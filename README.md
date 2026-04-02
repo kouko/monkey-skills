@@ -125,21 +125,26 @@ Install via marketplace or import `https://github.com/kouko/monkey-skills` in Se
 ```
 monkey-skills/
 ├── .claude-plugin/
-│   └── marketplace.json        ← Claude Code (5 plugins, all source: "./")
+│   └── marketplace.json           ← Claude Code marketplace (source: "./plugins/<name>")
 ├── .cursor-plugin/
-│   └── plugin.json             ← Cursor
+│   └── plugin.json                ← Cursor
 ├── .codex/
-│   └── INSTALL.md              ← Codex install guide
-├── gemini-extension.json       ← Gemini CLI
-├── GEMINI.md                   ← Gemini CLI context
-├── AGENTS.md                   ← Codex / Copilot CLI
-├── skills/                     ← 23 skills (flat, shared across plugins)
-├── agents/                     ← 17 agents (flat, shared across plugins)
-├── scripts/                    ← YouTube utility scripts
-└── docs/
+│   └── INSTALL.md                 ← Codex install guide
+├── gemini-extension.json          ← Gemini CLI
+├── GEMINI.md                      ← Gemini CLI context
+├── AGENTS.md                      ← Codex / Copilot CLI
+└── plugins/                       ← Each plugin is isolated
+    ├── code-team/
+    │   ├── .claude-plugin/plugin.json
+    │   ├── skills/                 ← Only code-team skills
+    │   └── agents/                 ← Only code-team agents
+    ├── design-team/
+    ├── research-team/
+    ├── obsidian-workflow/
+    └── youtube-skills/
 ```
 
-Follows the [anthropics/skills](https://github.com/anthropics/skills) marketplace pattern — all plugins use `source: "./"` with explicit skill/agent assignment, enabling cross-plugin sharing (e.g., `qa-evaluator` is shared by code-team and research-team).
+Uses **Pattern B** (isolated plugin directories). Each plugin has its own `skills/` and `agents/`, preventing namespace pollution. Shared agents (e.g., `qa-evaluator` used by both code-team and research-team) are copied to each plugin that needs them.
 
 ## License
 
