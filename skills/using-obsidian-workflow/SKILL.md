@@ -13,7 +13,7 @@ This plugin provides daily workflow skills and vault management for Obsidian.
 - Setting up a new Obsidian vault
 - Saving conversation summaries to vault
 - Processing files into Obsidian-ready notes
-- Creating Mermaid diagrams in vault notes
+- Creating diagrams (Mermaid, Excalidraw, Canvas)
 - Vault cleanup and organization
 
 ## Available Skills
@@ -25,6 +25,8 @@ This plugin provides daily workflow skills and vault management for Obsidian.
 | `obsidian-workflow:tldr` | Save conversation summary to vault |
 | `obsidian-workflow:file-intel` | Extract content from files into Obsidian notes |
 | `obsidian-workflow:mermaid-visualizer` | Create Mermaid diagrams in vault notes |
+| `obsidian-workflow:excalidraw-diagram` | Generate Excalidraw diagrams (Obsidian/Standard/Animated) |
+| `obsidian-workflow:obsidian-canvas-creator` | Create Canvas files (MindMap/freeform layouts) |
 
 ## Available Agents
 

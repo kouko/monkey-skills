@@ -60,7 +60,9 @@
         "vault-setup",
         "tldr",
         "file-intel",
-        "mermaid-visualizer"
+        "mermaid-visualizer",
+        "excalidraw-diagram",
+        "obsidian-canvas-creator"
       ],
       "agents": [
         "vault-organizer",
