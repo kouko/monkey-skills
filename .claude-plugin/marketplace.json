@@ -8,7 +8,7 @@
       "name": "code-team",
       "description": "Feature development team — Arch → Implement → Test → Review → Verify workflow with specialized agents",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/using-code-team",
         "./skills/code-team"
@@ -18,7 +18,7 @@
       "name": "design-team",
       "description": "App design team — Generate → Review (parallel) → Revise workflow with UX, UI, visual, and accessibility agents",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/using-design-team",
         "./skills/design-team"
@@ -28,7 +28,7 @@
       "name": "research-team",
       "description": "Deep research team — Generate → Evaluate → Edit workflow with research and investment analysts",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/using-research-team",
         "./skills/research-team"
@@ -38,7 +38,7 @@
       "name": "obsidian-workflow",
       "description": "Obsidian vault workflows — daily notes, vault setup, conversation summaries, diagrams, and file intelligence",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/using-obsidian-workflow",
         "./skills/daily",
@@ -54,7 +54,7 @@
       "name": "youtube-skills",
       "description": "YouTube video processing — search, download, transcribe, summarize, and extract metadata",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/using-youtube-skills",
         "./skills/mk-youtube-search",
