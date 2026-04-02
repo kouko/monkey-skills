@@ -59,7 +59,8 @@
         "daily",
         "vault-setup",
         "tldr",
-        "file-intel"
+        "file-intel",
+        "mermaid-visualizer"
       ],
       "agents": [
         "vault-organizer",
