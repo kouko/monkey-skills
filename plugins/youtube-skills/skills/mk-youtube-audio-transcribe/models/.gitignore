@@ -1,0 +1,3 @@
+# Downloaded whisper models (too large to commit)
+*.bin
+!.gitkeep

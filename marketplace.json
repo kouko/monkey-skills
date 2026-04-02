@@ -1,0 +1,10 @@
+{
+  "name": "monkey-skills",
+  "plugins": [
+    { "name": "code-team", "source": "./plugins/code-team" },
+    { "name": "design-team", "source": "./plugins/design-team" },
+    { "name": "research-team", "source": "./plugins/research-team" },
+    { "name": "obsidian-workflow", "source": "./plugins/obsidian-workflow" },
+    { "name": "youtube-skills", "source": "./plugins/youtube-skills" }
+  ]
+}
