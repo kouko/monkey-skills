@@ -7,65 +7,27 @@
     {
       "name": "code-team",
       "description": "Feature development team — Arch → Implement → Test → Review → Verify workflow with specialized agents",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/using-code-team",
-        "./skills/code-team"
-      ]
+      "source": "./plugins/code-team"
     },
     {
       "name": "design-team",
       "description": "App design team — Generate → Review (parallel) → Revise workflow with UX, UI, visual, and accessibility agents",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/using-design-team",
-        "./skills/design-team"
-      ]
+      "source": "./plugins/design-team"
     },
     {
       "name": "research-team",
       "description": "Deep research team — Generate → Evaluate → Edit workflow with research and investment analysts",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/using-research-team",
-        "./skills/research-team"
-      ]
+      "source": "./plugins/research-team"
     },
     {
       "name": "obsidian-workflow",
       "description": "Obsidian vault workflows — daily notes, vault setup, conversation summaries, diagrams, and file intelligence",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/using-obsidian-workflow",
-        "./skills/daily",
-        "./skills/vault-setup",
-        "./skills/tldr",
-        "./skills/file-intel",
-        "./skills/mermaid-visualizer",
-        "./skills/excalidraw-diagram",
-        "./skills/obsidian-canvas-creator"
-      ]
+      "source": "./plugins/obsidian-workflow"
     },
     {
       "name": "youtube-skills",
       "description": "YouTube video processing — search, download, transcribe, summarize, and extract metadata",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/using-youtube-skills",
-        "./skills/mk-youtube-search",
-        "./skills/mk-youtube-get-info",
-        "./skills/mk-youtube-get-caption",
-        "./skills/mk-youtube-get-audio",
-        "./skills/mk-youtube-audio-transcribe",
-        "./skills/mk-youtube-summarize",
-        "./skills/mk-youtube-transcript-summarize",
-        "./skills/mk-youtube-get-channel-latest"
-      ]
+      "source": "./plugins/youtube-skills"
     }
   ]
 }
