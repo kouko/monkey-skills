@@ -1,0 +1,86 @@
+{
+  "name": "monkey-skills",
+  "plugins": [
+    {
+      "name": "code-team",
+      "description": "Feature development team — Arch → Implement → Test → Review → Verify workflow with specialized agents",
+      "source": "./",
+      "skills": [
+        "using-code-team",
+        "code-team"
+      ],
+      "agents": [
+        "arch-reviewer",
+        "code-reviewer",
+        "qa-evaluator",
+        "test-writer",
+        "doc-writer",
+        "refactor-agent",
+        "code-summarizer"
+      ]
+    },
+    {
+      "name": "design-team",
+      "description": "App design team — Generate → Review (parallel) → Revise workflow with UX, UI, visual, and accessibility agents",
+      "source": "./",
+      "skills": [
+        "using-design-team",
+        "design-team"
+      ],
+      "agents": [
+        "ux-strategist",
+        "ui-reviewer",
+        "visual-reviewer",
+        "a11y-reviewer",
+        "design-summarizer"
+      ]
+    },
+    {
+      "name": "research-team",
+      "description": "Deep research team — Generate → Evaluate → Edit workflow with research and investment analysts",
+      "source": "./",
+      "skills": [
+        "using-research-team",
+        "research-team"
+      ],
+      "agents": [
+        "research-analyst",
+        "investment-analyst",
+        "qa-evaluator",
+        "research-summarizer"
+      ]
+    },
+    {
+      "name": "obsidian-workflow",
+      "description": "Obsidian vault workflows — daily notes, vault setup, conversation summaries, and file intelligence",
+      "source": "./",
+      "skills": [
+        "using-obsidian-workflow",
+        "daily",
+        "vault-setup",
+        "tldr",
+        "file-intel"
+      ],
+      "agents": [
+        "vault-organizer",
+        "note-summarizer"
+      ]
+    },
+    {
+      "name": "youtube-skills",
+      "description": "YouTube video processing — search, download, transcribe, summarize, and extract metadata",
+      "source": "./",
+      "skills": [
+        "using-youtube-skills",
+        "mk-youtube-search",
+        "mk-youtube-get-info",
+        "mk-youtube-get-caption",
+        "mk-youtube-get-audio",
+        "mk-youtube-audio-transcribe",
+        "mk-youtube-summarize",
+        "mk-youtube-transcript-summarize",
+        "mk-youtube-get-channel-latest"
+      ]
+    }
+  ]
+}
