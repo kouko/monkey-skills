@@ -1,0 +1,4205 @@
+1
+00:00:00,080 --> 00:00:02,550
+
+If you're using clawed code and its lack
+
+2
+00:00:02,550 --> 00:00:02,560
+If you're using clawed code and its lack
+ 
+
+3
+00:00:02,560 --> 00:00:04,150
+If you're using clawed code and its lack
+of memory makes it feel like you're
+
+4
+00:00:04,150 --> 00:00:04,160
+of memory makes it feel like you're
+ 
+
+5
+00:00:04,160 --> 00:00:05,749
+of memory makes it feel like you're
+starting every single session from
+
+6
+00:00:05,749 --> 00:00:05,759
+starting every single session from
+ 
+
+7
+00:00:05,759 --> 00:00:07,909
+starting every single session from
+scratch, then you got to check out this
+
+8
+00:00:07,909 --> 00:00:07,919
+scratch, then you got to check out this
+ 
+
+9
+00:00:07,919 --> 00:00:10,310
+scratch, then you got to check out this
+one tool that can fix all your problems.
+
+10
+00:00:10,310 --> 00:00:10,320
+one tool that can fix all your problems.
+ 
+
+11
+00:00:10,320 --> 00:00:13,190
+one tool that can fix all your problems.
+And that tool is Obsidian. It's free.
+
+12
+00:00:13,190 --> 00:00:13,200
+And that tool is Obsidian. It's free.
+ 
+
+13
+00:00:13,200 --> 00:00:14,950
+And that tool is Obsidian. It's free.
+It's simple to use. And it's going to
+
+14
+00:00:14,950 --> 00:00:14,960
+It's simple to use. And it's going to
+ 
+
+15
+00:00:14,960 --> 00:00:16,790
+It's simple to use. And it's going to
+help us unlock persistent memory for
+
+16
+00:00:16,790 --> 00:00:16,800
+help us unlock persistent memory for
+ 
+
+17
+00:00:16,800 --> 00:00:18,950
+help us unlock persistent memory for
+clawed code all while boosting our
+
+18
+00:00:18,950 --> 00:00:18,960
+clawed code all while boosting our
+ 
+
+19
+00:00:18,960 --> 00:00:20,950
+clawed code all while boosting our
+performance in the process. This allows
+
+20
+00:00:20,950 --> 00:00:20,960
+performance in the process. This allows
+ 
+
+21
+00:00:20,960 --> 00:00:22,630
+performance in the process. This allows
+us to do things that other tools like
+
+22
+00:00:22,630 --> 00:00:22,640
+us to do things that other tools like
+ 
+
+23
+00:00:22,640 --> 00:00:25,029
+us to do things that other tools like
+Open Claw claim to do yet fail
+
+24
+00:00:25,029 --> 00:00:25,039
+Open Claw claim to do yet fail
+ 
+
+25
+00:00:25,039 --> 00:00:27,589
+Open Claw claim to do yet fail
+completely at, like actually remember
+
+26
+00:00:27,589 --> 00:00:27,599
+completely at, like actually remember
+ 
+
+27
+00:00:27,599 --> 00:00:30,150
+completely at, like actually remember
+things about us and act in a way that a
+
+28
+00:00:30,150 --> 00:00:30,160
+things about us and act in a way that a
+ 
+
+29
+00:00:30,160 --> 00:00:31,830
+things about us and act in a way that a
+real human personal assistant would.
+
+30
+00:00:31,830 --> 00:00:31,840
+real human personal assistant would.
+ 
+
+31
+00:00:31,840 --> 00:00:33,430
+real human personal assistant would.
+Now, Obsidian is one of those rare tools
+
+32
+00:00:33,430 --> 00:00:33,440
+Now, Obsidian is one of those rare tools
+ 
+
+33
+00:00:33,440 --> 00:00:35,830
+Now, Obsidian is one of those rare tools
+that really does feel like a value ad
+
+34
+00:00:35,830 --> 00:00:35,840
+that really does feel like a value ad
+ 
+
+35
+00:00:35,840 --> 00:00:37,750
+that really does feel like a value ad
+across the board. So, I'm really excited
+
+36
+00:00:37,750 --> 00:00:37,760
+across the board. So, I'm really excited
+ 
+
+37
+00:00:37,760 --> 00:00:39,590
+across the board. So, I'm really excited
+for this lesson. So, let's just hop into
+
+38
+00:00:39,590 --> 00:00:39,600
+for this lesson. So, let's just hop into
+ 
+
+39
+00:00:39,600 --> 00:00:41,270
+for this lesson. So, let's just hop into
+it. So, let's first talk about what
+
+40
+00:00:41,270 --> 00:00:41,280
+it. So, let's first talk about what
+ 
+
+41
+00:00:41,280 --> 00:00:43,670
+it. So, let's first talk about what
+Obsidian actually is. Obsidian is an
+
+42
+00:00:43,670 --> 00:00:43,680
+Obsidian actually is. Obsidian is an
+ 
+
+43
+00:00:43,680 --> 00:00:45,670
+Obsidian actually is. Obsidian is an
+orchestration layer, an organization
+
+44
+00:00:45,670 --> 00:00:45,680
+orchestration layer, an organization
+ 
+
+45
+00:00:45,680 --> 00:00:48,549
+orchestration layer, an organization
+layer on top of your markdown files in a
+
+46
+00:00:48,549 --> 00:00:48,559
+layer on top of your markdown files in a
+ 
+
+47
+00:00:48,559 --> 00:00:51,430
+layer on top of your markdown files in a
+specific folder known as a vault.
+
+48
+00:00:51,430 --> 00:00:51,440
+specific folder known as a vault.
+ 
+
+49
+00:00:51,440 --> 00:00:54,950
+specific folder known as a vault.
+Obsidian is free. It is not open source,
+
+50
+00:00:54,950 --> 00:00:54,960
+Obsidian is free. It is not open source,
+ 
+
+51
+00:00:54,960 --> 00:00:56,790
+Obsidian is free. It is not open source,
+but everything we create and use with
+
+52
+00:00:56,790 --> 00:00:56,800
+but everything we create and use with
+ 
+
+53
+00:00:56,800 --> 00:00:59,029
+but everything we create and use with
+Obsidian is ours, right? We own it.
+
+54
+00:00:59,029 --> 00:00:59,039
+Obsidian is ours, right? We own it.
+ 
+
+55
+00:00:59,039 --> 00:01:00,389
+Obsidian is ours, right? We own it.
+Obsidian does it. There's no vendor
+
+56
+00:01:00,389 --> 00:01:00,399
+Obsidian does it. There's no vendor
+ 
+
+57
+00:01:00,399 --> 00:01:02,069
+Obsidian does it. There's no vendor
+lock. This isn't like Notion. And the
+
+58
+00:01:02,069 --> 00:01:02,079
+lock. This isn't like Notion. And the
+ 
+
+59
+00:01:02,079 --> 00:01:04,869
+lock. This isn't like Notion. And the
+real value ad for Obsidian from our
+
+60
+00:01:04,869 --> 00:01:04,879
+real value ad for Obsidian from our
+ 
+
+61
+00:01:04,879 --> 00:01:07,429
+real value ad for Obsidian from our
+point of view is its ability for us to
+
+62
+00:01:07,429 --> 00:01:07,439
+point of view is its ability for us to
+ 
+
+63
+00:01:07,439 --> 00:01:09,670
+point of view is its ability for us to
+see how our different notes and files
+
+64
+00:01:09,670 --> 00:01:09,680
+see how our different notes and files
+ 
+
+65
+00:01:09,680 --> 00:01:11,910
+see how our different notes and files
+and folders connect. So if I have
+
+66
+00:01:11,910 --> 00:01:11,920
+and folders connect. So if I have
+ 
+
+67
+00:01:11,920 --> 00:01:14,230
+and folders connect. So if I have
+something open right here, you can see
+
+68
+00:01:14,230 --> 00:01:14,240
+something open right here, you can see
+ 
+
+69
+00:01:14,240 --> 00:01:17,109
+something open right here, you can see
+how this connects to other related notes
+
+70
+00:01:17,109 --> 00:01:17,119
+how this connects to other related notes
+ 
+
+71
+00:01:17,119 --> 00:01:19,030
+how this connects to other related notes
+and files, right? And you can see over
+
+72
+00:01:19,030 --> 00:01:19,040
+and files, right? And you can see over
+ 
+
+73
+00:01:19,040 --> 00:01:20,550
+and files, right? And you can see over
+here on the right, we also have these
+
+74
+00:01:20,550 --> 00:01:20,560
+here on the right, we also have these
+ 
+
+75
+00:01:20,560 --> 00:01:23,510
+here on the right, we also have these
+like visual graphs that show us how
+
+76
+00:01:23,510 --> 00:01:23,520
+like visual graphs that show us how
+ 
+
+77
+00:01:23,520 --> 00:01:25,190
+like visual graphs that show us how
+different documents and projects relate
+
+78
+00:01:25,190 --> 00:01:25,200
+different documents and projects relate
+ 
+
+79
+00:01:25,200 --> 00:01:27,590
+different documents and projects relate
+to one another. Obsidian also has a huge
+
+80
+00:01:27,590 --> 00:01:27,600
+to one another. Obsidian also has a huge
+ 
+
+81
+00:01:27,600 --> 00:01:29,510
+to one another. Obsidian also has a huge
+plug-in community. So everything that
+
+82
+00:01:29,510 --> 00:01:29,520
+plug-in community. So everything that
+ 
+
+83
+00:01:29,520 --> 00:01:31,429
+plug-in community. So everything that
+you'll see today is just on the base
+
+84
+00:01:31,429 --> 00:01:31,439
+you'll see today is just on the base
+ 
+
+85
+00:01:31,439 --> 00:01:35,030
+you'll see today is just on the base
+level Obsidian, but there are 2736
+
+86
+00:01:35,030 --> 00:01:35,040
+level Obsidian, but there are 2736
+ 
+
+87
+00:01:35,040 --> 00:01:37,270
+level Obsidian, but there are 2736
+ways to spice it up if you want to. But
+
+88
+00:01:37,270 --> 00:01:37,280
+ways to spice it up if you want to. But
+ 
+
+89
+00:01:37,280 --> 00:01:38,870
+ways to spice it up if you want to. But
+why should you care about any of that?
+
+90
+00:01:38,870 --> 00:01:38,880
+why should you care about any of that?
+ 
+
+91
+00:01:38,880 --> 00:01:41,910
+why should you care about any of that?
+How does Obsidian actually relate to you
+
+92
+00:01:41,910 --> 00:01:41,920
+How does Obsidian actually relate to you
+ 
+
+93
+00:01:41,920 --> 00:01:44,469
+How does Obsidian actually relate to you
+and claude code and your productivity?
+
+94
+00:01:44,469 --> 00:01:44,479
+and claude code and your productivity?
+ 
+
+95
+00:01:44,479 --> 00:01:46,230
+and claude code and your productivity?
+Well, to answer that question, you need
+
+96
+00:01:46,230 --> 00:01:46,240
+Well, to answer that question, you need
+ 
+
+97
+00:01:46,240 --> 00:01:48,630
+Well, to answer that question, you need
+to understand the symbiotic relationship
+
+98
+00:01:48,630 --> 00:01:48,640
+to understand the symbiotic relationship
+ 
+
+99
+00:01:48,640 --> 00:01:51,429
+to understand the symbiotic relationship
+between these two things and you. So,
+
+100
+00:01:51,429 --> 00:01:51,439
+between these two things and you. So,
+ 
+
+101
+00:01:51,439 --> 00:01:53,590
+between these two things and you. So,
+first and foremost, we have Obsidian and
+
+102
+00:01:53,590 --> 00:01:53,600
+first and foremost, we have Obsidian and
+ 
+
+103
+00:01:53,600 --> 00:01:54,630
+first and foremost, we have Obsidian and
+you. What do you get out of this
+
+104
+00:01:54,630 --> 00:01:54,640
+you. What do you get out of this
+ 
+
+105
+00:01:54,640 --> 00:01:55,830
+you. What do you get out of this
+relationship? Well, you get what I just
+
+106
+00:01:55,830 --> 00:01:55,840
+relationship? Well, you get what I just
+ 
+
+107
+00:01:55,840 --> 00:01:58,230
+relationship? Well, you get what I just
+saw, right? The ability to look at files
+
+108
+00:01:58,230 --> 00:01:58,240
+saw, right? The ability to look at files
+ 
+
+109
+00:01:58,240 --> 00:01:59,590
+saw, right? The ability to look at files
+and click through it and see how they
+
+110
+00:01:59,590 --> 00:01:59,600
+and click through it and see how they
+ 
+
+111
+00:01:59,600 --> 00:02:02,389
+and click through it and see how they
+connect and have like visual insight
+
+112
+00:02:02,389 --> 00:02:02,399
+connect and have like visual insight
+ 
+
+113
+00:02:02,399 --> 00:02:04,550
+connect and have like visual insight
+between all of your folders and notes.
+
+114
+00:02:04,550 --> 00:02:04,560
+between all of your folders and notes.
+ 
+
+115
+00:02:04,560 --> 00:02:07,030
+between all of your folders and notes.
+The problem is for me to actually do
+
+116
+00:02:07,030 --> 00:02:07,040
+The problem is for me to actually do
+ 
+
+117
+00:02:07,040 --> 00:02:08,550
+The problem is for me to actually do
+this and get the full value from
+
+118
+00:02:08,550 --> 00:02:08,560
+this and get the full value from
+ 
+
+119
+00:02:08,560 --> 00:02:11,589
+this and get the full value from
+Obsidian as a user, I have to actually
+
+120
+00:02:11,589 --> 00:02:11,599
+Obsidian as a user, I have to actually
+ 
+
+121
+00:02:11,599 --> 00:02:13,990
+Obsidian as a user, I have to actually
+draft up all these markdown files and I
+
+122
+00:02:13,990 --> 00:02:14,000
+draft up all these markdown files and I
+ 
+
+123
+00:02:14,000 --> 00:02:15,510
+draft up all these markdown files and I
+have to draft them up in a specific way
+
+124
+00:02:15,510 --> 00:02:15,520
+have to draft them up in a specific way
+ 
+
+125
+00:02:15,520 --> 00:02:16,949
+have to draft them up in a specific way
+that they link, right? I have to like
+
+126
+00:02:16,949 --> 00:02:16,959
+that they link, right? I have to like
+ 
+
+127
+00:02:16,959 --> 00:02:18,309
+that they link, right? I have to like
+make sure, hey, I do the double
+
+128
+00:02:18,309 --> 00:02:18,319
+make sure, hey, I do the double
+ 
+
+129
+00:02:18,319 --> 00:02:20,070
+make sure, hey, I do the double
+brackets, I find the note I want, I link
+
+130
+00:02:20,070 --> 00:02:20,080
+brackets, I find the note I want, I link
+ 
+
+131
+00:02:20,080 --> 00:02:22,070
+brackets, I find the note I want, I link
+it, right? Pain in the butt. You're
+
+132
+00:02:22,070 --> 00:02:22,080
+it, right? Pain in the butt. You're
+ 
+
+133
+00:02:22,080 --> 00:02:23,350
+it, right? Pain in the butt. You're
+never going to do this in reality,
+
+134
+00:02:23,350 --> 00:02:23,360
+never going to do this in reality,
+ 
+
+135
+00:02:23,360 --> 00:02:24,869
+never going to do this in reality,
+right? No one's manually doing this in
+
+136
+00:02:24,869 --> 00:02:24,879
+right? No one's manually doing this in
+ 
+
+137
+00:02:24,879 --> 00:02:27,270
+right? No one's manually doing this in
+today's day and age. Enter obviously
+
+138
+00:02:27,270 --> 00:02:27,280
+today's day and age. Enter obviously
+ 
+
+139
+00:02:27,280 --> 00:02:29,750
+today's day and age. Enter obviously
+Claude Code. Claude Code will do all of
+
+140
+00:02:29,750 --> 00:02:29,760
+Claude Code. Claude Code will do all of
+ 
+
+141
+00:02:29,760 --> 00:02:32,229
+Claude Code. Claude Code will do all of
+that for us. Claude Code essentially
+
+142
+00:02:32,229 --> 00:02:32,239
+that for us. Claude Code essentially
+ 
+
+143
+00:02:32,239 --> 00:02:35,190
+that for us. Claude Code essentially
+supercharges the Obsidian experience for
+
+144
+00:02:35,190 --> 00:02:35,200
+supercharges the Obsidian experience for
+ 
+
+145
+00:02:35,200 --> 00:02:37,990
+supercharges the Obsidian experience for
+you because whatever you tell Claude
+
+146
+00:02:37,990 --> 00:02:38,000
+you because whatever you tell Claude
+ 
+
+147
+00:02:38,000 --> 00:02:39,990
+you because whatever you tell Claude
+Code, whether that's through text or
+
+148
+00:02:39,990 --> 00:02:40,000
+Code, whether that's through text or
+ 
+
+149
+00:02:40,000 --> 00:02:41,589
+Code, whether that's through text or
+prompts or brain dubs or just, you know,
+
+150
+00:02:41,589 --> 00:02:41,599
+prompts or brain dubs or just, you know,
+ 
+
+151
+00:02:41,599 --> 00:02:43,350
+prompts or brain dubs or just, you know,
+verbal diarrhea, right? Whatever you
+
+152
+00:02:43,350 --> 00:02:43,360
+verbal diarrhea, right? Whatever you
+ 
+
+153
+00:02:43,360 --> 00:02:45,430
+verbal diarrhea, right? Whatever you
+give Claude Code, it's going to turn
+
+154
+00:02:45,430 --> 00:02:45,440
+give Claude Code, it's going to turn
+ 
+
+155
+00:02:45,440 --> 00:02:48,630
+give Claude Code, it's going to turn
+that into a proper markdown file in the
+
+156
+00:02:48,630 --> 00:02:48,640
+that into a proper markdown file in the
+ 
+
+157
+00:02:48,640 --> 00:02:51,030
+that into a proper markdown file in the
+Obsidian format. Link it all together so
+
+158
+00:02:51,030 --> 00:02:51,040
+Obsidian format. Link it all together so
+ 
+
+159
+00:02:51,040 --> 00:02:52,869
+Obsidian format. Link it all together so
+you, the end user, can get better
+
+160
+00:02:52,869 --> 00:02:52,879
+you, the end user, can get better
+ 
+
+161
+00:02:52,879 --> 00:02:55,350
+you, the end user, can get better
+insights into your notes and your
+
+162
+00:02:55,350 --> 00:02:55,360
+insights into your notes and your
+ 
+
+163
+00:02:55,360 --> 00:02:56,790
+insights into your notes and your
+projects and your thoughts. What if
+
+164
+00:02:56,790 --> 00:02:56,800
+projects and your thoughts. What if
+ 
+
+165
+00:02:56,800 --> 00:02:57,990
+projects and your thoughts. What if
+that's all it did? Well, you still
+
+166
+00:02:57,990 --> 00:02:58,000
+that's all it did? Well, you still
+ 
+
+167
+00:02:58,000 --> 00:02:59,830
+that's all it did? Well, you still
+really wouldn't care, right? Neat. I can
+
+168
+00:02:59,830 --> 00:02:59,840
+really wouldn't care, right? Neat. I can
+ 
+
+169
+00:02:59,840 --> 00:03:01,030
+really wouldn't care, right? Neat. I can
+see more of my thoughts. I already know
+
+170
+00:03:01,030 --> 00:03:01,040
+see more of my thoughts. I already know
+ 
+
+171
+00:03:01,040 --> 00:03:02,229
+see more of my thoughts. I already know
+my thoughts. They're in my brain. How
+
+172
+00:03:02,229 --> 00:03:02,239
+my thoughts. They're in my brain. How
+ 
+
+173
+00:03:02,239 --> 00:03:05,430
+my thoughts. They're in my brain. How
+does this affect claw code? Well, by
+
+174
+00:03:05,430 --> 00:03:05,440
+does this affect claw code? Well, by
+ 
+
+175
+00:03:05,440 --> 00:03:08,149
+does this affect claw code? Well, by
+virtue of creating an organized
+
+176
+00:03:08,149 --> 00:03:08,159
+virtue of creating an organized
+ 
+
+177
+00:03:08,159 --> 00:03:10,229
+virtue of creating an organized
+hierarchy of your notes and actually
+
+178
+00:03:10,229 --> 00:03:10,239
+hierarchy of your notes and actually
+ 
+
+179
+00:03:10,239 --> 00:03:13,030
+hierarchy of your notes and actually
+connecting them all, Obsidian improves
+
+180
+00:03:13,030 --> 00:03:13,040
+connecting them all, Obsidian improves
+ 
+
+181
+00:03:13,040 --> 00:03:15,589
+connecting them all, Obsidian improves
+Claude code. Now, think of all this in
+
+182
+00:03:15,589 --> 00:03:15,599
+Claude code. Now, think of all this in
+ 
+
+183
+00:03:15,599 --> 00:03:17,350
+Claude code. Now, think of all this in
+terms of Claude Code acting as a
+
+184
+00:03:17,350 --> 00:03:17,360
+terms of Claude Code acting as a
+ 
+
+185
+00:03:17,360 --> 00:03:18,949
+terms of Claude Code acting as a
+personal assistant for you. And I use
+
+186
+00:03:18,949 --> 00:03:18,959
+personal assistant for you. And I use
+ 
+
+187
+00:03:18,959 --> 00:03:21,509
+personal assistant for you. And I use
+that demonstration on purpose because
+
+188
+00:03:21,509 --> 00:03:21,519
+that demonstration on purpose because
+ 
+
+189
+00:03:21,519 --> 00:03:23,750
+that demonstration on purpose because
+that's the sort of use case where you
+
+190
+00:03:23,750 --> 00:03:23,760
+that's the sort of use case where you
+ 
+
+191
+00:03:23,760 --> 00:03:25,670
+that's the sort of use case where you
+will get the most value add in this
+
+192
+00:03:25,670 --> 00:03:25,680
+will get the most value add in this
+ 
+
+193
+00:03:25,680 --> 00:03:27,030
+will get the most value add in this
+sorts of situation because when it comes
+
+194
+00:03:27,030 --> 00:03:27,040
+sorts of situation because when it comes
+ 
+
+195
+00:03:27,040 --> 00:03:30,710
+sorts of situation because when it comes
+to personal context, it's very wide in
+
+196
+00:03:30,710 --> 00:03:30,720
+to personal context, it's very wide in
+ 
+
+197
+00:03:30,720 --> 00:03:32,070
+to personal context, it's very wide in
+terms of breadth and the things you're
+
+198
+00:03:32,070 --> 00:03:32,080
+terms of breadth and the things you're
+ 
+
+199
+00:03:32,080 --> 00:03:33,589
+terms of breadth and the things you're
+talking about. Think of like daily notes
+
+200
+00:03:33,589 --> 00:03:33,599
+talking about. Think of like daily notes
+ 
+
+201
+00:03:33,599 --> 00:03:34,949
+talking about. Think of like daily notes
+and random projects you're working on,
+
+202
+00:03:34,949 --> 00:03:34,959
+and random projects you're working on,
+ 
+
+203
+00:03:34,959 --> 00:03:36,229
+and random projects you're working on,
+things you're just throwing claudes
+
+204
+00:03:36,229 --> 00:03:36,239
+things you're just throwing claudes
+ 
+
+205
+00:03:36,239 --> 00:03:37,750
+things you're just throwing claudes
+away, right? Huge breadth and it
+
+206
+00:03:37,750 --> 00:03:37,760
+away, right? Huge breadth and it
+ 
+
+207
+00:03:37,760 --> 00:03:40,309
+away, right? Huge breadth and it
+compounds over time, right? So if we're
+
+208
+00:03:40,309 --> 00:03:40,319
+compounds over time, right? So if we're
+ 
+
+209
+00:03:40,319 --> 00:03:42,550
+compounds over time, right? So if we're
+just talking about daily notes for a
+
+210
+00:03:42,550 --> 00:03:42,560
+just talking about daily notes for a
+ 
+
+211
+00:03:42,560 --> 00:03:43,830
+just talking about daily notes for a
+couple weeks, easy enough. How about
+
+212
+00:03:43,830 --> 00:03:43,840
+couple weeks, easy enough. How about
+ 
+
+213
+00:03:43,840 --> 00:03:45,350
+couple weeks, easy enough. How about
+daily notes for a couple years, right?
+
+214
+00:03:45,350 --> 00:03:45,360
+daily notes for a couple years, right?
+ 
+
+215
+00:03:45,360 --> 00:03:48,550
+daily notes for a couple years, right?
+These things add up. And so by having an
+
+216
+00:03:48,550 --> 00:03:48,560
+These things add up. And so by having an
+ 
+
+217
+00:03:48,560 --> 00:03:50,630
+These things add up. And so by having an
+organized system of these notes and
+
+218
+00:03:50,630 --> 00:03:50,640
+organized system of these notes and
+ 
+
+219
+00:03:50,640 --> 00:03:51,990
+organized system of these notes and
+having them linked together and they
+
+220
+00:03:51,990 --> 00:03:52,000
+having them linked together and they
+ 
+
+221
+00:03:52,000 --> 00:03:53,110
+having them linked together and they
+actually like make sense when you look
+
+222
+00:03:53,110 --> 00:03:53,120
+actually like make sense when you look
+ 
+
+223
+00:03:53,120 --> 00:03:56,149
+actually like make sense when you look
+at them, this helps claude code, right?
+
+224
+00:03:56,149 --> 00:03:56,159
+at them, this helps claude code, right?
+ 
+
+225
+00:03:56,159 --> 00:03:58,390
+at them, this helps claude code, right?
+Because when you ask it to do stuff and
+
+226
+00:03:58,390 --> 00:03:58,400
+Because when you ask it to do stuff and
+ 
+
+227
+00:03:58,400 --> 00:04:00,630
+Because when you ask it to do stuff and
+gain insights on things and essentially
+
+228
+00:04:00,630 --> 00:04:00,640
+gain insights on things and essentially
+ 
+
+229
+00:04:00,640 --> 00:04:02,470
+gain insights on things and essentially
+find relationships between documents, it
+
+230
+00:04:02,470 --> 00:04:02,480
+find relationships between documents, it
+ 
+
+231
+00:04:02,480 --> 00:04:04,710
+find relationships between documents, it
+helps to have that organization because
+
+232
+00:04:04,710 --> 00:04:04,720
+helps to have that organization because
+ 
+
+233
+00:04:04,720 --> 00:04:07,429
+helps to have that organization because
+that helps cloud code that helps you,
+
+234
+00:04:07,429 --> 00:04:07,439
+that helps cloud code that helps you,
+ 
+
+235
+00:04:07,439 --> 00:04:09,830
+that helps cloud code that helps you,
+right? Whatever gives cloud code better
+
+236
+00:04:09,830 --> 00:04:09,840
+right? Whatever gives cloud code better
+ 
+
+237
+00:04:09,840 --> 00:04:11,509
+right? Whatever gives cloud code better
+performance and insight, ultimately that
+
+238
+00:04:11,509 --> 00:04:11,519
+performance and insight, ultimately that
+ 
+
+239
+00:04:11,519 --> 00:04:13,830
+performance and insight, ultimately that
+rolls downhill. And hopefully by getting
+
+240
+00:04:13,830 --> 00:04:13,840
+rolls downhill. And hopefully by getting
+ 
+
+241
+00:04:13,840 --> 00:04:16,949
+rolls downhill. And hopefully by getting
+better insights from cloud code based on
+
+242
+00:04:16,949 --> 00:04:16,959
+better insights from cloud code based on
+ 
+
+243
+00:04:16,959 --> 00:04:18,469
+better insights from cloud code based on
+your interactions with cloud code, that
+
+244
+00:04:18,469 --> 00:04:18,479
+your interactions with cloud code, that
+ 
+
+245
+00:04:18,479 --> 00:04:21,509
+your interactions with cloud code, that
+will improve interactions down the line,
+
+246
+00:04:21,509 --> 00:04:21,519
+will improve interactions down the line,
+ 
+
+247
+00:04:21,519 --> 00:04:23,510
+will improve interactions down the line,
+which will then become files that are
+
+248
+00:04:23,510 --> 00:04:23,520
+which will then become files that are
+ 
+
+249
+00:04:23,520 --> 00:04:26,070
+which will then become files that are
+properly notated and organized inside of
+
+250
+00:04:26,070 --> 00:04:26,080
+properly notated and organized inside of
+ 
+
+251
+00:04:26,080 --> 00:04:28,710
+properly notated and organized inside of
+Obsidian, which then come to you who can
+
+252
+00:04:28,710 --> 00:04:28,720
+Obsidian, which then come to you who can
+ 
+
+253
+00:04:28,720 --> 00:04:29,909
+Obsidian, which then come to you who can
+actually see them. And this whole thing
+
+254
+00:04:29,909 --> 00:04:29,919
+actually see them. And this whole thing
+ 
+
+255
+00:04:29,919 --> 00:04:32,550
+actually see them. And this whole thing
+isn't just a black box. That's the value
+
+256
+00:04:32,550 --> 00:04:32,560
+isn't just a black box. That's the value
+ 
+
+257
+00:04:32,560 --> 00:04:34,790
+isn't just a black box. That's the value
+ad here with Obsidian. Obsidian is
+
+258
+00:04:34,790 --> 00:04:34,800
+ad here with Obsidian. Obsidian is
+ 
+
+259
+00:04:34,800 --> 00:04:37,110
+ad here with Obsidian. Obsidian is
+supercharged by Claude Code by virtue of
+
+260
+00:04:37,110 --> 00:04:37,120
+supercharged by Claude Code by virtue of
+ 
+
+261
+00:04:37,120 --> 00:04:38,950
+supercharged by Claude Code by virtue of
+organizing your files. That improves
+
+262
+00:04:38,950 --> 00:04:38,960
+organizing your files. That improves
+ 
+
+263
+00:04:38,960 --> 00:04:40,469
+organizing your files. That improves
+Claude Code's performance, which
+
+264
+00:04:40,469 --> 00:04:40,479
+Claude Code's performance, which
+ 
+
+265
+00:04:40,479 --> 00:04:43,670
+Claude Code's performance, which
+ultimately makes you happy. That's the
+
+266
+00:04:43,670 --> 00:04:43,680
+ultimately makes you happy. That's the
+ 
+
+267
+00:04:43,680 --> 00:04:45,189
+ultimately makes you happy. That's the
+relationship. That's what this is all
+
+268
+00:04:45,189 --> 00:04:45,199
+relationship. That's what this is all
+ 
+
+269
+00:04:45,199 --> 00:04:48,950
+relationship. That's what this is all
+about. Now, you might be thinking,
+
+270
+00:04:48,950 --> 00:04:48,960
+about. Now, you might be thinking,
+ 
+
+271
+00:04:48,960 --> 00:04:50,950
+about. Now, you might be thinking,
+"That's all well and good, Chase, but
+
+272
+00:04:50,950 --> 00:04:50,960
+"That's all well and good, Chase, but
+ 
+
+273
+00:04:50,960 --> 00:04:52,790
+"That's all well and good, Chase, but
+like, can't I just have a giant file
+
+274
+00:04:52,790 --> 00:04:52,800
+like, can't I just have a giant file
+ 
+
+275
+00:04:52,800 --> 00:04:55,110
+like, can't I just have a giant file
+system and throw Markdown files in there
+
+276
+00:04:55,110 --> 00:04:55,120
+system and throw Markdown files in there
+ 
+
+277
+00:04:55,120 --> 00:04:56,870
+system and throw Markdown files in there
+forever and ever and ever and won't claw
+
+278
+00:04:56,870 --> 00:04:56,880
+forever and ever and ever and won't claw
+ 
+
+279
+00:04:56,880 --> 00:04:59,830
+forever and ever and ever and won't claw
+code being as effective as it is, still
+
+280
+00:04:59,830 --> 00:04:59,840
+code being as effective as it is, still
+ 
+
+281
+00:04:59,840 --> 00:05:01,670
+code being as effective as it is, still
+be able to handle all those files?" The
+
+282
+00:05:01,670 --> 00:05:01,680
+be able to handle all those files?" The
+ 
+
+283
+00:05:01,680 --> 00:05:04,150
+be able to handle all those files?" The
+answer is yes to a certain degree. And
+
+284
+00:05:04,150 --> 00:05:04,160
+answer is yes to a certain degree. And
+ 
+
+285
+00:05:04,160 --> 00:05:05,670
+answer is yes to a certain degree. And
+this is kind of like a spectrum, right?
+
+286
+00:05:05,670 --> 00:05:05,680
+this is kind of like a spectrum, right?
+ 
+
+287
+00:05:05,680 --> 00:05:07,510
+this is kind of like a spectrum, right?
+Like on one hand, you can be the average
+
+288
+00:05:07,510 --> 00:05:07,520
+Like on one hand, you can be the average
+ 
+
+289
+00:05:07,520 --> 00:05:09,350
+Like on one hand, you can be the average
+user over here on the left who's very
+
+290
+00:05:09,350 --> 00:05:09,360
+user over here on the left who's very
+ 
+
+291
+00:05:09,360 --> 00:05:11,270
+user over here on the left who's very
+lazy and uses cloud code as a personal
+
+292
+00:05:11,270 --> 00:05:11,280
+lazy and uses cloud code as a personal
+ 
+
+293
+00:05:11,280 --> 00:05:13,029
+lazy and uses cloud code as a personal
+assistant. You just throw crap at at it.
+
+294
+00:05:13,029 --> 00:05:13,039
+assistant. You just throw crap at at it.
+ 
+
+295
+00:05:13,039 --> 00:05:14,230
+assistant. You just throw crap at at it.
+And if you think of it as like being in
+
+296
+00:05:14,230 --> 00:05:14,240
+And if you think of it as like being in
+ 
+
+297
+00:05:14,240 --> 00:05:16,390
+And if you think of it as like being in
+a warehouse with all of your files and
+
+298
+00:05:16,390 --> 00:05:16,400
+a warehouse with all of your files and
+ 
+
+299
+00:05:16,400 --> 00:05:18,150
+a warehouse with all of your files and
+data, like you just have papers on the
+
+300
+00:05:18,150 --> 00:05:18,160
+data, like you just have papers on the
+ 
+
+301
+00:05:18,160 --> 00:05:19,909
+data, like you just have papers on the
+ground, right? They're just thrown
+
+302
+00:05:19,909 --> 00:05:19,919
+ground, right? They're just thrown
+ 
+
+303
+00:05:19,919 --> 00:05:22,469
+ground, right? They're just thrown
+everywhere. Cloud code is good enough to
+
+304
+00:05:22,469 --> 00:05:22,479
+everywhere. Cloud code is good enough to
+ 
+
+305
+00:05:22,479 --> 00:05:23,430
+everywhere. Cloud code is good enough to
+handle this, although that
+
+306
+00:05:23,430 --> 00:05:23,440
+handle this, although that
+ 
+
+307
+00:05:23,440 --> 00:05:25,670
+handle this, although that
+disorganization does come at a cost. The
+
+308
+00:05:25,670 --> 00:05:25,680
+disorganization does come at a cost. The
+ 
+
+309
+00:05:25,680 --> 00:05:28,070
+disorganization does come at a cost. The
+other cost is to you, right? This then
+
+310
+00:05:28,070 --> 00:05:28,080
+other cost is to you, right? This then
+ 
+
+311
+00:05:28,080 --> 00:05:29,830
+other cost is to you, right? This then
+becomes a black box. You as the human
+
+312
+00:05:29,830 --> 00:05:29,840
+becomes a black box. You as the human
+ 
+
+313
+00:05:29,840 --> 00:05:31,270
+becomes a black box. You as the human
+cannot possibly sift through all that
+
+314
+00:05:31,270 --> 00:05:31,280
+cannot possibly sift through all that
+ 
+
+315
+00:05:31,280 --> 00:05:33,350
+cannot possibly sift through all that
+information, right? So you aren't
+
+316
+00:05:33,350 --> 00:05:33,360
+information, right? So you aren't
+ 
+
+317
+00:05:33,360 --> 00:05:34,950
+information, right? So you aren't
+operating at full capacity and neither's
+
+318
+00:05:34,950 --> 00:05:34,960
+operating at full capacity and neither's
+ 
+
+319
+00:05:34,960 --> 00:05:37,029
+operating at full capacity and neither's
+cloud code. On the other end of the
+
+320
+00:05:37,029 --> 00:05:37,039
+cloud code. On the other end of the
+ 
+
+321
+00:05:37,039 --> 00:05:40,469
+cloud code. On the other end of the
+spectrum, right, we could get we could
+
+322
+00:05:40,469 --> 00:05:40,479
+spectrum, right, we could get we could
+ 
+
+323
+00:05:40,479 --> 00:05:42,469
+spectrum, right, we could get we could
+go away from just markdown files in a
+
+324
+00:05:42,469 --> 00:05:42,479
+go away from just markdown files in a
+ 
+
+325
+00:05:42,479 --> 00:05:44,230
+go away from just markdown files in a
+folder system and we can instead go nuts
+
+326
+00:05:44,230 --> 00:05:44,240
+folder system and we can instead go nuts
+ 
+
+327
+00:05:44,240 --> 00:05:46,070
+folder system and we can instead go nuts
+and create some sort of like graph rag
+
+328
+00:05:46,070 --> 00:05:46,080
+and create some sort of like graph rag
+ 
+
+329
+00:05:46,080 --> 00:05:47,590
+and create some sort of like graph rag
+system, right? This nuclear bomb
+
+330
+00:05:47,590 --> 00:05:47,600
+system, right? This nuclear bomb
+ 
+
+331
+00:05:47,600 --> 00:05:48,870
+system, right? This nuclear bomb
+approach that's going to have embeddings
+
+332
+00:05:48,870 --> 00:05:48,880
+approach that's going to have embeddings
+ 
+
+333
+00:05:48,880 --> 00:05:50,870
+approach that's going to have embeddings
+and analysis and all this stuff. The
+
+334
+00:05:50,870 --> 00:05:50,880
+and analysis and all this stuff. The
+ 
+
+335
+00:05:50,880 --> 00:05:53,670
+and analysis and all this stuff. The
+problem is if we do the rag approach for
+
+336
+00:05:53,670 --> 00:05:53,680
+problem is if we do the rag approach for
+ 
+
+337
+00:05:53,680 --> 00:05:55,510
+problem is if we do the rag approach for
+most people that's too much and it's
+
+338
+00:05:55,510 --> 00:05:55,520
+most people that's too much and it's
+ 
+
+339
+00:05:55,520 --> 00:05:57,110
+most people that's too much and it's
+also too much to expect from them to be
+
+340
+00:05:57,110 --> 00:05:57,120
+also too much to expect from them to be
+ 
+
+341
+00:05:57,120 --> 00:05:59,430
+also too much to expect from them to be
+able to build and maintain that right if
+
+342
+00:05:59,430 --> 00:05:59,440
+able to build and maintain that right if
+ 
+
+343
+00:05:59,440 --> 00:06:00,950
+able to build and maintain that right if
+over here you know we have papers thrown
+
+344
+00:06:00,950 --> 00:06:00,960
+over here you know we have papers thrown
+ 
+
+345
+00:06:00,960 --> 00:06:02,870
+over here you know we have papers thrown
+on the ground this is the library of
+
+346
+00:06:02,870 --> 00:06:02,880
+on the ground this is the library of
+ 
+
+347
+00:06:02,880 --> 00:06:05,110
+on the ground this is the library of
+congress right you don't need that what
+
+348
+00:06:05,110 --> 00:06:05,120
+congress right you don't need that what
+ 
+
+349
+00:06:05,120 --> 00:06:07,430
+congress right you don't need that what
+we need is a happy medium right and what
+
+350
+00:06:07,430 --> 00:06:07,440
+we need is a happy medium right and what
+ 
+
+351
+00:06:07,440 --> 00:06:09,430
+we need is a happy medium right and what
+is that happy medium in most cases well
+
+352
+00:06:09,430 --> 00:06:09,440
+is that happy medium in most cases well
+ 
+
+353
+00:06:09,440 --> 00:06:11,590
+is that happy medium in most cases well
+it's actually obsidian because instead
+
+354
+00:06:11,590 --> 00:06:11,600
+it's actually obsidian because instead
+ 
+
+355
+00:06:11,600 --> 00:06:13,029
+it's actually obsidian because instead
+of papers on the ground or the library
+
+356
+00:06:13,029 --> 00:06:13,039
+of papers on the ground or the library
+ 
+
+357
+00:06:13,039 --> 00:06:14,870
+of papers on the ground or the library
+of congress I just want like a filing
+
+358
+00:06:14,870 --> 00:06:14,880
+of congress I just want like a filing
+ 
+
+359
+00:06:14,880 --> 00:06:17,029
+of congress I just want like a filing
+cabinet that's kind of organized for me
+
+360
+00:06:17,029 --> 00:06:17,039
+cabinet that's kind of organized for me
+ 
+
+361
+00:06:17,039 --> 00:06:18,950
+cabinet that's kind of organized for me
+and the offer here is Obsidian is going
+
+362
+00:06:18,950 --> 00:06:18,960
+and the offer here is Obsidian is going
+ 
+
+363
+00:06:18,960 --> 00:06:20,390
+and the offer here is Obsidian is going
+to be the filing cabinet and It's a
+
+364
+00:06:20,390 --> 00:06:20,400
+to be the filing cabinet and It's a
+ 
+
+365
+00:06:20,400 --> 00:06:22,710
+to be the filing cabinet and It's a
+filing cabinet that is free both in
+
+366
+00:06:22,710 --> 00:06:22,720
+filing cabinet that is free both in
+ 
+
+367
+00:06:22,720 --> 00:06:25,270
+filing cabinet that is free both in
+terms of actual cost and it's not like
+
+368
+00:06:25,270 --> 00:06:25,280
+terms of actual cost and it's not like
+ 
+
+369
+00:06:25,280 --> 00:06:26,870
+terms of actual cost and it's not like
+this is costing us tokens. This isn't
+
+370
+00:06:26,870 --> 00:06:26,880
+this is costing us tokens. This isn't
+ 
+
+371
+00:06:26,880 --> 00:06:28,469
+this is costing us tokens. This isn't
+some sort of heavy framework on top of
+
+372
+00:06:28,469 --> 00:06:28,479
+some sort of heavy framework on top of
+ 
+
+373
+00:06:28,479 --> 00:06:29,990
+some sort of heavy framework on top of
+cloud code changing how we interact with
+
+374
+00:06:29,990 --> 00:06:30,000
+cloud code changing how we interact with
+ 
+
+375
+00:06:30,000 --> 00:06:34,629
+cloud code changing how we interact with
+it. This is kind of honestly free value,
+
+376
+00:06:34,629 --> 00:06:34,639
+it. This is kind of honestly free value,
+ 
+
+377
+00:06:34,639 --> 00:06:36,870
+it. This is kind of honestly free value,
+you know, and it's not free value in
+
+378
+00:06:36,870 --> 00:06:36,880
+you know, and it's not free value in
+ 
+
+379
+00:06:36,880 --> 00:06:38,550
+you know, and it's not free value in
+terms of like, oh, if you use Obsidian
+
+380
+00:06:38,550 --> 00:06:38,560
+terms of like, oh, if you use Obsidian
+ 
+
+381
+00:06:38,560 --> 00:06:39,990
+terms of like, oh, if you use Obsidian
+after this video, your life's going to
+
+382
+00:06:39,990 --> 00:06:40,000
+after this video, your life's going to
+ 
+
+383
+00:06:40,000 --> 00:06:41,029
+after this video, your life's going to
+change and you're going to be able to do
+
+384
+00:06:41,029 --> 00:06:41,039
+change and you're going to be able to do
+ 
+
+385
+00:06:41,039 --> 00:06:43,189
+change and you're going to be able to do
+projects you couldn't. Not really. But
+
+386
+00:06:43,189 --> 00:06:43,199
+projects you couldn't. Not really. But
+ 
+
+387
+00:06:43,199 --> 00:06:45,350
+projects you couldn't. Not really. But
+it's one of these on the margin plays
+
+388
+00:06:45,350 --> 00:06:45,360
+it's one of these on the margin plays
+ 
+
+389
+00:06:45,360 --> 00:06:46,950
+it's one of these on the margin plays
+that I think are kind of rare and that
+
+390
+00:06:46,950 --> 00:06:46,960
+that I think are kind of rare and that
+ 
+
+391
+00:06:46,960 --> 00:06:48,870
+that I think are kind of rare and that
+like it's almost just like a straight
+
+392
+00:06:48,870 --> 00:06:48,880
+like it's almost just like a straight
+ 
+
+393
+00:06:48,880 --> 00:06:51,110
+like it's almost just like a straight
+plus with no negatives, right? Someone's
+
+394
+00:06:51,110 --> 00:06:51,120
+plus with no negatives, right? Someone's
+ 
+
+395
+00:06:51,120 --> 00:06:52,309
+plus with no negatives, right? Someone's
+walking down the street, they're just
+
+396
+00:06:52,309 --> 00:06:52,319
+walking down the street, they're just
+ 
+
+397
+00:06:52,319 --> 00:06:53,749
+walking down the street, they're just
+going to hand you 20 bucks. Are you
+
+398
+00:06:53,749 --> 00:06:53,759
+going to hand you 20 bucks. Are you
+ 
+
+399
+00:06:53,759 --> 00:06:54,870
+going to hand you 20 bucks. Are you
+going to say no because it's not a h
+
+400
+00:06:54,870 --> 00:06:54,880
+going to say no because it's not a h
+ 
+
+401
+00:06:54,880 --> 00:06:56,390
+going to say no because it's not a h
+100red bucks? Absolutely not. You're
+
+402
+00:06:56,390 --> 00:06:56,400
+100red bucks? Absolutely not. You're
+ 
+
+403
+00:06:56,400 --> 00:06:59,110
+100red bucks? Absolutely not. You're
+going to take it. So, this video is
+
+404
+00:06:59,110 --> 00:06:59,120
+going to take it. So, this video is
+ 
+
+405
+00:06:59,120 --> 00:07:01,189
+going to take it. So, this video is
+about how do we take that $20 and use
+
+406
+00:07:01,189 --> 00:07:01,199
+about how do we take that $20 and use
+ 
+
+407
+00:07:01,199 --> 00:07:02,790
+about how do we take that $20 and use
+it? Now, to use it, we first need to
+
+408
+00:07:02,790 --> 00:07:02,800
+it? Now, to use it, we first need to
+ 
+
+409
+00:07:02,800 --> 00:07:03,749
+it? Now, to use it, we first need to
+download it. So, you're just going to
+
+410
+00:07:03,749 --> 00:07:03,759
+download it. So, you're just going to
+ 
+
+411
+00:07:03,759 --> 00:07:06,070
+download it. So, you're just going to
+head to obsidian.md or just Google
+
+412
+00:07:06,070 --> 00:07:06,080
+head to obsidian.md or just Google
+ 
+
+413
+00:07:06,080 --> 00:07:08,390
+head to obsidian.md or just Google
+Obsidian. Go to the download page and
+
+414
+00:07:08,390 --> 00:07:08,400
+Obsidian. Go to the download page and
+ 
+
+415
+00:07:08,400 --> 00:07:10,469
+Obsidian. Go to the download page and
+download and run through the installer.
+
+416
+00:07:10,469 --> 00:07:10,479
+download and run through the installer.
+ 
+
+417
+00:07:10,479 --> 00:07:12,070
+download and run through the installer.
+It's going to ask you a couple question.
+
+418
+00:07:12,070 --> 00:07:12,080
+It's going to ask you a couple question.
+ 
+
+419
+00:07:12,080 --> 00:07:13,350
+It's going to ask you a couple question.
+And it's going to ask you where do you
+
+420
+00:07:13,350 --> 00:07:13,360
+And it's going to ask you where do you
+ 
+
+421
+00:07:13,360 --> 00:07:15,670
+And it's going to ask you where do you
+want your vault and what do you want to
+
+422
+00:07:15,670 --> 00:07:15,680
+want your vault and what do you want to
+ 
+
+423
+00:07:15,680 --> 00:07:18,550
+want your vault and what do you want to
+call it. So the vault is just a folder
+
+424
+00:07:18,550 --> 00:07:18,560
+call it. So the vault is just a folder
+ 
+
+425
+00:07:18,560 --> 00:07:20,309
+call it. So the vault is just a folder
+where essentially the Obsidian
+
+426
+00:07:20,309 --> 00:07:20,319
+where essentially the Obsidian
+ 
+
+427
+00:07:20,319 --> 00:07:21,589
+where essentially the Obsidian
+orchestration is going to live. The
+
+428
+00:07:21,589 --> 00:07:21,599
+orchestration is going to live. The
+ 
+
+429
+00:07:21,599 --> 00:07:22,790
+orchestration is going to live. The
+folder could be anywhere on your
+
+430
+00:07:22,790 --> 00:07:22,800
+folder could be anywhere on your
+ 
+
+431
+00:07:22,800 --> 00:07:24,710
+folder could be anywhere on your
+computer. It could be on your desktop.
+
+432
+00:07:24,710 --> 00:07:24,720
+computer. It could be on your desktop.
+ 
+
+433
+00:07:24,720 --> 00:07:27,110
+computer. It could be on your desktop.
+So you just have the folder. It's known
+
+434
+00:07:27,110 --> 00:07:27,120
+So you just have the folder. It's known
+ 
+
+435
+00:07:27,120 --> 00:07:28,790
+So you just have the folder. It's known
+as Obsidian's vault, but you don't have
+
+436
+00:07:28,790 --> 00:07:28,800
+as Obsidian's vault, but you don't have
+ 
+
+437
+00:07:28,800 --> 00:07:30,629
+as Obsidian's vault, but you don't have
+to call it the vault for this demo. It
+
+438
+00:07:30,629 --> 00:07:30,639
+to call it the vault for this demo. It
+ 
+
+439
+00:07:30,639 --> 00:07:32,230
+to call it the vault for this demo. It
+is literally called the vault. And
+
+440
+00:07:32,230 --> 00:07:32,240
+is literally called the vault. And
+ 
+
+441
+00:07:32,240 --> 00:07:33,909
+is literally called the vault. And
+inside of that folder, that's where all
+
+442
+00:07:33,909 --> 00:07:33,919
+inside of that folder, that's where all
+ 
+
+443
+00:07:33,919 --> 00:07:36,309
+inside of that folder, that's where all
+our markdown files are going to be. So
+
+444
+00:07:36,309 --> 00:07:36,319
+our markdown files are going to be. So
+ 
+
+445
+00:07:36,319 --> 00:07:38,550
+our markdown files are going to be. So
+the vault could have subfolders like,
+
+446
+00:07:38,550 --> 00:07:38,560
+the vault could have subfolders like,
+ 
+
+447
+00:07:38,560 --> 00:07:40,870
+the vault could have subfolders like,
+you know, daily notes, research, and
+
+448
+00:07:40,870 --> 00:07:40,880
+you know, daily notes, research, and
+ 
+
+449
+00:07:40,880 --> 00:07:44,469
+you know, daily notes, research, and
+projects. And inside daily notes are the
+
+450
+00:07:44,469 --> 00:07:44,479
+projects. And inside daily notes are the
+ 
+
+451
+00:07:44,479 --> 00:07:46,870
+projects. And inside daily notes are the
+markdown files, right? All of the daily
+
+452
+00:07:46,870 --> 00:07:46,880
+markdown files, right? All of the daily
+ 
+
+453
+00:07:46,880 --> 00:07:48,950
+markdown files, right? All of the daily
+notes for that particular day as just
+
+454
+00:07:48,950 --> 00:07:48,960
+notes for that particular day as just
+ 
+
+455
+00:07:48,960 --> 00:07:51,110
+notes for that particular day as just
+text documents. And like you saw, if I
+
+456
+00:07:51,110 --> 00:07:51,120
+text documents. And like you saw, if I
+ 
+
+457
+00:07:51,120 --> 00:07:53,350
+text documents. And like you saw, if I
+click on those text documents, I have
+
+458
+00:07:53,350 --> 00:07:53,360
+click on those text documents, I have
+ 
+
+459
+00:07:53,360 --> 00:07:56,390
+click on those text documents, I have
+the Obsidian document. When I say
+
+460
+00:07:56,390 --> 00:07:56,400
+the Obsidian document. When I say
+ 
+
+461
+00:07:56,400 --> 00:07:57,430
+the Obsidian document. When I say
+Obsidian document, I'm talking about
+
+462
+00:07:57,430 --> 00:07:57,440
+Obsidian document, I'm talking about
+ 
+
+463
+00:07:57,440 --> 00:07:59,189
+Obsidian document, I'm talking about
+this, right? We can look at this inside
+
+464
+00:07:59,189 --> 00:07:59,199
+this, right? We can look at this inside
+ 
+
+465
+00:07:59,199 --> 00:08:00,790
+this, right? We can look at this inside
+of something like our terminal or we can
+
+466
+00:08:00,790 --> 00:08:00,800
+of something like our terminal or we can
+ 
+
+467
+00:08:00,800 --> 00:08:01,990
+of something like our terminal or we can
+actually open up Obsidian and look at
+
+468
+00:08:01,990 --> 00:08:02,000
+actually open up Obsidian and look at
+ 
+
+469
+00:08:02,000 --> 00:08:03,670
+actually open up Obsidian and look at
+it. Same thing. So, after you download
+
+470
+00:08:03,670 --> 00:08:03,680
+it. Same thing. So, after you download
+ 
+
+471
+00:08:03,680 --> 00:08:05,430
+it. Same thing. So, after you download
+it, just decide where you want the vault
+
+472
+00:08:05,430 --> 00:08:05,440
+it, just decide where you want the vault
+ 
+
+473
+00:08:05,440 --> 00:08:07,029
+it, just decide where you want the vault
+to live. I suggest putting it wherever
+
+474
+00:08:07,029 --> 00:08:07,039
+to live. I suggest putting it wherever
+ 
+
+475
+00:08:07,039 --> 00:08:08,390
+to live. I suggest putting it wherever
+you put most of your Claude code
+
+476
+00:08:08,390 --> 00:08:08,400
+you put most of your Claude code
+ 
+
+477
+00:08:08,400 --> 00:08:11,029
+you put most of your Claude code
+projects. And now to have this
+
+478
+00:08:11,029 --> 00:08:11,039
+projects. And now to have this
+ 
+
+479
+00:08:11,039 --> 00:08:13,029
+projects. And now to have this
+relationship with Obsidian Cloud Code,
+
+480
+00:08:13,029 --> 00:08:13,039
+relationship with Obsidian Cloud Code,
+ 
+
+481
+00:08:13,039 --> 00:08:15,350
+relationship with Obsidian Cloud Code,
+you will just start a new project inside
+
+482
+00:08:15,350 --> 00:08:15,360
+you will just start a new project inside
+ 
+
+483
+00:08:15,360 --> 00:08:16,710
+you will just start a new project inside
+of that vault. Once you create the
+
+484
+00:08:16,710 --> 00:08:16,720
+of that vault. Once you create the
+ 
+
+485
+00:08:16,720 --> 00:08:18,309
+of that vault. Once you create the
+vault, all you have to do is open your
+
+486
+00:08:18,309 --> 00:08:18,319
+vault, all you have to do is open your
+ 
+
+487
+00:08:18,319 --> 00:08:21,029
+vault, all you have to do is open your
+terminal, navigate to a folder inside
+
+488
+00:08:21,029 --> 00:08:21,039
+terminal, navigate to a folder inside
+ 
+
+489
+00:08:21,039 --> 00:08:22,309
+terminal, navigate to a folder inside
+the vault, or just be in the vault
+
+490
+00:08:22,309 --> 00:08:22,319
+the vault, or just be in the vault
+ 
+
+491
+00:08:22,319 --> 00:08:24,230
+the vault, or just be in the vault
+itself and start up cloud code. You can
+
+492
+00:08:24,230 --> 00:08:24,240
+itself and start up cloud code. You can
+ 
+
+493
+00:08:24,240 --> 00:08:26,469
+itself and start up cloud code. You can
+see here I'm inside mine, users chase
+
+494
+00:08:26,469 --> 00:08:26,479
+see here I'm inside mine, users chase
+ 
+
+495
+00:08:26,479 --> 00:08:28,629
+see here I'm inside mine, users chase
+the vault, and over here on the left
+
+496
+00:08:28,629 --> 00:08:28,639
+the vault, and over here on the left
+ 
+
+497
+00:08:28,639 --> 00:08:31,990
+the vault, and over here on the left
+hand side, you can see all the files and
+
+498
+00:08:31,990 --> 00:08:32,000
+hand side, you can see all the files and
+ 
+
+499
+00:08:32,000 --> 00:08:33,350
+hand side, you can see all the files and
+folders. And this is my personal thing,
+
+500
+00:08:33,350 --> 00:08:33,360
+folders. And this is my personal thing,
+ 
+
+501
+00:08:33,360 --> 00:08:34,949
+folders. And this is my personal thing,
+and most of it's related to content
+
+502
+00:08:34,949 --> 00:08:34,959
+and most of it's related to content
+ 
+
+503
+00:08:34,959 --> 00:08:36,790
+and most of it's related to content
+creation. So you can see stuff for
+
+504
+00:08:36,790 --> 00:08:36,800
+creation. So you can see stuff for
+ 
+
+505
+00:08:36,800 --> 00:08:38,630
+creation. So you can see stuff for
+research, for projects, for people,
+
+506
+00:08:38,630 --> 00:08:38,640
+research, for projects, for people,
+ 
+
+507
+00:08:38,640 --> 00:08:41,029
+research, for projects, for people,
+inbox, daily notes, etc., etc. Now, when
+
+508
+00:08:41,029 --> 00:08:41,039
+inbox, daily notes, etc., etc. Now, when
+ 
+
+509
+00:08:41,039 --> 00:08:43,190
+inbox, daily notes, etc., etc. Now, when
+I look at these files inside of cursor,
+
+510
+00:08:43,190 --> 00:08:43,200
+I look at these files inside of cursor,
+ 
+
+511
+00:08:43,200 --> 00:08:44,550
+I look at these files inside of cursor,
+it looks just like a normal markdown
+
+512
+00:08:44,550 --> 00:08:44,560
+it looks just like a normal markdown
+ 
+
+513
+00:08:44,560 --> 00:08:46,150
+it looks just like a normal markdown
+file because that's all it is. Now,
+
+514
+00:08:46,150 --> 00:08:46,160
+file because that's all it is. Now,
+ 
+
+515
+00:08:46,160 --> 00:08:47,990
+file because that's all it is. Now,
+there's certain conventions that
+
+516
+00:08:47,990 --> 00:08:48,000
+there's certain conventions that
+ 
+
+517
+00:08:48,000 --> 00:08:49,670
+there's certain conventions that
+Obsidian follows, but guess who knows
+
+518
+00:08:49,670 --> 00:08:49,680
+Obsidian follows, but guess who knows
+ 
+
+519
+00:08:49,680 --> 00:08:52,070
+Obsidian follows, but guess who knows
+these conventions? Claude Code knows
+
+520
+00:08:52,070 --> 00:08:52,080
+these conventions? Claude Code knows
+ 
+
+521
+00:08:52,080 --> 00:08:53,670
+these conventions? Claude Code knows
+these conventions. So when you're
+
+522
+00:08:53,670 --> 00:08:53,680
+these conventions. So when you're
+ 
+
+523
+00:08:53,680 --> 00:08:55,590
+these conventions. So when you're
+working inside the vault, all you have
+
+524
+00:08:55,590 --> 00:08:55,600
+working inside the vault, all you have
+ 
+
+525
+00:08:55,600 --> 00:08:58,550
+working inside the vault, all you have
+to do is tellclaude code inside of its
+
+526
+00:08:58,550 --> 00:08:58,560
+to do is tellclaude code inside of its
+ 
+
+527
+00:08:58,560 --> 00:09:02,389
+to do is tellclaude code inside of its
+claw.md file and say, "Hey, all markdown
+
+528
+00:09:02,389 --> 00:09:02,399
+claw.md file and say, "Hey, all markdown
+ 
+
+529
+00:09:02,399 --> 00:09:04,310
+claw.md file and say, "Hey, all markdown
+files need to follow obsidian
+
+530
+00:09:04,310 --> 00:09:04,320
+files need to follow obsidian
+ 
+
+531
+00:09:04,320 --> 00:09:06,470
+files need to follow obsidian
+conventions." Furthermore, there are a
+
+532
+00:09:06,470 --> 00:09:06,480
+conventions." Furthermore, there are a
+ 
+
+533
+00:09:06,480 --> 00:09:08,790
+conventions." Furthermore, there are a
+million and one repos out there that
+
+534
+00:09:08,790 --> 00:09:08,800
+million and one repos out there that
+ 
+
+535
+00:09:08,800 --> 00:09:10,790
+million and one repos out there that
+have to do with creating Obsidian skills
+
+536
+00:09:10,790 --> 00:09:10,800
+have to do with creating Obsidian skills
+ 
+
+537
+00:09:10,800 --> 00:09:12,310
+have to do with creating Obsidian skills
+for Cloud Code. So, if you want to take
+
+538
+00:09:12,310 --> 00:09:12,320
+for Cloud Code. So, if you want to take
+ 
+
+539
+00:09:12,320 --> 00:09:14,710
+for Cloud Code. So, if you want to take
+it a step further and give Claude code
+
+540
+00:09:14,710 --> 00:09:14,720
+it a step further and give Claude code
+ 
+
+541
+00:09:14,720 --> 00:09:17,670
+it a step further and give Claude code
+specific Obsidian skills, just Google
+
+542
+00:09:17,670 --> 00:09:17,680
+specific Obsidian skills, just Google
+ 
+
+543
+00:09:17,680 --> 00:09:20,389
+specific Obsidian skills, just Google
+Obsidian skills repos or literally just
+
+544
+00:09:20,389 --> 00:09:20,399
+Obsidian skills repos or literally just
+ 
+
+545
+00:09:20,399 --> 00:09:22,389
+Obsidian skills repos or literally just
+tell Claude Code, "Hey, uh, go ahead and
+
+546
+00:09:22,389 --> 00:09:22,399
+tell Claude Code, "Hey, uh, go ahead and
+ 
+
+547
+00:09:22,399 --> 00:09:25,030
+tell Claude Code, "Hey, uh, go ahead and
+do a web search on the best practices
+
+548
+00:09:25,030 --> 00:09:25,040
+do a web search on the best practices
+ 
+
+549
+00:09:25,040 --> 00:09:27,590
+do a web search on the best practices
+for Claude code and Obsidian skills and
+
+550
+00:09:27,590 --> 00:09:27,600
+for Claude code and Obsidian skills and
+ 
+
+551
+00:09:27,600 --> 00:09:29,750
+for Claude code and Obsidian skills and
+create those, right? That easy." So, now
+
+552
+00:09:29,750 --> 00:09:29,760
+create those, right? That easy." So, now
+ 
+
+553
+00:09:29,760 --> 00:09:31,509
+create those, right? That easy." So, now
+let's talk about how we can use this
+
+554
+00:09:31,509 --> 00:09:31,519
+let's talk about how we can use this
+ 
+
+555
+00:09:31,519 --> 00:09:33,750
+let's talk about how we can use this
+markdown file setup and this sort of
+
+556
+00:09:33,750 --> 00:09:33,760
+markdown file setup and this sort of
+ 
+
+557
+00:09:33,760 --> 00:09:35,590
+markdown file setup and this sort of
+memory infrastructure to actually
+
+558
+00:09:35,590 --> 00:09:35,600
+memory infrastructure to actually
+ 
+
+559
+00:09:35,600 --> 00:09:37,350
+memory infrastructure to actually
+improve Claude code, especially from the
+
+560
+00:09:37,350 --> 00:09:37,360
+improve Claude code, especially from the
+ 
+
+561
+00:09:37,360 --> 00:09:39,750
+improve Claude code, especially from the
+position of a personal assistant. And
+
+562
+00:09:39,750 --> 00:09:39,760
+position of a personal assistant. And
+ 
+
+563
+00:09:39,760 --> 00:09:41,190
+position of a personal assistant. And
+the way we're going to do that is
+
+564
+00:09:41,190 --> 00:09:41,200
+the way we're going to do that is
+ 
+
+565
+00:09:41,200 --> 00:09:43,509
+the way we're going to do that is
+through the claude.md file. And that's
+
+566
+00:09:43,509 --> 00:09:43,519
+through the claude.md file. And that's
+ 
+
+567
+00:09:43,519 --> 00:09:45,350
+through the claude.md file. And that's
+what you're looking at right here. So
+
+568
+00:09:45,350 --> 00:09:45,360
+what you're looking at right here. So
+ 
+
+569
+00:09:45,360 --> 00:09:47,430
+what you're looking at right here. So
+remember the claude.md file
+
+570
+00:09:47,430 --> 00:09:47,440
+remember the claude.md file
+ 
+
+571
+00:09:47,440 --> 00:09:50,070
+remember the claude.md file
+traditionally is a file that you use in
+
+572
+00:09:50,070 --> 00:09:50,080
+traditionally is a file that you use in
+ 
+
+573
+00:09:50,080 --> 00:09:51,910
+traditionally is a file that you use in
+your project that essentially lists all
+
+574
+00:09:51,910 --> 00:09:51,920
+your project that essentially lists all
+ 
+
+575
+00:09:51,920 --> 00:09:53,430
+your project that essentially lists all
+your conventions. You also have the
+
+576
+00:09:53,430 --> 00:09:53,440
+your conventions. You also have the
+ 
+
+577
+00:09:53,440 --> 00:09:55,750
+your conventions. You also have the
+ability to do something like slashinit,
+
+578
+00:09:55,750 --> 00:09:55,760
+ability to do something like slashinit,
+ 
+
+579
+00:09:55,760 --> 00:09:57,590
+ability to do something like slashinit,
+right? And claude will automatically go
+
+580
+00:09:57,590 --> 00:09:57,600
+right? And claude will automatically go
+ 
+
+581
+00:09:57,600 --> 00:09:59,910
+right? And claude will automatically go
+through your entire codebase, figure out
+
+582
+00:09:59,910 --> 00:09:59,920
+through your entire codebase, figure out
+ 
+
+583
+00:09:59,920 --> 00:10:01,829
+through your entire codebase, figure out
+what you're doing and why, and put it in
+
+584
+00:10:01,829 --> 00:10:01,839
+what you're doing and why, and put it in
+ 
+
+585
+00:10:01,839 --> 00:10:04,710
+what you're doing and why, and put it in
+this file, this claw.md. It almost acts
+
+586
+00:10:04,710 --> 00:10:04,720
+this file, this claw.md. It almost acts
+ 
+
+587
+00:10:04,720 --> 00:10:07,030
+this file, this claw.md. It almost acts
+like a system message in the sense that
+
+588
+00:10:07,030 --> 00:10:07,040
+like a system message in the sense that
+ 
+
+589
+00:10:07,040 --> 00:10:08,550
+like a system message in the sense that
+claude code is always going to be
+
+590
+00:10:08,550 --> 00:10:08,560
+claude code is always going to be
+ 
+
+591
+00:10:08,560 --> 00:10:10,550
+claude code is always going to be
+looking at this right to make sure it's
+
+592
+00:10:10,550 --> 00:10:10,560
+looking at this right to make sure it's
+ 
+
+593
+00:10:10,560 --> 00:10:13,990
+looking at this right to make sure it's
+doing what you say. Now recently,
+
+594
+00:10:13,990 --> 00:10:14,000
+doing what you say. Now recently,
+ 
+
+595
+00:10:14,000 --> 00:10:16,630
+doing what you say. Now recently,
+relatively le recently, there has been a
+
+596
+00:10:16,630 --> 00:10:16,640
+relatively le recently, there has been a
+ 
+
+597
+00:10:16,640 --> 00:10:19,910
+relatively le recently, there has been a
+big push against things like claw.md
+
+598
+00:10:19,910 --> 00:10:19,920
+big push against things like claw.md
+ 
+
+599
+00:10:19,920 --> 00:10:22,550
+big push against things like claw.md
+files and slashinit in general. Now this
+
+600
+00:10:22,550 --> 00:10:22,560
+files and slashinit in general. Now this
+ 
+
+601
+00:10:22,560 --> 00:10:25,269
+files and slashinit in general. Now this
+is in response to this study that came
+
+602
+00:10:25,269 --> 00:10:25,279
+is in response to this study that came
+ 
+
+603
+00:10:25,279 --> 00:10:27,430
+is in response to this study that came
+out last month called evaluating
+
+604
+00:10:27,430 --> 00:10:27,440
+out last month called evaluating
+ 
+
+605
+00:10:27,440 --> 00:10:30,630
+out last month called evaluating
+agents.mmd. Are repository level context
+
+606
+00:10:30,630 --> 00:10:30,640
+agents.mmd. Are repository level context
+ 
+
+607
+00:10:30,640 --> 00:10:32,550
+agents.mmd. Are repository level context
+files helpful for coding agents? I'll
+
+608
+00:10:32,550 --> 00:10:32,560
+files helpful for coding agents? I'll
+ 
+
+609
+00:10:32,560 --> 00:10:34,310
+files helpful for coding agents? I'll
+put a link to this down below. The long
+
+610
+00:10:34,310 --> 00:10:34,320
+put a link to this down below. The long
+ 
+
+611
+00:10:34,320 --> 00:10:36,949
+put a link to this down below. The long
+and short of it is is that this study
+
+612
+00:10:36,949 --> 00:10:36,959
+and short of it is is that this study
+ 
+
+613
+00:10:36,959 --> 00:10:38,870
+and short of it is is that this study
+pretty much said that using stuff like
+
+614
+00:10:38,870 --> 00:10:38,880
+pretty much said that using stuff like
+ 
+
+615
+00:10:38,880 --> 00:10:41,990
+pretty much said that using stuff like
+Claude MD, these like system message
+
+616
+00:10:41,990 --> 00:10:42,000
+Claude MD, these like system message
+ 
+
+617
+00:10:42,000 --> 00:10:43,829
+Claude MD, these like system message
+add-ons that are supposed to enforce
+
+618
+00:10:43,829 --> 00:10:43,839
+add-ons that are supposed to enforce
+ 
+
+619
+00:10:43,839 --> 00:10:45,990
+add-ons that are supposed to enforce
+particular conventions are actually a
+
+620
+00:10:45,990 --> 00:10:46,000
+particular conventions are actually a
+ 
+
+621
+00:10:46,000 --> 00:10:48,710
+particular conventions are actually a
+net negative and they hurt the AI
+
+622
+00:10:48,710 --> 00:10:48,720
+net negative and they hurt the AI
+ 
+
+623
+00:10:48,720 --> 00:10:51,430
+net negative and they hurt the AI
+system. The reason for that is is often
+
+624
+00:10:51,430 --> 00:10:51,440
+system. The reason for that is is often
+ 
+
+625
+00:10:51,440 --> 00:10:54,550
+system. The reason for that is is often
+times these conventions don't make sense
+
+626
+00:10:54,550 --> 00:10:54,560
+times these conventions don't make sense
+ 
+
+627
+00:10:54,560 --> 00:10:57,990
+times these conventions don't make sense
+with how we actually create projects,
+
+628
+00:10:57,990 --> 00:10:58,000
+with how we actually create projects,
+ 
+
+629
+00:10:58,000 --> 00:10:59,350
+with how we actually create projects,
+right? oftentimes we're doing like the
+
+630
+00:10:59,350 --> 00:10:59,360
+right? oftentimes we're doing like the
+ 
+
+631
+00:10:59,360 --> 00:11:01,030
+right? oftentimes we're doing like the
+UI in one section and the back end in
+
+632
+00:11:01,030 --> 00:11:01,040
+UI in one section and the back end in
+ 
+
+633
+00:11:01,040 --> 00:11:02,389
+UI in one section and the back end in
+another section, the authentication in
+
+634
+00:11:02,389 --> 00:11:02,399
+another section, the authentication in
+ 
+
+635
+00:11:02,399 --> 00:11:03,590
+another section, the authentication in
+another place, yet it's constantly
+
+636
+00:11:03,590 --> 00:11:03,600
+another place, yet it's constantly
+ 
+
+637
+00:11:03,600 --> 00:11:06,470
+another place, yet it's constantly
+bringing in all the conventions. All
+
+638
+00:11:06,470 --> 00:11:06,480
+bringing in all the conventions. All
+ 
+
+639
+00:11:06,480 --> 00:11:08,630
+bringing in all the conventions. All
+that to say is a lot of people are
+
+640
+00:11:08,630 --> 00:11:08,640
+that to say is a lot of people are
+ 
+
+641
+00:11:08,640 --> 00:11:11,829
+that to say is a lot of people are
+saying don't use CloudMD. However, in
+
+642
+00:11:11,829 --> 00:11:11,839
+saying don't use CloudMD. However, in
+ 
+
+643
+00:11:11,839 --> 00:11:13,750
+saying don't use CloudMD. However, in
+the context of a personal assistant
+
+644
+00:11:13,750 --> 00:11:13,760
+the context of a personal assistant
+ 
+
+645
+00:11:13,760 --> 00:11:15,670
+the context of a personal assistant
+where our conventions don't have to do
+
+646
+00:11:15,670 --> 00:11:15,680
+where our conventions don't have to do
+ 
+
+647
+00:11:15,680 --> 00:11:17,990
+where our conventions don't have to do
+with code, they're conventions about how
+
+648
+00:11:17,990 --> 00:11:18,000
+with code, they're conventions about how
+ 
+
+649
+00:11:18,000 --> 00:11:20,710
+with code, they're conventions about how
+we think and conventions about how I
+
+650
+00:11:20,710 --> 00:11:20,720
+we think and conventions about how I
+ 
+
+651
+00:11:20,720 --> 00:11:23,110
+we think and conventions about how I
+want you to write the markdown files in
+
+652
+00:11:23,110 --> 00:11:23,120
+want you to write the markdown files in
+ 
+
+653
+00:11:23,120 --> 00:11:26,150
+want you to write the markdown files in
+relation to Obsidian. CloudMD is perfect
+
+654
+00:11:26,150 --> 00:11:26,160
+relation to Obsidian. CloudMD is perfect
+ 
+
+655
+00:11:26,160 --> 00:11:28,630
+relation to Obsidian. CloudMD is perfect
+for that, right? CloudMD is perfect for
+
+656
+00:11:28,630 --> 00:11:28,640
+for that, right? CloudMD is perfect for
+ 
+
+657
+00:11:28,640 --> 00:11:30,550
+for that, right? CloudMD is perfect for
+that. And one of the ways Obsidian
+
+658
+00:11:30,550 --> 00:11:30,560
+that. And one of the ways Obsidian
+ 
+
+659
+00:11:30,560 --> 00:11:33,269
+that. And one of the ways Obsidian
+allows us to improve this is because all
+
+660
+00:11:33,269 --> 00:11:33,279
+allows us to improve this is because all
+ 
+
+661
+00:11:33,279 --> 00:11:36,069
+allows us to improve this is because all
+of these files are already organized. It
+
+662
+00:11:36,069 --> 00:11:36,079
+of these files are already organized. It
+ 
+
+663
+00:11:36,079 --> 00:11:39,350
+of these files are already organized. It
+is really easy to turn this claw.md file
+
+664
+00:11:39,350 --> 00:11:39,360
+is really easy to turn this claw.md file
+ 
+
+665
+00:11:39,360 --> 00:11:42,069
+is really easy to turn this claw.md file
+into a living breathing document. What
+
+666
+00:11:42,069 --> 00:11:42,079
+into a living breathing document. What
+ 
+
+667
+00:11:42,079 --> 00:11:44,790
+into a living breathing document. What
+you see here is a few weeks of
+
+668
+00:11:44,790 --> 00:11:44,800
+you see here is a few weeks of
+ 
+
+669
+00:11:44,800 --> 00:11:46,550
+you see here is a few weeks of
+essentially using Obsidian and Claude
+
+670
+00:11:46,550 --> 00:11:46,560
+essentially using Obsidian and Claude
+ 
+
+671
+00:11:46,560 --> 00:11:48,150
+essentially using Obsidian and Claude
+code. I am by no means an Obsidian
+
+672
+00:11:48,150 --> 00:11:48,160
+code. I am by no means an Obsidian
+ 
+
+673
+00:11:48,160 --> 00:11:49,269
+code. I am by no means an Obsidian
+expert. I've not been using this for
+
+674
+00:11:49,269 --> 00:11:49,279
+expert. I've not been using this for
+ 
+
+675
+00:11:49,279 --> 00:11:51,990
+expert. I've not been using this for
+months and months and months. However, 3
+
+676
+00:11:51,990 --> 00:11:52,000
+months and months and months. However, 3
+ 
+
+677
+00:11:52,000 --> 00:11:53,509
+months and months and months. However, 3
+months from now, 6 months from now, 9
+
+678
+00:11:53,509 --> 00:11:53,519
+months from now, 6 months from now, 9
+ 
+
+679
+00:11:53,519 --> 00:11:54,710
+months from now, 6 months from now, 9
+months from now, or just like a month
+
+680
+00:11:54,710 --> 00:11:54,720
+months from now, or just like a month
+ 
+
+681
+00:11:54,720 --> 00:11:56,630
+months from now, or just like a month
+from now, as I continue to add on to
+
+682
+00:11:56,630 --> 00:11:56,640
+from now, as I continue to add on to
+ 
+
+683
+00:11:56,640 --> 00:11:58,710
+from now, as I continue to add on to
+this, one of the great Obsidian Claude
+
+684
+00:11:58,710 --> 00:11:58,720
+this, one of the great Obsidian Claude
+ 
+
+685
+00:11:58,720 --> 00:12:01,190
+this, one of the great Obsidian Claude
+code plays you can do is say, "Hey, take
+
+686
+00:12:01,190 --> 00:12:01,200
+code plays you can do is say, "Hey, take
+ 
+
+687
+00:12:01,200 --> 00:12:03,269
+code plays you can do is say, "Hey, take
+a look at all our notes. Compare it to
+
+688
+00:12:03,269 --> 00:12:03,279
+a look at all our notes. Compare it to
+ 
+
+689
+00:12:03,279 --> 00:12:06,389
+a look at all our notes. Compare it to
+our Claude MD file. Now, make them kind
+
+690
+00:12:06,389 --> 00:12:06,399
+our Claude MD file. Now, make them kind
+ 
+
+691
+00:12:06,399 --> 00:12:08,389
+our Claude MD file. Now, make them kind
+of match and improve the conventions."
+
+692
+00:12:08,389 --> 00:12:08,399
+of match and improve the conventions."
+ 
+
+693
+00:12:08,399 --> 00:12:10,470
+of match and improve the conventions."
+The idea being that your personal
+
+694
+00:12:10,470 --> 00:12:10,480
+The idea being that your personal
+ 
+
+695
+00:12:10,480 --> 00:12:12,790
+The idea being that your personal
+assistant Claude code continues to
+
+696
+00:12:12,790 --> 00:12:12,800
+assistant Claude code continues to
+ 
+
+697
+00:12:12,800 --> 00:12:15,670
+assistant Claude code continues to
+become closer and closer to this, you
+
+698
+00:12:15,670 --> 00:12:15,680
+become closer and closer to this, you
+ 
+
+699
+00:12:15,680 --> 00:12:18,550
+become closer and closer to this, you
+know, Jarvis type character you want by
+
+700
+00:12:18,550 --> 00:12:18,560
+know, Jarvis type character you want by
+ 
+
+701
+00:12:18,560 --> 00:12:20,629
+know, Jarvis type character you want by
+virtue of having more information about
+
+702
+00:12:20,629 --> 00:12:20,639
+virtue of having more information about
+ 
+
+703
+00:12:20,639 --> 00:12:23,190
+virtue of having more information about
+you. And in essence, what we get is we
+
+704
+00:12:23,190 --> 00:12:23,200
+you. And in essence, what we get is we
+ 
+
+705
+00:12:23,200 --> 00:12:25,509
+you. And in essence, what we get is we
+get this brain within a brain, right?
+
+706
+00:12:25,509 --> 00:12:25,519
+get this brain within a brain, right?
+ 
+
+707
+00:12:25,519 --> 00:12:27,509
+get this brain within a brain, right?
+This entire vault system is essentially
+
+708
+00:12:27,509 --> 00:12:27,519
+This entire vault system is essentially
+ 
+
+709
+00:12:27,519 --> 00:12:29,670
+This entire vault system is essentially
+your second brain, right? But this
+
+710
+00:12:29,670 --> 00:12:29,680
+your second brain, right? But this
+ 
+
+711
+00:12:29,680 --> 00:12:32,949
+your second brain, right? But this
+claude MD is like, you know, what
+
+712
+00:12:32,949 --> 00:12:32,959
+claude MD is like, you know, what
+ 
+
+713
+00:12:32,959 --> 00:12:34,150
+claude MD is like, you know, what
+everyone call like the frontal cortex.
+
+714
+00:12:34,150 --> 00:12:34,160
+everyone call like the frontal cortex.
+ 
+
+715
+00:12:34,160 --> 00:12:35,110
+everyone call like the frontal cortex.
+It's like this is the one that's
+
+716
+00:12:35,110 --> 00:12:35,120
+It's like this is the one that's
+ 
+
+717
+00:12:35,120 --> 00:12:36,629
+It's like this is the one that's
+actually making the decisions and it's
+
+718
+00:12:36,629 --> 00:12:36,639
+actually making the decisions and it's
+ 
+
+719
+00:12:36,639 --> 00:12:40,629
+actually making the decisions and it's
+distilled our thinking template into one
+
+720
+00:12:40,629 --> 00:12:40,639
+distilled our thinking template into one
+ 
+
+721
+00:12:40,639 --> 00:12:41,910
+distilled our thinking template into one
+file and it can always take a look at
+
+722
+00:12:41,910 --> 00:12:41,920
+file and it can always take a look at
+ 
+
+723
+00:12:41,920 --> 00:12:43,990
+file and it can always take a look at
+the details as needed and this is the
+
+724
+00:12:43,990 --> 00:12:44,000
+the details as needed and this is the
+ 
+
+725
+00:12:44,000 --> 00:12:45,990
+the details as needed and this is the
+sort of way you should approach the
+
+726
+00:12:45,990 --> 00:12:46,000
+sort of way you should approach the
+ 
+
+727
+00:12:46,000 --> 00:12:48,949
+sort of way you should approach the
+clawed code and Obsidian relationship.
+
+728
+00:12:48,949 --> 00:12:48,959
+clawed code and Obsidian relationship.
+ 
+
+729
+00:12:48,959 --> 00:12:51,670
+clawed code and Obsidian relationship.
+Now how you ultimately leverage all of
+
+730
+00:12:51,670 --> 00:12:51,680
+Now how you ultimately leverage all of
+ 
+
+731
+00:12:51,680 --> 00:12:53,750
+Now how you ultimately leverage all of
+this into something that is useful for
+
+732
+00:12:53,750 --> 00:12:53,760
+this into something that is useful for
+ 
+
+733
+00:12:53,760 --> 00:12:57,430
+this into something that is useful for
+you is obviously up to you. How I've
+
+734
+00:12:57,430 --> 00:12:57,440
+you is obviously up to you. How I've
+ 
+
+735
+00:12:57,440 --> 00:12:59,670
+you is obviously up to you. How I've
+been using this lately is pretty much
+
+736
+00:12:59,670 --> 00:12:59,680
+been using this lately is pretty much
+ 
+
+737
+00:12:59,680 --> 00:13:01,190
+been using this lately is pretty much
+what you saw from my last video. And if
+
+738
+00:13:01,190 --> 00:13:01,200
+what you saw from my last video. And if
+ 
+
+739
+00:13:01,200 --> 00:13:02,470
+what you saw from my last video. And if
+you haven't seen it, it was essentially
+
+740
+00:13:02,470 --> 00:13:02,480
+you haven't seen it, it was essentially
+ 
+
+741
+00:13:02,480 --> 00:13:05,269
+you haven't seen it, it was essentially
+using Claude code as a research agent on
+
+742
+00:13:05,269 --> 00:13:05,279
+using Claude code as a research agent on
+ 
+
+743
+00:13:05,279 --> 00:13:06,949
+using Claude code as a research agent on
+steroids in combination with a YouTube
+
+744
+00:13:06,949 --> 00:13:06,959
+steroids in combination with a YouTube
+ 
+
+745
+00:13:06,959 --> 00:13:09,670
+steroids in combination with a YouTube
+search skill and notebook LM. Well, what
+
+746
+00:13:09,670 --> 00:13:09,680
+search skill and notebook LM. Well, what
+ 
+
+747
+00:13:09,680 --> 00:13:10,949
+search skill and notebook LM. Well, what
+do you think I'm doing with all this
+
+748
+00:13:10,949 --> 00:13:10,959
+do you think I'm doing with all this
+ 
+
+749
+00:13:10,959 --> 00:13:12,790
+do you think I'm doing with all this
+research information I'm gathering from
+
+750
+00:13:12,790 --> 00:13:12,800
+research information I'm gathering from
+ 
+
+751
+00:13:12,800 --> 00:13:14,790
+research information I'm gathering from
+that workflow? I'm dumping it here into
+
+752
+00:13:14,790 --> 00:13:14,800
+that workflow? I'm dumping it here into
+ 
+
+753
+00:13:14,800 --> 00:13:17,430
+that workflow? I'm dumping it here into
+my second brain to continue to turn
+
+754
+00:13:17,430 --> 00:13:17,440
+my second brain to continue to turn
+ 
+
+755
+00:13:17,440 --> 00:13:19,829
+my second brain to continue to turn
+Claude code into my personal research
+
+756
+00:13:19,829 --> 00:13:19,839
+Claude code into my personal research
+ 
+
+757
+00:13:19,839 --> 00:13:22,150
+Claude code into my personal research
+content assistant. I want it to be. And
+
+758
+00:13:22,150 --> 00:13:22,160
+content assistant. I want it to be. And
+ 
+
+759
+00:13:22,160 --> 00:13:24,550
+content assistant. I want it to be. And
+in fact, tomorrow's video, at least
+
+760
+00:13:24,550 --> 00:13:24,560
+in fact, tomorrow's video, at least
+ 
+
+761
+00:13:24,560 --> 00:13:26,470
+in fact, tomorrow's video, at least
+that's the plan, is to show you exactly
+
+762
+00:13:26,470 --> 00:13:26,480
+that's the plan, is to show you exactly
+ 
+
+763
+00:13:26,480 --> 00:13:28,710
+that's the plan, is to show you exactly
+how to do that. And really what you
+
+764
+00:13:28,710 --> 00:13:28,720
+how to do that. And really what you
+ 
+
+765
+00:13:28,720 --> 00:13:30,230
+how to do that. And really what you
+should be thinking about in terms of the
+
+766
+00:13:30,230 --> 00:13:30,240
+should be thinking about in terms of the
+ 
+
+767
+00:13:30,240 --> 00:13:32,150
+should be thinking about in terms of the
+use cases is again like if you actually
+
+768
+00:13:32,150 --> 00:13:32,160
+use cases is again like if you actually
+ 
+
+769
+00:13:32,160 --> 00:13:33,430
+use cases is again like if you actually
+did have you know your version of
+
+770
+00:13:33,430 --> 00:13:33,440
+did have you know your version of
+ 
+
+771
+00:13:33,440 --> 00:13:35,190
+did have you know your version of
+Jarvis, what would it need to know and
+
+772
+00:13:35,190 --> 00:13:35,200
+Jarvis, what would it need to know and
+ 
+
+773
+00:13:35,200 --> 00:13:37,990
+Jarvis, what would it need to know and
+what would it need to do and figuring
+
+774
+00:13:37,990 --> 00:13:38,000
+what would it need to do and figuring
+ 
+
+775
+00:13:38,000 --> 00:13:40,150
+what would it need to do and figuring
+out how to execute that in this Obsidian
+
+776
+00:13:40,150 --> 00:13:40,160
+out how to execute that in this Obsidian
+ 
+
+777
+00:13:40,160 --> 00:13:41,990
+out how to execute that in this Obsidian
+Cloud Code ecosystem is where you're
+
+778
+00:13:41,990 --> 00:13:42,000
+Cloud Code ecosystem is where you're
+ 
+
+779
+00:13:42,000 --> 00:13:43,190
+Cloud Code ecosystem is where you're
+going to make your money. So this is
+
+780
+00:13:43,190 --> 00:13:43,200
+going to make your money. So this is
+ 
+
+781
+00:13:43,200 --> 00:13:44,629
+going to make your money. So this is
+where I'm going to leave you guys today.
+
+782
+00:13:44,629 --> 00:13:44,639
+where I'm going to leave you guys today.
+ 
+
+783
+00:13:44,639 --> 00:13:47,030
+where I'm going to leave you guys today.
+I hope this video and this conversation
+
+784
+00:13:47,030 --> 00:13:47,040
+I hope this video and this conversation
+ 
+
+785
+00:13:47,040 --> 00:13:49,509
+I hope this video and this conversation
+was, if nothing else, able to sort of
+
+786
+00:13:49,509 --> 00:13:49,519
+was, if nothing else, able to sort of
+ 
+
+787
+00:13:49,519 --> 00:13:51,509
+was, if nothing else, able to sort of
+shed some light on this relationship
+
+788
+00:13:51,509 --> 00:13:51,519
+shed some light on this relationship
+ 
+
+789
+00:13:51,519 --> 00:13:53,670
+shed some light on this relationship
+between all three because I think once
+
+790
+00:13:53,670 --> 00:13:53,680
+between all three because I think once
+ 
+
+791
+00:13:53,680 --> 00:13:55,350
+between all three because I think once
+you understand how they improve one
+
+792
+00:13:55,350 --> 00:13:55,360
+you understand how they improve one
+ 
+
+793
+00:13:55,360 --> 00:13:56,949
+you understand how they improve one
+another, you get a good grasp of what
+
+794
+00:13:56,949 --> 00:13:56,959
+another, you get a good grasp of what
+ 
+
+795
+00:13:56,959 --> 00:13:59,030
+another, you get a good grasp of what
+Obsidian does and does not buy you
+
+796
+00:13:59,030 --> 00:13:59,040
+Obsidian does and does not buy you
+ 
+
+797
+00:13:59,040 --> 00:14:00,310
+Obsidian does and does not buy you
+because I think the waters are still
+
+798
+00:14:00,310 --> 00:14:00,320
+because I think the waters are still
+ 
+
+799
+00:14:00,320 --> 00:14:02,790
+because I think the waters are still
+kind of murky for a lot of people. Um,
+
+800
+00:14:02,790 --> 00:14:02,800
+kind of murky for a lot of people. Um,
+ 
+
+801
+00:14:02,800 --> 00:14:05,509
+kind of murky for a lot of people. Um,
+lastly, as always, hey, if you are
+
+802
+00:14:05,509 --> 00:14:05,519
+lastly, as always, hey, if you are
+ 
+
+803
+00:14:05,519 --> 00:14:07,030
+lastly, as always, hey, if you are
+trying to learn more about Claude Code
+
+804
+00:14:07,030 --> 00:14:07,040
+trying to learn more about Claude Code
+ 
+
+805
+00:14:07,040 --> 00:14:08,069
+trying to learn more about Claude Code
+and you're someone who doesn't come from
+
+806
+00:14:08,069 --> 00:14:08,079
+and you're someone who doesn't come from
+ 
+
+807
+00:14:08,079 --> 00:14:09,509
+and you're someone who doesn't come from
+a technical background or even someone
+
+808
+00:14:09,509 --> 00:14:09,519
+a technical background or even someone
+ 
+
+809
+00:14:09,519 --> 00:14:11,110
+a technical background or even someone
+who does and essentially trying to
+
+810
+00:14:11,110 --> 00:14:11,120
+who does and essentially trying to
+ 
+
+811
+00:14:11,120 --> 00:14:12,550
+who does and essentially trying to
+supercharge their process of learning
+
+812
+00:14:12,550 --> 00:14:12,560
+supercharge their process of learning
+ 
+
+813
+00:14:12,560 --> 00:14:13,990
+supercharge their process of learning
+how to actually use it in a practical
+
+814
+00:14:13,990 --> 00:14:14,000
+how to actually use it in a practical
+ 
+
+815
+00:14:14,000 --> 00:14:16,389
+how to actually use it in a practical
+manner, I just released my Claude Code
+
+816
+00:14:16,389 --> 00:14:16,399
+manner, I just released my Claude Code
+ 
+
+817
+00:14:16,399 --> 00:14:18,710
+manner, I just released my Claude Code
+master class inside of the Chase AI Plus
+
+818
+00:14:18,710 --> 00:14:18,720
+master class inside of the Chase AI Plus
+ 
+
+819
+00:14:18,720 --> 00:14:20,949
+master class inside of the Chase AI Plus
+community. There is a link to that in
+
+820
+00:14:20,949 --> 00:14:20,959
+community. There is a link to that in
+ 
+
+821
+00:14:20,959 --> 00:14:22,470
+community. There is a link to that in
+the comments. So, make sure you check
+
+822
+00:14:22,470 --> 00:14:22,480
+the comments. So, make sure you check
+ 
+
+823
+00:14:22,480 --> 00:14:23,990
+the comments. So, make sure you check
+that out if you're someone who's serious
+
+824
+00:14:23,990 --> 00:14:24,000
+that out if you're someone who's serious
+ 
+
+825
+00:14:24,000 --> 00:14:25,189
+that out if you're someone who's serious
+about this stuff and is looking to
+
+826
+00:14:25,189 --> 00:14:25,199
+about this stuff and is looking to
+ 
+
+827
+00:14:25,199 --> 00:14:26,870
+about this stuff and is looking to
+eventually make it some sort of career.
+
+828
+00:14:26,870 --> 00:14:26,880
+eventually make it some sort of career.
+ 
+
+829
+00:14:26,880 --> 00:14:28,230
+eventually make it some sort of career.
+So, make sure to leave some comments and
+
+830
+00:14:28,230 --> 00:14:28,240
+So, make sure to leave some comments and
+ 
+
+831
+00:14:28,240 --> 00:14:29,990
+So, make sure to leave some comments and
+let me know what you thought. Also, make
+
+832
+00:14:29,990 --> 00:14:30,000
+let me know what you thought. Also, make
+ 
+
+833
+00:14:30,000 --> 00:14:31,750
+let me know what you thought. Also, make
+sure to go into the description and
+
+834
+00:14:31,750 --> 00:14:31,760
+sure to go into the description and
+ 
+
+835
+00:14:31,760 --> 00:14:33,590
+sure to go into the description and
+check out the free Chase community.
+
+836
+00:14:33,590 --> 00:14:33,600
+check out the free Chase community.
+ 
+
+837
+00:14:33,600 --> 00:14:35,829
+check out the free Chase community.
+Again, tons of free resources there if
+
+838
+00:14:35,829 --> 00:14:35,839
+Again, tons of free resources there if
+ 
+
+839
+00:14:35,839 --> 00:14:37,350
+Again, tons of free resources there if
+you're just getting started on your AI
+
+840
+00:14:37,350 --> 00:14:37,360
+you're just getting started on your AI
+ 
+
+841
+00:14:37,360 --> 00:14:41,279
+you're just getting started on your AI
+journey. And as always, I'll see you
+

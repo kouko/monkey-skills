@@ -5,29 +5,9 @@
   },
   "plugins": [
     {
-      "name": "code-team",
-      "description": "Feature development team — Arch → Implement → Test → Review → Verify workflow with specialized agents",
-      "source": "./plugins/code-team"
-    },
-    {
-      "name": "design-team",
-      "description": "App design team — Generate → Review (parallel) → Revise workflow with UX, UI, visual, and accessibility agents",
-      "source": "./plugins/design-team"
-    },
-    {
-      "name": "research-team",
-      "description": "Deep research team — Generate → Evaluate → Edit workflow with research and investment analysts",
-      "source": "./plugins/research-team"
-    },
-    {
-      "name": "obsidian-workflow",
-      "description": "Obsidian vault workflows — daily notes, vault setup, conversation summaries, diagrams, and file intelligence",
-      "source": "./plugins/obsidian-workflow"
-    },
-    {
-      "name": "youtube-skills",
-      "description": "YouTube video processing — search, download, transcribe, summarize, and extract metadata",
-      "source": "./plugins/youtube-skills"
+      "name": "monkey-skills",
+      "description": "Personal agent skills — code, design, research teams + obsidian workflows + youtube processing",
+      "source": ".."
     }
   ]
 }
