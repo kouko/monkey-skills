@@ -7,10 +7,7 @@
     {
       "name": "monkey-skills",
       "description": "Personal agent skills — code, design, research teams + obsidian workflows + youtube processing",
-      "source": {
-        "type": "github",
-        "repo": "kouko/monkey-skills"
-      }
+      "source": "./"
     }
   ]
 }
