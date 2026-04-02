@@ -3,11 +3,14 @@
   "displayName": "Monkey Skills",
   "description": "Personal agent skills — code, design, research teams + obsidian workflows + youtube processing",
   "version": "1.0.0",
-  "author": {
-    "name": "kouko"
-  },
-  "repository": "https://github.com/kouko/monkey-skills",
+  "author": "kouko",
   "license": "MIT",
-  "skills": "./skills/",
-  "agents": "./agents/"
+  "keywords": [
+    "skills",
+    "agents",
+    "code-review",
+    "research",
+    "obsidian",
+    "youtube"
+  ]
 }

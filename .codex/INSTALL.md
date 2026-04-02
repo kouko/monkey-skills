@@ -4,32 +4,38 @@
 
 - Git
 
-## Installation
+## Option A: Install as skills (standalone)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/kouko/monkey-skills.git ~/.codex/monkey-skills
-   ```
+```bash
+git clone https://github.com/kouko/monkey-skills.git ~/.codex/monkey-skills
 
-2. **Create the skills symlink:**
-   ```bash
-   mkdir -p ~/.agents/skills
-   ln -s ~/.codex/monkey-skills/skills ~/.agents/skills/monkey-skills
-   ```
+mkdir -p ~/.agents/skills
+ln -s ~/.codex/monkey-skills/skills ~/.agents/skills/monkey-skills
+```
 
-3. **Restart Codex** to discover the skills.
+## Option B: Install as plugin
+
+```bash
+git clone https://github.com/kouko/monkey-skills.git ~/.codex/plugins/monkey-skills
+```
+
+Restart Codex to discover the skills.
 
 ## Updating
 
 ```bash
 cd ~/.codex/monkey-skills && git pull
+# or
+cd ~/.codex/plugins/monkey-skills && git pull
 ```
-
-Skills update instantly through the symlink.
 
 ## Uninstalling
 
 ```bash
+# Option A
 rm ~/.agents/skills/monkey-skills
-rm -rf ~/.codex/monkey-skills
+rm -r ~/.codex/monkey-skills
+
+# Option B
+rm -r ~/.codex/plugins/monkey-skills
 ```
