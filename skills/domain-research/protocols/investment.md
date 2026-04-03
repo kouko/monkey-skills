@@ -1,0 +1,31 @@
+# Investment Analysis Rubric
+
+## Analysis Framework
+
+### Individual Stock Analysis
+1. **Business Model**: Revenue sources, competitive moats, TAM
+2. **Financials**: Revenue growth, margins, FCF, balance sheet strength
+3. **Valuation**: P/E, P/S, EV/EBITDA vs peers and historical range
+4. **Catalysts**: Upcoming events, product launches, regulatory changes
+5. **Risks**: Key risk factors with probability and impact assessment
+
+### Macro Analysis
+1. **Data**: Use official sources (Fed, BOJ, ECB, central bank reports)
+2. **Indicators**: CPI, PMI, yield curve, employment, leading indicators
+3. **Framework**: Identify regime (expansion/slowdown/contraction/recovery)
+4. **Implications**: Map macro conditions to asset class preferences
+
+## Cross-Reference Sources
+
+Always check kouko's vault for existing analysis:
+- investing/ — Personal analysis and positions
+- references/finance/ — External market commentary
+- references/economy/ — Macro trend notes
+
+## Output Standards
+
+- Language: Use the `output_language` from the orchestrator's plan
+- Cite every factual claim
+- Include confidence level (高/中/低)
+- Always note the data date — stale data kills analysis
+- End with clear actionable recommendation
