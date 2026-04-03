@@ -1,6 +1,6 @@
 ---
 name: using-obsidian-team
-description: Entry point for the obsidian-team plugin. Explains when to use it, what skills and agents are available. Load this skill for Obsidian vault operations.
+description: Route Obsidian tasks — daily notes, vault setup, conversation summaries, file processing, diagrams (Mermaid/Excalidraw/Canvas), vault cleanup. Load to select the right Obsidian skill.
 ---
 
 # Using Obsidian Team

@@ -5,7 +5,7 @@ Personal agent skills marketplace — team-based development workflows and Obsid
 ## Architecture: Phase-Driven + Domain Knowledge + Hybrid Evaluation
 
 ```
-Team Skill (orchestrator)
+Team Skill (pipeline)
   ├── worker (sonnet)    ← protocols/ + standards/
   ├── evaluator (opus)   ← checklists/ → rubrics/ + standards/
   └── context-compressor (haiku) ← context compression
@@ -39,7 +39,7 @@ Feature development workflow with hybrid evaluation gates.
 | Type | Name | Role |
 |------|------|------|
 | Skill | `using-code-team` | Entry point — routing and documentation |
-| Skill | `code-team` | Full workflow orchestration |
+| Skill | `code-team` | Full workflow pipeline |
 | Skill | `domain-code` | Domain knowledge (6 protocols, 1 checklist, 3 rubrics, 1 standard) |
 | Agent | `evaluator` | Security checklist, arch gate, quality gate, QA gate (opus) |
 | Agent | `worker` | Test writing, documentation, refactoring (sonnet) |
@@ -53,7 +53,7 @@ App design workflow with parallel evaluators and a11y checklist.
 | Type | Name | Role |
 |------|------|------|
 | Skill | `using-design-team` | Entry point |
-| Skill | `design-team` | Full workflow orchestration |
+| Skill | `design-team` | Full workflow pipeline |
 | Skill | `domain-design` | Domain knowledge (1 checklist, 3 rubrics, 1 standard) |
 | Agent | `evaluator` | A11y checklist, UX/UI/visual gates in parallel (opus) |
 
@@ -64,7 +64,7 @@ Deep research workflow with citation checklist and quality gate.
 | Type | Name | Role |
 |------|------|------|
 | Skill | `using-research-team` | Entry point |
-| Skill | `research-team` | Full workflow orchestration |
+| Skill | `research-team` | Full workflow pipeline |
 | Skill | `domain-research` | Domain knowledge (2 protocols, 1 checklist, 1 rubric, 1 standard) |
 | Agent | `worker` | Research generation (sonnet) |
 | Agent | `evaluator` | Citation checklist, quality gate (opus) |
@@ -130,8 +130,7 @@ Install via marketplace or import `https://github.com/kouko/monkey-skills` in Se
 
 ```
 monkey-skills/
-├── agents/                          ← Phase-driven agents (5 total)
-│   ├── orchestrator.md              ← Task decomposition (opus)
+├── agents/                          ← Phase-driven agents (4 total)
 │   ├── worker.md                    ← Generic executor (sonnet)
 │   ├── evaluator.md                 ← Generic evaluator (opus)
 │   ├── context-compressor.md                ← Context compressor (haiku)
@@ -154,7 +153,7 @@ monkey-skills/
 │   │   ├── checklists/
 │   │   ├── rubrics/
 │   │   └── standards/
-│   ├── code-team/                   ← Workflow orchestration
+│   ├── code-team/                   ← Workflow pipeline
 │   ├── design-team/
 │   ├── research-team/
 │   ├── obsidian-*/                  ← Vault tools

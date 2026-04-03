@@ -24,7 +24,7 @@ Always check kouko's vault for existing analysis:
 
 ## Output Standards
 
-- Language: Use the `output_language` from the orchestrator's plan
+- Language: Use the `output_language` from the launch prompt
 - Cite every factual claim
 - Include confidence level (高/中/低)
 - Always note the data date — stale data kills analysis

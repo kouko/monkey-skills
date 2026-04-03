@@ -1,6 +1,6 @@
 ---
 name: using-code-team
-description: Entry point for the code-team plugin. Explains when to use it, what agents are available, and how to route tasks. Load this skill at session start for code-related tasks.
+description: Route code tasks — new features, bug fixes, refactoring, code review, PR review, test writing, documentation. Load BEFORE code-team to select the right workflow and agents.
 ---
 
 # Using Code Team

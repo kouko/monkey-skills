@@ -11,7 +11,7 @@
 ## Rules
 
 - Language: Follow project convention. English for code docs.
-  Non-code content uses the `output_language` from the orchestrator's plan
+  Non-code content uses the `output_language` from the launch prompt
 - Never remove existing doc content without explicit instruction
 - Keep docs DRY — link to source of truth rather than duplicating
 - Include examples for non-obvious APIs

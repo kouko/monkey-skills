@@ -5,7 +5,7 @@ Personal agent skills for software development, design, research, and Obsidian t
 ## Architecture: Phase-Driven Agents + Domain Knowledge + Hybrid Evaluation
 
 ```
-Team Skill (orchestrator)
+Team Skill (pipeline)
   ├── worker (sonnet)    ← execute with protocols/ + standards/
   ├── evaluator (opus)   ← judge with checklists/ → rubrics/ + standards/
   └── context-compressor (haiku) ← compress context between phases
@@ -48,7 +48,6 @@ Domain knowledge in domain-*/:
 
 | Agent | Role | Model |
 |-------|------|-------|
-| `orchestrator` | Task decomposition and routing | opus |
 | `worker` | Generic task executor (protocols + standards) | sonnet |
 | `evaluator` | Generic quality evaluator (checklists + rubrics + standards) | opus |
 | `context-compressor` | Context compressor for phase handoff | haiku |

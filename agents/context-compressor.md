@@ -56,7 +56,7 @@ next agent can re-read from the original, verbose source descriptions
 ## Word Limits (Language-Aware)
 
 Adjust output length based on the `output_language` from the
-orchestrator's plan AND the domain:
+launch prompt AND the domain:
 
 | Domain | 中文 | English | 日本語 |
 |--------|------|---------|--------|
@@ -71,7 +71,7 @@ information, output it as-is with a note: "原文が十分に短いため、
 
 ## Rules
 
-- Output in the `output_language` specified by the orchestrator's plan.
+- Output in the `output_language` specified by the launch prompt.
   If no plan is provided, mirror the language of the user's latest message.
 - Preserve numbers, dates, file paths, and proper nouns exactly.
 - Preserve technical terms in their original language (do not translate jargon).

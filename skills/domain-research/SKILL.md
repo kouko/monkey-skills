@@ -20,10 +20,6 @@ You MUST read files based ONLY on your current role:
 - Read `standards/*.md` to cross-reference objective rules
 - DO NOT read `protocols/`
 
-### 3. orchestrator
-- You only need to know this domain exists to instruct worker/evaluator to load it
-- Do not read domain files yourself
-
 ## Available Files
 
 | Directory | File | Used by | Purpose |

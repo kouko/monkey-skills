@@ -1,6 +1,6 @@
 ---
 name: code-team
-description: Feature development workflow — Arch → Implement → Test → Review → Verify. Use for new features, bug fixes, or any code implementation task.
+description: Execute code pipeline: Arch → Implement → Test → Security → Quality → QA. Requires using-code-team for task routing.
 ---
 
 # Code Team
@@ -8,11 +8,17 @@ description: Feature development workflow — Arch → Implement → Test → Re
 Sequential Arch → Implement → Test → Checklist → Review → Verify.
 Uses hybrid evaluation: binary checklist gate first, then qualitative flag gate.
 
+## Language
+
+Detect the user's language and pass it as `output_language` to all agent launch prompts.
+
 ## Step 1 — Plan
 
 Use `feature-dev:code-architect` (plugin) for planning.
 
 ## Step 2 — Architecture Review (flag gate)
+
+Skip if: change is cosmetic (comments, formatting, renames) or single-file bug fix.
 
 Launch `evaluator` with:
 - Rubric: Read `skills/domain-code/rubrics/arch-gate.md`
