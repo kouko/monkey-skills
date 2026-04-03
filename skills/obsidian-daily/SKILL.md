@@ -1,6 +1,6 @@
 ---
 name: obsidian-daily
-description: Start the day with vault context. Read today's daily note or create one. Surface top priorities. Ask what we're working on.
+description: Start the day with Obsidian vault context. Use when beginning a work session, checking daily notes, or surfacing priorities. 今日のノート・朝のルーティン。每日筆記・開始工作。
 ---
 
 Read today's daily note at daily/YYYY-MM-DD.md (use today's actual date).

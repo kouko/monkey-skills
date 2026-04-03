@@ -1,6 +1,6 @@
 ---
 name: domain-research
-description: "Core knowledge base for research — analysis protocols, investment frameworks, citation checklists, and shared standards. Internal: loaded by team skills, not invoked directly."
+description: "Core knowledge base for research — analysis protocols, investment frameworks, tech stack evaluation, OSS due diligence, citation checklists, and standards. Internal: loaded by team skills, not invoked directly."
 ---
 
 # Domain: Research

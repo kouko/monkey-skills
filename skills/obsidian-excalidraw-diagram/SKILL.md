@@ -1,6 +1,6 @@
 ---
 name: obsidian-excalidraw-diagram
-description: Generate Excalidraw diagrams from text content. Supports three output modes - Obsidian (.md), Standard (.excalidraw), and Animated (.excalidraw with animation order). Triggers on "Excalidraw", "画图", "流程图", "思维导图", "可视化", "diagram", "标准Excalidraw", "standard excalidraw", "Excalidraw动画", "动画图", "animate".
+description: Generate Excalidraw diagrams from text content. Use when creating visual diagrams, mind maps, or animated flowcharts in Excalidraw format. Excalidraw・画图・流程图・思维导图・可视化・动画图。
 metadata:
   version: 1.2.1
 ---

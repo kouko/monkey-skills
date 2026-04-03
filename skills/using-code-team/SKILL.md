@@ -1,6 +1,6 @@
 ---
 name: using-code-team
-description: Route code tasks — new features, bug fixes, refactoring, code review, PR review, test writing, documentation. Load BEFORE code-team to select the right workflow and agents.
+description: Develop code with quality gates and review. Use when implementing features, fixing bugs, refactoring, reviewing code/PRs, writing tests, assessing codebase health, or auditing tech debt. 實作・修 bug・重構・程式碼審查。コード実装・バグ修正。
 ---
 
 # Using Code Team

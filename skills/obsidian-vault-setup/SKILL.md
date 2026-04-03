@@ -1,6 +1,6 @@
 ---
 name: obsidian-vault-setup
-description: Interactive Obsidian vault configurator. Asks the user to describe themselves in free text, then builds a personalized vault structure, CLAUDE.md, and slash commands directly in the current directory.
+description: Configure a new Obsidian vault interactively. Use when setting up a vault from scratch, personalizing vault structure, or creating initial CLAUDE.md and slash commands. Vault初期設定。Vault 初始化。
 ---
 
 # Vault Setup — Obsidian Configurator

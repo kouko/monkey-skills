@@ -1,6 +1,6 @@
 ---
 name: domain-code
-description: "Core knowledge base for software engineering — implementation protocols, quality rubrics, security checklists, and shared standards. Internal: loaded by team skills, not invoked directly."
+description: "Core knowledge base for code engineering — protocols, rubrics, checklists, and standards for implementation, testing, security, and tech debt. Internal: loaded by team skills, not invoked directly."
 ---
 
 # Domain: Code Engineering

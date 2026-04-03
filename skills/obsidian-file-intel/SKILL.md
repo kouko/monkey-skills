@@ -1,6 +1,6 @@
 ---
 name: obsidian-file-intel
-description: Run the Gemini file processor on any folder — extracts content from PDF, PPTX, XLSX, DOCX, CSV, JSON, and any text format, then generates Obsidian-ready summaries. Use when asked to "summarise this folder", "run file intel", "process these files", or a folder path is provided and summaries are needed.
+description: Extract content from files (PDF, PPTX, XLSX, DOCX, CSV, JSON) and generate Obsidian-ready summaries. Use when processing a folder, summarizing documents, or running file intel. ファイル処理・要約。檔案處理・摘要。
 ---
 
 # File Intel — Gemini File Processor
