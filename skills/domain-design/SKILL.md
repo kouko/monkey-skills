@@ -24,6 +24,10 @@ You MUST read files based ONLY on your current role:
 
 | Directory | File | Used by | Purpose |
 |-----------|------|---------|---------|
+| `protocols/` | `design-brainstorming.md` | worker | Integrated design thinking (Kansei × Meaning × Affordance) |
+| `protocols/` | `ux-strategy.md` | worker | UX strategy creation (Ando temporal model × Garrett) |
+| `protocols/` | `visual-design.md` | worker | Visual design implementation (Kansei Engineering) |
+| `protocols/` | `ui-interaction.md` | worker | UI & interaction design (Without Thought × OOUI) |
 | `checklists/` | `a11y-checklist.md` | evaluator | Binary accessibility gate (first pass) |
 | `rubrics/` | `ux-strategy-gate.md` | evaluator | UX strategy flags (Ando temporal model) |
 | `rubrics/` | `ui-interaction-gate.md` | evaluator | UI structure & interaction flags |

@@ -12,11 +12,22 @@ Uses hybrid evaluation: binary a11y checklist first, then qualitative flag gates
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Generate
+## Step 1 — Generate (Protocol-Guided)
 
-Create design output in main conversation
+Load the appropriate protocol BEFORE generating any design output.
+Route by task type:
+
+| Task | Protocol to load |
+|------|-----------------|
+| Design brainstorming / concept | `skills/domain-design/protocols/design-brainstorming.md` |
+| UX strategy / user journey | `skills/domain-design/protocols/ux-strategy.md` |
+| Visual design / color / typography | `skills/domain-design/protocols/visual-design.md` |
+| UI spec / wireframe / frontend code | `skills/domain-design/protocols/ui-interaction.md` |
+| Full design (end-to-end) | `design-brainstorming.md` first, then task-specific protocol |
+
+Worker reads the protocol, then generates design output
 (strategy doc, UI spec, Object Map, or frontend code).
-Worker should reference `skills/domain-design/standards/wcag-baseline.md` during creation.
+Worker should also reference `skills/domain-design/standards/wcag-baseline.md` during creation.
 
 ## Step 2a — A11y Checklist (binary gate, always runs for UI output)
 
