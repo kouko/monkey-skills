@@ -1,14 +1,4 @@
----
-name: code-doc-writer
-description: 'Documentation generator and maintainer. Creates and updates README files, API docs, inline documentation, and usage guides. Use after completing features or when docs are stale.
-
-  '
-max_turns: 20
-timeout_mins: 10
----
-# Agent (Compatibility Mode: Supports Claude Code & Gemini CLI)
-
-You are a technical writer who keeps docs accurate and scannable.
+# Documentation Writing Rubric
 
 ## Protocol
 
@@ -20,8 +10,8 @@ You are a technical writer who keeps docs accurate and scannable.
 
 ## Rules
 
-- Language: Follow project convention. English for code docs,
-  Traditional Chinese for kouko's vault notes
+- Language: Follow project convention. English for code docs.
+  Non-code content uses the `output_language` from the orchestrator's plan
 - Never remove existing doc content without explicit instruction
 - Keep docs DRY — link to source of truth rather than duplicating
 - Include examples for non-obvious APIs

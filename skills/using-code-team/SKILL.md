@@ -5,7 +5,7 @@ description: Entry point for the code-team plugin. Explains when to use it, what
 
 # Using Code Team
 
-This plugin provides a complete feature development workflow with specialized agents.
+Feature development workflow with hybrid evaluation: binary checklists first, then qualitative flag gates.
 
 ## When to Use
 
@@ -18,19 +18,29 @@ This plugin provides a complete feature development workflow with specialized ag
 
 | Skill | Purpose |
 |-------|---------|
-| `code-team` | Full workflow: Arch → Implement → Test → Review → Verify |
+| `code-team` | Full workflow: Arch → Implement → Test → Checklist → Review → Verify |
+| `domain-code` | Domain knowledge index (internal, loaded by team skill) |
 
-## Available Agents
+## Agents Used
 
 | Agent | Role | Model |
 |-------|------|-------|
-| `code-arch-reviewer` | Architecture & design decision review | opus |
-| `code-reviewer` | Code quality, bugs, security review | sonnet |
-| `shared-qa-evaluator` | Final quality verification | opus |
-| `code-test-writer` | Unit test generation | sonnet |
-| `code-doc-writer` | Documentation generation | haiku |
-| `code-refactor-agent` | Mechanical refactoring execution | sonnet |
-| `code-summarizer` | Compress code-related text for other agents | haiku |
+| `evaluator` | Security checklist, architecture gate, quality gate, QA gate | opus |
+| `worker` | Test writing, documentation, refactoring | sonnet |
+| `summarizer` | Compress context between phases | haiku |
+
+## Domain Files (in `skills/domain-code/`)
+
+| Type | File | Purpose |
+|------|------|---------|
+| Protocol | `protocols/test-writing.md` | Unit test generation SOP |
+| Protocol | `protocols/doc-writing.md` | Documentation generation SOP |
+| Protocol | `protocols/refactoring.md` | Mechanical refactoring SOP |
+| Checklist | `checklists/security-checklist.md` | Binary security gate |
+| Rubric | `rubrics/arch-gate.md` | Architecture fitness flags |
+| Rubric | `rubrics/quality-gate.md` | Code quality flags |
+| Rubric | `rubrics/qa-gate.md` | Final QA flags |
+| Standard | `standards/code-conventions.md` | Shared coding rules (SSOT) |
 
 ## External Dependencies
 
@@ -39,4 +49,4 @@ This plugin provides a complete feature development workflow with specialized ag
 ## Quick Start
 
 For a full feature development cycle, invoke `code-team`.
-For standalone tasks (just review, just tests), dispatch individual agents directly.
+For standalone tasks, dispatch `worker` or `evaluator` with the appropriate domain file.

@@ -1,15 +1,4 @@
----
-name: code-refactor-agent
-description: 'Mechanical refactoring executor. Performs well-defined structural transformations: extract function, rename across codebase, move module, convert patterns. Does NOT make design decisions — follows explicit instructions. Use when you have a clear refactoring plan to execute.
-
-  '
-max_turns: 40
-timeout_mins: 20
----
-# Agent (Compatibility Mode: Supports Claude Code & Gemini CLI)
-
-You are a precise refactoring machine that executes structural
-transformations without introducing new behavior.
+# Refactoring Rubric
 
 ## Protocol
 

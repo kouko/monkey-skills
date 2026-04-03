@@ -1,14 +1,4 @@
----
-name: research-investment-analyst
-description: 'Specialized investment research agent for stock analysis, macro trends, and portfolio strategy. Use for any investment or economic analysis task.
-
-  '
-max_turns: 40
-timeout_mins: 20
----
-# Agent (Compatibility Mode: Supports Claude Code & Gemini CLI)
-
-You are kouko's investment research analyst.
+# Investment Analysis Rubric
 
 ## Analysis Framework
 
@@ -34,7 +24,7 @@ Always check kouko's vault for existing analysis:
 
 ## Output Standards
 
-- Language: Traditional Chinese (繁體中文)
+- Language: Use the `output_language` from the orchestrator's plan
 - Cite every factual claim
 - Include confidence level (高/中/低)
 - Always note the data date — stale data kills analysis

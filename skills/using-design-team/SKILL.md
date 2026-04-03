@@ -5,7 +5,7 @@ description: Entry point for the design-team plugin. Explains when to use it, wh
 
 # Using Design Team
 
-This plugin provides a design review workflow with parallel specialized reviewers.
+Design review workflow with hybrid evaluation: binary a11y checklist first, then qualitative flag gates in parallel.
 
 ## When to Use
 
@@ -19,27 +19,34 @@ This plugin provides a design review workflow with parallel specialized reviewer
 
 | Skill | Purpose |
 |-------|---------|
-| `design-team` | Full workflow: Generate → Review (parallel) → Revise |
+| `design-team` | Full workflow: Generate → Checklist → Review (parallel) → Revise |
+| `domain-design` | Domain knowledge index (internal, loaded by team skill) |
 
-## Available Agents
+## Agents Used
 
 | Agent | Role | Model |
 |-------|------|-------|
-| `design-ux-strategist` | UX strategy, user journeys, value propositions | opus |
-| `design-ui-reviewer` | UI structure, IA, interaction patterns, OOUI | sonnet |
-| `design-visual-reviewer` | Visual design, typography, color, brand consistency | opus |
-| `design-a11y-reviewer` | Accessibility, WCAG compliance, keyboard navigation | sonnet |
-| `design-summarizer` | Compress design-related text for other agents | haiku |
+| `evaluator` | A11y checklist, UX strategy gate, UI interaction gate, visual gate (parallel) | opus |
+| `summarizer` | Compress context between phases | haiku |
+
+## Domain Files (in `skills/domain-design/`)
+
+| Type | File | Purpose |
+|------|------|---------|
+| Checklist | `checklists/a11y-checklist.md` | Binary accessibility gate |
+| Rubric | `rubrics/ux-strategy-gate.md` | UX strategy flags (Ando temporal model) |
+| Rubric | `rubrics/ui-interaction-gate.md` | UI structure & interaction flags (OOUI) |
+| Rubric | `rubrics/visual-gate.md` | Visual design flags (Kansei Engineering) |
+| Standard | `standards/wcag-baseline.md` | Shared WCAG 2.2 AA rules (SSOT) |
 
 ## Routing
 
-Reviewers are dispatched based on output type:
-- Strategy / journey → `design-ux-strategist`
-- Wireframe / UI spec / frontend code → `design-ui-reviewer`
-- Visual asset → `design-visual-reviewer`
-- Any UI output → `design-a11y-reviewer` (always runs alongside others)
+- Strategy / journey → evaluator + `ux-strategy-gate.md`
+- Wireframe / UI spec / frontend code → evaluator + `ui-interaction-gate.md`
+- Visual asset → evaluator + `visual-gate.md`
+- Any UI output → evaluator + `a11y-checklist.md` (always runs first)
 
 ## Quick Start
 
 For a full design review cycle, invoke `design-team`.
-For standalone reviews, dispatch individual agents directly.
+For standalone reviews, dispatch `evaluator` with the appropriate domain file.
