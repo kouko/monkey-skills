@@ -53,13 +53,13 @@ Each evaluator launch starts fresh. Pass only:
 - The design artifact to evaluate
 - The original requirements
 
-Use `summarizer` to compress large artifacts before passing between phases if needed.
+Use `context-compressor` to compress large artifacts before passing between phases if needed.
 
 ## Auto-Revise Loop (Context-Clean Retry)
 
 When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
 
-1. Use `summarizer` to compress the current artifact + feedback into a brief
+1. Use `context-compressor` to compress the current artifact + feedback into a brief
 2. Revise in main conversation with ONLY: original requirements + current artifact + evaluator feedback
 3. Discard all prior retry history from the evaluator's view
 4. Re-run from Step 2a (a11y checklist first)

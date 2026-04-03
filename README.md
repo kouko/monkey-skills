@@ -8,7 +8,7 @@ Personal agent skills marketplace — team-based development workflows and Obsid
 Team Skill (orchestrator)
   ├── worker (sonnet)    ← protocols/ + standards/
   ├── evaluator (opus)   ← checklists/ → rubrics/ + standards/
-  └── summarizer (haiku) ← context compression
+  └── context-compressor (haiku) ← context compression
 
 Hybrid evaluation pipeline:
   1. Checklist gate (binary PASS/FAIL) — "有沒有做？"
@@ -134,7 +134,7 @@ monkey-skills/
 │   ├── orchestrator.md              ← Task decomposition (opus)
 │   ├── worker.md                    ← Generic executor (sonnet)
 │   ├── evaluator.md                 ← Generic evaluator (opus)
-│   ├── summarizer.md                ← Context compressor (haiku)
+│   ├── context-compressor.md                ← Context compressor (haiku)
 │   └── obsidian-vault-organizer.md  ← Standalone vault tool (haiku)
 ├── skills/
 │   ├── domain-code/                 ← Code domain knowledge

@@ -27,7 +27,7 @@ Feature development workflow with hybrid evaluation: binary checklists first, th
 |-------|------|-------|
 | `evaluator` | Security checklist, architecture gate, quality gate, QA gate | opus |
 | `worker` | Test writing, documentation, refactoring | sonnet |
-| `summarizer` | Compress context between phases | haiku |
+| `context-compressor` | Compress context between phases | haiku |
 
 ## Domain Files (in `skills/domain-code/`)
 

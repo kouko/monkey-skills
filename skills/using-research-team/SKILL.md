@@ -28,7 +28,7 @@ Deep research workflow with hybrid evaluation: binary citation checklist first, 
 |-------|------|-------|
 | `worker` | Research generation (with analysis or investment protocol) | sonnet |
 | `evaluator` | Citation checklist, research quality gate | opus |
-| `summarizer` | Compress context between phases | haiku |
+| `context-compressor` | Compress context between phases | haiku |
 
 ## Domain Files (in `skills/domain-research/`)
 

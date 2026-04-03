@@ -49,13 +49,13 @@ Each agent launch starts fresh. Pass only:
 - To worker: the protocol + standards + research question (no prior conversation history)
 - To evaluator: the checklist/rubric + standards + research draft + original requirements
 
-Use `summarizer` to compress large artifacts before passing between phases if needed.
+Use `context-compressor` to compress large artifacts before passing between phases if needed.
 
 ## Auto-Revise Loop (Context-Clean Retry)
 
 When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
 
-1. Use `summarizer` to compress the current draft + feedback into a brief
+1. Use `context-compressor` to compress the current draft + feedback into a brief
 2. Launch a **fresh** worker with ONLY: original question + current draft + evaluator feedback
 3. Discard all prior retry history — the new worker should NOT see previous failed drafts
 4. Re-run from Step 2a (citation checklist first)

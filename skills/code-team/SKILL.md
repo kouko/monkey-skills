@@ -80,13 +80,13 @@ Each agent launch starts fresh. Pass only:
 - To evaluator: the checklist/rubric + standards + artifact + original requirements
 - To worker: the protocol + standards + task description + relevant input
 
-Use `summarizer` to compress large artifacts before passing between phases if needed.
+Use `context-compressor` to compress large artifacts before passing between phases if needed.
 
 ## Auto-Revise Loop (Context-Clean Retry)
 
 When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
 
-1. Use `summarizer` to compress the current artifact + feedback into a brief
+1. Use `context-compressor` to compress the current artifact + feedback into a brief
 2. Launch a **fresh** worker/main-conversation with ONLY:
    - Original requirements
    - Current artifact (V_n)

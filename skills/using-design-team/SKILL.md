@@ -27,7 +27,7 @@ Design review workflow with hybrid evaluation: binary a11y checklist first, then
 | Agent | Role | Model |
 |-------|------|-------|
 | `evaluator` | A11y checklist, UX strategy gate, UI interaction gate, visual gate (parallel) | opus |
-| `summarizer` | Compress context between phases | haiku |
+| `context-compressor` | Compress context between phases | haiku |
 
 ## Domain Files (in `skills/domain-design/`)
 
