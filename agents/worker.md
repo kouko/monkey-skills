@@ -102,4 +102,4 @@ status over hallucinating without the tool.
 
 Always end your output with this line:
 
-> 🔄 CHECKPOINT: This artifact is raw output. Orchestrator: consult your pipeline for the next gate.
+> 🔄 CHECKPOINT: This artifact is raw output. Pipeline: consult your workflow for the next gate.

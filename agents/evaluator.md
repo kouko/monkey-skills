@@ -108,4 +108,4 @@ is still to judge, not to do.
 
 Always end your output with this line:
 
-> 🔄 CHECKPOINT: Evaluation complete. Orchestrator: consult your pipeline for verdict handling.
+> 🔄 CHECKPOINT: Evaluation complete. Pipeline: consult your workflow for verdict handling.
