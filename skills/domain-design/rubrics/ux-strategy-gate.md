@@ -3,7 +3,7 @@
 Design philosophy: おもてなし — solve problems before users
 encounter them; notice needs users haven't articulated.
 
-## Evaluation: 安藤期間モデル × Garrett 戦略・要件
+## Evaluation: 安藤昌也 UXの期間モデル × Garrett 戦略・要件
 
 Each temporal phase is evaluated through two strategic lenses:
 - **戦略 (Strategy)**: user needs × business objectives alignment
