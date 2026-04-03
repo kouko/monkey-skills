@@ -9,12 +9,12 @@ Generate → Evaluate → Edit loop.
 
 ## Step 1 — Generate
 
-Launch `research-analyst` (or `investment-analyst` for investment/macro topics)
+Launch `research-analyst` (or `research-investment-analyst` for investment/macro topics)
 to produce research draft.
 
 ## Step 2 — Evaluate
 
-Launch `qa-evaluator` with the draft.
+Launch `shared-qa-evaluator` with the draft.
 
 ## Step 3 — Iterate based on verdict
 

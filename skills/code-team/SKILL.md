@@ -13,7 +13,7 @@ Use `feature-dev:code-architect` (plugin) for planning.
 
 ## Step 2 — Architecture Review (Opus gate)
 
-Launch `arch-reviewer`
+Launch `code-arch-reviewer`
 - **PASS** → proceed to Step 3
 - **PASS_WITH_NOTES** → Revise plan → re-run Step 2
 - **NEEDS_REVISION** → Stop, present alternatives to user
@@ -25,7 +25,7 @@ PostToolUse lint hook provides immediate syntax/style feedback.
 
 ## Step 3.5 — Test (optional)
 
-Launch `test-writer` for new/changed modules.
+Launch `code-test-writer` for new/changed modules.
 Tests must pass before proceeding to review.
 
 ## Step 4 — Review (Sonnet gate)
@@ -37,14 +37,14 @@ Launch `code-reviewer`
 
 ## Step 5 — Verify (Opus gate)
 
-Launch `qa-evaluator`
+Launch `shared-qa-evaluator`
 - **PASS** → Done, report to user
 - **PASS_WITH_NOTES** → Auto-fix → go back to Step 4 (re-review from Sonnet)
 - **NEEDS_REVISION** → Stop, present issues to user
 
 ## Step 6 — Documentation (optional)
 
-Launch `doc-writer` for new public APIs or significant behavior changes.
+Launch `code-doc-writer` for new public APIs or significant behavior changes.
 
 ## Guard Rails
 

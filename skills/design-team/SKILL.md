@@ -15,10 +15,10 @@ Create design output in main conversation
 ## Step 2 — Review
 
 Dispatch reviewers in parallel by output type:
-- Strategy / journey / value proposition → `ux-strategist`
-- Wireframe / UI spec / Object Map / IA / frontend code → `ui-reviewer`
-- Visual design (user-provided asset) → `visual-reviewer`
-- Any output with UI → `a11y-reviewer` (always runs alongside others)
+- Strategy / journey / value proposition → `design-ux-strategist`
+- Wireframe / UI spec / Object Map / IA / frontend code → `design-ui-reviewer`
+- Visual design (user-provided asset) → `design-visual-reviewer`
+- Any output with UI → `design-a11y-reviewer` (always runs alongside others)
 - Full design → all four in parallel
 
 ## Step 3 — Iterate based on verdict

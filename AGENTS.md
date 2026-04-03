@@ -1,6 +1,6 @@
 # Monkey Skills
 
-Personal agent skills for software development, design, research, Obsidian workflows, and YouTube processing.
+Personal agent skills for software development, design, research, and Obsidian team workflows.
 
 ## Skills
 
@@ -16,26 +16,15 @@ Personal agent skills for software development, design, research, Obsidian workf
 - `using-research-team` — Entry point and routing guide
 - `research-team` — Generate → Evaluate → Edit workflow
 
-### Obsidian Workflow
-- `using-obsidian-workflow` — Entry point and routing guide
-- `daily` — Start the day with vault context
-- `vault-setup` — Interactive vault configurator
-- `tldr` — Save conversation summary to vault
-- `file-intel` — Extract content from files into Obsidian notes
-- `mermaid-visualizer` — Create Mermaid diagrams
-- `excalidraw-diagram` — Generate Excalidraw diagrams
+### Obsidian Team
+- `using-obsidian-team` — Entry point and routing guide
+- `obsidian-daily` — Start the day with vault context
+- `obsidian-vault-setup` — Interactive vault configurator
+- `obsidian-tldr` — Save conversation summary to vault
+- `obsidian-file-intel` — Extract content from files into Obsidian notes
+- `obsidian-mermaid-visualizer` — Create Mermaid diagrams
+- `obsidian-excalidraw-diagram` — Generate Excalidraw diagrams
 - `obsidian-canvas-creator` — Create Canvas files
-
-### YouTube Skills
-- `using-youtube-skills` — Entry point and routing guide
-- `mk-youtube-search` — Search videos
-- `mk-youtube-get-info` — Get video metadata
-- `mk-youtube-get-caption` — Download subtitles
-- `mk-youtube-get-audio` — Download audio
-- `mk-youtube-audio-transcribe` — Transcribe via whisper.cpp
-- `mk-youtube-summarize` — Summarize video content
-- `mk-youtube-transcript-summarize` — Summarize from transcript
-- `mk-youtube-get-channel-latest` — Get latest from channel
 
 ## Agents
 

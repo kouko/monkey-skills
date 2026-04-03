@@ -19,23 +19,23 @@ This plugin provides a deep research workflow with specialized analysts.
 
 | Skill | Purpose |
 |-------|---------|
-| `research-team:research-team` | Full workflow: Generate → Evaluate → Edit |
+| `research-team` | Full workflow: Generate → Evaluate → Edit |
 
 ## Available Agents
 
 | Agent | Role | Model |
 |-------|------|-------|
 | `research-analyst` | Deep research, multi-source investigation | opus |
-| `investment-analyst` | Investment, stock, macro, market analysis | opus |
+| `research-investment-analyst` | Investment, stock, macro, market analysis | opus |
 | `research-summarizer` | Compress research data for other agents | haiku |
 
 ## Routing
 
 - General research → `research-analyst`
-- Investment / stock / macro / market → `investment-analyst`
-- Quality evaluation of drafts → `qa-evaluator` (from code-team plugin)
+- Investment / stock / macro / market → `research-investment-analyst`
+- Quality evaluation of drafts → `shared-qa-evaluator` (from code-team plugin)
 
 ## Quick Start
 
-For a full research cycle with quality evaluation, invoke `research-team:research-team`.
-For standalone analysis, dispatch `research-analyst` or `investment-analyst` directly.
+For a full research cycle with quality evaluation, invoke `research-team`.
+For standalone analysis, dispatch `research-analyst` or `research-investment-analyst` directly.

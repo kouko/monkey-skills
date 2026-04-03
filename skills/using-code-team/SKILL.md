@@ -18,18 +18,18 @@ This plugin provides a complete feature development workflow with specialized ag
 
 | Skill | Purpose |
 |-------|---------|
-| `code-team:code-team` | Full workflow: Arch → Implement → Test → Review → Verify |
+| `code-team` | Full workflow: Arch → Implement → Test → Review → Verify |
 
 ## Available Agents
 
 | Agent | Role | Model |
 |-------|------|-------|
-| `arch-reviewer` | Architecture & design decision review | opus |
+| `code-arch-reviewer` | Architecture & design decision review | opus |
 | `code-reviewer` | Code quality, bugs, security review | sonnet |
-| `qa-evaluator` | Final quality verification | opus |
-| `test-writer` | Unit test generation | sonnet |
-| `doc-writer` | Documentation generation | haiku |
-| `refactor-agent` | Mechanical refactoring execution | sonnet |
+| `shared-qa-evaluator` | Final quality verification | opus |
+| `code-test-writer` | Unit test generation | sonnet |
+| `code-doc-writer` | Documentation generation | haiku |
+| `code-refactor-agent` | Mechanical refactoring execution | sonnet |
 | `code-summarizer` | Compress code-related text for other agents | haiku |
 
 ## External Dependencies
@@ -38,5 +38,5 @@ This plugin provides a complete feature development workflow with specialized ag
 
 ## Quick Start
 
-For a full feature development cycle, invoke `code-team:code-team`.
+For a full feature development cycle, invoke `code-team`.
 For standalone tasks (just review, just tests), dispatch individual agents directly.

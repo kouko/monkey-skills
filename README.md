@@ -1,6 +1,6 @@
 # Monkey Skills
 
-Personal agent skills marketplace — team-based development workflows, Obsidian vault management, and YouTube processing.
+Personal agent skills marketplace — team-based development workflows and Obsidian vault management.
 
 ## Plugins
 
@@ -9,7 +9,7 @@ monkey-skills
 ├── code-team          Arch → Implement → Test → Review → Verify
 ├── design-team        Generate → Review (parallel) → Revise
 ├── research-team      Generate → Evaluate → Edit
-├── obsidian-workflow   Daily notes, diagrams, vault management
+├── obsidian-team       Daily notes, diagrams, vault management
 └── youtube-skills      Search, download, transcribe, summarize
 ```
 
@@ -21,12 +21,12 @@ Feature development workflow with quality gates.
 |------|------|------|
 | Skill | `using-code-team` | Entry point — routing and documentation |
 | Skill | `code-team` | Full workflow orchestration |
-| Agent | `arch-reviewer` | Architecture & design review (opus) |
+| Agent | `code-arch-reviewer` | Architecture & design review (opus) |
 | Agent | `code-reviewer` | Code quality, bugs, security (sonnet) |
-| Agent | `qa-evaluator` | Final quality verification (opus) |
-| Agent | `test-writer` | Unit test generation (sonnet) |
-| Agent | `doc-writer` | Documentation generation (haiku) |
-| Agent | `refactor-agent` | Mechanical refactoring (sonnet) |
+| Agent | `shared-qa-evaluator` | Final quality verification (opus) |
+| Agent | `code-test-writer` | Unit test generation (sonnet) |
+| Agent | `code-doc-writer` | Documentation generation (haiku) |
+| Agent | `code-refactor-agent` | Mechanical refactoring (sonnet) |
 | Agent | `code-summarizer` | Code-related text compression (haiku) |
 
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
@@ -39,10 +39,10 @@ App design workflow with parallel reviewers.
 |------|------|------|
 | Skill | `using-design-team` | Entry point |
 | Skill | `design-team` | Full workflow orchestration |
-| Agent | `ux-strategist` | UX strategy, user journeys (opus) |
-| Agent | `ui-reviewer` | UI structure, IA, interaction patterns (sonnet) |
-| Agent | `visual-reviewer` | Visual design, typography, color (opus) |
-| Agent | `a11y-reviewer` | Accessibility, WCAG compliance (sonnet) |
+| Agent | `design-ux-strategist` | UX strategy, user journeys (opus) |
+| Agent | `design-ui-reviewer` | UI structure, IA, interaction patterns (sonnet) |
+| Agent | `design-visual-reviewer` | Visual design, typography, color (opus) |
+| Agent | `design-a11y-reviewer` | Accessibility, WCAG compliance (sonnet) |
 | Agent | `design-summarizer` | Design-related text compression (haiku) |
 
 ### research-team
@@ -54,8 +54,8 @@ Deep research workflow with evaluation loop.
 | Skill | `using-research-team` | Entry point |
 | Skill | `research-team` | Full workflow orchestration |
 | Agent | `research-analyst` | Multi-source investigation (opus) |
-| Agent | `investment-analyst` | Investment & macro analysis (opus) |
-| Agent | `qa-evaluator` | Draft quality evaluation (opus) — shared with code-team |
+| Agent | `research-investment-analyst` | Investment & macro analysis (opus) |
+| Agent | `shared-qa-evaluator` | Draft quality evaluation (opus) — shared with code-team |
 | Agent | `research-summarizer` | Research data compression (haiku) |
 
 ### obsidian-workflow
@@ -65,15 +65,15 @@ Obsidian vault daily workflows and visual tools.
 | Type | Name | Role |
 |------|------|------|
 | Skill | `using-obsidian-workflow` | Entry point |
-| Skill | `daily` | Start the day — daily note, priorities |
-| Skill | `vault-setup` | Interactive vault configurator |
-| Skill | `tldr` | Save conversation summary to vault |
-| Skill | `file-intel` | Extract file content into Obsidian notes |
-| Skill | `mermaid-visualizer` | Create Mermaid diagrams \* |
-| Skill | `excalidraw-diagram` | Generate Excalidraw diagrams \* |
+| Skill | `obsidian-daily` | Start the day — daily note, priorities |
+| Skill | `obsidian-vault-setup` | Interactive vault configurator |
+| Skill | `obsidian-tldr` | Save conversation summary to vault |
+| Skill | `obsidian-file-intel` | Extract file content into Obsidian notes |
+| Skill | `obsidian-mermaid-visualizer` | Create Mermaid diagrams \* |
+| Skill | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams \* |
 | Skill | `obsidian-canvas-creator` | Create Canvas files \* |
-| Agent | `vault-organizer` | Vault cleanup and organization (haiku) |
-| Agent | `note-summarizer` | Note content compression (haiku) |
+| Agent | `obsidian-vault-organizer` | Vault cleanup and organization (haiku) |
+| Agent | `obsidian-note-summarizer` | Note content compression (haiku) |
 
 \* Integrated from [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) (MIT License)
 
@@ -99,11 +99,7 @@ YouTube video processing toolkit.
 
 ```bash
 claude plugin marketplace add kouko/monkey-skills
-claude plugin install code-team@monkey-skills
-claude plugin install design-team@monkey-skills
-claude plugin install research-team@monkey-skills
-claude plugin install obsidian-workflow@monkey-skills
-claude plugin install youtube-skills@monkey-skills
+claude plugin install monkey-skills
 ```
 
 ### Gemini CLI
@@ -144,7 +140,7 @@ monkey-skills/
     └── youtube-skills/
 ```
 
-Uses **Pattern B** (isolated plugin directories). Each plugin has its own `skills/` and `agents/`, preventing namespace pollution. Shared agents (e.g., `qa-evaluator` used by both code-team and research-team) are copied to each plugin that needs them.
+Uses **Pattern B** (isolated plugin directories). Each plugin has its own `skills/` and `agents/`, preventing namespace pollution. Shared agents (e.g., `shared-qa-evaluator` used by both code-team and research-team) are copied to each plugin that needs them.
 
 ## License
 
