@@ -20,7 +20,7 @@ Both worker (when producing) and evaluator (when reviewing) reference this file.
 
 ## Output Language
 
-- All research output in the `output_language` specified by the orchestrator's plan
+- All research output in the `output_language` specified in the launch prompt
 - Preserve original language for proper nouns, technical terms, and direct quotes
 
 ## Confidence Levels

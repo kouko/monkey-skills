@@ -12,7 +12,7 @@
 
 ## Output Standards
 
-- Language: Use the `output_language` from the orchestrator's plan
+- Language: Use the `output_language` from the launch prompt
 - Cite every factual claim with source
 - Distinguish facts from analysis from speculation
 - Include confidence level (高/中/低) for key conclusions

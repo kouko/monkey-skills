@@ -1,6 +1,6 @@
 ---
 name: using-research-team
-description: Entry point for the research-team plugin. Explains when to use it, what agents are available, and how to route tasks. Load this skill at session start for research-related tasks.
+description: Route research tasks — analysis, investigation, investment analysis, stock/macro/market research, technology evaluation. Load BEFORE research-team to select the right protocol.
 ---
 
 # Using Research Team

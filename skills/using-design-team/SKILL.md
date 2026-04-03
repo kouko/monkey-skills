@@ -1,6 +1,6 @@
 ---
 name: using-design-team
-description: Entry point for the design-team plugin. Explains when to use it, what agents are available, and how to route tasks. Load this skill at session start for design-related tasks.
+description: Route design tasks — UI design, wireframes, mockups, UX strategy, accessibility audits, visual design review, frontend implementation. Load BEFORE design-team to select the right evaluators.
 ---
 
 # Using Design Team

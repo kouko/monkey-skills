@@ -1,12 +1,16 @@
 ---
 name: research-team
-description: Deep research workflow — Generate → Evaluate → Edit loop. Use for research, analysis, investigation, or any task requiring multi-source information gathering.
+description: Execute research pipeline: Generate → Citation Check → Quality Gate → Edit. Requires using-research-team for task routing.
 ---
 
 # Research Team
 
 Generate → Checklist → Quality Gate → Edit loop.
 Uses hybrid evaluation: binary citation checklist first, then qualitative flag gate.
+
+## Language
+
+Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
 ## Step 1 — Generate
 

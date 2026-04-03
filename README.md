@@ -5,7 +5,7 @@ Personal agent skills marketplace — team-based development workflows and Obsid
 ## Architecture: Phase-Driven + Domain Knowledge + Hybrid Evaluation
 
 ```
-Team Skill (orchestrator)
+Team Skill (pipeline)
   ├── worker (sonnet)    ← protocols/ + standards/
   ├── evaluator (opus)   ← checklists/ → rubrics/ + standards/
   └── context-compressor (haiku) ← context compression
@@ -130,8 +130,7 @@ Install via marketplace or import `https://github.com/kouko/monkey-skills` in Se
 
 ```
 monkey-skills/
-├── agents/                          ← Phase-driven agents (5 total)
-│   ├── orchestrator.md              ← Task decomposition (opus)
+├── agents/                          ← Phase-driven agents (4 total)
 │   ├── worker.md                    ← Generic executor (sonnet)
 │   ├── evaluator.md                 ← Generic evaluator (opus)
 │   ├── context-compressor.md                ← Context compressor (haiku)

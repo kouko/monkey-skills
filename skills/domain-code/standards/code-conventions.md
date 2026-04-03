@@ -13,7 +13,7 @@ Both worker (when writing) and evaluator (when reviewing) reference this file.
 ## Language
 
 - Code documentation: English (unless project convention differs)
-- Non-code content (vault notes, reports): Use the `output_language` from the orchestrator's plan
+- Non-code content (vault notes, reports): Use the `output_language` from the launch prompt
 
 ## Style
 

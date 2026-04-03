@@ -1,12 +1,16 @@
 ---
 name: design-team
-description: App design workflow — Generate → Review (parallel) → Revise loop. Use for UI design, wireframes, mockups, UX strategy, or frontend implementation.
+description: Execute design pipeline: Generate → A11y → Review (parallel) → Revise. Requires using-design-team for task routing.
 ---
 
 # Design Team
 
 Semi-automatic Generate → Checklist → Review → Revise loop.
 Uses hybrid evaluation: binary a11y checklist first, then qualitative flag gates in parallel.
+
+## Language
+
+Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
 ## Step 1 — Generate
 
@@ -35,6 +39,7 @@ For each, read the corresponding rubric and include its content in the launch pr
   `evaluator` + Read `skills/domain-design/rubrics/ui-interaction-gate.md`
 - Visual design (user-provided asset) →
   `evaluator` + Read `skills/domain-design/rubrics/visual-gate.md`
+  Skip if: no visual asset provided (wireframe/text only)
 - Full design → all three in parallel
 
 Aggregate verdicts: worst verdict wins.
