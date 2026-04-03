@@ -1,5 +1,13 @@
 {
   "name": "monkey-skills",
-  "description": "Personal agent skills — code, design, research, obsidian teams",
-  "source": "."
+  "owner": {
+    "name": "kouko"
+  },
+  "plugins": [
+    {
+      "name": "monkey-skills",
+      "description": "Personal agent skills — code, design, research teams + obsidian workflows",
+      "source": "./"
+    }
+  ]
 }
