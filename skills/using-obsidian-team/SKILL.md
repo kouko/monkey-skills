@@ -1,6 +1,6 @@
 ---
 name: using-obsidian-team
-description: Route Obsidian tasks — daily notes, vault setup, conversation summaries, file processing, diagrams (Mermaid/Excalidraw/Canvas), vault cleanup. Load to select the right Obsidian skill.
+description: Manage Obsidian vault workflows. Use when managing daily notes, setting up vaults, saving conversation summaries, processing files, creating diagrams, or cleaning up vaults. 筆記・日記・整理。ノート・日記・整理。
 ---
 
 # Using Obsidian Team

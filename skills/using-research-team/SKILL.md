@@ -1,6 +1,6 @@
 ---
 name: using-research-team
-description: Route research tasks — analysis, investigation, investment analysis, stock/macro/market research, technology evaluation. Load BEFORE research-team to select the right protocol.
+description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, or doing investment/market analysis. 研究・分析・技術評估・開源調查。調査・技術評価。
 ---
 
 # Using Research Team

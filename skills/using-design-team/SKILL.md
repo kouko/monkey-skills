@@ -1,6 +1,6 @@
 ---
 name: using-design-team
-description: Route design tasks — UI design, wireframes, mockups, UX strategy, accessibility audits, visual design review, frontend implementation. Load BEFORE design-team to select the right evaluators.
+description: Design with accessibility and quality review. Use when designing UI, creating wireframes, planning UX strategy, auditing accessibility, reviewing visual design, or implementing frontend. UI設計・UXレビュー・アクセシビリティ。介面設計・無障礙審查。
 ---
 
 # Using Design Team

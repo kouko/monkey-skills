@@ -1,6 +1,6 @@
 ---
 name: code-team
-description: Execute code pipeline: Arch → Implement → Test → Security → Quality → QA. Requires using-code-team for task routing.
+description: Execute the code development pipeline with architecture review, implementation, testing, and quality gates. Requires using-code-team for task routing.
 ---
 
 # Code Team

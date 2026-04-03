@@ -1,6 +1,6 @@
 ---
 name: design-team
-description: Execute design pipeline: Generate → A11y → Review (parallel) → Revise. Requires using-design-team for task routing.
+description: Execute the design review pipeline with accessibility checks and parallel quality gates. Requires using-design-team for task routing.
 ---
 
 # Design Team

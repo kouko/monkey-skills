@@ -1,6 +1,6 @@
 ---
 name: obsidian-canvas-creator
-description: Create Obsidian Canvas files from text content, supporting both MindMap and freeform layouts. Use this skill when users want to visualize content as an interactive canvas, create mind maps, or organize information spatially in Obsidian format.
+description: Create Obsidian Canvas files with MindMap or freeform layouts. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
 ---
 
 # Obsidian Canvas Creator

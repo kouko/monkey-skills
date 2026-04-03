@@ -1,6 +1,6 @@
 ---
 name: research-team
-description: Execute research pipeline: Generate → Citation Check → Quality Gate → Edit. Requires using-research-team for task routing.
+description: Execute the research pipeline with citation checking and quality evaluation gates. Requires using-research-team for task routing.
 ---
 
 # Research Team

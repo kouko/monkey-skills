@@ -1,6 +1,6 @@
 ---
 name: obsidian-tldr
-description: Save a summary of this conversation to the vault. Key decisions, things to remember, next actions. Store in the right folder automatically.
+description: Save a conversation summary to the Obsidian vault. Use when ending a session, wanting to record decisions, or preserving context for next time. 会話まとめ・保存。對話摘要・儲存。
 ---
 
 Summarize this conversation:
