@@ -9,11 +9,13 @@ Design review workflow with hybrid evaluation: binary a11y checklist first, then
 
 ## When to Use
 
+- Design brainstorming and concept development
 - UI design and wireframes
 - UX strategy and user journeys
+- Visual design creation and specification
 - Frontend implementation review
 - Accessibility audits
-- Visual design feedback
+- Design review and feedback
 
 ## Available Skills
 
@@ -31,20 +33,34 @@ Design review workflow with hybrid evaluation: binary a11y checklist first, then
 
 ## Domain Files (in `skills/domain-design/`)
 
-| Type | File | Purpose |
-|------|------|---------|
-| Checklist | `checklists/a11y-checklist.md` | Binary accessibility gate |
-| Rubric | `rubrics/ux-strategy-gate.md` | UX strategy flags (Ando temporal model) |
-| Rubric | `rubrics/ui-interaction-gate.md` | UI structure & interaction flags (OOUI) |
-| Rubric | `rubrics/visual-gate.md` | Visual design flags (Kansei Engineering) |
-| Standard | `standards/wcag-baseline.md` | Shared WCAG 2.2 AA rules (SSOT) |
+| Type | File | Used by | Purpose |
+|------|------|---------|---------|
+| Protocol | `protocols/design-brainstorming.md` | worker | 統合設計発想（感性工学 × 意味のイノベーション × 無意識の設計） |
+| Protocol | `protocols/ux-strategy.md` | worker | UX戦略策定（安藤昌也 期間モデル × Garrett） |
+| Protocol | `protocols/visual-design.md` | worker | ビジュアル設計（感性工学 × 引き算のデザイン） |
+| Protocol | `protocols/ui-interaction.md` | worker | UI・インタラクション設計（無意識の設計 × OOUI） |
+| Checklist | `checklists/a11y-checklist.md` | evaluator | Binary accessibility gate |
+| Rubric | `rubrics/ux-strategy-gate.md` | evaluator | UX strategy flags (Ando temporal model) |
+| Rubric | `rubrics/ui-interaction-gate.md` | evaluator | UI structure & interaction flags (OOUI) |
+| Rubric | `rubrics/visual-gate.md` | evaluator | Visual design flags (Kansei Engineering) |
+| Standard | `standards/wcag-baseline.md` | both | Shared WCAG 2.2 AA rules (SSOT) |
 
 ## Routing
 
+### Worker (Generate)
+
+- Design brainstorming / concept → worker + `protocols/design-brainstorming.md`
+- UX strategy / user journey → worker + `protocols/ux-strategy.md`
+- Visual design / color / typography → worker + `protocols/visual-design.md`
+- UI spec / wireframe / frontend code → worker + `protocols/ui-interaction.md`
+- Full design → worker + `protocols/design-brainstorming.md` first, then task-specific protocol
+
+### Evaluator (Review)
+
+- Any UI output → evaluator + `a11y-checklist.md` (always runs first)
 - Strategy / journey → evaluator + `ux-strategy-gate.md`
 - Wireframe / UI spec / frontend code → evaluator + `ui-interaction-gate.md`
 - Visual asset → evaluator + `visual-gate.md`
-- Any UI output → evaluator + `a11y-checklist.md` (always runs first)
 
 ## Quick Start
 

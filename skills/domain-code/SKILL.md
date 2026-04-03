@@ -24,6 +24,7 @@ You MUST read files based ONLY on your current role:
 
 | Directory | File | Used by | Purpose |
 |-----------|------|---------|---------|
+| `protocols/` | `brainstorming.md` | worker | Feature brainstorming & approach exploration SOP |
 | `protocols/` | `test-writing.md` | worker | Unit test generation SOP |
 | `protocols/` | `doc-writing.md` | worker | Documentation generation SOP |
 | `protocols/` | `refactoring.md` | worker | Mechanical refactoring SOP |

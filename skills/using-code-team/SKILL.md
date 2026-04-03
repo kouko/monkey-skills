@@ -33,6 +33,7 @@ Feature development workflow with hybrid evaluation: binary checklists first, th
 
 | Type | File | Purpose |
 |------|------|---------|
+| Protocol | `protocols/brainstorming.md` | Feature brainstorming & approach exploration SOP |
 | Protocol | `protocols/test-writing.md` | Unit test generation SOP |
 | Protocol | `protocols/doc-writing.md` | Documentation generation SOP |
 | Protocol | `protocols/refactoring.md` | Mechanical refactoring SOP |

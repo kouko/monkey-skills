@@ -12,9 +12,19 @@ Uses hybrid evaluation: binary checklist gate first, then qualitative flag gate.
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Plan
+## Step 1 — Plan (Protocol-Guided)
 
-Use `feature-dev:code-architect` (plugin) for planning.
+Load the appropriate protocol BEFORE planning. Route by task type:
+
+| Task | Protocol to load |
+|------|-----------------|
+| New feature / significant change | `skills/domain-code/protocols/brainstorming.md` |
+| Refactoring | `skills/domain-code/protocols/refactoring.md` |
+| Codebase assessment | `skills/domain-code/protocols/codebase-assessment.md` |
+| Small bug fix / cosmetic change | Skip protocol, proceed directly |
+
+Pass the protocol output (Architect Handoff) to `feature-dev:code-architect` (plugin)
+for detailed implementation planning.
 
 ## Step 2 — Architecture Review (flag gate)
 

@@ -34,17 +34,31 @@ Deep research workflow with hybrid evaluation: binary citation checklist first, 
 
 | Type | File | Purpose |
 |------|------|---------|
-| Protocol | `protocols/analysis.md` | Deep research methodology SOP |
+| Protocol | `protocols/research.md` | General research methodology SOP (fallback) |
+| Protocol | `protocols/market-analysis.md` | Market & industry analysis SOP |
+| Protocol | `protocols/competitive-analysis.md` | Competitive & competitor analysis SOP |
+| Protocol | `protocols/academic-research.md` | Academic & theoretical research SOP |
 | Protocol | `protocols/investment.md` | Investment & macro analysis framework |
+| Protocol | `protocols/stack-evaluation.md` | Tech stack & OSS evaluation SOP |
 | Checklist | `checklists/source-citation-checklist.md` | Binary citation gate |
 | Rubric | `rubrics/research-quality-gate.md` | Research quality flags |
 | Standard | `standards/citation-standards.md` | Shared citation rules (SSOT) |
 
 ## Routing
 
-- General research → worker + `analysis.md` protocol
-- Investment / stock / macro / market → worker + `investment.md` protocol
-- Quality evaluation → evaluator: checklist first, then quality gate
+### Worker (Generate)
+
+- General research / analysis → worker + `protocols/research.md`
+- Market / industry analysis → worker + `protocols/market-analysis.md`
+- Competitive / competitor analysis → worker + `protocols/competitive-analysis.md`
+- Academic / theoretical research → worker + `protocols/academic-research.md`
+- Investment / stock / macro → worker + `protocols/investment.md`
+- Tech stack / library / OSS evaluation → worker + `protocols/stack-evaluation.md`
+
+### Evaluator (Review)
+
+- Any research output → evaluator + `source-citation-checklist.md` (always runs first)
+- Quality evaluation → evaluator + `research-quality-gate.md`
 
 ## Quick Start
 

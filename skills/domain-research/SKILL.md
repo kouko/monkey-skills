@@ -24,7 +24,10 @@ You MUST read files based ONLY on your current role:
 
 | Directory | File | Used by | Purpose |
 |-----------|------|---------|---------|
-| `protocols/` | `analysis.md` | worker | Deep research methodology SOP |
+| `protocols/` | `research.md` | worker | General research methodology SOP (fallback) |
+| `protocols/` | `market-analysis.md` | worker | Market & industry analysis SOP |
+| `protocols/` | `competitive-analysis.md` | worker | Competitive & competitor analysis SOP |
+| `protocols/` | `academic-research.md` | worker | Academic & theoretical research SOP |
 | `protocols/` | `investment.md` | worker | Investment & macro analysis framework |
 | `protocols/` | `stack-evaluation.md` | worker | Tech stack & OSS evaluation SOP |
 | `checklists/` | `source-citation-checklist.md` | evaluator | Binary citation gate (first pass) |

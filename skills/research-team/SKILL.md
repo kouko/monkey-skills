@@ -12,12 +12,23 @@ Uses hybrid evaluation: binary citation checklist first, then qualitative flag g
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Generate
+## Step 1 — Generate (Protocol-Guided)
+
+Load the appropriate protocol BEFORE generating research output. Route by task type:
+
+| Task | Protocol to load |
+|------|-----------------|
+| General research / analysis | `skills/domain-research/protocols/research.md` |
+| Market / industry analysis | `skills/domain-research/protocols/market-analysis.md` |
+| Competitive / competitor analysis | `skills/domain-research/protocols/competitive-analysis.md` |
+| Academic / theoretical research | `skills/domain-research/protocols/academic-research.md` |
+| Investment / stock / macro | `skills/domain-research/protocols/investment.md` |
+| Tech stack / library / OSS evaluation | `skills/domain-research/protocols/stack-evaluation.md` |
 
 Launch `worker` with:
-- Protocol: Read `skills/domain-research/protocols/analysis.md`
-  (or `skills/domain-research/protocols/investment.md` for investment/macro topics)
+- Protocol: the matched protocol from the table above
 - Standards: Read `skills/domain-research/standards/citation-standards.md`
+  (also `skills/domain-research/standards/oss-safety.md` for OSS evaluation)
 - Input: research question + context
 
 Include protocol and standards content in the worker's launch prompt.
