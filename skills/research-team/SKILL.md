@@ -1,91 +1,143 @@
 ---
 name: research-team
-description: Execute the research pipeline with citation checking and quality evaluation gates. Requires using-research-team for task routing.
+description: Research with quality checkpoints. Agent controls execution; gates enforce citation and analysis quality.
 ---
 
 # Research Team
 
-Generate → Checklist → Quality Gate → Edit loop.
-Uses hybrid evaluation: binary citation checklist first, then qualitative flag gate.
+Agent-driven execution with four-level quality gates.
 
 ## Language
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Generate (Protocol-Guided)
+## Quality Gates
 
-Load the appropriate protocol BEFORE generating research output. Route by task type:
+### SELF Check (every delivery)
 
-| Task | Protocol to load |
-|------|-----------------|
-| General research / analysis | `skills/domain-research/protocols/research.md` |
-| Market / industry analysis | `skills/domain-research/protocols/market-analysis.md` |
-| Competitive / competitor analysis | `skills/domain-research/protocols/competitive-analysis.md` |
-| Academic / theoretical research | `skills/domain-research/protocols/academic-research.md` |
-| Investment / stock / macro | `skills/domain-research/protocols/investment.md` |
-| Tech stack / library / OSS evaluation | `skills/domain-research/protocols/stack-evaluation.md` |
+Before delivering output, verify your own work:
+1. Re-read the user's original request
+2. List 3-5 things that would make this output unacceptable
+3. Check each one against your output
+4. Fix any issues found before delivering
 
-Launch `worker` with:
-- Protocol: the matched protocol from the table above
-- Standards: Read `skills/domain-research/standards/citation-standards.md`
+You may reference any domain file (rubrics, checklists, standards) during self-check.
+
+### MUST Gates (auto-trigger, non-skippable)
+
+| Gate | Trigger | File |
+|------|---------|------|
+| Source Citation | Output makes factual claims or cites sources | `evaluator` + `skills/domain-research/checklists/source-citation-checklist.md` |
+
+### SHOULD Gates (auto-trigger, skippable with stated reason)
+
+| Gate | Trigger | File |
+|------|---------|------|
+| Research Quality | Output is a deep research or analysis report | `evaluator` + `skills/domain-research/rubrics/research-quality-gate.md` |
+
+### MAY Gates (user-requested only)
+
+| Gate | File |
+|------|------|
+| OSS Due Diligence | `skills/domain-research/checklists/oss-due-diligence.md` |
+
+## Gate Protocol
+
+For MUST and SHOULD gates, launch `evaluator` with:
+- The gate file (checklist or rubric)
+- Standards: `skills/domain-research/standards/citation-standards.md`
   (also `skills/domain-research/standards/oss-safety.md` for OSS evaluation)
-- Input: research question + context
+- The artifact to evaluate
+- Original requirements
 
-Include protocol and standards content in the worker's launch prompt.
+Handle verdict:
+- **PASS** → gate cleared
+- **PASS_WITH_NOTES** → auto-fix based on feedback → re-run from MUST gate
+- **NEEDS_REVISION** → stop, present issues to user
 
-## Step 2a — Source Citation Checklist (binary gate)
+Guard rails:
+- Max 2 auto-edit rounds before escalating
+- Factual accuracy or data freshness issues → always NEEDS_REVISION
+  (main conversation cannot verify facts without web search)
+- Each retry launches a fresh evaluator (no accumulated context)
+- Use `context-compressor` if artifact is large before passing to evaluator
 
-Launch `evaluator` with:
-- Checklist: Read `skills/domain-research/checklists/source-citation-checklist.md`
-- Standards: Read `skills/domain-research/standards/citation-standards.md`
-- Artifact: research draft from Step 1
+## Available Resources
 
-- All `PASS` → proceed to Step 2b
-- Any `FAIL` → `NEEDS_REVISION`, re-dispatch worker with specific fix instructions
+Agent loads these as needed. No obligation to use all of them.
 
-## Step 2b — Research Quality Gate (flag gate)
+### Domain Knowledge (`skills/domain-research/`)
 
-Launch `evaluator` with:
-- Rubric: Read `skills/domain-research/rubrics/research-quality-gate.md`
-- Standards: Read `skills/domain-research/standards/citation-standards.md`
-- Artifact: research draft from Step 1
+All files are available to any agent as reference.
 
-## Step 3 — Iterate based on verdict
+| Directory | Content | Typical Use |
+|-----------|---------|-------------|
+| `protocols/` | Research methodology SOPs | Execution guidance |
+| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
+| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
+| `standards/` | Baseline rules (SSOT) | Universal reference |
 
-- **PASS** → Done, deliver to user
-- **PASS_WITH_NOTES** → Main conversation edits based on feedback
-  (formatting, clarity, structure only) → re-run Step 2b
-- **NEEDS_REVISION** → Stop, present issues to user
-  (user may choose to re-dispatch worker with feedback)
+Files:
+| File | Content |
+|------|---------|
+| `protocols/research.md` | General research methodology SOP (fallback) |
+| `protocols/market-analysis.md` | Market & industry analysis SOP |
+| `protocols/competitive-analysis.md` | Competitive & competitor analysis SOP |
+| `protocols/academic-research.md` | Academic & theoretical research SOP |
+| `protocols/investment.md` | Investment & macro analysis framework |
+| `protocols/stack-evaluation.md` | Tech stack & OSS evaluation SOP |
+| `checklists/source-citation-checklist.md` | Citation gate criteria |
+| `checklists/oss-due-diligence.md` | OSS compliance gate criteria |
+| `rubrics/research-quality-gate.md` | Research quality flags |
+| `standards/citation-standards.md` | Shared citation & output rules (SSOT) |
+| `standards/oss-safety.md` | OSS licensing & production-readiness rules (SSOT) |
+
+### Agents
+
+| Agent | Role | Model |
+|-------|------|-------|
+| `worker` | Execute research tasks with protocol guidance | sonnet |
+| `evaluator` | Run quality gates | opus |
+| `context-compressor` | Compress context between phases | haiku |
+
+## Recommended Flows
+
+Suggested approaches, not mandates. Agent adapts based on task.
+
+### Deep Research / Analysis
+1. Load matching protocol (research, market, competitive, academic, investment, or stack)
+2. Dispatch `worker` with protocol + standards
+3. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
+4. Deliver
+
+### Quick Lookup / Fact-Check
+1. Search and answer directly
+2. SELF check
+3. Deliver (no formal citations → no MUST gate trigger)
+
+### Research Summary (from existing sources)
+1. Load relevant protocol
+2. Write summary in main conversation
+3. SELF check → MUST gate (Citation, if sources cited)
+4. Deliver
+
+### Tech Stack / OSS Evaluation
+1. Load `stack-evaluation.md` protocol
+2. Dispatch `worker` with protocol + `citation-standards.md` + `oss-safety.md`
+3. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
+4. Optionally run OSS Due Diligence (MAY gate)
+5. Deliver
 
 ## Context Isolation
 
 Each agent launch starts fresh. Pass only:
-- To worker: the protocol + standards + research question (no prior conversation history)
-- To evaluator: the checklist/rubric + standards + research draft + original requirements
-
-Use `context-compressor` to compress large artifacts before passing between phases if needed.
-
-## Auto-Revise Loop (Context-Clean Retry)
-
-When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
-
-1. Use `context-compressor` to compress the current draft + feedback into a brief
-2. Launch a **fresh** worker with ONLY: original question + current draft + evaluator feedback
-3. Discard all prior retry history — the new worker should NOT see previous failed drafts
-4. Re-run from Step 2a (citation checklist first)
+- To evaluator: gate file + standards + artifact + original requirements
+- To worker: protocol + standards + research question + context
+Use `context-compressor` for large artifacts.
 
 ## Worker BLOCKED Handling
 
-If a worker outputs `BLOCKED` status (e.g., no sources found, contradictory requirements):
-- Do NOT proceed to evaluation gates
-- Present the BLOCKED reason and suggested next steps to the user
-- Wait for user input before re-dispatching
-
-## Guard Rails
-
-- Max 2 auto-edit rounds before escalating to user
-- Main conversation edits only what evaluator flagged
-- Factual accuracy or data freshness issues → always NEEDS_REVISION
-  (main conversation cannot verify facts without web search)
-- Each retry launches a fresh agent (no accumulated context from failed attempts)
+If a worker outputs `BLOCKED` (e.g., no sources found, contradictory requirements):
+- Do NOT proceed to gates
+- Present BLOCKED reason to user
+- Wait for user input

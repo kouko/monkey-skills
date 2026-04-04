@@ -5,31 +5,34 @@ description: "Core knowledge base for design — UX strategy, UI interaction, vi
 
 # Domain: Design
 
-## Agent Role Routing
+## Available Knowledge
 
-You MUST read files based ONLY on your current role:
+All files are available to any agent as reference.
 
-### 1. worker (Executing/Generating)
-- Read `protocols/*.md` for step-by-step implementation SOPs (if available)
-- Read `standards/*.md` to ensure your output complies with baseline rules
-- DO NOT read `rubrics/` or `checklists/`
+| Directory | Content | Typical Use |
+|-----------|---------|-------------|
+| `protocols/` | Step-by-step SOPs | Execution guidance |
+| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
+| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
+| `standards/` | Baseline rules (SSOT) | Universal reference |
 
-### 2. evaluator (Reviewing/Grading)
-- FIRST read `checklists/*.md` for binary pass/fail checks (objective gate)
-- THEN read `rubrics/*.md` for qualitative flag evaluation (subjective gate)
-- Read `standards/*.md` to cross-reference objective rules
-- DO NOT read `protocols/`
+## Behavioral Rules
 
-## Available Files
+Knowledge access is open. Role boundaries are enforced by behavior, not by reading restrictions:
 
-| Directory | File | Used by | Purpose |
-|-----------|------|---------|---------|
-| `protocols/` | `design-brainstorming.md` | worker | Integrated design thinking (Kansei × Meaning × Affordance) |
-| `protocols/` | `ux-strategy.md` | worker | UX strategy creation (Ando temporal model × Garrett) |
-| `protocols/` | `visual-design.md` | worker | Visual design implementation (Kansei Engineering) |
-| `protocols/` | `ui-interaction.md` | worker | UI & interaction design (Without Thought × OOUI) |
-| `checklists/` | `a11y-checklist.md` | evaluator | Binary accessibility gate (first pass) |
-| `rubrics/` | `ux-strategy-gate.md` | evaluator | UX strategy flags (Ando temporal model) |
-| `rubrics/` | `ui-interaction-gate.md` | evaluator | UI structure & interaction flags |
-| `rubrics/` | `visual-gate.md` | evaluator | Visual design flags (Kansei) |
-| `standards/` | `wcag-baseline.md` | both | Shared WCAG 2.2 AA rules (SSOT) |
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
+
+## Files
+
+| Directory | File | Purpose |
+|-----------|------|---------|
+| `protocols/` | `design-brainstorming.md` | Integrated design thinking (Kansei x Meaning x Affordance) |
+| `protocols/` | `ux-strategy.md` | UX strategy creation (Ando temporal model x Garrett) |
+| `protocols/` | `visual-design.md` | Visual design implementation (Kansei Engineering) |
+| `protocols/` | `ui-interaction.md` | UI & interaction design (Without Thought x OOUI) |
+| `checklists/` | `a11y-checklist.md` | Binary accessibility gate |
+| `rubrics/` | `ux-strategy-gate.md` | UX strategy flags (Ando temporal model) |
+| `rubrics/` | `ui-interaction-gate.md` | UI structure & interaction flags |
+| `rubrics/` | `visual-gate.md` | Visual design flags (Kansei) |
+| `standards/` | `wcag-baseline.md` | Shared WCAG 2.2 AA rules (SSOT) |

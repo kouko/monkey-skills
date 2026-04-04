@@ -2,36 +2,49 @@
 
 Personal agent skills for software development, design, research, and Obsidian team workflows.
 
-## Architecture: Phase-Driven Agents + Domain Knowledge + Hybrid Evaluation
+## Architecture: Checkpoint-Based Quality Gates + Open Domain Knowledge
 
 ```
-Team Skill (pipeline)
+Team Skill (checkpoint orchestrator)
   ├── worker (sonnet)    ← execute with protocols/ + standards/
-  ├── evaluator (opus)   ← judge with checklists/ → rubrics/ + standards/
+  ├── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
   └── context-compressor (haiku) ← compress context between phases
 
-Domain knowledge in domain-*/:
-  protocols/   → Worker reads (how to do)
-  checklists/  → Evaluator reads first (binary pass/fail)
-  rubrics/     → Evaluator reads second (qualitative flags)
-  standards/   → Both read (shared SSOT)
+Domain knowledge in domain-*/ (open access, all files readable by any agent):
+  protocols/   → Step-by-step SOPs (execution guidance)
+  checklists/  → Binary pass/fail criteria (gate evaluation)
+  rubrics/     → Qualitative flag criteria (gate evaluation)
+  standards/   → Baseline rules (shared SSOT)
+
+Role boundaries enforced by behavior, not reading restrictions:
+  worker      → produces artifacts, does NOT produce gate verdicts
+  evaluator   → produces verdicts, does NOT modify artifacts
 ```
+
+### Four-Level Quality Gates
+
+| Level | Behavior | Executor |
+|-------|----------|----------|
+| SELF | Agent self-generates check items | main agent |
+| MUST | Auto-trigger, non-skippable | evaluator |
+| SHOULD | Auto-trigger, skippable with reason | evaluator |
+| MAY | User-requested only | evaluator |
 
 ## Skills
 
 ### Code Team
-- `using-code-team` — Entry point and routing guide
-- `code-team` — Arch → Implement → Test → Checklist → Review → Verify
+- `using-code-team` — Entry point and capability overview
+- `code-team` — Agent-driven execution with Security + Architecture + Quality gates
 - `domain-code` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Design Team
-- `using-design-team` — Entry point and routing guide
-- `design-team` — Generate → Checklist → Review (parallel) → Revise
-- `domain-design` — Domain knowledge: checklists, rubrics, standards
+- `using-design-team` — Entry point and capability overview
+- `design-team` — Agent-driven execution with Accessibility + UX/UI gates
+- `domain-design` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Research Team
-- `using-research-team` — Entry point and routing guide
-- `research-team` — Generate → Checklist → Quality Gate → Edit
+- `using-research-team` — Entry point and capability overview
+- `research-team` — Agent-driven execution with Citation + Quality gates
 - `domain-research` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Obsidian Team

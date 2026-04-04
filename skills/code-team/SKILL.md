@@ -1,127 +1,164 @@
 ---
 name: code-team
-description: Execute the code development pipeline with architecture review, implementation, testing, and quality gates. Requires using-code-team for task routing.
+description: Code development with quality checkpoints. Agent controls execution; gates enforce quality.
 ---
 
 # Code Team
 
-Sequential Arch → Implement → Test → Checklist → Review → Verify.
-Uses hybrid evaluation: binary checklist gate first, then qualitative flag gate.
+Agent-driven execution with four-level quality gates.
 
 ## Language
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Plan (Protocol-Guided)
+## Quality Gates
 
-Load the appropriate protocol BEFORE planning. Route by task type:
+### SELF Check (every delivery)
 
-| Task | Protocol to load |
-|------|-----------------|
-| New feature / significant change | `skills/domain-code/protocols/brainstorming.md` |
-| Refactoring | `skills/domain-code/protocols/refactoring.md` |
-| Codebase assessment | `skills/domain-code/protocols/codebase-assessment.md` |
-| Small bug fix / cosmetic change | Skip protocol, proceed directly |
+Before delivering output, verify your own work:
+1. Re-read the user's original request
+2. List 3-5 things that would make this output unacceptable
+3. Check each one against your output
+4. Fix any issues found before delivering
 
-Pass the protocol output (Architect Handoff) to `feature-dev:code-architect` (plugin)
-for detailed implementation planning.
+You may reference any domain file (rubrics, checklists, standards) during self-check.
 
-## Step 2 — Architecture Review (flag gate)
+### MUST Gates (auto-trigger, non-skippable)
 
-Skip if: change is cosmetic (comments, formatting, renames) or single-file bug fix.
+| Gate | Trigger | File |
+|------|---------|------|
+| Security | Output contains code changes | `evaluator` + `skills/domain-code/checklists/security-checklist.md` |
+| Architecture | Output changes public API or system structure | `evaluator` + `skills/domain-code/rubrics/arch-gate.md` |
 
-Launch `evaluator` with:
-- Rubric: Read `skills/domain-code/rubrics/arch-gate.md`
-- Artifact: the plan from Step 1
+### SHOULD Gates (auto-trigger, skippable with stated reason)
 
-- **PASS** → proceed to Step 3
-- **PASS_WITH_NOTES** → Revise plan → re-run Step 2
-- **NEEDS_REVISION** → Stop, present alternatives to user
+| Gate | Trigger | File |
+|------|---------|------|
+| Quality | Code changes span >3 files or introduce new module | `evaluator` + `skills/domain-code/rubrics/quality-gate.md` |
 
-## Step 3 — Implement
+### MAY Gates (user-requested only)
 
-Make changes in main conversation.
-Worker should reference `skills/domain-code/standards/code-conventions.md`.
-PostToolUse lint hook provides immediate syntax/style feedback.
+| Gate | File |
+|------|------|
+| QA Verification | `skills/domain-code/rubrics/qa-gate.md` |
+| Tech Debt Audit | `skills/domain-code/checklists/tech-debt-checklist.md` |
 
-## Step 3.5 — Test (optional)
+## Gate Protocol
 
-Launch `worker` with:
-- Protocol: Read `skills/domain-code/protocols/test-writing.md`
-- Standards: Read `skills/domain-code/standards/code-conventions.md`
-- Input: summary of new/changed modules
+For MUST and SHOULD gates, launch `evaluator` with:
+- The gate file (checklist or rubric)
+- Standards: `skills/domain-code/standards/code-conventions.md`
+- The artifact to evaluate
+- Original requirements
 
-Tests must pass before proceeding to review.
+Handle verdict:
+- **PASS** → gate cleared
+- **PASS_WITH_NOTES** → auto-fix based on feedback → re-run from MUST gates
+- **NEEDS_REVISION** → stop, present issues to user
 
-## Step 4 — Security Checklist (binary gate)
+Guard rails:
+- Max 3 auto-revision rounds before escalating
+- Run tests after each revision if test suite exists
+- Each retry launches a fresh evaluator (no accumulated context)
+- After fixing one gate's issues, re-check other triggered gates
+- Use `context-compressor` if artifact is large before passing to evaluator
 
-Launch `evaluator` with:
-- Checklist: Read `skills/domain-code/checklists/security-checklist.md`
-- Artifact: code changes from Step 3
+## Available Resources
 
-- All `PASS` → proceed to Step 5
-- Any `FAIL` → `NEEDS_REVISION`, auto-fix → re-run Step 4
+Agent loads these as needed. No obligation to use all of them.
 
-## Step 5 — Quality Review (flag gate)
+### Domain Knowledge (`skills/domain-code/`)
 
-Launch `evaluator` with:
-- Rubric: Read `skills/domain-code/rubrics/quality-gate.md`
-- Standards: Read `skills/domain-code/standards/code-conventions.md`
-- Artifact: code changes from Step 3
+All files are available to any agent as reference.
 
-- **PASS** → proceed to Step 6
-- **PASS_WITH_NOTES** → Auto-fix based on feedback → re-run Step 5
-- **NEEDS_REVISION** → Stop, present issues to user
+| Directory | Content | Typical Use |
+|-----------|---------|-------------|
+| `protocols/` | Step-by-step SOPs | Execution guidance |
+| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
+| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
+| `standards/` | Baseline rules (SSOT) | Universal reference |
 
-## Step 6 — QA Verification (flag gate)
+Files:
+| File | Content |
+|------|---------|
+| `protocols/brainstorming.md` | Feature brainstorming & approach exploration |
+| `protocols/refactoring.md` | Mechanical refactoring SOP |
+| `protocols/codebase-assessment.md` | Health assessment SOP |
+| `protocols/doc-writing.md` | Documentation SOP |
+| `protocols/test-writing.md` | Test generation SOP |
+| `checklists/security-checklist.md` | Security gate criteria |
+| `checklists/tech-debt-checklist.md` | Tech debt gate criteria |
+| `rubrics/arch-gate.md` | Architecture fitness flags |
+| `rubrics/quality-gate.md` | Code quality flags |
+| `rubrics/qa-gate.md` | Final QA flags |
+| `standards/code-conventions.md` | Shared coding rules (SSOT) |
 
-Launch `evaluator` with:
-- Rubric: Read `skills/domain-code/rubrics/qa-gate.md`
-- Artifact: code changes from Step 3 (post-review)
+### Agents
 
-- **PASS** → Done, report to user
-- **PASS_WITH_NOTES** → Auto-fix → go back to Step 5 (re-review)
-- **NEEDS_REVISION** → Stop, present issues to user
+| Agent | Role | Model |
+|-------|------|-------|
+| `worker` | Execute large tasks with protocol guidance | sonnet |
+| `evaluator` | Run quality gates | opus |
+| `context-compressor` | Compress context between phases | haiku |
 
-## Step 7 — Documentation (optional)
+### External Plugins
 
-Launch `worker` with:
-- Protocol: Read `skills/domain-code/protocols/doc-writing.md`
-- Standards: Read `skills/domain-code/standards/code-conventions.md`
-- Input: new public APIs or significant behavior changes
+| Plugin | When useful |
+|--------|------------|
+| `feature-dev:code-architect` | Complex features needing detailed architecture planning |
+
+## Recommended Flows
+
+Suggested approaches, not mandates. Agent adapts based on task.
+
+### New Feature / Significant Change
+1. Load `brainstorming.md` → explore approaches
+2. Optionally use `feature-dev:code-architect` for planning
+3. Implement (main conversation or `worker`)
+4. Run tests if suite exists
+5. SELF check → MUST gates → SHOULD gates (if triggered)
+6. Deliver
+
+### Documentation
+1. Load `doc-writing.md` protocol
+2. Reference `code-conventions.md` for style
+3. Write
+4. SELF check
+5. Deliver (no MUST/SHOULD gates trigger — no code changes)
+
+### Refactoring
+1. Load `refactoring.md` protocol
+2. Implement → run tests
+3. SELF check → MUST gates → SHOULD gates (if triggered)
+4. Deliver
+
+### Bug Fix
+1. Investigate → fix → run tests
+2. SELF check → MUST gates
+3. Deliver
+
+### Standalone Test Writing
+1. Load `test-writing.md` protocol
+2. Write tests → verify they pass
+3. SELF check → MUST gates
+4. Deliver
+
+### Codebase Assessment
+1. Load `codebase-assessment.md` protocol
+2. Analyze
+3. SELF check
+4. Deliver (no code changes — no MUST gates trigger)
 
 ## Context Isolation
 
 Each agent launch starts fresh. Pass only:
-- To evaluator: the checklist/rubric + standards + artifact + original requirements
-- To worker: the protocol + standards + task description + relevant input
-
-Use `context-compressor` to compress large artifacts before passing between phases if needed.
-
-## Auto-Revise Loop (Context-Clean Retry)
-
-When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
-
-1. Use `context-compressor` to compress the current artifact + feedback into a brief
-2. Launch a **fresh** worker/main-conversation with ONLY:
-   - Original requirements
-   - Current artifact (V_n)
-   - Evaluator feedback from this round
-3. Discard all prior retry history — the new agent should NOT see V_1..V_(n-1)
-4. Re-run the same gate on the new output
-
-This prevents context bloat from polluting the LLM's attention across retries.
+- To evaluator: gate file + standards + artifact + original requirements
+- To worker: protocol + standards + task description + relevant input
+Use `context-compressor` for large artifacts.
 
 ## Worker BLOCKED Handling
 
-If a worker outputs `BLOCKED` status instead of an artifact:
-- Do NOT proceed to evaluation gates
-- Present the BLOCKED reason and suggested next steps to the user
-- Wait for user input before re-dispatching
-
-## Guard Rails
-
-- Max 3 auto-revision rounds (across all gates) before escalating
-- After QA fix, always re-run quality review — fixes may introduce bugs
-- Run tests after each revision if test suite exists
-- Each retry launches a fresh agent (no accumulated context from failed attempts)
+If a worker outputs `BLOCKED`:
+- Do NOT proceed to gates
+- Present BLOCKED reason to user
+- Wait for user input

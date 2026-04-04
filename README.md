@@ -2,70 +2,72 @@
 
 Personal agent skills marketplace — team-based development workflows and Obsidian vault management.
 
-## Architecture: Phase-Driven + Domain Knowledge + Hybrid Evaluation
+## Architecture: Checkpoint-Based Quality Gates + Open Domain Knowledge
 
 ```
-Team Skill (pipeline)
+Team Skill (checkpoint orchestrator)
   ├── worker (sonnet)    ← protocols/ + standards/
-  ├── evaluator (opus)   ← checklists/ → rubrics/ + standards/
+  ├── evaluator (opus)   ← checklists/ + rubrics/ + standards/
   └── context-compressor (haiku) ← context compression
 
-Hybrid evaluation pipeline:
-  1. Checklist gate (binary PASS/FAIL) — "有沒有做？"
-  2. Qualitative gate (🔴🟡🟢 flags) — "做得好不好？"
+Four-level quality gates:
+  SELF    → Agent self-checks every delivery
+  MUST    → Auto-trigger, non-skippable (e.g., security, a11y, citation)
+  SHOULD  → Auto-trigger, skippable with reason (e.g., quality, UX)
+  MAY     → User-requested only (e.g., QA, tech debt, visual)
 
-Domain knowledge (domain-*/):
-  protocols/   → Worker SOP (how to do)
-  checklists/  → Evaluator binary gate (did you do it?)
-  rubrics/     → Evaluator flag gate (did you do it well?)
-  standards/   → Shared SSOT (both reference)
+Domain knowledge (domain-*/, open access):
+  protocols/   → Step-by-step SOPs (execution guidance)
+  checklists/  → Binary pass/fail criteria (gate evaluation)
+  rubrics/     → Qualitative flag criteria (gate evaluation)
+  standards/   → Baseline rules (shared SSOT)
 ```
 
 ## Plugins
 
 ```
 monkey-skills
-├── code-team          Arch → Implement → Test → Checklist → Review → Verify
-├── design-team        Generate → Checklist → Review (parallel) → Revise
-├── research-team      Generate → Checklist → Quality Gate → Edit
+├── code-team          Agent-driven + Security / Architecture / Quality gates
+├── design-team        Agent-driven + Accessibility / UX / UI gates
+├── research-team      Agent-driven + Citation / Quality gates
 ├── obsidian-team       Daily notes, diagrams, vault management
 └── youtube-skills      Search, download, transcribe, summarize
 ```
 
 ### code-team
 
-Feature development workflow with hybrid evaluation gates.
+Code development with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-code-team` | Entry point — routing and documentation |
-| Skill | `code-team` | Full workflow pipeline |
-| Skill | `domain-code` | Domain knowledge (6 protocols, 1 checklist, 3 rubrics, 1 standard) |
-| Agent | `evaluator` | Security checklist, arch gate, quality gate, QA gate (opus) |
-| Agent | `worker` | Test writing, documentation, refactoring (sonnet) |
+| Skill | `using-code-team` | Entry point — capability overview |
+| Skill | `code-team` | Checkpoint orchestrator |
+| Skill | `domain-code` | Domain knowledge (5 protocols, 2 checklists, 3 rubrics, 1 standard) |
+| Agent | `evaluator` | Security checklist, arch gate, quality gate (opus) |
+| Agent | `worker` | Execute large tasks with protocol guidance (sonnet) |
 
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
 
 ### design-team
 
-App design workflow with parallel evaluators and a11y checklist.
+Design with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-design-team` | Entry point |
-| Skill | `design-team` | Full workflow pipeline |
-| Skill | `domain-design` | Domain knowledge (1 checklist, 3 rubrics, 1 standard) |
-| Agent | `evaluator` | A11y checklist, UX/UI/visual gates in parallel (opus) |
+| Skill | `using-design-team` | Entry point — capability overview |
+| Skill | `design-team` | Checkpoint orchestrator |
+| Skill | `domain-design` | Domain knowledge (4 protocols, 1 checklist, 3 rubrics, 1 standard) |
+| Agent | `evaluator` | A11y checklist, UX/UI/visual gates (opus) |
 
 ### research-team
 
-Deep research workflow with citation checklist and quality gate.
+Research with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-research-team` | Entry point |
-| Skill | `research-team` | Full workflow pipeline |
-| Skill | `domain-research` | Domain knowledge (2 protocols, 1 checklist, 1 rubric, 1 standard) |
+| Skill | `using-research-team` | Entry point — capability overview |
+| Skill | `research-team` | Checkpoint orchestrator |
+| Skill | `domain-research` | Domain knowledge (6 protocols, 2 checklists, 1 rubric, 2 standards) |
 | Agent | `worker` | Research generation (sonnet) |
 | Agent | `evaluator` | Citation checklist, quality gate (opus) |
 
@@ -130,17 +132,17 @@ Install via marketplace or import `https://github.com/kouko/monkey-skills` in Se
 
 ```
 monkey-skills/
-├── agents/                          ← Phase-driven agents (4 total)
+├── agents/                          ← Reusable agents (4 total)
 │   ├── worker.md                    ← Generic executor (sonnet)
 │   ├── evaluator.md                 ← Generic evaluator (opus)
-│   ├── context-compressor.md                ← Context compressor (haiku)
+│   ├── context-compressor.md        ← Context compressor (haiku)
 │   └── obsidian-vault-organizer.md  ← Standalone vault tool (haiku)
 ├── skills/
 │   ├── domain-code/                 ← Code domain knowledge
-│   │   ├── SKILL.md                 ← Role-based router
-│   │   ├── protocols/               ← Worker SOPs
-│   │   ├── checklists/              ← Evaluator binary gates
-│   │   ├── rubrics/                 ← Evaluator flag gates
+│   │   ├── SKILL.md                 ← Open access index + behavioral rules
+│   │   ├── protocols/               ← Execution SOPs
+│   │   ├── checklists/              ← Binary gate criteria
+│   │   ├── rubrics/                 ← Qualitative gate criteria
 │   │   └── standards/               ← Shared SSOT
 │   ├── domain-design/               ← Design domain knowledge
 │   │   ├── SKILL.md
@@ -153,7 +155,7 @@ monkey-skills/
 │   │   ├── checklists/
 │   │   ├── rubrics/
 │   │   └── standards/
-│   ├── code-team/                   ← Workflow pipeline
+│   ├── code-team/                   ← Checkpoint orchestrator
 │   ├── design-team/
 │   ├── research-team/
 │   ├── obsidian-*/                  ← Vault tools

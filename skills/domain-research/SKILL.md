@@ -5,33 +5,36 @@ description: "Core knowledge base for research — analysis protocols, investmen
 
 # Domain: Research
 
-## Agent Role Routing
+## Available Knowledge
 
-You MUST read files based ONLY on your current role:
+All files are available to any agent as reference.
 
-### 1. worker (Executing/Generating)
-- Read `protocols/*.md` for research methodology SOPs
-- Read `standards/*.md` for citation and output format rules
-- DO NOT read `rubrics/` or `checklists/`
+| Directory | Content | Typical Use |
+|-----------|---------|-------------|
+| `protocols/` | Research methodology SOPs | Execution guidance |
+| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
+| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
+| `standards/` | Baseline rules (SSOT) | Universal reference |
 
-### 2. evaluator (Reviewing/Grading)
-- FIRST read `checklists/*.md` for binary pass/fail checks (objective gate)
-- THEN read `rubrics/*.md` for qualitative flag evaluation (subjective gate)
-- Read `standards/*.md` to cross-reference objective rules
-- DO NOT read `protocols/`
+## Behavioral Rules
 
-## Available Files
+Knowledge access is open. Role boundaries are enforced by behavior, not by reading restrictions:
 
-| Directory | File | Used by | Purpose |
-|-----------|------|---------|---------|
-| `protocols/` | `research.md` | worker | General research methodology SOP (fallback) |
-| `protocols/` | `market-analysis.md` | worker | Market & industry analysis SOP |
-| `protocols/` | `competitive-analysis.md` | worker | Competitive & competitor analysis SOP |
-| `protocols/` | `academic-research.md` | worker | Academic & theoretical research SOP |
-| `protocols/` | `investment.md` | worker | Investment & macro analysis framework |
-| `protocols/` | `stack-evaluation.md` | worker | Tech stack & OSS evaluation SOP |
-| `checklists/` | `source-citation-checklist.md` | evaluator | Binary citation gate (first pass) |
-| `checklists/` | `oss-due-diligence.md` | evaluator | Binary OSS compliance gate |
-| `rubrics/` | `research-quality-gate.md` | evaluator | Research quality flags |
-| `standards/` | `citation-standards.md` | both | Shared citation & output rules (SSOT) |
-| `standards/` | `oss-safety.md` | both | OSS licensing & production-readiness rules (SSOT) |
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
+
+## Files
+
+| Directory | File | Purpose |
+|-----------|------|---------|
+| `protocols/` | `research.md` | General research methodology SOP (fallback) |
+| `protocols/` | `market-analysis.md` | Market & industry analysis SOP |
+| `protocols/` | `competitive-analysis.md` | Competitive & competitor analysis SOP |
+| `protocols/` | `academic-research.md` | Academic & theoretical research SOP |
+| `protocols/` | `investment.md` | Investment & macro analysis framework |
+| `protocols/` | `stack-evaluation.md` | Tech stack & OSS evaluation SOP |
+| `checklists/` | `source-citation-checklist.md` | Binary citation gate |
+| `checklists/` | `oss-due-diligence.md` | Binary OSS compliance gate |
+| `rubrics/` | `research-quality-gate.md` | Research quality flags |
+| `standards/` | `citation-standards.md` | Shared citation & output rules (SSOT) |
+| `standards/` | `oss-safety.md` | OSS licensing & production-readiness rules (SSOT) |

@@ -5,33 +5,36 @@ description: "Core knowledge base for code engineering — protocols, rubrics, c
 
 # Domain: Code Engineering
 
-## Agent Role Routing
+## Available Knowledge
 
-You MUST read files based ONLY on your current role:
+All files are available to any agent as reference.
 
-### 1. worker (Executing/Generating)
-- Read `protocols/*.md` for step-by-step implementation SOPs
-- Read `standards/*.md` to ensure your output complies with baseline rules
-- DO NOT read `rubrics/` or `checklists/`
+| Directory | Content | Typical Use |
+|-----------|---------|-------------|
+| `protocols/` | Step-by-step SOPs | Execution guidance |
+| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
+| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
+| `standards/` | Baseline rules (SSOT) | Universal reference |
 
-### 2. evaluator (Reviewing/Grading)
-- FIRST read `checklists/*.md` for binary pass/fail checks (objective gate)
-- THEN read `rubrics/*.md` for qualitative flag evaluation (subjective gate)
-- Read `standards/*.md` to cross-reference objective rules
-- DO NOT read `protocols/`
+## Behavioral Rules
 
-## Available Files
+Knowledge access is open. Role boundaries are enforced by behavior, not by reading restrictions:
 
-| Directory | File | Used by | Purpose |
-|-----------|------|---------|---------|
-| `protocols/` | `brainstorming.md` | worker | Feature brainstorming & approach exploration SOP |
-| `protocols/` | `test-writing.md` | worker | Unit test generation SOP |
-| `protocols/` | `doc-writing.md` | worker | Documentation generation SOP |
-| `protocols/` | `refactoring.md` | worker | Mechanical refactoring SOP |
-| `protocols/` | `codebase-assessment.md` | worker | Codebase health assessment SOP |
-| `checklists/` | `security-checklist.md` | evaluator | Binary security gate (first pass) |
-| `checklists/` | `tech-debt-checklist.md` | evaluator | Binary technical debt gate |
-| `rubrics/` | `arch-gate.md` | evaluator | Architecture fitness flags |
-| `rubrics/` | `quality-gate.md` | evaluator | Code quality flags |
-| `rubrics/` | `qa-gate.md` | evaluator | Final QA flags |
-| `standards/` | `code-conventions.md` | both | Shared coding standards (SSOT) |
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
+
+## Files
+
+| Directory | File | Purpose |
+|-----------|------|---------|
+| `protocols/` | `brainstorming.md` | Feature brainstorming & approach exploration SOP |
+| `protocols/` | `test-writing.md` | Unit test generation SOP |
+| `protocols/` | `doc-writing.md` | Documentation generation SOP |
+| `protocols/` | `refactoring.md` | Mechanical refactoring SOP |
+| `protocols/` | `codebase-assessment.md` | Codebase health assessment SOP |
+| `checklists/` | `security-checklist.md` | Binary security gate |
+| `checklists/` | `tech-debt-checklist.md` | Binary technical debt gate |
+| `rubrics/` | `arch-gate.md` | Architecture fitness flags |
+| `rubrics/` | `quality-gate.md` | Code quality flags |
+| `rubrics/` | `qa-gate.md` | Final QA flags |
+| `standards/` | `code-conventions.md` | Shared coding standards (SSOT) |

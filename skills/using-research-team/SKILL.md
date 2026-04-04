@@ -1,66 +1,45 @@
 ---
 name: using-research-team
-description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, or doing investment/market analysis. 研究・分析・技術評估・開源調查。調査・技術評価。
+description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, doing investment/market analysis, writing research summaries, or quick fact-checking. 研究・分析・技術評估・開源調查。調査・技術評価。
 ---
 
 # Using Research Team
 
-Deep research workflow with hybrid evaluation: binary citation checklist first, then qualitative flag gate.
+Research with checkpoint-based quality gates.
 
 ## When to Use
 
-- Research and analysis tasks
+- Deep research and analysis
 - Investment and macro analysis
-- Multi-source investigation
+- Market / competitive research
 - Technology evaluation
-- Market research
+- Research summaries from existing sources
+- Quick fact-check / single-question lookup
+- OSS license and compliance checks
 
-## Available Skills
+## How It Works
 
-| Skill | Purpose |
-|-------|---------|
-| `research-team` | Full workflow: Generate → Checklist → Quality Gate → Edit |
-| `domain-research` | Domain knowledge index (internal, loaded by team skill) |
+`research-team` uses a **checkpoint model** with four quality levels:
+
+| Level | Behavior |
+|-------|----------|
+| SELF | Agent self-checks every delivery (may reference any domain file) |
+| MUST | Citation gate auto-triggers when output cites sources |
+| SHOULD | Research quality gate auto-triggers for deep analysis |
+| MAY | OSS due diligence gate available on request |
+
+Agent decides how to approach the task. All domain knowledge (protocols,
+checklists, rubrics, standards) is freely accessible as reference.
 
 ## Agents Used
 
 | Agent | Role | Model |
 |-------|------|-------|
-| `worker` | Research generation (with analysis or investment protocol) | sonnet |
+| `worker` | Research generation with protocol guidance | sonnet |
 | `evaluator` | Citation checklist, research quality gate | opus |
 | `context-compressor` | Compress context between phases | haiku |
 
-## Domain Files (in `skills/domain-research/`)
-
-| Type | File | Purpose |
-|------|------|---------|
-| Protocol | `protocols/research.md` | General research methodology SOP (fallback) |
-| Protocol | `protocols/market-analysis.md` | Market & industry analysis SOP |
-| Protocol | `protocols/competitive-analysis.md` | Competitive & competitor analysis SOP |
-| Protocol | `protocols/academic-research.md` | Academic & theoretical research SOP |
-| Protocol | `protocols/investment.md` | Investment & macro analysis framework |
-| Protocol | `protocols/stack-evaluation.md` | Tech stack & OSS evaluation SOP |
-| Checklist | `checklists/source-citation-checklist.md` | Binary citation gate |
-| Rubric | `rubrics/research-quality-gate.md` | Research quality flags |
-| Standard | `standards/citation-standards.md` | Shared citation rules (SSOT) |
-
-## Routing
-
-### Worker (Generate)
-
-- General research / analysis → worker + `protocols/research.md`
-- Market / industry analysis → worker + `protocols/market-analysis.md`
-- Competitive / competitor analysis → worker + `protocols/competitive-analysis.md`
-- Academic / theoretical research → worker + `protocols/academic-research.md`
-- Investment / stock / macro → worker + `protocols/investment.md`
-- Tech stack / library / OSS evaluation → worker + `protocols/stack-evaluation.md`
-
-### Evaluator (Review)
-
-- Any research output → evaluator + `source-citation-checklist.md` (always runs first)
-- Quality evaluation → evaluator + `research-quality-gate.md`
-
 ## Quick Start
 
-For a full research cycle with quality evaluation, invoke `research-team`.
-For standalone analysis, dispatch `worker` with the appropriate protocol.
+Invoke `research-team` for any research-related task.
+The agent will choose the appropriate approach and run quality gates based on output type.

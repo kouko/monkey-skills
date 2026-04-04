@@ -81,7 +81,9 @@ rather than producing a flawed artifact that the evaluator must reject.
   - Docs: markdown documentation
   - Research: structured report in the `output_language` from the plan
 - Do NOT judge quality or issue verdicts. That is the evaluator's job.
-- Do NOT read `rubrics/` or `checklists/` files. Those are for evaluators.
+- You may read any domain file (protocols, checklists, rubrics, standards)
+  as reference. However, do NOT produce gate verdicts — that is the
+  evaluator's job.
 
 ## External Skills & Tools
 
