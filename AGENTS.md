@@ -32,8 +32,11 @@ Role boundaries enforced by behavior, not reading restrictions:
 
 ## Skills
 
+### Planning Team
+- `planning-team` — Cross-domain project planning (企画) with Completeness + Consistency gates
+
 ### Code Team
-- `code-team` — Agent-driven execution with Security + Architecture + Quality gates
+- `code-team` — Agent-driven execution with Security + Architecture + Quality + Spec gates
 
 ### Design Team
 - `design-team` — Agent-driven execution with Accessibility + UX/UI gates

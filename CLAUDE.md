@@ -4,9 +4,14 @@
 
 ### File Paths
 - SKILL.md 內引用 bundled files 時使用相對路徑（相對於 skill 目錄）
-- Good: `checklists/security-checklist.md`, `protocols/brainstorming.md`
+- Good: `checklists/security-checklist.md`, `protocols/code-brainstorming.md`
 - Bad: `skills/code-team/checklists/security-checklist.md`
 - 原因：Claude Code 提供 Base Path，bundled files 從 skill 目錄相對解析
+
+### Two-Layer Spec
+- PRODUCT-SPEC.md（planning-team 擁有）— 跨域：商業 + 設計 + 技術方向
+- TECH-SPEC.md（code-team 擁有）— 技術：模組設計 + 資料流 + 介面定義
+- TECH-SPEC.md 應 reference PRODUCT-SPEC.md 的內容
 
 ### Skill Structure
 - 每個 team skill 是自包含目錄（SKILL.md + protocols/ + checklists/ + rubrics/ + standards/）

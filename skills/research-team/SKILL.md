@@ -136,6 +136,20 @@ Suggested approaches, not mandates. Agent adapts based on task.
 4. Optionally run OSS Due Diligence (MAY gate)
 5. Deliver
 
+## Cross-Domain Awareness
+
+Lightweight cross-domain tasks can be handled directly without switching skills:
+- Reading code to understand behavior for research context
+- Simple architecture diagram to illustrate research findings
+- Brief design comparison for tech evaluation
+
+Switch to specialized team when quality gates for that domain are needed:
+- `planning-team`: cross-domain product spec or scope definition
+- `code-team`: any code implementation, tech spec writing, refactoring, bug fixes,
+  or any task where security/architecture quality gates are needed
+- `design-team`: UX strategy, full UI design, accessibility audit,
+  or any task where a11y/UX/visual quality gates are needed
+
 ## Context Isolation
 
 Each agent launch starts fresh. Pass only:

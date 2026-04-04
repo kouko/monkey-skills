@@ -144,6 +144,20 @@ Suggested approaches, not mandates. Agent adapts based on task.
 2. SELF check
 3. Deliver
 
+## Cross-Domain Awareness
+
+Lightweight cross-domain tasks can be handled directly without switching skills:
+- Quick reference lookup for design standards or patterns
+- Reading code to understand existing UI implementation
+- Brief competitive analysis of design approaches
+
+Switch to specialized team when quality gates for that domain are needed:
+- `planning-team`: cross-domain product spec or scope definition
+- `code-team`: any code implementation, tech spec writing, refactoring, bug fixes,
+  or any task where security/architecture quality gates are needed
+- `research-team`: deep analysis, multi-source investigation, tech evaluation,
+  or any task where citation verification matters
+
 ## Context Isolation
 
 Each agent launch starts fresh. Pass only:
