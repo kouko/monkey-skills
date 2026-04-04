@@ -1,88 +1,151 @@
 ---
 name: design-team
-description: Execute the design review pipeline with accessibility checks and parallel quality gates. Requires using-design-team for task routing.
+description: Design with accessibility and quality review. Use when designing UI, creating wireframes, planning UX strategy, auditing accessibility, reviewing visual design, implementing frontend, or writing design documentation. UI設計・UXレビュー・アクセシビリティ。介面設計・無障礙審查。
 ---
 
 # Design Team
 
-Semi-automatic Generate → Checklist → Review → Revise loop.
-Uses hybrid evaluation: binary a11y checklist first, then qualitative flag gates in parallel.
+Agent-driven execution with four-level quality gates.
+
+## When to Use
+
+- Design brainstorming and concept development
+- UI design and wireframes
+- UX strategy and user journeys
+- Visual design creation and specification
+- Frontend implementation review
+- Accessibility audits and reports
+- Design documentation (style guides, pattern libraries)
+- Design review and feedback
 
 ## Language
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
-## Step 1 — Generate (Protocol-Guided)
+## Quality Gates
 
-Load the appropriate protocol BEFORE generating any design output.
-Route by task type:
+### SELF Check (every delivery)
 
-| Task | Protocol to load |
-|------|-----------------|
-| Design brainstorming / concept | `skills/domain-design/protocols/design-brainstorming.md` |
-| UX strategy / user journey | `skills/domain-design/protocols/ux-strategy.md` |
-| Visual design / color / typography | `skills/domain-design/protocols/visual-design.md` |
-| UI spec / wireframe / frontend code | `skills/domain-design/protocols/ui-interaction.md` |
-| Full design (end-to-end) | `design-brainstorming.md` first, then task-specific protocol |
+Before delivering output, verify your own work:
+1. Re-read the user's original request
+2. List 3-5 things that would make this output unacceptable
+3. Check each one against your output
+4. Fix any issues found before delivering
 
-Worker reads the protocol, then generates design output
-(strategy doc, UI spec, Object Map, or frontend code).
-Worker should also reference `skills/domain-design/standards/wcag-baseline.md` during creation.
+You may reference any domain file (rubrics, checklists, standards) during self-check.
 
-## Step 2a — A11y Checklist (binary gate, always runs for UI output)
+### MUST Gates (auto-trigger, non-skippable)
 
-Launch `evaluator` with:
-- Checklist: Read `skills/domain-design/checklists/a11y-checklist.md`
-- Standards: Read `skills/domain-design/standards/wcag-baseline.md`
-- Artifact: design output from Step 1
+| Gate | Trigger | File |
+|------|---------|------|
+| Accessibility | Output contains UI elements (wireframe, spec, frontend code) | `evaluator` + `checklists/a11y-checklist.md` |
 
-- All `PASS` → proceed to Step 2b
-- Any `FAIL` → `NEEDS_REVISION`, auto-fix → re-run Step 2a
+### SHOULD Gates (auto-trigger, skippable with stated reason)
 
-## Step 2b — Qualitative Review (parallel flag gates)
+| Gate | Trigger | File |
+|------|---------|------|
+| UX Strategy | Output contains UX strategy or user journey | `evaluator` + `rubrics/ux-strategy-gate.md` |
+| UI Interaction | Output contains wireframe / UI spec / frontend code | `evaluator` + `rubrics/ui-interaction-gate.md` |
 
-Dispatch multiple `evaluator` instances in parallel by output type.
-For each, read the corresponding rubric and include its content in the launch prompt.
+### MAY Gates (user-requested only)
 
-- Strategy / journey / value proposition →
-  `evaluator` + Read `skills/domain-design/rubrics/ux-strategy-gate.md`
-- Wireframe / UI spec / Object Map / IA / frontend code →
-  `evaluator` + Read `skills/domain-design/rubrics/ui-interaction-gate.md`
-- Visual design (user-provided asset) →
-  `evaluator` + Read `skills/domain-design/rubrics/visual-gate.md`
-  Skip if: no visual asset provided (wireframe/text only)
-- Full design → all three in parallel
+| Gate | File |
+|------|------|
+| Visual Design | `rubrics/visual-gate.md` |
 
-Aggregate verdicts: worst verdict wins.
+## Gate Protocol
 
-## Step 3 — Iterate based on verdict
+For MUST and SHOULD gates, launch `evaluator` with:
+- The gate file (checklist or rubric)
+- Standards: `standards/wcag-baseline.md`
+- The artifact to evaluate
+- Original requirements
 
-- **PASS** → Done, report to user
-- **PASS_WITH_NOTES** → Auto-revise based on evaluator feedback → go to Step 2a
-- **NEEDS_REVISION** → Stop, present issues to user, await direction
+When multiple SHOULD gates trigger, run them in parallel. Aggregate verdicts: worst verdict wins.
 
-## Context Isolation
+Handle verdict:
+- **PASS** → gate cleared
+- **PASS_WITH_NOTES** → fix based on feedback → re-run from MUST gates
+  - Only use: original requirements + current artifact + feedback (no retry history)
+  - Max 3 rounds before escalating
+- **NEEDS_REVISION** → stop, present issues to user
 
-Each evaluator launch starts fresh. Pass only:
-- The checklist/rubric content (from the domain file)
-- Standards content (from `standards/wcag-baseline.md`)
-- The design artifact to evaluate
-- The original requirements
-
-Use `context-compressor` to compress large artifacts before passing between phases if needed.
-
-## Auto-Revise Loop (Context-Clean Retry)
-
-When a gate returns `PASS_WITH_NOTES` or a checklist returns `FAIL_FIXABLE`:
-
-1. Use `context-compressor` to compress the current artifact + feedback into a brief
-2. Revise in main conversation with ONLY: original requirements + current artifact + evaluator feedback
-3. Discard all prior retry history from the evaluator's view
-4. Re-run from Step 2a (a11y checklist first)
-
-## Guard Rails
-
-- Max 3 auto-revision rounds before escalating to user
+Guard rails:
 - Visual design cannot be auto-generated — always require human input
 - Only auto-revise issues evaluators flagged; do not introduce new changes
 - Each retry launches fresh evaluator instances (no accumulated context)
+- Use `context-compressor` if artifact is large before passing to evaluator
+
+## Available Resources
+
+Agent loads these as needed. No obligation to use all of them.
+
+### Domain Knowledge
+
+All files in this skill directory are available to any agent as reference.
+Organized by subdirectory convention:
+
+| Directory | Load when | Contains |
+|-----------|-----------|----------|
+| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
+| `checklists/` | Running MUST gates | Binary pass/fail criteria |
+| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
+| `standards/` | Always available as reference | Baseline rules (SSOT) |
+
+Files are named descriptively (e.g., `a11y-checklist.md`, `ux-strategy.md`).
+Use Glob to discover available files if unsure which to load.
+
+### Behavioral Rules
+
+Knowledge access is open. Role boundaries are enforced by behavior:
+
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
+
+### Agents
+
+| Agent | Role | Model |
+|-------|------|-------|
+| `evaluator` | Run quality gates | opus |
+| `context-compressor` | Compress context between phases | haiku |
+
+## Recommended Flows
+
+Suggested approaches, not mandates. Agent adapts based on task.
+
+### Full Design (end-to-end)
+1. Load `design-brainstorming.md` → explore concepts
+2. Load task-specific protocol (UX, UI, or visual)
+3. Generate design output
+4. SELF check → MUST gates → SHOULD gates (if triggered)
+5. Deliver
+
+### UX Strategy / User Journey
+1. Load `ux-strategy.md` protocol
+2. Generate strategy doc
+3. SELF check → SHOULD gate (UX Strategy)
+4. Deliver
+
+### UI Spec / Wireframe / Frontend Code
+1. Load `ui-interaction.md` protocol
+2. Reference `wcag-baseline.md`
+3. Generate UI output
+4. SELF check → MUST gate (A11y) → SHOULD gate (UI Interaction)
+5. Deliver
+
+### Design Documentation (style guide, pattern library)
+1. Load relevant protocol for reference
+2. Write documentation
+3. SELF check
+4. Deliver (no MUST gates trigger if no UI elements produced)
+
+### Minor Update to Existing Design Spec
+1. Make changes directly
+2. SELF check
+3. Deliver
+
+## Context Isolation
+
+Each agent launch starts fresh. Pass only:
+- To evaluator: gate file + standards + artifact + original requirements
+Use `context-compressor` for large artifacts.
