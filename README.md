@@ -27,12 +27,25 @@ Domain knowledge (colocated in each team skill directory, open access):
 
 ```
 monkey-skills
-├── code-team          Agent-driven + Security / Architecture / Quality gates
+├── planning-team      Cross-domain project planning (企画) + Completeness / Consistency gates
+├── code-team          Agent-driven + Security / Architecture / Quality / Spec gates
 ├── design-team        Agent-driven + Accessibility / UX / UI gates
 ├── research-team      Agent-driven + Citation / Quality gates
 ├── obsidian-team       Daily notes, diagrams, vault management
 └── youtube-skills      Search, download, transcribe, summarize
 ```
+
+### planning-team
+
+Cross-domain project planning (企画) with quality gates.
+
+| Type | Name | Role |
+|------|------|------|
+| Skill | `planning-team` | Checkpoint orchestrator for PRODUCT-SPEC.md |
+| Agent | `evaluator` | Completeness checklist, cross-domain consistency gate (opus) |
+| Agent | `worker` | Execute planning tasks with protocol guidance (sonnet) |
+
+Domain knowledge: 1 protocol, 1 checklist, 1 rubric (colocated in `skills/planning-team/`)
 
 ### code-team
 
@@ -44,7 +57,7 @@ Code development with checkpoint-based quality gates.
 | Agent | `evaluator` | Security checklist, arch gate, quality gate (opus) |
 | Agent | `worker` | Execute large tasks with protocol guidance (sonnet) |
 
-Domain knowledge: 5 protocols, 2 checklists, 3 rubrics, 1 standard (colocated in `skills/code-team/`)
+Domain knowledge: 6 protocols, 3 checklists, 3 rubrics, 1 standard (colocated in `skills/code-team/`)
 
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
 
@@ -138,6 +151,7 @@ monkey-skills/
 │   ├── context-compressor.md        ← Context compressor (haiku)
 │   └── obsidian-vault-organizer.md  ← Standalone vault tool (haiku)
 ├── skills/
+│   ├── planning-team/               ← Planning: orchestrator + domain knowledge
 │   ├── code-team/                   ← Code: orchestrator + domain knowledge
 │   │   ├── SKILL.md                 ← Checkpoint orchestrator
 │   │   ├── protocols/               ← Execution SOPs

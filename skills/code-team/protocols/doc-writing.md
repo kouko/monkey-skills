@@ -1,4 +1,6 @@
-# Documentation Writing Rubric
+# Documentation Writing Protocol
+
+For implementation specs (SPEC.md, design docs), use `spec-writing.md` instead.
 
 ## Protocol
 

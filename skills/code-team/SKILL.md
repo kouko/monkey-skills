@@ -46,6 +46,7 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 | Gate | Trigger | File |
 |------|---------|------|
 | Quality | Code changes span >3 files or introduce new module | `evaluator` + `rubrics/quality-gate.md` |
+| Spec Consistency | Output creates or modifies a spec/design document | `evaluator` + `checklists/spec-consistency.md` |
 
 ### MAY Gates (user-requested only)
 
@@ -90,7 +91,7 @@ Organized by subdirectory convention:
 | `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
 | `standards/` | Always available as reference | Baseline rules (SSOT) |
 
-Files are named descriptively (e.g., `security-checklist.md`, `brainstorming.md`).
+Files are named descriptively (e.g., `security-checklist.md`, `code-brainstorming.md`).
 Use Glob to discover available files if unsure which to load.
 
 ### Behavioral Rules
@@ -118,8 +119,22 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 
 Suggested approaches, not mandates. Agent adapts based on task.
 
+### Spec-First Development (full cycle)
+1. If starting a new project → suggest `planning-team` for PRODUCT-SPEC.md first
+2. Write TECH-SPEC.md → load `spec-writing.md` (use PRODUCT-SPEC.md as input if exists)
+3. SELF check → SHOULD gate (Spec Consistency)
+4. Iterate spec until PASS
+5. Bulk implement from spec (dispatch parallel `worker` agents)
+6. SELF check → MUST gates (Security, Architecture) → SHOULD gates
+7. Deliver
+
+### Spec-Code Co-Evolution
+When editing spec: SELF check → SHOULD gate (Spec Consistency)
+When editing code: SELF check → MUST gates (Security, Architecture)
+When editing both: all triggered gates run
+
 ### New Feature / Significant Change
-1. Load `brainstorming.md` → explore approaches
+1. Load `code-brainstorming.md` → explore approaches
 2. Optionally use `feature-dev:code-architect` for planning
 3. Implement (main conversation or `worker`)
 4. Run tests if suite exists
@@ -127,7 +142,7 @@ Suggested approaches, not mandates. Agent adapts based on task.
 6. Deliver
 
 ### Documentation
-1. Load `doc-writing.md` protocol
+1. Load `doc-writing.md` protocol (for implementation specs, use `spec-writing.md`)
 2. Reference `code-conventions.md` for style
 3. Write
 4. SELF check
@@ -155,6 +170,21 @@ Suggested approaches, not mandates. Agent adapts based on task.
 2. Analyze
 3. SELF check
 4. Deliver (no code changes — no MUST gates trigger)
+
+## Cross-Domain Awareness
+
+Lightweight cross-domain tasks can be handled directly without switching skills:
+- Quick API/library lookup, single-question fact check
+- Simple UI layout decision, basic styling choice
+- Brief competitive comparison for a specific technical choice
+
+Switch to specialized team when quality gates for that domain are needed:
+- `planning-team`: new project kickoff, cross-domain product spec,
+  or major scope/direction changes to PRODUCT-SPEC.md
+- `research-team`: deep analysis, multi-source investigation, investment research,
+  tech stack evaluation, or any task where citation verification matters
+- `design-team`: UX strategy, full UI design, accessibility audit, visual design review,
+  or any task where a11y/UX/visual quality gates are needed
 
 ## Context Isolation
 
