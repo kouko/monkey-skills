@@ -1,11 +1,21 @@
 ---
 name: research-team
-description: Research with quality checkpoints. Agent controls execution; gates enforce citation and analysis quality.
+description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, doing investment/market analysis, writing research summaries, or quick fact-checking. 研究・分析・技術評估・開源調查。調査・技術評価。
 ---
 
 # Research Team
 
 Agent-driven execution with four-level quality gates.
+
+## When to Use
+
+- Deep research and analysis
+- Investment and macro analysis
+- Market / competitive research
+- Technology evaluation
+- Research summaries from existing sources
+- Quick fact-check / single-question lookup
+- OSS license and compliance checks
 
 ## Language
 
@@ -27,36 +37,37 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Source Citation | Output makes factual claims or cites sources | `evaluator` + `skills/domain-research/checklists/source-citation-checklist.md` |
+| Source Citation | Output makes factual claims or cites sources | `evaluator` + `checklists/source-citation-checklist.md` |
 
 ### SHOULD Gates (auto-trigger, skippable with stated reason)
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Research Quality | Output is a deep research or analysis report | `evaluator` + `skills/domain-research/rubrics/research-quality-gate.md` |
+| Research Quality | Output is a deep research or analysis report | `evaluator` + `rubrics/research-quality-gate.md` |
 
 ### MAY Gates (user-requested only)
 
 | Gate | File |
 |------|------|
-| OSS Due Diligence | `skills/domain-research/checklists/oss-due-diligence.md` |
+| OSS Due Diligence | `checklists/oss-due-diligence.md` |
 
 ## Gate Protocol
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: `skills/domain-research/standards/citation-standards.md`
-  (also `skills/domain-research/standards/oss-safety.md` for OSS evaluation)
+- Standards: `standards/citation-standards.md`
+  (also `standards/oss-safety.md` for OSS evaluation)
 - The artifact to evaluate
 - Original requirements
 
 Handle verdict:
 - **PASS** → gate cleared
-- **PASS_WITH_NOTES** → auto-fix based on feedback → re-run from MUST gate
+- **PASS_WITH_NOTES** → fix based on feedback → re-run from MUST gates
+  - Only use: original requirements + current artifact + feedback (no retry history)
+  - Max 2 rounds before escalating
 - **NEEDS_REVISION** → stop, present issues to user
 
 Guard rails:
-- Max 2 auto-edit rounds before escalating
 - Factual accuracy or data freshness issues → always NEEDS_REVISION
   (main conversation cannot verify facts without web search)
 - Each retry launches a fresh evaluator (no accumulated context)
@@ -66,31 +77,28 @@ Guard rails:
 
 Agent loads these as needed. No obligation to use all of them.
 
-### Domain Knowledge (`skills/domain-research/`)
+### Domain Knowledge
 
-All files are available to any agent as reference.
+All files in this skill directory are available to any agent as reference.
+Organized by subdirectory convention:
 
-| Directory | Content | Typical Use |
-|-----------|---------|-------------|
-| `protocols/` | Research methodology SOPs | Execution guidance |
-| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
-| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
-| `standards/` | Baseline rules (SSOT) | Universal reference |
+| Directory | Load when | Contains |
+|-----------|-----------|----------|
+| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
+| `checklists/` | Running MUST gates | Binary pass/fail criteria |
+| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
+| `standards/` | Always available as reference | Baseline rules (SSOT) |
 
-Files:
-| File | Content |
-|------|---------|
-| `protocols/research.md` | General research methodology SOP (fallback) |
-| `protocols/market-analysis.md` | Market & industry analysis SOP |
-| `protocols/competitive-analysis.md` | Competitive & competitor analysis SOP |
-| `protocols/academic-research.md` | Academic & theoretical research SOP |
-| `protocols/investment.md` | Investment & macro analysis framework |
-| `protocols/stack-evaluation.md` | Tech stack & OSS evaluation SOP |
-| `checklists/source-citation-checklist.md` | Citation gate criteria |
-| `checklists/oss-due-diligence.md` | OSS compliance gate criteria |
-| `rubrics/research-quality-gate.md` | Research quality flags |
-| `standards/citation-standards.md` | Shared citation & output rules (SSOT) |
+Files are named descriptively (e.g., `source-citation-checklist.md`, `market-analysis.md`).
+Use Glob to discover available files if unsure which to load.
 | `standards/oss-safety.md` | OSS licensing & production-readiness rules (SSOT) |
+
+### Behavioral Rules
+
+Knowledge access is open. Role boundaries are enforced by behavior:
+
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
 
 ### Agents
 

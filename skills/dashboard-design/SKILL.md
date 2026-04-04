@@ -22,7 +22,7 @@ description: >
 
 ## いつ使わない
 - ダッシュボードの HTML/React/Power BI 実装 → `frontend-design` や BI ツールのドキュメントを参照
-- 一般的な UI/UX レビュー → `using-design-team` skill を使用
+- 一般的な UI/UX レビュー → `design-team` skill を使用
 - データ収集・加工・ETL → スコープ外
 - 探索型ダッシュボード（高度なフィルタリングや分析機能が主体） → 本 skill は提示型に特化
 

@@ -16,7 +16,7 @@ Four-level quality gates:
   SHOULD  → Auto-trigger, skippable with reason (e.g., quality, UX)
   MAY     → User-requested only (e.g., QA, tech debt, visual)
 
-Domain knowledge (domain-*/, open access):
+Domain knowledge (colocated in each team skill directory, open access):
   protocols/   → Step-by-step SOPs (execution guidance)
   checklists/  → Binary pass/fail criteria (gate evaluation)
   rubrics/     → Qualitative flag criteria (gate evaluation)
@@ -40,11 +40,11 @@ Code development with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-code-team` | Entry point — capability overview |
-| Skill | `code-team` | Checkpoint orchestrator |
-| Skill | `domain-code` | Domain knowledge (5 protocols, 2 checklists, 3 rubrics, 1 standard) |
+| Skill | `code-team` | Checkpoint orchestrator (discovery + execution) |
 | Agent | `evaluator` | Security checklist, arch gate, quality gate (opus) |
 | Agent | `worker` | Execute large tasks with protocol guidance (sonnet) |
+
+Domain knowledge: 5 protocols, 2 checklists, 3 rubrics, 1 standard (colocated in `skills/code-team/`)
 
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
 
@@ -54,10 +54,10 @@ Design with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-design-team` | Entry point — capability overview |
-| Skill | `design-team` | Checkpoint orchestrator |
-| Skill | `domain-design` | Domain knowledge (4 protocols, 1 checklist, 3 rubrics, 1 standard) |
+| Skill | `design-team` | Checkpoint orchestrator (discovery + execution) |
 | Agent | `evaluator` | A11y checklist, UX/UI/visual gates (opus) |
+
+Domain knowledge: 4 protocols, 1 checklist, 3 rubrics, 1 standard (colocated in `skills/design-team/`)
 
 ### research-team
 
@@ -65,11 +65,11 @@ Research with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-research-team` | Entry point — capability overview |
-| Skill | `research-team` | Checkpoint orchestrator |
-| Skill | `domain-research` | Domain knowledge (6 protocols, 2 checklists, 1 rubric, 2 standards) |
+| Skill | `research-team` | Checkpoint orchestrator (discovery + execution) |
 | Agent | `worker` | Research generation (sonnet) |
 | Agent | `evaluator` | Citation checklist, quality gate (opus) |
+
+Domain knowledge: 6 protocols, 2 checklists, 1 rubric, 2 standards (colocated in `skills/research-team/`)
 
 ### obsidian-workflow
 
@@ -138,28 +138,16 @@ monkey-skills/
 │   ├── context-compressor.md        ← Context compressor (haiku)
 │   └── obsidian-vault-organizer.md  ← Standalone vault tool (haiku)
 ├── skills/
-│   ├── domain-code/                 ← Code domain knowledge
-│   │   ├── SKILL.md                 ← Open access index + behavioral rules
+│   ├── code-team/                   ← Code: orchestrator + domain knowledge
+│   │   ├── SKILL.md                 ← Checkpoint orchestrator
 │   │   ├── protocols/               ← Execution SOPs
 │   │   ├── checklists/              ← Binary gate criteria
 │   │   ├── rubrics/                 ← Qualitative gate criteria
 │   │   └── standards/               ← Shared SSOT
-│   ├── domain-design/               ← Design domain knowledge
-│   │   ├── SKILL.md
-│   │   ├── checklists/
-│   │   ├── rubrics/
-│   │   └── standards/
-│   ├── domain-research/             ← Research domain knowledge
-│   │   ├── SKILL.md
-│   │   ├── protocols/
-│   │   ├── checklists/
-│   │   ├── rubrics/
-│   │   └── standards/
-│   ├── code-team/                   ← Checkpoint orchestrator
-│   ├── design-team/
-│   ├── research-team/
+│   ├── design-team/                 ← Design: orchestrator + domain knowledge
+│   ├── research-team/               ← Research: orchestrator + domain knowledge
 │   ├── obsidian-*/                  ← Vault tools
-│   └── using-*/                     ← Entry point skills
+│   └── using-obsidian-team/         ← Obsidian entry point
 ├── .claude-plugin/                  ← Claude Code marketplace
 ├── .cursor-plugin/                  ← Cursor
 ├── gemini-extension.json            ← Gemini CLI

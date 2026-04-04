@@ -1,11 +1,22 @@
 ---
 name: code-team
-description: Code development with quality checkpoints. Agent controls execution; gates enforce quality.
+description: Develop code with quality gates and review. Use when implementing features, fixing bugs, refactoring, reviewing code/PRs, writing tests, writing documentation, assessing codebase health, or auditing tech debt. 實作・修 bug・重構・程式碼審查。コード実装・バグ修正。
 ---
 
 # Code Team
 
 Agent-driven execution with four-level quality gates.
+
+## When to Use
+
+- New feature implementation
+- Bug fixes
+- Code refactoring
+- Documentation (SPEC, README, API docs)
+- Config / boilerplate creation
+- Test writing
+- Codebase assessment / tech debt audit
+- Any task in a code project
 
 ## Language
 
@@ -27,71 +38,67 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Security | Output contains code changes | `evaluator` + `skills/domain-code/checklists/security-checklist.md` |
-| Architecture | Output changes public API or system structure | `evaluator` + `skills/domain-code/rubrics/arch-gate.md` |
+| Security | Output contains code changes | `evaluator` + `checklists/security-checklist.md` |
+| Architecture | Output changes public API or system structure | `evaluator` + `rubrics/arch-gate.md` |
 
 ### SHOULD Gates (auto-trigger, skippable with stated reason)
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Quality | Code changes span >3 files or introduce new module | `evaluator` + `skills/domain-code/rubrics/quality-gate.md` |
+| Quality | Code changes span >3 files or introduce new module | `evaluator` + `rubrics/quality-gate.md` |
 
 ### MAY Gates (user-requested only)
 
 | Gate | File |
 |------|------|
-| QA Verification | `skills/domain-code/rubrics/qa-gate.md` |
-| Tech Debt Audit | `skills/domain-code/checklists/tech-debt-checklist.md` |
+| QA Verification | `rubrics/qa-gate.md` |
+| Tech Debt Audit | `checklists/tech-debt-checklist.md` |
 
 ## Gate Protocol
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: `skills/domain-code/standards/code-conventions.md`
+- Standards: `standards/code-conventions.md`
 - The artifact to evaluate
 - Original requirements
 
 Handle verdict:
 - **PASS** → gate cleared
-- **PASS_WITH_NOTES** → auto-fix based on feedback → re-run from MUST gates
+- **PASS_WITH_NOTES** → fix based on feedback → re-run from MUST gates
+  - Only use: original requirements + current artifact + feedback (no retry history)
+  - Max 3 rounds before escalating
 - **NEEDS_REVISION** → stop, present issues to user
 
 Guard rails:
-- Max 3 auto-revision rounds before escalating
 - Run tests after each revision if test suite exists
 - Each retry launches a fresh evaluator (no accumulated context)
-- After fixing one gate's issues, re-check other triggered gates
 - Use `context-compressor` if artifact is large before passing to evaluator
 
 ## Available Resources
 
 Agent loads these as needed. No obligation to use all of them.
 
-### Domain Knowledge (`skills/domain-code/`)
+### Domain Knowledge
 
-All files are available to any agent as reference.
+All files in this skill directory are available to any agent as reference.
+Organized by subdirectory convention:
 
-| Directory | Content | Typical Use |
-|-----------|---------|-------------|
-| `protocols/` | Step-by-step SOPs | Execution guidance |
-| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
-| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
-| `standards/` | Baseline rules (SSOT) | Universal reference |
+| Directory | Load when | Contains |
+|-----------|-----------|----------|
+| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
+| `checklists/` | Running MUST gates | Binary pass/fail criteria |
+| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
+| `standards/` | Always available as reference | Baseline rules (SSOT) |
 
-Files:
-| File | Content |
-|------|---------|
-| `protocols/brainstorming.md` | Feature brainstorming & approach exploration |
-| `protocols/refactoring.md` | Mechanical refactoring SOP |
-| `protocols/codebase-assessment.md` | Health assessment SOP |
-| `protocols/doc-writing.md` | Documentation SOP |
-| `protocols/test-writing.md` | Test generation SOP |
-| `checklists/security-checklist.md` | Security gate criteria |
-| `checklists/tech-debt-checklist.md` | Tech debt gate criteria |
-| `rubrics/arch-gate.md` | Architecture fitness flags |
-| `rubrics/quality-gate.md` | Code quality flags |
-| `rubrics/qa-gate.md` | Final QA flags |
-| `standards/code-conventions.md` | Shared coding rules (SSOT) |
+Files are named descriptively (e.g., `security-checklist.md`, `brainstorming.md`).
+Use Glob to discover available files if unsure which to load.
+
+### Behavioral Rules
+
+Knowledge access is open. Role boundaries are enforced by behavior:
+
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
 
 ### Agents
 

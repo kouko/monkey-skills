@@ -1,11 +1,22 @@
 ---
 name: design-team
-description: Design with quality checkpoints. Agent controls execution; gates enforce accessibility and design quality.
+description: Design with accessibility and quality review. Use when designing UI, creating wireframes, planning UX strategy, auditing accessibility, reviewing visual design, implementing frontend, or writing design documentation. UI設計・UXレビュー・アクセシビリティ。介面設計・無障礙審查。
 ---
 
 # Design Team
 
 Agent-driven execution with four-level quality gates.
+
+## When to Use
+
+- Design brainstorming and concept development
+- UI design and wireframes
+- UX strategy and user journeys
+- Visual design creation and specification
+- Frontend implementation review
+- Accessibility audits and reports
+- Design documentation (style guides, pattern libraries)
+- Design review and feedback
 
 ## Language
 
@@ -27,26 +38,26 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Accessibility | Output contains UI elements (wireframe, spec, frontend code) | `evaluator` + `skills/domain-design/checklists/a11y-checklist.md` |
+| Accessibility | Output contains UI elements (wireframe, spec, frontend code) | `evaluator` + `checklists/a11y-checklist.md` |
 
 ### SHOULD Gates (auto-trigger, skippable with stated reason)
 
 | Gate | Trigger | File |
 |------|---------|------|
-| UX Strategy | Output contains UX strategy or user journey | `evaluator` + `skills/domain-design/rubrics/ux-strategy-gate.md` |
-| UI Interaction | Output contains wireframe / UI spec / frontend code | `evaluator` + `skills/domain-design/rubrics/ui-interaction-gate.md` |
+| UX Strategy | Output contains UX strategy or user journey | `evaluator` + `rubrics/ux-strategy-gate.md` |
+| UI Interaction | Output contains wireframe / UI spec / frontend code | `evaluator` + `rubrics/ui-interaction-gate.md` |
 
 ### MAY Gates (user-requested only)
 
 | Gate | File |
 |------|------|
-| Visual Design | `skills/domain-design/rubrics/visual-gate.md` |
+| Visual Design | `rubrics/visual-gate.md` |
 
 ## Gate Protocol
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: `skills/domain-design/standards/wcag-baseline.md`
+- Standards: `standards/wcag-baseline.md`
 - The artifact to evaluate
 - Original requirements
 
@@ -54,11 +65,12 @@ When multiple SHOULD gates trigger, run them in parallel. Aggregate verdicts: wo
 
 Handle verdict:
 - **PASS** → gate cleared
-- **PASS_WITH_NOTES** → auto-fix based on feedback → re-run from MUST gate
+- **PASS_WITH_NOTES** → fix based on feedback → re-run from MUST gates
+  - Only use: original requirements + current artifact + feedback (no retry history)
+  - Max 3 rounds before escalating
 - **NEEDS_REVISION** → stop, present issues to user
 
 Guard rails:
-- Max 3 auto-revision rounds before escalating
 - Visual design cannot be auto-generated — always require human input
 - Only auto-revise issues evaluators flagged; do not introduce new changes
 - Each retry launches fresh evaluator instances (no accumulated context)
@@ -68,29 +80,27 @@ Guard rails:
 
 Agent loads these as needed. No obligation to use all of them.
 
-### Domain Knowledge (`skills/domain-design/`)
+### Domain Knowledge
 
-All files are available to any agent as reference.
+All files in this skill directory are available to any agent as reference.
+Organized by subdirectory convention:
 
-| Directory | Content | Typical Use |
-|-----------|---------|-------------|
-| `protocols/` | Step-by-step SOPs | Execution guidance |
-| `checklists/` | Binary pass/fail criteria | Gate evaluation, preventive self-check |
-| `rubrics/` | Qualitative flag criteria | Gate evaluation, preventive self-check |
-| `standards/` | Baseline rules (SSOT) | Universal reference |
+| Directory | Load when | Contains |
+|-----------|-----------|----------|
+| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
+| `checklists/` | Running MUST gates | Binary pass/fail criteria |
+| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
+| `standards/` | Always available as reference | Baseline rules (SSOT) |
 
-Files:
-| File | Content |
-|------|---------|
-| `protocols/design-brainstorming.md` | Integrated design thinking (Kansei x Meaning x Affordance) |
-| `protocols/ux-strategy.md` | UX strategy creation (Ando temporal model x Garrett) |
-| `protocols/visual-design.md` | Visual design (Kansei Engineering) |
-| `protocols/ui-interaction.md` | UI & interaction design (Without Thought x OOUI) |
-| `checklists/a11y-checklist.md` | Accessibility gate criteria |
-| `rubrics/ux-strategy-gate.md` | UX strategy flags (Ando temporal model) |
-| `rubrics/ui-interaction-gate.md` | UI structure & interaction flags |
-| `rubrics/visual-gate.md` | Visual design flags (Kansei) |
-| `standards/wcag-baseline.md` | Shared WCAG 2.2 AA rules (SSOT) |
+Files are named descriptively (e.g., `a11y-checklist.md`, `ux-strategy.md`).
+Use Glob to discover available files if unsure which to load.
+
+### Behavioral Rules
+
+Knowledge access is open. Role boundaries are enforced by behavior:
+
+- **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
+- **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
 
 ### Agents
 
@@ -98,12 +108,6 @@ Files:
 |-------|------|-------|
 | `evaluator` | Run quality gates | opus |
 | `context-compressor` | Compress context between phases | haiku |
-
-## Context Isolation
-
-Each agent launch starts fresh. Pass only:
-- To evaluator: gate file + standards + artifact + original requirements
-Use `context-compressor` for large artifacts.
 
 ## Recommended Flows
 
@@ -139,3 +143,9 @@ Suggested approaches, not mandates. Agent adapts based on task.
 1. Make changes directly
 2. SELF check
 3. Deliver
+
+## Context Isolation
+
+Each agent launch starts fresh. Pass only:
+- To evaluator: gate file + standards + artifact + original requirements
+Use `context-compressor` for large artifacts.

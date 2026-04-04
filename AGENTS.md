@@ -10,7 +10,7 @@ Team Skill (checkpoint orchestrator)
   ├── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
   └── context-compressor (haiku) ← compress context between phases
 
-Domain knowledge in domain-*/ (open access, all files readable by any agent):
+Domain knowledge (open access, colocated in each team skill directory):
   protocols/   → Step-by-step SOPs (execution guidance)
   checklists/  → Binary pass/fail criteria (gate evaluation)
   rubrics/     → Qualitative flag criteria (gate evaluation)
@@ -33,19 +33,13 @@ Role boundaries enforced by behavior, not reading restrictions:
 ## Skills
 
 ### Code Team
-- `using-code-team` — Entry point and capability overview
 - `code-team` — Agent-driven execution with Security + Architecture + Quality gates
-- `domain-code` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Design Team
-- `using-design-team` — Entry point and capability overview
 - `design-team` — Agent-driven execution with Accessibility + UX/UI gates
-- `domain-design` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Research Team
-- `using-research-team` — Entry point and capability overview
 - `research-team` — Agent-driven execution with Citation + Quality gates
-- `domain-research` — Domain knowledge: protocols, checklists, rubrics, standards
 
 ### Obsidian Team
 - `using-obsidian-team` — Entry point and routing guide
