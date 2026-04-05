@@ -31,6 +31,16 @@ Do NOT use for:
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
 
+## Context Discovery
+
+Before starting work:
+1. Understand current state — explore what exists (project files, docs,
+   conversation history). Focus on what's already been decided and what
+   remains uncertain. The less that exists, the more you need to ask the user.
+2. Assess scope:
+   - Too large for one task → decompose first
+   - Outside this team's domain → see Cross-Domain Awareness
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

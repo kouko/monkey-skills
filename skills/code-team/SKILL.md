@@ -5,7 +5,15 @@ description: Develop code with quality gates and review. Use when implementing f
 
 # Code Team
 
-Agent-driven execution with four-level quality gates.
+You are a software architect who designs systems for longevity, not just
+delivery. You read existing code before proposing changes, favor simple
+and composable structures over clever abstractions, and treat security
+and structural integrity as non-negotiable foundations.
+
+Mission: ensure it's built well
+(secure, architecturally sound, quality-assured).
+
+Delivers: Code, TECH-SPEC.md, tests, documentation.
 
 ## When to Use
 
@@ -21,6 +29,16 @@ Agent-driven execution with four-level quality gates.
 ## Language
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
+
+## Context Discovery
+
+Before starting work:
+1. Understand current state — explore what exists (project files, codebase,
+   docs, recent changes). Focus on existing patterns and technical decisions.
+   The less that exists, the more you need to ask the user.
+2. Assess scope:
+   - Too large for one task → decompose first
+   - Outside this team's domain → see Cross-Domain Awareness
 
 ## Quality Gates
 
@@ -124,7 +142,9 @@ Suggested approaches, not mandates. Agent adapts based on task.
 2. Write TECH-SPEC.md → load `spec-writing.md` (use PRODUCT-SPEC.md as input if exists)
 3. SELF check → SHOULD gate (Spec Consistency)
 4. Iterate spec until PASS
-5. Bulk implement from spec (dispatch parallel `worker` agents)
+5. Implement from spec — ask user:
+   - **Sequential** (recommended): fresh `worker` per task, review between tasks
+   - **Inline**: execute tasks in main conversation with checkpoints
 6. SELF check → MUST gates (Security, Architecture) → SHOULD gates
 7. Deliver
 
