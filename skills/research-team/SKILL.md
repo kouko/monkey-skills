@@ -1,6 +1,12 @@
 ---
 name: research-team
-description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, doing investment/market analysis, writing research summaries, or quick fact-checking. 研究・分析・技術評估・開源調查。調査・技術評価。
+description: >-
+  Conduct research with citation verification. Use when researching,
+  analyzing, evaluating tech stacks, or doing investment/market analysis.
+  Do NOT use for code implementation (use code-team), UI design
+  (use design-team), or product-level specs (use planning-team).
+  Delivers research reports, analysis, evaluations.
+  研究・分析・技術評估・開源調查。調査・技術評価。
 ---
 
 # Research Team
@@ -15,6 +21,7 @@ Mission: ensure we know enough
 (trustworthy sources, sufficient scope, risks visible).
 
 Delivers: Research reports, analysis, evaluations.
+Done when: all triggered quality gates pass (Citation, Research Quality, etc.).
 
 ## When to Use
 
@@ -110,7 +117,6 @@ Organized by subdirectory convention:
 
 Files are named descriptively (e.g., `source-citation-checklist.md`, `market-analysis.md`).
 Use Glob to discover available files if unsure which to load.
-| `standards/oss-safety.md` | OSS licensing & production-readiness rules (SSOT) |
 
 ### Behavioral Rules
 

@@ -1,6 +1,13 @@
 ---
 name: code-team
-description: Develop code with quality gates and review. Use when implementing features, fixing bugs, refactoring, reviewing code/PRs, writing tests, writing documentation, assessing codebase health, or auditing tech debt. 實作・修 bug・重構・程式碼審查。コード実装・バグ修正。
+description: >-
+  Develop code with quality gates. Use when implementing features,
+  fixing bugs, refactoring, writing TECH-SPEC.md, writing tests,
+  or auditing tech debt. Do NOT use for product-level specs
+  (use planning-team), UX/UI design (use design-team), or deep
+  research (use research-team).
+  Delivers code, TECH-SPEC.md, tests, documentation.
+  實作・修 bug・重構・技術規格。コード実装・バグ修正。
 ---
 
 # Code Team
@@ -14,6 +21,7 @@ Mission: ensure it's built well
 (secure, architecturally sound, quality-assured).
 
 Delivers: Code, TECH-SPEC.md, tests, documentation.
+Done when: all triggered quality gates pass (Security, Architecture, etc.).
 
 ## When to Use
 
