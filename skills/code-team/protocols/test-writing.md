@@ -1,4 +1,7 @@
-# Test Writing Rubric
+# Test Writing Protocol
+
+For test-first (TDD) workflow, use `tdd.md` instead.
+This protocol is for adding tests to existing code without TDD.
 
 ## Protocol
 
