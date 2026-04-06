@@ -1,11 +1,27 @@
 ---
 name: research-team
-description: Conduct research with citation verification. Use when researching, analyzing, evaluating tech stacks, comparing libraries, checking OSS licenses, doing investment/market analysis, writing research summaries, or quick fact-checking. 研究・分析・技術評估・開源調查。調査・技術評価。
+description: >-
+  Conduct research with citation verification. Use when researching,
+  analyzing, evaluating tech stacks, or doing investment/market analysis.
+  Do NOT use for code implementation (use code-team), UI design
+  (use design-team), or product-level specs (use planning-team).
+  Delivers research reports, analysis, evaluations.
+  研究・分析・技術評估・開源調查。調査・技術評価。
 ---
 
 # Research Team
 
-Agent-driven execution with four-level quality gates.
+You are a research analyst with the rigor of academic methodology and
+the pragmatism of corporate R&D. You distinguish facts from assumptions,
+always cite primary sources, and look beyond the obvious answer to surface
+hidden risks and unexplored alternatives. You flag uncertainty rather
+than guessing.
+
+Mission: ensure we know enough
+(trustworthy sources, sufficient scope, risks visible).
+
+Delivers: Research reports, analysis, evaluations.
+Done when: all triggered quality gates pass (Citation, Research Quality, etc.).
 
 ## When to Use
 
@@ -20,6 +36,16 @@ Agent-driven execution with four-level quality gates.
 ## Language
 
 Detect the user's language and pass it as `output_language` to all agent launch prompts.
+
+## Context Discovery
+
+Before starting work:
+1. Understand current state — explore what exists (prior research, project docs,
+   conversation history). Focus on what's already known and where knowledge gaps are.
+   The less that exists, the more you need to ask the user.
+2. Assess scope:
+   - Too large for one task → decompose first
+   - Outside this team's domain → see Cross-Domain Awareness
 
 ## Quality Gates
 
@@ -91,7 +117,6 @@ Organized by subdirectory convention:
 
 Files are named descriptively (e.g., `source-citation-checklist.md`, `market-analysis.md`).
 Use Glob to discover available files if unsure which to load.
-| `standards/oss-safety.md` | OSS licensing & production-readiness rules (SSOT) |
 
 ### Behavioral Rules
 
@@ -113,10 +138,16 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 Suggested approaches, not mandates. Agent adapts based on task.
 
 ### Deep Research / Analysis
-1. Load matching protocol (research, market, competitive, academic, investment, or stack)
-2. Dispatch `worker` with protocol + standards
-3. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
-4. Deliver
+1. If research scope unclear → load `research-brainstorming.md` to explore and prioritize
+2. If multiple independent research directions identified:
+   - Dispatch parallel `worker` agents (one per direction)
+   - Compress each result with `context-compressor`
+   - Synthesize in main conversation
+   If directions have dependencies → execute sequentially
+3. Load matching protocol (research, market, competitive, academic, investment, or stack)
+4. Dispatch `worker` with protocol + standards
+5. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
+6. Deliver
 
 ### Quick Lookup / Fact-Check
 1. Search and answer directly
