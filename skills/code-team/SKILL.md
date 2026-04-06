@@ -23,6 +23,16 @@ Mission: ensure it's built well
 Delivers: Code, TECH-SPEC.md, tests, documentation.
 Done when: all triggered quality gates pass (Security, Architecture, etc.).
 
+## Core Principle: Spec → Test → Code
+
+Always follow this order. Remind the user if any step is missing.
+1. **Spec first**: no implementation without a written spec to trace back to.
+   Even a minimal spec (scope + expected behavior) counts.
+2. **Test from spec**: derive test cases from spec before writing production code.
+3. **Then implement**: code should make failing tests pass.
+
+If user wants to skip a step, acknowledge the trade-off explicitly.
+
 ## When to Use
 
 - New feature implementation
@@ -150,11 +160,13 @@ Suggested approaches, not mandates. Agent adapts based on task.
 2. Write TECH-SPEC.md → load `spec-writing.md` (use PRODUCT-SPEC.md as input if exists)
 3. SELF check → SHOULD gate (Spec Consistency)
 4. Iterate spec until PASS
-5. Implement from spec — ask user:
+5. Derive test cases from spec → load `tdd.md`
+6. Implement via TDD (Red-Green-Refactor per module)
+   Ask user execution mode:
    - **Sequential** (recommended): fresh `worker` per task, review between tasks
    - **Inline**: execute tasks in main conversation with checkpoints
-6. SELF check → MUST gates (Security, Architecture) → SHOULD gates
-7. Deliver
+7. SELF check → MUST gates (Security, Architecture) → SHOULD gates
+8. Deliver
 
 ### Spec-Code Co-Evolution
 When editing spec: SELF check → SHOULD gate (Spec Consistency)
@@ -164,10 +176,11 @@ When editing both: all triggered gates run
 ### New Feature / Significant Change
 1. Load `code-brainstorming.md` → explore approaches
 2. Optionally use `feature-dev:code-architect` for planning
-3. Implement (main conversation or `worker`)
-4. Run tests if suite exists
-5. SELF check → MUST gates → SHOULD gates (if triggered)
-6. Deliver
+3. Verify spec exists (remind user if missing — see Core Principle)
+4. Derive test cases from spec → load `tdd.md`
+5. Implement via TDD
+6. SELF check → MUST gates → SHOULD gates (if triggered)
+7. Deliver
 
 ### Documentation
 1. Load `doc-writing.md` protocol (for implementation specs, use `spec-writing.md`)
@@ -178,14 +191,17 @@ When editing both: all triggered gates run
 
 ### Refactoring
 1. Load `refactoring.md` protocol
-2. Implement → run tests
-3. SELF check → MUST gates → SHOULD gates (if triggered)
-4. Deliver
+2. Ensure existing tests pass before changing code
+3. Implement → run tests after each change
+4. SELF check → MUST gates → SHOULD gates (if triggered)
+5. Deliver
 
 ### Bug Fix
-1. Investigate → fix → run tests
-2. SELF check → MUST gates
-3. Deliver
+1. Investigate root cause
+2. Write failing test reproducing the bug (see `tdd.md`)
+3. Fix → verify test passes
+4. SELF check → MUST gates
+5. Deliver
 
 ### Standalone Test Writing
 1. Load `test-writing.md` protocol
