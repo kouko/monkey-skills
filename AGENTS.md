@@ -71,6 +71,11 @@ Role boundaries enforced by behavior, not reading restrictions:
 |-------|------|-------|
 | `obsidian-vault-organizer` | Vault maintenance (standalone) | haiku |
 
+## Plugin: philosophers-toolkit (v0.1.0 — roadmap only)
+
+Philosophical thinking frameworks for problem clarification and deeper reasoning.
+See `philosophers-toolkit/ROADMAP.md` for planned skills.
+
 ## Installation
 
 See `.codex/INSTALL.md` for Codex, `gemini-extension.json` for Gemini CLI.
