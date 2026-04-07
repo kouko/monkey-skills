@@ -5,9 +5,14 @@
   },
   "plugins": [
     {
-      "name": "monkey-skills",
-      "description": "Personal agent skills — code, design, research teams + obsidian workflows",
-      "source": "./"
+      "name": "domain-teams",
+      "description": "Domain team skills — planning (企画), code, design, research with checkpoint-based quality gates",
+      "source": "./domain-teams/"
+    },
+    {
+      "name": "obsidian",
+      "description": "Obsidian vault workflows — daily notes, diagrams, file intel, vault management, dashboard design",
+      "source": "./obsidian/"
     }
   ]
 }

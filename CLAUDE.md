@@ -5,7 +5,7 @@
 ### File Paths
 - SKILL.md 內引用 bundled files 時使用相對路徑（相對於 skill 目錄）
 - Good: `checklists/security-checklist.md`, `protocols/code-brainstorming.md`
-- Bad: `skills/code-team/checklists/security-checklist.md`
+- Bad: `domain-teams/skills/code-team/checklists/security-checklist.md`
 - 原因：Claude Code 提供 Base Path，bundled files 從 skill 目錄相對解析
 
 ### Two-Layer Spec

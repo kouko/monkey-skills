@@ -1,5 +1,5 @@
-@./skills/planning-team/SKILL.md
-@./skills/code-team/SKILL.md
-@./skills/design-team/SKILL.md
-@./skills/research-team/SKILL.md
-@./skills/using-obsidian-team/SKILL.md
+@./domain-teams/skills/planning-team/SKILL.md
+@./domain-teams/skills/code-team/SKILL.md
+@./domain-teams/skills/design-team/SKILL.md
+@./domain-teams/skills/research-team/SKILL.md
+@./obsidian/skills/using-obsidian-team/SKILL.md
