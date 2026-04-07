@@ -1,6 +1,6 @@
 # Monkey Skills
 
-Personal agent skills marketplace — team-based development workflows and Obsidian vault management.
+Personal agent skills marketplace — two plugins: domain teams and Obsidian workflows.
 
 ## Architecture: Checkpoint-Based Quality Gates + Open Domain Knowledge
 
@@ -26,18 +26,16 @@ Domain knowledge (colocated in each team skill directory, open access):
 ## Plugins
 
 ```
-monkey-skills
-├── planning-team      Cross-domain project planning (企画) + Completeness / Consistency gates
-├── code-team          Agent-driven + Security / Architecture / Quality / Spec gates
-├── design-team        Agent-driven + Accessibility / UX / UI gates
-├── research-team      Agent-driven + Citation / Quality gates
-├── obsidian-team       Daily notes, diagrams, vault management
-└── youtube-skills      Search, download, transcribe, summarize
+monkey-skills (marketplace)
+├── domain-teams       Planning (企画) / Code / Design / Research
+└── obsidian           Daily notes, diagrams, vault management, dashboard design
 ```
 
-### planning-team
+### Plugin: domain-teams
 
-Cross-domain project planning (企画) with quality gates.
+Domain team skills with checkpoint-based quality gates.
+
+#### planning-team
 
 | Type | Name | Role |
 |------|------|------|
@@ -45,11 +43,7 @@ Cross-domain project planning (企画) with quality gates.
 | Agent | `evaluator` | Completeness checklist, cross-domain consistency gate (opus) |
 | Agent | `worker` | Execute planning tasks with protocol guidance (sonnet) |
 
-Domain knowledge: 1 protocol, 1 checklist, 1 rubric (colocated in `skills/planning-team/`)
-
-### code-team
-
-Code development with checkpoint-based quality gates.
+#### code-team
 
 | Type | Name | Role |
 |------|------|------|
@@ -57,24 +51,16 @@ Code development with checkpoint-based quality gates.
 | Agent | `evaluator` | Security checklist, arch gate, quality gate (opus) |
 | Agent | `worker` | Execute large tasks with protocol guidance (sonnet) |
 
-Domain knowledge: 6 protocols, 3 checklists, 3 rubrics, 1 standard (colocated in `skills/code-team/`)
-
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
 
-### design-team
-
-Design with checkpoint-based quality gates.
+#### design-team
 
 | Type | Name | Role |
 |------|------|------|
 | Skill | `design-team` | Checkpoint orchestrator (discovery + execution) |
 | Agent | `evaluator` | A11y checklist, UX/UI/visual gates (opus) |
 
-Domain knowledge: 4 protocols, 1 checklist, 3 rubrics, 1 standard (colocated in `skills/design-team/`)
-
-### research-team
-
-Research with checkpoint-based quality gates.
+#### research-team
 
 | Type | Name | Role |
 |------|------|------|
@@ -82,15 +68,13 @@ Research with checkpoint-based quality gates.
 | Agent | `worker` | Research generation (sonnet) |
 | Agent | `evaluator` | Citation checklist, quality gate (opus) |
 
-Domain knowledge: 6 protocols, 2 checklists, 1 rubric, 2 standards (colocated in `skills/research-team/`)
+### Plugin: obsidian
 
-### obsidian-workflow
-
-Obsidian vault daily workflows and visual tools.
+Obsidian vault daily workflows, visual tools, and dashboard design.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-obsidian-workflow` | Entry point |
+| Skill | `using-obsidian-team` | Entry point and routing guide |
 | Skill | `obsidian-daily` | Start the day — daily note, priorities |
 | Skill | `obsidian-vault-setup` | Interactive vault configurator |
 | Skill | `obsidian-tldr` | Save conversation summary to vault |
@@ -98,25 +82,10 @@ Obsidian vault daily workflows and visual tools.
 | Skill | `obsidian-mermaid-visualizer` | Create Mermaid diagrams \* |
 | Skill | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams \* |
 | Skill | `obsidian-canvas-creator` | Create Canvas files \* |
+| Skill | `dashboard-design` | Dashboard design workflow |
 | Agent | `obsidian-vault-organizer` | Vault cleanup and organization (haiku) |
 
 \* Integrated from [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) (MIT License)
-
-### youtube-skills
-
-YouTube video processing toolkit.
-
-| Type | Name | Role |
-|------|------|------|
-| Skill | `using-youtube-skills` | Entry point |
-| Skill | `mk-youtube-search` | Search videos by keyword |
-| Skill | `mk-youtube-get-info` | Get video metadata |
-| Skill | `mk-youtube-get-caption` | Download subtitles |
-| Skill | `mk-youtube-get-audio` | Download audio |
-| Skill | `mk-youtube-audio-transcribe` | Transcribe via whisper.cpp |
-| Skill | `mk-youtube-summarize` | Summarize video content |
-| Skill | `mk-youtube-transcript-summarize` | Summarize from transcript file |
-| Skill | `mk-youtube-get-channel-latest` | Get latest from channel |
 
 ## Installation
 
@@ -124,7 +93,7 @@ YouTube video processing toolkit.
 
 ```bash
 claude plugin marketplace add kouko/monkey-skills
-claude plugin install monkey-skills
+# Both plugins (domain-teams, obsidian) become available
 ```
 
 ### Gemini CLI
@@ -137,36 +106,40 @@ gemini extensions install https://github.com/kouko/monkey-skills
 
 See [`.codex/INSTALL.md`](.codex/INSTALL.md)
 
-### Cursor
-
-Install via marketplace or import `https://github.com/kouko/monkey-skills` in Settings > Plugins.
-
 ## Repository Structure
 
 ```
 monkey-skills/
-├── agents/                          ← Reusable agents (4 total)
-│   ├── worker.md                    ← Generic executor (sonnet)
-│   ├── evaluator.md                 ← Generic evaluator (opus)
-│   ├── context-compressor.md        ← Context compressor (haiku)
-│   └── obsidian-vault-organizer.md  ← Standalone vault tool (haiku)
-├── skills/
-│   ├── planning-team/               ← Planning: orchestrator + domain knowledge
-│   ├── code-team/                   ← Code: orchestrator + domain knowledge
-│   │   ├── SKILL.md                 ← Checkpoint orchestrator
-│   │   ├── protocols/               ← Execution SOPs
-│   │   ├── checklists/              ← Binary gate criteria
-│   │   ├── rubrics/                 ← Qualitative gate criteria
-│   │   └── standards/               ← Shared SSOT
-│   ├── design-team/                 ← Design: orchestrator + domain knowledge
-│   ├── research-team/               ← Research: orchestrator + domain knowledge
-│   ├── obsidian-*/                  ← Vault tools
-│   └── using-obsidian-team/         ← Obsidian entry point
-├── .claude-plugin/                  ← Claude Code marketplace
-├── .cursor-plugin/                  ← Cursor
-├── gemini-extension.json            ← Gemini CLI
-├── GEMINI.md                        ← Gemini CLI context
-└── AGENTS.md                        ← Codex / Copilot CLI
+├── domain-teams/                    ← Plugin: domain-teams
+│   ├── .claude-plugin/plugin.json
+│   ├── agents/
+│   │   ├── worker.md
+│   │   ├── evaluator.md
+│   │   └── context-compressor.md
+│   └── skills/
+│       ├── planning-team/           ← Orchestrator + domain knowledge
+│       │   ├── SKILL.md
+│       │   ├── protocols/
+│       │   ├── checklists/
+│       │   ├── rubrics/
+│       │   └── standards/
+│       ├── code-team/
+│       ├── design-team/
+│       └── research-team/
+├── obsidian/                        ← Plugin: obsidian
+│   ├── .claude-plugin/plugin.json
+│   ├── agents/
+│   │   └── obsidian-vault-organizer.md
+│   └── skills/
+│       ├── using-obsidian-team/
+│       ├── obsidian-daily/
+│       ├── obsidian-*/
+│       └── dashboard-design/
+├── .claude-plugin/
+│   └── marketplace.json             ← Lists both plugins
+├── gemini-extension.json             ← Gemini CLI (single extension)
+├── GEMINI.md                         ← Gemini CLI context
+└── AGENTS.md                         ← Codex / Copilot CLI
 ```
 
 ## License
