@@ -1,11 +1,9 @@
 ---
 name: wabi-sabi
 description: >-
-  侘寂 — 不完全さ・不恒常性の中に美を見出す視点で、過剰な磨き込みや
-  完璧主義に対抗する。「これで十分か」「もっと削れるか」「あえて未完成に
-  すべきか」と悩んでいるときに使う。実装や技術比較が目的の場合は使わない。
-  侘寂・不完全の美・ミニマリズム・十分さ。wabi-sabi, good enough, minimalism,
-  imperfection, over-engineering.
+  侘寂 — 不完全さの中に美を見出し、過剰を削ぎ落とす。「これで十分か」
+  と悩んでいるときに使う。実装や技術比較には使わない。
+  wabi-sabi, good enough, minimalism, imperfection.
 ---
 
 # 侘寂（Wabi-Sabi）
