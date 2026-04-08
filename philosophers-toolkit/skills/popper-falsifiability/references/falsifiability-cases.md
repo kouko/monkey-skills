@@ -52,9 +52,41 @@ Extended examples for reference.
 | Evidence | Pre-migration: 8 cross-team PRs per month. Post-migration (month 1-3 average): 11 cross-team PRs per month (37.5% increase) |
 | Verdict | **Falsified** — cross-team PRs increased by 37.5%, below the 50% threshold. The monorepo made cross-team changes easier but did not reach the hypothesized level of collaboration improvement. Possible confound: organizational incentives matter more than repository structure |
 
+## Real-World Cases
+
+### Netflix: DVD-by-Mail → Streaming → Content Creation
+
+| Step | Content |
+|------|---------|
+| Original Hypothesis | "Customers want convenient DVD rental by mail" |
+| Falsification Signal | Streaming technology matured; download speeds increased; customer behavior shifted toward instant access |
+| What Netflix Did | Treated each business model as a falsifiable hypothesis. When evidence showed streaming was overtaking DVD, pivoted — didn't cling to the original model |
+| Key Insight | Netflix's willingness to cannibalize its own DVD business is Popperian: the hypothesis "DVD-by-mail is the best delivery model" was falsified by market evidence, and they accepted it |
+
+### Spotify Car Thing: Hardware Hypothesis Falsified
+
+| Step | Content |
+|------|---------|
+| Original Hypothesis | "Consumers want a dedicated Spotify hardware device for cars" |
+| Operationalized | Ship a physical product (Car Thing) and measure adoption and retention |
+| Falsification Evidence | Low sales, weak retention, customers preferred using their phones |
+| Verdict | **Falsified** — Spotify discontinued Car Thing and redirected resources. Didn't persist with a falsified premise |
+| Key Insight | Fast falsification saved resources. A non-Popperian company would have doubled down on marketing instead of accepting the evidence |
+
+### Google: The Product Graveyard as Falsification Machine
+
+| Step | Content |
+|------|---------|
+| Pattern | Google launches products as hypotheses, kills them when falsified |
+| Examples | Google+ (hypothesis: users want a Google social network — falsified by low engagement), Google Glass (hypothesis: consumers want AR glasses — falsified by social rejection and limited use cases), Inbox (hypothesis: users want email reimagined — falsified by low migration from Gmail) |
+| Key Insight | Google's "graveyard" is not failure — it's a systematic falsification process. Products that survive testing (Search, Maps, YouTube) are the ones whose hypotheses were not falsified |
+
+Source: [Falsifiable Hypotheses in Data Science Practice — Crow Intelligence](https://crowintelligence.org/2025/02/25/falsifiable-hypotheses-how-poppers-philosophy-transformed-my-data-science-practice/)
+
 ## Sources
 
 - Popper, K. (1934). *The Logic of Scientific Discovery*
 - Popper, K. (1963). *Conjectures and Refutations*
 - [Stanford Encyclopedia of Philosophy — Karl Popper](https://plato.stanford.edu/entries/popper/)
 - [Falsifiability in Software Engineering — Hillel Wayne](https://www.hillelwayne.com/post/falsifiable/)
+- [Falsifiable Hypotheses in Data Science — Crow Intelligence](https://crowintelligence.org/2025/02/25/falsifiable-hypotheses-how-poppers-philosophy-transformed-my-data-science-practice/)
