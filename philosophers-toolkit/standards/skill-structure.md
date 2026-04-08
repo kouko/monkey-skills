@@ -34,6 +34,11 @@ The core procedure. Format depends on the method's nature:
 Define the structure of each agent response during the method.
 How should the agent format its output per turn?
 
+**Critical rule: ONE phase per response.**
+Never advance to the next phase without user input.
+If a phase requires the user to state something (thesis, assumption,
+ground truth), the agent MUST wait — do not generate it for them.
+
 ### 6. Critical Constraints
 Never / Always rules specific to this method.
 What must the agent avoid? What must it always do?

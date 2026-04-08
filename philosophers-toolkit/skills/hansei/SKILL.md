@@ -142,6 +142,9 @@ Do NOT use when:
 3. **具体的な次の一歩**を確認する
 4. **フォローアップの時期**を提案する（1週間後、1ヶ月後など）
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

@@ -177,6 +177,9 @@ Do NOT use when:
 3. **段階に応じた指導**を提供する
 4. **遷移シグナル**を提示する
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

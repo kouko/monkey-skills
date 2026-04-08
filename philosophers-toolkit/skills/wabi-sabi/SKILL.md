@@ -145,6 +145,9 @@ Do NOT use when:
 2. **「十分さ」の判断基準**を提示する
 3. **具体的な提案**をする（削るもの、残すもの、余白にするもの）
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

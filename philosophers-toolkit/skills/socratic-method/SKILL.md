@@ -208,6 +208,8 @@ User: "I think AI will take all our jobs."
 You: "So you're predicting widespread job displacement by AI. What evidence are you basing this prediction on? Have you considered historical examples of automation?"
 ```
 
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:
