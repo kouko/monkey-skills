@@ -293,3 +293,4 @@ SQLを触っている時間が一番楽しい。」
 - [ ] 前の軸との関連を示しているか？
 - [ ] 分析であって評価・判断になっていないか？
 - [ ] 答えを押し付けていないか？ユーザーの発見を促しているか？
+- [ ] Am I summarizing what the user said, not generating what they didn't?

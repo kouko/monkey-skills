@@ -294,3 +294,4 @@ Agent: "チームはスクラムにおいて守の段階にあると判断しま
 - [ ] 段階に応じた指導になっているか？（守に「自由に」と言っていないか？）
 - [ ] 各段階を敬意を持って扱っているか？
 - [ ] 遷移シグナルを提示しているか？
+- [ ] Am I summarizing what the user said, not generating what they didn't?

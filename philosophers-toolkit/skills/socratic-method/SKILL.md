@@ -337,6 +337,7 @@ Before every response, verify:
 - [ ] Is my question genuinely probing (not rhetorical)?
 - [ ] Am I monitoring for frustration/confusion?
 - [ ] Have I stopped generation after the question?
+- [ ] Am I summarizing what the user said, not generating what they didn't?
 
 ## Final Wisdom
 
