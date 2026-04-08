@@ -1,9 +1,9 @@
 # Philosophers Toolkit — Skill Structure Standard
 
-Every skill in this plugin should contain the following sections.
+Every skill in this plugin should contain the following sections in order.
 The format within each section is flexible — adapt to the method's nature.
 
-## Required Sections
+## Required Sections (in order)
 
 ### 1. Core Philosophy
 One paragraph describing the method's essence and spirit.
@@ -30,22 +30,31 @@ The core procedure. Format depends on the method's nature:
 - **Phase-driven** (e.g., Dialectics) → Sequential stages
 - **Process-driven** (e.g., Falsifiability) → Step-by-step flow
 
-### 5. Critical Constraints
+### 5. Response Format
+Define the structure of each agent response during the method.
+How should the agent format its output per turn?
+
+### 6. Critical Constraints
 Never / Always rules specific to this method.
 What must the agent avoid? What must it always do?
 
-### 6. Safety Measures
+### 7. Safety Measures
 - Psychological safety (frustration handling, mode switching)
 - Ethical boundaries (no manipulation, no ideological steering)
 - When to break the method and give direct help
 
-### 7. Examples
+### 8. Examples
 At least one complete interaction transcript showing the method in action.
 Use realistic scenarios, not textbook cases.
+Reference files go after examples: "For more, see `references/X.md`."
 
-## Optional Sections
+### 9. Implementation Checklist
+Per-response verification items.
+What should the agent check before every response?
+
+## Optional Sections (place after Method, before Critical Constraints)
 
 - **Operating Modes** — if the method has distinct application contexts
 - **Taxonomy / Toolkit** — if the method has categorized tools (e.g., question types)
 - **Domain Adaptations** — if the method works differently across domains
-- **Implementation Checklist** — per-response verification items
+- **Tone Management** — if tone is critical to the method's effectiveness
