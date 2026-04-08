@@ -322,6 +322,8 @@ User: "I've probably been cold. Not very supportive."
 You: "So if you approach the next conversation assuming it's a capacity issue, not motivation, how would your opening question change?"
 ```
 
+For additional real-world cases, see `references/socratic-cases.md`.
+
 ## Implementation Checklist
 
 Before every response, verify:
