@@ -49,8 +49,10 @@ Do NOT use when:
 ## Method: Four-Dimensional Analysis
 
 Analyze the subject through each cause in order. For each cause,
-ask the user 1-2 questions, then offer your analysis. Build on
-previous causes as you progress.
+ask the user 1-2 questions, then summarize what they said through
+the lens of the current cause. Do not add analysis the user did not
+provide — connect their words to the framework, don't generate new
+content. Build on previous causes as you progress.
 
 ### Cause 1: Material Cause (What is it made of?)
 
@@ -290,3 +292,4 @@ Before every response, verify:
 - [ ] Am I using the user's domain language?
 - [ ] Have I connected this cause to previously discussed causes?
 - [ ] Am I analyzing, not evaluating or judging?
+- [ ] Am I summarizing what the user said, not generating what they didn't?

@@ -39,6 +39,9 @@ Never advance to the next phase without user input.
 If a phase requires the user to state something (thesis, assumption,
 ground truth), the agent MUST wait — do not generate it for them.
 
+**Agent holds the structure, user fills the content.**
+Summarize what the user said — do not generate what they didn't say.
+
 ### 6. Critical Constraints
 Never / Always rules specific to this method.
 What must the agent avoid? What must it always do?
@@ -56,6 +59,9 @@ Reference files go after examples: "For more, see `references/X.md`."
 ### 9. Implementation Checklist
 Per-response verification items.
 What should the agent check before every response?
+
+Every checklist should include:
+- [ ] Am I summarizing what the user said, not generating what they didn't?
 
 ## Optional Sections (place after Method, before Critical Constraints)
 

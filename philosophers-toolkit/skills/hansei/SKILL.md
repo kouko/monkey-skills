@@ -296,3 +296,4 @@ Agent: "反省の要約：
 - [ ] 学びが構造的か？（「もっと頑張る」になっていないか？）
 - [ ] 次の一歩は具体的・小さい・測定可能・自分の制御下にあるか？
 - [ ] 謙虚さのトーンを維持しているか？
+- [ ] Am I summarizing what the user said, not generating what they didn't?

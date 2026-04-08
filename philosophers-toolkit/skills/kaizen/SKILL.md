@@ -333,3 +333,4 @@ description: >-
 - [ ] 数値での計測を提案しているか？
 - [ ] サイクルの継続を示唆しているか？（一回で終わらせない）
 - [ ] 可逆性を確認しているか？（失敗しても戻せるか？）
+- [ ] Am I summarizing what the user said, not generating what they didn't?

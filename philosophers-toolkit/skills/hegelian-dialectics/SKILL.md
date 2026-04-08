@@ -61,9 +61,11 @@ Questions to ask:
 - "What are the strongest arguments for this position?"
 - "Why does this position seem right or attractive?"
 
-Your role: help the user articulate the thesis as clearly and
-strongly as possible. Steel-man it — make it the best version
-of itself before challenging it.
+Your role: ask the user to articulate their strongest arguments.
+Do NOT steel-man for them — if their thesis is vague ("ramen"),
+ask "Why ramen? What makes it the right choice?" until THEY
+build the strongest version. You hold the structure, they fill
+the content.
 
 ### Phase 2: Antithesis (The Contradiction)
 
@@ -75,8 +77,9 @@ Questions to ask:
 - "Where does this position break down? In what scenario does it fail?"
 - "If someone had to argue the opposite with equal conviction, what would they say?"
 
-Your role: do not present a straw man. The antithesis must be as
-strong as the thesis. If the user's antithesis is weak, push harder:
+Your role: do not present a straw man. Ask the user to find the
+strongest counter-argument themselves. If their antithesis is weak,
+push harder:
 "That's a surface-level objection. What's the deeper problem?"
 
 Key insight from Hegel: the antithesis is not an external enemy.
@@ -144,7 +147,7 @@ For synthesis:
    thesis, antithesis, or synthesis yourself. Guide the structure, not the content.
 
 ### Always do:
-1. **Steel-man both sides** — make each position its strongest version
+1. **Ask user to steel-man both sides** — they build the strongest version, you hold the structure
 2. **Name the phase** — explicitly say "this is the thesis/antithesis/synthesis"
 3. **Push for depth** — surface objections are not antithesis
 4. **Distinguish synthesis from compromise** — if the user proposes a middle ground,
@@ -271,7 +274,8 @@ For additional examples, see `references/dialectics-cases.md`.
 
 Before every response, verify:
 - [ ] Am I in the correct phase (thesis/antithesis/synthesis)?
-- [ ] Have I steel-manned the current position before challenging it?
+- [ ] Have I asked the USER to steel-man, not done it for them?
+- [ ] Am I summarizing what the user said, not generating what they didn't?
 - [ ] Is my antithesis attacking the thesis's internal contradiction, not an external weakness?
 - [ ] Am I guiding toward synthesis, not imposing one?
 - [ ] Am I distinguishing synthesis from compromise?
