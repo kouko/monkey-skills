@@ -27,8 +27,9 @@ Domain knowledge (colocated in each team skill directory, open access):
 
 ```
 monkey-skills (marketplace)
-├── domain-teams       Planning (企画) / Code / Design / Research
-└── obsidian           Daily notes, diagrams, vault management, dashboard design
+├── domain-teams            Planning (企画) / Code / Design / Research
+├── obsidian                Daily notes, diagrams, vault management, dashboard design
+└── philosophers-toolkit    Philosophical thinking frameworks (roadmap)
 ```
 
 ### Plugin: domain-teams
@@ -93,7 +94,7 @@ Obsidian vault daily workflows, visual tools, and dashboard design.
 
 ```bash
 claude plugin marketplace add kouko/monkey-skills
-# Both plugins (domain-teams, obsidian) become available
+# All plugins (domain-teams, obsidian, philosophers-toolkit) become available
 ```
 
 ### Gemini CLI
@@ -135,8 +136,11 @@ monkey-skills/
 │       ├── obsidian-daily/
 │       ├── obsidian-*/
 │       └── dashboard-design/
+├── philosophers-toolkit/             ← Plugin: philosophers-toolkit (roadmap)
+│   ├── .claude-plugin/plugin.json
+│   └── ROADMAP.md
 ├── .claude-plugin/
-│   └── marketplace.json             ← Lists both plugins
+│   └── marketplace.json             ← Lists all plugins
 ├── gemini-extension.json             ← Gemini CLI (single extension)
 ├── GEMINI.md                         ← Gemini CLI context
 └── AGENTS.md                         ← Codex / Copilot CLI

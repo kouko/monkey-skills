@@ -13,6 +13,11 @@
       "name": "obsidian",
       "description": "Obsidian vault workflows — daily notes, diagrams, file intel, vault management, dashboard design",
       "source": "./obsidian/"
+    },
+    {
+      "name": "philosophers-toolkit",
+      "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning. 哲學思考框架。哲学的思考フレームワーク。",
+      "source": "./philosophers-toolkit/"
     }
   ]
 }
