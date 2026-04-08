@@ -123,6 +123,19 @@ Five-phase structure inspired by [awesome-skills/first-principles-skill](https:/
 | **Use When** | User needs to judge "good enough" vs more polish, or wants to embrace constraints as strengths |
 | **Command** | `/philosophers-toolkit:wabi-sabi` |
 
+### Getting Started
+
+#### Using Philosophers Toolkit
+
+Not sure which method to use? Start here:
+
+| | |
+|--|--|
+| **Command** | `/philosophers-toolkit:think` |
+| **What it does** | Asks what you're trying to do, then routes you to the best-fit method |
+| **Categories** | Understand → Decide → Improve → Reflect |
+| **Default** | If unsure, falls back to Socratic Method |
+
 ## Design Principles
 
 - Every skill is an **interactive process**, not a lecture
