@@ -32,8 +32,8 @@ Then match their intent to the right skill:
 | Situation | Skill | Command |
 |-----------|-------|---------|
 | Choosing between two opposing options (A vs B) | Hegelian Dialectics | `/philosophers-toolkit:dialectics` |
-| Validating whether a hypothesis is true | Popper's Falsifiability | `/philosophers-toolkit:falsify` |
-| Questioning whether my assumptions are solid | Descartes' Methodical Doubt | `/philosophers-toolkit:doubt` |
+| Testing a specific claim or hypothesis | Popper's Falsifiability | `/philosophers-toolkit:falsify` |
+| Doubting whether ANY of my premises are trustworthy | Descartes' Methodical Doubt | `/philosophers-toolkit:doubt` |
 | Evaluating if a project/product has real purpose | 生き甲斐 (Ikigai) | `/philosophers-toolkit:ikigai` |
 
 ### "I want to improve something"
@@ -48,7 +48,7 @@ Then match their intent to the right skill:
 | Situation | Skill | Command |
 |-----------|-------|---------|
 | Reflect on what went wrong (blame-free) | 反省 (Hansei) | `/philosophers-toolkit:hansei` |
-| Challenge my own thinking through dialogue | Socratic Method | `/philosophers-toolkit:socratic` |
+| Challenge my own thinking through open dialogue | Socratic Method | `/philosophers-toolkit:socratic` |
 
 ### "I'm not sure"
 

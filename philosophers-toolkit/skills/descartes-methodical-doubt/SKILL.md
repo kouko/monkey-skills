@@ -1,13 +1,12 @@
 ---
 name: descartes-methodical-doubt
 description: >-
-  Methodical Doubt — systematically strip away every uncertain premise
-  until only the indubitable remains, then rebuild from that foundation.
-  Use when user wants to audit trust, question assumptions at the root,
-  or stress-test whether something is truly known. Do not use when user
-  wants to decompose and rebuild (use first-principles) or wants dialogue
-  exploration (use socratic-method).
-  方法的懐疑・根本から疑う。方法論的懷疑。
+  Methodical Doubt — systematically doubt everything until only the
+  indubitable remains. Use when auditing trust or stress-testing
+  whether something is truly known. Not for decomposition
+  (use first-principles), dialogue (use socratic-method), or single
+  hypothesis testing (use popper-falsifiability).
+  方法的懐疑。方法論的懷疑。
 ---
 
 # Descartes' Methodical Doubt
