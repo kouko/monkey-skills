@@ -150,6 +150,9 @@ description: >-
 3. **ギャップ** — 欠けている軸があれば診断と対策を提示する
 4. **問いかけ** — 「この診断に違和感はありますか？」
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### 絶対にしないこと：

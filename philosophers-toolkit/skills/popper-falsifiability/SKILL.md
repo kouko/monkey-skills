@@ -182,6 +182,9 @@ For synthesis:
 3. **Deliver** the verdict with reasoning
 4. **Ask** if the user wants to reformulate (if unfalsifiable) or test further (if survived)
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

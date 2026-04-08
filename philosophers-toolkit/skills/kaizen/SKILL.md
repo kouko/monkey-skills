@@ -183,6 +183,9 @@ description: >-
 3. **比較** — 「改善」と「変革」の違いを明示する
 4. **選択** — ユーザーに選んでもらう
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### 絶対にしないこと：

@@ -191,6 +191,9 @@ For synthesis:
 3. **Present** the rebuilt foundation and what it justifies
 4. **Ask** the user if the surviving foundation changes their decision
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

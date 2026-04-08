@@ -162,6 +162,9 @@ For synthesis:
 2. **Trace** each component to its ground truth
 3. **Ask** if the user sees value in the rebuilt solution vs the original
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:

@@ -130,6 +130,9 @@ For synthesis:
 2. **Highlight** how causes influence each other
 3. **Ask** if any cause feels misaligned with the others
 
+
+**Stop after each phase. Never advance without user input.**
+
 ## Critical Constraints
 
 ### Never do:
