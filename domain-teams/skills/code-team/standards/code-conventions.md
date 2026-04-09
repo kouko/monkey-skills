@@ -15,15 +15,46 @@ Both worker (when writing) and evaluator (when reviewing) reference this file.
 - Code documentation: English (unless project convention differs)
 - Non-code content (vault notes, reports): Use the `output_language` from the launch prompt
 
-## Style
+## Comments
 
-- Do not add comments/docstrings to code you did not change
-- Only add comments where logic is not self-evident
-- Do not add error handling for scenarios that cannot happen
-- Do not create abstractions for one-time operations
+Code comments are a last resort. First try: rename, extract function, replace magic numbers
+with constants. Refactor unclear code rather than explaining it with comments.
+Only write what code alone cannot express.
+
+### What to write
+
+- **Docstring (功能)**: one-line summary of calling contract — write for the caller,
+  not the implementer. Omit if the function name already says it all.
+- **Intent (意圖)**: why this code exists in the system — what calls it,
+  what problem it solves, what breaks if removed
+- **Why (理由)**: why this approach was chosen when alternatives exist
+- **Why Not (却下理由)**: why the obvious/simpler approach was intentionally rejected —
+  prevents future "improvements" that reintroduce known issues
+
+### What NOT to write
+
+- What the code does line-by-line — the code already says this
+- Block-end markers (`// end if`, `// end for`) — the IDE shows structure
+- Revision history — git manages this
+- Commented-out code — delete it; git preserves history
+
+### Staleness rule
+
+A stale comment is worse than no comment.
+When changing code, update or delete adjacent comments. Treat outdated comments
+as tech debt equivalent to dead code.
+
+## KISS (Keep It Simple, Stupid)
+
 - Keep functions focused; prefer explicit over clever
 
-## DRY
+## YAGNI (You Ain't Gonna Need It)
+
+- Do not create abstractions for one-time operations
+- Do not add error handling for scenarios that cannot happen
+- Do not design for hypothetical future requirements
+
+## DRY (Don't Repeat Yourself)
 
 - Link to source of truth rather than duplicating
 - Three similar lines are better than a premature abstraction

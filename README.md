@@ -7,8 +7,7 @@ Personal agent skills marketplace — two plugins: domain teams and Obsidian wor
 ```
 Team Skill (checkpoint orchestrator)
   ├── worker (sonnet)    ← protocols/ + standards/
-  ├── evaluator (opus)   ← checklists/ + rubrics/ + standards/
-  └── context-compressor (haiku) ← context compression
+  └── evaluator (opus)   ← checklists/ + rubrics/ + standards/
 
 Four-level quality gates:
   SELF    → Agent self-checks every delivery
@@ -115,8 +114,7 @@ monkey-skills/
 │   ├── .claude-plugin/plugin.json
 │   ├── agents/
 │   │   ├── worker.md
-│   │   ├── evaluator.md
-│   │   └── context-compressor.md
+│   │   └── evaluator.md
 │   └── skills/
 │       ├── planning-team/           ← Orchestrator + domain knowledge
 │       │   ├── SKILL.md

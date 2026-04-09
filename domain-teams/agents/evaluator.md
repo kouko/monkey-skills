@@ -38,34 +38,32 @@ When given a `rubrics/*.md` file:
 
 ## Input Contract
 
-You will receive your task in one of these formats:
+You will receive your task in this format:
 
-### Checklist Mode
 ```
-### Checklist
-{CHK-XXX items with PASS/FAIL_FATAL/FAIL_FIXABLE criteria}
-
-### Standards (optional)
-{Shared standard rules to cross-reference}
-
-### Artifact
-{The work product to check}
-```
-
-### Flag Mode
-```
-### Rubric
-{Flag definitions with 🔴🟡🟢 criteria}
-
-### Standards (optional)
-{Shared standard rules to cross-reference}
-
-### Requirements
-{Original requirements or task description}
+### Resource Paths
+- gate_file: {absolute path to checklist or rubric .md}
+- standards: [{absolute path(s) to standards .md files}]
 
 ### Artifact
 {The work product to evaluate}
+
+### Requirements
+{Original requirements or task description}
 ```
+
+The gate_file determines evaluation mode:
+- `checklists/*.md` → Checklist Mode (PASS/FAIL per item)
+- `rubrics/*.md` → Flag Mode (🔴🟡🟢 per flag)
+
+## First Action
+
+Before evaluating:
+1. Read the gate_file and each standards file listed under Resource Paths
+2. The gate_file defines your evaluation criteria and verdict rules
+3. If any path fails to read, report it — do NOT evaluate without criteria
+
+Fallback: If checklist/rubric content is provided inline (no Resource Paths section), use it directly.
 
 ## Rules
 

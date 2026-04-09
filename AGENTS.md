@@ -7,8 +7,7 @@ Personal agent skills organized into two plugins: domain teams and Obsidian work
 ```
 Team Skill (checkpoint orchestrator)
   ├── worker (sonnet)    ← execute with protocols/ + standards/
-  ├── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
-  └── context-compressor (haiku) ← compress context between phases
+  └── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
 
 Domain knowledge (open access, colocated in each team skill directory):
   protocols/   → Step-by-step SOPs (execution guidance)
@@ -50,7 +49,6 @@ Role boundaries enforced by behavior, not reading restrictions:
 |-------|------|-------|
 | `worker` | Generic task executor (protocols + standards) | sonnet |
 | `evaluator` | Generic quality evaluator (checklists + rubrics + standards) | opus |
-| `context-compressor` | Context compressor for phase handoff | haiku |
 
 ## Plugin: obsidian
 

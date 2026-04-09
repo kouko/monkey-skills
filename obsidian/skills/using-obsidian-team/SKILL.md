@@ -33,7 +33,6 @@ This plugin provides daily workflow skills and vault management for Obsidian.
 | Agent | Role | Model |
 |-------|------|-------|
 | `obsidian-vault-organizer` | Vault file organization, broken links, metadata cleanup | haiku |
-| `context-compressor` | Compress notes and vault content for other agents | haiku |
 
 ## Quick Start
 
