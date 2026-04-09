@@ -26,7 +26,7 @@ Domain knowledge (colocated in each team skill directory, open access):
 
 ```
 monkey-skills (marketplace)
-├── domain-teams            Planning (企画) / Code / Design / Research
+├── domain-teams            Planning (企画) / Code / Docs / Design / Research
 ├── obsidian                Daily notes, diagrams, vault management, dashboard design
 └── philosophers-toolkit    Philosophical thinking frameworks (roadmap)
 ```
@@ -47,11 +47,19 @@ Domain team skills with checkpoint-based quality gates.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `code-team` | Checkpoint orchestrator (discovery + execution) |
+| Skill | `code-team` | Checkpoint orchestrator for code development |
 | Agent | `evaluator` | Security checklist, arch gate, quality gate (opus) |
-| Agent | `worker` | Execute large tasks with protocol guidance (sonnet) |
+| Agent | `worker` | Execute development tasks with protocol guidance (sonnet) |
 
 External dependency: `feature-dev:code-architect` (Anthropic official plugin)
+
+#### docs-team
+
+| Type | Name | Role |
+|------|------|------|
+| Skill | `docs-team` | Documentation and codebase assessment |
+| Agent | `worker` | Execute documentation and analysis tasks (sonnet) |
+| Agent | `evaluator` | QA gate, tech debt checklist — MAY only (opus) |
 
 #### design-team
 
@@ -116,6 +124,7 @@ monkey-skills/
 │   │   ├── worker.md
 │   │   └── evaluator.md
 │   └── skills/
+│       ├── using-domain-teams/      ← Router (entry point)
 │       ├── planning-team/           ← Orchestrator + domain knowledge
 │       │   ├── SKILL.md
 │       │   ├── protocols/
@@ -123,6 +132,7 @@ monkey-skills/
 │       │   ├── rubrics/
 │       │   └── standards/
 │       ├── code-team/
+│       ├── docs-team/
 │       ├── design-team/
 │       └── research-team/
 ├── obsidian/                        ← Plugin: obsidian

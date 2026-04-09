@@ -2,11 +2,11 @@
 name: code-team
 description: >-
   Develop code with quality gates. Use when implementing features,
-  fixing bugs, refactoring, writing TECH-SPEC.md, writing tests,
-  or auditing tech debt. Do NOT use for product-level specs
-  (use planning-team), UX/UI design (use design-team), or deep
-  research (use research-team).
-  Delivers code, TECH-SPEC.md, tests, documentation.
+  fixing bugs, refactoring, writing TECH-SPEC.md, or writing tests.
+  Do NOT use for documentation or codebase assessment (use docs-team),
+  product-level specs (use planning-team), UX/UI design (use design-team),
+  or deep research (use research-team).
+  Delivers code, TECH-SPEC.md, tests.
   實作・修 bug・重構・技術規格。コード実装・バグ修正。
 ---
 
@@ -38,11 +38,9 @@ If user wants to skip a step, acknowledge the trade-off explicitly.
 - New feature implementation
 - Bug fixes
 - Code refactoring
-- Documentation (SPEC, README, API docs)
+- TECH-SPEC.md writing
 - Config / boilerplate creation
 - Test writing
-- Codebase assessment / tech debt audit
-- Any task in a code project
 
 ## Language
 
@@ -84,13 +82,6 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 | Quality | Code changes span >3 files or introduce new module | `evaluator` + `rubrics/quality-gate.md` |
 | Spec Consistency | Output creates or modifies a spec/design document | `evaluator` + `checklists/spec-consistency.md` |
 
-### MAY Gates (user-requested only)
-
-| Gate | File |
-|------|------|
-| QA Verification | `rubrics/qa-gate.md` |
-| Tech Debt Audit | `checklists/tech-debt-checklist.md` |
-
 ## Gate Protocol
 
 For MUST and SHOULD gates, launch `evaluator` with:
@@ -124,8 +115,6 @@ Evaluator default resources:
 - Architecture gate: `rubrics/arch-gate.md`
 - Quality gate: `rubrics/quality-gate.md`
 - Spec Consistency gate: `checklists/spec-consistency.md`
-- QA gate (MAY): `rubrics/qa-gate.md`
-- Tech Debt gate (MAY): `checklists/tech-debt-checklist.md`
 
 ### Behavioral Rules
 
@@ -259,26 +248,6 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 |-------|------|-----------|-----------|--------------|
 | 1 | MUST | `checklists/security-checklist.md` | `standards/code-conventions.md` | yes |
 
-### Documentation
-
-**Trigger**: Writing docs, README, API docs (not implementation specs — use spec-writing protocol for those).
-
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Write | worker | `protocols/doc-writing.md` | subject matter | documentation | reference `standards/code-conventions.md` |
-
-**Gates**: None (no code changes).
-
-### Codebase Assessment
-
-**Trigger**: Analyzing codebase health, tech debt, or architecture.
-
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Analyze | worker | `protocols/codebase-assessment.md` | codebase | assessment report | — |
-
-**Gates**: None (no code changes).
-
 ### Spec-Code Co-Evolution
 
 **Trigger**: Editing both spec and code together.
@@ -295,6 +264,7 @@ Lightweight cross-domain tasks can be handled directly without switching skills:
 - Brief competitive comparison for a specific technical choice
 
 Switch to specialized team when quality gates for that domain are needed:
+- `docs-team`: README, API docs, codebase assessment, tech debt audit
 - `planning-team`: new project kickoff, cross-domain product spec,
   or major scope/direction changes to PRODUCT-SPEC.md
 - `research-team`: deep analysis, multi-source investigation, investment research,
