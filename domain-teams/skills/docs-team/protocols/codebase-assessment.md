@@ -114,7 +114,8 @@ Produce the final assessment with verification.
 
 - This protocol produces a REPORT, not code changes
 - Do NOT attempt to fix issues found — only identify and prioritize them
-- If the repo is too large for single-pass analysis, use `context-compressor` between phases
+- If the repo is too large for single-pass analysis, split into focused phases
+  (each phase analyzes a module/layer; worker reads files directly per phase)
 - Reference `standards/code-conventions.md` for evaluating naming and style compliance
 - Every claim must reference a specific file path or git evidence — no unsupported assertions
 

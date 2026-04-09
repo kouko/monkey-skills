@@ -7,8 +7,7 @@ Personal agent skills organized into two plugins: domain teams and Obsidian work
 ```
 Team Skill (checkpoint orchestrator)
   ├── worker (sonnet)    ← execute with protocols/ + standards/
-  ├── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
-  └── context-compressor (haiku) ← compress context between phases
+  └── evaluator (opus)   ← judge with checklists/ + rubrics/ + standards/
 
 Domain knowledge (open access, colocated in each team skill directory):
   protocols/   → Step-by-step SOPs (execution guidance)
@@ -32,17 +31,15 @@ Role boundaries enforced by behavior, not reading restrictions:
 
 ## Plugin: domain-teams
 
-### Planning Team
+### Entry Point
+- `using-domain-teams` — Route to the right domain team
+
+### Teams
 - `planning-team` — Cross-domain project planning (企画) with Completeness + Consistency gates
-
-### Code Team
-- `code-team` — Agent-driven execution with Security + Architecture + Quality + Spec gates
-
-### Design Team
-- `design-team` — Agent-driven execution with Accessibility + UX/UI gates
-
-### Research Team
-- `research-team` — Agent-driven execution with Citation + Quality gates
+- `code-team` — Code development with Security + Architecture + Quality + Spec gates
+- `docs-team` — Documentation and codebase assessment (MAY gates only)
+- `design-team` — Design with Accessibility + UX/UI gates
+- `research-team` — Research with Citation + Quality gates
 
 ### Agents (shared across domain teams)
 
@@ -50,7 +47,6 @@ Role boundaries enforced by behavior, not reading restrictions:
 |-------|------|-------|
 | `worker` | Generic task executor (protocols + standards) | sonnet |
 | `evaluator` | Generic quality evaluator (checklists + rubrics + standards) | opus |
-| `context-compressor` | Context compressor for phase handoff | haiku |
 
 ## Plugin: obsidian
 

@@ -98,25 +98,19 @@ Handle verdict:
 
 Guard rails:
 - Each retry launches a fresh evaluator (no accumulated context)
-- Use `context-compressor` if artifact is large before passing to evaluator
+- Do NOT compress artifacts before passing to evaluator — evaluator needs
+  full spec sections to judge completeness and cross-domain consistency
 
-## Available Resources
+## Resource Manifest
 
-Agent loads these as needed. No obligation to use all of them.
+Worker default resources:
+- standards: `standards/planning-frameworks.md`
+- protocol: (selected per-workflow from `protocols/`)
 
-### Domain Knowledge
-
-All files in this skill directory are available to any agent as reference.
-Organized by subdirectory convention:
-
-| Directory | Load when | Contains |
-|-----------|-----------|----------|
-| `protocols/` | Starting a task — pick the matching SOP by filename | Planning SOPs |
-| `checklists/` | Running MUST gates | Binary pass/fail criteria |
-| `rubrics/` | Running SHOULD gates | Qualitative flag criteria |
-
-Files are named descriptively (e.g., `product-spec-writing.md`).
-Use Glob to discover available files if unsure which to load.
+Evaluator default resources:
+- Completeness gate: `checklists/product-spec-completeness.md`
+- Cross-Domain Consistency gate: `rubrics/cross-domain-consistency.md`
+- Market Validation gate (MAY): `checklists/market-validation.md`
 
 ### Behavioral Rules
 
@@ -131,35 +125,85 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 |-------|------|-------|
 | `worker` | Execute planning tasks with protocol guidance | sonnet |
 | `evaluator` | Run quality gates | opus |
-| `context-compressor` | Compress context between phases | haiku |
 
-## Recommended Flows
+## Agent Launch Protocol
 
-Suggested approaches, not mandates. Agent adapts based on task.
+When launching an agent, pass **file paths** (not file content) in the Resource Paths section.
+Resolve relative paths against this skill's base directory to get absolute paths.
+
+### Worker launch template
+
+```
+### Task
+{What to produce}
+
+### Resource Paths
+- protocol: {base_path}/protocols/{selected-protocol}.md
+- standards: [{base_path}/standards/planning-frameworks.md]
+
+### Input
+{Artifact or context from previous phase}
+```
+
+### Evaluator launch template
+
+```
+### Resource Paths
+- gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
+
+### Artifact
+{The work product to evaluate}
+
+### Requirements
+{Original user request}
+```
+
+Agents will Read these files themselves. Do NOT embed file content in the prompt.
+
+## Workflows
 
 ### New Project (full 企画)
-1. If direction unclear → load `planning-brainstorming.md` to explore and confirm direction
-2. If market/competitive data needed → request user to invoke `research-team`
-3. Load `product-spec-writing.md` protocol
-4. Write PRODUCT-SPEC.md
-5. SELF check → MUST gate (Completeness) → SHOULD gate (Cross-Domain Consistency)
-6. Deliver PRODUCT-SPEC.md
-7. Suggest next: `code-team` for TECH-SPEC.md, `design-team` for UI/UX
+
+**Trigger**: New project kickoff, product scope definition, or initial PRODUCT-SPEC.md creation.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Brainstorm | worker | `protocols/planning-brainstorming.md` | user request | direction + priorities | optional — skip if direction clear |
+| 2. Research | — | — | — | — | if market data needed → suggest user invoke `research-team` |
+| 3. Write Spec | worker | `protocols/product-spec-writing.md` | direction + research | PRODUCT-SPEC.md | — |
+| 4. Gates | evaluator | (see gate table) | PRODUCT-SPEC.md | verdicts | — |
+
+**Gates after Phase 3:**
+
+| Order | Type | Gate File | Stop on Fail |
+|-------|------|-----------|--------------|
+| 1 | MUST | `checklists/product-spec-completeness.md` | yes |
+| 2 | SHOULD | `rubrics/cross-domain-consistency.md` | no |
+
+After delivery, suggest next: `code-team` for TECH-SPEC.md, `design-team` for UI/UX.
 
 ### Major Direction Change
-1. Read existing PRODUCT-SPEC.md
-2. Identify sections affected by the change
-3. Update affected sections
-4. SELF check → MUST gate → SHOULD gate
-5. Deliver updated PRODUCT-SPEC.md
-6. Note which downstream specs (TECH-SPEC.md, design docs) may need sync
+
+**Trigger**: Significant pivot, strategy change, or major scope redefinition.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Assess | main | — | existing PRODUCT-SPEC.md | affected sections | — |
+| 2. Update | main | — | affected sections | updated PRODUCT-SPEC.md | — |
+| 3. Gates | evaluator | (see gate table) | updated PRODUCT-SPEC.md | verdicts | — |
+
+**Gates**: Same as New Project (Completeness MUST + Cross-Domain SHOULD).
+
+After delivery, note which downstream specs (TECH-SPEC.md, design docs) may need sync.
 
 ### Scope Refinement (MVP / Phasing)
+
+**Trigger**: Adjusting scope, prioritizing features, or redefining MVP based on new constraints.
+
 1. Read existing PRODUCT-SPEC.md
-2. Reassess scope based on new constraints or feedback
-3. Update Goals, Non-Goals, and Phasing sections
-4. SELF check → MUST gate
-5. Deliver
+2. Update Goals, Non-Goals, and Phasing sections
+3. SELF check → MUST gate (Completeness)
+4. Deliver
 
 ## Cross-Domain Awareness
 
@@ -176,9 +220,3 @@ Switch to specialized team when quality gates for that domain are needed:
 - `code-team`: technical spec writing, implementation, refactoring,
   or any task where security/architecture quality gates are needed
 
-## Context Isolation
-
-Each agent launch starts fresh. Pass only:
-- To evaluator: gate file + artifact + original requirements
-- To worker: protocol + task description + relevant input
-Use `context-compressor` for large artifacts.

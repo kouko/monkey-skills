@@ -99,26 +99,21 @@ Guard rails:
 - Visual design cannot be auto-generated — always require human input
 - Only auto-revise issues evaluators flagged; do not introduce new changes
 - Each retry launches fresh evaluator instances (no accumulated context)
-- Use `context-compressor` if artifact is large before passing to evaluator
+- Do NOT compress artifacts before passing to evaluator — evaluator needs
+  full UI details (measurements, contrast ratios, component states) to judge a11y
 
-## Available Resources
+## Resource Manifest
 
-Agent loads these as needed. No obligation to use all of them.
+Worker default resources:
+- standards: `standards/wcag-baseline.md`
+- protocol: (selected per-workflow from `protocols/`)
 
-### Domain Knowledge
-
-All files in this skill directory are available to any agent as reference.
-Organized by subdirectory convention:
-
-| Directory | Load when | Contains |
-|-----------|-----------|----------|
-| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
-| `checklists/` | Running MUST gates | Binary pass/fail criteria |
-| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
-| `standards/` | Always available as reference | Baseline rules (SSOT) |
-
-Files are named descriptively (e.g., `a11y-checklist.md`, `ux-strategy.md`).
-Use Glob to discover available files if unsure which to load.
+Evaluator default resources:
+- standards: `standards/wcag-baseline.md`
+- Accessibility gate: `checklists/a11y-checklist.md`
+- UX Strategy gate: `rubrics/ux-strategy-gate.md`
+- UI Interaction gate: `rubrics/ui-interaction-gate.md`
+- Visual Design gate (MAY): `rubrics/visual-gate.md`
 
 ### Behavioral Rules
 
@@ -132,39 +127,87 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 | Agent | Role | Model |
 |-------|------|-------|
 | `evaluator` | Run quality gates | opus |
-| `context-compressor` | Compress context between phases | haiku |
 
-## Recommended Flows
+## Agent Launch Protocol
 
-Suggested approaches, not mandates. Agent adapts based on task.
+When launching an agent, pass **file paths** (not file content) in the Resource Paths section.
+Resolve relative paths against this skill's base directory to get absolute paths.
+
+### Evaluator launch template
+
+```
+### Resource Paths
+- gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
+- standards: [{base_path}/standards/wcag-baseline.md]
+
+### Artifact
+{The work product to evaluate}
+
+### Requirements
+{Original user request}
+```
+
+Agents will Read these files themselves. Do NOT embed file content in the prompt.
+
+## Workflows
 
 ### Full Design (end-to-end)
-1. Load `design-brainstorming.md` → explore concepts
-2. Load task-specific protocol (UX, UI, or visual)
-3. Generate design output
-4. SELF check → MUST gates → SHOULD gates (if triggered)
-5. Deliver
+
+**Trigger**: New design project requiring brainstorming + execution + quality review.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Brainstorm | main | `protocols/design-brainstorming.md` | user request | concept direction | — |
+| 2. Execute | main | task-specific protocol (see below) | concept | design artifact | — |
+| 3. Gates | evaluator | (see gate table) | design artifact | verdicts | — |
+
+**Protocol selection for Phase 2:**
+
+| Task type | Protocol |
+|-----------|----------|
+| UX strategy / user journey | `protocols/ux-strategy.md` |
+| UI spec / wireframe / frontend | `protocols/ui-interaction.md` |
+| Visual design | `protocols/visual-design.md` |
+
+**Gates after Phase 2:**
+
+| Order | Type | Gate File | Standards | Stop on Fail |
+|-------|------|-----------|-----------|--------------|
+| 1 | MUST | `checklists/a11y-checklist.md` | `standards/wcag-baseline.md` | yes |
+| 2 | SHOULD | (triggered by output type — see below) | `standards/wcag-baseline.md` | no |
+
+SHOULD gate selection: UX output → `rubrics/ux-strategy-gate.md`; UI output → `rubrics/ui-interaction-gate.md`. Run in parallel if both trigger; worst verdict wins.
 
 ### UX Strategy / User Journey
-1. Load `ux-strategy.md` protocol
-2. Generate strategy doc
-3. SELF check → SHOULD gate (UX Strategy)
-4. Deliver
+
+**Trigger**: User requests UX strategy, user journey mapping, or interaction flow.
+
+1. Load `protocols/ux-strategy.md` and execute in main conversation
+2. SELF check → SHOULD gate (UX Strategy)
+3. Deliver
 
 ### UI Spec / Wireframe / Frontend Code
-1. Load `ui-interaction.md` protocol
-2. Reference `wcag-baseline.md`
-3. Generate UI output
-4. SELF check → MUST gate (A11y) → SHOULD gate (UI Interaction)
-5. Deliver
 
-### Design Documentation (style guide, pattern library)
+**Trigger**: User requests wireframe, UI spec, or frontend implementation review.
+
+1. Load `protocols/ui-interaction.md`, reference `standards/wcag-baseline.md`
+2. Execute in main conversation
+3. SELF check → MUST gate (A11y) → SHOULD gate (UI Interaction)
+4. Deliver
+
+### Design Documentation
+
+**Trigger**: Writing style guides, pattern libraries, or design documentation.
+
 1. Load relevant protocol for reference
-2. Write documentation
+2. Write documentation in main conversation
 3. SELF check
 4. Deliver (no MUST gates trigger if no UI elements produced)
 
-### Minor Update to Existing Design Spec
+### Minor Update
+
+**Trigger**: Small changes to existing design specs.
+
 1. Make changes directly
 2. SELF check
 3. Deliver
@@ -183,8 +226,3 @@ Switch to specialized team when quality gates for that domain are needed:
 - `research-team`: deep analysis, multi-source investigation, tech evaluation,
   or any task where citation verification matters
 
-## Context Isolation
-
-Each agent launch starts fresh. Pass only:
-- To evaluator: gate file + standards + artifact + original requirements
-Use `context-compressor` for large artifacts.

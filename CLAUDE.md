@@ -28,3 +28,10 @@
 - worker：produces artifacts, does NOT produce gate verdicts
 - evaluator：produces verdicts, does NOT modify artifacts
 - Knowledge access is open（行為限制，非閱讀限制）
+
+### Agent Launch Convention
+- 傳遞 **檔案路徑** 給 agent（不是檔案內容）
+- Agent 用 Read 工具自行讀取資源
+- 路徑在 SKILL.md 中用相對路徑定義，launch 時解析為絕對路徑
+- Worker Input Contract: Resource Paths → Task → Input
+- Evaluator Input Contract: Resource Paths → Artifact → Requirements

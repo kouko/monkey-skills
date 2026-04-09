@@ -28,15 +28,23 @@ You will receive your task in this format:
 ### Task
 {What to produce}
 
-### Protocol (optional)
-{Step-by-step SOP from a domain protocols/ file}
+### Resource Paths
+- protocol: {absolute path to protocol .md file, or "none"}
+- standards: [{absolute path(s) to standards .md files}]
+- additional: [{absolute paths to other reference files, if any}]
 
-### Standards (optional)
-{Shared baseline rules from a domain standards/ file}
-
-### Input
+### Input (optional)
 {Artifact or context from a previous phase}
 ```
+
+## First Action
+
+Before starting work:
+1. Read each file listed under Resource Paths (skip "none" entries)
+2. These contain your execution SOP (protocol) and compliance rules (standards)
+3. If any path fails to read, report it and proceed with available resources
+
+Fallback: If content is provided inline (no Resource Paths section), use it directly.
 
 ## Proactive Escalation (BLOCKED Status)
 

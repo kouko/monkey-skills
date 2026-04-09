@@ -97,26 +97,23 @@ Guard rails:
 - Factual accuracy or data freshness issues → always NEEDS_REVISION
   (main conversation cannot verify facts without web search)
 - Each retry launches a fresh evaluator (no accumulated context)
-- Use `context-compressor` if artifact is large before passing to evaluator
+- Do NOT compress artifacts before passing to evaluator — evaluator needs
+  full citations (URLs, dates, figures) to judge source quality
 
-## Available Resources
+## Resource Manifest
 
-Agent loads these as needed. No obligation to use all of them.
+Worker default resources:
+- standards: `standards/citation-standards.md`
+- protocol: (selected per-workflow from `protocols/`)
 
-### Domain Knowledge
+Evaluator default resources:
+- standards: `standards/citation-standards.md`
+- Citation gate: `checklists/source-citation-checklist.md`
+- Quality gate: `rubrics/research-quality-gate.md`
+- OSS gate: `checklists/oss-due-diligence.md`
 
-All files in this skill directory are available to any agent as reference.
-Organized by subdirectory convention:
-
-| Directory | Load when | Contains |
-|-----------|-----------|----------|
-| `protocols/` | Starting a task — pick the matching SOP by filename | Execution SOPs |
-| `checklists/` | Running MUST gates | Binary pass/fail criteria |
-| `rubrics/` | Running MUST/SHOULD gates | Qualitative flag criteria |
-| `standards/` | Always available as reference | Baseline rules (SSOT) |
-
-Files are named descriptively (e.g., `source-citation-checklist.md`, `market-analysis.md`).
-Use Glob to discover available files if unsure which to load.
+Additional standards (load when relevant):
+- `standards/oss-safety.md` — for OSS evaluation tasks
 
 ### Behavioral Rules
 
@@ -131,41 +128,138 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 |-------|------|-------|
 | `worker` | Execute research tasks with protocol guidance | sonnet |
 | `evaluator` | Run quality gates | opus |
-| `context-compressor` | Compress context between phases | haiku |
 
-## Recommended Flows
+## Agent Launch Protocol
 
-Suggested approaches, not mandates. Agent adapts based on task.
+When launching an agent, pass **file paths** (not file content) in the Resource Paths section.
+Resolve relative paths against this skill's base directory to get absolute paths.
+
+### Worker launch template
+
+```
+### Task
+{What to produce}
+
+### Resource Paths
+- protocol: {base_path}/protocols/{selected-protocol}.md
+- standards: [{base_path}/standards/citation-standards.md]
+- additional: [{any extra standards, e.g., base_path}/standards/oss-safety.md]
+
+### Input
+{Artifact or context from previous phase}
+```
+
+### Evaluator launch template
+
+```
+### Resource Paths
+- gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
+- standards: [{base_path}/standards/citation-standards.md]
+
+### Artifact
+{The work product to evaluate}
+
+### Requirements
+{Original user request}
+```
+
+Agents will Read these files themselves. Do NOT embed file content in the prompt.
+
+## Workflows
 
 ### Deep Research / Analysis
-1. If research scope unclear → load `research-brainstorming.md` to explore and prioritize
-2. If multiple independent research directions identified:
-   - Dispatch parallel `worker` agents (one per direction)
-   - Compress each result with `context-compressor`
-   - Synthesize in main conversation
-   If directions have dependencies → execute sequentially
-3. Load matching protocol (research, market, competitive, academic, investment, or stack)
-4. Dispatch `worker` with protocol + standards
-5. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
-6. Deliver
+
+**Trigger**: User requests deep research, multi-source analysis, or comprehensive investigation.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Brainstorm | worker | `protocols/research-brainstorming.md` | user request | approach + directions | optional — skip if scope clear |
+| 2. Research | worker | `protocols/research.md` | directions | research artifact | parallel if independent directions |
+| 3. Synthesize | main | — | research artifact(s) | final report | — |
+
+**Parallel dispatch handling (Phase 2):**
+- Single direction → one worker, pass full artifact to Phase 3 directly
+- Multiple independent directions → parallel workers, then synthesize in main conversation
+  (each worker produces a focused artifact; main agent combines key findings)
+
+**Gates after Phase 3:**
+
+| Order | Type | Gate File | Standards | Stop on Fail |
+|-------|------|-----------|-----------|--------------|
+| 1 | MUST | `checklists/source-citation-checklist.md` | `standards/citation-standards.md` | yes |
+| 2 | SHOULD | `rubrics/research-quality-gate.md` | `standards/citation-standards.md` | no |
+
+### Market Analysis
+
+**Trigger**: User requests market research, market sizing, or market trends analysis.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Research | worker | `protocols/market-analysis.md` | user request | market report | — |
+
+**Gates**: Same as Deep Research (Citation MUST + Quality SHOULD).
+
+### Competitive Analysis
+
+**Trigger**: User requests competitive landscape, competitor comparison, or benchmarking.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Research | worker | `protocols/competitive-analysis.md` | user request | competitive report | — |
+
+**Gates**: Same as Deep Research (Citation MUST + Quality SHOULD).
+
+### Academic Research
+
+**Trigger**: User requests academic-grade analysis, literature review, or theoretical investigation.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Research | worker | `protocols/academic-research.md` | user request | academic report | — |
+
+**Gates**: Same as Deep Research (Citation MUST + Quality SHOULD).
+
+### Investment Analysis
+
+**Trigger**: User requests investment evaluation, financial analysis, or macro analysis.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Research | worker | `protocols/investment.md` | user request | investment report | — |
+
+**Gates**: Same as Deep Research (Citation MUST + Quality SHOULD).
+
+### Tech Stack / OSS Evaluation
+
+**Trigger**: User requests technology evaluation, framework comparison, or OSS assessment.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Evaluate | worker | `protocols/stack-evaluation.md` | user request | evaluation report | standards: `citation-standards.md` + `oss-safety.md` |
+
+**Gates:**
+
+| Order | Type | Gate File | Standards | Stop on Fail |
+|-------|------|-----------|-----------|--------------|
+| 1 | MUST | `checklists/source-citation-checklist.md` | `standards/citation-standards.md` | yes |
+| 2 | SHOULD | `rubrics/research-quality-gate.md` | `standards/citation-standards.md` | no |
+| 3 | MAY | `checklists/oss-due-diligence.md` | `standards/oss-safety.md` | no |
 
 ### Quick Lookup / Fact-Check
-1. Search and answer directly
+
+**Trigger**: Single-question lookup, quick fact-check, or simple verification.
+
+1. Search and answer directly in main conversation
 2. SELF check
 3. Deliver (no formal citations → no MUST gate trigger)
 
 ### Research Summary (from existing sources)
-1. Load relevant protocol
-2. Write summary in main conversation
-3. SELF check → MUST gate (Citation, if sources cited)
-4. Deliver
 
-### Tech Stack / OSS Evaluation
-1. Load `stack-evaluation.md` protocol
-2. Dispatch `worker` with protocol + `citation-standards.md` + `oss-safety.md`
-3. SELF check → MUST gate (Citation) → SHOULD gate (Quality)
-4. Optionally run OSS Due Diligence (MAY gate)
-5. Deliver
+**Trigger**: Summarize or synthesize existing documents, reports, or prior research.
+
+1. Write summary in main conversation
+2. SELF check → MUST gate (Citation, if sources cited)
+3. Deliver
 
 ## Cross-Domain Awareness
 
@@ -180,13 +274,6 @@ Switch to specialized team when quality gates for that domain are needed:
   or any task where security/architecture quality gates are needed
 - `design-team`: UX strategy, full UI design, accessibility audit,
   or any task where a11y/UX/visual quality gates are needed
-
-## Context Isolation
-
-Each agent launch starts fresh. Pass only:
-- To evaluator: gate file + standards + artifact + original requirements
-- To worker: protocol + standards + research question + context
-Use `context-compressor` for large artifacts.
 
 ## Worker BLOCKED Handling
 
