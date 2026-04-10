@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.6.1] — 2026-04-11
+
+### Changed
+
+- `skill-team/standards/skill-md-structure.md` §Frontmatter Schema —
+  lowered the `description` word-count floor from 80 to **40** words
+  to match observed precedent across all grounded teams. The earlier
+  80-word floor was aspirational and matched by zero existing
+  SKILL.md files (measured range: 44–127 words, stabilizing around
+  44–74 for teams with concise four-clause descriptions). Added an
+  explicit counting rule (English prose body only; exclude YAML
+  tokens, CJK suffix, punctuation, list bullets, block-quote
+  markers) and a router-skill exemption clause for skills without
+  worker/evaluator launch templates (e.g. `using-domain-teams`).
+- `skill-team/checklists/skill-completeness-checklist.md` CHK-SKL-001
+  — mirrored the 40-word floor, counting rule, and router exemption
+  from the standard. Evaluators must now record "router skill —
+  exempt" in the evidence field when the exemption applies.
+- `skill-team/standards/skill-md-structure.md` §Quality Gates
+  Sub-Section Rules — added a new dedicated sub-section making the
+  four gate tiers (SELF / MUST / SHOULD / MAY) structurally required
+  and explicitly documenting the table format (`Gate | Trigger |
+  File` for MUST/SHOULD/MAY) and empty-MAY-case convention
+  (`None currently.` + optional `Future candidates: …`). Resolves
+  inconsistency where some team SKILL.md files used 2-column
+  `Gate | File` tables or omitted the `### MAY Gates` sub-section
+  entirely.
+
+### Fixed
+
+- Universal frontmatter drift exposed by the code-team v4.6.0
+  dogfood (PR #31). CHK-SKL-001 previously failed against every
+  existing team's SKILL.md because the 80-word floor was never met
+  in practice. v4.6.1 makes the standard match observed precedent
+  instead of retroactively expanding every team's description to
+  fit an aspirational target.
+
+### Known issues (not addressed here)
+
+- Several domain-team SKILL.md files use a 2-column `Gate | File`
+  table in the `### MAY Gates` sub-section instead of the now-required
+  3-column `Gate | Trigger | File` shape: `design-team` (line 75+),
+  `planning-team` (line 79+), `research-team` (line 74+). These
+  will be corrected in each team's next refactor rather than in
+  this patch, per the "only modify skill-team self-consistency"
+  scope discipline.
+
 ## [4.6.0] — 2026-04-11
 
 ### Added

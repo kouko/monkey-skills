@@ -84,7 +84,7 @@ Required elements:
 3. **When NOT to Use** — bullet list with arrow delegation (`→ code-team`)
 4. **Language** — `Detect the user's language and pass it as output_language to all agent launch prompts.`
 5. **Context Discovery** — 2-3 step numbered list for pre-work state assessment
-6. **Quality Gates** — 4 sub-sections: SELF Check / MUST Gates / SHOULD Gates / MAY Gates
+6. **Quality Gates** — 4 sub-sections: SELF Check / MUST Gates / SHOULD Gates / MAY Gates (see rules below)
 7. **Gate Protocol** — evaluator launch rules + verdict handling + guard rails
 8. **Resource Manifest** — worker default resources + evaluator default resources
 9. **Behavioral Rules** — worker vs evaluator role boundaries
@@ -97,6 +97,59 @@ Required elements:
 Additional sections are permitted (e.g. `Note on Global Context` in devops-team)
 but MUST come between Persona and Quality Gates, or as a clearly marked appendix
 after Worker BLOCKED Handling.
+
+## Quality Gates Sub-Section Rules
+
+The `## Quality Gates` section has exactly four sub-sections in this
+order: `### SELF Check`, `### MUST Gates`, `### SHOULD Gates`, `### MAY Gates`.
+**All four sub-sections are structurally required** — the presence of each
+is a signal that the 4-tier system has been consciously evaluated for
+this skill. See `gate-system.md` for what each tier means.
+
+### SELF Check
+
+Always present. Written as a numbered 4-step process, not a table.
+SELF check is not a file; it lives inline in SKILL.md.
+
+### MUST Gates
+
+Required sub-section. Use a table with columns `Gate | Trigger | File`.
+At least one MUST gate is required — every domain-team skill must have
+at least one non-skippable quality check.
+
+### SHOULD Gates
+
+Required sub-section. Use a table with columns `Gate | Trigger | File`.
+Same column shape as MUST. A skill may have zero SHOULD gates, in which
+case write `None currently.` followed by an optional `Future candidates: …` line.
+
+### MAY Gates — table format and empty case
+
+Required sub-section. **Do NOT omit** this sub-section even when there
+are no MAY gates currently defined — its presence is the structural
+signal that MAY tier was considered.
+
+**When there are one or more MAY gates**: use the SAME table shape as
+MUST and SHOULD, i.e. `Gate | Trigger | File`. Do NOT use a 2-column
+`Gate | File` table — missing the `Trigger` column is a convention
+drift and makes the gate look like a standing rule rather than an
+on-demand check.
+
+**When there are no current MAY gates**: write `None currently.`
+optionally followed by a `Future candidates: {list}` sentence
+describing gates that might be added later. Example (from
+`code-team/SKILL.md`):
+
+```markdown
+### MAY Gates
+
+None currently. Future candidates: per-gate-file linting, TDD
+discipline audit, code-review checklist if a code-review protocol
+is added.
+```
+
+**Do NOT** simply omit the sub-section, and do NOT write only a header
+with no content.
 
 ## Line Budget
 
