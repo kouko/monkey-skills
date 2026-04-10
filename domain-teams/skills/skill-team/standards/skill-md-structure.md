@@ -31,11 +31,35 @@ description: >-
 
 **`name`**: kebab-case, matches directory name exactly (e.g. `qa-team`).
 
-**`description`**: 80–200 words. MUST contain:
+**`description`**: 40–200 words. MUST contain:
 - A one-sentence mission statement
 - A "Use when" clause listing trigger verbs (write, audit, design, refactor …)
 - A "Do NOT use for" clause with delegation targets (`code-team`, `planning-team`, …)
 - A "Delivers" clause listing output artifact names
+
+**Word count rule**. Count only the English prose body of the
+description. **Exclude**:
+- YAML tokens (`>-`, `|`, `|-`)
+- CJK / bilingual keyword suffix lines (e.g. `テスト観点・品質計画。測試觀點・品質計畫。`)
+- Punctuation characters (`·`, `—`, `・`, `。`, `、`, `「」`, `『』`, backticks)
+- Markdown-style list bullets or block-quote markers
+
+Rationale for the 40-word floor: the floor is grounded in observed
+precedent across qa-team (v4.2.0), docs-team (v4.3.0), devops-team
+(v4.4.0), and code-team (v4.6.0). Measured counts stabilize around
+44–127 words when the four mandatory clauses (mission / Use when /
+Do NOT use for / Delivers) are kept concise and non-repetitive.
+An earlier 80-word floor was aspirational and never matched observed
+precedent — it was lowered to 40 in v4.6.1 so the standard matches
+reality. See `CHK-SKL-001` in `checklists/skill-completeness-checklist.md`.
+
+**Router-skill exemption**. A **router skill** — a skill whose sole
+purpose is to route callers to other skills, containing no worker or
+evaluator launch templates and no per-workflow protocols — is exempt
+from the 40-word minimum. Current example: `using-domain-teams`
+(~36 words). Router skills still MUST contain `Use when` / `Do NOT
+use for` clauses but may omit the mission sentence and Delivers list
+since they deliver routing decisions, not artifacts.
 
 **Optional CJK keyword suffix**: one trailing line of Traditional Chinese /
 日本語 keywords for multilingual router discovery, e.g.
