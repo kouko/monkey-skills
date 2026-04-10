@@ -6,8 +6,10 @@ prioritized gap report with actionable recommendations.
 
 ## Phase 1: Map Existing Tests
 
-1. Inventory all existing tests by type (unit, integration, E2E,
-   performance, smoke)
+1. Inventory all existing tests by ISTQB test level (Component /
+   Integration / System / Acceptance) and test type (Functional /
+   Non-functional / Structural / Change-related) — see
+   `standards/istqb-vocabulary.md`
 2. For each test, identify what requirement or behavior it verifies
 3. Build a mapping: requirement/feature -> existing test(s)
 4. Note tests that do not trace to any known requirement (orphaned tests)
@@ -18,21 +20,26 @@ prioritized gap report with actionable recommendations.
    equivalent documentation
 2. Cross-reference against the test mapping from Phase 1
 3. Flag requirements with zero test coverage
-4. For covered requirements, assess depth:
-   - Happy path only (shallow)
-   - Happy path + key error paths (moderate)
-   - Happy path + error paths + edge cases (thorough)
+4. For covered requirements, assess depth using ISTQB design techniques
+   (see `standards/istqb-vocabulary.md` §Design Techniques):
+   - **Shallow**: happy path only
+   - **Moderate**: happy path + Equivalence Partitioning (EP) +
+     Boundary Value Analysis (BVA) on key inputs
+   - **Thorough**: EP + BVA + Decision Table or State Transition for
+     rule-heavy or stateful areas
 
 ## Phase 3: Classify Risk
 
-For each uncovered or shallowly-covered area:
-1. Assign risk level using standard definitions:
-   - **High**: Failure causes data loss, security breach, or revenue impact
-   - **Medium**: Failure degrades user experience or breaks secondary features
-   - **Low**: Failure is cosmetic or affects internal tooling only
-2. Consider: frequency of use, blast radius, data sensitivity,
-   external visibility
-3. Rank gaps by risk level (High first)
+For each uncovered or shallowly-covered area, use
+**Risk Level = Likelihood × Impact** per `standards/risk-assessment.md`.
+Do not use self-invented H/M/L without reference to the L×I matrix.
+
+1. Assess Likelihood factors: code complexity, dev familiarity, tech novelty,
+   defect history, dependencies
+2. Assess Impact factors: financial loss, reputational damage, safety,
+   users affected, business criticality, reversibility
+3. Compute Risk Level from the 3×3 matrix in `standards/risk-assessment.md`
+4. Rank gaps by risk level (Critical and High first)
 
 ## Phase 4: Produce Gap Report
 

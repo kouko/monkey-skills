@@ -8,9 +8,25 @@ The failure type for each item is defined below -- use the type specified.
 
 ## Checklist
 
-- [ ] **CHK-COV-001 (Requirement Mapping)** [FIXABLE]: Every requirement from the spec has at least one mapped test. Unmapped requirements are explicitly flagged as gaps with risk classification.
-- [ ] **CHK-COV-002 (Error Path Coverage)** [FIXABLE]: Error and exception paths are identified and have dedicated test cases or are explicitly flagged as gaps. Not just happy-path coverage.
-- [ ] **CHK-COV-003 (Boundary Values)** [FIXABLE]: Boundary conditions and edge cases have dedicated test cases or are explicitly flagged as gaps. Includes empty inputs, max values, and off-by-one scenarios.
+Vocabulary reference: `standards/istqb-vocabulary.md` §Design Techniques.
+
+- [ ] **CHK-COV-001 (Requirement Mapping)** [FIXABLE]: Every requirement from
+  the spec has at least one mapped test. Unmapped requirements are explicitly
+  flagged as gaps with ISTQB Risk = L×I classification per
+  `standards/risk-assessment.md`.
+- [ ] **CHK-COV-002 (Error Path Coverage)** [FIXABLE]: Error and exception paths
+  are identified and have dedicated test cases or are explicitly flagged as
+  gaps. Not just happy-path coverage.
+- [ ] **CHK-COV-003 (EP + BVA Applied)** [FIXABLE]: For input-validation logic,
+  **Equivalence Partitioning** (ISTQB CTFL v4.0 §4.2.1) and
+  **Boundary Value Analysis** (§4.2.2) are applied. Empty inputs, min/max
+  boundaries, and off-by-one scenarios have dedicated test cases. Absence
+  without rationale is a gap.
+- [ ] **CHK-COV-004 (Design Technique Diversity)** [FIXABLE]: The gap report
+  identifies at least one area where **Decision Table** (§4.2.3) or
+  **State Transition Testing** (§4.2.4) would add value — typically
+  rule-heavy business logic or stateful workflows. If no such area exists,
+  this must be stated explicitly.
 
 ## Verdict Rules
 
