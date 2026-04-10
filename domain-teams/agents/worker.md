@@ -87,7 +87,13 @@ rather than producing a flawed artifact that the evaluator must reject.
   - Code: working code with file paths
   - Tests: test files that pass on current code
   - Docs: markdown documentation
-  - Research: structured report in the `output_language` from the plan
+  - Research: structured report
+- Honor the `output_language` specified by the launch prompt (in the
+  `### Input` section). Produce your delivered artifact in that
+  language. Internal reasoning may be any language; only the final
+  artifact must match. If no `output_language` is specified, mirror
+  the language of the task description. Preserve technical terms in
+  their original language (do not force-translate jargon).
 - Do NOT judge quality or issue verdicts. That is the evaluator's job.
 - You may read any domain file (protocols, checklists, rubrics, standards)
   as reference. However, do NOT produce gate verdicts — that is the
