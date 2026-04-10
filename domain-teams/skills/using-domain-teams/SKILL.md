@@ -2,7 +2,7 @@
 name: using-domain-teams
 description: >-
   Route to the right domain team. Use when starting any domain task —
-  coding, documentation, research, design, or planning.
+  coding, documentation, testing, deployment, research, design, or planning.
   Do NOT use when you already know which team to invoke.
   ドメインチーム案内。領域團隊導引。
 ---
@@ -18,6 +18,8 @@ Each team has its own protocols, standards, and evaluation criteria.
 |------|---------|----------|
 | `code-team` | Ensure it's built well (secure, sound, tested) | Code, TECH-SPEC.md, tests |
 | `docs-team` | Ensure it's understood (clear docs, honest assessment) | Documentation, codebase reports |
+| `qa-team` | Ensure it's verified end-to-end (tested beyond unit) | TEST-PLAN.md, coverage reports |
+| `devops-team` | Ensure it's shipped safely (deployable, observable) | DEPLOY-SPEC.md, CI/CD, IaC |
 | `research-team` | Ensure we know enough (trustworthy sources, risks visible) | Research reports, analysis |
 | `design-team` | Ensure it's used well (accessible, intuitive) | UI specs, wireframes |
 | `planning-team` | Ensure the right thing gets built (scope, direction) | PRODUCT-SPEC.md |
@@ -30,6 +32,10 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Write TECH-SPEC.md | `code-team` |
 | Write README, API docs, architecture docs | `docs-team` |
 | Assess codebase health or tech debt | `docs-team` |
+| Create E2E / integration / performance test plans | `qa-team` |
+| Analyze test coverage gaps | `qa-team` |
+| Design CI/CD pipeline or deployment strategy | `devops-team` |
+| Write Dockerfiles, IaC, or monitoring configs | `devops-team` |
 | Research a topic, analyze market/competition | `research-team` |
 | Evaluate a tech stack or OSS | `research-team` |
 | Design UI/UX, create wireframes | `design-team` |
@@ -44,6 +50,9 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Need research to inform a spec | `research-team` first → then `planning-team` |
 | Need spec before coding | `planning-team` (PRODUCT-SPEC) → `code-team` (TECH-SPEC) |
 | Need design + code implementation | `design-team` (spec) → `code-team` (implement) |
+| Need test plan + test code | `qa-team` (TEST-PLAN.md) → `code-team` (implement tests) |
+| Need deployment after coding | `code-team` (code) → `devops-team` (deploy) |
+| Full project lifecycle | `planning-team` → `code-team` → `qa-team` → `devops-team` |
 | Task spans multiple domains | Decompose and invoke teams sequentially |
 
 ## Shared Agents

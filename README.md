@@ -26,7 +26,7 @@ Domain knowledge (colocated in each team skill directory, open access):
 
 ```
 monkey-skills (marketplace)
-├── domain-teams            Planning (企画) / Code / Docs / Design / Research
+├── domain-teams            Planning / Code / Docs / QA / DevOps / Design / Research
 ├── obsidian                Daily notes, diagrams, vault management, dashboard design
 └── philosophers-toolkit    Philosophical thinking frameworks (roadmap)
 ```
@@ -60,6 +60,22 @@ External dependency: `feature-dev:code-architect` (Anthropic official plugin)
 | Skill | `docs-team` | Documentation and codebase assessment |
 | Agent | `worker` | Execute documentation and analysis tasks (sonnet) |
 | Agent | `evaluator` | QA gate, tech debt checklist — MAY only (opus) |
+
+#### qa-team
+
+| Type | Name | Role |
+|------|------|------|
+| Skill | `qa-team` | Test strategy and planning (E2E, integration, performance) |
+| Agent | `worker` | Execute test planning tasks (sonnet) |
+| Agent | `evaluator` | Test plan completeness, strategy quality gates (opus) |
+
+#### devops-team
+
+| Type | Name | Role |
+|------|------|------|
+| Skill | `devops-team` | CI/CD, deployment, IaC, monitoring |
+| Agent | `worker` | Execute infrastructure tasks (sonnet) |
+| Agent | `evaluator` | Deployment safety, IaC quality gates (opus) |
 
 #### design-team
 
@@ -133,6 +149,8 @@ monkey-skills/
 │       │   └── standards/
 │       ├── code-team/
 │       ├── docs-team/
+│       ├── qa-team/
+│       ├── devops-team/
 │       ├── design-team/
 │       └── research-team/
 ├── obsidian/                        ← Plugin: obsidian
