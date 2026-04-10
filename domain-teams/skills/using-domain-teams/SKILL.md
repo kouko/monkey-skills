@@ -23,6 +23,7 @@ Each team has its own protocols, standards, and evaluation criteria.
 | `research-team` | Ensure we know enough (trustworthy sources, risks visible) | Research reports, analysis |
 | `design-team` | Ensure it's used well (accessible, intuitive) | UI specs, wireframes |
 | `planning-team` | Ensure the right thing gets built (scope, direction) | PRODUCT-SPEC.md |
+| `skill-team` | Build/modify domain-team skills with convention discipline | New/refactored skill directories + 3-commit branches |
 
 ## Intent Routing
 
@@ -42,6 +43,8 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Audit accessibility | `design-team` |
 | Define product scope, write PRODUCT-SPEC.md | `planning-team` |
 | Start a new project (企画) | `planning-team` |
+| Create a new domain-team skill | `skill-team` |
+| Refactor a team with primary-source grounding | `skill-team` |
 
 ## Ambiguous Cases
 
