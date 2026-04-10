@@ -7,6 +7,40 @@ The TECH-SPEC.md should trace back to PRODUCT-SPEC.md sections.
 A good tech spec lets a developer (or agent)
 start coding by reading only this document.
 
+## Primary Sources
+
+The 5-phase TECH-SPEC template used by this protocol
+(Scope → Architecture → Module → Interface → Testing) is a
+**house convention**, not a direct lift from any single primary
+source. It is inspired by the following industry references:
+
+- **arc42** — https://arc42.org — a community template for software
+  architecture documentation (12 sections). code-team's 5-phase
+  shape collapses arc42's "Introduction and Goals", "Constraints",
+  "Context", "Solution Strategy", "Building Block View", and
+  "Runtime View" into the Scope and Architecture phases. arc42 is
+  cited as an **inspiration**, not a direct source, because the
+  code-team template is deliberately shorter and implementation-
+  oriented rather than architecture-documentation-oriented.
+- **IEEE/ISO/IEC 29148** — *Systems and software engineering — Life
+  cycle processes — Requirements engineering*. Cited as an
+  industry standard for requirements integrity (self-contained,
+  verifiable, traceable requirements). The Scope & Constraints and
+  Module Design phases echo 29148's distinction between Goals /
+  Non-Goals and between functional and non-functional requirements.
+  Full text is paywalled at ISO, so this protocol cites the
+  standard by title and number only.
+- Team standards: architecture-section guidance is grounded in
+  `standards/solid-principles.md`; testing-section guidance is
+  grounded in `standards/tdd-standard.md`. Both are the
+  authoritative references for decisions made inside their
+  respective phases.
+
+> Disclosure: the 5-phase numbering (1 Scope → 5 Testing) is a
+> code-team choice. When a project's PRODUCT-SPEC.md already uses
+> a different structure (e.g. full arc42), mirror the PRODUCT-SPEC
+> structure instead of forcing this template.
+
 ## Phase 1: Scope & Constraints
 
 1. Clarify project type and delivery form:

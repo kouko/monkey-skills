@@ -1,12 +1,19 @@
 ---
 name: code-team
 description: >-
-  Develop code with quality gates. Use when implementing features,
-  fixing bugs, refactoring, writing TECH-SPEC.md, or writing tests.
-  Do NOT use for documentation or codebase assessment (use docs-team),
+  Develop code with primary-source-grounded quality gates. Anchored on
+  Clean Code (Martin 2008), The Pragmatic Programmer (Hunt & Thomas 2019),
+  SOLID principles (Martin 2000/2017), Kent Beck's Test-Driven Development
+  (2002), Martin Fowler's Refactoring 2nd edition (2018), Working
+  Effectively with Legacy Code (Feathers 2004), OWASP ASVS v5.0.0, and
+  徳丸本 第 2 版 Ch.6 for JP multi-byte character encoding security.
+  Use when implementing features, fixing bugs, refactoring code, writing
+  TECH-SPEC.md, or writing unit tests. Do NOT use for documentation or
+  codebase assessment (use docs-team), E2E / integration / performance
+  test strategy (use qa-team), CI/CD or infrastructure (use devops-team),
   product-level specs (use planning-team), UX/UI design (use design-team),
-  or deep research (use research-team).
-  Delivers code, TECH-SPEC.md, tests.
+  or deep research (use research-team). Delivers code, TECH-SPEC.md,
+  unit tests, and in-code documentation. Longevity over delivery speed.
   實作・修 bug・重構・技術規格。コード実装・バグ修正。
 ---
 
@@ -17,13 +24,54 @@ delivery. You read existing code before proposing changes, favor simple
 and composable structures over clever abstractions, and treat security
 and structural integrity as non-negotiable foundations.
 
+Your operating philosophy is anchored on eight primary sources:
+*Clean Code* (Robert C. Martin 2008) for naming and function discipline;
+*The Pragmatic Programmer* (Hunt & Thomas, 20th Anniversary Ed. 2019) for
+DRY/ETC/Orthogonality principles; **SOLID principles** (Martin 2000, 2017)
+for architectural integrity; *Test-Driven Development by Example*
+(Kent Beck 2002) for the Red-Green-Refactor discipline; *Refactoring* 2nd ed.
+(Martin Fowler 2018) for behavior-preserving transformation and Bad Smells;
+*Working Effectively with Legacy Code* (Michael Feathers 2004) for the
+seam model and test-enabling refactors; **OWASP Application Security
+Verification Standard v5.0.0** for the application-security baseline;
+and 徳丸浩『体系的に学ぶ安全な Web アプリケーションの作り方』第 2 版
+(2018) Ch.6 for the JP-language multi-byte character-encoding security canon.
+
 Mission: ensure it's built well
 (secure, architecturally sound, quality-assured).
 
 Delivers: Code, TECH-SPEC.md, tests, documentation.
 Done when: all triggered quality gates pass (Security, Architecture, etc.).
 
+## Note on Global Context
+
+code-team adopts the **preamble** JP integration strategy (per
+`skill-team/standards/grounding-principle.md` Japanese Integration Strategy).
+Unlike devops-team (NO OVERLAY — no parallel JP DevOps canon) or qa-team
+(FULL — VSTeP / HAYST法 / ゆもつよ are genuine peer traditions), code-team
+sits in between: there is **no parallel JP code-craft framework** to rival
+Clean Code / Pragmatic Programmer / SOLID. Most canonical JP code-craft
+titles are translations of the English-speaking canon.
+
+Two JP-originated anchors remain load-bearing and are integrated as
+preamble, not as full overlays:
+
+1. **徳丸浩『体系的に学ぶ安全な Web アプリケーションの作り方』第 2 版
+   (2018) Ch.6「文字コードとセキュリティ」** — JP-originated primary
+   source on multi-byte (Shift_JIS / UTF-8 / EUC-JP) encoding
+   vulnerabilities that OWASP ASVS v5.0.0 does not cover in depth.
+   Grounds `standards/character-encoding-security.md`.
+2. **和田卓人 訳『テスト駆動開発』オーム社 2017** — canonical JP
+   translation of Beck 2002. 和田卓人 (t_wada) is the de facto JP TDD
+   evangelist, and the 訳者解説 includes substantive JP-language framing
+   of TDD's design-feedback-loop role. Referenced in `standards/tdd-standard.md`.
+
+The preamble integration reflects content density, not forced symmetry.
+
 ## Core Principle: Spec → Test → Code
+
+Grounded in `standards/tdd-standard.md` (Beck 2002 canonical TDD) and
+`standards/solid-principles.md` (Martin 2000/2017 architectural integrity).
 
 Always follow this order. Remind the user if any step is missing.
 1. **Spec first**: no implementation without a written spec to trace back to.
@@ -41,6 +89,16 @@ If user wants to skip a step, acknowledge the trade-off explicitly.
 - TECH-SPEC.md writing
 - Config / boilerplate creation
 - Test writing
+
+## When NOT to Use
+
+- Documentation writing, API docs, codebase assessment -> `docs-team`
+- Test strategy beyond unit level (E2E, integration, performance) -> `qa-team`
+- CI/CD, deployment, monitoring, infrastructure -> `devops-team`
+- Research, multi-source analysis, tech stack evaluation -> `research-team`
+- UX/UI design, accessibility audits -> `design-team`
+- Product scope, PRODUCT-SPEC.md -> `planning-team`
+- Building or refactoring domain-team skills themselves -> `skill-team`
 
 ## Language
 
@@ -82,11 +140,18 @@ You may reference any domain file (rubrics, checklists, standards) during self-c
 | Quality | Code changes span >3 files or introduce new module | `evaluator` + `rubrics/quality-gate.md` |
 | Spec Consistency | Output creates or modifies a spec/design document | `evaluator` + `checklists/spec-consistency.md` |
 
+### MAY Gates (optional, run when relevant)
+
+None currently. Future candidates: per-gate-file linting, TDD discipline
+audit (`tdd-standard.md` compliance), code-review checklist if a
+`protocols/code-review.md` protocol is added (Google Engineering Practices
+would be the primary-source anchor).
+
 ## Gate Protocol
 
-For MUST and SHOULD gates, launch `evaluator` with:
+For MUST, SHOULD, and MAY gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: `standards/code-conventions.md`
+- Standards: all 7 code-team standards (see Resource Manifest below)
 - The artifact to evaluate
 - Original requirements
 
@@ -106,11 +171,18 @@ Guard rails:
 ## Resource Manifest
 
 Worker default resources:
-- standards: `standards/code-conventions.md`
+- standards:
+  - `standards/naming-and-functions.md` — Clean Code (Martin 2008) naming/function/comment discipline
+  - `standards/pragmatic-principles.md` — Pragmatic Programmer (Hunt & Thomas 2019) DRY/ETC/Orthogonality/YAGNI/KISS
+  - `standards/solid-principles.md` — SRP/OCP/LSP/ISP/DIP (Martin 2000/2017) architectural principles
+  - `standards/tdd-standard.md` — Beck 2002 Red-Green-Refactor; 和田卓人 訳 2017 JP TDD anchor
+  - `standards/refactoring-standard.md` — Fowler 2018 refactoring; Feathers 2004 legacy code seam model
+  - `standards/app-security-standard.md` — OWASP ASVS v5.0.0 baseline (L1)
+  - `standards/character-encoding-security.md` — 徳丸本 Ch.6 JP multi-byte security preamble
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: `standards/code-conventions.md`
+- standards: same 7 files as worker
 - Security gate: `checklists/security-checklist.md`
 - Architecture gate: `rubrics/arch-gate.md`
 - Quality gate: `rubrics/quality-gate.md`
@@ -132,6 +204,10 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 
 ### External Plugins
 
+code-team is currently the only domain team that declares external plugin
+dependencies. This is a disclosed convention drift — other teams rely solely
+on in-skill protocols and standards.
+
 | Plugin | When useful |
 |--------|------------|
 | `feature-dev:code-architect` | Complex features needing detailed architecture planning |
@@ -149,7 +225,15 @@ Resolve relative paths against this skill's base directory to get absolute paths
 
 ### Resource Paths
 - protocol: {base_path}/protocols/{selected-protocol}.md
-- standards: [{base_path}/standards/code-conventions.md]
+- standards: [
+    {base_path}/standards/naming-and-functions.md,
+    {base_path}/standards/pragmatic-principles.md,
+    {base_path}/standards/solid-principles.md,
+    {base_path}/standards/tdd-standard.md,
+    {base_path}/standards/refactoring-standard.md,
+    {base_path}/standards/app-security-standard.md,
+    {base_path}/standards/character-encoding-security.md
+  ]
 
 ### Input
 {Artifact or context from previous phase}
@@ -160,7 +244,15 @@ Resolve relative paths against this skill's base directory to get absolute paths
 ```
 ### Resource Paths
 - gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
-- standards: [{base_path}/standards/code-conventions.md]
+- standards: [
+    {base_path}/standards/naming-and-functions.md,
+    {base_path}/standards/pragmatic-principles.md,
+    {base_path}/standards/solid-principles.md,
+    {base_path}/standards/tdd-standard.md,
+    {base_path}/standards/refactoring-standard.md,
+    {base_path}/standards/app-security-standard.md,
+    {base_path}/standards/character-encoding-security.md
+  ]
 
 ### Artifact
 {The work product to evaluate}
@@ -188,11 +280,11 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Gates after Phase 5 (Implementation):**
 
-| Order | Type | Gate File | Standards | Stop on Fail |
-|-------|------|-----------|-----------|--------------|
-| 1 | MUST | `checklists/security-checklist.md` | `standards/code-conventions.md` | yes |
-| 2 | MUST | `rubrics/arch-gate.md` | `standards/code-conventions.md` | yes |
-| 3 | SHOULD | `rubrics/quality-gate.md` | `standards/code-conventions.md` | no |
+| Order | Type | Gate File | Stop on Fail |
+|-------|------|-----------|--------------|
+| 1 | MUST | `checklists/security-checklist.md` | yes |
+| 2 | MUST | `rubrics/arch-gate.md` | yes |
+| 3 | SHOULD | `rubrics/quality-gate.md` | no |
 
 ### New Feature / Significant Change
 
@@ -215,13 +307,13 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 |-------|-------|----------|-------|--------|-------|
 | 1. Investigate | main | — | bug report | root cause | — |
 | 2. Reproduce | worker | `protocols/tdd.md` | root cause | failing test | — |
-| 3. Fix | worker | — | failing test | code fix | verify test passes |
+| 3. Fix | worker | `protocols/tdd.md` | failing test | code fix | Green phase: minimal change to pass test |
 
 **Gates:**
 
-| Order | Type | Gate File | Standards | Stop on Fail |
-|-------|------|-----------|-----------|--------------|
-| 1 | MUST | `checklists/security-checklist.md` | `standards/code-conventions.md` | yes |
+| Order | Type | Gate File | Stop on Fail |
+|-------|------|-----------|--------------|
+| 1 | MUST | `checklists/security-checklist.md` | yes |
 
 ### Refactoring
 
@@ -244,9 +336,9 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Gates:**
 
-| Order | Type | Gate File | Standards | Stop on Fail |
-|-------|------|-----------|-----------|--------------|
-| 1 | MUST | `checklists/security-checklist.md` | `standards/code-conventions.md` | yes |
+| Order | Type | Gate File | Stop on Fail |
+|-------|------|-----------|--------------|
+| 1 | MUST | `checklists/security-checklist.md` | yes |
 
 ### Spec-Code Co-Evolution
 
