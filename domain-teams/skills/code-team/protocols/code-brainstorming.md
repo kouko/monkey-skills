@@ -1,9 +1,34 @@
 # Code Brainstorming Protocol
 
 Understand intent, explore approaches, and confirm direction before
-implementation. Core principles from superpowers:brainstorming adapted
-for code engineering: one question at a time, propose 2-3 approaches,
-YAGNI ruthlessly, AI proposes human decides.
+implementation. Core discipline: one question at a time, propose 2-3
+approaches, YAGNI ruthlessly, AI proposes human decides.
+
+## Primary Sources
+
+- **Hunt, A. & Thomas, D. (2019)** *The Pragmatic Programmer: Your
+  Journey to Mastery, 20th Anniversary Edition*, Addison-Wesley.
+  ISBN 978-0135957059. Ch.2 topics grounding this protocol:
+  - Topic "The Essence of Good Design (ETC — Easier to Change)" —
+    the meta-principle that justifies every trade-off dimension
+    below. Good design is design that is easier to change.
+  - Topic "Tracer Bullets" — build a minimal end-to-end working
+    version to validate an approach before committing to it.
+  - Topic "Prototypes and Post-it Notes" — throw-away experiments
+    to answer one specific design question.
+  > Citation honesty: Pragmatic Programmer 20th anniv. publicly
+  > enumerates Topic numbers only for Ch.2 (Topics 8–15). This
+  > protocol cites Ch.2 topics by title; topics in other chapters
+  > are referenced without a numeric Topic ID.
+- **Fowler, M.** bliki "Yagni" —
+  https://martinfowler.com/bliki/Yagni.html — authoritative source
+  for the "You Ain't Gonna Need It" principle as applied by modern
+  XP/agile practice. YAGNI does not forbid *thinking* ahead; it
+  forbids *building* speculative capability.
+- Team standard: `standards/pragmatic-principles.md` consolidates
+  DRY / ETC / Orthogonality / Tracer Bullets / YAGNI / Rule of
+  Three / KISS for code-team and is the authoritative reference
+  for this protocol's principle vocabulary.
 
 ## Protocol
 
@@ -24,14 +49,22 @@ YAGNI ruthlessly, AI proposes human decides.
 4. **Generate 2-3 approaches**: Propose with trade-offs. Even when
    one seems obvious, show alternatives and explain why they're
    less suitable.
-5. **Trade-off matrix**: Compare each approach on:
+5. **Trade-off matrix**: Compare each approach on the four
+   code-team dimensions below. These dimensions are a **house
+   convention** inspired by Pragmatic Programmer's ETC
+   meta-principle (Ch.2 "The Essence of Good Design") and the
+   cost-value framing found throughout Ch.2 — they are not an
+   independent taxonomy and are not claimed to be exhaustive. See
+   `standards/pragmatic-principles.md` §"Trade-off Dimensions" for
+   the fuller list code-team maintains.
    - Complexity (implementation cost)
-   - Maintainability (ease of future changes)
+   - Maintainability (ease of future changes — ETC)
    - Risk (blast radius on existing code)
    - Effort (scope size, not time estimates)
 6. **YAGNI check**: Strip unnecessary features and premature
-   abstractions from each approach. "Might need it later" is a
-   reason to remove, not to keep.
+   abstractions from each approach. Per Fowler bliki "Yagni":
+   "Might need it later" is a reason to remove, not to keep. Design
+   for change (ETC), but implement for today.
 
 ### Phase 2: Direction Confirmation
 
