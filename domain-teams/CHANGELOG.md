@@ -7,6 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.6.0] — 2026-04-11
+
+### Added
+
+- `code-team` grounding via primary sources (PR #31):
+  - Clean Code (Martin 2008, ISBN 978-0132350884) — naming, function
+    granularity, comment hierarchy
+  - The Pragmatic Programmer, 20th Anniversary Edition (Hunt & Thomas
+    2019, ISBN 978-0135957059) — DRY, Orthogonality, ETC, Tracer Bullets
+  - SOLID principles (Martin 2000 *Design Principles and Design
+    Patterns*; Martin 2017 *Clean Architecture* Part III)
+  - Test-Driven Development by Example (Beck 2002, ISBN 978-0321146533)
+    — canonical Red-Green-Refactor cycle (supersedes Clean Code Ch.9 as
+    TDD primary)
+  - Refactoring 2nd edition (Fowler 2018, ISBN 978-0134757599) —
+    behavior-preserving transformation, Two Hats, Rule of Three (Don
+    Roberts attribution), Bad Smells catalog
+  - Working Effectively with Legacy Code (Feathers 2004, ISBN
+    978-0131177055) — Seam Model, 24 dependency-breaking techniques
+  - OWASP Application Security Verification Standard v5.0.0 (released
+    2025-05-30; 17 chapters V1-V17; L1 baseline tier)
+  - 徳丸浩『体系的に学ぶ安全な Web アプリケーションの作り方』第 2 版
+    (2018, ISBN 978-4797393163) Ch.6「文字コードとセキュリティ」—
+    JP preamble for multi-byte encoding security (Shift_JIS 5C
+    problem, UTF-8 over-long, multi-byte boundary XSS)
+  - 和田卓人 訳『テスト駆動開発』オーム社 2017 (ISBN 978-4274217883) —
+    canonical JP TDD translation + evangelism lineage
+- 7 new grounded standards: `naming-and-functions.md`,
+  `pragmatic-principles.md`, `solid-principles.md`, `tdd-standard.md`,
+  `refactoring-standard.md`, `app-security-standard.md`,
+  `character-encoding-security.md`
+- `code-team/SKILL.md` new sections: `When NOT to Use` (explicit peer
+  team delegation), `Note on Global Context` (JP preamble integration
+  decision), MAY Gates table slot
+- `security-checklist.md` CHK-SEC-005 — multi-byte character encoding
+  security check (JP locale applicable, `NOT_APPLICABLE` escape valve
+  for non-JP apps)
+- Research note: `kouko-obsidian-vault/research/2026-04-11 code-team
+  再設計研究 — Clean Code・Pragmatic・SOLID・OWASP・徳丸本.md` (893
+  lines, full Phase 2 grounding research with EN + JP parallel search)
+
+### Changed
+
+- `code-team/SKILL.md` — persona rewrite anchoring on 8 primary sources
+  (Clean Code, Pragmatic Programmer, SOLID, Beck TDD, Fowler
+  Refactoring, Feathers Legacy Code, OWASP ASVS v5.0.0, 徳丸本 Ch.6)
+- 5 protocols + 4 gates cite primary sources:
+  - `protocols/code-brainstorming.md` — Pragmatic Programmer ETC,
+    Tracer Bullets; Fowler bliki "Yagni"
+  - `protocols/spec-writing.md` — arc42, IEEE 29148 acknowledgment
+  - `protocols/tdd.md` — Beck 2002 Ch.1/Ch.25; Clean Code Ch.9 Three
+    Laws; 和田訳 2017
+  - `protocols/test-writing.md` — Meszaros *xUnit Test Patterns* 2007;
+    Fowler bliki "Mocks Aren't Stubs"; Clean Code F.I.R.S.T
+  - `protocols/refactoring.md` — Fowler 2018 definition + Two Hats;
+    Feathers 2004 Seam Model
+  - `checklists/security-checklist.md` — ASVS v5.0.0 V1/V2/V6/V7/V11/
+    V13/V14/V16 chapter references; ASVS 4.0.3→5.0.0 migration note
+  - `checklists/spec-consistency.md` — arc42, IEEE 29148 acknowledgment
+  - `rubrics/arch-gate.md` — Martin 2000 SOLID, Martin 2017 *Clean
+    Architecture*, Fowler 2018 Bad Smells; honest disclosure that
+    numeric thresholds ("3x more complex", "5+ files across 3+
+    modules") are house heuristics, not primary-source rules
+  - `rubrics/quality-gate.md` — Clean Code Ch.2/Ch.3/Ch.9, Fowler 2018
+    Bad Smells, Beck 2002, Feathers 2004; note 20-line vs 100-line
+    function threshold discrepancy with Martin
+- **OWASP ASVS migration from 4.0.3 to v5.0.0** — V-number
+  reorganization: V5 (validation) → V2, V5.3 (injection) → V1+V2, V7.4
+  (error handling) → V16, V14+V2 (secrets) → V14+V13
+- `code-team/SKILL.md` Resource Manifest expanded from 1 standard
+  (`code-conventions.md`) to 7 grounded standards; worker and evaluator
+  launch templates updated with 7-standard array
+- `code-team/SKILL.md` frontmatter description expanded from ~52 to 122
+  words, adding primary-source grounding anchor and explicit peer-team
+  delegation clauses (fixes CHK-SKL-001 gate feedback during dogfood)
+- Bug Fix workflow Phase 3 protocol `—` placeholder → `protocols/tdd.md`
+  (Green phase: minimal change to pass test)
+
+### Removed
+
+- `code-team/standards/code-conventions.md` — 67-line self-invented
+  file superseded by the 7 new primary-source-grounded standards
+
+### Dogfood verification
+
+code-team v4.6.0 is the first real dogfood of the skill-team
+meta-workflow (v4.5.0). All 4 gates passed before PR push:
+
+- `checklists/skill-completeness-checklist.md` (MUST) — PASS (1 round
+  of feedback on CHK-SKL-001 frontmatter word count, fixed via amend;
+  re-run PASS on 12/12 items)
+- `checklists/commit-split-checklist.md` (MUST) — PASS (8/8 items; 3
+  disjoint commits: standards → protocols+gates → SKILL.md+bump+delete)
+- `rubrics/primary-source-grounding.md` (SHOULD) — PASS (16/16 files
+  GREEN across 4 dimensions; ASVS v5.0.0 V-numbers independently
+  verified against official OWASP/ASVS v5.0.0 repository; zero
+  fabrication)
+- `rubrics/skill-coherence.md` (SHOULD) — PASS (4/4 dimensions clear:
+  line budget 376, workflow completeness, router fit, duplicate-skill
+  check)
+
+### Known precedent drift (exposed by this dogfood, not addressed here)
+
+- `skill-team/checklists/skill-completeness-checklist.md` CHK-SKL-001
+  requires frontmatter description 80–200 words. qa-team (~46),
+  docs-team (~57), devops-team (~67), and others fall below the
+  80-word floor. Only code-team v4.6.0 is compliant (122 words).
+  Resolution options: (a) lower the standard floor to ~40 words
+  matching observed precedent, or (b) expand all existing team
+  descriptions. To be addressed in a follow-up patch.
+
 ## [4.5.1] — 2026-04-11
 
 ### Added
