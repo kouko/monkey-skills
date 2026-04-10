@@ -265,6 +265,10 @@ Lightweight cross-domain tasks can be handled directly without switching skills:
 
 Switch to specialized team when quality gates for that domain are needed:
 - `docs-team`: README, API docs, codebase assessment, tech debt audit
+- `qa-team`: E2E test strategy, integration test planning, performance test design,
+  coverage gap analysis, or any test planning beyond unit tests
+- `devops-team`: CI/CD pipeline design, Dockerfiles, deployment strategy, IaC,
+  monitoring setup, or any infrastructure configuration
 - `planning-team`: new project kickoff, cross-domain product spec,
   or major scope/direction changes to PRODUCT-SPEC.md
 - `research-team`: deep analysis, multi-source investigation, investment research,

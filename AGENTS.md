@@ -38,6 +38,8 @@ Role boundaries enforced by behavior, not reading restrictions:
 - `planning-team` — Cross-domain project planning (企画) with Completeness + Consistency gates
 - `code-team` — Code development with Security + Architecture + Quality + Spec gates
 - `docs-team` — Documentation and codebase assessment (MAY gates only)
+- `qa-team` — Test strategy and planning with Test Plan Completeness + Strategy Quality gates
+- `devops-team` — Deployment and infrastructure with Deployment Safety + IaC Quality gates
 - `design-team` — Design with Accessibility + UX/UI gates
 - `research-team` — Research with Citation + Quality gates
 

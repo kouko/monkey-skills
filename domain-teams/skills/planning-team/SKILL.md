@@ -219,4 +219,6 @@ Switch to specialized team when quality gates for that domain are needed:
   or any task where a11y/UX/visual quality gates are needed
 - `code-team`: technical spec writing, implementation, refactoring,
   or any task where security/architecture quality gates are needed
+- `devops-team`: deployment feasibility assessment, infrastructure constraints
+  that affect product scope
 
