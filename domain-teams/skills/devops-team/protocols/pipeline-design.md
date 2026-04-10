@@ -3,6 +3,16 @@
 Design CI/CD pipelines that catch problems before they reach users.
 Focus on fast feedback loops, clear failure messages, and reproducible builds.
 
+**Grounded in**: Humble & Farley, *Continuous Delivery* (Addison-Wesley 2010)
+and [Martin Fowler — DeploymentPipeline](https://martinfowler.com/bliki/DeploymentPipeline.html).
+See `standards/continuous-delivery.md` for canonical principles (build once,
+deploy many; every commit releasable; pipeline as a series of filters).
+
+**Provider-agnostic**: This protocol designs the *logical* pipeline. The
+concrete implementation target (GitHub Actions, GitLab CI, CircleCI,
+Jenkins) is chosen in Phase 6 and shapes the output format. See
+`standards/github-actions.md` for GitHub Actions specifics if GHA is chosen.
+
 ## Phase 1: Discover Existing Build Process
 
 1. **Scan project**: Look for existing CI configs (.github/workflows,
@@ -16,7 +26,9 @@ Focus on fast feedback loops, clear failure messages, and reproducible builds.
 
 ## Phase 2: Define Pipeline Stages
 
-Design stages in this order (skip stages that don't apply):
+Design stages in order of fastest-feedback-first (Fowler's "commit stage"
+principle: fail cheap and fast, fail expensive and slow). Skip stages that
+don't apply.
 
 1. **Lint & Format**: Static analysis, code formatting checks.
    Fast feedback, fail early.
@@ -67,14 +79,39 @@ Adapt to project's actual branching model.
 4. **Flaky test policy**: How to handle intermittent failures
    (retry count, quarantine, auto-skip with ticket)
 
+## Phase 6: Implementation Target Selection
+
+Choose the concrete CI/CD platform that will execute the logical pipeline
+designed in Phases 1-5. Common options:
+
+| Platform | Best for | Reference |
+|----------|----------|-----------|
+| **GitHub Actions** | Projects hosted on GitHub; tight integration with PRs and issues; broad ecosystem via marketplace actions | `standards/github-actions.md` |
+| **GitLab CI** | Projects on GitLab; integrated container registry; mature auto-devops | docs.gitlab.com/ee/ci/ |
+| **CircleCI** | Cross-provider projects; fast scheduling; Docker-first workflows | circleci.com/docs |
+| **Jenkins** | On-prem or hybrid; extreme plugin flexibility; legacy migration path | jenkins.io/doc |
+
+**For GitHub Actions** specifically, `standards/github-actions.md` documents:
+- Workflow file structure and naming conventions
+- Reusable workflow vs composite action decision
+- Secrets management: repository / environment / organization tiers
+- OIDC for cloud authentication (no long-lived credentials)
+- Security hardening: SHA-pinning, minimal GITHUB_TOKEN permissions, SLSA attestation
+
+Document the choice of target platform in the pipeline design output.
+The protocol itself remains agnostic; the implementation files
+(`.github/workflows/ci.yml` or `.gitlab-ci.yml` or `Jenkinsfile`) are
+produced per the chosen target's conventions.
+
 ## Rules
 
-- Fast feedback first: order stages by speed (lint < test < build < scan)
+- Fast feedback first: order stages by speed (lint < test < build < scan) — per Fowler's commit stage principle
 - Fail early: cheapest checks run first
-- Artifact immutability: build once, deploy everywhere
+- Artifact immutability: build once, deploy everywhere (Humble & Farley §13)
 - No secrets in pipeline logs: mask all sensitive values
 - Pipeline configs are code: review them like application code
 - Keep pipeline under 15 minutes for feature branches
+- Document the chosen implementation target (Phase 6) — the protocol is agnostic, the output is not
 
 ## Output Format
 

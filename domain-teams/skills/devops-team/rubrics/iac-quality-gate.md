@@ -1,5 +1,9 @@
 # IaC Quality Review Gate
 
+Dimensions draw on Team Topologies (Skelton & Pais) for "blast radius" and
+team ownership language, and on SRE Book Ch. 8 (Release Engineering) for
+drift detection and least privilege principles.
+
 ## Scope Boundary
 
 Review the _infrastructure design_ of the solution, not application logic.

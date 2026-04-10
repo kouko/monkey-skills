@@ -12,9 +12,10 @@ infrastructure, AI proposes human decides.
 1. **Clarify intent**: What are we deploying, why, and what does
    "shipped safely" look like? Ask one question at a time, prefer
    multiple choice when possible.
-2. **Scan existing infra**: Explore CI configs, Dockerfiles, IaC files,
-   deployment scripts, and cloud resources. Do not propose approaches
-   before understanding current state.
+2. **Scan existing infra**: Explore CI configs (`.github/workflows/`
+   for GitHub Actions, `.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`),
+   Dockerfiles, IaC files, deployment scripts, and cloud resources.
+   Do not propose approaches before understanding current state.
 3. **Identify constraints**: Cloud provider, budget, compliance
    requirements (SOC2, HIPAA), team expertise, existing tooling,
    and hard boundaries (region restrictions, vendor lock-in limits).
@@ -29,6 +30,9 @@ infrastructure, AI proposes human decides.
    - Reliability (blast radius, recovery time)
    - Observability (how easy to debug in production)
    - Cost (cloud spend, operational overhead)
+   - **DORA lead-time impact** (how the choice affects lead time for changes;
+     see `standards/dora-metrics.md`) — infrastructure choices that add
+     deploy-time friction will show up in lead time over weeks
 6. **Simplicity check**: Strip unnecessary infrastructure. A single
    VM with a deploy script beats Kubernetes for a weekend project.
    Match infrastructure to actual scale, not aspirational scale.
