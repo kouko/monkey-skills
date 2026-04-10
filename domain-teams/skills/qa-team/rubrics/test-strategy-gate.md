@@ -8,25 +8,53 @@ code-team gates.
 
 ## Flag Definitions
 
-### Test Type Coverage
-- Red **Fatal**: Only one test type used for a multi-service or multi-layer system
-- Yellow **Warning**: Missing one relevant test type that the system architecture warrants
-- Green **Clear**: All relevant test types covered with justification for inclusion/exclusion
+Vocabulary reference: `standards/istqb-vocabulary.md` (test levels and types).
+Strategy framework reference: `protocols/test-strategy-selection.md`.
+
+### Strategy Framework Citation
+- 🔴 **Fatal**: No strategy framework cited — no Pyramid / Trophy / Sizes
+  reasoning present. The plan proposes a distribution without grounding in
+  any named framework.
+- 🟡 **Warning**: Framework named but not justified for this project type
+  (e.g., "Test Pyramid" stated for a frontend JavaScript app where Testing
+  Trophy would be the conventional choice)
+- 🟢 **Clear**: Framework explicitly cited with justification tied to project
+  type — backend/systems → Practical Test Pyramid (Fowler/Vocke);
+  frontend/JS → Testing Trophy (Dodds 2018); Google-scale monorepo →
+  Small/Medium/Large Sizes
+
+### Test Level & Type Coverage
+- 🔴 **Fatal**: Only one ISTQB test type used for a multi-service or
+  multi-layer system (e.g., all functional, no non-functional or change-related)
+- 🟡 **Warning**: Missing one relevant test level or type that the system
+  architecture warrants (e.g., no Component-level tests for a unit-testable
+  library)
+- 🟢 **Clear**: All relevant ISTQB levels (Component/Integration/System/Acceptance)
+  and types (functional/non-functional/structural/change-related) covered
+  with justification for inclusion or exclusion
 
 ### Boundary Design
-- Red **Fatal**: Integration tests rely entirely on mocks with no plan for real-service testing
-- Yellow **Warning**: Unclear separation between unit and integration test scope
-- Green **Clear**: Clear boundaries between test types with justification for mock vs real decisions
+- 🔴 **Fatal**: Integration tests rely entirely on mocks with no plan for
+  real-service testing
+- 🟡 **Warning**: Unclear separation between Component and Integration test
+  scope
+- 🟢 **Clear**: Clear boundaries between test levels with justification for
+  mock vs real decisions
 
 ### Regression Strategy
-- Red **Fatal**: No regression approach defined for a system with existing functionality
-- Yellow **Warning**: Generic "re-run all tests" without targeting change-affected areas
-- Green **Clear**: Targeted regression strategy tied to change scope with explicit selection criteria
+- 🔴 **Fatal**: No regression approach defined for a system with existing
+  functionality (change-related test type absent)
+- 🟡 **Warning**: Generic "re-run all tests" without targeting change-affected
+  areas
+- 🟢 **Clear**: Targeted regression strategy tied to change scope with explicit
+  selection criteria
 
 ### Realism
-- Red **Fatal**: Test plan requires infrastructure or environments that do not exist and have no provisioning plan
-- Yellow **Warning**: Some environment gaps acknowledged but unresolved
-- Green **Clear**: Environment plan is executable with current or planned infrastructure
+- 🔴 **Fatal**: Test plan requires infrastructure or environments that do not
+  exist and have no provisioning plan
+- 🟡 **Warning**: Some environment gaps acknowledged but unresolved
+- 🟢 **Clear**: Environment plan is executable with current or planned
+  infrastructure
 
 ## Verdict Rules
 

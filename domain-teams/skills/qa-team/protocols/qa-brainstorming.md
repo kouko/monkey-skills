@@ -23,18 +23,21 @@ coverage percentage, AI proposes human decides.
 
 ### Phase 1: Approach Exploration
 
-5. **Identify test types needed**: For the system under test, which
-   types are most valuable?
-   - E2E (user journey validation)
-   - Integration (service boundary verification)
-   - Performance (latency, throughput, resource usage)
-   - Regression (change impact verification)
-   - Smoke (deployment sanity)
+5. **Identify test levels and types needed** (see `standards/istqb-vocabulary.md`):
+   Pick from ISTQB's two orthogonal axes:
+   - **Levels**: Component, Integration, System, Acceptance
+   - **Types**: Functional, Non-functional, Structural, Change-related
+   Concrete examples like "E2E", "smoke", and "performance" are instances:
+   E2E is System/Acceptance + Functional; smoke is Acceptance + Functional
+   (deployment sanity subset); performance is Non-functional (applicable at
+   any level).
 6. **Generate 2-3 strategies**: Propose with trade-offs. Each strategy
    should vary in coverage depth, infrastructure cost, and
-   maintenance burden.
-7. **Risk-based prioritization**: Rank test areas by failure impact
-   (what breaks costs the most?) rather than code coverage percentage.
+   maintenance burden. Reference a framework from `protocols/test-strategy-selection.md`
+   (Pyramid / Trophy / Sizes) to ground the discussion.
+7. **Risk-based prioritization**: Rank test areas using **Risk = Likelihood × Impact**
+   per ISTQB CTFL v4.0 §5.2 (see `standards/risk-assessment.md`). Do not rank
+   by code coverage percentage.
 
 ### Phase 2: Direction Confirmation
 
@@ -65,5 +68,9 @@ coverage percentage, AI proposes human decides.
 2. **Current State**: Existing tests, infra, gaps
 3. **Strategy Comparison**: 2-3 strategies with trade-off table
 4. **Selected Direction**: Chosen strategy with scope boundary
-5. **Plan Handoff**: Structured input for `protocols/test-plan-writing.md`
-   (Intent, Constraints, Test Types, Scope, Priority Areas)
+5. **Viewpoint Readiness Note**: Whether downstream should invoke
+   `protocols/test-viewpoint-extraction.md` before test case writing
+   (yes for non-trivial systems, no for single-component bug fixes)
+6. **Plan Handoff**: Structured input for `protocols/test-plan-writing.md`
+   (Intent, Constraints, Test Levels & Types, Scope, Priority Areas,
+   Strategy Framework, Viewpoint Extraction Y/N)
