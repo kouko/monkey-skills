@@ -1,5 +1,21 @@
 # Codebase Assessment Protocol
 
+Produces a codebase health report — code health, documentation health, or
+both — depending on the declared Mode.
+
+## Mode Declaration
+
+Before scanning, declare the assessment mode:
+
+- **Code mode**: focus on code health (complexity, hotspots, bus factor, tech debt).
+  Used by the Codebase Assessment workflow.
+- **Doc mode**: focus on documentation health (Diátaxis coverage, README quality,
+  freshness metadata, broken links). Used by the Documentation Audit workflow.
+- **Combined mode**: both code and documentation health. Used for full project audits.
+
+The Mode determines which steps apply and which report sections are produced.
+Default: Combined mode if not specified.
+
 ## Protocol
 
 ### Step 1. Scope definition
@@ -7,7 +23,8 @@
 Confirm assessment boundaries before scanning:
 - **Target**: entire repo, specific module, or specific concern area
 - **Depth**: overview (structure + entry points) or deep (data flow + side effects)
-- If not specified, default to overview of the entire repo
+- **Mode**: Code / Doc / Combined (see Mode Declaration above)
+- If not specified, default to overview of the entire repo in Combined mode
 
 ### Step 2. Scale-aware scanning plan
 
@@ -116,7 +133,9 @@ Produce the final assessment with verification.
 - Do NOT attempt to fix issues found — only identify and prioritize them
 - If the repo is too large for single-pass analysis, split into focused phases
   (each phase analyzes a module/layer; worker reads files directly per phase)
-- Reference `standards/code-conventions.md` for evaluating naming and style compliance
+- For documentation audits, also assess doc health: README presence, Diátaxis
+  quadrant coverage (see `standards/diataxis-taxonomy.md`), freshness metadata
+  presence (see `standards/freshness-metadata.md`), broken internal links
 - Every claim must reference a specific file path or git evidence — no unsupported assertions
 
 ## Output Format

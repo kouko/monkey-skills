@@ -36,5 +36,3 @@ The failure type for each item is defined below — use the type specified.
   ]
 }
 ```
-
-Reference `standards/code-conventions.md` for naming and style rules.
