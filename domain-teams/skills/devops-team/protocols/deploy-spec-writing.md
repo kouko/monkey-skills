@@ -23,11 +23,18 @@ set up the full deployment pipeline by reading only this document.
 
 ## Phase 2: Deployment Strategy
 
+Strategy selection follows Martin Fowler's release pattern catalog (see
+`standards/continuous-delivery.md`). Cite the chosen pattern by name.
+
 1. Select strategy with rationale (why this, not alternatives):
-   - Rolling: gradual replacement, zero-downtime, simple
-   - Blue-green: instant cutover, easy rollback, double resources
-   - Canary: traffic splitting, risk reduction, complex routing
-   - Feature flags: code-level toggling, no infra change, flag debt
+   - **Rolling**: gradual replacement, zero-downtime, simple
+   - **Blue-Green** ([Fowler 2010](https://martinfowler.com/bliki/BlueGreenDeployment.html)):
+     instant cutover via load balancer flip, easy rollback, 2× resources during deploy
+   - **Canary** ([Fowler 2014](https://martinfowler.com/bliki/CanaryRelease.html)):
+     gradual traffic shift to new version, monitor and decide, complex routing
+   - **Dark Launch**: deploy code but route no user traffic; validate via shadow traffic
+   - **Feature Toggles** ([Fowler 2017](https://martinfowler.com/articles/feature-toggles.html)):
+     decouple deploy from release; turn features on/off at runtime; flag debt is a cost
 2. Document deployment triggers (manual approval, auto on merge, scheduled)
 3. Define deployment verification steps (smoke tests, health checks)
 
@@ -42,25 +49,36 @@ set up the full deployment pipeline by reading only this document.
 
 ## Phase 4: Secrets Management
 
+Follows 12-Factor III (Config): secrets and environment-specific config
+live outside the codebase, injected at runtime. See `standards/twelve-factor.md` §III.
+
 1. Inventory all secrets (API keys, DB credentials, certificates, tokens)
 2. Select secret management approach:
    - Cloud-native (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault)
    - Self-hosted (HashiCorp Vault, Sealed Secrets)
-   - CI/CD-native (GitHub Secrets, GitLab CI Variables)
+   - CI/CD-native (GitHub Secrets + OIDC for cloud auth — see `standards/github-actions.md`)
 3. Define secret rotation policy and procedure
 4. Document access control (who/what can read each secret)
 
 ## Phase 5: Monitoring Baseline
 
-1. Define what to observe:
-   - Application metrics (latency, error rate, throughput)
-   - Infrastructure metrics (CPU, memory, disk, network)
-   - Business metrics (relevant domain KPIs)
-2. Set alert thresholds with escalation paths:
-   - Warning: team notification (Slack, email)
-   - Critical: on-call page with runbook link
-3. Define SLIs and SLOs for critical paths
-4. Document log aggregation strategy (structured logs, retention policy)
+Monitoring baseline is summarized in the deploy spec; the full monitoring
+design is produced by `protocols/monitoring-design.md` and should be
+invoked as a separate workflow or phase for any non-trivial service.
+
+This phase captures the high-level intent so that deploy-spec consumers
+understand what to expect, with the authoritative details living in the
+monitoring spec.
+
+1. Identify critical user journeys this service is responsible for
+2. Note SLI categories from the **Four Golden Signals** (see `standards/sre-practices.md`):
+   latency, traffic, errors, saturation
+3. Document SLO targets for each critical journey (target %, window)
+4. Reference the full monitoring spec produced via `protocols/monitoring-design.md`
+5. Document log aggregation strategy (structured logs per 12-Factor XI, retention policy)
+
+**Do not** write detailed instrumentation, dashboard, or alert rules here.
+Those belong in the dedicated monitoring spec.
 
 ## Phase 6: CI/CD Pipeline Stages
 
@@ -76,6 +94,29 @@ set up the full deployment pipeline by reading only this document.
 3. Document artifact versioning and tagging strategy
 4. Define failure handling per stage (retry, abort, notify)
 
+## Phase 7: Twelve-Factor Review (new cloud-native apps only)
+
+For **new cloud-native applications** (containerized, stateless,
+horizontally scalable), perform a 12-Factor compliance check before
+finalizing the deploy spec. See `standards/twelve-factor.md` for each
+factor's definition and modern interpretation.
+
+Checklist:
+- [ ] III Config: all config via env vars or secret manager
+- [ ] V Build/release/run: immutable artifacts, build once, deploy many
+- [ ] VI Processes: fully stateless
+- [ ] VII Port binding: app binds its own port, no external web server
+- [ ] IX Disposability: fast startup (<10s), graceful shutdown
+- [ ] X Dev/prod parity: same engines and versions across environments
+- [ ] XI Logs: unbuffered stdout/stderr, no local log files
+
+**Skip this phase** for legacy monoliths, on-prem-bound services, or
+stateful workloads (databases, brokers). Document the skip reason in the
+deploy spec.
+
+The Twelve-Factor Compliance gate (`rubrics/twelve-factor-compliance.md`)
+auto-runs at SHOULD level if this phase is performed.
+
 ## Rules
 
 - Self-contained: reading the spec alone must be enough to deploy
@@ -84,6 +125,7 @@ set up the full deployment pipeline by reading only this document.
 - Use concrete values (threshold numbers, resource sizes) over vague descriptions
 - Mark each section READY/PARTIAL/BLOCKED -- no ambiguity about what's deployable
 - Keep structure flat -- avoid deeply nested sections
+- Cite primary sources for deployment strategies and SLI/SLO definitions
 
 ## Output Structure
 
