@@ -140,19 +140,53 @@ language; only the delivered artifact must match `output_language`.
 ## Worker BLOCKED Handling
 
 If a worker determines it cannot proceed (missing data, contradictory
-requirements, destructive action requested), it returns:
+requirements, destructive action requested), it returns a structured
+JSON block instead of an artifact:
 
+```json
+{
+  "status": "BLOCKED",
+  "reason": "Clear explanation of what is missing or conflicting",
+  "suggested_next_steps": "What the user needs to provide"
+}
 ```
-BLOCKED: {reason, 1-3 sentences}
-```
+
+Valid reasons to return BLOCKED (per `agents/worker.md`):
+- Required library/API is deprecated and no documentation exists
+- User's requirements logically contradict each other
+- Task requires destructive actions not explicitly authorized
+- Critical information missing and cannot be inferred
+- Executing would violate security or compliance constraints
 
 The main agent MUST:
 1. NOT proceed to gates
-2. Present the BLOCKED reason to the user
+2. Present the BLOCKED reason and suggested next steps to the user
 3. Wait for user input
 
 A BLOCKED status is not a failure of the worker — it's the worker
-acting responsibly.
+acting responsibly. It saves token cost by catching impossible tasks
+early, rather than producing a flawed artifact the evaluator must reject.
+
+## Output Footer Convention
+
+Both worker and evaluator end their output with a checkpoint footer
+line. This is enforced by the agent files (`agents/worker.md` and
+`agents/evaluator.md`), and documented here so main agents can
+recognize and route on it.
+
+Worker footer:
+```
+> 🔄 CHECKPOINT: This artifact is raw output. Pipeline: consult your workflow for the next gate.
+```
+
+Evaluator footer:
+```
+> 🔄 CHECKPOINT: Evaluation complete. Pipeline: consult your workflow for verdict handling.
+```
+
+The main agent SHOULD use these footers to detect that a phase has
+completed and decide the next workflow step (e.g., launch the next
+evaluator, escalate a NEEDS_REVISION, or deliver to the user).
 
 ## Anti-Patterns
 
