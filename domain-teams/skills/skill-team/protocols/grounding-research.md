@@ -53,24 +53,80 @@ research-team produces a research report that passes:
 If research-team returns `NEEDS_REVISION` or `BLOCKED`, do NOT
 proceed — escalate to the user.
 
-## Phase 3: Obsidian Note Capture
+## Phase 3: Research Note Capture
 
-Save the research report to the user's Obsidian vault (if available)
-under:
-
-```
-research/{YYYY-MM-DD} {team-name} grounding — {topic}.md
-```
-
-This creates an audit trail. When someone later asks "why did
-skill-team pick Diátaxis?", the answer is in the research note, not
-lost to session compaction.
-
-If no Obsidian vault is configured, save to the project as:
+Save the research report **in-repo by default** under the skill's
+optional `research/` subdirectory:
 
 ```
-docs/research/{YYYY-MM-DD}-{team-name}-grounding.md
+domain-teams/skills/{team-name}/research/grounding-v{X.Y.Z}.md
 ```
+
+where `{X.Y.Z}` is the plugin version that will land the grounding
+work (for example, `grounding-v4.8.0.md` for design-team's v4.8.0
+refactor). See `file-conventions.md` §Directory Semantics and
+§Research Subdirectory Convention for the full rules:
+
+- One file per grounding event; no dates in filename (dates are in
+  git log and frontmatter)
+- ASCII-only filename; CJK content goes in the file body
+- File is maintainer-facing; NOT read by worker/evaluator at runtime
+- Not listed in SKILL.md Resource Manifest or launch templates
+- Exempt from Diátaxis single-quadrant rule (research notes are
+  fundamentally mixed-mode)
+
+The in-repo location makes research part of the PR review, ensures
+the audit trail survives session compaction and machine changes, and
+lets reviewers see the "why" behind primary-source choices alongside
+the grounding changes themselves.
+
+### File content
+
+Preserve the full research artifact: cluster-by-cluster source
+verification, research questions with cited answers, claim → source
+mapping tables, JP integration decision with evidence, open
+questions. Mirror the structure of prior grounded team research notes
+(see `qa-team/research/grounding-v4.2.0.md`,
+`docs-team/research/grounding-v4.3.0.md`,
+`code-team/research/grounding-v4.6.0.md` for reference shapes).
+
+Required frontmatter:
+
+```yaml
+---
+title: {team-name} 再設計研究 — {topic}
+date: {YYYY-MM-DD}
+team: {team-name}
+refactor_version: v{X.Y.Z}
+tags: [research, domain-teams, {team-name}, grounding]
+---
+```
+
+### Opt-in Obsidian export (user directive only)
+
+Obsidian vault export is **opt-in**. If — and only if — the user's
+skill-team invocation contains an explicit directive, ALSO write a
+copy to the user's Obsidian vault under the legacy convention path
+`research/{YYYY-MM-DD} {team-name} grounding — {topic}.md`.
+
+**Directive trigger phrases** (multilingual, accept any):
+
+- English: `also save to Obsidian`, `also export to Obsidian`,
+  `and to Obsidian`, `Obsidian copy`
+- 日本語: `Obsidianにも保存`, `Obsidianにもエクスポート`,
+  `Obsidianにもコピー`
+- 繁體中文: `也存到 Obsidian`, `也複製到 Obsidian`,
+  `也輸出到 Obsidian`
+- 简体中文: `也存到 Obsidian`, `也复制到 Obsidian`
+
+If no Obsidian directive is present, write **only** the in-repo
+file. Do not prompt the user to ask — silence means repo-only.
+
+If an Obsidian directive IS present but the Obsidian vault location
+is not discoverable (no `*.obsidian` vault found in expected paths),
+log a note in Phase 6's grounding plan ("Obsidian export requested
+but vault not found — in-repo copy only") and continue. Do not
+block the refactor on Obsidian availability.
 
 ## Phase 4: Standards Synthesis
 
@@ -109,7 +165,8 @@ Output a structured plan:
 ```markdown
 ## Grounding Plan for {team-name}
 
-**Research source**: {path to Obsidian note / report}
+**Research source**: `domain-teams/skills/{team-name}/research/grounding-v{X.Y.Z}.md` (in-repo, default)
+**Obsidian export**: {none | path to Obsidian copy if user requested opt-in export}
 
 **Standards to create** (for commit 1 of skill-redesign / new-skill-creation):
 1. {standard-name}.md — primary sources: {list}

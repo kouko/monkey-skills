@@ -41,7 +41,11 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
 - [ ] **CHK-SKL-011 (Relative paths)** [FATAL]: All references to files inside the skill directory (in both SKILL.md and any protocol/standard/gate file that references other files in the skill) use relative paths (`standards/x.md`, `protocols/y.md`) — never absolute paths and never plugin-rooted paths like `domain-teams/skills/...`.
 
-- [ ] **CHK-SKL-012 (Directory structure)** [FATAL]: The skill directory contains exactly these subdirectories: `standards/`, `protocols/`, `checklists/`, `rubrics/`. No other subdirectories, no nested subdirectories, no files at the top level other than `SKILL.md`.
+- [ ] **CHK-SKL-012 (Directory structure)** [FATAL]: The skill directory contains these required subdirectories: `standards/`, `protocols/`, `checklists/`, `rubrics/`. An optional `research/` subdirectory is permitted for grounding audit trail notes (see `standards/file-conventions.md` §Research Subdirectory Convention and `standards/skill-md-structure.md` §Research Subdirectory Convention). **Any other subdirectory is FATAL.** No nested subdirectories. No files at the top level other than `SKILL.md`.
+
+    **research/ file naming check**: if `research/` exists, every file inside MUST match the pattern `grounding-v{X.Y.Z}.md` (ASCII only, version-pegged) per `file-conventions.md` §research/ file naming. Any non-conforming filename in `research/` is FATAL.
+
+    **Absence is not a failure**: a skill without `research/` is compliant. Pre-v4.7.0 grounded skills are grandfathered without retroactive backfill.
 
 ## Verdict Rules
 
