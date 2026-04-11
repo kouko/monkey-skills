@@ -65,8 +65,20 @@ pipeline:
 3. **Launch research-team** (deep-research workflow): returns a
    research report with citations, evaluated by research-team's
    Source Citation gate (MUST) and Research Quality rubric (SHOULD)
-4. **Capture research outputs**: save to Obsidian vault under
-   `research/YYYY-MM-DD {topic}.md` for audit trail
+4. **Capture research outputs**: save **in-repo by default** to
+   `domain-teams/skills/{team-name}/research/grounding-v{X.Y.Z}.md`
+   where `{X.Y.Z}` is the plugin version landing the grounding work.
+   The in-repo location makes research part of the PR review and
+   preserves the audit trail across machines and session compactions.
+   See `file-conventions.md` §Research Subdirectory Convention for
+   file naming and Diátaxis exemption details.
+
+   **Obsidian vault export is opt-in**: only if the user explicitly
+   requests it via a directive like "also save to Obsidian" / "also
+   export to Obsidian" / 「Obsidianにも保存」/ 「也存到 Obsidian」,
+   the research worker ALSO writes a copy to the Obsidian vault under
+   the legacy path `research/{YYYY-MM-DD} {team-name} grounding — {topic}.md`.
+   Without an explicit directive, Phase 3 writes to the repo only.
 5. **Distill standards files**: each standard cites 2-5 primary
    sources in an opening "Primary Sources" section
 6. **Revise claims**: rewrite skill content to cite standards

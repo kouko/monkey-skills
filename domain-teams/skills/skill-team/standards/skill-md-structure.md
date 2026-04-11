@@ -165,6 +165,53 @@ is added.
 **Do NOT** simply omit the sub-section, and do NOT write only a header
 with no content.
 
+## Research Subdirectory Convention
+
+Some skills have an **optional** fifth subdirectory, `research/`, that
+holds primary-source grounding audit trails produced during grounding
+refactors. See `file-conventions.md` §Directory Semantics for the full
+definition. Key points for SKILL.md authors:
+
+### SKILL.md does NOT reference research/ files
+
+- `research/` is **maintainer-facing only**. Worker and evaluator agents
+  do not read it at runtime.
+- Do NOT list `research/*.md` in the Resource Manifest section.
+- Do NOT include `research/*.md` in worker or evaluator launch template
+  `standards` arrays.
+- Do NOT cross-reference research files from standards, protocols, or
+  gate files. Standards cite primary sources directly in their own
+  `## Primary Sources` section; the research note is the audit trail
+  for *why those sources were chosen*, not a runtime dependency.
+
+### When research/ exists vs doesn't
+
+- A skill may have zero or one `research/grounding-v{X.Y.Z}.md` file
+  per grounded version.
+- Pre-v4.7.0 grounded skills are **grandfathered without backfill** if
+  their original research was not captured in an importable form. The
+  absence of `research/` does NOT imply ungrounded — only that the
+  research audit trail pre-dates the in-repo convention.
+- `CHK-SKL-012` (directory structure) allows `research/` as an optional
+  subdirectory; any OTHER unexpected subdirectory is still FATAL.
+
+### Diátaxis exemption
+
+`research/` files are **explicitly exempt** from the Diátaxis
+single-quadrant rule that docs-team enforces (see
+`docs-team/standards/diataxis-taxonomy.md`). Grounding research notes
+are fundamentally mixed-mode (Explanation prose for overview +
+Reference tables for source verification + ADR-style decision sections
+for JP integration / tier choices). They are maintainer-facing raw
+artifacts, not polished user-facing documentation, and forcing them
+into a single Diátaxis quadrant would require splitting each note into
+2-3 files — heavy overhead with no clear reader benefit.
+
+If a user later wants a research note reformatted as a proper Nygard
+ADR or Diátaxis Explanation, they can invoke docs-team **separately**
+as an optional downstream consumer. docs-team is NOT a mandatory
+pipeline stage for grounding research.
+
 ## Line Budget
 
 - **Hard cap**: 500 lines (triggers Skill Coherence rubric 🔴)
