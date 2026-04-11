@@ -7,6 +7,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.0] — 2026-04-11
+
+### Added
+
+- **Optional `research/` subdirectory convention for domain-team
+  skills**. Each grounded skill may now have a
+  `domain-teams/skills/{team}/research/grounding-v{X.Y.Z}.md` file
+  preserving the Phase 2 grounding research artifact in-repo
+  alongside the skill it grounds. This is the third layer of
+  skill-team's primary-source record structure (layer 1 = SKILL.md
+  persona anchor; layer 2 = per-`standards/*.md` `## Primary Sources`
+  section; **layer 3 (new in-repo) = research audit trail**). See
+  `skill-team/standards/file-conventions.md` §Directory Semantics and
+  `skill-team/standards/skill-md-structure.md` §Research Subdirectory
+  Convention for full specification.
+- `skill-team/standards/file-conventions.md`: new fifth row in the
+  Directory Semantics table for `research/`, marked optional, with
+  explicit "NOT read by worker/evaluator at runtime" semantics. New
+  subsections "Why research/ is optional" (documents grandfather
+  clause for pre-v4.7.0 grounded skills) and "research/ file naming"
+  (mandates `grounding-v{X.Y.Z}.md` ASCII filenames).
+- `skill-team/standards/skill-md-structure.md`: new top-level
+  `## Research Subdirectory Convention` section documenting (a)
+  SKILL.md does NOT reference research/ files in Resource Manifest
+  or launch templates, (b) research/ is maintainer-facing only,
+  (c) grandfather clause, (d) Diátaxis single-quadrant exemption
+  (research notes are fundamentally mixed-mode Explanation +
+  Reference + ADR; cannot be split into single-quadrant docs without
+  heavy overhead), (e) docs-team is an **optional** downstream
+  consumer, NOT a mandatory pipeline stage for research reformatting.
+- **Backfilled 3 research notes** from the maintainer's Obsidian
+  vault to the repo (grandfather devops-team — see Known issues):
+  - `domain-teams/skills/qa-team/research/grounding-v4.2.0.md` (201
+    lines) — synthesized from the qa-team 再設計研究綜合 note;
+    歐美 / 日本 / MOC companion notes are authoring workspace
+    artifacts and were NOT backfilled.
+  - `domain-teams/skills/docs-team/research/grounding-v4.3.0.md`
+    (445 lines) — full copy of the 技術文件框架研究 note (Diátaxis,
+    Google Style, Microsoft Style, Write the Docs, Standard README,
+    Nygard ADR, MADR, OpenAPI 3.2.0, Vale, Google docs-rot, The
+    Good Docs Project, JP 3 原則).
+  - `domain-teams/skills/code-team/research/grounding-v4.6.0.md`
+    (893 lines) — full copy of the code-team v4.6.0 research note
+    (Clean Code, Pragmatic Programmer, SOLID, Beck TDD, Fowler
+    Refactoring, Feathers Legacy Code, OWASP ASVS v5.0.0, 徳丸本
+    Ch.6, 97のこと JP).
+- All 3 backfilled notes include a "Backfill note" header
+  documenting the migration and any wikilink normalization applied
+  (Obsidian `[[X]]` → plain text with in-repo or out-of-repo
+  annotation).
+
+### Changed
+
+- `skill-team/standards/grounding-principle.md` §The Research
+  Workflow step 4: **inverted default**. Was "save to Obsidian
+  vault"; now "save in-repo by default to
+  `domain-teams/skills/{team}/research/grounding-v{X.Y.Z}.md`.
+  Obsidian vault export is opt-in via explicit user directive."
+  Multilingual trigger phrases documented (English, 日本語, 繁體中文,
+  简体中文).
+- `skill-team/protocols/grounding-research.md` Phase 3: renamed
+  from "Obsidian Note Capture" to "Research Note Capture". Default
+  path is now the in-repo research/ subdirectory. Added required
+  YAML frontmatter schema (`title` / `date` / `team` /
+  `refactor_version` / `tags`). Added new "Opt-in Obsidian export
+  (user directive only)" subsection handling the "user asked for
+  Obsidian but vault not discoverable" edge case gracefully.
+- `skill-team/protocols/grounding-research.md` Phase 6: Grounding
+  Plan template `Research source` field now defaults to the in-repo
+  path. New `Obsidian export` field records whether opt-in export
+  was requested.
+- `skill-team/SKILL.md` L244 + L260 (New Skill Creation and Skill
+  Redesign workflow tables): Output column "grounding plan +
+  Obsidian note" → "grounding plan + in-repo research note
+  (research/grounding-v{X.Y.Z}.md)". Notes column adds "Obsidian
+  export is opt-in via user directive".
+- `skill-team/checklists/skill-completeness-checklist.md` CHK-SKL-012:
+  amended to allow an optional `research/` subdirectory without
+  making it FATAL. Added a research/ file-naming sub-check (files
+  MUST match `grounding-v{X.Y.Z}.md` ASCII pattern; non-conforming
+  filenames are FATAL). Explicit note that absence of `research/`
+  is NOT a failure.
+
+### Known issues
+
+- **devops-team v4.4.0 is grandfathered** without a `research/`
+  file. An Obsidian vault search returned no standalone research
+  note for the devops-team grounding refactor. devops-team v4.4.0
+  was executed before the skill-team meta-skill (v4.5.0) existed,
+  and its Phase 2 grounding research was not captured as a
+  separate artifact. The grounding evidence is distributed across
+  v4.4.0 commit messages, the `[4.4.0]` CHANGELOG entry, and the
+  `## Primary Sources` sections of each grounded standards file
+  (layers 1 and 2 of the primary-source record structure are
+  complete; layer 3 does not exist historically). This is accepted
+  as-is per the grandfather clause in the Research Subdirectory
+  Convention. If devops-team is re-grounded in a future refactor,
+  the new Phase 2 research will land in
+  `domain-teams/skills/devops-team/research/grounding-v{new}.md`
+  under the v4.7.0+ convention.
+
+### Why this change
+
+Exposed by design-team v4.8.0 refactor Phase 2 (paused in-session
+before completion). skill-team's grounding-research.md Phase 3 was
+writing research notes to the maintainer's Obsidian vault as the
+default with repo as a fallback. All 4 previously grounded teams
+(qa/docs/devops/code) therefore had their layer-3 audit trail
+**only** in the maintainer's Obsidian — invisible to PR reviewers
+and future maintainers. v4.7.0 inverts the default so audit trails
+live in git review alongside the grounding changes they explain.
+The Obsidian vault remains available as an opt-in export destination
+for users who want Obsidian's graph view, backlinks, and local
+search, but it is no longer the authoritative storage.
+
 ## [4.6.1] — 2026-04-11
 
 ### Changed

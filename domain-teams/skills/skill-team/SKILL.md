@@ -241,7 +241,7 @@ domain (e.g. adding `security-team`, `data-team`).
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
 | 1. Brainstorm | worker | `protocols/skill-brainstorming.md` | user request | skill scope brief | optional |
-| 2. Grounding Research | worker | `protocols/grounding-research.md` | scope brief | grounding plan + Obsidian note | required unless user supplies primary sources |
+| 2. Grounding Research | worker | `protocols/grounding-research.md` | scope brief | grounding plan + in-repo research note (`research/grounding-v{X.Y.Z}.md`) | required unless user supplies primary sources; Obsidian export is opt-in via user directive |
 | 3. Build | worker | `protocols/new-skill-creation.md` | grounding plan | skill directory + router update + version bump | executes the 10-phase build including 3-commit split |
 | 4. Completeness Gate | evaluator | `checklists/skill-completeness-checklist.md` | new SKILL.md | verdict | MUST gate |
 | 5. Commit Split Gate | evaluator | `checklists/commit-split-checklist.md` | branch commit history | verdict | MUST gate |
@@ -257,7 +257,7 @@ v4.2.0 / docs-team v4.3.0 / devops-team v4.4.0 pattern.
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
 | 1. Gap Assessment | worker | `protocols/skill-redesign.md` (Phase 1) | existing team dir | gap report | — |
-| 2. Grounding Research | worker | `protocols/grounding-research.md` | gap report | grounding plan + Obsidian note | skip only if purely structural refactor |
+| 2. Grounding Research | worker | `protocols/grounding-research.md` | gap report | grounding plan + in-repo research note (`research/grounding-v{X.Y.Z}.md`) | skip only if purely structural refactor; Obsidian export is opt-in via user directive |
 | 3. Delta Planning | worker | `protocols/skill-redesign.md` (Phase 3) | grounding plan | file delta assigned to 3 commits | — |
 | 4. Commit 1 | worker | `protocols/skill-redesign.md` (Phase 4) | delta | standards CREATE/MODIFY committed | — |
 | 5. Commit 2 | worker | `protocols/skill-redesign.md` (Phase 5) | delta | protocols + gates CREATE/MODIFY committed | — |

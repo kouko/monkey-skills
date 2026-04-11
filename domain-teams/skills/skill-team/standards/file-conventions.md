@@ -10,15 +10,36 @@ domain-team skill, plus naming and path rules.
 
 ## Directory Semantics
 
-Every domain-team skill has exactly four subdirectories. Each has a
-distinct role in the read chain of worker/evaluator agents.
+Every domain-team skill has **four required** subdirectories plus one
+**optional fifth** (`research/`). Each has a distinct role in the read
+chain of worker/evaluator agents.
 
-| Directory | Purpose | Who reads it | Typical file count |
-|-----------|---------|--------------|-------------------|
-| `standards/` | SSOT rules, terminology, primary-source anchors. Stable, slow-changing. | Both worker and evaluator, every launch | 1–6 |
-| `protocols/` | Workflow SOPs — step-by-step "how to produce X". Execution recipes. | Worker, one selected per task | 2–8 |
-| `checklists/` | Binary PASS / FAIL_FIXABLE / FAIL_FATAL gate criteria. | Evaluator, one per gate | 1–3 |
-| `rubrics/` | Qualitative 🔴 / 🟡 / 🟢 flag-based gate criteria. | Evaluator, one per gate | 1–4 |
+| Directory | Required? | Purpose | Who reads it | Typical file count |
+|-----------|-----------|---------|--------------|-------------------|
+| `standards/` | Required | SSOT rules, terminology, primary-source anchors. Stable, slow-changing. | Both worker and evaluator, every launch | 1–6 |
+| `protocols/` | Required | Workflow SOPs — step-by-step "how to produce X". Execution recipes. | Worker, one selected per task | 2–8 |
+| `checklists/` | Required | Binary PASS / FAIL_FIXABLE / FAIL_FATAL gate criteria. | Evaluator, one per gate | 1–3 |
+| `rubrics/` | Required | Qualitative 🔴 / 🟡 / 🟢 flag-based gate criteria. | Evaluator, one per gate | 1–4 |
+| `research/` | **Optional** | Primary-source grounding audit trail. Deep research notes from grounding refactors. **NOT read by worker/evaluator at runtime** — maintainer-facing only. Exempt from Diátaxis single-quadrant rule (research notes are fundamentally mixed-mode: Explanation + Reference + ADR). | Humans (PR reviewer, future maintainer) | 0–1 per version |
+
+### Why `research/` is optional
+
+Only skills that have undergone a primary-source grounding refactor need
+a `research/` subdirectory. Skills created before the grounding research
+convention existed (pre-v4.7.0) are grandfathered without retroactive
+backfill, unless their original research was captured in a recoverable
+form. The presence of a `research/` directory is a signal that the skill
+has been grounded to the v4.7.0+ standard; its absence does not imply
+the skill is ungrounded, only that its research audit trail pre-dates
+the in-repo convention.
+
+### research/ file naming
+
+- One file per grounding event: `grounding-v{X.Y.Z}.md` where X.Y.Z is
+  the plugin version that landed the grounding work (e.g.
+  `grounding-v4.6.0.md` for code-team's initial grounding at v4.6.0)
+- ASCII only in filename — CJK goes in the file body, never the filename
+- No dates in the filename — dates live in git log and frontmatter
 
 ### When to use standards vs protocols
 
