@@ -6,6 +6,58 @@
 - `standards/citation-standards.md` — citation discipline for version numbers, CVEs, and benchmark data
 - `standards/source-quality-and-evidence.md` — official registries (npm, PyPI, crates.io, GitHub) as primary; blog posts and "awesome" lists as secondary
 
+## Phase 0: Mode Detection and Budget Setup
+
+**MUST run before Step 1.** Read the `mode:` field from the worker
+launch `### Input` section. If absent, default to `quick`.
+
+| Mode | Default budget | Source cap | Search cap | Token cap |
+|---|---|---|---|---|
+| **quick** (default) | single-pass triangulation | 5 sources | 5 web searches | ~15k tokens |
+| **deep** (opt-in) | full audit trail | 15 sources | 20 web searches | ~150k tokens |
+
+User-overridable via `### Input` fields: `max_sources`, `max_web_searches`,
+`max_tokens`. Reject budgets below quick floor (15k tokens / 5 sources)
+with `BLOCKED: budget below minimum viable quick mode`.
+
+In **quick mode**, this protocol runs in a stripped-down form per the
+mode-specific exit rule defined in `standards/confidence-and-claim-language.md`
+§Cost-Aware Early-Exit Rule:
+- Skip cross-language (EN+JP) parallel search unless natural
+- ≥1 primary source per key claim is sufficient (vs ≥2 for deep)
+- Exit immediately when all key claims reach Medium confidence
+  (medium evidence × medium agreement on the IPCC 3×3 grid)
+- Skip MUST `source-citation-checklist` gate (SELF check applies)
+- Quick-mode reduction: skip full CHAOSS multi-signal evaluation —
+  use 3 core signals only (stars trend, last commit date, weekly
+  downloads); skip OpenSSF Scorecard 18-check enumeration — use
+  the top 5 most load-bearing checks (code review, CI, dependency
+  update tool, pinned dependencies, vulnerabilities); skip SLSA
+  build-level audit entirely; skip SBOM deep-dive
+
+In **deep mode**, run the protocol per the existing v4.9.0 grounding:
+- Cross-language parallel search REQUIRED
+- ≥2 sources per key claim REQUIRED
+- Exit at Very high confidence (robust evidence × high agreement)
+  per the early-exit rule
+- All MUST and SHOULD gates trigger
+- Retry on PASS_WITH_NOTES per gate-system.md
+- Deep-mode rigor: full OpenSSF Scorecard 18-check enumeration +
+  NIST SSDF v1.1 4 practice groups + SLSA v1.1 build levels L0-L3
+  + CVSS v4.0 4 metric groups on known CVEs + SPDX v3.0 license
+  identifier verification + license deep-dive (compatibility +
+  copyleft exposure)
+
+**Budget enforcement**: track source count, search count, token
+estimate. On overrun, finish current source verification (atomic),
+then return BLOCKED with summary: `"budget overrun: collected N
+sources, M searches, ~Tk tokens. Partial result attached. Reply
+'expand budget to X' or 'accept partial'."`
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific exit thresholds and the
+per-claim (not per-deliverable) policy.
+
 ## Protocol
 
 ### Step 1. Define evaluation scope
@@ -40,6 +92,9 @@ Different evaluation types require different methodologies:
 For upgrades (types 1-3): search for official migration guides FIRST (web search in EN + JP). The migration guide defines the checklist — do not invent rules beyond what the guide specifies.
 
 ### Step 3. Candidate discovery
+
+**Mode discipline**: in quick mode, cap collection per Phase 0
+budget; in deep mode, follow existing collection workflow.
 
 Identify 2-5 candidates (for new adoption / replacement type):
 - Search in English AND Japanese for candidates and comparisons

@@ -172,6 +172,105 @@ Workers who need the full 5-level distinction (e.g., when the
 deliverable will be further aggregated by another researcher) MAY
 report at the 5-level granularity, disclosing the choice.
 
+## Cost-Aware Early-Exit Rule
+
+Research has a long-tail cost problem: each additional source raises
+confidence less than the one before. The IPCC 3×3 evidence × agreement
+grid provides a principled way to decide when "enough is enough" so
+that workers can stop searching when the marginal value of one more
+source flattens, instead of always exhausting their budget.
+
+The exit rule is **mode-specific**, calibrated to the rigor-cost
+tradeoff of the two research-team modes (see SKILL.md §Research Modes
+for the quick / deep mode definitions):
+
+| Mode | Per-claim exit threshold | Stop trigger |
+|---|---|---|
+| **quick** | Each key claim has ≥1 primary source AND lands in the 3×3 grid at **medium evidence × medium agreement** OR better (i.e., **Medium confidence** or higher per the 5-level ladder) | First moment all key claims meet the threshold — exit immediately even if budget remains |
+| **deep** | Each key claim reaches **robust evidence × high agreement** (i.e., **Very high confidence**, the top-right cell of the 3×3 grid) OR the budget is exhausted OR the marginal-value curve flattens (last 2 sources added zero new claims and zero new evidence dimensions) | Whichever fires first; exit gracefully with a final synthesis pass |
+
+### Per-claim, not per-deliverable
+
+The rule applies **per key claim**, not "all claims uniformly". A
+research deliverable typically has 3-8 key claims; each is on its own
+trajectory through the 3×3 grid. The exit decision is made on the
+**worst-confidence key claim**: if 7 out of 8 claims have hit the
+threshold but 1 has not, the worker continues searching for sources
+that bear on the lagging claim. The lagging-claim policy prevents the
+common failure mode where workers triangulate the easy claims to high
+confidence and leave the hard claims under-evidenced.
+
+### Partial completion is a first-class outcome, not an error
+
+When the budget is exhausted **before** all key claims reach their
+threshold, return a **mixed-confidence deliverable** with under-met
+claims explicitly tagged via the existing fact / analysis / speculation
+taxonomy — typically as **speculation** with the confidence level
+made visible (e.g., "**Low confidence** because evidence is limited
+and budget exhausted at N sources"). Add `unresolved: true` metadata
+on those claims so downstream readers / agents know to investigate
+further if they need higher confidence.
+
+**Do NOT treat partial completion as BLOCKED.** BLOCKED is reserved
+for situations where the worker cannot proceed at all (no sources
+exist, the topic is malformed, the user must clarify scope). Partial
+completion is a normal research outcome — research is incomplete by
+nature.
+
+### Conflicting confidence levels are normal
+
+It is common for a single research task to surface claims at
+different confidence levels — for example, market size data may be
+medium-confidence (single industry-analyst source) while the
+competitive landscape may be high-confidence (multiple primary-source
+filings). This is **expected**, not a problem. The exit rule fires
+when the worst claim reaches the threshold; the deliverable reports
+both confidence levels honestly per the 高/中/低 mapping above.
+
+### Why the asymmetric thresholds
+
+Quick mode and deep mode use different thresholds because they
+answer different questions:
+
+- **Quick mode** answers "what is the rough lay of the land?" The
+  user has not committed to a deeper investigation; they want a
+  fast triangulation that can be revisited. **Medium confidence with
+  ≥1 primary source** is the natural floor for "good enough to be
+  worth showing the user, who can then decide if more rigor is
+  needed". Exiting earlier (e.g., at low confidence) would deliver
+  un-actionable garbage; exiting later (e.g., at high confidence)
+  would burn budget for marginal precision the user did not ask for.
+- **Deep mode** answers "what is the audit-trail-grade truth?" The
+  user has committed to spending more budget and expects rigor. The
+  "robust evidence × high agreement" cell of the 3×3 grid is the
+  IPCC's own definition of "very high confidence"; settling for
+  anything less defeats the purpose of opting into deep mode. The
+  **marginal-value flatline** backstop catches the case where the
+  topic itself is genuinely under-evidenced (no amount of additional
+  searching will raise confidence further) — this is the IPCC's
+  implicit answer to "what if very high confidence is unattainable?"
+
+The asymmetry mirrors the rigor / cost tradeoff: quick mode prioritizes
+*finishing* over precision; deep mode prioritizes *precision* over
+finishing.
+
+### Anti-patterns
+
+- ❌ Continuing to search after all key claims reach the per-mode
+  threshold ("just to be thorough"). Exhausting the budget is not a
+  goal in itself.
+- ❌ Treating partial completion as a failure. Partial is normal;
+  the deliverable should disclose what was triangulated to what
+  level, not refuse to report.
+- ❌ Auto-escalating from quick mode to deep mode when quick fails to
+  reach the threshold. The escalation decision belongs to the user,
+  not the worker. Return BLOCKED with the partial result and let the
+  user decide whether to expand budget.
+- ❌ Aggregating confidence levels into a single "overall confidence"
+  for the deliverable. Per-claim confidence is the load-bearing
+  unit; rolling it up into one number loses the information that
+  matters for downstream auditing.
+
 ## Fact / Analysis / Speculation Taxonomy
 
 Every sentence in a research deliverable is one of three categories,

@@ -6,6 +6,26 @@
 - `standards/confidence-and-claim-language.md` — IPCC/Kent calibrated language + 高/中/低 mapping + Fact/Analysis/Speculation taxonomy
 - `standards/citation-standards.md` — citation format rules, data freshness window, per-style examples
 
+## Mode-Aware Triggering (v4.9.1)
+
+This checklist is a **MUST gate in deep mode only**. In quick mode,
+this checklist is **NOT triggered** — the worker's SELF check applies
+instead. The v4.9.1 cost-aware modes mechanism (see SKILL.md
+§Research Modes) ensures quick-mode workers do not trigger this
+gate: quick mode by definition runs a stripped-down single-pass
+triangulation with ≥1 primary source per claim and exits at Medium
+confidence, which is below the threshold this gate is calibrated
+to enforce.
+
+When deep mode runs the gate, all CHK-SRC-001 through CHK-SRC-007
+items apply unchanged. Per-mode threshold tuning (for example a
+relaxed claim-to-citation ratio for quick mode) is deferred to
+v4.9.2 if real usage shows the binary skip is too coarse.
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific per-claim source thresholds
+and the per-claim (not per-deliverable) policy.
+
 ## Evaluation Instructions
 
 You are a strict fact-checker. Check each item below against the
