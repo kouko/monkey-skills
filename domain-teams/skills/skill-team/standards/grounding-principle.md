@@ -139,7 +139,12 @@ consolidated in a dedicated `## Critical Attribution Corrections`
 section placed **immediately after** `## Primary Sources`, not
 scattered as inline Admonition blocks in the body.
 
-Format for each correction (1 paragraph per correction):
+**Omit this section entirely when the grounding research did not
+surface any historical attribution errors.** A standards file with a
+clean lineage should have `## Primary Sources` followed directly by
+the body — do NOT include a placeholder "No corrections" heading.
+
+Format for each correction (one concise paragraph, 2-4 sentences):
 
 ```markdown
 ### {Subject}
@@ -175,6 +180,22 @@ design-team v4.8.0:
 | docs-team | ~4.0% | Minimal + URL-heavy |
 | qa-team | ~7.5% | Standard (multi-line per source, chapter refs) |
 | **design-team v4.8.0 target** | **~2-4%** | **Compact + Admonitions** |
+
+### Grandfather clause — precedent teams are not retroactively required to comply
+
+**The 4 precedent teams (qa-team v4.2.0, docs-team v4.3.0, devops-team
+v4.4.0, code-team v4.6.0) are grandfathered.** They retain their
+existing Primary Sources density until each team's next refactor. The
+Compact+Admonitions rule applies to **design-team v4.8.0 onward** and
+all subsequent grounding refactors (research-team, planning-team, and
+any future re-groundings of the 4 precedent teams when they are next
+refactored).
+
+Rationale: retrofitting 4 teams' citation style in a single PR would
+mix concerns (convention-change + multi-team-retrofit) and bloat the
+diff beyond reviewability. Per scope discipline, each team's citation
+style migration happens when that team is next refactored for other
+reasons, not as a standalone "style migration" sweep.
 
 ### Why the 80-word floor of CHK-SKL-001 does not apply here
 
