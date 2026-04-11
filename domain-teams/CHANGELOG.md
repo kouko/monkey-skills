@@ -7,6 +7,150 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.2] — 2026-04-11
+
+First CI infrastructure for the repo. Adds a deterministic
+SKILL.md structure validator and a Conventional Commits checker
+that run on every push to main and every pull request. PATCH bump
+because the new files are CI infrastructure (build / validation),
+not runtime files read by worker or evaluator agents — per the
+v4.8.1 CHK-CMT-005 distinguishing rule "does this branch introduce
+new files that worker or evaluator agents will Read at runtime?
+Yes → MINOR. No → PATCH."
+
+### Added
+
+- `scripts/check-skill-structure.py` — standalone Python validator
+  that walks every `domain-teams/skills/*/SKILL.md` and runs five
+  deterministic CHK-SKL-* checks from skill-team v4.8.1
+  `checklists/skill-completeness-checklist.md`. Designed for both
+  local invocation (`python3 scripts/check-skill-structure.py
+  domain-teams`) and CI use. Targets zero false positives on the
+  current grounded teams (qa / docs / devops / code / design) plus
+  the ungrounded teams (research / planning) and the router skill
+  (`using-domain-teams`).
+
+  Checks implemented:
+
+  - **CHK-SKL-001** (FATAL) — frontmatter `description` >= 40 word
+    tokens after the v4.6.1 hyphen/slash compound tokenization rule
+    and exclusion of CJK tokens. Counts only English prose body per
+    `skill-md-structure.md` §Frontmatter Schema §Word count rule.
+    Router skills (no `protocols/` subdirectory, no worker launch
+    template in SKILL.md) are exempt per the v4.6.1 router exemption
+    landed in `skill-md-structure.md` §Router-skill exemption.
+  - **CHK-SKL-005** (FATAL) — every concrete `{base_path}/<dir>/
+    <filename>.md` path in the `## Agent Launch Protocol` section
+    actually exists on disk. Resource Manifest list bullets are
+    deliberately NOT validated because they often list aspirational
+    MAY gates with `(MAY)` annotations; Resource-Manifest-vs-launch-
+    template drift is documentation drift, not runtime drift, and
+    is caught by the `skill-coherence` SHOULD gate at refactor time.
+  - **CHK-SKL-010** (FATAL) — SKILL.md <= 500 lines (hard cap from
+    `skill-md-structure.md` §Line Budget).
+  - **CHK-SKL-011** (FATAL) — SKILL.md contains no absolute paths
+    (`/Users/...`) and no plugin-rooted paths (`domain-teams/skills/
+    ...`). Standards / protocols / checklists / rubrics files are
+    intentionally NOT scanned because they legitimately reference
+    example paths inside markdown code blocks, inline backticks,
+    anti-pattern documentation, and primary source citations to
+    repo SSOT files outside the plugin (such as
+    `/Users/.../monkey-skills/CLAUDE.md`).
+  - **CHK-SKL-012** (FATAL) — directory layout: required
+    subdirectories `standards/`, `protocols/`, `checklists/`,
+    `rubrics/` plus the optional `research/` per v4.7.0; any other
+    subdirectory is FATAL; if `research/` exists, every file inside
+    must match `grounding-v{X.Y.Z}.md` per v4.7.0 file naming.
+    Router skills are exempt from the required-subdirectory check.
+    `.DS_Store`, `._*`, and `Thumbs.db` are ignored as filesystem
+    noise so local runs match what GitHub Actions sees on a fresh
+    checkout.
+
+- `.github/workflows/skill-structure.yml` — GitHub Actions workflow
+  with two independent jobs:
+
+  - `structure` — runs `scripts/check-skill-structure.py
+    domain-teams` on every push to main and every PR targeting main.
+    Uses `actions/setup-python@v5` with Python 3.11.
+  - `conventional-commits` — runs only on `pull_request` events.
+    Walks `git log {base}..{head}` for the PR range and validates
+    every non-merge commit's subject against a relaxed Conventional
+    Commits regex. Enforces the **load-bearing** parts of skill-team
+    v4.8.1 `commit-convention.md` §Commit Message Format: type ∈
+    {refactor, feat, fix, chore, docs}, scope = kebab-case
+    identifier, colon-space-subject, no trailing period. Does NOT
+    enforce "lowercase first letter" because real subjects
+    legitimately start with acronyms (CHK-CMT-001, OWASP, JSON,
+    API). The optional version/position suffix is permissive to
+    match observed precedent: `(vX.Y.Z N/3)` for 3-commit splits,
+    `(vX.Y.Z N/2)` for 2-commit splits, `(vX.Y.Z gate-feedback)`
+    for follow-up patches.
+
+### Changed
+
+- `.gitignore` — added `.DS_Store`, `**/.DS_Store`, `._*`, and
+  `Thumbs.db` patterns. None of these were tracked in git, but they
+  exist on local macOS filesystems and would otherwise be flagged by
+  the new `scripts/check-skill-structure.py` CHK-SKL-012 check
+  during local runs (the script also explicitly skips them as noise
+  for parity with what CI sees on a fresh checkout).
+
+### Verification
+
+Local dry-run on the current branch (after the script bug fix
+iterations) returns:
+
+```
+check-skill-structure: scanned 9 skills under
+    /Users/kouko/GitHub/monkey-skills/domain-teams/skills
+PASS  code-team
+PASS  design-team
+PASS  devops-team
+PASS  docs-team
+PASS  planning-team
+PASS  qa-team
+PASS  research-team
+PASS  skill-team
+PASS  using-domain-teams
+
+All 9 skills PASS
+```
+
+Deliberate-breakage test (inject a non-existent path into qa-team's
+launch template, run script, restore) confirms the CHK-SKL-005 path
+existence check correctly fails on injected drift and exits 1.
+Word count distribution across non-router skills (with the v4.6.1
+hyphen/slash tokenization rule + CJK token exclusion):
+code-team 139, devops-team 82, skill-team 78, docs-team 67, qa-team
+51, planning-team 46, design-team 45, research-team 43; router
+`using-domain-teams` 31 (exempt). All non-router skills are above
+the 40-word floor.
+
+### Meta
+
+This is the **first CI infrastructure** for the repo. Future
+candidates for additional checks (deferred):
+
+- Per-gate-file linting (e.g. checklist item ID format `CHK-XXX-NNN`)
+- Workflow phase table dependency graph (verify every Phase row's
+  Protocol/Input/Output cell is populated)
+- skill-team's full dogfood gate suite (would require running
+  evaluator agents inside CI, which requires Claude Code CI
+  integration that does not yet exist)
+- Cross-plugin scope expansion (validate `obsidian` and
+  `philosophers-toolkit` plugins under their own conventions)
+
+PATCH bump rationale per v4.8.1 `commit-convention.md` §Semver:
+this branch adds files (CI script + workflow + .gitignore patterns)
+but none of those files are read by worker or evaluator agents at
+runtime. The distinguishing rule classifies this as PATCH, not
+MINOR. Per the v4.8.1 CHK-CMT-003 refinement, modify-only PATCH
+bumps may also ship as a single-commit chore without splitting into
+the 3-commit pattern that grounding refactors use; v4.8.2 takes
+that single-commit path because the work is naturally cohesive
+(script + workflow + .gitignore + version bump are all the same
+"add CI" change).
+
 ## [4.8.1] — 2026-04-11
 
 Skill-team research-note convention cleanup patch — consolidates

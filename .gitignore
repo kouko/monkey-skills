@@ -1,3 +1,11 @@
+# macOS Finder noise
+.DS_Store
+**/.DS_Store
+._*
+
+# Windows
+Thumbs.db
+
 # Claude Code local settings
 .claude/settings.local.json
 
