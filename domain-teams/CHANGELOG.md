@@ -7,6 +7,258 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.10.0] — 2026-04-11
+
+planning-team primary-source grounding refactor — the **final domain
+team to complete grounding**. planning-team joins qa-team v4.2.0
+(ISTQB / VSTeP), docs-team v4.3.0 (Diátaxis / Google Style / JTAP),
+devops-team v4.4.0 (Google SRE / DORA / 12-Factor / Continuous
+Delivery), code-team v4.6.0 (GoF / Fowler / NIST), design-team v4.8.0
+(Norman / Nielsen / WCAG), and research-team v4.9.0 (Booth / Cochrane /
+IPCC) in having every load-bearing framework claim anchored to a
+named primary source. **All 7 domain teams are now grounded**.
+
+MINOR bump per `skill-team/standards/commit-convention.md` CHK-CMT-005
+because **3 new standards files** are added that worker and evaluator
+agents will Read at runtime: `discovery-frameworks.md`,
+`goals-and-metrics.md`, `spec-completeness-standards.md`. The 4th
+standards file (`planning-frameworks.md`) is a rewrite of a
+pre-existing file, not a new addition.
+
+The grounding pass surfaced **24 Critical Attribution Corrections**
+in the research note, of which 10 are load-bearing enough to appear
+inline in the standards files. The corrections are documented in
+`standards/planning-frameworks.md` §Critical Attribution Corrections,
+`standards/discovery-frameworks.md` §Critical Attribution Corrections,
+`standards/goals-and-metrics.md` §Critical Attribution Corrections,
+and `standards/spec-completeness-standards.md` §Critical Attribution
+Corrections.
+
+### Added
+
+- **`standards/discovery-frameworks.md`** (tier 1, new, 272 lines) —
+  Lean Startup canonical (Ries 2011) including MVP as
+  validated-learning-minimum NOT smallest-shippable-feature-set,
+  Build-Measure-Learn loop, Validated Learning as unit of progress,
+  Pivot or Persevere with 10 pivot types; Customer Development (Blank
+  2005) 4 steps; Product Discovery vs Delivery distinction (Cagan
+  2017 *Inspired* 2nd ed Parts III–IV) including the 4 Big Risks
+  cross-reference; Continuous Discovery Habits Opportunity Solution
+  Tree (Torres 2021) 4-layer structure; Amazon PR/FAQ Working
+  Backwards method (Bryar & Carr 2021 Ch.4) with Press Release 9-item
+  and FAQ internal+customer structure. JP genealogy note on Ries's
+  explicit Lean lineage to 大野耐一 1978『トヨタ生産方式』.
+
+- **`standards/goals-and-metrics.md`** (tier 1, new, 262 lines) —
+  **the largest additive upgrade** in v4.10.0. planning-team v4.9.x
+  had **zero OKR coverage**; v4.10.0 adds full OKR specification:
+  origin at Intel 1970s (Grove 1983 *High Output Management*),
+  modern canonical (Doerr 2018 *Measure What Matters*) with formula
+  "I will [O] as measured by [KR]", 0.0-1.0 grading scale, 0.7 is
+  aspirational success floor, 3-5 KRs per O. Also adds North Star
+  Metric (Ellis & Brown 2017 *Hacking Growth*) with selection
+  criteria, AARRR Pirate Metrics (McClure 2007, 5-stage canonical),
+  Goals / Non-Goals convention (Ubl 2020 "Design Docs at Google"
+  personal blog as community-established de-facto canonical).
+
+- **`standards/spec-completeness-standards.md`** (tier 2, new, 164
+  lines) — 5W2H completeness check with correct genealogy (Kipling
+  1902 "The Elephant's Child" 5W1H poetic origin → 1960s JUSE
+  Japanese quality movement added +2H → Ohno 1978 TPS book-form
+  popularization) — NOT purely "Japanese business convention" as
+  prior planning-team standards claimed. Per-letter mapping of 7
+  questions to PRODUCT-SPEC.md sections (Why/What/Who/When/Where/
+  How/How much). JP 企画 cultural anchoring via ヤング 1988 日譯
+  『アイデアのつくり方』(James Webb Young 1940 US original, but the
+  1988 Japanese translation with 竹内均 commentary is the canonical
+  edition in JP 企画 culture). Decision rationale rule: every "we
+  chose X" needs a "because Y". Full JP integration (highest JP
+  density of the 4 standards files).
+
+- **`checklists/market-validation.md`** (new, 132 lines) — fixes
+  the long-standing dangling MAY gate reference in SKILL.md that
+  pointed to a file that did not exist (a CHK-SKL-008 Resource
+  Manifest consistency failure). 5 checks (CHK-MKT-001 through 005)
+  covering customer validation, competitive landscape, market
+  sizing claims (FATAL if unsourced), regulatory/compliance claims
+  (FATAL if unsourced), go-to-market coherence. Lightweight sanity
+  check; defers deep market analysis to research-team's
+  `market-analysis` or `competitive-analysis` protocol.
+
+- **`research/grounding-v4.10.0.md`** (new, 569 lines) — complete
+  cluster-by-cluster primary source verification note. 9 framework
+  clusters covered: JTBD / Lean Startup / OKR / BMC-Lean Canvas /
+  DVF assumption frameworks / Product Discovery / Strategy (3C-VPC) /
+  Japanese 企画 methodology / North Star-AARRR-Goals-Non-Goals.
+  Appendix A: all primary-source ISBNs (audit trail). Appendix B:
+  open-access canonical URLs (used in standards file Primary Sources
+  sections). Maintainer-facing only per
+  `skill-team/protocols/grounding-research.md` Phase 3 rules;
+  not referenced by worker/evaluator at runtime.
+
+- **`SKILL.md` persona** — new primary-source discipline paragraph
+  naming the canonical authors planning-team anchors on: Christensen,
+  Adams, Ries, Grove, Doerr, Cagan, Bland, Osterwalder, 大前研一.
+
+- **`SKILL.md` Behavioral Rules** — 4 new planning-team-specific
+  discipline rules:
+  1. Primary-source discipline — every framework citation must name
+     the canonical author
+  2. Job Story template attribution — Adams (2016) Intercom, not
+     Christensen
+  3. 4 Big Risks is Cagan 2017, not Bland 2020 (Bland uses 3 axes)
+  4. MVP is learning, not shipping (Ries 2011)
+
+### Changed
+
+- **`standards/planning-frameworks.md`** — rewritten from 89 lines
+  of ungrounded prose to 292 lines of primary-source-anchored
+  framework reference. Coverage: JTBD with correct Job Story
+  template attribution to Adams 2016 Intercom, Business Model
+  Canvas (compact reference — full 9-block treatment stays in
+  research-team's `strategic-frameworks.md`), Lean Canvas with
+  authoritative Maurya 2022 4-block substitution mapping (Key
+  Partners → Unfair Advantage, Key Activities → Key Metrics, Key
+  Resources → Solution, Customer Relationships → Problem), Value
+  Proposition Canvas (Osterwalder et al. 2014), 4 Big Risks (Cagan
+  2017 *Inspired* 2nd ed Part III) as 4-axis canonical — NOT
+  Bland, Assumption Mapping (Bland & Osterwalder 2020) as the
+  3-axis DVF operational tool, 3C 分析 with full JP integration
+  (Japanese subheading, 大前 1975 Japanese original cite, Ohmae
+  1982 English expansion as secondary access point). JP genealogy
+  preamble with 4 anchors: ヤング 1988 / 大野 1978 / 三枝 1994 /
+  大前 1975.
+
+- **`protocols/product-spec-writing.md`** — all 5 phases now anchor
+  to the 4 standards files. Phase 1 Vision anchors to JTBD (Adams
+  2016 for Job Story, Christensen 2003/2016 HBR for theory), 3C
+  (大前 1975), North Star Metric (Ellis & Brown 2017). Phase 2
+  Concept anchors to VPC (Osterwalder et al. 2014). Phase 3 Scope
+  anchors to OKR format (Grove 1983 / Doerr 2018), Goals/Non-Goals
+  (Ubl 2020), 4 Big Risks (Cagan 2017), Assumption Mapping (Bland
+  & Osterwalder 2020), MVP-as-validated-learning (Ries 2011). Phase
+  4 Direction anchors to decision rationale rule, Lean Canvas,
+  AARRR (McClure 2007). Phase 5 Handoff adds 5W2H cross-check with
+  correct genealogy.
+
+- **`protocols/planning-brainstorming.md`** — 10-task checklist
+  anchored to specific standards references. Task 1 Spark references
+  ヤング 1988 5-step idea generation (材料収集 → 咀嚼 → 熟成 →
+  ひらめき → 具象化). Task 3 JTBD now explicitly uses Job Story
+  template with Adams (2016) Intercom attribution (NOT Christensen).
+  Task 4 Landscape anchors to Blank 2005 Customer Development +
+  3C 分析 Competitor lens. Task 7 Assumptions uses 4 Big Risks
+  (Cagan 2017) — with explicit note that 4-axis is Cagan not Bland.
+  Task 9 Scope Boundary anchors to Ubl 2020 Non-Goals convention.
+
+- **`checklists/product-spec-completeness.md`** — expanded from 7
+  checks (CHK-PROD-001 through 007) to 9 checks:
+  - CHK-PROD-001 Vision & Problem — now requires Job Story template
+    (Adams 2016) over "As a user" form
+  - CHK-PROD-002 Scope Definition — now requires Non-Goals to name
+    plausible rejected goals (Ubl 2020), not trivial exclusions;
+    MVP must be learning-minimum (Ries 2011), not smallest shippable
+  - **CHK-PROD-003 Assumption Discovery (NEW)** — top 3 assumptions
+    must map to 4 Big Risks (Cagan 2017) with named validation
+    approaches (Bland 2020)
+  - **CHK-PROD-008 5W2H Completeness Cross-Check (NEW)** — 7-letter
+    coverage per Kipling → JUSE → Ohno genealogy
+  - Renumbered existing checks to 004-005-006-007 (UX / Tech /
+    Decision Rationale / Handoff) and 009 (Formatting)
+
+- **`rubrics/cross-domain-consistency.md`** — expanded from 5 flags
+  (FLAG-XD-001 through 005) to 6 flags:
+  - Existing 4 flags updated to cross-reference grounded standards
+  - **FLAG-XD-005 Assumption → Risk Coverage (NEW)** — verifies that
+    every [ASSUMPTION] tag maps to one of the 4 Big Risks, and that
+    top 3 assumptions cover ≥2 distinct risk categories
+  - FLAG-XD-006 Terminology Consistency (renumbered from FLAG-XD-005)
+    — now checks Job Story vs user-story consistency
+
+- **`SKILL.md` Resource Manifest** — worker/evaluator now pass 4
+  standards files (previously 1). Both launch templates updated to
+  pass the full 4-file standards array.
+
+- **`SKILL.md` Worker launch template** — `### Input` now includes
+  `output_language` and `scope_clarity: {clear | unclear}` fields
+  for consistency with research-team v4.9.1 launch convention.
+  `scope_clarity=unclear` routes to planning-brainstorming first.
+
+- **`SKILL.md` Evaluator launch template** — now passes standards
+  array (for gates to verify claims map to primary sources) and
+  `output_language` field.
+
+- **`SKILL.md` frontmatter description** — adds "grounded in
+  primary-source product-management canon" language and names the
+  load-bearing frameworks (JTBD, Lean Startup, OKR, 4 Big Risks,
+  BMC/Lean Canvas). Satisfies CHK-SKL-002 by surfacing the
+  grounding in the description itself so downstream routers know
+  what planning-team now anchors on.
+
+- **`SKILL.md` When to Use** — MVP bullet now cites Ries 2011
+  ("minimum for validated learning, not smallest shippable feature
+  set") to reinforce the discipline.
+
+### Fixed
+
+- **Dangling MAY gate reference** — SKILL.md has referenced
+  `checklists/market-validation.md` as a MAY gate since v3.x, but
+  the file never actually existed (a CHK-SKL-008 Resource Manifest
+  consistency failure that the skill-coherence gate would have
+  caught). v4.10.0 creates the file properly.
+
+- **Prior 4-axis DVF misattribution** — planning-team v4.9.x listed
+  "Desirability / Feasibility / Viability / Usability" as 4-axis
+  assumption categories and (implicitly) attributed the framework
+  to Bland & Osterwalder. Bland uses only 3 axes (DVF). The 4-axis
+  version with Usability as a distinct fourth is **Marty Cagan's
+  Four Big Risks** from *Inspired* 2nd ed 2017 Part III. v4.10.0
+  corrects the attribution: the 4 Big Risks are cited to Cagan
+  (Value / Usability / Feasibility / Business Viability), and
+  Assumption Mapping is cited separately to Bland & Osterwalder 2020
+  as a 3-axis DVF operational tool (Impact × Evidence 2×2).
+
+- **Prior Job Story template misattribution** — planning-team v4.9.x
+  used the "When [situation], I want to [motivation], so I can
+  [outcome]" template under JTBD as if it were Christensen's. The
+  template is actually Paul Adams 2016-06-28 Intercom blog post
+  "How we accidentally invented Job Stories", later named "Job
+  Stories" by Alan Klement in *When Coffee and Kale Compete* (2018).
+  Christensen's 2003 book and 2016 HBR article never used this
+  sentence form. v4.10.0 cites Adams (2016) for the template and
+  Christensen (2003 / 2016 HBR) for the theory, separately.
+
+- **Prior 5W2H misattribution** — planning-team v4.9.x described
+  5W2H as "日本ビジネス慣習由來" ("derived from Japanese business
+  customs") as a single-origin claim. The correct genealogy is
+  multi-origin composite: Kipling 1902 poetic origin → late-19th-
+  century US journalism → 1960s JUSE Japanese quality movement
+  added +2H → Ohno 1978 TPS popularization. v4.10.0 spells out the
+  full genealogy in `spec-completeness-standards.md`.
+
+- **Prior 3C 分析 missing publication anchor** — planning-team
+  v4.9.x attributed 3C vaguely to "（大前研一）" without a citation.
+  v4.10.0 cites 大前研一 (1975)『企業参謀』プレジデント社 as the
+  Japanese original and Ohmae (1982) *The Mind of the Strategist*
+  McGraw-Hill as the English expansion (~60% rewritten, not a
+  direct translation).
+
+### Notes
+
+planning-team does NOT adopt the quick/deep cost modes that
+research-team introduced in v4.9.1. Planning work has a different
+cost profile — the dominant cost is human-clarification loops (the
+10-task brainstorming checklist), not LLM token consumption per
+source. Planning-team's natural cost tiering is already handled by
+its 3 existing workflows (Scope Refinement < Major Direction Change <
+New Project) and does not need a separate mode parameter. If future
+usage shows that the New Project workflow is too expensive by
+default, a cost-aware mode can be added in a follow-up PATCH.
+
+SKILL.md line count: 225 → 302. Still well within the 500-line
+budget. No skill-team CI regression expected
+(`check-skill-structure.py`).
+
 ## [4.9.1] — 2026-04-11
 
 research-team cost-aware research modes (quick / deep) with
