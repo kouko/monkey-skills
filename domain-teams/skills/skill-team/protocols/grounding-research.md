@@ -64,8 +64,9 @@ domain-teams/skills/{team-name}/research/grounding-v{X.Y.Z}.md
 
 where `{X.Y.Z}` is the plugin version that will land the grounding
 work (for example, `grounding-v4.8.0.md` for design-team's v4.8.0
-refactor). See `file-conventions.md` §Directory Semantics and
-§Research Subdirectory Convention for the full rules:
+refactor). See `file-conventions.md` §Directory Semantics (research/
+row) and `skill-md-structure.md` §Research Subdirectory Convention
+for the full rules:
 
 - One file per grounding event; no dates in filename (dates are in
   git log and frontmatter)

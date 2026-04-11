@@ -172,17 +172,41 @@ holds primary-source grounding audit trails produced during grounding
 refactors. See `file-conventions.md` §Directory Semantics for the full
 definition. Key points for SKILL.md authors:
 
-### SKILL.md does NOT reference research/ files
+### SKILL.md and runtime files do NOT structurally depend on research/
 
-- `research/` is **maintainer-facing only**. Worker and evaluator agents
-  do not read it at runtime.
-- Do NOT list `research/*.md` in the Resource Manifest section.
-- Do NOT include `research/*.md` in worker or evaluator launch template
-  `standards` arrays.
-- Do NOT cross-reference research files from standards, protocols, or
-  gate files. Standards cite primary sources directly in their own
+The rule below is **about runtime dependencies**, not about whether the
+letters `research/` are allowed to appear anywhere in SKILL.md. The
+goal is to keep worker and evaluator agents from trying to Read
+research files at runtime. Structural references cause runtime reads;
+prose rationale references do not.
+
+**Forbidden (structural — cause runtime reads):**
+
+- Listing `research/*.md` in the Resource Manifest section.
+- Including `research/*.md` in worker or evaluator launch template
+  `standards` arrays, `protocol:` field, or `gate_file:` field.
+- Cross-referencing research files from other standards, protocols, or
+  gate files in a way that implies the worker/evaluator should read
+  them (e.g. "see `research/grounding-v4.8.0.md` for the full SC list").
+  Standards must cite primary sources directly in their own
   `## Primary Sources` section; the research note is the audit trail
   for *why those sources were chosen*, not a runtime dependency.
+
+**Permitted (prose — maintainer-facing rationale):**
+
+- Mentioning `research/grounding-v{X.Y.Z}.md` by name in SKILL.md body
+  sections whose purpose is maintainer-facing rationale (e.g.
+  `## Note on Global Context`, `## Appendix`, or CHANGELOG-adjacent
+  prose), provided the reference is a pointer for human reviewers
+  and does not appear in any field that an agent launch would
+  interpret as a file path to Read.
+- Referencing research notes in commit messages, PR descriptions, and
+  repo-level documentation outside the skill directory.
+
+The distinguishing test: "Would a worker or evaluator agent, following
+its launch template literally, end up calling the Read tool on this
+path?" If yes → structural reference → forbidden. If no → prose
+reference → permitted.
 
 ### When research/ exists vs doesn't
 

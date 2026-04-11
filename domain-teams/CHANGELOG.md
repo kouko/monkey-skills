@@ -7,6 +7,219 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.1] — 2026-04-11
+
+Skill-team research-note convention cleanup patch — consolidates
+seven related fixes surfaced by the v4.8.0 design-team dogfood
+(Skill Coherence and Commit Split gates) plus a second-pass dogfood
+on this very branch. All changes are modify-only (no new files, no
+new grounded content). First PATCH bump codified under the refined
+CHK-CMT-005 three-way distinction between MINOR (additive) and
+PATCH (modify-only).
+
+**Why seven fixes in one patch**: the initial Track B scope
+identified two literal-vs-intent gaps (CHK-CMT-001 and
+skill-md-structure.md §Research Subdirectory Convention). Running
+skill-team's own dogfood against a first-pass fix surfaced four
+additional drifts in commit-convention.md, grounding-principle.md,
+and grounding-research.md — all caused by the same root issue:
+the research-note convention landed in v4.7.0 but its downstream
+references in commit-convention.md, grounding-principle.md,
+grounding-research.md, and skill-completeness-checklist.md were
+never updated. Re-running dogfood after the second-pass fix
+surfaced one more instance of the same drift in
+skill-completeness-checklist.md CHK-SKL-012. Fixing only some
+instances would have left main with the same root issue partially
+unfixed, so the scope was expanded twice to land all seven fixes
+as a single consistent cleanup.
+
+Honest disclosure: this branch went through THREE commit-set
+generations:
+- Generation 1 (3 fixes): commits 0a10ac4 + 45ae04c + 9d0c050.
+  Dogfood surfaced 4 more drifts.
+- Generation 2 (6 fixes): soft-reset + commits 8876323 + 5d1c782
+  + b40eb7b. Re-dogfood surfaced 1 more drift.
+- Generation 3 (7 fixes, FINAL): soft-reset of commits 2/3 + 3/3
+  only (commit 1/3 8876323 preserved) + commits e93284a + new 3/3.
+
+This is the v4.6.1 self-bootstrap precedent extended over multiple
+dogfood iterations. Each iteration is honest about what it found
+and what it missed.
+
+### Changed
+
+#### Standards
+
+- `skill-team/standards/skill-md-structure.md` §Research Subdirectory
+  Convention — the section heading "SKILL.md does NOT reference
+  research/ files" was over-broad; it was interpreted strictly to
+  prohibit any mention of `research/*.md` anywhere in SKILL.md, even
+  in maintainer-facing prose sections like `## Note on Global
+  Context`. The original intent was narrower: prevent worker and
+  evaluator agents from attempting to Read research files at runtime.
+  This release rewrites the section with a runtime-dependency scope:
+  - **Forbidden (structural)**: Resource Manifest entries, launch
+    template `standards` arrays, `gate_file:` / `protocol:` fields,
+    and cross-file references that imply runtime reads.
+  - **Permitted (prose)**: rationale mentions in `## Note on Global
+    Context`, `## Appendix`, commit messages, PR descriptions, and
+    CHANGELOG entries, provided they do not appear in any field an
+    agent launch interprets as a file path to Read.
+  - Distinguishing test: "Would a worker or evaluator, following its
+    launch template literally, end up calling the Read tool on this
+    path?" If yes → forbidden; if no → permitted.
+  - Discovery: v4.8.0 Skill Coherence gate flagged
+    `design-team/SKILL.md:61` as an "out of rubric scope" observation
+    because the `## Note on Global Context` section mentions
+    `research/grounding-v4.8.0.md` in prose. The reference is
+    legitimate rationale and should stand.
+
+- `skill-team/standards/commit-convention.md` §Commit 1/3 — added
+  optional bullet explicitly permitting a single
+  `research/grounding-v{X.Y.Z}.md` in commit 1 alongside
+  `standards/*.md`, per the v4.7.0 research-note convention.
+  Previously the section was silent on the research note, leaving
+  `commit-split-checklist.md` CHK-CMT-001 with no grounding anchor.
+
+- `skill-team/standards/commit-convention.md` §Commit 3/3 — SKILL.md
+  changes are now REQUIRED for additive MINOR bumps (where new
+  structure must be wired into the discovery surface) and OPTIONAL
+  for modify-only PATCH bumps (where no rewiring is needed). Also
+  explicitly lists `CHANGELOG.md` as part of commit 3/3 contents
+  (previously implicit).
+
+- `skill-team/standards/commit-convention.md` §Semver table —
+  rewrote the PATCH/MINOR/MAJOR rows with the distinguishing rule
+  "does this branch introduce new files that worker or evaluator
+  agents will Read at runtime?" Added explicit clause permitting
+  3-commit PATCH splits when SKILL.md rewiring is not needed.
+  Removed the old "A 3-commit refactor always bumps at least MINOR"
+  line which contradicted observed precedent (v4.6.1, v4.7.1,
+  v4.7.2 were all 3-commit PATCHes).
+
+- `skill-team/standards/grounding-principle.md` §The Research
+  Workflow step 4 — fixed broken cross-reference. Previously
+  pointed to `file-conventions.md §Research Subdirectory
+  Convention` which does not exist. Now correctly points to
+  `file-conventions.md §Directory Semantics (research/ row)` AND
+  `skill-md-structure.md §Research Subdirectory Convention`.
+
+#### Gates
+
+- `skill-team/checklists/commit-split-checklist.md` CHK-CMT-001 — the
+  literal text said "ONLY changes to files under `standards/` of the
+  target team", but the v4.7.0 research-note convention requires
+  commit 1/3 to also include the layer-3 research note at
+  `research/grounding-v{X.Y.Z}.md`. The v4.8.0 dogfood evaluator had
+  to manually reconcile the literal text against
+  `standards/grounding-principle.md` §The Research Workflow step 4
+  and `standards/file-conventions.md` §Directory Semantics.
+  CHK-CMT-001 now explicitly allows the research note alongside
+  `standards/` in commit 1/3.
+
+- `skill-team/checklists/commit-split-checklist.md` CHK-CMT-003 —
+  previously said "contains SKILL.md changes AND a version bump",
+  forcing every 3-commit branch to modify SKILL.md even when there
+  was nothing to rewire. Now distinguishes by bump level: REQUIRED
+  for additive MINOR bumps, OPTIONAL for modify-only PATCH bumps.
+  Must always contain plugin.json bump AND CHANGELOG entry. Without
+  this relaxation, the v4.8.1 PATCH itself would FAIL_FATAL its own
+  dogfood because commit 3/3 only touches plugin.json + CHANGELOG.
+
+- `skill-team/checklists/commit-split-checklist.md` CHK-CMT-005 — the
+  literal text said "PATCH-only bumps are rejected for 3-commit
+  splits", forcing every 3-commit branch to be MINOR. Observed
+  precedent contradicts this: v4.6.1, v4.7.1, and v4.7.2 were all
+  3-commit PATCHes for skill-team convention fixes. CHK-CMT-005 now
+  defines a three-way distinction:
+  - **MINOR bump** — additive work that introduces new grounded
+    content or new convention infrastructure (grounding refactors,
+    brand-new teams, new standards / protocols / gates, research-note
+    infrastructure, backfilled research files). Example precedents:
+    v4.2.0, v4.7.0, v4.8.0.
+  - **PATCH bump** — modify-only skill-team convention clarification,
+    policy fix, or meta-improvement that does not introduce new files
+    or new grounded content. Example precedents: v4.6.1, v4.7.1,
+    v4.7.2, and this release (v4.8.1).
+  - **MAJOR bump** — requires explicit authorization in the PR
+    description; never applied automatically.
+  - Distinguishing rule: "Does this branch introduce new files that
+    will be read by worker or evaluator agents at runtime?" Yes →
+    MINOR. No (only modifies existing runtime files) → PATCH.
+
+- `skill-team/checklists/skill-completeness-checklist.md` CHK-SKL-012
+  — fixed broken cross-reference. Previously pointed to
+  `standards/file-conventions.md §Research Subdirectory Convention`
+  which does not exist (file-conventions.md has §Directory Semantics
+  with a research/ row but no top-level §Research Subdirectory
+  Convention heading). Now points correctly to BOTH authoritative
+  locations: `file-conventions.md §Directory Semantics (research/
+  row)` AND `skill-md-structure.md §Research Subdirectory
+  Convention`. Same drift pattern as the grounding-principle.md and
+  grounding-research.md fixes — surfaced by the second-pass dogfood
+  on this branch.
+
+#### Protocols
+
+- `skill-team/protocols/grounding-research.md` Phase 3 — fixed
+  broken cross-reference. Previously pointed to
+  `file-conventions.md §Directory Semantics and §Research
+  Subdirectory Convention` — the second heading does not exist in
+  file-conventions.md (only in skill-md-structure.md). Now points
+  correctly to `file-conventions.md §Directory Semantics
+  (research/ row)` AND `skill-md-structure.md §Research Subdirectory
+  Convention`.
+
+### Meta
+
+This is the first self-applied PATCH bump under the refined
+CHK-CMT-005 three-way distinction. The distinguishing rule correctly
+identifies v4.8.1 as PATCH: the branch touches exactly 6 existing
+runtime files (`skill-md-structure.md`, `commit-convention.md`,
+`grounding-principle.md`, `commit-split-checklist.md`,
+`grounding-research.md`, `skill-completeness-checklist.md`) plus
+the plugin version file and this CHANGELOG. Zero new files added.
+
+**Dogfood status**: the 3-commit branch was evaluated against the
+**refined** CHK-CMT-001 / CHK-CMT-003 / CHK-CMT-005 wording it
+introduces (bootstrapped self-evaluation; the gate's v4.8.1 text
+defines the rule that the v4.8.1 branch passes). This is analogous
+to the v4.6.1 self-patch precedent — skill-team can only dogfood
+its own convention fixes against the post-fix version of the
+convention.
+
+**Three-generation scope-expansion disclosure**: this branch went
+through three commit-set generations to reach the final 7-fix
+scope. Each generation's dogfood surfaced additional drifts caused
+by the same root issue — the v4.7.0 research-note convention was
+landed but its downstream references in 5 other runtime files were
+never updated.
+
+- **Generation 1** (3 fixes, commits 0a10ac4 + 45ae04c + 9d0c050):
+  fixed skill-md-structure §Research Subdirectory Convention scope
+  + CHK-CMT-001 + CHK-CMT-005. Dogfood surfaced 4 more drifts:
+  commit-convention.md §Commit 1/3 one-bullet-behind, commit-
+  convention.md:137 direct contradiction, grounding-principle.md
+  :73 broken cross-ref, grounding-research.md:67-68 broken cross-
+  ref, plus CHK-CMT-003 literal-vs-intent gap.
+
+- **Generation 2** (6 fixes, soft-reset + 8876323 + 5d1c782 +
+  b40eb7b): added the 4 surfaced fixes + CHK-CMT-003. Re-dogfood
+  surfaced 1 more instance of the same drift pattern in
+  skill-completeness-checklist.md CHK-SKL-012.
+
+- **Generation 3** (7 fixes, soft-reset of commits 2/3 + 3/3 only,
+  commit 1/3 8876323 preserved, + e93284a + new 3/3): added the
+  CHK-SKL-012 fix to commit 2/3, updated CHANGELOG and bumped
+  plugin in commit 3/3. Final dogfood expected to PASS with no new
+  drifts.
+
+The pre-publication commit history was rewritten via local soft-
+resets twice. None of the rewritten generations were ever pushed
+to origin, so no shared history was disturbed. The narrative is
+preserved in this CHANGELOG and in the v4.6.1 self-bootstrap
+precedent.
+
 ## [4.8.0] — 2026-04-11
 
 ### Added
