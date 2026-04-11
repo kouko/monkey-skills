@@ -5,6 +5,26 @@
 - **意味のイノベーション**（Verganti / 八重樫文）— 製品の社会的意味を根本的に革新
 - **無意識の設計**（深澤直人）— アフォーダンスを通じた直感的行為への最適化
 
+## Primary Sources
+
+Each phase of this protocol is grounded in a tier-classified standard
+file. Consult the listed standard for primary-source citations and
+load-bearing definitions; do not re-spell them here.
+
+- **Phase 1 感性工学 / Kansei Engineering** → `standards/kansei-engineering-and-sd.md`
+  (長町三生 1989 『感性工学』海文堂出版; Nagamachi 1995 *IJIE* 15(1):3-11;
+  Osgood, Suci & Tannenbaum 1957 *The Measurement of Meaning* for SD 法 origin).
+- **Phase 2 意味のイノベーション / Meaning Innovation** → `standards/ux-temporal-and-quality-models.md`
+  §Meaning Innovation (Verganti 2009 *Design-Driven Innovation*, Harvard Business
+  Review Press — **NOT** 黒須; 意味のイノベーション is from Verganti, see that
+  standard's §Critical Attribution Corrections).
+- **Phase 3 無意識の設計 / Without Thought** → `standards/japanese-design-aesthetics.md`
+  §6 (深澤直人 2005 『デザインの輪郭』TOTO 出版; rooted in Gibson's ecological
+  affordance theory).
+- **Phase 4 統合・引き算・余白** → `standards/japanese-design-aesthetics.md`
+  §1 引き算のデザイン (原研哉 2003 『デザインのデザイン』岩波書店) + §2 白／余白
+  (原研哉 2008 『白』中央公論新社).
+
 ## Protocol
 
 ### Phase 0: Research & Insight（リサーチとインサイト開発）

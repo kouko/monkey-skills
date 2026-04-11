@@ -3,6 +3,36 @@
 おもてなし — ユーザーが問題に遭遇する前に解決する。
 `rubrics/ux-strategy-gate.md`（evaluator gate）と対になるプロトコル。
 
+## Primary Sources
+
+This protocol targets Garrett's Strategy + Scope planes
+(`standards/garrett-elements-of-ux.md` §Gate Scope Partition) and
+draws its temporal, quality, and meaning models from
+`standards/ux-temporal-and-quality-models.md`.
+
+- **Step 2 temporal journey (4 期間 UX)** → `standards/ux-temporal-and-quality-models.md`
+  §The 4 Temporal UX Phases. Primary source: Roto, Law, Vermeeren &
+  Hoonhout (2011) *User Experience White Paper*, Dagstuhl Seminar
+  10373; introduced to the Japanese HCD community by 安藤昌也 (2016)
+  『UX デザインの教科書』 §2.2.4. The 4 phases (予期的 / 一時的 /
+  エピソード的 / 累積的 UX) are **not a sequence** — for a long-term
+  user, all 4 are active simultaneously.
+- **Step 3 strategy × scope (Garrett)** → `standards/garrett-elements-of-ux.md`
+  §The 5 Planes. Strategy = user needs × business objectives;
+  Scope = functional + content requirements. Both planes live inside
+  the `ux-strategy-gate`.
+- **Step 6 meaning coherence** → `standards/ux-temporal-and-quality-models.md`
+  §Meaning Innovation. **意味のイノベーション is from Verganti 2009
+  *Design-Driven Innovation*, not 黒須.** 黒須 2020 『UX 原論』
+  Ch.11 §11.3 defines a 2×2 **4 Quality Regions** matrix (客観 / 主観
+  × 設計時 / 利用時) — it has no dimension called 意味性. Any
+  load-bearing 意味 claim must cite Verganti; see that standard's
+  §Critical Attribution Corrections for the 3D-quality →
+  4-quality-regions and 黒須 → Verganti attribution fixes.
+- **HCD process baseline (all steps)** → `standards/ux-temporal-and-quality-models.md`
+  §Human-Centred Design Process (ISO 9241-210:2019 / JIS Z 8530:2021,
+  6 principles).
+
 ## Protocol
 
 1. **Define user & business goals**: 主要ユーザーは誰か？ そのコアニーズは？

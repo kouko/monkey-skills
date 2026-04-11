@@ -3,6 +3,30 @@
 感性工学（長町三生）、引き算のデザイン、わびさびに基づくビジュアル設計プロトコル。
 `rubrics/visual-gate.md`（evaluator gate）と対になるプロトコル。
 
+## Primary Sources
+
+This protocol targets Garrett's Surface plane
+(`standards/garrett-elements-of-ux.md` §Gate Scope Partition) and
+grounds its Kansei, subtractive-design, and aesthetic steps in two
+tier-classified standards:
+
+- **Step 1 Kansei targets + Step 7 SD 法 coherence check** →
+  `standards/kansei-engineering-and-sd.md` (長町三生 1989 『感性工学』
+  海文堂出版; Nagamachi 1995 *IJIE* 15(1):3-11; Osgood, Suci &
+  Tannenbaum 1957 *The Measurement of Meaning*). The SD method is a
+  **7-point bipolar** scale and decomposes into Osgood's 3 factors
+  (Evaluation / Potency / Activity); never 5-point, never unipolar.
+  See that standard's §Critical Attribution Corrections for the
+  Osgood 1957 primary replacing earlier J-SEMS / J-STAGE / AIIT
+  citations.
+- **Step 2 引き算 / Step 3 余白 (Ma) / Step 6 佇まい / わびさび** →
+  `standards/japanese-design-aesthetics.md` §1 引き算のデザイン
+  (原研哉 2003), §2 白 / 余白 (原研哉 2008 『白』 Ch.3), §3 間 ma
+  (磯崎新 2003 『建築における「日本的なもの」』), §4 佇まい
+  (原研哉 2003 Ch.6 「日本にいる私」), §5 わびさび (Koren 1994).
+- **Surface plane scope (no overreach into Structure / Skeleton)** →
+  `standards/garrett-elements-of-ux.md`.
+
 ## Protocol
 
 1. **Establish Kansei targets**: デザインが喚起すべき感情を定める。
