@@ -7,6 +7,208 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.0] — 2026-04-11
+
+### Added
+
+- **7 new design-team standards** (Phase 4 synthesis of Phase 2
+  grounding research, `research/grounding-v4.8.0.md`):
+  - `nielsen-norman-heuristics.md` (Tier 1) — Jakob Nielsen 10
+    Usability Heuristics (1994, re-published 2024) + Donald Norman
+    2013 *The Design of Everyday Things* affordance / signifiers /
+    mappings / 7-stage action cycle. Primary anchor for interaction
+    quality review.
+  - `garrett-elements-of-ux.md` (Tier 1) — Jesse James Garrett 2010
+    *The Elements of User Experience* 5-plane model (strategy /
+    scope / structure / skeleton / surface). Primary anchor for UX
+    structural reasoning.
+  - `platform-conventions.md` (Tier 2) — Apple Human Interface
+    Guidelines / Google Material Design 3 / Microsoft Fluent 2
+    platform conventions and component semantics. Tier 2 because LLM
+    parametric knowledge mixes up version-specific component states.
+  - `ooui-and-object-modeling.md` (Tier 2) — Sophia Prater 2015/2016
+    OOUX / ORCA + 上野学 2020 *オブジェクト指向 UI デザイン*
+    co-canonical object modeling for UI. Tier 2 because method
+    details drift in LLM recall.
+  - `kansei-engineering-and-sd.md` (Tier 3) — 長町三生 1989
+    *感性工学のおはなし* kansei word collection → SD scale →
+    factor analysis → design element mapping methodology.
+    Fully self-contained 173-line body per Tier 3 self-containment
+    test (no parallel Anglo framework; LLM cold-query hallucinates).
+  - `japanese-design-aesthetics.md` (Tier 3) — 原研哉 2003
+    *デザインのデザイン* and 2008 *白* (引き算 / 白 / 佇まい) +
+    深澤直人 2005 *デザインの輪郭* (無意識のデザイン / Without
+    Thought). Fully self-contained 199-line body.
+  - `ux-temporal-and-quality-models.md` (Tier 3) — 安藤昌也 2016
+    *UX デザインの教科書* 4 temporal UX phases (anticipated /
+    momentary / episodic / cumulative, as JP introducer of Roto et
+    al. 2011 UX White Paper) + 黒須正明 2020 *UX 原論* Ch.11 §11.3
+    4 Quality Regions 2×2 matrix. Fully self-contained 214-line body
+    including Roto 2011 upstream anchor citation.
+
+- **1 upgraded standard**: `wcag-baseline.md` (Tier 2) — explicit
+  Primary Sources section, Success Criteria numbering table, and
+  SC 2.5.8 (24×24 AA) / SC 2.5.5 (44×44 AAA) touch target
+  disambiguation per WCAG 2.2 (recommendation 2024-12-12).
+
+- `design-team/research/grounding-v4.8.0.md` — 1065-line Phase 2
+  grounding research audit trail. Documents 24 primary sources
+  independently verified (Norman 2013, Nielsen 1994/2024, WCAG 2.2,
+  Garrett 2010, Verganti 2009, Prater 2015/2016, 長町 1989, 深澤
+  2005, 原研哉 2003/2008, 安藤 2016, 黒須 2020, 上野 2020, Roto et
+  al. 2011, Apple HIG, Material 3, Fluent 2, and others). Captures
+  the 12 implicit JP methodology anchors surfaced during research
+  that justified FULL JP integration strategy.
+
+- **design-team SKILL.md new sections**:
+  - `## Note on Global Context` — declares FULL JP integration
+    strategy (2nd team after qa-team v4.2.0). Documents that 4 of 8
+    standards ground on JP primary sources as load-bearing SSOT, not
+    preamble decoration. Comparison table across all 5 grounded
+    teams and their JP strategies.
+  - `## When NOT to Use` — explicit delegations to code-team,
+    qa-team, devops-team, docs-team, research-team, planning-team,
+    and skill-team.
+  - `## Worker BLOCKED Handling` — standard BLOCKED handling pattern
+    (do NOT proceed to gates, present reason, wait for user input).
+  - Worker launch template — 8-standard array in
+    `## Agent Launch Protocol`. design-team previously had only an
+    evaluator launch template.
+  - Tier annotations — every entry in the Resource Manifest standards
+    list is now prefixed with its tier (T1 × 2: nielsen-norman,
+    garrett; T2 × 3: wcag, platform-conventions, ooui; T3 × 3:
+    kansei, japanese-aesthetics, ux-temporal).
+
+### Changed
+
+- **design-team SKILL.md persona** — new "anchored on eleven primary
+  sources" clause in prose form: Donald Norman 2013, Jakob Nielsen
+  1994/2024, W3C WCAG 2.2 2024-12-12, Jesse James Garrett 2010,
+  Roberto Verganti 2009, Sophia Prater 2015/2016, 長町三生 1989,
+  深澤直人 2005, 原研哉 2003/2008, 安藤昌也 2016, 黒須正明 2020,
+  上野学 2020. Follows the code-team v4.6.0 persona shape.
+
+- **4 protocols now cite primary sources**:
+  - `protocols/design-brainstorming.md` — Norman 2013 action cycle +
+    Verganti 2009 meaning innovation framing
+  - `protocols/ui-interaction.md` — Nielsen 10 heuristics + WCAG 2.2
+    SC references + Apple HIG / Material 3 / Fluent 2 platform
+    conventions
+  - `protocols/ux-strategy.md` — Garrett 2010 5-plane model + 安藤
+    2016 4 temporal phases + 黒須 2020 4 Quality Regions + 長町 1989
+    感性工学 + OOUX/OOUI co-canonical
+  - `protocols/visual-design.md` — 原研哉 引き算 / 白 / 佇まい +
+    深澤 無意識のデザイン + WCAG 2.2 contrast SC
+
+- **4 gates now cite primary sources**:
+  - `checklists/a11y-checklist.md` — each CHK-A11Y item annotated
+    with its WCAG 2.2 Success Criterion number + level (A / AA / AAA).
+    Touch target correction: SC 2.5.8 = 24×24 CSS px AA (NEW in
+    WCAG 2.2); SC 2.5.5 = 44×44 CSS px AAA. The previous bare
+    "44×44 minimum" claim was a conflation of the AA and AAA targets.
+  - `rubrics/ui-interaction-gate.md` — Nielsen 10 heuristics +
+    Norman 2013 + platform conventions citations
+  - `rubrics/ux-strategy-gate.md` — **3 critical attribution
+    corrections landed**:
+    - "3D Quality" (which does not exist as a canonical model in any
+      primary source) → corrected to 黒須正明 2020 *UX 原論* Ch.11
+      §11.3 **4 Quality Regions** (objective / subjective ×
+      designer / user 2×2 matrix).
+    - 意味のイノベーション (meaning innovation) misattributed to
+      黒須 → corrected to **Roberto Verganti 2009
+      *Design-Driven Innovation*** (Harvard Business Review Press).
+      黒須 2020 does NOT treat meaning innovation; Verganti does.
+    - 4 temporal UX dimensions (anticipated / momentary / episodic /
+      cumulative) previously floating without citation → grounded in
+      **Roto, Law, Vermeeren, Hoonhout eds. 2011** UX White Paper
+      (upstream Anglo source) + 安藤昌也 2016 §2.2.4 (JP introducer).
+  - `rubrics/visual-gate.md` — **5 anti-pattern citations removed**
+    and replaced with primary sources. The removed citations (J-SEMS,
+    AIIT, KOGEI STANDARD, studio-tabi, Wikipedia, btrax blog) were
+    secondary / blog / marketing sources that should never have
+    been used as normative references in a grounded gate. Replaced
+    with 原研哉 2003/2008, 深澤 2005 (for aesthetic vocabulary) and
+    Norman 2013, Nielsen 1994/2024 (for usability dimensions).
+
+- **MAY gate table format fixed**: 2-column `Gate | File` →
+  3-column `Gate | Trigger | File` per
+  `skill-team/standards/skill-md-structure.md` §Quality Gates
+  Sub-Section Rules. Trigger: "Visual design audit requested, or
+  visual design review needed for production PR".
+
+- **Behavioral Rules and Agents sections promoted** from nested
+  `### Behavioral Rules` / `### Agents` (under Resource Manifest) to
+  top-level `## Behavioral Rules` / `## Agents`. Aligns design-team
+  with qa-team v4.2.0 and code-team v4.6.0 precedent where these
+  sections are top-level.
+
+- **design-team Resource Manifest expanded** from 1 standard
+  (`wcag-baseline.md` only) to all 8 standards with tier annotations.
+  Worker and evaluator launch templates updated with the 8-standard
+  array.
+
+### JP integration decision
+
+design-team v4.8.0 is the **second team after qa-team v4.2.0 to
+declare FULL JP integration** (per
+`skill-team/standards/grounding-principle.md` Japanese Integration
+Strategy). 4 of 8 standards ground on JP primary sources as
+load-bearing structural SSOT (not preamble decoration):
+
+- `kansei-engineering-and-sd.md` (Tier 3) — 長町 1989 感性工学
+- `japanese-design-aesthetics.md` (Tier 3) — 原研哉 + 深澤
+- `ux-temporal-and-quality-models.md` (Tier 3) — 安藤 + 黒須
+- `ooui-and-object-modeling.md` (Tier 2) — 上野 2020 co-canonical
+  with Prater
+
+**Rationale**: Phase 2 research (`research/grounding-v4.8.0.md`)
+surfaced 12 implicit JP methodology anchors already functioning as
+structural SSOT in existing design-team protocols and rubrics.
+Making the grounding formal just aligns the standards layer with
+what the protocols already assumed. Contrast with code-team (preamble
+integration — no parallel JP code-craft canon) and devops-team (no
+overlay — SRE / DORA / 12-Factor are Anglo-only).
+
+### v4.7.2 policy compliance (first real application)
+
+design-team v4.8.0 is the **first team grounded under the v4.7.2
+tier classification + body self-containment + ISBN removal policy**.
+Compliance highlights:
+
+- **All 8 standards declare `tier:` in frontmatter** (T1 × 2, T2 × 3,
+  T3 × 3) per `skill-team/standards/grounding-principle.md`
+  §3-Tier Parametric Classification.
+- **Tier 3 files have fully self-contained bodies** per the
+  self-containment test: kansei-engineering-and-sd.md 173 lines,
+  japanese-design-aesthetics.md 199 lines, ux-temporal-and-quality-
+  models.md 214 lines. Each Tier 3 body can be acted on without
+  relying on citation-triggered parametric recall — critical
+  because cold-query hallucinates on 黒須 4-quality regions, 長町
+  感性工学, and 深澤 無意識のデザイン.
+- **Zero ISBN strings in any Primary Sources bullet** per v4.7.2
+  per-source minimum field list (Author / Year / Title / URL if
+  web-accessible / one-line rationale; ISBN demoted to layer 3
+  research note).
+- **Critical Attribution Corrections consolidated** into 4 dedicated
+  sections (in wcag-baseline.md, kansei-engineering-and-sd.md,
+  japanese-design-aesthetics.md, and ux-temporal-and-quality-
+  models.md) per the Compact+Admonitions rule — not scattered as
+  inline Admonition blocks.
+
+### design-team v4.8.0 achievement summary
+
+- **5th grounded team** (after qa / docs / devops / code)
+- **2nd team with FULL JP integration** (after qa-team v4.2.0)
+- **1st team grounded under v4.7.2 policy** (tier classification +
+  body self-containment + ISBN removal)
+- 8 standards with tier frontmatter + Compact+Admonitions style +
+  zero ISBN in Primary Sources
+- 3 critical attribution corrections landed in ux-strategy-gate.md
+  (3D Quality → 4 Quality Regions, 意味性 → Verganti 2009,
+  Roto 2011 as upstream anchor for 安藤 2016)
+- 5 anti-pattern secondary-source citations removed from
+  visual-gate.md
+
 ## [4.7.2] — 2026-04-11
 
 ### Changed
