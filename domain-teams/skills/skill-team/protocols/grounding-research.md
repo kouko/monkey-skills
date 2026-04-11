@@ -135,8 +135,9 @@ For each cluster of related findings, plan one standards file:
 ```
 {authoritative-name}.md
 Purpose: {what claims this standard anchors}
-Primary sources: {2–5 URLs / book citations}
-Estimated length: {60–140 lines}
+Primary sources: {2–5 URLs / book citations, formatted per §Citation Density Rule}
+Critical attribution corrections: {any anti-drift corrections, if applicable}
+Estimated length: {60–160 lines}
 Load-bearing claims covered: {list}
 ```
 
@@ -144,6 +145,73 @@ Standards should be single-topic. If findings span two topics, split
 into two standards files.
 
 Typical output from phase 4 is a plan listing 3–6 standards to write.
+
+### Citation style for each standards file
+
+**Apply the Compact+Admonitions style** documented in
+`../standards/grounding-principle.md` §Citation Density Rule. Each
+standards file produced by this phase MUST contain:
+
+1. A `## Primary Sources` section with one bullet per source, each
+   containing ONLY the mandatory fields: author / year / title /
+   ISBN or URL / one-line load-bearing rationale.
+2. (Optional but recommended for first-time-grounded topics) A
+   `## Critical Attribution Corrections` section placed immediately
+   after `## Primary Sources`, consolidating any anti-drift
+   correction blocks as standalone paragraphs (not inline
+   Admonitions in the body).
+
+**Do NOT** include DOIs, translator names, supplementary
+bibliographies, subchapter titles, or publisher verbosity in the
+Primary Sources section — those details belong in the layer 3
+research note (`research/grounding-v{X.Y.Z}.md`), which you already
+produced in Phase 3.
+
+### Minimal template for a Primary Sources section
+
+```markdown
+## Primary Sources
+
+- **{Author} ({Year})** *{Title}*, {Publisher short name}. ISBN {canonical ISBN} or URL. {One-line why this standard cites it — chapter reference if specific.}
+- **{Author} ({Year})** *{Title}*, {Publisher short name}. {ISBN or URL}. {One-line why.}
+- {... 2 to 5 sources total ...}
+```
+
+### Minimal template for a Critical Attribution Corrections section
+
+Only add this section when the grounding research surfaced concrete
+attribution errors from earlier ungrounded versions. Otherwise omit
+entirely.
+
+```markdown
+## Critical Attribution Corrections
+
+### {Subject of correction}
+
+Earlier attribution {X} was wrong ({brief context — e.g. "appeared
+in ux-strategy-gate.md L42 of the pre-grounding version"}). The
+correct attribution is {Y}, grounded in {primary source from this
+standard's Primary Sources section above}. Do NOT cite {X} in this
+or downstream files.
+
+### {Subject of next correction}
+…
+```
+
+### Anti-patterns in Phase 4 output
+
+- ❌ Producing a `## Primary Sources` section that reproduces the
+  research note's full cluster-by-cluster citation table — layer 2
+  is not an audit trail
+- ❌ Scattering `> ⚠️ Correction` Admonitions in the body of the
+  standards file instead of consolidating them in
+  `## Critical Attribution Corrections`
+- ❌ Padding with DOIs / translators / bibliographies / subchapter
+  titles because "completeness seems safer"
+- ❌ Failing to write any `## Critical Attribution Corrections`
+  section when the research note explicitly surfaced attribution
+  errors — those corrections are load-bearing guardrails and must
+  be preserved SOMEWHERE in the standards layer
 
 ## Phase 5: Japanese Integration Decision
 
