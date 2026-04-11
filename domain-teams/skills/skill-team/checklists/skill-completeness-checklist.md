@@ -13,7 +13,13 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
 ## Checklist
 
-- [ ] **CHK-SKL-001 (Frontmatter)** [FIXABLE]: SKILL.md opens with YAML frontmatter containing `name` (matching directory name, kebab-case) and `description` (80–200 words). Description contains "Use when" trigger sentences AND "Do NOT use for" delegation clauses AND a "Delivers" clause.
+- [ ] **CHK-SKL-001 (Frontmatter)** [FIXABLE]: SKILL.md opens with YAML frontmatter containing `name` (matching directory name, kebab-case) and `description` (**40–200 words**). Description contains "Use when" trigger sentences AND "Do NOT use for" delegation clauses AND a "Delivers" clause.
+
+    **Word count rule** (matches `standards/skill-md-structure.md` §Frontmatter Schema): count only the English prose body. **Exclude** YAML tokens (`>-`, `|`, `|-`), CJK / bilingual keyword suffix lines, punctuation characters, and markdown list bullets / block-quote markers.
+
+    **Tokenization rule** (matches standard): hyphenated compounds (`code-team`, `cross-domain`, `product-level`) count as separate word tokens — `code-team` is 2 tokens. Slash-separated compounds (`UX/UI`, `investment/market`, `SLIs/SLOs`) also split into separate tokens per segment. This makes re-verification deterministic regardless of whether the counter uses natural `wc -w` or regex-tokenized counting.
+
+    **Router-skill exemption**: a skill with no worker or evaluator launch templates and no per-workflow protocols (e.g. `using-domain-teams`) is exempt from the 40-word minimum. Router skills still MUST contain `Use when` / `Do NOT use for` clauses but may omit the mission sentence and Delivers list. Record "router skill — exempt" in the evidence field when this exemption applies.
 
 - [ ] **CHK-SKL-002 (Persona block)** [FIXABLE]: Immediately after frontmatter, a persona block (~15–30 lines) establishes voice and mentions: an opening stance, primary-source anchors (2–5 sources named), a `Mission:` line, a `Delivers:` line, and a `Done when:` line.
 
