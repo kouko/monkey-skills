@@ -7,7 +7,7 @@ competitor deep-dives use `competitive-analysis.md`.
 
 ## Primary Sources
 
-- `standards/investment-analysis-canon.md` — Damodaran 2012 valuation taxonomy (DCF / Relative / Contingent-claim) + Graham & Dodd margin of safety + Mr. Market + Merrill Lynch Investment Clock (Greetham & Hartnett 2004) 2×2 growth × inflation matrix
+- `standards/investment-analysis-canon.md` — Damodaran 2012 valuation taxonomy (DCF / Relative including Campbell & Shiller 1998 CAPE cycle-smoothing / Contingent-claim) + Graham & Dodd margin of safety + Mr. Market + Merrill Lynch Investment Clock (Greetham & Hartnett 2004) 2×2 growth × inflation matrix + Dalio 2018 two-horizon debt-cycle framework (6 phases × {short 5-8 yr, long 50-75 yr}) + Koo 2008 balance-sheet recession JP parallel
 - `standards/source-quality-and-evidence.md` — filings and central bank releases as primary; analyst reports and financial media as secondary
 - `standards/confidence-and-claim-language.md` — Fact / Analysis / Speculation taxonomy and 高/中/低 confidence mapping for forward-looking claims
 
@@ -37,9 +37,12 @@ mode-specific exit rule defined in `standards/confidence-and-claim-language.md`
   the single most appropriate framework only (DCF, relative, or
   contingent-claim, per the asset type); skip Investment Clock
   2×2 macro regime analysis entirely (call the regime in one line
-  without full matrix construction); skip Graham margin-of-safety
-  detailed calculation (narrative bracket only, e.g., "~30%
-  margin" without per-line derivation)
+  without full matrix construction); skip Dalio debt-cycle deep
+  dive — one-line phase call only (e.g., "late-cycle bubble phase"),
+  no full 6-phase enumeration; skip CAPE cycle-smoothing — use
+  rolling P/E only; skip Graham margin-of-safety detailed
+  calculation (narrative bracket only, e.g., "~30% margin" without
+  per-line derivation)
 
 In **deep mode**, run the protocol per the existing v4.9.0 grounding:
 - Cross-language parallel search REQUIRED
@@ -49,11 +52,15 @@ In **deep mode**, run the protocol per the existing v4.9.0 grounding:
 - All MUST and SHOULD gates trigger
 - Retry on PASS_WITH_NOTES per gate-system.md
 - Deep-mode rigor: full Damodaran 3-framework valuation (DCF +
-  relative + contingent-claim where applicable) + Merrill Lynch
+  relative + contingent-claim where applicable) with CAPE
+  cycle-smoothing against Campbell & Shiller 1998 historical bands
+  for cyclical or market-level equity calls + Merrill Lynch
   Investment Clock 2×2 regime identification (Reflation / Recovery
   / Overheat / Stagflation — NEVER business-cycle terminology) +
-  Graham margin-of-safety detailed calculation + Mr. Market
-  price-independent verdict discipline
+  Dalio 2018 full 6-phase debt-cycle identification for BOTH the
+  short-term (5-8 yr) and long-term (50-75 yr) cycles as a
+  structural risk overlay + Graham margin-of-safety detailed
+  calculation + Mr. Market price-independent verdict discipline
 
 **Budget enforcement**: track source count, search count, token
 estimate. On overrun, finish current source verification (atomic),
@@ -98,10 +105,17 @@ budget; in deep mode, follow existing collection workflow.
      firms with stable cash flows. Terminal growth rate must NOT
      exceed long-run nominal GDP growth (the single most common
      DCF modeling error).
-   - **Relative** (P/E, EV/EBITDA, P/B, P/S) for firms embedded in
-     a deep, well-matched comparable set. Match the comparable set
-     rigorously; adjust for fundamental differences in growth, risk,
-     and reinvestment.
+   - **Relative** (P/E, EV/EBITDA, P/B, P/S, or **CAPE** for
+     cyclicals and market-level equity calls) for firms embedded
+     in a deep, well-matched comparable set. Match the comparable
+     set rigorously; adjust for fundamental differences in growth,
+     risk, and reinvestment. Use **CAPE** (Campbell & Shiller 1998
+     10-year real-earnings smoothing, per
+     `standards/investment-analysis-canon.md` §Cyclically-Adjusted
+     P/E) when single-year earnings are deeply cyclical — the
+     10-year window eliminates business-cycle noise. Cite BOTH
+     Campbell & Shiller 1998 for the operational formulation, NOT
+     Shiller alone.
    - **Contingent-claim / real options** for assets dominated by
      optionality (undeveloped reserves, early-stage patents, equity
      in distressed firms).
@@ -124,8 +138,11 @@ budget; in deep mode, follow existing collection workflow.
    release.
 10. **Indicators**: CPI, PMI, yield curve, employment, leading
     indicators. Always note the data date.
-11. **Identify Investment Clock regime** per
-    `standards/investment-analysis-canon.md` §The Merrill Lynch
+11. **Identify the regime — 2-layer read**. Deep-mode macro regime
+    analysis produces TWO complementary layers, not one:
+
+    **Layer A — Investment Clock regime (tactical 1-3 year call)**
+    per `standards/investment-analysis-canon.md` §The Merrill Lynch
     Investment Clock (Greetham & Hartnett 2004). The Investment
     Clock is a **2×2 growth direction × inflation direction**
     matrix with **four named regimes**:
@@ -141,10 +158,44 @@ budget; in deep mode, follow existing collection workflow.
     inflation regimes. The two are different concepts and
     conflating them is a fatal attribution error (see
     `standards/investment-analysis-canon.md` §Critical Attribution
-    Corrections).
-12. **Implications**: Map the identified regime to asset-class
-    preferences using the Greetham 2004 mapping above. State
-    confidence (高/中/低) per
+    Corrections §Investment Clock 4-phase naming).
+
+    **Layer B — Dalio debt-cycle phase (structural 5-8 / 50-75 year
+    risk overlay)** per `standards/investment-analysis-canon.md`
+    §Dalio's Debt Cycle Framework (Dalio 2018 *Principles for
+    Navigating Big Debt Crises*). Diagnose which of the 6 canonical
+    phases the current state maps to, for BOTH the short-term
+    (5-8 yr credit cycle) and long-term (50-75 yr leverage cycle)
+    horizons:
+    1. **Early part of the cycle** — healthy debt growth
+    2. **Bubble** — credit decoupling from fundamentals
+    3. **Top** — central banks tighten OR debt service breaks
+    4. **Depression** — bubble bursts, credit contracts, zero-bound
+    5. **Beautiful deleveraging** — coordinated austerity + debt
+       restructuring + money printing while growth stays positive
+    6. **Pushing on a string / normalization** — monetary policy
+       loses marginal efficacy; cycle resets toward Phase 1
+
+    Dalio's framework is **diagnostic, NOT prescriptive**: it
+    identifies the phase but does NOT produce buy/sell signals.
+    Layer A (Investment Clock) produces the asset-class call;
+    Layer B (Dalio) is the **structural risk overlay**.
+
+    Cite BOTH Dalio 2018 for the framework itself AND, where
+    relevant, Koo 2008 *The Holy Grail of Macroeconomics* for the
+    Japanese balance-sheet-recession deep-dive on the Depression
+    → Beautiful Deleveraging phases.
+
+12. **Implications — tactical call + structural overlay**. Map the
+    identified Investment Clock regime to asset-class preferences
+    using the Greetham 2004 mapping — this is the **tactical call**.
+    Then overlay the Dalio phase as **structural risk context**:
+    if the IC says "Recovery → Stocks lead" but Dalio says "Bubble
+    phase of the short-term debt cycle", the tactical call remains
+    "stocks lead", but the spec must flag that the stock leadership
+    is accompanied by credit-overstretch risk and downstream
+    size-down / hedging / shorter-horizon disciplines apply.
+    State confidence (高/中/低) for both layers separately per
     `standards/confidence-and-claim-language.md`.
 
 ### Phase 4: Output
@@ -169,6 +220,21 @@ budget; in deep mode, follow existing collection workflow.
 - Terminal growth rate in DCF must never exceed long-run nominal
   GDP growth
 - Never cite the Investment Clock with business-cycle terminology
+- Never present Dalio's debt-cycle phases as asset-allocation
+  prescription — the framework is diagnostic (phase identification
+  only). Asset-class calls come from the Investment Clock. Dalio's
+  6 phases (Early / Bubble / Top / Depression / Beautiful
+  deleveraging / Pushing on a string) must be named verbatim when
+  cited; do NOT collapse to 4 or 5 phases or substitute
+  business-cycle vocabulary
+- When citing CAPE, cite BOTH Campbell & Shiller 1998 authors and
+  name the 10-year real-earnings window. Do NOT credit CAPE to
+  Shiller alone or cite Shiller 2000 *Irrational Exuberance* as
+  the operational canonical
+- Do NOT cite "Damodaran's macro framework" or "Damodaran regime
+  model" — no such framework exists. Damodaran is bottom-up
+  valuation only. For regime models, cite Greetham & Hartnett 2004
+  (Investment Clock) or Dalio 2018 (debt cycle)
 - Include confidence level (高/中/低) on every forward-looking claim
 - Always note the data date — stale data kills analysis
 - Consult research notes (e.g., a user's personal vault) if
