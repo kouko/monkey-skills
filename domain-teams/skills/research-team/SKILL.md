@@ -36,11 +36,15 @@ the discipline of verification and source-triangulation obligations;
 the 18-check OSS supply-chain safety baseline across the 3 themes of
 maintenance / code-review / build-release; *Competitive Strategy*
 (Michael E. Porter 1980) for Five Forces and value-chain structural
-analysis; *Investment Valuation* 3rd ed. (Aswath Damodaran 2012) for
-the three-framework valuation taxonomy (DCF / relative / contingent-claim);
-**Merrill Lynch Investment Clock** (Greetham & Hartnett 2004) for the
-growth × inflation 2×2 regime mapping (Reflation / Recovery / Overheat
-/ Stagflation → {Bonds, Stocks, Commodities, Cash}); 倉田敬子 (2007)
+analysis; *Investment Valuation* 3rd ed. (Damodaran 2012) for the
+three-framework valuation taxonomy (DCF / relative — including
+Campbell & Shiller 1998 CAPE cycle-smoothing — / contingent-claim);
+**Merrill Lynch Investment Clock** (Greetham & Hartnett 2004) for
+the growth × inflation 2×2 regime mapping (Reflation / Recovery /
+Overheat / Stagflation → {Bonds, Stocks, Commodities, Cash}) with
+Dalio 2018 *Principles for Navigating Big Debt Crises* as the
+complementary two-horizon 6-phase debt-cycle diagnostic overlay;
+倉田敬子 (2007)
 『学術情報流通とオープンアクセス』for the Japanese 学術情報流通
 synthesis and the canonical treatment of OA in the JP context; and
 **国立国会図書館リサーチ・ナビ** (NDL, current) as the canonical JP
@@ -280,7 +284,7 @@ Worker default resources (always loaded):
 Additional standards (load when workflow requires):
 - `standards/systematic-review-methodology.md` (Tier 2) — Cochrane Handbook v6.5 8-step workflow + PRISMA 2020 27-item checklist + Booth 5th ed. 2024 5-element argument model; load for academic / deep research workflows
 - `standards/strategic-frameworks.md` (Tier 1) — Porter 1980 Five Forces + value chain + Kim & Mauborgne Blue Ocean ERRC + Osterwalder BMC 9-block + Aaker brand equity; load for market and competitive analysis workflows
-- `standards/investment-analysis-canon.md` (Tier 3) — Damodaran 2012 three-framework valuation + Graham & Dodd margin of safety + Mr. Market + Greetham & Hartnett 2004 Investment Clock 2×2; load for investment workflows (fully self-contained body)
+- `standards/investment-analysis-canon.md` (Tier 3) — Damodaran 2012 three-framework valuation (DCF / Relative including Campbell & Shiller 1998 CAPE cycle-smoothing / Contingent-claim) + Graham & Dodd margin of safety + Mr. Market + Greetham & Hartnett 2004 Investment Clock 2×2 + Dalio 2018 two-horizon debt-cycle 6-phase framework (structural risk overlay) + Koo 2008 balance-sheet recession JP parallel; load for investment workflows (fully self-contained body)
 - `standards/oss-safety.md` (Tier 2) — OpenSSF Scorecard 18-check + NIST SSDF 1.1 + SLSA v1.1 L0-L3 + CVSS v4.0 + SPDX v3.0 + license taxonomy; load for OSS / tech stack workflows
 - `standards/information-infrastructure.md` (Tier 3) — 倉田 2007 学術情報流通 + NDL リサーチ・ナビ 3-tier structure + CiNii Research 2022 統合 + ACRL 6 frames comparative anchor; load for JP database / academic workflows (fully self-contained JP preamble)
 
