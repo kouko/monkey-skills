@@ -70,8 +70,9 @@ pipeline:
    where `{X.Y.Z}` is the plugin version landing the grounding work.
    The in-repo location makes research part of the PR review and
    preserves the audit trail across machines and session compactions.
-   See `file-conventions.md` §Research Subdirectory Convention for
-   file naming and Diátaxis exemption details.
+   See `file-conventions.md` §Directory Semantics (research/ row) and
+   `skill-md-structure.md` §Research Subdirectory Convention for file
+   naming and Diátaxis exemption details.
 
    **Obsidian vault export is opt-in**: only if the user explicitly
    requests it via a directive like "also save to Obsidian" / "also

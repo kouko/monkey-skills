@@ -25,6 +25,11 @@ refactor({team}): adopt {sources} standards (v{X.Y.Z} 1/3)
 **Contents**:
 - CREATE new `standards/*.md` files (primary-source-grounded)
 - MODIFY existing `standards/*.md` files to add citations or anchors
+- OPTIONALLY include a single `research/grounding-v{X.Y.Z}.md`
+  audit trail for the grounding work (see `grounding-principle.md`
+  §The Research Workflow step 4). The research note is the layer-3
+  companion to the standards grounding and is inseparable from
+  commit 1 by design.
 - NOTHING else — no protocols, no gates, no SKILL.md changes, no
   version bump, no router updates
 
@@ -65,9 +70,13 @@ refactor({team}): wire {what}, {details}, bump {version} (v{X.Y.Z} 3/3)
 ```
 
 **Contents**:
-- MODIFY `SKILL.md` (persona rewrite, workflow tables, resource manifest)
+- MODIFY `SKILL.md` (persona rewrite, workflow tables, resource
+  manifest) — REQUIRED for additive MINOR bumps (grounding refactors,
+  brand-new teams); OPTIONAL for modify-only PATCH bumps where
+  convention clarification does not require SKILL.md rewiring
 - MODIFY `using-domain-teams/SKILL.md` (if adding a new team, add router row)
 - MODIFY `.claude-plugin/plugin.json` (version bump)
+- MODIFY `CHANGELOG.md` (new `[X.Y.Z]` entry documenting the change)
 - DELETE any legacy files superseded by new work
 - NO new content files here — this is purely wiring
 
@@ -130,11 +139,23 @@ repo-specific interpretations:
 
 | Level | When to bump | Example |
 |-------|--------------|---------|
-| **PATCH** (x.y.**z**) | Typo fix, single-file clarification, non-structural tweak | `4.4.0 → 4.4.1` |
-| **MINOR** (x.**y**.0) | Additive grounding refactor, new workflow, new team, new standards | `4.3.0 → 4.4.0` (devops-team grounding) |
-| **MAJOR** (**x**.y.0) | Breaking architectural change (agent contract change, directory restructure) | `3.x.x → 4.0.0` (PR #10 — checkpoint architecture) |
+| **PATCH** (x.y.**z**) | Modify-only convention clarification, policy fix, typo fix, single-file tweak that does not introduce new files or new grounded content | `4.8.0 → 4.8.1` (skill-team research-note convention cleanup) |
+| **MINOR** (x.**y**.0) | Additive grounding refactor, new workflow, new team, new standards / protocols / gates, new research-note infrastructure | `4.3.0 → 4.4.0` (devops-team grounding), `4.7.0` (research-note in-repo convention + backfills), `4.8.0` (design-team grounding) |
+| **MAJOR** (**x**.y.0) | Breaking architectural change (agent contract change, directory restructure) — requires explicit authorization in the PR description; never applied automatically | `3.x.x → 4.0.0` (PR #10 — checkpoint architecture) |
 
-A 3-commit refactor always bumps at least MINOR.
+**Distinguishing rule for PATCH vs MINOR**: does this branch
+introduce new files that worker or evaluator agents will Read at
+runtime (new standards, protocols, gates, research notes)? Yes →
+MINOR. No (only modifies existing runtime files) → PATCH.
+
+**3-commit-split bump level**: the 3-commit split pattern is valid
+for either MINOR or PATCH bumps. The split is about review
+ergonomics (foundation → operation → wiring), not about bump level.
+Historically most 3-commit splits were MINOR grounding refactors,
+but v4.6.1, v4.7.1, v4.7.2, and v4.8.1 are all 3-commit PATCH
+precedents for skill-team convention cleanups. When SKILL.md
+rewiring is not needed (see `### Commit 3/3`), a PATCH-level
+3-commit split may ship commit 3 as plugin.json + CHANGELOG only.
 
 ## Branch and PR Conventions
 
