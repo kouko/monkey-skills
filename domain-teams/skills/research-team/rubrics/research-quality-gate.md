@@ -6,6 +6,33 @@
 - `standards/systematic-review-methodology.md` — Booth 5-element argument model (for reasoning quality) + PRISMA 2020 27-item checklist (for completeness)
 - `standards/confidence-and-claim-language.md` — IPCC/Kent calibrated language + Fact / Analysis / Speculation taxonomy for judging calibration
 
+## Mode-Aware Triggering (v4.9.1)
+
+This rubric is a **SHOULD gate in deep mode only**. In quick mode,
+this rubric is **NOT triggered** — the worker's SELF check covers
+basic quality flags (cross-verification, reasoning soundness,
+obvious gaps) at a lighter bar appropriate to the quick-mode exit
+threshold of Medium confidence. The v4.9.1 cost-aware modes
+mechanism (see SKILL.md §Research Modes) ensures quick-mode
+workers do not trigger this gate.
+
+**Worker self-attestation in quick mode** includes the line:
+`"I claim this output meets the quick-mode quality bar; reply
+'run deep' for SHOULD-gate verification."` This gives the user an
+explicit one-step escalation path from quick to deep without
+re-running the protocol from scratch.
+
+When deep mode runs the gate, all flag dimensions (Source Quality
+& Cross-Verification, Reasoning & Logic, Completeness,
+Actionability) apply unchanged with the existing verdict rules.
+Per-mode threshold tuning (for example relaxing completeness
+warnings for quick mode) is deferred to v4.9.2 if real usage shows
+the binary skip is too coarse.
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific per-claim source thresholds
+and the per-claim (not per-deliverable) policy.
+
 ## Prerequisites
 
 This gate runs AFTER the source citation checklist passes.

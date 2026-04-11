@@ -11,9 +11,63 @@ competitor deep-dives use `competitive-analysis.md`.
 - `standards/source-quality-and-evidence.md` — filings and central bank releases as primary; analyst reports and financial media as secondary
 - `standards/confidence-and-claim-language.md` — Fact / Analysis / Speculation taxonomy and 高/中/低 confidence mapping for forward-looking claims
 
+## Phase 0: Mode Detection and Budget Setup
+
+**MUST run before Phase 1.** Read the `mode:` field from the worker
+launch `### Input` section. If absent, default to `quick`.
+
+| Mode | Default budget | Source cap | Search cap | Token cap |
+|---|---|---|---|---|
+| **quick** (default) | single-pass triangulation | 5 sources | 5 web searches | ~15k tokens |
+| **deep** (opt-in) | full audit trail | 15 sources | 20 web searches | ~150k tokens |
+
+User-overridable via `### Input` fields: `max_sources`, `max_searches`,
+`max_tokens`. Reject budgets below quick floor (15k tokens / 5 sources)
+with `BLOCKED: budget below minimum viable quick mode`.
+
+In **quick mode**, this protocol runs in a stripped-down form per the
+mode-specific exit rule defined in `standards/confidence-and-claim-language.md`
+§Cost-Aware Early-Exit Rule:
+- Skip cross-language (EN+JP) parallel search unless natural
+- ≥1 primary source per key claim is sufficient (vs ≥2 for deep)
+- Exit immediately when all key claims reach Medium confidence
+  (medium evidence × medium agreement on the IPCC 3×3 grid)
+- Skip MUST `source-citation-checklist` gate (SELF check applies)
+- Quick-mode reduction: skip Damodaran 3-framework deep dive — use
+  the single most appropriate framework only (DCF, relative, or
+  contingent-claim, per the asset type); skip Investment Clock
+  2×2 macro regime analysis entirely (call the regime in one line
+  without full matrix construction); skip Graham margin-of-safety
+  detailed calculation (narrative bracket only, e.g., "~30%
+  margin" without per-line derivation)
+
+In **deep mode**, run the protocol per the existing v4.9.0 grounding:
+- Cross-language parallel search REQUIRED
+- ≥2 sources per key claim REQUIRED
+- Exit at Very high confidence (robust evidence × high agreement)
+  per the early-exit rule
+- All MUST and SHOULD gates trigger
+- Retry on PASS_WITH_NOTES per gate-system.md
+- Deep-mode rigor: full Damodaran 3-framework valuation (DCF +
+  relative + contingent-claim where applicable) + Merrill Lynch
+  Investment Clock 2×2 regime identification (Reflation / Recovery
+  / Overheat / Stagflation — NEVER business-cycle terminology) +
+  Graham margin-of-safety detailed calculation + Mr. Market
+  price-independent verdict discipline
+
+**Budget enforcement**: track source count, search count, token
+estimate. On overrun, finish current source verification (atomic),
+then return BLOCKED with summary: `"budget overrun: collected N
+sources, M searches, ~Tk tokens. Partial result attached. Reply
+'expand budget to X' or 'accept partial'."`
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific exit thresholds and the
+per-claim (not per-deliverable) policy.
+
 ## Protocol
 
-### Phase 0: Scope
+### Phase 1: Scope
 
 1. **Define the investable question**: State the specific
    decision — single stock, sector rotation, asset allocation,
@@ -26,7 +80,10 @@ competitor deep-dives use `competitive-analysis.md`.
    the choice is a function of the asset and the question, not
    a preference.
 
-### Phase 1: Individual Security Analysis
+### Phase 2: Individual Security Analysis
+
+**Mode discipline**: in quick mode, cap collection per Phase 0
+budget; in deep mode, follow existing collection workflow.
 
 3. **Business Model**: Revenue sources, competitive moats, TAM,
    unit economics. Cite primary filings (10-K, 有価証券報告書) not
@@ -59,7 +116,7 @@ competitor deep-dives use `competitive-analysis.md`.
 8. **Risks**: Key risk factors with probability and impact
    assessment. Counter-arguments are mandatory.
 
-### Phase 2: Macro Regime Analysis
+### Phase 3: Macro Regime Analysis
 
 9. **Data**: Use official primary sources (Fed, BOJ, ECB, central
    bank reports, national statistics offices). Financial media
@@ -90,7 +147,7 @@ competitor deep-dives use `competitive-analysis.md`.
     confidence (高/中/低) per
     `standards/confidence-and-claim-language.md`.
 
-### Phase 3: Output
+### Phase 4: Output
 
 13. **Price-independent verdict**: Per Graham's Mr. Market
     allegory in `standards/investment-analysis-canon.md` §Graham

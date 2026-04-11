@@ -9,12 +9,69 @@
 - `standards/source-quality-and-evidence.md` — scope-expansion discipline と primary/secondary/tertiary source taxonomy（どのソース型で何が分かるか）
 - `standards/systematic-review-methodology.md` §Primary Sources — ACRL "Research as Inquiry" frame: research is an iterative, question-driven process, not a one-shot keyword dump
 
+## Phase 0: Mode Detection and Budget Setup
+
+**MUST run before Phase 1.** Read the `mode:` field from the worker
+launch `### Input` section. If absent, default to `quick`.
+
+| Mode | Default budget | Source cap | Search cap | Token cap |
+|---|---|---|---|---|
+| **quick** (default) | single-pass triangulation | 5 sources | 5 web searches | ~15k tokens |
+| **deep** (opt-in) | full audit trail | 15 sources | 20 web searches | ~150k tokens |
+
+User-overridable via `### Input` fields: `max_sources`, `max_searches`,
+`max_tokens`. Reject budgets below quick floor (15k tokens / 5 sources)
+with `BLOCKED: budget below minimum viable quick mode`.
+
+In **quick mode**, this protocol runs in a stripped-down form per the
+mode-specific exit rule defined in `standards/confidence-and-claim-language.md`
+§Cost-Aware Early-Exit Rule:
+- Skip cross-language (EN+JP) parallel search unless natural
+- ≥1 primary source per key claim is sufficient (vs ≥2 for deep)
+- Exit immediately when all key claims reach Medium confidence
+  (medium evidence × medium agreement on the IPCC 3×3 grid)
+- Skip MUST `source-citation-checklist` gate (SELF check applies)
+- Quick-mode reduction: limit to 3 candidate angles (vs unlimited);
+  skip exhaustive lateral exploration across all 5 facets — pick
+  the 3 most likely to surface decision-impacting unknowns
+
+In **deep mode**, run the protocol per the existing v4.9.0 grounding:
+- Cross-language parallel search REQUIRED
+- ≥2 sources per key claim REQUIRED
+- Exit at Very high confidence (robust evidence × high agreement)
+  per the early-exit rule
+- All MUST and SHOULD gates trigger
+- Retry on PASS_WITH_NOTES per gate-system.md
+- Deep-mode rigor: full lateral + assumption + risk exploration
+  (all 5 facets, ≥5 adjacent areas) per the existing Checklist
+
+**Phase hook composition**: This protocol can also run as the
+**Brainstorm phase hook** of any other workflow when
+`scope_clarity=unclear` is passed in `### Input`. See SKILL.md
+§Workflows for the phase-hook composition pattern. In that mode
+the brainstorming output feeds directly into the host protocol's
+Phase 1 (not a standalone deliverable).
+
+**Budget enforcement**: track source count, search count, token
+estimate. On overrun, finish current source verification (atomic),
+then return BLOCKED with summary: `"budget overrun: collected N
+sources, M searches, ~Tk tokens. Partial result attached. Reply
+'expand budget to X' or 'accept partial'."`
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific exit thresholds and the
+per-claim (not per-deliverable) policy.
+
 ## Hard Gate
 
 Do NOT start deep research or produce a report until the exploration
 scope has been confirmed with the user.
 
 ## Checklist
+
+**Mode discipline**: in quick mode, cap lateral exploration per
+Phase 0 budget (3 candidate angles max); in deep mode, follow
+existing exhaustive workflow.
 
 Complete each task in order. Each task requires user input before proceeding.
 One question per message. Prefer multiple choice when possible.

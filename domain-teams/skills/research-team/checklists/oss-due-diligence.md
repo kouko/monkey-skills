@@ -5,6 +5,32 @@
 - `standards/oss-safety.md` — OpenSSF Scorecard 18 checks + NIST SSDF v1.1 practice groups + SLSA v1.1 build-integrity levels + CVSS v4.0 severity bands + SPDX v3.0 license identifiers
 - `standards/citation-standards.md` — version number, CVE ID, and advisory URL citation rules
 
+## Mode-Aware Triggering (v4.9.1)
+
+This checklist is a **MAY gate** — user-requested only, never
+auto-triggered. The mode interaction works as follows: the user
+explicitly requests an OSS audit, and the worker then selects the
+depth per the active mode (see SKILL.md §Research Modes).
+
+- **Quick mode**: run a lightweight 3-check version — CHK-OSS-001
+  (License Compliance), CHK-OSS-002 (Known Vulnerabilities), and
+  CHK-OSS-006 (Supply Chain). These three are the load-bearing
+  FATAL-class risks; the remaining FIXABLE items (maintenance,
+  test coverage, documentation, SLSA) are deferred to deep mode.
+  The worker performs this check as SELF attestation — no
+  separate evaluator gate is dispatched.
+- **Deep mode**: run all CHK-OSS-001 through CHK-OSS-007 items
+  unchanged. The evaluator gate is dispatched per the usual
+  SHOULD / MAY verdict rules in `gate-system.md`.
+
+Per-mode threshold tuning (for example relaxing CHK-OSS-003
+"maintenance status" for quick mode) is deferred to v4.9.2 if real
+usage shows the binary split is too coarse.
+
+See `standards/confidence-and-claim-language.md` §Cost-Aware
+Early-Exit Rule for the mode-specific per-claim source thresholds
+and the per-claim (not per-deliverable) policy.
+
 ## Evaluation Instructions
 
 You are a strict open-source compliance auditor. Check each item below against the technology evaluation output.
