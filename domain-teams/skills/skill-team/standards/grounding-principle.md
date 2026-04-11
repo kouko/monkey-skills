@@ -89,14 +89,22 @@ pipeline:
 > **Compact + Admonitions**, not academic.
 
 This rule governs how the per-`standards/*.md` `## Primary Sources`
-section is written. It applies to **layer 2** of the 3-layer primary-
-source record structure:
+section AND the body of each standards file are written. It applies
+to **layer 2** of the 3-layer primary-source record structure:
 
-| Layer | Location | Density |
+| Layer | Location | Density / depth |
 |---|---|---|
 | 1 | `SKILL.md` persona "anchored on…" block | Very compact — 1 sentence per source listing name + author + year |
-| **2** | **Per-`standards/*.md` `## Primary Sources` section** | **Compact + Admonitions (this rule)** |
-| 3 | `research/grounding-v{X.Y.Z}.md` | Unrestricted — layer 3 is an audit trail, verbosity is acceptable |
+| **2** | **Per-`standards/*.md` file: body + `## Primary Sources` section** | **Tier-dependent (see §3-Tier Parametric Classification below). Primary Sources is always compact; body depth varies by tier 1/2/3.** |
+| 3 | `research/grounding-v{X.Y.Z}.md` | Unrestricted — layer 3 is an audit trail, verbosity is acceptable. ISBN / DOI / 補助書誌 / publisher metadata all belong here. |
+
+**Layer 2 has two co-equal rules**:
+1. **Primary Sources density**: Compact (§Per-source minimum required fields below).
+2. **Body self-containment**: Tier-dependent (§Body Self-Containment Rule below).
+
+Both rules must be satisfied. A Tier 3 standards file with a compact
+Primary Sources section but a thin body **fails** the Body Self-Containment
+test, even though the Primary Sources density is "correct" in isolation.
 
 ### Per-source minimum required fields
 
@@ -105,30 +113,165 @@ Every entry in a layer 2 `## Primary Sources` section MUST include:
 1. **Author** (family name + initial, or JP 氏名)
 2. **Year**
 3. **Title** (italicized for books, in quotes for articles)
-4. **ISBN or URL** — one canonical identifier; whichever is the natural lookup key
+4. **URL** — if the source is web-accessible (standard, article, bliki,
+   W3C rec, OWASP project page). For book sources with no canonical
+   web presence, omit this field — do NOT pad with the publisher's
+   product page URL.
 5. **One-line load-bearing rationale** — why this source is cited in
-   this specific standards file (chapter reference is acceptable
-   when the file cites a specific chapter; omit otherwise)
+   this specific standards file, and what chapter/section (if the
+   file references something specific)
+
+Rationale for omitting ISBN from the minimum fields: **ISBN has near-zero
+semantic value to an LLM**. LLM training data does not index books by
+ISBN; the anchoring activation that makes "Martin 2008 *Clean Code*"
+light up the right parametric knowledge comes from the author + year +
+title triple, not the ISBN string. ISBN is valuable only to human
+reviewers doing library/catalog lookup and as anti-drift metadata (catching
+edition confusion). Both of those use cases belong in layer 3 (`research/
+grounding-v{X.Y.Z}.md`) and the CHANGELOG, not in layer 2.
 
 ### Per-source explicitly OPTIONAL fields
 
-Do NOT include these unless they materially help a runtime worker or
-evaluator citing the source. When in doubt, leave them out — they
-belong in the layer 3 research note, not in layer 2:
+Do NOT include these in layer 2. They belong in the layer 3 research
+note and/or CHANGELOG:
 
-- **DOI strings** — only include if the source is a peer-reviewed
-  paper whose DOI is the canonical identifier (no book DOI padding)
-- **Translator names and translated-edition ISBNs** — only include
-  if the translation IS the primary cited edition (e.g., 和田卓人 訳
-  of Beck 2002 when JP TDD community treats it as the de-facto
-  primary); do not include when the translation is merely a parallel
-  option
-- **Supplementary bibliography** (補助書誌) — belongs in layer 3
+- **ISBN strings** — book ISBNs have no LLM semantic value; only useful
+  for human reviewer lookup and anti-drift (edition tracking). Record
+  in research note + CHANGELOG.
+- **DOI strings** — even for peer-reviewed papers; same reason (LLMs
+  don't index DOIs). Record in research note + CHANGELOG.
+- **Translator names and translated-edition ISBNs** — only include if
+  the translation IS the primary cited edition (e.g., 和田卓人 訳 of
+  Beck 2002 when JP TDD community treats it as the de-facto primary);
+  do not include when the translation is merely a parallel option.
+- **Supplementary bibliography** (補助書誌) — belongs in layer 3.
 - **Subchapter section titles** — cite chapter number only; omit the
   section title unless the standard actually references that
-  specific section
+  specific section.
 - **Publisher full corporate name + imprint + format + page count +
-  judgment size (判型)** — publisher short name is enough
+  judgment size (判型)** — publisher short name is enough.
+
+### 3-Tier Parametric Classification
+
+Standards files cite knowledge of varying **parametric strength** —
+how much of the knowledge is already internalized in the LLM's training
+data weights. The right citation density + body depth depend on this
+strength. Every grounded standard MUST declare its tier in the frontmatter
+and calibrate its body length accordingly.
+
+| Tier | Parametric strength | Body depth | Primary Sources role |
+|---|---|---|---|
+| **1** | **High** — LLM training data covers the topic accurately and in detail | Very compact — rules as 1-2 line bullets + anchor rationale | Pure anchor (trigger LLM's parametric memory) |
+| **2** | **Medium** — LLM knows the framework but gets details / version numbers / enum values wrong | Moderate — body spells out the specific details that LLMs confuse (SC numbers, V-chapter mapping, component states enumeration) | Anchor + partial disambiguation |
+| **3** | **Low** — LLM training data is sparse or absent; cold-query hallucinates | **Full self-contained** — body must define the concept, model structure, and judgment method with enough depth that a worker reading ONLY the body can act on the rule correctly | Audit trail only (citation is provenance, not knowledge delivery) |
+
+**Tier declaration in the frontmatter** (required for every grounded
+standards file):
+
+```yaml
+---
+title: {Standard Name}
+tier: 1  # or 2 or 3
+---
+```
+
+### Tier selection decision rule
+
+For each standard, ask this question before writing the body:
+
+> **Would `claude -p "What is X?"` (cold query, no context) return:**
+>
+> - **(a) Correct + detailed answer** → **Tier 1**, anchor-only body
+> - **(b) Correct framework but wrong details / version / numbers** → **Tier 2**, body supplies the specific details
+> - **(c) Hallucination or "I don't know"** → **Tier 3**, body must be fully self-contained
+
+When in doubt, **choose the higher tier** (Tier 3 over 2, Tier 2 over 1).
+The cost of over-documenting is token waste; the cost of under-documenting
+is factual error at runtime. Parametric knowledge also drifts across LLM
+versions — something that was Tier 1 for Claude Opus today may become
+Tier 2 for a future model trained on different data. Bias toward making
+the body survive LLM-version changes.
+
+### Examples from design-team v4.8.0
+
+| Standard | Tier | Why |
+|---|---|---|
+| `nielsen-norman-heuristics.md` | 1 | Nielsen's 10 heuristics + Norman foundational concepts are massively represented in LLM training data |
+| `garrett-elements-of-ux.md` | 1 | 5-plane model is a canonical HCI concept, widely cited |
+| `platform-conventions.md` | 1 | iOS 44pt / Android 48dp are textbook facts |
+| `wcag-baseline.md` | 2 | LLMs know WCAG framework; SC numbers (1.4.3 vs 2.5.8 vs 2.5.5) and touch target AA/AAA levels get confused |
+| `ooui-and-object-modeling.md` | 2 | OOUI is known; ORCA 4-step specific framework is weaker — body spells it out |
+| `app-security-standard.md` | 2 | OWASP ASVS is parametric for v4.0.3; v5.0.0 V-number reorganization (2025-05-30) post-dates most training cutoffs |
+| `kansei-engineering-and-sd.md` | **3** | 長町三生 1989 感性工学 methodology is JP 専門書; LLMs know "Kansei Engineering" name but not 7-point SD scale, 3 factors, design parameter translation workflow |
+| `japanese-design-aesthetics.md` | **3** | 引き算/間/佇まい/わびさび are culturally-loaded concepts; LLM cold-query produces tourist-level descriptions, not design judgment criteria |
+| `ux-temporal-and-quality-models.md` | **3** | 黒須 4-quality (NOT 3D), 安藤 4 temporal phases, Verganti meaning innovation — all hallucination hotspots in Phase 1/Phase 2 |
+
+### Body Self-Containment Rule
+
+> **Primary Sources is anchor + audit trail, NOT a knowledge delivery channel.**
+
+This is the core architectural rule of layer 2. The body of each
+standards file MUST be self-contained **to the tier-appropriate depth**
+such that a worker/evaluator reading the body can act on the rule
+without relying on citation-triggered parametric recall.
+
+Concretely:
+
+- **Tier 1 body**: 1-2 line bullets per rule + the rule's key phrase is
+  enough. LLM will correctly expand via parametric memory. Example:
+  ```markdown
+  ## Naming Rules
+  - Use intention-revealing names. Avoid mental mapping from variable
+    to meaning (Clean Code Ch.2 — rationale in Primary Sources).
+  - Avoid encodings (Hungarian notation, type prefixes).
+  ```
+
+- **Tier 2 body**: Spell out the details LLMs typically get wrong.
+  Example (WCAG touch target):
+  ```markdown
+  ## Touch Target Minimum
+  
+  WCAG 2.2 SC 2.5.8 Target Size (Minimum): **24×24 CSS pixels at [AA]**
+  
+  ⚠️ Do NOT confuse with:
+  - SC 2.5.5 Target Size (Enhanced): **44×44 CSS pixels at [AAA]**
+  - Apple HIG iOS: 44pt × 44pt (platform convention, stricter than WCAG AA)
+  - Material 3 Android: 48dp × 48dp (platform convention, stricter than WCAG AA)
+  ```
+  (LLMs conflate these four values all the time — body spells them out.)
+
+- **Tier 3 body**: Full definition including concept, structure,
+  judgment method. Example (黒須 4-quality model):
+  ```markdown
+  ## The 4 Quality Regions (四つの品質領域)
+  
+  Cartesian product of 2 axes: {objective, subjective} × {design-time, use-time}.
+  
+  |  | 設計時 (at-design-time) | 利用時 (at-use-time) |
+  |---|---|---|
+  | **客観的品質** | usability, functionality, reliability | effectiveness, efficiency, productivity |
+  | **主観的品質** | 魅力, 感性訴求性 | 達成感, 安心感, 楽しさ → 満足感 |
+  
+  Final convergence: **主観×利用時 = 満足感** (the gravitational center
+  of the model per 黒須 2020 Ch.11.3).
+  ```
+  (LLM cold-query would hallucinate "3D Quality" or miss axes — body
+  must fully define.)
+
+### Test for body self-containment
+
+> **If you removed the `## Primary Sources` section entirely, could a
+> worker reading only the body correctly act on the rule?**
+>
+> - **Yes** → body is self-contained at the right tier
+> - **No, worker would need to guess the specific details** → body is
+>   under-documented for its tier; either add detail or elevate the tier
+> - **Yes, but the body duplicates well-known facts** → body is
+>   over-documented for its tier; consider lowering to Tier 1 and
+>   trusting LLM parametric recall
+
+This test is the single most important quality check for layer 2.
+Apply it to every grounded standards file during Phase 4 synthesis.
 
 ### Critical Attribution Corrections — dedicated section, not inline
 
@@ -204,21 +347,46 @@ CHK-SKL-001's word-count floor applies to SKILL.md frontmatter
 Primary Sources sections. There is no hard floor on layer 2 citation
 density; the rule is "minimum sufficient," not "minimum word count."
 
-### Honesty disclosure — why this rule exists
+### Honesty disclosure — how this rule evolved
 
-This rule was codified in v4.7.1 after the design-team v4.8.0
-refactor Commit 1/3 (never landed on main; branch was reset) went
-academic-density on its first attempt. The user caught the drift
+This rule evolved across 2 patches in response to user review feedback:
+
+**v4.7.1 — Compact+Admonitions policy**. Codified after the design-team
+v4.8.0 refactor Commit 1/3 (never landed on main; branch was reset)
+went academic-density on its first attempt. The user caught the drift
 during review — DOIs, JP translation ISBNs, subchapter titles,
 supplementary bibliography, and inline Admonition blocks scattered
 across Primary Sources sections turned the standards files into
-academic papers. The rule prevents the same drift from recurring in
-future grounding refactors.
+academic papers. v4.7.1 codified the per-source minimum fields +
+OPTIONAL fields + Critical Attribution Corrections convention.
 
-The lesson: without a codified rule, a worker given the `grounding-
-research.md` Phase 4 template will over-index on research-note
-completeness and replicate the audit-trail density into layer 2,
-where it does not belong.
+**v4.7.2 — Tier classification + body self-containment**. Codified
+after the user questioned whether ISBN (and, more broadly, the entire
+citation metadata apparatus) actually helped LLM workers/evaluators
+understand the content, or whether it was just academic habit. The
+analysis surfaced two root insights:
+
+1. **ISBN has near-zero LLM semantic value** — LLM training data does
+   not index books by ISBN. Author+Year+Title is the anchoring triple
+   that activates parametric memory. ISBN was moved from the minimum
+   fields to layer 3 / CHANGELOG.
+
+2. **"Citation density" was the wrong unit of analysis** — the real
+   question is whether the body of each standards file is
+   self-contained to the depth required by the parametric strength of
+   the knowledge it documents. High-parametric topics (Clean Code,
+   SOLID, Nielsen 10 heuristics) can rely on anchor citation to trigger
+   LLM memory; low-parametric topics (黒須 4-quality, 感性工学 workflow,
+   わびさび design criteria) require the body itself to fully define
+   the concept because cold-query LLM hallucinates. v4.7.2 introduced
+   the 3-Tier Parametric Classification and the Body Self-Containment
+   Rule to make this explicit.
+
+The running lesson: layer 2 (`standards/*.md`) is neither pure
+bibliography nor pure knowledge delivery — it is **a tier-aware
+runtime resource** where body depth and citation density are
+co-calibrated to the parametric strength of the knowledge being
+documented.
 
 ### Anti-patterns
 
@@ -240,6 +408,24 @@ where it does not belong.
 - ❌ **Layer confusion**: treating layer 2 like a mini research note;
   layer 3 (`research/grounding-v{X.Y.Z}.md`) is where the audit
   trail goes
+- ❌ **ISBN padding**: including ISBN strings in Primary Sources
+  bullets. ISBNs have no LLM semantic value; put them in the research
+  note and CHANGELOG where humans can look them up.
+- ❌ **Miscalibrated tier**: declaring `tier: 1` in the frontmatter but
+  the body contains content LLMs cold-query correctly would never know
+  (e.g. declaring `kansei-engineering-and-sd.md` as Tier 1 with a 20-line
+  body). The tier declaration is a **contract** — if the body depth
+  doesn't match the tier semantics, either elevate the tier or expand
+  the body.
+- ❌ **Tier 1 body hallucination reliance**: treating every standard as
+  Tier 1 because "LLMs are smart enough to figure it out." This is how
+  the 黒須 3D Quality → 4-quality drift happened in the pre-v4.7.2
+  design-team Phase 1 gap report. When in doubt, choose Tier 2 or 3.
+- ❌ **Tier 3 body under-specification**: declaring `tier: 3` but
+  providing only a paragraph of prose. Tier 3 means the body has to be
+  detailed enough that removing the Primary Sources section would not
+  degrade worker/evaluator correctness. Use the §Test for body
+  self-containment to verify.
 
 ## Japanese Content Integration Strategy
 

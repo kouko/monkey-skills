@@ -134,10 +134,12 @@ For each cluster of related findings, plan one standards file:
 
 ```
 {authoritative-name}.md
+Tier: {1 | 2 | 3 — see §Tier Selection below}
 Purpose: {what claims this standard anchors}
-Primary sources: {2–5 URLs / book citations, formatted per §Citation Density Rule}
+Primary sources: {2–5 sources, formatted per §Citation Density Rule — NO ISBNs}
 Critical attribution corrections: {any anti-drift corrections, if applicable}
-Estimated length: {60–160 lines}
+Body outline: {tier-dependent — see §Body Self-Containment below}
+Estimated length: {Tier 1: 60-90 lines; Tier 2: 100-150 lines; Tier 3: 150-250 lines}
 Load-bearing claims covered: {list}
 ```
 
@@ -146,22 +148,57 @@ into two standards files.
 
 Typical output from phase 4 is a plan listing 3–6 standards to write.
 
+### Tier Selection (MUST run before writing each standard)
+
+Before writing any standard, classify it into one of 3 tiers per
+`../standards/grounding-principle.md` §3-Tier Parametric
+Classification. Apply the **cold-query decision rule**:
+
+> **Would `claude -p "What is X?"` (no context) return:**
+>
+> - **(a) Correct + detailed answer** → **Tier 1** (anchor-only body)
+> - **(b) Correct framework but wrong details / version / numbers** → **Tier 2** (body supplies confused details)
+> - **(c) Hallucination or "I don't know"** → **Tier 3** (body is fully self-contained)
+
+**Mandatory test**: actually run the cold-query mentally (or literally
+with `claude -p`) before committing to a tier. Do NOT default to Tier 1
+because "LLMs are smart enough." When in doubt, choose the higher tier.
+
+**Heuristics**:
+- Non-Anglo canonical knowledge (JP 専門書, 中文 regulatory docs,
+  domain-specific national standards) → usually Tier 3
+- Post-2024 standards and their specific numbered requirements
+  (ASVS v5, WCAG 3 drafts, new OWASP Top 10) → Tier 2
+- Pre-2024 mainstream Anglo HCI/software engineering canon (Clean Code,
+  SOLID, Nielsen 10, Norman, Fowler, Beck, Garrett, etc.) → usually Tier 1
+- Internal company conventions that are not in any public training
+  corpus → always Tier 3
+
+**Tier drives body depth, not Primary Sources density.** Primary
+Sources stays compact regardless of tier; the body is where tier
+calibration lives.
+
 ### Citation style for each standards file
 
 **Apply the Compact+Admonitions style** documented in
 `../standards/grounding-principle.md` §Citation Density Rule. Each
 standards file produced by this phase MUST contain:
 
-1. A `## Primary Sources` section with one bullet per source, each
-   containing ONLY the mandatory fields: author / year / title /
-   ISBN or URL / one-line load-bearing rationale.
-2. (Optional but recommended for first-time-grounded topics) A
-   `## Critical Attribution Corrections` section placed immediately
-   after `## Primary Sources`, consolidating any anti-drift
-   correction blocks as standalone paragraphs (not inline
-   Admonitions in the body).
+1. **Frontmatter with `tier: {1|2|3}`** — declares the standard's
+   parametric tier so downstream evaluators can verify body depth
+   calibration.
+2. **A `## Primary Sources` section** with one bullet per source, each
+   containing ONLY the mandatory fields: **author / year / title / URL
+   (if web-accessible) / one-line load-bearing rationale**. **No ISBN**
+   (ISBN has no LLM semantic value; it goes in the research note + CHANGELOG).
+3. **A body calibrated to the declared tier** (see §Body Self-Containment
+   below).
+4. (Optional but recommended for first-time-grounded topics) **A
+   `## Critical Attribution Corrections` section** placed immediately
+   after `## Primary Sources`, consolidating any anti-drift correction
+   blocks as standalone paragraphs (not inline Admonitions in the body).
 
-**Do NOT** include DOIs, translator names, supplementary
+**Do NOT** include ISBNs, DOIs, translator names, supplementary
 bibliographies, subchapter titles, or publisher verbosity in the
 Primary Sources section — those details belong in the layer 3
 research note (`research/grounding-v{X.Y.Z}.md`), which you already
@@ -172,10 +209,54 @@ produced in Phase 3.
 ```markdown
 ## Primary Sources
 
-- **{Author} ({Year})** *{Title}*, {Publisher short name}. ISBN {canonical ISBN} or URL. {One-line why this standard cites it — chapter reference if specific.}
-- **{Author} ({Year})** *{Title}*, {Publisher short name}. {ISBN or URL}. {One-line why.}
+- **{Author} ({Year})** *{Title}*. {URL if web-accessible}. {One-line why this standard cites it — chapter reference if specific.}
+- **{Author} ({Year})** *{Title}*. {One-line why.}
 - {... 2 to 5 sources total ...}
 ```
+
+Note: **no ISBN line, no publisher imprint, no DOI**. Book sources
+omit the URL line entirely (don't pad with publisher product pages).
+
+### Body Self-Containment by tier
+
+The body of the standards file must be calibrated to the tier you
+declared in the frontmatter. See
+`../standards/grounding-principle.md` §Body Self-Containment Rule for
+the full specification; the condensed per-tier checklist:
+
+**Tier 1 body** (high parametric):
+- Rules as 1-2 line bullets
+- Each rule has a short anchor phrase (the name of the rule + the
+  author/title cross-reference)
+- Trust LLM to fill in via parametric memory
+- Example target: `nielsen-norman-heuristics.md` — list the 10 by
+  canonical name, one line each, + brief anchor to Nielsen NN/g URL
+
+**Tier 2 body** (medium parametric):
+- Everything Tier 1 has, PLUS
+- Explicit spell-out of numbered details, enum values, version-specific
+  mappings that LLMs typically confuse
+- Use tables for matrix data (SC number × level, V-chapter × topic)
+- Example target: `wcag-baseline.md` — SC numbers 1.4.3 / 2.5.5 / 2.5.8
+  explicitly with their AA/AAA levels in a table
+
+**Tier 3 body** (low parametric):
+- Everything Tier 2 has, PLUS
+- Full definitions of concepts the LLM would hallucinate on cold query
+- Complete model structures (e.g. black's 4-quality 2×2 matrix spelled
+  out with cell contents)
+- Judgment criteria / decision rules that the evaluator gate needs to
+  apply
+- Example target: `ux-temporal-and-quality-models.md` — 4 temporal
+  phases defined with JP + English names, 4-quality regions in a
+  complete 2×2 table with cell contents, Verganti meaning innovation
+  3-path framework defined
+
+**Self-containment test** (run after writing each standard): mentally
+remove the `## Primary Sources` section. Could a worker reading only
+the body still correctly act on the rule? If yes at the declared tier
+level, body is calibrated correctly. If no, either elevate the tier or
+expand the body.
 
 ### Minimal template for a Critical Attribution Corrections section
 
@@ -203,6 +284,9 @@ or downstream files.
 - ❌ Producing a `## Primary Sources` section that reproduces the
   research note's full cluster-by-cluster citation table — layer 2
   is not an audit trail
+- ❌ **Including ISBN strings** in Primary Sources bullets. ISBNs
+  have no LLM semantic value; they belong in the research note and
+  the CHANGELOG, not in layer 2.
 - ❌ Scattering `> ⚠️ Correction` Admonitions in the body of the
   standards file instead of consolidating them in
   `## Critical Attribution Corrections`
@@ -212,6 +296,21 @@ or downstream files.
   section when the research note explicitly surfaced attribution
   errors — those corrections are load-bearing guardrails and must
   be preserved SOMEWHERE in the standards layer
+- ❌ **Missing tier declaration** in the standards file frontmatter.
+  `tier: 1|2|3` is mandatory per `../standards/grounding-principle.md`
+  §3-Tier Parametric Classification; downstream evaluators use it to
+  check body depth calibration.
+- ❌ **Tier-1-defaulting without cold-query test**. Assuming every
+  standard is Tier 1 because "LLMs know everything" is how the
+  黒須 3D Quality → 4-quality drift happened. Actually run the
+  cold-query test (or think hard about whether LLM cold-query is
+  likely to correctly answer "What is X from author Y?") before
+  committing to Tier 1.
+- ❌ **Tier 3 body too thin**. Declaring `tier: 3` but writing only
+  a paragraph of prose. Tier 3 means the body must define the
+  concept, model structure, and judgment criteria in full — run the
+  self-containment test (mentally remove Primary Sources and ask if
+  the body still suffices).
 
 ## Phase 5: Japanese Integration Decision
 

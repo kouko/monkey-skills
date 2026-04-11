@@ -7,6 +7,141 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.2] — 2026-04-11
+
+### Changed
+
+- `skill-team/standards/grounding-principle.md` §Citation Density Rule
+  — three architectural additions:
+  - **New §3-Tier Parametric Classification subsection**. Standards
+    files now declare a `tier: 1|2|3` in their frontmatter based on
+    the parametric strength of the knowledge they document:
+    - **Tier 1 (high parametric)**: LLM training data covers the
+      topic accurately; body can be anchor-only. Examples: Clean
+      Code, SOLID, Nielsen 10 heuristics, Fowler Bad Smells.
+    - **Tier 2 (medium parametric)**: LLM knows the framework but
+      confuses details, version numbers, or enum values; body
+      supplies the specific details. Examples: WCAG 2.2 SC numbers,
+      OWASP ASVS v5.0.0 V-chapter mapping, Material 3 component
+      states enumeration.
+    - **Tier 3 (low parametric)**: LLM training data is sparse or
+      absent; cold-query hallucinates; body must be fully
+      self-contained. Examples: 黒須 2020 4-quality regions, 安藤
+      2016 4 temporal UX phases, 長町 1989 感性工学 methodology,
+      徳丸本 Ch.6 multi-byte encoding security, わびさび / 間 /
+      佇まい design aesthetic concepts, internal company conventions.
+    The classification comes with a "cold-query decision rule"
+    (`claude -p "What is X?"` with no context — if it hallucinates,
+    it's Tier 3) and a worked example table mapping design-team
+    v4.8.0's 8 standards to their respective tiers.
+  - **New §Body Self-Containment Rule subsection**. Codifies that
+    Primary Sources is **anchor + audit trail**, NOT knowledge
+    delivery. The body of each standards file must be self-contained
+    to tier-appropriate depth such that a worker/evaluator reading
+    only the body can act on the rule without relying on
+    citation-triggered parametric recall. Ships with the
+    "self-containment test" (mentally remove Primary Sources and ask
+    if the body still suffices) and per-tier body writing examples.
+  - **Per-source minimum required fields: ISBN removed**. The 5-field
+    minimum is now **Author / Year / Title / URL (if web-accessible) /
+    one-line load-bearing rationale**. ISBN is demoted to the
+    "explicitly OPTIONAL / belongs in layer 3" list alongside DOIs,
+    translator metadata, supplementary bibliography, subchapter
+    titles, and publisher verbosity. Rationale: **ISBN has near-zero
+    LLM semantic value**. LLM training data does not index books by
+    ISBN; the anchoring activation that makes "Martin 2008 *Clean
+    Code*" light up the right parametric knowledge comes from the
+    author + year + title triple, not the ISBN string. ISBN is
+    valuable only to human reviewers doing library/catalog lookup
+    and as anti-drift metadata — both use cases belong in layer 3
+    (`research/grounding-v{X.Y.Z}.md`) and the CHANGELOG.
+  - **Anti-patterns expanded**: 4 new items (ISBN padding,
+    miscalibrated tier, Tier-1-defaulting without cold-query test,
+    Tier 3 body under-specification).
+  - **Honesty disclosure expanded** to document the 2-patch evolution
+    (v4.7.1 Compact+Admonitions → v4.7.2 tier + body self-containment
+    + ISBN demotion). Credits the user's question "does ISBN help LLMs
+    understand?" as the catalyst.
+
+- `skill-team/protocols/grounding-research.md` §Phase 4 Standards
+  Synthesis — integrated tier selection as a mandatory step:
+  - Per-cluster template gained `Tier` and `Body outline` fields;
+    estimated length replaced with tier-dependent ranges (T1 60-90,
+    T2 100-150, T3 150-250 lines).
+  - New §Tier Selection subsection with cold-query decision rule,
+    heuristics (non-Anglo canon → T3, post-2024 standards → T2,
+    mainstream Anglo canon → T1, internal conventions → always T3),
+    and "default to higher tier when in doubt" rule.
+  - §Citation style updated to list 4 mandatory elements: frontmatter
+    `tier`, compact Primary Sources (no ISBN), tier-calibrated body,
+    optional Critical Attribution Corrections.
+  - Minimal template for Primary Sources: ISBN slot removed.
+  - New §Body Self-Containment by tier subsection with per-tier body
+    writing checklists and concrete target exemplars from design-team
+    v4.8.0 (Tier 1 target: nielsen-norman-heuristics.md; Tier 2
+    target: wcag-baseline.md with SC number table; Tier 3 target:
+    ux-temporal-and-quality-models.md with full 2×2 matrices).
+  - Phase 4 anti-patterns expanded (ISBN padding, missing tier
+    declaration, Tier-1-defaulting without cold-query test, Tier 3
+    body too thin).
+
+### Why this change
+
+Exposed by user review of the v4.7.1 Compact+Admonitions policy. The
+user asked two questions in sequence:
+
+1. **"Does ISBN actually help LLMs understand the content? If not,
+   shouldn't it be in the research note / CHANGELOG instead of the
+   standards file?"** — Analysis confirmed ISBN has near-zero LLM
+   semantic value. LLM training data does not index books by ISBN;
+   the anchoring activation that makes citations "work" is the
+   Author+Year+Title triple, not the ISBN string. ISBN is valuable
+   only to human reviewers and as anti-drift metadata, both of which
+   belong in layer 3.
+
+2. **"How should we balance '依靠模型內部知識' (relying on LLM
+   parametric memory) vs 'providing independent knowledge files'?"** —
+   Analysis surfaced that different topics have different parametric
+   strengths. Clean Code and Nielsen 10 heuristics are massively
+   represented in LLM training data (high parametric); a short anchor
+   plus LLM memory is enough. 黒須 4-quality regions and 長町 感性
+   工学 methodology are Japanese 専門書 with thin LLM coverage (low
+   parametric); the body must be fully self-contained or the
+   evaluator gate will hallucinate. The right rule is **tier-aware
+   body depth**, not a single density target.
+
+The root architectural insight documented in §Honesty disclosure:
+**layer 2 (`standards/*.md`) is neither pure bibliography nor pure
+knowledge delivery — it is a tier-aware runtime resource where body
+depth and citation density are co-calibrated to the parametric
+strength of the knowledge being documented.**
+
+### Impact on design-team v4.8.0 (upcoming)
+
+When design-team v4.8.0 grounding refactor restarts in Step 2, the
+Phase 4 worker will read this updated policy and:
+- Classify each of the 8 planned design-team standards into a tier
+  using the cold-query decision rule
+- Write body depth per tier (`ux-temporal-and-quality-models.md`,
+  `kansei-engineering-and-sd.md`, and `japanese-design-aesthetics.md`
+  are all Tier 3 and will have full self-contained bodies; the other
+  5 standards will be Tier 1 or 2 with lighter bodies)
+- Omit ISBN from all Primary Sources bullets
+- Declare `tier:` in each standard's frontmatter
+- Run the self-containment test before finalizing each file
+
+### Known residual — grounded teams predating this rule
+
+The 4 teams grounded before v4.7.1 (qa/docs/devops/code) and v4.7.2
+(no new grounded teams between v4.7.1 and v4.7.2) are **grandfathered**.
+They do NOT need to retroactively add `tier:` frontmatter or rewrite
+their body depth. The Tier classification + Body Self-Containment
+rules apply to **design-team v4.8.0 onward** and future grounding
+refactors (research-team, planning-team, and any future re-groundings
+of the precedent teams when they are next refactored). Same rationale
+as v4.7.1's grandfather clause: retrofitting in a single sweep would
+mix concerns and bloat the diff beyond reviewability.
+
 ## [4.7.1] — 2026-04-11
 
 ### Changed
