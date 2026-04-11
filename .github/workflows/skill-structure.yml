@@ -1,0 +1,142 @@
+name: skill-structure
+
+# Validates domain-team SKILL.md files against skill-team's CHK-SKL-*
+# rules and verifies pull request commit messages follow the
+# Conventional Commits subset codified in skill-team v4.8.1
+# standards/commit-convention.md.
+#
+# Runs on every push to main and on every pull request targeting main.
+# Independent of any other CI; safe to add as the first workflow in
+# the repo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  structure:
+    name: SKILL.md structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Need full history for the commit-message check job to walk
+          # the PR commit range, not just the merge commit.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check-skill-structure.py against domain-teams
+        run: python3 scripts/check-skill-structure.py domain-teams
+
+  conventional-commits:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages on PR
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+          import sys
+
+          base = os.environ["BASE_SHA"]
+          head = os.environ["HEAD_SHA"]
+
+          # Conventional Commits subset per skill-team v4.8.1
+          # standards/commit-convention.md §Commit Message Format:
+          #
+          #   <type>(<scope>): <subject>
+          #   <type>(<scope>): <subject> (vX.Y.Z N/M)
+          #   <type>(<scope>): <subject> (vX.Y.Z gate-feedback)
+          #
+          # type   ∈ {refactor, feat, fix, chore, docs}
+          # scope  = kebab-case identifier (team name, domain-teams,
+          #          or other tracked plugin/component name)
+          # subject= human-readable summary, no trailing period
+          # suffix = optional version/position annotation; format is
+          #          permissive to match observed precedent (3-commit
+          #          splits, 2-commit splits, gate-feedback patches).
+          #
+          # The rule deliberately does NOT enforce "lowercase first
+          # letter" because real subjects sometimes legitimately start
+          # with an acronym (e.g. CHK-CMT-001, OWASP, JSON, API). The
+          # load-bearing parts are: type, scope, colon, subject body,
+          # no trailing period.
+          pattern = re.compile(
+              r"^(refactor|feat|fix|chore|docs)"
+              r"\(([a-z][a-z0-9-]*(?:/[a-z0-9-]+)?)\):\s+"
+              r"(\S.+?)$"
+          )
+
+          # Walk every commit in the PR range exclusive of base.
+          rev_list = subprocess.run(
+              ["git", "log", f"{base}..{head}", "--format=%H%n%s"],
+              capture_output=True,
+              text=True,
+              check=True,
+          ).stdout.strip()
+
+          if not rev_list:
+              print("No commits in PR range — nothing to check")
+              sys.exit(0)
+
+          entries = rev_list.split("\n")
+          errors = []
+          checked = 0
+          i = 0
+          while i < len(entries):
+              sha = entries[i]
+              subject = entries[i + 1] if i + 1 < len(entries) else ""
+              i += 2
+              checked += 1
+              # Allow Merge commits to bypass the format check.
+              if subject.startswith("Merge "):
+                  print(f"  SKIP {sha[:8]}  (merge commit)")
+                  continue
+              m = pattern.match(subject)
+              if not m:
+                  errors.append((sha, subject, "does not match <type>(<scope>): <subject> format"))
+                  continue
+              body = m.group(3)
+              if body.endswith("."):
+                  errors.append((sha, subject, "subject ends with a period"))
+                  continue
+              print(f"  PASS {sha[:8]}  {subject}")
+
+          print(f"\nChecked {checked} commit(s)")
+          if errors:
+              print(f"\n{len(errors)} commit message(s) failed Conventional Commits validation:")
+              for sha, subject, reason in errors:
+                  print(f"  FAIL {sha[:8]}  {subject}")
+                  print(f"       reason: {reason}")
+              print(
+                  "\nFormat (per skill-team standards/commit-convention.md):"
+                  "\n  <type>(<scope>): <subject>"
+                  "\n  <type>(<scope>): <subject> (vX.Y.Z N/M)"
+                  "\n  type  ∈ {refactor, feat, fix, chore, docs}"
+                  "\n  scope = kebab-case team name (or 'domain-teams' for cross-team)"
+                  "\n  subject = human-readable, no trailing period"
+              )
+              sys.exit(1)
+          PY
