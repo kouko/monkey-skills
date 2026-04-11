@@ -44,6 +44,20 @@ description. **Exclude**:
 - Punctuation characters (`·`, `—`, `・`, `。`, `、`, `「」`, `『』`, backticks)
 - Markdown-style list bullets or block-quote markers
 
+**Tokenization rule**. Hyphenated compounds (e.g. `code-team`,
+`product-level`, `cross-domain`, `PRODUCT-SPEC.md`) count as **separate
+word tokens**: `code-team` = 2 tokens, `cross-domain` = 2 tokens. Same
+rule for slash-separated compounds (e.g. `UX/UI`, `investment/market`,
+`SLIs/SLOs`) — each slash-separated segment is its own token. This
+matches the reference counts used when the 40-word floor was
+calibrated in v4.6.1 and ensures evaluator re-verification is
+deterministic across readers regardless of whether they use natural
+English `wc -w` (which treats hyphens as intra-word) or a
+regex-tokenized counter. Without this rule, `research-team`'s
+description would count as 38 words (strict) or 43 words
+(token-split) depending on interpretation — a 5-word ambiguity that
+straddles the 40-word floor.
+
 Rationale for the 40-word floor: the floor is grounded in observed
 precedent across qa-team (v4.2.0), docs-team (v4.3.0), devops-team
 (v4.4.0), and code-team (v4.6.0). Measured counts stabilize around

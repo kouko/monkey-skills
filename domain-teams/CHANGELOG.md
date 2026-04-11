@@ -21,10 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tokens, CJK suffix, punctuation, list bullets, block-quote
   markers) and a router-skill exemption clause for skills without
   worker/evaluator launch templates (e.g. `using-domain-teams`).
+  Also added a **tokenization rule** making hyphenated compounds
+  (`code-team`, `cross-domain`) and slash-separated compounds
+  (`UX/UI`) count as separate word tokens, which resolves a 1–2
+  word ambiguity at the floor boundary affecting `research-team`
+  and `planning-team` descriptions. Without this rule, the same
+  description could count as 38 (strict `wc -w`) or 43 (token-split)
+  depending on reader interpretation — tokenization is now the
+  mandated convention.
 - `skill-team/checklists/skill-completeness-checklist.md` CHK-SKL-001
-  — mirrored the 40-word floor, counting rule, and router exemption
-  from the standard. Evaluators must now record "router skill —
-  exempt" in the evidence field when the exemption applies.
+  — mirrored the 40-word floor, counting rule, tokenization rule,
+  and router exemption from the standard. Evaluators must now
+  record "router skill — exempt" in the evidence field when the
+  exemption applies.
 - `skill-team/standards/skill-md-structure.md` §Quality Gates
   Sub-Section Rules — added a new dedicated sub-section making the
   four gate tiers (SELF / MUST / SHOULD / MAY) structurally required
