@@ -4,6 +4,36 @@
 UI・インタラクション設計プロトコル。
 `rubrics/ui-interaction-gate.md`（evaluator gate）と対になるプロトコル。
 
+## Primary Sources
+
+This protocol targets Garrett's Structure + Skeleton planes
+(`standards/garrett-elements-of-ux.md`) and draws on four further
+tier-classified standards for its load-bearing concepts:
+
+- **ORCA / OOUI (Step 1, 4 — noun-before-verb object modeling)** →
+  `standards/ooui-and-object-modeling.md` (上野学・ソシオメディア・藤井幸多
+  2020 『オブジェクト指向 UI デザイン』技術評論社; Sophia V. Prater 2015
+  "Object-Oriented UX" *A List Apart* + ooux.com for the full ORCA
+  4-step framework, which is **not** present in the 2015 / 2016 ALA
+  articles).
+- **Without Thought / affordance (Step 5)** →
+  `standards/japanese-design-aesthetics.md` §6 (深澤直人 2005 『デザイン
+  の輪郭』TOTO 出版) grounded in Gibson's affordance theory, plus
+  `standards/nielsen-norman-heuristics.md` for Norman's signifier /
+  affordance distinction and the gulfs of execution / evaluation.
+- **Interaction feedback, error handling, component states (Steps 6–7)** →
+  `standards/nielsen-norman-heuristics.md` (Nielsen heuristics #1
+  Visibility of System Status, #5 Error Prevention, #9 Help Users
+  Recognize / Diagnose / Recover from Errors).
+- **Platform adaptation (Step 8) — 44pt / 48dp / 24×24** →
+  `standards/platform-conventions.md` (Apple HIG 44 × 44 pt iOS;
+  Material Design 3 48 × 48 dp Android; both stricter than the WCAG
+  2.2 SC 2.5.8 24 × 24 CSS px AA baseline — these are additive
+  obligations, not alternatives).
+
+Structure + Skeleton plane scope partition is defined in
+`standards/garrett-elements-of-ux.md` §Gate Scope Partition.
+
 ## Protocol
 
 1. **Identify core objects**: ユーザーが扱うドメインオブジェクト（名詞）を
