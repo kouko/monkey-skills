@@ -5,6 +5,12 @@ growth dynamics, and strategic landscape. For investment decisions
 use `investment.md`; for individual competitor deep-dives use
 `competitive-analysis.md`.
 
+## Primary Sources
+
+- `standards/strategic-frameworks.md` — Porter Five Forces + Porter value chain (industry structure + rent capture)
+- `standards/source-quality-and-evidence.md` — primary/secondary source taxonomy for market data (filings, analyst reports, trade publications)
+- `standards/confidence-and-claim-language.md` — Fact / Analysis / Speculation taxonomy for separating actual data from projections
+
 ## Protocol
 
 ### Phase 0: Market Definition
@@ -20,10 +26,16 @@ use `investment.md`; for individual competitor deep-dives use
 
 3. **Market sizing**: Estimate TAM / SAM / SOM with explicit
    data sources. Distinguish bottom-up from top-down estimates.
-   Flag when numbers are analyst projections vs actual data.
+   Tag actual historical data as **Fact** and analyst projections
+   as **Analysis** (or **Speculation** for multi-year forward
+   forecasts) per `standards/confidence-and-claim-language.md`
+   §Fact / Analysis / Speculation Taxonomy. Never present a
+   projection as if it were realized data.
 4. **Growth drivers & headwinds**: What accelerates and what
    constrains market growth? Categorize as technology, regulatory,
-   economic, or behavioral.
+   economic, or behavioral. Map against Porter Five Forces per
+   `standards/strategic-frameworks.md` §Porter's Five Forces to
+   identify which forces actually shape the observed dynamics.
 5. **Regulatory environment**: Current regulations, pending
    legislation, and compliance requirements that shape the market.
 
@@ -33,7 +45,9 @@ use `investment.md`; for individual competitor deep-dives use
    share estimates (if available). Include incumbents, challengers,
    and notable new entrants.
 7. **Value chain analysis**: Where is value created and captured?
-   Identify which positions in the chain have the most leverage.
+   Identify which positions in the chain have the most leverage
+   per `standards/strategic-frameworks.md` §Porter's Five Forces
+   (buyer / supplier bargaining power dimensions).
 8. **Trend analysis**: Technology trends, regulatory shifts,
    and consumer behavior changes that will reshape the market
    in the next 1-3 years.

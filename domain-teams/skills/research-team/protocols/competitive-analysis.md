@@ -5,6 +5,11 @@ market-analysis.md (which maps the overall landscape). Use this
 when the user needs to understand specific competitors in depth
 or identify differentiation opportunities.
 
+## Primary Sources
+
+- `standards/strategic-frameworks.md` — Porter Five Forces + Blue Ocean Four Actions (ERRC) + Business Model Canvas + Aaker brand equity
+- `standards/source-quality-and-evidence.md` — verification discipline for claims about competitors (filings, product docs, press releases as primary; analyst commentary as secondary)
+
 ## Protocol
 
 ### Phase 0: Scope
@@ -34,11 +39,14 @@ or identify differentiation opportunities.
 ### Phase 2: Differentiation Analysis
 
 6. **Differentiation map**: Plot competitors on 2 axes that
-   matter most to the target segment. Identify where the
-   density is (red ocean) and where gaps exist.
-7. **Uncontested space identification**: Using Blue Ocean lens,
-   what factors could be eliminated, reduced, raised, or created
-   to open new market space?
+   matter most to the target segment using the Strategy Canvas
+   technique (Kim & Mauborgne 2015) per
+   `standards/strategic-frameworks.md` §Blue Ocean Strategy.
+   Identify where the density is (red ocean) and where gaps exist.
+7. **Uncontested space identification**: Apply the Four Actions
+   Framework (Eliminate / Reduce / Raise / Create) per
+   `standards/strategic-frameworks.md` §Blue Ocean Strategy to
+   surface factors that could open new market space.
 8. **Competitive response prediction**: If we enter or change
    position, how will each competitor likely react? What are
    their constraints and incentives?

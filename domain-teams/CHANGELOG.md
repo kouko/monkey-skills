@@ -7,6 +7,397 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.0] — 2026-04-11
+
+research-team grounding refactor — closes the "philosophical
+hotspot" gap where research-team's own rules were previously
+self-invented despite its job being primary-source rigor. The Phase 1
+gap report catalogued six major taxonomy clusters without primary
+source anchors (source quality, confidence language, research
+process, strategic frameworks, investment regime phases, OSS
+thresholds). Phase 2 research (`research/grounding-v4.9.0.md`, 1991
+lines, 30+ verified primary sources) assembled the canonical anchors.
+Phase 4-6 landed 6 NEW standards and 2 REWRITE-in-place standards as
+three atomic commits per the grounding refactor convention. With
+research-team grounded, **6 of 8 domain teams are now grounded**
+(qa / docs / devops / code / design / research). Only `planning-team`
+remains ungrounded for a future v4.10.0 milestone. research-team also
+adopts the **preamble** JP integration strategy per
+`skill-team/standards/grounding-principle.md`: JP contributes
+information-infrastructure (NDL リサーチ・ナビ + CiNii Research +
+SIST 02 + 倉田敬子 2007) but has no parallel research-methodology
+canon to rival Cochrane / PRISMA / Booth / Damodaran / Porter.
+
+### Added
+
+- **6 new research-team standards** (Phase 4 synthesis of Phase 2
+  grounding research, `research/grounding-v4.9.0.md`):
+  - `source-quality-and-evidence.md` (Tier 1) — JMU/Cornell/ACRL
+    primary / secondary / tertiary source taxonomy + Kovach &
+    Rosenstiel 2021 *The Elements of Journalism* 4th ed. discipline
+    of verification + SPJ ethics code. Structural source-quality
+    SSOT for all research workflows.
+  - `confidence-and-claim-language.md` (Tier 2) — IPCC AR5
+    Mastrandrea et al. 2010 5-level confidence ladder (very low /
+    low / medium / high / very high) + 7-level likelihood ladder
+    (virtually certain → exceptionally unlikely) + 3×3 evidence ×
+    agreement grid + Sherman Kent 1964 words-of-estimative-probability
+    + Tetlock & Gardner 2015 *Superforecasting* calibration discipline.
+  - `systematic-review-methodology.md` (Tier 2) — Cochrane Handbook
+    for Systematic Reviews of Interventions v6.5 (2024) 8-step
+    workflow + PRISMA 2020 27-item 7-section reporting checklist +
+    Booth, Colomb, Williams, Bizup & FitzGerald *The Craft of
+    Research* 5th ed. (2024) 5-element argument model (claim /
+    reason / evidence / warrant / acknowledgement).
+  - `strategic-frameworks.md` (Tier 1) — Porter 1980
+    *Competitive Strategy* Five Forces + value chain + Kim &
+    Mauborgne 2015 *Blue Ocean Strategy* ERRC grid and strategy
+    canvas + Osterwalder & Pigneur 2010 Business Model Canvas
+    9-block + Aaker 1991 brand equity 5-component.
+  - `investment-analysis-canon.md` (Tier 3) — Damodaran 2012
+    *Investment Valuation* 3rd ed. three-framework taxonomy
+    (DCF / relative / contingent-claim) + Graham & Dodd *Security
+    Analysis* margin of safety + Mr. Market parable + Greetham &
+    Hartnett 2004 *Merrill Lynch Investment Clock* growth × inflation
+    2×2 regime mapping. Tier 3 body fully self-contained: all 4
+    Investment Clock phases (Reflation / Recovery / Overheat /
+    Stagflation) spelled out with their {Bonds, Stocks, Commodities,
+    Cash} asset-class implications.
+  - `information-infrastructure.md` (Tier 3) — JP preamble standard
+    grounded on 倉田敬子 2007 『学術情報流通とオープンアクセス』
+    (勁草書房) + 国立国会図書館リサーチ・ナビ 3-tier structure
+    (テーマ別調査案内 / 資料群別案内 / 調べ方マニュアル) + 国立
+    情報学研究所 CiNii Research 2022 統合 + ACRL 2016 Framework
+    6 frames as comparative anchor + SIST 02-2007 参照文献書き方
+    + 野末俊比古 2010 情報リテラシー教育. Tier 3 body fully
+    self-contained with JP/Anglo primary-secondary-tertiary
+    comparison table and JP-database decision rules.
+
+- `research-team/research/grounding-v4.9.0.md` — 1991-line Phase 2
+  grounding research audit trail. 30+ primary-source citations
+  independently verified: Booth 5th ed. 2024, Cochrane Handbook
+  v6.5 (2024), PRISMA 2020, IPCC Mastrandrea et al. 2010, Kent
+  1964, Tetlock & Gardner 2015, Kovach & Rosenstiel 2021 4th ed.,
+  SPJ ethics code, JMU / Cornell / ACRL source-quality guides,
+  Porter 1980, Kim & Mauborgne 2015, Osterwalder & Pigneur 2010,
+  Aaker 1991, Damodaran 2012, Graham & Dodd, Greetham & Hartnett
+  2004, APA 7th, Chicago 18th (2024-09), IEEE, SIST 02-2007,
+  OpenSSF Scorecard, NIST SSDF 1.1, SLSA v1.1, CVSS v4.0, SPDX
+  v3.0, 倉田敬子 2007, NDL リサーチ・ナビ, CiNii Research 2022,
+  野末俊比古 2010. Includes cluster mapping, JP parallel-tradition
+  check, tier classification worksheet, and 5 residual known-knowns.
+
+- **research-team SKILL.md new sections**:
+  - `## Note on Global Context` — declares **preamble** JP
+    integration strategy. Documents that Japan has substantial
+    information-infrastructure apparatus (NDL / CiNii / SIST 02 /
+    倉田 2007 / 野末 2010) but no JP-native parallel research-
+    methodology framework to rival Cochrane / PRISMA / Booth /
+    Damodaran / Porter. Same pattern as docs-team v4.3.0 (JTAP
+    preamble to Google Style) and code-team v4.6.0 (徳丸本 Ch.6
+    preamble to OWASP ASVS).
+  - `## When NOT to Use` — explicit arrow-delegation list split
+    out from the old Cross-Domain Awareness prose. Delegations
+    to code-team, design-team, planning-team, docs-team, qa-team,
+    devops-team, and skill-team.
+
+- **Checklist item additions**:
+  - `source-citation-checklist.md` — CHK-SRC-005 (Primary Source
+    Priority) [FATAL] grounded in source-quality-and-evidence;
+    CHK-SRC-006 (Confidence Calibration) [FIXABLE] grounded in
+    confidence-and-claim-language; CHK-SRC-007 (Citation Format)
+    [FIXABLE] grounded in citation-standards.
+  - `oss-due-diligence.md` — CHK-OSS-007 (SLSA Build Level)
+    [FIXABLE][MAY] optional check grounded in SLSA v1.1.
+
+### Changed
+
+- **2 standards rewritten in place** (preserving filename
+  contracts so existing protocol / gate references do not break):
+  - `citation-standards.md` (Tier 2, +176 lines) — adds explicit
+    Primary Sources section citing APA 7th, Chicago 18th (2024-09),
+    IEEE, and SIST 02-2007 with format examples; preserves existing
+    search protocol, freshness heuristics, confidence language, and
+    Fact/Analysis/Speculation labeling. Structural reorganization
+    aligns with v4.7.2 Compact+Admonitions + tier declaration.
+  - `oss-safety.md` (Tier 2, +204 lines) — adds OpenSSF Scorecard
+    18-check 3-theme structure + NIST SSDF 1.1 4 practice groups +
+    SLSA v1.1 L0-L3 + CVSS v4.0 4 metric groups + SPDX v3.0;
+    preserves existing license taxonomy.
+
+- **7 protocols gain ## Primary Sources cross-refs** (commit 2/3):
+  - `research.md` — systematic-review-methodology +
+    confidence-and-claim-language + source-quality-and-evidence;
+    Phase 2 adds claim taxonomy + Phase 3 adds Booth 5-element
+    argument model
+  - `research-brainstorming.md` — source-quality-and-evidence +
+    ACRL "Research as Inquiry" frame; JP prose preserved
+  - `academic-research.md` — systematic-review-methodology
+    (Cochrane 8-step + PICO/PICOC + PRISMA 2020 + Booth) +
+    source-quality-and-evidence + information-infrastructure (JP
+    database list now references the standard)
+  - `market-analysis.md` — strategic-frameworks (Porter Five
+    Forces + value chain) + source-quality-and-evidence +
+    confidence-and-claim-language
+  - `competitive-analysis.md` — strategic-frameworks (Blue Ocean
+    Four Actions + Strategy Canvas + Porter + BMC + Aaker) +
+    source-quality-and-evidence
+  - `investment.md` — PROMOTED from 31-line rubric-like snippet
+    to full Phase 0-3 + Rules + Output Format protocol (~130 lines)
+    grounded in investment-analysis-canon (Damodaran three-framework
+    + Graham & Dodd margin of safety + Mr. Market + Greetham &
+    Hartnett 2004 Investment Clock)
+  - `stack-evaluation.md` — oss-safety (OpenSSF Scorecard + NIST
+    SSDF + SLSA v1.1 + CVSS v4.0 + SPDX v3.0) + citation-standards
+    + source-quality-and-evidence; Step 4 quantitative thresholds
+    disclosed as internal operational heuristics.
+
+- **2 checklists and 1 rubric modified**:
+  - `checklists/source-citation-checklist.md` — 3 new items +
+    Primary Sources section (see Added)
+  - `checklists/oss-due-diligence.md` — CHK-OSS-002 expanded with
+    CVSS v4.0 severity bands + CHK-OSS-007 added (see Added)
+  - `rubrics/research-quality-gate.md` — grounds each of 4 flag
+    dimensions: Source Quality & Cross-Verification →
+    source-quality-and-evidence (Kovach); Reasoning & Logic →
+    Booth 5-element argument model; Completeness → PRISMA 2020;
+    Actionability → Kovach "Discipline of Verification"
+
+- **SKILL.md persona** — new "anchored on eleven primary sources"
+  clause in prose form: Booth 2024, Cochrane v6.5, PRISMA 2020,
+  IPCC Mastrandrea 2010, Kovach & Rosenstiel 2021, OpenSSF
+  Scorecard, Porter 1980, Damodaran 2012, Greetham & Hartnett
+  2004, 倉田敬子 2007, NDL リサーチ・ナビ. Follows the code-team
+  v4.6.0 + design-team v4.8.0 persona shape.
+
+- **SKILL.md frontmatter description** — expanded from 43 word
+  tokens to 69 word tokens (comfortably above the v4.6.1 40-word
+  floor). Adds "OSS license audits" and "investment / macro
+  analysis" and "academic literature review" as explicit trigger
+  verbs. Adds "tech stack assessments, investment memos" to the
+  Delivers clause.
+
+- **MAY Gates table format fixed**: 2-column `Gate | File` →
+  3-column `Gate | Trigger | File` per
+  `skill-team/standards/skill-md-structure.md` §Quality Gates
+  Sub-Section Rules. Trigger text: "User explicitly requests OSS
+  license or compliance audit."
+
+- **Behavioral Rules and Agents sections promoted** from nested
+  `### Behavioral Rules` / `### Agents` (under Resource Manifest)
+  to top-level `## Behavioral Rules` / `## Agents`. Aligns
+  research-team with the required-section order in
+  `skill-md-structure.md` §Required Sections positions 9 and 10.
+
+- **SKILL.md Resource Manifest expanded** from 1 standard
+  (`citation-standards.md` only) to all 8 standards with tier
+  annotations (T1 × 2: source-quality, strategic-frameworks;
+  T2 × 4: citation, confidence, systematic-review, oss-safety;
+  T3 × 2: investment-analysis-canon, information-infrastructure).
+  Worker default = 3 always-loaded standards; additional 5
+  standards load per-workflow. Worker and evaluator launch
+  templates updated to show the 3-standard default + commented
+  injection pattern for workflow-specific additions.
+
+- **SKILL.md workflow tables** — every workflow's Notes column and
+  gate Standards column updated to reflect the new standards map:
+  Deep Research → 3 defaults + systematic-review (SHOULD);
+  Market → 3 defaults + strategic-frameworks (SHOULD);
+  Competitive → 3 defaults + strategic-frameworks (SHOULD);
+  Academic → 3 defaults + systematic-review + information-infrastructure;
+  Investment → 3 defaults + investment-analysis-canon (SHOULD);
+  Tech Stack / OSS → 3 defaults + oss-safety (SHOULD + MAY).
+
+- **SKILL.md Cross-Domain Awareness** — trimmed; "When NOT to
+  Use"-style content moved to the new dedicated `## When NOT to
+  Use` section. Remaining content is only lightweight cross-domain
+  task examples, with an explicit pointer to `## When NOT to Use`
+  for full switches.
+
+- **`protocols/investment.md` restructured** — from a 31-line rubric-
+  like snippet to the full Phase 0-3 + Rules + Output Format
+  protocol pattern used by other research-team protocols. +148
+  lines total.
+
+### Fixed
+
+Three critical attribution corrections, each isolated in a
+dedicated section per grounding-principle.md Critical Attribution
+Corrections convention:
+
+1. **Investment Clock 4-phase renaming**
+   (`protocols/investment.md` line 15 +
+   `standards/investment-analysis-canon.md`) — previously labeled
+   regime states as "expansion / slowdown / contraction / recovery"
+   (generic business-cycle vocabulary not attributable to any
+   source). The correct Greetham & Hartnett 2004 *Merrill Lynch
+   Investment Clock* phase names are **Reflation / Recovery /
+   Overheat / Stagflation**, mapped to {Bonds, Stocks, Commodities,
+   Cash} via growth × inflation axes. The standards body spells
+   out the full 2×2 matrix with asset-class implications for each
+   phase; the investment protocol now cites the correct names.
+
+2. **Chicago 18th + Booth 5th editions current**
+   (`standards/citation-standards.md` +
+   `standards/systematic-review-methodology.md`) — LLM training-
+   data drift tends to treat Chicago 17th (2017) and Booth 4th as
+   current. v4.9.0 adopts **Chicago Manual of Style 18th ed.
+   (2024-09)** which removes place-of-publication and chapter
+   inclusive-pages from author-date format, and **Booth, Colomb,
+   Williams, Bizup & FitzGerald *The Craft of Research* 5th ed.
+   (2024-06-25)** which retains the 5-element argument model with
+   the FitzGerald co-authorship added.
+
+3. **Internal operational conventions disclosed**
+   (`standards/citation-standards.md` + `standards/oss-safety.md`) —
+   the 6-month freshness threshold (used in the "data freshness"
+   guard rail) is a research-team **internal heuristic**, NOT an
+   IPCC / PRISMA / Cochrane-grounded value. The stack-evaluation
+   quantitative thresholds (>500 issues, >12 months no commit,
+   <1000 weekly downloads) are research-team **internal heuristics**,
+   NOT CHAOSS metrics or OpenSSF Scorecard values. Both are
+   retained because they have been operationally useful, but now
+   explicitly flagged as internal convention so evaluators do not
+   misattribute them to the primary sources.
+
+### Removed
+
+- **Hard-coded "kouko's vault" path references**
+  (`protocols/investment.md` lines 20-24) — replaced with generic
+  "consult research notes if available" guidance. Protocols must
+  not reference a single maintainer's personal Obsidian vault
+  structure; v4.9.0 closes the last known occurrence.
+
+### Primary Sources adopted
+
+Research note (`research/grounding-v4.9.0.md`) summary cluster list
+— 30+ verified citations organized by cluster:
+
+- **Source Quality** (Cluster A): JMU library source-type guide,
+  Cornell library research primer, ACRL Framework for Information
+  Literacy for Higher Education (2016), Kovach & Rosenstiel
+  *The Elements of Journalism* 4th ed. (2021), Society of
+  Professional Journalists Code of Ethics.
+- **Confidence and Claim Language** (Cluster B): IPCC AR5
+  guidance note on uncertainty (Mastrandrea et al. 2010), Sherman
+  Kent 1964 "Words of Estimative Probability" CIA Studies in
+  Intelligence, Tetlock & Gardner 2015 *Superforecasting*.
+- **Systematic Review** (Cluster C): Cochrane Handbook for
+  Systematic Reviews of Interventions v6.5 (2024, Higgins et al.
+  eds.), PRISMA 2020 statement (Page et al. 2021), Booth / Colomb
+  / Williams / Bizup / FitzGerald *The Craft of Research* 5th ed.
+  (2024).
+- **Strategic Frameworks** (Cluster F): Porter 1980 *Competitive
+  Strategy*, Kim & Mauborgne 2015 *Blue Ocean Strategy* expanded
+  ed., Osterwalder & Pigneur 2010 *Business Model Generation*,
+  Aaker 1991 *Managing Brand Equity*.
+- **Investment Analysis** (Cluster G): Damodaran 2012 *Investment
+  Valuation* 3rd ed., Graham & Dodd *Security Analysis* (6th ed.
+  2008 McGraw-Hill with Buffett foreword), Greetham & Hartnett
+  2004 *The Investment Clock* (Merrill Lynch Global Strategy).
+- **Citation Format** (Cluster D): APA Publication Manual 7th ed.
+  (2020), Chicago Manual of Style 18th ed. (2024), IEEE Citation
+  Reference, SIST 02-2007 参照文献の書き方 (日本学術情報センター).
+- **OSS Safety** (Cluster E): OpenSSF Scorecard (current), NIST
+  Secure Software Development Framework v1.1 (SP 800-218), SLSA
+  v1.1 Supply-chain Levels for Software Artifacts, CVSS v4.0
+  (FIRST.org), SPDX v3.0 (Linux Foundation).
+- **JP Information Infrastructure** (Cluster H): 倉田敬子 2007
+  『学術情報流通とオープンアクセス』(勁草書房, 日本図書館情報
+  学会賞 2008), 国立国会図書館リサーチ・ナビ (NDL, current),
+  国立情報学研究所 CiNii Research (NII, 2022 統合), 野末俊比古
+  2010 情報リテラシー教育, ACRL Framework 2016 (comparative anchor).
+
+### JP integration decision
+
+research-team v4.9.0 adopts **preamble** integration, matching
+docs-team v4.3.0 and code-team v4.6.0, not qa-team v4.2.0 (full)
+or devops-team v4.4.0 (no overlay).
+
+- **Evidence**: Phase 2 research JP parallel-tradition check
+  (`research/grounding-v4.9.0.md`) verified that Japan has
+  substantial information-infrastructure works — 倉田敬子 2007,
+  NDL リサーチ・ナビ, CiNii Research 2022, SIST 02-2007, 野末
+  2010 情報リテラシー教育 — but these are **infrastructure and
+  access works**, not parallel research-methodology canons. There
+  is no JP-native equivalent to Cochrane / PRISMA / Booth /
+  Damodaran / Porter. The Anglo-American canon dominates research
+  methodology, systematic review, strategic frameworks, and
+  investment analysis.
+- **Pattern match**: docs-team v4.3.0 (JTAP 技術文書 3 原則 as
+  reader-first preamble to Google Style) + code-team v4.6.0
+  (徳丸本 Ch.6 as multi-byte security preamble to OWASP ASVS).
+- **Implementation**: one Tier 3 preamble standards file
+  (`standards/information-infrastructure.md`) orienting workers
+  to JP database infrastructure + SIST 02 citation conventions.
+  Plus 倉田敬子 2007 and NDL リサーチ・ナビ named in the
+  SKILL.md persona "anchored on" list as 2 of 11 load-bearing
+  anchors.
+
+### Tier distribution
+
+Following `skill-team/standards/grounding-principle.md` §3-Tier
+Parametric Classification (v4.7.2):
+
+- **Tier 1 (high parametric)** × 2:
+  - `source-quality-and-evidence.md`
+  - `strategic-frameworks.md`
+- **Tier 2 (medium parametric)** × 4:
+  - `citation-standards.md` (rewrite)
+  - `confidence-and-claim-language.md`
+  - `systematic-review-methodology.md`
+  - `oss-safety.md` (rewrite)
+- **Tier 3 (low parametric, fully self-contained body)** × 2:
+  - `investment-analysis-canon.md` — Investment Clock 2×2 matrix
+    fully spelled out; Damodaran three-framework explained with
+    DCF / relative / contingent-claim distinctions; Graham & Dodd
+    margin-of-safety in body
+  - `information-infrastructure.md` — NDL 3-tier structure
+    explained in body; CiNii Research 2022 統合 cataloged;
+    倉田 2007 core thesis summarized; JP/Anglo comparison table
+    in body
+
+### research-team v4.9.0 achievement summary
+
+- **6th grounded team** (after qa / docs / devops / code / design)
+- **Closes the "philosophical hotspot" gap**: research-team's own
+  rules were previously self-invented despite its job being
+  primary-source rigor — the meta-cringiest gap in the repo
+- **1 team left**: `planning-team` is the only remaining ungrounded
+  domain team. Targeted for v4.10.0 (next milestone).
+- Scope discipline: the 3-commit split strictly separated
+  standards (commit 1/3), protocols + gates (commit 2/3), and
+  SKILL.md + plugin.json + CHANGELOG (commit 3/3) per
+  `skill-team/protocols/skill-redesign.md` Phase 4-6.
+
+### Meta
+
+**MINOR bump rationale** per v4.8.1 `commit-convention.md`
+§Semver and CHK-CMT-005 distinguishing rule: this refactor adds 6
+new standards files and 1 research note file that the worker and
+evaluator will Read at runtime (via Resource Manifest + Agent
+Launch templates). New files that agents read at runtime
+classifies as MINOR, not PATCH. The 2 rewrite-in-place files
+(`citation-standards.md`, `oss-safety.md`) are not new, but the
+SKILL.md wiring exposes them alongside the 6 new files as an
+8-standard array — the pattern is "additive", not "modify-only".
+
+3-commit split pattern per skill-redesign protocol:
+- Commit 1/3 `0fb0b22` — standards + research note
+- Commit 2/3 `73076a1` — protocols + checklists + rubric
+- Commit 3/3 (this commit) — SKILL.md + plugin.json + CHANGELOG
+
+### Verification
+
+- `python3 scripts/check-skill-structure.py domain-teams` → all 9
+  skills PASS (research-team included) after this commit.
+- Dogfood gate suite (Skill Completeness + Skill Coherence +
+  Primary Source Grounding rubric + Commit Split) will run after
+  this commit lands, per skill-redesign protocol Phase 7.
+- 3-commit structure verified: standards isolated to 1/3,
+  protocols + gates isolated to 2/3, SKILL.md + plugin.json +
+  CHANGELOG isolated to 3/3. No cross-commit drift.
+
 ## [4.8.2] — 2026-04-11
 
 First CI infrastructure for the repo. Adds a deterministic

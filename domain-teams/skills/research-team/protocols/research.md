@@ -4,6 +4,12 @@ Universal research methodology for any investigation task.
 Fallback when no specialized protocol (market, competitive,
 academic, investment, stack) matches the task.
 
+## Primary Sources
+
+- `standards/systematic-review-methodology.md` — Cochrane 8-step + PRISMA 2020 + Booth 5-element argument model
+- `standards/confidence-and-claim-language.md` — IPCC/Kent calibrated language + Fact/Analysis/Speculation taxonomy + 高/中/低 mapping
+- `standards/source-quality-and-evidence.md` — primary/secondary/tertiary taxonomy + Kovach verification discipline
+
 ## Protocol
 
 ### Phase 0: Scoping
@@ -31,19 +37,24 @@ academic, investment, stack) matches the task.
 
 ### Phase 2: Synthesis
 
-7. **Categorize claims**: Tag every assertion as:
-   - Fact (cited, verifiable)
-   - Analysis (reasoned inference, logic chain explicit)
-   - Speculation (forward-looking, hedged language required)
-8. **Tag confidence**: Mark key conclusions with confidence
-   level (高/中/低). No unqualified certainty on contested claims.
+7. **Categorize claims**: Tag every assertion as Fact / Analysis /
+   Speculation per `standards/confidence-and-claim-language.md`
+   §Fact / Analysis / Speculation Taxonomy. Never present opinion
+   as fact.
+8. **Tag confidence**: Mark key conclusions with confidence level
+   (高/中/低) per `standards/confidence-and-claim-language.md`
+   §Mapping Research-Team 高/中/低 to IPCC 5-Tier. No unqualified
+   certainty on contested claims.
 9. **Counter-arguments**: Address opposing viewpoints and risks
    explicitly. Ignoring counter-evidence is a fatal flaw.
 
 ### Phase 3: Output
 
-10. **Actionable recommendations**: End with specific,
-    prioritized next steps. Include confidence level on each
+10. **Actionable recommendations**: End with specific, prioritized
+    next steps. Structure findings per Booth 5-element argument
+    model (claim + reasons + evidence + warrants + acknowledgments)
+    from `standards/systematic-review-methodology.md` §Booth's
+    5-Element Argument Model. Include confidence level on each
     recommendation. Vague advice ("consider improving X") is
     not acceptable.
 
