@@ -85,7 +85,7 @@ v4.2.0 FULL integration.
 
 ## When to Use
 
-- Deep research and analysis
+- Domain research and analysis (quick by default, deep on request — see ## Research Modes)
 - Investment and macro analysis
 - Market / competitive research
 - Technology evaluation

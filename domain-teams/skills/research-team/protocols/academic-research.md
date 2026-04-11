@@ -21,7 +21,7 @@ launch `### Input` section. If absent, default to `quick`.
 | **quick** (default) | single-pass triangulation | 5 sources | 5 web searches | ~15k tokens |
 | **deep** (opt-in) | full audit trail | 15 sources | 20 web searches | ~150k tokens |
 
-User-overridable via `### Input` fields: `max_sources`, `max_searches`,
+User-overridable via `### Input` fields: `max_sources`, `max_web_searches`,
 `max_tokens`. Reject budgets below quick floor (15k tokens / 5 sources)
 with `BLOCKED: budget below minimum viable quick mode`.
 
