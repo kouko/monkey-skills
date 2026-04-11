@@ -38,6 +38,7 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Design CI/CD pipeline or deployment strategy | `devops-team` |
 | Write Dockerfiles, IaC, or monitoring configs | `devops-team` |
 | Research a topic, analyze market/competition | `research-team` |
+| Investment analysis, valuation, asset allocation, macro regime call | `research-team` |
 | Evaluate a tech stack or OSS | `research-team` |
 | Design UI/UX, create wireframes | `design-team` |
 | Audit accessibility | `design-team` |
