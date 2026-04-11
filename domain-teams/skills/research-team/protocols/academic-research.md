@@ -5,26 +5,44 @@ For deep academic investigation — tracing theory evolution, mapping
 schools of thought, identifying research gaps. Use this for tasks
 like the domain-design Japanese design theory research.
 
+## Primary Sources
+
+- `standards/systematic-review-methodology.md` — Cochrane 8-step workflow + PICO/PICOC question framing + PRISMA 2020 27-item checklist + PRISMA flow diagram + Booth 5-element argument model
+- `standards/source-quality-and-evidence.md` — primary/secondary/tertiary source taxonomy + Kovach verification discipline
+- `standards/information-infrastructure.md` — NDL リサーチ・ナビ 3 層構造 + CiNii Research 系譜 + 倉田 2007 学術情報流通 + JP database decision rule
+
 ## Protocol
 
 ### Phase 0: Research Design
 
 1. **Define research question & scope**: State the theoretical
    question precisely. What phenomenon are we trying to understand?
-   What is the disciplinary scope?
-2. **Identify academic databases**: Select databases by discipline:
+   What is the disciplinary scope? Frame with PICO or PICOC per
+   `standards/systematic-review-methodology.md` §PICO and PICOC
+   Question Framing when the question suits intervention/comparison
+   structure.
+2. **Identify academic databases**: Select databases by discipline.
+   For Japanese-language academic sources, consult
+   `standards/information-infrastructure.md` §NDL リサーチ・ナビ
+   and §CiNii Research 系譜 for the canonical JP database list
+   (NDL, CiNii Research, J-Stage) with decision rules on which
+   to use when. For Anglo sources:
    - General: Google Scholar, Semantic Scholar
-   - Japanese: CiNii, J-Stage, NDL (National Diet Library)
    - Domain-specific: SSRN (social science), arXiv (CS/physics),
      PubMed (bio/med), JSTOR (humanities), IEEE Xplore (engineering)
 3. **Set inclusion / exclusion criteria**: Define what qualifies
    as relevant literature — time range, language, methodology,
    publication type (peer-reviewed, conference, book chapter).
+   Treat inclusion/exclusion as a formal Cochrane Step 2 decision
+   per `standards/systematic-review-methodology.md` §The Cochrane
+   8-Step Workflow.
 
 ### Phase 1: Literature Collection
 
 4. **Systematic search**: Search in English AND Japanese academic
    sources. Use domain-specific terminology in both languages.
+   Follow the Cochrane 8-step workflow (Step 3 "Search") per
+   `standards/systematic-review-methodology.md`.
    - EN: "{theory} systematic review", "{concept} framework"
    - JP: 「〇〇 理論」「〇〇 研究動向」「〇〇 レビュー」
 5. **Citation chain tracing**: Start from seminal works, trace
@@ -32,7 +50,10 @@ like the domain-design Japanese design theory research.
    Identify the intellectual lineage of the field.
 6. **Key author / research group identification**: Who are the
    foundational and active researchers? What institutions are
-   producing the most relevant work?
+   producing the most relevant work? Record the screening funnel
+   (identification → screening → eligibility → inclusion) per
+   `standards/systematic-review-methodology.md` §PRISMA 2020
+   Flow Diagram when the output is a formal review.
 
 ### Phase 2: Analysis & Synthesis
 
@@ -50,7 +71,11 @@ like the domain-design Japanese design theory research.
 
 10. **Literature synthesis**: Integrated narrative connecting
     the key works, not just a list of summaries. Show how
-    ideas build on each other.
+    ideas build on each other. Structure the synthesis per
+    Booth 5-element argument model (claim + reasons + evidence +
+    warrants + acknowledgments) from
+    `standards/systematic-review-methodology.md` §Booth's
+    5-Element Argument Model.
 11. **Research gaps & future directions**: Explicitly state
     what is unknown or contested, and what research would
     resolve it.

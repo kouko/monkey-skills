@@ -1,5 +1,11 @@
 # Tech Stack Evaluation Protocol
 
+## Primary Sources
+
+- `standards/oss-safety.md` — OpenSSF Scorecard 18 checks + NIST SSDF v1.1 + SLSA v1.1 levels + CVSS v4.0 severity ratings + SPDX v3.0 license identifiers
+- `standards/citation-standards.md` — citation discipline for version numbers, CVEs, and benchmark data
+- `standards/source-quality-and-evidence.md` — official registries (npm, PyPI, crates.io, GitHub) as primary; blog posts and "awesome" lists as secondary
+
 ## Protocol
 
 ### Step 1. Define evaluation scope
@@ -44,6 +50,13 @@ Identify 2-5 candidates (for new adoption / replacement type):
 
 ### Step 4. Quantitative signals (per candidate)
 
+Cross-reference `standards/oss-safety.md` for the grounded
+framework: OpenSSF Scorecard provides the 18-check production
+readiness model, NIST SSDF v1.1 defines the 4 secure-development
+practice groups, SLSA v1.1 defines build-integrity levels L0-L3,
+CVSS v4.0 defines severity bands, and SPDX v3.0 is the license
+identifier standard.
+
 | Signal | Source | Red Flag Threshold |
 |:---|:---|:---|
 | GitHub stars trend | GitHub | Declining over 12 months |
@@ -52,8 +65,17 @@ Identify 2-5 candidates (for new adoption / replacement type):
 | Release frequency | GitHub releases | No release in 12 months |
 | Weekly downloads | npm/PyPI/crates.io | <1000 for production use |
 | Breaking change frequency | CHANGELOG | >2 major versions/year |
-| Known CVEs | NVD, GitHub Advisories, Snyk | Any unpatched critical/high |
-| License (SPDX) | Repository | See `standards/oss-safety.md` |
+| Known CVEs | NVD, GitHub Advisories, Snyk | Any unpatched Critical/High per CVSS v4.0 (≥7.0) |
+| License (SPDX) | Repository | See `standards/oss-safety.md` §Acceptable Licenses |
+
+**Note on threshold values**: The numeric thresholds above
+(>500 issues, <1000 weekly downloads, >2 major versions/year,
+>12 months without commits) are research-team **internal
+operational heuristics**, not primary-source citations. They
+are disclosed as such per `standards/oss-safety.md` §Critical
+Attribution Corrections. OpenSSF Scorecard's own checks and
+CVSS severity bands are grounded citations; the count / frequency
+thresholds in this table are the team's convention.
 
 ### Step 5. Qualitative signals (per candidate)
 

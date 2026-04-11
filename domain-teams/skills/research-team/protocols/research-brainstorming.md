@@ -4,6 +4,11 @@
 体系的に洗い出す。Lateral Exploration（横断的探索）によって
 研究範囲を拡張し、優先順位をつける。
 
+## Primary Sources
+
+- `standards/source-quality-and-evidence.md` — scope-expansion discipline と primary/secondary/tertiary source taxonomy（どのソース型で何が分かるか）
+- `standards/systematic-review-methodology.md` §Primary Sources — ACRL "Research as Inquiry" frame: research is an iterative, question-driven process, not a one-shot keyword dump
+
 ## Hard Gate
 
 Do NOT start deep research or produce a report until the exploration
