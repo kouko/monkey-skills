@@ -7,6 +7,229 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.1] — 2026-04-11
+
+research-team cost-aware research modes (quick / deep) with
+**default-cheap discipline**: every research task starts in quick
+mode (~15k tokens, ≤5 sources, SELF check only) unless the user
+opts into deep mode via explicit trigger phrase or post-hoc
+escalation after seeing the quick output. PATCH bump per
+`skill-team/standards/commit-convention.md` CHK-CMT-005 because no
+new files are added at runtime — all changes are modifications to
+existing standards / protocols / gates / SKILL.md / plugin.json /
+CHANGELOG.md. The v4.10.0 reservation for planning-team grounding
+is preserved. Cost impact: typical research task drops from
+~150-300k tokens (deep-by-default in v4.9.0) to ~15-30k tokens
+(quick-by-default in v4.9.1), an estimated 5-10× reduction for
+general-purpose research while preserving audit-trail-grade rigor
+as an opt-in path.
+
+### Added
+
+- `standards/confidence-and-claim-language.md` §**Cost-Aware
+  Early-Exit Rule** — the canonical mode-threshold SSOT referenced
+  by SKILL.md `## Research Modes`. Defines per-mode exit thresholds
+  on the IPCC 3×3 evidence × agreement grid: **quick** exits when
+  each key claim reaches medium-confidence with ≥1 primary source;
+  **deep** exits at very-high-confidence OR budget exhaustion OR
+  marginal-value flatline. Per-claim (not per-deliverable) policy
+  targets the worst-confidence key claim so workers cannot
+  triangulate the easy claims and leave hard claims
+  under-evidenced. Partial completion is a first-class outcome
+  (mixed-confidence deliverable with `unresolved: true` metadata),
+  NOT a BLOCKED condition. Explicit anti-patterns block
+  auto-escalation from quick to deep and aggregation of per-claim
+  confidence into a single "overall confidence".
+
+- **SKILL.md `## Research Modes` section** (between `## Gate
+  Protocol` and `## Resource Manifest`) — full quick/deep mode
+  specification: default budgets, synthesis shape, gate suites,
+  exit thresholds, use cases. Quick-first default + post-hoc
+  escalation UX flow with actual footer format. Explicit-deep
+  bypass trigger phrase table in English / 日本語 / 繁體中文 /
+  简体中文 plus deliberately-excluded ambiguous phrases. Mid-stream
+  escalation (`run deep`) re-launches a second worker in deep mode
+  with the quick artifact as `### Input` seed context (~30-40%
+  saving vs cold-start deep). Quick-mode BLOCKED handling
+  explicitly forbids worker-side auto-escalation.
+
+- **SKILL.md `## Behavioral Rules` default-cheap discipline bullet**
+  — codifies the two-condition escalation rule: only (a) explicit
+  deep-mode trigger phrase in user prompt OR (b) "run deep" reply
+  after quick output triggers deep mode. Worker never auto-
+  escalates; escalation belongs to the user.
+
+### Changed
+
+- **7 research-team protocols gained Phase 0 mode detection +
+  budget enforcement** (commit 2/3 `cf89269`):
+  - `protocols/research.md`
+  - `protocols/research-brainstorming.md`
+  - `protocols/academic-research.md`
+  - `protocols/market-analysis.md`
+  - `protocols/competitive-analysis.md`
+  - `protocols/investment.md`
+  - `protocols/stack-evaluation.md`
+
+  Each protocol now reads `mode` + `max_tokens` + `max_sources` +
+  `max_web_searches` from worker `### Input` and applies per-team
+  quick-mode reductions (e.g., single-framework-only for Market
+  Analysis quick mode, reduced PRISMA scope for Academic Research
+  quick mode, skip Investment Clock full 2×2 for Investment quick
+  mode).
+
+- **3 gates gained Mode-Aware Triggering note** (commit 2/3):
+  - `checklists/source-citation-checklist.md` (MUST gate — skipped
+    in quick mode per `## Research Modes`)
+  - `rubrics/research-quality-gate.md` (SHOULD gate — skipped in
+    quick mode)
+  - `checklists/oss-due-diligence.md` (MAY gate — explicit opt-in
+    regardless of mode, but full suite only runs in deep mode)
+
+- **SKILL.md persona** — new **default-cheap discipline** line near
+  the Mission / Delivers block: "every research task starts in
+  quick mode (~15k tokens, ≤5 sources) unless the user explicitly
+  requests deep mode via trigger phrase or post-hoc escalation."
+
+- **SKILL.md workflows table refactored 8 → 7 rows**:
+  - Standalone Deep Research / Analysis workflow DELETED (see
+    Removed)
+  - New **Default Mode** column added to the 5 worker-dispatching
+    workflow phase tables (Market Analysis, Competitive Analysis,
+    Academic Research, Investment Analysis, Tech Stack / OSS
+    Evaluation) — every entry reads `quick`
+  - Quick Lookup / Fact-Check and Research Summary gained an
+    explicit `**Default mode**: quick (handled in main, no worker
+    dispatch)` line
+  - Header notes added: "All worker-dispatching workflows default
+    to quick mode" + "`scope_clarity=unclear` invokes Brainstorm +
+    Synthesize phase hooks"
+  - Per-gate-table header annotations now mark MUST + SHOULD as
+    "skipped in quick mode per `## Research Modes`"
+
+- **SKILL.md worker launch template `### Input`** — gained 5 new
+  fields: `output_language`, `mode`, `max_tokens`, `max_sources`,
+  `max_web_searches`, `scope_clarity`. Existing artifact / context
+  fields preserved.
+
+- **SKILL.md evaluator launch template `### Input`** — new
+  `mode` field so evaluators know which per-mode threshold to
+  enforce from the Cost-Aware Early-Exit Rule.
+
+- **SKILL.md Note on Global Context** — second paragraph compressed
+  from 11 lines to 8 lines to stay well under the 500-line hard cap
+  while preserving the same preamble-integration decision record.
+
+### Removed
+
+- **Deep Research / Analysis workflow as standalone entry** — the
+  Brainstorm (Phase 1) + Research (Phase 2) + Synthesize (Phase 3)
+  flow is replaced by optional **Brainstorm phase hook** and
+  **Synthesize phase hook** invokable via `scope_clarity=unclear`
+  on any worker-dispatching workflow. This collapses the 3-phase
+  dedicated workflow into an opt-in capability that composes with
+  every other workflow, rather than duplicating the effect as a
+  separate entry.
+
+### Design rationale
+
+Why post-hoc escalation default + trigger phrase bypass + no
+upfront cost preview: the v4.7.0 Obsidian opt-in directive
+precedent established that **"silence means default behavior — do
+not prompt"**. Upfront cost previews force every user through a
+confirmation round-trip before any work starts, even for trivial
+research that will finish in quick mode's default budget. The
+better UX is to run quick mode silently, show the result, and
+offer escalation **after** the user has seen whether it was
+sufficient — at which point they have the most information for
+the decision. The Plan-agent critique that landed this refactor
+explicitly recommended collapsing cost preview prose, $-amount
+estimates, and confirmation prompts into a post-hoc footer.
+
+Why a trigger phrase bypass: users who have pre-decided on deep
+mode (because they know the task is high-stakes) should not be
+forced through the quick-first intermediate. The trigger phrase
+table explicitly excludes ambiguous phrases like "thorough
+analysis", "comprehensive review", and 「詳細分析」 because those
+are how normal users phrase normal requests; only unambiguous
+phrases like "deep research", "spare no expense", 「徹底調査」, or
+「深入研究」 trigger the bypass.
+
+### Cost impact
+
+Typical research task drops from ~150-300k tokens (deep-by-default
+in v4.9.0 and earlier, which triggered the full MUST + SHOULD gate
+suite for every workflow) to ~15-30k tokens (quick-by-default in
+v4.9.1, which skips MUST + SHOULD for quick output and calls a
+lightweight SELF check instead). Estimated **5-10× cost
+reduction** for general-purpose research while preserving
+audit-trail-grade IPCC-level rigor as an opt-in path for
+high-stakes tasks. Mid-stream escalation (quick → deep with the
+quick artifact as seed) is ~30-40% cheaper than cold-start deep
+mode because the deep worker focuses on gap-filling rather than
+duplicating the triangulation the quick pass already performed.
+
+### Out of scope (deferred)
+
+- **Mode-aware gate threshold tuning** (v4.9.2 if needed) — the
+  current implementation is a binary skip: quick mode skips MUST +
+  SHOULD entirely rather than running relaxed per-mode variants.
+  A future refinement could introduce per-mode threshold tiers
+  inside the gate files themselves.
+- **Per-workflow budget tuning** (v4.9.2 if needed) — every
+  worker-dispatching workflow currently uses the default 15k /
+  150k quick / deep budgets. Some workflows (e.g., Academic
+  Research with PRISMA-grade scope) may deserve per-workflow
+  budget defaults in a future refinement.
+- **Cost preview prose and dollar-amount estimates** —
+  deliberately excluded per the v4.7.0 Obsidian opt-in directive
+  precedent. Users see actual consumption in the post-hoc footer,
+  not projected estimates before work starts.
+- **planning-team grounding** — v4.10.0 milestone reservation
+  preserved. planning-team remains the only ungrounded domain team
+  after v4.9.x.
+- **Hooks** — v5.0+ milestone; not touched by v4.9.1.
+
+### Meta
+
+**PATCH bump rationale** per `skill-team/standards/commit-convention.md`
+CHK-CMT-005 distinguishing rule ("does this branch introduce new
+files that worker or evaluator agents will Read at runtime? Yes →
+MINOR. No → PATCH."): v4.9.1 introduces **zero new files**. Every
+change in this release is a modification to an existing runtime
+file:
+
+- `confidence-and-claim-language.md` gains a new section but the
+  file itself already existed from v4.9.0
+- 7 protocols gain a Phase 0 block but the files already existed
+- 3 gates gain a Mode-Aware Triggering note but the files already
+  existed
+- SKILL.md gains sections and table columns but the file already
+  existed
+- plugin.json and CHANGELOG.md are the standard version-bump
+  files
+
+This makes v4.9.1 a textbook PATCH bump — the new section in
+`confidence-and-claim-language.md` is a section addition inside
+an existing file, not a new file.
+
+**3-commit split pattern** per `skill-team/protocols/skill-redesign.md`:
+- Commit 1/3 `3be7860` — standards (§Cost-Aware Early-Exit Rule)
+- Commit 2/3 `cf89269` — protocols + gates (Phase 0 mode detection +
+  Mode-Aware Triggering notes)
+- Commit 3/3 (this commit) — SKILL.md + plugin.json + CHANGELOG
+
+### Verification
+
+- `python3 scripts/check-skill-structure.py domain-teams` → all 9
+  skills PASS (research-team included) after this commit.
+- SKILL.md line count: 496 lines (under the 500-line hard cap per
+  `skill-md-structure.md` §Line Budget).
+- Frontmatter description word count unchanged from v4.9.0 (69
+  tokens, comfortably above the 40-token CHK-SKL-001 floor).
+- Investment Clock phase naming from v4.9.0 (Reflation / Recovery /
+  Overheat / Stagflation) preserved — not touched by v4.9.1.
+
 ## [4.9.0] — 2026-04-11
 
 research-team grounding refactor — closes the "philosophical

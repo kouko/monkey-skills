@@ -50,6 +50,10 @@ finding-aid infrastructure with its テーマ別調査案内 / 資料群別案�
 Mission: ensure we know enough
 (trustworthy sources, sufficient scope, risks visible).
 
+Default-cheap discipline: every research task starts in quick mode
+(~15k tokens, ≤5 sources) unless the user explicitly requests deep
+mode via trigger phrase or post-hoc escalation.
+
 Delivers: Research reports, analysis, evaluations, tech stack assessments, investment memos.
 Done when: all triggered quality gates pass (Citation, Research Quality, OSS Due Diligence).
 
@@ -71,16 +75,13 @@ tradition (NDL 3-tier navigation, CiNii 横断検索), not parallel
 methodology textbooks.
 
 The appropriate posture is a JP preamble standards file
-(`standards/information-infrastructure.md`, Tier 3) that orients
-workers to the JP information-access apparatus and to SIST 02
-citation-format conventions — not a full symmetric set of JP
-methodology standards. The research note
-(`research/grounding-v4.9.0.md`) Phase 2 JP parallel-tradition check
-verified this gap explicitly. This matches the docs-team v4.3.0
-precedent (JTAP preamble to Google Style) and the code-team v4.6.0
-precedent (徳丸本 Ch.6 preamble to OWASP ASVS), not the qa-team v4.2.0
-FULL integration precedent (VSTeP / HAYST法 / ゆもつよ as peer
-tradition to ISTQB).
+(`standards/information-infrastructure.md`, Tier 3) orienting
+workers to JP information-access apparatus and SIST 02 citation
+conventions — not a full symmetric set of JP methodology standards.
+Verified by `research/grounding-v4.9.0.md` Phase 2. Matches the
+docs-team v4.3.0 (JTAP preamble to Google Style) and code-team
+v4.6.0 (徳丸本 Ch.6 preamble to OWASP ASVS) precedents, not qa-team
+v4.2.0 FULL integration.
 
 ## When to Use
 
@@ -175,6 +176,98 @@ Guard rails:
 - Do NOT compress artifacts before passing to evaluator — evaluator needs
   full citations (URLs, dates, figures) to judge source quality
 
+## Research Modes
+
+research-team operates in two cost-aware modes per the v4.9.1
+Cost-Aware Early-Exit Rule (see `standards/confidence-and-claim-language.md`
+§Cost-Aware Early-Exit Rule for the per-mode exit thresholds and
+per-claim policy).
+
+### Quick mode (default)
+
+| Property | Value |
+|---|---|
+| Default budget | ~15k tokens, ≤5 sources, ≤5 web searches |
+| Synthesis | Single-pass structured summary |
+| Gates | SELF check only (skips MUST source-citation-checklist + SHOULD research-quality-gate) |
+| Exit threshold | All key claims at Medium confidence (medium evidence × medium agreement on the IPCC 3×3 grid) with ≥1 primary source per claim |
+| Use case | "Answer the question" — fast triangulation that the user can revisit |
+
+### Deep mode (opt-in)
+
+| Property | Value |
+|---|---|
+| Default budget | ~150k tokens, ≤15 sources, ≤20 web searches |
+| Synthesis | Full Phase 0-3 cycle with cross-language coverage |
+| Gates | Full suite: SELF + MUST source-citation-checklist + SHOULD research-quality-gate (+ MAY oss-due-diligence on OSS tasks) |
+| Exit threshold | All key claims at Very high confidence (robust evidence × high agreement) OR budget exhausted OR marginal-value flatline |
+| Use case | "Audit-trail-grade truth" — IPCC-grade rigor for high-stakes research |
+
+User can override deep-mode budget via worker launch `### Input`
+fields: `max_tokens`, `max_sources`, `max_web_searches`. Budgets
+below the quick floor (15k tokens / 5 sources) are rejected with
+BLOCKED.
+
+### Quick-first default + post-hoc escalation (mainline UX)
+
+Every research task starts in **quick mode** by default — no
+upfront cost preview, no confirmation prompt. After the quick
+worker completes, the main agent presents the artifact to the user
+with a footer summarizing actual consumption and offering
+escalation:
+
+```
+[quick artifact: ~50-line market overview]
+
+─── quick mode: 12k tokens / 4 sources / 6 searches / 90s ───
+Reply "run deep" for deeper pass with audit trail (~150k tokens,
+~15 sources, ~10 min). Or specify budget: "run deep max 50k tokens"
+/ "run deep max 8 sources".
+```
+
+The user decides AFTER seeing the quick output, when they have the
+most information about whether it was sufficient. This eliminates
+upfront cost preview prose, $-amount estimates, and confirmation
+round-trips before any work starts. Aligned with the v4.7.0
+Obsidian opt-in directive precedent ("silence means default
+behavior — do not prompt").
+
+### Explicit-deep bypass (fast path for pre-decided users)
+
+When the user's prompt contains an unambiguous deep-mode trigger
+phrase, main agent skips the quick intermediate and launches deep
+mode directly with default budget:
+
+| Language | Trigger phrases |
+|---|---|
+| English | `deep research`, `spare no expense`, `full rigor`, `with audit trail`, `deep mode` |
+| 日本語 | 「徹底調査」「深掘り」「ディープモード」 |
+| 繁體中文 | 「深入研究」「詳盡分析」「全面研究」 |
+| 简体中文 | 「深入研究」「详尽分析」「全面研究」 |
+
+**Deliberately excluded** (too ambiguous, common in normal
+phrasing): `thorough analysis`, `in-depth study`, `comprehensive
+review`, `carefully`, 「詳細分析」. These are how normal users
+phrase normal requests and should NOT trigger deep mode.
+
+### Mid-stream escalation (quick → deep)
+
+When the user replies "run deep" (or "run deep max X" with budget
+override) after seeing the quick output, main agent launches a
+**second worker** in deep mode with the **quick artifact passed as
+`### Input` seed context**. This is cheaper than a cold-start deep
+mode because the deep worker focuses on filling gaps, raising
+confidence, and adding primary sources where quick had only
+secondary. Estimated saving: ~30-40% vs cold-start deep mode.
+
+### Quick mode BLOCKED handling
+
+If quick mode cannot reach the medium-confidence threshold within
+its budget (e.g., insufficient sources exist for the topic), the
+worker returns BLOCKED with a partial result. Main agent presents
+to the user; **do NOT auto-escalate to deep mode** — the escalation
+decision belongs to the user, not the worker.
+
 ## Resource Manifest
 
 Worker default resources (always loaded):
@@ -203,6 +296,11 @@ Knowledge access is open. Role boundaries are enforced by behavior:
 
 - **worker / main agent**: Produces artifacts. Does NOT produce gate verdicts (PASS/FAIL/flags).
 - **evaluator**: Produces verdicts. Does NOT modify artifacts or produce revised output.
+- **Default-cheap discipline**: every research task starts in quick
+  mode unless (a) the user's prompt contains an explicit deep-mode
+  trigger phrase per `## Research Modes`, OR (b) the user replies
+  "run deep" to escalate after seeing quick output. Do NOT auto-
+  escalate; escalation is the user's decision.
 
 ## Agents
 
@@ -239,7 +337,13 @@ Resolve relative paths against this skill's base directory to get absolute paths
   ]
 
 ### Input
-{Artifact or context from previous phase}
+output_language: {detected from user}
+mode: quick    # or "deep" — defaults to quick if absent
+max_tokens: 15000      # quick default; 150000 for deep
+max_sources: 5         # quick default; 15 for deep
+max_web_searches: 5    # quick default; 20 for deep
+scope_clarity: clear   # or "unclear" — triggers Brainstorm phase hook
+{artifact or context from previous phase}
 ```
 
 ### Evaluator launch template
@@ -256,6 +360,10 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {inject workflow-specific standards here, same list as worker}
   ]
 
+### Input
+output_language: {detected}
+mode: quick    # or "deep" — passed by main agent so gate knows what to enforce
+
 ### Artifact
 {The work product to evaluate}
 
@@ -267,37 +375,43 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 ## Workflows
 
-### Deep Research / Analysis
+All worker-dispatching workflows default to **quick mode** and can
+escalate to deep via post-hoc escalation or explicit trigger phrase.
+See `## Research Modes` for the mode mechanism.
 
-**Trigger**: User requests deep research, multi-source analysis, or comprehensive investigation.
+When `scope_clarity=unclear` is passed in `### Input`, any worker-
+dispatching workflow can invoke the optional **Brainstorm phase
+hook** (running `protocols/research-brainstorming.md` first) and
+**Synthesize phase hook** (a final synthesis worker dispatch). This
+replaces the deleted standalone Deep Research workflow.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Brainstorm | worker | `protocols/research-brainstorming.md` | user request | approach + directions | optional — skip if scope clear |
-| 2. Research | worker | `protocols/research.md` | directions | research artifact | parallel if independent directions |
-| 3. Synthesize | main | — | research artifact(s) | final report | — |
+### Quick Lookup / Fact-Check
 
-**Parallel dispatch handling (Phase 2):**
-- Single direction → one worker, pass full artifact to Phase 3 directly
-- Multiple independent directions → parallel workers, then synthesize in main conversation
-  (each worker produces a focused artifact; main agent combines key findings)
+**Trigger**: Single-question lookup, quick fact-check, or simple verification.
+**Default mode**: quick (handled in main, no worker dispatch)
 
-**Gates after Phase 3:**
+1. Search and answer directly in main conversation
+2. SELF check
+3. Deliver (no formal citations → no MUST gate trigger)
 
-| Order | Type | Gate File | Standards | Stop on Fail |
-|-------|------|-----------|-----------|--------------|
-| 1 | MUST | `checklists/source-citation-checklist.md` | `source-quality-and-evidence.md` + `citation-standards.md` + `confidence-and-claim-language.md` | yes |
-| 2 | SHOULD | `rubrics/research-quality-gate.md` | same 3 defaults + `systematic-review-methodology.md` | no |
+### Research Summary (from existing sources)
+
+**Trigger**: Summarize or synthesize existing documents, reports, or prior research.
+**Default mode**: quick (handled in main, no worker dispatch)
+
+1. Write summary in main conversation
+2. SELF check → MUST gate (Citation, if sources cited)
+3. Deliver
 
 ### Market Analysis
 
 **Trigger**: User requests market research, market sizing, or market trends analysis.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Research | worker | `protocols/market-analysis.md` | user request | market report | standards: 3 defaults + `strategic-frameworks.md` |
+| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
+|-------|-------|----------|--------------|-------|--------|-------|
+| 1. Research | worker | `protocols/market-analysis.md` | quick | user request | market report | standards: 3 defaults + `strategic-frameworks.md` |
 
-**Gates:**
+**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite runs in deep mode):
 
 | Order | Type | Gate File | Standards | Stop on Fail |
 |-------|------|-----------|-----------|--------------|
@@ -308,11 +422,11 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Trigger**: User requests competitive landscape, competitor comparison, or benchmarking.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Research | worker | `protocols/competitive-analysis.md` | user request | competitive report | standards: 3 defaults + `strategic-frameworks.md` |
+| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
+|-------|-------|----------|--------------|-------|--------|-------|
+| 1. Research | worker | `protocols/competitive-analysis.md` | quick | user request | competitive report | standards: 3 defaults + `strategic-frameworks.md` |
 
-**Gates:**
+**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite runs in deep mode):
 
 | Order | Type | Gate File | Standards | Stop on Fail |
 |-------|------|-----------|-----------|--------------|
@@ -323,11 +437,11 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Trigger**: User requests academic-grade analysis, literature review, or theoretical investigation.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Research | worker | `protocols/academic-research.md` | user request | academic report | standards: 3 defaults + `systematic-review-methodology.md` + `information-infrastructure.md` (JP databases) |
+| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
+|-------|-------|----------|--------------|-------|--------|-------|
+| 1. Research | worker | `protocols/academic-research.md` | quick | user request | academic report | standards: 3 defaults + `systematic-review-methodology.md` + `information-infrastructure.md` (JP databases) |
 
-**Gates:**
+**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite runs in deep mode):
 
 | Order | Type | Gate File | Standards | Stop on Fail |
 |-------|------|-----------|-----------|--------------|
@@ -338,11 +452,11 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Trigger**: User requests investment evaluation, financial analysis, or macro analysis.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Research | worker | `protocols/investment.md` | user request | investment report | standards: 3 defaults + `investment-analysis-canon.md` |
+| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
+|-------|-------|----------|--------------|-------|--------|-------|
+| 1. Research | worker | `protocols/investment.md` | quick | user request | investment report | standards: 3 defaults + `investment-analysis-canon.md` |
 
-**Gates:**
+**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite runs in deep mode):
 
 | Order | Type | Gate File | Standards | Stop on Fail |
 |-------|------|-----------|-----------|--------------|
@@ -353,33 +467,17 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 
 **Trigger**: User requests technology evaluation, framework comparison, or OSS assessment.
 
-| Phase | Agent | Protocol | Input | Output | Notes |
-|-------|-------|----------|-------|--------|-------|
-| 1. Evaluate | worker | `protocols/stack-evaluation.md` | user request | evaluation report | standards: 3 defaults + `oss-safety.md` |
+| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
+|-------|-------|----------|--------------|-------|--------|-------|
+| 1. Evaluate | worker | `protocols/stack-evaluation.md` | quick | user request | evaluation report | standards: 3 defaults + `oss-safety.md` |
 
-**Gates:**
+**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite + optional MAY runs in deep mode):
 
 | Order | Type | Gate File | Standards | Stop on Fail |
 |-------|------|-----------|-----------|--------------|
 | 1 | MUST | `checklists/source-citation-checklist.md` | 3 defaults | yes |
 | 2 | SHOULD | `rubrics/research-quality-gate.md` | 3 defaults + `oss-safety.md` | no |
 | 3 | MAY | `checklists/oss-due-diligence.md` | 3 defaults + `oss-safety.md` | no |
-
-### Quick Lookup / Fact-Check
-
-**Trigger**: Single-question lookup, quick fact-check, or simple verification.
-
-1. Search and answer directly in main conversation
-2. SELF check
-3. Deliver (no formal citations → no MUST gate trigger)
-
-### Research Summary (from existing sources)
-
-**Trigger**: Summarize or synthesize existing documents, reports, or prior research.
-
-1. Write summary in main conversation
-2. SELF check → MUST gate (Citation, if sources cited)
-3. Deliver
 
 ## Cross-Domain Awareness
 
