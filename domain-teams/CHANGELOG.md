@@ -7,6 +7,200 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.10.1] — 2026-04-11
+
+research-team investment-analysis-canon.md extension adding two
+additional frameworks — Dalio's two-horizon debt cycle (6 phases)
+and Campbell & Shiller CAPE cycle-smoothing — plus a Critical
+Attribution Correction that explicitly rejects a non-existent
+"Damodaran macro regime framework". Also adds Richard Koo 2008
+*The Holy Grail of Macroeconomics* as the Japanese parallel to
+Dalio's depression → beautiful deleveraging phases.
+
+PATCH bump per `skill-team/standards/commit-convention.md`
+CHK-CMT-005 because **zero new files** are introduced. All changes
+are additive content inside existing `investment-analysis-canon.md`
+standards file + protocol wiring in `investment.md` + SKILL.md
+persona touch + plugin.json bump + CHANGELOG entry. The PATCH scope
+is intentionally narrow: no new standards file, no new protocol, no
+new gate, no workflow-table changes.
+
+### Added
+
+- **`standards/investment-analysis-canon.md` §Dalio's Debt Cycle
+  Framework** — new section (~135 lines) covering the two-horizon
+  framework: short-term debt cycle (5-8 years, credit expansion /
+  contraction) + long-term debt cycle (50-75 years, leverage
+  accumulation). Both cycles use the same 6 canonical phases —
+  **Early part of the cycle → Bubble → Top → Depression →
+  Beautiful deleveraging → Pushing on a string**. Body spells out
+  all 6 phases verbatim with definitions (LLM drift hotspot: cold
+  query often collapses to 4 or 5 phases or drops "early part").
+  Explicit 3-axis variable set (Growth + Inflation + Productivity)
+  contrasted with Investment Clock's 2-axis (Growth × Inflation).
+  Diagnostic-NOT-prescriptive discipline enforced: Dalio identifies
+  phase; asset-class calls come from Investment Clock. Complementarity
+  matrix showing IC and Dalio as orthogonal layers (tactical 1-3 yr
+  vs structural 5-8 / 50-75 yr). Primary source: Ray Dalio 2018
+  *Principles for Navigating Big Debt Crises*, Bridgewater Associates
+  (free PDF via principles.com).
+
+- **`standards/investment-analysis-canon.md` §Cyclically-Adjusted
+  P/E (CAPE)** — new subsection (~80 lines) placed under existing
+  §Damodaran's Valuation Taxonomy §2 Relative Valuation, NOT as a
+  parallel regime model. CAPE is a single-variable equity valuation
+  indicator (not cross-asset rotation), so it belongs alongside P/E
+  / EV/EBITDA / P/B / P/S as a cycle-smoothed refinement of the P/E
+  multiple. Full formula with explicit "real" (inflation-adjusted)
+  qualifier, 10-year smoothing window anchored in Graham & Dodd
+  1934 lineage, historical thresholds table (5 bands across ~150
+  years), predictive power R² ~0.30-0.40 on 10-year-forward real
+  returns per Campbell & Shiller 1998. Explicit "NOT a regime
+  model" disclaimer with complementarity note to Investment Clock.
+  JP application note on Nikkei CAPE availability via Shiller's
+  Yale dataset since 1957 (no parallel JP methodology). Primary
+  sources: Campbell & Shiller 1998 *JPM* 24(2) + Shiller 2015
+  *Irrational Exuberance* 3rd ed.
+
+- **`standards/investment-analysis-canon.md` §The Merrill Lynch
+  Investment Clock §Complementarity with CAPE** — new subsection
+  added after the existing §Anti-Drift Note making the IC ↔ CAPE
+  reading explicit. Not a duplicate — the cross-reference lives in
+  both directions (IC section points to CAPE, CAPE section points
+  to IC) so readers arriving from either framework see the other.
+
+- **`standards/investment-analysis-canon.md` §Balance-Sheet
+  Recession — the Japanese Parallel (Koo 2008)** — new subsection
+  inside the Dalio section documenting Richard C. Koo's 2008
+  *The Holy Grail of Macroeconomics* balance-sheet recession
+  concept. Koo's central finding: during Dalio's Depression →
+  Beautiful Deleveraging phases, firms switch from
+  profit-maximization to debt-minimization, producing prolonged
+  demand collapse even at zero interest rates. Grounded in Japan's
+  1990s Lost Decade with secondary 2008 US / Euro applications.
+  Complementary to Dalio's 6-phase framework (Koo covers 2 phases
+  in depth; Dalio covers the full cycle across 48 historical
+  crises). Primary source: Koo 2008 Wiley Singapore.
+
+### Changed
+
+- **`standards/investment-analysis-canon.md` frontmatter description
+  + Tier 3 rationale** — updated from "three load-bearing pillars"
+  to "five load-bearing pillars", adding Dalio and CAPE. Tier 3
+  rationale extended to document additional LLM hallucination
+  hotspots the body must preempt: Dalio's 6 phases often collapsed
+  to 4 or 5; CAPE miscredited to Shiller alone; fabricated
+  "Damodaran macro regime framework".
+
+- **`standards/investment-analysis-canon.md` §Critical Attribution
+  Corrections** — extended from 1 correction (Investment Clock
+  4-phase naming) to 4 corrections with 3 new subsections:
+  1. **CAPE authorship is Campbell & Shiller 1998, NOT Shiller
+     alone** — LLMs routinely credit CAPE to Shiller 2000
+     *Irrational Exuberance* and omit Campbell. The operational
+     10-year formulation is in the 1998 *JPM* paper.
+  2. **10-year CAPE window is Graham & Dodd 1934, NOT Shiller's
+     invention** — correct lineage is Graham & Dodd 1934 →
+     Campbell & Shiller 1988 → operational CAPE 1998. Do NOT
+     present the 10-year window as Shiller-derived or arbitrary.
+  3. **Damodaran has NO canonical macro / regime framework** —
+     explicit rejection of a recurring misconception. Damodaran's
+     corpus is exclusively bottom-up valuation: DCF / Relative /
+     Contingent-claim + ERP and Country Risk as DCF discount-rate
+     inputs + 2024 *Corporate Life Cycle* (firm-stage taxonomy,
+     NOT macro cycle). For regime frameworks, cite Greetham &
+     Hartnett 2004 or Dalio 2018, NOT Damodaran.
+
+- **`standards/investment-analysis-canon.md` §Primary Sources** —
+  5 new bullets added (Campbell & Shiller 1998, Shiller 2015,
+  Dalio 2018, Koo 2008, plus cross-reference to Campbell & Shiller
+  1988 predecessor). Total Primary Sources now ~10 bullets covering
+  the 5 load-bearing pillars.
+
+- **`standards/investment-analysis-canon.md` §Damodaran's Valuation
+  Taxonomy §Relative Valuation** — P/E bullet now explicitly
+  references the CAPE subsection for cyclical-industry use cases.
+  New CAPE bullet added to the multiples list.
+
+- **`standards/investment-analysis-canon.md` §Anti-Patterns** —
+  extended from 5 to 9 bullets with 4 new anti-patterns:
+  1. Citing Dalio's framework as prescriptive asset allocation
+  2. Collapsing Dalio's 6 phases into 4 or 5 or using business-cycle
+     vocabulary (mirrors the existing IC anti-pattern)
+  3. Citing "CAPE" without the "10-year" qualifier (LLMs drift to
+     5 or 7)
+  4. Citing "Damodaran's macro framework" — the framework does not
+     exist; redirect to Greetham & Hartnett 2004 or Dalio 2018
+
+- **`protocols/investment.md`** — Phase 2 Step 5 Valuation now
+  lists CAPE as an option under Relative Valuation with explicit
+  Campbell & Shiller 1998 dual-author citation requirement. Phase
+  3 Step 11 Macro Regime Analysis now produces a **2-layer regime
+  read**: Layer A (Investment Clock tactical call, existing) +
+  Layer B (Dalio debt-cycle structural risk overlay, new). Step 12
+  Implications extends from asset-class mapping alone to
+  "tactical call + structural overlay" (e.g., IC says "Recovery →
+  Stocks lead" AND Dalio says "Bubble phase → credit-overstretch
+  risk → size down"). Quick-mode reductions extended to note one-
+  line Dalio phase call only (no 6-phase enumeration) and
+  rolling-P/E fallback for CAPE. Deep-mode rigor extended to
+  require CAPE threshold check against Campbell & Shiller 1998
+  historical bands plus full Dalio 6-phase identification for both
+  short-term and long-term cycles. Rules section gains 4 new rules
+  (Dalio diagnostic-only, CAPE dual-author, no fabricated Damodaran
+  regime framework, Dalio 6 phases verbatim naming).
+
+- **`SKILL.md` persona** — Investment canon anchor paragraph
+  extended to name Campbell & Shiller 1998 CAPE and Dalio 2018 as
+  additional load-bearing primary sources alongside Damodaran 2012
+  and Greetham & Hartnett 2004.
+
+- **`SKILL.md` Resource Manifest** — `investment-analysis-canon.md`
+  description line extended to mention CAPE + Dalio + Koo
+  coverage.
+
+### Fixed
+
+- **Non-existent "Damodaran macro regime framework" misconception**
+  — documented as a Critical Attribution Correction so that future
+  requests or deliverables citing Damodaran for macro regimes are
+  explicitly redirected to the correct authors (Greetham & Hartnett
+  2004 for asset rotation, Dalio 2018 for debt-cycle diagnosis,
+  Howard Marks 2018 optional for narrative cycle). This preempts
+  downstream LLM drift.
+
+### Notes
+
+SKILL.md line count: 496 → 500 (exactly at the hard cap, 0 lines
+of margin). Any future v4.10.x patch that adds to SKILL.md will
+need to compress the persona block first. Consider as a follow-up
+the v4.10.2 candidate "SKILL.md persona compression pass to restore
+~50 lines of budget margin".
+
+investment-analysis-canon.md: 310 → 646 lines (+336 lines). Well
+within Tier 3 budget (5 pillars × ~130 lines = proportional to
+framework breadth). No new files added at runtime per CHK-CMT-005
+→ PATCH bump is correct.
+
+No new research note (`research/grounding-v4.10.1.md`) was created.
+Per `grounding-principle.md` the research note is optional for
+additive PATCH on frameworks that are already well-known,
+canonical, and cold-query-verifiable — Dalio, Campbell & Shiller,
+and Koo all meet this bar. The 3 parallel research agent outputs
+from the planning session serve as the informal audit trail; the
+v4.9.0 grounding-v4.9.0.md research note already covers the
+Investment Clock cluster that sits upstream.
+
+Howard Marks 2018 *Mastering the Market Cycle* (HarperBusiness)
+was considered and **deferred to a potential v4.10.2** if a
+contemporary narrative-cycle framework is desired alongside Dalio.
+Marks's greed-fear pendulum and 4-cycle (economic / profit / credit
+/ psychological) structure is qualitatively distinct from Dalio's
+structured 6-phase diagnostic and from the Investment Clock's
+quantitative 2×2 — adding all three in one PATCH would over-stuff
+the file. Marks remains a valid future addition if usage shows the
+gap.
+
 ## [4.10.0] — 2026-04-11
 
 planning-team primary-source grounding refactor — the **final domain
