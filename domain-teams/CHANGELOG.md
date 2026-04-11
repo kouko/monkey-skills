@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.1] — 2026-04-11
+
+### Changed
+
+- `skill-team/standards/grounding-principle.md` §Citation Density
+  Rule (new section): codified the **Compact+Admonitions** style for
+  layer 2 of the 3-layer primary-source record structure (per-
+  `standards/*.md` `## Primary Sources` sections). Specifies
+  minimum required per-source fields (author / year / title / ISBN
+  or URL / one-line rationale), explicitly optional fields (DOIs,
+  translator names, JP translation ISBNs, supplementary
+  bibliography, subchapter titles, publisher verbosity — do NOT
+  include unless materially helpful), and a dedicated
+  `## Critical Attribution Corrections` section convention for
+  anti-drift guardrails (consolidated after Primary Sources, not
+  scattered as inline Admonitions in the body). Includes observed
+  precedent table (code-team ~1.8%, devops-team ~2.5%, docs-team
+  ~4.0%, qa-team ~7.5%, design-team target 2-4%), honesty
+  disclosure explaining the trigger, and 7 new anti-patterns (DOI
+  padding, translator proliferation, supplementary bibliography in
+  layer 2, scattered Admonition blocks, publisher verbosity,
+  subchapter padding, layer confusion).
+
+- `skill-team/protocols/grounding-research.md` Phase 4 Standards
+  Synthesis: updated per-cluster template to include a `Critical
+  attribution corrections` field; expanded estimated length 60-140
+  → 60-160 to accommodate optional Critical Attribution Corrections
+  section. Added 3 new subsections: "Citation style for each
+  standards file" (cross-reference to new §Citation Density Rule),
+  "Minimal template for a Primary Sources section" (concrete markdown
+  fill-in-the-blank), "Minimal template for a Critical Attribution
+  Corrections section". New Phase 4 anti-patterns block forbids
+  reproducing the research note in layer 2, scattered Admonitions,
+  DOI/translator padding, and omission of Critical Attribution
+  Corrections when the research note surfaced attribution errors.
+
+### Why this change
+
+Exposed by the first Commit 1/3 attempt of the design-team v4.8.0
+grounding refactor (commit SHA `4a00cae` produced in-session, never
+landed on main because the branch was reset before PR creation).
+That commit's 8 standards files went academic-density on first pass:
+each `## Primary Sources` entry included DOI strings for peer-
+reviewed papers, full JP translation ISBNs with 訳者 names,
+supplementary bibliography subsections, detailed subchapter titles,
+publisher-imprint-format metadata, and 3 critical attribution
+corrections scattered as inline `> ⚠️ Critical correction`
+Admonition blocks spread across Primary Sources and body sections.
+
+Comparison against 4 grounded precedent teams confirmed the drift:
+code-team mean ~1.8% of file is Primary Sources; design-team v4.8.0
+first attempt was ~3.2-3.4% but padded with ~45 lines of scattered
+Admonition blocks — conflating bibliography (Reference mode), audit
+trail (research note territory), and anti-drift guardrails (which
+ARE load-bearing but belong in a consolidated section).
+
+The user caught the academic drift during Commit 1/3 review and
+halted Commit 2/3 launch. v4.7.1 codifies the Compact+Admonitions
+policy so future grounding refactors follow it by default. The
+design-team branch has been reset; the v4.8.0 refactor will restart
+after v4.7.1 merges, with the Phase 4 worker reading the new policy
+before producing standards.
+
+### Known residual — grounded teams predating this rule
+
+The 4 teams grounded before v4.7.1 (qa/docs/devops/code) were each
+written with their own intuitive density, landing in a range of
+1.3-8.3% per file. None of them are retroactively compliant with
+the Compact+Admonitions rule. Per scope discipline, v4.7.1 does NOT
+retro-apply the rule to existing grounded teams — their Primary
+Sources sections stay as-is until the next refactor of each team.
+The rule applies to **design-team v4.8.0 onward** and any future
+grounding refactors (research-team, planning-team).
+
 ## [4.7.0] — 2026-04-11
 
 ### Added
