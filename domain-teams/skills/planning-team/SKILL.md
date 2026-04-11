@@ -45,11 +45,12 @@ Consistency gate.
 - MVP definition and phasing (per Ries 2011 — minimum for validated
   learning, not smallest shippable feature set)
 
-Do NOT use for:
-- Pure technical spec (use code-team with spec-writing protocol)
-- Pure research / market analysis (use research-team)
-- Pure design work (use design-team)
-- Implementation (use code-team)
+## When NOT to Use
+
+- Pure technical spec → `code-team` (spec-writing protocol)
+- Pure research / market analysis → `research-team`
+- Pure design work → `design-team`
+- Implementation → `code-team`
 
 ## Language
 
@@ -95,9 +96,9 @@ during self-check.
 
 ### MAY Gates (user-requested only)
 
-| Gate | File |
-|------|------|
-| Market Validation | `checklists/market-validation.md` |
+| Gate | Trigger | File |
+|------|---------|------|
+| Market Validation | User explicitly requests a market-level sanity check on PRODUCT-SPEC.md claims | `evaluator` + `checklists/market-validation.md` |
 
 ## Gate Protocol
 
@@ -137,7 +138,7 @@ Evaluator default resources:
 - Cross-Domain Consistency gate: `rubrics/cross-domain-consistency.md`
 - Market Validation gate (MAY): `checklists/market-validation.md`
 
-### Behavioral Rules
+## Behavioral Rules
 
 Knowledge access is open. Role boundaries are enforced by behavior:
 
@@ -161,7 +162,7 @@ Additional planning-team discipline:
   define what the MVP is trying to learn. "MVP = smallest shippable
   feature set" is a misdefinition.
 
-### Agents
+## Agents
 
 | Agent | Role | Model |
 |-------|------|-------|
@@ -230,7 +231,7 @@ PRODUCT-SPEC.md creation.
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
 | 1. Brainstorm | worker | `protocols/planning-brainstorming.md` | user request | direction + priorities | optional — skip if direction clear (`scope_clarity: clear`) |
-| 2. Research | — | — | — | — | if market data needed → suggest user invoke `research-team` (market-analysis or competitive-analysis protocol) |
+| 2. Research | main | — | project context | market context (optional) | optional — if market data needed, suggest user invoke `research-team` (market-analysis or competitive-analysis protocol); otherwise skip |
 | 3. Write Spec | worker | `protocols/product-spec-writing.md` | direction + research | PRODUCT-SPEC.md | — |
 | 4. Gates | evaluator | (see gate table) | PRODUCT-SPEC.md | verdicts | — |
 
@@ -269,13 +270,17 @@ docs) may need sync.
 MVP based on new constraints. MVP refinement must re-validate the
 spec's "minimum for validated learning" framing per Ries (2011).
 
-1. Read existing PRODUCT-SPEC.md
-2. Update Goals, Non-Goals (plausible rejected goals, Ubl 2020), and
-   Phasing sections
-3. Re-verify 4 Big Risks coverage (Cagan 2017) — did the scope
-   change shift risk distribution?
-4. SELF check → MUST gate (Completeness)
-5. Deliver
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Assess | main | — | existing PRODUCT-SPEC.md | scope delta | identify Goals / Non-Goals / Phasing sections to update |
+| 2. Update | main | — | scope delta | updated Goals / Non-Goals / Phasing | apply Ubl 2020 Non-Goals discipline (plausible rejected goals) |
+| 3. Re-validate Risks | main | — | updated scope | 4 Big Risks re-check | Cagan 2017 — did the scope change shift risk distribution? |
+| 4. Gates | evaluator | (see gate table) | updated PRODUCT-SPEC.md | verdicts | — |
+
+**Gates**: Same as New Project (Completeness MUST + Cross-Domain
+Consistency SHOULD). The FLAG-XD-005 Assumption-Risk Coverage flag
+in the Cross-Domain Consistency rubric pairs with the Phase 3 risk
+re-check above.
 
 ## Cross-Domain Awareness
 
@@ -300,3 +305,19 @@ needed:
   or any task where security/architecture quality gates are needed
 - `devops-team`: deployment feasibility assessment, infrastructure
   constraints that affect product scope
+
+## Worker BLOCKED Handling
+
+If a worker outputs `BLOCKED`:
+- Do NOT proceed to MUST / SHOULD gates
+- Present the BLOCKED reason to the user
+- Wait for user input before retrying
+
+Planning-team-specific blockers to call out:
+- Unresolved JTBD / customer segment — cannot write a spec without
+  knowing who the job is for
+- Missing 4 Big Risks assessment — cannot validate assumptions
+  without naming the risk axes (Cagan 2017)
+- Scope-clarity uncertainty that the brainstorming protocol could
+  not resolve — route back to `protocols/planning-brainstorming.md`
+  with the specific ambiguity highlighted, or escalate to the user
