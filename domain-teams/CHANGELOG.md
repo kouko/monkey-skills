@@ -7,6 +7,255 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.11.1] — 2026-04-12
+
+Meta-refactor of **skill-team** (the plugin's meta-skill for building
+domain-team skills) codifying 7 patterns surfaced during the
+research-team v4.11.0 investment analysis L1/L2/L3/portfolio split
+refactor (PR #45, merged earlier same day).
+
+v4.11.0 was the first **post-grounding expansion refactor** in the
+plugin's history — research-team was already grounded (v4.9.0
+initial grounding, v4.10.x incremental PATCHes), and v4.11.0
+expanded investment analysis by adding 5 new frameworks (Hedgeye
+GIP / MMT / RAI / Taleb Barbell / Fama-French) AND splitting the
+monolithic `investment-analysis-canon.md` (646 lines) into 4
+scale-based standards files. The refactor surfaced **42 Critical
+Attribution Corrections** and exposed several meta-conventions not
+previously codified in skill-team: scale-hierarchy as a content
+organization axis, contested-framework citation discipline,
+cross-layer bridge preservation, extended JP integration decision
+modes, per-phase resource narrowing, multi-cluster parallel
+grounding, and post-grounding expansion as a distinct redesign
+mode.
+
+This v4.11.1 PATCH codifies all 7 patterns into skill-team's
+existing standards and protocols so future refactors use them
+consistently rather than re-inventing ad-hoc.
+
+PATCH bump per `skill-team/standards/commit-convention.md`
+CHK-CMT-005 distinguishing rule: all changes are **modify-only**
+(no new files read at runtime by worker/evaluator). 3-commit PATCH
+split allowance per v4.8.1.
+
+### User's question that triggered the refactor
+
+After merging research-team v4.11.0, the user asked:
+
+> 請問這輪的修改是否有可供 skill-team 借鑑的地方？
+
+("Are there any parts of this round's changes that skill-team
+could borrow from?")
+
+An audit of skill-team's current state against the 7 patterns
+observed in v4.11.0 surfaced gaps in 5 of 7 patterns (MISSING or
+PARTIAL coverage) and validated that all 7 are worth codifying.
+
+### Self-bootstrap precedent (5th instance)
+
+Previous self-bootstrap patches: v4.6.1 (CHK-SKL-001 80-word floor
+drift), v4.7.1 (Compact+Admonitions citation policy), v4.7.2
+(3-Tier Parametric Classification + Body Self-Containment), v4.8.1
+(7-fix consolidation for v4.7.0 research-note convention
+downstream drift). v4.11.1 is the 5th — skill-team codifying
+conventions observed in research-team v4.11.0 and validating them
+against its own newly-codified rules during dogfood. Each patch is
+simultaneously codifying and validated against the codified rule.
+
+### Added — 7 meta-conventions across 5 files (~460 lines total)
+
+**Pattern 1: Scale-hierarchy split axis** (`file-conventions.md`)
+
+- NEW §Standards Splitting Discipline with 3 split axes (topic /
+  tier / scale-hierarchy). Scale-hierarchy is the new axis added
+  by v4.11.0: split a single subject-matter domain by natural
+  professional-practice taxonomy where each layer asks a
+  qualitatively different question (macro → sector → security →
+  portfolio for investment analysis; strategic → tactical →
+  operational for planning; system → module → function for
+  architecture).
+- Includes a 4-condition decision rule, anti-conditions (do NOT
+  use when layers are really topics or tiers, or when domain has
+  no professional taxonomy), and cross-layer bridge requirement.
+
+**Pattern 5: Contested/heterodox framework dual-canonical + critique rule** (`grounding-principle.md §What Counts as Primary Source`)
+
+- NEW §Contested and heterodox frameworks subsection. For
+  frameworks outside global consensus (MMT, heterodox macro
+  schools, some JP 経営理論, Chinese regulatory frameworks),
+  single-canonical citation manufactures false consensus.
+- New rule: cite both **canonical lineage** (origin + academic
+  canonical + popular canonical, 2-3 as applicable) AND **mainstream
+  critique** (2-3 peer-reviewed responses) with equal prominence
+  (not relegated to footnote).
+- Precedent example: MMT with Mosler 1996 (origin) / Wray 2012
+  (academic) / Kelton 2020 (popular) + Krugman / Summers / Rogoff /
+  Blanchard 2019 *AER* 109(4) / Mankiw NBER WP 26650 critiques.
+- Includes "contested decision test": can you find ≥2 peer-reviewed
+  or authoritative-institution sources from outside the framework's
+  originating school that explicitly reject it? → contested →
+  dual/triple canonical required.
+
+**Pattern 4: Cross-layer bridge preservation** (`grounding-principle.md §Body Self-Containment Rule`)
+
+- NEW §Cross-Layer Bridge Preservation subsection. When splitting
+  by scale hierarchy, some claims span two layers and cannot be
+  cleanly assigned to a single file (CAPE is L1+L3; sector
+  rotation is L1↔L2 bridge).
+- Rule: each cross-layer claim has a single "home" file with the
+  primary definition, plus an explicit cross-reference paragraph
+  in the other affected file. Without this, the split loses
+  content at the seam (claim either disappears from non-home file
+  or duplicates and drifts).
+- 4 research-team v4.11.0 precedent examples: CAPE, Damodaran
+  implied ERP, sector rotation, factor × regime dependency.
+- 4-item preservation test: single home file, explicit cross-
+  reference, home-only worker can fully act, non-home-only worker
+  knows to consult home.
+
+**Pattern 6: Extended JP integration decision matrix** (`grounding-principle.md §Japanese Content Integration Strategy`)
+
+- Extends the existing 3-row matrix (full integration / preamble /
+  no overlay) with 2 new decision modes surfaced by v4.11.0:
+  - **Terminology trap warning**: JP term superficially matches EN
+    concept but means something different. Precedent: JP
+    バーベル戦略 (bond duration barbell) ≠ Taleb's antifragility
+    Barbell. Body MUST include §JP Terminology Traps section with
+    explicit "NOT X" language.
+  - **Closest analogue with caveat**: JP tool serves analogous-
+    but-different purpose. Precedent: BoJ Financial System Report
+    heat map is closest to RAI (same audience/scope) but differs
+    in intent (macroprudential-not-sentiment). Body MUST include
+    §JP Analogue section documenting both parallel and caveat.
+- Extends decision process from 3 branches to 5 branches.
+- Both new format templates included with concrete research-team
+  v4.11.0 precedent wording (バーベル戦略 disambiguation + BoJ FSR
+  heat map caveat).
+
+**Pattern 2: Per-phase resource narrowing** (`agent-interface.md §Worker Input Contract`)
+
+- NEW §Per-Phase Resource Narrowing as an **optional backward-
+  compatible extension** to the Worker Input Contract. Workers
+  that ignore any `phase_load_rule` hint continue to work
+  correctly (they load every file in the `standards:` array).
+- Two patterns documented:
+  - **Pattern A (recommended default)**: protocol-driven loading.
+    The protocol file itself documents which standards load in
+    which phase (inside each Phase header). No launch-time
+    contract change. Used by `research-team/protocols/investment.md`
+    v4.11.0 Phase 0 "Layer loading by mode" table.
+  - **Pattern B (explicit)**: launch-time `phase_load_rule` hint
+    in the `### Input` block. More explicit but requires worker
+    to parse.
+- Use when: protocol has 3+ phases AND distinct standards needs
+  per phase, full corpus exceeds ~100k tokens, quick/deep modes
+  have qualitatively different resource requirements.
+
+**Pattern 3: Multi-cluster parallel research** (`grounding-research.md §Phase 2b`)
+
+- NEW §Phase 2b as an optional phase for multi-framework
+  expansions. When grounding spans 3+ independent framework
+  clusters, a single sequential research-team launch is both slow
+  and loses focus across clusters.
+- New pattern: launch one `general-purpose` worker per cluster in
+  parallel (single main-agent response with N tool calls), each
+  with narrow scope (one framework, 4-6 specific claims, ~40-60k
+  token budget). Then synthesize N outputs into one consolidated
+  research note.
+- Precedent table from research-team v4.11.0: 5 parallel
+  general-purpose agents (Hedgeye GIP 7 corrections / MMT 7 / RAI
+  10 / Barbell 7 / Fama-French 11), total ~205k tokens, surfaced
+  42 attribution corrections with 11 unique misattributions
+  prevented.
+- 3 anti-conditions: initial skill grounding, single-framework
+  deep dive, tightly-coupled clusters.
+
+**Pattern 7: Post-grounding expansion track** (`skill-redesign.md §Phase 1 Variant`)
+
+- NEW §Phase 1 Variant: Post-Grounding Expansion Track as a
+  distinct redesign mode for refactoring already-grounded teams.
+- Trigger conditions: target already has `research/grounding-
+  v{X.Y.Z}.md`, adding new frameworks (not re-grounding or fixing
+  workflows), new frameworks fit existing scale/tier structure OR
+  introduce new scale-hierarchy split.
+- Streamlined Phase 1: skip full gap-assessment (no "load-bearing
+  claims without citations" scan), scan for new-framework gap
+  only, classify by layer / tier / topic, decide split vs extend,
+  skip broken-workflow scan, skip JP re-decision unless new
+  framework surfaces JP content.
+- Jumps to `grounding-research.md §Phase 2b` (parallel) for 3+
+  new frameworks; regular Phase 2 for 1-2.
+- Comparison table distinguishing initial grounding from post-
+  grounding expansion across 7 dimensions (target state, Phase 1
+  focus, Phase 2 launch, file operations, version bump, dogfood
+  gates, typical precedent).
+
+### Changed
+
+- `.claude-plugin/plugin.json` version bump `4.11.0` → `4.11.1`
+
+### File changes summary
+
+| File | Change | Δ Lines |
+|---|---|---:|
+| `skill-team/standards/file-conventions.md` | +§Standards Splitting Discipline | +55 |
+| `skill-team/standards/grounding-principle.md` | +§Contested frameworks / +§Cross-Layer Bridge Preservation / extended §JP Integration matrix | +159 |
+| `skill-team/standards/agent-interface.md` | +§Per-Phase Resource Narrowing | +62 |
+| `skill-team/protocols/grounding-research.md` | +§Phase 2b Multi-Cluster Parallel Research | +84 |
+| `skill-team/protocols/skill-redesign.md` | +§Phase 1 Variant: Post-Grounding Expansion Track | +88 |
+| `.claude-plugin/plugin.json` | version bump | +0 (1 modify) |
+| `CHANGELOG.md` | [4.11.1] entry | (this entry) |
+| **TOTAL new content** | | **~448 lines** |
+
+### Verification
+
+- `git log --stat` shows clean 3-commit split:
+  - 1/3 (0aeab23): standards — 3 files, +282 insertions
+  - 2/3 (1a49865): protocols — 2 files, +174 insertions
+  - 3/3: plugin.json + CHANGELOG (this commit)
+- All changes modify-only; no new files read at runtime by worker
+  or evaluator → PATCH classification per CHK-CMT-005
+- SKILL.md unchanged for skill-team (v4.8.1 PATCH allowance: SKILL.md
+  is optional for modify-only PATCHes that don't change SKILL.md
+  structure or Resource Manifest)
+- All 5 modified files retain their `## Primary Sources` sections
+  intact; new content is additive to existing sections
+- research-team v4.11.0 precedent references woven throughout for
+  concrete grounding
+
+### Dogfood gates (expected outcomes)
+
+| Gate | Tier | Expected |
+|---|---|---|
+| Skill Completeness | MUST | PASS (SKILL.md unchanged) |
+| Commit Split Validity | MUST | PASS (clean 3-commit PATCH, CHK-CMT-005 modify-only = PATCH) |
+| Primary Source Grounding | SHOULD | PASS (meta-refactor grounds in research-team v4.11.0 as the precedent; new sections cite v4.11.0 instances concretely) |
+| Skill Coherence | SHOULD | PASS (5 files modified, all cross-references preserved; new sections add cross-references between skill-team standards and protocols) |
+
+### Future refactors that will benefit
+
+Post-v4.11.1, future refactors can directly reference:
+
+- `file-conventions.md §Standards Splitting Discipline` → split
+  decision rules (topic vs tier vs scale-hierarchy)
+- `grounding-principle.md §Contested and heterodox frameworks` →
+  MMT-style dual-canonical citation discipline
+- `grounding-principle.md §Body Self-Containment §Cross-Layer
+  Bridge Preservation` → hierarchical split cross-reference rule
+- `grounding-principle.md §Japanese Content Integration Strategy`
+  (extended matrix) → terminology trap and closest-analogue modes
+- `agent-interface.md §Per-Phase Resource Narrowing` → token-
+  optimized workflow patterns
+- `grounding-research.md §Phase 2b Multi-Cluster Parallel Research`
+  → 3+ framework expansion grounding
+- `skill-redesign.md §Phase 1 Variant: Post-Grounding Expansion
+  Track` → already-grounded-team expansion workflow
+
+Next expected beneficiary: any future research-team framework
+expansion (e.g., v4.12+) AND any other grounded team that reaches
+expansion phase (design-team, planning-team as candidates for
+next post-grounding expansions).
+
 ## [4.11.0] — 2026-04-12
 
 Investment analysis standards split by **analytical scale** (L1
