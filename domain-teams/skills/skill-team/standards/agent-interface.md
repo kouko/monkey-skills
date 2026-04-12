@@ -58,6 +58,69 @@ Rules:
   research notes, spec files)
 - `Input`: the upstream artifact when this is a multi-phase workflow
 
+### Per-Phase Resource Narrowing (optional extension, added v4.11.0)
+
+For multi-phase protocols where different phases require different
+standards (e.g., a scale-hierarchy protocol where Phase 2 targets L3
+security valuation and Phase 3 targets L1 macro regime), the main
+agent MAY narrow standards loading on a per-phase basis to reduce
+token pressure.
+
+This is an **optional, backward-compatible extension**. Workers
+that ignore any `phase_load_rule` hint continue to work correctly
+(they simply load every file in the `standards:` array). The
+optimization pays off in long multi-phase workflows where the full
+standards corpus exceeds ~100k tokens.
+
+**Two patterns for per-phase narrowing**:
+
+**Pattern A — Protocol-driven loading (recommended default)**: the
+protocol file itself documents which standards load in which phase
+(inside each Phase's header). The main agent still passes the full
+`standards:` array, but the worker reads the protocol first and
+loads standards on-demand per phase. No contract change needed;
+nothing to do in the launch template.
+
+Precedent: `research-team/protocols/investment.md` v4.11.0 uses
+Pattern A. Phase 0 contains a "Layer loading by mode" table:
+Phase 2 (L3 security) loads `investment-security-valuation.md`
+only; Phase 3 (L1 macro) loads `investment-macro-regime.md` only;
+Phases 4-5 progressively load L2 and portfolio files in deep mode.
+Quick mode stops at Phases 2-3, loading at most 2 of the 4
+investment-* standards.
+
+**Pattern B — Launch-time phase hint (explicit)**: the main agent
+passes a `phase_load_rule` hint in the `### Input` block explicitly
+naming which standards each phase needs:
+
+```
+### Input
+output_language: en
+mode: quick
+phase_load_rule: |
+  Phase 2 (L3 Security): standards[investment-security-valuation.md] only
+  Phase 3 (L1 Macro): standards[investment-macro-regime.md] only
+  Phases 4-5: skip in quick mode
+```
+
+Pattern B is more explicit but requires the worker to parse the
+hint. Pattern A is simpler and should be the default.
+
+**When to use per-phase narrowing**:
+
+- Protocol has 3+ phases AND each phase has distinct standards
+  needs (scale-hierarchy splits are the prototypical case)
+- Full standards corpus for a workflow exceeds ~100k tokens
+- Quick-mode and deep-mode have qualitatively different resource
+  requirements
+
+**When NOT to use**:
+
+- Single-phase or 2-phase protocols (overhead > savings)
+- All standards are tightly interdependent (splitting loses context)
+- Worker is already load-shedding via other mechanisms (e.g.,
+  streaming, RAG)
+
 ## Evaluator Input Contract
 
 When launching an `evaluator` agent, use this exact block structure:

@@ -53,6 +53,91 @@ research-team produces a research report that passes:
 If research-team returns `NEEDS_REVISION` or `BLOCKED`, do NOT
 proceed — escalate to the user.
 
+## Phase 2b: Multi-Cluster Parallel Research (optional — for multi-framework expansions, added v4.11.0)
+
+If the grounding task spans **3 or more independent framework
+clusters** (e.g., adding 5 new macro frameworks to an already-
+grounded team), a single sequential research-team launch becomes
+both slow AND prone to losing focus across clusters. Use multi-
+cluster parallel grounding instead.
+
+### When to use multi-cluster parallel
+
+- Grounding task has **3+ independent framework clusters** (e.g.,
+  research-team v4.11.0 added 5 frameworks: Hedgeye GIP, MMT, RAI,
+  Taleb Barbell, Fama-French — one cluster per framework)
+- Clusters are **loosely coupled** — each can be researched without
+  depending on the findings of the others
+- The refactor is a **post-grounding expansion** (see
+  `skill-redesign.md §Phase 1 Variant: Post-Grounding Expansion
+  Track`), not an initial grounding
+
+### Parallel launch pattern
+
+For each framework cluster:
+
+1. **Scope narrowly** — one cluster = one worker launch. Do NOT
+   give one worker multiple clusters to research "in parallel"
+   internally.
+2. **Launch as `general-purpose` or `research-team deep mode`** —
+   each worker gets a focused research brief naming:
+   - The specific framework (e.g., "Hedgeye GIP")
+   - 4-6 concrete claims to verify (definition, lineage, attribution,
+     variants, JP integration, anti-drift corrections)
+   - Expected output structure (primary sources list, attribution
+     corrections, body draft for the eventual standards file)
+3. **Run all workers in parallel** via a single main-agent response
+   with N tool calls — NOT sequential launches.
+4. **Budget per cluster** — ~40-60k tokens for deep research; ~15-25k
+   for quick triangulation. Total budget scales linearly with
+   cluster count.
+5. **Collect outputs** as N separate research summaries.
+
+### Synthesis into a single research note
+
+After all parallel workers complete:
+
+1. **Merge outputs** into a single consolidated research note
+   (`research/grounding-v{X.Y.Z}.md`) with one cluster per section
+2. **De-duplicate cross-cluster attribution corrections** — some
+   corrections surface in multiple clusters (e.g., "Shiller alone
+   vs Campbell & Shiller 1998" might appear in both a macro
+   cluster and a security cluster)
+3. **Surface cross-cluster attribution drift** — parallel research
+   often exposes contradictions between clusters that sequential
+   single-task research misses (e.g., Cluster A cites X 2018;
+   Cluster B cites X 2020 — which is canonical?)
+4. **Run §Phase 4 Standards Synthesis** on the merged note as usual
+
+### Precedent — research-team v4.11.0
+
+5 parallel `general-purpose` grounding agents, one per framework
+cluster, for the investment analysis L1/L2/L3/portfolio split:
+
+| Cluster | Agent | Token budget | Corrections surfaced |
+|---|---|---:|---:|
+| Hedgeye GIP | general-purpose | ~40k | 7 |
+| MMT | general-purpose | ~50k | 7 |
+| RAI | general-purpose | ~45k | 10 |
+| Taleb Barbell | general-purpose | ~30k | 7 |
+| Fama-French | general-purpose | ~40k | 11 |
+| **Total** | | **~205k** | **42 (11 unique misattributions prevented)** |
+
+Synthesis phase produced `research/grounding-v4.11.0.md` (1364
+lines) as a single consolidated audit trail with all 42 attribution
+corrections, cross-referenced by layer for the 4 new standards
+files.
+
+### When NOT to use multi-cluster parallel
+
+- **Initial skill grounding** (new team, no prior standards) — use
+  the standard single-research-team Phase 2 launch; parallel works
+  best for additive expansions, not initial state
+- **Single-framework deep dive** (1-2 clusters) — parallel overhead
+  exceeds savings
+- **Tightly-coupled clusters** (e.g., "how do A, B, C interact?")
+  — parallel research cannot surface interaction findings
+
 ## Phase 3: Research Note Capture
 
 Save the research report **in-repo by default** under the skill's

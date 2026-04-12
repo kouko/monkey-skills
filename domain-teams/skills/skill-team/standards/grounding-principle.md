@@ -54,6 +54,58 @@ The line is blurry in practice. When unsure, ask: "Is this the person
 or organization who *defined* the concept, or someone summarizing it?"
 Only the definer counts.
 
+### Contested and heterodox frameworks — dual/triple canonical + critique rule (added v4.11.0)
+
+Some frameworks exist **outside the global professional consensus**:
+Modern Monetary Theory (MMT), certain heterodox macroeconomic
+schools, some Japanese 経営理論 not imported into the Anglo canon,
+Chinese regulatory frameworks that lack Western academic
+counterparts. For these, **single-canonical citation silently
+manufactures false consensus** — the standards file reads as if the
+framework has universal acceptance when the field is sharply divided.
+
+The rule: if a framework is academically contested or heterodox,
+cite **both the canonical lineage AND the mainstream critique** as
+required fields, not optional additions.
+
+**Canonical lineage** (pick 2-3 as applicable):
+
+1. **Origin** — author/work that first proposed the framework
+2. **Academic canonical** — peer-reviewed or authoritative-press
+   formalization that made the framework teachable
+3. **Popular/applied canonical** — how practitioners use it today
+   (often differs in emphasis from the academic version)
+
+**Mainstream critique** (required alongside canonical):
+
+- Peer-reviewed responses OR authoritative-institution statements
+  that disagree with the framework
+- At least 2-3 critique sources, cited with equal prominence to the
+  canonical sources (not relegated to a footnote)
+
+**Example — MMT, research-team v4.11.0**:
+
+- Origin: Mosler 1996 *Soft Currency Economics* (grey-literature
+  primary, Italian bond trade context)
+- Academic canonical: Wray 2012 *Modern Money Theory: A Primer on
+  Macroeconomics for Sovereign Monetary Systems* Palgrave Macmillan
+- Popular canonical: Kelton 2020 *The Deficit Myth* PublicAffairs
+- Mainstream critique: Krugman, Summers, Rogoff, Blanchard 2019
+  *AER* 109(4), Mankiw NBER WP 26650
+
+Citing Kelton 2020 alone is the anti-pattern — it reads as if MMT
+has mainstream acceptance when the professional economics community
+is sharply divided. The dual-citation rule surfaces the
+disagreement transparently.
+
+**"Contested" decision test**: can you find at least 2 peer-reviewed
+or authoritative-institution sources from scholars/institutions
+outside the framework's originating school that explicitly reject
+or challenge the framework? If yes → contested → dual/triple
+canonical + critique required. If no (only uncritical popular
+press pushback) → probably mainstream-accepted → single-canonical
+is fine.
+
 ## The Research Workflow
 
 Grounding a new skill (or re-grounding an old one) follows this
@@ -274,6 +326,58 @@ Concretely:
 This test is the single most important quality check for layer 2.
 Apply it to every grounded standards file during Phase 4 synthesis.
 
+### Cross-Layer Bridge Preservation (for hierarchical splits, added v4.11.0)
+
+When splitting a monolithic standards file by **scale hierarchy**
+(see `file-conventions.md §Standards Splitting Discipline §Scale-
+hierarchy decision rule`), some load-bearing claims are inherently
+cross-layer — they reference content in more than one hierarchical
+layer and cannot be cleanly assigned to a single file.
+
+**Precedent examples from research-team v4.11.0**:
+
+- **CAPE** — L1 whole-market valuation signal + L3 individual-stock
+  P/E variant. Home file: `investment-security-valuation.md` (L3).
+  Cross-referenced from `investment-macro-regime.md` (L1) for
+  market-level CAPE application.
+- **Damodaran implied ERP** — L3 DCF cost-of-capital input + L1
+  whole-market pricing barometer. Home file:
+  `investment-security-valuation.md` (L3). Cross-referenced from L1
+  regime file as market-pricing sanity check.
+- **Sector rotation by regime** — L1 regime diagnosis ↔ L2 sector
+  tilt. Home file: `investment-sector-industry.md` (L2). Cross-
+  references back to `investment-macro-regime.md` for regime
+  definitions.
+- **Factor × regime dependency** — L1 regime ↔ L2 factor premia.
+  Home file: `investment-sector-industry.md` (L2). Additional
+  mapping table documenting factor behavior per IC phase.
+
+**The rule**: when a claim spans two layers in a scale-hierarchy
+split, add a `## Cross-Layer Usage Notes` section (or an explicit
+cross-reference paragraph) in BOTH affected files. The claim
+**lives** in one file (the file where its primary definition
+belongs) and is **referenced** from the other.
+
+**Without this rule**, the split loses content at the seam: the
+claim either disappears from one file entirely (workers loading
+only that layer cannot act on it), or it gets duplicated in both
+files and drifts out of sync over time.
+
+**Test for cross-layer preservation** — after splitting, for each
+cross-layer claim, verify:
+
+1. The claim has a single **home** file (primary definition lives
+   there, in full)
+2. The other affected file has a one-paragraph cross-reference
+   pointing at the home file's relevant section
+3. A worker loading **only** the home file can fully act on the
+   claim
+4. A worker loading **only** the non-home file knows to consult
+   the home file (the cross-reference is not silent)
+
+If any test fails, either elevate the claim to its home file or
+add the missing cross-reference to the non-home file.
+
 ### Critical Attribution Corrections — dedicated section, not inline
 
 Anti-drift correction blocks (e.g., "3D Quality → 4-quality regions",
@@ -440,6 +544,8 @@ content should reflect reality, not symmetry-seeking.
 |----------|----------|-----------|
 | Parallel JP tradition with equivalent standing | Full integration — JP methodologies get their own standards file and protocol phases | qa-team: VSTeP (西康晴), HAYST法 (秋山浩一), ゆもつよメソッド (湯本剛) as peer to ISTQB |
 | Local JP principles but no full framework | Preamble / philosophical anchor only | docs-team: JTAP 技術文書 3 原則 第 1 原則 (書き手と読み手の違いを認識する) as reader-first preamble to Google Style |
+| **JP term superficially matches EN concept but means something different** | **Terminology trap warning** — explicit disambiguation, DO NOT fabricate overlay | research-team v4.11.0: Japanese バーベル戦略 means bond duration barbell (short + long maturities); NOT Taleb's antifragility Barbell |
+| **JP tool/metric serves an analogous-but-different purpose** | **Closest analogue with caveat** — document both the analogue and its difference in intent | research-team v4.11.0: BoJ Financial System Report heat map is the closest JP analogue to RAI in scope (policy-institution surveillance) but differs in intent (macroprudential, not risk-appetite sentiment) |
 | No JP parallel tradition exists | Explicit note declining symmetry | devops-team: `Note on Global Context` — SRE/DORA/12-Factor are globalized American; no JP parallel to force |
 
 The rule is honesty. Never synthesize a Japanese section just because
@@ -449,12 +555,65 @@ field.
 
 ### Decision process for JP integration
 
-1. Does a Japanese community has published, authored work in this
+1. Does a Japanese community have published, authored work in this
    domain that parallels (not merely translates) the Anglo-American
-   canon? If yes → full integration.
+   canon? If yes → **full integration**.
 2. Does it have substantial local principles or philosophical framings
-   that aren't in the Anglo-American canon? If yes → preamble only.
-3. Otherwise → declare explicitly that no overlay is added, and say why.
+   that aren't in the Anglo-American canon? If yes → **preamble only**.
+3. Does a Japanese term exist that **superficially matches** the
+   Anglo concept but has a **different meaning** in its native
+   context? If yes → **terminology trap warning** (added v4.11.0).
+4. Does a Japanese tool/metric exist that serves an **analogous-but-
+   different purpose** (same audience, different intent)? If yes →
+   **closest analogue with caveat** (added v4.11.0).
+5. Otherwise → declare explicitly that no overlay is added, and say
+   why.
+
+### Terminology trap warning format (added v4.11.0)
+
+When a JP term collides with an EN framework but means something
+different, the standards file body MUST include a brief `## JP
+Terminology Traps` section explicitly warning future readers:
+
+```markdown
+## JP Terminology Traps
+
+**バーベル戦略 (JP "barbell strategy")**: In Japanese fixed-income
+markets, this refers to a **bond duration barbell** — concentrating
+holdings in short-term + long-term maturities while avoiding
+intermediate durations. It predates Taleb's Barbell and is
+completely unrelated to antifragility or asymmetric extreme-extreme
+allocation. Do NOT translate Japanese バーベル戦略 as "Taleb
+Barbell" or vice versa.
+```
+
+The section uses explicit "NOT X" language to prevent future
+workers from synthesizing a false equivalence. Cite the JP
+terminology source (dictionary, industry glossary, or academic
+paper) in `## Primary Sources` if one exists.
+
+### Closest analogue with caveat format (added v4.11.0)
+
+When a JP tool serves an analogous-but-different purpose, document
+both the parallel AND the caveat in a `## JP Analogue` section:
+
+```markdown
+## JP Analogue (Closest Match with Caveat)
+
+**BoJ Financial System Report heat map** is the closest Japanese
+analogue to RAI (Risk Appetite Index) in terms of audience and
+scope — both are policy-institution-published surveillance tools
+tracking market health signals across asset classes. However, BoJ
+FSR heat map is **macroprudential-focused** (identifying systemic
+risks to financial stability), while RAI is **sentiment-focused**
+(measuring investor risk appetite as a contrarian indicator). When
+adapting RAI logic to Japan, consult BoJ FSR for structural
+precedent but recognize the different risk-definition intent.
+```
+
+The section names the analogue, cites it, and explicitly flags
+what differs — this prevents workers from treating the analogue as
+a drop-in equivalent.
 
 ## Anti-Patterns
 
