@@ -26,7 +26,7 @@ The root JSON object contains two optional arrays:
 
 All nodes share these required attributes:
 
-- `id` (required, string): Unique identifier for the node
+- `id` (required, string): Unique 16-character lowercase hex identifier
 - `type` (required, string): Node type (`text`, `file`, `link`, `group`)
 - `x` (required, integer): X position in pixels
 - `y` (required, integer): Y position in pixels

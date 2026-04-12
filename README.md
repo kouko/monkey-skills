@@ -98,7 +98,7 @@ Obsidian vault daily workflows, visual tools, and dashboard design.
 
 | Type | Name | Role |
 |------|------|------|
-| Skill | `using-obsidian-team` | Entry point and routing guide |
+| Skill | `using-obsidian` | Entry point and routing guide |
 | Skill | `obsidian-daily` | Start the day — daily note, priorities |
 | Skill | `obsidian-vault-setup` | Interactive vault configurator |
 | Skill | `obsidian-tldr` | Save conversation summary to vault |
@@ -158,7 +158,7 @@ monkey-skills/
 │   ├── agents/
 │   │   └── obsidian-vault-organizer.md
 │   └── skills/
-│       ├── using-obsidian-team/
+│       ├── using-obsidian/
 │       ├── obsidian-daily/
 │       ├── obsidian-*/
 │       └── dashboard-design/

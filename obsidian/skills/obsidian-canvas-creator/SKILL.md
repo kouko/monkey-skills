@@ -58,7 +58,7 @@ Ask user to choose or infer from context:
 Create JSON following the Canvas specification:
 
 **Node Creation:**
-- Assign unique 8-12 character hex IDs
+- Assign unique 16-character lowercase hex IDs
 - Set appropriate dimensions based on content length
 - Apply consistent color schemes
 - Ensure no coordinate overlaps
@@ -109,13 +109,52 @@ Before outputting:
 - No additional explanation text
 - Directly importable into Obsidian
 
+## Editing Existing Canvases
+
+### Add a Node to an Existing Canvas
+
+1. Read and parse the existing `.canvas` file
+2. Generate a unique 16-char hex ID that does not collide with existing node or edge IDs
+3. Choose position (`x`, `y`) that avoids overlapping existing nodes (leave 50-100px spacing)
+4. Append the new node object to the `nodes` array
+5. Optionally add edges connecting the new node to existing nodes
+6. **Validate**: Confirm all IDs are unique and all edge references resolve to existing nodes
+
+### Connect Two Existing Nodes
+
+1. Identify the source and target node IDs
+2. Generate a unique 16-char hex edge ID
+3. Set `fromNode` and `toNode` to the source and target IDs
+4. Optionally set `fromSide`/`toSide` (`top`, `right`, `bottom`, `left`) for anchor points
+5. Optionally set `label` for descriptive text on the edge
+6. Append the edge to the `edges` array
+7. **Validate**: Confirm both `fromNode` and `toNode` reference existing node IDs
+
+### Edit Canvas Content
+
+1. Read and parse the `.canvas` file as JSON
+2. Locate the target node or edge by `id`
+3. Modify the desired attributes (text, position, color, etc.)
+4. Write the updated JSON back to the file
+5. **Validate**: Re-check all ID uniqueness and edge reference integrity after editing
+
 ## Node Sizing Guidelines
 
-**Text Length-Based Sizing:**
+**By Text Length:**
 - Short text (<30 chars): 220 × 100 px
 - Medium text (30-60 chars): 260 × 120 px  
 - Long text (60-100 chars): 320 × 140 px
 - Very long text (>100 chars): 320 × 180 px
+
+**By Node Type:**
+
+| Node Type | Suggested Width | Suggested Height |
+|-----------|-----------------|------------------|
+| Small text | 200-300 | 80-150 |
+| Medium text | 300-450 | 150-300 |
+| Large text | 400-600 | 300-500 |
+| File preview | 300-500 | 200-400 |
+| Link preview | 250-400 | 100-200 |
 
 ## Color Schemes
 
@@ -137,26 +176,30 @@ Use for brand consistency or specific themes. Always use uppercase format: `"#4A
    - Chinese single quotes → 「」
    - English double quotes → `\"`
 
-2. **ID Generation:**
-   - 8-12 character random hex strings
+2. **Newline Handling:**
+   - Use `\n` for line breaks in JSON strings
+   - Do **not** use the literal `\\n` — Obsidian renders that as the characters `\` and `n`
+
+3. **ID Generation:**
+   - 16-character lowercase hexadecimal strings (e.g., `6f0ad84f44ce9c17`)
    - Must be unique across all nodes and edges
 
-3. **Z-Index Order:**
+4. **Z-Index Order:**
    - Output groups first (bottom layer)
    - Then subgroups
    - Finally text/link nodes (top layer)
 
-4. **Spacing Requirements:**
+5. **Spacing Requirements:**
    - Minimum horizontal: 320px between node centers
    - Minimum vertical: 200px between node centers
    - Account for node dimensions when calculating
 
-5. **JSON Structure:**
+6. **JSON Structure:**
    - Top level contains only `nodes` and `edges` arrays
    - No extra wrapping objects
    - No comments in output
 
-6. **No Emoji:**
+7. **No Emoji:**
    - Do not use any Emoji symbols in node text
    - Use color coding or text labels for visual distinction instead
 
@@ -186,6 +229,9 @@ Process:
 
 - **Canvas Specification**: `references/canvas-spec.md` - Complete JSON Canvas format specification
 - **Layout Algorithms**: `references/layout-algorithms.md` - Detailed positioning algorithms for both layout types
+- **Complete Examples**: `references/EXAMPLES.md` - Full canvas examples (mind maps, project boards, research canvases, flowcharts)
+- **JSON Canvas Spec 1.0**: https://jsoncanvas.org/spec/1.0/ — Official specification
+- **JSON Canvas GitHub**: https://github.com/obsidianmd/jsoncanvas
 
 Load these references when:
 - Need specification details for edge cases
