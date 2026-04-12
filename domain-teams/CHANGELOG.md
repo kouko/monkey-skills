@@ -7,6 +7,152 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.10.3] — 2026-04-11
+
+Discoverability fix for investment analysis as a research-team
+workflow, triggered by a user observation that "investment or macro
+analysis" was buried mid-sentence in research-team's description and
+not surfaced in the `using-domain-teams` router intent table. Pure
+modify-only PATCH targeting two locations: (1) add a dedicated
+Intent Routing row in the router skill; (2) minimal word-order
+reorder of research-team's description to put investment analysis
+first in the "Use when" clause. Zero new files, zero standards /
+protocol / gate changes.
+
+PATCH bump per `skill-team/standards/commit-convention.md`
+CHK-CMT-005 — zero new files, matching the v4.10.2 pattern.
+
+### User's original proposal and why it was not adopted as-is
+
+The user initially proposed rewriting research-team's description
+with an emoji prefix and `PRIMARY: / SECONDARY:` priority markers to
+elevate investment analysis:
+
+```yaml
+description: >-
+  🎯 PRIMARY: Investment analysis, valuation frameworks, asset
+  allocation decisions, macro regime diagnosis (Investment Clock).
+  ...
+  SECONDARY: Market/competitive research, tech evaluation, OSS
+  audits, academic reviews.
+```
+
+The proposal's underlying need was valid (investment analysis
+discoverability from the top of the description) but the form had
+**5 architectural problems**:
+
+1. **Missing Delivers clause** — `skill-md-structure.md`
+   §Frontmatter Schema requires a Delivers clause naming artifacts.
+   CHK-SKL-001 would FAIL FATAL on any PR with this description.
+2. **Missing mission statement** — `🎯 PRIMARY: Investment
+   analysis...` is a topic label, not a mission sentence. CHK-SKL-001
+   also fails on this.
+3. **Emoji prefix breaks the 7-team description convention** — zero
+   precedent across qa / docs / devops / code / design / planning /
+   research for emojis in SKILL.md descriptions. Global
+   `/Users/kouko/.claude/CLAUDE.md` says "avoid emojis unless
+   explicitly asked".
+4. **PRIMARY/SECONDARY priority markers bias routing for all
+   users** — research-team has **5 equally-supported worker-dispatch
+   workflows** (Market Analysis / Competitive Analysis / Academic
+   Research / Investment Analysis / Tech Stack OSS Evaluation);
+   calling Investment Analysis "PRIMARY" and the others
+   "SECONDARY" over-weights one user's personal use pattern and
+   misrepresents the actual implementation. The Tier 3 standards
+   files are `investment-analysis-canon.md` AND
+   `information-infrastructure.md` — both are load-bearing, neither
+   is "primary".
+5. **Architectural mislocation** — `skill-md-structure.md`
+   §Frontmatter Schema Router-skill exemption explicitly designates
+   `using-domain-teams/SKILL.md` as the canonical routing venue:
+   "Router skills still MUST contain Use when / Do NOT use for
+   clauses but may omit the mission sentence and Delivers list since
+   they deliver routing decisions, not artifacts." Routing signals
+   belong in the router, not in individual team descriptions.
+
+### Added
+
+- **`using-domain-teams/SKILL.md` Intent Routing table** — new row
+  placed between the existing research-team rows:
+
+  ```
+  | Investment analysis, valuation, asset allocation, macro regime
+  call | research-team |
+  ```
+
+  This is the architecturally correct fix for the discoverability
+  gap: the router is the designated routing venue, and adding a
+  specific investment-analysis intent row benefits **all users**
+  scanning for investment work (not just kouko). Users scanning the
+  router now see "Investment analysis, valuation, asset allocation,
+  macro regime call → research-team" as a top-level entry.
+
+### Changed
+
+- **`research-team/SKILL.md` frontmatter description** — minimal
+  word-order reorder of the "Use when" clause to move "investment
+  or macro analysis" from mid-sentence to **first item**:
+
+  ```diff
+  -  Use when researching, analyzing, evaluating tech stacks, running
+  -  OSS license audits, doing market or competitive research,
+  -  investment or macro analysis, or academic literature review.
+  +  Use when doing investment or macro analysis (valuation, asset
+  +  allocation, Investment Clock regime diagnosis), researching and
+  +  analyzing topics, evaluating tech stacks, running OSS license
+  +  audits, doing market or competitive research, or academic
+  +  literature review.
+  ```
+
+  All other description structure preserved: mission sentence,
+  Delivers clause, "Do NOT use for" clause, CJK suffix, word count.
+  No emoji, no PRIMARY/SECONDARY markers. This respects the
+  7-team convention and passes CHK-SKL-001 unchanged.
+
+  The parenthetical expansion adds specific framework names
+  (valuation, asset allocation, Investment Clock) so a reader
+  scanning the description sees investment-analysis detail at
+  first-position weight without needing to adopt a priority-marker
+  format.
+
+### Notes
+
+- **No persona or standards changes** — the Layer 1 / Layer 2 /
+  Layer 3 architecture from v4.10.2 is preserved. The persona still
+  lists 11 sources via 5 domain groupings (Booth / Cochrane / IPCC /
+  Kent / Damodaran / Greetham-Hartnett / Dalio / Porter /
+  Osterwalder / OpenSSF / 倉田 / NDL). The 8 `standards/*.md` files
+  are byte-identical to v4.10.2. The investment-analysis grounding
+  (Damodaran + Investment Clock + Dalio + CAPE + Koo) lives in
+  `investment-analysis-canon.md` which this refactor does not touch.
+
+- **SKILL.md line count impact** — the description reorder is a net
+  zero line change (swaps word position, does not add or remove
+  lines). research-team SKILL.md stays at 468 lines.
+
+- **No dogfood gate regressions expected** — the description still
+  passes CHK-SKL-001 (mission + Use when + Do NOT use for +
+  Delivers clauses all present, word count within 40-200 range).
+  The router change does not touch any standards file so Primary
+  Source Grounding gate is unchanged. Skill Coherence's Line Budget
+  flag stays 🟡 (at 468 lines, unchanged from v4.10.2) — this is
+  the known line-budget condition the v4.10.2 CHANGELOG documented.
+
+### Out of scope (deferred)
+
+- **PRIMARY/SECONDARY markers or emoji in descriptions** — rejected
+  as a 1-team convention break. If the user wants priority markers
+  across all 7 teams for consistency, that would be a separate v4.11
+  architecture decision affecting all team descriptions and would
+  need agreement from downstream reviewers.
+- **Propagating the "elevate most-used workflow to first position"
+  pattern to other teams** — the specific reorder applied to
+  research-team may or may not be appropriate for planning-team /
+  code-team / etc. depending on each team's use distribution; out
+  of scope for v4.10.3.
+- **Research Modes tables consolidation** — still a valid future
+  compression target, deferred.
+
 ## [4.10.2] — 2026-04-11
 
 research-team SKILL.md persona compression — a pure text-level

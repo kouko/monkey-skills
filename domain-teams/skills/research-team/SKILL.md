@@ -2,10 +2,11 @@
 name: research-team
 description: >-
   Conduct primary-source-grounded research with citation verification,
-  confidence calibration, and systematic-review rigor. Use when
-  researching, analyzing, evaluating tech stacks, running OSS license
-  audits, doing market or competitive research, investment or macro
-  analysis, or academic literature review. Do NOT use for code
+  confidence calibration, and systematic-review rigor. Use when doing
+  investment or macro analysis (valuation, asset allocation, Investment
+  Clock regime diagnosis), researching and analyzing topics, evaluating
+  tech stacks, running OSS license audits, doing market or competitive
+  research, or academic literature review. Do NOT use for code
   implementation (use code-team), UI design (use design-team), or
   product-level specs (use planning-team). Delivers research reports,
   analysis, evaluations, tech stack assessments, investment memos.
