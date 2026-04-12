@@ -149,8 +149,8 @@ span two layers (e.g., CAPE is both L1 market valuation AND L3
 individual P/E in research-team v4.11.0; sector rotation is a
 L1↔L2 bridge). Each cross-layer claim needs an explicit `## Cross-
 Layer Usage Notes` section (or equivalent cross-reference) in BOTH
-affected files — see `grounding-principle.md §Body Self-Containment
-§Cross-Layer Bridge Preservation` for the full rule.
+affected files — see `grounding-principle.md §Cross-Layer Bridge
+Preservation` for the full rule.
 
 ## Deletion Over Deprecation
 
