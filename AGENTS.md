@@ -53,7 +53,7 @@ Role boundaries enforced by behavior, not reading restrictions:
 ## Plugin: obsidian
 
 ### Skills
-- `using-obsidian-team` — Entry point and routing guide
+- `using-obsidian` — Entry point and routing guide
 - `obsidian-daily` — Start the day with vault context
 - `obsidian-vault-setup` — Interactive vault configurator
 - `obsidian-tldr` — Save conversation summary to vault
