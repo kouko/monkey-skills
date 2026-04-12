@@ -7,6 +7,367 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.11.0] — 2026-04-12
+
+Investment analysis standards split by **analytical scale** (L1
+macro / L2 sector / L3 security / portfolio meta-layer) matching
+professional top-down investment process. The monolithic 646-line
+`investment-analysis-canon.md` is replaced by 4 scale-specific
+standards files, and 5 new frameworks are added with primary-
+source grounding: Hedgeye GIP 4-quadrant, Modern Monetary Theory
+(background theory for regime analysis), Risk Appetite Index,
+Taleb Barbell Strategy, and Fama-French Factor Investing. The
+investment protocol is restructured from 4 phases (Scope /
+Security / Macro / Output) to 6 phases (Scope / L3 Security / L1
+Macro / L2 Sector / Portfolio / Output) with context-cost-aware
+per-layer standards loading.
+
+MINOR bump per `skill-team/standards/commit-convention.md`
+CHK-CMT-005 — 5 new files (4 standards + 1 research note) are
+read at runtime by worker and evaluator agents.
+
+### User's concern that triggered the refactor
+
+The user wanted to add more investment analysis frameworks (Hedgeye
+GIP / Economic Environments / RAI / Barbell / Risk Parity / Fama-
+French / MMT) to research-team and flagged that the existing
+`investment-analysis-canon.md` (646 lines after v4.10.1) was
+becoming monolithic and would fail at scale. The initial proposal
+was to split the canon by topic (valuation / regime / sentiment),
+but the user's critical architectural insight redirected the plan:
+
+> 我會覺得這些框架可能要區分是針對 總體經濟 產業 還是單一投資標的
+> 這樣規模不同的分析情境由大到小做個分類？
+
+Investment analysis has a **natural professional-practice taxonomy**
+that matches the top-down / bottom-up investment process:
+
+| Layer | Scale | Question | Output |
+|---|---|---|---|
+| **L1 Macro** | Global / country / currency-zone | "What regime are we in? Which asset class leads?" | Regime diagnosis + asset allocation |
+| **L2 Sector / Industry** | Industry / sector / theme | "Which sectors benefit in this regime?" | Sector rotation + theme bets |
+| **L3 Security** | Individual stocks / bonds / assets | "Is this specific asset cheap vs intrinsic value?" | Valuation + buy/sell + position sizing |
+| **Portfolio** (meta) | Allocation construction | "How do we combine positions into a risk-coherent portfolio?" | Allocation philosophy + risk budgeting |
+
+This maps 1:1 to how professional investment teams organize
+research (Macro Strategist / Sector Analyst / Equity Analyst /
+Portfolio Manager roles) and is the scalability-friendly structure
+— new frameworks naturally slot into one of the 4 layers.
+
+### Grounding research (Stage 1)
+
+Before executing the file split, 5 parallel grounding research
+agents verified primary sources and surfaced attribution
+corrections for each of the 5 new frameworks. Outputs consolidated
+into `research/grounding-v4.11.0.md` (1364 lines, audit trail).
+**42 Critical Attribution Corrections surfaced, 11 misattributions
+prevented before reaching standards files.**
+
+Per-framework grounding outcomes:
+
+**Hedgeye GIP (McCullough 2024)** — 7 corrections:
+- GIP is **2-axis + derived policy overlay**, NOT a 3-axis framework
+- Descendant of Dalio's 1996 4-box taxonomy, NOT a Greetham IC
+  refinement
+- Dual attribution: McCullough + Dale (Hedgeye Risk Management)
+- Canonical text: McCullough 2024 *Master The Market* (Hedgeye
+  self-published) + Hedgeye GIP white papers (grey literature)
+
+**Modern Monetary Theory (Mosler 1996 / Wray 2012 / Kelton 2020)**
+— 7 corrections:
+- **Mosler 1996** *Soft Currency Economics* is origin (Italian bond
+  trade context), NOT Kelton
+- **Wray 2012** *Modern Money Theory: A Primer* Palgrave Macmillan
+  is academic canonical
+- **Kelton 2020** *The Deficit Myth* PublicAffairs is popular
+  canonical — do NOT cite alone
+- Intellectual ancestors: Knapp 1905 + Mitchell-Innes 1913/14 +
+  Lerner 1943 + Minsky 1986 + Godley
+- NOT "just print money" — inflation is the binding constraint,
+  not debt level
+- Neutral presentation required with mainstream critique
+  (Krugman / Summers / Rogoff)
+- Japanese context dual position: Kuroda rejection vs Fujii
+  endorsement vs Ito / Fujimaki / Sakuragawa / Nersisyan-Wray 2021
+  Levy WP 985
+
+**Risk Appetite Index (Kumar & Persaud 2002)** — 10 corrections:
+- **Kumar & Persaud 2002** "Pure Contagion and Investors' Shifting
+  Risk Appetite" *International Finance* 5(3) is peer-reviewed
+  origin, NOT Credit Suisse Wilmot
+- **Illing & Aaron 2005** Bank of Canada *Financial System Review*
+  is the survey anchor
+- State Street ICI = **Froot & O'Connell NBER WP 10157** (corrected
+  from common misattribution to WP 8226)
+- Goldman Sachs publishes a **Risk-Aversion Index** (inverse
+  semantics), NOT an RAI — disambiguate
+- **"BofA Global Investor Confidence Index" does NOT exist** — the
+  real product is the **Bull & Bear Indicator** by Michael Hartnett
+- Use as contrarian indicator only
+
+**Taleb Barbell Strategy (Taleb 2012 Antifragile)** — 7 corrections:
+- **Taleb 2012** *Antifragile* Ch 11 is primary canonical, NOT
+  *Black Swan* 2007 Ch 13 (which mentions the concept briefly)
+- **Geman, Geman & Taleb 2015** "Tail Risk Constraints and Maximum
+  Entropy" *Entropy* 17(6) DOI 10.3390/e17063724 is mathematical
+  anchor
+- Barbell is **extreme-extreme** allocation, NOT moderate middle-
+  of-road — common misreading
+- 85/15 proportion is illustrative, NOT prescriptive
+- **Universa (Spitznagel) ≠ pure Barbell** — runs a 96.7% SPX +
+  3.3% tail hedge overlay, technically separate instrument
+  structure
+- Japanese バーベル戦略 terminology trap = bond duration barbell
+  (short + long, no middle), NOT Taleb's Barbell — disambiguate
+  in JP context
+
+**Fama-French Factor Investing (Fama & French 1993 / 2015)** —
+11 corrections:
+- **Fama & French 1993** "Common Risk Factors" *JFE* 33(1) is 3-
+  factor operational model (Market + SMB + HML)
+- **Fama & French 2015** "A Five-Factor Asset Pricing Model" *JFE*
+  116(1) adds RMW profitability + CMA investment
+- **Carhart 1997** "On Persistence in Mutual Fund Performance"
+  *JoF* 52(1) is 4-factor with momentum — NOT Fama-French
+- **FF5 EXPLICITLY excludes momentum** — specify which model when
+  citing factor results
+- **Quality factor = AQR QMJ** (Asness-Frazzini-Pedersen 2019
+  *Review of Accounting Studies* 24), NOT FF RMW
+- **Low-Vol / BAB = Frazzini-Pedersen 2014** *JFE* 111, NOT FF
+- **Fama-French ≠ APT** (Ross 1976 is different mathematical
+  foundation)
+- **Japan exception is load-bearing**:
+  - **Kubota & Takehara 2018** *International Review of Finance*
+    18(1) — FF5 fails in Japan
+  - **Fama & French 2012** *JFE* 105(3) — no momentum in Japan
+  - **Asness et al. 2011** *JPM* 37(4) — momentum-as-value-hedge
+    reinterpretation
+
+### Added
+
+- **`standards/investment-macro-regime.md`** (Tier 3, L1 Macro,
+  ~768 lines) — Greetham & Hartnett 2004 Merrill Lynch Investment
+  Clock + Dalio 2018 two-horizon debt cycle + Koo 2008 balance-
+  sheet recession JP parallel + McCullough 2024 Hedgeye GIP
+  4-quadrant refinement + Mosler 1996 / Wray 2012 / Kelton 2020
+  MMT background theory (with mainstream critique) + Kumar &
+  Persaud 2002 / Illing & Aaron 2005 RAI contrarian positioning
+  signal + consolidated Critical Attribution Corrections section
+
+- **`standards/investment-sector-industry.md`** (Tier 2, L2 Sector,
+  ~541 lines) — Fama & French 1993 3-factor + Fama & French 2015
+  5-factor + Carhart 1997 4-factor disambiguation + Asness 2011 /
+  Kubota-Takehara 2018 JP exception + sector rotation by IC/Dalio
+  regime mapping + factor × regime dependency tables + cross-ref
+  to `strategic-frameworks.md` for stand-alone sector diagnosis
+
+- **`standards/investment-security-valuation.md`** (Tier 3, L3
+  Security, ~482 lines) — Damodaran 2012 three-framework valuation
+  (DCF + Relative + Contingent-claim) + Graham & Dodd 1934 margin
+  of safety + Mr. Market price-independent verdict discipline +
+  Campbell & Shiller 1998 CAPE cycle-smoothing (cross-layer L1 +
+  L3) + Cross-Layer Usage Notes (CAPE and Implied ERP as L1 sanity
+  checks)
+
+- **`standards/investment-portfolio-construction.md`** (Tier 2,
+  Portfolio meta, ~390 lines) — Taleb 2012 *Antifragile* Ch 11
+  Barbell Strategy + Geman-Geman-Taleb 2015 mathematical anchor
+  + Dalio 2015 Bridgewater Risk Parity + allocation philosophy
+  comparison table (60/40 / Risk Parity / Barbell / Concentrated
+  value / Indexed passive) + integration with L1+L2+L3 layers
+
+- **`research/grounding-v4.11.0.md`** (1364 lines) — Stage 1
+  grounding research audit trail for the 5 new frameworks.
+  Primary source verifications, 42 Critical Attribution Corrections,
+  integration plan, open questions / deferred.
+
+- **`protocols/investment.md` Phase 4 (L2 Sector/Industry
+  Analysis)** — NEW phase for sector rotation by regime + factor
+  × regime mapping + factor attribution discipline + cross-ref
+  to `strategic-frameworks.md` for stand-alone sector diagnosis.
+  Skipped in quick mode and when question is pure L1/L3.
+
+- **`protocols/investment.md` Phase 5 (Portfolio Construction)**
+  — NEW phase for allocation philosophy call + integration with
+  L1+L2+L3 layers + critical attribution discipline. Skipped in
+  quick mode and when question is not about portfolio-level
+  allocation.
+
+### Changed
+
+- **`protocols/investment.md`** restructured from 4-phase (Scope /
+  Security / Macro / Output) to 6-phase (Scope / L3 Security / L1
+  Macro / L2 Sector / Portfolio / Output) structure. Phase 0 adds
+  layer-loading-by-mode table for context-cost optimization —
+  worker only loads standards files for the layers actually
+  needed by the question (a single-security valuation loads only
+  `investment-security-valuation.md`; a regime call loads only
+  `investment-macro-regime.md`; a top-down thesis loads all 4
+  progressively). Phase 1 adds analytical-scale classification
+  step. Phase 2 renamed to "L3 Security Analysis". Phase 3
+  renamed to "L1 Macro Regime Analysis" and split into required
+  2-layer IC+Dalio read plus optional Hedgeye GIP / MMT / RAI
+  refinements. Rules section expanded with all new attribution
+  corrections from v4.11.0 grounding.
+
+- **`SKILL.md` Resource Manifest** updated — 1 canon entry
+  replaced by 4 scale-based entries (investment-macro-regime /
+  investment-sector-industry / investment-security-valuation /
+  investment-portfolio-construction) with per-layer tier
+  classification (Tier 3 / 2 / 3 / 2) and load-on-demand
+  semantics per layer. Worker launch template `additional`
+  section lists the 4 files separately so per-workflow loading
+  can target specific layers.
+
+- **`SKILL.md` persona section** updated to reference the 4-layer
+  investment analysis organization with expanded primary source
+  list: L1 (IC + Dalio + Hedgeye + MMT + RAI), L2 (Fama-French +
+  Carhart), L3 (Damodaran + Graham & Dodd + CAPE), Portfolio
+  (Barbell + Risk Parity).
+
+- **`SKILL.md` Investment Analysis workflow** row expanded with
+  per-layer loading semantics: quick mode loads L1 and/or L3
+  only; deep mode adds L2 + Portfolio progressively.
+
+- **`plugin.json`** version bump `4.10.3` → `4.11.0`.
+
+### Removed
+
+- **`standards/investment-analysis-canon.md`** (646 lines) —
+  content fully redistributed to the 4 new scale-specific
+  standards files. No content lost; citation style, examples,
+  and Critical Attribution Corrections all preserved with
+  expanded grounding.
+
+### Critical Attribution Corrections (consolidated, 42 total)
+
+**L1 Macro Regime layer (11 corrections)**:
+1. Investment Clock 4 regimes are **Reflation / Recovery /
+   Overheat / Stagflation** — NEVER use business-cycle terminology
+   (expansion / slowdown / contraction / recovery as GDP concepts)
+2. Investment Clock describes asset-class relative performance,
+   NOT GDP dynamics — conflating the two is a fatal attribution
+   error
+3. Dalio 6 phases must be named verbatim (Early / Bubble / Top /
+   Depression / Beautiful deleveraging / Pushing on a string) —
+   do NOT collapse to 4 or 5
+4. Dalio framework is **diagnostic, NOT prescriptive** — asset-
+   class calls come from IC, Dalio is structural risk overlay
+5. Hedgeye GIP is **2-axis + derived policy overlay**, NOT a
+   3-axis framework
+6. Hedgeye GIP descended from Dalio 1996 4-box, NOT from Greetham
+   2004 IC
+7. Hedgeye dual attribution: McCullough + Dale
+8. MMT canonical sequence: **Mosler 1996 → Wray 2012 → Kelton
+   2020** — do NOT cite Kelton alone
+9. MMT is NOT "just print money" — inflation is the binding
+   constraint
+10. RAI origin is **Kumar & Persaud 2002** *International Finance*
+    5(3) — NOT Credit Suisse Wilmot
+11. State Street ICI = Froot & O'Connell NBER WP **10157**, NOT
+    WP 8226; GS publishes Risk-**Aversion** Index not RAI; "BofA
+    Global Investor Confidence Index" does NOT exist (real =
+    Bull & Bear Indicator by Hartnett)
+
+**L2 Sector/Factor layer (11 corrections)**:
+1. **FF3 (1993) ≠ FF5 (2015)** — specify which model when citing
+   factor results
+2. **FF5 EXPLICITLY excludes momentum** — momentum is Carhart
+   1997 or Jegadeesh-Titman 1993
+3. **Carhart 4-factor ≠ Fama-French** — Carhart is FF3 + momentum,
+   NOT an FF model
+4. **Quality factor = AQR QMJ** (Asness-Frazzini-Pedersen 2019),
+   NOT FF RMW
+5. **Low-Vol / BAB = Frazzini-Pedersen 2014**, NOT FF
+6. **Fama-French ≠ APT** (Ross 1976)
+7. **FF5 fails in Japan** per Kubota-Takehara 2018
+8. **No momentum in Japan** per Fama-French 2012 JFE 105(3)
+9. **Momentum-as-value-hedge** reinterpretation per Asness 2011
+   JPM 37(4)
+10. Sector rotation is **regime-dependent** — do not present
+    sectors as absolute winners/losers
+11. Factor regime dependency is **historical tendency, not
+    deterministic** — always state confidence
+
+**L3 Security Valuation layer (10 corrections)**:
+1. DCF terminal growth must ≤ long-run nominal GDP growth
+2. CAPE = **Campbell & Shiller 1998** both authors, NOT Shiller
+   alone
+3. CAPE operational formula = 10-year real-earnings window
+4. Do NOT cite Shiller 2000 *Irrational Exuberance* as operational
+   CAPE canonical
+5. "Damodaran's macro framework" / "Damodaran regime model" do
+   NOT exist — Damodaran is bottom-up valuation only
+6. Margin of safety is antidote to false precision, NOT optional
+   comfort
+7. Mr. Market discipline: fundamentals FIRST, price comparison
+   SECOND (reverse is guaranteed calibration failure)
+8. Three-framework choice is a function of asset and question,
+   NOT preference
+9. Relative valuation comparable set must be matched rigorously
+   (adjust for growth, risk, reinvestment differences)
+10. CAPE is **cross-layer**: L3 P/E variant + L1 whole-market
+    valuation signal; Damodaran implied ERP is L3 DCF input + L1
+    pricing barometer
+
+**Portfolio Construction layer (10 corrections)**:
+1. Barbell primary canonical = Taleb 2012 *Antifragile* Ch 11,
+   NOT *Black Swan* 2007 Ch 13
+2. Barbell is **extreme-extreme** allocation (safe ballast +
+   convex payoff), NOT moderate middle-of-road
+3. 85/15 Barbell proportion is **illustrative, NOT prescriptive**
+4. Geman-Geman-Taleb 2015 *Entropy* 17(6) is mathematical anchor
+5. **Universa ≠ pure Barbell** — 96.7% SPX + 3.3% tail hedge
+   overlay
+6. Japanese バーベル戦略 = bond duration barbell (short + long),
+   NOT Taleb's Barbell — disambiguate in JP context
+7. **Risk Parity ≠ 60/40** — risk-contribution-balanced, NOT
+   capital-weighted
+8. Risk Parity canonical = Dalio 2015 Bridgewater "Engineering
+   Targeted Returns" (grey-literature primary)
+9. Risk Parity typical implementation = equal risk contribution
+   across stocks / bonds / commodities / inflation-linked
+10. Portfolio construction is meta-layer across L1+L2+L3 — takes
+    regime call + sector tilt + security sizing as inputs
+
+### Verification
+
+- `git log --stat` shows clean 3-commit split (CHK-CMT rule):
+  - 1/3 — standards + research note: 6 file operations (5 CREATE +
+    1 DELETE), 3545 insertions / 646 deletions
+  - 2/3 — protocol refactor: 1 file modified, 303 insertions / 79
+    deletions
+  - 3/3 — SKILL.md wiring + plugin + CHANGELOG: 3 files modified
+- 4 new standards files each declare `tier:` + `layer:` in
+  frontmatter + `## Primary Sources` section + body + dedicated
+  `## Critical Attribution Corrections` section per
+  `grounding-principle.md §Critical Attribution Corrections`
+- `investment-analysis-canon.md` deleted; no stale references
+  anywhere in `SKILL.md`, `protocols/`, `checklists/`, or
+  `rubrics/`
+- `research/grounding-v4.11.0.md` (1364 lines) captures full
+  Stage 1 audit trail with 42 Critical Attribution Corrections
+- MINOR bump per CHK-CMT-005: 5 new files (4 standards + 1
+  research note) read at runtime by worker and evaluator — MINOR
+  is correct bump, not PATCH
+
+### Line budget status
+
+| File | Lines | Budget | Status |
+|---|---|---|---|
+| `research-team/SKILL.md` | 489 | 500 hard cap | within cap with 11-line headroom |
+| `investment-macro-regime.md` | 768 | Tier 3 heavyweight | expected — 6 frameworks in one file |
+| `investment-sector-industry.md` | 541 | Tier 2 medium | expected — factor model + JP exception + rotation tables |
+| `investment-security-valuation.md` | 482 | Tier 3 medium | within target |
+| `investment-portfolio-construction.md` | 390 | Tier 2 compact | within target |
+| `protocols/investment.md` | 480 | no hard cap | expanded from 256 for 6-phase structure |
+| `research/grounding-v4.11.0.md` | 1364 | audit trail | not user-facing; expected size |
+
+Carry-forward note from v4.10.2 / v4.10.3: research-team SKILL.md
+green-band compression to ≤400 lines remains deferred. Current
+489 is near the 500 hard cap; future Resource Manifest additions
+may force another round of persona compression.
+
 ## [4.10.3] — 2026-04-11
 
 Discoverability fix for investment analysis as a research-team
