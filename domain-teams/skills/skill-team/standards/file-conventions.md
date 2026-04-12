@@ -96,6 +96,62 @@ contract.
 The main agent resolves relative paths to absolute when launching a
 worker or evaluator. See `agent-interface.md` for the exact protocol.
 
+## Standards Splitting Discipline
+
+When a standards file grows beyond its Tier-appropriate line budget
+(Tier 1: ~90 lines; Tier 2: ~150 lines; Tier 3: ~250 lines) OR when
+its content no longer fits a single conceptual axis, split it. The
+choice of split axis determines whether the result matches how
+practitioners in the domain actually organize the subject matter.
+
+### Three split axes
+
+| Axis | When to use | Example |
+|---|---|---|
+| **Topic split** | Content covers two or more **independent subjects** with no hierarchical relationship | docs-team v4.3.0: `doc-writing.md` → `diataxis-mode-matrix.md` + `google-style.md` — Diátaxis and Google Style are independent authorities, not layers of the same concept |
+| **Tier split** | Single topic, but **parametric strength** varies by sub-concept (some parts LLM-known, others hallucination hotspots) | Splitting Clean Code (Tier 1) from 徳丸本 Ch.6 (Tier 3 JP) when both could fit in one `code-quality.md` |
+| **Scale-hierarchy split** | Single subject domain, but **practitioners organize it by analytical scale** — hierarchical layers where each layer asks a qualitatively different question | research-team v4.11.0: `investment-analysis-canon.md` (646 lines) → `investment-macro-regime.md` (L1) + `investment-sector-industry.md` (L2) + `investment-security-valuation.md` (L3) + `investment-portfolio-construction.md` (portfolio meta) |
+
+### Scale-hierarchy decision rule (added v4.11.0)
+
+Scale-hierarchy is appropriate when ALL of:
+
+1. The domain has a **natural professional-practice taxonomy** —
+   e.g., top-down investment (macro → sector → security → portfolio),
+   strategic planning (strategic → tactical → operational), software
+   architecture (system → module → function)
+2. Each layer asks a **qualitatively different question**, not just a
+   more detailed version of the same question
+3. Practitioners specialize by layer (Macro Strategist vs Sector
+   Analyst vs Equity Analyst vs Portfolio Manager — distinct roles)
+4. Cross-layer claims exist but are a minority — most content is
+   layer-local
+
+When these hold, scale-hierarchy split produces files that match
+professional mental models AND enable **per-layer loading** (worker
+loads only the layer(s) needed by the question — see
+`agent-interface.md §Per-Phase Resource Narrowing`).
+
+### Do NOT use scale-hierarchy when
+
+- The "layers" are actually independent topics pretending to be
+  hierarchical → topic-split instead
+- The "layers" are just increasingly detailed versions of the same
+  concept → tier-split instead
+- The domain has **no accepted professional taxonomy** for the split
+  — inventing a scale taxonomy is the self-invented-taxonomies
+  anti-pattern, even if the split looks clean
+
+### Cross-layer claims require bridge sections
+
+Scale-hierarchy splits inevitably leave some load-bearing claims that
+span two layers (e.g., CAPE is both L1 market valuation AND L3
+individual P/E in research-team v4.11.0; sector rotation is a
+L1↔L2 bridge). Each cross-layer claim needs an explicit `## Cross-
+Layer Usage Notes` section (or equivalent cross-reference) in BOTH
+affected files — see `grounding-principle.md §Body Self-Containment
+§Cross-Layer Bridge Preservation` for the full rule.
+
 ## Deletion Over Deprecation
 
 When a file becomes obsolete, delete it. Do NOT:
