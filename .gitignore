@@ -9,12 +9,5 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 
-# YouTube skills: Whisper models (large files, download separately)
-**/models/*.bin
-
-# YouTube skills: Skill output data (generated at runtime)
-plugins/youtube-skills/skills/*/data/*
-!plugins/youtube-skills/skills/*/data/.gitkeep
-
 # Keep .gitkeep files
 !**/.gitkeep
