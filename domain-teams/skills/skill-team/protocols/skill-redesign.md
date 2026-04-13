@@ -31,7 +31,7 @@ Produce a gap report answering:
   workflow phases (marked `--`), missing agent launch templates
 - **Anti-pattern occurrences**: inlined content, absolute paths,
   stale deprecation stubs, nested subdirectories
-- **Line budget status**: is SKILL.md approaching 500 lines?
+- **Token budget status**: is SKILL.md approaching ~6,000 tokens?
 - **JP integration status**: does the current JP content match the
   content-density rule?
 

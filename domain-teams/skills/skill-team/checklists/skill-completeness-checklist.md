@@ -37,7 +37,7 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
 - [ ] **CHK-SKL-009 (Worker BLOCKED Handling)** [FIXABLE]: A `## Worker BLOCKED Handling` section exists explaining what to do when a worker returns BLOCKED (do not proceed to gates, present reason, wait for user input).
 
-- [ ] **CHK-SKL-010 (Line budget)** [FATAL]: SKILL.md total line count is ≤ 500 lines. Count includes frontmatter and all sections.
+- [ ] **CHK-SKL-010 (Token budget)** [FATAL]: SKILL.md total token count is ≤ ~6,000 tokens (~4,500 words). Count includes frontmatter and all sections. Use word count as a proxy (`wc -w`); lines are unreliable due to density variation.
 
 - [ ] **CHK-SKL-011 (Relative paths)** [FATAL]: All references to files inside the skill directory (in both SKILL.md and any protocol/standard/gate file that references other files in the skill) use relative paths (`standards/x.md`, `protocols/y.md`) — never absolute paths and never plugin-rooted paths like `domain-teams/skills/...`.
 
