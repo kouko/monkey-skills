@@ -236,11 +236,12 @@ ADR or Diátaxis Explanation, they can invoke docs-team **separately**
 as an optional downstream consumer. docs-team is NOT a mandatory
 pipeline stage for grounding research.
 
-## Line Budget
+## Token Budget
 
-- **Hard cap**: 500 lines (triggers Skill Coherence rubric 🔴)
-- **Soft target**: 300–380 lines
-- **Warning zone**: 400–500 lines (🟡 in coherence rubric)
+- **Hard cap**: ~6,000 tokens / ~4,500 words (triggers Skill Coherence rubric 🔴)
+- **Soft target**: ~3,000–4,500 tokens
+- **Warning zone**: ~4,500–6,000 tokens (🟡 in coherence rubric)
+- Use word/token count rather than line count — lines vary too much in density
 
 Historical precedent:
 - qa-team: 268 lines

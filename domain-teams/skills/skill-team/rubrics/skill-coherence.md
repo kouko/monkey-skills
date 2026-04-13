@@ -15,11 +15,11 @@ structural work is done.
 
 ## Flag Definitions
 
-### Line Budget
+### Token Budget
 
-- :red_circle: **Fatal**: SKILL.md exceeds 500 lines. Hard cap from `standards/skill-md-structure.md`.
-- :yellow_circle: **Warning**: SKILL.md is 400–500 lines — approaching the budget. Usually means workflow tables have grown too verbose or the Resource Manifest is duplicating content better kept in the standards files themselves.
-- :green_circle: **Clear**: SKILL.md is ≤ 400 lines, ideally in the 300–380 sweet spot.
+- :red_circle: **Fatal**: SKILL.md exceeds ~6,000 tokens (~4,500 words). Hard cap from `standards/skill-md-structure.md`.
+- :yellow_circle: **Warning**: SKILL.md is ~4,500–6,000 tokens — approaching the budget. Usually means workflow tables have grown too verbose or the Resource Manifest is duplicating content better kept in the standards files themselves.
+- :green_circle: **Clear**: SKILL.md is under ~4,500 tokens, ideally in the ~3,000–4,500 sweet spot.
 
 ### Workflow Completeness
 

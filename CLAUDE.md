@@ -15,7 +15,7 @@
 
 ### Skill Structure
 - 每個 team skill 是自包含目錄（SKILL.md + protocols/ + checklists/ + rubrics/ + standards/）
-- SKILL.md body 控制在 500 行以內
+- SKILL.md body 控制在 ~6,000 tokens 以內（約 4,500 words）；Anthropic 官方建議 <500 lines，本 repo 改用 token 計量因為行數密度差異大
 - Domain knowledge 用目錄慣例 + 描述性檔名路由，不用靜態清單
 - Reference files 從 SKILL.md 直接引用（one level deep，不巢狀）
 
