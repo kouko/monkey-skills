@@ -32,17 +32,68 @@ approaches, YAGNI ruthlessly, AI proposes human decides.
 
 ## Protocol
 
-### Phase 0: Context Discovery
+### Phase 0: Context Discovery & Shared Understanding
 
-1. **Clarify intent**: What are we trying to achieve, why, and what
+#### Step 1: Clarify intent
+
+1. **Ask intent**: What are we trying to achieve, why, and what
    does success look like? Ask one question at a time, prefer
-   multiple choice when possible.
+   multiple choice when possible. Keep this brief (1-2 questions)
+   to establish direction before exploring code.
+
+#### Step 2: Explore codebase
+
 2. **Scan codebase**: Explore related code, existing patterns, and
    reusable implementations. Do not propose approaches before
    reading existing code.
 3. **Identify constraints**: Technical constraints (language,
    framework, compatibility), team conventions, performance
    requirements, and hard boundaries.
+
+#### Step 3: Grill — challenge assumptions
+
+Using codebase findings, question the user's intent and assumptions
+to reach shared understanding. One question at a time. For each
+question, provide your recommended answer.
+
+4. **Challenge assumptions**: "You said X, but the codebase shows Y
+   — is that intentional?" Surface contradictions between user's
+   stated intent and existing code reality.
+5. **Probe dependencies**: "If we change X, it affects Y and Z —
+   have you considered that?" Walk down each branch of the decision
+   tree, resolving dependencies one by one.
+6. **Test boundaries**: "What should happen when [edge case]?" Push
+   on unstated requirements and implicit expectations.
+7. **Explore the codebase** instead of asking, when a question can
+   be answered by reading code.
+
+Continue until no unresolved branches remain, or the user requests
+to move on. Do not set a fixed question limit — the depth of
+questioning should match the complexity of the task.
+
+#### Step 4: Understanding Summary
+
+8. **Produce Understanding Summary** and ask user to confirm before
+   proceeding to Phase 1:
+
+```
+## Understanding Summary
+
+### Intent
+[What we're building and why]
+
+### Key Constraints
+[Technical, team, and scope constraints]
+
+### Confirmed Assumptions
+[Assumptions validated during grill]
+
+### Resolved Ambiguities
+[Questions that were unclear but now resolved]
+```
+
+Skip Phase 0 Steps 3-4 for small bug fixes and cosmetic changes
+(comments, formatting, renames) — proceed directly to Phase 1.
 
 ### Phase 1: Approach Exploration
 
@@ -82,11 +133,16 @@ approaches, YAGNI ruthlessly, AI proposes human decides.
 - One question at a time, multiple choice preferred
 - Do not propose approaches before exploring existing code —
   complete Phase 0 before Phase 1
+- During grill (Step 3): provide your recommended answer with each
+  question — don't just ask, also propose
+- If a question can be answered by exploring the codebase, explore
+  the codebase instead of asking the user
+- Understanding Summary must be confirmed by user before Phase 1
 - YAGNI ruthlessly — eliminate abstractions for hypothetical
   future requirements
 - AI presents options and recommendations; human decides
-- Skip this protocol for small bug fixes and cosmetic changes
-  (comments, formatting, renames)
+- Skip Phase 0 grill (Steps 3-4) for small bug fixes and cosmetic
+  changes (comments, formatting, renames)
 - Early questions are cheaper than late rework — resolve ambiguity
   before moving forward
 
