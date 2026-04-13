@@ -89,8 +89,7 @@ skill-name/
 │   └── Markdown instructions
 └── Bundled Resources (optional)
     ├── scripts/    - Executable code for deterministic/repetitive tasks
-    ├── references/ - Docs loaded into context as needed
-    └── assets/     - Files used in output (templates, icons, fonts)
+    └── references/ - Docs loaded into context as needed
 ```
 
 Each skill should also have a corresponding **slash command** entry point in the plugin's `commands/` directory. See `references/plugin-conventions.md` for the format and examples.
@@ -396,16 +395,16 @@ The key thing to avoid: don't make should-not-trigger queries obviously irreleva
 
 ### Step 2: Review with user
 
-Present the eval set to the user for review using the HTML template:
+Present the eval set to the user inline for review. For each query, show:
 
-1. Read the template from `assets/eval_review.html`
-2. Replace the placeholders:
-   - `__EVAL_DATA_PLACEHOLDER__` → the JSON array of eval items (no quotes around it — it's a JS variable assignment)
-   - `__SKILL_NAME_PLACEHOLDER__` → the skill's name
-   - `__SKILL_DESCRIPTION_PLACEHOLDER__` → the skill's current description
-3. Write to a temp file (e.g., `/tmp/eval_review_<skill-name>.html`) and open it: `open /tmp/eval_review_<skill-name>.html`
-4. The user can edit queries, toggle should-trigger, add/remove entries, then click "Export Eval Set"
-5. The file downloads to `~/Downloads/eval_set.json` — check the Downloads folder for the most recent version in case there are multiple (e.g., `eval_set (1).json`)
+```markdown
+| # | Query | Should Trigger? |
+|---|-------|-----------------|
+| 1 | "ok so my boss sent me this xlsx..." | ✅ Yes |
+| 2 | "can you analyze the trends in..." | ❌ No |
+```
+
+Ask the user to confirm, edit, add, or remove queries before proceeding. Save the final eval set to `<workspace>/trigger-eval.json`.
 
 This step matters — bad eval queries lead to bad descriptions.
 
