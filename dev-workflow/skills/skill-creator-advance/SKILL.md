@@ -471,6 +471,7 @@ The references/ directory has additional documentation:
 - `references/schemas.md` — JSON structures for evals.json, grading.json, etc.
 - `references/plugin-conventions.md` — Plugin ecosystem conventions, directory structures, and slash command format
 - `references/iteration-automation.md` — Self-assessment and auto-regression detection protocols
+- `references/eval-methodology.md` — Eval methodology principles: why the eval workflow is designed this way (optional)
 - `references/platform-adaptations.md` — Claude.ai and Cowork platform-specific adjustments
 
 ---
