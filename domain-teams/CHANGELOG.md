@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.13.1] — 2026-04-14
+
+Language cleanup: migrate copywriting-team from 3-language mix
+(繁中 + JP + EN) to 2-language clean (JP + EN only). Modify-only
+PATCH bump — no new files, only prose language migration across
+existing files.
+
+### Motivation
+
+copywriting-team was the only domain-team using 繁中 heavily in
+its meta/scaffolding layer (protocols, gates, SKILL.md body). All
+other domain-teams (including FULL JP teams like qa-team and
+design-team) use EN for meta layer + JP for canon content. This
+inconsistency created unnecessary cognitive load with 3 language
+switches within single files and added "which language should I
+use?" friction for future v4.14.0/v4.15.0 authoring.
+
+### Changed
+
+All 23 files under `skills/copywriting-team/` migrated:
+
+- **10 standards**: 繁中 scaffolding (framing, anti-patterns,
+  comparison tables, section intros) → EN. JP canonical prose
+  (PASONA stages, キャッチコピー definitions, 谷山 / 今泉 / 川喜田
+  quotes) preserved. Anglo citations (Ogilvy / Cialdini / Schwartz)
+  already EN and untouched.
+- **7 protocols**: 繁中 → EN for Phase descriptions, Rules,
+  Anti-Patterns. `copywriting-brainstorming.md` gained a new
+  `## Template Rendering Rule` section + triple-language (ja/en/zh-TW)
+  rendered examples at Q2 and Q7 for intake templates.
+- **5 gates**: checklist item descriptions and rubric flag criteria
+  migrated 繁中 → EN. JP legal terms (景品表示法, ステマ告示) and
+  technique names (PASONA, なんかいいよね禁止, etc.) preserved in JP.
+- **SKILL.md** (390 → 391 lines): remaining 繁中 fragments in
+  When to Use, Resource Manifest annotations, workflow table Notes
+  column migrated to EN. Already-EN sections untouched.
+- **research/grounding-v4.12.0.md**: NOT migrated (maintainer-facing
+  audit trail, exempt from convention).
+
+### Language rule established
+
+> **Prose language follows canon language** — JP canon content
+> uses JP prose, Anglo canon content uses EN prose, meta/scaffolding
+> uses EN. No 繁中 in reference files going forward.
+
+Intake brainstorming Q1-Q10 templates support trilingual rendering
+via `output_language` parameter (ja / en / zh-TW), with EN baseline
+and triple-rendered examples at Q2 and Q7.
+
+### Not a breaking change
+
+Agent contracts, gate schemas, verdict rules, and file paths are
+all unchanged. Only prose language inside existing files was modified.
+
 ## [4.13.0] — 2026-04-14
 
 First copywriting-team interaction layer refactor: formalize user

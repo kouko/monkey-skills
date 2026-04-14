@@ -9,7 +9,7 @@ description: >-
   (use planning-team), UX microcopy inside interface screens (use design-team),
   or market research (use research-team).
   Delivers long-form copy (PASONA/PASBECONA), mid-form EC product copy (BEAF),
-  short-form キャッチコピー (7-15 字), voice guides, and audit reports.
+  short-form キャッチコピー (7-15 chars), voice guides, and audit reports.
 ---
 
 # Copywriting Team
@@ -42,9 +42,9 @@ Ethics, Voice Consistency, Form-Appropriate).
 
 ## When to Use
 
-- Long-form landing page copy (PASONA / PASBECONA 框架)
+- Long-form landing page copy (PASONA / PASBECONA framework)
 - Email campaign sequences, sales letters, 記事広告
-- Mid-form EC product descriptions (樂天 / Amazon JP / POP)
+- Mid-form EC product descriptions (Rakuten / Amazon JP / POP)
 - Short-form キャッチコピー, taglines, headlines, SNS posts, banner copy
 - Voice-and-tone guide authoring for a brand or product
 - Copy audit — review existing copy for framework / ethics / voice issues
@@ -53,16 +53,17 @@ Ethics, Voice Consistency, Form-Appropriate).
 ## When NOT to Use
 
 - Technical documentation, tutorials, API docs → `docs-team`
-- Product strategy, value proposition定義, PRODUCT-SPEC → `planning-team`
+- Product strategy, value proposition definition, PRODUCT-SPEC → `planning-team`
 - UX microcopy inside already-opened screens (buttons, errors, empty states)
   → `design-team`
 - Market research, competitive analysis, audience insights → `research-team`
 - Writing source code CTAs or implementing copy in templates → `code-team`
 
-Boundary rule with planning-team: planning 寫「命題」（value proposition thesis
-grounded in JTBD）, copywriting 寫「表達」（the headline / tagline / hero copy
-that communicates the thesis）. The PRODUCT-SPEC.md stays with planning;
-marketing artifacts (landing page, ad copy, launch email) belong here.
+Boundary rule with planning-team: planning writes the thesis (value
+proposition grounded in JTBD); copywriting writes the expression (the
+headline / tagline / hero copy that communicates the thesis). The
+PRODUCT-SPEC.md stays with planning; marketing artifacts (landing page,
+ad copy, launch email) belong here.
 
 Boundary rule with design-team: design owns microcopy *inside* a screen the
 user has already opened (button labels, empty states, error messages);
@@ -153,7 +154,7 @@ Handle verdict:
 
 Guard rails:
 - Do NOT compress artifacts before passing to evaluator — evaluator needs
-  full content to judge framework adherence,字數 discipline, and voice
+  full content to judge framework adherence, character-count discipline, and voice
   consistency
 - Each retry launches a fresh evaluator (no accumulated context)
 - Ethics gate verdicts are non-negotiable; NEEDS_REVISION on ethics blocks
@@ -163,14 +164,14 @@ Guard rails:
 
 Worker default resources:
 - standards:
-  - `standards/ideation-mandalart.md` — 今泉 1987 3×3 structure + 輔助方向庫
-  - `standards/ideation-kj-convergence.md` — 川喜田 1967 KJ法 6 階段
-  - `standards/ideation-taniyama-discipline.md` — 谷山 散らかす→選ぶ→磨く + なんかいいよね禁止 + 31 訓練
+  - `standards/ideation-mandalart.md` — 今泉 1987 3×3 structure + auxiliary direction bank
+  - `standards/ideation-kj-convergence.md` — 川喜田 1967 KJ法 6 stages
+  - `standards/ideation-taniyama-discipline.md` — 谷山 散らかす→選ぶ→磨く + なんかいいよね禁止 + 31 exercises
   - `standards/verbalized-sampling.md` — Zhang et al. 2025 VS technique
   - `standards/long-form-pasona-canon.md` — 神田 PASONA / 新 PASONA / PASBECONA canonical
   - `standards/mid-form-beaf-canon.md` — BEAF (Benefit → Evidence → Advantage → Feature)
-  - `standards/short-form-catchcopy-canon.md` — AIDMA 短版 + 糸井/岩崎/眞木/TCC + 3秒ルール + 7-15 字 + 5 切入點
-  - `standards/voice-and-tone.md` — Ogilvy + JP 情緒共鳴 + voice/tone axes
+  - `standards/short-form-catchcopy-canon.md` — AIDMA short edition + 糸井/岩崎/眞木/TCC + 3秒ルール + 7-15 chars + 5 切入點
+  - `standards/voice-and-tone.md` — Ogilvy + JP emotional resonance + voice/tone axes
   - `standards/persuasion-ethics.md` — Cialdini + 景品表示法 + FTC + dark patterns
   - `standards/persuasion-psychology-anchor.md` — Cialdini 6 + Schwartz 5 levels + Kahneman System 1/2
 - protocol: (selected per-workflow from `protocols/`)
@@ -279,8 +280,8 @@ Affinity candidates before drafting.
 |-------|-------|----------|-------|--------|-------|
 | 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
 | 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
-| 1. 發散 | worker (× N subagents) | `protocols/copy-ideation-parallel.md` | confirmed Summary | 64 candidates with VS probabilities | 8 曼陀羅 directions × 8 VS candidates |
-| 2. 收斂 | worker | `protocols/copy-ideation-parallel.md` | 64 candidates | 3-5 winning angles | KJ 6-stage + 谷山 「なんかいいよね禁止」 |
+| 1. Diverge | worker (× N subagents) | `protocols/copy-ideation-parallel.md` | confirmed Summary | 64 candidates with VS probabilities | 8 曼陀羅 directions × 8 VS candidates |
+| 2. Converge | worker | `protocols/copy-ideation-parallel.md` | 64 candidates | 3-5 winning angles | KJ 6-stage + 谷山 「なんかいいよね禁止」 |
 
 **Handoff**: the 3-5 winning angles feed directly into Long-Form / Mid-Form /
 Short-Form Copy Writing workflows as seed input (Affinity seed for long-form,
@@ -305,15 +306,15 @@ Benefit seed for mid-form, headline seed for short-form). Output format
 
 ### Mid-Form EC Copy Writing
 
-**Trigger**: Product description for 樂天 / Amazon JP / 店頭 POP / 説明会.
+**Trigger**: Product description for Rakuten / Amazon JP / in-store POP / presentation materials.
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
 | 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
 | 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
-| 1. BEAF 骨架 | worker | `protocols/write-mid-form-copy.md` | confirmed Summary | BEAF-ordered draft | Benefit-first enforcement |
+| 1. BEAF Skeleton | worker | `protocols/write-mid-form-copy.md` | confirmed Summary | BEAF-ordered draft | Benefit-first enforcement |
 | 2. Framework Gate | evaluator | `checklists/persuasion-framework-adherence-checklist.md` | copy artifact | verdict | MUST gate |
-| 3. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | copy artifact | verdict | MUST gate (景品表示法) |
+| 3. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | copy artifact | verdict | MUST gate (景品表示法 included) |
 | 4. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | copy artifact | verdict | SHOULD gate |
 
 ### Short-Form キャッチコピー Writing
@@ -324,12 +325,12 @@ Benefit seed for mid-form, headline seed for short-form). Output format
 |-------|-------|----------|-------|--------|-------|
 | 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
 | 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
-| 1. Approach 選擇 | worker | `protocols/write-short-form-copy.md` | confirmed Summary | one of 5 切入點 | 利益/恐懼/顛覆/呼喚/提問 |
-| 2. Draft | worker | `protocols/write-short-form-copy.md` | approach + voice | candidate キャッチコピー (7-15 字) | AIDMA A+I only |
-| 3. 禁句審查 | worker | `protocols/write-short-form-copy.md` | candidates | finalists with 3 reasons each | 谷山 なんかいいよね禁止 |
+| 1. Approach Selection | worker | `protocols/write-short-form-copy.md` | confirmed Summary | one of 5 切入點 | benefit / fear / subversion / calling / question |
+| 2. Draft | worker | `protocols/write-short-form-copy.md` | approach + voice | candidate キャッチコピー (7-15 chars) | AIDMA A+I only |
+| 3. Forbidden-Phrase Audit | worker | `protocols/write-short-form-copy.md` | candidates | finalists with 3 reasons each | 谷山 なんかいいよね禁止 |
 | 4. Framework Gate | evaluator | `checklists/persuasion-framework-adherence-checklist.md` | candidates | verdict | MUST gate |
 | 5. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | candidates | verdict | MUST gate |
-| 6. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | candidates | verdict | SHOULD gate (3-sec land + 7-15 字) |
+| 6. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | candidates | verdict | SHOULD gate (3-sec land + 7-15 chars) |
 | 7. Voice Gate | evaluator | `rubrics/voice-consistency-gate.md` | candidates | verdict | SHOULD gate |
 
 ### Copy Audit
