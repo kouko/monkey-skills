@@ -4,6 +4,63 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-04-14
+
+License compliance: add missing `LICENSE` and `NOTICE` files to the
+`skill-creator-advance` skill and correct the upstream attribution
+previously misstated in the v1.0.0 CHANGELOG.
+
+### Corrected upstream attribution
+
+v1.0.0 stated "based on Anthropic's skill-creator with 7 enhancements"
+and that bundled agents/scripts came "from Anthropic skill-creator."
+The accurate upstream chain is:
+
+1. **Anthropic `skill-creator`** (MIT) — the earliest upstream; provides
+   the eval-loop concept and file naming for bundled agents (grader,
+   comparator, analyzer) and scripts (aggregate_benchmark, run_eval,
+   run_loop, improve_description, package_skill, quick_validate,
+   generate_report, utils).
+   https://github.com/anthropics/skills/tree/main/skills/skill-creator
+2. **AllanYiin (尹相志) `skill-creator-advanced`** (MIT, Copyright (c)
+   2026 AllanYiin) — **the direct upstream** this plugin adapted from.
+   https://github.com/AllanYiin/Amon
+   Path: `src/amon/resources/skills/skill-creator-advanced/`
+3. **`dev-workflow/skills/skill-creator-advance/`** (MIT, Copyright (c)
+   2026 kouko) — this distribution.
+
+The v1.0.0 CHANGELOG incorrectly implied direct derivation from
+Anthropic. The direct upstream is Allan's work, which in turn draws
+from Anthropic (Allan's own reference files in the upstream
+acknowledge "upstream skill-creator").
+
+### Added
+
+- `dev-workflow/skills/skill-creator-advance/LICENSE` — MIT license
+  preserving AllanYiin's copyright + adding kouko's copyright for
+  modifications, per MIT requirement that upstream notices be retained
+  in all copies or substantial portions.
+- `dev-workflow/skills/skill-creator-advance/NOTICE` — detailed
+  upstream chain, per-version modifications, and link to Allan's
+  Facebook announcement of the original skill-creator-advanced.
+
+### Also (repo-root, in the same fix PR)
+
+- Root `LICENSE` (MIT) — corresponding to the MIT declaration in the
+  main `README.md` which previously had no license file backing it.
+- Root `ATTRIBUTION.md` — summary table of all third-party components
+  across all plugins (obsidian kepano skills, obsidian axtonliu visual
+  skills, skill-creator-advance lineage).
+- `obsidian/skills/README.md` — fixed 3 axtonliu upstream URLs that
+  incorrectly pointed to `github.com/anthropics/claude-code-skills`;
+  corrected to `github.com/axtonliu/axton-obsidian-visual-skills`.
+
+### Not a breaking change
+
+No skill content modified. Pure license-compliance housekeeping.
+v1.0.0 consumers continue to work unchanged; this PATCH only adds
+license / attribution files and corrects documentation text.
+
 ## [1.0.0] — 2026-04-13
 
 Initial release of the dev-workflow plugin with `skill-creator-advance`.
@@ -11,8 +68,12 @@ Initial release of the dev-workflow plugin with `skill-creator-advance`.
 ### Added
 
 - **skill-creator-advance** skill — general-purpose skill creation and
-  iterative improvement tool, based on Anthropic's skill-creator with
-  7 enhancements:
+  iterative improvement tool. Adapted from AllanYiin's `skill-creator-
+  advanced` (MIT; upstream at github.com/AllanYiin/Amon, path
+  src/amon/resources/skills/skill-creator-advanced/), which itself
+  draws on Anthropic's upstream `skill-creator`. See LICENSE and NOTICE
+  in the skill directory for the full upstream chain. Added the
+  following 7 enhancements in this distribution:
   1. monkey-skills ecosystem integration guidance
   2. Description best practices (negative triggers, multilingual keywords)
   3. Eval flow tiering (quick path vs full path)
@@ -21,10 +82,13 @@ Initial release of the dev-workflow plugin with `skill-creator-advance`.
   6. Self-assessment pass (auto-fix obvious defects before human review)
   7. Auto-regression detection across iterations
 
-- **Bundled agents**: grader, comparator, analyzer (from Anthropic skill-creator)
+- **Bundled agents**: grader, comparator, analyzer (inherited via
+  AllanYiin's skill-creator-advanced, which in turn took the file
+  naming convention from Anthropic's upstream skill-creator)
 
 - **Bundled scripts**: aggregate_benchmark, run_eval, run_loop,
   improve_description, package_skill, quick_validate, generate_report
+  (same inheritance chain as agents)
 
 - **Reference files**:
   - `plugin-conventions.md` — plugin ecosystem conventions and slash commands

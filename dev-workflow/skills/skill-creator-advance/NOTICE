@@ -1,0 +1,66 @@
+skill-creator-advance
+=====================
+
+Upstream chain
+--------------
+
+This skill is adapted from a chain of MIT-licensed upstream projects:
+
+1. Anthropic `skill-creator` — the earliest upstream.
+   https://github.com/anthropics/skills/tree/main/skills/skill-creator
+   License: MIT. Contributes the overall eval-loop concept + file naming
+   for bundled agents (grader, comparator, analyzer) and bundled scripts
+   (aggregate_benchmark, run_eval, run_loop, improve_description,
+   package_skill, quick_validate, generate_report, utils).
+
+2. AllanYiin (尹相志) `skill-creator-advanced` — direct upstream.
+   https://github.com/AllanYiin/Amon
+   Path: src/amon/resources/skills/skill-creator-advanced/
+   License: MIT. Copyright (c) 2026 AllanYiin.
+   Announcement (Chinese): https://www.facebook.com/allanyiin/posts/26778210211773012/
+   Allan's own reference files explicitly acknowledge the Anthropic
+   upstream (e.g., references/eval-workflow.md and references/eval-schemas.md
+   state "upstream skill-creator" as source for the eval loop and field
+   designs).
+
+3. kouko monkey-skills — this distribution.
+   https://github.com/kouko/monkey-skills
+   Path: dev-workflow/skills/skill-creator-advance/
+   License: MIT. Copyright (c) 2026 kouko.
+
+Modifications in this distribution (kouko)
+------------------------------------------
+
+See dev-workflow/CHANGELOG.md for the full per-version modification list.
+High-level summary (v1.0.0):
+
+- monkey-skills ecosystem integration guidance
+- Description best practices (negative triggers, multilingual keywords)
+- Eval flow tiering (quick path vs full path)
+- Existing skill improvement workflow
+- Slash command creation guidance
+- Self-assessment pass (auto-fix obvious defects before human review)
+- Auto-regression detection across iterations
+- Eval results presented inline + markdown report (removed browser viewer
+  dependency)
+- Token-based budget (~6,000 tokens) instead of line-based (500 lines)
+- Platform adaptations extracted to reference file (optional, load on demand)
+
+v1.0.1 (license compliance fix): added LICENSE and NOTICE files to
+correctly attribute the upstream chain; previous CHANGELOG text
+incorrectly claimed direct Anthropic upstream when the actual direct
+upstream was AllanYiin/Amon skill-creator-advanced.
+
+MIT license preservation
+------------------------
+
+The MIT license requires that the copyright notice and permission notice
+be included in all copies or substantial portions of the Software.
+Both the upstream AllanYiin copyright and the downstream kouko copyright
+are preserved in the accompanying LICENSE file in this directory.
+
+Transitive Anthropic copyright: since Allan's own license file does not
+carry an Anthropic copyright notice, this distribution cannot enumerate
+specific Anthropic-held portions. Anthropic's contribution is
+acknowledged above as the earliest upstream for readers tracing the
+lineage.
