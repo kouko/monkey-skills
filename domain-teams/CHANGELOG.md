@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.4] — 2026-04-15
+
+### Changed (copywriting-team)
+- **voice-and-tone.md tradition sections brought to symmetric
+  philosophy level**. After v4.18.0-v4.18.3 moved the copywriter
+  deep-dive ownership to `jp-copy-craft-lineage.md` and the brand-
+  level taxonomy to `voice-quadrant-positioning.md`, voice-and-tone.md
+  was left with an asymmetric tradition section (Anglo 28 lines at
+  philosophy level, JP 34 lines at deep-dive level, ZH 0 lines).
+  All three traditions now occupy ~14-28 lines at philosophy level
+  only, with deep-dive delegated.
+- **§JP emotional-resonance tradition trimmed** (34 → 14 lines):
+  retained philosophy contrast (state-proposal vs action-prompting,
+  余韻/impermanence); delegated voice-signature deep-dive (grammar
+  patterns, sentence endings, character ranges) to
+  `jp-copy-craft-lineage.md §糸井 / §岩崎 / §眞木準`. Fixes prior
+  dangling 眞木準 reference.
+
+### Added (copywriting-team)
+- **§ZH TW copywriting tradition** (new, ~18 lines) in voice-and-tone.md:
+  four distinct TW philosophical contributions with representative line
+  per contribution — 對仗式日常洞察 (龔大中 全聯), 意識形態式
+  aphorism (許舜英 中興百貨), 跨文化文學改寫 (李欣頻 誠品 /
+  寺山修司), 策略性敘事世界觀 (葉明桂 左岸咖啡館). Cross-references
+  `voice-quadrant-positioning.md §ZH Copywriting Tradition` for full
+  taxonomy + micro-indicators.
+- Six new cross-references in voice-and-tone.md to
+  `jp-copy-craft-lineage.md` (was zero) and
+  `voice-quadrant-positioning.md`, resolving the discoverability gap
+  introduced by v4.18.0 architecture.
+
+### Removed (copywriting-team)
+- Primary Sources entries for 糸井重里 voice reference and 岩崎俊一
+  voice reference — these are now owned by `jp-copy-craft-lineage.md`.
+  Ogilvy 1963 / Ogilvy 1983 / 18F / Mailchimp remain as
+  voice-and-tone.md's direct dependencies.
+
 ## [4.18.3] — 2026-04-15
 
 ### Removed (copywriting-team)
