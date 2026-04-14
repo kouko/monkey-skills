@@ -7,6 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.12.0] — 2026-04-14
+
+New domain team: **copywriting-team** — persuasive marketing copy
+grounded in Japanese advertising tradition and Anglo direct-response
+canon. MINOR bump per skill-team conventions (additive — new team
+under `skills/copywriting-team/`, router update, no breaking changes).
+
+### Added
+
+- `skills/copywriting-team/` — complete skill directory
+  - `SKILL.md` (351 lines) — persona grounded on 神田昌典 PASONA
+    2016+2021, 谷山 散らかす→選ぶ→磨く, 今泉 曼陀羅 1987,
+    川喜田 KJ法 1967, Cialdini 1984, Schwartz 1966, Zhang et al.
+    2025 Verbalized Sampling
+  - **10 standards** (1994 lines total):
+    - 4 ideation: `ideation-mandalart.md` (Tier 3),
+      `ideation-kj-convergence.md` (Tier 3),
+      `ideation-taniyama-discipline.md` (Tier 3),
+      `verbalized-sampling.md` (Tier 2)
+    - 3 writing layers: `long-form-pasona-canon.md` (Tier 3),
+      `mid-form-beaf-canon.md` (Tier 2),
+      `short-form-catchcopy-canon.md` (Tier 3)
+    - 3 common: `voice-and-tone.md` (Tier 2),
+      `persuasion-ethics.md` (Tier 2),
+      `persuasion-psychology-anchor.md` (Tier 2)
+  - **5 protocols**: `copy-ideation-parallel.md`,
+    `write-long-form-copy.md`, `write-mid-form-copy.md`,
+    `write-short-form-copy.md`, `copy-audit.md`
+  - **4 gates**: MUST `persuasion-framework-adherence-checklist.md`,
+    MUST `ethics-checklist.md`, SHOULD `voice-consistency-gate.md`,
+    SHOULD `form-appropriate-gate.md`
+  - `research/grounding-v4.12.0.md` — consolidated audit trail from
+    3 parallel research agents covering long-form / short-form /
+    ideation framework clusters
+
+### Changed
+
+- `skills/using-domain-teams/SKILL.md` — router updated:
+  - Available Teams table adds copywriting-team row
+  - Intent Routing adds 7 copy-related intent rows (long-form LP,
+    mid-form EC, short-form キャッチコピー, voice guide, ideation,
+    audit) plus handoff patterns with planning / design
+  - Ambiguous Cases adds 3 copywriting-involved chains
+
+### Design decisions
+
+- **Three-layer form split**: long (PASONA family) / mid (BEAF) /
+  short (キャッチコピー) — each layer has its own structural
+  framework because operating principles differ (conversion funnel
+  vs functional persuasion vs 一撃型 insight).
+- **Two-stage pipeline**: 發散 (曼陀羅 + Verbalized Sampling) →
+  收斂 (KJ法 + 谷山「なんかいいよね禁止」) → 撰寫 (three-layer
+  branching). Subagent parallelism via `copy-ideation-parallel.md`.
+- **FULL JP integration** — 5 of 10 standards are Tier 3
+  (神田 / 谷山 / 今泉 / 川喜田 / キャッチコピー 伝統) per
+  grounding-principle decision tree; JP content is structural SSOT.
+- **Secondary-source grounding discipline** — user confirmed no
+  primary-source access; every load-bearing claim dual-verified
+  against 2+ independent secondary sources per
+  `skill-team/standards/grounding-principle.md`.
+
+### Critical Attribution Corrections — 8 drifts校正
+
+1. マンダラート 8-方向 standard classification is 後人衍生, not
+   今泉 1987 原作
+2. 大谷翔平 OW64 is 原田隆史 Method (松村寧雄 1979 マンダラチャート
+   lineage), not 今泉 マンダラート
+3. 谷山雅計 "What×How 四象限" is NOT in the original book; canonical
+   is 散らかす→選ぶ→磨く +「なんかいいよね禁止」+ 31 訓練
+4. PASONA 1999 年 is 通說; canonical documentation is 神田昌典 2016
+   『稼ぐ言葉の法則』
+5. PASBECONA was formally named in **2021**『コピーライティング
+   技術大全』(神田 + 衣田共著), not 2016
+6. QUEST belongs to **Michel** Fortin 2005 blog (NOT Michael
+   Fortin, NOT Clayton Makepeace)
+7. PASTOR's T = **Transformation + Testimony** (両義, per Ray
+   Edwards 2016), not Testimony alone
+8. リゲイン「24 時間戦えますか？」 belongs to 杉山恒太郎 + リゲイン
+   PJ, not 岩崎俊一 (common misattribution)
+
+### Out of scope (deferred to copywriting-team v1.1.0)
+
+- Extended long-form frameworks (QUEST / PASTOR / CREMA)
+- Neta (流行文化引用) injection with WebSearch-only pipeline
+- 小霜和也 本能ドライバー analysis as structural alternative
+- JP copy craft lineage (糸井 / 岩崎 / 眞木 deeper voice studies)
+- SNS evolution AIDMA → AISAS → ULSSAS deep coverage
+
+Commit split (per skill-team 3-commit convention):
+
+1. `feat(copywriting-team): introduce standards + grounding research (v4.12.0 1/3)`
+2. `feat(copywriting-team): add protocols + gates (v4.12.0 2/3)`
+3. `feat(copywriting-team): wire SKILL.md, router, bump to 4.12.0 (v4.12.0 3/3)`
+
 ## [4.11.1] — 2026-04-12
 
 Meta-refactor of **skill-team** (the plugin's meta-skill for building

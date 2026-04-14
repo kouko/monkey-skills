@@ -23,6 +23,7 @@ Each team has its own protocols, standards, and evaluation criteria.
 | `research-team` | Ensure we know enough (trustworthy sources, risks visible) | Research reports, analysis |
 | `design-team` | Ensure it's used well (accessible, intuitive) | UI specs, wireframes |
 | `planning-team` | Ensure the right thing gets built (scope, direction) | PRODUCT-SPEC.md |
+| `copywriting-team` | Ensure copy persuades (framework-grounded, ethics-safe, voice-consistent) | Landing pages, emails, キャッチコピー, voice guides, copy audits |
 | `skill-team` | Build/modify domain-team skills with convention discipline | New/refactored skill directories + 3-commit branches |
 
 ## Intent Routing
@@ -44,6 +45,12 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Audit accessibility | `design-team` |
 | Define product scope, write PRODUCT-SPEC.md | `planning-team` |
 | Start a new project (企画) | `planning-team` |
+| Write landing page / email / sales letter (long-form copy) | `copywriting-team` |
+| Write 樂天 / Amazon JP product description / POP (mid-form copy) | `copywriting-team` |
+| Write キャッチコピー / tagline / headline / SNS post (short-form, 7-15 字) | `copywriting-team` |
+| Draft voice-and-tone guide for a brand | `copywriting-team` |
+| Generate multiple copy candidates via 曼陀羅 + Verbalized Sampling | `copywriting-team` |
+| Audit existing copy for framework / ethics / voice issues | `copywriting-team` |
 | Create a new domain-team skill | `skill-team` |
 | Refactor a team with primary-source grounding | `skill-team` |
 
@@ -57,6 +64,9 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Need test plan + test code | `qa-team` (TEST-PLAN.md) → `code-team` (implement tests) |
 | Need deployment after coding | `code-team` (code) → `devops-team` (deploy) |
 | Full project lifecycle | `planning-team` → `code-team` → `qa-team` → `devops-team` |
+| Value proposition + marketing copy | `planning-team` (PRODUCT-SPEC value prop) → `copywriting-team` (expressions) |
+| Marketing launch campaign | `planning-team` (positioning) → `copywriting-team` (copy) → `design-team` (visual pairing) |
+| Brand voice + UX microcopy consistency | `copywriting-team` (voice & tone guide) → `design-team` (microcopy) |
 | Task spans multiple domains | Decompose and invoke teams sequentially |
 
 ## Shared Agents
