@@ -122,14 +122,26 @@ execution protocol and `neta-safety-gate.md` for safety verification.
   & Mick as mechanism grounding, not as "McQuarrie & Mick's neta
   taxonomy."
 
+## Source Types vs Transformation Techniques
+
+This standard defines 4 **transformation techniques (轉化技法)** — the
+rhetorical operations applied to source material. Source types (取材類型)
+— WHERE the reference comes from — are defined in
+`neta-source-taxonomy.md`. The two axes are orthogonal: any technique
+can operate on any source type, with varying effectiveness documented
+in the taxonomy standard's compatibility matrix.
+
 ## Framing — the neta injection zone
 
 ### What counts as neta
 
-**Neta (ネタ)** in JP copywriting discourse refers to pop culture /
-subculture / meme / 流行語 / 固有名詞 references embedded in copy.
-Neta injection is NOT decoration — it is a **cognitive shortcut**
-exploiting the reader's prior knowledge to deliver compressed
+**Neta (ネタ)** in JP copywriting discourse refers to externally-sourced
+cultural references embedded in copy: pop culture / subculture / meme /
+流行語 / 固有名詞, as well as literary allusion, classical quotation,
+and famous phrases. Source types range from fast-moving SNS memes to
+evergreen classical literature (see `neta-source-taxonomy.md` for the
+full taxonomy). Neta injection is NOT decoration — it is a **cognitive
+shortcut** exploiting the reader's prior knowledge to deliver compressed
 meaning.
 
 Three conditions must hold for a neta injection to work:
