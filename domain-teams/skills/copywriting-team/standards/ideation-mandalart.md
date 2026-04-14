@@ -1,51 +1,71 @@
 ---
-title: Mandal-Art 曼陀羅發想法（今泉浩晃 1987/1988）
+title: Mandal-Art 曼陀羅発想法 (今泉浩晃 1987/1988)
 tier: 3
 ---
 
-# Mandal-Art 曼陀羅發想法
+# Mandal-Art 曼陀羅発想法
 
-Tier 3 standard: 自包含。以今泉浩晃 1987 年提唱、1988 年書籍正式化的 3×3
-曼陀羅結構為 canonical source，為 copywriting-team 的「散らかす」階段提供
-結構化發散工具。本檔校正兩項常見 attribution drift：①「8 方向標準分類」為
-後人衍生、非今泉原典；②大谷翔平 OW64 屬原田隆史 Method（松村寧雄 1979
-マンダラチャート lineage），**不是**今泉 マンダラート。本 standard 僅規範
-今泉原典 3×3 結構與其自動化邊界，並附「輔助方向庫」供 main worker 依題目
-自選 8 方向，明確標註該庫為後人衍生工具而非今泉典籍。
+Tier 3 standard: self-contained. Uses 今泉浩晃's 1987 proposal and 1988
+book formalization of the 3×3 曼陀羅 structure as canonical source,
+providing a structured divergence tool for copywriting-team's 散らかす
+(divergence) stage. This file corrects two common attribution drifts:
+(1) the "standard 8-direction taxonomy" is a later-invented derivative,
+not from 今泉's original canon; (2) 大谷翔平's OW64 chart belongs to
+原田隆史 Method (松村寧雄 1979 マンダラチャート lineage), **not**
+今泉's マンダラート. This standard regulates only 今泉's original 3×3
+structure and its automation boundaries, and supplements a "direction
+library" for the main worker to self-select 8 directions per topic,
+explicitly marking the library as a later-derived convenience tool
+rather than part of 今泉's canon.
 
 ## Primary Sources
 
-- 今泉浩晃 (1987) 「マンダラート」提唱 — 個人手法としての 3×3 メモ術の初出。copywriting-team Tier 3 canonical source。
-- 今泉浩晃 (1988) 『創造性を高めるマンダラート発想法』日本実業出版社 — 3×3 結構 + 81 格展開（72 個關聯概念）の完整形式化。今泉 original 書籍版。
-- Wikipedia 日本語版「マンダラート」 https://ja.wikipedia.org/wiki/マンダラート — 次級 dual-verify source：今泉 1987 提唱、曼荼羅由来命名、3×3 基本結構。
-- idea-soken「マンダラート発想法の使い方」 https://www.idea-soken.com/mandal-art — 次級 dual-verify source：9 格 / 81 格展開手順の実務解説、今泉書籍の引用。
+- 今泉浩晃 (1987) 「マンダラート」proposal — first appearance as a personal 3×3 memo technique. copywriting-team Tier 3 canonical source.
+- 今泉浩晃 (1988) 『創造性を高めるマンダラート発想法』日本実業出版社 — 3×3 structure + 81-cell expansion (72 associated concepts) fully formalized. 今泉 original book.
+- Wikipedia 日本語版「マンダラート」 https://ja.wikipedia.org/wiki/マンダラート — secondary dual-verify source: 今泉 1987 proposal, 曼荼羅-derived naming, 3×3 basic structure.
+- idea-soken「マンダラート発想法の使い方」 https://www.idea-soken.com/mandal-art — secondary dual-verify source: 9-cell / 81-cell expansion procedure, practical guide citing 今泉's book.
 
 ## Critical Attribution Corrections
 
-- **「8 方向標準分類」非今泉原典。** 坊間將「生活情境／情感觸發／數字刺激／反常識／隱喻對比／故事開頭／疑問句式／ベネフィット表達」
-  等方向歸為今泉 1987 作品的一部分，實為後人（主要是日本創意產業導師與 blog 作者）依使用場景衍生的模板。今泉原典僅規定
-  **3×3 結構 + 中心主題 + 8 聯想格**，不指定聯想內容的分類原則。本檔 §「輔助方向庫」明確標註為衍生工具，不得引用為今泉原著規範。
-- **大谷翔平 OW64 ≠ 今泉 マンダラート。** 大谷於花卷東高校所用的 8 目標達成シート（OW64 或稱目標達成マンダラチャート）來自
-  **原田隆史の原田 Method**，其 lineage 源於松村寧雄 1979 年提唱的「マンダラチャート」（商標：クローバ経営研究所／
-  マンダラチャート協会）。今泉「マンダラート」與松村「マンダラチャート」是**命名相近但來源不同的兩套方法**，
-  不得以大谷案例作為今泉 grounding 的例證。
+- **The "standard 8-direction taxonomy" is not from 今泉's original canon.**
+  Popular writing attributes categories such as "生活情境／情感トリガー／
+  数字刺激／反常識／メタファー対比／ストーリー冒頭／疑問形／ベネフィット
+  表達" to 今泉's 1987 work, but these are in fact later derivations by
+  Japanese creative-industry mentors and blog authors based on use cases.
+  今泉's original canon specifies only **the 3×3 structure + central theme
+  + 8 association cells**, with no prescription on classification principle
+  of the association content. The §"Direction Library" section below
+  explicitly labels this as a derivative tool and must not be cited as
+  part of 今泉's 1987/1988 regulation.
+- **大谷翔平's OW64 is not 今泉's マンダラート.** The 8-goal achievement
+  sheet (OW64, a.k.a. 目標達成マンダラチャート) 大谷 used at 花卷東高校
+  originates from **原田隆史's 原田 Method**, whose lineage traces to
+  松村寧雄's 1979 proposal of「マンダラチャート」(trademarks held by
+  クローバ経営研究所 / マンダラチャート協会). 今泉's「マンダラート」
+  and 松村's「マンダラチャート」are **two methods with similar names but
+  different origins**, and the 大谷 case must not be used as evidence of
+  今泉 grounding.
 
 ## Framing
 
-Mandal-Art 是一種以 3×3 格（9 格）為基本單元的發散發想工具，核心思想是
-把中心主題周圍八個空格強制填滿，藉「填空壓力」逼出非慣性聯想。它與
-brainstorming 的差異在於**空間上的封閉性**：8 格有限、必須全部填滿，
-這個約束把「自由聯想」轉化為「被 forced 的聯想」，是產生意外 concept
-的結構性機制。
+Mandal-Art is a divergence tool whose basic unit is a 3×3 grid (9 cells).
+Its core idea is to force all eight cells around a central theme to be
+filled, using "fill-in pressure" to elicit non-habitual associations.
+The difference from generic brainstorming lies in **spatial closure**:
+8 cells are finite and must all be filled. This constraint converts
+"free association" into "forced association" — a structural mechanism
+for producing unexpected concepts.
 
-在 copywriting pipeline 中，本工具屬於「散らかす（發散）」階段的代表
-技法，與 Verbalized Sampling（詞彙層 diversity）組合使用：Mandal-Art
-負責**結構層** diversity（覆蓋 8 個切入角度），Verbalized Sampling
-負責**詞彙層** diversity（同一角度內的表達多樣性）。
+Within the copywriting pipeline, this tool belongs to the "散らかす
+(divergence)" stage as a representative technique, combined with
+Verbalized Sampling (lexical-layer diversity): Mandal-Art is
+responsible for **structural-layer** diversity (covering 8 entry
+angles), and Verbalized Sampling is responsible for **lexical-layer**
+diversity (expression variety within a single angle).
 
-## 原始 3×3 結構（今泉 1987/1988 canonical）
+## Original 3×3 structure (今泉 1987/1988 canonical)
 
-**單層 Mandal-Art** 由 9 格組成：
+**Single-layer Mandal-Art** consists of 9 cells:
 
 ```
 ┌─────┬─────┬─────┐
@@ -57,133 +77,160 @@ brainstorming 的差異在於**空間上的封閉性**：8 格有限、必須全
 └─────┴─────┴─────┘
 ```
 
-- **中心格**：主題（例：商品名、key message、核心 benefit）
-- **周圍 8 格**：8 個聯想結果，不限定分類，但必須**全部填滿**（「空格禁止」規則）
+- **Center cell**: theme (e.g. product name, key message, core benefit)
+- **Surrounding 8 cells**: 8 association results; classification is
+  unrestricted, but all cells **must be filled** (the "no blank" rule)
 
-今泉原典強調：
-- 填滿強制性是核心機制 — 留空即失去 forced association 效果
-- 8 格的聯想 **不必彼此正交**，可以是平行思考也可以是層次遞進
-- 中心與周圍是**意味上的相互映射**（由曼荼羅儀軌的「中台八葉」結構借喻）
+今泉 original canon emphasizes:
+- Fill-in mandate is the core mechanism — leaving blanks loses the
+  forced-association effect
+- The 8 associations **need not be mutually orthogonal**; they may be
+  parallel thinking or layered progression
+- Center and surrounding cells are in **mutual semantic mapping**
+  (borrowed from the「中台八葉」structure of 曼荼羅 iconography)
 
-## 展開版 81 格（72 個關聯概念）
+## Expanded 81-cell version (72 associated concepts)
 
-將 8 個聯想結果各自作為**新的中心**，各自再展開 3×3：
+Each of the 8 association results is expanded as a **new center** with
+its own 3×3:
 
 ```
-[展開層：8 個子曼陀羅 × 9 格 = 72 個新關聯概念]
+[Expansion layer: 8 sub-mandalas × 9 cells = 72 new associated concepts]
                     +
-[中央層：原始 9 格]
+[Central layer: original 9 cells]
                     =
-[總計：81 格 / 72 個關聯概念]
+[Total: 81 cells / 72 associated concepts]
 ```
 
-81 格為今泉『創造性を高めるマンダラート発想法』(1988) 書籍形式化的展開版。
-此層產出可直接進入 KJ法 的「ラベル作成」階段（`ideation-kj-convergence.md`）
-進行收斂。
+The 81-cell form is the expansion formalized in 今泉's 1988 book
+『創造性を高めるマンダラート発想法』. Output at this layer can flow
+directly into the「ラベル作成」stage of KJ法 (`ideation-kj-convergence.md`)
+for convergence.
 
-## 自動化邊界表
+## Automation boundary table
 
-| 任務 | LLM 可做 | 半自動（人類 checkpoint） | LLM 不可做 |
+| Task | LLM can do | Semi-auto (human checkpoint) | LLM must not do |
 |---|---|---|---|
-| 單層 9 格填空 | ✓ 主題 + 8 聯想一次生成 | — | — |
-| 81 格展開 | ✓ 依 8 聯想批次展開 72 格 | — | — |
-| 抗漂移審查（是否偏離中心主題） | ✓ rule-based 檢查 | — | — |
-| Verbalized Sampling 注入 | ✓ 各格輸出附 probability | — | — |
-| 「意外な観点」識別 | — | ✓ LLM 標記候選、人類確認 | — |
-| 從 72 格挑選進入收斂的有效 concept | — | ✓ LLM 預選 Top-N、人類最終決 | — |
-| 中心主題本身的戰略選擇 | — | — | ✗ 需人類 / planning-team 判斷 |
+| Single-layer 9-cell fill-in | ✓ theme + 8 associations in one pass | — | — |
+| 81-cell expansion | ✓ batch expand 72 cells from the 8 associations | — | — |
+| Drift check (deviation from central theme) | ✓ rule-based check | — | — |
+| Verbalized Sampling injection | ✓ each cell's output attaches probability | — | — |
+| "Unexpected viewpoint" identification | — | ✓ LLM flags candidates, human confirms | — |
+| Selecting valid concepts for convergence from 72 cells | — | ✓ LLM pre-screens Top-N, human decides | — |
+| Strategic selection of the central theme itself | — | — | ✗ requires human / planning-team judgment |
 
-**規範**：在 copywriting subagent pipeline 中，自動化可一次輸出 81 格，
-但「挑選進入 KJ 收斂的 8-12 個候選」必須有人類 checkpoint（或 evaluator
-agent 作為代理 checkpoint）。
+**Rule**: in the copywriting subagent pipeline, automation may output
+all 81 cells in one pass, but "selecting the 8-12 candidates entering
+KJ convergence" must include a human checkpoint (or an evaluator
+agent acting as proxy checkpoint).
 
-## 應用於 copywriting
+## Application to copywriting
 
-### 適用度
+### Applicability
 
-- **單句 catch copy 發想**：適用度**高**。3×3 結構適合為單一 key message
-  生成 8 個角度 × 9 表達 ≈ 72 個候選，交給 `ideation-kj-convergence.md`
-  收斂至 3-5 個優勝。
-- **長文案發想**：適用度**低**。長文案（PASONA / PASBECONA / QUEST /
-  PASTOR）有固定段階骨架，段落間因果關係由框架決定；Mandal-Art 對
-  「段落內語句填充」幫助有限，且 81 格的產出與長文案的敘事連貫性不直接
-  對應。長文案建議改用「框架段階 × 各段獨立 Mandal-Art」的分層方式。
-- **中文案（BEAF）**：適用度**中**。可為 Benefit / Evidence / Advantage /
-  Feature 各自獨立展開 9 格。
+- **Single-line catch copy ideation**: applicability **high**. The 3×3
+  structure is well-suited to generating 8 angles × 9 expressions ≈
+  72 candidates for a single key message, then handing over to
+  `ideation-kj-convergence.md` to converge to 3–5 winners.
+- **Long-form copy ideation**: applicability **low**. Long-form copy
+  (PASONA / PASBECONA / QUEST / PASTOR) has fixed stage skeletons, and
+  inter-paragraph causality is decided by the framework; Mandal-Art
+  offers limited help with "in-paragraph sentence filling", and 81-cell
+  output does not directly correspond to narrative coherence of long
+  copy. For long copy, prefer a layered approach: "framework stages ×
+  per-stage independent Mandal-Art".
+- **Mid-form copy (BEAF)**: applicability **medium**. Each of Benefit /
+  Evidence / Advantage / Feature can be independently expanded into
+  its own 9-cell grid.
 
-### 代表使用流程
+### Representative usage flow
 
 ```
-【Step 1】主題確定
-  └── planning-team 給定 key message（中心格）
+【Step 1】Theme confirmation
+  └── planning-team supplies the key message (center cell)
 
-【Step 2】選 8 方向
-  └── main worker 從「輔助方向庫」依題目挑選 8 個方向
-  └── 或 LLM 自主 8 聯想（不使用衍生方向庫）
+【Step 2】Select 8 directions
+  └── main worker picks 8 directions from the "Direction Library" per topic
+  └── or the LLM self-generates 8 associations (bypassing the derivative library)
 
-【Step 3】9 格 / 81 格填滿
-  └── LLM 填空（附 Verbalized Sampling probability）
+【Step 3】Fill 9 or 81 cells
+  └── LLM fills cells (with Verbalized Sampling probability attached)
 
-【Step 4】收斂候選
-  └── 人類 / evaluator agent checkpoint
-  └── 進入 ideation-kj-convergence.md
+【Step 4】Converge candidates
+  └── human / evaluator agent checkpoint
+  └── proceed to ideation-kj-convergence.md
 ```
 
-## 輔助方向庫（後人衍生，非今泉 1987 原典）
+## Direction Library (later-derived, not 今泉 1987 original canon)
 
-> [!warning] 本庫為衍生工具
+> [!warning] This library is a derivative tool
 >
-> 以下 16 個方向來自日本 / 繁中創意產業實務 blog 與 TCC 講座講義的整理，
-> **不是**今泉浩晃 1987/1988 原典的一部分。使用時請視為 convenience tool，
-> 可自由增刪或完全忽略（改用 LLM 自主 8 聯想）。
+> The 16+ directions below are compiled from JP / zh-Hant creative-
+> industry practitioner blogs and TCC seminar notes, and are **not**
+> part of 今泉浩晃's 1987/1988 original canon. Treat as a convenience
+> tool: freely add, remove, or ignore entirely (falling back to LLM
+> self-generated 8 associations).
 
-main worker 可依題目性質自選 8 個方向填入 Mandal-Art 周圍格：
+The main worker may pick 8 directions per topic to fill the surrounding
+cells:
 
-1. **生活情境**（使用者日常場景切入）
-2. **情感觸發**（恐懼、驚喜、共感、悲憫、安心等情緒 hook）
-3. **數字刺激**（量化衝擊：%、倍、時間、人數）
-4. **反常識**（與受眾既有認知相反的主張）
-5. **隱喻對比**（以他物比擬商品特性）
-6. **故事開頭**（敘事鉤子：「ある日、…」「もし…」）
-7. **疑問句式**（「〇〇しませんか？」「なぜ…？」）
-8. **ベネフィット表達**（轉譯 feature → benefit）
-9. **比較對照**（before/after、競品對比、自己 vs 他人）
-10. **逆説**（看似矛盾的並置，如「遅いほど速い」）
-11. **時間軸**（過去回顧、未來預見、瞬間、長期）
-12. **使用者 voice**（第一人稱告白、証言風）
-13. **問題解決路徑**（痛點 → 解法）
-14. **感官描寫**（視覺、聽覺、觸覺、嗅覺、味覺）
-15. **擬人化**（商品或抽象概念人格化）
-16. **季節 / 時令**（節氣、年中行事、旬）
-17. **掛詞 / 音韻**（同音異義、韻律、リズム；眞木準 lineage）
-18. **極端化**（推到極致：「最も」「唯一」「誰も」）
-19. **否定 / 禁止**（「〜するな」「〜しない方がいい」）
-20. **権威 / 証拠**（数据、実績、受賞、専門家推薦）
-21. **共通体験**（「あるある」訴求、世代共有記憶）
-22. **自己言及**（商品自己說話、meta 廣告）
-23. **余白 / 省略**（岩崎俊一 lineage：未完、言わない）
-24. **対話**（二人称呼びかけ、問いかけ）
+1. **Life scenarios** (user's daily-life contexts)
+2. **Emotional triggers** (fear, surprise, empathy, compassion, relief)
+3. **Numerical impact** (quantitative hooks: %, times, time, headcount)
+4. **Counter-intuitive** (claims that contradict audience priors)
+5. **Metaphor / contrast** (compare product to unrelated objects)
+6. **Story opening** (narrative hooks: "ある日、…", "もし…")
+7. **Interrogative form** (「〇〇しませんか？」「なぜ…？」)
+8. **Benefit translation** (feature → benefit)
+9. **Comparison** (before/after, competitor contrast, self vs others)
+10. **Paradox** (seemingly contradictory juxtaposition, e.g.「遅いほど速い」)
+11. **Time axis** (retrospective, foresight, instantaneous, long-term)
+12. **User voice** (first-person confession, testimonial tone)
+13. **Problem-solution path** (pain point → resolution)
+14. **Sensory description** (visual, auditory, tactile, olfactory, gustatory)
+15. **Personification** (product or abstract concept anthropomorphized)
+16. **Season / almanac** (節気、年中行事、旬)
+17. **掛詞 / phonetics** (homophones, rhyme, リズム;眞木準 lineage)
+18. **Extremization** (push to the limit:「最も」「唯一」「誰も」)
+19. **Negation / prohibition** (「〜するな」「〜しない方がいい」)
+20. **Authority / evidence** (data, 実績、受賞、専門家推薦)
+21. **Shared experience** (「あるある」訴求, generational shared memory)
+22. **Self-reference** (the product speaks for itself, meta ads)
+23. **余白 / omission** (岩崎俊一 lineage: unfinished, unsaid)
+24. **Dialogue** (second-person address, questioning)
 
-選擇策略：
-- 題目情緒重 → 優先 {情感觸發、故事開頭、共通体験、感官描寫}
-- 題目理性重 → 優先 {數字刺激、比較對照、権威 / 証拠、問題解決路徑}
-- 題目短文 / 標語 → 優先 {掛詞、逆説、余白、極端化、疑問句式}
-- 題目商品導向 → 優先 {ベネフィット表達、feature 轉譯、比較對照}
+Selection heuristics:
+- Emotion-heavy topic → prefer {emotional triggers, story opening, shared experience, sensory description}
+- Rationality-heavy topic → prefer {numerical impact, comparison, authority/evidence, problem-solution path}
+- Short slogan / headline → prefer {掛詞, paradox, 余白, extremization, interrogative}
+- Product-oriented → prefer {benefit translation, feature conversion, comparison}
 
 ## Anti-Patterns
 
-- **把衍生分類當今泉原典**：將「8 方向標準分類」引用為 1987/1988 原著
-  規範。正確作法是標註為後人衍生 convenience tool，允許忽略。
-- **以大谷案例支持今泉 grounding**：「大谷翔平用マンダラート」屬原田
-  Method + 松村寧雄 lineage，與今泉不同 lineage。引用大谷案例時必須
-  說明是松村系，不得混為一談。
-- **強制 8 方向僵化**：要求每次 ideation 都使用同一組 8 方向。今泉原典
-  沒有規定 8 方向的固定內容，強制固定會降低「意外な観点」的湧現率。
-- **跳過填滿強制性**：留白 2-3 格「因為想不出」。填滿強制是核心機制，
-  想不出時應改變視角或引入 Verbalized Sampling 輔助，而非留空。
-- **把 81 格當最終答案**：81 格是**材料**不是**產品**。必須接續
-  `ideation-kj-convergence.md` 收斂，否則只產生噪聲。
-- **長文案強用單一 Mandal-Art**：對 3,000 字以上長文案只做一次 3×3
-  展開。長文案應「框架段階 × 各段 Mandal-Art」分層使用。
-- **忽略自動化邊界**：讓 LLM 一次跑完「主題選擇 + 9 格填空 + 收斂」。
-  主題選擇與收斂都需人類 checkpoint，否則 alignment drift 累積。
+- **Treating the derivative taxonomy as 今泉's original canon**:
+  citing the "standard 8-direction taxonomy" as part of 1987/1988
+  regulation. The correct practice is to label it as a later-derived
+  convenience tool, and permit ignoring it.
+- **Using the 大谷 case as 今泉 grounding**: "大谷翔平 used マンダラート"
+  belongs to the 原田 Method + 松村寧雄 lineage, a different lineage
+  from 今泉. Any citation of the 大谷 case must note that it is the
+  松村 lineage, and the two must not be conflated.
+- **Rigidly mandating the same 8 directions**: requiring every
+  ideation pass to use the same fixed 8 directions. 今泉's original
+  canon never prescribed fixed content for the 8 directions; forcing
+  a fixed set lowers the emergence rate of "unexpected viewpoints".
+- **Skipping the fill-in mandate**: leaving 2–3 cells blank "because
+  nothing comes to mind". Fill-in mandate is the core mechanism;
+  when stuck, shift viewpoint or inject Verbalized Sampling aid —
+  do not leave cells empty.
+- **Treating the 81 cells as the final answer**: 81 cells are
+  **material**, not **product**. Must be followed by
+  `ideation-kj-convergence.md` for convergence, otherwise only noise
+  is produced.
+- **Forcing a single Mandal-Art onto long copy**: doing only one 3×3
+  expansion for 3,000+ character long copy. Long copy should use the
+  layered approach "framework stages × per-stage Mandal-Art".
+- **Ignoring automation boundaries**: letting the LLM run "theme
+  selection + 9-cell fill-in + convergence" in a single pass. Both
+  theme selection and convergence require human checkpoints,
+  otherwise alignment drift accumulates.

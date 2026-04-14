@@ -5,257 +5,278 @@ tier: 3
 
 # Short-Form Copywriting — キャッチコピー Canon
 
-Tier 3 standard: fully self-contained. 短文案 (日本語キャッチコピー
-7-15 字帯) の canon 參照源。AIDMA 短版作用域、3 秒ルール、5 種切入点
-決策樹、糸井 / 岩崎 / 眞木 / 谷山 の 4 voice 巨匠、TCC 年鑑、Anglo
-headline との分界、SNS 時代演化 (AISAS / ULSSAS) を統合する。本
-standard は copywriting-team v1.0.0 の三層分流における「短文案層」
-の canon 參照源である。
+Tier 3 standard: fully self-contained. Canon reference for short-form
+copy (Japanese キャッチコピー, 7–15 character range). Covers AIDMA
+short-form action scope, 3 秒ルール, 5 approach angles decision tree,
+the four voice masters (糸井 / 岩崎 / 眞木 / 谷山), TCC 年鑑, demarcation
+from Anglo headline tradition, and SNS-era evolution (AISAS / ULSSAS).
+This standard is the "short-form layer" canon reference for
+copywriting-team v1.0.0's three-layer routing.
 
 ## Primary Sources
 
-- **AIDA**：E. St. Elmo Lewis (1898) 提唱。一次資料は Lewis の
-  当時の広告業界発表資料（現在は二次資料経由でのみ参照可能）。
-- **AIDMA**：Samuel Roland Hall (1924) *Retail Advertising and
-  Selling*. McGraw-Hill. **canonical** for Memory を含む 5 段階
-  (Attention - Interest - Desire - Memory - Action) の正式化。
-- **糸井重里** 西武百貨店 1982-83 キャンペーン作品群（「おいしい
-  生活。」1982 / 「不思議、大好き。」1981 他）。canonical
-  reference：ほぼ日刊イトイ新聞 掲載の本人コピー選集「糸井コピー
-  10」およびコピー年鑑。
-- **岩崎俊一** ミツカン 2004「やがて、いのちに変わるもの。」、
-  新潮文庫 1984「想像力と数百円。」他。canonical reference：
-  Wikipedia 岩崎俊一記事、TCC 年鑑、宣伝会議 掲載追悼記事。
-- **眞木準** 全日空 1970s-80s「でっかいどぉ。北海道」他。canonical
-  reference：Wikipedia 眞木準記事、宣伝会議 掲載評論。
+- **AIDA**: E. St. Elmo Lewis (1898) proposal. Primary sources are
+  Lewis's advertising-industry presentations of the time (now
+  accessible only via secondary sources).
+- **AIDMA**: Samuel Roland Hall (1924) *Retail Advertising and
+  Selling*. McGraw-Hill. **canonical** for the 5-stage formalization
+  including Memory (Attention - Interest - Desire - Memory - Action).
+- **糸井重里** 西武百貨店 1982–83 campaign works（「おいしい
+  生活。」1982 /「不思議、大好き。」1981, etc.）. Canonical
+  reference: ほぼ日刊イトイ新聞 author's own copy selection「糸井コピー
+  10」and コピー年鑑.
+- **岩崎俊一** ミツカン 2004「やがて、いのちに変わるもの。」,
+  新潮文庫 1984「想像力と数百円。」, etc. Canonical reference:
+  Wikipedia 岩崎俊一 article, TCC 年鑑, 宣伝会議 memorial article.
+- **眞木準** 全日空 1970s–80s「でっかいどぉ。北海道」, etc. Canonical
+  reference: Wikipedia 眞木準 article, 宣伝会議 published commentary.
 - **谷山雅計** (2007) 『広告コピーってこう書くんだ！読本』
-  宣伝会議. **canonical** for 「散らかす→選ぶ→磨く」「なんか
-  いいよね禁止」「31 の発想体質訓練」。
-- **TCC (東京コピーライターズクラブ)**：1958 年「コピー十日会」→
-  1962 年 TCC 改称、1963 年以降『コピー年鑑』毎年刊行。Hall of Fame
-  2003 年設立。canonical reference：TCC 公式サイト。
-- **3 秒ルール 次級來源**：JP 側 Prime Directions / 電通報 /
-  誠晃舎；EN 側 Data Axle / Star Digital Marketing — JP 3 來源 +
-  EN 2 來源が「3 秒以内の判断」経験則で一致。
-- **AISAS**：電通 (2004) 提唱、商標登録 2005 年。
-- **ULSSAS**：ホットリンク (2015) 提唱。
+  宣伝会議. **canonical** for「散らかす→選ぶ→磨く」「なんか
+  いいよね禁止」「31 の発想体質訓練」.
+- **TCC (東京コピーライターズクラブ)**: 1958「コピー十日会」→
+  1962 TCC renamed, 1963 onward『コピー年鑑』published annually.
+  Hall of Fame established 2003. Canonical reference: TCC official site.
+- **3 秒ルール secondary sources**: JP side — Prime Directions / 電通報
+  / 誠晃舎; EN side — Data Axle / Star Digital Marketing — 3 JP + 2 EN
+  sources converge on the "judgment within 3 seconds" heuristic.
+- **AISAS**: 電通 (2004) proposal, trademark registered 2005.
+- **ULSSAS**: ホットリンク (2015) proposal.
 
 ## Critical Attribution Corrections
 
-- **drift #8：リゲイン「24 時間戦えますか？」は岩崎俊一ではない**。
-  このコピーは 1989 年 三共 (現・第一三共ヘルスケア) リゲイン
-  テレビ CM のコピーであり、canonical な帰属は **杉山恒太郎 +
-  リゲイン プロジェクトチーム**（電通）である。岩崎俊一への
-  帰属は業界内でも頻出する誤植であり、本 canon では採用しない。
-  岩崎の canon 作品は ミツカン「やがて、いのちに変わるもの。」
-  および 新潮文庫「想像力と数百円。」系列。
+- **Drift #8: リゲイン "24 時間戦えますか？" is not by 岩崎俊一.**
+  This copy appeared in the 1989 三共 (now 第一三共ヘルスケア) リゲイン
+  TV CM, and the canonical attribution is **杉山恒太郎 + the リゲイン
+  project team** (電通). Attribution to 岩崎俊一 is a frequently
+  recurring misattribution even within the industry; this canon does
+  not adopt it. 岩崎's canonical works are the ミツカン「やがて、
+  いのちに変わるもの。」and 新潮文庫「想像力と数百円。」lineage.
 
-- **drift 関連注意：AIDMA を「短文案で全段階カバー」と記述する
-  誤用**。AIDMA の 5 段階は広告接触全体の読者心理 flow を射程
-  とし、**短文案単独で A+I 以降を担わない**。キャッチコピーは
-  A (Attention) + I (Interest) までを担う機能であり、D/M/A は
-  body copy / CTA / repetition が担う — この分業設計が canon。
+- **Drift-related caution: misuse of AIDMA as "full-stage coverage
+  by short copy alone."** AIDMA's 5 stages span the entire reader-
+  psychology flow of ad contact, and **short copy alone does not carry
+  beyond A+I**. キャッチコピー covers A (Attention) + I (Interest);
+  D/M/A are carried by body copy / CTA / repetition — this division
+  of labor is canonical.
 
-- **drift 関連注意：3 秒ルールを formula として扱う誤用**。
-  3 秒ルールは経験則 (heuristic) であり、formula (段階公式) では
-  ない。段階数・順序の厳密性は持たない経験則として本 canon で
-  扱う。
+- **Drift-related caution: treating 3 秒ルール as a formula.**
+  3 秒ルール is a heuristic (rule of thumb), not a formula (stage
+  formula). It lacks the strictness of stage count and ordering, and
+  this canon treats it as a heuristic.
 
-## AIDMA 短文案作用域
+## AIDMA short-form action scope
 
-AIDMA の 5 段階は **広告接触全体の読者心理 flow**：
+AIDMA's 5 stages span the **entire reader-psychology flow of ad
+contact**:
 
-| 段階 | 名称 | 短文案の役割 | 他要素の役割 |
+| Stage | Name | Short-copy role | Other-element role |
 |---|---|---|---|
-| **A** | Attention (注意) | **短文案が担う** | ビジュアルと連動 |
-| **I** | Interest (興味) | **短文案が担う** | 副題 / リード文 |
-| **D** | Desire (欲求) | — | body copy が担う |
-| **M** | Memory (記憶) | — | 反復露出 / ジングル が担う |
-| **A** | Action (行動) | — | CTA / ランディングページ が担う |
+| **A** | Attention (注意) | **Short copy carries this** | Coordinated with visual |
+| **I** | Interest (興味) | **Short copy carries this** | Subtitle / lead text |
+| **D** | Desire (欲求) | — | Body copy carries this |
+| **M** | Memory (記憶) | — | Repeated exposure / jingle carries this |
+| **A** | Action (行動) | — | CTA / landing page carries this |
 
-**canonical 分業設計**：短文案単独で全 5 段階をカバーしようと
-すると、字数オーバー (15 字超) か 説得力不足のいずれかに陥る。
-A+I に特化し、残段階を body / CTA / repetition に委ねる分業が
-canon。
+**Canonical division of labor**: attempting to cover all 5 stages with
+short copy alone results in either character-count overflow (>15 chars)
+or insufficient persuasion. Specializing in A+I and delegating the
+remaining stages to body / CTA / repetition is canonical.
 
-## 7-15 字 黃金範囲
+## 7–15 character golden range
 
-日本語キャッチコピーの canon 字数は **7〜15 字**。4 人の voice
-巨匠の代表作の文字数実測値：
+The canonical character count for Japanese キャッチコピー is **7–15
+characters**. Measured character counts of representative works by the
+four voice masters:
 
-| 作者 | 代表作 | 字数 |
+| Author | Representative work | Char count |
 |---|---|---|
 | 糸井重里 | 「おいしい生活。」 | 7 |
 | 糸井重里 | 「不思議、大好き。」 | 7 |
-| 岩崎俊一 | 「やがて、いのちに変わるもの。」 | 14 (句読点含む) |
+| 岩崎俊一 | 「やがて、いのちに変わるもの。」 | 14 (incl. punctuation) |
 | 眞木準 | 「でっかいどぉ。北海道」 | 10 |
-| Yahoo!ニューストピックス | 見出し規約 | 13 (半角) |
+| Yahoo! ニューストピックス | Headline spec | 13 (half-width) |
 
-**7-15 字 canonical 根拠**：
+**7–15 character canonical rationale**:
 
-- 人間の短期記憶スパン（マジカルナンバー 7±2）との一致
-- スマートフォン画面で 1 行に収まる上限
-- 俳句 17 音感覚と近接（俳句は 5+7+5 = 17 音、短文案は 音節数
-  基準で類似帯域）
-- 4 人の巨匠の代表作実測値の収束
+- Alignment with human short-term memory span (Miller's 7 ± 2)
+- Upper limit of a single line on smartphone screens
+- Proximity to haiku 17-mora sensation (haiku = 5+7+5 = 17 morae;
+  short copy is in a similar mora-count band)
+- Convergence of measured character counts across the four masters'
+  representative works
 
-**境界処理**：15 字を超えるものは「キャッチコピー」ではなく
-「リード文 / 副題 / ボディコピー」として扱う canonical 分界が
-ある。
+**Boundary handling**: text exceeding 15 characters is canonically
+classified as "lead text / subtitle / body copy," not キャッチコピー.
 
 ## 3 秒ルール
 
-経験則として：**人は広告を 3 秒以内で「読む / 捨てる」を判断する**。
-JP / EN 両サイドで独立に 1990s 以降から実測 / 経験報告が蓄積されて
-いる heuristic。
+As a heuristic: **a person decides to "read or discard" an ad within
+3 seconds**. Accumulated measurement / experience reports from both
+JP and EN sides independently since the 1990s.
 
-**3 秒内の推奨構造**：
+**Recommended structure within 3 seconds**:
 
-- **1 秒目**：キャッチ + メインビジュアルで興味喚起
-  （「これは何だ」と立ち止まらせる）
-- **2 秒目**：一番伝えたい情報（「自分に関係がある」と理解させる）
-- **3 秒目**：次の行動誘発（「もっと見たい / クリックしたい」）
+- **Second 1**: catch + main visual to spark interest ("what is this"
+  — make them stop)
+- **Second 2**: the single most important message ("this is relevant
+  to me" — make them understand)
+- **Second 3**: trigger the next action ("I want to see more / click")
 
-**SNS 時代の縮小**：TikTok / Reels / YouTube Shorts 等では
-**1〜3 秒**に短縮されている — サムネイル / 最初の 1 フレームで
-離脱判断が完了する経験則。
+**SNS-era compression**: on TikTok / Reels / YouTube Shorts, this has
+shortened to **1–3 seconds** — drop-off decisions complete at the
+thumbnail / first frame.
 
-**canonical 注意**：3 秒ルールは formula ではなく heuristic
-（経験則）。評価基準としては使えるが段階設計の formula として
-扱うと過剰適用になる。
+**Canonical caution**: 3 秒ルール is a heuristic, not a formula.
+Usable as an evaluation criterion, but treating it as a stage-design
+formula leads to over-application.
 
-## 5 種切入点決策樹（Phase 3 approach 選定前）
+## 5 approach angles decision tree (before Phase 3 approach selection)
 
-短文案の **内容アプローチ** を選ぶ際の 5 分類。canonical single
-source はなく、広告業界での実務的一般化として本 canon で採用する
-(grounding 研究では「approach heuristic」として位置づけ)。
+Five categories for selecting the **content approach** of short copy.
+No canonical single source exists; adopted in this canon as a practical
+industry generalization (positioned as "approach heuristic" in
+grounding research).
 
-| 切入点 | 典型構文 | 訴求軸 | 適合商材 |
+| Approach angle | Typical phrasing | Appeal axis | Suited products |
 |---|---|---|---|
-| **利益 / 願望** | 「〜になりませんか」「〜を手に入れよう」 | 正の結果追求 | 美容、語学、キャリア |
-| **恐怖 / 痛点** | 「このままで大丈夫？」「〜を失う前に」 | 負の回避 | 保険、健康、セキュリティ |
-| **顛覆常識** | 「誰が〇〇は△△と決めた？」「〇〇の常識を疑え」 | 眠った受眾を起こす | イノベーション商材、新カテゴリ |
-| **目標呼喚** | 「〜したい、あなたへ」「〇〇世代のための」 | 特定對象に精準打擊 | B2B、ニッチ市場、専門サービス |
-| **提問互動** | 「なぜ〇〇は〇〇なのか？」「もしあなたが〇〇だったら」 | 好奇心喚起 | 新商品、コンセプト訴求 |
+| **Benefit / aspiration** | "Won't you become ~", "Get your ~" | Positive outcome pursuit | Beauty, language learning, career |
+| **Fear / pain point** | "Are you sure you're OK like this?", "Before you lose ~" | Negative avoidance | Insurance, health, security |
+| **Disruptive** | "Who decided 〇〇 is △△?", "Question the common sense of 〇〇" | Awakening dormant audiences | Innovation products, new categories |
+| **Target call-out** | "For those who want ~", "For the 〇〇 generation" | Precision targeting of a specific audience | B2B, niche markets, specialized services |
+| **Interactive question** | "Why is 〇〇 〇〇?", "If you were 〇〇" | Curiosity arousal | New products, concept appeals |
 
-**選定基準**：
+**Selection criteria**:
 
-- 商品が「解決策」寄り → 利益 or 恐怖
-- 商品が「新カテゴリ」→ 顛覆 or 提問
-- ターゲットが狭い → 目標呼喚
-- 読者が広告慣れしている → 提問 で思考停止を解除
-- 倫理境界：恐怖訴求は `persuasion-ethics.md` の範疇であり、過度
-  な不安商法は本 canon では非推奨
+- Product is "solution-oriented" → benefit or fear
+- Product is "new category" → disruptive or interactive question
+- Target is narrow → target call-out
+- Readers are ad-savvy → interactive question to break autopilot
+- Ethics boundary: fear appeal falls under `persuasion-ethics.md`;
+  excessive anxiety marketing is not recommended by this canon
 
-## 四位 voice 巨匠
+## Four voice masters
 
-### 糸井重里 — 状態提案型 / 意図曖昧
+### 糸井重里 — state-proposal / intentional ambiguity
 
-- 哲学：「普通の言葉を生き生きさせる」
-- 代表作：「おいしい生活。」(西武百貨店 1982-83)、「不思議、
-  大好き。」(西武 1981)
-- 典型字数：5-10 字
-- voice 特徴：**意図的な曖昧さで受け手に解釈余地**を残す。
-  命令文ではなく状態提示。Anglo 的 "Just Do It" が **行動促進型**
-  であるのに対し、糸井は **状態提案型**。
-- 継承点：状態の提示、曖昧性の許容、生活語彙の詩的再配置
+- Philosophy:「普通の言葉を生き生きさせる」
+- Representative works:「おいしい生活。」(西武百貨店 1982–83),
+  「不思議、大好き。」(西武 1981)
+- Typical character count: 5–10
+- Voice characteristics: **intentional ambiguity leaving interpretive
+  room for the audience**. State presentation rather than imperative.
+  Anglo "Just Do It" is **action-prompting**; 糸井 is
+  **state-proposing**.
+- Inheritable elements: state presentation, tolerance of ambiguity,
+  poetic rearrangement of everyday vocabulary
 
-### 岩崎俊一 — 人生観 / 仏教無常観
+### 岩崎俊一 — life philosophy / Buddhist impermanence
 
-- 哲学：「コピーは、作るものではなく、見つけるもの」
-- 代表作：「やがて、いのちに変わるもの。」(ミツカン 2004)、
+- Philosophy:「コピーは、作るものではなく、見つけるもの」
+- Representative works:「やがて、いのちに変わるもの。」(ミツカン 2004),
   「想像力と数百円。」(新潮文庫 1984)
-- 典型字数：10-15 字
-- voice 特徴：季節感、有限性、仏教無常観の継承。人生の一場面を
-  抽出し商品と結合する技法。
-- 継承点：時間の流れ、命の移ろい、言葉の発見（創造ではなく）
+- Typical character count: 10–15
+- Voice characteristics: season, finiteness, inheritance of Buddhist
+  impermanence (無常観). Technique of extracting a life moment and
+  binding it to a product.
+- Inheritable elements: passage of time, transience of life, word
+  discovery (not creation)
 
-### 眞木準 — 掛詞 / 同音異義
+### 眞木準 — 掛詞 / homophone play
 
-- 宣言：「ダジャレではなく、オシャレ」
-- 代表作：「でっかいどぉ。北海道」(全日空 1970s-80s)
-- 典型字数：5-15 字
-- voice 特徴：**同音異義 (掛詞)** を用いた 和歌以来の日本語伝統
-  継承。「でっかいどぉ / 北海道」は音韻リピート + 掛詞の典型。
-- 継承点：音韻、リズム、日本語固有の音遊び技法
+- Manifesto:「ダジャレではなく、オシャレ」
+- Representative work:「でっかいどぉ。北海道」(全日空 1970s–80s)
+- Typical character count: 5–15
+- Voice characteristics: **homophone play (掛詞)** inheriting the
+  waka tradition of Japanese language. "でっかいどぉ / 北海道" is a
+  paradigm of phonetic repetition + 掛詞.
+- Inheritable elements: phonetics, rhythm, JP-specific sound-play
+  techniques
 
-### 谷山雅計 — 入口設計 / 31 訓練
+### 谷山雅計 — entry-point design / 31 training exercises
 
-- canonical：谷山 2007『広告コピーってこう書くんだ！読本』
-- 哲学：「散らかす→選ぶ→磨く」3 段階発想流程 + 「なんかいいよね
-  禁止」ルール
-- 特徴：**ideation 中心** の思想家で、voice 単体より入口設計
-  (どう発想を起こすか) に強い。31 の発想体質訓練法を提示。
-- 継承点：体質としての発想力、言語化の徹底、評価基準の明文化
+- Canonical: 谷山 2007『広告コピーってこう書くんだ！読本』
+- Philosophy:「散らかす→選ぶ→磨く」3-stage ideation process +
+  「なんかいいよね禁止」rule
+- Characteristics: an **ideation-centric** thinker whose strength is
+  less in individual voice and more in entry-point design (how to spark
+  ideas). Presents 31 creative-disposition training exercises.
+- Inheritable elements: disposition-based creative power, thoroughness
+  of verbalization, codification of evaluation criteria
 
-**四人共通点**：全員 TCC Hall of Fame 入り (2003 年以降)、全員
-7-15 字帯を中心作域とする、全員 canonical な作品がコピー年鑑に
-収録されている。
+**Commonality across all four**: all are TCC Hall of Fame inductees
+(2003 onward), all primarily work in the 7–15 character range, and all
+have canonical works recorded in コピー年鑑.
 
-## TCC 年鑑 — canon 參照源
+## TCC 年鑑 — canon reference source
 
-- 1958 年「コピー十日会」→ 1962 年 TCC 改称
-- 毎年 4 月 TCC 賞選抜 → 秋に『コピー年鑑』刊行
-- 1963 年第 1 巻以降継続刊行
-- Hall of Fame (2003 設立) — 糸井、谷山、岩崎、眞木、小霜 ら殿堂入り
+- 1958「コピー十日会」→ 1962 TCC renamed
+- TCC 賞 selection every April → 『コピー年鑑』published in autumn
+- Continuous annual publication since Volume 1 in 1963
+- Hall of Fame (established 2003) — 糸井, 谷山, 岩崎, 眞木, 小霜,
+  and others inducted
 
-**canonical 位置づけ**：TCC 年鑑は framework (公式 / 段階) ではなく
-**canon 參照源 (rubric corpus)**。「この作品が TCC 年鑑に収録された /
-TCC 賞を獲った」は canonical な品質担保であり、評価の anchor に
-使える — ただし、模倣対象としては扱わない（模倣は voice の固有性を
-毀損する）。
+**Canonical positioning**: TCC 年鑑 is not a framework (formula /
+stages) but a **canon reference source (rubric corpus)**. "This work
+was recorded in TCC 年鑑 / won a TCC 賞" provides canonical quality
+assurance and can serve as an evaluation anchor — but not as an
+imitation target (imitation damages voice uniqueness).
 
-## Anglo vs JP 分界
+## Anglo vs JP demarcation
 
-| 軸 | Anglo headline tradition | JP キャッチコピー tradition |
+| Axis | Anglo headline tradition | JP キャッチコピー tradition |
 |---|---|---|
-| Benefit 明示度 | 明示的 (clear benefit) | 曖昧余地許容 |
-| CTA 指向 | CTA-driven (Action 明示) | Memory-heavy (余韻残留) |
-| 起点 | 論理 / USP | 情緒 / 共鳴 |
-| 技法 | alliteration, headline formula | 掛詞、音韻、俳句感覚 |
-| 代表 | David Ogilvy, John Caples | 糸井、岩崎、眞木、谷山 |
-| 字数感覚 | word-count (5-10 words) | 音節 / 文字数 (7-15 字) |
+| Benefit explicitness | Explicit (clear benefit) | Ambiguity tolerated |
+| CTA orientation | CTA-driven (Action explicit) | Memory-heavy (lingering resonance) |
+| Starting point | Logic / USP | Emotion / resonance |
+| Techniques | Alliteration, headline formula | 掛詞, phonetics, haiku sense |
+| Representatives | David Ogilvy, John Caples | 糸井, 岩崎, 眞木, 谷山 |
+| Length sense | Word count (5–10 words) | Character/mora count (7–15 chars) |
 
-**canonical 注意**：Anglo headline formula (Caples の 5 types,
-Ogilvy の headline rules) を JP 短文案に直接適用すると、情緒
-共鳴 / 掛詞 / 余韻 が欠落した「翻訳調の 意味明示型」コピーに
-なり、TCC 的 canon から外れる。JP 短文案は **俳句 17 音感覚の
-継承** を持つ独立伝統である。
+**Canonical caution**: directly applying Anglo headline formulas
+(Caples's 5 types, Ogilvy's headline rules) to JP short copy strips
+away emotional resonance / 掛詞 / 余韻, producing "translation-tone,
+meaning-explicit" copy that departs from TCC canon. JP short copy is
+an **independent tradition inheriting the haiku 17-mora sense**.
 
-## SNS 時代の演化
+## SNS-era evolution
 
-AIDMA は 2004 年 **AISAS** (電通)、2015 年 **ULSSAS** (ホットリンク)
-により部分的に置換された — ただし canonical 置換ではなく **併存**。
+AIDMA was partially superseded in 2004 by **AISAS** (電通) and in 2015
+by **ULSSAS** (ホットリンク) — though not as canonical replacements
+but as **coexisting models**.
 
-- **AISAS** (2004 電通)：Attention - Interest - **Search** -
-  Action - **Share**。検索と共有を明示化した e-commerce / Web 時代
-  の flow。
-- **ULSSAS** (2015 ホットリンク)：**UGC** - **Like** - Search -
-  Search - Action - Share。SNS 時代の UGC 起点 flow。
+- **AISAS** (2004, 電通): Attention - Interest - **Search** -
+  Action - **Share**. Explicitly adds search and sharing for the
+  e-commerce / web era.
+- **ULSSAS** (2015, ホットリンク): **UGC** - **Like** - Search -
+  Search - Action - Share. UGC-originated flow for the SNS era.
 
-**canonical 注意**：B2B、TV CM、店頭販促、雑誌 では AIDMA が
-今も主流。SNS / e-commerce では AISAS / ULSSAS が主流。短文案
-自体の A+I 担当範囲は両 framework で不変。
+**Canonical caution**: in B2B, TV CM, in-store promotion, and print
+media, AIDMA remains the mainstream model (as of 2026). AISAS / ULSSAS
+are mainstream for SNS / e-commerce. Short copy's A+I scope is
+unchanged across all frameworks.
 
 ## Anti-Patterns
 
-- **15 字を超える文を「キャッチコピー」と呼ぶ**。15 字超は リード文 /
-  副題 / ボディコピーのいずれかに分類すべき。
-- **3 秒ルールを無視した情報密度**。3 秒で判断される媒体で、3 秒
-  内に主訊息が届かない設計は canonical 違反。
-- **Anglo headline formula を JP 短文案に強制適用**。Caples 的
-  headline types や Ogilvy の rule set は JP 短文案の情緒 /
-  掛詞 / 余韻 を毀損する。JP には JP の canon がある。
-- **リゲイン「24 時間戦えますか？」を岩崎俊一に帰属する** (drift
-  #8)。canonical な帰属は 杉山恒太郎 + リゲイン PJ (電通)。
-- **一つの短文で AIDMA 全段階をカバーしようとする**。短文案は
-  A+I 専用。D/M/A は body / CTA / repetition が担う分業が canon。
-- **3 秒ルールを formula として段階化する**。heuristic (経験則)
-  であり、「1 秒目 / 2 秒目 / 3 秒目」は設計指針であって段階
-  公式ではない。
-- **TCC 年鑑作品を模倣 / 翻案する**。canon 參照源としては有効だが
-  模倣対象にすると voice 固有性を毀損する。参照して 自分の voice
-  を磨く が canonical。
-- **AISAS / ULSSAS を「AIDMA の完全代替」とする**。2026 年時点でも
-  B2B / TV CM / 店頭 では AIDMA が主流。媒体に応じた使い分けが
-  canon。
+- **Calling text exceeding 15 characters "キャッチコピー"**. Over 15
+  characters should be classified as lead text / subtitle / body copy.
+- **Information density that ignores 3 秒ルール**. On media judged
+  within 3 seconds, a design where the main message does not land
+  within 3 seconds is a canonical violation.
+- **Force-applying Anglo headline formulas to JP short copy**. Caples-
+  style headline types and Ogilvy's rule set damage JP short copy's
+  emotional resonance / 掛詞 / 余韻. JP has its own canon.
+- **Attributing リゲイン "24 時間戦えますか？" to 岩崎俊一** (drift
+  #8). Canonical attribution is 杉山恒太郎 + リゲイン PJ (電通).
+- **Trying to cover all AIDMA stages with a single short copy**. Short
+  copy is A+I only. D/M/A are carried by body / CTA / repetition as a
+  canonical division of labor.
+- **Treating 3 秒ルール as a formula with stages**. It is a heuristic;
+  "second 1 / second 2 / second 3" is a design guideline, not a stage
+  formula.
+- **Imitating or adapting TCC 年鑑 works**. Effective as a canon
+  reference source but harmful as an imitation target — imitating
+  damages voice uniqueness. The canonical use is: reference to sharpen
+  your own voice.
+- **Treating AISAS / ULSSAS as "complete replacements for AIDMA"**.
+  As of 2026, AIDMA remains the mainstream model for B2B / TV CM /
+  in-store. Media-appropriate differentiation is canonical.
