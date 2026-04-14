@@ -1,5 +1,5 @@
 ---
-title: Voice Quadrant Positioning — 語感四象限 Macro-Typology
+title: Voice Quadrant Positioning — 2-Axis Macro-Typology
 tier: 3
 ---
 
@@ -41,16 +41,21 @@ sequential: quadrant first (strategic positioning), 4-axis second
   *Revista de Gestão*, 25(2), 142–152. Empirical test reduces
   12-archetype taxonomy to 4 clusters.
 
-### ZH copywriting tradition
+### Canonical ad corpus (v4.18.1 verification)
 
-- **葉明桂** (2017)《品牌的技術和藝術》— Ogilvy Taiwan insight-led
-  strategy method.
-- **許舜英** 中興百貨 campaign corpus (1990s-2000s) — 意識形態廣告
-  literary-ideological register.
-- **李欣頻** (1998)《誠品副作用》— bookstore cultural-institution
-  voice.
-- **龔大中** 全聯經濟美學 campaign corpus (2015–2021) — Ogilvy Taiwan
-  emotional-resonance method.
+- **Ogilvy, D.** (1958) Rolls-Royce Silver Cloud ad. Ogilvy, Benson
+  & Mather. *The New Yorker* / *NYT*.
+- **TBWA\Chiat\Day** (1997) "Think Different" — Lee Clow / Rob
+  Siltanen team, narrated by Richard Dreyfuss.
+- **Unilever / Ogilvy** (2004) Dove "Campaign for Real Beauty."
+- **小池一子** (1980–1983) MUJI foundational corpus — AD: 田中一光.
+- **糸井重里** (1980–1982) 西武百貨店 series.
+- **眞木準** (1989) 伊勢丹 「恋を何年、休んでますか。」.
+- **岩崎俊一** (1985; 2004) サントリー お歳暮ギフト; ミツカン.
+- **葉明桂** (1990s–) 左岸咖啡館 strategy — 奧美 / 統一企業.
+- **許舜英** (1988–2001) 中興百貨 意識形態廣告.
+- **李欣頻** (1990s) 誠品書店.
+- **龔大中** (2015–) 全聯經濟美學.
 
 ### Cross-reference anchors (cited elsewhere in the skill)
 
@@ -75,31 +80,41 @@ sequential: quadrant first (strategic positioning), 4-axis second
   loanword mix, punctuation pacing) are practical heuristics proposed
   by this team, not academically published advertising-linguistics
   metrics. Do not cite as canonical linguistic taxonomy.
+- **Drift #29 (v4.18.1)**: 「恋を何年、休んでますか。」 is **眞木準
+  伊勢丹 1989** alone. Earlier dual-attribution to "眞木/岩崎" is
+  incorrect. Strip 岩崎 from this line.
+- **Drift #30 (v4.18.1)**: MUJI foundational corpus (わけあって安い /
+  愛は飾らない / 自然当然無印 / しゃけは全身しゃけなんだ) is all
+  **小池一子** copy with AD 田中一光. Other attributions (including
+  Kodama Kunio) are unsupported.
 - **Archetype caveat**: Brand archetypes (Mark & Pearson 2001) are
   **contested** — peer-reviewed empirical work reduces the 12-category
   taxonomy to 4 clusters (Xara-Brasil 2018) and refutes the single-
   archetype doctrine (Dias & Dias 2022). Use as **practitioner
   heuristic only**; do NOT build gate criteria solely on archetype
   conformance.
+- **Nike "Just Do It" Q2/Q4 disambiguation**: imperative grammar is
+  Q4-syntactic ("direct action") but brand function is Q2-identity
+  (ideology/manifesto — empowerment, values signaling). Brand-strategy
+  literature consistently classifies as **Q2**; the standard places
+  it in Q2 accordingly.
 
 ## The Framework
 
 ### The 2 axes
 
 ```
-            Authority (高社會距離 / institutional)
+            Authority (high social distance / institutional)
                   ↑
-    Q1 知識權威型   |   Q2 意識形態型
-    (Authority +   |   (Authority +
-     Reason)       |    Emotion)
-                   |
-Reason ────────────┼──────────────── Emotion
-                   |
-    Q4 直覺行動型   |   Q3 情緒共鳴型
-    (Affinity +    |   (Affinity +
-     Reason)       |    Emotion)
-                  ↓
-            Affinity (低社會距離 / peer)
+    Q1                |   Q2
+    Authority-Reason  |   Authority-Emotion
+                      |
+Reason ───────────────┼─────────────── Emotion
+                      |
+    Q4                |   Q3
+    Affinity-Reason   |   Affinity-Emotion
+                      ↓
+            Affinity (low social distance / peer)
 ```
 
 **Vertical axis: Authority ↔ Affinity** (grounded in Halliday Tenor)
@@ -127,10 +142,14 @@ competing:
 
 ## The Four Quadrants
 
-### Q1: 知識權威型 (Authority + Reason)
+### Q1: Authority-Reason
 
-**Definition**: Logical, structured, data-driven. Establishes
-authority via evidence, precision, and institutional legitimacy.
+**Positive Positioning Principle**
+
+Establish trust through precise evidence, structured logic, and
+professional insight. Language is clean, clear, and respects reader
+intelligence. Ideal for B2B, finance, technical, deep-analysis
+journalism, and brand strategy communication.
 
 **Linguistic markers**:
 - Declarative sentences; subject-verb-object parallelism
@@ -140,7 +159,38 @@ authority via evidence, precision, and institutional legitimacy.
 - Long cohesive paragraphs
 
 **Use cases**: B2B, financial services, medical, technical
-documentation, deep-analysis journalism.
+documentation, deep-analysis journalism, brand strategy briefs.
+
+**Canonical Copy Corpus**
+
+*EN:*
+- **David Ogilvy — Rolls-Royce** (Silver Cloud, 1958): "At 60 miles
+  an hour the loudest noise in this new Rolls-Royce comes from the
+  electric clock." (Ogilvy, Benson & Mather; published in *The New
+  Yorker* and *NYT*.)
+- **David Ogilvy**: "The consumer isn't a moron; she is your wife.
+  You insult her intelligence if you assume that a mere slogan and
+  a few vapid adjectives will persuade her to buy anything."
+
+*JP:*
+- **佐藤尚之** (fan-base theory): structured communication anchoring
+  on the "3% fan base" method — evidence-and-logic framework for
+  brand advocacy.
+- **古川裕也** (Dentsu): data-and-insight-driven strategic logic in
+  contemporary Japanese advertising planning.
+
+*TW:*
+- **葉明桂 (奧美 TW, strategic brief)**: "品牌不是定位出來的，
+  是長出來的。" (Insight-led assertion — brands grow organically
+  through story accumulation and consumer relationships, not short-
+  term positioning tactics.)
+- **葉明桂 (奧美 TW, 左岸咖啡館 strategic brief)**: "我們現在不是
+  在賣咖啡，我們是在經營一家咖啡館。" (Internal strategic framing
+  that elevated 統一企業's ready-to-drink coffee product into a
+  Parisian Left Bank lifestyle — documented in《品牌的技術和藝術》.
+  This is strategist brief language, not public ad copy.)
+- **林育聖 (文案的美)**: "方法比才華更重要。" (Pragmatic
+  declarative — core principle of his copywriting pedagogy.)
 
 **Representative practitioners**:
 
@@ -148,25 +198,31 @@ documentation, deep-analysis journalism.
 |----------|--------------|-----------|
 | EN | David Ogilvy | Fact-based, "respect the reader" |
 | EN | Rory Sutherland (Ogilvy) | Behavioral-economics logic |
-| ZH | 葉明桂 (Ogilvy Taiwan CSO) | Insight-led strategy, "偏心" framing |
-| ZH | 林育聖 (文案的美) | Method-over-talent pragmatism |
 | JP | 佐藤尚之 | Fan-base theory, structured communication |
 | JP | 古川裕也 (Dentsu) | Strategic advertising logic |
-
-**Sample sentence patterns** (Q1 anchors):
-- 葉明桂: "品牌不是定位出來的，是長出來的。" (insight-led assertion)
-- 林育聖: "方法比才華更重要。" (pragmatic declarative)
-- Ogilvy: "The consumer isn't a moron; she is your wife."
+| TW | 葉明桂 (Ogilvy TW CSO) | Insight-led strategy, "偏心" framing |
+| TW | 林育聖 (文案的美) | Method-over-talent pragmatism |
 
 **Representative brands**:
 - EN: The Economist, McKinsey
-- ZH: 報導者 The Reporter, 玉山銀行 E.SUN Bank
 - JP: 日経新聞, SONY
+- TW: 報導者 The Reporter, 玉山銀行 E.SUN Bank
 
-### Q2: 意識形態型 (Authority + Emotion)
+**Positive Application Hints**
 
-**Definition**: Value-driven, aesthetic, identity-constructing.
-Establishes authority via worldview and cultural-capital signaling.
+Open with declarative assertions backed by specific data or insight.
+Let precision of vocabulary do the work of establishing credibility.
+Avoid emoji, exclamation marks, and high particle density — these
+collapse Q1 authority into Q3/Q4 register.
+
+### Q2: Authority-Emotion
+
+**Positive Positioning Principle**
+
+Build a distinctive high-ground stance via worldview, aesthetic
+assertion, and cultural taste. Language is poetic, philosophical,
+and rhythmic. Ideal for luxury brands, cultural institutions,
+lifestyle brands, and campaigns communicating brand attitude.
 
 **Linguistic markers**:
 - Abstract nouns, conceptual vocabulary
@@ -178,31 +234,86 @@ Establishes authority via worldview and cultural-capital signaling.
 **Use cases**: Premium/luxury, bookstores, lifestyle brands,
 cultural institutions, manifesto-driven campaigns.
 
+**Canonical Copy Corpus**
+
+*EN:*
+- **Apple "Think Different"** (TBWA\Chiat\Day, Lee Clow team, 1997
+  — full manifesto, 60-second TV cut):
+
+  > "Here's to the crazy ones. The misfits. The rebels. The
+  > troublemakers. The round pegs in the square holes. The ones
+  > who see things differently. They're not fond of rules. And they
+  > have no respect for the status quo. You can quote them, disagree
+  > with them, glorify or vilify them. About the only thing you
+  > can't do is ignore them. Because they change things. They push
+  > the human race forward. While some may see them as the crazy
+  > ones, we see genius. Because the people who are crazy enough
+  > to think they can change the world, are the ones who do."
+
+- **Nike "Just Do It"** (Dan Wieden / Wieden+Kennedy, 1988):
+  imperative-grammar tagline functioning as cultural manifesto.
+  Per brand-strategy literature, this is **Q2 ideology** (identity
+  signaling, empowerment) despite its Q4-syntactic surface.
+
+*JP (all MUJI — 小池一子 copy, 田中一光 AD):*
+- **無印良品**: "わけあって、安い。" (1980)
+- **無印良品**: "愛は飾らない。" (1981)
+- **無印良品**: "自然、当然、無印。" (1983, revived as global
+  corporate message 2014)
+- **無印良品**: "しゃけは全身しゃけなんだ。" (c.1980)
+- **仲畑貴志**: minimalist philosophical assertion (TOTO, Suntory
+  corpus) — canonical JP Q2 register.
+
+*TW:*
+- **許舜英 (中興百貨 意識形態廣告, 1990s)**: "女性主義就是失敗
+  在愛情和衣服這兩件事情上。"
+- **許舜英 (中興百貨)**: "銀行倒閉不會令我不安，服裝店倒閉
+  才會令我不安。"
+- **李欣頻 (誠品書店)**: "我在閱讀中，遇見另一個自己。"
+- **李欣頻 (誠品敦南店)**: "拋開阿莫多瓦的高跟鞋到街上去。
+  拋開村上春樹的彈珠遊戲到街上去。" (Inspired by 寺山修司
+  《拋開書本到街上去》. Full series extends with 徐四金、
+  彼得梅爾 etc.)
+- **左岸咖啡館 (奧美 TW / 統一企業)**: "我不在咖啡館，就在去咖啡館
+  的路上。" (Borrowed from Peter Altenberg; sinicized for
+  左岸咖啡館's Parisian Left Bank positioning.)
+- **左岸咖啡館**: "我在這裡，找到一個角落，一個上午，一杯 Cafe au
+  lait。Cafe au lait 一如記憶裡的模糊地帶。這是春天的最後一天，
+  我在左岸咖啡館。" (Poetic narrative — Q2 creative output
+  realizing 葉明桂's Q1 strategic framing.)
+
 **Representative practitioners**:
 
 | Language | Practitioner | Signature |
 |----------|--------------|-----------|
-| EN | Lee Clow (TBWA) | Apple "Think Different" |
-| EN | Dan Wieden (W+K) | Nike "Just Do It" |
-| ZH | 許舜英 (意識形態廣告) | Anti-utilitarian, aphoristic |
-| ZH | 李欣頻 (誠品) | Literary, meditative |
-| JP | 仲畑貴志 | Minimalist philosophical depth |
-| JP | 大貫卓也 | Absolute aesthetic assertion |
-
-**Sample sentence patterns** (Q2 anchors):
-- 許舜英: "女性主義就是失敗在愛情和衣服這兩件事情上。"
-- 李欣頻: 誠品 "我在閱讀中，遇見另一個自己。"
-- Wieden: "Just Do It."
+| EN | Lee Clow (TBWA) | Apple Think Different |
+| EN | Dan Wieden (W+K) | Nike Just Do It (manifesto) |
+| JP | 小池一子 (MUJI) | Minimalist philosophical copy |
+| JP | 仲畑貴志 | Absolute aesthetic minimalism |
+| TW | 許舜英 (意識形態廣告) | Anti-utilitarian, aphoristic |
+| TW | 李欣頻 (誠品) | Literary, meditative |
 
 **Representative brands**:
 - EN: Apple (Think Different era), Patagonia
-- ZH: 誠品書店 (意識形態 era 1990s-2000s), Aesop (TW positioning)
 - JP: 無印良品 MUJI, 蔦屋書店 TSUTAYA
+- TW: 誠品書店 (意識形態 era 1990s-2000s), 中興百貨
 
-### Q3: 情緒共鳴型 (Affinity + Emotion)
+**Positive Application Hints**
 
-**Definition**: Warm, conversational, empathetic. Establishes
-connection via "我也一樣" peer-register and everyday observation.
+Use abstract vocabulary, aphoristic short sentences, and literary
+rhythm to make the brand a worldview worth aligning with. Let
+punctuation control pacing; let sentence structure carry the
+argument's shape. Avoid mixing Q2 ideology with Q4 transactional
+CTAs — that combination reads as trying-too-hard.
+
+### Q3: Affinity-Emotion
+
+**Positive Positioning Principle**
+
+Create warm "我也一樣" (we're alike) connection through everyday
+language and observational specificity. Language is natural,
+conversational, life-grounded. Ideal for retail, family/household
+brands, social campaigns, and the Affinity stage of PASONA long-form.
 
 **Linguistic markers**:
 - Conversational fragments, ellipsis
@@ -214,32 +325,67 @@ connection via "我也一樣" peer-register and everyday observation.
 **Use cases**: Everyday retail, family/household brands, social
 campaigns, Affinity stage of PASONA long-form.
 
+**Canonical Copy Corpus**
+
+*EN:*
+- **Dove "Campaign for Real Beauty"** (Ogilvy / Unilever, 2004
+  launch): "Fat or Fab?", "Wrinkled or Wonderful?" billboard
+  prompts, foundational insight that only ~2% of women consider
+  themselves beautiful. (The later "You're more beautiful than you
+  think" tagline is from 2013 "Real Beauty Sketches" evolution.)
+- **Seth Godin**: tribal-leadership writing with short emotional
+  pulses — "People like us do things like this."
+
+*JP:*
+- **糸井重里 (西武百貨店)**: "じぶん、新発見。" (1980)
+- **糸井重里 (西武百貨店)**: "不思議、大好き。" (1981)
+- **糸井重里 (西武百貨店)**: "おいしい生活。" (1982)
+- **岩崎俊一 (サントリー お歳暮ギフト)**: "あなたに会えた、
+  お礼です。" (1985)
+- **岩崎俊一 (ミツカン)**: "やがて、いのちに変わるもの。" (2004)
+- **岩崎俊一 (プレナス ほっともっと)**: "幸福は、ごはんが炊かれる
+  場所にある。"
+
+*TW:*
+- **龔大中 (全聯經濟美學)**: "長得漂亮是本錢，把錢花得漂亮是本事。"
+- **龔大中 (全聯經濟美學)**: "知道一生要去的20個地方之後，我決定
+  先去全聯。"
+- **龔大中 (全聯潮包, 2016)**: "當不成名模，日子也要過得有模有樣。"
+- **龔大中 (全聯經典篇, 2017)**: "省錢就像白T牛仔褲，永不退流行。"
+- **盧建彰**: 情感寫實 — "除了漂亮的文字，更需要的是真實。"
+
 **Representative practitioners**:
 
 | Language | Practitioner | Signature |
 |----------|--------------|-----------|
 | EN | Seth Godin | Tribal leadership, human-scale |
 | EN | Leo Burnett | Plain-folk warmth |
-| ZH | 龔大中 (Ogilvy Taiwan CCO) | 經濟美學 observational wit |
-| ZH | 盧建彰 | Emotional realism, civic humanism |
 | JP | **糸井重里** | State proposal, intentional ambiguity (see `jp-copy-craft-lineage.md`) |
 | JP | **岩崎俊一** | Seasonal, impermanence (see `jp-copy-craft-lineage.md`) |
-
-**Sample sentence patterns** (Q3 anchors):
-- 龔大中 (全聯): "長得漂亮是本錢，把錢花得漂亮是本事。"
-- 龔大中 (全聯): "知道一生要去的20個地方之後，我決定先去全聯。"
-- 糸井重里: "おいしい生活。"
-- 岩崎俊一: "恋を何年、休んでますか。"
+| TW | 龔大中 (Ogilvy TW CCO) | 經濟美學 observational wit |
+| TW | 盧建彰 | Emotional realism, civic humanism |
 
 **Representative brands**:
 - EN: Dove (Real Beauty), Airbnb (Belong Anywhere)
-- ZH: 全聯福利中心 (經濟美學), IKEA Taiwan (30-year 人生故事)
 - JP: JR九州 (旅情), ほぼ日刊イトイ新聞
+- TW: 全聯福利中心 (經濟美學), IKEA Taiwan (人生故事)
 
-### Q4: 直覺行動型 (Affinity + Reason)
+**Positive Application Hints**
 
-**Definition**: Efficient, action-oriented, solution-focused. Peer-
-register directness combined with rational benefit clarity.
+Moderate particle usage, second-person address, and life-anchored
+vocabulary create the peer register. Observational specificity
+(not generic warmth) is what makes this quadrant land. Read your
+draft out loud — if it sounds like a friend sharing a small
+insight, you're in Q3.
+
+### Q4: Affinity-Reason
+
+**Positive Positioning Principle**
+
+Drive specific action through clear, direct, practical language.
+Language is short, benefit-focused, next-step-oriented. Ideal for
+e-commerce, promotional push, micro-conversion (opt-in / subscribe
+/ download) campaigns.
 
 **Linguistic markers**:
 - Short imperative sentences
@@ -252,27 +398,46 @@ register directness combined with rational benefit clarity.
 conversion (opt-in/subscribe/download — see
 `light-action-frameworks.md` PREP/CREMA).
 
+**Canonical Copy Corpus**
+
+*EN:*
+- **Gary Vaynerchuk** (conceptual): "You don't need more time, you
+  need more decisions."
+- **Dave Trott**: simple-and-direct problem-solving copy — "Problem,
+  solution, benefit." One-sentence clarity as discipline.
+
+*JP:*
+- **佐藤可士和 (brand direction)**: ultra-simple signaling via
+  超整理術 — not copywriter output per se (art direction), but
+  canonical for Q4 minimalist-action register.
+- **岸勇希 (ex-Dentsu)**: behavior-design communication — framing
+  the user's next action as the frictionless default.
+
+*TW:*
+- **蝦皮購物 Shopee** (2020 Valentine's): "今天下單，明天脫單。"
+- **蝦皮購物 Shopee** (2021 金句獎): "月初囤棉最便宜。"
+
 **Representative practitioners**:
 
 | Language | Practitioner | Signature |
 |----------|--------------|-----------|
 | EN | Gary Vaynerchuk | Action-first, hustle pragmatism |
 | EN | Dave Trott | Simple, direct, problem-solving |
-| ZH | 織田紀香 (諾利嘉) | Conversion-focused, SME-oriented |
-| ZH | 廣告樂血研究院 (Wawa) | Performance-marketing education |
-| JP | 佐藤可士和 | Ultra-simple signaling (超整理術) |
 | JP | 岸勇希 (ex-Dentsu) | Behavior-design communication |
-
-**Sample sentence patterns** (Q4 anchors):
-- Shopee: "今天下單，明天脫單。" (Valentine's 2020)
-- Shopee: "月初囤棉最便宜。" (2021 金句獎)
-- Vaynerchuk (conceptual): "You don't need more time, you need more
-  decisions."
+| TW | 織田紀香 (諾利嘉) | Conversion-focused, SME-oriented |
+| TW | 廣告樂血研究院 (Wawa) | Performance-marketing education |
 
 **Representative brands**:
 - EN: Amazon, Netflix
-- ZH: 蝦皮購物 Shopee
 - JP: UNIQLO, メルカリ Mercari
+- TW: 蝦皮購物 Shopee
+
+**Positive Application Hints**
+
+Open with an action verb. Anchor with a specific number (price,
+time, quantity). Close with a clear next step. Keep abstract
+nouns minimal — Q4 rewards concreteness. If your copy reads as
+"this is what to do right now," you're in Q4.
 
 ## Quadrant Mixing Rules
 
@@ -315,10 +480,12 @@ tradition has been under-represented. This section fills that gap.
 ### ZH tradition summary
 
 Taiwan advertising has four distinguishable voice families that
-map cleanly onto the quadrant:
+map cleanly onto the quadrant. Chinese names below are the
+**canonical Taiwan voice-family terminology** (analogous to JP
+terms like 界隈消費 in `neta-source-taxonomy.md`):
 
-| Quadrant | Taiwan lineage | Era |
-|----------|---------------|-----|
+| Quadrant | Taiwan voice family | Era |
+|----------|---------------------|-----|
 | Q1 | 奧美策略派 (Ogilvy TW strategist tradition) — 葉明桂 | 1984– |
 | Q2 | 意識形態廣告 — 許舜英 / 李欣頻 / 誠品 | 1990s–2000s |
 | Q3 | 全聯經濟美學派 — 龔大中 / 盧建彰 | 2015– |
@@ -399,33 +566,15 @@ metrics (see drift #28). Use for quadrant-alignment diagnosis only.
 **Rule**: Never use Q4 (direct action) for Level 5 Unaware readers —
 mirrors the Schwartz 1966 no-direct-Offer rule.
 
-## Anti-Patterns
+## Anti-Patterns (load-bearing only)
 
-- **Using the quadrant as a hard label rather than a starting
-  position**. Voice lives on a continuum; quadrant is orientation,
-  not prison. A brand can legitimately sit on a Q2↔Q3 edge.
 - **Diagonal quadrant mixing in one piece** (Q1+Q3 or Q2+Q4) without
   deliberate transition craft. Produces voice collapse (tonal
-  schizophrenia).
+  schizophrenia). Traverse via adjacency (Q2→Q3 or Q1→Q4), not
+  diagonal.
 - **Schwartz × Quadrant mismatch**: using Q4 direct-action voice for
   Schwartz Level 5 Unaware readers. Collapses conversion; mirrors
   the Schwartz no-direct-Offer rule.
-- **Citing brand archetypes as empirical taxonomy**. Archetypes are
-  practitioner heuristic (contested framework per Neher 1996 /
-  Xara-Brasil 2018 / Dias & Dias 2022). Use as voice-ideation prompt
-  only; do not build gate criteria on archetype conformance.
-- **Treating ZH micro-indicators as published linguistics**. 虛詞
-  density / loanword mix / punctuation pacing are team heuristics
-  (drift #28), not academically published advertising-linguistics
-  metrics. Cite as operational tools, not canonical taxonomy.
-- **Citing Vaughn or Halliday as the source of the combined quadrant**.
-  Vaughn's Think/Feel and Halliday's Tenor are the axis groundings;
-  the 2-axis combination is team synthesis (drift #25).
-- **Using 詹宏志 as a Q1 copywriting exemplar**. He is editor /
-  publisher / essayist — his voice is quadrant-relevant but scope-
-  mismatched for ad copywriting (drift #27).
-- **Referring to 廣告樂血幫**. The correct name is 廣告樂血研究院
-  (drift #26).
-- **Forcing the quadrant onto briefs that don't need positioning
-  declaration**. For briefs with no quadrant declaration, the gate
-  dimension is NOT_APPLICABLE; do not invent a position to evaluate.
+- **Using the quadrant as a hard label rather than a starting
+  position**. Voice lives on a continuum; quadrant is orientation,
+  not prison. A brand can legitimately sit on a Q2↔Q3 edge.

@@ -170,14 +170,14 @@ Obtain additional required fields based on form type.
 **Step 1 — Voice quadrant (optional, macro positioning)**: from
 `voice-quadrant-positioning.md`:
 
-- **Q1 知識權威型** (Authority + Reason) — B2B, finance, medical,
-  technical. Representatives: 葉明桂 / 林育聖 / Ogilvy / 報導者.
-- **Q2 意識形態型** (Authority + Emotion) — premium / luxury /
-  bookstore / manifesto. Representatives: 許舜英 / 李欣頻 / 誠品 / Apple.
-- **Q3 情緒共鳴型** (Affinity + Emotion) — everyday retail, family,
-  social. Representatives: 龔大中 / 盧建彰 / 全聯 / IKEA / 糸井 / 岩崎.
-- **Q4 直覺行動型** (Affinity + Reason) — e-commerce, app onboarding,
-  action push. Representatives: 織田紀香 / Shopee / UNIQLO.
+- **Q1 Authority-Reason** — B2B, finance, medical, technical.
+  Representatives: 葉明桂 / 林育聖 / Ogilvy / 報導者.
+- **Q2 Authority-Emotion** — premium / luxury / bookstore / manifesto.
+  Representatives: 許舜英 / 李欣頻 / 誠品 / Apple / MUJI.
+- **Q3 Affinity-Emotion** — everyday retail, family, social.
+  Representatives: 龔大中 / 盧建彰 / 全聯 / IKEA / 糸井 / 岩崎.
+- **Q4 Affinity-Reason** — e-commerce, app onboarding, action push.
+  Representatives: 織田紀香 / Shopee / Amazon.
 
 Recorded as `voice_quadrant: Q1 | Q2 | Q3 | Q4 | not-declared`.
 If declared, gate Dim 5 (Voice Quadrant Coherence) fires.
