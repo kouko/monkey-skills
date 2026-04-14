@@ -24,6 +24,7 @@ Cross-reference `long-form-pasona-canon.md` §三框架の適用表 and `persuas
    - Level 4 (Problem Aware) → thick 新 PASONA or PASBECONA
    - Level 5 (Unaware) → PASBECONA (full-length Problem + Affinity + Benefit + Evidence)
    - **Core rule (Schwartz 1966)**: Never use an Offer closer directly for Unaware readers. Always go through narrative problem discovery first.
+   - **Voice quadrant corollary** (per `voice-quadrant-positioning.md` §Schwartz × Quadrant): for Level 5 Unaware readers, prefer Q3 (Affinity + Emotion) narrative entry; never open with Q4 (Affinity + Reason direct-action voice) — Q4 assumes awareness that Level 5 readers lack, collapsing conversion.
 
 3. **Tone-boundary exclusion check**:
    - BtoB / medical / finance / high-ticket coaching → 旧 PASONA not recommended (Agitation canonical tone does not align).

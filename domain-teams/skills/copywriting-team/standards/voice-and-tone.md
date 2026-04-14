@@ -98,6 +98,29 @@ Implications of the JP emotional tradition for voice guides:
   of JP emotional voice; corresponds to the Memory stage in AIDMA (see
   `short-form-catchcopy-canon.md` for the 7–15 character discipline).
 
+**Quadrant mapping** (see `voice-quadrant-positioning.md`): 糸井 and
+岩崎 live in **Q3 (Affinity + Emotion)**; 眞木 sits at the Q2↔Q3 border
+(Ideology-Emotion leaning). See `jp-copy-craft-lineage.md` for voice-
+master deep-dive; see `voice-quadrant-positioning.md` for cross-lingual
+typology frame.
+
+## Voice positioning — strategic + tactical
+
+Voice positioning operates at two layers:
+
+1. **Macro (strategic)** — which voice family? See
+   `voice-quadrant-positioning.md` (Tier 3): 2-axis quadrant
+   (Authority↔Affinity × Reason↔Emotion) with EN/ZH/JP representative
+   practitioners and brands per quadrant. Use this FIRST to establish
+   the voice family.
+2. **Micro (tactical)** — how exactly within that family? The 4-axis
+   model below provides fine-grained positioning within the chosen
+   quadrant.
+
+The two layers are complementary and sequential: quadrant first,
+4-axis second. The 4-axis model remains the operational vocabulary
+for Brand Voice Guide authoring.
+
 ## Voice definition — 4 axes (adapted from 18F framework)
 
 The 18F Content Guide provides 4 continuous axes for voice definition,

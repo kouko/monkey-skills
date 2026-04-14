@@ -171,7 +171,7 @@ Japanese 掛詞 technique density.
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: all 18 copywriting-team standards (see Resource Manifest)
+- Standards: all 19 copywriting-team standards (see Resource Manifest)
 - The artifact to evaluate
 - Original requirements
 
@@ -201,7 +201,8 @@ Worker default resources:
   - `standards/long-form-pasona-canon.md` — 神田 PASONA / 新 PASONA / PASBECONA canonical
   - `standards/mid-form-beaf-canon.md` — BEAF (Benefit → Evidence → Advantage → Feature)
   - `standards/short-form-catchcopy-canon.md` — AIDMA short edition + 糸井/岩崎/眞木/TCC + 3秒ルール + 7-15 chars + 5 切入點
-  - `standards/voice-and-tone.md` — Ogilvy + JP emotional resonance + voice/tone axes
+  - `standards/voice-and-tone.md` — Ogilvy + JP emotional resonance + 4-axis micro model (tactical tuning)
+  - `standards/voice-quadrant-positioning.md` — 2-axis macro typology (Authority↔Affinity × Reason↔Emotion) + EN/ZH/JP practitioners per quadrant + ZH copywriting tradition + Schwartz × Quadrant routing, grounded on Vaughn 1980/1986 FCB + Halliday 1978 SFL (team synthesis disclosure) + Mark & Pearson 2001 (contested — cite as heuristic)
   - `standards/persuasion-ethics.md` — Cialdini + 景品表示法 + FTC + dark patterns
   - `standards/persuasion-psychology-anchor.md` — Cialdini 6 + Schwartz 5 levels + Kahneman System 1/2
   - `standards/long-form-extended-frameworks.md` — QUEST (Fortin 2005) + PASTOR (Edwards 2016) for EN/intl long-form
@@ -215,7 +216,7 @@ Worker default resources:
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: same 18 files as worker
+- standards: same 19 files as worker
 - Intake Completeness gate: `checklists/intake-completeness-checklist.md`
 - Persuasion Framework Adherence gate: `checklists/persuasion-framework-adherence-checklist.md`
 - Ethics gate: `checklists/ethics-checklist.md`
@@ -264,7 +265,7 @@ directory to get absolute paths.
 
 ### Resource Paths
 - protocol: {base_path}/protocols/{selected-protocol}.md
-- standards: all 18 files listed under Resource Manifest § Worker default
+- standards: all 19 files listed under Resource Manifest § Worker default
   resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Input
@@ -276,7 +277,7 @@ directory to get absolute paths.
 ```
 ### Resource Paths
 - gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
-- standards: all 18 files listed under Resource Manifest § Worker default
+- standards: all 19 files listed under Resource Manifest § Worker default
   resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Artifact
