@@ -69,11 +69,16 @@ is `N/A` for form_type = short.
   field) explicitly states `neta_opt_in: Yes | No`. Default is `No`
   unless user opted in. Missing declaration → FIXABLE (default to
   No; but silent omission prevents the Neta Injection Overlay
-  workflow from triggering). If `neta_opt_in: Yes`, downstream
+  workflow from triggering). If `neta_opt_in: Yes`: (a) downstream
   gates MUST include `neta-safety-gate.md` SHOULD gate with its
-  hard legal vetoes (copyright + 景表法 ステマ). **Grounded in**:
+  hard legal vetoes (copyright + 景表法 ステマ); (b) Understanding
+  Summary MUST also declare `neta_source_type_preference:
+  all | sns-meme | literary | mixed` (default: `all`). Missing
+  source-type preference → FIXABLE (default to `all` with
+  disclosure). **Grounded in**:
   `../protocols/copywriting-brainstorming.md` §Task 7.5 +
   `../standards/neta-injection-techniques.md` +
+  `../standards/neta-source-taxonomy.md` +
   `../standards/neta-websearch-pipeline.md`.
 
 ### Long-form items (form_type = long)
