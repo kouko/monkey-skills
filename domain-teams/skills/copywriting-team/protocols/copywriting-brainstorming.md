@@ -199,10 +199,24 @@ Options differ by form type:
   - BEAF (Benefit → Evidence → Advantage → Feature) default.
   - Confirm channel-dependent order tweaks (POP = Benefit-heavy /
     briefing = Evidence-heavy, etc.).
-- **Short-form**:
+- **Short-form** (キャッチコピー / タグライン, 7-15 chars):
   - 5 approaches (利益 / 恐懼 / 顛覆 / 呼喚 / 提問).
     AI recommends based on audience emotion per
     `short-form-catchcopy-canon.md` §5 種切入点決策樹.
+- **Light-action** (opt-in / subscribe / download / LP click-through,
+  50-1,500 chars, micro-conversion per Kaushik 2007):
+  - **PREP 法** (4 stages: Point-Reason-Example-Point) — logical
+    payload, no explicit CTA. Best for SNS posts, email openers,
+    presentation slides, share-triggering content.
+  - **CREMA 法** (5 stages: Conclusion-Reason-Evidence-Method-Action)
+    — explicit Action stage. Best for opt-in pages, newsletter
+    subscribe, free-download LPs, LINE 登録, light affiliate.
+  - See `light-action-frameworks.md` §Selection criteria. AI
+    recommends CREMA as default for any non-purchase action prompt;
+    PREP for share-triggering / non-CTA logical content.
+  - **Action-weight routing**: if brief turns out to target
+    high-ticket purchase (heavy action), re-route to Long-Form
+    framework selection above (PASONA-family / QUEST / PASTOR).
 - **Ideation**:
   - Mandal-Art 8 fan-out + VS / VS standalone / short-form 5-approach
     integration — recommend per `copy-ideation-parallel.md` §Phase 1

@@ -1,10 +1,12 @@
 # Protocol: Write Short-Form Copy（キャッチコピー Canon short-form writing）
 
-**When to use**: Short-form copy requests. Typical cases — キャッチコピー (advertising headlines), taglines, banner ads, SNS post text, CM titles, magazine / newspaper ad headlines, the single line overlaid on a website's main visual. Word count: 7-15 characters is the default; 15+ characters should be treated as a lead sentence / subtitle.
+**When to use**: Short-form **キャッチコピー** copy requests. Typical cases — キャッチコピー (advertising headlines), taglines, banner ads, SNS post text, CM titles, magazine / newspaper ad headlines, the single line overlaid on a website's main visual. Word count: **7-15 characters is the default**; 15+ characters should be treated as a lead sentence / subtitle.
 
-**Output**: A short-form copy artifact within the 7-15 character golden range. Select one of the 5 approaches, reference one of the voice masters, and attach "なぜ良いか" 3 items. Designed so the reader completes A+I (Attention + Interest) within 3 seconds.
+**When NOT to use (routing note)**: For **light-action logical-block copy** (50-1,500 characters targeting opt-in / newsletter subscribe / free download / LINE 登録 / LP click-through), do NOT use this protocol's 5 切入点 + 3秒ルール + 7-15 字 constraint. The キャッチコピー form is structurally distinct from light-action logical copy. Light-action workflow uses **PREP 法 / CREMA 法** framework per `../standards/light-action-frameworks.md` — the Light-Action Copy Writing workflow in SKILL.md routes here for structural reference but worker must apply `light-action-frameworks.md` stage definitions (PREP 4-stage or CREMA 5-stage) instead of the キャッチコピー 5 切入点 logic. In practice: if brief is キャッチコピー (7-15 chars), follow this protocol's Phases 1-5. If brief is light-action logical-block copy (50-1,500 chars), reference this protocol's ethics/voice phases only and substitute PREP/CREMA structure for the 5 切入点 approach.
 
-**Grounds on**: `../standards/short-form-catchcopy-canon.md`, `../standards/ideation-taniyama-discipline.md`, `../standards/voice-and-tone.md`, `../standards/persuasion-ethics.md`
+**Output**: A short-form copy artifact within the 7-15 character golden range (for キャッチコピー form) OR a PREP/CREMA-structured light-action copy artifact (for light-action form, per `light-action-frameworks.md`). Select one of the 5 approaches (キャッチコピー) or PREP/CREMA framework (light-action), reference one of the voice masters, and attach "なぜ良いか" 3 items. For キャッチコピー: designed so the reader completes A+I (Attention + Interest) within 3 seconds.
+
+**Grounds on**: `../standards/short-form-catchcopy-canon.md`, `../standards/light-action-frameworks.md`, `../standards/ideation-taniyama-discipline.md`, `../standards/voice-and-tone.md`, `../standards/persuasion-ethics.md`
 
 ## Phase 1: 5 Approach Selection
 
