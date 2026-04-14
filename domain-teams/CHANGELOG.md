@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.3] — 2026-04-15
+
+### Removed (copywriting-team)
+- **voice-quadrant-positioning.md §Critical Attribution Corrections
+  section removed entirely**. Redundancy audit found 3 of 4 retained
+  items were already disclosed inline elsewhere in the file:
+  - Drift #28 (ZH heuristics) — §ZH micro-indicators section header
+    and prose already self-disclose as "HEURISTICS, NOT CANONICAL
+    METRICS"
+  - Archetype caveat — §Primary Sources Archetype framework block
+    header already says "(contested — practitioner heuristic only)"
+    with Neher/Xara-Brasil/Dias critique citations listed
+  - Nike Q2/Q4 disambiguation — Nike brand entry in Q2 already
+    contains the inline disambiguation note
+  Only Drift #25 (FCB+SFL team synthesis) was both load-bearing and
+  non-redundant; relocated inline to §The Framework as a Synthesis
+  disclosure adjacent to the axis definitions.
+- **§Primary Sources subsections trimmed**:
+  - Removed §Canonical ad corpus bibliography roster (11 entries) —
+    every entry is fully annotated in per-quadrant brand entries with
+    more detail (agency, year, canonical lines, voice signature).
+    Redundant with body.
+  - Removed §Cross-reference anchors — actual cross-refs to
+    voice-and-tone.md and jp-copy-craft-lineage.md already inline in
+    per-quadrant Copywriter cross-reference sections.
+  - §Primary Sources now focuses on framework grounding only:
+    2-axis academic sources (Vaughn + Halliday) + Archetype contested-
+    framework block (Mark & Pearson + Jung + Neher + Xara-Brasil).
+- Stale breadcrumbs removed: "see drift #31 for prior attribution
+  correction" in JR九州 brand entry; "see drift #28" in §ZH
+  micro-indicators section.
+- Historical attribution corrections (drifts #26, #27, #29, #30, #31)
+  already applied inline in brand corpus — audit trail preserved in
+  `research/grounding-v4.18.x.md` notes.
+
+### Rationale
+Per `skill-team/standards/grounding-principle.md §Critical Attribution
+Corrections` convention, the section is OPTIONAL and should be OMITTED
+entirely when no guardrails are needed. After trim, only Drift #25 was
+a load-bearing non-duplicated guardrail — better placed inline where
+the 2-axis is introduced than in a single-item section.
+
+### No changes to
+- Brand corpus attribution (already correct inline)
+- Research notes (audit trail preserved unchanged for all drifts #25-31)
+- Other standards files
+- SKILL.md / other protocols / gates
+
 ## [4.18.2] — 2026-04-15
 
 ### Changed (copywriting-team)
