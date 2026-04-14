@@ -14,20 +14,25 @@ author の特定可能な一次資料は二次資料では未確認のため、*
 
 ## Primary Sources
 
-- 樂天市場出店者向け教学資料 / Amazon JP セラーセントラル ヘルプ —
-  商品ページの推奨構成 として Benefit-first 順序を指導する次級
-  來源が多数存在する（複数の樂天 / Amazon 運用代行会社の公式
-  ブログ記事が同順序で一致）。
-- 日本 EC 実務ブログ（"BEAFの法則 商品ページ" で検索される一群の
-  マーケティング会社記事）— 4 段階定義と順序について 3 社以上の
-  獨立來源で一致が確認される。
-- **Author attribution uncertainty**：BEAF の canonical author
-  （誰が命名し体系化したか）の一次資料は二次資料では特定
-  できていない。日本 EC 業界に定着した実務 framework として
-  扱い、**「業界通用 framework」** と表記する。canonical
-  textbook は未確定。
-- FAB (Feature-Advantage-Benefit) との関係：FAB は米国セールス
-  教育（Xerox 等）由来の古典的 3 段階で、順序は Feature → Advantage →
+- **宣伝会議 AdverTimes (2022)** *BEAFの法則とは — 商品ページで使える
+  コピーライティング術*. https://www.advertimes.com/ (site search:
+  "BEAFの法則"). 4 段階定義と Benefit-first 順序を正式化。
+- **ferret-plus (2020)** *BEAFの法則 — 商品ページ制作で覚えておきたい
+  文章構成*. https://ferret-plus.com/ (site search: "BEAF"). 4 段階名称
+  および樂天 / Amazon 商品ページ向け適用例を提供。
+- **innovation.co.jp urumo blog** *セールスコピー BEAF の法則*.
+  https://www.innovation.co.jp/urumo/ (site search: "BEAF"). B→E→A→F
+  順序の dual-verify ソース。
+- **樂天市場出店者向け教学資料 / Amazon JP セラーセントラル ヘルプ** —
+  商品ページの推奨構成として Benefit-first 順序を実務指導する公式
+  ドキュメント群。https://seller.rakuten.co.jp/ / https://sellercentral.amazon.co.jp/
+- **Author attribution uncertainty**：BEAF の canonical author（誰が
+  命名し体系化したか）を特定する一次資料は二次資料クラスタでは
+  確認できていない。日本 EC 業界に定着した実務 framework として
+  扱い、**「業界通用 framework」** と表記する。canonical textbook は
+  未確定。
+- **FAB (Feature-Advantage-Benefit) との関係**：FAB は米国セールス教育
+  （Xerox 等）由来の古典的 3 段階で、順序は Feature → Advantage →
   Benefit。BEAF は **逆方向 + Evidence 挿入** の 4 段階であり、
   FAB の日本 EC 向け改良形として理解される。
 

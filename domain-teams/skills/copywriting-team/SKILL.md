@@ -259,7 +259,10 @@ Affinity candidates before drafting.
 |-------|-------|----------|-------|--------|-------|
 | 1. 發散 | worker (× N subagents) | `protocols/copy-ideation-parallel.md` | value prop + audience | 64 candidates with VS probabilities | 8 曼陀羅 directions × 8 VS candidates |
 | 2. 收斂 | worker | `protocols/copy-ideation-parallel.md` | 64 candidates | 3-5 winning angles | KJ 6-stage + 谷山 「なんかいいよね禁止」 |
-| 3. Handoff | — | — | 3-5 angles | feeds directly into write-long/mid/short-form-copy | — |
+
+**Handoff**: the 3-5 winning angles feed directly into Long-Form / Mid-Form /
+Short-Form Copy Writing workflows as seed input (Affinity seed for long-form,
+Benefit seed for mid-form, headline seed for short-form).
 
 ### Long-Form Copy Writing
 
