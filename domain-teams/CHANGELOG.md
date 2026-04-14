@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.19.0] — 2026-04-15
+
+### Added (skill-team)
+- **New standard**: `standards/mermaid-usage-guidelines.md` (Tier 2).
+  Codifies when and how to use Mermaid diagrams in domain-team skills,
+  based on v4.18.5 empirical findings (3 demonstrations across
+  copywriting-team + skill-team).
+- Standards count: 6 → 7. Resource Manifest + agent launch templates
+  (worker + evaluator) updated to include the new standard.
+
+### Scope of guidelines
+- **Core finding**: Mermaid adds clarity to branching logic but does
+  NOT reduce token/line count when paired with explanatory prose.
+  Value is eliminating prose ambiguity, not compression.
+- **Decision criterion**: use Mermaid when prose would have ≥3 branch
+  conditions OR ≥4 state transitions.
+- **Strong candidates**: decision trees (framework/protocol selection),
+  state machines with retry loops (gate verdict handling), multi-path
+  routing with failure branches (retrieval paths), phase dependencies,
+  cross-cutting flows touching 3+ agents/files.
+- **Avoid**: Primary Sources, Anti-Patterns with why-explanation,
+  content corpora, philosophy/tradition prose, clean tables,
+  single-line conditionals.
+- **Integration with 4-tier gate system**: references the shared
+  Verdict State Machine in `gate-system.md`; explicitly directs gate
+  files NOT to duplicate verdict logic.
+
 ## [4.18.5] — 2026-04-15
 
 ### Changed
