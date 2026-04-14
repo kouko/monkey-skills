@@ -7,6 +7,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.16.0] — 2026-04-14
+
+Neta Injection Capability: formal framework for injecting pop culture
+/ subculture / meme references into copy via 4 techniques identified
+by English academic anchors (**Reversal** / **Substitution** /
+**Subcultural Capital** / **Cross-domain Mapping**) with EN industry
+vernacular (subvertising / snowclone / tribal signal / conceptual
+simplification) and JP practitioner terms (逆転 / 大喜利 / 界隈消費
+/ 次元降下) documented as audience-facing aliases, a Phase A-D
+WebSearch-only retrieval pipeline, and a safety gate with dual hard
+legal vetoes (copyright + 景表法 ステマ).
+
+### Motivation
+
+v4.12.0-v4.15.0 established structured copy frameworks (PASONA-family,
+QUEST/PASTOR, BEAF, キャッチコピー, PREP/CREMA), but had no formal
+approach for advanced rhetoric leveraging cultural compression.
+Neta (ネタ) injection is an advanced technique requiring:
+1. Primary-source grounding on rhetoric + humor theory
+2. Up-to-date cultural context (memes expire ≈4-6 months per
+   Shifman 2014)
+3. Strict safety discipline (copyright + JP ステマ告示 2023)
+
+v4.16.0 closes this gap with 2 standards + 1 protocol + 1 gate.
+Consistent with monkey-skills "file-based, no external infra" principle,
+the pipeline uses WebSearch JIT retrieval — no RAG, no vector DB.
+
+### Added
+
+2 new standards:
+
+- `standards/neta-injection-techniques.md` (Tier 3) — 4 operations
+  grounded on McQuarrie & Mick (1996) *JCR* 22(4) rhetorical figures
+  (reversal + substitution) + Ott & Walter (2000) *CSMC* 17(4)
+  intertextuality (parodic allusion) + Lakoff & Johnson (1980)
+  conceptual metaphor (cross-domain mapping) + Thornton (1995)
+  subcultural capital + humor theory anchors (Suls 1972 + Raskin
+  1985 + McGraw & Warren 2010). Explicit label-vs-mechanism
+  disclaimer: 繁中 labels are team synthesis; underlying mechanisms
+  are canonical rhetoric.
+
+- `standards/neta-websearch-pipeline.md` (Tier 2) — Phase A-D
+  lightweight retrieval pipeline. Phase B CoT grounded on Wei et al.
+  (2022) arXiv:2201.11903; ReAct interleaving grounded on Yao et al.
+  (2022) arXiv:2210.03629. Meme canon: Dawkins (1976) + Shifman
+  (2014) MIT Press. Phase C "Strict Replacement Rule" flagged
+  transparently as team synthesis (no primary source, parallel to
+  v4.15.0 action-weight disclaimer pattern). WebSearch-only (no RAG)
+  positioning grounded on Agentic RAG survey (arXiv:2501.09136) +
+  meme half-life data (Cambridge *Humor 2.0* Ch. 16).
+
+1 new protocol:
+
+- `protocols/copy-neta-injection.md` — post-production layer
+  executing Phase A-D pipeline. Invoked as optional overlay after
+  base-framework draft (short-form / mid-form / long-form /
+  light-action). Pre-Phase verifies intake neta opt-in; BLOCKED if
+  opt-in = No or if brief is >6-month evergreen (except for
+  evergreen-only techniques).
+
+1 new rubric:
+
+- `rubrics/neta-safety-gate.md` (SHOULD, with 2 hard legal vetoes)
+  — 5-dimension traffic-light scoring:
+  - Dim 1 Copyright/Trademark (**HARD VETO**): 17 USC § 107 +
+    Campbell v. Acuff-Rose (1994) transformative-use + Louis Vuitton
+    v. Haute Diggity Dog (2007) parody dual-message + JP 著作権法
+    32条 judicial doctrine (主従関係 + 明瞭区別性 per モンタージュ
+    写真事件 最高裁 昭和55年)
+  - Dim 2 景表法 ステマ (**HARD VETO**, JP): 消費者庁 2023-10-01
+    告示 two-prong test (brand-influence + identifiability); brand
+    is liable party
+  - Dim 3 Cringe index (soft): documented failure precedents
+    (McDonald's McDStories 2012, DiGiorno #WhyIStayed 2014, Pepsi
+    Kendall Jenner 2017, ペヤング 2014); Kucuk 2019 brand-hate taxonomy
+  - Dim 4 In-group match (soft): Thornton 1995 + Spence 1973 signaling
+    + Bourdieu 1984
+  - Dim 5 Timeliness (soft): Shifman 2014 + Cambridge *Humor 2.0*
+    Ch. 16 half-life
+  - Verdict rule: hard veto Red → NEEDS_REVISION regardless of soft
+    dimensions (legal risk non-fungible with taste risk)
+
+Research note:
+
+- `research/grounding-v4.16.0.md` — 3-cluster parallel audit trail
+  (neta technique academic + WebSearch pipeline + cringe/legal).
+
+### Changed
+
+- `SKILL.md`: intro + persona + anchors list + Delivers + When to
+  Use updated. Resource Manifest expanded 15 → 17 standards. MAY
+  Gates section now includes Neta Safety gate. Worker + evaluator
+  launch templates include 2 new standards. New workflow variant
+  "Short-Form / Long-Form with Neta Injection" documented.
+
+### Attribution corrections (drifts #20-#24)
+
+- #20: "Hitchon 1991 Adaptation of Lakoff and Johnson..." is informal
+  title; actual cite is ACR 18:752–753 "Effects of metaphorical vs
+  literal headlines"
+- #21: 「次元降下 (jigen kōka)」 is a JP vernacular borrowing from
+  Liu Cixin 三体 (2008) SF — usable as audience-facing JP term for
+  creative/technical communities but NOT rhetoric-canon terminology;
+  formal contexts should use 概念の構造化・簡略化 or cite the
+  academic anchor Cross-domain Mapping (Lakoff & Johnson 1980)
+- #22: McQuarrie & Mick "operations" are rhetorical figures, not
+  "neta injection" — team mapping is interpretive application
+- #23: "Transformative use" was articulated by Leval (1990) *Harvard
+  L. Rev.* 4 years before Campbell (1994) adopted the formulation
+- #24: 主従関係 + 明瞭区別性 are judicial doctrine layers on 著作権法
+  32条, NOT statutory text of the article
+
+### Commit split
+
+Canonical 3-commit split per skill-team convention:
+1. Standards foundation (2 new standards + research note bundled)
+2. Protocol + gate (new protocol + new rubric)
+3. SKILL.md wiring + plugin bump + CHANGELOG
+
+### Not a breaking change
+
+All existing workflows, gates, and standards remain intact. The 4
+new files are additive; the modified SKILL.md extends Resource
+Manifest and adds workflow variant. v4.15.0 consumers continue to
+work unchanged.
+
+### Roadmap completion
+
+v4.16.0 **completes the copywriting-team roadmap** (3-version plan
+from eventual-gathering-canyon.md). Team now has 17 standards + 9
+protocols + 3 checklists + 3 rubrics + 4 grounding research notes.
+
 ## [4.15.0] — 2026-04-14
 
 Light-Action Frameworks: formally recognize PREP 法 and CREMA 法 as

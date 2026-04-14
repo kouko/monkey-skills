@@ -284,10 +284,39 @@ Options differ by form type:
 >
 > AI 根據受眾情緒推薦。
 
+### Q7.5. Neta injection opt-in (Level 3 — default No)
+
+Ask whether the copy may inject pop culture / subculture / meme /
+流行語 references per `neta-injection-techniques.md` (4 techniques:
+**Reversal** / **Substitution** / **Subcultural Capital** /
+**Cross-domain Mapping**) and `neta-websearch-pipeline.md` (Phase A-D
+WebSearch pipeline). Default: **No** (neta injection off).
+
+When to flag **Yes**: brand voice explicitly allows cultural
+references; campaign is SNS-native (ULSSAS-era) UGC-triggering;
+audience profile is well-defined (not broad general-public);
+shelf life ≤6 months (memes expire per Shifman 2014) OR planning
+to use only evergreen techniques (Technique 1 Reversal on classics
++ Technique 4 Cross-domain Mapping).
+
+When to default **No**: brand voice / channel policy forbids neta;
+brief is evergreen (>6-month shelf life) AND not using evergreen-
+only techniques; audience is broad (general-public); high-stakes
+legal / regulated context (finance, healthcare, pharma).
+
+If user sets Yes: route the resulting workflow through **Neta
+Injection Overlay** variant (see `SKILL.md §Workflows`) — base-
+framework draft + `copy-neta-injection.md` Phase A-D + `neta-safety-
+gate.md` SHOULD gate (with hard legal vetoes on copyright + 景表法
+ステマ告示 per 消費者庁 2023-10-01).
+
+Record in Understanding Summary as: `neta_opt_in: Yes | No`.
+
 ### Q8. Grill — challenge assumptions
 
-Using the information collected in Q1-Q7, question the user's intent
-and assumptions to build shared understanding. One question at a time.
+Using the information collected in Q1-Q7.5, question the user's
+intent and assumptions to build shared understanding. One question
+at a time.
 Attach a **recommended answer** to each question. Adapted from the
 3-axis grill in `planning-brainstorming.md` §Task 4b Grill for
 copywriting:

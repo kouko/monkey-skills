@@ -64,6 +64,17 @@ is `N/A` for form_type = short.
   Resolved Ambiguities / Level 2/3 Defaults Accepted). Missing
   subsections → FIXABLE. **Grounded in**:
   `../protocols/copywriting-brainstorming.md` §Task 9.
+- [ ] **CHK-CTW-INTAKE-005 (Neta opt-in declared)** [FIXABLE]:
+  Understanding Summary §Level 2/3 Defaults Accepted (or dedicated
+  field) explicitly states `neta_opt_in: Yes | No`. Default is `No`
+  unless user opted in. Missing declaration → FIXABLE (default to
+  No; but silent omission prevents the Neta Injection Overlay
+  workflow from triggering). If `neta_opt_in: Yes`, downstream
+  gates MUST include `neta-safety-gate.md` SHOULD gate with its
+  hard legal vetoes (copyright + 景表法 ステマ). **Grounded in**:
+  `../protocols/copywriting-brainstorming.md` §Task 7.5 +
+  `../standards/neta-injection-techniques.md` +
+  `../standards/neta-websearch-pipeline.md`.
 
 ### Long-form items (form_type = long)
 
