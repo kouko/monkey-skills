@@ -1,28 +1,28 @@
 # Copywriting Brainstorming Protocol
 
-模糊な文案依頼から明確な制作規格を導き出す。Checklist-driven の
-対話プロセス。完了するまで copy 作成に進まない。
+Derive clear production specs from a vague copy request. A checklist-driven
+dialogue process. Do not proceed to copy creation until completion.
 
 ## Primary Sources
 
 - `../standards/voice-and-tone.md` — Ogilvy / 糸井 / 岩崎 / 18F /
-  Mailchimp voice axes。Task 6 voice 選択の選択肢は本檔 §JP 情緒
-  共鳴傳統 §Ogilvy 長文案 voice 經典原則 に準拠。
+  Mailchimp voice axes. Task 6 voice selection options are based on
+  §JP 情緒共鳴傳統 and §Ogilvy 長文案 voice 經典原則.
 - `../standards/persuasion-psychology-anchor.md` — Schwartz 1966
-  *Breakthrough Advertising* 5 levels of awareness。Task 5 の長文
-  awareness level 欄位はここに準拠（Unaware / Problem-Aware /
-  Solution-Aware / Product-Aware / Most-Aware）。
+  *Breakthrough Advertising* 5 levels of awareness. Task 5 long-form
+  awareness level field is based here (Unaware / Problem-Aware /
+  Solution-Aware / Product-Aware / Most-Aware).
 - `../standards/short-form-catchcopy-canon.md` — §5 種切入点決策樹
-  （利益 / 恐懼 / 顛覆 / 呼喚 / 提問）。Task 7 短文 approach 選択
-  はここに準拠。
+  (利益 / 恐懼 / 顛覆 / 呼喚 / 提問). Task 7 short-form approach
+  selection is based here.
 - `../standards/long-form-pasona-canon.md` — 旧 / 新 / PASBECONA
-  の使い分け規範。Task 7 長文 framework 推薦の根拠。
+  usage rules. Basis for Task 7 long-form framework recommendation.
 - `../standards/mid-form-beaf-canon.md` — BEAF (Benefit → Evidence
-  → Advantage → Feature) の適用範囲（樂天 / Amazon / POP / 説明会）。
-- 構造先例：`../../planning-team/protocols/planning-brainstorming.md`
+  → Advantage → Feature) scope (楽天 / Amazon / POP / briefing).
+- Structural precedent: `../../planning-team/protocols/planning-brainstorming.md`
   — sequential checklist + Socratic grill + Understanding Summary +
-  user confirmation gate の canonical pattern。本 protocol は同構造を
-  copywriting 向けに書き直したもの。
+  user confirmation gate canonical pattern. This protocol rewrites that
+  structure for copywriting use.
 
 ## Hard Gate
 
@@ -32,267 +32,380 @@ Do NOT load `write-long-form-copy.md` / `write-mid-form-copy.md` /
 subagents **until** this checklist is fully completed **and** the
 user has explicitly approved the Understanding Summary.
 
-Level 1 欄位 (form type / product / audience / form-specific must
-fields) が揃わない状態で先に進んだ場合は `intake-completeness-checklist.md`
-MUST gate が FAIL_FATAL → NEEDS_REVISION を返し BLOCKED となる。
+Level 1 fields (form type / product / audience / form-specific must
+fields) that remain missing will cause `intake-completeness-checklist.md`
+MUST gate to return FAIL_FATAL → NEEDS_REVISION, resulting in BLOCKED.
+
+## Template Rendering Rule
+
+Q1-Q10 templates below are written in English as the baseline. Worker
+MUST render each question in the user's `output_language` at runtime:
+
+- `output_language: ja` → render in 日本語
+- `output_language: en` → render in English (baseline)
+- `output_language: zh-TW` → render in 繁體中文
+
+Two representative questions (Q2 audience, Q7 framework) are shown
+fully rendered in all 3 languages below as pattern examples. For
+other questions, worker applies the same localization style.
 
 ## Checklist
 
-Complete each task in order. Each task requires user input (または
-明示的な「推薦採用」) before proceeding. One question per message.
-Prefer multiple choice with **推薦回答** when possible.
+Complete each task in order. Each task requires user input (or an
+explicit "adopt recommendation") before proceeding. One question per
+message. Prefer multiple choice with a **recommended answer** when
+possible.
 
-### 1. Understand the request
+### Q1. Understand the request
 
-使用者の依頼を**判断せずに**読む。「キャッチコピーお願いします」
-レベルの曖昧さでも OK。この段階では質問しない。使用者が literally
-何を言ったかを 1-2 文で言い換えて確認する。
+Read the user's request **without judging**. Even a vague request
+like "write me a キャッチコピー" is OK at this stage. Do not ask
+questions here. Paraphrase what the user literally said in 1-2
+sentences to confirm.
 
-- ヤング (1988 日譯) 『アイデアのつくり方』の **材料収集** 段階に
-  相当。判断せずに情報を吸収する。
-- 依頼文に既に form type / product / audience 等が書かれていれば
-  後続 Task でその情報を再度質問しない（「可查的不問」原則）。
+- Corresponds to ヤング (1988 JP translation) 『アイデアのつくり方』
+  **material collection** stage. Absorb information without judging.
+- If the request already contains form type / product / audience,
+  do not re-ask those in subsequent Tasks ("don't ask what you can look up" rule).
 
-### 2. Identify form type
+### Q2. Identify form type
 
-何を書くかを確定する。複数選択：
+Determine what to write. Multiple choice:
 
-- **Long-form**（LP / sales letter / 記事広告 / メルマガ）
-- **Mid-form**（EC 商品説明 / 樂天 / Amazon / 店頭 POP / 説明会）
-- **Short-form**（キャッチコピー / tagline / headline / SNS / banner）
-- **Ideation Workshop**（value prop から候補角度を発散 → 後続 protocol の種）
-- **Audit**（既存文案の review + 改善提案）
+- **Long-form** (LP / sales letter / advertorial / mail-magazine)
+- **Mid-form** (EC product description / 楽天 / Amazon / in-store POP / briefing)
+- **Short-form** (キャッチコピー / tagline / headline / SNS / banner)
+- **Ideation Workshop** (diverge candidate angles from value prop → seed for subsequent protocol)
+- **Audit** (review + improvement proposal for existing copy)
 
-依頼文脈から推薦する（例：「LP の headline 10 本」→ Ideation or
-Short-form）。曖昧なら確認。
+Recommend based on the request context (e.g., "10 LP headlines" →
+Ideation or Short-form). Ask for clarification if ambiguous.
 
-### 3. Clarify product / service
+**[Triple-language rendering example — Q2]**
 
-**Level 1 Must 欄位**（欠けたら BLOCKED）。
+> **ja**: 何を書きますか？ 選択肢：
+> - **長文案**（LP / セールスレター / 記事広告 / メルマガ）
+> - **中文案**（EC 商品説明 / 楽天 / Amazon / 店頭 POP / 説明会）
+> - **短文案**（キャッチコピー / tagline / headline / SNS / banner）
+> - **発想ワークショップ**（value prop から候補角度を発散 → 後続 protocol の種）
+> - **審稿**（既存文案の review + 改善提案）
+>
+> 依頼文脈から推薦します（例：「LP の headline 10 本」→ 発想 or 短文案）。曖昧なら確認します。
 
-- 何の商品 / サービスか
-- 主要 value proposition（1 文で）
-- すでに PRODUCT-SPEC.md / planning-team 出力があればそれを指し、
-  読んで取得する（「可查的不問」）
+> **en**: What do we write? Options:
+> - **Long-form** (LP / sales letter / advertorial / mail-magazine)
+> - **Mid-form** (EC product description / 楽天 / Amazon / in-store POP / briefing)
+> - **Short-form** (キャッチコピー / tagline / headline / SNS / banner)
+> - **Ideation Workshop** (diverge candidate angles from value prop → seed for subsequent protocol)
+> - **Audit** (review + improvement proposal for existing copy)
+>
+> I'll recommend based on your request context (e.g., "10 LP headlines" → Ideation or Short-form). If ambiguous, I'll ask.
 
-不明確なまま進むと 5 切入点 / Schwartz level / BEAF benefit 段
-いずれも選択不能。依頼者が value prop を言語化できない場合は
-`planning-team` を推薦し、BLOCKED で返す。
+> **zh-TW**: 要寫什麼？ 選項：
+> - **長文案**（LP / 銷售信 / 業配文 / 電子報）
+> - **中文案**（EC 商品說明 / 樂天 / Amazon / 店頭 POP / 說明會）
+> - **短文案**（キャッチコピー / tagline / headline / SNS / banner）
+> - **發想工作坊**（從 value prop 發散候選角度 → 後續 protocol 的種子）
+> - **審稿**（既有文案的 review + 改善提案）
+>
+> 我會根據你的需求脈絡推薦（例：「LP headline 10 條」→ 發想 or 短文案）。不明確的話會確認。
 
-### 4. Identify target audience
+### Q3. Clarify product / service
 
-**Level 1 Must 欄位**（欠けたら BLOCKED）。form type により深さ
-が変わる。
+**Level 1 Must field** (BLOCKED if missing).
 
-- **Short-form** の場合：target emotion / pain を優先確認
-  （「どんな気持ちに寄り添いたいか / どんな痛点を突きたいか」）
-  → Task 7 の 5 切入点 map の前提。
-- **Long-form** の場合：demographic + **Schwartz awareness level**
-  （5 段階：Unaware / Problem-Aware / Solution-Aware /
-  Product-Aware / Most-Aware）を確認。推薦：商品種別 + 既存
-  市場成熟度から推論して AI が提案 → 使用者が確認 or 修正。
-- **Mid-form** の場合：channel 前提の受眾（樂天利用者 / Amazon
-  prime 会員 / POP 店頭客 等）を確認。
-- **Ideation / Audit** は上 3 type の下位 frame として質問。
+- What product / service?
+- Core value proposition (in 1 sentence)
+- If PRODUCT-SPEC.md / planning-team output already exists, point to
+  it and read to extract ("don't ask what you can look up")
 
-### 5. Form-specific Level 1 fields（branching）
+If the user proceeds without clarity, the 5 approaches / Schwartz
+level / BEAF benefit stage all become unselectable. If the user cannot
+verbalize the value prop, recommend `planning-team` and return BLOCKED.
 
-form type に応じて以下の追加必須 fields を取得する。
+### Q4. Identify target audience
+
+**Level 1 Must field** (BLOCKED if missing). Depth varies by form type.
+
+- **Short-form**: Prioritize confirming target emotion / pain
+  ("What feeling do you want to address? / What pain point to target?")
+  → prerequisite for the 5-approach map in Q7.
+- **Long-form**: Confirm demographic + **Schwartz awareness level**
+  (5 levels: Unaware / Problem-Aware / Solution-Aware /
+  Product-Aware / Most-Aware). Recommendation: AI infers from product
+  type + market maturity → user confirms or corrects.
+- **Mid-form**: Confirm channel-assumption audience (楽天 users /
+  Amazon Prime members / in-store POP shoppers, etc.).
+- **Ideation / Audit**: Ask under the umbrella of the relevant form
+  type above.
+
+### Q5. Form-specific Level 1 fields (branching)
+
+Obtain additional required fields based on form type.
 
 - **Long-form**:
-  - 字數範囲（例：800-1200 / 2000-3000 / 5000+ 字）
-  - Schwartz awareness level（Task 4 で未確定なら確定）
-  - `long-form-pasona-canon.md` §使い分け表 に基づき framework
-    推薦：短中文 → 旧 PASONA、中長文 → 新 PASONA、高説得厚 →
-    PASBECONA。
+  - Word-count range (e.g., 800-1,200 / 2,000-3,000 / 5,000+ chars)
+  - Schwartz awareness level (confirm here if not settled in Q4)
+  - Framework recommendation based on `long-form-pasona-canon.md`
+    §usage table: short-mid text → 旧 PASONA, mid-long text →
+    新 PASONA, heavy persuasion → PASBECONA.
 - **Mid-form**:
-  - benefits list（**具體條列 3+ 項**、抽象語不可）
-  - channel（樂天 / Amazon JP / 店頭 POP / 説明会）
+  - Benefits list (**concrete 3+ items**, no abstract terms)
+  - Channel (楽天 / Amazon JP / in-store POP / briefing)
 - **Short-form**:
-  - target emotion / pain（Task 4 で既取得ならスキップ）→
-    5 切入点 map の前提
-  - intended channel（SNS / banner / tagline / CM 等）
-  - 字數上限（預設 15 字、JP 7-15 字帯を canonical とする）
+  - Target emotion / pain (skip if already obtained in Q4) →
+    prerequisite for 5-approach map
+  - Intended channel (SNS / banner / tagline / CM, etc.)
+  - Character limit (default 15 chars; JP 7-15 char band is canonical)
 - **Ideation Workshop**:
-  - 候補数（預設 5、3-5 範囲推薦）
-  - value prop source（user-supplied / planning-team /
-    PRODUCT-SPEC / 他）
+  - Number of candidates (default 5, recommend 3-5 range)
+  - Value prop source (user-supplied / planning-team /
+    PRODUCT-SPEC / other)
 - **Audit**:
-  - existing copy 全文（summary でなく原文必須）
-  - review focus（framework / ethics / voice / form-appropriate /
-    全体）
+  - Existing copy full text (original required, not a summary)
+  - Review focus (framework / ethics / voice / form-appropriate / overall)
 
-### 6. Voice / tone preference（Level 2）
+### Q6. Voice / tone preference (Level 2)
 
-使用者にとって望ましい語感を複数選択 + 推薦で確認：
+Confirm the user's preferred voice feel via multiple choice + recommendation:
 
-- **糸井系**（状態提案・曖昧余地・助詞結尾）—『voice-and-tone.md』
-  §JP 情緒共鳴傳統 §糸井。
-- **岩崎系**（人生観・季節感・いのち温度）— 同 §岩崎。
-- **眞木系**（掛詞・音韻・短文技巧）— 代表作「恋が着せ、愛が
-  脱がせる。」系。
-- **谷山系**（入口設計・「書きたいこと vs 言いたいこと」の分離）—
-  `../standards/ideation-taniyama-discipline.md` 全体。
-- **Ogilvy系**（benefit-clear・respect the reader・fact-based）—
-  `voice-and-tone.md` §Ogilvy 長文案 voice 經典原則。
-- **預設**（AI が audience + form + channel から推薦、使用者承認で
-  Level 3 扱いに降格）。
+- **糸井系** (state-proposal, ambiguity, particle endings) —
+  `voice-and-tone.md` §JP 情緒共鳴傳統 §糸井.
+- **岩崎系** (life philosophy, seasonal sensibility, warmth of life) —
+  same §岩崎.
+- **眞木系** (掛詞, phonetics, short-form craft) — representative work:
+  「恋が着せ、愛が脱がせる。」lineage.
+- **谷山系** (entry design, separating "what you want to write" from
+  "what you want to say") — `../standards/ideation-taniyama-discipline.md`
+  overall.
+- **Ogilvy系** (benefit-clear, respect the reader, fact-based) —
+  `voice-and-tone.md` §Ogilvy 長文案 voice 經典原則.
+- **Default** (AI recommends based on audience + form + channel; user
+  approval demotes to Level 3).
 
-ブランドに既存 voice guide があれば honor を優先し本 Task をスキップ。
+If the brand already has a voice guide, honor it and skip this Task.
 
-### 7. Framework / approach preference（Level 2 — branching）
+### Q7. Framework / approach preference (Level 2 — branching)
 
-form type に応じて選択肢が異なる：
+Options differ by form type:
 
 - **Long-form**:
-  - 旧 PASONA（短中文、DM / メール）
-  - 新 PASONA（中長文 LP / メルマガ、Affinity 入口）
-  - PASBECONA（2000+ 字帯、B/E/C で説得厚重増）
-  - 推薦は Task 5 字數範囲 + Task 4 awareness level に基づき AI
-    提示（未確定なら Solution-Aware 既定 + 新 PASONA 既定）。
+  - 旧 PASONA (short-mid text, DM / email)
+  - 新 PASONA (mid-long LP / mail-magazine, Affinity entry)
+  - PASBECONA (2,000+ char band, B/E/C adds persuasion depth)
+  - Recommendation based on Q5 word-count range + Q4 awareness level;
+    AI proposes (if undetermined, default to Solution-Aware + 新 PASONA).
 - **Mid-form**:
-  - BEAF (Benefit → Evidence → Advantage → Feature) 既定。
-  - channel により順序 tweak（POP = Benefit-heavy / 説明会 =
-    Evidence-heavy 等）を確認。
+  - BEAF (Benefit → Evidence → Advantage → Feature) default.
+  - Confirm channel-dependent order tweaks (POP = Benefit-heavy /
+    briefing = Evidence-heavy, etc.).
 - **Short-form**:
-  - 5 切入点（利益 / 恐懼 / 顛覆 / 呼喚 / 提問）より選択。
-    `short-form-catchcopy-canon.md` §5 種切入点決策樹 に基づき
-    audience emotion から AI が推薦。
+  - 5 approaches (利益 / 恐懼 / 顛覆 / 呼喚 / 提問).
+    AI recommends based on audience emotion per
+    `short-form-catchcopy-canon.md` §5 種切入点決策樹.
 - **Ideation**:
-  - 曼陀羅 8 fan-out + VS / VS 単独 / 短文系 5 切入点組込み
-    いずれかを `copy-ideation-parallel.md` §Phase 1 工具組合決策 に
-    従い推薦。
+  - Mandal-Art 8 fan-out + VS / VS standalone / short-form 5-approach
+    integration — recommend per `copy-ideation-parallel.md` §Phase 1
+    tool combination decision.
 - **Audit**:
-  - form type 既知なら同じ framework を適用、未知なら
-    `copy-audit.md` の Type ID step で先行推定。
+  - If form type is known, apply the same framework; if unknown,
+    use `copy-audit.md` Type ID step for preliminary estimation.
 
-### 8. Grill — challenge assumptions
+**[Triple-language rendering example — Q7]**
 
-Task 1-7 で収集した情報を基に、使用者の意図と仮定を質問して
-共通理解を構築する。一度に一つの質問。各質問に**推薦回答**を
-添える。`planning-brainstorming.md` §Task 4b Grill の 3 軸を
-copywriting 向けに転写：
+> **ja**: フレームワーク / アプローチを選んでください：
+>
+> **長文案の場合**:
+> - 旧 PASONA（短中文、DM / メール向け）
+> - 新 PASONA（中長文 LP / メルマガ、Affinity 入口）— **推薦**
+> - PASBECONA（2000 字+、B/E/C で説得力を厚くする）
+>
+> Task 5 の字數範囲 + Task 4 の awareness level に基づき推薦します。
+> 未確定の場合は Solution-Aware + 新 PASONA をデフォルトとします。
+>
+> **短文案の場合**:
+> - 利益 / 願望
+> - 恐怖 / 痛点
+> - 顛覆常識
+> - 目標呼喚
+> - 提問互動
+>
+> audience の emotion から AI が推薦します。
 
-- **前提への挑戦**: 「X とおっしゃいましたが、受眾の awareness
-  level を考えると Y の approach のほうが効果的では？」例：
-  「Problem-Aware 受眾に直接 Offer を closer する指定は Schwartz
-  1966 core rule に反します — 新 PASONA で Affinity から入るのが
-  canonical ですが、意図的ですか？」
-- **依存関係の深掘り**: 「もし audience 仮定が間違っていたら、
-  文案全体を書き直す必要がありますか？ 主要欄位を確定させて
-  から発散すれば後戻りが少なくなります」
-- **境界条件**: 「倫理的に避けるべき表現はありますか？ 例：
-  『業界 No.1』『24 時間限定』など景品表示法抵触リスクのある
-  最上級 / 稀少性表現。競合を貶す、偽の期限、偽の testimonial
-  も同様です」
-- **voice 衝突の確認**: 「既存ブランド voice guide と Task 6
-  選択が衝突していませんか？ voice guide は framework より優先
-  です（`voice-and-tone.md` §Framework と voice の接点）」
+> **en**: Choose a framework / approach:
+>
+> **For long-form**:
+> - 旧 PASONA (short-mid text, for DM / email)
+> - 新 PASONA (mid-long LP / mail-magazine, Affinity entry) — **recommended**
+> - PASBECONA (2,000+ chars, B/E/C adds persuasion depth)
+>
+> Recommendation based on Q5 word-count range + Q4 awareness level.
+> If undetermined, defaults to Solution-Aware + 新 PASONA.
+>
+> **For short-form**:
+> - 利益 / Desire
+> - 恐怖 / Pain
+> - 顛覆常識 / Disrupt convention
+> - 目標呼喚 / Target call
+> - 提問互動 / Question interaction
+>
+> AI recommends based on audience emotion.
 
-読めば分かる質問（依頼文 / PRODUCT-SPEC / 既存ブランドアセット
-から取得可能なもの）は使用者に聞かず自分で調べる。未解決の分岐が
-なくなるか、使用者が先に進みたいと言うまで続ける。
+> **zh-TW**: 選擇框架 / 切入方式：
+>
+> **長文案**:
+> - 舊 PASONA（短中文、DM / 電子郵件用）
+> - 新 PASONA（中長文 LP / 電子報、Affinity 入口）— **推薦**
+> - PASBECONA（2000 字+、B/E/C 增加說服深度）
+>
+> 根據 Q5 字數範圍 + Q4 awareness level 推薦。
+> 未確定時預設為 Solution-Aware + 新 PASONA。
+>
+> **短文案**:
+> - 利益 / 願望
+> - 恐怖 / 痛點
+> - 顛覆常識
+> - 目標呼喚
+> - 提問互動
+>
+> AI 根據受眾情緒推薦。
 
-### 9. Produce Understanding Summary
+### Q8. Grill — challenge assumptions
 
-Task 10 の user confirmation gate に進む前に、理解の要約を構造化
-して提示：
+Using the information collected in Q1-Q7, question the user's intent
+and assumptions to build shared understanding. One question at a time.
+Attach a **recommended answer** to each question. Adapted from the
+3-axis grill in `planning-brainstorming.md` §Task 4b Grill for
+copywriting:
+
+- **Challenge premises**: "You mentioned X, but considering the
+  audience's awareness level, would approach Y be more effective?"
+  Example: "Specifying a direct Offer closer for a Problem-Aware
+  audience violates the Schwartz 1966 core rule — entering via
+  Affinity with 新 PASONA is canonical. Was this intentional?"
+- **Dig into dependencies**: "If the audience assumption turns out to
+  be wrong, would the entire copy need rewriting? Locking the key
+  fields before divergence reduces backtracking."
+- **Boundary conditions**: "Are there expressions to ethically avoid?
+  For example, '業界 No.1' or '24 時間限定' carry 景品表示法 risk
+  for superlative / scarcity claims. Disparaging competitors, fake
+  deadlines, and fabricated testimonials are also flagged."
+- **Voice conflict check**: "Does the existing brand voice guide
+  conflict with the Q6 selection? The voice guide takes priority over
+  framework (`voice-and-tone.md` §Framework と voice の接点)."
+
+Do not ask questions whose answers can be found in the request text /
+PRODUCT-SPEC / existing brand assets — look them up yourself. Continue
+until no unresolved branches remain, or the user says to move on.
+
+### Q9. Produce Understanding Summary
+
+Before proceeding to the Q10 user confirmation gate, present a
+structured summary of understanding:
 
 ```
 ## Understanding Summary
 
 ### Request
-[Task 1 で言い換えた使用者の依頼]
+[User's request paraphrased in Q1]
 
 ### Form Type
 [long / mid / short / ideation / audit]
 
 ### Product / Value Proposition
-[Task 3 で確定した内容]
+[Confirmed in Q3]
 
 ### Target Audience
 [demographic / persona / Schwartz level (long) / emotion (short)]
 
 ### Form-Specific Spec
-[Task 5 で確定した字數・channel・benefits・候補数 等]
+[Confirmed in Q5 — word count / channel / benefits / candidate count, etc.]
 
 ### Voice Reference
-[Task 6 選択 — 糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / 預設]
+[Q6 selection — 糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / default]
 
 ### Framework / Approach
-[Task 7 選択 — 新 PASONA / BEAF / 利益切入 等 + 推薦根拠]
+[Q7 selection — 新 PASONA / BEAF / 利益切入, etc. + recommendation basis]
 
 ### Confirmed Assumptions
-[Task 8 grill で検証された仮定]
+[Assumptions verified in Q8 grill]
 
 ### Resolved Ambiguities
-[曖昧だったが解決された問題]
+[Issues that were ambiguous but resolved]
 
 ### Level 2/3 Defaults Accepted
-[使用者が選ばず預設採用したもの — intake-completeness-checklist
- の PASS_WITH_NOTES 対象]
+[Items where the user did not choose and adopted the AI default —
+ intake-completeness-checklist PASS_WITH_NOTES target]
 ```
 
-### 10. User confirmation gate
+### Q10. User confirmation gate
 
-Understanding Summary を提示した上で以下の選択肢を示す：
+Present the Understanding Summary and offer the following options:
 
-- **✓ 確認開始撰写** → 次 phase の protocol を load（form type に
-  応じて `write-long-form-copy.md` / `write-mid-form-copy.md` /
+- **Confirm — start writing** → load the next-phase protocol per form
+  type (`write-long-form-copy.md` / `write-mid-form-copy.md` /
   `write-short-form-copy.md` / `copy-ideation-parallel.md` /
-  `copy-audit.md`）
-- **✗ 調整某項** → 当該 Task に戻って再確認
-- **↻ 重新來過** → Task 1 から再スタート（使用者が依頼内容を
-  根本的に変更した場合）
+  `copy-audit.md`)
+- **Adjust item** → return to the relevant Task for re-confirmation
+- **Start over** → restart from Q1 (when the user fundamentally
+  changes the request)
 
-使用者の明示的な ✓ 確認を得るまで次 phase に進まない。**silent
-proceed は禁止**。
+Do not proceed to the next phase without the user's explicit
+confirmation. **Silent proceed is prohibited**.
 
 ## Rules
 
-- **一度に一つの質問**。複数の質問を一つのメッセージにまとめない
-- **Multiple choice 優先**。open-ended より選択肢を提示する
-- **各質問に推薦回答を添える**。聞くだけでなく提案もする
-  （Task 6/7 では audience + form から AI 推論した推薦を提示）
-- **可查的不問**。依頼文 / PRODUCT-SPEC / 既存 voice guide から
-  取得可能な情報は使用者に聞かず自分で読む
-- **Understanding Summary は hard gate**。使用者の ✓ 確認を得る
-  まで next phase の protocol を load しない
-- **Level 1 欠落 → BLOCKED**。form type / product / audience /
-  form-specific must のいずれかが一輪質問後も未取得なら
-  `intake-completeness-checklist.md` で FAIL_FATAL → NEEDS_REVISION
-- **Level 2 預設採用は Summary に明示**。使用者が選ばず AI 推薦を
-  採用した項目は Understanding Summary §Level 2/3 Defaults
-  Accepted に disclosure。silent default は禁止（intake gate で
-  FAIL_FIXABLE）
-- **voice guide > framework**。既存ブランド voice guide と Task 6
-  選択が衝突する場合は voice guide を優先
-- **grill を省略しない**。依頼が明確な場合でも Task 8 は簡略化
-  可だが完全スキップしない（最低 1 問：倫理境界条件）
+- **One question at a time**. Do not bundle multiple questions into
+  one message.
+- **Multiple choice first**. Prefer options over open-ended questions.
+- **Attach a recommended answer to each question**. Do not just ask —
+  also propose (in Q6/Q7, present AI-inferred recommendations based on
+  audience + form).
+- **Don't ask what you can look up**. Read information obtainable from
+  the request text / PRODUCT-SPEC / existing voice guide before asking
+  the user — only ask about missing parts.
+- **Understanding Summary is a hard gate**. Do not load the next-phase
+  protocol until the user gives explicit confirmation.
+- **Level 1 missing → BLOCKED**. If any of form type / product /
+  audience / form-specific must fields remain unobtained after one
+  round of questioning, `intake-completeness-checklist.md` returns
+  FAIL_FATAL → NEEDS_REVISION.
+- **Level 2 default adoption is disclosed in Summary**. Items where
+  the user did not choose and AI recommendation was adopted are
+  disclosed in Understanding Summary §Level 2/3 Defaults Accepted.
+  Silent defaults are prohibited (intake gate FAIL_FIXABLE).
+- **voice guide > framework**. If the existing brand voice guide
+  conflicts with the Q6 selection, voice guide takes priority.
+- **Do not skip the grill**. Even when the request is clear, Q8 may
+  be abbreviated but not fully skipped (minimum 1 question: ethics
+  boundary condition).
 
 ## Anti-Patterns
 
-- **批量提問**：「form type は？ audience は？ 字數は？ voice は？」
-  を 1 メッセージで並べる。使用者の認知負担が増え、回答の品質が
-  下がる。一問一答を守る
-- **Task 8 grill を省略して Task 9 に直行**：assumption 検証なしに
-  Summary を書くと、silent assumption が含まれたまま next phase に
-  渡り、後工程で「audience 仮定が違った」の手戻りが発生する
-- **Level 1 未取得で next phase に進む**：form type / product /
-  audience のいずれかが欠けた状態で `write-*.md` を load するのは
-  intake gate 違反。必ず BLOCKED を返す
-- **voice 選択肢を open-ended で聞く**：「どんな声で書きましょうか」
-  は使用者が答えられない。糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy /
-  預設の multiple choice + 各系の代表作サンプル提示で負担を減らす
-- **依頼文に answer が書いてあるのに質問する**：使用者が「Amazon JP
-  の商品説明 800 字」と明示しているのに「form type は？」と聞くの
-  は信頼を失う。読める情報は読んでから不足分のみ質問する
-- **推薦なしの質問**：「5 切入点どれにしますか」だけで推薦を添えない。
-  AI は audience emotion + 商品タイプから推論して「利益切入を推薦
-  します、理由は〜」と添えるのが canonical
-- **silent default で進める**：Level 2 を使用者が選ばなかったから
-  といって AI 判断で採用しつつ Summary に書かない。必ず §Defaults
-  Accepted に disclosure する
-- **✓ 確認を取らずに next protocol を load**：Understanding Summary
-  を提示した瞬間に「では write-long-form-copy.md を読みます」と
-  進める。使用者の明示的 ✓ を待つ
+- **Batch questioning**: "Form type? Audience? Word count? Voice?" all
+  in one message. Increases user's cognitive load and lowers answer
+  quality. Follow the one-question-per-message rule.
+- **Skipping Q8 grill to jump to Q9**: Writing the Summary without
+  assumption verification allows silent assumptions to pass through to
+  the next phase, causing "audience assumption was wrong" rework
+  downstream.
+- **Proceeding to next phase with Level 1 missing**: Loading
+  `write-*.md` with form type / product / audience incomplete is an
+  intake gate violation. Always return BLOCKED.
+- **Asking voice preference open-ended**: "What voice should we write
+  in?" is unanswerable for the user. Reduce burden with 糸井 / 岩崎 /
+  眞木 / 谷山 / Ogilvy / default multiple choice + representative work
+  samples for each.
+- **Asking when the answer is already in the request**: User writes
+  "Amazon JP product description, 800 chars" and you ask "What form
+  type?" — this erodes trust. Read what you can, then ask only about
+  gaps.
+- **Questions without recommendations**: Asking "Which of the 5
+  approaches?" without a recommendation. AI should infer from audience
+  emotion + product type and add "I recommend 利益切入, because ~".
+- **Silent default adoption**: AI adopts its own recommendation for
+  Level 2 because the user did not choose, but does not write it in
+  the Summary. Must disclose in §Defaults Accepted.
+- **Loading next protocol without confirmation**: Presenting the
+  Understanding Summary and immediately "Now loading
+  write-long-form-copy.md". Wait for the user's explicit confirmation.

@@ -1,179 +1,178 @@
 # Copywriting Handoff Format Protocol
 
-copywriting-team 候補と完成品の標準出力フォーマット + pipeline
-progress reporting。候補の提示方法と使用者介入点の規範。
+Standard output format for copywriting-team candidates and finished copy + pipeline
+progress reporting. Defines candidate presentation methods and user intervention points.
 
 ## Primary Sources
 
-- `copy-ideation-parallel.md` §Phase 3 Handoff — 既に候補出力
-  フォーマット（優勝 3-5 本 + 「なぜ良いか」3 項 + 次点 3-5 本 +
-  A 型図解）を定義。本 protocol はそれを一般化し、ideation 以外
-  の workflow（long / mid / short / audit）にも適用可能な
-  共通フォーマットとして再定義する。
+- `copy-ideation-parallel.md` §Phase 3 Handoff — already defines the candidate
+  output format (3-5 winners + "なぜ良いか" 3 items + 3-5 runner-ups +
+  A-type diagram). This protocol generalizes that into a common format
+  applicable beyond ideation to long / mid / short / audit workflows.
 - `copywriting-brainstorming.md` §Task 9 Understanding Summary —
-  intake フェーズの構造化 spec。handoff 時に再掲して candidate
-  との対応関係を明示する。
+  structured spec from the intake phase. Re-present it at handoff to
+  show correspondence between the spec and the candidates.
 - `../standards/ideation-taniyama-discipline.md` §「なんかいいよね
-  禁止」— 3 項理由の義務化の根拠。
+  禁止」— basis for the mandatory 3-item rationale.
 - `../standards/short-form-catchcopy-canon.md` §5 種切入点決策樹 +
-  `../standards/long-form-pasona-canon.md` — approach / framework
-  label の vocabulary 出典。
+  `../standards/long-form-pasona-canon.md` — vocabulary source for
+  approach / framework labels.
 
 ## Section 1: Candidate Output Format
 
-候補（短文 headline / 長文 draft / 中文 BEAF block いずれも）
-を提示するときは必ず以下の 6 要素を明示する：
+When presenting candidates (short-form headlines / long-form drafts /
+mid-form BEAF blocks), always include the following 6 elements:
 
 ```
-候補 #N：[文案本體]
-├─ voice reference: [糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / 預設]
+Candidate #N: [copy body]
+├─ voice reference: [糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / default]
 ├─ approach / framework:
-│   - short-form: 5 切入点のいずれか（利益 / 恐懼 / 顛覆 / 呼喚 / 提問）
-│   - mid-form: BEAF 順序 + channel tag（樂天 / Amazon / POP / 説明会）
-│   - long-form: PASONA 系 framework 名（旧 / 新 / PASBECONA）+ 段別
-│   - ideation: Mandal-Art 方向 + VS probability
-├─ VS probability（ideation Phase 1 産出時のみ）: p = 0.xx
-├─ 為何好（3 項、必須、「なんかいいよね」禁止）:
-│   1. 何が読者に何を伝えるか
-│   2. 既存の類似コピーに対して何が新しいか
-│   3. ターゲットの生活 / 文脈で何が共鳴するか
-└─ 倫理 self-check: [通過 / 有疑慮 + 説明]
-    - 景品表示法 / FTC / ステマ告示 の risky 表現 self-scan 結果
-    - 疑慮ありの場合は ethics-checklist.md MUST gate に委ねる旨を明示
+│   - short-form: one of the 5 approaches (利益 / 恐懼 / 顛覆 / 呼喚 / 提問)
+│   - mid-form: BEAF order + channel tag (楽天 / Amazon / POP / briefing)
+│   - long-form: PASONA series framework name (旧 / 新 / PASBECONA) + per-stage
+│   - ideation: Mandal-Art direction + VS probability
+├─ VS probability (only for ideation Phase 1 output): p = 0.xx
+├─ Why it works (3 items, mandatory, 「なんかいいよね」禁止):
+│   1. What is conveyed to whom
+│   2. What is new relative to existing similar copy
+│   3. What resonates in the target's life / context
+└─ ethics self-check: [pass / concern + explanation]
+    - Self-scan result for risky expressions under 景品表示法 / FTC / ステマ告示
+    - If concern exists, note that it will be escalated to the ethics-checklist.md MUST gate
 ```
 
-### Long-form draft 提示のバリエーション
+### Long-form draft presentation variation
 
-長文案 draft（2000 字+）の候補は full text を 1 候補だけ提示する
-ことが多い。その場合：
+Long-form drafts (2,000+ chars) often present only 1 full-text candidate.
+In that case:
 
-- 上 block の 6 要素は冒頭 metadata として提示
-- 段別（Affinity / Problem / Offer / Narrowing / Action 等）に
-  subsection heading を付け、各段で使った voice / 心理技法の
-  annotation を添える
-- 字數カウントを末尾に記載（`{actual} / {target range}` 形式）
+- Present the 6-element block above as opening metadata
+- Add subsection headings per stage (Affinity / Problem / Offer /
+  Narrowing / Action, etc.), annotating the voice / psychology technique
+  used in each stage
+- Include word count at the end (`{actual} / {target range}` format)
 
-### Audit 時の Variant rewrite フォーマット
+### Audit variant rewrite format
 
-`copy-audit.md` Phase 3 で rewrite variants を提示する場合は上の
-6 要素 block を variant ごとに並列提示。各 variant の冒頭に「原文
-との差分」要約を 1 文添える。
+When presenting rewrite variants in `copy-audit.md` Phase 3, display the
+6-element block side by side for each variant. Add a 1-sentence "diff from
+original" summary at the top of each variant.
 
 ## Section 2: Progress Reporting Templates
 
-pipeline が multi-phase に入るとき、使用者への透明性を保つために
-以下のテンプレートで報告する。
+When the pipeline enters multi-phase operation, maintain user transparency
+using the following templates.
 
-### Phase 啟動メッセージ
-
-```
-[Claude] ✓ Phase {X}-{Y} 啟動：{protocol_name}
-  入力: {input summary, 1 line}
-  予定: {phase 内の step sequence}
-```
-
-例：
-```
-[Claude] ✓ Phase 1-3 啟動：copy-ideation-parallel.md Phase 1 発散
-  入力: 商品=X, audience=Y, form=short
-  予定: 曼陀羅 8 方向 dispatch → VS 候補生成 → 64 候補集計
-```
-
-### Step-by-step 進度條
+### Phase start message
 
 ```
-⏳ Step 1/8: 曼陀羅方向 decision — 8 方向を選定中
-✓ Step 1/8: 曼陀羅方向 decision — {情感觸發 / 掛詞 / 逆説 / …}
-⏳ Step 2/8: subagent dispatch — 8 並行 agent 起動
-✓ Step 2/8: subagent dispatch — 8 agent 並行走行中
-…
+[Claude] Phase {X}-{Y} started: {protocol_name}
+  Input: {input summary, 1 line}
+  Plan: {step sequence within the phase}
 ```
 
-未完了は `⏳`、完了は `✓`。失敗は `✗` + 原因 1 行。skip した step
-は `—` + skip 理由 1 行。
-
-### Phase 完了 checkpoint メッセージ
-
+Example:
 ```
-[Claude] ✓ Phase {X} 完了：{phase_name}
-  生成物: {artifact summary}
-  所要: {step count}, {duration if relevant}
-
-次の選択肢:
-  ▶ continue — 直接 Phase {X+1} に進む
-  ⏸ adjust — Phase {X} 結果を調整してから進む
-  ↻ retry — Phase {X} を再実行（入力を変えて）
-  ✗ stop — ここで停止し使用者に return
-
-使用者が何も指定しない場合、{default option} を採用します。
+[Claude] Phase 1-3 started: copy-ideation-parallel.md Phase 1 divergence
+  Input: product=X, audience=Y, form=short
+  Plan: Mandal-Art 8-direction dispatch → VS candidate generation → 64-candidate aggregation
 ```
 
-default option の選択規則：
+### Step-by-step progress indicator
 
-- ideation Phase 1 → Phase 2: default は `continue`（64-100 候補
-  の mode collapse check をパスした場合）
-- ideation Phase 2 完了後：default は `⏸ adjust`（優勝 3-5 本の
-  使用者選択 checkpoint）
-- long-form draft 完了後：default は `⏸ adjust`（字數 / voice /
-  段別の調整確認）
-- gate 失敗後：default は `stop`（NEEDS_REVISION の場合は必ず
-  使用者判断を待つ）
+```
+ Step 1/8: Mandal-Art direction decision — selecting 8 directions
+ Step 1/8: Mandal-Art direction decision — {情感觸發 / 掛詞 / 逆説 / ...}
+ Step 2/8: subagent dispatch — launching 8 parallel agents
+ Step 2/8: subagent dispatch — 8 agents running in parallel
+...
+```
+
+Incomplete is ` `, complete is ` `. Failure is ` ` + 1-line cause. Skipped
+step is `—` + 1-line skip reason.
+
+### Phase completion checkpoint message
+
+```
+[Claude] Phase {X} complete: {phase_name}
+  Artifact: {artifact summary}
+  Steps: {step count}, {duration if relevant}
+
+Next options:
+   continue — proceed directly to Phase {X+1}
+   adjust — adjust Phase {X} results before proceeding
+   retry — re-run Phase {X} (with changed inputs)
+   stop — stop here and return to user
+
+If no user input, {default option} will be adopted.
+```
+
+Default option selection rules:
+
+- ideation Phase 1 → Phase 2: default is `continue` (if 64-100 candidate
+  mode collapse check passed)
+- ideation Phase 2 complete: default is `adjust` (user selection
+  checkpoint for 3-5 winners)
+- long-form draft complete: default is `adjust` (word count / voice /
+  per-stage adjustment confirmation)
+- after gate failure: default is `stop` (NEEDS_REVISION always waits
+  for user judgment)
 
 ## Section 3: Mid-Pipeline Checkpoint Rules
 
-以下の checkpoint は skip 禁止。silent proceed は anti-pattern。
+The following checkpoints are non-skippable. Silent proceed is an anti-pattern.
 
-### ideation Phase 2（KJ 収斂）完了後
+### After ideation Phase 2 (KJ convergence) completes
 
-`copy-ideation-parallel.md` §Phase 2 §文章化 + 谷山審査 直後：
+Immediately after `copy-ideation-parallel.md` §Phase 2 §Narrativization + 谷山 review:
 
-- 優勝 3-5 角度を**必ず使用者に提示**して選択させる
-  - (a) `accept all` → 全 3-5 を後続 protocol の seed として採用
-  - (b) `pick subset` → 手動で 1-3 を subset 選択
-  - (c) `reject, redo` → Phase 1 発散に戻って方向を変える
-- 次点 3-5 本も appendix として提示（A/B 変体用）
-- 省略して即座に次 phase へ進むのは anti-pattern
+- **Always present the 3-5 winning angles to the user** for selection
+  - (a) `accept all` → adopt all 3-5 as seeds for subsequent protocol
+  - (b) `pick subset` → manually select 1-3 as a subset
+  - (c) `reject, redo` → return to Phase 1 divergence with changed directions
+- Also present the 3-5 runner-ups as an appendix (for A/B variants)
+- Skipping and immediately proceeding to the next phase is an anti-pattern
 
-### long-form draft（> 2000 字）完了後
+### After long-form draft (> 2,000 chars) completes
 
-預設は**段階式展示**：
+Default is **staged presentation**:
 
-1. Draft 全体の outline（段別 heading + 各段 1 文要約）を先に提示
-2. 使用者が「見たい段」を指定 → その段だけ full text 提示
-3. 段ごとの調整を終えてから全体 full text を最終提示
+1. Present the draft's outline first (per-stage heading + 1-sentence summary per stage)
+2. User specifies which stage to view → present that stage's full text only
+3. After per-stage adjustments are complete, present the full final text
 
-使用者が「整篇一次に全部見せて」と指定した場合のみ一括提示。
-2000 字以上の一括提示は デフォルト動作ではない。
+Present all at once only when the user explicitly says "show me everything at once".
+All-at-once presentation for 2,000+ chars is **not the default behavior**.
 
-### Gate NEEDS_REVISION 発生時
+### When Gate NEEDS_REVISION occurs
 
-MUST / SHOULD gate のいずれかが `NEEDS_REVISION` を返した場合：
+When any MUST / SHOULD gate returns `NEEDS_REVISION`:
 
-- gate 名 + 失敗した checklist item / rubric dimension を提示
-- 具体的な修正方向（evaluator の fix_instruction）を提示
-- 使用者に以下の選択肢を出す：
-  - `auto-retry` → worker を再起動して自動修正（原則 max 2 回）
-  - `manual` → 使用者自身が修正指示を書いて再 dispatch
-  - `override` → 使用者がこの gate 失敗を受容（非推奨、理由記録必須）
+- Present the gate name + the failed checklist item / rubric dimension
+- Present a concrete fix direction (evaluator's fix_instruction)
+- Offer the user these options:
+  - `auto-retry` → restart worker for automatic fix (max 2 rounds as a rule)
+  - `manual` → user writes fix instructions and re-dispatches
+  - `override` → user accepts this gate failure (not recommended; must record reason)
 
-silent auto-retry は禁止。使用者に必ず gate 失敗を見せる。
+Silent auto-retry is prohibited. Always show the gate failure to the user.
 
-### Gate PASS_WITH_NOTES 発生時
+### When Gate PASS_WITH_NOTES occurs
 
-feedback を提示した上で auto-revise が走る。ただし使用者には**何を
-修正したか**を完了後に 1 行報告：
+Present the feedback, then auto-revise runs. However, **report what was
+fixed** to the user in 1 line after completion:
 
 ```
-[Claude] ✓ auto-revise 完了（PASS_WITH_NOTES feedback 対応）
-  修正内容: {diff summary, 1-2 line}
+[Claude] auto-revise complete (PASS_WITH_NOTES feedback addressed)
+  Fix: {diff summary, 1-2 lines}
 ```
 
-2 回目の PASS_WITH_NOTES で re-revise は **NEEDS_REVISION 扱い**に
-escalate（`SKILL.md §Gate Protocol §Max 2 rounds before escalating`）。
+A second PASS_WITH_NOTES triggering re-revise is **escalated to
+NEEDS_REVISION** (`SKILL.md §Gate Protocol §Max 2 rounds before escalating`).
 
 ## Section 4: Audit Report Format
 
-`copy-audit.md` の最終成果物フォーマット：
+Final deliverable format for `copy-audit.md`:
 
 ### Type ID block
 
@@ -181,111 +180,114 @@ escalate（`SKILL.md §Gate Protocol §Max 2 rounds before escalating`）。
 ## Audit Type ID
 
 - Form type detected: {long / mid / short}
-- Framework detected: {新 PASONA / BEAF / 利益切入 / 不明 / etc.}
-- Voice pattern detected: {糸井系 / 岩崎系 / Ogilvy系 / 混在 / etc.}
-- Channel（推測）: {LP / EC / SNS / CM / etc.}
+- Framework detected: {新 PASONA / BEAF / 利益切入 / unknown / etc.}
+- Voice pattern detected: {糸井系 / 岩崎系 / Ogilvy系 / mixed / etc.}
+- Channel (inferred): {LP / EC / SNS / CM / etc.}
 ```
 
 ### Issues by severity
 
-issue は severity で sort、同 severity 内は artifact 出現順：
+Issues sorted by severity; within the same severity, by artifact appearance order:
 
 ```
 ## Issues
 
-### 🔴 HIGH — {count} 件
+### HIGH — {count} items
 1. **{issue title}**
    - Location: {quoted line / paragraph reference}
-   - Problem: {what's wrong, 1-2 sentence}
+   - Problem: {what's wrong, 1-2 sentences}
    - Grounded in: {standard file or checklist item id}
-   - Fix suggestion: {concrete before → after 提案}
+   - Fix suggestion: {concrete before → after proposal}
 
-### 🟡 MEDIUM — {count} 件
-…
+### MEDIUM — {count} items
+...
 
-### 🟢 LOW — {count} 件
-…
+### LOW — {count} items
+...
 ```
 
-severity 定義：
+Severity definitions:
 
-- **🔴 HIGH** — 法律抵触 / fatal framework 違反 / 景品表示法 or
-  FTC risk（ethics-checklist.md FATAL 相当）
-- **🟡 MEDIUM** — framework 順序逸脱 / voice 漂移 / form 不適合
-  （SHOULD gate 相当）
-- **🟢 LOW** — 字數オーバー軽微 / 表記ゆれ / 磨き不足
-  （stylistic concern）
+- **HIGH** — Legal risk / fatal framework violation / 景品表示法 or
+  FTC risk (ethics-checklist.md FATAL equivalent)
+- **MEDIUM** — Framework order deviation / voice drift / form mismatch
+  (SHOULD gate equivalent)
+- **LOW** — Minor word-count overshoot / inconsistent notation / polish
+  deficiency (stylistic concern)
 
-### 綜合 verdict + 後続アクション
+### Overall verdict + next actions
 
 ```
 ## Verdict
 
-- 法律層: {pass / risky / fatal}（景品表示法 / FTC / ステマ告示）
-- framework 層: {canonical / deviated / unclear}
-- voice 層: {consistent / drift / abstract}
-- form 層: {appropriate / overflow / underflow}
+- Legal layer: {pass / risky / fatal} (景品表示法 / FTC / ステマ告示)
+- Framework layer: {canonical / deviated / unclear}
+- Voice layer: {consistent / drift / abstract}
+- Form layer: {appropriate / overflow / underflow}
 
 ## Recommended Next Steps
 
-- [ ] Fix 🔴 HIGH items（blocker）
-- [ ] Consider 🟡 MEDIUM items（strongly recommend）
-- [ ] Optional 🟢 LOW items（polish）
-- [ ] 必要に応じて rewrite variants 生成（→ Phase 4 ethics gate 対象）
+- [ ] Fix HIGH items (blocker)
+- [ ] Consider MEDIUM items (strongly recommend)
+- [ ] Optional LOW items (polish)
+- [ ] Generate rewrite variants if needed (→ Phase 4 ethics gate subject)
 ```
 
-使用者の選択肢：
+User options:
 
-- `fix-and-redeliver` → 上記 checklist を worker で消化、rewrite
-  variants 込みで再 handoff
-- `deliver-as-is` → 現状を使用者が受容（非推奨の場合は理由記録）
-- `manual-only` → 使用者自身が修正、本 team は介入しない
+- `fix-and-redeliver` → worker consumes the checklist above, re-handoff
+  including rewrite variants
+- `deliver-as-is` → user accepts current state (record reason if not
+  recommended)
+- `manual-only` → user fixes themselves, this team does not intervene
 
 ## Rules
 
-- **任意の候補必附 3 項理由**。「なんかいいよね」禁止（谷山 2007
-  + `ideation-taniyama-discipline.md` §「なんかいいよね禁止」
-  ルール）。3 項書けない候補は削除する
-- **label 欄位不可空**。voice reference / approach / framework /
-  channel のいずれかが「不明」のまま handoff するのは禁止。
-  brainstorming phase で確定していない場合は brainstorming に
-  戻る
-- **progress 必透明**。phase 啟動 / 各 step / phase 完了の報告を
-  skip しない。silent multi-phase 実行は anti-pattern
-- **mid-pipeline checkpoint skip 禁止**。ideation Phase 2 完了後
-  の優勝角度提示、long-form 2000 字+の段階式展示、gate
-  NEEDS_REVISION 時の使用者判断待ちは**必須 checkpoint**
-- **Gate 失敗の可視化**。NEEDS_REVISION / PASS_WITH_NOTES が出た
-  ら必ず使用者に通知。silent retry 禁止
-- **VS probability を省略しない**。ideation Phase 1 候補は VS
-  確率欄付きで handoff（`verbalized-sampling.md` §Anti-Patterns）
-- **3 項理由の視点規律**。「何を伝える / 何が新しい / 何が共鳴する」
-  の 3 軸で書く（`ideation-taniyama-discipline.md` §3 項理由書
-  テンプレート）
+- **Every candidate must have 3-item rationale**. 「なんかいいよね」禁止
+  (谷山 2007 + `ideation-taniyama-discipline.md` §「なんかいいよね禁止」
+  ルール). Candidates where 3 items cannot be written are deleted.
+- **Label fields must not be blank**. Handing off with voice reference /
+  approach / framework / channel as "unknown" is prohibited. If not
+  confirmed during brainstorming phase, return to brainstorming.
+- **Progress must be transparent**. Do not skip phase start / each step /
+  phase completion reports. Silent multi-phase execution is an anti-pattern.
+- **Mid-pipeline checkpoint skipping prohibited**. Presenting winning angles
+  after ideation Phase 2, staged presentation for 2,000+ char long-form,
+  and waiting for user judgment on gate NEEDS_REVISION are **mandatory
+  checkpoints**.
+- **Gate failure visibility**. When NEEDS_REVISION / PASS_WITH_NOTES occurs,
+  always notify the user. Silent retry is prohibited.
+- **Do not omit VS probability**. Ideation Phase 1 candidates are handed
+  off with the VS probability field (`verbalized-sampling.md` §Anti-Patterns).
+- **3-item rationale perspective discipline**. Write on the 3 axes: "what
+  is conveyed / what is new / what resonates"
+  (`ideation-taniyama-discipline.md` §3 項理由書テンプレート).
 
 ## Anti-Patterns
 
-- **無理由の候補陳列**：「候補 A / B / C どれが好き？」だけで 3 項
-  理由を付けない。谷山 2007「なんかいいよね」の典型。使用者は
-  印象で選ぶことになり、後工程で品質が担保されない
-- **隠れた gate 問題**：MUST gate が NEEDS_REVISION を返したのに
-  使用者に伝えず silent retry。倫理 gate 失敗を使用者に見せない
-  のは危険（景品表示法抵触を自動修正で誤魔化すリスク）
-- **一括 2000 字+ 長文出力**：段階式展示 default を守らず 5000 字の
-  LP を一気に出す。使用者の review cost が膨大になり、段別の voice
-  調整ができない
-- **NEEDS_REVISION を silent で retry**：gate が revision を要求
-  しているのに使用者判断を経ずに worker を再起動する。max 2 rounds
-  ルール違反 + 使用者の control を奪う
-- **label 欄空白**：`voice reference: （未定）` のまま handoff。
-  brainstorming phase で voice 選択を skip した結果。intake gate
-  で PASS_WITH_NOTES の disclosure 義務を果たしていない
-- **progress 報告を emoji だけで済ませる**：`✓` だけで何の phase
-  が完了したか書かない。phase 名 / step 名 / 生成物 summary を
-  1 行で添える
-- **default option を silent proceed にする**：checkpoint で使用者
-  入力を待たずに「continue」を自動採用する。checkpoint の目的は
-  使用者介入の機会を作ることなので、最低 1 回は使用者 ack を待つ
-- **audit report で severity を混ぜる**：🔴 HIGH と 🟡 MEDIUM を
-  同じ sort で並べる。使用者が blocker を見逃す。必ず severity で
-  section 分離する
+- **Presenting candidates without rationale**: "Candidate A / B / C — which
+  do you prefer?" without attaching 3-item rationale. The canonical
+  "なんかいいよね" anti-pattern (谷山 2007). The user ends up choosing by
+  impression, and downstream quality is not guaranteed.
+- **Hidden gate issues**: MUST gate returned NEEDS_REVISION but the user is
+  not informed and silent retry runs. Not showing ethics gate failure to the
+  user is dangerous (risk of papering over 景品表示法 violations with auto-fix).
+- **Dumping 2,000+ char long-form output at once**: Ignoring the staged
+  presentation default and outputting a 5,000-char LP all at once. Review
+  cost for the user is enormous, and per-stage voice adjustment becomes
+  impossible.
+- **Silent retry on NEEDS_REVISION**: Gate demands revision but worker is
+  restarted without user judgment. Max 2-rounds rule violation + user
+  control is taken away.
+- **Blank label fields**: Handing off with `voice reference: (undecided)`.
+  Result of skipping voice selection in brainstorming phase. Violates
+  intake gate PASS_WITH_NOTES disclosure obligation.
+- **Progress reporting with only status markers and no context**: Just a
+  check mark with no indication of which phase completed. Always include
+  phase name / step name / artifact summary in 1 line.
+- **Making default option a silent proceed**: Automatically adopting
+  "continue" without waiting for user input at a checkpoint. The purpose of
+  checkpoints is creating opportunities for user intervention — wait for at
+  least one user acknowledgment.
+- **Mixing severity levels in audit reports**: Listing HIGH and MEDIUM issues
+  in the same sort. User misses blockers. Always section-separate by severity.

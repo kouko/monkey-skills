@@ -1,197 +1,239 @@
 ---
-title: Persuasion Ethics 說服倫理（FTC × 景品表示法 × Dark Patterns × 小霜）
+title: Persuasion Ethics (FTC × 景品表示法 × Dark Patterns × 小霜)
 tier: 2
 ---
 
-# Persuasion Ethics 說服倫理
+# Persuasion Ethics
 
-Tier 2 common-layer standard：為 copywriting-team 所有輸出提供**說服 vs 操控**
-的倫理與法律邊界。本 standard 雙軌結構：①**法律硬邊界**（FTC Endorsement
-Guides + 日本景品表示法），違反會觸發監管處分；②**倫理軟邊界**（Cialdini
-6 原則的誤用、小霜和也「嘘をつかない」、Brignull / NN/g 提出的 dark pattern
-分類），違反雖不必然違法但會損害讀者信任與品牌 longevity。copywriting-team
-輸出必須同時通過兩軌。本檔規範「到哪裡就不能說」；「如何說服」的心理學
-機制由 copywriting-team 的心理學 anchor standard 獨立規範。
+Tier 2 common-layer standard: provides the **persuasion vs.
+manipulation** ethical and legal boundaries for all copywriting-team
+output. Dual-track structure: (1) **legal hard boundaries** (FTC
+Endorsement Guides + JP 景品表示法) — violations trigger regulatory
+enforcement; (2) **ethical soft boundaries** (misuse of Cialdini's
+6 principles, 小霜和也's「嘘をつかない」, dark-pattern taxonomy by
+Brignull / NN/g) — violations may not be illegal but damage reader
+trust and brand longevity. Copywriting-team output must pass both
+tracks. This file governs "where the line is drawn on what you can
+say"; the psychological mechanisms of "how to persuade" are
+independently governed by the psychology anchor standard.
 
 ## Primary Sources
 
-- Robert Cialdini (1984/2006) *Influence: The Psychology of Persuasion*, Harper Business — 6 原則 (reciprocity / commitment / social proof / authority / liking / scarcity) 的 canonical 出處。本檔引為「合法工具的定義」，倫理邊界分析對應 Cialdini 2001 的 "weapons of influence vs ethical influence" 章節延伸。
-- Robert Cialdini (2016) *Pre-Suasion: A Revolutionary Way to Influence and Persuade*, Simon & Schuster — 承接 1984 的續作，擴展「注意引導 (attention-channeling)」的倫理疑義；"ethical pre-suasion" 章節為本檔 dark pattern 分析的參考。
-- 小霜和也 (2014) 『ここらで広告コピーの本当の話をします。』宣伝会議 — 「嘘をつかない」原則、反 PASONA 煽り觀點、「本能ドライバー分析」；JP 短文案倫理的 canonical 當代論述。小霜は TCC 殿堂入りコピーライター。
-- U.S. Federal Trade Commission, *Guides Concerning the Use of Endorsements and Testimonials in Advertising* (16 CFR Part 255) — 最新版本於 **2023 年 7 月 1 日** 生效（FTC 2023-06-29 公告）。規範 endorsements / testimonials / influencer marketing 的 material connection disclosure。公式 URL: https://www.ftc.gov/legal-library/browse/rules/guides-concerning-use-endorsements-testimonials-advertising
-- U.S. Federal Trade Commission, *.com Disclosures: How to Make Effective Disclosures in Digital Advertising* — 2013 年發布、至今仍為數位廣告 disclosure 可讀性要求的權威文件（FTC 於 2022 年提案更新、尚未定稿；以 2013 版為現行 baseline）。公式 URL: https://www.ftc.gov/business-guidance/resources/com-disclosures-how-make-effective-disclosures-digital-advertising
-- 日本国 消費者庁『不当景品類及び不当表示防止法』（景品表示法）— **2023 年 5 月改正法 (令和 5 年法律第 29 号) 於 2024 年 10 月 1 日施行**；新設「確約手続」制度與「ステルスマーケティング告示」(2023 年 10 月 1 日 施行)。公式 URL: https://www.caa.go.jp/policies/policy/representation/fair_labeling/
-- Harry Brignull, *Deceptive Design (formerly darkpatterns.org)* — https://www.deceptive.design/ — 2010 年提出「dark pattern」詞彙的原始作者；12 類分類目錄的 canonical 出處。
-- Nielsen Norman Group, "Deceptive Patterns in UX" articles — https://www.nngroup.com/articles/deceptive-patterns-definition/ — 產業權威的 deceptive pattern 定義與案例庫；本檔引為 Brignull 分類的次級 dual-verify 來源。
+- Robert Cialdini (1984/2006) *Influence: The Psychology of Persuasion*, Harper Business — canonical source for the 6 principles (reciprocity / commitment / social proof / authority / liking / scarcity). Referenced here as "the definition of legitimate tools"; ethical-boundary analysis corresponds to Cialdini 2001's "weapons of influence vs ethical influence" extension.
+- Robert Cialdini (2016) *Pre-Suasion: A Revolutionary Way to Influence and Persuade*, Simon & Schuster — sequel to 1984; extends the ethical concerns of "attention-channeling"; the "ethical pre-suasion" chapter is a reference for the dark-pattern analysis here.
+- 小霜和也 (2014) 『ここらで広告コピーの本当の話をします。』宣伝会議 — the「嘘をつかない」principle, anti-PASONA-Agitation viewpoint, and「本能ドライバー分析」; canonical contemporary JP short-copy ethics discourse. 小霜 is a TCC Hall of Fame inductee.
+- U.S. Federal Trade Commission, *Guides Concerning the Use of Endorsements and Testimonials in Advertising* (16 CFR Part 255) — latest version effective **2023-07-01** (FTC announcement 2023-06-29). Governs endorsement / testimonial / influencer-marketing material-connection disclosure. Official URL: https://www.ftc.gov/legal-library/browse/rules/guides-concerning-use-endorsements-testimonials-advertising
+- U.S. Federal Trade Commission, *.com Disclosures: How to Make Effective Disclosures in Digital Advertising* — published 2013, still the authoritative document for digital-ad disclosure readability (FTC proposed update in 2022, not yet finalized; 2013 version is the current baseline). Official URL: https://www.ftc.gov/business-guidance/resources/com-disclosures-how-make-effective-disclosures-digital-advertising
+- 日本国 消費者庁『不当景品類及び不当表示防止法』(景品表示法) — **2023-05 amendment (令和 5 年法律第 29 号) effective 2024-10-01**; introduces「確約手続」and「ステルスマーケティング告示」(effective 2023-10-01). Official URL: https://www.caa.go.jp/policies/policy/representation/fair_labeling/
+- Harry Brignull, *Deceptive Design (formerly darkpatterns.org)* — https://www.deceptive.design/ — original coiner of "dark pattern" (2010); canonical source for the 12-category taxonomy.
+- Nielsen Norman Group, "Deceptive Patterns in UX" articles — https://www.nngroup.com/articles/deceptive-patterns-definition/ — industry-authoritative deceptive-pattern definitions and case library; secondary dual-verify source for Brignull's taxonomy.
 
-## 說服 vs 操控 — 核心分界
+## Persuasion vs manipulation — core demarcation
 
-Cialdini 在 *Influence* 1984/2006 區分了「合法影響工具 (tools of influence)」
-與「操控 (manipulation)」。同一原則（例：scarcity）可以合法使用（真實限量），
-也可以被操控化（false scarcity）。分界由**事實真偽 + 讀者自主性**決定：
+Cialdini in *Influence* 1984/2006 distinguishes "legitimate tools of
+influence" from "manipulation." The same principle (e.g. scarcity) can
+be used legitimately (genuine limited supply) or manipulatively (false
+scarcity). The demarcation depends on **factual truth + reader
+autonomy**:
 
-- **說服**：提供真實資訊、訴諸讀者真實利益、保留 opt-out 選項、不造假證據。
-- **操控**：製造虛假資訊、利用認知偏誤繞過讀者判斷、剝奪 opt-out、造假
-  社會證明或稀缺。
+- **Persuasion**: provides truthful information, appeals to the reader's
+  genuine interests, preserves opt-out options, does not fabricate
+  evidence.
+- **Manipulation**: manufactures false information, exploits cognitive
+  biases to bypass reader judgment, removes opt-out, fabricates social
+  proof or scarcity.
 
-所有 Cialdini 6 原則都必須通過「事實真偽 + 自主性」兩項測試才能使用。
+All 6 Cialdini principles must pass the "factual truth + autonomy"
+two-item test before use.
 
-## 小霜和也「嘘をつかない」原則
+## 小霜和也「嘘をつかない」principle
 
-小霜 2014『ここらで広告コピーの本当の話をします。』提出的 JP 當代短文案
-倫理 baseline（本書為 TCC 殿堂入りコピーライター的業界代表論述）：
+From 小霜 2014『ここらで広告コピーの本当の話をします。』— the JP
+contemporary short-copy ethics baseline (this book is an industry-
+representative discourse by a TCC Hall of Fame inductee):
 
-- **誇大しない**：benefit の過大表現（「誰でも 1 ヶ月で 10kg 痩せる」）禁止。
-- **benefit を捏造しない**：商品が持たない効能を書かない。
-- **ユーザーの声を偽造しない**：架空の testimonial 禁止。
-- **煽りを基本戦略としない**：小霜は PASONA の Agitation 段を基本戦略とする
-  アプローチを明示的に批判し、「本能ドライバー分析」で置換を提案。
+- **誇大しない**: exaggerating benefits (「誰でも 1 ヶ月で 10kg 痩せる」)
+  is prohibited.
+- **benefit を捏造しない**: do not claim capabilities the product does
+  not have.
+- **ユーザーの声を偽造しない**: fabricated testimonials are prohibited.
+- **煽りを基本戦略としない**: 小霜 explicitly criticizes the approach of
+  using PASONA's Agitation stage as the default strategy, proposing
+  「本能ドライバー分析」as a replacement.
 
-小霜原則與 Cialdini ethical influence 對齊，並與下述 FTC / 景品表示法的
-法律邊界一致。
+小霜's principles align with Cialdini's ethical influence and are
+consistent with the FTC / 景品表示法 legal boundaries below.
 
-## 景品表示法要點（JP 特有 — 法律硬邊界）
+## 景品表示法 essentials (JP-specific — legal hard boundary)
 
-「不当景品類及び不当表示防止法」(消費者庁所管)：廣告・文案表示の違反は
-消費者庁の措置命令・課徴金の対象。本檔列出 copywriting 直接相關的 4 類
-表示規制：
+「不当景品類及び不当表示防止法」(administered by 消費者庁):
+advertising / copy violations are subject to 消費者庁 enforcement
+orders and 課徴金 (surcharge penalties). Four display regulations
+directly relevant to copywriting:
 
-### 優良誤認表示（第 5 条第 1 号）
+### 優良誤認表示 (Article 5, Item 1)
 
-商品・サービスの**品質・規格・内容**について実際のものより著しく優良で
-あると示す、または事実に相違して競争業者のものより著しく優良であると示
-す表示。例：
+Displays that show product/service **quality, specifications, or
+content** as significantly superior to reality, or falsely show them
+as significantly superior to competitors. Examples:
 
-- 「業界最高品質」「世界初」等の最上級表示で根拠がないもの
-- 不当な比較優位表示（競合社のことを虛偽に劣位として描く）
-- 性能データの改ざん・恣意的條件選択
+- Superlative claims (「業界最高品質」「世界初」) without supporting
+  evidence
+- Unfair comparative-superiority displays (falsely depicting competitors
+  as inferior)
+- Falsified or selectively-conditioned performance data
 
-**2023 年改正の確認点**：ステマ告示 (2023 年 10 月 1 日施行) により、
-事業者が広告であることを隠して第三者になりすます表示は、優良誤認の判断
-プロセスに関係なく**表示者が事業者であることを明示しなければ** 直接的に
-不当表示とされる。
+**2023 amendment checkpoint**: under the ステマ告示 (effective
+2023-10-01), displays where the business entity disguises itself as a
+third party are **directly classified as improper display** regardless
+of the 優良誤認 judgment process — the business must disclose that
+it is the displayer.
 
-### 有利誤認表示（第 5 条第 2 号）
+### 有利誤認表示 (Article 5, Item 2)
 
-**価格・取引条件**について実際のものより著しく有利であると示す表示、
-または競争業者の取引条件より著しく有利であると示す表示。例：
+Displays that show **price or transaction terms** as significantly
+more favorable than reality, or significantly more favorable than
+competitors. Examples:
 
-- 虚偽の「通常価格」比較（二重価格表示）
-- 架空の「期間限定」「数量限定」（false scarcity — 詳細は §Dark Patterns）
-- 隠れた追加料金の不記載（hidden cost — FTC 共通問題）
+- Fictitious "regular price" comparisons (double-pricing)
+- Fabricated "limited time" / "limited quantity" (false scarcity —
+  details in §Dark Patterns)
+- Undisclosed additional charges (hidden cost — shared FTC concern)
 
-### 打消し表示（disclaimer）の規範
+### 打消し表示 (disclaimer) rules
 
-メイン訴求を否定・制限する disclaimer は、消費者庁 2017 年ガイドライン
-『打消し表示に関する表示方法及び表示内容に関する留意点』により：
+Disclaimers that negate or limit the main claim are governed by the
+消費者庁 2017 guideline『打消し表示に関する表示方法及び表示内容に
+関する留意点』:
 
-- 文字サイズ・色・背景コントラストでメイン訴求と同等に読めること
-- メインの訴求を**実質的に否定する** disclaimer は NG（メイン訴求自体が
-  誤認表示になる）
-- 動画広告では表示時間が短すぎて読めないものは打消し効果なし
+- Font size, color, and background contrast must make the disclaimer
+  equally readable as the main claim
+- Disclaimers that **substantively negate** the main claim render the
+  main claim itself a misleading display (NG)
+- In video ads, disclaimers displayed too briefly to read have no
+  disclaimer effect
 
-Copywriting implication：キャッチコピーに「※条件あり」と小字で付して
-おけば何書いてもよいわけではない。メイン訴求自体が内容の範囲で真実で
-あることが求められる。
+Copywriting implication: appending "※条件あり" in fine print to a
+キャッチコピー does not permit writing anything in the main claim.
+The main claim itself must be truthful within the scope of its content.
 
-### ステルスマーケティング告示（2023 年 10 月 1 日施行）
+### ステルスマーケティング告示 (effective 2023-10-01)
 
 令和 5 年消費者庁告示第 19 号「一般消費者が事業者の表示であることを
-判別することが困難である表示」：
+判別することが困難である表示」:
 
-- 事業者が第三者になりすまして SNS / レビュー / インフルエンサー投稿を
-  行うこと
-- インフルエンサーに対価を支払いながら「広告」「PR」「Sponsored」等の
-  明示をしないこと
-- アフィリエイトリンクを含むコンテンツで広告性を隠すこと
+- Businesses disguising themselves as third parties for SNS / review /
+  influencer posts
+- Paying influencers without marking "広告" / "PR" / "Sponsored"
+- Content containing affiliate links that conceals its advertising
+  nature
 
-これら自体が不当表示として直接規制対象となる。詳細な開示義務は FTC
-Endorsement Guides の material connection disclosure と実質的に同等。
+These are directly regulated as improper displays. Detailed disclosure
+obligations are substantively equivalent to FTC Endorsement Guides'
+material-connection disclosure.
 
-## FTC Endorsement Guides 要點（跨國 digital 適用）
+## FTC Endorsement Guides essentials (cross-border digital applicability)
 
-16 CFR Part 255（2023-07-01 施行版）の copywriting-team 直接相関条項：
+16 CFR Part 255 (effective 2023-07-01) provisions directly relevant
+to copywriting-team:
 
-- **Material connection disclosure (§255.5)**：endorser と brand の間に
-  金銭関係・物品提供・雇用関係・家族関係など「視聴者が endorsement の
-  重みを判断する際に影響する関係」がある場合、clear and conspicuous に
-  開示必須。
-- **Testimonial の代表性 (§255.2)**：個別の testimonial が「typical」で
-  ない場合、(a) その事実を明示、または (b) typical な結果を明示必須。
-  「平均的に期待できる結果」の明示なしに extreme testimonial を使うこと
-  は NG。2023 年改訂版では "typical results" 免責文（"results not typical"）
-  のみでは免責されないことが明文化。
-- **Endorser の真実性 (§255.1)**：endorser が実際に商品を使用し、表明した
-  意見を実際に持っていること。架空の reviewer・購入していない endorser
-  は違反。
-- **.com Disclosures (2013)**：digital 媒体での disclosure は近接性
-  (proximity)、目立つこと (prominence)、理解可能性 (comprehensibility)
-  の 3 要件。hashtag #ad #sponsored のみでも位置・可視性が不十分なら
-  無効。
+- **Material connection disclosure (§255.5)**: when a monetary, gift,
+  employment, or family relationship exists between endorser and brand
+  that would affect how viewers weigh the endorsement — clear and
+  conspicuous disclosure is mandatory.
+- **Testimonial typicality (§255.2)**: when an individual testimonial
+  is not "typical," either (a) disclose that fact, or (b) disclose
+  typical results. The "results not typical" disclaimer alone is
+  explicitly insufficient under the 2023 revision.
+- **Endorser truthfulness (§255.1)**: the endorser must have actually
+  used the product and genuinely hold the expressed opinion. Fabricated
+  reviewers / endorsers who never purchased are violations.
+- **.com Disclosures (2013)**: digital-media disclosures must meet 3
+  requirements — proximity, prominence, comprehensibility. A hashtag
+  #ad #sponsored alone is invalid if its placement or visibility is
+  insufficient.
 
-FTC は米国法だが、米国市場を対象とする SaaS・ EC の JP / 他国事業者にも
-実務上適用される。
+FTC is US law, but practically applies to JP and other-country
+businesses targeting the US market through SaaS and EC.
 
-## Dark Pattern 反模式清單
+## Dark-pattern anti-pattern catalog
 
-Brignull 2010 originator 的 12 類分類 + NN/g dual-verify。copywriting
-の直接関連するパターン：
+Brignull 2010 originator's 12-category taxonomy + NN/g dual-verify.
+Patterns directly relevant to copywriting:
 
 - **False scarcity / False urgency**
-  - 例：「再 2 名で限定解除」実は在庫無限、「24 時間限定！」実は毎日リセット
-  - 景品表示法：有利誤認表示（§5-2）／scarcity Cialdini 原則の操控化
-- **Confirmshaming（否認羞辱）**
-  - 例：opt-out ボタンのラベルに "No thanks, I hate saving money" 等の
-    自嘲的表現を強制
-  - 倫理：読者の自主性を侵害
-- **Roach motel（ローチモーテル）**
-  - 例：登録は 1-click、解約は電話のみ・複雑な確認フロー
-  - copywriting 層：「いつでも解約可能」と訴求しながら実態は解約困難
-- **Hidden costs（隠れコスト）**
-  - 例：checkout 最終画面まで送料・税・手数料を表示しない
+  - Example: "Only 2 spots left" — actually unlimited inventory;
+    "24-hour flash sale!" — actually resets daily
+  - 景品表示法: 有利誤認表示 (§5-2) / manipulation of Cialdini's
+    scarcity principle
+- **Confirmshaming**
+  - Example: opt-out button labeled "No thanks, I hate saving money"
+  - Ethics: infringes reader autonomy
+- **Roach motel**
+  - Example: 1-click registration, phone-only + complex-flow
+    cancellation
+  - Copywriting layer: claiming "cancel anytime" while cancellation
+    is actually difficult
+- **Hidden costs**
+  - Example: shipping / tax / fees not displayed until final checkout
+    screen
   - FTC .com Disclosures / 景品表示法 有利誤認表示
-- **Forced continuity（強制継続）**
-  - 例：「無料トライアル」の終了時に明示通知なしで課金開始、解約手続き困難
-- **Misdirection / Bait-and-switch（囮と入れ替え）**
-  - 例：広告で強調した特典が実際の購入時に別条件・別商品にすり替わる
-  - 景品表示法：おとり広告告示 (昭和 48 年公正取引委員会告示第 14 号)
-- **Sneak into basket（自動カート追加）**
-  - 例：checkout 中にユーザー同意なしでオプション商品がカートに追加
+- **Forced continuity**
+  - Example: "free trial" with no explicit notification at trial end,
+    auto-billing begins, difficult cancellation process
+- **Misdirection / Bait-and-switch**
+  - Example: benefits highlighted in the ad are replaced by different
+    conditions / different products at actual purchase
+  - 景品表示法: おとり広告告示 (昭和 48 年公正取引委員会告示第 14 号)
+- **Sneak into basket**
+  - Example: optional products added to cart without user consent
+    during checkout
 - **Fake social proof**
-  - 例：捏造 testimonial / 購入者数の水増し / 架空の "as seen on CNN"
-  - FTC §255.1 §255.2 違反 ／ Cialdini social proof 原則の操控化
+  - Example: fabricated testimonials / inflated purchase counts /
+    fictitious "as seen on CNN"
+  - FTC §255.1 §255.2 violation / manipulation of Cialdini's social-
+    proof principle
 
-## Copy 層面的具体反模式
+## Copy-layer specific anti-patterns
 
-copywriting-team の文案出力で頻出する違反パターン：
+Frequent violation patterns in copywriting-team output:
 
-- **未標記 affiliate link / promoted post**：「おすすめ 10 選」実は全て
-  アフィリエイト収益商品（FTC §255.5 / ステマ告示 違反）
-- **Fake testimonial / 架空レビュー**：「利用者の声」が捏造（FTC §255.1 /
-  景品表示法 優良誤認）
-- **虚假 "as seen on"**：メディア露出がなかったのに「TV で話題」等
-  （優良誤認 / §255 testimonial 偽造）
-- **Ambiguous before / after**：ビフォーアフター画像の条件が不明・
-  非典型（§255.2 typical results 違反）
-- **Word-level misdirection**：「全員無料」（小字で「抽選で 10 名」）／
-  「返金保証」（小字で「条件を満たした場合のみ」）— 打消し表示 過小化
+- **Unmarked affiliate links / promoted posts**: "our top 10 picks"
+  where all items are affiliate-revenue products (FTC §255.5 / ステマ
+  告示 violation)
+- **Fake testimonials / fabricated reviews**: "user voices" that are
+  fabricated (FTC §255.1 / 景品表示法 優良誤認)
+- **Fictitious "as seen on"**: claiming "featured on TV" without
+  actual media exposure (優良誤認 / §255 testimonial fabrication)
+- **Ambiguous before / after**: before/after images with unclear or
+  atypical conditions (§255.2 typical-results violation)
+- **Word-level misdirection**: "free for everyone" (fine print:
+  "lottery, 10 winners") / "money-back guarantee" (fine print: "if
+  conditions are met") — minimized 打消し表示
 
 ## Anti-Patterns
 
-- Cialdini 原則を dark pattern の粉飾に使う。「scarcity が有効だから」で
-  false scarcity を正当化する議論は倫理的にも法律的にも破綻。scarcity
-  は**真実な限定**でのみ許可される。
-- PASONA の Agitation 段を fear-mongering に推し進める。「痛みの扇動」と
-  「不安の捏造」は別物；小霜 2014 の反 PASONA 論点を参照。
-- 打消し表示 を過小字・短時間で処理。メイン訴求と同等の可読性を持たせ
-  ないと景品表示法違反（消費者庁 2017 ガイドライン）。
-- Testimonial を extreme case だけ並べる。typical results の明示または
-  代表性の担保なしに最良事例のみを並べるのは FTC §255.2 違反。
-- 「広告であることを隠す」文案・投稿。インフルエンサー／ネイティブ広告
-  での PR 表記欠落は 2023 年以降ステマ告示の直接処分対象。
-- 「業界 No.1」「世界初」「最安値」などの最上級表示を根拠なしに使用。
-  景品表示法 優良誤認 ／ 有利誤認 の頻出違反類型。
-- 二重価格表示（虛偽の通常価格比較）。景品表示法 有利誤認の典型違反；
-  実績のない「通常価格」との比較は出典必要。
-- 「※条件あり」disclaimer でメイン訴求を実質的に否定する文案。消費者庁
-  打消し表示ガイドライン の core 違反。
+- Using Cialdini principles to garnish dark patterns. "Scarcity is
+  effective, therefore" as justification for false scarcity — broken
+  both ethically and legally. Scarcity is **permitted only with genuine
+  limits**.
+- Pushing PASONA's Agitation stage into fear-mongering. "Pain
+  agitation" and "anxiety fabrication" are different things; reference
+  小霜 2014's anti-PASONA thesis.
+- Processing 打消し表示 in fine print / brief display. Disclaimers
+  must have readability equivalent to the main claim — otherwise a
+  景品表示法 violation (消費者庁 2017 guideline).
+- Lining up only extreme-case testimonials. Using only best-case
+  testimonials without disclosing typical results or ensuring
+  representativeness is an FTC §255.2 violation.
+- Copy or posts that conceal advertising nature. Missing PR labels in
+  influencer / native-ad copy is a direct enforcement target under the
+  2023 ステマ告示.
+- Unsubstantiated superlative claims: "industry No.1", "world's first",
+  "lowest price." Frequent violation types under 景品表示法 優良誤認 /
+  有利誤認.
+- Double-pricing with fictitious regular price. Classic 有利誤認
+  violation under 景品表示法; comparisons against "regular prices"
+  with no sales track record require source documentation.
+- Copy where a "※条件あり" disclaimer substantively negates the main
+  claim. Core violation of the 消費者庁 打消し表示 guideline.

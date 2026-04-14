@@ -1,159 +1,203 @@
 ---
-title: Voice and Tone 品牌聲音與語氣（Ogilvy × 糸井・岩崎 × 18F/Mailchimp）
+title: Voice and Tone (Ogilvy × 糸井・岩崎 × 18F/Mailchimp)
 tier: 2
 ---
 
-# Voice and Tone 品牌聲音與語氣
+# Voice and Tone
 
-Tier 2 common-layer standard：為 copywriting-team 所有長/中/短文案提供跨框架的
-品牌聲音一致性約束。Voice 是跨情境穩定的品牌人格，Tone 是情境敏感的語氣調整。
-本 standard 以 Ogilvy 的 Anglo 長文案正典為理性核心，以糸井重里・岩崎俊一 的
-JP 情緒共鳴傳統為感性核心，以 18F / Mailchimp 的現代 SaaS / 政府 voice guide
-為可執行的定義工具。所有 PASONA / PASBECONA / BEAF / キャッチコピー 框架
-輸出均須對齊本檔規範的 voice axes 與 tone 切換規則。
+Tier 2 common-layer standard: provides cross-framework brand-voice
+consistency constraints for all long / mid / short copy produced by
+copywriting-team. Voice is the stable brand persona across contexts;
+Tone is the context-sensitive register adjustment. This standard uses
+Ogilvy's Anglo long-copy canon as the rational core, 糸井重里 and
+岩崎俊一's JP emotional-resonance tradition as the emotional core,
+and 18F / Mailchimp's modern SaaS / government voice guides as
+actionable definition tools. All outputs from PASONA / PASBECONA /
+BEAF / キャッチコピー frameworks must align with the voice axes and
+tone-switching rules defined here.
 
 ## Primary Sources
 
-- David Ogilvy (1963) *Confessions of an Advertising Man*, Atheneum — Ogilvy's creative credo; 「consumer is not a moron, she is your wife」"respect the reader's intelligence" 等經典命題的出處。
-- David Ogilvy (1983) *Ogilvy on Advertising*, Crown — 長文案實務指導書；「5x more read the headline than the body copy」"on average, five times as many people read the headline as read the body copy" 的原典出處 (Chapter 4 "How to Write Potent Copy")。
-- 糸井重里 voice reference — 西武百貨店「おいしい生活。」(1982) 作者；『ほぼ日刊イトイ新聞』(1998–) 經年累積的 voice casebook。糸井の「普通の言葉を生き生きさせる」哲學為 JP 短文案 voice 的 canonical 代表之一。
-- 岩崎俊一 voice reference — ミツカン「やがて、いのちに変わるもの。」(2004)、新潮文庫「想像力と数百円。」(1984) 作者；岩崎は TCC Hall of Fame（2003 年創設、殿堂入り岩崎含む）の代表的なコピーライター。岩崎「コピーは作るものではなく、見つけるもの」哲學為 JP 情緒・季節感 voice 的 canonical 代表。
-- 18F Content Guide — https://content-guide.18f.gov/ — 美國聯邦政府 GSA 數位服務的 voice guide 公開標準，本檔引為 voice axes 定義工具的次級來源。
-- Mailchimp Voice and Tone Guide — https://styleguide.mailchimp.com/voice-and-tone/ — SaaS 產業 voice guide 的業界標竿。「one voice, multiple tones」原則與情境切換表為本檔 Tone 章節次級來源。
+- David Ogilvy (1963) *Confessions of an Advertising Man*, Atheneum — Ogilvy's creative credo; "consumer is not a moron, she is your wife" / "respect the reader's intelligence" etc. as canonical propositions.
+- David Ogilvy (1983) *Ogilvy on Advertising*, Crown — long-copy practice guide; "on average, five times as many people read the headline as read the body copy" canonical source (Chapter 4 "How to Write Potent Copy").
+- 糸井重里 voice reference — 西武百貨店「おいしい生活。」(1982) author; 『ほぼ日刊イトイ新聞』(1998–) as an accumulated voice casebook. 糸井's「普通の言葉を生き生きさせる」philosophy is a canonical representative of JP short-copy voice.
+- 岩崎俊一 voice reference — ミツカン「やがて、いのちに変わるもの。」(2004), 新潮文庫「想像力と数百円。」(1984) author; 岩崎 is a TCC Hall of Fame (established 2003) inductee. 岩崎's「コピーは作るものではなく、見つけるもの」philosophy is a canonical representative of JP emotional / seasonal voice.
+- 18F Content Guide — https://content-guide.18f.gov/ — US federal GSA digital-services voice guide; adopted here as a secondary source for voice-axes definition tooling.
+- Mailchimp Voice and Tone Guide — https://styleguide.mailchimp.com/voice-and-tone/ — industry benchmark for SaaS voice guides. "One voice, multiple tones" principle and context-switching table are secondary sources for the Tone section.
 
-## Voice vs Tone — 核心區分
+## Voice vs Tone — core distinction
 
-Voice 與 Tone 不是同義詞。工業界（18F / Mailchimp）共識：
+Voice and Tone are not synonyms. Industry consensus (18F / Mailchimp):
 
-- **Voice = 穩定的品牌人格**。跨產品文案、客服、郵件、社群的「一致自我」。
-  改變 voice = 品牌重塑。voice 應於整個產品生命週期保持不變。
-- **Tone = 情境下的語氣變化**。同一 voice 在 onboarding、error、crisis、
-  celebration 等情境會有語氣差異。changing tone 是每日操作；voice 是長期資產。
+- **Voice = the stable brand persona**. The "consistent self" across
+  product copy, customer service, email, and social media. Changing
+  voice = brand repositioning. Voice should remain constant across
+  the product lifecycle.
+- **Tone = contextual register variation**. The same voice adjusts
+  register for onboarding, error, crisis, celebration contexts.
+  Changing tone is a daily operation; voice is a long-term asset.
 
-Mailchimp 的 framing：「Our voice doesn't change much from day to day, but
-our tone changes all the time.」18F 的 framing：「Voice is who you are. Tone
-is how you speak in a given moment.」兩者對齊本檔定義。
+Mailchimp's framing: "Our voice doesn't change much from day to day,
+but our tone changes all the time." 18F's framing: "Voice is who you
+are. Tone is how you speak in a given moment." Both align with this
+file's definitions.
 
-## Ogilvy 長文案 voice 經典原則（Anglo canonical）
+## Ogilvy long-copy voice classics (Anglo canonical)
 
-Ogilvy 1963 / 1983 提出、至今仍為 Anglo 廣告教育的基本 commandments：
+Commandments from Ogilvy 1963 / 1983 that remain the foundation of
+Anglo advertising education:
 
-- **Consumer is your wife, not a moron**。不要把讀者當笨蛋。任何
-  condescending 或 gimmicky 的語氣會立即失去信任。
-- **Respect the reader's intelligence**。給事實、給證據、給理由；不要
-  空洞 hype。Ogilvy 的 Rolls-Royce 60-mph 廣告是此原則的 textbook 例。
-- **5× more read the headline**。讀 body 的人是讀 headline 的 1/5。
-  headline 必須獨立完成任務（不假設讀者會繼續讀 body）。短文案層級
-  的 voice 必須在 headline 就到位。
-- **Long copy sells**。當有實質可說時，長文案優於短文案；voice 必須
-  能承載長篇而不自我重複。
+- **Consumer is your wife, not a moron**. Do not talk down to the
+  reader. Any condescending or gimmicky register immediately loses
+  trust.
+- **Respect the reader's intelligence**. Give facts, evidence, reasons;
+  not empty hype. Ogilvy's Rolls-Royce 60-mph ad is the textbook
+  example of this principle.
+- **5× more read the headline**. Only 1/5 of headline readers continue
+  to the body. The headline must accomplish its mission independently
+  (do not assume the reader will continue to the body). Voice at the
+  short-copy layer must be fully present in the headline.
+- **Long copy sells**. When there is substance to convey, long copy
+  outperforms short copy; voice must sustain long-form text without
+  self-repetition.
 
-這些原則對 copywriting-team 的直接 implication：
+Direct implications for copywriting-team:
 
-- 每一句 body 都必須 earn its place。voice guide 必須明列「我們不講空話」
-  類 rule（對應 §Voice 定義 checklist 的 "What we aren't"）。
-- headline layer 的 voice 不能比 body layer 更誇張；headline 是 voice
-  的壓縮密度最高處，而非「為了吸引點擊而破壞 voice」的豁免區。
+- Every body sentence must earn its place. The voice guide must include
+  a "we do not speak in empty hype" rule (corresponds to the "What we
+  aren't" section of the §Voice definition checklist).
+- Headline-layer voice must not be more exaggerated than body-layer
+  voice; the headline is the highest-density compression of voice,
+  not a "click-bait exemption zone" where voice may be broken.
 
-## JP 情緒共鳴傳統（糸井 × 岩崎 canonical）
+## JP emotional-resonance tradition (糸井 × 岩崎 canonical)
 
-JP 短文案傳統有兩條 voice 軸線，與 Anglo「action-oriented / evidence-based」
-形成鮮明對照：
+JP short-copy tradition has two voice axes that stand in sharp contrast
+to Anglo "action-oriented / evidence-based":
 
-- **糸井重里：意図的曖昧さで状態提案**。代表作「おいしい生活。」(西武 1982)、
-  「不思議、大好き。」(西武 1981)。voice 不是命令「買下去」，而是
-  提案一種生活狀態，留解釋餘地給讀者。Anglo 的 "Just Do It" 是行動促進型，
-  糸井是**状態提案型**；voice guide 的語法傾向斷句、留白、助詞結尾。
-- **岩崎俊一：人生観・いのち・季節感**。代表作「やがて、いのちに変わるもの。」
-  (ミツカン 2004)、「想像力と数百円。」(新潮文庫 1984)。voice 承載**仏教無常観・
-  有限性**的情緒共鳴，典型字數 10–15 字，句尾常用助詞「もの」「こと」「ね」
-  等開放式接續，拒絕 call-to-action 直球。
+- **糸井重里: intentional ambiguity as state proposal**. Representative
+  works:「おいしい生活。」(西武 1982),「不思議、大好き。」(西武 1981).
+  The voice does not command "buy it" but proposes a life-state, leaving
+  interpretive room for the reader. Anglo "Just Do It" is action-
+  prompting; 糸井 is **state-proposing**; voice-guide grammar tends
+  toward sentence fragments, white space, and particle endings.
+- **岩崎俊一: life philosophy, いのち, season-sense**. Representative
+  works:「やがて、いのちに変わるもの。」(ミツカン 2004),「想像力と
+  数百円。」(新潮文庫 1984). Voice carries **Buddhist impermanence /
+  finiteness** emotional resonance; typical range 10–15 characters;
+  sentence endings often use open-ended particles like「もの」「こと」
+  「ね」, rejecting direct call-to-action.
 
-JP 情緒傳統對 voice guide 的 implication：
+Implications of the JP emotional tradition for voice guides:
 
-- voice 在 JP 市場不必是單一軸（如 Anglo 的「friendly 」「professional」），
-  可以是**状態 × 情緒**的複合軸。
-- 短文案中的 **memory-heavy repetition**（反覆接觸同一句完成記憶定著）
-  是 JP 情緒 voice 的標準機制；對應 AIDMA 中的 Memory 階段（詳見
-  `short-form-catchcopy-canon.md` 的 7-15 字紀律）。
+- Voice in the JP market need not be a single axis (like Anglo
+  "friendly ↔ professional"); it can be a **state × emotion compound
+  axis**.
+- **Memory-heavy repetition** in short copy (achieving memory fixation
+  through repeated exposure to the same line) is the standard mechanism
+  of JP emotional voice; corresponds to the Memory stage in AIDMA (see
+  `short-form-catchcopy-canon.md` for the 7–15 character discipline).
 
-## Voice 定義的 4 軸（18F framework 改編）
+## Voice definition — 4 axes (adapted from 18F framework)
 
-18F Content Guide 提供 voice 定義的 4 個連續軸，本檔採為 copywriting-team
-的 voice guide 標準格式。每個品牌應在 4 軸上各選一個 position，並配具體 example：
+The 18F Content Guide provides 4 continuous axes for voice definition,
+adopted here as copywriting-team's standard voice-guide format. Each
+brand should select a position on each axis and provide concrete
+examples:
 
-| 軸 | 左端 | 右端 |
+| Axis | Left end | Right end |
 |----|------|------|
-| Formality（形式度） | formal | casual |
-| Seriousness（嚴肅度） | serious | funny |
-| Respectfulness（敬意度） | respectful | irreverent |
-| Enthusiasm（熱情度） | matter-of-fact | enthusiastic |
+| Formality | formal | casual |
+| Seriousness | serious | funny |
+| Respectfulness | respectful | irreverent |
+| Enthusiasm | matter-of-fact | enthusiastic |
 
-**重要約束**：每個軸的選擇**不能抽象填空**，必須配「What we do / What we
-don't do / Example」的三段式說明才算 actionable。18F 與 Mailchimp 的共通
-規範：抽象 voice guide（只寫「friendly, professional」）不具可執行性。
+**Key constraint**: axis positions **must not be filled abstractly**;
+each must be accompanied by a three-part "What we do / What we don't
+do / Example" explanation to be actionable. Shared discipline from 18F
+and Mailchimp: abstract voice guides (writing only "friendly,
+professional") are not executable.
 
-## Brand Voice Guide 的 Checklist
+## Brand Voice Guide checklist
 
-建立可執行的 voice guide 最低要素（對照 Mailchimp / 18F 的實務清單）：
+Minimum elements for building an actionable voice guide (aligned with
+Mailchimp / 18F practice checklists):
 
-- [ ] **Voice statement**（1–2 句）：我們的品牌人格是什麼（avoid 泛泛形容詞）
-- [ ] **What we are**（3–5 項具體形容）：each with 1 example line
-- [ ] **What we aren't**（3–5 項反例）：each with 1 example line 說明會被
-      判為 off-brand 的寫法
-- [ ] **Voice 4 軸 position**：每軸 1 個點 + 具體 example
-- [ ] **語彙表**：常用 / 禁用 / 謹慎使用（按品牌定）
-- [ ] **語法偏好**：句長、斷句、助詞、稱謂（JP 特有）、人稱代詞
-- [ ] **At least 5 side-by-side examples**：「這樣寫 (on-brand) vs 這樣寫
-      (off-brand)」的對比表（18F 強制、Mailchimp 示範）
+- [ ] **Voice statement** (1–2 sentences): what is our brand persona
+      (avoid generic adjectives)
+- [ ] **What we are** (3–5 concrete descriptors): each with 1 example
+      line
+- [ ] **What we aren't** (3–5 counter-examples): each with 1 example
+      line explaining what would be judged off-brand
+- [ ] **Voice 4-axis positions**: 1 position per axis + concrete example
+- [ ] **Vocabulary table**: approved / prohibited / use-with-caution
+      terms (per brand)
+- [ ] **Grammar preferences**: sentence length, fragmentation, particles,
+      honorifics (JP-specific), pronouns
+- [ ] **At least 5 side-by-side examples**: "write it this way
+      (on-brand) vs. write it this way (off-brand)" comparison table
+      (18F mandates, Mailchimp demonstrates)
 
-若缺少 side-by-side examples，voice guide 會降回抽象填空，main worker 將
-無法判斷具體產出是否 on-brand。
+Without side-by-side examples, the voice guide regresses to abstract
+fill-in-the-blank, and the main worker cannot determine whether a
+specific output is on-brand.
 
-## Tone 情境切換表
+## Tone context-switching table
 
-Mailchimp 在單一 voice 下定義 4 種以上 tone 變體，本檔提取普遍適用的 4 情境
-（具體內容需依品牌 voice 客製化）：
+Mailchimp defines 4+ tone variants under a single voice; this file
+extracts 4 universally applicable contexts (specific content requires
+brand-voice customization):
 
-| 情境 | Tone 方向 | 注意事項 |
+| Context | Tone direction | Cautions |
 |------|----------|---------|
-| **Onboarding / Welcome** | 熱情、鼓勵、擁抱新 user | 避免「歡迎完就立刻推銷」的 tone 落差 |
-| **Error / Failure state** | 冷靜、具體、不推諉 | 不用幽默遮掩錯誤；誠實描述問題 + 下一步 |
-| **Crisis / Incident** | 嚴肅、及時、透明 | 不開玩笑；不使用 hype 詞彙；所有不確定性須標示 |
-| **Celebration / Launch** | 熱情、自信、感謝 user | 避免「只講自己厲害」；把主詞放在 user |
+| **Onboarding / Welcome** | Warm, encouraging, embracing new user | Avoid the tone drop of "welcome done, now hard sell" |
+| **Error / Failure state** | Calm, specific, non-deflecting | Do not use humor to mask errors; honestly describe the problem + next step |
+| **Crisis / Incident** | Serious, timely, transparent | No jokes; no hype vocabulary; all uncertainty must be labeled |
+| **Celebration / Launch** | Enthusiastic, confident, user-grateful | Avoid "only talking about how great we are"; make the user the subject |
 
-關鍵規則（Mailchimp 明示）：**voice 不變、tone 可變**。若品牌 voice 是
-「playful」，error state 不是切到「serious voice」，而是「voice 仍 playful
-但 tone 變得冷靜、不開玩笑」。
+Key rule (Mailchimp-explicit): **voice stays constant; tone varies**.
+If brand voice is "playful," error-state does not switch to "serious
+voice" — voice remains playful, but tone becomes calm and joke-free.
 
-## 與 PASONA / BEAF / キャッチコピー 框架的組合
+## Integration with PASONA / BEAF / キャッチコピー frameworks
 
-Framework（PASONA / PASBECONA / BEAF / AIDMA）提供**結構**，voice 提供
-**聲音**。兩者關係：framework = 骨 / voice = 肉。
+Framework (PASONA / PASBECONA / BEAF / AIDMA) provides **structure**;
+voice provides **sound**. Relationship: framework = skeleton / voice =
+flesh.
 
-- 同一 PASONA 結構可用不同 voice 產出完全不同讀感的文案。
-- PASONA 的 Affinity 段與 voice 的關聯最密切（讀者共感寄り添い）；Offer
-  段與 tone 的關聯最密切（情境：celebration vs crisis）。
-- キャッチコピー 短文案 voice 最外顯（7–15 字內無掩飾空間），長文案 voice
-  透過一致的 body 累積建立。
+- The same PASONA structure can produce entirely different reading
+  experiences with different voices.
+- PASONA's Affinity stage has the closest association with voice
+  (reader empathy and accompaniment); the Offer stage has the closest
+  association with tone (context: celebration vs. crisis).
+- キャッチコピー short-copy voice is maximally exposed (no hiding room
+  in 7–15 characters); long-copy voice is built through consistent body
+  accumulation.
 
-若 framework 輸出與 brand voice guide 衝突，以 **voice guide 為準**（framework
-是可替換的工具、voice 是不可替換的資產）。
+When framework output conflicts with the brand voice guide, **the voice
+guide takes precedence** (frameworks are replaceable tools; voice is
+an irreplaceable asset).
 
 ## Anti-Patterns
 
-- 同一產品內多篇文案 voice 漂移。每篇各自決定語氣，無 voice guide 作 SSOT，
-  用戶體驗為拼湊感。
-- Voice guide 抽象到無法執行。「我們的 voice 是 friendly, professional,
-  trustworthy」之類的填空，缺 side-by-side examples，main worker 無法判斷
-  是否 on-brand。
-- 把 voice 等同於 style（字體 / 色彩 / 排版）。Style 是視覺層；voice 是
-  語言層；兩者同屬 brand system 但不互相替代。
-- Tone 切換時連 voice 一起換。error state 不代表品牌變成另一個人；voice
-  須恆定，只調 tone。
-- 對 Ogilvy「respect the reader」原則輕忽，文案充斥 condescending 語氣或
-  空洞 hype 詞彙（amazing / revolutionary / game-changing）。
-- 把 JP 情緒 voice（糸井 / 岩崎）強套在 Anglo 品牌文案，或反過來把 Anglo
-  action-oriented voice 強塞進 JP 市場；兩傳統不可直譯轉植。
-- Headline 與 body voice 斷裂。headline 為吸睛破壞 voice，body 再「拉回」
-  voice — 讀者的信任已於 headline 層失去。
+- Voice drift within a single product's copy. Each piece of copy
+  decides its own register with no voice guide as SSOT — the user
+  experience becomes patchwork.
+- Voice guide too abstract to execute. "Our voice is friendly,
+  professional, trustworthy" — fill-in-the-blank style with no
+  side-by-side examples; the main worker cannot judge on-brand status.
+- Equating voice with style (typeface / color / layout). Style is
+  visual-layer; voice is language-layer; both belong to the brand
+  system but are not interchangeable.
+- Switching voice along with tone. Error-state does not mean the brand
+  becomes a different person; voice must remain constant, adjusting
+  only tone.
+- Neglecting Ogilvy's "respect the reader" principle, filling copy
+  with condescending register or empty hype vocabulary (amazing /
+  revolutionary / game-changing).
+- Force-fitting JP emotional voice (糸井 / 岩崎) onto Anglo brand
+  copy, or vice versa force-fitting Anglo action-oriented voice onto
+  JP market copy; the two traditions cannot be directly transplanted.
+- Headline and body voice disconnect. The headline breaks voice for
+  attention-grabbing, then the body "returns" to voice — the reader's
+  trust was already lost at the headline layer.

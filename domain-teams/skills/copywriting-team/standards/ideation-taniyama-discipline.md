@@ -1,240 +1,258 @@
 ---
-title: 谷山雅計 発想体質訓練（散らかす → 選ぶ → 磨く + なんかいいよね禁止）
+title: 谷山雅計 発想体質訓練 (散らかす → 選ぶ → 磨く + なんかいいよね禁止)
 tier: 3
 ---
 
 # 谷山雅計 発想体質訓練
 
-Tier 3 standard: 自包含。以谷山雅計 2007 年『広告コピーってこう書くんだ！
-読本』（宣伝会議）為 canonical source、2024 年増補新版を補強として、
-copywriting-team のコピー発想 / 評価で共用される「**散らかす → 選ぶ → 磨く**」
-三階段 + 「**なんかいいよね禁止**」ルール + 31 の発想体質訓練法を規範化する。
-本檔は重要な attribution drift #3 を校正する：「**What × How 四象限**」は
-谷山原書に存在せず、What / How は広告業界共通の戦略語彙（谷山首創ではない）。
-原書の核心は発散 / 収斂 / 精錬の三階段プロセスと「言語化されない好き嫌いの
-禁止」規則、そして日常の発想体質を鍛える 31 訓練である。
+Tier 3 standard: self-contained. Uses 谷山雅計 2007
+『広告コピーってこう書くんだ！読本』(宣伝会議) as canonical source,
+with the 2024 expanded edition as supplementary reinforcement.
+Formalizes the three-stage process「**散らかす → 選ぶ → 磨く**」+
+the「**なんかいいよね禁止**」rule + 31 creative-disposition training
+exercises used across copywriting-team's copy ideation and evaluation.
+This file corrects a critical attribution drift #3:「**What × How
+四象限**」does not exist in 谷山's original book; What / How are
+common advertising-industry strategy vocabulary (not coined by 谷山).
+The book's core is the three-stage divergence / convergence / refinement
+process, the "prohibition of un-verbalized preferences" rule, and the
+31 daily creative-disposition training exercises.
 
 ## Primary Sources
 
-- 谷山雅計 (2007) 『広告コピーってこう書くんだ！読本』宣伝会議 — canonical 初版。「散らかす → 選ぶ → 磨く」三階段と「なんかいいよね禁止」ルールと 31 訓練法の定式化。
+- 谷山雅計 (2007) 『広告コピーってこう書くんだ！読本』宣伝会議 — canonical first edition. Formalization of the「散らかす → 選ぶ → 磨く」three-stage process,「なんかいいよね禁止」rule, and 31 training exercises.
 - 谷山雅計 (2024) 『広告コピーってこう書くんだ！読本 増補新版』宣伝会議 — 17 年目の増補。基本構造は 2007 年版を継承、近年事例を追補。
-- AdverTimes（宣伝会議）「谷山雅計氏に聞く『なんかいいよね禁止』とは」 https://www.advertimes.com/ — 次級 dual-verify source：「なんかいいよね禁止」のルール詳細と育成哲学。
-- ferret-plus「広告コピーってこう書くんだ！読本 要点整理」 https://ferret-plus.com — 次級 dual-verify source：三階段プロセスと代表 31 訓練の抜粋。
-- diamond.jp 谷山雅計インタビュー — 次級 dual-verify source：「描写 vs 解決」論と発想体質の日常訓練観。
-- be-copywriter「谷山雅計流 発想法ガイド」 — 次級 dual-verify source：31 訓練法の具体例と実務現場での適用例。
+- AdverTimes（宣伝会議）「谷山雅計氏に聞く『なんかいいよね禁止』とは」 https://www.advertimes.com/ — secondary dual-verify source：「なんかいいよね禁止」のルール詳細と育成哲学。
+- ferret-plus「広告コピーってこう書くんだ！読本 要点整理」 https://ferret-plus.com — secondary dual-verify source: three-stage process and representative 31-training excerpts.
+- diamond.jp 谷山雅計インタビュー — secondary dual-verify source：「描写 vs 解決」論と発想体質の日常訓練観。
+- be-copywriter「谷山雅計流 発想法ガイド」 — secondary dual-verify source: concrete examples of the 31 training exercises and workplace application cases.
 
 ## Critical Attribution Corrections
 
-- **「What × How 四象限」は谷山原書に存在しない。** 谷山雅計 2007 の原書を
-  精読しても、What × How を 2×2 象限で並べる「四象限マトリクス」は登場
-  しない。**原書の核心は「散らかす → 選ぶ → 磨く」三階段 + 「なんかいい
-  よね禁止」ルール + 31 訓練法**である。What / How 自体は広告業界の
-  Creative Strategy 語彙（creative brief の標準構成要素）で、**谷山首創
-  でも原書核心でもない**。standards / rubrics / protocols で「谷山の
-  What × How」と書くのは drift、改めて本檔で上記三構成を canonical と
-  する。
-- **31 訓練法を「1 日 1 訓練」と断定しない。** 原書は 31 項目を列挙
-  するが「毎日 1 個やる」とは指定していない。31 の数字は「例示の幅広さ」
-  であって強制スケジュールではない。
+- **「What × How 四象限」does not exist in 谷山's original book.**
+  Close reading of 谷山 2007 reveals no What × How 2×2 quadrant matrix.
+  **The book's core is the「散らかす → 選ぶ → 磨く」three-stage process
+  + the「なんかいいよね禁止」rule + the 31 training exercises**. What /
+  How themselves are advertising-industry Creative Strategy vocabulary
+  (standard creative-brief components), **not coined by 谷山 nor core to
+  the original book**. Writing "谷山's What × How" in standards / rubrics
+  / protocols is drift; this file establishes the above three components
+  as canonical.
+- **Do not characterize the 31 exercises as "one per day".**
+  The original book lists 31 items but never prescribes "do one per day."
+  The number 31 represents breadth of examples, not a mandatory schedule.
 
 ## Framing
 
-谷山雅計の発想論は「**コピーライターは才能ではなく発想体質で決まる**」
-という前提に立つ。才能論は再現不能だが、体質は訓練で獲得できる。そこで
-原書は次の三つを体質要素として提示する：
+谷山雅計's creative theory rests on the premise that「**コピーライターは
+才能ではなく発想体質で決まる**」— copywriters are defined not by talent
+but by creative disposition. Talent theory is non-reproducible;
+disposition is trainable. The original book presents three disposition
+elements:
 
-1. **プロセス** — 散らかす → 選ぶ → 磨く（日々の発想の運び方）
-2. **ルール** — なんかいいよね禁止（判断の厳格化）
-3. **訓練** — 31 の発想体質訓練（日常で鍛える具体メニュー）
+1. **Process** — 散らかす → 選ぶ → 磨く (the daily workflow of ideation)
+2. **Rule** — なんかいいよね禁止 (strictifying judgment)
+3. **Training** — 31 creative-disposition exercises (concrete daily menus)
 
-copywriting pipeline での本 standard の役割は二重：
-- **Ideation 側** — 「散らかす」段階で Mandal-Art / Verbalized Sampling
-  と連携、「選ぶ」段階で KJ法 と連携、「磨く」段階で最終文案の精錬
-- **Evaluation 側** — 「なんかいいよね禁止」を evaluator rubric の
-  binary gate として埋め込み、候補全件に「なぜ良いか」三項の具体理由を
-  要求
+This standard has a dual role in the copywriting pipeline:
+- **Ideation side** — the「散らかす」stage links with Mandal-Art /
+  Verbalized Sampling, the「選ぶ」stage links with KJ法, and the
+  「磨く」stage handles final copy refinement
+- **Evaluation side** — the「なんかいいよね禁止」embeds as a binary
+  gate in evaluator rubrics, requiring three concrete reasons for
+  every retained candidate
 
-## 「散らかす → 選ぶ → 磨く」三階段
+## 「散らかす → 選ぶ → 磨く」three stages
 
-### 階段 1：散らかす（発散）
+### Stage 1: 散らかす (divergence)
 
-- **目的**：**大量の候補を出す**。質ではなく量を稼ぐ段階。
-- **量の目安**：ひとつの key message に対して **64-100 本**のコピー候補。
-  これより少ないと「選ぶ」階段が機能しない。
-- **禁忌**：この段階で「これは良い / 悪い」の自己審査をしない。自己
-  審査すると発散が止まり、既知の正解の近傍だけから抜け出せない。
-- **LLM 活用**：Mandal-Art 8 方向 × Verbalized Sampling 5 本 = 40-80 本
-  を一気に生成できる。人類単独より速い。
-- **谷山流 tip**：「**意図的に変な方向からも書く**」。無難な 80% + 奇抜
-  な 20% の比率が、次の「選ぶ」階段で意外な優勝を生む。
+- **Purpose**: **produce a large number of candidates**. Quantity, not
+  quality, is the objective at this stage.
+- **Volume target**: for a single key message, **64–100** copy
+  candidates. Fewer than this and the「選ぶ」stage cannot function.
+- **Prohibition**: do not self-censor ("this is good / bad") at this
+  stage. Self-censorship halts divergence and traps output near known
+  solutions.
+- **LLM usage**: Mandal-Art 8 directions × Verbalized Sampling 5 lines
+  = 40–80 lines generated at once. Faster than human solo.
+- **谷山 tip**:「**意図的に変な方向からも書く**」. An 80% conventional
+  + 20% eccentric ratio in divergence produces unexpected winners in
+  the next「選ぶ」stage.
 
-### 階段 2：選ぶ（収斂）
+### Stage 2: 選ぶ (convergence)
 
-- **目的**：候補群から**読者視点で**優勝を絞る。書き手視点（思い入れ）
-  ではなく、初見の読者が何を感じるかで判断。
-- **規則**：**「なんかいいよね禁止」**（§詳細は次節）
-- **量の目安**：64-100 候補 → 3-5 本の優勝
-- **手法**：KJ法 でクラスタ化（→ `ideation-kj-convergence.md`）して
-  グループ単位で強弱を見る + 単品評価で「なんかいいよね禁止」を個別に
-  適用。
-- **谷山流 tip**：「**自分の最初のお気に入りを疑う**」。書き手は自分の
-  発想の筋道を知っているから良く見えるだけで、読者には伝わらない場合が
-  多い。
+- **Purpose**: narrow candidates down from the **reader's perspective**.
+  Not the writer's perspective (personal attachment), but what a
+  first-time reader would feel.
+- **Rule**: **「なんかいいよね禁止」** (details in §next section)
+- **Volume target**: 64–100 candidates → 3–5 winners
+- **Method**: KJ法 clustering (→ `ideation-kj-convergence.md`) to
+  evaluate group-level strength + individual evaluation with
+  「なんかいいよね禁止」applied per candidate.
+- **谷山 tip**:「**自分の最初のお気に入りを疑う**」. The writer knows
+  their own ideation path, so their favorite may just look good to them;
+  readers often cannot receive it.
 
-### 階段 3：磨く（精錬）
+### Stage 3: 磨く (refinement)
 
-- **目的**：優勝 3-5 本の**一字一句を詰める**。語彙 / 助詞 / 句読点 /
-  改行 / リズムまで。
-- **着眼点**：
-  - **削れる語はないか**（短文案は特に）
-  - **リズム（音読した時の拍）は良いか**（眞木準系の掛詞 / 韻）
-  - **助詞一文字でニュアンスが変わらないか**（「は / が」「を / に」）
-  - **語順入れ替えで印象が変わるか**
-  - **句読点の有無で読点リズムが変わるか**
-- **谷山流 tip**：「**音読する**」。黙読では見逃すリズムの破綻が音読
-  で露呈する。
+- **Purpose**: polish every word of the 3–5 winners. Vocabulary,
+  particles, punctuation, line breaks, rhythm — everything.
+- **Checkpoints**:
+  - **Can any word be removed?** (especially in short copy)
+  - **Does the rhythm work when read aloud?** (掛詞 / 韻, 眞木準 lineage)
+  - **Does a single particle change the nuance?** (「は / が」「を / に」)
+  - **Does rearranging word order change the impression?**
+  - **Does adding or removing punctuation alter the reading rhythm?**
+- **谷山 tip**:「**音読する**」. Silent reading misses rhythm breakdowns
+  that reading aloud exposes.
 
-## 「なんかいいよね禁止」ルール
+## 「なんかいいよね禁止」rule
 
-### 定義
+### Definition
 
-**「なんかいいよね」** で候補を採用することを禁止する。全ての採用判断に
-**「なぜ良いか」の具体理由 3 項**を明示するよう強制する規則。
+Prohibiting the adoption of candidates on the basis of「なんかいいよね」
+(vague "it's kind of nice"). Enforcing that every adoption decision must
+have **three specific reasons** for "why this is good."
 
-「いいと思う」の感情を否定するのではない。**感情を言語化させる**のが
-目的。言語化できない好みは、偶然の一致か既存認知バイアスで、再現性が
-ない。
+This rule does not deny the feeling of "I like it." Its purpose is to
+**force verbalization of that feeling**. Preferences that cannot be
+verbalized are either coincidental agreement or pre-existing cognitive
+bias — not reproducible.
 
-### 運用
+### Operation
 
-候補 X を採用したい時、以下フォーマットで記述：
+When wanting to adopt candidate X, write in this format:
 
 ```
 採用候補：X
 なぜ良いか：
-1. [具体理由 1：何が読者に何を伝えるか]
-2. [具体理由 2：既存の類似コピーに対して何が新しいか]
-3. [具体理由 3：ターゲットの生活 / 文脈で何が共鳴するか]
+1. [Specific reason 1: what it communicates to the reader and how]
+2. [Specific reason 2: what is new compared to existing similar copies]
+3. [Specific reason 3: what resonates within the target's life / context]
 ```
 
-三項を**全部具体化できない**場合は採用しない。できるまで粘るか、捨てる。
+If **all three cannot be concretely filled**, the candidate is not
+adopted. Persevere until they can be filled, or discard.
 
 ### 描写 vs 解決
 
-谷山は「なんかいいよね」に陥る典型として「**ただ描写しているだけの
-コピー**」を挙げる。例：
+谷山 identifies the typical trap of「なんかいいよね」as
+「**ただ描写しているだけのコピー**」(copy that merely describes). Example:
 
-- **描写型（NG）**：「この化粧水は保湿力が高い」 — 商品特性をそのまま
-  述べただけ
-- **解決型（OK）**：「明日の朝、鏡を見るのが楽しみになる化粧水」 —
-  商品がユーザーの生活に**何をもたらすか**を提示
+- **Descriptive (NG)**:「この化粧水は保湿力が高い」— merely restating
+  the product attribute
+- **Resolution (OK)**:「明日の朝、鏡を見るのが楽しみになる化粧水」—
+  presenting **what the product brings to the user's life**
 
-「なぜ良いか」の 3 項には、**「これは描写ではなく、解決 / 新しい意味
-提示である」** ことを証明する理由が含まれるべき。
+Among the 3 reasons, at least one should prove that **"this is not
+description, but resolution / new meaning presentation."**
 
-## 31 の発想体質訓練法
+## 31 creative-disposition training exercises
 
-谷山 2007 原書は 31 項目を「発想体質を日常で鍛える訓練」として列挙する。
-以下は代表的な項目（全 31 個は原書参照；本檔は lineage を示す抜粋）：
+谷山 2007 lists 31 items as "exercises for building creative
+disposition in daily life." Below is a representative excerpt (for
+all 31, see the original book; this file provides a lineage sample):
 
-1. **電車の広告を 1 日 5 本書き写す** — プロの言葉遣いを手で覚える
-2. **街を歩いて見えた看板を 3 つ、書き換えてみる** — 既存コピーに改案を
-   当てる練習
-3. **友人の近況を 15 字でコピー化する** — 日常から短文案を出す訓練
-4. **1 つの商品について 20 本のキャッチを書く** — 量産体質の基礎
-5. **同じ商品のキャッチを「子供向け / 大人向け / 高齢者向け」3 通り書く**
-   — ターゲット切替の筋力
-6. **今日の自分の行動を一行で要約する** — 抽象化訓練
-7. **テレビ CM を 30 秒見て、15 字 copy に要約** — メッセージ抽出練習
-8. **新聞の見出しを 3 つ、キャッチ風に書き直す** — ジャーナリスティック
-   と広告的リズムの橋渡し
-9. **辞書で無作為に選んだ 1 語から、1 分で 3 本キャッチを書く** —
-   ウォームアップ
-10. **他人が書いたコピーを「なぜ良いか」3 項で言語化する** — 評価体質
-    構築
-11. **1 つのコピーに対し 5 通りの語順入れ替えを試す** — 磨く階段の練習
-12. **好きな小説の一文を広告に転用できる形に書き換える** — 文学からの
-    採集
-13. **自分の業界外の商品で 10 本書く** — 慣れた領域の思考癖を破る
-14. **「〜な商品」というお題で 10 本キャッチを出す** — 与件設定訓練
-15. **同じメッセージを「3 字 / 7 字 / 15 字」3 段階で書く** — 字数制約
-    筋トレ
-16. **「〜と思った」で終わる文を書く禁止令を自分に課す** — 描写コピー
-    の矯正
-... (原書で全 31 項目参照)
+1. **電車の広告を 1 日 5 本書き写す** — learn pro word choices through hand-copying
+2. **街を歩いて見えた看板を 3 つ、書き換えてみる** — practice writing alternatives to existing copy
+3. **友人の近況を 15 字でコピー化する** — daily-life-to-short-copy training
+4. **1 つの商品について 20 本のキャッチを書く** — foundational volume production
+5. **同じ商品のキャッチを「子供向け / 大人向け / 高齢者向け」3 通り書く** — target-switching muscle
+6. **今日の自分の行動を一行で要約する** — abstraction training
+7. **テレビ CM を 30 秒見て、15 字 copy に要約** — message extraction practice
+8. **新聞の見出しを 3 つ、キャッチ風に書き直す** — bridging journalistic and advertising rhythm
+9. **辞書で無作為に選んだ 1 語から、1 分で 3 本キャッチを書く** — warm-up
+10. **他人が書いたコピーを「なぜ良いか」3 項で言語化する** — building evaluation disposition
+11. **1 つのコピーに対し 5 通りの語順入れ替えを試す** — 磨く stage practice
+12. **好きな小説の一文を広告に転用できる形に書き換える** — harvesting from literature
+13. **自分の業界外の商品で 10 本書く** — breaking habitual-domain thinking
+14. **「〜な商品」というお題で 10 本キャッチを出す** — brief-setting training
+15. **同じメッセージを「3 字 / 7 字 / 15 字」3 段階で書く** — word-count constraint training
+16. **「〜と思った」で終わる文を書く禁止令を自分に課す** — correcting descriptive copy habits
+... (see original book for all 31)
 
-**運用のコツ**：31 全部を一度にやらない。週 2-3 訓練を選んで継続する。
-「自分が苦手な筋肉」から選ぶと効果が早い。
+**Practice tip**: do not attempt all 31 at once. Select 2–3 per week
+and sustain. Choose from "muscles that feel weakest" for fastest effect.
 
-## LLM 自動化策略
+## LLM automation strategy
 
-### Ideation 段階での LLM 活用
+### LLM usage in the ideation stage
 
-| 階段 | LLM 可做 | 人類 / evaluator checkpoint |
+| Stage | LLM can do | Human / evaluator checkpoint |
 |---|---|---|
-| 散らかす（64-100 候補生成） | ✓ Mandal-Art × VS で自動生成 | — |
-| 選ぶ（KJ法 + なんかいいよね禁止） | ✓ 初期クラスタ + 候補の「なぜ良いか」3 項 自動生成 | ✓ 3 項の具体性を人類 / evaluator で確認 |
-| 磨く（精錬案出し） | ✓ 語順 / 助詞 / 句読点の代案複数 | ✓ 最終採用は人類 / evaluator |
+| 散らかす (generate 64–100 candidates) | ✓ auto-generate via Mandal-Art × VS | — |
+| 選ぶ (KJ法 + なんかいいよね禁止) | ✓ initial clusters + auto-generate "why good" 3 reasons per candidate | ✓ confirm concreteness of 3 reasons via human / evaluator |
+| 磨く (refinement alternatives) | ✓ multiple alternatives for word order / particles / punctuation | ✓ final adoption by human / evaluator |
 
-### Evaluation 段階での LLM 活用（「なんかいいよね禁止」を binary gate に）
+### LLM usage in the evaluation stage (「なんかいいよね禁止」as binary gate)
 
-evaluator rubric に以下を埋め込む：
+Embed the following in the evaluator rubric:
 
 ```
-Gate: 「なんかいいよね禁止」通過判定
-- 候補 X に対し「なぜ良いか」3 項が記述されているか：PASS / FAIL
-- 各項が具体的で、他候補にもそのまま当てはまる汎用表現でないか：PASS / FAIL
-- 描写型（特性の言い換え）で終わっていないか、解決 / 意味提示まで
-  届いているか：PASS / FAIL
+Gate: 「なんかいいよね禁止」pass judgment
+- Are 3 "why good" reasons written for candidate X: PASS / FAIL
+- Is each reason concrete and not generic phrasing that could apply
+  to any candidate: PASS / FAIL
+- Does it go beyond descriptive (attribute rephrasing) to resolution /
+  meaning presentation: PASS / FAIL
 ```
 
-3 項目全 PASS で「なんかいいよね禁止」gate 通過。1 つでも FAIL なら
-revise。
+All 3 items PASS = 「なんかいいよね禁止」gate passed. Any FAIL =
+revise.
 
-## ideation + evaluation 兩用性
+## Ideation + evaluation dual-use nature
 
-谷山原書は「発想と評価は同じ筋肉」と論じる。「なんかいいよね禁止」は
-発想時の自己審査（書きながら 3 項を自問）にも、評価時の候補選別
-（evaluator として 3 項を検証）にも使える。
+谷山's original book argues「発想と評価は同じ筋肉」(ideation and
+evaluation are the same muscle).「なんかいいよね禁止」works both as
+self-censorship during ideation (asking oneself the 3 reasons while
+writing) and as candidate screening during evaluation (an evaluator
+verifying the 3 reasons).
 
-copywriting-team pipeline ではこの両用性を次のように分担：
+In the copywriting-team pipeline, this dual-use nature divides as
+follows:
 
-- **worker 側（ideation）** — 散らかす → 選ぶ階段で「3 項の理由書」を
-  自分に課し、候補にメタ情報として附記
-- **evaluator 側（evaluation）** — 候補 + 3 項理由書を受け取り、gate
-  判定する（worker が 3 項を書けない候補は自動で下位）
+- **Worker side (ideation)** — in the 散らかす → 選ぶ stages, impose
+  the "3-reason write-up" on oneself and attach as metadata to
+  candidates
+- **Evaluator side (evaluation)** — receive candidates + 3-reason
+  write-ups and perform gate judgment (candidates whose worker could
+  not write 3 reasons automatically rank lower)
 
-## 代表作（grounding note 出典、JP カノン）
+## Representative works (grounding note sources, JP canon)
 
-- **「Yonda?」**（新潮文庫 2000s-）— 疑問形一語で読書行為を呼び起こす
-  短文案の代表
-- **「ガス・パッ・チョ！」**（東京ガス）— オノマトペ + リズムで商品
-  機能を音韻化
-- **「生茶」**（キリンビバレッジ）— 商品名そのものを copy として機能
-  させる短文案
-- その他 TCC 賞 / TCC 年鑑（1963-）に収録の谷山作品群は短文案カノンの
-  参照源
+- **「Yonda?」** (新潮文庫 2000s–) — a single interrogative word
+  evoking the act of reading; a representative short-form copy
+- **「ガス・パッ・チョ！」** (東京ガス) — onomatopoeia + rhythm encoding
+  product function in phonetics
+- **「生茶」** (キリンビバレッジ) — product name itself functioning as
+  copy
+- Other 谷山 works in TCC 賞 / TCC 年鑑 (1963–) serve as short-form
+  canon reference sources
 
 ## Anti-Patterns
 
-- **「What × How 四象限」を谷山由来として引用する**：原書に存在しない。
-  What / How を 2×2 に並べて「谷山メソッド」と呼ぶのは drift。本檔の
-  三階段 + なんかいいよね禁止 + 31 訓練を canonical とすること。
-- **What / How を谷山首創として引用する**：What（何を言うか）と How
-  （どう言うか）は広告業界の Creative Strategy 語彙で、creative brief の
-  標準構成要素。谷山首創でも独自概念でもない。
-- **「なんかいいよね禁止」gate をスキップする**：worker が 3 項理由書を
-  省略し、evaluator も検証しない。これは発想体質の核心規則違反で、
-  谷山流を名乗る資格がなくなる。
-- **31 訓練を全部やろうとする**：原書も全部一度にやれとは言わない。
-  週 2-3 訓練の継続が基本。
-- **「31 は谷山固有の数字」と神聖化する**：31 は例示の幅で、魔法の数
-  ではない。過不足あっても発想体質訓練という枠組みは機能する。
-- **散らかす段階で自己審査する**：候補を出しながら「これは良くないな」
-  と捨てる。発散が止まり、既知の近傍から抜け出せない。
-- **描写コピーで止まる**：「〇〇は△△です」で完結する。商品特性を述べ
-  ただけで解決 / 新しい意味提示まで届いていない。谷山「描写 vs 解決」
-  論に反する。
-- **書き手視点で選ぶ**：自分の発想ルートを知っているから良く見えるだけ、
-  を優勝に選ぶ。読者視点の転換がないと「なんかいいよね禁止」を擦り抜
-  ける。
+- **Citing「What × How 四象限」as 谷山-originated**: the original book
+  contains no such matrix. Calling a What / How 2×2 "谷山 method" is
+  drift. Use the three-stage process + なんかいいよね禁止 + 31 training
+  exercises as canonical.
+- **Citing What / How as 谷山's coinage**: What (what to say) and How
+  (how to say it) are common advertising Creative Strategy vocabulary,
+  standard creative-brief components. Not coined by or unique to 谷山.
+- **Skipping the「なんかいいよね禁止」gate**: worker omits the 3-reason
+  write-up, evaluator does not verify. This violates the core rule of
+  creative disposition; it disqualifies claiming 谷山's method.
+- **Attempting all 31 exercises at once**: the original book does not
+  prescribe doing all of them at once. Sustaining 2–3 per week is the
+  baseline.
+- **Sacralizing 31 as a magic number**: 31 is the breadth of examples,
+  not a magic constant. More or fewer items still make the
+  creative-disposition training framework functional.
+- **Self-censoring during 散らかす**: discarding candidates while
+  generating ("this isn't good"). Divergence stops and output cannot
+  escape the vicinity of known solutions.
+- **Stopping at descriptive copy**: finishing with「〇〇は△△です」.
+  Merely stating product attributes without reaching resolution / new
+  meaning presentation. Violates 谷山's「描写 vs 解決」thesis.
+- **Selecting from the writer's perspective**: choosing a favorite
+  because "I know my ideation path, so it looks good to me." Without
+  the reader-perspective shift,「なんかいいよね禁止」is circumvented.
