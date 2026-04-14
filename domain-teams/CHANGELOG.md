@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.1] — 2026-04-15
+
+### Changed (copywriting-team)
+- **voice-quadrant-positioning.md rebalanced to positive examples**:
+  per-quadrant structure now leads with Positive Positioning Principle,
+  expands Canonical Copy Corpus with verified EN/JP/TW samples, and
+  closes with Positive Application Hints. Anti-Patterns section
+  trimmed from ~10 items to 3 load-bearing rules (diagonal mixing /
+  Schwartz × Quadrant mismatch / quadrant-as-hard-label).
+- **Language compliance fix** (per v4.13.1 policy): framework labels
+  Q1–Q4 refactored from 繁中 to EN only (Q1 Authority-Reason / Q2
+  Authority-Emotion / Q3 Affinity-Emotion / Q4 Affinity-Reason). ZH
+  labels retained only in §ZH Copywriting Tradition as Taiwan voice-
+  family canonical terminology.
+- Cross-file label alignment: `voice-consistency-gate.md` Dim 5 and
+  `copywriting-brainstorming.md` Q6 updated to EN quadrant labels.
+
+### Fixed (copywriting-team)
+- **Drift #29**: 「恋を何年、休んでますか。」 attribution corrected to
+  眞木準 伊勢丹 1989 alone (previous dual-attribution to 眞木/岩崎
+  was incorrect).
+- **Drift #30**: MUJI foundational corpus (わけあって、安い /
+  愛は飾らない / 自然、当然、無印 / しゃけは全身しゃけなんだ) all
+  attributed to 小池一子 (AD: 田中一光).
+- Ogilvy Rolls-Royce 1958 wording fix: "this new Rolls-Royce" (not
+  "the new").
+
+### Added (canonical copy samples, all WebSearch-verified)
+- **EN**: Ogilvy Rolls-Royce 1958, Apple Think Different full
+  manifesto, Dove Real Beauty 2004.
+- **JP**: MUJI x4 (小池一子), 糸井 西武 1980-1982 x3, 岩崎
+  サントリー 1985 + ミツカン 2004 + プレナス, 眞木 伊勢丹 1989.
+- **TW**: 葉明桂 左岸咖啡館 strategic brief (Q1), 左岸咖啡館 ad
+  series x2 (Q2, with Altenberg borrowing note), 許舜英 銀行倒閉,
+  李欣頻 拋開阿莫多瓦 (誠品敦南), 龔大中 全聯潮包 2016 + 經典篇 2017.
+
+### Excluded (unverified)
+- TW: 左岸「你在左岸咖啡館」 series, 許舜英「購物冷感症」
+- JP: UNIQLO / 佐藤可士和 as copywriter (reframed as art direction)
+
+### Research
+- `research/grounding-v4.18.1.md` — 3-cluster verification audit trail
+  (EN / JP / TW canonical ad corpus).
+
 ## [4.18.0] — 2026-04-14
 
 ### Added (copywriting-team)
