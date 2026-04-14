@@ -473,6 +473,7 @@ The references/ directory has additional documentation:
 - `references/iteration-automation.md` — Self-assessment and auto-regression detection protocols
 - `references/eval-methodology.md` — Eval methodology principles: why the eval workflow is designed this way (optional)
 - `references/platform-adaptations.md` — Claude.ai and Cowork platform-specific adjustments
+- `references/mermaid-usage-guidelines.md` — When to use Mermaid diagrams vs prose in skill authoring (decision trees / state machines / routing), syntax conventions, cost-benefit framework
 
 ---
 
