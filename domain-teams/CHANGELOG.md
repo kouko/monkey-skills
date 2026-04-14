@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.12.1] — 2026-04-14
+
+Skill-team convention clarification: formally define a **2-commit
+split variant** for refactors that introduce no new `standards/`
+files. Modify-only PATCH bump per skill-team convention (existing
+runtime files updated, no new files added).
+
+### Motivation
+
+copywriting-team v4.13.0 (forthcoming) is an interaction-layer
+refactor (intake protocol + handoff format + intake-completeness
+checklist) that adds no new `standards/` files. The canonical
+3-commit split's "Commit 1/3 — Standards Foundation" has no content
+to hold for such refactors. Forcing a placeholder or stub into
+Commit 1 would be an anti-pattern per `grounding-principle.md`.
+Before v4.12.1, the Commit Split Validity gate had no formal branch
+for this case and flagged such refactors as NEEDS_REVISION — a
+convention gap rather than an actual structural problem.
+
+### Changed
+
+- `skills/skill-team/standards/commit-convention.md`:
+  - New §2-Commit Variant: Refactor Without New Standards section
+    defining Commit 1/2 (protocols/gates + modify-only standards) +
+    Commit 2/2 (wiring) layout
+  - Detection rule: `git diff --name-only --diff-filter=A main..HEAD
+    -- '**/standards/*.md'` empty → 2-commit variant applies;
+    otherwise 3-commit canonical. The `--diff-filter=A` restricts to
+    **added** files, so modify-only standards edits stay in 2-commit
+    mode (rationale: 3-commit's value is isolating NEW grounding for
+    review; text-only tweaks do not need that isolation)
+  - §Commit Message Format clarifies `(v<X.Y.Z> <N>/<N>)` suffix with
+    denominator matching detected split size (examples of both
+    canonical 3-commit and 2-commit variant)
+- `skills/skill-team/checklists/commit-split-checklist.md`:
+  - §Scope adds mandatory split-mode detection first step with
+    matching `--diff-filter=A` rule
+  - CHK-CMT-001/002/003 gain mode-aware branches (3-commit canonical
+    vs 2-commit variant) — each item specifies expected content per
+    mode. 2-commit branch of CHK-CMT-001 explicitly permits modify-
+    only standards edits (only NEW additions trip 3-commit mode)
+  - CHK-CMT-003 returns NOT_APPLICABLE in 2-commit mode (content
+    validated by CHK-CMT-002 in that mode)
+  - CHK-CMT-004 updates suffix pattern to `N/<N>` with denominator
+    matching the detected mode
+
+### Self-dogfood
+
+This very amendment is 2-commit mode — it modifies `commit-convention.md`
+(in `standards/`) and `commit-split-checklist.md` (in `checklists/`).
+Because no **new** standards files are added, the detection rule with
+`--diff-filter=A` correctly routes to 2-commit mode. The initial draft
+used plain `git diff --name-only` (no filter), which would have tripped
+to 3-commit mode on this branch — the filter refinement was surfaced
+by dogfood evaluation and applied before this commit.
+
+### When to use which split
+
+| Refactor touches `standards/`? | Split mode | Precedent |
+|---|---|---|
+| Yes (add / modify standards) | canonical 3-commit | qa-team v4.2.0, design-team v4.8.0 |
+| No (protocols/gates/wiring only) | 2-commit variant | copywriting-team v4.13.0 (forthcoming) |
+
+### Not a breaking change
+
+Existing 3-commit branches continue to pass unchanged — mode detection
+routes them to the canonical branch of each CHK-CMT item. The gate's
+output JSON format and verdict rules are identical.
+
+### Commit split
+
+Since this amendment is itself a modify-only PATCH with no new files,
+per the convention it codifies, the **2-commit variant** applies
+self-dogfood style:
+
+1. `refactor(skill-team): add 2-commit variant to commit-convention + checklist (v4.12.1 1/2)`
+2. `refactor(skill-team): bump 4.12.1 with CHANGELOG (v4.12.1 2/2)`
+
 ## [4.12.0] — 2026-04-14
 
 New domain team: **copywriting-team** — persuasive marketing copy
