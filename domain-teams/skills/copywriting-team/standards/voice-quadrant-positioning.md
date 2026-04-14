@@ -87,6 +87,11 @@ sequential: quadrant first (strategic positioning), 4-axis second
   愛は飾らない / 自然当然無印 / しゃけは全身しゃけなんだ) is all
   **小池一子** copy with AD 田中一光. Other attributions (including
   Kodama Kunio) are unsupported.
+- **Drift #31 (v4.18.2)**: JR九州 canonical line 「愛とか、勇気とか、
+  見えないものも乗せている。」 is **仲畑貴志 1994** per TCC年鑑
+  verification. Prior attribution 「夢とか、決意とか…」 is NOT in the
+  TCC archive — removed from the Q3 brand corpus. Use only the
+  verified 仲畑貴志 line.
 - **Archetype caveat**: Brand archetypes (Mark & Pearson 2001) are
   **contested** — peer-reviewed empirical work reduces the 12-category
   taxonomy to 4 clusters (Xara-Brasil 2018) and refutes the single-
