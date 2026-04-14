@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.14.0] — 2026-04-14
+
+Depth & Craft expansion: 4 new standards + 1 new protocol deepening
+copywriting-team's framework coverage, JP voice analysis, instinct-
+driven ideation, and SNS-era consumer behavior modeling.
+
+### Motivation
+
+v4.12.0 shipped with 10 standards covering the PASONA/BEAF/AIDMA
+core, but deferred several knowledge-deepening items: Anglo long-form
+alternatives (QUEST/PASTOR), JP voice master deep dives, 小霜和也's
+instinct-driven analytical lens, and SNS-era consumer behavior models
+(AISAS/SIPS/ULSSAS). v4.14.0 closes these gaps.
+
+### Added
+
+4 new standards:
+
+- `standards/long-form-extended-frameworks.md` (Tier 2) — QUEST
+  (Michel Fortin 2005) + PASTOR (Ray Edwards 2016). Extends PASONA-
+  family routing for EN/international long-form. Corrects drifts #6
+  (QUEST attribution to Makepeace), #7 (PASTOR T = dual meaning),
+  #14 (PASTOR authorship). CREMA dropped — no canonical source.
+- `standards/jp-copy-craft-lineage.md` (Tier 3) — 糸井重里 / 岩崎俊一
+  / 眞木準 voice deep dives with voice signatures, stylistic grammar
+  patterns, generational context, and LLM reproduction gap analysis
+  per master. Corrects drift #8 (リゲイン misattribution).
+- `standards/kosimo-instinct-analysis.md` (Tier 3) — 小霜和也's
+  instinct-driven (本能駆動) analytical lens. 無意識 vs 意識 model,
+  90-10 rule, 一行で関係を作れるか test, structural comparison with
+  PASONA family, 義 (righteousness) ethical foundation. Corrects
+  drifts #9 (pub year 2010 not 2009), #10 (process lens not taxonomy).
+- `standards/sns-evolution-aisas-ulssas.md` (Tier 2) — AIDMA →
+  AISAS (秋山・杉山 2004) → SIPS (佐藤 2011) → ULSSAS (飯髙 2019).
+  Per-model copywriting implications + ULSSAS UGC-triggering seed
+  concept. Corrects drifts #11 (year), #12 (publisher), #13 (source).
+
+1 new protocol:
+
+- `protocols/copy-ideation-advanced.md` — multi-method overlay on
+  copy-ideation-parallel.md. Adds 小霜 instinct-lens divergence,
+  ULSSAS seed criteria, voice lineage calibration, and 谷山 31
+  training fragments as warm-up / quality-development tools.
+
+Research note:
+
+- `research/grounding-v4.14.0.md` — 5-cluster parallel grounding
+  audit trail (QUEST, PASTOR, 小霜, AISAS/ULSSAS, 糸井/岩崎/眞木).
+
+### Changed
+
+- `SKILL.md`: intro updated to reference new frameworks and sources.
+  Resource Manifest expanded 10 → 14 standards. Protocol paths add
+  copy-ideation-advanced. Worker/evaluator launch templates include
+  all 14 standards. New "Long-Form Extended (QUEST / PASTOR)"
+  workflow added. Copy Ideation Workshop updated with advanced
+  variant opt-in.
+
+### Not a breaking change
+
+All existing workflows, gates, and standards remain intact. The 4
+new standards are additive — no existing file was modified except
+SKILL.md (wiring). Existing 10 standards retain their content and
+tier levels. Gate files (checklists, rubrics) are unchanged.
+
 ## [4.13.1] — 2026-04-14
 
 Language cleanup: migrate copywriting-team from 3-language mix
