@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.0] — 2026-04-14
+
+### Added (copywriting-team)
+- **Voice Quadrant Positioning** (`standards/voice-quadrant-positioning.md`,
+  Tier 3): 2-axis macro typology (Authority↔Affinity × Reason↔Emotion)
+  with 4 quadrants (Q1 知識權威 / Q2 意識形態 / Q3 情緒共鳴 /
+  Q4 直覺行動). Per-quadrant EN/ZH/JP representative practitioners and
+  brands with sample sentence patterns (One-shot anchors). Complements
+  the existing 4-axis micro-tuning model in voice-and-tone.md.
+- **ZH copywriting tradition**: 葉明桂, 林育聖 (Q1), 許舜英, 李欣頻
+  (Q2), 龔大中, 盧建彰 (Q3), 織田紀香, 廣告樂血研究院 (Q4). Fills
+  gap between existing JP and EN grounding.
+- **Schwartz × Quadrant routing rule**: Level 5 Unaware readers must
+  enter via Q3 (Affinity + Emotion) narrative, never Q4 (direct action).
+- **Voice Consistency Gate Dim 5**: Voice Quadrant Coherence with
+  mechanical per-quadrant distinguishability (particle density / emoji /
+  abstract-noun ratio / imperative verbs / evidence style).
+- Grounding research: `research/grounding-v4.18.0.md` (3 clusters:
+  FCB+Halliday, Brand Archetypes contested, ZH tradition).
+
+### Changed (copywriting-team)
+- `voice-and-tone.md`: added "Voice positioning — strategic + tactical"
+  section directing users to quadrant for macro first; added quadrant
+  mapping for JP masters (糸井/岩崎 → Q3; 眞木 → Q2↔Q3).
+- `voice-consistency-gate.md`: Dim 4 now 3-way (JP-emotional / Anglo-
+  benefit-clear / ZH-copywriting); Dim 5 added.
+- `copywriting-brainstorming.md` Q6: two-step (quadrant + maestro) with
+  ZH maestro options.
+- `write-long-form-copy.md`: added voice quadrant corollary to Schwartz
+  awareness decision.
+- Standards count: 18 → 19.
+
+### Honesty disclosures (v4.18.0)
+- Drift #25: FCB + SFL combination for brand voice is team synthesis.
+- Drift #26: 廣告樂血研究院 (not 樂血幫).
+- Drift #27: 詹宏志 excluded (editor, not ad copywriter).
+- Drift #28: ZH micro-indicators are heuristics, not published metrics.
+- Brand Archetypes: contested framework (Neher 1996, Xara-Brasil 2018,
+  Dias & Dias 2022); cite as practitioner heuristic only.
+
 ## [4.17.0] — 2026-04-14
 
 ### Added (copywriting-team)
