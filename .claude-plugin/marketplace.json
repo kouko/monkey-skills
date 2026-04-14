@@ -18,6 +18,11 @@
       "name": "philosophers-toolkit",
       "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning. 哲學思考框架。哲学的思考フレームワーク。",
       "source": "./philosophers-toolkit/"
+    },
+    {
+      "name": "dev-workflow",
+      "description": "Developer workflow skills — skill creation, evaluation, and iterative improvement",
+      "source": "./dev-workflow/"
     }
   ]
 }
