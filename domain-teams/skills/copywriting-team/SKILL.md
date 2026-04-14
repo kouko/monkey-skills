@@ -80,19 +80,28 @@ produce form-aware outputs (JP キャッチコピー + EN tagline may coexist).
 
 ## Context Discovery
 
-Before starting work:
-1. Identify the form type — long / mid / short — from user request.
-   If ambiguous, ask before drafting.
-2. Identify the source of the value proposition — user-supplied, from a
-   PRODUCT-SPEC.md, from planning-team output, or needs extraction.
-3. Identify the target audience — persona, awareness level (Schwartz 5),
-   cultural register (JP / Anglo / other).
-4. Check if an existing voice-and-tone guide governs this brand. If yes,
-   honor it; if no and the work is brand-defining, propose creating one.
-5. Assess scope:
-   - Too large for one task → decompose (e.g., LP + email + banner = three
-     workflows, not one)
-   - Outside this team's domain → see Cross-Domain Awareness
+**Phase 0 — Intake**: every workflow starts by running
+`protocols/copywriting-brainstorming.md`. That protocol is a hard gate —
+no copy drafting, ideation dispatch, or audit begins until its
+Understanding Summary is produced AND the user confirms it.
+
+The brainstorming protocol collects Level 1 (BLOCKED if missing) + Level 2
+(ask before Phase 1) + Level 3 (default with disclosure) fields per
+workflow, runs a Socratic grill against assumptions, and emits a
+structured spec. The Intake Completeness MUST gate then verifies the
+Summary before downstream protocols load.
+
+Lightweight trigger assessment (before the protocol runs):
+- Identify whether the user's request falls inside this team's scope
+  (see `When NOT to Use`); route away if not.
+- Identify if scope is too large for a single workflow (e.g., LP + email
+  + banner = three workflows, not one) and decompose before invoking
+  brainstorming.
+
+Do NOT short-circuit the brainstorming protocol even when the user's
+request looks specific. A seemingly-complete request may still lack
+Schwartz awareness level, voice reference, or approach selection —
+brainstorming surfaces those gaps.
 
 ## Quality Gates
 
@@ -111,6 +120,7 @@ self-check.
 
 | Gate | Trigger | File |
 |------|---------|------|
+| Intake Completeness | Output from Phase 0 brainstorming before any downstream protocol loads | `evaluator` + `checklists/intake-completeness-checklist.md` |
 | Persuasion Framework Adherence | Output is a copy artifact (long / mid / short) | `evaluator` + `checklists/persuasion-framework-adherence-checklist.md` |
 | Ethics | Output is a copy artifact or audit report | `evaluator` + `checklists/ethics-checklist.md` |
 
@@ -167,10 +177,20 @@ Worker default resources:
 
 Evaluator default resources:
 - standards: same 10 files as worker
+- Intake Completeness gate: `checklists/intake-completeness-checklist.md`
 - Persuasion Framework Adherence gate: `checklists/persuasion-framework-adherence-checklist.md`
 - Ethics gate: `checklists/ethics-checklist.md`
 - Voice Consistency gate: `rubrics/voice-consistency-gate.md`
 - Form-Appropriate gate: `rubrics/form-appropriate-gate.md`
+
+Protocol paths (selected per-workflow):
+- `protocols/copywriting-brainstorming.md` — Phase 0 intake (always first)
+- `protocols/copywriting-handoff-format.md` — candidate output + progress reporting standard (always referenced during output)
+- `protocols/copy-ideation-parallel.md` — Phase 1-2 fan-out + convergence
+- `protocols/write-long-form-copy.md` — Phase 3-L
+- `protocols/write-mid-form-copy.md` — Phase 3-M
+- `protocols/write-short-form-copy.md` — Phase 3-S
+- `protocols/copy-audit.md` — audit workflow
 
 ### Behavioral Rules
 
@@ -257,12 +277,16 @@ Affinity candidates before drafting.
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
-| 1. 發散 | worker (× N subagents) | `protocols/copy-ideation-parallel.md` | value prop + audience | 64 candidates with VS probabilities | 8 曼陀羅 directions × 8 VS candidates |
+| 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
+| 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
+| 1. 發散 | worker (× N subagents) | `protocols/copy-ideation-parallel.md` | confirmed Summary | 64 candidates with VS probabilities | 8 曼陀羅 directions × 8 VS candidates |
 | 2. 收斂 | worker | `protocols/copy-ideation-parallel.md` | 64 candidates | 3-5 winning angles | KJ 6-stage + 谷山 「なんかいいよね禁止」 |
 
 **Handoff**: the 3-5 winning angles feed directly into Long-Form / Mid-Form /
 Short-Form Copy Writing workflows as seed input (Affinity seed for long-form,
-Benefit seed for mid-form, headline seed for short-form).
+Benefit seed for mid-form, headline seed for short-form). Output format
+(candidate structure, progress reporting, checkpoint prompts) follows
+`protocols/copywriting-handoff-format.md`.
 
 ### Long-Form Copy Writing
 
@@ -270,8 +294,10 @@ Benefit seed for mid-form, headline seed for short-form).
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
-| 1. Framework | worker | `protocols/write-long-form-copy.md` | audience + word count | PASONA / 新 PASONA / PASBECONA choice | based on length + awareness level |
-| 2. Draft | worker | `protocols/write-long-form-copy.md` | framework + seed | long-form copy artifact | — |
+| 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
+| 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
+| 1. Framework | worker | `protocols/write-long-form-copy.md` | confirmed Summary | PASONA / 新 PASONA / PASBECONA choice | based on length + awareness level |
+| 2. Draft | worker | `protocols/write-long-form-copy.md` | framework + seed | long-form copy artifact | progress reporting per handoff-format |
 | 3. Framework Gate | evaluator | `checklists/persuasion-framework-adherence-checklist.md` | copy artifact | verdict | MUST gate |
 | 4. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | copy artifact | verdict | MUST gate |
 | 5. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | copy artifact | verdict | SHOULD gate |
@@ -283,7 +309,9 @@ Benefit seed for mid-form, headline seed for short-form).
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
-| 1. BEAF 骨架 | worker | `protocols/write-mid-form-copy.md` | product spec + benefits | BEAF-ordered draft | Benefit-first enforcement |
+| 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
+| 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
+| 1. BEAF 骨架 | worker | `protocols/write-mid-form-copy.md` | confirmed Summary | BEAF-ordered draft | Benefit-first enforcement |
 | 2. Framework Gate | evaluator | `checklists/persuasion-framework-adherence-checklist.md` | copy artifact | verdict | MUST gate |
 | 3. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | copy artifact | verdict | MUST gate (景品表示法) |
 | 4. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | copy artifact | verdict | SHOULD gate |
@@ -294,7 +322,9 @@ Benefit seed for mid-form, headline seed for short-form).
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
-| 1. Approach 選擇 | worker | `protocols/write-short-form-copy.md` | audience emotion | one of 5 切入點 | 利益/恐懼/顛覆/呼喚/提問 |
+| 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request | Understanding Summary | hard gate — user must confirm |
+| 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
+| 1. Approach 選擇 | worker | `protocols/write-short-form-copy.md` | confirmed Summary | one of 5 切入點 | 利益/恐懼/顛覆/呼喚/提問 |
 | 2. Draft | worker | `protocols/write-short-form-copy.md` | approach + voice | candidate キャッチコピー (7-15 字) | AIDMA A+I only |
 | 3. 禁句審查 | worker | `protocols/write-short-form-copy.md` | candidates | finalists with 3 reasons each | 谷山 なんかいいよね禁止 |
 | 4. Framework Gate | evaluator | `checklists/persuasion-framework-adherence-checklist.md` | candidates | verdict | MUST gate |
@@ -308,6 +338,8 @@ Benefit seed for mid-form, headline seed for short-form).
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
+| 0. Intake | worker | `protocols/copywriting-brainstorming.md` | user request + existing copy | Understanding Summary (light — review focus only) | hard gate — user confirms focus |
+| 0.1. Intake Gate | evaluator | `checklists/intake-completeness-checklist.md` | Summary | verdict | MUST gate |
 | 1. Type ID | worker | `protocols/copy-audit.md` | existing copy | form type + framework detected | — |
 | 2. Diagnose | worker | `protocols/copy-audit.md` | copy + type | issue list by severity | references form-appropriate + framework + ethics criteria |
 | 3. Suggest | worker | `protocols/copy-audit.md` | issues | improvement recommendations (+ optional rewrites) | optional variants via 「なんかいいよね禁止」 |
@@ -345,6 +377,10 @@ If a worker outputs `BLOCKED`:
 - Wait for user input
 
 Common BLOCKED scenarios:
+- **Intake-level BLOCKED** (surfaced by brainstorming protocol or Intake
+  Completeness gate): a Level 1 field remains missing after one clarification
+  round — product/service undefined, target audience un-identifiable, form
+  type indeterminate, existing copy missing for audit, etc.
 - Value proposition unclear — needs planning-team first
 - Target audience unspecified — cannot choose among 5 切入點 or Schwartz levels
 - Required voice guide does not exist and scope is too narrow to create one

@@ -7,6 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.13.0] — 2026-04-14
+
+First copywriting-team interaction layer refactor: formalize user
+intake, clarification hierarchy, progress reporting, mid-pipeline
+checkpoints, and candidate output format. MINOR bump per skill-team
+conventions (new runtime files — 2 protocols + 1 checklist; additive).
+
+Applies the 2-commit variant formalized in v4.12.1 (no new
+`standards/` files added on this branch; `--diff-filter=A` detection
+routes to 2-commit mode).
+
+### Added
+
+- `skills/copywriting-team/protocols/copywriting-brainstorming.md`
+  (~300 lines) — Phase 0 intake protocol. 10-task sequential checklist
+  + Socratic grill + Understanding Summary hard gate. Branches Level 1
+  field collection by form type (long / mid / short / ideation / audit).
+  Structural precedent: `planning-team/protocols/planning-brainstorming.md`.
+- `skills/copywriting-team/protocols/copywriting-handoff-format.md`
+  (~290 lines) — candidate output format standard + pipeline progress
+  reporting templates + mid-pipeline checkpoint rules + audit report
+  structure. Every candidate must attach voice/framework label + 3
+  concrete "why good" reasons (enforcing 谷山「なんかいいよね禁止」).
+- `skills/copywriting-team/checklists/intake-completeness-checklist.md`
+  (~195 lines) — new MUST gate: verifies all Level 1 intake fields
+  present in Understanding Summary before downstream protocols load.
+  Branches verification by declared form type. FAIL_FATAL on any
+  missing Level 1 field → returns BLOCKED to main.
+
+### Changed
+
+- `skills/copywriting-team/SKILL.md` (351 → 390 lines):
+  - §Context Discovery rewritten to mandate Phase 0 via
+    `copywriting-brainstorming.md` before any downstream work
+  - §MUST Gates table adds Intake Completeness as first gate
+  - §Resource Manifest evaluator block adds intake gate;
+    worker block adds new protocols list section
+  - All 5 workflows (Copy Ideation Workshop / Long-Form / Mid-Form /
+    Short-Form / Copy Audit) prepend Phase 0 Intake + Phase 0.1 Intake
+    Gate rows, gated on confirmed Summary before their respective
+    Phase 1 loads
+  - §Worker BLOCKED Handling adds "Intake-level BLOCKED" as the first
+    common scenario (surfaced by brainstorming protocol or
+    Intake Completeness gate)
+
+### Design decisions
+
+- **Full 5-dimension interaction layer in one version** — intake +
+  clarification hierarchy + progress reporting + mid-pipeline
+  checkpoints + output format convention all delivered together.
+  Rationale: dimensions are mutually reinforcing; splitting would
+  require temporary inconsistent UX.
+- **Level 1 / 2 / 3 intake hierarchy** — Level 1 (Must, BLOCKED if
+  missing), Level 2 (Strong recommend, ≤2 clarification rounds
+  before fallback), Level 3 (default with disclosure in Summary).
+- **Understanding Summary as hard gate** — user must explicitly
+  confirm the structured spec before any downstream protocol loads.
+  Mirrors `planning-team/protocols/planning-brainstorming.md` Task 4c
+  and `code-team/protocols/code-brainstorming.md` Understanding
+  Summary step.
+- **Candidate output format standardization** — every candidate
+  (from ideation workshop or direct drafting) carries voice
+  reference + approach/framework label + 3 concrete "why good"
+  reasons + ethics self-check result. Borrowed from
+  `protocols/copy-ideation-parallel.md` §Phase 3 handoff and
+  promoted to team-wide standard.
+
+### Commit split
+
+2-commit variant per v4.12.1 skill-team convention (this refactor adds
+no new `standards/` files, so canonical 3-commit's "Commit 1/3 —
+Standards Foundation" does not apply):
+
+1. `refactor(copywriting-team): add intake protocol + handoff format + completeness checklist (v4.13.0 1/2)`
+2. `refactor(copywriting-team): wire intake into workflows, bump 4.13.0 (v4.13.0 2/2)`
+
+### Out of scope (deferred to v4.14.0 / v4.15.0)
+
+- QUEST / PASTOR / CREMA extended long-form frameworks (v4.14.0 —
+  addresses attribution drifts 6+7)
+- 小霜和也 本能ドライバー analysis as structural alternative (v4.14.0)
+- JP copy craft lineage depth — 糸井/岩崎/眞木 voice studies (v4.14.0)
+- SNS evolution AIDMA → AISAS → ULSSAS coverage (v4.14.0)
+- Neta injection techniques + WebSearch-only pipeline + safety gate
+  (v4.15.0)
+
 ## [4.12.1] — 2026-04-14
 
 Skill-team convention clarification: formally define a **2-commit
