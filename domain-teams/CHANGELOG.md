@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.16.1] — 2026-04-14
+
+Housekeeping: add missing `commands/copywriting.md` slash command
+wrapper for copywriting-team. The team has shipped (v4.12.0 onward)
+but the slash command entry point was never added — meaning users
+could only invoke it via the using-domain-teams router or by name,
+not via the `/copywriting` shortcut available for all 8 other teams.
+
+This is a modify-only PATCH bump (no new runtime behavior; only
+adds a discoverability wrapper). Parallels v4.5.1 precedent which
+backfilled the missing skill-team slash command after a similar gap.
+
+### Added
+
+- `commands/copywriting.md` — 5-line stub matching the convention
+  used by the 8 other team commands (code/design/devops/docs/planning/
+  qa/research/skill). Description: "Persuasive marketing copy with
+  framework grounding. Landing pages, キャッチコピー, email, voice
+  guides, audits."
+
+### Not a breaking change
+
+No skill content modified. v4.16.0 consumers continue to work
+unchanged; this PATCH only adds the `/copywriting` slash command
+entry point.
+
 ## [4.16.0] — 2026-04-14
 
 Neta Injection Capability: formal framework for injecting pop culture
