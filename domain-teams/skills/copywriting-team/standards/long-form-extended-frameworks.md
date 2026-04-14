@@ -262,12 +262,16 @@ are handled by `persuasion-ethics.md`.
   structural logics (PASONA: fear/empathy → offer → scarcity;
   QUEST: filter → empathy → educate → stimulate → close;
   PASTOR: person → amplify → story → transform → offer → respond).
-- **Citing "CREMA" as a canonical framework**. No primary source
-  has been identified for CREMA (Conclusion-Reason-Evidence-Method-
-  Action). It appears in JP secondary sources as an industry
-  heuristic but lacks author attribution or canonical publication.
-  Do not present CREMA as a grounded framework alongside QUEST
-  and PASTOR.
+- **Citing CREMA as a long-form framework**. CREMA (Conclusion-
+  Reason-Evidence-Method-Action) is a JP web-marketing industry
+  template for **short-to-mid form light-action copy** (email
+  opt-in, newsletter subscribe, LP click-through, free download).
+  It is documented in `light-action-frameworks.md` with appropriate
+  primary-source handling (no canonical author, parallel to BEAF).
+  Using CREMA for long-form contexts (sales letters, high-ticket
+  LPs) is a **scope mismatch** — CREMA's Evidence is too compressed
+  and its Action too direct to overcome deep purchase resistance.
+  For long-form contexts, prefer QUEST / PASTOR / PASONA-family.
 - **Treating the Offer 20% rule as absolute**. The ~20% proportion
   for PASTOR's Offer stage is a heuristic from Cooler Insights
   2017 corroboration, not Edwards' canonical prescription. Adjust
