@@ -20,10 +20,13 @@ tone-switching rules defined here.
 
 - David Ogilvy (1963) *Confessions of an Advertising Man*, Atheneum — Ogilvy's creative credo; "consumer is not a moron, she is your wife" / "respect the reader's intelligence" etc. as canonical propositions.
 - David Ogilvy (1983) *Ogilvy on Advertising*, Crown — long-copy practice guide; "on average, five times as many people read the headline as read the body copy" canonical source (Chapter 4 "How to Write Potent Copy").
-- 糸井重里 voice reference — 西武百貨店「おいしい生活。」(1982) author; 『ほぼ日刊イトイ新聞』(1998–) as an accumulated voice casebook. 糸井's「普通の言葉を生き生きさせる」philosophy is a canonical representative of JP short-copy voice.
-- 岩崎俊一 voice reference — ミツカン「やがて、いのちに変わるもの。」(2004), 新潮文庫「想像力と数百円。」(1984) author; 岩崎 is a TCC Hall of Fame (established 2003) inductee. 岩崎's「コピーは作るものではなく、見つけるもの」philosophy is a canonical representative of JP emotional / seasonal voice.
 - 18F Content Guide — https://content-guide.18f.gov/ — US federal GSA digital-services voice guide; adopted here as a secondary source for voice-axes definition tooling.
 - Mailchimp Voice and Tone Guide — https://styleguide.mailchimp.com/voice-and-tone/ — industry benchmark for SaaS voice guides. "One voice, multiple tones" principle and context-switching table are secondary sources for the Tone section.
+
+For JP copywriter voice-signature deep-dives (糸井重里 / 岩崎俊一 /
+眞木準 / 谷山雅計), see `jp-copy-craft-lineage.md`. For brand-level
+voice positioning with EN/JP/ZH canonical corpus (19 brands across
+Q1-Q4), see `voice-quadrant-positioning.md`.
 
 ## Voice vs Tone — core distinction
 
@@ -70,39 +73,44 @@ Direct implications for copywriting-team:
   voice; the headline is the highest-density compression of voice,
   not a "click-bait exemption zone" where voice may be broken.
 
-## JP emotional-resonance tradition (糸井 × 岩崎 canonical)
+## JP emotional-resonance tradition
 
-JP short-copy tradition has two voice axes that stand in sharp contrast
-to Anglo "action-oriented / evidence-based":
+JP short-copy tradition contrasts sharply with Anglo "action-oriented":
 
-- **糸井重里: intentional ambiguity as state proposal**. Representative
-  works:「おいしい生活。」(西武 1982),「不思議、大好き。」(西武 1981).
-  The voice does not command "buy it" but proposes a life-state, leaving
-  interpretive room for the reader. Anglo "Just Do It" is action-
-  prompting; 糸井 is **state-proposing**; voice-guide grammar tends
-  toward sentence fragments, white space, and particle endings.
-- **岩崎俊一: life philosophy, いのち, season-sense**. Representative
-  works:「やがて、いのちに変わるもの。」(ミツカン 2004),「想像力と
-  数百円。」(新潮文庫 1984). Voice carries **Buddhist impermanence /
-  finiteness** emotional resonance; typical range 10–15 characters;
-  sentence endings often use open-ended particles like「もの」「こと」
-  「ね」, rejecting direct call-to-action.
+- **State-proposal vs action-prompting**: 糸井重里「おいしい生活。」
+  (西武 1982) proposes a life-state; Anglo "Just Do It" commands.
+- **余韻 / impermanence**: 岩崎俊一「やがて、いのちに変わるもの。」
+  (ミツカン 2004) carries Buddhist finiteness; rejects direct CTA.
 
-Implications of the JP emotional tradition for voice guides:
+JP voice can be a **state × emotion compound axis**, not a single
+friendly↔professional axis. Memory-heavy repetition is standard
+(see `short-form-catchcopy-canon.md` 7–15 char discipline).
 
-- Voice in the JP market need not be a single axis (like Anglo
-  "friendly ↔ professional"); it can be a **state × emotion compound
-  axis**.
-- **Memory-heavy repetition** in short copy (achieving memory fixation
-  through repeated exposure to the same line) is the standard mechanism
-  of JP emotional voice; corresponds to the Memory stage in AIDMA (see
-  `short-form-catchcopy-canon.md` for the 7–15 character discipline).
+**Quadrant + deep-dive**: 糸井 / 岩崎 live in **Q3 Affinity-Emotion**;
+眞木準 at **Q2↔Q3 border**. See `voice-quadrant-positioning.md` for
+quadrant typology; see `jp-copy-craft-lineage.md §糸井 / §岩崎 /
+§眞木準` for voice-signature deep-dives.
 
-**Quadrant mapping** (see `voice-quadrant-positioning.md`): 糸井 and
-岩崎 live in **Q3 (Affinity + Emotion)**; 眞木 sits at the Q2↔Q3 border
-(Ideology-Emotion leaning). See `jp-copy-craft-lineage.md` for voice-
-master deep-dive; see `voice-quadrant-positioning.md` for cross-lingual
-typology frame.
+## ZH TW copywriting tradition
+
+ZH TW has distinct philosophical contributions that neither Anglo
+benefit-clear nor JP state-proposal fully captures:
+
+- **對仗式日常洞察** (parallel-structure observational insight):
+  龔大中 全聯「長得漂亮是本錢，把錢花得漂亮是本事。」— everyday
+  thrift elevated into 對仗 aphorism.
+- **意識形態式 aphorism** (consumption as philosophical statement):
+  許舜英 中興百貨「銀行倒閉不會令我不安，服裝店倒閉才會令我不安。」
+- **跨文化文學改寫** (cross-cultural literary sampling):
+  李欣頻 誠品「拋開阿莫多瓦的高跟鞋到街上去。」(改寫寺山修司);
+  白話文 register enables ZH-specific rhetoric.
+- **策略性敘事世界觀** (strategic narrative world-building):
+  葉明桂 左岸咖啡館「我們不是在賣咖啡、我們是在經營一家咖啡館。」
+
+成語 / 四字熟語 / 對仗 are ZH-unique rhetoric resources. For TW
+voice-family taxonomy (奧美策略派 / 意識形態 / 全聯經濟美學 /
+數位行銷實務) + micro-indicators, see `voice-quadrant-positioning.md
+§ZH Copywriting Tradition`.
 
 ## Voice positioning — strategic + tactical
 
