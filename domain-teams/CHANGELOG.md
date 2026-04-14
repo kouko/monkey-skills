@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.3] — 2026-04-15
+
+### Changed (copywriting-team)
+- **voice-quadrant-positioning.md §Critical Attribution Corrections
+  trimmed** from 9 items to 4 load-bearing structural disclosures.
+  Retained: drift #25 (FCB+SFL team synthesis), drift #28 (ZH micro-
+  indicators as heuristics), Archetype caveat (contested framework),
+  Nike Q2/Q4 disambiguation.
+- **Removed** (historical attribution corrections — already applied
+  inline in brand corpus, audit trail preserved in
+  `research/grounding-v4.18.x.md` notes): drift #26 (廣告樂血研究院
+  naming), drift #27 (詹宏志 scope), drift #29 (恋を何年 attribution),
+  drift #30 (MUJI 小池一子), drift #31 (JR九州 line).
+
+### Rationale
+Per `skill-team/standards/grounding-principle.md §Critical Attribution
+Corrections` convention: section must contain **actual past errors
+needing guardrailing**, NOT minor naming notes or historical
+bookkeeping. Section is a drift guardrail, not a general disclaimer
+repository. Research notes hold the discovery audit trail; the
+standard's section holds actionable regression guardrails only.
+
+Most copywriting-team standards have 0-2 drift items; 9 items made
+voice-quadrant-positioning.md an outlier. The 5 removed items were
+team working-draft or Gemini-proposal errors, not drifts in
+circulating advertising literature — no ongoing regression risk when
+the body corpus has correct attribution inline.
+
+### No changes to
+- Brand corpus attribution (already correct inline)
+- Research notes (audit trail preserved unchanged)
+- Other standards files (no cross-file alignment needed)
+- SKILL.md / other protocols / gates
+
 ## [4.18.2] — 2026-04-15
 
 ### Changed (copywriting-team)
