@@ -62,37 +62,6 @@ sequential: quadrant first (strategic positioning), 4-axis second
 - Ogilvy 1963/1983 — in `voice-and-tone.md`
 - 糸井重里 / 岩崎俊一 / 眞木準 — in `jp-copy-craft-lineage.md`
 
-## Critical Attribution Corrections
-
-This section documents structural disclosures that shape how readers
-should interpret and apply this framework. Per `grounding-principle.md`
-convention, it holds load-bearing guardrails only; historical
-attribution errors that are already corrected in the brand corpus live
-in the `research/grounding-v4.18.x.md` audit trail (drifts #26, #27,
-#29, #30, #31 — see research notes for discovery context).
-
-- **Drift #25 (v4.18.0)**: The 2-axis quadrant combining FCB Think/Feel
-  with Halliday's Tenor is **this team's synthesis**, not a pre-
-  existing published framework. Neither Vaughn nor Halliday proposes
-  this combination for brand voice positioning; the synthesis is
-  operational. Cite primary sources individually as axis grounding;
-  cite the combination as team synthesis.
-- **Drift #28 (v4.18.0)**: ZH micro-indicators (虛詞 density,
-  loanword mix, punctuation pacing) are practical heuristics proposed
-  by this team, not academically published advertising-linguistics
-  metrics. Do not cite as canonical linguistic taxonomy.
-- **Archetype caveat**: Brand archetypes (Mark & Pearson 2001) are
-  **contested** — peer-reviewed empirical work reduces the 12-category
-  taxonomy to 4 clusters (Xara-Brasil 2018) and refutes the single-
-  archetype doctrine (Dias & Dias 2022). Use as **practitioner
-  heuristic only**; do NOT build gate criteria solely on archetype
-  conformance.
-- **Nike "Just Do It" Q2/Q4 disambiguation**: imperative grammar is
-  Q4-syntactic ("direct action") but brand function is Q2-identity
-  (ideology/manifesto — empowerment, values signaling). Brand-strategy
-  literature consistently classifies as **Q2**; the standard places
-  it in Q2 accordingly.
-
 ## The Framework
 
 ### The 2 axes
@@ -120,6 +89,12 @@ Reason ───────────────┼────────�
 - Reason = logical/evidential register, data-driven, specification-
   focused
 - Emotion = affective register, narrative, identity-driven
+
+**Synthesis disclosure**: the 2-axis combination is **this team's
+synthesis**, not a pre-existing published framework. Neither Vaughn nor
+Halliday proposes this combination for brand voice positioning. Cite
+Vaughn and Halliday individually as axis grounding; cite the
+combination as team synthesis.
 
 ### Relationship to the 4-axis model
 
@@ -443,7 +418,7 @@ Unilever, 2004–)
 - Copywriter(s): 仲畑貴志 (1990s era)
 - Canonical corpus:
   - "愛とか、勇気とか、見えないものも乗せている。" (仲畑貴志, 1994
-    — TCC年鑑 verified; see drift #31 for prior attribution correction)
+    — TCC年鑑 verified)
 - Era narration: 1990s era strong; post-1990s voice less documented.
 
 **ほぼ日刊イトイ新聞 / ほぼ日** (publisher/brand; JP; 糸井重里
@@ -619,7 +594,7 @@ terms like 界隈消費 in `neta-source-taxonomy.md`):
 
 **Important**: these 3 indicators are **practical heuristics proposed
 for this skill**, not academically published advertising-linguistics
-metrics (see drift #28). Use for quadrant-alignment diagnosis only.
+metrics. Use for quadrant-alignment diagnosis only.
 
 1. **虛詞使用頻率 (particle density)**
    - Low (Q1, Q2, Q4): ≤2 particles per 100 chars. Precision + brevity.

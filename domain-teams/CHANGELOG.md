@@ -9,36 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.18.3] — 2026-04-15
 
-### Changed (copywriting-team)
+### Removed (copywriting-team)
 - **voice-quadrant-positioning.md §Critical Attribution Corrections
-  trimmed** from 9 items to 4 load-bearing structural disclosures.
-  Retained: drift #25 (FCB+SFL team synthesis), drift #28 (ZH micro-
-  indicators as heuristics), Archetype caveat (contested framework),
-  Nike Q2/Q4 disambiguation.
-- **Removed** (historical attribution corrections — already applied
-  inline in brand corpus, audit trail preserved in
-  `research/grounding-v4.18.x.md` notes): drift #26 (廣告樂血研究院
-  naming), drift #27 (詹宏志 scope), drift #29 (恋を何年 attribution),
-  drift #30 (MUJI 小池一子), drift #31 (JR九州 line).
+  section removed entirely**. Redundancy audit found 3 of 4 retained
+  items were already disclosed inline elsewhere in the file:
+  - Drift #28 (ZH heuristics) — §ZH micro-indicators section header
+    and prose already self-disclose as "HEURISTICS, NOT CANONICAL
+    METRICS"
+  - Archetype caveat — §Primary Sources Archetype framework block
+    header already says "(contested — practitioner heuristic only)"
+    with Neher/Xara-Brasil/Dias critique citations listed
+  - Nike Q2/Q4 disambiguation — Nike brand entry in Q2 already
+    contains the inline disambiguation note
+  Only Drift #25 (FCB+SFL team synthesis) was both load-bearing and
+  non-redundant; relocated inline to §The Framework as a Synthesis
+  disclosure adjacent to the axis definitions.
+- Stale breadcrumbs removed: "see drift #31 for prior attribution
+  correction" in JR九州 brand entry; "see drift #28" in §ZH
+  micro-indicators section.
+- Historical attribution corrections (drifts #26, #27, #29, #30, #31)
+  already applied inline in brand corpus — audit trail preserved in
+  `research/grounding-v4.18.x.md` notes.
 
 ### Rationale
 Per `skill-team/standards/grounding-principle.md §Critical Attribution
-Corrections` convention: section must contain **actual past errors
-needing guardrailing**, NOT minor naming notes or historical
-bookkeeping. Section is a drift guardrail, not a general disclaimer
-repository. Research notes hold the discovery audit trail; the
-standard's section holds actionable regression guardrails only.
-
-Most copywriting-team standards have 0-2 drift items; 9 items made
-voice-quadrant-positioning.md an outlier. The 5 removed items were
-team working-draft or Gemini-proposal errors, not drifts in
-circulating advertising literature — no ongoing regression risk when
-the body corpus has correct attribution inline.
+Corrections` convention, the section is OPTIONAL and should be OMITTED
+entirely when no guardrails are needed. After trim, only Drift #25 was
+a load-bearing non-duplicated guardrail — better placed inline where
+the 2-axis is introduced than in a single-item section.
 
 ### No changes to
 - Brand corpus attribution (already correct inline)
-- Research notes (audit trail preserved unchanged)
-- Other standards files (no cross-file alignment needed)
+- Research notes (audit trail preserved unchanged for all drifts #25-31)
+- Other standards files
 - SKILL.md / other protocols / gates
 
 ## [4.18.2] — 2026-04-15
