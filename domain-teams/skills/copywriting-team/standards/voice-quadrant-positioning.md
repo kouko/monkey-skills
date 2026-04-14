@@ -41,27 +41,6 @@ sequential: quadrant first (strategic positioning), 4-axis second
   *Revista de Gestão*, 25(2), 142–152. Empirical test reduces
   12-archetype taxonomy to 4 clusters.
 
-### Canonical ad corpus (v4.18.1 verification)
-
-- **Ogilvy, D.** (1958) Rolls-Royce Silver Cloud ad. Ogilvy, Benson
-  & Mather. *The New Yorker* / *NYT*.
-- **TBWA\Chiat\Day** (1997) "Think Different" — Lee Clow / Rob
-  Siltanen team, narrated by Richard Dreyfuss.
-- **Unilever / Ogilvy** (2004) Dove "Campaign for Real Beauty."
-- **小池一子** (1980–1983) MUJI foundational corpus — AD: 田中一光.
-- **糸井重里** (1980–1982) 西武百貨店 series.
-- **眞木準** (1989) 伊勢丹 「恋を何年、休んでますか。」.
-- **岩崎俊一** (1985; 2004) サントリー お歳暮ギフト; ミツカン.
-- **葉明桂** (1990s–) 左岸咖啡館 strategy — 奧美 / 統一企業.
-- **許舜英** (1988–2001) 中興百貨 意識形態廣告.
-- **李欣頻** (1990s) 誠品書店.
-- **龔大中** (2015–) 全聯經濟美學.
-
-### Cross-reference anchors (cited elsewhere in the skill)
-
-- Ogilvy 1963/1983 — in `voice-and-tone.md`
-- 糸井重里 / 岩崎俊一 / 眞木準 — in `jp-copy-craft-lineage.md`
-
 ## The Framework
 
 ### The 2 axes

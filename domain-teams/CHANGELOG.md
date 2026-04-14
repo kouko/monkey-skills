@@ -24,6 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Only Drift #25 (FCB+SFL team synthesis) was both load-bearing and
   non-redundant; relocated inline to §The Framework as a Synthesis
   disclosure adjacent to the axis definitions.
+- **§Primary Sources subsections trimmed**:
+  - Removed §Canonical ad corpus bibliography roster (11 entries) —
+    every entry is fully annotated in per-quadrant brand entries with
+    more detail (agency, year, canonical lines, voice signature).
+    Redundant with body.
+  - Removed §Cross-reference anchors — actual cross-refs to
+    voice-and-tone.md and jp-copy-craft-lineage.md already inline in
+    per-quadrant Copywriter cross-reference sections.
+  - §Primary Sources now focuses on framework grounding only:
+    2-axis academic sources (Vaughn + Halliday) + Archetype contested-
+    framework block (Mark & Pearson + Jung + Neher + Xara-Brasil).
 - Stale breadcrumbs removed: "see drift #31 for prior attribution
   correction" in JR九州 brand entry; "see drift #28" in §ZH
   micro-indicators section.
