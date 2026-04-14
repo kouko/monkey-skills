@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.2] — 2026-04-15
+
+### Changed (copywriting-team)
+- **voice-quadrant-positioning.md restructured to Brand × Copy primary
+  axis**. Per-quadrant Canonical Copy Corpus (copywriter-centric)
+  replaced with Canonical Brand Corpus (brand-centric). Per-brand
+  entries follow the research-informed template: voice statement +
+  paired "X, never Y" voice attributes (Slack pattern) + copywriter
+  metadata + dated canonical corpus + optional era narration +
+  optional voice-doc source.
+- **Division of labor finalized**: voice-quadrant-positioning.md now
+  owns brand-level market voice positioning; `jp-copy-craft-lineage.md`
+  owns copywriter deep-dive (糸井/岩崎/眞木/谷山). The two standards
+  become complementary instead of overlapping — cross-reference only.
+- **Removed redundant tables**: Representative practitioners + Represen-
+  tative brands tables absorbed into brand corpus.
+
+### Added (copywriting-team)
+- 19 brand entries across the four quadrants:
+  - Q1 (3): The Economist, Rolls-Royce (Ogilvy 1958), 報導者
+  - Q2 (7): Apple, Nike, MUJI, Patagonia, 誠品書店, 中興百貨,
+    左岸咖啡館
+  - Q3 (6): Dove, 西武百貨店 (糸井 era), ミツカン (岩崎 2004),
+    JR九州, ほぼ日, 全聯福利中心
+  - Q4 (3): Shopee, Amazon, UNIQLO
+- Voice-doc primary-source citations for benchmark brands:
+  MUJI (Kenya Hara *Designing Design*), Patagonia (Chouinard
+  *Let My People Go Surfing*), 誠品 (李欣頻《廣告副作用》+
+  《誠品副作用》), 左岸咖啡館 (葉明桂《品牌的技術和藝術》),
+  ほぼ日 (1101.com daily corpus).
+- Research: `research/grounding-v4.18.2.md` (2-cluster audit trail —
+  industry brand-voice documentation structural patterns + 8 canonical
+  sustained-voice brand case studies with stability rankings).
+
+### Fixed (copywriting-team)
+- **Drift #31**: JR九州 canonical line corrected to 仲畑貴志 1994
+  「愛とか、勇気とか、見えないものも乗せている。」 (TCC年鑑
+  verified). Prior-assumed 「夢とか、決意とか...」 is NOT in TCC
+  archive — removed.
+- Apple "1984" properly attributed to Steve Hayden (Chiat\Day).
+- MUJI era disambiguation: "Compact Life" (post-2010 Kenya Hara
+  product line) and 2003 "Horizon / 地平線" (Bolivia/Mongolia
+  campaign) are distinct campaigns within the same stable voice —
+  do not conflate.
+
+### Research findings (cumulative honesty disclosures)
+- TCC年鑑 dual-axis indexing (brand + copywriter) validates this
+  refactor's Brand-primary + copywriter cross-ref approach.
+- Industry convention: voice eras handled as dated tags within ONE
+  brand entry, NOT separate sub-entries. Apply this to Apple era
+  (pre-1997 / Think Different / post-Jobs) as inline narration.
+- Bilingual gap: major brand-voice references are EN-only; for
+  EN/JP/ZH trilingual corpus we keep canonical copy in original
+  language, add market/era tag; do NOT auto-translate.
+
+### Drift summary (cumulative)
+- #25 (v4.18.0): FCB + SFL combination = team synthesis
+- #26 (v4.18.0): 廣告樂血研究院 naming correction
+- #27 (v4.18.0): 詹宏志 scope exclusion
+- #28 (v4.18.0): ZH micro-indicators = team heuristics
+- #29 (v4.18.1): 眞木準 sole attribution for 「恋を何年」
+- #30 (v4.18.1): MUJI corpus = 小池一子
+- **#31 (v4.18.2)**: JR九州 line = 仲畑貴志 1994 「愛とか、勇気とか」
+
 ## [4.18.1] — 2026-04-15
 
 ### Changed (copywriting-team)
