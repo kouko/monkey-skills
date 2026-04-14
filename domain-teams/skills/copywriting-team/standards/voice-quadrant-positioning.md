@@ -64,34 +64,23 @@ sequential: quadrant first (strategic positioning), 4-axis second
 
 ## Critical Attribution Corrections
 
+This section documents structural disclosures that shape how readers
+should interpret and apply this framework. Per `grounding-principle.md`
+convention, it holds load-bearing guardrails only; historical
+attribution errors that are already corrected in the brand corpus live
+in the `research/grounding-v4.18.x.md` audit trail (drifts #26, #27,
+#29, #30, #31 — see research notes for discovery context).
+
 - **Drift #25 (v4.18.0)**: The 2-axis quadrant combining FCB Think/Feel
   with Halliday's Tenor is **this team's synthesis**, not a pre-
   existing published framework. Neither Vaughn nor Halliday proposes
   this combination for brand voice positioning; the synthesis is
   operational. Cite primary sources individually as axis grounding;
   cite the combination as team synthesis.
-- **Drift #26 (v4.18.0)**: 廣告樂血研究院 is the correct name (Wawa /
-  玉琥). Earlier references to "廣告樂血幫" are incorrect.
-- **Drift #27 (v4.18.0)**: 詹宏志 is primarily editor/publisher/
-  essayist, not an ad copywriter — excluded from the Q1 copywriting
-  exemplar list despite his intellectual-authority voice being
-  quadrant-relevant.
 - **Drift #28 (v4.18.0)**: ZH micro-indicators (虛詞 density,
   loanword mix, punctuation pacing) are practical heuristics proposed
   by this team, not academically published advertising-linguistics
   metrics. Do not cite as canonical linguistic taxonomy.
-- **Drift #29 (v4.18.1)**: 「恋を何年、休んでますか。」 is **眞木準
-  伊勢丹 1989** alone. Earlier dual-attribution to "眞木/岩崎" is
-  incorrect. Strip 岩崎 from this line.
-- **Drift #30 (v4.18.1)**: MUJI foundational corpus (わけあって安い /
-  愛は飾らない / 自然当然無印 / しゃけは全身しゃけなんだ) is all
-  **小池一子** copy with AD 田中一光. Other attributions (including
-  Kodama Kunio) are unsupported.
-- **Drift #31 (v4.18.2)**: JR九州 canonical line 「愛とか、勇気とか、
-  見えないものも乗せている。」 is **仲畑貴志 1994** per TCC年鑑
-  verification. Prior attribution 「夢とか、決意とか…」 is NOT in the
-  TCC archive — removed from the Q3 brand corpus. Use only the
-  verified 仲畑貴志 line.
 - **Archetype caveat**: Brand archetypes (Mark & Pearson 2001) are
   **contested** — peer-reviewed empirical work reduces the 12-category
   taxonomy to 4 clusters (Xara-Brasil 2018) and refutes the single-
