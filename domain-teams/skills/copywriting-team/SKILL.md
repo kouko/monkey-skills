@@ -10,8 +10,9 @@ description: >-
   or market research (use research-team).
   Delivers long-form copy (PASONA/PASBECONA/QUEST/PASTOR), mid-form EC
   product copy (BEAF), light-action copy (PREP/CREMA for opt-in/
-  subscribe/download), short-form キャッチコピー (7-15 chars), voice
-  guides, and audit reports.
+  subscribe/download), short-form キャッチコピー (7-15 chars), neta-
+  injected copy (pop culture / subculture / meme references via 4
+  techniques + WebSearch pipeline), voice guides, and audit reports.
 ---
 
 # Copywriting Team
@@ -24,7 +25,12 @@ CREMA), disciplined ideation methods (曼陀羅 + Verbalized Sampling + 谷山
 散らかす→選ぶ→磨く + KJ法 + 小霜 本能分析), SNS-era consumer behavior
 models (AISAS / SIPS / ULSSAS), explicit action-weight routing (light-action
 micro-conversions vs heavy-action macro-conversions per Kaushik 2007 +
-Cialdini 1984), and clear persuasion ethics anchored in 景品表示法 and FTC
+Cialdini 1984), 4 neta-injection operations (**Reversal** /
+**Substitution** / **Subcultural Capital** / **Cross-domain Mapping**
+via McQuarrie & Mick 1996 + Ott & Walter 2000 + Lakoff & Johnson 1980
++ Thornton 1995; JP vernacular: 逆転 / 大喜利 / 界隈消費 / 次元降下)
+with WebSearch-only retrieval pipeline (CoT per Wei 2022 + ReAct per
+Yao 2022), and clear persuasion ethics anchored in 景品表示法 and FTC
 Endorsement Guides. You reject "AI-voice generic" copy
 by forcing LLM output through structural frameworks and the
 「なんかいいよね禁止」 discipline that requires every candidate to justify
@@ -36,9 +42,13 @@ canonical books), 谷山雅計 2007 *広告コピーってこう書くんだ！�
 Schwartz 1966 *Breakthrough Advertising*, Zhang et al. 2025 *Verbalized
 Sampling* (arXiv:2510.01171), Michel Fortin 2005 QUEST, Ray Edwards 2016
 PASTOR, 小霜和也 2010/2014 本能分析, 秋山隆平・杉山恒太郎 2004 AISAS,
-飯髙悠太 2019 ULSSAS, Kaushik 2007 micro/macro conversion, and Freedman
-& Fraser 1966 foot-in-the-door. PREP / CREMA / BEAF are treated as
-industry-standard templates without canonical author attribution. Voice references draw on the Japanese short-copy
+飯髙悠太 2019 ULSSAS, Kaushik 2007 micro/macro conversion, Freedman
+& Fraser 1966 foot-in-the-door, McQuarrie & Mick 1996 *JCR* rhetorical
+operations, Lakoff & Johnson 1980 conceptual metaphor, Thornton 1995
+subcultural capital, Shifman 2014 memes in digital culture, and
+humor theory anchors (Suls 1972 + Raskin 1985 + McGraw & Warren 2010).
+PREP / CREMA / BEAF are treated as industry-standard templates without
+canonical author attribution. Voice references draw on the Japanese short-copy
 tradition (糸井重里, 岩崎俊一, 眞木準) curated through the TCC 年鑑, with
 deep voice signatures and LLM reproduction gap analysis.
 
@@ -47,7 +57,9 @@ Mission: ensure copy is structurally grounded
 
 Delivers: landing-page copy (PASONA / QUEST / PASTOR), email campaigns,
 opt-in / subscribe / download pages (PREP / CREMA), キャッチコピー,
-product descriptions, voice-and-tone guides, copy audit reports.
+neta-injected copy (optional post-production layer for pop culture /
+subculture / meme references), product descriptions, voice-and-tone
+guides, copy audit reports.
 Done when: all triggered quality gates pass (Persuasion Framework Adherence,
 Ethics, Voice Consistency, Form-Appropriate).
 
@@ -56,6 +68,9 @@ Ethics, Voice Consistency, Form-Appropriate).
 - Long-form landing page copy (PASONA / PASBECONA / QUEST / PASTOR framework)
 - Light-action copy — email opt-in, newsletter subscribe, free download,
   LINE 登録, LP click-through (PREP / CREMA framework)
+- Neta-injected copy — pop culture / subculture / meme references for
+  campaigns where cultural compression adds value (optional
+  post-production layer via 4 techniques + Phase A-D WebSearch pipeline)
 - Email campaign sequences, sales letters, 記事広告
 - Mid-form EC product descriptions (Rakuten / Amazon JP / POP)
 - Short-form キャッチコピー, taglines, headlines, SNS posts, banner copy
@@ -144,17 +159,18 @@ self-check.
 |------|---------|------|
 | Voice Consistency | Output spans multiple sections or multiple candidates | `evaluator` + `rubrics/voice-consistency-gate.md` |
 | Form-Appropriate | Output is a copy artifact with declared form type | `evaluator` + `rubrics/form-appropriate-gate.md` |
+| Neta Safety | Neta Injection Overlay workflow active (output includes pop culture / meme reference); 5 dimensions with 2 hard legal vetoes (copyright + 景表法 ステマ) | `evaluator` + `rubrics/neta-safety-gate.md` |
 
 ### MAY Gates
 
-None currently. Future candidates: neta (cultural reference) safety gate
-in v1.1.0, linguistic polish rubric for Japanese 掛詞 technique density.
+None currently. Future candidates: linguistic polish rubric for
+Japanese 掛詞 technique density.
 
 ## Gate Protocol
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: all 15 copywriting-team standards (see Resource Manifest)
+- Standards: all 17 copywriting-team standards (see Resource Manifest)
 - The artifact to evaluate
 - Original requirements
 
@@ -192,21 +208,25 @@ Worker default resources:
   - `standards/kosimo-instinct-analysis.md` — 小霜和也 本能分析 lens + 90-10 rule + 義 ethics
   - `standards/sns-evolution-aisas-ulssas.md` — AIDMA → AISAS → SIPS → ULSSAS evolution + copywriting implications
   - `standards/light-action-frameworks.md` — PREP (Anglo 1980s) + CREMA (JP ~2021) for opt-in / subscribe / download micro-conversions, grounded on Kaushik 2007 + Cialdini 1984
+  - `standards/neta-injection-techniques.md` — 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) for pop culture / subculture / meme references, grounded on McQuarrie & Mick 1996 + Ott & Walter 2000 + Lakoff & Johnson 1980 + Thornton 1995 + humor theory
+  - `standards/neta-websearch-pipeline.md` — Phase A-D lightweight retrieval pipeline (audience context + CoT deconstruction + parameter stitching + vibe/safety), grounded on Wei 2022 + Yao 2022 + Shifman 2014
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: same 15 files as worker
+- standards: same 17 files as worker
 - Intake Completeness gate: `checklists/intake-completeness-checklist.md`
 - Persuasion Framework Adherence gate: `checklists/persuasion-framework-adherence-checklist.md`
 - Ethics gate: `checklists/ethics-checklist.md`
 - Voice Consistency gate: `rubrics/voice-consistency-gate.md`
 - Form-Appropriate gate: `rubrics/form-appropriate-gate.md`
+- Neta Safety gate: `rubrics/neta-safety-gate.md` (conditional on neta opt-in)
 
 Protocol paths (selected per-workflow):
 - `protocols/copywriting-brainstorming.md` — Phase 0 intake (always first)
 - `protocols/copywriting-handoff-format.md` — candidate output + progress reporting standard (always referenced during output)
 - `protocols/copy-ideation-parallel.md` — Phase 1-2 fan-out + convergence
 - `protocols/copy-ideation-advanced.md` — multi-method overlay (小霜 instinct + ULSSAS seeds + voice calibration + 谷山 training fragments)
+- `protocols/copy-neta-injection.md` — post-production layer executing Phase A-D pipeline for neta injection (optional, conditional on intake opt-in)
 - `protocols/write-long-form-copy.md` — Phase 3-L
 - `protocols/write-mid-form-copy.md` — Phase 3-M
 - `protocols/write-short-form-copy.md` — Phase 3-S
@@ -242,23 +262,8 @@ directory to get absolute paths.
 
 ### Resource Paths
 - protocol: {base_path}/protocols/{selected-protocol}.md
-- standards: [
-    {base_path}/standards/ideation-mandalart.md,
-    {base_path}/standards/ideation-kj-convergence.md,
-    {base_path}/standards/ideation-taniyama-discipline.md,
-    {base_path}/standards/verbalized-sampling.md,
-    {base_path}/standards/long-form-pasona-canon.md,
-    {base_path}/standards/long-form-extended-frameworks.md,
-    {base_path}/standards/mid-form-beaf-canon.md,
-    {base_path}/standards/short-form-catchcopy-canon.md,
-    {base_path}/standards/voice-and-tone.md,
-    {base_path}/standards/persuasion-ethics.md,
-    {base_path}/standards/persuasion-psychology-anchor.md,
-    {base_path}/standards/jp-copy-craft-lineage.md,
-    {base_path}/standards/kosimo-instinct-analysis.md,
-    {base_path}/standards/sns-evolution-aisas-ulssas.md,
-    {base_path}/standards/light-action-frameworks.md
-  ]
+- standards: all 17 files listed under Resource Manifest § Worker default
+  resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Input
 {Value proposition / target audience / form type / existing voice guide if any}
@@ -269,23 +274,8 @@ directory to get absolute paths.
 ```
 ### Resource Paths
 - gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
-- standards: [
-    {base_path}/standards/ideation-mandalart.md,
-    {base_path}/standards/ideation-kj-convergence.md,
-    {base_path}/standards/ideation-taniyama-discipline.md,
-    {base_path}/standards/verbalized-sampling.md,
-    {base_path}/standards/long-form-pasona-canon.md,
-    {base_path}/standards/long-form-extended-frameworks.md,
-    {base_path}/standards/mid-form-beaf-canon.md,
-    {base_path}/standards/short-form-catchcopy-canon.md,
-    {base_path}/standards/voice-and-tone.md,
-    {base_path}/standards/persuasion-ethics.md,
-    {base_path}/standards/persuasion-psychology-anchor.md,
-    {base_path}/standards/jp-copy-craft-lineage.md,
-    {base_path}/standards/kosimo-instinct-analysis.md,
-    {base_path}/standards/sns-evolution-aisas-ulssas.md,
-    {base_path}/standards/light-action-frameworks.md
-  ]
+- standards: all 17 files listed under Resource Manifest § Worker default
+  resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Artifact
 {The copy artifact to evaluate, with declared form type}
@@ -419,6 +409,24 @@ heavy-action contexts.
 | 5. Ethics Gate | evaluator | `checklists/ethics-checklist.md` | candidates | verdict | MUST gate |
 | 6. Form Gate | evaluator | `rubrics/form-appropriate-gate.md` | candidates | verdict | SHOULD gate (3-sec land + 7-15 chars) |
 | 7. Voice Gate | evaluator | `rubrics/voice-consistency-gate.md` | candidates | verdict | SHOULD gate |
+
+### Neta Injection Overlay (variant)
+
+**Trigger**: Intake set neta opt-in = Yes. Applied as post-production
+overlay on short-form / mid-form / long-form / light-action base draft.
+**Skip when**: neta opt-in = No; brief is >6-month evergreen (except
+evergreen-only techniques 1 Reversal, 4 Cross-domain Mapping);
+audience too broad for Technique 3 Subcultural Capital.
+
+| Phase | Agent | Protocol | Output | Notes |
+|-------|-------|----------|--------|-------|
+| 1-N. Base Framework | (per base workflow above) | ... | base-framework draft | Short-Form / Mid-Form / Long-Form / Light-Action completes first |
+| N+1. Neta Overlay | worker | `protocols/copy-neta-injection.md` | neta-injected draft (2-3) | Phase A-D: WebSearch context → CoT deconstruction → Strict Replacement → Vibe/Safety |
+| N+2. Neta Safety | evaluator | `rubrics/neta-safety-gate.md` | verdict | SHOULD gate; hard legal vetoes on copyright + 景表法 ステマ |
+
+Base workflow's MUST/SHOULD gates (Framework, Ethics, Voice, Form)
+run after Neta Safety on the final artifact. Neta Safety is in
+addition to, not in place of, base gates.
 
 ### Copy Audit
 
