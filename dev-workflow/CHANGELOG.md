@@ -4,6 +4,31 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] — 2026-04-15
+
+### Added (skill-creator-advance)
+- **New reference**: `references/mermaid-usage-guidelines.md`.
+  Generic skill-authoring guidance for when to use Mermaid diagrams
+  vs prose. Covers decision criterion (≥3 branch conditions OR ≥4
+  state transitions), strong-candidate categories (decision trees,
+  state machines with retry loops, routing with failure branches),
+  avoid-categories (bibliographies, rationale, corpora, philosophy,
+  clean tables, linear sequences), cost-benefit framework, Mermaid
+  type selection, syntax conventions, and anti-patterns.
+- SKILL.md references/ listing updated to include the new reference.
+
+### Rationale
+
+Complements `domain-teams/skill-team v4.19.0` which shipped the
+domain-team-specific version. This version is generic (no gate-system
+assumptions) and serves any Claude skill author, not just domain-team
+skills.
+
+Empirical finding from the precedent: Mermaid adds clarity to
+branching logic but does NOT reduce token/line count when paired
+with explanatory prose. The value is eliminating prose ambiguity,
+not compression.
+
 ## [1.0.1] — 2026-04-14
 
 License compliance: add missing `LICENSE` and `NOTICE` files to the
