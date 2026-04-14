@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.15.0] — 2026-04-14
+
+Light-Action Frameworks: formally recognize PREP 法 and CREMA 法 as
+industry-standard templates for micro-conversion copy (email opt-in,
+newsletter subscribe, download, click-through), paired with
+theoretical grounding on Kaushik 2007 micro/macro conversion +
+Cialdini 1984 commitment-and-consistency + Freedman-Fraser 1966
+foot-in-the-door.
+
+### Motivation
+
+v4.14.0 `long-form-extended-frameworks.md` dropped CREMA from the
+long-form framework family because:
+1. No canonical primary source exists for CREMA
+2. CREMA's actual scope is short-to-mid form light-action copy, not
+   long-form sales letters
+
+v4.15.0 addresses the scope mismatch by creating a dedicated
+light-action framework standard. CREMA and PREP are paired
+(CREMA derives from PREP) and framed parallel to BEAF's industry-
+standard framework treatment — no canonical author, but documented
+across multiple independent JP industry sources.
+
+The "light-action vs heavy-action" axis itself is this team's
+analytical synthesis (not documented JP canon), explicitly flagged
+as such and anchored on primary-source Anglo psychology research
+(Kaushik / Cialdini / Freedman-Fraser).
+
+### Added
+
+1 new standard:
+
+- `standards/light-action-frameworks.md` (Tier 2) — PREP 法
+  (Anglo 1980s corporate training, Toastmasters canonical) + CREMA
+  法 (JP web-marketing ~2021, earliest documentation 2021-10-25
+  看板のサインシティ). Paired framing as "industry-standard
+  framework" parallel to BEAF. Action-weight routing matrix across
+  all 8 copywriting-team frameworks (PREP / CREMA / BEAF → light;
+  PASONA-family / QUEST / PASTOR → heavy). Corrects drifts #15-#19.
+
+Research note:
+
+- `research/grounding-v4.15.0.md` — 3-cluster parallel grounding
+  audit trail (PREP origin, CREMA documentation, light-action
+  taxonomy).
+
+### Changed
+
+- `standards/long-form-extended-frameworks.md`: CREMA anti-pattern
+  refined from "do not cite" to "do not cite as long-form framework;
+  see light-action-frameworks.md for proper scope." Scope-correct
+  framing replaces blanket prohibition.
+- `SKILL.md`: intro updated to reference PREP/CREMA + Kaushik/FITD.
+  Resource Manifest expanded 14 → 15 standards. Worker/evaluator
+  launch templates include new standard. New "Light-Action Copy
+  Writing (PREP / CREMA)" workflow added.
+
+### Attribution corrections (drifts #15-#19)
+
+- #15: PREP is NOT by Brian Tracy (no primary source)
+- #16: PREP is NOT McKinsey-origin (conflation with Minto 1987)
+- #17: PREP is NOT Toulmin model (structurally distinct)
+- #18: CREMA name does NOT derive from espresso-foam (unverified)
+- #19: David Kolb did NOT invent CREMA (comparison analogy misread)
+
+### Commit split
+
+Canonical 3-commit split per skill-team convention (new standards
+file triggers 3-commit mode via `--diff-filter=A` detection rule):
+1. Standards foundation (CREATE + MODIFY)
+2. Research companion (grounding-v4.15.0.md audit trail)
+3. SKILL.md wiring + plugin bump + CHANGELOG
+
+### Not a breaking change
+
+All existing workflows, gates, and standards remain intact. The 1
+new standard is additive; the 1 modified standard (long-form-
+extended-frameworks) only refines anti-pattern phrasing — no
+structural changes. v4.14.0 consumers continue to work unchanged.
+
+### Roadmap update
+
+v4.15.0 slot originally planned for Neta Injection is now
+Light-Action Frameworks. Neta Injection moved to v4.16.0.
+
 ## [4.14.0] — 2026-04-14
 
 Depth & Craft expansion: 4 new standards + 1 new protocol deepening
