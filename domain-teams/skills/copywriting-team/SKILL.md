@@ -11,8 +11,9 @@ description: >-
   Delivers long-form copy (PASONA/PASBECONA/QUEST/PASTOR), mid-form EC
   product copy (BEAF), light-action copy (PREP/CREMA for opt-in/
   subscribe/download), short-form キャッチコピー (7-15 chars), neta-
-  injected copy (pop culture / subculture / meme references via 4
-  techniques + WebSearch pipeline), voice guides, and audit reports.
+  injected copy (pop culture / subculture / meme / literary / classical
+  references via 4 techniques + source-type-aware retrieval pipeline),
+  voice guides, and audit reports.
 ---
 
 # Copywriting Team
@@ -170,7 +171,7 @@ Japanese 掛詞 technique density.
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: all 17 copywriting-team standards (see Resource Manifest)
+- Standards: all 18 copywriting-team standards (see Resource Manifest)
 - The artifact to evaluate
 - Original requirements
 
@@ -208,12 +209,13 @@ Worker default resources:
   - `standards/kosimo-instinct-analysis.md` — 小霜和也 本能分析 lens + 90-10 rule + 義 ethics
   - `standards/sns-evolution-aisas-ulssas.md` — AIDMA → AISAS → SIPS → ULSSAS evolution + copywriting implications
   - `standards/light-action-frameworks.md` — PREP (Anglo 1980s) + CREMA (JP ~2021) for opt-in / subscribe / download micro-conversions, grounded on Kaushik 2007 + Cialdini 1984
-  - `standards/neta-injection-techniques.md` — 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) for pop culture / subculture / meme references, grounded on McQuarrie & Mick 1996 + Ott & Walter 2000 + Lakoff & Johnson 1980 + Thornton 1995 + humor theory
-  - `standards/neta-websearch-pipeline.md` — Phase A-D lightweight retrieval pipeline (audience context + CoT deconstruction + parameter stitching + vibe/safety), grounded on Wei 2022 + Yao 2022 + Shifman 2014
+  - `standards/neta-injection-techniques.md` — 4 transformation techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) for cultural references, grounded on McQuarrie & Mick 1996 + Ott & Walter 2000 + Lakoff & Johnson 1980 + Thornton 1995 + humor theory
+  - `standards/neta-source-taxonomy.md` — 5 source categories (SNS/Meme, Classical Lit, Modern Lit, Famous Quotes, Contemporary Culture) with 2-axis design (source types × transformation techniques), Path A-1/A-2 retrieval routing, 3-language literary verification allow-list, grounded on Kristeva 1969 + Genette 1982 + Ben-Porat 1976 + 本歌取り (Brower & Miner 1961 / 藤原定家 c.1209) + Bourdieu 1984 + Peterson & Kern 1996
+  - `standards/neta-websearch-pipeline.md` — Phase A-D retrieval pipeline with source-type routing (Path A-1 WebSearch-first for SNS/Meme + Path A-2 parametric-first for literary), grounded on Wei 2022 + Yao 2022 + Shifman 2014
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: same 17 files as worker
+- standards: same 18 files as worker
 - Intake Completeness gate: `checklists/intake-completeness-checklist.md`
 - Persuasion Framework Adherence gate: `checklists/persuasion-framework-adherence-checklist.md`
 - Ethics gate: `checklists/ethics-checklist.md`
@@ -262,7 +264,7 @@ directory to get absolute paths.
 
 ### Resource Paths
 - protocol: {base_path}/protocols/{selected-protocol}.md
-- standards: all 17 files listed under Resource Manifest § Worker default
+- standards: all 18 files listed under Resource Manifest § Worker default
   resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Input
@@ -274,7 +276,7 @@ directory to get absolute paths.
 ```
 ### Resource Paths
 - gate_file: {base_path}/{checklists or rubrics}/{gate-file}.md
-- standards: all 17 files listed under Resource Manifest § Worker default
+- standards: all 18 files listed under Resource Manifest § Worker default
   resources → standards (resolve {base_path}/standards/<each-file>.md)
 
 ### Artifact
@@ -414,9 +416,11 @@ heavy-action contexts.
 
 **Trigger**: Intake set neta opt-in = Yes. Applied as post-production
 overlay on short-form / mid-form / long-form / light-action base draft.
-**Skip when**: neta opt-in = No; brief is >6-month evergreen (except
-evergreen-only techniques 1 Reversal, 4 Cross-domain Mapping);
-audience too broad for Technique 3 Subcultural Capital.
+**Skip when**: neta opt-in = No; brief is >6-month evergreen AND source
+type is `sns-meme` only (literary sources are inherently evergreen-
+compatible); audience too broad for Technique 3 Subcultural Capital
+with SNS/Meme sources (literary sources may work for broader audiences
+via Bourdieu cultural capital axis).
 
 | Phase | Agent | Protocol | Output | Notes |
 |-------|-------|----------|--------|-------|
