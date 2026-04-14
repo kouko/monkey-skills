@@ -87,6 +87,82 @@ the new structure is already in place when Claude starts using it.
 **Review question**: "Does the SKILL.md correctly expose the new
 workflows, standards, and gates to the skill dispatch layer?"
 
+## 2-Commit Variant: Refactor Without New Standards
+
+The canonical 3-commit split assumes the refactor introduces or modifies
+grounding in `standards/`. When a refactor touches **no standards files
+at all** (all new content is in `protocols/`, `checklists/`, `rubrics/`,
+or is pure wiring), the canonical Commit 1/3 ("Standards Foundation")
+has no content to hold — forcing a placeholder or stub into it would be
+an anti-pattern per `grounding-principle.md`.
+
+For such refactors, use the **2-commit variant**:
+
+### Commit 1/2 — Protocols, Gates, and Research
+
+**Commit message**:
+```
+refactor({team}): {new-protocols/gates summary} (v{X.Y.Z} 1/2)
+```
+
+**Contents**:
+- CREATE new `protocols/*.md` files
+- MODIFY existing protocols
+- CREATE new `checklists/*.md` and `rubrics/*.md` files
+- MODIFY existing gates
+- OPTIONALLY include a single `research/grounding-v{X.Y.Z}.md` companion
+  (rare for no-standards refactors, but permitted)
+- NOTHING else — no SKILL.md changes, no version bump, no `standards/`
+  additions (which would trip detection into 3-commit mode)
+
+### Commit 2/2 — SKILL.md Wiring and Version Bump
+
+**Commit message**:
+```
+refactor({team}): wire {what}, bump {version} (v{X.Y.Z} 2/2)
+```
+
+**Contents**: identical to canonical Commit 3/3 (SKILL.md +
+`.claude-plugin/plugin.json` + `CHANGELOG.md` + optional router update
++ optional legacy deletions). No new content files here.
+
+### When to use the 2-commit variant
+
+Detection rule (also used by the Commit Split Validity gate):
+
+> If `git diff --name-only --diff-filter=A main..HEAD -- '**/standards/*.md'`
+> is empty (**no new standards files added** on this branch — modifications
+> to existing standards are permitted) → **2-commit variant applies**.
+> Otherwise (at least one new standards file added) → canonical **3-commit
+> split applies**.
+
+The `--diff-filter=A` restricts the check to added files. Modify-only
+standards edits (e.g., this very amendment modifies `commit-convention.md`
+in the `standards/` directory of skill-team) stay in 2-commit mode
+because no new grounding is introduced. The rationale: 3-commit split's
+value is isolating *new grounding* for review; a branch that only
+tweaks existing standards text does not need that isolation.
+
+The variant is common for:
+- Interaction-layer refactors that add intake protocols + UX checklists
+  without touching grounding (e.g., copywriting-team v4.13.0 — intake
+  protocol + handoff format + intake-completeness checklist)
+- Adding a new MAY/SHOULD gate to an already-grounded team without
+  expanding the standards base
+- Workflow-tuning refactors that add a new protocol variant referencing
+  existing standards
+
+The variant is **NOT** appropriate for:
+- Any refactor that adds new standards (→ canonical 3-commit)
+- Grounding audits that uncover attribution drift and require standards
+  rewrites (→ canonical 3-commit)
+
+### 2-commit bump level
+
+Same rules as 3-commit: MINOR when new runtime files are introduced
+(protocols/gates are Read at runtime → MINOR); PATCH when modify-only.
+The variant name (`1/2` and `2/2` suffix) is orthogonal to bump level.
+
 ## Why 3 Commits (Not 1 or 5)
 
 - **Smaller than 3**: collapsing into 1 commit makes review painful
@@ -115,13 +191,25 @@ Follows Conventional Commits subset:
 - **`(v<X.Y.Z> <N>/3)` suffix**: required for 3-commit splits;
   identifies the version and the commit position
 
+- **`(v<X.Y.Z> <N>/<N>)` suffix**: position suffix uses the actual
+  split size — `N/3` for canonical 3-commit split, `N/2` for the
+  2-commit variant (see §2-Commit Variant above). Required for all
+  split branches; individual hotfix commits on a 1-commit branch may
+  omit the suffix.
+
 ### Examples
 
-Good:
+Good (3-commit):
 ```
 refactor(qa-team): add ISTQB/ISO-29119/JSTQB-aligned standards (v4.2.0 1/3)
 refactor(docs-team): Diátaxis quadrant protocols + README/ADR + 5 gates (v4.3.0 2/3)
 refactor(devops-team): wire SRE/DORA workflows, fix Monitoring, bump 4.4.0 (v4.4.0 3/3)
+```
+
+Good (2-commit variant):
+```
+refactor(copywriting-team): add intake protocol + handoff format + completeness checklist (v4.13.0 1/2)
+refactor(copywriting-team): wire intake into workflows, bump 4.13.0 (v4.13.0 2/2)
 ```
 
 Bad:
