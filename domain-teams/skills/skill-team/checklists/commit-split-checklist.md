@@ -14,20 +14,50 @@ Grounds on: `standards/commit-convention.md`.
 
 ## Scope
 
-This gate applies only to 3-commit-split workflows (new-skill-creation
-and skill-redesign). It does NOT apply to minor single-commit fixes.
-If the branch has only 1 commit, return `NOT_APPLICABLE` for every
-item and verdict `PASS`.
+This gate applies to split-commit workflows (new-skill-creation and
+skill-redesign). It does NOT apply to minor single-commit fixes. If
+the branch has only 1 commit, return `NOT_APPLICABLE` for every item
+and verdict `PASS`.
+
+### Split-mode detection (mandatory first step)
+
+Before evaluating CHK-CMT-001/002/003, detect which split mode applies:
+
+```
+git diff --name-only --diff-filter=A main..HEAD -- '**/standards/*.md'
+```
+
+The `--diff-filter=A` restricts the check to **added** files. Modify-only
+edits to existing standards (e.g., a convention amendment that tweaks
+`commit-convention.md` itself) stay in 2-commit mode — only *new*
+standards files introduce new grounding and require 3-commit review
+isolation.
+
+- **Empty output** → **2-commit variant** applies (refactor adds no
+  new `standards/` files). Branch must have exactly 2 commits. Apply
+  CHK-CMT items per the "2-commit variant" branch below.
+- **Non-empty output** → **canonical 3-commit split** applies. Branch
+  must have exactly 3 commits. Apply CHK-CMT items per the "3-commit
+  canonical" branch below.
+
+See `standards/commit-convention.md` §2-Commit Variant for the
+underlying convention.
 
 ## Checklist
 
-- [ ] **CHK-CMT-001 (Commit 1 content)** [FATAL]: The first commit contains ONLY changes to files under `standards/` of the target team AND optionally the single in-repo research note at `research/grounding-v{X.Y.Z}.md` (per skill-team v4.7.0 research-note convention — the research note is the layer-3 companion to the standards grounding and is inseparable from commit 1 by design). No changes to `protocols/`, `checklists/`, `rubrics/`, `SKILL.md`, router, or `plugin.json`.
+- [ ] **CHK-CMT-001 (Commit 1 content)** [FATAL]:
+    - **3-commit canonical**: The first commit contains ONLY changes to files under `standards/` of the target team AND optionally the single in-repo research note at `research/grounding-v{X.Y.Z}.md` (per skill-team v4.7.0 research-note convention — the research note is the layer-3 companion to the standards grounding and is inseparable from commit 1 by design). No changes to `protocols/`, `checklists/`, `rubrics/`, `SKILL.md`, router, or `plugin.json`.
+    - **2-commit variant**: The first commit (`1/2`) contains ONLY changes to files under `protocols/`, `checklists/`, or `rubrics/` of the target team AND/OR **modifications** (not additions) to existing `standards/*.md` files AND optionally the single in-repo research note at `research/grounding-v{X.Y.Z}.md`. No **new** standards files (adding a new standards file trips detection into 3-commit mode). No `SKILL.md` changes, no router changes, no `plugin.json` changes in this commit.
 
-- [ ] **CHK-CMT-002 (Commit 2 content)** [FATAL]: The second commit contains ONLY changes to files under `protocols/`, `checklists/`, or `rubrics/` of the target team. No changes to `SKILL.md`, `standards/`, router, or `plugin.json`.
+- [ ] **CHK-CMT-002 (Commit 2 content)** [FATAL]:
+    - **3-commit canonical**: The second commit contains ONLY changes to files under `protocols/`, `checklists/`, or `rubrics/` of the target team. No changes to `SKILL.md`, `standards/`, router, or `plugin.json`.
+    - **2-commit variant**: The second commit (`2/2`) contains a version bump in `.claude-plugin/plugin.json` AND a new entry in `CHANGELOG.md`. It MUST ALSO contain `SKILL.md` changes for additive MINOR bumps where the new structure needs to be wired into the discovery surface; for modify-only PATCH bumps where wiring is not needed, `SKILL.md` changes are OPTIONAL. It may contain router updates (`using-domain-teams/SKILL.md`) and legacy file deletions. No new content files under standards / protocols / gates in this commit. (This is the equivalent of canonical Commit 3/3 under the 2-commit variant.)
 
-- [ ] **CHK-CMT-003 (Commit 3 content)** [FATAL]: The third commit contains a version bump in `.claude-plugin/plugin.json` AND a new entry in `CHANGELOG.md`. It MUST ALSO contain `SKILL.md` changes for additive MINOR bumps (grounding refactors, brand-new teams) where the new structure needs to be wired into the discovery surface. For modify-only PATCH bumps where convention clarifications do not require SKILL.md rewiring, `SKILL.md` changes are OPTIONAL. It may contain router updates (`using-domain-teams/SKILL.md`) and legacy file deletions. No new content files under standards / protocols / gates in this commit.
+- [ ] **CHK-CMT-003 (Commit 3 content)** [FATAL]:
+    - **3-commit canonical**: The third commit contains a version bump in `.claude-plugin/plugin.json` AND a new entry in `CHANGELOG.md`. It MUST ALSO contain `SKILL.md` changes for additive MINOR bumps (grounding refactors, brand-new teams) where the new structure needs to be wired into the discovery surface. For modify-only PATCH bumps where convention clarifications do not require SKILL.md rewiring, `SKILL.md` changes are OPTIONAL. It may contain router updates (`using-domain-teams/SKILL.md`) and legacy file deletions. No new content files under standards / protocols / gates in this commit.
+    - **2-commit variant**: Return `NOT_APPLICABLE` — there is no third commit. The content CHK-CMT-003 would check lives in Commit 2/2 and is validated by CHK-CMT-002 (2-commit variant branch) above.
 
-- [ ] **CHK-CMT-004 (Message format)** [FIXABLE]: Every commit message follows `<type>({scope}): <subject> (v<X.Y.Z> <N>/3)` with type in {refactor, feat, fix, chore, docs}, scope being the team name, subject in imperative lowercase without trailing period, and the version/position suffix present.
+- [ ] **CHK-CMT-004 (Message format)** [FIXABLE]: Every commit message follows `<type>({scope}): <subject> (v<X.Y.Z> <N>/<N>)` with type in {refactor, feat, fix, chore, docs}, scope being the team name, subject in imperative lowercase without trailing period, and the version/position suffix present. The denominator in the suffix matches the detected split mode (`3` for canonical 3-commit split, `2` for the 2-commit variant).
 
 - [ ] **CHK-CMT-005 (Version bump validity)** [FIXABLE]: The version in `plugin.json` in commit 3 is greater than the version in `main` by one of:
     - **MINOR bump** (`x.y.z → x.(y+1).0`) — for **additive** work that introduces new grounded content or new convention infrastructure: grounding refactors, brand-new teams, new standards / protocols / gates, new research-note infrastructure, or backfilled research files. Example precedents: v4.2.0 (qa-team grounding), v4.7.0 (research-note in-repo convention + 3 backfills), v4.8.0 (design-team grounding).
