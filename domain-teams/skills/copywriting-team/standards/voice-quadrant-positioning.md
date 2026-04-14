@@ -142,6 +142,14 @@ competing:
 
 ## The Four Quadrants
 
+Per-quadrant structure: **Positive Positioning Principle → Linguistic
+markers → Use cases → Canonical Brand Corpus → Copywriter cross-
+reference → Positive Application Hints**. Brand entries follow the
+template (Voice statement + paired attributes + copywriter metadata +
+dated canonical corpus + optional era narration). Author-level voice
+deep-dives live in `jp-copy-craft-lineage.md` and are cross-referenced,
+not duplicated.
+
 ### Q1: Authority-Reason
 
 **Positive Positioning Principle**
@@ -161,52 +169,49 @@ journalism, and brand strategy communication.
 **Use cases**: B2B, financial services, medical, technical
 documentation, deep-analysis journalism, brand strategy briefs.
 
-**Canonical Copy Corpus**
+**Canonical Brand Corpus**
 
-*EN:*
-- **David Ogilvy — Rolls-Royce** (Silver Cloud, 1958): "At 60 miles
-  an hour the loudest noise in this new Rolls-Royce comes from the
-  electric clock." (Ogilvy, Benson & Mather; published in *The New
-  Yorker* and *NYT*.)
-- **David Ogilvy**: "The consumer isn't a moron; she is your wife.
-  You insult her intelligence if you assume that a mere slogan and
-  a few vapid adjectives will persuade her to buy anything."
+**The Economist** (publisher; global; AMV BBDO, 1988–)
+- Voice statement: Intelligent, rigorous, wry — respects reader
+  intelligence.
+- Voice attributes: informed, never preachy / witty, never glib /
+  global, never parochial
+- Copywriter(s): agency rotation (AMV BBDO most notable)
+- Canonical corpus:
+  - "White van man reads The Economist." (billboard, 1988–, AMV BBDO)
+  - "Never a dull page." (brand tagline)
+  - "Think. More intensely." (print, 2010s)
 
-*JP:*
-- **佐藤尚之** (fan-base theory): structured communication anchoring
-  on the "3% fan base" method — evidence-and-logic framework for
-  brand advocacy.
-- **古川裕也** (Dentsu): data-and-insight-driven strategic logic in
-  contemporary Japanese advertising planning.
+**Rolls-Royce** (automotive; global; Ogilvy, Benson & Mather, 1958)
+- Voice statement: Understatement as authority — let product facts
+  carry the premium position.
+- Voice attributes: factual, never boastful / precise, never sterile
+- Copywriter(s): David Ogilvy (CEO + copywriter)
+- Canonical corpus:
+  - "At 60 miles an hour the loudest noise in this new Rolls-Royce
+    comes from the electric clock." (Silver Cloud, 1958, *The New
+    Yorker* + *NYT* — origin: adapted from *The Motor* magazine)
+- Era narration: 1958 ad remains canonical reference; post-Ogilvy
+  Rolls-Royce advertising has varied agencies and voices — the 1958
+  piece is the Q1 benchmark.
 
-*TW:*
-- **葉明桂 (奧美 TW, strategic brief)**: "品牌不是定位出來的，
-  是長出來的。" (Insight-led assertion — brands grow organically
-  through story accumulation and consumer relationships, not short-
-  term positioning tactics.)
-- **葉明桂 (奧美 TW, 左岸咖啡館 strategic brief)**: "我們現在不是
-  在賣咖啡，我們是在經營一家咖啡館。" (Internal strategic framing
-  that elevated 統一企業's ready-to-drink coffee product into a
-  Parisian Left Bank lifestyle — documented in《品牌的技術和藝術》.
-  This is strategist brief language, not public ad copy.)
-- **林育聖 (文案的美)**: "方法比才華更重要。" (Pragmatic
-  declarative — core principle of his copywriting pedagogy.)
+**報導者 The Reporter** (nonprofit journalism; Taiwan; in-house, 2015–)
+- Voice statement: Public-interest investigative journalism — authority
+  through evidence, not opinion.
+- Voice attributes: rigorous, never sensational / transparent, never
+  evasive
+- Copywriter(s): in-house editorial (founded by 何榮幸)
+- Canonical corpus: editorial style is the voice; not a single-line
+  slogan corpus but a sustained register across every article.
+  Brand guidelines available at twreporter.gitbook.io.
 
-**Representative practitioners**:
+**Copywriter cross-reference**
 
-| Language | Practitioner | Signature |
-|----------|--------------|-----------|
-| EN | David Ogilvy | Fact-based, "respect the reader" |
-| EN | Rory Sutherland (Ogilvy) | Behavioral-economics logic |
-| JP | 佐藤尚之 | Fan-base theory, structured communication |
-| JP | 古川裕也 (Dentsu) | Strategic advertising logic |
-| TW | 葉明桂 (Ogilvy TW CSO) | Insight-led strategy, "偏心" framing |
-| TW | 林育聖 (文案的美) | Method-over-talent pragmatism |
-
-**Representative brands**:
-- EN: The Economist, McKinsey
-- JP: 日経新聞, SONY
-- TW: 報導者 The Reporter, 玉山銀行 E.SUN Bank
+For author-centric Q1 voice deep-dives: David Ogilvy's broader corpus
+lives in `voice-and-tone.md §Ogilvy Long-Copy Classics`. TW strategic
+thinking (葉明桂 insight-led method, 林育聖 method-over-talent) is
+practitioner-level; no dedicated standard for deep-dive (see
+`research/grounding-v4.18.0.md` Cluster C).
 
 **Positive Application Hints**
 
@@ -234,69 +239,135 @@ lifestyle brands, and campaigns communicating brand attitude.
 **Use cases**: Premium/luxury, bookstores, lifestyle brands,
 cultural institutions, manifesto-driven campaigns.
 
-**Canonical Copy Corpus**
+**Canonical Brand Corpus**
 
-*EN:*
-- **Apple "Think Different"** (TBWA\Chiat\Day, Lee Clow team, 1997
-  — full manifesto, 60-second TV cut):
+**Apple** (tech; global; TBWA\Chiat\Day 1997–; TBWA\Media Arts Lab 2006–)
+- Voice statement: Manifesto voice — celebrating those who challenge
+  the status quo; products as tools for creators.
+- Voice attributes: visionary, never grandiose / confident, never
+  boastful / simple, never dumbed-down
+- Copywriter(s): Lee Clow team (CCO); Rob Siltanen (Think Different
+  manifesto); Craig Tanimoto (AD); Steve Hayden ("1984")
+- Canonical corpus:
+  - "1984." (Macintosh Super Bowl, 1984, Chiat\Day, Steve Hayden)
+  - "Here's to the crazy ones. The misfits. The rebels. The
+    troublemakers. The round pegs in the square holes. The ones
+    who see things differently. They're not fond of rules. And they
+    have no respect for the status quo. You can quote them, disagree
+    with them, glorify or vilify them. About the only thing you
+    can't do is ignore them. Because they change things. They push
+    the human race forward. While some may see them as the crazy
+    ones, we see genius. Because the people who are crazy enough
+    to think they can change the world, are the ones who do."
+    (Think Different manifesto, 1997, 60-second TV cut)
+  - "Think Different." (tagline, 1997–2002)
+  - "1000 songs in your pocket." (iPod, 2001)
+  - "Shot on iPhone." (campaign, 2015–)
+- Era narration: pre-1997 voice inconsistent; 1997–2011 Think Different
+  era sets canonical Q2 manifesto voice; post-Jobs (2011–) drifts
+  toward product-functional register but rallying-cry moments still
+  resurface.
 
-  > "Here's to the crazy ones. The misfits. The rebels. The
-  > troublemakers. The round pegs in the square holes. The ones
-  > who see things differently. They're not fond of rules. And they
-  > have no respect for the status quo. You can quote them, disagree
-  > with them, glorify or vilify them. About the only thing you
-  > can't do is ignore them. Because they change things. They push
-  > the human race forward. While some may see them as the crazy
-  > ones, we see genius. Because the people who are crazy enough
-  > to think they can change the world, are the ones who do."
+**Nike** (sportswear; global; Wieden+Kennedy, 1988–)
+- Voice statement: Empowerment manifesto — athletic effort as
+  identity.
+- Voice attributes: determined, never pushy / inclusive, never
+  preachy / direct, never curt
+- Copywriter(s): Dan Wieden (founder, W+K)
+- Canonical corpus:
+  - "Just Do It." (launch, 1988 — origin: adapted from Gary Gilmore
+    1977 "Let's do it")
+- Q2/Q4 disambiguation: imperative grammar is Q4-syntactic, but
+  brand function is Q2-identity (empowerment, values signaling).
+  Brand-strategy literature consistently classifies as Q2.
 
-- **Nike "Just Do It"** (Dan Wieden / Wieden+Kennedy, 1988):
-  imperative-grammar tagline functioning as cultural manifesto.
-  Per brand-strategy literature, this is **Q2 ideology** (identity
-  signaling, empowerment) despite its Q4-syntactic surface.
+**MUJI 無印良品** (retail; JP/global; 1980s copy 小池一子 × AD 田中一光;
+2002– AD Kenya Hara)
+- Voice statement: Wabi-sabi minimalism — utility without ornament,
+  aesthetic through restraint.
+- Voice attributes: philosophical, never preachy / minimal, never cold
+  / universal, never generic
+- Copywriter(s): 小池一子 (1980s foundational corpus); later Kenya
+  Hara art direction (2002–)
+- Canonical corpus:
+  - "わけあって、安い。" (1980, foundational slogan)
+  - "愛は飾らない。" (1981, 田中一光 AD)
+  - "自然、当然、無印。" (1983, revived as global corporate message
+    2014)
+  - "しゃけは全身しゃけなんだ。" (c.1980, product copy)
+- Voice-doc source: Kenya Hara *Designing Design* (Lars Müller, 2007)
+- Era narration: 1980s foundational era under 小池一子/田中一光 sets
+  canonical voice; 2002– global era under Kenya Hara adds product-
+  lifestyle imagery but voice remains stable. "Compact Life" (post-
+  2010 product line) and 2003 "Horizon / 地平線" (Bolivia/Mongolia
+  campaign) are distinct campaigns within the same voice.
 
-*JP (all MUJI — 小池一子 copy, 田中一光 AD):*
-- **無印良品**: "わけあって、安い。" (1980)
-- **無印良品**: "愛は飾らない。" (1981)
-- **無印良品**: "自然、当然、無印。" (1983, revived as global
-  corporate message 2014)
-- **無印良品**: "しゃけは全身しゃけなんだ。" (c.1980)
-- **仲畑貴志**: minimalist philosophical assertion (TOTO, Suntory
-  corpus) — canonical JP Q2 register.
+**Patagonia** (outdoor retail; global; founder-led voice, 1973–)
+- Voice statement: Anti-consumption activism through product-grade
+  honesty — the brand is a vehicle for environmental values.
+- Voice attributes: committed, never sanctimonious / plain-spoken,
+  never folksy / activist, never opportunistic
+- Copywriter(s): Yvon Chouinard author-voice; in-house team
+- Canonical corpus:
+  - "Don't Buy This Jacket." (*NYT* full-page, Black Friday 2011)
+  - "We're in business to save our home planet." (mission statement
+    rewrite, 2018)
+- Voice-doc source: Chouinard *Let My People Go Surfing* (Penguin,
+  2005)
 
-*TW:*
-- **許舜英 (中興百貨 意識形態廣告, 1990s)**: "女性主義就是失敗
-  在愛情和衣服這兩件事情上。"
-- **許舜英 (中興百貨)**: "銀行倒閉不會令我不安，服裝店倒閉
-  才會令我不安。"
-- **李欣頻 (誠品書店)**: "我在閱讀中，遇見另一個自己。"
-- **李欣頻 (誠品敦南店)**: "拋開阿莫多瓦的高跟鞋到街上去。
-  拋開村上春樹的彈珠遊戲到街上去。" (Inspired by 寺山修司
-  《拋開書本到街上去》. Full series extends with 徐四金、
-  彼得梅爾 etc.)
-- **左岸咖啡館 (奧美 TW / 統一企業)**: "我不在咖啡館，就在去咖啡館
-  的路上。" (Borrowed from Peter Altenberg; sinicized for
-  左岸咖啡館's Parisian Left Bank positioning.)
-- **左岸咖啡館**: "我在這裡，找到一個角落，一個上午，一杯 Cafe au
-  lait。Cafe au lait 一如記憶裡的模糊地帶。這是春天的最後一天，
-  我在左岸咖啡館。" (Poetic narrative — Q2 creative output
-  realizing 葉明桂's Q1 strategic framing.)
+**誠品書店 Eslite** (bookstore; Taiwan; 李欣頻 copy corpus,
+1990s–2000s)
+- Voice statement: Literary humanism — reading as identity, bookstore
+  as cultural institution.
+- Voice attributes: reflective, never pedantic / aspirational, never
+  hollow / meditative, never sleepy
+- Copywriter(s): 李欣頻 (10+ years from敦南店 opening)
+- Canonical corpus:
+  - "我在閱讀中，遇見另一個自己。"
+  - "拋開阿莫多瓦的高跟鞋到街上去。拋開村上春樹的彈珠遊戲到街上去。"
+    (誠品敦南店; inspired by 寺山修司《拋開書本到街上去》; full
+    series extends with 徐四金、彼得梅爾 etc.)
+- Voice-doc source: 李欣頻《廣告副作用》+《誠品副作用》(1998)
+- Era narration: 1990s–2000s 意識形態 era sets canonical Q2 voice;
+  post-2010 voice fragments — use ONLY 1990s corpus as benchmark.
 
-**Representative practitioners**:
+**中興百貨** (department store; Taiwan; 意識形態廣告 / 許舜英,
+1988–2001)
+- Voice statement: Consumption as cultural ideology — shopping as
+  philosophy, not transaction.
+- Voice attributes: provocative, never gratuitous / intellectual,
+  never pretentious / ironic, never cynical
+- Copywriter(s): 許舜英 (founder/CD of 意識形態廣告)
+- Canonical corpus:
+  - "女性主義就是失敗在愛情和衣服這兩件事情上。"
+  - "銀行倒閉不會令我不安，服裝店倒閉才會令我不安。"
+- Era narration: 1988–2001 campaign run produced ~28x revenue growth
+  for 中興百貨; terminated with store closure in 2008 — use only
+  the ideology-era corpus.
 
-| Language | Practitioner | Signature |
-|----------|--------------|-----------|
-| EN | Lee Clow (TBWA) | Apple Think Different |
-| EN | Dan Wieden (W+K) | Nike Just Do It (manifesto) |
-| JP | 小池一子 (MUJI) | Minimalist philosophical copy |
-| JP | 仲畑貴志 | Absolute aesthetic minimalism |
-| TW | 許舜英 (意識形態廣告) | Anti-utilitarian, aphoristic |
-| TW | 李欣頻 (誠品) | Literary, meditative |
+**左岸咖啡館** (RTD coffee; Taiwan; 奧美 Taiwan / 葉明桂 strategy,
+統一企業)
+- Voice statement: Parisian narrative world — product as access to a
+  literary state of being.
+- Voice attributes: poetic, never purple / contemplative, never vacant
+  / evocative, never opaque
+- Copywriter(s): 奧美 Taiwan team under 葉明桂 strategic direction
+- Canonical corpus:
+  - "我不在咖啡館，就在去咖啡館的路上。" (borrowed from Peter
+    Altenberg, sinicized)
+  - "我在這裡，找到一個角落，一個上午，一杯 Cafe au lait。Cafe au
+    lait 一如記憶裡的模糊地帶。這是春天的最後一天，我在左岸咖啡館。"
+- Strategic brief note (Q1-strategy level, 葉明桂):
+  - "我們現在不是在賣咖啡，我們是在經營一家咖啡館。" (documented
+    in《品牌的技術和藝術》)
+- Voice-doc source: 葉明桂《品牌的技術和藝術》(天下文化, 2017)
 
-**Representative brands**:
-- EN: Apple (Think Different era), Patagonia
-- JP: 無印良品 MUJI, 蔦屋書店 TSUTAYA
-- TW: 誠品書店 (意識形態 era 1990s-2000s), 中興百貨
+**Copywriter cross-reference**
+
+For author-centric Q2 voice deep-dives where the copywriter is a
+canonical figure (仲畑貴志, 大貫卓也, 眞木準), see
+`jp-copy-craft-lineage.md`. The quadrant file treats brands as the
+primary unit; jp-copy-craft-lineage owns authorial deep-dives.
 
 **Positive Application Hints**
 
@@ -325,50 +396,98 @@ brands, social campaigns, and the Affinity stage of PASONA long-form.
 **Use cases**: Everyday retail, family/household brands, social
 campaigns, Affinity stage of PASONA long-form.
 
-**Canonical Copy Corpus**
+**Canonical Brand Corpus**
 
-*EN:*
-- **Dove "Campaign for Real Beauty"** (Ogilvy / Unilever, 2004
-  launch): "Fat or Fab?", "Wrinkled or Wonderful?" billboard
-  prompts, foundational insight that only ~2% of women consider
-  themselves beautiful. (The later "You're more beautiful than you
-  think" tagline is from 2013 "Real Beauty Sketches" evolution.)
-- **Seth Godin**: tribal-leadership writing with short emotional
-  pulses — "People like us do things like this."
+**Dove (Campaign for Real Beauty)** (personal care; global; Ogilvy /
+Unilever, 2004–)
+- Voice statement: Real-bodies activism — beauty as confidence, not
+  as anxiety.
+- Voice attributes: affirming, never saccharine / inclusive, never
+  performative / honest, never preachy
+- Copywriter(s): Ogilvy (primarily Düsseldorf + London)
+- Canonical corpus:
+  - "Fat or Fab?" (billboard prompt, 2004 launch)
+  - "Wrinkled or Wonderful?" (billboard prompt, 2004 launch)
+  - "You're more beautiful than you think." (Real Beauty Sketches,
+    2013 evolution — NOT the 2004 launch tagline)
+- Foundational insight: ~2% of women consider themselves beautiful.
+- Era narration: 2004 launch → 2013 Sketches → ongoing; voice-doc
+  stable across 20+ years.
 
-*JP:*
-- **糸井重里 (西武百貨店)**: "じぶん、新発見。" (1980)
-- **糸井重里 (西武百貨店)**: "不思議、大好き。" (1981)
-- **糸井重里 (西武百貨店)**: "おいしい生活。" (1982)
-- **岩崎俊一 (サントリー お歳暮ギフト)**: "あなたに会えた、
-  お礼です。" (1985)
-- **岩崎俊一 (ミツカン)**: "やがて、いのちに変わるもの。" (2004)
-- **岩崎俊一 (プレナス ほっともっと)**: "幸福は、ごはんが炊かれる
-  場所にある。"
+**西武百貨店** (department store; JP; 糸井重里 copy, 1980–1982)
+- Voice statement: State-proposal voice — ambiguity as invitation;
+  lifestyle reverie without direct product claim.
+- Voice attributes: evocative, never vague / open, never empty /
+  playful, never flippant
+- Copywriter(s): 糸井重里 (see `jp-copy-craft-lineage.md §糸井` for
+  deep-dive)
+- Canonical corpus:
+  - "じぶん、新発見。" (1980)
+  - "不思議、大好き。" (1981)
+  - "おいしい生活。" (1982)
+- Era narration: 1980–1982 window is the canonical 糸井 × 西武
+  collaboration; later 糸井 work (see ほぼ日 entry below) continues
+  the voice on a different platform.
 
-*TW:*
-- **龔大中 (全聯經濟美學)**: "長得漂亮是本錢，把錢花得漂亮是本事。"
-- **龔大中 (全聯經濟美學)**: "知道一生要去的20個地方之後，我決定
-  先去全聯。"
-- **龔大中 (全聯潮包, 2016)**: "當不成名模，日子也要過得有模有樣。"
-- **龔大中 (全聯經典篇, 2017)**: "省錢就像白T牛仔褲，永不退流行。"
-- **盧建彰**: 情感寫實 — "除了漂亮的文字，更需要的是真實。"
+**ミツカン** (food/condiments; JP; 岩崎俊一 copy, 2004 campaign)
+- Voice statement: Impermanence and life-continuity — food as the
+  medium through which life becomes what it becomes.
+- Voice attributes: reverent, never solemn / poetic, never ornate
+- Copywriter(s): 岩崎俊一 (see `jp-copy-craft-lineage.md §岩崎` for
+  deep-dive)
+- Canonical corpus:
+  - "やがて、いのちに変わるもの。" (2004)
+- Additional 岩崎 canonical (other clients):
+  - "あなたに会えた、お礼です。" (サントリー お歳暮ギフト, 1985)
+  - "幸福は、ごはんが炊かれる場所にある。" (プレナス ほっともっと)
 
-**Representative practitioners**:
+**JR九州** (rail; JP; 九州旅客鉄道)
+- Voice statement: 旅情 (travel reverie) — movement as emotional
+  geography.
+- Voice attributes: evocative, never decorative / gentle, never
+  sentimental
+- Copywriter(s): 仲畑貴志 (1990s era)
+- Canonical corpus:
+  - "愛とか、勇気とか、見えないものも乗せている。" (仲畑貴志, 1994
+    — TCC年鑑 verified; see drift #31 for prior attribution correction)
+- Era narration: 1990s era strong; post-1990s voice less documented.
 
-| Language | Practitioner | Signature |
-|----------|--------------|-----------|
-| EN | Seth Godin | Tribal leadership, human-scale |
-| EN | Leo Burnett | Plain-folk warmth |
-| JP | **糸井重里** | State proposal, intentional ambiguity (see `jp-copy-craft-lineage.md`) |
-| JP | **岩崎俊一** | Seasonal, impermanence (see `jp-copy-craft-lineage.md`) |
-| TW | 龔大中 (Ogilvy TW CCO) | 經濟美學 observational wit |
-| TW | 盧建彰 | Emotional realism, civic humanism |
+**ほぼ日刊イトイ新聞 / ほぼ日** (publisher/brand; JP; 糸井重里
+direct author, 1998–)
+- Voice statement: Daily observation as brand practice — author
+  identity IS brand identity.
+- Voice attributes: warm, never syrupy / curious, never intrusive /
+  considered, never precious
+- Copywriter(s): 糸井重里 (founder/primary author; see
+  `jp-copy-craft-lineage.md §糸井`)
+- Canonical corpus:
+  - Daily essays on 1101.com (1998–present) — the corpus is itself
+    the voice doc
+- Era narration: consistent since 1998 founding; extraordinarily
+  stable voice due to single-author continuity.
 
-**Representative brands**:
-- EN: Dove (Real Beauty), Airbnb (Belong Anywhere)
-- JP: JR九州 (旅情), ほぼ日刊イトイ新聞
-- TW: 全聯福利中心 (經濟美學), IKEA Taiwan (人生故事)
+**全聯福利中心 PX Mart** (retail; Taiwan; 奧美 Taiwan / 龔大中, 2015–)
+- Voice statement: Thrift is dignity — observational wit elevates
+  frugality to aesthetic.
+- Voice attributes: playful, never mocking / thrifty, never cheap /
+  observational, never snide
+- Copywriter(s): 龔大中 (奧美 Taiwan CCO 2020–; ECD 2014–)
+- Canonical corpus:
+  - "長得漂亮是本錢，把錢花得漂亮是本事。" (經濟美學, 2015)
+  - "知道一生要去的20個地方之後，我決定先去全聯。" (經濟美學)
+  - "當不成名模，日子也要過得有模有樣。" (全聯潮包, 2016)
+  - "省錢就像白T牛仔褲，永不退流行。" (經典篇, 2017)
+- Era narration: pre-2015 voice was generic retail; 2015 經濟美學
+  campaign establishes canonical Q3 voice. Post-2015 sustained.
+
+**Copywriter cross-reference**
+
+Q3 contains the deepest JP author tradition. 糸井重里 and 岩崎俊一
+appear across multiple brand entries because their voice signature
+transcends any single client. For deep-dive voice analysis see
+`jp-copy-craft-lineage.md` (§糸井 / §岩崎). 盧建彰 TW civic-humanist
+voice is practitioner-level; see `research/grounding-v4.18.0.md`
+Cluster C-3 for notes.
 
 **Positive Application Hints**
 
@@ -398,39 +517,50 @@ e-commerce, promotional push, micro-conversion (opt-in / subscribe
 conversion (opt-in/subscribe/download — see
 `light-action-frameworks.md` PREP/CREMA).
 
-**Canonical Copy Corpus**
+**Canonical Brand Corpus**
 
-*EN:*
-- **Gary Vaynerchuk** (conceptual): "You don't need more time, you
-  need more decisions."
-- **Dave Trott**: simple-and-direct problem-solving copy — "Problem,
-  solution, benefit." One-sentence clarity as discipline.
+**蝦皮購物 Shopee** (e-commerce; Taiwan/SEA; in-house + agency mix,
+2015–)
+- Voice statement: Conversion-optimized playfulness — every line has
+  a job.
+- Voice attributes: direct, never blunt / witty, never flippant /
+  urgent, never pushy
+- Copywriter(s): in-house + agency rotation
+- Canonical corpus:
+  - "今天下單，明天脫單。" (Valentine's, 2020)
+  - "月初囤棉最便宜。" (金句獎, 2021)
 
-*JP:*
-- **佐藤可士和 (brand direction)**: ultra-simple signaling via
-  超整理術 — not copywriter output per se (art direction), but
-  canonical for Q4 minimalist-action register.
-- **岸勇希 (ex-Dentsu)**: behavior-design communication — framing
-  the user's next action as the frictionless default.
+**Amazon** (e-commerce; global; in-house brand voice, 1994–)
+- Voice statement: Customer obsession expressed as frictionlessness —
+  remove doubt between want and have.
+- Voice attributes: clear, never curt / confident, never pushy /
+  direct, never transactional
+- Copywriter(s): in-house brand team
+- Canonical corpus:
+  - "Earth's most customer-centric company." (mission statement)
+  - Product-page conventions: one-click, "also bought", subscribe &
+    save — each pattern is a voice artifact
 
-*TW:*
-- **蝦皮購物 Shopee** (2020 Valentine's): "今天下單，明天脫單。"
-- **蝦皮購物 Shopee** (2021 金句獎): "月初囤棉最便宜。"
+**UNIQLO** (retail; JP/global; in-house copy; 佐藤可士和 AD, 2006–)
+- Voice statement: LifeWear — clothing as infrastructure for everyday
+  living.
+- Voice attributes: functional, never cold / universal, never generic
+- Copywriter(s): in-house team; 佐藤可士和 art direction (2006–) is
+  NOT copywriter role
+- Canonical corpus:
+  - "From Tokyo to New York." (SoHo flagship positioning banner, 2006)
+  - "LifeWear" (brand tagline, 2013–)
+- Voice-doc source: no public voice doc; 佐藤可士和 超整理術 writings
+  document the brand-system philosophy
 
-**Representative practitioners**:
+**Copywriter cross-reference**
 
-| Language | Practitioner | Signature |
-|----------|--------------|-----------|
-| EN | Gary Vaynerchuk | Action-first, hustle pragmatism |
-| EN | Dave Trott | Simple, direct, problem-solving |
-| JP | 岸勇希 (ex-Dentsu) | Behavior-design communication |
-| TW | 織田紀香 (諾利嘉) | Conversion-focused, SME-oriented |
-| TW | 廣告樂血研究院 (Wawa) | Performance-marketing education |
-
-**Representative brands**:
-- EN: Amazon, Netflix
-- JP: UNIQLO, メルカリ Mercari
-- TW: 蝦皮購物 Shopee
+Q4 practitioners (Gary Vaynerchuk action-first, Dave Trott
+simple-and-direct, 織田紀香 / 廣告樂血研究院 performance-marketing
+education) are strategy/pedagogy voices rather than canonical
+copywriters with single-brand corpora. No dedicated deep-dive
+standard; see `research/grounding-v4.18.0.md` Cluster C-4 for
+TW practitioner notes.
 
 **Positive Application Hints**
 
