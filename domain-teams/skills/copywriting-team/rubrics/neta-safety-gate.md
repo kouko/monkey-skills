@@ -21,6 +21,7 @@ The other three dimensions aggregate per Verdict Rules below.
 
 **Grounds on**:
 - `../standards/neta-injection-techniques.md`
+- `../standards/neta-source-taxonomy.md`
 - `../standards/neta-websearch-pipeline.md`
 - `../standards/persuasion-ethics.md`
 
@@ -29,7 +30,8 @@ The other three dimensions aggregate per Verdict Rules below.
 This gate applies to copy where neta injection has been applied (per
 `protocols/copy-neta-injection.md` output). It does NOT apply to copy
 that deliberately avoided neta injection. If the artifact contains
-no pop culture / subculture / meme / 固有名詞 reference, return
+no cultural reference (pop culture / subculture / meme / literary
+allusion / classical quotation / famous phrase / 固有名詞), return
 `NOT_APPLICABLE` for every dimension and verdict `PASS`.
 
 ## Primary sources for rubric dimensions
@@ -164,7 +166,7 @@ advisory rather than hard veto; but cross-reference
 ### Dimension 3: Cringe Index (soft)
 
 **What to evaluate**: does the copy read as earnestly clever, or
-as cringingly out-of-touch / forced / generationally misaligned?
+as cringingly out-of-touch / forced / misaligned?
 
 **Documented failure precedents** (academic / industry):
 - McDonald's #McDStories (2012) — brand-hashtag hijacked
@@ -178,72 +180,129 @@ as cringingly out-of-touch / forced / generationally misaligned?
 Consumer Negativity*, Palgrave Macmillan — taxonomy of brand
 backlash.
 
+**Source-type-specific cringe patterns** (per
+`neta-source-taxonomy.md` signaling axis model):
+
+| Source type | Cringe failure mode |
+|-------------|-------------------|
+| SNS/Meme | **Out-of-touch**: dead meme, format misuse, "fellow kids" |
+| Classical Lit | **Pretentiousness**: talking down to reader, brand seems elitist |
+| Modern Lit | Pretentiousness OR **generational mismatch** |
+| Quotes | **Cliché**: overused quote with zero compression power |
+| Contemporary | Spoiler / **fandom mismatch** |
+
+Literary-specific patterns:
+- **Pretentiousness**: using obscure literary references to signal
+  sophistication rather than to compress meaning. Brand voice must
+  earn the literary positioning (Bourdieu cultural capital).
+- **Misattribution cringe**: getting the quote wrong is worse for
+  classical sources because the audience that recognizes the
+  reference also recognizes the error. Verify via Path A-2 sources.
+- **Pedagogical tone**: reference reads as "look how well-read I am"
+  rather than serving the product message. The reference should
+  compress meaning, not lecture.
+
 **Flag criteria**:
 
 - 🟢 **Green**: copy reads as authentically in-tune with target
   audience. Execution is confident, not trying too hard. Reference
-  fits product message naturally (not forced).
+  fits product message naturally (not forced). For literary sources:
+  brand voice credibly supports the allusion's register.
 - 🟡 **Yellow**: copy is generally on-tone but has 1-2 elements that
   feel slightly off (e.g., generationally misaligned word choice,
   overused template, slight forcing of product message onto
-  reference).
+  reference, literary reference slightly above audience's comfort
+  zone).
 - 🔴 **Red**: copy reads as performative, out-of-touch, or
-  generationally misaligned. Executive-written-trying-to-be-youth-
-  cool. Forced reference that doesn't map to product. Uses a
-  sensitive hashtag / context inappropriately (DiGiorno failure
-  mode).
+  misaligned. For SNS/Meme: executive-written-trying-to-be-youth-
+  cool. For Literary: brand-trying-to-seem-intellectual without
+  earned positioning. Forced reference that doesn't map to product.
+  Uses a sensitive hashtag / context inappropriately.
 
-### Dimension 4: In-Group (Subcultural Capital) Match (soft)
+### Dimension 4: Audience Capital Match (soft)
 
-**What to evaluate**: does the in-group reference (Technique 3:
-Subcultural Capital / tribal signal / 界隈消費) match the intended
-audience's subcultural boundaries? For non-in-group techniques
-(Techniques 1/2/4: Reversal / Substitution / Cross-domain Mapping),
-is the reference's recognition scope appropriate for target
-audience breadth?
+**What to evaluate**: does the reference match the target audience's
+recognition profile? This dimension operates on **two signaling axes**
+depending on source type (per `neta-source-taxonomy.md`):
 
-**Academic anchors**: Thornton 1995 subcultural capital, Spence 1973
-signaling, Bourdieu 1984 cultural capital.
+- **Thornton's subcultural capital** (1995): for SNS/Meme and
+  Contemporary Culture sources — "being in the know" within a
+  specific subculture. Tests in-group membership.
+- **Bourdieu's cultural capital** (1984): for Classical Lit, Modern
+  Lit, and Quotes sources — education, cultural literacy,
+  sophistication. Tests whether the audience's reading/education
+  background includes the reference.
+
+Peterson & Kern's omnivore thesis (1996) applies: high-status
+audiences consume across both axes. The two are complementary, not
+contradictory, but the failure modes differ.
+
+**Academic anchors**: Thornton 1995, Bourdieu 1984, Peterson & Kern
+1996, Spence 1973 signaling.
 
 **Flag criteria**:
 
-- 🟢 **Green**: target audience's subcultural profile matches the
-  reference's in-group. Brand has credible in-group connection
-  (earned, not performed). Non-in-group reference has recognition
-  window appropriate for audience breadth.
+- 🟢 **Green**: target audience's profile matches the reference's
+  recognition requirements. For subcultural capital: brand has
+  credible in-group connection (earned, not performed). For cultural
+  capital: audience's education/literacy band includes the reference;
+  brand voice credibly supports the allusion's register.
 - 🟡 **Yellow**: audience-reference match is partial. Some segment
   of intended audience will recognize, some will not. Mitigation:
   ensure fallback readability so non-recognizers still parse surface
-  meaning.
-- 🔴 **Red**: reference is in-group for a community adjacent to
-  (not overlapping with) target audience. Cultural-appropriation
-  risk — brand uses in-group token without genuine connection.
-  Alienates primary audience by excluding them from "insider" signal.
+  meaning. For literary sources: reference may be at the edge of the
+  audience's cultural literacy.
+- 🔴 **Red**: For subcultural sources: reference is in-group for a
+  community adjacent to (not overlapping with) target audience;
+  cultural-appropriation risk. For literary sources: reference
+  requires education/literacy significantly above the audience's
+  profile; reads as exclusionary rather than enriching. In either
+  case: brand uses cultural token without genuine connection.
 
 ### Dimension 5: Timeliness / Currency (soft)
 
-**What to evaluate**: is the referenced meme / phrase / token
-currently alive in the target audience's discourse, or expired?
+**What to evaluate**: is the reference timely for its source type?
+Timeliness criteria differ by source category (per
+`neta-source-taxonomy.md`):
 
 **Anchors**:
-- Shifman 2014 meme lifecycle
-- Cambridge *Humor 2.0* Ch. 16 half-life: ≈4-6 months
+- Shifman 2014 meme lifecycle (for SNS/Meme)
+- Cambridge *Humor 2.0* Ch. 16 half-life: ≈4-6 months (for SNS/Meme)
+- Bourdieu 1984 cultural capital (for literary — recognition depends
+  on education, not temporal currency)
 
-**Flag criteria**:
+**Source-type-aware flag criteria**:
 
-- 🟢 **Green**: reference is either (a) a classic / evergreen
-  (recognizable across generations — e.g., 富士フイルム「美しい人は
-  より美しく」 1980 still widely recognized) OR (b) current within
-  meme half-life window (≤6 months) with 2+ independent source
-  verification.
-- 🟡 **Yellow**: reference is 6-12 months old; currency requires
-  re-verification. May still work for target audience but risk of
-  "late to the joke" perception. Recommend verification via
-  additional WebSearch before commit.
-- 🔴 **Red**: reference is >12 months old AND not classic /
-  evergreen. "Cringe by delay" — brand using a meme past its
-  cultural moment. Also red for memes that peaked and collapsed
-  (e.g., briefly-viral hashtag that became associated with scandal).
+- 🟢 **Green**:
+  - *SNS/Meme*: current within meme half-life window (≤6 months)
+    with 2+ independent source verification
+  - *Classical Lit*: reference is canonical and within target
+    audience's cultural literacy (evergreen — no expiry)
+  - *Modern Lit*: reference is well-known to target generation OR
+    experiencing active cultural rediscovery (adaptation, anniversary)
+  - *Quotes*: reference is widely recognized AND not yet cliché
+    (still carries compression power)
+  - *Contemporary Culture*: within 1-5 year recognition window for
+    the specific medium
+- 🟡 **Yellow**:
+  - *SNS/Meme*: 6-12 months old; currency requires re-verification
+  - *Modern Lit*: reference is 5-10 years from last cultural moment;
+    context-dependent verification needed
+  - *Quotes*: quote is approaching cliché status (still parseable
+    but losing compression)
+  - *Contemporary*: at the tail of its recognition window
+- 🔴 **Red**:
+  - *SNS/Meme*: >12 months old AND not classic. "Cringe by delay."
+    Also red for memes that peaked and collapsed.
+  - *Classical Lit*: red only if the reference's connotation has
+    shifted due to recent cultural events (e.g., a quote newly
+    associated with controversy) — otherwise classical sources do
+    NOT receive red on timeliness
+  - *Quotes*: dead cliché — overused to the point of carrying no
+    compression at all ("Be the change," "Think different" in
+    non-Apple context)
+  - *Modern Lit*: >10 years from last cultural moment without active
+    rediscovery; recognition has decayed for the target generation
 
 ## Verdict Rules
 

@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.17.0] — 2026-04-14
+
+### Added (copywriting-team)
+- **Neta Source Taxonomy** (`standards/neta-source-taxonomy.md`, Tier 3):
+  5 source categories (SNS/Meme, Classical Literature, Modern Literature,
+  Famous Quotes, Contemporary Culture) with 2-axis design separating
+  source types (取材類型) from transformation techniques (轉化技法).
+  Grounded on Kristeva 1969 intertextuality, Genette 1982 transtextuality,
+  Ben-Porat 1976 literary allusion, 本歌取り (Brower & Miner 1961 /
+  藤原定家 c.1209), Bourdieu 1984 cultural capital, Peterson & Kern 1996
+  omnivore thesis.
+- **Path A-2 parametric-first retrieval** for literary sources (Classical
+  Lit, Modern Lit, Quotes) with 3-language verification allow-list
+  (JP: 青空文庫, NDL, J-STAGE; EN: Project Gutenberg, Perseus, Internet
+  Archive; ZH: ctext.org, 維基文庫, 成語典).
+- **Source-type preference** intake field (`neta_source_type_preference:
+  all | sns-meme | literary | mixed`) in Q7.5 brainstorming.
+- Grounding research: `research/grounding-v4.17.0.md` (3 clusters:
+  Intertextuality, 本歌取り, Cultural Capital).
+
+### Changed (copywriting-team)
+- `neta-injection-techniques.md`: added "Source Types vs Transformation
+  Techniques" clarification section; broadened "What counts as neta" to
+  include literary allusion and classical quotation.
+- `neta-websearch-pipeline.md`: Phase A now routes by source type
+  (Path A-1 WebSearch-first for SNS/Meme vs Path A-2 parametric-first
+  for literary); source-type-aware Phase D self-check.
+- `neta-safety-gate.md`: Dim 3 (Cringe) gains source-type-specific
+  patterns; Dim 4 renamed to "Audience Capital Match" with dual-axis
+  (Bourdieu + Thornton); Dim 5 (Timeliness) becomes source-type-aware.
+- `copy-neta-injection.md`: source-type routing in Phase A; softened
+  evergreen restriction for literary sources.
+- `copywriting-brainstorming.md` Q7.5: expanded opt-in triggers for
+  literary/classical allusion; added source-type preference sub-question.
+- `intake-completeness-checklist.md` CHK-CTW-INTAKE-005: added
+  source-type preference sub-check.
+- Standards count: 17 → 18.
+
 ## [4.16.1] — 2026-04-14
 
 Housekeeping: add missing `commands/copywriting.md` slash command

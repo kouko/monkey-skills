@@ -1,18 +1,19 @@
 # Protocol: Copy Neta Injection（Phase A-D post-production layer for cultural-reference injection）
 
-**When to use**: When a brief has been pre-approved for neta (pop culture / subculture / meme / 流行語) injection during intake (`copywriting-brainstorming.md` neta opt-in Level 2 field = Yes), AND a base-framework copy draft has been produced by `write-short-form-copy.md`, `write-long-form-copy.md`, `write-mid-form-copy.md`, or similar. This protocol applies neta injection as a **post-production layer** on top of already-structured copy.
+**When to use**: When a brief has been pre-approved for neta (cultural reference) injection during intake (`copywriting-brainstorming.md` neta opt-in Level 2 field = Yes), AND a base-framework copy draft has been produced by `write-short-form-copy.md`, `write-long-form-copy.md`, `write-mid-form-copy.md`, or similar. This protocol applies neta injection as a **post-production layer** on top of already-structured copy.
 
 **When NOT to use**:
 - Brand voice or channel policy forbids neta injection (confirmed at intake)
 - Base-framework copy is not yet drafted (neta injection is post-production, not initial drafting)
-- Brief is for evergreen copy with >6-month shelf life (meme half-life is 4-6 months per Shifman 2014; current memes will expire — prefer evergreen references only, i.e., Technique 1 Reversal on classics or Technique 4 Cross-domain Mapping)
-- Audience profile is broad / general-public (Technique 3 Subcultural Capital / tribal signal reference would alienate adjacent audiences; other techniques require recognition that broad audiences may not share)
+- Brief is for evergreen copy with >6-month shelf life AND source type is SNS/Meme (meme half-life is 4-6 months per Shifman 2014). Literary sources (Classical Lit, Modern Lit, Quotes) are inherently evergreen-compatible and CAN be used for long-lived copy.
+- Audience profile is broad / general-public AND source type is SNS/Meme (Technique 3 Subcultural Capital / tribal signal reference would alienate adjacent audiences). Literary sources may still work for broad audiences if the reference operates on Bourdieu's cultural capital axis (education-based recognition).
 
 **Output**: Copy draft with neta injection applied, annotated with (a) reference source URL, (b) technique used per `neta-injection-techniques.md`, (c) neta-safety-gate verdict.
 
 **Grounds on**:
 - `../standards/neta-injection-techniques.md` — 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping)
-- `../standards/neta-websearch-pipeline.md` — Phase A-D pipeline definition
+- `../standards/neta-source-taxonomy.md` — 5 source categories + retrieval path routing
+- `../standards/neta-websearch-pipeline.md` — Phase A-D pipeline definition (Path A-1 / A-2)
 - `../standards/persuasion-ethics.md` — for dark-pattern + 景品表示法 cross-check
 - `../rubrics/neta-safety-gate.md` — SHOULD gate at Phase D
 
@@ -20,45 +21,74 @@
 
 Before executing Phase A-D, verify:
 
-1. Intake Understanding Summary (`copywriting-brainstorming.md` output) contains explicit "neta 使用許可 = Yes" (neta opt-in Level 2 field)
-2. Base-framework draft exists (copy structure from short-form / mid-form / long-form / light-action already produced)
-3. Shelf-life requirement is compatible (copy not intended for >6-month evergreen use, unless using evergreen-only techniques)
-4. Audience profile is sufficiently specific to enable Phase A retrieval
+1. Intake Understanding Summary (`copywriting-brainstorming.md` output) contains explicit `neta_opt_in: Yes`
+2. `neta_source_type_preference` is recorded (default: `all`)
+3. Base-framework draft exists (copy structure from short-form / mid-form / long-form / light-action already produced)
+4. Shelf-life requirement is compatible: if >6-month evergreen AND source type is `sns-meme` only → BLOCKED. Literary sources (`literary`, `all`, `mixed`) are inherently evergreen-compatible.
+5. Audience profile is sufficiently specific to enable Phase A retrieval
 
 If any check fails: return BLOCKED to main worker with specific gap identified.
 
 ## Phase A: Audience Context Retrieval
 
-Retrieve up-to-date cultural context via WebSearch (site-locked) per `neta-websearch-pipeline.md` §Phase A.
+Retrieve cultural context per `neta-websearch-pipeline.md` §Phase A,
+routing by source type.
 
-1. **Parse intake audience profile**: age band, platform presence, subcultural affiliations. From `copywriting-brainstorming.md` Q3 Target audience output.
+### Source-type routing
 
-2. **Select domain allow-list** from the Tier 2 standard's table:
-   - SNS-native youth: X JP, TikTok, niconico / Reddit, Twitter/X, TikTok
-   - Anime/manga fandom: 2ch, X JP, pixiv / Reddit r/anime, Crunchyroll forums
-   - Business / adult professional: はてなブックマーク, NewsPicks / LinkedIn, FT, WSJ
-   - Gaming: ふたば, niconico 実況 / Reddit r/games, Steam forums
-   - Custom: combine or narrow based on specific audience segment
+Check `neta_source_type_preference` from intake:
+- `sns-meme` → **Path A-1 only** (WebSearch-first)
+- `literary` → **Path A-2 only** (parametric-first)
+- `all` or `mixed` → both paths; merge candidate catalogs
 
-3. **Execute site-locked WebSearch queries** using Google `site:` operator (documented in Google Search Central):
+### Path A-1 (SNS/Meme, Contemporary Culture)
+
+1. **Parse intake audience profile**: age band, platform presence,
+   subcultural affiliations. From `copywriting-brainstorming.md` Q3.
+
+2. **Select SNS domain allow-list** from pipeline standard's table.
+
+3. **Execute site-locked WebSearch queries** using `site:` operator:
    ```
    site:twitter.com OR site:x.com [topic] lang:ja after:2026-01-01
    site:reddit.com/r/[relevant_subreddit] [topic]
    site:niconico.jp [topic]
    ```
-   Adjust `after:` date to approximate meme half-life (6 months back).
 
-4. **Build candidate catalog**: 5-15 candidate references with:
-   - Source URL
-   - Post date (for recency)
-   - Recognition assessment (how widely known within target audience)
-   - In-group context (which subculture/platform originated)
+4. **Recency filter**: prefer ≤6 months. 6-12 months = re-verify.
+   >12 months = expired unless "classic."
 
-5. **Recency filter**: prefer ≤6 months old. References 6-12 months old require re-verification of continued currency. References >12 months either qualify as "classic" (evergreen) or are expired — do NOT use as "current."
+5. **Build candidate catalog**: 5-15 references with source URL,
+   date, recognition assessment, in-group context.
 
-6. **Failure handling**:
-   - Zero results: audience profile too narrow; return BLOCKED asking user to broaden or redirect to evergreen-only techniques
-   - Outdated-only results: signal user that Technique 3 Subcultural Capital with current memes is not viable; propose Techniques 1 / 2 / 4 (Reversal / Substitution / Cross-domain Mapping) on evergreen references
+### Path A-2 (Classical Lit, Modern Lit, Quotes)
+
+1. **Parse intake audience profile**: education level, cultural
+   literacy band, generational reading patterns, cross-cultural canon
+   overlap (e.g., 漢詩 for JP, Shakespeare for EN).
+
+2. **Parametric candidate enumeration**: generate 5-15 candidate
+   references from LLM knowledge matching product domain + audience.
+
+3. **Attribution verification via WebSearch** against 3-language
+   literary verification allow-list (JP: 青空文庫, NDL, J-STAGE;
+   EN: Project Gutenberg, Perseus, Internet Archive; ZH: ctext.org,
+   維基文庫, 成語典). Verify: correct author, exact wording, context.
+
+4. **Audience-recognition check** (replaces currency check): does
+   the audience's education/cultural profile include this reference?
+
+5. **Build candidate catalog**: 5-15 references with source text,
+   verified attribution, audience-recognition assessment, source type.
+
+### Failure handling
+
+- Zero results (A-1): audience profile too narrow; BLOCKED
+- Outdated-only results (A-1): redirect to literary sources or
+  evergreen-only techniques (Reversal / Cross-domain Mapping)
+- Attribution unverifiable (A-2): do NOT use — misquotation cringe
+- Audience-recognition gap (A-2): discard candidate; classical ≠
+  universally known
 
 ## Phase B: Structural Deconstruction (Chain-of-Thought)
 
@@ -132,7 +162,7 @@ Before launching evaluator, verify:
 1. **Recognition hook preserved**: can the reference still be recognized at full fidelity?
 2. **Fallback readability**: can a reader who misses the reference still parse the copy's surface meaning?
 3. **Load-bearing neta**: does the reference carry product meaning, or is it decorative?
-4. **Currency verified**: has the reference been WebSearch-confirmed within meme half-life window?
+4. **Timeliness verified per source type**: SNS/Meme = WebSearch-confirmed within meme half-life window; Literary = audience-recognition check per `neta-source-taxonomy.md`; Quotes = cliché index + attribution accuracy verified.
 5. **ステマ risk**: could this be mistaken for authentic organic UGC? (If yes, brand disclosure must be explicit elsewhere.)
 
 If any answer is uncertain, revise the draft before launching the gate.
@@ -141,7 +171,7 @@ If any answer is uncertain, revise the draft before launching the gate.
 
 Launch `evaluator` agent with:
 - `gate_file`: `{base_path}/rubrics/neta-safety-gate.md`
-- `standards`: all 17 copywriting-team standards (see SKILL.md Resource Manifest)
+- `standards`: all 18 copywriting-team standards (see SKILL.md Resource Manifest)
 - `artifact`: the neta-injected draft(s)
 - `requirements`: original user brief + neta opt-in context + technique used
 
@@ -168,12 +198,12 @@ Handoff document must include:
 
 ## Rules
 
-- **Always execute Phase A before Phase B**. Do not use the model's pre-training memory as a substitute for current context retrieval. Meme half-life is 4-6 months; pre-training data is typically older.
+- **Always execute Phase A before Phase B**. For Path A-1 (SNS/Meme): do not use pre-training memory as a substitute for WebSearch. For Path A-2 (Literary): parametric discovery is acceptable but attribution verification via WebSearch is mandatory.
 - **One technique per piece**. Density greater than one technique per キャッチコピー / one per opener block in long-form produces cringe rather than elegance (`jp-copy-craft-lineage.md` §眞木 principle).
 - **Strict Replacement Rule is non-negotiable**. If a template doesn't fit the product's slot-grammar, pick a different template; do not bend structure.
 - **Phase D hard legal vetoes are non-fungible**. Copyright + ステマ reds block delivery regardless of other dimensions.
-- **Evergreen-only techniques** (Technique 1 Reversal on classics / Technique 4 Cross-domain Mapping) are the only safe choice for copy with >6-month shelf life.
-- **Currency verification requires 2+ independent sources**. A single post does not prove a meme is alive; confirm via multiple platforms or references.
+- **Source-type-aware timeliness**. SNS/Meme sources: only safe for copy with ≤6-month shelf life (evergreen-only techniques excepted). Literary sources (Classical Lit, Modern Lit, Quotes): inherently evergreen-compatible for any shelf life.
+- **Currency verification requires 2+ independent sources** (Path A-1). Attribution verification requires allow-list source confirmation (Path A-2).
 - **Route to this protocol only when intake opt-in = Yes**. Do not inject neta into copy whose intake did not authorize it.
 
 ## Anti-Patterns

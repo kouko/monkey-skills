@@ -109,13 +109,22 @@ lifecycle as grounding; do not cite this positioning as canonical.
 
 ### Purpose
 
-Retrieve up-to-date context on what the target audience is
-**currently** referencing, sharing, and quoting. The output is a
-catalog of candidate neta (classic references, trending memes,
-in-group tokens, structural templates) that the audience would
-recognize.
+Retrieve cultural context that the target audience would recognize.
+The output is a catalog of candidate neta (classic references,
+trending memes, literary allusions, in-group tokens, structural
+templates) drawn from the appropriate source types.
 
-### Method
+### Source-type routing
+
+Before executing retrieval, check the intake Understanding Summary's
+`neta_source_type_preference` field (see `copywriting-brainstorming.md`
+Q7.5 and `neta-source-taxonomy.md` for definitions):
+
+- `sns-meme` → **Path A-1 only** (WebSearch-first)
+- `literary` → **Path A-2 only** (parametric-first)
+- `all` or `mixed` → both paths; merge candidate catalogs
+
+### Path A-1: WebSearch-first (SNS/Meme, Contemporary Culture)
 
 1. **Audience profiling** from intake Understanding Summary
    (`copywriting-brainstorming.md` Q3 target audience):
@@ -139,7 +148,7 @@ recognize.
    than 12 months should be re-checked for continued currency
    before use.
 
-4. **Domain allow-list** (team-curated, NOT canonical):
+4. **SNS domain allow-list** (team-curated, NOT canonical):
 
    | Audience tier | JP sources | EN sources |
    |---------------|-----------|------------|
@@ -152,16 +161,60 @@ recognize.
    with metadata (source URL, date, recognition assessment, in-group
    context).
 
+### Path A-2: Parametric-first (Classical Lit, Modern Lit, Quotes)
+
+LLMs reliably know canonical literature — discovery does not require
+WebSearch. WebSearch is used for **attribution verification** (correct
+author, exact wording, correct context). LLMs can and do misattribute
+quotes; verification is mandatory.
+
+1. **Audience profiling** from intake Understanding Summary:
+   - Education level, cultural literacy band
+   - Generational reading patterns (which authors/works are part of
+     this generation's 国語教育 or cultural zeitgeist?)
+   - Cross-cultural canon overlap (e.g., 漢詩 for JP audiences,
+     Shakespeare for EN audiences, 論語 for ZH/JP shared canon)
+
+2. **Parametric candidate enumeration**: generate 5-15 candidate
+   references from the LLM's knowledge that match the product domain
+   + audience profile + desired technique.
+
+3. **Attribution verification via WebSearch** against the 3-language
+   literary verification allow-list (team-curated):
+
+   | Category | JP Sources | EN Sources | ZH Sources |
+   |----------|-----------|------------|------------|
+   | Classical Lit | 青空文庫 (aozora.gr.jp); 国立国会図書館デジタルコレクション (dl.ndl.go.jp); J-STAGE | Project Gutenberg (gutenberg.org); Perseus Digital Library (perseus.tufts.edu); Internet Archive (archive.org) | 中國哲學書電子化計劃 (ctext.org); 維基文庫 (zh.wikisource.org) |
+   | Modern Lit | 青空文庫 (著作権切れ); 新潮社/岩波書店カタログ | Project Gutenberg; Open Library (openlibrary.org) | 維基文庫; 中國現代文學館 |
+   | Quotes / Aphorisms | 故事ことわざ辞典; コトバンク (kotobank.jp) | Wikiquote (en.wikiquote.org); Oxford Dictionary of Quotations | 維基語錄 (zh.wikiquote.org); 成語典 (dict.idioms.moe.edu.tw) |
+   | Shared Canon | 漢文 (漢詩・論語・孟子 — JP 国語教育で共有) | — | ctext.org (原典) |
+
+4. **Audience-recognition check** (replaces currency check):
+   "Does the target audience's cultural literacy include this
+   reference?" Factors: education level, generational reading
+   patterns, cross-cultural canon overlap.
+
+5. **Candidate catalog output**: list 5-15 candidate references
+   with metadata (source text, verified attribution, audience-
+   recognition assessment, source type per
+   `neta-source-taxonomy.md`).
+
 ### Failure modes
 
-- **Zero results**: audience profile too narrow or too niche for
-  WebSearch — escalate BLOCKED to user with intake refinement
-  request
-- **Outdated-only results**: audience moved platforms or the topic
-  has no current discourse — signal to user that evergreen
-  techniques (Reversal, Substitution, Cross-domain Mapping) are
-  safer than current memes (Subcultural Capital
-  in-group code)
+- **Zero results (Path A-1)**: audience profile too narrow or too
+  niche for WebSearch — escalate BLOCKED to user with intake
+  refinement request
+- **Outdated-only results (Path A-1)**: audience moved platforms or
+  topic has no current discourse — signal to user that evergreen
+  source types (Classical Lit, Quotes) with Reversal or Cross-domain
+  Mapping techniques are safer than current memes
+- **Attribution unverifiable (Path A-2)**: WebSearch cannot confirm
+  the exact wording or author — do NOT use the reference. Misquotation
+  cringe is worse for literary sources because the audience that
+  recognizes the reference also recognizes errors.
+- **Audience-recognition gap (Path A-2)**: literary reference is
+  canonical but the target audience's education/cultural profile does
+  not include it — discard candidate. Classical ≠ universally known.
 
 ## Phase B: Structural Deconstruction (Chain-of-Thought)
 
@@ -291,8 +344,11 @@ Before launching evaluator, worker performs SELF Check:
    reference (fallback readability)?
 3. Does the reference carry product meaning (not merely
    cleverness)?
-4. Has the reference been checked for currency within meme
-   half-life window?
+4. Has the reference been verified per its source type's timeliness
+   model? (SNS/Meme: currency within meme half-life window;
+   Literary: audience-recognition check per
+   `neta-source-taxonomy.md`; Quotes: cliché index + attribution
+   accuracy.)
 5. Could this be mistaken for 真正 UGC (ステマ risk)?
 
 If any answer is uncertain, revise before gate.
