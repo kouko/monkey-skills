@@ -30,10 +30,15 @@ This gate does NOT review:
   JP emotional tradition + 18F / Mailchimp Voice 4-axis + Mailchimp
   "one voice, multiple tones" + Tone context-switching table
   (onboarding / error / crisis / celebration).
+- `../standards/voice-quadrant-positioning.md` — 2-axis macro typology
+  (Authority↔Affinity × Reason↔Emotion) + EN/ZH/JP representative
+  practitioners + ZH micro-indicators (particle density / loanword mix /
+  punctuation pacing).
 - `../standards/short-form-catchcopy-canon.md` — Four voice maestros
   (糸井 / 岩崎 / 眞木 / 谷山) canonical voice definitions.
 - grounding SSOT: `../research/grounding-v4.12.0.md` §3 Cluster B.3-B.8
-  + §8 Load-bearing claims.
+  + §8 Load-bearing claims; `../research/grounding-v4.18.0.md` for
+  voice quadrant grounding.
 
 ## Dimensions
 
@@ -109,29 +114,67 @@ whether the output is faithful to that maestro's canonical style.
 - **Note**: For artifacts that do not declare a maestro reference, this
   dimension is `not_applicable` (neither 🟡 nor 🔴 is assigned).
 
-### Dimension 4: Clarity of JP Emotional Resonance vs Anglo Benefit-Clear Choice (RUB-CTW-VC-004)
+### Dimension 4: Clarity of Voice Tradition Choice (RUB-CTW-VC-004)
 
-Whether the voice tradition is clearly chosen for the target audience
-(JP market / Anglo market / global bilingual). Prevents the Anti-Pattern
-in `voice-and-tone.md`: "literal transplanting JP emotional voice ↔
-Anglo action-oriented voice."
+Whether the voice tradition is clearly chosen for the target audience.
+Three recognized traditions: **JP emotional** (糸井 / 岩崎 — 余韻,
+state-proposal, impermanence), **Anglo benefit-clear** (Ogilvy long-
+form direct), **ZH copywriting** (經濟美學 observational wit, 意識形態
+literary-ideological, or 數位實務 direct-action — see
+`voice-quadrant-positioning.md` §ZH Copywriting Tradition). Prevents
+cross-tradition transplant errors.
 
 - 🔴 **Fatal**: Tradition mismatch. A JP-market artifact uses only
   Anglo "Just Do It"-style direct CTA + adjective hype (zero emotional
-  resonance / 余韻 / 掛詞). Or conversely, an Anglo-market artifact
-  uses excessively ambiguous / 余韻-oriented "translated-sounding"
-  copy (benefit does not directly reach the reader). Forceful
-  application of a tradition that does not fit the target audience.
+  resonance / 余韻 / 掛詞). An Anglo-market artifact uses excessively
+  ambiguous / 余韻-oriented "translated-sounding" copy. A ZH-market
+  (Taiwan) artifact uses pure JP particle density (呢/よ/ね style) or
+  pure Anglo benefit-push without 龔大中-style observational warmth.
+  Forceful application of a tradition that does not fit the target
+  audience.
 - 🟡 **Warning**: Tradition choice is not stated in artifact metadata
   and is ambiguous from the output. Example: JP-market target but 30%
   reads as Anglo direct style, 70% as JP emotional — unclear whether
   intentional hybrid or accidental inconsistency. Or choice is stated
   but execution is half-hearted.
 - 🟢 **Clear**: Tradition is stated in artifact metadata (e.g., "JP
-  emotional resonance line / 糸井 + 岩崎系 as primary axis" or "Anglo
-  benefit-clear line / Ogilvy long-form") + consistently executed
-  throughout the output. If hybrid, the intent and proportion are
-  explicitly stated.
+  emotional / 糸井 + 岩崎系", "Anglo benefit-clear / Ogilvy long-form",
+  "ZH 經濟美學 / 龔大中系") + consistently executed throughout the
+  output. If hybrid, the intent and proportion are explicitly stated.
+
+### Dimension 5: Voice Quadrant Coherence (RUB-CTW-VC-005)
+
+When a voice quadrant position (Q1 知識權威 / Q2 意識形態 / Q3 情緒共鳴
+/ Q4 直覺行動) is declared in artifact metadata or input brief,
+whether the output's linguistic markers are consistent with the
+declared quadrant. Grounded in `voice-quadrant-positioning.md`.
+
+**Mechanical distinguishability criteria** (per quadrant):
+
+| Marker | Q1 Authority+Reason | Q2 Authority+Emotion | Q3 Affinity+Emotion | Q4 Affinity+Reason |
+|--------|---------------------|---------------------|---------------------|---------------------|
+| 虛詞 density (per 100 chars) | ≤2 | ≤2 | 3-6 | ≤2 |
+| Emoji / exclamation | prohibited | prohibited | sparing | permitted |
+| Abstract-noun ratio | medium-high | high | low | low |
+| Imperative verbs leading | rare | rare | rare | common |
+| Evidence style | data/citation | aphorism/manifesto | everyday anecdote | numerical specific |
+
+- 🔴 **Fatal**: Declared quadrant is Q1 (Authority+Reason) but output
+  uses casual particles, emoji, informal register throughout. Or
+  declared Q3 (Affinity+Emotion) but output is data-table-heavy with
+  zero emotional resonance. Or declared Q4 (direct action) used for
+  Schwartz Level 5 Unaware readers (Q3 narrative entry required per
+  `voice-quadrant-positioning.md` §Schwartz × Quadrant).
+- 🟡 **Warning**: Quadrant alignment is mostly maintained but 1-2
+  sections drift into an adjacent quadrant without declared intent
+  (adjacent = Q1↔Q2 or Q1↔Q4 or Q2↔Q3 or Q3↔Q4). Or diagonal mixing
+  attempted without deliberate transition craft.
+- 🟢 **Clear**: Linguistic markers (particle density, evidence style,
+  emotional vocabulary, abstract-noun ratio) are consistent with the
+  declared quadrant. Any adjacent-quadrant excursion is deliberate
+  and justified.
+- **Note**: For artifacts without a quadrant declaration, this
+  dimension is `not_applicable` (excluded from verdict calculation).
 
 ## Verdict Rules
 
@@ -139,9 +182,10 @@ Anglo action-oriented voice."
 - **2 or more** 🟡 warnings → `NEEDS_REVISION`
 - **1** 🟡 warning (no 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
 - All 🟢 clear → `PASS`
-- Dimension 3 (maestro reference) is `not_applicable` for artifacts
-  without a declaration. `not_applicable` is excluded from verdict
-  calculation (not counted as 🔴, 🟡, or 🟢).
+- Dimensions 3 (maestro reference) and 5 (quadrant coherence) are
+  `not_applicable` for artifacts without the respective declaration.
+  `not_applicable` is excluded from verdict calculation (not counted
+  as 🔴, 🟡, or 🟢).
 
 ## Rules
 
@@ -174,7 +218,8 @@ Anglo action-oriented voice."
   ],
   "voice_guide_provided": true,
   "maestro_reference_declared": "糸井 | 岩崎 | 眞木 | 谷山 | none",
-  "target_tradition": "JP-emotional | Anglo-benefit-clear | hybrid | unclear",
+  "target_tradition": "JP-emotional | Anglo-benefit-clear | ZH-copywriting | hybrid | unclear",
+  "quadrant_declared": "Q1 | Q2 | Q3 | Q4 | none",
   "summary": "1-3 sentence overall assessment + next-step priority"
 }
 ```

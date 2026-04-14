@@ -167,19 +167,38 @@ Obtain additional required fields based on form type.
 
 ### Q6. Voice / tone preference (Level 2)
 
-Confirm the user's preferred voice feel via multiple choice + recommendation:
+**Step 1 — Voice quadrant (optional, macro positioning)**: from
+`voice-quadrant-positioning.md`:
+
+- **Q1 知識權威型** (Authority + Reason) — B2B, finance, medical,
+  technical. Representatives: 葉明桂 / 林育聖 / Ogilvy / 報導者.
+- **Q2 意識形態型** (Authority + Emotion) — premium / luxury /
+  bookstore / manifesto. Representatives: 許舜英 / 李欣頻 / 誠品 / Apple.
+- **Q3 情緒共鳴型** (Affinity + Emotion) — everyday retail, family,
+  social. Representatives: 龔大中 / 盧建彰 / 全聯 / IKEA / 糸井 / 岩崎.
+- **Q4 直覺行動型** (Affinity + Reason) — e-commerce, app onboarding,
+  action push. Representatives: 織田紀香 / Shopee / UNIQLO.
+
+Recorded as `voice_quadrant: Q1 | Q2 | Q3 | Q4 | not-declared`.
+If declared, gate Dim 5 (Voice Quadrant Coherence) fires.
+
+**Step 2 — Voice maestro (optional, tactical reference)**:
 
 - **糸井系** (state-proposal, ambiguity, particle endings) —
-  `voice-and-tone.md` §JP 情緒共鳴傳統 §糸井.
+  `voice-and-tone.md` §JP 情緒共鳴傳統 §糸井. Q3 quadrant.
 - **岩崎系** (life philosophy, seasonal sensibility, warmth of life) —
-  same §岩崎.
+  same §岩崎. Q3 quadrant.
 - **眞木系** (掛詞, phonetics, short-form craft) — representative work:
-  「恋が着せ、愛が脱がせる。」lineage.
+  「恋が着せ、愛が脱がせる。」lineage. Q2↔Q3 border.
 - **谷山系** (entry design, separating "what you want to write" from
   "what you want to say") — `../standards/ideation-taniyama-discipline.md`
   overall.
 - **Ogilvy系** (benefit-clear, respect the reader, fact-based) —
-  `voice-and-tone.md` §Ogilvy 長文案 voice 經典原則.
+  `voice-and-tone.md` §Ogilvy 長文案 voice 經典原則. Q1 quadrant.
+- **龔大中系** (經濟美學 observational wit — ZH) — `voice-quadrant-
+  positioning.md` §Q3 ZH entries. Q3 quadrant.
+- **許舜英系** (意識形態廣告 literary-ideological — ZH) —
+  `voice-quadrant-positioning.md` §Q2 ZH entries. Q2 quadrant.
 - **Default** (AI recommends based on audience + form + channel; user
   approval demotes to Level 3).
 
