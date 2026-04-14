@@ -144,8 +144,9 @@ cross-tradition transplant errors.
 
 ### Dimension 5: Voice Quadrant Coherence (RUB-CTW-VC-005)
 
-When a voice quadrant position (Q1 知識權威 / Q2 意識形態 / Q3 情緒共鳴
-/ Q4 直覺行動) is declared in artifact metadata or input brief,
+When a voice quadrant position (Q1 Authority-Reason / Q2 Authority-
+Emotion / Q3 Affinity-Emotion / Q4 Affinity-Reason) is declared in
+artifact metadata or input brief,
 whether the output's linguistic markers are consistent with the
 declared quadrant. Grounded in `voice-quadrant-positioning.md`.
 
