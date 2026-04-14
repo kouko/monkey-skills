@@ -10,33 +10,54 @@ This protocol is recommended to follow the Phase 3 handoff from `copy-ideation-p
 
 ## Phase 1: Framework Selection
 
-Cross-reference `long-form-pasona-canon.md` §三框架の適用表 and `persuasion-psychology-anchor.md` §Schwartz 5 Levels of Awareness to select the framework.
+Cross-reference `long-form-pasona-canon.md` §三框架の適用表 and `persuasion-psychology-anchor.md` §Schwartz 5 Levels of Awareness.
 
-1. **Primary decision by word-count band**:
-   - 1,500-5,000 chars → 旧 PASONA (5 stages P/A/So/N/A, So merged)
-   - 3,000-10,000 chars → 新 PASONA (6 stages P/A/S/O/N/A, Affinity entry)
-   - 5,000-20,000+ chars → PASBECONA (9 stages, B/E/C inserted)
-   - Overlapping boundaries (3,000-5,000 / 5,000-10,000) are resolved by the secondary decision below.
+### Decision tree
 
-2. **Secondary decision by awareness level** (`persuasion-psychology-anchor.md` §Schwartz 5 Levels):
-   - Level 1-2 (Most / Product Aware) → 旧 PASONA or compressed 新 PASONA
-   - Level 3 (Solution Aware) → 新 PASONA
-   - Level 4 (Problem Aware) → thick 新 PASONA or PASBECONA
-   - Level 5 (Unaware) → PASBECONA (full-length Problem + Affinity + Benefit + Evidence)
-   - **Core rule (Schwartz 1966)**: Never use an Offer closer directly for Unaware readers. Always go through narrative problem discovery first.
-   - **Voice quadrant corollary** (per `voice-quadrant-positioning.md` §Schwartz × Quadrant): for Level 5 Unaware readers, prefer Q3 (Affinity + Emotion) narrative entry; never open with Q4 (Affinity + Reason direct-action voice) — Q4 assumes awareness that Level 5 readers lack, collapsing conversion.
+```mermaid
+flowchart TD
+    Start[Long-form brief received] --> Tone{BtoB / medical / finance<br/>/ high-ticket coaching?}
+    Tone -- Yes --> ExcludeOld[Exclude 旧 PASONA<br/>Agitation tone misaligned]
+    Tone -- No --> WC{Word-count band?}
+    ExcludeOld --> WC
 
-3. **Tone-boundary exclusion check**:
-   - BtoB / medical / finance / high-ticket coaching → 旧 PASONA not recommended (Agitation canonical tone does not align).
-   - Default to the Affinity-entry of 新 PASONA / PASBECONA.
+    WC -- "1.5k–5k" --> SC1{Schwartz level?}
+    WC -- "3k–10k" --> SC2{Schwartz level?}
+    WC -- "5k–20k+" --> PASB[PASBECONA 9-stage<br/>B/E/C inserted]
 
-4. **Record**: Note the selected framework name, target word count, awareness level diagnosis, and selection rationale at the top of the draft. Keep it in a form verifiable by downstream evaluator / audit.
-   - Example: "framework = 新 PASONA / word count 5,000 chars / Schwartz Level 3 (Solution Aware) / rationale: audience knows the product category; building an empathy-based educational LP with Affinity entry"
+    SC1 -- "L1–2 Aware" --> OLD[旧 PASONA<br/>5-stage P/A/So/N/A]
+    SC1 -- "L3 Solution" --> NEW1[新 PASONA<br/>Affinity entry]
+    SC1 -- "L4 Problem" --> NEW2[新 PASONA thick]
+    SC1 -- "L5 Unaware" --> PASB
 
-5. **Exception cases**:
-   - Awareness level spans multiple segments (some Level 2, some Level 4) → either choose PASBECONA full-length to cover Level 4-5 as well, or branch LP by segment — discuss with planning-team.
-   - Word-count constraint imposed externally (media word-count rules) → prioritize word count for framework selection; record the stage-compression policy.
-   - Renewal of an existing LP that requires framework switch → run `copy-audit.md` Phase 3 framework-switch proposal first, then rebuild under the new framework with this protocol.
+    SC2 -- "L1–2" --> OLD_COMP[旧 PASONA<br/>or 新 PASONA compressed]
+    SC2 -- "L3" --> NEW1
+    SC2 -- "L4" --> NEW2
+    SC2 -- "L5" --> PASB
+
+    OLD --> Record
+    OLD_COMP --> Record
+    NEW1 --> Record
+    NEW2 --> Record
+    PASB --> Record
+    Record[Record: framework / word count /<br/>Schwartz level / rationale<br/>at top of draft]
+```
+
+### Rules embedded in the tree
+
+- **Core rule (Schwartz 1966)**: never use an Offer closer directly for Unaware readers; always go through narrative problem discovery first. (Enforced by L5 → PASBECONA path.)
+- **Voice quadrant corollary** (per `voice-quadrant-positioning.md` §Schwartz × Quadrant): for Level 5 Unaware readers, prefer Q3 (Affinity + Emotion) narrative entry; never open with Q4 (Affinity + Reason direct-action voice) — Q4 assumes awareness that Level 5 readers lack, collapsing conversion.
+- **Tone-boundary exclusion**: BtoB / medical / finance / high-ticket coaching → 旧 PASONA path is pruned; default to Affinity-entry of 新 PASONA / PASBECONA.
+
+### Record example
+
+> framework = 新 PASONA / word count 5,000 chars / Schwartz Level 3 (Solution Aware) / rationale: audience knows the product category; building an empathy-based educational LP with Affinity entry
+
+### Exception cases (outside the decision tree)
+
+- **Awareness level spans multiple segments** (some Level 2, some Level 4) → either choose PASBECONA full-length to cover Level 4-5 as well, or branch LP by segment — discuss with planning-team.
+- **Word-count constraint imposed externally** (media word-count rules) → prioritize word count for framework selection; record the stage-compression policy.
+- **Renewal of an existing LP that requires framework switch** → run `copy-audit.md` Phase 3 framework-switch proposal first, then rebuild under the new framework with this protocol.
 
 ## Phase 2: Stage-by-Stage Drafting
 

@@ -59,25 +59,49 @@ Typical MAY gates cover: audits, detailed quality reviews, specialist checks.
 
 Both checklists and rubrics produce one of these verdicts.
 
-| Verdict | Meaning | Next action |
-|---------|---------|-------------|
-| `PASS` | All checks pass / all green | Gate cleared, proceed |
-| `PASS_WITH_NOTES` | 1 yellow flag OR only FAIL_FIXABLE items | Auto-revise, re-run from first MUST gate |
-| `NEEDS_REVISION` | ≥1 red flag OR ≥1 FAIL_FATAL OR 2+ yellow | STOP, escalate to user |
-| `NEEDS_METADATA` (docs-team only) | Required metadata is missing, cannot judge | Not a revision — add metadata or skip gate with reason |
+| Verdict | Meaning |
+|---------|---------|
+| `PASS` | All checks pass / all green |
+| `PASS_WITH_NOTES` | 1 yellow flag OR only FAIL_FIXABLE items |
+| `NEEDS_REVISION` | ≥1 red flag OR ≥1 FAIL_FATAL OR 2+ yellow |
+| `NEEDS_METADATA` (docs-team only) | Required metadata is missing, cannot judge |
 
-### Auto-revise rules
+### Verdict state machine
 
-When a gate returns `PASS_WITH_NOTES`:
+```mermaid
+stateDiagram-v2
+    [*] --> Evaluator: Worker delivers artifact<br/>(after SELF check)
+    Evaluator --> PASS: all green
+    Evaluator --> PASS_WITH_NOTES: 1 yellow / FAIL_FIXABLE only
+    Evaluator --> NEEDS_REVISION: red / FAIL_FATAL / 2+ yellow
+    Evaluator --> NEEDS_METADATA: required metadata missing<br/>(docs-team only)
+
+    PASS --> NextGate: proceed to next gate<br/>or deliver
+    PASS_WITH_NOTES --> AutoRevise: relaunch worker<br/>(fresh evaluator, no retry history)
+    AutoRevise --> RetryCount{Retry count<br/>< 2–3?}
+    RetryCount -- yes --> Evaluator: re-run from FIRST MUST gate
+    RetryCount -- no --> Escalate: cap reached →<br/>escalate as NEEDS_REVISION
+
+    NEEDS_REVISION --> Escalate
+    Escalate --> UserDecision: present full feedback<br/>wait for user
+    UserDecision --> [*]: fix approach / skip with reason /<br/>abandon task
+
+    NEEDS_METADATA --> FixMetadata: add metadata<br/>OR skip gate with reason
+    FixMetadata --> [*]
+
+    NextGate --> [*]
+```
+
+### Auto-revise rules (PASS_WITH_NOTES branch)
+
 1. Main agent relaunches worker with: original requirements + current artifact + evaluator feedback
 2. Worker produces a revised artifact
 3. Re-run from the FIRST MUST gate (not just the gate that flagged)
 4. Each retry launches a FRESH evaluator — no accumulated retry history
 5. Cap: 2-3 rounds. After the cap, escalate to user as NEEDS_REVISION.
 
-### Escalation rules
+### Escalation rules (NEEDS_REVISION branch)
 
-When a gate returns `NEEDS_REVISION`:
 1. Do NOT auto-revise
 2. Present the evaluator's full feedback to the user
 3. Wait for user decision (fix approach, skip gate with reason, abandon task)

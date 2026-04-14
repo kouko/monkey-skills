@@ -34,30 +34,45 @@ If any check fails: return BLOCKED to main worker with specific gap identified.
 Retrieve cultural context per `neta-websearch-pipeline.md` §Phase A,
 routing by source type.
 
-### Source-type routing
+### Routing diagram
 
-Check `neta_source_type_preference` from intake:
-- `sns-meme` → **Path A-1 only** (WebSearch-first)
-- `literary` → **Path A-2 only** (parametric-first)
-- `all` or `mixed` → both paths; merge candidate catalogs
+```mermaid
+flowchart TD
+    Start[neta_source_type_preference<br/>from intake] --> Route{Preference?}
+
+    Route -- "sns-meme" --> A1[Path A-1: WebSearch-first]
+    Route -- "literary" --> A2[Path A-2: parametric-first]
+    Route -- "all / mixed" --> Both[Run BOTH paths<br/>merge candidate catalogs]
+
+    A1 --> A1Steps[1 Parse SNS audience profile<br/>2 Select SNS allow-list<br/>3 Site-locked WebSearch<br/>4 Recency filter ≤6mo<br/>5 Build 5-15 candidates]
+    A2 --> A2Steps[1 Parse literacy/generation profile<br/>2 Parametric candidate enumeration<br/>3 WebSearch attribution verify<br/>4 Audience-recognition check<br/>5 Build 5-15 candidates]
+    Both --> A1Steps
+    Both --> A2Steps
+
+    A1Steps --> A1Check{Results?}
+    A2Steps --> A2Check{Results?}
+
+    A1Check -- "zero" --> Blocked1[BLOCKED:<br/>audience too narrow]
+    A1Check -- "outdated only" --> Redirect[Redirect to literary<br/>or evergreen techniques]
+    A1Check -- "OK" --> Catalog
+    A2Check -- "attribution unverifiable" --> Reject[Discard:<br/>misquotation cringe]
+    A2Check -- "recognition gap" --> Discard[Discard candidate:<br/>classical ≠ universal]
+    A2Check -- "OK" --> Catalog[Candidate catalog<br/>→ Phase B]
+```
 
 ### Path A-1 (SNS/Meme, Contemporary Culture)
 
 1. **Parse intake audience profile**: age band, platform presence,
    subcultural affiliations. From `copywriting-brainstorming.md` Q3.
-
 2. **Select SNS domain allow-list** from pipeline standard's table.
-
 3. **Execute site-locked WebSearch queries** using `site:` operator:
    ```
    site:twitter.com OR site:x.com [topic] lang:ja after:2026-01-01
    site:reddit.com/r/[relevant_subreddit] [topic]
    site:niconico.jp [topic]
    ```
-
 4. **Recency filter**: prefer ≤6 months. 6-12 months = re-verify.
    >12 months = expired unless "classic."
-
 5. **Build candidate catalog**: 5-15 references with source URL,
    date, recognition assessment, in-group context.
 
@@ -66,29 +81,16 @@ Check `neta_source_type_preference` from intake:
 1. **Parse intake audience profile**: education level, cultural
    literacy band, generational reading patterns, cross-cultural canon
    overlap (e.g., 漢詩 for JP, Shakespeare for EN).
-
 2. **Parametric candidate enumeration**: generate 5-15 candidate
    references from LLM knowledge matching product domain + audience.
-
 3. **Attribution verification via WebSearch** against 3-language
    literary verification allow-list (JP: 青空文庫, NDL, J-STAGE;
    EN: Project Gutenberg, Perseus, Internet Archive; ZH: ctext.org,
    維基文庫, 成語典). Verify: correct author, exact wording, context.
-
 4. **Audience-recognition check** (replaces currency check): does
    the audience's education/cultural profile include this reference?
-
 5. **Build candidate catalog**: 5-15 references with source text,
    verified attribution, audience-recognition assessment, source type.
-
-### Failure handling
-
-- Zero results (A-1): audience profile too narrow; BLOCKED
-- Outdated-only results (A-1): redirect to literary sources or
-  evergreen-only techniques (Reversal / Cross-domain Mapping)
-- Attribution unverifiable (A-2): do NOT use — misquotation cringe
-- Audience-recognition gap (A-2): discard candidate; classical ≠
-  universally known
 
 ## Phase B: Structural Deconstruction (Chain-of-Thought)
 

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.18.5] — 2026-04-15
+
+### Changed
+- **Mermaid demonstrations (3 files)** — replacing complex decision
+  logic / routing / state machine prose with Mermaid diagrams to
+  reduce ambiguity for LLM readers:
+  - `copywriting-team/protocols/write-long-form-copy.md` §Phase 1
+    framework selection: word-count × Schwartz-level × tone-exclusion
+    decision tree → Mermaid flowchart
+  - `copywriting-team/protocols/copy-neta-injection.md` §Phase A:
+    source-type routing (Path A-1 WebSearch-first / Path A-2
+    parametric-first / merge) + failure handling → Mermaid flowchart
+  - `skill-team/standards/gate-system.md` §Verdict Semantics:
+    PASS / PASS_WITH_NOTES / NEEDS_REVISION / NEEDS_METADATA
+    transitions → Mermaid state diagram (shared state machine for
+    all domain-team gates)
+
+### Rationale
+Proof-of-concept for Mermaid adoption in domain-teams. Empirical
+finding: Mermaid adds **clarity and reduces branching ambiguity**
+for decision trees / routing logic / state machines, but **does
+not uniformly reduce line count** when paired with explanatory prose
+— token cost stays roughly neutral. Best suited for:
+- Multi-condition decision trees (framework / protocol selection)
+- State machines with auto-revise loops (gate verdict handling)
+- Multi-path routing with failure branches (neta retrieval paths)
+
+Guidelines documenting when to use / avoid Mermaid will be
+established in a follow-up (Plan A).
+
 ## [4.18.4] — 2026-04-15
 
 ### Changed (copywriting-team)
