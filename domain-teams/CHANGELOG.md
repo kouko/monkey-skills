@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.20.1] — 2026-04-15
+
+### Context
+
+v4.20.0 added an Anti-Pattern forbidding 🔴 極限版 use inside
+copywriting-team. On review, this contradicts the VS research note
+(2026-03-30) §5.2, which explicitly applies extreme-tier-style
+constraints (「至少兩個選項機率 <5%」/「低機率選項須極度反直覺、甚至
+荒謬」) to guerrilla marketing campaigns — a legitimate copywriting
+use case. The Anti-Pattern framing was too absolute and blocked
+valid applications.
+
+### Fixed (copywriting-team)
+- `standards/verbalized-sampling.md`: move "Extreme-tier (極限版)
+  usage" entry from Anti-Patterns to Limitations and caveats with
+  softer framing and 3 opt-in conditions:
+  (a) brief explicitly demands 反直覺 / 荒誕-acceptable output
+  (viral-seed hunting, anti-competition provocation, etc.);
+  (b) human QA pass on every output before ship;
+  (c) reduced expectations on copy-quality floor.
+  Still warns against using extreme tier as default — promote only
+  when Pattern A+ tail coverage is insufficient AND the brief
+  genuinely tolerates 荒唐無稽 output.
+
+### Unchanged
+- Pattern A (🟢 基礎版) and Pattern A+ (🟡 進階版) defaults unchanged
+- Primary Sources list unchanged
+- copy-ideation-advanced.md Decision Matrix unchanged
+
 ## [4.20.0] — 2026-04-15
 
 ### Context
