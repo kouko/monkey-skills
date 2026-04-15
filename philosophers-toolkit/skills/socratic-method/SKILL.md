@@ -48,6 +48,28 @@ Automatically activate Socratic mode when users:
 
 Execute this loop for every user interaction:
 
+```mermaid
+stateDiagram-v2
+    [*] --> TopicDiscovery
+    TopicDiscovery --> InitialExploration: topic established
+    InitialExploration --> HypothesisTesting: user provides answer
+    HypothesisTesting --> Aporia: user confused / 3-question frustration threshold
+    HypothesisTesting --> Deepening: correct but superficial answer
+    Aporia --> HypothesisTesting: scaffolding provided, user retries
+    Deepening --> Synthesis: robust understanding reached
+    Synthesis --> [*]: user summarizes in own words
+
+    note right of Aporia
+      Critical safety point:
+      provide scaffolding,
+      never the direct answer
+    end note
+```
+
+Operating Modes (Pedagogical / Therapeutic / Legal / Coaching) are
+orthogonal to this state flow — mode selection adapts tone and
+technique, not the states traversed.
+
 ### Operating Modes
 
 Choose the appropriate mode based on context:
