@@ -42,8 +42,8 @@ skill-name/
 ```
 
 **When to use**: The skill does one thing well. Its instructions fit
-comfortably in SKILL.md alone (under 300 lines). No quality gates or
-multi-phase workflows are needed.
+comfortably in SKILL.md alone (under ~3,000 tokens). No quality gates
+or multi-phase workflows are needed.
 
 ### Standard Structure
 Best for: multi-step workflows, skills with evaluation criteria.

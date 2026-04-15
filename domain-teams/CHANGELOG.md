@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.19.1] — 2026-04-15
+
+### Context
+
+PR #73 was merged at commit bd344a4 (Mermaid guidelines, commits 1-4);
+commits 5 and 6 were not included in the merge. This PATCH restores
+both lost content fix sets.
+
+### Fixed (copywriting-team)
+- `copywriting-brainstorming.md` JP/EN scaffolding cleanup:
+  - Q2 ja block: Chinese terms replaced with proper Japanese
+    (ロングコピー / 中尺コピー / ショートコピー / コピーレビュー)
+  - Q7 ja block: Chinese terms replaced with proper Japanese
+    (ロングコピー / ショートコピー / ペインポイント / 常識破り /
+    ターゲット呼びかけ / 問いかけ)
+  - Q7 EN block: removed stale ZH-EN pair format; using canonical EN
+    only (Benefit / Fear / Disruptive / Target call-out / Interactive
+    question)
+  - Primary Sources + Q6 Ogilvy系 + L222-225 Short-form: updated
+    stale §references to post-v4.18.4 canonical EN section names
+
+### Fixed (skill-team — line→token budget consistency)
+Completing the line→token migration established in
+`skill-md-structure.md` v4.11.0:
+- `SKILL.md` Resource Manifest description: "line budget" →
+  "token budget"
+- `standards/file-conventions.md` §Standards Splitting Discipline:
+  Tier thresholds converted from lines to tokens
+  (Tier 1: ~90 lines → ~2,500 tokens;
+   Tier 2: ~150 lines → ~4,000 tokens;
+   Tier 3: ~250 lines → ~7,000 tokens)
+- `protocols/new-skill-creation.md` Phase 6: SKILL.md target
+  "Line budget: aim 300–380, hard cap 500" → "Token budget:
+  aim ~3,000–4,500, hard cap ~6,000"
+- `rubrics/skill-coherence.md`: output-format dimension
+  "Line Budget" → "Token Budget" (matches §Flag Definitions
+  already named "Token Budget"); prose references to
+  "line budget overflow" / "line counts" / "700 lines"
+  phrased in token terms
+
 ## [4.19.0] — 2026-04-15
 
 ### Added (skill-team)

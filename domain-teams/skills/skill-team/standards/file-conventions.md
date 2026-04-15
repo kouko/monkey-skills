@@ -98,10 +98,10 @@ worker or evaluator. See `agent-interface.md` for the exact protocol.
 
 ## Standards Splitting Discipline
 
-When a standards file grows beyond its Tier-appropriate line budget
-(Tier 1: ~90 lines; Tier 2: ~150 lines; Tier 3: ~250 lines) OR when
-its content no longer fits a single conceptual axis, split it. The
-choice of split axis determines whether the result matches how
+When a standards file grows beyond its Tier-appropriate token budget
+(Tier 1: ~2,500 tokens; Tier 2: ~4,000 tokens; Tier 3: ~7,000 tokens)
+OR when its content no longer fits a single conceptual axis, split it.
+The choice of split axis determines whether the result matches how
 practitioners in the domain actually organize the subject matter.
 
 ### Three split axes

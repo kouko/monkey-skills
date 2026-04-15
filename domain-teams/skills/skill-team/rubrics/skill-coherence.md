@@ -50,8 +50,8 @@ structural work is done.
 
 - Coherence failures are about shape, not content. A skill can have
   excellent standards but still fail this rubric if its SKILL.md is
-  700 lines or its router entry is missing.
-- When issuing NEEDS_REVISION for line budget overflow, MUST identify
+  over the token budget or its router entry is missing.
+- When issuing NEEDS_REVISION for token budget overflow, MUST identify
   which sections are over-sized and suggest specific trim targets
   (e.g. "collapse the 4 workflow phase tables into a single shared
   template").
@@ -63,9 +63,9 @@ structural work is done.
 
 ## Output Format
 
-1. **Per-dimension flags**: Line Budget / Workflow Completeness / Router Fit / Duplicate-Skill Check
-2. **Evidence**: Specific line counts, workflow names, router row quotes
-3. **Trim suggestions** (line budget warning/fatal only): specific sections to compress
+1. **Per-dimension flags**: Token Budget / Workflow Completeness / Router Fit / Duplicate-Skill Check
+2. **Evidence**: Specific token/word counts, workflow names, router row quotes
+3. **Trim suggestions** (token budget warning/fatal only): specific sections to compress
 4. **Verdict**: PASS / PASS_WITH_NOTES / NEEDS_REVISION
 
 PASS_WITH_NOTES issues auto-revise without human review. Be specific

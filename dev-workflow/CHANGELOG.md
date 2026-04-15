@@ -4,6 +4,35 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] — 2026-04-15
+
+### Context
+
+PR #73 was merged at commit bd344a4 (Mermaid guidelines only); the
+line→token budget migration commit (d0b1b2c) was not included. This
+PATCH restores the dev-workflow portion of that migration.
+
+### Fixed (skill-creator-advance — line→token budget consistency)
+
+Completing the line→token budget migration per `plugin-conventions.md`
+§Lightweight SKILL.md canonical guidance ("Use word/token count rather
+than line count — lines vary too much in density"):
+
+- `SKILL.md` Key patterns: reference TOC threshold
+  ">300 lines" → ">~8,000 tokens"
+- `SKILL.md` Working-with-existing-plugin enum:
+  "line budgets" → "token budgets"
+- `references/plugin-conventions.md` §Lightweight Structure:
+  "under 300 lines" → "under ~3,000 tokens"
+
+### Kept as-is (correct current usage)
+
+- `NOTICE:46` — historical migration record
+- `references/mermaid-usage-guidelines.md` mentions of "token or line
+  count" — accurate discussion of both metrics
+- `references/plugin-conventions.md:85` "Use word/token count rather
+  than line count" — canonical guidance
+
 ## [1.0.2] — 2026-04-15
 
 ### Added (skill-creator-advance)

@@ -106,7 +106,7 @@ These word counts are approximate and you can feel free to go longer if needed.
 **Key patterns:**
 - Keep SKILL.md under ~6,000 tokens (~4,500 words); if approaching this limit, extract detailed content into reference files with clear pointers from SKILL.md.
 - Reference files clearly from SKILL.md with guidance on when to read them
-- For large reference files (>300 lines), include a table of contents
+- For large reference files (>~8,000 tokens), include a table of contents
 
 **Domain organization**: When a skill supports multiple domains/frameworks, organize by variant (e.g., `references/aws.md`, `references/gcp.md`) — Claude reads only the relevant reference file.
 
@@ -115,7 +115,7 @@ These word counts are approximate and you can feel free to go longer if needed.
 When creating a skill that will live inside an existing plugin, match the plugin's conventions rather than imposing a new structure. Read `references/plugin-conventions.md` for detailed guidance on:
 - Observing and matching the target plugin's style
 - Choosing between lightweight, standard, and full directory structures
-- Key conventions: relative paths, line budgets, bundled file organization
+- Key conventions: relative paths, token budgets, bundled file organization
 
 #### Principle of Lack of Surprise
 
