@@ -251,6 +251,21 @@ re-generate directive should be issued.
   increases diversity but tends to degrade quality. VS raises diversity
   while preserving quality — this is its differentiation. When using
   both, temperature 0.7–0.9 + VS is the typical combination.
+- **Extreme-tier ("極限版") usage** — the VS research note §5.2
+  explicitly applies extreme-tier constraints (contrarian system
+  persona + "at least half must be counter-intuitive / borderline
+  absurd" + temperature=1.2 / top_p=0.99) to guerrilla marketing
+  campaigns. This tier is compatible with copywriting-team but
+  requires:
+  (a) brief explicitly demands 反直覺 / 荒誕-acceptable output
+  (viral-seed hunting, anti-competition provocation campaign, etc.);
+  (b) human QA pass on every output before ship — AI-flagged extreme
+  output may break client brand-guideline compliance;
+  (c) reduced expectations on copy-quality floor.
+  Do NOT use extreme tier as default Pattern A / Pattern A+
+  replacement. Promote to extreme tier only when Pattern A+ tail
+  coverage is insufficient AND the brief genuinely tolerates 荒唐無稽
+  output.
 
 ## Anti-Patterns
 
@@ -280,12 +295,3 @@ re-generate directive should be issued.
 - **Positioning temperature as antagonistic** — creating a "VS or
   temperature" binary choice. The two are orthogonal with additive
   effects; combined use is recommended.
-- **Invoking "極限版" (contrarian-persona + absurd quota + temp=1.2)
-  inside copywriting-team** — extreme-creativity tiers (contrarian
-  system persona + "at least half must be counter-intuitive /
-  borderline absurd" + temperature=1.2 / top_p=0.99) target
-  creative-writing extremes, not production ad copy. For campaign
-  copy, stay at Pattern A (basic) or Pattern A+ (judged probability
-  cap). Extreme tiers drop copy-usability floor below production
-  threshold; use VS directly outside copywriting-team if genuinely
-  needed.
