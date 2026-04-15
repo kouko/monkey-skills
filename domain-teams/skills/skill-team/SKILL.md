@@ -92,6 +92,14 @@ Before starting work:
      `protocols/skill-brainstorming.md`
    - Outside this skill's scope → see "When NOT to Use"
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: skill-team builds or refactors domain-team skills with primary-source grounding, 3-commit split, and 4-tier gate design. It does NOT handle generic Claude skill authoring (→ `superpowers:writing-skills`), obsidian or philosophers-toolkit skills, or plugin packaging work.
+2. **Route to intake**: invoke `protocols/skill-brainstorming.md` — decomposes the scope into one of: new skill creation, grounding refactor, protocol addition, or gate addition. Reads target team state before proposing a plan.
+3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars naming the target team and change type — e.g., "add Mermaid guidelines to skill-team"), proceed directly to Context Discovery without the introduction.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

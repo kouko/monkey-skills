@@ -102,6 +102,14 @@ Before starting work:
    - Too large for one task → decompose first
    - Outside this team's domain → see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: devops-team produces IaC plans, CI/CD configs, monitoring designs, and SRE runbooks grounded in SRE / DORA / 12-Factor / Continuous Delivery. It does NOT handle application logic (→ code-team) or product planning (→ planning-team).
+2. **Route to intake**: invoke `protocols/devops-brainstorming.md` — explores infra state (configs / scripts / deployments) and asks about scope, constraints, and safety requirements before planning changes.
+3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete infra ask — target environment, change type, SLO), proceed directly to Context Discovery without the introduction.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

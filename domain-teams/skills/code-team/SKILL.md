@@ -114,6 +114,14 @@ Before starting work:
    - Too large for one task → decompose first
    - Outside this team's domain → see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: code-team produces TECH-SPEC.md, refactor PRs, bug fixes, and grounded technical designs (Clean Code / 徳丸本 / SOLID). It does NOT handle product-level scope decisions (→ planning-team) or user-facing documentation (→ docs-team).
+2. **Route to intake**: invoke `protocols/code-brainstorming.md` — intent question + codebase scan → propose 2-3 approaches; user chooses before implementation.
+3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete technical ask — file path, error message, feature description), proceed directly to Context Discovery without the introduction.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

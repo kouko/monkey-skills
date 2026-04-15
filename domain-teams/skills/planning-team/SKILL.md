@@ -69,6 +69,14 @@ Before starting work:
      `protocols/planning-brainstorming.md`
    - Outside this team's domain → see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: planning-team produces PRODUCT-SPEC.md, job stories, risk assessments, and product-level scope decisions. It does NOT handle technical design (→ code-team) or visual design (→ design-team).
+2. **Route to intake**: invoke `protocols/planning-brainstorming.md` — mandatory Q1-Q8 intake (hard gate, Japanese-first). Spark → job story → risks is extracted before any spec writing.
+3. **Sharp-input skip**: never skip. planning-team's hard-gate intake applies regardless of input length — product decisions require the full Q1-Q8 grounding even when the brief looks complete.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)
