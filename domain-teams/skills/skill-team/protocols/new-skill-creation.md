@@ -102,7 +102,7 @@ Write the SKILL.md following `../standards/skill-md-structure.md` exactly:
 12. **Cross-Domain Awareness**
 13. **Worker BLOCKED Handling**
 
-Line budget: aim 300–380, hard cap 500.
+Token budget: aim ~3,000–4,500, hard cap ~6,000 (see `standards/skill-md-structure.md` §Token Budget).
 
 ## Phase 7: Router Integration
 

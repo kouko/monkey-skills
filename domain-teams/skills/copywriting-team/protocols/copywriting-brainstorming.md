@@ -7,14 +7,15 @@ dialogue process. Do not proceed to copy creation until completion.
 
 - `../standards/voice-and-tone.md` — Ogilvy / 糸井 / 岩崎 / 18F /
   Mailchimp voice axes. Task 6 voice selection options are based on
-  §JP 情緒共鳴傳統 and §Ogilvy 長文案 voice 經典原則.
+  §JP emotional-resonance tradition and §Ogilvy long-copy voice classics.
 - `../standards/persuasion-psychology-anchor.md` — Schwartz 1966
   *Breakthrough Advertising* 5 levels of awareness. Task 5 long-form
   awareness level field is based here (Unaware / Problem-Aware /
   Solution-Aware / Product-Aware / Most-Aware).
-- `../standards/short-form-catchcopy-canon.md` — §5 種切入点決策樹
-  (利益 / 恐懼 / 顛覆 / 呼喚 / 提問). Task 7 short-form approach
-  selection is based here.
+- `../standards/short-form-catchcopy-canon.md` — §5 approach angles
+  decision tree (benefit / fear / disruptive / target call-out /
+  interactive question). Task 7 short-form approach selection is
+  based here.
 - `../standards/long-form-pasona-canon.md` — 旧 / 新 / PASBECONA
   usage rules. Basis for Task 7 long-form framework recommendation.
 - `../standards/mid-form-beaf-canon.md` — BEAF (Benefit → Evidence
@@ -84,13 +85,13 @@ Ideation or Short-form). Ask for clarification if ambiguous.
 **[Triple-language rendering example — Q2]**
 
 > **ja**: 何を書きますか？ 選択肢：
-> - **長文案**（LP / セールスレター / 記事広告 / メルマガ）
-> - **中文案**（EC 商品説明 / 楽天 / Amazon / 店頭 POP / 説明会）
-> - **短文案**（キャッチコピー / tagline / headline / SNS / banner）
+> - **ロングコピー**（LP / セールスレター / 記事広告 / メルマガ）
+> - **中尺コピー**（EC 商品説明 / 楽天 / Amazon / 店頭 POP / 説明会）
+> - **ショートコピー**（キャッチコピー / tagline / headline / SNS / banner）
 > - **発想ワークショップ**（value prop から候補角度を発散 → 後続 protocol の種）
-> - **審稿**（既存文案の review + 改善提案）
+> - **コピーレビュー**（既存コピーのレビュー + 改善提案）
 >
-> 依頼文脈から推薦します（例：「LP の headline 10 本」→ 発想 or 短文案）。曖昧なら確認します。
+> 依頼文脈から推薦します（例：「LP の headline 10 本」→ 発想 or ショートコピー）。曖昧なら確認します。
 
 > **en**: What do we write? Options:
 > - **Long-form** (LP / sales letter / advertorial / mail-magazine)
@@ -194,7 +195,7 @@ If declared, gate Dim 5 (Voice Quadrant Coherence) fires.
   "what you want to say") — `../standards/ideation-taniyama-discipline.md`
   overall.
 - **Ogilvy系** (benefit-clear, respect the reader, fact-based) —
-  `voice-and-tone.md` §Ogilvy 長文案 voice 經典原則. Q1 quadrant.
+  `voice-and-tone.md` §Ogilvy long-copy voice classics. Q1 quadrant.
 - **龔大中系** (經濟美學 observational wit — ZH) — `voice-quadrant-
   positioning.md` §Q3 ZH entries. Q3 quadrant.
 - **許舜英系** (意識形態廣告 literary-ideological — ZH) —
@@ -218,10 +219,10 @@ Options differ by form type:
   - BEAF (Benefit → Evidence → Advantage → Feature) default.
   - Confirm channel-dependent order tweaks (POP = Benefit-heavy /
     briefing = Evidence-heavy, etc.).
-- **Short-form** (キャッチコピー / タグライン, 7-15 chars):
-  - 5 approaches (利益 / 恐懼 / 顛覆 / 呼喚 / 提問).
-    AI recommends based on audience emotion per
-    `short-form-catchcopy-canon.md` §5 種切入点決策樹.
+- **Short-form** (キャッチコピー / tagline, 7-15 chars):
+  - 5 approaches (benefit / fear / disruptive / target call-out /
+    interactive question). AI recommends based on audience emotion per
+    `short-form-catchcopy-canon.md` §5 approach angles decision tree.
 - **Light-action** (opt-in / subscribe / download / LP click-through,
   50-1,500 chars, micro-conversion per Kaushik 2007):
   - **PREP 法** (4 stages: Point-Reason-Example-Point) — logical
@@ -248,20 +249,20 @@ Options differ by form type:
 
 > **ja**: フレームワーク / アプローチを選んでください：
 >
-> **長文案の場合**:
-> - 旧 PASONA（短中文、DM / メール向け）
-> - 新 PASONA（中長文 LP / メルマガ、Affinity 入口）— **推薦**
+> **ロングコピーの場合**:
+> - 旧 PASONA（短中尺、DM / メール向け）
+> - 新 PASONA（中長尺 LP / メルマガ、Affinity 入口）— **推薦**
 > - PASBECONA（2000 字+、B/E/C で説得力を厚くする）
 >
-> Task 5 の字數範囲 + Task 4 の awareness level に基づき推薦します。
+> Task 5 の字数範囲 + Task 4 の awareness level に基づき推薦します。
 > 未確定の場合は Solution-Aware + 新 PASONA をデフォルトとします。
 >
-> **短文案の場合**:
+> **ショートコピーの場合**:
 > - 利益 / 願望
-> - 恐怖 / 痛点
-> - 顛覆常識
-> - 目標呼喚
-> - 提問互動
+> - 恐怖 / ペインポイント
+> - 常識破り
+> - ターゲット呼びかけ
+> - 問いかけ
 >
 > audience の emotion から AI が推薦します。
 
@@ -276,11 +277,11 @@ Options differ by form type:
 > If undetermined, defaults to Solution-Aware + 新 PASONA.
 >
 > **For short-form**:
-> - 利益 / Desire
-> - 恐怖 / Pain
-> - 顛覆常識 / Disrupt convention
-> - 目標呼喚 / Target call
-> - 提問互動 / Question interaction
+> - Benefit / aspiration
+> - Fear / pain point
+> - Disruptive
+> - Target call-out
+> - Interactive question
 >
 > AI recommends based on audience emotion.
 

@@ -151,7 +151,7 @@ Guard rails:
 
 Worker default resources:
 - standards:
-  - `standards/skill-md-structure.md` — SKILL.md structure, required sections, line budget
+  - `standards/skill-md-structure.md` — SKILL.md structure, required sections, token budget
   - `standards/file-conventions.md` — the four-subdirectory semantic boundary, path discipline
   - `standards/gate-system.md` — SELF / MUST / SHOULD / MAY tier system, verdict semantics
   - `standards/grounding-principle.md` — primary-source rule, JP integration strategy
