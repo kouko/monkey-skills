@@ -140,6 +140,69 @@ Probabilities must sum to ~100%. Include both high-probability
 full distribution.
 ```
 
+#### Forced probability allocation (optional)
+
+For briefs that need explicit tail coverage (not just "include both
+high and low"), specify an allocation shape instead of "sum to ~100%":
+
+| Slot | Probability | Role |
+|---|---|---|
+| Option 1 | >60% | The typical, expected direction |
+| Option 2 | ~25% | Secondary, still conventional |
+| Options 3–N | <5% each | Long-tail, counter-intuitive |
+
+This forces subagents to reach the tail rather than clustering at
+high-probability candidates. Use when Pattern A's soft hint ("include
+both") is not producing enough tail coverage — typically detected by
+evaluator (Pattern C) flagging probability skew.
+
+### Pattern A+: long-tail forced sampling (進階版)
+
+Upgrade of Pattern A for briefs that deliberately require tail-mode
+extraction — guerrilla marketing, counter-intuitive positioning,
+viral-seed hunting. Adds two hard constraints absent from Pattern A:
+
+1. **Probability cap** — every candidate's probability must be below
+   a user-specified cap (typical: 0.10 for mild tail, 0.05 for
+   aggressive tail).
+2. **Explicit long-tail directive** — "Deliberately sample from the
+   long tails of your internal probability distribution, not the
+   typical mode."
+
+Pattern A+ template:
+
+```
+【Task】Write catch copies for product: {product}
+【Angle】{angle}
+
+【Output format】Generate exactly {N} candidates.
+Wrap each in <response> tags containing:
+  <text>: the copy body ({char range})
+  <probability>: your estimated typical generation probability
+
+⚠️ Critical constraint: every <probability> must be less than
+{probability_cap} (typical: 0.10). Deliberately sample from the
+long tails of your internal probability distribution — avoid the
+typical mode entirely.
+```
+
+When to use Pattern A+:
+- Guerrilla / viral / counter-intuitive brief
+- Existing mainstream copy pool already exhausted
+- Campaign explicitly wants "un-ChatGPT" outputs
+
+When NOT to use:
+- Default copy generation — stay on Pattern A. Pattern A+ lowers
+  average copy-quality floor in exchange for tail coverage; only
+  worth it when the brief explicitly prizes the tail.
+- Small models (7B and below) — cap enforcement is unreliable and
+  numeric thresholds get ignored (see Limitations §model-size gap).
+
+Derivation: Zhang et al. 2025 §5 experimental setup explicitly uses
+probability thresholds in the tail-sampling condition — Pattern A+
+is a direct application of that experimental protocol to copy
+ideation.
+
 ### Pattern B: combined with Mandal-Art 8 angles
 
 ```
@@ -217,3 +280,12 @@ re-generate directive should be issued.
 - **Positioning temperature as antagonistic** — creating a "VS or
   temperature" binary choice. The two are orthogonal with additive
   effects; combined use is recommended.
+- **Invoking "極限版" (contrarian-persona + absurd quota + temp=1.2)
+  inside copywriting-team** — extreme-creativity tiers (contrarian
+  system persona + "at least half must be counter-intuitive /
+  borderline absurd" + temperature=1.2 / top_p=0.99) target
+  creative-writing extremes, not production ad copy. For campaign
+  copy, stay at Pattern A (basic) or Pattern A+ (judged probability
+  cap). Extreme tiers drop copy-usability floor below production
+  threshold; use VS directly outside copywriting-team if genuinely
+  needed.

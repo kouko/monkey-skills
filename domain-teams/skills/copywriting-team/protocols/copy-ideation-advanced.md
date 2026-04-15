@@ -27,9 +27,12 @@ Before entering Phase 1, decide which method combination to use. This decision h
 | Complex brief: multi-channel, ambiguous target, or innovative positioning needed | 曼陀羅 + 小霜 instinct lens (dual-axis divergence) |
 | SNS-native campaign, UGC-triggering needed | 曼陀羅 + ULSSAS seed criteria overlay |
 | Brand voice development, キャッチコピー for cultural campaign | 曼陀羅 + voice lineage calibration (糸井/岩崎/眞木) |
+| Guerrilla / viral / counter-intuitive brief — tail-mode copy explicitly prized over polished mainstream | Base protocol + **VS Pattern A+** (`verbalized-sampling.md` §Pattern A+) — upgrades the subagent prompt template with probability cap + long-tail directive |
 | All of the above, or brief explicitly requests "explore deeply" | Full combination: 曼陀羅 + 小霜 + ULSSAS + voice |
 
 **Default**: if uncertain, use 曼陀羅 + 小霜 instinct lens (dual-axis). This is the most generally applicable advanced combination.
+
+**Pattern A+ is orthogonal**: it upgrades the VS prompt template (probability cap + long-tail directive), not the divergence axis. Any overlay above can be combined with Pattern A+ when the brief genuinely prizes tail output over mainstream quality. Do NOT use Pattern A+ as default — it lowers average copy-quality floor in exchange for tail coverage (see `verbalized-sampling.md` §Pattern A+ "When NOT to use").
 
 ### Decision output
 

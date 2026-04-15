@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.20.0] — 2026-04-15
+
+### Context
+
+Verbalized Sampling (VS) implementation audit against Obsidian
+research note (2026-03-30 VS 與 AI 創意多樣性) found that the core
+VS mechanism is faithfully reproduced at the 🟢 基礎版 level, but
+the 🟡 進階版 tier (long-tail forced sampling with probability cap)
+is not exposed. This MINOR bump adds the 進階版 tier as opt-in
+Pattern A+, without changing default copy behavior.
+
+### Added (copywriting-team)
+- `standards/verbalized-sampling.md` §Pattern A+ — long-tail forced-
+  sampling tier (進階版) with probability cap + explicit long-tail
+  directive. Direct application of Zhang et al. 2025 §5 experimental
+  tail-sampling protocol. Opt-in for guerrilla / viral / counter-
+  intuitive briefs only.
+- `standards/verbalized-sampling.md` §Forced probability allocation
+  subsection — 60/25/<5 distribution shape for briefs that need
+  explicit tail coverage beyond the soft "include both high and low"
+  hint. Triggered by Pattern C evaluator detecting probability skew.
+- `standards/verbalized-sampling.md` Anti-Pattern re: 🔴 極限版 —
+  explicit guidance to stay at Pattern A / Pattern A+ for production
+  copy. Extreme-creativity tiers (contrarian persona + absurd quota
+  + temp=1.2) drop copy-usability floor below production threshold.
+- `protocols/copy-ideation-advanced.md` Decision Matrix row for
+  guerrilla / counter-intuitive briefs routing to Base protocol +
+  Pattern A+. Clarifies Pattern A+ is orthogonal to divergence-axis
+  overlays (曼陀羅 / 小霜 / ULSSAS / voice).
+
+### Unchanged
+- Default copy generation continues to use Pattern A (🟢 基礎版) —
+  Pattern A+ is explicitly opt-in via Decision Matrix
+- Primary Sources list unchanged at 3 citations — Pattern A+ derives
+  from already-cited Zhang §5; root-cause theory papers (Kirk 2023,
+  Yun 2025) intentionally NOT added (token cost > benefit;
+  Zhang §2 Prior Work transitively covers)
+
+### Rationale
+- Research note prescribes 3 tiers (🟢 基礎 / 🟡 進階 / 🔴 極限);
+  copywriting-team now exposes the first two, with 🔴 極限版
+  explicitly marked as out-of-scope via Anti-Pattern. Campaign copy
+  prizes production-ready quality floor; 極限版 targets creative-
+  writing extremes.
+
 ## [4.19.1] — 2026-04-15
 
 ### Context
