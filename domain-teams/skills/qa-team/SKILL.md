@@ -60,6 +60,14 @@ Before starting work:
    - Too large for one task -> decompose first
    - Outside this team's domain -> see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (<=5 lines)**: qa-team produces test plans, test strategies, and test case designs grounded in ISTQB + VSTeP viewpoint frameworks. It does NOT implement test code (→ code-team) or write user-facing QA documentation (→ docs-team).
+2. **Route to intake**: invoke `protocols/qa-brainstorming.md` -- explores test patterns and coverage, then asks about scope / priority / risk posture before planning test work.
+3. **Sharp-input skip**: if the user already provides an actionable brief (>=50 chars with a concrete QA ask -- SUT, feature under test, risk concern), proceed directly to Context Discovery without the introduction.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

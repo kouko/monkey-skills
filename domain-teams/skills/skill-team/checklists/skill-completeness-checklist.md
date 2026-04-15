@@ -47,6 +47,14 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
     **Absence is not a failure**: a skill without `research/` is compliant. Pre-v4.7.0 grounded skills are grandfathered without retroactive backfill.
 
+- [ ] **CHK-SKL-013 (Empty Invocation Fallback)** [FIXABLE]: SKILL.md contains a `## Empty Invocation Fallback` section (per `standards/skill-md-structure.md` §Empty Invocation Fallback Rules). The section MUST contain the 3 required elements:
+
+    1. **Introduce** (≤5 lines) — surfaces skill essence without duplicating the full When to Use / When NOT to Use bullet lists
+    2. **Route to intake** — either references an existing brainstorming protocol by relative path (`protocols/{team}-brainstorming.md`) OR provides 2-3 bootstrap questions covering scope / inputs / output expectation
+    3. **Sharp-input skip** — explicit rule that the fallback is bypassed when user input is ≥50 chars with an actionable brief
+
+    **Router-skill exemption**: skills whose sole purpose is routing (`using-domain-teams`, `using-philosophers-toolkit`) are exempt and do NOT need this section. Record "router skill — exempt" in the evidence field when this exemption applies.
+
 ## Verdict Rules
 
 - Any **1 item** is `FAIL_FATAL` → final verdict is `NEEDS_REVISION` (escalate to user)

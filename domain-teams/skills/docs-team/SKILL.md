@@ -73,6 +73,14 @@ Before starting work:
    - Too large for one task → decompose first (per doc, per quadrant)
    - Outside this team's domain → see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: docs-team produces Diátaxis-categorized documentation (Tutorial / How-to / Explanation / Reference) following Google Style + JTAP conventions. It does NOT generate code (→ code-team) or design mockups (→ design-team).
+2. **Route to intake**: invoke `protocols/doc-writing-router.md` — 2-step routing pattern. Router first identifies which Diátaxis quadrant fits the user's need, then dispatches to the quadrant-specific writing protocol (`tutorial-writing.md` / `how-to-writing.md` / `explanation-writing.md` / `reference-writing.md`).
+3. **Sharp-input skip**: if the user already specifies both the doc type AND target audience (≥50 chars, e.g., "write a how-to for API consumers on retry logic"), proceed directly to Context Discovery and skip the router step.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

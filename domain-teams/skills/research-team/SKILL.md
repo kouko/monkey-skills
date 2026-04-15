@@ -99,6 +99,14 @@ Before starting work:
    - Too large for one task → decompose first
    - Outside this team's domain → see Cross-Domain Awareness
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: research-team produces primary-source grounded research reports, literature reviews, and domain grounding notes. It does NOT produce opinion pieces or summaries built on secondary sources without primary-source verification.
+2. **Route to intake**: invoke `protocols/research-brainstorming.md` — asks about research type / scope, decomposes if large, and delegates to the right specialist when the topic is out-of-domain.
+3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete research ask — specific claim to verify, specific domain to survey), proceed directly to Context Discovery without the introduction.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)

@@ -133,6 +133,14 @@ request looks specific. A seemingly-complete request may still lack
 Schwartz awareness level, voice reference, or approach selection —
 brainstorming surfaces those gaps.
 
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+
+1. **Introduce (≤5 lines)**: copywriting-team produces long / mid / short-form ad copy, キャッチコピー, and slogans using Mandal-Art × Verbalized Sampling divergence + KJ convergence + 谷山 discipline. It does NOT handle code (→ code-team), visual design (→ design-team), or primary-source research (→ research-team).
+2. **Route to intake**: invoke `protocols/copywriting-brainstorming.md` — mandatory Q1-Q10 intake (hard gate). Intake Completeness checklist must pass before any ideation begins. This is intentional: Schwartz awareness / voice / approach selection all live in intake.
+3. **Sharp-input skip**: never skip. copywriting-team's hard-gate intake applies regardless of input length — even a detailed brief may lack Schwartz awareness or voice reference that only Q1-Q10 surfaces.
+
 ## Quality Gates
 
 ### SELF Check (every delivery)
