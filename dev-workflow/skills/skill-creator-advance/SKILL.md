@@ -121,6 +121,29 @@ When creating a skill that will live inside an existing plugin, match the plugin
 
 This goes without saying, but skills must not contain malware, exploit code, or any content that could compromise system security. A skill's contents should not surprise the user in their intent if described. Don't go along with requests to create misleading skills or skills designed to facilitate unauthorized access, data exfiltration, or other malicious activities. Things like a "roleplay as an XYZ" are OK though.
 
+#### Empty-Prompt Onboarding (recommended for conversational / multi-workflow skills)
+
+When a user invokes a skill with no prompt or a very sparse prompt, consider including a "surface orientation" behavior so the skill can introduce itself, explain how it works with the user, and ask for the minimum inputs needed. This is an opt-in pattern — single-shot utility skills (file transforms, fixed-format generators) don't need it; conversational or multi-workflow skills benefit significantly.
+
+**Recommended pattern** (adapt to your skill's shape):
+
+1. **Surface orientation** — present the user with:
+   - What the skill does (top 3 triggers from the description's "Use when" clause)
+   - What it doesn't do (delegation hints for adjacent skills)
+   - How the interaction will unfold (intake questions + workflow phases + delivery)
+   - What inputs help most (2-3 prerequisite bullets)
+2. **Route to intake** — either invoke a dedicated brainstorming protocol OR ask 2-3 bootstrap questions covering scope / inputs / output expectation
+3. **Sufficient-context skip** — bypass orientation when any context source already provides an actionable brief. Check **all** of these, not just the current prompt:
+   - (a) Current-turn prompt ≥50 chars with a concrete ask
+   - (b) Prior conversation turns state scope / artifact / output expectation
+   - (c) IDE context (`<ide_selection>`, opened files) identifies the target
+   - (d) Referenced plan / memory file encodes the brief
+   - (e) Upstream skill handoff (main agent provided a prior skill's output)
+
+**Common pitfall**: triggering orientation on "empty current prompt" alone creates friction for returning users — Claude's context often already carries the brief. Always check the full context, not just the current prompt's length.
+
+For domain-team skills (which follow a stricter `skill-team` convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — see `domain-teams/skills/skill-team/standards/skill-md-structure.md` §Empty Invocation Fallback Rules for the rigorous version with a §Surface Orientation Format markdown skeleton and a hard-gate exception for skills with mandatory intake.
+
 #### Writing Patterns
 
 Prefer using the imperative form in instructions.
