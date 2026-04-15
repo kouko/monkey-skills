@@ -132,11 +132,16 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers when user input is empty / very sparse AND no context source (prior conversation, IDE context, plan/memory file, upstream skill handoff) provides an actionable brief.
 
-1. **Introduce (≤5 lines)**: design-team produces UI/UX specs, wireframes, interaction flows, and component designs with accessibility considerations. It does NOT handle implementation (→ code-team) or product-level strategy decisions (→ planning-team).
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
 2. **Route to intake**: invoke `protocols/design-brainstorming.md` — explores existing design state (specs / UX / brand) and asks about user goals, scope, and constraints before decomposing into workflows.
-3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete design ask — artifact type, target audience, constraint set), proceed directly to Context Discovery without the introduction.
+3. **Sufficient-context skip**: if any context source provides an actionable brief (current prompt ≥50 chars, prior conversation, IDE context, plan/memory, upstream handoff), proceed directly to Context Discovery.
+
+Prerequisites (inline hint for orientation synthesis):
+- User goal / target audience
+- Artifact type (wireframe / spec / component / flow)
+- Brand or UX constraints (if any)
 
 ## Quality Gates
 

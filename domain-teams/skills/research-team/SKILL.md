@@ -101,11 +101,11 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers when user input is empty / very sparse AND no context source (prior conversation, IDE context, plan/memory file, upstream skill handoff) provides an actionable brief.
 
-1. **Introduce (≤5 lines)**: research-team produces primary-source grounded research reports, literature reviews, and domain grounding notes. It does NOT produce opinion pieces or summaries built on secondary sources without primary-source verification.
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol. Prerequisites are intentionally omitted — research scopes vary too widely to pre-commit.
 2. **Route to intake**: invoke `protocols/research-brainstorming.md` — asks about research type / scope, decomposes if large, and delegates to the right specialist when the topic is out-of-domain.
-3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete research ask — specific claim to verify, specific domain to survey), proceed directly to Context Discovery without the introduction.
+3. **Sufficient-context skip**: if any context source provides an actionable brief (current prompt ≥50 chars, prior conversation, IDE context, plan/memory, upstream handoff), proceed directly to Context Discovery.
 
 ## Quality Gates
 
