@@ -97,16 +97,17 @@ Required elements:
 2. **When to Use** — bullet list of trigger scenarios
 3. **When NOT to Use** — bullet list with arrow delegation (`→ code-team`)
 4. **Language** — `Detect the user's language and pass it as output_language to all agent launch prompts.`
-5. **Context Discovery** — 2-3 step numbered list for pre-work state assessment
-6. **Quality Gates** — 4 sub-sections: SELF Check / MUST Gates / SHOULD Gates / MAY Gates (see rules below)
-7. **Gate Protocol** — evaluator launch rules + verdict handling + guard rails
-8. **Resource Manifest** — worker default resources + evaluator default resources
-9. **Behavioral Rules** — worker vs evaluator role boundaries
-10. **Agents** — table with agent name, role, model
-11. **Agent Launch Protocol** — worker and evaluator launch templates (fenced code blocks)
-12. **Workflows** — one sub-section per workflow, each with phase table
-13. **Cross-Domain Awareness** — lightweight vs switch-to-other-team guidance
-14. **Worker BLOCKED Handling** — what to do if worker returns BLOCKED
+5. **Context Discovery** — 2-3 step numbered list for pre-work state assessment (agent-internal)
+6. **Empty Invocation Fallback** — user-facing onboarding when input is empty or too sparse to proceed (see rules below)
+7. **Quality Gates** — 4 sub-sections: SELF Check / MUST Gates / SHOULD Gates / MAY Gates (see rules below)
+8. **Gate Protocol** — evaluator launch rules + verdict handling + guard rails
+9. **Resource Manifest** — worker default resources + evaluator default resources
+10. **Behavioral Rules** — worker vs evaluator role boundaries
+11. **Agents** — table with agent name, role, model
+12. **Agent Launch Protocol** — worker and evaluator launch templates (fenced code blocks)
+13. **Workflows** — one sub-section per workflow, each with phase table
+14. **Cross-Domain Awareness** — lightweight vs switch-to-other-team guidance
+15. **Worker BLOCKED Handling** — what to do if worker returns BLOCKED
 
 Additional sections are permitted (e.g. `Note on Global Context` in devops-team)
 but MUST come between Persona and Quality Gates, or as a clearly marked appendix
@@ -235,6 +236,65 @@ If a user later wants a research note reformatted as a proper Nygard
 ADR or Diátaxis Explanation, they can invoke docs-team **separately**
 as an optional downstream consumer. docs-team is NOT a mandatory
 pipeline stage for grounding research.
+
+## Empty Invocation Fallback Rules
+
+**Context Discovery** (§5) is agent-internal state mapping — what the
+agent reads before starting work. **Empty Invocation Fallback** (§6)
+is the user-facing behavior specification for when the user invokes
+the skill with no prompt or a prompt too sparse to act on. These two
+sections serve different purposes and MUST be kept separate.
+
+### Required elements (3)
+
+Every SKILL.md §Empty Invocation Fallback section MUST specify:
+
+1. **Introduce (≤5 lines)**: surface essence of "When to Use" / "When
+   NOT to Use". What this skill does, what it does not do. Not a
+   lecture — the goal is to orient the user, not replace the existing
+   sections.
+2. **Route to intake**: if this skill has a brainstorming protocol
+   (typically `protocols/{team}-brainstorming.md`), invoke it.
+   Otherwise, ask 2-3 bootstrap questions that establish: (a) scope /
+   artifact type, (b) inputs / constraints, (c) output expectation.
+3. **Sharp-input skip**: if the user's input already contains an
+   actionable brief (≥50 chars with a concrete ask), SKIP this
+   fallback and proceed to Context Discovery directly. Avoid
+   introducing the skill every time — that creates friction for
+   returning users.
+
+### Format
+
+Keep the whole section to ~10-15 lines. Do NOT duplicate the
+brainstorming protocol's phase table; just reference the protocol by
+relative path. Example skeleton:
+
+```markdown
+## Empty Invocation Fallback
+
+Triggers when user input is empty OR < 50 chars OR lacks an
+actionable brief signal.
+
+1. **Introduce (≤5 lines)**: {skill essence — 1-2 sentences what it
+   does and delivers, then 1 sentence on what it does NOT do}.
+2. **Route to intake**: invoke `protocols/{team}-brainstorming.md`
+   — the structured intake protocol that extracts brief via Q1-QN.
+3. **Sharp-input skip**: if user already provides an actionable brief
+   (≥50 chars with a concrete ask), proceed directly to Context
+   Discovery without the introduction or bootstrap questions.
+```
+
+### Router-skill exemption
+
+**Router skills** (skills whose sole purpose is to route callers to
+other skills — currently `using-domain-teams` and
+`using-philosophers-toolkit`) are EXEMPT from §Empty Invocation
+Fallback. Their entire SKILL.md body *is* a routing-on-empty-input
+mechanism. Adding this section to a router would be redundant.
+
+Document this exemption in the skill's frontmatter description or in
+a brief comment at the top of the Context Discovery section if
+present.
 
 ## Token Budget
 
