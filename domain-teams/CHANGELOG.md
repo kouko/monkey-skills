@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.21.1] — 2026-04-15
+
+### Context
+
+Two corrections to the v4.21.0 Empty Invocation Fallback spec. Review
+with the user found that (1) "Introduce (≤5 lines)" was too thin for
+user-facing onboarding — the original goal was "主動介紹該 skill 的
+運作流程與建議的使用方式", which a 5-line essence doesn't satisfy; and
+(2) the trigger condition checked only current-turn prompt length,
+ignoring that Claude's context often carries rich brief signal from
+prior conversation / IDE selection / plan files / upstream skill
+handoffs.
+
+### Changed (skill-team standards + checklist)
+- `standards/skill-md-structure.md` §Empty Invocation Fallback Rules:
+  - Element 1 upgraded: "Introduce (≤5 lines)" → **"Surface
+    orientation"** (structured synthesis at runtime from existing
+    sections — no static content duplication)
+  - Element 3 upgraded: "Sharp-input skip" → **"Sufficient-context
+    skip"** — agent MUST check 5 context sources before triggering:
+    (a) current prompt ≥50 chars, (b) prior conversation, (c) IDE
+    context, (d) plan/memory file, (e) upstream skill handoff
+  - New §Surface Orientation Format sub-section specifying the
+    markdown skeleton (team/mission → What I do / What I don't do /
+    How we'll work together / Prerequisites / First intake question)
+  - New §Hard-gate exception clarifying copywriting-team and
+    planning-team explicitly replace element 3 with "Never skip"
+    plus rationale (intake surfaces elements context cannot reliably
+    provide — Schwartz awareness, voice, job story, risks)
+
+- `checklists/skill-completeness-checklist.md` CHK-SKL-013:
+  - Updated to check element 1 references Surface Orientation Format
+    (static ≤5-line intro no longer acceptable)
+  - Updated to check element 3 covers all 5 context sources
+    (current-turn-only is FAIL_FIXABLE)
+  - Added hard-gate variant PASS condition (Never skip + rationale)
+
+### Changed (9 domain-team SKILL.md)
+All 9 qualifying SKILL.md §Empty Invocation Fallback sections updated:
+- Trigger wording: "empty OR < 50 chars" → "empty / very sparse AND
+  no context source provides brief"
+- Element 1: Surface orientation reference
+- Element 3: Sufficient-context skip (or "Never skip" for hard gates)
+- Added optional Prerequisites inline bullets to 8 teams
+  (research-team intentionally omits — scopes vary too widely)
+
+### Unchanged
+- Router-skill exemption preserved (`using-domain-teams`,
+  `using-philosophers-toolkit`)
+- No SKILL.md section counts changed (still 15 required sections)
+- Existing brainstorming protocols unchanged
+
+### Rationale
+Triggering on "empty current prompt" alone was a common pitfall that
+would create friction for returning users. Real invocations often
+have rich context from prior turns or IDE state. The sufficient-
+context check ensures fallback fires only on genuine cold starts.
+
 ## [4.21.0] — 2026-04-15
 
 ### Context

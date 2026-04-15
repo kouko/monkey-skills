@@ -62,11 +62,16 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers when user input is empty / very sparse AND no context source (prior conversation, IDE context, plan/memory file, upstream skill handoff) provides an actionable brief.
 
-1. **Introduce (<=5 lines)**: qa-team produces test plans, test strategies, and test case designs grounded in ISTQB + VSTeP viewpoint frameworks. It does NOT implement test code (→ code-team) or write user-facing QA documentation (→ docs-team).
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format -- draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
 2. **Route to intake**: invoke `protocols/qa-brainstorming.md` -- explores test patterns and coverage, then asks about scope / priority / risk posture before planning test work.
-3. **Sharp-input skip**: if the user already provides an actionable brief (>=50 chars with a concrete QA ask -- SUT, feature under test, risk concern), proceed directly to Context Discovery without the introduction.
+3. **Sufficient-context skip**: if any context source provides an actionable brief (current prompt >=50 chars, prior conversation, IDE context, plan/memory, upstream handoff), proceed directly to Context Discovery.
+
+Prerequisites (inline hint for orientation synthesis):
+- SUT (system under test) identifier
+- Feature under test or risk concern
+- Risk posture / priority
 
 ## Quality Gates
 

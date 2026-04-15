@@ -135,11 +135,17 @@ brainstorming surfaces those gaps.
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers on every invocation (hard-gate intake applies regardless of context richness).
 
-1. **Introduce (≤5 lines)**: copywriting-team produces long / mid / short-form ad copy, キャッチコピー, and slogans using Mandal-Art × Verbalized Sampling divergence + KJ convergence + 谷山 discipline. It does NOT handle code (→ code-team), visual design (→ design-team), or primary-source research (→ research-team).
-2. **Route to intake**: invoke `protocols/copywriting-brainstorming.md` — mandatory Q1-Q10 intake (hard gate). Intake Completeness checklist must pass before any ideation begins. This is intentional: Schwartz awareness / voice / approach selection all live in intake.
-3. **Sharp-input skip**: never skip. copywriting-team's hard-gate intake applies regardless of input length — even a detailed brief may lack Schwartz awareness or voice reference that only Q1-Q10 surfaces.
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
+2. **Route to intake**: invoke `protocols/copywriting-brainstorming.md` — mandatory Q1-Q10 intake (hard gate). Intake Completeness checklist must pass before any ideation begins.
+3. **Never skip** — intake surfaces elements that context alone cannot reliably provide: Schwartz awareness level, voice reference (糸井/岩崎/眞木 lineage), approach selection (5 angles), campaign context. Apply regardless of input length or prior conversation richness. Trade-off: returning-user friction accepted for intake rigor.
+
+Prerequisites (inline hint for orientation synthesis):
+- Product name / service description
+- Target audience (persona, Schwartz awareness level)
+- Channel + format (LP / email / banner / slogan)
+- Voice reference or brand guideline
 
 ## Quality Gates
 

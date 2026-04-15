@@ -249,39 +249,96 @@ sections serve different purposes and MUST be kept separate.
 
 Every SKILL.md §Empty Invocation Fallback section MUST specify:
 
-1. **Introduce (≤5 lines)**: surface essence of "When to Use" / "When
-   NOT to Use". What this skill does, what it does not do. Not a
-   lecture — the goal is to orient the user, not replace the existing
-   sections.
+1. **Surface orientation**: synthesize a structured orientation at
+   runtime per §Surface Orientation Format below. Draw from existing
+   sections (frontmatter / When to Use / When NOT to Use / Workflows /
+   intake protocol) — do NOT duplicate content as static prose. The
+   goal is to orient the user with "what I do / how we work together /
+   what to have ready", not a lecture.
 2. **Route to intake**: if this skill has a brainstorming protocol
    (typically `protocols/{team}-brainstorming.md`), invoke it.
    Otherwise, ask 2-3 bootstrap questions that establish: (a) scope /
    artifact type, (b) inputs / constraints, (c) output expectation.
-3. **Sharp-input skip**: if the user's input already contains an
-   actionable brief (≥50 chars with a concrete ask), SKIP this
-   fallback and proceed to Context Discovery directly. Avoid
-   introducing the skill every time — that creates friction for
-   returning users.
+3. **Sufficient-context skip**: SKIP the fallback (proceed directly to
+   Context Discovery) when ANY of the following provides an actionable
+   brief:
+   - (a) Current-turn prompt: ≥50 chars with a concrete ask
+   - (b) Prior conversation turns already state scope / artifact /
+     output expectation
+   - (c) IDE context (`<ide_selection>`, opened files) identifies the
+     target artifact
+   - (d) Referenced plan (`.claude/plans/*.md`) / memory file encodes
+     the brief
+   - (e) Upstream skill handoff — the main agent provided a prior
+     skill's output as this skill's input
+
+   Intent: don't lecture users when context is already rich. The
+   fallback is for **genuine cold starts only**. Checking only the
+   current-turn prompt length is a common pitfall that creates
+   friction for returning users.
+
+### Hard-gate exception
+
+Skills with mandatory intake protocols (`copywriting-team`,
+`planning-team`) explicitly replace element 3 with "Never skip" plus
+a short rationale. The intake protocol surfaces elements that context
+alone cannot reliably provide — e.g., Schwartz awareness level, voice
+reference, job story, risks. These skills trade off returning-user
+friction for intake rigor; document the trade-off in the SKILL.md
+section.
+
+### Surface Orientation Format
+
+When orientation fires (context-check yielded insufficient brief),
+present the following markdown skeleton to the user, filled from the
+existing SKILL.md sections cited in each slot:
+
+```markdown
+## {team-name} — {first sentence of frontmatter description}
+
+**What I do:**
+- {top 3 bullets from §When to Use}
+
+**What I don't do** (use these teams):
+- {top 2 bullets from §When NOT to Use, include → delegation arrows}
+
+**How we'll work together:**
+1. **Intake**: {1-line summary of intake style — e.g., "Q1-Q10
+   structured brainstorming" or "2-3 bootstrap questions"}
+2. **Workflow**: {phase names chained from first §Workflows entry}
+3. **Delivery**: {from frontmatter "Delivers:" clause}
+
+**To get the best result, have these ready:**
+- {2-3 prerequisite bullets — optional; omit if skill is open-ended}
+
+Let's start. {First question from the intake protocol's first phase}
+```
+
+All load-bearing slots map to already-required SKILL.md sections —
+no new static content is mandated. Prerequisites are optional
+per-skill; skills may include an inline prerequisites bullet list in
+their §Empty Invocation Fallback body to guide the synthesis.
 
 ### Format
 
-Keep the whole section to ~10-15 lines. Do NOT duplicate the
-brainstorming protocol's phase table; just reference the protocol by
-relative path. Example skeleton:
+Keep the whole §Empty Invocation Fallback body to ~10-15 lines. Do
+NOT duplicate the brainstorming protocol's phase table; just reference
+the protocol by relative path. Example skeleton:
 
 ```markdown
 ## Empty Invocation Fallback
 
 Triggers when user input is empty OR < 50 chars OR lacks an
-actionable brief signal.
+actionable brief signal AND no prior context / IDE context /
+plan-file / upstream handoff provides one.
 
-1. **Introduce (≤5 lines)**: {skill essence — 1-2 sentences what it
-   does and delivers, then 1 sentence on what it does NOT do}.
-2. **Route to intake**: invoke `protocols/{team}-brainstorming.md`
-   — the structured intake protocol that extracts brief via Q1-QN.
-3. **Sharp-input skip**: if user already provides an actionable brief
-   (≥50 chars with a concrete ask), proceed directly to Context
-   Discovery without the introduction or bootstrap questions.
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
+2. **Route to intake**: invoke `protocols/{team}-brainstorming.md` — the structured intake protocol that extracts brief via Q1-QN.
+3. **Sufficient-context skip**: if any context source provides an actionable brief (current prompt ≥50 chars, prior conversation, IDE context, plan/memory file, upstream handoff), proceed directly to Context Discovery without orientation.
+
+Prerequisites (inline hint for orientation synthesis):
+- {prerequisite 1}
+- {prerequisite 2}
 ```
 
 ### Router-skill exemption

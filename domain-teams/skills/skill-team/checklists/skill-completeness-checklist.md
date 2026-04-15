@@ -49,9 +49,11 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
 - [ ] **CHK-SKL-013 (Empty Invocation Fallback)** [FIXABLE]: SKILL.md contains a `## Empty Invocation Fallback` section (per `standards/skill-md-structure.md` §Empty Invocation Fallback Rules). The section MUST contain the 3 required elements:
 
-    1. **Introduce** (≤5 lines) — surfaces skill essence without duplicating the full When to Use / When NOT to Use bullet lists
+    1. **Surface orientation** — references `standards/skill-md-structure.md` §Surface Orientation Format (synthesis from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol). A static "≤5-line intro" is no longer acceptable — runtime synthesis is required.
     2. **Route to intake** — either references an existing brainstorming protocol by relative path (`protocols/{team}-brainstorming.md`) OR provides 2-3 bootstrap questions covering scope / inputs / output expectation
-    3. **Sharp-input skip** — explicit rule that the fallback is bypassed when user input is ≥50 chars with an actionable brief
+    3. **Sufficient-context skip** — explicit rule that fallback is bypassed when ANY of 5 context sources provides an actionable brief: (a) current-turn prompt ≥50 chars, (b) prior conversation, (c) IDE context (`<ide_selection>`, opened files), (d) plan / memory file, (e) upstream skill handoff. Checking only current-turn prompt length is FAIL_FIXABLE — the check must cover all 5 sources.
+
+    **Hard-gate variant**: skills with mandatory intake (`copywriting-team`, `planning-team`) replace element 3 with "Never skip" plus a short rationale (intake surfaces elements context cannot reliably provide — Schwartz awareness, voice, job story, risks). This variant PASSES CHK-SKL-013 when the rationale is present.
 
     **Router-skill exemption**: skills whose sole purpose is routing (`using-domain-teams`, `using-philosophers-toolkit`) are exempt and do NOT need this section. Record "router skill — exempt" in the evidence field when this exemption applies.
 

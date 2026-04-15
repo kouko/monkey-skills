@@ -4,6 +4,38 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] — 2026-04-15
+
+### Context
+
+Paired with `domain-teams` v4.21.1 (same PR). Domain-teams made Empty
+Invocation Fallback a hard-required SKILL.md section with surface-
+orientation synthesis and 5-source sufficient-context check. This
+release adds a companion **guidance** (not hard requirement) to
+`skill-creator-advance` so authors of generic Claude skills can apply
+the same pattern when building conversational or multi-workflow skills.
+
+### Added (skill-creator-advance)
+
+New §Empty-Prompt Onboarding subsection under §Skill Writing Guide
+(between "Principle of Lack of Surprise" and "Writing Patterns").
+
+The subsection covers:
+- When to include the pattern (recommended for conversational /
+  multi-workflow skills; unnecessary for single-shot utility skills)
+- 3-element pattern: Surface orientation / Route to intake /
+  Sufficient-context skip
+- Sufficient-context check must cover 5 sources: current prompt,
+  prior conversation, IDE context, plan/memory, upstream handoff
+- Common pitfall: triggering orientation on empty-current-prompt
+  alone creates friction for returning users
+- Cross-reference to `domain-teams/skills/skill-team/standards/skill-md-structure.md`
+  §Empty Invocation Fallback Rules as the rigorous domain-team
+  version (with §Surface Orientation Format skeleton and CHK-SKL-013
+  gate)
+
++23 lines. No breaking change.
+
 ## [1.0.3] — 2026-04-15
 
 ### Context

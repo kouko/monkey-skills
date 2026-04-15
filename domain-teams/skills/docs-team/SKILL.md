@@ -75,11 +75,15 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers when user input is empty / very sparse AND no context source (prior conversation, IDE context, plan/memory file, upstream skill handoff) provides an actionable brief with doc type + audience.
 
-1. **Introduce (≤5 lines)**: docs-team produces Diátaxis-categorized documentation (Tutorial / How-to / Explanation / Reference) following Google Style + JTAP conventions. It does NOT generate code (→ code-team) or design mockups (→ design-team).
-2. **Route to intake**: invoke `protocols/doc-writing-router.md` — 2-step routing pattern. Router first identifies which Diátaxis quadrant fits the user's need, then dispatches to the quadrant-specific writing protocol (`tutorial-writing.md` / `how-to-writing.md` / `explanation-writing.md` / `reference-writing.md`).
-3. **Sharp-input skip**: if the user already specifies both the doc type AND target audience (≥50 chars, e.g., "write a how-to for API consumers on retry logic"), proceed directly to Context Discovery and skip the router step.
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
+2. **Route to intake**: invoke `protocols/doc-writing-router.md` — 2-step routing. Router first identifies which Diátaxis quadrant fits the need, then dispatches to the quadrant-specific protocol (`tutorial-writing.md` / `how-to-writing.md` / `explanation-writing.md` / `reference-writing.md`).
+3. **Sufficient-context skip**: if any context source provides doc type + target audience (current prompt, prior conversation, IDE context naming a doc file, plan/memory, upstream handoff), proceed directly to Context Discovery and skip the router step.
+
+Prerequisites (inline hint for orientation synthesis):
+- Doc type preference (Tutorial / How-to / Explanation / Reference)
+- Target audience (beginner / API consumer / contributor / operator)
 
 ## Quality Gates
 

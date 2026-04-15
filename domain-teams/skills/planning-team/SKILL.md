@@ -71,11 +71,15 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers on every invocation (hard-gate intake applies regardless of context richness).
 
-1. **Introduce (≤5 lines)**: planning-team produces PRODUCT-SPEC.md, job stories, risk assessments, and product-level scope decisions. It does NOT handle technical design (→ code-team) or visual design (→ design-team).
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
 2. **Route to intake**: invoke `protocols/planning-brainstorming.md` — mandatory Q1-Q8 intake (hard gate, Japanese-first). Spark → job story → risks is extracted before any spec writing.
-3. **Sharp-input skip**: never skip. planning-team's hard-gate intake applies regardless of input length — product decisions require the full Q1-Q8 grounding even when the brief looks complete.
+3. **Never skip** — intake surfaces elements that context alone cannot reliably provide: spark (動機), job story (状況 → 動機 → 結果), risks, assumptions. Apply regardless of input length or prior conversation richness. Trade-off: returning-user friction accepted for product-decision rigor.
+
+Prerequisites (inline hint for orientation synthesis):
+- Spark / business goal
+- Target user (persona / job story seed)
 
 ## Quality Gates
 

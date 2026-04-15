@@ -104,11 +104,16 @@ Before starting work:
 
 ## Empty Invocation Fallback
 
-Triggers when user input is empty OR < 50 chars OR lacks an actionable brief signal.
+Triggers when user input is empty / very sparse AND no context source (prior conversation, IDE context, plan/memory file, upstream skill handoff) provides an actionable brief.
 
-1. **Introduce (≤5 lines)**: devops-team produces IaC plans, CI/CD configs, monitoring designs, and SRE runbooks grounded in SRE / DORA / 12-Factor / Continuous Delivery. It does NOT handle application logic (→ code-team) or product planning (→ planning-team).
+1. **Surface orientation**: synthesize per `standards/skill-md-structure.md` §Surface Orientation Format — draw from frontmatter / When to Use / When NOT to Use / Workflows / intake protocol.
 2. **Route to intake**: invoke `protocols/devops-brainstorming.md` — explores infra state (configs / scripts / deployments) and asks about scope, constraints, and safety requirements before planning changes.
-3. **Sharp-input skip**: if the user already provides an actionable brief (≥50 chars with a concrete infra ask — target environment, change type, SLO), proceed directly to Context Discovery without the introduction.
+3. **Sufficient-context skip**: if any context source provides an actionable brief (current prompt ≥50 chars, prior conversation, IDE context, plan/memory, upstream handoff), proceed directly to Context Discovery.
+
+Prerequisites (inline hint for orientation synthesis):
+- Target environment (prod / staging / dev)
+- Change type (IaC / CI-CD / monitoring / runbook)
+- SLO context or safety constraints
 
 ## Quality Gates
 

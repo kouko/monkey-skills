@@ -27,7 +27,14 @@ gate, not here):
                             tables and "Future candidates" prose are
                             NOT validated (those are forward-looking
                             references, not runtime dependencies)
-    CHK-SKL-010 (FATAL)  — SKILL.md <= 500 lines (hard cap)
+    CHK-SKL-010 (FATAL)  — SKILL.md word count <= 4,500 words
+                            (~6,000 tokens) per the token budget
+                            defined in skill-md-structure.md §Token
+                            Budget. Word count is used as a stable
+                            proxy for token count because line count
+                            varies too much with density (noted in
+                            v4.19.1 line->token migration). The earlier
+                            500-line cap is retired.
     CHK-SKL-011 (FATAL)  — no absolute paths (`/Users/...`) and no
                             plugin-rooted paths (`domain-teams/skills/
                             ...`) in SKILL.md. Standards / protocols /
@@ -276,10 +283,14 @@ def check_chk_skl_005(skill_dir: Path) -> list[CheckError]:
 
 
 # ---------------------------------------------------------------------------
-# CHK-SKL-010 — SKILL.md line budget
+# CHK-SKL-010 — SKILL.md token budget (word count proxy)
 # ---------------------------------------------------------------------------
 
-LINE_HARD_CAP = 500
+# Per skill-md-structure.md §Token Budget: hard cap ~6,000 tokens
+# (~4,500 words). Word count is used as a deterministic proxy because
+# token counts depend on tokenizer choice. `wc -w`-equivalent split
+# matches the guidance in CHK-SKL-010.
+WORD_HARD_CAP = 4500
 
 
 def check_chk_skl_010(skill_dir: Path) -> list[CheckError]:
@@ -287,13 +298,13 @@ def check_chk_skl_010(skill_dir: Path) -> list[CheckError]:
     name = skill_dir.name
     if not skill_md.exists():
         return []
-    line_count = sum(1 for _ in skill_md.read_text(encoding="utf-8").splitlines())
-    if line_count > LINE_HARD_CAP:
+    word_count = len(skill_md.read_text(encoding="utf-8").split())
+    if word_count > WORD_HARD_CAP:
         return [
             CheckError(
                 "CHK-SKL-010",
                 name,
-                f"SKILL.md is {line_count} lines (hard cap: {LINE_HARD_CAP})",
+                f"SKILL.md is {word_count} words (hard cap: {WORD_HARD_CAP} words / ~6,000 tokens)",
                 skill_md,
             )
         ]
