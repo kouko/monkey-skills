@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.21.0] — 2026-04-15
+
+### Context
+
+Users invoking a domain-team skill with empty or very sparse input
+got inconsistent onboarding: copywriting-team and planning-team
+enforced hard intake gates, others asked lightly, docs-team used a
+router, skill-team had only agent-internal Context Discovery. This
+MINOR bump standardizes user-facing onboarding behavior as a new
+required SKILL.md section.
+
+### Added (skill-team — convention)
+- `standards/skill-md-structure.md`: new Required Section §6 "Empty
+  Invocation Fallback" + new §Empty Invocation Fallback Rules
+  subsection specifying 3 required elements (Introduce ≤5 lines /
+  Route to intake / Sharp-input skip). Documents router-skill
+  exemption (using-domain-teams, using-philosophers-toolkit).
+- `checklists/skill-completeness-checklist.md`: new
+  **CHK-SKL-013 (Empty Invocation Fallback)** [FIXABLE] enforcing
+  section presence + 3 required elements + router exemption
+  recording.
+
+### Added (9 domain-team SKILL.md files)
+Each SKILL.md now has a `## Empty Invocation Fallback` section that
+references its existing brainstorming/routing protocol:
+
+- code-team, design-team, devops-team, qa-team, research-team,
+  skill-team → reference `protocols/{team}-brainstorming.md` with
+  sharp-input skip allowed (≥50 chars concrete brief bypasses intro)
+- copywriting-team, planning-team → reference intake protocol as
+  hard gate (never skip — intake surfaces elements that a
+  seemingly-complete brief may still lack: Schwartz awareness /
+  voice / job story / risks)
+- docs-team → references `protocols/doc-writing-router.md` with
+  router-then-route pattern; sharp-input skip allowed when doc type
+  AND target audience are already specified
+
+### Exempt
+- `using-domain-teams/SKILL.md` — router skill; its entire SKILL.md
+  body IS an empty-input routing mechanism. Exemption documented in
+  skill-md-structure.md §Empty Invocation Fallback Rules.
+
+### Unchanged
+- Context Discovery sections (agent-internal state mapping) preserved
+  in all skills — the new fallback section is a sibling, not a
+  replacement
+- All existing brainstorming protocols unchanged — the section just
+  surfaces them at SKILL.md level
+- Token budget: each SKILL.md remains well under ~6,000 token cap
+  (+8 lines per file)
+
+### Rationale
+Context Discovery is agent-internal (what to read); Empty Invocation
+Fallback is user-facing (what to show/ask). Keep them separate for
+clarity. Eliminates the "user invokes `/team-name` and gets
+inconsistent treatment across teams" friction.
+
 ## [4.20.1] — 2026-04-15
 
 ### Context
