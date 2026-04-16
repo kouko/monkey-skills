@@ -18,8 +18,9 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `investment-memo-writer` | Full memo pipeline — delegates to domain-teams:investing-team | v1.0.0 |
 | `dcf-valuation` | 3-stage DCF model + sensitivity table | v1.0.0 |
 | `taiwan-stock-snapshot` | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
-| `stock-screener` | Multi-criteria US stock screener | v1.2.0 — not yet available |
-| `technical-snapshot` | Technical indicators: RSI, MACD, Bollinger | v1.2.0 — not yet available |
+| `stock-screener` | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
+| `technical-snapshot` | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
+| `invest-portfolio` | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
 
 ---
 
@@ -30,8 +31,8 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `/invest` | Router — describe your goal and be dispatched | v1.0.0 |
 | `/invest-macro` | Fetch FRED data and call the macro regime | v1.0.0 |
 | `/invest-memo` | Full investment memo pipeline | v1.0.0 |
-| `/invest-screen` | Screen stocks by criteria | v1.2.0 — not yet available |
-| `/invest-portfolio` | Full portfolio review from holdings CSV | v1.2.0 — not yet available |
+| `/invest-screen` | Screen tickers by valuation/momentum/trend criteria | v1.2.0 |
+| `/invest-portfolio` | Full portfolio review from holdings CSV or inline list | v1.2.0 |
 
 ---
 
@@ -44,10 +45,11 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Write a full investment memo on NVDA" | `investment-memo-writer` |
 | "DCF valuation for MSFT" | `dcf-valuation` |
 | "Taiwan stock data / 三大法人 / 月營收 / 融資融券 / 董監持股" | `taiwan-stock-snapshot` |
-| "Screen stocks by criteria" | `stock-screener` (v1.2.0) |
-| "Technical indicators for TSLA" | `technical-snapshot` (v1.2.0) |
+| "Screen stocks by criteria / rank AAPL,MSFT,NVDA" | `stock-screener` |
+| "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
+| "Review my portfolio / rebalance" | `invest-portfolio` |
 
-For skills marked "not yet available", inform the user of the planned version and suggest the closest available alternative.
+All v1.2.0 skills are now available.
 
 ---
 

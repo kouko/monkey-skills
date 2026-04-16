@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — macro regime diagnosis, DCF valuation, US equity
@@ -13,8 +13,8 @@ snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
 | `/invest` | Route to the right skill | ✅ v1.0.0 |
 | `/invest-macro [--region us\|global]` | IC + FRED regime call | ✅ v1.0.0 |
 | `/invest-memo {ticker} [--scope deep\|quick]` | Full memo pipeline → investing-team | ✅ v1.0.0 |
-| `/invest-screen {ticker\|criteria}` | Stock screener | 🔜 v1.2.0 |
-| `/invest-portfolio [holdings.csv]` | Portfolio review | 🔜 v1.2.0 |
+| `/invest-screen {tickers} [--pe-max N] [--above-sma200]` | Batch screener + composite rank | ✅ v1.2.0 |
+| `/invest-portfolio [holdings.csv]` | Portfolio review + rebalance | ✅ v1.2.0 |
 
 ## Skills
 
@@ -26,8 +26,9 @@ snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
 | `investment-memo-writer` | Full memo orchestration | ✅ v1.0.0 |
 | `dcf-valuation` | 3-stage DCF + sensitivity | ✅ v1.0.0 |
 | `taiwan-stock-snapshot` | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | ✅ v1.1.0 |
-| `stock-screener` | Multi-criteria screener | 🔜 v1.2.0 |
-| `technical-snapshot` | RSI / MACD / Bollinger | 🔜 v1.2.0 |
+| `stock-screener` | Batch screener — composite score | ✅ v1.2.0 |
+| `technical-snapshot` | RSI / MACD / Bollinger / ATR / SMA | ✅ v1.2.0 |
+| `invest-portfolio` | Portfolio review + rebalance | ✅ v1.2.0 |
 
 ## Architecture
 

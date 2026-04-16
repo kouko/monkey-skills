@@ -36,15 +36,18 @@
 
 ---
 
-## v1.2.0 — Screener + Technical Layer
+## v1.2.0 — Screener + Technical Layer (current)
 
-**Scope**: Multi-ticker screening, technical indicators.
+**Scope**: Technical indicators, batch screener, portfolio review.
 
 ### New
-- [ ] skills/stock-screener/SKILL.md (criteria-based US screener)
-- [ ] skills/technical-snapshot/SKILL.md (RSI, MACD, Bollinger, ATR via yfinance)
-- [ ] /invest-screen {criteria} — US universe
-- [ ] /invest-portfolio {holdings.csv} — full portfolio review pipeline
+- [x] scripts/ta_client.py (RSI/MACD/Bollinger/ATR/SMA from OHLCV, no external API)
+- [x] scripts/yfinance_client.py --tickers batch mode
+- [x] skills/technical-snapshot/SKILL.md (RSI, MACD, Bollinger, ATR, SMA)
+- [x] skills/stock-screener/SKILL.md (valuation + momentum + trend composite score)
+- [x] skills/invest-portfolio/SKILL.md (P&L snapshot + regime overlay + investing-team delegation)
+- [x] /invest-screen {tickers} [--pe-max] [--above-sma200] [--rsi-min/max]
+- [x] /invest-portfolio [holdings.csv | inline-list]
 
 ---
 

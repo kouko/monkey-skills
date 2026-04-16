@@ -1,23 +1,40 @@
 # /invest-portfolio
 
-**Trigger**: `/invest-portfolio [holdings.csv]`
+**Trigger**: `/invest-portfolio [holdings.csv | inline-list]`
 
-> **Coming in investing-toolkit v1.2.0.**
+Routes to `invest-portfolio` skill.
 
-In the meantime:
-- Provide your holdings list directly and use `domain-teams:investing-team` Portfolio Review workflow
-
-## Planned Capabilities (v1.2.0)
+## Usage
 
 ```
-/invest-portfolio                    # Interactive holdings entry
-/invest-portfolio holdings.csv       # Load from CSV (ticker, shares, avg_cost)
+# From CSV file
+/invest-portfolio holdings.csv
+
+# Inline holdings (ticker:shares:avg_cost)
+/invest-portfolio AAPL:100:150.00, MSFT:50:280.00, NVDA:30:420.00
+
+# Mixed US + Taiwan
+/invest-portfolio AAPL:100:150.00, 2330.TW:200:550.00
 ```
 
-Outputs:
-- Portfolio snapshot (current weights, PE, PB, beta-weighted)
-- Regime overlay (IC phase alignment per position)
-- Rebalance suggestions with Kelly-based sizing rationale
-- Concentration risk flags
+## CSV Format
 
-See `ROADMAP.md` for timeline.
+```csv
+ticker,shares,avg_cost
+AAPL,100,150.00
+MSFT,50,280.00
+2330.TW,200,550.00
+```
+
+## Output
+
+1. **Portfolio snapshot** — current value, P&L, weights, IC regime alignment
+2. **Regime overlay** — IC phase alignment per position
+3. **Rebalance recommendations** — from `domain-teams:investing-team` Portfolio Review
+4. **Gate verdicts** — MUST + SHOULD gates from investing-team
+
+## Notes
+
+- Multi-currency portfolios (USD + TWD) show P&L per currency, not converted
+- Taiwan positions require FinMind (`FINMIND_API_TOKEN` optional, see `scripts/README.md`)
+- For deep analysis of individual positions, use `/invest-memo {ticker}`

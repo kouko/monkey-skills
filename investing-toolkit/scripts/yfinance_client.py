@@ -7,10 +7,14 @@
 yfinance_client.py — investing-toolkit US stock data adapter
 Provides price history and company info via yfinance (unofficial).
 
-Usage:
-  python3 yfinance_client.py --ticker AAPL --period 1y
-  python3 yfinance_client.py --ticker NVDA --action info
-  python3 yfinance_client.py --ticker MSFT --period 6mo --interval 1wk
+Single ticker:
+  uv run yfinance_client.py --ticker AAPL --period 1y
+  uv run yfinance_client.py --ticker NVDA --action info
+  uv run yfinance_client.py --ticker MSFT --period 6mo --interval 1wk
+
+Batch mode (screener / portfolio):
+  uv run yfinance_client.py --tickers AAPL,MSFT,NVDA --period 1y
+  uv run yfinance_client.py --tickers AAPL,MSFT --action info
 
 Auth: None required.
 Cache: ~/.cache/investing-toolkit/yfinance/{ticker}_{action}.json  TTL: 1h
@@ -147,9 +151,39 @@ def get_info(ticker: str) -> dict:
     save_cache(cache_path, result)
     return result
 
+def get_batch(tickers: list[str], action: str, period: str, interval: str) -> dict:
+    """Fetch data for multiple tickers. Returns {tickers: {AAPL: {...}, MSFT: {...}}}."""
+    results = {}
+    has_error = False
+    for ticker in tickers:
+        try:
+            if action == "history":
+                results[ticker.upper()] = get_history(ticker, period, interval)
+            else:
+                results[ticker.upper()] = get_info(ticker)
+            if "error" in results[ticker.upper()]:
+                has_error = True
+        except Exception as e:
+            results[ticker.upper()] = {"error": str(e), "ticker": ticker.upper()}
+            has_error = True
+
+    return {
+        "mode": "batch",
+        "action": action,
+        "tickers": results,
+        "_partial": has_error,
+        "_summary": {
+            t: "ok" if "error" not in d else f"error: {d['error']}"
+            for t, d in results.items()
+        },
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description="yfinance investing-toolkit adapter")
-    parser.add_argument("--ticker", required=True, help="Stock ticker (e.g. AAPL, 2330.TW)")
+    ticker_group = parser.add_mutually_exclusive_group(required=True)
+    ticker_group.add_argument("--ticker", help="Single ticker (e.g. AAPL, 2330.TW)")
+    ticker_group.add_argument("--tickers", help="Comma-separated tickers for batch mode (e.g. AAPL,MSFT,NVDA)")
     parser.add_argument("--action", default="history",
                         choices=["history", "info"],
                         help="Data type: history (OHLCV) or info (fundamentals)")
@@ -161,6 +195,21 @@ def main():
 
     args = parser.parse_args()
 
+    # Batch mode
+    if args.tickers:
+        ticker_list = [t.strip() for t in args.tickers.split(",") if t.strip()]
+        if args.no_cache:
+            for t in ticker_list:
+                p = get_cache_path(t, args.action, args.period, args.interval)
+                if p.exists():
+                    p.unlink()
+        result = get_batch(ticker_list, args.action, args.period, args.interval)
+        print(json.dumps(result, default=str, indent=2))
+        if result.get("_partial"):
+            sys.exit(1)
+        return
+
+    # Single ticker mode
     if args.no_cache:
         cache_path = get_cache_path(args.ticker, args.action, args.period, args.interval)
         if cache_path.exists():
