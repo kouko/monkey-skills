@@ -69,7 +69,7 @@ WACC = Ke × We + Kd(1-t) × Wd:             _____%
 ```
 
 To fetch current DGS10, run:
-`python3 {base_path}/fred_client.py --series DGS10 --periods 1`
+`uv run {base_path}/fred_client.py --series DGS10 --periods 1`
 
 ### Stage 4 — Terminal Growth
 

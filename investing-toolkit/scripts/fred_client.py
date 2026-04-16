@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
 """
 fred_client.py — investing-toolkit FRED macro data adapter
 Fetches Federal Reserve Economic Data series.

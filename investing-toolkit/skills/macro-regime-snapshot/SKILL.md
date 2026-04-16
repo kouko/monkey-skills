@@ -28,9 +28,9 @@ Fetch the following FRED series. Use the data-fetcher launch template from `../.
 
 ```
 ### Fetch Requests
-- python3 {base_path}/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
-- python3 {base_path}/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
-- python3 {base_path}/fred_client.py --series GDPC1,INDPRO --periods 12
+- uv run {base_path}/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
+- uv run {base_path}/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
+- uv run {base_path}/fred_client.py --series GDPC1,INDPRO --periods 12
 ```
 
 | Series | Meaning |

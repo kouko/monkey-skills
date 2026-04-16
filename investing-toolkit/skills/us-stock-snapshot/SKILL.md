@@ -37,8 +37,8 @@ Do not analyze or interpret.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- python3 {base_path}/yfinance_client.py --ticker {ticker} --period {period}
-- python3 {base_path}/yfinance_client.py --ticker {ticker} --action info
+- uv run {base_path}/yfinance_client.py --ticker {ticker} --period {period}
+- uv run {base_path}/yfinance_client.py --ticker {ticker} --action info
 
 ### Output Format
 {

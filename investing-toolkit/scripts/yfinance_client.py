@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["yfinance==0.2.54", "pandas==2.2.3"]
+# ///
 """
 yfinance_client.py — investing-toolkit US stock data adapter
 Provides price history and company info via yfinance (unofficial).

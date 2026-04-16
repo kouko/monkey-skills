@@ -4,16 +4,27 @@ Python data adapters for fetching market and macro data.
 
 ## Setup
 
-```bash
-pip install -r requirements.txt
-```
-
-Or with uv (recommended):
+**Step 1 — Install uv** (one-time, auto-detects Homebrew):
 
 ```bash
-uv pip install -r requirements.txt
-# or as an inline script dependency — see individual script headers
+sh investing-toolkit/scripts/setup.sh
 ```
+
+That's it. The scripts use `uv run` with inline dependencies — no manual
+`pip install` needed.
+
+<details>
+<summary>Manual install options</summary>
+
+```bash
+# macOS with Homebrew
+brew install uv
+
+# macOS / Linux without Homebrew
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+</details>
 
 ## Scripts
 
@@ -26,14 +37,14 @@ Fetches US stock price history and company info via yfinance (unofficial).
 
 ```bash
 # OHLCV price history
-python3 yfinance_client.py --ticker AAPL --period 1y
-python3 yfinance_client.py --ticker NVDA --period 6mo --interval 1wk
+uv run yfinance_client.py --ticker AAPL --period 1y
+uv run yfinance_client.py --ticker NVDA --period 6mo --interval 1wk
 
 # Company info (PE, PB, market cap, EV — NOT financials)
-python3 yfinance_client.py --ticker MSFT --action info
+uv run yfinance_client.py --ticker MSFT --action info
 
 # Bypass cache
-python3 yfinance_client.py --ticker TSLA --period 1y --no-cache
+uv run yfinance_client.py --ticker TSLA --period 1y --no-cache
 ```
 
 **Warning**: yfinance is an unofficial scraper. It provides **price data only**.
@@ -55,13 +66,13 @@ Without key: ~100 requests/day before 429 throttle.
 
 ```bash
 # Single series
-python3 fred_client.py --series T10Y2Y --periods 24
+uv run fred_client.py --series T10Y2Y --periods 24
 
 # Multiple series (comma-separated)
-python3 fred_client.py --series DGS10,DGS2,CPIAUCSL,GDPC1 --periods 12
+uv run fred_client.py --series DGS10,DGS2,CPIAUCSL,GDPC1 --periods 12
 
 # Bypass cache
-python3 fred_client.py --series FEDFUNDS --periods 24 --no-cache
+uv run fred_client.py --series FEDFUNDS --periods 24 --no-cache
 ```
 
 **Key series for macro regime diagnosis**:
@@ -124,25 +135,25 @@ Without token: 300 req/hr. With token: 600 req/hr.
 
 ```bash
 # Taiwan stock price (OHLCV daily) — ticker = 4-digit code
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
 
 # 三大法人買賣超 (last 3 months)
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
 
 # 月營收 (last 12 months)
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
 
 # 董監持股 + 質押率
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
 
 # 融資融券 (last 3 months)
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
 
 # Multiple datasets in one call
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice,TaiwanStockMonthRevenue --date-start 2025-01-01
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockPrice,TaiwanStockMonthRevenue --date-start 2025-01-01
 
 # Bypass cache
-python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01 --no-cache
+uv run finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01 --no-cache
 ```
 
 **Ticker format**: 4-digit code only. `.TW` and `.TWO` suffixes are stripped automatically.

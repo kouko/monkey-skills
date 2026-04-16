@@ -49,11 +49,11 @@ Fetch Taiwan equity data for {ticker}. Return structured JSON. Do not analyze.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start_1y}
-- python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
-- python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
-- python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
-- python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
+- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start_1y}
+- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
+- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
+- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
+- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
 
 ### Output Format
 {

@@ -46,17 +46,19 @@ investing-toolkit (data + tool layer)
 ## Setup
 
 ```bash
-# Install Python dependencies
-pip install -r investing-toolkit/scripts/requirements.txt
+# Step 1 — install uv (Homebrew first, curl fallback, skip if already installed)
+sh investing-toolkit/scripts/setup.sh
 
-# Optional: FRED API key for higher rate limits (free)
+# Step 2 (optional) — FRED API key for higher rate limits (free)
 # https://fred.stlouisfed.org/docs/api/api_key.html
 export FRED_API_KEY=your_key_here
 
-# Optional: FinMind token for Taiwan data (free registration)
+# Step 3 (optional) — FinMind token for Taiwan data (free registration)
 # https://finmindtrade.com
 export FINMIND_API_TOKEN=your_token_here
 ```
+
+Scripts use `uv run` with inline dependencies — no `pip install` needed after step 1.
 
 ## Taiwan Stocks
 
