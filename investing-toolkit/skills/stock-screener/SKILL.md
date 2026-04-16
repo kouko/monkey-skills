@@ -40,13 +40,27 @@ computation. Outputs a ranked table with composite scores.
 Use `--preset {name}` instead of manual criteria. Presets apply predefined filter
 + scoring weights. User criteria override preset defaults when both are specified.
 
+**Value strategies** (source: stock-skills screening_presets.yaml)
+
 | Preset | Filters | Scoring Emphasis | Style |
 |--------|---------|-----------------|-------|
-| `value` | PE ≤ 15, PB ≤ 2.5 | valuation 60%, trend 25%, momentum 15% | Graham / deep value |
-| `growth` | PE any, revenue-YoY > 20% (if available) | momentum 45%, trend 35%, valuation 20% | Growth at reasonable pace |
+| `value` | PE ≤ 15, PB ≤ 1.5, div ≥ 2%, ROE ≥ 5% | valuation 60%, trend 25%, momentum 15% | Classic value |
+| `deep-value` | PE ≤ 8, PB ≤ 0.5 | valuation 70%, trend 20%, momentum 10% | Contrarian deep discount |
+| `quality` | PE ≤ 15, PB ≤ 1.5, ROE ≥ 15%, div ≥ 2% | valuation 40%, quality 35%, trend 25% | Compounders |
+| `high-dividend` | div ≥ 3%, PE ≤ 20, ROE ≥ 5% | valuation 55%, trend 25%, momentum 20% | Income |
+
+**Growth strategies**
+
+| Preset | Filters | Scoring Emphasis | Style |
+|--------|---------|-----------------|-------|
+| `growth` | ROE ≥ 15%, rev-growth ≥ 5%, earnings-growth ≥ 10% | momentum 45%, trend 35%, valuation 20% | Quality growth |
+| `growth-value` | PE ≤ 20, ROE ≥ 10%, rev-growth ≥ 5% | valuation 40%, momentum 35%, trend 25% | GARP — growth at reasonable price |
+
+**Tactical strategies**
+
+| Preset | Filters | Scoring Emphasis | Style |
+|--------|---------|-----------------|-------|
 | `momentum` | RSI 50–80, above SMA200 | momentum 50%, trend 40%, valuation 10% | Trend following |
-| `quality` | ROE > 15% (if available), PE ≤ 30 | valuation 40%, trend 30%, momentum 30% | Compounders |
-| `high-dividend` | dividendYield > 3% (if available), PE ≤ 20 | valuation 55%, trend 25%, momentum 20% | Income |
 | `balanced` | (none — default) | valuation 40%, momentum 30%, trend 30% | Baseline — same as no preset |
 
 **Preset usage**:
@@ -62,29 +76,34 @@ filter is soft: it does not exclude, only penalizes scoring.
 
 ---
 
-## ISQ 5-Dimension Scoring
+## Multi-Dimension Profile (MDP)
 
-Beyond the composite score, each ticker also receives an ISQ profile — five
-orthogonal dimensions (inspired by Dexter Kabu JP's ISQ framework) that give a
-more nuanced view:
+Beyond the composite score, each ticker receives an MDP — five orthogonal
+dimensions for a nuanced view beyond single-number ranking.
 
 | Dimension | What it measures | Source |
 |-----------|-----------------|--------|
-| **I — Intrinsic** | Valuation gap vs. fair value | PE, PB (inverse normalized) |
+| **V — Valuation** | Discount to fair value | PE, PB (inverse normalized) |
 | **S — Strength** | Price trend and momentum | RSI, SMA alignment, MACD crossover |
 | **Q — Quality** | Business quality proxies | ROE, profit margins (if available) |
-| **Sentiment** | Market positioning signal | RSI extreme zones, %B band position |
-| **Timeliness** | Is the entry timing right? | MACD histogram direction, ATR volatility |
+| **Sent — Sentiment** | Market positioning signal | RSI extreme zones, %B band position |
+| **T — Timing** | Is the entry timing right? | MACD histogram direction, ATR volatility |
 
-Each dimension scores 0–100. Output as a radar-style profile:
+Each dimension scores 0–100. Output as profile:
 
 ```
-ISQ Profile: I:72 S:65 Q:N/A Sent:58 Time:81
+MDP: V:72 S:65 Q:N/A Sent:58 T:81
 ```
 
 When quality data (ROE, margins) is unavailable, Q renders as `N/A` and is
-excluded from the composite. ISQ is informational — composite score still drives
+excluded from the composite. MDP is informational — composite score still drives
 ranking.
+
+**Attribution note**: Dexter Kabu JP's ISQ framework (confidence×0.35 +
+intensity×0.30 + expectationGap×0.20 + timeliness×0.15) assesses *signal
+quality* — how reliable an analysis conclusion is, not stock fundamentals.
+Our MDP assesses *stock characteristics* across five axes. Different purpose,
+different formulas.
 
 ---
 
@@ -147,7 +166,7 @@ Tickers failing any filter are excluded from ranking but listed in a
 
 ---
 
-### Step 4 — Compute composite score + ISQ profile
+### Step 4 — Compute composite score + MDP profile
 
 For each passing ticker, compute a 0–100 composite score using weights from the
 active preset (or `balanced` default):
@@ -165,13 +184,13 @@ Preset weights override — see Preset Strategies table above.
 
 If `trailingPE` is missing, set valuation_score = 0.20 (neutral) and note in output.
 
-**ISQ profile** (computed alongside composite):
+**MDP profile** (computed alongside composite):
 ```
-I = valuation_score × 100
+V = valuation_score × 100
 S = trend_alignment_score × 100   (Strong Bullish=100, Bullish=75, Mixed=50, Bearish=25, Strong Bearish=0)
 Q = normalize(ROE, 0, 40) × 100   (N/A if ROE unavailable)
 Sent = 100 - abs(rsi_14 - 50) × 2   (max at RSI=50, min at extremes)
-Time = (50 + macd_histogram_direction × 25 + atr_recency × 25)
+T = (50 + macd_histogram_direction × 25 + atr_recency × 25)
 ```
 
 ---
@@ -182,10 +201,10 @@ Time = (50 + macd_histogram_direction × 25 + atr_recency × 25)
 ## Screen Results — {date}
 **Preset**: {preset_name} | **Universe**: {N} tickers | **Passed**: {M} | **Top {top_n}**
 
-| Rank | Ticker | Price | PE | RSI | SMA200 | MACD | Score | ISQ |
+| Rank | Ticker | Price | PE | RSI | SMA200 | MACD | Score | MDP |
 |------|--------|-------|----|-----|--------|------|-------|-----|
-| 1 | NVDA | $890 | 45.2 | 62 Neutral | Above | Bullish | 74.2 | I:68 S:85 Q:72 Sent:76 Time:81 |
-| 2 | MSFT | $415 | 32.1 | 55 Neutral | Above | Bullish | 68.5 | I:75 S:80 Q:N/A Sent:90 Time:65 |
+| 1 | NVDA | $890 | 45.2 | 62 Neutral | Above | Bullish | 74.2 | V:68 S:85 Q:72 Sent:76 T:81 |
+| 2 | MSFT | $415 | 32.1 | 55 Neutral | Above | Bullish | 68.5 | V:75 S:80 Q:N/A Sent:90 T:65 |
 | ... |
 
 ### Filtered Out
@@ -194,7 +213,7 @@ Time = (50 + macd_histogram_direction × 25 + atr_recency × 25)
 | XYZ | PE 85.3 > max 15 (value preset) |
 
 _Data via yfinance (unofficial). Scores are relative — not investment recommendations._
-_ISQ: I=Intrinsic, S=Strength, Q=Quality, Sent=Sentiment, Time=Timeliness_
+_MDP: V=Valuation, S=Strength, Q=Quality, Sent=Sentiment, T=Timing_
 _For full analysis, route to `domain-teams:investing-team`._
 ```
 

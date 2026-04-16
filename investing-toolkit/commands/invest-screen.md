@@ -32,16 +32,18 @@ Routes to `stock-screener` skill.
 
 | Preset | Style | Key Filters |
 |--------|-------|-------------|
-| `value` | Graham deep value | PE ≤ 15, PB ≤ 2.5 |
-| `growth` | Growth at reasonable pace | Revenue-YoY > 20% |
+| `value` | Classic value | PE ≤ 15, PB ≤ 1.5, div ≥ 2%, ROE ≥ 5% |
+| `deep-value` | Contrarian | PE ≤ 8, PB ≤ 0.5 |
+| `quality` | Compounders | PE ≤ 15, PB ≤ 1.5, ROE ≥ 15%, div ≥ 2% |
+| `high-dividend` | Income | Div ≥ 3%, PE ≤ 20, ROE ≥ 5% |
+| `growth` | Quality growth | ROE ≥ 15%, rev-growth ≥ 5%, earnings-growth ≥ 10% |
+| `growth-value` | GARP | PE ≤ 20, ROE ≥ 10%, rev-growth ≥ 5% |
 | `momentum` | Trend following | RSI 50–80, above SMA200 |
-| `quality` | Compounders | ROE > 15%, PE ≤ 30 |
-| `high-dividend` | Income | Div yield > 3%, PE ≤ 20 |
-| `balanced` | Default baseline | No preset filters |
+| `balanced` | Default | No preset filters |
 
 ## Output
 
-Ranked table by composite score (weights vary by preset) + ISQ 5-dimension profile
-(Intrinsic / Strength / Quality / Sentiment / Timeliness).
+Ranked table by composite score (weights vary by preset) + MDP 5-dimension profile
+(Valuation / Strength / Quality / Sentiment / Timing).
 
 For full analysis of top candidates, use `/invest-memo {ticker}`.

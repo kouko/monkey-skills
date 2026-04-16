@@ -118,7 +118,7 @@ _Data via yfinance (unofficial). Price only — no financial statements._
 
 ---
 
-## Multi-Timeframe Confirmation (TraderMonty method)
+## Multi-Timeframe Confirmation
 
 When `--multi-timeframe` is specified (or by default for `investment-memo-writer`
 handoff), compute indicators at two timeframes and produce a confirmation signal:
@@ -162,6 +162,12 @@ _Unconfirmed = daily and weekly disagree. Higher conviction when both align._
 
 Multi-timeframe reduces false signals: a daily RSI overbought that contradicts
 a weekly downtrend suggests a bear-market rally, not a genuine reversal.
+
+**Attribution note**: TraderMonty uses a Minervini 7-Point Stage 2 Trend Template
+(Price > SMA150 > SMA200, SMA200 up ≥ 22 days, RS rank > 70, etc.) — a single-
+timeframe multi-criteria gate, not a D1/W1 cross-check. Our approach compares
+the same indicators at two timeframes (daily vs weekly) for directional agreement.
+Different method, same goal: reduce false signals.
 
 ---
 
