@@ -118,6 +118,53 @@ _Data via yfinance (unofficial). Price only — no financial statements._
 
 ---
 
+## Multi-Timeframe Confirmation (TraderMonty method)
+
+When `--multi-timeframe` is specified (or by default for `investment-memo-writer`
+handoff), compute indicators at two timeframes and produce a confirmation signal:
+
+### Fetch
+
+```
+### Fetch Requests
+- uv run {base_path}/yfinance_client.py --ticker {ticker} --period 2y --interval 1d
+- uv run {base_path}/yfinance_client.py --ticker {ticker} --period 2y --interval 1wk
+```
+
+### Compute
+
+Run `ta_client.py` on both outputs → daily indicators + weekly indicators.
+
+### Confirmation Matrix
+
+| Daily Signal | Weekly Signal | Confirmation | Meaning |
+|-------------|-------------|-------------|---------|
+| RSI > 50 + MACD Bullish | RSI > 50 + MACD Bullish | **Confirmed Bullish** | Strong trend, aligned |
+| RSI > 50 + MACD Bullish | RSI < 50 or MACD Bearish | **Unconfirmed** | Daily strength, weekly weakness |
+| RSI < 50 + MACD Bearish | RSI < 50 + MACD Bearish | **Confirmed Bearish** | Strong downtrend, aligned |
+| RSI < 50 + MACD Bearish | RSI > 50 or MACD Bullish | **Unconfirmed** | Daily weakness, weekly still up |
+
+### Output (appended to snapshot card)
+
+```markdown
+### Multi-Timeframe Confirmation
+
+| Indicator | Daily (D1) | Weekly (W1) | Aligned? |
+|-----------|-----------|------------|---------|
+| RSI(14) | {d_rsi} {signal} | {w_rsi} {signal} | ✓ / ✗ |
+| MACD | {d_macd_cross} | {w_macd_cross} | ✓ / ✗ |
+| vs SMA200 | {d_sma200} | {w_sma200} | ✓ / ✗ |
+| Trend | {d_trend} | {w_trend} | ✓ / ✗ |
+
+**Verdict**: {Confirmed Bullish / Confirmed Bearish / Unconfirmed}
+_Unconfirmed = daily and weekly disagree. Higher conviction when both align._
+```
+
+Multi-timeframe reduces false signals: a daily RSI overbought that contradicts
+a weekly downtrend suggests a bear-market rally, not a genuine reversal.
+
+---
+
 ## Cross-Plugin Handoff
 
 Pass the snapshot card to `domain-teams:investing-team` for full analysis:
