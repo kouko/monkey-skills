@@ -69,7 +69,14 @@ def fetch_series(series: str, periods: int, api_key: str | None) -> dict:
     if api_key:
         params["api_key"] = api_key
     else:
-        params["api_key"] = "anonymous"  # FRED accepts this for low-volume use
+        return {
+            "error": (
+                "FRED_API_KEY not set. FRED requires an API key (free). "
+                "Get one at https://fred.stlouisfed.org/docs/api/api_key.html "
+                "then: export FRED_API_KEY=your_key_here"
+            ),
+            "series": series,
+        }
 
     query = "&".join(f"{k}={v}" for k, v in params.items())
     url = f"{FRED_BASE}?{query}"
@@ -105,7 +112,7 @@ def fetch_series(series: str, periods: int, api_key: str | None) -> dict:
     result = {
         "series": series.upper(),
         "periods_requested": periods,
-        "fetched_at": datetime.utcnow().isoformat() + "Z",
+        "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "_cache": "miss",
         "_warning": (
             f"FRED series {series} has publication lag — latest value may be "
@@ -144,7 +151,7 @@ def main():
         result = fetch_series(series_list[0], args.periods, api_key)
     else:
         result = {
-            "fetched_at": datetime.utcnow().isoformat() + "Z",
+            "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "series": {},
         }
         for s in series_list:
