@@ -28,22 +28,22 @@ It returns raw JSON only.
 Fetch the following data and return as structured JSON. Do not analyze or interpret.
 
 ### Scripts
-base_path: {absolute path to investing-toolkit/scripts/}
+scripts_path: ${CLAUDE_SKILL_DIR}/scripts/
 
 ### Fetch Requests
 {list each fetch request, one per line, with the exact command to run}
 
 Examples (US):
-- uv run {base_path}/yfinance_client.py --ticker AAPL --period 1y
-- uv run {base_path}/yfinance_client.py --ticker AAPL --action info
-- uv run {base_path}/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL --periods 24
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker AAPL --period 1y
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker AAPL --action info
+- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL --periods 24
 
 Examples (Taiwan — ticker_code = 4-digit code, e.g. 2330):
-- uv run {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
-- uv run {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
-- uv run {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
-- uv run {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
-- uv run {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
 
 ### Output Format
 Return a JSON object with keys matching each request:

@@ -33,16 +33,33 @@ snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
 ## Architecture
 
 ```
-investing-toolkit (data + tool layer)
-  ├── scripts/
-  │   ├── yfinance_client.py     # US price data
-  │   └── fred_client.py         # Macro data (FRED)
-  ├── agents/data-fetcher.md     # Dedicated I/O agent
-  └── skills/investment-memo-writer/  ──→  domain-teams:investing-team
-                                            (analysis + quality gates)
-                                        ──→  domain-teams:docs-team
-                                            (optional formatting)
+investing-toolkit/
+├── scripts/                          # Source of truth (edit here only)
+│   ├── yfinance_client.py           #   → synced to skill dirs via sync-scripts.sh
+│   ├── fred_client.py               #   → synced to skill dirs
+│   ├── finmind_client.py            #   → synced to skill dirs
+│   ├── ta_client.py                 #   → synced to skill dirs
+│   ├── sync-scripts.sh              # Copy source → skill dirs
+│   └── sync-check.sh               # CI: verify all copies match
+├── agents/data-fetcher.md           # Shared I/O agent spec
+├── skills/
+│   ├── {each-skill}/
+│   │   ├── SKILL.md
+│   │   ├── scripts/                 # Self-contained: synced copies
+│   │   │   └── yfinance_client.py   #   from scripts/ source of truth
+│   │   └── references/              # Self-contained: skill-specific docs
+│   └── ...
+│
+│   investment-memo-writer/ ──→  domain-teams:investing-team
+│                                  (analysis + quality gates + ISQ)
+│                            ──→  domain-teams:docs-team
+│                                  (optional formatting)
+└── commands/                        # /invest-* slash commands
 ```
+
+Each skill is self-contained with its own `scripts/` and `references/`.
+Plugin-level `scripts/` is the single source of truth — run `sync-scripts.sh`
+after editing, `sync-check.sh` to verify.
 
 ## Setup
 

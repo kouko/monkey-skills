@@ -49,11 +49,11 @@ Fetch Taiwan equity data for {ticker}. Return structured JSON. Do not analyze.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start_1y}
-- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
-- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
-- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
-- uv run {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start_1y}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
 
 ### Output Format
 {
@@ -156,7 +156,7 @@ _台股代號：上市 {ticker}.TW | 上櫃 {ticker}.TWO_
 ## Attribution Corrections
 
 These corrections are embedded in the script's `_processed` output. Reference:
-`../../references/taiwan-data-source-map.md`
+`references/taiwan-data-source-map.md`
 
 1. **月營收截止日是每月10日（曆日）** — 不是月底，不是15日（證交法第36條）
 2. **融資 vs 融券方向相反** — 融資↑ = 散戶加碼多單；融券↑ = 放空部位增加。

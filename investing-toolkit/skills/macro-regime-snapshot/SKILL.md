@@ -28,9 +28,9 @@ Fetch the following FRED series. Use the data-fetcher launch template from `../.
 
 ```
 ### Fetch Requests
-- uv run {base_path}/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
-- uv run {base_path}/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
-- uv run {base_path}/fred_client.py --series GDPC1,INDPRO --periods 12
+- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
+- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
+- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
 ```
 
 | Series | Meaning |
@@ -74,8 +74,8 @@ Produce structured markdown (see Output Format below).
 
 ## Data Sources
 
-- FRED via `../../scripts/fred_client.py` (through data-fetcher agent)
-- Reference framework: `../../references/investment-clock-cheatsheet.md`
+- FRED via `scripts/fred_client.py` (through data-fetcher agent)
+- Reference framework: `references/investment-clock-cheatsheet.md`
 
 ---
 

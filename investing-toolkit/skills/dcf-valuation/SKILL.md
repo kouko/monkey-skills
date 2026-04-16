@@ -16,7 +16,7 @@ Ch.12 (3-stage DCF). This skill does **not fetch data** — all financial inputs
 must be supplied by the user or passed in from a `us-stock-snapshot` fixture or
 SEC EDGAR financials.
 
-Reference template: `../../references/dcf-template.md`
+Reference template: `references/dcf-template.md`
 
 ## When to Use
 
@@ -69,7 +69,7 @@ WACC = Ke × We + Kd(1-t) × Wd:             _____%
 ```
 
 To fetch current DGS10, run:
-`uv run {base_path}/fred_client.py --series DGS10 --periods 1`
+`uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGS10 --periods 1`
 
 ### Stage 4 — Terminal Growth
 
@@ -130,7 +130,7 @@ Label the base case cell as `$BASE`.
 
 ## Verdict Condition
 
-From `../../references/dcf-template.md` (Graham & Dodd / Klarman):
+From `references/dcf-template.md` (Graham & Dodd / Klarman):
 
 ```
 BUY   if current_price ≤ intrinsic_value × (1 - MoS_factor)
@@ -148,7 +148,7 @@ Report all three thresholds so the user can apply their own grade.
 
 ## Attribution Corrections
 
-From `../../references/dcf-template.md`:
+From `references/dcf-template.md`:
 
 1. **Terminal growth must be ≤ risk-free rate**: Terminal growth ≠ nominal GDP
    growth. Using nominal GDP (~4–5%) as terminal growth double-counts inflation

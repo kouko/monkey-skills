@@ -52,8 +52,8 @@ Launch `../../agents/data-fetcher.md`:
 
 ```
 ### Fetch Requests
-- uv run {base_path}/yfinance_client.py --tickers {us_tickers} --action info
-- uv run {base_path}/yfinance_client.py --tickers {us_tickers} --period 3mo
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {us_tickers} --action info
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {us_tickers} --period 3mo
 ```
 
 ---
@@ -62,8 +62,8 @@ Launch `../../agents/data-fetcher.md`:
 
 ```
 ### Fetch Requests
-- uv run {base_path}/yfinance_client.py --tickers {tw_tickers} --action info
-- uv run {base_path}/finmind_client.py --ticker {tw_ticker} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {tw_tickers} --action info
+- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {tw_ticker} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
 ```
 
 *(Run per Taiwan ticker — FinMind does not support batch in v1.1.0)*

@@ -84,8 +84,8 @@ Launch `../../agents/data-fetcher.md` with two parallel batch requests:
 
 ```
 ### Fetch Requests
-- uv run {base_path}/yfinance_client.py --tickers {ticker_list} --period {period}
-- uv run {base_path}/yfinance_client.py --tickers {ticker_list} --action info
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {ticker_list} --period {period}
+- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {ticker_list} --action info
 ```
 
 Expected output:
@@ -106,7 +106,7 @@ For each ticker with valid OHLCV data, compute indicators:
 
 ```bash
 # Pipe each ticker's price JSON to ta_client.py
-echo '{price_json_for_AAPL}' | uv run {base_path}/ta_client.py --input -
+echo '{price_json_for_AAPL}' | uv run ${CLAUDE_SKILL_DIR}/scripts/ta_client.py --input -
 ```
 
 Extract from `ta_client.py` output:
