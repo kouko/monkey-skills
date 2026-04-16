@@ -43,7 +43,7 @@ Routes to `stock-screener` skill.
 
 ## Output
 
-Ranked table by composite score (weights vary by preset) + MDP 5-dimension profile
+Ranked table by composite score (weights vary by preset) + ISQ 5-dimension profile
 (Valuation / Strength / Quality / Sentiment / Timing).
 
 For full analysis of top candidates, use `/invest-memo {ticker}`.
