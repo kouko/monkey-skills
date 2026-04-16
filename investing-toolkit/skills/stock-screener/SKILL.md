@@ -76,36 +76,6 @@ filter is soft: it does not exclude, only penalizes scoring.
 
 ---
 
-## ISQ 5-Dimension Profile
-
-Beyond the composite score, each ticker receives an ISQ profile — five
-orthogonal dimensions for a nuanced view beyond single-number ranking.
-
-| Dimension | What it measures | Source |
-|-----------|-----------------|--------|
-| **V — Valuation** | Discount to fair value | PE, PB (inverse normalized) |
-| **S — Strength** | Price trend and momentum | RSI, SMA alignment, MACD crossover |
-| **Q — Quality** | Business quality proxies | ROE, profit margins (if available) |
-| **Sent — Sentiment** | Market positioning signal | RSI extreme zones, %B band position |
-| **T — Timing** | Is the entry timing right? | MACD histogram direction, ATR volatility |
-
-Each dimension scores 0–100. Output as profile:
-
-```
-ISQ: V:72 S:65 Q:N/A Sent:58 T:81
-```
-
-When quality data (ROE, margins) is unavailable, Q renders as `N/A` and is
-excluded from the composite. ISQ is informational — composite score still drives
-ranking.
-
-**Attribution note**: Dexter Kabu JP's ISQ (confidence×0.35 + intensity×0.30 +
-expectationGap×0.20 + timeliness×0.15) assesses signal reliability. Our ISQ
-reuses the name but maps to stock characteristics (V/S/Q/Sent/T) — different
-dimensions, same multi-axis philosophy.
-
----
-
 ## How It Works
 
 ### Step 1 — Batch data fetch (data-fetcher agent)
@@ -165,7 +135,7 @@ Tickers failing any filter are excluded from ranking but listed in a
 
 ---
 
-### Step 4 — Compute composite score + ISQ profile
+### Step 4 — Compute composite score
 
 For each passing ticker, compute a 0–100 composite score using weights from the
 active preset (or `balanced` default):
@@ -183,15 +153,6 @@ Preset weights override — see Preset Strategies table above.
 
 If `trailingPE` is missing, set valuation_score = 0.20 (neutral) and note in output.
 
-**ISQ profile** (computed alongside composite):
-```
-V = valuation_score × 100
-S = trend_alignment_score × 100   (Strong Bullish=100, Bullish=75, Mixed=50, Bearish=25, Strong Bearish=0)
-Q = normalize(ROE, 0, 40) × 100   (N/A if ROE unavailable)
-Sent = 100 - abs(rsi_14 - 50) × 2   (max at RSI=50, min at extremes)
-T = (50 + macd_histogram_direction × 25 + atr_recency × 25)
-```
-
 ---
 
 ### Step 5 — Render ranked table
@@ -200,10 +161,10 @@ T = (50 + macd_histogram_direction × 25 + atr_recency × 25)
 ## Screen Results — {date}
 **Preset**: {preset_name} | **Universe**: {N} tickers | **Passed**: {M} | **Top {top_n}**
 
-| Rank | Ticker | Price | PE | RSI | SMA200 | MACD | Score | ISQ |
-|------|--------|-------|----|-----|--------|------|-------|-----|
-| 1 | NVDA | $890 | 45.2 | 62 Neutral | Above | Bullish | 74.2 | V:68 S:85 Q:72 Sent:76 T:81 |
-| 2 | MSFT | $415 | 32.1 | 55 Neutral | Above | Bullish | 68.5 | V:75 S:80 Q:N/A Sent:90 T:65 |
+| Rank | Ticker | Price | PE | PB | RSI | SMA200 | MACD | Score |
+|------|--------|-------|----|-----|-----|--------|------|-------|
+| 1 | NVDA | $890 | 45.2 | 28.1 | 62 Neutral | Above | Bullish | 74.2 |
+| 2 | MSFT | $415 | 32.1 | 12.4 | 55 Neutral | Above | Bullish | 68.5 |
 | ... |
 
 ### Filtered Out
@@ -212,7 +173,6 @@ T = (50 + macd_histogram_direction × 25 + atr_recency × 25)
 | XYZ | PE 85.3 > max 15 (value preset) |
 
 _Data via yfinance (unofficial). Scores are relative — not investment recommendations._
-_ISQ: V=Valuation, S=Strength, Q=Quality, Sent=Sentiment, T=Timing_
 _For full analysis, route to `domain-teams:investing-team`._
 ```
 

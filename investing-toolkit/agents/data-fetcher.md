@@ -79,6 +79,10 @@ FRED_API_KEY: {inject from env if available, else omit}
    - Do NOT block — return what succeeded
 5. **No interpretation**: Do not add market commentary, risk warnings, or analysis.
    The calling skill's worker or investing-team will do that.
+6. **Data quality summary**: Always include a `_data_quality` key in the output:
+   - `completeness`: `"full"` if all fetches succeeded, `"partial"` if any failed
+   - `freshness`: note any series with publication lag > 7 days (e.g. FRED CPI)
+   - `limitations`: list known data source limitations relevant to this fetch
 
 ---
 
@@ -92,6 +96,14 @@ FRED_API_KEY: {inject from env if available, else omit}
     "macro": "ok (cache: miss)"
   },
   "_partial": false,
+  "_data_quality": {
+    "completeness": "full",
+    "freshness": "stale: CPIAUCSL (2026-03-01, 16 days lag)",
+    "limitations": [
+      "yfinance: unofficial scraper, no financial statements",
+      "FRED CPIAUCSL: 2-3 week publication lag"
+    ]
+  },
   "price_history": {
     "ticker": "AAPL",
     "period": "1y",
