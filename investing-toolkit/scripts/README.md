@@ -112,7 +112,53 @@ CasualMarket is NOT bundled with investing-toolkit. It runs as an MCP server
 and provides live TWSE/OTC quotes, 外資動向, and valuation multiples.
 See: https://github.com/sacahan/CasualMarket
 
-## Planned (v1.1.0)
+---
 
-- `finmind_client.py` — Taiwan financial data (三大法人, 月營收, 融資融券, 董監持股)
-  - Auth: `FINMIND_API_TOKEN` env var (optional; anonymous = 300 req/hr)
+### finmind_client.py
+
+Fetches Taiwan equity data from the FinMind API.
+
+**Auth**: Set `FINMIND_API_TOKEN` env var for higher rate limits (free registration).  
+Without token: 300 req/hr. With token: 600 req/hr.  
+**Cache**: `~/.cache/investing-toolkit/finmind/` — 6h TTL.
+
+```bash
+# Taiwan stock price (OHLCV daily) — ticker = 4-digit code
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
+
+# 三大法人買賣超 (last 3 months)
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
+
+# 月營收 (last 12 months)
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
+
+# 董監持股 + 質押率
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
+
+# 融資融券 (last 3 months)
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
+
+# Multiple datasets in one call
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice,TaiwanStockMonthRevenue --date-start 2025-01-01
+
+# Bypass cache
+python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01 --no-cache
+```
+
+**Ticker format**: 4-digit code only. `.TW` and `.TWO` suffixes are stripped automatically.
+
+**Supported datasets**:
+
+| Dataset ID | Content | Publication lag |
+|-----------|---------|-----------------|
+| `TaiwanStockPrice` | OHLCV daily | ~15 min (T+0) |
+| `TaiwanStockInstitutionalInvestorsBuySell` | 三大法人買賣超 | T+1 after 18:00 |
+| `TaiwanStockMonthRevenue` | 月營收 | Within 10th of following month |
+| `TaiwanStockHoldingSharesPer` | 董監持股 + 質押率 | Quarterly |
+| `TaiwanStockMarginPurchaseShortSale` | 融資融券餘額 | T+1 after 18:00 |
+| `TaiwanStockFinancialStatements` | 財務報表（季頻）| Quarterly |
+| `TaiwanStockProfitLossStatement` | 損益表（季頻） | Quarterly |
+
+Get a free FinMind API token: https://finmindtrade.com
+
+---

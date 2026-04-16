@@ -23,16 +23,16 @@
 
 ---
 
-## v1.1.0 — Taiwan Layer
+## v1.1.0 — Taiwan Layer (current)
 
 **Scope**: Taiwan equity data via FinMind. taiwan-stock-snapshot skill.
 
 ### New
-- [ ] scripts/finmind_client.py (FINMIND_API_TOKEN env, anonymous fallback)
-- [ ] skills/taiwan-stock-snapshot/SKILL.md
-- [ ] /invest-screen {ticker} with --universe tw50 support
-- [ ] CasualMarket MCP installation guide
-- [ ] taiwan-local-rigor gate auto-trigger in investment-memo-writer for .TW tickers
+- [x] scripts/finmind_client.py (FINMIND_API_TOKEN env, anonymous fallback)
+- [x] skills/taiwan-stock-snapshot/SKILL.md
+- [x] CasualMarket MCP installation guide (in scripts/README.md + taiwan-stock-snapshot)
+- [x] investment-memo-writer Phase 1: FinMind commands for .TW/.TWO tickers
+- [ ] /invest-screen {ticker} with --universe tw50 support (moved to v1.2.0)
 
 ---
 

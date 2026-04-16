@@ -33,10 +33,17 @@ base_path: {absolute path to investing-toolkit/scripts/}
 ### Fetch Requests
 {list each fetch request, one per line, with the exact command to run}
 
-Examples:
+Examples (US):
 - python3 {base_path}/yfinance_client.py --ticker AAPL --period 1y
 - python3 {base_path}/yfinance_client.py --ticker AAPL --action info
 - python3 {base_path}/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL --periods 24
+
+Examples (Taiwan — ticker_code = 4-digit code, e.g. 2330):
+- python3 {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
+- python3 {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
+- python3 {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
+- python3 {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
+- python3 {base_path}/finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
 
 ### Output Format
 Return a JSON object with keys matching each request:
@@ -124,4 +131,8 @@ FRED_API_KEY: {inject from env if available, else omit}
 | FRED daily series | 24h | 0–1 day | DGS10, T10Y2Y |
 | FRED monthly CPI | 24h | 2–3 weeks | CPIAUCSL release schedule |
 | FRED quarterly GDP | 24h | ~1 month | GDPC1 advance estimate |
-| FinMind (v1.1.0) | 6h | 15m–1 day | Depends on dataset |
+| FinMind TaiwanStockPrice | 6h | ~15 min (T+0) | OHLCV daily |
+| FinMind 三大法人 | 6h | T+1 after 18:00 | Separate foreign/trust/dealer |
+| FinMind 月營收 | 6h | Within 10th of following month | 截止日：每月10日 |
+| FinMind 董監持股 | 6h | Quarterly | Quarterly disclosure |
+| FinMind 融資融券 | 6h | T+1 after 18:00 | Daily balance |

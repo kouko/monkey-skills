@@ -17,7 +17,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `us-stock-snapshot` | yfinance price + info snapshot for a US ticker | v1.0.0 |
 | `investment-memo-writer` | Full memo pipeline — delegates to domain-teams:investing-team | v1.0.0 |
 | `dcf-valuation` | 3-stage DCF model + sensitivity table | v1.0.0 |
-| `taiwan-stock-snapshot` | Taiwan equity data (FinMind, 三大法人, 月營收) | v1.1.0 — not yet available |
+| `taiwan-stock-snapshot` | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
 | `stock-screener` | Multi-criteria US stock screener | v1.2.0 — not yet available |
 | `technical-snapshot` | Technical indicators: RSI, MACD, Bollinger | v1.2.0 — not yet available |
 
@@ -43,7 +43,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Give me a quick snapshot on AAPL / stock info" | `us-stock-snapshot` |
 | "Write a full investment memo on NVDA" | `investment-memo-writer` |
 | "DCF valuation for MSFT" | `dcf-valuation` |
-| "Taiwan stock data / 三大法人 / 月營收" | `taiwan-stock-snapshot` (v1.1.0) |
+| "Taiwan stock data / 三大法人 / 月營收 / 融資融券 / 董監持股" | `taiwan-stock-snapshot` |
 | "Screen stocks by criteria" | `stock-screener` (v1.2.0) |
 | "Technical indicators for TSLA" | `technical-snapshot` (v1.2.0) |
 

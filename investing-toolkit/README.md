@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.0.0  
+**Version**: 1.1.0  
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — macro regime diagnosis, DCF valuation, US equity
@@ -25,7 +25,7 @@ snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
 | `us-stock-snapshot` | yfinance price + info | ✅ v1.0.0 |
 | `investment-memo-writer` | Full memo orchestration | ✅ v1.0.0 |
 | `dcf-valuation` | 3-stage DCF + sensitivity | ✅ v1.0.0 |
-| `taiwan-stock-snapshot` | FinMind Taiwan data | 🔜 v1.1.0 |
+| `taiwan-stock-snapshot` | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | ✅ v1.1.0 |
 | `stock-screener` | Multi-criteria screener | 🔜 v1.2.0 |
 | `technical-snapshot` | RSI / MACD / Bollinger | 🔜 v1.2.0 |
 
@@ -52,15 +52,18 @@ pip install -r investing-toolkit/scripts/requirements.txt
 # Optional: FRED API key for higher rate limits (free)
 # https://fred.stlouisfed.org/docs/api/api_key.html
 export FRED_API_KEY=your_key_here
+
+# Optional: FinMind token for Taiwan data (free registration)
+# https://finmindtrade.com
+export FINMIND_API_TOKEN=your_token_here
 ```
 
 ## Taiwan Stocks
 
-v1.0.0 supports Taiwan tickers (.TW/.TWO) for **price data only** via yfinance.
-
-Full Taiwan data (三大法人, 月營收, 融資融券, 董監持股) requires:
-- **v1.1.0** — `scripts/finmind_client.py` + `taiwan-stock-snapshot` skill
-- **CasualMarket MCP** (optional, real-time) — see `scripts/README.md`
+v1.1.0 adds full Taiwan equity data via FinMind:
+- `scripts/finmind_client.py` — 三大法人, 月營收, 融資融券, 董監持股
+- `taiwan-stock-snapshot` skill — structured snapshot card + cross-plugin handoff
+- **CasualMarket MCP** (optional, real-time quotes) — see `scripts/README.md`
 
 ## Data Sources
 
@@ -69,7 +72,7 @@ Full Taiwan data (三大法人, 月營收, 融資融券, 董監持股) requires:
 | yfinance | US price, basic info | None |
 | FRED | Macro: yield curve, CPI, GDP, Fed Funds | Optional API key |
 | SEC EDGAR | US financials (via manual URL) | None |
-| FinMind (v1.1.0) | Taiwan: 三大法人, 月營收, 融資融券 | Optional token |
+| FinMind | Taiwan: 三大法人, 月營收, 融資融券, 董監持股, 財報 | Optional token |
 | CasualMarket MCP | Taiwan real-time quotes | None |
 
 ## Cross-Plugin Delegation

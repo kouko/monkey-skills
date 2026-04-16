@@ -22,8 +22,8 @@ pass the finished memo to docs-team for polished formatting.
 
 **Taiwan detection**: If the ticker ends in `.TW` or `.TWO`, output_language defaults
 to `zh-TW` and the investing-team Taiwan-Specific Diagnosis gate (MAY level) is
-auto-enabled. Note: v1.0.0 provides yfinance price/info data only for Taiwan tickers.
-Full Taiwan financials (三大法人, 月營收) require **investing-toolkit v1.1.0** (FinMind).
+auto-enabled. Phase 1 will also launch FinMind fetches for 三大法人, 月營收,
+融資融券, and 董監持股.
 
 ---
 
@@ -31,22 +31,44 @@ Full Taiwan financials (三大法人, 月營收) require **investing-toolkit v1.
 
 ### Phase 1 — Data Fetch (data-fetcher agent)
 
-Launch the data-fetcher agent (haiku, low cost) with these three commands:
+Launch the data-fetcher agent (haiku, low cost). Commands differ by ticker market:
 
+**US ticker** (e.g. AAPL, NVDA, MSFT):
 ```
 python3 {base_path}/yfinance_client.py --ticker {ticker} --period 2y
 python3 {base_path}/yfinance_client.py --ticker {ticker} --action info
 python3 {base_path}/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL,GDPC1 --periods 12
 ```
 
+**Taiwan ticker** (ticker ends in `.TW` or `.TWO`):
+```
+python3 {base_path}/yfinance_client.py --ticker {ticker} --period 2y
+python3 {base_path}/yfinance_client.py --ticker {ticker} --action info
+python3 {base_path}/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL,GDPC1 --periods 12
+python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
+python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
+python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
+python3 {base_path}/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
+```
+
+`{ticker_code}` = ticker with `.TW`/`.TWO` suffix stripped (e.g. `2330`).
+
 Reference: `../../agents/data-fetcher.md`
 
-Expected output: structured JSON fixture with keys `price_history`, `company_info`,
-`macro`. The fixture is the seed context passed to Phase 3.
+Expected output keys:
+- `price_history`, `company_info`, `macro` (all tickers)
+- `institutional`, `revenue`, `holding`, `margin` (Taiwan tickers only)
 
-**Data gap warning**: yfinance does not provide financial statements (income statement,
-balance sheet, cash flow). The investing-team worker will note missing financials and may
-prompt for SEC EDGAR data manually. Do not block on this — proceed with available data.
+The fixture is the seed context passed to Phase 3.
+
+**Data gap warning (US)**: yfinance does not provide financial statements (income
+statement, balance sheet, cash flow). The investing-team worker will note missing
+financials and may prompt for SEC EDGAR data manually. Do not block — proceed with
+available data.
+
+**Data gap warning (Taiwan)**: yfinance does not provide Taiwan financial statements.
+FinMind `TaiwanStockFinancialStatements` is available but not fetched by default —
+request explicitly if SEC EDGAR-equivalent financials are needed.
 
 ---
 
@@ -120,10 +142,10 @@ This skill is the repo's first cross-plugin delegation pattern
 
 ## Limitations
 
-- yfinance does not provide financial statements. Memo will have fundamental gaps
-  unless the user supplies SEC EDGAR data separately.
+- yfinance does not provide financial statements (income statement, balance sheet,
+  cash flow). Memo will have fundamental gaps unless the user supplies SEC EDGAR
+  (US) or FinMind `TaiwanStockFinancialStatements` (Taiwan) data separately.
 - yfinance is an unofficial scraper. Data may lag or be temporarily unavailable.
-- Taiwan tickers in v1.0.0: price + info only. No 三大法人, 月營收, or balance sheet.
-  Full Taiwan analysis requires v1.1.0 (FinMind).
+- FinMind anonymous limit: 300 req/hr. Set `FINMIND_API_TOKEN` env var for 600 req/hr.
 - FRED without API key: ~100 requests/day. Set `FRED_API_KEY` env var for higher limits.
   See `../../scripts/README.md`.
