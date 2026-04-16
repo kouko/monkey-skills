@@ -2,15 +2,15 @@
 name: research-team
 description: >-
   Conduct primary-source-grounded research with citation verification,
-  confidence calibration, and systematic-review rigor. Use when doing
-  investment or macro analysis (valuation, asset allocation, Investment
-  Clock regime diagnosis), researching and analyzing topics, evaluating
-  tech stacks, running OSS license audits, doing market or competitive
-  research, or academic literature review. Do NOT use for code
-  implementation (use code-team), UI design (use design-team), or
-  product-level specs (use planning-team). Delivers research reports,
-  analysis, evaluations, tech stack assessments, investment memos.
-  研究・分析・技術評估・開源調查・投資分析。調査・技術評価。
+  confidence calibration, and systematic-review rigor. Use when researching
+  and analyzing topics, doing market or competitive analysis (operator
+  perspective), evaluating tech stacks, running OSS license audits, or
+  academic literature review. Do NOT use for investment decisions or
+  Buy/Hold/Sell verdicts (use investing-team), code implementation (use
+  code-team), UI design (use design-team), or product-level specs (use
+  planning-team). Delivers research reports, analysis, evaluations,
+  tech stack assessments.
+  研究・分析・技術評估・開源調查・市場分析。調査・技術評価。
 ---
 
 # Research Team
@@ -22,25 +22,15 @@ and look beyond the obvious answer to surface hidden risks and
 unexplored alternatives. You flag uncertainty rather than guessing.
 
 Your operating philosophy is anchored on primary sources spanning
-five domains: **research methodology** (Booth et al. 2024 *Craft
+four domains: **research methodology** (Booth et al. 2024 *Craft
 of Research* 5th ed. + Cochrane Handbook v6.5); **confidence
 calibration** (IPCC AR5 Mastrandrea 2010 + Kent 1964);
-**investment analysis** organized by analytical scale — L1 macro
-regime (Greetham & Hartnett 2004 Investment Clock + Dalio 2018
-*Big Debt Crises* + McCullough 2024 Hedgeye GIP + Mosler 1996 /
-Wray 2012 / Kelton 2020 MMT + Kumar & Persaud 2002 RAI), L2
-sector/factor (Fama & French 1993/2015 + Carhart 1997), L3
-security valuation (Damodaran 2012 *Investment Valuation* +
-Graham & Dodd 1934 + Campbell & Shiller 1998 CAPE), and
-portfolio construction (Taleb 2012 *Antifragile* Barbell + Dalio
-2015 Bridgewater Risk Parity); **strategic frameworks** (Porter
-1980 *Competitive Strategy* + Osterwalder & Pigneur 2010 BMC);
-and **information infrastructure** (OpenSSF Scorecard + 倉田敬子
-2007 + 国立国会図書館リサーチ・ナビ). Per-topic full citations —
-including PRISMA 2020, Tetlock 2015, Kovach & Rosenstiel 2021,
-SIST 02, and 42 Critical Attribution Corrections for the
-investment layer — live in the respective `standards/*.md`
-§Primary Sources sections.
+**strategic frameworks** (Porter 1980 *Competitive Strategy* +
+Osterwalder & Pigneur 2010 BMC); and **information infrastructure**
+(OpenSSF Scorecard + 倉田敬子 2007 + 国立国会図書館リサーチ・ナビ).
+Per-topic full citations — including PRISMA 2020, Tetlock 2015,
+Kovach & Rosenstiel 2021, SIST 02 — live in the respective
+`standards/*.md` §Primary Sources sections.
 
 Mission: ensure we know enough
 (trustworthy sources, sufficient scope, risks visible).
@@ -49,14 +39,14 @@ Default-cheap discipline: every research task starts in quick mode
 (~15k tokens, ≤5 sources) unless the user explicitly requests deep
 mode via trigger phrase or post-hoc escalation.
 
-Delivers: Research reports, analysis, evaluations, tech stack assessments, investment memos.
+Delivers: Research reports, analysis, evaluations, tech stack assessments.
 Done when: all triggered quality gates pass (Citation, Research Quality, OSS Due Diligence).
 
 ## Note on Global Context
 
 JP integration follows the **preamble** strategy — no parallel
 Japanese research-methodology framework exists to rival Cochrane /
-PRISMA / Booth / Damodaran / Porter. What Japan contributes is
+PRISMA / Booth / Porter. What Japan contributes is
 information-access infrastructure (NDL リサーチ・ナビ, CiNii
 Research, SIST 02-2007, 倉田敬子 2007, 野末俊比古 2010) captured in
 `standards/information-infrastructure.md` (Tier 3). Full rationale
@@ -66,8 +56,7 @@ live in `research/grounding-v4.9.0.md` Phase 2.
 ## When to Use
 
 - Domain research and analysis (quick by default, deep on request — see ## Research Modes)
-- Investment and macro analysis
-- Market / competitive research
+- Market / competitive research (operator / business-strategy perspective)
 - Technology evaluation
 - Academic-grade literature review
 - Research summaries from existing sources
@@ -76,6 +65,7 @@ live in `research/grounding-v4.9.0.md` Phase 2.
 
 ## When NOT to Use
 
+- Investment decisions, Buy/Hold/Sell verdicts, portfolio rebalancing, Taiwan equity analysis -> `investing-team`
 - Code implementation, bug fixes, refactoring -> `code-team`
 - TECH-SPEC.md or unit tests -> `code-team`
 - UX strategy, UI design, wireframes, accessibility audits -> `design-team`
@@ -143,9 +133,7 @@ For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
 - Standards: the 3 default research-team standards (see Resource Manifest below)
 - Any workflow-specific additional standards (e.g. `oss-safety.md` for OSS
-  evaluation, the 4 investment-* standards files for investment
-  analysis (L1 macro / L2 sector / L3 security / portfolio),
-  `strategic-frameworks.md` for market / competitive work,
+  evaluation, `strategic-frameworks.md` for market / competitive work,
   `systematic-review-methodology.md` for academic research,
   `information-infrastructure.md` when JP database workflows matter)
 - The artifact to evaluate
@@ -269,10 +257,6 @@ Worker default resources (always loaded):
 Additional standards (load when workflow requires):
 - `standards/systematic-review-methodology.md` (Tier 2) — Cochrane Handbook v6.5 8-step workflow + PRISMA 2020 27-item checklist + Booth 5th ed. 2024 5-element argument model; load for academic / deep research workflows
 - `standards/strategic-frameworks.md` (Tier 1) — Porter 1980 Five Forces + value chain + Kim & Mauborgne Blue Ocean ERRC + Osterwalder BMC 9-block + Aaker brand equity; load for market and competitive analysis workflows
-- `standards/investment-macro-regime.md` (Tier 3, L1 Macro) — Greetham & Hartnett 2004 Investment Clock 2×2 + Dalio 2018 two-horizon debt-cycle 6-phase framework (structural risk overlay) + Koo 2008 balance-sheet recession JP parallel + McCullough 2024 Hedgeye GIP 4-quadrant refinement + Mosler 1996 / Wray 2012 / Kelton 2020 MMT background theory + Kumar & Persaud 2002 / Illing & Aaron 2005 RAI contrarian positioning signal; load for L1 macro regime workflows
-- `standards/investment-sector-industry.md` (Tier 2, L2 Sector) — Fama & French 1993 3-factor + Fama & French 2015 5-factor + Carhart 1997 4-factor disambiguation + sector rotation by IC/Dalio regime mapping + factor × regime dependency tables + cross-ref to `strategic-frameworks.md` for stand-alone sector diagnosis; load for L2 sector rotation + factor workflows
-- `standards/investment-security-valuation.md` (Tier 3, L3 Security) — Damodaran 2012 three-framework valuation (DCF / Relative / Contingent-claim) + Graham & Dodd 1934 margin of safety + Mr. Market discipline + Campbell & Shiller 1998 CAPE cycle-smoothing (cross-layer L1 + L3); load for L3 individual security valuation workflows
-- `standards/investment-portfolio-construction.md` (Tier 2, Portfolio meta) — Taleb 2012 *Antifragile* Ch 11 Barbell Strategy + Geman-Geman-Taleb 2015 mathematical anchor + Dalio 2015 Bridgewater Risk Parity + allocation philosophy comparison table; load for portfolio construction + allocation philosophy workflows
 - `standards/oss-safety.md` (Tier 2) — OpenSSF Scorecard 18-check + NIST SSDF 1.1 + SLSA v1.1 L0-L3 + CVSS v4.0 + SPDX v3.0 + license taxonomy; load for OSS / tech stack workflows
 - `standards/information-infrastructure.md` (Tier 3) — 倉田 2007 学術情報流通 + NDL リサーチ・ナビ 3-tier structure + CiNii Research 2022 統合 + ACRL 6 frames comparative anchor; load for JP database / academic workflows (fully self-contained JP preamble)
 
@@ -323,10 +307,6 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {inject workflow-specific standards here, e.g.,}
     {base_path}/standards/systematic-review-methodology.md,
     {base_path}/standards/strategic-frameworks.md,
-    {base_path}/standards/investment-macro-regime.md,
-    {base_path}/standards/investment-sector-industry.md,
-    {base_path}/standards/investment-security-valuation.md,
-    {base_path}/standards/investment-portfolio-construction.md,
     {base_path}/standards/oss-safety.md,
     {base_path}/standards/information-infrastructure.md
   ]
@@ -443,27 +423,6 @@ replaces the deleted standalone Deep Research workflow.
 | 1 | MUST | `checklists/source-citation-checklist.md` | 3 defaults | yes |
 | 2 | SHOULD | `rubrics/research-quality-gate.md` | 3 defaults + `systematic-review-methodology.md` | no |
 
-### Investment Analysis
-
-**Trigger**: User requests investment evaluation, financial analysis, macro regime call, sector rotation, or portfolio construction.
-
-Organized by **analysis scale** (L1 macro / L2 sector / L3 security
-/ portfolio meta-layer) per v4.11.0. The protocol loads only the
-standards files for the layer(s) the question targets, not the
-full investment corpus — context-cost optimization. Quick mode
-loads 1-2 layers; deep mode loads all 4 progressively.
-
-| Phase | Agent | Protocol | Default Mode | Input | Output | Notes |
-|-------|-------|----------|--------------|-------|--------|-------|
-| 1. Research | worker | `protocols/investment.md` | quick | user request | investment report | standards: 3 defaults + `investment-macro-regime.md` (L1) and/or `investment-security-valuation.md` (L3); deep mode adds `investment-sector-industry.md` (L2) + `investment-portfolio-construction.md` (portfolio) |
-
-**Gates** (MUST + SHOULD skipped in quick mode per `## Research Modes`; full suite runs in deep mode):
-
-| Order | Type | Gate File | Standards | Stop on Fail |
-|-------|------|-----------|-----------|--------------|
-| 1 | MUST | `checklists/source-citation-checklist.md` | 3 defaults | yes |
-| 2 | SHOULD | `rubrics/research-quality-gate.md` | 3 defaults + loaded investment-* files | no |
-
 ### Tech Stack / OSS Evaluation
 
 **Trigger**: User requests technology evaluation, framework comparison, or OSS assessment.
@@ -479,6 +438,23 @@ loads 1-2 layers; deep mode loads all 4 progressively.
 | 1 | MUST | `checklists/source-citation-checklist.md` | 3 defaults | yes |
 | 2 | SHOULD | `rubrics/research-quality-gate.md` | 3 defaults + `oss-safety.md` | no |
 | 3 | MAY | `checklists/oss-due-diligence.md` | 3 defaults + `oss-safety.md` | no |
+
+## Investment Analysis Delegation
+
+**Since v5.0.0**, personal investment analysis — Buy/Hold/Sell verdicts, equity
+research memos, portfolio rebalancing, position sizing, Taiwan equity diagnosis
+(三大法人/月營收/董監持股/融資融券) — has moved to **`investing-team`**.
+
+research-team retains the **macro regime substrate** (Investment Clock framework,
+sector rotation taxonomy) as background knowledge for market / competitive
+analysis. If a user requests a regime call purely as analytical context (not
+as a verdict input), it may still be handled here. If a verdict or sizing
+recommendation is needed, route to `investing-team`.
+
+Strategic frameworks in `standards/strategic-frameworks.md` remain here for
+**operator / business-strategy** use (market entry, competitive positioning).
+The investor-perspective interpretation of the same frameworks lives in
+`investing-team/standards/strategic-frameworks-investor-lens.md`.
 
 ## Cross-Domain Awareness
 

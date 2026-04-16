@@ -25,6 +25,7 @@ Each team has its own protocols, standards, and evaluation criteria.
 | `planning-team` | Ensure the right thing gets built (scope, direction) | PRODUCT-SPEC.md |
 | `copywriting-team` | Ensure copy persuades (framework-grounded, ethics-safe, voice-consistent) | Landing pages, emails, キャッチコピー, voice guides, copy audits |
 | `skill-team` | Build/modify domain-team skills with convention discipline | New/refactored skill directories + 3-commit branches |
+| `investing-team` | Make defensible investment decisions — thesis, verdict, sizing, Taiwan-aware | Buy/Hold/Sell memos, portfolio reviews, regime calls, Taiwan equity diagnoses |
 
 ## Intent Routing
 
@@ -39,7 +40,12 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Design CI/CD pipeline or deployment strategy | `devops-team` |
 | Write Dockerfiles, IaC, or monitoring configs | `devops-team` |
 | Research a topic, analyze market/competition | `research-team` |
-| Investment analysis, valuation, asset allocation, macro regime call | `research-team` |
+| Recommend Buy/Hold/Sell on a ticker | `investing-team` |
+| Write a full equity research memo | `investing-team` |
+| Review allocation / rebalance portfolio | `investing-team` |
+| Size a position (Kelly / risk-budget) | `investing-team` |
+| 台股分析 — 三大法人, 月營收, 董監持股, 融資融券 | `investing-team` |
+| Macro regime call WITHOUT an investment verdict (regime substrate only) | `research-team` |
 | Evaluate a tech stack or OSS | `research-team` |
 | Design UI/UX, create wireframes | `design-team` |
 | Audit accessibility | `design-team` |
@@ -68,6 +74,8 @@ Each team has its own protocols, standards, and evaluation criteria.
 | Marketing launch campaign | `planning-team` (positioning) → `copywriting-team` (copy) → `design-team` (visual pairing) |
 | Brand voice + UX microcopy consistency | `copywriting-team` (voice & tone guide) → `design-team` (microcopy) |
 | Task spans multiple domains | Decompose and invoke teams sequentially |
+| Macro regime call + investment verdict needed | `research-team` (regime substrate) → `investing-team` (verdict + sizing) |
+| Business strategy analysis vs. investment memo on same company | `research-team` (operator perspective) vs. `investing-team` (investor perspective) |
 
 ## Shared Agents
 

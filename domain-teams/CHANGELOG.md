@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] — 2026-04-16
+
+### Context
+
+`investing-team` debuts as a new domain team purpose-built for personal
+investment decisions. Simultaneously, `research-team`'s Investment Analysis
+workflow is retired. The four foundational investment standards (L1 macro
+regime, L2 sector/industry, L3 security valuation, portfolio construction)
+are migrated from `research-team` to `investing-team`. Seven new standards
+cover the decision/verdict/sizing/Taiwan/data layer that was absent. This
+is a MAJOR bump: any session using `research-team` for investment
+Buy/Hold/Sell verdicts must now route to `investing-team`.
+
+### Added
+
+**`investing-team`** — new domain team (investor perspective)
+
+- `skills/investing-team/SKILL.md` — 5 workflows, 2 MUST + 3 SHOULD + 1 MAY gates
+- `skills/investing-team/standards/` (11 files):
+  - Migrated from research-team: `investment-macro-regime.md`,
+    `investment-sector-industry.md`, `investment-security-valuation.md`,
+    `investment-portfolio-construction.md`
+  - New decision layer: `investment-thesis-structure.md`,
+    `decision-framework-and-verdict.md`, `position-sizing-and-risk.md`,
+    `backtesting-and-robustness-discipline.md`
+  - New Taiwan + data: `taiwan-equity-frameworks.md`,
+    `data-sources-and-fixtures.md`
+  - New strategic (investor lens): `strategic-frameworks-investor-lens.md`
+- `skills/investing-team/protocols/` (5 files):
+  `quick-stock-screen.md`, `deep-equity-research-memo.md`,
+  `portfolio-review.md`, `macro-regime-diagnosis.md`,
+  `taiwan-market-diagnosis.md`
+- `skills/investing-team/checklists/` (2 MUST gates):
+  `primary-source-citation-compliance.md`,
+  `investment-thesis-soundness-checklist.md`
+- `skills/investing-team/rubrics/` (3 SHOULD + 1 MAY gates):
+  `scenario-stress-test-gate.md`, `position-sizing-rationale-gate.md`,
+  `market-regime-consistency-gate.md`, `taiwan-local-rigor-gate.md`
+- `skills/investing-team/research/grounding-v5.0.0.md` — primary-source
+  audit trail (42 attribution corrections across 11 standards)
+
+### Removed (Breaking Changes)
+
+**`research-team`** — Investment Analysis workflow retired
+
+- `skills/research-team/standards/investment-macro-regime.md` — moved to investing-team
+- `skills/research-team/standards/investment-sector-industry.md` — moved to investing-team
+- `skills/research-team/standards/investment-security-valuation.md` — moved to investing-team
+- `skills/research-team/standards/investment-portfolio-construction.md` — moved to investing-team
+- `skills/research-team/protocols/investment.md` — superseded by investing-team protocols
+
+### Changed
+
+- `skills/research-team/SKILL.md` — removed Investment Analysis workflow;
+  added Investment Analysis Delegation section pointing to investing-team;
+  updated frontmatter description, system persona, Resource Manifest, and
+  Gate Protocol to remove investment-* references; retained macro regime
+  substrate as analytical background knowledge for competitive research
+- `skills/using-domain-teams/SKILL.md` — added `investing-team` to Available
+  Teams; added 5 routing rows for investment intents; added 2 Ambiguous Cases
+  (regime-only vs. regime+verdict; business strategy vs. invest memo)
+- `.claude-plugin/plugin.json` — version `4.21.1` → `5.0.0`
+
+### Migration Guide
+
+Sessions previously routing to `research-team` for investment decisions:
+- `Investment Analysis` workflow → `investing-team` `Deep Equity Research Memo`
+- `台股分析` → `investing-team` `Taiwan-Specific Diagnosis`
+- `regime call with verdict` → `research-team` (regime substrate) →
+  `investing-team` (verdict + sizing)
+
+`research-team` retains macro regime knowledge as analytical background.
+Use `research-team` for regime calls that are context for competitive
+analysis (operator view), not investment verdicts.
+
+### Rationale
+
+The separation standard is user role: research-team = researcher / analyst /
+operator perspective; investing-team = personal investor / fund manager
+perspective. Investment frameworks (IC, DCF, Kelly) were always designed for
+the investor question "should I buy this asset?" — not the analyst question
+"what is the market doing?" Hosting them in research-team created conceptual
+confusion. Clean extraction at v5.0.0 reflects this clarity principle.
+
 ## [4.21.1] — 2026-04-15
 
 ### Context

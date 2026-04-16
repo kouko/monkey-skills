@@ -13,3 +13,6 @@ Thumbs.db
 
 # Keep .gitkeep files
 !**/.gitkeep
+
+# Git worktrees
+.worktrees/
