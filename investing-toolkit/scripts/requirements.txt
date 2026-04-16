@@ -1,0 +1,6 @@
+# investing-toolkit Python adapter dependencies
+# Pin exact versions for reproducibility
+
+yfinance==0.2.54
+pandas==2.2.3
+requests==2.32.3
