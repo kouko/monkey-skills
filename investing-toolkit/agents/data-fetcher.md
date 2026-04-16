@@ -67,19 +67,27 @@ FRED_API_KEY: {inject from env if available, else omit}
 
 ## Behavioral Rules
 
-1. **Run scripts, don't analyze**: Return raw JSON output from scripts. Do not
+1. **Pre-flight: verify uv installed**: Before running any script, check:
+   ```bash
+   command -v uv
+   ```
+   - If found → proceed to fetch requests
+   - If not found → run `sh ${CLAUDE_SKILL_DIR}/../../scripts/setup.sh`
+   - If setup.sh succeeds → proceed
+   - If setup.sh fails → return `{"error": "uv not installed. Run: sh investing-toolkit/scripts/setup.sh"}` and stop
+2. **Run scripts, don't analyze**: Return raw JSON output from scripts. Do not
    summarize, interpret, or add editorial commentary.
-2. **One tool call per script**: Run scripts sequentially if they share rate limits
+3. **One tool call per script**: Run scripts sequentially if they share rate limits
    (FRED), in parallel if independent (yfinance + FRED together is fine).
-3. **Cache transparency**: Always include `_cache` field from script output in your
+4. **Cache transparency**: Always include `_cache` field from script output in your
    return so the calling skill knows data freshness.
-4. **Graceful degradation**: If a fetch fails:
+5. **Graceful degradation**: If a fetch fails:
    - Return partial data with the error included
    - Set `"_partial": true` in the output
    - Do NOT block — return what succeeded
-5. **No interpretation**: Do not add market commentary, risk warnings, or analysis.
+6. **No interpretation**: Do not add market commentary, risk warnings, or analysis.
    The calling skill's worker or investing-team will do that.
-6. **Data quality summary**: Always include a `_data_quality` key in the output:
+7. **Data quality summary**: Always include a `_data_quality` key in the output:
    - `completeness`: `"full"` if all fetches succeeded, `"partial"` if any failed
    - `freshness`: note any series with publication lag > 7 days (e.g. FRED CPI)
    - `limitations`: list known data source limitations relevant to this fetch
