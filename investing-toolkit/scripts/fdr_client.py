@@ -16,12 +16,14 @@ Usage:
   uv run fdr_client.py --preset krw-usd                  # KRW/USD (via FDR currency)
 
 Auth: None required. FinanceDataReader accesses BOK ECOS internally.
-Cache: ~/.cache/investing-toolkit/fdr/{preset}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/fdr/{preset}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Source: BOK ECOS via FinanceDataReader (ECOS-KEYSTAT codes)
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -31,7 +33,8 @@ from pathlib import Path
 # Configuration
 # ---------------------------------------------------------------------------
 
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "fdr"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "fdr"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 
 # ---------------------------------------------------------------------------

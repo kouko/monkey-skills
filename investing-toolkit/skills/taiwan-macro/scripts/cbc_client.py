@@ -16,12 +16,14 @@ Usage:
   uv run cbc_client.py --item EG2AM01en --no-cache                # Force fresh fetch
 
 Auth: None required.
-Cache: ~/.cache/investing-toolkit/cbc/{item_code}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/cbc/{item_code}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 API: https://cpx.cbc.gov.tw/API/DataAPI/Get?FileName={ItemCode}
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -39,7 +41,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ---------------------------------------------------------------------------
 
 CBC_API_BASE = "https://cpx.cbc.gov.tw/API/DataAPI/Get"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "cbc"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "cbc"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

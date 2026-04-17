@@ -14,12 +14,14 @@ Usage:
   uv run boj_client.py --db FM01 --code STRDCLUCON --no-cache
 
 Auth: None required.
-Cache: ~/.cache/investing-toolkit/boj/{db}_{code}_{start}_{end}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/boj/{db}_{code}_{start}_{end}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 API docs: https://www.stat-search.boj.or.jp/info/api_guide_en.html
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -32,7 +34,8 @@ import requests as _requests
 # ---------------------------------------------------------------------------
 
 BOJ_API_BASE = "https://www.stat-search.boj.or.jp/api/v1/getDataCode"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "boj"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "boj"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

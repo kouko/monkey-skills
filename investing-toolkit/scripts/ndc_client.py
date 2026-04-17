@@ -17,13 +17,15 @@ Usage:
   uv run ndc_client.py --preset signal --no-cache     # Force fresh fetch
 
 Auth: None required.
-Cache: ~/.cache/investing-toolkit/ndc/ndc_zip.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/ndc/{preset}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Source: ws.ndc.gov.tw (bypasses Cloudflare on index.ndc.gov.tw)
 """
 
 import argparse
 import csv
 import json
+import os
 import sys
 import time
 import zipfile
@@ -50,7 +52,8 @@ NDC_ZIP_URL = (
     "&n=5pmv5rCj5oyH5qiZ5Y%2bK54eI6JmfLnppcA%3d%3d&icon=.zip"
 )
 
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "ndc"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "ndc"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

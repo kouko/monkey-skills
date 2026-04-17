@@ -15,12 +15,14 @@ Usage:
   uv run statgov_client.py --preset export-orders --no-cache
 
 Auth: None required. Pure GET request, no Cloudflare.
-Cache: ~/.cache/investing-toolkit/statgov/{preset}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/statgov/{preset}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Source: https://www.stat.gov.tw/Point.aspx?sid=t.{N}
 """
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -39,7 +41,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ---------------------------------------------------------------------------
 
 STATGOV_BASE = "https://www.stat.gov.tw/Point.aspx"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "statgov"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "statgov"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

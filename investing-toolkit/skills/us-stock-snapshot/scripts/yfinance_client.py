@@ -17,7 +17,8 @@ Batch mode (screener / portfolio):
   uv run yfinance_client.py --tickers AAPL,MSFT --action info
 
 Auth: None required.
-Cache: ~/.cache/investing-toolkit/yfinance/{ticker}_{action}.json  TTL: 1h
+Cache: $INVESTING_TOOLKIT_CACHE/yfinance/{ticker}_{action}.json  TTL: 1h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 """
 
 import argparse
@@ -28,7 +29,8 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "yfinance"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "yfinance"
 CACHE_TTL_SECONDS = 3600  # 1 hour
 
 

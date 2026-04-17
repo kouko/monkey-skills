@@ -19,7 +19,8 @@ Auth: FINMIND_API_TOKEN env var (optional)
   - Anonymous: 300 req/hr
   - With token: 600 req/hr (free registration at https://finmindtrade.com)
 
-Cache: ~/.cache/investing-toolkit/finmind/, 6h TTL
+Cache: $INVESTING_TOOLKIT_CACHE/finmind/, 6h TTL
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 
 Usage:
   python3 finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
@@ -54,7 +55,8 @@ import requests
 # ---------------------------------------------------------------------------
 
 FINMIND_BASE_URL = "https://api.finmindtrade.com/api/v4/data"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "finmind"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "finmind"
 CACHE_TTL_SECONDS = 6 * 3600  # 6 hours
 
 MAX_RETRIES = 3

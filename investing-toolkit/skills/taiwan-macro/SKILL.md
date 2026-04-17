@@ -129,18 +129,18 @@ This skill is **data-only**. The output is designed for handoff to
 
 ```
 ### Fetch Requests (statgov)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset export-orders,exports,imports
-- uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset gdp-yoy,ipi,unemployment
-- uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset fx-reserves,taiex,m2-yoy,leading-index
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset export-orders,exports,imports
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset gdp-yoy,ipi,unemployment
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/statgov_client.py --preset fx-reserves,taiex,m2-yoy,leading-index
 
 ### Fetch Requests (CBC)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/cbc_client.py --preset rediscount-rate,twdusd,m2,reserve-money
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/cbc_client.py --preset rediscount-rate,twdusd,m2,reserve-money
 
 ### Fetch Requests (DGBAS Excel)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/dgbas_client.py --preset cpi,core-cpi,ppi,import-pi,export-pi
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/dgbas_client.py --preset cpi,core-cpi,ppi,import-pi,export-pi
 
 ### Fetch Requests (NDC)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/ndc_client.py --preset signal,signal-components
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ndc_client.py --preset signal,signal-components
 ```
 
 ### Step 3 — Merge into unified output

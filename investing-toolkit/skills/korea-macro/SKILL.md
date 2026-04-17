@@ -136,19 +136,19 @@ This skill is **data-only**. The output is designed for handoff to
 
 ```
 ### Fetch Requests (rates batch)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset policy-rate,call-rate,cd-91d,treasury-3y,treasury-5y,corp-bond-3y
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset policy-rate,call-rate,cd-91d,treasury-3y,treasury-5y,corp-bond-3y
 
 ### Fetch Requests (inflation batch)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset cpi,core-cpi,ppi,import-pi,export-pi
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset cpi,core-cpi,ppi,import-pi,export-pi
 
 ### Fetch Requests (growth + labor)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset gdp-qoq,gdp-nominal,ipi,manufacturing,unemployment,employment-rate
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset gdp-qoq,gdp-nominal,ipi,manufacturing,unemployment,employment-rate
 
 ### Fetch Requests (trade + money + sentiment)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset current-account,terms-of-trade,m2,household-credit,consumer-sentiment,economic-sentiment,leading-cycle,coincident-cycle
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset current-account,terms-of-trade,m2,household-credit,consumer-sentiment,economic-sentiment,leading-cycle,coincident-cycle
 
 ### Fetch Requests (markets + fx + real estate)
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset kospi,kosdaq,krw-usd,housing-price
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset kospi,kosdaq,krw-usd,housing-price
 ```
 
 ### Step 3 — Merge into unified output
