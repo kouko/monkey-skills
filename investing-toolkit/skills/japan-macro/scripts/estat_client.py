@@ -54,7 +54,7 @@ PRESETS: dict[str, str] = {
     "coincident-index": "0706010500000090010",     # 景気動向指数（一致指数）2020 base
     "machine-orders": "0701030000000010010",        # 機械受注額（船舶・電力を除く民需）
     "real-wages": "0302030201010090010",            # 実質賃金指数（現金給与総額）
-    "job-ratio": "0301020001000010020",             # 有効求人倍率 (fiscal-year only; use --cycle yearly)
+    "job-ratio": "0301020001000010010",             # 有効求人倍率（季節調整値）Active opening rate, monthly
     "tertiary-index": "0603100300000090010",        # 第3次産業活動指数 2020 base
     "retail-sales": "0601010201010010000",          # 小売業販売額（名目）
     "service-sales": "0603010000000010000",         # サービス産業売上高（サービス産業動態統計調査, StatCode=00200546）
@@ -70,7 +70,7 @@ INDICATOR_NAMES: dict[str, str] = {
     "0706010500000090010": "Composite Coincident Index 2020 base",
     "0701030000000010010": "Machinery Orders (Private, exc. volatile)",
     "0302030201010090010": "Real Wage Index (Total cash earnings)",
-    "0301020001000010020": "Ratio of Job Vacancies to Applicants",
+    "0301020001000010010": "Active Opening Rate (有効求人倍率)",
     "0603100300000090010": "Tertiary Industry Activity Index 2020 base",
     "0601010201010010000": "Retail Sales Value (Nominal)",
     "0603010000000010000": "Service Industry Sales (Dynamic Survey)",
