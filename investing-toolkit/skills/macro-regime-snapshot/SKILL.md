@@ -1,11 +1,11 @@
 ---
 name: macro-regime-snapshot
-description: Diagnose the current macro regime using FRED data. Maps key indicators to the Investment Clock phase and Hedgeye GIP quadrant, then outputs a regime call with asset-class tilts.
+description: Diagnose the current macro regime using country macro skills. Maps key indicators to the Investment Clock phase and Hedgeye GIP quadrant, then outputs a regime call with asset-class tilts. Supports US, Japan, and global (side-by-side) regions.
 ---
 
 # macro-regime-snapshot
 
-Fast macro regime call using the Investment Clock (IC) + Hedgeye GIP framework. Fetches FRED series via the data-fetcher agent, maps to IC 2x2 phase, cross-checks with GIP quadrant, and outputs a structured regime call with 3 asset-class tilts.
+Fast macro regime call using the Investment Clock (IC) + Hedgeye GIP framework. Delegates data fetching to country-specific macro skills (`us-macro`, `japan-macro`), maps to IC 2x2 phase, cross-checks with GIP quadrant, and outputs a structured regime call with 3 asset-class tilts.
 
 Full IC and GIP framework details: see `domain-teams:investing-team` standards/investment-macro-regime.md. This skill is the **data layer** — it fetches and maps. Analysis and conviction judgments belong to investing-team.
 
@@ -15,34 +15,20 @@ Full IC and GIP framework details: see `domain-teams:investing-team` standards/i
 
 | Input | Values | Default |
 |-------|--------|---------|
-| `region` | `us` / `global` | `us` |
+| `region` | `us` / `japan` / `global` | `us` |
 | `date_context` | Optional override (e.g. "as of 2026-03") | latest available |
 
 ---
 
 ## How It Works
 
-### Step 1 — Launch data-fetcher agent
+### Step 1 — Fetch macro indicators via country skills
 
-Fetch the following FRED series. Use the data-fetcher launch template from `../../agents/data-fetcher.md`.
+Route to the appropriate country macro skill based on `region`:
 
-```
-### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
-```
-
-| Series | Meaning |
-|--------|---------|
-| T10Y2Y | 10Y–2Y yield spread (yield curve) |
-| DGS10 | 10-year Treasury yield |
-| DGS2 | 2-year Treasury yield |
-| CPIAUCSL | CPI headline (YoY) |
-| CPILFESL | CPI core (YoY) |
-| GDPC1 | Real GDP (quarterly) |
-| INDPRO | Industrial Production Index |
-| FEDFUNDS | Effective Fed Funds rate |
+- **`region=us`** — Use the `us-macro` skill to fetch US indicators (FRED 8-series: T10Y2Y, DGS10, DGS2, FEDFUNDS, CPIAUCSL, CPILFESL, GDPC1, INDPRO). Then proceed to Step 2.
+- **`region=japan`** — Use the `japan-macro` skill to fetch Japan indicators (BOJ + e-Stat series: CPI, Core CPI, GDP, Industrial Production, BOJ Policy Rate, JGB 10Y, Unemployment, Tankan DI, etc.). Then proceed to Step 2.
+- **`region=global`** — Fetch both `us-macro` and `japan-macro` in parallel. Then produce **side-by-side regime calls** — one IC phase per country, plus a combined divergence note. Proceed to Step 2 for each country independently.
 
 ### Step 2 — Map to IC 2x2 grid
 
@@ -55,6 +41,8 @@ Growth Rising     IC Phase 2           IC Phase 1
 Growth Falling    IC Phase 3           IC Phase 4
                 (Stagflation)        (Reflation)
 ```
+
+**Japan note**: Japan's uniquely low inflation regime means "Inflation Rising" in Japan may still be below 2%. Apply the IC framework to the **direction of change** (rate-of-change), not the absolute level. A move from 0.5% to 1.5% is "Inflation Rising" even though the level remains below most developed-market norms.
 
 ### Step 3 — Cross-check with Hedgeye GIP quadrant
 
@@ -74,7 +62,8 @@ Produce structured markdown (see Output Format below).
 
 ## Data Sources
 
-- FRED via `scripts/fred_client.py` (through data-fetcher agent)
+- **US**: via `us-macro` skill (FRED 8 indicators)
+- **Japan**: via `japan-macro` skill (BOJ + e-Stat 13 indicators)
 - Reference framework: `references/investment-clock-cheatsheet.md`
 
 ---

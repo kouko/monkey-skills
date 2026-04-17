@@ -41,13 +41,22 @@ echo "Syncing fred_client.py..."
 copy_to fred_client.py \
   macro-regime-snapshot \
   investment-memo-writer \
-  dcf-valuation
+  dcf-valuation \
+  us-macro
 
 echo "Syncing finmind_client.py..."
 copy_to finmind_client.py \
   taiwan-stock-snapshot \
   investment-memo-writer \
   invest-portfolio
+
+echo "Syncing boj_client.py..."
+copy_to boj_client.py \
+  japan-macro
+
+echo "Syncing estat_client.py..."
+copy_to estat_client.py \
+  japan-macro
 
 echo "Syncing ta_client.py..."
 copy_to ta_client.py \
@@ -63,7 +72,9 @@ copy_to setup.sh \
   invest-portfolio \
   macro-regime-snapshot \
   dcf-valuation \
-  taiwan-stock-snapshot
+  taiwan-stock-snapshot \
+  us-macro \
+  japan-macro
 
 echo ""
 echo "Sync complete."

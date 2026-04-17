@@ -21,6 +21,8 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `stock-screener` | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `technical-snapshot` | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
 | `invest-portfolio` | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
+| `us-macro` | US macro indicators via FRED (8 series + reference doc) | v1.3.0 |
+| `japan-macro` | Japan macro indicators via BOJ + e-Stat (13 series + bilingual reference) | v1.3.0 |
 
 ---
 
@@ -40,6 +42,8 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 
 | User intent | Route to |
 |-------------|----------|
+| "US macro data / FRED indicators / US rates" | `us-macro` |
+| "Japan macro data / BOJ / JGB yield / 日本のマクロ" | `japan-macro` |
 | "What is the macro regime / where are we in the cycle?" | `macro-regime-snapshot` |
 | "Give me a quick snapshot on AAPL / stock info" | `us-stock-snapshot` |
 | "Write a full investment memo on NVDA" | `investment-memo-writer` |

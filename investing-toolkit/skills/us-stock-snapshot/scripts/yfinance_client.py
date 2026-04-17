@@ -25,11 +25,45 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "yfinance"
 CACHE_TTL_SECONDS = 3600  # 1 hour
+
+
+# ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(result: dict) -> dict:
+    """Build _provenance block for a yfinance result."""
+    ref_period = result.get("latest_date")
+    return {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": result.get("fetched_at"),
+        "reference_period": ref_period,
+        "staleness_days": _compute_staleness(ref_period, result.get("fetched_at", "")),
+    }
 
 def get_cache_path(ticker: str, action: str, period: str = "", interval: str = "") -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -69,6 +103,8 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
+        if "_provenance" not in cached:
+            cached["_provenance"] = _make_provenance(cached)
         return cached
 
     import yfinance as yf
@@ -82,7 +118,7 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
         "ticker": ticker.upper(),
         "period": period,
         "interval": interval,
-        "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "_cache": "miss",
         "data": [
             {
@@ -99,6 +135,7 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
         "latest_date": str(hist.index[-1].date()),
         "rows": len(hist),
     }
+    result["_provenance"] = _make_provenance(result)
     save_cache(cache_path, result)
     return result
 
@@ -107,6 +144,8 @@ def get_info(ticker: str) -> dict:
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
+        if "_provenance" not in cached:
+            cached["_provenance"] = _make_provenance(cached)
         return cached
 
     import yfinance as yf
@@ -136,7 +175,7 @@ def get_info(ticker: str) -> dict:
 
     result = {
         "ticker": ticker.upper(),
-        "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "_cache": "miss",
         "_warning": (
             "yfinance is an unofficial scraper. DO NOT use for financial statements "
@@ -148,6 +187,7 @@ def get_info(ticker: str) -> dict:
         if val is not None:
             result[f] = val
 
+    result["_provenance"] = _make_provenance(result)
     save_cache(cache_path, result)
     return result
 

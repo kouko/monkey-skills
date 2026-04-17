@@ -1,17 +1,18 @@
 # investing-toolkit
 
-**Version**: 1.2.0  
+**Version**: 1.3.0  
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
-Investing research toolkit — macro regime diagnosis, DCF valuation, US equity
-snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
+Investing research toolkit — macro regime diagnosis, country-specific macro data
+(US + Japan), DCF valuation, US equity snapshots, and full investment memo
+pipeline via `domain-teams:investing-team`.
 
 ## Slash Commands
 
 | Command | What it does | Status |
 |---------|-------------|--------|
 | `/invest` | Route to the right skill | ✅ v1.0.0 |
-| `/invest-macro [--region us\|global]` | IC + FRED regime call | ✅ v1.0.0 |
+| `/invest-macro [--region us\|japan\|global]` | IC + FRED/BOJ regime call | ✅ v1.0.0 |
 | `/invest-memo {ticker} [--scope deep\|quick]` | Full memo pipeline → investing-team | ✅ v1.0.0 |
 | `/invest-screen {tickers} [--pe-max N] [--above-sma200]` | Batch screener + composite rank | ✅ v1.2.0 |
 | `/invest-portfolio [holdings.csv]` | Portfolio review + rebalance | ✅ v1.2.0 |
@@ -29,6 +30,8 @@ snapshots, and full investment memo pipeline via `domain-teams:investing-team`.
 | `stock-screener` | Batch screener — composite score | ✅ v1.2.0 |
 | `technical-snapshot` | RSI / MACD / Bollinger / ATR / SMA | ✅ v1.2.0 |
 | `invest-portfolio` | Portfolio review + rebalance | ✅ v1.2.0 |
+| `us-macro` | US macro indicators via FRED (8 series) | ✅ v1.3.0 |
+| `japan-macro` | Japan macro indicators via BOJ + e-Stat (13 series, bilingual) | ✅ v1.3.0 |
 
 ## Architecture
 
@@ -39,10 +42,15 @@ investing-toolkit/
 │   ├── fred_client.py               #   → synced to skill dirs
 │   ├── finmind_client.py            #   → synced to skill dirs
 │   ├── ta_client.py                 #   → synced to skill dirs
+│   ├── boj_client.py                #   → synced to japan-macro
+│   ├── estat_client.py              #   → synced to japan-macro
 │   ├── sync-scripts.sh              # Copy source → skill dirs
 │   └── sync-check.sh               # CI: verify all copies match
 ├── agents/data-fetcher.md           # Shared I/O agent spec
 ├── skills/
+│   ├── us-macro/                    # US FRED indicators (v1.3.0)
+│   ├── japan-macro/                 # BOJ + e-Stat indicators (v1.3.0)
+│   ├── macro-regime-snapshot/       # IC regime → consumes us-macro / japan-macro
 │   ├── {each-skill}/
 │   │   ├── SKILL.md
 │   │   ├── scripts/                 # Self-contained: synced copies
@@ -94,6 +102,8 @@ v1.1.0 adds full Taiwan equity data via FinMind:
 | SEC EDGAR | US financials (via manual URL) | None |
 | FinMind | Taiwan: 三大法人, 月營收, 融資融券, 董監持股, 財報 | Optional token |
 | CasualMarket MCP | Taiwan real-time quotes | None |
+| BOJ Time-Series API | Japan: policy rate, JGB yields, monetary base | None |
+| 統計ダッシュボード (e-Stat) | Japan: CPI, GDP, industrial production, unemployment | None |
 
 ## Cross-Plugin Delegation
 

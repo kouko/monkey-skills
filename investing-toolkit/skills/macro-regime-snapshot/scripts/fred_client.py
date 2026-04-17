@@ -63,10 +63,45 @@ def save_cache(path: Path, data: dict) -> None:
         pass
 
 
+# ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(result: dict) -> dict:
+    """Build _provenance block for a FRED result."""
+    latest = result.get("latest")
+    ref_period = latest["date"] if latest else None
+    return {
+        "source": "FRED CSV (fred.stlouisfed.org)",
+        "source_authority": "Federal Reserve Bank of St. Louis",
+        "data_type": "official_government_statistics",
+        "update_cycle": "varies by series",
+        "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+        "fetched_at": result.get("fetched_at"),
+        "reference_period": ref_period,
+        "staleness_days": _compute_staleness(ref_period, result.get("fetched_at", "")),
+    }
+
+
 def _build_result(series: str, periods: int, observations: list[dict], source: str) -> dict:
     valid = [o for o in observations if o.get("value") is not None]
     latest_n = valid[-periods:] if len(valid) > periods else valid
-    return {
+    result = {
         "series": series.upper(),
         "periods_requested": periods,
         "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -83,6 +118,8 @@ def _build_result(series: str, periods: int, observations: list[dict], source: s
         "latest": {"date": latest_n[-1]["date"], "value": latest_n[-1]["value"]} if latest_n else None,
         "count": len(latest_n),
     }
+    result["_provenance"] = _make_provenance(result)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +235,8 @@ def fetch_series(series: str, periods: int, api_key: str | None, use_api: bool) 
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
+        if "_provenance" not in cached:
+            cached["_provenance"] = _make_provenance(cached)
         return cached
 
     if use_api and api_key:

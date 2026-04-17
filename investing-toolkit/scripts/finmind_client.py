@@ -71,6 +71,39 @@ KNOWN_DATASETS = {
 }
 
 # ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(latest_date: str | None, fetched_at: str | None) -> dict:
+    """Build _provenance block for a FinMind result."""
+    return {
+        "source": "FinMind API (finmindtrade.com)",
+        "source_authority": "FinMind (open-source aggregator, data from TWSE/MOPS)",
+        "data_type": "open_source_aggregator",
+        "update_cycle": "daily (T+1 for most datasets)",
+        "typical_lag": "1 business day",
+        "fetched_at": fetched_at,
+        "reference_period": latest_date,
+        "staleness_days": _compute_staleness(latest_date, fetched_at or ""),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -118,6 +151,14 @@ def fetch_dataset(
         cached = load_cache(key)
         if cached is not None:
             cached["_cache"] = "hit"
+            if "_provenance" not in cached:
+                data_rows = cached.get("data", [])
+                latest_date = None
+                if data_rows:
+                    dates = [r.get("date", "") for r in data_rows if r.get("date")]
+                    if dates:
+                        latest_date = max(dates)
+                cached["_provenance"] = _make_provenance(latest_date, cached.get("fetched_at"))
             return cached
 
     params: dict = {
@@ -151,15 +192,26 @@ def fetch_dataset(
                 last_error = f"FinMind API error: {body.get('msg', 'unknown')}"
                 break  # API-level error, no point retrying
 
+            data_rows = body.get("data", [])
+            fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            # Determine latest date from data rows
+            latest_date = None
+            if data_rows:
+                dates = [r.get("date", "") for r in data_rows if r.get("date")]
+                if dates:
+                    latest_date = max(dates)
+
             result = {
                 "dataset": dataset,
                 "ticker": ticker,
                 "date_start": date_start,
                 "date_end": date_end,
-                "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "fetched_at": fetched_at,
                 "_cache": "miss",
-                "rows": len(body.get("data", [])),
-                "data": body.get("data", []),
+                "rows": len(data_rows),
+                "data": data_rows,
+                "_provenance": _make_provenance(latest_date, fetched_at),
             }
 
             if use_cache:
