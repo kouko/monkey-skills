@@ -21,8 +21,10 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `stock-screener` | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `technical-snapshot` | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
 | `invest-portfolio` | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
-| `us-macro` | US macro indicators via FRED (8 series + reference doc) | v1.3.0 |
-| `japan-macro` | Japan macro indicators via BOJ + e-Stat (13 series + bilingual reference) | v1.3.0 |
+| `us-macro` | US macro indicators via FRED (21 series + reference doc) | v1.3.0 |
+| `japan-macro` | Japan macro indicators via BOJ + e-Stat (20 series + bilingual reference) | v1.3.0 |
+| `taiwan-macro` | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
+| `korea-macro` | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
 
 ---
 
@@ -44,6 +46,8 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 |-------------|----------|
 | "US macro data / FRED indicators / US rates" | `us-macro` |
 | "Japan macro data / BOJ / JGB yield / 日本のマクロ" | `japan-macro` |
+| "Taiwan macro data / CBC / TAIEX / 台灣總經 / 景氣燈號" | `taiwan-macro` |
+| "Korea macro data / BOK / KOSPI / 한국 매크로 / 기준금리" | `korea-macro` |
 | "What is the macro regime / where are we in the cycle?" | `macro-regime-snapshot` |
 | "Give me a quick snapshot on AAPL / stock info" | `us-stock-snapshot` |
 | "Write a full investment memo on NVDA" | `investment-memo-writer` |
@@ -53,7 +57,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All v1.2.0 skills are now available.
+All skills through v1.5.0 are now available.
 
 ---
 

@@ -65,9 +65,28 @@
 
 ---
 
-## v1.4.0 — China + Taiwan Macro (planned)
-- [ ] china-macro (FRED China series)
-- [ ] taiwan-macro (CBC API + DGBAS)
+## v1.4.0 — Taiwan Macro
+
+**Scope**: Taiwan macro indicators from 4 government sources.
+
+### New
+- [x] scripts/statgov_client.py (stat.gov.tw hidden chart JSON, 17 presets)
+- [x] scripts/cbc_client.py (CBC Open Data API, 5 presets)
+- [x] scripts/dgbas_client.py (DGBAS Excel .xls, 6 presets)
+- [x] scripts/ndc_client.py (NDC ZIP/CSV, 6 presets)
+- [x] skills/taiwan-macro/SKILL.md (30 indicators, 8 groups, trilingual references)
+
+---
+
+## v1.5.0 — Korea Macro (current)
+
+**Scope**: Korea macro indicators via FinanceDataReader (BOK ECOS-KEYSTAT).
+
+### New
+- [x] scripts/fdr_client.py (FinanceDataReader ECOS-KEYSTAT, 27 presets + 1 FRED)
+- [x] skills/korea-macro/SKILL.md (28 indicators, 10 groups, trilingual references)
+- [x] Unified indicator reference format across US/JP/TW/KR (93 indicators)
+- [x] Cache migration to $CLAUDE_PLUGIN_DATA convention (10 scripts)
 
 ---
 

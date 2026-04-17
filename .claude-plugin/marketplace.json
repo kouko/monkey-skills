@@ -26,7 +26,7 @@
     },
     {
       "name": "investing-toolkit",
-      "description": "Investing research toolkit — macro regime diagnosis, DCF and screening workflows, US and Taiwan equity snapshots via yfinance, FRED, and SEC EDGAR adapters. 投資調査・台股・美股。投資研究工具組。",
+      "description": "Investing research toolkit — macro regime diagnosis (US/JP/TW/KR), DCF and screening workflows, equity snapshots via yfinance, FRED, BOJ, FinMind, and FinanceDataReader adapters. 投資調査・美股・台股・日本株・韓國股。投資研究工具組。",
       "source": "./investing-toolkit/"
     }
   ]
