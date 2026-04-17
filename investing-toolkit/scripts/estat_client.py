@@ -51,6 +51,13 @@ PRESETS: dict[str, str] = {
     "unemployment": "0301010000020020010",
     "ip": "0502070301000090010",
     "jgb10y": "0702020300000010020",
+    "coincident-index": "0706010500000090010",     # 景気動向指数（一致指数）2020 base
+    "machine-orders": "0701030000000010010",        # 機械受注額（船舶・電力を除く民需）
+    "real-wages": "0302030201010090010",            # 実質賃金指数（現金給与総額）
+    "job-ratio": "0301020001000010020",             # 有効求人倍率 (fiscal-year only; use --cycle yearly)
+    "tertiary-index": "0603100300000090010",        # 第3次産業活動指数 2020 base
+    "retail-sales": "0601010201010010000",          # 小売業販売額（名目）
+    "service-sales": "0603010200000010000",         # サービス産業売上高（月次サービス産業動態統計）
 }
 
 INDICATOR_NAMES: dict[str, str] = {
@@ -60,12 +67,20 @@ INDICATOR_NAMES: dict[str, str] = {
     "0301010000020020010": "Unemployment Rate",
     "0502070301000090010": "Industrial Production Index 2020 base",
     "0702020300000010020": "10Y JGB Yield (month-end)",
+    "0706010500000090010": "Composite Coincident Index 2020 base",
+    "0701030000000010010": "Machinery Orders (Private, exc. volatile)",
+    "0302030201010090010": "Real Wage Index (Total cash earnings)",
+    "0301020001000010020": "Ratio of Job Vacancies to Applicants",
+    "0603100300000090010": "Tertiary Industry Activity Index 2020 base",
+    "0601010201010010000": "Retail Sales Value (Nominal)",
+    "0603010200000010000": "Service Industry Sales (Monthly Survey)",
 }
 
 CYCLE_MAP: dict[str, str] = {
     "monthly": "1",
     "quarterly": "2",
     "yearly": "3",
+    "fiscal-year": "4",
 }
 
 
@@ -433,7 +448,7 @@ def main() -> None:
 
     parser.add_argument(
         "--cycle", default="monthly",
-        choices=["monthly", "quarterly", "yearly"],
+        choices=["monthly", "quarterly", "yearly", "fiscal-year"],
         help="Data frequency (default: monthly)",
     )
     parser.add_argument(

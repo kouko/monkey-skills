@@ -31,7 +31,7 @@ investment verdicts. The output is designed for immediate handoff to
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `tankan`, `forex`, `money`, `balance`, or `all` |
+| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `labor`, `consumption`, `tankan`, `forex`, `money`, `balance`, or `all` |
 
 ---
 
@@ -59,6 +59,23 @@ investment verdicts. The output is designed for immediate handoff to
 | 統計DB | ip | 0502070301000090010 | 鉱工業生産指数 | Monthly |
 | 統計DB | unemployment | 0301010000020020010 | 完全失業率 | Monthly |
 | 統計DB | gdp | (discover via search) | GDP | Quarterly (use `--cycle quarterly`) |
+| 統計DB | coincident-index | 0706010500000090010 | 景気動向指数（一致指数）| Monthly |
+| 統計DB | machine-orders | 0701030000000010010 | 機械受注額 | Monthly |
+| 統計DB | tertiary-index | 0603100300000090010 | 第3次産業活動指数 | Monthly |
+
+### labor
+
+| Source | DB/Preset | Code/ID | Name | Frequency |
+|--------|-----------|---------|------|-----------|
+| 統計DB | real-wages | 0302030201010090010 | 実質賃金指数 | Monthly |
+| 統計DB | job-ratio | 0301020001000010020 | 有効求人倍率 | Fiscal-year (use `--cycle fiscal-year`) |
+
+### consumption
+
+| Source | DB/Preset | Code/ID | Name | Frequency |
+|--------|-----------|---------|------|-----------|
+| 統計DB | retail-sales | 0601010201010010000 | 小売業販売額 | Monthly |
+| 統計DB | service-sales | 0603010200000010000 | サービス産業売上高 | Monthly |
 
 ### money
 
@@ -97,7 +114,9 @@ Map `--indicators` to BOJ and 統計DB series:
 |-------|-----------|---------------|
 | `rates` | FM01:STRDCLUCON | jgb10y |
 | `inflation` | PR01:(discover) | cpi, core-cpi |
-| `growth` | (none) | ip, unemployment, gdp (quarterly) |
+| `growth` | (none) | ip, unemployment, gdp (quarterly), coincident-index, machine-orders, tertiary-index |
+| `labor` | (none) | real-wages, job-ratio (fiscal-year) |
+| `consumption` | (none) | retail-sales, service-sales |
 | `money` | MD02:(discover) | (none) |
 | `tankan` | CO:(discover) | (none) |
 | `forex` | FM08:(discover), FM09:(discover) | (none) |
@@ -150,7 +169,10 @@ base_path: {absolute path to investing-toolkit/scripts/}
 ### Fetch Requests
 - uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset jgb10y
 - uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset cpi,core-cpi
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment
+- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment,coincident-index,machine-orders,tertiary-index
+- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset real-wages
+- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset job-ratio --cycle fiscal-year
+- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset retail-sales,service-sales
 - uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset gdp --cycle quarterly
 
 ### Output Format
@@ -184,9 +206,20 @@ indicator group. Each data point retains its `"_source"` tag (`"boj"` or
       "core_cpi": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
     },
     "growth": {
-      "ip":           { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
-      "unemployment": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
-      "gdp":          { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
+      "ip":              { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "unemployment":    { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "gdp":             { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "coincident_index":{ "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "machine_orders":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "tertiary_index":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
+    },
+    "labor": {
+      "real_wages": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "job_ratio":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
+    },
+    "consumption": {
+      "retail_sales":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "service_sales": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
     },
     "money": {
       "m2": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" }
@@ -234,6 +267,13 @@ lag, interpretation, Japan-specific context, common pitfalls):
 | Current Account (BP01) | ~6 weeks after reference month |
 | GDP (統計DB) | ~6 weeks (1st preliminary), quarterly |
 | JGB 10Y Yield (統計DB) | ~1 week after month-end |
+| Coincident Index (統計DB) | ~6 weeks after reference month |
+| Machine Orders (統計DB) | ~6 weeks after reference month |
+| Real Wages (統計DB) | ~5 weeks after reference month |
+| Job Ratio (統計DB) | Fiscal-year data; ~4 weeks after FY-end (original MHLW is monthly) |
+| Tertiary Index (統計DB) | ~6 weeks after reference month |
+| Retail Sales (統計DB) | ~4 weeks after reference month |
+| Service Industry Sales (統計DB) | ~6 weeks after reference month |
 
 Always check the `latest.date` field to confirm the reference period.
 

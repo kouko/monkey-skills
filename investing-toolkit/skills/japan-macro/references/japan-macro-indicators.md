@@ -5,7 +5,7 @@ Tier 1 entries include full documentation; Tier 2 entries are brief summaries.
 
 ---
 
-## Tier 1 -- Core Indicators (13)
+## Tier 1 -- Core Indicators (20)
 
 ---
 
@@ -466,6 +466,282 @@ investment income is often reinvested abroad rather than repatriated.
 - Seasonal patterns are strong (fiscal year-end in March, bonus months). Use seasonally adjusted data for trend analysis.
 - BP01 contains many sub-components (trade, services, income). Use getMetadata to identify the correct total current account code.
 - The data is jointly compiled by MOF and BOJ. Published by MOF in the Balance of Payments statistics.
+
+---
+
+### 景気動向指数（一致指数）/ Composite Coincident Index
+
+- **Source / データソース**: 統計ダッシュボード (preset=coincident-index, indicator=0706010500000090010)
+- **Unit / 単位**: Index (2020 base = 100)
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~6 weeks after reference month
+- **Managing agency / 所管**: 内閣府 (Cabinet Office)
+
+**What it measures / 経済的意味**:
+(EN) A composite index combining multiple economic indicators (industrial production, employment, consumption, etc.) that move in tandem with the current phase of the business cycle. The coincident index is the definitive measure of where Japan currently stands in the economic cycle.
+(JP) 鉱工業生産・雇用・消費など複数の経済指標を合成した景気の同時指標。景気循環の現在地を示す「体温計」として、内閣府が毎月公表する。
+
+**How to interpret / 解読方法**:
+- Rising / 上昇 → Economy is in an expansion phase. Business conditions improving across multiple sectors simultaneously. / 景気は拡大局面。複数セクターで同時に景況感が改善。
+- Falling / 下落 → Economy is in a contraction phase. Weakness spreading across sectors. / 景気は後退局面。弱さが複数セクターに波及。
+
+**Market significance / 市場での重要度**: ⭐⭐⭐
+The Cabinet Office publishes this monthly as Japan's official business cycle barometer. It combines production, employment, and consumption into one number, making it more comprehensive than industrial production alone. The 3-month moving average direction of the coincident index formally determines the business cycle phase (expansion or contraction). For IC mapping, this is the most direct growth proxy available.
+
+**When to use / 使用場面**:
+Investment Clock growth axis (most direct proxy), business cycle phase confirmation,
+cross-checking IP and GDP signals, GIP quadrant mapping.
+
+**Japan-specific context / 日本固有の文脈**:
+The Cabinet Office formally declares business cycle peaks and troughs based on
+this index (with significant delay -- often 12+ months after the fact). The
+coincident index uses 10 component series including IP, employment, retail sales,
+and electricity consumption. Japan also publishes leading and lagging composite
+indexes, but the coincident index is the headline for current conditions.
+
+**Common pitfalls / よくある間違い**:
+- The coincident index level is not directly comparable across base year revisions (2020 base vs. 2015 base). Compare trends within the same base period.
+- Official business cycle dating by the Cabinet Office lags substantially. The index itself is timely, but the official "this was a recession" announcement comes much later.
+- The 3-month moving average direction is more informative than single-month movements, which can be noisy.
+
+---
+
+### 機械受注額 / Machine Orders
+
+- **Source / データソース**: 統計ダッシュボード (preset=machine-orders, indicator=0701030000000010010)
+- **Unit / 単位**: JPY 100 million (億円)
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~6 weeks after reference month
+- **Managing agency / 所管**: 内閣府 (Cabinet Office)
+
+**What it measures / 経済的意味**:
+(EN) The value of new orders received by major machinery manufacturers from the private sector, excluding volatile orders for ships and electric power. This is Japan's most closely watched leading indicator for business investment (capex), as orders placed today become investment spending 6-9 months later.
+(JP) 主要機械メーカーが民間から受注した機械の金額（船舶・電力を除く民需）。設備投資の6-9ヶ月先行指標として、日本市場で最も注目される経済指標の一つ。
+
+**How to interpret / 解読方法**:
+- Rising / 上昇 → Firms are ordering more equipment. Capex cycle upswing expected 6-9 months ahead. Positive for machinery, construction, and capital goods sectors. / 企業の設備投資意欲が旺盛。6-9ヶ月先の設備投資拡大を示唆。
+- Falling / 下落 → Firms are cutting back on equipment orders. Capex downturn ahead. Negative for cyclical sectors. / 企業の設備投資抑制。景気後退の前兆となりうる。
+
+**Market significance / 市場での重要度**: ⭐⭐⭐
+This is the single most market-moving domestic macro indicator in Japan. On release days, USD/JPY and the Nikkei 225 frequently react with significant moves. The headline number is "Private-sector, excluding ships and electric power" (船舶・電力を除く民需). Machine orders lead GDP by 6-9 months, making them the best real-time gauge of future capex, which is a major component of Japan's GDP.
+
+**When to use / 使用場面**:
+Capex cycle forecasting, leading indicator for GDP, equity sector rotation
+(machinery, construction), business cycle turning point detection.
+
+**Japan-specific context / 日本固有の文脈**:
+Machine orders are extremely volatile month-to-month (swings of +/-10% in a
+single month are common) due to lumpy large-scale orders. Markets focus on the
+3-month moving average and the quarterly comparison to smooth noise. The
+government's quarterly forecast for machine orders is also closely watched
+for guidance on the capex outlook.
+
+**Common pitfalls / よくある間違い**:
+- Single-month figures are extremely noisy. A -15% MoM decline does not necessarily signal a downturn. Always use 3-month moving averages for trend analysis.
+- The headline "ships and electric power excluded" (船舶・電力を除く) is the standard measure. Total orders including ships/electric power are misleading due to occasional massive one-off orders.
+- Machine orders measure the value of orders received, not shipped. There is a further lag between orders and actual investment spending.
+- Do not confuse with "machine tool orders" (工作機械受注), which is published by the Japan Machine Tool Builders' Association and covers a narrower scope.
+
+---
+
+### 実質賃金指数 / Real Wage Index
+
+- **Source / データソース**: 統計ダッシュボード (preset=real-wages, indicator=0302030201010090010)
+- **Unit / 単位**: Index (2020 = 100)
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~5 weeks after reference month
+- **Managing agency / 所管**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
+
+**What it measures / 経済的意味**:
+(EN) The wage index for total cash earnings adjusted for consumer price inflation. Real wages = nominal wages minus CPI. It measures whether workers' purchasing power is increasing or declining.
+(JP) 現金給与総額の賃金指数を消費者物価で実質化したもの。実質賃金＝名目賃金−CPI。労働者の購買力が上昇しているか低下しているかを測定する。
+
+**How to interpret / 解読方法**:
+- Rising (positive YoY) / 上昇 → Workers' purchasing power increasing. Supports consumption growth and virtuous wage-price cycle. / 労働者の購買力上昇。消費拡大と賃金・物価の好循環を支持。
+- Falling (negative YoY) / 下落 → Inflation outpacing wage growth. Erodes purchasing power and suppresses consumption. / インフレが賃金上昇を上回る。購買力低下で消費を抑制。
+
+**Market significance / 市場での重要度**: ⭐⭐
+This is the indicator most directly linked to BOJ rate decisions. The 2024 decision to exit negative interest rates was predicated on achieving sustained positive real wage growth. When real wages turn positive, the BOJ gains confidence that inflation is demand-driven (virtuous cycle) rather than cost-push. Real wages were negative for most of 2022-2024 due to high import-driven inflation outpacing the spring wage negotiations (春闘 shunto).
+
+**When to use / 使用場面**:
+BOJ policy prediction, consumption outlook assessment, wage-price spiral
+analysis, living standards evaluation.
+
+**Japan-specific context / 日本固有の文脈**:
+Japan's wage-setting system revolves around the annual spring wage negotiations
+(春闘, shunto) between employers and unions each February-March. Shunto results
+set the tone for wage growth for the entire fiscal year. Real wages were negative
+for 27 consecutive months (2022-2024), the longest streak since records began,
+despite nominal wage growth turning positive. This prolonged real wage decline
+was a key reason the BOJ was cautious about rate hikes even as headline inflation
+exceeded 2%.
+
+**Common pitfalls / よくある間違い**:
+- Real wages can be negative even with rising nominal wages if CPI is rising faster. Always check both the nominal and real series.
+- The Monthly Labour Survey (毎月勤労統計) that produces this index was at the center of a major statistical scandal in 2018 (sampling methodology irregularities). While corrected, it reduced public trust in the data.
+- Total cash earnings includes bonuses, which cause seasonal spikes in June and December. Use the seasonally adjusted series for trend analysis.
+- Part-time worker composition effects can distort the average wage. An increase in part-time employment share pushes down the average even if individual wages are rising.
+
+---
+
+### 有効求人倍率 / Job-to-Applicant Ratio
+
+- **Source / データソース**: 統計ダッシュボード (preset=job-ratio, indicator=0301020001000010020, `--cycle fiscal-year`)
+- **Unit / 単位**: Ratio (倍)
+- **Frequency / 頻度**: Fiscal-year (年度) -- use `--cycle fiscal-year`
+- **Publication lag / 公表遅延**: ~4 weeks after reference month (original MHLW source is monthly; 統計DB only has fiscal-year aggregates)
+- **Managing agency / 所管**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
+
+**What it measures / 経済的意味**:
+(EN) The ratio of active job openings to active job seekers at public employment offices (Hello Work). A value of 1.0 means there is exactly one job available for each job seeker. Above 1.0 indicates more jobs than applicants (labor shortage); below 1.0 indicates more applicants than jobs (labor surplus).
+(JP) 公共職業安定所（ハローワーク）における有効求人数と有効求職者数の比率。1.0＝求人と求職が均衡。1.0超＝人手不足、1.0未満＝就職難。
+
+**How to interpret / 解読方法**:
+- Rising (above 1.0) / 上昇 → Labor market tightening, labor shortage intensifying. Upward pressure on wages. / 労働市場の逼迫、人手不足の深刻化。賃金上昇圧力。
+- Falling (toward or below 1.0) / 下落 → Labor market loosening. A fall below 1.0 is a strong recession signal. / 労働市場の緩和。1.0割れは景気後退の強いシグナル。
+
+**Market significance / 市場での重要度**: ⭐⭐
+In Japan, this ratio is considered more informative than the unemployment rate for gauging labor market tightness. The unemployment rate barely moves in Japan due to structural factors (labor hoarding, lifetime employment), but the job ratio is more responsive to cyclical changes. A sustained move below 1.0 has historically coincided with every post-war recession. Japan has been structurally above 1.0 since 2014 due to demographic labor shortages.
+
+**When to use / 使用場面**:
+Labor market tightness assessment, wage growth prediction, consumption outlook,
+BOJ policy input, recession risk gauge.
+
+**Japan-specific context / 日本固有の文脈**:
+The data comes from Hello Work (ハローワーク), Japan's public employment service.
+It does not capture the full labor market (private recruiters, direct hiring are
+excluded), but its long history and consistency make it the standard benchmark.
+Japan's demographic decline (shrinking working-age population) creates a
+structural upward bias -- even in downturns, the ratio often stays above 1.0.
+The ratio fell to 0.42 during the 2009 financial crisis (the lowest since 1999)
+and recovered to 1.6+ by 2018.
+
+**Common pitfalls / よくある間違い**:
+- The data only covers Hello Work registrations. Many job openings and job seekers use private channels. The level may undercount both sides, but the trend is reliable.
+- Regional variation is enormous. Tokyo may be at 2.0+ while rural prefectures are at 0.8. The national average masks significant geographic disparities.
+- "Effective" (有効) means both opening and application are currently active (not expired). "New" (新規) refers to newly posted that month. Use the effective (有効) series for trend analysis.
+- The seasonally adjusted series is the standard for analysis. Raw data shows strong seasonal patterns (April hiring season spike).
+- The Statistics Dashboard API only provides fiscal-year aggregates for this indicator. For monthly data, use the MHLW e-Stat original statistics directly. Use `--cycle fiscal-year` with estat_client.py.
+
+---
+
+### 第3次産業活動指数 / Tertiary Industry Activity Index
+
+- **Source / データソース**: 統計ダッシュボード (preset=tertiary-index, indicator=0603100300000090010)
+- **Unit / 単位**: Index (2020 base = 100), seasonally adjusted
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~6 weeks after reference month
+- **Managing agency / 所管**: 経済産業省 (Ministry of Economy, Trade and Industry, METI)
+
+**What it measures / 経済的意味**:
+(EN) A real (inflation-adjusted) index measuring the output of Japan's service sector (tertiary industry), covering wholesale/retail, finance/insurance, transport, information/communications, and other services. This is the services counterpart to the Industrial Production Index.
+(JP) サービス業（第3次産業）の活動量を実質ベースで測定する指数。卸小売、金融保険、運輸、情報通信等を含む。鉱工業生産指数のサービス版。
+
+**How to interpret / 解読方法**:
+- Rising / 上昇 → Service sector activity expanding. Positive for Japan's consumption-driven recovery narrative. / サービスセクターの活動拡大。消費主導の景気回復を支持。
+- Falling / 下落 → Service sector activity contracting. Since services are 70% of GDP, broad weakness signals significant economic slowdown. / サービスセクターの活動縮小。GDPの70%を占めるため広範な弱さは深刻な景気減速を示唆。
+
+**Market significance / 市場での重要度**: ⭐⭐
+This index covers the 70% of Japan's GDP that is services. Industrial Production (IP) only captures manufacturing and mining. To get a complete picture of the economy, you need both IP and the Tertiary Index. The index is in real terms (adjusted for price changes), making it suitable for IC mapping as a growth proxy. It is less volatile than IP and captures the domestic consumption and services recovery that has been a key theme post-COVID.
+
+**When to use / 使用場面**:
+Services-led recovery assessment, complement to IP for full economic picture,
+IC mapping growth proxy, domestic consumption tracking, post-COVID recovery
+monitoring.
+
+**Japan-specific context / 日本固有の文脈**:
+Japan's economy has gradually shifted from manufacturing to services over
+decades, with services now accounting for roughly 70% of GDP. However, policy
+attention and market focus historically skew toward manufacturing (IP, TANKAN
+manufacturing DI). The Tertiary Index helps correct this manufacturing bias.
+The COVID-19 pandemic caused an unprecedented collapse in service-sector
+activity due to Japan's prolonged state of emergency declarations and
+voluntary movement restrictions.
+
+**Common pitfalls / よくある間違い**:
+- The Tertiary Index is real (volume-based), not nominal. If service prices rise but activity is flat, the nominal sales figure (service-sales preset) may show growth while this index stays flat.
+- Coverage is broad but not complete. Some service sub-sectors have poor measurement, especially newer digital services.
+- Base year revisions (currently 2020 base) change component weights and can cause level shifts. The 2020 base incorporates COVID-year distortions.
+- Do not confuse with the "All Industry Activity Index" (全産業活動指数), which combines both IP and Tertiary into a single measure.
+
+---
+
+### 小売業販売額 / Retail Sales
+
+- **Source / データソース**: 統計ダッシュボード (preset=retail-sales, indicator=0601010201010010000)
+- **Unit / 単位**: JPY 100 million (億円), nominal
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~4 weeks after reference month
+- **Managing agency / 所管**: 経済産業省 (Ministry of Economy, Trade and Industry, METI)
+
+**What it measures / 経済的意味**:
+(EN) The total nominal value of goods sold by retail establishments across Japan. This is the primary measure of consumer spending on goods, equivalent to US Retail Sales.
+(JP) 全国の小売業事業所における商品販売額（名目）。財に対する個人消費の実態を示す主要指標。米国のRetail Salesに相当。
+
+**How to interpret / 解読方法**:
+- Rising / 上昇 → Consumer spending on goods is increasing. Positive for domestic demand-oriented companies and consumption recovery narrative. / 財への消費支出が増加。内需企業・消費回復にポジティブ。
+- Falling / 下落 → Consumer spending on goods is weakening. Negative for retail sector and domestic demand outlook. / 財への消費支出が減少。小売セクター・内需見通しにネガティブ。
+
+**Market significance / 市場での重要度**: ⭐⭐
+Retail sales data is released relatively quickly (~4 weeks lag) and provides a timely read on consumer spending trends. JPY can move on the release. However, this is a nominal figure (includes price effects), so it must be cross-checked with real consumption data for accurate volume assessment. Strong retail sales driven purely by price increases (inflation) do not indicate genuine consumption growth.
+
+**When to use / 使用場面**:
+Consumer spending trends, domestic demand assessment, retail sector analysis,
+inflation pass-through to consumers (nominal vs real comparison).
+
+**Japan-specific context / 日本固有の文脈**:
+Japanese retail sales are heavily influenced by consumption tax hikes (last hike
+from 8% to 10% in October 2019), which cause a demand surge before the hike and
+a sharp drop after. Seasonal patterns include year-end/New Year shopping and
+summer Obon gift-giving. The inbound tourism boom (post-2023 yen weakness) has
+also boosted retail sales, particularly in department stores and luxury goods,
+making it harder to isolate domestic consumer sentiment.
+
+**Common pitfalls / よくある間違い**:
+- This is NOMINAL data. Rising retail sales during inflation may reflect higher prices, not higher volumes. Cross-check with real household consumption expenditure (家計調査) for volume trends.
+- Retail sales cover goods only, not services. In a services-led economy, this gives an incomplete consumption picture.
+- Online sales are included but may be underrepresented due to survey methodology. The shift to e-commerce can distort establishment-based retail surveys.
+- Do not confuse with "Commercial Sales Statistics" (商業動態統計), which includes both wholesale and retail. The retail-only figure is the relevant consumer spending proxy.
+
+---
+
+### サービス産業売上高 / Service Industry Sales
+
+- **Source / データソース**: 統計ダッシュボード (preset=service-sales, indicator=0603010200000010000)
+- **Unit / 単位**: JPY 100 million (億円), nominal
+- **Frequency / 頻度**: Monthly
+- **Publication lag / 公表遅延**: ~6 weeks after reference month
+- **Managing agency / 所管**: 総務省統計局 (Ministry of Internal Affairs and Communications, Statistics Bureau)
+
+**What it measures / 経済的意味**:
+(EN) The total nominal revenue (sales) of service industry establishments, covering a wide range of services including information/communications, transport, accommodation, food services, entertainment, and professional services. Based on the Monthly Survey on Service Industries.
+(JP) サービス産業の事業所における売上高（営業収入）の名目値。情報通信、運輸、宿泊、飲食、娯楽、専門サービス等を広範にカバー。月次サービス産業動態統計調査に基づく。
+
+**How to interpret / 解読方法**:
+- Rising / 上昇 → Service sector revenue growing. Can reflect volume growth, price increases, or both. / サービスセクターの収入増加。数量増・値上げ、またはその両方を反映。
+- Falling / 下落 → Service sector revenue declining. Signals weakening demand for services. / サービスセクターの収入減少。サービス需要の弱さを示唆。
+
+**Market significance / 市場での重要度**: ⭐
+As a standalone indicator, market impact is low. However, when combined with the Tertiary Industry Activity Index (real, volume-based), it reveals pricing dynamics: if nominal service sales rise while the Tertiary Index is flat, the gap indicates service-sector price increases (値上げ). This combination is useful for detecting "quiet inflation" in services, which is the type of inflation the BOJ most wants to see for sustained 2% target achievement.
+
+**When to use / 使用場面**:
+Service sector revenue analysis, price vs volume decomposition (paired with
+Tertiary Index), sector-level consumption analysis, services inflation detection.
+
+**Japan-specific context / 日本固有の文脈**:
+Japan's service sector has historically been characterized by "cost disease"
+(productivity growth lagging manufacturing) and resistance to price increases.
+The post-COVID period saw the first significant service-sector price increases
+in decades, driven by labor shortages and input cost pass-through. The
+hospitality sub-sector (accommodation, food services) was most affected by
+COVID restrictions and has shown the strongest recovery, boosted by inbound
+tourism and domestic travel campaigns (全国旅行支援).
+
+**Common pitfalls / よくある間違い**:
+- This is NOMINAL revenue, not real activity. Rising sales may reflect price increases rather than volume growth. Always pair with the Tertiary Industry Activity Index for a complete picture.
+- The Monthly Survey on Service Industries (月次サービス産業動態統計) covers establishments with 10+ employees. Small establishments (which dominate Japan's service sector) are underrepresented.
+- Sub-sector composition matters greatly. "Service industry" spans from high-value IT consulting to low-margin food services. Aggregate trends can mask divergent sub-sector dynamics.
+- Do not confuse with the BOJ's Services Producer Price Index (SPPI, PR02), which measures B2B service prices, not revenue.
 
 ---
 
