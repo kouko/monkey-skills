@@ -325,9 +325,8 @@ def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: 
 
     result: dict = {
         "indicator": indicator,
+        "preset": preset,
     }
-    if preset:
-        result["preset"] = preset
     result.update({
         "name": name,
         "fetched_at": now,
@@ -408,6 +407,10 @@ def main() -> None:
 
     # --search mode: search and exit
     if args.search:
+        if args.no_cache:
+            catalog_cache = CACHE_DIR / "_indicator_catalog.json"
+            if catalog_cache.exists():
+                catalog_cache.unlink()
         result = search_indicators(args.search)
         print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
         if "error" in result:
