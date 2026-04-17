@@ -35,3 +35,27 @@
 - 路徑在 SKILL.md 中用相對路徑定義，launch 時解析為絕對路徑
 - Worker Input Contract: Resource Paths → Task → Input
 - Evaluator Input Contract: Resource Paths → Artifact → Requirements
+
+### Cross-Plugin Delegation Contract
+
+首例：`investing-toolkit:investment-memo-writer` → `domain-teams:investing-team`
+
+**規則**：
+1. **Delegation = pass paths + structured seed context** — 不傳遞 file content，不內嵌分析結果
+2. **Delegation target receives full authority** — 被委派的 skill 自行載入 standards、執行 gates、產生 verdict；委派方不干涉
+3. **Data layer stays in toolkit, analysis layer stays in domain-teams** — investing-toolkit 只負責 data fetch + pipeline orchestration；investing-team 負責分析、primary-source anchoring、gate enforcement
+4. **Gate verdicts flow back** — delegation target 的 gate 結果（PASS / NEEDS_REVISION）回傳給 orchestrating skill，不被 swallowed
+5. **Cross-plugin path resolution** — 委派時使用 plugin name + skill path（e.g. `domain-teams:investing-team`），不使用檔案系統絕對路徑
+
+**Pattern（investing-toolkit → domain-teams）**：
+```
+investing-toolkit skill
+  → data-fetcher agent (I/O only)
+  → domain-teams:{team} skill (analysis + gates)
+  → domain-teams:docs-team (formatting, optional)
+```
+
+**禁止**：
+- 不可在 toolkit skill 內自行執行 investing-team 的 gate logic（避免 gate bypass）
+- 不可把 domain-teams standards 複製到 toolkit skill（避免 drift）
+- data-fetcher agent 不可做分析（I/O only）

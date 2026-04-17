@@ -141,6 +141,7 @@ You may reference any standards, checklists, or rubrics during self-check.
 | Scenario Stress-Test | Output includes forward-looking assumptions or price targets | `evaluator` + `rubrics/scenario-stress-test-gate.md` |
 | Position-Sizing Rationale | Output specifies position size or allocation % | `evaluator` + `rubrics/position-sizing-rationale-gate.md` |
 | Market-Regime Consistency | Output includes a regime call AND an individual stock verdict | `evaluator` + `rubrics/market-regime-consistency-gate.md` |
+| Signal Quality (ISQ) | Output contains any verdict, recommendation, or regime call | `evaluator` + `rubrics/signal-quality-assessment-gate.md` |
 
 ### MAY Gates (trigger on scope)
 
@@ -201,6 +202,9 @@ Strategic (Investor Lens):
 Data + Backtesting:
   standards/data-sources-and-fixtures.md        (Tier 2)
   standards/backtesting-and-robustness-discipline.md (Tier 2)
+
+Signal Quality:
+  standards/investment-signal-quality.md         (Tier 2)
 ```
 
 Gate files:
@@ -214,6 +218,7 @@ SHOULD rubrics:
   rubrics/scenario-stress-test-gate.md
   rubrics/position-sizing-rationale-gate.md
   rubrics/market-regime-consistency-gate.md
+  rubrics/signal-quality-assessment-gate.md
 
 MAY rubric:
   rubrics/taiwan-local-rigor-gate.md
@@ -310,7 +315,8 @@ full memo.
 |-------|------|-----------|--------------|
 | 1 | MUST | `checklists/primary-source-citation-compliance.md` | yes |
 | 2 | MUST | `checklists/investment-thesis-soundness-checklist.md` | yes |
-| 3 | MAY | `rubrics/taiwan-local-rigor-gate.md` | no |
+| 3 | SHOULD | `rubrics/signal-quality-assessment-gate.md` | no |
+| 4 | MAY | `rubrics/taiwan-local-rigor-gate.md` | no |
 
 ---
 
@@ -334,7 +340,8 @@ Taiwan if `.TW`/`.TWO` + Strategic + Data + Backtesting)
 | 3 | SHOULD | `rubrics/scenario-stress-test-gate.md` | no |
 | 4 | SHOULD | `rubrics/position-sizing-rationale-gate.md` | no |
 | 5 | SHOULD | `rubrics/market-regime-consistency-gate.md` | no |
-| 6 | MAY | `rubrics/taiwan-local-rigor-gate.md` | no |
+| 6 | SHOULD | `rubrics/signal-quality-assessment-gate.md` | no |
+| 7 | MAY | `rubrics/taiwan-local-rigor-gate.md` | no |
 
 ---
 
@@ -358,6 +365,7 @@ decision-framework-and-verdict) + Data
 | 2 | MUST | `checklists/investment-thesis-soundness-checklist.md` | yes |
 | 3 | SHOULD | `rubrics/position-sizing-rationale-gate.md` | no |
 | 4 | SHOULD | `rubrics/market-regime-consistency-gate.md` | no |
+| 5 | SHOULD | `rubrics/signal-quality-assessment-gate.md` | no |
 
 ---
 
@@ -378,6 +386,7 @@ economic cycle — without a specific stock verdict.
 |-------|------|-----------|--------------|
 | 1 | MUST | `checklists/primary-source-citation-compliance.md` | yes |
 | 2 | SHOULD | `rubrics/market-regime-consistency-gate.md` | no |
+| 3 | SHOULD | `rubrics/signal-quality-assessment-gate.md` | no |
 
 ---
 
@@ -404,7 +413,8 @@ Output language defaults to **zh-TW**.
 | 3 | SHOULD | `rubrics/scenario-stress-test-gate.md` | no |
 | 4 | SHOULD | `rubrics/position-sizing-rationale-gate.md` | no |
 | 5 | SHOULD | `rubrics/market-regime-consistency-gate.md` | no |
-| 6 | MAY | `rubrics/taiwan-local-rigor-gate.md` | yes (Taiwan scope ≡ required for this workflow) |
+| 6 | SHOULD | `rubrics/signal-quality-assessment-gate.md` | no |
+| 7 | MAY | `rubrics/taiwan-local-rigor-gate.md` | yes (Taiwan scope ≡ required for this workflow) |
 
 ---
 

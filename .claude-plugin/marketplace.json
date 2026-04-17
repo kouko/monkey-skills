@@ -23,6 +23,11 @@
       "name": "dev-workflow",
       "description": "Developer workflow skills — skill creation, evaluation, and iterative improvement",
       "source": "./dev-workflow/"
+    },
+    {
+      "name": "investing-toolkit",
+      "description": "Investing research toolkit — macro regime diagnosis, DCF and screening workflows, US and Taiwan equity snapshots via yfinance, FRED, and SEC EDGAR adapters. 投資調査・台股・美股。投資研究工具組。",
+      "source": "./investing-toolkit/"
     }
   ]
 }

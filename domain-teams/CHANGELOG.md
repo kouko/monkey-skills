@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] — 2026-04-17
+
+### Context
+
+ISQ (Investment Signal Quality) added to `investing-team` as a SHOULD-level
+gate. ISQ evaluates the credibility of analysis conclusions — orthogonal to
+existing gates which check process compliance. Adapted from Dexter Kabu JP
+(raditrejp/dexter-kabu-jp `src/tools/signal/isq.ts`); original formula
+preserved with investing-team-specific dimension rubrics.
+
+### Added
+
+- `investing-team/standards/investment-signal-quality.md` — ISQ framework:
+  4 dimensions (Confidence 35%, Intensity 30%, Expectation Gap 20%,
+  Timeliness 15%), signal labels (Strong ≥0.8 / Medium / Weak / Noise <0.4),
+  output format, gate interaction model
+- `investing-team/rubrics/signal-quality-assessment-gate.md` — SHOULD gate:
+  evaluator scores each dimension 🟢/🟡/🔴, computes ISQ, produces
+  informational annotation (never FAIL — Noise conclusions still delivered)
+
+### Changed
+
+- `investing-team/SKILL.md`:
+  - SHOULD gates table: added Signal Quality (ISQ)
+  - All 5 workflow gate tables: added ISQ as SHOULD gate
+  - Resource Manifest: added standard + rubric paths
+
 ## [5.0.0] — 2026-04-16
 
 ### Context
