@@ -35,14 +35,16 @@ copy_to yfinance_client.py \
   technical-snapshot \
   stock-screener \
   investment-memo-writer \
-  invest-portfolio
+  invest-portfolio \
+  china-macro
 
 echo "Syncing fred_client.py..."
 copy_to fred_client.py \
   macro-regime-snapshot \
   investment-memo-writer \
   dcf-valuation \
-  us-macro
+  us-macro \
+  china-macro
 
 echo "Syncing finmind_client.py..."
 copy_to finmind_client.py \
@@ -78,6 +80,10 @@ echo "Syncing fdr_client.py..."
 copy_to fdr_client.py \
   korea-macro
 
+echo "Syncing akshare_client.py..."
+copy_to akshare_client.py \
+  china-macro
+
 echo "Syncing ta_client.py..."
 copy_to ta_client.py \
   technical-snapshot \
@@ -96,7 +102,8 @@ copy_to setup.sh \
   us-macro \
   japan-macro \
   taiwan-macro \
-  korea-macro
+  korea-macro \
+  china-macro
 
 echo ""
 echo "Sync complete."
