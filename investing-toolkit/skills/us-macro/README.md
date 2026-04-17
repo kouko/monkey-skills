@@ -1,13 +1,15 @@
 # us-macro
 
-US macroeconomic data skill for investing-toolkit.
+US macroeconomic and sector-level data skill for investing-toolkit.
 
 ## Overview
 
-Fetches 8 key US macroeconomic indicators from FRED (Federal Reserve Economic
-Data) and returns structured JSON grouped by rates, inflation, and growth.
-This is a data-only skill -- it does not analyze, map to regimes, or generate
-investment verdicts.
+Fetches 21 US macroeconomic and sector-level indicators from FRED (Federal
+Reserve Economic Data) and returns structured JSON grouped by 10 indicator
+groups: rates, inflation, growth (core macro), plus housing, industrials,
+energy, financials, consumer, tech, and ppi (sector-level). Sector groups
+map to sector ETFs for investment analysis. This is a data-only skill -- it
+does not analyze, map to regimes, or generate investment verdicts.
 
 ## Data Source
 
@@ -24,6 +26,8 @@ all use cases for this skill.
 
 ## Indicators
 
+### Core Macro
+
 | Series | Name | Group | Frequency | Typical Lag |
 |--------|------|-------|-----------|-------------|
 | T10Y2Y | 10Y-2Y Treasury spread | rates | Daily | 1 business day |
@@ -35,11 +39,48 @@ all use cases for this skill.
 | GDPC1 | Real GDP | growth | Quarterly | ~1 month (advance est.) |
 | INDPRO | Industrial Production Index | growth | Monthly | ~3-4 weeks |
 
-Organized in 3 groups:
+### Sector-Level
+
+| Series | Name | Group | Frequency | Typical Lag |
+|--------|------|-------|-----------|-------------|
+| PERMIT | Building Permits | housing | Monthly | ~2-3 weeks |
+| HOUST | Housing Starts | housing | Monthly | ~2-3 weeks |
+| CSUSHPISA | Case-Shiller Home Price Index | housing | Monthly | ~2 months |
+| MORTGAGE30US | 30-Year Mortgage Rate | housing | Weekly | ~1 week |
+| DGORDER | Durable Goods Orders | industrials | Monthly | ~4 weeks |
+| DCOILWTICO | WTI Crude Oil Price | energy | Daily | 1 business day |
+| DHHNGSP | Henry Hub Natural Gas Price | energy | Daily | 1 business day |
+| BAMLH0A0HYM2 | High Yield Credit Spread | financials | Daily | 1 business day |
+| RSAFS | Advance Retail Sales | consumer | Monthly | ~2 weeks |
+| UMCSENT | Consumer Sentiment (UMich) | consumer | Monthly | ~2-4 weeks |
+| CES3133440001 | Semiconductor Employment | tech | Monthly | ~3-4 weeks |
+| PCUAINFOAINFO | PPI: Information Services | tech | Monthly | ~2-3 weeks |
+| PCUOMFGOMFG | PPI: Total Manufacturing | ppi | Monthly | ~2-3 weeks |
+
+Organized in 10 groups:
 
 - **rates**: T10Y2Y, DGS10, DGS2, FEDFUNDS
 - **inflation**: CPIAUCSL, CPILFESL
 - **growth**: GDPC1, INDPRO
+- **housing**: PERMIT, HOUST, CSUSHPISA, MORTGAGE30US
+- **industrials**: DGORDER
+- **energy**: DCOILWTICO, DHHNGSP
+- **financials**: BAMLH0A0HYM2
+- **consumer**: RSAFS, UMCSENT
+- **tech**: CES3133440001, PCUAINFOAINFO
+- **ppi**: PCUOMFGOMFG
+
+## Sector ETF Mapping
+
+| Group | Primary ETFs | Notes |
+|-------|-------------|-------|
+| housing | XLRE, XHB | MORTGAGE30US also signals XLF |
+| industrials | XLI | INDPRO (growth group) also relevant |
+| energy | XLE | Oil affects airlines, consumer spending, inflation |
+| financials | XLF | T10Y2Y (rates group) drives bank margins |
+| consumer | XLY, XLP | Retail sales drives discretionary vs staples rotation |
+| tech | XLK | Semiconductor employment tracks supply chain |
+| ppi | (cross-sector) | Leads CPI by 3-6 months; margin pressure signal |
 
 ## Architecture
 
@@ -50,7 +91,7 @@ us-macro skill
 │   ├── fred_client.py          <- FRED CSV adapter (no API key)
 │   └── setup.sh                <- auto-install uv
 └── references/
-    └── us-macro-indicators.md  <- indicator meanings + interpretation
+    └── us-macro-indicators.md  <- 21 indicator entries + interpretation
 ```
 
 Scripts are synced copies from `investing-toolkit/scripts/` via
@@ -95,7 +136,14 @@ resolves all paths relative to the skill root.
     "growth": {
       "GDPC1":  { "latest": { "..." }, "prior": { "..." }, "direction": "..." },
       "INDPRO": { "latest": { "..." }, "prior": { "..." }, "direction": "..." }
-    }
+    },
+    "housing": { "PERMIT": { "..." }, "HOUST": { "..." }, "CSUSHPISA": { "..." }, "MORTGAGE30US": { "..." } },
+    "industrials": { "DGORDER": { "..." } },
+    "energy": { "DCOILWTICO": { "..." }, "DHHNGSP": { "..." } },
+    "financials": { "BAMLH0A0HYM2": { "..." } },
+    "consumer": { "RSAFS": { "..." }, "UMCSENT": { "..." } },
+    "tech": { "CES3133440001": { "..." }, "PCUAINFOAINFO": { "..." } },
+    "ppi": { "PCUOMFGOMFG": { "..." } }
   }
 }
 ```
@@ -136,7 +184,7 @@ uv run scripts/fred_client.py --series T10Y2Y,DGS10 --periods 24
 ```bash
 cd investing-toolkit/scripts
 
-for series in T10Y2Y DGS10 DGS2 FEDFUNDS CPIAUCSL CPILFESL GDPC1 INDPRO; do
+for series in T10Y2Y DGS10 DGS2 FEDFUNDS CPIAUCSL CPILFESL GDPC1 INDPRO PERMIT HOUST CSUSHPISA MORTGAGE30US DGORDER DCOILWTICO DHHNGSP BAMLH0A0HYM2 RSAFS UMCSENT CES3133440001 PCUAINFOAINFO PCUOMFGOMFG; do
   uv run fred_client.py --series "$series" --periods 3 --no-cache 2>&1 | \
     python3 -c "
 import json, sys
@@ -156,8 +204,10 @@ done
 
 | Frequency | Series | Expected Staleness |
 |-----------|--------|-------------------|
-| Daily | T10Y2Y, DGS10, DGS2 | < 5 days |
-| Monthly | FEDFUNDS, CPIAUCSL, CPILFESL, INDPRO | < 60 days |
+| Daily | T10Y2Y, DGS10, DGS2, DCOILWTICO, DHHNGSP, BAMLH0A0HYM2 | < 5 days |
+| Weekly | MORTGAGE30US | < 10 days |
+| Monthly | FEDFUNDS, CPIAUCSL, CPILFESL, INDPRO, PERMIT, HOUST, DGORDER, RSAFS, UMCSENT, CES3133440001, PCUOMFGOMFG, PCUAINFOAINFO | < 60 days |
+| Monthly (lagging) | CSUSHPISA | < 90 days |
 | Quarterly | GDPC1 | < 200 days |
 
 ### Verify FRED CSV endpoint
@@ -185,4 +235,4 @@ If retired, check successor at: `https://fred.stlouisfed.org/series/{SERIES_ID}`
 
 ### Latest verification
 
-**Date**: 2026-04-17 — All 8 series ACTIVE, returning 2026 data via CSV endpoint.
+**Date**: 2026-04-17 — All 21 series ACTIVE, returning 2026 data via CSV endpoint.
