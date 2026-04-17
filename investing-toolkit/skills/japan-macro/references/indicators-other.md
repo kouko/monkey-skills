@@ -37,6 +37,11 @@ policy trap. M2 growth accelerated during COVID fiscal transfers.
 - Japan uses M2 as the headline aggregate (not M3 as in the Eurozone). M3 includes Japan Post Bank deposits and is broader.
 - MD02 contains multiple series. Use getMetadata to find the M2 headline aggregate code.
 
+**Cross-indicator notes**:
+- Japan-specific anomaly: M2 expanded sharply post-1995 while nominal GDP stagnated — opposite to textbook expectations. Expanded money funded government bond purchases (low fiscal multipliers), not private investment, during the balance sheet recession period (1990-2005).
+  Source: RIETI analysis https://www.rieti.go.jp/jp/columns/s15_0010.html
+  Period: 1995–2012 (quantitative easing era). Similar pattern during 2013–2020 QQE.
+
 ---
 
 ### 短観 業況判断DI / TANKAN Business Conditions DI
@@ -185,6 +190,11 @@ investment income is often reinvested abroad rather than repatriated.
 - Seasonal patterns are strong (fiscal year-end in March, bonus months). Use seasonally adjusted data for trend analysis.
 - BP01 contains many sub-components (trade, services, income). Use getMetadata to identify the correct total current account code.
 - The data is jointly compiled by MOF and BOJ. Published by MOF in the Balance of Payments statistics.
+
+**Cross-indicator notes**:
+- The traditional 「経常収支黒字→円高」relationship has structurally broken since 2011 (post-earthquake trade deficit). Japan's current account surplus now derives from overseas investment income (第一次所得収支), but reinvested earnings abroad do NOT convert to yen demand. This breaks the "current account → currency strength" textbook link.
+  Source: 三井住友DSアセットマネジメント analysis, 2024-04
+  Structural break: 2011–present.
 
 ---
 

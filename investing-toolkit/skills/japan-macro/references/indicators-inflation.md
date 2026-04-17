@@ -38,6 +38,11 @@ and the yen exchange rate. Government energy subsidies can distort CPI by
 - Japan CPI uses a different basket weighting than US CPI. Shelter (rent) weight is much lower in Japan (~20% vs ~36% in US) because Japan has high home ownership and controlled rents.
 - "Core CPI" in Japan means "less fresh food" (生鮮食品を除く), NOT "less food and energy" as in the US. The US-style core is called "core-core CPI" (生鮮食品及びエネルギーを除く) in Japan.
 
+**Cross-indicator notes**:
+- 円安→CPI pass-through is structurally weak in Japan: 1% yen depreciation → 2% import price increase (immediate) → only 0.1% core CPI increase (12-month lag). Small firms with weak pricing power buffer consumer prices.
+  Source: RIETI Research Paper https://www.rieti.go.jp/jp/publications/nts/19e078.html
+- CGPI (企業物価) can spike while CPI stays flat — this "pass-through gap" signals that cost pressure is building in the corporate sector but hasn't reached consumers yet. The lag is typically 6-12 months.
+
 ---
 
 ### 企業物価指数 CGPI / Corporate Goods Price Index

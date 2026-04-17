@@ -38,6 +38,11 @@ ratio (有効求人倍率, published by MHLW) than by the unemployment rate alon
 - The rate barely moved during COVID (peaked at 3.1%) due to massive government employment subsidies (雇用調整助成金). This masked the true impact.
 - Do not compare Japan's 2.5% with US 4% and conclude Japan's labor market is tighter. Structural and definitional differences make absolute comparison misleading.
 
+**Cross-indicator notes**:
+- Japan's Phillips Curve is structurally flat: low unemployment does NOT reliably push up wages or CPI. Root cause: dual labor market (正規/非正規雇用) suppresses aggregate wage bargaining power.
+  Source: Gregor Smith (2008) "Japan's Phillips Curve Looks Like Japan"; Springer (2022) on dual labor market effects.
+- 有効求人倍率 provides more cyclical signal than unemployment in Japan because unemployment stays structurally low (~2.5%) due to labor shortage demographics.
+
 ---
 
 ### 実質賃金指数 / Real Wage Index
@@ -77,6 +82,11 @@ exceeded 2%.
 - The Monthly Labour Survey (毎月勤労統計) that produces this index was at the center of a major statistical scandal in 2018 (sampling methodology irregularities). While corrected, it reduced public trust in the data.
 - Total cash earnings includes bonuses, which cause seasonal spikes in June and December. Use the seasonally adjusted series for trend analysis.
 - Part-time worker composition effects can distort the average wage. An increase in part-time employment share pushes down the average even if individual wages are rising.
+
+**Cross-indicator notes**:
+- BOJ Governor Ueda's policy normalization framework (2023–present) requires a "virtuous cycle between wages and prices" (賃金と物価の好循環). Three conditions: (1) firms pass wage costs into selling prices (2) inflation expectations become forward-looking (3) wage momentum persists beyond commodity shocks.
+  Source: BOJ Governor speech, 2024-05-08 https://www.boj.or.jp/en/about/press/koen_2024/ko240508a.htm
+  Note: This framework is current as of 2026 but may change with future BOJ leadership.
 
 ---
 

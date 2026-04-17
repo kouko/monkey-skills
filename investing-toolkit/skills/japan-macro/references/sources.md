@@ -75,6 +75,14 @@ Primary sources referenced in the japan-macro indicator documentation.
 - **Yield Curve and Recession**: Estrella, A. & Mishkin, F.S. "The Yield Curve as a Predictor of U.S. Recessions." Federal Reserve Bank of New York, Current Issues in Economics and Finance, Vol. 2, No. 7. (US-focused but framework applied globally.)
   https://www.newyorkfed.org/research/current_issues/ci2-7.html
 
+- **Japan Phillips Curve**: Gregor Smith (2008), "Japan's Phillips Curve Looks Like Japan." Journal of Money, Credit and Banking 40(6).
+
+- **Exchange Rate Pass-Through (Japan)**: RIETI, "Exchange Rate Pass-Through and Domestic Prices." https://www.rieti.go.jp/jp/publications/nts/19e078.html
+
+- **Money-GDP Divergence (Japan)**: RIETI column analysis. https://www.rieti.go.jp/jp/columns/s15_0010.html
+
+- **Sahm Rule**: Sahm, Claudia (2019). "Direct Stimulus Payments to Individuals." Brookings Hamilton Project. FRED series: SAHMREALTIME.
+
 ---
 
 ## Market Consensus Claims

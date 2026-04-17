@@ -46,6 +46,12 @@ recession probability assessment, fixed-income allocation decisions.
   so the signal is noisier during periods of active Fed balance sheet operations.
 - A single day's reading is meaningless; look at the trend over weeks/months.
 
+**Cross-indicator notes**:
+- Campbell Harvey (1986, Duke): discovered yield curve recession prediction in his dissertation. 2022-23 inversion lasted 16 months without recession — possibly the first false signal, or lag extending due to post-pandemic structural changes. Conclusion still open.
+- MSCI study (1978-2022, 14 inversions): 36 months after inversion, 10/14 cases showed positive equity returns. Inversion is a recession signal, NOT a market timing signal.
+- NY Fed recession probability model uses 10Y-3M spread (not T10Y2Y). When probability exceeds 32%, recession has always followed (except Oct 1966).
+  Source: https://www.newyorkfed.org/research/capital_markets/ycfaq
+
 ---
 
 ### DGS10: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
@@ -204,6 +210,12 @@ mapping.
 - Base effects can distort YoY readings. Always check MoM annualized alongside
   YoY.
 
+**Cross-indicator notes**:
+- CPI vs PCE divergence: CPI weights shelter ~2x higher than PCE. During housing inflation cycles (e.g. 2021-2024), CPI can run 50-90 bps above PCE. The Fed targets PCE, not CPI.
+  Source: Cleveland Fed infographic, 2024 https://www.clevelandfed.org/collections/infographics/2024/infogr-20241205-cpi-versus-pce-price-index
+- Sahm Rule: when unemployment's 3-month average rises >=0.5% above prior 12-month low, recession is underway. 11/11 correct since 1950. Available as real-time FRED series: SAHMREALTIME.
+  Source: Claudia Sahm; FRED https://fred.stlouisfed.org/series/SAHMREALTIME
+
 ---
 
 ### CPILFESL: Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average
@@ -331,6 +343,11 @@ cyclical vs. defensive sector allocation.
 - The index is seasonally adjusted, but holiday timing and calendar effects
   can still create noise.
 - INDPRO is revised in subsequent months. Initial prints can be misleading.
+
+**Cross-indicator notes**:
+- ISM Manufacturing PMI and INDPRO correlation has declined significantly post-2010. S&P Global data shows 69% correlation over 23 years, but ISM-specific correlation is much weaker since GFC. Soft data (PMI surveys) and hard data (INDPRO) can diverge for extended periods — do not assume PMI predicts INDPRO.
+- Conference Board Leading Economic Index (LEI) includes INDPRO-related components (manufacturing hours, new orders) alongside yield spread, stock prices, and building permits — 10 indicators total.
+  Source: https://www.conference-board.org/topics/us-leading-indicators/
 
 ---
 
