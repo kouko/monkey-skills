@@ -12,9 +12,11 @@ ERRORS=0
 
 echo "Checking script sync..."
 
-for skill_script in "$SKILLS"/*/scripts/*.py; do
+for skill_script in "$SKILLS"/*/scripts/*.py "$SKILLS"/*/scripts/*.sh; do
   [ -f "$skill_script" ] || continue
   filename="$(basename "$skill_script")"
+  # Skip CI-only scripts (not synced to skills)
+  case "$filename" in sync-check.sh|sync-scripts.sh) continue ;; esac
   source="$SCRIPT_DIR/$filename"
 
   if [ ! -f "$source" ]; then

@@ -72,7 +72,7 @@ FRED_API_KEY: {inject from env if available, else omit}
    command -v uv
    ```
    - If found → proceed to fetch requests
-   - If not found → run `sh ${CLAUDE_SKILL_DIR}/../../scripts/setup.sh`
+   - If not found → run `sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh`
    - If setup.sh succeeds → proceed
    - If setup.sh fails → return `{"error": "uv not installed. Run: sh investing-toolkit/scripts/setup.sh"}` and stop
 2. **Run scripts, don't analyze**: Return raw JSON output from scripts. Do not

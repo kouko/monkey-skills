@@ -227,4 +227,4 @@ When installed, skills can call it directly for:
 claude plugin add casualmarket
 ```
 
-See `../../scripts/README.md` for setup notes.
+See `investing-toolkit/scripts/README.md` for setup notes.

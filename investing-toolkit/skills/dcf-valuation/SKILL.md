@@ -68,7 +68,7 @@ Debt weight:                                  _____%
 WACC = Ke × We + Kd(1-t) × Wd:             _____%
 ```
 
-To fetch current DGS10, run (verify uv first: `command -v uv || sh ${CLAUDE_SKILL_DIR}/../../scripts/setup.sh`):
+To fetch current DGS10, run (verify uv first: `command -v uv || sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh`):
 `uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGS10 --periods 1`
 
 ### Stage 4 — Terminal Growth

@@ -47,7 +47,7 @@ Expected output: JSON with `data` array (OHLCV rows) and `latest_close`.
 
 Before running scripts directly, verify uv is installed:
 ```bash
-command -v uv || sh ${CLAUDE_SKILL_DIR}/../../scripts/setup.sh
+command -v uv || sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh
 ```
 
 Pass the JSON from Step 1 to `ta_client.py`:

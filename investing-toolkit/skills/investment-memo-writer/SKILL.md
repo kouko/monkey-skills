@@ -148,4 +148,4 @@ This skill is the repo's first cross-plugin delegation pattern
 - yfinance is an unofficial scraper. Data may lag or be temporarily unavailable.
 - FinMind anonymous limit: 300 req/hr. Set `FINMIND_API_TOKEN` env var for 600 req/hr.
 - FRED without API key: ~100 requests/day. Set `FRED_API_KEY` env var for higher limits.
-  See `../../scripts/README.md`.
+  See `investing-toolkit/scripts/README.md`.

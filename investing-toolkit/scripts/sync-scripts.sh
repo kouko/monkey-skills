@@ -54,5 +54,16 @@ copy_to ta_client.py \
   technical-snapshot \
   stock-screener
 
+echo "Syncing setup.sh..."
+copy_to setup.sh \
+  us-stock-snapshot \
+  technical-snapshot \
+  stock-screener \
+  investment-memo-writer \
+  invest-portfolio \
+  macro-regime-snapshot \
+  dcf-valuation \
+  taiwan-stock-snapshot
+
 echo ""
 echo "Sync complete."

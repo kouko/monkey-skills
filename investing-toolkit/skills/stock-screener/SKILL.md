@@ -104,7 +104,7 @@ If any ticker fails, continue with `_partial: true` — do not block.
 
 Before running scripts directly, verify uv is installed:
 ```bash
-command -v uv || sh ${CLAUDE_SKILL_DIR}/../../scripts/setup.sh
+command -v uv || sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh
 ```
 
 For each ticker with valid OHLCV data, compute indicators:
