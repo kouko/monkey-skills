@@ -58,6 +58,22 @@ echo "Syncing estat_client.py..."
 copy_to estat_client.py \
   japan-macro
 
+echo "Syncing cbc_client.py..."
+copy_to cbc_client.py \
+  taiwan-macro
+
+echo "Syncing dgbas_client.py..."
+copy_to dgbas_client.py \
+  taiwan-macro
+
+echo "Syncing ndc_client.py..."
+copy_to ndc_client.py \
+  taiwan-macro
+
+echo "Syncing statgov_client.py..."
+copy_to statgov_client.py \
+  taiwan-macro
+
 echo "Syncing ta_client.py..."
 copy_to ta_client.py \
   technical-snapshot \
@@ -74,7 +90,8 @@ copy_to setup.sh \
   dcf-valuation \
   taiwan-stock-snapshot \
   us-macro \
-  japan-macro
+  japan-macro \
+  taiwan-macro
 
 echo ""
 echo "Sync complete."
