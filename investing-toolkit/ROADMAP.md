@@ -36,7 +36,7 @@
 
 ---
 
-## v1.2.0 — Screener + Technical Layer (current)
+## v1.2.0 — Screener + Technical Layer
 
 **Scope**: Technical indicators, batch screener, portfolio review.
 
@@ -48,6 +48,26 @@
 - [x] skills/invest-portfolio/SKILL.md (P&L snapshot + regime overlay + investing-team delegation)
 - [x] /invest-screen {tickers} [--pe-max] [--above-sma200] [--rsi-min/max]
 - [x] /invest-portfolio [holdings.csv | inline-list]
+
+---
+
+## v1.3.0 — Country Macro Skills (current)
+
+**Scope**: Country-specific macro data skills with bilingual indicator references.
+
+### New
+- [x] scripts/boj_client.py (BOJ Time-Series API, no auth)
+- [x] scripts/estat_client.py (統計ダッシュボード API, no auth)
+- [x] skills/us-macro/SKILL.md (FRED 8 indicators + reference doc)
+- [x] skills/japan-macro/SKILL.md (BOJ + 統計DB 13 indicators + bilingual reference)
+- [x] macro-regime-snapshot: region=japan support
+- [x] japan-boj-db-catalog.md (40+ DB bilingual catalog)
+
+---
+
+## v1.4.0 — China + Taiwan Macro (planned)
+- [ ] china-macro (FRED China series)
+- [ ] taiwan-macro (CBC API + DGBAS)
 
 ---
 
