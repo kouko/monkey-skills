@@ -226,10 +226,12 @@ pressure.
   preferred signal for considering easing.
 
 **Market significance**: ⭐⭐⭐
-The Fed's preferred inflation gauge for policy decisions. When headline CPI
-and core CPI diverge, the Fed weights core more heavily. "Core stickiness"
-is the dominant narrative in rate decision debates. Market participants
-scrutinize the core MoM annualized print even more than headline YoY.
+A critical inflation measure for policy decisions. Note: the Fed's official
+2% inflation target uses PCE (Personal Consumption Expenditures), not CPI.
+However, CPI releases precede PCE by ~2 weeks and are more widely covered
+in media. Core CPI is the market's real-time proxy for underlying inflation
+pressure. Market participants scrutinize the core MoM annualized print for
+signals about the PCE print to come.
 
 **When to use**: Cross-check against headline CPI to determine if inflation
 is broad-based or commodity-driven. Core CPI is the better input for
@@ -261,9 +263,10 @@ and the definitive gauge of whether the economy is expanding or contracting.
 **How to interpret**:
 - Rising (positive QoQ annualized growth) → Economy is expanding. Supportive
   of corporate earnings and risk assets.
-- Falling (negative QoQ annualized growth) → Economy is contracting. Two
-  consecutive negative quarters is the informal recession definition (though
-  NBER uses a broader set of criteria).
+- Falling (negative QoQ annualized growth) → Economy is contracting. The
+  popular "two consecutive negative quarters = recession" heuristic is
+  explicitly rejected by NBER, which uses broader criteria (depth, diffusion,
+  duration). The 2001 recession had no two consecutive negative quarters.
 
 **Market significance**: ⭐⭐
 The definitive measure of economic output, but its market impact is lower
@@ -328,3 +331,37 @@ cyclical vs. defensive sector allocation.
 - The index is seasonally adjusted, but holiday timing and calendar effects
   can still create noise.
 - INDPRO is revised in subsequent months. Initial prints can be misleading.
+
+---
+
+## Sources
+
+Primary sources referenced in this document:
+
+### Yield Curve & Recession Prediction
+- Estrella, A. & Mishkin, F.S. "The Yield Curve as a Predictor of U.S. Recessions." Federal Reserve Bank of New York, Current Issues in Economics and Finance, Vol. 2, No. 7. https://www.newyorkfed.org/research/current_issues/ci2-7.html
+
+### Macro Announcement Market Impact
+- Andersen, T.G., Bollerslev, T., Diebold, F.X., & Vega, C. "Micro Effects of Macro Announcements: Real-Time Price Discovery in Foreign Exchange." NBER Working Paper No. 8959. https://www.nber.org/papers/w8959
+- Fleming, M.J. & Remolona, E.M. "Price Formation and Liquidity in the U.S. Treasury Market." Federal Reserve Bank of New York Staff Reports, 1999.
+
+### Treasury as Global Benchmark
+- IMF Global Financial Stability Report, October 2024, Chapter 1. https://www.imf.org/en/Publications/GFSR
+
+### Fed Policy & Inflation Target
+- Federal Reserve Board. "Why does the Federal Reserve aim for inflation of 2 percent over the longer run?" https://www.federalreserve.gov/faqs/economy_14400.htm
+- Note: The Fed's official 2% target uses PCE inflation, not CPI. CPI is widely monitored but is not the policy target.
+
+### Federal Funds Rate Global Spillovers
+- BIS Working Papers No. 757, "Explaining Monetary Spillovers: The Matrix Reloaded." https://www.bis.org/publ/work757.pdf
+- BIS Working Papers No. 719, "Channels of US Monetary Policy Spillovers." https://www.bis.org/publ/work719.pdf
+
+### NBER Recession Dating
+- NBER Business Cycle Dating Committee. "Business Cycle Dating Procedure: Frequently Asked Questions." https://www.nber.org/research/business-cycle-dating
+- Note: NBER explicitly rejects the "two consecutive negative GDP quarters" heuristic.
+
+### Industrial Production
+- Federal Reserve Board. "Industrial Production and Capacity Utilization — G.17 Release." https://www.federalreserve.gov/releases/g17/current/default.htm
+
+### GDP Composition
+- U.S. Bureau of Economic Analysis. "GDP by Industry." https://www.bea.gov/data/gdp/gdp-industry
