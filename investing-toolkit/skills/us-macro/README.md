@@ -128,3 +128,61 @@ CSV endpoint.
 # Manual test
 uv run scripts/fred_client.py --series T10Y2Y,DGS10 --periods 24
 ```
+
+## Maintenance & Verification
+
+### Verify all series return data
+
+```bash
+cd investing-toolkit/scripts
+
+for series in T10Y2Y DGS10 DGS2 FEDFUNDS CPIAUCSL CPILFESL GDPC1 INDPRO; do
+  uv run fred_client.py --series "$series" --periods 3 --no-cache 2>&1 | \
+    python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+l = d.get('latest') or {}
+pv = d.get('_provenance') or {}
+err = d.get('error', '')
+if err:
+    print(f'$series: ERROR - {err}')
+else:
+    print(f'$series: date={l.get(\"date\",\"???\")}  value={l.get(\"value\",\"\")}  staleness={pv.get(\"staleness_days\",\"?\")}d')
+"
+done
+```
+
+**Expected staleness by frequency:**
+
+| Frequency | Series | Expected Staleness |
+|-----------|--------|-------------------|
+| Daily | T10Y2Y, DGS10, DGS2 | < 5 days |
+| Monthly | FEDFUNDS, CPIAUCSL, CPILFESL, INDPRO | < 60 days |
+| Quarterly | GDPC1 | < 200 days |
+
+### Verify FRED CSV endpoint
+
+```bash
+curl -sS "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10" | tail -3
+```
+
+### Verify series IDs are still valid
+
+FRED occasionally retires or renames series:
+
+```bash
+curl -sS "https://fred.stlouisfed.org/graph/fredgraph.csv?id={SERIES_ID}" | head -3
+```
+
+If retired, check successor at: `https://fred.stlouisfed.org/series/{SERIES_ID}`
+
+### Add a new FRED series
+
+1. Find series ID at https://fred.stlouisfed.org
+2. Verify: `uv run fred_client.py --series {ID} --periods 12 --no-cache`
+3. Update `SKILL.md` (add to group) + `references/us-macro-indicators.md` (add entry)
+4. No code change needed in `fred_client.py` (accepts any FRED series ID)
+
+### Latest verification
+
+**Date**: 2026-04-17 — All 8 series ACTIVE, returning 2026 data via CSV endpoint.

@@ -231,3 +231,66 @@ uv run scripts/boj_client.py --db FM01 --code STRDCLUCON --start-date 202501
 # Manual test -- e-Stat CPI
 uv run scripts/estat_client.py --preset cpi
 ```
+
+## Maintenance & Verification
+
+### Verify all presets are active + returning data
+
+**e-Stat presets (batch check):**
+
+```bash
+cd investing-toolkit/scripts
+
+for p in cpi core-cpi core-core-cpi unemployment ip jgb10y \
+  coincident-index machine-orders real-wages job-ratio \
+  tertiary-index retail-sales service-sales; do
+  uv run estat_client.py --preset "$p" --no-cache 2>&1 | \
+    python3 -c "
+import json,sys
+p='$p'
+d=json.load(sys.stdin)
+l=d.get('latest') or {}
+s=(d.get('_provenance') or {}).get('staleness_days','?')
+print(f'{p:20} date={l.get(\"date\",\"???\")}  value={l.get(\"value\",\"\")}  stale={s}d')
+"
+done
+```
+
+**BOJ series:**
+
+```bash
+uv run boj_client.py --db FM01 --code STRDCLUCON --start-date 202601
+```
+
+### Verify presets are not discontinued
+
+Use `getIndicatorInfo` API to check `toDate`:
+
+```bash
+curl -sS "https://dashboard.e-stat.go.jp/api/1.0/Json/getIndicatorInfo?Lang=EN&IndicatorCode={CODE}"
+```
+
+- `toDate = 99991200` → ACTIVE
+- `toDate = 20241200` → DISCONTINUED — find replacement (see below)
+
+### When a survey is discontinued
+
+1. Check the e-Stat API metadata PDF for old/new StatCode:
+   https://dashboard.e-stat.go.jp/static/api
+2. Search by new StatCode: `getIndicatorInfo?StatCode={NEW_CODE}`
+3. Find monthly + Japan-nationwide variant
+4. Update `PRESETS` + `INDICATOR_NAMES` in `estat_client.py`
+5. Run `sync-scripts.sh` + `sync-check.sh`
+
+### Add a new indicator
+
+1. Search: `uv run estat_client.py --search "keyword"` (English only)
+2. Or by Category: `getIndicatorInfo?Category={CODE}` (see API metadata PDF)
+3. Verify: `uv run estat_client.py --indicator {CODE} --no-cache`
+4. Add to `PRESETS` dict + `INDICATOR_NAMES` dict + `SKILL.md` + indicator reference file
+
+### Latest verification
+
+**Date**: 2026-04-17 — All 14 indicators (1 BOJ + 13 e-Stat) ACTIVE + Monthly + 2026 data.
+**Fixes applied**: `service-sales` (old survey discontinued 2024-12, replaced with new StatCode),
+`job-ratio` (old code was fiscal-year only, replaced with monthly code).
