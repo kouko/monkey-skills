@@ -17,7 +17,7 @@ Usage:
 
 Auth: None required. Free API.
 Cache: ~/.cache/investing-toolkit/estat/{indicator}_{cycle}.json  TTL: 24h
-API docs: https://dashboard.e-stat.go.jp
+API docs: https://dashboard.e-stat.go.jp/static/api
 """
 
 import argparse

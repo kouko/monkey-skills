@@ -27,7 +27,8 @@ skill -- it does not analyze, map to regimes, or generate investment verdicts.
 
 ### 統計ダッシュボード API (Statistics Dashboard)
 
-- **URL**: `https://dashboard.e-stat.go.jp/api/1.0/`
+- **API Endpoint**: `https://dashboard.e-stat.go.jp/api/1.0/`
+- **API Docs**: https://dashboard.e-stat.go.jp/static/api
 - **Auth**: None required
 - **Covers**: CPI, core CPI, industrial production, unemployment, GDP,
   10-year JGB yield
