@@ -74,6 +74,10 @@ echo "Syncing statgov_client.py..."
 copy_to statgov_client.py \
   taiwan-macro
 
+echo "Syncing fdr_client.py..."
+copy_to fdr_client.py \
+  korea-macro
+
 echo "Syncing ta_client.py..."
 copy_to ta_client.py \
   technical-snapshot \
@@ -91,7 +95,8 @@ copy_to setup.sh \
   taiwan-stock-snapshot \
   us-macro \
   japan-macro \
-  taiwan-macro
+  taiwan-macro \
+  korea-macro
 
 echo ""
 echo "Sync complete."
