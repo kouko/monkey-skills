@@ -97,6 +97,41 @@ def save_cache(path: Path, data: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(result: dict) -> dict:
+    """Build _provenance block for an e-Stat result."""
+    latest = result.get("latest")
+    ref_period = latest["date"] if latest else None
+    return {
+        "source": "Statistics Dashboard API (dashboard.e-stat.go.jp)",
+        "source_authority": "Ministry of Internal Affairs and Communications (総務省)",
+        "data_type": "official_government_statistics",
+        "update_cycle": "monthly",  # varies by indicator
+        "typical_lag": "3-4 weeks after reference month",
+        "fetched_at": result.get("fetched_at"),
+        "reference_period": ref_period,
+        "staleness_days": _compute_staleness(ref_period, result.get("fetched_at", "")),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Time normalization
 # ---------------------------------------------------------------------------
 
@@ -311,6 +346,8 @@ def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: 
         cached = load_cache(cache_path)
         if cached is not None:
             cached["_cache"] = "hit"
+            if "_provenance" not in cached:
+                cached["_provenance"] = _make_provenance(cached)
             return cached
 
     body = _fetch_data(indicator, cycle)
@@ -336,6 +373,7 @@ def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: 
         "latest": latest,
         "count": len(observations),
     })
+    result["_provenance"] = _make_provenance(result)
 
     if "error" not in result:
         save_cache(cache_path, result)

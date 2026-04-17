@@ -155,6 +155,41 @@ def fetch_all_pages(
 
 
 # ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(result: dict) -> dict:
+    """Build _provenance block for a BOJ result."""
+    latest = result.get("latest")
+    ref_period = latest["date"] if latest else None
+    return {
+        "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
+        "source_authority": "Bank of Japan (日本銀行)",
+        "data_type": "official_government_statistics",
+        "update_cycle": "daily",  # BOJ updates at 8:50 AM JST
+        "typical_lag": "0-1 business days",
+        "fetched_at": result.get("fetched_at"),
+        "reference_period": ref_period,
+        "staleness_days": _compute_staleness(ref_period, result.get("fetched_at", "")),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Parse RESULTSET into observations
 # ---------------------------------------------------------------------------
 
@@ -214,6 +249,11 @@ def fetch_series(
                 for v in cached["series"].values():
                     if isinstance(v, dict):
                         v["_cache"] = "hit"
+                        if "_provenance" not in v:
+                            v["_provenance"] = _make_provenance(v)
+            else:
+                if "_provenance" not in cached:
+                    cached["_provenance"] = _make_provenance(cached)
             return cached
 
     body = fetch_all_pages(db, code, start_date, end_date)
@@ -259,6 +299,7 @@ def fetch_series(
         result["fetched_at"] = now
         result["_cache"] = "miss"
         result["_source"] = "boj"
+        result["_provenance"] = _make_provenance(result)
     else:
         # Multi-series: wrap in {"series": {...}}
         result = {
@@ -275,6 +316,7 @@ def fetch_series(
                 entry["fetched_at"] = now
                 entry["_cache"] = "miss"
                 entry["_source"] = "boj"
+                entry["_provenance"] = _make_provenance(entry)
                 result["series"][sc] = entry
             else:
                 result["series"][sc] = {
