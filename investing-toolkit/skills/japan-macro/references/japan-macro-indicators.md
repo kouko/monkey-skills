@@ -243,7 +243,7 @@ typhoons) can cause sharp one-month drops that do not reflect underlying trend.
 **Common pitfalls / よくある間違い**:
 - METI publishes IP alongside a "production forecast survey" (製造工業生産予測調査) for the next 2 months. The forecast is systematically optimistic -- apply a downward adjustment.
 - The 2020 base index absorbed COVID disruption into the base year. Compare trends, not absolute levels, when bridging pre/post base revision data.
-- IP covers manufacturing and mining only, not services (the dominant majority of Japan's GDP, 約7割、2015–2023年安定推移). A services-led recovery can coexist with flat IP.
+- IP covers manufacturing and mining only, not services (the dominant majority of Japan's GDP, 約7割、2015–2024年安定推移). A services-led recovery can coexist with flat IP.
 
 ---
 
@@ -639,10 +639,10 @@ and recovered to 1.6+ by 2018.
 
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Service sector activity expanding. Positive for Japan's consumption-driven recovery narrative. / サービスセクターの活動拡大。消費主導の景気回復を支持。
-- Falling / 下落 → Service sector activity contracting. Since services are the dominant majority of GDP (約7割、2015–2023年安定推移), broad weakness signals significant economic slowdown. / サービスセクターの活動縮小。GDPの過半数（約7割、2015–2023年安定推移）を占めるため広範な弱さは深刻な景気減速を示唆。
+- Falling / 下落 → Service sector activity contracting. Since services are the dominant majority of GDP (約7割、2015–2024年安定推移), broad weakness signals significant economic slowdown. / サービスセクターの活動縮小。GDPの過半数（約7割、2015–2024年安定推移）を占めるため広範な弱さは深刻な景気減速を示唆。
 
 **Market significance / 市場での重要度**: ⭐⭐
-This index covers the dominant majority of Japan's GDP (services sector, 約7割、2015–2023年安定推移). Industrial Production (IP) only captures manufacturing and mining. To get a complete picture of the economy, you need both IP and the Tertiary Index. The index is in real terms (adjusted for price changes), making it suitable for IC mapping as a growth proxy. It is less volatile than IP and captures the domestic consumption and services recovery that has been a key theme post-COVID.
+This index covers the dominant majority of Japan's GDP (services sector, 約7割、2015–2024年安定推移). Industrial Production (IP) only captures manufacturing and mining. To get a complete picture of the economy, you need both IP and the Tertiary Index. The index is in real terms (adjusted for price changes), making it suitable for IC mapping as a growth proxy. It is less volatile than IP and captures the domestic consumption and services recovery that has been a key theme post-COVID.
 
 **When to use / 使用場面**:
 Services-led recovery assessment, complement to IP for full economic picture,
