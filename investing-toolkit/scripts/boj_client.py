@@ -44,7 +44,7 @@ RETRY_BASE_DELAY = 2.0
 
 def get_cache_path(db: str, code: str, start_date: str, end_date: str) -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    safe_code = code.replace(",", "_")
+    safe_code = "_".join(sorted(c.strip() for c in code.split(",") if c.strip()))
     return CACHE_DIR / f"{db}_{safe_code}_{start_date}_{end_date}.json"
 
 
@@ -147,7 +147,7 @@ def fetch_all_pages(
         all_resultsets.extend(resultset)
 
         next_pos = body.get("NEXTPOSITION")
-        if next_pos is None:
+        if not next_pos or str(next_pos) == "null":
             break
         position = int(next_pos)
 
@@ -209,6 +209,11 @@ def fetch_series(
         cached = load_cache(cache_path)
         if cached is not None:
             cached["_cache"] = "hit"
+            # Patch per-entry _cache for multi-series responses
+            if isinstance(cached.get("series"), dict):
+                for v in cached["series"].values():
+                    if isinstance(v, dict):
+                        v["_cache"] = "hit"
             return cached
 
     body = fetch_all_pages(db, code, start_date, end_date)
@@ -248,6 +253,8 @@ def fetch_series(
             else:
                 return {"error": f"No data returned for {sc}", "series": sc}
 
+        # Always overwrite series with requested code (API may omit SERIES_CODE)
+        result["series"] = sc
         result["db"] = db.upper()
         result["fetched_at"] = now
         result["_cache"] = "miss"
