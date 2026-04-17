@@ -57,7 +57,7 @@ PRESETS: dict[str, str] = {
     "job-ratio": "0301020001000010020",             # 有効求人倍率 (fiscal-year only; use --cycle yearly)
     "tertiary-index": "0603100300000090010",        # 第3次産業活動指数 2020 base
     "retail-sales": "0601010201010010000",          # 小売業販売額（名目）
-    "service-sales": "0603010200000010000",         # サービス産業売上高（月次サービス産業動態統計）
+    "service-sales": "0603010000000010000",         # サービス産業売上高（サービス産業動態統計調査, StatCode=00200546）
 }
 
 INDICATOR_NAMES: dict[str, str] = {
@@ -73,7 +73,7 @@ INDICATOR_NAMES: dict[str, str] = {
     "0301020001000010020": "Ratio of Job Vacancies to Applicants",
     "0603100300000090010": "Tertiary Industry Activity Index 2020 base",
     "0601010201010010000": "Retail Sales Value (Nominal)",
-    "0603010200000010000": "Service Industry Sales (Monthly Survey)",
+    "0603010000000010000": "Service Industry Sales (Dynamic Survey)",
 }
 
 CYCLE_MAP: dict[str, str] = {
