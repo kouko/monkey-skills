@@ -5,13 +5,14 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 
 ---
 
-### 完全失業率 / Unemployment Rate
+## unemployment: 完全失業率 / Unemployment Rate
 
-- **Source / データソース**: 統計ダッシュボード (preset=unemployment, indicator=0301010000020020010)
+- **Series code**: 0301010000020020010 (統計ダッシュボード)
+- **Source**: 総務省統計局 (Ministry of Internal Affairs and Communications, Statistics Bureau)
 - **Unit / 単位**: Percent (%)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~4 weeks after reference month
-- **Managing agency / 所管**: 総務省統計局 (Ministry of Internal Affairs and Communications, Statistics Bureau)
+- **History**: From 1953 (878 observations)
 
 **What it measures / 経済的意味**:
 (EN) The percentage of the labor force that is unemployed and actively seeking work. Japan's official measure of labor market slack.
@@ -20,6 +21,9 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Labor market weakening. Negative for consumption outlook and wage growth. / 労働市場の悪化。消費見通し・賃金上昇にネガティブ。
 - Falling / 下落 → Labor market tightening. Positive for wage growth and consumption, but may add to inflation pressure. / 労働市場の逼迫。賃金・消費にポジティブだがインフレ圧力を助長する可能性。
+
+**Market significance / 市場重要度**: ⭐⭐
+Japan's unemployment is structurally low (2-3%) due to labor shortages from aging demographics. Less market-moving than in the US, but sustained rises above 3% would signal significant recession.
 
 **When to use / 使用場面**:
 Labor market assessment, wage-price spiral risk evaluation, consumption
@@ -45,13 +49,14 @@ ratio (有効求人倍率, published by MHLW) than by the unemployment rate alon
 
 ---
 
-### 実質賃金指数 / Real Wage Index
+## real-wages: 実質賃金指数 / Real Wage Index
 
-- **Source / データソース**: 統計ダッシュボード (preset=real-wages, indicator=0302030201010090010)
+- **Series code**: 0302030201010090010 (統計ダッシュボード)
+- **Source**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
 - **Unit / 単位**: Index (2020 = 100)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~5 weeks after reference month
-- **Managing agency / 所管**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
+- **History**: From 2012 (170 observations)
 
 **What it measures / 経済的意味**:
 (EN) The wage index for total cash earnings adjusted for consumer price inflation. Real wages = nominal wages minus CPI. It measures whether workers' purchasing power is increasing or declining.
@@ -61,8 +66,8 @@ ratio (有効求人倍率, published by MHLW) than by the unemployment rate alon
 - Rising (positive YoY) / 上昇 → Workers' purchasing power increasing. Supports consumption growth and virtuous wage-price cycle. / 労働者の購買力上昇。消費拡大と賃金・物価の好循環を支持。
 - Falling (negative YoY) / 下落 → Inflation outpacing wage growth. Erodes purchasing power and suppresses consumption. / インフレが賃金上昇を上回る。購買力低下で消費を抑制。
 
-**Market significance / 市場での重要度**: ⭐⭐
-This is the indicator most directly linked to BOJ rate decisions. The 2024 decision to exit negative interest rates was predicated on achieving sustained positive real wage growth. When real wages turn positive, the BOJ gains confidence that inflation is demand-driven (virtuous cycle) rather than cost-push. Real wages were negative for most of 2022-2024 due to high import-driven inflation outpacing the spring wage negotiations (春闘 shunto).
+**Market significance / 市場重要度**: ⭐⭐⭐
+The most watched labor indicator in the current cycle. Sustained real wage growth is the BOJ's key condition for continued rate normalization. The "wage-price positive cycle" (賃金と物価の好循環) is the central narrative of Japan's post-deflation transition.
 
 **When to use / 使用場面**:
 BOJ policy prediction, consumption outlook assessment, wage-price spiral
@@ -90,13 +95,14 @@ exceeded 2%.
 
 ---
 
-### 有効求人倍率 / Job-to-Applicant Ratio
+## job-ratio: 有効求人倍率 / Job-to-Applicant Ratio
 
-- **Source / データソース**: 統計ダッシュボード (preset=job-ratio, indicator=0301020001000010020, `--cycle fiscal-year`)
+- **Series code**: 0301020001000010020 (統計ダッシュボード, `--cycle fiscal-year`)
+- **Source**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
 - **Unit / 単位**: Ratio (倍)
 - **Frequency / 頻度**: Fiscal-year (年度) -- use `--cycle fiscal-year`
 - **Publication lag / 公表遅延**: ~4 weeks after reference month (original MHLW source is monthly; 統計DB only has fiscal-year aggregates)
-- **Managing agency / 所管**: 厚生労働省 (Ministry of Health, Labour and Welfare, MHLW)
+- **History**: From 1963 (758 observations)
 
 **What it measures / 経済的意味**:
 (EN) The ratio of active job openings to active job seekers at public employment offices (Hello Work). A value of 1.0 means there is exactly one job available for each job seeker. Above 1.0 indicates more jobs than applicants (labor shortage); below 1.0 indicates more applicants than jobs (labor surplus).
@@ -106,8 +112,8 @@ exceeded 2%.
 - Rising (above 1.0) / 上昇 → Labor market tightening, labor shortage intensifying. Upward pressure on wages. / 労働市場の逼迫、人手不足の深刻化。賃金上昇圧力。
 - Falling (toward or below 1.0) / 下落 → Labor market loosening. A fall below 1.0 is a strong recession signal. / 労働市場の緩和。1.0割れは景気後退の強いシグナル。
 
-**Market significance / 市場での重要度**: ⭐⭐
-In Japan, this ratio is considered more informative than the unemployment rate for gauging labor market tightness. The unemployment rate barely moves in Japan due to structural factors (labor hoarding, lifetime employment), but the job ratio is more responsive to cyclical changes. A sustained move below 1.0 has historically coincided with every post-war recession. Japan has been structurally above 1.0 since 2014 due to demographic labor shortages.
+**Market significance / 市場重要度**: ⭐⭐
+A sensitive labor market tightness indicator. Ratios above 1.0 (more jobs than applicants) confirm tight labor conditions. Used alongside unemployment for a fuller picture of labor supply/demand balance.
 
 **When to use / 使用場面**:
 Labor market tightness assessment, wage growth prediction, consumption outlook,

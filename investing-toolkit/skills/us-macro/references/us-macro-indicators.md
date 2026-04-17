@@ -9,12 +9,14 @@ growth). The remaining 13 cover sector-level indicators mapped to sector ETFs.
 
 ## Rates
 
-### T10Y2Y: 10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity
+## T10Y2Y: 10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity
 
+- **Series code**: T10Y2Y (FRED)
+- **Source**: Federal Reserve Board of Governors
 - **Unit**: Percent
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: Federal Reserve Board of Governors
+- **History**: From 1976 (daily)
 
 **What it measures**: The spread between the 10-year and 2-year U.S. Treasury
 yields. This is the most widely watched yield curve indicator, reflecting
@@ -55,12 +57,14 @@ recession probability assessment, fixed-income allocation decisions.
 
 ---
 
-### DGS10: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
+## DGS10: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
 
+- **Series code**: DGS10 (FRED)
+- **Source**: Federal Reserve Board of Governors
 - **Unit**: Percent
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: Federal Reserve Board of Governors
+- **History**: From 1962 (daily)
 
 **What it measures**: The yield on 10-year U.S. Treasury bonds, widely
 considered the benchmark risk-free rate. It reflects long-term inflation
@@ -92,12 +96,14 @@ allocation.
 
 ---
 
-### DGS2: Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity
+## DGS2: Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity
 
+- **Series code**: DGS2 (FRED)
+- **Source**: Federal Reserve Board of Governors
 - **Unit**: Percent
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: Federal Reserve Board of Governors
+- **History**: From 1976 (daily)
 
 **What it measures**: The yield on 2-year U.S. Treasury bonds, which closely
 tracks expected Federal Reserve policy rate path over the next two years. It
@@ -132,12 +138,14 @@ computation).
 
 ---
 
-### FEDFUNDS: Effective Federal Funds Rate
+## FEDFUNDS: Effective Federal Funds Rate
 
+- **Series code**: FEDFUNDS (FRED)
+- **Source**: Federal Reserve Bank of New York
 - **Unit**: Percent
 - **Frequency**: Monthly (average of daily values)
 - **Publication lag**: ~1 week after month-end
-- **Source**: Federal Reserve Bank of New York
+- **History**: From 1954 (monthly)
 
 **What it measures**: The volume-weighted average rate at which depository
 institutions lend reserve balances to other depository institutions overnight.
@@ -170,12 +178,14 @@ mapping (policy rate vs. inflation), short-term rate environment baseline.
 
 ## Inflation
 
-### CPIAUCSL: Consumer Price Index for All Urban Consumers: All Items in U.S. City Average
+## CPIAUCSL: Consumer Price Index for All Urban Consumers: All Items in U.S. City Average
 
+- **Series code**: CPIAUCSL (FRED)
+- **Source**: U.S. Bureau of Labor Statistics (BLS)
 - **Unit**: Index (1982-84 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Bureau of Labor Statistics (BLS)
+- **History**: From 1947 (monthly)
 
 **What it measures**: The broadest measure of consumer price inflation in the
 U.S., covering food, energy, housing, transportation, medical care, and other
@@ -219,12 +229,14 @@ mapping.
 
 ---
 
-### CPILFESL: Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average
+## CPILFESL: Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average
 
+- **Series code**: CPILFESL (FRED)
+- **Source**: U.S. Bureau of Labor Statistics (BLS)
 - **Unit**: Index (1982-84 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Bureau of Labor Statistics (BLS)
+- **History**: From 1957 (monthly)
 
 **What it measures**: CPI excluding food and energy — the "core CPI." Strips
 out the most volatile components to reveal the underlying inflation trend.
@@ -262,12 +274,14 @@ structural inflation assessment and Fed reaction function modeling.
 
 ## Growth
 
-### GDPC1: Real Gross Domestic Product
+## GDPC1: Real Gross Domestic Product
 
+- **Series code**: GDPC1 (FRED)
+- **Source**: U.S. Bureau of Economic Analysis (BEA)
 - **Unit**: Billions of chained 2017 dollars
 - **Frequency**: Quarterly
 - **Publication lag**: ~1 month after quarter-end (advance estimate)
-- **Source**: U.S. Bureau of Economic Analysis (BEA)
+- **History**: From 1947 (quarterly)
 
 **What it measures**: The inflation-adjusted total value of goods and services
 produced in the U.S. economy. This is the broadest measure of economic output
@@ -303,12 +317,14 @@ change), cycle positioning, asset allocation decisions.
 
 ---
 
-### INDPRO: Industrial Production: Total Index
+## INDPRO: Industrial Production: Total Index
 
+- **Series code**: INDPRO (FRED)
+- **Source**: Federal Reserve Board of Governors
 - **Unit**: Index (2017 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **Source**: Federal Reserve Board of Governors
+- **History**: From 1919 (monthly)
 
 **What it measures**: The real output of U.S. manufacturing, mining, and
 electric and gas utilities. While industrial production represents roughly
@@ -354,12 +370,14 @@ cyclical vs. defensive sector allocation.
 
 ## Housing / REIT (-> XLRE, XHB)
 
-### PERMIT: New Privately-Owned Housing Units Authorized (Building Permits)
+## PERMIT: New Privately-Owned Housing Units Authorized (Building Permits)
 
+- **Series code**: PERMIT (FRED)
+- **Source**: U.S. Census Bureau
 - **Unit**: Thousands of units (seasonally adjusted annual rate)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Census Bureau
+- **History**: From 1960 (monthly)
 
 **What it measures**: The number of new privately-owned housing units
 authorized by building permits. A leading indicator for residential
@@ -400,12 +418,14 @@ timing.
 
 ---
 
-### HOUST: New Privately-Owned Housing Units Started (Housing Starts)
+## HOUST: New Privately-Owned Housing Units Started (Housing Starts)
 
+- **Series code**: HOUST (FRED)
+- **Source**: U.S. Census Bureau
 - **Unit**: Thousands of units (seasonally adjusted annual rate)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Census Bureau
+- **History**: From 1959 (monthly)
 
 **What it measures**: The number of new privately-owned housing units on which
 construction has actually begun. Confirms what permits signaled and represents
@@ -439,12 +459,14 @@ analysis.
 
 ---
 
-### CSUSHPISA: S&P/Case-Shiller U.S. National Home Price Index
+## CSUSHPISA: S&P/Case-Shiller U.S. National Home Price Index
 
+- **Series code**: CSUSHPISA (FRED)
+- **Source**: S&P Dow Jones Indices (via FRED)
 - **Unit**: Index (January 2000 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~2 months after reference month
-- **Source**: S&P Dow Jones Indices (via FRED)
+- **History**: From 1987 (monthly)
 
 **What it measures**: A composite measure of U.S. residential housing prices
 using the repeat-sales methodology — tracking price changes of the same
@@ -483,12 +505,14 @@ assessment (paired with income data).
 
 ---
 
-### MORTGAGE30US: 30-Year Fixed Rate Mortgage Average
+## MORTGAGE30US: 30-Year Fixed Rate Mortgage Average
 
+- **Series code**: MORTGAGE30US (FRED)
+- **Source**: Freddie Mac (Primary Mortgage Market Survey)
 - **Unit**: Percent
 - **Frequency**: Weekly (Thursday release)
 - **Publication lag**: ~1 week
-- **Source**: Freddie Mac (Primary Mortgage Market Survey)
+- **History**: From 1971 (weekly)
 
 **What it measures**: The average interest rate on 30-year fixed-rate
 mortgages in the U.S., the dominant mortgage product. Directly determines
@@ -529,12 +553,14 @@ refinancing wave detection, financial conditions assessment, XHB/XLRE timing.
 
 ## Industrials (-> XLI)
 
-### DGORDER: Manufacturers' New Orders: Durable Goods
+## DGORDER: Manufacturers' New Orders: Durable Goods
 
+- **Series code**: DGORDER (FRED)
+- **Source**: U.S. Census Bureau
 - **Unit**: Millions of dollars (seasonally adjusted)
 - **Frequency**: Monthly
 - **Publication lag**: ~4 weeks after reference month
-- **Source**: U.S. Census Bureau
+- **History**: From 1992 (monthly)
 
 **What it measures**: Total new orders received by manufacturers of durable
 goods (items designed to last 3+ years) — including computers, appliances,
@@ -581,12 +607,14 @@ forecasting, GDP equipment investment nowcasting, XLI allocation timing.
 
 ## Energy (-> XLE)
 
-### DCOILWTICO: Crude Oil Prices: West Texas Intermediate (WTI)
+## DCOILWTICO: Crude Oil Prices: West Texas Intermediate (WTI)
 
+- **Series code**: DCOILWTICO (FRED)
+- **Source**: U.S. Energy Information Administration (EIA)
 - **Unit**: Dollars per barrel
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: U.S. Energy Information Administration (EIA)
+- **History**: From 1986 (daily)
 
 **What it measures**: The spot price of West Texas Intermediate crude oil, the
 primary U.S. benchmark for oil pricing. WTI is a light, sweet crude traded at
@@ -628,12 +656,14 @@ cross-sector margin impact (airlines, chemicals, logistics).
 
 ---
 
-### DHHNGSP: Henry Hub Natural Gas Spot Price
+## DHHNGSP: Henry Hub Natural Gas Spot Price
 
+- **Series code**: DHHNGSP (FRED)
+- **Source**: U.S. Energy Information Administration (EIA)
 - **Unit**: Dollars per million BTU
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: U.S. Energy Information Administration (EIA)
+- **History**: From 1997 (daily)
 
 **What it measures**: The spot price of natural gas at Henry Hub, Louisiana,
 the primary U.S. natural gas pricing point. Henry Hub is the delivery point for
@@ -678,12 +708,14 @@ seasonal energy demand patterns.
 
 ## Financials (-> XLF)
 
-### BAMLH0A0HYM2: ICE BofA US High Yield Index Option-Adjusted Spread
+## BAMLH0A0HYM2: ICE BofA US High Yield Index Option-Adjusted Spread
 
+- **Series code**: BAMLH0A0HYM2 (FRED)
+- **Source**: ICE Data Indices, LLC (via FRED)
 - **Unit**: Percent (spread over Treasury)
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **Source**: ICE Data Indices, LLC (via FRED)
+- **History**: From 1997 (daily)
 
 **What it measures**: The option-adjusted spread (OAS) of the ICE BofA US High
 Yield Corporate Bond Index over the risk-free Treasury curve. This represents
@@ -733,12 +765,14 @@ decisions. Should be checked alongside T10Y2Y for a complete risk picture.
 
 ## Technology (-> XLK)
 
-### CES3133440001: All Employees, Semiconductor and Other Electronic Component Manufacturing
+## CES3133440001: All Employees, Semiconductor and Other Electronic Component Manufacturing
 
+- **Series code**: CES3133440001 (FRED)
+- **Source**: U.S. Bureau of Labor Statistics (BLS)
 - **Unit**: Thousands of persons (seasonally adjusted)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **Source**: U.S. Bureau of Labor Statistics (BLS)
+- **History**: From 1985 (monthly)
 
 **What it measures**: Total employment in the U.S. semiconductor and
 electronic component manufacturing sector (NAICS 334400). Tracks the labor
@@ -780,12 +814,14 @@ buildout tracking.
 
 ---
 
-### PCUAINFOAINFO: Producer Price Index by Industry: Information Services
+## PCUAINFOAINFO: Producer Price Index by Industry: Information Services
 
+- **Series code**: PCUAINFOAINFO (FRED)
+- **Source**: U.S. Bureau of Labor Statistics (BLS)
 - **Unit**: Index (December 2009 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Bureau of Labor Statistics (BLS)
+- **History**: From 2007 (monthly)
 
 **What it measures**: Producer prices for the information services sector
 (NAICS 5112, 5182, 5191, etc.), covering software publishing, data processing,
@@ -824,12 +860,14 @@ trend monitoring, margin pressure assessment for tech companies.
 
 ## Consumer (-> XLY, XLP)
 
-### RSAFS: Advance Retail Sales: Retail and Food Services, Total
+## RSAFS: Advance Retail Sales: Retail and Food Services, Total
 
+- **Series code**: RSAFS (FRED)
+- **Source**: U.S. Census Bureau
 - **Unit**: Millions of dollars (seasonally adjusted)
 - **Frequency**: Monthly
 - **Publication lag**: ~2 weeks after reference month
-- **Source**: U.S. Census Bureau
+- **History**: From 1992 (monthly)
 
 **What it measures**: Total monthly retail and food services sales, the
 broadest available measure of consumer spending activity. Consumer spending
@@ -874,12 +912,14 @@ forecasting, consumer health assessment.
 
 ---
 
-### UMCSENT: University of Michigan Consumer Sentiment Index
+## UMCSENT: University of Michigan Consumer Sentiment Index
 
+- **Series code**: UMCSENT (FRED)
+- **Source**: University of Michigan, Surveys of Consumers
 - **Unit**: Index (1966Q1 = 100)
 - **Frequency**: Monthly (preliminary mid-month, final end-of-month)
 - **Publication lag**: ~2 weeks (preliminary), ~4 weeks (final)
-- **Source**: University of Michigan, Surveys of Consumers
+- **History**: From 1952 (monthly)
 
 **What it measures**: A composite index of consumer confidence based on
 telephone surveys of ~500 U.S. households, covering assessments of personal
@@ -924,12 +964,14 @@ recession probability assessment (sustained readings below 70).
 
 ## Producer Prices (cross-sector)
 
-### PCUOMFGOMFG: Producer Price Index by Industry: Total Manufacturing Industries
+## PCUOMFGOMFG: Producer Price Index by Industry: Total Manufacturing Industries
 
+- **Series code**: PCUOMFGOMFG (FRED)
+- **Source**: U.S. Bureau of Labor Statistics (BLS)
 - **Unit**: Index (December 2003 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~2-3 weeks after reference month
-- **Source**: U.S. Bureau of Labor Statistics (BLS)
+- **History**: From 1985 (monthly)
 
 **What it measures**: Producer prices for the total manufacturing sector,
 covering the prices received by domestic producers for their output across all

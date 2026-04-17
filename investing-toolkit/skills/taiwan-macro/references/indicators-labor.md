@@ -2,10 +2,10 @@
 
 ---
 
-## unemployment: 失業率 Unemployment Rate
+## unemployment: 失業率 / Unemployment Rate
 
-- **Preset**: unemployment
-- **Source**: statgov (stat.gov.tw sid=t.3)
+- **Series code**: sid=t.3 (stat.gov.tw)
+- **Source**: statgov (stat.gov.tw)
 - **Unit**: Percent (%)
 - **Frequency**: Monthly
 - **Publication lag**: ~4 weeks after reference month
@@ -26,6 +26,8 @@ An important but lagging indicator for the Taiwan economy. Unemployment
 responds slowly to economic conditions — firms in Taiwan tend to reduce
 overtime hours and implement hiring freezes before laying off workers.
 The monthly release generates modest media coverage.
+
+**When to use**: Labor market slack assessment, CBC growth outlook input, consumption forecast, structural employment analysis.
 
 **Taiwan-specific context**:
 - Taiwan's unemployment rate is structurally lower than the US and most

@@ -15,12 +15,14 @@ Usage:
   uv run dgbas_client.py --preset cpi --no-cache         # Force fresh fetch
 
 Auth: None required.
-Cache: ~/.cache/investing-toolkit/dgbas/{filename}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/dgbas/{filename}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Source: https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -40,7 +42,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ---------------------------------------------------------------------------
 
 DGBAS_PRICE_BASE = "https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "dgbas"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "dgbas"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

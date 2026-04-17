@@ -18,7 +18,8 @@ Usage:
 
 Auth: FRED_API_KEY env var is optional. CSV endpoint works without it.
       Set API key for JSON API access: https://fred.stlouisfed.org/docs/api/api_key.html
-Cache: ~/.cache/investing-toolkit/fred/{series}_{periods}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/fred/{series}_{periods}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 """
 
 import argparse
@@ -34,7 +35,8 @@ import requests as _requests
 
 FRED_CSV_BASE = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 FRED_API_BASE = "https://api.stlouisfed.org/fred/series/observations"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "fred"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "fred"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

@@ -2,14 +2,14 @@
 
 ---
 
-## rediscount-rate: 重貼現率 Rediscount Rate
+## rediscount-rate: 重貼現率 / Rediscount Rate
 
-- **Item Code**: EG2AM01en
+- **Series code**: EG2AM01en (CBC API)
 - **Source**: CBC (Central Bank)
 - **Unit**: Percent (%)
 - **Frequency**: Monthly (changes at quarterly board meetings)
 - **Publication lag**: Same day as policy announcement
-- **API**: `https://cpx.cbc.gov.tw/API/DataAPI/Get?FileName=EG2AM01en`
+- **History**: From 2000 (monthly)
 
 **What it measures**: The rate at which the Central Bank of the Republic of
 China (Taiwan) lends to commercial banks against eligible bills and notes.
@@ -33,6 +33,8 @@ standard Fed move), reflecting Taiwan's preference for policy stability. The
 announcement moves TWD, Taiwan equity indices (TAIEX), and government bond
 yields.
 
+**When to use**: Investment Clock monetary policy axis, CBC rate cycle analysis, TWD direction assessment, Taiwan financial conditions baseline.
+
 **Taiwan-specific context**:
 - The CBC has historically maintained lower rates than the US Fed, reflecting
   Taiwan's export-oriented economy and structural current account surplus.
@@ -50,14 +52,14 @@ yields.
 
 ---
 
-## rates-daily: 央行利率（日頻） CBC Interest Rates Daily
+## rates-daily: 央行利率（日頻） / CBC Interest Rates Daily
 
-- **Item Code**: EG28D01en
+- **Series code**: EG28D01en (CBC API)
 - **Source**: CBC (Central Bank)
 - **Unit**: Percent (%)
 - **Frequency**: Daily
 - **Publication lag**: ~1 business day
-- **API**: `https://cpx.cbc.gov.tw/API/DataAPI/Get?FileName=EG28D01en`
+- **History**: From 2000 (daily)
 
 **What it measures**: Daily-frequency interest rate data from the CBC,
 including various lending facility rates. Provides granular tracking of
@@ -73,6 +75,8 @@ rate changes between board meetings.
 Mostly confirmatory — the rediscount rate (monthly) captures the same
 policy signals. Daily frequency is useful for historical event studies
 and precise date mapping.
+
+**When to use**: CBC policy rate confirmation, interest rate event study, historical rate change date mapping.
 
 **Common pitfalls**:
 - Data may lag actual CBC announcements by 1-2 days.

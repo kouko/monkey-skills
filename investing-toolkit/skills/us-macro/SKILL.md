@@ -140,17 +140,17 @@ Do not analyze or interpret.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PERMIT,HOUST,CSUSHPISA --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series MORTGAGE30US --periods 52
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGORDER --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DCOILWTICO,DHHNGSP --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series BAMLH0A0HYM2 --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series RSAFS,UMCSENT --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CES3133440001,PCUAINFOAINFO --periods 24
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PCUOMFGOMFG --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PERMIT,HOUST,CSUSHPISA --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series MORTGAGE30US --periods 52
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGORDER --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DCOILWTICO,DHHNGSP --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series BAMLH0A0HYM2 --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series RSAFS,UMCSENT --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CES3133440001,PCUAINFOAINFO --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PCUOMFGOMFG --periods 24
 
 ### Output Format
 Return raw JSON from each fetch request.

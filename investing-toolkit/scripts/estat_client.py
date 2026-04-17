@@ -16,12 +16,14 @@ Usage:
   uv run estat_client.py --preset cpi --cycle quarterly --no-cache
 
 Auth: None required. Free API.
-Cache: ~/.cache/investing-toolkit/estat/{indicator}_{cycle}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/estat/{indicator}_{cycle}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
 API docs: https://dashboard.e-stat.go.jp/static/api
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -35,7 +37,8 @@ import requests as _requests
 
 ESTAT_DATA_BASE = "https://dashboard.e-stat.go.jp/api/1.0/Json/getData"
 ESTAT_SEARCH_BASE = "https://dashboard.e-stat.go.jp/api/1.0/Json/getIndicatorInfo"
-CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "estat"
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
+CACHE_DIR = Path(_CACHE_BASE) / "estat"
 CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0

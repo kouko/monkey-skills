@@ -140,13 +140,13 @@ Do not analyze or interpret.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM01 --code STRDCLUCON --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db PR01 --code {discovered} --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db MD02 --code {discovered} --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db CO --code {discovered} --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM08 --code {discovered} --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM09 --code {discovered} --start-date {YYYYMM}
-- uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db BP01 --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM01 --code STRDCLUCON --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db PR01 --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db MD02 --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db CO --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM08 --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM09 --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db BP01 --code {discovered} --start-date {YYYYMM}
 
 ### Output Format
 Return raw JSON from each fetch request.
@@ -167,13 +167,13 @@ Do not analyze or interpret.
 base_path: {absolute path to investing-toolkit/scripts/}
 
 ### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset jgb10y
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset cpi,core-cpi
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment,coincident-index,machine-orders,tertiary-index
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset real-wages
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset job-ratio --cycle fiscal-year
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset retail-sales,service-sales
-- uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset gdp --cycle quarterly
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset jgb10y
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset cpi,core-cpi
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment,coincident-index,machine-orders,tertiary-index
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset real-wages
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset job-ratio --cycle fiscal-year
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset retail-sales,service-sales
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset gdp --cycle quarterly
 
 ### Output Format
 Return raw JSON from each fetch request.

@@ -36,7 +36,7 @@ Launch `../../agents/data-fetcher.md` with:
 
 ```
 ### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period}
 ```
 
 Expected output: JSON with `data` array (OHLCV rows) and `latest_close`.
@@ -53,14 +53,14 @@ command -v uv || sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh
 Pass the JSON from Step 1 to `ta_client.py`:
 
 ```bash
-uv run ${CLAUDE_SKILL_DIR}/scripts/ta_client.py --input {ohlcv_json_path}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ta_client.py --input {ohlcv_json_path}
 ```
 
 Or as a direct pipe:
 
 ```bash
-uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period} | \
-  uv run ${CLAUDE_SKILL_DIR}/scripts/ta_client.py --input -
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period} | \
+  INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ta_client.py --input -
 ```
 
 `ta_client.py` computes and returns:
@@ -132,8 +132,8 @@ handoff), compute indicators at two timeframes and produce a confirmation signal
 
 ```
 ### Fetch Requests
-- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y --interval 1d
-- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y --interval 1wk
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y --interval 1d
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y --interval 1wk
 ```
 
 ### Compute

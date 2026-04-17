@@ -2,9 +2,10 @@
 
 ---
 
-## export-orders: 外銷訂單 Export Orders
+## export-orders: 外銷訂單 / Export Orders
 
-- **Source**: statgov (stat.gov.tw sid=t.5)
+- **Series code**: sid=t.5 (stat.gov.tw)
+- **Source**: statgov (stat.gov.tw)
 - **Unit**: 百萬美元 (millions USD)
 - **Frequency**: Monthly
 - **Publication lag**: ~3 weeks (每月20日公布上月資料)
@@ -22,6 +23,8 @@ the 20th generates front-page financial news. Export orders exceeding
 expectations triggers immediate TAIEX, TWD, and Asia-tech repricing.
 The breakdown by product (電子產品, 資訊通信) and region (美國, 中國大陸)
 provides sector and geopolitical intelligence.
+
+**When to use**: Leading export indicator (~2-3 month lead on actual exports), semiconductor demand gauge, Taiwan GDP leading signal.
 
 **Taiwan-specific context**:
 - Taiwan's export orders are dominated by electronics and ICT (~70%).
@@ -43,7 +46,8 @@ provides sector and geopolitical intelligence.
 
 ## exports / imports: 出口金額 / 進口金額
 
-- **Source**: statgov (stat.gov.tw sid=t.8)
+- **Series code**: sid=t.8 (stat.gov.tw)
+- **Source**: statgov (stat.gov.tw)
 - **Unit**: 億美元 (hundred millions USD)
 - **Frequency**: Monthly
 - **Publication lag**: ~2 weeks after reference month
@@ -61,10 +65,17 @@ flows that enter GDP calculations.
   Rising raw material imports signal production ramp-up. The trade balance
   (exports - imports) affects TWD.
 
+**When to use**:
+- **exports**: Actual export performance tracking, trade balance computation, TWD demand assessment, global trade cycle positioning.
+- **imports**: Import demand tracking, domestic demand gauge, trade balance computation, commodity import volume analysis.
+- **exports-yoy**: Export growth momentum assessment, sector cycle positioning, global trade demand proxy.
+- **imports-yoy**: Import growth momentum tracking, domestic demand strength gauge, commodity price pass-through assessment.
+
 ---
 
 ## import-pi / export-pi: 進口物價指數 / 出口物價指數
 
+- **Series code**: ipispl.xls / epispl.xls (DGBAS Excel)
 - **Source**: DGBAS Excel
 - **Unit**: Index (base year varies)
 - **Frequency**: Monthly
@@ -77,3 +88,7 @@ and trade conditions.
 **Key use**: The **terms of trade** (export PI / import PI) ratio measures
 Taiwan's purchasing power per unit exported. Improving terms of trade →
 higher real income. Worsening → squeezed margins.
+
+**When to use**:
+- **import-pi**: Import cost pressure monitoring, TWD pass-through analysis, commodity price impact assessment, manufacturing input cost tracking.
+- **export-pi**: Export competitiveness tracking, terms of trade computation, semiconductor pricing cycle signal.

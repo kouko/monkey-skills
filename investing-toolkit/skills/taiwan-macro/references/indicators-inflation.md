@@ -2,14 +2,14 @@
 
 ---
 
-## cpi: 消費者物價指數 Consumer Price Index
+## cpi: 消費者物價指數 / Consumer Price Index
 
-- **Preset**: cpi
+- **Series code**: cpispl.xls (DGBAS Excel)
 - **Source**: DGBAS (主計總處) — `cpispl.xls`
 - **Unit**: Index (base year varies; current base = 105 年 / 2016 = 100)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month (released around 5th of each month)
-- **URL**: `https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/cpispl.xls`
+- **History**: From 1981 (monthly)
 
 **What it measures**: The broadest measure of consumer price inflation in
 Taiwan, covering food, clothing, housing, transportation, medical care,
@@ -27,6 +27,8 @@ Taiwan's primary inflation gauge. The CBC monitors CPI closely when making
 rate decisions, though Taiwan's inflation has historically been lower and
 more stable than in the US or Japan. CPI exceeding 3% YoY is considered
 unusually high for Taiwan and triggers policy discussion.
+
+**When to use**: Investment Clock inflation axis, CBC policy prediction, real return calculation, Taiwan purchasing power analysis.
 
 **Taiwan-specific context**:
 - Taiwan's CPI is compiled using ROC calendar (民國年). The Excel file
@@ -52,14 +54,14 @@ unusually high for Taiwan and triggers policy discussion.
 
 ---
 
-## core-cpi: 核心CPI Core CPI (不含蔬果及能源)
+## core-cpi: 核心CPI / Core CPI (不含蔬果及能源)
 
-- **Preset**: core-cpi
+- **Series code**: cpisplexvfe.xls (DGBAS Excel)
 - **Source**: DGBAS (主計總處) — `cpisplexvfe.xls`
 - **Unit**: Index (same base as headline CPI)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **URL**: `https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/cpisplexvfe.xls`
+- **History**: From 1981 (monthly)
 
 **What it measures**: CPI excluding fruits, vegetables, and energy (蔬果及能源).
 Strips out the most volatile components to reveal underlying inflation trend.
@@ -73,6 +75,8 @@ Strips out the most volatile components to reveal underlying inflation trend.
 More relevant than headline CPI for monetary policy analysis because it
 removes weather-driven food volatility and global energy price pass-through.
 The CBC references core CPI in its policy statements.
+
+**When to use**: Underlying inflation trend assessment, CBC policy reaction function input, cross-country core CPI comparison (note Taiwan-specific exclusion: fruits, vegetables, energy).
 
 **Taiwan-specific context**:
 - Taiwan's core CPI excludes **fruits and vegetables** (蔬果) specifically,
@@ -90,14 +94,14 @@ The CBC references core CPI in its policy statements.
 
 ---
 
-## ppi: 躉售物價指數 Producer Price Index (WPI)
+## ppi: 躉售物價指數 / Producer Price Index (WPI)
 
-- **Preset**: ppi
+- **Series code**: ppispl.xls (DGBAS Excel)
 - **Source**: DGBAS (主計總處) — `ppispl.xls`
 - **Unit**: Index (base year varies)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **URL**: `https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/ppispl.xls`
+- **History**: From 1981 (monthly)
 
 **What it measures**: Wholesale/producer price index measuring price changes
 of goods at the wholesale level. Taiwan officially calls this 躉售物價指數
@@ -115,6 +119,8 @@ Leading indicator for CPI. Less market-moving than CPI itself, but important
 for understanding the inflation pipeline. Taiwan's PPI is heavily influenced
 by imported commodity prices due to the economy's dependence on imported raw
 materials and energy.
+
+**When to use**: CPI leading indicator (3-6 month lead), corporate margin pressure assessment, upstream cost tracking, import price pass-through analysis.
 
 **Taiwan-specific context**:
 - Taiwan imports ~98% of its energy and a large share of raw materials.
