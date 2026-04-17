@@ -1,50 +1,60 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = []
+# dependencies = ["requests==2.32.3"]
 # ///
 """
 fred_client.py — investing-toolkit FRED macro data adapter
 Fetches Federal Reserve Economic Data series.
 
-Usage:
-  python3 fred_client.py --series T10Y2Y --periods 24
-  python3 fred_client.py --series DGS10,DGS2,CPIAUCSL --periods 12
-  python3 fred_client.py --series GDPC1 --periods 8
+Default: CSV endpoint (no API key required).
+Optional: JSON API endpoint (requires FRED_API_KEY, more flexible).
 
-Auth: Set FRED_API_KEY env var (optional; without key: ~100 requests/day before 429).
-      Free API key: https://fred.stlouisfed.org/docs/api/api_key.html
+Usage:
+  uv run fred_client.py --series T10Y2Y --periods 24
+  uv run fred_client.py --series DGS10,DGS2,CPIAUCSL --periods 12
+  uv run fred_client.py --series GDPC1 --periods 8
+  uv run fred_client.py --series DGS10 --periods 12 --use-api   # force JSON API
+
+Auth: FRED_API_KEY env var is optional. CSV endpoint works without it.
+      Set API key for JSON API access: https://fred.stlouisfed.org/docs/api/api_key.html
 Cache: ~/.cache/investing-toolkit/fred/{series}_{periods}.json  TTL: 24h
 """
 
 import argparse
+import csv
+import io
 import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import urlopen, Request
-from urllib.error import HTTPError, URLError
+import requests as _requests
 
-FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
+FRED_CSV_BASE = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+FRED_API_BASE = "https://api.stlouisfed.org/fred/series/observations"
 CACHE_DIR = Path.home() / ".cache" / "investing-toolkit" / "fred"
 CACHE_TTL_SECONDS = 86400  # 24 hours
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 2.0
+
 
 def get_cache_path(series: str, periods: int) -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     return CACHE_DIR / f"{series.upper()}_{periods}.json"
 
+
 def load_cache(path: Path) -> dict | None:
     if not path.exists():
         return None
-    mtime = path.stat().st_mtime
-    if time.time() - mtime > CACHE_TTL_SECONDS:
+    if time.time() - path.stat().st_mtime > CACHE_TTL_SECONDS:
         return None
     try:
         return json.loads(path.read_text())
     except Exception:
         return None
+
 
 def save_cache(path: Path, data: dict) -> None:
     try:
@@ -52,81 +62,157 @@ def save_cache(path: Path, data: dict) -> None:
     except Exception:
         pass
 
-def fetch_series(series: str, periods: int, api_key: str | None) -> dict:
-    """Fetch a single FRED series, returning last `periods` observations."""
+
+def _build_result(series: str, periods: int, observations: list[dict], source: str) -> dict:
+    valid = [o for o in observations if o.get("value") is not None]
+    latest_n = valid[-periods:] if len(valid) > periods else valid
+    return {
+        "series": series.upper(),
+        "periods_requested": periods,
+        "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "_cache": "miss",
+        "_source": source,
+        "_warning": (
+            f"FRED series {series} has publication lag — latest value may be "
+            "1-4 weeks behind real-world data depending on release schedule."
+        ),
+        "observations": [
+            {"date": o["date"], "value": o["value"]}
+            for o in latest_n
+        ],
+        "latest": {"date": latest_n[-1]["date"], "value": latest_n[-1]["value"]} if latest_n else None,
+        "count": len(latest_n),
+    }
+
+
+# ---------------------------------------------------------------------------
+# CSV endpoint (default, no API key)
+# ---------------------------------------------------------------------------
+
+def fetch_series_csv(series: str, periods: int) -> dict:
+    """Fetch via CSV endpoint. No API key required."""
+    url = f"{FRED_CSV_BASE}?id={series.upper()}"
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = _requests.get(url, timeout=30, headers={"User-Agent": "investing-toolkit/1.2.0"})
+            if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            if resp.status_code != 200:
+                return {"error": f"FRED CSV HTTP {resp.status_code}", "series": series}
+            raw_csv = resp.text
+            break
+        except _requests.exceptions.Timeout:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": "FRED CSV request timed out", "series": series}
+        except _requests.exceptions.ConnectionError as e:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": f"FRED CSV connection error: {e}", "series": series}
+        except Exception as e:
+            return {"error": str(e), "series": series}
+
+    reader = csv.reader(io.StringIO(raw_csv))
+    header = next(reader, None)
+    if not header:
+        return {"error": f"Empty CSV response for {series}", "series": series}
+
+    observations = []
+    for row in reader:
+        if len(row) >= 2:
+            date_str, value_str = row[0], row[1]
+            if value_str in (".", "", "N/A"):
+                continue
+            try:
+                observations.append({"date": date_str, "value": float(value_str)})
+            except ValueError:
+                continue
+
+    return _build_result(series, periods, observations, "csv")
+
+
+# ---------------------------------------------------------------------------
+# JSON API endpoint (requires FRED_API_KEY)
+# ---------------------------------------------------------------------------
+
+def fetch_series_api(series: str, periods: int, api_key: str) -> dict:
+    """Fetch via JSON API. Requires FRED_API_KEY."""
+    params = {
+        "series_id": series.upper(),
+        "sort_order": "desc",
+        "limit": str(periods),
+        "file_type": "json",
+        "api_key": api_key,
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = _requests.get(
+                FRED_API_BASE, params=params, timeout=15,
+                headers={"User-Agent": "investing-toolkit/1.2.0"},
+            )
+            if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt) * 2)
+                continue
+            if resp.status_code != 200:
+                return {"error": f"FRED API HTTP {resp.status_code}", "series": series}
+            raw = resp.json()
+            break
+        except _requests.exceptions.Timeout:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": "FRED API request timed out", "series": series}
+        except _requests.exceptions.ConnectionError as e:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": f"FRED API connection error: {e}", "series": series}
+        except Exception as e:
+            return {"error": str(e), "series": series}
+
+    raw_obs = raw.get("observations", [])
+    observations = []
+    for o in raw_obs:
+        if o.get("value") in (".", None, ""):
+            continue
+        try:
+            observations.append({"date": o["date"], "value": float(o["value"])})
+        except (ValueError, KeyError):
+            continue
+
+    observations.reverse()
+    return _build_result(series, periods, observations, "api")
+
+
+# ---------------------------------------------------------------------------
+# Unified fetch: CSV default, API if key available and --use-api
+# ---------------------------------------------------------------------------
+
+def fetch_series(series: str, periods: int, api_key: str | None, use_api: bool) -> dict:
     cache_path = get_cache_path(series, periods)
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
         return cached
 
-    params = {
-        "series_id": series.upper(),
-        "sort_order": "desc",
-        "limit": str(periods),
-        "file_type": "json",
-    }
-    if api_key:
-        params["api_key"] = api_key
+    if use_api and api_key:
+        result = fetch_series_api(series, periods, api_key)
+    elif use_api and not api_key:
+        result = fetch_series_csv(series, periods)
+        result["_note"] = "--use-api requested but FRED_API_KEY not set; fell back to CSV"
     else:
-        return {
-            "error": (
-                "FRED_API_KEY not set. FRED requires an API key (free). "
-                "Get one at https://fred.stlouisfed.org/docs/api/api_key.html "
-                "then: export FRED_API_KEY=your_key_here"
-            ),
-            "series": series,
-        }
+        result = fetch_series_csv(series, periods)
 
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    url = f"{FRED_BASE}?{query}"
+    if "error" not in result:
+        save_cache(cache_path, result)
 
-    for attempt in range(3):
-        try:
-            req = Request(url, headers={"User-Agent": "investing-toolkit/1.0.0"})
-            with urlopen(req, timeout=15) as resp:
-                raw = json.loads(resp.read())
-            break
-        except HTTPError as e:
-            if e.code == 429:
-                if attempt < 2:
-                    time.sleep(2 ** attempt * 5)
-                    continue
-                return {
-                    "error": "FRED rate limit (429). Set FRED_API_KEY env var for higher limits.",
-                    "series": series,
-                }
-            return {"error": f"FRED HTTP {e.code}: {e.reason}", "series": series}
-        except URLError as e:
-            if attempt < 2:
-                time.sleep(2 ** attempt)
-                continue
-            return {"error": f"FRED network error: {e.reason}", "series": series}
-        except Exception as e:
-            return {"error": str(e), "series": series}
-
-    observations = raw.get("observations", [])
-    # Filter out missing values (FRED uses "." for missing)
-    valid = [o for o in observations if o.get("value") not in (".", None, "")]
-
-    result = {
-        "series": series.upper(),
-        "periods_requested": periods,
-        "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "_cache": "miss",
-        "_warning": (
-            f"FRED series {series} has publication lag — latest value may be "
-            "1-4 weeks behind real-world data depending on release schedule."
-        ),
-        "observations": [
-            {"date": o["date"], "value": float(o["value"])}
-            for o in valid
-        ],
-        "latest": {"date": valid[0]["date"], "value": float(valid[0]["value"])} if valid else None,
-        "count": len(valid),
-    }
-    save_cache(cache_path, result)
     return result
+
 
 def main():
     parser = argparse.ArgumentParser(description="FRED macro data adapter for investing-toolkit")
@@ -134,6 +220,8 @@ def main():
                         help="FRED series ID(s), comma-separated (e.g. T10Y2Y,DGS10,CPIAUCSL)")
     parser.add_argument("--periods", type=int, default=24,
                         help="Number of most-recent observations to return (default: 24)")
+    parser.add_argument("--use-api", action="store_true",
+                        help="Use JSON API instead of CSV (requires FRED_API_KEY)")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache")
 
     args = parser.parse_args()
@@ -148,14 +236,14 @@ def main():
                 path.unlink()
 
     if len(series_list) == 1:
-        result = fetch_series(series_list[0], args.periods, api_key)
+        result = fetch_series(series_list[0], args.periods, api_key, args.use_api)
     else:
         result = {
-            "fetched_at": datetime.now(tz=__import__('datetime').timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "series": {},
         }
         for s in series_list:
-            data = fetch_series(s, args.periods, api_key)
+            data = fetch_series(s, args.periods, api_key, args.use_api)
             result["series"][s] = data
 
     print(json.dumps(result, default=str, indent=2))
@@ -167,6 +255,7 @@ def main():
     )
     if has_error:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
