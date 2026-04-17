@@ -245,7 +245,13 @@ indicator group. Each data point retains its `"_source"` tag (`"boj"` or
 For detailed documentation on each indicator (units, frequency, publication
 lag, interpretation, Japan-specific context, common pitfalls):
 
-- `references/japan-macro-indicators.md` — Tier 1 + Tier 2 indicator reference (bilingual)
+- `references/indicator-index.md` — Quick lookup index for all indicators (bilingual)
+- `references/indicators-rates.md` — 金利系: Call Rate, Discount Rate, 10Y JGB Yield + Tier 2
+- `references/indicators-inflation.md` — 物價系: CPI, CGPI + Tier 2
+- `references/indicators-growth.md` — 成長系: GDP, IP, Coincident Index, Machine Orders, Tertiary Index
+- `references/indicators-labor.md` — 雇用系: Unemployment, Real Wages, Job Ratio
+- `references/indicators-consumption.md` — 消費系: Retail Sales, Service Industry Sales
+- `references/indicators-other.md` — その他: M2, TANKAN, USD/JPY, REER, Current Account + Tier 2
 - `references/japan-boj-db-catalog.md` — Complete BOJ DB catalog (Tier 3, bilingual)
 
 ---
