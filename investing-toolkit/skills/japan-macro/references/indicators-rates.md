@@ -5,13 +5,14 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 
 ---
 
-### 無担保コールO/N物レート / Call Rate, Uncollateralized Overnight
+## call-rate: 無担保コールO/N物レート / Call Rate, Uncollateralized Overnight
 
-- **Source / データソース**: BOJ API (db=FM01, code=STRDCLUCON)
+- **Series code**: FM01/STRDCLUCON (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: Percent (%)
 - **Frequency / 頻度**: Daily
 - **Publication lag / 公表遅延**: ~1 business day
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1985 (daily)
 
 **What it measures / 経済的意味**:
 (EN) The weighted average interest rate at which financial institutions lend uncollateralized overnight funds in the interbank call money market. This is the BOJ's primary policy rate target, equivalent to the Federal Funds rate in the US.
@@ -20,6 +21,9 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → BOJ is tightening monetary policy. Higher short-term borrowing costs across the economy. / 日銀が金融引締めに動いている。短期借入コストが上昇。
 - Falling / 下落 → BOJ is easing monetary policy. Lower borrowing costs to stimulate lending and spending. / 日銀が金融緩和に動いている。借入コスト低下で貸出・消費を刺激。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's primary policy rate. BOJ rate decisions are global headlines, moving JPY, JGBs, Nikkei 225, and global carry trade positions. The first rate hike in 17 years (March 2024) was the most anticipated BOJ decision in a generation.
 
 **When to use / 使用場面**:
 Investment Clock monetary policy axis, DCF short-term risk-free rate proxy,
@@ -40,13 +44,14 @@ historically significant.
 
 ---
 
-### 基準割引率・基準貸付利率 / Basic Discount Rate and Basic Loan Rate
+## discount-rate: 基準割引率・基準貸付利率 / Basic Discount Rate and Basic Loan Rate
 
-- **Source / データソース**: BOJ API (db=IR01)
+- **Series code**: IR01 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: Percent (%)
 - **Frequency / 頻度**: Irregular (changes with policy decisions)
 - **Publication lag / 公表遅延**: Same day as policy decision
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1882 (irregular)
 
 **What it measures / 経済的意味**:
 (EN) The rate at which the BOJ lends to financial institutions through its Complementary Lending Facility. It acts as an effective ceiling for the overnight call rate, since no institution would borrow in the interbank market at a rate above what the BOJ charges directly.
@@ -55,6 +60,9 @@ historically significant.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → BOJ is raising the corridor ceiling, consistent with overall tightening. / 日銀がコリドーの上限を引き上げ。全体的な引締めと整合。
 - Falling / 下落 → BOJ is lowering the ceiling, widening accommodation. / 上限引下げ。緩和スタンスの拡大。
+
+**Market significance / 市場重要度**: ⭐
+Corridor ceiling rate. Primarily confirmatory — changes follow the call rate target. Of interest mainly for BOJ operational framework analysis.
 
 **When to use / 使用場面**:
 Understanding the BOJ's interest rate corridor system, confirming policy rate
@@ -72,13 +80,14 @@ designed as a routine backstop.
 
 ---
 
-### 新発10年国債利回り / 10-Year JGB Yield
+## jgb10y: 新発10年国債利回り / 10-Year JGB Yield
 
-- **Source / データソース**: 統計ダッシュボード (preset=jgb10y, indicator=0702020300000010020)
+- **Series code**: 0702020300000010020 (統計DB)
+- **Source**: 財務省 / 日本証券業協会
 - **Unit / 単位**: Percent (%), month-end value
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~1 week after month-end
-- **Managing agency / 所管**: 財務省 (Ministry of Finance) / 日本証券業協会
+- **History**: From 2013 (150 observations)
 
 **What it measures / 経済的意味**:
 (EN) The yield on the most recently issued 10-year Japanese Government Bond. The benchmark long-term risk-free rate for Japan, reflecting long-term inflation expectations, growth expectations, and BOJ policy outlook.
@@ -87,6 +96,9 @@ designed as a routine backstop.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Markets expect higher inflation, stronger growth, or BOJ policy normalization. Raises discount rates for equity valuations. / 市場がインフレ上昇・景気回復・日銀正常化を予想。株式バリュエーションの割引率上昇。
 - Falling / 下落 → Markets expect deflation, weaker growth, or continued BOJ accommodation. Flight to safety. / デフレ・景気減速・日銀緩和継続の予想。安全資産への逃避。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's benchmark long-term rate. Under YCC (2016-2024), it was the most intervention-distorted sovereign yield globally. Post-YCC, its normalization path affects JPY carry trade economics, global bond supply/demand, and Japanese insurance/pension portfolio rebalancing.
 
 **When to use / 使用場面**:
 DCF discount rate for Japan equities, JPY-denominated bond allocation,

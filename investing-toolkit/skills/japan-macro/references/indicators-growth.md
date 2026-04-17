@@ -5,13 +5,14 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 
 ---
 
-### 国内総生産 GDP / Gross Domestic Product
+## gdp: 国内総生産 GDP / Gross Domestic Product
 
-- **Source / データソース**: 統計ダッシュボード (use `--cycle quarterly`, discover via search)
+- **Series code**: discover via search (統計DB, use `--cycle quarterly`)
+- **Source**: 内閣府 (Cabinet Office)
 - **Unit / 単位**: QoQ annualized % change or JPY trillions
 - **Frequency / 頻度**: Quarterly
 - **Publication lag / 公表遅延**: ~6 weeks (1st preliminary estimate / 速報)
-- **Managing agency / 所管**: 内閣府 (Cabinet Office)
+- **History**: From 1994 (quarterly)
 
 **What it measures / 経済的意味**:
 (EN) The total inflation-adjusted value of goods and services produced in Japan. The definitive measure of whether the Japanese economy is expanding or contracting.
@@ -20,6 +21,9 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 **How to interpret / 解読方法**:
 - Rising (positive QoQ) / 上昇 → Economy expanding. Supports corporate earnings and risk assets. / 経済拡大。企業収益・リスク資産を支持。
 - Falling (negative QoQ) / 下落 → Economy contracting. Two consecutive negative quarters is the informal recession definition. / 経済縮小。2四半期連続マイナスは非公式の景気後退定義。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+The definitive measure of Japan's economic performance. Quarterly GDP releases move JPY, Nikkei, JGBs. Revisions between 1st and 2nd preliminary estimates frequently flip the narrative.
 
 **When to use / 使用場面**:
 Investment Clock growth axis, GIP quadrant mapping, cycle positioning,
@@ -40,13 +44,14 @@ differ by over 1 percentage point annualized.
 
 ---
 
-### 鉱工業生産指数 / Industrial Production Index
+## ip: 鉱工業生産指数 / Industrial Production Index
 
-- **Source / データソース**: 統計ダッシュボード (preset=ip, indicator=0502070301000090010)
+- **Series code**: 0502070301000090010 (統計DB)
+- **Source**: 経済産業省 (METI)
 - **Unit / 単位**: Index (2020 base = 100), seasonally adjusted
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~6 weeks after reference month
-- **Managing agency / 所管**: 経済産業省 (Ministry of Economy, Trade and Industry, METI)
+- **History**: From 1978 (578 observations)
 
 **What it measures / 経済的意味**:
 (EN) The real output volume of Japan's mining and manufacturing sectors. A high-frequency cyclical indicator that tracks industrial activity and leads broader economic turning points.
@@ -55,6 +60,9 @@ differ by over 1 percentage point annualized.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Industrial activity expanding. Positive for cyclical equities, machinery orders, and export-oriented sectors. / 鉱工業活動の拡大。循環株・機械受注・輸出関連セクターにポジティブ。
 - Falling / 下落 → Industrial activity contracting. Signals potential recession if sustained 3+ months. / 鉱工業活動の縮小。3ヶ月以上持続すれば景気後退のシグナル。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's most important high-frequency growth indicator. Manufacturing is the engine of Japan's export economy. IP trends are highly correlated with Nikkei earnings revisions and yen direction.
 
 **When to use / 使用場面**:
 Investment Clock growth proxy (higher frequency than GDP), GIP quadrant
@@ -73,13 +81,14 @@ typhoons) can cause sharp one-month drops that do not reflect underlying trend.
 
 ---
 
-### 景気動向指数（一致指数）/ Composite Coincident Index
+## coincident-index: 景気動向指数（一致指数）/ Composite Coincident Index
 
-- **Source / データソース**: 統計ダッシュボード (preset=coincident-index, indicator=0706010500000090010)
+- **Series code**: 0706010500000090010 (統計DB)
+- **Source**: 内閣府 (Cabinet Office)
 - **Unit / 単位**: Index (2020 base = 100)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~6 weeks after reference month
-- **Managing agency / 所管**: 内閣府 (Cabinet Office)
+- **History**: From 1985 (494 observations)
 
 **What it measures / 経済的意味**:
 (EN) A composite index combining multiple economic indicators (industrial production, employment, consumption, etc.) that move in tandem with the current phase of the business cycle. The coincident index is the definitive measure of where Japan currently stands in the economic cycle.
@@ -89,8 +98,8 @@ typhoons) can cause sharp one-month drops that do not reflect underlying trend.
 - Rising / 上昇 → Economy is in an expansion phase. Business conditions improving across multiple sectors simultaneously. / 景気は拡大局面。複数セクターで同時に景況感が改善。
 - Falling / 下落 → Economy is in a contraction phase. Weakness spreading across sectors. / 景気は後退局面。弱さが複数セクターに波及。
 
-**Market significance / 市場での重要度**: ⭐⭐⭐
-The Cabinet Office publishes this monthly as Japan's official business cycle barometer. It combines production, employment, and consumption into one number, making it more comprehensive than industrial production alone. The 3-month moving average direction of the coincident index formally determines the business cycle phase (expansion or contraction). For IC mapping, this is the most direct growth proxy available.
+**Market significance / 市場重要度**: ⭐⭐
+Official business cycle phase indicator. The Cabinet Office uses this index to formally date recessions and expansions. Useful for Investment Clock phase confirmation.
 
 **When to use / 使用場面**:
 Investment Clock growth axis (most direct proxy), business cycle phase confirmation,
@@ -110,13 +119,14 @@ indexes, but the coincident index is the headline for current conditions.
 
 ---
 
-### 機械受注額 / Machine Orders
+## machine-orders: 機械受注額 / Machine Orders
 
-- **Source / データソース**: 統計ダッシュボード (preset=machine-orders, indicator=0701030000000010010)
+- **Series code**: 0701030000000010010 (統計DB)
+- **Source**: 内閣府 (Cabinet Office)
 - **Unit / 単位**: JPY 100 million (億円)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~6 weeks after reference month
-- **Managing agency / 所管**: 内閣府 (Cabinet Office)
+- **History**: From 2005 (251 observations)
 
 **What it measures / 経済的意味**:
 (EN) The value of new orders received by major machinery manufacturers from the private sector, excluding volatile orders for ships and electric power. This is Japan's most closely watched leading indicator for business investment (capex), as orders placed today become investment spending 6-9 months later.
@@ -126,8 +136,8 @@ indexes, but the coincident index is the headline for current conditions.
 - Rising / 上昇 → Firms are ordering more equipment. Capex cycle upswing expected 6-9 months ahead. Positive for machinery, construction, and capital goods sectors. / 企業の設備投資意欲が旺盛。6-9ヶ月先の設備投資拡大を示唆。
 - Falling / 下落 → Firms are cutting back on equipment orders. Capex downturn ahead. Negative for cyclical sectors. / 企業の設備投資抑制。景気後退の前兆となりうる。
 
-**Market significance / 市場での重要度**: ⭐⭐⭐
-This is the single most market-moving domestic macro indicator in Japan. On release days, USD/JPY and the Nikkei 225 frequently react with significant moves. The headline number is "Private-sector, excluding ships and electric power" (船舶・電力を除く民需). Machine orders lead GDP by 6-9 months, making them the best real-time gauge of future capex, which is a major component of Japan's GDP.
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's most important capex leading indicator. Volatile month-to-month but the trend signals corporate investment intentions 3-6 months ahead. Moves equity markets on release.
 
 **When to use / 使用場面**:
 Capex cycle forecasting, leading indicator for GDP, equity sector rotation
@@ -148,13 +158,14 @@ for guidance on the capex outlook.
 
 ---
 
-### 第3次産業活動指数 / Tertiary Industry Activity Index
+## tertiary-index: 第3次産業活動指数 / Tertiary Industry Activity Index
 
-- **Source / データソース**: 統計ダッシュボード (preset=tertiary-index, indicator=0603100300000090010)
+- **Series code**: 0603100300000090010 (統計DB)
+- **Source**: 経済産業省 (METI)
 - **Unit / 単位**: Index (2020 base = 100), seasonally adjusted
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~6 weeks after reference month
-- **Managing agency / 所管**: 経済産業省 (Ministry of Economy, Trade and Industry, METI)
+- **History**: From 2018 (97 observations)
 
 **What it measures / 経済的意味**:
 (EN) A real (inflation-adjusted) index measuring the output of Japan's service sector (tertiary industry), covering wholesale/retail, finance/insurance, transport, information/communications, and other services. This is the services counterpart to the Industrial Production Index.
@@ -164,8 +175,8 @@ for guidance on the capex outlook.
 - Rising / 上昇 → Service sector activity expanding. Positive for Japan's consumption-driven recovery narrative. / サービスセクターの活動拡大。消費主導の景気回復を支持。
 - Falling / 下落 → Service sector activity contracting. Since services are the dominant majority of GDP (約7割、2015–2024年安定推移), broad weakness signals significant economic slowdown. / サービスセクターの活動縮小。GDPの過半数（約7割、2015–2024年安定推移）を占めるため広範な弱さは深刻な景気減速を示唆。
 
-**Market significance / 市場での重要度**: ⭐⭐
-This index covers the dominant majority of Japan's GDP (services sector, 約7割、2015–2024年安定推移). Industrial Production (IP) only captures manufacturing and mining. To get a complete picture of the economy, you need both IP and the Tertiary Index. The index is in real terms (adjusted for price changes), making it suitable for IC mapping as a growth proxy. It is less volatile than IP and captures the domestic consumption and services recovery that has been a key theme post-COVID.
+**Market significance / 市場重要度**: ⭐⭐
+Japan's services sector activity gauge. Complements IP for a full picture of the economy. Services account for ~70% of GDP but get less market attention than manufacturing.
 
 **When to use / 使用場面**:
 Services-led recovery assessment, complement to IP for full economic picture,

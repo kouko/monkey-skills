@@ -5,13 +5,14 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 
 ---
 
-### 消費者物価指数 CPI / Consumer Price Index
+## cpi: 消費者物価指数 CPI / Consumer Price Index
 
-- **Source / データソース**: 統計ダッシュボード (preset=cpi, indicator=0703010501010030000)
+- **Series code**: 0703010501010030000 (統計DB)
+- **Source**: 総務省統計局 (Statistics Bureau)
 - **Unit / 単位**: YoY % change (前年同月比)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~3-4 weeks after reference month
-- **Managing agency / 所管**: 総務省統計局 (Ministry of Internal Affairs and Communications, Statistics Bureau)
+- **History**: From 1971 (662 observations)
 
 **What it measures / 経済的意味**:
 (EN) Year-over-year percentage change in the consumer price index for all items, covering the prices of goods and services purchased by households nationwide. This is Japan's headline inflation measure.
@@ -20,6 +21,9 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Inflation is accelerating. If sustained above BOJ's 2% target, supports hawkish policy expectations. / インフレ加速。2%目標を持続的に超えれば引締め観測を強化。
 - Falling / 下落 → Disinflation or deflation risk. Supports dovish policy stance. / ディスインフレまたはデフレリスク。緩和スタンスを支持。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's headline inflation gauge. After decades of deflation, sustained CPI above 2% (2022-) has fundamentally changed the BOJ policy equation. CPI releases directly drive JPY, JGB yields, and BOK/Fed policy expectations for Japan.
 
 **When to use / 使用場面**:
 Investment Clock inflation axis, BOJ policy prediction, real return
@@ -45,13 +49,14 @@ and the yen exchange rate. Government energy subsidies can distort CPI by
 
 ---
 
-### 企業物価指数 CGPI / Corporate Goods Price Index
+## cgpi: 企業物価指数 CGPI / Corporate Goods Price Index
 
-- **Source / データソース**: BOJ API (db=PR01, code=discover via getMetadata)
+- **Series code**: PR01 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: YoY % change or Index (2020 base = 100)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~2 weeks after reference month (published before CPI)
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1960 (monthly)
 
 **What it measures / 経済的意味**:
 (EN) The price change of goods traded between corporations at the producer level. Formerly called the Wholesale Price Index (WPI). Covers domestically produced goods, exports, and imports. It is a leading indicator for CPI because B2B price pressures eventually pass through to consumer prices.
@@ -60,6 +65,9 @@ and the yen exchange rate. Government energy subsidies can distort CPI by
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Input cost pressures building for corporations. If sustained, expect pass-through to CPI with a 3-6 month lag. Margin pressure for companies without pricing power. / 企業のコスト圧力上昇。3-6ヶ月のラグでCPIに転嫁される可能性。
 - Falling / 下落 → Deflationary pressure at the producer level. Eases corporate cost burden but signals weak demand. / 生産者段階のデフレ圧力。コスト負担は軽減するが需要の弱さを示唆。
+
+**Market significance / 市場重要度**: ⭐⭐
+Leading indicator for CPI with 3-6 month lag. Published by the BOJ (unique among central banks). The CGPI-CPI gap reveals corporate pass-through intentions — a widening gap signals building margin pressure.
 
 **When to use / 使用場面**:
 Leading indicator for CPI trajectory, corporate margin analysis,

@@ -2,10 +2,10 @@
 
 ---
 
-## gdp-growth: 經濟成長率 GDP Growth Rate YoY%
+## gdp-growth: 經濟成長率 / GDP Growth Rate YoY%
 
-- **Preset**: gdp-yoy
-- **Source**: statgov (stat.gov.tw sid=t.1)
+- **Series code**: sid=t.1 (stat.gov.tw)
+- **Source**: statgov (stat.gov.tw)
 - **Unit**: Percent (%) — year-over-year growth rate
 - **Frequency**: Quarterly
 - **Publication lag**: ~6 weeks after quarter-end (advance estimate)
@@ -26,6 +26,8 @@ Taiwan's GDP is the ultimate measure of economic performance, but quarterly
 frequency and long publication lag reduce its real-time utility. Higher-frequency
 proxies (IPI, exports, the NDC signal) often move markets before GDP confirms.
 The advance estimate still generates headlines and affects CBC policy outlook.
+
+**When to use**: Investment Clock growth axis, recession assessment, Taiwan allocation weight decisions, semiconductor cycle confirmation.
 
 **Taiwan-specific context**:
 - Taiwan's GDP is heavily driven by exports (~70% of GDP) and particularly
@@ -48,14 +50,13 @@ The advance estimate still generates headlines and affects CBC policy outlook.
 
 ---
 
-## import-pi: 進口物價指數 Import Price Index
+## import-pi: 進口物價指數 / Import Price Index
 
-- **Preset**: import-pi
+- **Series code**: ipispl.xls (DGBAS Excel)
 - **Source**: DGBAS (主計總處) — `ipispl.xls`
 - **Unit**: Index (base year varies)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **URL**: `https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/ipispl.xls`
 
 **What it measures**: Price changes of imported goods into Taiwan, denominated
 in NTD. Captures the combined effect of global commodity prices, foreign
@@ -74,6 +75,8 @@ Important for understanding cost pressure on Taiwan's export-manufacturing
 economy. Taiwan imports nearly all raw materials and energy, making this
 index a critical input to margin analysis for the manufacturing sector.
 
+**When to use**: Import cost pressure monitoring, TWD pass-through analysis, commodity price impact assessment, manufacturing input cost tracking.
+
 **Taiwan-specific context**:
 - Taiwan's import mix is heavily weighted toward intermediate goods and raw
   materials (semiconductors materials, petrochemicals, machinery parts,
@@ -91,14 +94,13 @@ index a critical input to margin analysis for the manufacturing sector.
 
 ---
 
-## export-pi: 出口物價指數 Export Price Index
+## export-pi: 出口物價指數 / Export Price Index
 
-- **Preset**: export-pi
+- **Series code**: epispl.xls (DGBAS Excel)
 - **Source**: DGBAS (主計總處) — `epispl.xls`
 - **Unit**: Index (base year varies)
 - **Frequency**: Monthly
 - **Publication lag**: ~3-4 weeks after reference month
-- **URL**: `https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/epispl.xls`
 
 **What it measures**: Price changes of exported goods from Taiwan, denominated
 in NTD. Reflects Taiwan's export competitiveness and global demand conditions
@@ -116,6 +118,8 @@ for Taiwan's key exports (semiconductors, electronics, machinery).
 Taiwan is the world's largest semiconductor foundry (TSMC) and a major
 electronics exporter. Export price trends signal the health of Taiwan's
 dominant industry and have implications for global tech supply chains.
+
+**When to use**: Export competitiveness tracking, terms of trade computation, semiconductor pricing cycle signal.
 
 **Taiwan-specific context**:
 - Export prices are heavily weighted toward electronics and semiconductors.

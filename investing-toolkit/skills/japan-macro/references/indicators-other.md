@@ -5,13 +5,14 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 
 ---
 
-### マネーストック M2 / Money Stock M2
+## m2: マネーストック M2 / Money Stock M2
 
-- **Source / データソース**: BOJ API (db=MD02, code=discover via getMetadata)
+- **Series code**: MD02 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: JPY 100 million (億円) or YoY % change
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~2 weeks after reference month
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 2003 (monthly, current definition)
 
 **What it measures / 経済的意味**:
 (EN) The total amount of money held by non-financial sectors (households, corporations, local governments), including cash in circulation, demand deposits, and time deposits at domestically licensed banks. M2 is the most-watched money supply aggregate in Japan.
@@ -20,6 +21,9 @@ Part of `japan-macro` skill. See `indicator-index.md` for full index.
 **How to interpret / 解読方法**:
 - Rising (accelerating YoY) / 上昇 → Money supply expanding. Can signal future inflation if velocity picks up. Accommodative monetary conditions. / マネーサプライ拡大。流通速度が上昇すれば将来のインフレを示唆。
 - Falling (decelerating YoY) / 下落 → Money supply growth slowing. Tighter monetary conditions or weak credit demand. / マネーサプライ伸び鈍化。金融環境の引締めまたは信用需要の弱さ。
+
+**Market significance / 市場重要度**: ⭐
+Technical monetary indicator. Less directly market-moving than in previous decades. The BOJ monitors M2 growth for financial stability but does not target it explicitly.
 
 **When to use / 使用場面**:
 Monetary conditions assessment, liquidity analysis, cross-check with BOJ
@@ -44,13 +48,14 @@ policy trap. M2 growth accelerated during COVID fiscal transfers.
 
 ---
 
-### 短観 業況判断DI / TANKAN Business Conditions DI
+## tankan: 短観 業況判断DI / TANKAN Business Conditions DI
 
-- **Source / データソース**: BOJ API (db=CO, code=discover via getMetadata)
+- **Series code**: CO (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: Diffusion Index (percentage points)
 - **Frequency / 頻度**: Quarterly (March, June, September, December surveys)
 - **Publication lag / 公表遅延**: ~1 week after quarter-end survey
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1974 (quarterly)
 
 **What it measures / 経済的意味**:
 (EN) The TANKAN (Short-Period Economic Survey of Enterprises) is the BOJ's own quarterly survey of approximately 10,000 firms on business conditions. The headline DI = (% of firms reporting "favorable") minus (% reporting "unfavorable"). The "Large Manufacturers" DI is the most-watched number.
@@ -60,6 +65,9 @@ policy trap. M2 growth accelerated during COVID fiscal transfers.
 - DI > 0 → More firms see conditions as "favorable" than "unfavorable." Positive business sentiment. / 「良い」超。景況感はポジティブ。
 - DI < 0 → More firms see conditions as "unfavorable." Negative business sentiment. / 「悪い」超。景況感はネガティブ。
 - DI = 0 → Neutral threshold (not a midpoint on a scale). / ゼロは中立の閾値（スケールの中間点ではない）。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+Japan's most important business sentiment survey. The BOJ's own survey, released quarterly, is the definitive gauge of corporate Japan's outlook. The Large Manufacturing DI is the headline number — it moves markets on release day.
 
 **When to use / 使用場面**:
 Leading indicator for capex and earnings, corporate sentiment gauge,
@@ -82,13 +90,14 @@ Japan's economy shifts toward services.
 
 ---
 
-### USD/JPY 為替レート / USD/JPY Exchange Rate
+## usdjpy: USD/JPY 為替レート / USD/JPY Exchange Rate
 
-- **Source / データソース**: BOJ API (db=FM08, code=discover via getMetadata)
+- **Series code**: FM08 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: JPY per 1 USD
 - **Frequency / 頻度**: Daily (Tokyo market)
 - **Publication lag / 公表遅延**: ~1-2 business days
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1980 (monthly)
 
 **What it measures / 経済的意味**:
 (EN) The exchange rate of Japanese yen per US dollar as observed in the Tokyo foreign exchange market. The most important exchange rate for Japan's trade-dependent economy.
@@ -97,6 +106,9 @@ Japan's economy shifts toward services.
 **How to interpret / 解読方法**:
 - Rising (JPY weakening) / 上昇 → Yen depreciation against USD. Positive for Japanese exporters' earnings, but raises import costs (energy, food). Can push CGPI and eventually CPI higher. / 円安。輸出企業の収益にプラスだが輸入コスト上昇。
 - Falling (JPY strengthening) / 下落 → Yen appreciation against USD. Negative for exporter competitiveness, but lowers import costs. / 円高。輸出競争力にマイナスだが輸入コスト低下。
+
+**Market significance / 市場重要度**: ⭐⭐⭐
+The world's most traded currency pair after EUR/USD. USD/JPY reflects BOJ-Fed policy divergence, risk appetite, and carry trade dynamics. Moves above 150 trigger government intervention warnings; moves below 130 signal JPY strength.
 
 **When to use / 使用場面**:
 Japan equity analysis (exporters vs importers), import cost pass-through
@@ -119,13 +131,14 @@ in September/October 2022 and April/July 2024.
 
 ---
 
-### 実効為替レート / Effective Exchange Rate
+## reer: 実効為替レート / Effective Exchange Rate
 
-- **Source / データソース**: BOJ API (db=FM09, code=discover via getMetadata)
+- **Series code**: FM09 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: Index (2020 = 100, trade-weighted)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~1-2 business days after month-end
-- **Managing agency / 所管**: 日本銀行 (Bank of Japan)
+- **History**: From 1970 (monthly)
 
 **What it measures / 経済的意味**:
 (EN) A trade-weighted index of the yen's value against a basket of major trading partner currencies, adjusted for inflation differentials (real effective exchange rate, REER) or unadjusted (nominal effective exchange rate, NEER). Captures the yen's overall competitiveness, not just against the dollar.
@@ -134,6 +147,9 @@ in September/October 2022 and April/July 2024.
 **How to interpret / 解読方法**:
 - Rising / 上昇 → Yen strengthening on a trade-weighted basis. Japan's export competitiveness declining. / 円の実効的な増価。輸出競争力の低下。
 - Falling / 下落 → Yen weakening on a trade-weighted basis. Export competitiveness improving but import costs rising. / 円の実効的な減価。輸出競争力は改善だが輸入コスト上昇。
+
+**Market significance / 市場重要度**: ⭐⭐
+Trade-weighted effective exchange rate. More informative than bilateral USD/JPY for assessing Japan's overall competitiveness. The JPY REER has been near 50-year lows, reflecting structural JPY weakness.
 
 **When to use / 使用場面**:
 Holistic yen competitiveness assessment (better than bilateral USD/JPY),
@@ -156,13 +172,14 @@ competitiveness position.
 
 ---
 
-### 経常収支 / Current Account Balance
+## current-account: 経常収支 / Current Account Balance
 
-- **Source / データソース**: BOJ API (db=BP01, code=discover via getMetadata)
+- **Series code**: BP01 (BOJ API)
+- **Source**: 日本銀行 (Bank of Japan)
 - **Unit / 単位**: JPY 100 million (億円)
 - **Frequency / 頻度**: Monthly
 - **Publication lag / 公表遅延**: ~6 weeks after reference month
-- **Managing agency / 所管**: 財務省 (Ministry of Finance) / 日本銀行
+- **History**: From 1985 (monthly)
 
 **What it measures / 経済的意味**:
 (EN) The sum of Japan's trade balance, services balance, primary income balance (investment income from overseas assets), and secondary income balance. Measures Japan's overall economic transactions with the rest of the world.
@@ -171,6 +188,9 @@ competitiveness position.
 **How to interpret / 解読方法**:
 - Surplus / 黒字 → Japan earns more from the world than it pays. Supports JPY demand (though with diminishing FX impact as income is often reinvested abroad). / 日本の対外収入が支出を上回る。円需要を支持（ただし所得は海外で再投資されることが多い）。
 - Deficit / 赤字 → Japan pays more to the world than it earns. Potential JPY weakness factor if structural. / 日本の対外支出が収入を上回る。構造的なら円安要因。
+
+**Market significance / 市場重要度**: ⭐⭐
+Japan's broadest trade measure. Japan shifted from goods surplus to services deficit + investment income surplus. The structure of the current account (income-driven vs trade-driven) matters for JPY direction.
 
 **When to use / 使用場面**:
 JPY fundamental valuation, Japan investment flow analysis, terms-of-trade
