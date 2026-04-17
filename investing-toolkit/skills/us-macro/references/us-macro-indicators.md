@@ -29,6 +29,13 @@ market expectations for future economic conditions and monetary policy.
 - Negative (inverted) → Short-term yields exceed long-term yields. Historically
   a reliable recession predictor with a 6-18 month lead time.
 
+**Market significance**: ⭐⭐⭐
+The single most watched recession indicator. An inversion (negative spread)
+has preceded every U.S. recession since 1970 with only one false positive.
+FOMC members, fixed-income desks, and macro strategists monitor this daily.
+CPI release days aside, yield curve moves generate more market commentary
+than almost any other macro data point.
+
 **When to use**: Yield curve analysis, Investment Clock regime diagnosis,
 recession probability assessment, fixed-income allocation decisions.
 
@@ -58,6 +65,12 @@ expectations, real growth expectations, and the term premium.
   tightens financial conditions.
 - Falling → Markets expect lower inflation, weaker growth, or flight to safety.
   Lowers discount rates and loosens financial conditions.
+
+**Market significance**: ⭐⭐⭐
+The global benchmark risk-free rate. Moves in the 10Y drive mortgage rates,
+corporate bond pricing, equity valuations (DCF discount rate), and cross-border
+capital flows. Every asset class references this yield directly or indirectly.
+When DGS10 moves 10+ bps in a day, it's front-page financial news.
 
 **When to use**: DCF discount rate input, equity valuation sensitivity,
 mortgage rate forecasting, financial conditions assessment, cross-asset
@@ -89,6 +102,13 @@ is the most policy-sensitive point on the yield curve.
   guidance.
 - Falling → Markets expect Fed easing (rate cuts). Sharp drops often signal
   imminent policy pivot or recession fears.
+
+**Market significance**: ⭐⭐
+The most policy-sensitive yield on the curve. Reacts sharply to FOMC
+statements, dot plots, and economic data that shifts Fed expectations.
+Traders use DGS2 as a proxy for "what the market thinks the Fed will do."
+Less watched by the general public than DGS10, but essential for rate
+strategy desks.
 
 **When to use**: Fed policy expectations, short-duration fixed-income
 positioning, yield curve spread analysis (paired with DGS10 for T10Y2Y
@@ -122,6 +142,12 @@ This is the primary tool of Federal Reserve monetary policy.
 - Falling → Fed is easing to stimulate growth or respond to financial stress.
   Lower borrowing costs encourage lending and spending.
 
+**Market significance**: ⭐⭐⭐
+The Fed's primary policy tool. Every FOMC meeting's rate decision is global
+headline news. The absolute level of FEDFUNDS sets the floor for all short-term
+borrowing costs in the world's largest economy. Changes ripple through mortgages,
+corporate credit, emerging market capital flows, and currency markets.
+
 **When to use**: Monetary policy stance assessment, Investment Clock phase
 mapping (policy rate vs. inflation), short-term rate environment baseline.
 
@@ -154,6 +180,13 @@ goods and services. Often called "headline CPI."
   equities depending on pricing power.
 - Falling (decelerating YoY) → Disinflation in progress. Opens the door for
   dovish Fed pivot. Positive for duration assets.
+
+**Market significance**: ⭐⭐⭐
+The most market-moving economic release on the calendar. CPI day routinely
+produces 1-2% equity swings and 10+ bps Treasury moves. The Fed's dual mandate
+makes inflation control half of its mission. Every basis point of surprise vs.
+consensus triggers immediate repricing across all asset classes. Arguably the
+single most important macro data point for global markets.
 
 **When to use**: Investment Clock inflation axis (use YoY rate of change, not
 level), real return calculations, TIPS breakeven comparison, GIP quadrant
@@ -192,6 +225,12 @@ pressure.
 - Falling (decelerating YoY) → Underlying inflation is cooling. The Fed's
   preferred signal for considering easing.
 
+**Market significance**: ⭐⭐⭐
+The Fed's preferred inflation gauge for policy decisions. When headline CPI
+and core CPI diverge, the Fed weights core more heavily. "Core stickiness"
+is the dominant narrative in rate decision debates. Market participants
+scrutinize the core MoM annualized print even more than headline YoY.
+
 **When to use**: Cross-check against headline CPI to determine if inflation
 is broad-based or commodity-driven. Core CPI is the better input for
 structural inflation assessment and Fed reaction function modeling.
@@ -226,6 +265,13 @@ and the definitive gauge of whether the economy is expanding or contracting.
   consecutive negative quarters is the informal recession definition (though
   NBER uses a broader set of criteria).
 
+**Market significance**: ⭐⭐
+The definitive measure of economic output, but its market impact is lower
+than CPI because quarterly frequency means markets have already priced in
+the trend via higher-frequency proxies (employment, ISM, retail sales).
+The advance estimate still moves markets when it surprises significantly.
+Revision vintages (second and third estimates) rarely move markets.
+
 **When to use**: Investment Clock growth axis, GIP quadrant mapping (rate of
 change), cycle positioning, asset allocation decisions.
 
@@ -259,6 +305,14 @@ economic turning points.
 - Falling (negative MoM) → Industrial activity contracting. Can signal
   approaching recession, especially if sustained over 3+ months. Favors
   defensive positioning.
+
+**Market significance**: ⭐⭐
+A high-frequency cyclical gauge that fills the gap between quarterly GDP
+prints. Manufacturing is a small share of GDP (roughly 15-20%, 2015–2024
+stable) but is more cyclically sensitive than services, making INDPRO a
+useful early warning. ISM Manufacturing PMI gets more headlines, but INDPRO
+is the hard data confirmation. Less market-moving than CPI or employment,
+but important for cycle-timing and sector rotation.
 
 **When to use**: Investment Clock growth proxy (higher frequency than GDP),
 GIP quadrant mapping (rate of change), manufacturing cycle assessment,
