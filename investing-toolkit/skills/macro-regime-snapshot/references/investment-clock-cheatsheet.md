@@ -110,26 +110,60 @@ are published by the source authority:
 
 Real rate = DFII (TIPS yield) ≈ Nominal (DGSxx) − Breakeven (TxxYIE).
 
-### Signal thresholds
+### Signal thresholds (four-tier, 2025-2026 calibration)
 
 | DFII5 / DFII10 | Signal | Fed-policy framing |
 |----------------|--------|--------------------|
-| `< 0%` | **Accommodative** | Real cost of capital negative → favours risk assets, gold, duration. Historically associated with ZIRP or active QE regimes. |
-| `0% ≤ x < 1.5%` | **Neutral** | Around Fed r* (0.5-1.0%) plus small term premium. Typical mid-cycle. |
-| `≥ 1.5%` | **Restrictive** | Real cost of capital elevated. Headwind for equity multiples (particularly long-duration tech), credit, real estate. |
+| `< 0%` | **Accommodative** | Real cost of capital negative → favours risk assets, gold, duration. Historically ZIRP / active QE regimes. |
+| `0% ≤ x < 1.0%` | **Neutral** | Around HLW r* (~1.42% in 2025) minus term premium. Typical mid-cycle. |
+| `1.0% ≤ x < 1.75%` | **Moderately Restrictive** | Matches Williams' (NY Fed) qualitative "modestly restrictive" language (Dec 2025 / Jan 2026 speeches). Headwind for long-duration assets but not crushing. |
+| `≥ 1.75%` | **Clearly Restrictive** | Above upper-bound of FOMC long-run dots (0.6-1.9% real range) and Lubik-Matthes r* (2.15% − term premium). Full policy headwind for equity multiples, credit, REITs. |
 
-### Why 1.5%?
+### Threshold provenance (r* estimates as of 2026-Q1)
 
-Fed estimates of the neutral real rate (r*) cluster around 0.5-1.0% post-GFC.
-The SEP median long-run dot has floated 0.5-1.5%. 1.5% is the defensible
-"clearly above neutral" threshold given term premium and model uncertainty.
+The two-tier restrictive classification is calibrated against the
+**current r* debate** (post-COVID is genuinely contested in the
+literature, so a single cut-off isn't defensible):
+
+| Source | r* estimate (real) | How it maps |
+|--------|-------------------|-------------|
+| HLW (Holston-Laubach-Williams, 2025 vintage) | **1.42%** | Lower-bound anchor; r* hasn't risen materially post-COVID |
+| Lubik-Matthes (Richmond Fed) | **2.15%** | Upper-bound anchor; r* has risen post-COVID |
+| NY Fed composite (2025-08 note) medium-run nominal 3.7% (band 2.9-4.5%) | **~1.7% real** (band 0.9-2.5%) | 77% probability statement current stance is restrictive |
+| FOMC long-run dot plot (19 members, Dec 2025) | **0.6-1.9% real** (nominal 2.6-3.9% − 2% target) | Spread reflects intra-FOMC disagreement |
+| BOJ working paper WP24-J-09 on US r* | 0.5-1.5% | Conservative / pre-2024 consensus |
+| Itochu / Mizuho house view | 0.5-1.5% | Japanese sell-side convergence |
+
+**Rationale for 1.75% cut-off**: HLW + 50 bp term premium ≈ 1.9%, but
+term-premium compression has been observed post-COVID (Adrian-Crump-Moench
+10Y TP falling below 50 bp). Using 1.75% as "clearly above neutral"
+respects both the HLW + term-premium channel and stays below Lubik-Matthes
+r* estimate (no strong case for Moderate beyond 2.15%).
+
+**Fed qualitative anchor** (decisive): Williams in his Dec 2025 "Resilience"
+and Jan 2026 "A Few Words for the New Year" speeches labels current policy
+**"modestly restrictive"** — current 10Y DFII10 ≈ 1.93% → this should map
+to "Moderately" or "Clearly" restrictive, not merely "Neutral". The 1.75%
+cut-off respects this Fed verbal guidance.
 
 ### Anchoring cross-check
 
 If `|Nominal − Breakeven − Real| > 5 bp`, note possible **TIPS liquidity
 premium** — the breakeven overstates pure inflation expectations by
-~15-30 bp in stressed markets. Don't overfit Fed narrative in those
-regimes.
+~15-30 bp in stressed markets (D'Amico-Kim-Wei decomposition). Don't
+overfit Fed narrative in those regimes.
+
+### Sources (for audit / future revision)
+
+- NY Fed r-star page: https://www.newyorkfed.org/research/policy/rstar
+- Williams "Resilience" (2025-12-15), "A Few Words for the New Year" (2026-01-12)
+- Cleveland Fed 2025-08 Economic Commentary: Neutral Interest Rates and the Monetary Policy Stance
+- Liberty Street Economics 2025-08: Are Financial Markets Good Predictors of R-Star?
+- Holston-Laubach-Williams (HLW) 2023 post-COVID update
+- Lubik-Matthes Richmond Fed natural real rate series
+- BOJ WP24-J-09 (2024) natural-rate survey
+- Itochu Research 2024 column on r* across US/JP
+- JST research note 42 (2026-01): 中立金利とタームプレミアム
 
 ---
 
@@ -144,7 +178,7 @@ Rising/Falling:
 | Inflation | Above target / At target / Below target | vs country target (US 2%, JP 2%, KR 2%, TW ~2%, CN 3%) |
 | Labor | Tight / Balanced / Slack | Unemployment < NAIRU / ≈ NAIRU / > NAIRU |
 | Policy rate | Accommodative / Neutral / Restrictive | vs estimated neutral (Fed r*, BOJ, etc.) |
-| Real rate (US) | Accommodative / Neutral / Restrictive | see thresholds above |
+| Real rate (US) | Accommodative / Neutral / Moderately Restrictive / Clearly Restrictive | four-tier; see thresholds above |
 | PMI (if available) | Expansion / Contraction | > 50 / < 50 |
 | Credit spread (HY) | Normal / Elevated / Stressed | < 400 bp / 400-700 / > 700 bp |
 

@@ -84,8 +84,14 @@ symmetric framework for monthly GDP tracking.
 
 Used by `macro-regime-snapshot` for the real-rate decomposition block:
 `Real = Nominal − Breakeven` (identity-check with DFIIxx market yield).
-Signal thresholds — Real rate < 0 = Accommodative / 0–1.5% = Neutral /
-≥ 1.5% = Restrictive. See `references/indicators-us-real-rates.md`.
+Signal thresholds (four-tier, 2025-2026 calibration):
+`< 0%` Accommodative / `0–1.0%` Neutral / `1.0–1.75%` Moderately
+Restrictive / `≥ 1.75%` Clearly Restrictive. Calibrated against HLW r*
+(1.42%), Lubik-Matthes (2.15%), NY Fed composite (~1.7%), and Williams'
+"modestly restrictive" qualitative guidance (Dec 2025 / Jan 2026
+speeches). See `references/us-macro-indicators.md` "Real Rates" section
+and `../macro-regime-snapshot/references/investment-clock-cheatsheet.md`
+"Threshold provenance" for full audit.
 
 ### housing
 

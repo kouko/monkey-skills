@@ -125,10 +125,17 @@ Pull from us-macro `real-rates` group:
 **Identity check**: `Nominal ≈ Breakeven + Real (DFII)`. If mismatch
 > 5 bp, note possible liquidity-premium adjustment.
 
-**Signal thresholds (per-tenor, applied to DFIIxx)**:
+**Signal thresholds (four-tier, per-tenor, applied to DFIIxx — 2025-2026 calibration)**:
 - `< 0%` → **Accommodative**
-- `0% ≤ x < 1.5%` → **Neutral**
-- `≥ 1.5%` → **Restrictive**
+- `0% ≤ x < 1.0%` → **Neutral** (around HLW r* minus term premium)
+- `1.0% ≤ x < 1.75%` → **Moderately Restrictive** (matches Williams' "modestly restrictive" language, Dec 2025 / Jan 2026 speeches)
+- `≥ 1.75%` → **Clearly Restrictive** (above FOMC long-run dot upper range; full headwind)
+
+The four-tier split respects the post-COVID r* debate: HLW (2025) = 1.42%,
+Lubik-Matthes = 2.15%, NY Fed composite ≈ 1.7%. A single cut-off isn't
+defensible given this spread. See
+`references/investment-clock-cheatsheet.md` § "Threshold provenance"
+for sources + calibration audit.
 
 For non-US countries emit: "Real-rate decomposition not available — no
 developed TIPS/linker series in free data sources. JP JGBi could be
@@ -184,8 +191,8 @@ Reference framework: `references/investment-clock-cheatsheet.md`.
 ### Block 3 — Real Rate Decomposition   ← (US only)
 | Tenor | Nominal | Breakeven | Real (DFII) | Signal |
 |-------|---------|-----------|-------------|--------|
-| 5Y | …% | …% | …% | Accommodative / Neutral / Restrictive |
-| 10Y | …% | …% | …% | Accommodative / Neutral / Restrictive |
+| 5Y | …% | …% | …% | Accommodative / Neutral / Moderately Restrictive / Clearly Restrictive |
+| 10Y | …% | …% | …% | Accommodative / Neutral / Moderately Restrictive / Clearly Restrictive |
 
 (For non-US: "Real-rate decomposition not available — no developed
 TIPS/linker series in free data sources.")

@@ -640,18 +640,20 @@ diagnosis.
 breakeven (an expectation), this is the **actual yield investors can
 lock in above inflation** — the market price of capital in real terms.
 
-**How to interpret** (signal thresholds used by the regime skill):
+**How to interpret** (signal thresholds used by the regime skill — four-tier):
 - `DFII5 < 0%` → **Accommodative** (real cost of capital negative;
   favours risk assets, gold, duration).
-- `0% ≤ DFII5 < 1.5%` → **Neutral** (typical of mid-cycle; no strong
-  tilt).
-- `DFII5 ≥ 1.5%` → **Restrictive** (real cost of capital elevated;
-  headwind for equity multiples, real estate, credit).
+- `0% ≤ DFII5 < 1.0%` → **Neutral** (around HLW r* minus term premium).
+- `1.0% ≤ DFII5 < 1.75%` → **Moderately Restrictive** (matches Williams'
+  Dec 2025 "modestly restrictive" qualitative guidance).
+- `DFII5 ≥ 1.75%` → **Clearly Restrictive** (above FOMC long-run-dot
+  upper range; full headwind for equity multiples / credit / REITs).
 
-These bands are calibrated around the post-2003 history where DFII5
-has ranged roughly −1.5% to +3.5%. The Fed neutral-rate (r*) estimates
-cluster ~0.5-1.0% real, justifying the 1.5% upper bound as clearly
-restrictive.
+Post-COVID r* is contested in the literature: HLW (2025) = 1.42%;
+Lubik-Matthes = 2.15%; NY Fed composite ~1.7% real. The 1.0/1.75%
+two-tier split respects this disagreement. See
+`investing-toolkit/skills/macro-regime-snapshot/references/investment-clock-cheatsheet.md`
+§ "Threshold provenance" for the full calibration audit.
 
 **Market significance**: ⭐⭐⭐ — the single best summary of Fed policy
 stance in real terms. Rising DFII5 → tightening financial conditions;
@@ -672,9 +674,9 @@ falling DFII5 → loosening.
 real-rate benchmark.
 
 **How to interpret**:
-- Same threshold bands as DFII5 (`<0` accommodative, `0-1.5%` neutral,
-  `≥1.5%` restrictive) — in practice DFII10 tracks DFII5 with a ~30-60 bp
-  term premium.
+- Same four-tier threshold as DFII5 (`<0` Accommodative, `0-1.0%` Neutral,
+  `1.0-1.75%` Moderately Restrictive, `≥1.75%` Clearly Restrictive) —
+  in practice DFII10 tracks DFII5 with a ~30-60 bp term premium.
 - Rising DFII10 with falling DFII5 → curve steepening in real terms
   (long-end bear-steepener), often associated with growth repricing.
 
