@@ -560,6 +560,131 @@ essential for global-macro allocation decisions.
 
 ---
 
+## Real Rates (TIPS + Breakeven Inflation)
+
+The real-rates block decomposes nominal Treasury yields into inflation
+expectations (breakeven) and inflation-adjusted market yields (TIPS).
+Fed policy stance reads off this: negative real yields = accommodative,
+positive and rising = restrictive.
+
+Identity: `Nominal (DGSxx) ≈ Breakeven (TxxYIE) + Real (DFIIxx)`.
+
+### T5YIE: 5-Year Breakeven Inflation Rate
+
+- **Series code**: T5YIE (FRED)
+- **Source**: Federal Reserve Bank of St. Louis (computed: DGS5 − DFII5)
+- **Unit**: Percent, annualised
+- **Frequency**: Daily (business days)
+- **Publication lag**: ~1-2 business days
+- **History**: From 2003
+
+**What it measures**: Market-implied average annual CPI inflation
+expected over the next 5 years. Computed as the yield spread between
+5-year nominal Treasuries (DGS5) and 5-year TIPS (DFII5).
+
+**How to interpret**:
+- Above Fed 2% target → markets expect above-target inflation.
+- Below 2% → markets expect below-target inflation (disinflation or
+  deflation risk).
+- Sharp moves (±25 bp intraday) typically around CPI releases, FOMC
+  statements, or inflation-surprise events.
+
+**Market significance**: ⭐⭐⭐ — the cleanest daily read on inflation
+expectations. Watched by FOMC (Fed dot-plot framing), TIPS desks, and
+macro PMs.
+
+**Pitfalls**:
+- Contains a liquidity premium (TIPS less liquid than nominal) — real
+  expectations are typically ~15-30 bp lower than the headline
+  breakeven.
+- Short-tenor breakevens (<2Y) are very noisy — use 5Y/10Y as the
+  benchmarks.
+
+---
+
+### T10YIE: 10-Year Breakeven Inflation Rate
+
+- **Series code**: T10YIE (FRED)
+- **Source**: Federal Reserve Bank of St. Louis (computed: DGS10 − DFII10)
+- **Unit**: Percent, annualised
+- **Frequency**: Daily (business days)
+- **Publication lag**: ~1-2 business days
+- **History**: From 2003
+
+**What it measures**: Market-implied average annual CPI inflation over
+the next 10 years. The standard long-term inflation-expectations
+benchmark.
+
+**How to interpret**:
+- 10Y breakeven is stickier than 5Y — slower to react, more reflective
+  of long-run regime expectations.
+- Fed watches the **5Y5Y forward** (derived from 5Y + 10Y breakevens)
+  as its preferred long-run inflation anchor.
+
+**Market significance**: ⭐⭐⭐ — cross-checked with survey measures
+(UMich 1Y / 5-10Y, NY Fed SCE) for inflation-expectations regime
+diagnosis.
+
+---
+
+### DFII5: 5-Year Treasury Inflation-Indexed Security (5Y TIPS yield)
+
+- **Series code**: DFII5 (FRED)
+- **Source**: U.S. Treasury via FRED
+- **Unit**: Percent, annualised
+- **Frequency**: Daily (business days)
+- **Publication lag**: ~1-2 business days
+- **History**: From 2003
+
+**What it measures**: Market real yield on 5-year TIPS. Unlike the
+breakeven (an expectation), this is the **actual yield investors can
+lock in above inflation** — the market price of capital in real terms.
+
+**How to interpret** (signal thresholds used by the regime skill):
+- `DFII5 < 0%` → **Accommodative** (real cost of capital negative;
+  favours risk assets, gold, duration).
+- `0% ≤ DFII5 < 1.5%` → **Neutral** (typical of mid-cycle; no strong
+  tilt).
+- `DFII5 ≥ 1.5%` → **Restrictive** (real cost of capital elevated;
+  headwind for equity multiples, real estate, credit).
+
+These bands are calibrated around the post-2003 history where DFII5
+has ranged roughly −1.5% to +3.5%. The Fed neutral-rate (r*) estimates
+cluster ~0.5-1.0% real, justifying the 1.5% upper bound as clearly
+restrictive.
+
+**Market significance**: ⭐⭐⭐ — the single best summary of Fed policy
+stance in real terms. Rising DFII5 → tightening financial conditions;
+falling DFII5 → loosening.
+
+---
+
+### DFII10: 10-Year Treasury Inflation-Indexed Security (10Y TIPS yield)
+
+- **Series code**: DFII10 (FRED)
+- **Source**: U.S. Treasury via FRED
+- **Unit**: Percent, annualised
+- **Frequency**: Daily (business days)
+- **Publication lag**: ~1-2 business days
+- **History**: From 2003
+
+**What it measures**: Market real yield on 10-year TIPS. The long-end
+real-rate benchmark.
+
+**How to interpret**:
+- Same threshold bands as DFII5 (`<0` accommodative, `0-1.5%` neutral,
+  `≥1.5%` restrictive) — in practice DFII10 tracks DFII5 with a ~30-60 bp
+  term premium.
+- Rising DFII10 with falling DFII5 → curve steepening in real terms
+  (long-end bear-steepener), often associated with growth repricing.
+
+**Market significance**: ⭐⭐⭐ — long-duration equity valuations
+(especially growth / tech / unprofitable-tech) are highly sensitive
+to DFII10 moves; each +25 bp in DFII10 typically compresses Nasdaq
+PE multiples.
+
+---
+
 ## Housing / REIT (-> XLRE, XHB)
 
 ## PERMIT: New Privately-Owned Housing Units Authorized (Building Permits)
