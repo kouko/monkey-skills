@@ -187,9 +187,27 @@ EOF
 
 ---
 
-## Task 2: Commit 2 — JSDA client + JP real-rates
+## Task 2: Commit 2 — JP real-rates (revised: multi-source C+D+E, not JSDA YTM)
 
-**Files:**
+> **PIVOT (2026-04-19)**: Original JSDA path invalidated after probe — JSDA publishes
+> JGBi **単価 only, no yield** (all yield fields masked `999.999`). After parallel
+> research into MoF 連動係数 / YTM math / industry practice / QuantLib, elected
+> Option Split: v1.10.0 uses C+D+E multi-source (MoF auction anchor + ECB monthly
+> real yield + BOJ Tankan 期待インフレ). Full MoF + QuantLib YTM solver deferred
+> to v1.11.0 as standalone PR. Rationale: scope protection + Option A earns its
+> own primary-source grounding audit. JBTS BEI scrape rejected on ToS grounds
+> (「複製、転用、送信可能化 固く禁じます」).
+
+**Revised scope** — see Task 2R below. Original JSDA steps preserved for historical record.
+
+**Files (revised):**
+- Create: `investing-toolkit/scripts/ecb_client.py` (ECB Data Portal CSV fetcher)
+- Extend: `investing-toolkit/scripts/boj_client.py` (Tankan 企業物価見通し support)
+- Modify: `investing-toolkit/skills/japan-macro/SKILL.md`
+- Create: `investing-toolkit/skills/japan-macro/references/indicators-japan-real-rates.md`
+- Modify: `investing-toolkit/skills/macro-regime-snapshot/references/thresholds-japan.md`
+
+**Original scope (invalidated):**
 - Create: `investing-toolkit/scripts/jsda_client.py`
 - Modify: `investing-toolkit/skills/japan-macro/SKILL.md`
 - Create: `investing-toolkit/skills/japan-macro/references/indicators-japan-real-rates.md`
