@@ -16,8 +16,9 @@ Statistics System (ECOS) via FinanceDataReader. Single script, single source,
 no API key required.
 
 - **FinanceDataReader** (`fdr_client.py`) — BOK ECOS-KEYSTAT integration:
-  rates, inflation, growth, labor, trade, money, sentiment, markets, FX,
-  real estate (27 presets via ECOS-KEYSTAT, 1 via FRED CSV)
+  rates, inflation, growth, industry, labor, trade, money, sentiment,
+  cycle, markets, FX, real estate, demographics (53 presets via
+  ECOS-KEYSTAT, 1 via FRED CSV)
 
 This skill is **data-only**. The output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
@@ -38,7 +39,7 @@ KEYSTAT — deferred.
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `labor`, `trade`, `money`, `sentiment`, `cycle`, `markets`, `fx`, `realestate`, `demographics`, or `all` |
+| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `industry`, `labor`, `trade`, `money`, `sentiment`, `cycle`, `markets`, `fx`, `realestate`, `demographics`, or `all` |
 
 ---
 
@@ -77,6 +78,22 @@ KEYSTAT — deferred.
 | private-consumption | K259 | Private Consumption (민간소비) | Quarterly |
 | equipment-investment | K260 | Equipment Investment (설비투자) | Quarterly |
 | construction-investment | K261 | Construction Investment (건설투자) | Quarterly |
+
+### industry (monthly sector activity)
+
+| Preset | Code | Name | Frequency |
+|--------|------|------|-----------|
+| manufacturing-inventory | K202 | Manufacturing Inventory Index (제조업 재고지수) | Monthly |
+| manufacturing-shipment | K203 | Manufacturing Shipment Index (제조업 출하지수) | Monthly |
+| manufacturing-operating-rate | K204 | Manufacturing Operating Rate Index (가동률지수) | Monthly |
+| services-production | K205 | Services Production Index (서비스업 생산지수) | Monthly |
+| retail-sales | K206 | Retail Sales Index (소매판매액지수) | Monthly |
+| wholesale-retail | K207 | Wholesale & Retail Production (도매 및 소매업 생산) | Monthly |
+| credit-card-usage | K210 | Credit Card Individual Usage (개인카드 이용금액) | Monthly |
+| machinery-orders | K213 | Machinery Orders Domestic ex-Ship (국내기계수주, 선박제외) | Monthly |
+| capital-goods-output | K215 | Capital Goods Output ex-Ship (기계설비류 생산, 선박제외) | Monthly |
+| construction-completion | K216 | Construction Completion Value (건설기성액) | Monthly |
+| construction-orders | K217 | Construction Orders Value (건설수주액) | Monthly |
 
 ### labor
 
@@ -158,6 +175,7 @@ KEYSTAT — deferred.
 | `rates` | policy-rate, call-rate, cd-91d, koribor-3m, treasury-3y, treasury-5y, corp-bond-3y |
 | `inflation` | cpi, core-cpi, ppi, import-pi, export-pi |
 | `growth` | gdp-qoq, gdp-nominal, ipi, manufacturing, private-consumption, equipment-investment, construction-investment |
+| `industry` | manufacturing-inventory, manufacturing-shipment, manufacturing-operating-rate, services-production, retail-sales, wholesale-retail, credit-card-usage, machinery-orders, capital-goods-output, construction-completion, construction-orders |
 | `labor` | unemployment, employment-rate |
 | `trade` | current-account, terms-of-trade, goods-exports |
 | `money` | m1, m2, lf, household-credit |
@@ -180,6 +198,9 @@ KEYSTAT — deferred.
 ### Fetch Requests (growth + labor)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset gdp-qoq,gdp-nominal,ipi,manufacturing,private-consumption,equipment-investment,construction-investment,unemployment,employment-rate
 
+### Fetch Requests (industry batch)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset manufacturing-inventory,manufacturing-shipment,manufacturing-operating-rate,services-production,retail-sales,wholesale-retail,credit-card-usage,machinery-orders,capital-goods-output,construction-completion,construction-orders
+
 ### Fetch Requests (trade + money + sentiment + cycle)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset current-account,terms-of-trade,goods-exports,m1,m2,lf,household-credit,consumer-sentiment,economic-sentiment,leading-cycle,coincident-cycle
 
@@ -198,7 +219,8 @@ All data points retain `_source`: `"fdr_ecos"` (or `"fred"` for krw-usd).
 - `references/indicator-index.md` — Quick lookup (trilingual)
 - `references/indicators-rates.md` — 금리 Rates
 - `references/indicators-inflation.md` — 물가 Inflation
-- `references/indicators-growth.md` — 성장 Growth
+- `references/indicators-growth.md` — 성장 Growth (quarterly national accounts)
+- `references/indicators-industry.md` — 산업 Industry (monthly sector activity)
 - `references/indicators-labor.md` — 고용 Labor
 - `references/indicators-trade.md` — 무역 Trade
 - `references/indicators-sentiment.md` — 센티먼트 Sentiment (CSI/ESI, survey-based)
@@ -230,6 +252,11 @@ All data points retain `_source`: `"fdr_ecos"` (or `"fred"` for krw-usd).
 | PPI (K402) | ~4 weeks after month-end |
 | Import/Export PI (K403, K404) | ~3-4 weeks after month-end |
 | IPI, Manufacturing (K220, K201) | ~5-6 weeks after month-end |
+| Manufacturing Inventory / Shipment / Operating-Rate (K202-K204) | ~5-6 weeks after month-end |
+| Services Production, Retail Sales, Wholesale-Retail (K205-K207) | ~5-6 weeks after month-end |
+| Credit Card Usage (K210) | ~6 weeks after month-end |
+| Capital Goods Output (K215) | ~5-6 weeks after month-end |
+| Machinery Orders, Construction Completion / Orders (K213, K216-K217) | ~6-7 weeks after month-end |
 | Unemployment (K303) | ~3 weeks after month-end |
 | Current Account (K351) | ~6 weeks after month-end |
 | GDP (K257, K258) | ~8 weeks after quarter-end |

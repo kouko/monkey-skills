@@ -5,16 +5,16 @@ Korea macroeconomic data skill for investing-toolkit.
 
 ## Overview
 
-Fetches **43 Korea macroeconomic indicators** from the Bank of Korea (BOK)
+Fetches **54 Korea macroeconomic indicators** from the Bank of Korea (BOK)
 Economic Statistics System (ECOS) via FinanceDataReader and returns
-structured JSON grouped by **12 indicator groups**: rates, inflation,
-growth, labor, trade, money, sentiment, cycle, markets, fx, realestate,
-and demographics.
+structured JSON grouped by **13 indicator groups**: rates, inflation,
+growth, industry, labor, trade, money, sentiment, cycle, markets, fx,
+realestate, and demographics.
 
 **Catalogue**: See `docs/bok-ecos-keystat-catalog.md` for the complete
-98-code BOK ECOS KEYSTAT catalogue (43 as presets + ~50 Tier-B candidates
-+ 7 skipped). The full BOK ECOS catalogue (10,000+ series) requires an
-API key — deferred to v1.9.0.
+98-code BOK ECOS KEYSTAT catalogue (54 as presets + ~40 remaining Tier-B
+candidates + 7 skipped). The full BOK ECOS catalogue (10,000+ series)
+requires an API key — deferred to v1.9.0.
 
 **Monthly GDP proxy**: The `coincident-cycle` (K253, 동행지수순환변동치)
 + `leading-cycle` (K254, 선행지수순환변동치) pair collectively proxies
@@ -28,17 +28,17 @@ exposed via BOK ECOS KEYSTAT (probed K255/K256 — both map to other series).
 
 | Script | Source | Indicators | Role |
 |--------|--------|-----------|------|
-| `fdr_client.py` | BOK ECOS-KEYSTAT via FinanceDataReader | 27 (+ 1 FRED) | **Primary** — all macro indicators |
+| `fdr_client.py` | BOK ECOS-KEYSTAT via FinanceDataReader | 53 (+ 1 FRED) | **Primary** — all macro indicators |
 
 ### Why Single Script?
 
 FinanceDataReader wraps BOK ECOS's internal endpoint in a clean Python
-API. All 42 ECOS-KEYSTAT codes go through the same `fdr.DataReader()`
+API. All 53 ECOS-KEYSTAT codes go through the same `fdr.DataReader()`
 call. Only KRW/USD (`krw-usd`) uses a FRED CSV fallback for symmetry with
 other country skills (K152 is the BOK official KRW/USD alternative; see
 catalogue).
 
-## Indicators (43, v1.8.0)
+## Indicators (54, v1.8.1)
 
 ### Core (by group)
 
@@ -47,6 +47,7 @@ catalogue).
 | rates | 7 | 기준금리, 콜금리, CD 91일, KORIBOR 3M, 국고채 3Y/5Y, 회사채 AA- | Daily |
 | inflation | 5 | CPI, Core CPI, PPI, 수입물가, 수출물가 | Monthly |
 | growth | 7 | GDP QoQ + 명목, 전산업/제조업 생산, 민간소비, 설비/건설투자 | Quarterly/Monthly |
+| industry | 11 | 제조업 재고/출하/가동률, 서비스업 생산, 소매판매, 도소매, 카드이용, 기계수주, 자본재 생산, 건설기성/수주 | Monthly |
 | labor | 2 | 실업률, 고용률 | Monthly |
 | trade | 3 | 경상수지, 교역조건, 재화수출 (national accounts) | Monthly/Quarterly |
 | money | 4 | M1, M2, Lf, 가계신용 | Monthly/Quarterly |
@@ -72,7 +73,7 @@ korea-macro/
 ├── SKILL.md
 ├── README.md
 ├── scripts/
-│   ├── fdr_client.py                      ← BOK ECOS via FDR (42 presets + 1 FRED)
+│   ├── fdr_client.py                      ← BOK ECOS via FDR (53 presets + 1 FRED)
 │   └── setup.sh
 ├── docs/                                   ← developer reference material (v1.8.0)
 │   ├── README.md
@@ -80,10 +81,11 @@ korea-macro/
 │   ├── bok-ecos-keystat.json              ← raw probe output
 │   └── tools/probe-keystat.py             ← re-probe script
 └── references/
-    ├── indicator-index.md                 ← 43 indicators trilingual index
+    ├── indicator-index.md                 ← 54 indicators trilingual index
     ├── indicators-rates.md
     ├── indicators-inflation.md
-    ├── indicators-growth.md
+    ├── indicators-growth.md               ← quarterly national accounts
+    ├── indicators-industry.md             ← monthly sector activity (v1.8.1)
     ├── indicators-labor.md
     ├── indicators-trade.md
     ├── indicators-sentiment.md            ← CSI / ESI (survey-based)
@@ -108,10 +110,11 @@ uv run scripts/fdr_client.py --preset all
 ```bash
 cd investing-toolkit/scripts
 
-# All 43 presets
+# All 54 presets
 for p in policy-rate call-rate cd-91d koribor-3m treasury-3y treasury-5y corp-bond-3y \
   cpi core-cpi ppi import-pi export-pi \
   gdp-qoq gdp-nominal ipi manufacturing private-consumption equipment-investment construction-investment \
+  manufacturing-inventory manufacturing-shipment manufacturing-operating-rate services-production retail-sales wholesale-retail credit-card-usage machinery-orders capital-goods-output construction-completion construction-orders \
   unemployment employment-rate \
   current-account terms-of-trade goods-exports \
   m1 m2 lf household-credit \
@@ -122,26 +125,32 @@ for p in policy-rate call-rate cd-91d koribor-3m treasury-3y treasury-5y corp-bo
   population aging-ratio fertility-rate; do
   uv run fdr_client.py --preset "$p" --no-cache 2>&1 | python3 -c "
 import json,sys;p='$p';d=json.load(sys.stdin);l=d.get('latest') or {}
-print(f'{p:25} {l.get(\"date\",\"?\")} {str(l.get(\"value\",\"\")):>12}')
+print(f'{p:28} {l.get(\"date\",\"?\")} {str(l.get(\"value\",\"\")):>12}')
 "; done
 ```
 
 ### Latest verification
 
-**Date**: 2026-04-18 — **43 indicators**, all ACTIVE. 42 via
+**Date**: 2026-04-18 — **54 indicators**, all ACTIVE. 53 via
 ECOS-KEYSTAT + 1 via FRED DEXKOUS.
 
 **v1.7.3 additions** (2 tagged): `leading-cycle` + `coincident-cycle`
 tagged as monthly GDP proxy components.
 
-**v1.8.0 additions** (13 new presets): `koribor-3m`, `private-consumption`,
+**v1.8.0 additions** (15 new presets): `koribor-3m`, `private-consumption`,
 `equipment-investment`, `construction-investment`, `goods-exports`, `m1`,
 `lf`, `krw-jpy`, `krw-eur`, `krw-cny`, `fx-reserves`, `population`,
-`aging-ratio`, `fertility-rate`. Plus **structural refactor**: `sentiment`
-group split into `sentiment` (CSI/ESI) + `cycle` (CI pair) + new
-`demographics` group.
+`aging-ratio`, `fertility-rate`, and the `sentiment` → `sentiment` +
+`cycle` refactor + new `demographics` group.
+
+**v1.8.1 additions** (11 new presets, new `industry` group):
+`manufacturing-inventory`, `manufacturing-shipment`,
+`manufacturing-operating-rate`, `services-production`, `retail-sales`,
+`wholesale-retail`, `credit-card-usage`, `machinery-orders`,
+`capital-goods-output`, `construction-completion`, `construction-orders`.
+Closes the monthly sector-activity gap versus JP/TW/CN.
 
 **v1.9.0 candidate**: Full BOK ECOS API integration (requires free API
-key registration) — would unlock ~50 additional Tier-B candidates
-identified in `docs/bok-ecos-keystat-catalogue.md` plus the lagging CI
+key registration) — would unlock ~40 additional Tier-B candidates
+identified in `docs/bok-ecos-keystat-catalog.md` plus the lagging CI
 (후행지수).
