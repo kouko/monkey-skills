@@ -84,6 +84,10 @@ echo "Syncing akshare_client.py..."
 copy_to akshare_client.py \
   china-macro
 
+echo "Syncing nbs_client.py..."
+copy_to nbs_client.py \
+  china-macro
+
 echo "Syncing ta_client.py..."
 copy_to ta_client.py \
   technical-snapshot \

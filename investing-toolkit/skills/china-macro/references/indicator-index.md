@@ -1,26 +1,37 @@
 # China Macro Indicator Index / 中国宏观指标索引 / 中國總經指標索引
 
-| Preset / Ticker | 中文 | English | Source | File |
+34 indicators across 4 sources. NBS = primary source via reverse-engineered
+new-SPA API (2026-04 migration).
+
+| Preset / Ticker | 中文 | English | Source | Reference file |
 |---|---|---|---|---|
-| `cpi-yoy` | 消费者物价指数 同比 | CPI YoY | NBS via akshare | `indicators-inflation.md` |
-| `ppi-yoy` | 生产者物价指数 同比 | PPI YoY | NBS via akshare | `indicators-inflation.md` |
-| `gdp-yoy` | 国内生产总值 同比 | GDP YoY | NBS via akshare | `indicators-growth.md` |
-| `industrial-yoy` | 规模以上工业增加值 同比 | Industrial Production YoY | NBS via investing.com mirror | `indicators-growth.md` |
-| `retail-yoy` | 社会消费品零售总额 同比 | Retail Sales YoY | NBS via akshare | `indicators-growth.md` |
-| `exports-yoy` | 以美元计算出口 同比 | Exports YoY USD | GAC via investing.com mirror | `indicators-trade.md` |
-| `imports-yoy` | 以美元计算进口 同比 | Imports YoY USD | GAC via investing.com mirror | `indicators-trade.md` |
-| `trade-balance` | 贸易帐 以美元计算 | Trade Balance USD | GAC via investing.com mirror | `indicators-trade.md` |
-| `urban-unemployment` | 全国城镇调查失业率 | Urban Surveyed Unemployment | NBS via akshare | `indicators-labor.md` |
-| `pmi-manufacturing` | 官方制造业PMI | Manufacturing PMI (NBS official) | NBS via akshare | `indicators-sentiment.md` |
-| `pmi-non-manufacturing` | 官方非制造业PMI | Non-Manufacturing PMI (NBS official) | NBS via akshare | `indicators-sentiment.md` |
-| `lpr-1y` | 贷款市场报价利率 1年期 | Loan Prime Rate 1Y | PBOC via chinamoney | `indicators-rates.md` |
-| `lpr-5y` | 贷款市场报价利率 5年期 | Loan Prime Rate 5Y | PBOC via chinamoney | `indicators-rates.md` |
-| `rrr-major` | 大型金融机构 存款准备金率 | RRR Major Banks | PBOC via akshare | `indicators-rates.md` |
-| `shibor-3m` | 上海银行间同业拆放利率 3M | SHIBOR 3-Month | SHIBOR via shibor.org | `indicators-rates.md` |
-| `m2-yoy` | 广义货币 M2 同比增长 | M2 YoY | PBOC via akshare | `indicators-money.md` |
-| `m1-yoy` | 狭义货币 M1 同比增长 | M1 YoY | PBOC via akshare | `indicators-money.md` |
-| `shrzgm` | 社会融资规模增量 | Aggregate Financing (AFRE) | PBOC via akshare | `indicators-money.md` |
-| `new-loans` | 人民币贷款增量 当月 | New RMB Loans | PBOC via akshare | `indicators-money.md` |
+| `cpi-yoy` | 居民消费价格指数 同比 | CPI YoY | NBS → `nbs_client` | `indicators-inflation.md` |
+| `core-cpi` | 不包括食品和能源 CPI | Core CPI | NBS → `nbs_client` | `indicators-inflation.md` |
+| `ppi-yoy` | 工业生产者出厂价格指数 | PPI YoY | NBS → `nbs_client` | `indicators-inflation.md` |
+| `gdp-yoy` | 国内生产总值指数 同比 | GDP YoY (quarterly) | NBS → `nbs_client` | `indicators-growth.md` |
+| `industrial-yoy` | 规上工业增加值 同比 | Industrial Production YoY | NBS → `nbs_client` | `indicators-growth.md` |
+| `retail-yoy` | 社会消费品零售总额 同比 | Retail Sales YoY | NBS → `nbs_client` | `indicators-growth.md` |
+| `fai-yoy` | 固定资产投资 累计同比 | FAI YoY (cumulative) | NBS → `nbs_client` | `indicators-growth.md` |
+| `exports-yoy` | 出口总值 同比 | Exports YoY USD | NBS → `nbs_client` | `indicators-trade.md` |
+| `imports-yoy` | 进口总值 同比 | Imports YoY USD | NBS → `nbs_client` | `indicators-trade.md` |
+| `trade-balance` | 进出口差额 当期值 | Trade Balance USD | NBS → `nbs_client` | `indicators-trade.md` |
+| `urban-unemployment` | 全国城镇调查失业率 | Urban Surveyed Unemployment | NBS → `nbs_client` | `indicators-labor.md` |
+| `pmi-manufacturing` | 官方制造业PMI | Manufacturing PMI (NBS official) | NBS → `nbs_client` | `indicators-sentiment.md` |
+| `pmi-non-manufacturing` | 官方非制造业PMI | Non-Manufacturing PMI (NBS official) | NBS → `nbs_client` | `indicators-sentiment.md` |
+| `pmi-composite` | 综合PMI产出指数 | Composite PMI Output | NBS → `nbs_client` | `indicators-sentiment.md` |
+| `m2-yoy` | 广义货币 M2 同比增长 | M2 YoY | NBS → `nbs_client` | `indicators-money.md` |
+| `m1-yoy` | 狭义货币 M1 同比增长 | M1 YoY | NBS → `nbs_client` | `indicators-money.md` |
+| `lpr-1y` | 贷款市场报价利率 1年期 | Loan Prime Rate 1Y | PBOC → `akshare_client` | `indicators-rates.md` |
+| `lpr-5y` | 贷款市场报价利率 5年期 | Loan Prime Rate 5Y | PBOC → `akshare_client` | `indicators-rates.md` |
+| `rrr-major` | 大型金融机构 存款准备金率 | RRR Major Banks | PBOC → `akshare_client` | `indicators-rates.md` |
+| `shibor-3m` | 上海银行间同业拆放利率 3M | SHIBOR 3-Month | SHIBOR → `akshare_client` | `indicators-rates.md` |
+| `shrzgm` | 社会融资规模增量 | Aggregate Financing (flow) | PBOC → `akshare_client` | `indicators-money.md` |
+| `new-loans` | 人民币贷款增量 当月 | New RMB Loans | PBOC → `akshare_client` | `indicators-money.md` |
+| `realestate-investment-yoy` | 房地产开发投资 累计同比 | Real Estate Investment YoY | NBS → `nbs_client` | `indicators-realestate.md` |
+| `housing-sales-area-yoy` | 商品住宅销售面积 累计同比 | Residential Sales Floor Area YoY | NBS → `nbs_client` | `indicators-realestate.md` |
+| `housing-sales-value-yoy` | 商品住宅销售额 累计同比 | Residential Sales Value YoY | NBS → `nbs_client` | `indicators-realestate.md` |
+| `realestate-funding-yoy` | 房地产投资本年资金来源 累计同比 | Real Estate Funding YoY | NBS → `nbs_client` | `indicators-realestate.md` |
+| `services-production-yoy` | 服务业生产指数 当月同比 | Services Production Index YoY | NBS → `nbs_client` | `indicators-services.md` |
 | `000300.SS` | 沪深300 | CSI 300 | yfinance | `indicators-markets.md` |
 | `000001.SS` | 上证综指 | Shanghai Composite | yfinance | `indicators-markets.md` |
 | `399006.SZ` | 创业板指 | ChiNext Index | yfinance | `indicators-markets.md` |
@@ -28,3 +39,25 @@
 | `^HSCE` | 恒生国企指数 | Hang Seng China Enterprises | yfinance | `indicators-markets.md` |
 | `DEXCHUS` | 人民币兑美元汇率 | CNY/USD Exchange Rate | FRED | `indicators-fx.md` |
 | `TRESEGCNM052N` | 国家外汇储备 ex-gold | FX Reserves ex-gold | FRED (IMF/SAFE) | `indicators-fx.md` |
+
+## Source distribution
+
+- **NBS (`nbs_client.py`)**: 21 indicators — all NBS-published monthly +
+  quarterly data, primary source
+- **PBOC + SHIBOR (`akshare_client.py`)**: 6 indicators — PBOC-only data
+  not redistributed by NBS
+- **FRED (`fred_client.py`)**: 2 indicators — CNY/USD + FX reserves
+- **yfinance (`yfinance_client.py`)**: 5 equity indices
+
+## Migration note (2026-04-18)
+
+13 presets (CPI/PPI/GDP/industrial/retail/exports/imports/trade-balance/
+urban-unemployment/PMI-mfg/PMI-non-mfg/M2/M1) migrated from akshare
+mirrors to NBS direct. 8 new presets added (core-cpi, fai-yoy,
+pmi-composite, 4 real estate, services-production). 2 Caixin PMI
+presets dropped (see `references/sources.md`).
+
+Net freshness improvement for trade indicators: **~178 days**
+(254d → 76d). See `docs/china-macro-research-frameworks.md` for the
+industry-framework synthesis that drove preset selection and
+`docs/nbs-indicator-catalog.md` for the full NBS UUID catalog.

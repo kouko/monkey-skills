@@ -5,17 +5,17 @@ China macroeconomic data skill for investing-toolkit.
 
 ## Overview
 
-Fetches 26 China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR
-mirrors), FRED (CNY/USD, FX reserves), and yfinance (CSI300/SSEC/ChiNext/
-HSI/HSCEI) and returns structured JSON grouped by 10 indicator groups:
-inflation, growth, trade, labor, sentiment, rates, money, credit, markets,
-and fx.
+Fetches 34 China macroeconomic indicators from four sources: NBS (direct via
+reverse-engineered new-SPA API, 2026-04 migration), PBOC/SHIBOR via akshare,
+FRED (CNY/USD + FX reserves), and yfinance (5 equity indices). Returns
+structured JSON grouped by 12 indicator groups.
 
-## Data Sources (3 scripts)
+## Data Sources (4 scripts)
 
 | Script | Source | Indicators | Role |
 |--------|--------|-----------|------|
-| `akshare_client.py` | akshare (NBS/PBOC/SHIBOR/chinamoney mirrors) | 19 | **Primary** — macro indicators |
+| `nbs_client.py` | NBS new-SPA API (`data.stats.gov.cn/dg/website/publicrelease/web/external/*`) | **21** | **Primary source** — all NBS monthly+quarterly data |
+| `akshare_client.py` | PBOC (chinamoney) + SHIBOR (shibor.org) via akshare | 6 | PBOC-only: LPR×2, RRR, SHIBOR, 社融增量, new loans |
 | `fred_client.py` | FRED CSV | 2 | CNY/USD (`DEXCHUS`) + FX reserves (`TRESEGCNM052N`) |
 | `yfinance_client.py` | Yahoo Finance | 5 | CSI300, SSEC, ChiNext, HSI, HSCEI |
 
@@ -31,17 +31,19 @@ and fx.
 - **yfinance** — already a toolkit dependency; covers all 5 China and HK
   benchmark indices with no additional packages.
 
-## Indicators (26)
+## Indicators (34)
 
 ### Core (by group)
 
 | Group | Count | Indicators | Frequency |
 |-------|-------|-----------|-----------|
-| inflation | 2 | CPI YoY, PPI YoY | Monthly |
-| growth | 3 | GDP YoY, Industrial Production YoY, Retail Sales YoY | Quarterly/Monthly |
+| inflation | 3 | CPI YoY, Core CPI, PPI YoY | Monthly |
+| growth | 4 | GDP YoY, Industrial Production YoY, Retail Sales YoY, FAI YoY | Quarterly/Monthly |
 | trade | 3 | Exports YoY, Imports YoY, Trade Balance | Monthly |
 | labor | 1 | Urban Surveyed Unemployment | Monthly |
-| sentiment | 2 | Manufacturing PMI (official), Non-Manufacturing PMI (official) | Monthly |
+| sentiment | 3 | Mfg / Non-Mfg / Composite PMI (NBS official) | Monthly |
+| realestate | 4 | Investment / Sales area / Sales value / Funding | Monthly |
+| services | 1 | Services Production Index | Monthly |
 | rates | 4 | LPR 1Y, LPR 5Y, RRR, SHIBOR 3M | Daily/Monthly/Event |
 | money | 2 | M1 YoY, M2 YoY | Monthly |
 | credit | 2 | 社融 (Aggregate Financing), New RMB Loans | Monthly |
@@ -50,21 +52,19 @@ and fx.
 
 ### Stability Notes
 
-- **akshare macro_china_cpi / _ppi / _gdp / _consumer_goods_retail /
-  _pmi / _money_supply / _new_financial_credit / _lpr / _shibor_all**:
-  Reliable — backed by eastmoney (a major financial portal), chinamoney
-  (CFETS), and shibor.org. Fresh to within ~1 month.
-- **akshare macro_china_industrial_production_yoy / _exports_yoy /
-  _imports_yoy / _trade_balance**: Sourced from investing.com's free
-  calendar feed — can be up to 8 months stale. Use as best-available
-  fallback; mark freshness in analysis. (Caixin PMI presets
-  `cx_pmi_yearly` / `cx_services_pmi_yearly` were removed 2026-04-18
-  for the same staleness reason; see SKILL.md "Deliberately excluded
-  indicators".)
-- **FRED `DEXCHUS`, `TRESEGCNM052N`**: Official Federal Reserve / IMF data
-  — very stable.
-- **yfinance Yahoo Finance**: Standard daily feed, widely relied upon. ChiNext
-  (`399006.SZ`) sometimes returns only latest close without history.
+- **NBS direct via `nbs_client.py`** — primary source. Reachable from
+  Taiwan + Anthropic IPs. WAF trips on bulk traversal (100+ requests),
+  so all `(cid, indicator_id)` pairs are statically pinned; no runtime
+  discovery. Base-period revisions happen every ~5 years and will
+  require catalog refresh; see `docs/tools/README.md`.
+- **akshare PBOC presets**: backed by chinamoney (CFETS) and shibor.org.
+  Fresh to within ~1 month.
+- **FRED `DEXCHUS`, `TRESEGCNM052N`**: Official Fed / IMF data — very stable.
+- **yfinance**: Standard daily feed.
+- **Caixin PMI** presets removed 2026-04-18 (stale mirror, no fresh source).
+  See SKILL.md "Deliberately excluded indicators".
+- **70-city housing price index** not included — NBS doesn't expose it
+  via `queryIndexTreeAsync` (only PDF publication). Deferred.
 
 ## Architecture
 
@@ -73,12 +73,18 @@ china-macro/
 ├── SKILL.md
 ├── README.md
 ├── scripts/
-│   ├── akshare_client.py      ← 21 presets via akshare
-│   ├── fred_client.py         ← 2 China series
+│   ├── nbs_client.py          ← 21 presets via NBS new-SPA API (PRIMARY)
+│   ├── akshare_client.py      ← 6 PBOC presets
+│   ├── fred_client.py         ← 2 China FX series
 │   ├── yfinance_client.py     ← 5 indices
 │   └── setup.sh
+├── docs/                       ← developer reference material
+│   ├── nbs-indicator-catalog.md
+│   ├── china-macro-research-frameworks.md
+│   ├── nbs-tree-*.md + nbs-indicators-*.{json,md}
+│   └── tools/ (probe scripts)
 └── references/
-    ├── indicator-index.md     ← 28 indicators trilingual index
+    ├── indicator-index.md     ← 34 indicators trilingual index
     ├── indicators-inflation.md
     ├── indicators-growth.md
     ├── indicators-trade.md
@@ -86,6 +92,8 @@ china-macro/
     ├── indicators-sentiment.md
     ├── indicators-rates.md
     ├── indicators-money.md
+    ├── indicators-realestate.md
+    ├── indicators-services.md
     ├── indicators-markets.md
     ├── indicators-fx.md
     └── sources.md
@@ -93,13 +101,20 @@ china-macro/
 
 ## Setup
 
-No API keys needed. akshare uses public mirrors; FRED CSV and Yahoo Finance
-require no auth.
+No API keys needed. NBS, FRED, Yahoo Finance, akshare endpoints are all
+no-auth.
 
 ```bash
-uv run scripts/akshare_client.py --preset cpi-yoy
-uv run scripts/akshare_client.py --preset lpr-1y,m2-yoy,new-loans
+# NBS direct (primary source, 21 indicators)
+uv run scripts/nbs_client.py --preset cpi-yoy
+uv run scripts/nbs_client.py --preset industrial-yoy,exports-yoy,trade-balance
+uv run scripts/nbs_client.py --preset all
+
+# PBOC via akshare (6 indicators)
+uv run scripts/akshare_client.py --preset lpr-1y,shibor-3m,new-loans
 uv run scripts/akshare_client.py --preset all
+
+# FRED (2) + yfinance (5)
 uv run scripts/fred_client.py --series DEXCHUS,TRESEGCNM052N --periods 12
 uv run scripts/yfinance_client.py --tickers "000300.SS,^HSI,^HSCE"
 ```

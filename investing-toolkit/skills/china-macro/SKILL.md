@@ -1,32 +1,35 @@
 ---
 name: china-macro
 description: >-
-  Fetch China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR)
-  with FRED fallbacks for CNY/USD and FX reserves, plus yfinance for
-  CSI300/SSEC/ChiNext/HSI/HSCEI indices. Data layer only — no analysis.
-  Returns structured JSON with latest values and direction for inflation,
-  growth, trade, labor, sentiment, rates, money, credit, markets, and FX.
-  中国宏观经济指标取数 (NBS + PBOC via akshare)。
-  中國宏觀經濟指標擷取（國家統計局 + 人民銀行，經 akshare）。
+  Fetch China macroeconomic indicators from NBS (primary-source via
+  reverse-engineered new-SPA API), PBOC (via akshare — LPR/RRR/SHIBOR/社融/
+  new loans), FRED (CNY/USD + FX reserves), and yfinance (CSI300/SSEC/
+  ChiNext/HSI/HSCEI). Data layer only — no analysis. Returns structured
+  JSON with latest values and direction for inflation, growth, trade,
+  labor, sentiment, rates, money, credit, real estate, services, markets,
+  and FX groups.
+  中国宏观经济指标取数 (NBS 直抓 + PBOC)。
+  中國宏觀經濟資料擷取（國家統計局直抓 + 人民銀行）。
 ---
 
 # China Macro
 
-Fetches China macroeconomic indicators via akshare (aggregates from NBS,
-PBOC, SHIBOR, and chinamoney mirrors), plus FRED for FX reserves and
-CNY/USD, and yfinance for market indices. No API key required.
+Fetches 34 Chinese macroeconomic indicators from four sources, prioritising
+primary-source freshness. No API key required.
 
-- **akshare** (`akshare_client.py`) — 19 presets across inflation, growth,
-  trade, labor, sentiment, rates, money & credit groups
-- **FRED** (`fred_client.py`) — CNY/USD (`DEXCHUS`) and FX reserves
-  (`TRESEGCNM052N`) — delegated because akshare's SAFE mirror is unreliable
-- **yfinance** (`yfinance_client.py`) — CSI 300, Shanghai Composite, ChiNext,
-  Hang Seng, Hang Seng China Enterprises
+| Script | Source | # presets | Role |
+|---|---|---|---|
+| **`nbs_client.py`** | **NBS new-SPA API** (`data.stats.gov.cn/dg/website/publicrelease/web/external/*`) | **21** | Primary source for all NBS-published indicators: CPI/PPI/GDP/industrial/retail/FAI/trade/labor/PMI/money/real-estate/services |
+| `akshare_client.py` | PBOC via chinamoney / SHIBOR via shibor.org | 6 | PBOC-only data not in NBS: LPR×2, RRR, SHIBOR, 社融增量, new loans |
+| `fred_client.py` | FRED CSV | 2 | CNY/USD (`DEXCHUS`), FX reserves (`TRESEGCNM052N`) |
+| `yfinance_client.py` | Yahoo Finance | 5 | Market indices: CSI 300, SSEC, ChiNext, HSI, HSCEI |
 
-**Why not NBS directly?** NBS `data.stats.gov.cn` WAF (UrlACL) returns 403
-for non-mainland IPs. akshare aggregates equivalent data from mirrors
-(eastmoney for NBS pass-through, investing.com, chinamoney, shibor.org)
-which remain reachable.
+**Primary-source design**: `nbs_client.py` calls NBS's own API directly
+(verified reachable from TW + Anthropic IPs). Replaces earlier
+stale-mirror dependencies (investing.com calendar feed was 8 months
+behind on industrial/trade). See `docs/nbs-indicator-catalog.md` for
+full API docs + `docs/china-macro-research-frameworks.md` for the
+3-language industry synthesis that drove preset selection.
 
 This skill is **data-only**. Output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
@@ -37,72 +40,90 @@ This skill is **data-only**. Output is designed for handoff to
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated: `inflation`, `growth`, `trade`, `labor`, `sentiment`, `rates`, `money`, `credit`, `markets`, `fx`, or `all` |
+| `--indicators` | no | `all` | Comma-separated: `inflation`, `growth`, `trade`, `labor`, `sentiment`, `rates`, `money`, `credit`, `realestate`, `services`, `markets`, `fx`, or `all` |
 
 ---
 
 ## Indicator Groups
 
-### inflation
+### inflation (NBS)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| cpi-yoy | macro_china_cpi | CPI YoY / 消费者物价指数 同比 | Monthly |
-| ppi-yoy | macro_china_ppi | PPI YoY / 生产者物价指数 同比 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| cpi-yoy | nbs_client | CPI YoY / 居民消费价格指数 同比 | Monthly |
+| core-cpi | nbs_client | Core CPI / 不包括食品和能源 CPI | Monthly |
+| ppi-yoy | nbs_client | PPI YoY / 工业生产者出厂价格指数 | Monthly |
 
-### growth
+### growth (NBS, 三大数据)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| gdp-yoy | macro_china_gdp | GDP YoY / 国内生产总值 同比 | Quarterly |
-| industrial-yoy | macro_china_industrial_production_yoy | Industrial Production YoY / 规模以上工业增加值 同比 | Monthly |
-| retail-yoy | macro_china_consumer_goods_retail | Retail Sales YoY / 社会消费品零售总额 同比 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| gdp-yoy | nbs_client | GDP YoY / 国内生产总值指数 同比 | Quarterly |
+| industrial-yoy | nbs_client | Industrial Production YoY / 规上工业增加值 同比 | Monthly |
+| retail-yoy | nbs_client | Retail Sales YoY / 社会消费品零售总额 同比 | Monthly |
+| fai-yoy | nbs_client | FAI YoY (累计) / 固定资产投资 累计同比 | Monthly |
 
-### trade
+### trade (NBS, GAC via NBS)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| exports-yoy | macro_china_exports_yoy | Exports YoY USD / 以美元计算出口 同比 | Monthly |
-| imports-yoy | macro_china_imports_yoy | Imports YoY USD / 以美元计算进口 同比 | Monthly |
-| trade-balance | macro_china_trade_balance | Trade Balance USD / 贸易帐 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| exports-yoy | nbs_client | Exports YoY USD / 出口总值 同比 | Monthly |
+| imports-yoy | nbs_client | Imports YoY USD / 进口总值 同比 | Monthly |
+| trade-balance | nbs_client | Trade Balance USD / 进出口差额 当期值 | Monthly |
 
-### labor
+### labor (NBS)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| urban-unemployment | macro_china_urban_unemployment | Urban Surveyed Unemployment / 全国城镇调查失业率 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| urban-unemployment | nbs_client | 全国城镇调查失业率 | Monthly |
 
-### sentiment
+### sentiment (NBS)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| pmi-manufacturing | macro_china_pmi | Manufacturing PMI (official) / 官方制造业PMI | Monthly |
-| pmi-non-manufacturing | macro_china_pmi | Non-Manufacturing PMI (official) / 官方非制造业PMI | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| pmi-manufacturing | nbs_client | Mfg PMI (官方) / 制造业采购经理指数 | Monthly |
+| pmi-non-manufacturing | nbs_client | Non-Mfg PMI / 非制造业商务活动指数 | Monthly |
+| pmi-composite | nbs_client | Composite PMI / 综合PMI产出指数 | Monthly |
 
-### rates
+### money (NBS)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| lpr-1y | macro_china_lpr | Loan Prime Rate 1Y / 贷款市场报价利率 1年期 | Monthly |
-| lpr-5y | macro_china_lpr | Loan Prime Rate 5Y / 贷款市场报价利率 5年期 | Monthly |
-| rrr-major | macro_china_reserve_requirement_ratio | RRR Major Banks / 大型金融机构存款准备金率 | Event |
-| shibor-3m | macro_china_shibor_all | SHIBOR 3-Month / 上海银行间同业拆放利率 3M | Daily |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| m2-yoy | nbs_client | M2 YoY / 广义货币 同比 | Monthly |
+| m1-yoy | nbs_client | M1 YoY / 狭义货币 同比 | Monthly |
 
-### money
+### rates (PBOC / SHIBOR via akshare)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| m2-yoy | macro_china_money_supply | M2 YoY / 广义货币 同比增长 | Monthly |
-| m1-yoy | macro_china_money_supply | M1 YoY / 狭义货币 同比增长 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| lpr-1y | akshare_client | Loan Prime Rate 1Y / 贷款市场报价利率 1年期 | Monthly |
+| lpr-5y | akshare_client | Loan Prime Rate 5Y / 贷款市场报价利率 5年期 | Monthly |
+| rrr-major | akshare_client | RRR 大型金融机构 存款准备金率 | Event |
+| shibor-3m | akshare_client | SHIBOR 3M / 上海银行间同业拆放利率 | Daily |
 
-### credit
+### credit (PBOC via akshare)
 
-| Preset | Function | Name | Frequency |
-|--------|----------|------|-----------|
-| shrzgm | macro_china_shrzgm | Aggregate Financing / 社会融资规模增量 | Monthly |
-| new-loans | macro_china_new_financial_credit | New RMB Loans / 人民币贷款增量 | Monthly |
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| shrzgm | akshare_client | Aggregate Financing / 社会融资规模 增量 | Monthly |
+| new-loans | akshare_client | New RMB Loans / 人民币贷款增量 | Monthly |
 
-### markets (via yfinance)
+### realestate (NBS)
+
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| realestate-investment-yoy | nbs_client | 房地产开发投资 累计同比 | Monthly |
+| housing-sales-area-yoy | nbs_client | 商品住宅销售面积 累计同比 | Monthly |
+| housing-sales-value-yoy | nbs_client | 商品住宅销售额 累计同比 | Monthly |
+| realestate-funding-yoy | nbs_client | 房地产投资本年资金来源 累计同比 | Monthly |
+
+### services (NBS)
+
+| Preset | Source | Name | Frequency |
+|--------|--------|------|-----------|
+| services-production-yoy | nbs_client | 服务业生产指数 当月同比 | Monthly |
+
+### markets (yfinance)
 
 | Ticker | Name | Frequency |
 |--------|------|-----------|
@@ -112,11 +133,11 @@ This skill is **data-only**. Output is designed for handoff to
 | `^HSI` | Hang Seng / 恒生指数 | Daily |
 | `^HSCE` | Hang Seng China Enterprises / 国企指数 | Daily |
 
-### fx (via FRED)
+### fx (FRED)
 
 | Series | Name | Frequency |
 |--------|------|-----------|
-| `DEXCHUS` | CNY/USD Exchange Rate / 人民币汇率中间价 | Daily |
+| `DEXCHUS` | CNY/USD 汇率 | Daily |
 | `TRESEGCNM052N` | FX Reserves ex-gold / 国家外汇储备 | Monthly |
 
 ---
@@ -127,28 +148,30 @@ This skill is **data-only**. Output is designed for handoff to
 
 | Input | Presets / tickers |
 |-------|-------------------|
-| `inflation` | cpi-yoy, ppi-yoy |
-| `growth` | gdp-yoy, industrial-yoy, retail-yoy |
+| `inflation` | cpi-yoy, core-cpi, ppi-yoy |
+| `growth` | gdp-yoy, industrial-yoy, retail-yoy, fai-yoy |
 | `trade` | exports-yoy, imports-yoy, trade-balance |
 | `labor` | urban-unemployment |
-| `sentiment` | pmi-manufacturing, pmi-non-manufacturing |
-| `rates` | lpr-1y, lpr-5y, rrr-major, shibor-3m |
+| `sentiment` | pmi-manufacturing, pmi-non-manufacturing, pmi-composite |
 | `money` | m2-yoy, m1-yoy |
+| `rates` | lpr-1y, lpr-5y, rrr-major, shibor-3m |
 | `credit` | shrzgm, new-loans |
+| `realestate` | realestate-investment-yoy, housing-sales-area-yoy, housing-sales-value-yoy, realestate-funding-yoy |
+| `services` | services-production-yoy |
 | `markets` | 000300.SS, 000001.SS, 399006.SZ, ^HSI, ^HSCE |
 | `fx` | DEXCHUS, TRESEGCNM052N |
 
 ### Step 2 — Launch data-fetcher agents
 
 ```
-### Fetch Requests (inflation + growth + trade)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset cpi-yoy,ppi-yoy,gdp-yoy,industrial-yoy,retail-yoy,exports-yoy,imports-yoy,trade-balance
+### Fetch Requests (NBS — inflation + growth + trade + labor)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/nbs_client.py --preset cpi-yoy,core-cpi,ppi-yoy,gdp-yoy,industrial-yoy,retail-yoy,fai-yoy,exports-yoy,imports-yoy,trade-balance,urban-unemployment
 
-### Fetch Requests (labor + sentiment)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset urban-unemployment,pmi-manufacturing,pmi-non-manufacturing
+### Fetch Requests (NBS — sentiment + money + real estate + services)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/nbs_client.py --preset pmi-manufacturing,pmi-non-manufacturing,pmi-composite,m2-yoy,m1-yoy,realestate-investment-yoy,housing-sales-area-yoy,housing-sales-value-yoy,realestate-funding-yoy,services-production-yoy
 
-### Fetch Requests (rates + money + credit)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset lpr-1y,lpr-5y,rrr-major,shibor-3m,m2-yoy,m1-yoy,shrzgm,new-loans
+### Fetch Requests (PBOC via akshare — rates + credit)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset lpr-1y,lpr-5y,rrr-major,shibor-3m,shrzgm,new-loans
 
 ### Fetch Requests (markets — yfinance batch)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers "000300.SS,000001.SS,399006.SZ,^HSI,^HSCE"
@@ -160,88 +183,94 @@ This skill is **data-only**. Output is designed for handoff to
 ### Step 3 — Merge into unified output
 
 Each observation retains `_source`:
-- `"akshare"` — NBS/PBOC/SHIBOR data
-- `"yfinance"` — market indices
-- `"fred"` — CNY/USD and FX reserves
+- `"nbs_spa"` — NBS direct-API data (primary source, 21 indicators)
+- `"akshare"` — PBOC / SHIBOR / chinamoney via akshare (6 indicators)
+- `"yfinance"` — Yahoo Finance (5 equity indices)
+- `"csv"` — FRED CSV (2 FX-related)
 
 ---
 
 ## Reference
 
 - `references/indicator-index.md` — Quick lookup (trilingual)
-- `references/indicators-inflation.md` — CPI, PPI
-- `references/indicators-growth.md` — GDP, industrial, retail
+- `references/indicators-inflation.md` — CPI, core CPI, PPI
+- `references/indicators-growth.md` — GDP, industrial, retail, FAI
 - `references/indicators-trade.md` — Exports, imports, trade balance
 - `references/indicators-labor.md` — Urban unemployment
-- `references/indicators-sentiment.md` — PMI (official manufacturing + non-manufacturing)
+- `references/indicators-sentiment.md` — PMI (mfg / non-mfg / composite)
 - `references/indicators-rates.md` — LPR, RRR, SHIBOR
-- `references/indicators-money.md` — M0/M1/M2, 社融, new loans
+- `references/indicators-money.md` — M1, M2, 社融, new loans
+- `references/indicators-realestate.md` — Real estate investment / sales / funding
+- `references/indicators-services.md` — Services Production Index
 - `references/indicators-markets.md` — CSI300, SSEC, ChiNext, HSI, HSCEI
 - `references/indicators-fx.md` — CNY/USD, FX reserves
-- `references/sources.md` — Primary sources and akshare provenance
+- `references/sources.md` — Primary sources and provenance
 
-Developer-facing materials (API reverse-engineering notes, NBS tree catalogs
-for future `nbs_client.py` work) live under `docs/` — not loaded by this
-skill at runtime. See `docs/README.md`.
+Developer-facing materials (NBS API reverse-engineering, full indicator
+UUID catalog, 3-language research synthesis) live under `docs/` — not
+loaded at skill runtime. See `docs/README.md`.
 
 ---
 
 ## Limitations
 
-### Data freshness varies by mirror
+### Data freshness by source
 
 | Source | Freshness |
 |--------|-----------|
-| `macro_china_cpi` / `_ppi` / `_gdp` (eastmoney mirror) | ~1 month lag |
-| `macro_china_pmi` / `_consumer_goods_retail` (eastmoney mirror) | ~1 month lag |
-| `macro_china_urban_unemployment` (eastmoney mirror) | ~1-2 month lag |
-| `macro_china_money_supply` / `_new_financial_credit` (PBOC) | ~1 month lag |
-| `macro_china_shrzgm` (PBOC) | ~1-2 month lag |
-| `macro_china_lpr` / `_shibor_all` | same-day to 1 business day |
-| `macro_china_industrial_production_yoy` / `_exports_yoy` / `_imports_yoy` / `_trade_balance` (investing.com mirror) | **stale — up to 8 months behind**. Use only as backup; prefer NBS English site when accessible. |
-| `macro_china_reserve_requirement_ratio` | event-driven (last RRR change date) |
+| `nbs_client` CPI / PPI / PMI × 3 | **~45-50d** (NBS publishes monthly around 9th-15th) |
+| `nbs_client` FAI / Trade / M1 / M2 / urban-unemp / real estate | ~75d (mid-month release for prior month) |
+| `nbs_client` industrial / retail / services-production | **~135d in Jan-Feb** (NBS combines Jan-Feb into one 累计 release due to Spring Festival; single-month YoY values appear only from March onwards) |
+| `nbs_client` GDP | ~100d (quarterly; released ~Day 20 of first month after quarter end) |
+| `akshare_client` LPR / SHIBOR | same-day to 1 business day |
+| `akshare_client` RRR | event-driven (latest = last change date) |
+| `akshare_client` 社融 / new-loans | ~1-2 month lag |
+| FRED DEXCHUS | 1-2 business days |
+| FRED TRESEGCNM052N | ~30-60d (SAFE release cadence) |
+| yfinance indices | ~real-time (15 min delay) |
+
+### NBS time-window "fences"
+
+NBS publishes CPI, PPI, and some other indicators on a 5-year
+base-period revision schedule (e.g. CPI has separate cids for 2026-
+and 2021-2025 and 2016-2020 and -2015). `nbs_client.py` pins the
+current (2026-) series only; for full historical back-fills, the
+client would need to stitch multiple cids. Use case: current-regime
+reads are fine; multi-decade back-tests need extension. See
+`docs/nbs-indicator-catalog.md` §1a for the syntax.
 
 ### Deliberately excluded indicators
 
-- **Caixin Manufacturing PMI** and **Caixin Services PMI** were removed
-  2026-04-18. The only free akshare path (`macro_china_cx_pmi_yearly` /
-  `_cx_services_pmi_yearly`) draws from investing.com's calendar and has
-  been running ~8 months stale since mid-2025. A stale PMI defeats the
-  purpose (PMI value is timeliness), and surfacing it risks Claude
-  treating 2025-09 numbers as current-regime signals. Official NBS
-  manufacturing + non-manufacturing PMI remain in the skill at ~47d
-  freshness and cover the primary sentiment axis. If a fresh Caixin
-  read is needed, see S&P Global's Caixin release page or the Caixin
-  Global news feed — a dedicated `caixin_client.py` can be added later
-  if that demand materialises.
+**Caixin Manufacturing PMI** and **Caixin Services PMI** were removed
+2026-04-18. Only free source (investing.com calendar via akshare) ran
+8 months stale; no reliable fresh substitute exists. NBS official
+Mfg + Non-Mfg + Composite PMI cover the primary sentiment axis.
 
-### NBS WAF blocks foreign IPs
+**70-city housing price index** — not exposed by NBS's
+`queryIndexTreeAsync` API (only published as standalone monthly PDF
+via stats.gov.cn/sj/zxfb). Deferred; would require a separate PDF
+parser.
 
-Direct access to `data.stats.gov.cn/english/easyquery.htm` returns HTTP 403
-(`reason:UrlACL`) for most non-mainland IPs. This skill uses akshare which
-scrapes eastmoney and other reachable mirrors. If NBS relaxes the WAF in the
-future, a direct NBS client (nbsc-pattern) would give fresher data for
-industrial / trade indicators.
+**社融存量 同比增长** (TSF stock YoY growth) — canonical credit-
+impulse input. Available only in PBOC press release text. akshare's
+`shrzgm` gives flow (增量), not stock. Documented in
+`docs/china-macro-research-frameworks.md` §3a.
 
-### akshare dependency
-
-`akshare_client.py` uses `akshare==1.18.55`. akshare has 10k+ GitHub stars
-and is actively maintained (akfamily/akshare), but it aggregates data by
-reverse-engineering public websites — individual endpoints can break when
-upstream pages change. `macro_china_foreign_exchange_gold` is currently
-broken upstream; the skill routes FX reserves to FRED instead.
+**Li Keqiang Index** — all 3 components (electricity / rail freight /
+new loans) are now available individually. Composite preset
+deferred. Documented in `docs/china-macro-research-frameworks.md`
+§1d.
 
 ### FX reserves via FRED
 
-`TRESEGCNM052N` is FX reserves **ex-gold**, sourced from the IMF/SAFE
-pipeline. Units are millions USD (FRED) vs. 亿美元 at SAFE — divide by 100
-to compare with Chinese news. For gold reserves separately, there is no
-stable no-auth source — note in analysis if relevant.
+`TRESEGCNM052N` is FX reserves **ex-gold**, IMF/SAFE pipeline. Units
+are millions USD (FRED) vs. 亿美元 in Chinese news — divide FRED
+by 100 for direct comparison.
 
 ### CNY/USD via FRED
 
-`DEXCHUS` is CNY per USD daily (Chinese yuan renminbi to one US dollar).
-Sourced from Federal Reserve Board. 1-2 business day lag.
+`DEXCHUS` is CNY per USD daily from Federal Reserve Board. Onshore
+CNY only; CNH (offshore) divergence is a stress indicator not covered.
 
 ---
 

@@ -60,98 +60,18 @@ CACHE_TTL_SECONDS = 86400  # 24h
 # ---------------------------------------------------------------------------
 
 PRESETS: dict[str, dict] = {
-    # --- Inflation (NBS, monthly) ---
-    "cpi-yoy": {
-        "fn": "macro_china_cpi",
-        "name": "CPI YoY / 消费者物价指数 同比",
-        "date_col": "月份", "value_col": "全国-同比增长",
-        "date_format": "chinese_month", "unit": "%", "freq": "monthly",
-        "source": "NBS via akshare",
-    },
-    "ppi-yoy": {
-        "fn": "macro_china_ppi",
-        "name": "PPI YoY / 生产者物价指数 同比",
-        "date_col": "月份", "value_col": "当月同比增长",
-        "date_format": "chinese_month", "unit": "%", "freq": "monthly",
-        "source": "NBS via akshare",
-    },
-
-    # --- Growth (NBS) ---
-    "gdp-yoy": {
-        "fn": "macro_china_gdp",
-        "name": "GDP YoY / 国内生产总值 同比",
-        "date_col": "季度", "value_col": "国内生产总值-同比增长",
-        "date_format": "chinese_quarter", "unit": "%", "freq": "quarterly",
-        "source": "NBS via akshare",
-    },
-    "industrial-yoy": {
-        "fn": "macro_china_industrial_production_yoy",
-        "name": "Industrial Production YoY / 规模以上工业增加值 同比",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "%", "freq": "monthly",
-        "source": "NBS via investing.com mirror",
-    },
-    "retail-yoy": {
-        "fn": "macro_china_consumer_goods_retail",
-        "name": "Retail Sales YoY / 社会消费品零售总额 同比",
-        "date_col": "月份", "value_col": "同比增长",
-        "date_format": "chinese_month", "unit": "%", "freq": "monthly",
-        "source": "NBS via akshare",
-    },
-
-    # --- Trade (General Administration of Customs) ---
-    "exports-yoy": {
-        "fn": "macro_china_exports_yoy",
-        "name": "Exports YoY USD / 以美元计算出口 同比",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "%", "freq": "monthly",
-        "source": "GAC via investing.com mirror",
-    },
-    "imports-yoy": {
-        "fn": "macro_china_imports_yoy",
-        "name": "Imports YoY USD / 以美元计算进口 同比",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "%", "freq": "monthly",
-        "source": "GAC via investing.com mirror",
-    },
-    "trade-balance": {
-        "fn": "macro_china_trade_balance",
-        "name": "Trade Balance USD / 贸易帐 以美元计算",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "亿美元", "freq": "monthly",
-        "source": "GAC via investing.com mirror",
-    },
-
-    # --- Labor (NBS) ---
-    "urban-unemployment": {
-        "fn": "macro_china_urban_unemployment",
-        "name": "Urban Surveyed Unemployment / 全国城镇调查失业率",
-        "date_col": "date", "value_col": "value",
-        "date_format": "yyyymm", "unit": "%", "freq": "monthly",
-        "filter_col": "item", "filter_val": "全国城镇调查失业率",
-        "source": "NBS via akshare",
-    },
-
-    # --- Sentiment (NBS official + Caixin/Markit) ---
-    "pmi-manufacturing": {
-        "fn": "macro_china_pmi",
-        "name": "Manufacturing PMI (official) / 官方制造业PMI",
-        "date_col": "月份", "value_col": "制造业-指数",
-        "date_format": "chinese_month", "unit": "index", "freq": "monthly",
-        "source": "NBS via akshare",
-    },
-    "pmi-non-manufacturing": {
-        "fn": "macro_china_pmi",
-        "name": "Non-Manufacturing PMI (official) / 官方非制造业PMI",
-        "date_col": "月份", "value_col": "非制造业-指数",
-        "date_format": "chinese_month", "unit": "index", "freq": "monthly",
-        "source": "NBS via akshare",
-    },
-    # Note: Caixin PMI presets (pmi-caixin-manufacturing, pmi-caixin-services)
-    # were removed on 2026-04-18 because the only available akshare source
-    # (investing.com calendar mirror) ran ~8 months stale, making the data
-    # unfit for current-regime reads. See references/sources.md "Excluded
-    # indicators" for rationale and alternatives.
+    # NOTE: CPI / PPI / GDP / industrial / retail / exports / imports /
+    # trade-balance / urban-unemployment / PMI-mfg / PMI-non-mfg / M2 / M1
+    # were migrated to `nbs_client.py` on 2026-04-18. NBS new-SPA API is
+    # primary source (no mirror lag, ~30-75d freshness vs 47-254d via
+    # akshare mirrors). akshare_client.py now serves only PBOC-published
+    # data (LPR/RRR/SHIBOR/社融/new loans) that NBS does not redistribute
+    # in its monthly 金融 subtree. See docs/nbs-indicator-catalog.md for
+    # the migration rationale.
+    #
+    # Caixin PMI presets were also removed (2026-04-18) — stale mirror,
+    # no reliable fresh source. See references/sources.md "Excluded
+    # indicators".
 
     # --- Rates (PBOC) ---
     "lpr-1y": {
@@ -183,21 +103,7 @@ PRESETS: dict[str, dict] = {
         "source": "SHIBOR via shibor.org",
     },
 
-    # --- Money & Credit (PBOC) ---
-    "m2-yoy": {
-        "fn": "macro_china_money_supply",
-        "name": "M2 YoY / 广义货币 同比增长",
-        "date_col": "月份", "value_col": "货币和准货币(M2)-同比增长",
-        "date_format": "chinese_month", "unit": "%", "freq": "monthly",
-        "source": "PBOC via akshare",
-    },
-    "m1-yoy": {
-        "fn": "macro_china_money_supply",
-        "name": "M1 YoY / 狭义货币 同比增长",
-        "date_col": "月份", "value_col": "货币(M1)-同比增长",
-        "date_format": "chinese_month", "unit": "%", "freq": "monthly",
-        "source": "PBOC via akshare",
-    },
+    # --- Credit (PBOC-only; M1/M2 migrated to nbs_client.py 2026-04-18) ---
     "shrzgm": {
         "fn": "macro_china_shrzgm",
         "name": "Aggregate Financing / 社会融资规模增量",
