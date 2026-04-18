@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.32.3"]
+# dependencies = ["requests==2.33.1"]
 # ///
 """
 estat_client.py — investing-toolkit e-Stat Dashboard API adapter

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["akshare==1.18.55", "pandas==2.2.3", "requests==2.32.3"]
+# dependencies = ["akshare==1.18.55", "pandas==2.2.3", "requests==2.33.1"]
 # ///
 """
 akshare_client.py — investing-toolkit China macro adapter via akshare.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.32.3", "xlrd==2.0.1"]
+# dependencies = ["requests==2.33.1", "xlrd==2.0.2"]
 # ///
 """
 dgbas_client.py — investing-toolkit DGBAS (主計總處) Excel adapter
