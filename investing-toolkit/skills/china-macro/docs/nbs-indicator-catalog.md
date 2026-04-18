@@ -74,12 +74,54 @@ Payload fields:
 - **indicatorIds**: list of indicator UUIDs within the cid (from `queryIndicatorsByCid`)
 - **das**: region selector; `[{"text":"全国","value":"000000000000"}]` = national
 - **showType**: "1" for normal numeric values
-- **dts**: array of date-range strings. Format: `YYYYMM{MM|SS|YY}-YYYYMM{MM|SS|YY}`
-  where the 5th-6th suffix chars are `MM` monthly, `SS` quarterly, `YY` yearly
+- **dts**: array of date-range strings. Period suffix: `MM` monthly, `SS` quarterly, `YY` yearly.
+  See §1a below for the full accepted syntax and the web UI shortcuts that do NOT transit to the API.
 - **rootId**: root of the frequency tree (see §2)
 
 Response `data[].values[].value` is the numeric value (string, e.g. `"101.0"`).
 `data[].code` is the period code (e.g. `"202603MM"`).
+
+### 1a. `dts` syntax — what the API actually accepts
+
+Verified empirically on `5c7452825c7c4dcba391db5ca7f335c5` (CPI 2026-) on 2026-04-18.
+
+| Form | Example | Works? | Notes |
+|---|---|---|---|
+| Single closed range | `"202401MM-202603MM"` | ✅ | Canonical. Every period in the interval is returned (values may be empty if outside the indicator's validity window). |
+| Multi-range array | `["202301MM-202312MM","202601MM-202603MM"]` | ✅ | Each element is an independent closed range. Non-contiguous ranges are **fully supported** — one POST can fetch 2023 annual + 2026 Q1 in 15 periods. |
+| Quarterly range | `"202301SS-202601SS"` | ✅ | Suffix `SS`. |
+| Yearly range | `"2020YY-2025YY"` | ✅ | Suffix `YY`. |
+| `"LATEST10"` / `"LAST5"` / `"last99"` | any | ❌ | **UI-only shortcuts.** The web textbox accepts them (the placeholder says `last10`), but the SPA's JS translates them client-side to an explicit range before POSTing. Inherited-looking behaviour from `mbk-dev/nbsc`'s old `easyquery.htm` is gone on the new API. |
+| Open-ended range | `"2023-"` / `"-202012MM"` | ❌ | Empty response. API requires both ends. |
+| Comma-delimited discrete periods | `"202301MM,202306MM,202312MM"` | ❌ | Parsed as one opaque code, returns one garbage row. The UI textbox hint `201201,201205` is also client-side-only. |
+
+**Replicating `last99` in your own client**:
+
+```python
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+# last N monthly periods ending at today's year-month
+today = date.today()
+start = today - relativedelta(months=N - 1)
+dts = [f"{start:%Y%m}MM-{today:%Y%m}MM"]
+
+# last N quarterly periods
+q_today = (today.month - 1) // 3 + 1
+start_y  = today.year - ((N - q_today) // 4)
+start_q  = ((q_today - N) % 4) or 4
+dts = [f"{start_y}{start_q:02}SS-{today.year}{q_today:02}SS"]
+```
+
+**Time-window "fences" on indicator IDs**:
+
+Each leaf catalog (`cid`) bundles multiple indicator IDs, and a given indicator ID is
+only valid for its declared year window. For CPI the four IDs are
+`(2026-)`, `(2021-2025)`, `(2016-2020)`, and `(-2015)`. A request with
+`dts=["201001MM-202603MM"]` and only the 2026+ indicator ID will return 195
+period rows but values for only 3 periods (2026-01/02/03). To stitch full
+history, pass all four sibling indicator IDs — the API will populate each
+period with whichever ID covers that window.
 
 ---
 
