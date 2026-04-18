@@ -21,11 +21,11 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `stock-screener` | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `technical-snapshot` | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
 | `invest-portfolio` | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
-| `us-macro` | US macro indicators via FRED (21 series + reference doc) | v1.3.0 |
-| `japan-macro` | Japan macro indicators via BOJ + e-Stat (20 series + bilingual reference) | v1.3.0 |
+| `us-macro` | US macro indicators via FRED (25 series incl. `nowcast` group + reference doc) | v1.7.0 |
+| `japan-macro` | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
 | `taiwan-macro` | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
 | `korea-macro` | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
-| `china-macro` | China macro indicators via akshare NBS + PBOC + yfinance + FRED (28 indicators) | v1.6.0 |
+| `china-macro` | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
 
 ---
 
@@ -59,7 +59,28 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All skills through v1.6.0 are now available.
+All skills through v1.7.1 are now available.
+
+---
+
+## Cross-market Monthly GDP Proxy Framework
+
+As of v1.7.1, `us-macro`, `japan-macro`, and `china-macro` all expose
+**monthly GDP proxy** indicators labelled consistently across skills:
+
+| Market | Proxy type | Indicators |
+|--------|-----------|------------|
+| US | Pre-aggregated Fed nowcasts | `nowcast` group: GDPNOW, CFNAI, WEI, OECD CLI |
+| JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: `coincident-index` (monthly GDP proxy), `leading-index`, `lagging-index` |
+| CN | Raw components (no authoritative composite) | 三大数据: `industrial-yoy`, `retail-yoy`, `fai-yoy` + `services-production-yoy` companion |
+
+US/JP serve pre-aggregated values; CN keeps components raw because there
+is no market consensus on synthesis (Li Keqiang Index is obsolete post-2012,
+SF Fed CAT is quarterly + standard-deviation units, Goldman/Bloomberg are
+proprietary). Composite synthesis belongs in the analysis layer
+(`domain-teams:investing-team`) where methodology choice has analytical
+accountability. See each skill's `references/indicators-growth.md`
+preamble for full discussion.
 
 ---
 
