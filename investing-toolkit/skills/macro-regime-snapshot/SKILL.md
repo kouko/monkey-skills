@@ -55,18 +55,34 @@ at the end.
 
 ## How It Works
 
-### Step 1 — Route region(s) to country macro skills
+### Step 1 — Route region(s) to country macro skills + load country thresholds
 
-| Country | Route to | Indicator groups required |
-|---------|----------|---------------------------|
-| US | `us-macro` | `rates`, `inflation`, `nowcast`, `real-rates` |
-| Japan | `japan-macro` | `rates`, `inflation`, `growth` (景気動向指数 CI), `forex` |
-| Taiwan | `taiwan-macro` | `rates`, `inflation`, `cycle` (NDC 景氣燈號) |
-| Korea | `korea-macro` | `rates`, `inflation`, `cycle` (K253 CI) |
-| China | `china-macro` | `rates`, `inflation`, `growth` (三大数据) |
+| Country | Route to | Indicator groups required | Threshold reference |
+|---------|----------|---------------------------|---------------------|
+| US | `us-macro` | `rates`, `inflation`, `nowcast`, `real-rates` | `references/thresholds-us.md` |
+| Japan | `japan-macro` | `rates`, `inflation`, `growth` (景気動向指数 CI), `forex` | `references/thresholds-japan.md` |
+| Taiwan | `taiwan-macro` | `rates`, `inflation`, `cycle` (NDC 景氣燈號) | `references/thresholds-taiwan.md` |
+| Korea | `korea-macro` | `rates`, `inflation`, `cycle` (K253 CI) | `references/thresholds-korea.md` |
+| China | `china-macro` | `rates`, `inflation`, `growth` (三大数据) | `references/thresholds-china.md` |
 
 Invoke each country skill in parallel when multi-country regions are
-requested.
+requested. **Load the corresponding `references/thresholds-{country}.md`
+file** for each selected country — this file contains the
+country-specific:
+
+- Inflation target + tolerance band + Above/At/Below-target thresholds
+- NAIRU estimate + Tight/Balanced/Slack unemployment bands
+- Policy rate + nominal + real neutral-rate estimate
+- Real-rate block availability + thresholds (US only; others "N/A")
+- Structural regime notes (deflation legacy / tech concentration /
+  property deleveraging / etc.)
+- Country-specific IC sector tilt adjustments
+- Primary-source URLs + citations for audit
+
+**Do NOT apply US thresholds to non-US countries** — e.g. JP NAIRU is
+~3.5% (not US's 4.4%); CN inflation target is 3% (not 2%); TW uses
+flexible definition (not a rigid target). Always read the per-country
+threshold file before classifying signals.
 
 ### Step 2 — Extract per-country Growth + Inflation direction
 
@@ -237,10 +253,33 @@ that implies (e.g. "US in Phase 2 Overheat while CN in Phase 4 Reflation
 - **CN no consensus composite**: `industrial-yoy` is the primary Growth
   proxy but the 4 components (industrial/retail/fai/services) often
   disagree month-to-month — flag in output when they diverge > 2%.
-- **Signal thresholds are heuristics**: the 1.5% restrictive line for
-  DFII is calibrated to post-2003 history + Fed r* framing; other bands
-  (Expansion/Contraction for CFNAI) use standard-deviation bands. See
-  cheatsheet for full rationale.
+- **Signal thresholds are heuristics, not dogma**: calibration vintages
+  are documented in per-country threshold files
+  (`references/thresholds-{country}.md`). Values should be revised as
+  FOMC dot plot, BOJ 展望, BOK 통화정책방향 updates arrive. Re-read the
+  threshold file for each country before each regime call.
+
+---
+
+## References
+
+Framework + country calibration:
+
+- `references/investment-clock-cheatsheet.md` — IC + GIP framework,
+  per-country proxy mapping, real-rate interpretation, signal-label
+  glossary, threshold provenance
+- `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW
+  / Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
+- `references/thresholds-japan.md` — BOJ 2% target (no band), JILPT
+  NAIRU ~3.5-3.6%, BOJ WP24-J-09 r* = -0.25% mean, deflation-legacy
+  caveats, post-YCC regime
+- `references/thresholds-taiwan.md` — CBC 彈性定義, 景氣對策信號 5-color
+  scoring (9-45 composite), TAIEX ~65% tech + TSMC ~40%
+- `references/thresholds-korea.md` — BOK 2% target, KDI NAIRU ~3.0-3.5%,
+  KOSPI Samsung + SK Hynix ~30%, household-debt 105% GDP caveat
+- `references/thresholds-china.md` — 3% State Council target (ceiling
+  not center), 5.5% 城鎮調查失業率 target, multi-rate PBOC framework,
+  property deleveraging structural overhang, Phase-3/4 default regime
 
 ---
 
