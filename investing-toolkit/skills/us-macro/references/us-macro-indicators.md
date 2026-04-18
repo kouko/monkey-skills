@@ -368,6 +368,198 @@ cyclical vs. defensive sector allocation.
 
 ---
 
+## Nowcast (monthly GDP proxies)
+
+The US publishes official GDP quarterly (`GDPC1`). The 4 series below are
+the industry-standard monthly GDP proxies — each viewed independently as a
+real-time "GDP feel" by Fed economists, sell-side, and allocators:
+
+| Series | What it captures | Release cadence |
+|--------|------------------|-----------------|
+| GDPNOW | Atlanta Fed's model-based current-quarter real GDP forecast | 6-7 updates/month within the current quarter |
+| CFNAI | Weighted composite of 85 monthly activity indicators | Monthly, lag ~2 months |
+| WEI | 10-weekly-indicator composite for real-time GDP | Weekly, lag ~1 week |
+| USALOLITOAASTSAM | OECD Composite Leading Indicator for USA (amplitude-adjusted) | Monthly, lag ~1 month |
+
+Cross-market parallels: this group matches china-macro's 三大數據 + services
+production (monthly) and japan-macro's 景気動向指数 CI trio (monthly).
+
+## GDPNOW: Atlanta Fed GDPNow Real GDP Nowcast (SAAR %)
+
+- **Series code**: GDPNOW (FRED)
+- **Source**: Federal Reserve Bank of Atlanta
+- **Unit**: Seasonally adjusted annual rate (%), real GDP growth
+- **Frequency**: Quarterly snapshot on FRED; live model updates 6-7 times per
+  month on the Atlanta Fed page within the current quarter
+- **Publication lag**: Tracks the CURRENT quarter (not the prior one) — the
+  GDPNow estimate converges to the BEA advance estimate just before GDPC1
+  prints
+- **History**: From 2011 Q3
+
+**What it measures**: A model-based forecast of real GDP growth for the
+current quarter, assembled from 13 GDP sub-components and updated whenever
+one of them is released. Essentially answers: "If BEA released GDP today,
+what would it be?"
+
+**How to interpret**:
+- Rising → macro consensus tilts toward upside surprise on the next GDPC1
+  print. Historically, equity markets track GDPNow revisions more than
+  quarterly GDPC1 itself (the latter is already priced).
+- Falling → downside surprise probability. A sudden drop in GDPNow often
+  precedes growth-scare narratives (e.g., 2022 Q1 flipped negative 3 weeks
+  before the GDPC1 print came in at -1.6%).
+- Direction of WEEKLY revisions matters more than the absolute level. A
+  +3% forecast that was +2% a week ago is more bullish than a static +3%.
+
+**Market significance**: ⭐⭐⭐
+The canonical "what is GDP right now" number for US macro traders. Bloomberg
+and CNBC cite it by name. Fixed income desks use the GDPNow path to
+calibrate rate-cut probabilities; equity desks use it for growth-regime
+rotation.
+
+**When to use**: Current-quarter growth nowcast, IC phase dating, pre-FOMC
+growth assessment, macro-regime-snapshot input (for the "rate-of-change"
+axis).
+
+**Common pitfalls**:
+- GDPNow shows EARLY-QUARTER estimates that are statistically noisy because
+  few sub-components have printed yet. The first 2-3 weeks of a new quarter
+  carry wide error bars.
+- FRED's GDPNOW series only snapshots the quarter-level value — it does NOT
+  record the live intra-quarter path. For real-time tracking, use Atlanta
+  Fed's webpage directly; FRED is adequate for historical comparison only.
+- GDPNow is model-driven, not survey-driven, so it does not capture
+  qualitative shocks (supply-chain, weather, policy) that surveys might pick
+  up. Pair with CFNAI for cross-validation.
+- NYFed also publishes a Nowcast (discontinued Aug 2021, reinstated 2023);
+  GDPNow is the industry default.
+
+## CFNAI: Chicago Fed National Activity Index
+
+- **Series code**: CFNAI (FRED)
+- **Source**: Federal Reserve Bank of Chicago
+- **Unit**: Standardized index (mean = 0, stdev = 1)
+- **Frequency**: Monthly
+- **Publication lag**: ~25-30 days after the reference month (later than most
+  monthly macro series because CFNAI waits for all 85 inputs)
+- **History**: From 1967
+
+**What it measures**: A weighted composite of 85 monthly activity indicators
+across production, employment, personal consumption/housing, and
+sales/orders/inventories. Designed to be a coincident indicator of US
+economic activity (not leading).
+
+**How to interpret**:
+- `CFNAI > 0` → growth above historical trend
+- `CFNAI < 0` → growth below trend
+- `CFNAI-MA3 < -0.70` for the first time in an expansion → high probability
+  of recession onset (Chicago Fed's canonical threshold)
+- `CFNAI-MA3 > +0.20` for the first time in a recession → high probability
+  of recovery onset
+
+**Market significance**: ⭐⭐
+Less market-moving than GDPNow or ISM PMI (because of the ~30-day lag) but
+academically preferred as the cleanest single-number US macro coincident.
+Cited by NBER, IMF, and Conference Board as a dating tool for cycles.
+
+**When to use**: Recession probability assessment, cycle-dating, IC phase
+confirmation, CFNAI-MA3 threshold monitoring.
+
+**Common pitfalls**:
+- The `-0.70` threshold is a first-time trigger during expansions; recurring
+  dips below -0.70 within the same cycle do not re-signal recession.
+- CFNAI is a coincident indicator, not a leader. Use GDPNow or the yield
+  curve for forward-looking signals.
+- Single-month readings are noisy. Chicago Fed explicitly publishes CFNAI-MA3
+  (3-month moving average) and recommends it for analysis — FRED also
+  provides `CFNAIMA3` as a separate series if needed.
+
+## WEI: NY Fed Weekly Economic Index
+
+- **Series code**: WEI (FRED)
+- **Source**: Federal Reserve Bank of New York
+- **Unit**: Scaled to match 4-quarter GDP growth (%), SAAR
+- **Frequency**: Weekly (ending Saturdays)
+- **Publication lag**: ~4-7 days after the reference week
+- **History**: From 2008-01
+
+**What it measures**: A composite of 10 weekly indicators (unemployment
+claims, retail sales, electricity usage, steel production, consumer
+confidence, etc.) scaled so that the WEI level approximates the 4-quarter
+real GDP growth rate. Created by Lewis, Mertens, and Stock during COVID to
+fill the quarterly-GDP visibility gap.
+
+**How to interpret**:
+- WEI ≈ current pace of 4-quarter real GDP growth
+- WEI crossing 0 → economy shifting between expansion and contraction
+- A week-over-week drop of 1pp+ in a non-holiday week → meaningful
+  deceleration signal
+- Seasonal patterns: WEI is seasonally adjusted, but still noisy around
+  Thanksgiving / Christmas weeks
+
+**Market significance**: ⭐⭐
+Preferred high-frequency GDP tracker for cross-asset strategists. Widely
+cited by FX / rates desks during policy-pivot periods. Less commonly on
+equity-desk dashboards than GDPNow.
+
+**When to use**: Weekly macro update, bond-market reaction gauging,
+event-window analysis (war, pandemic, banking stress), supplement to GDPNow.
+
+**Common pitfalls**:
+- WEI conflates level and rate. A stable but low WEI (e.g., +0.5 for weeks)
+  does NOT mean economy is at risk — it just means slow steady growth.
+- Holiday weeks introduce noise; Atlanta Fed and NY Fed sometimes annotate
+  these weeks.
+- The 10-indicator basket was last revised in 2022; data-construction
+  methodology changes can cause historical splices. Check NY Fed's
+  methodology notes when splicing pre-2022 data.
+
+## USALOLITOAASTSAM: OECD Composite Leading Indicator (USA)
+
+- **Series code**: USALOLITOAASTSAM (FRED)
+- **Source**: OECD (Organisation for Economic Co-operation and Development)
+- **Unit**: Index, amplitude-adjusted (long-term trend = 100)
+- **Frequency**: Monthly
+- **Publication lag**: ~1 month after the reference month (OECD releases on
+  the ~10th of each month)
+- **History**: From 1960 (US series)
+
+**What it measures**: OECD's composite leading indicator for the United
+States, combining multiple forward-looking series (building permits, stock
+prices, money supply, yield spread, consumer confidence) designed to signal
+turning points in business-cycle activity 6-9 months ahead.
+
+**How to interpret**:
+- Index > 100 and rising → expansion, above long-term trend
+- Index > 100 and falling → expansion, but decelerating (pre-peak)
+- Index < 100 and falling → contraction, below trend
+- Index < 100 and rising → recovery, still below trend (pre-trough)
+- Crossing 100 upward → typically leads GDP peaks/troughs by 6-9 months
+
+**Market significance**: ⭐⭐
+Primary international-comparable leading indicator. OECD releases align
+across G20, enabling cross-country cycle-dating. Less popular in US-only
+dashboards because GDPNow + CFNAI already cover the domestic cycle, but
+essential for global-macro allocation decisions.
+
+**When to use**: Turning-point detection, international cycle comparison
+(pair with OECD CLIs for EU / JP / CN to see cycle de-synchronization),
+6-9-month-ahead forward view.
+
+**Common pitfalls**:
+- REPLACEMENT NOTE: The old FRED series `USSLIND` (Leading Index for the
+  United States, Philadelphia Fed) was discontinued in February 2020. OECD
+  CLI is the closest actively-maintained substitute; methodology differs
+  (OECD uses different basket weights + amplitude adjustment) so historical
+  splicing with USSLIND is not clean.
+- OECD CLI is heavily revised. Recent 6 months are provisional and can
+  revise 0.3-0.5 points.
+- Amplitude-adjusted version (suffix `AASTSAM`) is smoother but damps
+  magnitude of extreme events; normalized version (`NOSTSAM`) preserves
+  magnitude but is harder to interpret around 100.
+
+---
+
 ## Housing / REIT (-> XLRE, XHB)
 
 ## PERMIT: New Privately-Owned Housing Units Authorized (Building Permits)

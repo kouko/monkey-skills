@@ -90,7 +90,7 @@
 
 ---
 
-## v1.6.0 — China Macro (current)
+## v1.6.0 — China Macro
 
 **Scope**: China macro indicators via akshare (NBS + PBOC + SHIBOR),
 FRED fallbacks (CNY/USD, FX reserves), and yfinance market indices.
@@ -101,6 +101,25 @@ FRED fallbacks (CNY/USD, FX reserves), and yfinance market indices.
 - [x] NBS WAF workaround — akshare mirrors (eastmoney, investing.com, chinamoney, shibor.org) remain reachable when `data.stats.gov.cn` blocks foreign IPs
 - [x] 10 reference files including 119 indicator sections across US/JP/TW/KR/CN (unified format)
 - [x] NBS new-SPA API reverse-engineered (`docs/nbs-indicator-catalog.md`): 2908-leaf indicator tree captured for future `nbs_client.py` work
+
+---
+
+## v1.7.0 — Monthly GDP Proxies for US + JP (current)
+
+**Scope**: Cross-market symmetric monthly GDP tracking. US and Japan gain
+the monthly-GDP-proxy indicator packages that china-macro already provides
+via 三大數據 + services-production.
+
+**Background**: No major economy publishes official monthly GDP (UK and
+Canada are exceptions). For US, the Fed family of nowcasts (GDPNow, CFNAI,
+WEI) plus OECD CLI are the industry-standard proxies. For Japan, the
+内閣府 景気動向指数 CI trio (先行/一致/遅行) is the canonical proxy, with
+一致指数 treated as the definitive "current GDP feel".
+
+### New
+- [x] us-macro: +4 presets under new `nowcast` group — `GDPNOW` (Atlanta Fed), `CFNAI` (Chicago Fed), `WEI` (NY Fed), `USALOLITOAASTSAM` (OECD CLI, replacing discontinued USSLIND). 21 → 25 series.
+- [x] japan-macro: +2 presets `leading-index` + `lagging-index` completing the 景気動向指数 CI trio. 14 → 16 active indicators.
+- [x] references/indicators-growth.md expanded in both skills with full monthly-GDP-proxy documentation.
 
 ---
 

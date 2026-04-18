@@ -3,9 +3,9 @@ name: us-macro
 description: >-
   Fetch US macroeconomic and sector-level indicators via FRED CSV. Data layer
   only — no analysis or regime mapping. Returns structured JSON with latest
-  values and direction for 10 indicator groups: rates, inflation, growth,
-  housing, industrials, energy, financials, consumer, tech, and ppi. Designed
-  for handoff to macro-regime-snapshot (IC/GIP mapping) or
+  values and direction for 11 indicator groups: rates, inflation, growth,
+  nowcast, housing, industrials, energy, financials, consumer, tech, and ppi.
+  Designed for handoff to macro-regime-snapshot (IC/GIP mapping) or
   domain-teams:investing-team (sector ETF analysis).
   米国マクロ・セクター指標取得。美國總經與產業指標擷取。
 ---
@@ -13,13 +13,19 @@ description: >-
 # US Macro
 
 Fetches US macroeconomic and sector-level indicators from FRED and outputs
-structured JSON. Covers 21 series across 10 groups: 3 core macro groups
-(rates, inflation, growth) and 7 sector groups (housing, industrials, energy,
-financials, consumer, tech, ppi) mapped to sector ETFs. This skill is
+structured JSON. Covers 25 series across 11 groups: 4 core macro groups
+(rates, inflation, growth, nowcast) and 7 sector groups (housing, industrials,
+energy, financials, consumer, tech, ppi) mapped to sector ETFs. This skill is
 **data-only** — it does not analyze, map to regimes, or generate investment
 verdicts. The output is designed for immediate handoff to
 `macro-regime-snapshot` for IC/GIP regime mapping, or to
 `domain-teams:investing-team` for sector ETF analysis.
+
+**Monthly GDP proxy note**: US official GDP is quarterly (`GDPC1`). The
+`nowcast` group provides four Fed-published series (GDPNow, CFNAI, WEI, OECD
+CLI) that collectively proxy real-time GDP momentum — parallel to china-macro's
+三大數據 package and japan-macro's 景気動向指数 CI trio, forming a cross-market
+symmetric framework for monthly GDP tracking.
 
 ---
 
@@ -27,7 +33,7 @@ verdicts. The output is designed for immediate handoff to
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
+| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `nowcast`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
 
 ---
 
@@ -55,6 +61,15 @@ verdicts. The output is designed for immediate handoff to
 |--------|------|-----------|
 | GDPC1 | Real GDP | Quarterly |
 | INDPRO | Industrial Production Index | Monthly |
+
+### nowcast (monthly GDP proxies)
+
+| Series | Name | Frequency |
+|--------|------|-----------|
+| GDPNOW | Atlanta Fed GDPNow Real GDP Nowcast (SAAR %) | Quarterly snapshot, updated 6-7×/mo during quarter |
+| CFNAI | Chicago Fed National Activity Index | Monthly |
+| WEI | NY Fed Weekly Economic Index | Weekly |
+| USALOLITOAASTSAM | OECD Composite Leading Indicator (USA, amplitude-adjusted) | Monthly |
 
 ### housing
 
@@ -117,6 +132,7 @@ Map `--indicators` to FRED series IDs:
 | `rates` | T10Y2Y,DGS10,DGS2,FEDFUNDS |
 | `inflation` | CPIAUCSL,CPILFESL |
 | `growth` | GDPC1,INDPRO |
+| `nowcast` | GDPNOW,CFNAI,WEI,USALOLITOAASTSAM |
 | `housing` | PERMIT,HOUST,CSUSHPISA,MORTGAGE30US |
 | `industrials` | DGORDER |
 | `energy` | DCOILWTICO,DHHNGSP |
@@ -124,7 +140,7 @@ Map `--indicators` to FRED series IDs:
 | `consumer` | RSAFS,UMCSENT |
 | `tech` | CES3133440001,PCUAINFOAINFO |
 | `ppi` | PCUOMFGOMFG |
-| `all` | All 21 series above |
+| `all` | All 25 series above |
 
 ### Step 2 — Launch data-fetcher agent
 
@@ -143,6 +159,8 @@ base_path: {absolute path to investing-toolkit/scripts/}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,DGS2,FEDFUNDS --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series CPIAUCSL,CPILFESL --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPNOW,CFNAI,USALOLITOAASTSAM --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series WEI --periods 52
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PERMIT,HOUST,CSUSHPISA --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series MORTGAGE30US --periods 52
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGORDER --periods 24
@@ -192,6 +210,12 @@ Group results under their indicator group key.
     "growth": {
       "GDPC1":  { "latest": { ... }, "prior": { ... }, "direction": "..." },
       "INDPRO": { "latest": { ... }, "prior": { ... }, "direction": "..." }
+    },
+    "nowcast": {
+      "GDPNOW":           { "latest": { ... }, "prior": { ... }, "direction": "..." },
+      "CFNAI":            { "latest": { ... }, "prior": { ... }, "direction": "..." },
+      "WEI":              { "latest": { ... }, "prior": { ... }, "direction": "..." },
+      "USALOLITOAASTSAM": { "latest": { ... }, "prior": { ... }, "direction": "..." }
     },
     "housing": {
       "PERMIT":       { "latest": { ... }, "prior": { ... }, "direction": "..." },
@@ -274,6 +298,10 @@ real-world conditions:
 | PCUOMFGOMFG, PCUAINFOAINFO | ~2-3 weeks after reference month |
 | CSUSHPISA | ~2 months after reference month |
 | GDPC1 | ~1 month (advance estimate) |
+| GDPNOW | Quarter-level snapshot; updated 6-7×/mo within the current quarter, final value fixes when GDPC1 prints |
+| CFNAI | ~2-3 months after reference month |
+| WEI | ~1 week after reference week |
+| USALOLITOAASTSAM | ~1 month after reference month (OECD CLI release) |
 
 Always check the `latest.date` field to confirm the reference period.
 

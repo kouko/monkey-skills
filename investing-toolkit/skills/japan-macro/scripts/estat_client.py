@@ -54,7 +54,9 @@ PRESETS: dict[str, str] = {
     "unemployment": "0301010000020020010",
     "ip": "0502070301000090010",
     "jgb10y": "0702020300000010020",
-    "coincident-index": "0706010500000090010",     # 景気動向指数（一致指数）2020 base
+    "coincident-index": "0706010500000090010",     # 景気動向指数 CI 一致指数 2020 base
+    "leading-index": "0706010500000090020",         # 景気動向指数 CI 先行指数 2020 base
+    "lagging-index": "0706010500000090030",         # 景気動向指数 CI 遅行指数 2020 base
     "machine-orders": "0701030000000010010",        # 機械受注額（船舶・電力を除く民需）
     "real-wages": "0302030201010090010",            # 実質賃金指数（現金給与総額）
     "job-ratio": "0301020001000010010",             # 有効求人倍率（季節調整値）Active opening rate, monthly
@@ -71,6 +73,8 @@ INDICATOR_NAMES: dict[str, str] = {
     "0502070301000090010": "Industrial Production Index 2020 base",
     "0702020300000010020": "10Y JGB Yield (month-end)",
     "0706010500000090010": "Composite Coincident Index 2020 base",
+    "0706010500000090020": "Composite Leading Index 2020 base",
+    "0706010500000090030": "Composite Lagging Index 2020 base",
     "0701030000000010010": "Machinery Orders (Private, exc. volatile)",
     "0302030201010090010": "Real Wage Index (Total cash earnings)",
     "0301020001000010010": "Active Opening Rate (有効求人倍率)",

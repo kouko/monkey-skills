@@ -4,12 +4,16 @@ US macroeconomic and sector-level data skill for investing-toolkit.
 
 ## Overview
 
-Fetches 21 US macroeconomic and sector-level indicators from FRED (Federal
-Reserve Economic Data) and returns structured JSON grouped by 10 indicator
-groups: rates, inflation, growth (core macro), plus housing, industrials,
-energy, financials, consumer, tech, and ppi (sector-level). Sector groups
-map to sector ETFs for investment analysis. This is a data-only skill -- it
-does not analyze, map to regimes, or generate investment verdicts.
+Fetches 25 US macroeconomic and sector-level indicators from FRED (Federal
+Reserve Economic Data) and returns structured JSON grouped by 11 indicator
+groups: rates, inflation, growth, nowcast (core macro), plus housing,
+industrials, energy, financials, consumer, tech, and ppi (sector-level).
+Sector groups map to sector ETFs for investment analysis. This is a data-only
+skill -- it does not analyze, map to regimes, or generate investment verdicts.
+
+**Monthly GDP proxy**: US official GDP is quarterly (`GDPC1`). The `nowcast`
+group (GDPNow, CFNAI, WEI, OECD CLI) collectively proxies real-time GDP momentum,
+parallel to china-macro's 三大數據 and japan-macro's 景気動向指数 CI trio.
 
 ## Data Source
 
@@ -38,6 +42,10 @@ all use cases for this skill.
 | CPILFESL | Core CPI (Less Food & Energy) | inflation | Monthly | ~2-3 weeks |
 | GDPC1 | Real GDP | growth | Quarterly | ~1 month (advance est.) |
 | INDPRO | Industrial Production Index | growth | Monthly | ~3-4 weeks |
+| GDPNOW | Atlanta Fed GDPNow (SAAR %) | nowcast | Quarterly snapshot | Updated 6-7×/mo within current quarter |
+| CFNAI | Chicago Fed National Activity Index | nowcast | Monthly | ~2-3 months |
+| WEI | NY Fed Weekly Economic Index | nowcast | Weekly | ~1 week |
+| USALOLITOAASTSAM | OECD Composite Leading Indicator (USA) | nowcast | Monthly | ~1 month |
 
 ### Sector-Level
 
@@ -57,11 +65,12 @@ all use cases for this skill.
 | PCUAINFOAINFO | PPI: Information Services | tech | Monthly | ~2-3 weeks |
 | PCUOMFGOMFG | PPI: Total Manufacturing | ppi | Monthly | ~2-3 weeks |
 
-Organized in 10 groups:
+Organized in 11 groups:
 
 - **rates**: T10Y2Y, DGS10, DGS2, FEDFUNDS
 - **inflation**: CPIAUCSL, CPILFESL
 - **growth**: GDPC1, INDPRO
+- **nowcast**: GDPNOW, CFNAI, WEI, USALOLITOAASTSAM
 - **housing**: PERMIT, HOUST, CSUSHPISA, MORTGAGE30US
 - **industrials**: DGORDER
 - **energy**: DCOILWTICO, DHHNGSP
@@ -91,7 +100,7 @@ us-macro skill
 │   ├── fred_client.py          <- FRED CSV adapter (no API key)
 │   └── setup.sh                <- auto-install uv
 └── references/
-    └── us-macro-indicators.md  <- 21 indicator entries + interpretation
+    └── us-macro-indicators.md  <- 25 indicator entries + interpretation
 ```
 
 Scripts are synced copies from `investing-toolkit/scripts/` via
@@ -136,6 +145,12 @@ resolves all paths relative to the skill root.
     "growth": {
       "GDPC1":  { "latest": { "..." }, "prior": { "..." }, "direction": "..." },
       "INDPRO": { "latest": { "..." }, "prior": { "..." }, "direction": "..." }
+    },
+    "nowcast": {
+      "GDPNOW":           { "latest": { "..." }, "prior": { "..." }, "direction": "..." },
+      "CFNAI":            { "latest": { "..." }, "prior": { "..." }, "direction": "..." },
+      "WEI":              { "latest": { "..." }, "prior": { "..." }, "direction": "..." },
+      "USALOLITOAASTSAM": { "latest": { "..." }, "prior": { "..." }, "direction": "..." }
     },
     "housing": { "PERMIT": { "..." }, "HOUST": { "..." }, "CSUSHPISA": { "..." }, "MORTGAGE30US": { "..." } },
     "industrials": { "DGORDER": { "..." } },
@@ -184,7 +199,7 @@ uv run scripts/fred_client.py --series T10Y2Y,DGS10 --periods 24
 ```bash
 cd investing-toolkit/scripts
 
-for series in T10Y2Y DGS10 DGS2 FEDFUNDS CPIAUCSL CPILFESL GDPC1 INDPRO PERMIT HOUST CSUSHPISA MORTGAGE30US DGORDER DCOILWTICO DHHNGSP BAMLH0A0HYM2 RSAFS UMCSENT CES3133440001 PCUAINFOAINFO PCUOMFGOMFG; do
+for series in T10Y2Y DGS10 DGS2 FEDFUNDS CPIAUCSL CPILFESL GDPC1 INDPRO GDPNOW CFNAI WEI USALOLITOAASTSAM PERMIT HOUST CSUSHPISA MORTGAGE30US DGORDER DCOILWTICO DHHNGSP BAMLH0A0HYM2 RSAFS UMCSENT CES3133440001 PCUAINFOAINFO PCUOMFGOMFG; do
   uv run fred_client.py --series "$series" --periods 3 --no-cache 2>&1 | \
     python3 -c "
 import json, sys
@@ -205,10 +220,10 @@ done
 | Frequency | Series | Expected Staleness |
 |-----------|--------|-------------------|
 | Daily | T10Y2Y, DGS10, DGS2, DCOILWTICO, DHHNGSP, BAMLH0A0HYM2 | < 5 days |
-| Weekly | MORTGAGE30US | < 10 days |
-| Monthly | FEDFUNDS, CPIAUCSL, CPILFESL, INDPRO, PERMIT, HOUST, DGORDER, RSAFS, UMCSENT, CES3133440001, PCUOMFGOMFG, PCUAINFOAINFO | < 60 days |
-| Monthly (lagging) | CSUSHPISA | < 90 days |
-| Quarterly | GDPC1 | < 200 days |
+| Weekly | MORTGAGE30US, WEI | < 10 days |
+| Monthly | FEDFUNDS, CPIAUCSL, CPILFESL, INDPRO, PERMIT, HOUST, DGORDER, RSAFS, UMCSENT, CES3133440001, PCUOMFGOMFG, PCUAINFOAINFO, USALOLITOAASTSAM | < 60 days |
+| Monthly (lagging) | CSUSHPISA, CFNAI | < 90 days |
+| Quarterly | GDPC1, GDPNOW | < 200 days |
 
 ### Verify FRED CSV endpoint
 
@@ -235,4 +250,5 @@ If retired, check successor at: `https://fred.stlouisfed.org/series/{SERIES_ID}`
 
 ### Latest verification
 
-**Date**: 2026-04-17 — All 21 series ACTIVE, returning 2026 data via CSV endpoint.
+**Date**: 2026-04-18 — All 25 series ACTIVE, returning 2026 data via CSV endpoint.
+Added `nowcast` group (GDPNOW, CFNAI, WEI, USALOLITOAASTSAM) as monthly GDP proxies.

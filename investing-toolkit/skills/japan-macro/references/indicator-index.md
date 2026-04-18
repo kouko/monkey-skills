@@ -11,7 +11,9 @@ Quick lookup: find which file contains the indicator you need.
 | `cgpi` (BOJ PR01) | 企業物価指数 CGPI | Corporate Goods Price Index | `indicators-inflation.md` |
 | `gdp` | 国内総生産 GDP | Gross Domestic Product | `indicators-growth.md` |
 | `ip` | 鉱工業生産指数 | Industrial Production Index | `indicators-growth.md` |
-| `coincident-index` | 景気動向指数（一致指数） | Composite Coincident Index | `indicators-growth.md` |
+| `coincident-index` | 景気動向指数（一致指数） | Composite Coincident Index (**monthly GDP proxy**) | `indicators-growth.md` |
+| `leading-index` | 景気動向指数（先行指数） | Composite Leading Index | `indicators-growth.md` |
+| `lagging-index` | 景気動向指数（遅行指数） | Composite Lagging Index | `indicators-growth.md` |
 | `machine-orders` | 機械受注額 | Machine Orders | `indicators-growth.md` |
 | `tertiary-index` | 第3次産業活動指数 | Tertiary Industry Activity Index | `indicators-growth.md` |
 | `unemployment` | 完全失業率 | Unemployment Rate | `indicators-labor.md` |
