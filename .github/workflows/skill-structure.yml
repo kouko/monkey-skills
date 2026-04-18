@@ -39,6 +39,26 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
+  scraper-deps:
+    name: Scraper dependency freshness (report-only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check scraper deps vs PyPI latest
+        run: |
+          python3 scripts/check-scraper-deps.py --format markdown \
+            | tee "$GITHUB_STEP_SUMMARY"
+        # Never fails the PR — surfaces drift in the job summary so
+        # reviewers see a pinned-vs-latest table without blocking merges.
+
   conventional-commits:
     name: Conventional Commits
     runs-on: ubuntu-latest
