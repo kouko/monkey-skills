@@ -1,6 +1,6 @@
 # Korea Macro Indicator Index / 한국 매크로 지표 색인 / 韓國總經指標索引
 
-43 indicators across 12 groups. 42 via BOK ECOS KEYSTAT (`fdr_client`) +
+54 indicators across 13 groups. 53 via BOK ECOS KEYSTAT (`fdr_client`) +
 1 via FRED (`krw-usd` DEXKOUS).
 
 | Preset | 한국어 | English | Code | File |
@@ -24,6 +24,17 @@
 | `private-consumption` | 민간소비 | Private Consumption | K259 | `indicators-growth.md` |
 | `equipment-investment` | 설비투자 | Equipment Investment | K260 | `indicators-growth.md` |
 | `construction-investment` | 건설투자 | Construction Investment | K261 | `indicators-growth.md` |
+| `manufacturing-inventory` | 제조업 재고지수 | Manufacturing Inventory Index | K202 | `indicators-industry.md` |
+| `manufacturing-shipment` | 제조업 출하지수 | Manufacturing Shipment Index | K203 | `indicators-industry.md` |
+| `manufacturing-operating-rate` | 제조업 가동률지수 | Manufacturing Operating Rate | K204 | `indicators-industry.md` |
+| `services-production` | 서비스업 생산지수 | Services Production Index | K205 | `indicators-industry.md` |
+| `retail-sales` | 소매판매액지수 | Retail Sales Index | K206 | `indicators-industry.md` |
+| `wholesale-retail` | 도매 및 소매업 생산 | Wholesale & Retail Production | K207 | `indicators-industry.md` |
+| `credit-card-usage` | 개인카드 이용금액 | Credit Card Individual Usage | K210 | `indicators-industry.md` |
+| `machinery-orders` | 국내기계수주(선박제외) | Machinery Orders ex-Ship | K213 | `indicators-industry.md` |
+| `capital-goods-output` | 기계설비류 생산(선박제외) | Capital Goods Output ex-Ship | K215 | `indicators-industry.md` |
+| `construction-completion` | 건설기성액 | Construction Completion Value | K216 | `indicators-industry.md` |
+| `construction-orders` | 건설수주액 | Construction Orders Value | K217 | `indicators-industry.md` |
 | `unemployment` | 실업률 | Unemployment Rate | K303 | `indicators-labor.md` |
 | `employment-rate` | 고용률 | Employment Rate | K304 | `indicators-labor.md` |
 | `current-account` | 경상수지 | Current Account (M USD) | K351 | `indicators-trade.md` |
@@ -49,13 +60,14 @@
 | `aging-ratio` | 고령인구비율 | Elderly Ratio ≥65 | K460 | `indicators-demographics.md` |
 | `fertility-rate` | 합계출산율 | Total Fertility Rate | K461 | `indicators-demographics.md` |
 
-## Group membership (v1.8.0)
+## Group membership (v1.8.1)
 
 | Group | Presets |
 |-------|---------|
 | `rates` (7) | policy-rate, call-rate, cd-91d, koribor-3m, treasury-3y, treasury-5y, corp-bond-3y |
 | `inflation` (5) | cpi, core-cpi, ppi, import-pi, export-pi |
 | `growth` (7) | gdp-qoq, gdp-nominal, ipi, manufacturing, private-consumption, equipment-investment, construction-investment |
+| `industry` (11) | manufacturing-inventory, manufacturing-shipment, manufacturing-operating-rate, services-production, retail-sales, wholesale-retail, credit-card-usage, machinery-orders, capital-goods-output, construction-completion, construction-orders |
 | `labor` (2) | unemployment, employment-rate |
 | `trade` (3) | current-account, terms-of-trade, goods-exports |
 | `money` (4) | m1, m2, lf, household-credit |

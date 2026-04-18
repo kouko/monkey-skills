@@ -20,6 +20,7 @@ https://ecos.bok.or.kr/api/#/AuthKeyApply) — not covered here.
 
 - **in-skill**: Already exposed as a preset in `fdr_client.py`
 - **v1.8.0**: Added as Tier B expansion in v1.8.0
+- **v1.8.1**: Added as Tier B expansion in v1.8.1 (industry activity layer)
 - **candidate**: Identified but not yet added; possible future expansion
 - **skip**: Duplicate, ambiguous, or not meaningful without extra dimension
 
@@ -99,18 +100,18 @@ to presets.
 | K-code | First column | Suggested name (EN) | Rows | Latest | Status |
 |--------|--------------|---------------------|------|--------|--------|
 | K201 | 제조업 | Manufacturing IPI (전산업생산지수 세부) | 434 | 2026-02 | in-skill (`manufacturing`) |
-| K202 | 제조업 | Manufacturing inventory | 434 | 2026-02 | candidate |
-| K203 | 제조업 | Manufacturing shipment | 434 | 2026-02 | candidate |
-| K204 | 제조업 | Manufacturing operating rate | 434 | 2026-02 | candidate |
-| K205 | 총지수 | Services production | 314 | 2026-02 | candidate |
-| K206 | 총지수 | Retail sales | 374 | 2026-02 | candidate |
-| K207 | 도매 및 소매업 | Wholesale/retail | 314 | 2026-02 | candidate |
-| K210 | 개인 이용금액 | Credit card usage | 277 | 2026-01 | candidate |
+| K202 | 제조업 | Manufacturing inventory | 434 | 2026-02 | **v1.8.1** (preset: `manufacturing-inventory`) |
+| K203 | 제조업 | Manufacturing shipment | 434 | 2026-02 | **v1.8.1** (preset: `manufacturing-shipment`) |
+| K204 | 제조업 | Manufacturing operating rate | 434 | 2026-02 | **v1.8.1** (preset: `manufacturing-operating-rate`) |
+| K205 | 총지수 | Services production | 314 | 2026-02 | **v1.8.1** (preset: `services-production`) |
+| K206 | 총지수 | Retail sales | 374 | 2026-02 | **v1.8.1** (preset: `retail-sales`) |
+| K207 | 도매 및 소매업 | Wholesale/retail | 314 | 2026-02 | **v1.8.1** (preset: `wholesale-retail`) |
+| K210 | 개인 이용금액 | Credit card usage | 277 | 2026-01 | **v1.8.1** (preset: `credit-card-usage`) |
 | K212 | 계절조정지수 | SA index (see ECOS) | 373 | 2026-02 | candidate |
-| K213 | 국내수요(선박제외) | Machinery orders ex-ship | 357 | 2026-02 | candidate |
-| K215 | 기계설비류(선박제외) | Capital goods output ex-ship | 434 | 2026-02 | candidate |
-| K216 | 총기성액 | Construction completion value | 344 | 2026-02 | candidate |
-| K217 | 총수주액 | Construction orders value | 434 | 2026-02 | candidate |
+| K213 | 국내수요(선박제외) | Machinery orders ex-ship | 357 | 2026-02 | **v1.8.1** (preset: `machinery-orders`) |
+| K215 | 기계설비류(선박제외) | Capital goods output ex-ship | 434 | 2026-02 | **v1.8.1** (preset: `capital-goods-output`) |
+| K216 | 총기성액 | Construction completion value | 344 | 2026-02 | **v1.8.1** (preset: `construction-completion`) |
+| K217 | 총수주액 | Construction orders value | 434 | 2026-02 | **v1.8.1** (preset: `construction-orders`) |
 | K218 | 구조별 | Housing starts by structure | 86 | 2026-02 | candidate |
 | K219 | 연면적 | Housing floor area | 86 | 2026-02 | candidate |
 | K220 | 전산업생산지수(농림어업 제외) | All-Industry Production (ex ag/fish) | 314 | 2026-02 | in-skill (`ipi`) |

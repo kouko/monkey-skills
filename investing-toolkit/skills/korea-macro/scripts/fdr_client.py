@@ -112,6 +112,51 @@ PRESETS: dict[str, dict] = {
         "code": "K201", "name": "Manufacturing Production Index (제조업 생산지수)",
         "start": "2000", "source": "keystat",
     },
+    # --- Industry (monthly sector activity) ---
+    "manufacturing-inventory": {
+        "code": "K202", "name": "Manufacturing Inventory Index (제조업 재고지수)",
+        "start": "2000", "source": "keystat",
+    },
+    "manufacturing-shipment": {
+        "code": "K203", "name": "Manufacturing Shipment Index (제조업 출하지수)",
+        "start": "2000", "source": "keystat",
+    },
+    "manufacturing-operating-rate": {
+        "code": "K204", "name": "Manufacturing Operating Rate (제조업 가동률지수)",
+        "start": "2000", "source": "keystat",
+    },
+    "services-production": {
+        "code": "K205", "name": "Services Production Index (서비스업 생산지수)",
+        "start": "2000", "source": "keystat",
+    },
+    "retail-sales": {
+        "code": "K206", "name": "Retail Sales Index (소매판매액지수)",
+        "start": "2000", "source": "keystat",
+    },
+    "wholesale-retail": {
+        "code": "K207", "name": "Wholesale & Retail Production (도매 및 소매업 생산)",
+        "start": "2000", "source": "keystat",
+    },
+    "credit-card-usage": {
+        "code": "K210", "name": "Credit Card Individual Usage (개인카드 이용금액)",
+        "start": "2003", "source": "keystat",
+    },
+    "machinery-orders": {
+        "code": "K213", "name": "Machinery Orders Domestic ex-Ship (국내기계수주, 선박제외)",
+        "start": "2000", "source": "keystat",
+    },
+    "capital-goods-output": {
+        "code": "K215", "name": "Capital Goods Output ex-Ship (기계설비류 생산, 선박제외)",
+        "start": "2000", "source": "keystat",
+    },
+    "construction-completion": {
+        "code": "K216", "name": "Construction Completion Value (건설기성액)",
+        "start": "2000", "source": "keystat",
+    },
+    "construction-orders": {
+        "code": "K217", "name": "Construction Orders Value (건설수주액)",
+        "start": "2000", "source": "keystat",
+    },
     "private-consumption": {
         "code": "K259", "name": "Private Consumption (민간소비)",
         "start": "2000", "source": "keystat",

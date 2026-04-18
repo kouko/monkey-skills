@@ -197,7 +197,7 @@ adds the Tier 2 tagging + framework row + references preamble.
 
 ---
 
-## v1.8.0 — Korea-macro catalogue + structural refactor + Tier-B expansion (current)
+## v1.8.0 — Korea-macro catalogue + structural refactor + Tier-B expansion
 
 **Scope**: Three-phase korea-macro upgrade — document the full BOK ECOS
 KEYSTAT catalogue (mirror of the v1.6.0 NBS tree work for CN), refactor
@@ -238,11 +238,51 @@ groups + 1 new `demographics` group.
 
 ### Deferred (v1.9.0 candidate)
 
-- **Full BOK ECOS API integration** — would unlock ~50 additional Tier-B
+- **Full BOK ECOS API integration** — would unlock the remaining Tier-B
   candidates (identified in `docs/bok-ecos-keystat-catalog.md` as
   `candidate` rows) plus the lagging CI (후행지수순환변동치) not
   exposed via KEYSTAT. Requires free API key registration at
   https://ecos.bok.or.kr/api/#/AuthKeyApply.
+
+---
+
+## v1.8.1 — Korea industry activity layer (current)
+
+**Scope**: Closes the KR sector-activity coverage gap (identified as
+`candidate` in v1.8.0 catalogue) — adds the monthly K201-K217 경제활동
+cluster as a new `industry` group. Parallels JP `activity` group and
+TW `production` group; completes cross-market parity for monthly
+sector pulse.
+
+### Phase 1 — New `industry` group (+11 presets, 43 → 54 indicators)
+- [x] Manufacturing trio: `manufacturing-inventory` (K202),
+  `manufacturing-shipment` (K203), `manufacturing-operating-rate` (K204)
+- [x] Services + retail: `services-production` (K205),
+  `retail-sales` (K206), `wholesale-retail` (K207),
+  `credit-card-usage` (K210)
+- [x] Capex cycle: `machinery-orders` (K213),
+  `capital-goods-output` (K215)
+- [x] Construction cycle: `construction-completion` (K216),
+  `construction-orders` (K217)
+
+### Phase 2 — Documentation
+- [x] `skills/korea-macro/references/indicators-industry.md` (new, bilingual)
+- [x] `skills/korea-macro/SKILL.md` — new group section + Step 1/2 fetch
+  batches + lag table entries
+- [x] `skills/korea-macro/README.md` — counts 43 → 54, group list 12 → 13
+- [x] `skills/korea-macro/references/indicator-index.md` — 11 new rows +
+  `industry (11)` group row
+- [x] `skills/korea-macro/docs/bok-ecos-keystat-catalog.md` — 11 rows
+  flipped `candidate` → `v1.8.1`
+- [x] `skills/using-investing-toolkit/SKILL.md` + plugin-level `README.md`
+  counts updated
+
+### Deferred (unchanged)
+- v1.9.0: full BOK ECOS API integration (lagging CI + ~10K series,
+  requires free API key)
+- v1.10.0+: macro-regime-snapshot v1.7.0-aware refresh (currently only
+  consumes US 8 + JP 13 series; ignores monthly GDP proxies and all
+  post-v1.3.0 country skills)
 
 ---
 

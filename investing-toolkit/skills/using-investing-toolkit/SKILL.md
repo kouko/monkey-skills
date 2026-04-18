@@ -22,7 +22,7 @@ Skills are organised in three layers:
 | `us-macro` | data | US macro indicators via FRED (25 series incl. `nowcast` group + reference doc) | v1.7.0 |
 | `japan-macro` | data | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
 | `taiwan-macro` | data | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
-| `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (43 indicators, 12 groups; full KEYSTAT catalogue in `docs/`) | v1.8.0 |
+| `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (54 indicators, 13 groups incl. monthly `industry` activity layer; full KEYSTAT catalogue in `docs/`) | v1.8.1 |
 | `china-macro` | data | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
 | `us-stock-snapshot` | data | yfinance price + info snapshot for a US ticker | v1.0.0 |
 | `taiwan-stock-snapshot` | data | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
@@ -65,7 +65,7 @@ Skills are organised in three layers:
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All skills through v1.8.0 are now available.
+All skills through v1.8.1 are now available.
 
 ---
 
