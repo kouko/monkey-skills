@@ -11,6 +11,12 @@ Bank of Japan (日本銀行) Time-Series API and the Statistics Dashboard
 inflation, growth, money, tankan, forex, and balance. This is a data-only
 skill -- it does not analyze, map to regimes, or generate investment verdicts.
 
+**Monthly GDP proxy**: Japan's official GDP is quarterly (統計DB). The
+景気動向指数 CI trio (先行 / 一致 / 遅行) published monthly by 内閣府 is the
+industry-standard monthly GDP proxy, with the 一致指数 (`coincident-index`)
+being the definitive "what's the economy doing right now" reading, parallel
+to us-macro's `nowcast` group and china-macro's 三大數據.
+
 日本銀行の時系列統計APIと統計ダッシュボードAPIから日本マクロ指標を取得し、
 グループ別の構造化JSONを返す。データ取得のみで、分析やレジーム判定は行わない。
 
@@ -63,7 +69,7 @@ Using the source APIs directly provides monthly granularity and timely data.
 
 ## Indicators
 
-### Tier 1: Core Indicators (13)
+### Tier 1: Core Indicators (16)
 
 | 日本語 | English | Source | Frequency | Typical Lag |
 |--------|---------|--------|-----------|-------------|
@@ -80,6 +86,9 @@ Using the source APIs directly provides monthly granularity and timely data.
 | 短観 業況判断DI | TANKAN Business Conditions DI | BOJ (CO) | Quarterly | ~1 week |
 | USD/JPY 為替レート | USD/JPY Exchange Rate | BOJ (FM08) | Daily | 1-2 business days |
 | 実効為替レート | Effective Exchange Rate (REER) | BOJ (FM09) | Monthly | 1-2 business days |
+| 景気動向指数 CI 一致指数 | Composite Coincident Index (**monthly GDP proxy**) | 統計DB | Monthly | ~6-8 weeks |
+| 景気動向指数 CI 先行指数 | Composite Leading Index | 統計DB | Monthly | ~6-8 weeks |
+| 景気動向指数 CI 遅行指数 | Composite Lagging Index | 統計DB | Monthly | ~6-8 weeks |
 
 ### Tier 2: Extended (30+)
 
@@ -242,7 +251,8 @@ uv run scripts/estat_client.py --preset cpi
 cd investing-toolkit/scripts
 
 for p in cpi core-cpi core-core-cpi unemployment ip jgb10y \
-  coincident-index machine-orders real-wages job-ratio \
+  coincident-index leading-index lagging-index \
+  machine-orders real-wages job-ratio \
   tertiary-index retail-sales service-sales; do
   uv run estat_client.py --preset "$p" --no-cache 2>&1 | \
     python3 -c "
@@ -291,6 +301,8 @@ curl -sS "https://dashboard.e-stat.go.jp/api/1.0/Json/getIndicatorInfo?Lang=EN&I
 
 ### Latest verification
 
-**Date**: 2026-04-17 — All 14 indicators (1 BOJ + 13 e-Stat) ACTIVE + Monthly + 2026 data.
+**Date**: 2026-04-18 — All 16 indicators (1 BOJ + 15 e-Stat) ACTIVE + Monthly + 2026 data.
+**v1.7.0 additions**: `leading-index` + `lagging-index` to complete the 景気動向指数 CI trio
+(先行 / 一致 / 遅行) as Japan's monthly GDP proxy package.
 **Fixes applied**: `service-sales` (old survey discontinued 2024-12, replaced with new StatCode),
 `job-ratio` (old code was fiscal-year only, replaced with monthly code).

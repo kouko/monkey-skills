@@ -59,7 +59,9 @@ investment verdicts. The output is designed for immediate handoff to
 | 統計DB | ip | 0502070301000090010 | 鉱工業生産指数 | Monthly |
 | 統計DB | unemployment | 0301010000020020010 | 完全失業率 | Monthly |
 | 統計DB | gdp | (discover via search) | GDP | Quarterly (use `--cycle quarterly`) |
-| 統計DB | coincident-index | 0706010500000090010 | 景気動向指数（一致指数）| Monthly |
+| 統計DB | coincident-index | 0706010500000090010 | 景気動向指数 CI 一致指数 (**monthly GDP proxy**) | Monthly |
+| 統計DB | leading-index | 0706010500000090020 | 景気動向指数 CI 先行指数 | Monthly |
+| 統計DB | lagging-index | 0706010500000090030 | 景気動向指数 CI 遅行指数 | Monthly |
 | 統計DB | machine-orders | 0701030000000010010 | 機械受注額 | Monthly |
 | 統計DB | tertiary-index | 0603100300000090010 | 第3次産業活動指数 | Monthly |
 
@@ -114,7 +116,7 @@ Map `--indicators` to BOJ and 統計DB series:
 |-------|-----------|---------------|
 | `rates` | FM01:STRDCLUCON | jgb10y |
 | `inflation` | PR01:(discover) | cpi, core-cpi |
-| `growth` | (none) | ip, unemployment, gdp (quarterly), coincident-index, machine-orders, tertiary-index |
+| `growth` | (none) | ip, unemployment, gdp (quarterly), coincident-index, leading-index, lagging-index, machine-orders, tertiary-index |
 | `labor` | (none) | real-wages, job-ratio (fiscal-year) |
 | `consumption` | (none) | retail-sales, service-sales |
 | `money` | MD02:(discover) | (none) |
@@ -169,7 +171,7 @@ base_path: {absolute path to investing-toolkit/scripts/}
 ### Fetch Requests
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset jgb10y
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset cpi,core-cpi
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment,coincident-index,machine-orders,tertiary-index
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset ip,unemployment,coincident-index,leading-index,lagging-index,machine-orders,tertiary-index
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset real-wages
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset job-ratio --cycle fiscal-year
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/estat_client.py --preset retail-sales,service-sales
@@ -210,6 +212,8 @@ indicator group. Each data point retains its `"_source"` tag (`"boj"` or
       "unemployment":    { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
       "gdp":             { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
       "coincident_index":{ "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "leading_index":   { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
+      "lagging_index":   { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
       "machine_orders":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" },
       "tertiary_index":  { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "estat_dashboard" }
     },
@@ -248,7 +252,7 @@ lag, interpretation, Japan-specific context, common pitfalls):
 - `references/indicator-index.md` — Quick lookup index for all indicators (bilingual)
 - `references/indicators-rates.md` — 金利系: Call Rate, Discount Rate, 10Y JGB Yield + Tier 2
 - `references/indicators-inflation.md` — 物價系: CPI, CGPI + Tier 2
-- `references/indicators-growth.md` — 成長系: GDP, IP, Coincident Index, Machine Orders, Tertiary Index
+- `references/indicators-growth.md` — 成長系: GDP, IP, CI 先行/一致/遅行 (monthly GDP proxy trio), Machine Orders, Tertiary Index
 - `references/indicators-labor.md` — 雇用系: Unemployment, Real Wages, Job Ratio
 - `references/indicators-consumption.md` — 消費系: Retail Sales, Service Industry Sales
 - `references/indicators-other.md` — その他: M2, TANKAN, USD/JPY, REER, Current Account + Tier 2
@@ -273,7 +277,7 @@ lag, interpretation, Japan-specific context, common pitfalls):
 | Current Account (BP01) | ~6 weeks after reference month |
 | GDP (統計DB) | ~6 weeks (1st preliminary), quarterly |
 | JGB 10Y Yield (統計DB) | ~1 week after month-end |
-| Coincident Index (統計DB) | ~6 weeks after reference month |
+| Coincident / Leading / Lagging Index (統計DB) | ~6-8 weeks after reference month (CI trio released together by 内閣府) |
 | Machine Orders (統計DB) | ~6 weeks after reference month |
 | Real Wages (統計DB) | ~5 weeks after reference month |
 | Job Ratio (統計DB) | Fiscal-year data; ~4 weeks after FY-end (original MHLW is monthly) |
