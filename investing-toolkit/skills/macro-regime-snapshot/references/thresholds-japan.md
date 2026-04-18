@@ -177,23 +177,83 @@ IOER 下に 2-5 bp 押し下げる。Fed funds rate vs IOER の 2018-2019
 
 ## Real Rate Decomposition
 
-**Not available** in free data layer for v1.9.0.
+**v1.10.0 status: Multi-source framework active (C + D + E).** Free-tier
+primary-source paths replicate BOJ's own composite expected-inflation
+methodology (market + survey + auction). Data layer lives in
+`japan-macro` skill; full source-by-source documentation at
+`investing-toolkit/skills/japan-macro/references/indicators-japan-real-rates.md`.
 
-**Why**: Japan has JGBi (物価連動国債, inflation-linked bonds) but:
-1. BOJ/e-Stat API does not expose clean daily breakeven/TIPS-equivalent
-   series in ECOS-like form
-2. Would require MoF XLS scraper (月次 発行実績 + 流通市場データ)
-3. Market structure differs — JGBi less liquid, BOJ still holds
-   substantial inventory
+### Data paths
 
-**Current 10Y JP real yield**: 2026-Q1 時点で G7 の中で相対的に低く
-(負圏の可能性あり)。prior draft の "-0.386%" 出典（伊藤忠総研 2024-04
-コラム) は本文に該当数値を含まないため**削除**。v1.10.0 で MoF JGBi
-(物価連動国債) scraper 実装時に検証可能なスナップショットへ差替え。
+| Path | Source | Cadence | Preset | Authority tier |
+|------|--------|---------|--------|----------------|
+| C | MoF JGBi 落札利回り (`jgbi-auction-history.yml`) | ~quarterly (~4/yr) | `real-10y-auction` | ⭐⭐⭐⭐ primary anchor, 単利 |
+| D | ECB Data Portal `M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA` | monthly | `real-10y-monthly` | ⭐⭐⭐ primary, **ex-post** (NOT market BEI) |
+| E | BOJ Tankan 企業物価見通し (CO DB, `TK99F0000204/205/206HCQ00000`) | quarterly | `inflation-tankan-1y/3y/5y` | ⭐⭐⭐⭐ BOJ Outlook Report component |
 
-**Deferred to v1.10.0+**: MoF JGBi scraper + thresholds calibrated to
-JP r* estimate (probably `< -0.5%` Accommodative / `-0.5% to 0.5%`
-Neutral / `> 0.5%` Restrictive — roughly HLW-JP ± 50 bp).
+**Sources deliberately NOT used**:
+- **JSDA 日次 JGBi CSV** — yield fields masked `999.999` (JSDA 公開は 単価 only).
+- **JBTS BEI** — 利用規約 prohibits 複製・送信・再配信.
+
+### Signal thresholds (Block 4)
+
+**`real-10y-monthly` (ECB ex-post)** — applies to monthly period-average:
+
+| Level | Threshold | Reading |
+|-------|-----------|---------|
+| Accommodative | `< 0%` | Real yield below neutral; policy supportive |
+| Neutral | `0% to 1%` | Near r\* midpoint of BOJ estimated range |
+| Restrictive | `≥ 1%` | Real yield above BOJ r\* upper range (+0.5%) plus ~0.5 pp ex-post vs. ex-ante wedge |
+
+Calibration rationale: BOJ WP24-J-09 2024-08 / rev26j05 2026-03 give
+r\* range **-1.0% to +0.5%** with midpoint ≈ **-0.25%**. The ex-post
+ECB series runs ~0.5-1.0 pp different from ex-ante market real yield
+in most regimes, so thresholds are widened vs. ex-ante framework
+(pre-2024 drafts had proposed `< -0.5% / -0.5% to 0.5% / > 0.5%` for
+ex-ante context).
+
+**Explicit caveat**: ECB series is **ex-post** (nominal minus realised
+CPI). It is not market-implied expected-inflation; the "real yield"
+label matches the ECB title but the construction differs from US TIPS
+market-implied real yield. Triangulate against Path E (Tankan ex-ante
+corporate expectations) when the ex-post signal drifts during
+inflation-surprise episodes.
+
+**`real-10y-auction` (MoF JGBi 単利)** — validation anchor, not a
+continuous signal:
+
+- Snapshot refreshed manually per auction (v1.11.0 automates via MoF
+  scraper).
+- Read alongside ECB monthly series: when MoF auction spot and ECB
+  monthly diverge by >30 bp, flag data-consistency check.
+- 2025-08 cross-section: auction +0.078% ≈ ECB ex-post compression to
+  near-zero → consistent post-YCC-exit regime.
+
+**`inflation-tankan-1y` (BOJ Tankan 全企業・全産業平均)**:
+
+| Level | Threshold | Reading |
+|-------|-----------|---------|
+| Below target | `< 1.5%` | Corporate 1Y expectations below BOJ 2% target -50 bp |
+| At target | `1.5% to 2.5%` | Anchored at BOJ target ±50 bp |
+| Overshoot | `> 2.5%` | Corporate 1Y expectations above target +50 bp (regime-shift signal) |
+
+**`inflation-tankan-5y`** — long-term anchoring:
+
+| Level | Threshold | Reading |
+|-------|-----------|---------|
+| De-anchored low | `< 1.5%` | Structural sub-target regime risk |
+| Anchored | `1.5% to 2.5%` | BOJ-target-consistent regime |
+| De-anchored high | `> 2.5%` | Sustained above-target regime (post-2023 Japan is here) |
+
+### v1.11.0 roadmap
+
+- **MoF 連動係数 daily feed** (official XLS + daily CSV).
+- **QuantLib-based JGBi YTM solver** — daily 単価 (from JSDA CSV)
+  + 連動係数 + coupon → daily real YTM at Bloomberg-grade ±5 bp accuracy.
+- Adds fourth signal `real-10y-daily` to Block 4 thresholds table above.
+- Ships as standalone PR with dedicated primary-source grounding audit
+  (MoF 応募要領 + 仕組み書 → 単利 / 複利 / 連動係数 semantics fully
+  anchored, no fabricated conversion formulas).
 
 ---
 

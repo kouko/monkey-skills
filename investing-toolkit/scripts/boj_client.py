@@ -13,6 +13,16 @@ Usage:
   uv run boj_client.py --db FM01 --code STRDCLUCON --start-date 202501 --end-date 202504
   uv run boj_client.py --db FM01 --code STRDCLUCON --no-cache
 
+Convenience preset — Tankan 企業物価見通し (Average Inflation Outlook, CPI-based):
+  uv run boj_client.py --tankan-price-outlook --horizons 1,3,5 --periods 8
+  uv run boj_client.py --tankan-price-outlook                       # 1Y/3Y/5Y, 8 quarters
+
+  Maps to DB=CO codes:
+    TK99F0000204HCQ00000  Outlook for General Prices / 1 year ahead
+    TK99F0000205HCQ00000  Outlook for General Prices / 3 years ahead
+    TK99F0000206HCQ00000  Outlook for General Prices / 5 years ahead
+  All: All Enterprises / All industries / Average of Enterprises' Inflation Outlook.
+
 Auth: None required.
 Cache: $INVESTING_TOOLKIT_CACHE/boj/{db}_{code}_{start}_{end}.json  TTL: 24h
        Falls back to ~/.cache/investing-toolkit/ if env var not set.
@@ -334,6 +344,48 @@ def fetch_series(
 
 
 # ---------------------------------------------------------------------------
+# Tankan 企業物価見通し — CPI-based expected inflation preset
+# ---------------------------------------------------------------------------
+#
+# Series key: "Outlook for General Prices / N year(s) ahead /
+#              The Average of Enterprises' Inflation Outlook /
+#              All Enterprises / All industries" (unit: %-change, quarterly)
+# Source: BOJ Tankan (短観) — stat-search DB "CO".
+# Reference period dimension uses CQ (calendar-quarter, 20XXQQ).
+
+TANKAN_PRICE_OUTLOOK_CODES: dict[int, str] = {
+    1: "TK99F0000204HCQ00000",   # 1Y ahead
+    3: "TK99F0000205HCQ00000",   # 3Y ahead
+    5: "TK99F0000206HCQ00000",   # 5Y ahead
+}
+
+
+def _periods_to_start_yyyymm(periods: int, freq: str = "quarterly") -> str:
+    """Rough backward calendar offset from today for --periods semantics.
+
+    The BOJ API uses calendar dates, not an N-most-recent filter, so we
+    translate --periods (quarters for Tankan) into a conservative start
+    date that is guaranteed to cover `periods` most-recent observations.
+
+    For quarterly series (CQ freq) the "MM" segment must be a valid
+    quarter number 01-04 (not a month), so we always return YYYY01 with
+    a year offset that covers `periods` quarters + a safety buffer.
+    """
+    today = datetime.now(tz=timezone.utc)
+    if freq == "quarterly":
+        years_back = (periods // 4) + 2  # +2 years safety margin
+        year = today.year - years_back
+        return f"{year:04d}01"
+    months_back = periods + 2
+    year = today.year
+    month = today.month - months_back
+    while month <= 0:
+        month += 12
+        year -= 1
+    return f"{year:04d}{month:02d}"
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -342,15 +394,15 @@ def main() -> None:
         description="BOJ Time-Series Data Search adapter for investing-toolkit"
     )
     parser.add_argument(
-        "--db", required=True,
+        "--db", default=None,
         help="BOJ database name (e.g. FM01, PR01, CO, MD02)",
     )
     parser.add_argument(
-        "--code", required=True,
+        "--code", default=None,
         help="Series code(s), comma-separated (e.g. STRDCLUCON or STRDCLUCON,STRDCLUCONH). NO DB prefix.",
     )
     parser.add_argument(
-        "--start-date", required=True,
+        "--start-date", default=None,
         help="Start date in YYYYMM format (e.g. 202501)",
     )
     parser.add_argument(
@@ -358,11 +410,87 @@ def main() -> None:
         help="End date in YYYYMM format (optional, defaults to latest)",
     )
     parser.add_argument(
+        "--tankan-price-outlook", action="store_true",
+        help="Fetch Tankan 企業物価見通し (Average Inflation Outlook, CPI-based). "
+             "Pairs with --horizons and --periods.",
+    )
+    parser.add_argument(
+        "--horizons", default="1,3,5",
+        help="Comma-separated horizons in years for --tankan-price-outlook "
+             "(default: 1,3,5). Valid: 1, 3, 5.",
+    )
+    parser.add_argument(
+        "--periods", type=int, default=8,
+        help="Number of most-recent quarterly observations to retain "
+             "for --tankan-price-outlook (default: 8).",
+    )
+    parser.add_argument(
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
 
     args = parser.parse_args()
+
+    # ---- Tankan preset path -------------------------------------------------
+    if args.tankan_price_outlook:
+        try:
+            horizons = [int(h.strip()) for h in args.horizons.split(",") if h.strip()]
+        except ValueError:
+            print(json.dumps({"error": "Invalid --horizons; expected integers."}))
+            sys.exit(2)
+        bad = [h for h in horizons if h not in TANKAN_PRICE_OUTLOOK_CODES]
+        if bad:
+            print(json.dumps({
+                "error": f"Unsupported horizons {bad}. Valid: {sorted(TANKAN_PRICE_OUTLOOK_CODES)}.",
+            }))
+            sys.exit(2)
+
+        db = "CO"
+        codes = ",".join(TANKAN_PRICE_OUTLOOK_CODES[h] for h in horizons)
+        start_date = _periods_to_start_yyyymm(args.periods, freq="quarterly")
+        end_date = ""
+
+        if args.no_cache:
+            cache_path = get_cache_path(db, codes, start_date, end_date)
+            if cache_path.exists():
+                cache_path.unlink()
+
+        raw = fetch_series(db, codes, start_date, end_date, use_cache=not args.no_cache)
+
+        # Trim each series to last N observations and add horizon tag.
+        horizon_by_code = {TANKAN_PRICE_OUTLOOK_CODES[h]: h for h in horizons}
+        if "series" in raw and isinstance(raw["series"], dict):
+            for sc, entry in raw["series"].items():
+                if isinstance(entry, dict) and "observations" in entry:
+                    obs = entry["observations"][-args.periods:]
+                    entry["observations"] = obs
+                    entry["count"] = len(obs)
+                    entry["latest"] = obs[-1] if obs else None
+                    entry["horizon_years"] = horizon_by_code.get(sc)
+                    entry["indicator"] = "tankan_inflation_outlook"
+        elif "observations" in raw:
+            # Single-horizon case.
+            obs = raw["observations"][-args.periods:]
+            raw["observations"] = obs
+            raw["count"] = len(obs)
+            raw["latest"] = obs[-1] if obs else None
+            raw["horizon_years"] = horizon_by_code.get(raw.get("series", ""))
+            raw["indicator"] = "tankan_inflation_outlook"
+
+        raw["_preset"] = "tankan-price-outlook"
+        print(json.dumps(raw, default=str, indent=2))
+
+        if "error" in raw:
+            sys.exit(1)
+        if "series" in raw and isinstance(raw["series"], dict):
+            if any("error" in v for v in raw["series"].values() if isinstance(v, dict)):
+                sys.exit(1)
+        return
+
+    # ---- Generic path -------------------------------------------------------
+    if not args.db or not args.code or not args.start_date:
+        parser.error("--db, --code, and --start-date are required "
+                     "(or use --tankan-price-outlook).")
 
     db = args.db.upper()
     code = args.code.strip()

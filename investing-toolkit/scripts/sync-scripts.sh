@@ -60,6 +60,10 @@ echo "Syncing estat_client.py..."
 copy_to estat_client.py \
   japan-macro
 
+echo "Syncing ecb_client.py..."
+copy_to ecb_client.py \
+  japan-macro
+
 echo "Syncing cbc_client.py..."
 copy_to cbc_client.py \
   taiwan-macro

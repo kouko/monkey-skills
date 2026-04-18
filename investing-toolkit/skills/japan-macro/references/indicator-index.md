@@ -26,3 +26,8 @@ Quick lookup: find which file contains the indicator you need.
 | `usdjpy` (BOJ FM08) | USD/JPY 為替レート | USD/JPY Exchange Rate | `indicators-other.md` |
 | `reer` (BOJ FM09) | 実効為替レート | Effective Exchange Rate | `indicators-other.md` |
 | `current-account` (BOJ BP01) | 経常収支 | Current Account Balance | `indicators-other.md` |
+| `real-10y-monthly` (ECB) | 日本10年実質利回り（月次・事後） | Japan 10Y Real Yield (ECB, ex-post monthly) | `indicators-japan-real-rates.md` |
+| `real-10y-auction` (MoF) | JGBi 10年入札 募入最高利回り | JGBi 10Y Auction Real Yield (primary-source anchor) | `indicators-japan-real-rates.md` |
+| `inflation-tankan-1y` (BOJ CO) | 短観 企業物価見通し 1年後 平均 | Tankan Corporate Inflation Outlook (1Y, All Enterprises avg) | `indicators-japan-real-rates.md` |
+| `inflation-tankan-3y` (BOJ CO) | 短観 企業物価見通し 3年後 平均 | Tankan Corporate Inflation Outlook (3Y, All Enterprises avg) | `indicators-japan-real-rates.md` |
+| `inflation-tankan-5y` (BOJ CO) | 短観 企業物価見通し 5年後 平均 | Tankan Corporate Inflation Outlook (5Y, All Enterprises avg) | `indicators-japan-real-rates.md` |

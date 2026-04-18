@@ -1,24 +1,31 @@
 ---
 name: japan-macro
 description: >-
-  Fetch Japan macroeconomic indicators via BOJ Time-Series API and
-  Statistics Dashboard (統計ダッシュボード) API. Data layer only — no analysis
-  or regime mapping. Returns structured JSON with latest values and direction
-  for rates, inflation, growth, tankan, forex, money, and balance indicator
+  Fetch Japan macroeconomic indicators via BOJ Time-Series API, Statistics
+  Dashboard (統計ダッシュボード) API, ECB Data Portal (JP real yield), and
+  MoF JGBi auction snapshot. Data layer only — no analysis or regime mapping.
+  Returns structured JSON with latest values and direction for rates,
+  inflation, growth, tankan, real-rates, forex, money, and balance indicator
   groups. Designed for handoff to macro-regime-snapshot or
-  domain-teams:investing-team. 日本マクロ指標取得（日銀API＋統計DB）。
-  日本總經指標擷取（BOJ + 統計Dashboard）。
+  domain-teams:investing-team. 日本マクロ指標取得（日銀API＋統計DB＋ECB＋MoF）。
+  日本總經指標擷取（BOJ + 統計Dashboard + ECB + MoF）。
 ---
 
 # Japan Macro
 
-Fetches Japan macroeconomic indicators from two government data sources and
-outputs structured JSON:
+Fetches Japan macroeconomic indicators from four government / supranational
+data sources and outputs structured JSON:
 
 - **BOJ Time-Series Statistics** (`boj_client.py`) — Bank of Japan data
-  (rates, CGPI, money stock, TANKAN, forex, balance of payments)
+  (rates, CGPI, money stock, TANKAN including 企業物価見通し, forex,
+  balance of payments)
 - **Statistics Dashboard / 統計ダッシュボード** (`estat_client.py`) — e-Stat
   data (CPI, unemployment, industrial production, GDP, JGB yields)
+- **ECB Data Portal** (`ecb_client.py`) — ECB SDMX CSV endpoint for JP
+  10-year ex-post real yield (primary-source, monthly)
+- **MoF JGBi auction snapshot** (`references/jgbi-auction-history.yml`) —
+  財務省 物価連動国債 落札利回り primary-source anchor points (quarterly,
+  human-curated)
 
 This skill is **data-only** — it does not analyze, map to regimes, or generate
 investment verdicts. The output is designed for immediate handoff to
@@ -31,7 +38,7 @@ investment verdicts. The output is designed for immediate handoff to
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `labor`, `consumption`, `tankan`, `forex`, `money`, `balance`, or `all` |
+| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `labor`, `consumption`, `tankan`, `real-rates`, `forex`, `money`, `balance`, or `all` |
 
 ---
 
@@ -91,6 +98,24 @@ investment verdicts. The output is designed for immediate handoff to
 |--------|-----------|---------|------|-----------|
 | BOJ | CO | (discover via getMetadata) | 短観 業況判断DI | Quarterly |
 
+### real-rates
+
+Multi-source Japan 10Y real yield + expected inflation (ECB monthly +
+MoF auction anchor + BOJ Tankan quarterly). JSDA daily YTM solver
+deferred to v1.11.0 (JSDA publishes 単価 only, yield fields masked
+`999.999` — requires MoF 連動係数 + QuantLib solver). See
+`references/indicators-japan-real-rates.md` for full source-by-source
+framework and `references/jgbi-auction-history.yml` for the MoF
+primary-source anchor snapshot.
+
+| Source | DB/Preset | Code/ID | Name | Frequency |
+|--------|-----------|---------|------|-----------|
+| ECB | FM (`ecb_client.py`) | `M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA` | Real Japan 10Y Government Benchmark bond yield (ex-post) — preset `real-10y-monthly` | Monthly |
+| MoF | `jgbi-auction-history.yml` | — | JGBi 10Y auction 募入最高利回り (primary-source anchor, human-curated) — preset `real-10y-auction` | Quarterly (~4/yr) |
+| BOJ | CO (`boj_client.py --tankan-price-outlook`) | `TK99F0000204HCQ00000` | Tankan 企業物価見通し 1Y ahead (全企業・全産業平均) — preset `inflation-tankan-1y` | Quarterly |
+| BOJ | CO (`boj_client.py --tankan-price-outlook`) | `TK99F0000205HCQ00000` | Tankan 企業物価見通し 3Y ahead — preset `inflation-tankan-3y` | Quarterly |
+| BOJ | CO (`boj_client.py --tankan-price-outlook`) | `TK99F0000206HCQ00000` | Tankan 企業物価見通し 5Y ahead — preset `inflation-tankan-5y` | Quarterly |
+
 ### forex
 
 | Source | DB/Preset | Code/ID | Name | Frequency |
@@ -112,18 +137,19 @@ investment verdicts. The output is designed for immediate handoff to
 
 Map `--indicators` to BOJ and 統計DB series:
 
-| Input | BOJ series | 統計DB presets |
-|-------|-----------|---------------|
-| `rates` | FM01:STRDCLUCON | jgb10y |
-| `inflation` | PR01:(discover) | cpi, core-cpi |
-| `growth` | (none) | ip, unemployment, gdp (quarterly), coincident-index, leading-index, lagging-index, machine-orders, tertiary-index |
-| `labor` | (none) | real-wages, job-ratio (fiscal-year) |
-| `consumption` | (none) | retail-sales, service-sales |
-| `money` | MD02:(discover) | (none) |
-| `tankan` | CO:(discover) | (none) |
-| `forex` | FM08:(discover), FM09:(discover) | (none) |
-| `balance` | BP01:(discover) | (none) |
-| `all` | All BOJ series above | All presets above |
+| Input | BOJ series | 統計DB presets | ECB series | MoF snapshot |
+|-------|-----------|----------------|-----------|--------------|
+| `rates` | FM01:STRDCLUCON | jgb10y | — | — |
+| `inflation` | PR01:(discover) | cpi, core-cpi | — | — |
+| `growth` | (none) | ip, unemployment, gdp (quarterly), coincident-index, leading-index, lagging-index, machine-orders, tertiary-index | — | — |
+| `labor` | (none) | real-wages, job-ratio (fiscal-year) | — | — |
+| `consumption` | (none) | retail-sales, service-sales | — | — |
+| `money` | MD02:(discover) | (none) | — | — |
+| `tankan` | CO:(discover) | (none) | — | — |
+| `real-rates` | CO `--tankan-price-outlook --horizons 1,3,5` | (none) | `M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA` | `jgbi-auction-history.yml` |
+| `forex` | FM08:(discover), FM09:(discover) | (none) | — | — |
+| `balance` | BP01:(discover) | (none) | — | — |
+| `all` | All BOJ series above | All presets above | ECB JP real 10Y | MoF JGBi snapshot |
 
 For BOJ series marked "(discover via getMetadata)", the data-fetcher agent
 must first call the BOJ API's `getMetadata` endpoint for the given DB to
@@ -146,6 +172,7 @@ base_path: {absolute path to investing-toolkit/scripts/}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db PR01 --code {discovered} --start-date {YYYYMM}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db MD02 --code {discovered} --start-date {YYYYMM}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db CO --code {discovered} --start-date {YYYYMM}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --tankan-price-outlook --horizons 1,3,5 --periods 8
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM08 --code {discovered} --start-date {YYYYMM}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db FM09 --code {discovered} --start-date {YYYYMM}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/boj_client.py --db BP01 --code {discovered} --start-date {YYYYMM}
@@ -154,7 +181,9 @@ base_path: {absolute path to investing-toolkit/scripts/}
 Return raw JSON from each fetch request.
 ```
 
-Only include fetch requests for the resolved indicator groups.
+Only include fetch requests for the resolved indicator groups. The
+`--tankan-price-outlook` preset is used for the `real-rates` group's
+Path E (BOJ Tankan 企業物価見通し).
 
 ### Step 3 — Launch data-fetcher agent for 統計DB series
 
@@ -184,11 +213,40 @@ Return raw JSON from each fetch request.
 Only include fetch requests for the resolved indicator groups. Use
 `--cycle quarterly` for GDP.
 
+### Step 3b — Launch data-fetcher agent for ECB series (`real-rates` group only)
+
+Launch `../../agents/data-fetcher.md` with ECB fetch requests when the
+resolved indicator set contains `real-rates`:
+
+```
+### Task
+Fetch Japan real 10Y yield (ex-post, monthly) from ECB Data Portal.
+Return structured JSON. Do not analyze or interpret.
+
+### Scripts
+base_path: {absolute path to investing-toolkit/scripts/}
+
+### Fetch Requests
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ecb_client.py --series M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA --periods 24
+
+### Output Format
+Return raw JSON from the fetch request.
+```
+
+**MoF JGBi auction data** is not a live fetch — it is a static
+human-curated snapshot at `references/jgbi-auction-history.yml`. The
+skill can read that YAML directly as the quarterly primary-source
+anchor for the `real-rates` group. v1.11.0 will add an automated
+MoF scraper; until then, update the YAML manually every ~3 months
+when a new 10Y JGBi auction is published at
+https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/.
+
 ### Step 4 — Merge into unified output
 
-Combine BOJ and 統計DB results into a single JSON structure grouped by
-indicator group. Each data point retains its `"_source"` tag (`"boj"` or
-`"estat_dashboard"`).
+Combine BOJ, 統計DB, ECB, and (where applicable) MoF snapshot results
+into a single JSON structure grouped by indicator group. Each data
+point retains its `"_source"` tag (`"boj"`, `"estat_dashboard"`,
+`"ecb_data_portal"`, or `"mof_snapshot"`).
 
 ---
 
@@ -231,6 +289,13 @@ indicator group. Each data point retains its `"_source"` tag (`"boj"` or
     "tankan": {
       "tankan_di": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" }
     },
+    "real_rates": {
+      "real_10y_monthly":    { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "ecb_data_portal" },
+      "real_10y_auction":    { "latest": { "date": "2025-08-15", "value": 0.078, "issue_no": 30 }, "_source": "mof_snapshot" },
+      "inflation_tankan_1y": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" },
+      "inflation_tankan_3y": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" },
+      "inflation_tankan_5y": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" }
+    },
     "forex": {
       "usdjpy": { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" },
       "reer":   { "latest": { ... }, "prior": { ... }, "direction": "...", "_source": "boj" }
@@ -256,6 +321,8 @@ lag, interpretation, Japan-specific context, common pitfalls):
 - `references/indicators-labor.md` — 雇用系: Unemployment, Real Wages, Job Ratio
 - `references/indicators-consumption.md` — 消費系: Retail Sales, Service Industry Sales
 - `references/indicators-other.md` — その他: M2, TANKAN, USD/JPY, REER, Current Account + Tier 2
+- `references/indicators-japan-real-rates.md` — 実質金利系: multi-source v1.10.0 framework (ECB monthly + MoF JGBi auction + BOJ Tankan 企業物価見通し)
+- `references/jgbi-auction-history.yml` — 財務省 JGBi 10Y auction primary-source anchor snapshot (human-curated)
 - `references/japan-boj-db-catalog.md` — Complete BOJ DB catalog (Tier 3, bilingual)
 
 ---
@@ -284,6 +351,9 @@ lag, interpretation, Japan-specific context, common pitfalls):
 | Tertiary Index (統計DB) | ~6 weeks after reference month |
 | Retail Sales (統計DB) | ~4 weeks after reference month |
 | Service Industry Sales (統計DB) | ~6 weeks after reference month |
+| Real 10Y JP yield (ECB) | ~1-3 months after reference month (ex-post; CPI realisation lag) |
+| Tankan 企業物価見通し (BOJ CO) | ~1 week after quarter-end survey (same cadence as Tankan DI) |
+| JGBi auction real yield (MoF snapshot) | Same day as auction (~4 auctions/year); manual YAML refresh until v1.11.0 scraper |
 
 Always check the `latest.date` field to confirm the reference period.
 
