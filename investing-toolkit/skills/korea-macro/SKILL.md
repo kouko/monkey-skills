@@ -38,7 +38,7 @@ KEYSTAT — deferred.
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `labor`, `trade`, `money`, `sentiment`, `markets`, `fx`, `realestate`, or `all` |
+| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `labor`, `trade`, `money`, `sentiment`, `cycle`, `markets`, `fx`, `realestate`, `demographics`, or `all` |
 
 ---
 
@@ -51,6 +51,7 @@ KEYSTAT — deferred.
 | policy-rate | K051 | BOK Base Rate (기준금리) | Daily |
 | call-rate | K052 | Call Rate Overnight (콜금리 1일) | Daily |
 | cd-91d | K053 | CD 91-Day Rate (CD 91일) | Daily |
+| koribor-3m | K063 | KORIBOR 3M (3개월) | Daily |
 | treasury-3y | K056 | Treasury Bond 3Y (국고채 3년) | Daily |
 | treasury-5y | K062 | Treasury Bond 5Y (국고채 5년) | Daily |
 | corp-bond-3y | K057 | Corporate Bond 3Y AA- (회사채 AA-) | Daily |
@@ -73,6 +74,9 @@ KEYSTAT — deferred.
 | gdp-nominal | K257 | GDP Nominal (명목 시장가격) | Quarterly |
 | ipi | K220 | All-Industry Production Index (전산업생산지수) | Monthly |
 | manufacturing | K201 | Manufacturing Production Index (제조업 생산지수) | Monthly |
+| private-consumption | K259 | Private Consumption (민간소비) | Quarterly |
+| equipment-investment | K260 | Equipment Investment (설비투자) | Quarterly |
+| construction-investment | K261 | Construction Investment (건설투자) | Quarterly |
 
 ### labor
 
@@ -87,20 +91,28 @@ KEYSTAT — deferred.
 |--------|------|------|-----------|
 | current-account | K351 | Current Account (경상수지 백만USD) | Monthly |
 | terms-of-trade | K360 | Terms of Trade Index (순상품교역조건지수) | Monthly |
+| goods-exports | K462 | Goods Exports (재화수출, national accounts) | Quarterly |
 
 ### money
 
 | Preset | Code | Name | Frequency |
 |--------|------|------|-----------|
+| m1 | K002 | M1 Narrow Money (협의통화 평잔) | Monthly |
 | m2 | K003 | M2 Broad Money (광의통화 M2 평잔) | Monthly |
+| lf | K004 | Lf Financial Institution Liquidity (금융기관유동성) | Monthly |
 | household-credit | K007 | Household Credit (가계신용) | Quarterly |
 
-### sentiment (incl. monthly GDP proxy CI pair)
+### sentiment (survey-based)
 
 | Preset | Code | Name | Frequency |
 |--------|------|------|-----------|
 | consumer-sentiment | K252 | Consumer Sentiment Index (소비자심리지수) | Monthly |
 | economic-sentiment | K269 | Economic Sentiment Index (경제심리지수) | Monthly |
+
+### cycle (monthly GDP proxy CI pair)
+
+| Preset | Code | Name | Frequency |
+|--------|------|------|-----------|
 | leading-cycle | K254 | Leading CI Cyclical Component (선행지수순환변동치) (**monthly GDP proxy leading**) | Monthly |
 | coincident-cycle | K253 | Coincident CI Cyclical Component (동행지수순환변동치) (**monthly GDP proxy**) | Monthly |
 
@@ -116,12 +128,24 @@ KEYSTAT — deferred.
 | Preset | Code | Name | Frequency |
 |--------|------|------|-----------|
 | krw-usd | DEXKOUS | KRW/USD Exchange Rate (원달러 환율) | Daily (via FRED) |
+| krw-jpy | K153 | KRW/JPY Exchange Rate per 100 yen (원/일본엔) | Daily |
+| krw-eur | K154 | KRW/EUR Exchange Rate (원/유로) | Daily |
+| krw-cny | K156 | KRW/CNY Exchange Rate (원/위안 종가) | Daily |
+| fx-reserves | K155 | FX Reserves Total (외환보유액 합계) | Monthly |
 
 ### realestate
 
 | Preset | Code | Name | Frequency |
 |--------|------|------|-----------|
 | housing-price | K407 | Housing Price Index (주택매매가격지수) | Monthly |
+
+### demographics
+
+| Preset | Code | Name | Frequency |
+|--------|------|------|-----------|
+| population | K451 | Estimated Population (추계인구) | Annual |
+| aging-ratio | K460 | Elderly Population Ratio ≥65 (고령인구비율) | Annual |
+| fertility-rate | K461 | Total Fertility Rate (합계출산율) | Annual |
 
 ---
 
@@ -131,34 +155,36 @@ KEYSTAT — deferred.
 
 | Input | Presets |
 |-------|--------|
-| `rates` | policy-rate, call-rate, cd-91d, treasury-3y, treasury-5y, corp-bond-3y |
+| `rates` | policy-rate, call-rate, cd-91d, koribor-3m, treasury-3y, treasury-5y, corp-bond-3y |
 | `inflation` | cpi, core-cpi, ppi, import-pi, export-pi |
-| `growth` | gdp-qoq, gdp-nominal, ipi, manufacturing |
+| `growth` | gdp-qoq, gdp-nominal, ipi, manufacturing, private-consumption, equipment-investment, construction-investment |
 | `labor` | unemployment, employment-rate |
-| `trade` | current-account, terms-of-trade |
-| `money` | m2, household-credit |
-| `sentiment` | consumer-sentiment, economic-sentiment, leading-cycle, coincident-cycle |
+| `trade` | current-account, terms-of-trade, goods-exports |
+| `money` | m1, m2, lf, household-credit |
+| `sentiment` | consumer-sentiment, economic-sentiment |
+| `cycle` | leading-cycle, coincident-cycle |
 | `markets` | kospi, kosdaq |
-| `fx` | krw-usd |
+| `fx` | krw-usd, krw-jpy, krw-eur, krw-cny, fx-reserves |
 | `realestate` | housing-price |
+| `demographics` | population, aging-ratio, fertility-rate |
 
 ### Step 2 — Launch data-fetcher agents
 
 ```
 ### Fetch Requests (rates batch)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset policy-rate,call-rate,cd-91d,treasury-3y,treasury-5y,corp-bond-3y
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset policy-rate,call-rate,cd-91d,koribor-3m,treasury-3y,treasury-5y,corp-bond-3y
 
 ### Fetch Requests (inflation batch)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset cpi,core-cpi,ppi,import-pi,export-pi
 
 ### Fetch Requests (growth + labor)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset gdp-qoq,gdp-nominal,ipi,manufacturing,unemployment,employment-rate
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset gdp-qoq,gdp-nominal,ipi,manufacturing,private-consumption,equipment-investment,construction-investment,unemployment,employment-rate
 
-### Fetch Requests (trade + money + sentiment)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset current-account,terms-of-trade,m2,household-credit,consumer-sentiment,economic-sentiment,leading-cycle,coincident-cycle
+### Fetch Requests (trade + money + sentiment + cycle)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset current-account,terms-of-trade,goods-exports,m1,m2,lf,household-credit,consumer-sentiment,economic-sentiment,leading-cycle,coincident-cycle
 
-### Fetch Requests (markets + fx + real estate)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset kospi,kosdaq,krw-usd,housing-price
+### Fetch Requests (markets + fx + real estate + demographics)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fdr_client.py --preset kospi,kosdaq,krw-usd,krw-jpy,krw-eur,krw-cny,fx-reserves,housing-price,population,aging-ratio,fertility-rate
 ```
 
 ### Step 3 — Merge into unified output
@@ -175,9 +201,12 @@ All data points retain `_source`: `"fdr_ecos"` (or `"fred"` for krw-usd).
 - `references/indicators-growth.md` — 성장 Growth
 - `references/indicators-labor.md` — 고용 Labor
 - `references/indicators-trade.md` — 무역 Trade
-- `references/indicators-sentiment.md` — 경기 Sentiment / Cycle
+- `references/indicators-sentiment.md` — 센티먼트 Sentiment (CSI/ESI, survey-based)
+- `references/indicators-cycle.md` — 경기종합지수 Cycle CI pair (monthly GDP proxy)
+- `references/indicators-demographics.md` — 인구 Demographics
 - `references/indicators-other.md` — Markets, FX, Money, Real Estate
 - `references/sources.md` — Primary sources
+- `docs/bok-ecos-keystat-catalog.md` — Full 98-code KEYSTAT catalogue
 
 ---
 
@@ -188,7 +217,13 @@ All data points retain `_source`: `"fdr_ecos"` (or `"fred"` for krw-usd).
 | Series | Typical lag |
 |--------|-------------|
 | BOK Base Rate (K051) | 1 business day (daily) |
-| Call Rate, CD, Bonds (K052-K062) | 1 business day (daily) |
+| Call Rate, CD, KORIBOR, Bonds (K052-K063) | 1 business day (daily) |
+| KRW/JPY, KRW/EUR, KRW/CNY (K153-K156) | 1 business day (daily) |
+| FX Reserves (K155) | ~1 week after month-end |
+| Private Consumption, Investment (K259-K261) | ~8 weeks after quarter-end |
+| Goods Exports (K462) | ~8 weeks after quarter-end |
+| Population / Aging / Fertility (K451/K460/K461) | ~6 months (annual series) |
+| M1, Lf (K002, K004) | ~4 weeks after month-end |
 | KOSPI, KOSDAQ (K101-K102) | 1 business day (daily) |
 | KRW/USD via FRED (DEXKOUS) | 1-2 business days |
 | CPI, Core CPI (K401, K405) | ~3-4 weeks after month-end |

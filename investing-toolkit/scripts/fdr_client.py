@@ -70,6 +70,10 @@ PRESETS: dict[str, dict] = {
         "code": "K057", "name": "Corporate Bond 3Y AA- (회사채 3년 AA-)",
         "start": "1999", "source": "keystat",
     },
+    "koribor-3m": {
+        "code": "K063", "name": "KORIBOR 3M (3개월)",
+        "start": "2004", "source": "keystat",
+    },
     # --- Inflation ---
     "cpi": {
         "code": "K401", "name": "CPI Total Index (소비자물가 총지수)",
@@ -108,6 +112,18 @@ PRESETS: dict[str, dict] = {
         "code": "K201", "name": "Manufacturing Production Index (제조업 생산지수)",
         "start": "2000", "source": "keystat",
     },
+    "private-consumption": {
+        "code": "K259", "name": "Private Consumption (민간소비)",
+        "start": "2000", "source": "keystat",
+    },
+    "equipment-investment": {
+        "code": "K260", "name": "Equipment Investment (설비투자)",
+        "start": "2000", "source": "keystat",
+    },
+    "construction-investment": {
+        "code": "K261", "name": "Construction Investment (건설투자)",
+        "start": "2000", "source": "keystat",
+    },
     # --- Labor ---
     "unemployment": {
         "code": "K303", "name": "Unemployment Rate % (실업률)",
@@ -126,16 +142,28 @@ PRESETS: dict[str, dict] = {
         "code": "K360", "name": "Terms of Trade Index (순상품교역조건지수)",
         "start": "1980", "source": "keystat",
     },
+    "goods-exports": {
+        "code": "K462", "name": "Goods Exports (재화수출, national accounts)",
+        "start": "2000", "source": "keystat",
+    },
     # --- Money ---
+    "m1": {
+        "code": "K002", "name": "M1 Narrow Money (협의통화 평잔)",
+        "start": "2003", "source": "keystat",
+    },
     "m2": {
         "code": "K003", "name": "M2 Broad Money (광의통화 M2 평잔)",
+        "start": "2003", "source": "keystat",
+    },
+    "lf": {
+        "code": "K004", "name": "Lf Financial Institution Liquidity (금융기관유동성)",
         "start": "2003", "source": "keystat",
     },
     "household-credit": {
         "code": "K007", "name": "Household Credit (가계신용)",
         "start": "2002", "source": "keystat",
     },
-    # --- Sentiment / Cycle ---
+    # --- Sentiment (survey-based) ---
     "consumer-sentiment": {
         "code": "K252", "name": "Consumer Sentiment Index (소비자심리지수)",
         "start": "2008", "source": "keystat",
@@ -144,6 +172,7 @@ PRESETS: dict[str, dict] = {
         "code": "K269", "name": "Economic Sentiment Index (경제심리지수)",
         "start": "2008", "source": "keystat",
     },
+    # --- Cycle (CI cyclical components — monthly GDP proxy) ---
     "leading-cycle": {
         "code": "K254", "name": "Leading CI Cyclical Component (선행지수순환변동치)",
         "start": "2000", "source": "keystat",
@@ -161,15 +190,44 @@ PRESETS: dict[str, dict] = {
         "code": "K102", "name": "KOSDAQ Index (코스닥지수)",
         "start": "1999", "source": "keystat",
     },
-    # --- FX (via FRED CSV, no auth) ---
+    # --- FX ---
     "krw-usd": {
         "code": "DEXKOUS", "name": "KRW/USD Exchange Rate (원달러 환율)",
         "start": "2000", "source": "fred",
+    },
+    "krw-jpy": {
+        "code": "K153", "name": "KRW/JPY Exchange Rate per 100 yen (원/일본엔)",
+        "start": "2000", "source": "keystat",
+    },
+    "krw-eur": {
+        "code": "K154", "name": "KRW/EUR Exchange Rate (원/유로)",
+        "start": "2000", "source": "keystat",
+    },
+    "krw-cny": {
+        "code": "K156", "name": "KRW/CNY Exchange Rate (원/위안 종가)",
+        "start": "2015", "source": "keystat",
+    },
+    "fx-reserves": {
+        "code": "K155", "name": "FX Reserves Total (외환보유액 합계)",
+        "start": "1990", "source": "keystat",
     },
     # --- Real Estate ---
     "housing-price": {
         "code": "K407", "name": "Housing Price Index (주택매매가격지수)",
         "start": "2021", "source": "keystat",
+    },
+    # --- Demographics ---
+    "population": {
+        "code": "K451", "name": "Estimated Population (추계인구)",
+        "start": "1990", "source": "keystat",
+    },
+    "aging-ratio": {
+        "code": "K460", "name": "Elderly Population Ratio ≥65 (고령인구비율)",
+        "start": "1990", "source": "keystat",
+    },
+    "fertility-rate": {
+        "code": "K461", "name": "Total Fertility Rate (합계출산율)",
+        "start": "1990", "source": "keystat",
     },
 }
 

@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.7.2
+**Version**: 1.8.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -21,7 +21,7 @@ GDP proxy convention:
 | US | Pre-aggregated Fed nowcasts | `nowcast` group: `GDPNOW`, `CFNAI`, `WEI`, `USALOLITOAASTSAM` (OECD CLI) |
 | JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: `coincident-index` (the proxy), `leading-index`, `lagging-index` |
 | TW | Pre-aggregated NDC + DGBAS | `signal` (五色景氣燈號 — Taiwan 特色), `leading-index`, `coincident-index` |
-| KR | Pre-aggregated BOK ECOS | `coincident-cycle` K253 (the proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
+| KR | Pre-aggregated BOK ECOS | `cycle` group: `coincident-cycle` K253 (the proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
 | CN | Raw components (no consensus composite) | 三大数据: `industrial-yoy`, `retail-yoy`, `fai-yoy` + `services-production-yoy` |
 
 US / JP / TW / KR all serve **pre-aggregated** values from the respective
@@ -56,7 +56,7 @@ router):
 | `us-macro` | data | US macro via FRED (25 series incl. `nowcast` group) | v1.7.0 |
 | `japan-macro` | data | Japan macro via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio) | v1.7.0 |
 | `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
-| `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
+| `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (**41 indicators, 12 groups**; full 98-code catalogue in `docs/`) | v1.8.0 |
 | `china-macro` | data | China macro via NBS new-SPA API + PBOC + FRED + yfinance (34 indicators) | v1.7.1 |
 | `us-stock-snapshot` | data | yfinance price + info for US tickers | v1.0.0 |
 | `taiwan-stock-snapshot` | data | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
@@ -173,7 +173,9 @@ live in `domain-teams:investing-team`.
 
 ## Version Highlights
 
-- **v1.7.2** (current) — Router sync + Layer column
+- **v1.8.0** (current) — Korea-macro catalogue + structural refactor + 13 Tier-B presets (28 → 41 indicators)
+- **v1.7.3** — Taiwan + Korea monthly GDP proxy tagging (5-market framework complete)
+- **v1.7.2** — Router sync + Layer column
 - **v1.7.1** — China monthly GDP proxy tagging (Tier 2 parity with US/JP)
 - **v1.7.0** — Monthly GDP proxies for US (nowcast group) + JP (CI trio)
 - **v1.6.0** — China macro (34 indicators via NBS direct + PBOC + FRED + yfinance)

@@ -148,6 +148,146 @@ The most important exchange rate for Korea. KRW/USD is:
 
 ---
 
+## krw-jpy / krw-eur / krw-cny: KRW cross rates
+
+- **Series codes**: K153 (KRW/JPY per 100 yen), K154 (KRW/EUR), K156 (KRW/CNY)
+- **Source**: Bank of Korea via FinanceDataReader (BOK official closing rates)
+- **Unit**: KRW per unit of foreign currency (KRW per 100 JPY for K153)
+- **Frequency**: Daily (3:30pm KST close)
+- **Publication lag**: 1 business day
+- **History**: K153/K154 from 2000; K156 from 2015 (direct KRW/CNY quote)
+
+**What they measure**: BOK's official closing FX fixing rates for the
+three major KRW cross pairs beyond USD.
+
+**How to interpret**:
+- **KRW/JPY** — most-watched cross for competitive exports. Samsung / Hyundai
+  compete directly with Sony / Toyota; KRW strength vs JPY compresses
+  Korean export margins.
+- **KRW/EUR** — matters for EU-bound exports (autos, shipbuilding, semiconductors).
+- **KRW/CNY** — reflects China supply-chain dynamics; KRW weakness vs CNY
+  often signals 재화수출 to China softening.
+
+**Market significance**: ⭐⭐ (JPY) / ⭐ (EUR / CNY)
+KRW/JPY is the most cited after KRW/USD by local brokers. Bank of Korea
+also watches the **통화지수** (REER / NEER basket) which uses these.
+
+**When to use**: Competitive-devaluation analysis, chaebol earnings
+sensitivity, China-KR trade balance decomposition.
+
+**Common pitfalls**:
+- K153 is per **100 yen**, not per 1 yen — read carefully.
+- K152 (KRW/USD BOK official) is an alternative to FRED DEXKOUS; we
+  continue to use FRED for symmetry with other country skills.
+
+---
+
+## fx-reserves: 외환보유액 합계 / FX Reserves Total
+
+- **Series code**: K155 (ECOS-KEYSTAT)
+- **Source**: Bank of Korea via FinanceDataReader
+- **Unit**: Million USD
+- **Frequency**: Monthly (end-of-month)
+- **Publication lag**: ~5-7 days after month-end
+- **History**: From 1990
+
+**What it measures**: Korea's total foreign exchange reserves — USD-denominated
+sum of securities, deposits, gold, SDRs, and IMF reserve position held by
+the BOK.
+
+**How to interpret**:
+- Rising → BOK accumulating FX (often via trade surplus + less intervention).
+- Falling → BOK depleting reserves (FX intervention to defend KRW, or USD-
+  denominated asset repricing during strong dollar periods).
+- Historical peaks: ~$469B in 2022; fell to ~$400B during 2022 USD surge
+  when BOK intervened heavily.
+
+**Market significance**: ⭐⭐
+Signals BOK's willingness and capacity to intervene in FX. Large monthly
+drops (e.g., -$10B) coincide with active smoothing operations.
+
+**When to use**: BOK intervention detection, FX defence capacity
+assessment, sovereign credit rating input (S&P / Moody's track reserves/GDP ratio).
+
+**Korea-specific context**:
+- Korea sits in the upper tier globally but is dwarfed by JP ($1.2T+) and
+  CN ($3.2T+). Reserves/M2 ratio is ~15%, comfortable but not abundant.
+- National Pension Service (NPS) holdings are NOT included — only BOK-managed reserves.
+
+**Common pitfalls**:
+- The value is in USD; valuation effect (USD strength → EUR/JPY reserve
+  components shrink in USD terms) can cause headline swings not reflecting
+  policy intervention. Check BOK commentary to separate intervention from
+  valuation.
+
+---
+
+## m1: 협의통화 M1 / M1 Narrow Money
+
+- **Series code**: K002 (ECOS-KEYSTAT)
+- **Source**: Bank of Korea via FinanceDataReader
+- **Unit**: Billion KRW (average balance, original series)
+- **Frequency**: Monthly
+- **Publication lag**: ~4 weeks after reference month
+- **History**: From 2003
+
+**What it measures**: Narrow money — currency in circulation plus demand
+deposits and instantly-withdrawable savings. The most liquid monetary
+aggregate; measures transaction balances.
+
+**How to interpret**:
+- M1 YoY growth accelerating → Liquidity flowing into transaction
+  accounts (rather than term deposits) — typically precedes asset-price
+  rallies or consumption pickup.
+- M1/M2 ratio falling → Funds moving into longer-maturity deposits,
+  suggesting rate-sensitive savers moving away from demand accounts.
+
+**Market significance**: ⭐⭐
+M1 leads M2 at turning points — accelerating M1 often signals
+imminent risk-asset rallies (KOSPI / real estate). BOK watches M1/M2
+spread for policy transmission feedback.
+
+**When to use**: Liquidity regime detection, KOSPI beta rotation timing,
+BOK policy transmission check.
+
+**Common pitfalls**: Values in billions of KRW; use YoY growth rather
+than level. Not seasonally adjusted — watch for Chuseok / Lunar New
+Year distortions.
+
+---
+
+## lf: Lf 금융기관유동성 / Financial Institution Liquidity
+
+- **Series code**: K004 (ECOS-KEYSTAT)
+- **Source**: Bank of Korea via FinanceDataReader
+- **Unit**: Billion KRW
+- **Frequency**: Monthly
+- **Publication lag**: ~6 weeks after reference month
+- **History**: From 2003
+
+**What it measures**: Lf (금융기관유동성) — a broader liquidity
+aggregate than M2 that adds financial institution bonds and commercial
+paper. BOK uses Lf as its "near-M3" tracker since Korea's M3 was
+discontinued.
+
+**How to interpret**:
+- Lf growth > M2 growth → Liquidity is expanding primarily through
+  non-bank financial channels (insurance, securities companies).
+- Lf growth < M2 growth → Bank liquidity expansion dominates;
+  non-bank FIs deleveraging.
+
+**Market significance**: ⭐
+Niche — mainly used in BOK research papers. Less market-moving than M2.
+
+**When to use**: Comprehensive liquidity assessment when analyzing
+non-bank FI stress (e.g., 2022 Legoland crisis exposed 증권사 CP
+distress that was visible in Lf but not M2).
+
+**Common pitfalls**: Ambiguous release schedule (sometimes bundled
+with M2, sometimes separate). Always check latest release date.
+
+---
+
 ## m2: 광의통화 M2 / M2 Broad Money
 
 - **Series code**: K003 (ECOS-KEYSTAT)

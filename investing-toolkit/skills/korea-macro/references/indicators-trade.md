@@ -108,3 +108,48 @@ price spikes.
 - The index is derived from export PI / import PI. If both indices are
   from the same base year, the ratio is straightforward. Check for base
   year consistency.
+
+---
+
+## goods-exports: 재화수출 / Goods Exports (national accounts basis)
+
+- **Series code**: K462 (ECOS-KEYSTAT)
+- **Source**: Bank of Korea via FinanceDataReader
+- **Unit**: QoQ growth % (SA, constant prices)
+- **Frequency**: Quarterly
+- **Publication lag**: ~8 weeks after quarter-end (national accounts release)
+- **History**: From 2000
+
+**What it measures**: Quarterly change in **goods exports** from the
+national accounts (GDP decomposition). Distinct from KITA's monthly customs
+trade data — this is the expenditure-side GDP component used to calculate
+net exports' contribution to GDP growth.
+
+**How to interpret**:
+- Positive QoQ SA → Goods exports contributing positively to Q GDP growth
+- Negative QoQ SA → Export drag on GDP (seen 2022-2024 during semiconductor
+  cycle downturn)
+- Trend deceleration → Early signal of KR manufacturing profit squeeze
+  (Samsung / SK Hynix earnings)
+
+**Market significance**: ⭐⭐⭐
+Korea's export-to-GDP ratio is among the world's highest (~40%). Goods
+exports are the single most important cyclical component. Sustained
+negative prints historically coincide with KOSPI earnings recessions.
+
+**When to use**: GDP decomposition, semiconductor cycle tracking
+(semiconductors = ~20% of goods exports), KOSPI earnings forecasting.
+
+**Korea-specific context**:
+- Semiconductors (~20%), autos (~10%), petrochemicals (~10%), ships (~5%),
+  display (~5%) dominate goods exports.
+- Quarterly national accounts basis differs from KITA monthly customs
+  data — NA includes both goods AND services and is seasonally adjusted
+  at constant prices.
+
+**Common pitfalls**:
+- Quarterly, not monthly — cannot be used for MoM signal. For monthly
+  exports, MOTIE/KITA publish customs-based exports not currently in
+  our skill (candidate for future addition if direct ECOS API is added).
+- The "GDP-basis" export value differs from headline customs exports
+  (value + timing + coverage differences).

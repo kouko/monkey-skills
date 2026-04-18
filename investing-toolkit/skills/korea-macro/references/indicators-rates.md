@@ -242,3 +242,38 @@ crisis) signal systemic credit stress.
   Korean agencies tend to rate higher than global agencies for the same issuer.
 - The corporate bond market is less liquid than KTBs. Spreads can be
   sticky and may not reflect real-time credit conditions.
+
+---
+
+## koribor-3m: KORIBOR 3개월 / KORIBOR 3-Month
+
+- **Series code**: K063 (ECOS-KEYSTAT)
+- **Source**: Korea Federation of Banks via BOK ECOS
+- **Unit**: Percent (%)
+- **Frequency**: Daily (business days)
+- **Publication lag**: 1 business day
+- **History**: From 2004 (~5,100 observations)
+
+**What it measures**: Korea Interbank Offered Rate for 3-month term — the
+rate at which Korean banks offer unsecured funds to each other. Korean
+analogue of USD LIBOR / JPY SHIBOR / JP TIBOR.
+
+**How to interpret**:
+- KORIBOR 3M − BOK Base Rate → **interbank funding stress premium**. Normal
+  times: 20-50 bps. Crisis periods: 100+ bps.
+- Rising > policy expectations → funding stress (2008, 2022 Legoland).
+- Converging toward base rate → easing funding conditions.
+
+**Market significance**: ⭐⭐
+Cross-market analogue of JP SHIBOR 3M in our `japan-macro` skill.
+Bank net interest margins, credit card revolving rates, and many
+corporate loans are KORIBOR-linked.
+
+**When to use**: Korean interbank funding-stress detection, credit-card
+sector margin analysis, BOK policy transmission check.
+
+**Common pitfalls**:
+- KORIBOR reformed in 2012 to use actual transactions rather than poll-based
+  quotes (post-LIBOR scandal era). Pre-2012 data uses quote-based methodology.
+- KORIBOR is less liquid than CD 91일 (K053) — for most analytical purposes,
+  CD is the more common benchmark in Korea.

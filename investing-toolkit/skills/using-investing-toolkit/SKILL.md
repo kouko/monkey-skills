@@ -22,7 +22,7 @@ Skills are organised in three layers:
 | `us-macro` | data | US macro indicators via FRED (25 series incl. `nowcast` group + reference doc) | v1.7.0 |
 | `japan-macro` | data | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
 | `taiwan-macro` | data | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
-| `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
+| `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (41 indicators, 12 groups; full KEYSTAT catalogue in `docs/`) | v1.8.0 |
 | `china-macro` | data | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
 | `us-stock-snapshot` | data | yfinance price + info snapshot for a US ticker | v1.0.0 |
 | `taiwan-stock-snapshot` | data | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
@@ -65,7 +65,7 @@ Skills are organised in three layers:
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All skills through v1.7.1 are now available.
+All skills through v1.8.0 are now available.
 
 ---
 
@@ -79,7 +79,7 @@ indicators labelled consistently across skills:
 | US | Pre-aggregated Fed nowcasts | `nowcast` group: `GDPNOW`, `CFNAI`, `WEI`, `USALOLITOAASTSAM` (OECD CLI) |
 | JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: `coincident-index` (monthly GDP proxy), `leading-index`, `lagging-index` |
 | TW | Pre-aggregated NDC + DGBAS | `signal` (五色景氣燈號 — Taiwan 特色), `leading-index`, `coincident-index` |
-| KR | Pre-aggregated BOK ECOS | `coincident-cycle` K253 (monthly GDP proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
+| KR | Pre-aggregated BOK ECOS | `cycle` group: `coincident-cycle` K253 (the proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
 | CN | Raw components (no authoritative composite) | 三大数据: `industrial-yoy`, `retail-yoy`, `fai-yoy` + `services-production-yoy` companion |
 
 US / JP / TW / KR all serve **pre-aggregated** values from the respective
