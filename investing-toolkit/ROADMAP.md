@@ -201,7 +201,7 @@ adds the Tier 2 tagging + framework row + references preamble.
 
 **Scope**: Three-phase korea-macro upgrade — document the full BOK ECOS
 KEYSTAT catalogue (mirror of the v1.6.0 NBS tree work for CN), refactor
-the `sentiment` group, and add 13 Tier-B presets across 5 existing
+the `sentiment` group, and add 15 Tier-B presets across 5 existing
 groups + 1 new `demographics` group.
 
 ### Phase 1 — Catalogue
@@ -222,7 +222,7 @@ groups + 1 new `demographics` group.
   `indicators-sentiment.md`); `indicators-sentiment.md` retains only
   CSI/ESI
 
-### Phase 3 — Tier-B expansion (+13 presets, 28 → 41 indicators)
+### Phase 3 — Tier-B expansion (+15 presets, 28 → 43 indicators)
 - [x] `rates`: +`koribor-3m` (K063) — cross-market parallel of JP SHIBOR 3M
 - [x] `growth`: +`private-consumption` (K259), +`equipment-investment` (K260),
   +`construction-investment` (K261) — GDP expenditure breakdown

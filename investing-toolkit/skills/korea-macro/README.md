@@ -5,14 +5,14 @@ Korea macroeconomic data skill for investing-toolkit.
 
 ## Overview
 
-Fetches **41 Korea macroeconomic indicators** from the Bank of Korea (BOK)
+Fetches **43 Korea macroeconomic indicators** from the Bank of Korea (BOK)
 Economic Statistics System (ECOS) via FinanceDataReader and returns
 structured JSON grouped by **12 indicator groups**: rates, inflation,
 growth, labor, trade, money, sentiment, cycle, markets, fx, realestate,
 and demographics.
 
 **Catalogue**: See `docs/bok-ecos-keystat-catalog.md` for the complete
-98-code BOK ECOS KEYSTAT catalogue (41 as presets + ~50 Tier-B candidates
+98-code BOK ECOS KEYSTAT catalogue (43 as presets + ~50 Tier-B candidates
 + 7 skipped). The full BOK ECOS catalogue (10,000+ series) requires an
 API key — deferred to v1.9.0.
 
@@ -33,12 +33,12 @@ exposed via BOK ECOS KEYSTAT (probed K255/K256 — both map to other series).
 ### Why Single Script?
 
 FinanceDataReader wraps BOK ECOS's internal endpoint in a clean Python
-API. All 40 ECOS-KEYSTAT codes go through the same `fdr.DataReader()`
+API. All 42 ECOS-KEYSTAT codes go through the same `fdr.DataReader()`
 call. Only KRW/USD (`krw-usd`) uses a FRED CSV fallback for symmetry with
 other country skills (K152 is the BOK official KRW/USD alternative; see
 catalogue).
 
-## Indicators (41, v1.8.0)
+## Indicators (43, v1.8.0)
 
 ### Core (by group)
 
@@ -72,7 +72,7 @@ korea-macro/
 ├── SKILL.md
 ├── README.md
 ├── scripts/
-│   ├── fdr_client.py                      ← BOK ECOS via FDR (40 presets + 1 FRED)
+│   ├── fdr_client.py                      ← BOK ECOS via FDR (42 presets + 1 FRED)
 │   └── setup.sh
 ├── docs/                                   ← developer reference material (v1.8.0)
 │   ├── README.md
@@ -80,7 +80,7 @@ korea-macro/
 │   ├── bok-ecos-keystat.json              ← raw probe output
 │   └── tools/probe-keystat.py             ← re-probe script
 └── references/
-    ├── indicator-index.md                 ← 41 indicators trilingual index
+    ├── indicator-index.md                 ← 43 indicators trilingual index
     ├── indicators-rates.md
     ├── indicators-inflation.md
     ├── indicators-growth.md
@@ -108,7 +108,7 @@ uv run scripts/fdr_client.py --preset all
 ```bash
 cd investing-toolkit/scripts
 
-# All 41 presets
+# All 43 presets
 for p in policy-rate call-rate cd-91d koribor-3m treasury-3y treasury-5y corp-bond-3y \
   cpi core-cpi ppi import-pi export-pi \
   gdp-qoq gdp-nominal ipi manufacturing private-consumption equipment-investment construction-investment \
@@ -128,7 +128,7 @@ print(f'{p:25} {l.get(\"date\",\"?\")} {str(l.get(\"value\",\"\")):>12}')
 
 ### Latest verification
 
-**Date**: 2026-04-18 — **41 indicators**, all ACTIVE. 40 via
+**Date**: 2026-04-18 — **43 indicators**, all ACTIVE. 42 via
 ECOS-KEYSTAT + 1 via FRED DEXKOUS.
 
 **v1.7.3 additions** (2 tagged): `leading-cycle` + `coincident-cycle`

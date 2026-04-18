@@ -1,6 +1,6 @@
 # Korea Macro Indicator Index / 한국 매크로 지표 색인 / 韓國總經指標索引
 
-41 indicators across 12 groups. 40 via BOK ECOS KEYSTAT (`fdr_client`) +
+43 indicators across 12 groups. 42 via BOK ECOS KEYSTAT (`fdr_client`) +
 1 via FRED (`krw-usd` DEXKOUS).
 
 | Preset | 한국어 | English | Code | File |
