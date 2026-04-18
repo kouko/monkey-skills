@@ -181,6 +181,8 @@ Each observation retains `_source`:
 - `references/indicators-markets.md` — CSI300, SSEC, ChiNext, HSI, HSCEI
 - `references/indicators-fx.md` — CNY/USD, FX reserves
 - `references/sources.md` — Primary sources and akshare provenance
+- `references/nbs-indicator-catalog.md` — (dev ref) reverse-engineered NBS new-SPA API + full indicator tree (605 monthly + 116 quarterly + 2187 yearly leaves) + akshare↔NBS preset mapping for future `nbs_client.py` work
+- `references/nbs-tree-{monthly,quarterly,yearly}.txt` — raw indicator trees captured 2026-04-18 (grep-navigable)
 
 ---
 
