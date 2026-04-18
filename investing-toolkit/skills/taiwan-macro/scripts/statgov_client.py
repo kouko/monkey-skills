@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.32.3", "beautifulsoup4==4.13.4"]
+# dependencies = ["requests==2.33.1", "beautifulsoup4==4.14.3"]
 # ///
 """
 statgov_client.py — investing-toolkit stat.gov.tw chart data adapter

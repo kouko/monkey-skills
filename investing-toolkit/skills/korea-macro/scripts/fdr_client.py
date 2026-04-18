@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["finance-datareader==0.9.90", "requests==2.32.3", "beautifulsoup4==4.13.4", "lxml==5.4.0", "plotly==6.1.0"]
+# dependencies = ["finance-datareader==0.9.110", "requests==2.33.1", "beautifulsoup4==4.14.3", "lxml==6.0.4", "plotly==6.7.0"]
 # ///
 """
 fdr_client.py — investing-toolkit FinanceDataReader adapter for Korea macro

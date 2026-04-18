@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["yfinance==0.2.54", "pandas==2.2.3"]
+# dependencies = ["yfinance==1.3.0", "pandas==3.0.2", "curl_cffi>=0.15"]
 # ///
 """
 yfinance_client.py — investing-toolkit US stock data adapter
@@ -110,11 +110,19 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
         return cached
 
     import yfinance as yf
+    import pandas as pd
     t = yf.Ticker(ticker)
     hist = fetch_with_retry(lambda: t.history(period=period, interval=interval))
 
     if hist.empty:
         return {"error": f"No price data returned for {ticker}"}
+
+    # yfinance 1.x sometimes returns a trailing placeholder row with NaN OHLC
+    # for the current/upcoming session (esp. non-US indices like 000300.SS).
+    # Drop rows without a valid Close.
+    hist = hist[hist["Close"].notna()]
+    if hist.empty:
+        return {"error": f"No valid price rows for {ticker} (all Close are NaN)"}
 
     result = {
         "ticker": ticker.upper(),
@@ -129,7 +137,7 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
                 "high": round(float(row["High"]), 4),
                 "low": round(float(row["Low"]), 4),
                 "close": round(float(row["Close"]), 4),
-                "volume": int(row["Volume"]),
+                "volume": int(row["Volume"]) if pd.notna(row["Volume"]) else 0,
             }
             for idx, row in hist.iterrows()
         ],

@@ -1,0 +1,136 @@
+name: scraper-deps-monthly
+
+# Monthly cron: diff investing-toolkit scraper deps against PyPI latest,
+# open (or refresh) a tracking issue when any scraper-tagged lib is behind.
+#
+# Scope is intentionally narrow: we only alert when a lib on the
+# scraper allowlist (yfinance, akshare, finance-datareader, curl_cffi,
+# lxml, beautifulsoup4, finmind) is patch/minor/major behind. Non-scraper
+# pins (pandas, requests, plotly, xlrd) are excluded from the alert
+# surface so the issue stays signal-heavy.
+#
+# Triggered on the 1st of each month at 00:17 UTC (off-peak) and on
+# manual dispatch for testing.
+
+on:
+  schedule:
+    - cron: "17 0 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Scraper dependency freshness (alert)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate scraper drift report
+        id: report
+        run: |
+          python3 scripts/check-scraper-deps.py --scrapers-only --format markdown > report.md
+          echo "---"
+          cat report.md
+          # Detect whether any scraper drifted. --fail-on patch exits 1 if any
+          # scraper (any drift at all) is out of date; we capture the code
+          # rather than failing the workflow, so we still reach the "open
+          # issue" step downstream.
+          if python3 scripts/check-scraper-deps.py --scrapers-only --fail-on patch > /dev/null; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift=true"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or refresh tracking issue
+        if: steps.report.outputs.drift == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('report.md', 'utf8');
+            const title = '[scraper-deps] Monthly scraper freshness check';
+            const labels = ['scraper-deps', 'dependencies'];
+
+            // Find an open issue with our title (created by this workflow).
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: labels.join(','),
+              per_page: 100,
+            });
+
+            const match = existing.find(i => i.title === title);
+            const ts = new Date().toISOString().slice(0, 10);
+            const payload = `_Last checked: ${ts}_\n\n${body}`;
+
+            if (match) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: payload,
+              });
+              core.notice(`Updated existing issue #${match.number}`);
+            } else {
+              // Ensure labels exist (idempotent — ignore if already present)
+              for (const name of labels) {
+                try {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name,
+                    color: name === 'scraper-deps' ? 'fbca04' : 'ededed',
+                  });
+                } catch (_) { /* already exists */ }
+              }
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: payload,
+                labels,
+              });
+              core.notice(`Opened new issue #${created.number}`);
+            }
+
+      - name: Close tracking issue if all synced
+        if: steps.report.outputs.drift == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '[scraper-deps] Monthly scraper freshness check';
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'scraper-deps',
+              per_page: 100,
+            });
+            const match = existing.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: 'All scraper deps now synced with PyPI latest — closing.',
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+              core.notice(`Closed tracking issue #${match.number}`);
+            } else {
+              core.notice('All scraper deps synced — no open issue to close.');
+            }

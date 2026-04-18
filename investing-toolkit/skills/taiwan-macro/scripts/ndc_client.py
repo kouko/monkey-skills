@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.32.3"]
+# dependencies = ["requests==2.33.1"]
 # ///
 """
 ndc_client.py — investing-toolkit NDC (國發會) Business Cycle adapter

@@ -25,6 +25,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | `japan-macro` | Japan macro indicators via BOJ + e-Stat (20 series + bilingual reference) | v1.3.0 |
 | `taiwan-macro` | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
 | `korea-macro` | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
+| `china-macro` | China macro indicators via akshare NBS + PBOC + yfinance + FRED (28 indicators) | v1.6.0 |
 
 ---
 
@@ -48,6 +49,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Japan macro data / BOJ / JGB yield / 日本のマクロ" | `japan-macro` |
 | "Taiwan macro data / CBC / TAIEX / 台灣總經 / 景氣燈號" | `taiwan-macro` |
 | "Korea macro data / BOK / KOSPI / 한국 매크로 / 기준금리" | `korea-macro` |
+| "China macro data / NBS / PBOC / CSI300 / 中国宏观 / 中國總經 / LPR / 社融" | `china-macro` |
 | "What is the macro regime / where are we in the cycle?" | `macro-regime-snapshot` |
 | "Give me a quick snapshot on AAPL / stock info" | `us-stock-snapshot` |
 | "Write a full investment memo on NVDA" | `investment-memo-writer` |
@@ -57,7 +59,7 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All skills through v1.5.0 are now available.
+All skills through v1.6.0 are now available.
 
 ---
 

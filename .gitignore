@@ -16,3 +16,7 @@ Thumbs.db
 
 # Git worktrees
 .worktrees/
+
+# MCP server caches
+.playwright-mcp/
+.chrome-devtools-mcp/

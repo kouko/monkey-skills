@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pandas==2.2.3", "numpy>=1.26"]
+# dependencies = ["pandas==3.0.2", "numpy>=1.26"]
 # ///
 """
 ta_client.py — Technical indicator calculator for investing-toolkit
