@@ -39,6 +39,15 @@ goods-production vs services.
 **When to use**: GDP decomposition, services-recovery narrative, pair
 trading (services-heavy vs industrials-heavy equities).
 
+**Monthly GDP proxy role**: This indicator, introduced by NBS in 2017,
+was created precisely to fill the services-sector gap in the 三大数据
+framework — making `industrial-yoy` + `retail-yoy` + `fai-yoy` +
+`services-production-yoy` the most GDP-coverage-complete monthly proxy
+set available from China. See `references/indicators-growth.md`
+preamble for the full cross-market discussion (vs US GDPNow /
+JP 景気動向指数 CI trio) and why this skill does not synthesise a
+single composite value.
+
 **China-specific context**:
 - Created in 2017 as NBS recognised that 三驾马车 framework undersampled
   services. Parallels the Japanese 第3次産業活動指数 (Tertiary Industry

@@ -10,6 +10,14 @@ reverse-engineered new-SPA API, 2026-04 migration), PBOC/SHIBOR via akshare,
 FRED (CNY/USD + FX reserves), and yfinance (5 equity indices). Returns
 structured JSON grouped by 12 indicator groups.
 
+**Monthly GDP proxy**: The 三大数据 (`industrial-yoy` / `retail-yoy` /
+`fai-yoy`) + `services-production-yoy` collectively proxy monthly GDP
+momentum, parallel to us-macro's `nowcast` group and japan-macro's
+景気動向指数 CI trio. China has **no authoritative monthly composite** —
+Li Keqiang Index / SF Fed CAT / Goldman CAI / academic DFM methodologies
+do not converge. This skill intentionally keeps the 4 components raw;
+synthesis is deferred to analysis layer (investing-team).
+
 ## Data Sources (4 scripts)
 
 | Script | Source | Indicators | Role |

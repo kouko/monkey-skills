@@ -2,6 +2,43 @@
 
 ---
 
+## 三大数据 monthly trio — Monthly GDP proxy
+
+The **三大数据** (industrial production + retail sales + fixed asset
+investment), released together around the 15th-20th of each month by
+NBS, form China's canonical monthly GDP proxy package. Combined with
+`services-production-yoy` (published the same day since 2017), they
+cover ≈95% of GDP by sector decomposition.
+
+| Preset | 指标 | Role |
+|--------|------|------|
+| `industrial-yoy` | 规上工业增加值 同比 | Secondary sector (~28% GDP) |
+| `retail-yoy` | 社会消费品零售总额 同比 | Consumption side (~55% GDP) |
+| `fai-yoy` | 固定资产投资 累计同比 | Investment side (~40% GDP) |
+| `services-production-yoy` (see `indicators-services.md`) | 服务业生产指数 同比 | Tertiary sector (~55% GDP) |
+
+Unlike US (GDPNow is Atlanta Fed's pre-aggregated nowcast %) or Japan
+(景気動向指数 一致指数 is 内閣府's pre-aggregated composite), NBS does
+**not** publish a single-number monthly GDP proxy. Proposed aggregators
+have no market consensus:
+
+- **Li Keqiang Index** (electricity 40% + rail 20% + loans 40%) — widely
+  regarded as obsolete after the post-2012 services-sector shift
+  (Kroeber/Gavekal: "quite useless"; Canon Institute / 日本総研 echo)
+- **SF Fed China CAT** — 8-indicator PCA; rigorous methodology but outputs
+  quarterly standard-deviation-from-trend, not monthly %YoY
+- **Goldman CAI / Bloomberg China Monthly GDP** — proprietary, closed
+- **Academic DFM nowcasts** (HKMA / Giannone / IMF papers) — each paper
+  uses a different variable set and lag structure
+
+This skill intentionally keeps the 4 components raw. Synthesis belongs
+in analysis layer (`investing-team`) where methodology choice can be
+made with analytical accountability. See
+`docs/china-macro-research-frameworks.md §1d` for the methodology
+discussion and deferred options.
+
+---
+
 ## gdp-yoy: GDP 同比 / Gross Domestic Product YoY
 
 - **Series code**: akshare:macro_china_gdp (column: 国内生产总值-同比增长)

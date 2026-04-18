@@ -104,7 +104,7 @@ FRED fallbacks (CNY/USD, FX reserves), and yfinance market indices.
 
 ---
 
-## v1.7.0 — Monthly GDP Proxies for US + JP (current)
+## v1.7.0 — Monthly GDP Proxies for US + JP
 
 **Scope**: Cross-market symmetric monthly GDP tracking. US and Japan gain
 the monthly-GDP-proxy indicator packages that china-macro already provides
@@ -120,6 +120,34 @@ WEI) plus OECD CLI are the industry-standard proxies. For Japan, the
 - [x] us-macro: +4 presets under new `nowcast` group — `GDPNOW` (Atlanta Fed), `CFNAI` (Chicago Fed), `WEI` (NY Fed), `USALOLITOAASTSAM` (OECD CLI, replacing discontinued USSLIND). 21 → 25 series.
 - [x] japan-macro: +2 presets `leading-index` + `lagging-index` completing the 景気動向指数 CI trio. 14 → 16 active indicators.
 - [x] references/indicators-growth.md expanded in both skills with full monthly-GDP-proxy documentation.
+
+---
+
+## v1.7.1 — China monthly GDP proxy tagging (current)
+
+**Scope**: Tier 2 symmetry with us-macro / japan-macro. Explicitly tag
+三大数据 + `services-production-yoy` as monthly GDP proxy components
+in china-macro documentation so all three country skills share the
+same proxy-labelling convention.
+
+### New
+- [x] china-macro SKILL.md: Monthly GDP proxy callout in Overview; `growth` group re-titled as "三大数据 — monthly GDP proxy components"; 4 indicator rows tagged with bold proxy labels
+- [x] china-macro README.md: cross-market parity Overview note
+- [x] references/indicator-index.md: 4 indicators tagged `(**monthly GDP proxy component/companion**)`
+- [x] references/indicators-growth.md: new 三大数据 monthly trio preamble explaining cross-market parallel + why Tier 3 synthesis is deferred
+- [x] references/indicators-services.md: `services-production-yoy` annotated as 2017-introduced services-gap filler in the proxy package
+
+### Deliberately NOT done — Tier 3 (synthesised single-number proxy)
+
+Research finding: no market consensus across Li Keqiang Index (obsolete
+post-2012 services shift), SF Fed China CAT (quarterly + standard-deviation
+units, not monthly %YoY), Goldman CAI / Bloomberg China Monthly GDP
+(proprietary), academic DFM nowcasts (each paper uses a different
+variable set). Picking any single methodology would embed an analytical
+choice in the data layer, violating the toolkit/analysis separation in
+`CLAUDE.md` cross-plugin contract. Synthesis belongs in `investing-team`
+analysis layer. See `docs/china-macro-research-frameworks.md §1d` for
+deferred methodology options if requirements change.
 
 ---
 

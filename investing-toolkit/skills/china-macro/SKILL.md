@@ -34,6 +34,19 @@ full API docs + `docs/china-macro-research-frameworks.md` for the
 This skill is **data-only**. Output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
 
+**Monthly GDP proxy note**: China publishes official GDP quarterly
+(`gdp-yoy`). The **三大数据 monthly trio** (`industrial-yoy` +
+`retail-yoy` + `fai-yoy`) plus `services-production-yoy` collectively
+**proxy monthly GDP momentum**, parallel to us-macro's `nowcast` group
+and japan-macro's 景気動向指数 CI trio. Unlike US/JP where Fed / 内閣府
+publish pre-aggregated nowcasts (GDPNow, 一致指数), NBS does not publish
+a single-number composite. Proposed aggregators (Li Keqiang Index,
+SF Fed CAT, Goldman CAI, academic DFM) have no market consensus, so
+this skill intentionally keeps the 4 components raw — synthesis belongs
+in analysis layer (investing-team). See
+`docs/china-macro-research-frameworks.md §1d` for the methodology
+discussion and deferred options.
+
 ---
 
 ## Inputs
@@ -54,14 +67,14 @@ This skill is **data-only**. Output is designed for handoff to
 | core-cpi | nbs_client | Core CPI / 不包括食品和能源 CPI | Monthly |
 | ppi-yoy | nbs_client | PPI YoY / 工业生产者出厂价格指数 | Monthly |
 
-### growth (NBS, 三大数据)
+### growth (NBS, 三大数据 — monthly GDP proxy components)
 
 | Preset | Source | Name | Frequency |
 |--------|--------|------|-----------|
 | gdp-yoy | nbs_client | GDP YoY / 国内生产总值指数 同比 | Quarterly |
-| industrial-yoy | nbs_client | Industrial Production YoY / 规上工业增加值 同比 | Monthly |
-| retail-yoy | nbs_client | Retail Sales YoY / 社会消费品零售总额 同比 | Monthly |
-| fai-yoy | nbs_client | FAI YoY (累计) / 固定资产投资 累计同比 | Monthly |
+| industrial-yoy | nbs_client | Industrial Production YoY / 规上工业增加值 同比 (**monthly GDP proxy component**) | Monthly |
+| retail-yoy | nbs_client | Retail Sales YoY / 社会消费品零售总额 同比 (**monthly GDP proxy component**) | Monthly |
+| fai-yoy | nbs_client | FAI YoY (累计) / 固定资产投资 累计同比 (**monthly GDP proxy component**) | Monthly |
 
 ### trade (NBS, GAC via NBS)
 
@@ -121,7 +134,7 @@ This skill is **data-only**. Output is designed for handoff to
 
 | Preset | Source | Name | Frequency |
 |--------|--------|------|-----------|
-| services-production-yoy | nbs_client | 服务业生产指数 当月同比 | Monthly |
+| services-production-yoy | nbs_client | 服务业生产指数 当月同比 (**monthly GDP proxy companion**) | Monthly |
 
 ### markets (yfinance)
 
