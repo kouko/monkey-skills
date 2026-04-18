@@ -327,10 +327,12 @@ To fetch full history, you must stitch 4 requests. This is analogous to
 Detailed tree listings are intentionally not inlined here (monthly alone is
 645 lines; yearly 2445). They live in-repo alongside this doc as sibling files:
 
-- `nbs-tree-monthly.txt` (14 categories, 605 leaves)
-- `nbs-tree-quarterly.txt` (8 categories, 116 leaves)
-- `nbs-tree-yearly.txt` (28 categories, 2187 leaves)
+- `nbs-tree-monthly.md` (14 categories, 605 leaves)
+- `nbs-tree-quarterly.md` (8 categories, 116 leaves)
+- `nbs-tree-yearly.md` (28 categories, 2188 leaves)
 
-Each uses 📁 folder / 📄 leaf markers with 2-space indentation. `grep -n`
-against the file is the recommended navigation.
+Each is a nested markdown bullet list. 📁 = folder, 📄 = leaf table;
+each node carries its UUID in backticks. Leaf UUID is the `cid` for
+`POST getEsDataByCidAndDt`. Use the IDE outline view for navigation or
+`grep -n` for targeted lookups.
 
