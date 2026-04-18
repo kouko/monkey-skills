@@ -171,6 +171,12 @@ See `CLAUDE.md` §Cross-Plugin Delegation Contract for conventions.
 Data layer lives in this toolkit; analysis / verdicts / quality gates
 live in `domain-teams:investing-team`.
 
+## Cross-country Reference Documents
+
+Plugin-level cross-market references (complement the per-skill references):
+
+- [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
+
 ## Version Highlights
 
 - **v1.8.0** (current) — Korea-macro catalogue + structural refactor + 15 Tier-B presets (28 → 43 indicators)

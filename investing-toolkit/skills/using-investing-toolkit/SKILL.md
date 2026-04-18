@@ -92,6 +92,10 @@ Composite synthesis belongs in the analysis layer
 accountability. See each skill's `references/indicators-*.md` preamble
 for full discussion.
 
+For the **industry-level indicator** counterpart (sector coverage + release
+cadence comparison across the 5 markets), see
+[`docs/industry-indicator-cadence.md`](../../docs/industry-indicator-cadence.md).
+
 ---
 
 ## Cross-Plugin Note
