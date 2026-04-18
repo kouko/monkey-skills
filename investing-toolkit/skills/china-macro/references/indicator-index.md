@@ -9,9 +9,9 @@ new-SPA API (2026-04 migration).
 | `core-cpi` | 不包括食品和能源 CPI | Core CPI | NBS → `nbs_client` | `indicators-inflation.md` |
 | `ppi-yoy` | 工业生产者出厂价格指数 | PPI YoY | NBS → `nbs_client` | `indicators-inflation.md` |
 | `gdp-yoy` | 国内生产总值指数 同比 | GDP YoY (quarterly) | NBS → `nbs_client` | `indicators-growth.md` |
-| `industrial-yoy` | 规上工业增加值 同比 | Industrial Production YoY | NBS → `nbs_client` | `indicators-growth.md` |
-| `retail-yoy` | 社会消费品零售总额 同比 | Retail Sales YoY | NBS → `nbs_client` | `indicators-growth.md` |
-| `fai-yoy` | 固定资产投资 累计同比 | FAI YoY (cumulative) | NBS → `nbs_client` | `indicators-growth.md` |
+| `industrial-yoy` | 规上工业增加值 同比 | Industrial Production YoY (**monthly GDP proxy component**) | NBS → `nbs_client` | `indicators-growth.md` |
+| `retail-yoy` | 社会消费品零售总额 同比 | Retail Sales YoY (**monthly GDP proxy component**) | NBS → `nbs_client` | `indicators-growth.md` |
+| `fai-yoy` | 固定资产投资 累计同比 | FAI YoY cumulative (**monthly GDP proxy component**) | NBS → `nbs_client` | `indicators-growth.md` |
 | `exports-yoy` | 出口总值 同比 | Exports YoY USD | NBS → `nbs_client` | `indicators-trade.md` |
 | `imports-yoy` | 进口总值 同比 | Imports YoY USD | NBS → `nbs_client` | `indicators-trade.md` |
 | `trade-balance` | 进出口差额 当期值 | Trade Balance USD | NBS → `nbs_client` | `indicators-trade.md` |
@@ -31,7 +31,7 @@ new-SPA API (2026-04 migration).
 | `housing-sales-area-yoy` | 商品住宅销售面积 累计同比 | Residential Sales Floor Area YoY | NBS → `nbs_client` | `indicators-realestate.md` |
 | `housing-sales-value-yoy` | 商品住宅销售额 累计同比 | Residential Sales Value YoY | NBS → `nbs_client` | `indicators-realestate.md` |
 | `realestate-funding-yoy` | 房地产投资本年资金来源 累计同比 | Real Estate Funding YoY | NBS → `nbs_client` | `indicators-realestate.md` |
-| `services-production-yoy` | 服务业生产指数 当月同比 | Services Production Index YoY | NBS → `nbs_client` | `indicators-services.md` |
+| `services-production-yoy` | 服务业生产指数 当月同比 | Services Production Index YoY (**monthly GDP proxy companion**) | NBS → `nbs_client` | `indicators-services.md` |
 | `000300.SS` | 沪深300 | CSI 300 | yfinance | `indicators-markets.md` |
 | `000001.SS` | 上证综指 | Shanghai Composite | yfinance | `indicators-markets.md` |
 | `399006.SZ` | 创业板指 | ChiNext Index | yfinance | `indicators-markets.md` |
