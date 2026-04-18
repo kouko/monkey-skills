@@ -31,6 +31,13 @@ midpoint derivation**, not原典表述。
 **New primary sources added**: BOJ 日銀レビュー rev26j05 (2026-03-27 —
 最新官方 r\* 見解), lab18j02 (1980 年代以来 r\* 下降 4 pp 分解).
 
+**2026-04-18 supplementary grounding**: Added BOJ 政策金利 3 層構造
+details (誘導目標 0.75% 程度 / IOER 0.75% / 基準貸付 1.00%) + 実績
+市場利率 (STRDCLUCON 0.727%) vs 目標 2-3 bp 乖離 mechanism +
+2025-12-19 決議 PDF 長期国債減額ペース. Confirms toolkit's
+FM01/STRDCLUCON fetch returns ~target ± 3 bp — acceptable precision
+for regime call but should be cited as "target approximation".
+
 **Next recalibration**: April 2026 (BOJ 展望 Q1 release).
 
 ---
@@ -91,12 +98,66 @@ level-vs-target gap.
 
 ## Policy Rate Neutrality
 
-- **Current BOJ policy rate**: **0.75%** (post-YCC end 2024-03 →
-  2024-07 0.25% → 2025-01 0.50% → 2025-12 **0.75% (30 年ぶり水準)**;
-  2026-01-23 会合で据え置き、1 名が 1.0% 提案も否決)
+### BOJ 政策金利の正体 — 3 層構造
+
+日銀の政策金利は **単一数字ではなく、3 層の金利体系**として運用される。
+2024-03 YCC 終了後、2025-12-19 利上げ後の現行構成 (2026-Q1)：
+
+| 階層 | 名称 | 利率 | 役割 |
+|------|------|------|------|
+| **目標** | 無担保コールレート(オーバーナイト物) の誘導目標 | **0.75% 程度** | BOJ 決定会合の文字決議。「X% 程度で推移するよう促す」の表現 |
+| **Floor-ish** | 補完当座預金制度 適用利率 (IOER 相当) | **0.75%** | 超過準備への付利金利。2024-03 以降は階層構造廃止、単一利率を一律適用。従来は floor だが、非銀行の裁定によりやや穴がある |
+| **Ceiling** | 補完貸付制度 (基準貸付利率 / 旧「公定歩合」) | **1.00%** | 誘導目標 + 25 bp。BOJ が民間銀行に当日貸付ける際の上限利率として corridor ceiling 機能 |
+
+**決議の原文用語** (2025-12-19 k251219a.pdf): 「無担保コールレート
+(オーバーナイト物) を、0.75% 程度で推移するよう促す」— この「程度」
+(approximately) に ±数 bp 許容が含意される。
+
+### 実績市場利率 vs 目標の乖離
+
+我々の投資 toolkit は `japan-macro` skill の `rates` 群組で
+**BOJ FM01 / STRDCLUCON**（無担保コールO/N物レート）を取得する：
+
+```
+2026-04-15 実績 (STRDCLUCON): 0.727%
+           ↕  ~2-3 bp 差
+2026-Q1 目標:               0.75% 程度
+```
+
+**なぜ 2-3 bp 下か？**: 投資信託委託会社や一部のノンバンクは BOJ 当座
+預金を持てないため IOER 0.75% を直接受け取れず、コール市場で僅かに
+下の利率で貸し出す（ゼロより得ならば貸す）。これが市場利率を
+IOER 下に 2-5 bp 押し下げる。Fed funds rate vs IOER の 2018-2019
+年の乖離 (3-15 bp) よりは狭い。
+
+**実務上の扱い**: regime call で「政策利率水準」を言及する際、
+**STRDCLUCON の実績値は目標の ~2-3 bp 下である近似**として使う。
+正確な目標は最新 金融政策決定会合 声明 (https://www.boj.or.jp/mopo/mpmdeci/) を参照。
+
+### 歷史軌跡 (post-YCC 正常化パス)
+
+| 会合 | 誘導目標 | IOER | 基準貸付 | 備考 |
+|------|----------|------|----------|------|
+| 2024-03-19 | 0.00% 程度 (0-0.1%) | 0.10% | 0.30% | YCC 終了・マイナス金利解除 |
+| 2024-07-31 | 0.25% 程度 | 0.25% | 0.50% | 初回利上げ |
+| 2025-01-24 | 0.50% 程度 | 0.50% | 0.75% | 2 回目 |
+| **2025-12-19** | **0.75% 程度** | **0.75%** | **1.00%** | **3 回目・30 年ぶり水準** |
+| 2026-01-23 | 0.75% 程度 (据え置き) | 0.75% | 1.00% | 1 名が 1.0% 提案するも否決 |
+
+### 2025-12-19 決議の他の重要内容
+
+- **長期国債買入れ減額ペース** (k251219a.pdf 別項):
+  - 2026年1-3月: 毎四半期 4,000億円程度ずつ減額
+  - 2026年4-6月以降: 毎四半期 2,000億円程度ずつ減額
+  - 2027年1-3月: 2 兆円程度に到達予定
+
+### Neutral rate 推定
+
 - **Nominal neutral rate estimate**: ~**1.0-1.75%** (市場コンセンサス
   + 野村メインシナリオターミナル 1.50% を包含). BOJ themselves do not
-  publish a neutral rate.
+  publish a neutral rate; both because r\* 不透明性 is a deliberate
+  policy choice (like BOK), and because r\* estimates diverge widely
+  in Japan's unique regime.
 - **Real r\* (BOJ Working Paper 24-J-09 2024-08 + 日銀レビュー rev26j05 2026-03)**:
   - Range estimates: **-1.0% to +0.5%** (複数モデルの幅; 原典が「相当な
     ばらつきがある」と明記)
@@ -197,6 +258,14 @@ Neutral / `> 0.5%` Restrictive — roughly HLW-JP ± 50 bp).
 ## Sources (citations)
 
 Primary (原典, 日本語):
+- BOJ 金融市場調節方針の変更について 2025-12-19 (k251219a.pdf) —
+  https://www.boj.or.jp/mopo/mpmdeci/mpr_2025/k251219a.pdf —
+  0.75% 程度利上げ + 長期国債買入れ減額計画
+- BOJ 補完当座預金制度 基本要領 —
+  https://www.boj.or.jp/mopo/measures/term_cond/yoryo37.htm
+- BOJ 金融市場局「2024 年度の金融市場調節」概要 2025-06-04 (mor250604b.pdf) —
+  https://www.boj.or.jp/research/brp/mor/data/mor250604b.pdf —
+  市場調節の運営実績 + 3 層金利構造の解説
 - BOJ 物価安定の目標 (2013-01-22 共同声明)
 - BOJ 経済・物価情勢の展望 2025-10 (展望レポート本文 + ハイライト)
 - **BOJ Working Paper WP24-J-09 (2024-08, 杉岡・中野・山本)** — 自然利子率の計測をめぐる近年の動向
