@@ -162,12 +162,23 @@ Primary sources referenced in the china-macro indicator documentation.
 
 - **~8-month staleness for investing.com-mirrored series**:
   `macro_china_industrial_production_yoy`, `macro_china_exports_yoy`,
-  `macro_china_imports_yoy`, `macro_china_trade_balance`,
-  `macro_china_cx_pmi_yearly`, and `macro_china_cx_services_pmi_yearly`
-  source from investing.com's free calendar endpoint, which
-  experiences periodic gaps. If fresher data is critical, cross-check
-  against the primary source (NBS, customs, Caixin press release)
-  when accessible.
+  `macro_china_imports_yoy`, and `macro_china_trade_balance` source
+  from investing.com's free calendar endpoint, which experiences
+  periodic gaps. If fresher data is critical, cross-check against
+  the primary source (NBS, customs) when accessible.
+
+- **Caixin PMI (excluded 2026-04-18)**: Both
+  `macro_china_cx_pmi_yearly` and `macro_china_cx_services_pmi_yearly`
+  were the same investing.com-mirrored endpoint and ran consistently
+  7-8 months stale since mid-2025. PMI's value is timeliness, so a
+  stale Caixin PMI defeats the indicator's purpose. The presets
+  `pmi-caixin-manufacturing` and `pmi-caixin-services` were removed
+  from `akshare_client.py`. The skill still ships official NBS
+  manufacturing + non-manufacturing PMI (fresh ~47d). For a fresh
+  Caixin read, consult S&P Global's monthly Caixin PMI release page
+  or the Caixin Global news feed directly; a dedicated
+  `caixin_client.py` can be revived here if a stable free source
+  emerges.
 
 - **MLF rate not directly exposed**: akshare does not provide a clean
   MLF rate time series. LPR is the closest accessible proxy for

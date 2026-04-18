@@ -92,14 +92,15 @@
 
 ## v1.6.0 — China Macro (current)
 
-**Scope**: China macro indicators via akshare (NBS + PBOC + SHIBOR + Caixin),
+**Scope**: China macro indicators via akshare (NBS + PBOC + SHIBOR),
 FRED fallbacks (CNY/USD, FX reserves), and yfinance market indices.
 
 ### New
-- [x] scripts/akshare_client.py (21 presets: inflation/growth/trade/labor/sentiment/rates/money/credit)
-- [x] skills/china-macro/SKILL.md (28 indicators total: 21 akshare + 2 FRED + 5 yfinance, trilingual references)
+- [x] scripts/akshare_client.py (19 presets: inflation/growth/trade/labor/sentiment/rates/money/credit — 2 Caixin PMI presets removed 2026-04-18, mirror ran 8mo stale)
+- [x] skills/china-macro/SKILL.md (26 indicators total: 19 akshare + 2 FRED + 5 yfinance, trilingual references)
 - [x] NBS WAF workaround — akshare mirrors (eastmoney, investing.com, chinamoney, shibor.org) remain reachable when `data.stats.gov.cn` blocks foreign IPs
-- [x] 10 reference files including 121 indicator sections across US/JP/TW/KR/CN (unified format)
+- [x] 10 reference files including 119 indicator sections across US/JP/TW/KR/CN (unified format)
+- [x] NBS new-SPA API reverse-engineered (`docs/nbs-indicator-catalog.md`): 2908-leaf indicator tree captured for future `nbs_client.py` work
 
 ---
 

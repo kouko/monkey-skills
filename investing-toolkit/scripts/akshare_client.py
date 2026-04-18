@@ -147,20 +147,11 @@ PRESETS: dict[str, dict] = {
         "date_format": "chinese_month", "unit": "index", "freq": "monthly",
         "source": "NBS via akshare",
     },
-    "pmi-caixin-manufacturing": {
-        "fn": "macro_china_cx_pmi_yearly",
-        "name": "Caixin Manufacturing PMI / 财新制造业PMI",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "index", "freq": "monthly",
-        "source": "Caixin/Markit via investing.com mirror",
-    },
-    "pmi-caixin-services": {
-        "fn": "macro_china_cx_services_pmi_yearly",
-        "name": "Caixin Services PMI / 财新服务业PMI",
-        "date_col": "日期", "value_col": "今值",
-        "date_format": "iso", "unit": "index", "freq": "monthly",
-        "source": "Caixin/Markit via investing.com mirror",
-    },
+    # Note: Caixin PMI presets (pmi-caixin-manufacturing, pmi-caixin-services)
+    # were removed on 2026-04-18 because the only available akshare source
+    # (investing.com calendar mirror) ran ~8 months stale, making the data
+    # unfit for current-regime reads. See references/sources.md "Excluded
+    # indicators" for rationale and alternatives.
 
     # --- Rates (PBOC) ---
     "lpr-1y": {

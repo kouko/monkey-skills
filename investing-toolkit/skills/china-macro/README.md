@@ -5,17 +5,17 @@ China macroeconomic data skill for investing-toolkit.
 
 ## Overview
 
-Fetches 28 China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR +
-Caixin mirrors), FRED (CNY/USD, FX reserves), and yfinance (CSI300/SSEC/
-ChiNext/HSI/HSCEI) and returns structured JSON grouped by 10 indicator
-groups: inflation, growth, trade, labor, sentiment, rates, money, credit,
-markets, and fx.
+Fetches 26 China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR
+mirrors), FRED (CNY/USD, FX reserves), and yfinance (CSI300/SSEC/ChiNext/
+HSI/HSCEI) and returns structured JSON grouped by 10 indicator groups:
+inflation, growth, trade, labor, sentiment, rates, money, credit, markets,
+and fx.
 
 ## Data Sources (3 scripts)
 
 | Script | Source | Indicators | Role |
 |--------|--------|-----------|------|
-| `akshare_client.py` | akshare (NBS/PBOC/SHIBOR/chinamoney mirrors) | 21 | **Primary** — macro indicators |
+| `akshare_client.py` | akshare (NBS/PBOC/SHIBOR/chinamoney mirrors) | 19 | **Primary** — macro indicators |
 | `fred_client.py` | FRED CSV | 2 | CNY/USD (`DEXCHUS`) + FX reserves (`TRESEGCNM052N`) |
 | `yfinance_client.py` | Yahoo Finance | 5 | CSI300, SSEC, ChiNext, HSI, HSCEI |
 
@@ -31,7 +31,7 @@ markets, and fx.
 - **yfinance** — already a toolkit dependency; covers all 5 China and HK
   benchmark indices with no additional packages.
 
-## Indicators (28)
+## Indicators (26)
 
 ### Core (by group)
 
@@ -41,7 +41,7 @@ markets, and fx.
 | growth | 3 | GDP YoY, Industrial Production YoY, Retail Sales YoY | Quarterly/Monthly |
 | trade | 3 | Exports YoY, Imports YoY, Trade Balance | Monthly |
 | labor | 1 | Urban Surveyed Unemployment | Monthly |
-| sentiment | 4 | Manufacturing PMI, Non-Manufacturing PMI, Caixin Mfg PMI, Caixin Services PMI | Monthly |
+| sentiment | 2 | Manufacturing PMI (official), Non-Manufacturing PMI (official) | Monthly |
 | rates | 4 | LPR 1Y, LPR 5Y, RRR, SHIBOR 3M | Daily/Monthly/Event |
 | money | 2 | M1 YoY, M2 YoY | Monthly |
 | credit | 2 | 社融 (Aggregate Financing), New RMB Loans | Monthly |
@@ -55,9 +55,12 @@ markets, and fx.
   Reliable — backed by eastmoney (a major financial portal), chinamoney
   (CFETS), and shibor.org. Fresh to within ~1 month.
 - **akshare macro_china_industrial_production_yoy / _exports_yoy /
-  _imports_yoy / _trade_balance / _cx_pmi_yearly / _cx_services_pmi_yearly**:
-  Sourced from investing.com's free calendar feed — can be up to 8 months
-  stale. Use as best-available fallback; mark freshness in analysis.
+  _imports_yoy / _trade_balance**: Sourced from investing.com's free
+  calendar feed — can be up to 8 months stale. Use as best-available
+  fallback; mark freshness in analysis. (Caixin PMI presets
+  `cx_pmi_yearly` / `cx_services_pmi_yearly` were removed 2026-04-18
+  for the same staleness reason; see SKILL.md "Deliberately excluded
+  indicators".)
 - **FRED `DEXCHUS`, `TRESEGCNM052N`**: Official Federal Reserve / IMF data
   — very stable.
 - **yfinance Yahoo Finance**: Standard daily feed, widely relied upon. ChiNext

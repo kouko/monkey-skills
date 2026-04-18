@@ -1,8 +1,8 @@
 ---
 name: china-macro
 description: >-
-  Fetch China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR +
-  Caixin) with FRED fallbacks for CNY/USD and FX reserves, plus yfinance for
+  Fetch China macroeconomic indicators via akshare (NBS + PBOC + SHIBOR)
+  with FRED fallbacks for CNY/USD and FX reserves, plus yfinance for
   CSI300/SSEC/ChiNext/HSI/HSCEI indices. Data layer only — no analysis.
   Returns structured JSON with latest values and direction for inflation,
   growth, trade, labor, sentiment, rates, money, credit, markets, and FX.
@@ -13,10 +13,10 @@ description: >-
 # China Macro
 
 Fetches China macroeconomic indicators via akshare (aggregates from NBS,
-PBOC, SHIBOR, chinamoney, and Caixin/Markit mirrors), plus FRED for FX
-reserves and CNY/USD, and yfinance for market indices. No API key required.
+PBOC, SHIBOR, and chinamoney mirrors), plus FRED for FX reserves and
+CNY/USD, and yfinance for market indices. No API key required.
 
-- **akshare** (`akshare_client.py`) — 21 presets across inflation, growth,
+- **akshare** (`akshare_client.py`) — 19 presets across inflation, growth,
   trade, labor, sentiment, rates, money & credit groups
 - **FRED** (`fred_client.py`) — CNY/USD (`DEXCHUS`) and FX reserves
   (`TRESEGCNM052N`) — delegated because akshare's SAFE mirror is unreliable
@@ -78,8 +78,6 @@ This skill is **data-only**. Output is designed for handoff to
 |--------|----------|------|-----------|
 | pmi-manufacturing | macro_china_pmi | Manufacturing PMI (official) / 官方制造业PMI | Monthly |
 | pmi-non-manufacturing | macro_china_pmi | Non-Manufacturing PMI (official) / 官方非制造业PMI | Monthly |
-| pmi-caixin-manufacturing | macro_china_cx_pmi_yearly | Caixin Manufacturing PMI / 财新制造业PMI | Monthly |
-| pmi-caixin-services | macro_china_cx_services_pmi_yearly | Caixin Services PMI / 财新服务业PMI | Monthly |
 
 ### rates
 
@@ -133,7 +131,7 @@ This skill is **data-only**. Output is designed for handoff to
 | `growth` | gdp-yoy, industrial-yoy, retail-yoy |
 | `trade` | exports-yoy, imports-yoy, trade-balance |
 | `labor` | urban-unemployment |
-| `sentiment` | pmi-manufacturing, pmi-non-manufacturing, pmi-caixin-manufacturing, pmi-caixin-services |
+| `sentiment` | pmi-manufacturing, pmi-non-manufacturing |
 | `rates` | lpr-1y, lpr-5y, rrr-major, shibor-3m |
 | `money` | m2-yoy, m1-yoy |
 | `credit` | shrzgm, new-loans |
@@ -147,7 +145,7 @@ This skill is **data-only**. Output is designed for handoff to
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset cpi-yoy,ppi-yoy,gdp-yoy,industrial-yoy,retail-yoy,exports-yoy,imports-yoy,trade-balance
 
 ### Fetch Requests (labor + sentiment)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset urban-unemployment,pmi-manufacturing,pmi-non-manufacturing,pmi-caixin-manufacturing,pmi-caixin-services
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset urban-unemployment,pmi-manufacturing,pmi-non-manufacturing
 
 ### Fetch Requests (rates + money + credit)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset lpr-1y,lpr-5y,rrr-major,shibor-3m,m2-yoy,m1-yoy,shrzgm,new-loans
@@ -162,7 +160,7 @@ This skill is **data-only**. Output is designed for handoff to
 ### Step 3 — Merge into unified output
 
 Each observation retains `_source`:
-- `"akshare"` — NBS/PBOC/SHIBOR/Caixin data
+- `"akshare"` — NBS/PBOC/SHIBOR data
 - `"yfinance"` — market indices
 - `"fred"` — CNY/USD and FX reserves
 
@@ -175,7 +173,7 @@ Each observation retains `_source`:
 - `references/indicators-growth.md` — GDP, industrial, retail
 - `references/indicators-trade.md` — Exports, imports, trade balance
 - `references/indicators-labor.md` — Urban unemployment
-- `references/indicators-sentiment.md` — PMI (official + Caixin)
+- `references/indicators-sentiment.md` — PMI (official manufacturing + non-manufacturing)
 - `references/indicators-rates.md` — LPR, RRR, SHIBOR
 - `references/indicators-money.md` — M0/M1/M2, 社融, new loans
 - `references/indicators-markets.md` — CSI300, SSEC, ChiNext, HSI, HSCEI
@@ -201,8 +199,21 @@ skill at runtime. See `docs/README.md`.
 | `macro_china_shrzgm` (PBOC) | ~1-2 month lag |
 | `macro_china_lpr` / `_shibor_all` | same-day to 1 business day |
 | `macro_china_industrial_production_yoy` / `_exports_yoy` / `_imports_yoy` / `_trade_balance` (investing.com mirror) | **stale — up to 8 months behind**. Use only as backup; prefer NBS English site when accessible. |
-| `macro_china_cx_pmi_yearly` / `_cx_services_pmi_yearly` (investing.com mirror) | **stale — up to 8 months behind** |
 | `macro_china_reserve_requirement_ratio` | event-driven (last RRR change date) |
+
+### Deliberately excluded indicators
+
+- **Caixin Manufacturing PMI** and **Caixin Services PMI** were removed
+  2026-04-18. The only free akshare path (`macro_china_cx_pmi_yearly` /
+  `_cx_services_pmi_yearly`) draws from investing.com's calendar and has
+  been running ~8 months stale since mid-2025. A stale PMI defeats the
+  purpose (PMI value is timeliness), and surfacing it risks Claude
+  treating 2025-09 numbers as current-regime signals. Official NBS
+  manufacturing + non-manufacturing PMI remain in the skill at ~47d
+  freshness and cover the primary sentiment axis. If a fresh Caixin
+  read is needed, see S&P Global's Caixin release page or the Caixin
+  Global news feed — a dedicated `caixin_client.py` can be added later
+  if that demand materialises.
 
 ### NBS WAF blocks foreign IPs
 

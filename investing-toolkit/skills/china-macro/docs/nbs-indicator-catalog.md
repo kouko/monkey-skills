@@ -231,7 +231,8 @@ period with whichever ID covers that window.
 
 ## 5. Mapping — current akshare presets ↔ NBS subtrees
 
-Which of our 21 existing `akshare_client.py` presets have a direct NBS path.
+Which of our 19 existing `akshare_client.py` presets have a direct NBS path.
+(Down from 21 after Caixin PMI presets were removed 2026-04-18 for staleness.)
 Stale akshare mirrors are the priority upgrade candidates for any future
 `nbs_client.py`.
 
@@ -248,8 +249,6 @@ Stale akshare mirrors are the priority upgrade candidates for any future
 | `urban-unemployment` | 月度→城镇调查失业率 | ✅ | ~75d (fresh) |
 | `pmi-manufacturing` | 月度→采购经理指数→制造业PMI | ✅ | ~47d (fresh) |
 | `pmi-non-manufacturing` | 月度→采购经理指数→非制造业PMI | ✅ | ~47d (fresh) |
-| `pmi-caixin-manufacturing` | (private — not in NBS) | ❌ | ~228d (stale, no fix) |
-| `pmi-caixin-services` | (private — not in NBS) | ❌ | ~226d (stale, no fix) |
 | `lpr-1y`, `lpr-5y` | (PBOC — not in NBS monthly) | ❌ | fresh (chinamoney) |
 | `rrr-major` | (PBOC — not in NBS) | ❌ | event-driven |
 | `shibor-3m` | (SHIBOR — not in NBS) | ❌ | same-day (shibor.org) |

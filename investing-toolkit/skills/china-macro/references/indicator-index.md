@@ -13,8 +13,6 @@
 | `urban-unemployment` | 全国城镇调查失业率 | Urban Surveyed Unemployment | NBS via akshare | `indicators-labor.md` |
 | `pmi-manufacturing` | 官方制造业PMI | Manufacturing PMI (NBS official) | NBS via akshare | `indicators-sentiment.md` |
 | `pmi-non-manufacturing` | 官方非制造业PMI | Non-Manufacturing PMI (NBS official) | NBS via akshare | `indicators-sentiment.md` |
-| `pmi-caixin-manufacturing` | 财新制造业PMI | Caixin Manufacturing PMI | Caixin/Markit via investing.com mirror | `indicators-sentiment.md` |
-| `pmi-caixin-services` | 财新服务业PMI | Caixin Services PMI | Caixin/Markit via investing.com mirror | `indicators-sentiment.md` |
 | `lpr-1y` | 贷款市场报价利率 1年期 | Loan Prime Rate 1Y | PBOC via chinamoney | `indicators-rates.md` |
 | `lpr-5y` | 贷款市场报价利率 5年期 | Loan Prime Rate 5Y | PBOC via chinamoney | `indicators-rates.md` |
 | `rrr-major` | 大型金融机构 存款准备金率 | RRR Major Banks | PBOC via akshare | `indicators-rates.md` |
