@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["yfinance==1.3.0", "pandas==2.2.3", "curl_cffi>=0.15"]
+# dependencies = ["yfinance==1.3.0", "pandas==3.0.2", "curl_cffi>=0.15"]
 # ///
 """
 yfinance_client.py — investing-toolkit US stock data adapter
