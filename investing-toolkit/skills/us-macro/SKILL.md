@@ -3,8 +3,9 @@ name: us-macro
 description: >-
   Fetch US macroeconomic and sector-level indicators via FRED CSV. Data layer
   only — no analysis or regime mapping. Returns structured JSON with latest
-  values and direction for 11 indicator groups: rates, inflation, growth,
-  nowcast, housing, industrials, energy, financials, consumer, tech, and ppi.
+  values and direction for 12 indicator groups: rates, inflation, growth,
+  nowcast, real-rates, housing, industrials, energy, financials, consumer,
+  tech, and ppi.
   Designed for handoff to macro-regime-snapshot (IC/GIP mapping) or
   domain-teams:investing-team (sector ETF analysis).
   米国マクロ・セクター指標取得。美國總經與產業指標擷取。
@@ -13,9 +14,10 @@ description: >-
 # US Macro
 
 Fetches US macroeconomic and sector-level indicators from FRED and outputs
-structured JSON. Covers 25 series across 11 groups: 4 core macro groups
-(rates, inflation, growth, nowcast) and 7 sector groups (housing, industrials,
-energy, financials, consumer, tech, ppi) mapped to sector ETFs. This skill is
+structured JSON. Covers 29 series across 12 groups: 5 core macro groups
+(rates, inflation, growth, nowcast, real-rates) and 7 sector groups
+(housing, industrials, energy, financials, consumer, tech, ppi) mapped to
+sector ETFs. This skill is
 **data-only** — it does not analyze, map to regimes, or generate investment
 verdicts. The output is designed for immediate handoff to
 `macro-regime-snapshot` for IC/GIP regime mapping, or to
@@ -33,7 +35,7 @@ symmetric framework for monthly GDP tracking.
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `nowcast`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
+| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `nowcast`, `real-rates`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
 
 ---
 
@@ -70,6 +72,26 @@ symmetric framework for monthly GDP tracking.
 | CFNAI | Chicago Fed National Activity Index | Monthly |
 | WEI | NY Fed Weekly Economic Index | Weekly |
 | USALOLITOAASTSAM | OECD Composite Leading Indicator (USA, amplitude-adjusted) | Monthly |
+
+### real-rates (breakeven inflation + TIPS market real yields)
+
+| Series | Name | Frequency |
+|--------|------|-----------|
+| T5YIE | 5-Year Breakeven Inflation Rate (DGS5 − DFII5) | Daily |
+| T10YIE | 10-Year Breakeven Inflation Rate (DGS10 − DFII10) | Daily |
+| DFII5 | 5-Year Treasury Inflation-Indexed Security (market real yield) | Daily |
+| DFII10 | 10-Year Treasury Inflation-Indexed Security (market real yield) | Daily |
+
+Used by `macro-regime-snapshot` for the real-rate decomposition block:
+`Real = Nominal − Breakeven` (identity-check with DFIIxx market yield).
+Signal thresholds (four-tier, 2025-2026 calibration):
+`< 0%` Accommodative / `0–1.0%` Neutral / `1.0–1.75%` Moderately
+Restrictive / `≥ 1.75%` Clearly Restrictive. Calibrated against HLW r*
+(1.42%), Lubik-Matthes (2.15%), NY Fed composite (~1.7%), and Williams'
+"modestly restrictive" qualitative guidance (Dec 2025 / Jan 2026
+speeches). See `references/us-macro-indicators.md` "Real Rates" section
+and `../macro-regime-snapshot/references/investment-clock-cheatsheet.md`
+"Threshold provenance" for full audit.
 
 ### housing
 
@@ -133,6 +155,7 @@ Map `--indicators` to FRED series IDs:
 | `inflation` | CPIAUCSL,CPILFESL |
 | `growth` | GDPC1,INDPRO |
 | `nowcast` | GDPNOW,CFNAI,WEI,USALOLITOAASTSAM |
+| `real-rates` | T5YIE,T10YIE,DFII5,DFII10 |
 | `housing` | PERMIT,HOUST,CSUSHPISA,MORTGAGE30US |
 | `industrials` | DGORDER |
 | `energy` | DCOILWTICO,DHHNGSP |
@@ -140,7 +163,7 @@ Map `--indicators` to FRED series IDs:
 | `consumer` | RSAFS,UMCSENT |
 | `tech` | CES3133440001,PCUAINFOAINFO |
 | `ppi` | PCUOMFGOMFG |
-| `all` | All 25 series above |
+| `all` | All 29 series above |
 
 ### Step 2 — Launch data-fetcher agent
 
@@ -161,6 +184,7 @@ base_path: {absolute path to investing-toolkit/scripts/}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPC1,INDPRO --periods 12
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPNOW,CFNAI,USALOLITOAASTSAM --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series WEI --periods 52
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T5YIE,T10YIE,DFII5,DFII10 --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PERMIT,HOUST,CSUSHPISA --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series MORTGAGE30US --periods 52
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGORDER --periods 24

@@ -246,7 +246,7 @@ groups + 1 new `demographics` group.
 
 ---
 
-## v1.8.1 — Korea industry activity layer (current)
+## v1.8.1 — Korea industry activity layer
 
 **Scope**: Closes the KR sector-activity coverage gap (identified as
 `candidate` in v1.8.0 catalogue) — adds the monthly K201-K217 경제활동
@@ -277,12 +277,92 @@ sector pulse.
 - [x] `skills/using-investing-toolkit/SKILL.md` + plugin-level `README.md`
   counts updated
 
-### Deferred (unchanged)
-- v1.9.0: full BOK ECOS API integration (lagging CI + ~10K series,
-  requires free API key)
-- v1.10.0+: macro-regime-snapshot v1.7.0-aware refresh (currently only
-  consumes US 8 + JP 13 series; ignores monthly GDP proxies and all
-  post-v1.3.0 country skills)
+### Deferred
+- v1.10.0+: full BOK ECOS API integration (lagging CI + ~10K series,
+  requires free API key; originally scoped as v1.9.0, re-deferred when
+  macro-regime refresh took v1.9.0 slot)
+
+---
+
+## v1.9.0 — macro-regime-snapshot multi-country + LSEG real-rate block (current)
+
+**Scope**: Rewrite `macro-regime-snapshot` to cover **all 5 country
+macro skills** (US/JP/TW/KR/CN) using the v1.7.0 monthly GDP proxies,
+and absorb the LSEG `macro-rates-monitor` dashboard pattern — new
+5-block output (Macro Summary / Yield Curve / Real Rate / IC+GIP /
+Asset-Class Tilts) with signal-label semantics
+(Expansion/Contraction, Accommodative/Restrictive). Adds US real-rate
+block via 4 new FRED series; IC + GIP framework unchanged.
+
+### Phase 1 — us-macro `real-rates` group (+4 FRED series, 25 → 29 total)
+- [x] `scripts/` — no change (fred_client.py is a generic CSV fetcher)
+- [x] `skills/us-macro/SKILL.md` — new `real-rates` group section + Step 1/2 updates
+- [x] `skills/us-macro/references/us-macro-indicators.md` — new Real Rates
+  section (T5YIE, T10YIE, DFII5, DFII10) with threshold framing
+
+### Phase 2 — macro-regime-snapshot rewrite
+- [x] `skills/macro-regime-snapshot/SKILL.md` — complete rewrite:
+  - `region` expanded 3 → 9 values (us / japan / taiwan / korea / china /
+    global / asia-pac / all / free-form list)
+  - Per-country proxy routing (use v1.7.0 monthly GDP proxies, not raw IPI)
+  - New Step 4: real-rate decomposition block (US only)
+  - New Step 5: 5-block dashboard output format
+- [x] `skills/macro-regime-snapshot/references/investment-clock-cheatsheet.md`
+  — extended with per-country proxy mapping, real-rate thresholds
+  section, signal-label glossary (LSEG absorption)
+
+### Phase 3 — Plugin-level docs
+- [x] `commands/invest-macro.md` — `--region` enum updated to 9 values +
+  examples + Real-Rate block note
+- [x] `skills/using-investing-toolkit/SKILL.md` — rows for us-macro
+  (+ real-rates) and macro-regime-snapshot (5-country + LSEG dashboard)
+- [x] `README.md` — Skills table counts + Version Highlights entry
+- [x] `ROADMAP.md` — this v1.9.0 entry
+- [x] `.claude-plugin/plugin.json` — 1.8.1 → 1.9.0
+
+### Phase 4 — Per-country threshold calibration (Option B hybrid)
+- [x] `references/thresholds-{us,japan,taiwan,korea,china}.md` (5 new
+  files, consistent 8-section template) — per-country inflation target,
+  NAIRU, r* estimate, real-rate block status, structural regime notes,
+  asset-class tilt calibration, primary-source URLs, native-language sources
+- [x] `references/recalibration-protocol.md` — triggers, cadence,
+  source tiers (A/B/C/D), native-language priority, escalation rules
+- [x] SKILL.md Step 1 — per-country threshold-file routing + explicit
+  "do NOT apply US thresholds to non-US countries" guardrail
+
+### Phase 5 — Primary-source grounding audit (following domain-teams convention)
+- [x] `research/grounding-v1.9.0.md` — **consolidated audit trail**
+  (5 parallel native-language research agents, 2026-04-18). Fixed
+  **19 🔴 + 16 ⚠️ corrections** across 5 countries (critical vintage
+  errors in BOJ展望/JILPT NAIRU/Fed FAIT-retired/PBOC-CPI-target-
+  reduced/KOSPI-concentration/TSMC-weight). 20-year trajectory
+  research (2005-2026) per country. Includes JP integration decision
+  (full native-language priority), fabrication-risk warnings
+  (3 unverifiable citations removed).
+- [x] Threshold files updated with "Grounding Status" blocks at top
+  (per-file corrections audit + next-recalibration date).
+- [x] Cheatsheet "Threshold provenance" updated with revised r*
+  estimates (HLW 0.75%, LM 1.68%, not prior 1.42% / 2.15%).
+
+### LSEG absorption summary
+
+Pattern ported from Anthropic's `financial-services-plugins/partner-built/lseg/skills/macro-rates-monitor` (paid MCP → free FRED data):
+
+| LSEG pattern | Our port |
+|--------------|----------|
+| 4-block dashboard (Macro / Curve / Real Rate / Swap) | 5-block (added IC + GIP + Asset Tilts) |
+| Real-rate decomposition (nominal − breakeven) | US-only via T5YIE/T10YIE/DFII5/DFII10 |
+| Signal labels (Expansion/Restrictive/etc.) | Added to Block 1 + glossary in cheatsheet |
+| Yield-curve slope + shape | Preserved (Block 2) |
+| Swap-spread block | **Deferred to v1.10.0+** (needs more FRED series) |
+
+### Deferred to v1.10.0+
+- JP JGBi real-rate (MoF XLS scraper)
+- KR KTBi real-rate (needs BOK ECOS API key)
+- ISM PMI via FRED NAPM
+- TW / KR local PMI (製造業採購經理人指數 / 기업경기실사)
+- Swap-spread block (requires additional FRED series + signal calibration)
+- Full BOK ECOS API (lagging CI 후행지수 + 10K series; re-deferred from v1.9.0)
 
 ---
 

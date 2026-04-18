@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.8.1
+**Version**: 1.9.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -53,7 +53,7 @@ router):
 
 | Skill | Layer | Purpose | Status |
 |-------|-------|---------|--------|
-| `us-macro` | data | US macro via FRED (25 series incl. `nowcast` group) | v1.7.0 |
+| `us-macro` | data | US macro via FRED (29 series incl. `nowcast` + new `real-rates` group) | v1.9.0 |
 | `japan-macro` | data | Japan macro via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio) | v1.7.0 |
 | `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
 | `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (**54 indicators, 13 groups** incl. monthly `industry` activity layer; full 98-code catalogue in `docs/`) | v1.8.1 |
@@ -61,7 +61,7 @@ router):
 | `us-stock-snapshot` | data | yfinance price + info for US tickers | v1.0.0 |
 | `taiwan-stock-snapshot` | data | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
 | `technical-snapshot` | data | RSI / MACD / Bollinger / ATR / SMA via `ta_client.py` | v1.2.0 |
-| `macro-regime-snapshot` | aggregation | Investment Clock phase + GIP quadrant from country macros | v1.0.0 |
+| `macro-regime-snapshot` | aggregation | 5-country IC + GIP regime call (US/JP/TW/KR/CN) + real-rate block (US) with LSEG-style signal labels | v1.9.0 |
 | `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `dcf-valuation` | aggregation | 3-stage DCF + sensitivity table | v1.0.0 |
 | `invest-portfolio` | aggregation | Portfolio review — P&L + regime overlay + rebalance | v1.2.0 |
@@ -179,7 +179,8 @@ Plugin-level cross-market references (complement the per-skill references):
 
 ## Version Highlights
 
-- **v1.8.1** (current) — Korea-macro monthly industry activity layer (43 → 54 indicators; new `industry` group: K201-K217 sector activity — manufacturing inventory/shipment/operating-rate, services production, retail sales, wholesale-retail, credit-card usage, machinery orders, capital-goods output, construction completion/orders)
+- **v1.9.0** (current) — macro-regime-snapshot 5-country refresh (US/JP/TW/KR/CN) + LSEG-style 5-block dashboard (Macro Summary / Yield Curve / Real Rate / IC+GIP Regime / Asset-Class Tilts) + new US `real-rates` group in us-macro (T5YIE / T10YIE / DFII5 / DFII10 — real-rate decomposition block). Adds signal-label semantics (Expansion/Contraction, Accommodative/Restrictive, etc.)
+- **v1.8.1** — Korea-macro monthly industry activity layer (43 → 54 indicators; new `industry` group: K201-K217 sector activity — manufacturing inventory/shipment/operating-rate, services production, retail sales, wholesale-retail, credit-card usage, machinery orders, capital-goods output, construction completion/orders)
 - **v1.8.0** — Korea-macro catalogue + structural refactor + 15 Tier-B presets (28 → 43 indicators)
 - **v1.7.3** — Taiwan + Korea monthly GDP proxy tagging (5-market framework complete)
 - **v1.7.2** — Router sync + Layer column

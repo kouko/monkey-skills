@@ -1,38 +1,110 @@
 ---
 name: macro-regime-snapshot
-description: Diagnose the current macro regime using country macro skills. Maps key indicators to the Investment Clock phase and Hedgeye GIP quadrant, then outputs a regime call with asset-class tilts. Supports US, Japan, and global (side-by-side) regions.
+description: >-
+  Diagnose the current macro regime across US/JP/TW/KR/CN using country macro
+  skills. Maps each country's growth + inflation direction to the Investment
+  Clock (IC) phase + Hedgeye GIP quadrant, decomposes US real rates (breakeven
+  + TIPS), and outputs a 5-block dashboard (Macro Summary / Yield Curve /
+  Real Rate / IC+GIP Regime / Asset-Class Tilts) with LSEG-style signal labels
+  (Expansion/Contraction, Accommodative/Restrictive). Data + aggregation layer.
 ---
 
 # macro-regime-snapshot
 
-Fast macro regime call using the Investment Clock (IC) + Hedgeye GIP framework. Delegates data fetching to country-specific macro skills (`us-macro`, `japan-macro`), maps to IC 2x2 phase, cross-checks with GIP quadrant, and outputs a structured regime call with 3 asset-class tilts.
+Five-country macro regime call using the Investment Clock (IC) +
+Hedgeye GIP framework, extended with an LSEG-style real-rate
+decomposition block for the US. Delegates all raw data fetching to
+country-specific macro skills (`us-macro`, `japan-macro`, `taiwan-macro`,
+`korea-macro`, `china-macro`) — does not call scripts directly. Maps
+each country's Growth + Inflation direction to an IC phase + GIP
+quadrant, then outputs a dashboard with asset-class tilts.
 
-Full IC and GIP framework details: see `domain-teams:investing-team` standards/investment-macro-regime.md. This skill is the **data layer** — it fetches and maps. Analysis and conviction judgments belong to investing-team.
+Full IC + GIP framework details + per-country proxy mapping:
+`references/investment-clock-cheatsheet.md`. This skill is the
+**aggregation layer** — analysis conviction, ISQ gating, and memo-grade
+commentary belong in `domain-teams:investing-team`.
 
 ---
 
 ## Inputs
 
-| Input | Values | Default |
-|-------|--------|---------|
-| `region` | `us` / `japan` / `global` | `us` |
-| `date_context` | Optional override (e.g. "as of 2026-03") | latest available |
+| Parameter | Required | Default | Values |
+|-----------|----------|---------|--------|
+| `region` | no | `us` | `us` / `japan` / `taiwan` / `korea` / `china` / `global` / `asia-pac` / `all` / free-form comma list (e.g. `us,taiwan`) |
+| `date_context` | no | latest | Optional override (e.g. "as of 2026-03") |
+
+### Region expansion
+
+| Value | Countries |
+|-------|-----------|
+| `us` | US only |
+| `japan` | Japan only |
+| `taiwan` | Taiwan only |
+| `korea` | Korea only |
+| `china` | China only |
+| `global` | US + Japan (backward-compat default for pre-v1.9.0 callers) |
+| `asia-pac` | Japan + Taiwan + Korea + China |
+| `all` | US + Japan + Taiwan + Korea + China |
+| `us,korea` etc. | Free-form comma list |
+
+Each selected country produces its own independent 5-block dashboard;
+multi-country invocations append a **Cross-Market Divergence** note
+at the end.
 
 ---
 
 ## How It Works
 
-### Step 1 — Fetch macro indicators via country skills
+### Step 1 — Route region(s) to country macro skills + load country thresholds
 
-Route to the appropriate country macro skill based on `region`:
+| Country | Route to | Indicator groups required | Threshold reference |
+|---------|----------|---------------------------|---------------------|
+| US | `us-macro` | `rates`, `inflation`, `nowcast`, `real-rates` | `references/thresholds-us.md` |
+| Japan | `japan-macro` | `rates`, `inflation`, `growth` (景気動向指数 CI), `forex` | `references/thresholds-japan.md` |
+| Taiwan | `taiwan-macro` | `rates`, `inflation`, `cycle` (NDC 景氣燈號) | `references/thresholds-taiwan.md` |
+| Korea | `korea-macro` | `rates`, `inflation`, `cycle` (K253 CI) | `references/thresholds-korea.md` |
+| China | `china-macro` | `rates`, `inflation`, `growth` (三大数据) | `references/thresholds-china.md` |
 
-- **`region=us`** — Use the `us-macro` skill to fetch US indicators (FRED 8-series: T10Y2Y, DGS10, DGS2, FEDFUNDS, CPIAUCSL, CPILFESL, GDPC1, INDPRO). Then proceed to Step 2.
-- **`region=japan`** — Use the `japan-macro` skill to fetch Japan indicators (BOJ + e-Stat series: CPI, Core CPI, GDP, Industrial Production, BOJ Policy Rate, JGB 10Y, Unemployment, Tankan DI, etc.). Then proceed to Step 2.
-- **`region=global`** — Fetch both `us-macro` and `japan-macro` in parallel. Then produce **side-by-side regime calls** — one IC phase per country, plus a combined divergence note. Proceed to Step 2 for each country independently.
+Invoke each country skill in parallel when multi-country regions are
+requested. **Load the corresponding `references/thresholds-{country}.md`
+file** for each selected country — this file contains the
+country-specific:
 
-### Step 2 — Map to IC 2x2 grid
+- Inflation target + tolerance band + Above/At/Below-target thresholds
+- NAIRU estimate + Tight/Balanced/Slack unemployment bands
+- Policy rate + nominal + real neutral-rate estimate
+- Real-rate block availability + thresholds (US only; others "N/A")
+- Structural regime notes (deflation legacy / tech concentration /
+  property deleveraging / etc.)
+- Country-specific IC sector tilt adjustments
+- Primary-source URLs + citations for audit
 
-Compute direction (rising / falling) for Growth proxy (INDPRO MoM rate-of-change) and Inflation proxy (CPIAUCSL YoY rate-of-change):
+**Do NOT apply US thresholds to non-US countries** — e.g. JP NAIRU is
+~3.5% (not US's 4.4%); CN inflation target is 3% (not 2%); TW uses
+flexible definition (not a rigid target). Always read the per-country
+threshold file before classifying signals.
+
+### Step 2 — Extract per-country Growth + Inflation direction
+
+Use the **v1.7.0 monthly GDP proxies** (not raw IPI) for the Growth
+axis. See `references/investment-clock-cheatsheet.md` §"Per-country
+proxy mapping" for the canonical series.
+
+| Country | Growth proxy (monthly) | Inflation proxy |
+|---------|------------------------|-----------------|
+| US | `nowcast.CFNAI` primary + `nowcast.WEI` secondary | `CPIAUCSL` YoY, check vs prior 3-month average |
+| JP | `coincident-index` CI (景気動向指数) | 全国CPI YoY |
+| TW | `cycle.signal` 景氣燈號 numeric score (1-9) | CPI YoY |
+| KR | `coincident-cycle` K253 (동행지수순환변동치) | K401 CPI YoY |
+| CN | `industrial-yoy` primary (+ 4-component raw overlay) | CPI YoY |
+
+Compute direction: compare latest reading vs prior 3-month average.
+- **Rising**: latest > prior-3m by ≥ half a standard deviation (or
+  ≥ 0.1 for normalised indices like CFNAI)
+- **Falling**: latest < prior-3m by same threshold
+- **Flat**: within the band (note as Stagnation signal)
+
+### Step 3 — Map to IC 2×2 + GIP quadrant
 
 ```
               Inflation Rising    Inflation Falling
@@ -42,79 +114,191 @@ Growth Falling    IC Phase 3           IC Phase 4
                 (Stagflation)        (Reflation)
 ```
 
-**Japan note**: Japan's uniquely low inflation regime means "Inflation Rising" in Japan may still be below 2%. Apply the IC framework to the **direction of change** (rate-of-change), not the absolute level. A move from 0.5% to 1.5% is "Inflation Rising" even though the level remains below most developed-market norms.
+GIP quadrant (Hedgeye): same 2×2 but using rate-of-change (2nd
+derivative) instead of level direction. IC and GIP can disagree — note
+any divergence.
 
-### Step 3 — Cross-check with Hedgeye GIP quadrant
+**Country-specific notes**:
+- **JP**: Japan's low-inflation regime means "Inflation Rising" may
+  still be below 2%. Apply IC to **direction of change**, not level.
+- **CN**: CN growth direction uses `industrial-yoy` per v1.7.1 decision
+  (no market consensus on composite synthesis — Li Keqiang obsolete,
+  SF Fed CAT quarterly, GS/Bloomberg proprietary). Overlay the other
+  three Tier-2 components (`retail-yoy`, `fai-yoy`, `services-production-yoy`)
+  as supporting context, flag if components disagree.
+- **TW**: 五色景氣燈號 score is already a pre-aggregated signal (NDC
+  publishes monthly). Score ≥ 32 (綠燈+) = Rising; < 23 (黃藍燈) = Falling.
 
-Use rate-of-change (not level) for both GDP and Inflation:
-- Quad 1: GDP+ Inflation+
-- Quad 2: GDP+ Inflation-
-- Quad 3: GDP- Inflation-
-- Quad 4: GDP- Inflation+
+### Step 4 — Real-rate decomposition (US only)
 
-GIP is a cross-check, not an override. Note any IC/GIP divergence.
+Pull from us-macro `real-rates` group:
 
-### Step 4 — Output regime call
+| Tenor | Nominal | Breakeven | Real (market) | Signal |
+|-------|---------|-----------|---------------|--------|
+| 5Y | DGS5 | T5YIE | DFII5 | see threshold below |
+| 10Y | DGS10 | T10YIE | DFII10 | see threshold below |
 
-Produce structured markdown (see Output Format below).
+**Identity check**: `Nominal ≈ Breakeven + Real (DFII)`. If mismatch
+> 5 bp, note possible liquidity-premium adjustment.
+
+**Signal thresholds (four-tier, per-tenor, applied to DFIIxx — 2025-2026 calibration)**:
+- `< 0%` → **Accommodative**
+- `0% ≤ x < 1.0%` → **Neutral** (around HLW r* minus term premium)
+- `1.0% ≤ x < 1.75%` → **Moderately Restrictive** (matches Williams' "modestly restrictive" language, Dec 2025 / Jan 2026 speeches)
+- `≥ 1.75%` → **Clearly Restrictive** (above FOMC long-run dot upper range; full headwind)
+
+The four-tier split respects the post-COVID r* debate: HLW (2025) = 1.42%,
+Lubik-Matthes = 2.15%, NY Fed composite ≈ 1.7%. A single cut-off isn't
+defensible given this spread. See
+`references/investment-clock-cheatsheet.md` § "Threshold provenance"
+for sources + calibration audit.
+
+For non-US countries emit: "Real-rate decomposition not available — no
+developed TIPS/linker series in free data sources. JP JGBi could be
+added via MoF scraper in a future release."
+
+### Step 5 — Output 5-block dashboard
+
+Produce one per-country block group, then a cross-market note if
+multi-country. See **Output Format** below.
 
 ---
 
 ## Data Sources
 
-- **US**: via `us-macro` skill (FRED 8 indicators)
-- **Japan**: via `japan-macro` skill (BOJ + e-Stat 13 indicators)
-- Reference framework: `references/investment-clock-cheatsheet.md`
+| Country | Via skill | Free | Notes |
+|---------|-----------|------|-------|
+| US | `us-macro` (29 FRED series) | ✓ | includes new `real-rates` group (T5YIE/T10YIE/DFII5/DFII10) |
+| Japan | `japan-macro` (22 BOJ + e-Stat series) | ✓ | 景気動向指数 CI trio from e-Stat |
+| Taiwan | `taiwan-macro` (30 series, 4 scripts) | ✓ | NDC 景氣燈號 pre-aggregated |
+| Korea | `korea-macro` (54 series via BOK ECOS-KEYSTAT) | ✓ | K253 CI pre-aggregated |
+| China | `china-macro` (34 series, NBS + PBOC) | ✓ | 三大数据 raw components |
+
+Reference framework: `references/investment-clock-cheatsheet.md`.
 
 ---
 
 ## Output Format
 
 ```markdown
-## Macro Regime Snapshot — {date}
+# Macro Regime Snapshot — {Region} — {date}
 
+## {Country 1} Dashboard
+
+### Block 1 — Macro Summary
+| Indicator | Latest | Prior | Direction | Signal |
+|-----------|--------|-------|-----------|--------|
+| Growth proxy (CFNAI / CI / signal / industrial-yoy) | … | … | Rising / Falling | Expansion / Contraction / Stagnation |
+| CPI YoY | …% | …% | Rising / Falling | Above target / At target / Below target |
+| Unemployment | …% | …% | Rising / Falling | Tight / Balanced / Slack |
+| Policy rate | …% | …% | — | Accommodative / Neutral / Restrictive |
+
+### Block 2 — Yield Curve Snapshot
+| Tenor | Yield | vs Prior | Notes |
+|-------|-------|----------|-------|
+| 2Y | …% | … bp | |
+| 5Y | …% | … bp | |
+| 10Y | …% | … bp | |
+| 30Y | …% | … bp | |
+
+**Slope**: 2s10s = … bp / 3M10Y = … bp
+**Curve shape**: Normal / Flat / Inverted / Humped
+
+### Block 3 — Real Rate Decomposition   ← (US only)
+| Tenor | Nominal | Breakeven | Real (DFII) | Signal |
+|-------|---------|-----------|-------------|--------|
+| 5Y | …% | …% | …% | Accommodative / Neutral / Moderately Restrictive / Clearly Restrictive |
+| 10Y | …% | …% | …% | Accommodative / Neutral / Moderately Restrictive / Clearly Restrictive |
+
+(For non-US: "Real-rate decomposition not available — no developed
+TIPS/linker series in free data sources.")
+
+### Block 4 — IC + GIP Regime Call
 **IC Phase**: {1 Recovery / 2 Overheat / 3 Stagflation / 4 Reflation}
 **GIP Quadrant**: {Quad 1-4 label}
-**Divergence**: {IC and GIP agree / note if divergent}
+**Divergence**: {agreement / note if divergent}
 
-### Key Indicators
-
-| Indicator | Latest | Prior | Direction |
-|-----------|--------|-------|-----------|
-| INDPRO MoM | ... | ... | Rising / Falling |
-| CPI YoY | ... | ... | Rising / Falling |
-| Core CPI YoY | ... | ... | Rising / Falling |
-| 10Y-2Y Spread | ... | ... | Steepening / Flattening |
-| FEDFUNDS | ... | ... | — |
-
-### Asset-Class Tilts
-
+### Block 5 — Asset-Class Tilts
 | Asset Class | Tilt | Rationale |
 |-------------|------|-----------|
-| Equities | ... | ... |
-| Fixed Income | ... | ... |
-| Commodities | ... | ... |
+| Equities | Overweight / Neutral / Underweight | (IC phase mapping) |
+| Fixed Income | … | … |
+| Commodities | … | … |
 
 ### Confidence Note
 {Data lag note + any missing series + confidence level: High / Medium / Low}
+
+---
+
+## {Country 2} Dashboard
+… (repeat Blocks 1-5) …
+
+---
+
+## Cross-Market Divergence   ← (only for multi-country)
+2-3 sentences on whether country regimes align or diverge, and what
+that implies (e.g. "US in Phase 2 Overheat while CN in Phase 4 Reflation
+— classic USD-strength / EM-headwind setup").
 ```
 
 ---
 
 ## Limitations
 
-FRED data has publication lags:
-- CPI: ~2–3 weeks after reference month
-- GDP (GDPC1): ~1 month (advance estimate)
-- INDPRO: ~3–4 weeks after reference month
+- **Publication lags**: CPI ~2-3 weeks, CFNAI ~3 weeks, CI ~5-6 weeks,
+  country macro-proxies ~4-8 weeks after reference month. Always cite
+  reference dates in the Confidence Note.
+- **No real-rate block for non-US**: JGBi / KTBi / linkers not wired
+  in v1.9.0. Deferred to v1.10.0+.
+- **CN no consensus composite**: `industrial-yoy` is the primary Growth
+  proxy but the 4 components (industrial/retail/fai/services) often
+  disagree month-to-month — flag in output when they diverge > 2%.
+- **Signal thresholds are heuristics, not dogma**: calibration vintages
+  are documented in per-country threshold files
+  (`references/thresholds-{country}.md`). Values should be revised as
+  FOMC dot plot, BOJ 展望, BOK 통화정책방향 updates arrive. Re-read the
+  threshold file for each country before each regime call.
 
-The regime call reflects the latest **available** data, not real-time conditions. Always note the reference dates of the most recent observations in the confidence note.
+---
+
+## References
+
+Framework + country calibration:
+
+- `references/investment-clock-cheatsheet.md` — IC + GIP framework,
+  per-country proxy mapping, real-rate interpretation, signal-label
+  glossary, threshold provenance
+- `references/recalibration-protocol.md` — when & how to re-verify
+  threshold files against primary sources (triggers, cadence,
+  source tiers, native-language priority)
+- `research/grounding-v1.9.0.md` — **primary-source audit trail**
+  for 5-country threshold calibration (2026-04-18, 5 parallel
+  native-language grounding agents; found & fixed 19 🔴 + 16 ⚠️
+  corrections across US/JP/TW/KR/CN)
+- `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW
+  / Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
+- `references/thresholds-japan.md` — BOJ 2% target (no band), JILPT
+  NAIRU ~3.5-3.6%, BOJ WP24-J-09 r* = -0.25% mean, deflation-legacy
+  caveats, post-YCC regime
+- `references/thresholds-taiwan.md` — CBC 彈性定義, 景氣對策信號 5-color
+  scoring (9-45 composite), TAIEX ~65% tech + TSMC ~40%
+- `references/thresholds-korea.md` — BOK 2% target, KDI NAIRU ~3.0-3.5%,
+  KOSPI Samsung + SK Hynix ~30%, household-debt 105% GDP caveat
+- `references/thresholds-china.md` — 3% State Council target (ceiling
+  not center), 5.5% 城鎮調查失業率 target, multi-rate PBOC framework,
+  property deleveraging structural overhang, Phase-3/4 default regime
 
 ---
 
 ## Attribution
 
 IC + GIP framework details and regime playbooks are maintained in:
-`domain-teams:investing-team` → standards/investment-macro-regime.md
+`domain-teams:investing-team` → standards/investment-macro-regime.md.
 
-This skill is the data layer. For full analysis, conviction ratings, and portfolio-level implications, route to `domain-teams:investing-team`.
+Real-rate / signal-label pattern inspired by the LSEG partner-built
+`macro-rates-monitor` skill in Anthropic's financial-services-plugins
+repo (ported from paid MCP to free FRED data).
+
+This skill is the aggregation layer. For full analysis, conviction
+ratings, ISQ gating, and portfolio-level implications, route to
+`domain-teams:investing-team`.
