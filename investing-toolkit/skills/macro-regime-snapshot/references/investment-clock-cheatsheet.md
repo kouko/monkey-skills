@@ -127,18 +127,27 @@ literature, so a single cut-off isn't defensible):
 
 | Source | r* estimate (real) | How it maps |
 |--------|-------------------|-------------|
-| HLW (Holston-Laubach-Williams, 2025 vintage) | **1.42%** | Lower-bound anchor; r* hasn't risen materially post-COVID |
-| Lubik-Matthes (Richmond Fed) | **2.15%** | Upper-bound anchor; r* has risen post-COVID |
-| NY Fed composite (2025-08 note) medium-run nominal 3.7% (band 2.9-4.5%) | **~1.7% real** (band 0.9-2.5%) | 77% probability statement current stance is restrictive |
-| FOMC long-run dot plot (19 members, Dec 2025) | **0.6-1.9% real** (nominal 2.6-3.9% − 2% target) | Spread reflects intra-FOMC disagreement |
-| BOJ working paper WP24-J-09 on US r* | 0.5-1.5% | Conservative / pre-2024 consensus |
-| Itochu / Mizuho house view | 0.5-1.5% | Japanese sell-side convergence |
+| **HLW (Holston-Laubach-Williams 2023 post-COVID, 2025-Q4 NY Fed vintage)** | **~0.75%** | Lower-bound anchor; Williams maintains r\* has NOT meaningfully risen post-COVID |
+| **Lubik-Matthes (Richmond Fed, 2025-Q4, updated 2026-03-10)** | **1.68%** | Upper-bound anchor; r\* has risen post-COVID |
+| FOMC Dec 2025 SEP longer-run real | **1.0% median** (CT 0.8-1.5%, range 0.6-1.9%) | 2019 0.5% trough → 2025 1.0% median = ~50 bp recovery |
+| NY Fed composite (2025-08 Liberty Street) medium-run nominal 3.7% | ~1.7% real (band 0.9-2.5%) | 77% probability statement current stance is restrictive |
+| Itochu / Mizuho house view (2024) | 0.5-1.5% | Pre-2025 Japanese sell-side convergence |
 
-**Rationale for 1.75% cut-off**: HLW + 50 bp term premium ≈ 1.9%, but
-term-premium compression has been observed post-COVID (Adrian-Crump-Moench
-10Y TP falling below 50 bp). Using 1.75% as "clearly above neutral"
-respects both the HLW + term-premium channel and stays below Lubik-Matthes
-r* estimate (no strong case for Moderate beyond 2.15%).
+**Verified 2026-04-18** via `../research/grounding-v1.9.0.md`. Prior draft
+values (HLW 1.42%, LM 2.15%) were web-synthesis errors — likely confused
+LW-closure model with HLW, and LM figure not matching current Richmond Fed
+vintage. Current 68% cross-method band: **~0.5-1.9% real**.
+
+**Rationale for 1.75% cut-off (revised post-grounding)**:
+- HLW 0.75% + Adrian-Crump-Moench 10Y term premium ~50 bp ≈ **1.25%**
+- LM 1.68% + 50 bp term premium ≈ **2.18%**
+- Dec 2025 SEP longer-run real median 1.0% + 50 bp TP ≈ **1.50%**
+- Cross-method central tendency: ~1.25-1.75% for "clearly above neutral"
+- 1.75% sits at the upper end — still defensible, but **grounding note
+  now flags this may be ~0.25 pp too aggressive** given corrected
+  (lower) HLW. Current DFII5 = 1.31%, DFII10 = 1.93% with revised
+  thresholds: DFII5 **Moderately Restrictive** (between HLW+TP and
+  SEP+TP), DFII10 **Clearly Restrictive** (above LM+TP).
 
 **Fed qualitative anchor** (decisive): Williams in his Dec 2025 "Resilience"
 and Jan 2026 "A Few Words for the New Year" speeches labels current policy

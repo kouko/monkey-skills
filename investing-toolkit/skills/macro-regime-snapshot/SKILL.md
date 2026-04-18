@@ -268,6 +268,13 @@ Framework + country calibration:
 - `references/investment-clock-cheatsheet.md` — IC + GIP framework,
   per-country proxy mapping, real-rate interpretation, signal-label
   glossary, threshold provenance
+- `references/recalibration-protocol.md` — when & how to re-verify
+  threshold files against primary sources (triggers, cadence,
+  source tiers, native-language priority)
+- `research/grounding-v1.9.0.md` — **primary-source audit trail**
+  for 5-country threshold calibration (2026-04-18, 5 parallel
+  native-language grounding agents; found & fixed 19 🔴 + 16 ⚠️
+  corrections across US/JP/TW/KR/CN)
 - `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW
   / Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
 - `references/thresholds-japan.md` — BOJ 2% target (no band), JILPT

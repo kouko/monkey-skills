@@ -3,13 +3,49 @@
 **Authority**: 中央銀行 (CBC) + 國家發展委員會 (NDC) + 主計總處 (DGBAS) |
 **Currency**: TWD | **Calibration vintage**: 2026-Q1
 
+## Grounding Status (as of 2026-04-18)
+
+**Last full verification**: 2026-04-18 via `../research/grounding-v1.9.0.md`
+(5-country parallel grounding note; TW section).
+
+**Verified (✅)**: 五色燈號 5 色分數範圍、CBC 貼現率 2.00%、
+CPI 2026-03 = 1.20% (DGBAS)、2024-06 CNA 彈性定義原文。
+
+**Corrected (🔴 in prior draft → fixed below)**:
+1. **9 構成指標 2 項錯誤**：
+   - 「非農業部門就業人數」→ **工業及服務業加班工時**
+   - 「製造業存貨率比率」→ **製造業營業氣候測驗點 (TIER)**
+2. **TSMC 佔 TAIEX 44.30%** (TWSE 2026-03-31 官方；前 10 大合計 58.27%)
+   — NOT ~40%. 5 年從 28% 暴升 +17 pp，歷史最高集中度。
+3. **景氣對策信號現行版本是 2024 修訂** — NOT 2013. 9 次修訂依序：
+   1978/1984/1989/1995/2001/2007/2013/2018/**2024**.
+4. **2009 GFC 失業率月峰 6.04%** (2009-08), 年均 5.85% — NOT 6.1%.
+
+**Partial (⚠️)**:
+- 「具彈性」用語實際是 CBC 高層場外解釋語，**理監事決議新聞稿本身未使用**，
+  改稱「適時調整」。
+- NAIRU 3.5-4.0% 降級為「學術推估」— CBC/DGBAS 無官方 NAIRU 發布值。
+
+**新發現**：
+- **2014-2023 十年無紅燈** → **2024-02 首度破紅燈 + 創 31 年分數新高 40 分**
+- 2026-02 再現紅燈 40 分
+
+**Next recalibration**: July 2026 (CBC Q2 理監事 + NDC 燈號年度統計更新).
+
+---
+
 ---
 
 ## Inflation Target / 物價穩定定義
 
-- **No explicit numeric target.** CBC explicitly rejects rigid 2%
-  targeting, citing "小型開放經濟體" (small open economy) context —
-  uses **"具彈性的物價穩定定義"** (flexible price-stability definition).
+- **No explicit numeric target.** 2024-06 央行對外明確化其長期實踐：
+  「台灣作為小型開放經濟體，採**具彈性的物價穩定定義**，應較妥適」
+  （中央社 2024-06-19）。理由為（1）Fed/ECB 以 2% 為「中期目標」預留
+  彈性；（2）疫後結構性轉變削弱央行對通膨控制力；（3）台灣通膨易受
+  供給面衝擊，單靠貨幣政策效果有限。
+- **重要注意**：CBC 理監事決議新聞稿本身**並未使用「具彈性」字眼**，
+  改稱「適時調整貨幣政策，以達成物價穩定與金融穩定」。「彈性」為
+  央行高層場外解釋語，非常設正式決議用語。
 - **Informal watchline**: **2%** is commonly cited as 警戒線 (alert
   level) in commentary but is **not binding** on CBC.
 - **Recent readings (2026-Q1)**:
@@ -35,11 +71,15 @@ checking whether it's demand or supply.
 
 ## Labor Market Tightness (NAIRU)
 
-- **No official NAIRU publication** from 中央銀行 / 主計總處. Academic
-  estimates + historical structural rate: **~3.5-4.0%**.
+- **No official NAIRU publication** from 中央銀行 / 主計總處. 中央銀行
+  季刊有 2 篇 NAIRU / 自然失業率專題研究 (CBC 季刊「台灣地區無加速通膨
+  失業率 NAIRU 之探討」+「應用勞動市場流動率探討台灣自然失業率」)；
+  學術估計多落於 **3.5-4.0% 區間**，但此為**學術推估，非央行政策錨**。
 - **Recent unemployment** (主計總處 DGBAS):
-  - 2026-Q1: **~3.4%** (low end of post-1990 structural range)
-  - Historic range: 3.4-6.1% (2009 GFC peak)
+  - 2026-Q1: **~3.4%** (post-1990 structural range 的低端)
+  - **2024 年均 3.38%**（24 年新低）
+  - Historic range: 3.38% (2024 年均) 到 5.85% (2009 年均)；**月度峰值
+    2009-08 為 6.04%**（非 6.1%）
 - **Bands (using ~3.7% structural anchor ± 0.4 pp)**:
   - `unemp < 3.3%` → Tight
   - `3.3% ≤ unemp ≤ 4.1%` → Balanced
@@ -56,7 +96,20 @@ Taiwan has a **unique pre-aggregated regime indicator**: 五色景氣燈號
 (5-color business cycle signal) published monthly by NDC 國家發展委員會.
 This IS the official Taiwanese monthly GDP proxy.
 
-**Construction**: 9 indicators × 1-5 分/指標 → composite **9-45 分**
+**Construction (2024 現行版 revision)**: 9 indicators × 1-5 分/指標 → composite **9-45 分**
+
+**9 constituent indicators (2024 version)**:
+1. 貨幣總計數 M1B 變動率
+2. 股價指數
+3. 工業生產指數
+4. **工業及服務業加班工時**（注意：不是「非農業部門就業人數」— 後者為同時指標）
+5. 海關出口值
+6. 機械及電機設備進口值
+7. 製造業銷售量指數
+8. 批發、零售及餐飲業營業額
+9. **製造業營業氣候測驗點 (TIER)**（注意：不是「製造業存貨率比率」）
+
+**Revision history**: 1978 / 1984 / 1989 / 1995 / 2001 / 2007 / 2013 / 2018 / **2024 (current)**
 
 **Signal thresholds (NDC official)**:
 
@@ -121,11 +174,16 @@ been issued infrequently and has minimal secondary-market liquidity.
 
 ## Asset-Class Tilt Calibration
 
-- **Equity index concentration — EXTREME**:
-  - TAIEX is **~65% tech-heavy** (semi + electronics)
-  - **TSMC alone ~40%** of weighted index
-  - Non-tech sectors (financials, traditional industry) only ~35%
-  - → Regime tilts MUST account for **semi cycle = TW equity cycle**
+- **Equity index concentration — EXTREME (歷史最高)**:
+  - TAIEX **~60%+ electronics-heavy** (TWSE 未公布電子類股於加權指數之
+    單一整合權重；60% 為市場估計)
+  - **TSMC alone 44.30%** of weighted index（TWSE 2026-03-31）；
+    前 10 大成分合計 **58.27%**
+  - 歷史集中度軌跡：2020 ~28% → 2024-06 34% → **2026-03 44.30%**
+    （5 年 +17 pp，歷史最高）
+  - 電子類股指數內 TSMC 佔 **56.32%**
+  - → Regime tilts MUST account for **TSMC = TW equity cycle**
+    (實質上 TAIEX ≈ TSMC ADR 代理)
 - **Fixed income**: TW government bonds (公債) smaller market than
   TW equities; less useful for regime signal. CBC interventions
   compress yield movements.

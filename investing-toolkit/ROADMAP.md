@@ -320,6 +320,30 @@ block via 4 new FRED series; IC + GIP framework unchanged.
 - [x] `ROADMAP.md` — this v1.9.0 entry
 - [x] `.claude-plugin/plugin.json` — 1.8.1 → 1.9.0
 
+### Phase 4 — Per-country threshold calibration (Option B hybrid)
+- [x] `references/thresholds-{us,japan,taiwan,korea,china}.md` (5 new
+  files, consistent 8-section template) — per-country inflation target,
+  NAIRU, r* estimate, real-rate block status, structural regime notes,
+  asset-class tilt calibration, primary-source URLs, native-language sources
+- [x] `references/recalibration-protocol.md` — triggers, cadence,
+  source tiers (A/B/C/D), native-language priority, escalation rules
+- [x] SKILL.md Step 1 — per-country threshold-file routing + explicit
+  "do NOT apply US thresholds to non-US countries" guardrail
+
+### Phase 5 — Primary-source grounding audit (following domain-teams convention)
+- [x] `research/grounding-v1.9.0.md` — **consolidated audit trail**
+  (5 parallel native-language research agents, 2026-04-18). Fixed
+  **19 🔴 + 16 ⚠️ corrections** across 5 countries (critical vintage
+  errors in BOJ展望/JILPT NAIRU/Fed FAIT-retired/PBOC-CPI-target-
+  reduced/KOSPI-concentration/TSMC-weight). 20-year trajectory
+  research (2005-2026) per country. Includes JP integration decision
+  (full native-language priority), fabrication-risk warnings
+  (3 unverifiable citations removed).
+- [x] Threshold files updated with "Grounding Status" blocks at top
+  (per-file corrections audit + next-recalibration date).
+- [x] Cheatsheet "Threshold provenance" updated with revised r*
+  estimates (HLW 0.75%, LM 1.68%, not prior 1.42% / 2.15%).
+
 ### LSEG absorption summary
 
 Pattern ported from Anthropic's `financial-services-plugins/partner-built/lseg/skills/macro-rates-monitor` (paid MCP → free FRED data):

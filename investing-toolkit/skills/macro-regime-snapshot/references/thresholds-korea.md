@@ -3,15 +3,69 @@
 **Authority**: 한국은행 (Bank of Korea, BOK) + 통계청 (KOSTAT) |
 **Currency**: KRW | **Calibration vintage**: 2026-Q1
 
+## Grounding Status (as of 2026-04-18)
+
+**Last full verification**: 2026-04-18 via `../research/grounding-v1.9.0.md`
+(5-country parallel grounding note; KR section).
+
+**Verified (✅)**: 현재 물가안정목표 2% single-point, 2026 CPI 전망 2.1%,
+BOK 물가목표 "균형있게 고려" 정성적 언어.
+
+**Corrected (🔴 in prior draft → fixed below)**:
+1. **2018-12-26 발표 / 2019 이후 적용** (prior draft "2019 설정" 애매);
+   이전 3 년 주기 재설정 관행 폐기, 적용기간 무기한화.
+2. **2004-2006 과 2007-2009 목표 지표 顛倒** —
+   - 2004-2006: core CPI 2.5-3.5%
+   - 2007-2009: **headline CPI 3% ± 0.5%** (prior draft 반대로 기록)
+3. **NAIRU 1998-2004 (외환위기 피크 구간)** — NOT 1998-2000. 이후 하락 추세.
+4. **삼성전자 + SK하이닉스 = 39.88%** (2026-02) → **40.90%** (2026-04 중).
+   삼성그룹 + SK그룹 전체 **61.29%** (1 년 전의 2 배). Prior draft 의 ~30%
+   는 1 년 전 (2025-02) vintage.
+5. **가계부채/GDP ~90%** (BIS 2025-Q3 89.4%; BOK 92.3% @ 2025-09).
+   **105% 는 2021 피크** (실제 99.1%), 이미 ~10 pp 하락. Prior draft wrong.
+
+**Partial (⚠️)**:
+- 2.50% 인하 날짜: **2025-05-29 인하**, 이후 5 회 연속 동결 (2026-01-15 포함).
+- 현재 실업률: 2.7% 는 2026-03 계절조정; 원계열 2026-01 = 4.1%, 2026-02 = 3.4%;
+  청년실업 2026-02 = 7.7% (5 년 최고).
+- r\* 추정: BOK 연구원 Do/Ahn/Jung 2024 multi-model real ~0-1% (prior draft
+  "0.25-0.75% real" 은 상단만 반영).
+
+**New sources added**: SSRN 5009627 (Do/Ahn/Jung 2024 BOK 연구원 r\* paper),
+Seoul Economic Daily 2026-02 (KOSPI 集中度), BIS 2025-Q3 data.
+
+**New discovery**: KR 2026-01 from BIS 재분류 to **advanced economy**
+(ex-emerging) — 시계열 그룹 변경.
+
+**Next recalibration**: May 2026 (BOK 경제전망 상반기 + 5월 MPC).
+
+---
+
 ---
 
 ## Inflation Target / 물가안정목표
 
-- **Official target**: **2% CPI YoY** (소비자물가 전년동기대비, set 2019)
+- **Official target**: **2% CPI YoY** (소비자물가 전년동기대비)
+- **Framework**: 2018-12-26 BOK-정부 합의로 "2019년 이후 적용 물가안정목표"
+  설정; 이전 3 년 주기 재설정 관행 폐기, **적용기간 무기한화**
+  ("특별한 이유가 없으면 디폴트로 2% 유지" — 정규일 부총재보). 2016년부터
+  이미 2% point target 운영, 2018-12 개정은 **목표 유지 + 적용기간 무기한
+  + 운영방식 개선**.
 - **Tolerance band**: **none explicit** — BOK uses
   "목표수준을 지속적으로 상회하거나 하회할 위험을 균형있게 고려"
   ("balanced consideration of persistent overshoot/undershoot risk")
 - **Target horizon**: medium-term (중기적 시계)
+
+### Historical targets (20-year, grounding-v1.9.0.md KR §20-year trajectory)
+
+| 기간 | 지표 | 수준 |
+|------|------|------|
+| 2004-2006 | **core CPI** | 2.5-3.5% band |
+| 2007-2009 | **headline CPI** | **3% ± 0.5%** |
+| 2010-2012 | headline CPI | 3% ± 1% |
+| 2013-2015 | headline CPI | 2.5-3.5% band |
+| 2016-2018 | headline CPI | 2% point |
+| **2019-현재** | headline CPI | **2% (적용기간 무기한)** |
 - **2026 CPI forecast** (BOK): **2.1%** — close to target
 - **Recent readings (2026)**: settling near 2.0-2.1% after 2022-2023
   food/energy spike
@@ -29,9 +83,15 @@
   - 1988-1997 (Miracle era): ~2.6-3.2%
   - Post-1997 IMF crisis peak: 4.0-5.3%
   - Post-2010 trending down: **~3.0-3.5%** current consensus
+  - **NOTE**: Prior draft incorrectly stated 1998-2000 peak; correct
+    peak interval per 신석하 2004 is **1998-2004** (wider, 반영 IMF 이후
+    hysteresis; 이후 하락 추세 시작).
 - **BOK does not publish official NAIRU** — relies on KDI / KIEP /
   academic literature.
-- **Current unemployment** (통계청 2026-01/02): **~2.7%**
+- **Current unemployment** (통계청 2026-03 계절조정): **2.7%**
+  (2023-08 이후 최저 근접). **원계열 기준**: 2026-01 = 4.1%, 2026-02 = 3.4%
+  (계절성 때문에 Q1 초반이 연중 고점). 청년실업 (15-29세) 2026-02 = **7.7%**
+  (5년 최고) — 전체 실업률과 괴리 주시.
 - **Implication**: unemp **below structural NAIRU** → **Tight** labor
   market (cross-check: wage growth accelerating 2024-2025 post
   "미니멈 웨이지" legal-hike effects).
@@ -44,12 +104,15 @@
 
 ## Policy Rate Neutrality
 
-- **Current BOK 기준금리 (base rate)**: **2.50%** (decided 2026-01-15
-  금융통화위원회)
+- **Current BOK 기준금리 (base rate)**: **2.50%** (2025-05-29 인하 이후
+  유지; 2026-01-15, 2026-02-26 포함 **5회 연속 만장일치 동결** — 2026-Q1
+  기준 완화 사이클 일시 중단, 원화 16년 저점 + Fed 불확실성 고려)
 - **Nominal neutral estimate**: BOK has historically been reluctant to
-  publish explicit r*. Academic estimates + market consensus:
-  **nominal ~2.25-2.75%**, implying **real r\* ~0.25-0.75%** (lower
-  than US but higher than JP).
+  publish explicit r\*. **BOK 연구원 최신 multi-model 추정**
+  (Do, Ahn, Jung 2024, SSRN 5009627): **실질 r\* ~0-1%** (2010년대
+  변동범위 내); 2% 물가 가정시 **nominal ~2.0-3.0%**. Prior draft
+  "0.25-0.75% real" 은 범위의 상단 — 실제 분포는 더 넓고 **하단은
+  마이너스 근접 가능**.
 - **Historical range**: BOK base rate 2000-2024 = 1.25% to 5.25%.
 - **Post-2020**: peaked at 3.50%, now moderating back toward neutral.
 - **BOK MPC framework**: more flexible forward-guidance-lite than Fed;
@@ -86,9 +149,11 @@ thinner market):
 - **Semi concentration**: Samsung Electronics + SK Hynix together ~30%
   of KOSPI weight; DRAM cycle turns drive BOK + Finance Ministry
   responses directly.
-- **Household debt high**: ~105% of GDP (higher than US ~75% or JP ~65%)
-  — BOK must consider household-debt stability alongside inflation +
-  growth. Macroprudential policy often pre-empts monetary policy.
+- **Household debt high but easing**: ~**90% of GDP** (2025-Q3 BIS
+  기준 89.4%; BOK 기준 92.3% @ 2025-09). 2021-Q3 피크 99.1% 에서
+  **지속 하락 중**. OECD 31 국 중 6 위권 (스위스/호주/캐나다/
+  네덜란드/뉴질랜드 다음). 장기 평균 (2010-) 83.7%. 여전히 US (~75%)
+  / JP (~65%) 대비 높음 — 매크로프루덴셜 compulsion 유지.
 - **KRW managed**: KRW is free-floating but BOK intervenes in
   large-move episodes. KRW sensitivity to USD + CNY both important.
 - **Demographic overhang**: KR on JP's aging path (fertility 0.72,
@@ -99,11 +164,16 @@ thinner market):
 
 ## Asset-Class Tilt Calibration
 
-- **Equity index concentration — high**:
-  - KOSPI dominated by Samsung Electronics (~20%) + SK Hynix (~10%)
-  - Tech + semi ~35-40% weight
-  - Chaebol concentration: top 10 chaebols = ~55% of KOSPI market cap
-  - → Regime tilts dominated by **semi cycle** + **chaebol governance reforms**
+- **Equity index concentration — 歷史 최고**:
+  - 삼성전자 + SK하이닉스 = **39.88%** (2026-02-27) → **40.90%**
+    (2026-04 중순), **S&P500 Mag-7 (33.41%) 초과**
+  - 삼성그룹 + SK그룹 전체 = **61.29%** (2026-02), 1 년 전 30.56% 의 약 2 배
+  - 변동성 주의: 2025-06 에는 삼성전자 단독 14.53% (9 년 저점) →
+    HBM 경쟁력 회복으로 9 개월간 급반등
+  - → Regime tilts는 **DRAM 사이클 = KR 지수 사이클**; 기재부 정책 반응
+    이 directly driven by 반도체
+- **BIS 재분류 (2026-01 from)**: Korea reclassified to "advanced economy" —
+  EM 집계와 break; 비교 대상국 그룹 변경 주시.
 - **KOSDAQ**: small-cap growth venue; more volatile, less regime-driven.
 - **Fixed income**: KTB market reasonably deep; 10Y yield pays ~3%
   nominal (2026-Q1). KTB-vs-UST spread often tracks KRW direction.

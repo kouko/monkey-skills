@@ -3,6 +3,38 @@
 **Authority**: 日本銀行 (Bank of Japan, BOJ) | **Currency**: JPY |
 **Calibration vintage**: 2026-Q1
 
+## Grounding Status (as of 2026-04-18)
+
+**Last full verification**: 2026-04-18 via `../research/grounding-v1.9.0.md`
+(5-country parallel grounding note; JP section).
+
+**Verified (✅)**: 2013-01-22 2% 目標採用日、2026-02 完全失業率 2.6%、
+Williams-like 定性語言。
+
+**Corrected (🔴 in prior draft → fixed below)**:
+1. **BOJ 政策利率 0.75%** — 2025-12 升息至 30 年來最高（prior draft
+   wrote 0.5%）
+2. **JILPT 均衡失業率 2.80%** (2026-02 latest) — NOT 3.5-3.6%.
+   需要不足失業率 -0.17%。Current unemp 2.6% 是**軽度タイト only**，
+   not "~1 pp below NAIRU".
+3. **BOJ 展望 2025-10 FY 見通し**: FY2025/26/27 = 2.7% / 1.8% / 2.0%
+   (prior draft wrote FY2024/25/26 = 2.5/1.9/1.9 — wrong by 1 year
+   AND wrong 0.8 pp on FY2025).
+4. **野村 森田京平 main scenario**: ターミナル 1.50% via 3 hikes
+   (2026-06, 2026-12, 2027-06); prior draft wrote 2 hikes to 1.0%.
+5. **10Y JP real yield -0.386% 数値削除** — 伊藤忠 2024-04 コラム
+   本文不含此数値 (unverifiable fabrication risk).
+
+**Partial (⚠️)**: WP24-J-09 r\* "mean -0.25%" → refined as **range
+midpoint derivation**, not原典表述。
+
+**New primary sources added**: BOJ 日銀レビュー rev26j05 (2026-03-27 —
+最新官方 r\* 見解), lab18j02 (1980 年代以来 r\* 下降 4 pp 分解).
+
+**Next recalibration**: April 2026 (BOJ 展望 Q1 release).
+
+---
+
 ---
 
 ## Inflation Target / 物価安定の目標
@@ -12,13 +44,13 @@
   "概ね整合的な水準" ("roughly consistent level") rather than a
   numerical band. Academic proposals (Canada-style 1-3%) exist but
   not adopted.
-- **Current reading**: Core CPI (除生鮮食品) 2026 見通し中央値 1.9%
-  (2025-10 展望レポート)
-- **FY outlook (BOJ 展望 2025-10)**:
-  - FY2024: 2.5%
-  - FY2025: 1.9%
-  - FY2026: 1.9%
-  - Late in projection horizon: "物価安定の目標と概ね整合的な水準"
+- **Current outlook**: Core CPI (除生鮮食品) FY2026 見通し中央値 +1.8%,
+  FY2027 +2.0% (2025-10 展望レポート, 政策委員中央値)。FY2025 は +2.7%
+  と輸入インフレ・米価押上げ等でオーバーシュート状態。
+- **FY outlook (BOJ 展望レポート 2025-10, 政策委員中央値)**:
+  - Core CPI (除生鮮食品): FY2025 **+2.7%** / FY2026 **+1.8%** / FY2027 **+2.0%**
+  - 実質 GDP: FY2025 +0.7% / FY2026 +0.7% / FY2027 +1.0%
+  - Projection horizon 末尾: 「物価安定の目標と概ね整合的な水準」
 - **Signal (using BOJ 2% anchor)**:
   - `> 2.2%` Above target
   - `1.8% ≤ x ≤ 2.2%` At target (this IS BOJ's goal state)
@@ -37,16 +69,20 @@ level-vs-target gap.
 
 ## Labor Market Tightness (NAIRU / 均衡失業率)
 
-- **NAIRU estimate**: **~3.5-3.6%** ("3% 台半ば" per JILPT 均衡失業率
-  analysis and 第一生命経済研究所 macro research)
-- **Current unemployment** (労働力調査 2026-01/02): **2.6-2.7%**
-- **Implication**: unemployment is **~1 pp below NAIRU** → structurally
-  **Tight** labor market. This has been the default Japan regime
-  post-2015.
-- **Bands (NAIRU ± 0.4 pp, tighter than US because JP NAIRU is lower)**:
-  - `unemp < 3.2%` → Tight (current regime)
-  - `3.2% ≤ unemp ≤ 4.0%` → Balanced
-  - `unemp > 4.0%` → Slack
+- **NAIRU proxy (JILPT 均衡失業率)**: **~2.80%** (2026-02 latest;
+  2025Q4 = 2.78%); 需要不足失業率 -0.17% で労働需給は**充足状態**
+- **Current unemployment** (労働力調査 2026-02): **2.6%** (季調;
+  2026-01 は 2.7%)
+- **Implication**: unemployment は均衡失業率を **~0.2 pp 下回る** →
+  労働需給充足から**軽度タイト**。post-2015 の構造的タイト化は継続
+  しているが、prior draft の "1 pp 下回る Tight" は過大評価。
+- **Bands (JILPT 均衡失業率 ± 0.3 pp, 絶対値が低い JP 特性を反映)**:
+  - `unemp < 2.5%` → Tight (overheating 兆候)
+  - `2.5% ≤ unemp ≤ 3.1%` → Balanced (現在 2.6% はこのバンド)
+  - `unemp > 3.1%` → Slack
+- **春闘 wage signal**: since 2024 春闘, Japan transitioning from
+  "tight-no-wage-gain" to genuine wage growth — watch spring round
+  results as second labor-tightness dimension.
 - **Wage-inflation signal**: since 2024 春闘 wage rounds, Japan
   transitioning from "tight-but-no-wage-gain" to genuine wage growth —
   watch spring round results as a second labor-tightness dimension.
@@ -55,17 +91,26 @@ level-vs-target gap.
 
 ## Policy Rate Neutrality
 
-- **Current BOJ policy rate**: **~0.5%** (post-YCC end, 2024-03 onwards;
-  additional hikes 2024-07, 2025 normalization path)
-- **Nominal neutral rate estimate**: ~**1.0%** (market consensus /
-  NRI, 三井住友DS AM). BOJ themselves do not publish a neutral rate.
-- **Real r\* (BOJ Working Paper 24-J-09, 2024)**:
-  - Range estimates: **-1.0% to +0.5%**
-  - Mean: **-0.25%** (slightly negative!)
-  - Much lower than US r* due to demographic decline + low trend growth
-- **Nominal hiking path (野村 2026 メインシナリオ)**:
-  - 2026 policy rate trajectory: 2 hikes to ~1.0% by late-2026
-  - 2027 H1: ~1.25%
+- **Current BOJ policy rate**: **0.75%** (post-YCC end 2024-03 →
+  2024-07 0.25% → 2025-01 0.50% → 2025-12 **0.75% (30 年ぶり水準)**;
+  2026-01-23 会合で据え置き、1 名が 1.0% 提案も否決)
+- **Nominal neutral rate estimate**: ~**1.0-1.75%** (市場コンセンサス
+  + 野村メインシナリオターミナル 1.50% を包含). BOJ themselves do not
+  publish a neutral rate.
+- **Real r\* (BOJ Working Paper 24-J-09 2024-08 + 日銀レビュー rev26j05 2026-03)**:
+  - Range estimates: **-1.0% to +0.5%** (複数モデルの幅; 原典が「相当な
+    ばらつきがある」と明記)
+  - Range 中点: ~**-0.25%** (単一推計値ではなく派生; "mean" 一語は
+    原典表現でないため避ける)
+  - 長期トレンド: 1980 年代から約 **4 pp 低下** (lab18j02 分解: 技術進歩
+    ~2 pp + 金融仲介機能 ~1 pp + 人口動態)
+  - 日本の r\* は G7 最低水準; 長寿化・生産性鈍化・銀行危機傷跡が主因
+  - 2026-03 rev26j05 は WP24-J-09 を GDP 基準改定後に再推計した BOJ 最新公式見解
+- **Nominal hiking path (野村 森田京平 2026-01-26 メインシナリオ 60%)**:
+  - 2026-06 +25 bp → 1.00%、2026-12 +25 bp → 1.25%、2027-06 +25 bp → 1.50%
+  - **ターミナルレート: 1.50%**
+  - リスクシナリオ (円安圧力継続, 40%): 2026-04/10, 2027-04/10
+    各 +25 bp → ターミナル **1.75%**
 
 ---
 
@@ -80,8 +125,10 @@ level-vs-target gap.
 3. Market structure differs — JGBi less liquid, BOJ still holds
    substantial inventory
 
-**Current 10Y JP real yield** (approximate, cross-source): **-0.386%**
-as of 2026-Q1 (G7's only negative 10Y real yield).
+**Current 10Y JP real yield**: 2026-Q1 時点で G7 の中で相対的に低く
+(負圏の可能性あり)。prior draft の "-0.386%" 出典（伊藤忠総研 2024-04
+コラム) は本文に該当数値を含まないため**削除**。v1.10.0 で MoF JGBi
+(物価連動国債) scraper 実装時に検証可能なスナップショットへ差替え。
 
 **Deferred to v1.10.0+**: MoF JGBi scraper + thresholds calibrated to
 JP r* estimate (probably `< -0.5%` Accommodative / `-0.5% to 0.5%`
@@ -149,11 +196,25 @@ Neutral / `> 0.5%` Restrictive — roughly HLW-JP ± 50 bp).
 
 ## Sources (citations)
 
-- BOJ 物価安定の目標 (2013-01 policy statement)
-- BOJ 経済・物価情勢の展望 2025-10 (展望レポート)
-- BOJ Working Paper WP24-J-09 (2024) — 自然利子率の計測をめぐる近年の動向
+Primary (原典, 日本語):
+- BOJ 物価安定の目標 (2013-01-22 共同声明)
+- BOJ 経済・物価情勢の展望 2025-10 (展望レポート本文 + ハイライト)
+- **BOJ Working Paper WP24-J-09 (2024-08, 杉岡・中野・山本)** — 自然利子率の計測をめぐる近年の動向
+- **BOJ 日銀レビュー rev26j05 (2026-03-27, 企画局)** — 自然利子率の動向と金融緩和度合いの評価 (最新 BOJ 公式 r\* 見解)
+- **BOJ リサーチラボ lab18j02 (2018-06, 須藤・岡崎・瀧塚)** — わが国の自然利子率の決定要因 (r\* 下降 4pp 分解)
+- BOJ WP03-J-05 (2003-10, 小田・村永) — 自然利子率 分析原点
+- BOJ 総裁記者会見 (2026-01-23 kk260126a.pdf)
+- JILPT UV 分析 (均衡失業率 2026-02 最新)
+- 総務省統計局 労働力調査
 - 日経 参議院 Research Note 2024-12 — 物価安定の目標をめぐる経緯と論点
-- 伊藤忠総研 2024 コラム — 自然利子率r*に振り回される日米金融市場
-- NRI 木内登英 2025-12-16 — 政府のデフレ完全克服と日銀の2％物価安定
-- 野村証券 (森田京平) 2026 メインシナリオ — 日銀追加利上げ予想
+
+Secondary (日本語):
+- 野村ウェルスタイル 0571 (2026-01-26, 森田京平) — 日銀利上げシナリオ (main ターミナル 1.50%)
+- NRI 木内登英 2025-12-16 コラム — 政府のデフレ完全克服と日銀の2％物価安定
+- 第一ライフ資産運用経済研究所 熊野英生 0.75% 利上げコラム
 - JST 資金運用本部 Research Note 42 (2026-01-29) — 中立金利とタームプレミアム
+- 日経 2025-12-19 — 日銀 0.75% 利上げ決定 (30 年ぶり水準)
+
+Removed (unverifiable):
+- ~~伊藤忠総研 2024-04 コラム「自然利子率r\*に振り回される日米金融市場」数値引用~~
+  (-0.386% / G7 比較 数値が本文に不含; 出典無効)
