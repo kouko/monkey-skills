@@ -558,6 +558,85 @@ essential for global-macro allocation decisions.
   magnitude of extreme events; normalized version (`NOSTSAM`) preserves
   magnitude but is harder to interpret around 100.
 
+Also used as PMI proxy — see `PMI` section below.
+
+---
+
+## PMI (Purchasing Managers' Index)
+
+**Status on FRED**: Neither ISM PMI nor S&P Global / Markit PMI is
+currently available on FRED. This skill uses OECD CLI
+(`USALOLITOAASTSAM`) as the FRED-available leading-indicator proxy
+(amplitude-adjusted composite; NOT a diffusion index).
+
+**Series** (via FRED CSV endpoint):
+- `USALOLITOAASTSAM` — OECD Composite Leading Indicator (USA,
+  amplitude-adjusted). See the full entry under "Nowcast" above. Shared
+  across the `nowcast` and `pmi` groups (single fetch, two logical
+  groupings for IC/GIP mapping).
+
+**Frequency**: Monthly, publication lag ~1 month after reference month.
+
+**Signal thresholds (OECD CLI calibration — NOT ISM's 50-point rule)**:
+- `> 100 & rising` → Expansion, above long-term trend
+- `> 100 & falling` → Pre-peak deceleration
+- `< 100 & falling` → Contraction, below trend
+- `< 100 & rising` → Recovery, still below trend
+
+**Why no S&P Global PMI on FRED**:
+- FRED discontinued all Institute for Supply Management (ISM) data on
+  2016-06-24. All 22 series from the Manufacturing ISM Report on Business
+  and Non-Manufacturing ISM Report on Business (including `NAPMPI`,
+  `NAPMHNEI`, `NAPMHNII`) were removed. See:
+  https://news.research.stlouisfed.org/2016/06/institute-for-supply-management-data-to-be-removed-from-fred/
+- S&P Global PMI (formerly Markit PMI) is not on FRED either. S&P Global
+  licenses the PMI data commercially (Bloomberg, Refinitiv, S&P Global
+  Market Intelligence, Haver Analytics) and has no free public-domain
+  feed on FRED.
+- Probe evidence (2026-04-18): all candidates `USPMIM`, `USAPMIM`,
+  `SPGSPMICM`, `USAPMIS`, `SPGSPMISM`, `USAPMICOMPM`, `SPGUSCPMI`,
+  `SPGUSMPMI`, `SPGUSPM`, `USCOMPPMI`, `USNONPMI`, `NAPMPI`, `NAPMHNEI`,
+  `NAPMHNII`, `NAPMCI`, `NMFCI`, `NMFBAI`, `NMFBI`, `NMFNOI`, `NMFPI`,
+  `NMFEI`, `MARKITMFG`, `MARKITSVC`, `MARKITCOMP`, `PMICMP`, `PMIMFG`
+  returned HTTP 404 from the FRED CSV endpoint.
+
+**ISM vs S&P Global vs OECD CLI methodology delta**:
+- ISM (monthly): US-respondent panel of purchasing managers; 5 sub-indices
+  (New Orders, Production, Employment, Supplier Deliveries, Inventories)
+  each weighted 20%. 50 = neutral threshold.
+- S&P Global (monthly, flash + final): separate panel (~400-800
+  manufacturers / ~400 services firms); 5-item weighted diffusion index.
+  50 = neutral threshold.
+- ISM vs S&P Global correlation on direction: ~0.85. Absolute readings
+  can differ ±2-3 points in the same month. DO NOT reflexively apply
+  ISM's 47-point "recession threshold" calibration to S&P Global
+  readings (different panel, different question wording).
+- OECD CLI (monthly, here): amplitude-adjusted composite of forward-
+  looking cyclical series (see the "Nowcast" section above for the full
+  USA CLI component list and OECD methodology references). Amplitude is
+  trend-centered on 100 (NOT on 50 like diffusion indices) — so the
+  threshold interpretation is cycle-phase (above/below trend, rising/
+  falling) rather than breadth-of-change. Tends to lead ISM turning
+  points by several months (OECD positions CLIs as cycle-peak / trough
+  early-warning indicators), but direction-correlation is qualitative
+  and varies by cycle; use as a cycle-phase indicator, not as a
+  substitute PMI reading.
+
+**Manual PMI cross-check URLs** (for human reference — do NOT scrape):
+- ISM Report on Business (official):
+  https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/
+- S&P Global PMI press releases (free):
+  https://www.pmi.spglobal.com/Public/Home/PressRelease
+- MacroMicro visual chart (free read-only):
+  https://en.macromicro.me/collections/8/us-industry-relative/37/ism-new-order
+  (MacroMicro ToS prohibits scraping; use for visual cross-check only.)
+
+**Future upgrade path**: If FRED ever hosts S&P Global PMI directly, or
+if an Atlanta/Chicago/NY Fed alternative becomes available, this section
+can be updated to add the new series IDs and shift the default from OECD
+CLI to the diffusion reading. Until then, OECD CLI + manual ISM/S&P
+Global cross-check is the primary-source-grounded path.
+
 ---
 
 ## Real Rates (TIPS + Breakeven Inflation)
