@@ -321,17 +321,35 @@ To fetch full history, you must stitch 4 requests. This is analogous to
 
 ---
 
-## 8. Full trees
+## 8. Full catalogs (trees + indicators)
 
-Detailed tree listings are intentionally not inlined here (monthly alone is
-645 lines; yearly 2445). They live in-repo alongside this doc as sibling files:
+### 8a. Tree catalogs (cid only)
 
 - `nbs-tree-monthly.md` (14 categories, 605 leaves)
 - `nbs-tree-quarterly.md` (8 categories, 116 leaves)
-- `nbs-tree-yearly.md` (28 categories, 2188 leaves)
+- `nbs-tree-yearly.md` (28 categories, 2187 leaves)
 
 Each is a nested markdown bullet list. 📁 = folder, 📄 = leaf table;
 each node carries its UUID in backticks. Leaf UUID is the `cid` for
-`POST getEsDataByCidAndDt`. Use the IDE outline view for navigation or
-`grep -n` for targeted lookups.
+`POST getEsDataByCidAndDt`.
+
+### 8b. Indicator catalogs (cid → indicatorIds[])
+
+Captured 2026-04-18 via `queryIndicatorsByCid?cid=<leaf>` against every
+leaf in §8a:
+
+- `nbs-indicators-monthly.{json,md}` (605 cids, ~15k indicators)
+- `nbs-indicators-quarterly.{json,md}` (116 cids, ~3k indicators)
+- `nbs-indicators-yearly.{json,md}` (2187 cids, ~57k indicators)
+
+JSON is machine-readable (`{cid → {path, indicators[], ...}}`); MD is
+human-readable with per-category TOC + per-leaf indicator tables.
+Together with §8a these give everything a hardcoded
+`nbs_client.py` needs.
+
+**Capture stats**: 2908 cids / 75,719 indicators / 0 WAF events (under
+NordVPN + 0.5s throttle + exponential backoff).
+
+Generation scripts are in `tools/` — see `tools/README.md` for when
+to re-run (typically every ~5 years at NBS base-period revisions).
 
