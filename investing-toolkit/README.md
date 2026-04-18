@@ -13,16 +13,19 @@ judgement, quality-gated memos happen in `domain-teams:investing-team`.
 
 ## Monthly GDP Proxy Framework
 
-As of v1.7.1, the three largest macro markets share a consistent monthly
+As of v1.7.3, all five country-macro skills share a consistent monthly
 GDP proxy convention:
 
 | Market | Proxy type | Indicators |
 |--------|-----------|------------|
 | US | Pre-aggregated Fed nowcasts | `nowcast` group: `GDPNOW`, `CFNAI`, `WEI`, `USALOLITOAASTSAM` (OECD CLI) |
 | JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: `coincident-index` (the proxy), `leading-index`, `lagging-index` |
+| TW | Pre-aggregated NDC + DGBAS | `signal` (五色景氣燈號 — Taiwan 特色), `leading-index`, `coincident-index` |
+| KR | Pre-aggregated BOK ECOS | `coincident-cycle` K253 (the proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
 | CN | Raw components (no consensus composite) | 三大数据: `industrial-yoy`, `retail-yoy`, `fai-yoy` + `services-production-yoy` |
 
-US / JP serve pre-aggregated values from Fed / 内閣府. China keeps
+US / JP / TW / KR all serve **pre-aggregated** values from the respective
+statistical authorities (Fed / 内閣府 / NDC+DGBAS / BOK ECOS). China keeps
 components raw because no market consensus exists on a synthesized
 composite (Li Keqiang Index is obsolete, SF Fed CAT is quarterly,
 Goldman / Bloomberg are proprietary). Composite synthesis belongs in

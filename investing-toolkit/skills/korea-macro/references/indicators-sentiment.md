@@ -2,6 +2,35 @@
 
 ---
 
+## Korea 경기종합지수 — Monthly GDP proxy (선행 + 동행 pair)
+
+Korea publishes official GDP quarterly (`gdp-qoq` K258 / `gdp-nominal`
+K257). The **선행지수순환변동치 + 동행지수순환변동치** pair, published
+monthly by 통계청 (Statistics Korea) via BOK ECOS, collectively proxies
+monthly GDP momentum. `coincident-cycle` (K253) is the canonical
+"current GDP feel" read; `leading-cycle` (K254) leads it by ~5-7 months.
+
+| Preset | BOK ECOS | 한국어 | Role |
+|--------|----------|--------|------|
+| `leading-cycle` | K254 | 선행지수순환변동치 | Leads 동행 by ~5-7 months (CI amplitude) |
+| `coincident-cycle` | K253 | 동행지수순환변동치 | **Monthly GDP proxy** — coincident |
+
+Cross-market parallels:
+
+- US `nowcast` group (GDPNOW / CFNAI / WEI / OECD CLI) — Fed-aggregated
+- JP 景気動向指数 CI trio (先行 / 一致 / 遅行) — 内閣府-aggregated
+- TW 景氣對策信號 + leading / coincident index — NDC + DGBAS-aggregated
+- **KR 선행 + 동행 CI — BOK ECOS-aggregated**
+- CN 三大数据 raw components (no consensus composite)
+
+The lagging CI (후행지수순환변동치) exists at 통계청 KOSIS but is
+**not exposed via BOK ECOS KEYSTAT**. Probed K255 / K256 in v1.7.3 —
+both map to other series (manufacturing-related, 16 rows). If adding
+lagging is needed, would require a direct 통계청/KOSIS scraper
+(deferred to v1.8.0 or later).
+
+---
+
 ## consumer-sentiment: 소비자심리지수 / Consumer Sentiment Index (CSI)
 
 - **Series code**: K252 (ECOS-KEYSTAT)
@@ -145,6 +174,11 @@ Statistics Korea officially announces business cycle reference dates
 - A single month above/below 100 does not confirm a turning point. Look
   for 3+ months of consistent direction.
 
+**Monthly GDP proxy role**: This is the **leading companion** of the
+`coincident-cycle` monthly GDP proxy (K253). Together they form Korea's
+monthly GDP proxy CI pair. See the preamble at the top of this file for
+the cross-market comparison.
+
 ---
 
 ## coincident-cycle: 동행지수순환변동치 / Coincident CI Cyclical Component
@@ -190,3 +224,10 @@ business cycle peaks and troughs.
   economic timing, not in data release timing.
 - The coincident component can show the economy "above trend" even during
   a slowdown if the slowdown hasn't yet brought activity below trend.
+
+**Monthly GDP proxy role**: This is **Korea's canonical monthly GDP
+proxy** — the CI coincident component plays the same role as Japan's
+景気動向指数 一致指数. Pair with `leading-cycle` (K254) for the full
+선행-동행 pair. The lagging sibling (후행지수) is not exposed via BOK
+ECOS KEYSTAT. See preamble at top of this file for cross-market
+comparison.

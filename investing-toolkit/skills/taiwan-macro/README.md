@@ -9,6 +9,14 @@ Fetches 30 Taiwan macroeconomic indicators from four government data sources
 and returns structured JSON grouped by 8 indicator groups: rates, inflation,
 growth, labor, trade, cycle, forex, and money.
 
+**Monthly GDP proxy**: The `signal` (景氣對策信號) + `leading-index` +
+`coincident-index` triplet collectively proxies monthly GDP momentum in
+parallel to us-macro's `nowcast` group, japan-macro's 景気動向指数 CI
+trio, and china-macro's 三大数据. NDC/DGBAS publish pre-aggregated CI
+values — no synthesis needed. Taiwan uniquely also provides the
+**五色景氣燈號** dashboard via `signal` (紅/黃紅/綠/黃藍/藍), a NDC特色
+not found elsewhere.
+
 ## Data Sources (4 scripts)
 
 | Script | Source | Indicators | Role |

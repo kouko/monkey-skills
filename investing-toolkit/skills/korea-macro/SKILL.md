@@ -22,6 +22,16 @@ no API key required.
 This skill is **data-only**. The output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
 
+**Monthly GDP proxy note**: Korea's official GDP is quarterly
+(`gdp-qoq` / `gdp-nominal`). The **선행-동행 CI pair** (`leading-cycle`
+K254 + `coincident-cycle` K253), published monthly by 통계청 (Statistics
+Korea) and served via BOK ECOS, collectively proxy monthly GDP momentum
+— parallel to us-macro's `nowcast` group, japan-macro's 景気動向指数
+CI trio, and china-macro's 三大数据. `coincident-cycle` (동행지수
+순환변동치) is the canonical "current GDP feel" read. The lagging CI
+(후행지수) exists at Statistics Korea but is not exposed via BOK ECOS
+KEYSTAT — deferred.
+
 ---
 
 ## Inputs
@@ -85,14 +95,14 @@ This skill is **data-only**. The output is designed for handoff to
 | m2 | K003 | M2 Broad Money (광의통화 M2 평잔) | Monthly |
 | household-credit | K007 | Household Credit (가계신용) | Quarterly |
 
-### sentiment
+### sentiment (incl. monthly GDP proxy CI pair)
 
 | Preset | Code | Name | Frequency |
 |--------|------|------|-----------|
 | consumer-sentiment | K252 | Consumer Sentiment Index (소비자심리지수) | Monthly |
 | economic-sentiment | K269 | Economic Sentiment Index (경제심리지수) | Monthly |
-| leading-cycle | K254 | Leading CI Cyclical Component (선행지수순환변동치) | Monthly |
-| coincident-cycle | K253 | Coincident CI Cyclical Component (동행지수순환변동치) | Monthly |
+| leading-cycle | K254 | Leading CI Cyclical Component (선행지수순환변동치) (**monthly GDP proxy leading**) | Monthly |
+| coincident-cycle | K253 | Coincident CI Cyclical Component (동행지수순환변동치) (**monthly GDP proxy**) | Monthly |
 
 ### markets
 
