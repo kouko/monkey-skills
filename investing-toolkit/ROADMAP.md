@@ -123,7 +123,7 @@ WEI) plus OECD CLI are the industry-standard proxies. For Japan, the
 
 ---
 
-## v1.7.1 — China monthly GDP proxy tagging (current)
+## v1.7.1 — China monthly GDP proxy tagging
 
 **Scope**: Tier 2 symmetry with us-macro / japan-macro. Explicitly tag
 三大数据 + `services-production-yoy` as monthly GDP proxy components
@@ -148,6 +148,21 @@ choice in the data layer, violating the toolkit/analysis separation in
 `CLAUDE.md` cross-plugin contract. Synthesis belongs in `investing-team`
 analysis layer. See `docs/china-macro-research-frameworks.md §1d` for
 deferred methodology options if requirements change.
+
+---
+
+## v1.7.2 — Router sync + Layer column (current)
+
+**Scope**: Documentation-only. Update `using-investing-toolkit/SKILL.md`
+to reflect post-v1.6.0 indicator counts, the v1.7.0/v1.7.1 Monthly GDP
+Proxy framework, and a new `Layer` column distinguishing data /
+aggregation / delegation skills.
+
+### New
+- [x] using-investing-toolkit skill table synced: us-macro 21→25 series, japan-macro 20→22 presets, china-macro 28→34 indicators
+- [x] Skill versions updated: us-macro / japan-macro → v1.7.0, china-macro → v1.7.1
+- [x] Cross-market Monthly GDP Proxy Framework section added — summarises US nowcast / JP CI trio / CN 三大数据 parity + why CN stays Tier 2
+- [x] `Layer` column added to Available Skills table (data / aggregation / delegation); skills re-sorted by layer for easier discovery
 
 ---
 
