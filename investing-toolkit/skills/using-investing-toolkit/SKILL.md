@@ -11,21 +11,27 @@ You are the entry point for investing-toolkit. Route the user to the right skill
 
 ## Available Skills
 
-| Skill | Description | Status |
-|-------|-------------|--------|
-| `macro-regime-snapshot` | IC + FRED regime call — diagnose current macro phase | v1.0.0 |
-| `us-stock-snapshot` | yfinance price + info snapshot for a US ticker | v1.0.0 |
-| `investment-memo-writer` | Full memo pipeline — delegates to domain-teams:investing-team | v1.0.0 |
-| `dcf-valuation` | 3-stage DCF model + sensitivity table | v1.0.0 |
-| `taiwan-stock-snapshot` | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
-| `stock-screener` | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
-| `technical-snapshot` | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
-| `invest-portfolio` | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
-| `us-macro` | US macro indicators via FRED (25 series incl. `nowcast` group + reference doc) | v1.7.0 |
-| `japan-macro` | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
-| `taiwan-macro` | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
-| `korea-macro` | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
-| `china-macro` | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
+Skills are organised in three layers:
+
+- **data** — fetch raw time-series from external sources, no analysis
+- **aggregation** — combine / score / transform data from the data layer into a single-purpose output (regime call, composite score, valuation model, P&L)
+- **delegation** — bridge to `domain-teams:investing-team` for full research framework with quality gates
+
+| Skill | Layer | Description | Status |
+|-------|-------|-------------|--------|
+| `us-macro` | data | US macro indicators via FRED (25 series incl. `nowcast` group + reference doc) | v1.7.0 |
+| `japan-macro` | data | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
+| `taiwan-macro` | data | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
+| `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (28 indicators) | v1.5.0 |
+| `china-macro` | data | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
+| `us-stock-snapshot` | data | yfinance price + info snapshot for a US ticker | v1.0.0 |
+| `taiwan-stock-snapshot` | data | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
+| `technical-snapshot` | data | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
+| `macro-regime-snapshot` | aggregation | IC + FRED regime call — diagnose current macro phase | v1.0.0 |
+| `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
+| `dcf-valuation` | aggregation | 3-stage DCF model + sensitivity table | v1.0.0 |
+| `invest-portfolio` | aggregation | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
+| `investment-memo-writer` | delegation | Full memo pipeline — delegates to domain-teams:investing-team | v1.0.0 |
 
 ---
 
