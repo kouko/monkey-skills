@@ -27,6 +27,15 @@ Fetches Taiwan macroeconomic indicators from four government data sources:
 This skill is **data-only**. The output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
 
+**Monthly GDP proxy note**: Taiwan's official GDP is quarterly. The
+**景氣對策信號 + CI pair** (`signal` + `leading-index` + `coincident-index`),
+published monthly by NDC and stat.gov.tw, collectively proxy monthly GDP
+momentum — parallel to us-macro's `nowcast` group, japan-macro's 景気
+動向指数 CI trio, and china-macro's 三大数据. NDC/DGBAS already publish
+pre-aggregated CI values so no synthesis is needed. Uniquely, Taiwan
+also provides the **五色景氣燈號** dashboard (紅/黃紅/綠/黃藍/藍) via
+`signal` — a NDC特色 not found in other markets.
+
 ---
 
 ## Inputs
@@ -82,15 +91,15 @@ This skill is **data-only**. The output is designed for handoff to
 | DGBAS Excel | import-pi | 進口物價指數 Import PI | Monthly |
 | DGBAS Excel | export-pi | 出口物價指數 Export PI | Monthly |
 
-### cycle
+### cycle — monthly GDP proxy components
 
 | Source | Preset | Name | Frequency |
 |--------|--------|------|-----------|
-| NDC | signal | 景氣對策信號 (score + color) | Monthly |
+| NDC | signal | 景氣對策信號 score + 五色燈號 (**monthly GDP proxy, Taiwan 特色**) | Monthly |
+| statgov | leading-index | 景氣領先指標不含趨勢 (**monthly GDP proxy leading**) | Monthly |
+| statgov | coincident-index | 景氣同時指標不含趨勢 (**monthly GDP proxy coincident**) | Monthly |
 | NDC | signal-components | 9 構成項目 (IPI, M1B, TAIEX...) | Monthly |
 | NDC | leading | 領先指標構成項目 | Monthly |
-| statgov | leading-index | 景氣領先指標不含趨勢 | Monthly |
-| statgov | coincident-index | 景氣同時指標不含趨勢 | Monthly |
 
 ### forex
 

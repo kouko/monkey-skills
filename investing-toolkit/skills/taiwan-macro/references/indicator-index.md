@@ -20,11 +20,11 @@
 | `imports-yoy` | 進口年增率 | Imports YoY% | statgov | `indicators-trade.md` |
 | `import-pi` | 進口物價指數 | Import PI | DGBAS Excel | `indicators-trade.md` |
 | `export-pi` | 出口物價指數 | Export PI | DGBAS Excel | `indicators-trade.md` |
-| `signal` | 景氣對策信號 | Business Cycle Signal | NDC | `indicators-cycle.md` |
+| `signal` | 景氣對策信號 | Business Cycle Signal (**monthly GDP proxy — Taiwan 特色 五色燈號**) | NDC | `indicators-cycle.md` |
 | `signal-components` | 對策信號構成項目 | Signal Components | NDC | `indicators-cycle.md` |
 | `leading` | 領先指標構成項目 | Leading Components | NDC | `indicators-cycle.md` |
-| `leading-index` | 景氣領先指標 | Leading Index | statgov | `indicators-cycle.md` |
-| `coincident-index` | 景氣同時指標 | Coincident Index | statgov | `indicators-cycle.md` |
+| `leading-index` | 景氣領先指標 | Leading Index (**monthly GDP proxy leading**) | statgov | `indicators-cycle.md` |
+| `coincident-index` | 景氣同時指標 | Coincident Index (**monthly GDP proxy coincident**) | statgov | `indicators-cycle.md` |
 | `signal-score` | 景氣燈號分數 | Signal Score | statgov | `indicators-cycle.md` |
 | `twdusd` | TWD/USD 匯率 | TWD/USD Rate | CBC | `indicators-other.md` |
 | `fx-reserves` | 外匯存底 | FX Reserves (B USD) | statgov | `indicators-other.md` |

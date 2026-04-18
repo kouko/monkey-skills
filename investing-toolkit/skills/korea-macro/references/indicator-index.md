@@ -25,8 +25,8 @@
 | `household-credit` | 가계신용 | Household Credit | K007 | `indicators-other.md` |
 | `consumer-sentiment` | 소비자심리지수 | Consumer Sentiment Index | K252 | `indicators-sentiment.md` |
 | `economic-sentiment` | 경제심리지수 | Economic Sentiment Index | K269 | `indicators-sentiment.md` |
-| `leading-cycle` | 선행지수순환변동치 | Leading CI Cyclical | K254 | `indicators-sentiment.md` |
-| `coincident-cycle` | 동행지수순환변동치 | Coincident CI Cyclical | K253 | `indicators-sentiment.md` |
+| `leading-cycle` | 선행지수순환변동치 | Leading CI Cyclical (**monthly GDP proxy leading**) | K254 | `indicators-sentiment.md` |
+| `coincident-cycle` | 동행지수순환변동치 | Coincident CI Cyclical (**monthly GDP proxy**) | K253 | `indicators-sentiment.md` |
 | `kospi` | 코스피지수 | KOSPI Index | K101 | `indicators-other.md` |
 | `kosdaq` | 코스닥지수 | KOSDAQ Index | K102 | `indicators-other.md` |
 | `krw-usd` | 원달러 환율 | KRW/USD Rate | DEXKOUS | `indicators-other.md` |

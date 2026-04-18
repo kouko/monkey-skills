@@ -10,6 +10,14 @@ Economic Statistics System (ECOS) via FinanceDataReader and returns
 structured JSON grouped by 10 indicator groups: rates, inflation, growth,
 labor, trade, money, sentiment, markets, fx, and real estate.
 
+**Monthly GDP proxy**: The `coincident-cycle` (K253, 동행지수순환변동치)
++ `leading-cycle` (K254, 선행지수순환변동치) pair collectively proxies
+monthly GDP momentum, parallel to us-macro's `nowcast` group, japan-macro's
+景気動향指数 CI trio, and china-macro's 三大数据. Statistics Korea
+(통계청) publishes pre-aggregated CI values via BOK ECOS — no synthesis
+needed. The lagging CI (후행지수) exists at Statistics Korea but is not
+exposed via BOK ECOS KEYSTAT (probed K255/K256 — both map to other series).
+
 ## Data Source (1 script)
 
 | Script | Source | Indicators | Role |

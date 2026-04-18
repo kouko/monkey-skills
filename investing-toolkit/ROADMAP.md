@@ -151,7 +151,7 @@ deferred methodology options if requirements change.
 
 ---
 
-## v1.7.2 — Router sync + Layer column (current)
+## v1.7.2 — Router sync + Layer column
 
 **Scope**: Documentation-only. Update `using-investing-toolkit/SKILL.md`
 to reflect post-v1.6.0 indicator counts, the v1.7.0/v1.7.1 Monthly GDP
@@ -163,6 +163,37 @@ aggregation / delegation skills.
 - [x] Skill versions updated: us-macro / japan-macro → v1.7.0, china-macro → v1.7.1
 - [x] Cross-market Monthly GDP Proxy Framework section added — summarises US nowcast / JP CI trio / CN 三大数据 parity + why CN stays Tier 2
 - [x] `Layer` column added to Available Skills table (data / aggregation / delegation); skills re-sorted by layer for easier discovery
+
+---
+
+## v1.7.3 — Taiwan + Korea monthly GDP proxy tagging (current)
+
+**Scope**: Extend the cross-market Monthly GDP Proxy Framework from 3 to 5
+markets. TW and KR already had CI-family indicators in their skills; v1.7.3
+adds the Tier 2 tagging + framework row + references preamble.
+
+### New
+
+- [x] taiwan-macro: tag `signal` / `leading-index` / `coincident-index` as
+  monthly GDP proxy components; SKILL + README + indicator-index + indicators-cycle
+  (4 files) updated with **Taiwan 特色 五色景氣燈號** emphasis
+- [x] korea-macro: tag `leading-cycle` (K254) / `coincident-cycle` (K253) as
+  monthly GDP proxy leading + proxy; SKILL + README + indicator-index +
+  indicators-sentiment (4 files) updated
+- [x] Cross-market Monthly GDP Proxy Framework expanded from 3 → 5 markets
+  in both `using-investing-toolkit/SKILL.md` and plugin-level `README.md`
+
+### Deliberately NOT done
+
+- **KR lagging CI** (후행지수순환변동치) — probed K255/K256; both map to
+  other series (manufacturing-related, 16 rows) rather than Lagging CI
+  Cyclical Component. BOK ECOS KEYSTAT does not expose this index.
+  Statistics Korea (KOSIS) publishes it but would require a separate
+  scraper — deferred to v1.8.0 if demand arises.
+- **TW Tier 3 synthesis** — not needed; NDC already publishes pre-aggregated
+  composite score + colour via `signal`.
+- **KR Tier 3 synthesis** — not needed; BOK ECOS already publishes
+  pre-aggregated CI cyclical components.
 
 ---
 

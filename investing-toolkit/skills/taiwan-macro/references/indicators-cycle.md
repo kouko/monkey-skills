@@ -2,6 +2,36 @@
 
 ---
 
+## Taiwan 景氣指標 trio — Monthly GDP proxy
+
+Taiwan publishes official GDP quarterly. The **景氣對策信號 + CI pair**
+published monthly by 國發會 (NDC) and 行政院主計總處 (DGBAS) collectively
+form Taiwan's canonical monthly GDP proxy package:
+
+| Preset | 指標 | Role |
+|--------|------|------|
+| `signal` (NDC) | 景氣對策信號 score + 五色燈號 | **Taiwan 特色** — 5-colour dashboard (紅/黃紅/綠/黃藍/藍), monthly composite |
+| `leading-index` (stat.gov.tw) | 景氣領先指標不含趨勢 | Leading by ~3-6 months (CI amplitude) |
+| `coincident-index` (stat.gov.tw) | 景氣同時指標不含趨勢 | Coincident — the "temperature right now" |
+
+Unlike US (Fed GDPNow nowcast %) or CN (raw components, no official composite),
+Taiwan's NDC already publishes a **pre-aggregated composite score + colour**
+via `signal`, and stat.gov.tw publishes CI amplitude values. No synthesis is
+needed on our side.
+
+Cross-market parallels:
+
+- US `nowcast` group (GDPNOW / CFNAI / WEI / OECD CLI) — Fed-aggregated
+- JP 景気動向指数 CI trio (先行 / 一致 / 遅行) — 内閣府-aggregated
+- **TW signal + leading-index + coincident-index — NDC + DGBAS-aggregated**
+- KR 선행 / 동행 CI (K254 / K253) — BOK ECOS-aggregated
+- CN 三大数据 raw components (no consensus composite)
+
+The 五色景氣燈號 dashboard is unique to Taiwan — no other market provides
+a similarly qualitative monthly signal directly from the government.
+
+---
+
 ## signal: 景氣對策信號 / Business Cycle Monitoring Indicator (景氣燈號)
 
 - **Series code**: 景氣指標與燈號.csv (NDC ZIP)
@@ -224,6 +254,12 @@ official recession dating.
   In Taiwan's case, IPI and manufacturing heavily influence the result.
 - Historical revisions can retroactively change the apparent timing of
   cycle turns.
+
+**Monthly GDP proxy role**: Together with `signal` (NDC) and
+`leading-index` (stat.gov.tw), this indicator completes Taiwan's
+monthly GDP proxy package. See the preamble at the top of this file
+for the cross-market comparison (US nowcast / JP 景気動向指数 CI trio
+/ KR 선행-동행 CI / CN 三大数据).
 
 ---
 

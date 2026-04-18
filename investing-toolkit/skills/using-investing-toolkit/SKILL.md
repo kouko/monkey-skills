@@ -71,22 +71,26 @@ All skills through v1.7.1 are now available.
 
 ## Cross-market Monthly GDP Proxy Framework
 
-As of v1.7.1, `us-macro`, `japan-macro`, and `china-macro` all expose
-**monthly GDP proxy** indicators labelled consistently across skills:
+As of v1.7.3, all five country-macro skills expose **monthly GDP proxy**
+indicators labelled consistently across skills:
 
 | Market | Proxy type | Indicators |
 |--------|-----------|------------|
-| US | Pre-aggregated Fed nowcasts | `nowcast` group: GDPNOW, CFNAI, WEI, OECD CLI |
+| US | Pre-aggregated Fed nowcasts | `nowcast` group: `GDPNOW`, `CFNAI`, `WEI`, `USALOLITOAASTSAM` (OECD CLI) |
 | JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: `coincident-index` (monthly GDP proxy), `leading-index`, `lagging-index` |
+| TW | Pre-aggregated NDC + DGBAS | `signal` (五色景氣燈號 — Taiwan 特色), `leading-index`, `coincident-index` |
+| KR | Pre-aggregated BOK ECOS | `coincident-cycle` K253 (monthly GDP proxy), `leading-cycle` K254 (lagging not in KEYSTAT) |
 | CN | Raw components (no authoritative composite) | 三大数据: `industrial-yoy`, `retail-yoy`, `fai-yoy` + `services-production-yoy` companion |
 
-US/JP serve pre-aggregated values; CN keeps components raw because there
-is no market consensus on synthesis (Li Keqiang Index is obsolete post-2012,
-SF Fed CAT is quarterly + standard-deviation units, Goldman/Bloomberg are
-proprietary). Composite synthesis belongs in the analysis layer
+US / JP / TW / KR all serve **pre-aggregated** values from the respective
+statistical authorities (Fed / 内閣府 / NDC+DGBAS / BOK ECOS). CN keeps
+components raw because there is no market consensus on synthesis
+(Li Keqiang Index is obsolete post-2012, SF Fed CAT is quarterly +
+standard-deviation units, Goldman / Bloomberg are proprietary).
+Composite synthesis belongs in the analysis layer
 (`domain-teams:investing-team`) where methodology choice has analytical
-accountability. See each skill's `references/indicators-growth.md`
-preamble for full discussion.
+accountability. See each skill's `references/indicators-*.md` preamble
+for full discussion.
 
 ---
 
