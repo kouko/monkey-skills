@@ -166,7 +166,7 @@ aggregation / delegation skills.
 
 ---
 
-## v1.7.3 — Taiwan + Korea monthly GDP proxy tagging (current)
+## v1.7.3 — Taiwan + Korea monthly GDP proxy tagging
 
 **Scope**: Extend the cross-market Monthly GDP Proxy Framework from 3 to 5
 markets. TW and KR already had CI-family indicators in their skills; v1.7.3
@@ -194,6 +194,55 @@ adds the Tier 2 tagging + framework row + references preamble.
   composite score + colour via `signal`.
 - **KR Tier 3 synthesis** — not needed; BOK ECOS already publishes
   pre-aggregated CI cyclical components.
+
+---
+
+## v1.8.0 — Korea-macro catalogue + structural refactor + Tier-B expansion (current)
+
+**Scope**: Three-phase korea-macro upgrade — document the full BOK ECOS
+KEYSTAT catalogue (mirror of the v1.6.0 NBS tree work for CN), refactor
+the `sentiment` group, and add 15 Tier-B presets across 5 existing
+groups + 1 new `demographics` group.
+
+### Phase 1 — Catalogue
+- [x] `skills/korea-macro/docs/bok-ecos-keystat-catalog.md` — 98-code
+  human-readable catalogue grouped by category (monetary / rates /
+  markets / FX / activity / CI / labor / BoP / prices / demographics)
+  with preset status (in-skill / v1.8.0 / candidate / skip)
+- [x] `skills/korea-macro/docs/bok-ecos-keystat.json` — machine-readable
+  raw probe output
+- [x] `skills/korea-macro/docs/tools/probe-keystat.py` — re-probe script
+  (sweeps K001-K500)
+
+### Phase 2 — Structural refactor
+- [x] Split `sentiment` group into `sentiment` (CSI K252 / ESI K269 —
+  survey-based) + `cycle` (CI pair K253/K254 — business cycle indices).
+  Fixes the semantic inconsistency inherited from v1.5.0.
+- [x] New `references/indicators-cycle.md` (moved CI content out of
+  `indicators-sentiment.md`); `indicators-sentiment.md` retains only
+  CSI/ESI
+
+### Phase 3 — Tier-B expansion (+15 presets, 28 → 43 indicators)
+- [x] `rates`: +`koribor-3m` (K063) — cross-market parallel of JP SHIBOR 3M
+- [x] `growth`: +`private-consumption` (K259), +`equipment-investment` (K260),
+  +`construction-investment` (K261) — GDP expenditure breakdown
+- [x] `trade`: +`goods-exports` (K462) — fills the major gap of
+  no-exports-indicator (KR export dependency ~40% of GDP)
+- [x] `money`: +`m1` (K002), +`lf` (K004) — cross-market symmetry with JP/CN
+- [x] `fx`: +`krw-jpy` (K153), +`krw-eur` (K154), +`krw-cny` (K156),
+  +`fx-reserves` (K155)
+- [x] **New `demographics` group** (+3 presets): `population` (K451),
+  `aging-ratio` (K460), `fertility-rate` (K461) — long-horizon structural
+  context (KR leads JP demographic decline by ~15-20 years)
+- [x] New `references/indicators-demographics.md`
+
+### Deferred (v1.9.0 candidate)
+
+- **Full BOK ECOS API integration** — would unlock ~50 additional Tier-B
+  candidates (identified in `docs/bok-ecos-keystat-catalog.md` as
+  `candidate` rows) plus the lagging CI (후행지수순환변동치) not
+  exposed via KEYSTAT. Requires free API key registration at
+  https://ecos.bok.or.kr/api/#/AuthKeyApply.
 
 ---
 

@@ -175,3 +175,70 @@ Manufacturing production trends are highly correlated with KOSPI earnings.
 - The index covers volume, not value. High production during a price slump
   (e.g., memory chip oversupply) can show rising production with falling
   revenue.
+
+---
+
+## GDP expenditure breakdown (K259 / K260 / K261)
+
+The following three presets break down GDP by expenditure side. All
+are quarterly, SA, constant prices, QoQ growth %, published together
+with `gdp-qoq` around ~8 weeks after quarter-end.
+
+### private-consumption: 민간소비 / Private Consumption
+
+- **Series code**: K259 (ECOS-KEYSTAT)
+- **Unit**: QoQ growth % (SA, real)
+- **Share of GDP**: ~50%
+
+**What it measures**: Household final consumption expenditure, the
+single largest GDP component. Drives discretionary + staples earnings
+(KOSPI consumer sector).
+
+**How to interpret**:
+- Structurally weak post-2020 (housing affordability + aging + household
+  debt near historical highs). Frequent sub-1% QoQ prints.
+- Rare sharp acceleration → often tied to fiscal stimulus (cash handouts)
+  or post-crisis rebound.
+
+**Market significance**: ⭐⭐⭐ — determines CSI validity and BOK growth outlook.
+
+### equipment-investment: 설비투자 / Equipment Investment
+
+- **Series code**: K260 (ECOS-KEYSTAT)
+- **Unit**: QoQ growth % (SA, real)
+- **Share of GDP**: ~10%
+
+**What it measures**: Private-sector fixed capital formation — machinery,
+ICT equipment, transportation equipment. Follows the semiconductor capex
+cycle closely (Samsung / SK Hynix fab spend).
+
+**How to interpret**:
+- Extremely volatile — single-quarter swings of ±10% are common.
+- Leading indicator for IPI and goods exports 3-6 months out.
+
+**Market significance**: ⭐⭐ — semiconductor cycle leading indicator.
+
+### construction-investment: 건설투자 / Construction Investment
+
+- **Series code**: K261 (ECOS-KEYSTAT)
+- **Unit**: QoQ growth % (SA, real)
+- **Share of GDP**: ~12-15%
+
+**What it measures**: Building construction + civil engineering. Includes
+residential + commercial + infrastructure.
+
+**How to interpret**:
+- Structural headwind since 2022 property-project-finance crisis
+  (2022 Legoland 사태 + subsequent developer defaults).
+- Government infrastructure stimulus can offset private decline
+  (watch 재정보강 fiscal announcements).
+
+**Market significance**: ⭐⭐ — construction chaebol (현대건설, 대우건설) earnings
++ commodity demand (steel, cement) + banking credit quality proxy.
+
+**Common pitfalls (all three)**:
+- Quarterly, not monthly. For higher-frequency substitutes: IPI +
+  manufacturing for equipment, housing permits (not in skill) for
+  construction.
+- These are **QoQ** — do not confuse with YoY. QoQ prints of +3% imply
+  annualized ~12%, which is the headline GDP growth scale.
