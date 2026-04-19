@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.16.3
+**Version**: 1.16.4
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -177,8 +177,28 @@ live in `domain-teams:investing-team`.
 Plugin-level cross-market references (complement the per-skill references):
 
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
+- [Design Principles](docs/design-principles.md) — meta-conventions for architecting this plugin, including the **empirical-first design** rule (earned through v1.14.0 + v1.16.3 "hypothesis vs reality" post-mortems)
+- [MCP Setup](docs/mcp-setup.md) — install paths + honest Cowork sandbox limitation
 
 ## Version Highlights
+
+### v1.16.4 (2026-04-19) — taiwan-stock-snapshot wires TWSE `/rwd/` + design-principles doc
+
+Closes two loose ends from v1.16.3:
+
+- **A1 — TWSE `/rwd/` stock-day-history is no longer an orphan**:
+  taiwan-stock-snapshot Phase 1 now explicitly routes `.TW` tickers
+  through the Tier A raw-price endpoint when memo needs
+  regulator-citation (ISQ Narrative Anchor). Complements the existing
+  yfinance-primary default in technical-snapshot — raw vs adjusted
+  prices now have distinct, documented consumers.
+- **A3 — `docs/design-principles.md`**: codifies the empirical-first
+  design rule earned from v1.14.0 (MCP Cowork premise failure) +
+  v1.16.3 (yfinance TW coverage assumption failure). Turns two
+  incidents into a reusable pre-design probe checklist.
+
+No code changes, only SKILL.md / docs. Regression tests unchanged
+(26/26 pass as v1.16.3).
 
 ### v1.16.3 (2026-04-19) — TWSE `/rwd/` historical OHLCV action (Tier A, memo-citation mode)
 

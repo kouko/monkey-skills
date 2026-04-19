@@ -434,7 +434,36 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.3 — TWSE stock-day-history action + empirical yfinance validation (current)
+## v1.16.4 — taiwan-stock-snapshot TWSE `/rwd/` wiring + design-principles doc (current)
+
+**Scope**: Small polish release closing two v1.16.3 loose ends.
+
+### Commits (3)
+- [x] Commit 1 (fix): `taiwan-stock-snapshot/SKILL.md` — wires TWSE
+      `/rwd/` stock-day-history into Phase 1 as an explicit Tier A
+      option for `.TW` tickers when memo needs regulator-raw prices.
+      The action is no longer orphan (v1.16.3 shipped it documented
+      only). Complements the yfinance-primary default used in
+      technical-snapshot.
+- [x] Commit 2 (docs): `docs/design-principles.md` (NEW) — codifies
+      the "empirical-first design" rule earned from v1.14.0 + v1.16.3.
+      README gains a link in Cross-country Reference Documents.
+- [x] Commit 3 (chore): plugin sync 1.16.3 → 1.16.4.
+
+No code / script / test changes. Regression suite unchanged (26/26).
+
+### Tier A raw vs split-adjusted consumer map (post-v1.16.4)
+
+| Consumer | Wants | Uses |
+|---|---|---|
+| `technical-snapshot` (RSI/MACD/BB/ATR/SMA) | Split-adjusted (TA standard) | yfinance_client |
+| `stock-screener` (batch filter) | Split-adjusted | yfinance_client |
+| `taiwan-stock-snapshot` (memo + ISQ citation) | Regulator-raw (primary-source) | twse_openapi stock-day-history for .TW; FinMind TaiwanStockPrice for .TWO |
+| `investment-memo-writer` (via taiwan-stock-snapshot) | Regulator-raw | Same as above |
+
+---
+
+## v1.16.3 — TWSE stock-day-history action + empirical yfinance validation
 
 **Scope**: User flagged technical-snapshot / stock-screener hard-coded
 yfinance and asked whether TW coverage was reliable. Originally planned

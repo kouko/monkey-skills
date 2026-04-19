@@ -72,7 +72,7 @@ cross-validation, Taiwan-specific curation, and coverage of known Tier 1 gaps.
 | `pe_pb_yield` | twse-openapi | `pe-pb-yield` (BWIBBU_ALL) | latest session |
 | `margin_balance` | twse-openapi | `margin-balance` (MI_MARGN) | latest session |
 | `qfiis_holdings_snapshot` | twse-openapi | `three-investor` (MI_QFIIS_sort_20) | latest session |
-| `daily_price_history` | **finmind** | TaiwanStockPrice | past `period` (Tier 1 gap — routed to FinMind by default) |
+| `daily_price_history` | **twse-openapi** (`.TW` only) → **finmind** (fallback / `.TWO`) | `stock-day-history` (Tier A, raw prices) / `TaiwanStockPrice` (Tier 2, aggregated) | past `period` — v1.16.3+ supplies Tier A /rwd/ raw OHLCV for TWSE-listed when memo needs regulator-citation |
 | `three_investor_flow_30d` | **finmind** | TaiwanStockInstitutionalInvestorsBuySell | past 3 months (Tier 1 gap) |
 | `margin_balance_history` | **finmind** | TaiwanStockMarginPurchaseShortSale | past 3 months (time-series) |
 
@@ -121,7 +121,15 @@ base_path: {absolute path to investing-toolkit/scripts/}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --ticker {ticker_code} --action margin-balance
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --ticker {ticker_code} --action three-investor
 
+# --- Tier 1 PRIMARY (v1.16.3+): TWSE /rwd/ historical OHLCV for .TW ---
+# Use this when the memo needs regulator-raw prices for primary-source
+# citation (e.g. ISQ Narrative Anchor gate). Skip for .TWO (TPEx has no
+# /rwd/ equivalent — falls through to FinMind below).
+- [if market == "sii" (.TW)]: INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --ticker {ticker_code} --action stock-day-history --months {months_from_period}
+
 # --- Tier 2 by-design (Tier 1 gap) or AUTO-FALLBACK target ---
+# - FinMind TaiwanStockPrice: .TWO 必用；.TW 失敗時 fallback；或需要
+#   split-adjusted prices (TA-friendly) 時用
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start_period}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
