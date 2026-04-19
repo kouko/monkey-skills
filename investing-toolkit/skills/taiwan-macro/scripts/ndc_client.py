@@ -625,6 +625,23 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register NDC (國發會) Business Cycle + CIER PMI tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def ndc_fetch(preset: str) -> dict:
+        """Fetch a Taiwan NDC (國家發展委員會) indicator — 景氣對策信號
+        (signal) / leading-index / coincident-index / 先行指標構成項目 /
+        v1.11.0 CIER PMI (manufacturing + non-manufacturing, via NDC
+        政府資料開放 dataset 6100). Pass a preset name from PRESETS.
+        """
+        return fetch_preset(preset, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

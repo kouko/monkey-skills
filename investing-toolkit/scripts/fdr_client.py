@@ -430,6 +430,25 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register Korea FinanceDataReader (BOK ECOS-KEYSTAT) tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def fdr_fetch(preset: str) -> dict:
+        """Fetch a Korea macro indicator via FinanceDataReader's BOK ECOS
+        KEYSTAT wrapper. 54 indicators / 13 groups — includes monthly
+        industry activity layer (K201-K217 manufacturing / services /
+        retail / credit-card), GDP + CI cycle (K253 coincident, K254
+        leading), rates (K113/K114/K151), 환율/물가/고용/통화/금융 시장.
+        Used by korea-macro and macro-regime-snapshot.
+        """
+        return fetch_preset(preset, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

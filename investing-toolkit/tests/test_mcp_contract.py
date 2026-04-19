@@ -10,7 +10,7 @@ Asserts that:
      contract we rely on when skills' SKILL.md prose tells Claude "MCP
      and CLI return identical JSON".
 
-Current surface (v1.15.0): 19 tools across 10 clients.
+Current surface (v1.16.0): 29 tools across 18 clients.
 
 Run with:
     uv run --script servers/mcp_server.py --self-check   # sanity
@@ -56,17 +56,22 @@ def test_self_check_returns_expected_summary():
     lines = [ln for ln in res.stdout.splitlines() if ln.strip()]
     payload = json.loads(lines[-1])
     assert payload["ok"] is True
-    assert payload["tools"] == 19  # v1.15.0: +4 edinet +1 tdnet +1 yfinance_financials
+    assert payload["tools"] == 29  # v1.16.0: + 8 macro clients (10 new tools)
     assert set(payload["tools_per_client"]) == {
-        "yfinance", "akshare", "nbs", "fred",
-        "sec_edgar", "mops", "twse_openapi", "finmind",
+        # equity (v1.13.0-v1.15.0)
+        "yfinance", "sec_edgar", "mops", "twse_openapi", "finmind",
         "edinet", "tdnet",
+        # macro (v1.0.0-v1.11.0, MCP-wrapped in v1.16.0)
+        "fred", "akshare", "nbs",
+        "boj", "ecb", "estat",
+        "cbc", "dgbas", "ndc", "statgov", "fdr",
     }
     assert payload["tools_per_client"]["sec_edgar"] == 4
     assert payload["tools_per_client"]["edinet"] == 4
-    assert payload["tools_per_client"]["yfinance"] == 4  # v1.15.0: + financials
-    assert payload["tools_per_client"]["mops"] == 1
-    assert payload["tools_per_client"]["tdnet"] == 1
+    assert payload["tools_per_client"]["yfinance"] == 4
+    assert payload["tools_per_client"]["boj"] == 2
+    assert payload["tools_per_client"]["estat"] == 2
+    assert payload["tools_per_client"]["fdr"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -83,13 +88,12 @@ _INITIALIZED_NOTE = '{"jsonrpc":"2.0","method":"notifications/initialized"}\n'
 _LIST_TOOLS_REQ = '{"jsonrpc":"2.0","id":2,"method":"tools/list"}\n'
 
 
-def test_mcp_stdio_exposes_all_19_tools():
+def test_mcp_stdio_exposes_all_29_tools():
     res = _run_uv_script(
         [str(SERVER)],
         stdin=_INITIALIZE_REQ + _INITIALIZED_NOTE + _LIST_TOOLS_REQ,
         timeout=60,
     )
-    # FastMCP logs go to stderr; stdout holds JSON-RPC frames.
     frames = [json.loads(ln) for ln in res.stdout.splitlines() if ln.strip().startswith("{")]
     init_frames = [f for f in frames if f.get("id") == 1]
     list_frames = [f for f in frames if f.get("id") == 2]
@@ -101,22 +105,25 @@ def test_mcp_stdio_exposes_all_19_tools():
     assert init_result["serverInfo"]["name"] == "investing-toolkit"
 
     tools = list_frames[0]["result"]["tools"]
-    assert len(tools) == 19
+    assert len(tools) == 29
     names = {t["name"] for t in tools}
     expected = {
         # yfinance (4 — v1.15.0 added financials)
         "yfinance_history", "yfinance_info", "yfinance_batch", "yfinance_financials",
-        # macro + regulator (6)
-        "akshare_china_macro", "nbs_china_macro", "fred_series",
+        # equity regulator adapters
+        "sec_edgar_cik", "sec_edgar_facts", "sec_edgar_filings", "sec_edgar_narrative",
         "mops_fetch", "twse_openapi_fetch", "finmind_fetch",
-        # sec_edgar (4)
-        "sec_edgar_cik", "sec_edgar_facts", "sec_edgar_filings",
-        "sec_edgar_narrative",
-        # edinet (4 — NEW v1.15.0)
         "edinet_resolve_code", "edinet_list_filings",
         "edinet_fetch_statements", "edinet_filing_summary",
-        # tdnet (1 — NEW v1.15.0)
         "tdnet_list",
+        # macro (v1.16.0 wraps the 8 remaining data-fetching scripts)
+        "fred_series",
+        "akshare_china_macro", "nbs_china_macro",
+        "boj_fetch", "boj_tankan_inflation_outlook",
+        "ecb_series",
+        "estat_fetch", "estat_search",
+        "cbc_fetch", "dgbas_fetch", "ndc_fetch", "statgov_fetch",
+        "fdr_fetch",
     }
     assert names == expected, sorted(names - expected) + sorted(expected - names)
 

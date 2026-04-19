@@ -434,7 +434,40 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.15.0 — Japan individual-stock skill (current)
+## v1.16.0 — Complete MCP tool surface (current)
+
+**Scope**: Wrap the 8 remaining data-fetching scripts deferred from
+v1.14.0 plan so Cowork users are not blocked on macro / regime work
+(`/invest-macro`, `macro-regime-snapshot`, country-macro skills).
+
+### Phase 1 — Macro register_mcp_tools (Commits 1-3)
+- [x] `boj_client.py`: boj_fetch + boj_tankan_inflation_outlook
+- [x] `ecb_client.py`: ecb_series
+- [x] `estat_client.py`: estat_fetch + estat_search
+- [x] `cbc_client.py`: cbc_fetch
+- [x] `dgbas_client.py`: dgbas_fetch
+- [x] `ndc_client.py`: ndc_fetch
+- [x] `statgov_client.py`: statgov_fetch
+- [x] `fdr_client.py`: fdr_fetch
+
+### Phase 2 — Central registry + plugin sync (Commits 4-5)
+- [x] `servers/mcp_server.py`: 10 → 18 clients, 19 → 29 tools
+- [x] Contract tests: `tools=29`, expected names set extended
+- [x] Plugin sync 1.15.0 → 1.16.0 (auto-invalidates .mcp_ready marker)
+
+### Deliberately NOT wrapped
+- `ta_client.py` — transforms local OHLCV into RSI/MACD/Bollinger/ATR/SMA;
+  not a data fetcher. Compose via MCP `yfinance_history` →
+  local subprocess `ta_client.py` if needed from Cowork.
+
+### Deferred to v1.16.x+ (budget review trigger)
+- Session token cost 4.4K now (29 × ~150 tok); v1.14.0 plan flagged
+  5K as split threshold. Next additions (dcf-jp, korea-stock-snapshot,
+  sector-etf) may push over → investigate core/extras MCP server split.
+
+---
+
+## v1.15.0 — Japan individual-stock skill
 
 **Scope**: Path γ stacked-PR carry-over from v1.13.0 — Japan joins US + TW
 as the third market with a dedicated individual-stock data skill. Primary-
