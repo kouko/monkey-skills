@@ -5,7 +5,7 @@ description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance 
 
 # investment-memo-writer
 
-> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`yfinance_history`, `yfinance_info`, `fred_series`, `sec_edgar_filings`, `sec_edgar_facts`, `mops_fetch`, `twse_openapi_fetch`, `finmind_fetch`) are registered in your session, prefer them over the `uv run ${CLAUDE_SKILL_DIR}/scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+> **MCP-aware execution (v1.14.0+, expanded v1.15.0)**: If `investing-toolkit` MCP tools (`yfinance_history`, `yfinance_info`, `yfinance_financials`, `fred_series`, `sec_edgar_filings`, `sec_edgar_facts`, `mops_fetch`, `twse_openapi_fetch`, `finmind_fetch`, `edinet_filing_summary`, `edinet_list_filings`, `tdnet_list`) are registered in your session, prefer them over the `uv run ${CLAUDE_SKILL_DIR}/scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
 
 Orchestrate a full investment memo from raw ticker to polished document. This skill
 coordinates three subsystems: data fetching (investing-toolkit), regime context
@@ -45,6 +45,33 @@ INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/s
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/sec_edgar_client.py --ticker {ticker} --action filings --forms 10-K,10-Q,8-K,4 --limit 8
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/sec_edgar_client.py --ticker {ticker} --action facts
 ```
+
+**Japan ticker** (4-digit code, optionally ending in `.T` or `.TO`) — v1.15.0:
+Dual-mode fundamentals. With `EDINET_API_KEY` set → Tier A primary-source
+(金融庁 有報 / 四半期 / 臨時 / 大量保有); without key → yfinance Tier 2
+scraper fallback (provenance explicitly labelled). TDnet Yanoshin index
+always available for 決算短信 + material events, same-day. See
+`../japan-stock-snapshot/SKILL.md` for full tier-routing rationale.
+
+```
+# Shared (price context + macro). yfinance .T works for JP snapshot.
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker4}.T --period 2y
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker4}.T --action info
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL,GDPC1 --periods 12
+
+# Tier A path (IF EDINET_API_KEY is set) — 金融庁 primary-source
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/edinet_client.py --action filing-summary --ticker {ticker4} --days 365
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/edinet_client.py --action list-filings --ticker {ticker4} --forms 180,220,350 --days 180 --limit 15
+
+# Tier 2 fallback (ELSE — surface degraded provenance prominently)
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker4}.T --action financials --period annual
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker4}.T --action financials --period quarterly
+
+# TDnet same-day index (no key) — always run
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/tdnet_client.py --ticker {ticker4} --limit 20
+```
+
+`{ticker4}` = 4-digit 証券コード (e.g. `7203` for Toyota, `6758` for Sony).
 
 **Taiwan ticker** (ticker ends in `.TW` or `.TWO`) — v1.13.0 restructure:
 MOPS + TWSE OpenAPI are Tier 1 primary (金管會法定揭露 + 交易所公開資料);

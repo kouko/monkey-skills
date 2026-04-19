@@ -434,7 +434,56 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.14.0 — MCP migration infrastructure (current)
+## v1.15.0 — Japan individual-stock skill (current)
+
+**Scope**: Path γ stacked-PR carry-over from v1.13.0 — Japan joins US + TW
+as the third market with a dedicated individual-stock data skill. Primary-
+source Tier A (EDINET + TDnet + yfinance .T) with dual-mode tier routing
+(Tier A if EDINET_API_KEY set, Tier 2 yfinance financials fallback else).
+
+### Phase 1 — Data adapters (Commits 1-3)
+- [x] `scripts/edinet_client.py` — EDINET v2 REST API; 7 forms
+      (120/140/160/180/220/350 + 訂正版); type=5 CSV parsed into
+      canonical key_metrics; ticker→EDINET code via public ZIP; PDL 1.0
+- [x] `scripts/tdnet_client.py` — Yanoshin WEB-API index wrapper;
+      決算短信 / 業績予想 / 株主総会 / 役員 / 自己株 classifier
+- [x] `scripts/yfinance_client.py --action financials` — Tier 2 BS/PL/CF
+      fallback; data_tier provenance label; Toyota FY2025 equivalence
+      check vs EDINET passes (revenue/operating/net/OCF match exactly)
+
+### Phase 2 — Skill + orchestration (Commits 4-6)
+- [x] `skills/japan-stock-snapshot/SKILL.md` — dual-mode routing;
+      upgrade-path footer for Tier 2 users; known gaps documented
+- [x] `sync-scripts.sh` wires edinet/tdnet/yfinance into
+      japan-stock-snapshot + investment-memo-writer + dcf-valuation
+- [x] `servers/mcp_server.py` registers 10 clients × 19 tools
+      (+4 edinet, +1 tdnet, +1 yfinance_financials); contract tests
+      updated + all 3 pass
+- [x] `investment-memo-writer` Phase 1 JP branch routes 4-digit tickers
+      through EDINET (Tier A) or yfinance financials (Tier 2) + TDnet
+- [x] Plugin-level sync 1.14.0 → 1.15.0
+
+### Known gaps deferred to v1.15.x
+- **信用取引残高 / 空売り per-stock** — J-Quants Standard (paid) only
+- **daily 投資部門別 per-stock flow** — genuinely unavailable free
+  (JPX publishes weekly aggregate only)
+- **EPS via EDINET** — alias coverage incomplete for IFRS
+  KeyFinancialData namespace; yfinance `.T` info fills gap
+- **Narrative Item extraction from EDINET iXBRL** — CSV is
+  table-only; narrative 事業等のリスク / MD&A text lives in iXBRL 本文
+- **pre-April-2024 historical filings** — type=5 CSV was added
+  2024-04; older filings need iXBRL parser
+
+### Deferred to v1.16.0+ candidates
+- J-Quants free tier `/listed/info` for 33業種 (if we need JPX
+  industry classification vs yfinance GICS sector)
+- `dcf-valuation` JP branch (auto-source EDINET key_metrics)
+- Korea individual-stock skill (KRX + DART)
+- China individual-stock skill (SZSE + eastmoney)
+
+---
+
+## v1.14.0 — MCP migration infrastructure
 
 **Scope**: Expose all 8 data-fetch scripts as 13 MCP tools, bundled at
 plugin level. Unblocks Claude Desktop Cowork users (previously all
