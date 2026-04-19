@@ -255,6 +255,35 @@ def fetch_series(series: str, periods: int, api_key: str | None, use_api: bool) 
     return result
 
 
+# ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register FRED macro tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def fred_series(series: list[str], periods: int = 24) -> dict:
+        """Fetch US macro time-series from FRED (Federal Reserve Economic
+        Data). Pass one or more FRED series IDs (e.g. T10Y2Y, DGS10, CPIAUCSL,
+        UNRATE, DEXCHUS). Uses public CSV by default; JSON API used if
+        FRED_API_KEY env var is set (higher rate limits).
+        """
+        api_key = os.environ.get("FRED_API_KEY")
+        use_api = bool(api_key)
+        series_list = [s.strip().upper() for s in series if s.strip()]
+        if len(series_list) == 1:
+            return fetch_series(series_list[0], periods, api_key, use_api)
+        out = {
+            "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "series": {},
+        }
+        for s in series_list:
+            out["series"][s] = fetch_series(s, periods, api_key, use_api)
+        return out
+
+
 def main():
     parser = argparse.ArgumentParser(description="FRED macro data adapter for investing-toolkit")
     parser.add_argument("--series", required=True,

@@ -604,6 +604,44 @@ def action_narrative(accession: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register SEC EDGAR tools with a FastMCP instance."""
+
+    @mcp.tool()
+    def sec_edgar_cik(ticker: str) -> dict:
+        """Resolve a US ticker symbol to its SEC Central Index Key (CIK)."""
+        return action_cik(ticker)
+
+    @mcp.tool()
+    def sec_edgar_facts(ticker: str, concept: str | None = None) -> dict:
+        """Fetch XBRL company facts from SEC EDGAR. Without `concept`, returns
+        list of available us-gaap/dei concept names. With `concept` (e.g.
+        'Revenues', 'NetIncomeLoss', 'Assets'), returns full time-series of
+        reported values. Primary source for US financial statements."""
+        return action_facts(ticker, concept)
+
+    @mcp.tool()
+    def sec_edgar_filings(
+        ticker: str, forms: list[str] | None = None, limit: int = 10,
+    ) -> dict:
+        """List recent SEC filings for a ticker. `forms` filters to specific
+        form types (e.g. ['10-K', '10-Q', '8-K', 'DEF 14A']); default returns
+        all. Returns accession numbers usable with sec_edgar_narrative."""
+        return action_filings(ticker, forms, limit)
+
+    @mcp.tool()
+    def sec_edgar_narrative(accession: str) -> dict:
+        """Fetch narrative (Item 1 Business / Item 1A Risk Factors / Item 7
+        MD&A / etc.) from a specific SEC filing. Pass the accession number
+        returned by sec_edgar_filings."""
+        return action_narrative(accession)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
