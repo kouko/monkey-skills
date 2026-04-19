@@ -5,6 +5,193 @@ description: Phase 8 form gate (evaluator-only) — framework adherence + length
 
 # copywriting-form-check-stage
 
-Phase 8 form gate — evaluator-only MUST gate.
+Phase 8 — **evaluator-only form MUST gate**. This is the **last gate
+before delivery**. It runs only after `copywriting-ethics-check-stage`
+(Phase 7) returns `PASS`.
 
-> **Wave 1 — Commit 9 fills this body.** persuasion-framework-adherence-checklist + form-appropriate-gate rubric (evaluator mode).
+> Position in pipeline: … → `copywriting-ethics-check-stage` → **this
+> skill (Phase 8)** → delivery to user.
+
+## Role Constraint (read first)
+
+- **Evaluator-only** — this skill MUST NOT edit the draft. Per plugin
+  CLAUDE.md (Agent Behavioral Rules): evaluators produce verdicts,
+  do NOT modify artifacts.
+- **MUST gate** — verdict is binding on delivery. `NEEDS_REVISION`
+  loops the envelope back to the Phase 4 drafter skill with the
+  evaluator's findings attached.
+- **Preconditions** — `envelope.ethics_verdict == "PASS"`. If this
+  field is missing or not `PASS`, stop and return to the orchestrator;
+  the pipeline MUST pass Phase 7 first.
+
+## Input — Envelope Shape
+
+```json
+{
+  "phase": "phase-8-form",
+  "form": "<short-form | mid-form | long-form-pasona | long-form-extended | light-action>",
+  "brief": { "...": "from Phase 0 intake" },
+  "message_thesis": "...",
+  "draft": "<Phase 7-cleared draft>",
+  "voice_quadrant": "...",
+  "tone_notes": "...",
+  "ethics_verdict": "PASS",
+  "next_stage": "copywriting-form-check-stage"
+}
+```
+
+## Gate Definition
+
+Two evaluator passes run in order. Both use `../../agents/evaluator.md`.
+
+| # | Layer | File | Mode | Tier |
+|---|---|---|---|---|
+| 8a | Gate (checklist) | `checklists/persuasion-framework-adherence-checklist.md` | Checklist Mode (PASS / FAIL_FATAL / FAIL_FIXABLE / N/A) | **MUST** |
+| 8b | Gate (rubric) | `rubrics/form-appropriate-gate.md` | Flag Mode (🔴 / 🟡 / 🟢) | **SHOULD** |
+
+### Coverage
+
+**8a — Framework adherence (MUST, binary)**
+
+- Stage existence / ordering per form:
+  - 旧 PASONA (5) / 新 PASONA (6) / PASBECONA (9) — long-form
+  - QUEST / PASTOR — long-form-extended
+  - BEAF (Benefit → Evidence → Advantage → Feature) — mid-form
+  - PREP / CREMA (5) — light-action
+  - AIDMA short-form (A+I only) — short-form catchcopy
+- **Length discipline**:
+  - Short-form: 7–15 字 golden range
+  - Mid-form: ~300–800 字
+  - Long-form: ≥1,500 字 + stage word-count ratios
+    (旧 P:A:So:N:A ≒ 2:2:3:2:1, PASBECONA ≒ 1:1:1:1:2:2:1:0.5:0.5)
+- **CTA appropriateness** — stage-correct placement (e.g., Action stage
+  in PASONA, C stage in CREMA); no CTA-before-Problem inversions
+- **Taniyama discipline** — 「なんかいいよね禁止」 3-reason rule,
+  描写 vs 解決 boundary, applied across forms
+
+**8b — Form-appropriate qualitative assessment (SHOULD, flag mode)**
+
+Assesses *how well* the structure is executed (not whether it exists —
+that is 8a's job). Dimension set is form-specific:
+
+- **Long-form**: inter-stage flow, drop-off prevention, B/E/C
+  abstract → objective → concrete progression, Affinity thickness
+- **Mid-form**: Benefit-first clarity, Evidence concreteness,
+  Advantage comparison clarity
+- **Short-form**: 3-second land ability, 掛詞 / phonetic technique,
+  5-type 切入点 (利益 / 恐怖 / 顛覆 / 呼喚 / 提問) clarity
+
+Gate 8b runs in **flag mode**: it surfaces weaknesses but does not
+block on a single 🟡. Verdict rules are per the rubric
+(`rubrics/form-appropriate-gate.md`): 1 🔴 → `NEEDS_REVISION`;
+2+ 🟡 → `NEEDS_REVISION`; 1 🟡 → `PASS_WITH_NOTES`; all 🟢 → `PASS`.
+
+## Evaluator Launch — Pass 8a (MUST)
+
+```
+### Resource Paths
+- gate_file: <absolute>/checklists/persuasion-framework-adherence-checklist.md
+- standards: []   # the checklist references its own standards by relative path;
+                  # evaluator resolves them from the checklist itself
+
+### Artifact
+<envelope.draft>
+
+### Requirements
+<original user brief from envelope.brief, plus envelope.form so
+evaluator's form-type determination step (checklist §Form Type
+Determination) can cross-check against declared form>
+```
+
+If 8a returns `NEEDS_REVISION` → skip 8b, go to loop-back handling
+(below). If 8a returns `PASS` or `PASS_WITH_NOTES` → proceed to 8b.
+
+## Evaluator Launch — Pass 8b (SHOULD)
+
+```
+### Resource Paths
+- gate_file: <absolute>/rubrics/form-appropriate-gate.md
+- standards: []
+
+### Artifact
+<envelope.draft (post-FIXABLE-revise if 8a returned PASS_WITH_NOTES)>
+
+### Requirements
+<envelope.form + envelope.voice_quadrant + envelope.tone_notes for
+context on positioning and register>
+```
+
+## Combined Verdict
+
+| 8a | 8b | Final | Action |
+|---|---|---|---|
+| `PASS` | `PASS` | `PASS` | Deliver. |
+| `PASS` | `PASS_WITH_NOTES` | `PASS_WITH_NOTES` | Present findings alongside delivery. User chooses whether to iterate. |
+| `PASS_WITH_NOTES` | any | auto-revise 8a FIXABLEs, re-run 8a, then 8b | Max one auto-revise round on 8a. |
+| `NEEDS_REVISION` (either pass) | — | `NEEDS_REVISION` | Loop back (below). |
+
+## Loop-Back on `NEEDS_REVISION`
+
+Per plugin convention (see `../../CLAUDE.md`, and revise-loop cap
+inherited from copywriting-team), **maximum 2 revise rounds** per
+phase. Protocol:
+
+1. Attach the evaluator's per-item findings to the envelope as
+   `form_findings`.
+2. Set `next_stage` back to the Phase 4 drafter skill implied by
+   `envelope.form`:
+   - `short-form` → `copywriting-short-form`
+   - `mid-form` → `copywriting-mid-form`
+   - `long-form-pasona` → `copywriting-long-form-pasona`
+   - `long-form-extended` → `copywriting-long-form-extended`
+   - `light-action` → `copywriting-light-action`
+3. Track `revise_round_count` in the envelope. On entering a 3rd
+   round, stop the loop and surface the situation to the user for a
+   human decision (change `form`, change `message_thesis`, or
+   accept-with-notes).
+
+Do NOT re-run Phase 5 (positioning), Phase 6 (tone), or Phase 7
+(ethics) on loop-back unless the drafter materially changes the
+message thesis. Ethics re-gating is required if the drafter's rewrite
+introduces new claims, testimonials, or urgency framing.
+
+## Returned Envelope
+
+On final `PASS` / `PASS_WITH_NOTES`:
+
+```json
+{
+  "phase": "delivered",
+  "form": "<unchanged>",
+  "brief": { "...": "unchanged" },
+  "message_thesis": "...",
+  "draft": "<final copy>",
+  "voice_quadrant": "...",
+  "tone_notes": "...",
+  "ethics_verdict": "PASS",
+  "form_verdict": "PASS | PASS_WITH_NOTES",
+  "form_findings": "<optional 8b flag notes>",
+  "next_stage": null
+}
+```
+
+On `NEEDS_REVISION`: envelope returned to Phase 4 drafter with
+`form_findings` and incremented `revise_round_count`.
+
+## Do NOT
+
+- Do NOT edit the draft directly — loop back to the Phase 4 drafter.
+- Do NOT skip 8b when 8a passes — flag-level issues (weak Affinity,
+  abstract Evidence, generic catchcopy) are the whole point of a
+  separate SHOULD gate.
+- Do NOT paraphrase `checklists/persuasion-framework-adherence-checklist.md`
+  or `rubrics/form-appropriate-gate.md` — byte-identical copies from
+  `domain-teams/skills/copywriting-team/`.
+- Do NOT run this skill before `ethics_verdict == "PASS"`.
+- Do NOT exceed 2 revise rounds silently — escalate to the user on
+  round 3.
+
+## Next Stage
+
+- Final `PASS` / `PASS_WITH_NOTES` → delivery (no `next_stage`).
+- `NEEDS_REVISION` → the Phase 4 drafter matching `envelope.form`.
