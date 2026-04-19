@@ -434,7 +434,64 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.11.0 — Cross-country consistency refresh (current)
+## v1.12.0 — Pattern C UX (file-write + visibility) (current)
+
+**Scope**: Fixes 3 UX issues exposed by v1.11.0 NVDA Pattern C demo:
+(1) no file-write default (2500-word memo lived only in chat
+transcript); (2) skill drift — investing-team reference should route
+to research-team; (3) ~2 min agent silence during Phase 3 dispatch.
+
+Cross-plugin: investing-toolkit (1.11.0 → 1.12.0) + domain-teams
+(5.1.0 → 5.2.0).
+
+### Phase 1 — investment-memo-writer file-write + narration + target fix
+- [x] Phase 5 rewrite — default path
+  `$CLAUDE_PLUGIN_DATA/memos/{YYYY-MM-DD}_{ticker}_{mode}_memo.md`
+  (deep vs quick mode-separated filenames; overwrite on same-mode
+  re-run); Obsidian mode auto-detect (env var → vault probe → vault
+  CLAUDE.md folder convention → obsidian:obsidian-markdown skill)
+- [x] Chat delivery — executive summary + gate verdicts + file link
+  only; full memo stays in file (not repeated in chat)
+- [x] Phase 3 target fix — `domain-teams:investing-team` →
+  `domain-teams:research-team` (historical note preserved)
+- [x] Narration Convention (軸 1) — pre-dispatch expectation-setting
+  pattern documented
+
+### Phase 2 — domain-teams Visibility Convention (v5.2.0)
+- [x] `skill-team/SKILL.md` — new §Visibility Convention requiring
+  `TaskUpdate` emission at 3 levels: phase transitions, milestones,
+  heartbeat (≤60s max silence)
+- [x] 7 workflow skills gain compliance block: research-team /
+  code-team / design-team / docs-team / devops-team / qa-team /
+  planning-team
+- [x] Probabilistic vs structural guarantee trade-off documented;
+  phase-split architecture (軸 3) deferred to v5.3.0+
+
+### Phase 3 — Plugin-level sync
+- [x] `investing-toolkit/.claude-plugin/plugin.json` — 1.11.0 → 1.12.0
+- [x] `domain-teams/.claude-plugin/plugin.json` — 5.1.0 → 5.2.0
+- [x] `investing-toolkit/README.md` — v1.12.0 Version Highlights
+  prepended
+- [x] `ROADMAP.md` — this v1.12.0 entry; v1.11.0 de-marked as (current)
+
+### Deferred to v1.13.0+ candidates
+
+- **軸 3 phase-split orchestration** — if 軸 1+2 prove insufficient
+  in practice (structural guarantee for 60s max silence at cost of
+  context-fragmentation between dispatches)
+- **File-write convention extension** — apply file-persistence pattern
+  to `stock-screener`, `dcf-valuation`, `invest-portfolio` outputs
+- **Sector ETF cross-plugin workflow** — needs japan / korea /
+  china stock-snapshot skills first (per v1.11.0 sector ETF audit)
+- **KR KTBi via BOK ECOS API key** — carried from v1.9.0+ deferred
+- **Full 5-parallel grounding re-audit** — target ~2026-Q3
+- **JGBi YTM solver** — REJECTED per v1.11.0 brainstorm (architectural
+  consistency; would make JP the only bond-math country among 5
+  country-macro skills)
+
+---
+
+## v1.11.0 — Cross-country consistency refresh
 
 **Scope**: Addresses v1.10.0 PMI asymmetry (1 / 5 countries live) +
 grounding vintage drift (v1.9.0 baseline 2026-04-18 needed 2026-Q2

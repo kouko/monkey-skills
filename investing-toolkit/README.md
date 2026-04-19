@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.11.0
+**Version**: 1.12.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -178,6 +178,38 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.12.0 (2026-04-19) — Pattern C UX (file-write + visibility)
+
+Fixes 3 UX issues exposed by v1.11.0 NVDA Pattern C demo:
+
+- **investment-memo-writer Phase 5**: file-write default —
+  `$CLAUDE_PLUGIN_DATA/memos/{YYYY-MM-DD}_{ticker}_{mode}_memo.md`
+  with deep/quick mode-separated filenames (overwrite on same-mode
+  re-run). Obsidian mode auto-detect: `$OBSIDIAN_VAULT_PATH` env var
+  or probe `~/kouko-obsidian-vault/` etc.; reads vault `CLAUDE.md` for
+  folder convention; routes via `obsidian:obsidian-markdown` skill.
+  Chat delivery shows executive summary + gate verdicts + file link
+  only (full memo lives in file, not repeated in chat).
+
+- **investment-memo-writer Phase 3 target fix**: replaces
+  `domain-teams:investing-team` references with
+  `domain-teams:research-team` (per research-team's "investment or
+  macro analysis" scope). Historical note preserved.
+
+- **skill-team Visibility Convention (domain-teams v5.2.0)**: 7
+  workflow skills (research / code / design / docs / devops / qa /
+  planning) gain compliance block requiring `TaskUpdate` emission at
+  3 levels: phase transitions + milestones + heartbeat (≤60 seconds
+  max silence). Narration Convention (軸 1) added to
+  investment-memo-writer for pre-dispatch expectation-setting.
+
+Architectural alternative (軸 3 phase-split) deferred to v1.13.0+
+if 軸 1+2 insufficient. Probabilistic vs structural guarantee
+trade-off documented in skill-team SKILL.md §Visibility Convention.
+
+Cross-plugin PR: investing-toolkit (1.11.0 → 1.12.0) + domain-teams
+(5.1.0 → 5.2.0). 3-commit stack, ~3.5 days scope.
 
 ### v1.11.0 (2026-04-19) — Cross-country consistency refresh
 

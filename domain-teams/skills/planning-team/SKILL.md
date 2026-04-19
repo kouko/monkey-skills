@@ -333,3 +333,14 @@ Planning-team-specific blockers to call out:
 - Scope-clarity uncertainty that the brainstorming protocol could
   not resolve — route back to `protocols/planning-brainstorming.md`
   with the specific ambiguity highlighted, or escalate to the user
+
+---
+
+## Compliance: Visibility Convention (skill-team v5.2.0+)
+
+This skill dispatches multi-phase work (project planning, PRODUCT-SPEC
+authoring, JTBD analysis, 4 Big Risks assessment). Agent prompts built
+here include the Visibility Convention clause requiring `TaskUpdate`
+emission at phase transitions, milestones, and heartbeat intervals
+(≤60s max silence). See `domain-teams:skill-team` §Visibility Convention
+for full text + rationale.

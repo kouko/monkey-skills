@@ -386,3 +386,13 @@ If a worker outputs `BLOCKED`:
 - Do NOT proceed to gates
 - Present BLOCKED reason to user
 - Wait for user input
+
+---
+
+## Compliance: Visibility Convention (skill-team v5.2.0+)
+
+This skill dispatches multi-phase work (feature development, refactoring,
+bug fixes, test writing). Agent prompts built here include the Visibility
+Convention clause requiring `TaskUpdate` emission at phase transitions,
+milestones, and heartbeat intervals (≤60s max silence). See
+`domain-teams:skill-team` §Visibility Convention for full text + rationale.
