@@ -10,6 +10,8 @@ description: >-
 
 # stock-screener
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`yfinance_batch`, `yfinance_history`, `yfinance_info`, `finmind_fetch`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Screens a user-provided list of tickers against valuation, momentum, and trend
 criteria. Uses batch yfinance fetching and `ta_client.py` for indicator
 computation. Outputs a ranked table with composite scores.

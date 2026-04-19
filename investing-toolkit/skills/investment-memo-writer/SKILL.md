@@ -5,6 +5,8 @@ description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance 
 
 # investment-memo-writer
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`yfinance_history`, `yfinance_info`, `fred_series`, `sec_edgar_filings`, `sec_edgar_facts`, `mops_fetch`, `twse_openapi_fetch`, `finmind_fetch`) are registered in your session, prefer them over the `uv run ${CLAUDE_SKILL_DIR}/scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Orchestrate a full investment memo from raw ticker to polished document. This skill
 coordinates three subsystems: data fetching (investing-toolkit), regime context
 (macro-regime-snapshot), and analysis + gates (domain-teams:research-team). Optionally
