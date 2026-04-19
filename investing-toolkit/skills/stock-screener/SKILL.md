@@ -80,25 +80,61 @@ filter is soft: it does not exclude, only penalizes scoring.
 
 ## How It Works
 
-### Step 1 — Batch data fetch (data-fetcher agent)
+### Step 1 — Partition-and-batch data fetch (v1.16.3 suffix routing)
 
-Launch `../../agents/data-fetcher.md` with two parallel batch requests:
+Before issuing fetch requests, **partition the ticker list by suffix** so each market gets its best-available primary-source OHLCV (see `technical-snapshot/SKILL.md` for the same routing table):
+
+```
+tw_tickers   = [t for t in tickers if t.endswith(".TW")]       # TWSE 上市
+two_tickers  = [t for t in tickers if t.endswith(".TWO")]      # TPEx 上櫃
+jp_tickers   = [t for t in tickers if t.endswith((".T",".TO"))] # JP Tokyo
+yf_tickers   = [everything else — US / KR / CN / HK]
+```
+
+Then launch `../../agents/data-fetcher.md` with market-appropriate requests:
 
 ```
 ### Fetch Requests
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {ticker_list} --period {period}
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {ticker_list} --action info
+
+# yfinance batch — US/KR/CN/HK (still gets `.T` JP tickers for efficiency)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {yf_tickers + jp_tickers} --period {period}
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {yf_tickers + jp_tickers} --action info
+
+# TWSE /rwd/ stock-day-history per-ticker loop (Tier A for 上市)
+# one call per .TW ticker; auto-fallback to FinMind on TwseOpenApiError
+# Translate period: 1y→12, 6mo→6, 2y→24 (use months clamp 1..60).
+- foreach tw_t in {tw_tickers}:
+    INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action stock-day-history --ticker {tw_t.replace(".TW","")} --months {months}
+    # info (PE/PB/yield) still via yfinance since TWSE OpenAPI snapshot is per-day aggregate only:
+    INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {tw_t} --action info
+
+# FinMind per-ticker loop (Tier 2 for 上櫃 + TWSE fallback)
+- foreach two_t in {two_tickers}:
+    INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {two_t.replace(".TWO","")} --dataset TaiwanStockPrice --date-start {date_start}
+    INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {two_t} --action info
 ```
 
-Expected output:
+`{date_start}` = `today - {months} months` formatted `YYYY-MM-DD`.
+
+Expected output (post-merge):
 ```json
 {
-  "price_batch": {"tickers": {"AAPL": {...}, "MSFT": {...}}},
-  "info_batch":  {"tickers": {"AAPL": {...}, "MSFT": {...}}}
+  "price_batch": {"tickers": {"AAPL": {...}, "MSFT": {...}, "7203.T": {...}}},
+  "info_batch":  {"tickers": {"AAPL": {...}, "MSFT": {...}, ...}},
+  "tw_prices":   {"2330": {"data": [...], "period": "12mo", ...}},
+  "two_prices":  {"2454": {"TaiwanStockPrice": {...}}}
 }
 ```
 
-If any ticker fails, continue with `_partial: true` — do not block.
+If any fetch fails, continue with `_partial: true` — do not block.
+
+Rate-limit / performance notes:
+- TWSE /rwd/ loop: 12-month × 1 ticker = ~1-3 s cold; <200 ms cached.
+  Per-month cache (TTL 30 d past / 1 d current). Screening 10 `.TW`
+  tickers × 12 months cold ≈ 15-30 s first run; negligible on replay.
+- FinMind anonymous limit: 300 req/hr (one dataset fetch = one req).
+  For wide screens (20+ `.TWO` tickers), suggest `FINMIND_API_TOKEN`.
+- yfinance batch: one request for all yf+jp tickers (unchanged).
 
 ---
 
