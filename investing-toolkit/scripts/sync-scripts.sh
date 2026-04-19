@@ -103,6 +103,12 @@ copy_to sec_edgar_client.py \
   investment-memo-writer \
   dcf-valuation
 
+echo "Syncing mops_client.py..."
+copy_to mops_client.py \
+  taiwan-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
 echo "Syncing setup.sh..."
 copy_to setup.sh \
   us-stock-snapshot \
