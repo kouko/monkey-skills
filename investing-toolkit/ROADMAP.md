@@ -434,7 +434,66 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.0 — Complete MCP tool surface (current)
+## v1.16.1 — Cowork sandbox retrospective + maintenance automation (current)
+
+**Scope**: v1.14.0 premise failure correction + CI automation to make
+keeping MCP cheap.
+
+### Retrospective (confirmed empirically 2026-04-19)
+
+Plugin-installed stdio MCP servers run INSIDE the Claude Desktop
+Cowork sandbox, subject to the same URL allowlist as plugin-subprocess
+scripts. v1.14.0 shipped MCP infrastructure believing MCP spawned
+outside the sandbox — this was wrong. Anthropic's own plugins
+(knowledge-work-plugins, financial-services-plugins) exclusively use
+remote `type: http` MCP for exactly this reason.
+
+**Decision**: keep MCP infrastructure (works fine in Code CLI,
+preserves optionality for future remote-MCP pivot, rollback cost >
+keeping cost), correct all documentation, add CI automation to reduce
+recurring maintenance cost.
+
+### Commits
+- [x] Commit 1: `docs/mcp-setup.md` — honest retrospective at top;
+      "What actually works where" table; token/latency trade-off;
+      opt-out guidance.
+- [x] Commit 2: 9 SKILL.md blockquotes changed from "MCP-prefer" to
+      neutral dual-mode + explicit Cowork caveat; per-skill tool
+      enumeration moved to `docs/mcp-setup.md` (single authoritative
+      catalog).
+- [x] Commit 3: `tests/test_mcp_equivalence_auto.py` — parameterized
+      MCP↔CLI drift guard; 14 fixtures covering all public-tier
+      clients. Runtime ~6 s warm / 30 s cold.
+- [x] Commit 4: `tests/test_skill_md_sync.py` (canonical-phrase check
+      + stale-tool-ref check) + `tools/validate_mcp_tools.py`
+      (schema + description linter, all 29 tools pass).
+- [x] Commit 5: plugin.json / README / ROADMAP sync 1.16.0 → 1.16.1.
+
+### Maintenance cost reduction (estimated)
+
+Before: ~3.5-6.5 h / 6 months for MCP maintenance (drift checks,
+SKILL.md sync, scaffolding). After: <1 h / 6 months. Break-even on
+the ~1 day automation investment: ~2 months.
+
+### Known open items (deferred to v1.16.x+)
+
+- MCP equivalence coverage expansion (14 → 18+ fixtures):
+  sec_edgar_facts, sec_edgar_narrative, finmind, boj_fetch (generic),
+  ecb_series. All require either API keys or stable public fixtures.
+- `tools/scaffold_mcp_tool.py` for new-script bootstrapping (deferred
+  — save ~15 min per future script, current ROI uncertain).
+- Nightly URL probe for setup.sh external deps (uv install URL,
+  Homebrew formula) — current `Scraper dependency freshness` CI
+  partially covers this already.
+
+### Long-term: would need to pivot strategy for real Cowork support
+- Anthropic allowlists our data-source URLs (no ETA).
+- We host investing-toolkit as remote-HTTP MCP (requires $5-20/mo
+  infra, privacy consideration, out of scope for solo OSS plugin).
+
+---
+
+## v1.16.0 — Complete MCP tool surface
 
 **Scope**: Wrap the 8 remaining data-fetching scripts deferred from
 v1.14.0 plan so Cowork users are not blocked on macro / regime work

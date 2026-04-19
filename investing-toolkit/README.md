@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.16.0
+**Version**: 1.16.1
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -179,6 +179,41 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.16.1 (2026-04-19) — Cowork sandbox retrospective + maintenance automation
+
+**Retrospective**: v1.14.0's core premise — that plugin-installed stdio
+MCP servers bypass the Claude Desktop Cowork sandbox URL allowlist —
+was wrong. Empirical testing in v1.16.1 confirms plugin-MCP runs INSIDE
+the same sandbox as plugin-subprocess, so both paths are blocked
+equally in Cowork. Anthropic's own plugins all use remote `type: http`
+MCPs for exactly this reason, a signal we misread.
+
+**What this means**:
+- Claude Code CLI / Desktop Code tab: both subprocess and MCP work
+  fine; subprocess is the cheaper default (zero token overhead).
+- Claude Desktop Cowork tab: neither path works for URL-fetching
+  scripts. Pivot to Claude Code CLI for this plugin.
+
+**What changes in v1.16.1**:
+- `docs/mcp-setup.md` rewritten with honest retrospective + Code CLI
+  vs Cowork guidance + token/latency trade-off table.
+- 9 SKILL.md MCP-aware blockquotes neutralized from "prefer MCP" to
+  "Claude may use either; both return identical JSON"; explicit
+  Cowork caveat added; per-skill tool-name enumeration moved to the
+  single authoritative catalog at `docs/mcp-setup.md`.
+- **New `tests/test_mcp_equivalence_auto.py`** — parameterized MCP↔CLI
+  drift guard covering 14 fixtures across all public clients. Catches
+  silent divergence when action helpers change.
+- **New `tests/test_skill_md_sync.py`** — enforces canonical
+  retrospective phrasing + flags stale MCP tool references in SKILL.md.
+- **New `tools/validate_mcp_tools.py`** — schema + description linter;
+  all 29 tools currently pass.
+
+**MCP infrastructure is NOT rolled back** — it works fine in Code CLI,
+preserves optionality for a future remote-HTTP-MCP pivot, and the ~1
+day CI automation investment in v1.16.1 cuts future maintenance from
+~3.5-6.5 h/6mo to <1 h/6mo.
 
 ### v1.16.0 (2026-04-19) — Complete MCP tool surface
 
