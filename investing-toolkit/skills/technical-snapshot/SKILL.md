@@ -32,50 +32,49 @@ Minimum 200 trading days needed for SMA-200. Use `period=1y` or longer.
 
 ## How It Works
 
-### Step 1 — Fetch OHLCV (data-fetcher agent; v1.16.3 suffix-based routing)
+### Step 1 — Fetch OHLCV (data-fetcher agent)
 
-Route by ticker suffix to the best-available OHLCV source per market:
+**Default: yfinance for all markets** — empirically validated to cover
+US + JP + TW + KR + CN + HK with split/dividend-adjusted prices (the
+technical-analysis industry standard; avoids artificial jumps at split
+dates that raw prices introduce).
 
-| Suffix | Market | Primary source (Tier A) | Fallback |
-|---|---|---|---|
-| `.TW` | 上市 (TWSE) | **TWSE /rwd/ stock-day-history** | FinMind TaiwanStockPrice (Tier 2) |
-| `.TWO` | 上櫃 (TPEx) | FinMind TaiwanStockPrice | — (TPEx has no /rwd/ equiv) |
-| `.T` / `.TO` | JP (Tokyo) | yfinance `.T` | — (J-Quants Standard paid) |
-| bare / `.KS` / `.KQ` / `.SS` / `.SZ` / `.HK` | US / KR / CN / HK | yfinance | — |
-
-Pick ONE branch based on ticker suffix. Translate `period` (`1y` / `6mo` / `2y` / etc.) to months (`12` / `6` / `24` / etc.) for TWSE/FinMind paths.
-
-**Branch A — `.TW` (TWSE 上市, Tier A)**:
-```
-### Fetch Requests
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action stock-day-history --ticker {ticker_code} --months {months}
-```
-Auto-fallback to FinMind on `TwseOpenApiError` / HTTP 4xx/5xx:
-```
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start}
-```
-`{ticker_code}` = ticker with `.TW` stripped (e.g. `2330`). `{months}` = mapped from `period` (1y→12, 6mo→6, 2y→24, etc.). `{date_start}` = today − N months, `YYYY-MM-DD`.
-
-**Branch B — `.TWO` (TPEx 上櫃)**:
-```
-### Fetch Requests
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start}
-```
-(TPEx has no free Tier A primary; FinMind is the only historical-OHLCV option.)
-
-**Branch C — `.T` / `.TO` (JP Tokyo)**:
-```
-### Fetch Requests
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker}.T --period {period}
-```
-
-**Branch D — default (US / KR / CN / HK)**:
 ```
 ### Fetch Requests
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period}
 ```
 
-Expected output (all branches): JSON with `data` array (OHLCV rows). yfinance + TWSE stock-day-history additionally supply `latest_close`/`latest_date` at top level; FinMind output feeds directly since `ta_client.py` v1.16.3+ auto-computes them from the last row.
+JP tickers (Tokyo Stock Exchange) use the `.T` / `.TO` suffix:
+`yfinance_client.py --ticker 7203.T --period 1y`.
+
+TW tickers (.TW / .TWO) work as-is with yfinance; empirically verified
+2026-04-19: TSMC 2330.TW returns 243 rows / 1y, full info (sector, PE,
+P/B, marketCap in TWD), SMA-200 fully computable. 3105.TWO (WIN Semi,
+上櫃) returns 55 rows / 3mo cleanly.
+
+Expected output: JSON with `data` array (OHLCV rows) + `latest_close`
++ `latest_date` at top level.
+
+### Advanced — TW primary-source mode (explicit request only)
+
+If the caller specifically requests Tier A primary-source (e.g. for a
+`taiwan-stock-snapshot` memo where regulator-raw data is needed for
+citation), use `twse_openapi_client.py --action stock-day-history`
+instead for `.TW` tickers. Returns TWSE-raw (non-adjusted) OHLCV
+sourced directly from `twse.com.tw/rwd/zh/afterTrading/STOCK_DAY`.
+
+```
+# .TW primary-source (raw prices, memo-citation mode)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action stock-day-history --ticker {ticker_code} --months {months}
+
+# .TWO primary-source fallback (TPEx — no TWSE /rwd/ equivalent)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start}
+```
+
+Raw prices are harder to read for TA (introduce artificial jumps on
+split / dividend dates), which is why they are NOT the default for
+technical-snapshot. Use them only when the downstream consumer
+specifically needs regulator-raw data.
 
 ---
 

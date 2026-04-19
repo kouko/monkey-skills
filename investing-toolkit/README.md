@@ -180,13 +180,17 @@ Plugin-level cross-market references (complement the per-skill references):
 
 ## Version Highlights
 
-### v1.16.3 (2026-04-19) — TWSE `/rwd/` historical OHLCV + cross-country routing for technical-snapshot + stock-screener
+### v1.16.3 (2026-04-19) — TWSE `/rwd/` historical OHLCV action (Tier A, memo-citation mode)
 
-User flagged that `technical-snapshot` and `stock-screener` hard-coded
-`yfinance_client.py` for OHLCV across all markets, giving uneven coverage
-(great for US/JP, patchy for TW/KR/CN). This release adds a proper Tier A
-historical-OHLCV source for TWSE-listed (上市) tickers and threads
-suffix-based routing through both skills.
+User flagged that `technical-snapshot` / `stock-screener` hard-coded
+`yfinance_client.py` for OHLCV, possibly giving patchy TW/KR/CN coverage.
+Added a Tier A TWSE historical endpoint for `.TW`. Then empirically
+validated yfinance on TSMC 2330.TW (243 rows / 1y, full info, SMA-200
+computable) + 3105.TWO WIN Semi — **yfinance actually covers TW just
+fine with split-adjusted prices (TA standard)**. So the final routing
+keeps **yfinance as default for all markets** and exposes the TWSE
+`/rwd/` endpoint as an *explicit-request* mode when callers need
+regulator-raw prices for memo primary-source citation.
 
 - **`scripts/twse_openapi_client.py::stock-day-history`** (new action):
   wraps `https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY` — the
@@ -200,24 +204,30 @@ suffix-based routing through both skills.
   `latest_close` from `data[]` when the source didn't supply them at
   the top level. Makes ta_client portable across yfinance + FinMind +
   TWSE `/rwd/` with zero per-source normalization shims.
-- **`technical-snapshot` SKILL.md Phase 1**: 4-branch suffix router.
-  `.TW` → TWSE `/rwd/` Tier A with FinMind Tier 2 fallback;
-  `.TWO` → FinMind; `.T`/`.TO` → yfinance `.T`; else → yfinance
-  (US/KR/CN/HK unchanged).
-- **`stock-screener` SKILL.md Phase 1**: partition-then-batch. yfinance
-  batch for US+JP+KR+CN+HK (one HTTP call, unchanged behavior);
-  per-ticker loops for `.TW` (TWSE /rwd/) and `.TWO` (FinMind).
-- **Empirical validation**: TSMC 2330.TW via TWSE /rwd/ 12 months →
-  250+ trading days → RSI 61.58, MACD Bullish, SMA-200 1476.02,
-  trend_alignment "Strong Bullish", latest close NT$2030 @ 2026-04-17.
-- **Regression**: existing US path (AAPL / NVDA) unchanged. MCP contract
-  tests 22/22 (14 existing positive + 6 negative + 2 TWSE fixtures).
+- **`technical-snapshot` SKILL.md Phase 1**: yfinance remains the
+  default for ALL markets (including `.TW` / `.TWO`). TWSE `/rwd/`
+  action is documented as an Advanced / memo-citation mode for raw
+  primary-source prices.
+- **`stock-screener` SKILL.md Phase 1**: single yfinance batch call
+  for the full ticker list (pre-v1.16.3 shape preserved). TWSE `/rwd/`
+  pointer noted for taiwan-stock-snapshot memo contexts.
+- **Empirical validation 2026-04-19**:
+  - TSMC 2330.TW via yfinance 1y → 243 rows, SMA-200 computable,
+    currency TWD, full info (sector/PE/PB/yield); matches TWSE `/rwd/`
+    close exactly (2030.0 @ 2026-04-17).
+  - 3105.TWO (WIN Semi, 上櫃) via yfinance 3mo → 55 rows, close 539.0.
+  - yfinance prices are split/dividend-adjusted (industry-standard for
+    TA); TWSE `/rwd/` prices are raw (for regulator-citation use).
+- **Regression**: MCP contract tests 26/26. No behavior change for
+  US / JP / existing TW / TWO users compared to v1.16.2.
 
-Caveats (documented in `_provenance._endpoint`):
-- TWSE `/rwd/` endpoint is not catalogued at openapi.twse.com.tw. Tier A
-  (TWSE-authored) but undocumented — could change without notice.
-  Auto-fallback to FinMind mitigates.
-- TPEx (.TWO) has no /rwd/ equivalent; stays on FinMind.
+Caveats:
+- TWSE `/rwd/` endpoint is not catalogued at openapi.twse.com.tw.
+  Tier A (TWSE-authored) but undocumented — kept as explicit-request
+  action, not default path.
+- TPEx (.TWO) has no /rwd/ equivalent — yfinance is the recommended
+  default; FinMind TaiwanStockPrice remains available for explicit
+  Tier 2 fallback in `taiwan-stock-snapshot` memo context.
 
 ### v1.16.2 (2026-04-19) — mops_fetch required-param validation (user-reported bug fix)
 
