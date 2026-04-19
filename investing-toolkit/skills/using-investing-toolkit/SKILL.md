@@ -19,15 +19,15 @@ Skills are organised in three layers:
 
 | Skill | Layer | Description | Status |
 |-------|-------|-------------|--------|
-| `us-macro` | data | US macro indicators via FRED (29 series incl. `nowcast` group + new `real-rates` group T5YIE/T10YIE/DFII5/DFII10) | v1.9.0 |
-| `japan-macro` | data | Japan macro indicators via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio + bilingual reference) | v1.7.0 |
+| `us-macro` | data | US macro indicators via FRED (~31 series incl. `pmi` group [OECD CLI proxy for ISM] + `swap-spreads` group new in v1.10.0) | v1.10.0 |
+| `japan-macro` | data | Japan macro indicators via BOJ + e-Stat + ECB + MoF auction history (27 presets / 10 groups incl. `real-rates` group new in v1.10.0; C+D+E multi-source framework) | v1.10.0 |
 | `taiwan-macro` | data | Taiwan macro indicators via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
 | `korea-macro` | data | Korea macro indicators via FinanceDataReader BOK ECOS-KEYSTAT (54 indicators, 13 groups incl. monthly `industry` activity layer; full KEYSTAT catalogue in `docs/`) | v1.8.1 |
 | `china-macro` | data | China macro indicators via NBS new-SPA API + PBOC (akshare) + FRED + yfinance (34 indicators) | v1.7.1 |
 | `us-stock-snapshot` | data | yfinance price + info snapshot for a US ticker | v1.0.0 |
 | `taiwan-stock-snapshot` | data | Taiwan equity data via FinMind (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
 | `technical-snapshot` | data | RSI, MACD, Bollinger Bands, ATR, SMA via ta_client.py | v1.2.0 |
-| `macro-regime-snapshot` | aggregation | 5-country IC + GIP regime call (US/JP/TW/KR/CN) + real-rate block (US); 5-block dashboard per country with LSEG-style signal labels | v1.9.0 |
+| `macro-regime-snapshot` | aggregation | 5-country IC + GIP (US/JP/TW/KR/CN) + Rate Stress Dashboard (US real-rate from v1.9.0 + JP real-rate C+D+E new + US swap spread new) | v1.10.0 |
 | `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `dcf-valuation` | aggregation | 3-stage DCF model + sensitivity table | v1.0.0 |
 | `invest-portfolio` | aggregation | Portfolio review — P&L snapshot + regime overlay + rebalance | v1.2.0 |
@@ -65,7 +65,7 @@ Skills are organised in three layers:
 | "Technical indicators / RSI / MACD for TSLA" | `technical-snapshot` |
 | "Review my portfolio / rebalance" | `invest-portfolio` |
 
-All skills through v1.9.0 are now available.
+All skills through v1.10.0 are now available.
 
 ---
 

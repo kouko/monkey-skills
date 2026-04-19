@@ -284,7 +284,7 @@ sector pulse.
 
 ---
 
-## v1.9.0 — macro-regime-snapshot multi-country + LSEG real-rate block (current)
+## v1.9.0 — macro-regime-snapshot multi-country + LSEG real-rate block
 
 **Scope**: Rewrite `macro-regime-snapshot` to cover **all 5 country
 macro skills** (US/JP/TW/KR/CN) using the v1.7.0 monthly GDP proxies,
@@ -357,12 +357,94 @@ Pattern ported from Anthropic's `financial-services-plugins/partner-built/lseg/s
 | Swap-spread block | **Deferred to v1.10.0+** (needs more FRED series) |
 
 ### Deferred to v1.10.0+
-- JP JGBi real-rate (MoF XLS scraper)
-- KR KTBi real-rate (needs BOK ECOS API key)
-- ISM PMI via FRED NAPM
-- TW / KR local PMI (製造業採購經理人指數 / 기업경기실사)
-- Swap-spread block (requires additional FRED series + signal calibration)
+- JP JGBi real-rate (MoF XLS scraper) — **delivered in v1.10.0 as C+D+E multi-source**
+- KR KTBi real-rate (needs BOK ECOS API key) — still deferred
+- ISM PMI via FRED NAPM — still deferred (FRED relicensing not available)
+- TW / KR local PMI (製造業採購經理人指數 / 기업경기실사) — still deferred
+- Swap-spread block — **delivered in v1.10.0 as Treasury-SOFR 3M proxy**
 - Full BOK ECOS API (lagging CI 후행지수 + 10K series; re-deferred from v1.9.0)
+
+---
+
+## v1.10.0 — PMI + JP real rates + swap spread (current)
+
+**Scope**: Closes three data-coverage gaps from v1.9.0 deferred list —
+ISM-substitute PMI in us-macro (OECD CLI proxy), full JP real-rate
+support via C+D+E multi-source framework, and US swap-spread block
+via Treasury-SOFR 3M proxy. `macro-regime-snapshot` Block 3 renamed
+"Rate Stress Dashboard" to absorb the new JP real-rate and US
+swap-spread sub-blocks.
+
+### Phase 1 — us-macro `pmi` group (OECD CLI fallback)
+- [x] `skills/us-macro/SKILL.md` — new `pmi` group section (single series
+  USALOLITOAASTSAM, already fetched under `nowcast`; reused as PMI proxy
+  with threshold documentation). ISM / S&P Global PMI removed from FRED
+  in 2016 (St. Louis Fed blog citation in `references/us-macro-indicators.md`
+  "PMI" section). USALOLITOAASTSAM counted once in the 31-series total.
+- [x] `skills/us-macro/references/us-macro-indicators.md` — "PMI" section
+  added with OECD CLI methodology + threshold framing (100 = long-run
+  avg; ≥100.5 expansion, ≤99.5 contraction).
+
+### Phase 2 — japan-macro `real-rates` group (C+D+E multi-source) + grounding note
+- [x] `scripts/ecb_client.py` — new SDMX client for ECB long-term
+  monthly ex-post real yields (M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA).
+- [x] `scripts/boj_client.py` — extended for Tankan
+  1Y/3Y/5Y expected inflation series.
+- [x] `skills/japan-macro/SKILL.md` — new `real-rates` group + Step 3b
+  (ECB fetch) + multi-source routing table (MoF snapshot anchor + ECB
+  monthly + Tankan survey). Presets: 22 → 27; groups: 9 → 10.
+- [x] `skills/japan-macro/references/indicators-japan-real-rates.md` —
+  new reference; C+D+E framework documentation.
+- [x] `research/grounding-v1.10.0.md` — primary-source vetting for 3 new
+  data sources (MoF auction history / ECB SDMX / BOJ Tankan) +
+  rejection rationale for JSDA (999.999 sentinel confirmed via probe) /
+  JBTS paths.
+
+### Phase 3 — us-macro `swap-spreads` group (T-SOFR 3M proxy)
+- [x] `skills/us-macro/SKILL.md` — new `swap-spreads` group section
+  (DGS3MO − SOFR30DAYAVG proxy). 14-group structure documented.
+- [x] `skills/us-macro/references/us-macro-indicators.md` — "Swap Spread /
+  Money-Market Stress" section added with post-LIBOR methodology
+  explanation (FRED has no clean term swap series after LIBOR wind-down).
+
+### Phase 4 — macro-regime-snapshot integration
+- [x] `skills/macro-regime-snapshot/SKILL.md` — Block 1 PMI row per
+  country (US fetched live; JP/TW/KR/CN URL-only references pending
+  licensed access). Block 3 renamed "Rate Stress Dashboard" with
+  JP real-rate sub-block (C+D+E output) and US swap-spread sub-block.
+  Step numbering preserves existing 5-block output contract.
+- [x] `skills/macro-regime-snapshot/references/investment-clock-cheatsheet.md`
+  — Rate Stress Dashboard interpretation guide added.
+
+### Phase 5 — Plugin-level sync
+- [x] `skills/using-investing-toolkit/SKILL.md` — us-macro / japan-macro /
+  macro-regime-snapshot rows bumped to v1.10.0 with new groups/blocks noted.
+- [x] `README.md` — v1.10.0 Version Highlights entry + Skills table
+  updates for 3 affected rows.
+- [x] `ROADMAP.md` — this v1.10.0 entry; v1.9.0 de-marked as (current).
+- [x] `.claude-plugin/plugin.json` — 1.9.0 → 1.10.0.
+
+### Deferred to v1.11.0 (next major candidate)
+
+- **Full MoF 連動係数 + QuantLib CPIBond YTM solver for daily JGBi
+  real yield** — Bloomberg-grade ±5bp accuracy, 5-7 working days scope,
+  dedicated PR with primary-source grounding audit. v1.10.0 ships the
+  C+D+E multi-source anchor; v1.11.0 would upgrade to full indexation-
+  ratio-adjusted YTM via QuantLib `CPIBond` class.
+
+### Deferred to v1.11.x / v1.12.0 candidates (carried forward)
+
+- **KR KTBi real-rate** — BOK ECOS API key required (free registration at
+  ecos.bok.or.kr/api/#/AuthKeyApply); unlocks lagging CI 후행지수 +
+  10K series concurrently
+- **JP Jibun Bank PMI** — licensed S&P Global access needed for
+  machine-readable feed (URL-only reference in v1.10.0 Block 1)
+- **CN Caixin PMI via akshare** — mirror availability pending re-probe
+  (2 presets removed in v1.6.0 after 8-month stale window)
+- **TW + KR domestic PMI scrapers** — 製造業採購經理人指數 (中經院) /
+  기업경기실사 (BOK); custom scraper per source
+- **ISM PMI via FRED NAPM** — blocked by 2016 FRED delisting; awaits
+  hypothetical relicensing
 
 ---
 
