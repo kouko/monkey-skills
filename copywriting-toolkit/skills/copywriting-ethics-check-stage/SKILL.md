@@ -17,9 +17,9 @@ whether Phase 8 (form gate) may run.
 ## Role Constraint (read first)
 
 - **Evaluator-only** — this skill MUST NOT produce, edit, or paraphrase
-  any draft content. Behavioral contract from
-  `../../../CLAUDE.md` (Agent Behavioral Rules): evaluators produce
-  verdicts, do NOT modify artifacts.
+  any draft content. Behavioral contract from `../../agents/evaluator.md`
+  §Rules: "Do NOT fix problems or produce revised artifacts. Your job
+  is to judge, not to do."
 - **MUST gate** — the verdict is binding. `NEEDS_REVISION` here halts
   the pipeline regardless of how well later gates would score. Do not
   forward-run Phase 8 to "check anyway."

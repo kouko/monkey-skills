@@ -80,7 +80,7 @@ Worker appends to envelope:
 }
 ```
 
-Progress reporting follows `domain-teams/skills/copywriting-team/protocols/copywriting-handoff-format.md` if the caller needs structured candidate output.
+Candidate output shape — progress reporting, checkpoint prompts, and 3-reason rationale are produced inline following the envelope schema above. Structured handoff-format tooling is owned by `copywriting-intake` (Phase 0-1 entry) and is not re-loaded here.
 
 ## Downstream Gates
 

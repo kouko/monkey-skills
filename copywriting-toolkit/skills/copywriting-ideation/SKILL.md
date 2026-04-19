@@ -82,10 +82,11 @@ Advanced (only when overlay activated):
 
 - `standards/kosimo-instinct-analysis.md` — 小霜 和也 の本能軸分析。INLINE duplicate: this standard lives ONLY in this ideation skill, not duplicated elsewhere. Use as the secondary divergence axis in 曼陀羅 + 小霜 dual-axis mode.
 
-Advanced overlay also references (lives in other skill dirs — do not copy here):
+Scope boundary — this skill is self-contained. It does NOT load standards from other skills. Concepts that belong downstream (SNS-era seed behavior per AISAS / ULSSAS, JP voice lineage signatures, form-specific approach canons) are applied by their owning skills, not here:
 
-- ULSSAS seed criteria → `copywriting-long-form-pasona/standards/sns-evolution-aisas-ulssas.md` (at runtime, advanced overlay reads that file via relative discovery; this ideation skill does not own that standard)
-- JP voice lineage calibration → `copywriting-voice-positioning-stage/standards/jp-copy-craft-lineage.md`
+- SNS-native seed filtering — `copywriting-long-form-pasona` / `copywriting-light-action` handle ULSSAS / AISAS routing at Phase 4 drafting time via their own `standards/sns-evolution-aisas-ulssas.md`. Ideation's SNS-native trigger (advanced overlay activation rule above) only signals that the downstream drafter should engage SNS behavior models; ideation itself does not apply them.
+- JP voice lineage calibration — `copywriting-voice-tone-stage` applies 糸井 / 岩崎 / 眞木 signatures in Phase 6 via its own `standards/jp-copy-craft-lineage.md`. Ideation emits candidates free-form; voice tuning happens after Phase 4 draft.
+- Form-specific approach seeds (5 切入點 for short-form, BEAF stages for mid-form) — applied by the form's own drafter skill during Phase 4. Ideation's form-aware rules (Hard rules below) operate on structural layout only, not on standard content.
 
 ## Hard rules
 
@@ -96,7 +97,7 @@ Advanced overlay also references (lives in other skill dirs — do not copy here
 - Default winner count 3-5. Fewer than 2 = selection failed; more than 6 = convergence failed.
 - Long-form Phase 0: use layered "PASONA stage × independent Mandal-Art per stage", not one 3×3 for the whole piece.
 - Mid-form Phase 0: independent expansion per BEAF stage.
-- Short-form Phase 0: embed the 5 切入点 from `copywriting-short-form/standards/short-form-catchcopy-canon.md` into the 8 directions, OR weight 掛詞 / 余白 / 極端化 heavily.
+- Short-form Phase 0: when the brief is short-form, weight 掛詞 / 余白 / 極端化 / 意外性 heavily across the 8 directions. 5 切入點 (利益 / 恐怖 / 顛覆 / 呼喚 / 提問) routing is a downstream concern — `copywriting-short-form` applies it in Phase 4 using its own standard. Ideation emits raw candidates; it does not pre-classify them by 切入點.
 
 ## Hand-off envelope
 

@@ -77,7 +77,7 @@ If Phase 3 emits rewrite variants (optional output), those rewrites trigger:
 - Additional form re-gate on each rewrite (Phase 8)
 - Voice consistency SHOULD gate across all variants (Phase 6 rubric)
 
-Rewrites follow 谷山 「なんかいいよね禁止」 — each variant must justify with 3 concrete reasons (see `copywriting-ideation/standards/ideation-taniyama-discipline.md`).
+Rewrites follow 谷山 「なんかいいよね禁止」 — each variant must justify with 3 concrete reasons covering (a) what benefit / to whom, (b) why new vs existing copy, (c) why resonant in the given context. Description-type rationale ("it reads better" / "it's punchier") is rejected; the reason must name a concrete audience / benefit / rhetorical mechanism. This rule is applied locally here; audit does not delegate to `copywriting-ideation`.
 
 ## Output
 

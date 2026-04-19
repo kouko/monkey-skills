@@ -79,7 +79,7 @@ Worker appends to envelope:
 {
   "phase": "phase-4-draft",
   "form": "long-form-pasona",
-  "framework_selected": "pasona | new-pasona | pasbeconano",
+  "framework_selected": "pasona | new-pasona | pasbecona",
   "draft": "<stage-labeled long-form copy>",
   "next_stage": "copywriting-voice-positioning-stage"
 }
