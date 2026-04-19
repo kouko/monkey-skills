@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.16.1
+**Version**: 1.16.2
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -179,6 +179,35 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.16.2 (2026-04-19) — mops_fetch required-param validation (user-reported bug fix)
+
+Fixes a cryptic runtime error when `mops_fetch` was called without required
+params. Example: `mops_fetch(action="director-holdings", ticker="6741")` —
+missing `year`/`month` — used to crash with
+`unsupported format string passed to NoneType.__format__` (downstream f-string
+on `None`). Now returns:
+
+```json
+{"error": "action 'director-holdings' requires: --year, --month. (ROC calendar for --year: 西元 - 1911; e.g. 2026 → 115)", "action": "director-holdings"}
+```
+
+- **scripts/mops_client.py**: adds `_REQUIRED_PARAMS` table (action → required
+  param names) + `_validate_action_params(args)` helper called at top of
+  `_run_action()`. Missing params raise `SystemExit` with clear flag list; the
+  existing `mops_fetch` SystemExit handler converts to the friendly error dict.
+  13 actions across 5 categories now validated.
+- **mops_fetch docstring**: rewritten with explicit `[required, params]`
+  notation per action — replaces the ambiguous "Insider / governance (ticker,
+  year [+ month])" syntax that misled LLM callers about which params are
+  required.
+- **tests/test_mcp_equivalence_auto.py**: adds 6 parametrized negative-case
+  regression tests covering director-holdings, monthly-revenue,
+  day-announcements, balance-sheet, and insider-trades missing-param paths.
+
+Fixes both MCP and CLI paths (both funnel through `_run_action`). Sibling
+clients (twse/edinet/sec_edgar) were already safe — mops was the only
+dispatcher-pattern client without top-level validation.
 
 ### v1.16.1 (2026-04-19) — Cowork sandbox retrospective + maintenance automation
 

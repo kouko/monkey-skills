@@ -278,7 +278,50 @@ def _skip_reason(fx: dict) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Parameterized test
+# Negative-case tests — v1.16.2 mops_fetch missing-param validation
+# ---------------------------------------------------------------------------
+#
+# Asserts mops_fetch returns a friendly {"error": "...", "action": "..."}
+# dict when required per-action params are missing, instead of crashing
+# with "unsupported format string passed to NoneType.__format__"
+# (fixed in v1.16.2 via `_validate_action_params`).
+
+
+MOPS_MISSING_PARAM_CASES: list[tuple[str, dict, str]] = [
+    # action,                  mcp_args,                                 expected missing flag in error
+    ("director-holdings", {"ticker": "6741"},                            "--year"),
+    ("director-holdings", {"ticker": "6741", "year": 114},               "--month"),
+    ("monthly-revenue",   {"ticker": "2330"},                            "--year"),
+    ("day-announcements", {},                                             "--year"),
+    ("balance-sheet",     {"ticker": "2330", "year": 114},               "--season"),
+    ("insider-trades",    {"ticker": "2330", "year": 114},               "--month"),
+]
+
+
+@pytest.mark.parametrize(
+    "action,args,expected_flag",
+    MOPS_MISSING_PARAM_CASES,
+    ids=[f"{a}_missing_{f}" for a, _, f in MOPS_MISSING_PARAM_CASES],
+)
+def test_mops_fetch_rejects_missing_required_params(
+    action: str, args: dict, expected_flag: str,
+):
+    result = _call_mcp("mops_fetch", {"action": action, **args})
+    assert "error" in result, (
+        f"expected error dict for {action} missing {expected_flag}, "
+        f"got: {result}"
+    )
+    assert expected_flag in result["error"], (
+        f"error should mention missing flag {expected_flag}; "
+        f"got: {result['error']!r}"
+    )
+    assert result.get("action") == action, (
+        f"error should carry action={action!r}, got: {result.get('action')!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Parameterized test (positive path — MCP == CLI equivalence)
 # ---------------------------------------------------------------------------
 
 

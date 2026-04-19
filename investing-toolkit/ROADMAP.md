@@ -434,7 +434,41 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.1 — Cowork sandbox retrospective + maintenance automation (current)
+## v1.16.2 — mops_fetch required-param validation (current)
+
+**Scope**: User-reported bug fix. `mops_fetch(action=..., ticker=...)` without
+required year/month/season args used to crash with the cryptic Python error
+`unsupported format string passed to NoneType.__format__` (f-string format
+spec on None value from `types.SimpleNamespace` defaulting). Now returns a
+friendly `{"error": "action '...' requires: --year, --month. ...", "action":
+"..."}` dict.
+
+### Commits
+- [x] Commit 1: `scripts/mops_client.py` — `_REQUIRED_PARAMS` table +
+      `_validate_action_params()` helper called at top of `_run_action()`;
+      updated `mops_fetch` docstring with explicit `[required, params]`
+      notation per action.
+- [x] Commit 2: `tests/test_mcp_equivalence_auto.py` — 6 parametrized
+      negative-case regression tests.
+- [x] Commit 3: plugin sync 1.16.1 → 1.16.2.
+
+### Root cause
+
+`mops_client.py` is the only dispatcher-pattern MCP client in the plugin (16
+actions funneled through `_run_action` via `types.SimpleNamespace`). All
+other clients (twse/edinet/sec_edgar/etc.) either register separate tools per
+action (JSONSchema `required` enforces params) or raise `SystemExit`
+per-branch before any None-on-format. mops lacked top-level validation.
+
+### Deferred
+- Split `mops_fetch` into 16 individual MCP tools (would eliminate the
+  dispatcher vulnerability architecturally) — ~2.2K token overhead, rejected
+  for budget reasons in v1.14.0 plan review. Revisit if Anthropic raises
+  session token budget OR core/extras MCP split ships.
+
+---
+
+## v1.16.1 — Cowork sandbox retrospective + maintenance automation
 
 **Scope**: v1.14.0 premise failure correction + CI automation to make
 keeping MCP cheap.
