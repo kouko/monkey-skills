@@ -1,14 +1,16 @@
-"""test_mcp_contract.py — v1.14.0 contract tests
+"""test_mcp_contract.py — MCP surface contract tests (v1.14.0+)
 
 Asserts that:
   1. `mcp_server.py --self-check` returns a canonical JSON shape with
-     ok=True, tools=13, and the expected per-client breakdown.
+     ok=True, the expected total tool count, and per-client breakdown.
   2. Spawning the MCP stdio server and performing a real initialize +
-     tools/list roundtrip returns all 13 tools with non-empty schemas.
+     tools/list roundtrip returns all expected tools with non-empty schemas.
   3. For a stable, cache-friendly tool (`fred_series`), calling via MCP
      and via the subprocess CLI returns the same `latest.value` — the
      contract we rely on when skills' SKILL.md prose tells Claude "MCP
      and CLI return identical JSON".
+
+Current surface (v1.15.0): 19 tools across 10 clients.
 
 Run with:
     uv run --script servers/mcp_server.py --self-check   # sanity
@@ -54,14 +56,17 @@ def test_self_check_returns_expected_summary():
     lines = [ln for ln in res.stdout.splitlines() if ln.strip()]
     payload = json.loads(lines[-1])
     assert payload["ok"] is True
-    assert payload["tools"] == 13
+    assert payload["tools"] == 19  # v1.15.0: +4 edinet +1 tdnet +1 yfinance_financials
     assert set(payload["tools_per_client"]) == {
         "yfinance", "akshare", "nbs", "fred",
         "sec_edgar", "mops", "twse_openapi", "finmind",
+        "edinet", "tdnet",
     }
     assert payload["tools_per_client"]["sec_edgar"] == 4
-    assert payload["tools_per_client"]["yfinance"] == 3
+    assert payload["tools_per_client"]["edinet"] == 4
+    assert payload["tools_per_client"]["yfinance"] == 4  # v1.15.0: + financials
     assert payload["tools_per_client"]["mops"] == 1
+    assert payload["tools_per_client"]["tdnet"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +83,7 @@ _INITIALIZED_NOTE = '{"jsonrpc":"2.0","method":"notifications/initialized"}\n'
 _LIST_TOOLS_REQ = '{"jsonrpc":"2.0","id":2,"method":"tools/list"}\n'
 
 
-def test_mcp_stdio_exposes_all_13_tools():
+def test_mcp_stdio_exposes_all_19_tools():
     res = _run_uv_script(
         [str(SERVER)],
         stdin=_INITIALIZE_REQ + _INITIALIZED_NOTE + _LIST_TOOLS_REQ,
@@ -96,14 +101,22 @@ def test_mcp_stdio_exposes_all_13_tools():
     assert init_result["serverInfo"]["name"] == "investing-toolkit"
 
     tools = list_frames[0]["result"]["tools"]
-    assert len(tools) == 13
+    assert len(tools) == 19
     names = {t["name"] for t in tools}
     expected = {
-        "yfinance_history", "yfinance_info", "yfinance_batch",
+        # yfinance (4 — v1.15.0 added financials)
+        "yfinance_history", "yfinance_info", "yfinance_batch", "yfinance_financials",
+        # macro + regulator (6)
         "akshare_china_macro", "nbs_china_macro", "fred_series",
+        "mops_fetch", "twse_openapi_fetch", "finmind_fetch",
+        # sec_edgar (4)
         "sec_edgar_cik", "sec_edgar_facts", "sec_edgar_filings",
         "sec_edgar_narrative",
-        "mops_fetch", "twse_openapi_fetch", "finmind_fetch",
+        # edinet (4 — NEW v1.15.0)
+        "edinet_resolve_code", "edinet_list_filings",
+        "edinet_fetch_statements", "edinet_filing_summary",
+        # tdnet (1 — NEW v1.15.0)
+        "tdnet_list",
     }
     assert names == expected, sorted(names - expected) + sorted(expected - names)
 

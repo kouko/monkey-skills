@@ -36,7 +36,7 @@ import os
 import sys
 from pathlib import Path
 
-VERSION = "1.14.0"
+VERSION = "1.15.0"
 
 # Resolve plugin root. Normally Claude sets CLAUDE_PLUGIN_ROOT; fall back
 # to __file__ location for direct invocation / testing.
@@ -58,13 +58,15 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 
 def _import_clients():
-    """Import all 8 client modules. Returns list of (name, module)."""
+    """Import all 10 client modules (v1.15.0+). Returns list of (name, module)."""
     import akshare_client
+    import edinet_client
     import finmind_client
     import fred_client
     import mops_client
     import nbs_client
     import sec_edgar_client
+    import tdnet_client
     import twse_openapi_client
     import yfinance_client
 
@@ -77,6 +79,8 @@ def _import_clients():
         ("mops", mops_client),
         ("twse_openapi", twse_openapi_client),
         ("finmind", finmind_client),
+        ("edinet", edinet_client),
+        ("tdnet", tdnet_client),
     ]
 
 
@@ -96,8 +100,9 @@ def _self_check() -> None:
     # FastMCP exposes tools via internal registry; count via list_tools() coroutine
     # is async — we just report known counts statically for self-check speed.
     tool_counts = {
-        "yfinance": 3, "akshare": 1, "nbs": 1, "fred": 1,
+        "yfinance": 4, "akshare": 1, "nbs": 1, "fred": 1,
         "sec_edgar": 4, "mops": 1, "twse_openapi": 1, "finmind": 1,
+        "edinet": 4, "tdnet": 1,
     }
     total = sum(tool_counts.values())
     print(json.dumps({
