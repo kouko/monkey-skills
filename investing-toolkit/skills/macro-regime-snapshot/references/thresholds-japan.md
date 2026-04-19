@@ -38,6 +38,20 @@ details (誘導目標 0.75% 程度 / IOER 0.75% / 基準貸付 1.00%) + 実績
 FM01/STRDCLUCON fetch returns ~target ± 3 bp — acceptable precision
 for regime call but should be cited as "target approximation".
 
+### v1.10.0 addendum (2026-04-19)
+
+Real-rate decomposition section populated with C+D+E multi-source framework:
+- MoF 国債入札結果 (JGBi 第29-30回 auction real yields 単利, 2024-05 → 2025-08)
+- ECB Data Portal SDMX series `FM.M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA` (ex-post monthly real)
+- BOJ Tankan 企業物価見通し codes TK99F0000204/205/206HCQ00000 (1Y/3Y/5Y CPI outlook)
+
+Correction #5 ("-0.386% 数値削除") superseded — v1.10.0 now supplies verified
+anchor points. See `## Real Rate Decomposition` section below for full framework.
+Full daily JGBi YTM solver (MoF 連動係数 + QuantLib) deferred to v1.11.0.
+
+Grounding note: `../research/grounding-v1.10.0.md` documents primary-source
+vetting for the 3 newly-trusted sources and JSDA / JBTS rejection rationale.
+
 **Next recalibration**: April 2026 (BOJ 展望 Q1 release).
 
 ---
