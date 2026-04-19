@@ -42,7 +42,7 @@ before delivery**. It runs only after `copywriting-ethics-check-stage`
 
 ## Gate Definition
 
-Two evaluator passes run in order. Both use `../../agents/evaluator.md`.
+Two evaluator passes run in order. Both use `../../agents/copywriter-evaluator.md`.
 
 | # | Layer | File | Mode | Tier |
 |---|---|---|---|---|

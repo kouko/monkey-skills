@@ -45,7 +45,7 @@ Hard gate: `copywriting-intake` must have passed Intake Completeness with `actio
 
 ## Drafting Approach
 
-Worker loads `protocols/write-short-form-copy.md` and `standards/light-action-frameworks.md`. Standard encodes:
+The `copywriter` agent loads `protocols/write-short-form-copy.md` and `standards/light-action-frameworks.md`. Standard encodes:
 
 - PREP 法 (Anglo 1980s) — Point → Reason → Example → Point — 4-stage lightweight logical frame; default for share-triggering or no-CTA logical payload
 - CREMA 法 (JP ~2021) — Conclusion → Reason → Evidence → Method → Action — 5-stage PREP extension adding Method + Action; default for any non-purchase action prompt
@@ -78,7 +78,7 @@ Note: this skill shares `protocols/write-short-form-copy.md` verbatim with `copy
 
 ## Output
 
-Worker appends to envelope:
+The `copywriter` appends to envelope:
 
 ```json
 {
@@ -96,8 +96,8 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | worker |
-| 6 | `copywriting-voice-tone-stage` | worker |
+| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — commitment-escalation transparency + 景品表示法 + 2023 Oct ステマ regulation |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — PREP 4-stage or CREMA 5-stage adherence + action-prompt clarity |
 | (SHOULD) | voice-consistency inside form-check-stage | SHOULD — multi-candidate output triggers this |

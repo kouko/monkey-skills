@@ -67,7 +67,7 @@ Phase 8 — Form Gate          reuse copywriting-form-check-stage
                                                length, CTA)
 ```
 
-Phases 5-8 run on the `external_copy` as if it were a Phase 4 draft. They use the same evaluator (`../../agents/evaluator.md`) and the same gate files — no duplicated checklists / rubrics in this skill directory.
+Phases 5-8 run on the `external_copy` as if it were a Phase 4 draft. They use the same evaluator (`../../agents/copywriter-evaluator.md`) and the same gate files — no duplicated checklists / rubrics in this skill directory.
 
 ### When rewrites are produced
 

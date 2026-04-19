@@ -44,7 +44,7 @@ Hard gate: `copywriting-intake` must have passed Intake Completeness before this
 
 ## Drafting Approach
 
-Worker loads `protocols/write-mid-form-copy.md` and `standards/mid-form-beaf-canon.md`. Standard encodes:
+The `copywriter` agent loads `protocols/write-mid-form-copy.md` and `standards/mid-form-beaf-canon.md`. Standard encodes:
 
 - BEAF's 4-stage definitions (Benefit → Evidence → Advantage → Feature)
 - Importance of Benefit-first ordering (vs spec-first failure mode)
@@ -53,7 +53,7 @@ Worker loads `protocols/write-mid-form-copy.md` and `standards/mid-form-beaf-can
 - Differences from FAB (industry confusion correction)
 - Anti-patterns (feature-list disguised as copy, unsubstantiated benefit claims)
 
-Persuasion psychology layer (Cialdini 6 social-proof / authority mapping onto Evidence stage, Schwartz 5 level-check) lives in `standards/persuasion-psychology-anchor.md`. Worker reads it alongside the canon — the Evidence stage in particular depends on Cialdini's social-proof framing.
+Persuasion psychology layer (Cialdini 6 social-proof / authority mapping onto Evidence stage, Schwartz 5 level-check) lives in `standards/persuasion-psychology-anchor.md`. The `copywriter` reads it alongside the canon — the Evidence stage in particular depends on Cialdini's social-proof framing.
 
 Framework flow enforced by the protocol:
 1. BEAF skeleton — lay out Benefit → Evidence → Advantage → Feature in order
@@ -69,7 +69,7 @@ See `standards/mid-form-beaf-canon.md` for the full canon and `protocols/write-m
 
 ## Output
 
-Worker appends to envelope:
+The `copywriter` appends to envelope:
 
 ```json
 {
@@ -86,8 +86,8 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | worker |
-| 6 | `copywriting-voice-tone-stage` | worker |
+| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 particularly strict for EC product claims |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — BEAF adherence + character-count range |
 | (SHOULD) | voice-consistency inside form-check-stage | SHOULD — if multiple product variants produced |

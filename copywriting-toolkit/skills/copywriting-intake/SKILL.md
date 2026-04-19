@@ -35,7 +35,7 @@ envelope within the same session and the request has not changed.
   skill uses §Section 2 (progress reporting) for Phase 0-1 transparency;
   downstream skills use the rest.
 - **Gate**: `checklists/intake-completeness-checklist.md` — MUST gate run
-  by `copywriting-toolkit/agents/evaluator.md` against the Understanding
+  by `copywriting-toolkit/agents/copywriter-evaluator.md` against the Understanding
   Summary before this skill returns.
 
 ## Phase 0 — Brief Intake
@@ -125,7 +125,7 @@ plain-English suggestion the user acts on or ignores.
 After Q9 Summary is drafted AND before Q10 user confirmation, dispatch the
 evaluator:
 
-- **Agent**: `copywriting-toolkit/agents/evaluator.md`
+- **Agent**: `copywriting-toolkit/agents/copywriter-evaluator.md`
 - **Checklist**: `checklists/intake-completeness-checklist.md`
 - **Input**: the Understanding Summary artifact + form_type
 - **Output**: verdict JSON (see checklist §Output Format)

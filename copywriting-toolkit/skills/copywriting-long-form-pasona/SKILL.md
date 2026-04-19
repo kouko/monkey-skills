@@ -45,7 +45,7 @@ Hard gate: `copywriting-intake` must have passed Intake Completeness. For PASBEC
 
 ## Drafting Approach
 
-Worker loads `protocols/write-long-form-copy.md` and `standards/long-form-pasona-canon.md`. Standard encodes:
+The `copywriter` agent loads `protocols/write-long-form-copy.md` and `standards/long-form-pasona-canon.md`. Standard encodes:
 
 - 旧 PASONA (5 stages) — 神田 2016 canonical book-first publication
 - 新 PASONA (6 stages) — 神田 2016『稼ぐ言葉の法則』revision
@@ -73,7 +73,7 @@ See `standards/long-form-pasona-canon.md` for the full canon, `standards/sns-evo
 
 ## Output
 
-Worker appends to envelope:
+The `copywriter` appends to envelope:
 
 ```json
 {
@@ -91,8 +91,8 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | worker |
-| 6 | `copywriting-voice-tone-stage` | worker |
+| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 / FTC + dark-pattern check on narrow-down + action stages |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — PASONA stage adherence + length band match |
 | (SHOULD) | voice-consistency inside form-check-stage | SHOULD — long-form with multiple sections triggers this |

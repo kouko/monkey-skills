@@ -2,7 +2,7 @@
 
 Operational routing script for `using-copywriting-toolkit`. Read top-down, ask only the questions needed to disambiguate, and hand off with a populated handoff envelope.
 
-This protocol is imperative — a worker can execute it step-by-step without further context.
+This protocol is imperative — the orchestrating agent (main agent, or a dispatched `copywriter` subagent) can execute it step-by-step without further context.
 
 ## Invariants
 

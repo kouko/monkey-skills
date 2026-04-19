@@ -244,7 +244,7 @@ pre-phase opt-in verification live in
 Neta Safety gate before advancing.** The gate is evaluator-only.
 
 - Rubric: `rubrics/neta-safety-gate.md`
-- Agent: `copywriting-toolkit/agents/evaluator.md`
+- Agent: `copywriting-toolkit/agents/copywriter-evaluator.md`
 - Dimensions: 5 (cultural fit, attribution accuracy, freshness,
   audience recognition, legal)
 - **Two hard legal vetoes** (any one = FAIL):

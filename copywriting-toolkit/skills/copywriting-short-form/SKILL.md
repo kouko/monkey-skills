@@ -42,7 +42,7 @@ Hard gate: `copywriting-intake` must have passed Intake Completeness before this
 
 ## Drafting Approach
 
-Worker loads `protocols/write-short-form-copy.md` and `standards/short-form-catchcopy-canon.md`. Standard encodes:
+The `copywriter` agent loads `protocols/write-short-form-copy.md` and `standards/short-form-catchcopy-canon.md`. Standard encodes:
 
 - AIDMA short-form action scope (A + I only — short copy does not carry D/M/A)
 - 7-15 character golden range rationale
@@ -52,7 +52,7 @@ Worker loads `protocols/write-short-form-copy.md` and `standards/short-form-catc
 - Anglo vs JP demarcation + SNS-era evolution notes
 - Anti-patterns (generic-voice, AI-sounding candidates)
 
-Persuasion psychology layer (Cialdini 6 / Schwartz 5 / Kahneman System 1 routing) lives in `standards/persuasion-psychology-anchor.md`. Worker reads it alongside the canon for approach-to-psychology mapping.
+Persuasion psychology layer (Cialdini 6 / Schwartz 5 / Kahneman System 1 routing) lives in `standards/persuasion-psychology-anchor.md`. The `copywriter` reads it alongside the canon for approach-to-psychology mapping.
 
 Framework flow enforced by the protocol:
 1. Approach selection from 5 切入點 (matches Schwartz awareness level)
@@ -68,7 +68,7 @@ See `standards/short-form-catchcopy-canon.md` for the full canon and `protocols/
 
 ## Output
 
-Worker appends to envelope:
+The `copywriter` appends to envelope:
 
 ```json
 {
@@ -88,8 +88,8 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | worker |
-| 6 | `copywriting-voice-tone-stage` | worker |
+| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 / FTC |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — framework adherence, 7-15 chars, 3 秒ルール |
 | (SHOULD) | voice-consistency inside form-check-stage | SHOULD — multi-candidate output triggers this |

@@ -45,14 +45,46 @@ Each stage reads envelope, adds its layer, updates `next_stage`, returns.
 
 Phase 1 Message Confirmation inside `copywriting-intake` may RECOMMEND `planning-team` when the problem is thesis-level (unclear positioning / audience / goal). Do NOT enforce — user may proceed anyway. No auto-delegation.
 
-## Evaluator
+## Agents
 
-Own `agents/evaluator.md` — NOT shared with `domain-teams:evaluator`. Infrastructure stays independent.
+Plugin-local pair — NOT shared with `domain-teams`. Infrastructure stays independent.
+
+### `agents/copywriter.md` (worker)
+
+Drafting / ideation / audit-variant producer. Persona: reader-first copywriter in 糸井 / 岩崎 / 眞木 / 谷山 (JP) and Ogilvy / Schwartz / Halbert / Cialdini (Anglo) lineages, with 小霜「嘘をつかない」 discipline. Model tier: sonnet.
+
+Used by (launches the agent, passing protocol + standards paths):
+- `copywriting-intake` (Phase 0-1 brainstorming + Q1-Q10 intake)
+- `copywriting-ideation` (Phase 2 divergence subagents + convergence)
+- `copywriting-neta-injection` (Phase 3 WebSearch pipeline A-D + 4 techniques)
+- 5 Phase-4 drafter skills (short / mid / long-pasona / long-extended / light-action)
+- `copywriting-voice-positioning-stage` / `copywriting-voice-tone-stage` (Phase 5-6 tuning passes)
+- `copywriting-audit-stage` (Phase 2 diagnose / Phase 3 rewrite variants)
+
+Does NOT produce gate verdicts — that is `copywriter-evaluator`'s role.
+
+### `agents/copywriter-evaluator.md` (evaluator)
+
+Gate verdict producer. Persona: strict legal / framework reviewer (景品表示法 / FTC / Cialdini misuse / PASONA / BEAF / QUEST / PASTOR / PREP / CREMA / voice quadrant / form appropriate). Deliberately NOT copywriter-persona — aesthetic capture is an anti-pattern that contaminates ethics / form judgement. Model tier: opus.
 
 Used by:
-- `copywriting-ethics-check-stage` (Phase 7)
-- `copywriting-form-check-stage` (Phase 8)
-- `copywriting-audit-stage` (audits external copy)
+- `copywriting-intake` (Intake Completeness MUST gate on Understanding Summary)
+- `copywriting-neta-injection` (Neta Safety SHOULD gate)
+- `copywriting-voice-tone-stage` (Voice Consistency SHOULD gate)
+- `copywriting-ethics-check-stage` (Ethics MUST gate, Phase 7)
+- `copywriting-form-check-stage` (Form 8a MUST + 8b SHOULD, Phase 8)
+- `copywriting-audit-stage` (reuses Phase 5-8 gates on external copy)
+
+Does NOT draft or soften — only judges.
+
+### Why two agents, two personas
+
+Separation keeps each role honest:
+
+- Copywriter persona (reader-first, voice-disciplined) produces quality drafts but is the wrong lens for legal / ethics / framework judgement — it prioritises elegance over compliance.
+- Legal-reviewer persona produces reliable gate verdicts but is the wrong lens for drafting — it prioritises risk-avoidance over rhetorical force.
+
+Running a single multi-role agent blurs both. Using `domain-teams:worker` / `domain-teams:evaluator` (generic) loses the copywriting-specific priors (lineage attribution rules, ethics landmines, voice traditions). Hence the specialized pair.
 
 ## A/B Coexistence
 
@@ -69,7 +101,9 @@ copywriting-toolkit/
   .claude-plugin/plugin.json
   README.md
   CLAUDE.md
-  agents/evaluator.md
+  agents/
+    copywriter.md              # worker — sonnet, drafting / ideation / audit variants
+    copywriter-evaluator.md    # evaluator — opus, legal / framework / voice gates
   skills/
     <skill>/
       SKILL.md                  # ≤6K tokens, references the rest

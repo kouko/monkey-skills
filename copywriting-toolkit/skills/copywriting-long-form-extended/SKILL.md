@@ -45,7 +45,7 @@ Hard gate: `copywriting-intake` must have passed Intake Completeness. `positioni
 
 ## Drafting Approach
 
-Worker loads `protocols/write-long-form-copy.md` and `standards/long-form-extended-frameworks.md`. Standard encodes:
+The `copywriter` agent loads `protocols/write-long-form-copy.md` and `standards/long-form-extended-frameworks.md`. Standard encodes:
 
 - QUEST — Michel Fortin 2005 (Qualify → Understand → Educate → Stimulate → Transition) + 5 stages + mountain-metaphor flow
 - PASTOR — Ray Edwards 2016 (Problem / Person → Amplify / Aspiration → Story / Solution → Testimony / Transformation → Offer → Response) + 6 stages with multi-meaning dimensions + narrative requirement
@@ -73,7 +73,7 @@ Note: this skill shares `protocols/write-long-form-copy.md` verbatim with `copyw
 
 ## Output
 
-Worker appends to envelope:
+The `copywriter` appends to envelope:
 
 ```json
 {
@@ -91,8 +91,8 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | worker |
-| 6 | `copywriting-voice-tone-stage` | worker |
+| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — FTC Endorsement Guides especially strict on PASTOR testimony |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — QUEST 5-stage or PASTOR 6-stage adherence + length band match |
 | (SHOULD) | voice-consistency inside form-check-stage | SHOULD — long-form with multiple sections triggers this |

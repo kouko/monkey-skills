@@ -210,7 +210,7 @@ Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes`
 ## Gate — SHOULD (Voice Consistency)
 
 - **Rubric**: `rubrics/voice-consistency-gate.md`
-- **Agent**: `copywriting-toolkit/agents/evaluator.md`
+- **Agent**: `copywriting-toolkit/agents/copywriter-evaluator.md`
 - **Trigger**: multi-stage OR multi-candidate artifact (PASONA 6 stages,
   BEAF 4 stages, ideation N candidates, or a series). Per the rubric's
   §Scope Boundary: single-stage / single short-form only → gate is

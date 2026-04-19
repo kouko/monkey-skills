@@ -17,7 +17,7 @@ whether Phase 8 (form gate) may run.
 ## Role Constraint (read first)
 
 - **Evaluator-only** — this skill MUST NOT produce, edit, or paraphrase
-  any draft content. Behavioral contract from `../../agents/evaluator.md`
+  any draft content. Behavioral contract from `../../agents/copywriter-evaluator.md`
   §Rules: "Do NOT fix problems or produce revised artifacts. Your job
   is to judge, not to do."
 - **MUST gate** — the verdict is binding. `NEEDS_REVISION` here halts
@@ -79,7 +79,7 @@ definitions):
 
 ## Evaluator Launch
 
-Use `../../agents/evaluator.md` (plugin-local evaluator, not
+Use `../../agents/copywriter-evaluator.md` (plugin-local evaluator, not
 `domain-teams:evaluator`). Per plugin CLAUDE.md §Evaluator, launch
 with the input contract from the evaluator agent's own spec:
 
@@ -105,7 +105,7 @@ not file content).
 ## Output — Verdict Handling
 
 The evaluator returns one of three verdicts (see
-`../../agents/evaluator.md §Mode 1`):
+`../../agents/copywriter-evaluator.md §Mode 1`):
 
 | Verdict | Meaning | Action |
 |---|---|---|
