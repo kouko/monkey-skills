@@ -97,6 +97,24 @@ copy_to ta_client.py \
   technical-snapshot \
   stock-screener
 
+echo "Syncing sec_edgar_client.py..."
+copy_to sec_edgar_client.py \
+  us-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
+echo "Syncing mops_client.py..."
+copy_to mops_client.py \
+  taiwan-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
+echo "Syncing twse_openapi_client.py..."
+copy_to twse_openapi_client.py \
+  taiwan-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
 echo "Syncing setup.sh..."
 copy_to setup.sh \
   us-stock-snapshot \

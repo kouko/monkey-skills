@@ -434,7 +434,57 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.12.0 — Pattern C UX (file-write + visibility) (current)
+## v1.13.0 — Individual stock fundamentals (US + TW) (current)
+
+**Scope**: Closes Pattern C NVDA demo 4 data gaps for US + TW markets.
+Primary-source Tier A across all new fetchers.
+
+### Phase 1 — SEC EDGAR (US)
+- [x] `scripts/sec_edgar_client.py` (7 form types, XBRL + narrative)
+- [x] `us-stock-snapshot` SKILL.md integration
+- [x] `references/sec-edgar-guide.md` (new reference doc)
+
+### Phase 2 — MOPS (TW 公司揭露)
+- [x] `scripts/mops_client.py` (16 endpoints)
+- [x] MOPS JSON API confirmed via 2-round probe (zero-auth, no cookie)
+- [x] Historical depth: IFRS 財報 ROC 102-115 (13 yr); 重大訊息 ROC 85+ (30 yr)
+
+### Phase 3 — TWSE OpenAPI (TW 交易)
+- [x] `scripts/twse_openapi_client.py` (日行情 / 融資融券 / 三大法人
+      snapshot / 產業 EPS / 除權息日曆)
+- [x] TPEx bonus endpoint added (tpex-margin-balance)
+- [x] Known gaps documented (daily T86 per-stock flow not in OpenAPI)
+
+### Phase 4 — taiwan-stock-snapshot rebuild
+- [x] SKILL.md rewrite: MOPS + TWSE OpenAPI Tier 1 primary; FinMind
+      Tier 2 auto-fallback (Pattern A+B combo)
+- [x] `references/data-sources.md` new reference doc (10 sections)
+
+### Phase 5 — DCF + memo-writer integration
+- [x] `dcf-valuation` SKILL.md — financial statements now available
+- [x] `investment-memo-writer` Phase 1 — SEC EDGAR + MOPS + TWSE OpenAPI
+      commands added
+
+### Phase 6 — Plugin-level sync
+- [x] plugin.json 1.12.0 → 1.13.0
+- [x] README v1.13.0 Version Highlights prepended
+- [x] ROADMAP this entry; v1.12.0 de-marked as (current)
+
+### Deferred to v1.14.0+ candidates
+
+- **v1.14.0 (stacked)**: `japan-stock-snapshot` skill (yfinance .T +
+  evaluate EDINET XBRL for primary-source-grade)
+- **v1.13.x patches**: analyst consensus (finnhub / alphavantage),
+  market-wide MOPS t146sb10 broader coverage
+- **v1.15.0+**: `korea-stock-snapshot` (FDR + DART), `china-stock-snapshot`
+  (akshare extended)
+- **軸 3 phase-split** (from v1.12.0 Pattern C UX) — if 軸 1+2 proves
+  insufficient in practice
+- **Full 5-parallel grounding re-audit** (~2026-Q3)
+
+---
+
+## v1.12.0 — Pattern C UX (file-write + visibility)
 
 **Scope**: Fixes 3 UX issues exposed by v1.11.0 NVDA Pattern C demo:
 (1) no file-write default (2500-word memo lived only in chat

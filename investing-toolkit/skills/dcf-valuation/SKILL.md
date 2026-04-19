@@ -12,28 +12,59 @@ description: >-
 # DCF Valuation
 
 Interactive intrinsic value model based on Damodaran 2012 *Investment Valuation*
-Ch.12 (3-stage DCF). This skill does **not fetch data** — all financial inputs
-must be supplied by the user or passed in from a `us-stock-snapshot` fixture or
-SEC EDGAR financials.
+Ch.12 (3-stage DCF). This skill does **not fetch data itself** — all financial
+inputs must be supplied by the user or auto-sourced via upstream data fetchers
+(US: SEC EDGAR; TW: MOPS) as described in `## Data Availability` below.
 
 Reference template: `references/dcf-template.md`
 
+## Data Availability (v1.13.0+)
+
+As of v1.13.0, the financial statements required for DCF are auto-sourceable
+for the two primary covered markets:
+
+| Market | Source | Script | Coverage |
+|--------|--------|--------|----------|
+| US     | SEC EDGAR XBRL facts | `sec_edgar_client.py` | `Revenues`, `NetIncomeLoss`, `CashAndCashEquivalentsAtCarryingValue`, `PropertyPlantAndEquipmentNet`, `StockholdersEquity`, etc. |
+| TW     | MOPS JSON API | `mops_client.py` | `t164sb03` 資產負債表 / `t164sb04` 綜合損益表 / `t164sb05` 現金流量表 — all 3 statements, 46-80 pre-parsed rows each, IFRS |
+
+Both are Tier A primary sources (SEC-mandated XBRL / 金管會法定揭露). The
+previous "needs SEC EDGAR manual supply" note — which structurally pre-crippled
+this skill in v1.12.0 and earlier — is removed.
+
+### Input data flow (auto-sourceable per input)
+
+| DCF input | US derivation | TW derivation |
+|-----------|---------------|---------------|
+| Historical revenue + 5-10 yr growth | `sec_edgar --action facts` → `Revenues` | `mops_client --action income-statement` (連續季度) |
+| Margin trajectory | `NetIncomeLoss / Revenues` from facts | t164sb04 綜合損益表 |
+| Free cash flow | Cash flow statement (facts) | t164sb05 現金流量表 |
+| CapEx | Cash flow investing section | t164sb05 投資活動之現金流量 |
+| Working capital deltas | Balance-sheet facts delta | t164sb03 資產負債表 period-over-period |
+| Cash + debt (capital structure) | `CashAndCashEquivalents*` + debt facts | t164sb03 現金 + 借款 |
+
+Shares outstanding + market cap: still sourced from `yfinance_client.py`
+(`us-stock-snapshot`) or `twse_openapi_client.py` (`taiwan-stock-snapshot`).
+
 ## When to Use
 
-- You have revenue, margin, and reinvestment data for a company
+- You have revenue, margin, and reinvestment data for a company (auto-sourced
+  or manually supplied)
 - You want an absolute intrinsic value (not relative multiples)
 - You want to stress-test assumptions via sensitivity analysis
 
 ## When NOT to Use
 
-- You need financial statements first → fetch from SEC EDGAR, then return here
 - You want relative valuation (P/E vs. peers) → that is a multiples analysis,
   not DCF (see Attribution Corrections below)
 
 ## Inputs
 
-Step through each input with the user. Accept a `us-stock-snapshot` card as a
-starting point for market cap and shares outstanding.
+Step through each input with the user. Accept a `us-stock-snapshot` card
+(market cap, shares outstanding) or `taiwan-stock-snapshot` card (同上) as a
+starting point. Financial-statement inputs (revenue history, margin trajectory,
+cash flow, capex, working capital) auto-source from SEC EDGAR (US) or MOPS
+(TW) per §Data Availability.
 
 ### Stage 1 — Revenue and Growth
 

@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.12.0
+**Version**: 1.13.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -178,6 +178,44 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.13.0 (2026-04-19) — Individual stock fundamentals (US + TW)
+
+Closes Pattern C NVDA demo 4 data gaps (SEC EDGAR missing / forward
+guidance / consensus / peer) for US + TW markets:
+
+- **sec_edgar_client.py**: JSON API covering 7 SEC form types (10-K /
+  10-Q / 8-K / Form 4 / 13F / S-1 / DEF 14A). XBRL structured facts +
+  HTML narrative Item-section parser. User-Agent required, 10 req/sec
+  compliance built-in, tiered cache TTL.
+
+- **mops_client.py**: 16 endpoints via new MOPS JSON API (launched
+  2025-02 at mops.twse.com.tw). Covers 公司基本資料 + 財報 BS/IS/CF +
+  月營收 + 持股 + 股利 + 重大訊息 + 股東會. Historical depth: IFRS
+  財報 13 yr (2013+), 歷史重大訊息 30 yr (1996+). No auth/cookie/CSRF.
+  Primary-source Tier A (金管會法定揭露).
+
+- **twse_openapi_client.py**: TWSE/TPEx public OpenAPI for 交易資料
+  (日行情 / 融資融券 / 三大法人 snapshot / 產業 EPS / 除權息日曆).
+  MOPS doesn't cover this — split by design.
+
+- **taiwan-stock-snapshot rebuild**: MOPS + TWSE OpenAPI Tier 1
+  primary; FinMind Tier 2 auto-fallback (Pattern A+B). Known Tier 1
+  gaps (daily T86 per-stock flow, 歷史 STOCK_DAY) routed to FinMind by
+  default with warning log.
+
+- **dcf-valuation enable**: previously structurally crippled by
+  missing financial statements; now auto-sources from SEC EDGAR (US)
+  or MOPS (TW).
+
+- **investment-memo-writer Phase 1 update**: SEC EDGAR + MOPS + TWSE
+  OpenAPI commands added; FinMind retained as Tier 2 fallback path.
+
+JP individual stock skill defers to v1.14.0 stacked PR (Path γ
+architecture decision).
+
+Pattern C re-run expectation: ISQ verdict `PASS` (not
+`PASS_WITH_NOTES`) for NVDA and 2330.TW after v1.13.0 merge.
 
 ### v1.12.0 (2026-04-19) — Pattern C UX (file-write + visibility)
 
