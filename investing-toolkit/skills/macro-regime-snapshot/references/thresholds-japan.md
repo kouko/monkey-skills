@@ -1,7 +1,7 @@
 # Japan / 日本 — Macro Regime Thresholds & Calibration
 
 **Authority**: 日本銀行 (Bank of Japan, BOJ) | **Currency**: JPY |
-**Calibration vintage**: 2026-Q1
+**Calibration vintage**: 2026-Q2
 
 ## Grounding Status (as of 2026-04-18)
 
@@ -52,7 +52,121 @@ Full daily JGBi YTM solver (MoF 連動係数 + QuantLib) deferred to v1.11.0.
 Grounding note: `../research/grounding-v1.10.0.md` documents primary-source
 vetting for the 3 newly-trusted sources and JSDA / JBTS rejection rationale.
 
-**Next recalibration**: April 2026 (BOJ 展望 Q1 release).
+### v1.11.0 full refresh (2026-04-19)
+
+Full re-audit since v1.9.0 (2026-04-18) + v1.10.0 (2026-04-19) Real Rate
+Decomposition addendum. Covers 2026-Q1 BOJ meetings (1/23 + 3/19), 2026-01
+展望レポート, 2025 春闘 最終集計, 2026 春闘 進展, BOJ rev26j05 follow-up, and
+市場金利 / 審議委員人事 updates.
+
+🔴 **BOJ FY2026 core CPI 見通し中央値**: 1.8% → **1.9%** (2026-01-23
+展望レポート 上方修正; FY2025 2.7% / FY2027 2.0% unchanged). Sources:
+https://www.boj.or.jp/mopo/outlook/gor2601a.pdf,
+https://www.nikkei.com/article/DGXZQOUB231PP0T20C26A1000000/
+
+🔴 **BOJ 実質 GDP 見通し中央値**: FY2025 0.7% → **0.9%**、
+FY2026 0.7% → **1.0%** (2026-01 展望 両方上方修正). Source:
+https://www.boj.or.jp/mopo/outlook/gor2601a.pdf
+
+🔴 **2025 春闘 最終集計**: **5.25%** (連合 2025-07-03 最終発表;
+1991 年以来 34 年ぶり高水準、ベア 3.56%) — v1.9.0 では "2024
+春闘以降の移行期" とのみ言及、最終数値欠落。Source:
+https://www.jil.go.jp/kokunai/blt/backnumber/2025/10/shuntou_01.html
+
+🔴 **2026 春闘 第 3 回集計**: 全体 **5.09%** / 300 人未満中小 5.00%
+(連合 2026-04-03 発表; 前年同時点比 -0.33 pp だが 3 年連続で 5% 超)。
+第 1 回は 5.26%、第 2 回 5.12%。Source:
+https://www.jil.go.jp/kokunai/topics/mm/20260327a.html,
+https://www.jiji.com/jc/article?k=2026040300929
+
+🔴 **10Y JGB nominal yield**: ~1.5% (2026-Q1 snapshot in v1.9.0) →
+**~2.41-2.45%** (2026-04 mid; 28 年ぶり高水準、2025-12-19 利上げ +
+Takaichi 政権下財政拡張観測 + 2026-01 展望 上方修正が複合要因)。
+10Y 実質利回り は Block 4 real-rate framework の入力として要再測定。
+Source: https://www.bloomberg.com/jp/markets/rates-bonds/government-bonds/japan,
+https://jp.tradingeconomics.com/japan/government-bond-yield
+
+🔴 **日銀審議委員人事**: **野口旭** (最後のリフレ派) 任期満了
+2026-03-31 → 後任 **浅田統一郎** (中央大学名誉教授) 2026-04-01 就任。
+中川順子 審議委員は 2026-06-29 任期満了予定 (後任未発表)。Source:
+https://www.boj.or.jp/about/organization/policyboard/pb260401a.htm,
+https://business.nikkei.com/atcl/seminar/19/00122/00270/
+
+🔴 **実質賃金 プラス転化定着**: 2026-01 **+1.4% YoY**、2026-02
+**+1.9% YoY** (厚労省 毎月勤労統計; "持家の帰属家賃を除く総合" CPI
+で実質化)。2025-12 以来のプラス継続 → BOJ 「賃金と物価の好循環」
+narrative に sustained 証拠。Source:
+https://www.dlri.co.jp/report/macro/581131.html,
+https://www.dlri.co.jp/report/macro/593034.html
+
+⚠️ **BOJ 金融政策決定会合 2026-01-23 + 2026-03-19**: 両会合とも
+**0.75% 据え置き** (8 対 1、**高田創** 審議委員が 1.00% への利上げ
+提案も否決)。v1.9.0 draft で野村 森田 メインシナリオ「2026-06
++25 bp → 1.00%」は現時点で pending (未実施)。Source:
+https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/k260123a.pdf,
+https://www.cnbc.com/2026/03/19/bank-of-japan-keeps-rates-steady.html
+
+⚠️ **植田総裁 2026-04-13 演説 トーン変化**: イスラエル・イラン戦況を
+念頭に "developments in the Middle East remain uncertain" と
+明示。4/28 会合の利上げ確率 (OIS 市場織り込み) は 4/11 時点
+60% → 4/14 朝 45% → 演説後 **33%** へ急低下。ターミナル 1.50%
+シナリオ継続するも 2026-Q2 hike は geopolitical risk-contingent。
+Source: https://www.bloomberg.com/news/articles/2026-04-13/ueda-s-speech-shows-rising-caution
+
+⚠️ **BOJ 長期国債買入れ減額ペース**: 予定通り 2026-04-06 期以降
+毎四半期 4,000 億円 → **2,000 億円** 減額に緩和 (2025-06 決定)。
+2026-06 会合で中間評価予定。Source:
+https://www.boj.or.jp/mopo/mpmdeci/mpr_2025/k250617b.pdf
+
+⚠️ **JGBi 第 31 回 (新発) は 2026-Q1 時点未発行**: 2026 年 1-3 月 は
+**第 22-30 回** のみ買入対象 (第 21 回は 1 月のみ)。月 1 回 200 億円
+程度の買入オペ継続。新規 10Y JGBi (第 31 回) の入札タイミングは
+2026-Q2 以降の財務省 プレスリリース待ち。`jgbi-auction-history.yml`
+更新は次期 auction 実施後。Source:
+https://www.mof.go.jp/jgbs/topics/press_release/20251225-01.htm
+
+**Verified unchanged**:
+- 2013-01-22 2% 物価安定目標 (日銀・政府共同声明)
+- JILPT 均衡失業率 ~2.80% (2026-02 latest; 次回更新 2026-Q2 末見込み)
+- 完全失業率 2.6% (2026-02 季調; 2026-03 は未発表)
+- 植田総裁任期 2028-04-08、氷見野・内田副総裁任期 2028-03-19
+- BOJ 政策金利 3 層構造 (誘導目標 0.75% / IOER 0.75% / 基準貸付
+  1.00%); STRDCLUCON ~2-3 bp 下の乖離メカニズム
+- r\* range -1.0% to +0.5%, 中点 ~-0.25% (WP24-J-09 + rev26j05;
+  新しい公式 BOJ 推計 paper 未発表)
+- BOJ 日銀レビュー rev26j05 の "複数指標による総合評価" 枠組み
+  (2026-03-27 発表; single r\* への依存回避)
+- 野村 森田京平 ターミナル 1.50% シナリオ (3 hikes via 2026-06 /
+  12 / 2027-06; main 60% weight) — 4/28 hike 確率が市場で低下も
+  シナリオ自体は撤回されていない
+
+**New primary-source URLs**:
+- BOJ 2026-01 展望リポート 基本的見解:
+  https://www.boj.or.jp/mopo/outlook/gor2601a.pdf
+- BOJ 2026-01-23 金融市場調節方針 (据え置き決議):
+  https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/k260123a.pdf
+- BOJ 2026-01-26 植田総裁記者会見:
+  https://www.boj.or.jp/about/press/kaiken_2026/kk260126a.pdf
+- BOJ rev26j05 自然利子率と金融緩和度合いの評価 (2026-03-27):
+  https://www.boj.or.jp/research/wps_rev/rev_2026/rev26j05.htm
+- BOJ 審議委員浅田統一郎発令 (2026-04-01):
+  https://www.boj.or.jp/about/organization/policyboard/pb260401a.htm
+- 連合 2026 春闘 第 1 回集計 (2026-03-23、JILPT 整理):
+  https://www.jil.go.jp/kokunai/topics/mm/20260327a.html
+- 連合 2026 春闘 第 3 回集計 (時事通信 2026-04-03):
+  https://www.jiji.com/jc/article?k=2026040300929&g=eco
+- JILPT 2025 春闘最終集計 (5.25%、BLT 2025-10):
+  https://www.jil.go.jp/kokunai/blt/backnumber/2025/10/shuntou_01.html
+- 財務省 物価連動債 2026 年 1-3 月 発行計画 (2025-12-25):
+  https://www.mof.go.jp/jgbs/topics/press_release/20251225-01.htm
+- BOJ 長期国債買入れ減額計画 (2025-06-17 決定):
+  https://www.boj.or.jp/mopo/mpmdeci/mpr_2025/k250617b.pdf
+
+See `../research/grounding-v1.11.0.md` (to be written in next commit)
+for consolidated cross-country audit.
+
+**Next recalibration**: July 2026 (BOJ 2026-04-28 展望レポート 公表後、
+2026 春闘 連合 最終集計 確定後; v1.12.0 target)。
 
 ---
 
@@ -65,13 +179,16 @@ vetting for the 3 newly-trusted sources and JSDA / JBTS rejection rationale.
   "概ね整合的な水準" ("roughly consistent level") rather than a
   numerical band. Academic proposals (Canada-style 1-3%) exist but
   not adopted.
-- **Current outlook**: Core CPI (除生鮮食品) FY2026 見通し中央値 +1.8%,
-  FY2027 +2.0% (2025-10 展望レポート, 政策委員中央値)。FY2025 は +2.7%
-  と輸入インフレ・米価押上げ等でオーバーシュート状態。
-- **FY outlook (BOJ 展望レポート 2025-10, 政策委員中央値)**:
-  - Core CPI (除生鮮食品): FY2025 **+2.7%** / FY2026 **+1.8%** / FY2027 **+2.0%**
-  - 実質 GDP: FY2025 +0.7% / FY2026 +0.7% / FY2027 +1.0%
+- **Current outlook**: Core CPI (除生鮮食品) FY2026 見通し中央値 +1.9%,
+  FY2027 +2.0% (**2026-01 展望レポート**, 政策委員中央値; FY2026 は
+  2025-10 時点 +1.8% から 0.1 pp 上方修正)。FY2025 は +2.7%
+  (据え置き) と輸入インフレ・米価押上げ等でオーバーシュート状態。
+- **FY outlook (BOJ 展望レポート 2026-01, 政策委員中央値)**:
+  - Core CPI (除生鮮食品): FY2025 **+2.7%** / FY2026 **+1.9%** / FY2027 **+2.0%**
+  - 実質 GDP: FY2025 **+0.9%** / FY2026 **+1.0%** / FY2027 +1.0%
+    (FY2025/2026 ともに +0.2-0.3 pp 上方修正)
   - Projection horizon 末尾: 「物価安定の目標と概ね整合的な水準」
+  - Source: https://www.boj.or.jp/mopo/outlook/gor2601a.pdf
 - **Signal (using BOJ 2% anchor)**:
   - `> 2.2%` Above target
   - `1.8% ≤ x ≤ 2.2%` At target (this IS BOJ's goal state)
@@ -101,12 +218,17 @@ level-vs-target gap.
   - `unemp < 2.5%` → Tight (overheating 兆候)
   - `2.5% ≤ unemp ≤ 3.1%` → Balanced (現在 2.6% はこのバンド)
   - `unemp > 3.1%` → Slack
-- **春闘 wage signal**: since 2024 春闘, Japan transitioning from
-  "tight-no-wage-gain" to genuine wage growth — watch spring round
-  results as second labor-tightness dimension.
-- **Wage-inflation signal**: since 2024 春闘 wage rounds, Japan
-  transitioning from "tight-but-no-wage-gain" to genuine wage growth —
-  watch spring round results as a second labor-tightness dimension.
+- **春闘 wage signal (2025-2026 actuals)**:
+  - **2025 春闘 連合最終集計 (2025-07)**: **5.25%** (ベア 3.56% + 定昇)、
+    1991 年以来 34 年ぶり水準、2 年連続 5% 超
+  - **2026 春闘 連合第 3 回集計 (2026-04-03)**: 全体 **5.09%** (ベア
+    分離不詳、4/29 段階の概数) / 中小 (300 人未満) 5.00% — 前年同時点
+    比 -0.33 pp だが **3 年連続 5% 超** を維持
+  - 実質賃金 (毎月勤労統計): 2026-01 +1.4% YoY、2026-02 +1.9% YoY —
+    2 ヶ月連続プラス → BOJ 「賃金と物価の好循環」 narrative に
+    sustained empirical 裏付け
+  - 2024 春闘 以降の構造的賃金上昇は定着 — regime call で "wage-less
+    tightness" 前提は 2026 年以降無効
 
 ---
 
@@ -115,7 +237,7 @@ level-vs-target gap.
 ### BOJ 政策金利の正体 — 3 層構造
 
 日銀の政策金利は **単一数字ではなく、3 層の金利体系**として運用される。
-2024-03 YCC 終了後、2025-12-19 利上げ後の現行構成 (2026-Q1)：
+2024-03 YCC 終了後、2025-12-19 利上げ後の現行構成 (2026-Q2 据え置き継続)：
 
 | 階層 | 名称 | 利率 | 役割 |
 |------|------|------|------|
@@ -135,7 +257,7 @@ level-vs-target gap.
 ```
 2026-04-15 実績 (STRDCLUCON): 0.727%
            ↕  ~2-3 bp 差
-2026-Q1 目標:               0.75% 程度
+2026-Q1/Q2 目標:            0.75% 程度 (2026-01-23, 2026-03-19 据え置き)
 ```
 
 **なぜ 2-3 bp 下か？**: 投資信託委託会社や一部のノンバンクは BOJ 当座
@@ -156,14 +278,32 @@ IOER 下に 2-5 bp 押し下げる。Fed funds rate vs IOER の 2018-2019
 | 2024-07-31 | 0.25% 程度 | 0.25% | 0.50% | 初回利上げ |
 | 2025-01-24 | 0.50% 程度 | 0.50% | 0.75% | 2 回目 |
 | **2025-12-19** | **0.75% 程度** | **0.75%** | **1.00%** | **3 回目・30 年ぶり水準** |
-| 2026-01-23 | 0.75% 程度 (据え置き) | 0.75% | 1.00% | 1 名が 1.0% 提案するも否決 |
+| 2026-01-23 | 0.75% 程度 (据え置き) | 0.75% | 1.00% | 8-1 票決、高田委員が 1.0% 提案も否決。展望上方修正 |
+| 2026-03-19 | 0.75% 程度 (据え置き) | 0.75% | 1.00% | 8-1 票決 (高田委員 1.0% 提案)、中東情勢を上振れリスクに明記 |
+| 2026-04-28 | — pending — | — | — | 展望レポート 公表予定会合; 植田 4/13 演説で中東リスク強調、市場 hike 確率 33% |
 
-### 2025-12-19 決議の他の重要内容
+### 2025-12-19 決議の他の重要内容 + 2026-04 更新
 
-- **長期国債買入れ減額ペース** (k251219a.pdf 別項):
+- **長期国債買入れ減額ペース** (2025-06-17 決定 + 2025-12 確認):
   - 2026年1-3月: 毎四半期 4,000億円程度ずつ減額
-  - 2026年4-6月以降: 毎四半期 2,000億円程度ずつ減額
+  - **2026年4月以降**: 毎四半期 **2,000億円** 程度ずつ減額 (ペース緩和)
+  - 2026年6月会合: 中間評価予定
   - 2027年1-3月: 2 兆円程度に到達予定
+  - Source: https://www.boj.or.jp/mopo/mpmdeci/mpr_2025/k250617b.pdf
+
+### 2026-01 / 2026-03 会合のポイント (v1.11.0 追加)
+
+- **1/23 会合 (展望レポート更新)**: 政策金利 0.75% 据え置き (8-1)。
+  **展望 上方修正**: FY2025/FY2026 実質 GDP 両方 +0.2-0.3 pp、
+  FY2026 核 CPI +0.1 pp (1.8% → 1.9%)。「基調的インフレ率は見通し
+  後半に 2% 程度で推移」の文言継続。
+- **3/19 会合**: 0.75% 据え置き (8-1、高田委員 1.0% 提案)。中東情勢
+  (イスラエル・イラン) を物価の **上振れリスク** に明記。原油価格
+  上昇圧力への注視。
+- **4/28 会合 (予定)**: 展望レポート 更新会合。**植田総裁 2026-04-13
+  演説** で "developments in the Middle East remain uncertain" と
+  明示、市場 hike 織込確率 60% → **33%** へ低下。野村 森田メイン
+  シナリオの 6 月利上げタイミングが前倒しされる可能性は低下。
 
 ### Neutral rate 推定
 
@@ -301,8 +441,12 @@ continuous signal:
   rerating — **structural re-rating can dominate regime signal** for
   JP equities.
 - **Fixed income**: JGB curve post-YCC → finally market-priced;
-  10Y yield ~1.5% (2026-Q1). Real yield negative → JGB expensive in
-  real terms but defensive.
+  10Y yield **~2.41-2.45%** (2026-04 mid; 28 年ぶり高水準)。
+  2025-12 利上げ + Takaichi 政権下の財政拡張観測 + 2026-01 展望
+  上方修正 + BOJ 買入れ減額 の複合要因で Q1 から急上昇。
+  Real yield は正領域へ転換可能性 (2026-Q1 時点 ECB ex-post
+  ~0% vs 10Y JGB 2.4% 強 → 実質 ~0.5-0.8% の可能性; Block 4
+  framework で再測定要)。
 - **Commodities**: Japan is major commodity importer — commodity
   strength = terms-of-trade drag. Energy (crude) especially critical
   (not self-sufficient).
@@ -341,6 +485,17 @@ Primary (原典, 日本語):
   https://www.boj.or.jp/research/brp/mor/data/mor250604b.pdf —
   市場調節の運営実績 + 3 層金利構造の解説
 - BOJ 物価安定の目標 (2013-01-22 共同声明)
+- **BOJ 経済・物価情勢の展望 2026-01-23 (gor2601a.pdf)** —
+  https://www.boj.or.jp/mopo/outlook/gor2601a.pdf — FY2026 核 CPI
+  1.8% → 1.9% 上方修正、FY2025/FY2026 実質 GDP 両方上方修正
+- **BOJ 金融市場調節方針 (2026-01-23 k260123a.pdf)** —
+  https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/k260123a.pdf —
+  0.75% 据え置き 8-1 票決
+- **BOJ 植田総裁 2026-01-26 記者会見 (kk260126a.pdf)** —
+  https://www.boj.or.jp/about/press/kaiken_2026/kk260126a.pdf
+- **BOJ 審議委員 浅田統一郎 発令 2026-04-01 (pb260401a.htm)** —
+  https://www.boj.or.jp/about/organization/policyboard/pb260401a.htm —
+  野口旭 退任後任
 - BOJ 経済・物価情勢の展望 2025-10 (展望レポート本文 + ハイライト)
 - **BOJ Working Paper WP24-J-09 (2024-08, 杉岡・中野・山本)** — 自然利子率の計測をめぐる近年の動向
 - **BOJ 日銀レビュー rev26j05 (2026-03-27, 企画局)** — 自然利子率の動向と金融緩和度合いの評価 (最新 BOJ 公式 r\* 見解)
@@ -348,6 +503,22 @@ Primary (原典, 日本語):
 - BOJ WP03-J-05 (2003-10, 小田・村永) — 自然利子率 分析原点
 - BOJ 総裁記者会見 (2026-01-23 kk260126a.pdf)
 - JILPT UV 分析 (均衡失業率 2026-02 最新)
+- **JILPT 2025 春闘 最終集計 (BLT 2025-10)** —
+  https://www.jil.go.jp/kokunai/blt/backnumber/2025/10/shuntou_01.html —
+  賃上げ率 5.25% (34 年ぶり高水準)
+- **JILPT 2026 春闘 第 1 回集計整理 (2026-03-27)** —
+  https://www.jil.go.jp/kokunai/topics/mm/20260327a.html —
+  3 年連続 5% 超
+- **時事通信 2026-04-03 連合第 3 回集計** —
+  https://www.jiji.com/jc/article?k=2026040300929&g=eco — 全体 5.09%
+- **厚労省 毎月勤労統計 2026-01 / 02** (実質賃金プラス転化確認経由
+  第一ライフ資産運用経済研究所 新家)
+- **BOJ 長期国債買入れ減額計画 2025-06-17 (k250617b.pdf)** —
+  https://www.boj.or.jp/mopo/mpmdeci/mpr_2025/k250617b.pdf —
+  2026-04 以降ペース緩和 (4,000 億 → 2,000 億/四半期)
+- **財務省 物価連動債 2026-Q1 発行計画 (2025-12-25)** —
+  https://www.mof.go.jp/jgbs/topics/press_release/20251225-01.htm —
+  第 21-30 回のみ買入対象、新発 第 31 回は Q2 以降
 - 総務省統計局 労働力調査
 - 日経 参議院 Research Note 2024-12 — 物価安定の目標をめぐる経緯と論点
 

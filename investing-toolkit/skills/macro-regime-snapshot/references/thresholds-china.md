@@ -1,12 +1,13 @@
 # China / 中国 — Macro Regime Thresholds & Calibration
 
 **Authority**: 中国人民银行 (PBOC) + 国家统计局 (NBS) + 国务院 (State Council) |
-**Currency**: CNY | **Calibration vintage**: 2026-Q1
+**Currency**: CNY | **Calibration vintage**: 2026-Q2
 
-## Grounding Status (as of 2026-04-18)
+## Grounding Status (as of 2026-04-19)
 
-**Last full verification**: 2026-04-18 via `../research/grounding-v1.9.0.md`
-(5-country parallel grounding note; CN section).
+**Last full verification**: 2026-04-19 via `../research/grounding-v1.11.0.md`
+(cross-country v1.11.0 refresh; CN section). Prior full grounding:
+2026-04-18 v1.9.0 (preserved below for historical record).
 
 **Verified (✅)**: PBOC 2026-Q1 例会「适度宽松」语言、2025 城镇调查失业率
 5.2%、2026 目标 5.5%、房地产 23.6% GDP (直接) / 31% (含基建)。
@@ -60,6 +61,126 @@ partial recalibration。
 
 ---
 
+### v1.11.0 full refresh (2026-04-19)
+
+Full re-audit since v1.9.0 (2026-04-18) vintage. **Scope**: 2026-Q1 / 2026-Q2
+data that became available after v1.9.0 capture (2025 全年公报、2026 两会
+政府工作报告、2026-Q1 PBOC 货币政策委员会例会、2026-03 月度 CPI/PPI、
+2026-Q1 GDP 初步核算).
+
+**Structural frame unchanged**: "适度宽松" 货币政策延续、7D 逆回购 = 主政
+策利率、CPI 目标 2%、MLF 数量工具、BIS r\* Rees-Sun 2021 2-3% real 估计
+仍是 benchmark — 全部无需修订。
+
+🔴 **GDP 目标首次用区间 + 首次低于 5%**：2026 两会《政府工作报告》定
+2026 GDP 增长 **4.5-5% 区间** (2024/2025 均为「5% 左右」)。区间值为
+2026 首次采用，低于 5% 也是改革开放以来首次。既为「十五五」开局留空
+间，亦与 2035 远景目标 (年均 4.17%) 衔接。Source:
+https://www.news.cn/politics/20260305/e5c6a09cba0f445b9ee6cc6f8973132a/c.html
+
+🔴 **赤字率 2026 提高至 4% 左右** (2025 为 3% 左右 → 2026 约 4%；规模
+5.89 万亿元)。配套专项债 4.4 万亿、超长期特别国债 1.3 万亿、新型政策
+性金融工具 8000 亿。Source:
+https://www.yicai.com/news/103074560.html
+
+🔴 **2025 全年 GDP = 5.0%** (目标实现)。季度路径: Q1 5.4% → Q2 5.2%
+→ Q3 4.8% → Q4 4.5% (明显减速)。Source:
+https://www.stats.gov.cn/sj/zxfb/202601/t20260120_1962349.html
+
+🔴 **2026-Q1 GDP = 5.0% YoY** (1-3 月良好开局)。一季度工业增加值
++6.1%、零售 +2.4%、固投 +1.7%、房地产投资 **-11.2%**、住宅投资 **-11.0%**、
+新房销售面积 **-10.4%**、销售额 **-16.7%**。房地产仍是单边拖累。Source:
+https://www.stats.gov.cn/sj/zxfb/202604/t20260416_1963330.html
+
+🔴 **2026-03 CPI = 1.0% YoY、核心 CPI = 1.1% YoY**，1-3月累计 CPI =
+0.9%。核心仍高于总体 (v1.9.0 captured 反转 pattern 延续)。食品 +0.3%
+(猪肉 -11.5% 拖累 ~0.22pp)，非食品 +1.2%。Source:
+https://www.stats.gov.cn/sj/zxfb/202604/t20260410_1963264.html
+
+🔴 **2026-03 PPI 同比转正 +0.5%**，结束连续 **41 个月下降**，环比 +1.0%
+连 6 个月上涨（48 个月最大）。**通缩 tail risk 边际降温的首个硬证据**。
+Source: https://www.stats.gov.cn/sj/zxfbhjd/202604/t20260410_1963265.html
+
+🔴 **2026-Q1 城镇调查失业率 = 5.3% 平均 (3月 5.4%)**，31个大城市 5.3%。
+2025 全年 5.2% → 2026 Q1 5.3% 小幅上行，但仍低于 5.5% 目标。Source:
+https://finance.sina.com.cn/jjxw/2026-04-16/doc-inhuskuh7260825.shtml
+
+⚠️ **RRR 维持 9.0% 未动** — market expected Q1 2026 50bp 降准未落地。
+2026-04 中旬 PBOC 副行长邹澜确认法定存款准备金率平均 **6.3%**、加权
+6.2%，"5% 隐形下限可能调整或取消"。央行 Q1 缩量续作买断式逆回购、
+继续依赖 MLF + 国债买卖净投放 2.05 万亿，**替代降准**。降准/降息可能
+延至 Q2/Q3。Source:
+https://www.jiemian.com/article/14251219.html
+
+⚠️ **结构性降息 0.25pp (2025-12)** — PBOC 对部分结构性工具利率定向
+下调 0.25 pp (支农支小再贷款、碳减排工具、科技创新再贷款等)。**这是
+v1.9.0 未捕获但 2025-12 已落地的政策动作**，与 7D OMO 1.40% 保持不动
+并行。Source:
+https://stcn.com/article/detail/3595664.html
+
+⚠️ **远期售汇外汇风险准备金率 2026-03-02 起降为 0** (从 20%)。**非
+RRR，是 FX macroprudential 工具**，意在便利企业远期购汇、减轻人民币
+贬值压力的结构性信号。Source:
+https://www.chnfund.com/article/AR5f68505b-1eb7-cc1d-8331-3a1fafe738d9
+
+⚠️ **PBOC 2026-Q1 例会语言** (3/26，总第 112 次) 延续「适度宽松」，新
+增「加大逆周期和跨周期调节力度」+「使社会融资规模、货币供应量增长
+同经济增长、价格总水平预期目标相匹配」。v1.9.0 的「推动价格总水平
+由负转正」在 2026-03 PPI 转正后可视为**阶段性兑现**。Source:
+https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/2026033115531475919/index.html
+
+⚠️ **CSI 300 2025-12 调样生效** — 信息技术行业样本数量 **+4**、通信
+服务 **+2**；权重分别上升 **+1.46%** / **+0.75%**。2026-Q1 结构继续向
+新经济倾斜，但 v1.9.0 captured 的 2025 末权重 (金融 22.97%、信息
+技术 20.38%) 仍是 best-available 静态快照 — 2026-Q1 完整 factsheet
+(季度发布) 在 2026-04 末-05 初更新后再 recalibrate。Source:
+https://www.stcn.com/article/detail/1433088.html
+
+**Verified unchanged (14 facts reconfirmed)**:
+- PBOC 2024-07 7D OMO 框架 (= 主政策利率 1.40%)
+- LPR 1Y 3.0% / LPR 5Y 3.5% (2025-05 下调后连续 11 个月持平；
+  2026-04-20 仍持平)
+- RRR 大银行 9.0% (未变；加权 6.2%、均值 6.3%)
+- MLF 角色 (数量工具，不再为政策利率锚)
+- CPI 目标 2% (2026 两会延续)
+- 城镇调查失业率目标 5.5%
+- 「适度宽松」货币政策基调 (CEWC 2025-12 + PBOC Q1 2026 例会)
+- BIS WP No 949 (Rees & Sun 2021) r\* real 2-3% 估计
+- CSI300 已转为「四分天下」(金融/消费/新能源/AI)
+- 核心 CPI 高于总体 (2026-Q1 延续)
+- 房地产投资深度负增长 (Q1 -11.2%)
+- 青年失业率 16-18% 区间 (2025 全年 band)
+- 20-year CPI 目标轨迹表
+- Equity index / property / bond / FX 资产类别 calibration
+
+**New primary-source URLs**:
+- 国家统计局 2026-04-16 — 2026 年一季度国民经济实现良好开局:
+  https://www.stats.gov.cn/sj/zxfb/202604/t20260416_1963330.html
+- 国家统计局 2026-04-17 — 一季度 GDP 初步核算结果:
+  https://www.stats.gov.cn/sj/zxfb/202604/t20260417_1963336.html
+- 国家统计局 2026-04-10 — 2026 年 3 月 CPI / PPI:
+  https://www.stats.gov.cn/sj/zxfb/202604/t20260410_1963264.html
+- 国家统计局 2026-04-10 — CPI/PPI 解读 (董莉娟):
+  https://www.stats.gov.cn/sj/zxfbhjd/202604/t20260410_1963265.html
+- 国家统计局 2026-01-20 — 2025 Q4 + 全年 GDP 初步核算:
+  https://www.stats.gov.cn/sj/zxfb/202601/t20260120_1962349.html
+- 2026 政府工作报告解读 (新华社 / 第一财经):
+  https://www.news.cn/politics/20260305/e5c6a09cba0f445b9ee6cc6f8973132a/c.html
+  https://www.yicai.com/news/103074560.html
+- PBOC 货币政策委员会 2026 Q1 例会 (3/26):
+  https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/2026033115531475919/index.html
+- 中央经济工作会议 2025-12-10/11 (新华社):
+  https://www.cac.gov.cn/2025-12/11/c_1767178314595543.htm
+- 新华社 2026-01-07 — 央行定调 2026 货币政策:
+  https://www.news.cn/fortune/20260107/2d78951afc9545b1a3e029687f0b4f31/c.html
+- 全国银行间同业拆借中心 2026-04-20 LPR 报价:
+  https://cj.sina.com.cn/articles/view/7857141524/1d452771401901t65m
+
+See `../research/grounding-v1.11.0.md` (to be written in follow-up commit)
+for consolidated cross-country audit.
+
+---
+
 ---
 
 ## Inflation Target / 通货膨胀目标
@@ -75,10 +196,15 @@ partial recalibration。
 - **Current outlook** (2026 forecast):
   - 中银证券: 2026 全年 CPI **0.1-0.8% M 型走势**
   - 中银研究院: 温和回升态势
-  - 2026-Q1 实际 (1-3 月均): **总体 CPI 0.9% / 核心 CPI 1.1-1.3%**
+  - 2026-Q1 实际 (1-3 月累计): **总体 CPI 0.9% / 核心 CPI 1.1-1.3%**
     (食品猪肉 -11.5% 拖累总体, 核心反高于总体)
+  - **2026-03 单月**: 总体 CPI **1.0%** YoY、核心 **1.1%** YoY (环比
+    -0.7%，春节后回落)
+  - **PPI 2026-03 转正 +0.5% YoY** — 结束连续 **41 个月下降**,
+    环比 +1.0% 连 6 个月上涨 (48 个月最大)。**通缩 tail risk
+    边际降温首个硬证据**
   - PBOC 2026-Q1 例会 (3/26): 「继续实施适度宽松的货币政策」,
-    强调「推动价格总水平由负转正」
+    强调「推动价格总水平由负转正」(PPI 转正阶段性兑现)
 - **Signal** (使用 2% 软 ceiling + 物价回升诉求 双框架):
   - `> 2.5%` 明显超过目标 (罕见, 2024 后未见)
   - `1.5% ≤ x ≤ 2.5%` 接近目标中枢 (**2026 央行所期望的正常区间**)
@@ -106,15 +232,20 @@ partial recalibration。
 China's CPI structure differs fundamentally from G7: food + pork
 (猪肉周期) has outsized weight and drives headline gyrations. **Core
 CPI (核心CPI, food + energy excluded) is a better demand-pull signal**.
-Current (2026-Q1) core CPI trending well below headline, implying
-weak domestic demand despite any food-price bounces.
+Current (2026-Q1) core CPI **slightly above** headline (核心 1.1% vs
+总体 0.9-1.0%) — reversal from 2023-2024 pattern where core < headline.
+Reason: 猪肉 -11.5% + 食品 weak 拖累 headline below weak-but-
+rebounding core demand. 2026-03 PPI 转正 +0.5% 为 disinflation regime
+内首个 supply-side ease，but core CPI 仍远低于 2% 目标 = 需求端
+pressure 未释放。
 
 ---
 
 ## Labor Market Tightness
 
 - **Official target**: **城镇调查失业率 (urban surveyed unemployment
-  rate) around 5.5%** (2025 actual: 5.2%; 2026 target ~5.5%)
+  rate) around 5.5%** (2025 actual 全年: 5.2%; **2026-Q1 平均 5.3%,
+  2026-03 单月 5.4%**; 2026 目标 ~5.5%; 城镇新增就业目标 1200 万以上)
 - **No published NAIRU**: NBS acknowledges "自然失业率 = 摩擦性 +
   结构性 失业" conceptually, but does not publish point estimates.
 - **Structural features**:
@@ -138,11 +269,19 @@ weak domestic demand despite any food-price bounces.
 
 - **Multi-rate system** — PBOC 2024-07 已明确 **7 天逆回购为主要政策利率**
   (取代 MLF):
-  - **7 天逆回购**: **1.40%** (2026-Q1, PBOC 政策利率锚; 2025-09 下调后未动)
-  - **LPR 1Y**: **3.0%** (2026-Q1, 贷款报价基准)
-  - **LPR 5Y**: **3.5%** (房贷参考)
+  - **7 天逆回购**: **1.40%** (2026-04，PBOC 政策利率锚；2025-09 下调
+    后连续 **7+ 个月未动**；2026-04-02 固定利率操作仍 1.40% 确认)
+  - **LPR 1Y**: **3.0%** (2026-04-20 公告，LPR 自 2025-05 下调后连续
+    **11 个月持平**)
+  - **LPR 5Y**: **3.5%** (同上，房贷参考)
   - **MLF 1Y**: 约 2.0% (**数量工具，2024 后不再为政策利率**)
-  - **RRR**: 大型银行 **9.0%** (2025-11 末调整)
+  - **RRR**: 大型银行 **9.0%** (2025-11 末调整后未动；2026-Q1 降准
+    预期未落地；加权 RRR 6.2% / 平均 6.3%)
+  - **结构性政策工具利率** (2025-12): 支农支小再贷款、碳减排工具、
+    科技创新再贷款等定向 **下调 0.25pp** — 属"结构性降息"而非全面
+    降息；未改 7D OMO / LPR
+  - **FX 宏观审慎**: 远期售汇外汇风险准备金率 2026-03-02 起由 20%
+    **降为 0** (便利企业远期购汇；非 RRR)
 - **Real neutral rate r\***: **BIS WP No 949 (Rees & Sun 2021)**
   Bayesian 估计 1995Q2-2019Q4: 2019 末 r\* **real 2-3%** (95% CI 1.5-3%).
   自 GFC 以来持续下行，潜在增速下降贡献 2/3. 2020 后房地产危机 + 通缩
@@ -165,9 +304,13 @@ daily breakeven series.
 **Alternative**: **nominal real rate proxy** = LPR 1Y − CPI YoY (rough
 estimate of real financing cost). Can be computed manually but lacks
 TIPS-market's forward-looking inflation-expectation content.
-Current (2026-Q1): LPR 1Y **3.0%** − CPI YoY 0.9% ≈ **+2.1% ex-post real**
+Current (2026-03): LPR 1Y **3.0%** − CPI YoY **1.0%** ≈ **+2.0% ex-post
+real** (2026-Q1 累计: 3.0% − 0.9% ≈ +2.1%)
 — 相对于 BIS r\* 估计 2-3% real, 处于 **中性偏紧** (非 "structurally very
-tight"); 但相对于「物价回升诉求」的政策意图仍显不足。
+tight"); 但相对于「物价回升诉求」的政策意图仍显不足。**PPI 2026-03 转
+正 +0.5% 之后，real financing cost 对企业端 marginal ease** (LPR 1Y
+3.0% − PPI 0.5% ≈ 2.5% real vs 2025 年末 LPR 3.0% − PPI ≈ −0.9% 得出
+约 3.9% real)。
 
 **Structural view**: China is experiencing **"balance-sheet deflation"
 risk** (property sector deleveraging) — high ex-post real rates
@@ -262,16 +405,28 @@ property-deleveraging regime.
 
 - 中国人民银行 PBOC: http://www.pbc.gov.cn/
 - PBOC 货币政策委员会例会 (quarterly): http://www.pbc.gov.cn/goutongjiaoliu/
+- PBOC 货币政策执行报告: http://www.pbc.gov.cn/zhengcehuobisi/125207/125227/
+- PBOC 2026 Q1 例会 (3/26): https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/2026033115531475919/index.html
 - 国家统计局 NBS: https://www.stats.gov.cn/
+- NBS 数据发布: https://www.stats.gov.cn/sj/zxfb/
 - NBS 调查失业率: https://data.stats.gov.cn/
 - 中共中央经济工作会议 (CEWC) statements via 新华社: https://www.news.cn/
+- 2026 政府工作报告: https://www.news.cn/politics/20260305/e5c6a09cba0f445b9ee6cc6f8973132a/c.html
 
 ## Sources (citations)
 
-- 中国人民银行货币政策委员会 2026年第一季度例会
-- 新华网 2026-01-06 — 中国人民银行2026年将继续实施好适度宽松的货币政策
-- 第一财经 2024 — 中国该如何制订今年物价目标 (3% framework discussion)
+- 中国人民银行货币政策委员会 2026年第一季度例会 (2026-03-26)
+- 新华网 2026-01-06 / 2026-01-07 — 中国人民银行2026年将继续实施好适度宽松的货币政策
+- 新华社 2025-12-11 — 中央经济工作会议在北京举行 (CEWC 部署 2026)
+- 国家统计局 2026-01-19 — 2025年国民经济运行情况 (全年 GDP 5.0%)
+- 国家统计局 2026-01-20 — 2025 年四季度和全年 GDP 初步核算结果
 - 国家统计局 2026-01-19 — 2025年就业形势保持总体稳定 (urban surveyed unemployment 5.2%)
-- 国家统计局 — 什么是调查失业率 (concept explainer)
+- 国家统计局 2026-04-10 — 2026 年 3 月 CPI/PPI 数据 + 董莉娟解读
+- 国家统计局 2026-04-16 — 2026 年一季度国民经济实现良好开局 (GDP 5.0%, 失业率 5.3%)
+- 国家统计局 2026-04-17 — 2026 年一季度 GDP 初步核算结果
+- 2026 政府工作报告 (李强, 2026-03-05) — GDP 4.5-5%, CPI 2%, 赤字率 4%
+- 第一财经 2024 — 中国该如何制订今年物价目标 (3% framework discussion)
+- 第一财经 2026-03-05 — 政府工作报告解读: GDP 增速设定区间目标
 - 中国银行研究院 2026 《经济金融展望报告》
 - 中国银河宏观 2026-Q1 货币政策委员会例会解读
+- 新华社 2025-12-18 — 解码中央经济工作会议: 货币政策延续「适度宽松」
