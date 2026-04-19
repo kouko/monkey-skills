@@ -22,8 +22,9 @@ pass the finished memo to docs-team for polished formatting.
 
 **Taiwan detection**: If the ticker ends in `.TW` or `.TWO`, output_language defaults
 to `zh-TW` and the research-team Taiwan-Specific Diagnosis gate (MAY level) is
-auto-enabled. Phase 1 will also launch FinMind fetches for 三大法人, 月營收,
-融資融券, and 董監持股.
+auto-enabled. Phase 1 will launch the MOPS + TWSE OpenAPI Tier 1 pipeline
+(公司揭露 + 交易) with FinMind as Tier 2 auto-fallback + T86 gap-fill (per
+`taiwan-stock-snapshot` v1.13.0 architecture).
 
 ---
 
@@ -38,37 +39,64 @@ Launch the data-fetcher agent (haiku, low cost). Commands differ by ticker marke
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --action info
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL,GDPC1 --periods 12
+# v1.13.0: SEC EDGAR primary-source (filings index + XBRL structured facts)
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/sec_edgar_client.py --ticker {ticker} --action filings --forms 10-K,10-Q,8-K,4 --limit 8
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/sec_edgar_client.py --ticker {ticker} --action facts
 ```
 
-**Taiwan ticker** (ticker ends in `.TW` or `.TWO`):
+**Taiwan ticker** (ticker ends in `.TW` or `.TWO`) — v1.13.0 restructure:
+MOPS + TWSE OpenAPI are Tier 1 primary (金管會法定揭露 + 交易所公開資料);
+FinMind retained as Tier 2 auto-fallback + T86 per-stock flow gap-fill.
+
 ```
+# Shared (price context + macro)
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period 2y
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --action info
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL,GDPC1 --periods 12
+
+# Tier 1 Primary: MOPS (公司揭露 — 公司基本 + IFRS 財報 + 月營收 + 持股 + 股利)
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action company-basic
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action balance-sheet --year {current_roc} --season {last_reported_q}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action income-statement --year {current_roc} --season {last_reported_q}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action cash-flow --year {current_roc} --season {last_reported_q}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action monthly-revenue --year {current_roc} --month {current_month}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action director-holdings --year {current_roc} --month {current_month}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/mops_client.py --ticker {ticker_code} --action dividends --first-year {roc_minus_5} --last-year {current_roc}
+
+# Tier 1 Primary: TWSE OpenAPI (交易 — 日行情 + 融資融券)
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action daily-price --ticker {ticker_code}
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action margin-balance --ticker {ticker_code}
+
+# Tier 2 Fallback (auto-triggered on Tier 1 5xx/timeout; also fills Tier 1 gap
+# for daily T86 三大法人 per-stock flow which TWSE OpenAPI does not expose)
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start {date_start_3mo}
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMonthRevenue --date-start {date_start_1y}
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockHoldingSharesPer --date-start {date_start_1y}
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockMarginPurchaseShortSale --date-start {date_start_3mo}
 ```
 
 `{ticker_code}` = ticker with `.TW`/`.TWO` suffix stripped (e.g. `2330`).
+`{current_roc}` = ROC year (Gregorian − 1911). `{last_reported_q}` ∈ {1,2,3,4}.
 
 Reference: `../../agents/data-fetcher.md`
 
 Expected output keys:
-- `price_history`, `company_info`, `macro` (all tickers)
-- `institutional`, `revenue`, `holding`, `margin` (Taiwan tickers only)
+- All tickers: `price_history`, `company_info`, `macro`
+- US (v1.13.0+): `sec_filings`, `sec_facts`
+- Taiwan (v1.13.0 restructured): `mops_company_basic`,
+  `mops_balance_sheet`, `mops_income_statement`, `mops_cash_flow`,
+  `mops_monthly_revenue`, `mops_director_holdings`, `mops_dividends`,
+  `twse_daily_price`, `twse_margin_balance`, `finmind_institutional`
+  (fallback + T86 gap-fill)
 
 The fixture is the seed context passed to Phase 3.
 
-**Data gap warning (US)**: yfinance does not provide financial statements (income
-statement, balance sheet, cash flow). The research-team worker will note missing
-financials and may prompt for SEC EDGAR data manually. Do not block — proceed with
-available data.
+**Data gap — US (REDUCED in v1.13.0)**: SEC EDGAR now provides all financial
+statements (XBRL structured facts) + narrative (10-K / 10-Q / 8-K / Form 4
+filings). yfinance remains snapshot-only. Analyst consensus + forward
+guidance still external (deferred to v1.13.x patches — finnhub /
+alphavantage candidates).
 
-**Data gap warning (Taiwan)**: yfinance does not provide Taiwan financial statements.
-FinMind `TaiwanStockFinancialStatements` is available but not fetched by default —
-request explicitly if SEC EDGAR-equivalent financials are needed.
+**Data gap — Taiwan (ADDRESSED in v1.13.0)**: MOPS provides all 3 IFRS
+statements (t164sb03/04/05) + 月營收 + 持股 + 股利 as Tier A primary source
+(金管會法定揭露). FinMind retained as Tier 2 fallback + T86 per-stock flow.
 
 ---
 
@@ -232,10 +260,16 @@ This skill is the repo's first cross-plugin delegation pattern
 
 ## Limitations
 
-- yfinance does not provide financial statements (income statement, balance sheet,
-  cash flow). Memo will have fundamental gaps unless the user supplies SEC EDGAR
-  (US) or FinMind `TaiwanStockFinancialStatements` (Taiwan) data separately.
+- **US financial statements**: auto-sourced via SEC EDGAR (v1.13.0+). yfinance
+  remains snapshot-only. Analyst consensus + forward guidance still external.
+- **Taiwan financial statements**: auto-sourced via MOPS (v1.13.0+ — t164sb03
+  資產負債表 / t164sb04 綜合損益表 / t164sb05 現金流量表). FinMind retained
+  as Tier 2 fallback.
 - yfinance is an unofficial scraper. Data may lag or be temporarily unavailable.
+- SEC EDGAR requires `User-Agent` header compliance + 10 req/sec rate limit
+  (built into `sec_edgar_client.py`).
+- MOPS JSON API is zero-auth but back-end is `mops.twse.com.tw` — respect
+  client-side throttle (no parallel burst).
 - FinMind anonymous limit: 300 req/hr. Set `FINMIND_API_TOKEN` env var for 600 req/hr.
 - FRED without API key: ~100 requests/day. Set `FRED_API_KEY` env var for higher limits.
   See `investing-toolkit/scripts/README.md`.
