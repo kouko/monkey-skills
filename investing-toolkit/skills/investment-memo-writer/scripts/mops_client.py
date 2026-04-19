@@ -582,7 +582,56 @@ def _envelope(action: str, data: dict, *, cache_status: str,
 # CLI dispatch
 # ---------------------------------------------------------------------------
 
+# Required-params table per action. Used by _validate_action_params() below
+# so MCP callers who omit a required arg get a friendly SystemExit-based
+# error (converted to `{"error": "...", "action": "..."}` by the MCP
+# wrapper's except SystemExit) instead of the cryptic Python
+# `unsupported format string passed to NoneType.__format__` crash on
+# downstream `:02d` f-string format specs. CLI users are unaffected —
+# argparse either supplies defaults or rejects missing required flags
+# explicitly before the action reaches _run_action().
+_REQUIRED_PARAMS: dict[str, tuple[str, ...]] = {
+    "balance-sheet":              ("ticker", "year", "season"),
+    "income-statement":           ("ticker", "year", "season"),
+    "cash-flow":                  ("ticker", "year", "season"),
+    "financial-status":           ("ticker", "year", "season"),
+    "china-investment":           ("ticker", "year", "season"),
+    "company-basic":              ("ticker",),
+    "company-overview":           ("ticker",),
+    "monthly-revenue":            ("ticker", "year", "month"),
+    "dividends":                  ("ticker", "first_year", "last_year"),
+    "ex-dividend":                ("ticker", "year"),
+    "director-holdings":          ("ticker", "year", "month"),
+    "insider-trades":             ("ticker", "year", "month"),
+    "shareholder-meetings":       ("ticker", "year"),
+    "historical-announcements":   ("ticker", "year"),
+    "day-announcements":          ("year", "month", "day"),
+    "realtime-announcements":     ("market", "count"),
+    "search-announcements":       ("first_date", "last_date"),
+}
+
+
+def _validate_action_params(args) -> None:
+    """Raise SystemExit with a clear message if required params for the
+    selected action are missing (None). MCP wrapper converts SystemExit
+    → {"error": str(e), "action": action}."""
+    required = _REQUIRED_PARAMS.get(args.action)
+    if required is None:
+        raise SystemExit(
+            f"Unknown action: {args.action!r}. "
+            f"Valid: {', '.join(sorted(_REQUIRED_PARAMS.keys()))}"
+        )
+    missing = [p for p in required if getattr(args, p, None) is None]
+    if missing:
+        flags = ", ".join("--" + p.replace("_", "-") for p in missing)
+        raise SystemExit(
+            f"action {args.action!r} requires: {flags}. "
+            f"(ROC calendar for --year: 西元 - 1911; e.g. 2026 → 115)"
+        )
+
+
 def _run_action(args) -> dict:
+    _validate_action_params(args)
     client = MopsClient()
     action = args.action
 
@@ -746,24 +795,28 @@ def register_mcp_tools(mcp) -> None:
         """Fetch data from Taiwan MOPS JSON API (primary source, zero-auth).
         `year` uses ROC calendar (西元 - 1911); e.g. 2026 → 115.
 
-        Actions (16 endpoints):
-          Financial statements (ticker + year ROC + season 1-4):
-            - balance-sheet / income-statement / cash-flow
-            - financial-status / china-investment
-          Company info (ticker):
+        Actions (16 endpoints; required params in [brackets]):
+          Financial statements [ticker, year, season]:
+            - balance-sheet / income-statement / cash-flow /
+              financial-status / china-investment
+          Company info [ticker]:
             - company-basic / company-overview
-          Revenue/dividends:
-            - monthly-revenue (ticker, year, month)
-            - dividends (ticker, first_year, last_year)
-            - ex-dividend (ticker, year)
-          Insider / governance (ticker, year [+ month]):
-            - director-holdings / insider-trades
-            - shareholder-meetings / historical-announcements
+          Revenue / dividends:
+            - monthly-revenue    [ticker, year, month]
+            - dividends          [ticker, first_year, last_year]
+            - ex-dividend        [ticker, year]
+          Insider / governance:
+            - director-holdings / insider-trades      [ticker, year, month]
+            - shareholder-meetings / historical-announcements  [ticker, year]
           Market-wide announcements:
-            - day-announcements (year, month, day)
-            - realtime-announcements (market, count)
-            - search-announcements (ticker/market/first_date/last_date/
-              announcement_type/scope_type)
+            - day-announcements       [year, month, day]
+            - realtime-announcements  [market ('sii'|'otc'), count]
+            - search-announcements    [first_date, last_date; optional
+              ticker / market / announcement_type / scope_type]
+
+        Missing required params return {"error": "action '...' requires:
+        --foo, --bar ...", "action": "..."} instead of raising a Python
+        exception (v1.16.2+).
         """
         args = types.SimpleNamespace(
             action=action, ticker=ticker, year=year, season=season,
