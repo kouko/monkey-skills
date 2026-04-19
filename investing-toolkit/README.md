@@ -177,6 +177,8 @@ live in `domain-teams:investing-team`.
 Plugin-level cross-market references (complement the per-skill references):
 
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
+- [Design Principles](docs/design-principles.md) — meta-conventions for architecting this plugin, including the **empirical-first design** rule (earned through v1.14.0 + v1.16.3 "hypothesis vs reality" post-mortems)
+- [MCP Setup](docs/mcp-setup.md) — install paths + honest Cowork sandbox limitation
 
 ## Version Highlights
 
