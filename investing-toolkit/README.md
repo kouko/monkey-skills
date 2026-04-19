@@ -1,10 +1,10 @@
 # investing-toolkit
 
-**Version**: 1.14.0
+**Version**: 1.15.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
-stock snapshots (US / TW), technical indicators, DCF valuation, stock screener,
+stock snapshots (US / TW / JP), technical indicators, DCF valuation, stock screener,
 portfolio review, and full investment memo pipeline via
 `domain-teams:investing-team`.
 
@@ -58,8 +58,9 @@ router):
 | `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (32 indicators incl. new `pmi` group — CIER PMI/NMI via NDC 政府資料開放 dataset 6100) | v1.11.0 |
 | `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (**54 indicators, 13 groups** incl. monthly `industry` activity layer; full 98-code catalogue in `docs/`) | v1.8.1 |
 | `china-macro` | data | China macro via NBS new-SPA API + PBOC + FRED + yfinance (36 indicators incl. new `pmi` group — Caixin mfg/svc via akshare + NBS mfg/non-mfg/composite via nbs_client; primary-source preferred) | v1.11.0 |
-| `us-stock-snapshot` | data | yfinance price + info for US tickers | v1.0.0 |
-| `taiwan-stock-snapshot` | data | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
+| `us-stock-snapshot` | data | yfinance price + info + **SEC EDGAR Tier A fundamentals** (XBRL + Item sections) | v1.13.0 |
+| `taiwan-stock-snapshot` | data | **MOPS + TWSE/TPEx OpenAPI Tier A primary** (公司揭露 + 交易); FinMind Tier 2 fallback | v1.13.0 |
+| `japan-stock-snapshot` | data | **EDINET v2 Tier A fundamentals** (有報/四半期/臨時/大量保有) + TDnet same-day index + yfinance Tier 2 fallback — dual-mode routing by `EDINET_API_KEY` | v1.15.0 |
 | `technical-snapshot` | data | RSI / MACD / Bollinger / ATR / SMA via `ta_client.py` | v1.2.0 |
 | `macro-regime-snapshot` | aggregation | 5-country IC + GIP (US/JP/TW/KR/CN) + Rate Stress Dashboard + v1.11.0 cross-country consistency refresh (Block 1 PMI 3/5 live; 5×9 coverage grid; 2026-Q2 grounding) | v1.11.0 |
 | `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
@@ -178,6 +179,47 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.15.0 (2026-04-19) — Japan individual-stock skill (Path γ complete)
+
+Closes the stacked-PR carry-over from v1.13.0: Japan joins US + TW as
+the third market with a dedicated individual-stock data skill.
+
+- **scripts/edinet_client.py** (739 lines): 金融庁 EDINET v2 REST API
+  Tier A primary-source adapter. 7 form types (有報 120 / 四半期 140 /
+  半期 160 / 臨時 180 / 自己株買付 220 / 大量保有 350 + 訂正版). CSV
+  type=5 (added by FSA 2024-04) as MVP path — parses iXBRL-flattened
+  BS/PL/CF into canonical key_metrics dict that mirrors sec_edgar /
+  mops shape. Ticker → EDINET code resolution via free public
+  Edinetcode.zip download (no key needed). PDL 1.0 license —
+  redistribution OK with 出典：金融庁 EDINET attribution.
+
+- **scripts/tdnet_client.py**: Same-day 適時開示情報 index via
+  Yanoshin WEB-API. Covers 決算短信 / 業績予想 / 配当予想 / 自己株
+  買付 / 株主総会 / 役員異動 — events EDINET 臨時報告書 surfaces only
+  after ~45 days. Index-only pointer pattern; full documents fetched
+  from JPX (release.tdnet.info).
+
+- **yfinance_client.py --action financials** (new): Tier 2 BS/PL/CF
+  fallback using Yahoo Finance for JP (and cross-market). Provenance
+  explicitly labelled `data_tier: "tier_2"` with warning. Verified
+  against EDINET on Toyota FY2025-03-31 — revenue / operating / net
+  income / total assets / operating CF match to the yen.
+
+- **skills/japan-stock-snapshot/**: Dual-mode tier routing SKILL.md.
+  `EDINET_API_KEY` set → Tier A mode; absent → Tier 2 yfinance
+  fallback with prominent upgrade-path prompt. Known gaps documented
+  (信用取引残高 per-stock / 空売り / daily 投資部門別 — all locked
+  behind J-Quants Standard paid tier or genuinely unavailable free).
+
+- **investment-memo-writer**: Phase 1 extended to route 4-digit JP
+  tickers (`^\d{4}(\.T|\.TO)?$`) to the new skill. Same output shape
+  as US/TW snapshots so `domain-teams:research-team` gets a
+  market-agnostic fixture.
+
+- **MCP surface**: 13 → 19 tools (+4 edinet, +1 tdnet, +1
+  yfinance_financials). `--self-check` returns 10 clients. Contract
+  tests updated; all 3 pass.
 
 ### v1.14.0 (2026-04-19) — MCP migration (Claude Desktop Cowork unblock)
 

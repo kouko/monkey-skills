@@ -32,6 +32,8 @@ copy_to() {
 echo "Syncing yfinance_client.py..."
 copy_to yfinance_client.py \
   us-stock-snapshot \
+  taiwan-stock-snapshot \
+  japan-stock-snapshot \
   technical-snapshot \
   stock-screener \
   investment-memo-writer \
@@ -115,6 +117,17 @@ copy_to twse_openapi_client.py \
   investment-memo-writer \
   dcf-valuation
 
+echo "Syncing edinet_client.py..."
+copy_to edinet_client.py \
+  japan-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
+echo "Syncing tdnet_client.py..."
+copy_to tdnet_client.py \
+  japan-stock-snapshot \
+  investment-memo-writer
+
 echo "Syncing setup.sh..."
 copy_to setup.sh \
   us-stock-snapshot \
@@ -125,6 +138,7 @@ copy_to setup.sh \
   macro-regime-snapshot \
   dcf-valuation \
   taiwan-stock-snapshot \
+  japan-stock-snapshot \
   us-macro \
   japan-macro \
   taiwan-macro \
