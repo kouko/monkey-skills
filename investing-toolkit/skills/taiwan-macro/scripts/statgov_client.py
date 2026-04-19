@@ -385,6 +385,22 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register stat.gov.tw (Directorate-General of Budget 統計資訊網) tool."""
+
+    @mcp.tool()
+    def statgov_fetch(preset: str) -> dict:
+        """Fetch a Taiwan stat.gov.tw indicator via the hidden chart-JSON
+        endpoint (17 presets — CPI / PPI / unemployment / wages / IPI /
+        exports / retail / industrial-production). Used by taiwan-macro.
+        """
+        return fetch_preset(preset, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

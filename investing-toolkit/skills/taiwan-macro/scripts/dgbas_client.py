@@ -344,6 +344,23 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register DGBAS (行政院主計總處) Excel adapter tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def dgbas_fetch(preset: str) -> dict:
+        """Fetch a Taiwan DGBAS (行政院主計總處) time-series via the
+        official Excel download. Used by taiwan-macro for GDP / 景氣對策信號
+        / coincident-index / leading-index. Pass a preset name from PRESETS
+        (e.g. 'gdp-qoq', 'coincident-index', 'signal-score').
+        """
+        return fetch_preset(preset, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
