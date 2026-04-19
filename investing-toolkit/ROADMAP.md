@@ -434,7 +434,47 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.2 — mops_fetch required-param validation (current)
+## v1.16.3 — TWSE stock-day historical + cross-country routing (current)
+
+**Scope**: technical-snapshot + stock-screener hard-coded yfinance across
+all markets, giving patchy TW/KR/CN coverage. Adds TWSE's own historical
+OHLCV endpoint as Tier A primary for .TW tickers, threads suffix-based
+routing through both skills, and makes ta_client portable across three
+OHLCV sources.
+
+### New Tier A for TW historical OHLCV
+
+`twse.com.tw/rwd/zh/afterTrading/STOCK_DAY` — discovered via
+stock-day.html form inspection 2026-04-19. Not in openapi.twse.com.tw
+catalogue. TWSE-authored → Tier A; month-granularity; past months
+immutable (30d cache TTL). Auto-fallback to FinMind Tier 2 on any
+TwseOpenApiError, preserving taiwan-stock-snapshot's dual-mode pattern.
+
+### Commits (5)
+- [x] Commit 1: `scripts/twse_openapi_client.py` — new `stock-day-history`
+      action with per-month cache + ta-ready output normalization
+      (ROC→Gregorian, lowercase fields, parsed floats). MCP tool surface
+      + contract test fixture updated.
+- [x] Commit 2: `scripts/ta_client.py` — auto-compute `latest_date` /
+      `latest_close` from `data[]` last row when absent. Defensive
+      across all sources (yfinance supplies at top level; FinMind +
+      TWSE `/rwd/` don't).
+- [x] Commit 3: `skills/technical-snapshot/SKILL.md` — 4-branch suffix
+      router; .TW primary/fallback documented.
+- [x] Commit 4: `skills/stock-screener/SKILL.md` — partition `--tickers`
+      by suffix; yfinance batch for US/JP/KR/CN/HK + per-ticker loops
+      for TW/TWO.
+- [x] Commit 5: Plugin sync 1.16.2 → 1.16.3.
+
+### Known gaps / deferred
+- KR/CN individual-stock primary-source clients — tracked in v1.15.0+
+  deferred list; keep yfinance for now.
+- Extended stock-screener country-specific signals (TW 融資融券 score,
+  etc.) — out of scope.
+
+---
+
+## v1.16.2 — mops_fetch required-param validation
 
 **Scope**: User-reported bug fix. `mops_fetch(action=..., ticker=...)` without
 required year/month/season args used to crash with the cryptic Python error

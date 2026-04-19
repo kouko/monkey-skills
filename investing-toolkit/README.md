@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.16.2
+**Version**: 1.16.3
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -179,6 +179,45 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.16.3 (2026-04-19) — TWSE `/rwd/` historical OHLCV + cross-country routing for technical-snapshot + stock-screener
+
+User flagged that `technical-snapshot` and `stock-screener` hard-coded
+`yfinance_client.py` for OHLCV across all markets, giving uneven coverage
+(great for US/JP, patchy for TW/KR/CN). This release adds a proper Tier A
+historical-OHLCV source for TWSE-listed (上市) tickers and threads
+suffix-based routing through both skills.
+
+- **`scripts/twse_openapi_client.py::stock-day-history`** (new action):
+  wraps `https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY` — the
+  endpoint backing TWSE's public stock-day.html page. Tier A
+  primary-source, ~16 years historical, month-granularity (client loops
+  N months internally). Past months cached 30 d; current month 1 d.
+  Normalized output matches ta_client's input contract: Gregorian dates,
+  lowercase `open/high/low/close/volume`, parsed floats (thousands-
+  separator stripped).
+- **`scripts/ta_client.py` robustness**: auto-computes `latest_date` /
+  `latest_close` from `data[]` when the source didn't supply them at
+  the top level. Makes ta_client portable across yfinance + FinMind +
+  TWSE `/rwd/` with zero per-source normalization shims.
+- **`technical-snapshot` SKILL.md Phase 1**: 4-branch suffix router.
+  `.TW` → TWSE `/rwd/` Tier A with FinMind Tier 2 fallback;
+  `.TWO` → FinMind; `.T`/`.TO` → yfinance `.T`; else → yfinance
+  (US/KR/CN/HK unchanged).
+- **`stock-screener` SKILL.md Phase 1**: partition-then-batch. yfinance
+  batch for US+JP+KR+CN+HK (one HTTP call, unchanged behavior);
+  per-ticker loops for `.TW` (TWSE /rwd/) and `.TWO` (FinMind).
+- **Empirical validation**: TSMC 2330.TW via TWSE /rwd/ 12 months →
+  250+ trading days → RSI 61.58, MACD Bullish, SMA-200 1476.02,
+  trend_alignment "Strong Bullish", latest close NT$2030 @ 2026-04-17.
+- **Regression**: existing US path (AAPL / NVDA) unchanged. MCP contract
+  tests 22/22 (14 existing positive + 6 negative + 2 TWSE fixtures).
+
+Caveats (documented in `_provenance._endpoint`):
+- TWSE `/rwd/` endpoint is not catalogued at openapi.twse.com.tw. Tier A
+  (TWSE-authored) but undocumented — could change without notice.
+  Auto-fallback to FinMind mitigates.
+- TPEx (.TWO) has no /rwd/ equivalent; stays on FinMind.
 
 ### v1.16.2 (2026-04-19) — mops_fetch required-param validation (user-reported bug fix)
 
