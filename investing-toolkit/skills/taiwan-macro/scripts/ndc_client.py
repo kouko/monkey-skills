@@ -13,13 +13,18 @@ Usage:
   uv run ndc_client.py --preset signal               # 景氣燈號 score + color
   uv run ndc_client.py --preset signal-components     # 9 component indicators
   uv run ndc_client.py --preset leading               # Leading indicator index
+  uv run ndc_client.py --preset pmi-mfg               # Taiwan 製造業 PMI (v1.11.0)
+  uv run ndc_client.py --preset pmi-nmi               # Taiwan 非製造業 NMI (v1.11.0)
   uv run ndc_client.py --preset all                   # Everything
   uv run ndc_client.py --preset signal --no-cache     # Force fresh fetch
 
 Auth: None required.
 Cache: $INVESTING_TOOLKIT_CACHE/ndc/{preset}.json  TTL: 24h
        Falls back to ~/.cache/investing-toolkit/ if env var not set.
-Source: ws.ndc.gov.tw (bypasses Cloudflare on index.ndc.gov.tw)
+Sources:
+  - ws.ndc.gov.tw business-cycle ZIP (bypasses Cloudflare on index.ndc.gov.tw)
+  - data.gov.tw dataset 6100 (Taiwan PMI / NMI CSV, 政府資料開放授權條款-第1版,
+    compiled by 中華經濟研究院 on 國發會 commission)
 """
 
 import argparse
@@ -50,6 +55,18 @@ NDC_ZIP_URL = (
     "u=LzAwMS9hZG1pbmlzdHJhdG9yLzEwL3JlbGZpbGUvNTc4MS82MzkyL2VhMjM1YmQ5LW"
     "QwNTItNGE2OS1hYmZjLWQ1Yzc4NWQzZDBlMi56aXA%3d"
     "&n=5pmv5rCj5oyH5qiZ5Y%2bK54eI6JmfLnppcA%3d%3d&icon=.zip"
+)
+
+# Taiwan PMI (製造業 PMI) + NMI (非製造業 NMI) single CSV, provided by 國發會
+# via 政府資料開放平臺 dataset id 6100 under 政府資料開放授權條款-第1版
+# (CC BY-equivalent). Underlying survey conducted by 中華經濟研究院 (CIER)
+# on NDC commission. CSV columns: Date (YYYYMM), PMI, NMI.
+# Dataset page: https://data.gov.tw/en/datasets/6100
+NDC_PMI_CSV_URL = (
+    "https://ws.ndc.gov.tw/Download.ashx?"
+    "u=LzAwMS9hZG1pbmlzdHJhdG9yLzEwL3JlbGZpbGUvNTc4MS82MzkxL2JmOGE0ZWI3LT"
+    "EwZmUtNGZhMC1iNjQ2LTMwZTg5MGQwMjE4YS5jc3Y%3d"
+    "&n=6Ie654Gj5o6h6LO857aT55CG5Lq65oyH5pW4KHBtaeWPim5taSkuY3N2&icon=.csv"
 )
 
 _CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
@@ -174,6 +191,85 @@ def _download_zip() -> bytes | dict:
             return {"error": str(e)}
 
     return {"error": "Max retries exceeded"}
+
+
+def _download_pmi_csv() -> str | dict:
+    """Download the NDC Taiwan PMI/NMI CSV file.
+
+    Returns UTF-8-decoded CSV content (str) or {"error": ...} dict.
+    """
+    headers = {
+        "User-Agent": "investing-toolkit/1.11.0",
+        "Accept-Encoding": "gzip",
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = _requests.get(
+                NDC_PMI_CSV_URL, timeout=30, headers=headers, verify=False,
+            )
+
+            if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+
+            if resp.status_code != 200:
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                    continue
+                return {"error": f"NDC PMI CSV HTTP {resp.status_code}"}
+
+            # CSV is UTF-8 (no BOM observed, but use utf-8-sig defensively)
+            try:
+                return resp.content.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                try:
+                    return resp.content.decode("big5")
+                except UnicodeDecodeError:
+                    return {"error": "NDC PMI CSV decode failed"}
+
+        except _requests.exceptions.Timeout:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": "NDC PMI CSV request timed out"}
+        except _requests.exceptions.ConnectionError as e:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return {"error": f"NDC PMI CSV connection error: {e}"}
+        except Exception as e:
+            return {"error": str(e)}
+
+    return {"error": "Max retries exceeded"}
+
+
+def _parse_pmi_csv(content: str) -> dict[str, list[dict]]:
+    """Parse the Taiwan PMI/NMI CSV into per-column observations.
+
+    Expected columns: Date (YYYYMM), PMI, NMI.
+    Missing / '-' values are skipped (NMI starts 2014-08; PMI starts 2012-07).
+    """
+    reader = csv.DictReader(StringIO(content))
+    series: dict[str, list[dict]] = {"PMI": [], "NMI": []}
+
+    for row in reader:
+        date = _normalize_date(row.get("Date", row.get("年月", "")))
+        if not date:
+            continue
+        for col in ("PMI", "NMI"):
+            raw = (row.get(col) or "").strip()
+            if not raw or raw in ("-", "…"):
+                continue
+            try:
+                series[col].append({"date": date, "value": float(raw)})
+            except ValueError:
+                continue
+
+    for obs_list in series.values():
+        obs_list.sort(key=lambda o: o["date"])
+
+    return series
 
 
 def _extract_csvs(zip_bytes: bytes) -> dict[str, str]:
@@ -382,6 +478,29 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
             cached["_cache"] = "hit"
             return cached
 
+    # Taiwan PMI / NMI presets use a separate CSV (data.gov.tw dataset 6100),
+    # not the business-cycle ZIP. Short-circuit here.
+    if preset in ("pmi-mfg", "pmi-nmi"):
+        csv_content = _download_pmi_csv()
+        if isinstance(csv_content, dict):
+            return csv_content  # error
+        parsed = _parse_pmi_csv(csv_content)
+        if preset == "pmi-mfg":
+            obs = parsed.get("PMI", [])
+            result = _build_result(
+                "Taiwan Manufacturing PMI (製造業採購經理人指數)",
+                preset, obs,
+            )
+        else:  # pmi-nmi
+            obs = parsed.get("NMI", [])
+            result = _build_result(
+                "Taiwan Non-Manufacturing NMI (非製造業經理人指數)",
+                preset, obs,
+            )
+        if "error" not in result:
+            save_cache(cache_path, result)
+        return result
+
     # Download and extract ZIP
     zip_bytes = _download_zip()
     if isinstance(zip_bytes, dict):
@@ -497,7 +616,7 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
     else:
         return {"error": f"Unknown preset: {preset}",
-                "available_presets": ["signal", "signal-components", "leading", "coincident", "lagging", "unemployment", "all"]}
+                "available_presets": ["signal", "signal-components", "leading", "coincident", "lagging", "unemployment", "pmi-mfg", "pmi-nmi", "all"]}
 
     if "error" not in result:
         save_cache(cache_path, result)
@@ -525,7 +644,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.preset.strip().lower() == "all":
-        presets = ["signal", "signal-components", "leading", "coincident", "lagging", "unemployment"]
+        presets = ["signal", "signal-components", "leading", "coincident", "lagging", "unemployment", "pmi-mfg", "pmi-nmi"]
     else:
         presets = [p.strip() for p in args.preset.split(",") if p.strip()]
 

@@ -26,6 +26,8 @@
 | `leading-index` | 景氣領先指標 | Leading Index (**monthly GDP proxy leading**) | statgov | `indicators-cycle.md` |
 | `coincident-index` | 景氣同時指標 | Coincident Index (**monthly GDP proxy coincident**) | statgov | `indicators-cycle.md` |
 | `signal-score` | 景氣燈號分數 | Signal Score | statgov | `indicators-cycle.md` |
+| `pmi-mfg` | 製造業採購經理人指數 | Taiwan Manufacturing PMI (compiled by CIER, released by NDC via data.gov.tw dataset 6100) | NDC (data.gov.tw) | `indicators-pmi.md` |
+| `pmi-nmi` | 非製造業經理人指數 | Taiwan Non-Manufacturing NMI (compiled by CIER, released by NDC via data.gov.tw dataset 6100) | NDC (data.gov.tw) | `indicators-pmi.md` |
 | `twdusd` | TWD/USD 匯率 | TWD/USD Rate | CBC | `indicators-other.md` |
 | `fx-reserves` | 外匯存底 | FX Reserves (B USD) | statgov | `indicators-other.md` |
 | `m2` | 貨幣總計數 M2 | M2 Level | CBC | `indicators-other.md` |

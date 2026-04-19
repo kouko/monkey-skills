@@ -31,3 +31,4 @@ Quick lookup: find which file contains the indicator you need.
 | `inflation-tankan-1y` (BOJ CO) | 短観 企業物価見通し 1年後 平均 | Tankan Corporate Inflation Outlook (1Y, All Enterprises avg) | `indicators-japan-real-rates.md` |
 | `inflation-tankan-3y` (BOJ CO) | 短観 企業物価見通し 3年後 平均 | Tankan Corporate Inflation Outlook (3Y, All Enterprises avg) | `indicators-japan-real-rates.md` |
 | `inflation-tankan-5y` (BOJ CO) | 短観 企業物価見通し 5年後 平均 | Tankan Corporate Inflation Outlook (5Y, All Enterprises avg) | `indicators-japan-real-rates.md` |
+| PMI (URL-only) | au Jibun Bank 製造業 / サービス / コンポジット PMI | au Jibun Bank Manufacturing / Services / Composite PMI (**not fetched — licensed by S&P Global**; see SKILL.md "PMI" section) | SKILL.md |

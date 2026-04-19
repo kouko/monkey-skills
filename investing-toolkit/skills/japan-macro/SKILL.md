@@ -129,6 +129,40 @@ primary-source anchor snapshot.
 |--------|-----------|---------|------|-----------|
 | BOJ | BP01 | (discover via getMetadata) | 経常収支 | Monthly |
 
+### PMI (URL reference only — licensed, not fetched)
+
+Free-tier PMI data for Japan is **not fetched** by this skill because
+the **au Jibun Bank Manufacturing / Services / Composite PMI** (Japan's
+canonical PMI series) is compiled and licensed commercially by **S&P
+Global** in partnership with au Jibun Bank:
+
+- Full historic headline and sub-index data require a paid S&P Global
+  subscription. S&P Global's data licence explicitly prohibits
+  unauthorised scraping or redistribution of PMI values.
+- The BOJ and 統計ダッシュボード do not host any competing manufacturing
+  PMI; the closest BOJ-published sentiment signal is the **Tankan
+  業況判断DI** (already fetched by this skill under the `tankan` group),
+  which uses different methodology (diffusion of positive vs negative
+  assessments, -100 to +100 scale, quarterly).
+
+Reader can manually cross-reference:
+
+- S&P Global au Jibun Bank Japan Manufacturing PMI press release (free
+  headline value + summary commentary):
+  https://www.pmi.spglobal.com/Public/Home/PressRelease/9fe04d02e2f545038afb0d8fb5884daa
+- S&P Global au Jibun Bank Japan Services PMI press release:
+  https://www.pmi.spglobal.com/Public/Home/PressRelease/0e06bb86c21f4b7fba7fab8091647724
+- S&P Global au Jibun Bank Japan Composite PMI press release:
+  https://www.pmi.spglobal.com/Public/Home/PressRelease/87cfcdb4bf004efbba809355e60ac8ca
+- S&P Global PMI portal: https://www.pmi.spglobal.com/
+
+Related existing preset in this skill: `tankan` (BOJ CO 短観 業況判断DI,
+quarterly) — not a PMI but the closest BOJ-published sentiment proxy.
+For cross-country PMI comparison, see CN Caixin + NBS PMI in
+`china-macro` skill (v1.11.0 `pmi` group), TW PMI / NMI in
+`taiwan-macro` skill (v1.11.0 `pmi` group via NDC open data), and US
+OECD CLI in `us-macro` skill (v1.10.0 `pmi` group).
+
 ---
 
 ## How It Works

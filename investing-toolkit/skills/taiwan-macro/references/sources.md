@@ -60,6 +60,16 @@ Primary sources referenced in the taiwan-macro indicator documentation.
   Not currently accessible programmatically (Cloudflare protection).
   https://index.ndc.gov.tw/
 
+- **Taiwan PMI / NMI open data (added v1.11.0)**: The manufacturing PMI and
+  non-manufacturing NMI are released monthly via 政府資料開放平臺
+  (`data.gov.tw/en/datasets/6100`) as CSV under 政府資料開放授權條款-第1版
+  (Taiwan Government Open Data License v1 — CC BY-equivalent, commercial
+  reuse permitted with attribution). The underlying survey is conducted by
+  CIER on NDC commission, then published by NDC via the open-data portal.
+  Dataset page: https://data.gov.tw/en/datasets/6100
+  Index explainer: https://index.ndc.gov.tw/n/zh_tw/PMI
+  PMI history from 2012-07, NMI history from 2014-08.
+
 ### Ministry of Economic Affairs / 經濟部 (MOEA)
 
 - **Industrial Production Index (工業生產指數)**: Monthly index of manufacturing
@@ -72,9 +82,13 @@ Primary sources referenced in the taiwan-macro indicator documentation.
 
 ### Chunghwa Institution for Economic Research / 中華經濟研究院 (CIER)
 
-- **Taiwan PMI (製造業採購經理人指數)**: Monthly purchasing managers' index.
-  Not available via public API.
-  https://www.cier.edu.tw/
+- **Taiwan PMI / NMI (採購經理人指數)**: Monthly ISM-style PMI (manufacturing)
+  and NMI (non-manufacturing) surveys. CIER compiles the survey under NDC
+  commission; the CIER own website publishes monthly Excel/PDF reports but
+  does not expose a CSV or API. For structured machine-readable access, see
+  the NDC open-data entry above (data.gov.tw dataset 6100).
+  CIER PMI reports page: https://www.cier.edu.tw/en/eco_cat/pmi-en/
+  CIER NMI page: https://www.cier.edu.tw/nmi
 
 ---
 

@@ -59,6 +59,7 @@
 | `population` | 추계인구 | Estimated Population | K451 | `indicators-demographics.md` |
 | `aging-ratio` | 고령인구비율 | Elderly Ratio ≥65 | K460 | `indicators-demographics.md` |
 | `fertility-rate` | 합계출산율 | Total Fertility Rate | K461 | `indicators-demographics.md` |
+| PMI (URL-only) | S&P Global 한국 제조업 PMI | S&P Global South Korea Manufacturing PMI (**not fetched — licensed by S&P Global**; closest proxies: `consumer-sentiment` K252 + `economic-sentiment` K269 via sentiment group. See SKILL.md "PMI" section) | — | SKILL.md |
 
 ## Group membership (v1.8.1)
 
