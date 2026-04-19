@@ -21,12 +21,11 @@ Auth: None required.
 Cache: $INVESTING_TOOLKIT_CACHE/akshare/{preset}.json  TTL: 24h
        Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Sources:
-  - NBS (via eastmoney/akshare): CPI, PPI, GDP, industrial, retail, PMI
-  - Stats Bureau (NBS): urban unemployment
-  - PBOC (via chinamoney + akshare): LPR, RRR, M0/M1/M2, 社融, new loans
+  - PBOC (via chinamoney + akshare): LPR, RRR, 社融, new loans
   - SHIBOR (via shibor.org): 3M interbank rate
-  - SAFE (via akshare): FX reserves
-  - Caixin/Markit (via investing.com mirror): Caixin PMI
+  - Caixin / S&P Global (via eastmoney mirror, index_pmi_*_cx): Caixin PMI
+    (manufacturing + services); fresh source distinct from the 2026-04-18
+    removed investing.com mirror.
 """
 
 import argparse
@@ -64,14 +63,29 @@ PRESETS: dict[str, dict] = {
     # trade-balance / urban-unemployment / PMI-mfg / PMI-non-mfg / M2 / M1
     # were migrated to `nbs_client.py` on 2026-04-18. NBS new-SPA API is
     # primary source (no mirror lag, ~30-75d freshness vs 47-254d via
-    # akshare mirrors). akshare_client.py now serves only PBOC-published
-    # data (LPR/RRR/SHIBOR/社融/new loans) that NBS does not redistribute
-    # in its monthly 金融 subtree. See docs/nbs-indicator-catalog.md for
-    # the migration rationale.
-    #
-    # Caixin PMI presets were also removed (2026-04-18) — stale mirror,
-    # no reliable fresh source. See references/sources.md "Excluded
-    # indicators".
+    # akshare mirrors). akshare_client.py now serves PBOC-published data
+    # (LPR/RRR/SHIBOR/社融/new loans) that NBS does not redistribute in
+    # its monthly 金融 subtree, plus Caixin/S&P Global PMI via the
+    # eastmoney-backed `index_pmi_*_cx` functions (re-added 2026-04-19,
+    # v1.11.0 — distinct endpoint from the stale investing.com-backed
+    # `macro_china_cx_*_pmi_yearly` removed 2026-04-18). See
+    # docs/nbs-indicator-catalog.md for the migration rationale.
+
+    # --- Sentiment (Caixin / S&P Global via eastmoney) ---
+    "caixin-mfg-pmi": {
+        "fn": "index_pmi_man_cx",
+        "name": "Caixin Manufacturing PMI / 财新制造业 PMI",
+        "date_col": "日期", "value_col": "制造业PMI",
+        "date_format": "iso", "unit": "index", "freq": "monthly",
+        "source": "Caixin / S&P Global via eastmoney",
+    },
+    "caixin-svc-pmi": {
+        "fn": "index_pmi_ser_cx",
+        "name": "Caixin Services PMI / 财新服务业 PMI",
+        "date_col": "日期", "value_col": "服务业PMI",
+        "date_format": "iso", "unit": "index", "freq": "monthly",
+        "source": "Caixin / S&P Global via eastmoney",
+    },
 
     # --- Rates (PBOC) ---
     "lpr-1y": {

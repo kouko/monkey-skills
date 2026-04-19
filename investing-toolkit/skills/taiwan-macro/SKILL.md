@@ -4,7 +4,7 @@ description: >-
   Fetch Taiwan macroeconomic indicators via stat.gov.tw, CBC API, DGBAS Excel,
   and NDC business cycle data. Data layer only — no analysis or regime mapping.
   Returns structured JSON with latest values and direction for rates, inflation,
-  growth, labor, trade, cycle, forex, and money indicator groups.
+  growth, labor, trade, cycle, pmi, forex, and money indicator groups.
   台灣總經指標擷取（stat.gov.tw＋央行＋主計總處＋國發會）。
   台湾マクロ指標取得（stat.gov.tw＋CBC＋DGBAS＋NDC）。
 ---
@@ -20,9 +20,10 @@ Fetches Taiwan macroeconomic indicators from four government data sources:
   TWD/USD, reserve money (5 presets)
 - **DGBAS Excel** (`dgbas_client.py`) — Price indices: CPI, core CPI,
   PPI, import/export price indices (6 presets)
-- **NDC ZIP** (`ndc_client.py`) — Business cycle: 景氣燈號 score + color,
+- **NDC ZIP + CSV** (`ndc_client.py`) — Business cycle: 景氣燈號 score + color,
   9 signal components, leading/coincident/lagging indices, unemployment
-  (6 presets)
+  (6 presets) + Taiwan PMI / NMI via data.gov.tw dataset 6100 (2 presets,
+  added v1.11.0)
 
 This skill is **data-only**. The output is designed for handoff to
 `macro-regime-snapshot` or `domain-teams:investing-team`.
@@ -42,7 +43,7 @@ also provides the **五色景氣燈號** dashboard (紅/黃紅/綠/黃藍/藍) v
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `labor`, `trade`, `cycle`, `forex`, `money`, or `all` |
+| `--indicators` | no | `all` | Comma-separated: `rates`, `inflation`, `growth`, `labor`, `trade`, `cycle`, `pmi`, `forex`, `money`, or `all` |
 
 ---
 
@@ -101,6 +102,25 @@ also provides the **五色景氣燈號** dashboard (紅/黃紅/綠/黃藍/藍) v
 | NDC | signal-components | 9 構成項目 (IPI, M1B, TAIEX...) | Monthly |
 | NDC | leading | 領先指標構成項目 | Monthly |
 
+### pmi (added v1.11.0)
+
+| Source | Preset | Name | Frequency |
+|--------|--------|------|-----------|
+| NDC (data.gov.tw dataset 6100) | pmi-mfg | 製造業採購經理人指數 Taiwan Manufacturing PMI | Monthly |
+| NDC (data.gov.tw dataset 6100) | pmi-nmi | 非製造業經理人指數 Taiwan Non-Manufacturing NMI | Monthly |
+
+Taiwan PMI / NMI is compiled by **中華經濟研究院 (CIER)** under commission
+by **國家發展委員會 (NDC)** and released via the government open-data portal
+**政府資料開放平臺** (`data.gov.tw/en/datasets/6100`) under 政府資料開放
+授權條款-第1版 (Taiwan Government Open Data License v1, CC BY-equivalent —
+commercial reuse permitted with attribution). PMI history from 2012-07;
+NMI history from 2014-08. ISM-style methodology, 50 = neutral.
+
+The CIER own website (`cier.edu.tw`) publishes the same monthly reports
+as Excel/PDF only (no CSV/API); this skill fetches the NDC-hosted CSV
+instead because it is structurally machine-readable and the license is
+unambiguous.
+
 ### forex
 
 | Source | Preset | Name | Frequency |
@@ -131,6 +151,7 @@ also provides the **五色景氣燈號** dashboard (紅/黃紅/綠/黃藍/藍) v
 | `labor` | unemployment, unemployment-sa | — | — | — |
 | `trade` | export-orders, exports, imports | — | import-pi, export-pi | — |
 | `cycle` | leading-index, coincident-index | — | — | signal, signal-components |
+| `pmi` | — | — | — | pmi-mfg, pmi-nmi |
 | `forex` | fx-reserves | twdusd | — | — |
 | `money` | m2-yoy, taiex | m2, reserve-money | — | — |
 
@@ -150,7 +171,12 @@ also provides the **五色景氣燈號** dashboard (紅/黃紅/綠/黃藍/藍) v
 
 ### Fetch Requests (NDC)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ndc_client.py --preset signal,signal-components
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/ndc_client.py --preset pmi-mfg,pmi-nmi
 ```
+
+Include the second NDC fetch line only when the resolved indicator set
+contains `pmi` (the CSV source is a separate download from the
+business-cycle ZIP).
 
 ### Step 3 — Merge into unified output
 
@@ -167,6 +193,7 @@ Each data point retains `_source`: `"statgov"`, `"cbc"`, `"dgbas"`, or `"ndc"`.
 - `references/indicators-labor.md` — 勞動系
 - `references/indicators-trade.md` — 貿易系 (export orders, exports/imports)
 - `references/indicators-cycle.md` — 景氣系
+- `references/indicators-pmi.md` — PMI / NMI (added v1.11.0)
 - `references/indicators-other.md` — 匯率, M2, TAIEX, FX reserves
 - `references/sources.md` — Primary sources
 
@@ -189,6 +216,7 @@ Each data point retains `_source`: `"statgov"`, `"cbc"`, `"dgbas"`, or `"ndc"`.
 | Unemployment (statgov) | ~4 weeks |
 | 景氣燈號 (NDC) | ~6 weeks |
 | TAIEX, FX Reserves (statgov) | ~2 weeks |
+| PMI / NMI (NDC via data.gov.tw) | ~1-2 weeks (CIER press-release cadence) |
 
 ### SSL certificates
 

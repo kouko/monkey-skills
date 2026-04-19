@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.10.0
+**Version**: 1.11.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -55,13 +55,13 @@ router):
 |-------|-------|---------|--------|
 | `us-macro` | data | US macro via FRED (~31 series, 14 groups incl. new `pmi` [OECD CLI] + new `swap-spreads` [T-SOFR 3M]) | v1.10.0 |
 | `japan-macro` | data | Japan macro via BOJ + e-Stat + ECB + MoF auction (27 presets / 10 groups incl. new `real-rates` group, C+D+E multi-source) | v1.10.0 |
-| `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
+| `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (32 indicators incl. new `pmi` group — CIER PMI/NMI via NDC 政府資料開放 dataset 6100) | v1.11.0 |
 | `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (**54 indicators, 13 groups** incl. monthly `industry` activity layer; full 98-code catalogue in `docs/`) | v1.8.1 |
-| `china-macro` | data | China macro via NBS new-SPA API + PBOC + FRED + yfinance (34 indicators) | v1.7.1 |
+| `china-macro` | data | China macro via NBS new-SPA API + PBOC + FRED + yfinance (36 indicators incl. new `pmi` group — Caixin mfg/svc via akshare + NBS mfg/non-mfg/composite via nbs_client; primary-source preferred) | v1.11.0 |
 | `us-stock-snapshot` | data | yfinance price + info for US tickers | v1.0.0 |
 | `taiwan-stock-snapshot` | data | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
 | `technical-snapshot` | data | RSI / MACD / Bollinger / ATR / SMA via `ta_client.py` | v1.2.0 |
-| `macro-regime-snapshot` | aggregation | 5-country IC + GIP (US/JP/TW/KR/CN) + Rate Stress Dashboard (US real-rate + JP real-rate C+D+E + US swap spread, all tagged v1.10.0) | v1.10.0 |
+| `macro-regime-snapshot` | aggregation | 5-country IC + GIP (US/JP/TW/KR/CN) + Rate Stress Dashboard + v1.11.0 cross-country consistency refresh (Block 1 PMI 3/5 live; 5×9 coverage grid; 2026-Q2 grounding) | v1.11.0 |
 | `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `dcf-valuation` | aggregation | 3-stage DCF + sensitivity table | v1.0.0 |
 | `invest-portfolio` | aggregation | Portfolio review — P&L + regime overlay + rebalance | v1.2.0 |
@@ -178,6 +178,32 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.11.0 (2026-04-19) — Cross-country consistency refresh
+
+Addresses v1.10.0 PMI asymmetry + grounding vintage drift:
+- **china-macro**: new `pmi` group (Caixin mfg/svc via akshare + NBS
+  official mfg/non-mfg/composite via existing nbs_client — primary-
+  source preferred). Fills Block 1 CN PMI gap.
+- **taiwan-macro**: new `pmi` group (PMI/NMI via NDC data.gov.tw CSV —
+  unexpected free-tier access found during v1.11.0 APAC probe;
+  license: 政府資料開放授權條款-第1版 CC BY equivalent)
+- **japan-macro / korea-macro**: PMI URL-only references formalized
+  (au Jibun Bank / S&P Global Korea licensed — no free-tier path)
+- **macro-regime-snapshot**: Block 1 PMI row coverage improved 1/5 →
+  3/5 live (+CN +TW); Data Source Architecture section expanded with
+  5×9 cross-country coverage grid
+- **grounding refresh**: CN + JP full re-audit to 2026-Q2 vintage
+  (CN 2026 Work Report GDP 4.5-5% range; BOJ held 0.75% 2026-01/03);
+  US + TW + KR delta addenda (FOMC SEP r* 3.0→3.1%; CBC held 2.00%;
+  BOK 7-consecutive hold). 16 🔴 + 17 ⚠️ corrections total.
+- **research/grounding-v1.11.0.md**: consolidated 299-line audit trail
+
+JGBi YTM solver (originally considered for v1.11.0) deliberately
+rejected for architectural consistency — would make JP the only
+bond-math country among 5 country-macro skills, violating
+"country-macro = pure data layer" discipline. Reaffirmed via
+brainstorming audit.
 
 ### v1.10.0 (2026-04-19) — PMI + JP real rates + swap spread
 

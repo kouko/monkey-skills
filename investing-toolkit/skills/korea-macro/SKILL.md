@@ -164,6 +164,49 @@ KEYSTAT — deferred.
 | aging-ratio | K460 | Elderly Population Ratio ≥65 (고령인구비율) | Annual |
 | fertility-rate | K461 | Total Fertility Rate (합계출산율) | Annual |
 
+### PMI (URL reference only — licensed, not fetched)
+
+Free-tier PMI data for Korea is **not fetched** by this skill because
+the **S&P Global South Korea Manufacturing PMI** (Korea's canonical PMI
+series) is compiled and licensed commercially by **S&P Global**:
+
+- Full historic headline and sub-index data require a paid S&P Global
+  subscription. S&P Global's data licence prohibits unauthorised scraping
+  or redistribution of PMI values.
+- BOK ECOS does expose manufacturing BSI (기업경기실사지수) series
+  (K255 / K256 / K267), but these are low-cadence (quarterly, ~15 rows
+  of history) and structurally differ from S&P Global PMI methodology —
+  they were intentionally skipped during the v1.8.1 catalogue build
+  (see `docs/bok-ecos-keystat-catalog.md`). A full BSI integration would
+  require direct ECOS API access (free API key at
+  `ecos.bok.or.kr/api/#/AuthKeyApply`) and remains on the
+  deferred-candidates list (see `investing-toolkit/ROADMAP.md`).
+
+Reader can manually cross-reference:
+
+- S&P Global South Korea Manufacturing PMI press release (free headline
+  + summary commentary):
+  https://www.pmi.spglobal.com/Public/Home/PressRelease/d24db6b6b62745c1970931ac3b4323c5
+- S&P Global PMI portal: https://www.pmi.spglobal.com/
+
+Related existing presets in this skill (closest proxy signals — **not
+PMI-equivalent**, but survey-based Korean sentiment captured monthly
+by BOK via the `sentiment` group):
+
+- `consumer-sentiment` (K252, 소비자심리지수, Consumer Sentiment Index)
+- `economic-sentiment` (K269, 경제심리지수, Economic Sentiment Index)
+
+Both are 100-centred composite indicators and do not map 1:1 to a
+50-threshold PMI reading — but they are the BOK-published monthly
+sentiment signals for Korea and serve as the skill's interim proxy for
+manufacturing momentum until S&P Global PMI becomes accessible via a
+free primary source.
+
+For cross-country PMI comparison, see CN Caixin + NBS PMI in
+`china-macro` skill (v1.11.0 `pmi` group), TW PMI / NMI in
+`taiwan-macro` skill (v1.11.0 `pmi` group via NDC open data), and US
+OECD CLI in `us-macro` skill (v1.10.0 `pmi` group).
+
 ---
 
 ## How It Works

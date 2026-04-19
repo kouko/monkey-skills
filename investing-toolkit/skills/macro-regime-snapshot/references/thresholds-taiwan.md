@@ -30,7 +30,48 @@ CPI 2026-03 = 1.20% (DGBAS)、2024-06 CNA 彈性定義原文。
 - **2014-2023 十年無紅燈** → **2024-02 首度破紅燈 + 創 31 年分數新高 40 分**
 - 2026-02 再現紅燈 40 分
 
-**Next recalibration**: July 2026 (CBC Q2 理監事 + NDC 燈號年度統計更新).
+### v1.11.0 addendum (2026-04-19)
+
+Delta refresh since v1.9.0 (2026-04-18) vintage. Not a full re-audit
+— only changes captured.
+
+🔴 None — no material corrections required.
+
+⚠️ **CBC 2026-Q1 理監事 (2026-03-19) — 全員一致續守 2.00%**：貼現率
+維持 2.00%、擔保放款融通 2.375%、短期融通 4.25% 不變（理監事會全
+體一致通過）。2026 年 GDP 預估 3.67%、CPI < 2%（2026 基準展望）。
+政策語言續用「適時調整」（未使用「彈性」）。(Source:
+https://www.cbc.gov.tw/tw/cp-302-189508-c6f08-1.html)
+
+⚠️ **景氣對策信號 2026-02 = 紅燈 40 分（三度連續紅燈）**：AI 終端
+需求 → 工業及服務業加班工時升至紅燈；領先及同時指標同步上升。
+NDC 警示中東地緣風險 + 美國 301 條款重啟為主要下行風險。Phase 2
+Overheat 定調持續有效。(Source: https://index.ndc.gov.tw/n/zh_tw/data/eco)
+
+⚠️ **TSMC TAIEX 比重 — AI 行情下維持 40%+**：市場資料 2026-04 中旬
+「40% 以上」（部分來源引述 45%），v1.9.0 的 44.30% 基準線仍在區間
+內；TAIEX 2026-04-15 寫下 35,450 點歷史新高（YTD +26.5%）。TSMC
+2026-Q1 營收 1.13 兆台幣（+35.1% YoY），毛利率 66.2%，EPS 22.08
+台幣。集中度風險持續「歷史最高」定調不變 — 仍須 TWSE 下一次官方
+月度公告確認（預計 2026-04-30 月底數據）。
+
+**Verified unchanged**:
+- CBC 貼現率 2.00%（自 2024-09 降息以來維持）
+- 景氣燈號 2024 現行版 9 指標構成 + 5 色分數區間（9-45 分）
+- NAIRU 3.5-4.0% 學術推估範圍（無官方更新）
+- 「彈性定義」2024-06 CNA 原文（中央銀行高層場外解釋語定位）
+- TSMC = TW equity cycle 結構性判讀
+
+**New primary-source URLs**:
+- https://www.cbc.gov.tw/tw/cp-302-189508-c6f08-1.html
+- https://www.cbc.gov.tw/dl-225076-3c0958e07f3e4e258cd95ca1debd0019.html
+  (2026-03 理監事決議參考資料)
+
+See `../research/grounding-v1.11.0.md` (to be written in next commit)
+for consolidated cross-country audit.
+
+**Next recalibration**: July 2026 (CBC Q2 理監事 2026-06-18 + NDC
+燈號年度統計更新).
 
 ---
 

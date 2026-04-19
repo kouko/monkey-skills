@@ -37,7 +37,54 @@ Seoul Economic Daily 2026-02 (KOSPI 集中度), BIS 2025-Q3 data.
 **New discovery**: KR 2026-01 from BIS 재분류 to **advanced economy**
 (ex-emerging) — 시계열 그룹 변경.
 
-**Next recalibration**: May 2026 (BOK 경제전망 상반기 + 5월 MPC).
+### v1.11.0 addendum (2026-04-19)
+
+Delta refresh since v1.9.0 (2026-04-18) vintage. Not a full re-audit
+— only changes captured.
+
+🔴 None — no material corrections required.
+
+⚠️ **BOK 2026-04-10 금통위 — 기준금리 2.50% 7연속 동결 (만장일치)**:
+v1.9.0 draft 은 "5회 연속 동결" (2026-01-15 까지) 기준. 이후 2026-02-26,
+2026-04-10 두 차례 더 추가되어 **7회 연속** 동결이 공식 수치. 금통위
+결정문은 **중동전쟁으로 인한 공급충격**을 핵심 변수로 명시: (1) 유가 상승
+→ 인플레이션 상방압력 확대, (2) 성장 하방압력 증대, (3) 금융·외환시장
+변동성 확대. 완화 사이클 재개 시점 불확실성 증가 (시장 컨센서스 2026-H2
+로 이연). (Source: https://www.bok.or.kr/portal/bbs/P0000559/view.do?nttId=10097452)
+
+⚠️ **삼성전자 + SK하이닉스 비중 — AI/HBM 랠리로 40%+ 유지**: SK하이닉스
+2026-04-14 주가 113 만 원 신고가, 시가총액 ~110 조 원 (코스피 2 위 공고).
+삼성전자 + SK하이닉스 합산 2026-02 39.88% → 2026-04 중 40.90% (v1.9.0
+기록). 2026-04 중순 이후는 추가 확대 여지 (HBM 경쟁력 + AI 데이터센터
+수요). Phase 2 Overheat / 반도체 사이클 정점 근접 위험 주시 요인 — 다만
+v1.9.0 threshold 와 일관된 방향성, 밴드 재조정 불필요.
+
+⚠️ **가계부채/GDP — 하락 추세 지속**: BIS 2025-Q1 89.5%, Q3 2025 BOK
+기준 92.3% (2025-Q2 92.7% 에서 소폭 하락). v1.9.0 의 "2021 피크 99.1%
+에서 지속 하락" 진단 유효. BIS 2025-05 리포트에서 "다음 금융위기 촉발
+가능성이 높은 국가 중 하나" 경고 유지 — 매크로프루덴셜 규제 지속 필요.
+
+**Verified unchanged**:
+- 물가안정목표 2% (2019- 적용기간 무기한)
+- 2026 CPI 전망 2.1% (BOK)
+- NAIRU 3.0-3.5% 학술 컨센서스
+- 현행 실업률 2.7% (2026-03 계절조정) 구조적 NAIRU 하회 → Tight
+- BOK r\* ~0-1% real (Do/Ahn/Jung 2024 추정 범위)
+- 삼성그룹 + SK그룹 전체 61.29% 집중도 (2026-02 기준)
+- KRW 관리변동환율 / 원화 16년 저점 근접 유지
+- BIS 2026-01 advanced economy 재분류
+
+**New primary-source URLs**:
+- https://www.bok.or.kr/portal/bbs/P0000559/view.do?nttId=10097452
+  (BOK 통화정책방향 2026-04-10 결정문)
+- https://www.fntimes.com/html/view.php?ud=202604101058544858179ad43907_18
+  (2026-04-10 7연속 동결 보도)
+
+See `../research/grounding-v1.11.0.md` (to be written in next commit)
+for consolidated cross-country audit.
+
+**Next recalibration**: July 2026 (BOK 경제전망 하반기 + 7월 MPC;
+중동상황 관련 완화 재개 시점 재평가).
 
 ---
 

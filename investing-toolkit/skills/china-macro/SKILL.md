@@ -2,25 +2,25 @@
 name: china-macro
 description: >-
   Fetch China macroeconomic indicators from NBS (primary-source via
-  reverse-engineered new-SPA API), PBOC (via akshare — LPR/RRR/SHIBOR/社融/
-  new loans), FRED (CNY/USD + FX reserves), and yfinance (CSI300/SSEC/
-  ChiNext/HSI/HSCEI). Data layer only — no analysis. Returns structured
-  JSON with latest values and direction for inflation, growth, trade,
-  labor, sentiment, rates, money, credit, real estate, services, markets,
-  and FX groups.
-  中国宏观经济指标取数 (NBS 直抓 + PBOC)。
-  中國宏觀經濟資料擷取（國家統計局直抓 + 人民銀行）。
+  reverse-engineered new-SPA API), PBOC + Caixin PMI (via akshare —
+  LPR/RRR/SHIBOR/社融/new loans/Caixin PMI), FRED (CNY/USD + FX reserves),
+  and yfinance (CSI300/SSEC/ChiNext/HSI/HSCEI). Data layer only — no
+  analysis. Returns structured JSON with latest values and direction for
+  inflation, growth, trade, labor, PMI, rates, money, credit, real estate,
+  services, markets, and FX groups.
+  中国宏观经济指标取数 (NBS 直抓 + PBOC + Caixin PMI)。
+  中國宏觀經濟資料擷取（國家統計局直抓 + 人民銀行 + 財新 PMI）。
 ---
 
 # China Macro
 
-Fetches 34 Chinese macroeconomic indicators from four sources, prioritising
+Fetches 36 Chinese macroeconomic indicators from four sources, prioritising
 primary-source freshness. No API key required.
 
 | Script | Source | # presets | Role |
 |---|---|---|---|
 | **`nbs_client.py`** | **NBS new-SPA API** (`data.stats.gov.cn/dg/website/publicrelease/web/external/*`) | **21** | Primary source for all NBS-published indicators: CPI/PPI/GDP/industrial/retail/FAI/trade/labor/PMI/money/real-estate/services |
-| `akshare_client.py` | PBOC via chinamoney / SHIBOR via shibor.org | 6 | PBOC-only data not in NBS: LPR×2, RRR, SHIBOR, 社融增量, new loans |
+| `akshare_client.py` | PBOC via chinamoney / SHIBOR via shibor.org / Caixin via eastmoney | 8 | PBOC-only data not in NBS (LPR×2, RRR, SHIBOR, 社融增量, new loans) + Caixin/S&P Global PMI (mfg + services) |
 | `fred_client.py` | FRED CSV | 2 | CNY/USD (`DEXCHUS`), FX reserves (`TRESEGCNM052N`) |
 | `yfinance_client.py` | Yahoo Finance | 5 | Market indices: CSI 300, SSEC, ChiNext, HSI, HSCEI |
 
@@ -53,7 +53,7 @@ discussion and deferred options.
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated: `inflation`, `growth`, `trade`, `labor`, `sentiment`, `rates`, `money`, `credit`, `realestate`, `services`, `markets`, `fx`, or `all` |
+| `--indicators` | no | `all` | Comma-separated: `inflation`, `growth`, `trade`, `labor`, `pmi`, `rates`, `money`, `credit`, `realestate`, `services`, `markets`, `fx`, or `all` |
 
 ---
 
@@ -90,13 +90,20 @@ discussion and deferred options.
 |--------|--------|------|-----------|
 | urban-unemployment | nbs_client | 全国城镇调查失业率 | Monthly |
 
-### sentiment (NBS)
+### pmi (NBS 官方 + Caixin / S&P Global)
 
 | Preset | Source | Name | Frequency |
 |--------|--------|------|-----------|
-| pmi-manufacturing | nbs_client | Mfg PMI (官方) / 制造业采购经理指数 | Monthly |
-| pmi-non-manufacturing | nbs_client | Non-Mfg PMI / 非制造业商务活动指数 | Monthly |
-| pmi-composite | nbs_client | Composite PMI / 综合PMI产出指数 | Monthly |
+| pmi-manufacturing | nbs_client | NBS 官方 Mfg PMI / 制造业采购经理指数 (sample ≥ 3000 incl. SOE) | Monthly |
+| pmi-non-manufacturing | nbs_client | NBS 官方 Non-Mfg PMI / 非制造业商务活动指数 | Monthly |
+| pmi-composite | nbs_client | NBS Composite PMI / 综合PMI产出指数 | Monthly |
+| caixin-mfg-pmi | akshare_client | Caixin Manufacturing PMI / 财新制造业 PMI (sample ~430, SME/民企 concentrated) | Monthly |
+| caixin-svc-pmi | akshare_client | Caixin Services PMI / 财新服务业 PMI | Monthly |
+
+**Signal thresholds** (standard diffusion index): `> 52` Expansion /
+`50-52` Near-neutral / `< 50` Contraction. See
+`references/indicators-pmi.md` for Caixin vs NBS methodology delta and
+historical regime shifts.
 
 ### money (NBS)
 
@@ -165,7 +172,7 @@ discussion and deferred options.
 | `growth` | gdp-yoy, industrial-yoy, retail-yoy, fai-yoy |
 | `trade` | exports-yoy, imports-yoy, trade-balance |
 | `labor` | urban-unemployment |
-| `sentiment` | pmi-manufacturing, pmi-non-manufacturing, pmi-composite |
+| `pmi` | pmi-manufacturing, pmi-non-manufacturing, pmi-composite, caixin-mfg-pmi, caixin-svc-pmi |
 | `money` | m2-yoy, m1-yoy |
 | `rates` | lpr-1y, lpr-5y, rrr-major, shibor-3m |
 | `credit` | shrzgm, new-loans |
@@ -180,11 +187,11 @@ discussion and deferred options.
 ### Fetch Requests (NBS — inflation + growth + trade + labor)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/nbs_client.py --preset cpi-yoy,core-cpi,ppi-yoy,gdp-yoy,industrial-yoy,retail-yoy,fai-yoy,exports-yoy,imports-yoy,trade-balance,urban-unemployment
 
-### Fetch Requests (NBS — sentiment + money + real estate + services)
+### Fetch Requests (NBS — PMI (官方) + money + real estate + services)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/nbs_client.py --preset pmi-manufacturing,pmi-non-manufacturing,pmi-composite,m2-yoy,m1-yoy,realestate-investment-yoy,housing-sales-area-yoy,housing-sales-value-yoy,realestate-funding-yoy,services-production-yoy
 
-### Fetch Requests (PBOC via akshare — rates + credit)
-- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset lpr-1y,lpr-5y,rrr-major,shibor-3m,shrzgm,new-loans
+### Fetch Requests (PBOC + Caixin PMI via akshare — rates + credit + Caixin PMI)
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/akshare_client.py --preset lpr-1y,lpr-5y,rrr-major,shibor-3m,shrzgm,new-loans,caixin-mfg-pmi,caixin-svc-pmi
 
 ### Fetch Requests (markets — yfinance batch)
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers "000300.SS,000001.SS,399006.SZ,^HSI,^HSCE"
@@ -197,7 +204,7 @@ discussion and deferred options.
 
 Each observation retains `_source`:
 - `"nbs_spa"` — NBS direct-API data (primary source, 21 indicators)
-- `"akshare"` — PBOC / SHIBOR / chinamoney via akshare (6 indicators)
+- `"akshare"` — PBOC / SHIBOR / chinamoney / Caixin via akshare (8 indicators)
 - `"yfinance"` — Yahoo Finance (5 equity indices)
 - `"csv"` — FRED CSV (2 FX-related)
 
@@ -210,7 +217,7 @@ Each observation retains `_source`:
 - `references/indicators-growth.md` — GDP, industrial, retail, FAI
 - `references/indicators-trade.md` — Exports, imports, trade balance
 - `references/indicators-labor.md` — Urban unemployment
-- `references/indicators-sentiment.md` — PMI (mfg / non-mfg / composite)
+- `references/indicators-pmi.md` — PMI (NBS 官方 mfg / non-mfg / composite; Caixin mfg / services; methodology delta)
 - `references/indicators-rates.md` — LPR, RRR, SHIBOR
 - `references/indicators-money.md` — M1, M2, 社融, new loans
 - `references/indicators-realestate.md` — Real estate investment / sales / funding
@@ -238,6 +245,8 @@ loaded at skill runtime. See `docs/README.md`.
 | `akshare_client` LPR / SHIBOR | same-day to 1 business day |
 | `akshare_client` RRR | event-driven (latest = last change date) |
 | `akshare_client` 社融 / new-loans | ~1-2 month lag |
+| `akshare_client` Caixin Mfg PMI (`index_pmi_man_cx`) | **~20-30d** (published 1st business day after month-end) |
+| `akshare_client` Caixin Services PMI (`index_pmi_ser_cx`) | **~30-50d** (published 3rd business day after month-end) |
 | FRED DEXCHUS | 1-2 business days |
 | FRED TRESEGCNM052N | ~30-60d (SAFE release cadence) |
 | yfinance indices | ~real-time (15 min delay) |
@@ -254,10 +263,14 @@ reads are fine; multi-decade back-tests need extension. See
 
 ### Deliberately excluded indicators
 
-**Caixin Manufacturing PMI** and **Caixin Services PMI** were removed
-2026-04-18. Only free source (investing.com calendar via akshare) ran
-8 months stale; no reliable fresh substitute exists. NBS official
-Mfg + Non-Mfg + Composite PMI cover the primary sentiment axis.
+**Caixin Manufacturing / Services PMI via investing.com mirror** —
+removed 2026-04-18 (ran 8 months stale). **Restored 2026-04-19 (v1.11.0)**
+via a distinct akshare endpoint (`index_pmi_man_cx` / `index_pmi_ser_cx`,
+eastmoney-backed), which publishes fresh monthly data within the
+standard Caixin release cadence (1st / 3rd business day after month-end).
+See `references/indicators-pmi.md`. The stale
+`macro_china_cx_pmi_yearly` / `macro_china_cx_services_pmi_yearly`
+remain excluded.
 
 **70-city housing price index** — not exposed by NBS's
 `queryIndexTreeAsync` API (only published as standalone monthly PDF
