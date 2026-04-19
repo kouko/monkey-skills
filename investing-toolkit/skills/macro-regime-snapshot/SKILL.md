@@ -207,8 +207,8 @@ dislocation.
 | Spread | Signal |
 |--------|--------|
 | < 20 bp | Normal |
-| 20-50 bp | Elevated |
-| > 50 bp | Stressed (GFC / COVID / SVB breach levels) |
+| 20 ≤ x < 50 bp | Elevated |
+| ≥ 50 bp | Stressed (GFC / COVID / SVB breach levels) |
 
 Use **monthly average** rather than quarter-end spot (post-QT window-
 dressing distorts spot readings 10-15 bp at quarter-end). Threshold
