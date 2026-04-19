@@ -201,6 +201,159 @@ def get_info(ticker: str) -> dict:
     save_cache(cache_path, result)
     return result
 
+# ---------------------------------------------------------------------------
+# Financials (Tier 2 fallback for JP / when primary-source unavailable)
+# ---------------------------------------------------------------------------
+#
+# Yahoo Finance is an unofficial scraper — use ONLY when a primary-source
+# (SEC EDGAR for US / MOPS for TW / EDINET for JP) is not available or
+# the user explicitly opts for Tier 2 data. Intended fallback for JP
+# tickers when EDINET_API_KEY is not set; otherwise the japan-stock-snapshot
+# skill should route to edinet_client.py.
+
+
+_FINANCIALS_KEY_METRICS_MAPPING = {
+    # yfinance row-label → canonical metric name (matches edinet_client
+    # / sec_edgar naming so downstream skills can diff US/TW/JP uniformly).
+    "Total Revenue": "revenue",
+    "Operating Income": "operating_income",
+    "Net Income": "net_income",
+    "Net Income Common Stockholders": "net_income",
+    "Basic EPS": "eps",
+    "Total Assets": "total_assets",
+    "Stockholders Equity": "net_assets",
+    "Total Equity Gross Minority Interest": "net_assets",
+    "Cash And Cash Equivalents": "cash_and_equivalents",
+    "Operating Cash Flow": "operating_cash_flow",
+    "Cash Flow From Continuing Operating Activities": "operating_cash_flow",
+    "Investing Cash Flow": "investing_cash_flow",
+    "Financing Cash Flow": "financing_cash_flow",
+    "Free Cash Flow": "free_cash_flow",
+}
+
+
+def _df_to_records(df) -> dict:
+    """Convert yfinance financial-statement DataFrame (rows=line items,
+    columns=period-end dates) to a {period_iso: {metric: value}} dict.
+    Also drops all-NaN rows."""
+    import pandas as pd
+
+    if df is None or df.empty:
+        return {}
+    out: dict = {}
+    # Columns are Timestamp dates; serialize to YYYY-MM-DD
+    for col in df.columns:
+        period_key = col.strftime("%Y-%m-%d") if hasattr(col, "strftime") else str(col)
+        period_dict: dict = {}
+        for row_label, val in df[col].items():
+            if pd.isna(val):
+                continue
+            try:
+                v = float(val)
+            except (TypeError, ValueError):
+                continue
+            period_dict[str(row_label)] = v
+        if period_dict:
+            out[period_key] = period_dict
+    return out
+
+
+def _extract_key_metrics_yf(
+    income: dict, balance: dict, cashflow: dict,
+) -> tuple[str | None, dict]:
+    """Pick the latest period that appears in at least one statement,
+    then emit a canonical key_metrics dict (shape mirrors edinet_client)."""
+    all_periods = sorted(
+        set(income) | set(balance) | set(cashflow), reverse=True,
+    )
+    if not all_periods:
+        return None, {}
+    latest = all_periods[0]
+
+    key_metrics: dict = {}
+    for source_dict in (income.get(latest, {}), balance.get(latest, {}),
+                        cashflow.get(latest, {})):
+        for raw_label, value in source_dict.items():
+            canonical = _FINANCIALS_KEY_METRICS_MAPPING.get(raw_label)
+            if canonical and canonical not in key_metrics:
+                key_metrics[canonical] = {
+                    "value": value,
+                    "source_label": raw_label,
+                    "period": latest,
+                }
+    return latest, key_metrics
+
+
+def get_financials(ticker: str, period: str = "annual") -> dict:
+    """Fetch BS/PL/CF for a ticker via Yahoo Finance (Tier 2).
+
+    period: 'annual' (default) or 'quarterly'. Returns income_statement,
+    balance_sheet, cash_flow as {period_iso: {row_label: value}} plus
+    a canonical key_metrics extract tied to the latest available period.
+    """
+    import yfinance as yf
+    import pandas as pd
+
+    cache_path = get_cache_path(ticker, f"financials_{period}")
+    cached = load_cache(cache_path)
+    if cached:
+        cached["_cache"] = "hit"
+        return cached
+
+    t = yf.Ticker(ticker)
+    try:
+        if period == "annual":
+            income_df = fetch_with_retry(lambda: t.financials)
+            balance_df = fetch_with_retry(lambda: t.balance_sheet)
+            cashflow_df = fetch_with_retry(lambda: t.cashflow)
+        elif period == "quarterly":
+            income_df = fetch_with_retry(lambda: t.quarterly_financials)
+            balance_df = fetch_with_retry(lambda: t.quarterly_balance_sheet)
+            cashflow_df = fetch_with_retry(lambda: t.quarterly_cashflow)
+        else:
+            return {"error": f"Invalid period '{period}' (use 'annual' or 'quarterly')"}
+    except Exception as e:
+        return {"error": f"yfinance financials fetch failed: {e}", "ticker": ticker}
+
+    income = _df_to_records(income_df)
+    balance = _df_to_records(balance_df)
+    cashflow = _df_to_records(cashflow_df)
+
+    if not income and not balance and not cashflow:
+        return {
+            "error": f"No financial-statement data returned for {ticker} (period={period}). "
+                     "Ticker may be invalid, delisted, or Yahoo scraper blocked.",
+            "ticker": ticker,
+        }
+
+    latest_period, key_metrics = _extract_key_metrics_yf(income, balance, cashflow)
+
+    result = {
+        "ticker": ticker.upper(),
+        "period": period,
+        "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "_cache": "miss",
+        "latest_period": latest_period,
+        "key_metrics": key_metrics,
+        "income_statement": income,
+        "balance_sheet": balance,
+        "cash_flow": cashflow,
+        "_warning": (
+            "Yahoo Finance is an unofficial scraper. Financial statements "
+            "may be stale, incomplete, or diverge from regulator filings. "
+            "For JP tickers (.T), prefer edinet_client.py (primary-source "
+            "金融庁 Tier A) when EDINET_API_KEY is set."
+        ),
+    }
+    result["_provenance"] = {
+        **_make_provenance(result),
+        "data_tier": "tier_2",
+        "note": "Unofficial Yahoo scraper; not regulator-filed.",
+    }
+    save_cache(cache_path, result)
+    return result
+
+
 def get_batch(tickers: list[str], action: str, period: str, interval: str) -> dict:
     """Fetch data for multiple tickers. Returns {tickers: {AAPL: {...}, MSFT: {...}}}."""
     results = {}
@@ -254,6 +407,18 @@ def register_mcp_tools(mcp) -> None:
         return get_info(ticker)
 
     @mcp.tool()
+    def yfinance_financials(ticker: str, period: str = "annual") -> dict:
+        """Fetch BS/PL/CF from Yahoo Finance (Tier 2 — unofficial scraper).
+        Use as fallback when a primary-source (SEC EDGAR for US, MOPS for TW,
+        EDINET for JP) is not available. Returns income_statement /
+        balance_sheet / cash_flow as {period: {row: value}} plus a canonical
+        key_metrics dict (revenue / operating_income / net_income / total_assets
+        / net_assets / OCF/ICF/FCF etc.) for the latest period.
+        period: 'annual' (default) or 'quarterly'.
+        """
+        return get_financials(ticker, period)
+
+    @mcp.tool()
     def yfinance_batch(
         tickers: list[str], action: str = "history",
         period: str = "1y", interval: str = "1d",
@@ -268,10 +433,12 @@ def main():
     ticker_group.add_argument("--ticker", help="Single ticker (e.g. AAPL, 2330.TW)")
     ticker_group.add_argument("--tickers", help="Comma-separated tickers for batch mode (e.g. AAPL,MSFT,NVDA)")
     parser.add_argument("--action", default="history",
-                        choices=["history", "info"],
-                        help="Data type: history (OHLCV) or info (fundamentals)")
+                        choices=["history", "info", "financials"],
+                        help="Data type: history (OHLCV) / info (snapshot) / "
+                             "financials (BS+PL+CF, Tier 2 only)")
     parser.add_argument("--period", default="1y",
-                        help="Period for history: 1d 5d 1mo 3mo 6mo 1y 2y 5y 10y ytd max")
+                        help="Period for history: 1d 5d 1mo 3mo 6mo 1y 2y 5y 10y ytd max. "
+                             "For --action financials: 'annual' or 'quarterly'.")
     parser.add_argument("--interval", default="1d",
                         help="Interval for history: 1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache")
@@ -301,6 +468,10 @@ def main():
     try:
         if args.action == "history":
             result = get_history(args.ticker, args.period, args.interval)
+        elif args.action == "financials":
+            # For financials, --period doubles as annual/quarterly selector.
+            fin_period = args.period if args.period in ("annual", "quarterly") else "annual"
+            result = get_financials(args.ticker, fin_period)
         else:
             result = get_info(args.ticker)
     except Exception as e:
