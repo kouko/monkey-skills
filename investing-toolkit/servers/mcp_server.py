@@ -36,7 +36,7 @@ import os
 import sys
 from pathlib import Path
 
-VERSION = "1.15.0"
+VERSION = "1.16.0"
 
 # Resolve plugin root. Normally Claude sets CLAUDE_PLUGIN_ROOT; fall back
 # to __file__ location for direct invocation / testing.
@@ -58,29 +58,47 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 
 def _import_clients():
-    """Import all 10 client modules (v1.15.0+). Returns list of (name, module)."""
+    """Import all 18 client modules (v1.16.0+). Returns list of (name, module)."""
     import akshare_client
+    import boj_client
+    import cbc_client
+    import dgbas_client
+    import ecb_client
     import edinet_client
+    import estat_client
+    import fdr_client
     import finmind_client
     import fred_client
     import mops_client
     import nbs_client
+    import ndc_client
     import sec_edgar_client
+    import statgov_client
     import tdnet_client
     import twse_openapi_client
     import yfinance_client
 
     return [
+        # Equity snapshot + fundamentals (v1.13.0-v1.15.0)
         ("yfinance", yfinance_client),
-        ("akshare", akshare_client),
-        ("nbs", nbs_client),
-        ("fred", fred_client),
         ("sec_edgar", sec_edgar_client),
         ("mops", mops_client),
         ("twse_openapi", twse_openapi_client),
         ("finmind", finmind_client),
         ("edinet", edinet_client),
         ("tdnet", tdnet_client),
+        # Macro / regime (v1.0.0-v1.11.0 + v1.16.0 MCP wrap)
+        ("fred", fred_client),
+        ("akshare", akshare_client),
+        ("nbs", nbs_client),
+        ("boj", boj_client),
+        ("ecb", ecb_client),
+        ("estat", estat_client),
+        ("cbc", cbc_client),
+        ("dgbas", dgbas_client),
+        ("ndc", ndc_client),
+        ("statgov", statgov_client),
+        ("fdr", fdr_client),
     ]
 
 
@@ -100,9 +118,11 @@ def _self_check() -> None:
     # FastMCP exposes tools via internal registry; count via list_tools() coroutine
     # is async — we just report known counts statically for self-check speed.
     tool_counts = {
-        "yfinance": 4, "akshare": 1, "nbs": 1, "fred": 1,
-        "sec_edgar": 4, "mops": 1, "twse_openapi": 1, "finmind": 1,
-        "edinet": 4, "tdnet": 1,
+        "yfinance": 4, "sec_edgar": 4, "mops": 1, "twse_openapi": 1,
+        "finmind": 1, "edinet": 4, "tdnet": 1,
+        "fred": 1, "akshare": 1, "nbs": 1,
+        "boj": 2, "ecb": 1, "estat": 2,
+        "cbc": 1, "dgbas": 1, "ndc": 1, "statgov": 1, "fdr": 1,
     }
     total = sum(tool_counts.values())
     print(json.dumps({
