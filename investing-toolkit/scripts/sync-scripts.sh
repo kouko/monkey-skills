@@ -109,6 +109,12 @@ copy_to mops_client.py \
   investment-memo-writer \
   dcf-valuation
 
+echo "Syncing twse_openapi_client.py..."
+copy_to twse_openapi_client.py \
+  taiwan-stock-snapshot \
+  investment-memo-writer \
+  dcf-valuation
+
 echo "Syncing setup.sh..."
 copy_to setup.sh \
   us-stock-snapshot \
