@@ -11,6 +11,8 @@ description: >-
 
 # taiwan-stock-snapshot
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`mops_fetch`, `twse_openapi_fetch`, `finmind_fetch`, `yfinance_history`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Taiwan equity data snapshot from **primary-source Tier A** APIs (MOPS + TWSE/TPEx
 OpenAPI), with FinMind as a Tier 2 fallback for coverage gaps and resilience.
 Produces a structured card for handoff to `domain-teams:investing-team`

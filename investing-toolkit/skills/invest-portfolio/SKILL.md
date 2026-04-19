@@ -10,6 +10,8 @@ description: >-
 
 # invest-portfolio
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`yfinance_batch`, `yfinance_history`, `yfinance_info`, `finmind_fetch`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Full portfolio review pipeline — from holdings input to rebalance recommendations.
 This skill handles data assembly; analysis and sizing decisions are delegated to
 `domain-teams:investing-team` Portfolio Review workflow.

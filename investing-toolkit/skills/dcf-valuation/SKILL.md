@@ -11,6 +11,8 @@ description: >-
 
 # DCF Valuation
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`sec_edgar_facts`, `mops_fetch`, `yfinance_info`, `fred_series`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Interactive intrinsic value model based on Damodaran 2012 *Investment Valuation*
 Ch.12 (3-stage DCF). This skill does **not fetch data itself** — all financial
 inputs must be supplied by the user or auto-sourced via upstream data fetchers

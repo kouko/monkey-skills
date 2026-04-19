@@ -9,6 +9,8 @@ description: >-
 
 # technical-snapshot
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tool `yfinance_history` is registered in your session, prefer it over the `uv run scripts/...` subprocess command shown below. Identical JSON payload, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess command remains the canonical spec and fallback.
+
 Computes common technical indicators from OHLCV price data and outputs a
 structured snapshot card. This skill uses `scripts/ta_client.py` for all
 indicator calculations — no external API or manual computation required.

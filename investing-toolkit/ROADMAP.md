@@ -434,7 +434,53 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.13.0 — Individual stock fundamentals (US + TW) (current)
+## v1.14.0 — MCP migration infrastructure (current)
+
+**Scope**: Expose all 8 data-fetch scripts as 13 MCP tools, bundled at
+plugin level. Unblocks Claude Desktop Cowork users (previously all
+`uv run scripts/...` calls blocked by Cowork sandbox URL allowlist);
+Claude Code CLI keeps working via the identical-JSON dual-mode path.
+
+### Phase 1 — Per-script register_mcp_tools()
+- [x] Commit 1: `yfinance_client.py` / `akshare_client.py` /
+      `nbs_client.py` (3 HIGH-risk scripts confirmed failing in sandbox)
+- [x] Commit 2: `fred_client.py` / `sec_edgar_client.py` /
+      `mops_client.py` / `twse_openapi_client.py` / `finmind_client.py`
+      (5 Pattern C scripts)
+- [x] 13 tools total; dispatch pattern used for mops (16 actions) and
+      twse (10 actions) to keep session token cost manageable.
+
+### Phase 2 — servers/ central registry + entry chain
+- [x] Commit 3: `servers/mcp_server.py` + `--self-check` flag for
+      setup-time dep warming. Follows official plugins-reference layout
+      convention (`servers/` not `scripts/`).
+- [x] Commit 4: `.mcp.json` + `servers/mcp_bootstrap.sh` +
+      `servers/mcp_wrapper.py` + `servers/setup.sh`. V2 silent-auto
+      design (pre-flight P3 probe 2026-04-19 confirmed Claude Desktop
+      MCP handshake timeout cliff = 60 s, so synchronous bootstrap
+      would fail on first install; background setup + stdlib wrapper
+      keeps handshake under the limit).
+
+### Phase 3 — Documentation + tests
+- [x] Commit 5: 8 SKILL.md files carry MCP-aware prose blockquote
+      (prefer MCP tools if registered, subprocess commands remain
+      canonical fallback).
+- [x] Commit 6: `docs/mcp-setup.md` — 3 install paths (CLI / Cowork
+      Team private fork / Cowork Pro/Max limited) + troubleshooting.
+- [x] Commit 7: `tests/test_mcp_contract.py` — 3 contract tests
+      (self-check shape, stdio handshake exposes 13 tools, FRED
+      MCP=CLI equivalence).
+
+### Deferred to v1.15.0+
+- Japan individual stock skill (Path γ carry-over from v1.13.0 plan).
+- Wrap remaining 9 macro / reference scripts (boj / ecb / estat /
+  cbc / dgbas / ndc / statgov / fdr / ta) as MCP demand surfaces.
+- `.mcpb` Desktop Extension packaging (Chat-tab users only, niche).
+- Remote HTTP MCP hosting (privacy + cost concerns).
+
+---
+
+## v1.13.0 — Individual stock fundamentals (US + TW)
 
 **Scope**: Closes Pattern C NVDA demo 4 data gaps for US + TW markets.
 Primary-source Tier A across all new fetchers.

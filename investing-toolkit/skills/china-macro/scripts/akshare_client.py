@@ -363,6 +363,41 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def _fetch_many(presets: list[str], use_cache: bool = True) -> dict:
+    if len(presets) == 1:
+        return fetch_preset(presets[0], use_cache=use_cache)
+    result = {
+        "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "_source": "akshare",
+        "indicators": {},
+    }
+    for preset in presets:
+        result["indicators"][preset] = fetch_preset(preset, use_cache=use_cache)
+    return result
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register akshare China macro tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def akshare_china_macro(presets: list[str]) -> dict:
+        """Fetch China macro indicators via akshare (PBOC LPR/RRR/SHIBOR,
+        社融, new RMB loans, Caixin PMI). Pass one or more preset keys;
+        use ['all'] to fetch every preset.
+
+        Available presets: caixin-mfg-pmi, caixin-svc-pmi, lpr-1y, lpr-5y,
+        rrr-major, shibor-3m, shrzgm, new-loans.
+        """
+        if len(presets) == 1 and presets[0].strip().lower() == "all":
+            presets = list(PRESETS.keys())
+        return _fetch_many(presets, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

@@ -11,6 +11,8 @@ description: >-
 
 # US Stock Snapshot
 
+> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`yfinance_history`, `yfinance_info`, `sec_edgar_cik`, `sec_edgar_facts`, `sec_edgar_filings`, `sec_edgar_narrative`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+
 Fetches US equity data across **two layers** and outputs a structured snapshot
 card. This skill is **data-only** — it does not analyze, score, or generate
 investment verdicts. The card is designed for immediate handoff to

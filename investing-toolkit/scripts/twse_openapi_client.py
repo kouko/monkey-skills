@@ -501,6 +501,42 @@ def _run_action(args) -> dict:
     raise SystemExit(f"Unknown action: {action}")
 
 
+# ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register TWSE/TPEx OpenAPI dispatch tool with a FastMCP instance."""
+    import types
+
+    @mcp.tool()
+    def twse_openapi_fetch(action: str, ticker: str | None = None) -> dict:
+        """Fetch data from TWSE + TPEx OpenAPI (primary source, zero-auth).
+        Trading / market reference data only (not financial statements —
+        use mops_fetch for those).
+
+        Actions (10 endpoints):
+          TWSE (上市, listed-price):
+            - listed-companies (master list; ticker filters to one row)
+            - daily-price-all (latest-session OHLCV snapshot for all stocks)
+            - daily-price (ticker required; filters daily-price-all)
+            - pe-pb-yield (valuation ratios; ticker optional)
+            - margin-balance (融資融券; ticker optional)
+            - three-investor (top-20 QFII snapshot; NOT daily flow)
+            - industry-eps (industry aggregates)
+            - ex-dividend-calendar (upcoming ex-dividend dates)
+          TPEx (上櫃):
+            - tpex-daily-close (snapshot)
+            - tpex-margin-balance
+        """
+        args = types.SimpleNamespace(action=action, ticker=ticker)
+        try:
+            return _run_action(args)
+        except SystemExit as e:
+            return {"error": str(e), "action": action}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="TWSE + TPEx OpenAPI adapter for investing-toolkit",

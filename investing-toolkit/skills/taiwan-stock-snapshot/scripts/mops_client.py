@@ -716,6 +716,70 @@ def _run_action(args) -> dict:
     raise SystemExit(f"Unknown action: {action}")
 
 
+# ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register MOPS (Taiwan MOPS JSON API) dispatch tool with a FastMCP instance."""
+    import types
+
+    @mcp.tool()
+    def mops_fetch(
+        action: str,
+        ticker: str | None = None,
+        year: int | None = None,
+        season: int | None = None,
+        month: int | None = None,
+        day: int | None = None,
+        first_year: int | None = None,
+        last_year: int | None = None,
+        first_date: str | None = None,
+        last_date: str | None = None,
+        market: str | None = None,
+        count: int | None = None,
+        query_type: str | None = None,
+        announcement_type: str | None = None,
+        scope_type: str | None = None,
+    ) -> dict:
+        """Fetch data from Taiwan MOPS JSON API (primary source, zero-auth).
+        `year` uses ROC calendar (西元 - 1911); e.g. 2026 → 115.
+
+        Actions (16 endpoints):
+          Financial statements (ticker + year ROC + season 1-4):
+            - balance-sheet / income-statement / cash-flow
+            - financial-status / china-investment
+          Company info (ticker):
+            - company-basic / company-overview
+          Revenue/dividends:
+            - monthly-revenue (ticker, year, month)
+            - dividends (ticker, first_year, last_year)
+            - ex-dividend (ticker, year)
+          Insider / governance (ticker, year [+ month]):
+            - director-holdings / insider-trades
+            - shareholder-meetings / historical-announcements
+          Market-wide announcements:
+            - day-announcements (year, month, day)
+            - realtime-announcements (market, count)
+            - search-announcements (ticker/market/first_date/last_date/
+              announcement_type/scope_type)
+        """
+        args = types.SimpleNamespace(
+            action=action, ticker=ticker, year=year, season=season,
+            month=month, day=day,
+            first_year=first_year, last_year=last_year,
+            first_date=first_date, last_date=last_date,
+            market=market, count=count,
+            query_type=query_type, announcement_type=announcement_type,
+            scope_type=scope_type,
+        )
+        try:
+            return _run_action(args)
+        except SystemExit as e:
+            return {"error": str(e), "action": action}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="MOPS JSON API adapter for investing-toolkit",
