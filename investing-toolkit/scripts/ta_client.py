@@ -217,14 +217,26 @@ def last(series: list) -> float | None:
 # ---------------------------------------------------------------------------
 
 def compute_indicators(ohlcv_json: dict) -> dict:
-    """Take yfinance_client.py output, return indicator JSON."""
+    """Take yfinance_client.py / finmind_client.py / twse_openapi
+    stock-day-history output, return indicator JSON.
+
+    v1.16.3: `latest_date` / `latest_close` are auto-computed from the
+    last row in `data[]` when absent from the top level — makes ta_client
+    portable across the 3 OHLCV sources (yfinance already supplies them;
+    FinMind and TWSE /rwd/ do not).
+    """
     ticker = ohlcv_json.get("ticker", "UNKNOWN")
-    as_of = ohlcv_json.get("latest_date", "N/A")
-    latest_close = ohlcv_json.get("latest_close")
     rows = ohlcv_json.get("data", [])
 
     if not rows:
         return {"ticker": ticker, "error": "No OHLCV data in input"}
+
+    # Auto-compute latest_date / latest_close from the last row if the
+    # source didn't supply them at the top level.
+    as_of = ohlcv_json.get("latest_date") or rows[-1].get("date") or "N/A"
+    latest_close = ohlcv_json.get("latest_close")
+    if latest_close is None:
+        latest_close = rows[-1].get("Close") or rows[-1].get("close")
 
     closes = [r.get("Close") or r.get("close") for r in rows]
     highs  = [r.get("High")  or r.get("high")  for r in rows]

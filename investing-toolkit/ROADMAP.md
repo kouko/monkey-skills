@@ -434,7 +434,64 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.2 — mops_fetch required-param validation (current)
+## v1.16.3 — TWSE stock-day-history action + empirical yfinance validation (current)
+
+**Scope**: User flagged technical-snapshot / stock-screener hard-coded
+yfinance and asked whether TW coverage was reliable. Originally planned
+as a suffix-based router (TWSE `/rwd/` primary for .TW). Mid-stack
+empirical testing confirmed yfinance actually covers `.TW` / `.TWO`
+correctly with split-adjusted prices (TA standard), so the final
+architecture keeps yfinance as default for ALL markets and makes TWSE
+`/rwd/` an *explicit-request* action for memo-citation primary-source
+use.
+
+### What's new in v1.16.3 code
+
+Still valuable despite the priority flip — Tier A primary-source TW
+OHLCV is useful for `taiwan-stock-snapshot` memo contexts where
+regulator-raw prices are required:
+
+`twse.com.tw/rwd/zh/afterTrading/STOCK_DAY` — discovered via
+stock-day.html form inspection 2026-04-19. Not in openapi.twse.com.tw
+catalogue. TWSE-authored → Tier A; month-granularity; past months
+immutable (30d cache TTL).
+
+### Commits (6)
+- [x] Commit 1 (feat): `scripts/twse_openapi_client.py` — new
+      `stock-day-history` action with per-month cache + ta-ready
+      normalization (ROC→Gregorian, lowercase fields, parsed floats).
+      MCP tool surface + contract test fixture updated.
+- [x] Commit 2 (refactor): `scripts/ta_client.py` auto-compute
+      `latest_date` / `latest_close` from `data[]` last row when
+      absent. Defensive across all sources.
+- [x] Commit 3 (fix): `skills/technical-snapshot/SKILL.md` — suffix
+      router (original: TWSE primary for .TW).
+- [x] Commit 4 (fix): `skills/stock-screener/SKILL.md` — partition
+      `--tickers` by suffix (original).
+- [x] Commit 5 (chore): Plugin sync 1.16.2 → 1.16.3.
+- [x] Commit 6 (fix): **Flip .TW / .TWO priority to yfinance primary**
+      after empirical validation — TSMC 2330.TW via yfinance returned
+      243 rows / 1y in TWD with full info. Reverts Phase 1 to
+      yfinance-for-all-markets; TWSE `/rwd/` stays as documented
+      advanced action for memo-citation mode.
+
+### Lesson learned
+
+Should have empirically tested yfinance TW coverage BEFORE designing
+the suffix router. Architected 5 commits around a hypothesis that
+didn't survive contact with reality. TWSE `/rwd/` code still lands
+(useful for memo primary-source citation), but the Phase 1 routing
+stays simpler than initially planned.
+
+### Known gaps / deferred
+- KR/CN individual-stock primary-source clients — tracked in v1.15.0+
+  deferred list; keep yfinance for now.
+- Extended stock-screener country-specific signals (TW 融資融券 score,
+  etc.) — out of scope.
+
+---
+
+## v1.16.2 — mops_fetch required-param validation
 
 **Scope**: User-reported bug fix. `mops_fetch(action=..., ticker=...)` without
 required year/month/season args used to crash with the cryptic Python error

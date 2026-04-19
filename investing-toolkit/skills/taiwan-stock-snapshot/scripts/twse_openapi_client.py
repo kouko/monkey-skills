@@ -58,6 +58,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 TWSE_BASE = "https://openapi.twse.com.tw/v1"
 TPEX_BASE = "https://www.tpex.org.tw/openapi/v1"
 
+# Non-OpenAPI endpoint — backs the user-facing stock-day.html form.
+# Serves historical monthly OHLCV for TWSE-listed 個股. Tier A
+# (TWSE-authored) but not documented in openapi.twse.com.tw catalogue.
+# Discovered via stock-day.html form inspection 2026-04-19.
+TWSE_RWD_BASE = "https://www.twse.com.tw/rwd/zh/afterTrading"
+
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -69,8 +75,9 @@ _CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(
 )
 CACHE_DIR = Path(_CACHE_BASE) / "twse_openapi"
 
-TTL_DAILY = 24 * 3600   # 24h — daily snapshots
+TTL_DAILY = 24 * 3600   # 24h — daily snapshots + current month of stock-day-history
 TTL_STATIC = 7 * 86400  # 7d  — rarely-changing metadata (listed companies)
+TTL_MONTHLY = 30 * 86400  # 30d — past months of stock-day-history (immutable)
 
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0
@@ -315,10 +322,102 @@ class TwseOpenApiClient:
             ttl=TTL_DAILY,
         )
 
+    # ── TWSE historical OHLCV (/rwd/ endpoint, v1.16.3+) ───────────────
+
+    def get_stock_day_history_month(self, ticker: str, yyyymmdd: str
+                                    ) -> tuple[dict, str]:
+        """One month of daily OHLCV for a single TWSE-listed ticker.
+
+        Wraps the TWSE /rwd/ stock-day.html backing endpoint. Passing any
+        YYYYMMDD within the target month returns the full month of trading
+        days. Historical months (not current) are immutable → 30-day
+        TTL; the current month is still accumulating → 1-day TTL.
+
+        Args:
+            ticker: 4-digit 証券コード (e.g. "2330" for TSMC)
+            yyyymmdd: any date string within the target month (e.g.
+                "20260401" for April 2026)
+
+        Returns:
+            (raw response dict, cache_status) — see _normalize_stock_day
+            for field extraction downstream.
+        """
+        current_yyyymm = datetime.now().strftime("%Y%m")
+        target_yyyymm = yyyymmdd[:6]
+        ttl = TTL_DAILY if target_yyyymm == current_yyyymm else TTL_MONTHLY
+        url = (
+            f"{TWSE_RWD_BASE}/STOCK_DAY"
+            f"?date={yyyymmdd}&stockNo={ticker}&response=json"
+        )
+        return _cached_get(
+            url, f"stock_day_{ticker}_{target_yyyymm}.json", ttl=ttl,
+        )
+
 
 # ---------------------------------------------------------------------------
 # Envelope
 # ---------------------------------------------------------------------------
+
+def _roc_slash_to_gregorian(roc_slash: str) -> str | None:
+    """Convert '115/04/01' → '2026-04-01' (TWSE /rwd/ format uses slashes)."""
+    if not roc_slash:
+        return None
+    try:
+        parts = roc_slash.strip().split("/")
+        if len(parts) != 3:
+            return None
+        roc_y, mm, dd = int(parts[0]), int(parts[1]), int(parts[2])
+        return f"{roc_y + 1911:04d}-{mm:02d}-{dd:02d}"
+    except (ValueError, TypeError):
+        return None
+
+
+def _strip_number(s: str) -> float | None:
+    """Strip thousands separators + parse as float. '46,457,423' → 46457423.0.
+    Returns None on empty/unparsable (e.g. '--' no-data marker)."""
+    if s is None:
+        return None
+    try:
+        return float(str(s).replace(",", "").replace("+", "").strip())
+    except (ValueError, TypeError):
+        return None
+
+
+def _normalize_stock_day_rows(raw_month: dict) -> list[dict]:
+    """Convert one month's /rwd/ STOCK_DAY response into ta_client-friendly
+    OHLCV dicts (lowercase fields, Gregorian dates, parsed floats).
+
+    Input schema (from TWSE /rwd/):
+        fields: ["日期", "成交股數", "成交金額", "開盤價", "最高價",
+                 "最低價", "收盤價", "漲跌價差", "成交筆數", "註記"]
+        data: [["115/04/01", "46,457,423", ..., "1,840.00", "1,855.00",
+                "1,830.00", "1,855.00", "+95.00", "103,263", ""], ...]
+    Output: [{"date": "2026-04-01", "open": 1840.0, "high": 1855.0,
+              "low": 1830.0, "close": 1855.0, "volume": 46457423.0}, ...]
+    """
+    if raw_month.get("stat") != "OK":
+        return []
+    rows = raw_month.get("data") or []
+    out: list[dict] = []
+    for r in rows:
+        if not isinstance(r, list) or len(r) < 7:
+            continue
+        iso_date = _roc_slash_to_gregorian(r[0])
+        if not iso_date:
+            continue
+        close = _strip_number(r[6])
+        if close is None:  # skip rows with no Close price
+            continue
+        out.append({
+            "date": iso_date,
+            "open":   _strip_number(r[3]),
+            "high":   _strip_number(r[4]),
+            "low":    _strip_number(r[5]),
+            "close":  close,
+            "volume": _strip_number(r[1]),
+        })
+    return out
+
 
 def _extract_date(rows: list) -> str | None:
     """Extract ROC date from first row's Date/出表日期 field, convert to YYYY-MM-DD."""
@@ -498,6 +597,60 @@ def _run_action(args) -> dict:
             reference_period=ref, extra={"count": len(rows)},
         )
 
+    # ── TWSE historical OHLCV (v1.16.3+) ──
+    if action == "stock-day-history":
+        if not ticker:
+            raise SystemExit("--ticker required for stock-day-history")
+        months = getattr(args, "months", None) or 12
+        months = max(1, min(int(months), 60))  # 1..60 months clamp
+
+        today = datetime.now()
+        all_rows: list[dict] = []
+        any_miss = False
+        per_month_status: list[str] = []
+        for offset in range(months):
+            y = today.year
+            m = today.month - offset
+            while m <= 0:
+                m += 12
+                y -= 1
+            yyyymmdd = f"{y:04d}{m:02d}01"
+            try:
+                raw, cache = client.get_stock_day_history_month(ticker, yyyymmdd)
+            except TwseOpenApiError as e:
+                per_month_status.append(f"{y:04d}-{m:02d}=error:{e}")
+                continue
+            if cache == "miss":
+                any_miss = True
+            per_month_status.append(f"{y:04d}-{m:02d}={cache}")
+            all_rows.extend(_normalize_stock_day_rows(raw))
+
+        # Sort + de-dupe by date (months may overlap at month boundaries)
+        by_date: dict[str, dict] = {}
+        for r in all_rows:
+            by_date[r["date"]] = r
+        data = sorted(by_date.values(), key=lambda r: r["date"])
+
+        latest = data[-1] if data else None
+        return _envelope(
+            action, data, cache_status=("miss" if any_miss else "hit"),
+            prov_kwargs=TWSE_PROV,
+            reference_period=latest["date"] if latest else None,
+            extra={
+                "ticker": ticker,
+                "period": f"{months}mo",
+                "rows": len(data),
+                "latest_date": latest["date"] if latest else None,
+                "latest_close": latest["close"] if latest else None,
+                "_months_fetched": per_month_status,
+                "_endpoint": (
+                    "twse.com.tw/rwd/zh/afterTrading/STOCK_DAY "
+                    "(Tier A, not in openapi.twse.com.tw catalogue; "
+                    "month-granularity; discovered via stock-day.html 2026-04-19)"
+                ),
+            },
+        )
+
     raise SystemExit(f"Unknown action: {action}")
 
 
@@ -511,16 +664,23 @@ def register_mcp_tools(mcp) -> None:
     import types
 
     @mcp.tool()
-    def twse_openapi_fetch(action: str, ticker: str | None = None) -> dict:
+    def twse_openapi_fetch(
+        action: str, ticker: str | None = None, months: int | None = None,
+    ) -> dict:
         """Fetch data from TWSE + TPEx OpenAPI (primary source, zero-auth).
         Trading / market reference data only (not financial statements —
         use mops_fetch for those).
 
-        Actions (10 endpoints):
-          TWSE (上市, listed-price):
+        Actions (11 endpoints; required params in [brackets]):
+          TWSE (上市):
             - listed-companies (master list; ticker filters to one row)
             - daily-price-all (latest-session OHLCV snapshot for all stocks)
-            - daily-price (ticker required; filters daily-price-all)
+            - daily-price [ticker] (filters daily-price-all; snapshot only)
+            - stock-day-history [ticker, months=1..60] — **historical daily
+              OHLCV** via TWSE /rwd/ endpoint, Tier A. Defaults months=12.
+              Returns ta-ready {date, open, high, low, close, volume} rows
+              with Gregorian dates + parsed floats. Per-month cache; first
+              12-month fetch ~2-6s, cached replay <200ms.
             - pe-pb-yield (valuation ratios; ticker optional)
             - margin-balance (融資融券; ticker optional)
             - three-investor (top-20 QFII snapshot; NOT daily flow)
@@ -530,7 +690,9 @@ def register_mcp_tools(mcp) -> None:
             - tpex-daily-close (snapshot)
             - tpex-margin-balance
         """
-        args = types.SimpleNamespace(action=action, ticker=ticker)
+        args = types.SimpleNamespace(
+            action=action, ticker=ticker, months=months,
+        )
         try:
             return _run_action(args)
         except SystemExit as e:
@@ -546,6 +708,7 @@ def main():
         choices=[
             "listed-companies",
             "daily-price", "daily-price-all",
+            "stock-day-history",
             "pe-pb-yield",
             "margin-balance", "three-investor",
             "industry-eps", "ex-dividend-calendar",
@@ -553,6 +716,8 @@ def main():
         ],
     )
     parser.add_argument("--ticker", help="Taiwan stock ticker (e.g. 2330)")
+    parser.add_argument("--months", type=int, default=12,
+                        help="stock-day-history: months back (1-60, default 12)")
     parser.add_argument("--date", help="(reserved — OpenAPI returns latest only)")
     parser.add_argument("--no-cache", action="store_true",
                         help="Bypass cache for this run")

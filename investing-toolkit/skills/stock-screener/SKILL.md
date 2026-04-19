@@ -90,15 +90,29 @@ Launch `../../agents/data-fetcher.md` with two parallel batch requests:
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --tickers {ticker_list} --action info
 ```
 
+yfinance empirically covers all markets including TW `.TW` / `.TWO`
+with split-adjusted prices (TA standard). Verified 2026-04-19 across
+TSMC 2330.TW, 2317.TW Hon Hai, WIN Semi 3105.TWO, Global Unichip
+6488.TWO — all returned full history + info in TWD.
+
 Expected output:
 ```json
 {
-  "price_batch": {"tickers": {"AAPL": {...}, "MSFT": {...}}},
-  "info_batch":  {"tickers": {"AAPL": {...}, "MSFT": {...}}}
+  "price_batch": {"tickers": {"AAPL": {...}, "MSFT": {...}, "2330.TW": {...}}},
+  "info_batch":  {"tickers": {"AAPL": {...}, "MSFT": {...}, "2330.TW": {...}}}
 }
 ```
 
 If any ticker fails, continue with `_partial: true` — do not block.
+
+**Advanced — TW primary-source alternative**: when a specific call-site
+needs TWSE-raw (non-adjusted) OHLCV for Tier A memo citation, the
+`twse_openapi_client.py --action stock-day-history` action is
+available (v1.16.3+, per-ticker loop, month-granularity). For routine
+screening, yfinance batch is the right default — adjusted prices
+produce cleaner technical indicators than raw prices. See
+`taiwan-stock-snapshot` SKILL.md for when primary-source TW data
+matters (memo context) vs. screening (this skill).
 
 ---
 
