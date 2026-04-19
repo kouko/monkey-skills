@@ -23,7 +23,65 @@ FOMC 2% target adoption.
 **Partial updates (⚠️)**: CBO 2026 forecast = 4.6% unemp (from earlier
 4.5-4.6%); FOMC Dec 2025 SEP full specs inserted.
 
-**Next recalibration**: March 2026 (Q1 SEP + CBO Outlook refresh).
+### v1.11.0 addendum (2026-04-19)
+
+Delta refresh since v1.9.0 (2026-04-18) vintage. Not a full re-audit
+— only changes captured.
+
+🔴 **FOMC March 2026 SEP — longer-run nominal median revised UP**:
+3.0% (Dec 2025) → **3.1%** (Mar 18 2026); implied **real longer-run
+median: 1.0% → ~1.1%**. Central tendency shifted to ~2.8-3.6%, full
+range 2.625-3.875%. Powell attributed to higher productivity
+expectations (AI data-center buildout raising short-term neutral).
+End-2026 fed funds median unchanged at 3.4%; 2027/2028 medians at
+3.1%. Supply-side shock (Middle East war, mid-Feb 2026) cited for
+inflation upside + growth downside in projections. (Source:
+https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260318.htm)
+
+🔴 **QT officially ended 2025-12-01** (prior draft's "balance sheet
+runoff status" framing outdated). Fed now in "active reserve
+management" phase; first Reserve Management Purchases (RMPs)
+expected 2026-Q2 — **technical**, not stimulative. Balance sheet
+floor ~$6.58T. (Source: Comerica / Connect Money commentary; Fed
+statement 2025-10-29 announcement.)
+
+⚠️ **Powell succession — acting-chair fight active**: Powell's chair
+term ends **2026-05-15**. Trump nominated Kevin Warsh; confirmation
+stalled (Sen. Tillis won't vote until DOJ probe concludes). Trump
+threatening to fire Powell next month if he doesn't voluntarily
+vacate. Acting-chair scenario now live risk. Powell's **governor**
+term runs to Jan 2028 — he could remain on Board. This is a
+regime-level credibility/independence risk not captured in v1.9.0.
+(Sources: https://www.washingtonpost.com/business/2026/04/14/trump-fed-acting-chairman-delay/,
+https://www.cnbc.com/2026/04/15/trump-threatens-to-fire-powell-if-the-fed-chair-doesnt-leave-office-on-his-own.html)
+
+⚠️ **HLW r\* still ~1% real** (Liberty Street 2026-04 "R*–Labor Share
+Nexus" post; HLW estimates current through 2025-Q4). No 2026-Q1
+estimate yet published — next update expected ~mid-May 2026 per
+quarterly cadence. Prior draft's "~0.75%" was 2025-Q4 specific;
+current NY Fed summary states HLW ~1%.
+(Source: https://libertystreeteconomics.newyorkfed.org/2026/04/the-r-labor-share-nexus/)
+
+⚠️ **LM r\* = 1.68% real (unchanged from 2025-Q4)**: Richmond Fed
+page not yet updated to Q1 2026 as of 2026-04-19 (updates typically
+lag ~2 months from quarter-end). Prior draft figure stands.
+
+**Verified unchanged**: FIT framework (since 2025-08); 2% PCE
+symmetric target; 4-tier DFII band structure; CBO NROU 4.4% anchor;
+Williams "modestly restrictive" qualitative stance; dual-mandate
+structure.
+
+**New primary-source URLs**:
+- https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260318.htm
+- https://www.federalreserve.gov/mediacenter/files/FOMCpresconf20260318.pdf
+- https://libertystreeteconomics.newyorkfed.org/2026/04/the-r-labor-share-nexus/
+- https://libertystreeteconomics.newyorkfed.org/2026/02/the-post-pandemic-global-r/
+
+See `../research/grounding-v1.11.0.md` (to be written in next commit)
+for consolidated cross-country audit.
+
+**Next recalibration**: June 2026 (Q2 SEP 2026-06-17 + CBO mid-year
+update; possible acting-chair transition).
 
 ---
 
