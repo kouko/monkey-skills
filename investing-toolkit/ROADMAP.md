@@ -366,7 +366,7 @@ Pattern ported from Anthropic's `financial-services-plugins/partner-built/lseg/s
 
 ---
 
-## v1.10.0 — PMI + JP real rates + swap spread (current)
+## v1.10.0 — PMI + JP real rates + swap spread
 
 **Scope**: Closes three data-coverage gaps from v1.9.0 deferred list —
 ISM-substitute PMI in us-macro (OECD CLI proxy), full JP real-rate
@@ -424,27 +424,109 @@ swap-spread sub-blocks.
 - [x] `ROADMAP.md` — this v1.10.0 entry; v1.9.0 de-marked as (current).
 - [x] `.claude-plugin/plugin.json` — 1.9.0 → 1.10.0.
 
-### Deferred to v1.11.0 (next major candidate)
+### Deferred → partially delivered in v1.11.0
+
+- CN Caixin PMI via akshare (eastmoney-backed) + NBS PMI via `nbs_client`
+  **delivered** in v1.11.0 `china-macro.pmi` group (5 presets)
+- TW Manufacturing PMI + NMI **delivered** in v1.11.0 `taiwan-macro.pmi`
+  group via NDC 政府資料開放 dataset 6100 (free-tier access discovered
+  during APAC probe)
+
+---
+
+## v1.11.0 — Cross-country consistency refresh (current)
+
+**Scope**: Addresses v1.10.0 PMI asymmetry (1 / 5 countries live) +
+grounding vintage drift (v1.9.0 baseline 2026-04-18 needed 2026-Q2
+refresh for CN Work Report + BOJ 2026-01/03 holds). Closes Block 1
+PMI row gap for CN + TW via free-tier sources; formalises JP + KR
+URL-only status (both S&P Global licensed, no free path).
+
+### Phase 1 — china-macro `pmi` group (Caixin + NBS)
+- [x] `scripts/akshare_client.py` — `caixin-mfg-pmi` + `caixin-svc-pmi`
+  via `index_pmi_man_cx` / `index_pmi_ser_cx` (eastmoney-backed; fresh
+  endpoint distinct from 2026-04-18 excluded investing.com route)
+- [x] `china-macro` new `pmi` group: 5 presets (2 Caixin via akshare +
+  3 NBS `pmi-manufacturing` / `pmi-non-manufacturing` / `pmi-composite`
+  via existing nbs_client, regrouped from legacy `sentiment`)
+- [x] `references/indicators-pmi.md` — NBS ≥3000 incl. SOE vs Caixin ~430
+  SME/民企 methodology contrast + 1-2mo Caixin-leads-NBS lag around
+  turning points + 2015/2020-02/2022-04/2024-25 regime-shift sampling
+- [x] Indicator count 34 → 36; akshare preset count 6 → 8
+
+### Phase 2 — APAC PMI probes (TW live; JP/KR URL-only)
+- [x] `taiwan-macro` new `pmi` group — `pmi-mfg` + `pmi-nmi` via
+  `ndc_client.py` dedicated CSV endpoint (NDC 政府資料開放平臺 dataset
+  6100, 政府資料開放授權條款第1版 CC BY-equivalent). Indicator count
+  30 → 32. New `references/indicators-pmi.md`.
+- [x] `japan-macro` — "PMI (URL reference only)" subsection added
+  linking to S&P Global press releases; BOJ Tankan 業況判断DI noted
+  as closest free sentiment proxy
+- [x] `korea-macro` — "PMI (URL reference only)" subsection added
+  linking to S&P Global Korea press release; CSI (K252) + ESI (K269)
+  + business-cycle CI (K253/K254) noted as closest free proxies
+
+### Phase 3 — CN + JP full grounding refresh (2026-Q2 vintage)
+- [x] `thresholds-china.md` — 2026 Work Report GDP 4.5-5% range;
+  LPR-1Y/5Y vintage refresh; 16 🔴 + 9 ⚠️ CN+JP corrections
+- [x] `thresholds-japan.md` — BOJ held 0.75% 2026-01 + 2026-03;
+  JILPT NAIRU refresh; Tankan 2026-Q1 vintage
+
+### Phase 4 — US + TW + KR grounding delta addenda
+- [x] `thresholds-us.md` — FOMC SEP long-run real r* 3.0 → 3.1%
+- [x] `thresholds-taiwan.md` — CBC held 2.00% 2026-Q1
+- [x] `thresholds-korea.md` — BOK 7-consecutive hold confirmation
+- [x] 2 🔴 + 8 ⚠️ delta corrections across US/TW/KR
+
+### Phase 5 — Consolidated audit trail
+- [x] `skills/macro-regime-snapshot/research/grounding-v1.11.0.md`
+  — 299-line consolidated audit trail covering all 5 countries
+  (full CN + JP re-audit + US/TW/KR delta); 16 🔴 + 17 ⚠️ total
+
+### Phase 6 — Plugin-level integration + sync
+- [x] `skills/macro-regime-snapshot/SKILL.md` — Block 1 PMI row CN + TW
+  promoted from N/A → live (citing preset names); Data Source
+  Architecture section expanded with 5×9 cross-country coverage grid
+  (Growth / Inflation / Policy rate / Yield curve / Real rate / PMI /
+  Swap spread / FX / Equity). Consolidated into existing section per
+  spec §3.6 Option X (replaces standalone coverage-matrix.md)
+- [x] `skills/using-investing-toolkit/SKILL.md` — china-macro /
+  taiwan-macro / macro-regime-snapshot rows bumped to v1.11.0
+- [x] `README.md` — v1.11.0 Version Highlights prepended; Skills
+  table updates
+- [x] `ROADMAP.md` — this v1.11.0 entry
+- [x] `.claude-plugin/plugin.json` — 1.10.0 → 1.11.0
+
+### Deferred to v1.12.0+ candidates (carried forward)
+
+- **KR KTBi real-rate via BOK ECOS API key** — free registration at
+  ecos.bok.or.kr/api/#/AuthKeyApply; unlocks lagging CI 후행지수 +
+  10K series concurrently (unchanged from v1.11.0 deferred)
+- **JP au Jibun Bank / KR S&P Global Korea PMI licensed access** —
+  both S&P Global licensed; no free-tier machine-readable path
+  available; formalised as URL-only in v1.11.0
+- **Full 5-parallel grounding re-audit (target ~2026-Q3)** — next
+  full sweep on the cadence documented in `references/recalibration-
+  protocol.md`
+- **ISM PMI via FRED NAPM** — still blocked by 2016 FRED delisting;
+  awaits hypothetical relicensing
+
+### REJECTED — architecturally inconsistent
 
 - **Full MoF 連動係数 + QuantLib CPIBond YTM solver for daily JGBi
-  real yield** — Bloomberg-grade ±5bp accuracy, 5-7 working days scope,
-  dedicated PR with primary-source grounding audit. v1.10.0 ships the
-  C+D+E multi-source anchor; v1.11.0 would upgrade to full indexation-
-  ratio-adjusted YTM via QuantLib `CPIBond` class.
-
-### Deferred to v1.11.x / v1.12.0 candidates (carried forward)
-
-- **KR KTBi real-rate** — BOK ECOS API key required (free registration at
-  ecos.bok.or.kr/api/#/AuthKeyApply); unlocks lagging CI 후행지수 +
-  10K series concurrently
-- **JP Jibun Bank PMI** — licensed S&P Global access needed for
-  machine-readable feed (URL-only reference in v1.10.0 Block 1)
-- **CN Caixin PMI via akshare** — mirror availability pending re-probe
-  (2 presets removed in v1.6.0 after 8-month stale window)
-- **TW + KR domestic PMI scrapers** — 製造業採購經理人指數 (中經院) /
-  기업경기실사 (BOK); custom scraper per source
-- **ISM PMI via FRED NAPM** — blocked by 2016 FRED delisting; awaits
-  hypothetical relicensing
+  real yield** — originally deferred from v1.10.0 to v1.11.0 as "next
+  major candidate". **Rejected during v1.11.0 brainstorming audit**:
+  would make `japan-macro` the only bond-math country among the 5
+  country-macro skills (US/JP/TW/KR/CN), violating the explicit
+  "country-macro = pure data layer" discipline documented in
+  `CLAUDE.md` Cross-Plugin Delegation Contract §3
+  ("Data layer stays in toolkit, analysis layer stays in domain-teams").
+  Bond-math solvers (YTM, duration-adjusted real-yield inversion) are
+  an analysis-layer concern and belong in `domain-teams:investing-team`
+  if pursued. v1.10.0 C+D+E multi-source anchor (ECB monthly ex-post +
+  BOJ Tankan + MoF JGBi auction) is the permanent JP real-rate shape.
+  Preserved here as a historical roadmap entry so the decision is
+  discoverable.
 
 ---
 

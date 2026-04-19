@@ -227,13 +227,43 @@ multi-country. See **Output Format** below.
 
 ## Data Sources
 
+### Per-country fetch matrix
+
 | Country | Via skill | Free | Notes |
 |---------|-----------|------|-------|
-| US | `us-macro` (29+ FRED series) | ✓ | v1.9.0 `real-rates` (T5YIE/T10YIE/DFII5/DFII10) + v1.10.0 `pmi` (OECD CLI `USALOLITOAASTSAM`) + `swap-spreads` (DGS3MO − SOFR30DAYAVG) |
-| Japan | `japan-macro` (22+ BOJ + e-Stat series) | ✓ | 景気動向指数 CI trio + v1.10.0 `real-rates` group (ECB ex-post monthly + BOJ Tankan + JGBi auction history) |
-| Taiwan | `taiwan-macro` (30 series, 4 scripts) | ✓ | NDC 景氣燈號 pre-aggregated |
-| Korea | `korea-macro` (54 series via BOK ECOS-KEYSTAT) | ✓ | K253 CI pre-aggregated |
-| China | `china-macro` (34 series, NBS + PBOC) | ✓ | 三大数据 raw components |
+| US | `us-macro` (31 FRED series) | ✓ | v1.9.0 `real-rates` (T5YIE/T10YIE/DFII5/DFII10) + v1.10.0 `pmi` (OECD CLI `USALOLITOAASTSAM`) + `swap-spreads` (DGS3MO − SOFR30DAYAVG) |
+| Japan | `japan-macro` (27 presets / 10 groups) | ✓ | 景気動向指数 CI trio + v1.10.0 `real-rates` group (ECB ex-post monthly + BOJ Tankan + JGBi auction history); PMI URL-only |
+| Taiwan | `taiwan-macro` (32 indicators, 4 scripts) | ✓ | NDC 景氣燈號 pre-aggregated + v1.11.0 `pmi` group (`pmi-mfg` / `pmi-nmi` via `ndc_client` CSV, 政府資料開放授權條款第1版) |
+| Korea | `korea-macro` (54 series via BOK ECOS-KEYSTAT) | ✓ | K253 CI pre-aggregated; PMI URL-only (S&P Global licensed) |
+| China | `china-macro` (36 indicators, NBS + PBOC + FRED + yfinance) | ✓ | 三大数据 raw components + v1.11.0 `pmi` group (Caixin via akshare + NBS via `nbs_client`, primary-source preferred) |
+
+### Cross-country coverage grid (v1.11.0)
+
+Per-country availability for the 9 signals this skill consumes. ✅ = fetched
+via a free primary source (preset/group cited); ⚠️ = partial / proxy /
+URL-only; ❌ = not available. Cross-link to `thresholds-{country}.md`
+for per-country regime calibration (targets, bands, r*, structural caveats).
+
+| Signal | US (`us-macro`) | JP (`japan-macro`) | TW (`taiwan-macro`) | KR (`korea-macro`) | CN (`china-macro`) |
+|--------|-----------------|--------------------|---------------------|--------------------|--------------------|
+| Growth proxy (monthly GDP) | ✅ `nowcast.CFNAI` + `WEI` | ✅ `coincident-index` (内閣府 CI) | ✅ `cycle.signal` (NDC 五色燈號) | ✅ `cycle.coincident-cycle` K253 | ⚠️ `growth.industrial-yoy` primary + 3-component overlay (no consensus composite; see thresholds-china.md) |
+| Inflation (CPI YoY) | ✅ `inflation.CPIAUCSL` | ✅ `inflation.cpi-all-items` | ✅ `inflation.cpi-yoy` | ✅ `inflation.K401` | ✅ `inflation.cpi-yoy` |
+| Policy rate | ✅ `rates.DFEDTARU` | ✅ `rates.policy-rate` | ✅ `rates.rediscount-rate` | ✅ `rates.base-rate` K041 | ✅ `rates.lpr-1y` + `lpr-5y` |
+| Yield curve (2s10s) | ✅ `rates.DGS2` + `DGS10` | ✅ `rates.jgb-2y` + `jgb-10y` | ⚠️ CBC 5Y/10Y (no 2Y benchmark; short end via `rediscount-rate`) | ✅ `rates.ktb-3y` + `ktb-10y` | ⚠️ CGB 10Y via akshare (2Y sparse; short end via SHIBOR 3M) |
+| Real rate (market) | ✅ `real-rates` (T5YIE/T10YIE/DFII5/DFII10) | ✅ `real-rates` C+D+E (ECB monthly + Tankan + JGBi auction) | ❌ no public CPI-linker market | ❌ KR KTBi requires BOK ECOS API key (deferred) | ❌ no public CPI-linker market |
+| PMI | ✅ `pmi.USALOLITOAASTSAM` (OECD CLI proxy) | ⚠️ URL-only (au Jibun Bank / S&P Global licensed); Tankan DI as free proxy | ✅ `pmi.pmi-mfg` + `pmi-nmi` (v1.11.0 new, NDC 政府資料開放) | ⚠️ URL-only (S&P Global licensed); CSI/ESI/CI as free proxy | ✅ `pmi` group — Caixin mfg/svc + NBS mfg/non-mfg/composite (v1.11.0 new) |
+| Swap spread (money-mkt stress) | ✅ `swap-spreads` (DGS3MO − SOFR30DAYAVG) | ❌ no equivalent free-tier SOFR-like benchmark | ❌ no equivalent | ❌ no equivalent | ❌ no equivalent |
+| FX | ✅ DXY via yfinance (implicit) | ✅ `forex.usd-jpy` | ✅ `forex.usd-twd` (CBC) | ✅ `fx.krw-usd` K151 | ✅ `fx.cny-usd` (FRED DEXCHUS fallback) |
+| Equity | ✅ S&P 500 via yfinance | ✅ TOPIX / N225 via yfinance | ✅ TAIEX via yfinance | ✅ KOSPI via yfinance | ✅ CSI300 via yfinance |
+
+**Grid legend — read together with**:
+- `references/thresholds-us.md` / `thresholds-japan.md` / `thresholds-taiwan.md`
+  / `thresholds-korea.md` / `thresholds-china.md` for per-country calibration
+  (inflation targets, NAIRU, r*, structural notes)
+- `references/investment-clock-cheatsheet.md` for IC + GIP framework +
+  signal-label semantics
+- `research/grounding-v1.11.0.md` for the latest 2026-Q2 vintage audit
+  trail (16 🔴 + 17 ⚠️ corrections across 5 countries)
 
 Reference framework: `references/investment-clock-cheatsheet.md`.
 
@@ -253,14 +283,28 @@ Reference framework: `references/investment-clock-cheatsheet.md`.
 | CPI YoY | …% | …% | Rising / Falling | Above target / At target / Below target |
 | Unemployment | …% | …% | Rising / Falling | Tight / Balanced / Slack |
 | Policy rate | …% | …% | — | Accommodative / Neutral / Restrictive |
-| PMI / Business cycle | US: OECD CLI amplitude ; JP/TW/KR/CN: N/A (see URL cross-reference) | … | Rising / Flat / Falling | Expansion / Near-neutral / Contraction (US); URL-only (others) |
+| PMI / Business cycle | US: OECD CLI amplitude ; TW: PMI/NMI live ; CN: Caixin+NBS live ; JP/KR: URL-only | … | Rising / Flat / Falling | Expansion / Near-neutral / Contraction |
 
-**PMI per-country data availability**:
-- **US**: OECD CLI (`USALOLITOAASTSAM`) fetched via `us-macro` → `pmi` group (ISM / S&P Global not on FRED)
-- **JP**: Jibun Bank Composite PMI — licensed; URL reference only (https://www.pmi.spglobal.com/ or https://www.jibunbank.co.jp/)
-- **TW**: 中経院 (CIER) PMI / 中華採購與供應管理協會 PMI — URL only (https://www.cier.edu.tw/)
-- **KR**: 한국경제연구원 (KERI) BSI / S&P Global Korea PMI — URL only
-- **CN**: Caixin Manufacturing + NBS 官方 PMI — v1.11.0+ candidate (akshare); v1.10.0 N/A with URL reference
+**PMI per-country data availability (v1.11.0)**:
+- **US**: OECD CLI (`USALOLITOAASTSAM`) fetched via `us-macro` → `pmi` group
+  (ISM / S&P Global not on FRED)
+- **JP**: au Jibun Bank Manufacturing / Services / Composite PMI — licensed by
+  S&P Global; URL reference only (https://www.pmi.spglobal.com/ or
+  https://www.jibunbank.co.jp/). BOJ Tankan 業況判断DI is the closest free
+  sentiment proxy — see `japan-macro` → `tankan` group
+- **TW**: Manufacturing PMI + Non-Manufacturing NMI via `taiwan-macro` →
+  `pmi` group (presets `pmi-mfg` + `pmi-nmi`; NDC 政府資料開放平臺
+  dataset 6100 under 政府資料開放授權條款第1版 CC BY-equivalent).
+  New v1.11.0 — unexpected free-tier access surfaced during APAC probe
+- **KR**: S&P Global South Korea Manufacturing PMI — licensed by S&P
+  Global; URL reference only. Consumer-sentiment (K252) + ESI (K269) +
+  business-cycle CI (K253/K254) are the closest free proxies —
+  see `korea-macro` → `sentiment` + `cycle` groups
+- **CN**: Caixin Manufacturing + Services + NBS 官方 mfg / non-mfg / composite
+  PMI via `china-macro` → `pmi` group. v1.11.0 **new** — 5 presets total:
+  `caixin-mfg-pmi` / `caixin-svc-pmi` (akshare eastmoney-backed) +
+  `pmi-manufacturing` / `pmi-non-manufacturing` / `pmi-composite` (NBS
+  official via `nbs_client`; primary-source preferred for headline regime call)
 
 Signal thresholds + direction classification: see `references/investment-clock-cheatsheet.md`
 § "PMI Signal Glossary (v1.10.0)".
@@ -348,10 +392,12 @@ that implies (e.g. "US in Phase 2 Overheat while CN in Phase 4 Reflation
 - **Swap-spread block (v1.10.0)**: US-only T-Bill 3M − SOFR30DAYAVG
   money-market liquidity proxy (NOT a full term swap spread — that
   requires licensed data). No equivalent free benchmark for JP/TW/KR/CN.
-- **PMI coverage (v1.10.0)**: US only via OECD CLI (`USALOLITOAASTSAM`)
-  as proxy — ISM / S&P Global not on FRED. JP/TW/KR/CN kept as URL-only
-  references (licensed / out-of-scope); CN Caixin + NBS PMI via akshare
-  is a v1.11.0+ candidate.
+- **PMI coverage (v1.11.0)**: US via OECD CLI proxy (`USALOLITOAASTSAM`) +
+  TW via NDC 政府資料開放 (`pmi-mfg` / `pmi-nmi`, new v1.11.0) + CN via
+  Caixin (akshare) + NBS (`nbs_client`) `pmi` group (new v1.11.0). JP
+  (au Jibun Bank / S&P Global) + KR (S&P Global Korea) remain URL-only —
+  both licensed by S&P Global with no free-tier machine-readable path.
+  Block 1 PMI row live coverage: 3 / 5 countries (was 1 / 5 in v1.10.0).
 - **CN no consensus composite**: `industrial-yoy` is the primary Growth
   proxy but the 4 components (industrial/retail/fai/services) often
   disagree month-to-month — flag in output when they diverge > 2%.
@@ -377,6 +423,10 @@ Framework + country calibration:
   for 5-country threshold calibration (2026-04-18, 5 parallel
   native-language grounding agents; found & fixed 19 🔴 + 16 ⚠️
   corrections across US/JP/TW/KR/CN)
+- `research/grounding-v1.11.0.md` — **2026-Q2 vintage refresh** —
+  CN + JP full re-audit (16 🔴 + 9 ⚠️); US + TW + KR delta addenda
+  (2 🔴 + 8 ⚠️). Consolidated 299-line audit trail covering v1.11.0
+  cross-country consistency refresh.
 - `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW
   / Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
 - `references/thresholds-japan.md` — BOJ 2% target (no band), JILPT
