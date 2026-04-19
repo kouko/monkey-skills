@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.15.0
+**Version**: 1.16.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -179,6 +179,27 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.16.0 (2026-04-19) — Complete MCP tool surface
+
+Wraps the 8 remaining data-fetching scripts deferred from v1.14.0 as
+MCP tools so Cowork users aren't blocked on macro / regime work.
+Every primary data adapter in the toolkit is now MCP-addressable.
+
+- **JP macro MCP tools** (Commit 1): `boj_fetch`, `boj_tankan_inflation_outlook`,
+  `ecb_series`, `estat_fetch`, `estat_search`.
+- **TW macro MCP tools** (Commit 2): `cbc_fetch`, `dgbas_fetch`,
+  `ndc_fetch`, `statgov_fetch`.
+- **KR macro MCP tool** (Commit 3): `fdr_fetch` (BOK ECOS-KEYSTAT 54
+  indicators / 13 groups).
+- **Central registry** (Commit 4): `servers/mcp_server.py` imports 18
+  clients / exposes 29 tools. Contract tests updated; 3 pass.
+- **Session token cost**: ~4.4K (29 × 150) — below the v1.14.0 5K-split
+  threshold; core/extras MCP split still deferred.
+
+**Known non-goals**: `ta_client.py` NOT wrapped because it transforms
+OHLCV locally rather than fetching external data (compose with
+`yfinance_history` and run the CLI transform if MCP callers need it).
 
 ### v1.15.0 (2026-04-19) — Japan individual-stock skill (Path γ complete)
 
