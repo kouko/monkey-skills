@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.9.0
+**Version**: 1.10.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -53,15 +53,15 @@ router):
 
 | Skill | Layer | Purpose | Status |
 |-------|-------|---------|--------|
-| `us-macro` | data | US macro via FRED (29 series incl. `nowcast` + new `real-rates` group) | v1.9.0 |
-| `japan-macro` | data | Japan macro via BOJ + e-Stat (22 presets incl. 景気動向指数 CI trio) | v1.7.0 |
+| `us-macro` | data | US macro via FRED (~31 series, 14 groups incl. new `pmi` [OECD CLI] + new `swap-spreads` [T-SOFR 3M]) | v1.10.0 |
+| `japan-macro` | data | Japan macro via BOJ + e-Stat + ECB + MoF auction (27 presets / 10 groups incl. new `real-rates` group, C+D+E multi-source) | v1.10.0 |
 | `taiwan-macro` | data | Taiwan macro via stat.gov.tw + CBC + DGBAS + NDC (30 indicators) | v1.4.0 |
 | `korea-macro` | data | Korea macro via FinanceDataReader BOK ECOS-KEYSTAT (**54 indicators, 13 groups** incl. monthly `industry` activity layer; full 98-code catalogue in `docs/`) | v1.8.1 |
 | `china-macro` | data | China macro via NBS new-SPA API + PBOC + FRED + yfinance (34 indicators) | v1.7.1 |
 | `us-stock-snapshot` | data | yfinance price + info for US tickers | v1.0.0 |
 | `taiwan-stock-snapshot` | data | FinMind Taiwan data (三大法人, 月營收, 融資融券, 董監持股) | v1.1.0 |
 | `technical-snapshot` | data | RSI / MACD / Bollinger / ATR / SMA via `ta_client.py` | v1.2.0 |
-| `macro-regime-snapshot` | aggregation | 5-country IC + GIP regime call (US/JP/TW/KR/CN) + real-rate block (US) with LSEG-style signal labels | v1.9.0 |
+| `macro-regime-snapshot` | aggregation | 5-country IC + GIP (US/JP/TW/KR/CN) + Rate Stress Dashboard (US real-rate + JP real-rate C+D+E + US swap spread, all tagged v1.10.0) | v1.10.0 |
 | `stock-screener` | aggregation | Batch screener — valuation + momentum + trend composite score | v1.2.0 |
 | `dcf-valuation` | aggregation | 3-stage DCF + sensitivity table | v1.0.0 |
 | `invest-portfolio` | aggregation | Portfolio review — P&L + regime overlay + rebalance | v1.2.0 |
@@ -179,7 +179,26 @@ Plugin-level cross-market references (complement the per-skill references):
 
 ## Version Highlights
 
-- **v1.9.0** (current) — macro-regime-snapshot 5-country refresh (US/JP/TW/KR/CN) + LSEG-style 5-block dashboard (Macro Summary / Yield Curve / Real Rate / IC+GIP Regime / Asset-Class Tilts) + new US `real-rates` group in us-macro (T5YIE / T10YIE / DFII5 / DFII10 — real-rate decomposition block). Adds signal-label semantics (Expansion/Contraction, Accommodative/Restrictive, etc.)
+### v1.10.0 (2026-04-19) — PMI + JP real rates + swap spread
+
+Closes three data-coverage gaps from v1.9.0 deferred list:
+- **us-macro**: new `pmi` group (OECD CLI USALOLITOAASTSAM as FRED-available
+  proxy — ISM/S&P Global removed from FRED in 2016 per St. Louis Fed blog)
+  + new `swap-spreads` group (Treasury-SOFR 3M spread as money-market
+  liquidity proxy — post-LIBOR FRED has no clean term swap series)
+- **japan-macro**: new `real-rates` group via C+D+E multi-source framework
+  (MoF JGBi auction anchor + ECB monthly ex-post + BOJ Tankan 1Y/3Y/5Y
+  expected inflation). JSDA YTM solver deferred to v1.11.0 after probe
+  confirmed JSDA masks JGBi yields (999.999 sentinel). Added `ecb_client.py`
+  and extended `boj_client.py` for Tankan.
+- **macro-regime-snapshot**: Block 1 PMI row per country (US fetched;
+  JP/TW/KR/CN URL-only). Block 3 renamed "Rate Stress Dashboard" with
+  JP real-rate sub-block and US swap spread sub-block.
+- **research**: new `grounding-v1.10.0.md` documenting primary-source
+  vetting for 3 new JP data sources (MoF auction / ECB SDMX / BOJ Tankan)
+  plus rejection rationale for JSDA / JBTS paths.
+
+- **v1.9.0** — macro-regime-snapshot 5-country refresh (US/JP/TW/KR/CN) + LSEG-style 5-block dashboard (Macro Summary / Yield Curve / Real Rate / IC+GIP Regime / Asset-Class Tilts) + new US `real-rates` group in us-macro (T5YIE / T10YIE / DFII5 / DFII10 — real-rate decomposition block). Adds signal-label semantics (Expansion/Contraction, Accommodative/Restrictive, etc.)
 - **v1.8.1** — Korea-macro monthly industry activity layer (43 → 54 indicators; new `industry` group: K201-K217 sector activity — manufacturing inventory/shipment/operating-rate, services production, retail sales, wholesale-retail, credit-card usage, machinery orders, capital-goods output, construction completion/orders)
 - **v1.8.0** — Korea-macro catalogue + structural refactor + 15 Tier-B presets (28 → 43 indicators)
 - **v1.7.3** — Taiwan + Korea monthly GDP proxy tagging (5-market framework complete)

@@ -41,8 +41,13 @@ Invokes `skills/macro-regime-snapshot/SKILL.md`.
   (NBS + PBOC via akshare).
 - All data sources are free — no API keys required for core operation.
   `FRED_API_KEY` optional for higher US rate limits.
-- Real-rate block (Block 3) is US-only in v1.9.0. JP JGBi / KR KTBi
-  real-rates deferred to v1.10.0+.
+- Block 3 renamed "Rate Stress Dashboard" in v1.10.0: 3a Real Rate
+  Decomposition covers US (unchanged from v1.9.0) + JP (new via
+  C+D+E: MoF JGBi auction anchor + ECB monthly ex-post + BOJ Tankan
+  期待インフレ). 3b Swap Spread (Treasury-SOFR 3M proxy) is US-only.
+  TW has no free linker market; KR KTBi deferred to v1.11.0+ (ECOS
+  API key); CN has no linker market. Full MoF 連動係数 + QuantLib
+  YTM solver for daily JGBi real yield = v1.11.0 candidate.
 - Publication lags: CPI ~2-3 weeks, monthly GDP proxies ~3-6 weeks
   after reference month. Always cite reference dates in Confidence Note.
 - For full analysis with investment verdict → use `/invest-memo` or

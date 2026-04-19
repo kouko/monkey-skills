@@ -3,9 +3,9 @@ name: us-macro
 description: >-
   Fetch US macroeconomic and sector-level indicators via FRED CSV. Data layer
   only — no analysis or regime mapping. Returns structured JSON with latest
-  values and direction for 12 indicator groups: rates, inflation, growth,
-  nowcast, real-rates, housing, industrials, energy, financials, consumer,
-  tech, and ppi.
+  values and direction for 14 indicator groups: rates, inflation, growth,
+  nowcast, real-rates, pmi, swap-spreads, housing, industrials, energy,
+  financials, consumer, tech, and ppi.
   Designed for handoff to macro-regime-snapshot (IC/GIP mapping) or
   domain-teams:investing-team (sector ETF analysis).
   米国マクロ・セクター指標取得。美國總經與產業指標擷取。
@@ -14,10 +14,16 @@ description: >-
 # US Macro
 
 Fetches US macroeconomic and sector-level indicators from FRED and outputs
-structured JSON. Covers 29 series across 12 groups: 5 core macro groups
-(rates, inflation, growth, nowcast, real-rates) and 7 sector groups
-(housing, industrials, energy, financials, consumer, tech, ppi) mapped to
-sector ETFs. This skill is
+structured JSON. Covers 31 distinct series across 14 groups: 7 core macro
+groups (rates, inflation, growth, nowcast, real-rates, pmi, swap-spreads)
+and 7 sector groups (housing, industrials, energy, financials, consumer,
+tech, ppi) mapped to sector ETFs. The `pmi` group shares `USALOLITOAASTSAM`
+with `nowcast` as the OECD CLI proxy for the FRED-unavailable ISM / S&P
+Global PMI (see `references/us-macro-indicators.md` "PMI" section). The
+`swap-spreads` group uses `DGS3MO − SOFR30DAYAVG` as a money-market
+liquidity proxy after post-LIBOR (2023-06) cessation removed FRED's clean
+term-structure USD swap series — see `references/us-macro-indicators.md`
+"Swap Spread / Money-Market Liquidity" section. This skill is
 **data-only** — it does not analyze, map to regimes, or generate investment
 verdicts. The output is designed for immediate handoff to
 `macro-regime-snapshot` for IC/GIP regime mapping, or to
@@ -35,7 +41,7 @@ symmetric framework for monthly GDP tracking.
 
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
-| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `nowcast`, `real-rates`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
+| `--indicators` | no | `all` | Comma-separated group names: `rates`, `inflation`, `growth`, `nowcast`, `real-rates`, `pmi`, `swap-spreads`, `housing`, `industrials`, `energy`, `financials`, `consumer`, `tech`, `ppi`, or `all` |
 
 ---
 
@@ -92,6 +98,43 @@ Restrictive / `≥ 1.75%` Clearly Restrictive. Calibrated against HLW r*
 speeches). See `references/us-macro-indicators.md` "Real Rates" section
 and `../macro-regime-snapshot/references/investment-clock-cheatsheet.md`
 "Threshold provenance" for full audit.
+
+### pmi (OECD CLI cycle-phase proxy for manufacturing/services PMI)
+
+| Series | Name | Frequency |
+|--------|------|-----------|
+| USALOLITOAASTSAM | OECD Composite Leading Indicator (USA, amplitude-adjusted) — PMI proxy | Monthly |
+
+FRED does **not** host ISM PMI (removed June 2016) or S&P Global / Markit
+PMI (S&P Global licenses commercially, not on FRED). OECD CLI
+(`USALOLITOAASTSAM`) is the FRED-available leading-indicator proxy —
+same underlying cycle signal, different construction (amplitude-adjusted
+composite of cyclical series, NOT a diffusion index).
+Signal thresholds (OECD CLI calibration, NOT the ISM 50-point threshold):
+`> 100 & rising` Expansion / `> 100 & falling` Pre-peak / `< 100 & falling`
+Contraction / `< 100 & rising` Recovery. Series is shared with the
+`nowcast` group (single fetch, two logical groupings). For real ISM / S&P
+Global PMI readings, cross-check manually against ISM and S&P Global
+press releases — see `references/us-macro-indicators.md` "PMI" section.
+
+### swap-spreads (Treasury-SOFR 3M money-market liquidity proxy)
+
+| Series | Name | Frequency |
+|--------|------|-----------|
+| DGS3MO | 3-Month Treasury Constant Maturity yield | Daily |
+| SOFR30DAYAVG | 30-Day Average Secured Overnight Financing Rate | Daily |
+
+Computed: Treasury-SOFR 3M spread = `DGS3MO − SOFR30DAYAVG` (in bps). This
+is a **money-market / short-end liquidity stress gauge**, NOT a full 10Y
+term swap spread. Post-LIBOR (2023-06 cessation), FRED's clean term-
+structure USD swap rate series discontinued; SOFR-OIS term swap curves
+exist only on licensed feeds (Bloomberg / Refinitiv / ICE). The 3M
+Treasury-SOFR spread is directionally reliable for detecting dollar-
+funding stress events (2008 GFC, 2020-03 COVID, 2023-03 SVB).
+Signal thresholds (2010-2025 daily history):
+`< 20 bp` Normal / `20–50 bp` Elevated / `≥ 50 bp` Stressed.
+See `references/us-macro-indicators.md` "Swap Spread / Money-Market
+Liquidity" section for full methodology and post-QT regime caveats.
 
 ### housing
 
@@ -156,6 +199,8 @@ Map `--indicators` to FRED series IDs:
 | `growth` | GDPC1,INDPRO |
 | `nowcast` | GDPNOW,CFNAI,WEI,USALOLITOAASTSAM |
 | `real-rates` | T5YIE,T10YIE,DFII5,DFII10 |
+| `pmi` | USALOLITOAASTSAM (shared with `nowcast` — fetched once) |
+| `swap-spreads` | DGS3MO,SOFR30DAYAVG |
 | `housing` | PERMIT,HOUST,CSUSHPISA,MORTGAGE30US |
 | `industrials` | DGORDER |
 | `energy` | DCOILWTICO,DHHNGSP |
@@ -163,7 +208,7 @@ Map `--indicators` to FRED series IDs:
 | `consumer` | RSAFS,UMCSENT |
 | `tech` | CES3133440001,PCUAINFOAINFO |
 | `ppi` | PCUOMFGOMFG |
-| `all` | All 29 series above |
+| `all` | All 31 distinct series above (USALOLITOAASTSAM serves both `nowcast` and `pmi`) |
 
 ### Step 2 — Launch data-fetcher agent
 
@@ -185,6 +230,7 @@ base_path: {absolute path to investing-toolkit/scripts/}
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series GDPNOW,CFNAI,USALOLITOAASTSAM --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series WEI --periods 52
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T5YIE,T10YIE,DFII5,DFII10 --periods 24
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGS3MO,SOFR30DAYAVG --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series PERMIT,HOUST,CSUSHPISA --periods 24
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series MORTGAGE30US --periods 52
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series DGORDER --periods 24
@@ -200,6 +246,10 @@ Return raw JSON from each fetch request.
 
 Only include fetch requests for the resolved indicator groups. If
 `--indicators growth` is specified, only run the GDPC1,INDPRO fetch.
+
+If `--indicators pmi` is specified alone, reuse the `nowcast` fetch path
+that includes `USALOLITOAASTSAM` (there is no separate PMI fetch — OECD
+CLI is the shared FRED-available proxy).
 
 ### Step 3 — Structure output
 
@@ -240,6 +290,13 @@ Group results under their indicator group key.
       "CFNAI":            { "latest": { ... }, "prior": { ... }, "direction": "..." },
       "WEI":              { "latest": { ... }, "prior": { ... }, "direction": "..." },
       "USALOLITOAASTSAM": { "latest": { ... }, "prior": { ... }, "direction": "..." }
+    },
+    "pmi": {
+      "USALOLITOAASTSAM": { "latest": { ... }, "prior": { ... }, "direction": "..." }
+    },
+    "swap-spreads": {
+      "DGS3MO":       { "latest": { ... }, "prior": { ... }, "direction": "..." },
+      "SOFR30DAYAVG": { "latest": { ... }, "prior": { ... }, "direction": "..." }
     },
     "housing": {
       "PERMIT":       { "latest": { ... }, "prior": { ... }, "direction": "..." },
@@ -308,6 +365,8 @@ real-world conditions:
 | Series | Typical lag |
 |--------|-------------|
 | T10Y2Y, DGS10, DGS2 | 1 business day |
+| DGS3MO | 1 business day |
+| SOFR30DAYAVG | 1 business day (but is a rolling 30-day average — interpret as avg over prior month) |
 | DCOILWTICO, DHHNGSP | 1 business day |
 | BAMLH0A0HYM2 | 1 business day |
 | MORTGAGE30US | ~1 week (weekly release) |

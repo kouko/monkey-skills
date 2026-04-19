@@ -558,6 +558,85 @@ essential for global-macro allocation decisions.
   magnitude of extreme events; normalized version (`NOSTSAM`) preserves
   magnitude but is harder to interpret around 100.
 
+Also used as PMI proxy — see `PMI` section below.
+
+---
+
+## PMI (Purchasing Managers' Index)
+
+**Status on FRED**: Neither ISM PMI nor S&P Global / Markit PMI is
+currently available on FRED. This skill uses OECD CLI
+(`USALOLITOAASTSAM`) as the FRED-available leading-indicator proxy
+(amplitude-adjusted composite; NOT a diffusion index).
+
+**Series** (via FRED CSV endpoint):
+- `USALOLITOAASTSAM` — OECD Composite Leading Indicator (USA,
+  amplitude-adjusted). See the full entry under "Nowcast" above. Shared
+  across the `nowcast` and `pmi` groups (single fetch, two logical
+  groupings for IC/GIP mapping).
+
+**Frequency**: Monthly, publication lag ~1 month after reference month.
+
+**Signal thresholds (OECD CLI calibration — NOT ISM's 50-point rule)**:
+- `> 100 & rising` → Expansion, above long-term trend
+- `> 100 & falling` → Pre-peak deceleration
+- `< 100 & falling` → Contraction, below trend
+- `< 100 & rising` → Recovery, still below trend
+
+**Why no S&P Global PMI on FRED**:
+- FRED discontinued all Institute for Supply Management (ISM) data on
+  2016-06-24. All 22 series from the Manufacturing ISM Report on Business
+  and Non-Manufacturing ISM Report on Business (including `NAPMPI`,
+  `NAPMHNEI`, `NAPMHNII`) were removed. See:
+  https://news.research.stlouisfed.org/2016/06/institute-for-supply-management-data-to-be-removed-from-fred/
+- S&P Global PMI (formerly Markit PMI) is not on FRED either. S&P Global
+  licenses the PMI data commercially (Bloomberg, Refinitiv, S&P Global
+  Market Intelligence, Haver Analytics) and has no free public-domain
+  feed on FRED.
+- Probe evidence (2026-04-18): all candidates `USPMIM`, `USAPMIM`,
+  `SPGSPMICM`, `USAPMIS`, `SPGSPMISM`, `USAPMICOMPM`, `SPGUSCPMI`,
+  `SPGUSMPMI`, `SPGUSPM`, `USCOMPPMI`, `USNONPMI`, `NAPMPI`, `NAPMHNEI`,
+  `NAPMHNII`, `NAPMCI`, `NMFCI`, `NMFBAI`, `NMFBI`, `NMFNOI`, `NMFPI`,
+  `NMFEI`, `MARKITMFG`, `MARKITSVC`, `MARKITCOMP`, `PMICMP`, `PMIMFG`
+  returned HTTP 404 from the FRED CSV endpoint.
+
+**ISM vs S&P Global vs OECD CLI methodology delta**:
+- ISM (monthly): US-respondent panel of purchasing managers; 5 sub-indices
+  (New Orders, Production, Employment, Supplier Deliveries, Inventories)
+  each weighted 20%. 50 = neutral threshold.
+- S&P Global (monthly, flash + final): separate panel (~400-800
+  manufacturers / ~400 services firms); 5-item weighted diffusion index.
+  50 = neutral threshold.
+- ISM vs S&P Global correlation on direction: ~0.85. Absolute readings
+  can differ ±2-3 points in the same month. DO NOT reflexively apply
+  ISM's 47-point "recession threshold" calibration to S&P Global
+  readings (different panel, different question wording).
+- OECD CLI (monthly, here): amplitude-adjusted composite of forward-
+  looking cyclical series (see the "Nowcast" section above for the full
+  USA CLI component list and OECD methodology references). Amplitude is
+  trend-centered on 100 (NOT on 50 like diffusion indices) — so the
+  threshold interpretation is cycle-phase (above/below trend, rising/
+  falling) rather than breadth-of-change. Tends to lead ISM turning
+  points by several months (OECD positions CLIs as cycle-peak / trough
+  early-warning indicators), but direction-correlation is qualitative
+  and varies by cycle; use as a cycle-phase indicator, not as a
+  substitute PMI reading.
+
+**Manual PMI cross-check URLs** (for human reference — do NOT scrape):
+- ISM Report on Business (official):
+  https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/
+- S&P Global PMI press releases (free):
+  https://www.pmi.spglobal.com/Public/Home/PressRelease
+- MacroMicro visual chart (free read-only):
+  https://en.macromicro.me/collections/8/us-industry-relative/37/ism-new-order
+  (MacroMicro ToS prohibits scraping; use for visual cross-check only.)
+
+**Future upgrade path**: If FRED ever hosts S&P Global PMI directly, or
+if an Atlanta/Chicago/NY Fed alternative becomes available, this section
+can be updated to add the new series IDs and shift the default from OECD
+CLI to the diffusion reading. Until then, OECD CLI + manual ISM/S&P
+Global cross-check is the primary-source-grounded path.
+
 ---
 
 ## Real Rates (TIPS + Breakeven Inflation)
@@ -1340,6 +1419,102 @@ monitoring.
 
 ---
 
+## Swap Spread / Money-Market Liquidity
+
+**Series (via FRED CSV endpoint)**:
+- `DGS3MO` — 3-Month Treasury Constant Maturity yield (daily, Board of
+  Governors H.15 release; 1 business day lag)
+- `SOFR30DAYAVG` — 30-Day Average Secured Overnight Financing Rate (daily,
+  NY Fed; rolling 30-calendar-day compound average of daily SOFR)
+
+**Computed**: Treasury-SOFR 3M spread = `DGS3MO − SOFR30DAYAVG` (expressed
+in basis points). The skill fetches both series and leaves the subtraction
+to the consumer (macro-regime-snapshot or investing-team), so the raw
+component yields stay auditable.
+
+**Why this is a proxy, not a true swap spread**:
+- Post-LIBOR cessation (2023-06-30, ICE Benchmark Administration final
+  USD LIBOR panel publication), FRED's clean term-structure USD swap rate
+  series (previously `ICERATES1100USD10Y`, `USDSWAP10` family) were
+  discontinued. The remaining FRED SOFR-linked series cover the overnight
+  rate and the 30/90/180-day compounded averages — not a full term swap
+  curve.
+- SOFR-based OIS swap curves at 2Y / 5Y / 10Y tenors exist on commercial
+  feeds (Bloomberg SOFR curve, Refinitiv ICE Swap Rate, CME Term SOFR)
+  but these are licensed, not FRED-accessible.
+- The Treasury-SOFR 3M spread is therefore a **money-market / short-end
+  liquidity stress gauge**, NOT a 10Y term swap spread. It captures the
+  same underlying signal (Treasury vs collateralised-funding spread) at
+  the short end of the curve only.
+- Directionally reliable for detecting dollar-funding stress events
+  (2008-09 GFC TED-spread blowout, 2020-03 COVID dash-for-cash, 2023-03
+  SVB regional-bank stress), but it is NOT a substitute for the full
+  term-structure signal a licensed Bloomberg / Refinitiv blotter provides.
+
+**Signal thresholds** (based on 2010-2025 daily history of DGS3MO −
+SOFR30DAYAVG; calibrated using distributional analysis of non-stress
+baseline periods vs named stress windows):
+- `< 20 bp` → Normal funding-market conditions
+- `20–50 bp` → Elevated (quarter-end funding pressure, Treasury supply
+  squeeze, or early stress signal; warrants monitoring)
+- `≥ 50 bp` → Stressed. Exceeded during 2008-09 GFC, 2020-03 COVID dash-
+  for-cash, 2023-03 SVB episode. Indicates material dollar-funding
+  dislocation.
+
+**Caveat on 2024-2026 post-QT regime**: Federal Reserve balance-sheet
+runoff (QT) has tightened reserve supply, leaving SOFR more sensitive to
+quarter-end repo-market pressures. Recent quarter-end / month-end episodes:
+- 2023-09-30: SOFR +15 bp overnight repo spike (first-of-month coupon
+  settlement + quarter-end dealer balance-sheet window-dressing)
+- 2024-03-29: SOFR +10 bp quarter-end pressure
+- 2024-06-28 and 2024-09-30: additional mid-single-digit bp quarter-end
+  prints
+
+Apply the signal thresholds above to the 30-day average value
+(`SOFR30DAYAVG` smooths over these isolated quarter-end spikes), not to
+raw spot SOFR. A single-day Treasury-SOFR reading around quarter-end can
+transiently exceed 50 bp without indicating true funding stress.
+
+**Series ID probe evidence (2026-04-18)**: The following alternative
+SOFR / swap-rate candidates were tested against the FRED CSV endpoint:
+- Live (HTTP 200): `SOFR30DAYAVG`, `SOFR` (overnight daily), `DGS3MO`,
+  `DGS10`, `DFF` (daily Fed Funds), `OBFR` (Overnight Bank Funding Rate)
+- 404 / discontinued: `SOFRRATE`, `SOFRINT`, `USD10YOIS`
+- Conclusion: no clean long-end OIS swap rate is available on FRED;
+  `DGS3MO − SOFR30DAYAVG` is the best FRED-accessible proxy.
+
+**Sector ETF mapping**: Cross-sector liquidity / risk-off signal. Not
+mapped to a single ETF. Stressed readings are most negative for XLF
+(bank funding stress), high-yield credit (HYG / JNK), and risk assets
+broadly. Widening from Normal to Elevated is an early-warning signal for
+the same complex.
+
+**When to use**: Dollar-funding stress detection, money-market
+dislocation monitoring, cross-checking credit-spread readings
+(`BAMLH0A0HYM2`) against short-end liquidity conditions, Fed emergency-
+facility trigger awareness (Standing Repo Facility, BTFP-type programmes).
+
+**Common pitfalls**:
+- Not a term swap spread. Do NOT compare reading magnitudes against
+  historical 10Y swap-spread benchmarks (e.g. pre-LIBOR 10Y swap-spread
+  compression into negative territory post-2015). Different tenor,
+  different signal.
+- Quarter-end / year-end technicals: raw spot readings can transiently
+  widen without fundamental stress. Use 30-day average (SOFR30DAYAVG is
+  already a 30-day compound) or further smooth to a monthly mean for
+  threshold comparison.
+- Treasury supply effects: heavy T-bill issuance can push DGS3MO higher
+  relative to SOFR for supply-technical reasons unrelated to funding
+  stress. Cross-check against BAMLH0A0HYM2 (HY OAS) — a widening
+  Treasury-SOFR spread WITHOUT a corresponding HY OAS widening is more
+  likely Treasury-supply-technical than funding-stress.
+- Post-2024 regime baseline shift: pre-QE-unwind era baseline was ~0–5 bp;
+  post-QT (2023+) baseline has shifted toward ~5–15 bp. When applying
+  thresholds to new episodes, anchor on the rolling 12-month mean rather
+  than long-run pre-2020 history.
+
+---
+
 ## Sources
 
 Primary sources referenced in this document:
@@ -1371,6 +1546,12 @@ Primary sources referenced in this document:
 
 ### GDP Composition
 - U.S. Bureau of Economic Analysis. "GDP by Industry." https://www.bea.gov/data/gdp/gdp-industry
+
+### Swap Spread / SOFR / LIBOR Cessation
+- Federal Reserve Bank of New York. "Secured Overnight Financing Rate Data." https://www.newyorkfed.org/markets/reference-rates/sofr
+- ICE Benchmark Administration. "LIBOR Cessation." Final USD LIBOR panel publication 2023-06-30. https://www.ice.com/iba/libor
+- Alternative Reference Rates Committee (ARRC), Federal Reserve. "Transition from LIBOR." https://www.newyorkfed.org/arrc
+- Federal Reserve Board. "Selected Interest Rates (Daily) - H.15." https://www.federalreserve.gov/releases/h15/ (source for DGS3MO Treasury constant-maturity yields)
 
 ### Sector-Level Indicators
 - FRED Housing Data: https://fred.stlouisfed.org/categories/97

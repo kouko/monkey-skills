@@ -1,0 +1,96 @@
+# JGBi (10-year 物価連動国債) auction history — static snapshot
+#
+# Source: 財務省 (Ministry of Finance, Japan) 国債入札結果 (JGB auction results)
+# https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/
+#
+# Purpose: primary-source anchor points for Japan 10Y real yield. JGBi is
+# Japan's inflation-indexed government bond (principal 連動 with the全国
+# CPI excluding fresh food, reset with ~3-month lag per 財務省 設計). The
+# yield-at-auction is the official real-yield quote at issuance — complies
+# with "primary-source grounding" for v1.10.0 investing-toolkit.
+#
+# v1.10.0 scope: human-curated static snapshot (re-issuance happens ~4x/year).
+# v1.11.0 scope: automated MoF auction result scraper + 連動係数-driven
+#                QuantLib YTM solver for daily JGBi yields (Bloomberg-grade).
+#
+# Fields:
+#   issue_no        — 回号 (JGBi issue number, e.g. 30 = 第30回)
+#   auction_date    — YYYY-MM-DD of auction
+#   issue_date      — YYYY-MM-DD of issuance
+#   coupon_pct      — クーポンレート (%; nominal coupon on principal)
+#   highest_yield_pct — 募入最高利回り (real yield at highest accepted price, %,
+#                     単利 simple-yield convention per MoF disclosure)
+#   applications_oku  — 応募額 (¥億, tendered amount)
+#   accepted_oku      — 募入決定額 (¥億, accepted face amount)
+#   linkage_coefficient — 連動係数 at issue date (principal multiplier
+#                         relative to 1.00 at original launch)
+#   source_url        — 財務省 result page
+#
+# NOTE: "highest_yield_pct" is the marginal real yield (lowest accepted
+# price → highest yield). Per MoF disclosure practice the 平均落札利回り
+# is often not published separately for JGBi; the highest_yield is the
+# published anchor quote.
+
+auctions:
+  - issue_no: 30
+    auction_date: "2025-08-15"
+    issue_date: "2025-08-18"
+    coupon_pct: 0.005
+    highest_yield_pct: 0.078
+    applications_oku: 7292
+    accepted_oku: 2500
+    linkage_coefficient: null  # not disclosed on this result page
+    source_url: "https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/resul20250815.htm"
+
+  - issue_no: 30
+    auction_date: "2025-05-22"
+    issue_date: "2025-05-23"
+    coupon_pct: 0.005
+    highest_yield_pct: 0.000
+    applications_oku: 7597
+    accepted_oku: 2498
+    linkage_coefficient: null
+    source_url: "https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/resul20250522.htm"
+
+  - issue_no: 29
+    auction_date: "2025-02-12"
+    issue_date: "2025-02-13"
+    coupon_pct: 0.005
+    highest_yield_pct: -0.269
+    applications_oku: 6904
+    accepted_oku: 2498
+    linkage_coefficient: 1.02672
+    source_url: "https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/resul20250212.htm"
+
+  - issue_no: 29
+    auction_date: "2024-11-11"
+    issue_date: "2024-11-12"
+    coupon_pct: 0.005
+    highest_yield_pct: -0.362
+    applications_oku: 8850
+    accepted_oku: 2498
+    linkage_coefficient: 1.02131
+    source_url: "https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/resul20241111.htm"
+
+  - issue_no: 29
+    auction_date: "2024-05-20"
+    issue_date: "2024-05-21"
+    coupon_pct: 0.005
+    highest_yield_pct: -0.545
+    applications_oku: 10673
+    accepted_oku: 2499
+    linkage_coefficient: 1.00194
+    source_url: "https://www.mof.go.jp/jgbs/auction/calendar/nyusatsu/resul20240520.htm"
+
+# Structural notes:
+# - Current outstanding 10Y JGBi tranche: 第30回 (first issued 2025-05-23).
+# - Coupon held at 0.005% (minimum allowed) since 第28回 era — principal
+#   inflation pickup drives total-return, not coupon.
+# - Real-yield trajectory over this snapshot:
+#     2024-05: -0.545%
+#     2024-11: -0.362%
+#     2025-02: -0.269%
+#     2025-05:  0.000%   ← first non-negative JGBi auction print since 2015
+#     2025-08: +0.078%   ← confirms post-zero regime shift.
+# - Cross-check against ECB ex-post real-yield monthly series (different
+#   construction; both should be near zero / slightly positive by 2025-08).

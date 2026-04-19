@@ -198,3 +198,55 @@ translate signals into positioning.
 Source: the LSEG partner-built `macro-rates-monitor` skill in Anthropic's
 `financial-services-plugins` uses similar labels; we port the pattern
 to free FRED data.
+
+---
+
+## PMI Signal Glossary (v1.10.0)
+
+Signal thresholds vary by country due to differing PMI methodologies:
+
+### US (OECD CLI — amplitude-adjusted cycle phase)
+OECD CLI is centered on 100 (not 50 diffusion-index style). US `pmi` group uses `USALOLITOAASTSAM`.
+
+| CLI reading | Signal | Phase implication |
+|-------------|--------|-------------------|
+| > 100, rising | Accelerating Expansion | Recovery → late-Recovery |
+| > 100, falling | Slowing Expansion | Late-Recovery → Overheat |
+| < 100, falling | Deepening Slowdown | Stagflation / recession |
+| < 100, rising | Recovering from trough | Reflation / early-Recovery |
+
+### JP / TW / KR / CN (S&P Global / domestic PMI — diffusion index, 50 midpoint)
+URL-only references (not fetched in v1.10.0):
+
+| PMI reading | Signal | Phase implication |
+|-------------|--------|-------------------|
+| > 55 | Strong Expansion | Overheat likely |
+| 52-55 | Expansion | Recovery / late-Recovery |
+| 50-52 | Near-neutral | Regime transition (watch trend) |
+| 47-50 | Contraction (mild) | Stagflation / early Reflation |
+| < 47 | Deep Contraction | Reflation / recession |
+
+**Country coverage**:
+- **US**: OECD CLI via FRED (`USALOLITOAASTSAM`) — fetched
+- **JP**: Jibun Bank Composite PMI — licensed, URL reference only
+- **TW**: 中経院 PMI (CIER) — URL reference only
+- **KR**: 한국경제연구원 KERI BSI / S&P Global Korea PMI — URL reference only
+- **CN**: Caixin Manufacturing + NBS 官方 PMI — v1.11.0+ candidate (via akshare)
+
+**Direction classification (for Block 1 Direction column)**:
+- Month-over-month change > +0.5 CLI pts (US) or > +1 PMI pts (JP/TW/KR/CN) → Rising
+- Within ±0.5 / ±1 → Flat
+- Below → Falling
+
+## Swap Spread Threshold Provenance (v1.10.0)
+
+Thresholds calibrated to US 2010-2025 daily history of Treasury-SOFR 3M spread (DGS3MO − SOFR30DAYAVG, in bps):
+
+| Threshold | Empirical rationale |
+|-----------|---------------------|
+| 20 bp | 95th percentile during 2010-2019 normal window; breached routinely in 2020-03, 2023-03 |
+| 50 bp | 99.5th percentile; breached only during GFC (2008-10), COVID (2020-03), SVB (2023-03) |
+
+**Use monthly average rather than quarter-end spot**. Post-QT (2022+) window-dressing distorts spot readings 10-15 bp at quarter-end (verified: 2023-09-30 +15 bp, 2024-03-29 +10 bp, 2024-06-28 +11 bp, 2024-09-30 +13 bp).
+
+This is a **money-market liquidity proxy, not a term swap spread**. The true 10Y term swap spread requires licensed data (Bloomberg / Reuters / ICE).
