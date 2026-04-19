@@ -11,7 +11,7 @@ description: >-
 
 # macro-regime-snapshot
 
-> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`fred_series`, `akshare_china_macro`, `nbs_china_macro`, `yfinance_history`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+> **Dual-mode execution (v1.14.0+, corrected v1.16.1)**: The `uv run scripts/...` commands below are canonical. Matching MCP tools are registered alongside (`investing-toolkit:*` namespace) — Claude may use either; both return identical JSON. ⚠️ **Cowork limitation**: MCP does NOT bypass Cowork sandbox URL allowlist (v1.14.0 premise was wrong, confirmed v1.16.1). Use Claude Code CLI. Full catalog: [`docs/mcp-setup.md`](../../docs/mcp-setup.md).
 
 Five-country macro regime call using the Investment Clock (IC) +
 Hedgeye GIP framework, extended with an LSEG-style real-rate

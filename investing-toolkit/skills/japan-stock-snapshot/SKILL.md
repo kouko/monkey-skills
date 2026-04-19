@@ -11,7 +11,7 @@ description: >-
 
 # japan-stock-snapshot
 
-> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tools (`edinet_resolve_code`, `edinet_list_filings`, `edinet_fetch_statements`, `edinet_filing_summary`, `tdnet_list`, `yfinance_history`, `yfinance_info`, `yfinance_financials`) are registered in your session, prefer them over the `uv run scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+> **Dual-mode execution (v1.15.0+, corrected v1.16.1)**: The `uv run scripts/...` commands below are canonical. Matching MCP tools are registered alongside (`investing-toolkit:*` namespace) — Claude may use either; both return identical JSON. ⚠️ **Cowork limitation**: MCP does NOT bypass Cowork sandbox URL allowlist (v1.14.0 premise was wrong, confirmed v1.16.1). Use Claude Code CLI. Full catalog: [`docs/mcp-setup.md`](../../docs/mcp-setup.md).
 
 Japan equity data snapshot built on **dual-mode tier routing**. When
 `EDINET_API_KEY` is set, fundamentals come from the 金融庁 EDINET v2 REST

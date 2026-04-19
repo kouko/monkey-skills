@@ -9,7 +9,7 @@ description: >-
 
 # technical-snapshot
 
-> **MCP-aware execution (v1.14.0+)**: If `investing-toolkit` MCP tool `yfinance_history` is registered in your session, prefer it over the `uv run scripts/...` subprocess command shown below. Identical JSON payload, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess command remains the canonical spec and fallback.
+> **Dual-mode execution (v1.14.0+, corrected v1.16.1)**: The `uv run scripts/...` command below is canonical. Matching MCP tool `yfinance_history` is registered alongside — Claude may use either; both return identical JSON. ⚠️ **Cowork limitation**: MCP does NOT bypass Cowork sandbox URL allowlist (v1.14.0 premise was wrong, confirmed v1.16.1). Use Claude Code CLI. Full catalog: [`docs/mcp-setup.md`](../../docs/mcp-setup.md).
 
 Computes common technical indicators from OHLCV price data and outputs a
 structured snapshot card. This skill uses `scripts/ta_client.py` for all

@@ -5,7 +5,7 @@ description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance 
 
 # investment-memo-writer
 
-> **MCP-aware execution (v1.14.0+, expanded v1.15.0)**: If `investing-toolkit` MCP tools (`yfinance_history`, `yfinance_info`, `yfinance_financials`, `fred_series`, `sec_edgar_filings`, `sec_edgar_facts`, `mops_fetch`, `twse_openapi_fetch`, `finmind_fetch`, `edinet_filing_summary`, `edinet_list_filings`, `tdnet_list`) are registered in your session, prefer them over the `uv run ${CLAUDE_SKILL_DIR}/scripts/...` subprocess commands shown below. Identical JSON payloads, faster on repeat calls, bypasses the Claude Desktop Cowork sandbox. Subprocess commands remain the canonical spec and fallback.
+> **Dual-mode execution (v1.14.0+, corrected v1.16.1)**: The `uv run ${CLAUDE_SKILL_DIR}/scripts/...` commands below are canonical. Matching `investing-toolkit` MCP tools are registered alongside (`investing-toolkit:*` namespace) — Claude may call either path; both return identical JSON. ⚠️ **Cowork limitation**: MCP does NOT bypass Cowork sandbox URL allowlist (v1.14.0 premise was wrong, confirmed v1.16.1) — both paths equally blocked in Cowork. Use Claude Code CLI for this skill. Full MCP tool catalog: [`docs/mcp-setup.md`](../../docs/mcp-setup.md).
 
 Orchestrate a full investment memo from raw ticker to polished document. This skill
 coordinates three subsystems: data fetching (investing-toolkit), regime context
