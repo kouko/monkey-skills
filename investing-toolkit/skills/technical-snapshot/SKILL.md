@@ -32,16 +32,50 @@ Minimum 200 trading days needed for SMA-200. Use `period=1y` or longer.
 
 ## How It Works
 
-### Step 1 — Fetch OHLCV (data-fetcher agent)
+### Step 1 — Fetch OHLCV (data-fetcher agent; v1.16.3 suffix-based routing)
 
-Launch `../../agents/data-fetcher.md` with:
+Route by ticker suffix to the best-available OHLCV source per market:
 
+| Suffix | Market | Primary source (Tier A) | Fallback |
+|---|---|---|---|
+| `.TW` | 上市 (TWSE) | **TWSE /rwd/ stock-day-history** | FinMind TaiwanStockPrice (Tier 2) |
+| `.TWO` | 上櫃 (TPEx) | FinMind TaiwanStockPrice | — (TPEx has no /rwd/ equiv) |
+| `.T` / `.TO` | JP (Tokyo) | yfinance `.T` | — (J-Quants Standard paid) |
+| bare / `.KS` / `.KQ` / `.SS` / `.SZ` / `.HK` | US / KR / CN / HK | yfinance | — |
+
+Pick ONE branch based on ticker suffix. Translate `period` (`1y` / `6mo` / `2y` / etc.) to months (`12` / `6` / `24` / etc.) for TWSE/FinMind paths.
+
+**Branch A — `.TW` (TWSE 上市, Tier A)**:
+```
+### Fetch Requests
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/twse_openapi_client.py --action stock-day-history --ticker {ticker_code} --months {months}
+```
+Auto-fallback to FinMind on `TwseOpenApiError` / HTTP 4xx/5xx:
+```
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start}
+```
+`{ticker_code}` = ticker with `.TW` stripped (e.g. `2330`). `{months}` = mapped from `period` (1y→12, 6mo→6, 2y→24, etc.). `{date_start}` = today − N months, `YYYY-MM-DD`.
+
+**Branch B — `.TWO` (TPEx 上櫃)**:
+```
+### Fetch Requests
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker {ticker_code} --dataset TaiwanStockPrice --date-start {date_start}
+```
+(TPEx has no free Tier A primary; FinMind is the only historical-OHLCV option.)
+
+**Branch C — `.T` / `.TO` (JP Tokyo)**:
+```
+### Fetch Requests
+- INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker}.T --period {period}
+```
+
+**Branch D — default (US / KR / CN / HK)**:
 ```
 ### Fetch Requests
 - INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker {ticker} --period {period}
 ```
 
-Expected output: JSON with `data` array (OHLCV rows) and `latest_close`.
+Expected output (all branches): JSON with `data` array (OHLCV rows). yfinance + TWSE stock-day-history additionally supply `latest_close`/`latest_date` at top level; FinMind output feeds directly since `ta_client.py` v1.16.3+ auto-computes them from the last row.
 
 ---
 
