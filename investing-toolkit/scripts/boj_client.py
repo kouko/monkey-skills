@@ -386,6 +386,59 @@ def _periods_to_start_yyyymm(periods: int, freq: str = "quarterly") -> str:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register BOJ Time-Series tools with a FastMCP instance."""
+
+    @mcp.tool()
+    def boj_fetch(
+        db: str, code: str, start_date: str, end_date: str = "",
+    ) -> dict:
+        """Fetch a Japan BOJ time-series by DB code + series code.
+        db: BOJ database code (e.g. 'BP' for BIS effective rates, 'PR' for
+        policy rates, 'MD' for monetary data, 'CO' for Tankan).
+        code: comma-separated series codes within the DB.
+        start_date / end_date: 'YYYYMM' or 'YYYYMMDD' (end_date='' = latest).
+        """
+        return fetch_series(db, code, start_date, end_date, use_cache=True)
+
+    @mcp.tool()
+    def boj_tankan_inflation_outlook(
+        horizons: list[int] | None = None, periods: int = 8,
+    ) -> dict:
+        """Fetch Tankan 企業物価見通し (corporate inflation expectations) —
+        1Y/3Y/5Y horizons. Surveyed quarterly since 2014-Q1. Used by
+        macro-regime-snapshot for JP real-rates calculation.
+        horizons: subset of [1, 3, 5]; default all three.
+        periods: number of quarterly observations (default 8 = 2 years).
+        """
+        horizons = horizons or [1, 3, 5]
+        bad = [h for h in horizons if h not in TANKAN_PRICE_OUTLOOK_CODES]
+        if bad:
+            return {
+                "error": f"Unsupported horizons {bad}",
+                "valid": sorted(TANKAN_PRICE_OUTLOOK_CODES),
+            }
+        codes = ",".join(TANKAN_PRICE_OUTLOOK_CODES[h] for h in horizons)
+        start_date = _periods_to_start_yyyymm(periods, freq="quarterly")
+        raw = fetch_series("CO", codes, start_date, "", use_cache=True)
+        horizon_by_code = {TANKAN_PRICE_OUTLOOK_CODES[h]: h for h in horizons}
+        if "series" in raw and isinstance(raw["series"], dict):
+            for sc, entry in raw["series"].items():
+                if isinstance(entry, dict) and "observations" in entry:
+                    obs = entry["observations"][-periods:]
+                    entry["observations"] = obs
+                    entry["count"] = len(obs)
+                    entry["latest"] = obs[-1] if obs else None
+                    entry["horizon_years"] = horizon_by_code.get(sc)
+                    entry["indicator"] = "tankan_inflation_outlook"
+        raw["_preset"] = "tankan-price-outlook"
+        return raw
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 

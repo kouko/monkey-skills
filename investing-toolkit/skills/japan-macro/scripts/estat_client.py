@@ -431,6 +431,47 @@ def search_indicators(query: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register e-Stat (統計ダッシュボード) tools with a FastMCP instance."""
+
+    @mcp.tool()
+    def estat_fetch(
+        preset: str | None = None, indicator: str | None = None,
+        cycle: str = "monthly",
+    ) -> dict:
+        """Fetch a Japan e-Stat Dashboard indicator. Use either `preset`
+        (shorthand like 'cpi-core', 'industrial-production'; see PRESETS)
+        OR `indicator` (raw 8-digit indicator code, e.g. '0702010000').
+        cycle: 'monthly' (default), 'quarterly', 'annual'. Used by
+        japan-macro for 内閣府 景気動向指数 + 統計局 CPI/industrial/retail.
+        """
+        if preset and indicator:
+            return {"error": "Pass preset OR indicator, not both"}
+        if preset:
+            code = PRESETS.get(preset)
+            if not code:
+                return {
+                    "error": f"Unknown preset: {preset}",
+                    "available_presets": sorted(PRESETS.keys()),
+                }
+            return fetch_indicator(code, cycle, use_cache=True, preset=preset)
+        if indicator:
+            return fetch_indicator(indicator, cycle, use_cache=True)
+        return {"error": "Provide either preset or indicator"}
+
+    @mcp.tool()
+    def estat_search(query: str) -> dict:
+        """Search the e-Stat Dashboard indicator catalogue by keyword
+        (Japanese or English). Returns matching indicator codes + titles
+        for use with estat_fetch."""
+        return search_indicators(query)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
