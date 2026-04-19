@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.13.0
+**Version**: 1.14.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -178,6 +178,49 @@ Plugin-level cross-market references (complement the per-skill references):
 - [Industry Indicator Cadence](docs/industry-indicator-cadence.md) — five-country (US/JP/TW/KR/CN) comparison of industry-level indicator coverage, release frequencies (daily → annual tiers), publication lags, and investment-horizon matching guide
 
 ## Version Highlights
+
+### v1.14.0 (2026-04-19) — MCP migration (Claude Desktop Cowork unblock)
+
+Exposes the 8 data-fetch scripts as **13 MCP tools** via a single plugin-
+level MCP server. Claude Code and Claude Cowork auto-activate it on
+plugin install; the MCP process runs outside the Claude Desktop sandbox,
+so URL restrictions that previously blocked every data-fetch call in
+Cowork are now bypassed by architecture.
+
+- **servers/mcp_server.py**: FastMCP entry importing all 8 client
+  modules. 13 tools total (yfinance × 3, sec_edgar × 4, fred / mops /
+  twse_openapi / finmind / akshare_china_macro / nbs_china_macro × 1
+  each). `--self-check` flag pre-warms uv cache + deps without
+  entering the MCP loop.
+
+- **.mcp.json + servers/mcp_bootstrap.sh**: plugin auto-registration.
+  Two-path router: FAST PATH (marker + uv ready → exec real server in
+  <3 s), BOOTSTRAP PATH (spawn setup.sh in background, exec stdlib
+  wrapper that responds instantly under Claude Desktop's 60 s
+  handshake timeout — empirically probed 2026-04-19).
+
+- **servers/setup.sh**: silent-auto tiered install (Homebrew → curl
+  astral.sh/uv/install.sh), then `--self-check` pre-warms 66 wheel
+  installs, writes plugin-version marker. Non-developer users don't
+  need to open Terminal.
+
+- **servers/mcp_wrapper.py**: stdlib JSON-RPC; exposes
+  `investing_toolkit_status` during the provisioning window so Claude
+  can report live setup progress and ask for restart when ready.
+
+- **Dual-mode scripts**: `register_mcp_tools()` added to all 8 client
+  scripts; `uv run scripts/xxx.py` CLI paths remain untouched — MCP
+  and CLI return identical JSON (enforced by
+  `tests/test_mcp_contract.py`).
+
+- **SKILL.md MCP-aware prose**: 8 skills annotated to prefer MCP tools
+  when registered; subprocess commands remain canonical fallback.
+
+- **docs/mcp-setup.md**: user install guide — Claude Code CLI,
+  Claude Cowork (Team private fork), Pro/Max limitation notes,
+  troubleshooting.
+
+See [`docs/mcp-setup.md`](docs/mcp-setup.md) for install paths.
 
 ### v1.13.0 (2026-04-19) — Individual stock fundamentals (US + TW)
 
