@@ -513,6 +513,37 @@ def run_preset(session: requests.Session, preset: str, periods: int, use_cache: 
 
 
 # ---------------------------------------------------------------------------
+# MCP tool registration (v1.14.0+)
+# ---------------------------------------------------------------------------
+
+
+def register_mcp_tools(mcp) -> None:
+    """Register NBS China macro tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def nbs_china_macro(presets: list[str], periods: int = DEFAULT_PERIODS) -> dict:
+        """Fetch China macro indicators directly from NBS new-SPA API —
+        primary-source, ~same-day-of-release for 21 indicators (CPI/PPI,
+        GDP, industrial, retail, trade, M1/M2, PMI, unemployment, etc.).
+        Pass one or more preset keys; use ['all'] for every preset.
+        """
+        if len(presets) == 1 and presets[0].strip().lower() == "all":
+            presets = list(PRESETS.keys())
+        session = prime_session()
+        if len(presets) == 1:
+            return run_preset(session, presets[0], periods, use_cache=True)
+        out = {
+            "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "_source": "nbs_spa",
+            "indicators": {},
+        }
+        for p in presets:
+            out["indicators"][p] = run_preset(session, p, periods, use_cache=True)
+            time.sleep(0.5)  # WAF throttle
+        return out
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
