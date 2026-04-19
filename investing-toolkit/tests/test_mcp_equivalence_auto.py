@@ -190,12 +190,28 @@ FIXTURES: list[dict] = [
         "cli_script": "mops_client.py",
         "cli_flags": ["--action", "company-basic", "--ticker", "2330"],
     },
-    # --- twse_openapi (1 dispatch tool) ---
+    # --- twse_openapi (1 dispatch tool, 2 fixtures — snapshot + history) ---
     {
         "tool": "twse_openapi_fetch",
         "mcp_args": {"action": "listed-companies", "ticker": "2330"},
         "cli_script": "twse_openapi_client.py",
         "cli_flags": ["--action", "listed-companies", "--ticker", "2330"],
+    },
+    {
+        # v1.16.3 stock-day-history action — Tier A historical OHLCV
+        "tool": "twse_openapi_fetch",
+        "mcp_args": {"action": "stock-day-history", "ticker": "2330",
+                     "months": 2},
+        "cli_script": "twse_openapi_client.py",
+        "cli_flags": ["--action", "stock-day-history", "--ticker", "2330",
+                      "--months", "2"],
+        "compare_fn": lambda m, c: (
+            m.get("ticker") == c.get("ticker") == "2330"
+            and m.get("period") == c.get("period") == "2mo"
+            and m.get("rows") == c.get("rows")
+            and (m.get("data") or [{}])[-1].get("close")
+                == (c.get("data") or [{}])[-1].get("close")
+        ),
     },
     # --- tdnet (1 tool) ---
     {
