@@ -310,3 +310,93 @@ Common BLOCKED scenarios in skill-team work:
 - The user's request conflicts with existing team boundaries
 - A destructive action is needed (e.g. large-scale rename) without
   explicit confirmation
+
+---
+
+## Visibility Convention (v5.2.0+)
+
+Workflow skills that execute multi-phase tasks (memo writing, code
+generation, test plan, spec writing, etc.) MUST emit `TaskUpdate` at
+**three levels** to keep users informed during long-running dispatches:
+
+1. **Phase transition** — at start AND end of each major phase
+   (e.g., "Phase 3.1 Thesis — starting", "Phase 3.1 Thesis — complete")
+
+2. **Milestone** — each section / deliverable / sub-step completed
+   (e.g., "Executive Summary drafted", "Valuation cross-check done",
+   "SOLID principles applied to module X")
+
+3. **Heartbeat** — **silent period MUST NOT exceed 60 seconds**.
+   If the agent is deep in extended reasoning and hasn't hit a natural
+   milestone, emit a keep-alive update:
+   `TaskUpdate: "... still working on {current_section} — {brief status}"`
+
+### Rationale
+
+User cannot distinguish "agent working" from "agent stuck" without
+visible feedback. Silence > 60s degrades UX; silence > 2 min risks
+user abandoning the task. Pattern C demo (investing-toolkit v1.11.0
+NVDA walk-through, 2026-04-19) surfaced this gap — deep equity memo
+ran ~2 min silent with no intermediate signal.
+
+### Enforcement
+
+The dispatching skill (controller) MUST include the Visibility
+Convention clause in the agent prompt it builds. Example:
+
+```
+**Visibility requirement**: You MUST emit a TaskUpdate:
+- Before each major analysis section
+- At each sub-phase milestone
+- Periodically — no more than 60 seconds between updates, even during
+  extended reasoning. If you're deep in a long section, emit a
+  "still working on X" heartbeat.
+
+Failure to comply = bad user experience. This is mandatory.
+```
+
+### Probabilistic vs Structural Guarantee
+
+This convention provides a **probabilistic guarantee** — compliance
+depends on agent behavior, which is not 100% enforceable at the
+protocol level. If strict structural guarantee is required (e.g., for
+very-long-running dispatches > 5 min), consider **phase-split
+architecture** where the controlling skill decomposes the task into
+multiple sub-dispatches, each with naturally short duration. This is
+a heavier refactor and should be applied per-skill where the silence
+risk genuinely outweighs the context-fragmentation cost.
+
+### Narration Convention (complementary, controller-side)
+
+Controllers orchestrating multi-phase work SHOULD narrate expectations
+BEFORE dispatching agents:
+- Expected duration of the agent task
+- What phase/agent is about to run
+- Expected TaskUpdate cadence (per this convention)
+
+This combines **expectation-setting** (narration, controller side)
+with **real-time visibility** (TaskUpdate emission, agent side) to
+give users a full picture even if the agent violates the TaskUpdate
+cadence.
+
+### Compliance checklist for workflow skills
+
+Every workflow-type domain-team skill (research-team, code-team,
+design-team, docs-team, devops-team, qa-team, planning-team,
+investing-team, copywriting-team) should include in its SKILL.md:
+
+```markdown
+## Compliance: Visibility Convention (skill-team v5.2.0+)
+
+This skill dispatches multi-phase work. Agent prompts built here
+include the Visibility Convention clause requiring TaskUpdate at
+phase transitions, milestones, and heartbeat intervals (≤60s).
+See `domain-teams:skill-team` §Visibility Convention for full text.
+```
+
+### Exceptions
+
+Router skills (e.g., `using-domain-teams`) and pure-reference skills
+(no agent dispatch) are exempt — they don't dispatch workflow agents.
+Meta skills (skill-team itself) follow the convention when dispatching
+grounding-research workers.

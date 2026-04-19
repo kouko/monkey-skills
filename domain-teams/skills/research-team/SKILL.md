@@ -471,3 +471,15 @@ If a worker outputs `BLOCKED` (e.g., no sources found, contradictory requirement
 - Do NOT proceed to gates
 - Present BLOCKED reason to user
 - Wait for user input
+
+---
+
+## Compliance: Visibility Convention (skill-team v5.2.0+)
+
+This skill dispatches multi-phase work (research + analysis + memo
+production, incl. the Deep Equity Research Memo workflow used by
+investing-toolkit's investment-memo-writer). Agent prompts built here
+include the Visibility Convention clause requiring `TaskUpdate` emission
+at phase transitions, milestones, and heartbeat intervals (≤60s max
+silence). See `domain-teams:skill-team` §Visibility Convention for full
+text + rationale.
