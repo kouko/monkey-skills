@@ -140,16 +140,30 @@ The evaluator returns one of three verdicts (see
 |---|---|---|
 | `PASS` | All items `PASS` or `N/A` | Update envelope: `phase → phase-8-form`, `next_stage → copywriting-form-check-stage`. Hand off. |
 | `PASS_WITH_NOTES` | Only `FAIL_FIXABLE` items, no FATALs | Apply evaluator's deterministic notes (formatting / disclosure-wording polish) via a brief auto-revise turn, re-run this gate ONCE, then hand off on re-`PASS`. Never forward-run Phase 8 while a FIXABLE is outstanding. |
-| `NEEDS_REVISION` | Any `FAIL_FATAL` | **Stop.** Present the evaluator's per-item findings to the user verbatim. Do NOT auto-rewrite. Do NOT launch Phase 8. User must edit the draft (or restart earlier phases) and re-enter Phase 7. |
+| `NEEDS_REVISION` | Any `FAIL_FATAL` | **Stop.** Present the evaluator's per-item findings to the user verbatim. Do NOT auto-rewrite. Do NOT launch Phase 8. Default re-entry: `copywriting-<form>` (Phase 4 drafter) with `ethics_findings` attached to the envelope. User may override to any of the three options below. |
 
 ### Stop rule on `NEEDS_REVISION`
 
 Legal / dark-pattern failures require human judgement. The pipeline
-MUST halt. Acceptable next steps:
+MUST halt and ask. **Default re-entry** is the Phase 4 drafter named
+in `envelope.form` (matching the router Step 2 table) — the drafter
+applies the user's chosen fix in its framework context. **User-
+overridable** to:
 
-1. User rewrites the offending claim(s) and re-enters Phase 7.
-2. User restarts Phase 4 drafting with revised message_thesis.
-3. User drops the claim (e.g., removes an unverifiable testimonial).
+1. **User hand-edits the draft text directly** and re-submits to Phase 7
+   (skip re-drafting). Router accepts `phase: phase-7-ethics` +
+   `draft` + user-provided change rationale, re-validates
+   Preconditions, re-runs ethics gate.
+2. **User restarts Phase 4 drafting with a revised `message_thesis`**
+   (a different claim that sidesteps the ethics issue entirely).
+   Router routes to Phase 4 drafter with amended envelope.
+3. **User drops the claim** — remove the offending paragraph / testimonial
+   from the draft and re-enter Phase 7 with the reduced draft.
+
+On any path, `revise_round_count` increments. Per `../../CLAUDE.md
+§Envelope Violation`, `total_retries >= 4` HALTS the pipeline and
+requires explicit user intervention — the evaluator may have
+uncovered a systemic claim problem that no rewrite round will fix.
 
 Unacceptable:
 

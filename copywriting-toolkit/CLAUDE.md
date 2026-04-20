@@ -58,20 +58,29 @@ Every downstream skill declares its `## Preconditions` schema in its own SKILL.m
     "bounce_round": 1,
     "user_message": "Plain-language explanation for the user — what the pipeline cannot proceed without"
   },
-  "original_envelope": { "...": "preserved verbatim for round-2 merging" }
+  "original_envelope": { "...": "frozen snapshot of the envelope that failed validation — operator / audit inspection only; NOT auto-merged on re-entry" },
+  "retries": {
+    "bounce_round": 1,
+    "revise_round_count": 0,
+    "total_retries": 1
+  }
 }
 ```
 
 ### Bounce rules
 
 1. **Single skill declares, router enforces** — skills do NOT self-dispatch bounce; they return the violation shape and let the router route.
-2. **Preserve `original_envelope`** — don't strip fields the upstream already has; only ADD the missing ones on re-entry.
-3. **bounce_round increments on each bounce**. Hard cap:
-   - Round 1 — automatic bounce to `bounce_to`
-   - Round 2 — automatic bounce ALLOWED if `bounce_to` changes (different upstream)
-   - Round 3 — **HALT + ask user**. Do NOT loop. This mirrors `superpowers:executing-plans` stop-and-ask discipline and prevents infinite ping-pong between upstream / downstream
-4. **Evaluator verdicts are NOT violations** — `NEEDS_REVISION` from a MUST gate is a verdict with its own loop-back rule (max 2 auto-revise rounds in `copywriting-form-check-stage` / `copywriting-ethics-check-stage`). Do not conflate: violation = schema gap before skill runs; verdict = judgement after skill runs.
-5. **user_message is mandatory** — always human-readable; cite the specific SKILL.md Preconditions row that failed
+2. **`original_envelope` is a forensic snapshot, not a merge source** — it freezes the envelope the router rejected so the user / operator can inspect what failed. On re-entry the upstream skill (typically `copywriting-intake`) runs FRESH; `original_envelope` is not merged back into the live envelope. This mirrors Express Mode's rule that bounce-backs force Q1-Q10: if Express synthesis was good enough, the violation would not have fired — so the re-entry starts from user words, not stale synthesis.
+3. **Round caps** — three independent counters converge into `total_retries`:
+   - `bounce_round` — increments on each schema violation
+   - `revise_round_count` — increments on each evaluator-verdict auto-revise (Phase 7 FIXABLE, Phase 8 loop-back)
+   - `total_retries = bounce_round + revise_round_count` — the aggregate
+   Hard caps:
+   - `bounce_round >= 3` → HALT (schema-loop stuck)
+   - `revise_round_count >= 2` per phase → HALT (evaluator-loop stuck)
+   - **`total_retries >= 4` (combined)** → HALT regardless of which counter got there. Prevents pathological cycles where schema bounces and verdict revisions alternate to bypass individual caps (mirrors `superpowers:executing-plans` stop-and-ask: when you can't make progress, ask)
+4. **Evaluator verdicts are NOT violations** — `NEEDS_REVISION` from a MUST gate is a verdict with its own loop-back rule. Do not conflate: violation = schema gap before skill runs; verdict = judgement after skill runs. Both increment `total_retries`.
+5. **user_message is mandatory** — always human-readable; cite the specific SKILL.md Preconditions row that failed (or evaluator finding, for verdict loops).
 
 ### Multi-field violations
 
@@ -83,10 +92,11 @@ If several fields are missing, list them all in `missing[]`. Router picks the SI
 
 ## Router Validation
 
-`using-copywriting-toolkit` is the single enforcement point for precondition validation. It performs two checks before every skill launch:
+`using-copywriting-toolkit` is the single enforcement point for precondition validation. It performs three checks before every skill launch:
 
-1. **Preconditions check** — load the target skill's `## Preconditions § Required envelope fields` table from its SKILL.md, verify every row against the current envelope. On any missing / malformed field → emit `violation` envelope, do NOT launch the target skill, route to the `bounce_to` skill named in the target's Preconditions.
-2. **Express qualification (Shape A only)** — per `using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 0.5`, inspect raw brief against intake's Level 1 field set. If qualified, dispatch intake in Express Mode (`copywriting-intake/protocols/express-mode.md`); otherwise default to Q1-Q10 full intake.
+1. **Aggregate retry cap** — read `envelope.retries.total_retries`; if `>= 4`, HALT and ask the user (do not launch any skill, do not bounce). Present the retries breakdown (`bounce_round` / `revise_round_count`) so the user can see why progress stalled.
+2. **Preconditions check** — load the target skill's `## Preconditions § Required envelope fields` table from its SKILL.md, verify every row against the current envelope. On any missing / malformed field → emit `violation` envelope, do NOT launch the target skill, route to the `bounce_to` skill named in the target's Preconditions, increment `bounce_round` and `total_retries`.
+3. **Express qualification (Shape A only)** — per `using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 0.5`, inspect raw brief against intake's Level 1 field set. If qualified, dispatch intake in Express Mode (`copywriting-intake/protocols/express-mode.md`); otherwise default to Q1-Q10 full intake.
 
 Router does not draft, does not judge gate verdicts, does not rewrite. It routes, validates, and bounces.
 

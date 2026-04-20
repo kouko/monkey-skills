@@ -35,6 +35,17 @@ Worker produces an **Understanding Summary draft envelope** in the Q9 10-subsect
 | **Level 2** | MAY be AI-inferred from brief + toolkit standards. MUST be explicitly labelled `AI-recommend — user-adjustable`. Include the 1-line rationale | `[AI-recommend]` |
 | **Level 3** | Apply defaults (neta opt-in = No, etc.). Label as `default accepted — opt in if needed` | `[default]` |
 
+**High-stakes Level 2 exclusion — voice_reference maestro inference**:
+
+Even though `brief.voice_reference` is Level 2, Express synthesis MUST NOT auto-infer a specific Japanese maestro ({糸井重里, 岩崎俊一, 眞木準, 谷山雅計}) unless the user's brief names that maestro explicitly. Reason: Phase 6 treats maestro-specific `voice_reference` as a HARD TRIGGER for JP lineage craft (Pass 3 in `copywriting-voice-tone-stage/SKILL.md §When JP lineage applies`), which re-writes the draft in that maestro's voice signature. Mis-inference produces a silently wrong-direction draft that downstream gates cannot schema-detect.
+
+Express synthesis rule:
+
+- User brief quotes a maestro name → set `brief.voice_reference` to that maestro, label `[user-stated]`
+- User brief does NOT quote a maestro → set `brief.voice_reference = "default"`, label `[default — user may override]`. Include this prominently in the confirmation turn so the user can opt in to a maestro if desired.
+
+The same exclusion applies to any other Level 2 field that downstream skills treat as a hard trigger. When in doubt between "AI-recommend specific value" and "default + prompt user to override", pick the latter.
+
 Worker also pre-computes:
 
 - **Predicted Phase 4 form** (short / mid / long-pasona / long-extended / light-action) from brief channel + length + action weight — labelled `[form detected]`
