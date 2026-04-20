@@ -1,5 +1,18 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.0.2 — 2026-04-20 (Fix #6 rubric reconciliation)
+
+Post-v1.0.1 re-test found one internal contradiction in Fix #6 (word-count band adherence in Phase 8 8b): the rubric example said "新 PASONA at 1500 chars → 🟡" but the threshold rule stated "≤60% of band floor → 🔴". 1500 / 3000 floor = 50%, which falls under the ≤60% rule → actual verdict should be 🔴, not 🟡 as the example claimed.
+
+Reconciled by restating the rubric as three ordered thresholds (🔴 ≤60% / 🟡 60-99% / 🟢 ≥100%) and updating the example:
+
+- 新 PASONA at 1500 chars (50% of floor) → 🔴 (recommend 旧 PASONA)
+- 新 PASONA at 2500 chars (83% of floor) → 🟡
+
+File changed: `copywriting-toolkit/skills/copywriting-form-check-stage/SKILL.md §8b Word-count band adherence`.
+
+No other fixes touched; all 7 v1.0.1 fixes remain as designed. Bump plugin.json 1.0.1 → 1.0.2.
+
 ## v1.0.1 — 2026-04-20 (post-E2E-test hardening)
 
 End-to-end pipeline test (4 parallel agents on a zh-TW coffee subscription brief with a planted 30% 有利誤認 claim) surfaced 7 design tensions. All fixed in this patch:

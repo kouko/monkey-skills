@@ -106,7 +106,12 @@ that is 8a's job). Dimension set is form-specific:
 
 **Additional 8b dimensions the evaluator must raise regardless of form** (added per v1.0.0 review):
 
-- **Word-count band adherence** — check the draft length against the framework's canonical band (per `long-form-pasona-canon.md §Three-framework applicability matrix`: 旧 PASONA ≤3000 chars / 新 PASONA 3000-10000 / PASBECONA 10000+). A boundary case (e.g., 新 PASONA at 1500 chars, below the 3000 floor) → 🟡. Far-below (≤60% of band floor) → 🔴. The gate does NOT reject boundary cases outright but surfaces them as a flag so the user can choose to downgrade the framework (e.g., 新 PASONA → 旧 PASONA) or expand the draft.
+- **Word-count band adherence** — check the draft length against the framework's canonical band (per `long-form-pasona-canon.md §Three-framework applicability matrix`: 旧 PASONA ≤3000 chars / 新 PASONA 3000-10000 / PASBECONA 10000+). Threshold rules (apply in order — first match wins):
+  - Draft ≤ 60% of band floor (e.g., 新 PASONA at ≤1800 chars against 3000 floor) → **🔴 far-below**. Recommend downgrading framework or substantially expanding the draft.
+  - Draft > 60% of floor but < 100% of floor (e.g., 新 PASONA at 2000-2999 chars) → **🟡 boundary**. Acceptable but flag for user awareness.
+  - Draft ≥ floor → **🟢 in-band**.
+  - Example: 新 PASONA at 1500 chars = 50% of 3000 floor → 🔴 (recommend 旧 PASONA instead, which sits ≤3000). 新 PASONA at 2500 chars = 83% → 🟡.
+  - The gate does NOT reject outright — it surfaces the mismatch so the user can choose to downgrade framework (e.g., 新 PASONA → 旧 PASONA) or expand the draft. But 🔴 triggers `NEEDS_REVISION` per the 8b verdict rules below.
 - **`schwartz_alignment: conflict_flagged` carry-forward** — when Phase 5's `voice_quadrant.schwartz_alignment == "conflict_flagged"` persists to Phase 8, the rubric checks whether the final draft delivers the claimed voice despite the Schwartz mismatch. If voice-fidelity drops (e.g., declared 許舜英 Q2 manifesto but actual copy reads Q4 direct-response), raise 🟡 for "voice-intent vs delivery mismatch in Schwartz-conflict context". This is the downstream consumer that closes the conflict_flagged loop.
 
 Gate 8b runs in **flag mode**: it surfaces weaknesses but does not
