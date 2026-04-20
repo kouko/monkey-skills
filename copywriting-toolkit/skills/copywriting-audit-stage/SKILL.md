@@ -134,7 +134,7 @@ Audit report envelope:
       "form_verdict": "PASS | PASS_WITH_NOTES | NEEDS_REVISION"
     }
   ],
-  "voice_quadrant": "Q1-Q4",
+  "voice_quadrant": { "primary": "Q1 | Q2 | Q3 | Q4", "edge": "...", "rationale": "...", "schwartz_alignment": "..." },
   "tone_notes": "...",
   "ethics_verdict_on_original": "PASS | PASS_WITH_NOTES | NEEDS_REVISION",
   "form_verdict_on_original": "PASS | PASS_WITH_NOTES | NEEDS_REVISION",

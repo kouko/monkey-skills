@@ -106,7 +106,7 @@ Check required keys: `phase`, `brief`, `next_stage`. If malformed, return a stru
 | `phase-3-neta-pre-draft` | passed | Step 5 (form selection) |
 | `phase-4-draft` | form gate not yet run | Step 6 (neta overlay decision) |
 | `phase-3-neta-overlay` | passed | `copywriting-voice-positioning-stage` (Phase 5) |
-| `phase-5-voice-positioning` | passed | `copywriting-voice-tone-stage` (Phase 6) |
+| `phase-5-voice-positioned` | passed | `copywriting-voice-tone-stage` (Phase 6) |
 | `phase-6-voice-tone` | passed | `copywriting-ethics-check-stage` (Phase 7) |
 | `phase-7-ethics` | PASS | `copywriting-form-check-stage` (Phase 8) |
 | `phase-7-ethics` | NEEDS_REVISION | Return to whichever skill authored the draft (form-specific) |

@@ -34,7 +34,7 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 {
   "phase": "phase-4-draft",
   "form": "light-action",
-  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_ref": "...", "action_weight": "light", "target_action": "opt-in | subscribe | download | follow | share | ..." },
+  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_reference": "...", "action_weight": "light", "target_action": "opt-in | subscribe | download | follow | share | ..." },
   "message_thesis": "...",
   "ideation_pool": ["... optional ..."],
   "neta_candidates": ["... optional pre-draft ..."]
@@ -64,7 +64,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 | Field | Type | Notes |
 |---|---|---|
 | `brief.schwartz_level` | enum 1-5 | |
-| `brief.voice_ref` | string | |
+| `brief.voice_reference` | string | |
 | `ideation_pool.winners[]` | array | if Phase 2 ran |
 
 ### Upstream bounce target on violation

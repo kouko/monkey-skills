@@ -39,8 +39,11 @@ least one of the following is true:
 
 1. `brief.output_language` is `ja` (Japanese-language output).
 2. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}.
-3. `brief.voice_quadrant` = Q3 (Affinity-Emotion) AND the message thesis
-   is state-proposal / 余韻-driven rather than action-prompting.
+3. `voice_quadrant.primary == "Q3"` (Affinity-Emotion) AND the message
+   thesis is state-proposal / 余韻-driven rather than action-prompting.
+   Note: `voice_quadrant` is the object emitted by Phase 5
+   (`{primary, edge, rationale, schwartz_alignment}`) — always
+   dereference `.primary`, never read it as a string.
 
 Otherwise, voice tuning operates on `voice-and-tone.md` alone (Ogilvy Anglo
 canon + 18F / Mailchimp 4-axis + tone context-switching). Do **not** force
@@ -162,7 +165,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 | Field | Type | Source | Notes |
 |---|---|---|---|
-| `phase` | enum | Phase 5 | must equal `phase-5-positioned` |
+| `phase` | enum | Phase 5 | must equal `phase-5-voice-positioned` |
 | `voice_quadrant.primary` | enum Q1-Q4 | Phase 5 | required — macro quadrant before tactical tuning |
 | `draft` | string | Phase 4 | non-empty |
 | `form` | enum | intake | |
@@ -189,12 +192,16 @@ post-Phase 5:
 
 ```json
 {
-  "phase": "phase-5-positioned",
+  "phase": "phase-5-voice-positioned",
   "form": "long-form-pasona | long-form-extended | mid-form | short-form | light-action | audit",
   "brief": { "voice_reference": "...", "output_language": "ja | en | zh-TW", "...": "..." },
   "message_thesis": "...",
-  "voice_quadrant": "Q1 | Q2 | Q3 | Q4",
-  "voice_quadrant_rationale": "Phase 5 rationale",
+  "voice_quadrant": {
+    "primary": "Q1 | Q2 | Q3 | Q4",
+    "edge": "Q2-Q3 | Q1-Q4 | null",
+    "rationale": "Phase 5 rationale",
+    "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
+  },
   "draft": "the Phase 4 draft",
   "next_stage": "copywriting-voice-tone-stage"
 }

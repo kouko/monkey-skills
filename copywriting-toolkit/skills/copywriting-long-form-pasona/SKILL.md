@@ -34,7 +34,7 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 {
   "phase": "phase-4-draft",
   "form": "long-form-pasona",
-  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_ref": "...", "target_length": "...", "channel": "..." },
+  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_reference": "...", "target_length": "...", "channel": "..." },
   "message_thesis": "...",
   "ideation_pool": ["... optional — Affinity-quadrant seed candidates ..."],
   "neta_candidates": ["... optional pre-draft ..."]
@@ -65,7 +65,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 | Field | Type | Notes |
 |---|---|---|
-| `brief.voice_ref` | string | 糸井 / 岩崎 / 眞木 / Ogilvy / default |
+| `brief.voice_reference` | string | 糸井 / 岩崎 / 眞木 / Ogilvy / default |
 | `ideation_pool.winners[]` | array | if Phase 2 ran, Affinity-quadrant seeds feed Affinity stage |
 | `neta_candidates[]` | array | if Phase 3 ran pre-draft |
 

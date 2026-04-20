@@ -41,7 +41,12 @@ Envelope`). At this phase the envelope MUST already carry:
   "brief": { "...": "from Phase 0 intake" },
   "message_thesis": "...",
   "draft": "<polished draft from Phase 6>",
-  "voice_quadrant": "<from Phase 5>",
+  "voice_quadrant": {
+    "primary": "Q1 | Q2 | Q3 | Q4",
+    "edge": "Q2-Q3 | Q1-Q4 | null",
+    "rationale": "<from Phase 5>",
+    "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
+  },
   "tone_notes": "<from Phase 6>",
   "next_stage": "copywriting-ethics-check-stage"
 }

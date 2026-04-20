@@ -31,14 +31,14 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 {
   "phase": "phase-4-draft",
   "form": "short-form",
-  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_ref": "..." },
+  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_reference": "..." },
   "message_thesis": "...",
   "ideation_pool": ["... optional ..."],
   "neta_candidates": ["... optional pre-draft ..."]
 }
 ```
 
-Hard gate: `copywriting-intake` must have passed Intake Completeness before this skill runs. Do not short-circuit if `brief.schwartz_level` or `brief.voice_ref` is missing — kick back to intake.
+Hard gate: `copywriting-intake` must have passed Intake Completeness before this skill runs. Do not short-circuit if `brief.schwartz_level` or `brief.voice_reference` is missing — kick back to intake.
 
 ## Preconditions
 
@@ -61,7 +61,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 | Field | Type | Notes |
 |---|---|---|
 | `brief.schwartz_level` | enum 1-5 | drives 5 切入點 selection |
-| `brief.voice_ref` | string | maestro tag (糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / default) |
+| `brief.voice_reference` | string | maestro tag (糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / default) |
 
 ### Upstream bounce target on violation
 

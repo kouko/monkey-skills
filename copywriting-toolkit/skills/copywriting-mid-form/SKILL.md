@@ -33,7 +33,7 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 {
   "phase": "phase-4-draft",
   "form": "mid-form",
-  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_ref": "...", "evidence_sources": ["..."] },
+  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_reference": "...", "evidence_sources": ["..."] },
   "message_thesis": "...",
   "ideation_pool": ["... optional ..."],
   "neta_candidates": ["... optional pre-draft ..."]
@@ -62,7 +62,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 | Field | Type | Notes |
 |---|---|---|
-| `brief.voice_ref` | string | maestro tag or default |
+| `brief.voice_reference` | string | maestro tag or default |
 
 ### Upstream bounce target on violation
 

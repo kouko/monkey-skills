@@ -90,8 +90,8 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 | Field | Type | Notes |
 |---|---|---|
-| `schwartz_level` | enum 1-5 | activates Schwartz × Quadrant hard-rule table (Level 5 ≠ Q4) |
-| `brief.voice_ref` | string | if present, constrains primary quadrant |
+| `brief.schwartz_level` | enum 1-5 | activates Schwartz × Quadrant hard-rule table (Level 5 ≠ Q4) |
+| `brief.voice_reference` | string | if present, constrains primary quadrant |
 | `brief.channel` | string | affects register calibration |
 
 ### Upstream bounce target on violation
@@ -107,10 +107,12 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 {
   "phase": "phase-4-draft",
   "form": "<long-form-pasona | mid-form | short-form | light-action | long-form-extended>",
-  "brief": { "...": "from intake" },
+  "brief": {
+    "schwartz_level": "1 | 2 | 3 | 4 | 5",
+    "...": "from intake"
+  },
   "message_thesis": "...",
   "draft": "...",
-  "schwartz_level": "1 | 2 | 3 | 4 | 5",
   "next_stage": "copywriting-voice-positioning-stage"
 }
 ```
@@ -120,10 +122,9 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 {
   "phase": "phase-5-voice-positioned",
   "form": "...",
-  "brief": { "...": "passthrough" },
+  "brief": { "...": "passthrough (includes schwartz_level)" },
   "message_thesis": "...",
   "draft": "...",
-  "schwartz_level": "...",
   "voice_quadrant": {
     "primary": "Q1 | Q2 | Q3 | Q4",
     "edge": "Q2-Q3 | Q1-Q4 | null",
@@ -143,7 +144,7 @@ Positioning is orientation, not prison — legitimate edge positions (Q2↔Q3, Q
 3. **Diagnose axes**:
    - Tenor (Authority vs Affinity) from brief's audience + channel + brand relationship.
    - Think/Feel (Reason vs Emotion) from message_thesis + decision type.
-4. **Apply Schwartz × Quadrant table** if `schwartz_level` is present. If the quadrant chosen on voice grounds collides with Schwartz preference, the Schwartz hard rule (Level 5 ≠ Q4) wins; soft mismatches surface as `schwartz_alignment: "conflict_flagged"` with rationale.
+4. **Apply Schwartz × Quadrant table** if `brief.schwartz_level` is present. If the quadrant chosen on voice grounds collides with Schwartz preference, the Schwartz hard rule (Level 5 ≠ Q4) wins; soft mismatches surface as `schwartz_alignment: "conflict_flagged"` with rationale.
 5. **Check adjacency**: if the draft shows legitimate edge positioning, record it. If it shows diagonal mixing, flag as voice-collapse risk before Phase 6.
 6. **Emit** output envelope with `next_stage: copywriting-voice-tone-stage`.
 

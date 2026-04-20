@@ -34,7 +34,7 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 {
   "phase": "phase-4-draft",
   "form": "long-form-extended",
-  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_ref": "...", "positioning": "expert | shepherd | ...", "language": "en | ja | ..." },
+  "brief": { "product": "...", "audience": "...", "schwartz_level": "...", "voice_reference": "...", "positioning": "expert | shepherd | ...", "language": "en | ja | ..." },
   "message_thesis": "...",
   "ideation_pool": ["... optional ..."],
   "neta_candidates": ["... optional pre-draft ..."]
@@ -65,7 +65,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 | Field | Type | Notes |
 |---|---|---|
-| `brief.voice_ref` | string | Ogilvy / Schwartz / default |
+| `brief.voice_reference` | string | Ogilvy / Schwartz / default |
 | `ideation_pool.winners[]` | array | seeds Stimulate (QUEST) or Story / Transformation (PASTOR) |
 | `neta_candidates[]` | array | if Phase 3 ran pre-draft |
 

@@ -56,7 +56,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
   "brief": { "...": "from Phase 0 intake" },
   "message_thesis": "...",
   "draft": "<Phase 7-cleared draft>",
-  "voice_quadrant": "...",
+  "voice_quadrant": { "primary": "Q1 | Q2 | Q3 | Q4", "edge": "...", "rationale": "...", "schwartz_alignment": "..." },
   "tone_notes": "...",
   "ethics_verdict": "PASS",
   "next_stage": "copywriting-form-check-stage"
@@ -189,7 +189,7 @@ On final `PASS` / `PASS_WITH_NOTES`:
   "brief": { "...": "unchanged" },
   "message_thesis": "...",
   "draft": "<final copy>",
-  "voice_quadrant": "...",
+  "voice_quadrant": { "primary": "Q1 | Q2 | Q3 | Q4", "edge": "...", "rationale": "...", "schwartz_alignment": "..." },
   "tone_notes": "...",
   "ethics_verdict": "PASS",
   "form_verdict": "PASS | PASS_WITH_NOTES",
