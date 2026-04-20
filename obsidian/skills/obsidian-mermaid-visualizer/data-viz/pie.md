@@ -16,7 +16,7 @@ Proportion of a whole — market share, survey responses, time allocation.
 ## Canonical syntax
 
 ```mermaid
-pie title Market Share Q1 2026
+pie title "Market Share Q1 2026"
     "Product A" : 45
     "Product B" : 30
     "Product C" : 15
@@ -34,7 +34,7 @@ Values can be any numeric — Mermaid normalizes to percentages automatically. `
 ### With / without title
 
 ```mermaid
-pie title My Chart
+pie title "My Chart"
     "A" : 50
     "B" : 50
 ```
@@ -66,12 +66,19 @@ pie showData
   - Too many slices (>6) makes the legend hard to read — not a technical limit but a design recommendation
 - **Workaround**: none needed
 
+## Quote rule for pie
+
+Pie chart **requires** display labels to be wrapped in `"..."` — this is the canonical form. All examples in this file already follow that convention.
+
+- **Slice labels**: `"Label" : value` (always quoted)
+- **Title**: quote if it contains spaces: `pie title "Has Spaces"` — unquoted form `pie title Simple` also works for single-word titles, but quoting for consistency is safe
+
 ## Worked examples
 
 ### Example 1: Market share
 
 ```mermaid
-pie title Market Share 2026 Q1
+pie title "Market Share 2026 Q1"
     "Acme Corp" : 42
     "BetaCo" : 28
     "Gamma Ltd" : 18
@@ -82,7 +89,7 @@ pie title Market Share 2026 Q1
 ### Example 2: Time allocation (percentage)
 
 ```mermaid
-pie showData title Weekly Time Allocation
+pie showData title "Weekly Time Allocation"
     "Deep work" : 45
     "Meetings" : 25
     "Code review" : 15
@@ -102,7 +109,7 @@ pie title "NPS Response Distribution (n=200)"
 ### Example 4: Budget breakdown (dollar amounts)
 
 ```mermaid
-pie showData title Q1 Marketing Budget (USD)
+pie showData title "Q1 Marketing Budget (USD)"
     "Paid ads" : 15000
     "Content" : 8000
     "Events" : 5000

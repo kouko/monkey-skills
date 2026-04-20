@@ -114,6 +114,43 @@ This is the most common silent-failure pattern: diagram parses but layout is wro
 
 ---
 
+## Quirk 4.5: Always quote user-visible display strings (where the parser allows it)
+
+**Rule**: Wrap user-visible display text in `"..."` wherever the diagram type's parser accepts it.
+
+**Rationale**:
+- CJK (Chinese / Japanese / Korean) text fails unpredictably without quotes across many Mermaid positions
+- EN text often works unquoted but can fail silently on special characters (spaces, dashes, parentheses, reserved words)
+- Unified rule eliminates per-case judgment and avoids the "works most of the time" trap
+
+**Positions where quoting IS required or safe (apply consistently)**:
+- Flowchart / graph / circular-flow / comparison node labels: `A["Label"]`, `B("Label")`, `C(("Label"))`, `D{"Decision?"}`, `E[/"Para"/]`, `F[("DB")]`, etc.
+- Flowchart arrow labels: `A -->|"Label"| B`
+- Subgraph display names with spaces: `subgraph id["Display Name"]`
+- Pie slice labels: `"Label" : value`
+- Pie title (if multi-word): `pie title "Multi Word Title"`
+- Quadrant data points: `"Name": [x, y]`
+- xychart title, axis names, categorical x-axis labels, series names: all `"..."` per [data-viz/xychart.md](data-viz/xychart.md) Style rule
+- Block-beta labels: `id["Display"]`
+- C4 element / boundary / relationship labels: all quoted per C4 canonical syntax
+- gitGraph commit IDs and tags: `id: "..."`, `tag: "..."`
+
+**Positions where quoting is NOT supported — leave unquoted**:
+- Identifiers / node IDs / branch names / class names / entity names (these are references, not display strings)
+- Keywords: `subgraph`, `end`, `class`, `state`, `loop`, `alt`, `participant`, `actor`, `section`, `title`, `direction`
+- Sequence message text / state transition labels / state descriptions (positions after `:` in sequence-v2 and state-v2)
+- Gantt title / section / task name (all free-form after keyword)
+- Timeline title / section / period / event text
+- Quadrant title / axis / quadrant-N labels (but data-point names ARE quoted)
+- Architecture-beta bracket content `[Label]` (bracket form is canonical; adding quotes inside is non-standard)
+- Numeric values, arrow operators, cardinality symbols, shape syntax without text content
+
+**When uncertain**: test in Mermaid Live Editor first; if quotes render literally in output, the position does not support quoting — leave unquoted and rely on rephrasing to avoid special characters.
+
+Per-type quote rules are documented at the top of each type file under `## Quote rule for <type>`.
+
+---
+
 ## Quirk 5: Inline styling syntax
 
 **Rule**: Style declarations use the same syntax across all diagram types that support styling.
@@ -183,6 +220,7 @@ Before finalizing ANY Mermaid diagram for an Obsidian note:
 - [ ] No `number. space` pattern in any node / label text
 - [ ] All subgraphs with spaces use `subgraph id["Display Name"]` format
 - [ ] All node references use IDs, never display text
+- [ ] **User-visible display strings quoted in positions that support it** (flowchart nodes, arrow labels, pie labels, quadrant data points, xychart title/axis/series, C4 labels, gitGraph tags) — see Quirk 4.5
 - [ ] Special characters (`"`, `()`) replaced with safe equivalents (`『』`, `「」`)
 - [ ] No features from Mermaid 11.5+ (Neo look, showDataLabelOutsideBar, wardley-beta)
 - [ ] Style declarations use valid hex colors and syntax

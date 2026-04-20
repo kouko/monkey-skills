@@ -100,6 +100,18 @@ timeline
   - Non-ASCII characters render fine but may affect alignment
 - **Workaround**: none needed for standard use
 
+## Quote rule for Timeline
+
+Mermaid timeline treats title / section / period / event text as free-form tokens delimited by newlines or `:`. Wrapping them in `"..."` causes quote characters to render literally in the output.
+
+**Do NOT quote**:
+- Title: `title History of Programming Languages` ✅ (NOT `title "..."`)
+- Section: `section 1950s` ✅ (NOT `section "1950s"`)
+- Period / events: `1957 : FORTRAN` ✅ (NOT `1957 : "FORTRAN"`)
+- Multi-event line: `1995 : Java : JavaScript : PHP : Ruby` ✅ — each event is colon-delimited free-form, unquoted
+
+**For CJK content in Timeline**: Mermaid timeline tolerates CJK throughout. Known caveat — colon in event text collides with the event separator; rephrase or remove colons rather than quoting.
+
 ## Worked examples
 
 ### Example 1: Technology era timeline

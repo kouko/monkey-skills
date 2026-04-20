@@ -95,6 +95,16 @@ Use `gitGraph TB` for top-to-bottom (but renders as LR in some versions).
   - Parallel merges from multiple branches can look tangled — render each separately if needed
 - **Workaround**: for complex branching, consider splitting into multiple smaller gitGraph diagrams showing different aspects
 
+## Quote rule for gitGraph
+
+Mermaid gitGraph requires quoting on **commit IDs** and **tags** — this is the canonical form and all examples in this file already follow that convention:
+
+- **Commit IDs**: `commit id: "initial"` ✅ (always quoted per Mermaid docs)
+- **Tags**: `commit tag: "v1.0"` ✅ (always quoted)
+- **Cherry-pick IDs**: `cherry-pick id: "abc123"` ✅ (always quoted)
+- **Branch names** (`branch develop`, `checkout develop`): identifiers — unquoted. Branch names are references, not display strings
+- **Commit type keywords** (`type: REVERSE`, `type: HIGHLIGHT`): enum values — unquoted
+
 ## Worked examples
 
 ### Example 1: Simple feature branch workflow

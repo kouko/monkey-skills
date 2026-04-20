@@ -131,6 +131,18 @@ gantt
   - Sections with no tasks may render as empty rows
 - **Workaround**: none needed
 
+## Quote rule for Gantt
+
+Gantt's grammar treats `section`, `title`, and task-name positions as free-form text until the next line or delimiter — wrapping them in `"..."` causes the quote characters to render literally.
+
+**Do NOT quote**:
+- Title: `title Project Roadmap Q1 2026` ✅ (NOT `title "Project Roadmap Q1 2026"`)
+- Section name: `section Planning` ✅ (NOT `section "Planning"`)
+- Task name: `Research        :done, research, 2026-01-01, 5d` ✅ (the "Research" part is free-form, NOT quotable)
+- Task ID, status, dates, durations: all structured tokens, unquoted
+
+**For CJK content in Gantt**: Mermaid Gantt tolerates CJK in title / section / task name positions without quoting. If a specific label fails to parse, rephrase or remove special characters.
+
 ## Worked examples
 
 ### Example 1: Simple 2-month project

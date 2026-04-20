@@ -21,18 +21,18 @@ Minimal example:
 
 ```mermaid
 graph TB
-    A[Start] --> B[Process]
-    B --> C[End]
+    A["Start"] --> B["Process"]
+    B --> C["End"]
 ```
 
 With decision + multiple paths:
 
 ```mermaid
 graph TB
-    Start[Start] --> Decision{Decision?}
-    Decision -->|Yes| PathA[Path A]
-    Decision -->|No| PathB[Path B]
-    PathA --> End[End]
+    Start["Start"] --> Decision{"Decision?"}
+    Decision -->|"Yes"| PathA["Path A"]
+    Decision -->|"No"| PathB["Path B"]
+    PathA --> End["End"]
     PathB --> End
 ```
 
@@ -52,16 +52,16 @@ graph TB
 ### Node shapes
 
 ```mermaid
-A[Rectangle Text]             # Default rectangle
-B(Rounded Text)               # Rounded rectangle
-C([Stadium Text])             # Stadium / pill
-D((Circle<br/>Text))          # Circle (supports <br/>)
-E>Right Arrow]                # Asymmetric / flag
-F{Decision?}                  # Rhombus (decision)
-G{{Hexagon}}                  # Hexagon
-H[/Parallelogram/]            # Parallelogram
-I[(Database)]                 # Database cylinder
-J[/Trapezoid\]                # Trapezoid
+A["Rectangle Text"]             # Default rectangle
+B("Rounded Text")               # Rounded rectangle
+C(["Stadium Text"])             # Stadium / pill
+D(("Circle<br/>Text"))          # Circle (supports <br/>)
+E>"Right Arrow"]                # Asymmetric / flag
+F{"Decision?"}                  # Rhombus (decision)
+G{{"Hexagon"}}                  # Hexagon
+H[/"Parallelogram"/]            # Parallelogram
+I[("Database")]                 # Database cylinder
+J[/"Trapezoid"\]                # Trapezoid
 ```
 
 ### Arrow types
@@ -74,7 +74,7 @@ J[/Trapezoid\]                # Trapezoid
 | `A ~~~ B` | Invisible link (layout only, not rendered) |
 | `A <--> B` | Bidirectional solid |
 | `A <-.-> B` | Bidirectional dashed |
-| `A -->|Label| B` | Arrow with label |
+| `A -->|"Label"| B` | Arrow with label (always quote the label) |
 
 ### Multi-target connections
 
@@ -130,7 +130,7 @@ See SKILL.md §Color Scheme Defaults for the 9-color palette and when to apply e
 - **Known quirks**:
   - Undirected graph edges (`---`) may render as directed in 11.4.1 (known 11.5+ fix) — use explicit arrows
   - Large flowcharts (>50 nodes) may have layout stability issues — consider splitting into multiple diagrams
-  - `<br/>` in node text works reliably only in circle nodes `((Text<br/>Line))`
+  - `<br/>` in node text works reliably only in circle nodes `(("Text<br/>Line"))`
 - **Workaround**: none needed for standard use; follow [obsidian-common-quirks.md](../obsidian-common-quirks.md) universal rules
 
 ## Worked examples
@@ -140,15 +140,15 @@ See SKILL.md §Color Scheme Defaults for the 9-color palette and when to apply e
 ```mermaid
 graph TB
     subgraph lane1["Lane 1 — User"]
-        A[Login] --> B[Browse]
+        A["Login"] --> B["Browse"]
     end
 
     subgraph lane2["Lane 2 — System"]
-        C[Auth Check] --> D[Fetch Data]
+        C["Auth Check"] --> D["Fetch Data"]
     end
 
     B --> C
-    D --> E[Display Results]
+    D --> E["Display Results"]
 
     style A fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
     style B fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
@@ -161,9 +161,9 @@ graph TB
 
 ```mermaid
 graph TB
-    A[Start] --> B[Process]
-    B --> C[Output]
-    C -.->|Feedback| A
+    A["Start"] --> B["Process"]
+    B --> C["Output"]
+    C -.->|"Feedback"| A
 
     style A fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
     style B fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
@@ -174,12 +174,12 @@ graph TB
 
 ```mermaid
 graph TB
-    Hub[Central Hub]
+    Hub["Central Hub"]
 
-    A[Spoke 1] --> Hub
-    B[Spoke 2] --> Hub
-    C[Spoke 3] --> Hub
-    Hub --> D[Output]
+    A["Spoke 1"] --> Hub
+    B["Spoke 2"] --> Hub
+    C["Spoke 3"] --> Hub
+    Hub --> D["Output"]
 
     style Hub fill:#1971c2,stroke:#1971c2,stroke-width:3px,color:#ffffff
 ```
@@ -188,14 +188,14 @@ graph TB
 
 ```mermaid
 graph TB
-    Start[User Request] --> Decision{Has valid brief?}
-    Decision -->|Yes| Draft[Draft Copy]
-    Decision -->|No| Intake[Run Intake]
+    Start["User Request"] --> Decision{"Has valid brief?"}
+    Decision -->|"Yes"| Draft["Draft Copy"]
+    Decision -->|"No"| Intake["Run Intake"]
     Intake --> Decision
 
-    Draft --> Ethics{Ethics check}
-    Ethics -->|Pass| Deliver[Deliver]
-    Ethics -->|Fail| Revise[Revise]
+    Draft --> Ethics{"Ethics check"}
+    Ethics -->|"Pass"| Deliver["Deliver"]
+    Ethics -->|"Fail"| Revise["Revise"]
     Revise --> Ethics
 ```
 
@@ -203,17 +203,17 @@ graph TB
 
 ```mermaid
 graph TB
-    Input[User Query] --> Perception
+    Input["User Query"] --> Perception
 
     subgraph agent["AI Agent Core"]
         direction TB
-        Perception[①Perception] --> Planning[②Planning]
-        Planning --> Reasoning[③Reasoning]
-        Reasoning --> Action[④Action]
+        Perception["①Perception"] --> Planning["②Planning"]
+        Planning --> Reasoning["③Reasoning"]
+        Reasoning --> Action["④Action"]
     end
 
-    Action --> Output[System Response]
-    Output -.->|Feedback| Perception
+    Action --> Output["System Response"]
+    Output -.->|"Feedback"| Perception
 
     style Input fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
     style Output fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
@@ -231,19 +231,21 @@ Note the use of `①②③④` instead of `1. 2. 3. 4.` to avoid the Markdown li
 
 | ❌ Wrong | ✅ Right | Reason |
 |---|---|---|
-| `A --> [Display Text]` | `A --> B` then define `B[Display Text]` elsewhere | Target must be node ID, not shape definition inline |
+| `A --> ["Display Text"]` | `A --> B` then define `B["Display Text"]` elsewhere | Target must be node ID, not shape definition inline |
 | `graph TB A --> B` (on one line) | Put `graph TB` on its own line, then `A --> B` on next | Direction declaration needs newline |
 | `subgraph AI Agent` without ID | `subgraph agent["AI Agent"]` | Space in name requires ID+display format |
-| `A --> B --> |Label| C` | `A --> B -->|Label| C` (no space before `|`) | Arrow label syntax is strict |
-| Using `<br/>` in rectangles `[Line1<br/>Line2]` | Use circle nodes `((Line1<br/>Line2))` OR split into annotation nodes | `<br/>` reliable only in circles |
+| `A --> B --> |"Label"| C` | `A --> B -->|"Label"| C` (no space before `|`) | Arrow label syntax is strict |
+| Using `<br/>` in rectangles `["Line1<br/>Line2"]` | Use circle nodes `(("Line1<br/>Line2"))` OR split into annotation nodes | `<br/>` reliable only in circles |
+| Unquoted display text: `A[Label]` | Quote display text: `A["Label"]` | Unified quote rule for reliability (CJK + special chars) |
 
 ### Pre-save validation
 
 - [ ] Direction specified on first line (`graph TB` / `graph LR` etc.)
 - [ ] All nodes referenced by ID, never by display text
+- [ ] **All user-visible display text wrapped in `"..."`** (node labels, arrow labels, subgraph names)
 - [ ] All subgraphs with spaces use `subgraph id["Display Name"]`
 - [ ] Arrow syntax matches type (`-->`, `-.->`, `==>`, never mixed like `-.>`)
-- [ ] Decision nodes use `{Text?}` rhombus shape
+- [ ] Decision nodes use `{"Text?"}` rhombus shape
 - [ ] `<br/>` only used in circle nodes
 - [ ] Style declarations apply to node IDs not display text
 - [ ] Cross-type universal checks per [obsidian-common-quirks.md](../obsidian-common-quirks.md)

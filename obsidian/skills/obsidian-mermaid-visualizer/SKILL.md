@@ -153,6 +153,7 @@ Before outputting any diagram, verify:
 - [ ] Subgraphs with spaces use `subgraph id["Display"]` format ([quirk 2](obsidian-common-quirks.md))
 - [ ] All node / entity references use IDs, not display text ([quirk 3](obsidian-common-quirks.md))
 - [ ] Special characters replaced: `"` → `『』`, `()` → `「」` ([quirk 4](obsidian-common-quirks.md))
+- [ ] **User-visible display strings quoted where the parser supports it** ([quirk 4.5](obsidian-common-quirks.md)) — flowchart nodes `A["Label"]`, arrow labels `-->|"Label"|`, pie labels, quadrant data points, xychart axes, C4 labels, gitGraph tags
 - [ ] No v11.5+ features used (Neo look, showDataLabelOutsideBar, wardley-beta) ([quirk 6](obsidian-common-quirks.md))
 - [ ] Diagram wrapped in ` ```mermaid ... ``` ` fence
 - [ ] No Emoji in node / label text (use color coding instead)

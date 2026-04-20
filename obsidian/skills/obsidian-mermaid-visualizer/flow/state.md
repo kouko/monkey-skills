@@ -114,6 +114,18 @@ stateDiagram-v2
   - Composite states nested >2 levels deep can overflow preview pane
 - **Workaround**: none needed
 
+## Quote rule for state diagrams
+
+State diagrams, like sequence diagrams, treat text after `:` as free-form description. Adding `"..."` around transition labels or state descriptions makes the quotes render literally.
+
+**Do NOT quote**:
+- State description: `State1 : description` (NOT `State1 : "description"`)
+- Transition label: `A --> B: label` (NOT `A --> B: "label"`)
+
+**State IDs must remain unquoted identifiers** (`Idle`, `Loading`, etc.) — these are not display strings, they are references. If you need a multi-word state, use underscore (`Virus_scan`) or camelCase (`VirusScan`).
+
+**For CJK / special characters in state**: Mermaid state-v2 tolerates CJK in descriptions and labels without quoting. If a label fails to parse, rephrase or remove the problematic character rather than wrapping in quotes.
+
 ## Worked examples
 
 ### Example 1: Simple UI state

@@ -20,16 +20,16 @@ Comparison is a **flowchart pattern** — uses `graph TB` with parallel subgraph
 
 ```mermaid
 graph TB
-    Title[Comparison]
+    Title["Comparison"]
 
     subgraph left["System A"]
-        A1[Feature 1]
-        A2[Feature 2]
+        A1["Feature 1"]
+        A2["Feature 2"]
     end
 
     subgraph right["System B"]
-        B1[Feature 1]
-        B2[Feature 2]
+        B1["Feature 1"]
+        B2["Feature 2"]
     end
 
     Title --> left
@@ -56,25 +56,25 @@ Inherits flowchart options. Key variations for comparison:
 
 ```mermaid
 graph TB
-    Title[Architecture Comparison]
+    Title["Architecture Comparison"]
 
     subgraph traditional["Traditional"]
-        T1[Monolithic App]
-        T2[Single Database]
-        T3[Vertical Scaling]
+        T1["Monolithic App"]
+        T2["Single Database"]
+        T3["Vertical Scaling"]
     end
 
     subgraph modern["Modern"]
-        M1[Microservices]
-        M2[Distributed DB]
-        M3[Horizontal Scaling]
+        M1["Microservices"]
+        M2["Distributed DB"]
+        M3["Horizontal Scaling"]
     end
 
     Title --> traditional
     Title --> modern
 
     subgraph diff["Key Differences"]
-        D1[Coupling / Deployment / Cost model]
+        D1["Coupling / Deployment / Cost model"]
     end
 
     traditional --> diff
@@ -90,14 +90,14 @@ graph TB
 ```mermaid
 graph LR
     subgraph before["Before: Manual Review"]
-        B1[Submit] --> B2[Wait 3 days] --> B3[Email feedback]
+        B1["Submit"] --> B2["Wait 3 days"] --> B3["Email feedback"]
     end
 
     subgraph after["After: Automated Pipeline"]
-        A1[Submit] --> A2[CI runs tests] --> A3[Inline feedback]
+        A1["Submit"] --> A2["CI runs tests"] --> A3["Inline feedback"]
     end
 
-    before --> Result[Comparison Outcome]
+    before --> Result["Comparison Outcome"]
     after --> Result
 
     style before fill:#f8f9fa,stroke:#868e96,stroke-width:2px
@@ -109,21 +109,21 @@ graph LR
 ```mermaid
 graph TB
     subgraph criteria["Evaluation Criteria"]
-        C1[Speed]
-        C2[Cost]
-        C3[Maintainability]
+        C1["Speed"]
+        C2["Cost"]
+        C3["Maintainability"]
     end
 
     subgraph optionA["Option A: Library X"]
-        A1[Fast]
-        A2[Free]
-        A3[Low maintenance]
+        A1["Fast"]
+        A2["Free"]
+        A3["Low maintenance"]
     end
 
     subgraph optionB["Option B: Library Y"]
-        B1[Slow]
-        B2[Paid]
-        B3[High maintenance]
+        B1["Slow"]
+        B2["Paid"]
+        B3["High maintenance"]
     end
 
     criteria --> optionA
@@ -141,5 +141,6 @@ graph TB
 | No visual distinction between sides | Use contrasting fill colors (e.g., gray vs blue) | Reader can't parse comparison without visual cue |
 | Subgraphs at different depths on each side | Keep parallel structure identical (same node count, same nesting) | Asymmetry implies the comparison isn't fair |
 | Using circular feedback arrows | Comparison is static, not cyclic — use flow arrows only | Feedback arrows confuse the comparison semantic |
+| Unquoted display text: `A[Feature]` | `A["Feature"]` | Unified quote rule for display strings |
 
 See also [obsidian-common-quirks.md](../obsidian-common-quirks.md) for universal rules.

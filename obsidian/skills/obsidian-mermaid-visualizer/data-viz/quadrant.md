@@ -78,6 +78,17 @@ Width / height customization. Not all init options work reliably in Obsidian 11.
   - Long quadrant labels may get truncated — use concise phrasing (2-3 words)
 - **Workaround**: none needed for standard use
 
+## Quote rule for quadrant
+
+Mixed quoting convention — only **data points** take quoted labels; axis / title / quadrant labels are unquoted free-form text (quoting them causes the quotes to render literally):
+
+- **Data points** (always quote): `"Name": [x, y]` ✅
+- **Title** (unquoted, free-form): `title Priority Matrix` ✅ — do NOT quote
+- **Axis labels** (unquoted, free-form): `x-axis Low Effort --> High Effort` ✅ — do NOT quote
+- **Quadrant labels** (unquoted, free-form): `quadrant-1 Quick Wins` ✅ — do NOT quote
+
+This is the opposite of `xychart-beta` where title and axis names ARE quoted. The divergence is intentional per each diagram type's parser. Quadrant data-point labels follow the unified quote rule because they are the user-visible items whose quoting is required for spaces and CJK.
+
 ## Worked examples
 
 ### Example 1: Eisenhower matrix (urgent × important)

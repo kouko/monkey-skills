@@ -98,6 +98,17 @@ ENTITY {
   - Relationships with both ends `}{` (many-many) can render awkwardly — consider decomposing to a junction entity
 - **Workaround**: none needed
 
+## Quote rule for ER diagrams
+
+ER diagrams use **structured identifiers** for entities and fields; only field comments and relationship labels are user-visible display text:
+
+- **Entity names** (`CUSTOMER`, `ORDER`): identifiers — unquoted (or quoted as `"Customer Order"` only if spaces required)
+- **Field names / types / keys** (`string customer_id PK`): identifier-structured — unquoted
+- **Field comments** (`string id PK "Primary key"`): ALREADY quoted per Mermaid canonical syntax — keep quoted. This is the one position where ER requires quoting
+- **Relationship labels** (`CUSTOMER ||--o{ ORDER : places`): free-form text after `:` — NOT quotable (quotes render literally) unless they already contain special chars: `USER ||..o{ AUDIT_LOG : "may generate"` shows the quoted form which is accepted by Mermaid parser when the label is multi-word or contains punctuation
+
+**Recommendation**: keep relationship labels unquoted when they are single-word (`places`, `has`, `manages`); quote them only when they contain spaces or punctuation (`"may generate"`, `"belongs to"`). Mermaid ER parser tolerates both forms.
+
 ## Worked examples
 
 ### Example 1: Simple one-to-many (Customer → Orders)

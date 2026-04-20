@@ -120,6 +120,18 @@ classDiagram
   - Unicode in class names sometimes causes issues — prefer ASCII
 - **Workaround**: none needed
 
+## Quote rule for class diagrams
+
+Class diagrams use **structured identifiers**, not free-form display strings. There is no user-visible display text to quote:
+
+- **Class names** (`Animal`, `Dog`, `Repository`): identifiers — unquoted
+- **Field / method signatures** (`+String name`, `+bark() void`): typed-structured — unquoted
+- **Annotations** (`<<interface>>`, `<<abstract>>`): keyword-structured — unquoted
+- **Relationship labels** (`Car *-- Engine : contains`): free-form text after `:` — NOT quotable (quotes render literally)
+- **Cardinality labels** (`"1" --> "*"`): ALREADY quoted per Mermaid docs — keep quoted
+
+**Notes** attached via `note for Foo "..."` or `note "..."` — these ARE quoted per Mermaid canonical syntax; examples in this file already use the quoted form.
+
 ## Worked examples
 
 ### Example 1: Simple inheritance

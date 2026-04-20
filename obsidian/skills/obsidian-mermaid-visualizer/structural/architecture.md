@@ -101,6 +101,14 @@ Use junctions to branch one output to multiple inputs.
   - If Obsidian is online + unblocked: iconify icons work
   - If icons don't render (offline / CDN blocked): skill falls back to `graph TB` + subgraph approximation — see [obsidian-compatibility.md § Architecture icon fallback policy](../obsidian-compatibility.md)
 
+## Quote rule for architecture-beta
+
+architecture-beta uses the bracket form `[Display Label]` for service / group display names. Per Mermaid docs, adding quotes inside the bracket (e.g., `["Display Label"]`) is **not part of the documented canonical form** and support is inconsistent across Mermaid versions.
+
+**Recommendation**: leave bracket content unquoted in architecture-beta: `service svc(server)[App Server]`. If a label contains characters that fail to parse (e.g., embedded `[`, `]`, or CDN-unsafe chars), rephrase rather than quoting. If you need CJK content, test it — CJK characters inside brackets generally work in architecture-beta without quoting.
+
+If the fallback to `graph TB` is triggered, apply the standard flowchart quote rule (`A["Label"]`) to the fallback diagram.
+
 ## Worked examples
 
 ### Example 1: Simple 3-tier web app (built-in icons only, 100% reliable)
@@ -166,9 +174,9 @@ When iconify icons fail, replace with `graph TB` + subgraph:
 graph TB
     subgraph aws["AWS us-east-1"]
         direction TB
-        S3[S3 Bucket]
-        Lambda[Lambda]
-        RDS[RDS PostgreSQL]
+        S3["S3 Bucket"]
+        Lambda["Lambda"]
+        RDS["RDS PostgreSQL"]
     end
 
     S3 --> Lambda

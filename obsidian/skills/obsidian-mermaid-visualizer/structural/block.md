@@ -100,6 +100,10 @@ block-beta
   - If block-beta renders poorly: fall back to `graph TB` + subgraph (loses grid semantics but preserves structure)
   - Commit 4 of this skill's development will populate actual render status in [obsidian-compatibility.md](../obsidian-compatibility.md)
 
+## Quote rule for block-beta
+
+block-beta display labels use the `id["Display Label"]` form with quotes inside the brackets — this is the canonical form and all examples in this file already follow that convention. Block IDs (e.g., `CPU`, `Bus`, `A`, `B`) remain unquoted since they are identifiers, not display strings.
+
 ## Worked examples
 
 ### Example 1: Basic CPU architecture
@@ -174,18 +178,18 @@ If block-beta doesn't render well in user's Obsidian, degrade to:
 graph TB
     subgraph frontend["Frontend"]
         direction LR
-        UI[UI Layer]
-        Router[Router]
+        UI["UI Layer"]
+        Router["Router"]
     end
 
     subgraph backend["Backend"]
         direction LR
-        API[REST API]
-        Auth[Auth]
-        Service[Business Logic]
+        API["REST API"]
+        Auth["Auth"]
+        Service["Business Logic"]
     end
 
-    Database[(Database)]
+    Database[("Database")]
 
     frontend --> backend
     backend --> Database

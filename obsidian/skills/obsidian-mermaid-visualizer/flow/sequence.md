@@ -101,6 +101,22 @@ sequenceDiagram
   - Activation boxes (`+`/`-`) must be paired — unmatched `+` without `-` causes render error
 - **Workaround**: none needed for standard flows
 
+## Quote rule for sequence diagrams
+
+Sequence diagram has **limited quote support** compared to flowchart. Mermaid sequence parser treats most display text as free-form between delimiters, and adding quotes in participant aliases, message text, or notes typically makes the quote characters appear literally in the rendered output rather than being stripped.
+
+**Safe to quote**:
+- Nothing reliably — quotes appear literally in the render
+
+**Do NOT quote** (quote characters render literally):
+- `participant A as Alice` — NOT `participant A as "Alice"`
+- `A->>B: Message` — NOT `A->>B: "Message"`
+- `Note over A,B: Setup` — NOT `Note over A,B: "Setup"`
+- `loop Every 10 seconds` — NOT `loop "Every 10 seconds"`
+- `alt Success` — NOT `alt "Success"`
+
+**For CJK / special characters in sequence**: Mermaid sequence tolerates CJK in these positions without quoting. If a specific message fails to parse, use the backtick-escape `A->>B: \`message with special chars\`` or HTML-encode problematic characters. Do not wrap the whole string in `"..."` as the quotes will render literally.
+
 ## Worked examples
 
 ### Example 1: Simple API call
