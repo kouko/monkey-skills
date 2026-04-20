@@ -32,7 +32,7 @@ If any of the 3 required inputs (value prop / target / form) is missing, HALT an
 
 ## Preconditions
 
-Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`.
 
 ### Required envelope fields (Level 1 — BLOCKED if missing)
 

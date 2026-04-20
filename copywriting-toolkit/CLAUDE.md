@@ -41,6 +41,46 @@ Between-skill artifact shape (JSON):
 
 Each stage reads envelope, adds its layer, updates `next_stage`, returns.
 
+## Envelope Violation (bounce-back contract)
+
+Every downstream skill declares its `## Preconditions` schema in its own SKILL.md. The `using-copywriting-toolkit` router validates the envelope against that schema BEFORE launching the skill. On violation, the router does not launch; instead it emits a bounce-back envelope and re-routes upstream.
+
+### Violation envelope shape
+
+```json
+{
+  "violation": {
+    "detected_by": "copywriting-<skill-that-rejected>",
+    "detected_at": "ISO8601 timestamp",
+    "missing": ["field1", "field2.nested"],
+    "malformed": [{ "field": "name", "expected": "enum[a|b|c]", "got": "..." }],
+    "bounce_to": "copywriting-<upstream-skill-to-re-enter>",
+    "bounce_round": 1,
+    "user_message": "Plain-language explanation for the user — what the pipeline cannot proceed without"
+  },
+  "original_envelope": { "...": "preserved verbatim for round-2 merging" }
+}
+```
+
+### Bounce rules
+
+1. **Single skill declares, router enforces** — skills do NOT self-dispatch bounce; they return the violation shape and let the router route.
+2. **Preserve `original_envelope`** — don't strip fields the upstream already has; only ADD the missing ones on re-entry.
+3. **bounce_round increments on each bounce**. Hard cap:
+   - Round 1 — automatic bounce to `bounce_to`
+   - Round 2 — automatic bounce ALLOWED if `bounce_to` changes (different upstream)
+   - Round 3 — **HALT + ask user**. Do NOT loop. This mirrors `superpowers:executing-plans` stop-and-ask discipline and prevents infinite ping-pong between upstream / downstream
+4. **Evaluator verdicts are NOT violations** — `NEEDS_REVISION` from a MUST gate is a verdict with its own loop-back rule (max 2 auto-revise rounds in `copywriting-form-check-stage` / `copywriting-ethics-check-stage`). Do not conflate: violation = schema gap before skill runs; verdict = judgement after skill runs.
+5. **user_message is mandatory** — always human-readable; cite the specific SKILL.md Preconditions row that failed
+
+### Multi-field violations
+
+If several fields are missing, list them all in `missing[]`. Router picks the SINGLE furthest-upstream skill to bounce to — usually `copywriting-intake` if any Level 1 field is absent. Bouncing to multiple upstreams in one round is forbidden (round counter would be ambiguous).
+
+### Audit-stage exception
+
+`copywriting-audit-stage` does NOT accept bounce-back to `copywriting-intake` (audit bypasses intake by design). Its only bounce target is `using-copywriting-toolkit` for re-collecting `external_copy` full text.
+
 ## Cross-Plugin Delegation (Loose)
 
 Phase 1 Message Confirmation inside `copywriting-intake` may RECOMMEND `planning-team` when the problem is thesis-level (unclear positioning / audience / goal). Do NOT enforce — user may proceed anyway. No auto-delegation.

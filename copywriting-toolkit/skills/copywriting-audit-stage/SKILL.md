@@ -48,7 +48,7 @@ If `form` is `unknown`, the audit protocol's Phase 1 (Type ID) determines it bef
 
 ## Preconditions
 
-Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. Audit-stage is an alternate entry; it does NOT require the full intake envelope.
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`. Audit-stage is an alternate entry; it does NOT require the full intake envelope.
 
 ### Required envelope fields (Level 1 — BLOCKED if missing)
 

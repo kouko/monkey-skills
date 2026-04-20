@@ -26,7 +26,7 @@ before delivery**. It runs only after `copywriting-ethics-check-stage`
 
 ## Preconditions
 
-Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`.
 
 ### Required envelope fields (Level 1 — BLOCKED if missing)
 

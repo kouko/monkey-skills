@@ -99,7 +99,7 @@ survives if neta fails Safety gate).
 
 ## Preconditions
 
-Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. Two sets — one per placement mode.
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`. Two sets — one per placement mode.
 
 ### Required envelope fields (pre-draft bake-in mode)
 
