@@ -1,6 +1,74 @@
 # Mermaid Visualizer
 
-Transform text content into professional Mermaid diagrams for Obsidian.
+Transform text content into Obsidian-optimized Mermaid diagrams across **17 diagram types**.
+
+## What this skill does
+
+Produces Mermaid diagrams that render correctly in Obsidian's native viewer (bundled Mermaid 11.4.1), covering:
+
+- **Flow & conceptual** (6): flowchart / circular flow / comparison / mindmap / sequence / state
+- **Data visualization** (3): xychart-beta / pie / quadrantChart
+- **Structural** (6): architecture-beta / block-beta / class / ER / C4 (Context/Container/Component) / gitgraph
+- **Time** (2): gantt / timeline
+
+Each type has a dedicated reference file under `flow/`, `data-viz/`, `structural/`, `time/` with canonical syntax, configuration options, Obsidian 11.4.1 compatibility notes, worked examples, and per-type error prevention.
+
+## Obsidian 11.4.1 compatibility
+
+This skill targets **Obsidian's bundled Mermaid 11.4.1** (as of April 2026), which lags about 10 minor versions behind Mermaid's latest (11.14.0). Implications:
+
+- Features added in Mermaid v11.5+ are **not** used (e.g., Neo look, `showDataLabelOutsideBar`, wardley-beta)
+- Known bugs like `xychart-beta` line `stroke-width: 0` (lines invisible) require **fallback policies** — implemented automatically by this skill
+- Full compatibility matrix per diagram type: [`obsidian-compatibility.md`](obsidian-compatibility.md)
+
+## Line chart fallback policy
+
+When a user asks for a **line chart** (`折線`, `line chart`, `trend`, `走勢`), this skill produces `xychart-beta` **bar mode** instead + an inline degrade note. This keeps the skill zero-setup (no CSS snippets required) while preserving numeric data and x-axis ordering. For true line rendering, users can:
+
+- Export via [Mermaid Live Editor](https://mermaid.live/) as PNG
+- Install the [Mermaid View plugin](https://forum.obsidian.md/t/plugin-mermaid-view/110220) (bundles newer Mermaid)
+
+Full rationale: [`obsidian-compatibility.md § Line chart fallback policy`](obsidian-compatibility.md).
+
+## Directory structure
+
+```
+obsidian-mermaid-visualizer/
+├── SKILL.md                          # Router + Selection Tree + know-how
+├── obsidian-common-quirks.md         # Cross-type rules (list syntax, subgraph naming, version landmines)
+├── obsidian-compatibility.md         # 17-type compat matrix + fallback policies
+├── flow/                             # 6 flow/conceptual type files
+├── data-viz/                         # 3 data-viz type files
+├── structural/                       # 6 structural type files
+├── time/                             # 2 time-viz type files
+├── README.md
+└── LICENSE
+```
+
+This structure **intentionally deviates** from the `references/` convention used by other `obsidian/skills/*`. Rationale: the 17 per-type files are the skill's primary routed content, not auxiliary references. Single-layer router (SKILL.md → type file) per Anthropic's "keep references one level deep" guideline.
+
+## Quick reference — 17 types at a glance
+
+| Category | Type | File | Obsidian 11.4.1 |
+|---|---|---|---|
+| Flow | Flowchart | [flow/flowchart.md](flow/flowchart.md) | ✅ full |
+| Flow | Circular flow | [flow/circular-flow.md](flow/circular-flow.md) | ✅ full |
+| Flow | Comparison | [flow/comparison.md](flow/comparison.md) | ✅ full |
+| Flow | Mindmap | [flow/mindmap.md](flow/mindmap.md) | ✅ full |
+| Flow | Sequence | [flow/sequence.md](flow/sequence.md) | ✅ full |
+| Flow | State | [flow/state.md](flow/state.md) | ✅ full |
+| Data viz | XY Chart (bar) | [data-viz/xychart.md](data-viz/xychart.md) | ✅ full |
+| Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | 🔻 auto-fallback to bar |
+| Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | ✅ full |
+| Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | ✅ full |
+| Structural | Architecture | [structural/architecture.md](structural/architecture.md) | 🟡 iconify CDN dependency |
+| Structural | Block | [structural/block.md](structural/block.md) | 🟡 needs testing |
+| Structural | Class | [structural/class.md](structural/class.md) | ✅ full |
+| Structural | ER | [structural/er.md](structural/er.md) | ✅ full |
+| Structural | C4 | [structural/c4.md](structural/c4.md) | ✅ full |
+| Structural | gitgraph | [structural/gitgraph.md](structural/gitgraph.md) | ✅ full |
+| Time | Gantt | [time/gantt.md](time/gantt.md) | ✅ full |
+| Time | Timeline | [time/timeline.md](time/timeline.md) | ✅ full |
 
 ## Original Source
 
@@ -8,3 +76,8 @@ Transform text content into professional Mermaid diagrams for Obsidian.
 - **Repository**: [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills)
 - **Plugin**: `obsidian-visual-skills`
 - **Marketplace**: `axton-obsidian-visual-skills`
+
+## Version history
+
+- **v2.0.0** (2026-04-20) — Expanded from 6 to 17 diagram types. Added data-viz (xychart / pie / quadrant), structural (architecture / block / class / ER / C4 / gitgraph), and time-viz (gantt / timeline) categories. Restructured into per-type files with single-layer router. Formalized line-chart fallback policy and architecture-icon fallback policy. Calibrated all syntax to Mermaid 11.4.1 (Obsidian's bundled version).
+- **v1.x** — Original 6-type version by axtonliu
