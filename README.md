@@ -1,8 +1,8 @@
 # Monkey Skills
 
-Personal agent skills marketplace — **4 plugins** covering domain-team quality
-gates, Obsidian vault workflows, philosophical thinking frameworks, and
-skill-authoring tools.
+Personal agent skills marketplace — **6 plugins** covering domain-team quality
+gates, Obsidian vault workflows, philosophical thinking frameworks,
+skill-authoring tools, investing research, and pipeline-structured copywriting.
 
 ## Plugins at a glance
 
@@ -12,8 +12,10 @@ skill-authoring tools.
 | `obsidian` | 13 + 1 agent | 1 | Obsidian vault workflows — daily notes, diagrams, dashboards + imported kepano & axtonliu visual skills |
 | `philosophers-toolkit` | 12 | 12 | Philosophical thinking frameworks for problem clarification and deeper reasoning |
 | `dev-workflow` | 1 | 1 | Skill creation and eval workflows (adapted from upstream) |
+| `investing-toolkit` | 15 | — | Investing research — US/JP/TW/KR/CN macro regime diagnosis, DCF, screening, equity snapshots |
+| `copywriting-toolkit` | 14 | — | Pipeline-structured copywriting — intake, ideation, neta injection, 5 form-specific drafters, voice positioning / tone, ethics + form gates, audit. A/B coexistence with `domain-teams:copywriting-team` |
 
-**Total**: 36 skills, 23 slash commands across 4 plugins.
+**Total**: 65 skills, 23 slash commands across 6 plugins.
 
 ## Architecture: Checkpoint-Based Quality Gates + Open Domain Knowledge
 
