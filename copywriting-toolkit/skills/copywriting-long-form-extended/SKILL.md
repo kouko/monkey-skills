@@ -43,6 +43,36 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 
 Hard gate: `copywriting-intake` must have passed Intake Completeness. `positioning` and `language` fields drive the QUEST-vs-PASTOR decision — if absent, kick back to intake.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | intake / ideation / neta | one of `phase-1-confirmed`, `phase-express-confirmed`, `phase-2-ideation-complete`, `phase-3-neta-baked` |
+| `form` | string | intake | must equal `long-form-extended` |
+| `brief.product` | string | intake | non-empty |
+| `brief.target_audience` | string | intake | Schwartz-aware persona |
+| `brief.schwartz_level` | enum 1-5 | intake | |
+| `brief.positioning` | enum | intake | `expert` / `shepherd` / `guide` / `educator` — drives QUEST vs PASTOR |
+| `brief.language` | enum | intake | `en` / `ja` / `zh-TW` / etc. — EN default favours this skill over pasona |
+| `message_thesis` | string | intake | |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` |
+
+### Optional fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.voice_ref` | string | Ogilvy / Schwartz / default |
+| `ideation_pool.winners[]` | array | seeds Stimulate (QUEST) or Story / Transformation (PASTOR) |
+| `neta_candidates[]` | array | if Phase 3 ran pre-draft |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — missing Level 1. If `form != "long-form-extended"`, bounce to `using-copywriting-toolkit`. If `positioning` and `language` are both absent, audience culture fit is unknowable — always bounce; do not guess.
+
 ## Drafting Approach
 
 The `copywriter` agent loads `protocols/write-long-form-copy.md` and `standards/long-form-extended-frameworks.md`. Standard encodes:

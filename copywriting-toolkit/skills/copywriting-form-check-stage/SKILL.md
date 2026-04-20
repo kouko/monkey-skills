@@ -24,6 +24,29 @@ before delivery**. It runs only after `copywriting-ethics-check-stage`
   field is missing or not `PASS`, stop and return to the orchestrator;
   the pipeline MUST pass Phase 7 first.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | Phase 7 | must equal `phase-8-form` |
+| `ethics_verdict` | enum | Phase 7 | must equal `PASS` — `NEEDS_REVISION` blocks, `PASS_WITH_NOTES` must have FIXABLE notes applied first |
+| `draft` | string | Phase 4 / 6 / 7 | non-empty; final polished version |
+| `form` | enum | intake | determines which framework-adherence branch applies (PASONA / BEAF / QUEST-PASTOR / PREP-CREMA / AIDMA short) |
+| `voice_quadrant` | object | Phase 5 | context for 8b form-appropriate rubric (voice-register vs form-register consistency) |
+| `tone_notes` | object | Phase 6 | context for 8b |
+
+### Bounce targets on violation
+
+- `ethics_verdict` missing OR `NEEDS_REVISION` → `copywriting-ethics-check-stage` (Phase 7 must complete first)
+- `ethics_verdict == "PASS_WITH_NOTES"` with unapplied notes → bounce to Phase 7 FIXABLE auto-revise loop
+- `draft` missing → `copywriting-<form>` (Phase 4 drafter)
+- `form` missing → `using-copywriting-toolkit` (mis-routed)
+- `voice_quadrant` / `tone_notes` missing → `copywriting-voice-positioning-stage` / `copywriting-voice-tone-stage`
+
 ## Input — Envelope Shape
 
 ```json

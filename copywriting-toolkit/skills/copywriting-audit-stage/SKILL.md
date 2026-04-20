@@ -46,6 +46,34 @@ Hard rule: `external_copy` must be the full original text. Audit on summaries co
 
 If `form` is `unknown`, the audit protocol's Phase 1 (Type ID) determines it before downstream gates run.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. Audit-stage is an alternate entry; it does NOT require the full intake envelope.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | router | must equal `phase-audit-entry` |
+| `external_copy` | string | user | FULL TEXT of copy under review — summaries rejected |
+| `brief.review_focus` | enum | user OR default | `structure` / `ethics` / `voice` / `all` (default `all`) |
+
+### Optional fields (fill via defaults if absent)
+
+| Field | Type | Notes |
+|---|---|---|
+| `form` | enum | if `unknown`, protocol Step 1 Type ID resolves it before Phase 5-8 |
+| `brief.product` | string | helpful for context; not strictly required for detection |
+| `brief.target_audience` | string | helpful for voice-consistency gate |
+| `brief.voice_reference` | string | if supplied, gates judge fidelity; if absent, audit marks voice as "declared-by-artifact" |
+
+### Upstream bounce target on violation
+
+- `external_copy` missing / summary-only → bounce to `using-copywriting-toolkit` to re-collect full text from user
+- `external_copy` empty / placeholder → do NOT proceed; audit has nothing to judge
+
+Audit-stage reuses Phase 5-8 gates. If any downstream gate bounces (e.g. `voice_quadrant` not determinable because copy is non-prose), audit-stage halts and surfaces the block — it does NOT paper over with placeholder data.
+
 ## Workflow
 
 Uses `protocols/copy-audit.md` (cp'd verbatim from `domain-teams/skills/copywriting-team/`).

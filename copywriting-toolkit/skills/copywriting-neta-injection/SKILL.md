@@ -97,6 +97,37 @@ surfaces (headline, mid-body callback, CTA). Runs **after** Phase 4,
 When ambiguous, default to **post-draft overlay** (safer — base draft
 survives if neta fails Safety gate).
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. Two sets — one per placement mode.
+
+### Required envelope fields (pre-draft bake-in mode)
+
+| Field | Type | Source phase | Notes |
+|---|---|---|---|
+| `phase` | enum | ideation OR intake | one of `phase-2-ideation-complete`, `phase-1-confirmed`, `phase-express-confirmed` |
+| `brief.product` | string | intake | non-empty |
+| `brief.target_audience` | string | intake | |
+| `message_thesis` | string | intake | |
+| `neta_opt_in` | bool | intake | must be `true` — else skip this skill |
+| `neta_source_type_preference` | enum | intake | `all` / `sns-meme` / `literary` / `mixed` |
+
+### Required envelope fields (post-draft overlay mode)
+
+| Field | Type | Source phase | Notes |
+|---|---|---|---|
+| `phase` | enum | Phase 4 drafter | `phase-4-draft-complete` |
+| `form` | enum | intake | one of 5 Phase-4 form types |
+| `draft` | string | Phase 4 | non-empty, ≥1 sentence |
+| `message_thesis` | string | intake | |
+| `neta_opt_in` | bool | intake | must be `true` |
+
+### Upstream bounce targets on violation
+
+- `neta_opt_in` missing / `false` → skip this skill entirely (emit `phase-3-skipped`, route to Phase 4 drafter or Phase 5 positioning)
+- pre-draft mode: any intake L1 missing → bounce to `copywriting-intake`
+- post-draft mode: `draft` missing → bounce to `copywriting-<form>` (Phase 4 drafter named in `envelope.form`)
+
 ## Inputs & Outputs (envelope contract)
 
 ### Pre-draft bake-in mode

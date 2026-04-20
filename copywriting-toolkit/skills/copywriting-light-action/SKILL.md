@@ -43,6 +43,34 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 
 Hard gate: `copywriting-intake` must have passed Intake Completeness with `action_weight = light` surfaced as a Level 2 field. If intake reports `action_weight = heavy`, re-route to long-form skills — CREMA / PREP are not for purchase-level conversion.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | intake / ideation / neta | one of `phase-1-confirmed`, `phase-express-confirmed`, `phase-2-ideation-complete`, `phase-3-neta-baked` |
+| `form` | string | intake | must equal `light-action` |
+| `brief.product` | string | intake | non-empty |
+| `brief.target_audience` | string | intake | |
+| `brief.action_weight` | enum | intake | must equal `light` — `heavy` bounces to long-form |
+| `brief.target_action` | enum | intake | `opt-in` / `subscribe` / `download` / `follow` / `share` / `comment` / etc. |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` |
+
+### Optional fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.schwartz_level` | enum 1-5 | |
+| `brief.voice_ref` | string | |
+| `ideation_pool.winners[]` | array | if Phase 2 ran |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — missing Level 1 or `action_weight` unset. If `action_weight == "heavy"`, route instead to `copywriting-long-form-pasona` or `copywriting-long-form-extended` (CREMA / PREP are not for macro-conversion). If `form != "light-action"`, bounce to `using-copywriting-toolkit`.
+
 ## Drafting Approach
 
 The `copywriter` agent loads `protocols/write-short-form-copy.md` and `standards/light-action-frameworks.md`. Standard encodes:

@@ -43,6 +43,36 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 
 Hard gate: `copywriting-intake` must have passed Intake Completeness. For PASBECONA (the longest variant), `target_length` and `channel` must be explicit — PASBECONA's 9 stages are wasted on short channels.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | intake / ideation / neta | one of `phase-1-confirmed`, `phase-express-confirmed`, `phase-2-ideation-complete`, `phase-3-neta-baked` |
+| `form` | string | intake | must equal `long-form-pasona` |
+| `brief.product` | string | intake | non-empty |
+| `brief.target_audience` | string | intake | Schwartz-aware persona |
+| `brief.schwartz_level` | enum 1-5 | intake | drives PASONA stage emphasis |
+| `brief.target_length` | string | intake | word-count range (short / medium / long / PASBECONA-long) |
+| `brief.channel` | string | intake | LP / sales letter / email / 記事広告 |
+| `message_thesis` | string | intake | confirmed 1-sentence thesis |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` |
+
+### Optional fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.voice_ref` | string | 糸井 / 岩崎 / 眞木 / Ogilvy / default |
+| `ideation_pool.winners[]` | array | if Phase 2 ran, Affinity-quadrant seeds feed Affinity stage |
+| `neta_candidates[]` | array | if Phase 3 ran pre-draft |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — missing Level 1. If `form != "long-form-pasona"`, router mis-routed; bounce to `using-copywriting-toolkit`. If `target_length == "PASBECONA-long"` but `channel` lacks long-form fit → intake for length / channel reconciliation.
+
 ## Drafting Approach
 
 The `copywriter` agent loads `protocols/write-long-form-copy.md` and `standards/long-form-pasona-canon.md`. Standard encodes:

@@ -40,6 +40,33 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 
 Hard gate: `copywriting-intake` must have passed Intake Completeness before this skill runs. Do not short-circuit if `brief.schwartz_level` or `brief.voice_ref` is missing — kick back to intake.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | intake / ideation / neta | one of `phase-1-confirmed`, `phase-express-confirmed`, `phase-2-ideation-complete`, `phase-3-neta-baked` |
+| `form` | string | intake | must equal `short-form` |
+| `brief.product` | string | intake | non-empty |
+| `brief.target_audience` | string | intake | target emotion / pain surfaced |
+| `brief.channel` | string | intake | SNS / banner / CM title / tagline / etc. |
+| `brief.char_limit_band` | string | intake | 7-15 default; explicit if custom |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` |
+
+### Required form-specific fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.schwartz_level` | enum 1-5 | drives 5 切入點 selection |
+| `brief.voice_ref` | string | maestro tag (糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / default) |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — any Level 1 missing is an intake gap. If `form != "short-form"`, router mis-routed; bounce to `using-copywriting-toolkit`.
+
 ## Drafting Approach
 
 The `copywriter` agent loads `protocols/write-short-form-copy.md` and `standards/short-form-catchcopy-canon.md`. Standard encodes:

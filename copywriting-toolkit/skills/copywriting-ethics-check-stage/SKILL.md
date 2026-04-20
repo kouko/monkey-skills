@@ -51,6 +51,30 @@ If `draft`, `voice_quadrant`, or `tone_notes` are missing, stop and
 return control to the orchestrator — do not launch the evaluator
 against an incomplete envelope.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | Phase 6 | must equal `phase-7-ethics` (router sets this when routing to this skill) |
+| `draft` | string | Phase 4 / 6 | non-empty; polished after tone tuning |
+| `voice_quadrant` | object | Phase 5 | needed as context (ethics does not judge voice but records positioning for audit trail) |
+| `tone_notes` | object | Phase 6 | needed for PASS_WITH_NOTES auto-revise targeting |
+| `form` | enum | intake | determines which legal / ethics dimensions apply more aggressively |
+| `brief` | object | intake | original claims / testimonials / urgency framing subject to FTC / 景表法 |
+
+### Bounce targets on violation
+
+- `draft` missing → `copywriting-<form>` (Phase 4 drafter)
+- `voice_quadrant` missing → `copywriting-voice-positioning-stage` (Phase 5)
+- `tone_notes` missing → `copywriting-voice-tone-stage` (Phase 6)
+- `form` or `brief` missing → `copywriting-intake`
+
+Ethics gate MUST NOT run on an incomplete envelope — partial artifacts yield false-positive PASS verdicts on claims the evaluator cannot see in full context.
+
 ## Gate Definition
 
 | Layer | File | Mode |

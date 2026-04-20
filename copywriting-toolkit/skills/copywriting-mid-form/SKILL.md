@@ -42,6 +42,32 @@ Expects upstream envelope from `copywriting-intake` (or `copywriting-ideation` i
 
 Hard gate: `copywriting-intake` must have passed Intake Completeness before this skill runs. Evidence sources (reviews, spec data, third-party endorsements) must be surfaced in intake — BEAF's Evidence stage depends on them.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | intake / ideation / neta | one of `phase-1-confirmed`, `phase-express-confirmed`, `phase-2-ideation-complete`, `phase-3-neta-baked` |
+| `form` | string | intake | must equal `mid-form` |
+| `brief.product` | string | intake | non-empty |
+| `brief.benefits` | array[string] | intake | ≥3 concrete benefits (BEAF Benefit stage requires this) |
+| `brief.channel` | string | intake | Rakuten / Amazon JP / POP / presentation |
+| `brief.evidence_sources` | array[string] | intake | reviews / spec data / third-party endorsements — BEAF Evidence stage depends on these |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` |
+
+### Optional fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.voice_ref` | string | maestro tag or default |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — any Level 1 missing, especially `evidence_sources` (景品表示法-critical for EC claims). If `form != "mid-form"`, router mis-routed; bounce to `using-copywriting-toolkit`.
+
 ## Drafting Approach
 
 The `copywriter` agent loads `protocols/write-mid-form-copy.md` and `standards/mid-form-beaf-canon.md`. Standard encodes:

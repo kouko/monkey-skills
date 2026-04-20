@@ -72,6 +72,34 @@ When Phase 4 carries a Schwartz awareness level (from `persuasion-psychology-anc
 
 Full bibliography + contested-status flags in `standards/voice-quadrant-positioning.md §Primary Sources`.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `phase` | enum | Phase 4 OR Phase 3 overlay | `phase-4-draft` or `phase-3-neta-overlaid` |
+| `form` | enum | intake | one of 5 Phase-4 form types — determines quadrant anchor corpus |
+| `draft` | string | Phase 4 | non-empty; audit-stage may pass `external_copy` here |
+| `brief.target_audience` | string | intake | for Tenor (Authority ↔ Affinity) diagnosis |
+| `message_thesis` | string | intake | for Think/Feel (Reason ↔ Emotion) diagnosis |
+
+### Optional fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `schwartz_level` | enum 1-5 | activates Schwartz × Quadrant hard-rule table (Level 5 ≠ Q4) |
+| `brief.voice_ref` | string | if present, constrains primary quadrant |
+| `brief.channel` | string | affects register calibration |
+
+### Upstream bounce target on violation
+
+- `draft` missing → bounce to `copywriting-<form>` (Phase 4 drafter)
+- `form` missing → bounce to `using-copywriting-toolkit` for mis-routing
+- `brief` or `message_thesis` missing → bounce to `copywriting-intake`
+
 ## I/O Contract
 
 **Input envelope** (from Phase 4):

@@ -30,6 +30,35 @@ From `copywriting-intake` handoff envelope:
 
 If any of the 3 required inputs (value prop / target / form) is missing, HALT and return to `copywriting-intake`. Ideation cannot substitute for intake.
 
+## Preconditions
+
+Formal schema used by `using-copywriting-toolkit` router for bounce-back routing.
+
+### Required envelope fields (Level 1 — BLOCKED if missing)
+
+| Field | Type | Source phase | Notes |
+|---|---|---|---|
+| `phase` | enum | intake or express | one of `phase-1-confirmed`, `phase-express-confirmed` |
+| `form` | enum | intake | `long-form-pasona` / `long-form-extended` / `mid-form` / `short-form` / `light-action` — determines Phase 3 handoff target |
+| `brief.product` | string | intake | non-empty |
+| `brief.value_proposition` | string | intake | single-sentence |
+| `brief.target_audience` | string | intake | at least one concrete demographic / persona |
+| `message_thesis` | string | intake | confirmed 1-sentence core message |
+| `gate_verdict` | enum | intake | `PASS` or `PASS_WITH_NOTES` (from Intake Completeness MUST gate) |
+
+### Optional envelope fields (Level 2/3)
+
+| Field | Type | Notes |
+|---|---|---|
+| `brief.voice_reference` | string | if present, activates advanced overlay voice-calibration signal |
+| `brief.schwartz_level` | enum 1-5 | if present, downstream Phase 5 routing honours Schwartz × Quadrant table |
+| `brief.neta_opt_in` | bool | default `false` |
+| `ideation_overlay_hint` | enum | `multi-channel` / `sns-native` / `cultural` / `ambiguous-target` / `innovative-positioning` — any triggers advanced overlay |
+
+### Upstream bounce target on violation
+
+`copywriting-intake` — any Level 1 field missing means intake did not complete; loop back and surface the missing field to the user.
+
 ## Output
 
 - 3-5 winning angles — each with body + Mandal-Art direction tag + "なぜ良いか" 3-item rationale
