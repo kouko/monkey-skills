@@ -1,6 +1,6 @@
 ---
 name: obsidian-mermaid-visualizer
-description: Create Mermaid diagrams optimized for Obsidian notes — flowcharts, sequence / state / class / ER / C4 / git-branch diagrams, bar / pie / quadrant charts, Gantt / timeline schedules, architecture / block diagrams, mindmaps. Use when visualizing workflows, data trends, system architecture, project timelines, or hierarchical concepts in Obsidian notes. Handles Mermaid 11.4.1 syntax quirks + auto-downgrades line charts to bar (Obsidian native-viewer compat). Mermaid図・フローチャート・グラフ・データチャート・C4・ガントチャート。Mermaid 圖・流程圖・長條圖・架構圖・甘特圖・時間軸・類別圖・ER 圖。
+description: Create Mermaid diagrams optimized for Obsidian notes — flowcharts, sequence / state / class / ER / C4 / git-branch diagrams, bar / line / pie / quadrant charts, Gantt / timeline schedules, architecture / block diagrams, mindmaps. Use when visualizing workflows, data trends, system architecture, project timelines, or hierarchical concepts in Obsidian notes. Calibrated to Obsidian 11.4.1 syntax + recommends named-line form for xychart line charts. Mermaid図・フローチャート・グラフ・データチャート・C4・ガントチャート。Mermaid 圖・流程圖・長條圖・折線圖・架構圖・甘特圖・時間軸・類別圖・ER 圖。
 ---
 
 # Obsidian Mermaid Visualizer
@@ -55,7 +55,7 @@ Pick the diagram type by the content's intent. Each entry links to a type-specif
 ### Data visualization (資料視覺化)
 
 - Discrete bar chart (categorical data) → [data-viz/xychart.md](data-viz/xychart.md) bar mode
-- **Line / trend chart** → [data-viz/xychart.md](data-viz/xychart.md) **auto-fallback to bar** (Obsidian 11.4.1 line CSS bug; see § Line Chart Fallback Policy below)
+- Line / trend chart (single or multi-series) → [data-viz/xychart.md](data-viz/xychart.md) — **use named-line syntax `line "name" [values]`** which works in Obsidian 11.4.1
 - Proportion of whole (%) → [data-viz/pie.md](data-viz/pie.md)
 - 2×2 positioning (Eisenhower / impact-effort / BCG) → [data-viz/quadrant.md](data-viz/quadrant.md)
 
@@ -85,19 +85,27 @@ Pick the diagram type by the content's intent. Each entry links to a type-specif
 
 ---
 
-## Line Chart Fallback Policy
+## Line Chart Rendering Note
 
-**Trigger**: user query contains line-chart intent — words like `折線` / `line chart` / `trend` / `走勢` / `time series` / `時間序列`.
+**Named-line syntax works in Obsidian 11.4.1** (user-verified April 2026). For all line charts, use:
 
-**Behavior**:
-1. Produce `xychart-beta` with **bar** mode (preserves numeric data + ordered x-axis for trend feel)
-2. Include an inline degrade note after the diagram:
+```
+line "series name" [values]
+```
 
-> ⚠️ Obsidian 11.4.1 native viewer 無法正確渲染折線圖（已知 `stroke-width: 0` CSS bug），已自動降級為長條圖以保證可視化。需真折線請用 Mermaid Live Editor export PNG，或安裝 Mermaid View plugin。
+This renders correctly as a colored line with legend entry. Multi-series works naturally:
 
-**Rationale**: zero-setup principle — user shouldn't have to install CSS snippets to get a visible chart. Bar fallback preserves the numeric values and ordering; only continuous-line visualization is lost.
+```mermaid
+xychart-beta
+    title "Monthly Revenue"
+    x-axis [Jan, Feb, Mar, Apr, May]
+    y-axis "NT$ M" 0 --> 100
+    line "Revenue" [42, 58, 67, 81, 95]
+```
 
-Full policy + why not CSS / graph TB alternatives: [obsidian-compatibility.md § Line chart fallback policy](obsidian-compatibility.md).
+**Historical note**: A January 2024 Obsidian Forum report described `stroke-width: 0` making lines invisible — this appears to have been specific to the bare `line [values]` form (without series name). Named-line syntax works. If a user reports their Obsidian vault still shows invisible lines even with named syntax, check for conflicting CSS snippets or plugins; fallback to bar only as last resort with an inline note explaining the specific environment issue.
+
+Details + rejected alternatives (CSS snippet, graph TB approximation): [obsidian-compatibility.md § Line chart policy](obsidian-compatibility.md).
 
 ---
 

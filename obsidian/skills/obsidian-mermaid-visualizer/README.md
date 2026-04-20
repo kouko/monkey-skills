@@ -21,14 +21,26 @@ This skill targets **Obsidian's bundled Mermaid 11.4.1** (as of April 2026), whi
 - Known bugs like `xychart-beta` line `stroke-width: 0` (lines invisible) require **fallback policies** — implemented automatically by this skill
 - Full compatibility matrix per diagram type: [`obsidian-compatibility.md`](obsidian-compatibility.md)
 
-## Line chart fallback policy
+## Line chart rendering note
 
-When a user asks for a **line chart** (`折線`, `line chart`, `trend`, `走勢`), this skill produces `xychart-beta` **bar mode** instead + an inline degrade note. This keeps the skill zero-setup (no CSS snippets required) while preserving numeric data and x-axis ordering. For true line rendering, users can:
+Line charts **work correctly in Obsidian 11.4.1** (user-verified April 2026) when using the named-line syntax:
 
-- Export via [Mermaid Live Editor](https://mermaid.live/) as PNG
-- Install the [Mermaid View plugin](https://forum.obsidian.md/t/plugin-mermaid-view/110220) (bundles newer Mermaid)
+```
+line "series name" [values]
+```
 
-Full rationale: [`obsidian-compatibility.md § Line chart fallback policy`](obsidian-compatibility.md).
+```mermaid
+xychart-beta
+    title "Multi-line chart example"
+    x-axis [Jan, Feb, Mar, Apr, May, Jun]
+    y-axis "Revenue" 0 --> 100
+    line "Product A" [35, 42, 28, 55, 48, 62]
+    line "Product B" [22, 38, 45, 30, 52, 41]
+```
+
+Historical note: a 2024 Obsidian Forum report suggested `stroke-width: 0` would make lines invisible — this appears specific to the bare `line [values]` form (without series name). Named-line syntax (recommended default) renders correctly.
+
+Full details: [`obsidian-compatibility.md § Line chart policy`](obsidian-compatibility.md).
 
 ## Directory structure
 
@@ -58,7 +70,7 @@ This structure **intentionally deviates** from the `references/` convention used
 | Flow | Sequence | [flow/sequence.md](flow/sequence.md) | ✅ full |
 | Flow | State | [flow/state.md](flow/state.md) | ✅ full |
 | Data viz | XY Chart (bar) | [data-viz/xychart.md](data-viz/xychart.md) | ✅ full |
-| Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | 🔻 auto-fallback to bar |
+| Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | ✅ full with named-line syntax |
 | Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | ✅ full |
 | Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | ✅ full |
 | Structural | Architecture | [structural/architecture.md](structural/architecture.md) | 🟡 iconify CDN dependency |
@@ -79,5 +91,5 @@ This structure **intentionally deviates** from the `references/` convention used
 
 ## Version history
 
-- **v2.0.0** (2026-04-20) — Expanded from 6 to 17 diagram types. Added data-viz (xychart / pie / quadrant), structural (architecture / block / class / ER / C4 / gitgraph), and time-viz (gantt / timeline) categories. Restructured into per-type files with single-layer router. Formalized line-chart fallback policy and architecture-icon fallback policy. Calibrated all syntax to Mermaid 11.4.1 (Obsidian's bundled version).
+- **v2.0.0** (2026-04-20) — Expanded from 6 to 17 diagram types. Added data-viz (xychart / pie / quadrant), structural (architecture / block / class / ER / C4 / gitgraph), and time-viz (gantt / timeline) categories. Restructured into per-type files with single-layer router. Architecture-icon fallback policy documented. Calibrated all syntax to Mermaid 11.4.1 (Obsidian's bundled version). User-verified named-line syntax renders correctly for xychart line charts.
 - **v1.x** — Original 6-type version by axtonliu

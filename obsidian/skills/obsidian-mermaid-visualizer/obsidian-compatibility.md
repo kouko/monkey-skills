@@ -31,7 +31,7 @@ This skill is designed for **option 1** (zero-setup Obsidian native rendering).
 | Flow | Sequence | [flow/sequence.md](flow/sequence.md) | any | ✅ full | — | Use directly |
 | Flow | State | [flow/state.md](flow/state.md) | any | ✅ full | Use v2 (`stateDiagram-v2`) not v1 | Use directly |
 | Data viz | XY Chart (bar) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ (`xychart-beta`) | ✅ full | — | Use directly |
-| Data viz | **XY Chart (line)** | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ | 🔻 fallback-only | `stroke-width: 0` CSS bug — lines invisible | **Auto-fallback to bar + inline note** |
+| Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ | ✅ full (with named syntax) | Use `line "name" [values]` not bare `line [values]` | Use directly with named-line form |
 | Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | any | ✅ full | — | Use directly |
 | Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | v10.6+ | ✅ full | Quadrant numbering counter-intuitive | Use directly |
 | Structural | Architecture | [structural/architecture.md](structural/architecture.md) | v11.1+ (`architecture-beta`) | 🟡 partial | Iconify CDN offline fails | Built-in icons OK; fallback to graph TB if iconify blocked |
@@ -50,26 +50,44 @@ This skill is designed for **option 1** (zero-setup Obsidian native rendering).
 
 ---
 
-## Line chart fallback policy
+## Line chart policy — named-line syntax (preferred)
 
-**Trigger**: user query contains line-chart intent — `折線` / `line chart` / `trend` / `走勢` / `時間序列` / `time series` / `line graph` / similar.
+**Update (April 2026)**: User testing confirmed that `xychart-beta` line mode **renders correctly in Obsidian 11.4.1** when using the named-line syntax `line "series name" [values]`. The earlier 2024 forum report of `stroke-width: 0` bug may have been specific to bare `line [values]` syntax (without a series name).
 
-**Behavior**:
-1. Skill produces `xychart-beta` with **bar mode** (preserves numeric data + ordered x-axis for trend feel)
-2. Skill includes an inline degrade note after the diagram:
+**Recommended default syntax**:
 
-> ⚠️ Obsidian 11.4.1 native viewer 無法正確渲染折線圖（已知 `stroke-width: 0` CSS bug），已自動降級為長條圖以保證可視化。需真折線請用 Mermaid Live Editor export PNG，或安裝 Mermaid View plugin。
+```mermaid
+xychart-beta
+    title "Monthly Revenue"
+    x-axis [Jan, Feb, Mar, Apr, May]
+    y-axis "NT$ M" 0 --> 100
+    line "Revenue" [42, 58, 67, 81, 95]
+```
 
-**Why this policy**:
+**Works even without legend benefit**: use named-line even for single-series charts for consistent behavior. Multi-series works naturally:
+
+```mermaid
+    line "Product A" [35, 42, 28, 55]
+    line "Product B" [22, 38, 45, 30]
+```
+
+**Fallback — only if named-line fails in a specific Obsidian environment**:
+
+If a user reports their Obsidian vault still shows invisible lines (possible if custom CSS snippets conflict, or if a plugin modifies rendering), the skill may fall back to bar chart:
+
+1. Produce `xychart-beta` with bar mode preserving data ordering
+2. Inline note: "折線圖在此 Obsidian 環境未正常渲染，已改用長條圖。請檢查 Obsidian 是否有自訂 CSS snippet 或 plugin 影響 Mermaid 渲染。"
+
+**This fallback is NOT auto-triggered** — default path is named-line syntax, which works in standard Obsidian 11.4.1.
+
+**Rejected alternatives** (documented here for future maintainers):
 
 | Alternative | Why not |
 |---|---|
-| CSS snippet fix (`.obsidian/snippets/xychart-lines.css`) | ❌ Requires user setup; breaks "zero-setup" skill contract |
+| CSS snippet `stroke: red !important` workaround | ❌ Unnecessary — named-line syntax works without CSS intervention |
 | `graph TB` approximation | ❌ Semantic mismatch — graph is structure, line is trend |
-| Produce line syntax anyway + warn user | ❌ Diagram visibly fails; user has to re-run or manually fix |
-| **Bar fallback with note** | ✅ Preserves numeric values + ordering + immediately usable + transparent about limitation |
-
-**When Obsidian upgrades Mermaid to 11.5+**: verify the `stroke-width: 0` bug is resolved; if so, remove this policy and allow line mode. See § Migration path.
+| Always auto-fallback to bar | ❌ Would ignore the fact that line rendering works; loses the continuous-line visualization user asked for |
+| **Named-line as default** | ✅ Preserves line visualization + works out of the box in Obsidian 11.4.1 |
 
 ---
 
@@ -100,7 +118,7 @@ Bugs known to exist in Mermaid 11.4.1 (and thus in Obsidian 11.4.1) that were fi
 
 | Bug | Fixed in | Obsidian 11.4.1 behavior | Workaround |
 |---|---|---|---|
-| `xychart-beta` line `stroke-width: 0` | Possibly fixed v11.5+ (unverified) | Lines invisible, bars visible | Line-chart fallback policy above |
+| `xychart-beta` line `stroke-width: 0` (reported 2024) | Unclear — named-line syntax works in April 2026 user-tested Obsidian 11.4.1 | Bare `line [values]` may fail; named `line "name" [values]` works | Use named-line syntax (see line chart policy above) |
 | Undirected graph rendering as directed | v11.5 | Undirected `---` shows arrow anyway | Use explicit directed `-->` arrows |
 | Various minor arrow rendering issues | v11.5–11.8 | May see misaligned or mis-styled arrows | Prefer standard arrow types |
 
@@ -121,7 +139,7 @@ When Obsidian upgrades its bundled Mermaid to 11.5+ or newer:
 1. **Check new version** — via Obsidian changelog or compare test diagram output with [Mermaid Live Editor](https://mermaid.live/)
 2. **Re-verify 🟡 and 🔻 types** — follow the end-to-end test checklist from this skill's Commit 4 (test each type with its canonical example in the new Obsidian)
 3. **Update the compatibility matrix above** — change the "Obsidian 11.4.1" column header to the new version and adjust status marks
-4. **If `xychart-beta` line bug is fixed** — remove the Line chart fallback policy; allow direct `line [...]` syntax
+4. **If bare `line [values]` syntax starts rendering correctly** — update `data-viz/xychart.md` to note parity between named and bare forms; keep named-line as default for legend benefits
 5. **Update CHANGELOG and bump skill version** — document which fallbacks are obsoleted
 
 ---
@@ -132,7 +150,7 @@ When in doubt, prefer types marked ✅ full:
 
 - **Process flow** → flowchart / sequence / state
 - **Hierarchy** → mindmap
-- **Data** → pie or quadrant (not xychart line)
+- **Data** → pie / quadrant / xychart (bar + named-line both work)
 - **Structure** → class / ER / C4
 - **Time** → gantt / timeline
 
