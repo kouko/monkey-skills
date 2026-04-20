@@ -68,12 +68,16 @@ If for some reason named-line doesn't render in your Obsidian vault, use `bar` i
 ```mermaid
 xychart-beta horizontal
     title "Horizontal bar chart"
-    x-axis [Revenue] 0 --> 100
-    y-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    y-axis "Revenue" 0 --> 100
     bar [42, 58, 67, 81]
 ```
 
-`xychart-beta horizontal` swaps axes. x-axis becomes the value axis (with numeric range), y-axis becomes the category axis.
+`xychart-beta horizontal` flips rendering direction only — **axis declarations stay the same as vertical** (categories on `x-axis`, numeric values on `y-axis`). The renderer draws horizontal bars extending along the value axis.
+
+**Key point**: don't swap x-axis and y-axis when switching to horizontal. The `horizontal` keyword handles the reorientation; your declarations remain categorical=x, numeric=y.
+
+**Quoting categories**: user-verified that quoting the category strings (`["Q1", "Q2", ...]`) works reliably. Unquoted category names (`[Q1, Q2]`) may work in simple cases but quoting is the safer default.
 
 ### Multiple series (side-by-side bars)
 
@@ -182,10 +186,12 @@ xychart-beta
 ```mermaid
 xychart-beta horizontal
     title "Headcount Growth by Quarter"
-    x-axis "Employees" 0 --> 200
-    y-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    y-axis "Employees" 0 --> 200
     bar [85, 120, 155, 188]
 ```
+
+Note: `horizontal` flips rendering orientation only; axis declarations keep the same structure as vertical mode (categorical labels on x-axis, numeric scale on y-axis).
 
 ### Example 5: Two-series bar comparison
 
@@ -219,6 +225,8 @@ xychart-beta
 | `y-axis "Label" 0 -> 100` (wrong arrow) | `y-axis "Label" 0 --> 100` | Must use `-->` double-hyphen |
 | Missing quotes on title with spaces | `title "Has Spaces"` | Strings with spaces need quotes |
 | Using `showDataLabelOutsideBar` or Neo look | These are v11.14.0+ features — not in Obsidian 11.4.1 | Silent feature-ignore |
+| Swapping x-axis / y-axis for `horizontal` mode | Keep categorical on x-axis, numeric on y-axis; let `horizontal` flip rendering | `horizontal` reorients visuals; axis declarations stay the same as vertical |
+| Unquoted category names with special chars / CJK | `["1月", "2月"]` (quote all entries) | Quoting is the safer default for any category string |
 
 ### Pre-save validation
 
