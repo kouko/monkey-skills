@@ -1,6 +1,6 @@
 ---
 name: copywriting-ideation
-description: Diverge angle / headline / concept candidates using 曼陀羅 + Verbalized Sampling + 小霜本能分析, then converge via KJ法 + 谷山 なんかいいよね禁止. Use when you have a confirmed brief but no chosen angle yet — before drafting. Not needed when brief is concrete (single thesis + single audience + chosen direction) — skippable. Not for raw briefs without intake — route via using-copywriting-toolkit first. 文案發想。コピー発想。
+description: Brainstorm / ideate creative angle, headline, and concept options using 曼陀羅 + Verbalized Sampling + 小霜本能分析, then converge via KJ法 + 谷山 なんかいいよね禁止. Use when the copywriting-intake phase has produced a confirmed envelope (phase-1-confirmed or later) but no chosen angle / direction / concept yet — before drafting. Not needed when brief is concrete (single thesis + single audience + chosen direction) — skippable. MUST NOT fire on raw user requests (e.g. "help me brainstorm taglines", "想幾個切入點", "想 tagline candidates") — route via using-copywriting-toolkit first. 文案發想・アイデア発散・ブレスト。創意發想・切入點發想・腦力激盪。
 ---
 
 # copywriting-ideation
