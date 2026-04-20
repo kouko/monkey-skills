@@ -1,6 +1,6 @@
 ---
 name: copywriting-short-form
-description: Phase 4 short-form drafter — キャッチコピー / headline (7-15 chars, AIDMA A+I, 3秒ルール, 5 切入點). Use when output is a tagline, SNS post, banner, or CM title. Not for EC product description (use copywriting-mid-form) or long-form LP / sales letter (use copywriting-long-form-pasona / -extended). 短文案・キャッチコピー作成。
+description: Write キャッチコピー / headlines / taglines (7-15 chars, AIDMA A+I, 3秒ルール, 5 切入點 framework). Use when you have a confirmed brief with short-form deliverable — tagline, SNS post, banner, CM title — after intake, before voice positioning. Not for EC product description (use copywriting-mid-form) or long-form LP / sales letter (use copywriting-long-form-pasona / -extended). Not for raw briefs — route via using-copywriting-toolkit first. 短文案・キャッチコピー作成。
 ---
 
 # copywriting-short-form

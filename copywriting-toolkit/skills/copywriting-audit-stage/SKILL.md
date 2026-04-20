@@ -1,6 +1,6 @@
 ---
 name: copywriting-audit-stage
-description: Alternate pipeline entry — audit existing external copy through Phases 5-8 (voice positioning, tone, ethics, form). Use when reviewing copy you did not draft (competitor, legacy, A/B variant). 文案審查・既存コピー監査。
+description: Audit existing external copy you did not draft — competitor / legacy / A/B variant — through voice positioning, tone, ethics, and form checks. Use when you have pre-existing copy text (not a new brief) and want review / critique / rewrite suggestions. Not for new copy creation — use using-copywriting-toolkit to start a fresh pipeline. 文案審查・既存コピー監査。
 ---
 
 # copywriting-audit-stage

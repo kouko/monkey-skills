@@ -1,6 +1,6 @@
 ---
 name: copywriting-neta-injection
-description: Add metaphor / pun / buzzword / subculture meme / literary quote overlay to copy for memorability + cultural currency. 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) via WebSearch-sourced neta pipeline. Use when copy feels flat and needs a cultural hook, or as Phase 3 pre-draft bake-in / post-draft overlay. Not for every brief — skip when audience too broad for subcultural capital or SNS-meme sources fail evergreen test. ネタ投入・メタファー・比喩。文案ネタ挿入・迷因置入。
+description: Add metaphor / pun / buzzword / subculture meme / literary quote overlay for memorability + cultural currency, using 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) via WebSearch-sourced neta pipeline. Use when you have a confirmed brief AND the copy needs a cultural hook — either before drafting (bake-in) or after drafting (overlay). Not for every brief — skip when audience is too broad for subcultural capital or SNS-meme sources fail evergreen test. Not for raw briefs without intake — route via using-copywriting-toolkit first. ネタ投入・メタファー・比喩。文案ネタ挿入・迷因置入。
 ---
 
 # copywriting-neta-injection
