@@ -129,7 +129,9 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
     "primary": "Q1 | Q2 | Q3 | Q4",
     "edge": "Q2-Q3 | Q1-Q4 | null",
     "rationale": "1–3 sentences citing brand anchor from standard",
-    "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
+    "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged",
+    "execution_reference": "target-language native anchor(s) in the chosen quadrant — e.g. '龔大中 / 全聯經濟美學派' for zh-TW Q3. Optional when voice_reference is same-language.",
+    "user_intent_signal": "original cross-language maestro the user cited, preserved for audit — e.g. '糸井重里'. null when no cross-language signal."
   },
   "next_stage": "copywriting-voice-tone-stage"
 }
@@ -145,8 +147,13 @@ Positioning is orientation, not prison — legitimate edge positions (Q2↔Q3, Q
    - Tenor (Authority vs Affinity) from brief's audience + channel + brand relationship.
    - Think/Feel (Reason vs Emotion) from message_thesis + decision type.
 4. **Apply Schwartz × Quadrant table** if `brief.schwartz_level` is present. If the quadrant chosen on voice grounds collides with Schwartz preference, the Schwartz hard rule (Level 5 ≠ Q4) wins; soft mismatches surface as `schwartz_alignment: "conflict_flagged"` with rationale.
-5. **Check adjacency**: if the draft shows legitimate edge positioning, record it. If it shows diagonal mixing, flag as voice-collapse risk before Phase 6.
-6. **Emit** output envelope with `next_stage: copywriting-voice-tone-stage`.
+5. **Resolve cross-language execution anchor** (v1.2.1). If `brief.voice_notes.user_intent_signal` is present AND the cited maestro's native language ≠ `brief.output_language`, the maestro is a **quadrant signal**, NOT a source text:
+   - Parse the maestro → quadrant mapping per `standards/voice-quadrant-positioning.md` (e.g. 糸井重里 → Q3 / Ogilvy → Q1 / 許舜英 → Q2).
+   - Select the **target-language native anchor(s)** in that same quadrant from the standard's Per-quadrant anchors section — e.g. zh-TW Q3 → 龔大中 / 全聯經濟美學派; zh-TW Q2 → 許舜英 / 李欣頻 / 葉明桂; EN Q3 → MailChimp / Innocent.
+   - Record as `voice_quadrant.execution_reference` (target-language anchor name(s)) alongside `voice_quadrant.user_intent_signal` (original maestro, preserved for audit).
+   - Downstream Phase 4 drafter ideates **natively in `output_language`** using `execution_reference` register. Do NOT instruct the drafter to "translate from" or "channel" the cross-language maestro — that path produces 翻譯腔 (translation-flavored prose) which fails Voice Consistency.
+6. **Check adjacency**: if the draft shows legitimate edge positioning, record it. If it shows diagonal mixing, flag as voice-collapse risk before Phase 6.
+7. **Emit** output envelope with `next_stage: copywriting-voice-tone-stage`.
 
 ## Gate (SHOULD — downstream)
 

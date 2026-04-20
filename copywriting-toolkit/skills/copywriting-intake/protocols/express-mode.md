@@ -47,9 +47,47 @@ Even though `brief.voice_reference` is Level 2, Express synthesis MUST NOT auto-
 
 Express synthesis rule:
 
-- User brief QUOTES a maestro name (exact match, e.g. "許舜英", "Itoi Shigesato", "糸井重里") → set `brief.voice_reference` to that maestro, label `[user-stated]`
-- User brief describes a STYLE without naming a maestro (e.g. "aspirational like Apple", "cool-aesthetic 中興百貨 feel") → set `brief.voice_reference = "default"` + `brief.voice_description = "<user's wording>"`, label `[default — style-described, user may opt in to a maestro]`. Phase 5 diagnoses Q1-Q4 from the description; Phase 6 Pass 3 does NOT activate unless user subsequently chooses a specific maestro.
+- User brief QUOTES a maestro name whose native language MATCHES `output_language` (e.g. "糸井重里" + `output_language: ja`, or "許舜英" + `output_language: zh-TW`) → set `brief.voice_reference` to that maestro, label `[user-stated]`. Phase 6 Pass 3 lineage standard loads as designed.
+- User brief QUOTES a maestro name whose native language DOES NOT MATCH `output_language` (e.g. "糸井重里" + `output_language: zh-TW`) → **Option C — Quadrant Signal Mode** (see below). The maestro name is interpreted as a **quadrant signal**, not a text-source-to-translate.
+- User brief describes a STYLE without naming a maestro (e.g. "aspirational like Apple", "cool-aesthetic 中興百貨 feel") → set `brief.voice_reference = "default"` + `brief.voice_description = "<user's wording>"`, label `[default — style-described, user may opt in to a maestro]`. Phase 5 diagnoses Q1-Q4 from the description; Phase 6 Pass 3 does NOT activate unless user subsequently chooses a specific maestro in the output_language's native set.
 - User brief does NOT mention voice at all → set `brief.voice_reference = "default"`, label `[default — user may override]`. Prompt in the confirmation turn.
+
+### Option C — Quadrant Signal Mode (v1.2.1 — cross-language maestro resolution)
+
+**Prior to v1.2.1**: cross-language maestro references (e.g. 糸井 + zh-TW) were resolved by setting `voice_reference = "default"` + `voice_description = "<maestro> 風格 譯化"`. The word **譯化** misled the drafter agent into a JP→zh-TW **translation** workflow — ideating candidates natively in the maestro's source language then surface-translating to the target language. Result: JP syntax and 翻譯腔 (translation-flavored prose) leaked into zh-TW output. Anti-pattern confirmed by v1.2.0 E2E test inspection.
+
+**v1.2.1 resolution**: the plugin's `voice-quadrant-positioning.md` already has native anchors for each quadrant in EN, ZH, and JP (e.g. Q3: 糸井 / ほぼ日 [JP], 全聯 / 龔大中 [ZH], MailChimp / Innocent [EN]). When the user's declared maestro is cross-language, we have NO NEED to translate — we map the maestro to its quadrant, then select the target-language anchor in that same quadrant as execution reference.
+
+Procedure:
+
+1. Parse user's maestro name → look up quadrant via `voice-quadrant-positioning.md` (糸井 → Q3, 許舜英 → Q2, Ogilvy → Q1, etc.)
+2. Record:
+   ```json
+   {
+     "brief": {
+       "voice_reference": "default",
+       "voice_quadrant_interpreted": "Q3",
+       "voice_notes": {
+         "user_intent_signal": "糸井重里",
+         "interpretation": "cross-language maestro → quadrant signal; execution via target-language native anchor in same quadrant"
+       }
+     }
+   }
+   ```
+3. Phase 5 will emit `voice_quadrant.primary = <interpreted_quadrant>` + set `voice_quadrant.execution_reference` to the target-language native anchor from `voice-quadrant-positioning.md §<quadrant>` (e.g. for Q3 + zh-TW → 全聯經濟美學派 / 龔大中 lineage).
+4. Phase 6 Pass 3 **does NOT activate** — guard remains strict (voice_reference is "default", not in maestro enum set).
+5. Phase 4 drafter reads `voice_quadrant.execution_reference` + **ideates natively in `output_language` from the first keystroke**. No intermediate JP (or other source-language) thinking.
+
+**Why this is better than譯化 mode**:
+
+- Output is **native**, not translated — zero 翻譯腔 risk
+- Voice fidelity is **higher** (target-language anchor saturates the register; borrowing foreign discipline only partially fits)
+- Token cost is **lower** (no intermediate language space; no loading of cross-language lineage standards)
+- Respects 《voice-and-tone.md §Anti-Patterns》 which explicitly forbids cross-tradition transplant
+
+**User's maestro name is NOT discarded** — it's preserved in `voice_notes.user_intent_signal` for audit trail and for confirming the quadrant interpretation during the single-turn confirmation. User may correct: "actually I meant 糸井 the JP voice specifically, produce output in ja instead" → re-route with `output_language = ja`.
+
+**If the target-language has no native anchor in that quadrant** (edge case — e.g. user names an obscure maestro in an under-documented quadrant): fall back to `voice_description` + 4-axis positioning alone; flag to user that execution will be Q*-quadrant-generic rather than anchored.
 
 The same exclusion applies to any other Level 2 field that downstream skills treat as a hard trigger. When in doubt between "AI-recommend specific value" and "default + prompt user to override", pick the latter.
 

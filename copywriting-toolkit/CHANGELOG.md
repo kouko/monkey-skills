@@ -1,5 +1,35 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.2.1 — 2026-04-20 (Quadrant Signal Mode — fix JP-thinking leakage on cross-language maestro refs)
+
+**Observed failure** (v1.2.0 E2E test): user brief cited 糸井重里 + `output_language: zh-TW`. Pipeline produced zh-TW output but internally **ideated in Japanese first** and translated, yielding candidates like「冷蔵庫の奥、賞味期限切れの醤油が、3本。」 — clearly Japanese prose wrapped in nominal zh-TW output. Root cause: Express Mode's v1.2.0 dual-trigger resolution Option C wording ("譯化") misled the drafter into a JP→zh translation workflow instead of native zh-TW ideation.
+
+**User insight that redirected the fix**: `standards/voice-quadrant-positioning.md` already has per-language native anchors in each quadrant (EN: Ogilvy/Apple/MailChimp — JP: 糸井/岩崎/谷山 — ZH: 許舜英/龔大中 etc.). Fix = use target-language anchor directly, not translate from source maestro.
+
+### Fix — Quadrant Signal Mode
+
+When user brief quotes a maestro whose native language ≠ `output_language`, the maestro is parsed as a **quadrant signal** (e.g. 糸井 → Q3), NOT a source text. The Phase 5 output then names the **target-language native anchor** in that same quadrant as `voice_quadrant.execution_reference`. Phase 4 drafters ideate **natively in `output_language` from the first keystroke** using that anchor's register — no translation stage ever occurs.
+
+### Files changed
+
+- **`skills/copywriting-intake/protocols/express-mode.md`** — Option C rewritten as Quadrant Signal Mode. Dual-trigger (cross-language maestro + output_language) parsed into quadrant lookup + target-language anchor lookup; `voice_notes.user_intent_signal` preserved for audit.
+- **`agents/copywriter.md`** — Persona rule 2 rewritten: lineage matches `output_language`, not user's cited maestro. Added rules: native ideation from first keystroke, cross-tradition transplant is anti-pattern (Anti-Patterns in `voice-and-tone.md`), cross-language maestro is quadrant signal + Phase 5 names target-language native anchor.
+- **`skills/copywriting-voice-positioning-stage/SKILL.md`** — new Workflow step 5: cross-language execution anchor resolution. Output envelope `voice_quadrant` gains `execution_reference` + `user_intent_signal` fields.
+
+### Impact
+
+- Zero-cost fix on the quadrant-lookup side (standard already exists)
+- No additional gates added — preserves v1.2.0 verification-density budget
+- Phase 6 Pass 3 activation guard (v1.2.0) unaffected — when `execution_reference` is target-language native, Pass 3 matches that lineage's canon standard (e.g. `zh-copy-craft-lineage.md` for zh-TW Q2-Q3); no dual-lineage load
+
+### Preserved
+
+- All v1.2.0 creative divergence widths unchanged
+- Immutable fields contract unchanged (`voice_quadrant` as whole still immutable after Phase 5)
+- Same-language maestro references (e.g. 谷山 + ja, Ogilvy + en) unchanged — `execution_reference` simply equals `voice_reference` in that case
+
+---
+
 ## v1.2.0 — 2026-04-20 (Verification Density Principle — token pruning, zero divergence loss)
 
 Post-v1.1.0 token-cost analysis showed +25-40% cost vs `domain-teams:copywriting-team` baseline. Root cause: **17 verification / gate points** accumulated across v1.0.x-v1.1.0 (baseline has ~5), each individually justified when added but collectively over-dense. v1.2.0 prunes verification redundancy while **preserving 100% of creative divergence width** — candidate counts, runner-up pools, full-draft alternatives, 谷山 3-reason application per-candidate all unchanged.

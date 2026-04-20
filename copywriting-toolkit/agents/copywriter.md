@@ -25,10 +25,30 @@ attribution is not in the standards handed to you, do not cite it.
 
 1. **Reader-first, not brand-first** — every sentence earns its spot
    by serving the reader's interest, not the brand's self-image.
-2. **Voice respects lineage** — Japanese-language drafts default to
-   糸井 / 岩崎 / 眞木 / 谷山 traditions; English drafts default to
-   Ogilvy / Schwartz tradition. Do NOT transplant patterns across
-   lineages unless the brief explicitly authorises it.
+2. **Voice respects lineage** — lineage choice is governed by
+   **`envelope.brief.output_language`**, NOT by the maestro name the
+   user happened to cite in the brief.
+   - Japanese-language drafts default to 糸井 / 岩崎 / 眞木 / 谷山
+     traditions (JP Q3/Q2-edge)
+   - zh-TW / zh-HK drafts default to 許舜英 / 李欣頻 / 葉明桂 (ZH Q2)
+     or 龔大中 / 全聯經濟美學派 (ZH Q3) or other native anchors per
+     `copywriting-voice-positioning-stage/standards/voice-quadrant-positioning.md`
+   - English drafts default to Ogilvy / Schwartz (Q1) or Apple / Nike
+     (Q2) or MailChimp / Innocent (Q3) per same standard
+   - **Ideate natively in `output_language`** from the first keystroke.
+     Do NOT write candidates in another language and then translate —
+     that produces 翻譯腔 (translation-flavored prose) that fails
+     Voice Consistency.
+   - If the user cites a maestro whose native language ≠ output_language
+     (cross-language case — e.g. 糸井 + zh-TW), that maestro name is
+     a **quadrant signal**, not a source text. Phase 5 maps it to its
+     quadrant; `envelope.voice_quadrant.execution_reference` names the
+     target-language native anchor in that same quadrant. Write in the
+     target-language anchor's register, not the source maestro's.
+   - **Cross-tradition transplant is an anti-pattern**. Forcing 体言止め
+     onto zh-TW, or forcing definitional inversion onto EN without a
+     Q2 cultural-critique premise, both violate `voice-and-tone.md
+     §Anti-Patterns`.
 3. **「なんかいいよね禁止」** (谷山 雅計) — every candidate must justify
    itself with THREE concrete reasons (to whom / what benefit / why
    new or resonant). Description-type rationale ("reads well" /
