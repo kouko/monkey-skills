@@ -2,6 +2,8 @@
 
 17-type compatibility status for Obsidian's native Mermaid viewer + fallback policies for types that don't render correctly.
 
+> **Data source disclosure**: the status marks in the matrix below (✅ / 🟡 / 🔻) are based on **WebSearch + Obsidian Forum research** (primarily posts from 2024 and Mermaid changelog analysis), NOT on observed rendering in any specific user's Obsidian instance. Actual render behavior in your vault may differ based on: your Obsidian version, installed plugins, custom CSS themes, OS / GPU, and network conditions (for iconify CDN). Before relying on a 🟡 or 🔻 type in production notes, test it with the canonical example from the corresponding type file.
+
 ## Obsidian Mermaid version context
 
 - **Obsidian bundled Mermaid**: 11.4.1 (as of April 2026)
@@ -137,3 +139,47 @@ When in doubt, prefer types marked ✅ full:
 When user explicitly asks for types marked 🟡 or 🔻, apply the fallback policy and inform the user transparently.
 
 See each type's individual file for syntax + examples, and [obsidian-common-quirks.md](obsidian-common-quirks.md) for cross-type rules.
+
+---
+
+## End-to-end verification results (v2.0.0 release)
+
+### Automated checks — PASS
+
+**Structural audit** (2026-04-20):
+- 21 `.md` files across expected structure (1 SKILL.md + 2 cross-type + 17 type files + 1 README)
+- No `references/` directory (deprecated in v2.0.0)
+- All 4 category folders present: `flow/` (6 files), `data-viz/` (3), `structural/` (6), `time/` (2)
+
+**Link integrity** (SKILL.md → type files):
+- 17/17 unique type-file links resolve to existing files
+- No dangling references
+
+**Trigger routing simulation** — 18/18 PASS:
+- 18 natural-language queries across zh-TW / ja / EN routed correctly to their target diagram type
+- Coverage spans all 4 categories and both language mixes
+- Tiebreakers confirmed working:
+  - Architecture cloud-vs-software split (architecture-beta vs C4)
+  - Timeline gantt-vs-timeline split (dependencies → Gantt, events-only → Timeline)
+- Line-chart fallback policy triggers correctly on "line chart" / "折線" / "trend" keywords
+
+### Manual verification pending — user-side tasks
+
+The following tests **require actual rendering in your Obsidian vault** and are NOT performed automatically:
+
+1. **Render test per type** — paste each type's canonical example into a `.md` note and verify it displays in preview mode
+2. **xychart-beta bar rendering** — confirm bars display correctly (should ✅ per research)
+3. **Line-chart user-flow test** — ask Claude: "幫我用折線圖顯示 Q1-Q4 營收" → verify skill output uses bar mode with degrade note (not line syntax)
+4. **architecture-beta offline test** — disconnect internet, render an architecture-beta diagram, observe whether iconify icons appear or fail
+5. **block-beta render test** — critical: 2024 forum reports said block-beta had render issues in Obsidian; verify current status in your Obsidian version
+6. **C4 Context / Container / Component** — each at its own zoom level, verify boundaries and Rel() arrows
+7. **gitgraph multi-branch layout** — with 3+ branches and merges, check for visual clutter
+8. **Dark-mode contrast** — toggle Obsidian dark mode and verify all 17 types remain legible
+
+### If manual tests reveal discrepancies
+
+- Update the relevant row in the compatibility matrix above (✅ → 🟡, or 🟡 → 🔻 etc.)
+- Add an entry in the `Version gap impact summary` if the issue is a Mermaid version bug
+- If a fallback policy needs adjustment, update SKILL.md § Line Chart Fallback Policy or add a new §<Type> Fallback Policy section
+- Open an issue in the monkey-skills repo so other users benefit from the observed behavior
+
