@@ -1,6 +1,6 @@
 ---
 name: copywriting-ethics-check-stage
-description: Phase 7 ethics gate (evaluator-only) — 景品表示法 + FTC Endorsement Guides + Cialdini dark-pattern audit. Non-negotiable MUST gate; NEEDS_REVISION blocks delivery. 倫理ゲート・広告表示法。倫理審查。
+description: Check draft copy for 景品表示法 / FTC Endorsement / 優良誤認 / 不實廣告 / Cialdini dark-pattern compliance. Use when auditing a draft for legal + ethics risk, or called by the pipeline as Phase 7 MUST gate (evaluator-only; NEEDS_REVISION blocks delivery). 倫理ゲート・広告表示法チェック。倫理審查・不實廣告。
 ---
 
 # copywriting-ethics-check-stage

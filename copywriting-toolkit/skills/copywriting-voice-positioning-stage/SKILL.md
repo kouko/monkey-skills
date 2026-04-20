@@ -1,6 +1,6 @@
 ---
 name: copywriting-voice-positioning-stage
-description: Phase 5 Voice Quadrant positioning — 2-axis macro typology (Authority↔Affinity × Reason↔Emotion), EN/ZH/JP practitioners per quadrant, Schwartz × Quadrant routing. Use after Phase 4 draft before Phase 6 tone tuning. ボイス・ポジショニング。文案聲音象限。
+description: Pick voice direction (Q1-Q4) for a brand or draft on the Authority↔Affinity × Reason↔Emotion quadrant, matched to EN/ZH/JP practitioner anchors (Ogilvy / 許舜英 / 糸井 / 龔大中 etc.) + Schwartz × Quadrant routing. Use when deciding the voice register of a new brand, diagnosing a draft's quadrant, or called by the pipeline between Phase 4 draft and Phase 6 tone tuning. ボイス・ポジショニング・四象限。文案聲音象限。
 ---
 
 # copywriting-voice-positioning-stage

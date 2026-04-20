@@ -1,6 +1,6 @@
 ---
 name: copywriting-form-check-stage
-description: Phase 8 form gate (evaluator-only) — framework adherence + length discipline + CTA appropriateness. MUST gate after ethics clears. 形式ゲート・フレームワーク適合。形式審查。
+description: Verify draft copy against its chosen framework — PASONA / 新PASONA / PASBECONA / QUEST / PASTOR / BEAF / PREP / CREMA stage completeness + length band + CTA appropriateness. Use when checking structure of a draft, or called by the pipeline as Phase 8 MUST gate (evaluator-only; runs after Phase 7 ethics). 形式ゲート・フレームワーク適合チェック。形式審查・結構檢查。
 ---
 
 # copywriting-form-check-stage

@@ -1,6 +1,6 @@
 ---
 name: copywriting-neta-injection
-description: Phase 3 neta overlay — 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) via WebSearch-only pipeline. Hybrid pre-draft bake-in OR post-draft overlay. Skippable. ネタ投入。文案ネタ挿入。
+description: Add metaphor / pun / buzzword / subculture meme / literary quote overlay to copy for memorability + cultural currency. 4 techniques (Reversal / Substitution / Subcultural Capital / Cross-domain Mapping) via WebSearch-sourced neta pipeline. Use when copy feels flat and needs a cultural hook, or as Phase 3 pre-draft bake-in / post-draft overlay. Skippable. ネタ投入・メタファー・比喩。文案ネタ挿入・迷因置入。
 ---
 
 # copywriting-neta-injection

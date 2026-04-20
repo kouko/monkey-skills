@@ -1,6 +1,6 @@
 ---
 name: using-copywriting-toolkit
-description: Route to the right copywriting-toolkit skill via phase decision tree. Use when starting any copywriting task — intake, ideation, draft, audit, or voice positioning. 文案工具組導引。コピーツールキット案内。
+description: Start here for any copywriting task — write a landing page / email / キャッチコピー / sales letter / SNS post / voice guide / copy audit. Routes a new brief (Shape A), an external-copy audit (Shape B), or a resumed mid-pipeline envelope (Shape C) to the right next skill via phase decision tree, with L1-L3 precondition + bounce-back enforcement. 文案工具組導引・パイプラインルーター。コピーツールキット案内・文案流程入口。
 ---
 
 # using-copywriting-toolkit
