@@ -1,6 +1,10 @@
 # Mermaid Visualizer
 
-Transform text content into Obsidian-optimized Mermaid diagrams across **17 diagram types**.
+Transform text content into Mermaid diagrams across **17 diagram types** — primarily optimized for Obsidian 11.4.1 native viewer, but output is portable to any Mermaid-compatible renderer supporting v11.4.1+ (GitHub, GitLab, Mermaid Live Editor, Notion, Confluence, HackMD, Docusaurus, MkDocs, etc.).
+
+## Why Obsidian-first?
+
+This skill was designed from the ground up for Obsidian notes — all syntax is calibrated to Obsidian's bundled Mermaid 11.4.1, and quirks specific to Obsidian's native viewer (e.g., architecture-beta iconify CDN dependency) have dedicated fallback policies. The v11.4.1 subset is the **most conservative** Mermaid dialect; output works on newer renderers automatically since they support v11.4.1+ as a baseline.
 
 ## What this skill does
 

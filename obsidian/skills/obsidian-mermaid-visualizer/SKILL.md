@@ -1,11 +1,11 @@
 ---
 name: obsidian-mermaid-visualizer
-description: Create Mermaid diagrams optimized for Obsidian notes — flowcharts, sequence / state / class / ER / C4 / git-branch diagrams, bar / line / pie / quadrant charts, Gantt / timeline schedules, architecture / block diagrams, mindmaps. Use when visualizing workflows, data trends, system architecture, project timelines, or hierarchical concepts in Obsidian notes. Calibrated to Obsidian 11.4.1 syntax + recommends named-line form for xychart line charts. Mermaid図・フローチャート・グラフ・データチャート・C4・ガントチャート。Mermaid 圖・流程圖・長條圖・折線圖・架構圖・甘特圖・時間軸・類別圖・ER 圖。
+description: Create Mermaid diagrams — flowcharts, sequence / state / class / ER / C4 / git-branch diagrams, bar / line / pie / quadrant charts, Gantt / timeline schedules, architecture / block diagrams, mindmaps — optimized for Obsidian 11.4.1 notes but portable to any Mermaid-compatible renderer (GitHub / GitLab / Mermaid Live Editor / Notion / Confluence / HackMD / Docusaurus / MkDocs supporting v11.4.1+). Use when visualizing workflows, data trends, system architecture, project timelines, or hierarchical concepts. Mermaid図・フローチャート・グラフ・データチャート・C4・ガントチャート。Mermaid 圖・流程圖・長條圖・折線圖・架構圖・甘特圖・時間軸・類別圖・ER 圖。
 ---
 
 # Obsidian Mermaid Visualizer
 
-Produces clean, Obsidian-renderable Mermaid diagrams across 17 diagram types — flow / data-viz / structural / time categories. Handles Obsidian 11.4.1 syntax quirks, auto-downgrades line charts to bar (CSS bug in native viewer), and provides consistent per-type knowledge.
+Produces clean Mermaid diagrams across 17 diagram types — flow / data-viz / structural / time categories — primarily optimized for Obsidian 11.4.1 native viewer, but output is portable to any Mermaid-compatible renderer supporting v11.4.1+ (GitHub, GitLab, Mermaid Live Editor, Notion, Confluence, HackMD, Docusaurus, MkDocs, etc.). Handles Obsidian-specific quirks and provides consistent per-type knowledge.
 
 ## Overview
 
