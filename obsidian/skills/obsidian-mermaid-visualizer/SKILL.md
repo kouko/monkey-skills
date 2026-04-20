@@ -43,7 +43,7 @@ Skill: generate Mermaid code + rendering notes
 
 Pick the diagram type by the content's intent. Each entry links to a type-specific file with canonical syntax, configuration options, worked examples, and error prevention.
 
-### Flow & conceptual (流程 / 概念)
+### Flow & conceptual
 
 - Sequential / decision steps / workflow → [flow/flowchart.md](flow/flowchart.md)
 - Cyclic / feedback loops / iteration (PDCA / OODA) → [flow/circular-flow.md](flow/circular-flow.md)
@@ -52,14 +52,14 @@ Pick the diagram type by the content's intent. Each entry links to a type-specif
 - Actor interactions over time / API calls → [flow/sequence.md](flow/sequence.md)
 - System states + transitions (FSM / lifecycle) → [flow/state.md](flow/state.md)
 
-### Data visualization (資料視覺化)
+### Data visualization
 
 - Discrete bar chart (categorical data) → [data-viz/xychart.md](data-viz/xychart.md) bar mode
 - Line / trend chart (single or multi-series) → [data-viz/xychart.md](data-viz/xychart.md) — **use named-line syntax `line "name" [values]`** which works in Obsidian 11.4.1
 - Proportion of whole (%) → [data-viz/pie.md](data-viz/pie.md)
 - 2×2 positioning (Eisenhower / impact-effort / BCG) → [data-viz/quadrant.md](data-viz/quadrant.md)
 
-### Structural (結構 / 架構)
+### Structural
 
 - Cloud / infrastructure with service icons → [structural/architecture.md](structural/architecture.md)
 - Generic block / hardware layouts → [structural/block.md](structural/block.md)
@@ -68,7 +68,7 @@ Pick the diagram type by the content's intent. Each entry links to a type-specif
 - Software architecture at 3 zoom levels (C4 model) → [structural/c4.md](structural/c4.md)
 - Git branches / merges / commits → [structural/gitgraph.md](structural/gitgraph.md)
 
-### Time / project (時程)
+### Time / project
 
 - Project schedule with dependencies (Gantt) → [time/gantt.md](time/gantt.md)
 - Chronology without dependencies (history / release log) → [time/timeline.md](time/timeline.md)
