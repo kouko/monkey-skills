@@ -32,7 +32,7 @@ line "series name" [values]
 ```mermaid
 xychart-beta
     title "Multi-line chart example"
-    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
     y-axis "Revenue" 0 --> 100
     line "Product A" [35, 42, 28, 55, 48, 62]
     line "Product B" [22, 38, 45, 30, 52, 41]

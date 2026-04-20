@@ -22,7 +22,7 @@ Bar and line charts for categorical / numerical data — revenue trends, signup 
 ```mermaid
 xychart-beta
     title "Q1-Q4 2026 Revenue (NT$ M)"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Revenue" 0 --> 100
     bar [42, 58, 67, 81]
 ```
@@ -37,22 +37,43 @@ xychart-beta
 - `y-axis` label + range
 - Multiple data series
 
-### Style rule — quote all categorical axis elements
+### Style rule — axis declarations
 
-**Pattern**: any non-continuous (categorical) axis element MUST be wrapped in `""` quotes:
+Two conventions enforced across all xychart examples:
+
+**Rule 1: both axes always have a name label**
 
 ```
-✅ x-axis ["Q1", "Q2", "Q3", "Q4"]
-✅ x-axis ["1月", "2月", "3月"]
-✅ x-axis ["Product A", "Product B"]
+✅ x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
+✅ y-axis "Revenue (NT$ M)" 0 --> 100
 
-❌ x-axis [Q1, Q2, Q3, Q4]
-❌ x-axis [1月, 2月, 3月]
+❌ x-axis ["Q1", "Q2", "Q3", "Q4"]              ← missing x-axis label
+❌ y-axis 0 --> 100                              ← missing y-axis label
 ```
 
-Numeric y-axis ranges (`y-axis "Revenue" 0 --> 100`) don't need quoting — they're continuous.
+Axis names make charts self-describing without reader having to infer from data context. Cost: ~15 characters per axis; benefit: unambiguous meaning.
 
-**Why**: uniform quoting rule prevents ambiguity and edge cases (CJK / special chars / reserved words). Easier to maintain than per-case judgment about when quoting is needed.
+**Rule 2: all categorical (non-continuous) axis elements wrapped in `""`**
+
+```
+✅ x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
+✅ x-axis "月份" ["1月", "2月", "3月"]
+✅ x-axis "Product" ["Product A", "Product B"]
+
+❌ x-axis "Quarter" [Q1, Q2, Q3, Q4]            ← unquoted categorical elements
+❌ x-axis "月份" [1月, 2月, 3月]
+```
+
+Numeric axis ranges (`y-axis "Revenue" 0 --> 100`) are continuous — no quoting.
+
+**Combined canonical form**:
+
+```
+x-axis "LabelName" ["Cat1", "Cat2", "Cat3"]
+y-axis "LabelName" MIN --> MAX
+```
+
+**Why both rules**: eliminate per-case judgment. Any xychart produced by this skill is self-describing (has axis labels) and handles edge cases consistently (CJK / special chars / reserved words via uniform quoting).
 
 ## Canonical syntax — line mode (use NAMED-LINE form)
 
@@ -61,7 +82,7 @@ Numeric y-axis ranges (`y-axis "Revenue" 0 --> 100`) don't need quoting — they
 ```mermaid
 xychart-beta
     title "多條折線圖 - 帶名稱"
-    x-axis ["1月", "2月", "3月", "4月", "5月", "6月"]
+    x-axis "月份" ["1月", "2月", "3月", "4月", "5月", "6月"]
     y-axis "銷售額 (萬)" 0 --> 100
     line "產品 A" [35, 42, 28, 55, 48, 62]
     line "產品 B" [22, 38, 45, 30, 52, 41]
@@ -85,7 +106,7 @@ If for some reason named-line doesn't render in your Obsidian vault, use `bar` i
 ```mermaid
 xychart-beta horizontal
     title "Horizontal bar chart"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Revenue" 0 --> 100
     bar [42, 58, 67, 81]
 ```
@@ -99,7 +120,7 @@ xychart-beta horizontal
 ```mermaid
 xychart-beta
     title "Revenue vs Profit (Q1-Q4)"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "NT$ M" 0 --> 100
     bar [42, 58, 67, 81]
     bar [12, 18, 22, 28]
@@ -112,7 +133,7 @@ Two `bar [...]` lines render as paired bars per category. Add names for legend l
 ```mermaid
 xychart-beta
     title "Monthly Active Users by Product"
-    x-axis ["Jan", "Feb", "Mar", "Apr"]
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr"]
     y-axis "MAU (k)" 0 --> 500
     line "Product A" [180, 220, 280, 340]
     line "Product B" [90, 140, 195, 245]
@@ -126,7 +147,7 @@ Each named line renders as a distinct colored line with legend entry.
 ```mermaid
 xychart-beta
     title "Revenue (bar) + Growth rate (line)"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Value" 0 --> 100
     bar "Revenue" [42, 58, 67, 81]
     line "Growth %" [15, 38, 16, 21]
@@ -169,7 +190,7 @@ This fallback is **NOT auto-triggered** — the default path is named-line, whic
 ```mermaid
 xychart-beta
     title "Monthly Revenue 2026"
-    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
     y-axis "NT$ M" 0 --> 50
     bar [12, 18, 24, 29, 32, 38]
 ```
@@ -179,7 +200,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Monthly Sign-ups"
-    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
     y-axis "Users" 0 --> 1000
     line "Sign-ups" [120, 280, 450, 620, 810, 950]
 ```
@@ -189,7 +210,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "多條折線圖 - 帶名稱"
-    x-axis ["1月", "2月", "3月", "4月", "5月", "6月"]
+    x-axis "月份" ["1月", "2月", "3月", "4月", "5月", "6月"]
     y-axis "銷售額 (萬)" 0 --> 100
     line "產品 A" [35, 42, 28, 55, 48, 62]
     line "產品 B" [22, 38, 45, 30, 52, 41]
@@ -201,7 +222,7 @@ xychart-beta
 ```mermaid
 xychart-beta horizontal
     title "Headcount Growth by Quarter"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Employees" 0 --> 200
     bar [85, 120, 155, 188]
 ```
@@ -213,7 +234,7 @@ Note: `horizontal` flips rendering orientation only; axis declarations keep the 
 ```mermaid
 xychart-beta
     title "Product A vs Product B Sales"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Units sold" 0 --> 500
     bar "Product A" [250, 310, 380, 420]
     bar "Product B" [180, 230, 290, 340]
@@ -224,7 +245,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Revenue (bars) + Growth Rate (line)"
-    x-axis ["Q1", "Q2", "Q3", "Q4"]
+    x-axis "Quarter" ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Value" 0 --> 100
     bar "Revenue (NT$ M)" [42, 58, 67, 81]
     line "Growth %" [15, 38, 16, 21]
@@ -241,13 +262,15 @@ xychart-beta
 | Missing quotes on title with spaces | `title "Has Spaces"` | Strings with spaces need quotes |
 | Using `showDataLabelOutsideBar` or Neo look | These are v11.14.0+ features — not in Obsidian 11.4.1 | Silent feature-ignore |
 | Swapping x-axis / y-axis for `horizontal` mode | Keep categorical on x-axis, numeric on y-axis; let `horizontal` flip rendering | `horizontal` reorients visuals; axis declarations stay the same as vertical |
-| Unquoted categorical axis elements `[Q1, Q2]` | Quote all categorical labels `["Q1", "Q2"]` | Statutory rule per § Style rule — consistent pattern for any non-continuous axis |
+| Unquoted categorical axis elements `[Q1, Q2]` | Quote all categorical labels `["Q1", "Q2"]` | Statutory rule per § Style rule Rule 2 — consistent pattern for non-continuous axes |
+| Axis without name label `x-axis ["Q1", "Q2"]` | `x-axis "Quarter" ["Q1", "Q2"]` | Statutory rule per § Style rule Rule 1 — charts must be self-describing |
 
 ### Pre-save validation
 
 - [ ] `xychart-beta` declared on line 1 (with `-beta` suffix)
 - [ ] x-axis array length matches each data series array length
-- [ ] **All categorical axis labels quoted** — `["Q1", "Q2"]` not `[Q1, Q2]` (see § Style rule)
+- [ ] **Both axes have name labels** — `x-axis "Quarter" [...]` and `y-axis "Revenue" ...` (see § Style rule Rule 1)
+- [ ] **All categorical axis labels quoted** — `["Q1", "Q2"]` not `[Q1, Q2]` (see § Style rule Rule 2)
 - [ ] Line charts use named-line syntax: `line "name" [values]`
 - [ ] Title quoted if contains spaces
 - [ ] y-axis uses `-->` double-hyphen arrow syntax

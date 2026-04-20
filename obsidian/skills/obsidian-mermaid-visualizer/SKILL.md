@@ -98,7 +98,7 @@ This renders correctly as a colored line with legend entry. Multi-series works n
 ```mermaid
 xychart-beta
     title "Monthly Revenue"
-    x-axis ["Jan", "Feb", "Mar", "Apr", "May"]
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr", "May"]
     y-axis "NT$ M" 0 --> 100
     line "Revenue" [42, 58, 67, 81, 95]
 ```
