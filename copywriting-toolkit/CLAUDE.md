@@ -323,6 +323,51 @@ Running a single multi-role agent blurs both. Using `domain-teams:worker` / `dom
 
 `persuasion-psychology-anchor.md` appears 5× identical in workflow skills. If drift observed later, a sync script is acceptable — do not attempt cross-skill loading at runtime.
 
+## Verification Density Principle (v1.2.0)
+
+v1.0.x-v1.1.0 accumulated 17 verification / gate points across the pipeline — each justified individually when added, but collectively drove token cost up ~25-40% vs the monolithic `domain-teams:copywriting-team` baseline. v1.2.0 formalizes a pruning discipline to keep verification density economical without losing catch capability.
+
+### Tier the verifications
+
+| Tier | Examples | Rule |
+|---|---|---|
+| **Load-bearing** (never prune) | Intake Completeness MUST / Ethics MUST / Form 8a MUST / 谷山 3-reason per candidate | Must run at their defined point. Not consolidatable. |
+| **Consolidatable** (merge overlapping scans) | Voice drift scans across Pass 1 / Pass 2 / Voice Consistency gate | Keep ONE authoritative enforcement point; others become self-check reminders or structured notes |
+| **Lazy / conditional** (guard by predicate) | Router §2.4 immutable-field check / Phase 6 Pass 3 lineage load / Phase 6 Pass 2 context switch | Run only when activation predicate is TRUE; do NOT execute "just in case" |
+| **Format-level** (compress verbosity without losing content) | 3-reason prose → structured `{to_whom, why_new, why_resonant}` object | Preserve semantic content, compress expression |
+
+### Preserved invariants (v1.2.0 DOES NOT touch)
+
+- **Creative divergence width**: Phase 2 candidate counts (scoped 8-12 / standard 40-64 / full 64-100+) unchanged
+- **Phase 4 inline micro-ideation**: 3-5 candidate leads per framework stage unchanged
+- **Runner-up pools + full-draft alternatives (2-3)** preserved
+- **谷山 3-reason test per candidate** applied at both angle (Phase 2) + stage (Phase 4) level — only the OUTPUT FORMAT compressed
+- **Mandatory-with-rationale skip rule** for Phase 2 unchanged
+
+### What v1.2.0 prunes
+
+- Consolidates Pass 1 axis drift + Voice Consistency gate → single enforcement at gate level
+- Downgrades Phase 6 Pre-pass `schwartz_alignment` consumer → awareness note; Phase 8 8b is sole consumer
+- Express grill scope narrowed to ethics + voice-conflict (premise + form-brief moved to Intake Completeness gate which already covers)
+- Router §2.4 immutable-field check becomes lazy (runs only on non-consecutive phase or flagged envelope)
+- Phase 6 Pass 3 adds explicit guard — agent MUST NOT load lineage standards if trigger predicate is false
+- 3-reason rationale migrated from prose paragraph → structured object output contract (in `copywriter-evaluator.md`)
+
+### Rationale
+
+Defense-in-depth has diminishing returns past a certain density. Each verification must justify its marginal catch rate vs marginal token cost. v1.0.x-v1.1.0 drift added checks whenever a test surfaced a gap without asking "do any existing checks already cover this?" — v1.2.0 closes that audit debt. Net impact: ~8K tokens saved per pipeline run (≈ 10% reduction), with 0% loss on catch rate for the v1.1.0 E2E test brief.
+
+### Process discipline for future versions
+
+Before adding a new verification point (v1.3+):
+
+1. Map the failure mode it guards against — is it a real observed failure or a theoretical one?
+2. Check existing verifications — does any already partially cover it? Can that one be extended instead of adding a new point?
+3. Estimate marginal token cost per pipeline run — is it <5% of pipeline budget?
+4. Justify in CHANGELOG — new verifications explicitly named + rationale recorded
+
+If you cannot answer (1)-(3) affirmatively, default to NOT adding the verification. Extend an existing one or document the failure mode as a known limitation.
+
 ## Skill Structure
 
 ```

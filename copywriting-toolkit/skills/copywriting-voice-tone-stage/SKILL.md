@@ -133,16 +133,18 @@ rewrite Phase 4's structural skeleton — frameworks are replaceable, voice
 is an irreplaceable asset, but structural edits belong to Phase 4 re-runs,
 not here.
 
-### Pre-pass: `schwartz_alignment` consumer
+### Pre-pass: `schwartz_alignment` awareness note (v1.2.0 — downgraded from consumer)
 
-If `envelope.voice_quadrant.schwartz_alignment == "conflict_flagged"`, Phase 6 MUST acknowledge the upstream Phase 5 conflict before running Pass 1:
+**v1.2.0 change**: The authoritative consumer of `schwartz_alignment` moved to Phase 8 8b rubric (single enforcement point per §Verification Density Principle). Pre-pass now downgraded to a lightweight awareness note.
 
-- Record the conflict verbatim in `tone_notes.schwartz_conflict_carried` with the Phase 5 rationale quoted.
-- Tune 4-axis defaults (Pass 1) with awareness of the conflict — e.g., L2 Product Aware audience forced into Q2 voice loses the comparative-advantage directness L2 prefers; Pass 1 should compensate by keeping `enthusiasm = matter-of-fact` (no cheerleader puffery that would double-mismatch the audience register) and `respectfulness = respectful-peer` (not condescending — L2 audience is category-savvy).
-- If the conflict is `hard_rule_applied` (Phase 5 overrode user's voice choice because of Schwartz Level 5 ≠ Q4 rule), Phase 6 cannot tune back toward the original voice reference — respect the hard rule.
-- Pass the flag forward unchanged on envelope exit. Phase 8 8b rubric also consumes it.
+If `envelope.voice_quadrant.schwartz_alignment == "conflict_flagged"`:
 
-This pre-pass prevents `conflict_flagged` from being a "flag that lives in isolation" — it ensures Phase 6 tuning does not compound the mismatch.
+- Record it in `tone_notes.schwartz_awareness_note` (one-line acknowledgement; do NOT elaborate full rationale here — Phase 5 already recorded it in `voice_quadrant.rationale`).
+- Pass 1 may lightly compensate 4-axis defaults (e.g., avoid double-mismatch by keeping enthusiasm matter-of-fact when L2 forced into Q2) but is NOT responsible for rigorous compensation verification — that's Phase 8 8b's job.
+- If `hard_rule_applied`, acknowledge but do not attempt to revert.
+- Pass `voice_quadrant` (including `schwartz_alignment`) forward unchanged per `../../CLAUDE.md §Immutable fields`.
+
+**Rationale for downgrade**: Phase 5 writes the flag; Phase 8 8b consumes it at the form-fidelity level. Phase 6 pre-pass previously did a third pass of compensation reasoning that duplicated Phase 5's rationale emit and Phase 8's fidelity check — redundant per v1.2.0 §Verification Density Principle. Lightweight note keeps the flag visible to Pass 1 without re-verifying.
 
 ### Pass 1 — 4-axis micro calibration (always runs)
 
@@ -162,10 +164,15 @@ Action:
    (Q1 ≈ formal / serious / respectful / matter-of-fact; Q3 ≈ casual /
    warm / respectful / warm-enthusiastic; etc.) and **disclose** the
    derivation in `tone_notes.axis_default_derived`.
-2. Scan the draft for axis drift — any sentence whose axis reading
-   conflicts with the target vector by >1 step on any axis.
-3. Rewrite only the drift sentences. Preserve framework stage boundaries
-   (PASONA A / S / O labels, BEAF stages, etc.) verbatim.
+2. **Self-check for axis drift** (v1.2.0 — downgraded from full scan):
+   lightly scan the draft for sentences whose axis reading obviously
+   conflicts with the target vector by ≥2 steps. Rewrite the flagged
+   sentences. Do NOT do a rigorous per-sentence enumeration — that is
+   the Voice Consistency SHOULD gate's job (single authoritative
+   enforcement per §Verification Density Principle). Pass 1 is "catch
+   the obvious" not "catch everything".
+3. Preserve framework stage boundaries (PASONA A / S / O labels, BEAF
+   stages, etc.) verbatim.
 4. Apply Ogilvy commandments explicitly: no empty-hype vocabulary
    (amazing / revolutionary / game-changing), headline voice = body voice
    (no click-bait exemption), long-copy must earn every body sentence.
@@ -194,6 +201,28 @@ PASONA / BEAF / キャッチコピー frameworks`).
 ### Pass 3 — Lineage craft (runs only per §When lineage craft applies)
 
 Pass 3 loads exactly ONE language-specific lineage standard based on the trigger conditions. Apply the referenced maestro's voice signature.
+
+#### Pass 3 activation guard (v1.2.0 — hard constraint)
+
+**Before loading any lineage standard (`jp-copy-craft-lineage.md` or `zh-copy-craft-lineage.md`)**, the agent MUST verify the trigger predicate evaluates to TRUE per §When lineage craft applies:
+
+```
+JP trigger:
+  output_language == "ja"
+  OR voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}
+  OR (voice_quadrant.primary == "Q3" AND message_thesis is state-proposal)
+
+ZH trigger:
+  (output_language ∈ {"zh-TW", "zh-HK"} AND Q2 maestro voice declared)
+  OR voice_reference ∈ {許舜英, 李欣頻, 葉明桂}
+  OR (voice_quadrant.primary == "Q2" AND audience is ZH-sphere consumer-class)
+```
+
+**If neither predicate is TRUE → Pass 3 MUST NOT load any lineage standard.** Record `tone_notes.lineage_applied = null` + skip to Phase 7. Do NOT load "just in case".
+
+**Rationale** (v1.2.0 §Verification Density Principle — Lazy tier): the 2 lineage standards together are ~700 lines / ~8-10K tokens. Loading them on a run that won't use them (most Express Mode runs with `voice_reference = "default"` — the v1.1.0 dual-trigger resolution Option C case) is pure waste. Prior versions let agents load "defensively" — v1.2.0 makes non-loading the enforced default.
+
+**If predicate is TRUE → proceed to Pass 3a or 3b as applicable**.
 
 #### Pass 3a — JP lineage (JP trigger matched)
 

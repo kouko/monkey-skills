@@ -1,5 +1,72 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.2.0 — 2026-04-20 (Verification Density Principle — token pruning, zero divergence loss)
+
+Post-v1.1.0 token-cost analysis showed +25-40% cost vs `domain-teams:copywriting-team` baseline. Root cause: **17 verification / gate points** accumulated across v1.0.x-v1.1.0 (baseline has ~5), each individually justified when added but collectively over-dense. v1.2.0 prunes verification redundancy while **preserving 100% of creative divergence width** — candidate counts, runner-up pools, full-draft alternatives, 谷山 3-reason application per-candidate all unchanged.
+
+### New principle — §Verification Density
+
+plugin CLAUDE.md adds §Verification Density Principle (v1.2.0) — tiers verifications:
+
+- **Load-bearing** — never prune (Intake Completeness MUST / Ethics MUST / Form 8a MUST / 谷山 3-reason per candidate)
+- **Consolidatable** — merge overlapping scans; keep one authoritative enforcement point
+- **Lazy / conditional** — guard by predicate; do not execute "just in case"
+- **Format-level** — compress verbosity without losing content
+
+Plus: a process discipline for future versions — before adding any new verification, map failure mode + check existing coverage + estimate marginal token cost + CHANGELOG justification.
+
+### 7 prunes applied (estimated savings ~8K tokens per typical pipeline run)
+
+**Consolidate (merge overlapping)**:
+
+1. **Voice drift enforcement unified at Voice Consistency SHOULD gate** — Phase 6 Pass 1 axis drift scan downgraded to "catch the obvious" self-check; rigorous per-sentence enumeration is sole responsibility of Voice Consistency gate. Saves ~1K.
+2. **`schwartz_alignment` consumer consolidated at Phase 8 8b** — Phase 6 Pre-pass downgraded to `tone_notes.schwartz_awareness_note` lightweight acknowledgement; 8b rubric is sole authoritative fidelity consumer. Saves ~500.
+
+**Scope reduction (remove redundant scans)**:
+
+3. **Express Phase 0.5-B grill scoped to 2 scans** (down from 4) — ethics boundary + voice-conflict check retained; premise / dependency + form-brief mismatch moved to Intake Completeness MUST gate (which already covered them). Saves ~1K.
+
+**Lazy / conditional (guard by predicate)**:
+
+4. **Router §2.4 invariant check → lazy mode** — runs only on non-consecutive phase / retry state / empty audit_trail / present violation / anomalous envelope size. Normal in-session continuation skips. Saves ~500 per transition.
+5. **Phase 6 Pass 3 activation guard (hardened)** — agent MUST verify trigger predicate evaluates TRUE before loading any lineage standard. The ~700-line JP + ZH lineage files (~8-10K tokens) no longer load "just in case" — common Express Mode runs with `voice_reference = "default"` (dual-trigger resolution Option C case) skip Pass 3 entirely. **Saves ~2-3K on non-lineage runs (most Express cases).**
+
+**Format-level (compress without losing content)**:
+
+6. **3-reason rationale → structured object contract** — copywriter agent persona rule 3 adds v1.2.0 output contract: `{candidate, three_reasons: {to_whom, why_new, why_resonant}, verdict}` with each reason ≤ 30 words / 1 sentence. Replaces prior prose paragraph. ~70 tokens saved per candidate × ~28 candidates per pipeline run = **~2K per run**.
+7. **Cumulative structural tightening** across §Verification Density Principle itself — ~500 saved in SKILL.md cross-references (pointers instead of duplicated inline logic).
+
+### Preserved (NOT touched per user constraint)
+
+- Phase 2 candidate counts: scoped 8-12 / standard 40-64 / full 64-100+ — **unchanged**
+- Phase 4 inline micro-ideation: **3-5 candidates per framework stage — unchanged**
+- Runner-up pools preserved
+- Full-draft alternative pass (2-3 alternatives) preserved
+- 谷山 3-reason test per candidate **unchanged in application** — only output format compressed
+- Mandatory-with-rationale skip rule for Phase 2 unchanged
+- All Load-bearing MUST gates unchanged (Intake Completeness / Ethics / Form 8a)
+- All Tier 1 standards (academic canon) byte-identical per §Provenance & Divergence
+
+### Expected impact
+
+- Token cost per typical pipeline run: -8 to -9K (from ~85K → ~77K)
+- Relative to baseline: v1.1.0 +25-40% → v1.2.0 **+15-25%**
+- Catch rate on v1.1.0 E2E test brief (禾井): **unchanged** (all 7 load-bearing gates still active)
+- Divergence width: **unchanged**
+- Voice lineage execution: **unchanged** (Pass 3 still activates when triggers match; only "just in case" loads removed)
+
+### Files changed
+
+- `copywriting-toolkit/CLAUDE.md` — §Verification Density Principle added (with future-version process discipline)
+- `copywriting-voice-tone-stage/SKILL.md` — Pass 3 activation guard + Pre-pass downgrade to awareness note + Pass 1 self-check downgrade
+- `using-copywriting-toolkit/protocols/phase-decision-tree.md` — §2.4.1 lazy-mode activation rule added
+- `copywriting-intake/protocols/express-mode.md` — Phase 0.5-B grill scope reduced to 2 scans
+- `copywriting-form-check-stage/rubrics/form-appropriate-gate.md` — §schwartz_alignment dimension marked as v1.2.0 sole consumer
+- `copywriting-toolkit/agents/copywriter.md` — persona rule 3 adds structured 3-reason output contract
+- `copywriting-toolkit/.claude-plugin/plugin.json` — version 1.1.0 → 1.2.0
+
+No Tier 1 files modified. DIVERGED header convention from v1.1.0 maintained for Tier 2 modifications.
+
 ## v1.1.0 — 2026-04-20 (architectural minor release — Provenance & Divergence principle + Phase 2 mandatory + Phase 4 inline micro-ideation)
 
 **Minor version bump** (1.0.x → 1.1.0) signals architectural changes beyond spec clarification. Three concurrent layers.

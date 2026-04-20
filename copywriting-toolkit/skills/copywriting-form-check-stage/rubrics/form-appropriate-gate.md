@@ -334,8 +334,12 @@ Examples:
 
 The gate does NOT reject outright — it surfaces the mismatch so the user can choose to downgrade framework or expand the draft. But 🔴 triggers `NEEDS_REVISION` per the verdict rules above.
 
-### Dimension — `schwartz_alignment: conflict_flagged` carry-forward (v1.0.1 rule)
+### Dimension — `schwartz_alignment: conflict_flagged` carry-forward (v1.0.1 rule; v1.2.0 sole consumer)
 
-When Phase 5's `voice_quadrant.schwartz_alignment == "conflict_flagged"` persists to Phase 8, check whether the final draft delivers the claimed voice despite the Schwartz mismatch. If voice-fidelity drops (e.g., declared 許舜英 Q2 manifesto but actual copy reads Q4 direct-response), raise 🟡 for "voice-intent vs delivery mismatch in Schwartz-conflict context". This is the downstream consumer that closes the conflict_flagged loop originating at Phase 5.
+**v1.2.0 change**: This is now the SOLE authoritative consumer of `schwartz_alignment == "conflict_flagged"` (per §Verification Density Principle — §Consolidatable tier). Phase 6 Pre-pass was downgraded to lightweight awareness note in v1.2.0; this 8b check is where the fidelity verdict fires.
+
+When Phase 5's `voice_quadrant.schwartz_alignment == "conflict_flagged"` persists to Phase 8, check whether the final draft delivers the claimed voice despite the Schwartz mismatch. If voice-fidelity drops (e.g., declared 許舜英 Q2 manifesto but actual copy reads Q4 direct-response), raise 🟡 for "voice-intent vs delivery mismatch in Schwartz-conflict context". This is the authoritative downstream consumer that closes the conflict_flagged loop originating at Phase 5.
+
+Implementation note for evaluator: read `envelope.voice_quadrant.rationale` (Phase 5 wrote this) and `envelope.tone_notes.schwartz_awareness_note` (Phase 6 Pre-pass wrote this) as context — do not re-derive the compensation logic; just verify the final draft lands on-target.
 
 Both dimensions are surfaced here (in the rubric) rather than in the checklist because they are qualitative / context-sensitive, not binary pass/fail.

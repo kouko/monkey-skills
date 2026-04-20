@@ -60,16 +60,23 @@ Worker also pre-computes:
 - **Predicted framework** (新 PASONA / BEAF / QUEST / CREMA / AIDMA short etc.) from form + Schwartz level — labelled `[AI-recommend]`
 - **Predicted pipeline route** — enumerate which phases will run and their **depth**. Phase 2 ideation is MANDATORY per v1.1.0 — default depth = `scoped` for Express; skipping requires an explicit user rationale. Phase 3 neta runs or skips per `neta_opt_in` envelope flag.
 
-### Phase 0.5-B — Automated Grill (mandatory)
+### Phase 0.5-B — Automated Grill (mandatory, scope reduced in v1.2.0)
 
-Mirror `copywriting-brainstorming.md §Task 4b` grill, but run by `copywriter-evaluator` (not `copywriter`) against the synthesised envelope:
+Run by `copywriter-evaluator` against the synthesised envelope. **v1.2.0 scoped the grill to 2 scans** (down from 4) per §Verification Density Principle — premise check + form-brief mismatch were already caught downstream by Intake Completeness MUST gate (which runs right after this), so running them here is redundant.
 
-1. Ethics boundary scan — 景品表示法 優良誤認 / 有利誤認 / ステマ告示 + FTC Endorsement red flags surfaced from the user's brief
-2. Premise / dependency check — hidden assumptions in the brief
-3. Voice-conflict check — audience register vs declared voice reference
-4. Form-brief mismatch check — e.g. "7-15 chars brief" while user supplied paragraph-length narrative
+Active scans:
+
+1. **Ethics boundary scan** — 景品表示法 優良誤認 / 有利誤認 / ステマ告示 + FTC Endorsement red flags surfaced from the user's brief. Load-bearing — cannot be moved downstream because tier classification (T1/T2/T3) needs to happen BEFORE Phase 0.5-C confirmation turn so the user sees the flag.
+2. **Voice-conflict check** — audience register vs declared voice reference, including dual-lineage trigger detection (JP maestro + zh output conflict, etc.). Load-bearing — must fire before Phase 6 Pass 3 trigger evaluation.
+
+**Moved to downstream (Intake Completeness gate handles these equivalently)**:
+
+- ~~Premise / dependency check — hidden assumptions in the brief~~ → Intake Completeness gate's Level 1 field check + user confirmation turn catches these; no early-stage value in grill.
+- ~~Form-brief mismatch check~~ → Intake Completeness gate + Phase 4 drafter Preconditions schema both catch form-brief length / channel mismatch; redundant here.
 
 Grill findings attach to the summary under `Confirmed Assumptions` (explicit) and `Resolved Ambiguities` (AI-resolved).
+
+**Rationale**: the 2-scan grill still catches both failure modes that v1.1.0 E2E testing surfaced (30% claim, 糸井+zh-TW dual-trigger). The removed scans caught the same issues later in the pipeline — no catch-rate delta.
 
 ### Tiered FATAL handling — Express-only output contract
 

@@ -34,6 +34,28 @@ attribution is not in the standards handed to you, do not cite it.
    new or resonant). Description-type rationale ("reads well" /
    "punchy") is rejected by default; reject your own as readily as
    the user's.
+
+   **v1.2.0 — structured output contract for 3-reason** (replaces prior
+   prose format). Emit each candidate's rationale as a compact object,
+   NOT a paragraph:
+
+   ```json
+   {
+     "candidate": "<candidate text>",
+     "three_reasons": {
+       "to_whom": "<1 line: who this is for + what benefit>",
+       "why_new": "<1 line: differentiation vs existing similar copy>",
+       "why_resonant": "<1 line: why it lands in this context>"
+     },
+     "verdict": "selected | runner_up | rejected"
+   }
+   ```
+
+   Each reason: one sentence, ≤ 30 words. No explanatory prose paragraphs.
+   The discipline is preserved (3-reason gate fully applied); verbose
+   justification prose is not. This compresses ~70 tokens per candidate
+   × ~28 candidates per typical pipeline run ≈ 2K tokens saved per run.
+
    **Corollary (v1.1.0): NEVER deliver a single non-compared draft.**
    If no Phase 2 ideation candidates exist, run inline micro-ideation
    at the stage-lead level yourself (3-5 candidate leads per framework

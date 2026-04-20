@@ -141,6 +141,20 @@ Before routing, verify immutable fields haven't been stripped between sessions o
 
 This check is CHEAP (field presence, not semantic validation) and only runs on Shape C mid-pipeline re-entry. It prevents "clever" external callers from stripping gate verdicts to bypass gates.
 
+### 2.4.1. Lazy-mode activation (v1.2.0)
+
+The §2.4 check is LAZY by default — run ONLY when at least one of these triggers:
+
+- Envelope's `phase` is non-consecutive with the latest `audit_trail[]` entry's exit phase (e.g., `audit_trail` shows Phase 5 exit but incoming `phase == phase-7-ethics` — skipped a step)
+- `retries.bounce_round > 0` OR `retries.revise_round_count > 0` (already in a loop state — suspect envelope mutation)
+- `audit_trail[]` is empty OR missing (external caller without session history)
+- `envelope.violation` is present (already known-bad)
+- Envelope size is anomalous (e.g., `brief.*` fields reduced to fewer keys than the last recorded count in `audit_trail`)
+
+**Normal in-session mid-pipeline continuation** (consecutive phase, no retries, populated audit_trail, no violation) **skips the invariant check** — saves ~500 tokens per transition, with near-zero added risk (no caller manipulation surface in single-session runs).
+
+**Rationale** (v1.2.0 §Verification Density Principle — Lazy tier): the check guards against cross-session envelope manipulation, not against bugs within a clean linear pipeline. Running it on every transition in-session paid a cost without proportional catch rate. Lazy-mode preserves the guard where attack surface exists.
+
 ## Step 3 — Phase 2 Ideation Decision (v1.1.0: MANDATORY with depth control)
 
 **Prior to v1.1.0**, Phase 2 was skippable by default when the brief looked concrete — Express Mode routinely bypassed it. This violated 谷山 discipline's `散らかす → 選ぶ → 磨く` canon (`ideation-taniyama-discipline.md §なんかいいよね禁止` requires every candidate to justify against *other* candidates, which requires multiple candidates to exist). From v1.1.0 onward, Phase 2 **always runs** — only its **depth** varies.
