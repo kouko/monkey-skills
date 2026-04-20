@@ -7,9 +7,10 @@ This protocol is imperative — the orchestrating agent (main agent, or a dispat
 ## Invariants
 
 - Never draft copy or produce gate verdicts inside this protocol; only route.
-- Never skip Phase 0 Intake; a seemingly-complete request may still lack Schwartz awareness, voice reference, or action weight.
+- Never skip Phase 0 Intake entirely — but a fully-qualified brief may take the Express Mode fast path (Step 0.5 below) instead of Q1-Q10. Both paths still run the Intake Completeness MUST gate.
 - Every hand-off produces a handoff envelope (schema in `SKILL.md` §Handoff Envelope Schema).
 - Ambiguous routing → ask ONE clarifying question from this protocol, not a freeform probe.
+- **Precondition validation is mandatory before every skill launch** — load the target skill's `## Preconditions` schema, check envelope against it, emit `violation` envelope and route upstream if the schema does not hold (see `../../CLAUDE.md §Envelope Violation`). Do NOT launch a skill against an incomplete envelope.
 
 ## Step 0 — Detect Input Shape
 
@@ -22,6 +23,44 @@ Inspect the raw request. Classify into one of:
 | (C) Mid-pipeline continuation | Envelope already exists (prior skill returned) | Step 2 |
 | (D) Explicit skill request | User names a specific skill | Hand off directly, no routing |
 | (E) Out-of-scope | Technical doc / product strategy / UX microcopy / research / code | Hand off to another team (see SKILL.md §Out of Scope) |
+
+## Step 0.5 — Express Qualification Check (Shape A only)
+
+Before routing Shape A (raw new brief) to intake's Q1-Q10, check whether the brief already carries all Level 1 fields. If yes, dispatch intake in Express Mode (`copywriting-intake/protocols/express-mode.md`) instead of Q1-Q10.
+
+### Qualification rules (ALL must hold)
+
+Load `copywriting-intake/SKILL.md §Preconditions` (hmm — intake has no envelope preconditions since it's the entry; use `copywriting-brainstorming.md §Level 1` field list instead). Check the raw brief against the Level 1 field set for the **predicted Phase 4 form**:
+
+| Common Level 1 (all forms) | Source check |
+|---|---|
+| `form_type` (short / mid / long-pasona / long-extended / light-action / audit / ideation-only) | Detectable from channel / length / action cues in brief |
+| `product` | User names a product / service / thing being copy-for |
+| `value_proposition` | User states a 1-sentence value claim OR the claim is extractable as a single sentence |
+| `target_audience` | User names at least one concrete demographic / persona |
+
+Plus form-specific Level 1 (see each Phase 4 skill's `## Preconditions § Required envelope fields`):
+
+- **short-form**: channel + char-limit band surfaced (or default 7-15 inferable)
+- **mid-form**: ≥3 concrete benefits + channel + evidence sources
+- **long-form-pasona**: target_length + channel + schwartz_level
+- **long-form-extended**: positioning + language + schwartz_level
+- **light-action**: action_weight + target_action
+
+### Disqualifiers (ANY forces Q1-Q10)
+
+- Any Level 1 field requires inference (cannot be quoted from the brief)
+- Brief is a bounce-back re-entry (envelope.violation present from downstream) — bounce-backs ALWAYS take Q1-Q10 because synthesis missed something the first time
+- User explicitly requested `full intake` / `detailed Q&A` / 詳しく聞いて etc.
+- Brief contains a potential 景品表示法 / FTC red flag — grill requires interactive clarification
+
+### Routing
+
+- **ALL qualify + zero disqualifiers** → dispatch to `copywriting-intake` with `mode: express`, envelope carries `raw_request` only
+- **Any disqualifier** → dispatch to `copywriting-intake` with `mode: full-q1-q10` (default), skip to Step 1
+- **Partial qualification** (Level 1 mostly present, one missing) → dispatch with `mode: full-q1-q10` and include `skip_hint: [confirmed_field_1, ...]` so intake can short-circuit already-answered Q's (not an Express, just trimmed Q&A)
+
+Express Mode itself includes a user confirmation turn + grill + Intake Completeness gate. Do NOT bypass those by routing directly to Phase 2+.
 
 ## Step 1 — New Brief (Shape A)
 

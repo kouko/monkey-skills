@@ -81,6 +81,25 @@ If several fields are missing, list them all in `missing[]`. Router picks the SI
 
 `copywriting-audit-stage` does NOT accept bounce-back to `copywriting-intake` (audit bypasses intake by design). Its only bounce target is `using-copywriting-toolkit` for re-collecting `external_copy` full text.
 
+## Router Validation
+
+`using-copywriting-toolkit` is the single enforcement point for precondition validation. It performs two checks before every skill launch:
+
+1. **Preconditions check** — load the target skill's `## Preconditions § Required envelope fields` table from its SKILL.md, verify every row against the current envelope. On any missing / malformed field → emit `violation` envelope, do NOT launch the target skill, route to the `bounce_to` skill named in the target's Preconditions.
+2. **Express qualification (Shape A only)** — per `using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 0.5`, inspect raw brief against intake's Level 1 field set. If qualified, dispatch intake in Express Mode (`copywriting-intake/protocols/express-mode.md`); otherwise default to Q1-Q10 full intake.
+
+Router does not draft, does not judge gate verdicts, does not rewrite. It routes, validates, and bounces.
+
+### Why validation lives in the router, not each skill
+
+- **Single source of truth** — when preconditions change, only the target skill's SKILL.md Preconditions table changes. Router reads it fresh; no duplicated validation logic drifts.
+- **Downstream skills stay focused** — ideation, drafting, voice tuning, gates all assume a well-formed envelope. They do not contain defensive input-validation code paths.
+- **bounce_round counter is a router-local concern** — a single validator keeps the round cap coherent. If skills self-dispatched bounces, round counting would fragment and the round-3 HALT rule could be violated.
+
+### Express Mode is not a Preconditions bypass
+
+Express Mode replaces Q1-Q10 **elicitation** with synthesis-plus-single-turn-confirmation. The Intake Completeness MUST gate still runs. The downstream skill still sees a well-formed envelope that satisfies its Preconditions. If Express-synthesised fields turn out to be wrong, a downstream skill will emit a violation → router routes back to intake → intake on re-entry forces Q1-Q10 (not Express) because bounce-backs are a disqualifier.
+
 ## Cross-Plugin Delegation (Loose)
 
 Phase 1 Message Confirmation inside `copywriting-intake` may RECOMMEND `planning-team` when the problem is thesis-level (unclear positioning / audience / goal). Do NOT enforce — user may proceed anyway. No auto-delegation.

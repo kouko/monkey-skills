@@ -38,7 +38,20 @@ envelope within the same session and the request has not changed.
   by `copywriting-toolkit/agents/copywriter-evaluator.md` against the Understanding
   Summary before this skill returns.
 
-## Phase 0 — Brief Intake
+## Execution Paths — Q1-Q10 vs Express Mode
+
+This skill has two execution paths for producing the Understanding Summary:
+
+| Path | Protocol | When used | Elicitation |
+|---|---|---|---|
+| **Q1-Q10 (default)** | `protocols/copywriting-brainstorming.md` | Brief is rough / missing Level 1 fields / user requested full intake / re-entry after a downstream bounce-back | 10 questions, one per turn |
+| **Express Mode** | `protocols/express-mode.md` | Router's Express Qualification Check (phase-decision-tree.md §Step 0.5) declared the raw brief Level-1-complete | Synthesis + single-turn confirmation |
+
+Both paths produce the same output envelope shape and both run the same Intake Completeness MUST gate. Express Mode is a fast-path, not a relaxed-rigor path — rigor lives in the gate, not in the number of questions.
+
+Route selection is driven by the router; this skill accepts whichever protocol the router dispatches and honours abort/fallback signals (Express → Q1-Q10 fallback on grill FATAL, synthesis Level 1 gap, or gate NEEDS_REVISION).
+
+## Phase 0 — Brief Intake (Q1-Q10 path)
 
 Drive the Q1-Q10 sequence in `protocols/copywriting-brainstorming.md`.
 One question per message, multiple-choice first, always attach a recommended
