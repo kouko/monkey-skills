@@ -1,3 +1,13 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/protocols/write-short-form-copy.md
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §Inline micro-ideation (谷山 stage-level diverge-select rule)
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.1.0 addition"
+markers to locate plugin-specific additions.
+-->
+
 # Protocol: Write Short-Form Copy（キャッチコピー Canon short-form writing）
 
 **When to use**: Short-form **キャッチコピー** copy requests. Typical cases — キャッチコピー (advertising headlines), taglines, banner ads, SNS post text, CM titles, magazine / newspaper ad headlines, the single line overlaid on a website's main visual. Word count: **7-15 characters is the default**; 15+ characters should be treated as a lead sentence / subtitle.
@@ -145,3 +155,58 @@ Reference `short-form-catchcopy-canon.md` §四位 voice 巨匠 and `voice-and-t
 - **Stopping at description-type copy**: Ending with "○○は△△です". Product feature rephrasing with no new meaning presented.
 - **Choosing from the writer's perspective**: Selecting a candidate that only looks good because you know the ideation route.
 - **Using superlative claims ("最高", "No.1", "世界初") without evidence in short-form**: 景品表示法 優良誤認 / 有利誤認 frequent violation type. Even under the 15-char constraint, evidence is a prerequisite.
+
+
+---
+
+<!-- v1.1.0 addition: inline micro-ideation per 切入點 / stage (copywriting-toolkit specific) -->
+
+## Inline Micro-Ideation (copywriting-toolkit v1.1.0)
+
+Applies regardless of whether Phase 2 ideation produced external candidates. Purpose: enforce 谷山 「なんかいいよね禁止」at stage level — never deliver a single candidate without comparison.
+
+### Trigger
+
+- ALWAYS runs inside Phase 4 drafting, after upstream ideation winners (if any) are consumed.
+- If `envelope.ideation_depth == "skipped"`, this section is the ONLY diverge-select pass in the pipeline — do NOT skip it.
+
+### Procedure — short-form (7-15 字 catchcopy)
+
+For each selected 切入點（利益 / 恐怖 / 顛覆 / 呼喚 / 提問）the worker uses:
+
+1. Produce **3-5 candidates** within the 7-15 字 band.
+2. Apply 谷山 3-reason test per `standards/ideation-taniyama-discipline.md`:
+   - Who is this for / what benefit
+   - Why new versus existing copy
+   - Why resonant in the given context
+3. Select 1 winner per 切入點. Candidates that fail the 3-reason test are rejected, not stored as B-candidates.
+4. Record rejected candidates in `envelope.draft_inline_ideation.rejected[]` with reason-of-rejection.
+
+### Procedure — light-action (PREP / CREMA stage)
+
+For each stage (P / R / E / P for PREP; C / R / E / M / A for CREMA):
+
+1. Produce **3-5 candidate sentences** for the stage.
+2. Apply 谷山 3-reason test to each candidate.
+3. Select 1 winner per stage.
+
+### Record
+
+Append to envelope:
+```json
+{
+  "draft_inline_ideation": {
+    "enabled": true,
+    "depth": "stage-level",
+    "rejected_candidates": [
+      {"stage_or_approach": "...", "candidate": "...", "rejected_because": "..."}
+    ]
+  }
+}
+```
+
+This is distinct from `ideation_pool` (Phase 2 angle-level output). Both may coexist — Phase 2 winners select the angle; inline micro-ideation selects the sentence within that angle.
+
+### Why mandatory
+
+Without inline micro-ideation, the drafter produces a single non-compared candidate per stage, violating 谷山 discipline even if Phase 2 angle-level ideation ran. Canon requires diverge-select at **all scales**, not just at the angle level.

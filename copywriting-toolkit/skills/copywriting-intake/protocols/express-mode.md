@@ -58,7 +58,7 @@ Worker also pre-computes:
 - **Predicted Phase 4 form** (short / mid / long-pasona / long-extended / light-action) from brief channel + length + action weight — labelled `[form detected]`
 - **Predicted Phase 5 voice quadrant** from audience register + brief language + message_thesis — labelled `[AI-recommend]`
 - **Predicted framework** (新 PASONA / BEAF / QUEST / CREMA / AIDMA short etc.) from form + Schwartz level — labelled `[AI-recommend]`
-- **Predicted pipeline route** — enumerate which phases will run (Phase 2 ideation? Phase 3 neta?) and which will skip, with one-line rationale each
+- **Predicted pipeline route** — enumerate which phases will run and their **depth**. Phase 2 ideation is MANDATORY per v1.1.0 — default depth = `scoped` for Express; skipping requires an explicit user rationale. Phase 3 neta runs or skips per `neta_opt_in` envelope flag.
 
 ### Phase 0.5-B — Automated Grill (mandatory)
 
@@ -140,7 +140,10 @@ Render the Understanding Summary to the user in the following fixed shape (outpu
 
 【預計 Pipeline】
   Phase 0   → Express confirm (current step)
-  Phase 2   → <run | skip> — <rationale>
+  Phase 2   → <scoped | standard | full | skipped-with-rationale> — <rationale>
+              (v1.1.0: Phase 2 is mandatory; depth varies. Default for Express = scoped.
+               Skip only valid with explicit user rationale, recorded as
+               ideation_skip_rationale field.)
   Phase 3   → <run bake-in | run overlay | skip> — <rationale>
   Phase 4   → copywriting-<form>
   Phase 5   → copywriting-voice-positioning-stage

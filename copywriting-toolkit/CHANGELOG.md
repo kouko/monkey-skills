@@ -1,5 +1,78 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.1.0 — 2026-04-20 (architectural minor release — Provenance & Divergence principle + Phase 2 mandatory + Phase 4 inline micro-ideation)
+
+**Minor version bump** (1.0.x → 1.1.0) signals architectural changes beyond spec clarification. Three concurrent layers.
+
+### Layer 1 — Provenance & Divergence supersedes Copy-First
+
+v1.0.x's "Copy-First" principle (all cp'd files byte-identical to source, zero modification) served initial development but became a drag as copywriting-toolkit's own mechanics (L1/L2/L3 preconditions, Express Mode tier taxonomy, brief+draft scope, conflict_flagged cross-phase consumers, retry-cap mechanics) outgrew the original `domain-teams:copywriting-team` scope. Continuing caused workaround sprawl (plugin-specific logic in SKILL.md §Evaluator hints, §Execution Paths, §8b extensions) that fragmented cohesive rules across 2+ files.
+
+v1.1.0 formalizes a 2-tier policy in plugin CLAUDE.md §Provenance & Divergence Principle:
+
+- **Tier 1 (immutable)**: standards/*.md + research/*.md — academic canon (神田 / 谷山 / Cialdini / Schwartz / Vaughn / Halliday etc.). `diff -q` must return empty.
+- **Tier 2 (may diverge with documentation)**: protocols/*.md + checklists/*.md + rubrics/*.md — execution SOPs + gate criteria + qualitative rubrics legitimately vary per plugin. Every modified file carries a `<!-- DIVERGED FROM -->` header; changes are additive only (no deletion / re-order of original prose); every modification logged in CHANGELOG.
+
+Exception: `zh-copy-craft-lineage.md` (new in v1.0.1, never cp'd — newly authored for this toolkit) is Tier 1 immutable without a diffable source.
+
+### Layer 1b — v1.0.1-1.0.4 workarounds migrated to Tier 2 files
+
+The SKILL.md-resident workarounds accumulated since v1.0.1 are now relocated to their natural home:
+
+- `ethics-checklist.md` (now DIVERGED) — inherits §copywriting-toolkit evaluator hints for common TW/JP D2C patterns (aggregate-count social-proof / 業界首創 / 市價 dual-pricing / comparative-price w/o benchmark / repeating false-urgency); evaluator reads these alongside CHK-CTW-ETH-001 through 010 directly.
+- `form-appropriate-gate.md` (now DIVERGED) — inherits §copywriting-toolkit additional dimensions (word-count band adherence with 🔴/🟡/🟢 thresholds + `schwartz_alignment: conflict_flagged` voice-fidelity dimension).
+- `copywriting-ethics-check-stage/SKILL.md` — §Evaluator hints collapsed to a short pointer to the migrated checklist section.
+- `copywriting-form-check-stage/SKILL.md` — §8b additional dimensions collapsed to a pointer.
+
+Net effect: evaluator opens the checklist/rubric and finds the hints in one place. No more "read SKILL.md AND checklist AND cross-reference" cognitive tax.
+
+### Layer 2 — Phase 2 ideation MANDATORY with depth control
+
+Prior to v1.1.0, Phase 2 was skippable by default when a brief looked concrete. Express Mode routinely bypassed it. This violated 谷山 discipline's `散らかす → 選ぶ → 磨く` canon (`ideation-taniyama-discipline.md §なんかいいよね禁止` requires every candidate to justify against *other* candidates, which requires multiple candidates to exist).
+
+v1.1.0:
+
+- `phase-decision-tree.md §Step 3` rewritten — Phase 2 always runs; only **depth** varies:
+  - **scoped** (8-12 candidates, single-pass, Express default)
+  - **standard** (40-64 candidates, parallel subagents × 曼陀羅, Q1-Q10 default)
+  - **full** (64-100+, standard + advanced overlays, for complex briefs)
+- Skip only valid with **explicit rationale** recorded in `envelope.ideation_skip_rationale` (valid examples: pre-existing approved angle, known-winner baseline A/B, external concept re-draft). Silent skip → router force-upgrades to scoped.
+- `copywriting-ideation/SKILL.md` §When to use rewritten — depth table + skip-rationale requirements.
+- `express-mode.md` — predicted-pipeline template updated to surface depth choice.
+
+### Layer 3 — Phase 4 drafter inline micro-ideation
+
+Phase 2 alone is **angle-level** divergence (which concept direction?). Drafting a single non-compared prose per stage still violates 谷山 discipline at the **stage level**. v1.1.0 adds inline micro-ideation to all 5 Phase 4 protocols:
+
+- `write-short-form-copy.md` (x2 — short-form + light-action) — 3-5 candidates per 切入點 or PREP/CREMA stage, 3-reason test, select 1
+- `write-mid-form-copy.md` — 3-5 candidate sentences per BEAF stage, stage-specific discipline (B reject Feature contamination, E reject empty claims, A reject absolute superlatives, F reject marketing-copy language)
+- `write-long-form-copy.md` (x2 — pasona + extended) — 3-5 candidate paragraph leads per stage + optional full-draft-level 2-3 alternative pass (tone-axis variations)
+
+All 5 protocols carry DIVERGED header + §Inline micro-ideation section added at bottom. Original prose preserved verbatim.
+
+`copywriter.md` agent persona rule 3 extended with v1.1.0 corollary: "NEVER deliver a single non-compared draft. If no Phase 2 candidates exist, run inline micro-ideation at stage-lead level yourself. 谷山 discipline is scale-invariant — diverge-select applies at angle level (Phase 2) AND stage level (Phase 4)."
+
+### Files touched (v1.1.0)
+
+- `copywriting-toolkit/CLAUDE.md` — §Copy-First rewritten as §Provenance & Divergence
+- `copywriting-toolkit/skills/copywriting-ethics-check-stage/checklists/ethics-checklist.md` — DIVERGED + evaluator hints migrated
+- `copywriting-toolkit/skills/copywriting-ethics-check-stage/SKILL.md` — §Evaluator hints collapsed to pointer
+- `copywriting-toolkit/skills/copywriting-form-check-stage/rubrics/form-appropriate-gate.md` — DIVERGED + 2 dimensions migrated
+- `copywriting-toolkit/skills/copywriting-form-check-stage/SKILL.md` — §8b dimensions collapsed to pointer
+- `copywriting-toolkit/skills/using-copywriting-toolkit/protocols/phase-decision-tree.md` — §Step 3 rewritten (Phase 2 mandatory)
+- `copywriting-toolkit/skills/copywriting-intake/protocols/express-mode.md` — predicted-pipeline template updated
+- `copywriting-toolkit/skills/copywriting-ideation/SKILL.md` — §When to use rewritten (depth table)
+- 5x Phase 4 protocols — DIVERGED + §Inline micro-ideation appended:
+  - `copywriting-short-form/protocols/write-short-form-copy.md`
+  - `copywriting-light-action/protocols/write-short-form-copy.md`
+  - `copywriting-mid-form/protocols/write-mid-form-copy.md`
+  - `copywriting-long-form-pasona/protocols/write-long-form-copy.md`
+  - `copywriting-long-form-extended/protocols/write-long-form-copy.md`
+- `copywriting-toolkit/agents/copywriter.md` — persona rule 3 corollary added
+- `copywriting-toolkit/.claude-plugin/plugin.json` — version 1.0.4 → 1.1.0
+
+**Zero deletion** of original cp'd prose. Every divergence is additive and marked. Run `grep -l "DIVERGED FROM" copywriting-toolkit/skills/**/*.md` to enumerate modified Tier 2 files.
+
 ## v1.0.4 — 2026-04-20 (topology-driven spec gaps closed)
 
 Mermaid pipeline diagram added in v1.0.3 README surfaced 4 real spec gaps — not diagram artifacts, actual definitions missing from SKILL.md / protocol files that a rigorous agent walking the topology would notice. All 4 closed in this patch:

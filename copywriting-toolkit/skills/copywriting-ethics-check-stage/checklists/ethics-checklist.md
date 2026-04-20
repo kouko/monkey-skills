@@ -1,3 +1,14 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/checklists/ethics-checklist.md
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §copywriting-toolkit evaluator hints (migrated from
+    copywriting-ethics-check-stage/SKILL.md §Evaluator hints)
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.1.0 addition"
+markers to locate plugin-specific additions.
+-->
+
 # Checklist: Persuasion Ethics
 
 MUST gate (binary pass/fail). Triggers: copy artifact completed (long /
@@ -184,3 +195,23 @@ non-compliant, use `FAIL_*`, not `N/A`.
   "summary": "1-3 sentence overall assessment + legal vs ethical breakdown"
 }
 ```
+
+
+---
+
+<!-- v1.1.0 addition: copywriting-toolkit evaluator hints — migrated from copywriting-ethics-check-stage/SKILL.md §Evaluator hints -->
+
+## copywriting-toolkit evaluator hints for common TW/JP D2C patterns
+
+*This section is an additive extension specific to `copywriting-toolkit`. Does NOT apply when this checklist is loaded by the original `domain-teams:copywriting-team` plugin.*
+
+The CHK-CTW-ETH-001 through CHK-CTW-ETH-010 items above cover the canon directly. These hints guide the evaluator to map common real-world copy patterns onto the right checklist item — they supplement the checklist, they do not replace it.
+
+- **Aggregate-count social-proof claims** (e.g. "已有 5,000 位訂閱者", "over 10,000 customers", "業界 90% 企業使用") — route primarily through CHK-CTW-ETH-003 (優良誤認, unverifiable aggregate) AND CHK-CTW-ETH-006 (testimonial) simultaneously. CHK-006 was authored around individual testimonials (FTC §255.2 typicality), but aggregate counts that function as social-proof surrogate need the same substantiation discipline: source + timeframe + methodology. When the claim fails (number not verifiable), FAIL_FATAL via CHK-003 is primary; CHK-006 secondary.
+- **"First in industry" / "業界首創" / "No.1" claims** — CHK-CTW-ETH-003 優良誤認. Require dated primary-source evidence (not corporate self-claim).
+- **"市價 X 元" dual-pricing** — CHK-CTW-ETH-004 有利誤認. Require genuine market-price reference with date. Common TW D2C pattern where a "market price" is invented to create discount perception.
+- **Comparative-price claims without benchmark** — CHK-CTW-ETH-004. "比 X 便宜 Y%" without specified comparator/unit/period/baseline → FAIL_FATAL.
+- **Time-limited scarcity that repeats** — CHK-CTW-ETH-002. "限時 72 小時" that resets weekly violates false-urgency (Brignull). Check brief for implementation frequency if ambiguous.
+
+These hints close v1.0.0 checklist gaps surfaced during end-to-end testing (see copywriting-toolkit/CHANGELOG.md §v1.0.1).
+

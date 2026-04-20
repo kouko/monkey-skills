@@ -1,3 +1,13 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/protocols/write-long-form-copy.md
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §Inline micro-ideation (谷山 stage-level diverge-select rule)
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.1.0 addition"
+markers to locate plugin-specific additions.
+-->
+
 # Protocol: Write Long-Form Copy（PASONA Canon long-form writing）
 
 **When to use**: Long-form copy requests. Typical cases — landing page (LP), sales letter, seminar / webinar invitation page, mail-magazine series, document-request trigger copy, advertorial, long-format CM script. Word count: 1,500+ characters.
@@ -161,3 +171,51 @@ Self-check against `persuasion-ethics.md` §景品表示法要點 + §FTC Endors
 - **Skipping ethics self-check**: "The evaluator will check" is an abdication of responsibility. 景品表示法 / FTC violations should be eliminated at the worker stage.
 - **Writing long-form with short-form voice**: Extending short-form compression density into long-form produces self-repetition (`voice-and-tone.md` §Anti-Patterns "headline と body voice 断裂" flip side).
 - **Using superlative claims without evidence**: "業界 No.1", "世界初", "最安値" are frequent violation types for 景品表示法 優良誤認 / 有利誤認 (`persuasion-ethics.md` §Anti-Patterns).
+
+
+---
+
+<!-- v1.1.0 addition: inline micro-ideation per PASONA / QUEST / PASTOR stage (copywriting-toolkit specific) -->
+
+## Inline Micro-Ideation (copywriting-toolkit v1.1.0)
+
+Applies regardless of whether Phase 2 ideation produced external candidates. Purpose: enforce 谷山 「なんかいいよね禁止」at stage level for long-form drafting.
+
+### Procedure — per framework stage
+
+Applies to all long-form frameworks: 旧 PASONA (5 stages) / 新 PASONA (6 stages) / PASBECONA (9 stages) / QUEST (5) / PASTOR (6).
+
+For each stage:
+
+1. Produce **3-5 candidate paragraph leads** (opening 1-2 sentences of the stage).
+2. Apply 谷山 3-reason test per `standards/ideation-taniyama-discipline.md`:
+   - Who is this for / what stage-goal does this lead serve
+   - Why new vs generic long-form opening for this stage
+   - Why resonant — specifically addressing the stage's role:
+     - P (Problem): does it name a specific state the reader recognizes?
+     - A (Affinity): does it establish peer / empathy without pandering?
+     - S (Solution): does it pivot from problem to solution cleanly?
+     - B (Benefit) / E (Evidence) / C (Contents): PASBECONA mid-section — concrete abstractness progression
+     - O (Offer): does it crystallize the deal without feeling transactional?
+     - N (Narrow-down): does it stratify reader without being exclusionary for its own sake?
+     - A (Action): does it hand off to CTA without tone-collapse from the preceding register?
+     - QUEST Qualify / Understand / Educate / Stimulate / Transition — per Fortin
+     - PASTOR Problem-Person / Amplify-Aspiration / Story-Solution / Testimony-Transformation / Offer / Response — per Edwards
+3. Select 1 winner per stage lead. Unused candidates become runner-up pool for re-draft if Phase 8 8b flags.
+4. Record in `envelope.draft_inline_ideation.rejected[]`.
+
+### Full-draft pass (long-form specific)
+
+After all stage leads are selected and the full draft is composed:
+
+1. Produce **2-3 full-draft alternatives** by varying the tone axis (higher / lower formality, higher / lower enthusiasm) while keeping structure identical.
+2. Compare via 谷山 discipline — which alternative best serves the declared `voice_quadrant` + audience + channel?
+3. Winner = deliverable; runners-up stored in `envelope.draft_alternatives[]` for A/B test variants if client requests.
+
+### Trigger
+
+ALWAYS runs inside Phase 4 drafting. If `envelope.ideation_depth == "skipped"`, this is the ONLY diverge-select pass — do NOT skip it.
+
+### Why mandatory
+
+Long-form drafts are expensive to revise at Phase 7-8. Catching stage-lead weakness at micro-ideation level prevents full-draft discard. Also: PASBECONA-sized drafts (5K-10K chars) compound single-candidate commitment — by the time Phase 8 fires 🔴, 2 hours of writing are sunk. Micro-ideation at paragraph-lead level is ~5-10% of drafting cost; catches most stage-framing errors pre-gate.

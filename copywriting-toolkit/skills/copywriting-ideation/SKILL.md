@@ -11,13 +11,30 @@ Phase 2 of the copywriting pipeline. Take the Understanding Summary from `copywr
 
 ## When to use
 
-Invoke after Phase 1 intake is complete (Understanding Summary confirmed, Intake Completeness gate PASS).
+**As of v1.1.0, Phase 2 is MANDATORY — always runs; only its depth varies.** The prior v1.0.x behavior (skippable when brief looked concrete) violated 谷山 discipline's `散らかす → 選ぶ → 磨く` canon (`standards/ideation-taniyama-discipline.md §なんかいいよね禁止` requires every candidate to justify against other candidates, which requires multiple candidates to exist — single-draft delivery is a discipline violation).
 
-- ✅ Use when: multiple copy angles must be generated before drafting; キャッチ/LP headline candidate ideation; キャンペーン concept divergence; unclear which message facet to lead with.
-- ⏭ Skip when: brief already has a single concrete angle agreed with stakeholder (go straight to Phase 3 `copywriting-neta-injection` or Phase 4 draft). Record the skip rationale in the handoff envelope (`ideation_pool: null`, skip reason string).
-- ⏭ Skip when: the task is `copywriting-audit-stage` (auditing pre-existing external copy — ideation not part of audit flow).
+Invoke after Phase 1 intake (Understanding Summary confirmed, Intake Completeness gate PASS).
 
-Skip is an explicit decision, not a default. If the skipped brief later proves thin during Phase 4 draft, re-enter ideation rather than papering over.
+### Depth control
+
+Depth is set by `envelope.ideation_depth` field, populated by router per `using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 3`:
+
+| Depth | Candidates | Execution | Trigger |
+|---|---|---|---|
+| **scoped** | 8-12 | Single-pass, no parallel subagents; `copywriter` produces inline in one pass through 曼陀羅 center | Default for Express path — brief is Level-1-complete + concrete |
+| **standard** | 40-64 | Parallel subagents × 曼陀羅 8-direction fan-out (base `copy-ideation-parallel.md`) | Default for Q1-Q10 path |
+| **full** | 64-100+ | Standard + advanced overlays (小霜 instinct axis, ULSSAS seed filter, jp-lineage voice calibration) per `copy-ideation-advanced.md` | Multi-channel, SNS-native, cultural campaign, ambiguous target, innovative-positioning brief |
+
+### Skip — rare, rationale-required
+
+Skip is NEVER the default path in v1.1.0. Valid skip scenarios:
+
+- Audit workflow (`copywriting-audit-stage` — audit reviews existing copy, not new ideation)
+- Pre-existing approved angle from a prior session's Phase 2 output
+- A/B test explicitly baselined against a known-winner variant
+- External concept already approved by client; this run is a formal re-draft only
+
+When skipping, envelope MUST carry `ideation_skip_rationale: <explicit reason>`. Silent skips are rejected by the Intake Completeness gate. If user requests skip without valid rationale, router force-upgrades to scoped depth (10-second cost, closes the canon gap).
 
 ## Input
 

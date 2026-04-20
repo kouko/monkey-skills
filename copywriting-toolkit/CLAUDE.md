@@ -27,23 +27,69 @@ None required. Plugin is self-contained — no API keys, no cache paths, no pers
 
 The envelope is in-memory per pipeline run. Nothing is persisted across sessions unless the caller saves the envelope explicitly. `audit_trail[]` (when populated) lives on the envelope, not in plugin storage.
 
-## Copy-First Principle
+## Provenance & Divergence Principle (supersedes §Copy-First in v1.1.0)
 
-All standards / protocols / checklists / rubrics / grounding notes are byte-identical copies from `domain-teams/skills/copywriting-team/`. Never paraphrase, condense, or "optimize" the original text.
+Plugin files fall into two provenance tiers. The original v1.0.x "Copy-First" rule (byte-identical to source, zero modification) was tightened enough in early development but became a drag once copywriting-toolkit's own mechanics (L1/L2/L3 preconditions, Express Mode tier taxonomy, brief+draft scope, conflict_flagged cross-phase consumers, retry-cap mechanics) outgrew the original domain-teams:copywriting-team scope. Continuing the rule caused workaround sprawl (plugin-specific logic in SKILL.md §Evaluator hints, §Execution Paths, §8b extensions) that fragmented cohesive rules across 2+ files. v1.1.0 formalizes a 2-tier policy.
 
-- `cp` — do not rewrite
-- SKILL.md references copied files (`See standards/X.md`) rather than inline-rewriting their content
-- Per-commit diff check: `diff -q <file> <source>` must return nothing
+### Tier 1 — BYTE-IDENTICAL (immutable)
 
-### INLINE-duplicate clarification
+Files in this tier MUST match the source verbatim. No divergence allowed. Verify via `diff -q` against `domain-teams/skills/copywriting-team/`.
 
-"INLINE" means `cp` the same standard into multiple skills' `standards/` directories — NOT prose paste into SKILL.md.
+- `skills/*/standards/*.md` — academic canon: 神田 PASONA / 谷山 discipline / 今泉 曼陀羅 / 川喜田 KJ / Cialdini / Schwartz / Vaughn / Halliday / Fortin / Edwards / 小霜 / Kaushik / 秋山・杉山 AISAS / 飯髙 ULSSAS / McQuarrie & Mick / Lakoff & Johnson / Thornton etc.
+- `skills/using-copywriting-toolkit/research/*.md` — grounding notes (historical versioning artifacts)
 
-- `persuasion-psychology-anchor.md` → duplicated across 5 Phase-4 workflow skills (identical copies)
-- `sns-evolution-aisas-ulssas.md` → duplicated across long-form-pasona + light-action
-- `kosimo-instinct-analysis.md` → single copy in ideation
+Rationale: these files carry third-party canon (books, papers, TCC 年鑑 citations). They should never drift per-plugin. A plugin has no authority to edit 神田昌典's PASONA definitions. `diff -q` must return empty.
 
-All remain discrete files — referenced, never pasted.
+**Exception** — ZH voice lineage: `skills/copywriting-voice-tone-stage/standards/zh-copy-craft-lineage.md` is **newly authored for this toolkit in v1.0.1** (not cp'd from domain-teams source — the source never had a ZH counterpart to `jp-copy-craft-lineage.md`). It is Tier 1 in the sense of "immutable canon", but has no upstream source to diff against.
+
+### Tier 2 — MAY DIVERGE with explicit documentation
+
+Files in this tier MAY be modified to adopt plugin-specific execution mechanics. Each modified file MUST:
+
+1. Carry a `<!-- DIVERGED FROM -->` header at the top of the file (see template below)
+2. Preserve ALL original prose — changes are **additive only**; do NOT delete, re-order, or rewrite original sentences
+3. Mark plugin-specific additions clearly with `<!-- v1.x.y addition: <topic> -->` blocks
+4. Log every divergence in `CHANGELOG.md` per version bump
+
+Covers:
+- `skills/*/protocols/*.md` — execution SOPs; plugin-specific mechanics are legitimate divergence
+- `skills/*/checklists/*.md` — gate items; plugin-specific hint subitems OK
+- `skills/*/rubrics/*.md` — qualitative flag criteria; plugin-specific dimensions OK
+
+Rationale: execution mechanics legitimately vary between plugins. copywriting-toolkit's L1/L2/L3 precondition / bounce-back / Express Mode / tier taxonomy / cross-phase flag preservation are plugin-specific, and belong in the protocols / checklists / rubrics where evaluators and workers actually read them — not shunted into SKILL.md workarounds that agents have to cross-reference.
+
+### DIVERGED header template
+
+Every modified Tier 2 file carries this block at the top:
+
+```
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/<path>
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §<topic>
+  - v1.x.y: ...
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.x.y addition"
+markers to locate plugin-specific additions.
+-->
+```
+
+### Enforcement
+
+- **Lint** (future CI): Tier 1 files diff-checked against source; Tier 2 files with content beyond the DIVERGED header checked for the header's presence
+- **Review gate**: Tier 2 modifications without a CHANGELOG entry = PR rejection
+- **Additive-only discipline**: if an existing sentence needs actual correction (not addition), raise it to `domain-teams:copywriting-team` upstream and keep waiting; do not rewrite in place
+
+### INLINE-duplicate clarification (Tier 1 standards)
+
+"INLINE" means `cp` the same Tier 1 standard into multiple skills' `standards/` directories — NOT prose paste into SKILL.md.
+
+- `persuasion-psychology-anchor.md` → duplicated across 5 Phase-4 workflow skills (identical copies, all Tier 1)
+- `sns-evolution-aisas-ulssas.md` → duplicated across long-form-pasona + light-action (both Tier 1)
+- `kosimo-instinct-analysis.md` → single copy in ideation (Tier 1)
+
+All remain discrete files — referenced, never pasted. Tier 1 discipline (byte-identical) applies to each copy.
 
 ## SKILL.md Budget
 

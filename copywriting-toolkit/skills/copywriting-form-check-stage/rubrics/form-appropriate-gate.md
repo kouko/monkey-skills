@@ -1,3 +1,15 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/rubrics/form-appropriate-gate.md
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §copywriting-toolkit additional dimensions (migrated from
+    copywriting-form-check-stage/SKILL.md §Gate Definition §8b additional
+    dimensions — word-count band adherence + schwartz_alignment consumer)
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.1.0 addition"
+markers to locate plugin-specific additions.
+-->
+
 # Rubric: Form-Appropriate Gate
 
 SHOULD gate (qualitative flag-based). Triggers: copy artifact completed
@@ -296,3 +308,34 @@ Whether the adopted approach (利益／願望, 恐怖／痛点, 顛覆常識,
   "summary": "1-3 sentence overall assessment + next-step priority"
 }
 ```
+
+
+---
+
+<!-- v1.1.0 addition: copywriting-toolkit additional dimensions — migrated from copywriting-form-check-stage/SKILL.md §Gate Definition §8b -->
+
+## copywriting-toolkit additional dimensions
+
+*This section is an additive extension specific to `copywriting-toolkit`. Does NOT apply when this rubric is loaded by the original `domain-teams:copywriting-team` plugin.*
+
+The dimension sets above cover the canon form-appropriate assessment. The following two dimensions are plugin-specific and MUST be evaluated regardless of form:
+
+### Dimension — Word-count band adherence (v1.0.2 rule)
+
+Check draft length against the framework's canonical band (per `long-form-pasona-canon.md §Three-framework applicability matrix`: 旧 PASONA ≤3000 chars / 新 PASONA 3000-10000 / PASBECONA 10000+). Threshold rules (apply in order — first match wins):
+
+- Draft ≤ 60% of band floor (e.g. 新 PASONA at ≤1800 chars against 3000 floor) → **🔴 far-below**. Recommend downgrading framework or substantially expanding the draft.
+- Draft > 60% of floor but < 100% of floor (e.g. 新 PASONA at 2000-2999 chars) → **🟡 boundary**. Acceptable but flag for user awareness.
+- Draft ≥ floor → **🟢 in-band**.
+
+Examples:
+- 新 PASONA at 1500 chars = 50% of 3000 floor → 🔴 (recommend 旧 PASONA instead, which sits ≤3000)
+- 新 PASONA at 2500 chars = 83% → 🟡
+
+The gate does NOT reject outright — it surfaces the mismatch so the user can choose to downgrade framework or expand the draft. But 🔴 triggers `NEEDS_REVISION` per the verdict rules above.
+
+### Dimension — `schwartz_alignment: conflict_flagged` carry-forward (v1.0.1 rule)
+
+When Phase 5's `voice_quadrant.schwartz_alignment == "conflict_flagged"` persists to Phase 8, check whether the final draft delivers the claimed voice despite the Schwartz mismatch. If voice-fidelity drops (e.g., declared 許舜英 Q2 manifesto but actual copy reads Q4 direct-response), raise 🟡 for "voice-intent vs delivery mismatch in Schwartz-conflict context". This is the downstream consumer that closes the conflict_flagged loop originating at Phase 5.
+
+Both dimensions are surfaced here (in the rubric) rather than in the checklist because they are qualitative / context-sensitive, not binary pass/fail.

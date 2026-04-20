@@ -120,15 +120,11 @@ definitions):
 
 ### Evaluator hints for common TW/JP D2C patterns
 
-The checklist items (CHK-CTW-ETH-001 through 010 in `checklists/ethics-checklist.md`) cover the canon directly. These hints guide the evaluator to map common real-world copy patterns onto the right checklist item — they supplement the checklist, they do not replace it:
+**As of v1.1.0**, evaluator hints live IN the checklist itself. See `checklists/ethics-checklist.md §copywriting-toolkit evaluator hints for common TW/JP D2C patterns` for the canonical list (5 patterns: aggregate-count social-proof, first-in-industry, 市價 dual-pricing, comparative-price without benchmark, repeating false-urgency).
 
-- **Aggregate-count social-proof claims** (e.g. "已有 5,000 位訂閱者", "over 10,000 customers", "業界 90% 企業使用") — route primarily through CHK-CTW-ETH-003 (優良誤認, unverifiable aggregate) AND CHK-CTW-ETH-006 (testimonial) simultaneously. CHK-006 was authored around individual testimonials (FTC §255.2 typicality), but aggregate counts that functions as social proof surrogate need the same substantiation discipline: source + timeframe + methodology. When the claim fails (number not verifiable), FAIL_FATAL via CHK-003 is primary; CHK-006 secondary.
-- **"First in industry" / "業界首創" / "No.1" claims** — CHK-CTW-ETH-003 優良誤認. Require dated primary-source evidence (not corporate self-claim).
-- **"市價 X 元" dual-pricing** — CHK-CTW-ETH-004 有利誤認. Require genuine market-price reference with date. Common TW D2C pattern where a "market price" is invented to create discount perception.
-- **Comparative-price claims without benchmark** — CHK-CTW-ETH-004. "比 X 便宜 Y%" without specified comparator/unit/period/baseline → FAIL_FATAL.
-- **Time-limited scarcity that repeats** — CHK-CTW-ETH-002. "限時 72 小時" that resets weekly violates false-urgency (Brignull). Check brief for implementation frequency if ambiguous.
+The evaluator agent reads the checklist directly — it will automatically apply these hints without needing to cross-reference this SKILL.md. This SKILL.md section is kept only as a navigation pointer.
 
-These hints close gaps in the v1.0.0 checklist that surfaced during end-to-end testing (see CHANGELOG §Known limitations). They do NOT modify the checklist file itself (copy-first principle).
+(Prior to v1.1.0, hints lived here because the checklist was Tier 1 unmodifiable. The v1.1.0 Provenance & Divergence principle allows Tier 2 additive modification; hints migrated to their natural home. See `../../CLAUDE.md §Provenance & Divergence Principle`.)
 
 ## Evaluator Launch
 

@@ -141,17 +141,50 @@ Before routing, verify immutable fields haven't been stripped between sessions o
 
 This check is CHEAP (field presence, not semantic validation) and only runs on Shape C mid-pipeline re-entry. It prevents "clever" external callers from stripping gate verdicts to bypass gates.
 
-## Step 3 — Phase 2 Ideation Decision
+## Step 3 — Phase 2 Ideation Decision (v1.1.0: MANDATORY with depth control)
 
-Ask (if not already answered in intake):
+**Prior to v1.1.0**, Phase 2 was skippable by default when the brief looked concrete — Express Mode routinely bypassed it. This violated 谷山 discipline's `散らかす → 選ぶ → 磨く` canon (`ideation-taniyama-discipline.md §なんかいいよね禁止` requires every candidate to justify against *other* candidates, which requires multiple candidates to exist). From v1.1.0 onward, Phase 2 **always runs** — only its **depth** varies.
 
-> "Do you want to generate candidate angles / headline options first, or go straight to drafting?"
+### Depth selection
 
-Decision logic:
+| Depth | Candidates | Execution | When used |
+|---|---|---|---|
+| **scoped** (default for Express path) | 8-12 candidates, single-pass | No parallel subagents — `copywriter` produces inline | Brief is Level-1-complete + concrete angle stated; fast-path respects Express's speed promise |
+| **standard** (default for Q1-Q10 path) | 40-64 candidates | Parallel subagents × 曼陀羅 fan-out (per `copy-ideation-parallel.md`) | Brief went through Q1-Q10 (already multi-turn, incremental cost is acceptable); typical case |
+| **full** (multi-channel / SNS-native / cultural campaign) | 64-100+ candidates | Parallel subagents × 曼陀羅 × advanced overlays (小霜 instinct, ULSSAS seed, jp-lineage calibration) | `copy-ideation-advanced.md` triggers — see §When advanced ideation protocol applies |
 
-- **Yes, generate candidates** → Route to `copywriting-ideation`. Set envelope `next_stage = "copywriting-ideation"`.
-- **No, brief is concrete** → Skip to Step 4.
-- **Complex brief signals** (multi-channel, ambiguous target, SNS-native campaign, cultural/meme-driven) → Strongly recommend ideation; confirm with user before skipping.
+### Skip rule — tightened
+
+User may opt out of Phase 2, BUT:
+
+1. Skip is NEVER silent — user must explicitly request it AND provide a rationale
+2. Rationale recorded in envelope as `ideation_skip_rationale` field (free text)
+3. Valid rationales: "pre-existing approved angle from prior session" / "A/B test against a known-winner baseline" / "re-draft of an externally-approved concept"
+4. Invalid rationales: "I'm in a hurry" / silent skip / no reason given
+5. If rationale is missing or invalid → force scoped depth (3-5 candidates minimum, ~10-20 seconds of drafter time)
+
+This closes the gap where Express Mode silently bypassed creative divergence and Phase 4 drafters delivered single non-compared drafts.
+
+### Envelope annotation
+
+When Phase 2 runs, add to envelope:
+```json
+{
+  "ideation_depth": "scoped | standard | full",
+  "ideation_candidates_count": N,
+  "ideation_winners": [{"angle": "...", "three_reasons": [...]}]
+}
+```
+
+When skipped (rare, rationale-required):
+```json
+{
+  "ideation_depth": "skipped",
+  "ideation_skip_rationale": "<user's reason>"
+}
+```
+
+Phase 4 drafter reads `ideation_winners[]` to seed the draft. If `ideation_depth == "skipped"`, the Phase 4 drafter MUST run inline micro-ideation per stage (see `write-*-copy.md §Inline micro-ideation`, v1.1.0) — Phase 4 cannot skip diverge-then-select at BOTH angle level AND stage level.
 
 ## Step 4 — Phase 3 Neta Pre-Draft Decision
 

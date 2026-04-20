@@ -1,3 +1,13 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/protocols/write-mid-form-copy.md
+Changes in copywriting-toolkit:
+  - v1.1.0: ADDED §Inline micro-ideation (谷山 stage-level diverge-select rule)
+Original content preserved verbatim below. All divergences are additive;
+no deletion or re-order of original prose. Search for "v1.1.0 addition"
+markers to locate plugin-specific additions.
+-->
+
 # Protocol: Write Mid-Form Copy（BEAF Canon mid-form writing）
 
 **When to use**: Mid-form copy requests. Typical cases — product page body text on 楽天市場 / Yahoo!ショッピング / Amazon JP, store POP (supermarket / electronics retailer / bookstore), briefing / exhibition handout, B2B product catalog single-product-page description, EC site product listing summary text. Word count: tens to hundreds of characters (if exceeding 1,000 characters, consider the long-form protocol instead).
@@ -100,3 +110,43 @@ Mid-form copy is functional-persuasion-oriented (objective), but voice remains i
 - **Using fabricated testimonials / unsupported superlative claims as Evidence**: 景品表示法 優良誤認 / FTC §255.1 §255.2 violation.
 - **Using "業界 No.1", "世界初", "最安値" without evidence**: Frequent violation type for 景品表示法 優良誤認 / 有利誤認 (`persuasion-ethics.md` §Anti-Patterns).
 - **Wrecking voice with condescending tone / hollow hype**: Ogilvy "respect the reader" violation (`voice-and-tone.md` §Anti-Patterns).
+
+
+---
+
+<!-- v1.1.0 addition: inline micro-ideation per BEAF stage (copywriting-toolkit specific) -->
+
+## Inline Micro-Ideation (copywriting-toolkit v1.1.0)
+
+Applies regardless of whether Phase 2 ideation produced external candidates. Purpose: enforce 谷山 「なんかいいよね禁止」at stage level.
+
+### Procedure — BEAF (Benefit → Evidence → Advantage → Feature)
+
+For each stage:
+
+1. Produce **3-5 candidate sentences** for the stage content.
+2. Apply 谷山 3-reason test per `standards/ideation-taniyama-discipline.md`:
+   - Who is this for / what benefit / how it serves the stage goal
+   - Why new vs existing similar product-copy in this category
+   - Why resonant — specifically addressing the BEAF stage's purpose:
+     - B: abstract benefit (Ogilvy reader-state change)
+     - E: concrete evidence (numbers / third-party / spec)
+     - A: comparative advantage (vs named / implied competitor)
+     - F: explicit feature (component / usage / spec)
+3. Select 1 winner per stage.
+4. Record rejected candidates in `envelope.draft_inline_ideation.rejected[]` with reason-of-rejection.
+
+### Stage-specific discipline
+
+- **B stage — reject any Feature contamination** in candidate selection. Candidates must be pure reader-state / lifestyle-change expressions.
+- **E stage — reject any "empty claim"** candidates ("loved by many" / "chosen by" without source). Minimum concrete-information threshold per stage.
+- **A stage — reject absolute superlatives** without substantiation per 景表法 §5-1; prefer relative "vs FAB/plain-product" framing.
+- **F stage — reject marketing-copy language**; feature stage reads as spec-sheet prose.
+
+### Trigger
+
+ALWAYS runs inside Phase 4 drafting. If `envelope.ideation_depth == "skipped"`, this is the ONLY diverge-select pass — do NOT skip it.
+
+### Why mandatory
+
+Single-candidate BEAF drafting violates 谷山 canon and typically produces FAB-inverted or Feature-contaminated B stages. Inline micro-ideation + 3-reason test catches these at draft-time, before Phase 8 form gate fires them as 🔴.

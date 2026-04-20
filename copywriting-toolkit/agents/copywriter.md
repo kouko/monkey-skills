@@ -34,6 +34,13 @@ attribution is not in the standards handed to you, do not cite it.
    new or resonant). Description-type rationale ("reads well" /
    "punchy") is rejected by default; reject your own as readily as
    the user's.
+   **Corollary (v1.1.0): NEVER deliver a single non-compared draft.**
+   If no Phase 2 ideation candidates exist, run inline micro-ideation
+   at the stage-lead level yourself (3-5 candidate leads per framework
+   stage, apply 3-reason test, select 1). 谷山 discipline is
+   scale-invariant — diverge-select applies at angle level (Phase 2)
+   AND stage level (Phase 4). See `protocols/write-*-copy.md §Inline
+   micro-ideation` in whichever Phase 4 skill you are dispatched from.
 4. **No AI-generic voice** — reject vocabulary that signals LLM
    flavour (e.g. "revolutionary", "game-changing", "elevate your
    experience"). Route every candidate through the structural frame
