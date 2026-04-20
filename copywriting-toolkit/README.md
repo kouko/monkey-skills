@@ -151,6 +151,75 @@ flowchart TD
 
 Dashed edges represent routing hand-offs (router-mediated), solid edges are direct pipeline flow.
 
+## Example Brief — Reference Input for the Pipeline
+
+A **brief** (業界術語：creative brief) is the task description you hand the pipeline. It is what Phase 0 intake structures into the `envelope.brief{}` fields. Complete briefs trigger Express Mode (single-turn confirm); partial briefs trigger Q1-Q10 multi-turn intake to fill gaps.
+
+### Brief field structure (what the pipeline expects)
+
+| Field | Level | Role | Example |
+|---|---|---|---|
+| `product` | 1 — required | What you are selling, named | 「禾井」台灣在地職人手工醬油 |
+| `value_proposition` | 1 — required | Single-sentence core value | 台灣本土非基改黑豆 + 木桶發酵 18 個月, 月訂 NT$680 含冷藏宅配 |
+| `target_audience` | 1 — required | Concrete demographic / psychographic | 30-50 歲, 注重料理品質, 已接觸日本職人醬油 / 有機食品店消費 |
+| `schwartz_level` | 1 — required | Awareness level (Schwartz 1966) L1-L5 | L2-L3 (product-aware → solution-aware) |
+| `form` | 1 — required | Copy form | long-form-pasona (新 PASONA, ~3500 字 LP) |
+| `channel` | 1 — required | Delivery surface | landing-page hero + body |
+| `target_length` | 1 — required for long-form | Expected word count | ~3500 字 |
+| `output_language` | 1 — required | ja / zh-TW / zh-HK / en etc. | zh-TW |
+| `voice_reference` | 2 — AI-recommend-or-user-stated | Maestro name (user-quoted only) or descriptor | 糸井重里 / 許舜英 / "default" + voice_description |
+| `voice_description` | 2 — optional | Free-text style description | "溫暖 / 狀態提案 / 體言止め / 不直接呼籲 / 余韻" |
+| `framework` | 2 — AI-recommend | PASONA family / BEAF / QUEST / PASTOR / PREP / CREMA | 新 PASONA |
+| `claims[]` | context | Any comparative / superlative / substantiation-required claims (for Phase 7 adjudication) | 「全世界最長發酵時間 18 個月」(T2 — benchmark-required) |
+| `neta_opt_in` | 3 — default false | Whether to allow pop-culture / meme / literary layering | false |
+
+**Level 1 = BLOCKED if missing** (intake forces Q1-Q10 elicitation).
+**Level 2 = AI-recommend + user-confirm** (Express labels `[AI-recommend]` or `[user-stated]`).
+**Level 3 = opt-in / defaults** (`[default]` label).
+
+### Reference brief — 「禾井」醬油月訂閱 LP (used in v1.1.0 E2E test)
+
+```
+產品：台灣在地職人手工醬油品牌「禾井」
+受眾：30-50 歲、注重料理品質、已接觸過日本職人醬油 / 有機食品店消費
+      習慣 (Schwartz L2-L3)
+價值主張：使用台灣本土非基改黑豆 + 純手工木桶發酵 18 個月，
+          每瓶 500ml，月訂閱 NT$680 含冷藏宅配
+Voice：糸井重里 ほぼ日 Q3 Affinity-Emotion — 溫暖 / 狀態提案 / 體言止め
+       (user explicitly named 糸井)
+Output language：zh-TW
+Form：long-form-pasona 新 PASONA (6-stage, ~3500 字)
+Channel：landing page hero + body
+
+Claim to test:「全世界最長發酵時間 18 個月」— 最上級 No.1 claim;
+              triggers 景表法 §5-1 優良誤認 if no benchmark
+```
+
+### Why this brief — what it exercises
+
+This brief is designed as a pipeline regression anchor. Running it through the toolkit exercises the full v1.1.0 mechanism set:
+
+| Brief feature | What it triggers |
+|---|---|
+| All Level 1 fields present | Express Mode qualifies at Step 0.5 (no Q1-Q10 fallback) |
+| 糸井重里 user-stated + output `zh-TW` | **Dual-lineage trigger conflict** — router emits violation, re-clarifies via intake; user picks resolution (typically Option C: `voice_reference = "default"` + `voice_description` captures 糸井 discipline as prose posture, Pass 3 NOT activated to avoid JP→ZH cross-transplant) |
+| `「全世界最」` claim | **T2 tier classification** in Phase 0.5-B grill — user-stated + benchmark_missing + not outright violation → carry to Phase 7 with `benchmark_required_before_phase_7` flag |
+| target_length 3500 字 vs 新 PASONA band 3000-10000 | Phase 8 8b word-count band → 🟢 in-band (117%), no framework downgrade needed |
+| L2-L3 Schwartz × Q3 voice | `schwartz_alignment: ok` — no conflict_flagged carry-forward needed |
+| Phase 2 ideation mandatory (v1.1.0) | Scoped depth (Express default) — 8-12 candidates single-pass, KJ-converged to 3-5 winners; `ideation_skip_rationale` not set |
+| Phase 4 inline micro-ideation (v1.1.0) | Per-stage 3-5 candidate paragraph leads + 谷山 3-reason selection; rejected candidates recorded in `draft_inline_ideation.rejected[]` |
+
+Expected final deliverable: ~3500 字 zh-TW 新 PASONA 6-stage LP with 糸井-spirit-in-zh-TW voice, ethics gate PASS after 1 auto-revise (drops「全世界最」→ substantiable comparative), Phase 8 PASS (in-band + voice consistent), `total_retries = 2` (1 dual-trigger bounce + 1 ethics auto-revise), well under cap of 4.
+
+### Using the reference brief
+
+- As a **regression test input** for future versions — re-run through each toolkit release to check that catch rate / output quality doesn't regress
+- As a **worked onboarding example** for new users learning how to structure briefs
+- As an **A/B baseline anchor** for comparing this plugin vs `domain-teams:copywriting-team` on identical input
+- As a **prompt template** — copy the brief block above, substitute your product / audience / claim, and paste into the router
+
+Brief is deliberately chosen to surface tricky cases (JP maestro + zh-TW output conflict, 最上級 claim without benchmark) rather than a vanilla pass-through case — a vanilla brief would verify fewer mechanisms.
+
 ## Two Execution Paths for Intake
 
 Paths resolve FATAL candidates differently, by design (mirrors `superpowers:brainstorming` vs `superpowers:subagent-driven-development`):
