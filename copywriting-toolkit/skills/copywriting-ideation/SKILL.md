@@ -1,6 +1,6 @@
 ---
 name: copywriting-ideation
-description: Phase 2 ideation — diverge with 曼陀羅 + Verbalized Sampling + 小霜本能分析; converge with KJ法 + 谷山 なんかいいよね禁止. Use when brief needs candidate angles before drafting. Skippable if brief is concrete. 文案發想。コピー発想。
+description: Phase 2 ideation — diverge with 曼陀羅 + Verbalized Sampling + 小霜本能分析; converge with KJ法 + 谷山 なんかいいよね禁止. Use when brief needs candidate angles before drafting. Not needed (skippable) when brief is concrete — single thesis, single audience, single form, user already picked direction. 文案發想。コピー発想。
 ---
 
 # copywriting-ideation

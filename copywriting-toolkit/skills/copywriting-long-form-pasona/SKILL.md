@@ -1,6 +1,6 @@
 ---
 name: copywriting-long-form-pasona
-description: Phase 4 long-form drafter — PASONA / 新PASONA / PASBECONA (神田昌典 canonical). Use for landing pages, sales letters, email campaigns, 記事広告, long CM copy. 長文案・PASONA。
+description: Phase 4 long-form drafter — PASONA / 新PASONA / PASBECONA (神田昌典 canonical). Use for landing pages, sales letters, email campaigns, 記事広告, long CM copy. Not for EN QUEST / PASTOR (use copywriting-long-form-extended) or キャッチコピー (use copywriting-short-form). 長文案・PASONA。
 ---
 
 # copywriting-long-form-pasona

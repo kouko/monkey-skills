@@ -1,6 +1,6 @@
 ---
 name: copywriting-voice-tone-stage
-description: Fix voice drift / tone inconsistency in a draft — Ogilvy 4-axis + JP lineage craft (糸井 / 岩崎 / 眞木 / 谷山) + ZH lineage craft (許舜英 / 李欣頻 / 葉明桂 / 龔大中) with LLM reproduction gap analysis. Use when a draft feels off-voice, applying maestro lineage register, polishing 語尾 / 呼吸 / rhythm, or called by the pipeline as Phase 6 after Phase 5 positioning. ボイス・トーン調整・系譜クラフト。文案聲調修飾・語氣校正。
+description: Fix voice drift / tone inconsistency in a draft — Ogilvy 4-axis + JP lineage craft (糸井 / 岩崎 / 眞木 / 谷山) + ZH lineage craft (許舜英 / 李欣頻 / 葉明桂 / 龔大中) with LLM reproduction gap analysis. Use when a draft feels off-voice, applying maestro lineage register, polishing 語尾 / 呼吸 / rhythm, or called by the pipeline as Phase 6 after Phase 5 positioning. Not for macro quadrant selection (use copywriting-voice-quadrant-stage) or legal / ethics review (use copywriting-ethics-check-stage). ボイス・トーン調整・系譜クラフト。文案聲調修飾・語氣校正。
 ---
 
 # copywriting-voice-tone-stage

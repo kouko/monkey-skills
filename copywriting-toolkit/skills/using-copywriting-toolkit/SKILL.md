@@ -1,6 +1,6 @@
 ---
 name: using-copywriting-toolkit
-description: Start here for any copywriting task — write a landing page / email / キャッチコピー / sales letter / SNS post / voice guide / copy audit. Routes a new brief (Shape A), an external-copy audit (Shape B), or a resumed mid-pipeline envelope (Shape C) to the right next skill via phase decision tree, with L1-L3 precondition + bounce-back enforcement. 文案工具組導引・パイプラインルーター。コピーツールキット案内・文案流程入口。
+description: Start here for any copywriting task — write a landing page / email / キャッチコピー / sales letter / SNS post / voice guide / copy audit. Routes a new brief (Shape A), an external-copy audit (Shape B), or a resumed mid-pipeline envelope (Shape C) to the right next skill via phase decision tree, with L1-L3 precondition + bounce-back enforcement. Not for direct skill invocation — if the target skill is already known (e.g. user explicitly asked for form gate), call it directly. 文案工具組導引・パイプラインルーター。コピーツールキット案内・文案流程入口。
 ---
 
 # using-copywriting-toolkit

@@ -1,6 +1,6 @@
 ---
 name: copywriting-long-form-extended
-description: Phase 4 long-form drafter — QUEST (Fortin 2005) / PASTOR (Edwards 2016). Use for EN/intl landing pages, coaching / consulting sales, story-driven sales letters, guide-based positioning. 長文案・QUEST・PASTOR。
+description: Phase 4 long-form drafter — QUEST (Fortin 2005) / PASTOR (Edwards 2016). Use for EN/intl landing pages, coaching / consulting sales, story-driven sales letters, guide-based positioning. Not for JP 神田 PASONA family (use copywriting-long-form-pasona) or EC product copy (use copywriting-mid-form). 長文案・QUEST・PASTOR。
 ---
 
 # copywriting-long-form-extended
