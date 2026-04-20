@@ -225,6 +225,34 @@ graph TB
 
 Note the use of `①②③④` instead of `1. 2. 3. 4.` to avoid the Markdown list syntax conflict (see [obsidian-common-quirks.md Quirk 1](../obsidian-common-quirks.md)).
 
+### Example 6: CJK content (訂單處理流程)
+
+```mermaid
+graph TB
+    Start["使用者下單"] --> Check{"庫存充足?"}
+    Check -->|"是"| Payment["進入付款"]
+    Check -->|"否"| Notify["通知缺貨"]
+
+    Payment --> PayCheck{"付款成功?"}
+    PayCheck -->|"是"| Confirm["出貨確認"]
+    PayCheck -->|"否"| Retry["重試或取消"]
+    Retry --> Payment
+
+    Confirm --> Ship["出貨中"]
+    Ship --> Done["訂單完成"]
+
+    Notify --> Refund["退款處理"]
+    Refund --> Done
+
+    style Start fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style Done fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
+    style Check fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
+    style PayCheck fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
+    style Refund fill:#fff4e6,stroke:#e67700,stroke-width:2px
+```
+
+CJK labels work reliably when wrapped in `"..."` per the unified quote rule (see [obsidian-common-quirks.md § Quirk 4.5](../obsidian-common-quirks.md)). Without quotes, CJK characters in node labels may fail to render or break parsing.
+
 ## Error prevention
 
 ### Specific to flowchart

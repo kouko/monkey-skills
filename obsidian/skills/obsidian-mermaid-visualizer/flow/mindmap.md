@@ -144,6 +144,31 @@ mindmap
       CICD["CI/CD"]
 ```
 
+### Example 4: CJK content (讀書筆記 — 系統設計書)
+
+```mermaid
+mindmap
+  root(("系統設計入門筆記"))
+    Part1["第一部 基礎"]
+      Scale["可擴展性"]
+      Reliability["可靠性"]
+      Maintain["可維護性"]
+    Part2["第二部 模式"]
+      Micro["微服務"]
+      ES["事件溯源"]
+      CQRS["CQRS 模式"]
+    Part3["第三部 案例"]
+      Uber["Uber 架構"]
+      Netflix["Netflix 架構"]
+      Discord["Discord 架構"]
+    Takeaway["關鍵收穫"]
+      Trade["權衡取捨"]
+      Boundary["邊界設計"]
+      Evolution["漸進演化"]
+```
+
+Using the quoted shape form `id["..."]` is especially important for CJK content — bare text like `可擴展性` without a shape wrapper may fail to parse reliably. Node IDs stay as ASCII identifiers (`Part1`, `Scale`, etc.) since they are references, not display strings.
+
 ## Error prevention
 
 | ❌ Wrong | ✅ Right | Reason |

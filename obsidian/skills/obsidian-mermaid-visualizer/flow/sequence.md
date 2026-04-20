@@ -195,6 +195,37 @@ sequenceDiagram
     W-->>-C: Final result
 ```
 
+### Example 5: CJK content (使用者註冊流程 — demonstrates CJK tolerance without quoting)
+
+```mermaid
+sequenceDiagram
+    actor User as 使用者
+    participant App as 前端 App
+    participant API as 註冊 API
+    participant DB as 資料庫
+    participant Mail as 信件服務
+
+    User->>App: 填寫註冊表單
+    App->>API: POST /register
+    API->>DB: 檢查 email 是否已存在
+
+    alt email 未註冊
+        DB-->>API: 不存在
+        API->>DB: 建立新使用者
+        DB-->>API: 回傳 user_id
+        API->>Mail: 寄送驗證信
+        Mail-->>API: 已寄出
+        API-->>App: 201 註冊成功
+        App-->>User: 請至信箱驗證
+    else email 已存在
+        DB-->>API: 已存在
+        API-->>App: 409 衝突
+        App-->>User: 此 email 已註冊
+    end
+```
+
+**Important note**: sequence diagram does NOT support quoting — messages / participant aliases / note text / alt-else labels are all free-form after the delimiter. CJK content works directly in these positions without `"..."`. This example deliberately shows CJK in every quote-unsupported position (participant aliases, messages, alt labels, note) to demonstrate the Mermaid parser tolerates CJK there.
+
 ## Error prevention
 
 | ❌ Wrong | ✅ Right | Reason |

@@ -221,6 +221,35 @@ timeline
 
 Sections are optional — simple linear timelines work without them.
 
+### Example 6: CJK content (台灣網路業發展簡史 — demonstrates CJK tolerance without quoting)
+
+```mermaid
+timeline
+    title 台灣網路業發展簡史
+
+    section 萌芽期 1990s
+        1991 : 中研院連上 NSFNET
+        1996 : 蕃薯藤成立 : PC home 上線
+        1998 : Hinet ADSL 服務
+
+    section 爆發期 2000s
+        2000 : 無名小站上線
+        2003 : PChome 購物
+        2006 : Facebook 進入台灣
+
+    section 行動時代 2010s
+        2011 : LINE 登陸台灣
+        2014 : Uber 進入台灣
+        2018 : 電支法上路
+
+    section 新世代 2020s
+        2020 : 疫情加速數位轉型
+        2023 : 生成式 AI 創業潮
+        2026 : AI 應用普及
+```
+
+**Important note**: Timeline does NOT support quoting — title, section names, periods, and event text are all free-form tokens delimited by newlines or `:`. CJK works directly without `"..."`. Wrapping CJK in quotes like `section "萌芽期"` would make the quote characters render literally. Avoid colons `:` inside CJK event text since colons are the event separator (use dashes or rephrase if needed).
+
 ## Error prevention
 
 | ❌ Wrong | ✅ Right | Reason |

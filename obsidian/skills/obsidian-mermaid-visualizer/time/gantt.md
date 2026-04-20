@@ -245,6 +245,31 @@ gantt
     Retro             :retro, after demo, 1h
 ```
 
+### Example 6: CJK content (產品上線時程 — demonstrates CJK tolerance without quoting)
+
+```mermaid
+gantt
+    title 2026 Q1 產品上線時程
+    dateFormat YYYY-MM-DD
+    axisFormat %m/%d
+
+    section 企劃期
+    需求訪談          :done, req, 2026-01-05, 10d
+    功能規劃          :done, plan, after req, 7d
+
+    section 開發期
+    後端 API          :active, crit, api, 2026-01-25, 20d
+    前端 UI           :crit, ui, after api, 14d
+    整合測試          :test, after ui, 5d
+
+    section 上線期
+    內測              :internal, after test, 5d
+    軟啟動            :soft, after internal, 3d
+    正式上線          :milestone, launch, after soft, 0d
+```
+
+**Important note**: Gantt does NOT support quoting — title, section names, and task names are all free-form. CJK works directly in these positions without `"..."`. Task IDs (`req`, `api`, `ui`, etc.) stay ASCII as required by the parser. Wrapping CJK in quotes like `section "企劃期"` would make the quote characters render literally.
+
 ## Error prevention
 
 | ❌ Wrong | ✅ Right | Reason |
