@@ -1,5 +1,18 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.0.1 — 2026-04-20 (post-E2E-test hardening)
+
+End-to-end pipeline test (4 parallel agents on a zh-TW coffee subscription brief with a planted 30% 有利誤認 claim) surfaced 7 design tensions. All fixed in this patch:
+
+- **Tiered FATAL handling in Express Mode** (`copywriting-intake/protocols/express-mode.md`) — replaced one-size-fits-all "any FATAL → ABORT Express" with three tiers: T1 AI-inferred FATAL → abort; T2 user-stated FATAL candidate with missing benchmark → carry to Phase 7; T3 user-stated outright violation → abort. Defense-in-depth with Phase 7 for the common comparative-claim case.
+- **Phase 7 artifact scope clarified** (`copywriting-ethics-check-stage/SKILL.md §Artifact scope`) — evaluator judges both `draft` text AND brief-level claims that will accompany delivery in real placement. Closes the gap where `copywriter` agent's legitimate claim-drop at Phase 4 could silently slip a FATAL past a draft-only adjudication.
+- **ZH anchors added to Express high-stakes exclusion** (`express-mode.md`) — restricted maestro list now covers {許舜英, 李欣頻, 葉明桂} in addition to the JP set {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}. Express must not auto-infer these as voice_reference — they trigger Phase 6 Pass 3 lineage craft which re-writes the draft.
+- **NEW `zh-copy-craft-lineage.md`** (Tier 3 ZH lineage standard, 428 lines) — primary-source-researched deep-dive on 許舜英 (意識形態 / 中興百貨 1988-1999, 11 dated corpus entries), 李欣頻 (誠品敦南 1990s-2000s, 7 entries), 葉明桂 (奧美 / 左岸 1998-, 3 campaign lines + strategic-framework quotes). 4 attribution corrections (#Z1 Altenberg, #Z2 寺山修司, #Z3 意識形態 founding year, #Z4 content-farm drift). Per-master LLM reproduction gap analysis. Primary Sources bibliography with ISBNs. This is NOT a verbatim cp from `domain-teams:copywriting-team` — it is newly authored for this toolkit.
+- **Phase 6 Pass 3 extended to ZH branch** (`copywriting-voice-tone-stage/SKILL.md`) — "When JP lineage applies" became "When lineage craft applies" with separate JP and ZH triggers. Pass 3 now has Pass 3a (JP) and Pass 3b (ZH). Cross-transplant explicitly forbidden. Dual-trigger conflict (e.g. `voice_reference: 糸井重里` + `output_language: zh-TW`) → BLOCKED, return to intake.
+- **`schwartz_alignment: conflict_flagged` now has downstream consumers** — Phase 6 Pre-pass reads the flag and compensates 4-axis defaults; Phase 8 8b rubric checks whether voice-intent vs delivery mismatches in conflict_flagged context, raising 🟡 on fidelity failure. Closes the "flag with no consumer" loop.
+- **Word-count band adherence added to Phase 8 8b** — `copywriting-form-check-stage/SKILL.md §Gate Definition § 8b` now flags drafts below framework's canonical band floor (🟡 boundary, 🔴 far-below). Surfaces e.g. 新 PASONA at 1500 chars (below 3000 floor) as a tunable flag, not silent pass.
+- **Evaluator hints added for common TW/JP D2C patterns** (`copywriting-ethics-check-stage/SKILL.md §Evaluator hints`) — aggregate-count social-proof ("5,000 位訂閱者") routes through CHK-003 + CHK-006 simultaneously; "first in industry" / "業界首創" → CHK-003; "市價 X 元" dual-pricing → CHK-004; comparative-price without benchmark → CHK-004; repeating false-urgency → CHK-002. Closes v1.0.0 checklist gaps without modifying the cp'd checklist file.
+
 ## v1.0.0 — 2026-04-20
 
 Initial release. Pipeline-structured refactor of `domain-teams:copywriting-team` (505-line SKILL.md, 19 standards, 9 protocols, ~12K lines) into a 14-skill plugin with formal precondition / bounce-back / Express Mode mechanics. Original `domain-teams:copywriting-team` remains untouched for A/B comparison.

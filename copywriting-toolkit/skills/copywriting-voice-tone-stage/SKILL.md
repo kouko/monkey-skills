@@ -32,23 +32,44 @@ Skip only when:
   this skill still runs, but treats the provided copy as the draft input
   rather than regenerating.
 
-### When JP lineage applies
+### When lineage craft applies (Pass 3)
 
-The `jp-copy-craft-lineage.md` deep-dive layer is loaded **only** when at
-least one of the following is true:
+Pass 3 loads a language-specific lineage standard. Exactly one of the
+two lineage files loads — never both, never cross-transplanted:
 
-1. `brief.output_language` is `ja` (Japanese-language output).
-2. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}.
+**JP lineage** — `jp-copy-craft-lineage.md` loads when:
+
+1. `brief.output_language` is `ja` (Japanese-language output), OR
+2. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}, OR
 3. `voice_quadrant.primary == "Q3"` (Affinity-Emotion) AND the message
    thesis is state-proposal / 余韻-driven rather than action-prompting.
-   Note: `voice_quadrant` is the object emitted by Phase 5
-   (`{primary, edge, rationale, schwartz_alignment}`) — always
-   dereference `.primary`, never read it as a string.
 
-Otherwise, voice tuning operates on `voice-and-tone.md` alone (Ogilvy Anglo
-canon + 18F / Mailchimp 4-axis + tone context-switching). Do **not** force
-JP lineage patterns onto Anglo / ZH output — `voice-and-tone.md §Anti-
-Patterns` explicitly bans cross-tradition transplant.
+**ZH lineage** — `zh-copy-craft-lineage.md` loads when:
+
+1. `brief.output_language` is `zh-TW` or `zh-HK` AND a Q2-or-Q2-edge
+   maestro voice is declared, OR
+2. `brief.voice_reference` ∈ {許舜英, 李欣頻, 葉明桂}, OR
+3. `voice_quadrant.primary == "Q2"` (Authority-Emotion) AND the target
+   audience is ZH-sphere consumer-class context (e.g., TW 都會消費主義,
+   HK 文化消費) where the Taiwan / Hong Kong Q2 canon is the relevant
+   reference, not Anglo / JP.
+
+Note: `voice_quadrant` is the object emitted by Phase 5
+(`{primary, edge, rationale, schwartz_alignment}`) — always dereference
+`.primary`, never read it as a string.
+
+**Neither lineage applies** → Pass 3 does NOT run. Voice tuning operates
+on `voice-and-tone.md` alone (Ogilvy Anglo canon + 18F / Mailchimp
+4-axis + tone context-switching).
+
+**Cross-tradition transplant is forbidden** — never force JP lineage
+patterns onto ZH output (or vice versa), never force either onto Anglo
+output. `voice-and-tone.md §Anti-Patterns` + both lineage standards'
+§Anti-Patterns sections explicitly ban this.
+
+**If both lineage triggers match** (e.g., brief has `voice_reference:
+糸井重里` but `output_language: zh-TW`) → BLOCKED; return to intake
+for clarification. This indicates a confused brief.
 
 ## What This Skill Owns
 
@@ -58,10 +79,19 @@ Patterns` explicitly bans cross-tradition transplant.
     tradition (糸井 state-proposal, 岩崎 余韻) + 18F / Mailchimp 4-axis
     voice model + Mailchimp "one voice, multiple tones" + tone context-
     switching table (onboarding / error / crisis / celebration).
-  - `standards/jp-copy-craft-lineage.md` — Tier 3 deep-dive on 糸井重里 /
-    岩崎俊一 / 眞木準 voice signatures: representative corpus, stylistic
-    grammar patterns, generational context, and **LLM reproduction gap
-    analysis** per master. Invoked per §When JP lineage applies.
+  - `standards/jp-copy-craft-lineage.md` — Tier 3 JP deep-dive on
+    糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 voice signatures:
+    representative corpus, stylistic grammar patterns, generational
+    context, and **LLM reproduction gap analysis** per master. Invoked
+    per §When lineage craft applies (JP branch).
+  - `standards/zh-copy-craft-lineage.md` — Tier 3 ZH deep-dive on
+    許舜英 (意識形態 / 中興百貨) / 李欣頻 (誠品) / 葉明桂 (奧美 /
+    左岸) voice signatures: 11 + 7 + 3 dated verbatim corpus entries,
+    stylistic grammar (definitional inversion / cultural-critique
+    density / brand-personality mapping), generational context
+    (1990s 台灣都會消費主義覺醒), 4 attribution-drift corrections,
+    and per-master LLM reproduction gap analysis. Invoked per §When
+    lineage craft applies (ZH branch).
 - **Rubric (SHOULD gate)**:
   - `rubrics/voice-consistency-gate.md` — cross-stage / cross-candidate
     voice stability + tone contextual appropriateness + maestro fidelity.
@@ -82,6 +112,17 @@ draft or an annotation the next pass must honor. No pass may silently
 rewrite Phase 4's structural skeleton — frameworks are replaceable, voice
 is an irreplaceable asset, but structural edits belong to Phase 4 re-runs,
 not here.
+
+### Pre-pass: `schwartz_alignment` consumer
+
+If `envelope.voice_quadrant.schwartz_alignment == "conflict_flagged"`, Phase 6 MUST acknowledge the upstream Phase 5 conflict before running Pass 1:
+
+- Record the conflict verbatim in `tone_notes.schwartz_conflict_carried` with the Phase 5 rationale quoted.
+- Tune 4-axis defaults (Pass 1) with awareness of the conflict — e.g., L2 Product Aware audience forced into Q2 voice loses the comparative-advantage directness L2 prefers; Pass 1 should compensate by keeping `enthusiasm = matter-of-fact` (no cheerleader puffery that would double-mismatch the audience register) and `respectfulness = respectful-peer` (not condescending — L2 audience is category-savvy).
+- If the conflict is `hard_rule_applied` (Phase 5 overrode user's voice choice because of Schwartz Level 5 ≠ Q4 rule), Phase 6 cannot tune back toward the original voice reference — respect the hard rule.
+- Pass the flag forward unchanged on envelope exit. Phase 8 8b rubric also consumes it.
+
+This pre-pass prevents `conflict_flagged` from being a "flag that lives in isolation" — it ensures Phase 6 tuning does not compound the mismatch.
 
 ### Pass 1 — 4-axis micro calibration (always runs)
 
@@ -130,7 +171,11 @@ contexts still map — e.g., PASONA's Affinity stage ≈ Onboarding tone;
 Offer stage ≈ Celebration tone (see `voice-and-tone.md §Integration with
 PASONA / BEAF / キャッチコピー frameworks`).
 
-### Pass 3 — JP lineage craft (runs only per §When JP lineage applies)
+### Pass 3 — Lineage craft (runs only per §When lineage craft applies)
+
+Pass 3 loads exactly ONE language-specific lineage standard based on the trigger conditions. Apply the referenced maestro's voice signature.
+
+#### Pass 3a — JP lineage (JP trigger matched)
 
 Load `standards/jp-copy-craft-lineage.md`. Apply the master-specific voice
 signature for the referenced maestro:
@@ -144,18 +189,58 @@ signature for the referenced maestro:
 - **谷山雅計** — discipline-centric (see `jp-copy-craft-lineage.md` for
   full signature).
 
-**LLM reproduction gap — mandatory disclosure**. Each master has a
-documented gap between surface mimicry and true voice signature; the
-standard's per-master §LLM Reproduction Gap section names the specific
-failure mode. When Pass 3 outputs a rewrite, `tone_notes.lineage_gap` must
-record which gap the rewrite is most at risk of falling into + what
-mitigation was applied (e.g., for 岩崎: "gap = direct emotional statement
-where 余韻 is required; mitigation = replaced 形容詞 + 句点 with 体言止め +
-読点 tail").
-
-**Critical attribution corrections** — 『リゲイン「24時間戦えますか？」』
+**Critical attribution corrections (JP)** — 『リゲイン「24時間戦えますか？」』
 is NOT 岩崎俊一 (jp-copy-craft-lineage.md §Critical Attribution
 Corrections). Do not attribute misattributed copies during reference lookup.
+
+#### Pass 3b — ZH lineage (ZH trigger matched)
+
+Load `standards/zh-copy-craft-lineage.md`. Apply the master-specific voice
+signature for the referenced maestro:
+
+- **許舜英** — definitional inversion (「服裝就是一種高明的政治」), cross-
+  domain vocabulary transplant (政治 / 姿態 / 命題 / 邏輯), cultural-
+  critique payload density, paradox-as-hook ("不是 X, 是 Y"). 意識形態
+  廣告 中興百貨 1988-1999 canon.
+- **李欣頻** — 書店 / 閱讀 philosophical prose (「閱讀是唯一的迷信」),
+  existential-aphorism register, 誠品敦南 1990s-2000s canon. Voice is
+  Q2 tipping into Q2-Q3 edge (warmer than 許舜英's cool-aesthetic).
+- **葉明桂** — brand-personality mapping via systematic strategic
+  frameworks. 左岸咖啡館 1998- canon. Voice is Q2-Q3 edge (authority
+  framing via warmth). Distinguished from 許舜英's cool manifesto
+  register by brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
+
+**Critical attribution corrections (ZH)** — see
+`zh-copy-craft-lineage.md §Critical Attribution Corrections`:
+- 「我不在咖啡館...」originates from Peter Altenberg (German poet,
+  sinicized); NOT an original 葉明桂 line, though used in 左岸 campaigns.
+- 「拋開書本到街上去」references 寺山修司 1967 book title; 李欣頻
+  credited the allusion in her own writing.
+- 意識形態廣告 founded **1987** (not 1988 as sometimes reported);
+  中興百貨 canonical window 1988-1999.
+- Content-farm reprints of "中興百貨 文案" mix canonical 許舜英 work
+  with post-2000 agency imitations — anchor only to《許舜英購物日記》+
+  意識形態 award archives when citing.
+
+#### Pass 3 cross-branch common rules
+
+**LLM reproduction gap — mandatory disclosure**. Each master in each
+lineage has a documented gap between surface mimicry and true voice
+signature; the standard's per-master §LLM Reproduction Gap section
+names the specific failure mode. When Pass 3 outputs a rewrite,
+`tone_notes.lineage_gap` must record which gap the rewrite is most at
+risk of falling into + what mitigation was applied. Examples:
+
+- JP 岩崎: "gap = direct emotional statement where 余韻 is required;
+  mitigation = replaced 形容詞 + 句点 with 体言止め + 読点 tail"
+- ZH 許舜英: "gap = hollow definitional inversion without cultural-
+  critique payload; mitigation = forced concrete target audience tension
+  before drafting, verified inversion lands on a real social observation
+  not a decorative paradox"
+
+**Forbidden cross-transplant**: Pass 3a and Pass 3b are mutually
+exclusive — never apply JP signatures to ZH output or vice versa.
+Both lineage standards' §Anti-Patterns sections ban this explicitly.
 
 ## Preconditions
 
@@ -275,8 +360,18 @@ Verdict handling:
   voice"). `voice-and-tone.md §Anti-Patterns`: voice stays constant, only
   tone shifts.
 - Force-fitting JP lineage onto Anglo / ZH output when the trigger
-  conditions (§When JP lineage applies) are unmet.
-- Attributing 『24時間戦えますか？』to 岩崎俊一 (documented drift #8).
+  conditions (§When lineage craft applies — JP branch) are unmet.
+- Force-fitting ZH lineage onto JP / Anglo output when the ZH branch
+  trigger conditions are unmet.
+- Cross-transplanting JP signatures (体言止め, 余韻) into ZH output or
+  ZH signatures (definitional inversion, cultural-critique density)
+  into JP output. Both lineage standards ban this in §Anti-Patterns.
+- Attributing 『24時間戦えますか？』to 岩崎俊一 (documented drift #8 in
+  jp-copy-craft-lineage.md).
+- Attributing 「我不在咖啡館...」as original 葉明桂 line (actually Peter
+  Altenberg sinicized — zh-copy-craft-lineage.md drift #Z1).
+- Citing "中興百貨 文案" from content-farm reprint lists without
+  anchoring to 許舜英購物日記 + 意識形態 archives (drift #Z4).
 - Filling the Voice Guide axes abstractly ("friendly, professional") with
   no side-by-side on-brand / off-brand examples (`voice-and-tone.md §Brand
   Voice Guide checklist`).
@@ -289,5 +384,8 @@ Verdict handling:
 - `standards/voice-and-tone.md` — Tier 2 voice SSOT (verbatim copy from
   `domain-teams:copywriting-team`).
 - `standards/jp-copy-craft-lineage.md` — Tier 3 JP lineage deep-dive
-  (verbatim copy).
+  (verbatim copy from `domain-teams:copywriting-team`).
+- `standards/zh-copy-craft-lineage.md` — Tier 3 ZH lineage deep-dive
+  (NEW in v1.0.0; primary-source-researched; not cp'd from
+  `domain-teams:copywriting-team`).
 - `rubrics/voice-consistency-gate.md` — SHOULD gate rubric (verbatim copy).

@@ -56,6 +56,18 @@ If `draft`, `voice_quadrant`, or `tone_notes` are missing, stop and
 return control to the orchestrator — do not launch the evaluator
 against an incomplete envelope.
 
+### Artifact scope — what the evaluator judges
+
+The evaluator judges **both** the final `draft` text AND brief-level claims that will accompany the delivery in the real placement context. This distinction matters for borderline cases:
+
+- **In-draft claims** are the primary artifact. Any 景表法 / FTC / dark-pattern violation present in the draft triggers a FATAL directly.
+- **Brief-level claims** that a reasonable reader would understand to accompany the copy in the real channel (LP hero + sub-copy, email subject + body, product page body) are ALSO in scope. E.g., "比市售連鎖咖啡便宜 30%" stated in `brief.value_proposition` but NOT in `draft` is still subject to adjudication if the delivery context (a landing page) would print both.
+- **Upstream grill findings carried forward** from Express Mode as T2 benchmark-required flags are adjudicated here. If the benchmark was supplied between intake and Phase 7, the evaluator PASSES the claim; if not, the evaluator returns FAIL_FATAL.
+
+**Rationale**: the copywriter agent can strategically drop a FATAL-candidate claim from the draft itself (per `copywriter.md §Persona Discipline` rule 5) to slip past narrow draft-only adjudication. That is good discipline but insufficient legal protection — the brand's real-world placement will still include the brief-level value proposition in the page surrounds. Phase 7 protects against that gap by reading `brief` as context, not just `draft` as artifact.
+
+**Limit of scope**: claims in `ideation_pool` or `neta_candidates` that were discarded at convergence are NOT in scope. The evaluator does not resurrect rejected candidates.
+
 ## Preconditions
 
 Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`.
@@ -105,6 +117,18 @@ definitions):
      coercion
    - 小霜和也「嘘をつかない」principle — no claim the writer cannot
      personally defend
+
+### Evaluator hints for common TW/JP D2C patterns
+
+The checklist items (CHK-CTW-ETH-001 through 010 in `checklists/ethics-checklist.md`) cover the canon directly. These hints guide the evaluator to map common real-world copy patterns onto the right checklist item — they supplement the checklist, they do not replace it:
+
+- **Aggregate-count social-proof claims** (e.g. "已有 5,000 位訂閱者", "over 10,000 customers", "業界 90% 企業使用") — route primarily through CHK-CTW-ETH-003 (優良誤認, unverifiable aggregate) AND CHK-CTW-ETH-006 (testimonial) simultaneously. CHK-006 was authored around individual testimonials (FTC §255.2 typicality), but aggregate counts that functions as social proof surrogate need the same substantiation discipline: source + timeframe + methodology. When the claim fails (number not verifiable), FAIL_FATAL via CHK-003 is primary; CHK-006 secondary.
+- **"First in industry" / "業界首創" / "No.1" claims** — CHK-CTW-ETH-003 優良誤認. Require dated primary-source evidence (not corporate self-claim).
+- **"市價 X 元" dual-pricing** — CHK-CTW-ETH-004 有利誤認. Require genuine market-price reference with date. Common TW D2C pattern where a "market price" is invented to create discount perception.
+- **Comparative-price claims without benchmark** — CHK-CTW-ETH-004. "比 X 便宜 Y%" without specified comparator/unit/period/baseline → FAIL_FATAL.
+- **Time-limited scarcity that repeats** — CHK-CTW-ETH-002. "限時 72 小時" that resets weekly violates false-urgency (Brignull). Check brief for implementation frequency if ambiguous.
+
+These hints close gaps in the v1.0.0 checklist that surfaced during end-to-end testing (see CHANGELOG §Known limitations). They do NOT modify the checklist file itself (copy-first principle).
 
 ## Evaluator Launch
 

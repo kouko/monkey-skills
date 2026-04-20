@@ -37,12 +37,19 @@ Worker produces an **Understanding Summary draft envelope** in the Q9 10-subsect
 
 **High-stakes Level 2 exclusion — voice_reference maestro inference**:
 
-Even though `brief.voice_reference` is Level 2, Express synthesis MUST NOT auto-infer a specific Japanese maestro ({糸井重里, 岩崎俊一, 眞木準, 谷山雅計}) unless the user's brief names that maestro explicitly. Reason: Phase 6 treats maestro-specific `voice_reference` as a HARD TRIGGER for JP lineage craft (Pass 3 in `copywriting-voice-tone-stage/SKILL.md §When JP lineage applies`), which re-writes the draft in that maestro's voice signature. Mis-inference produces a silently wrong-direction draft that downstream gates cannot schema-detect.
+Even though `brief.voice_reference` is Level 2, Express synthesis MUST NOT auto-infer a specific maestro whose name functions as a HARD TRIGGER for downstream lineage craft. Phase 6 (`copywriting-voice-tone-stage §When JP/ZH lineage applies`) re-writes the draft in the named maestro's voice signature — mis-inference produces a silently wrong-direction draft that downstream gates cannot schema-detect.
+
+**Restricted maestro list** (exclusion applies to ALL of these):
+
+- **JP Q3 / Q2-edge lineage** (state-proposal, 余韻, aphoristic): 糸井重里, 岩崎俊一, 眞木準, 谷山雅計
+- **ZH Q2 Authority-Emotion lineage** (意識形態廣告, 誠品, 左岸): 許舜英, 李欣頻, 葉明桂
+- **Any maestro added to `standards/jp-copy-craft-lineage.md` or `standards/zh-copy-craft-lineage.md` §Per-master sections in future versions** — the restricted list tracks the lineage standards' per-master coverage, not a static name list.
 
 Express synthesis rule:
 
-- User brief quotes a maestro name → set `brief.voice_reference` to that maestro, label `[user-stated]`
-- User brief does NOT quote a maestro → set `brief.voice_reference = "default"`, label `[default — user may override]`. Include this prominently in the confirmation turn so the user can opt in to a maestro if desired.
+- User brief QUOTES a maestro name (exact match, e.g. "許舜英", "Itoi Shigesato", "糸井重里") → set `brief.voice_reference` to that maestro, label `[user-stated]`
+- User brief describes a STYLE without naming a maestro (e.g. "aspirational like Apple", "cool-aesthetic 中興百貨 feel") → set `brief.voice_reference = "default"` + `brief.voice_description = "<user's wording>"`, label `[default — style-described, user may opt in to a maestro]`. Phase 5 diagnoses Q1-Q4 from the description; Phase 6 Pass 3 does NOT activate unless user subsequently chooses a specific maestro.
+- User brief does NOT mention voice at all → set `brief.voice_reference = "default"`, label `[default — user may override]`. Prompt in the confirmation turn.
 
 The same exclusion applies to any other Level 2 field that downstream skills treat as a hard trigger. When in doubt between "AI-recommend specific value" and "default + prompt user to override", pick the latter.
 
@@ -64,7 +71,31 @@ Mirror `copywriting-brainstorming.md §Task 4b` grill, but run by `copywriter-ev
 
 Grill findings attach to the summary under `Confirmed Assumptions` (explicit) and `Resolved Ambiguities` (AI-resolved).
 
-If any grill finding escalates to `FAIL_FATAL` (e.g. brief contains a claim violating 景表法) → ABORT Express Mode, route the user to full Q1-Q10 intake so the question can be interactively resolved.
+### Tiered FATAL handling
+
+Grill findings are classified into three tiers. Different tiers trigger different actions — a one-size-fits-all "any FATAL → ABORT Express" rule over-escalates user-stated claims that Phase 7 is designed to adjudicate.
+
+| Tier | Definition | Example | Action |
+|---|---|---|---|
+| **T1 — AI-inferred FATAL** | Grill detected a violation based on its own inference from the brief, NOT from user's explicit wording. e.g., grill guesses a ステマ risk based on sentiment but user never mentioned influencer arrangement. | "I think this might be a paid testimonial because the tone reads promotional" | **ABORT Express → Q1-Q10.** Interactive mode resolves the ambiguity; AI inference alone cannot. |
+| **T2 — User-stated FATAL candidate, benchmark missing** | User explicitly stated a claim (quoted verbatim from brief) that WOULD violate 景表法 / FTC IF insubstantiated, but benchmark / proof is absent from brief. | "比市售連鎖咖啡便宜 30%" — user stated the 30%, but no comparison baseline given | **CARRY to Phase 7.** Record in `Confirmed Assumptions` with explicit `benchmark_required_before_phase_7` flag. Phase 7 adjudicates: if benchmark is provided between intake and Phase 7, claim passes; if not, Phase 7 returns NEEDS_REVISION with Option 3 (drop claim) as default remedy. |
+| **T3 — User-stated FATAL, outright violation** | User's brief quotes a claim that is violation-on-its-face regardless of substantiation (e.g., "fake testimonial", "undisclosed paid endorsement", "fabricated scarcity"). | "tell them there are only 10 slots left even though we have plenty" | **ABORT Express → Q1-Q10.** Plus flag for user: this is not a benchmark question; the claim itself is impermissible. |
+
+Routing logic:
+
+```
+For each grill finding with status == FAIL_FATAL:
+  if user_stated AND benchmark_missing AND not outright_violation:
+    tier = T2 → carry forward with benchmark_required flag
+  elif user_stated AND outright_violation:
+    tier = T3 → abort Express, force Q1-Q10 ethics discussion
+  else:  # AI-inferred
+    tier = T1 → abort Express, force Q1-Q10 clarification
+```
+
+**T2 is the common case for this toolkit**: comparative price claims, "first in industry" claims, "最" superlatives that require evidence. Express Mode + T2 + Phase 7 together form defense-in-depth: Express carries the claim forward with a visible flag, user sees it in the confirmation turn and can drop it early, and Phase 7 provides the final legal gate if it slipped through.
+
+Implementation note for the `copywriter-evaluator` running grill: when emitting a FATAL finding, ALWAYS set `{ "tier": "T1" | "T2" | "T3", "user_stated": bool, "outright_violation": bool }` on the finding object so the router can route correctly. Omission defaults to T1 (safest — over-escalation is preferable to under-escalation).
 
 ### Phase 0.5-C — Single-turn Confirmation
 
