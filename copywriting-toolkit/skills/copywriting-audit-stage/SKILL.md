@@ -99,13 +99,24 @@ Phases 5-8 run on the `external_copy` as if it were a Phase 4 draft. They use th
 
 ### When rewrites are produced
 
-If Phase 3 emits rewrite variants (optional output), those rewrites trigger:
+If Phase 3 emits rewrite variants (optional output, 1-3 variants typical), each variant undergoes an **independent sub-pipeline** through Phase 7 + Phase 8. This is a divergent fan-out from the main audit flow.
 
-- Additional ethics re-gate on each rewrite (Phase 7)
-- Additional form re-gate on each rewrite (Phase 8)
-- Voice consistency SHOULD gate across all variants (Phase 6 rubric)
+**Variant re-gating loop — formal contract:**
 
-Rewrites follow 谷山 「なんかいいよね禁止」 — each variant must justify with 3 concrete reasons covering (a) what benefit / to whom, (b) why new vs existing copy, (c) why resonant in the given context. Description-type rationale ("it reads better" / "it's punchier") is rejected; the reason must name a concrete audience / benefit / rhetorical mechanism. This rule is applied locally here; audit does not delegate to `copywriting-ideation`.
+For each `rewrite_variants[i]`:
+
+1. **Construct per-variant envelope** — clone the main envelope, replace `draft` with `rewrite_variants[i].text`, reset `retries.revise_round_count` to 0 (each variant has its own revision budget), preserve all other fields (voice_quadrant from main Phase 5 result, tone_notes from Phase 6, brief unchanged).
+2. **Run Phase 7 ethics-check** on the variant draft. Verdict → `rewrite_variants[i].ethics_verdict`.
+3. **If ethics PASS** → run Phase 8 form-check. Verdict → `rewrite_variants[i].form_verdict`.
+4. **If ethics NEEDS_REVISION** → skip Phase 8 for this variant; record ethics findings; variant is reported as "gate-blocked" but not auto-revised (audit does not re-draft — it reports).
+5. **Per-variant revise budget**: `revise_round_count < 2` → allow auto-revise for FIXABLE at Phase 7 or 8; `>= 2` → stop for that variant.
+6. **Aggregate total_retries**: sum across main + all variants. If `total_retries >= 4` at ANY point (main audit + variant gates combined), HALT entire audit and ask user — do not silently keep re-gating.
+
+**Execution strategy** — serial by default. Parallel execution is permitted if the orchestrator supports isolated variant sub-envelopes AND guarantees `retries.total_retries` aggregation atomicity. Default to serial to keep the counter coherent.
+
+**Voice Consistency SHOULD gate runs cross-variant** — once after all variants are evaluated, the Phase 6 voice-consistency rubric checks that the variants collectively deliver a stable voice. This is one gate per audit run, not per variant.
+
+**Rewrites follow 谷山 「なんかいいよね禁止」** — each variant must justify with 3 concrete reasons covering (a) what benefit / to whom, (b) why new vs existing copy, (c) why resonant in the given context. Description-type rationale ("it reads better" / "it's punchier") is rejected; the reason must name a concrete audience / benefit / rhetorical mechanism. This rule is applied locally here; audit does not delegate to `copywriting-ideation`.
 
 ## Output
 

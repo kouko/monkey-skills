@@ -68,6 +68,26 @@ Between-skill artifact shape (JSON):
 
 Each stage reads envelope, adds its layer, updates `next_stage`, returns.
 
+### Immutable fields — preservation contract
+
+Certain envelope fields MUST pass through downstream skills unchanged. A skill is free to READ them, but must NOT mutate, omit, or re-type them when emitting its output envelope. These fields travel multiple hops and have multiple consumers; silent drops are how defense-in-depth mechanisms (Phase 5 flag consumed by Phase 8, bounce-back context carried across sessions) fail invisibly.
+
+| Field | Writer | Readers | Mutability |
+|---|---|---|---|
+| `voice_quadrant` (entire object) | Phase 5 | Phase 6 Pre-pass + Phase 6 Pass 1 + Phase 8 8b | **Immutable** after Phase 5 |
+| `voice_quadrant.schwartz_alignment` | Phase 5 | Phase 6 Pre-pass + Phase 8 8b rubric | **Immutable** — consumers rely on the exact enum value (`ok` / `hard_rule_applied` / `conflict_flagged`) |
+| `tone_notes.schwartz_conflict_carried` | Phase 6 Pre-pass | Phase 8 8b | **Immutable** after Phase 6 |
+| `tone_notes.lineage_gap` | Phase 6 Pass 3 | Phase 8 8b | **Immutable** after Phase 6 |
+| `brief.*` Level 1 fields | Phase 0 intake | All downstream | **Immutable** unless user explicitly edits brief in a user-override turn (e.g., Phase 7 NEEDS_REVISION Option 2) |
+| `audit_trail[]` | Any skill / router | All skills, user on halt | **Append-only** — no skill may remove or reorder entries |
+| `retries.*` counters | Router | Router | **Monotonic** — counters only increment, never reset by a downstream skill (resetting is how stall-loops hide) |
+| `express_mode_used` | Phase 0 intake | Phase 7 audit, debugging tools | **Immutable** after intake |
+| `violation` (when present) | Router | Target bounce-to skill | Present until bounce-back consumed; target skill clears it only on successful re-intake |
+
+If a skill must transform a field (e.g., edit `draft` at Phase 6), it creates a NEW version alongside — it does not rewrite history. Phase 6 output envelope carries BOTH the Phase 4 `draft` (unchanged) and a new `tone_notes` + polished draft annotation. The router's re-entry invariant check (see `using-copywriting-toolkit/protocols/phase-decision-tree.md §2.4`) verifies immutable fields are still present on every Shape C continuation.
+
+**Enforcement**: router bounces any envelope with a dropped immutable field back to the skill that last wrote it, per §2.4. This is cheap (presence check, not semantic) and makes drops auditable.
+
 ## Envelope Violation (bounce-back contract)
 
 Every downstream skill declares its `## Preconditions` schema in its own SKILL.md. The `using-copywriting-toolkit` router validates the envelope against that schema BEFORE launching the skill. On violation, the router does not launch; instead it emits a bounce-back envelope and re-routes upstream.

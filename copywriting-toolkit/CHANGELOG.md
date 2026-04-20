@@ -1,5 +1,68 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.0.4 — 2026-04-20 (topology-driven spec gaps closed)
+
+Mermaid pipeline diagram added in v1.0.3 README surfaced 4 real spec gaps — not diagram artifacts, actual definitions missing from SKILL.md / protocol files that a rigorous agent walking the topology would notice. All 4 closed in this patch:
+
+### #1 Shape C mid-pipeline re-entry semantics undefined
+
+`using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 2` defined phase-based routing forward but not **session resumption** / **external caller re-entry**. Added §2.3 Re-entry semantics + §2.4 Envelope invariant check:
+
+- Retry-cap short-circuit (total_retries ≥ 4 → HALT before routing)
+- Active violation routing (if `envelope.violation` present, route to `bounce_to`)
+- Unknown phase rejection (malformed envelope → structured error)
+- Stale envelope detection (missing L1 fields → route to intake)
+- Cheap presence check on immutable fields — bounces to the skill that last wrote a dropped field
+
+This closes the gap where external callers (scripts, UI, cron, resumed session) could arrive with a partially-populated envelope and router had no defined behavior.
+
+### #2 Audit rewrite variant re-gating loop undefined
+
+`copywriting-audit-stage/SKILL.md §When rewrites are produced` said "additional ethics re-gate on each rewrite" but didn't formalize the loop. Added formal 6-step contract:
+
+1. Construct per-variant envelope (clone + swap draft + reset variant revise counter)
+2. Run Phase 7 on variant
+3. On PASS → run Phase 8
+4. On NEEDS_REVISION → skip Phase 8, record findings, do NOT auto-revise (audit reports, doesn't re-draft)
+5. Per-variant revise budget (revise_round_count < 2 allows FIXABLE auto-revise)
+6. Aggregate `total_retries` across main + all variants; HALT at 4 regardless of which sub-pipeline got there
+
+Plus: serial execution default; Voice Consistency gate runs once cross-variant; 谷山 3-reason rule applied locally (not via ideation).
+
+`envelope.schema.json` adds `rewrite_variants[]` structure with per-variant verdicts + independent `revise_round_count`.
+
+### #3 `conflict_flagged` preservation contract — and all cross-phase flags in general
+
+Phase 5's `voice_quadrant.schwartz_alignment = conflict_flagged` travels 3 hops (Phase 5 emit → Phase 6 Pre-pass consumer → Phase 8 8b consumer). No explicit rule required preservation, so a misbehaving Phase 6 output could silently drop it. Same gap for `tone_notes.lineage_gap`, `audit_trail[]`, `retries.*` counters.
+
+`copywriting-toolkit/CLAUDE.md §Handoff Envelope` adds §Immutable fields — preservation contract with 9 fields listed (writer / readers / mutability). Key rules:
+
+- **Immutable after writer phase**: voice_quadrant object, schwartz_alignment, tone_notes.schwartz_conflict_carried, tone_notes.lineage_gap, brief L1, express_mode_used
+- **Append-only**: audit_trail[]
+- **Monotonic**: retries.* (counters only increment; resetting hides stall loops)
+
+Enforcement: router's Step 2.4 re-entry invariant check bounces any envelope with a dropped immutable field to the last-writer skill. Cheap presence check, not semantic validation.
+
+`envelope.schema.json` adds `immutable_fields_enforced[]` as documentation marker.
+
+### #4 Phase 6 BLOCKED dual-trigger conflict bypassed the router
+
+`copywriting-voice-tone-stage/SKILL.md §When lineage craft applies` said "if both JP + ZH triggers match → BLOCKED; return to intake" as a SELF-DISPATCHED bounce. This violated the L2 single-enforcement-point contract (CLAUDE.md §Router Validation: "skills do NOT self-dispatch bounce; they return the violation shape and let the router route"). Fragmented the `bounce_round` counter across skill-local and router-local scopes.
+
+Fixed by changing the instruction to emit a proper `violation` envelope (with `detected_by`, `malformed`, `bounce_to: copywriting-intake`, `user_message`). Router handles the actual bounce + counter increment.
+
+### Changes
+
+- `using-copywriting-toolkit/protocols/phase-decision-tree.md` — §2.3 + §2.4 added
+- `copywriting-audit-stage/SKILL.md` — §When rewrites are produced expanded with 6-step contract
+- `copywriting-toolkit/CLAUDE.md` — §Handoff Envelope gains §Immutable fields section
+- `copywriting-voice-tone-stage/SKILL.md` — Pass 3 dual-trigger block now emits violation, does not self-bounce
+- `.claude-plugin/envelope.schema.json` — `rewrite_variants[]` + `immutable_fields_enforced[]` added
+
+No behavioural regression. These are spec-completeness fixes that make existing de-facto behavior explicit + catch silent drops.
+
+plugin.json: 1.0.3 → 1.0.4.
+
 ## v1.0.3 — 2026-04-20 (grill resolution strategy scope clarification — superpowers-aligned)
 
 Post-v1.0.2 incomplete-brief E2E test surfaced a protocol gap: the tier taxonomy (T1/T2/T3) was defined only in `protocols/express-mode.md §Tiered FATAL handling` but `copywriting-brainstorming.md §Q8` (cp'd byte-identical from `domain-teams:copywriting-team`) didn't reference it. A rigorous agent running Q1-Q10 could either over-escalate (abort on every FATAL candidate) or under-escalate (resolve inline but lose the carry-forward metadata).

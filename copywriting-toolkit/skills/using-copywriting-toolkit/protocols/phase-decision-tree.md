@@ -114,6 +114,33 @@ Check required keys: `phase`, `brief`, `next_stage`. If malformed, return a stru
 | `phase-8-form-check` | NEEDS_REVISION | Return to draft skill OR voice stage depending on revision notes |
 | `audit` | (any stage) | Evaluate `envelope.audit_focus` to route to next gate skill |
 
+### 2.3. Re-entry semantics (session resumption / external caller)
+
+An envelope may arrive from an external caller (script, UI, cron) OR a prior session the user resumes — not only from a freshly-returned skill. Route the same way as §2.2, WITH these additional checks run FIRST in order:
+
+| Check | Condition | Action |
+|---|---|---|
+| **Retry cap** | `envelope.retries.total_retries >= 4` OR `bounce_round >= 3` | HALT → render retries breakdown + `audit_trail[]` tail to user; require human decision before any further routing |
+| **Active violation** | `envelope.violation` field present and non-null | Route to `envelope.violation.bounce_to` skill (per §Envelope Violation bounce-back contract); increment `bounce_round` |
+| **Unknown phase** | `envelope.phase` not in the enum from `envelope.schema.json` | Reject as malformed; return structured error naming the field |
+| **Stale envelope** | `audit_trail[]` empty OR `envelope.brief` missing required Level 1 fields for declared `form` | Route to `copywriting-intake` mode=full-q1-q10 to recover state; preserve any downstream fields as `envelope.original_envelope` for operator inspection |
+| **Dropped invariant** | See §2.4 below |
+
+### 2.4. Envelope invariant check on re-entry
+
+Before routing, verify immutable fields haven't been stripped between sessions or by a misbehaving caller. If any of these are NULL / missing when they were previously populated (as evidenced by `audit_trail[]`), treat as a bounce to the phase that last wrote them:
+
+| Field | Writer phase | On missing |
+|---|---|---|
+| `voice_quadrant` (object) | Phase 5 | bounce to `copywriting-voice-positioning-stage` |
+| `voice_quadrant.schwartz_alignment` | Phase 5 | same |
+| `tone_notes` | Phase 6 | bounce to `copywriting-voice-tone-stage` |
+| `ethics_verdict` (if `phase >= phase-8-form`) | Phase 7 | bounce to `copywriting-ethics-check-stage` |
+| `brief.*` Level 1 fields (product / target / etc.) | Phase 0 | bounce to `copywriting-intake` |
+| `retries.*` counters | router | preserve verbatim — do NOT reset on re-entry; resetting is how stall loops hide |
+
+This check is CHEAP (field presence, not semantic validation) and only runs on Shape C mid-pipeline re-entry. It prevents "clever" external callers from stripping gate verdicts to bypass gates.
+
 ## Step 3 — Phase 2 Ideation Decision
 
 Ask (if not already answered in intake):

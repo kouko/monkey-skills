@@ -214,6 +214,46 @@
           "detail": { "type": "string" }
         }
       }
+    },
+    "rewrite_variants": {
+      "type": "array",
+      "description": "Audit-stage output — rewrite variants produced by Phase 3 Suggest. Each variant runs its own Phase 7 + Phase 8 sub-pipeline with independent revise_round_count. See copywriting-audit-stage/SKILL.md §When rewrites are produced.",
+      "items": {
+        "type": "object",
+        "required": ["variant_id", "text", "three_reasons"],
+        "properties": {
+          "variant_id": { "type": "string" },
+          "text": { "type": "string" },
+          "three_reasons": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": { "type": "string" },
+            "description": "Taniyama 3-reason rationale: (a) benefit / to whom, (b) why new, (c) why resonant"
+          },
+          "ethics_verdict": {
+            "type": "string",
+            "enum": ["PASS", "PASS_WITH_NOTES", "NEEDS_REVISION", "not_run"]
+          },
+          "ethics_findings": { "type": "string" },
+          "form_verdict": {
+            "type": "string",
+            "enum": ["PASS", "PASS_WITH_NOTES", "NEEDS_REVISION", "not_run"]
+          },
+          "form_findings": { "type": "string" },
+          "revise_round_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2,
+            "description": "Per-variant revise budget, independent from main pipeline's counter"
+          }
+        }
+      }
+    },
+    "immutable_fields_enforced": {
+      "type": "array",
+      "description": "READ-ONLY marker list. See copywriting-toolkit/CLAUDE.md §Handoff Envelope §Immutable fields — preservation contract. Router enforces these via Step 2.4 re-entry invariant check. Listed here so external callers know which fields MUST pass through unchanged: voice_quadrant (object), voice_quadrant.schwartz_alignment, tone_notes.schwartz_conflict_carried, tone_notes.lineage_gap, brief.* Level 1 fields, audit_trail (append-only), retries.* (monotonic), express_mode_used, violation.",
+      "items": { "type": "string" }
     }
   },
   "required": ["phase"]

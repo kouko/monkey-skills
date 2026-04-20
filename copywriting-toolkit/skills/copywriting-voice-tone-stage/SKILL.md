@@ -68,8 +68,28 @@ output. `voice-and-tone.md §Anti-Patterns` + both lineage standards'
 §Anti-Patterns sections explicitly ban this.
 
 **If both lineage triggers match** (e.g., brief has `voice_reference:
-糸井重里` but `output_language: zh-TW`) → BLOCKED; return to intake
-for clarification. This indicates a confused brief.
+糸井重里` but `output_language: zh-TW`) → emit a `violation` envelope
+per `../../CLAUDE.md §Envelope Violation`; router routes to
+`copywriting-intake` for clarification. Do NOT self-dispatch the
+bounce — that would fragment `bounce_round` counter per L2 contract
+(§Router Validation single enforcement point).
+
+Violation payload:
+```json
+{
+  "violation": {
+    "detected_by": "copywriting-voice-tone-stage",
+    "missing": [],
+    "malformed": [{
+      "field": "brief.voice_reference + brief.output_language",
+      "expected": "consistent lineage (JP maestro + ja OR ZH maestro + zh-*)",
+      "got": "cross-lineage conflict (e.g., 糸井重里 + zh-TW)"
+    }],
+    "bounce_to": "copywriting-intake",
+    "user_message": "Voice reference and output language disagree on lineage — intake needs to resolve which tradition applies."
+  }
+}
+```
 
 ## What This Skill Owns
 
