@@ -59,7 +59,7 @@ This skill is designed for **option 1** (zero-setup Obsidian native rendering).
 ```mermaid
 xychart-beta
     title "Monthly Revenue"
-    x-axis [Jan, Feb, Mar, Apr, May]
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May"]
     y-axis "NT$ M" 0 --> 100
     line "Revenue" [42, 58, 67, 81, 95]
 ```

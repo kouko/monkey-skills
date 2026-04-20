@@ -22,7 +22,7 @@ Bar and line charts for categorical / numerical data — revenue trends, signup 
 ```mermaid
 xychart-beta
     title "Q1-Q4 2026 Revenue (NT$ M)"
-    x-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Revenue" 0 --> 100
     bar [42, 58, 67, 81]
 ```
@@ -30,12 +30,29 @@ xychart-beta
 **Minimum required**:
 - `xychart-beta` directive on line 1
 - At least one data series (`bar` or `line`)
-- x-axis category labels
+- x-axis category labels (all categorical labels **must be quoted** — see § Style rule below)
 
 **Optional but recommended**:
 - `title` for context
 - `y-axis` label + range
 - Multiple data series
+
+### Style rule — quote all categorical axis elements
+
+**Pattern**: any non-continuous (categorical) axis element MUST be wrapped in `""` quotes:
+
+```
+✅ x-axis ["Q1", "Q2", "Q3", "Q4"]
+✅ x-axis ["1月", "2月", "3月"]
+✅ x-axis ["Product A", "Product B"]
+
+❌ x-axis [Q1, Q2, Q3, Q4]
+❌ x-axis [1月, 2月, 3月]
+```
+
+Numeric y-axis ranges (`y-axis "Revenue" 0 --> 100`) don't need quoting — they're continuous.
+
+**Why**: uniform quoting rule prevents ambiguity and edge cases (CJK / special chars / reserved words). Easier to maintain than per-case judgment about when quoting is needed.
 
 ## Canonical syntax — line mode (use NAMED-LINE form)
 
@@ -77,14 +94,12 @@ xychart-beta horizontal
 
 **Key point**: don't swap x-axis and y-axis when switching to horizontal. The `horizontal` keyword handles the reorientation; your declarations remain categorical=x, numeric=y.
 
-**Quoting categories**: user-verified that quoting the category strings (`["Q1", "Q2", ...]`) works reliably. Unquoted category names (`[Q1, Q2]`) may work in simple cases but quoting is the safer default.
-
 ### Multiple series (side-by-side bars)
 
 ```mermaid
 xychart-beta
     title "Revenue vs Profit (Q1-Q4)"
-    x-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
     y-axis "NT$ M" 0 --> 100
     bar [42, 58, 67, 81]
     bar [12, 18, 22, 28]
@@ -97,7 +112,7 @@ Two `bar [...]` lines render as paired bars per category. Add names for legend l
 ```mermaid
 xychart-beta
     title "Monthly Active Users by Product"
-    x-axis [Jan, Feb, Mar, Apr]
+    x-axis ["Jan", "Feb", "Mar", "Apr"]
     y-axis "MAU (k)" 0 --> 500
     line "Product A" [180, 220, 280, 340]
     line "Product B" [90, 140, 195, 245]
@@ -111,7 +126,7 @@ Each named line renders as a distinct colored line with legend entry.
 ```mermaid
 xychart-beta
     title "Revenue (bar) + Growth rate (line)"
-    x-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Value" 0 --> 100
     bar "Revenue" [42, 58, 67, 81]
     line "Growth %" [15, 38, 16, 21]
@@ -154,7 +169,7 @@ This fallback is **NOT auto-triggered** — the default path is named-line, whic
 ```mermaid
 xychart-beta
     title "Monthly Revenue 2026"
-    x-axis [Jan, Feb, Mar, Apr, May, Jun]
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
     y-axis "NT$ M" 0 --> 50
     bar [12, 18, 24, 29, 32, 38]
 ```
@@ -164,7 +179,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Monthly Sign-ups"
-    x-axis [Jan, Feb, Mar, Apr, May, Jun]
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
     y-axis "Users" 0 --> 1000
     line "Sign-ups" [120, 280, 450, 620, 810, 950]
 ```
@@ -198,7 +213,7 @@ Note: `horizontal` flips rendering orientation only; axis declarations keep the 
 ```mermaid
 xychart-beta
     title "Product A vs Product B Sales"
-    x-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Units sold" 0 --> 500
     bar "Product A" [250, 310, 380, 420]
     bar "Product B" [180, 230, 290, 340]
@@ -209,7 +224,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Revenue (bars) + Growth Rate (line)"
-    x-axis [Q1, Q2, Q3, Q4]
+    x-axis ["Q1", "Q2", "Q3", "Q4"]
     y-axis "Value" 0 --> 100
     bar "Revenue (NT$ M)" [42, 58, 67, 81]
     line "Growth %" [15, 38, 16, 21]
@@ -226,15 +241,17 @@ xychart-beta
 | Missing quotes on title with spaces | `title "Has Spaces"` | Strings with spaces need quotes |
 | Using `showDataLabelOutsideBar` or Neo look | These are v11.14.0+ features — not in Obsidian 11.4.1 | Silent feature-ignore |
 | Swapping x-axis / y-axis for `horizontal` mode | Keep categorical on x-axis, numeric on y-axis; let `horizontal` flip rendering | `horizontal` reorients visuals; axis declarations stay the same as vertical |
-| Unquoted category names with special chars / CJK | `["1月", "2月"]` (quote all entries) | Quoting is the safer default for any category string |
+| Unquoted categorical axis elements `[Q1, Q2]` | Quote all categorical labels `["Q1", "Q2"]` | Statutory rule per § Style rule — consistent pattern for any non-continuous axis |
 
 ### Pre-save validation
 
 - [ ] `xychart-beta` declared on line 1 (with `-beta` suffix)
 - [ ] x-axis array length matches each data series array length
+- [ ] **All categorical axis labels quoted** — `["Q1", "Q2"]` not `[Q1, Q2]` (see § Style rule)
 - [ ] Line charts use named-line syntax: `line "name" [values]`
 - [ ] Title quoted if contains spaces
 - [ ] y-axis uses `-->` double-hyphen arrow syntax
 - [ ] No v11.14.0+ features used
+- [ ] For horizontal mode: axis declarations stay categorical=x, numeric=y (don't swap)
 
 See also [obsidian-common-quirks.md](../obsidian-common-quirks.md) and [obsidian-compatibility.md](../obsidian-compatibility.md).
