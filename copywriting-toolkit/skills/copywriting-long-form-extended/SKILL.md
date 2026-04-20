@@ -1,6 +1,6 @@
 ---
 name: copywriting-long-form-extended
-description: Write EN / international long-form LP, coaching / consulting sales pages, story-driven sales letters, guide-based positioning copy using QUEST (Fortin 2005) / PASTOR (Edwards 2016). Use when you have a confirmed brief with EN/intl long-form goal — after intake, before voice positioning. Not for JP 神田 PASONA family (use copywriting-long-form-pasona) or EC product copy (use copywriting-mid-form). Not for raw briefs — route via using-copywriting-toolkit first. 長文案・QUEST・PASTOR。
+description: Write EN / international long-form LP, coaching / consulting sales pages, story-driven sales letters, guide-based positioning copy using QUEST / PASTOR frameworks. Use when you have a confirmed brief with EN/intl long-form goal — after intake, before voice positioning. Not for JP 神田 PASONA family (use copywriting-long-form-pasona) or EC product copy (use copywriting-mid-form). Not for raw briefs — route via using-copywriting-toolkit first. 長文案・QUEST・PASTOR。
 ---
 
 # copywriting-long-form-extended

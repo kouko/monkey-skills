@@ -1,6 +1,6 @@
 ---
 name: copywriting-intake
-description: Run brief intake + message confirmation — Understanding Summary + hard gate on Level 1 fields (product / audience / goal / form). Use when starting a new copywriting task with a raw user brief — before any drafting, ideation, or audit. LOOSE recommend planning-team when thesis-level ambiguity surfaces. Not for external-copy review (use copywriting-audit-stage — audit bypasses intake by design). 文案 brief 整理・ヒアリング。コピー案件インテーク。
+description: Clarify and confirm copywriting requirements — product, audience, goal, form, Schwartz awareness level — with a hard gate on missing info. Use when starting a new copywriting task with an incomplete or ambiguous brief, before any drafting, ideation, or audit. LOOSE recommend planning-team when thesis-level ambiguity surfaces. Not for external-copy review (use copywriting-audit-stage — audit bypasses intake by design). 文案需求確認・brief 整理・ヒアリング。コピー案件インテーク・需求確認。
 ---
 
 # copywriting-intake

@@ -1,6 +1,6 @@
 ---
 name: copywriting-ethics-check-stage
-description: Check draft copy for 景品表示法 / FTC Endorsement / 優良誤認 / 不實廣告 / Cialdini dark-pattern compliance. Use when you have a polished draft ready for legal + ethics review — evaluator-only; NEEDS_REVISION blocks delivery. Not for raw briefs without a draft (write first or use copywriting-audit-stage for existing copy), form structure (use copywriting-form-check-stage), or voice drift (use copywriting-voice-tone-stage). 倫理ゲート・広告表示法チェック。倫理審查・不實廣告。
+description: Check draft copy for 景品表示法 / FTC Endorsement / 優良誤認 / 不實廣告 / Cialdini dark-pattern compliance. Use when you have a polished draft ready for legal + ethics review — blocks delivery on violation (judgement-only, does not edit the draft). Not for raw briefs without a draft (write first or use copywriting-audit-stage for existing copy), form structure (use copywriting-form-check-stage), or voice drift (use copywriting-voice-tone-stage). 倫理ゲート・広告表示法チェック。倫理審查・不實廣告。
 ---
 
 # copywriting-ethics-check-stage
