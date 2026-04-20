@@ -97,6 +97,37 @@ surfaces (headline, mid-body callback, CTA). Runs **after** Phase 4,
 When ambiguous, default to **post-draft overlay** (safer — base draft
 survives if neta fails Safety gate).
 
+### Automated default — brief-property heuristic
+
+Router applies this heuristic BEFORE asking the user, so the default
+is driven by brief properties rather than UX friction. User can
+override the auto-default in the routing confirmation turn.
+
+| Brief property (from intake envelope) | Default mode |
+|---|---|
+| `ideation_pool.winners[]` contains a Technique 4 Cross-domain Mapping candidate | **Pre-draft bake-in** — the mapping anchors the whole draft; bolt-on is too weak |
+| `form == long-form-pasona` OR `long-form-extended` AND `brief.target_audience` flagged subculture-native | **Pre-draft bake-in** — tone / word choice / rhythm must permeate |
+| `neta_source_type_preference == "literary"` AND `form == short-form` | **Pre-draft bake-in** — literary reference must sit in the hook |
+| `form == short-form` AND `neta_source_type_preference == "sns-meme"` | **Pre-draft bake-in** — catchcopy with a bolt-on meme reads flat |
+| User flagged `wants_variants: true` at intake (A/B test intent) | **Post-draft overlay** — overlay gives a clean base draft for free |
+| Single chosen technique is Reversal (Tech 1) or Substitution (Tech 2) at a single surface | **Post-draft overlay** — no structural mapping needed |
+| Brief has strong framework discipline (PASBECONA long-form, BEAF EC) and neta is flair | **Post-draft overlay** — protect the framework's stage order |
+| None of the above match | **Post-draft overlay** (conservative default — base draft survives if neta fails Safety gate) |
+
+Presentation at the routing confirmation turn:
+
+```
+Neta timing — auto-default: <mode> (<heuristic row that matched>)
+  [1] confirm — use this mode
+  [2] switch to <other mode>
+  [3] explain why
+```
+
+The user-prompt fallback remains for cases where no heuristic row
+matched with confidence, or when the user explicitly asks for a
+choice. Heuristic is additive: it removes friction for the common
+case, it does not replace the user's override authority.
+
 ## Preconditions
 
 Formal schema used by `using-copywriting-toolkit` router for bounce-back routing. On violation, router emits the bounce-back envelope defined in `../../CLAUDE.md §Envelope Violation`. Two sets — one per placement mode.

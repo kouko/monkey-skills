@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/copywriting-toolkit/envelope.schema.json",
+  "title": "copywriting-toolkit Handoff Envelope",
+  "description": "Single source of truth for envelope FIELD NAMES + TYPES across the 9-phase pipeline. Each SKILL.md §Preconditions table is a slice of this schema; when file and SKILL.md disagree, this file wins. ENFORCEMENT MODEL: this schema is permissively shaped (only `phase` is globally required) — it captures the shared envelope vocabulary, NOT per-skill input constraints. Per-skill preconditions (which fields MUST be present before launching which skill) live in each SKILL.md §Preconditions section and are enforced at runtime by `using-copywriting-toolkit` (see `copywriting-toolkit/CLAUDE.md §Router Validation`). Integrators should NOT rely on JSON-Schema-level validation alone; always route through the validator.",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "phase-0-intake",
+        "phase-1-confirmed",
+        "phase-express-confirmed",
+        "phase-2-ideation-complete",
+        "phase-3-neta-baked",
+        "phase-3-neta-overlaid",
+        "phase-3-skipped",
+        "phase-4-draft",
+        "phase-4-draft-complete",
+        "phase-5-voice-positioned",
+        "phase-6-voice-tone",
+        "phase-7-ethics",
+        "phase-8-form",
+        "phase-audit-entry",
+        "audit-complete",
+        "delivered"
+      ]
+    },
+    "form": {
+      "type": "string",
+      "enum": [
+        "long-form-pasona",
+        "long-form-extended",
+        "mid-form",
+        "short-form",
+        "light-action",
+        "ideation",
+        "audit",
+        "unknown"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "properties": {
+        "product": { "type": "string" },
+        "value_proposition": { "type": "string" },
+        "target_audience": { "type": "string" },
+        "schwartz_level": {
+          "type": "string",
+          "enum": ["1", "2", "3", "4", "5"]
+        },
+        "voice_reference": {
+          "type": "string",
+          "description": "Canonical name. Maestros {糸井重里, 岩崎俊一, 眞木準, 谷山雅計} are HARD TRIGGERS for Phase 6 JP lineage craft; Express Mode MUST NOT auto-infer these."
+        },
+        "output_language": { "type": "string" },
+        "channel": { "type": "string" },
+        "char_limit_band": { "type": "string" },
+        "benefits": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence_sources": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "target_length": { "type": "string" },
+        "positioning": {
+          "type": "string",
+          "enum": ["expert", "shepherd", "guide", "educator"]
+        },
+        "language": { "type": "string" },
+        "action_weight": {
+          "type": "string",
+          "enum": ["light", "heavy"]
+        },
+        "target_action": { "type": "string" },
+        "review_focus": {
+          "type": "string",
+          "enum": ["structure", "ethics", "voice", "all"]
+        },
+        "neta_opt_in": { "type": "boolean" },
+        "neta_source_type_preference": {
+          "type": "string",
+          "enum": ["all", "sns-meme", "literary", "mixed"]
+        }
+      }
+    },
+    "message_thesis": { "type": "string" },
+    "draft": { "type": "string" },
+    "external_copy": {
+      "type": "string",
+      "description": "Full text of existing copy for audit-stage. Summaries are rejected."
+    },
+    "ideation_pool": {
+      "type": ["object", "null"],
+      "properties": {
+        "winners": { "type": "array" },
+        "runner_ups": { "type": "array" }
+      }
+    },
+    "neta_candidates": { "type": "array" },
+    "neta_annotations": { "type": "array" },
+    "voice_quadrant": {
+      "type": "object",
+      "required": ["primary"],
+      "description": "Always an object — never a plain string. Dereference .primary when reading.",
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": ["Q1", "Q2", "Q3", "Q4"]
+        },
+        "edge": {
+          "type": ["string", "null"],
+          "enum": ["Q2-Q3", "Q1-Q4", null]
+        },
+        "rationale": { "type": "string" },
+        "schwartz_alignment": {
+          "type": "string",
+          "enum": ["ok", "hard_rule_applied", "conflict_flagged"]
+        }
+      }
+    },
+    "tone_notes": {
+      "type": "object",
+      "properties": {
+        "axis_default_derived": { "type": "boolean" },
+        "lineage_gap": { "type": "string" }
+      }
+    },
+    "ethics_verdict": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"]
+    },
+    "ethics_findings": { "type": "string" },
+    "form_verdict": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"]
+    },
+    "form_findings": { "type": "string" },
+    "gate_verdict": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"]
+    },
+    "express_mode_used": { "type": "boolean" },
+    "planning_team_recommended": { "type": "boolean" },
+    "framework_selected": { "type": "string" },
+    "approach_selected": { "type": "string" },
+    "next_stage": {
+      "type": ["string", "null"],
+      "description": "Target skill name for the next pipeline step, or null at pipeline end."
+    },
+    "violation": {
+      "type": "object",
+      "required": ["detected_by", "missing", "bounce_to", "user_message"],
+      "properties": {
+        "detected_by": { "type": "string" },
+        "detected_at": { "type": "string", "format": "date-time" },
+        "missing": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "malformed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["field", "expected", "got"],
+            "properties": {
+              "field": { "type": "string" },
+              "expected": { "type": "string" },
+              "got": { "type": "string" }
+            }
+          }
+        },
+        "bounce_to": { "type": "string" },
+        "bounce_round": { "type": "integer", "minimum": 0 },
+        "user_message": { "type": "string" }
+      }
+    },
+    "original_envelope": {
+      "type": "object",
+      "description": "Frozen snapshot of the envelope that failed validation. Operator / audit inspection only — NOT auto-merged on re-entry."
+    },
+    "retries": {
+      "type": "object",
+      "properties": {
+        "bounce_round": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "revise_round_count": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "total_retries": { "type": "integer", "minimum": 0, "maximum": 4 }
+      },
+      "description": "Router halts when bounce_round >= 3 OR revise_round_count >= 2 per phase OR total_retries >= 4."
+    },
+    "audit_trail": {
+      "type": "array",
+      "description": "Append-only log of phase transitions + bounces + verdicts. Each entry is one pipeline event.",
+      "items": {
+        "type": "object",
+        "required": ["at", "event", "skill"],
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "event": {
+            "type": "string",
+            "enum": [
+              "skill-entered",
+              "skill-exited",
+              "gate-verdict",
+              "violation-detected",
+              "bounce-dispatched",
+              "auto-revise",
+              "halt-ask-user"
+            ]
+          },
+          "skill": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  },
+  "required": ["phase"]
+}

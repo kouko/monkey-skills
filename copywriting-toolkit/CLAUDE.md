@@ -1,5 +1,32 @@
 # copywriting-toolkit — Plugin Conventions
 
+## Setup
+
+### Install
+
+The plugin activates via Claude Code's marketplace mechanism — see `/Users/kouko/GitHub/monkey-skills/.claude-plugin/marketplace.json` entry for `copywriting-toolkit`. Once the marketplace is loaded, all 14 skills + 2 agents + 3 protocols (router phase-decision-tree + intake brainstorming + intake express-mode + 8 workflow protocols) resolve automatically.
+
+### Permissions
+
+Skills read files inside their own directory (`standards/`, `protocols/`, `checklists/`, `rubrics/`) and plugin-root shared resources (`agents/`, `CLAUDE.md`, `envelope.schema.json`). No network access required except `WebSearch` for `copywriting-neta-injection` Phase A (source-taxonomy allow-list only — Path A-1 SNS/meme, Path A-2 literary). No file writes outside the plugin directory.
+
+### Model tiers
+
+| Agent | Tier | Rationale |
+|---|---|---|
+| `copywriter` | sonnet | Drafting / ideation / audit-variant production — high volume, quality-sensitive but not judgement-critical |
+| `copywriter-evaluator` | opus | Legal / framework / voice / form gates — low volume, judgement-critical; `FAIL_FATAL` decisions carry legal weight |
+
+If your platform cannot differentiate tiers, default both to opus. Do not default both to sonnet — evaluator's aesthetic-capture anti-pattern is harder to resist at lower tiers.
+
+### Environment variables
+
+None required. Plugin is self-contained — no API keys, no cache paths, no persistent state.
+
+### Persistence
+
+The envelope is in-memory per pipeline run. Nothing is persisted across sessions unless the caller saves the envelope explicitly. `audit_trail[]` (when populated) lives on the envelope, not in plugin storage.
+
 ## Copy-First Principle
 
 All standards / protocols / checklists / rubrics / grounding notes are byte-identical copies from `domain-teams/skills/copywriting-team/`. Never paraphrase, condense, or "optimize" the original text.
@@ -109,6 +136,73 @@ Router does not draft, does not judge gate verdicts, does not rewrite. It routes
 ### Express Mode is not a Preconditions bypass
 
 Express Mode replaces Q1-Q10 **elicitation** with synthesis-plus-single-turn-confirmation. The Intake Completeness MUST gate still runs. The downstream skill still sees a well-formed envelope that satisfies its Preconditions. If Express-synthesised fields turn out to be wrong, a downstream skill will emit a violation → router routes back to intake → intake on re-entry forces Q1-Q10 (not Express) because bounce-backs are a disqualifier.
+
+## Audit Trail
+
+The envelope's `audit_trail[]` field (defined in `.claude-plugin/envelope.schema.json`) is an append-only log of pipeline events. Each entry records one of:
+
+| event | written by | purpose |
+|---|---|---|
+| `skill-entered` | router, before skill launch | marks which skill starts processing the envelope |
+| `skill-exited` | router, after skill returns | pairs with `skill-entered` so run duration + control flow is auditable |
+| `gate-verdict` | `copywriter-evaluator` | records `PASS` / `PASS_WITH_NOTES` / `NEEDS_REVISION` + which gate |
+| `violation-detected` | router, on Preconditions check failure | captures the missing / malformed fields |
+| `bounce-dispatched` | router, after emitting violation envelope | names the upstream skill routed to |
+| `auto-revise` | Phase 7 / 8 FIXABLE handler | marks a round of automatic revision |
+| `halt-ask-user` | router, on `total_retries >= 4` or `bounce_round >= 3` | surfaces a stall to the user |
+
+Entries carry `{at, event, skill, detail}`. The router is the sole writer for routing / violation events; the evaluator is the sole writer for verdict events. Skills do NOT append to `audit_trail[]` themselves — a skill that fails its own precondition returns a violation envelope and lets the router log it.
+
+Rendering to user: on `halt-ask-user` events, the router SHOULD render the last 5-10 `audit_trail[]` entries as a compact timeline so the user can see where the pipeline stalled. For normal completion (`phase: delivered`), the full trail is available to the caller but not rendered by default.
+
+Persistence: `audit_trail[]` lives on the envelope. Callers who want cross-session auditability must save the envelope themselves (the plugin does not persist).
+
+## External Caller Guide
+
+If you invoke skills directly (not through `using-copywriting-toolkit` router), you are responsible for constructing the initial envelope correctly. The router's Step 0.5 Express Qualification + Preconditions validator are skipped in this path — you own both.
+
+### Minimum envelope shapes
+
+**Shape A — new brief** (go through router; Express / Q1-Q10 decided there):
+
+```json
+{
+  "phase": "phase-0-intake",
+  "raw_request": "<user's original message, verbatim>",
+  "brief": {}
+}
+```
+
+Only `phase` and `raw_request` are required. Leave `brief: {}` empty — intake will populate it. Do NOT pre-fill `brief.*` from your own inference.
+
+**Audit alt-entry** (external copy review):
+
+```json
+{
+  "phase": "phase-audit-entry",
+  "form": "unknown",
+  "brief": {
+    "review_focus": "all"
+  },
+  "external_copy": "<FULL TEXT — not a summary>"
+}
+```
+
+`external_copy` MUST be full text. Summaries collapse the form-adherence + voice-consistency checks and will be rejected by `copywriting-audit-stage`.
+
+**Mid-pipeline re-entry** (you kept an envelope from a prior run):
+
+Pass it as-is. The router's Step 2 mid-pipeline table (`phase-decision-tree.md`) routes based on `envelope.phase` + latest verdict. Do NOT mutate `phase` yourself — that violates the router's state machine.
+
+### What NOT to do
+
+- **Do NOT construct `voice_quadrant` yourself** — it's Phase 5's output. If you try to inject a pre-computed quadrant, Phase 5's validation may accept it (the Preconditions only check `draft` + `form` + audience), but the downstream gates will compare it against the draft's actual register and likely flag a conflict.
+- **Do NOT set `gate_verdict: "PASS"` manually** — evaluators own verdicts. A manual PASS bypasses ethics / form gates silently.
+- **Do NOT omit `retries: { bounce_round, revise_round_count, total_retries }`** if you're resuming a previously-bounced envelope — the router halts at `total_retries >= 4`, and omitting the field resets the counter, allowing the stall loop to hide.
+
+### Envelope evolution
+
+Future plugin versions may add optional fields. Callers should preserve unknown fields verbatim on re-entry (forward-compatible). Required fields are locked per semantic version — changes go in CHANGELOG and bump the minor version at minimum.
 
 ## Cross-Plugin Delegation (Loose)
 
