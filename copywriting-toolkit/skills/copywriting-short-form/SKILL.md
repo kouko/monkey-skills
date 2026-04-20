@@ -5,7 +5,7 @@ description: Phase 4 short-form drafter — キャッチコピー / headline (7-
 
 # copywriting-short-form
 
-Phase 4 variant — short-form headline / キャッチコピー drafter. Produces 7-15 character candidates using AIDMA A+I scope, 3 秒ルール landability, and 5 切入點 approach selection. Hands the `draft` envelope field to `copywriting-voice-positioning-stage`.
+Phase 4 variant — short-form headline / キャッチコピー drafter. Produces 7-15 character candidates using AIDMA A+I scope, 3 秒ルール landability, and 5 切入點 approach selection. Hands the `draft` envelope field to `copywriting-voice-quadrant-stage`.
 
 ## Triggers
 
@@ -103,7 +103,7 @@ The `copywriter` appends to envelope:
   "form": "short-form",
   "draft": "<3-5 finalist candidates, each with 3 justifying reasons + char count>",
   "approach_selected": "<one of 5 切入點>",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -115,7 +115,7 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 5 | `copywriting-voice-quadrant-stage` | copywriter |
 | 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 / FTC |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — framework adherence, 7-15 chars, 3 秒ルール |
@@ -125,4 +125,4 @@ Short-form outputs almost always trigger the voice-consistency gate because mult
 
 ## Next Stage
 
-Hand off `draft` + full envelope to `copywriting-voice-positioning-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.
+Hand off `draft` + full envelope to `copywriting-voice-quadrant-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.

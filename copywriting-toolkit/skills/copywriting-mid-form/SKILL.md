@@ -5,7 +5,7 @@ description: Phase 4 mid-form drafter — EC product copy (BEAF — Benefit → 
 
 # copywriting-mid-form
 
-Phase 4 variant — mid-form EC product copy drafter. Produces BEAF-ordered product descriptions (Benefit → Evidence → Advantage → Feature) for EC listings, POP, and in-store presentation. Hands the `draft` envelope field to `copywriting-voice-positioning-stage`.
+Phase 4 variant — mid-form EC product copy drafter. Produces BEAF-ordered product descriptions (Benefit → Evidence → Advantage → Feature) for EC listings, POP, and in-store presentation. Hands the `draft` envelope field to `copywriting-voice-quadrant-stage`.
 
 ## Triggers
 
@@ -102,7 +102,7 @@ The `copywriter` appends to envelope:
   "phase": "phase-4-draft",
   "form": "mid-form",
   "draft": "<BEAF-ordered product copy with evidence citations>",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -112,7 +112,7 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 5 | `copywriting-voice-quadrant-stage` | copywriter |
 | 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 particularly strict for EC product claims |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — BEAF adherence + character-count range |
@@ -122,4 +122,4 @@ After this skill completes, orchestrator runs (in order):
 
 ## Next Stage
 
-Hand off `draft` + full envelope to `copywriting-voice-positioning-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.
+Hand off `draft` + full envelope to `copywriting-voice-quadrant-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.

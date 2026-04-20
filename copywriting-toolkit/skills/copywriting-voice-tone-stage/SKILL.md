@@ -17,7 +17,7 @@ ethics check.
 
 ## When to Use
 
-Invoke this skill **after** `copywriting-voice-positioning-stage` (Phase 5)
+Invoke this skill **after** `copywriting-voice-quadrant-stage` (Phase 5)
 has stamped a `voice_quadrant` onto the envelope AND a workflow skill
 (Phase 4: `long-form-pasona` / `long-form-extended` / `mid-form` /
 `short-form` / `light-action`) has produced a `draft`.
@@ -120,7 +120,7 @@ Violation payload:
 
 This skill does **not** own:
 
-- Voice quadrant selection — `copywriting-voice-positioning-stage` (Phase 5).
+- Voice quadrant selection — `copywriting-voice-quadrant-stage` (Phase 5).
 - Framework structure (PASONA stage ordering etc.) — Phase 4 workflow skills.
 - Ethics / legal / ステマ — `copywriting-ethics-check-stage` (Phase 7).
 - Form-appropriate character discipline — `copywriting-form-check-stage` (Phase 8).
@@ -315,7 +315,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 ### Upstream bounce target on violation
 
-- `voice_quadrant` missing → bounce to `copywriting-voice-positioning-stage` (Phase 5 must run first)
+- `voice_quadrant` missing → bounce to `copywriting-voice-quadrant-stage` (Phase 5 must run first)
 - `draft` missing → bounce to `copywriting-<form>` (Phase 4 drafter)
 - `brief.output_language` missing → bounce to `copywriting-intake` (Level 1 / 2 gap)
 

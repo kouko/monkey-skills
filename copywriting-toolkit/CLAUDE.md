@@ -108,7 +108,7 @@ Between-skill artifact shape (JSON):
   "ideation_pool": ["... optional if Phase 2 ran ..."],
   "neta_candidates": ["... optional if Phase 3 ran pre-draft ..."],
   "draft": "...",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -287,7 +287,7 @@ Used by (launches the agent, passing protocol + standards paths):
 - `copywriting-ideation` (Phase 2 divergence subagents + convergence)
 - `copywriting-neta-injection` (Phase 3 WebSearch pipeline A-D + 4 techniques)
 - 5 Phase-4 drafter skills (short / mid / long-pasona / long-extended / light-action)
-- `copywriting-voice-positioning-stage` / `copywriting-voice-tone-stage` (Phase 5-6 tuning passes)
+- `copywriting-voice-quadrant-stage` / `copywriting-voice-tone-stage` (Phase 5-6 tuning passes)
 - `copywriting-audit-stage` (Phase 2 diagnose / Phase 3 rewrite variants)
 
 Does NOT produce gate verdicts — that is `copywriter-evaluator`'s role.

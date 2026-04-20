@@ -105,7 +105,7 @@ Check required keys: `phase`, `brief`, `next_stage`. If malformed, return a stru
 | `phase-2-ideation` | passed | Step 4 (neta pre-draft decision) |
 | `phase-3-neta-pre-draft` | passed | Step 5 (form selection) |
 | `phase-4-draft` | form gate not yet run | Step 6 (neta overlay decision) |
-| `phase-3-neta-overlay` | passed | `copywriting-voice-positioning-stage` (Phase 5) |
+| `phase-3-neta-overlay` | passed | `copywriting-voice-quadrant-stage` (Phase 5) |
 | `phase-5-voice-positioned` | passed | `copywriting-voice-tone-stage` (Phase 6) |
 | `phase-6-voice-tone` | passed | `copywriting-ethics-check-stage` (Phase 7) |
 | `phase-7-ethics` | PASS | `copywriting-form-check-stage` (Phase 8) |
@@ -132,7 +132,7 @@ Before routing, verify immutable fields haven't been stripped between sessions o
 
 | Field | Writer phase | On missing |
 |---|---|---|
-| `voice_quadrant` (object) | Phase 5 | bounce to `copywriting-voice-positioning-stage` |
+| `voice_quadrant` (object) | Phase 5 | bounce to `copywriting-voice-quadrant-stage` |
 | `voice_quadrant.schwartz_alignment` | Phase 5 | same |
 | `tone_notes` | Phase 6 | bounce to `copywriting-voice-tone-stage` |
 | `ethics_verdict` (if `phase >= phase-8-form`) | Phase 7 | bounce to `copywriting-ethics-check-stage` |
@@ -281,14 +281,14 @@ Envelope:
 Only reached if Step 4 deferred neta to overlay.
 
 - If `envelope.brief.neta_timing == "overlay"` → Route to `copywriting-neta-injection` now. Set `next_stage = "copywriting-neta-injection"`. The neta skill produces 2-3 variants then hands off to Phase 5.
-- Otherwise → Skip to `copywriting-voice-positioning-stage`.
+- Otherwise → Skip to `copywriting-voice-quadrant-stage`.
 
 ## Step 7 — Phases 5-8 (Linear)
 
 Once the draft exists and neta overlay (if any) is done, the route is linear:
 
 ```
-copywriting-voice-positioning-stage
+copywriting-voice-quadrant-stage
   → copywriting-voice-tone-stage
   → copywriting-ethics-check-stage      (evaluator-only gate)
   → copywriting-form-check-stage        (evaluator-only gate)

@@ -229,7 +229,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
       "injected_text": "..."
     }
   ],
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -324,7 +324,7 @@ candidate catalog stays stable).
 - **Bake-in mode**: hand off to the Phase 4 drafting skill selected in
   the router (`copywriting-<form>`). `neta_candidates` is a pool the
   drafter selects from — not every candidate must appear.
-- **Overlay mode**: hand off to `copywriting-voice-positioning-stage`.
+- **Overlay mode**: hand off to `copywriting-voice-quadrant-stage`.
   The voice-quadrant positioning analyzes the neta-injected draft, not
   the pre-overlay base.
 
@@ -357,5 +357,5 @@ downstream expects either neta output or explicit skip flag.
 ## Next Stage
 
 - Bake-in mode → `copywriting-<form>` (Phase 4 drafting)
-- Overlay mode → `copywriting-voice-positioning-stage` (Phase 5)
+- Overlay mode → `copywriting-voice-quadrant-stage` (Phase 5)
 - Skipped → whichever phase the router dictates (Phase 4 or Phase 5)

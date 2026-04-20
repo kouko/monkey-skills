@@ -23,7 +23,7 @@ Launch `copywriter` agent with:
 - Protocol: this file
 - Standards to read:
   - `../protocols/copywriting-brainstorming.md` — Level 1/2/3 field taxonomy + form-specific branches
-  - `../../copywriting-voice-positioning-stage/standards/voice-quadrant-positioning.md` — quadrant pre-diagnosis (read-only)
+  - `../../copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md` — quadrant pre-diagnosis (read-only)
   - `../../copywriting-ideation/standards/kosimo-instinct-analysis.md` — Level 2 approach hint
 - Input: raw user brief + user's `output_language`
 
@@ -191,7 +191,7 @@ Render the Understanding Summary to the user in the following fixed shape (outpu
                ideation_skip_rationale field.)
   Phase 3   → <run bake-in | run overlay | skip> — <rationale>
   Phase 4   → copywriting-<form>
-  Phase 5   → copywriting-voice-positioning-stage
+  Phase 5   → copywriting-voice-quadrant-stage
   Phase 6   → copywriting-voice-tone-stage
   Phase 7   → copywriting-ethics-check-stage (MUST)
   Phase 8   → copywriting-form-check-stage (MUST)

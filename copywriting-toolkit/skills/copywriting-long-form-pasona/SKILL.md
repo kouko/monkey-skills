@@ -5,7 +5,7 @@ description: Phase 4 long-form drafter — PASONA / 新PASONA / PASBECONA (神�
 
 # copywriting-long-form-pasona
 
-Phase 4 variant — PASONA-family long-form drafter. Produces landing-page, sales-letter, email-campaign, and 記事広告 copy using 神田昌典's 旧 PASONA (5 stages) / 新 PASONA (6 stages) / PASBECONA (9 stages) canon. Hands the `draft` envelope field to `copywriting-voice-positioning-stage`.
+Phase 4 variant — PASONA-family long-form drafter. Produces landing-page, sales-letter, email-campaign, and 記事広告 copy using 神田昌典's 旧 PASONA (5 stages) / 新 PASONA (6 stages) / PASBECONA (9 stages) canon. Hands the `draft` envelope field to `copywriting-voice-quadrant-stage`.
 
 ## Triggers
 
@@ -111,7 +111,7 @@ The `copywriter` appends to envelope:
   "form": "long-form-pasona",
   "framework_selected": "pasona | new-pasona | pasbecona",
   "draft": "<stage-labeled long-form copy>",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -121,7 +121,7 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 5 | `copywriting-voice-quadrant-stage` | copywriter |
 | 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — 景品表示法 / FTC + dark-pattern check on narrow-down + action stages |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — PASONA stage adherence + length band match |
@@ -129,4 +129,4 @@ After this skill completes, orchestrator runs (in order):
 
 ## Next Stage
 
-Hand off `draft` + full envelope to `copywriting-voice-positioning-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.
+Hand off `draft` + full envelope to `copywriting-voice-quadrant-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.

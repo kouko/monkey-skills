@@ -83,7 +83,7 @@ Phase 1 — Type ID            protocol Step 1   form type + framework detected
 Phase 2 — Diagnose           protocol Step 2   issue list by severity
 Phase 3 — Suggest            protocol Step 3   improvement recommendations
                                                (+ optional rewrites)
-Phase 5 — Voice Positioning  reuse copywriting-voice-positioning-stage
+Phase 5 — Voice Positioning  reuse copywriting-voice-quadrant-stage
                                                assign voice_quadrant
 Phase 6 — Voice Tone         reuse copywriting-voice-tone-stage
                                                tone_notes + voice-consistency

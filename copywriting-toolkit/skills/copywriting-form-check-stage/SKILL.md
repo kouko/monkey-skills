@@ -45,7 +45,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 - `ethics_verdict == "PASS_WITH_NOTES"` with unapplied notes → bounce to Phase 7 FIXABLE auto-revise loop
 - `draft` missing → `copywriting-<form>` (Phase 4 drafter)
 - `form` missing → `using-copywriting-toolkit` (mis-routed)
-- `voice_quadrant` / `tone_notes` missing → `copywriting-voice-positioning-stage` / `copywriting-voice-tone-stage`
+- `voice_quadrant` / `tone_notes` missing → `copywriting-voice-quadrant-stage` / `copywriting-voice-tone-stage`
 
 ## Input — Envelope Shape
 

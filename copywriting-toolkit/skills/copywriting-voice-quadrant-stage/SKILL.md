@@ -1,9 +1,9 @@
 ---
-name: copywriting-voice-positioning-stage
+name: copywriting-voice-quadrant-stage
 description: Pick voice direction (Q1-Q4) for a brand or draft on the Authority↔Affinity × Reason↔Emotion quadrant, matched to EN/ZH/JP practitioner anchors (Ogilvy / 許舜英 / 糸井 / 龔大中 etc.) + Schwartz × Quadrant routing. Use when deciding the voice register of a new brand, diagnosing a draft's quadrant, or called by the pipeline between Phase 4 draft and Phase 6 tone tuning. ボイス・ポジショニング・四象限。文案聲音象限。
 ---
 
-# copywriting-voice-positioning-stage
+# copywriting-voice-quadrant-stage
 
 Phase 5 — strategic voice positioning. Consumes a Phase 4 `draft` and tags it with a `voice_quadrant` before Phase 6 (`copywriting-voice-tone-stage`) performs tactical 4-axis tone tuning.
 
@@ -113,7 +113,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
   },
   "message_thesis": "...",
   "draft": "...",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 

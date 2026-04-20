@@ -14,7 +14,7 @@ When user brief quotes a maestro whose native language ≠ `output_language`, th
 
 - **`skills/copywriting-intake/protocols/express-mode.md`** — Option C rewritten as Quadrant Signal Mode. Dual-trigger (cross-language maestro + output_language) parsed into quadrant lookup + target-language anchor lookup; `voice_notes.user_intent_signal` preserved for audit.
 - **`agents/copywriter.md`** — Persona rule 2 rewritten: lineage matches `output_language`, not user's cited maestro. Added rules: native ideation from first keystroke, cross-tradition transplant is anti-pattern (Anti-Patterns in `voice-and-tone.md`), cross-language maestro is quadrant signal + Phase 5 names target-language native anchor.
-- **`skills/copywriting-voice-positioning-stage/SKILL.md`** — new Workflow step 5: cross-language execution anchor resolution. Output envelope `voice_quadrant` gains `execution_reference` + `user_intent_signal` fields.
+- **`skills/copywriting-voice-quadrant-stage/SKILL.md`** — new Workflow step 5: cross-language execution anchor resolution. Output envelope `voice_quadrant` gains `execution_reference` + `user_intent_signal` fields.
 
 ### Impact
 
@@ -296,7 +296,7 @@ Phase 3    copywriting-neta-injection      skippable; hybrid pre/post placement
 Phase 4    one of 5 form-specific drafters:
              copywriting-short-form / mid-form /
              long-form-pasona / long-form-extended / light-action
-Phase 5    copywriting-voice-positioning-stage
+Phase 5    copywriting-voice-quadrant-stage
 Phase 6    copywriting-voice-tone-stage
 Phase 7    copywriting-ethics-check-stage     (MUST gate, evaluator-only)
 Phase 8    copywriting-form-check-stage       (MUST gate, evaluator-only)
@@ -317,7 +317,7 @@ Router     using-copywriting-toolkit          (entry, validator, Express qualifi
 | `copywriting-long-form-pasona` | executor | Phase 4 PASONA / 新PASONA / PASBECONA (神田) |
 | `copywriting-long-form-extended` | executor | Phase 4 QUEST (Fortin 2005) / PASTOR (Edwards 2016) |
 | `copywriting-light-action` | executor | Phase 4 PREP / CREMA micro-conversions (Kaushik 2007) |
-| `copywriting-voice-positioning-stage` | executor | Phase 5 Voice Quadrant (Vaughn × Halliday) + Schwartz routing |
+| `copywriting-voice-quadrant-stage` | executor | Phase 5 Voice Quadrant (Vaughn × Halliday) + Schwartz routing |
 | `copywriting-voice-tone-stage` | executor | Phase 6 4-axis tone + Mailchimp context switching + JP lineage |
 | `copywriting-ethics-check-stage` | ops | Phase 7 MUST gate — 景表法 / FTC / dark patterns |
 | `copywriting-form-check-stage` | ops | Phase 8 MUST + SHOULD gate — framework / length / CTA |
@@ -398,7 +398,7 @@ These are **intentional scope cuts**, tracked here rather than buried in code co
 
 4. **5 `-stage` suffixes on Phase 5-8 skills** — long but semantically consistent with the pipeline framing. Rename would cascade through every cross-reference in SKILL.md / envelope.schema.json / phase-decision-tree.md. Deferred unless a dedicated naming refactor is scheduled.
 
-5. **`copywriting-voice-positioning-stage` Schwartz × Quadrant conflict has no inline worked example** — the detail lives in `standards/voice-quadrant-positioning.md §With persuasion-psychology-anchor.md Schwartz Levels`. Add worked example if user feedback shows confusion.
+5. **`copywriting-voice-quadrant-stage` Schwartz × Quadrant conflict has no inline worked example** — the detail lives in `standards/voice-quadrant-positioning.md §With persuasion-psychology-anchor.md Schwartz Levels`. Add worked example if user feedback shows confusion.
 
 6. **No Mermaid pipeline diagram** — the 9-phase ASCII diagram in README is clear but a Mermaid diagram for the bounce-back + revise-loop control flow would aid onboarding. Deferred to v1.1 documentation pass.
 

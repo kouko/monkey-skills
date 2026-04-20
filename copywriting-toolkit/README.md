@@ -24,7 +24,7 @@ Phase 4  one of:                                  mandatory
            copywriting-long-form-pasona
            copywriting-long-form-extended
            copywriting-light-action
-Phase 5  copywriting-voice-positioning-stage      mandatory
+Phase 5  copywriting-voice-quadrant-stage      mandatory
 Phase 6  copywriting-voice-tone-stage             mandatory
 Phase 7  copywriting-ethics-check-stage           mandatory, evaluator-only
 Phase 8  copywriting-form-check-stage             mandatory, evaluator-only
@@ -244,7 +244,7 @@ See [`skills/copywriting-intake/SKILL.md §Execution Paths`](skills/copywriting-
 | `copywriting-long-form-pasona` | 4 | PASONA / 新PASONA / PASBECONA (神田昌典 canonical) |
 | `copywriting-long-form-extended` | 4 | QUEST (Fortin 2005) / PASTOR (Edwards 2016) |
 | `copywriting-light-action` | 4 | PREP / CREMA micro-conversion (Kaushik 2007) |
-| `copywriting-voice-positioning-stage` | 5 | Voice Quadrant (Authority↔Affinity × Reason↔Emotion) + Schwartz routing |
+| `copywriting-voice-quadrant-stage` | 5 | Voice Quadrant (Authority↔Affinity × Reason↔Emotion) + Schwartz routing |
 | `copywriting-voice-tone-stage` | 6 | 4-axis tone + Mailchimp context-switching + JP/ZH lineage Pass 3 |
 | `copywriting-ethics-check-stage` | 7 | 景品表示法 / FTC / Cialdini misuse / dark-pattern MUST gate |
 | `copywriting-form-check-stage` | 8 | Framework adherence (8a MUST) + qualitative (8b SHOULD) |

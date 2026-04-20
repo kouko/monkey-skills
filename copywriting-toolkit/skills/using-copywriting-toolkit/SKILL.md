@@ -44,7 +44,7 @@ Phase 1  Message Confirmation      copywriting-intake (inline)     mandatory, lo
 Phase 2  Ideation                  copywriting-ideation            skippable if brief is concrete
 Phase 3  Neta Decision             copywriting-neta-injection      skippable; hybrid pre-draft or post-draft
 Phase 4  Form-Specific Draft       one of 5 workflow skills        mandatory — form selection tree below
-Phase 5  Voice Quadrant Position   copywriting-voice-positioning-stage   mandatory
+Phase 5  Voice Quadrant Position   copywriting-voice-quadrant-stage   mandatory
 Phase 6  Voice Tone Tuning         copywriting-voice-tone-stage    mandatory
 Phase 7  Ethics Gate               copywriting-ethics-check-stage  mandatory, evaluator-only
 Phase 8  Form Gate                 copywriting-form-check-stage    mandatory, evaluator-only
@@ -91,7 +91,7 @@ Q6. Neta opt-in = Yes AND neta timing = overlay (post-draft)?
     YES → Route to copywriting-neta-injection (Phase 3 overlay)
     NO  → continue
 
-Q7. → copywriting-voice-positioning-stage (Phase 5)
+Q7. → copywriting-voice-quadrant-stage (Phase 5)
 Q8. → copywriting-voice-tone-stage       (Phase 6)
 Q9. → copywriting-ethics-check-stage     (Phase 7, evaluator-only gate)
 Q10.→ copywriting-form-check-stage       (Phase 8, evaluator-only gate)
@@ -259,7 +259,7 @@ Schema rules:
 | Draft phase, long QUEST/PASTOR | `copywriting-long-form-extended` | `copywriting-long-form-extended` |
 | Draft phase, light action | `copywriting-light-action` | `copywriting-light-action` |
 | Draft done, neta overlay | `copywriting-neta-injection` | `copywriting-neta-injection` |
-| Draft done, position voice | `copywriting-voice-positioning-stage` | `copywriting-voice-positioning-stage` |
+| Draft done, position voice | `copywriting-voice-quadrant-stage` | `copywriting-voice-quadrant-stage` |
 | Voice positioned, tune tone | `copywriting-voice-tone-stage` | `copywriting-voice-tone-stage` |
 | Tone tuned, run ethics | `copywriting-ethics-check-stage` | `copywriting-ethics-check-stage` |
 | Ethics passed, run form gate | `copywriting-form-check-stage` | `copywriting-form-check-stage` |

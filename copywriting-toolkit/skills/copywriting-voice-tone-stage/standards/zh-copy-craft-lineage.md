@@ -7,7 +7,7 @@ tier: 3
 
 Tier 3 standard: fully self-contained. Deepens the voice master
 references introduced in
-`copywriting-voice-positioning-stage/standards/voice-quadrant-positioning.md`
+`copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md`
 §Q2 ZH anchors. Where the positioning canon provides 2-3 line voice
 summaries per brand, this standard provides full voice analysis:
 representative corpus, stylistic grammar patterns, generational
@@ -367,7 +367,7 @@ canon but means nothing.
 
 ## Voice selection guidance
 
-When `copywriting-voice-positioning-stage/standards/voice-quadrant-positioning.md`
+When `copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md`
 references a Q2 ZH voice, or when `copywriting-voice-tone-stage`
 calibrates ZH tone, use this standard to pick the right master:
 

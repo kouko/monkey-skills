@@ -86,7 +86,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 ### Bounce targets on violation
 
 - `draft` missing → `copywriting-<form>` (Phase 4 drafter)
-- `voice_quadrant` missing → `copywriting-voice-positioning-stage` (Phase 5)
+- `voice_quadrant` missing → `copywriting-voice-quadrant-stage` (Phase 5)
 - `tone_notes` missing → `copywriting-voice-tone-stage` (Phase 6)
 - `form` or `brief` missing → `copywriting-intake`
 

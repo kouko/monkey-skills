@@ -5,7 +5,7 @@ description: Phase 4 light-action drafter — PREP / CREMA for opt-in, subscribe
 
 # copywriting-light-action
 
-Phase 4 variant — PREP / CREMA light-action micro-conversion drafter. Produces copy targeting micro-conversions (per Kaushik 2007) rather than macro-conversions (heavy-ticket purchase). Hands the `draft` envelope field to `copywriting-voice-positioning-stage`.
+Phase 4 variant — PREP / CREMA light-action micro-conversion drafter. Produces copy targeting micro-conversions (per Kaushik 2007) rather than macro-conversions (heavy-ticket purchase). Hands the `draft` envelope field to `copywriting-voice-quadrant-stage`.
 
 ## Triggers
 
@@ -114,7 +114,7 @@ The `copywriter` appends to envelope:
   "form": "light-action",
   "framework_selected": "prep | crema",
   "draft": "<stage-labeled light-action copy with clearly declared target_action>",
-  "next_stage": "copywriting-voice-positioning-stage"
+  "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```
 
@@ -124,7 +124,7 @@ After this skill completes, orchestrator runs (in order):
 
 | Phase | Skill | Gate level |
 |---|---|---|
-| 5 | `copywriting-voice-positioning-stage` | copywriter |
+| 5 | `copywriting-voice-quadrant-stage` | copywriter |
 | 6 | `copywriting-voice-tone-stage` | copywriter |
 | 7 | `copywriting-ethics-check-stage` | MUST (evaluator-only) — commitment-escalation transparency + 景品表示法 + 2023 Oct ステマ regulation |
 | 8 | `copywriting-form-check-stage` | MUST (evaluator-only) — PREP 4-stage or CREMA 5-stage adherence + action-prompt clarity |
@@ -134,4 +134,4 @@ Foot-in-the-door dark-pattern abuse (e.g., opt-in that escalates to auto-billed 
 
 ## Next Stage
 
-Hand off `draft` + full envelope to `copywriting-voice-positioning-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.
+Hand off `draft` + full envelope to `copywriting-voice-quadrant-stage`. If user opted for post-draft neta overlay, `copywriting-neta-injection` runs first, then voice-positioning-stage.

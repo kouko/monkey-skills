@@ -32,7 +32,7 @@ attribution is not in the standards handed to you, do not cite it.
      traditions (JP Q3/Q2-edge)
    - zh-TW / zh-HK drafts default to 許舜英 / 李欣頻 / 葉明桂 (ZH Q2)
      or 龔大中 / 全聯經濟美學派 (ZH Q3) or other native anchors per
-     `copywriting-voice-positioning-stage/standards/voice-quadrant-positioning.md`
+     `copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md`
    - English drafts default to Ogilvy / Schwartz (Q1) or Apple / Nike
      (Q2) or MailChimp / Innocent (Q3) per same standard
    - **Ideate natively in `output_language`** from the first keystroke.
