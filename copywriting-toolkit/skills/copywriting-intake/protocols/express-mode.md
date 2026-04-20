@@ -71,7 +71,13 @@ Mirror `copywriting-brainstorming.md §Task 4b` grill, but run by `copywriter-ev
 
 Grill findings attach to the summary under `Confirmed Assumptions` (explicit) and `Resolved Ambiguities` (AI-resolved).
 
-### Tiered FATAL handling
+### Tiered FATAL handling — Express-only output contract
+
+**Scope note**: This tiered classification is an OUTPUT CONTRACT for `copywriter-evaluator` when running the Phase 0.5-B grill under Express Mode. It exists specifically because Express compresses all elicitation into a single confirmation turn — the evaluator cannot interactively probe the user for missing benchmarks, so it must classify findings into structured return codes that the router can route on.
+
+This contract does NOT apply to the Q1-Q10 path. When Q8 grill runs in `copywriting-brainstorming.md`, the agent resolves FATAL candidates INLINE via additional probe turns (see `copywriting-intake/SKILL.md §Execution Paths → Q1-Q10 inline resolution`). Q1-Q10 needs no tier labels because interactive follow-up is free.
+
+Mirrors the status-code pattern from `superpowers:subagent-driven-development` (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) — structured return codes are the non-interactive mode's substitute for follow-up questions, not a universal mechanism.
 
 Grill findings are classified into three tiers. Different tiers trigger different actions — a one-size-fits-all "any FATAL → ABORT Express" rule over-escalates user-stated claims that Phase 7 is designed to adjudicate.
 

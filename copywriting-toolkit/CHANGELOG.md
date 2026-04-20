@@ -1,5 +1,27 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.0.3 — 2026-04-20 (grill resolution strategy scope clarification — superpowers-aligned)
+
+Post-v1.0.2 incomplete-brief E2E test surfaced a protocol gap: the tier taxonomy (T1/T2/T3) was defined only in `protocols/express-mode.md §Tiered FATAL handling` but `copywriting-brainstorming.md §Q8` (cp'd byte-identical from `domain-teams:copywriting-team`) didn't reference it. A rigorous agent running Q1-Q10 could either over-escalate (abort on every FATAL candidate) or under-escalate (resolve inline but lose the carry-forward metadata).
+
+**Design question**: should the gap be closed by unifying both paths under a shared tier SSOT, or by scoping tier logic to Express-only and declaring Q1-Q10 inline-resolving?
+
+Consulted `superpowers` precedent — `brainstorming` (interactive) and `subagent-driven-development` (status codes: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) are kept as **two separate skills with different return contracts**. `superpowers` explicitly does NOT unify interactive and non-interactive paths. Tier codes are the non-interactive mode's substitute for follow-up questions, not a universal mechanism.
+
+Applied the same pattern:
+
+- `protocols/express-mode.md §Tiered FATAL handling` — added Scope note at top: tier classification is an OUTPUT CONTRACT for `copywriter-evaluator` under Express grill specifically, analogous to subagent status codes. Does NOT apply to Q1-Q10.
+- `copywriting-intake/SKILL.md §Execution Paths` — extended with §Grill resolution strategy differs by path section. Documents:
+  - Q1-Q10 inline probe-and-resolve (A/B/C option menu at Q8; no tier concept)
+  - Express structured tier return (T1/T2/T3 classification)
+  - Explicit §Rationale for not unifying citing `superpowers` precedent
+- Did NOT modify `copywriting-brainstorming.md` (cp'd, byte-identical — copy-first).
+- Did NOT create a shared tier-SSOT file (rejected per superpowers pattern).
+
+No behavioural logic changed — this is a documentation-contract clarification. Both paths were already working correctly in E2E tests; v1.0.3 makes the design intent explicit so future agents don't need to "apply by analogy".
+
+plugin.json bumped 1.0.2 → 1.0.3.
+
 ## v1.0.2 — 2026-04-20 (Fix #6 rubric reconciliation)
 
 Post-v1.0.1 re-test found one internal contradiction in Fix #6 (word-count band adherence in Phase 8 8b): the rubric example said "新 PASONA at 1500 chars → 🟡" but the threshold rule stated "≤60% of band floor → 🔴". 1500 / 3000 floor = 50%, which falls under the ≤60% rule → actual verdict should be 🔴, not 🟡 as the example claimed.

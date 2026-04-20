@@ -51,6 +51,40 @@ Both paths produce the same output envelope shape and both run the same Intake C
 
 Route selection is driven by the router; this skill accepts whichever protocol the router dispatches and honours abort/fallback signals (Express → Q1-Q10 fallback on grill FATAL, synthesis Level 1 gap, or gate NEEDS_REVISION).
 
+### Grill resolution strategy differs by path (by design)
+
+The two paths handle Q8 grill FATAL candidates differently — this bifurcation is intentional, mirrors `superpowers:brainstorming` (interactive) vs `superpowers:subagent-driven-development` (status-coded return), and is NOT a protocol drift to be reconciled:
+
+**Q1-Q10 path — inline probe-and-resolve** (interactive)
+
+When Q8 grill surfaces a FATAL candidate (景表法 / FTC / ステマ / dark-pattern / unsubstantiated claim), the agent resolves it INLINE before emitting the Understanding Summary:
+
+1. Agent probe: surface the specific concern to the user in plain language, cite the legal / ethical surface (e.g., 景表法 §5-2 有利誤認).
+2. Agent offers 3 structured options:
+   - **(A) Supply substantiation** — user provides benchmark / third-party data / certification.
+   - **(B) Rewrite to avoid** — drop the claim and replace with experiential / factual framing the writer can defend.
+   - **(C) Drop the claim** — remove entirely; brief proceeds without it.
+3. User picks → agent records decision in `Confirmed Assumptions` → continues to Q9 Summary.
+4. If user cannot decide after one probe round (replies vague, off-topic, or asks agent to decide) → agent BLOCKED status, halt and ask human partner per `superpowers:executing-plans §When to Stop and Ask for Help`.
+
+**Q1-Q10 has NO tier concept** (T1/T2/T3). Tier classification is an Express Mode output contract (see `protocols/express-mode.md §Tiered FATAL handling §Scope note`). In Q1-Q10, every FATAL candidate is resolved interactively — there is no "carry to Phase 7 with benchmark-required flag" because Q8 probe-and-resolve already surfaced the benchmark requirement to the user in the same session.
+
+**Express path — structured tier return** (non-interactive)
+
+When Phase 0.5-B grill (run by `copywriter-evaluator` in single-shot mode) surfaces a FATAL candidate, it cannot probe — it classifies the finding into T1 / T2 / T3 per `protocols/express-mode.md §Tiered FATAL handling`. Router routes based on the tier:
+
+- T1 (AI-inferred) → ABORT Express → fall back to Q1-Q10 (interactive mode can probe).
+- T2 (user-stated + benchmark-missing) → CARRY to Phase 7 with `benchmark_required_before_phase_7` flag in `Confirmed Assumptions`. User sees the flag in Phase 0.5-C single-turn confirmation and can pre-resolve, OR Phase 7 adjudicates.
+- T3 (user-stated + outright violation) → ABORT Express → fall back to Q1-Q10 (the claim itself needs discussion, not benchmark).
+
+Tier logic exists ONLY for Express because Express lacks the interactive probe option. Q1-Q10 has no need for it.
+
+### Rationale for not unifying
+
+Following `superpowers` precedent: `brainstorming` and `subagent-driven-development` are treated as two distinct skills with different return contracts, not one unified process. Interactive and non-interactive modes legitimately have different resolution strategies — unifying them would force Q1-Q10 to adopt tier labels it doesn't need, or force Express to leave questions open for a probe turn it cannot execute.
+
+Each path is clean within its own context. The rhetoric divergence (tier vs probe) is a feature, not a bug.
+
 ## Phase 0 — Brief Intake (Q1-Q10 path)
 
 Drive the Q1-Q10 sequence in `protocols/copywriting-brainstorming.md`.
