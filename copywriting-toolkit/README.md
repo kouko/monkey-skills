@@ -39,86 +39,117 @@ Full routing + validation + bounce-back topology:
 
 ```mermaid
 flowchart TD
-    Start([User brief]) --> Router[using-copywriting-toolkit<br/>router + validator]
+    Start([User brief OR resumed envelope]) --> Router[using-copywriting-toolkit<br/>router + validator<br/>single enforcement point]
 
-    Router -->|Shape detect| ShapeCheck{Shape?}
-    ShapeCheck -->|A - new brief| Q05[Step 0.5<br/>Express qualification]
-    ShapeCheck -->|B - external copy| Audit[copywriting-audit-stage<br/>Phase 5-8 on external copy]
-    ShapeCheck -->|C - mid-pipeline| Route[Route by envelope.phase]
+    Router --> PreCheck{Entry type?}
+
+    PreCheck -->|Shape A<br/>new raw brief| Q05[Step 0.5<br/>Express qualification]
+    PreCheck -->|Shape B<br/>external copy + review| AuditEntry[copywriting-audit-stage<br/>Phase 1 Type ID]
+    PreCheck -->|Shape C<br/>envelope present| ReentryChk[Step 2.3/2.4 re-entry checks]
+    PreCheck -->|Shape D<br/>explicit skill name| DirectDispatch[Direct dispatch<br/>no routing]
+
+    ReentryChk -->|total_retries >= 4<br/>OR bounce_round >= 3| Halt([HALT<br/>ask user])
+    ReentryChk -->|violation present| BounceRoute[Route to violation.bounce_to<br/>bounce_round++]
+    ReentryChk -->|unknown phase| Reject([Reject malformed<br/>structured error])
+    ReentryChk -->|immutable field dropped| BounceWriter[Route to last-writer skill]
+    ReentryChk -->|stale / missing L1| Q1Q10
+    ReentryChk -->|valid continuation| PhaseRoute[Route by envelope.phase<br/>to next phase]
+
+    BounceRoute --> Q1Q10
+    BounceWriter -.-> P5 & P6 & P0
+    PhaseRoute -.-> P2 & P4 & P5 & P6 & P7 & P8
 
     Q05 -->|ALL L1 present<br/>no red flag| Express[copywriting-intake<br/>Express Mode<br/>synthesis + 1-turn confirm]
     Q05 -->|L1 gaps OR<br/>red flag| Q1Q10[copywriting-intake<br/>Q1-Q10 multi-turn]
 
-    Express --> Grill_E[Phase 0.5-B grill<br/>T1/T2/T3 classify]
-    Q1Q10 --> Grill_I[Q8 grill<br/>inline probe-and-resolve]
+    Express --> Grill_E[Phase 0.5-B grill<br/>T1/T2/T3 classify<br/>Express-only output contract]
+    Q1Q10 --> Grill_I[Q8 grill<br/>inline probe-and-resolve<br/>no tier concept]
 
-    Grill_E -->|T1 AI-inferred FATAL| FallQ1Q10[ABORT - force Q1-Q10]
+    Grill_E -->|T1 AI-inferred FATAL| FallQ1Q10[ABORT Express<br/>force Q1-Q10]
     Grill_E -->|T3 outright violation| FallQ1Q10
-    Grill_E -->|T2 user-stated + benchmark missing| Confirm
+    Grill_E -->|T2 user-stated<br/>benchmark missing| Confirm
     Grill_E -->|PASS / PASS_WITH_NOTES| Confirm[Single-turn confirmation<br/>Understanding Summary]
-
-    Grill_I --> Q9[Q9 Understanding Summary]
+    Grill_I --> Q9[Q9 Understanding Summary<br/>3-option probe menu: supply/rewrite/drop]
     FallQ1Q10 --> Q1Q10
 
-    Confirm --> IntakeGate[Intake Completeness<br/>MUST gate]
-    Q9 --> IntakeGate
-
-    IntakeGate -->|PASS| Ideation{Phase 2?}
-    IntakeGate -->|NEEDS_REVISION| Q1Q10
+    Confirm --> P0[Intake Completeness<br/>MUST gate]
+    Q9 --> P0
+    P0 -->|PASS| Ideation{Phase 2 ideation?}
+    P0 -->|NEEDS_REVISION| Q1Q10
 
     Ideation -->|yes| P2[copywriting-ideation<br/>Mandalart + KJ + Taniyama + VS]
     Ideation -->|skip| Neta1{Phase 3 pre-draft?}
     P2 --> Neta1
 
-    Neta1 -->|bake-in| P3_Pre[copywriting-neta-injection<br/>4 techniques, Path A-D]
+    Neta1 -->|bake-in<br/>default per brief heuristic| P3_Pre[copywriting-neta-injection<br/>Phase A-D WebSearch<br/>+ Neta Safety gate]
     Neta1 -->|skip| P4
     P3_Pre --> P4
 
-    P4[Phase 4 drafter<br/>short / mid / long-pasona / long-extended / light-action]
-    P4 --> Neta2{Phase 3 post-draft?}
+    P4[Phase 4 drafter<br/>short / mid / long-pasona /<br/>long-extended / light-action]
+    P4 --> Neta2{Phase 3 overlay?}
 
-    Neta2 -->|overlay| P3_Post[copywriting-neta-injection<br/>overlay + Neta Safety gate]
+    Neta2 -->|overlay<br/>default when ambiguous| P3_Post[copywriting-neta-injection<br/>overlay + Neta Safety gate]
     Neta2 -->|skip| P5
     P3_Post --> P5
 
-    P5[Phase 5<br/>voice-positioning-stage<br/>Q1-Q4 + Schwartz routing]
-    P5 -->|voice_quadrant.schwartz_alignment<br/>= conflict_flagged?| P6[Phase 6<br/>voice-tone-stage<br/>4-axis + Pass 3 lineage]
-    P6 --> P6Pass3{Pass 3 trigger?}
-    P6Pass3 -->|JP: output_language=ja<br/>OR maestro in JP set<br/>OR Q3 + state-proposal| JPL[Pass 3a<br/>jp-copy-craft-lineage.md]
-    P6Pass3 -->|ZH: output_language=zh<br/>OR maestro in ZH set<br/>OR Q2 + TW 都會| ZHL[Pass 3b<br/>zh-copy-craft-lineage.md]
-    P6Pass3 -->|none| P7
+    P5[Phase 5<br/>voice-positioning-stage<br/>Q1-Q4 + Schwartz routing<br/>emits schwartz_alignment]
+    P5 --> P6[Phase 6<br/>voice-tone-stage<br/>Pre-pass consumes schwartz_alignment<br/>+ 4-axis Pass 1 + context Pass 2]
+
+    P6 --> P6Dual{Pass 3 trigger?}
+    P6Dual -->|JP only<br/>ja / JP maestro / Q3+state-proposal| JPL[Pass 3a<br/>jp-copy-craft-lineage.md]
+    P6Dual -->|ZH only<br/>zh / ZH maestro / Q2+TW 都會| ZHL[Pass 3b<br/>zh-copy-craft-lineage.md]
+    P6Dual -->|both triggers match<br/>e.g. 糸井+zh-TW| P6Conflict[Emit violation<br/>bounce_to: intake<br/>router handles bounce]
+    P6Dual -->|none| P7
     JPL --> P7
     ZHL --> P7
+    P6Conflict -.-> Router
 
-    P7[Phase 7<br/>ethics-check-stage<br/>MUST gate]
-    P7 -->|PASS| P8[Phase 8<br/>form-check-stage<br/>8a MUST + 8b SHOULD]
-    P7 -->|NEEDS_REVISION<br/>景表法 / FTC FAIL_FATAL| LoopP4[Default re-entry:<br/>Phase 4 drafter<br/>with ethics_findings]
+    P7[Phase 7<br/>ethics-check-stage<br/>MUST gate<br/>reads brief + draft]
+    P7 -->|PASS| P8[Phase 8<br/>form-check-stage<br/>8a MUST + 8b SHOULD<br/>word-count band check<br/>schwartz_alignment consumer]
+    P7 -->|NEEDS_REVISION<br/>景表法/FTC FAIL_FATAL| LoopP4[Default: Phase 4 drafter<br/>user-override: re-submit Phase 7 /<br/>restart thesis / drop claim]
     P7 -->|PASS_WITH_NOTES| P7Fix[Auto-revise FIXABLE<br/>max 1 round]
     P7Fix --> P7
 
     P8 -->|PASS| Deliver([Deliver final copy])
-    P8 -->|NEEDS_REVISION| LoopP4
     P8 -->|PASS_WITH_NOTES| DeliverNotes([Deliver with notes])
+    P8 -->|NEEDS_REVISION<br/>framework / length / CTA| LoopP4
 
-    Audit --> P5
+    AuditEntry --> AuditDiag[Phase 2 Diagnose<br/>issue list by severity]
+    AuditDiag --> AuditSug[Phase 3 Suggest<br/>+ optional rewrite variants]
+    AuditSug --> P5
 
-    LoopP4 -->|revise_round_count < 2| P4
-    LoopP4 -->|>= 2 or total_retries >= 4| Halt([HALT - ask user])
+    AuditSug -->|N variants| VariantLoop[Per-variant sub-pipeline<br/>Phase 7 + 8 serial<br/>independent revise_round_count]
+    VariantLoop -->|each variant| P7
+    VariantLoop --> AuditReport([Audit report<br/>rewrite_variants with verdicts])
 
-    Router -.->|violation envelope<br/>bounce_to field| Halt
+    LoopP4 -->|revise_round_count < 2<br/>AND total_retries < 4| P4
+    LoopP4 -->|>= 2 OR total_retries >= 4| Halt
 
     classDef router fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     classDef gate fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef draft fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
     classDef halt fill:#ffebee,stroke:#c62828,stroke-width:2px
     classDef deliver fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef audit fill:#f9fbe7,stroke:#827717,stroke-width:2px
 
-    class Router,Q05 router
-    class IntakeGate,P7,P8,P7Fix gate
+    class Router,Q05,PreCheck,ReentryChk,BounceRoute,BounceWriter,PhaseRoute,P6Conflict router
+    class P0,P7,P8,P7Fix gate
     class P4,P5,P6,JPL,ZHL,P2,P3_Pre,P3_Post draft
-    class Halt,LoopP4,FallQ1Q10 halt
-    class Deliver,DeliverNotes deliver
+    class Halt,LoopP4,FallQ1Q10,Reject halt
+    class Deliver,DeliverNotes,AuditReport deliver
+    class AuditEntry,AuditDiag,AuditSug,VariantLoop audit
 ```
+
+**Diagram legend**:
+
+- 🔵 **Router nodes** (light blue) — `using-copywriting-toolkit`, Step 0.5 qualification, Step 2.3/2.4 re-entry checks, Phase 6 dual-trigger violation emit, and intermediate routing decisions. All bounce logic lives here (L2 single enforcement point).
+- 🟠 **Gates** (light orange) — Intake Completeness MUST + Phase 7 ethics MUST + Phase 8 form 8a/8b.
+- 🟣 **Drafting skills** (light purple) — Phase 2/3/4/5/6 where `copywriter` agent produces artifacts.
+- 🟡 **Audit sub-pipeline** (light yellow) — Phase 1/2/3 of audit-stage + per-variant re-gating loop.
+- 🔴 **HALT / abort paths** (light red) — retry-cap exhaustion, malformed envelope rejection, Q1-Q10 fallback.
+- 🟢 **Delivery** (light green) — final artifact exit points.
+
+Dashed edges represent routing hand-offs (router-mediated), solid edges are direct pipeline flow.
 
 ## Two Execution Paths for Intake
 
