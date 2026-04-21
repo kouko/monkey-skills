@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Technical-specific vocabulary deployed at sentence level so reader absorbs domain knowledge through the grain of the prose itself; author recedes behind accumulated particulars, letting objects and quoted experts carry meaning.
 
-**Native critical read** (5):
+**Native critical read**:
 - "structure" — McPhee's own term for load-bearing skeleton of a piece (*Draft No. 4*, FSG 2017, makes it a noun of craft)
 - "greenlight writing" — McPhee's term for first-draft permission to write badly until shape appears (*Draft No. 4* 2017, title essay)
 - "Art of Nonfiction No. 3" Paris Review (2010, Peter Hessler interviewing) — Hessler reads McPhee as "factual writing that reads as carefully as a poem"
 - "fact-pieces" — McPhee's own register-word for his form (*Draft No. 4* passim)
 - Sam Anderson (NYT Magazine, 2017): McPhee's "prose of unobtrusive exactness"
 
-## Prose mechanics (8)
+## Prose mechanics
 - **Technical noun introduced bare, then deepened** — first instance drops term cold ("batholith", "xenolith", "jump shot", "Valencia"); second instance re-uses as if reader now owns it. No glossing parenthetical
 - **Declarative + concrete modifier; adjectives earn place by specificity** — "small, shrewd eyes" beats "piercing eyes"; numerical or measurable modifiers preferred
 - **Quotation integration without speech-verbs stack** — expert quoted, then McPhee's sentence picks up the noun the expert used; avoid "he explained", "she noted" chains
@@ -31,7 +31,7 @@ date: 2026-04-21
 - **Proper nouns preferred over category nouns** — "a Valencia" not "an orange"; "the Sierra" not "the mountains"; "Bradley" not "the player"
 - **No editorial adverbs** ("remarkably", "incredibly", "surprisingly") — the fact is allowed to be remarkable without narration
 
-## Examples (8 from 5 works)
+## Examples
 - "A basketball player, as he goes up for a shot, elevates his physical and competitive instincts to a level that is well above his own mental reach." (*A Sense of Where You Are*, 1965)
 - "When Bradley, working against the Seton Hall defense, drove one foot forward into what appeared to be a perfectly set swan dive, and tossed the ball over his shoulder and into the basket, he did not seem to consider the manoeuvre unusual." (*A Sense of Where You Are*, 1965)
 - "An orange, like any other fruit, is the ovary of a flower." (*Oranges*, 1967 — opening: specialist term dropped bare, no gloss)

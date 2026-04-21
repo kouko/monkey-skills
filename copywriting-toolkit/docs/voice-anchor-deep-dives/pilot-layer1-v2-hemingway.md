@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Convey emotional weight through omitted interior and flat concrete surface — declarative sentences, named physical objects, and dialogue do the lifting; feeling registers as pressure under the sentence, never as stated content.
 
-**Native critical read** (5):
+**Native critical read**:
 - "iceberg theory / theory of omission" — "If a writer of prose knows enough of what he is writing about he may omit things that he knows and the reader… will have a feeling of those things as strongly as though the writer had stated them." (Hemingway, *Death in the Afternoon*, 1932, Ch. 16)
 - "I always try to write on the principle of the iceberg. There is seven-eighths of it under water for every part that shows." (Paris Review Art of Fiction No. 21, 1958)
 - "the one true sentence" — "All you have to do is write one true sentence. Write the truest sentence that you know." (*A Moveable Feast*, 1964)
 - "grace under pressure" (Hemingway letter to Maxwell Perkins, April 1926; Dorothy Parker *New Yorker* profile, 30 Nov 1929)
 - "a vocabulary shrunk to a handful of Anglo-Saxon monosyllables; a syntax confined to the kindergarten simplicity of the compound sentence linked by *and*." (Harry Levin, *Kenyon Review*, 1951)
 
-## Prose mechanics (8)
+## Prose mechanics
 - Default clause shape: subject + concrete verb + named object. Average sentence <15 words. Compound sentences joined by *and* (polysyndeton), not subordinated by *because / although / while*
 - Adjective elision: zero or one adjective per noun; when used prefer physical (*cold, hard, clean, dry, good*) over evaluative (*beautiful, tragic, meaningful*). Ban abstract nouns of feeling (*love, despair, grief*) from narration
 - Verb selection: plainest Anglo-Saxon verb (*was, went, drank, looked, said*). Forbid Latinate substitution (*observed, consumed, departed*). *Said* is near-sole dialogue tag
@@ -31,7 +31,7 @@ date: 2026-04-21
 - Polysyndeton discipline: *and…and…and* binds parallel sensory items in ONE sentence (2-4 items max). Do not escalate to run-on
 - Dialogue semantic density: characters talk around the subject, never name it (abortion in "Hills"; death in "Clean"; war-wound in "Farewell")
 
-## Examples (8 from 5 works)
+## Examples
 - "The hills across the valley of the Ebro were long and white. On this side there was no shade and no trees and the station was between two lines of rails in the sun." ("Hills Like White Elephants", 1927)
 - "'It's really an awfully simple operation, Jig,' the man said. 'It's not really an operation at all.' The girl looked at the ground the table legs rested on. 'I know you wouldn't mind it, Jig. It's really not anything. It's just to let the air in.' The girl did not say anything." ("Hills Like White Elephants", 1927)
 - "It was late and everyone had left the cafe except an old man who sat in the shadow the leaves of the tree made against the electric light." ("A Clean, Well-Lighted Place", 1933)

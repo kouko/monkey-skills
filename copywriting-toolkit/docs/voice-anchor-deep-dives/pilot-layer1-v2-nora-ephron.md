@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Deliver a hard, often unflattering observation about aging, female bodies, domestic failure, or New York life — then land the sentence with a deadpan punchline that converts private embarrassment into shared adult comedy. The register is confessional but brisk; refuses both sentimentality and grievance.
 
-**Native critical read** (5):
+**Native critical read**:
 - "self-deprecation without self-pity" — recurring descriptor in NYT obituary (2012) and Ephron retrospectives
 - "everything is copy" — Ephron's own lifelong maxim (inherited from mother Phoebe Ephron), cited as essayist's contract with reader: private material becomes public text without apology (HBO doc title, 2015)
 - "personal essay" in the Didion / Ephron / Dunham line (Sloane Crosley *NYT Book Review*; Ariel Levy *New Yorker* profile 2009) — first-person as investigative instrument, not therapy
 - "companionably neurotic" (NYT obituary 2012) — reader addressed as friend who already shares the complaint
 - "the Dorothy Parker of her generation" (common critical shorthand, NYT / New Yorker) — epigrammatic wit anchored to specific urban-female sensibility
 
-## Prose mechanics (8)
+## Prose mechanics
 - **Punchline-after-vulnerability**: stage admission of inadequacy, bodily decline, or minor humiliation in clause 1; land flat rhythmically shorter punchline in clause 2. Never reverse the order
 - **List-as-argument**: when subject is loss, aging, or grievance, convert to bare numbered or comma-chained list. Specificity beats adjectives. (*I Remember Nothing* "What I Will Miss / What I Won't Miss" template)
 - **Concrete noun over abstract feeling**: "my neck," "egg-white omelette," "a bad cabbage strudel," "reading glasses" — never "aging," "regret," "mortality". The noun does emotional work
@@ -31,7 +31,7 @@ date: 2026-04-21
 - **No therapy vocabulary**: forbid "healing," "journey," "closure," "growth". Treat feeling through action and object
 - **Short paragraphs, periodic sentence**: 2-4 sentences per paragraph; final sentence almost always shortest, often one clause
 
-## Examples (9 from 4 works)
+## Examples
 - "I feel bad about my neck." (*I Feel Bad About My Neck*, 2006, title essay opening)
 - "Oh, how I regret not having worn a bikini for the entire year I was twenty-six. If anyone young is reading this, go, right this minute, put on a bikini, and don't take it off until you're thirty-four." (*I Feel Bad About My Neck*, 2006)
 - "Reading is everything. Reading makes me feel I've accomplished something, learned something, become a better person. Reading makes me smarter. Reading gives me something to talk about later on. Reading is the unbelievably healthy way my attention deficit disorder medicates itself." (*I Remember Nothing*, 2010, "On Rapture")
@@ -44,7 +44,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLMs default to "sassy older woman voice" — pile on italics, exclamation points, parenthetical asides, "let me tell you, honey"-style filler. Real Ephron is drier, shorter, more list-based, never condescends to reader with winks. Second failure: sentimental softening at paragraph close; Ephron ends on flat joke, not reassurance
-- **Mitigation** (≤15 words): "One italic per paragraph max; end on the flat joke, never the hug"
+- **Mitigation**: "One italic per paragraph max; end on the flat joke, never the hug"
 
 ## Metadata
 - Trigger slug: `en-nora-ephron-warm-wit`

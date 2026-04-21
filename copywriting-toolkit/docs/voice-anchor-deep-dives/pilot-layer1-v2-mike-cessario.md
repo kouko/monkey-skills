@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sell the most boring category (canned water) as if it were a thrash-metal merch drop — death-metal naming register + environmentalist punk copy weaponized so the brand itself is entertainment, not advertising for a product.
 
-**Native critical read** (≥3, verbatim):
+**Native critical read**:
 - "Murder Your Thirst" — Cessario's founding tagline, stamped on every tallboy since the 2019 launch; he calls it the "three-word brief" the whole company writes against (Cessario, Kickstarter pitch video, 2019)
 - "Heavy metal marketing" — Cessario's self-applied genre label across the 2020-2023 podcast circuit (Modern Retail, Marketing Brew, How I Built This, 2022-2023)
 - "Death to Plastic" — in-house campaign platform for aluminum-over-PET advocacy, printed on cans and used as hashtag (Liquid Death packaging + social, 2019-present)
 - "Advertising as entertainment, not entertainment as advertising" — Cessario's stated North Star in almost every founder interview (Marketing Brew, 2022)
 - "We're a funny ad agency that happens to sell water" — Cessario's self-definition, repeated in 2023 How I Built This episode
 
-## Prose mechanics (≥5, actionable)
+## Prose mechanics
 - Front-load a violent transitive verb ("Murder", "Slay", "Execute", "Sever") against a mundane bodily-maintenance object ("Thirst", "Your Boredom", "Plastic"). Verb must be metal-band-grade; object must be boring-adult-life-grade. The collision IS the joke.
 - Name SKUs and campaigns with death-metal band-naming conventions: all-caps, single domain noun, optional "of" construction — "MOUNTAIN WATER", "SEVERED HEAD", "COUNTRY CLUB MASSACRE", "BERRY IT ALIVE". Never brand-safe adjectives ("refreshing", "pure", "crisp").
 - Treat the product spec as liturgy: every can, site, and ad must state "Mountain water / Sparkling water / Iced tea" in plain type adjacent to the horror imagery. The flat descriptor is the punchline that makes the metal land — remove it and the joke dies.
@@ -30,7 +30,7 @@ date: 2026-04-21
 - Deploy self-aware DTC meta-copy: name the marketing mechanism inside the copy itself ("Sell Your Soul", the actual 2021 campaign where customers signed IP rights over for a discount). The move is honesty-through-exaggeration, not wink-and-nudge.
 - Keep sentence length short and chant-ready. Body copy averages <12 words/sentence; imperative mood dominates; exclamation marks are rationed — the metal does the shouting, not the punctuation.
 
-## Examples (≥5 verbatim)
+## Examples
 - "Murder Your Thirst." (primary slogan, can + all comms, 2019-present)
 - "Death to Plastic." (packaging back-panel + hashtag, 2019-present)
 - "It's just water. We swear." (tallboy side-panel microcopy, 2019 launch)
@@ -44,7 +44,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLMs cargo-cult the surface — pile on gore verbs ("ANNIHILATE", "OBLITERATE") without the flat category-descriptor counterweight, producing tryhard edgelord copy that has no straight-man. Also: moralizing the environmental line into a paragraph instead of a militant three-word clause.
-- **Mitigation** (≤15 words): "Every metal line needs a flat category descriptor beside it; compress sustainability to one clause."
+- **Mitigation**: "Every metal line needs a flat category descriptor beside it; compress sustainability to one clause."
 
 ## Metadata
 - Trigger slug: en-mike-cessario-liquid-death-metal

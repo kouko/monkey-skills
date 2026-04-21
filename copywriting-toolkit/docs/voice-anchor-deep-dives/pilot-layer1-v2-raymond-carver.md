@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render blue-collar domestic unease as a chain of plain physical acts and flat speech — the reader senses dread, loss, or tenderness only through what the sentences refuse to name. Emotion is load-bearing but never stated.
 
-**Native critical read** (6):
+**Native critical read**:
 - "dirty realism" (Bill Buford, editorial intro *Granta* 8: "Dirty Realism — New Writing from America," 1983 — coined for the Carver / Ford / Wolff / Mason / Phillips cluster)
 - "K-Mart realism" (1980s US trade-press label, applied critically to Carver's brand-name-dropping blue-collar surfaces)
 - "commonplace but precise language … [to] endow those things — a chair, a window curtain, a fork, a stone, a woman's earring — with immense, even startling power" (Carver self-description, "On Writing," 1981)
@@ -22,7 +22,7 @@ date: 2026-04-21
 - "there has to be tension, a sense that something is imminent, that certain things are in relentless motion" (Carver, "On Writing," 1981)
 - "minimalism" (trade label Carver publicly resisted; Kim Herzinger, "Minimalism as a Postmodernism," *New Orleans Review* 1989)
 
-## Prose mechanics (8)
+## Prose mechanics
 - Declarative subject-verb-object, Anglo-Saxon lexicon first. No Latinate abstractions. Default verbs: *said, drank, sat, poured, looked, waited*. Latinate word = character reaching above their register
 - Sentence length 6-14 words; paragraphs often 1-3 sentences. Long sentences only when character is drinking or evading; length itself signals unreliability
 - Brand names and consumer objects as load-bearing nouns (*gin, Teacher's, bingo card, Jell-O, the bedroom suite in the front yard*). Specific object replaces abstract mood word
@@ -32,7 +32,7 @@ date: 2026-04-21
 - No interior-monologue abstraction about feelings. Characters never think "I was sad". They notice the sink, the sunlight, the cord on the phone. Dread routed through furniture
 - Compressed concessives stay absent. Parataxis (sentence. sentence. sentence.) replaces subordination. Hypotaxis signals writerliness, breaks register
 
-## Examples (9 from 5 stories across 2 collections)
+## Examples
 - "My friend Mel McGinnis was talking. Mel McGinnis is a cardiologist, and sometimes that gives him the right." ("What We Talk About When We Talk About Love," WWTA, 1981 — opening)
 - "The four of us were sitting around his kitchen table drinking gin. Sunlight filled the kitchen from the big window behind the sink." (WWTA, 1981)
 - "In the kitchen, he poured another drink and looked at the bedroom suite in his front yard." ("Why Don't You Dance?", WWTA, 1981)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Seduce the prospect into reading long copy as pleasure, not sales — the envelope teaser lands a curiosity-jolt, the letter unfolds as fireside narrative with commercial attraction "cleverly disguised," every word earning its slot and ornate specificity replacing generic benefit-speak.
 
-**Native critical read** (6):
+**Native critical read**:
 - "Master of the direct mail letter / there has never been anyone better, before or since" (Andy Owen, *Bill Jayme — the greatest copywriter of them all*)
 - Envelope as "hot pants on the hooker" (Jayme self-description, widely cited trade archive)
 - "Pure poetry / eloquently about anything to anyone" (Brian Kurtz, briankurtz.net/bill-jayme)
@@ -22,7 +22,7 @@ date: 2026-04-21
 - "Extremely literate and witty / terribly articulate" (Frank Johnson, Time Inc. colleague, quoted in Owen)
 - "Old-fashioned narrative as sales pitch… evocative images and nostalgia… elegance and grace" (Owen synthesis)
 
-## Prose mechanics (9)
+## Prose mechanics
 - **Envelope teaser = curiosity-jolt question or taboo specific**, never benefit headline. One vivid private-behaviour confession or domain-specific wink (bathroom door / ashtray-tip / "DAMN!" / "Filthy Rich"). One line outer, nothing competing
 - **Open letter like dinner anecdote**, not pitch. Seasonal sensory inventory or literary quote before any product mention
 - **Sprinkle "raisins"** — words forcing the eye to stop (*sex*, *death*, *free*, *filthy*, *damn*). Frank-Johnson-coined Jayme discipline; 2-3 times per page, never clustered
@@ -33,7 +33,7 @@ date: 2026-04-21
 - **Always a P.S.** — read before body by ~80% of recipients; restate offer or add one more seductive specific
 - **Read every draft aloud** — if it doesn't play as something you'd read after dinner, rewrite
 
-## Examples (10 across 5+ campaigns)
+## Examples
 - "Do you close the bathroom door even when you're the only one home?" (Psychology Today envelope teaser, 1970s; 8-year control)
 - "How much do you tip the waitress, when you're planning to steal the ashtray?" (envelope teaser, later campaign)
 - "Hatch chicks in your bra!" (Countryside magazine, letter body line)
@@ -47,7 +47,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM slides from ornate specificity into purple prose — adjective stacking, stacked metaphors, "carnival barker" register without craft-restraint that made it work. Also: manufactured taboo (bathroom / naughty) with no thematic connection to product
-- **Mitigation** (≤15 words): "Teaser must earn taboo via product logic; cap adjectives at 1 per concrete noun"
+- **Mitigation**: "Teaser must earn taboo via product logic; cap adjectives at 1 per concrete noun"
 
 ## Metadata
 - Trigger slug: `en-bill-jayme-direct-mail-seduction`

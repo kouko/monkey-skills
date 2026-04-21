@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Frame a product launch or brand stance as a civilizational turning point; recruit the reader into a lineage of dissidents by citing historical geniuses as permission structure, delivered in declarative-poetic sentences that sound like scripture read over black-and-white newsreel footage.
 
-**Native critical read** (≥3):
+**Native critical read**:
 - "advertising that celebrates the crazy ones" (Clow's recurring ECD-philosophy phrase, Adweek profile + multiple Apple keynote citations)
 - "mythic register" / "secular liturgy for the tech age" (Ad Age retrospective on Think Different)
 - "the closest thing advertising has to a sermon" (Fast Company feature on the 1997 Apple relaunch)
 - "historical-citation-as-permission" — Clow's own framing, interview re: why the spot names Einstein / Gandhi / Lennon
 - "counter-programming to the IBM rational-corporate voice" (Steven Levy, Newsweek 1997)
 
-## Prose mechanics (≥5)
+## Prose mechanics
 - **Anaphoric opening** — one repeated clause stacked 5-8 times at sentence head ("Here's to the ___. The ___. The ___."). First clause sets the reverent frame; subsequent clauses are juxtaposed nouns (misfits, rebels, troublemakers).
 - **Declarative mood only** — zero questions, zero conditionals in the manifesto body. The voice does not ask; it pronounces.
 - **Noun-triad cascades** — compress description into 3-noun bursts separated by full stops, not commas ("The misfits. The rebels. The troublemakers."). Periods give each noun ceremonial weight.
@@ -32,7 +32,7 @@ date: 2026-04-21
 - **No adjectives of marketing register** — forbidden: "amazing," "revolutionary," "breakthrough," "innovative." Permitted: "crazy," "different," "round pegs," "square holes."
 - **Present-tense verb spine** — "see," "change," "push," "invent." The voice operates outside time.
 
-## Examples (≥5 verbatim)
+## Examples
 - "Here's to the crazy ones. The misfits. The rebels. The troublemakers. The round pegs in the square holes." (Apple, "Think Different," 1997 manifesto)
 - "The ones who see things differently. They're not fond of rules. And they have no respect for the status quo." (Apple, "Think Different," 1997)
 - "You can quote them, disagree with them, glorify or vilify them. About the only thing you can't do is ignore them. Because they change things." (Apple, "Think Different," 1997)
@@ -43,7 +43,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLMs default to the LinkedIn-thought-leader pastiche of "Here's to the ___" — reverent anaphora untethered from product, stacked with generic virtue nouns ("the dreamers, the doers, the believers"), resolving to a SaaS tagline. The register collapses into self-congratulation because the historical-citation-as-permission step is skipped or replaced with generic "innovators."
-- **Mitigation** (≤15 words): "Name specific historical dissidents by single name, or cut the anaphora entirely."
+- **Mitigation**: "Name specific historical dissidents by single name, or cut the anaphora entirely."
 
 ## Metadata
 - Trigger slug: en-lee-clow-visionary-manifesto

@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Stage an argument as kinetic, competitive talk — speakers out-think each other in real time, domain jargon lands as moral weight, and a rhetorical question unlocks a declarative verdict. The aim is persuasion through velocity: the reader/listener feels outpaced, then convinced.
 
-**Native critical read** (5):
+**Native critical read**:
 - "Sorkin dialogue" / "Sorkinese" — canonical industry shorthand (Michael Schulman, *The New Yorker*, 2020)
 - "walk-and-talk" — staging vocabulary Sorkin himself credits to *Sports Night* and *The West Wing* (Sorkin *MasterClass* "Screenwriting", 2016)
 - "rhetorical Q-and-A / the Sorkin setup" (Emily Nussbaum, *The New Yorker* — "a rhetorical question answered by the same speaker a half-beat later, with escalating specificity")
 - "operatic argument" (David Fear, *Variety*, 2010 review of *The Social Network*)
 - "speechifying" (Alessandra Stanley, *NYT* review of *The Newsroom*, 2012)
 
-## Prose mechanics (7)
+## Prose mechanics
 - **Rhetorical question followed by same speaker's answer, within one beat**. Never let the foil answer; the speaker answers themselves, more specifically. Pattern: "You know what X is? X is [escalating definition]"
 - **Short, declarative moral verdict nested inside longer technical exchange**. Moral sentence 6-10 words; surrounding lines 15-25 words of jargon. Contrast in register = punch
 - **Overlapping-clause allusion + professional vocabulary in same line**. One domain term (legislative / legal / journalistic / engineering) AND one cultural allusion (Gilbert & Sullivan, Constitution, baseball, Shakespeare)
@@ -30,7 +30,7 @@ date: 2026-04-21
 - **One "I'm going to tell you what I think" moral declaration per scene, maximum**. Earn it by making preceding exchange fact-dense. Over-use = speechifying failure
 - **Professional jargon used correctly, not flavored**. If a character cites a statute, amendment, journalistic standard, engineering term, it must be accurate
 
-## Examples (9 from 5 works)
+## Examples
 - "You can't handle the truth!" (*A Few Good Men*, 1992, Col. Jessup)
 - "You want answers?" / "I want the truth!" / "You can't handle the truth!" (*A Few Good Men*, 1992 — canonical rhetorical-Q-and-answer)
 - "What's next?" (*The West Wing*, 1999-2006, recurring Bartlet walk-and-talk closer)
@@ -43,7 +43,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM over-produces rhetorical-question-plus-self-answer pattern every 2-3 lines, flattening cadence into smug monologue; jargon becomes decorative instead of load-bearing; moral declarations pile up without fact-dense setup, collapsing into speechifying
-- **Mitigation** (≤15 words): "Max one rhetorical-Q-plus-self-answer and one moral verdict per scene; jargon must be accurate"
+- **Mitigation**: "Max one rhetorical-Q-plus-self-answer and one moral verdict per scene; jargon must be accurate"
 
 ## Metadata
 - Trigger slug: `en-aaron-sorkin-rapid-fire`

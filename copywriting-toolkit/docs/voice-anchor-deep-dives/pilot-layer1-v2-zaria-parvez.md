@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Hijack the brand mascot into a horny, unhinged, perpetually-online Gen-Z persona so that a language-learning app reads as a parasocial chaos agent — every post is a bit, the product becomes the punchline, and the algorithm rewards commitment to the joke over commitment to the product.
 
-**Native critical read** (5):
+**Native critical read**:
 - "unhinged" — Parvez's own recurring descriptor (Adweek, "How a 23-year-old TikTok intern turned Duolingo's owl into a celebrity", 2022)
 - "chaos marketing / chaotic brand TikTok" (Fast Company Most Creative People coverage, 2022)
 - "It's not about the app. It's about Duo." (Parvez on inversion of product-first social, Adweek 2022)
 - "thirst-trap owl" (Business Insider "How Duolingo went viral on TikTok", Sep 2021)
 - "Duo the owl canon" — community-origin term adopted by Duolingo social team for mascot's running fictional continuity
 
-## Prose mechanics (8)
+## Prose mechanics
 - Caption ≤ 80 chars when possible; lowercase except for DUO or target celebrity's name; period optional and usually omitted
 - Mascot speaks in first-person-horny / first-person-menacing; never corporate first-person-plural ("we at Duolingo…" is forbidden)
 - Bury the product in comments, not in caption — product mention is punchline reveal, never setup
@@ -31,7 +31,7 @@ date: 2026-04-21
 - One piece of lore per post — Duo in love with Dua Lipa, Duo is dead, Duo at the Grammys — do not stack multiple jokes in one caption
 - Zero hashtags beyond #Duolingo when posting; discoverability earned by sound + comment-replies, not tag-stuffing
 
-## Examples (8 verbatim 2021-2022)
+## Examples
 - "mmm yeah step on me dua lipa" (Duolingo TikTok, 2021, Dua Lipa thirst-arc)
 - "i'm literally right here dua" (Duolingo TikTok, Nov 2021, Grammys-adjacent)
 - "duo died for your sins (and your spanish lessons)" (Duolingo TikTok, 2021, mock-funeral bit)
@@ -43,7 +43,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM defaults into "quirky brand voice" pastiche — stacks multiple jokes per caption, over-explains the trend, name-drops product in hook, inserts corporate "we"/"our users" framing, loses single-lore-beat discipline. Result reads as 2018 social-media-manager LinkedIn post cosplaying as Gen-Z, not as Duo
-- **Mitigation** (≤15 words): "One lore beat per post. Lowercase. Product in comments, never in caption"
+- **Mitigation**: "One lore beat per post. Lowercase. Product in comments, never in caption"
 
 ## Metadata
 - Trigger slug: `en-zaria-parvez-duolingo-tiktok-2021-22`

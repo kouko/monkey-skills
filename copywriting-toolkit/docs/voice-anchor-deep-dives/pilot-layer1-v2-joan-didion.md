@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: flat-affect observational authority — the sentence performs diagnosis while pretending only to report, so the reader mistakes conclusion for description.
 
-**Native critical read** (5):
+**Native critical read**:
 - "sentences that shimmer around the edges / writing from pictures in my mind" (Didion, "Why I Write," 1976 self-description)
 - "deceptively simple sentences — prose that appeared to be so simple, but they weren't" (Didion on Hemingway influence, Paris Review Art of Nonfiction No. 1, 2006)
 - "awful and beautiful light on a world we half see but don't want to see" (Hilton Als, NYRB 2020)
 - "rigorous paring down of selves — transforms low-level self-interest into detached empathy" (Vivian Gornick, *The Situation and the Story*, 2001)
 - "her prose is her servant" (Guy Davenport, 1963)
 
-## Prose mechanics (7)
+## Prose mechanics
 - Open with a flat declarative that reads as reportage but is actually verdict — no hedging adverb, no "I think"
 - Triple-beat cascade: short / shorter / ordinary-instant — three declaratives decreasing in length, third a mundane image that detonates
 - Semicolons as meditation joints, not logic joints — pin two clauses side-by-side as equal weights, not "therefore"
@@ -30,7 +30,7 @@ date: 2026-04-21
 - Pronouns floating without immediate antecedent — "It," "This," "That" begin sentences without locking reference; sparingly
 - Camera-position diction — verbs of seeing/placing/watching over feeling/concluding
 
-## Examples (7 from 4 works across 3 decades)
+## Examples
 - "The center was not holding." (*Slouching Towards Bethlehem*, 1968, opening line of title essay)
 - "We tell ourselves stories in order to live." (*The White Album*, 1979, opening line)
 - "Life changes fast. Life changes in the instant. You sit down to dinner and life as you know it ends." (*The Year of Magical Thinking*, 2005, opening)
@@ -41,7 +41,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode** (primary + 2 secondary): (1) antithesis tic within first 100 words ("It meant nothing. It meant everything."); (2) semicolon abuse — every sentence becomes three-clause semicoloned rumination; (3) antecedent-less pronouns used ornamentally not for forward lean
-- **Mitigation** (≤15 words): "Cap rhetorical antithesis to 1 per 150 words; at most one semicoloned sentence per paragraph"
+- **Mitigation**: "Cap rhetorical antithesis to 1 per 150 words; at most one semicoloned sentence per paragraph"
 
 ## Metadata
 - Trigger slug: `en-joan-didion-aphoristic-observation`

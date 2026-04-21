@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Founder-as-spokesperson deadpan: direct-to-camera sincerity cut with improv-trained absurdist asides. Converts the category's over-engineered premium pitch into a guy walking through his own warehouse explaining why the expensive version is bullshit — low-budget production becomes a feature ("the $4,500 video") because visible cheapness authenticates the cost claim.
 
-**Native critical read** (≥4):
+**Native critical read**:
 - "deadpan delivery and bold positioning" — Adweek on the DSC launch video's signature register
 - "direct attack on market over-serving" — Ben Thompson, Stratechery, 2016 on the manifesto's rhetorical stance
 - "category-defining DTC launch video" / "one of the best introductory videos of all time" — industry retrospectives (Stratechery; The Drum "World's Best Ads #19", 2022)
 - "Understanding what's funny or why the audience laughs is something you learn through the process of improv… it trains your brain to find what's funny about a situation" — Dubin, self-citation on his 8-year UCB (Upright Citizens Brigade) training (2001–2010)
 - "irreverent spirit" — Adweek framing of DSC's sustained founder-led voice across follow-up campaigns
 
-## Prose mechanics (≥6, actionable, concrete)
+## Prose mechanics
 - **Open with self-introduction + plain product summary in one breath**, no brand theatre: "Hi, I'm Mike. Founder of DollarShaveClub dot com. What is DollarShaveClub dot com? Well, for a dollar a month we send high quality razors right to your door." — the sentence rhythm is flat, declarative, deliberately unpolished.
 - **Drop the expletive feature-claim once, early, as the thesis**: "Our blades are f***ing great." One profanity per piece, thesis-position, never sprinkled. Over-use collapses the register into generic bro-voice.
 - **Build every objection-handler as a rhetorical question → absurd visual-gag answer**: "Do you think your razor needs a vibrating handle, a flashlight, a backscratcher, and ten blades? Your handsome-ass grandfather had one blade. And polio." — list-of-four escalation, then a two-beat historical zinger with `AND` doing the comic work.
@@ -31,7 +31,7 @@ date: 2026-04-21
 - **Let the visible production budget do rhetorical work**: references to the warehouse, the bear suit, the wheelbarrow of cash, the leaf-blower — each shot is cheap enough to be a punchline in itself. The sentence-level equivalent: resist adjectives that imply polish ("premium," "crafted," "thoughtfully designed").
 - **Average sentence length < 12 words**; no subordinate clauses longer than one beat. Conversational runs, not written-advertising cadence.
 
-## Examples (≥6 verbatim, 2012 DSC launch video unless noted)
+## Examples
 - "Hi, I'm Mike. Founder of DollarShaveClub dot com. What is DollarShaveClub dot com? Well, for a dollar a month we send high quality razors right to your door." (opening, 2012)
 - "Are the blades any good? No. Our blades are f***ing great." (thesis line, 2012)
 - "Each razor has stainless-steel blades, an aloe-vera lubricating strip, and a pivot head so gentle a toddler could use it." (product spec, delivered over a toddler holding a razor, 2012)
@@ -43,7 +43,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM over-indexes on profanity + bro-snark and produces 2013-2020 DTC-video pastiche (Harry's / MeUndies / Squatty Potty register). Sprinkles f-bombs, stacks absurd non-sequiturs without the rhetorical-question spine, loses the founder-sincerity substrate that makes the jokes land. Replaces specific dollar figures and named employees with generic "tired of overpaying?" filler.
-- **Mitigation** (≤15 words): "One profanity max, thesis-position; every joke answers a stated objection; name real people."
+- **Mitigation**: "One profanity max, thesis-position; every joke answers a stated objection; name real people."
 
 ## Metadata
 - Trigger slug: en-michael-dubin-dtc-founder-video

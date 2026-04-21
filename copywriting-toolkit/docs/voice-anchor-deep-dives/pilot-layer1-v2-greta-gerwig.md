@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Stage several voices at once so affection, argument, and self-discovery surface together — no single speaker owns the scene, and tenderness is carried by hyper-specific domestic detail rather than stated feeling.
 
-**Native critical read** (6):
+**Native critical read**:
 - "gentle specificity" (A.O. Scott, *NYT* review of *Lady Bird*, 2017)
 - "a symphony of female voices, overlapping and interrupting" (Manohla Dargis, *NYT* on *Little Women*, 2019)
 - "writes love as attention" (Richard Brody, *The New Yorker*, 2017)
@@ -22,7 +22,7 @@ date: 2026-04-21
 - "I wanted every line to feel like it was said in a kitchen, not a theater" (Gerwig, *NYT Magazine* profile, Nov 2017)
 - "coming-of-age as the sound of people loving each other badly" (Justin Chang, *LA Times* on *Lady Bird*, 2017)
 
-## Prose mechanics (8)
+## Prose mechanics
 - **Overlap permitted** — let one speaker finish another's sentence, or interrupt mid-clause; do NOT tidy dialogue into clean turn-taking
 - **Direct address to named beloved** — characters use each other's names inside sentences ("Marion, I don't —", "Jo, you'll —"). Names do affective work prose usually gives to adjectives
 - **Concrete object replaces abstract feeling** — "the blue dress", "the manuscript on the floor", "Sacramento"; never "loss", "longing", "identity"
@@ -32,7 +32,7 @@ date: 2026-04-21
 - **Run-on of small ordinary nouns** — three to five homely items in a row carries affection through inventory, not adjective
 - **No internal monologue spelled out** — realization lands in physical gesture (closing a door, turning down a radio), never narrated
 
-## Examples (10 from 4 works)
+## Examples
 - "I want you to be the very best version of yourself that you can be." / "What if this is the best version?" (*Lady Bird*, 2017, Marion & Christine)
 - "Do you like me?" / "Of course I love you." / "But do you like me?" (*Lady Bird*, 2017)
 - "Different things can be sad. It's not all war." (*Lady Bird*, 2017, Sister Sarah Joan)
@@ -46,7 +46,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM slips into Sundance-quirky register — whimsical objects (typewriters, polaroids), manic-pixie cadence, strained indie-whimsy metaphors ("her laugh was like a screen door"). The *ensemble* dissolves into single quirky narrator voice; overlap becomes stagey instead of lived
-- **Mitigation** (≤15 words): "No whimsy metaphors. Overlap real. Object > feeling. Name the beloved, not the emotion"
+- **Mitigation**: "No whimsy metaphors. Overlap real. Object > feeling. Name the beloved, not the emotion"
 
 ## Metadata
 - Trigger slug: `en-greta-gerwig-ensemble-intimacy`

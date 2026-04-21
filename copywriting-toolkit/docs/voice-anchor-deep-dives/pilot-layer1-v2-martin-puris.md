@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Treat the product-as-machine as a technical specification read aloud with quiet reverence; the sentence becomes a proof where engineering facts, not adjectives, carry the persuasion. Headlines name a singular mechanical truth; body copy verifies it with torque figures, chassis geometry, and test-track numbers — the reader is addressed as a fellow engineer, not a consumer.
 
-**Native critical read** (≥3, verbatim vocabulary from critics / industry):
+**Native critical read**:
 - "The Ultimate Driving Machine" — the 1975 launch tagline Puris coined when BMW had <15,000 U.S. units/year; Advertising Age later listed it among the "Top 100 Advertising Campaigns of the 20th Century" (Ad Age Special Report, 1999)
 - "Technical specification as headline" — Adweek's recurring shorthand for the Ammirati & Puris BMW template: a spec-sheet number (0-60, hp, drag coefficient) elevated to display type
 - "Precision engineering" / "fahrvergnügen of fact" — trade-press (Adweek, Automotive News) critical vocabulary distinguishing Puris-era BMW from Mercedes prestige-register and Detroit emotion-register
 - Puris on his own method (from *Comp: The Best Seven-Letter Word in Advertising*, 2011): "Give the reader one true mechanical thing, then prove it. The prose is the dynamometer."
 - Ad Age 1984 profile: Puris "writes about cars the way Road & Track writes about cars, then puts it in a magazine the reader already trusts"
 
-## Prose mechanics (≥5, actionable, concrete)
+## Prose mechanics
 - **Headline = one noun-phrase spec or one definitional claim.** No verbs-of-feeling, no second person, no promise. "The Ultimate Driving Machine." "The 3.5 liter, 24-valve answer to the question of what a sedan should be." Length target: ≤10 words, headline carries the fact.
 - **Body copy opens with a number or a part name within the first 15 words.** Torque, horsepower, valves-per-cylinder, drag coefficient, wheelbase. If you cannot lead with a measurement, the voice collapses into generic-luxury.
 - **One engineering term per sentence, defined by what it does, not what it is.** "The independent rear suspension keeps all four tires in contact with the road during a 0.83g lateral acceleration." The definition is performative; the reader learns by watching the part work.
@@ -30,7 +30,7 @@ date: 2026-04-21
 - **Restraint on humor and wordplay.** One dry understatement per ad, maximum. Puris's signature move is the flat declarative that implies a comparison without naming the competitor ("Perhaps the best reason for not buying a large luxury sedan is a smaller one.").
 - **Close on a mechanical fact, not a call-to-action.** Dealer locator is footer-set; the body's last sentence returns to the machine.
 
-## Examples (≥5 verbatim, with source work / year)
+## Examples
 - "The Ultimate Driving Machine." (BMW U.S. launch tagline, 1975 — continuous line through 1996)
 - "Perhaps the best reason for not buying a large luxury sedan is a smaller one." (BMW 3-Series print, c. 1983, against Cadillac / Lincoln positioning)
 - "The 3.5 liter, 24-valve answer to the question of what a sedan should be." (BMW 535i / M5 print, mid-1980s)
@@ -42,7 +42,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM defaults to *fake* technical vocabulary — "precision-engineered," "meticulously crafted," "state-of-the-art engineering" — which uses spec-sheet texture without naming any actual spec. Puris never writes "precision engineering" as adjective; he writes "0.32 drag coefficient" and lets the reader infer precision. The imitation-trap is adjective-precision replacing number-precision.
-- **Mitigation** (≤15 words): "Every engineering claim cites a number, part name, or test result — no 'precision' without a figure."
+- **Mitigation**: "Every engineering claim cites a number, part name, or test result — no 'precision' without a figure."
 
 ## Metadata
 - Trigger slug: en-martin-puris-bmw-engineering-precision

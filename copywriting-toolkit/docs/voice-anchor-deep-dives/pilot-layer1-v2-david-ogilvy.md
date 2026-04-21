@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sell through specific, verifiable fact delivered in patrician, conversational prose — long copy that reads like a thoughtful letter from a knowledgeable friend, not a shout. Headline as news-bearing promise; body as unhurried reason-why cascade that earns the reader past line five.
 
-**Native critical read** (5, mostly self-articulated):
+**Native critical read**:
 - "The consumer isn't a moron, she is your wife." (*Confessions of an Advertising Man*, 1963) — dignity of address, forbids condescension
 - "When I write an advertisement, I don't want you to tell me that you find it 'creative.' I want you to find it so interesting that you buy the product." (*Ogilvy on Advertising*, 1983) — subordinates style to persuasion-effect
 - "On the average, five times as many people read the headline as read the body copy. When you have written your headline, you have spent eighty cents out of your dollar." (*Confessions*, 1963) — headline-leverage doctrine
 - "Every advertisement should be thought of as a contribution to the complex symbol which is the brand image." (*Confessions*, 1963) — coined "brand image"
 - "I don't know the rules of grammar… If you're trying to persuade people to do something, or buy something, it seems to me you should use their language." (*Ogilvy on Advertising*, 1983) — plain-speech mandate
 
-## Prose mechanics (8)
+## Prose mechanics
 - Headline carries concrete news or specific fact — a number, a place, a named person, a product attribute. Never a pun if a fact is available
 - Long copy preferred over short; "the more you tell, the more you sell". Body 6-20 short paragraphs; numbered facts acceptable
 - Reason-why structure: headline promise → subhead amplification → numbered / bulleted substantiations → closing call → postscript
@@ -31,7 +31,7 @@ date: 2026-04-21
 - No superlatives, similes, analogies, or "obvious generalities" — one of his 11 commandments. Concrete over clever
 - P.S. is a weapon: postscripts get read; put the second-strongest selling point there
 
-## Examples (9 from 5 campaigns)
+## Examples
 - "At 60 miles an hour the loudest noise in this new Rolls-Royce comes from the electric clock." (Rolls-Royce, 1958)
 - "What makes Rolls-Royce the best car in the world? 'There is really no magic about it — it is merely patient attention to detail,' says an eminent Rolls-Royce engineer." (Rolls-Royce, 1958 subhead)
 - "The man in the Hathaway shirt." (Hathaway, 1951)

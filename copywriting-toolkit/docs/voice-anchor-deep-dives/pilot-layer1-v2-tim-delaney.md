@@ -29,7 +29,7 @@ Aphoristic brand-tagline register built on a single load-bearing sentence that r
 6. **One idea per sentence; one sentence per paragraph where possible.** White space carries the restraint.
 7. **Verbs of duration over verbs of action** — "endures", "remains", "is passed", "is kept" — passive and stative constructions are permitted and preferred.
 
-## Examples (verbatim)
+## Examples
 1. "You never actually own a Patek Philippe. You merely look after it for the next generation." *(Patek Philippe, "Generations", 1996 — core line, Tim Delaney / Leagas Delaney)*
 2. "Begin your own tradition." *(Patek Philippe, "Generations", sub-line on father-son executions)*
 3. "Some of the world's most beautiful machines are to be found inside a Patek Philippe." *(Patek Philippe, "Generations" long-copy opener, men's Calatrava execution)*
@@ -39,7 +39,7 @@ Aphoristic brand-tagline register built on a single load-bearing sentence that r
 
 ## Don't / Over-mimic
 - **Failure mode**: LLMs copy the "You never actually own…" structure literally or near-paraphrase, producing instantly-parody luxury advertising; stack heritage signifiers (founding years, founder names) in headlines, violating the withholding discipline; make sentiment explicit with "love / bond / cherish / forever" adjectives that destroy the restraint; drift into second-person across long copy, collapsing the third-person vignette frame. Categories at highest risk: watches, jewellery, spirits, real estate — all 30-year imitators of this register.
-- **Mitigation** (≤15 words): "Succession nouns carry emotion; withhold dates, price, adjectives; third-person vignette only."
+- **Mitigation**: "Succession nouns carry emotion; withhold dates, price, adjectives; third-person vignette only."
 
 ## Metadata
 - Trigger slug: en-tim-delaney-patek-philippe-stewardship

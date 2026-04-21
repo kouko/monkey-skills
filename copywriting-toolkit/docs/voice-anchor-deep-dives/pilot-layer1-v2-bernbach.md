@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Earn rational trust by confessing the product's unflattering truth first, then letting a single plain-stated benefit land without amplification; wit undercuts advertising-voice so the reader feels addressed as an adult, not a mark.
 
-**Native critical read** (5):
+**Native critical read**:
 - "The product is the hero." (Bernbach, DDB internal creed, Levenson *Bill Bernbach's Book*, 1987, p. xix)
 - "The most powerful element in advertising is the truth." (Bernbach, DDB memo "A Creative Credo for the Advertising Business", c. 1947 — reproduced Levenson 1987)
 - "Creative revolution" — AdAge retrospective term for Bernbach-led 1960s shift from USP hard-sell to idea-driven craft (AdAge, "The Advertising Century", 1999)
 - "Bernbach-ism" — Sullivan's trade name for confession-then-benefit move (*Hey Whipple, Squeeze This* 4th ed. 2012, ch. 3)
 - "Self-deprecating humor as brand honesty" (Levenson 1987 commentary, Avis campaign brief)
 
-## Prose mechanics (8)
+## Prose mechanics
 - **Confession-before-claim syntax**: lead sentence admits a disadvantage ("It's ugly", "Lemon.", "We're only No. 2"); claim arrives in sentence 2-3, never as sentence 1
 - **One-word or two-word headline when product carries argument** ("Lemon." / "Think small."); never pad with modifiers
 - **Average sentence length 8-14 words in body copy**; no compound-complex sentences. Strunk-discipline: cut every word that does not earn its keep
@@ -31,7 +31,7 @@ date: 2026-04-21
 - **Product-truth sentences use concrete nouns** — "chrome strip", "dent", "rental counter" — not "quality", "excellence", "commitment"
 - **End on understatement, not crescendo**: close with small practical consequence ("That's why", "Or buy a Volkswagen"), not aspirational flourish
 
-## Examples (9 from 4 campaigns)
+## Examples
 - "Think small." (VW, DDB, 1959)
 - "Lemon." (VW, DDB, 1960)
 - "This Volkswagen missed the boat. The chrome strip on the glove compartment is blemished and must be replaced." (VW "Lemon", 1960)

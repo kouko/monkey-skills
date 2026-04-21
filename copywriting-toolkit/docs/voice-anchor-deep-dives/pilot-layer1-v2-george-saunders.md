@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render late-capitalist indignity (theme-park serfs, chemo trials, suburban dads failing the moment) so the narrator's embarrassment and tenderness arrive simultaneously — absurdity exposes the wound, kindness refuses to moralize. Earnestness survives by routing through bureaucratic euphemism, not despite it.
 
-**Native critical read** (5):
+**Native critical read**:
 - "compassionate absurdism" (standard Saunders-crit term, used across *NYT* / *New Yorker* profile coverage since *Tenth of December*)
 - "kindness without sentimentality" — Saunders's own phrasing, Syracuse commencement address, 2013 ("What I regret most… are failures of kindness")
 - "the moral fiction of the corporate hellscape" (Joel Lovell, *NYT Magazine* cover profile, 6 Jan 2013)
 - "ritual space… the story as a device for inducing empathy" (Saunders, *A Swim in a Pond in the Rain*, 2021)
 - "the megaphone guy" — Saunders's own shorthand for noise-saturated bad prose (title essay, *The Braindead Megaphone*, 2007)
 
-## Prose mechanics (8)
+## Prose mechanics
 - **Italic interior monologue vs. plain-text exterior** — character's private thought in italics mid-paragraph; public-facing dialogue stays roman. Never collapse the two into free indirect; the tonal gap IS the voice
 - **Brand-name / trademark nouns as realist furniture, not satire punchline** — proprietary-sounding capitalized invented products ("Semplica Girls", "KidLuv", "Verbaluce™") appear mid-sentence with no italics / no scare-quotes / no wink
 - **Exclamation without irony** — cheerful managerial "!" placed on sentences that are objectively catastrophic ("Please do not touch Janet!"). The "!" is the character's genuine upbeat register; horror is ambient
@@ -31,7 +31,7 @@ date: 2026-04-21
 - **Fragment-chaining in crisis** — at peak emotion, clauses shorten to 3-6 words and pile without conjunction ("He was. It was. Oh boy."). Syntax falls apart before character does
 - **Refuse the satirical exit** — the story does not end by revealing "the system is bad." It ends with the character trying, failing, trying again, smaller this time
 
-## Examples (8 from 4 works + 2 essays)
+## Examples
 - "Goodnight Mike my darling. In our little house. Which soon will be ours." (*Pastoralia*, 2000, "The Falls" — Morse's private benediction)
 - "Always do the kindest thing." (*Lincoln in the Bardo*, 2017 — reverend's internal instruction)
 - "Are we not part of nature? And, if we are part of nature, are we not then natural?" (*CivilWarLand in Bad Decline*, 1996, title story)

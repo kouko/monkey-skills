@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Speak as the reluctant capitalist-conscience — indict the product and the purchase in the same breath that sells them; surface material supply-chain facts (cotton, water, CO2, waste) inside the sentence itself so the reader cannot separate the pitch from its cost.
 
-**Native critical read** (≥3, verbatim):
+**Native critical read**:
 - "anti-marketing marketing" (phrase attached to Patagonia / Chouinard's Don't Buy This Jacket in Harvard Business Review case + Fast Company 2013 coverage)
 - "conscience of the outdoor industry" (recurring trade-press framing, Outside Magazine profile language 2005-2016)
 - "material-transparency copy" (CSR/marketing-ethics literature describing Patagonia's Footprint Chronicles + MIR disclosure register)
 - "We're in business to save our home planet" (Patagonia Mission Statement, 2018 revision — Chouinard's own rewrite replacing the 1991 "cause no unnecessary harm" version)
 - "Let My People Go Surfing" / "MBA — Management By Absence" (Chouinard's self-coined management terms, 2005 / 2016 revised ed., Penguin)
 
-## Prose mechanics (≥5, actionable)
+## Prose mechanics
 - Open on a self-indictment sentence that names the product's harm before naming its benefit — inversion of standard ad grammar (benefit → reservation). E.g., "Don't buy this jacket" precedes any feature claim.
 - Insert hard material-fact inventory mid-paragraph as bare numerals + units (liters of water, kg CO2, grams of waste) without rhetorical softening — the numbers ARE the argument, no adjectives.
 - Use the imperative "we" and "you" in moral-address register ("we ask", "we make", "you can help") — never corporate "our customers" or third-person brand-speak.
@@ -30,7 +30,7 @@ date: 2026-04-21
 - Admit defect openly: name what the company has NOT solved (virgin polyester %, remaining PFCs, supplier non-compliance) in the same document that sells. Transparency is the proof; concealment breaks the register.
 - Cross-reference the supplier / factory / material by name (MIR register, Footprint Chronicles) — specificity is the anti-greenwash signal.
 
-## Examples (≥5 verbatim)
+## Examples
 - "Don't buy this jacket." (Patagonia full-page NYT ad, Black Friday, 25 Nov 2011 — Vincent Stanley / Chouinard approval)
 - "The R2 Jacket shown, one of our best sellers. To make it required 135 liters of water, enough to meet the daily needs (three glasses a day) of 45 people. Its journey from its origin as 60% recycled polyester to our Reno warehouse generated nearly 20 pounds of carbon dioxide, 24 times the weight of the finished product. This jacket left behind, on its way to Reno, two-thirds its weight in waste." (Don't Buy This Jacket ad body, NYT 2011)
 - "We're in business to save our home planet." (Patagonia Mission Statement, Chouinard's 2018 rewrite)
@@ -42,7 +42,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM produces greenwash-pastiche — moralizing opener ("In a world of..."), vague harm-acknowledgment without numerals, "join us on the journey" closer. Reaches for sustainability-brand cadence (Allbirds / Everlane / Oatly) and loses Chouinard's specific-material-fact register + founder-written moral-address.
-- **Mitigation** (≤15 words): "Lead with self-indictment + bare supply-chain numerals; forbid 'journey', 'innovative', 'premium', 'join us'."
+- **Mitigation**: "Lead with self-indictment + bare supply-chain numerals; forbid 'journey', 'innovative', 'premium', 'join us'."
 
 ## Metadata
 - Trigger slug: en-yvon-chouinard-patagonia-conscience

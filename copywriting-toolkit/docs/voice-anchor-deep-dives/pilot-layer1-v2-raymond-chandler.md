@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: A wise-cracking first-person narrator who converts observational detail into violent, incongruous simile — cynicism as survival posture, compassion hidden under a jaded adjective. The register anchors moral bearing inside a corrupt world via the narrator's register alone (no exposition).
 
-**Native critical read** (5):
+**Native critical read**:
 - "hard-boiled" — trade term Chandler accepted; reframed in his essay as *realism* about language, not brutality (Chandler, "The Simple Art of Murder," *Atlantic Monthly* 1944, repub. 1950)
 - "down these mean streets a man must go who is not himself mean, who is neither tarnished nor afraid" — Chandler's self-description of the Marlowe hero (same essay)
 - "wise-cracking" — conventional critical descriptor for Marlowe dialogue register (OED / *Oxford Companion to Crime & Mystery Writing*)
 - Chandler on Hammett: "Hammett gave murder back to the kind of people that commit it for reasons… He put these people down on paper as they are, and he made them talk and think in the language they customarily used" (same essay)
 - "The most durable thing in writing is style" (Chandler letter to Frederick Lewis Allen, 1948)
 
-## Prose mechanics (8)
+## Prose mechanics
 - Simile via violent incongruity, not likeness: yoke the mundane to the grotesque / sacred. Target: ONE signature simile per scene, NOT per paragraph
 - First-person declarative past tense, short-to-medium sentences (avg ~14-18 words). Subordinate clauses arrive as dry addenda, not rhetorical flourishes
 - Adjectives do moral work, not decorative: "tarnished," "shabby," "polite," "nice" are judgements disguised as description. Prefer single pointed adjective over stacked pair
@@ -31,7 +31,7 @@ date: 2026-04-21
 - No abstract nouns in narrator voice — "loneliness," "despair," "hope" are banned; render state via object, gesture, drink, smell
 - Register polarity: narrator is the ONLY cynic; the world is merely shabby. Never let a secondary character narrate irony
 
-## Examples (6 from 3 novels + essay)
+## Examples
 - "It was about eleven o'clock in the morning, mid October, with the sun not shining and a look of hard wet rain in the clearness of the foothills." (*The Big Sleep*, 1939 opening)
 - "Even on Central Avenue, not the quietest dressed street in the world, he looked about as inconspicuous as a tarantula on a slice of angel food." (*Farewell, My Lovely*, 1940 — Moose Malloy)
 - "It was a blonde. A blonde to make a bishop kick a hole in a stained glass window." (*Farewell, My Lovely*, 1940, Ch. 13)

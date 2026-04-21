@@ -14,14 +14,14 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Collapses seller-reader distance to a one-on-one hand-written letter — confessional, urgent, specific, proof-stacked — so the reader feels personally addressed rather than marketed to. Emotion lands via vulnerable admission and concrete detail; persuasion travels on the warmth of a friend who happens to be selling something.
 
-**Native critical read** (5):
+**Native critical read**:
 - "A-list copywriter" (DR-industry trade term; Halbert used it as internal caste line — *The Gary Halbert Letter* newsletter archive)
 - "Dear Friend," (Halbert's canonical salutation — *The Boron Letters* Ch.9)
 - "starving crowd" (Halbert's own principle — "the only advantage I want is a starving crowd" — *The Boron Letters* Ch.8)
 - "personal-letter-to-one-reader" (Halbert: write to ONE person, never "an audience")
 - "people are lazy, skeptical, and bored" (Halbert's recurring reader-model from newsletter — governs scannability, proof, story)
 
-## Prose mechanics (9)
+## Prose mechanics
 - Open "Dear Friend," never "Dear Customer" / "Dear Reader". Sign off first-person ("Gary") with a P.S.
 - Sentence length skews short and punchy; interleave one long rambling sentence with three to five short ones. Fragments allowed, encouraged, commonplace
 - SHOUT IN ALL-CAPS for one to three words per paragraph when marking emotional peaks — NEVER whole sentences, NEVER buzzwords. Reserve caps for the earned beat
@@ -32,7 +32,7 @@ date: 2026-04-21
 - Every section ends with forward-pulling line — a question, a cliffhanger promise, a "more on this in a minute" — so reader keeps reading
 - P.S. is load-bearing: restate core offer or plant strongest proof/urgency there
 
-## Examples (7 from 2 sources)
+## Examples
 - "The only advantage I want is a starving crowd." (*The Boron Letters*, Ch.8, Halbert to Bond Halbert, 1984)
 - "Dear Friend, As I sit down to write this letter to you…" (standard Halbert salutation, recurrent *Gary Halbert Letter* 1986-2007)
 - "Nobody wants to read your ad. They want to read something interesting — and then buy from you." (*Gary Halbert Letter* archive)
@@ -43,7 +43,7 @@ date: 2026-04-21
 
 ## Don't / Over-mimic
 - **Failure mode**: LLM reaches for generic "hype" DR cliché — stacked exclamation marks, ALL-CAPS sentences, "AMAZING!!!", manufactured urgency ("ACT NOW — LIMITED TIME!!!"). This is imitation-Halbert register that flooded 1990s-2000s affiliate copy, not Halbert himself. Halbert's force comes from restraint between peaks, specificity of confession, and the letter-to-ONE-person tone
-- **Mitigation** (≤15 words): "Write to one named friend; CAPS only at earned peaks; confess before you sell"
+- **Mitigation**: "Write to one named friend; CAPS only at earned peaks; confess before you sell"
 
 ## Metadata
 - Trigger slug: `en-gary-halbert-dr-letter`
