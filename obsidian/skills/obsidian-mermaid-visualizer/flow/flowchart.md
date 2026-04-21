@@ -100,6 +100,20 @@ graph TB
     group_id -.-> simple    # Connect at group level (creates invisible layout link)
 ```
 
+#### Subgraph direction — important limitation
+
+The `direction TB/LR/BT/RL` statement inside a subgraph **is honored only when the subgraph is self-contained OR connected at the subgraph level** (i.e. `subgraphA --> subgraphB` referencing IDs, not nodes).
+
+**If any of a subgraph's NODES are linked to nodes outside the subgraph, the `direction` is ignored** — the subgraph inherits the parent graph's direction (per Mermaid flowchart docs).
+
+| Connection pattern | Subgraph `direction` honored? |
+|---|:---:|
+| Self-contained subgraph (no external connections) | ✅ yes |
+| `subgraphA --> subgraphB` (subgraph-level link) | ✅ yes — connects subgraph IDs, not nodes |
+| `A2 --> B1` (node-to-node across subgraph boundary) | ❌ no — direction ignored, inherits parent |
+
+**Tip**: to preserve per-subgraph direction in multi-stage pipelines, route connections through subgraph IDs rather than internal nodes. See § Worked example 7 below.
+
 **Nested subgraphs** — limit to 2 levels for readability:
 
 ```mermaid
@@ -252,6 +266,49 @@ graph TB
 ```
 
 CJK labels work reliably when wrapped in `"..."` per the unified quote rule (see [obsidian-common-quirks.md § Quirk 4.5](../obsidian-common-quirks.md)). Without quotes, CJK characters in node labels may fail to render or break parsing.
+
+### Example 7: Multi-stage pipeline (subgraph direction preserved via subgraph-level linking)
+
+When you need horizontal stage-to-stage flow AND vertical sub-step flow within each stage, use **subgraph-level connections** (`stageA --> stageB`) rather than node-to-node cross-boundary links. This preserves each subgraph's internal `direction`:
+
+```mermaid
+graph LR
+    subgraph stageA["Stage A — 使用者提交"]
+        direction TB
+        A1["Submit"] --> A2["Wait 3 days"]
+        A2 --> A3["Email feedback"]
+    end
+
+    subgraph stageB["Stage B — 員工處理"]
+        direction TB
+        B1["Processed by Staff"] --> B2["Reply to customers"]
+    end
+
+    subgraph stageC["Stage C — 歸檔"]
+        direction TB
+        C1["Archive"]
+    end
+
+    stageA --> stageB
+    stageB --> stageC
+
+    style stageA fill:#f8f9fa,stroke:#868e96,stroke-width:2px
+    style stageB fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style stageC fill:#d5f9f8,stroke:#2c9ec4,stroke-width:2px
+```
+
+**Why this works**:
+- Parent graph: `LR` → stages flow left-to-right
+- Each subgraph: `direction TB` → sub-steps flow top-to-bottom WITHIN stage
+- Stages connected at **subgraph ID level** (`stageA --> stageB`), NOT via internal nodes (`A3 --> B1`)
+- Because no internal node links across subgraph boundaries, each `direction TB` is honored
+
+**Anti-pattern** — if you connected via `A3 --> B1` instead of `stageA --> stageB`, Mermaid would ignore `direction TB` and render each subgraph in parent's `LR` direction, collapsing the intended column layout.
+
+**When to use this pattern**:
+- Multi-stage workflows with distinct phases (approval / procurement / deployment etc.)
+- Each stage has multiple sequential steps you want displayed vertically
+- Overall flow should read horizontally
 
 ## Error prevention
 
