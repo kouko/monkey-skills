@@ -1,5 +1,87 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.0 — 2026-04-21 (Anchor Schema v2 — purpose-centric, individual-creator-only)
+
+Major rethinking of anchor content design. v1.3.x schema was researcher-catalog-centric (Era / Agency / Primary sources / Representative lines / Voice signature / Over-mimic / Cross-ref / Trigger slug), mixing three readers' needs in one bullet list. v2 splits into layers, keeps only **Layer 1 inside skill**, moves Layer 2/3 (biographical / agency / awards / provenance) to `docs/voice-anchor-deep-dives/` as research artifacts.
+
+### Design principle change
+
+**Anchor file content = what Pass 3 copywriter agent needs to rewrite a draft in this voice, and nothing else.**
+
+### Inclusion criterion (new)
+
+An entity qualifies as a voice anchor IF AND ONLY IF it is an **individual creator** whose sentence-level register is identifiable across a body of work:
+- Authors / novelists / essayists / screenwriters / poets
+- Named copywriters with craft-gate signature
+- Named creative directors with recognizable craft across multiple campaigns
+
+Disqualifying types (move to `format-templates/` or `register-references/`):
+- Magazines / newspapers / wire services with rotating authors
+- Institutional platforms / SNS / IP / brand mascots
+- Brand house-style guides without a single named author
+- E-commerce platforms with distributed authorship
+- Campaign-level entries without clear individual authorship
+- Documented movements / genres
+
+### Schema v2 Layer 1 (what ships in skill)
+
+```markdown
+### {anchor} ({culture} | {quadrant} {landmark})
+
+## Voice direction
+**What this register achieves**: {1 sentence}
+**Native critical read** (≥3, attributed verbatim): ...
+
+## Prose mechanics (≥5, sentence-level voice rules only)
+- ...
+
+## Examples (≥5 verbatim from ≥2 works)
+- ...
+
+## Don't / Over-mimic
+- Failure mode: ...
+- Mitigation (≤15 words): ...
+
+## Metadata
+- Trigger slug / Over-mimic risk / Pairs with form (list) / Cross-reference
+```
+
+### Delivered in v1.4.0
+
+1. **`docs/anchor-schema-v2.md`** — full schema spec + inclusion criterion + recast rules
+2. **`docs/voice-library-recast-audit.md`** — 105 anchors classified: ~52 KEEP as-is individual / ~20 RECAST institutional-to-individual / ~25 MOVE-OUT (format-templates/register-references)
+3. **`docs/anchor-schema-v2-pilot-findings.md`** — two rounds of pilot results
+4. **8 Round-1 pilot entries** (`pilot-layer1-*.md`) — mixed individual + institutional; surfaced the structural-contamination problem
+5. **4 Round-2 pilot entries** (`pilot-layer1-v2-*.md`) — individual-creator only; 100% 5/5 full pass:
+   - 向田邦子 (JP Q3 center, essayist + screenwriter)
+   - 張愛玲 Eileen Chang (zh Q2 toward-Q3, novelist + essayist)
+   - Joan Didion (EN Q2 toward-Q3, essayist + novelist; net-new entry)
+   - 糸井重里 (JP Q3 center, craft-gate master named copywriter)
+
+### What did NOT ship in v1.4.0
+
+- No changes to `standards/*.md` (v1.3.x entries preserved)
+- No changes to `voice-anchor-meta-core.md` anchor schema spec
+- No changes to Pass 3 SKILL.md routing
+- No movement of institutional entries out (deferred to Phase C)
+
+**Rationale**: v1.4.0 is pilot + design artifact. Actual migration of ~52 individual-creator anchors begins in v1.4.1+ (Phase A). This preserves v1.3.6 functionality unchanged while the design is validated.
+
+### Key schema insights surfaced during pilots
+
+1. **Biographical/structural content contaminates Prose mechanics in v1 schema** — 5+ of 8 Round-1 entries had "4-sentence contract", "byline 三欄制", "週循環 SOP", "T字型思考法", "historical-event anchoring", etc. — these are Phase 4 (framework) territory, not Phase 6 (voice) territory. Cleanly separated in v2.
+2. **Institutional anchors often cannot produce ≥5 voice-level mechanics** — 研之有物 after purification had only 3 voice mechanics (hedging preservation / 擬人 subhead / 嘆號 frequency). Rest was attribution protocol / structural template.
+3. **Individual creators produce ≥5 voice mechanics cleanly** — all 4 Round-2 entries hit 7.
+4. **Copywriter mechanics cluster** (糸井 insight): copywriter anchors gravitate to 4 families (punctuation / elision / register / mora). Acceptable but worth monitoring.
+5. **Phase 4 form taxonomy may need refinement** — 糸井 `pairs_with_form` proposed `short-form-catchcopy` / `mid-form-brand-tagline` / `light-action-lifestyle` not currently in Phase 4 enum.
+
+### Phase plan (v1.4.1+)
+
+- **Phase A** (v1.4.1-v1.5.0): migrate ~48 remaining individual-creator anchors via parallel research-agent batches
+- **Phase B** (v1.5.x): recast ~20 institutional-to-individual candidates (原研哉, 太田恵美, 金鵬遠, Kate Kiefer Lee, Richard Reed, Dan Wieden, David Abbott, etc.)
+- **Phase C** (v1.6.0): move ~25 institutional / brand / platform entries to `format-templates/` + `register-references/`
+- **Phase D** (v1.7.0): Update `voice-anchor-meta-core.md` to v2 schema; update Pass 3 SKILL.md Pass 3d to read v2; delete v1 schema compatibility shims
+
 ## v1.3.6 — 2026-04-21 (Revert `anchor_marginal_value` — premature optimization)
 
 Removes the `anchor_marginal_value` schema field added in v1.3.5 Item 3. Decision: the field was a typed slot for future Pass 3 skip-on-LOW optimization (estimated savings ~1.7% of total pipeline tokens), but:

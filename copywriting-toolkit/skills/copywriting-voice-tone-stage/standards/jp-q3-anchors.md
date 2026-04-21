@@ -49,9 +49,19 @@ canonical peer-warm voice。
 - **Era**: 1967 生; 脚本家 1987-ongoing
 - **Agency / creator**: TV ドラマ脚本家（fuji TV + TBS）; 近年は映画
 - **Primary sources**:
-  - 『東京ラブストーリー』(1991)、『カルテット』(2017)、『大豆田とわ子』(2021)、『怪物』(2023 Cannes 2023 脚本賞)
-  - BuzzFeed Japan 2017「カルテット 言葉の魔術師」
-  - 神戸大学紀要『坂元裕二脚本における日常性の演出』
+  - 『東京ラブストーリー』(1991)、『最高の離婚』(2013)、『カルテット』(2017)、『大豆田とわ子』(2021)、『怪物』(Cannes 2023 脚本賞)
+  - 『怪物』オリジナルシナリオブック (KADOKAWA, 2023, ISBN 978-4-04-000658-1)
+  - [神戸大学紀要『坂元裕二脚本における日常性の演出』](https://da.lib.kobe-u.ac.jp/da/kernel/0100481681/0100481681.pdf)
+  - [BuzzFeed Japan 2017「カルテット 言葉の魔術師」](https://www.buzzfeed.com/jp/tatsunoritokushige/quartet2017)
+  - [Festival de Cannes Best Screenplay 2023](https://www.festival-cannes.com/en/medialibrary/best-screenplay-kore-eda-for-monster/)
+  - [Real Sound『初恋の悪魔』4 人組会話劇評 2022](https://realsound.jp/movie/2022/08/post-1101347.html)
+  - [CINRA 是枝×坂元 3 年協業対談 2023](https://www.cinra.net/article/202306-kaibutsu)
+- **Representative lines**（verbatim, verified v1.4.0）:
+  - 「僕は君が好きだ。ラブじゃなくていい、ライクでいいから」『東京ラブストーリー』(1991) 赤名リカ
+  - 「みぞみぞする」『カルテット』(2017) 世吹すずめ 固有口癖
+  - 「人生に失敗はあったって、失敗した人生なんてない」『大豆田とわ子と三人の元夫』(2021)
+  - 「色鉛筆と同じ。大事なものから先になくなるの」『最高の離婚』(2013)
+  - 「月五万八千円のアパートの郵便受けに入っている三億二千万円の分譲マンションのチラシ」(批評引用定型 — 具体数字 + 固有名詞 signature)
 - **Voice signature**（原生批評用語）:
   - **言葉の魔術師**（BuzzFeed 2017 見出し定着）
   - **口語のように聞こえて、口語ではない / 特殊な言葉使い**（神戸大学紀要）
@@ -59,8 +69,22 @@ canonical peer-warm voice。
   - **リアリティと、ひどく詩的で現実離れ の同居**（カルテット評）
   - **「あるある」の言語化**（Crank-in / U-NEXT SQUARE）
   - **会話劇 / 四重奏のような会話**（カルテット固有評）
-- **LLM corpus depth**: MEDIUM（script 文字起こし流通; Cannes 2023 で批評 layer 追加）
-- **Over-mimic risk**: LOW-MEDIUM
+  - **敬語が多い / タメ口より敬語**（All About 分析）— peer-warm でも距離感を残す register marker
+  - **ドラマにならない部分までバックボーンを掘り下げる**（書評定型）
+  - **THE 坂元セリフ = 恋愛を食品・お菓子で比喩**（note 批評定型）
+  - **4 人組会話構造（2+2 / 3+1 兼ね）**（Real Sound 2022『初恋の悪魔』評）
+  - **具体数字 + 固有名詞の積層列挙**（saru.co.jp / mi-mollet）
+  - **比喩の論理飛躍 / 詭弁的論理**（note 比喩分析）
+- **Mechanical signatures**（LLM 再現 checklist）:
+  1. 抽象語（愛・孤独・希望）直接使用禁止
+  2. 具体数字・固有名詞・物品の列挙で感情を裏側から浮かせる
+  3. 敬語レイヤを peer-warm 場面でも崩さない
+  4. 造語口癖は 1 作 1 キャラ 1 語まで（みぞみぞする / ずっちぃなー）
+  5. 比喩の橋は張らない（読者補完に委ねる）
+- **Commercial crossover**: なし — **pure screenwriter register**。Q3 広告 copy 流用は二次翻案として扱う
+- **LLM corpus depth**: MEDIUM-DEEP（Cannes 2023 後 批評 layer 増加; シナリオブック流通）
+- **Over-mimic risk**: **MEDIUM-HIGH**（v1.4.0 上修自 LOW-MEDIUM — 4 人組 / 比喩 pattern / 数字積層 が identifiable fingerprint）
+  - Mitigation (14 字): "抽象語禁止。数字・固有名詞・物品で列挙し、比喩の橋は張らない"
 - **Trigger slug**: `jp-sakamoto-yuji-kotoba-no-majutsushi`
 
 ## Landmark: extreme
@@ -100,17 +124,50 @@ peer-intimate の最大値。ブランドが「午前 2 時の友人」のよう
   - 『注文の多い料理店』
   - 「雨ニモマケズ」（教科書 canon）
   - 『春と修羅』序文（「心象スケッチ」自称）
-  - 田守育啓『賢治独特の非慣習的オノマトペ』人文論集 第46巻
+  - [田守育啓 論文『賢治独特の非慣習的オノマトペ』人文論集 第46巻 PDF](https://files.core.ac.uk/download/pdf/268061882.pdf)
+  - 田守育啓『賢治オノマトペの謎を解く』大修館書店 (ISBN 978-4-469-22209-8) — 論文書籍化
   - ちくま文庫『宮沢賢治のオノマトペ集』栗原敦
-- **Voice signature**（原生批評用語）:
+  - ロジャー・パルバース『NHK 100 分 de 名著ブックス 宮沢賢治 銀河鉄道の夜』(NHK 出版, 2012, ISBN 978-4-14-081525-4)
+  - [宮澤賢治学会イーハトーブセンター企画展「宮沢賢治とオノマトペ」(2021)](https://www.kenji.gr.jp/2021/08/07/18139/)
+- **Representative passages**（v1.4.0 additions — verbatim + work context）:
+  - 「わたくしといふ現象は／仮定された有機交流電燈の／ひとつの青い照明です」『春と修羅』序 — **cosmic-scientific self-definition**
+  - 「きれいにすきとおった風をたべ、桃いろのうつくしい朝の日光をのむ」『注文の多い料理店』序 — **4-5 層名詞連鎖修飾 + sensory intake inversion**
+  - 「ドッテテ ドッテテ、ドッテテド／でんしんばしらのぐんたいは」『月夜のでんしんばしら』— **onomatopoeia as stanza backbone**
+  - 「ごとごと ごとごと ごとん ごとん ごとんごとん」『銀河鉄道の夜』ジョバンニ乗車 — **文中 onomatopoeia = page-visual rhythm**
+  - 「グララアガア、グララアガア」『オツベルと象』— **non-domesticable onomatopoeia**（辞書に存在しない音素連鎖）
+- **Voice signature**（原生批評用語 + mechanical）:
   - **心象スケッチ**（賢治自称ジャンル名、『春と修羅』序文）
   - **イーハトーブ**（賢治造語、理想郷）
   - **ほんとうのさいわい**（作中定型、賢治造語化）
-  - **非慣習的オノマトペ**（田守育啓 論文定式化）— 「ドッテテドッテテ」「ぽくぽく」「きしきし」が代表例
+  - **第四次延長 / 四次元**（賢治自称時空認識フレーム、『春と修羅』序）
+  - **仮定された有機交流電燈**（賢治造語、cosmic-self predicate landmark 句）
+  - **非慣習的オノマトペ**（田守育啓 2011 論文定式化）
+  - **音韻変化による派生オノマトペ**（田守分類軸：濁音化／母音延長／反復／domain hijacking）
+  - **桔梗いろ / 天河石 / 橄欖色**（mineral-reference 色彩 palette）
   - **あなたのすきとおったほんとうのたべもの**（『注文の多い料理店』序、批評定型引用）
-- **LLM corpus depth**: DEEP（青空文庫 + 教科書 canon）
-- **Over-mimic risk**: MEDIUM（非慣習オノマトペ leakage）
-  - Mitigation: "オノマトペは 1 piece 内で 1 回まで; cosmic-dialect の leakage を避ける"
+- **Non-conventional onomatopoeia expanded corpus**（田守 2011 より、total 158 種分類）:
+  - タンタアーン（注文／銃声）/ グララアガア（オツベル／象走行）/ どってこどってこ（どんぐり／きのこ楽隊）/ むちゃむちゃむちゃ（ツェねずみ／食事）/ すぱすぱ（又三郎／歩行）/ ぽかぽか（なめとこ山／燃焼）/ さめざめ（銀河／光り方）/ こちこち（食器・咀嚼）
+  - 共通 mechanism: **慣習形の音韻変化（濁音化・母音延長・反復）+ domain hijacking（A 領域語を B 領域に転用）**
+- **Mechanical features**（beyond "cosmic-warm" label）:
+  - **4-5 層名詞連鎖修飾**（「きれいにすきとおった風」「桃いろのうつくしい朝の日光」）
+  - **科学用語 × 叙情文 同居**（「有機交流電燈」「因果交流電燈」「セントーア露をふらせ」）
+  - **Onomatopoeia が stanza backbone**（1 行独立 + 反復で骨格構成）
+  - **Reduced color palette with mineral-reference naming**（RGB 的でなく鉱物参照）
+  - **体言止め + 副詞句独立行**（「せはしくせはしく明滅しながら」）
+- **Commercial adaptation precedent**（2020 偶然 2 社同時）:
+  - 養命酒製造「雨ニモマケズ」CM (2020-10) — 滋養強壮紐付け
+  - 東芝「世界を、止めるな。」篇 (2020-12, 有村架純朗読) — インフラ事業紐付け
+  - **Pattern**: 商業借用はほぼ「雨ニモマケズ」に限定 — 銀河鉄道 / 春と修羅 の register は CM 15-30 秒枠に乗らない
+- **LLM corpus depth**: DEEP（青空文庫 PD + 教科書 canon + 田守分類）
+- **Over-mimic risk**: **MEDIUM-HIGH**（v1.4.0 上修自 MEDIUM — 7 条 sub-guardrails 必要）
+  - **Sub-guardrails (v1.4.0 expanded, ≤15 words each)**:
+    1. オノマトペは 1 piece 内で 1 回まで
+    2. 「ほんとうの／すきとおった」は 1 piece 内 1 回まで（safe-word 消費回避）
+    3. 擬古仮名遣い（やう/ゐ/ふ）は採用しない — 現代ブランドを古びさせる
+    4. 固有名詞（イーハトーブ／銀河／ギンガ）は brand-tie 明示時のみ
+    5. 名詞連鎖修飾 4 層以上はコピー本文外 body に限定
+    6. 科学用語 + 叙情の mechanism は 1 箇所のみ、全文賢治化禁
+    7. 宮沢の「暗さ」を抜いた優しい賢治だけ切り出すと saccharine 化 — register balance 保持
 - **Stylistic parallel note**: 糸井 「このへんないきもの」「生きろ。」は 宮沢 の cosmic-warm register と共鳴 — **critical-consensus stylistic parallel であって documented citation ではない**
 - **Cross-cultural equivalents**: Antoine de Saint-Exupéry *Le Petit Prince* (EN/FR)
 - **Trigger slug**: `jp-miyazawa-shinshou-sketch`

@@ -59,35 +59,55 @@ canonical manifesto / aspirational register。brief 要求 standard ZH authorita
 
 Authority × Emotion 最大值。aphoristic density peak。
 
-### 朱家鼎 KC Tsang / 鐵達時「天長地久三部曲」(zh-HK | Q2 extreme — cross-ref to zh-TW)
+### 朱家鼎 Mike Chu Ka-Ting / 鐵達時「天長地久三部曲」(zh-HK | Q2 extreme — cross-ref to zh-TW)
 
-**⚠ Z9 Correction applied**:
-- Name romanization **KC Tsang**（NOT Calvin Choy — unrelated finance YouTuber）
-- Agency path: Ogilvy 奧美 → **Bozell 堂煌**（1997 CD）→ **BBDO HK ECD 1998**（NOT JWT）→ 陳曾黃朱梅 co-founder 2001 → The Bees Group 2012 → PolyU Senior Instructor 2009-
+**⚠ Z10 Correction (v1.4.0) — supersedes Z9**:
 
-- **Era**: 1978 開始；鐵達時「天長地久三部曲」1988-1992 peak（三支 campaigns：1988 梅艷芳 / 1990 張學友 / 1992 周潤發×吳倩蓮）
-- **Agency / creator**: 堂煌廣告 → 靈智廣告 (Lowe HK, 1983 創辦)；朱家鼎 作為 Titus campaigns creative lead
+v1.3.x 的 Z9 將兩個不同的人誤混為一人。**朱家鼎** 與 **曾錦程 KC Tsang** 是兩位獨立的 HK ECD，分別有各自 body of work。此 anchor 重構為兩個分開的 entry：
+
+- **朱家鼎 Mike Chu Ka-Ting** (1954-2007，鍾楚紅 husband) — **鐵達時 Titus 天長地久三部曲 creative lead**。Agency path: 堂煌 1978 副創意 → 創辦**灵智廣告 Synergie 1983** → 併入 **The Ball Partnership 1988**（HK$40M，Lowe HK 前身）→ ECD 直至 1990s 後期。Romanization = **Mike Chu (Chu Ka-Ting)**。
+- **曾錦程 KC Tsang** — 另立 entry 於 §Landmark: center（Q2-toward-Q3 Cantonese-vernacular-pun register），primary work = SUNDAY / 和記天地線 / 眼鏡 88。
+- Titus campaign 的 primary copywriter of record 為 **盧婉儀 Iris Lo**（在 朱家鼎 ECD 之下）；CD 陳志明 Kinson Chan；director 徐佩侃 David Tsui；composer 戴樂民 Romeo Diaz。
+
+- **Era**: 鐵達時「天長地久三部曲」1988 / 1990 / 1992（三支獨立 TVC，**共用同一個 tagline** — 差異在敘事而非 copy）
+- **Agency / creator**: 灵智廣告 Synergie 1983 → The Ball Partnership 1988；朱家鼎 ECD；Iris Lo CW
 - **Primary sources**:
-  - [曾錦程 Wikipedia zh-HK](https://zh.wikipedia.org/zh-hant/曾錦程)
-  - 《十個廣告九個醜》(博益, 2000, ISBN 9621780233)
-  - 《我地廣告》(2017, ISBN 9888488279)
-  - [MadMan 廣告狂人 曾錦程 tag archive](https://madman-magazine.com/blog/tag/曾錦程/)
-- **Representative lines**:
-  - 「不在乎天長地久，只在乎曾經擁有。」(1988 鐵達時, 梅艷芳版)
-  - 1992 周潤發×吳倩蓮 生離死別版（配樂 Ennio Morricone《La Califfa》）
-- **Voice signature**（原生批評用語）:
+  - [zh-wiki 朱家鼎](https://zh.wikipedia.org/wiki/朱家鼎)
+  - [zh-wiki 鐵達時天長地久廣告系列](https://zh.wikipedia.org/zh-hk/鐵達時天長地久廣告系列) — creative team + year-by-year award
+  - [digitaling 廣告創意解密｜周潤發鐵達時廣告的前世今生](https://www.digitaling.com/articles/16198.html) — 1939 蘭州空戰 歷史錨點 + 「大音若希、裹草藏道」critical phrase
+  - [HK01 Morricone《La Califfa》→ Romeo Diaz arrangement](https://www.hk01.com/眾樂迷/494904/)
+  - [Sohu「你看的不是廣告，是史詩般的人生」](https://www.sohu.com/a/355454248_364333) — 史詩 / 時代感 / 港式浪漫 / 淒美 critical cluster
+  - [hokkfabrica Time is Love 後續 campaigns verbatim](https://hokkfabrica.com/time-is-love-solvil-et-titus-advertisements/)
+- **Representative lines**（verbatim + campaign context）:
+  - 「不在乎天長地久，只在乎曾經擁有。」(同一 tagline 三支 TVC 共用：1988 梅艷芳 / 1990 **王傑 Michael Wong** / 1992 周潤發×吳倩蓮 — **1990 主角為王傑，非張學友** — v1.3.x 錯誤)
+  - 「浪漫靈感鐵達時」(brand-endline bookend)
+  - 「背面刻有『天長地久』」(diegetic in-TVC copy — engraving vs tagline **inversion**)
+  - 「時間，讓愛更了解愛」(Titus 2013「時間樹」, Time is Love — post-Mike-Chu successor)
+  - 「愛是永恆 / 一百年之約」(Titus 2012, Chapter 2)
+- **Three Titus campaigns deep-dive**:
+  - **1988（梅艷芳）**: 1930-40s 上海 train-station；watch 刻「天長地久」贈出征兵。Mechanism = **engraved-promise vs lived-loss inversion**（手錶背面寫 天長地久、tagline 否定之）。金帆 Gold 1989
+  - **1990（王傑）**: 雪地 Republican-era 撤離；survivor keeps watch. Mechanism = **survivor-keeps-object**（product 成為失者的 tomb）。金帆 Gold 1991
+  - **1992（周潤發 × 吳倩蓮）**: 1939 蘭州空戰（歷史人物 劉福洪 × 陳影凡 原型）；pilot 出征前給新娘手錶。Mechanism = **ceremonial-last-gift + national-scale stakes**（家國情懷 per digitaling）。1994 金獎 / 1995 ATV 十大
+- **Voice signature**（原生批評用語 + mechanical）:
   - **天長地久三部曲**（港台廣告史 canonical 命名）
-  - **電影感 / 電影級敘事**（《我地廣告》業界評語定型）
-  - **手錶 = 愛情信物 / 記憶載體**（campaign 策略定型語）
-  - **港式浪漫 / 大中華浪漫主義 era**（1990s 港台文藝 register 總稱）
-  - 宿命感句型（fate + love + war compressed）
-- **Awards**: 4As 金帆獎 Kam Fan + 250+ local/international（1992-1993 金帆大獎兩年連莊）
-- **LLM corpus depth**: DEEP（ZH-HK 媒體 heavy；2 books with ISBN；金帆獎 registry）
-- **Over-mimic risk**: HARD（1990s 大中華浪漫主義 era-specific；LLM 易漂向瓊瑤腔）
-  - Mitigation: "borrow compressed fate-sentence 結構；避開 1990s-drama tropes"
+  - **電影感 / 史詩般的廣告片**（Sohu / pixnet 評定型）
+  - **家國情懷**（digitaling — romance-scale stakes upgraded to national）
+  - **故事隱藏 / 裹草藏道**（digitaling — 歷史線索藏在 subtext 而非 exposition）
+  - **大音若希**（借 老子 phrase，digitaling re: Mike Chu method）
+  - **時代感 / 港式浪漫 / 淒美**（critical cluster）
+  - **格調**（MadMan 廣告狂人 central axis，非「創意」）
+  - **Tagline-as-inversion**：slogan NEGATES 產品上的 engraved phrase — copy 活在 product-claim 與 human-reality 的 gap
+  - **Object-transfer gesture-triggered copy**：watch 給/留/等的 gesture 才觸發 tagline，非 voiceover
+  - **Historical-event anchoring**：1939 蘭州空戰 / 抗戰 — real dates + real weapons，宿命感 from verifiable history 而非 drama-rain-tears cliché
+  - **Compressed concessive 句型**：`不在乎 X，只在乎 Y` — concede 大 claim、pivot 至 小/真 claim
+  - **Ellipsis pacing**：copy appears once, late — 60-80s silent/musical narrative 後才出現 tagline，no mid-ad repetition
+- **Awards**: 4As 金帆獎 3 座 Gold + 250+ local/international（1992-1993 金帆大獎兩年連莊；朱家鼎個人 200+ awards）
+- **LLM corpus depth**: DEEP（ZH-HK 媒體 heavy；wiki 完整；金帆獎 registry）
+- **Over-mimic risk**: HARD（1990s 大中華浪漫主義 era-specific；LLM 漂向瓊瑤腔或王家衛獨白）
+  - **Mitigation** (14 字): "`不在乎 X 只在乎 Y` 句型 1 次；錨定真實歷史事件；避免抽象情緒名詞堆疊"
 - **Cross-reference-valid-for**:
   - zh-TW: STRONG（HK→TW 1990s 文化流；TW 文藝市場 吸收 HK 浪漫 aesthetic）
-- **Trigger slug**: `zh-hk-kc-tsang-titus-cinematic-romance`
+- **Trigger slug**: `zh-hk-mike-chu-titus-cinematic-romance-inversion`
 
 ### 王家衛 Wong Kar-wai (zh-HK | Q2 extreme — screenwriter)
 
@@ -145,6 +165,35 @@ Manifesto 方向 analytical authority。brief 要求 literary-intellectual hybri
 - **Over-mimic risk**: LOW
 - **Cross-cultural equivalents**: W.G. Sebald (EN) / 川端康成 lineage-consciousness (JP)
 - **Trigger slug**: `zh-tw-pai-hsien-yung-elegiac-diaspora`
+
+### 曾錦程 KC Tsang — SUNDAY / 和記 / 眼鏡 88 (zh-HK | Q2 toward-Q1 — Cantonese-vernacular-pun register)
+
+**⚠ Z10 Split (v1.4.0)**: 從原 Z9 (誤混 朱家鼎 + KC Tsang) 拆出。曾錦程是**另一人** — CUHK 1986 journalism grad — 有獨立 body of work，不應與 朱家鼎 Mike Chu 合併。
+
+- **Era**: Ogilvy 奧美 → Bozell 堂煌（1997 CD）→ BBDO HK ECD 1998 → CTWCM 陳曾黃朱梅 co-founder 2001 → The Bees Group 2012 → PolyU School of Design Senior Instructor 2009-
+- **Agency / creator**: 個人 ECD + educator
+- **Primary sources**:
+  - [zh-wiki 曾錦程](https://zh.wikipedia.org/zh-hant/曾錦程)
+  - [PolyU School of Design staff page](https://www.polyu.edu.hk/sd/people/academic-staff/tsang-kc/)
+  - 《十個廣告九個醜》(博益, 2000, ISBN 9621780233, with 陳大仁 Paul Chan)
+  - 《我地廣告》(2017, with 劉掌瑜)
+  - [CUHK UBeat 陳大仁 × 曾錦程 專訪](https://ubeat.com.cuhk.edu.hk/ubeat_past/020551/51adv.htm)
+- **Representative lines**:
+  - 「10 個 Sunday 用戶 9 個靚仔」(SUNDAY 電訊 1990s，Cantonese playful-irreverent)
+  - 「眼鏡 88，看出一點真」(Optical 88 1990s，double-entendre pun)
+  - 和記天地線 pun-density telco campaign series
+- **Voice signature**（原生批評用語）:
+  - **廣告符號意義**（自述《十個廣告九個醜》framework）
+  - **廣告策略對與錯**（自述）
+  - **天馬行空**（自述創意哲學）
+  - Cantonese-vernacular pun density
+  - Number-wordplay 結構（prime-number humour，e.g. 9/10）
+  - Irreverent-witty register（非 cinematic-romance — 跟 Mike Chu Titus completely different register）
+- **LLM corpus depth**: MEDIUM（港式 puns + Cantonese vernacular LLM coverage 相對薄）
+- **Over-mimic risk**: MEDIUM（Cantonese pun 本身不易 LLM 產出，但流滑向 generic 俏皮體）
+  - Mitigation: "保留 Cantonese vernacular 結構；避免 Mandarin 化；pun 至少 2-layer"
+- **⚠ Do NOT cross-pollinate with Mike Chu Titus register** — completely different axes
+- **Trigger slug**: `zh-hk-kc-tsang-cantonese-vernacular-pun`
 
 ## Landmark: toward-Q3
 

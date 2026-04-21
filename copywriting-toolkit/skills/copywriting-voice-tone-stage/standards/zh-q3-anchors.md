@@ -104,26 +104,47 @@ peer-intimate 最大值。品牌以 friend-at-2am 或 self-subverting institutio
 
 ### 故宮粉絲團「朕知道了」era (zh-TW | Q3 extreme — institutional self-subversion)
 
-- **Era**: 2013「朕知道了」紙膠帶爆紅 → sustained humorous register through 2010s-2020s
-- **Agency / creator**: 國立故宮博物院 in-house 新媒體小組 + 文創合作
+**⚠ Z11 Correction (v1.4.0)**:「朕知道了」是 **康熙硃批**（NOT 雍正 — v1.3.x 標錯）。來源為 2004-09 至 2005-05 馮明珠策劃〈知道了：硃批奏摺展〉（英譯 "Thou Art Understood!"），展覽 brochure 封面即選康熙。2013-07 紙膠帶 launch 時沿用此既有 IP。
+
+- **Era**: 2013-07-04「朕知道了」紙膠帶 FB 首貼 → sustained humorous register through 2010s-2020s；2017-19 小編團隊擴編至 6-10 人輪值制
+- **Agency / creator**: 國立故宮博物院 in-house 新媒體小組（均齡 26 歲）+ 文創合作
 - **Primary sources**:
-  - 故宮官網 2013「朕知道了」文創商品 press release
-  - [動腦雜誌 故宮小編 文創案例](https://www.brain.com.tw/)
-  - 數位時代 / Brand 故宮文創 case studies
-  - 故宮 Facebook 粉絲專頁 archive
-- **Representative lines / artifacts**:
-  - 「朕知道了」（雍正硃批 → 紙膠帶 → meme — launching signature）
-  - 文物 personification posts（翠玉白菜 humorous persona）
-  - 「今天你來故宮了嗎」peer-tone posts
+  - [Taipei Times 2013-07-12 "Museum's Kangxi tape becomes a hit"](https://www.taipeitimes.com/News/taiwan/archives/2013/07/12/2003566945) — launch timeline + 康熙硃批出處 + 2004-2005 exhibition origin
+  - [ETtoday 2013-07-05 首日售罄報導](https://www.ettoday.net/news/20130705/236501.htm)
+  - [天下雜誌〈平均 26 歲故宮 6 小編讓粉絲暴增 4 倍〉](https://www.cw.com.tw/article/5093102) — 團隊結構 + 週循環 SOP
+  - [經理人月刊〈一款文案導購率近 30%〉](https://www.managertoday.com.tw/articles/view/55924) — 帝后酒瓶塞 verbatim + SOP
+  - [ADM 廣告雜誌 2018](http://adaround.blogspot.com/2018/04/blog-post_48.html) — 衝突感 critique 定型語 + 7 人輪值結構
+  - [自由時報 2018-07 古人有梗片](https://news.ltn.com.tw/news/life/breakingnews/2503897) — LINE 貼圖 verbatim + 24 小時萬套數字
+  - [交流雜誌 馮明珠〈蛻變中的國立故宮博物院〉2015-12](https://www.sef.org.tw/article-1-129-4976)
+- **Representative lines / artifacts**（verbatim + 銷售 milestone）:
+  - 「朕知道了」（**康熙硃批**紙膠帶，2013-07-04 FB 首貼；三個月售 4 萬組 / NTD 850 萬；累計約 20 萬組）
+  - 「皇上，臣妾最近吃太多……」「朕也是，卡住了……」（帝后酒瓶塞 2018，導購率 28%）
+  - 「被朕點名的小編，領旨跪安吧！」（隆哥尾牙宴 2019-01）
+  - 「他只是個孩子呀」「你在上我在下」（清明上河圖 LINE 貼圖 2018-07-24，24h 售破 1 萬套）
+  - 「開會好想睡」菩薩 /「怪我囉」菩薩（觸及 94 萬，2019）
+  - 週循環欄目：「小編要發問」「小資小編的敗家計畫」「乾隆小講堂」
 - **Voice signature**（原生批評用語）:
   - **讓歷史走進生活**（故宮文創 mission 自述）
-  - **文創 / 文物 IP 化**（故宮策略自述、批評沿用）
-  - **故宮小編**（社群 persona label、批評定型語）
+  - **故事行銷**（小編自述核心策略、經理人專訪）
+  - **深刻的衝突感**（ADM 廣告雜誌 2018 評論定型語 — 博物館莊嚴 × 活潑語氣）
+  - **文創 / 文物 IP 化**（策略自述）
+  - **故宮小編 / 隆哥 / 波編**（persona 暱稱 sticky label）
   - **古物擬人化 / 文物人設**（批評定型語）
-  - 皇帝 / 文物 → meme subject（institutional self-subversion）
-  - 二人稱 peer-intimate（「你」/「大家」）+ emoji + 古文 mixed register
+  - **週循環四節奏**（週一興趣／週二知識／週三導購／週四轉話題 SOP、經理人）
+  - **輪值制 6-10 人小編群**（天下＋ADM 共通描述）
+- **Mechanical register features**（measurable）:
+  - **古文 / 白話比例 ~20-30% / 70-80%**（code-switch 比例精確；「朕」「臣妾」「領旨」直接接「吃太多」「卡住」「高大上」「怪我囉」）
+  - **Two-speaker dialogue 擬人**（皇 × 后對話），**非單 persona 獨白**
+  - Meme = 文物 fragment + 現代 caption **「減法」結構** — 文物本身不改，只加現代 caption
+  - 每貼對應真實 SKU（commercial ground truth），防止 persona 漂移
+  - 商品導購反向驅動：節慶/時事 → 從館藏 inventory 找 metaphor（長輩問薪水 → 封條紙膠帶）
+- **Platform differentiator**: 故宮獨有 **"institutional IP × commerce × historical corpus" 三層** — 擬人對象是自家文物（非外部 mascot）、古文 code-switch 有文物正當性、每貼文對應真實 SKU。vs 中研院〈研之有物〉純 explainer 無商業 / 北美館 curatorial-neutral 無人設 / 台灣吧 娛樂-only 無商業錨點
 - **LLM corpus depth**: MEDIUM-DEEP（landmark case 廣泛討論）
-- **Over-mimic risk**: LOW — 故宮身份 + 文物素材為不可複製 asset
+- **Over-mimic risk**: **MEDIUM**（v1.4.0 上修自 LOW）— failure modes:
+  - (a) 古文比例失控（LLM 傾向堆全文言體）
+  - (b) two-speaker 退化為單 narrator
+  - (c) 虛構不存在的館藏文物（真實洩漏風險）
+  - Mitigation: "古文比例 ≤30%；不得虛構館藏；擬人須 two-speaker dialogue"
 - **Trigger slug**: `zh-tw-npm-zhen-zhidaole-institutional-meme`
 
 ### 台灣吧 Taiwan Bar (zh-TW | Q3 extreme — educational-comedy)
