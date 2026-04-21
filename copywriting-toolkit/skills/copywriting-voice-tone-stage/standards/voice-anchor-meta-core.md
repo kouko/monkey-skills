@@ -11,7 +11,7 @@ tier: 2
 
 ## Purpose
 
-This file provides the minimum operational metadata Pass 3 needs to correctly read and apply ANY voice anchor (whether from craft-gate `{jp,zh}-copy-craft-lineage.md`, register-signal `{lang}-q{N}-anchors.md`, or axis `axis-extreme-anchors.md`). Schema + rubric + mitigation are "hot path" because they are consulted on every anchor invocation.
+This file provides the minimum operational metadata Pass 3 needs to correctly read and apply ANY voice anchor (whether from craft-gate per-master `anchor-{jp,zh-tw}-{master}-*.md` via `JP/ZH_CRAFT_MASTER_MAP`, register-signal `{lang}-q{N}-anchors.md` router → `anchor-{slug}.md` body, or axis `axis-extreme-anchors.md`). Cross-master attribution / era / comparison audit content lives in `voice-anchor-meta-detail.md §Cross-Master Context` (conditional Pass 3a/3b load + always-on Pass 3d load). Schema + rubric + mitigation are "hot path" because they are consulted on every anchor invocation.
 
 ## Schema version selector (v1.5.0)
 
