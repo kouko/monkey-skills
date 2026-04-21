@@ -1,5 +1,80 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.0 — 2026-04-21 (Voice Anchor Library foundation — scaffold + meta split + landmark sections)
+
+Foundation PR for voice anchor library expansion. 15 new toolkit-originated files scaffolded; content population lands in subsequent releases (v1.3.1 JP+zh / v1.3.2 EN+pipeline integration).
+
+### Purpose
+
+Prior to v1.3.0, Phase 6 Pass 3 lineage craft only supported 6 canonical masters (糸井 / 岩崎 / 眞木 / 谷山 JP + 許舜英 / 李欣頻 / 葉明桂 zh-TW). Any brief citing a non-master anchor (Didion / Hemingway / 張愛玲 / 向田邦子 / brand-era / literary primer) fell through to Pass 3's "no lineage match" default — losing register-signal refinement opportunity.
+
+v1.3.0 establishes the foundation for a register-signal branch (alongside existing craft-gate + new axis-extreme branches) that gives Pass 3 access to ~70 additional anchors across EN/JP/zh-TW, grouped by quadrant × landmark position.
+
+### Architecture (Option B3 + 4 token optimizations)
+
+1. **Existing Tier 1 untouched** — `jp-copy-craft-lineage.md` + `zh-copy-craft-lineage.md` + `voice-and-tone.md` unchanged
+2. **Flat layout** — all 15 new files directly under `standards/` per Anthropic skill-authoring "one level deep"
+3. **Meta split (token optimization ①)** — hot-path schema/rubric/mitigation in `meta-core.md`; deep-path lineage/cross-ref/labels/corrections in `meta-detail.md`; Craft Gate loads core only, Register Signal loads both
+4. **Landmark sections per quadrant file (token optimization ②)** — each `{lang}-q{N}-anchors.md` has explicit `## Landmark: {center/extreme/toward-Qn}` markers enabling section-targeted Pass 3 read (~1.5K vs ~3K whole-file)
+5. **Cross-lang independent load (JP→zh-TW STRONG)** — register-signal path loads both `zh-q{N}` and `jp-q{N}` when applicable
+6. **Axis extreme single cross-language file** — `axis-extreme-anchors.md` covers all 4 axis positions (authority/affinity/reason/emotion extreme) across EN/JP/zh-TW in one file; MVP placeholder pending V2 research
+
+### Files added (15)
+
+**Meta (2)**:
+- `voice-anchor-meta-core.md` — schema definition + 4-condition selection rubric + over-mimic mitigation registry (20 entries)
+- `voice-anchor-meta-detail.md` — verified lineage map (9 primary-source citations + 7 inferred-parallel flags) + cross-reference registry (JP→zh-TW STRONG directions) + 19×4 cross-cultural label rubric matrix + drift corrections catalog Z5-Z11
+
+**Per-quadrant (12, landmark-organized skeletons)**:
+- JP: `jp-q{1,2,3,4}-anchors.md`
+- zh-TW: `zh-q{1,2,3,4}-anchors.md`
+- EN: `en-q{1,2,3,4}-anchors.md`
+
+Each quadrant file has 4 Landmark sections (`center` / `extreme` / `toward-Q{adj1}` / `toward-Q{adj2}`) + Overview + Cross-references. Placeholder comments note specific anchor candidates to be populated in v1.3.1 (JP+zh) / v1.3.2 (EN).
+
+**Axis extreme (1)**:
+- `axis-extreme-anchors.md` — 4 axis position stubs + candidate list + V2 research trigger criteria
+
+### Files NOT changed (Tier 1 byte-identical preserved)
+
+- `voice-and-tone.md`
+- `jp-copy-craft-lineage.md`
+- `zh-copy-craft-lineage.md` (Z5-Z11 drift corrections land in v1.3.1 via upstream domain-teams sync)
+- `voice-quadrant-positioning.md` (optional `position` field lands in v1.3.2)
+
+### Drift corrections catalog (documented in meta-detail)
+
+Surfaced during research waves 2026-04-21; corrections will propagate into active inventory as files populate (v1.3.1+):
+
+- Z5: 多喝水 ≠ 吳念真（奧美 in-house）
+- Z6: 孫大偉 agency = 台灣奧美 / 偉太（非 JWT）
+- Z7: 長榮〈I SEE YOU〉旁白 = 金城武（非 吳念真）
+- Z8: 全聯經濟美學 creative lead = 龔大中（非 林敬凱）
+- Z9: HK CD 名字 = KC Tsang（非 Calvin Choy）；agency = BBDO（非 JWT）
+- Z10: 全聯 TV-era 2006-2014 = **Q3-CENTER（格言）**，非 Q3-extreme
+- Z11: 意識形態廣告 = 許舜英 **+ 鄭松茂** 共同創辦
+
+### Token cost (baseline, since no Pass 3 load logic changed)
+
+No token cost impact in v1.3.0 — Pass 3 load logic refactor (to actually consume the new files) lands in v1.3.2. Current Pass 3 behavior unchanged: only craft-gate 6 masters supported.
+
+### Research provenance
+
+15 files scaffolded based on 6 research waves on `research/copywriting-voice-anchor-expansion` branch:
+- 4 parallel research agents (EN / JP / ZH / KR+EU+other) — brand-era + copywriter persona
+- 2 parallel Layer-0 research agents (JP/ZH + EN/KR) — literary / screenwriter primers
+- 1 Type 5 verification agent — deferred candidates (國井美果 / SHIRO / KC Tsang / Dan Kennedy / Bill Jayme)
+- 3 parallel gap-filler agents — JP Q1/Q4 + zh-TW Q1/Q3 + EN Q2/Q3 extreme
+
+Research docs preserved in `copywriting-toolkit/docs/`:
+- `voice-anchor-research.md` (initial brand-era + persona synthesis)
+- `voice-anchor-layer-0-research.md` (literary register primer)
+- `voice-anchor-archived-references.md` (skip list + KR scope-excluded + Type 5 verdicts)
+- `voice-anchor-gap-research.md` (6 landmark gap fill)
+- `voice-anchor-implementation-plan.md` (this PR executes PR 1 of 3-PR plan)
+
+---
+
 ## v1.2.1 — 2026-04-20 (Quadrant Signal Mode — fix JP-thinking leakage on cross-language maestro refs)
 
 **Observed failure** (v1.2.0 E2E test): user brief cited 糸井重里 + `output_language: zh-TW`. Pipeline produced zh-TW output but internally **ideated in Japanese first** and translated, yielding candidates like「冷蔵庫の奥、賞味期限切れの醤油が、3本。」 — clearly Japanese prose wrapped in nominal zh-TW output. Root cause: Express Mode's v1.2.0 dual-trigger resolution Option C wording ("譯化") misled the drafter into a JP→zh translation workflow instead of native zh-TW ideation.
