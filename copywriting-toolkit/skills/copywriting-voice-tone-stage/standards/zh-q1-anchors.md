@@ -23,7 +23,13 @@ All v1 entries moved out (v1.6.0):
 - **報導者 The Reporter** (center + investigative-extreme registers, non-profit journalism) → [../../../../docs/register-references/zh-tw-reporter-explanatory-journalism.md](../../../../docs/register-references/zh-tw-reporter-explanatory-journalism.md)
 - **研之有物 Research @ Sinica** (institutional 科普 platform) → [../../../../docs/format-templates/zh-tw-research-sinica-popularization.md](../../../../docs/format-templates/zh-tw-research-sinica-popularization.md)
 
-Strategy: select individual voice anchor cross-loaded from JP/EN Q1 + use institutional register reference for structural layer.
+Strategy: select individual voice anchor from the v1.8.0 additions below, or cross-load from JP/EN Q1 + use institutional register reference for structural layer.
+
+### zh-TW Q1 individual-creator pool (v1.8.0 gap-fill)
+
+- **南方朔 — lexical archaeology** (essayist / cultural critic) — [anchor-zh-tw-nan-fang-shuo-lexical-archaeology.md](anchor-zh-tw-nan-fang-shuo-lexical-archaeology.md)
+  - Slug: `zh-tw-nan-fang-shuo-lexical-archaeology`
+  - Register: 單一詞為入口 + 字源追溯 + 跨文化並舉 + 古典當代對照; 詞語考古學 register
 
 ## Landmark: extreme
 
@@ -31,11 +37,19 @@ Moved out: 報導者 investigative-extreme register (consolidated with center en
 
 ## Landmark: toward-Q2
 
-(Gap flagged — future research: 龍應台 / 南方朔 essayist register candidates)
+- **龍應台 — public intellectual address** (essayist / 野火集 1985-) — [anchor-zh-tw-lung-ying-tai-public-intellectual.md](anchor-zh-tw-lung-ying-tai-public-intellectual.md)
+  - Slug: `zh-tw-lung-ying-tai-public-intellectual`
+  - Register: 「你」作為讀者-公民的直接呼告 + 短句排比 + 歷史敘事 + 道德反問 + 具名田調感
+  - ⚠ Over-mimic MEDIUM: 道德反問 tic + 演講腔 drift
 
 ## Landmark: toward-Q4
 
 **商業周刊 Business Weekly** (金惟純-era institutional strategy-imperative) → [../../../../docs/register-references/zh-tw-business-weekly-strategy-imperative.md](../../../../docs/register-references/zh-tw-business-weekly-strategy-imperative.md)
+
+- **楊照 — lecture-hall essay** (essayist / 誠品講堂 + podcast host) — [anchor-zh-tw-yang-zhao-lecture-hall-essay.md](anchor-zh-tw-yang-zhao-lecture-hall-essay.md)
+  - Slug: `zh-tw-yang-zhao-lecture-hall-essay`
+  - Register: 口語講堂 register 書面化 + 歷史現場具象 + 「其實」反轉連接詞 + 古典文本現代化解讀
+  - ⚠ Over-mimic MEDIUM: 「其實」tic
 
 ## Cross-references
 

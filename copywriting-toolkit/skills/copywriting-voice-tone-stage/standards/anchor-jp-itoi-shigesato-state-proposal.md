@@ -47,13 +47,4 @@ date: 2026-04-21
 - Over-mimic risk: **HIGH** (「。」-on-fragment is the most-copied surface marker in JP ad-copy LLM output; real register is semantic, not punctuational)
 - Pairs with form: [short-form-catchcopy, mid-form-brand-tagline, light-action-lifestyle]
 
-## Coverage self-check
-- ✅ 4 critics' read (≥3), all JP verbatim attributed (谷山雅計 / TCC / ほぼ日 / 宣伝会議)
-- ✅ 7 prose mechanics (≥5), all sentence-level — punctuation / kanji-hiragana / adjective-elision / connective-elision / person / ambiguity / mora-count
-- ✅ 7 verbatim examples across 4 brands (≥5 / ≥2)
-- ✅ Specific failure mode + <15-word mitigation
 
-## Schema test note
-**First named-copywriter tested**. Schema v2 holds. Agent observation: copywriter mechanics naturally trend toward 4 families (punctuation / elision / register / mora). Future copywriter entries may cluster — acceptable but worth monitoring across 岩崎 / 眞木 / 谷山 / 許舜英 / 李欣頻 / 龔大中 migrations.
-
-**New form enum surfaced**: `short-form-catchcopy`, `mid-form-brand-tagline`, `light-action-lifestyle` — not in current Phase 4 form enum. Phase 4 form taxonomy may need refinement during v2 migration.

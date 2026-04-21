@@ -29,7 +29,7 @@ Multiple EN Q1 / Q4 institutional + platform entries from v1 share the same disq
 ## The Economist brand voice (institutional) (EN | Q1 extreme)
 - **Slug**: `en-economist-institutional-voice`
 - **Format mechanics**: anonymous-byline aphoristic authority; "surprisingly" pivots; short declaratives; long subordinate qualifying clauses; dry British tone
-- **Distinct from**: Abbott Mead Vickers BBDO ads (David Abbott — recast pending research, defer to v1.7.0+)
+- **Distinct from**: Abbott Mead Vickers BBDO ads → RECAST COMPLETE (v1.8.0) → [anchor-en-david-abbott-economist-aphoristic.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-david-abbott-economist-aphoristic.md). The Economist institutional brand voice (post-Abbott) stays here as format-template reference; AMV BBDO campaign work under Abbott's hand is the named-individual anchor.
 
 ---
 
@@ -56,14 +56,14 @@ Multiple EN Q1 / Q4 institutional + platform entries from v1 share the same disq
 
 ## Basecamp Rework (EN | Q1 toward-Q2 + Q4 center, Fried + DHH)
 - **Slugs**: `en-basecamp-rework-contrarian-manifesto` + `en-basecamp-rework-center-plain-style`
-- **Status**: dual-author (Jason Fried + DHH) — borderline case. Original v1 entries stay as pointers; full Layer 1 v2 recast deferred (needs sentence-level audit to confirm isolable voice vs. team-coauthored).
+- **Status**: RECAST COMPLETE (v1.8.0) → [anchor-en-basecamp-fried-dhh-contrarian-manifesto.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-basecamp-fried-dhh-contrarian-manifesto.md) — dual-author (Fried + DHH) treated as fused voice with tell-pattern differentiation noted in anchor body
 
 ---
 
 ## Nike "Just Do It" center (EN | Q2 center)
 - **Slug**: `en-nike-just-do-it-imperative-aspiration`
 - **Campaign-level entry, 1988 Wieden+Kennedy**
-- **Status**: RECAST pending research on Dan Wieden (v1.7.0+); earlier batch agent returned content but it was not saved to disk before session compaction.
+- **Status**: RECAST COMPLETE (v1.8.0) → [anchor-en-wieden-just-do-it-minimal-imperative.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-wieden-just-do-it-minimal-imperative.md)
 
 ---
 
@@ -85,26 +85,26 @@ Multiple EN Q1 / Q4 institutional + platform entries from v1 share the same disq
 ## Absolut Vodka print campaign (EN | Q2 toward-Q1)
 - **Slug**: `en-absolut-two-word-bottle-formula`
 - **Format**: "Absolut X" two-word headline + bottle visual pun, TBWA 1980s-90s; Richard Costello / Geoff Hayes CW
-- **Status**: RECAST pending research (v1.7.0+); dual-CW attribution needs disambiguation
+- **Status**: RECAST COMPLETE (v1.8.0) with attribution correction → [anchor-en-absolut-two-word-bottle-formula.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-absolut-two-word-bottle-formula.md). Founding 1980 "Absolut Perfection" ad credited to **Geoff Hayes (AD) + Graham Turner (CW)** per Adweek 2015 Hayes obit + Communication Arts 1980 credits + Lewis "Absolut Book" 1996. Richard Costello was TBWA equity partner / US president, not creative on this campaign.
 
 ---
 
 ## MailChimp Voice & Tone (EN | Q3 center)
 - **Slug**: `en-mailchimp-voice-tone-framework`
-- **Status**: RECAST pending research on Kate Kiefer Lee (v1.7.0+); earlier batch agent returned content but not saved.
+- **Status**: RECAST COMPLETE (v1.8.0) → [anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md)
 - Note: pilot-layer1-mailchimp.md exists as v1-schema institutional reference (moved to format-templates/en-mailchimp-institutional-pilot.md).
 
 ---
 
 ## Innocent Drinks (1999-2009 canonical "wackaging" era) (EN | Q3 center)
 - **Slug**: `en-innocent-wackaging-conversational-fragment`
-- **Status**: RECAST pending research on Richard Reed (v1.7.0+); earlier batch agent returned but not saved.
+- **Status**: RECAST COMPLETE (v1.8.0) → [anchor-en-richard-reed-innocent-wackaging.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-richard-reed-innocent-wackaging.md)
 
 ---
 
 ## Oatly Schoolcraft era (EN | Q2 toward-Q3 + Q3 center dual, John Schoolcraft CD 2012-)
 - **Slugs**: `en-oatly-activist-mode`, `en-oatly-center-friendly-irreverent`
-- **Status**: preserved as v1 entries pending full Layer 1 v2 audit (John Schoolcraft is named but voice-trackability needs research confirmation beyond campaign-level attribution)
+- **Status**: RECAST COMPLETE (v1.8.0) → [anchor-en-schoolcraft-oatly-activist-typewriter.md](../../skills/copywriting-voice-tone-stage/standards/anchor-en-schoolcraft-oatly-activist-typewriter.md); canonical era STRICT pre-2021 IPO
 
 ---
 
@@ -115,9 +115,18 @@ Multiple EN Q1 / Q4 institutional + platform entries from v1 share the same disq
 
 ---
 
-## Recast deferral note
+## Recast history
 
-Entries marked **RECAST pending research (v1.7.0+)** returned during earlier Phase B agent batch but were not persisted as pilot files before session compaction. Re-research needed to ship individual-creator anchors: Dan Wieden (Nike), David Abbott (Economist), Kate Kiefer Lee (Mailchimp), Richard Reed (Innocent), Richard Costello / Geoff Hayes (Absolut).
+All 7 entries marked "RECAST pending research (v1.7.0+)" in v1.6.0-v1.7.1 are now COMPLETE (v1.8.0):
+- Dan Wieden (Nike JDI) → `anchor-en-wieden-just-do-it-minimal-imperative.md`
+- David Abbott (Economist AMV BBDO ads) → `anchor-en-david-abbott-economist-aphoristic.md`
+- Kate Kiefer Lee (Mailchimp Voice & Tone) → `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md`
+- Richard Reed (Innocent Drinks 1999-2009) → `anchor-en-richard-reed-innocent-wackaging.md`
+- Geoff Hayes + Graham Turner (Absolut; attribution corrected from v1 Costello+Hayes) → `anchor-en-absolut-two-word-bottle-formula.md`
+- Jason Fried + DHH (Basecamp Rework) → `anchor-en-basecamp-fried-dhh-contrarian-manifesto.md`
+- John Schoolcraft (Oatly pre-2021-IPO) → `anchor-en-schoolcraft-oatly-activist-typewriter.md`
+
+Institutional / movement / category entries (The Economist post-Abbott brand voice, Nike Dream Crazy campaign team, XR Declaration, Amazon / REI / IKEA, Morning Brew pre-recast pointer) remain here as format-template references.
 
 ## Cross-reference direction
 

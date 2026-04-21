@@ -15,8 +15,15 @@ Q2 = Authority × Emotion. Manifesto / 文学 / 陰翳 / brand-philosophy regist
 
 ## Landmark: center
 
-- **原研哉 (MUJI era)** — RECAST pending research (v1.7.0+). v1 entry 「empty vessel / 空 / 透明性」register tracks to 原研哉 as design director but Layer 1 v2 research not yet completed. See `docs/voice-library-recast-audit.md`.
-- **太田恵美 (JR東海「そうだ 京都、行こう。」)** — RECAST pending research (v1.7.0+). CD: 佐々木宏, CW: 太田恵美 (v1.3.3 attribution correction preserved).
+- **原研哉 — design manifesto register** (named designer recast, MUJI AD 2001-) — [anchor-jp-hara-kenya-design-manifesto.md](anchor-jp-hara-kenya-design-manifesto.md)
+  - Slug: `jp-hara-kenya-design-manifesto`
+  - Register: design-as-sensory-awakening essay; 白 / 虚 / 間 conceptual vocabulary; 「ではなく」転倒 + 具体物→感覚→世界観 三段跳躍
+  - Recast from: MUJI 無印良品 原研哉 era brand anchor (v1.3.x) → named designer 原研哉 (v1.8.0)
+
+- **太田恵美 — JR東海「そうだ 京都、行こう。」** (named CW recast; CD 佐々木宏) — [anchor-jp-jr-central-souda-kyoto-discovery.md](anchor-jp-jr-central-souda-kyoto-discovery.md)
+  - Slug: `jp-jr-central-souda-kyoto-discovery`
+  - Register: 口語開口 + 独白体 + 季語ドライブ + 最小単位コピー; 30 年持続 campaign register
+  - ⚠ v1.3.3 attribution correction preserved — CW = 太田恵美 (not 一倉宏), CD = 佐々木宏
 
 ## Landmark: extreme
 

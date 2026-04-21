@@ -18,11 +18,15 @@ Q4 = Affinity × Reason. EN canonical:
 
 ## Landmark: center
 
+- **Jason Fried + DHH — Basecamp Rework center (plain-practical mode)** (named author duo) — [anchor-en-basecamp-fried-dhh-contrarian-manifesto.md](anchor-en-basecamp-fried-dhh-contrarian-manifesto.md)
+  - Slug: `en-basecamp-fried-dhh-contrarian-manifesto`
+  - Register: plain declarative startup-advice; short sentence + 2-3 sentence chapters; named-enemy antithesis
+  - Dual placement: Q4 center + Q1 toward-Q2 (manifesto mode) — see [en-q1-anchors.md](en-q1-anchors.md) for primary entry
+
 **Moved to format-templates**:
 - Amazon product copy → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Amazon
 - REI expert-advice → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §REI
 - IKEA assembly → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §IKEA (SKIP note: visual-dominant, >50% signal off-text)
-- Basecamp Rework center mode (Fried + DHH) → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Basecamp; recast pending audit (v1.7.0+)
 
 ## Landmark: extreme
 

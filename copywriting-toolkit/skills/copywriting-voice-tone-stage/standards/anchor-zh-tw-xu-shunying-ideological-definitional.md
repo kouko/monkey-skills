@@ -48,4 +48,5 @@ date: 2026-04-21
 - Trigger slug: `zh-tw-xu-shunying-ideology-inversion`
 - Over-mimic risk: HIGH
 - Pairs with form: [mid-form, short-form-brand-tagline, long-form-extended]
-- Cross-reference-valid-for: zh 張愛玲 aphoristic parallel (stylistic, not documented)
+- Cross-reference-valid-for: jp: WEAK; en: WEAK (power-disparity payload requirement is zh-specific cultural-critique tradition)
+- Stylistic-sibling (not transferability): 張愛玲 aphoristic observation (`anchor-zh-eileen-chang-aphoristic-observation.md`) — shares compressed-observation cadence but 張's register lacks power-disparity payload requirement
