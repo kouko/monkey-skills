@@ -1,5 +1,58 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.11.2 — 2026-04-22 (Phase 5 / Phase 6 unification — Brand Corpus ↔ anchor library cross-refs)
+
+User-directed consolidation: Phase 5 quadrant diagnosis landmarks now explicitly link to Phase 6 anchor library entries, eliminating two-tier confusion.
+
+### CLAUDE.md §Provenance Principle scope refinement
+
+Previous default treated entire `skills/*/standards/*.md` as Tier 1 byte-identical. Refined to apply Tier 1 only to **third-party framework text within standards files** (e.g., Halliday Tenor theory, Vaughn FCB grid, Schwartz 5-level taxonomy, PASONA definitions). Team-curated segments inside standards files (Brand Corpus selections, exemplar lists) are Tier 2 — plugin may diverge to align with plugin-specific anchor library decisions.
+
+Also clarified: the entire Phase 6 anchor system (87 `anchor-*.md` + meta-core/meta-detail + 12 routers + `anchor-schema-v2.md`) is plugin-native with no upstream counterpart — not subject to `diff -q`.
+
+### Phase 5 positioning.md — 19 Brand Corpus entries annotated with Phase 6 cross-refs
+
+For each entry, added `**Phase 6 anchor**` (individual-creator match exists) OR `**Phase 6 handoff**` (institutional entry; names nearest individual anchor for rewrite).
+
+**11 entries with direct Phase 6 anchor match** (linked inline):
+- Q1: Rolls-Royce → Ogilvy
+- Q2: Apple → Lee Clow / MUJI → 原研哉 / Patagonia → Chouinard / 誠品 → 李欣頻 / 中興 → 許舜英 / 左岸 → 葉明桂
+- Q3: 西武 → 糸井重里 / ミツカン → 岩崎俊一 / ほぼ日 → 糸井 / 全聯 → 龔大中
+- Q4: UNIQLO → 佐藤可士和
+
+**8 institutional entries retained as quadrant landmarks with Phase 6 handoff pointers** (no individual-creator anchor per v2 schema):
+- Economist / 報導者 (Q1) — rotating-author institutional
+- Nike (Q2) — Wieden+Kennedy agency-rotating
+- Dove (Q3) — campaign-level
+- JR九州 (Q3) — brand-era; 仲畑貴志 era has no standalone anchor (flagged for future research)
+- Shopee / Amazon (Q4) — in-house rotating
+
+### Phase 5 SKILL.md — cross-language maestro examples refreshed
+
+Step 5 example list updated:
+- Mailchimp → `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md` (Kate Kiefer Lee recast)
+- Innocent → `anchor-en-richard-reed-innocent-wackaging.md` (Richard Reed recast)
+- zh-TW Q3 → `anchor-zh-tw-gong-dazhong-*` (龔大中 recast, not "全聯經濟美學派")
+- JP Q3 → 糸井重里 / 岩崎俊一 anchor slugs
+
+Added new §Two-tier voice curation section clarifying Phase 5 Brand Corpus vs Phase 6 Anchor Library division of labor.
+
+### Rationale
+
+User surfaced: "Phase 5 quadrant 診斷用的識別 landmark 應該要用 Phase 6 裡對應的 anchor — 這樣才不會讓使用者產生疑惑". Pre-v1.11.2 users could see Mailchimp in Phase 5 and then find it "moved to format-templates" in Phase 6's v2 library with no explanation. Post-v1.11.2, every Phase 5 entry explicitly resolves to a Phase 6 handoff.
+
+The 8 institutional-retained entries remain valuable as **quadrant landmarks** (Economist IS a Q1 register exemplar even without individual-creator voice) but no longer confuse users about Phase 6 rewrite targets.
+
+### Files touched
+
+- `copywriting-toolkit/CLAUDE.md` — §Provenance Principle scope refinement
+- `copywriting-toolkit/skills/copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md` — 19 Brand Corpus entries + 4 quadrant preambles annotated
+- `copywriting-toolkit/skills/copywriting-voice-quadrant-stage/SKILL.md` — Step 5 examples refreshed + §Two-tier voice curation added
+
+No anchor changes. No agent changes. No Phase 6 routing changes.
+
+---
+
 ## v1.11.1 — 2026-04-22 (safe_substitute predicate fix + router prose parity + invalid-pairing cleanup)
 
 Post-v1.11.0 E2E surfaced a trigger-predicate bug + 2 invalid pairings + router prose parity gap. 4 parallel Pass 3 simulation agents run against main post-merge; findings documented in `docs/voice-anchor-e2e-tests/v1.11.0-post-merge-findings.md`.
