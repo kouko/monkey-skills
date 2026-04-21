@@ -1,5 +1,32 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.4 — 2026-04-21 (Voice Consistency Dimension 7 — Thesis Alignment + e2e test artifacts)
+
+Empirical outcome from first end-to-end pipeline tests of the v1.3.x anchor library. Test harness in `docs/voice-anchor-e2e-tests/` shipped as artifacts so future iterations have a regression baseline. One concrete bug surfaced → Dimension 7 added to Voice Consistency gate.
+
+### What changed
+
+- **Rubric `rubrics/voice-consistency-gate.md` — Dimension 7 (RUB-CTW-VC-007) added**: catches anchor-induced drift from `envelope.message_thesis`. Scope: applies only when Pass 3 ran AND thesis is non-empty. Fires 🔴 when Pass 3 output reintroduces a concept the thesis explicitly negated, or undermines an assertion. Remediation pattern documents "anchor register must serve thesis; drop conflicting imagery, keep cadence / discipline only".
+- **SKILL.md gate reference updated** to list Dimension 7 alongside 5 / 6.
+- **Docs folder `docs/voice-anchor-e2e-tests/`**: README + 4 initial test specs + findings from Pass 3 rationale tests + findings from apply-rewrite tests. Preserves concrete before/after draft pairs for 2 briefs (zh-TW Q3 center / JP Q3 center).
+
+### Empirical finding that drove Dimension 7
+
+zh-TW Q3 brief with thesis「古早味不是懷舊，是我們今天還在過的日常」→ Pass 3 applied 全聯 格言體 + 吳念真 stance anchors → polished draft contained「放學路上那個沒什麼煩惱的下午」— a nostalgic frame the thesis explicitly rejected. Anchor register was pulling the rewrite toward register-canonical imagery (身體感官的懷舊記憶) that felt right stylistically but violated the argument. No existing gate dimension caught this (D1-D5 check voice coherence not argument; D6 checks registered over-mimic tropes not thesis).
+
+### Empirical findings NOT fixed this version (recorded for future iteration)
+
+- **Anchor ROI varies with register distinctiveness** — JP Q3 (向田 ト書き register) → large shape change; zh-TW Q3 center →细微 delta (generic peer-warm quadrant). Suggests future `anchor_marginal_value: HIGH/MEDIUM/LOW` field in meta-core so Pass 3 can skip anchor load when marginal value is LOW. Not shipped this version — needs dedicated design pass.
+- **Anchor selection non-deterministic** — same brief, same pipeline, different Pass 3 invocations can select different primary anchors (Test 02 chose 吳念真; Apply A2 chose 全聯). Legitimate interpretation space but should be surfaced via `anchor_candidates_ranked[]` rather than single-slug output. Not shipped — schema change deferred.
+- **Native-reviewer blind evaluation not performed** — all analysis in this version is self-inspection. Real TW/JP copywriter blind rating of baseline-vs-applied drafts is the missing ground truth.
+
+### No regressions
+
+- No anchor file content changed
+- No routing / envelope / Pass 3 load logic changed
+- Existing dimensions 1-6 behavior unchanged
+- `not_applicable` scoping preserved for Dimensions 3 / 5 / 6 / 7
+
 ## v1.3.3 — 2026-04-21 (JP + zh-TW anchor native-source vocabulary rewrite)
 
 Content-layer polish: replaced English-translated voice signatures with native critical vocabulary researched from primary sources (JP: Wikipedia JA / 宣伝会議 / 朝日新聞 / 岩波 / 学術紀要 / author's own books; zh-TW: 動腦 / 數位時代 / 小魚廣告網 / 中央社文化 / 機構自述 / 學界批評).
