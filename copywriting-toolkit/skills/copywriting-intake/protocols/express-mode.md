@@ -43,7 +43,7 @@ Even though `brief.voice_reference` is Level 2, Express synthesis MUST NOT auto-
 
 - **JP Q3 / Q2-edge lineage** (state-proposal, 余韻, aphoristic): 糸井重里, 岩崎俊一, 眞木準, 谷山雅計
 - **ZH Q2 Authority-Emotion lineage** (意識形態廣告, 誠品, 左岸): 許舜英, 李欣頻, 葉明桂
-- **Any maestro added to `standards/jp-copy-craft-lineage.md` or `standards/zh-copy-craft-lineage.md` §Per-master sections in future versions** — the restricted list tracks the lineage standards' per-master coverage, not a static name list.
+- **Any maestro added to `standards/voice-anchor-meta-detail.md §Cross-Master Context` or `standards/voice-anchor-meta-detail.md §Cross-Master Context` §Per-master sections in future versions** — the restricted list tracks the lineage standards' per-master coverage, not a static name list.
 
 Express synthesis rule:
 

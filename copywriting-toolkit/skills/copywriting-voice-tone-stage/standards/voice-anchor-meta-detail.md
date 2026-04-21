@@ -28,7 +28,7 @@ When Pass 3 enters Register Signal branch (voice_reference is not a craft-gate m
 | 3 | 李欣頻 | 徐四金 Patrick Süskind | 《拋開書本到街上去》系列 — 作者自述 | HIGH |
 | 4 | 李欣頻 | 村上春樹 Murakami Haruki | 《拋開書本到街上去》系列 — 作者自述 | HIGH |
 | 5 | 糸井重里 Itoi Shigesato | 谷川俊太郎 Tanikawa Shuntarō | ほぼ日刊イトイ新聞 repeated collaborations; 共著『ぼく』(2013) | HIGH |
-| 6 | 葉明桂 Yeh Ming-kuei / 台灣奧美 | Peter Altenberg | 左岸咖啡館「我不在咖啡館，就在去咖啡館的路上」sinicized from Altenberg Viennese saying — documented in zh-copy-craft-lineage.md drift #Z1 | HIGH |
+| 6 | 葉明桂 Yeh Ming-kuei / 台灣奧美 | Peter Altenberg | 左岸咖啡館「我不在咖啡館，就在去咖啡館的路上」sinicized from Altenberg Viennese saying — documented in §Cross-Master Context §Drift #Z1 below | HIGH |
 | 7 | David Ogilvy | Strunk & White | *Ogilvy on Advertising* (1983), "How to Write Potent Copy" 章 explicit 推薦 | HIGH |
 | 8 | Anglo copywriting canon | George Orwell "Politics and the English Language" (1946) | 直接影響 Strunk & White tradition + 廣告 craft rules 傳承 | HIGH (as canonical substrate, not single-copywriter citation) |
 | 9 | 박웅현 Park Woong-hyun (KR, archived scope-excluded) | 김훈 / Milan Kundera / Kazantzakis / Dostoevsky / Oscar Wilde | 《책은 도끼다》(북하우스, 2011) — 書名 from Kafka metaphor | HIGH (scope-excluded, retained for future) |
@@ -175,7 +175,124 @@ Corrections that must propagate through active inventory. Each was identified du
 
 **Correct**: 許舜英 **+ 鄭松茂** 共同創辦 (1987). 許舜英 擔任 ECD; 鄭松茂 為策略合夥人. Campaign run 1988-1999 peak; 許舜英 2008 離開加入 奧美時尚.
 
+## §Cross-Master Context (absorbed from craft-lineage files v1.9.0)
+
+This section consolidates cross-master attribution corrections, generational context, and inter-master comparison tables previously maintained in `voice-anchor-meta-detail.md §Cross-Master Context (JP)` + `voice-anchor-meta-detail.md §Cross-Master Context (ZH)`. Per-master voice bodies (register, prose mechanics, examples, Don't blocks) already live in each `anchor-{slug}.md`; this section covers what IS genuinely cross-master.
+
+**Load scope**: Pass 3a/3b conditional (attribution risk / cross-master comparison / era context triggers) + Pass 3d register-signal (always loaded with meta-detail).
+
+### Primary Sources (aggregate)
+
+**JP craft-gate masters**:
+- **糸井重里**: ほぼ日刊イトイ新聞 archive; 2024 コピー10 series (landmark copies discussed with 谷山雅計); TCC コピー年鑑.
+- **岩崎俊一**: 『幸福を見つめるコピー』(東急エージェンシー, 2009; restored 2015). 宣伝会議 memorial articles. TCC コピー年鑑.
+- **眞木準**: TCC コピー年鑑. 宣伝会議賞 眞木準賞.
+- **谷山雅計**: 『広告コピーってこう書くんだ！読本』『人の心を動かす「伝える」技術』. TCC コピー年鑑.
+- **Cross-reference JP sources**: TCC official site, iso-labo.com, kai-story.com, AdverTimes, EDIMAG.
+
+**ZH craft-gate masters**:
+- **許舜英**: 《許舜英購物日記》(漫遊者文化, 2011); 《我不是一本型錄》文集; 中興百貨 1988–1999 campaign archive (意識形態廣告公司作品集, 數英 / 壹讀 / Brain 340 期 2004).
+- **李欣頻**: 《誠品副作用》(新新聞文化, 1998); 《廣告副作用．藝文篇》; 《李欣頻的廣告四庫全書》(時報 2016, 1991-2016 典藏); 《李欣頻的寫作之道》(2019).
+- **葉明桂**: 《品牌的技術和藝術：向廣告鬼才葉明桂學洞察力與故事力》(天下文化, 2017; ISBN 9789864792375); 左岸咖啡館 1998– campaign archive (台灣奧美作品集, 數英 / 廣告雜誌 122 期); 奧美官方簡歷.
+- **Cross-reference ZH sources**: 動腦 Brain magazine archive (brain.com.tw), 天下雜誌, 經理人月刊, 數英 digitaling.com, 壹讀 read01.com, 設計之家 sj33.cn.
+
+### Critical Attribution Corrections (expanded from Z1-Z8; supplements Z9-Z11 above)
+
+#### Drift #Z1: Peter Altenberg sinicization (NOT 葉明桂 original)
+
+「我不在咖啡館，就在去咖啡館的路上」is a Chinese adaptation of Austrian poet Peter Altenberg's (1859–1919) Viennese saying "Wenn der Altenberg nicht im Kaffeehaus ist, ist er am Weg dorthin" (「如果 Altenberg 不在咖啡館，就在前往咖啡館的路上」). Originally said **about** Altenberg by contemporaries (not by him), later recirculated as self-description. 台灣奧美 sinicized and adopted for 左岸咖啡館 — a borrowed line, not original composition. Do not drift into claiming 葉明桂 coined it.
+
+#### Drift #Z2: 「拋開書本到街上去」— 李欣頻 but referencing 寺山修司
+
+「拋開書本到街上去」series (誠品敦南) is 李欣頻's, but the inverted source — 《書を捨てよ、町へ出よう》(1967) — is 寺山修司's. Some secondary sources omit the 寺山修司 attribution and present the copy as pure 李欣頻 invention. 李欣頻 herself has documented the 寺山修司 inspiration in interviews; do not flatten the lineage.
+
+#### Drift #Z3: 意識形態廣告 founding year
+
+意識形態廣告 (Icey) founding year is **1987**, not 1988. 許舜英 and 鄭松茂 co-founded the agency in 1987. The 中興百貨 campaign run began 1988 and peaked through 1999. 許舜英 departed 意識形態 in 2008 to join 奧美時尚 (Ogilvy Fashion & Lifestyle). 中興百貨 itself closed its last store in 2008. The **1988–1999** decade is the ideology-era canonical window — post-2000 中興百貨 copy is not canonical 許舜英 voice.
+
+#### Drift #Z4: 中興百貨 文案 canonical source discipline
+
+Widely-circulated online "中興百貨 文案" lists mix 許舜英 works with later imitations and uncredited copy. The confirmed canonical set is anchored in 《許舜英購物日記》+ 意識形態 award-year archives (時報廣告金像獎, 4A 自由創意獎, 亞太廣告獎). Lines not traceable to these sources should be treated as **[disputed] pending primary-source confirmation**.
+
+#### Drift #Z5: 多喝水 NOT 吳念真
+
+「多喝水 MORE WATER」(金車) is NOT 吳念真's work. It is 奧美台灣 in-house copy, frequently misattributed to 吳念真 online due to his 1990s TW advertising prominence. 吳念真's canonical TW advertising voice anchors are **保力達B 口白** (李奧貝納, 1990s–ongoing, 台語 register) + **全國電子「足感心」** (2000s). Do not list 多喝水 among 吳念真 works.
+
+#### Drift #Z6: 孫大偉 agency affiliation
+
+孫大偉's agency affiliation is **台灣奧美** (initially) then **偉太廣告** (1991+ independent founder). Some secondary sources incorrectly cite him as 智威湯遜 (J. Walter Thompson). 孫大偉 worked at 奧美 1980s–1990s before founding 偉太; JWT attribution is an error to reject at source-check. (孫大偉 does not have a dedicated v2 anchor; this correction lives here.)
+
+#### Drift #Z7: 長榮航空〈I SEE YOU〉VO is 金城武 himself
+
+長榮航空〈I SEE YOU〉(2013) 旁白 = **金城武 本人獨白**, NOT 吳念真. The ad stars Takeshi Kaneshiro and the monologue 「我心中，尚未崩壞的地方」is delivered by Kaneshiro himself. 吳念真 did not participate in this campaign's VO. When citing 吳念真's iconic 旁白 work, stick to 保力達B / 全國電子 / other confirmed attributions.
+
+#### Drift #Z8: 全聯經濟美學 creative lead
+
+全聯經濟美學 (2015–) creative lead = **龔大中** (台灣奧美 ECD at campaign start, 2020 promoted to CCO). Some online sources incorrectly cite 林敬凱 as creative lead, OR mistakenly credit 邱彥翔 as copywriter. **邱彥翔 is the actor** ("全聯先生") hired 2006 for the pre-經濟美學 TV-era campaigns; he is not a copywriter and did not author the 2015+ 經濟美學 aphoristic copy. Primary-source anchor: 數位時代 2015 龔大中 專訪 + 經理人月刊 2020 全聯 × 奧美 對談 + 第38屆時報廣告金像獎 全聯經濟美學 2015 得獎紀錄.
+
+#### Drift #JP-8: リゲイン「24時間戦えますか？」NOT 岩崎俊一
+
+This copy is frequently misattributed to 岩崎 in secondary sources. Re-confirmed during v4.14.0 grounding research — the attribution is incorrect. Do not list it among 岩崎's works. (This correction is also inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer.)
+
+### Generational Context
+
+#### JP (1947-1948 cohort, 1980s copywriter boom)
+
+糸井重里 (1948–), 岩崎俊一 (1947–2014), 眞木準 (1948–2009), 谷山雅計 (1961–, later cohort). All active during the 1980s "コピーライターブーム":
+
+- Mass media dominance (TV CM + print + 交通広告)
+- Copywriter as cultural celebrity
+- Copy judged by artistic merit, not click-through rate
+- TCC (東京コピーライターズクラブ) annual as the industry's canon
+
+These voices emerged from a media environment where **a single line needed to work across millions of viewers with no targeting, no A/B testing, and no retargeting**. This constraint produced copy that prioritized universality, ambiguity, and cultural resonance over specificity and conversion optimization.
+
+#### ZH (1980s-1990s TW 解嚴後新都會消費主義覺醒)
+
+許舜英 / 李欣頻 / 葉明桂 — all three masters emerged from 1980s–1990s 台灣解嚴後新都會消費主義覺醒:
+
+- 1987 解嚴 → 1990s 文化開放 + 消費升級 + 女性經濟獨立
+- 意識形態廣告公司 (1987–2008) as cultural focal point for "有態度的消費" — advertising as cultural criticism, not product description
+- 誠品書店 1989 敦南店 → 1995 遷址 → 2000s 全島連鎖, anchoring "書店 = 生活提案" category that did not exist before
+- 台灣奧美 under 莊淑芬 / 葉明桂 leadership institutionalizing strategic-planning-first advertising
+
+These voices emerged from a media environment where **a full-page 報紙廣告 or one-minute TVC had to carry an entire cultural thesis**. Reader hailed as **literate cultural peer**, not conversion target. Produces copy privileging aphoristic density, cross-domain vocabulary transplant, cultural-reference-dense hooks over specificity and call-to-action clarity.
+
+**Warning**: applying these voices uncritically to 2020s performance-marketing contexts produces beautiful copy that does not convert. Use as voice reference, not targeting strategy.
+
+### LLM Reproduction Gap — Cross-master Summary (ZH craft-gate)
+
+| Master | Hardest dimension to reproduce | Canonical failure mode | Single best mitigation gate |
+|--------|-------------------------------|------------------------|-----------------------------|
+| 許舜英 | 文化批判 payload underneath definitional inversion | Hollow 「X 是一種 Y」without power-disparity word | Require a power-disparity word (政治/殖民/失敗/禁慾/危險) in the sentence |
+| 李欣頻 | Named-reference specificity in enumeration | Generic-list rhythm without load-bearing names | Require 4 specific named cultural figures; confirm removing one breaks the rhythm |
+| 葉明桂 / 左岸 | Strategic category-reframe underneath atmospheric prose | Pretty scene without brand thesis | Require answering "what are we actually selling that competitor is not?" before drafting scene |
+
+All three masters share a common LLM-failure pattern: **surface grammar is easy to copy; the cultural / strategic / critical payload underneath is not**. ZH Q2 literary voice is defined by payload + grammar in tension; reproducing grammar alone produces what Chinese copywriting critics call 「文青腔」— a voice that sounds like the canon but means nothing.
+
+### Voice selection guidance (cross-master)
+
+| Voice reference | Best fit | Avoid when |
+|-----------------|----------|------------|
+| 許舜英 | Fashion / luxury retail / cultural-criticism-tolerant brands; audiences comfortable with provocation | Mass-market FMCG; youth-targeted short-form; any context where power-disparity vocabulary reads as alienating |
+| 李欣頻 | Bookstores / lifestyle retail / cultural institutions; audiences who read named references | Utility products; price-sensitive campaigns; audiences without literary-reference capital |
+| 葉明桂 / 左岸 | Long-arc brand-building for premium consumer goods with strategic category-reframe potential | Performance-marketing contexts requiring measurable CTR; short-term promotional windows |
+
+### Cross-master Anti-Patterns
+
+- **Mixing two ZH masters' voices in one piece** — registers conflict: 許舜英's aphoristic density overwhelms 李欣頻's breathing rhythm; 葉明桂 / 左岸's first-person intimacy collapses 許舜英's impersonal critique stance. One voice per piece.
+- **Using 許舜英's definitional inversion for products without cultural-critique capacity** — 民生用品 ad as "X 就是一種 Y" reads pretentious, not insightful. Inversion requires cultural tension to inversely mirror; if product category has no such tension, form does not apply.
+- **Applying 李欣頻's named-reference enumeration to audiences without literary-reference capital** — voice assumes reader recognizes 寺山修司 / 阿莫多瓦 / 徐四金. For audiences outside that reference set, copy reads as cultural gatekeeping rather than invitation.
+- **Reproducing 左岸 atmospheric prose without the strategic category-reframe underneath** — atmosphere without brand thesis produces interchangeable café copy. 葉明桂's method is explicit: strategy first, copy second.
+- **Ignoring generational context** — these voices emerged from 1990s–2000s pre-digital media. Applying to 2020s performance-marketing contexts produces beautiful copy that does not convert.
+- **Claiming LLM can "寫出 許舜英 / 李欣頻 / 左岸 style" or "岩崎 / 糸井 / 眞木 style"** — LLM reproduces grammar but consistently fails on payload. Use the mitigation gates per master (via each anchor's `Don't / Over-mimic` block + this cross-master summary), not the naive claim.
+
+### Cross-tradition transplant forbidden
+
+Never force JP lineage patterns onto ZH output (or vice versa); never force either onto Anglo output. Each culture's voice tradition emerged from distinct media ecology, critical apparatus, and reader-register expectations. Cross-reference-valid-for registry (see above) documents where cross-fertilization is safe; outside those documented links, **do not transplant**.
+
 ## Cross-references
 
 - [voice-anchor-meta-core.md](voice-anchor-meta-core.md) — schema + rubric + over-mimic mitigation index (always loaded with this file)
 - Per-quadrant anchor files: citations for specific anchors live there; this file is metadata reference
+- Per-master biographical arc + campaign detail: see `docs/voice-anchor-deep-dives/pilot-layer1-v2-{slug}.md` files (Layer 2/3 research artifacts, Pass 3 does NOT load)

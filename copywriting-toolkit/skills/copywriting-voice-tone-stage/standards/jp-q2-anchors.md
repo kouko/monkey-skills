@@ -30,25 +30,25 @@ Q2 = Authority × Emotion. Manifesto / 文学 / 陰翳 / brand-philosophy regist
 - **寺山修司 — 言葉の錬金術師** (poet / playwright, 1935-1983) — [anchor-jp-terayama-kotoba-no-renkinjutsushi.md](anchor-jp-terayama-kotoba-no-renkinjutsushi.md)
   - Slug: `jp-terayama-kotoba-no-renkinjutsushi`
 
-Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load [jp-copy-craft-lineage.md](jp-copy-craft-lineage.md) when trigger matches.
+Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load `voice-anchor-meta-detail.md §Cross-Master Context` when trigger matches.
 
 ## Landmark: toward-Q1
 
 - **谷崎潤一郎『陰翳礼讃』** (novelist, 1886-1965) — [anchor-jp-tanizaki-inei.md](anchor-jp-tanizaki-inei.md)
   - Slug: `jp-tanizaki-inei`
 
-Craft-gate pointer: 秋山晶 aphoristic time-philosophy — load [jp-copy-craft-lineage.md](jp-copy-craft-lineage.md).
+Craft-gate pointer: 秋山晶 aphoristic time-philosophy — load `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 ## Landmark: toward-Q3
 
 - **川端康成『雪国』— 新感覚派** (novelist, 1899-1972) — [anchor-jp-kawabata-shinkankaku-ha.md](anchor-jp-kawabata-shinkankaku-ha.md)
   - Slug: `jp-kawabata-shinkankaku-ha`
 
-Craft-gate pointer: 糸井重里 「おいしい生活」Q2-edge — load [jp-copy-craft-lineage.md](jp-copy-craft-lineage.md).
+Craft-gate pointer: 糸井重里 「おいしい生活」Q2-edge — load `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 ## Cross-references
 
-- **zh Q2 STRONG**: 中興百貨 (許舜英) / 誠品書店 (李欣頻) / 左岸咖啡館 (葉明桂) — load [zh-copy-craft-lineage.md](zh-copy-craft-lineage.md)
+- **zh Q2 STRONG**: 中興百貨 (許舜英) / 誠品書店 (李欣頻) / 左岸咖啡館 (葉明桂) — load `voice-anchor-meta-detail.md §Cross-Master Context`
 - **EN Q2**: Apple Lee Clow `anchor-en-lee-clow-visionary-manifesto.md`, Nike Dan Wieden `anchor-en-dan-wieden-*`, Patek Philippe Tim Delaney `anchor-en-tim-delaney-patek-philippe-stewardship.md`, Yvon Chouinard `anchor-en-yvon-chouinard-patagonia-conscience.md`
 
 ## Migration history

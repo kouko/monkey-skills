@@ -32,47 +32,27 @@ Skip only when:
   this skill still runs, but treats the provided copy as the draft input
   rather than regenerating.
 
-### When lineage craft applies (Pass 3)
+### When lineage craft applies (Pass 3, v1.9.0)
 
-Pass 3 loads a language-specific lineage standard. Exactly one of the
-two lineage files loads — never both, never cross-transplanted:
+Pass 3 triggers per the 4-branch dispatch (§Pass 3 activation guard). Post-v1.7.0, **Pass 3a/3b load per-master `anchor-{slug}.md` files directly** (via JP_CRAFT_MASTER_MAP / ZH_CRAFT_MASTER_MAP) — no wholesale craft-lineage load.
 
-**JP lineage** — `jp-copy-craft-lineage.md` loads when:
+**JP craft-gate (Pass 3a)** — activates when:
 
-1. `brief.output_language` is `ja` (Japanese-language output), OR
-2. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}, OR
-3. `voice_quadrant.primary == "Q3"` (Affinity-Emotion) AND the message
-   thesis is state-proposal / 余韻-driven rather than action-prompting.
+1. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}, OR
+2. `brief.output_language == "ja"` AND Q3 state-proposal / 余韻 register is declared (routes through Pass 3d to JP Q3 quadrant router; returns to craft-gate if master identified)
 
-**ZH lineage** — `zh-copy-craft-lineage.md` loads when:
+**ZH craft-gate (Pass 3b)** — activates when:
 
-1. `brief.output_language` is `zh-TW` or `zh-HK` AND a Q2-or-Q2-edge
-   maestro voice is declared, OR
-2. `brief.voice_reference` ∈ {許舜英, 李欣頻, 葉明桂}, OR
-3. `voice_quadrant.primary == "Q2"` (Authority-Emotion) AND the target
-   audience is ZH-sphere consumer-class context (e.g., TW 都會消費主義,
-   HK 文化消費) where the Taiwan / Hong Kong Q2 canon is the relevant
-   reference, not Anglo / JP.
+1. `brief.voice_reference` ∈ {許舜英, 李欣頻, 葉明桂}, OR
+2. `brief.output_language` is `zh-TW` or `zh-HK` AND Q2-maestro voice declared (routes through Pass 3d register-signal)
 
-Note: `voice_quadrant` is the object emitted by Phase 5
-(`{primary, edge, rationale, schwartz_alignment}`) — always dereference
-`.primary`, never read it as a string.
+Note: `voice_quadrant` is the object emitted by Phase 5 (`{primary, edge, rationale, schwartz_alignment}`) — always dereference `.primary`, never read as string.
 
-**Neither lineage applies** → Pass 3 does NOT run. Voice tuning operates
-on `voice-and-tone.md` alone (Ogilvy Anglo canon + 18F / Mailchimp
-4-axis + tone context-switching).
+**Non-craft-gate Pass 3 paths**: Pass 3c (axis-extreme), Pass 3d (register-signal via quadrant router) — see §Pass 3 activation guard below for full dispatch logic.
 
-**Cross-tradition transplant is forbidden** — never force JP lineage
-patterns onto ZH output (or vice versa), never force either onto Anglo
-output. `voice-and-tone.md §Anti-Patterns` + both lineage standards'
-§Anti-Patterns sections explicitly ban this.
+**Cross-tradition transplant forbidden** — never force JP lineage onto ZH output (or vice versa), never force either onto Anglo output. `voice-and-tone.md §Anti-Patterns` + `voice-anchor-meta-detail.md §Cross-Master Context` document the ban.
 
-**If both lineage triggers match** (e.g., brief has `voice_reference:
-糸井重里` but `output_language: zh-TW`) → emit a `violation` envelope
-per `../../CLAUDE.md §Envelope Violation`; router routes to
-`copywriting-intake` for clarification. Do NOT self-dispatch the
-bounce — that would fragment `bounce_round` counter per L2 contract
-(§Router Validation single enforcement point).
+**If both lineage triggers match** (e.g., `voice_reference: 糸井重里` but `output_language: zh-TW`) → emit `violation` envelope per `../../CLAUDE.md §Envelope Violation`; router routes to `copywriting-intake`. Do NOT self-dispatch bounce (fragments `bounce_round` counter).
 
 Violation payload:
 ```json
@@ -99,19 +79,8 @@ Violation payload:
     tradition (糸井 state-proposal, 岩崎 余韻) + 18F / Mailchimp 4-axis
     voice model + Mailchimp "one voice, multiple tones" + tone context-
     switching table (onboarding / error / crisis / celebration).
-  - `standards/jp-copy-craft-lineage.md` — Tier 3 JP deep-dive on
-    糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 voice signatures:
-    representative corpus, stylistic grammar patterns, generational
-    context, and **LLM reproduction gap analysis** per master. Invoked
-    per §When lineage craft applies (JP branch).
-  - `standards/zh-copy-craft-lineage.md` — Tier 3 ZH deep-dive on
-    許舜英 (意識形態 / 中興百貨) / 李欣頻 (誠品) / 葉明桂 (奧美 /
-    左岸) voice signatures: 11 + 7 + 3 dated verbatim corpus entries,
-    stylistic grammar (definitional inversion / cultural-critique
-    density / brand-personality mapping), generational context
-    (1990s 台灣都會消費主義覺醒), 4 attribution-drift corrections,
-    and per-master LLM reproduction gap analysis. Invoked per §When
-    lineage craft applies (ZH branch).
+  - `standards/anchor-jp-{itoi-shigesato,iwasaki-shunichi,maki-jun,taniyama-masakazu}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 糸井 / 岩崎 / 眞木 / 谷山 (Pass 3a craft-gate). Replace the former `voice-anchor-meta-detail.md §Cross-Master Context (JP)` Tier 3 deep-dive; cross-master content absorbed into `voice-anchor-meta-detail.md §Cross-Master Context`.
+  - `standards/anchor-zh-tw-{xu-shunying,lee-hsin-ping,ye-mingui}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 許舜英 / 李欣頻 / 葉明桂 (Pass 3b craft-gate). Replace the former `voice-anchor-meta-detail.md §Cross-Master Context (ZH)` Tier 3 deep-dive; Z1-Z8 attribution corrections absorbed into `voice-anchor-meta-detail.md §Cross-Master Context` + inlined per-anchor Metadata (Z1 → 葉明桂; Z2 → 李欣頻; Z3/Z4 → 許舜英; Z5/Z7 → 吳念真; Z8 → 龔大中).
 - **Rubric (SHOULD gate)**:
   - `rubrics/voice-consistency-gate.md` — cross-stage / cross-candidate
     voice stability + tone contextual appropriateness + maestro fidelity.
@@ -216,16 +185,16 @@ if Pass 3 triggered:
         master_slug = JP_CRAFT_MASTER_MAP[voice_reference]
         load standards/anchor-jp-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
         load standards/voice-anchor-meta-core.md    # over-mimic mitigation registry
-        # Conditional: if brief needs lineage / era / cross-master context
-        # OR attribution correction risk flagged → load jp-copy-craft-lineage.md
+        # Conditional: if brief needs cross-master context / era / attribution risk
+        # → load standards/voice-anchor-meta-detail.md §Cross-Master Context (section-targeted)
         proceed to Pass 3a
 
     elif voice_reference ∈ {許舜英, 李欣頻, 葉明桂}:
         master_slug = ZH_CRAFT_MASTER_MAP[voice_reference]
         load standards/anchor-zh-tw-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
         load standards/voice-anchor-meta-core.md
-        # Conditional: zh-copy-craft-lineage.md loads only for attribution corrections /
-        # cross-master lineage (e.g. Peter Altenberg origin, 寺山 1967 allusion)
+        # Conditional: attribution corrections (Z1-Z8) / cross-master lineage / 意識形態 era
+        # → load standards/voice-anchor-meta-detail.md §Cross-Master Context
         proceed to Pass 3b
 
     # Tier 3 — Axis Extreme (new, v1.3.2)
@@ -298,21 +267,14 @@ master:
   — discipline-centric (3-reason test per candidate + compressive
   restraint).
 
-**Conditional load of `jp-copy-craft-lineage.md`** — load ONLY when:
-1. Brief explicitly requires cross-master lineage / historical era /
-   critical debate context
-2. Attribution risk triggered (e.g. rival-of-master misattribution
-   common in user briefs)
+**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.0) — load ONLY when:
+1. Brief explicitly requires cross-master lineage / historical era / critical debate context
+2. Attribution risk triggered (e.g. rival-of-master misattribution common in user briefs)
 3. Draft involves multiple JP masters side-by-side comparison
 
-Default: do NOT load craft-lineage.md. v2 anchor body carries sufficient
-voice signature for standalone rewrite.
+Default: do NOT load meta-detail. v2 anchor body carries sufficient voice signature + per-master `Don't` block for standalone rewrite.
 
-**Critical attribution corrections (JP)** — 『リゲイン「24時間戦えますか？」』
-is NOT 岩崎俊一 (authoritative source:
-`jp-copy-craft-lineage.md §Critical Attribution Corrections`). Do not
-attribute misattributed copies during reference lookup. If brief cites
-disputed attribution, trigger conditional load of craft-lineage.
+**Critical attribution corrections (JP)** — 『リゲイン「24時間戦えますか？」』is NOT 岩崎俊一 (drift #JP-8). Correction inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. For full cross-master correction set, see `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 #### Pass 3b — ZH lineage (ZH trigger matched, v1.7.0 per-master v2 load)
 
@@ -333,27 +295,19 @@ Load the master-specific v2 anchor file (from ZH_CRAFT_MASTER_MAP above):
   warmth). Distinguished from 許舜英's cool manifesto register by
   brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
 
-**Conditional load of `zh-copy-craft-lineage.md`** — load ONLY when:
-1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register
-   differentiation)
-2. Attribution correction risk triggered (see below — Peter Altenberg /
-   寺山 allusion chains)
-3. Brief references 意識形態 廣告 institutional-era context
+**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.0) — load ONLY when:
+1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register differentiation)
+2. Attribution correction risk triggered (Peter Altenberg / 寺山 allusion chains / Z1-Z8)
+3. Brief references 意識形態 廣告 institutional-era context (1987-1999 decade)
 
-Default: do NOT load craft-lineage.md.
+Default: do NOT load meta-detail. Per-anchor `Don't` block + anchor Metadata carry inlined Z1 (葉明桂 anchor) + Z3/Z4 (許舜英 anchor) + Z5/Z7 (吳念真 anchor) + Z8 (龔大中 anchor + zh-q3 router) + 寺山 lineage (李欣頻 anchor).
 
-**Critical attribution corrections (ZH)** — authoritative source is
-`zh-copy-craft-lineage.md §Critical Attribution Corrections`. Summary
-(trigger conditional load for full context):
-- 「我不在咖啡館...」originates from Peter Altenberg (German poet,
-  sinicized); NOT an original 葉明桂 line, though used in 左岸 campaigns.
-- 「拋開書本到街上去」references 寺山修司 1967 book title; 李欣頻
-  credited the allusion in her own writing.
-- 意識形態廣告 founded **1987** (not 1988 as sometimes reported);
-  中興百貨 canonical window 1988-1999.
-- Content-farm reprints of "中興百貨 文案" mix canonical 許舜英 work
-  with post-2000 agency imitations — anchor only to《許舜英購物日記》+
-  意識形態 award archives when citing.
+**Critical attribution corrections (ZH)** — authoritative source is `voice-anchor-meta-detail.md §Cross-Master Context §Critical Attribution Corrections`. Quick-reference summary (trigger conditional load for full context):
+- 「我不在咖啡館...」(Peter Altenberg sinicized, NOT 葉明桂 original) — Z1
+- 「拋開書本到街上去」(李欣頻, referencing 寺山修司 1967) — Z2
+- 意識形態廣告 founded **1987** (not 1988); 中興百貨 canonical window 1988-1999 — Z3
+- Content-farm "中興百貨 文案" mixes canonical with post-2000 imitations; canonical = 《許舜英購物日記》+ 意識形態 award archives — Z4
+- 孫大偉 agency = 奧美 → 偉太 (NOT JWT) — Z6
 
 #### Pass 3 cross-branch common rules
 
@@ -551,9 +505,9 @@ Verdict handling:
   ZH signatures (definitional inversion, cultural-critique density)
   into JP output. Both lineage standards ban this in §Anti-Patterns.
 - Attributing 『24時間戦えますか？』to 岩崎俊一 (documented drift #8 in
-  jp-copy-craft-lineage.md).
+  voice-anchor-meta-detail.md §Cross-Master Context).
 - Attributing 「我不在咖啡館...」as original 葉明桂 line (actually Peter
-  Altenberg sinicized — zh-copy-craft-lineage.md drift #Z1).
+  Altenberg sinicized — voice-anchor-meta-detail.md §Cross-Master Context drift #Z1).
 - Citing "中興百貨 文案" from content-farm reprint lists without
   anchoring to 許舜英購物日記 + 意識形態 archives (drift #Z4).
 - Filling the Voice Guide axes abstractly ("friendly, professional") with
@@ -567,9 +521,9 @@ Verdict handling:
 
 - `standards/voice-and-tone.md` — Tier 2 voice SSOT (verbatim copy from
   `domain-teams:copywriting-team`).
-- `standards/jp-copy-craft-lineage.md` — Tier 3 JP lineage deep-dive
+- `standards/voice-anchor-meta-detail.md §Cross-Master Context` — Tier 3 JP lineage deep-dive
   (verbatim copy from `domain-teams:copywriting-team`).
-- `standards/zh-copy-craft-lineage.md` — Tier 3 ZH lineage deep-dive
+- `standards/voice-anchor-meta-detail.md §Cross-Master Context` — Tier 3 ZH lineage deep-dive
   (NEW in v1.0.0; primary-source-researched; not cp'd from
   `domain-teams:copywriting-team`).
 - `rubrics/voice-consistency-gate.md` — SHOULD gate rubric (verbatim copy).
