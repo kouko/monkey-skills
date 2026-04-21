@@ -6,6 +6,7 @@ quadrant: Q4
 landmark: toward-Q3
 creator_type: author
 pilot_round: batch-7
+safe_substitute_for: [Chandler, Raymond Chandler]
 date: 2026-04-21
 ---
 

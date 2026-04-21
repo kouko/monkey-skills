@@ -6,6 +6,7 @@ quadrant: Q2
 landmark: toward-Q1
 creator_type: author
 pilot_round: batch-5
+safe_substitute_for: [張愛玲]
 date: 2026-04-21
 ---
 

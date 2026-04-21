@@ -18,6 +18,17 @@ Q4 = Affinity × Reason. EN canonical:
 
 ## Landmark: center
 
+- **Eugene Schwartz — "channel the desire, never create it"** (copywriter, 1927-1995; author of *Breakthrough Advertising* 1966) — [anchor-en-schwartz-eugene-direct-response-breakthrough.md](anchor-en-schwartz-eugene-direct-response-breakthrough.md) (v1.11.0)
+  - Slug: `en-schwartz-eugene-direct-response-breakthrough`
+  - Register: direct-response long-form; awareness-stage calibration + market-sophistication rule + fascination bullet structure + bullets/story/bullets rhythm
+  - ⚠ Over-mimic HIGH: LLM defaults into Hopkins-era carnival-barker pastiche — exclamation-heavy, hyperbolic, generic-benefit claims. Mitigation: withhold resolutions in bullets; cite specific numbers only; no exclamation points
+  - Not substitutable for Ogilvy/Hopkins (different register: Ogilvy = reason-why brand prestige, Hopkins = pre-Schwartz scientific testing)
+
+- **Matt Levine — *Money Stuff* insider-wry financial exegesis** (Bloomberg Opinion columnist, ex-Wachtell/Goldman M&A lawyer) — [anchor-en-levine-matt-money-stuff.md](anchor-en-levine-matt-money-stuff.md) (v1.11.0)
+  - Slug: `en-levine-matt-money-stuff`
+  - Register: numbered hypothetical explainer spine + childish-grammar imagined dialogue + footnote as digression + "everything is X" refrain-then-complicate + ironic-literal gloss + self-deprecating frame
+  - ⚠ Over-mimic HIGH: catchphrases trivially copyable, mechanics not. Mitigation: require one numbered hypothetical and one plain-English re-gloss of jargon per piece
+
 - **Jason Fried + DHH — Basecamp Rework center (plain-practical mode)** (named author duo) — [anchor-en-basecamp-fried-dhh-contrarian-manifesto.md](anchor-en-basecamp-fried-dhh-contrarian-manifesto.md)
   - Slug: `en-basecamp-fried-dhh-contrarian-manifesto`
   - Register: plain declarative startup-advice; short sentence + 2-3 sentence chapters; named-enemy antithesis

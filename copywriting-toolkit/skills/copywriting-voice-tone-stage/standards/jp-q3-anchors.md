@@ -46,6 +46,14 @@ Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-me
 - **梅田悟司 — 内なる言葉の方法論** (named CW, ジョージア「世界は誰かの仕事でできている。」) — [anchor-jp-umeda-satoshi-uchinaru-kotoba.md](anchor-jp-umeda-satoshi-uchinaru-kotoba.md)
   - Slug: `jp-umeda-satoshi-uchinaru-kotoba`
 
+## Landmark: toward-Q4
+
+- **松浦弥太郎 — 「今日もていねいに」** (essayist, 元『暮しの手帖』編集長 2006-2015, COW BOOKS 代表) — [anchor-jp-matsuura-yataro-teinei-essay.md](anchor-jp-matsuura-yataro-teinei-essay.md) (v1.11.0)
+  - Slug: `jp-matsuura-yataro-teinei-essay`
+  - Register: ですます調基調 + 一人称「ぼく/僕」+ 句点短文+並列読点; 『100の基本』体言止めマキシム 1 章 1 回; 命令形・勧誘形禁止
+  - ⚠ Over-mimic HIGH: ひらがな過多 + 体言止め濫発 → ポエム化 / 自己啓発化. Mitigation: ですます基調+句点短文;体言止めは 1 章 1 回まで
+  - Cross-ref: zh-TW STRONG (繁中既有譯本廣為流通、模仿者眾)
+
 ## Cross-references
 
 - **zh-TW Q3 STRONG** (this direction dominant): 龔大中 全聯格言 / 吳念真 台語氣口 / 胡湘雲 大眾銀行 / 黃春明 / 三毛 — see [zh-q3-anchors.md](zh-q3-anchors.md)
