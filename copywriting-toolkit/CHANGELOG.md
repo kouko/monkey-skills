@@ -1,5 +1,36 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.4 — 2026-04-21 (Phase A batch 6 — 6 more Layer 1 v2 entries, EN-focused)
+
+6 saved Layer 1 v2 entries from batch 6 (8 dispatched, 6 saved this commit; 2 under review). All 5/5 pass.
+
+### Batch 6 saved (6 entries)
+- Amy Hempel (EN Q1 toward-Q4) — compressed minimalism, Lish lineage
+- George Orwell (EN Q1 toward-Q4) — political plain prose, 6 rules
+- James Baldwin (EN Q2 toward-Q3) — sermonic cadence, Black-church periodic sentence
+- Gary Halbert (EN Q4 extreme, craft-gate) — DR letter, Hopkins→Ogilvy→Halbert lineage
+- Bill Jayme (EN Q4 extreme) — direct-mail seduction, envelope teaser discipline
+- Nora Ephron (EN Q3 center) — warm-wit personal essay
+
+### Cumulative v2: 44 Layer 1 entries (dispatched)
+
+- JP: 14 anchors (craft-gate 4/4 + Q1/Q2/Q3/Q4 coverage)
+- zh-TW: 11 anchors (craft-gate 3/3 + Q1/Q2/Q3 coverage)
+- zh-HK: 2 anchors (Mike Chu + KC Tsang — already institutional moved-out, 2 kept individual)
+- EN: 17 anchors (Q1/Q2/Q3/Q4 all major creators)
+
+### Remaining KEEP audit (~10 EN)
+
+- Kazuo Ishiguro / Phoebe Waller-Bridge / Aaron Sorkin / Taika Waititi / Greta Gerwig
+- Dashiell Hammett / Anton Chekhov / Ben Thompson (Stratechery)
+- Nathan Allebach / Zaria Parvez
+
+### Still deferred
+
+- No `standards/*.md` integration
+- No `voice-anchor-meta-core.md` schema update
+- No Pass 3 routing change
+
 ## v1.4.3 — 2026-04-21 (Phase A batch 5 — 8 more Layer 1 v2 entries)
 
 8 additional Layer 1 v2 individual-creator entries, all native-language (no English-scaffold problem from v1.4.2 pilot entries).
