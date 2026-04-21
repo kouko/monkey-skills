@@ -1,5 +1,39 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.3 — 2026-04-21 (Phase A batch 5 — 8 more Layer 1 v2 entries)
+
+8 additional Layer 1 v2 individual-creator entries, all native-language (no English-scaffold problem from v1.4.2 pilot entries).
+
+### Batch 5 (8 entries)
+- 吉本ばなな (JP Q3 extreme, author) — 大胆な省略 / J文学
+- 伊丹十三 (JP Q1 toward-Q4, essayist + film director) — 軽妙洒脱
+- 高田明 (JP Q4 extreme, TV shopping founder 1990-2015) — 2秒の間 / 序破急
+- 白先勇 (zh-TW Q2 toward-Q1, author) — elegiac diaspora / 今昔之感
+- 三毛 (zh-TW Q3 toward-Q2, author) — 流浪文學 / 任性宣告
+- 胡湘雲 大眾銀行系列 (zh-TW Q3 center, named CD) — narrative TVC / 不平凡的平凡大眾
+- Strunk & White (EN Q1 toward-Q4, author duo) — *The Elements of Style*, Ogilvy lineage
+- George Saunders (EN Q3 toward-Q2, author) — compassionate absurd
+
+### Cumulative v2: 36 entries, 100% 5/5 pass rate
+
+- **JP craft-gate 4/4 complete**: 糸井 / 岩崎 / 眞木 / 谷山
+- **zh-TW craft-gate 3/3 complete**: 許舜英 / 李欣頻 / 葉明桂
+- **JP Q3 landscape** essentially complete: 向田 / 坂元 / 吉本 / 梅田 / 宮沢 / 谷川 (6 anchors)
+- **zh-TW Q3 landscape** complete across positions: 吳念真 / 胡湘雲 center, 黃春明 / 三毛 toward-Q2
+- **zh-TW Q2 landscape** complete: craft-gate + 張愛玲 / 朱天文 / 白先勇 / 錢鍾書 / 王家衛 / 朱家鼎
+- **EN Q1 landscape** strengthened: Ogilvy / Bernbach / Strunk&White / McPhee / Hemingway / Carver / 漱石 (spans JP→EN parity)
+- **EN Q2-Q3-Q4** key anchors: Didion / Morrison / Chandler / Hopkins / Saunders
+
+### Remaining KEEP audit (~12 anchors)
+
+- EN (~12): Amy Hempel / Orwell / James Baldwin / Kazuo Ishiguro / Phoebe Waller-Bridge / Aaron Sorkin / Taika Waititi / Greta Gerwig / Nora Ephron / Dashiell Hammett / Anton Chekhov / Ben Thompson (Stratechery) / Gary Halbert / Bill Jayme / Nathan Allebach / Zaria Parvez
+
+### Still deferred
+
+- No `standards/*.md` integration (v2 entries remain in docs/voice-anchor-deep-dives/)
+- No schema update to voice-anchor-meta-core.md
+- No Pass 3 routing change
+
 ## v1.4.2 — 2026-04-21 (Phase A batch 3 + 4 + language-consistency rewrite)
 
 16 additional Layer 1 v2 individual-creator entries (8 batch 3 + 8 batch 4), plus language-consistency rewrite of 14 earlier entries whose Voice direction / Prose mechanics / Don't-Failure-mode / Mitigation sections were in English when the anchor's native language is JP or zh.
