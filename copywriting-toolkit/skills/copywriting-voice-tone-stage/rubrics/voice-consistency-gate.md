@@ -177,16 +177,49 @@ declared quadrant. Grounded in `voice-quadrant-positioning.md`.
 - **Note**: For artifacts without a quadrant declaration, this
   dimension is `not_applicable` (excluded from verdict calculation).
 
+### Dimension 6: Over-Mimic Adherence (RUB-CTW-VC-006) — v1.3.2
+
+When Pass 3 Register Signal or Axis Extreme branch activates (per [SKILL.md §Pass 3 activation guard](../SKILL.md)), the selected anchor may carry over-mimic mitigation clauses defined in [voice-anchor-meta-core.md §Over-mimic mitigation registry](../standards/voice-anchor-meta-core.md). This dimension checks the output for leaked tropes forbidden by the applicable mitigation.
+
+**Scope**: applies ONLY when `tone_notes.register_signal_applied` or `tone_notes.axis_extreme_applied` is non-null AND the anchor has a registered mitigation clause. If anchor is not in over-mimic registry, this dimension is `not_applicable`.
+
+**Verification procedure**:
+1. Read `tone_notes.register_signal_applied.anchor_slug` (or axis_extreme equivalent)
+2. Look up anchor in meta-core over-mimic mitigation registry
+3. If anchor is listed, verify output against its "auto-leaked tropes" column
+4. Mark the dimension accordingly
+
+**Registry-referenced mitigations include** (non-exhaustive):
+- Murakami: no jazz / cats / wells / whisky / cooking-phone-ring
+- 王家衛: no expiration imagery / countdowns / cans / step-printing
+- 金庸: no wuxia vocabulary (江湖 / 內功 / 俠氣 / 前輩晚輩)
+- Hemingway: no dialogue-tag chains >2; pair with Carver/Didion
+- Didion: cap rhetorical-antithesis to 1 per 150 words
+- Chandler: cap similes to 1 per 50 words
+- McCarthy: forbid triple-conjunction chains
+- Sorkin: forbid rhetorical-question-plus-answer pattern
+- XR Declaration: civic-declarative register ONLY, NOT for commercial
+- Nike "Dream Crazy": anaphora limited to 1 series per piece
+- Duolingo: anchor ONLY to 2021-2022 formative window
+- 許舜英 inversion: require power-disparity word (政治/殖民/失敗/禁慾/危險)
+
+Full 20-entry registry in [voice-anchor-meta-core.md §Over-mimic mitigation registry](../standards/voice-anchor-meta-core.md).
+
+- 🔴 **Fatal**: Applicable mitigation clause is explicitly violated and the leaked trope is load-bearing (e.g. Nike "Dream Crazy" anaphoric cascade used 5+ times in single piece, or XR Declaration register applied to commercial product copy, or Duolingo style used with post-2023 tropes).
+- 🟡 **Warning**: Mitigation violated in ≤2 sentences with minor leakage (e.g. Murakami invoked + 1 cat mention, Chandler invoked + 2 similes in 50 words).
+- 🟢 **Clear**: All applicable mitigation clauses respected, output register is clean of leaked tropes.
+- **Note**: `not_applicable` when no over-mimic-registered anchor is active.
+
 ## Verdict Rules
 
 - Any single 🔴 fatal → `NEEDS_REVISION` (escalate to user)
 - **2 or more** 🟡 warnings → `NEEDS_REVISION`
 - **1** 🟡 warning (no 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
 - All 🟢 clear → `PASS`
-- Dimensions 3 (maestro reference) and 5 (quadrant coherence) are
-  `not_applicable` for artifacts without the respective declaration.
-  `not_applicable` is excluded from verdict calculation (not counted
-  as 🔴, 🟡, or 🟢).
+- Dimensions 3 (maestro reference), 5 (quadrant coherence), and 6
+  (over-mimic adherence) are `not_applicable` for artifacts without
+  the respective declaration / registry match. `not_applicable` is
+  excluded from verdict calculation (not counted as 🔴, 🟡, or 🟢).
 
 ## Rules
 

@@ -128,6 +128,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
   "voice_quadrant": {
     "primary": "Q1 | Q2 | Q3 | Q4",
     "edge": "Q2-Q3 | Q1-Q4 | null",
+    "position": "center | extreme | toward-Q1 | toward-Q2 | toward-Q3 | toward-Q4 | axis-authority-extreme | axis-affinity-extreme | axis-reason-extreme | axis-emotion-extreme | null",
     "rationale": "1–3 sentences citing brand anchor from standard",
     "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged",
     "execution_reference": "target-language native anchor(s) in the chosen quadrant — e.g. '龔大中 / 全聯經濟美學派' for zh-TW Q3. Optional when voice_reference is same-language.",
@@ -138,6 +139,27 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 ```
 
 Positioning is orientation, not prison — legitimate edge positions (Q2↔Q3, Q1↔Q4) are allowed; record them in `edge`. Diagonal mixing (Q1+Q3, Q2+Q4) inside one piece is an anti-pattern — see `standards/voice-quadrant-positioning.md §Anti-Patterns`.
+
+### `position` field (v1.3.2, optional)
+
+The `position` field gives Phase 6 Pass 3 Register Signal branch a more precise landmark-level target within the primary quadrant. Added in v1.3.2 alongside the voice anchor library expansion (per-quadrant files organized by landmark sections).
+
+**Values**:
+- `center` — canonical prototype voice for the quadrant (default fallback when position is missing)
+- `extreme` — maximum intensity on both axes simultaneously (requires over-mimic mitigation per meta-core registry)
+- `toward-Q{1-4}` — edge toward adjacent quadrant (e.g. `toward-Q2` within primary Q1)
+- `axis-authority-extreme` / `axis-affinity-extreme` / `axis-reason-extreme` / `axis-emotion-extreme` — single-axis extremes with neutral other axis (MVP placeholder; V2 research expansion)
+- `null` — position not diagnosed; Pass 3 falls back to full-file read (higher token cost but correct)
+
+**Derivation** (Phase 5 diagnosis):
+- Most briefs resolve to `center` — this is the default when no specific intensity signal in brief
+- `extreme` when brief explicitly cites "maximum / peak / pure" register (user says "strongly Q2" or "極端的權威感")
+- `toward-Q{n}` when brief has hybrid signals from two axis-sharing adjacent quadrants
+- `axis-*` when brief explicitly refuses one axis (e.g. "institutional but neither argumentative nor emotional" → axis-authority-extreme)
+
+**Default behavior when missing**: Phase 6 Pass 3 Register Signal branch treats missing position as `center` and proceeds to load the center landmark section. No envelope violation triggered.
+
+**Cross-adjacency rule**: Q1 may go toward-Q2 or toward-Q4 (axis-sharing); toward-Q3 would be diagonal (forbidden). Same for Q2→Q1/Q3, Q3→Q2/Q4, Q4→Q1/Q3.
 
 ## Workflow
 
