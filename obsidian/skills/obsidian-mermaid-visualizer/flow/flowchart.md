@@ -280,30 +280,30 @@ The syntax trick: use **subgraph-level connections** (`stageA --> stageB`) rathe
 graph LR
     subgraph stageA["Stage A — 使用者提交"]
         direction TB
-        A1["填寫表單"] --> A2["系統驗證"]
-        A2 --> A3["自動分類"]
+        A1["填寫表單"] -->|"送出"| A2["系統驗證"]
+        A2 -->|"有效"| A3["自動分類"]
     end
 
     subgraph stageB["Stage B — 員工處理"]
         direction TB
-        B1["分派給客服"] --> B2["調查問題"]
-        B2 --> B3["回覆客戶"]
+        B1["分派給客服"] -->|"開始調查"| B2["調查問題"]
+        B2 -->|"有解答"| B3["回覆客戶"]
     end
 
     subgraph stageC["Stage C — 歸檔與追蹤"]
         direction TB
-        C1["寄滿意度調查"] --> C2["歸檔結案"]
+        C1["寄滿意度調查"] -->|"收到回覆"| C2["歸檔結案"]
     end
 
     stageA -->|"分派處理"| stageB
     stageB -->|"結案關單"| stageC
 
-    style stageA fill:#f8f9fa,stroke:#868e96,stroke-width:2px
-    style stageB fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-    style stageC fill:#d5f9f8,stroke:#2c9ec4,stroke-width:2px
+    style stageA fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style stageB fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    style stageC fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
 ```
 
-Stage 的步驟數分佈在這裡是 **3 / 3 / 2**（非遞減）— 刻意展示 **「階段步驟數沒有單調規律」**。真實流程可能前重後輕、中間最重、或均勻分布，不要被 Example 8（4/3/3/3）或本例誤導成「後階段必定較少」。設計時依實際內容決定每階段的步驟數。
+Step-count distribution here is **3 / 3 / 2** (non-monotonic) — deliberately shows that **stage step counts follow no monotonic rule**. Real workflows may be front-heavy, middle-heavy, back-heavy, or uniform. Don't let this example or Example 8 (3/3/3/3) mislead you into thinking "later stages must have fewer steps". Design per actual content, not by superficial pattern.
 
 **Why this works**:
 - Parent graph: `LR` → stages flow left-to-right
@@ -338,32 +338,36 @@ Same technique as Example 7 with orientation flipped + a different domain (techn
 graph TB
     subgraph build["① Build"]
         direction LR
-        B1["Checkout"] --> B2["Install deps"] --> B3["Compile"]
+        B1["Checkout"] -->|"source ready"| B2["Install deps"]
+        B2 -->|"deps cached"| B3["Compile"]
     end
 
     subgraph test["② Test"]
         direction LR
-        T1["Unit tests"] --> T2["Integration"] --> T3["E2E"]
+        T1["Unit tests"] -->|"units pass"| T2["Integration"]
+        T2 -->|"services pass"| T3["E2E"]
     end
 
     subgraph staging["③ Staging"]
         direction LR
-        S1["Deploy staging"] --> S2["Smoke test"] --> S3["UAT approval"]
+        S1["Deploy staging"] -->|"env up"| S2["Smoke test"]
+        S2 -->|"basic OK"| S3["UAT approval"]
     end
 
     subgraph prod["④ Production"]
         direction LR
-        P1["Deploy prod"] --> P2["Health check"] --> P3["Monitor"]
+        P1["Deploy prod"] -->|"rollout OK"| P2["Health check"]
+        P2 -->|"healthy"| P3["Monitor"]
     end
 
     build -->|"artifact ready"| test
     test -->|"tests pass"| staging
     staging -->|"UAT approved"| prod
 
-    style build fill:#e7f5ff,stroke:#1971c2,stroke-width:2px
-    style test fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style build fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style test fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
     style staging fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
-    style prod fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style prod fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
 ```
 
 4 stages × 3 steps = 12 nodes total — comfortably in the "≥8-10 nodes" threshold where the subgraph-chunking pattern earns its complexity. Circled numbers `①②③④` on stage titles signal sequence at a glance.
