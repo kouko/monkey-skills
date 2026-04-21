@@ -210,16 +210,39 @@ Full 20-entry registry in [voice-anchor-meta-core.md §Over-mimic mitigation reg
 - 🟢 **Clear**: All applicable mitigation clauses respected, output register is clean of leaked tropes.
 - **Note**: `not_applicable` when no over-mimic-registered anchor is active.
 
+### Dimension 7: Thesis Alignment (RUB-CTW-VC-007) — v1.3.4
+
+When Pass 3 rewrites the draft (any branch: Craft Gate / Register Signal / Axis Extreme), the anchor's voice signature can pull the text toward register-canonical tropes that **subtly contradict** `envelope.message_thesis`. This dimension checks the Pass 3 output against the thesis to catch anchor-induced thesis drift.
+
+**Scope**: applies ONLY when `envelope.message_thesis` is non-empty AND Pass 3 ran (any of `tone_notes.lineage_applied` / `register_signal_applied` / `axis_extreme_applied` is non-null). If Pass 3 skipped, `not_applicable`.
+
+**Verification procedure**:
+1. Read `envelope.message_thesis` and identify its explicit negations / assertions (e.g. thesis「古早味不是懷舊，是日常」→ negation: "NOT nostalgia" + assertion: "IS daily").
+2. Read Pass 3 polished draft.
+3. Scan for spans that **reintroduce** the negated concept OR **undermine** the assertion.
+4. Mark the dimension accordingly.
+
+**Real-world failure mode (documented in v1.3.4 e2e tests)**: zh-TW Q3 brief with thesis「古早味不是懷舊」applied 全聯 格言體 + 吳念真 stance anchors; Pass 3 output added「放學路上那個沒什麼煩惱的下午」— a nostalgic frame the thesis explicitly rejected. Anchors pulled the rewrite toward 懷舊 imagery that felt register-appropriate but violated the stated argument.
+
+- 🔴 **Fatal**: Pass 3 output contains a concrete span that directly negates the thesis's explicit negation OR undermines its assertion (e.g. thesis says "NOT X" and output reintroduces X as load-bearing imagery; thesis says "IS daily" and output frames as "rare / special").
+- 🟡 **Warning**: Mild drift — thesis still readable from output, but 1 span weakens it (e.g. thesis「不是懷舊」+ output uses past-tense 拉回 frame in 1 sentence without negating it).
+- 🟢 **Clear**: Pass 3 output's argumentative direction is fully aligned with thesis; any stylistic tension between anchor register and thesis is resolved in favor of thesis.
+- **Note**: `not_applicable` when `message_thesis` absent OR Pass 3 did not run.
+
+**Remediation pattern for 🔴 / 🟡**: bounce back to Pass 3 with instruction "anchor register must serve thesis; if register-canonical imagery contradicts thesis, drop the imagery, keep the register's cadence / discipline only." Do NOT swap anchor unless Dimension 6 also fires.
+
 ## Verdict Rules
 
 - Any single 🔴 fatal → `NEEDS_REVISION` (escalate to user)
 - **2 or more** 🟡 warnings → `NEEDS_REVISION`
 - **1** 🟡 warning (no 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
 - All 🟢 clear → `PASS`
-- Dimensions 3 (maestro reference), 5 (quadrant coherence), and 6
-  (over-mimic adherence) are `not_applicable` for artifacts without
-  the respective declaration / registry match. `not_applicable` is
-  excluded from verdict calculation (not counted as 🔴, 🟡, or 🟢).
+- Dimensions 3 (maestro reference), 5 (quadrant coherence), 6
+  (over-mimic adherence), and 7 (thesis alignment) are
+  `not_applicable` for artifacts without the respective declaration /
+  registry match / Pass 3 activity / thesis presence.
+  `not_applicable` is excluded from verdict calculation (not counted
+  as 🔴, 🟡, or 🟢).
 
 ## Rules
 

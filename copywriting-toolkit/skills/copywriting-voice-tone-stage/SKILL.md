@@ -334,10 +334,29 @@ When voice_reference is not a craft-gate master AND position is not axis-extreme
 When cross-reference registry (meta-detail) shows `cross-reference-valid-for[output_language] == STRONG` for any anchor in the target section, ALSO load the corresponding cross-lang file's same Landmark section. Most common: JP→zh-TW STRONG (zh-TW Q3 brief with 糸井 cross-ref loads jp-q3 center).
 
 Register-Signal apply:
-1. Read per-quadrant Landmark section — extract anchor entries + metadata (per meta-core schema)
-2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions) + consult over-mimic mitigation registry (meta-core) for required clauses
-3. Apply best-fit anchor's voice signature to draft rewrite
-4. Record `tone_notes.register_signal_applied = {anchor_slug, landmark_position, mitigation_clauses_applied}`
+1. Read per-quadrant Landmark section — extract anchor entries + metadata. **Schema auto-detect (v1.5.0)**: inspect anchor file frontmatter. If `schema_version: 2.0`, extract Layer 1 v2 fields (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata) per `voice-anchor-meta-core.md §v2 schema`. Otherwise extract v1 fields (Era / Representative lines / Voice signature / LLM corpus depth / Over-mimic risk) per `voice-anchor-meta-core.md §v1 schema`. Both schemas coexist during migration window. Additional v2 entries live in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` — consult `docs/voice-library-recast-audit.md` for the mapping from v1 brand/campaign entries to v2 individual-creator recasts.
+2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions). For v2 entries, the over-mimic mitigation clause is in the anchor's own `Don't / Over-mimic` block (single source of truth). For v1 entries, consult meta-core's §Over-mimic mitigation registry.
+3. **Rank top-3 candidates** by fit — emit `anchor_candidates_ranked` list (v1.3.5); then apply the primary (rank 1) voice signature to draft rewrite
+4. **Thesis-conflict self-check** (v1.3.5): after the rewrite but BEFORE emit, scan the polished draft for spans that reintroduce a concept `envelope.message_thesis` explicitly negates, or undermine its assertion. If detected, revise the draft dropping the conflicting imagery (keep the anchor's cadence / discipline). Record the self-check outcome in `tone_notes.register_signal_applied.thesis_self_check` as `clear` / `revised_once` / `escalate` (escalate when revise-once still conflicts — downstream Dimension 7 will catch).
+5. Record `tone_notes.register_signal_applied = {primary_anchor_slug, landmark_position, mitigation_clauses_applied, anchor_candidates_ranked[], thesis_self_check}`
+
+**v1.3.5 output schema** (register_signal_applied):
+```json
+{
+  "primary_anchor_slug": "zh-tw-wu-nien-jen-taiyu-peer-intimate",
+  "landmark_position": "center",
+  "mitigation_clauses_applied": ["do not attempt 台語 reproduction; borrow 講古 structure + rural-peer stance only"],
+  "anchor_candidates_ranked": [
+    {"rank": 1, "slug": "zh-tw-wu-nien-jen-taiyu-peer-intimate", "fit_score": "HIGH", "fit_reasoning": "..."},
+    {"rank": 2, "slug": "zh-tw-quanlian-tv-era-aphorism", "fit_score": "MEDIUM", "fit_reasoning": "..."},
+    {"rank": 3, "slug": "zh-tw-hu-xiang-yun-narrative-tvc", "fit_score": "LOW", "fit_reasoning": "..."}
+  ],
+  "thesis_self_check": "clear | revised_once | escalate",
+  "native_critical_vocab_cited": ["氣口", "講古式敘事", "..."]
+}
+```
+
+Emitting ranked candidates (instead of a single slug) surfaces Pass 3's interpretation space for downstream review and for regression auditing — the same brief across runs may legitimately select different primaries, but the candidate set should be stable.
 
 **Cross-branch rule**: if multiple branches' conditions match (e.g. voice_reference names a craft-gate master AND voice_quadrant.position = axis-*), Craft Gate wins. Tier precedence: Craft Gate > Axis Extreme > Register Signal.
 
@@ -414,6 +433,15 @@ orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
     ],
     "lineage_applied": "岩崎俊一 | null",
     "lineage_gap": "direct emotional statement risk; mitigated via 体言止め tail | null",
+    "register_signal_applied": {
+      "primary_anchor_slug": "zh-tw-wu-nien-jen-taiyu-peer-intimate | null",
+      "landmark_position": "center | extreme | toward-Q{N} | null",
+      "mitigation_clauses_applied": ["..."],
+      "anchor_candidates_ranked": [{"rank": 1, "slug": "...", "fit_score": "HIGH", "fit_reasoning": "..."}],
+      "thesis_self_check": "clear | revised_once | escalate | not_applicable",
+      "native_critical_vocab_cited": ["..."]
+    },
+    "axis_extreme_applied": "mvp-stub-{position} | null",
     "ogilvy_flags": ["removed 'revolutionary' empty-hype token in stage S"]
   },
   "gate_verdict": "PASS | PASS_WITH_NOTES | NEEDS_REVISION",
@@ -439,7 +467,10 @@ Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes`
   before Phase 7 legal gates pick up the artifact.
 - **Dimensions** (per rubric): brand voice stability, tone contextual
   appropriateness, maestro style fidelity (if lineage applied), JP
-  emotional-resonance vs Anglo benefit-clear fit.
+  emotional-resonance vs Anglo benefit-clear fit, voice quadrant
+  coherence, over-mimic adherence (v1.3.2, scoped to Pass 3), and
+  **thesis alignment** (v1.3.4, scoped to Pass 3 — catches anchor-
+  induced drift from `envelope.message_thesis`).
 
 Verdict handling:
 

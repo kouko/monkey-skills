@@ -1,5 +1,599 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.6.1 — 2026-04-21 (restore docs/voice-anchor-deep-dives/ — accidental delete in v1.6.0)
+
+**Bug fix**: v1.6.0 migration removed `docs/voice-anchor-deep-dives/` and 64 pilot files. Intent was to move the Layer 1 content to `standards/anchor-{slug}.md` (correct), but the folder itself is per `anchor-schema-v2.md` the designated **Layer 2/3 research artifacts home** — biographical / era / lineage / awards / primary-source bibliography beyond Layer 1 critic citations. Without the folder, future deep-dive research has nowhere to go.
+
+**Fix**: restored all 64 files verbatim from commit `b9b1c39` (pre-delete snapshot, post-scaffolding-cleanup). Added README explaining Layer 1 vs Layer 2/3 separation and usage rules (Pass 3 MUST NOT load Layer 2/3; Dimension 6 evaluator MAY cite optionally; updates to Layer 1 and Layer 2/3 are independent commits).
+
+Current state: the 64 files are identical to the corresponding `anchor-{slug}.md` files in `standards/` — they're **seed material** for future deep-dive expansion, not yet Layer 2/3 research. Allowed to diverge going forward.
+
+Filename alignment deferred: v1.7.0+ may rename `pilot-layer1-v2-{slug}.md` → `{trigger-slug}.md` to match Layer 1 slugs for audit tooling simplicity.
+
+## v1.6.0 — 2026-04-21 (full standards/*.md migration: router index + flat per-entry + institutional move-outs)
+
+Follows v1.5.0's Phase B/C/D groundwork with the actual structural refactor. 12 quadrant aggregate files become **router indexes**; all 67 individual-creator voice anchors live in flat `anchor-{slug}.md` files alongside the routers (single-layer flat per Anthropic skill-authoring guidance, no nested subdirs); ~25 institutional / rotating-author entries moved out of voice library to `docs/format-templates/` + `docs/register-references/`. `docs/voice-anchor-deep-dives/` folder removed (all pilot files migrated).
+
+### Structural change
+
+**Before (v1.5.x)**:
+```
+standards/
+  {lang}-q{N}-anchors.md  (~300-500 lines each, 5-10 inline entries)
+docs/voice-anchor-deep-dives/
+  pilot-layer1-v2-*.md    (64 flat pilot files, Layer 1 v2 entries)
+```
+
+**After (v1.6.0)**:
+```
+standards/
+  {lang}-q{N}-anchors.md  (~70-120 lines, router index per quadrant)
+  anchor-{slug}.md        (67 flat per-entry voice anchor bodies)
+  voice-anchor-meta-core.md + meta-detail.md  (unchanged)
+  {jp,zh}-copy-craft-lineage.md  (unchanged)
+  axis-extreme-anchors.md  (unchanged)
+docs/format-templates/
+  ~15 institutional / platform / wire format templates
+docs/register-references/
+  ~5 documented-movement / magazine register references
+```
+
+### Pass 3d two-step read protocol
+
+1. Load `{lang}-q{N}-anchors.md` router → extract landmark-section listing
+2. Match landmark position → load named `anchor-{slug}.md` file for full voice body
+
+Token cost per Pass 3 read: router ~1K + anchor body ~1.2K ≈ 2.2K (comparable to v1.5.x landmark-targeted section read of ~1.5K).
+
+### Migration scope
+
+**Committed across 6 incremental commits on this PR**:
+1. `5c3122f` zh-q3 pilot (6 anchors + 2 move-outs + router)
+2. `b9b1c39` scaffolding cleanup (strip research-spec `(≥N)` / `(≥5, 中文)` etc. from 62 files)
+3. `ad4ea8a` jp-q1 migration (2 + 4 move-outs + router)
+4. `94b90af` jp-q2/q3/q4 migration (11 anchors + 3 move-outs + 3 routers)
+5. `8b6bc68` zh-q1/q2/q4 migration (7 anchors + 10 move-outs + 3 routers)
+6. `67f4c29` EN all 4 quadrants (31 anchors + EN institutional aggregate + 4 routers)
+
+### Individual anchors by quadrant (67 total)
+
+- **JP Q1**: 夏目漱石 / 伊丹十三 (2)
+- **JP Q2**: 寺山修司 / 谷崎 / 川端 (3)
+- **JP Q3**: 向田邦子 / 坂元裕二 / 谷川俊太郎 / 宮沢賢治 / 吉本ばなな / 梅田悟司 / 澤本嘉光 SoftBank-recast (7)
+- **JP Q4**: ジャパネットたかた 高田明 (era-locked) (1)
+- **JP craft-gate**: 糸井 / 岩崎 / 眞木 / 谷山 (4, additive to jp-copy-craft-lineage.md)
+- **zh-HK**: 朱家鼎 Mike Chu / 王家衛 / KC Tsang (3)
+- **zh canonical**: 錢鍾書 / 張愛玲 (2)
+- **zh-TW Q2**: 白先勇 / 朱天文 (2)
+- **zh-TW Q3**: 龔大中 / 吳念真 / 胡湘雲 / 黃春明 / 三毛 (5) + 金鵬遠 Durex (CN, 1) = 6
+- **zh-TW craft-gate**: 許舜英 / 李欣頻 / 葉明桂 (3, additive to zh-copy-craft-lineage.md)
+- **EN Q1**: Ogilvy / Puris / Hopkins / Bernbach / McPhee / Hemingway / Carver / Hempel / Strunk&White / Orwell (10)
+- **EN Q2**: Lee Clow / Tim Delaney / Yvon Chouinard / Morrison / Baldwin / Ishiguro / Didion / Sorkin (8)
+- **EN Q3**: Ephron / Allebach / Parvez / Waller-Bridge / Cessario / Saunders / Waititi / Gerwig / Dubin / Chekhov (10)
+- **EN Q4**: Halbert / Jayme / Thompson / Chandler / Hammett / Lieberman (6)
+
+### Move-out summary (~25 entries)
+
+- **JP format-templates**: 天声人語 / 東洋経済+日経ビジネス / ロイター JP / 日経社説 / クックパッド / 通販生活 / ワークマン (7)
+- **zh-TW format-templates**: 研之有物 / 故宮粉絲團 / e-commerce aggregate (PChome+MOMO+OPEN將+全聯 SNS+Shopee+Pinkoi) (3 files, 7 entries aggregate)
+- **zh-TW register-references**: 天下雜誌 / 報導者 (center+extreme) / 商業周刊 / 台灣吧 (4)
+- **EN aggregate**: WebMD/Reuters/Bloomberg + Economist + Amazon + REI + IKEA + Basecamp + Nike JDI + Nike Dream Crazy + XR + Absolut + MailChimp + Innocent + Oatly + Morning Brew (1 file, 14 entries aggregate)
+
+### Remaining Phase B recast gaps → v1.7.0+
+
+Individual-creator recasts that returned from Phase B research agents but were not persisted before session compaction, OR require additional research:
+
+- 原研哉 (MUJI Q2), 太田恵美 (JR東海 Q2), 青木耕平 (北欧 Q4), 佐藤可士和 (UNIQLO Q4)
+- Dan Wieden (Nike Just Do It Q2 / Dream Crazy Q2 extreme)
+- David Abbott (AMV Economist Q1)
+- Kate Kiefer Lee (Mailchimp Q3), Richard Reed (Innocent Q3)
+- Richard Costello / Geoff Hayes (Absolut Q2 toward-Q1)
+- Jason Fried + DHH (Basecamp Q1 toward-Q2 + Q4 center, dual-author audit)
+- John Schoolcraft (Oatly Q2 toward-Q3 + Q3 center, audit)
+
+Additional research gaps:
+- zh-TW Q1 individual essayists (龍應台 / 南方朔 / 楊照 candidates)
+- zh-TW Q4 individual DR tradition (genuinely thin — may remain cross-ref-only)
+
+## v1.5.0 — 2026-04-21 (Phase B recasts + Phase C folder scaffolding + Phase D schema selector)
+
+10 individual-creator recasts for previously institutional/brand/campaign anchors; new `docs/format-templates/` + `docs/register-references/` folders holding migrated-out entries; `voice-anchor-meta-core.md` v2 schema spec added alongside v1 (both coexist during migration); SKILL.md Pass 3d auto-detects schema version via frontmatter.
+
+### Phase B — 10 Layer 1 v2 recast entries (all 5/5 pass)
+
+Brand/campaign anchors recast to their named individual creators per `docs/anchor-schema-v2.md` inclusion criterion.
+
+- 金鵬遠 (zh-CN/zh-TW Q3 extreme) — 杜蕾斯借勢文案 2011-2017 era lock (STRICT)
+- 龔大中 (zh-TW Q3 center) — 全聯格言體 craft-gate
+- Lee Clow (EN Q2 extreme) — visionary manifesto (Apple "1984" + "Think Different" + "Get a Mac" across 20+ year ECD tenure)
+- Michael Dubin (EN Q3 toward-Q4) — DTC founder-spokesperson deadpan (Dollar Shave Club 2012 launch)
+- 澤本嘉光 (JP Q3 center) — 白戸家世界観 (SoftBank 2007-)
+- Tim Delaney (EN Q2 toward-Q1) — Patek Philippe stewardship register (1996- "Generations")
+- Alex Lieberman (EN Q3 center) — Morning Brew peer-finance 2015-2020 era
+- Mike Cessario (EN Q3 toward-Q4) — Liquid Death heavy-metal-water (2019-)
+- Yvon Chouinard (EN Q2 toward-Q4) — Patagonia conscience register (Don't Buy This Jacket 2011 + Let My People Go Surfing)
+- Martin Puris (EN Q1 extreme) — BMW engineering-precision (1975-1996 Ammirati & Puris tenure)
+
+### Phase C — `docs/format-templates/` + `docs/register-references/` folder scaffolding
+
+New non-anchor holding folders per `docs/voice-library-recast-audit.md` MOVE-OUT decisions:
+
+- **`docs/format-templates/README.md`** — purpose, scope (magazines / newspapers / wire services / institutional platforms / SNS / IP mascots / e-commerce platforms / brand institutional voices), entries slated to migrate (天声人語, 東洋経済, Reuters JP, 日経社説, クックパッド, 通販生活, ワークマン, 研之有物, 故宮粉絲團, PChome, 7-ELEVEN OPEN 將, 全聯 SNS post-2020, Shopee, Pinkoi, Amazon, REI, IKEA), and rule that Pass 3 does NOT load these as voice anchors.
+- **`docs/register-references/README.md`** — purpose, scope (documented movements / magazine institutional voices / campaign-level entries with rotating authorship), entries slated to migrate (XR Declaration, Economist brand voice, 天下雜誌, 報導者, 商業周刊, Nike "Dream Crazy"), and rule that these are mitigation-only references (anti-patterns for Dimension 6), not voice sources.
+
+Actual entry-by-entry migration from v1 `standards/*-anchors.md` into these folders is progressive — entries move as Phase D refactors each `-anchors.md` file to v2 schema. v1 entries remain in place during migration window so Pass 3 still resolves them.
+
+### Phase D — schema selector + Pass 3d auto-detect
+
+- `voice-anchor-meta-core.md` adds **§Schema version selector** + **§v2 schema (Layer 1 purpose-centric, preferred going forward)** alongside the preserved §v1 schema. Both schemas coexist during migration; Pass 3 detects via `schema_version: 2.0` frontmatter.
+- SKILL.md Pass 3d §Register-Signal apply updated: step 1 now includes schema auto-detect instructions + pointer to `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` as the current v2 entry location; step 2 clarifies v2 entries carry their own over-mimic mitigation inline (the anchor file IS the single source of truth for v2), while v1 entries still use meta-core's legacy registry table.
+
+Full `standards/*.md` replacement (v1 entries → v2) deferred to v1.6.0+; requires per-file rewrite for 14 anchor files and is substantial enough for its own release. Current v1.5.0 state: Pass 3 routes work against v1 standards (still 100% valid), v2 pilot entries are reachable by name via audit file, and schema selector is in place so the migration can proceed incrementally.
+
+### Cumulative v2 state (after v1.5.0)
+
+- **54 Phase A entries** (already-individual) +  **10 Phase B recasts** (institutional → individual) = **64 Layer 1 v2 entries** in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md`
+- 2 new holding folders (`format-templates/` + `register-references/`) with READMEs + migration lists
+- Schema selector live: Pass 3 reads either v1 or v2 based on frontmatter
+- v1 `standards/*-anchors.md` files unchanged — full migration incremental
+
+### Still deferred (post-v1.5.0)
+
+- **v1.6.0+**: per-`standards/*-anchors.md`-file rewrite replacing v1 entries with v2 structure; physically move MOVE-OUT entries into `format-templates/` + `register-references/` bodies (not just lists)
+- **Phase B remainder (optional)**: 青木耕平 (北欧、暮らしの道具店), 佐藤可士和 (UNIQLO LifeWear), 謝政豪/蕭宇辰 (台灣吧), Richard Costello/Geoff Hayes (Absolut) — these are lower-priority and may stay as v1 entries until corpus justification
+- **Cross-reference integrity sweep**: after v1.6.0 refactor, re-map `cross-reference-valid-for` links in meta-detail
+
+## v1.4.5 — 2026-04-21 (Phase A batch 7 — 10 final entries, Phase A COMPLETE)
+
+10 final Layer 1 v2 entries. All 5/5 pass. **Phase A migration complete** across the audit KEEP list of ~52 individual-creator anchors.
+
+### Batch 7 (10 entries — larger than usual to close Phase A)
+- Kazuo Ishiguro (EN Q2 toward-Q3) — restrained denial
+- Phoebe Waller-Bridge (EN Q3 extreme) — Fleabag fourth-wall
+- Aaron Sorkin (EN Q2 toward-Q1) — rhetorical rapid-fire (net-new entry)
+- Taika Waititi (EN Q3 toward-Q2) — deadpan-absurd-warmth
+- Greta Gerwig (EN Q3 toward-Q2) — ensemble intimacy
+- Dashiell Hammett (EN Q4 toward-Q3) — terse procedural
+- Anton Chekhov (EN Q3 toward-Q4) — compassionate realism (in translation)
+- Ben Thompson Stratechery (EN Q4 toward-Q1) — peer-analytical framework-naming
+- Nathan Allebach (EN Q3 extreme, 2017-2021 era lock) — Steak-umm Twitter
+- Zaria Parvez (EN Q3 extreme, 2021-2022 era lock) — Duolingo TikTok
+
+### Phase A complete — 54 Layer 1 v2 entries
+
+**Cumulative coverage**:
+- JP: 14 anchors (craft-gate 4/4 complete)
+- zh-TW: 11 anchors (craft-gate 3/3 complete)
+- zh-HK: 2 anchors
+- EN: 27 anchors (Q1/Q2/Q3/Q4 all covered; includes authors, screenwriters, poets, copywriters, SM operators)
+- 100% 5/5 coverage pass rate across all 54
+
+**Creator types covered**:
+- Authors / essayists / novelists / poets (22)
+- Screenwriters / directors (8)
+- Named copywriters (craft-gate) (10)
+- Named CDs (creative directors) (5)
+- Journalists / analysts (3)
+- Individual SM operators (era-locked) (2)
+- Author duo / creative partnership (2)
+- Essayist + film director hybrid (1)
+- Essayist + screenwriter hybrid (1)
+
+**4 languages**: JP / zh-HK / zh-TW / EN
+
+### Still deferred (Phase B-D, future versions)
+
+- **Phase B** (v1.5.0+): recast ~20 institutional-to-individual candidates (原研哉 / 太田恵美 / 金鵬遠 / Kate Kiefer Lee / Richard Reed / Dan Wieden / David Abbott / Lee Clow / Mike Cessario / Michael Dubin / Alex Lieberman etc.)
+- **Phase C** (v1.6.0): move ~25 institutional/brand/platform entries to `format-templates/` + `register-references/` folders
+- **Phase D** (v1.7.0): Update `voice-anchor-meta-core.md` to v2 schema; update Pass 3 SKILL.md §Pass 3d to read v2 (or auto-detect schema_version); replace v1 `standards/*.md` content with v2 Layer 1 entries
+
+## v1.4.4 — 2026-04-21 (Phase A batch 6 — 6 more Layer 1 v2 entries, EN-focused)
+
+6 saved Layer 1 v2 entries from batch 6 (8 dispatched, 6 saved this commit; 2 under review). All 5/5 pass.
+
+### Batch 6 saved (6 entries)
+- Amy Hempel (EN Q1 toward-Q4) — compressed minimalism, Lish lineage
+- George Orwell (EN Q1 toward-Q4) — political plain prose, 6 rules
+- James Baldwin (EN Q2 toward-Q3) — sermonic cadence, Black-church periodic sentence
+- Gary Halbert (EN Q4 extreme, craft-gate) — DR letter, Hopkins→Ogilvy→Halbert lineage
+- Bill Jayme (EN Q4 extreme) — direct-mail seduction, envelope teaser discipline
+- Nora Ephron (EN Q3 center) — warm-wit personal essay
+
+### Cumulative v2: 44 Layer 1 entries (dispatched)
+
+- JP: 14 anchors (craft-gate 4/4 + Q1/Q2/Q3/Q4 coverage)
+- zh-TW: 11 anchors (craft-gate 3/3 + Q1/Q2/Q3 coverage)
+- zh-HK: 2 anchors (Mike Chu + KC Tsang — already institutional moved-out, 2 kept individual)
+- EN: 17 anchors (Q1/Q2/Q3/Q4 all major creators)
+
+### Remaining KEEP audit (~10 EN)
+
+- Kazuo Ishiguro / Phoebe Waller-Bridge / Aaron Sorkin / Taika Waititi / Greta Gerwig
+- Dashiell Hammett / Anton Chekhov / Ben Thompson (Stratechery)
+- Nathan Allebach / Zaria Parvez
+
+### Still deferred
+
+- No `standards/*.md` integration
+- No `voice-anchor-meta-core.md` schema update
+- No Pass 3 routing change
+
+## v1.4.3 — 2026-04-21 (Phase A batch 5 — 8 more Layer 1 v2 entries)
+
+8 additional Layer 1 v2 individual-creator entries, all native-language (no English-scaffold problem from v1.4.2 pilot entries).
+
+### Batch 5 (8 entries)
+- 吉本ばなな (JP Q3 extreme, author) — 大胆な省略 / J文学
+- 伊丹十三 (JP Q1 toward-Q4, essayist + film director) — 軽妙洒脱
+- 高田明 (JP Q4 extreme, TV shopping founder 1990-2015) — 2秒の間 / 序破急
+- 白先勇 (zh-TW Q2 toward-Q1, author) — elegiac diaspora / 今昔之感
+- 三毛 (zh-TW Q3 toward-Q2, author) — 流浪文學 / 任性宣告
+- 胡湘雲 大眾銀行系列 (zh-TW Q3 center, named CD) — narrative TVC / 不平凡的平凡大眾
+- Strunk & White (EN Q1 toward-Q4, author duo) — *The Elements of Style*, Ogilvy lineage
+- George Saunders (EN Q3 toward-Q2, author) — compassionate absurd
+
+### Cumulative v2: 36 entries, 100% 5/5 pass rate
+
+- **JP craft-gate 4/4 complete**: 糸井 / 岩崎 / 眞木 / 谷山
+- **zh-TW craft-gate 3/3 complete**: 許舜英 / 李欣頻 / 葉明桂
+- **JP Q3 landscape** essentially complete: 向田 / 坂元 / 吉本 / 梅田 / 宮沢 / 谷川 (6 anchors)
+- **zh-TW Q3 landscape** complete across positions: 吳念真 / 胡湘雲 center, 黃春明 / 三毛 toward-Q2
+- **zh-TW Q2 landscape** complete: craft-gate + 張愛玲 / 朱天文 / 白先勇 / 錢鍾書 / 王家衛 / 朱家鼎
+- **EN Q1 landscape** strengthened: Ogilvy / Bernbach / Strunk&White / McPhee / Hemingway / Carver / 漱石 (spans JP→EN parity)
+- **EN Q2-Q3-Q4** key anchors: Didion / Morrison / Chandler / Hopkins / Saunders
+
+### Remaining KEEP audit (~12 anchors)
+
+- EN (~12): Amy Hempel / Orwell / James Baldwin / Kazuo Ishiguro / Phoebe Waller-Bridge / Aaron Sorkin / Taika Waititi / Greta Gerwig / Nora Ephron / Dashiell Hammett / Anton Chekhov / Ben Thompson (Stratechery) / Gary Halbert / Bill Jayme / Nathan Allebach / Zaria Parvez
+
+### Still deferred
+
+- No `standards/*.md` integration (v2 entries remain in docs/voice-anchor-deep-dives/)
+- No schema update to voice-anchor-meta-core.md
+- No Pass 3 routing change
+
+## v1.4.2 — 2026-04-21 (Phase A batch 3 + 4 + language-consistency rewrite)
+
+16 additional Layer 1 v2 individual-creator entries (8 batch 3 + 8 batch 4), plus language-consistency rewrite of 14 earlier entries whose Voice direction / Prose mechanics / Don't-Failure-mode / Mitigation sections were in English when the anchor's native language is JP or zh.
+
+### Batch 3 (8 entries)
+- 寺山修司 (JP Q2 extreme, poet/playwright) — documented lineage 寺山 → 李欣頻《誠品副作用》
+- 許舜英 (zh-TW Q2 center, craft-gate) — power-disparity word rule, 意識形態廣告
+- 李欣頻 (zh-TW Q2 center, craft-gate) — 具名引用 lineage preserved
+- 葉明桂 (zh-TW Q2 center, craft-gate) — strategic gate before drafting; Z1 drift
+- 川端康成 (JP Q2 toward-Q3) — sensory-ellipsis, 新感覚派
+- 谷崎潤一郎 (JP Q2 toward-Q1) — shadow-aesthetic, 陰翳礼讃
+- Bill Bernbach (EN Q1 toward-Q2, ECD craft-gate) — confession-before-claim
+- John McPhee (EN Q1 toward-Q4) — longform precision
+
+### Batch 4 (8 entries)
+- 岩崎俊一 (JP Q3 center, craft-gate) — 余韻 / 無常、JP craft-gate 4 人完成
+- 眞木準 (JP Q2 toward-Q3, craft-gate) — 諧謔×知性 deadpan、two-gate wordplay test
+- 谷山雅計 (JP craft-gate) — 解決・意味提案, 3-reasons gate
+- 錢鍾書 (zh Q2 toward-Q1) — 博喻, 學者型小說家
+- 黃春明 (zh-TW Q3 toward-Q2) — 鄉土文學, humane vernacular
+- Claude Hopkins (EN Q4 center, craft-gate) — Ogilvy lineage "read seven times"
+- Toni Morrison (EN Q2 toward-Q3) — the-ancestor, lyrical inheritance
+- Raymond Carver (EN Q1 toward-Q4) — working-class precision, Hemingway descendant
+
+### Language-consistency rewrite (14 entries affected)
+
+User flag: anchor entries must describe themselves in the anchor's **native language**, not in English. Applied native rewrite (not translation) to Voice direction / Prose mechanics / Don't Failure mode / Mitigation sections for:
+
+JP anchors: 坂元裕二 / 梅田悟司 / 宮沢賢治 / 糸井重里 / 寺山修司 / 岩崎俊一 / 眞木準 / 谷山雅計
+
+zh-HK / zh-TW anchors: 朱家鼎 Mike Chu / 曾錦程 KC Tsang / 研之有物 / 故宮粉絲團 / 許舜英 / 葉明桂
+
+What stays English (intentional):
+- Schema section labels (Voice direction / Prose mechanics / Examples / Metadata)
+- Metadata enums (Trigger slug / Over-mimic risk / Pairs with form / Cross-reference-valid-for) for machine-readability
+- Enum values (HIGH / MEDIUM / LOW / STRONG / WEAK)
+
+### Cumulative v2 progress
+
+- Total Layer 1 v2 entries: **28** (pilot 4 + batch 2-4 × 8 each)
+- Creator types covered: essayist / novelist / poet / screenwriter / director / craft-gate copywriter / craft-gate CD / journalist / hardboiled author
+- Languages: JP / zh-HK / zh-TW / EN
+- **100% full pass rate (28/28 at 5/5 coverage)** — Schema v2 empirically validated across wide spread of creators
+
+### JP / zh craft-gate tier fully covered
+
+- **JP craft-gate masters (4/4)**: 糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 — all Layer 1 v2
+- **zh-TW craft-gate masters (3/3)**: 許舜英 / 李欣頻 / 葉明桂 — all Layer 1 v2
+
+### Still deferred
+
+- No `standards/*.md` integration (v2 entries remain in docs/voice-anchor-deep-dives/)
+- No schema update to voice-anchor-meta-core.md
+- No Pass 3 routing change
+- ~20 audit KEEP individual anchors remaining (JP Hemingway-descendants, zh-TW 白先勇/三毛/胡湘雲, EN Hempel/Strunk&White/Orwell/Baldwin/Ishiguro/Waller-Bridge/Saunders/Waititi/Gerwig/Chekhov/Ephron/Halbert/Jayme/Thompson/Hammett/Allebach/Parvez etc.)
+
+## v1.4.1 — 2026-04-21 (Phase A batch 2 — 8 Layer 1 v2 individual-creator entries)
+
+Eight additional individual-creator voice anchor entries researched + formatted to Layer 1 v2 schema. All 8 hit full 5/5 coverage under refined research-agent prompt with hard rules (no bio, no structural, ≥5 verbatim, native vocab, ≥5 mechanics).
+
+### Batch 2 deliveries
+
+Cross-culture / cross-type coverage (eight individual creators):
+
+| Anchor | Culture | Quadrant | Creator type |
+|---|---|---|---|
+| 谷川俊太郎 | JP | Q3 extreme | poet |
+| 王家衛 Wong Kar-wai | zh-HK | Q2 extreme | screenwriter/director |
+| 吳念真 | zh-TW | Q3 center | named CW + VO + director |
+| 朱天文 | zh-TW | Q2 toward-Q3 | novelist + screenwriter |
+| David Ogilvy | EN | Q1 center | named copywriter (craft-gate) |
+| Ernest Hemingway | EN | Q1 toward-Q4 | author |
+| Raymond Chandler | EN | Q4 toward-Q3 | author |
+| 夏目漱石 | JP | Q1 toward-Q2 | author |
+
+### Cumulative v1.4.0 + v1.4.1 Layer 1 v2 entries
+
+12 individual-creator anchors fully documented at Layer 1 v2:
+- Round 1 (v1.4.0): 向田邦子 / 張愛玲 / Joan Didion / 糸井重里
+- Round 2 (v1.4.1): 谷川俊太郎 / 王家衛 / 吳念真 / 朱天文 / Ogilvy / Hemingway / Chandler / 夏目漱石
+
+**12/12 = 100% 5/5 coverage pass rate**. Schema v2 validated across 7 creator types and 4 languages (JP / zh-HK / zh-TW / EN).
+
+### Per-entry refinements beyond meta-core over-mimic registry
+
+- Hemingway: added "4-turn tag-less cap" (beyond registry's 2) + "named-physical-object discipline" (addresses generic-object vague nouns)
+- Chandler: suggested registry upgrade — "cap similes to 1 per scene; single adjectives only; no abstract emotional nouns in narrator voice; aphorism once per chapter max" (beyond existing "1 per 50 words")
+- 王家衛: refined to "三件套替代形容詞堆疊" rule (addresses 形容詞堆疊 specific failure)
+- 吳念真: added 勿堆鄉愁形容詞 anti-kitsch guard
+- 夏目漱石: 3-sub failure mode (archaic 文末 / 一方向 snark / 漢語羅列 misread)
+
+### Observations for Phase A (continued)
+
+- Research-agent prompt v2 is stable across 8 parallel independent dispatches — hard rules consistently respected
+- Zero attribution bugs surfaced in batch 2 (batch 1 surfaced Mike Chu / KC Tsang split + 康熙 / 雍正 correction)
+- Copywriter mechanics cluster observation (糸井 from v1.4.0) holds: Ogilvy also clusters in 4 families (punctuation / elision / specificity / structure-doctrine). Non-copywriter anchors span wider
+- `pairs_with_form` continues to hint at Phase 4 form taxonomy refinement needs (Ogilvy: long-form-pasona + long-form-extended + mid-form)
+
+### Still deferred to later versions
+
+- No actual `standards/*.md` integration yet (Layer 1 v2 entries remain in `docs/voice-anchor-deep-dives/` as pilots)
+- No `voice-anchor-meta-core.md` schema update
+- No Pass 3 SKILL.md routing change
+- No format-templates/ / register-references/ directory created
+- ~40 individual-creator anchors remaining in audit KEEP list
+
+## v1.4.0 — 2026-04-21 (Anchor Schema v2 — purpose-centric, individual-creator-only)
+
+Major rethinking of anchor content design. v1.3.x schema was researcher-catalog-centric (Era / Agency / Primary sources / Representative lines / Voice signature / Over-mimic / Cross-ref / Trigger slug), mixing three readers' needs in one bullet list. v2 splits into layers, keeps only **Layer 1 inside skill**, moves Layer 2/3 (biographical / agency / awards / provenance) to `docs/voice-anchor-deep-dives/` as research artifacts.
+
+### Design principle change
+
+**Anchor file content = what Pass 3 copywriter agent needs to rewrite a draft in this voice, and nothing else.**
+
+### Inclusion criterion (new)
+
+An entity qualifies as a voice anchor IF AND ONLY IF it is an **individual creator** whose sentence-level register is identifiable across a body of work:
+- Authors / novelists / essayists / screenwriters / poets
+- Named copywriters with craft-gate signature
+- Named creative directors with recognizable craft across multiple campaigns
+
+Disqualifying types (move to `format-templates/` or `register-references/`):
+- Magazines / newspapers / wire services with rotating authors
+- Institutional platforms / SNS / IP / brand mascots
+- Brand house-style guides without a single named author
+- E-commerce platforms with distributed authorship
+- Campaign-level entries without clear individual authorship
+- Documented movements / genres
+
+### Schema v2 Layer 1 (what ships in skill)
+
+```markdown
+### {anchor} ({culture} | {quadrant} {landmark})
+
+## Voice direction
+**What this register achieves**: {1 sentence}
+**Native critical read** (≥3, attributed verbatim): ...
+
+## Prose mechanics (≥5, sentence-level voice rules only)
+- ...
+
+## Examples (≥5 verbatim from ≥2 works)
+- ...
+
+## Don't / Over-mimic
+- Failure mode: ...
+- Mitigation (≤15 words): ...
+
+## Metadata
+- Trigger slug / Over-mimic risk / Pairs with form (list) / Cross-reference
+```
+
+### Delivered in v1.4.0
+
+1. **`docs/anchor-schema-v2.md`** — full schema spec + inclusion criterion + recast rules
+2. **`docs/voice-library-recast-audit.md`** — 105 anchors classified: ~52 KEEP as-is individual / ~20 RECAST institutional-to-individual / ~25 MOVE-OUT (format-templates/register-references)
+3. **`docs/anchor-schema-v2-pilot-findings.md`** — two rounds of pilot results
+4. **8 Round-1 pilot entries** (`pilot-layer1-*.md`) — mixed individual + institutional; surfaced the structural-contamination problem
+5. **4 Round-2 pilot entries** (`pilot-layer1-v2-*.md`) — individual-creator only; 100% 5/5 full pass:
+   - 向田邦子 (JP Q3 center, essayist + screenwriter)
+   - 張愛玲 Eileen Chang (zh Q2 toward-Q3, novelist + essayist)
+   - Joan Didion (EN Q2 toward-Q3, essayist + novelist; net-new entry)
+   - 糸井重里 (JP Q3 center, craft-gate master named copywriter)
+
+### What did NOT ship in v1.4.0
+
+- No changes to `standards/*.md` (v1.3.x entries preserved)
+- No changes to `voice-anchor-meta-core.md` anchor schema spec
+- No changes to Pass 3 SKILL.md routing
+- No movement of institutional entries out (deferred to Phase C)
+
+**Rationale**: v1.4.0 is pilot + design artifact. Actual migration of ~52 individual-creator anchors begins in v1.4.1+ (Phase A). This preserves v1.3.6 functionality unchanged while the design is validated.
+
+### Key schema insights surfaced during pilots
+
+1. **Biographical/structural content contaminates Prose mechanics in v1 schema** — 5+ of 8 Round-1 entries had "4-sentence contract", "byline 三欄制", "週循環 SOP", "T字型思考法", "historical-event anchoring", etc. — these are Phase 4 (framework) territory, not Phase 6 (voice) territory. Cleanly separated in v2.
+2. **Institutional anchors often cannot produce ≥5 voice-level mechanics** — 研之有物 after purification had only 3 voice mechanics (hedging preservation / 擬人 subhead / 嘆號 frequency). Rest was attribution protocol / structural template.
+3. **Individual creators produce ≥5 voice mechanics cleanly** — all 4 Round-2 entries hit 7.
+4. **Copywriter mechanics cluster** (糸井 insight): copywriter anchors gravitate to 4 families (punctuation / elision / register / mora). Acceptable but worth monitoring.
+5. **Phase 4 form taxonomy may need refinement** — 糸井 `pairs_with_form` proposed `short-form-catchcopy` / `mid-form-brand-tagline` / `light-action-lifestyle` not currently in Phase 4 enum.
+
+### Phase plan (v1.4.1+)
+
+- **Phase A** (v1.4.1-v1.5.0): migrate ~48 remaining individual-creator anchors via parallel research-agent batches
+- **Phase B** (v1.5.x): recast ~20 institutional-to-individual candidates (原研哉, 太田恵美, 金鵬遠, Kate Kiefer Lee, Richard Reed, Dan Wieden, David Abbott, etc.)
+- **Phase C** (v1.6.0): move ~25 institutional / brand / platform entries to `format-templates/` + `register-references/`
+- **Phase D** (v1.7.0): Update `voice-anchor-meta-core.md` to v2 schema; update Pass 3 SKILL.md Pass 3d to read v2; delete v1 schema compatibility shims
+
+## v1.3.6 — 2026-04-21 (Revert `anchor_marginal_value` — premature optimization)
+
+Removes the `anchor_marginal_value` schema field added in v1.3.5 Item 3. Decision: the field was a typed slot for future Pass 3 skip-on-LOW optimization (estimated savings ~1.7% of total pipeline tokens), but:
+
+- v1.3.5 shipped it unpopulated (all 105 anchors marked `unevaluated`), creating fabrication pressure
+- Populating properly requires ~$50 + 3 hours of cross-model-judge automation (Tier 1 pipeline designed but not built)
+- Skip-on-LOW saves ~1.7% cost but carries maintenance overhead (field documentation, Pass 3 branching, evidence standard enforcement)
+- Alternative observability already in place: `docs/voice-anchor-e2e-tests/` regression baseline + Dimension 6/7 gates + `cw_toolkit` CHANGELOG per-run token estimates
+
+Net: a field that doesn't pay for its upkeep yet. Removed to reduce schema entropy. If Pass 3 token cost becomes an observed bottleneck, reintroduce alongside a built Tier 1 evaluation pipeline.
+
+### Changes
+
+- `voice-anchor-meta-core.md` — removed `anchor marginal value` row in anchor entry schema + field semantics table + entire `§anchor_marginal_value semantics` section
+- `docs/voice-anchor-e2e-tests/findings-apply-rewrite.md` — updated pending-work bullet to note revert rationale
+- No anchor file content changed
+- No SKILL.md / gate rubric / Pass 3 logic changed (v1.3.5 already specified field was read-only, no skip-logic was ever wired)
+
+### Retained from v1.3.5
+
+- Item 1 (`anchor_candidates_ranked[]` output) — kept
+- Item 2 (Pass 3 thesis-conflict self-check) — kept
+- Item 3 (`anchor_marginal_value` field) — **reverted**
+
+## v1.3.5 — 2026-04-21 (Pass 3 transparency + thesis self-check + marginal-value schema stub)
+
+Three small improvements folded in after v1.3.4 e2e testing, each addressing a specific gap surfaced during the apply-rewrite round. Token cost estimate: +2-4% per pipeline run short-term, +1-2.6% long-term once `anchor_marginal_value` populates.
+
+### Item 1 — Pass 3 ranked candidates output schema
+
+`tone_notes.register_signal_applied` now includes `anchor_candidates_ranked[]` (top-3) + `primary_anchor_slug` (rank 1) instead of a single anchor slug. Surfaces Pass 3's interpretation space — the same brief across runs may legitimately select different primaries, but the candidate set should stabilize. Downstream reviewers and regression audits can see the alternatives.
+
+**Motivation**: v1.3.x e2e tests showed the same zh-TW Q3 brief picked different primary anchors across runs (Test 02 → 吳念真; Apply A2 → 全聯). Not a bug, but was being swallowed by single-slug output schema.
+
+### Item 2 — Pass 3 thesis-conflict self-check
+
+Pass 3d adds a self-check step BEFORE emitting polished draft: scan rewrite for spans reintroducing concepts `envelope.message_thesis` explicitly negates. If detected, revise (drop conflicting imagery, keep anchor cadence / discipline). Records outcome in `thesis_self_check: clear | revised_once | escalate`. Escalate cases flow to Dimension 7 gate for terminal catch.
+
+**Motivation**: Documented failure mode (v1.3.4 Dimension 7) where anchor register pulled rewrite into thesis-violating imagery (zh-TW Q3「不是懷舊」thesis + anchor reintroduced 放學路上 nostalgia). Self-check at Pass 3 = defense in depth; Dimension 7 remains the terminal gate.
+
+### Item 3 — `anchor_marginal_value` schema field (stub, unpopulated)
+
+New optional field in meta-core anchor schema: `HIGH / MEDIUM / LOW / unevaluated`. Concept: some anchors make drafts distinctly different from no-anchor baseline (HIGH — e.g. 向田邦子 ト書き); others produce cadence changes but similar structural shape (MEDIUM); others are swamped by the quadrant baseline (LOW — e.g. zh-TW Q3 peer-warm generic).
+
+**v1.3.5 does NOT populate values** on any existing anchor — all default to `unevaluated`. Schema field is added now to prevent drift when future iterations fill in data from apply-rewrite test rounds.
+
+**Future use (not v1.3.5)**: Pass 3 may skip anchor load for LOW-marginal anchors to save ~1.5K tokens per Pass 3 invocation. Not activated yet — needs enough populated values to justify the branch.
+
+**Meta-note on evidence standards**: values MUST come from apply-rewrite A/B evidence (baseline vs anchor-applied draft pair); NOT from rationale-only tests or `native_critical_vocab_cited` count (v1.3.3 A/B showed vocab count is a misleading proxy).
+
+### No regressions
+
+- Existing `tone_notes.register_signal_applied` consumers continue to work — `primary_anchor_slug` is the new name for what was `anchor_slug`; downstream reads may need an additive alias (kept in v1.3.5 CHANGELOG as a known touchpoint; callers should adopt `primary_anchor_slug` going forward)
+- No anchor file content changed
+- No Pass 3 routing / tier precedence changed
+- Gate dimensions 1-7 behavior unchanged
+- `anchor_marginal_value` read-only in v1.3.5 — no skip-logic activates
+
+### Token cost impact (estimated)
+
+Baseline per-pipeline-run (v1.3.2 reference): ~26K tokens.
+
+| Change | Per Pass 3 cost | Per pipeline run (Pass 3 fires ~80%) |
+|---|---|---|
+| Item 1 candidates_ranked | +200-500 | +160-400 |
+| Item 2 thesis self-check (incl. 15% revise rate) | +275 weighted avg | +220 |
+| Item 3 marginal_value stub | +50-100 | +40-80 |
+| **Aggregate short-term** | +525-1000 | **+420-800 (~+1.6-3.1%)** |
+| **Aggregate long-term** (once marginal_value populates and Pass 3 skips LOW) | +175-600 | **+140-480 (~+0.5-1.8%)** |
+
+All within CLAUDE.md §Verification Density Principle 5% marginal-cost ceiling.
+
+## v1.3.4 — 2026-04-21 (Voice Consistency Dimension 7 — Thesis Alignment + e2e test artifacts)
+
+Empirical outcome from first end-to-end pipeline tests of the v1.3.x anchor library. Test harness in `docs/voice-anchor-e2e-tests/` shipped as artifacts so future iterations have a regression baseline. One concrete bug surfaced → Dimension 7 added to Voice Consistency gate.
+
+### What changed
+
+- **Rubric `rubrics/voice-consistency-gate.md` — Dimension 7 (RUB-CTW-VC-007) added**: catches anchor-induced drift from `envelope.message_thesis`. Scope: applies only when Pass 3 ran AND thesis is non-empty. Fires 🔴 when Pass 3 output reintroduces a concept the thesis explicitly negated, or undermines an assertion. Remediation pattern documents "anchor register must serve thesis; drop conflicting imagery, keep cadence / discipline only".
+- **SKILL.md gate reference updated** to list Dimension 7 alongside 5 / 6.
+- **Docs folder `docs/voice-anchor-e2e-tests/`**: README + 4 initial test specs + findings from Pass 3 rationale tests + findings from apply-rewrite tests. Preserves concrete before/after draft pairs for 2 briefs (zh-TW Q3 center / JP Q3 center).
+
+### Empirical finding that drove Dimension 7
+
+zh-TW Q3 brief with thesis「古早味不是懷舊，是我們今天還在過的日常」→ Pass 3 applied 全聯 格言體 + 吳念真 stance anchors → polished draft contained「放學路上那個沒什麼煩惱的下午」— a nostalgic frame the thesis explicitly rejected. Anchor register was pulling the rewrite toward register-canonical imagery (身體感官的懷舊記憶) that felt right stylistically but violated the argument. No existing gate dimension caught this (D1-D5 check voice coherence not argument; D6 checks registered over-mimic tropes not thesis).
+
+### Empirical findings NOT fixed this version (recorded for future iteration)
+
+- **Anchor ROI varies with register distinctiveness** — JP Q3 (向田 ト書き register) → large shape change; zh-TW Q3 center →细微 delta (generic peer-warm quadrant). Suggests future `anchor_marginal_value: HIGH/MEDIUM/LOW` field in meta-core so Pass 3 can skip anchor load when marginal value is LOW. Not shipped this version — needs dedicated design pass.
+- **Anchor selection non-deterministic** — same brief, same pipeline, different Pass 3 invocations can select different primary anchors (Test 02 chose 吳念真; Apply A2 chose 全聯). Legitimate interpretation space but should be surfaced via `anchor_candidates_ranked[]` rather than single-slug output. Not shipped — schema change deferred.
+- **Native-reviewer blind evaluation not performed** — all analysis in this version is self-inspection. Real TW/JP copywriter blind rating of baseline-vs-applied drafts is the missing ground truth.
+
+### No regressions
+
+- No anchor file content changed
+- No routing / envelope / Pass 3 load logic changed
+- Existing dimensions 1-6 behavior unchanged
+- `not_applicable` scoping preserved for Dimensions 3 / 5 / 6 / 7
+
+## v1.3.3 — 2026-04-21 (JP + zh-TW anchor native-source vocabulary rewrite)
+
+Content-layer polish: replaced English-translated voice signatures with native critical vocabulary researched from primary sources (JP: Wikipedia JA / 宣伝会議 / 朝日新聞 / 岩波 / 学術紀要 / author's own books; zh-TW: 動腦 / 數位時代 / 小魚廣告網 / 中央社文化 / 機構自述 / 學界批評).
+
+Previous anchor files had English-structured signatures with native names pasted in — this version reads like TW/JP critics actually write. No schema changes; no lineage changes; no over-mimic-registry changes.
+
+### What changed
+
+- **8 files rewritten**: `jp-q{1,2,3,4}-anchors.md` + `zh-q{1,2,3,4}-anchors.md`
+- **Schema labels stay EN**: Era / Agency / Primary sources / Voice signature / LLM corpus depth / Over-mimic risk / Cross-reference-valid-for / Trigger slug — consistency with meta-core
+- **Enum values stay EN**: DEEP / MEDIUM / HIGH / STRONG / WEAK
+- **Trigger slugs stay kebab-case machine-readable**
+- **Voice signature bullets use native critical terms** actually used by TW/JP critics, agency self-descriptions, and academic 批評
+
+### Critical attribution corrections (research agent flags)
+
+- **JR東海「そうだ 京都、行こう。」** main copywriter corrected from 一倉宏 → **太田恵美**（CD: 佐々木宏）per JP research agent flag against Wikipedia JA + 宣伝会議 archive
+- **報導者 extreme vocab** corrected「血淚調查」→「公共領域調查報導 / 時間成本／半年一篇 / 不受廣告業主干預」per zh research agent flag (「血淚」is not native critical vocabulary for 報導者 register)
+
+### Representative native vocabulary applied
+
+JP:
+- 糸井重里 lineage references now cite「状態提案」(自稱)、「ほぼ日」(媒體自稱)
+- 宮沢賢治「心象スケッチ」(自稱ジャンル名)、「非慣習的オノマトペ」(田守育啓 論文定式化)
+- 谷川俊太郎「詩のことば」≠「伝達のことば」(谷川 自述, ほぼ日)
+- 坂元裕二「言葉の魔術師」(BuzzFeed 2017 見出し定着)、「余白」(神戸大学紀要)
+- 吉本ばなな「大胆な省略」(辻井喬 書評)、「J 文学」(1990s 批評標識)
+
+zh-TW:
+- 天下雜誌「積極、前瞻、放眼天下」(殷允芃自述 DNA)
+- 報導者「三不原則」(不擁有、不干預、不回收)、「自己的新聞自己救」(何榮幸 創辦宣言)
+- 研之有物「言之有物」(命名出處《周易·家人》)
+- 吳念真「氣口」(台語 CW 術語、吳本人用語)
+- 胡湘雲「不平凡的平凡大眾 / 真人真事改編」(campaign 自述)
+- 故宮「讓歷史走進生活 / 故宮小編 / 古物擬人化」
+- 台灣吧「知識娛樂化 / 幹話體」
+- 黃春明「鄉土文學」(1970s 鄉土文學論戰 canonical 學界術語)
+- 三毛「流浪文學」(自述 genre)
+- 錢鍾書「博喻 / 打通 / 學者型小說家」(錢自創 + 學界沿用)
+- 張愛玲「蒼涼 / 參差的對照」(張自述美學、《自己的文章》)
+- 朱天文「世紀末 / 物質書寫」(批評定型語)
+
+### Rationale
+
+Original v1.3.0-v1.3.2 anchor content was generated by translating English critical analyses of these voices into English-with-zh/jp-character-names. That structure doesn't match how TW/JP critics actually write about these voices natively, and Phase 6 Pass 3 anchor rationale output read as "outsider translation". Research agents working in JP-Wikipedia / CNA 文化 / 動腦 / 宣伝会議 / 神戸大学紀要 / 岩波 etc. surfaced the actual critical vocabulary circulating in each tradition. Rewriting ensures voice-reference rationale in envelope.audit_trail matches what a native-language copywriter would cite.
+
+### No regressions
+
+- Tier 1 (Craft Gate) unaffected — craft-lineage files unchanged
+- Tier 3 (Axis Extreme) unaffected — placeholder unchanged
+- Meta-core / meta-detail / gate rubric unchanged
+- Pipeline routing unchanged
+- Envelope contract unchanged
+- `voice_quadrant.position` field behavior unchanged
+
 ## v1.3.2 — 2026-04-21 (EN anchor content + Pass 3 3-tier refactor + position field + gate rubric)
 
 PR 3 of 3 for voice anchor library expansion. Completes EN content population AND wires up the register-signal + axis-extreme branches in Phase 6 Pass 3. Adds `voice_quadrant.position` optional envelope field + gate rubric over-mimic adherence dimension.
