@@ -1,5 +1,53 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.5 — 2026-04-21 (Pass 3 transparency + thesis self-check + marginal-value schema stub)
+
+Three small improvements folded in after v1.3.4 e2e testing, each addressing a specific gap surfaced during the apply-rewrite round. Token cost estimate: +2-4% per pipeline run short-term, +1-2.6% long-term once `anchor_marginal_value` populates.
+
+### Item 1 — Pass 3 ranked candidates output schema
+
+`tone_notes.register_signal_applied` now includes `anchor_candidates_ranked[]` (top-3) + `primary_anchor_slug` (rank 1) instead of a single anchor slug. Surfaces Pass 3's interpretation space — the same brief across runs may legitimately select different primaries, but the candidate set should stabilize. Downstream reviewers and regression audits can see the alternatives.
+
+**Motivation**: v1.3.x e2e tests showed the same zh-TW Q3 brief picked different primary anchors across runs (Test 02 → 吳念真; Apply A2 → 全聯). Not a bug, but was being swallowed by single-slug output schema.
+
+### Item 2 — Pass 3 thesis-conflict self-check
+
+Pass 3d adds a self-check step BEFORE emitting polished draft: scan rewrite for spans reintroducing concepts `envelope.message_thesis` explicitly negates. If detected, revise (drop conflicting imagery, keep anchor cadence / discipline). Records outcome in `thesis_self_check: clear | revised_once | escalate`. Escalate cases flow to Dimension 7 gate for terminal catch.
+
+**Motivation**: Documented failure mode (v1.3.4 Dimension 7) where anchor register pulled rewrite into thesis-violating imagery (zh-TW Q3「不是懷舊」thesis + anchor reintroduced 放學路上 nostalgia). Self-check at Pass 3 = defense in depth; Dimension 7 remains the terminal gate.
+
+### Item 3 — `anchor_marginal_value` schema field (stub, unpopulated)
+
+New optional field in meta-core anchor schema: `HIGH / MEDIUM / LOW / unevaluated`. Concept: some anchors make drafts distinctly different from no-anchor baseline (HIGH — e.g. 向田邦子 ト書き); others produce cadence changes but similar structural shape (MEDIUM); others are swamped by the quadrant baseline (LOW — e.g. zh-TW Q3 peer-warm generic).
+
+**v1.3.5 does NOT populate values** on any existing anchor — all default to `unevaluated`. Schema field is added now to prevent drift when future iterations fill in data from apply-rewrite test rounds.
+
+**Future use (not v1.3.5)**: Pass 3 may skip anchor load for LOW-marginal anchors to save ~1.5K tokens per Pass 3 invocation. Not activated yet — needs enough populated values to justify the branch.
+
+**Meta-note on evidence standards**: values MUST come from apply-rewrite A/B evidence (baseline vs anchor-applied draft pair); NOT from rationale-only tests or `native_critical_vocab_cited` count (v1.3.3 A/B showed vocab count is a misleading proxy).
+
+### No regressions
+
+- Existing `tone_notes.register_signal_applied` consumers continue to work — `primary_anchor_slug` is the new name for what was `anchor_slug`; downstream reads may need an additive alias (kept in v1.3.5 CHANGELOG as a known touchpoint; callers should adopt `primary_anchor_slug` going forward)
+- No anchor file content changed
+- No Pass 3 routing / tier precedence changed
+- Gate dimensions 1-7 behavior unchanged
+- `anchor_marginal_value` read-only in v1.3.5 — no skip-logic activates
+
+### Token cost impact (estimated)
+
+Baseline per-pipeline-run (v1.3.2 reference): ~26K tokens.
+
+| Change | Per Pass 3 cost | Per pipeline run (Pass 3 fires ~80%) |
+|---|---|---|
+| Item 1 candidates_ranked | +200-500 | +160-400 |
+| Item 2 thesis self-check (incl. 15% revise rate) | +275 weighted avg | +220 |
+| Item 3 marginal_value stub | +50-100 | +40-80 |
+| **Aggregate short-term** | +525-1000 | **+420-800 (~+1.6-3.1%)** |
+| **Aggregate long-term** (once marginal_value populates and Pass 3 skips LOW) | +175-600 | **+140-480 (~+0.5-1.8%)** |
+
+All within CLAUDE.md §Verification Density Principle 5% marginal-cost ceiling.
+
 ## v1.3.4 — 2026-04-21 (Voice Consistency Dimension 7 — Thesis Alignment + e2e test artifacts)
 
 Empirical outcome from first end-to-end pipeline tests of the v1.3.x anchor library. Test harness in `docs/voice-anchor-e2e-tests/` shipped as artifacts so future iterations have a regression baseline. One concrete bug surfaced → Dimension 7 added to Voice Consistency gate.
