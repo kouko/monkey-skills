@@ -439,7 +439,10 @@ Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes`
   before Phase 7 legal gates pick up the artifact.
 - **Dimensions** (per rubric): brand voice stability, tone contextual
   appropriateness, maestro style fidelity (if lineage applied), JP
-  emotional-resonance vs Anglo benefit-clear fit.
+  emotional-resonance vs Anglo benefit-clear fit, voice quadrant
+  coherence, over-mimic adherence (v1.3.2, scoped to Pass 3), and
+  **thesis alignment** (v1.3.4, scoped to Pass 3 — catches anchor-
+  induced drift from `envelope.message_thesis`).
 
 Verdict handling:
 
