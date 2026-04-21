@@ -198,31 +198,61 @@ contexts still map — e.g., PASONA's Affinity stage ≈ Onboarding tone;
 Offer stage ≈ Celebration tone (see `voice-and-tone.md §Integration with
 PASONA / BEAF / キャッチコピー frameworks`).
 
-### Pass 3 — Lineage craft (runs only per §When lineage craft applies)
+### Pass 3 — Lineage craft / register signal / axis extreme (runs only per §When lineage craft applies)
 
-Pass 3 loads exactly ONE language-specific lineage standard based on the trigger conditions. Apply the referenced maestro's voice signature.
+Pass 3 branches into **three mutually exclusive load paths** based on voice_reference + voice_quadrant configuration. v1.3.2 expanded v1.2.0's single "craft gate" path into 3 tiers for the voice anchor library (PR 1 foundation v1.3.0 + content v1.3.1).
 
-#### Pass 3 activation guard (v1.2.0 — hard constraint)
+#### Pass 3 activation guard (v1.3.2 — 3-tier branching)
 
-**Before loading any lineage standard (`jp-copy-craft-lineage.md` or `zh-copy-craft-lineage.md`)**, the agent MUST verify the trigger predicate evaluates to TRUE per §When lineage craft applies:
+**Before loading any standards**, the agent MUST verify Pass 3 trigger evaluates to TRUE per §When lineage craft applies. Then branch:
 
 ```
-JP trigger:
-  output_language == "ja"
-  OR voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}
-  OR (voice_quadrant.primary == "Q3" AND message_thesis is state-proposal)
+# Pass 3 activation predicate (outer gate, v1.2.0 preserved)
+if Pass 3 triggered:
 
-ZH trigger:
-  (output_language ∈ {"zh-TW", "zh-HK"} AND Q2 maestro voice declared)
-  OR voice_reference ∈ {許舜英, 李欣頻, 葉明桂}
-  OR (voice_quadrant.primary == "Q2" AND audience is ZH-sphere consumer-class)
+    # Tier 1 — Craft Gate (existing 6 canonical masters, v1.2.0 behavior)
+    if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}:
+        load standards/jp-copy-craft-lineage.md
+        load standards/voice-anchor-meta-core.md  (for over-mimic mitigation)
+        # NO meta-detail, NO per-quadrant, NO axis-extreme
+        proceed to Pass 3a
+
+    elif voice_reference ∈ {許舜英, 李欣頻, 葉明桂}:
+        load standards/zh-copy-craft-lineage.md
+        load standards/voice-anchor-meta-core.md
+        proceed to Pass 3b
+
+    # Tier 3 — Axis Extreme (new, v1.3.2)
+    elif voice_quadrant.position starts with "axis-":
+        load standards/voice-anchor-meta-core.md
+        load standards/axis-extreme-anchors.md
+        proceed to Pass 3c
+
+    # Tier 2 — Register Signal (new, v1.3.2) — default for any other Pass-3-triggered case
+    else:
+        load standards/voice-anchor-meta-core.md
+        load standards/voice-anchor-meta-detail.md
+        position = voice_quadrant.position OR "center" (default fallback)
+        load standards/{output_language}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
+        if cross-reference-valid-for[output_language] == STRONG for cited anchor:
+            load standards/{cross-ref-lang}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
+        proceed to Pass 3d
+
+else (Pass 3 not triggered):
+    # No load, skip to Phase 7
+    tone_notes.lineage_applied = null
+    tone_notes.register_signal_applied = null
+    tone_notes.axis_extreme_applied = null
 ```
 
-**If neither predicate is TRUE → Pass 3 MUST NOT load any lineage standard.** Record `tone_notes.lineage_applied = null` + skip to Phase 7. Do NOT load "just in case".
+**If no branch condition is TRUE → Pass 3 MUST NOT load any standards.** Record the null annotations and skip. Do NOT load "just in case".
 
-**Rationale** (v1.2.0 §Verification Density Principle — Lazy tier): the 2 lineage standards together are ~700 lines / ~8-10K tokens. Loading them on a run that won't use them (most Express Mode runs with `voice_reference = "default"` — the v1.1.0 dual-trigger resolution Option C case) is pure waste. Prior versions let agents load "defensively" — v1.2.0 makes non-loading the enforced default.
+**Rationale** (v1.2.0 §Verification Density Principle + v1.3.2 optimization 1-4):
+- v1.2.0 preserved craft-gate gate (6 masters); lineage standards 700 lines / 8-10K tokens load only when craft master cited
+- v1.3.2 adds register-signal + axis-extreme branches with **landmark-targeted section read** (~1.5K per section) and **meta-core vs meta-detail split** (core ~2K always when Pass 3 triggers; detail ~3K only when Register Signal)
+- Net: Pass 3 per-trigger weighted cost ~5-7K (down from 8-10K pre-split)
 
-**If predicate is TRUE → proceed to Pass 3a or 3b as applicable**.
+**If predicate is TRUE → proceed to Pass 3a / 3b / 3c / 3d as applicable**.
 
 #### Pass 3a — JP lineage (JP trigger matched)
 
@@ -290,6 +320,26 @@ risk of falling into + what mitigation was applied. Examples:
 **Forbidden cross-transplant**: Pass 3a and Pass 3b are mutually
 exclusive — never apply JP signatures to ZH output or vice versa.
 Both lineage standards' §Anti-Patterns sections ban this explicitly.
+
+#### Pass 3c — Axis Extreme branch (v1.3.2, new)
+
+When `voice_quadrant.position` starts with `axis-*` (e.g. `axis-authority-extreme`), Pass 3 loads `axis-extreme-anchors.md` — a cross-language file covering 4 axis-extreme positions (authority/affinity/reason/emotion). **MVP**: file is placeholder with candidate lists; V2 research will populate with full entries (BBC News / Supreme Court / Hallmark / Wikipedia / Mailchimp help center neutral etc.).
+
+During MVP period: if brief triggers `axis-*` position, agent should note the placeholder status in `tone_notes.axis_extreme_applied = "mvp-stub-{position}"` and apply best-effort register matching from candidate list in the file. If V2 content is present, apply per standard anchor entry.
+
+#### Pass 3d — Register Signal branch (v1.3.2, new)
+
+When voice_reference is not a craft-gate master AND position is not axis-extreme (the default Pass-3-triggered case), Pass 3 loads the per-quadrant anchor file matching `output_language` × `voice_quadrant.primary`. **Landmark-targeted read**: only the `## Landmark: {position}` section is consumed (~1.5K tokens vs ~3K whole file). Fallback to whole-file read when position is missing.
+
+When cross-reference registry (meta-detail) shows `cross-reference-valid-for[output_language] == STRONG` for any anchor in the target section, ALSO load the corresponding cross-lang file's same Landmark section. Most common: JP→zh-TW STRONG (zh-TW Q3 brief with 糸井 cross-ref loads jp-q3 center).
+
+Register-Signal apply:
+1. Read per-quadrant Landmark section — extract anchor entries + metadata (per meta-core schema)
+2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions) + consult over-mimic mitigation registry (meta-core) for required clauses
+3. Apply best-fit anchor's voice signature to draft rewrite
+4. Record `tone_notes.register_signal_applied = {anchor_slug, landmark_position, mitigation_clauses_applied}`
+
+**Cross-branch rule**: if multiple branches' conditions match (e.g. voice_reference names a craft-gate master AND voice_quadrant.position = axis-*), Craft Gate wins. Tier precedence: Craft Gate > Axis Extreme > Register Signal.
 
 ## Preconditions
 
