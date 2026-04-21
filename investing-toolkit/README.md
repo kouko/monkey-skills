@@ -1,6 +1,6 @@
 # investing-toolkit
 
-**Version**: 1.16.4
+**Version**: 1.16.5
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Investing research toolkit — **5-country macro data** (US / JP / TW / KR / CN),
@@ -181,6 +181,28 @@ Plugin-level cross-market references (complement the per-skill references):
 - [MCP Setup](docs/mcp-setup.md) — install paths + honest Cowork sandbox limitation
 
 ## Version Highlights
+
+### v1.16.5 (2026-04-20) — investment-memo-writer Phase 3 retarget to investing-team
+
+Corrects v1.16.4 stale routing inherited from v1.16.4 inherited from v1.12.0:
+memo Phase 3 was dispatching to `domain-teams:research-team` under
+the false premise that `investing-team` was "v5.0.0-v5.1.0 transient".
+Git log shows investing-team has been permanent since v5.0.0 with a
+full standards/protocols/rubrics stack; research-team's own SKILL.md
+redirects investment work back to investing-team, making the prior
+routing a wasteful indirection that also contradicted CLAUDE.md's
+Cross-Plugin Delegation Contract canonical target.
+
+- `skills/investment-memo-writer/SKILL.md`: Phase 3 heading + body +
+  description + narration + Cross-Plugin Delegation Contract §
+  retargeted from research-team → investing-team.
+- Gates table replaced with the **actual** investing-team gate stack
+  (was listing 7 invented "research-team gates"; now lists the real
+  2 MUST + 4 SHOULD + 1 MAY from investing-team rubrics/).
+- History note retained for audit trail — retrospectively explains
+  the v1.12.0 false premise + v1.16.5 correction.
+
+No code / script / test changes. Regression suite unchanged (26/26 pass).
 
 ### v1.16.4 (2026-04-19) — taiwan-stock-snapshot wires TWSE `/rwd/` + design-principles doc
 

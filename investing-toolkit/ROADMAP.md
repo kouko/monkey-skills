@@ -434,7 +434,51 @@ swap-spread sub-blocks.
 
 ---
 
-## v1.16.4 — taiwan-stock-snapshot TWSE `/rwd/` wiring + design-principles doc (current)
+## v1.16.5 — investment-memo-writer Phase 3 retarget to investing-team (current)
+
+**Scope**: Small correctness fix closing a v1.12.0 drift.
+
+### The stale routing
+
+v1.12.0 (commit 2a92193) retargeted investment-memo-writer Phase 3
+from `domain-teams:investing-team` → `domain-teams:research-team`
+under the false premise "investing-team v5.0.0-v5.1.0 transient".
+That premise was wrong — git log shows investing-team was created
+at v5.0.0 (df10eaa) as a permanent team:
+  - 12 standards / 5 protocols / 2 checklists / 5 rubrics
+  - ISQ gate added v5.1.0 (de4d3b2)
+  - Visibility Convention added v5.2.0 (323b50b)
+
+research-team's own SKILL.md (since v5.0.0) explicitly redirects
+investment work BACK to investing-team (lines 8-9, 68, 444-457 of
+research-team/SKILL.md). So the v1.12.0 choice was:
+  - Architecturally wrong (CLAUDE.md §Cross-Plugin Delegation
+    Contract names investing-team as the canonical target)
+  - Runtime inefficient (research-team bounces back to investing-team
+    via SKILL.md prose redirect; one wasted LLM hop per memo)
+
+### Commits (2)
+- [x] Commit 1 (fix): `skills/investment-memo-writer/SKILL.md` —
+      frontmatter description / Phase 3 heading+body / Taiwan detection
+      paragraph / narration example / Cross-Plugin Delegation Contract
+      § all retargeted research-team → investing-team. Phase 3 Gates
+      table replaced with the real investing-team gate stack (was
+      listing 7 invented "research-team gates"; now lists 2 MUST +
+      4 SHOULD + 1 MAY from investing-team rubrics/).
+- [x] Commit 2 (chore): plugin sync 1.16.4 → 1.16.5 + README +
+      ROADMAP.
+
+### Impact
+- Functional: one fewer LLM indirection hop per memo dispatch.
+- Correctness: Phase 3 now reaches investing-team directly instead of
+  relying on research-team's SKILL.md prose bounce.
+- Contract alignment: matches CLAUDE.md canonical delegation target.
+
+No code / script / test changes. Regression 26/26 pass (unchanged).
+
+---
+
+## v1.16.4 — taiwan-stock-snapshot TWSE `/rwd/` wiring + design-principles doc
 
 **Scope**: Small polish release closing two v1.16.3 loose ends.
 

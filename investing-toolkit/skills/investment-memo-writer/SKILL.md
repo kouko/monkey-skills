@@ -1,6 +1,6 @@
 ---
 name: investment-memo-writer
-description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance + FRED) → macro-regime-snapshot → domain-teams:research-team (Deep Equity Research Memo workflow + all gates) → optional docs-team formatting. This is the primary cross-plugin delegation skill in the repo.
+description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance + FRED) → macro-regime-snapshot → domain-teams:investing-team (Deep Equity Research Memo protocol + all gates) → optional docs-team formatting. This is the primary cross-plugin delegation skill in the repo.
 ---
 
 # investment-memo-writer
@@ -9,7 +9,7 @@ description: Full investment memo pipeline. Orchestrates data-fetcher (yfinance 
 
 Orchestrate a full investment memo from raw ticker to polished document. This skill
 coordinates three subsystems: data fetching (investing-toolkit), regime context
-(macro-regime-snapshot), and analysis + gates (domain-teams:research-team). Optionally
+(macro-regime-snapshot), and analysis + gates (domain-teams:investing-team). Optionally
 pass the finished memo to docs-team for polished formatting.
 
 ---
@@ -23,7 +23,7 @@ pass the finished memo to docs-team for polished formatting.
 | `output_language` | no | detect from user | Set to `zh-TW` for .TW/.TWO tickers automatically |
 
 **Taiwan detection**: If the ticker ends in `.TW` or `.TWO`, output_language defaults
-to `zh-TW` and the research-team Taiwan-Specific Diagnosis gate (MAY level) is
+to `zh-TW` and the investing-team Taiwan Local Rigor gate (MAY level) is
 auto-enabled. Phase 1 will launch the MOPS + TWSE OpenAPI Tier 1 pipeline
 (公司揭露 + 交易) with FinMind as Tier 2 auto-fallback + T86 gap-fill (per
 `taiwan-stock-snapshot` v1.13.0 architecture).
@@ -141,40 +141,44 @@ FRED call.
 
 ---
 
-### Phase 3 — Full Memo (domain-teams:research-team)
+### Phase 3 — Full Memo (domain-teams:investing-team)
 
-Launch `domain-teams:research-team` with the **Deep Equity Research Memo** workflow.
+Launch `domain-teams:investing-team` with the **Deep Equity Research Memo**
+protocol (`protocols/deep-equity-research-memo.md`).
 
-**History note (v1.12.0)**: This phase previously targeted
-`domain-teams:investing-team` (v5.0.0-v5.1.0 transient team). As of v1.12.0
-the skill routes to `domain-teams:research-team`, whose description explicitly
-covers "investment or macro analysis (valuation, asset allocation,
-Investment Clock regime diagnosis)". research-team applies the same
-primary-source-grounding + gate discipline with the full investment analysis
-workflow.
+**History note (v1.16.5, correcting v1.12.0 stale routing)**: v1.12.0
+wrongly retargeted Phase 3 from `investing-team` → `research-team` under
+the premise that investing-team was "v5.0.0-v5.1.0 transient". That
+premise was false — investing-team was created at v5.0.0 as a
+permanent team (12 standards, 5 protocols, 5 rubrics, ISQ gate at
+v5.1.0, Visibility Convention at v5.2.0) and has been the canonical
+investment-analysis target since. research-team's own SKILL.md
+(since v5.0.0) explicitly redirects investment work back to
+investing-team. v1.16.5 restores the canonical route per CLAUDE.md
+§Cross-Plugin Delegation Contract.
 
-**Agent launch note**: Pass the data fixture from Phase 1 and the regime call from
-Phase 2 as `### Input` seed context. The research-team worker will run the full
-6-phase Deep Equity Research Memo protocol. Do not summarize or pre-analyze the data
-yourself — pass it raw.
+**Agent launch note**: Pass the data fixture from Phase 1 and the regime
+call from Phase 2 as `### Input` seed context. The investing-team worker
+runs the full Deep Equity Research Memo protocol. Do not summarize or
+pre-analyze the data yourself — pass it raw.
 
-**Visibility requirement (v1.12.0)**: The agent prompt sent to research-team
+**Visibility requirement**: The agent prompt sent to investing-team
 MUST include the skill-team Visibility Convention clause requiring
 TaskUpdate emission at 3 levels (phase transitions / milestones /
 heartbeat ≤60s). See `domain-teams:skill-team` SKILL.md §Visibility
 Convention and this skill's §Narration Convention below.
 
-**Gates that run** (all handled by research-team):
+**Gates that run** (investing-team canonical gate stack):
 
-| Gate | Level | Description |
-|------|-------|-------------|
-| Data completeness check | MUST | Flags missing financials, stale data |
-| Framework consistency check | MUST | IC/GIP alignment with thesis |
-| Bull/bear/base scenario coverage | SHOULD | All three scenarios present |
-| Valuation cross-check | SHOULD | Multiple methods reconciled |
-| Risk factor completeness | SHOULD | Macro + idiosyncratic risks |
-| ISQ (Investment Signal Quality) | SHOULD | Analysis credibility; PASS / PASS_WITH_NOTES / NEEDS_REVISION |
-| Taiwan-Specific Diagnosis | MAY | Auto-triggered for .TW/.TWO tickers |
+| Gate | Level | Source |
+|------|-------|--------|
+| Primary-Source Citation Compliance | **MUST** | `checklists/primary-source-citation-compliance.md` |
+| Investment Thesis Soundness | **MUST** | `checklists/investment-thesis-soundness-checklist.md` |
+| Scenario Stress-Test | SHOULD | `rubrics/scenario-stress-test-gate.md` |
+| Position-Sizing Rationale | SHOULD | `rubrics/position-sizing-rationale-gate.md` |
+| Market-Regime Consistency | SHOULD | `rubrics/market-regime-consistency-gate.md` |
+| Signal Quality (ISQ) | SHOULD | `rubrics/signal-quality-assessment-gate.md` |
+| Taiwan Local Rigor | MAY | `rubrics/taiwan-local-rigor-gate.md` (auto-triggered for .TW/.TWO) |
 
 ---
 
@@ -259,7 +263,7 @@ narrates:
 
 Example before Phase 3 dispatch:
 
-> "Starting Phase 3 — dispatching research-team for deep equity memo
+> "Starting Phase 3 — dispatching investing-team for deep equity memo
 > (expected 2-5 min). You will see TaskUpdates at phase transitions,
 > milestones, and heartbeats (~60s max silence). If silent > 2 min,
 > likely agent stuck — interrupt and I'll investigate."
@@ -279,11 +283,12 @@ This skill is the repo's first cross-plugin delegation pattern
 **Delegation rules**:
 1. Pass **file paths** to agents, not raw file content
 2. Pass the data fixture as structured seed context in `### Input` — not as analysis
-3. The research-team worker owns analysis quality; this skill owns data assembly
-4. Gate verdicts are produced by research-team evaluator agents — not by this skill
+3. The investing-team worker owns analysis quality; this skill owns data assembly
+4. Gate verdicts are produced by investing-team evaluator agents — not by this skill
 
-**What this skill does**: assemble + pipeline  
-**What research-team does**: analyze + evaluate + gate
+**What this skill does**: assemble + pipeline
+**What investing-team does**: analyze + evaluate + gate (via the
+Deep Equity Research Memo protocol + 2 MUST + 4 SHOULD + 1 MAY gates)
 
 ---
 
