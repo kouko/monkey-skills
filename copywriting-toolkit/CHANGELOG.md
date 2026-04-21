@@ -1,5 +1,59 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.10.0 — 2026-04-22 (auto-selection polish — 3 improvements from v1.9.x E2E findings)
+
+Post-v1.9.x E2E (6 agent-simulated Pass 3 runs, 3 explicit-voice + 3 auto-select) surfaced 3 architectural improvements, all shipped together as v1.10.0:
+
+### 1. `safe_substitute_for:` anchor frontmatter field (schema v2 extension)
+
+Addresses v1.9.x Test 1 finding: "吉本ばなな is Murakami safe substitute" was only in router prose, not queryable by Pass 3 auto-selector.
+
+- Added optional `safe_substitute_for: [higher-risk-master-name, ...]` frontmatter field to v2 schema spec (`docs/anchor-schema-v2.md §Safe substitute for`)
+- Applied to `anchor-jp-yoshimoto-banana-j-bungaku.md` with `safe_substitute_for: [村上春樹]`
+- Pass 3 can now query deterministically: when user specifies a HIGH-over-mimic-risk master, find anchors where named-master ∈ `safe_substitute_for[]` and suggest safer alternative
+- Emits `register_signal_applied.substitute_suggested` alongside primary; user confirmation retains default primary
+
+### 2. §Condition 5 Negation-of-axis rule (meta-core selection rubric)
+
+Addresses v1.9.x Test 1 finding: `tone_cue` containing negation of axis (e.g., "calming, not corporate") is a strong deterministic signal that wasn't codified.
+
+New condition in `voice-anchor-meta-core.md §Anchor selection rubric`:
+
+> When `brief.tone_cue` contains explicit negation of an axis or axis-adjacent cluster — "not corporate" / "not artisan-snob" / "not preachy" / "not aspirational" etc. — Pass 3 auto-selector MUST:
+> 1. Forbid the negated axis/cluster from consideration
+> 2. Record forbidden axis in `voice_quadrant.rationale` for Phase 6 gate verification
+> 3. If no anchor satisfies the negation, emit violation to intake
+
+Example from v1.9.x E2E (JP 瞑想 app): `tone_cue: "calming, not corporate"` → Authority axis forbidden → Q1/Q2 craft-gate eliminated → Q3 private-space 吉本ばなな selected.
+
+### 3. `secondary_anchors[]` Pass 3d output schema extension
+
+Addresses v1.9.x Test 3 finding (EN Fried+DHH + Stratechery dual-anchor): Pass 3d output schema only had single primary; dual-anchor apply (primary register + supplementary discipline) is a natural pattern that was emitted ad-hoc.
+
+SKILL.md Pass 3d §Register-Signal apply added step 5 (Secondary anchor application) and step 6 (Safe-substitute suggestion). Output schema `register_signal_applied` now includes:
+
+```json
+{
+  "primary_anchor_slug": "...",
+  "secondary_anchors": [
+    {"slug": "...", "role": "secondary-discipline", "rationale": "..."}
+  ],
+  "substitute_suggested": {"slug": "...", "rationale": "..."} | null,
+  ...
+}
+```
+
+Common secondary roles:
+- `"secondary-discipline"` — borrow sentence-level rule only (e.g., Stratechery "earn every declarative")
+- `"secondary-cadence"` — borrow rhythm only (e.g., cross-lang borrowing 糸井 cadence in zh-TW output without vocabulary)
+- `"cross-lang-borrowing"` — borrow structure across language without vocabulary transplant
+
+Hard limit: **max 1 secondary per rewrite** — 3+ anchors compose as pastiche.
+
+### No behavioral regression
+
+All 3 changes are additive. Pass 3 with no secondary anchor + no substitute suggestion behaves identically to v1.9.2. Backward-compatible.
+
 ## v1.9.2 — 2026-04-22 (meta-core + meta-detail legacy cleanup — drop v1 schema body spec, consolidate drift catalogs)
 
 Post-v1.9.0 audit identified two legacy-era bloat areas in meta files:

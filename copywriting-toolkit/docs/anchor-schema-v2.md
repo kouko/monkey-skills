@@ -90,7 +90,21 @@ Each anchor entry in `standards/{lang}-q{N}-anchors.md` uses this structure:
 ## Trigger slug: {culture}-{kebab-name}-{style-label}
 ## Over-mimic risk: LOW / MEDIUM / HIGH / HIGH+
 ## Cross-reference-valid-for (optional): {other-lang}: STRONG / MEDIUM / WEAK
+## Safe substitute for (optional, v1.10.0+): [higher-over-mimic-risk-master-name, ...]
 ```
+
+### `Safe substitute for` (optional, v1.10.0+)
+
+Lists higher-over-mimic-risk masters this anchor can be used as a **lower-risk substitute** for. Enables Pass 3 auto-selector to prefer a safer alternative when the user-specified master has HIGH over-mimic risk + this anchor delivers adjacent register at LOWER risk.
+
+Example: `anchor-jp-yoshimoto-banana-j-bungaku.md` declares `safe_substitute_for: [村上春樹]` — when a brief requests 村上春樹 register, Pass 3 auto-selector may suggest 吉本ばなな as safer alternative (same peer-intimate cadence, without Murakami's HIGH-risk cats/jazz/wells tropes).
+
+Must carry **frontmatter field** (not prose only) so Pass 3 can query deterministically. Pass 3 queries: `any anchor where {higher-risk-master} ∈ safe_substitute_for[]`.
+
+Only applies when:
+1. Higher-risk master is in meta-core Over-mimic mitigation registry (documented pastiche risk)
+2. Substitute anchor delivers adjacent register empirically verified (native critical read or agent-run E2E evidence)
+3. Substitute anchor's own over-mimic risk is LOWER than target master's
 
 ## Field definitions
 
