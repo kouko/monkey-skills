@@ -1,5 +1,68 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.2 — 2026-04-21 (EN anchor content + Pass 3 3-tier refactor + position field + gate rubric)
+
+PR 3 of 3 for voice anchor library expansion. Completes EN content population AND wires up the register-signal + axis-extreme branches in Phase 6 Pass 3. Adds `voice_quadrant.position` optional envelope field + gate rubric over-mimic adherence dimension.
+
+### EN content populated (4 files × 4 landmarks = 16 sections)
+
+- `en-q1-anchors.md` — Ogilvy Rolls-Royce/Hathaway + Abbott Economist + BMW Ultimate (center) + Economist brand voice + wire cluster + Hopkins Scientific (extreme) + Bernbach DDB (**LINEAGE VERIFIED** with Strunk & White per meta-detail) + Basecamp manifesto (toward-Q2) + McPhee/Hemingway/Carver/Hempel/Strunk&White/Orwell (toward-Q4)
+- `en-q2-anchors.md` — Apple Think Different + Nike JDI + Patagonia Don't Buy (center) + XR Declaration (civic-only mitigation) + Nike Dream Crazy/Crazier (anaphoric cap mitigation) [extreme] + Patek Generations + Absolut (toward-Q1) + Oatly activist + Morrison/Baldwin/Ishiguro/Didion edge (toward-Q3)
+- `en-q3-anchors.md` — MailChimp Voice & Tone + Innocent wackaging (with cliché flag) + Oatly center + Ephron (center) + Steak-umm Allebach + Duolingo Parvez 2021-22 (STRICT era flag) + PWB Fleabag + Liquid Death (extreme) + Saunders/Waititi/Gerwig (toward-Q2) + Dollar Shave Club/Chekhov (toward-Q4)
+- `en-q4-anchors.md` — Amazon/REI/Basecamp Rework/IKEA (center) + Gary Halbert Boron Letters + Bill Jayme (Type 5 PROMOTE per research) + Hopkins (extreme) + Morning Brew/Stratechery (toward-Q1) + Chandler hard-boiled + Hammett (toward-Q3)
+
+### Phase 6 Pass 3 load logic — 3-tier branching
+
+Upgraded v1.2.0's single "craft gate" path to 3-tier:
+
+1. **Tier 1 — Craft Gate** (preserved v1.2.0 behavior): voice_reference ∈ {6 canonical masters} → load jp/zh-copy-craft-lineage.md + voice-anchor-meta-core.md
+2. **Tier 2 — Register Signal** (NEW v1.3.2): default Pass-3-triggered case → load meta-core + meta-detail + `{lang}-q{N}-anchors.md` (landmark-targeted section read per voice_quadrant.position); cross-language STRONG triggers additional quadrant file load
+3. **Tier 3 — Axis Extreme** (NEW v1.3.2, MVP): voice_quadrant.position starts with "axis-*" → load meta-core + axis-extreme-anchors.md
+
+Tier precedence: Craft Gate > Axis Extreme > Register Signal.
+
+### `voice_quadrant.position` optional envelope field
+
+Added to `copywriting-voice-quadrant-stage/SKILL.md` I/O contract. Values:
+- `center` (default fallback) / `extreme` / `toward-Q{1-4}` / `axis-{authority,affinity,reason,emotion}-extreme` / `null`
+
+Phase 5 diagnosis derives position when intensity signal is strong in brief; fallback to `center` when absent. Cross-adjacency rule: Q1 may go toward-Q2 or toward-Q4 (axis-sharing); diagonal (Q1 toward-Q3) forbidden.
+
+### Voice Consistency gate — Dimension 6: Over-Mimic Adherence
+
+`rubrics/voice-consistency-gate.md` adds Dimension 6 (RUB-CTW-VC-006). Scope: applies ONLY when Pass 3 Register Signal or Axis Extreme branch activated AND anchor is registered in meta-core over-mimic registry.
+
+Checks output for leaked tropes per mitigation clauses covering 20 anchors. Verdict contributions:
+- 🔴 Fatal: mitigation violated with load-bearing leaked trope
+- 🟡 Warning: minor mitigation leakage (≤2 sentences)
+- 🟢 Clear: all applicable mitigations respected
+- `not_applicable`: anchor not in registry
+
+### Token cost analysis (v1.3.2 post-refactor)
+
+Pass 3 load logic now matches the 4-optimization plan:
+- No-Pass-3 runs (~10% briefs): no meta load — ~20K tokens (down from 25K pre-refactor)
+- Craft Gate (~20% briefs): meta-core only + lineage — ~25-27K (baseline ~24K)
+- Register Signal (~40% briefs): meta-core + meta-detail + quadrant section — ~26.5K
+- Register Signal cross-lang (~20% briefs): +additional quadrant file section — ~28.5K
+- Axis Extreme (~5% briefs): meta-core + axis-extreme placeholder — ~24K
+- Weighted per-run avg: **~26K** (+18% vs baseline, -9% vs original plan without optimizations)
+
+### Documented lineages now load-bearing in pipeline
+
+- Ogilvy → Strunk & White (referenced in en-q1 center entries)
+- 糸井重里 → 谷川俊太郎 (referenced in jp-q3 extreme entries)
+- 李欣頻 → 寺山修司 / 阿莫多瓦 / 徐四金 / 村上春樹 (referenced in zh-q2 + jp-q2 center/extreme entries)
+- 葉明桂 / 台灣奧美 → Peter Altenberg (referenced in zh-q2 center drift correction)
+
+### What's next (post-v1.3.2 backlog)
+
+- V2 axis-extreme research (BBC/NHK/Reuters for authority-extreme; Mailchimp help/Reddit for affinity-extreme; Wikipedia/Stratechery for reason-extreme; Hallmark/cinematic-MV for emotion-extreme)
+- Phase 7/8 meta-core dependency audit (Option 4 full-benefit — currently meta-core always loaded by Pass 3; if Phase 8 8b doesn't need it, can be further lazy)
+- Cross-cultural label matrix orphans (monologue-fragment-temporal JP/EN candidates)
+
+---
+
 ## v1.3.1 — 2026-04-21 (JP + zh-TW anchor content + drift corrections Z5-Z11)
 
 PR 2 of 3. Populates JP + zh-TW per-quadrant anchor inventory (8 files × 4 landmarks = 32 landmark sections). Applies Z5-Z11 drift corrections to existing zh-copy-craft-lineage.md + new zh-q2/zh-q3 inventory entries.
