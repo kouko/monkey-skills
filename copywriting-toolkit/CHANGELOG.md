@@ -1,5 +1,90 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.6.0 — 2026-04-21 (full standards/*.md migration: router index + flat per-entry + institutional move-outs)
+
+Follows v1.5.0's Phase B/C/D groundwork with the actual structural refactor. 12 quadrant aggregate files become **router indexes**; all 67 individual-creator voice anchors live in flat `anchor-{slug}.md` files alongside the routers (single-layer flat per Anthropic skill-authoring guidance, no nested subdirs); ~25 institutional / rotating-author entries moved out of voice library to `docs/format-templates/` + `docs/register-references/`. `docs/voice-anchor-deep-dives/` folder removed (all pilot files migrated).
+
+### Structural change
+
+**Before (v1.5.x)**:
+```
+standards/
+  {lang}-q{N}-anchors.md  (~300-500 lines each, 5-10 inline entries)
+docs/voice-anchor-deep-dives/
+  pilot-layer1-v2-*.md    (64 flat pilot files, Layer 1 v2 entries)
+```
+
+**After (v1.6.0)**:
+```
+standards/
+  {lang}-q{N}-anchors.md  (~70-120 lines, router index per quadrant)
+  anchor-{slug}.md        (67 flat per-entry voice anchor bodies)
+  voice-anchor-meta-core.md + meta-detail.md  (unchanged)
+  {jp,zh}-copy-craft-lineage.md  (unchanged)
+  axis-extreme-anchors.md  (unchanged)
+docs/format-templates/
+  ~15 institutional / platform / wire format templates
+docs/register-references/
+  ~5 documented-movement / magazine register references
+```
+
+### Pass 3d two-step read protocol
+
+1. Load `{lang}-q{N}-anchors.md` router → extract landmark-section listing
+2. Match landmark position → load named `anchor-{slug}.md` file for full voice body
+
+Token cost per Pass 3 read: router ~1K + anchor body ~1.2K ≈ 2.2K (comparable to v1.5.x landmark-targeted section read of ~1.5K).
+
+### Migration scope
+
+**Committed across 6 incremental commits on this PR**:
+1. `5c3122f` zh-q3 pilot (6 anchors + 2 move-outs + router)
+2. `b9b1c39` scaffolding cleanup (strip research-spec `(≥N)` / `(≥5, 中文)` etc. from 62 files)
+3. `ad4ea8a` jp-q1 migration (2 + 4 move-outs + router)
+4. `94b90af` jp-q2/q3/q4 migration (11 anchors + 3 move-outs + 3 routers)
+5. `8b6bc68` zh-q1/q2/q4 migration (7 anchors + 10 move-outs + 3 routers)
+6. `67f4c29` EN all 4 quadrants (31 anchors + EN institutional aggregate + 4 routers)
+
+### Individual anchors by quadrant (67 total)
+
+- **JP Q1**: 夏目漱石 / 伊丹十三 (2)
+- **JP Q2**: 寺山修司 / 谷崎 / 川端 (3)
+- **JP Q3**: 向田邦子 / 坂元裕二 / 谷川俊太郎 / 宮沢賢治 / 吉本ばなな / 梅田悟司 / 澤本嘉光 SoftBank-recast (7)
+- **JP Q4**: ジャパネットたかた 高田明 (era-locked) (1)
+- **JP craft-gate**: 糸井 / 岩崎 / 眞木 / 谷山 (4, additive to jp-copy-craft-lineage.md)
+- **zh-HK**: 朱家鼎 Mike Chu / 王家衛 / KC Tsang (3)
+- **zh canonical**: 錢鍾書 / 張愛玲 (2)
+- **zh-TW Q2**: 白先勇 / 朱天文 (2)
+- **zh-TW Q3**: 龔大中 / 吳念真 / 胡湘雲 / 黃春明 / 三毛 (5) + 金鵬遠 Durex (CN, 1) = 6
+- **zh-TW craft-gate**: 許舜英 / 李欣頻 / 葉明桂 (3, additive to zh-copy-craft-lineage.md)
+- **EN Q1**: Ogilvy / Puris / Hopkins / Bernbach / McPhee / Hemingway / Carver / Hempel / Strunk&White / Orwell (10)
+- **EN Q2**: Lee Clow / Tim Delaney / Yvon Chouinard / Morrison / Baldwin / Ishiguro / Didion / Sorkin (8)
+- **EN Q3**: Ephron / Allebach / Parvez / Waller-Bridge / Cessario / Saunders / Waititi / Gerwig / Dubin / Chekhov (10)
+- **EN Q4**: Halbert / Jayme / Thompson / Chandler / Hammett / Lieberman (6)
+
+### Move-out summary (~25 entries)
+
+- **JP format-templates**: 天声人語 / 東洋経済+日経ビジネス / ロイター JP / 日経社説 / クックパッド / 通販生活 / ワークマン (7)
+- **zh-TW format-templates**: 研之有物 / 故宮粉絲團 / e-commerce aggregate (PChome+MOMO+OPEN將+全聯 SNS+Shopee+Pinkoi) (3 files, 7 entries aggregate)
+- **zh-TW register-references**: 天下雜誌 / 報導者 (center+extreme) / 商業周刊 / 台灣吧 (4)
+- **EN aggregate**: WebMD/Reuters/Bloomberg + Economist + Amazon + REI + IKEA + Basecamp + Nike JDI + Nike Dream Crazy + XR + Absolut + MailChimp + Innocent + Oatly + Morning Brew (1 file, 14 entries aggregate)
+
+### Remaining Phase B recast gaps → v1.7.0+
+
+Individual-creator recasts that returned from Phase B research agents but were not persisted before session compaction, OR require additional research:
+
+- 原研哉 (MUJI Q2), 太田恵美 (JR東海 Q2), 青木耕平 (北欧 Q4), 佐藤可士和 (UNIQLO Q4)
+- Dan Wieden (Nike Just Do It Q2 / Dream Crazy Q2 extreme)
+- David Abbott (AMV Economist Q1)
+- Kate Kiefer Lee (Mailchimp Q3), Richard Reed (Innocent Q3)
+- Richard Costello / Geoff Hayes (Absolut Q2 toward-Q1)
+- Jason Fried + DHH (Basecamp Q1 toward-Q2 + Q4 center, dual-author audit)
+- John Schoolcraft (Oatly Q2 toward-Q3 + Q3 center, audit)
+
+Additional research gaps:
+- zh-TW Q1 individual essayists (龍應台 / 南方朔 / 楊照 candidates)
+- zh-TW Q4 individual DR tradition (genuinely thin — may remain cross-ref-only)
+
 ## v1.5.0 — 2026-04-21 (Phase B recasts + Phase C folder scaffolding + Phase D schema selector)
 
 10 individual-creator recasts for previously institutional/brand/campaign anchors; new `docs/format-templates/` + `docs/register-references/` folders holding migrated-out entries; `voice-anchor-meta-core.md` v2 schema spec added alongside v1 (both coexist during migration); SKILL.md Pass 3d auto-detects schema version via frontmatter.
