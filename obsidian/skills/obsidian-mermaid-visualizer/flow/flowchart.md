@@ -280,27 +280,30 @@ The syntax trick: use **subgraph-level connections** (`stageA --> stageB`) rathe
 graph LR
     subgraph stageA["Stage A — 使用者提交"]
         direction TB
-        A1["Submit"] --> A2["Wait 3 days"]
-        A2 --> A3["Email feedback"]
+        A1["填寫表單"] --> A2["系統驗證"]
+        A2 --> A3["自動分類"]
     end
 
     subgraph stageB["Stage B — 員工處理"]
         direction TB
-        B1["Processed by Staff"] --> B2["Reply to customers"]
+        B1["分派給客服"] --> B2["調查問題"]
+        B2 --> B3["回覆客戶"]
     end
 
-    subgraph stageC["Stage C — 歸檔"]
+    subgraph stageC["Stage C — 歸檔與追蹤"]
         direction TB
-        C1["Archive"]
+        C1["寄滿意度調查"] --> C2["歸檔結案"]
     end
 
-    stageA --> stageB
-    stageB --> stageC
+    stageA -->|"分派處理"| stageB
+    stageB -->|"結案關單"| stageC
 
     style stageA fill:#f8f9fa,stroke:#868e96,stroke-width:2px
     style stageB fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
     style stageC fill:#d5f9f8,stroke:#2c9ec4,stroke-width:2px
 ```
+
+Stage 的步驟數分佈在這裡是 **3 / 3 / 2**（非遞減）— 刻意展示 **「階段步驟數沒有單調規律」**。真實流程可能前重後輕、中間最重、或均勻分布，不要被 Example 8（4/3/3/3）或本例誤導成「後階段必定較少」。設計時依實際內容決定每階段的步驟數。
 
 **Why this works**:
 - Parent graph: `LR` → stages flow left-to-right
@@ -353,9 +356,9 @@ graph TB
         P1["Deploy prod"] --> P2["Health check"] --> P3["Monitor"]
     end
 
-    build --> test
-    test --> staging
-    staging --> prod
+    build -->|"artifact ready"| test
+    test -->|"tests pass"| staging
+    staging -->|"UAT approved"| prod
 
     style build fill:#e7f5ff,stroke:#1971c2,stroke-width:2px
     style test fill:#fff4e6,stroke:#e67700,stroke-width:2px
