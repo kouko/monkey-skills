@@ -121,19 +121,33 @@ When `brief.tone_cue` contains an **explicit negation of an axis or an axis-adja
 
 Example from v1.9.x E2E (JP meditation app): `tone_cue: "calming, not corporate"` → Authority axis forbidden → Q1/Q2 craft-gate masters (糸井 / 岩崎 state-proposal) eliminated → Q3 private-space register selected (吉本ばなな).
 
-### Safe-substitute lookup (v1.10.0)
+### Safe-substitute lookup (v1.10.0, broadened v1.11.1)
 
-When `brief.voice_reference` names a master with **HIGH over-mimic risk** in the registry (村上春樹 / Hemingway / Didion / Chandler / Sorkin / Duolingo-Parvez / etc.), Pass 3 MAY auto-suggest a safer alternative by querying anchor frontmatter:
+When `brief.voice_reference` names any master, Pass 3 MAY auto-suggest a safer alternative by querying anchor frontmatter:
 
 ```
-candidates = [anchor for anchor in standards/*.md
+candidates = [anchor for anchor in standards/anchor-*.md
               if named-master ∈ anchor.frontmatter.safe_substitute_for]
 ```
 
-If a candidate exists AND its over-mimic risk is LOWER than the named master's, Pass 3 emits `register_signal_applied.substitute_suggested = {slug, rationale}` alongside the primary selection. The user-specified master remains the default primary unless user confirms substitute in a follow-up turn.
+**Qualifying rule (v1.11.1)**: a candidate qualifies as a substitute IFF its over-mimic risk is **strictly lower** than the named master's. Risk order: `LOW < MEDIUM < MEDIUM-HIGH < HIGH < HIGH+`. Read the named master's risk from its own anchor frontmatter's `Over-mimic risk:` line; if the named master has no anchor file, fall back to the §Over-mimic mitigation registry table below; if not in either, treat as `MEDIUM` (permissive default — substitute emits if substitute is LOW).
 
-Current documented substitutes (expand as research surfaces more):
-- 吉本ばなな `anchor-jp-yoshimoto-banana-j-bungaku.md` has `safe_substitute_for: [村上春樹]` — same peer-intimate cadence, LOWER over-mimic risk (no jazz/cats/wells tropes).
+If a candidate exists AND is strictly lower-risk, Pass 3 emits `register_signal_applied.substitute_suggested = {slug, rationale}` alongside the primary selection. The user-specified master remains the default primary unless user confirms substitute in a follow-up turn.
+
+**v1.11.1 change rationale**: v1.10.0 required the named master to be in the HIGH-risk registry table, which silently failed for valid v1.11.0 pairings where target is MEDIUM (e.g., 張愛玲 → 白先勇: 張愛玲 is MEDIUM-risk, never in HIGH-registry → `substitute_suggested` never fired even though the frontmatter pairing was wired). Broadening the trigger to "any documented pairing with strictly-lower substitute risk" aligns data and rule.
+
+**tone_cue contamination upgrade (v1.11.1)**: if `brief.tone_cue` contains tokens that match the substitute anchor's `Don't / Failure mode` warning about the named-master contamination, upgrade `substitute_suggested` to `substitute_recommended_strong` in the envelope — signals to Phase 6 that substitute isn't just safer but likely necessary to avoid the failure mode the user's own cue is invoking.
+
+Current documented substitutes (6 from v1.11.0 Phase C sweep, 1 from v1.10.0 precedent, 2 from v1.11.0 new anchors):
+- `anchor-jp-yoshimoto-banana-j-bungaku.md`: `safe_substitute_for: [村上春樹]` — same peer-intimate cadence, LOWER over-mimic risk (no jazz/cats/wells tropes)
+- `anchor-en-carver-working-class-precision.md`: `safe_substitute_for: [Hemingway]` — self-declared iceberg-descendant; brand-name load-bearing nouns resist generic-object parody
+- `anchor-en-ephron-warm-wit.md`: `safe_substitute_for: [Didion, Joan Didion]` — Didion/Ephron personal-essay line; list-as-argument replaces antithesis-tic
+- `anchor-en-hammett-terse-procedural.md`: `safe_substitute_for: [Chandler, Raymond Chandler]` — Chandler-named-Hammett-as-progenitor; anti-simile-cascade discipline
+- `anchor-jp-tanikawa-shi-no-kotoba.md`: `safe_substitute_for: [糸井重里]` — documented lineage (ほぼ日『ぼく』2013); breath-scaled lines, no 。-on-fragment trap
+- `anchor-zh-tw-pai-hsien-yung-elegiac-diaspora.md`: `safe_substitute_for: [張愛玲]` — Chang-mechanics sans aphoristic-metaphor density
+- `anchor-zh-qianzhongshu-erudite-sardonic-metaphor.md`: `safe_substitute_for: [David Foster Wallace, DFW]` — 博喻三連 + 譏誚 delivers recursive erudite without nested-footnote failure
+- `anchor-jp-yoro-takeshi-baka-no-kabe.md`: `safe_substitute_for: [原研哉]` — intellectual authority without Q2 manifesto inflation
+- `anchor-jp-toyama-shigehiko-shikou-seiri.md`: `safe_substitute_for: [伊丹十三]` — essay lineage; dialogic reasoning backbone
 
 ### Automatic rejection
 

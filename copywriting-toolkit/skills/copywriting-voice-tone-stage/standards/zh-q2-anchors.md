@@ -42,9 +42,11 @@ Q2 = Authority × Emotion. zh canonical:
 
 - **錢鍾書《圍城》** (zh canonical novelist) — [anchor-zh-qianzhongshu-erudite-sardonic-metaphor.md](anchor-zh-qianzhongshu-erudite-sardonic-metaphor.md)
   - Slug: `zh-qianzhongshu-erudite-sardonic-metaphor`
+  - `safe_substitute_for: [David Foster Wallace, DFW]` (v1.11.0) — cross-lang substitute; 博喻三連 + 譏誚 delivers recursive erudite at LOW-MEDIUM vs DFW's HIGH (nested-footnote failure avoided).
 
 - **白先勇 Pai Hsien-yung** (zh-TW novelist) — [anchor-zh-tw-pai-hsien-yung-elegiac-diaspora.md](anchor-zh-tw-pai-hsien-yung-elegiac-diaspora.md)
   - Slug: `zh-tw-pai-hsien-yung-elegiac-diaspora`
+  - `safe_substitute_for: [張愛玲]` (v1.11.0) — Chang-mechanics sans aphoristic-metaphor density; LOW vs 張愛玲's MEDIUM. Pass 3 auto-suggests when user names 張愛玲.
 
 - **曾錦程 KC Tsang — SUNDAY / 和記 / 眼鏡 88** (zh-HK Cantonese-vernacular-pun) — [anchor-zh-hk-kc-tsang-cantonese-vernacular-pun.md](anchor-zh-hk-kc-tsang-cantonese-vernacular-pun.md)
   - Slug: `zh-hk-kc-tsang-cantonese-vernacular-pun`
@@ -53,6 +55,7 @@ Q2 = Authority × Emotion. zh canonical:
 
 - **張愛玲 Eileen Chang** (zh canonical novelist) — [anchor-zh-eileen-chang-aphoristic-observation.md](anchor-zh-eileen-chang-aphoristic-observation.md)
   - Slug: `zh-eileen-chang-aphoristic-observation`
+  - Safe substitute available (v1.11.0): 白先勇 `anchor-zh-tw-pai-hsien-yung-elegiac-diaspora.md` at LOW risk (vs 張's MEDIUM); Pass 3 auto-suggests when brief names 張愛玲 + `tone_cue` contains "華麗頹廢" etc. (contamination trigger matches 白's Don't-warning).
 
 - **朱天文 Chu Tien-wen** (zh-TW author / screenwriter) — [anchor-zh-tw-chu-tien-wen-temporal-slowness.md](anchor-zh-tw-chu-tien-wen-temporal-slowness.md)
   - Slug: `zh-tw-chu-tien-wen-temporal-slowness`

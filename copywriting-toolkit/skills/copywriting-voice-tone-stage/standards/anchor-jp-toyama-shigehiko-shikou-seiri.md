@@ -5,7 +5,6 @@ culture: JP
 quadrant: Q4
 landmark: toward-Q1
 creator_type: scholar-essayist
-safe_substitute_for: [伊丹十三]
 pilot_round: batch-5
 date: 2026-04-22
 ---
@@ -51,4 +50,4 @@ date: 2026-04-22
 - Over-mimic risk: MEDIUM (比喩の骨格化 + dialogic 語尾 が surface-level mimic されやすい)
 - Pairs with form: [mid-form-essay, long-form-column, short-form-aphorism]
 - Cross-reference-valid-for (optional): Charles Lamb / G.K. Chesterton familiar essay (EN) — 外山の直接的な文学的祖型
-- Safe substitute for (optional): [伊丹十三] — 両者 essay register だが伊丹は映画人的軽妙洒脱、外山は英文学者的思考エッセイ。教養背骨と dialogic reasoning が必要な brief では外山を選ぶ
+- Safe substitute for (optional): [] — (v1.11.0 proposed [伊丹十三]; removed v1.11.1 after risk audit: 外山 MEDIUM > 伊丹 LOW violates schema v2 rule. The essay-lineage rationale is not a risk-reduction relationship; 伊丹 is itself the LOWER-risk anchor.)

@@ -47,7 +47,6 @@ Cross-load: 伊丹十三 `anchor-jp-itami-juzo-keimyou-shadatsu.md` (Q1 toward-Q
   - Register: 『思考の整理学』系思考エッセイ; 比喩先行・抽象後追い + 日常ことわざを論証の骨に + 「〜ではないか」dialogic 語尾 + Charles Lamb / Chesterton familiar essay 系譜
   - ⚠ Over-mimic MEDIUM: 比喩の骨格化 + dialogic 語尾 surface mimic. Mitigation: 比喩は章の骨、語尾は 〜ではないか、原語は一度だけ
   - Differentiation vs 池上彰: 池上は「わかる」ゴール(解説ジャーナリズム), 外山は「考える」プロセス(思考エッセイ)
-  - `safe_substitute_for: [伊丹十三]` — essay register lineage、教養背骨と dialogic reasoning が必要な brief では外山
 
 ## Landmark: toward-Q3
 

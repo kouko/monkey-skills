@@ -33,7 +33,6 @@ Canonical expert + trusted authority register.
   - Register: バカの壁 / 一元論批判 / 身体論 + 口述ヘッジ助詞「〜わけです」「〜と思います」+ 具体身体→抽象概念の一気跳躍 + 一行タウトロジー punchline
   - Secondary landmark: toward-Q2 (一元論批判 manifesto edge)
   - ⚠ Over-mimic MEDIUM-HIGH: 2000s-2010s 新書ブーム 濫用 register. Mitigation: 身体の具体観察を 1 段落に 1 つ置く
-  - `safe_substitute_for: [原研哉]` — 知性的 authority 要件で Q2 manifesto の重さを避けたい brief
 
 **Moved out to format templates** (v1.6.0):
 - 朝日新聞「天声人語」rotating 論説委員 → [../../../../docs/format-templates/jp-tensei-jingo-compressed-essay.md](../../../../docs/format-templates/jp-tensei-jingo-compressed-essay.md)

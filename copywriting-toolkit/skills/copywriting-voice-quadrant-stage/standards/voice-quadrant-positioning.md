@@ -119,6 +119,8 @@ documentation, deep-analysis journalism, brand strategy briefs.
 
 **Canonical Brand Corpus**
 
+<!-- v1.11.2: Brand Corpus entries now cross-reference Phase 6 anchor library where individual-creator anchor exists. Entries are **quadrant landmarks for diagnosis**; for per-sentence voice rewrite targets, consult Phase 6 at `../../../copywriting-voice-tone-stage/standards/anchor-*.md`. Institutional / rotating-author entries (no individual-creator anchor per v2 schema) retain diagnostic value but flag the nearest individual anchor for Phase 6 rewrite handoff. -->
+
 **The Economist** (publisher; global; AMV BBDO, 1988–)
 - Voice statement: Intelligent, rigorous, wry — respects reader
   intelligence.
@@ -129,6 +131,7 @@ documentation, deep-analysis journalism, brand strategy briefs.
   - "White van man reads The Economist." (billboard, 1988–, AMV BBDO)
   - "Never a dull page." (brand tagline)
   - "Think. More intensely." (print, 2010s)
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (rotating-author per v2 schema disqualifier). For Q1 rewrite, nearest individual anchors: `anchor-en-ogilvy-rolls-royce-reason-why.md` (reason-why brand prestige) / `anchor-en-mcphee-new-yorker-detail-reportage.md` (longform journalism) / `anchor-en-bernbach-ddb-confession-plain-style.md` (plain declarative). Economist itself is an institutional format reference.
 
 **Rolls-Royce** (automotive; global; Ogilvy, Benson & Mather, 1958)
 - Voice statement: Understatement as authority — let product facts
@@ -142,6 +145,7 @@ documentation, deep-analysis journalism, brand strategy briefs.
 - Era narration: 1958 ad remains canonical reference; post-Ogilvy
   Rolls-Royce advertising has varied agencies and voices — the 1958
   piece is the Q1 benchmark.
+- **Phase 6 anchor** (v1.11.2): [`anchor-en-ogilvy-rolls-royce-reason-why.md`](../../../copywriting-voice-tone-stage/standards/anchor-en-ogilvy-rolls-royce-reason-why.md) — David Ogilvy individual creator; Q1 toward-Q4 (reason-why brand prestige).
 
 **報導者 The Reporter** (nonprofit journalism; Taiwan; in-house, 2015–)
 - Voice statement: Public-interest investigative journalism — authority
@@ -152,6 +156,7 @@ documentation, deep-analysis journalism, brand strategy briefs.
 - Canonical corpus: editorial style is the voice; not a single-line
   slogan corpus but a sustained register across every article.
   Brand guidelines available at twreporter.gitbook.io.
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (in-house rotating per v2 schema). Institutional exemplar retained for zh-TW Q1 diagnosis — zh-TW Q1 individual-creator pool remains thin; for rewrite fallback consult `../../../copywriting-voice-tone-stage/standards/zh-q1-anchors.md` router.
 
 **Copywriter cross-reference**
 
@@ -215,6 +220,7 @@ cultural institutions, manifesto-driven campaigns.
   era sets canonical Q2 manifesto voice; post-Jobs (2011–) drifts
   toward product-functional register but rallying-cry moments still
   resurface.
+- **Phase 6 anchor** (v1.11.2): [`anchor-en-lee-clow-visionary-manifesto.md`](../../../copywriting-voice-tone-stage/standards/anchor-en-lee-clow-visionary-manifesto.md) — Lee Clow individual creator (Chiat\Day CCO); Q2 center manifesto register.
 
 **Nike** (sportswear; global; Wieden+Kennedy, 1988–)
 - Voice statement: Empowerment manifesto — athletic effort as
@@ -228,6 +234,7 @@ cultural institutions, manifesto-driven campaigns.
 - Q2/Q4 disambiguation: imperative grammar is Q4-syntactic, but
   brand function is Q2-identity (empowerment, values signaling).
   Brand-strategy literature consistently classifies as Q2.
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (Wieden+Kennedy agency-rotating per v2 schema). For Q2 manifesto rewrite, nearest individual anchors: `anchor-en-lee-clow-visionary-manifesto.md` (Apple lineage) / `anchor-en-schoolcraft-oatly-activist-typewriter.md` (activist register) / `anchor-en-yvon-chouinard-patagonia-conscience.md` (values-driven). Nike itself retained as Q2 institutional landmark.
 
 **MUJI 無印良品** (retail; JP/global; 1980s copy 小池一子 × AD 田中一光;
 2002– AD Kenya Hara)
@@ -249,6 +256,7 @@ cultural institutions, manifesto-driven campaigns.
   lifestyle imagery but voice remains stable. "Compact Life" (post-
   2010 product line) and 2003 "Horizon / 地平線" (Bolivia/Mongolia
   campaign) are distinct campaigns within the same voice.
+- **Phase 6 anchor** (v1.11.2): [`anchor-jp-hara-kenya-design-manifesto.md`](../../../copywriting-voice-tone-stage/standards/anchor-jp-hara-kenya-design-manifesto.md) — 原研哉 individual creator (Q2 center design-manifesto); 2002– MUJI era recast.
 
 **Patagonia** (outdoor retail; global; founder-led voice, 1973–)
 - Voice statement: Anti-consumption activism through product-grade
@@ -262,6 +270,7 @@ cultural institutions, manifesto-driven campaigns.
     rewrite, 2018)
 - Voice-doc source: Chouinard *Let My People Go Surfing* (Penguin,
   2005)
+- **Phase 6 anchor** (v1.11.2): [`anchor-en-yvon-chouinard-patagonia-conscience.md`](../../../copywriting-voice-tone-stage/standards/anchor-en-yvon-chouinard-patagonia-conscience.md) — Chouinard individual creator (founder-author).
 
 **誠品書店 Eslite** (bookstore; Taiwan; 李欣頻 copy corpus,
 1990s–2000s)
@@ -278,6 +287,7 @@ cultural institutions, manifesto-driven campaigns.
 - Voice-doc source: 李欣頻《廣告副作用》+《誠品副作用》(1998)
 - Era narration: 1990s–2000s 意識形態 era sets canonical Q2 voice;
   post-2010 voice fragments — use ONLY 1990s corpus as benchmark.
+- **Phase 6 anchor** (v1.11.2): [`anchor-zh-tw-lee-hsin-ping-literary-consumption.md`](../../../copywriting-voice-tone-stage/standards/anchor-zh-tw-lee-hsin-ping-literary-consumption.md) — 李欣頻 individual creator (craft-gate master, HIGH risk).
 
 **中興百貨** (department store; Taiwan; 意識形態廣告 / 許舜英,
 1988–2001)
@@ -292,6 +302,7 @@ cultural institutions, manifesto-driven campaigns.
 - Era narration: 1988–2001 campaign run produced ~28x revenue growth
   for 中興百貨; terminated with store closure in 2008 — use only
   the ideology-era corpus.
+- **Phase 6 anchor** (v1.11.2): [`anchor-zh-tw-xu-shunying-ideological-definitional.md`](../../../copywriting-voice-tone-stage/standards/anchor-zh-tw-xu-shunying-ideological-definitional.md) — 許舜英 individual creator (craft-gate master, HIGH+ risk).
 
 **左岸咖啡館** (RTD coffee; Taiwan; 奧美 Taiwan / 葉明桂 strategy,
 統一企業)
@@ -309,6 +320,7 @@ cultural institutions, manifesto-driven campaigns.
   - "我們現在不是在賣咖啡，我們是在經營一家咖啡館。" (documented
     in《品牌的技術和藝術》)
 - Voice-doc source: 葉明桂《品牌的技術和藝術》(天下文化, 2017)
+- **Phase 6 anchor** (v1.11.2): [`anchor-zh-tw-ye-mingui-strategic-aphorism.md`](../../../copywriting-voice-tone-stage/standards/anchor-zh-tw-ye-mingui-strategic-aphorism.md) — 葉明桂 individual creator (strategic-aphorism register).
 
 **Copywriter cross-reference**
 
@@ -361,6 +373,7 @@ Unilever, 2004–)
 - Foundational insight: ~2% of women consider themselves beautiful.
 - Era narration: 2004 launch → 2013 Sketches → ongoing; voice-doc
   stable across 20+ years.
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (Ogilvy agency-rotating on campaign). Dove retained as Q3 institutional landmark for activist-inclusive register. For Q3 rewrite with individual voice, nearest: `anchor-en-nora-ephron-warm-wit.md` (warm-wit personal essay) / `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md` (peer-accessible brand voice).
 
 **西武百貨店** (department store; JP; 糸井重里 copy, 1980–1982)
 - Voice statement: State-proposal voice — ambiguity as invitation;
@@ -376,6 +389,7 @@ Unilever, 2004–)
 - Era narration: 1980–1982 window is the canonical 糸井 × 西武
   collaboration; later 糸井 work (see ほぼ日 entry below) continues
   the voice on a different platform.
+- **Phase 6 anchor** (v1.11.2): [`anchor-jp-itoi-shigesato-state-proposal.md`](../../../copywriting-voice-tone-stage/standards/anchor-jp-itoi-shigesato-state-proposal.md) — 糸井重里 individual creator (craft-gate master, HIGH+ risk; 西武 1980-82 era).
 
 **ミツカン** (food/condiments; JP; 岩崎俊一 copy, 2004 campaign)
 - Voice statement: Impermanence and life-continuity — food as the
@@ -388,6 +402,7 @@ Unilever, 2004–)
 - Additional 岩崎 canonical (other clients):
   - "あなたに会えた、お礼です。" (サントリー お歳暮ギフト, 1985)
   - "幸福は、ごはんが炊かれる場所にある。" (プレナス ほっともっと)
+- **Phase 6 anchor** (v1.11.2): [`anchor-jp-iwasaki-shunichi-yonin.md`](../../../copywriting-voice-tone-stage/standards/anchor-jp-iwasaki-shunichi-yonin.md) — 岩崎俊一 individual creator (craft-gate master, HIGH+ risk; 余韻派).
 
 **JR九州** (rail; JP; 九州旅客鉄道)
 - Voice statement: 旅情 (travel reverie) — movement as emotional
@@ -399,6 +414,7 @@ Unilever, 2004–)
   - "愛とか、勇気とか、見えないものも乗せている。" (仲畑貴志, 1994
     — TCC年鑑 verified)
 - Era narration: 1990s era strong; post-1990s voice less documented.
+- **Phase 6 handoff** (v1.11.2): 仲畑貴志 1990s era has no standalone anchor in Phase 6 library (flagged for future research per v1.11.0 gap audit). For JP Q3 旅情 register rewrite, nearest: `anchor-jp-mukoda-kuniko-shinuchi-zuihitsu.md` (Q3 center everyday register) / `anchor-jp-iwasaki-shunichi-yonin.md` (余韻派 JP copy lineage). JR九州 retained as Q3 institutional landmark.
 
 **ほぼ日刊イトイ新聞 / ほぼ日** (publisher/brand; JP; 糸井重里
 direct author, 1998–)
@@ -413,6 +429,7 @@ direct author, 1998–)
     the voice doc
 - Era narration: consistent since 1998 founding; extraordinarily
   stable voice due to single-author continuity.
+- **Phase 6 anchor** (v1.11.2): [`anchor-jp-itoi-shigesato-state-proposal.md`](../../../copywriting-voice-tone-stage/standards/anchor-jp-itoi-shigesato-state-proposal.md) — 糸井重里 same craft-gate anchor as 西武 entry; ほぼ日 is the post-西武 platform continuation.
 
 **全聯福利中心 PX Mart** (retail; Taiwan; 奧美 Taiwan / 龔大中, 2015–)
 - Voice statement: Thrift is dignity — observational wit elevates
@@ -427,6 +444,7 @@ direct author, 1998–)
   - "省錢就像白T牛仔褲，永不退流行。" (經典篇, 2017)
 - Era narration: pre-2015 voice was generic retail; 2015 經濟美學
   campaign establishes canonical Q3 voice. Post-2015 sustained.
+- **Phase 6 anchor** (v1.11.2): [`anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md`](../../../copywriting-voice-tone-stage/standards/anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md) — 龔大中 individual creator (奧美 Taiwan CCO, 2015 經濟美學 campaign recast).
 
 **Copywriter cross-reference**
 
@@ -477,6 +495,7 @@ conversion (opt-in/subscribe/download — see
 - Canonical corpus:
   - "今天下單，明天脫單。" (Valentine's, 2020)
   - "月初囤棉最便宜。" (金句獎, 2021)
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (in-house + agency rotating per v2 schema). Shopee retained as Q4 institutional landmark for SEA e-commerce register. For Q4 rewrite with individual voice, nearest: `anchor-en-halbert-boron-letters-direct-response.md` (direct-response canon) / `anchor-en-schwartz-eugene-direct-response-breakthrough.md` (awareness-stage direct-response).
 
 **Amazon** (e-commerce; global; in-house brand voice, 1994–)
 - Voice statement: Customer obsession expressed as frictionlessness —
@@ -488,6 +507,7 @@ conversion (opt-in/subscribe/download — see
   - "Earth's most customer-centric company." (mission statement)
   - Product-page conventions: one-click, "also bought", subscribe &
     save — each pattern is a voice artifact
+- **Phase 6 handoff** (v1.11.2): no individual-creator anchor (in-house rotating per v2 schema). Amazon retained as Q4 institutional landmark for frictionless-commerce register. For Q4 rewrite with individual voice, nearest: `anchor-en-basecamp-fried-dhh-contrarian-manifesto.md` (plain-practical product voice, Q4 center dual-placement) / `anchor-en-stratechery-peer-analytical.md` (analyst register, Q4 toward-Q1).
 
 **UNIQLO** (retail; JP/global; in-house copy; 佐藤可士和 AD, 2006–)
 - Voice statement: LifeWear — clothing as infrastructure for everyday
@@ -500,6 +520,7 @@ conversion (opt-in/subscribe/download — see
   - "LifeWear" (brand tagline, 2013–)
 - Voice-doc source: no public voice doc; 佐藤可士和 超整理術 writings
   document the brand-system philosophy
+- **Phase 6 anchor** (v1.11.2): [`anchor-jp-uniqlo-sato-kashiwa-lifewear.md`](../../../copywriting-voice-tone-stage/standards/anchor-jp-uniqlo-sato-kashiwa-lifewear.md) — 佐藤可士和 individual creator (named AD recast; LifeWear Q4 toward-Q1).
 
 **Copywriter cross-reference**
 

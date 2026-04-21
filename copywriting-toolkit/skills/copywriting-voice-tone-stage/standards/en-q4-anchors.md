@@ -61,9 +61,11 @@ Q4 = Affinity × Reason. EN canonical:
 - **Raymond Chandler — hard-boiled metaphor** (author) — [anchor-en-chandler-hard-boiled-metaphor.md](anchor-en-chandler-hard-boiled-metaphor.md)
   - Slug: `en-chandler-hard-boiled-metaphor`
   - ⚠ Over-mimic HIGH: "Her eyes were like [noun]" simile cascade. Meta-core mitigation: "cap similes to 1 per 50 words".
+  - Safe substitute available (v1.11.0): `anchor-en-hammett-terse-procedural.md` carries `safe_substitute_for: [Chandler, Raymond Chandler]` — Chandler-named-Hammett-as-progenitor; anti-simile-cascade discipline at MEDIUM vs Chandler's HIGH.
 
 - **Dashiell Hammett — terse-procedural** (author) — [anchor-en-hammett-terse-procedural.md](anchor-en-hammett-terse-procedural.md)
   - Slug: `en-hammett-terse-procedural`
+  - `safe_substitute_for: [Chandler, Raymond Chandler]` — see substitute note on Chandler entry above.
 
 ## Cross-references
 

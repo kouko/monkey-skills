@@ -1,5 +1,133 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.11.2 — 2026-04-22 (Phase 5 / Phase 6 unification — Brand Corpus ↔ anchor library cross-refs)
+
+User-directed consolidation: Phase 5 quadrant diagnosis landmarks now explicitly link to Phase 6 anchor library entries, eliminating two-tier confusion.
+
+### CLAUDE.md §Provenance Principle scope refinement
+
+Previous default treated entire `skills/*/standards/*.md` as Tier 1 byte-identical. Refined to apply Tier 1 only to **third-party framework text within standards files** (e.g., Halliday Tenor theory, Vaughn FCB grid, Schwartz 5-level taxonomy, PASONA definitions). Team-curated segments inside standards files (Brand Corpus selections, exemplar lists) are Tier 2 — plugin may diverge to align with plugin-specific anchor library decisions.
+
+Also clarified: the entire Phase 6 anchor system (87 `anchor-*.md` + meta-core/meta-detail + 12 routers + `anchor-schema-v2.md`) is plugin-native with no upstream counterpart — not subject to `diff -q`.
+
+### Phase 5 positioning.md — 19 Brand Corpus entries annotated with Phase 6 cross-refs
+
+For each entry, added `**Phase 6 anchor**` (individual-creator match exists) OR `**Phase 6 handoff**` (institutional entry; names nearest individual anchor for rewrite).
+
+**11 entries with direct Phase 6 anchor match** (linked inline):
+- Q1: Rolls-Royce → Ogilvy
+- Q2: Apple → Lee Clow / MUJI → 原研哉 / Patagonia → Chouinard / 誠品 → 李欣頻 / 中興 → 許舜英 / 左岸 → 葉明桂
+- Q3: 西武 → 糸井重里 / ミツカン → 岩崎俊一 / ほぼ日 → 糸井 / 全聯 → 龔大中
+- Q4: UNIQLO → 佐藤可士和
+
+**8 institutional entries retained as quadrant landmarks with Phase 6 handoff pointers** (no individual-creator anchor per v2 schema):
+- Economist / 報導者 (Q1) — rotating-author institutional
+- Nike (Q2) — Wieden+Kennedy agency-rotating
+- Dove (Q3) — campaign-level
+- JR九州 (Q3) — brand-era; 仲畑貴志 era has no standalone anchor (flagged for future research)
+- Shopee / Amazon (Q4) — in-house rotating
+
+### Phase 5 SKILL.md — cross-language maestro examples refreshed
+
+Step 5 example list updated:
+- Mailchimp → `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md` (Kate Kiefer Lee recast)
+- Innocent → `anchor-en-richard-reed-innocent-wackaging.md` (Richard Reed recast)
+- zh-TW Q3 → `anchor-zh-tw-gong-dazhong-*` (龔大中 recast, not "全聯經濟美學派")
+- JP Q3 → 糸井重里 / 岩崎俊一 anchor slugs
+
+Added new §Two-tier voice curation section clarifying Phase 5 Brand Corpus vs Phase 6 Anchor Library division of labor.
+
+### Rationale
+
+User surfaced: "Phase 5 quadrant 診斷用的識別 landmark 應該要用 Phase 6 裡對應的 anchor — 這樣才不會讓使用者產生疑惑". Pre-v1.11.2 users could see Mailchimp in Phase 5 and then find it "moved to format-templates" in Phase 6's v2 library with no explanation. Post-v1.11.2, every Phase 5 entry explicitly resolves to a Phase 6 handoff.
+
+The 8 institutional-retained entries remain valuable as **quadrant landmarks** (Economist IS a Q1 register exemplar even without individual-creator voice) but no longer confuse users about Phase 6 rewrite targets.
+
+### Files touched
+
+- `copywriting-toolkit/CLAUDE.md` — §Provenance Principle scope refinement
+- `copywriting-toolkit/skills/copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md` — 19 Brand Corpus entries + 4 quadrant preambles annotated
+- `copywriting-toolkit/skills/copywriting-voice-quadrant-stage/SKILL.md` — Step 5 examples refreshed + §Two-tier voice curation added
+
+No anchor changes. No agent changes. No Phase 6 routing changes.
+
+---
+
+## v1.11.1 — 2026-04-22 (safe_substitute predicate fix + router prose parity + invalid-pairing cleanup)
+
+Post-v1.11.0 E2E surfaced a trigger-predicate bug + 2 invalid pairings + router prose parity gap. 4 parallel Pass 3 simulation agents run against main post-merge; findings documented in `docs/voice-anchor-e2e-tests/v1.11.0-post-merge-findings.md`.
+
+### Bug 1: Safe-substitute trigger restricted to HIGH-registry targets (silent failure)
+
+**Symptom**: Test 3 (張愛玲→白先勇 substitute) — v1.11.0 wired `safe_substitute_for: [張愛玲]` on 白先勇 anchor, but Pass 3 never emits `substitute_suggested` because meta-core §Safe-substitute lookup required named master to be in the HIGH-risk registry table. 張愛玲 is MEDIUM risk, not in registry → trigger silently fails.
+
+**Fix**: Broaden predicate in `voice-anchor-meta-core.md §Safe-substitute lookup` + mirror update in `SKILL.md` Pass 3d step 6.
+
+- **Before**: `"When brief.voice_reference names a master with HIGH over-mimic risk in the registry ..."`
+- **After**: `"When brief.voice_reference names any master AND at least one anchor lists that master in frontmatter.safe_substitute_for[]. Substitute qualifies iff over-mimic risk is strictly lower (LOW < MEDIUM < MEDIUM-HIGH < HIGH < HIGH+)."`
+
+Risk lookup order: anchor's own frontmatter → meta-core registry → default MEDIUM.
+
+### Bug 2: v1.11.0 introduced 2 invalid safe_substitute_for pairings (risk reversed)
+
+Audit of all v1.11.0 pairings against schema v2 rule "substitute's risk must be strictly lower":
+
+| Pair | Substitute | Target | Valid? |
+|---|---|---|---|
+| Carver → Hemingway | MEDIUM-HIGH | HIGH | ✓ |
+| Ephron → Didion | MEDIUM | HIGH | ✓ |
+| Hammett → Chandler | MEDIUM | HIGH | ✓ |
+| 谷川 → 糸井 | LOW | HIGH+ | ✓ |
+| 白先勇 → 張愛玲 | LOW | MEDIUM | ✓ |
+| 錢鍾書 → DFW | LOW-MEDIUM | HIGH | ✓ |
+| **養老 → 原研哉** | **MEDIUM-HIGH** | **MEDIUM** | **✗ removed v1.11.1** |
+| **外山 → 伊丹** | **MEDIUM** | **LOW** | **✗ removed v1.11.1** |
+
+Both invalid pairings came from research agents that suggested axis-intent relationships (Q2 manifesto avoidance / essay lineage) misfiled under the risk-based `safe_substitute_for` field. These relationships are real but belong in a different conceptual slot (not risk-reduction). Removed from:
+- `anchor-jp-yoro-takeshi-baka-no-kabe.md` — frontmatter field + router entry in `jp-q1-anchors.md`
+- `anchor-jp-toyama-shigehiko-shikou-seiri.md` — frontmatter field + router entry in `jp-q4-anchors.md`
+
+Preserved prose note in each anchor's Metadata Safe-substitute line documents why removed (so future readers don't re-propose).
+
+### New: tone_cue contamination upgrade
+
+v1.11.1 adds a stronger-signal path: if `brief.tone_cue` contains tokens matching the substitute anchor's `Don't / Failure mode` warning about named-master contamination, upgrade `substitute_suggested` → `substitute_recommended_strong` in envelope. Example: brief `voice_reference: 張愛玲` + `tone_cue: 華麗頹廢` matches 白先勇's Don't-block warning "LLM 常把白先勇誤讀為張愛玲式華麗頹廢" → recommends 白先勇 strongly rather than merely suggesting.
+
+### Router prose parity (6 pairs added)
+
+v1.11.0 frontmatter pairings were queryable but router-level discoverability was asymmetric (JP routers inlined substitute notes; EN/ZH did not). v1.11.1 adds one-line substitute notes to router entries for all 6 valid pairings:
+
+- `en-q1-anchors.md` §Hemingway — note Carver as substitute + paired Carver cross-ref
+- `en-q2-anchors.md` §Didion — note Ephron as substitute
+- `en-q4-anchors.md` §Chandler — note Hammett as substitute + paired Hammett cross-ref
+- `zh-q2-anchors.md` §錢鍾書 — note DFW cross-lang substitute relationship
+- `zh-q2-anchors.md` §白先勇 — note 張愛玲 substitute relationship + contamination trigger
+- `zh-q2-anchors.md` §張愛玲 — note 白先勇 as substitute (reverse-direction discoverability)
+- `jp-q3-anchors.md` §谷川 — note 糸井 substitute relationship
+
+### E2E test results
+
+4 parallel simulations:
+- Test 1 (池上彰 explicit NHK brief) — PASS, clean routing
+- Test 2 (Hemingway→Carver pet-food brief) — PASS_WITH_NOTES (router parity fix now applied)
+- Test 3 (張愛玲→白先勇 Shanghai hotel brief) — PASS_WITH_NOTES (predicate bug fix now applied)
+- Test 4 (松浦 auto-select 暮しの手帖 brief) — PASS_WITH_NOTES (negation-of-axis fires correctly)
+
+Full findings: `docs/voice-anchor-e2e-tests/v1.11.0-post-merge-findings.md`.
+
+### Valid pairings post-v1.11.1
+
+7 total (dropped 2 from v1.11.0):
+- Carver → [Hemingway]
+- Ephron → [Didion, Joan Didion]
+- Hammett → [Chandler, Raymond Chandler]
+- 谷川俊太郎 → [糸井重里]
+- 白先勇 → [張愛玲]
+- 錢鍾書 → [David Foster Wallace, DFW]
+- 吉本ばなな → [村上春樹] (from v1.10.0)
+
+---
+
 ## v1.11.0 — 2026-04-22 (anchor gap-fill — 6 new + 1 research-only + 6 safe_substitute_for relationships)
 
 Research-first, fallback-to-note protocol per user directive: "先深入研究候選 如果研究後發現資料不足以規則化語氣 那就只留研究筆記但放棄成為 anchor". 8 parallel research agents dispatched; 6 candidates passed the v2 Layer-1 eligibility gate (≥5 verbatim + ≥3 attributed native critical read + ≥5 actionable sentence-level mechanics + failure mode + ≤15-word mitigation), 1 candidate failed and produced a research note, 1 agent ran the Phase C cross-anchor sweep.
