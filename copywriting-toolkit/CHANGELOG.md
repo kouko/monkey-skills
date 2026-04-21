@@ -1,5 +1,15 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.6.1 — 2026-04-21 (restore docs/voice-anchor-deep-dives/ — accidental delete in v1.6.0)
+
+**Bug fix**: v1.6.0 migration removed `docs/voice-anchor-deep-dives/` and 64 pilot files. Intent was to move the Layer 1 content to `standards/anchor-{slug}.md` (correct), but the folder itself is per `anchor-schema-v2.md` the designated **Layer 2/3 research artifacts home** — biographical / era / lineage / awards / primary-source bibliography beyond Layer 1 critic citations. Without the folder, future deep-dive research has nowhere to go.
+
+**Fix**: restored all 64 files verbatim from commit `b9b1c39` (pre-delete snapshot, post-scaffolding-cleanup). Added README explaining Layer 1 vs Layer 2/3 separation and usage rules (Pass 3 MUST NOT load Layer 2/3; Dimension 6 evaluator MAY cite optionally; updates to Layer 1 and Layer 2/3 are independent commits).
+
+Current state: the 64 files are identical to the corresponding `anchor-{slug}.md` files in `standards/` — they're **seed material** for future deep-dive expansion, not yet Layer 2/3 research. Allowed to diverge going forward.
+
+Filename alignment deferred: v1.7.0+ may rename `pilot-layer1-v2-{slug}.md` → `{trigger-slug}.md` to match Layer 1 slugs for audit tooling simplicity.
+
 ## v1.6.0 — 2026-04-21 (full standards/*.md migration: router index + flat per-entry + institutional move-outs)
 
 Follows v1.5.0's Phase B/C/D groundwork with the actual structural refactor. 12 quadrant aggregate files become **router indexes**; all 67 individual-creator voice anchors live in flat `anchor-{slug}.md` files alongside the routers (single-layer flat per Anthropic skill-authoring guidance, no nested subdirs); ~25 institutional / rotating-author entries moved out of voice library to `docs/format-templates/` + `docs/register-references/`. `docs/voice-anchor-deep-dives/` folder removed (all pilot files migrated).
