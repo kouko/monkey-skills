@@ -1,5 +1,52 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.7.0 — 2026-04-21 (Pass 3a/3b craft-gate v2 anchor integration — resolves 7 orphaned anchor files)
+
+Post-v1.6.1 audit surfaced 7 craft-gate `anchor-{slug}.md` files that existed as valid v2 Layer 1 bodies but had no Pass 3 load path (Pass 3a/3b was wholesale-loading `{jp,zh}-copy-craft-lineage.md` directly per v1.2.0 behavior, bypassing per-master v2 anchors introduced in v1.4.0+). v1.7.0 rewires Pass 3a/3b to load per-master v2 anchors as primary, with craft-lineage.md becoming conditional-only (attribution corrections / cross-master lineage / era context).
+
+### SKILL.md changes
+
+- Pass 3a/3b dispatch rewritten: load `anchor-{jp|zh-tw}-{master}.md` per voice_reference match, not `{jp,zh}-copy-craft-lineage.md` wholesale
+- New **JP_CRAFT_MASTER_MAP** + **ZH_CRAFT_MASTER_MAP** tables define master → anchor-*.md routing
+- `{jp,zh}-copy-craft-lineage.md` now loaded **conditionally** when brief requires cross-master lineage, attribution correction risk, era context, or multi-master comparison
+
+### Master → anchor mapping (7 previously-orphan files now on Pass 3 hot path)
+
+**JP** (Pass 3a):
+- 糸井重里 → `anchor-jp-itoi-shigesato-state-proposal.md`
+- 岩崎俊一 → `anchor-jp-iwasaki-shunichi-yonin.md`
+- 眞木準 → `anchor-jp-maki-jun-craft-aphorism.md`
+- 谷山雅計 → `anchor-jp-taniyama-masakazu-discipline.md`
+
+**ZH** (Pass 3b):
+- 許舜英 → `anchor-zh-tw-xu-shunying-ideological-definitional.md`
+- 李欣頻 → `anchor-zh-tw-lee-hsin-ping-literary-consumption.md`
+- 葉明桂 → `anchor-zh-tw-ye-mingui-strategic-aphorism.md`
+
+### Token impact
+
+- Craft-gate trigger cost: 8-10K wholesale craft-lineage load → ~1.2K per-master anchor body + ~2K meta-core = **~3-5K total** (down ~50% per trigger)
+- Non-craft-gate paths unaffected (Pass 3c/3d token budgets unchanged)
+- Attribution corrections still enforced: Z1-Z11 corrections authoritative source remains `{jp,zh}-copy-craft-lineage.md`; Pass 3a/3b conditional-load when attribution risk detected
+
+### Architecture alignment
+
+Resolves v1.6.1 audit finding that 7 craft-gate anchor-*.md files were "additive v2-schema translations with no load path". Now:
+- JP/ZH craft-gate → Pass 3a/3b per-master v2 anchor (uniform with register-signal path)
+- EN craft-gate → still uses Pass 3d register-signal (no upstream craft-lineage file; EN masters always ran via per-master anchors)
+- All 67 `anchor-{slug}.md` files now reachable from Pass 3 hot path (up from 60)
+
+### Backward compatibility
+
+- `{jp,zh}-copy-craft-lineage.md` files unchanged (still Tier 1 byte-identical from domain-teams upstream; Provenance & Divergence Principle preserved)
+- Pass 3a/3b branch condition unchanged (same 7 master names trigger gate)
+- `voice-anchor-meta-core.md §Over-mimic mitigation registry` still consulted for v1 entries; v2 entries continue to use inline `Don't / Over-mimic` block
+
+### Deferred to v1.7.1+
+
+- Actual Pass 3 agent-run E2E test with a JP/ZH craft-gate brief (v1.6.1 only did structural verification)
+- Migration of Z1-Z11 attribution corrections into per-anchor Metadata sections (optional, for fully self-contained v2 anchors)
+
 ## v1.6.1 — 2026-04-21 (restore docs/voice-anchor-deep-dives/ — accidental delete in v1.6.0)
 
 **Bug fix**: v1.6.0 migration removed `docs/voice-anchor-deep-dives/` and 64 pilot files. Intent was to move the Layer 1 content to `standards/anchor-{slug}.md` (correct), but the folder itself is per `anchor-schema-v2.md` the designated **Layer 2/3 research artifacts home** — biographical / era / lineage / awards / primary-source bibliography beyond Layer 1 critic citations. Without the folder, future deep-dive research has nowhere to go.
