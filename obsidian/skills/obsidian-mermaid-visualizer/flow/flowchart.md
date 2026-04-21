@@ -100,6 +100,20 @@ graph TB
     group_id -.-> simple    # Connect at group level (creates invisible layout link)
 ```
 
+#### Subgraph direction — important limitation
+
+The `direction TB/LR/BT/RL` statement inside a subgraph **is honored only when the subgraph is self-contained OR connected at the subgraph level** (i.e. `subgraphA --> subgraphB` referencing IDs, not nodes).
+
+**If any of a subgraph's NODES are linked to nodes outside the subgraph, the `direction` is ignored** — the subgraph inherits the parent graph's direction (per Mermaid flowchart docs).
+
+| Connection pattern | Subgraph `direction` honored? |
+|---|:---:|
+| Self-contained subgraph (no external connections) | ✅ yes |
+| `subgraphA --> subgraphB` (subgraph-level link) | ✅ yes — connects subgraph IDs, not nodes |
+| `A2 --> B1` (node-to-node across subgraph boundary) | ❌ no — direction ignored, inherits parent |
+
+**Tip**: to preserve per-subgraph direction in multi-stage pipelines, route connections through subgraph IDs rather than internal nodes. See § Worked example 7 below.
+
 **Nested subgraphs** — limit to 2 levels for readability:
 
 ```mermaid
@@ -252,6 +266,133 @@ graph TB
 ```
 
 CJK labels work reliably when wrapped in `"..."` per the unified quote rule (see [obsidian-common-quirks.md § Quirk 4.5](../obsidian-common-quirks.md)). Without quotes, CJK characters in node labels may fail to render or break parsing.
+
+### Example 7: Multi-stage pipeline (compact display for long workflows)
+
+**When to use this pattern**:
+- **Long workflows that would overflow horizontally or vertically if flat**. A 10-20 node linear flowchart becomes either very wide (`LR`) or very tall (`TB`) — both cramp into Obsidian's preview pane and strain reader focus.
+- **Solution**: chunk the flow into phases (Stage A / B / C ...) with each phase as a subgraph containing its internal sub-steps. Parent graph `LR` arranges phases horizontally; each subgraph `direction TB` stacks sub-steps vertically. Same content, **~2× information density** vs flat layout, much better readability.
+- **Bonus**: phase grouping also adds **semantic structure** — reader sees "user phase / staff phase / archive phase" at a glance before reading details.
+
+The syntax trick: use **subgraph-level connections** (`stageA --> stageB`) rather than node-to-node cross-boundary links. This preserves each subgraph's internal `direction`:
+
+```mermaid
+graph LR
+    subgraph stageA["Stage A — 使用者提交"]
+        direction TB
+        A1["填寫表單"] -->|"送出"| A2["系統驗證"]
+        A2 -->|"有效"| A3["自動分類"]
+    end
+
+    subgraph stageB["Stage B — 員工處理"]
+        direction TB
+        B1["分派給客服"] -->|"開始調查"| B2["調查問題"]
+        B2 -->|"有解答"| B3["回覆客戶"]
+    end
+
+    subgraph stageC["Stage C — 歸檔與追蹤"]
+        direction TB
+        C1["寄滿意度調查"] -->|"收到回覆"| C2["歸檔結案"]
+    end
+
+    stageA -->|"分派處理"| stageB
+    stageB -->|"結案關單"| stageC
+
+    classDef greenStage fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    classDef purpleStage fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    classDef cyanStage fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
+
+    class A1,A2,A3 greenStage
+    class B1,B2,B3 purpleStage
+    class C1,C2 cyanStage
+```
+
+Step-count distribution here is **3 / 3 / 2** (non-monotonic) — deliberately shows that **stage step counts follow no monotonic rule**. Real workflows may be front-heavy, middle-heavy, back-heavy, or uniform. Don't let this example or Example 8 (3/3/3/3) mislead you into thinking "later stages must have fewer steps". Design per actual content, not by superficial pattern.
+
+**Why this works**:
+- Parent graph: `LR` → stages flow left-to-right
+- Each subgraph: `direction TB` → sub-steps flow top-to-bottom WITHIN stage
+- Stages connected at **subgraph ID level** (`stageA --> stageB`), NOT via internal nodes (`A3 --> B1`)
+- Because no internal node links across subgraph boundaries, each `direction TB` is honored
+
+**Anti-pattern** — if you connected via `A3 --> B1` instead of `stageA --> stageB`, Mermaid would ignore `direction TB` and render each subgraph in parent's `LR` direction, collapsing the intended column layout.
+
+**Pattern fit checklist** — use this pattern when:
+- ✅ Workflow has **≥8-10 nodes** total (flat layout would be too wide or too tall)
+- ✅ Flow has **natural phase boundaries** (handoff between teams / systems / contexts)
+- ✅ Each phase has **2-5 sub-steps** (if just 1 step per phase, no grouping benefit)
+- ✅ Obsidian preview pane is limited width — vertical chunks fit better than long horizontal snake
+
+**When NOT to use**:
+- ❌ Workflow has ≤5 nodes total — flat flowchart is simpler
+- ❌ Workflow has many cross-phase jumps — subgraph grouping fights the content
+- ❌ No clear phase boundaries — grouping would be arbitrary
+
+**Typical use cases**:
+- Multi-stage approval workflows (submission / review / approval / archive)
+- Customer service pipelines (intake / triage / resolution / follow-up)
+- CI/CD pipelines (build / test / staging / production)
+- Multi-team handoff processes (design / engineering / QA / deploy)
+
+### Example 8: Vertical variant (TB outer + LR inner) — CI/CD pipeline for narrow preview panes
+
+Same technique as Example 7 with orientation flipped + a different domain (technical CI/CD pipeline vs. Example 7's customer service flow). Use this when Obsidian's preview pane is narrow (typical sidebar preview) or when the workflow reads more naturally as top-to-bottom phases:
+
+```mermaid
+graph TB
+    subgraph build["① Build"]
+        direction LR
+        B1["Checkout"] -->|"source ready"| B2["Install deps"]
+        B2 -->|"deps cached"| B3["Compile"]
+    end
+
+    subgraph test["② Test"]
+        direction LR
+        T1["Unit tests"] -->|"units pass"| T2["Integration"]
+        T2 -->|"services pass"| T3["E2E"]
+    end
+
+    subgraph staging["③ Staging"]
+        direction LR
+        S1["Deploy staging"] -->|"env up"| S2["Smoke test"]
+        S2 -->|"basic OK"| S3["UAT approval"]
+    end
+
+    subgraph prod["④ Production"]
+        direction LR
+        P1["Deploy prod"] -->|"rollout OK"| P2["Health check"]
+        P2 -->|"healthy"| P3["Monitor"]
+    end
+
+    build -->|"artifact ready"| test
+    test -->|"tests pass"| staging
+    staging -->|"UAT approved"| prod
+
+    classDef greenStage fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    classDef redStage fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
+    classDef purpleStage fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    classDef cyanStage fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
+
+    class B1,B2,B3 greenStage
+    class T1,T2,T3 redStage
+    class S1,S2,S3 purpleStage
+    class P1,P2,P3 cyanStage
+```
+
+4 stages × 3 steps = 12 nodes total — comfortably in the "≥8-10 nodes" threshold where the subgraph-chunking pattern earns its complexity. Circled numbers `①②③④` on stage titles signal sequence at a glance.
+
+**When to prefer Example 8 (TB outer) over Example 7 (LR outer)**:
+
+| Condition | Example 7 (LR + inner TB) | Example 8 (TB + inner LR) |
+|---|:---:|:---:|
+| Obsidian preview pane is narrow (sidebar mode) | 🟡 horizontal scroll | ✅ vertical scroll (natural) |
+| Many stages (≥5), each 2-4 steps | 🟡 row gets long | ✅ fits vertical |
+| Stages ~equal length, pipeline / timeline feel | ✅ | 🟡 |
+| Export to PDF / print | 🟡 landscape needed | ✅ portrait native |
+| Reader scrolls vertically (default reading) | 🟡 requires H-scroll | ✅ |
+| Reader has wide screen / full-width editor | ✅ | 🟡 feels short-wide |
+
+Both variants apply the same technique — **subgraph-level connections** (`stageA --> stageB`) — and the same `direction` preservation rule. Pick based on preview / screen / reading orientation.
 
 ## Error prevention
 

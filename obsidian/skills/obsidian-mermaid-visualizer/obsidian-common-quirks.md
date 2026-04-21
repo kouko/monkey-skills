@@ -164,10 +164,20 @@ style NodeID fill:#color,stroke:#color,stroke-width:2px
 - RGB: `rgb(255,0,0)` (works but verbose)
 - Named: `red`, `blue`, etc. (limited support; stick to hex)
 
-**Style multiple nodes at once**:
-```mermaid
-style A,B,C fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+**Style multiple nodes at once** — do NOT use comma-separated `style` (Obsidian 11.4.1 parses it as one long node ID and creates an orphan node):
+
 ```
+❌ style A,B,C fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px    ← renders as orphan node "A,B,C"
+```
+
+Use `classDef` + `class` instead (standard Mermaid multi-node styling):
+
+```mermaid
+classDef greenGroup fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+class A,B,C greenGroup
+```
+
+This defines a named class once, then applies it to multiple node IDs. Supported universally in Mermaid including Obsidian 11.4.1.
 
 **Font color for dark backgrounds**:
 ```mermaid
