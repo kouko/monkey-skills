@@ -1,5 +1,68 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.9.2 — 2026-04-22 (meta-core + meta-detail legacy cleanup — drop v1 schema body spec, consolidate drift catalogs)
+
+Post-v1.9.0 audit identified two legacy-era bloat areas in meta files:
+
+1. **meta-core §v1 schema body spec** — obsolete since v1.8.0 (all 81 anchors v2); no writer / consumer remaining
+2. **meta-detail dual drift catalogs** — v1.9.0's `§Cross-Master Context §Critical Attribution Corrections` (Z1-Z8 + JP-8 full text) duplicated the older `§Drift corrections catalog (Z5-Z11)` section; and both sections were 100% redundant with per-anchor inline drift corrections except Z6 (孫大偉) which has no anchor home
+
+### Changes
+
+**meta-core** (242 → 210 lines, -500 tokens):
+- Removed §v1 schema body spec (full 30-line field structure) — obsolete
+- Removed §Field semantics table (documented v1-only fields) — obsolete
+- Kept §Schema version selector (still used for frontmatter auto-detect)
+- Kept §Anchor selection rubric + §Over-mimic mitigation registry + §Quick reference (all still load-bearing)
+- §v1 schema now reads: "As of v1.9.2, no anchor files use v1 schema body. 9 v1-only authors remain as registry-row entries only (村上 / 金庸 / 三島 / 太宰 / 余華 / McCarthy / DFW / Ellroy / 莫言). Anchors default to v2; v1 schema fallback preserved for future compatibility."
+
+**meta-detail** (298 → 242 lines, -1K tokens):
+- Replaced full-text duplicate drift catalogs with single §Drift corrections catalog (pointer index) — all drifts (Z1-Z11 + JP-8) listed as 1-line entries pointing to their authoritative per-anchor home
+- Only Z6 (孫大偉 agency = 奧美 → 偉太, NOT JWT) keeps full-text treatment — no 孫大偉 anchor exists
+- Removed §Cross-Master Context §Critical Attribution Corrections full-text block (v1.9.0 addition, now redundant with per-anchor inlines + pointer index)
+- Kept §Verified lineage map + §Cross-reference-valid-for registry + §Cross-cultural unified label rubric + §Generational Context + §LLM Reproduction Gap cross-master summary + §Voice selection guidance + §Cross-master Anti-Patterns (all genuinely cross-master, not in per-anchor)
+
+### Pass 3a/3b conditional trigger simplification
+
+SKILL.md Pass 3a/3b conditional load triggers simplified:
+
+**Before (v1.9.0)**:
+1. Cross-master lineage / era / critical debate
+2. **Attribution-risk** (always triggered meta-detail load)
+3. Multi-master comparison
+4. (ZH) 意識形態 era context
+
+**After (v1.9.2)**:
+1. Cross-master lineage / era / critical debate (genuinely cross-master)
+2. Multi-master side-by-side comparison
+3. (ZH only) Brief references **孫大偉** — Z6 lives in meta-detail, not in any anchor
+4. (ZH only) 意識形態 institutional-era context (Generational Context section)
+
+Attribution-risk no longer auto-routes to meta-detail — all drift corrections (Z1-Z5, Z7-Z11, JP-8) are already inlined at authoritative per-anchor source. Pass 3a/3b loads meta-detail only for genuinely cross-master content.
+
+### Token impact
+
+Per Pass 3d trigger: meta-detail smaller → **~1K tokens saved per trigger** (5K → 4K). Pass 3a/3b default unchanged (conditional path rarely fires; when it does, section-targeted read is smaller than before).
+
+### Drift corrections catalog (v1.9.2 pointer index)
+
+Authoritative sources per drift:
+
+| # | Drift | Source |
+|---|---|---|
+| Z1 | Altenberg | `anchor-zh-tw-ye-mingui-*` |
+| Z2 | 寺山 allusion | `anchor-zh-tw-lee-hsin-ping-*` |
+| Z3 | 意識形態 1987 | `anchor-zh-tw-xu-shunying-*` |
+| Z4 | Content-farm discipline | `anchor-zh-tw-xu-shunying-*` |
+| Z5 | 多喝水 | `anchor-zh-tw-wu-nien-jen-*` |
+| **Z6** | **孫大偉 agency** | **meta-detail (no anchor)** |
+| Z7 | I SEE YOU | `anchor-zh-tw-wu-nien-jen-*` |
+| Z8 | 全聯 ECD | `anchor-zh-tw-gong-dazhong-*` + zh-q3 router |
+| Z9 | KC Tsang identity | `anchor-zh-hk-kc-tsang-*` |
+| Z10 | 全聯 Q3-center | `anchor-zh-tw-gong-dazhong-*` + zh-q3 router |
+| Z11 | 意識形態 鄭松茂 | `anchor-zh-tw-xu-shunying-*` |
+| JP-8 | リゲイン | `anchor-jp-iwasaki-shunichi-*` |
+
 ## v1.9.0 — 2026-04-21 (craft-lineage dissolution — absorb cross-master content into meta-detail)
 
 Empirical analysis revealed 95% redundancy between `{jp,zh}-copy-craft-lineage.md` per-master sections and the v2 `anchor-{slug}.md` files introduced v1.7.0+. The remaining 5% (Z# attribution corrections, cross-master lineage map, generational era context, cross-master comparison tables, anti-patterns) genuinely cross-cuts masters and belongs in meta-detail, not per-anchor.

@@ -124,56 +124,32 @@ When Pass 3 agent needs "find equivalent anchor in target culture", this matrix 
 - **hard-boiled-metaphor** ZH — TW noir tradition thin
 - **dialogic-walk-and-talk** ZH — no clear anchor; 王家衛 is monologue-type not dialogue-type
 
-## Drift corrections catalog (Z5-Z11)
+## Drift corrections catalog (pointer index, v1.9.2)
 
-Corrections that must propagate through active inventory. Each was identified during research waves on 2026-04-21. Z5-Z8 originated in ZH research; Z9-Z11 surfaced from Type 5 verification + gap research + further lineage audit.
+All Z# attribution drifts except Z6 are **inlined in corresponding anchor files** per v2 SSOT rule (§Dimension 6 consumer change — anchor file is single source of truth). Meta-detail keeps only Z6 full text (no anchor home for 孫大偉) + pointer index below for discoverability.
 
-### Z5 — 多喝水 attribution
+| # | Drift | Authoritative source |
+|---|---|---|
+| Z1 | Altenberg sinicized (NOT 葉明桂 original) | `anchor-zh-tw-ye-mingui-strategic-aphorism.md §Don't / Over-mimic` |
+| Z2 | 「拋開書本到街上去」李欣頻 ref 寺山修司 1967 | `anchor-zh-tw-lee-hsin-ping-literary-consumption.md §Metadata` |
+| Z3 | 意識形態 founded 1987 (not 1988); canonical window 1988-1999 | `anchor-zh-tw-xu-shunying-ideological-definitional.md §Metadata` |
+| Z4 | Content-farm "中興百貨 文案" source discipline | `anchor-zh-tw-xu-shunying-ideological-definitional.md §Metadata` |
+| Z5 | 多喝水 NOT 吳念真 (奧美台灣 in-house) | `anchor-zh-tw-wu-nien-jen-taiyu-peer-intimate.md` |
+| **Z6** | **孫大偉 agency: 台灣奧美 → 偉太 (NOT JWT)** | **(kept here — no dedicated 孫大偉 anchor)** |
+| Z7 | 長榮〈I SEE YOU〉VO is 金城武, NOT 吳念真 | `anchor-zh-tw-wu-nien-jen-taiyu-peer-intimate.md` |
+| Z8 | 全聯經濟美學 creative lead = 龔大中 (not 林敬凱 / 邱彥翔) | `anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md` + `zh-q3-anchors.md` |
+| Z9 | KC Tsang (NOT Calvin Choy); agency path: Ogilvy → Bozell → BBDO HK → 陳曾黃朱梅 | `anchor-zh-hk-kc-tsang-cantonese-vernacular-pun.md` |
+| Z10 | 全聯 2006-2014 TV-era is **Q3-CENTER** (aphoristic), NOT Q3-extreme | `anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md` + `zh-q3-anchors.md` |
+| Z11 | 意識形態廣告 co-founded 許舜英 + 鄭松茂 (1987) — not 許舜英 alone | `anchor-zh-tw-xu-shunying-ideological-definitional.md` |
+| JP-8 | リゲイン「24時間戦えますか？」NOT 岩崎俊一 | `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata |
 
-**Drift**: "多喝水 MORE WATER" (金車) often misattributed to 吳念真.
-
-**Correct**: 奧美台灣 in-house work. 吳念真 canonical TW advertising voice anchors are **保力達B 口白** (李奧貝納) + **全國電子「足感心」**.
-
-### Z6 — 孫大偉 agency
+### Z6 — 孫大偉 agency (only drift with no anchor home)
 
 **Drift**: 孫大偉 sometimes cited as 智威湯遜 (J. Walter Thompson) affiliated.
 
 **Correct**: 台灣奧美 創意總監 (1980s-2000s) → 汎太廣告 → 偉太廣告 (1991+ 創辦人). NOT JWT.
 
-### Z7 — 長榮〈I SEE YOU〉旁白
-
-**Drift**: Some sources attribute the VO to 吳念真.
-
-**Correct**: 金城武 本人獨白。吳念真 未參與該片 VO。Campaign itself (2013) often linked to 李奧貝納 Taiwan — confirm with agency case archive before citing.
-
-### Z8 — 全聯經濟美學 creative lead
-
-**Drift**: 林敬凱 sometimes named as the creative lead; 邱彥翔 mistakenly cited as copywriter.
-
-**Correct**: 龔大中 (台灣奧美 CCO 2020-；ECD before) is the 2015-era 經濟美學 campaign creative lead. 邱彥翔 is the **actor** ("全聯先生") hired 2006, not a copywriter.
-
-### Z9 — HK CD 曾錦程 identity correction
-
-**Drift**: In earlier ZH research, flagged as "曾錦程 / Calvin Choy [UNVERIFIED]".
-
-**Correct**:
-- **Name romanization**: KC Tsang (NOT "Calvin Choy" — Calvin Choy returned by earlier search is a finance YouTuber, unrelated)
-- **Agency path**: Ogilvy 奧美 → Bozell 堂煌 (1997 CD) → **BBDO HK ECD 1998** (NOT JWT) → 陳曾黃朱梅 co-founder 2001 → The Bees Group co-founder 2012 → PolyU Senior Instructor 2009-
-- Verified via zh.wikipedia.org/wiki/曾錦程 + ISBN 9621780233 《十個廣告九個醜》+ ISBN 9888488279 《我地廣告》
-
-### Z10 — 全聯 TV-era re-classification
-
-**Drift**: 2006-2014 TV-era 全聯 sometimes categorized as Q3-extreme.
-
-**Correct**: 2006-2014 "全聯先生" TV era voice is **Q3-CENTER** (格言 / aphorism register — 「長得漂亮是本錢，把錢花得漂亮是本事」). This is aphoristic not peer-intimate.
-
-**Distinguishing**: Q3-EXTREME would be 배민 (KR) / 故宮粉絲團「朕知道了」 peer-intimate 小編 voice — where the brand speaks as friend-at-2am, not as aphorism-maker.
-
-### Z11 — 意識形態廣告 founders
-
-**Drift**: 意識形態廣告 (Icey) often described as "許舜英 獨資創辦".
-
-**Correct**: 許舜英 **+ 鄭松茂** 共同創辦 (1987). 許舜英 擔任 ECD; 鄭松茂 為策略合夥人. Campaign run 1988-1999 peak; 許舜英 2008 離開加入 奧美時尚.
+**Why here not inline**: 孫大偉 has no dedicated `anchor-{slug}.md` file (not in the 81-anchor v2 inventory). If a future brief references 孫大偉, Pass 3a/3b conditional load triggers this section for the correction. If a 孫大偉 anchor is created in a future version, this entry migrates to the anchor's Metadata.
 
 ## §Cross-Master Context (absorbed from craft-lineage files v1.9.0)
 
@@ -196,43 +172,11 @@ This section consolidates cross-master attribution corrections, generational con
 - **葉明桂**: 《品牌的技術和藝術：向廣告鬼才葉明桂學洞察力與故事力》(天下文化, 2017; ISBN 9789864792375); 左岸咖啡館 1998– campaign archive (台灣奧美作品集, 數英 / 廣告雜誌 122 期); 奧美官方簡歷.
 - **Cross-reference ZH sources**: 動腦 Brain magazine archive (brain.com.tw), 天下雜誌, 經理人月刊, 數英 digitaling.com, 壹讀 read01.com, 設計之家 sj33.cn.
 
-### Critical Attribution Corrections (expanded from Z1-Z8; supplements Z9-Z11 above)
+### Critical Attribution Corrections
 
-#### Drift #Z1: Peter Altenberg sinicization (NOT 葉明桂 original)
+See §Drift corrections catalog (pointer index) above for the complete list (Z1-Z11 + JP-8). All drifts except Z6 are inlined at their authoritative per-anchor source; Z6 (孫大偉) is kept in full above since no 孫大偉 anchor exists.
 
-「我不在咖啡館，就在去咖啡館的路上」is a Chinese adaptation of Austrian poet Peter Altenberg's (1859–1919) Viennese saying "Wenn der Altenberg nicht im Kaffeehaus ist, ist er am Weg dorthin" (「如果 Altenberg 不在咖啡館，就在前往咖啡館的路上」). Originally said **about** Altenberg by contemporaries (not by him), later recirculated as self-description. 台灣奧美 sinicized and adopted for 左岸咖啡館 — a borrowed line, not original composition. Do not drift into claiming 葉明桂 coined it.
-
-#### Drift #Z2: 「拋開書本到街上去」— 李欣頻 but referencing 寺山修司
-
-「拋開書本到街上去」series (誠品敦南) is 李欣頻's, but the inverted source — 《書を捨てよ、町へ出よう》(1967) — is 寺山修司's. Some secondary sources omit the 寺山修司 attribution and present the copy as pure 李欣頻 invention. 李欣頻 herself has documented the 寺山修司 inspiration in interviews; do not flatten the lineage.
-
-#### Drift #Z3: 意識形態廣告 founding year
-
-意識形態廣告 (Icey) founding year is **1987**, not 1988. 許舜英 and 鄭松茂 co-founded the agency in 1987. The 中興百貨 campaign run began 1988 and peaked through 1999. 許舜英 departed 意識形態 in 2008 to join 奧美時尚 (Ogilvy Fashion & Lifestyle). 中興百貨 itself closed its last store in 2008. The **1988–1999** decade is the ideology-era canonical window — post-2000 中興百貨 copy is not canonical 許舜英 voice.
-
-#### Drift #Z4: 中興百貨 文案 canonical source discipline
-
-Widely-circulated online "中興百貨 文案" lists mix 許舜英 works with later imitations and uncredited copy. The confirmed canonical set is anchored in 《許舜英購物日記》+ 意識形態 award-year archives (時報廣告金像獎, 4A 自由創意獎, 亞太廣告獎). Lines not traceable to these sources should be treated as **[disputed] pending primary-source confirmation**.
-
-#### Drift #Z5: 多喝水 NOT 吳念真
-
-「多喝水 MORE WATER」(金車) is NOT 吳念真's work. It is 奧美台灣 in-house copy, frequently misattributed to 吳念真 online due to his 1990s TW advertising prominence. 吳念真's canonical TW advertising voice anchors are **保力達B 口白** (李奧貝納, 1990s–ongoing, 台語 register) + **全國電子「足感心」** (2000s). Do not list 多喝水 among 吳念真 works.
-
-#### Drift #Z6: 孫大偉 agency affiliation
-
-孫大偉's agency affiliation is **台灣奧美** (initially) then **偉太廣告** (1991+ independent founder). Some secondary sources incorrectly cite him as 智威湯遜 (J. Walter Thompson). 孫大偉 worked at 奧美 1980s–1990s before founding 偉太; JWT attribution is an error to reject at source-check. (孫大偉 does not have a dedicated v2 anchor; this correction lives here.)
-
-#### Drift #Z7: 長榮航空〈I SEE YOU〉VO is 金城武 himself
-
-長榮航空〈I SEE YOU〉(2013) 旁白 = **金城武 本人獨白**, NOT 吳念真. The ad stars Takeshi Kaneshiro and the monologue 「我心中，尚未崩壞的地方」is delivered by Kaneshiro himself. 吳念真 did not participate in this campaign's VO. When citing 吳念真's iconic 旁白 work, stick to 保力達B / 全國電子 / other confirmed attributions.
-
-#### Drift #Z8: 全聯經濟美學 creative lead
-
-全聯經濟美學 (2015–) creative lead = **龔大中** (台灣奧美 ECD at campaign start, 2020 promoted to CCO). Some online sources incorrectly cite 林敬凱 as creative lead, OR mistakenly credit 邱彥翔 as copywriter. **邱彥翔 is the actor** ("全聯先生") hired 2006 for the pre-經濟美學 TV-era campaigns; he is not a copywriter and did not author the 2015+ 經濟美學 aphoristic copy. Primary-source anchor: 數位時代 2015 龔大中 專訪 + 經理人月刊 2020 全聯 × 奧美 對談 + 第38屆時報廣告金像獎 全聯經濟美學 2015 得獎紀錄.
-
-#### Drift #JP-8: リゲイン「24時間戦えますか？」NOT 岩崎俊一
-
-This copy is frequently misattributed to 岩崎 in secondary sources. Re-confirmed during v4.14.0 grounding research — the attribution is incorrect. Do not list it among 岩崎's works. (This correction is also inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer.)
+v1.9.2 removed the duplicate full-text Z1-Z8 block that previously lived here — redundant with anchor inlines. Pass 3a/3b conditional load now reads the pointer index; v2 anchors carry the full correction text inline.
 
 ### Generational Context
 
