@@ -11,7 +11,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Cosmic-warm stance where the ordinary and the cosmic share the same sentence. Scientific and lyrical vocabulary co-habit. Sound (onomatopoeia) is structural, not decorative — it carries the text's rhythm as much as syntax does.
+**What this register achieves**: 日常の細部と宇宙的スケールを同一文に同居させ、科学語と叙情語が共棲する voice。オノマトペは装飾ではなく骨格として機能し、構文と同等にテキストの拍子を担う。
 
 **Native critical read** (6):
 - 「心象スケッチ」(賢治自称ジャンル名、『春と修羅』序文)
@@ -41,7 +41,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM converges on a surface 4-set when asked for 宮沢: `「〜のやうな」+ オノマトペ連打 + 擬古仮名遣い + 「ほんたうの」連呼`. This produces "なんとなく賢治っぽいけど薄い" — surface mimicry without domain-hijacking / cosmic-predicate / 名詞連鎖 structural moves. In commercial copy, "すきとおった / ほんとうの" gets safe-word-consumed as generic Q3 warmth.
+- **Failure mode**: LLM は賢治を模倣する際、表層の 4-セット（「〜のやうな」＋オノマトペ連打＋擬古仮名遣い＋「ほんたうの」連呼）に収束し、domain hijacking・cosmic-predicate・名詞連鎖修飾などの構造的移動を欠いて「なんとなく賢治っぽいけど薄い」pastiche を生む。商業コピーでは「すきとおった／ほんとうの」が generic Q3 warmth の safe-word として消費されてしまう。
 - **Mitigation** (15 chars): "オノマトペ・すきとおった・ほんとうの は各 1 piece 内 1 回まで"
 
 ## Trigger slug: `jp-miyazawa-shinshou-sketch`

@@ -1,5 +1,61 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.2 — 2026-04-21 (Phase A batch 3 + 4 + language-consistency rewrite)
+
+16 additional Layer 1 v2 individual-creator entries (8 batch 3 + 8 batch 4), plus language-consistency rewrite of 14 earlier entries whose Voice direction / Prose mechanics / Don't-Failure-mode / Mitigation sections were in English when the anchor's native language is JP or zh.
+
+### Batch 3 (8 entries)
+- 寺山修司 (JP Q2 extreme, poet/playwright) — documented lineage 寺山 → 李欣頻《誠品副作用》
+- 許舜英 (zh-TW Q2 center, craft-gate) — power-disparity word rule, 意識形態廣告
+- 李欣頻 (zh-TW Q2 center, craft-gate) — 具名引用 lineage preserved
+- 葉明桂 (zh-TW Q2 center, craft-gate) — strategic gate before drafting; Z1 drift
+- 川端康成 (JP Q2 toward-Q3) — sensory-ellipsis, 新感覚派
+- 谷崎潤一郎 (JP Q2 toward-Q1) — shadow-aesthetic, 陰翳礼讃
+- Bill Bernbach (EN Q1 toward-Q2, ECD craft-gate) — confession-before-claim
+- John McPhee (EN Q1 toward-Q4) — longform precision
+
+### Batch 4 (8 entries)
+- 岩崎俊一 (JP Q3 center, craft-gate) — 余韻 / 無常、JP craft-gate 4 人完成
+- 眞木準 (JP Q2 toward-Q3, craft-gate) — 諧謔×知性 deadpan、two-gate wordplay test
+- 谷山雅計 (JP craft-gate) — 解決・意味提案, 3-reasons gate
+- 錢鍾書 (zh Q2 toward-Q1) — 博喻, 學者型小說家
+- 黃春明 (zh-TW Q3 toward-Q2) — 鄉土文學, humane vernacular
+- Claude Hopkins (EN Q4 center, craft-gate) — Ogilvy lineage "read seven times"
+- Toni Morrison (EN Q2 toward-Q3) — the-ancestor, lyrical inheritance
+- Raymond Carver (EN Q1 toward-Q4) — working-class precision, Hemingway descendant
+
+### Language-consistency rewrite (14 entries affected)
+
+User flag: anchor entries must describe themselves in the anchor's **native language**, not in English. Applied native rewrite (not translation) to Voice direction / Prose mechanics / Don't Failure mode / Mitigation sections for:
+
+JP anchors: 坂元裕二 / 梅田悟司 / 宮沢賢治 / 糸井重里 / 寺山修司 / 岩崎俊一 / 眞木準 / 谷山雅計
+
+zh-HK / zh-TW anchors: 朱家鼎 Mike Chu / 曾錦程 KC Tsang / 研之有物 / 故宮粉絲團 / 許舜英 / 葉明桂
+
+What stays English (intentional):
+- Schema section labels (Voice direction / Prose mechanics / Examples / Metadata)
+- Metadata enums (Trigger slug / Over-mimic risk / Pairs with form / Cross-reference-valid-for) for machine-readability
+- Enum values (HIGH / MEDIUM / LOW / STRONG / WEAK)
+
+### Cumulative v2 progress
+
+- Total Layer 1 v2 entries: **28** (pilot 4 + batch 2-4 × 8 each)
+- Creator types covered: essayist / novelist / poet / screenwriter / director / craft-gate copywriter / craft-gate CD / journalist / hardboiled author
+- Languages: JP / zh-HK / zh-TW / EN
+- **100% full pass rate (28/28 at 5/5 coverage)** — Schema v2 empirically validated across wide spread of creators
+
+### JP / zh craft-gate tier fully covered
+
+- **JP craft-gate masters (4/4)**: 糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 — all Layer 1 v2
+- **zh-TW craft-gate masters (3/3)**: 許舜英 / 李欣頻 / 葉明桂 — all Layer 1 v2
+
+### Still deferred
+
+- No `standards/*.md` integration (v2 entries remain in docs/voice-anchor-deep-dives/)
+- No schema update to voice-anchor-meta-core.md
+- No Pass 3 routing change
+- ~20 audit KEEP individual anchors remaining (JP Hemingway-descendants, zh-TW 白先勇/三毛/胡湘雲, EN Hempel/Strunk&White/Orwell/Baldwin/Ishiguro/Waller-Bridge/Saunders/Waititi/Gerwig/Chekhov/Ephron/Halbert/Jayme/Thompson/Hammett/Allebach/Parvez etc.)
+
 ## v1.4.1 — 2026-04-21 (Phase A batch 2 — 8 Layer 1 v2 individual-creator entries)
 
 Eight additional individual-creator voice anchor entries researched + formatted to Layer 1 v2 schema. All 8 hit full 5/5 coverage under refined research-agent prompt with hard rules (no bio, no structural, ≥5 verbatim, native vocab, ≥5 mechanics).

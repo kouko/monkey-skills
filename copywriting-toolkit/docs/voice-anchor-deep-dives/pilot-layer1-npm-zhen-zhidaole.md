@@ -13,7 +13,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Institutional authority voluntarily subverts itself via classical-vernacular code-switch. The museum's own artifact is the meme source; the modern caption is the punchline. Commercial intent and cultural legitimacy coexist because each post maps to a real SKU — persona cannot drift beyond inventory.
+**What this register achieves**: 機構權威主動用古文／白話切換把自己解嚴 — 博物館自己的文物是梗的來源，現代的 caption 是笑點。商業意圖與文化正當性可以共存，因為每則貼文都對應一個真實的文創 SKU，persona 不會漂出文物清單之外。
 
 **Native critical read** (5):
 - 「讓歷史走進生活」(故宮文創 mission 自述)
@@ -43,7 +43,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: (a) 古文比例失控 → LLM 傾向堆全文言體，丟失 20-30% 古文 + 70% 白話的衝突感；(b) two-speaker dialogue 退化為單 narrator → 帝后對話變成一個人碎碎念；(c) 虛構不存在的館藏文物 → 實際洩漏風險。
+- **Failure mode**: (a) 古文比例失控 — LLM 傾向堆成全文言體，丟失 20-30% 古文 + 70% 白話之間的衝突感；(b) 雙人對話退化成單一 narrator — 帝后對話變成一個人自言自語；(c) 虛構不存在的館藏文物 — 會被文博圈 fact-check 揭穿的真實洩漏風險。
 - **Mitigation** (15 chars): "古文比例 ≤30%；不得虛構館藏；擬人必 two-speaker dialogue"
 
 ## Trigger slug: `zh-tw-npm-zhen-zhidaole-institutional-meme`

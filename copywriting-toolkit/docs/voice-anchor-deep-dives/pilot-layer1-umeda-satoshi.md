@@ -11,7 +11,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Third-person declarative manifesto that reframes the reader's position from "one who needs support" to "one who already supports the world." Social diagnosis precedes phrasing — the copy carries verifiable zeitgeist weight.
+**What this register achieves**: 読者の立ち位置を「応援される側」から「既に世界を支える側」へ反転させる第三人称陳述形のマニフェスト。同時代の社会診断を先に据え、言葉はその上に載るため、コピー自体が時代の重みを帯びる。
 
 **Native critical read** (5):
 - 「内なる言葉 / 外に向かう言葉」(本人定義、『「言葉にできる」は武器になる。』日経BP 2016)
@@ -40,7 +40,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM mimics the surface grammar (第三人称陳述形) but lacks the social-diagnosis anchor + positional subject-reversal move. Result = 「頑張れ」換言 in declarative dress, or sermon-tone lecture. The child-frame bracket is also LLM-skipped, collapsing the observer position.
+- **Failure mode**: LLM は表層文法（第三人称陳述形）を真似ても、社会診断 anchor と主格反転の positional move を欠くため、「頑張れ」の換言を陳述形で装ったものか、説教調の教訓に退化する。子ども視点フレームも省略されがちで、観察者ポジションが崩れる。
 - **Mitigation** (15 chars): "社会診断 anchor なしに第三人称陳述を書かない — 説教調退化を招く"
 
 ## Trigger slug: `jp-umeda-satoshi-uchinaru-kotoba`

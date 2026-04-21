@@ -14,7 +14,7 @@ cross-ref: zh-TW STRONG
 
 ## Voice direction
 
-**What this register achieves**: Fate-compressed cinematic narrative where a product object (a watch) becomes a memory-vessel across war, loss, distance. Copy appears once, late — as punctuation on an object-transfer gesture. The tagline NEGATES the product's own engraved phrase.
+**What this register achieves**: 一件產品（一隻手錶）在戰爭、失散、時間的距離之間成為記憶載體的電影級敘事。Copy 只在最後出現一次 — 以句點之姿，落在一個「物件交付」的手勢上。Tagline 直接否定產品上刻著的那句話。
 
 **Native critical read** (6):
 - 「天長地久三部曲」(港台廣告史 canonical 命名)
@@ -26,14 +26,14 @@ cross-ref: zh-TW STRONG
 
 ## Prose mechanics (8)
 
-1. **Tagline-as-inversion 結構** — slogan 必須 NEGATE 產品上的 engraved / visible phrase（手錶背面刻「天長地久」→ tagline 說「不在乎天長地久」— copy 活在 product-claim 與 human-reality 的 gap 裡）
-2. **Compressed concessive 句型** — `不在乎 X，只在乎 Y` — concede 大 claim、pivot 至小/真 claim；**1 piece 內 1 次**
-3. **Object-transfer gesture-triggered copy** — watch 給 / 留 / 等的 physical gesture 才觸發 tagline，**非 voiceover / narration**
-4. **Historical-event anchoring** — 1939 蘭州空戰 / 抗戰撤離等 real dates + real weapons — 宿命感 from verifiable history，**拒絕 drama-rain-tears cliché**
-5. **Ellipsis pacing** — 60-80 秒 silent / musical narrative 後才出現 tagline；copy appears **once, late, no mid-ad repetition**
-6. **抽象情緒名詞堆疊禁止** — 避開 愛 / 淚 / 風 / 雨 / 今生今世 noun-stack（瓊瑤腔 trap）
-7. **Mandarin 化禁止** — 保留 粵語 sensibility、不翻成普通話 drama
-8. **王家衛獨白 drift 禁止** — Titus register 是 ellipsis + gesture，**非** interior monologue；若滑向 monologue 即失真
+1. **Tagline 必須否定產品上的 engraved phrase** — 手錶背面刻「天長地久」，tagline 就說「不在乎天長地久」。Copy 活在產品宣稱與人間現實的縫隙裡
+2. **壓縮式讓步句型** — `不在乎 X，只在乎 Y`：讓出大的 claim，換取小的真。**一支片 1 次即可**
+3. **Copy 由物件交付的肢體動作觸發** — 手錶「給／留／等」的實體手勢才拉出 tagline；**絕不用 voiceover / 旁白**
+4. **錨定可查證的歷史事件** — 1939 蘭州空戰／抗戰撤離這類真實日期與真實武器。宿命感從歷史裡長出，**絕不倒進「瓊瑤式淚雨」的套路**
+5. **留白式節奏** — 60-80 秒靜默／音樂敘事之後，tagline 才現身。Copy 只出現一次，位置偏晚，片中不重複
+6. **禁堆疊抽象情緒名詞** — 避開「愛／淚／風／雨／今生今世」這類瓊瑤腔名詞群
+7. **禁 Mandarin 化** — 保留粵語的語感，不翻成普通話劇腔
+8. **禁滑向王家衛獨白體** — Titus 的氣質是「留白＋動作」，不是 interior monologue。一旦轉入獨白即失真
 
 ## Examples (5 verbatim)
 
@@ -45,7 +45,7 @@ cross-ref: zh-TW STRONG
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM drifts to 瓊瑤腔（abstract 淚 / 愛 / 風 / 雨 / 今生今世 noun-stack）OR 王家衛 interior-monologue cadence。Titus register is neither — is historically-anchored ellipsis + concessive inversion with ONE tagline triggered off a physical object-transfer gesture.
+- **Failure mode**: LLM 易漂向瓊瑤腔（抽象「淚／愛／風／雨／今生今世」名詞堆疊）或王家衛內心獨白 cadence。Titus 的氣質兩者皆非 — 而是「錨定真實歷史事件的留白 + 讓步否定句，一支片只在物件交付的肢體動作之後出一次 tagline」。
 - **Mitigation** (14 words): "`不在乎 X 只在乎 Y` 句型 1 次；錨定真實歷史事件；避免抽象情緒名詞堆疊"
 
 ## Trigger slug: `zh-hk-mike-chu-titus-cinematic-romance-inversion`

@@ -11,7 +11,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Everyday peer-intimate dialogue with one foot in the poetic. Emotion never stated, always arrived at via specific-number / proper-noun enumeration + unbridged metaphor jumps.
+**What this register achieves**: 感情を名指さず、具体数字と固有名詞の積層、そして比喩の飛躍を通じて、日常的で親密な peer-warm の会話劇が詩的現実離れと同居する register を立ち上げる。
 
 **Native critical read** (6):
 - 「言葉の魔術師」(BuzzFeed Japan 2017 『カルテット』特集見出し)
@@ -41,7 +41,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM tries to convey "詩的リアリティの同居" by inserting abstract words (愛 / 孤独) or by building logical bridges between image and feeling — produces Hallmark-parody ("感動させようとしている感"). Also tends to duplicate signature phrases ("みぞみぞ") out of original character context.
+- **Failure mode**: LLM が「詩的リアリティの同居」を目指すと、「愛」「孤独」等の抽象語を直接入れたり、比喩と感情の間に論理的な橋を架けたりして、「感動させようとしている感」が透ける Hallmark 調 pastiche に堕ちる。また「みぞみぞ」等キャラ固有の造語口癖を文脈外で流用しがち。
 - **Mitigation** (14 chars): "抽象語禁止。数字・固有名詞・物品で列挙し、比喩の橋は張らない"
 
 ## Trigger slug: `jp-sakamoto-yuji-kotoba-no-majutsushi`

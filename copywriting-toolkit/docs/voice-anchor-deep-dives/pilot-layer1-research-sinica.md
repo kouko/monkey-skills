@@ -11,7 +11,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Editor-ventriloquized institutional trust — a 中研院-backed in-house editor speaks the scientist's research in plain but precise language, while preserving the scientist's first-person hedging verbatim. Reader enters via daily life / news hook, exits with a named researcher + institutional anchor.
+**What this register achieves**: 編輯代言型的機構信任 — 由中研院背書的內部編輯，用淺白但精確的語言替研究員說話，但把研究員的第一人稱 hedging（「我們還不夠瞭解⋯」）原樣引述保留。讀者從日常／時事 hook 進來，帶著一位具名研究員與機構錨點離開。
 
 **Native critical read** (5):
 - 「言之有物」(命名出處《周易·家人》「君子以言有物而行有恆」、About 頁自述)
@@ -41,7 +41,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM defaults to (a) dropping institutional anchor 句型 → 退化為 generic 科普 (b) paraphrasing scientist hedging into third-person「研究顯示⋯」→ losing trust-preservation mechanism (c) over-producing 嘆號 subheads → slipping into 商業 clickbait register, losing 中研院 institutional weight.
+- **Failure mode**: LLM 預設犯三個錯：(a) 省略 institutional anchor 句型 → 退化為 generic 科普；(b) 把研究員的 hedging paraphrase 成第三人稱的「研究顯示⋯」→ 信任機制流失；(c) 嘆號 subhead 過度生產 → 滑向商業 clickbait register、中研院的機構重量不見了。
 - **Mitigation** (14 chars): "保留中研院專訪句型 + 研究員第一人稱 hedging；避免 clickbait 嘆號"
 
 ## Trigger slug: `zh-tw-research-sinica-popularization`

@@ -13,7 +13,7 @@ pilot_source: research-agent 2026-04-21
 
 ## Voice direction
 
-**What this register achieves**: Peer-irreverent Cantonese vernacular that packs 2-layer puns per slogan. Witty not cinematic. Brand speaks as clever friend-at-the-pub, not oracle-of-fate. Number-wordplay is structural, not decorative.
+**What this register achieves**: 同輩位、帶點不正經的粵語口語，一個 slogan 裡壓著至少兩層 pun。機智而非電影化，品牌說的是「茶餐廳朋友」的話，不是宿命先知。數字的文字遊戲是結構，不是裝飾。
 
 **Native critical read** (4):
 - 「廣告符號意義」(自述《十個廣告九個醜》博益 2000, ISBN 9621780233, with 陳大仁 framework)
@@ -23,12 +23,12 @@ pilot_source: research-agent 2026-04-21
 
 ## Prose mechanics (6)
 
-1. **Cantonese vernacular 保持** — 「靚仔」「睇」「乜」等粵語詞直接進 copy，**不翻成 Mandarin drama**
-2. **Pun 至少 2-layer** — 表面意 + 隱義，單 layer 笑點不算 KC Tsang register
-3. **數字 prime-number humour** — 「10 個 Sunday 用戶 9 個靚仔」(9/10 結構)、prime-number 擺位產生 rhythmic 笑點
-4. **Double-entendre 句尾 pivot** — 「眼鏡 88，看出一點真」— 「一點真」既指視力也指本質
-5. **Irreverent-witty register** — peer-at-pub 聲口，**禁用** cinematic-romance 嚴肅調（朱家鼎 Titus 的 drift trap）
-6. **Branded line 每支只走 1 個 pun** — 避免多 pun 堆砌稀釋
+1. **保留粵語口語** — 「靚仔」「睇」「乜」這類粵語詞直接入 copy，**不翻成普通話劇腔**
+2. **Pun 至少兩層** — 表面意＋隱義，只有單層笑點不算 KC Tsang register
+3. **數字／質數的笑位** — 「10 個 Sunday 用戶 9 個靚仔」（9/10 結構），數字位置本身就是節奏笑點
+4. **句尾雙關 pivot** — 「眼鏡 88，看出一點真」—「一點真」既指視力也指本質
+5. **同輩 + 不正經的氣質** — 茶餐廳朋友的語氣，**禁用電影浪漫的嚴肅調**（這是朱家鼎 Titus 的 register 陷阱）
+6. **一支 slogan 只走一個 pun** — 避免多 pun 堆砌把笑位稀釋掉
 
 ## Examples (3 verbatim, ⚠ coverage thin)
 
@@ -40,8 +40,8 @@ pilot_source: research-agent 2026-04-21
 
 ## Don't / Over-mimic
 
-- **Failure mode**: LLM 傾向流滑向 (a) generic 俏皮體（pun 只 1 layer、失去 Cantonese vernacular 指紋）或 (b) Mandarin drama 化（把 KC Tsang 誤讀為 cinematic）。Cantonese vernacular 本身 LLM coverage 薄，容易退化。
-- **Mitigation** (≤15 words): "保留 Cantonese vernacular 結構；pun 必 2-layer；Mandarin 化禁"
+- **Failure mode**: LLM 容易滑向兩種錯誤 — (a) 寫成 generic 的俏皮體，pun 只剩一層、粵語口語指紋消失；(b) Mandarin drama 化，把 KC Tsang 誤讀成電影浪漫派。粵語口語本身 LLM 的 coverage 薄，退化尤其快
+- **Mitigation** (≤15 words): 「保留粵語結構；pun 必須雙層；禁 Mandarin 化」
 
 ## Trigger slug: `zh-hk-kc-tsang-cantonese-vernacular-pun`
 ## Over-mimic risk: MEDIUM (LLM Cantonese corpus thin, pun auto-mimic hard)
