@@ -1,5 +1,49 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.5 — 2026-04-21 (Phase A batch 7 — 10 final entries, Phase A COMPLETE)
+
+10 final Layer 1 v2 entries. All 5/5 pass. **Phase A migration complete** across the audit KEEP list of ~52 individual-creator anchors.
+
+### Batch 7 (10 entries — larger than usual to close Phase A)
+- Kazuo Ishiguro (EN Q2 toward-Q3) — restrained denial
+- Phoebe Waller-Bridge (EN Q3 extreme) — Fleabag fourth-wall
+- Aaron Sorkin (EN Q2 toward-Q1) — rhetorical rapid-fire (net-new entry)
+- Taika Waititi (EN Q3 toward-Q2) — deadpan-absurd-warmth
+- Greta Gerwig (EN Q3 toward-Q2) — ensemble intimacy
+- Dashiell Hammett (EN Q4 toward-Q3) — terse procedural
+- Anton Chekhov (EN Q3 toward-Q4) — compassionate realism (in translation)
+- Ben Thompson Stratechery (EN Q4 toward-Q1) — peer-analytical framework-naming
+- Nathan Allebach (EN Q3 extreme, 2017-2021 era lock) — Steak-umm Twitter
+- Zaria Parvez (EN Q3 extreme, 2021-2022 era lock) — Duolingo TikTok
+
+### Phase A complete — 54 Layer 1 v2 entries
+
+**Cumulative coverage**:
+- JP: 14 anchors (craft-gate 4/4 complete)
+- zh-TW: 11 anchors (craft-gate 3/3 complete)
+- zh-HK: 2 anchors
+- EN: 27 anchors (Q1/Q2/Q3/Q4 all covered; includes authors, screenwriters, poets, copywriters, SM operators)
+- 100% 5/5 coverage pass rate across all 54
+
+**Creator types covered**:
+- Authors / essayists / novelists / poets (22)
+- Screenwriters / directors (8)
+- Named copywriters (craft-gate) (10)
+- Named CDs (creative directors) (5)
+- Journalists / analysts (3)
+- Individual SM operators (era-locked) (2)
+- Author duo / creative partnership (2)
+- Essayist + film director hybrid (1)
+- Essayist + screenwriter hybrid (1)
+
+**4 languages**: JP / zh-HK / zh-TW / EN
+
+### Still deferred (Phase B-D, future versions)
+
+- **Phase B** (v1.5.0+): recast ~20 institutional-to-individual candidates (原研哉 / 太田恵美 / 金鵬遠 / Kate Kiefer Lee / Richard Reed / Dan Wieden / David Abbott / Lee Clow / Mike Cessario / Michael Dubin / Alex Lieberman etc.)
+- **Phase C** (v1.6.0): move ~25 institutional/brand/platform entries to `format-templates/` + `register-references/` folders
+- **Phase D** (v1.7.0): Update `voice-anchor-meta-core.md` to v2 schema; update Pass 3 SKILL.md §Pass 3d to read v2 (or auto-detect schema_version); replace v1 `standards/*.md` content with v2 Layer 1 entries
+
 ## v1.4.4 — 2026-04-21 (Phase A batch 6 — 6 more Layer 1 v2 entries, EN-focused)
 
 6 saved Layer 1 v2 entries from batch 6 (8 dispatched, 6 saved this commit; 2 under review). All 5/5 pass.
