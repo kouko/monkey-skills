@@ -156,36 +156,60 @@ Anchor with **documented advertising-craft lineage** to a verified copywriter ci
 
 When the listed anchor is invoked, the corresponding mitigation clause MUST appear inline in the prompt or be enforced by the Voice Consistency gate. Omitting mitigation → pastiche leak.
 
+### Source of truth (v1.7.1)
+
+This registry covers TWO categories:
+
+1. **v1-only anchors** (no v2 migration yet) — mitigation lives in this table; Pass 3 consumes directly.
+2. **Movement / campaign / brand-category entries** (not individual-creator anchors) — these have no v2 anchor file because they fail the inclusion criterion (rotating authorship / team-coauthored / generic category). Mitigation stays here as the only home.
+
+**For v2-migrated anchors**: mitigation lives in the anchor's own `Don't / Over-mimic` block (single source of truth). Pass 3 reads it from the anchor file directly, NOT from this registry. See §v2 anchors with inline mitigation (below) for the index.
+
+### Registry table (v1-only anchors + movement / campaign / category)
+
 | Anchor | Auto-leaked tropes | Required mitigation clause (≤15 words) |
 |---|---|---|
 | 村上春樹 Murakami | jazz, cats, wells, whisky, pasta-boiling-while-phone-rings | "no jazz / no cats / no wells / no whisky / no cooking-phone-ring" |
-| 王家衛 Wong Kar-wai | expiration dates, 1-minute, pineapple cans, step-printing | "no expiration imagery / no countdowns / no cans / no step-printing" |
 | 金庸 Jin Yong | 江湖, 內功, 俠氣, 前輩晚輩 | "no wuxia vocabulary; 只借節奏不借詞彙" |
 | 三島由紀夫 Mishima | sword, seppuku, 金閣, nationalist pathos | "avoid violent-aesthetic imagery" |
 | 莫言 Mo Yan | red sorghum, 高密東北鄉, magical-realist hallucination | "no rural-surrealist imagery" |
 | 太宰治 Dazai | "恥の多い生涯", 人間失格 opening register | "no confessional-failure framing" |
 | 余華 Yu Hua | death, blood-selling, famine | "sentence architecture only, no content" |
-| 夏目漱石 Soseki | 「〜である」archaic grammar | "modern grammar only" |
-| Hemingway | "He was tired. The whisky was cold." + he-said/she-said chains | "pair with Carver/Didion; forbid dialogue-tag chains >2" |
-| Didion | "It meant nothing. It meant everything." antithesis tic | "cap rhetorical-antithesis to 1 per 150 words" |
-| Raymond Chandler | "Her eyes were like [noun]" simile cascade | "cap similes to 1 per 50 words" |
 | Cormac McCarthy | "and X and Y and Z" polysyndeton | "forbid triple-conjunction chains" |
-| Aaron Sorkin | "You want X? Let me tell you about X" rhetorical-Q-then-A | "forbid rhetorical-question-plus-answer pattern" |
 | David Foster Wallace | Nested footnotes/parentheticals | "Layer-1 only, never Layer-0 / flatten nesting" |
 | James Ellroy | Telegraph staccato fragments | "avoid for Layer-0; paragraph-level integration required" |
 | Extinction Rebellion Declaration | US-Declaration-of-Independence pastiche on any manifesto | "civic-declarative register ONLY; NOT for commercial product copy" |
 | Nike "Dream Crazy" | "Believe in something. Even if it means sacrificing everything." anaphora | "anaphora limited to 1 series per piece; sacrifice-stake clause reserved" |
-| Duolingo unhinged owl | ALL-CAPS threats / parasocial name-drops post-2023 cliché | "anchor ONLY to 2021-2022 formative window; avoid post-2023 style" |
-| 許舜英 definitional inversion | Hollow 「X 是一種 Y」without cultural-critique payload | "require power-disparity word (政治/殖民/失敗/禁慾/危險)" |
 | Extreme luxury manifesto brands (generic) | Ralph Lauren / Gucci aspirational-heritage auto-drift | "no nostalgia clichés (old-world / heritage / craftsmanship) without specific signifier" |
+
+### v2 anchors with inline mitigation (SSOT in anchor file, NOT here)
+
+The following v2-migrated anchors carry their own `Don't / Over-mimic` block in their `anchor-{slug}.md` file. Pass 3 reads mitigation from the anchor file directly (per v2 schema §Dimension 6 consumer change). These are listed here for **discoverability only** — do NOT duplicate their mitigation clauses into the registry table above.
+
+| Anchor | Mitigation source |
+|---|---|
+| 王家衛 Wong Kar-wai | `anchor-zh-hk-wong-kar-wai-monologue-fragment-temporal.md §Don't / Over-mimic` |
+| 夏目漱石 Soseki | `anchor-jp-soseki-yoyu-ha-dry-observer.md §Don't / Over-mimic` |
+| Hemingway | `anchor-en-hemingway-iceberg.md §Don't / Over-mimic` |
+| Joan Didion | `anchor-en-didion-observational-essay.md §Don't / Over-mimic` |
+| Raymond Chandler | `anchor-en-chandler-hard-boiled-metaphor.md §Don't / Over-mimic` |
+| Aaron Sorkin | `anchor-en-sorkin-rhetorical-rapid-fire.md §Don't / Over-mimic` |
+| Zaria Parvez (Duolingo 2021-2022 era) | `anchor-en-duolingo-parvez-2021-formative.md §Don't / Over-mimic` |
+| 許舜英 | `anchor-zh-tw-xu-shunying-ideological-definitional.md §Don't / Over-mimic` |
+
+Additional v2-migrated anchors with inline mitigation (not flagged for drift in v1 registry historically, but follow the same SSOT rule): all other `anchor-{slug}.md` files under `standards/` carry their own `Don't / Over-mimic` block.
 
 ### Usage rule
 
-Pass 3 agent reads this registry when selecting an anchor. If anchor listed here:
-1. The mitigation clause becomes part of the rewrite prompt
-2. Voice Consistency gate later checks the draft for leaked tropes per this clause
+Pass 3 agent consults mitigation as follows:
 
-If anchor NOT listed here, Pass 3 applies anchor without mitigation (LOW risk default).
+1. **Anchor is v2-migrated** (has `schema_version: 2.0` frontmatter and corresponding `anchor-{slug}.md`): read mitigation from the anchor's own `Don't / Over-mimic` block. Do NOT look in this registry table.
+2. **Anchor is v1-only** (no v2 migration yet): read mitigation from the registry table above.
+3. **Entry is movement / campaign / brand-category** (XR Declaration / Nike Dream Crazy / Extreme luxury manifesto brands): read mitigation from the registry table above (these have no v2 anchor by design).
+
+Voice Consistency gate (Dimension 6) applies the same precedence — v2 anchor file is authoritative; registry is fallback for v1 / movement / category entries.
+
+If anchor NOT listed in either place, Pass 3 applies anchor without mitigation (LOW risk default).
 
 ## Quick reference — anchor lookup flow
 

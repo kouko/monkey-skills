@@ -1,5 +1,35 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.7.1 — 2026-04-21 (over-mimic registry SSOT dedup — resolves v1.7.0 E2E Finding 1)
+
+v1.7.0 E2E test (`docs/voice-anchor-e2e-tests/v1.7.0-pass-3ab-agent-run-findings.md`) surfaced a SSOT violation in `voice-anchor-meta-core.md §Over-mimic mitigation registry`: 8 entries for v2-migrated anchors duplicated their own `anchor-{slug}.md §Don't / Over-mimic` blocks, risking drift. v2 schema already declared anchor-as-SSOT for mitigation (§Dimension 6 consumer change); registry was not swept during v1.4.0+ migration.
+
+v1.7.1 restructures the registry into two explicit categories and moves 8 v2-migrated entries from the registry table to a pointer-index section.
+
+### Changes
+
+- **Split §Over-mimic mitigation registry** into:
+  - **Registry table (v1-only + movement / campaign / category entries)**: 村上春樹 / 金庸 / 三島 / 莫言 / 太宰 / 余華 / McCarthy / DFW / Ellroy / XR Declaration / Nike Dream Crazy / Extreme luxury manifesto (12 rows)
+  - **v2 anchors with inline mitigation (SSOT in anchor file)**: 王家衛 / 夏目漱石 / Hemingway / Didion / Chandler / Sorkin / Duolingo-Parvez / 許舜英 (8 rows, pointer-only)
+- **Updated §Usage rule**: 3-step precedence — (1) v2-migrated → read anchor's own `Don't` block, (2) v1-only → read registry table, (3) movement/category → read registry table
+- Voice Consistency gate (Dimension 6) follows same precedence
+
+### Why
+
+Preserves v2 schema invariant: "anchor is SSOT for mitigation". Prevents drift when anchor file's `Don't` block evolves (v2 migration intent) but registry lags (v1 habit). Discoverability preserved — v2 pointer index lists the 8 anchors + their file paths so reviewers can find mitigation source at a glance.
+
+### Not changed
+
+- Anchor `Don't / Over-mimic` blocks in the 8 anchor files — untouched; they remain the authoritative source
+- 12 v1-only / movement / category registry rows — untouched (still canonical there)
+- Pass 3 dispatch logic (SKILL.md) — no change; Dimension 6 precedence was already implicit in v2 consumer change rule, now explicit
+
+### v1.7.0 E2E Findings 2-4 deferred
+
+- Finding 2: `Cross-reference-valid-for` tier inconsistency (許舜英 anchor) → v1.8.0+
+- Finding 3: Form enum granularity gap → Phase 4 form taxonomy refinement (separate scope)
+- Finding 4: anchor §Coverage self-check cleanup → v1.8.0+ optional
+
 ## v1.7.0 — 2026-04-21 (Pass 3a/3b craft-gate v2 anchor integration — resolves 7 orphaned anchor files)
 
 Post-v1.6.1 audit surfaced 7 craft-gate `anchor-{slug}.md` files that existed as valid v2 Layer 1 bodies but had no Pass 3 load path (Pass 3a/3b was wholesale-loading `{jp,zh}-copy-craft-lineage.md` directly per v1.2.0 behavior, bypassing per-master v2 anchors introduced in v1.4.0+). v1.7.0 rewires Pass 3a/3b to load per-master v2 anchors as primary, with craft-lineage.md becoming conditional-only (attribution corrections / cross-master lineage / era context).
