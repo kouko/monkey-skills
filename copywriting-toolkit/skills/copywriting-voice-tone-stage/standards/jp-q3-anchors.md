@@ -27,7 +27,7 @@ Q3 = Affinity × Emotion. JP canonical: 向田邦子 (center, 真打ち random),
   - Slug: `jp-sawamoto-yoshimitsu-shiroto-family`
   - Recast from v1 「Brand-era pointer: SoftBank 白戸家（佐々木宏 + 澤本嘉光）」→ named CD 澤本嘉光 selected (Phase B v1.5.0).
 
-Craft-gate pointer: 糸井重里 状態提案 register — load [jp-copy-craft-lineage.md](jp-copy-craft-lineage.md).
+Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 ## Landmark: extreme
 

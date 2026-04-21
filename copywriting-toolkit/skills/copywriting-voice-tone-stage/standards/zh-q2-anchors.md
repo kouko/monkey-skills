@@ -12,7 +12,7 @@ migrated_date: 2026-04-21
 ## Overview
 
 Q2 = Authority × Emotion. zh canonical:
-- **zh-TW craft-gate** (許舜英 / 李欣頻 / 葉明桂): routed via `zh-copy-craft-lineage.md`
+- **zh-TW craft-gate** (許舜英 / 李欣頻 / 葉明桂): routed via `voice-anchor-meta-detail.md §Cross-Master Context (ZH)`
 - **zh-HK ECDs**: 朱家鼎 Mike Chu (extreme), KC Tsang (toward-Q1)
 - **zh-HK screenwriter**: 王家衛 (extreme)
 - **zh canonical authors**: 錢鍾書 (toward-Q1), 白先勇 (toward-Q1), 張愛玲 (toward-Q3), 朱天文 (toward-Q3)
@@ -21,11 +21,11 @@ Q2 = Authority × Emotion. zh canonical:
 
 ### Craft-gate pointers (三位 canonical masters — route to craft-lineage)
 
-- **中興百貨 brand-era → 許舜英** — load [zh-copy-craft-lineage.md](zh-copy-craft-lineage.md) §許舜英
+- **中興百貨 brand-era → 許舜英** — load `voice-anchor-meta-detail.md §Cross-Master Context` §許舜英
   - Slug: `zh-tw-zhongxing-xusunying-ideology-era` (brand-era label preserved; craft-gate is the actual voice anchor)
-- **誠品書店 brand-era → 李欣頻** — load [zh-copy-craft-lineage.md](zh-copy-craft-lineage.md) §李欣頻
+- **誠品書店 brand-era → 李欣頻** — load `voice-anchor-meta-detail.md §Cross-Master Context` §李欣頻
   - Slug: `zh-tw-eslite-lixinping-literary-bookstore`
-- **左岸咖啡館 brand-era → 葉明桂** — load [zh-copy-craft-lineage.md](zh-copy-craft-lineage.md) §葉明桂
+- **左岸咖啡館 brand-era → 葉明桂** — load `voice-anchor-meta-detail.md §Cross-Master Context` §葉明桂
   - Slug: `zh-tw-zuoan-yemingui-strategic-cafe`
 
 ## Landmark: extreme
@@ -65,4 +65,4 @@ Q2 = Authority × Emotion. zh canonical:
 ## Migration history
 
 - **v1.0-v1.5.x**: aggregate with 10 inline entries (3 brand-era pointers + 朱家鼎 + KC Tsang + 王家衛 + 錢鍾書 + 白先勇 + 張愛玲 + 朱天文)
-- **v1.6.0** (this file): 7 individual-creator entries moved to flat `anchor-*.md`; 3 brand-era entries collapsed to craft-gate pointers (許舜英 / 李欣頻 / 葉明桂 already in zh-copy-craft-lineage.md)
+- **v1.6.0** (this file): 7 individual-creator entries moved to flat `anchor-*.md`; 3 brand-era entries collapsed to craft-gate pointers (許舜英 / 李欣頻 / 葉明桂 already in voice-anchor-meta-detail.md §Cross-Master Context)

@@ -219,7 +219,7 @@ voice_reference = user-supplied string (or "default")
 Is it in craft-gate masters?
   {糸井重里, 岩崎俊一, 眞木準, 谷山雅計,
    許舜英, 李欣頻, 葉明桂}
-      ├── YES → Tier 1: load jp/zh-copy-craft-lineage.md
+      ├── YES → Tier 1: load voice-anchor-meta-detail.md §Cross-Master Context
       │        + this file (for over-mimic mitigation)
       │
       └── NO → Is voice_quadrant.position = "axis-*"?
@@ -236,7 +236,7 @@ Is it in craft-gate masters?
 ## Cross-references
 
 - [voice-anchor-meta-detail.md](voice-anchor-meta-detail.md) — verified lineage map / cross-reference registry / cross-cultural label rubric / corrections catalog (loaded for register-signal path)
-- [jp-copy-craft-lineage.md](jp-copy-craft-lineage.md) — craft-gate target for JP canonical masters
-- [zh-copy-craft-lineage.md](zh-copy-craft-lineage.md) — craft-gate target for ZH canonical masters
+- `voice-anchor-meta-detail.md §Cross-Master Context` — craft-gate target for JP canonical masters
+- `voice-anchor-meta-detail.md §Cross-Master Context` — craft-gate target for ZH canonical masters
 - Per-quadrant anchor files: `{jp,zh,en}-q{1,2,3,4}-anchors.md` — register-signal inventory
 - [axis-extreme-anchors.md](axis-extreme-anchors.md) — axis-extreme landmarks (V2 expansion)

@@ -16,8 +16,8 @@ date: 2026-04-21
 
 **Native critical read**:
 - 「意識形態廣告」(campaign-house name used natively by 動腦雜誌 / 時報廣告金像獎 archives as register label)
-- 「文化批判 payload underneath definitional inversion」(zh-copy-craft-lineage Drift-Prevention Card)
-- 「power-disparity word」(政治 / 統治 / 殖民 / 失敗 / 禁慾 / 危險 — named by zh-copy-craft-lineage §LLM reproduction gap mitigation)
+- 「文化批判 payload underneath definitional inversion」(meta-detail §Cross-Master Context)
+- 「power-disparity word」(政治 / 統治 / 殖民 / 失敗 / 禁慾 / 危險 — named by meta-detail §Cross-Master Context §LLM Reproduction Gap)
 - 「服裝是一種高明的政治」式 aphorism (王志弘 / 漫遊者編輯語彙、動腦 意識形態特輯反覆徵引)
 - 「三日不購物便覺靈魂可憎」(作者自引於《購物日記》開卷 — self-citation as register anchor)
 
@@ -50,3 +50,5 @@ date: 2026-04-21
 - Pairs with form: [mid-form, short-form-brand-tagline, long-form-extended]
 - Cross-reference-valid-for: jp: WEAK; en: WEAK (power-disparity payload requirement is zh-specific cultural-critique tradition)
 - Stylistic-sibling (not transferability): 張愛玲 aphoristic observation (`anchor-zh-eileen-chang-aphoristic-observation.md`) — shares compressed-observation cadence but 張's register lacks power-disparity payload requirement
+- ⚠ Drift Correction Z3: 意識形態廣告 (Icey) 創立年 = **1987**（非 1988）。許舜英 + 鄭松茂 1987 共同創辦；中興百貨 campaign run 1988-1999 peak；許舜英 2008 離開意識形態加入奧美時尚。中興百貨 2008 關最後一家店。Canonical window = **1988-1999**；post-2000 中興百貨 copy 非 canonical 許舜英 voice
+- ⚠ Drift Correction Z4: 網路流傳的「中興百貨文案」清單**混入後期 agency imitations + 未掛名 copy**。Canonical 許舜英 作品 anchored in 《許舜英購物日記》(漫遊者文化 2011) + 意識形態 award-year archives（時報廣告金像獎 / 4A 自由創意獎 / 亞太廣告獎）。無法 trace 回這些 primary source 的句子一律視為 `[disputed]`，不得掛 許舜英 名引用

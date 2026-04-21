@@ -1,5 +1,84 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.9.0 — 2026-04-21 (craft-lineage dissolution — absorb cross-master content into meta-detail)
+
+Empirical analysis revealed 95% redundancy between `{jp,zh}-copy-craft-lineage.md` per-master sections and the v2 `anchor-{slug}.md` files introduced v1.7.0+. The remaining 5% (Z# attribution corrections, cross-master lineage map, generational era context, cross-master comparison tables, anti-patterns) genuinely cross-cuts masters and belongs in meta-detail, not per-anchor.
+
+v1.9.0 dissolves the craft-lineage files: cross-master content absorbed into `voice-anchor-meta-detail.md §Cross-Master Context`; unique Z# corrections inlined into corresponding anchor Metadata sections; 2 craft-lineage standalone files deleted.
+
+### What got absorbed into meta-detail
+
+New `§Cross-Master Context` section in `voice-anchor-meta-detail.md`:
+- **Primary Sources** (aggregate bibliography for JP + ZH craft-gate masters)
+- **Critical Attribution Corrections** full text (Z1-Z8 JP+ZH + drift #JP-8)
+- **Generational Context** (JP 1980s コピーライターブーム + ZH 1980s-1990s 解嚴後都會消費主義覺醒)
+- **LLM Reproduction Gap Cross-master Summary** table
+- **Voice selection guidance** table
+- **Cross-master Anti-Patterns**
+- **Cross-tradition transplant forbidden** discipline
+
+meta-detail grows ~181 → ~380 lines (~3K → ~5K tokens). Pass 3d register-signal path regression: +~2K per trigger (acceptable, vs proposed +12K if whole craft-lineage was absorbed).
+
+### What got inlined into anchor files
+
+- **Z1** (Altenberg sinicized, not 葉明桂) — already inlined in `anchor-zh-tw-ye-mingui-strategic-aphorism.md §Don't` (v1.6.0)
+- **Z2** (寺山修司 1967 allusion in 李欣頻 誠品) — already preserved in `anchor-zh-tw-lee-hsin-ping-literary-consumption.md §Metadata` as documented lineage
+- **Z3** (意識形態 founded 1987, not 1988; canonical window 1988-1999) — NEW inline in `anchor-zh-tw-xu-shunying-ideological-definitional.md §Metadata`
+- **Z4** (content-farm source discipline — canonical = 《許舜英購物日記》+ award archives) — NEW inline in 許舜英 anchor Metadata
+- **Z5** (多喝水 non-吳念真) — already in `anchor-zh-tw-wu-nien-jen-taiyu-peer-intimate.md` + zh-q3 router
+- **Z7** (長榮 VO 金城武) — already in 吳念真 anchor
+- **Z8** (全聯 ECD 龔大中) — already in 龔大中 anchor + zh-q3 router
+- **drift #JP-8** (リゲイン 非岩崎) — already in `anchor-jp-iwasaki-shunichi-yonin.md` (v1.4.x)
+- **Z6** (孫大偉 JWT misattribution) — KEPT in meta-detail only (no dedicated anchor for 孫大偉; conditional-load triggers on 孫大偉-brief)
+
+### Files removed
+
+- `standards/jp-copy-craft-lineage.md` (269 lines)
+- `standards/zh-copy-craft-lineage.md` (459 lines)
+
+Content byte-identical-preserved: cross-master sections absorbed into meta-detail; per-master voice bodies already in anchor-*.md; per-master biographical arc stays preserved in `docs/voice-anchor-deep-dives/pilot-layer1-v2-{slug}.md` seed files (Layer 2/3 deep-dive home, Pass 3 does NOT load).
+
+### SKILL.md changes
+
+- §"When lineage craft applies" (lines 35-75) — stale v1.2.0 framing removed; now correctly reflects v1.7.0+ per-master anchor load via JP_CRAFT_MASTER_MAP / ZH_CRAFT_MASTER_MAP
+- Pass 3a/3b conditional load target: `jp/zh-copy-craft-lineage.md` → `voice-anchor-meta-detail.md §Cross-Master Context` (section-targeted read ~1.5K, was ~4-8K wholesale load)
+- §"What This Skill Owns" — craft-lineage entries replaced with per-master anchor references
+- Summary of Critical Attribution Corrections added inline (quick-reference)
+
+### Reference updates (batch sed across ~14 files)
+
+14 other files referencing craft-lineage filenames updated:
+- `standards/voice-anchor-meta-core.md` (anchor lookup flow)
+- `standards/voice-anchor-meta-detail.md` (§Cross-Master Context additions + self-reference fix for Z1 pointer)
+- `standards/voice-and-tone.md` (theory-layer reference)
+- `standards/{jp-q2,jp-q3,zh-q2}-anchors.md` (router craft-gate pointers)
+- `standards/anchor-zh-tw-xu-shunying-*.md` (Native critical read citations)
+- `skills/copywriting-ideation/SKILL.md` + `protocols/copy-ideation-advanced.md` (workflow references)
+- `skills/copywriting-intake/protocols/express-mode.md` (intake grounding)
+
+### Provenance & Divergence carve-out
+
+craft-lineage files were Tier 1 byte-identical from `domain-teams:copywriting-team` upstream. v1.9.0 **absorbs** the content into meta-detail rather than deleting: byte-identical text preserved inside the absorbing file's `§Cross-Master Context` section. This is a structural reorganization within copywriting-toolkit, NOT content divergence from upstream canon. Upstream `domain-teams:copywriting-team/standards/{jp,zh}-copy-craft-lineage.md` remain untouched; if domain-teams wants to mirror this consolidation, a separate upstream PR would be required.
+
+### Cumulative state (v1.9.0)
+
+- **standards/**: 97 files (was 99 in v1.8.0; -2 craft-lineage)
+  - 81 `anchor-{slug}.md` flat v2 bodies
+  - 12 `{lang}-q{N}-anchors.md` router indexes
+  - 2 meta (voice-anchor-meta-core + meta-detail, meta-detail now carries §Cross-Master Context)
+  - 1 voice-and-tone
+  - 1 axis-extreme-anchors
+- **Pass 3 dispatch unchanged structurally**: Pass 3a/3b still load per-master anchor + meta-core; conditional cross-master load target changed from craft-lineage file to meta-detail §Cross-Master Context section
+- **0 orphan files** (audited post-change)
+
+### v1.9.0 E2E validation (structural)
+
+- No broken references: batch grep confirms 0 remaining links to deleted craft-lineage files in voice-tone-stage scope
+- Pass 3 dispatch paths intact: Pass 3a/3b mapping tables unchanged; only conditional-load target updated
+- Byte-identical content preservation: Z1-Z8 + era context + cross-master tables verbatim in meta-detail §Cross-Master Context
+
+Full Pass 3 agent-run E2E test against v1.9.0 deferred to v1.9.1 — structural migration low risk (no hot-path change; only conditional-load target reorganization).
+
 ## v1.8.0 — 2026-04-21 (backlog sweep: 11 recasts + 3 zh-TW Q1 new + F2/F4 fixes)
 
 Closes the v1.6.1/v1.7.0 "RECAST pending research" backlog and fills the zh-TW Q1 individual-creator gap. Total: 14 new `anchor-{slug}.md` files (81 total anchors now in standards/). Also addresses E2E Findings 2 and 4 from v1.7.0 agent-run test.
