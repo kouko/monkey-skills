@@ -387,6 +387,109 @@ Per `feedback_cc_type_whitelist`: only {refactor, feat, fix, chore, docs} allowe
 - v1.3.0 (current) → v1.4.0 (PR 1 foundation) → v1.4.1 (PR 2 JP/zh) → v1.4.2 (PR 3 EN/pipeline)
 - plugin.json version bump in each PR's final `chore:` commit
 
+## Token cost analysis
+
+Token estimates based on ~12 tokens/line for markdown with entry metadata. All figures are per-pipeline-run unless stated.
+
+### Baseline (current pipeline, pre-implementation)
+
+| Phase | Always-loaded | Conditional (Pass 3) | Total |
+|---|---|---|---|
+| Phase 5 | voice-quadrant-positioning.md (~8K) + SKILL.md (~3K) | — | ~11K |
+| Phase 6 | voice-and-tone.md (~4K) + SKILL.md (~5K) | jp or zh lineage (0-5.3K, 20% trigger) | ~9-14K |
+| **Total** | — | — | **~20-25K** |
+
+### New architecture (PR 1+2+3 merged)
+
+**File size estimates**:
+- `voice-anchor-meta.md`: ~400 lines / ~5K tokens
+- `{lang}-q{N}-anchors.md` (12 files): avg ~250 lines / ~3K tokens each
+- `axis-extreme-anchors.md` (MVP stub): ~150 lines / ~2K tokens
+- Existing `jp-copy-craft-lineage.md` / `zh-copy-craft-lineage.md`: unchanged
+
+**Pass 3 path weighted cost** (with estimated brief-type distribution):
+
+| Path | Trigger rate | Baseline + meta | Pass 3 conditional | Per-run total | vs baseline |
+|---|---|---|---|---|---|
+| No Pass 3 (short-form, no voice_reference) | ~10% | 20K + 5K meta = 25K | 0 | ~25K | +5K (meta) |
+| Craft gate (existing 6 masters) | ~20% | 25K | +3.3-5.3K lineage | ~28-30K | +5-8K |
+| Register signal (new, no cross-lang) | ~40% | 25K | +3K quadrant | ~28K | +3-8K (new capability) |
+| Register signal (JP→zh-TW STRONG) | ~20% | 25K | +6K (zh-qN + jp-qN) | ~31K | +6-11K |
+| Axis extreme (MVP placeholder) | ~5% | 25K | +2K | ~27K | +2-7K |
+| Axis extreme (V2 populated) | future ~5% | 25K | +5K | ~30K | +5-10K |
+
+**Weighted per-run average**: `0.1×25 + 0.2×29 + 0.4×28 + 0.2×31 + 0.1×27 = ~28.7K tokens`
+
+**Delta vs baseline**: **+3-4K tokens per run (+15-20% per pipeline average)**
+
+### Architecture comparison (why Option B3 is the most token-efficient path given scope)
+
+| Architecture | Pass 3 peak load | Per-run weighted avg | Notes |
+|---|---|---|---|
+| Current (6 masters only, no expansion) | 5.3K | ~22K | No register-signal capability |
+| **Option B3 (this plan)** | **6K** | **~28.7K** | Per-quadrant ~3K each |
+| Option B (per-language monolithic) | 13K | ~35K | Per-lang file ~10-13K |
+| Option A (single voice-anchor-taxonomy.md) | 50K+ | OOM risk | Not viable |
+
+**Key win**: Option B3 saves **~7-10K tokens per Pass 3 trigger** vs Option B because per-quadrant files are 3-4× smaller than per-language monolithic. This saving compounds across `copywriter` + `copywriter-evaluator` agent invocations per pipeline.
+
+### Per-agent multiplier (pipeline with multiple voice-touching agents)
+
+Each subagent invocation independently loads the standards it needs — context is not shared across agents. Worst-case short-form pipeline run with voice-touching phases:
+
+| Phase | Agent | Voice-standards delta |
+|---|---|---|
+| Phase 4 draft | copywriter | +3K (voice hint for drafting) |
+| Phase 5 quadrant | copywriter | +11K (existing, unchanged) |
+| Phase 6 Pass 1-3 | copywriter + evaluator | +10K avg (meta + quadrant anchor + gate rubric) |
+| Phase 8 form check | evaluator | +3K (if over-mimic check subset loaded) |
+| **Voice-related total per pipeline** | — | **~27K per full run** |
+
+Baseline equivalent: ~15K (Phase 5 q-positioning 11K + Phase 6 lineage conditional 4K if triggered).
+
+**Delta per voice-intensive pipeline**: **+12K (~+80%)** in worst-case. Typical briefs cluster around +3-6K per run.
+
+### Cost breakdown by category
+
+1. **Always-load overhead (`voice-anchor-meta.md` ~5K)**: every run pays, regardless of Pass 3
+2. **Per-trigger conditional load (3-6K)**: varies by Pass 3 branch (craft-gate / register-signal / axis-extreme)
+3. **Per-agent multiplier**: each standards-consuming agent loads its own copy of relevant standards
+
+### Optimization options (for v1.5 if usage shows pain)
+
+| Optimization | Savings | Cost | When to trigger |
+|---|---|---|---|
+| **Meta split**: core (~2K always) + rich (~3K conditional) | -3K on no-Pass-3 runs (~10% of briefs) | Load logic complexity | If real-usage avg exceeds 40K voice-stack tokens |
+| **Progressive disclosure within quadrant file**: landmark sections lazy-loaded by `voice_quadrant.position` | -1-2K per load | Requires precise position field | v2 pipeline upgrade |
+| **Lazy cross-ref registry**: only load when applicable | -500 tokens/run | Moderate | v1.5 |
+| **Meta.md only on Pass 3 trigger**: remove always-load | -5K on no-Pass-3 runs | Phase 7/8 may need meta subset | v1.5 after usage audit |
+| **YAML frontmatter tighter template** | -20-30% per file | Readability loss | Not recommended |
+| **Split quadrant into center/extreme files** | -1-2K per load | 12 → 24 files; too fragmented | Not recommended |
+
+### Trigger criteria for v1.5 optimization
+
+Activate optimization work if any of:
+
+- Real-usage pipeline average exceeds **40K voice-stack tokens** across representative briefs
+- User feedback cites voice-stack loading as bottleneck (perceived latency > 15s for Pass 3 skills)
+- Cost tracking shows voice-stack token cost > 60% of full pipeline token cost
+
+Below these thresholds, Option B3 baseline is acceptable.
+
+### Honest trade-off summary
+
+**Cost**: +3-4K tokens per run weighted average (+15-20%)
+
+**In exchange**:
+- 60% of briefs gain register-signal capability that didn't exist
+- Pass 3 load per trigger ~7-10K smaller than Option B alternative
+- Tier 1 byte-identical policy preserved (zero drift risk)
+- Backward compatible for existing 6-master craft-gate flow (~20% of briefs unchanged)
+
+No architecture achieves lower token cost while delivering the register-signal capability. Cheaper architectures (skip expansion / skip Layer-0) lose voice precision; more expensive architectures (Option B monolithic / single taxonomy file) burn 2-3× more per trigger.
+
+**Recommendation**: ship as planned; measure actual pipeline token usage for 2 weeks post-merge; revisit optimization only if v1.5 trigger criteria met.
+
 ## Risks
 
 1. **Upstream sync conflict**: if domain-teams zh-copy-craft-lineage.md receives concurrent edits between upstream merge and toolkit sync, diff may not match. Mitigation: keep upstream PR small (drift-only), merge, immediately sync.
