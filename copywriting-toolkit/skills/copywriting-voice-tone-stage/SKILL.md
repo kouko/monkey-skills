@@ -267,14 +267,13 @@ master:
   — discipline-centric (3-reason test per candidate + compressive
   restraint).
 
-**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.0) — load ONLY when:
-1. Brief explicitly requires cross-master lineage / historical era / critical debate context
-2. Attribution risk triggered (e.g. rival-of-master misattribution common in user briefs)
-3. Draft involves multiple JP masters side-by-side comparison
+**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
+1. Brief explicitly requires cross-master lineage / historical era / critical debate context (genuinely cross-master)
+2. Draft involves multiple JP masters side-by-side comparison
 
-Default: do NOT load meta-detail. v2 anchor body carries sufficient voice signature + per-master `Don't` block for standalone rewrite.
+Default: do NOT load meta-detail. v2 anchor body carries sufficient voice signature + per-master `Don't` block + inline drift #JP-8 correction for standalone rewrite. v1.9.2 note: attribution-risk no longer auto-triggers meta-detail — all JP drift corrections are inlined in the corresponding anchor's Metadata.
 
-**Critical attribution corrections (JP)** — 『リゲイン「24時間戦えますか？」』is NOT 岩崎俊一 (drift #JP-8). Correction inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. For full cross-master correction set, see `voice-anchor-meta-detail.md §Cross-Master Context`.
+**Critical attribution corrections (JP)** — drift #JP-8 (リゲイン「24時間戦えますか？」NOT 岩崎) inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. Authoritative drift index in `voice-anchor-meta-detail.md §Drift corrections catalog`.
 
 #### Pass 3b — ZH lineage (ZH trigger matched, v1.7.0 per-master v2 load)
 
@@ -295,19 +294,14 @@ Load the master-specific v2 anchor file (from ZH_CRAFT_MASTER_MAP above):
   warmth). Distinguished from 許舜英's cool manifesto register by
   brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
 
-**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.0) — load ONLY when:
+**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
 1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register differentiation)
-2. Attribution correction risk triggered (Peter Altenberg / 寺山 allusion chains / Z1-Z8)
-3. Brief references 意識形態 廣告 institutional-era context (1987-1999 decade)
+2. Brief references 意識形態 廣告 institutional-era context (1987-1999 decade) — Generational Context section
+3. Brief references **孫大偉** (only ZH drift without an anchor home — Z6 lives in meta-detail)
 
-Default: do NOT load meta-detail. Per-anchor `Don't` block + anchor Metadata carry inlined Z1 (葉明桂 anchor) + Z3/Z4 (許舜英 anchor) + Z5/Z7 (吳念真 anchor) + Z8 (龔大中 anchor + zh-q3 router) + 寺山 lineage (李欣頻 anchor).
+Default: do NOT load meta-detail. Per-anchor `Don't` block + anchor Metadata carry inlined Z1 (葉明桂 anchor) + Z2 (李欣頻 anchor) + Z3/Z4/Z11 (許舜英 anchor) + Z5/Z7 (吳念真 anchor) + Z8/Z10 (龔大中 anchor + zh-q3 router) + Z9 (KC Tsang anchor). v1.9.2 note: attribution-risk triggers no longer need meta-detail unless Z6-specific.
 
-**Critical attribution corrections (ZH)** — authoritative source is `voice-anchor-meta-detail.md §Cross-Master Context §Critical Attribution Corrections`. Quick-reference summary (trigger conditional load for full context):
-- 「我不在咖啡館...」(Peter Altenberg sinicized, NOT 葉明桂 original) — Z1
-- 「拋開書本到街上去」(李欣頻, referencing 寺山修司 1967) — Z2
-- 意識形態廣告 founded **1987** (not 1988); 中興百貨 canonical window 1988-1999 — Z3
-- Content-farm "中興百貨 文案" mixes canonical with post-2000 imitations; canonical = 《許舜英購物日記》+ 意識形態 award archives — Z4
-- 孫大偉 agency = 奧美 → 偉太 (NOT JWT) — Z6
+**Critical attribution corrections (ZH)** — authoritative drift index in `voice-anchor-meta-detail.md §Drift corrections catalog`. Per-anchor inlines are SSOT. Exception: Z6 (孫大偉 agency = 奧美 → 偉太, NOT JWT) has no anchor home; lives in meta-detail Z6 section.
 
 #### Pass 3 cross-branch common rules
 

@@ -11,7 +11,7 @@ tier: 2
 
 ## Purpose
 
-This file provides the minimum operational metadata Pass 3 needs to correctly read and apply ANY voice anchor (whether from craft-gate `{jp,zh}-copy-craft-lineage.md`, register-signal `{lang}-q{N}-anchors.md`, or axis `axis-extreme-anchors.md`). Schema + rubric + mitigation are "hot path" because they are consulted on every anchor invocation.
+This file provides the minimum operational metadata Pass 3 needs to correctly read and apply ANY voice anchor (whether from craft-gate per-master `anchor-{jp,zh-tw}-{master}-*.md` via `JP/ZH_CRAFT_MASTER_MAP`, register-signal `{lang}-q{N}-anchors.md` router → `anchor-{slug}.md` body, or axis `axis-extreme-anchors.md`). Cross-master attribution / era / comparison audit content lives in `voice-anchor-meta-detail.md §Cross-Master Context` (conditional Pass 3a/3b load + always-on Pass 3d load). Schema + rubric + mitigation are "hot path" because they are consulted on every anchor invocation.
 
 ## Schema version selector (v1.5.0)
 
@@ -65,46 +65,14 @@ Source of truth spec: `docs/anchor-schema-v2.md`. Fields Pass 3 reads:
 
 **v2 Dimension 6 consumer change**: the over-mimic mitigation clause is now read directly from the anchor's own `Don't / Over-mimic` block, not from the legacy registry table in §Over-mimic mitigation registry. For v2 entries, the anchor file IS the single source of truth for mitigation. For v1 entries, the registry table still applies.
 
-## v1 schema (legacy, still supported during migration)
+## v1 schema (legacy — registry-row entries only)
 
-Every v1 anchor entry follows this structure:
+As of v1.9.2, **no anchor files use v1 schema body** — all 81 `anchor-{slug}.md` carry `schema_version: 2.0` frontmatter and v2 body structure. The full v1 body spec has been removed (was obsolete; no writer / consumer).
 
-```
-### {anchor name} ({culture} | {quadrant} {landmark position})
+v1-era remnants still present:
+- **9 v1-only authors in §Over-mimic mitigation registry below** (村上春樹 / 金庸 / 三島 / 莫言 / 太宰 / 余華 / McCarthy / DFW / Ellroy) — registry-row entries only (anchor name + auto-leaked tropes + mitigation clause), NOT full v1 anchor bodies.
 
-- **Era**: {start-year - end-year, or "ongoing"}
-- **Agency / creator**: {attribution (specific person / agency / team)}
-- **Primary sources**: {2-3 verifiable — Wikipedia URL / ISBN / Brain / TCC / D&AD / Cannes / author book}
-- **Representative lines** (verbatim, not paraphrase):
-  - {line 1}
-  - {line 2}
-  - {line 3}
-- **Voice signature** (3-4 dimensions):
-  - Dimension 1: {characteristic}
-  - Dimension 2: {characteristic}
-  - Dimension 3: {characteristic}
-  - Dimension 4: {characteristic}
-- **LLM corpus depth**: DEEP / MEDIUM-DEEP / MEDIUM / THIN — {rationale}
-- **Over-mimic risk**: LOW / MEDIUM / HIGH
-  - Mitigation (required if HIGH, ≤15 words): "{clause}"
-- **Cross-reference-valid-for** (optional):
-  - {other lang}: STRONG / MEDIUM / WEAK
-- **Cross-cultural equivalents**: {parallel anchors in other cultures}
-- **Trigger slug**: `{culture}-{name-kebab-case}-{style-label}`
-```
-
-### Field semantics
-
-| Field | Meaning | Used by |
-|---|---|---|
-| `era` | Canonical window when voice is citable | Phase 5 era-boundary flags |
-| `primary sources` | Verifiable citations | Gate verdict rationale; drift protection |
-| `representative lines` | Verbatim corpus (no paraphrase) | Pass 3 register template |
-| `voice signature` | 3-4 operational dimensions | Pass 3 craft application |
-| `LLM corpus depth` | Proxy for retrieval reliability | Anchor selection rubric condition 1 |
-| `over-mimic risk` + mitigation | Load-bearing guardrail against pastiche | Pass 3 application + Voice Consistency gate |
-| `cross-reference-valid-for` | Target-language strengths | Phase 5 cross-lang resolver + Pass 3 cross-lang load |
-| `trigger slug` | Kebab-case reference token | `brief.voice_reference` matching |
+§Schema version selector above still detects `schema_version` frontmatter; anything without it falls back to "treat as registry-row reference only, not as standalone anchor body".
 
 ## Anchor selection rubric — 4 conditions
 
