@@ -1,5 +1,56 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.1 — 2026-04-21 (JP + zh-TW anchor content + drift corrections Z5-Z11)
+
+PR 2 of 3. Populates JP + zh-TW per-quadrant anchor inventory (8 files × 4 landmarks = 32 landmark sections). Applies Z5-Z11 drift corrections to existing zh-copy-craft-lineage.md + new zh-q2/zh-q3 inventory entries.
+
+### Files changed
+
+**Drift correction** (existing Tier 1 toolkit-originated):
+- `zh-copy-craft-lineage.md` — added Z5-Z8 drift corrections to §Critical Attribution Corrections:
+  - Z5: 多喝水 ≠ 吳念真 (奧美 in-house)
+  - Z6: 孫大偉 agency = 台灣奧美 / 偉太 (NOT JWT)
+  - Z7: 長榮〈I SEE YOU〉VO = 金城武 (NOT 吳念真)
+  - Z8: 全聯經濟美學 creative lead = 龔大中 (NOT 林敬凱; 邱彥翔 is actor)
+  - (Z11 covered by existing Z3: 意識形態 founders = 許舜英 + 鄭松茂)
+
+**JP quadrant inventory (populated)**:
+- `jp-q1-anchors.md` — 朝日天声人語 (center) + 東洋経済/日経ビジネス (center) + Reuters JP/日経社説 (extreme with intl-wire caveat) + 夏目漱石 (toward-Q2) + 伊丹十三 (toward-Q4)
+- `jp-q2-anchors.md` — MUJI 原研哉 (center) + JR東海 そうだ京都 (center) + 寺山修司 (extreme, LINEAGE VERIFIED with 李欣頻) + 谷崎《陰翳礼讃》(toward-Q1) + 川端康成 (toward-Q3) + craft-gate pointers to 糸井/岩崎/眞木/秋山
+- `jp-q3-anchors.md` — 向田邦子 + 坂元裕二 (center) + 谷川俊太郎 (extreme, LINEAGE VERIFIED with 糸井) + 宮沢賢治 + 吉本ばなな (extreme) + 梅田悟司 Georgia (toward-Q2)
+- `jp-q4-anchors.md` — クックパッド + Kurashicom Q4-subset (center, with Q3/Q4 boundary warning) + ジャパネットたかた 高田明 1990-2015 founder (extreme) + 通販生活 + UNIQLO LifeWear (toward-Q1) + ワークマン SNS (toward-Q3)
+
+**zh-TW quadrant inventory (populated)**:
+- `zh-q1-anchors.md` — 天下雜誌 + 報導者 center register + 研之有物 (center) + 報導者 investigative (extreme, Q1-Q2 edge flag) + 商業周刊 (toward-Q4); Q1-toward-Q2 gap flagged for V2
+- `zh-q2-anchors.md` — 中興百貨/誠品/左岸 brand-era pointers to craft-gate (center) + **朱家鼎 KC Tsang** 鐵達時 HK (extreme, **Z9 correction applied**: KC Tsang NOT Calvin Choy; BBDO NOT JWT) + 王家衛 (extreme, per meta-core over-mimic mitigation) + 錢鍾書 圍城 + 白先勇 (toward-Q1) + 張愛玲 (toward-Q3, stylistic parallel to 許舜英 flag) + 朱天文 侯孝賢 lineage
+- `zh-q3-anchors.md` — **全聯 TV-era 2006-2014 格言體 (center, Z10 re-classification)** + 吳念真 保力達B (Z5/Z7 inline) + 胡湘雲 大眾銀行 (center) + 故宮「朕知道了」+ 台灣吧 + 杜蕾斯 CN cross-pollination (extreme) + 黃春明 + 三毛 (toward-Q2)
+- `zh-q4-anchors.md` — PChome/MOMO/7-ELEVEN OPEN 將 (center) + 全聯 SNS post-2020 (extreme, distinct from TV-era Z10) + 蝦皮 雙11 + Pinkoi designer-story (toward-Q3) + JP Q4 heavy cross-ref (native corpus thin)
+
+### Critical drift corrections surfaced in active inventory
+
+- **Z9 (applied in zh-q2-anchors.md)**: HK CD name = **KC Tsang** (NOT Calvin Choy, unrelated finance YouTuber); agency path = **BBDO HK ECD 1998** (NOT JWT). Per [曾錦程 Wikipedia zh-HK](https://zh.wikipedia.org/zh-hant/曾錦程) + ISBN 9621780233 + ISBN 9888488279.
+- **Z10 (applied in zh-q3-anchors.md)**: 全聯 TV-era 2006-2014 re-classified as **Q3-CENTER** (格言 / aphorism register), NOT Q3-extreme. Q3-extreme reserved for peer-intimate voices (故宮 / 台灣吧) where brand speaks as friend-at-2am. 對仗結構「本錢 / 本事」is aphoristic discipline, not peer-intimate.
+- **Stylistic parallel flag (張愛玲 / 許舜英)**: marked as "critical-consensus stylistic parallel, NOT documented citation" per meta-detail §Inferred parallels.
+
+### Documented lineages applied
+
+Two craft-gate master lineages referenced via verified meta-detail map:
+- 糸井重里 → 谷川俊太郎 (cross-linked in jp-q3 extreme landmark)
+- 李欣頻 → 寺山修司 (cross-linked in jp-q2 extreme landmark via meta-detail verified map)
+
+### Token cost
+
+Pass 3 load logic NOT refactored in v1.3.1 (lands in v1.3.2 PR 3). Content is in place but skill still uses v1.2.0 lineage-only Pass 3 path. Token cost unchanged until PR 3 merges.
+
+### Out of scope (PR 3 v1.3.2)
+
+- EN quadrant inventory (en-q1/q2/q3/q4-anchors.md) — still skeleton
+- Pass 3 load logic refactor (register-signal + axis-extreme branches)
+- `voice_quadrant.position` optional envelope field
+- Voice Consistency gate over-mimic adherence dimension
+
+---
+
 ## v1.3.0 — 2026-04-21 (Voice Anchor Library foundation — scaffold + meta split + landmark sections)
 
 Foundation PR for voice anchor library expansion. 15 new toolkit-originated files scaffolded; content population lands in subsequent releases (v1.3.1 JP+zh / v1.3.2 EN+pipeline integration).
