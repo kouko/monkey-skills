@@ -111,6 +111,30 @@ Over-mimic risk is LOW or MEDIUM natively, OR the mitigation clause fits in ≤1
 
 Anchor with **documented advertising-craft lineage** to a verified copywriter citation (primary source = author's own book / verified interview / TCC 年鑑 / 宣伝会議 / Brain magazine) gets +1 tier. See [verified lineage map in meta-detail](voice-anchor-meta-detail.md#verified-lineage-map).
 
+### Condition 5: Negation-of-axis rule (v1.10.0)
+
+When `brief.tone_cue` contains an **explicit negation of an axis or an axis-adjacent cluster** — e.g., "not corporate", "not artisan-snob", "not funny", "not preachy", "not aspirational" — Pass 3 auto-selector MUST:
+
+1. Forbid the negated axis/cluster from consideration. Example: "not corporate" → Authority axis forbidden → Q1/Q2 candidates downgraded.
+2. Record the forbidden axis in `voice_quadrant.rationale` so Phase 6 gates can verify the rewrite does not drift back.
+3. If no anchor satisfies the negation (all candidates fail), emit a `violation` envelope to intake requesting tone_cue clarification.
+
+Example from v1.9.x E2E (JP meditation app): `tone_cue: "calming, not corporate"` → Authority axis forbidden → Q1/Q2 craft-gate masters (糸井 / 岩崎 state-proposal) eliminated → Q3 private-space register selected (吉本ばなな).
+
+### Safe-substitute lookup (v1.10.0)
+
+When `brief.voice_reference` names a master with **HIGH over-mimic risk** in the registry (村上春樹 / Hemingway / Didion / Chandler / Sorkin / Duolingo-Parvez / etc.), Pass 3 MAY auto-suggest a safer alternative by querying anchor frontmatter:
+
+```
+candidates = [anchor for anchor in standards/*.md
+              if named-master ∈ anchor.frontmatter.safe_substitute_for]
+```
+
+If a candidate exists AND its over-mimic risk is LOWER than the named master's, Pass 3 emits `register_signal_applied.substitute_suggested = {slug, rationale}` alongside the primary selection. The user-specified master remains the default primary unless user confirms substitute in a follow-up turn.
+
+Current documented substitutes (expand as research surfaces more):
+- 吉本ばなな `anchor-jp-yoshimoto-banana-j-bungaku.md` has `safe_substitute_for: [村上春樹]` — same peer-intimate cadence, LOWER over-mimic risk (no jazz/cats/wells tropes).
+
 ### Automatic rejection
 
 - Voice inseparable from ideological/traumatic content (三島 nationalist / 莫言 magical-realist-rural / 余華 death-content)

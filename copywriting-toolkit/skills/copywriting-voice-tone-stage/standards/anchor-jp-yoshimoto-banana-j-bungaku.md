@@ -5,6 +5,7 @@ culture: JP
 quadrant: Q3
 landmark: extreme
 creator_type: author
+safe_substitute_for: [村上春樹]
 pilot_round: batch-5
 date: 2026-04-21
 ---
