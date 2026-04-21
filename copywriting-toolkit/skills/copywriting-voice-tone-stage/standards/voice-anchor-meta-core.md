@@ -13,9 +13,61 @@ tier: 2
 
 This file provides the minimum operational metadata Pass 3 needs to correctly read and apply ANY voice anchor (whether from craft-gate `{jp,zh}-copy-craft-lineage.md`, register-signal `{lang}-q{N}-anchors.md`, or axis `axis-extreme-anchors.md`). Schema + rubric + mitigation are "hot path" because they are consulted on every anchor invocation.
 
-## Anchor entry schema
+## Schema version selector (v1.5.0)
 
-Every anchor entry across all files follows this structure:
+Anchor entries now exist in two schemas. Pass 3 must detect schema version before field extraction.
+
+**Detection rule**:
+- If anchor file frontmatter contains `schema_version: 2.0` → use **Layer 1 v2 schema** (below, §v2 schema)
+- Otherwise (no `schema_version` OR `schema_version: 1.x`) → use **v1 schema** (original, below)
+
+Both schemas coexist during migration window. v2 entries are individually re-researched per `docs/anchor-schema-v2.md` inclusion criterion. Entries without individual-creator authorship have been moved to `docs/format-templates/` (institutional/platform) or `docs/register-references/` (documented movements/campaigns) — those are NOT voice anchors and are NOT loaded by Pass 3.
+
+## v2 schema (Layer 1 purpose-centric, preferred going forward)
+
+Source of truth spec: `docs/anchor-schema-v2.md`. Fields Pass 3 reads:
+
+```
+### {anchor name} ({culture} | {quadrant} {landmark position})
+
+## Voice direction
+**What this register achieves**: {one-line register intent}
+
+**Native critical read** (≥3):
+- 「{verbatim term}」({source: critic/author/trade-press})
+- ...
+
+## Prose mechanics (≥5, actionable)
+- {Rule 1 — sentence-level, concrete}
+- ...
+
+## Examples (≥5 verbatim)
+- 「{verbatim line}」({work, year, context})
+- ...
+
+## Don't / Over-mimic
+- **Failure mode**: {LLM-default-drift specific to this anchor}
+- **Mitigation** (≤15 words): "{injectable clause}"
+
+## Metadata
+- Trigger slug: {culture}-{kebab}-{style-label}
+- Over-mimic risk: LOW / MEDIUM / HIGH / HIGH+
+- Pairs with form: [form1, form2, ...]
+- Cross-reference-valid-for (optional): {other-lang}: STRONG / MEDIUM / WEAK
+```
+
+**v2 validation** (anchor passes iff ALL 5 hold):
+1. Voice direction present (1 line, substantive)
+2. Native critical read has ≥3 attributed phrases
+3. Prose mechanics has ≥5 actionable rules
+4. Examples has ≥5 verbatim with source
+5. Don't / Over-mimic has failure mode + ≤15-word mitigation
+
+**v2 Dimension 6 consumer change**: the over-mimic mitigation clause is now read directly from the anchor's own `Don't / Over-mimic` block, not from the legacy registry table in §Over-mimic mitigation registry. For v2 entries, the anchor file IS the single source of truth for mitigation. For v1 entries, the registry table still applies.
+
+## v1 schema (legacy, still supported during migration)
+
+Every v1 anchor entry follows this structure:
 
 ```
 ### {anchor name} ({culture} | {quadrant} {landmark position})

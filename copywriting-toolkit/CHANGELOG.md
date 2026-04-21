@@ -1,5 +1,53 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.5.0 — 2026-04-21 (Phase B recasts + Phase C folder scaffolding + Phase D schema selector)
+
+10 individual-creator recasts for previously institutional/brand/campaign anchors; new `docs/format-templates/` + `docs/register-references/` folders holding migrated-out entries; `voice-anchor-meta-core.md` v2 schema spec added alongside v1 (both coexist during migration); SKILL.md Pass 3d auto-detects schema version via frontmatter.
+
+### Phase B — 10 Layer 1 v2 recast entries (all 5/5 pass)
+
+Brand/campaign anchors recast to their named individual creators per `docs/anchor-schema-v2.md` inclusion criterion.
+
+- 金鵬遠 (zh-CN/zh-TW Q3 extreme) — 杜蕾斯借勢文案 2011-2017 era lock (STRICT)
+- 龔大中 (zh-TW Q3 center) — 全聯格言體 craft-gate
+- Lee Clow (EN Q2 extreme) — visionary manifesto (Apple "1984" + "Think Different" + "Get a Mac" across 20+ year ECD tenure)
+- Michael Dubin (EN Q3 toward-Q4) — DTC founder-spokesperson deadpan (Dollar Shave Club 2012 launch)
+- 澤本嘉光 (JP Q3 center) — 白戸家世界観 (SoftBank 2007-)
+- Tim Delaney (EN Q2 toward-Q1) — Patek Philippe stewardship register (1996- "Generations")
+- Alex Lieberman (EN Q3 center) — Morning Brew peer-finance 2015-2020 era
+- Mike Cessario (EN Q3 toward-Q4) — Liquid Death heavy-metal-water (2019-)
+- Yvon Chouinard (EN Q2 toward-Q4) — Patagonia conscience register (Don't Buy This Jacket 2011 + Let My People Go Surfing)
+- Martin Puris (EN Q1 extreme) — BMW engineering-precision (1975-1996 Ammirati & Puris tenure)
+
+### Phase C — `docs/format-templates/` + `docs/register-references/` folder scaffolding
+
+New non-anchor holding folders per `docs/voice-library-recast-audit.md` MOVE-OUT decisions:
+
+- **`docs/format-templates/README.md`** — purpose, scope (magazines / newspapers / wire services / institutional platforms / SNS / IP mascots / e-commerce platforms / brand institutional voices), entries slated to migrate (天声人語, 東洋経済, Reuters JP, 日経社説, クックパッド, 通販生活, ワークマン, 研之有物, 故宮粉絲團, PChome, 7-ELEVEN OPEN 將, 全聯 SNS post-2020, Shopee, Pinkoi, Amazon, REI, IKEA), and rule that Pass 3 does NOT load these as voice anchors.
+- **`docs/register-references/README.md`** — purpose, scope (documented movements / magazine institutional voices / campaign-level entries with rotating authorship), entries slated to migrate (XR Declaration, Economist brand voice, 天下雜誌, 報導者, 商業周刊, Nike "Dream Crazy"), and rule that these are mitigation-only references (anti-patterns for Dimension 6), not voice sources.
+
+Actual entry-by-entry migration from v1 `standards/*-anchors.md` into these folders is progressive — entries move as Phase D refactors each `-anchors.md` file to v2 schema. v1 entries remain in place during migration window so Pass 3 still resolves them.
+
+### Phase D — schema selector + Pass 3d auto-detect
+
+- `voice-anchor-meta-core.md` adds **§Schema version selector** + **§v2 schema (Layer 1 purpose-centric, preferred going forward)** alongside the preserved §v1 schema. Both schemas coexist during migration; Pass 3 detects via `schema_version: 2.0` frontmatter.
+- SKILL.md Pass 3d §Register-Signal apply updated: step 1 now includes schema auto-detect instructions + pointer to `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` as the current v2 entry location; step 2 clarifies v2 entries carry their own over-mimic mitigation inline (the anchor file IS the single source of truth for v2), while v1 entries still use meta-core's legacy registry table.
+
+Full `standards/*.md` replacement (v1 entries → v2) deferred to v1.6.0+; requires per-file rewrite for 14 anchor files and is substantial enough for its own release. Current v1.5.0 state: Pass 3 routes work against v1 standards (still 100% valid), v2 pilot entries are reachable by name via audit file, and schema selector is in place so the migration can proceed incrementally.
+
+### Cumulative v2 state (after v1.5.0)
+
+- **54 Phase A entries** (already-individual) +  **10 Phase B recasts** (institutional → individual) = **64 Layer 1 v2 entries** in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md`
+- 2 new holding folders (`format-templates/` + `register-references/`) with READMEs + migration lists
+- Schema selector live: Pass 3 reads either v1 or v2 based on frontmatter
+- v1 `standards/*-anchors.md` files unchanged — full migration incremental
+
+### Still deferred (post-v1.5.0)
+
+- **v1.6.0+**: per-`standards/*-anchors.md`-file rewrite replacing v1 entries with v2 structure; physically move MOVE-OUT entries into `format-templates/` + `register-references/` bodies (not just lists)
+- **Phase B remainder (optional)**: 青木耕平 (北欧、暮らしの道具店), 佐藤可士和 (UNIQLO LifeWear), 謝政豪/蕭宇辰 (台灣吧), Richard Costello/Geoff Hayes (Absolut) — these are lower-priority and may stay as v1 entries until corpus justification
+- **Cross-reference integrity sweep**: after v1.6.0 refactor, re-map `cross-reference-valid-for` links in meta-detail
+
 ## v1.4.5 — 2026-04-21 (Phase A batch 7 — 10 final entries, Phase A COMPLETE)
 
 10 final Layer 1 v2 entries. All 5/5 pass. **Phase A migration complete** across the audit KEEP list of ~52 individual-creator anchors.
