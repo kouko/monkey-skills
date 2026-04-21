@@ -1,276 +1,206 @@
 ---
 name: obsidian-mermaid-visualizer
-description: Create Mermaid diagrams from text content. Use when visualizing concepts, creating flowcharts, architecture diagrams, or mindmaps for documentation. Mermaid図・フローチャート。Mermaid 圖・流程圖。
+description: Create Mermaid diagrams — flowcharts, sequence / state / class / ER / C4 / git-branch diagrams, bar / line / pie / quadrant charts, Gantt / timeline schedules, architecture / block diagrams, mindmaps — optimized for Obsidian 11.4.1 notes but portable to any Mermaid-compatible renderer (GitHub / GitLab / Mermaid Live Editor / Notion / Confluence / HackMD / Docusaurus / MkDocs supporting v11.4.1+). Use when visualizing workflows, data trends, system architecture, project timelines, or hierarchical concepts. Mermaid図・フローチャート・グラフ・データチャート・C4・ガントチャート。Mermaid 圖・流程圖・長條圖・折線圖・架構圖・甘特圖・時間軸・類別圖・ER 圖。
 ---
 
 # Obsidian Mermaid Visualizer
 
+Produces clean Mermaid diagrams across 17 diagram types — flow / data-viz / structural / time categories — primarily optimized for Obsidian 11.4.1 native viewer, but output is portable to any Mermaid-compatible renderer supporting v11.4.1+ (GitHub, GitLab, Mermaid Live Editor, Notion, Confluence, HackMD, Docusaurus, MkDocs, etc.). Handles Obsidian-specific quirks and provides consistent per-type knowledge.
+
 ## Overview
 
-Convert text content into clean, professional Mermaid diagrams optimized for presentations and documentation. Automatically handles common syntax pitfalls (list syntax conflicts, subgraph naming, spacing issues) to ensure diagrams render correctly in Obsidian, GitHub, and other Mermaid-compatible platforms.
+When the user requests a diagram:
 
-## Quick Start
+1. **Identify content intent** — what is the diagram trying to show? (flow / data / structure / time)
+2. **Pick diagram type** via the § Diagram Type Selection Tree below
+3. **Read the type file** for canonical syntax + Obsidian quirks + worked examples
+4. **Apply cross-type rules** from [obsidian-common-quirks.md](obsidian-common-quirks.md) (list syntax, subgraph naming, node references, etc.)
+5. **Check compatibility** via [obsidian-compatibility.md](obsidian-compatibility.md) if the type is 🟡 partial or 🔻 fallback-only
+6. **Generate the Mermaid code** inside a ` ```mermaid ... ``` ` fence with brief context
 
-When creating a Mermaid diagram:
+## Quick start
 
-1. **Analyze the content** - Identify key concepts, relationships, and flow
-2. **Choose diagram type** - Select the most appropriate visualization (see Diagram Types below)
-3. **Select configuration** - Determine layout, detail level, and styling
-4. **Generate diagram** - Create syntactically correct Mermaid code
-5. **Output in markdown** - Wrap in proper code fence with optional explanation
-
-**Default assumptions:**
-- Vertical layout (TB) unless horizontal requested
-- Medium detail level (balanced between simplicity and information)
-- Professional color scheme with semantic colors
-- Obsidian/GitHub compatible syntax
-
-## Diagram Types
-
-### 1. Process Flow (graph TB/LR)
-**Best for:** Workflows, decision trees, sequential processes, AI agent architectures
-
-**Use when:** Content describes steps, stages, or a sequence of actions
-
-**Key features:**
-- Swimlanes via subgraph for grouping related steps
-- Arrow labels for transitions
-- Feedback loops and branches
-- Color-coded stages
-
-**Configuration options:**
-- `layout`: "vertical" (TB), "horizontal" (LR)
-- `detail`: "simple" (core steps only), "standard" (with descriptions), "detailed" (with annotations)
-- `style`: "minimal", "professional", "colorful"
-
-### 2. Circular Flow (graph TD with circular layout)
-**Best for:** Cyclic processes, continuous improvement loops, agent feedback systems
-
-**Use when:** Content emphasizes iteration, feedback, or circular relationships
-
-**Key features:**
-- Central hub with radiating elements
-- Curved feedback arrows
-- Clear cycle indicators
-
-### 3. Comparison Diagram (graph TB with parallel paths)
-**Best for:** Before/after comparisons, A vs B analysis, traditional vs modern systems
-
-**Use when:** Content contrasts two or more approaches or systems
-
-**Key features:**
-- Side-by-side layout
-- Central comparison node
-- Clear differentiation via color/style
-
-### 4. Mindmap
-**Best for:** Hierarchical concepts, knowledge organization, topic breakdowns
-
-**Use when:** Content is hierarchical with clear parent-child relationships
-
-**Key features:**
-- Radial tree structure
-- Multiple levels of nesting
-- Clean visual hierarchy
-
-### 5. Sequence Diagram
-**Best for:** Interactions between components, API calls, message flows
-
-**Use when:** Content involves communication between actors/systems over time
-
-**Key features:**
-- Timeline-based layout
-- Clear actor separation
-- Activation boxes for processes
-
-### 6. State Diagram
-**Best for:** System states, status transitions, lifecycle stages
-
-**Use when:** Content describes states and transitions between them
-
-**Key features:**
-- Clear state nodes
-- Labeled transitions
-- Start and end states
-
-## Critical Syntax Rules
-
-**Always follow these rules to prevent parsing errors:**
-
-### Rule 1: Avoid List Syntax Conflicts
 ```
-❌ WRONG: [1. Perception]       → Triggers "Unsupported markdown: list"
-✅ RIGHT: [1.Perception]         → Remove space after period
-✅ RIGHT: [① Perception]         → Use circled numbers (①②③④⑤⑥⑦⑧⑨⑩)
-✅ RIGHT: [(1) Perception]       → Use parentheses
-✅ RIGHT: [Step 1: Perception]   → Use "Step" prefix
+User: "幫我畫一個 [content description]"
+  ↓
+Skill: identify category (flow / data-viz / structural / time)
+  ↓
+Skill: navigate § Selection Tree → specific type → read <category>/<type>.md
+  ↓
+Skill: generate Mermaid code + rendering notes
 ```
 
-### Rule 2: Subgraph Naming
+**Default assumptions** (unless user specifies otherwise):
+- Vertical layout (TB) for flow / structural types
+- Horizontal layout (LR) for time / gantt
+- Medium detail level (balanced simplicity + information)
+- Professional color palette (see § Color Scheme)
+- Obsidian 11.4.1 syntax (no features requiring v11.5+)
+
+---
+
+## Diagram Type Selection Tree
+
+Pick the diagram type by the content's intent. Each entry links to a type-specific file with canonical syntax, configuration options, worked examples, and error prevention.
+
+### Flow & conceptual
+
+- Sequential / decision steps / workflow → [flow/flowchart.md](flow/flowchart.md)
+- Cyclic / feedback loops / iteration (PDCA / OODA) → [flow/circular-flow.md](flow/circular-flow.md)
+- A vs B side-by-side analysis → [flow/comparison.md](flow/comparison.md)
+- Hierarchical concepts / topic breakdown → [flow/mindmap.md](flow/mindmap.md)
+- Actor interactions over time / API calls → [flow/sequence.md](flow/sequence.md)
+- System states + transitions (FSM / lifecycle) → [flow/state.md](flow/state.md)
+
+### Data visualization
+
+- Discrete bar chart (categorical data) → [data-viz/xychart.md](data-viz/xychart.md) bar mode
+- Line / trend chart (single or multi-series) → [data-viz/xychart.md](data-viz/xychart.md) — **use named-line syntax `line "name" [values]`** which works in Obsidian 11.4.1
+- Proportion of whole (%) → [data-viz/pie.md](data-viz/pie.md)
+- 2×2 positioning (Eisenhower / impact-effort / BCG) → [data-viz/quadrant.md](data-viz/quadrant.md)
+
+### Structural
+
+- Cloud / infrastructure with service icons → [structural/architecture.md](structural/architecture.md)
+- Generic block / hardware layouts → [structural/block.md](structural/block.md)
+- OOP class hierarchy + UML → [structural/class.md](structural/class.md)
+- Database schema with cardinality → [structural/er.md](structural/er.md)
+- Software architecture at 3 zoom levels (C4 model) → [structural/c4.md](structural/c4.md)
+- Git branches / merges / commits → [structural/gitgraph.md](structural/gitgraph.md)
+
+### Time / project
+
+- Project schedule with dependencies (Gantt) → [time/gantt.md](time/gantt.md)
+- Chronology without dependencies (history / release log) → [time/timeline.md](time/timeline.md)
+
+**Decision tiebreakers** (when intent is ambiguous):
+
+| If the user says... | Go with |
+|---|---|
+| "flowchart" / "workflow" (no specific type) | `flow/flowchart.md` |
+| "timeline" (ambiguous — Gantt or Timeline?) | Has dependencies/durations → Gantt; just events → Timeline |
+| "diagram" (generic) | Default to `flow/flowchart.md` and ask user if wrong |
+| "chart" (generic) | Look for data — numeric = xychart/pie; positioning = quadrant |
+| "architecture" (unclear — cloud or software?) | Cloud/infra → architecture-beta; software components → C4 |
+
+---
+
+## Line Chart Rendering Note
+
+**Named-line syntax works in Obsidian 11.4.1** (user-verified April 2026). For all line charts, use:
+
 ```
-❌ WRONG: subgraph AI Agent Core  → Space in name without quotes
-✅ RIGHT: subgraph agent["AI Agent Core"]  → Use ID with display name
-✅ RIGHT: subgraph agent          → Use simple ID only
-```
-
-### Rule 3: Node References
-```
-❌ WRONG: Title --> AI Agent Core  → Reference display name directly
-✅ RIGHT: Title --> agent          → Reference subgraph ID
-```
-
-### Rule 4: Special Characters in Node Text
-```
-✅ Use quotes for text with spaces: ["Text with spaces"]
-✅ Escape or avoid: quotation marks → use 『』instead
-✅ Escape or avoid: parentheses → use 「」instead
-✅ Line breaks in circle nodes only: ((Text<br/>Break))
-```
-
-### Rule 5: Arrow Types
-- `-->` solid arrow
-- `-.->` dashed arrow (for supporting systems, optional paths)
-- `==>` thick arrow (for emphasis)
-- `~~~` invisible link (for layout only)
-
-For complete syntax reference and edge cases, see [references/syntax-rules.md](references/syntax-rules.md)
-
-## Configuration Options
-
-All diagrams accept these parameters:
-
-**Layout:**
-- `direction`: "vertical" (TB), "horizontal" (LR), "right-to-left" (RL), "bottom-to-top" (BT)
-- `aspect`: "portrait" (default), "landscape" (wide), "square"
-
-**Detail Level:**
-- `simple`: Core elements only, minimal labels
-- `standard`: Balanced detail with key descriptions (default)
-- `detailed`: Full annotations, explanations, and metadata
-- `presentation`: Optimized for slides (larger text, fewer details)
-
-**Style:**
-- `minimal`: Monochrome, clean lines
-- `professional`: Semantic colors, clear hierarchy (default)
-- `colorful`: Vibrant colors, high contrast
-- `academic`: Formal styling for papers/documentation
-
-**Additional Options:**
-- `show_legend`: true/false - Include color/symbol legend
-- `numbered`: true/false - Add sequence numbers to steps
-- `title`: string - Add diagram title
-
-## Example Usage Patterns
-
-**Pattern 1: Basic request**
-```
-User: "Visualize the software development lifecycle"
-Response: [Analyze → Choose graph TB → Generate with standard detail]
-```
-
-**Pattern 2: With configuration**
-```
-User: "Create a horizontal flowchart of our sales process with lots of detail"
-Response: [Analyze → Choose graph LR → Generate with detailed level]
+line "series name" [values]
 ```
 
-**Pattern 3: Comparison**
+This renders correctly as a colored line with legend entry. Multi-series works naturally:
+
+```mermaid
+xychart-beta
+    title "Monthly Revenue"
+    x-axis "Month" ["Jan", "Feb", "Mar", "Apr", "May"]
+    y-axis "NT$ M" 0 --> 100
+    line "Revenue" [42, 58, 67, 81, 95]
 ```
-User: "Compare traditional AI vs AI agents"
-Response: [Analyze → Choose comparison layout → Generate with contrasting styles]
-```
 
-## Workflow
+**Historical note**: A January 2024 Obsidian Forum report described `stroke-width: 0` making lines invisible — this appears to have been specific to the bare `line [values]` form (without series name). Named-line syntax works. If a user reports their Obsidian vault still shows invisible lines even with named syntax, check for conflicting CSS snippets or plugins; fallback to bar only as last resort with an inline note explaining the specific environment issue.
 
-1. **Understand the content**
-   - Identify main concepts, entities, and relationships
-   - Determine hierarchy or sequence
-   - Note any comparisons or contrasts
+Details + rejected alternatives (CSS snippet, graph TB approximation): [obsidian-compatibility.md § Line chart policy](obsidian-compatibility.md).
 
-2. **Select diagram type**
-   - Match content structure to diagram type
-   - Consider user's presentation context
-   - Default to process flow if ambiguous
-
-3. **Choose configuration**
-   - Apply user-specified options
-   - Use sensible defaults for unspecified options
-   - Optimize for readability
-
-4. **Generate Mermaid code**
-   - Follow all syntax rules strictly
-   - Use semantic naming (descriptive IDs)
-   - Apply consistent styling
-   - Test for common errors:
-     * No "number. space" patterns in node text
-     * All subgraphs use ID["display name"] format
-     * All node references use IDs not display names
-
-5. **Output with context**
-   - Wrap in ```mermaid code fence
-   - Add brief explanation of diagram structure
-   - Mention rendering compatibility (Obsidian, GitHub, etc.)
-   - Offer to adjust or create variations
+---
 
 ## Color Scheme Defaults
 
-Standard professional palette:
-- Green (#d3f9d8/#2f9e44): Input, perception, start states
-- Red (#ffe3e3/#c92a2a): Planning, decision points
-- Purple (#e5dbff/#5f3dc4): Processing, reasoning
-- Orange (#ffe8cc/#d9480f): Actions, tool usage
-- Cyan (#c5f6fa/#0c8599): Output, execution, results
-- Yellow (#fff4e6/#e67700): Storage, memory, data
-- Pink (#f3d9fa/#862e9c): Learning, optimization
-- Blue (#e7f5ff/#1971c2): Metadata, definitions, titles
-- Gray (#f8f9fa/#868e96): Neutral elements, traditional systems
+### Professional palette (use for flow / structural diagrams)
 
-## Common Patterns
+Each pair: light fill + stronger stroke. Use semantic assignments by role, not arbitrarily.
 
-### Swimlane Pattern (Grouping)
+- **Green** (start / input / perception): `#d3f9d8` fill / `#2f9e44` stroke
+- **Red** (decision / planning / problem): `#ffe3e3` fill / `#c92a2a` stroke
+- **Purple** (processing / reasoning): `#e5dbff` fill / `#5f3dc4` stroke
+- **Orange** (action / tool use / execution): `#ffe8cc` fill / `#d9480f` stroke
+- **Cyan** (output / result / deliverable): `#c5f6fa` fill / `#0c8599` stroke
+- **Yellow** (storage / memory / data): `#fff4e6` fill / `#e67700` stroke
+- **Pink** (learning / optimization / feedback): `#f3d9fa` fill / `#862e9c` stroke
+- **Blue** (metadata / title / context): `#e7f5ff` fill / `#1971c2` stroke
+- **Gray** (neutral / traditional / background): `#f8f9fa` fill / `#868e96` stroke
+
+Example:
 ```mermaid
-graph TB
-    subgraph core["Core Process"]
-        A --> B --> C
-    end
-    subgraph support["Supporting Systems"]
-        D
-        E
-    end
-    core -.-> support
+style NodeA fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
 ```
 
-### Feedback Loop Pattern
-```mermaid
-graph TB
-    A[Start] --> B[Process]
-    B --> C[End]
-    C -.->|Feedback| A
-```
+### Chart palette (use for data-viz diagrams — categorical data series)
 
-### Hub and Spoke Pattern
-```mermaid
-graph TB
-    Central[Hub]
-    A[Spoke 1] --> Central
-    B[Spoke 2] --> Central
-    C[Spoke 3] --> Central
-```
+For xychart (multiple bar series), pie slices, quadrant points — use a categorical palette to distinguish data series:
+
+- Series 1: `#4c72b0` (blue)
+- Series 2: `#dd8452` (orange)
+- Series 3: `#55a868` (green)
+- Series 4: `#c44e52` (red)
+- Series 5: `#8172b3` (purple)
+
+These are ColorBrewer-inspired, tested for colorblind-friendliness.
+
+---
 
 ## Quality Checklist
 
-Before outputting, verify:
-- [ ] No "number. space" patterns in any node text
-- [ ] All subgraphs use proper ID syntax
-- [ ] All arrows use correct syntax (-->, -.->)
-- [ ] Colors applied consistently
-- [ ] Layout direction specified
-- [ ] Style declarations present
-- [ ] No ambiguous node references
-- [ ] Compatible with Obsidian/GitHub renderers
-- [ ] **No Emoji** in any node text - use text labels or color coding instead
+Before outputting any diagram, verify:
+
+### Universal checks (all 17 types)
+- [ ] No `number. space` pattern in node / label text ([quirk 1](obsidian-common-quirks.md))
+- [ ] Subgraphs with spaces use `subgraph id["Display"]` format ([quirk 2](obsidian-common-quirks.md))
+- [ ] All node / entity references use IDs, not display text ([quirk 3](obsidian-common-quirks.md))
+- [ ] Special characters replaced: `"` → `『』`, `()` → `「」` ([quirk 4](obsidian-common-quirks.md))
+- [ ] **User-visible display strings quoted where the parser supports it** ([quirk 4.5](obsidian-common-quirks.md)) — flowchart nodes `A["Label"]`, arrow labels `-->|"Label"|`, pie labels, quadrant data points, xychart axes, C4 labels, gitGraph tags
+- [ ] No v11.5+ features used (Neo look, showDataLabelOutsideBar, wardley-beta) ([quirk 6](obsidian-common-quirks.md))
+- [ ] Diagram wrapped in ` ```mermaid ... ``` ` fence
+- [ ] No Emoji in node / label text (use color coding instead)
+
+### Type-specific checks (follow the § Error prevention in the type file)
+- Flow types → arrow syntax matches type (`-->` flowchart ≠ `->>` sequence)
+- Data-viz → if line chart intent: bar fallback + degrade note applied
+- Structural → relationship arrows match semantics (C4 uses `Rel()`, ER uses `||--o{`, class uses `<|--`)
+- Time → dateFormat / duration suffix / milestone 0d rules honored
+
+### Compatibility checks (when using 🟡 partial or 🔻 fallback types)
+- [ ] Consulted [obsidian-compatibility.md](obsidian-compatibility.md) for quirks
+- [ ] Applied fallback policy if applicable (line → bar, architecture icons → graph TB)
+- [ ] Included inline degrade note if fallback was applied
+
+---
+
+## Output format
+
+Standard output template when generating a diagram:
+
+````
+Here is the Mermaid diagram for <description>:
+
+```mermaid
+<diagram code>
+```
+
+<1-2 sentence context about diagram type choice>
+<If fallback applied: inline degrade note>
+<If non-trivial: rendering notes — e.g., "Renders in Obsidian 11.4.1 native viewer. For advanced features, consider Mermaid View plugin.">
+````
+
+---
 
 ## References
 
-For detailed syntax rules and troubleshooting, see:
-- [references/syntax-rules.md](references/syntax-rules.md) - Complete syntax reference and error prevention
+- [obsidian-common-quirks.md](obsidian-common-quirks.md) — cross-type rules every Mermaid diagram in Obsidian should follow (list syntax, subgraph naming, node refs, special chars, version-gap landmines)
+- [obsidian-compatibility.md](obsidian-compatibility.md) — 17-type compatibility matrix for Obsidian 11.4.1, fallback policies for line charts and architecture icons, migration path for future Obsidian Mermaid upgrades
+- Individual type files — see § Diagram Type Selection Tree above
+
+---
+
+## Design notes (non-normative)
+
+**Directory structure** — this skill uses a non-standard layout: 4 category folders (`flow/`, `data-viz/`, `structural/`, `time/`) at the skill root instead of under a `references/` wrapper. Rationale: the 17 per-type files are primary routed content, not supplementary references. Other `obsidian/skills/*` use flat `references/` — this skill is an intentional deviation per user-approved plan.
+
+**Single-layer router** — SKILL.md links directly to each type file, not through intermediate category routers. Rationale: Anthropic's skill authoring docs warn that nested references cause Claude partial-reads (`head -100` previews instead of full loads). Single-layer routing keeps every reference one level deep.
+
+**Line-chart fallback as policy, not workaround** — the decision not to ship a CSS snippet is deliberate, preserving zero-setup skill contract. If Obsidian eventually upgrades Mermaid to 11.5+, see [obsidian-compatibility.md § Migration path](obsidian-compatibility.md) to remove the fallback.
