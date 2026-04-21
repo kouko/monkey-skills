@@ -327,34 +327,43 @@ graph LR
 - CI/CD pipelines (build / test / staging / production)
 - Multi-team handoff processes (design / engineering / QA / deploy)
 
-### Example 8: Vertical variant (TB outer + LR inner) — for narrow preview panes
+### Example 8: Vertical variant (TB outer + LR inner) — CI/CD pipeline for narrow preview panes
 
-Same technique as Example 7 with orientation flipped. Use this when Obsidian's preview pane is narrow (typical sidebar preview) or when the workflow reads more naturally as top-to-bottom phases:
+Same technique as Example 7 with orientation flipped + a different domain (technical CI/CD pipeline vs. Example 7's customer service flow). Use this when Obsidian's preview pane is narrow (typical sidebar preview) or when the workflow reads more naturally as top-to-bottom phases:
 
 ```mermaid
 graph TB
-    subgraph stageA["Stage A — 使用者提交"]
+    subgraph build["① Build"]
         direction LR
-        A1["Submit"] --> A2["Wait 3 days"] --> A3["Email feedback"]
+        B1["Checkout"] --> B2["Install deps"] --> B3["Compile"]
     end
 
-    subgraph stageB["Stage B — 員工處理"]
+    subgraph test["② Test"]
         direction LR
-        B1["Processed by Staff"] --> B2["Reply to customers"]
+        T1["Unit tests"] --> T2["Integration"] --> T3["E2E"]
     end
 
-    subgraph stageC["Stage C — 歸檔"]
+    subgraph staging["③ Staging"]
         direction LR
-        C1["Archive"]
+        S1["Deploy staging"] --> S2["Smoke test"] --> S3["UAT approval"]
     end
 
-    stageA --> stageB
-    stageB --> stageC
+    subgraph prod["④ Production"]
+        direction LR
+        P1["Deploy prod"] --> P2["Health check"] --> P3["Monitor"]
+    end
 
-    style stageA fill:#f8f9fa,stroke:#868e96,stroke-width:2px
-    style stageB fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-    style stageC fill:#d5f9f8,stroke:#2c9ec4,stroke-width:2px
+    build --> test
+    test --> staging
+    staging --> prod
+
+    style build fill:#e7f5ff,stroke:#1971c2,stroke-width:2px
+    style test fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style staging fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    style prod fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
 ```
+
+4 stages × 3 steps = 12 nodes total — comfortably in the "≥8-10 nodes" threshold where the subgraph-chunking pattern earns its complexity. Circled numbers `①②③④` on stage titles signal sequence at a glance.
 
 **When to prefer Example 8 (TB outer) over Example 7 (LR outer)**:
 
