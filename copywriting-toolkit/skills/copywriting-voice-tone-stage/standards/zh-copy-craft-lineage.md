@@ -76,6 +76,37 @@ ZH brands reach for "文青" / "意識形態" / "品味 retail" registers.
   亞太廣告獎). Lines not traceable to these sources should be
   treated as [disputed] pending primary-source confirmation.
 
+- **Drift #Z5: 「多喝水 MORE WATER」(金車) is NOT 吳念真's work.**
+  It is 奧美台灣 in-house copy, frequently misattributed to 吳念真
+  online due to his 1990s TW advertising prominence. 吳念真's
+  canonical TW advertising voice anchors are **保力達B 口白**
+  (李奧貝納, 1990s–ongoing, 台語 register) + **全國電子「足感心」**
+  (2000s). Do not list 多喝水 among 吳念真 works.
+
+- **Drift #Z6: 孫大偉's agency affiliation is 台灣奧美 (initially)
+  then 偉太廣告 (1991+ independent founder).** Some secondary sources
+  incorrectly cite him as 智威湯遜 (J. Walter Thompson). 孫大偉 worked
+  at 奧美 1980s–1990s before founding 偉太; JWT attribution is an
+  error to reject at source-check.
+
+- **Drift #Z7: 長榮航空〈I SEE YOU〉(2013) 旁白 = 金城武 本人獨白,
+  NOT 吳念真.** The ad stars Takeshi Kaneshiro and the monologue
+  「我心中，尚未崩壞的地方」is delivered by Kaneshiro himself.
+  吳念真 did not participate in this campaign's VO. When citing
+  吳念真's iconic 旁白 work, stick to 保力達B / 全國電子 / other
+  confirmed attributions.
+
+- **Drift #Z8: 全聯經濟美學 (2015–) creative lead = 龔大中
+  (台灣奧美 ECD at campaign start, 2020 promoted to CCO).** Some
+  online sources incorrectly cite 林敬凱 as creative lead, OR
+  mistakenly credit 邱彥翔 as copywriter. **邱彥翔 is the actor
+  ("全聯先生")** hired 2006 for the pre-經濟美學 TV-era campaigns;
+  he is not a copywriter and did not author the 2015+ 經濟美學
+  aphoristic copy (「長得漂亮是本錢，把錢花得漂亮是本事。」etc.).
+  Primary-source anchor: 數位時代 2015 龔大中 專訪 + 經理人月刊
+  2020 全聯 × 奧美 對談 + 第38屆時報廣告金像獎 全聯經濟美學 2015
+  得獎紀錄.
+
 ## Generational Context
 
 All three masters emerged from **1980s–1990s 台灣解嚴後新都會消費主義
