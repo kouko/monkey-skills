@@ -298,9 +298,9 @@ graph LR
     stageA -->|"分派處理"| stageB
     stageB -->|"結案關單"| stageC
 
-    style stageA fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-    style stageB fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
-    style stageC fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
+    style A1,A2,A3 fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style B1,B2,B3 fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    style C1,C2 fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
 ```
 
 Step-count distribution here is **3 / 3 / 2** (non-monotonic) — deliberately shows that **stage step counts follow no monotonic rule**. Real workflows may be front-heavy, middle-heavy, back-heavy, or uniform. Don't let this example or Example 8 (3/3/3/3) mislead you into thinking "later stages must have fewer steps". Design per actual content, not by superficial pattern.
@@ -364,10 +364,10 @@ graph TB
     test -->|"tests pass"| staging
     staging -->|"UAT approved"| prod
 
-    style build fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-    style test fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
-    style staging fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
-    style prod fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
+    style B1,B2,B3 fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style T1,T2,T3 fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px
+    style S1,S2,S3 fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
+    style P1,P2,P3 fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
 ```
 
 4 stages × 3 steps = 12 nodes total — comfortably in the "≥8-10 nodes" threshold where the subgraph-chunking pattern earns its complexity. Circled numbers `①②③④` on stage titles signal sequence at a glance.
