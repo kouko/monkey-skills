@@ -1,5 +1,68 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.8.0 — 2026-04-21 (backlog sweep: 11 recasts + 3 zh-TW Q1 new + F2/F4 fixes)
+
+Closes the v1.6.1/v1.7.0 "RECAST pending research" backlog and fills the zh-TW Q1 individual-creator gap. Total: 14 new `anchor-{slug}.md` files (81 total anchors now in standards/). Also addresses E2E Findings 2 and 4 from v1.7.0 agent-run test.
+
+### 11 recasts completed (resolved "RECAST pending research" markers)
+
+Institutional / campaign / brand-era entries now have named-individual anchors:
+
+**JP** (4):
+- 原研哉 (MUJI Q2 center design AD 2001-) → `anchor-jp-hara-kenya-design-manifesto.md`
+- 太田恵美 (JR東海「そうだ 京都、行こう。」Q2 center, CD 佐々木宏) → `anchor-jp-jr-central-souda-kyoto-discovery.md`
+- 佐藤可士和 (UNIQLO LifeWear Q4 toward-Q1, AD 2006-) → `anchor-jp-uniqlo-sato-kashiwa-lifewear.md`
+- 青木耕平 + 佐藤友子 (クラシコム Q4 toward-Q3, 2006-) → `anchor-jp-kurashicom-aoki-kohei-lifestyle-narrative.md`
+
+**EN** (7):
+- Dan Wieden (Nike "Just Do It" Q2 center, W+K 1988-) → `anchor-en-wieden-just-do-it-minimal-imperative.md`
+- David Abbott (AMV BBDO Economist Q1 center, 1977-) → `anchor-en-david-abbott-economist-aphoristic.md`
+- Kate Kiefer Lee (Mailchimp Voice & Tone Q3 center, 2013-) → `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md`
+- Richard Reed (Innocent Drinks Q3 center, 1999-2009 STRICT era lock) → `anchor-en-richard-reed-innocent-wackaging.md`
+- **Geoff Hayes + Graham Turner** (Absolut Vodka Q2 toward-Q1, 1980 founding ad) → `anchor-en-absolut-two-word-bottle-formula.md`
+  - ⚠ **Attribution correction from v1 audit**: v1.3.x audit named "Costello + Hayes"; primary-source research (Adweek 2015 Hayes obituary + Communication Arts 1980 credits + Lewis *Absolut Book* 1996) confirms **Geoff Hayes (AD) + Graham Turner (CW)**. Richard Costello was TBWA equity partner / US president, not creative on this campaign.
+- Jason Fried + DHH (Basecamp Rework Q1 toward-Q2 + Q4 center dual) → `anchor-en-basecamp-fried-dhh-contrarian-manifesto.md`
+- John Schoolcraft (Oatly Q2 toward-Q3 + Q3 center, 2012- pre-2021-IPO canonical) → `anchor-en-schoolcraft-oatly-activist-typewriter.md`
+
+### 3 zh-TW Q1 new entries (fills individual-creator gap)
+
+v1.6.0 audit flagged zh-TW Q1 individual pool as 0 entries (all v1 entries were institutional/rotating-author). v1.8.0 fills with:
+
+- 龍應台 (public intellectual essayist, Q1 toward-Q2) → `anchor-zh-tw-lung-ying-tai-public-intellectual.md`
+- 南方朔 (lexical archaeology essayist, Q1 center) → `anchor-zh-tw-nan-fang-shuo-lexical-archaeology.md`
+- 楊照 (lecture-hall essay, Q1 toward-Q4) → `anchor-zh-tw-yang-zhao-lecture-hall-essay.md`
+
+### Router + format-template updates
+
+- `jp-q2-anchors.md` center: 原研哉 + 太田恵美 now named anchors (was "RECAST pending")
+- `jp-q4-anchors.md` center + toward-Q1: 青木耕平 + 佐藤可士和 added
+- `en-q1-anchors.md` center + toward-Q2: David Abbott + Fried/DHH added
+- `en-q2-anchors.md` center + toward-Q1 + toward-Q3: Dan Wieden + Absolut + Schoolcraft added
+- `en-q3-anchors.md` center: Kate Kiefer Lee + Richard Reed + Schoolcraft (Q3 mode) added
+- `en-q4-anchors.md` center: Fried/DHH (plain-practical mode) added
+- `zh-q1-anchors.md` center + toward-Q2 + toward-Q4: 南方朔 + 龍應台 + 楊照 added
+- `docs/format-templates/en-institutional-and-platform-aggregate.md`: 7 "RECAST pending" markers updated to "COMPLETE" with forward pointers
+
+### E2E Findings 2 and 4 fixes
+
+- **F2 (Cross-reference-valid-for normalization)**: 許舜英 anchor's free-text field `zh 張愛玲 aphoristic parallel (stylistic, not documented)` normalized to schema-compliant `jp: WEAK; en: WEAK` + separate `Stylistic-sibling` field pointing to 張愛玲 anchor. Semantic distinction between cross-lang transferability (STRONG/MEDIUM/WEAK per lang) and cross-master stylistic-sibling made explicit.
+- **F4 (strip §Coverage self-check meta-commentary)**: 4 anchors (糸井 / 向田邦子 / Didion / 張愛玲) had leftover §Coverage self-check sections from research-agent research phase — stripped via batch script, saving ~80 tokens × 4 = ~320 tokens non-operational load.
+- **F3 deferred**: Form enum sub-form granularity (e.g. `mid-form-brand-tagline` not in Phase 4 enum) — remains Phase 4 form-taxonomy scope, not voice-tone-stage.
+
+### Anchor count
+
+- v1.7.1: 67 flat `anchor-{slug}.md` in standards/
+- v1.8.0: **81 flat anchors** (67 + 11 recasts + 3 zh-TW Q1)
+- All 81 have `schema_version: 2.0` frontmatter
+- All 81 reachable from Pass 3 routing (either via Pass 3a/3b craft-gate or Pass 3d register-signal)
+
+### Still deferred (v1.9.0+ backlog)
+
+- Layer 2/3 deep-dive research content (64 seed files in `docs/voice-anchor-deep-dives/` currently match Layer 1; biographical / era / lineage / awards research pending)
+- Actual deployed-plugin Pass 3 E2E test (current tests are agent-simulated; deployed marketplace test requires live plugin loading)
+- zh-TW Q4 individual DR tradition (genuinely thin — may remain cross-ref-only indefinitely)
+- Remaining craft-lineage byte-identical v1 entries that have no v2 anchor yet (村上春樹 / 金庸 / 三島 etc. — low priority; mitigation already in meta-core registry)
+
 ## v1.7.1 — 2026-04-21 (over-mimic registry SSOT dedup — resolves v1.7.0 E2E Finding 1)
 
 v1.7.0 E2E test (`docs/voice-anchor-e2e-tests/v1.7.0-pass-3ab-agent-run-findings.md`) surfaced a SSOT violation in `voice-anchor-meta-core.md §Over-mimic mitigation registry`: 8 entries for v2-migrated anchors duplicated their own `anchor-{slug}.md §Don't / Over-mimic` blocks, risking drift. v2 schema already declared anchor-as-SSOT for mitigation (§Dimension 6 consumer change); registry was not swept during v1.4.0+ migration.

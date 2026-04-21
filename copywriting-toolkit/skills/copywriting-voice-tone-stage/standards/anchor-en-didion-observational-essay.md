@@ -48,9 +48,3 @@ date: 2026-04-21
 - Over-mimic risk: HIGH (already in meta-core registry)
 - Pairs with form: [mid-form, long-form-extended]
 
-## Coverage self-check
-- ✅ 5 native critical reads (≥3), 4 attributed (Didion ×2, Als, Gornick, Davenport)
-- ✅ 7 prose mechanics (≥5), all sentence-level
-- ✅ 7 verbatim examples (≥5) across 4 works spanning 1968 / 1976 / 1979 / 2005
-- ✅ Primary + 2 secondary failure modes + 15-word mitigation
-- ✅ Zero biography in Layer 1 (reserved section pointed to Layer 2)

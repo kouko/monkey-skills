@@ -25,8 +25,13 @@ Q2 = Authority × Emotion. EN canonical:
   - Recast from "Apple Think Different" campaign entry. ⚠ Over-mimic HIGH+.
   - Credit note: actual CW for Think Different = Rob Siltanen + Ken Segall + Jennifer Golub; Clow = ECD.
 
-**Moved to format-templates / deferred**:
-- Nike "Just Do It" center → Dan Wieden recast pending (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Nike Just Do It
+- **Dan Wieden — "Just Do It" minimal imperative** (W+K co-founder, Nike ECD 1988-) — [anchor-en-wieden-just-do-it-minimal-imperative.md](anchor-en-wieden-just-do-it-minimal-imperative.md)
+  - Slug: `en-wieden-just-do-it-minimal-imperative`
+  - Register: 2-4 word bare-imperative; democratic-athlete peer register; athlete-monologue setup that earns tagline; two-beat stop
+  - ⚠ Over-mimic HIGH (3-word imperative template widely cargo-culted)
+  - Recast from: Nike "Just Do It" campaign anchor (v1.3.x) → named ECD Dan Wieden (v1.8.0)
+
+**Moved to format-templates**:
 - Patagonia "Don't Buy This Jacket" → recast to Yvon Chouinard complete (see toward-Q4 below)
 
 ## Landmark: extreme
@@ -46,8 +51,10 @@ Q2 = Authority × Emotion. EN canonical:
   - Slug: `en-sorkin-rhetorical-rapid-fire`
   - ⚠ Over-mimic HIGH: rhetorical-Q-then-A pattern. Meta-core mitigation: "forbid rhetorical-question-plus-answer pattern".
 
-**Moved to format-templates / deferred**:
-- Absolut Vodka print (Costello / Hayes CW) → recast pending (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Absolut
+- **Absolut Vodka two-word formula** (named CW recast: Geoff Hayes AD + Graham Turner CW per 1980 founding ad; TBWA\Chiat\Day) — [anchor-en-absolut-two-word-bottle-formula.md](anchor-en-absolut-two-word-bottle-formula.md)
+  - Slug: `en-absolut-two-word-bottle-formula`
+  - Register: TWO-WORD headline formula strict ("Absolut + [noun/verb]"); visual pun carried by bottle shape; cross-reference art/culture world; no body copy
+  - ⚠ Attribution correction: v1.3.x audit named Costello+Hayes; primary-source research (Adweek 2015 Hayes obit + Communication Arts 1980 credits + Lewis "Absolut Book" 1996) identifies **Geoff Hayes (AD) + Graham Turner (CW)** for 1980 "Absolut Perfection" founding ad; Richard Costello was TBWA equity partner / US president, not creative on this campaign
 
 ## Landmark: toward-Q3
 
@@ -68,8 +75,12 @@ Q2 = Authority × Emotion. EN canonical:
   - Slug: `en-didion-observational-essay`
   - ⚠ Over-mimic registry: "It meant nothing. It meant everything." antithesis tic — meta-core mitigation: "cap rhetorical-antithesis to 1 per 150 words".
 
-**Moved to format-templates / deferred**:
-- Oatly Schoolcraft (activist mode) → recast pending audit (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Oatly
+- **John Schoolcraft — Oatly activist-typewriter** (named CCO recast, 2012-, pre-2021-IPO canonical window) — [anchor-en-schoolcraft-oatly-activist-typewriter.md](anchor-en-schoolcraft-oatly-activist-typewriter.md)
+  - Slug: `en-schoolcraft-oatly-activist-typewriter`
+  - Register: typewriter-aesthetic + activist-scolding + "Wow no cow" antithesis + self-deprecating CEO letter + small-print-activism pairing
+  - Dual placement: Q2 toward-Q3 (activist manifesto) + Q3 center (irreverent peer)
+  - ⚠ Over-mimic HIGH (typewriter + activist register cargo-culted 2018-2023 DTC)
+  - Recast from: Oatly activist + center brand anchors (v1.3.x) → named CCO John Schoolcraft (v1.8.0)
 
 ## Cross-references
 

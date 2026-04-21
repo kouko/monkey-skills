@@ -27,8 +27,14 @@ Q1 = Authority × Reason. EN canonical:
   - Slug: `en-martin-puris-bmw-engineering-precision`
   - Recast from "BMW Ultimate Driving Machine" campaign entry.
 
-**Moved to format-templates / deferred**:
-- AMV BBDO Economist + Economist institutional → [en-institutional-and-platform-aggregate.md](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Economist; David Abbott individual recast pending (v1.7.0+).
+- **David Abbott — Economist Aphoristic Register** (named CW/ECD, AMV BBDO co-founder 1977) — [anchor-en-david-abbott-economist-aphoristic.md](anchor-en-david-abbott-economist-aphoristic.md)
+  - Slug: `en-david-abbott-economist-aphoristic`
+  - Register: 6-12 word finished-thought aphorism; flattery of implied-intelligent-peer; white-out-of-red template; long-copy discipline as counter-weight
+  - ⚠ Over-mimic HIGH: most-imitated intelligent-brand register 1990-2020
+  - Recast from: AMV BBDO The Economist campaign anchor (v1.3.x) → named CW David Abbott (v1.8.0)
+
+**Moved to format-templates**:
+- Economist institutional (post-Abbott brand voice, separate from AMV ad campaigns) → [en-institutional-and-platform-aggregate.md](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Economist
 
 ## Landmark: extreme
 
@@ -43,8 +49,11 @@ Q1 = Authority × Reason. EN canonical:
 - **Bill Bernbach / DDB — VW "Think Small"** (ECD) — [anchor-en-bernbach-ddb-confession-plain-style.md](anchor-en-bernbach-ddb-confession-plain-style.md)
   - Slug: `en-bernbach-ddb-confession-plain-style`
 
-**Moved to format-templates**:
-- Basecamp Rework manifesto mode (Fried + DHH duo) → [en-institutional-and-platform-aggregate.md](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Basecamp — v1.7.0+ audit.
+- **Jason Fried + DHH — Basecamp contrarian manifesto** (named author duo) — [anchor-en-basecamp-fried-dhh-contrarian-manifesto.md](anchor-en-basecamp-fried-dhh-contrarian-manifesto.md)
+  - Slug: `en-basecamp-fried-dhh-contrarian-manifesto`
+  - Register: 2-3 sentence chapter openers; antithesis-as-headline ("Meetings are toxic"); aphorism→cost→pivot 3-beat rhythm; plain-style contrarian startup voice
+  - Dual placement: Q1 toward-Q2 (manifesto mode) + Q4 center (plain-practical mode)
+  - Recast from: Basecamp Rework manifesto + center brand anchors (v1.3.x) → named authors Fried + DHH (v1.8.0)
 
 ## Landmark: toward-Q4
 

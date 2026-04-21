@@ -48,8 +48,3 @@ date: 2026-04-21
 - Over-mimic risk: MEDIUM
 - Pairs with form: [mid-form, long-form-extended, short-form]
 
-## Coverage self-check
-- ✅ 6 critics' read (≥3), 張自述 4 + 夏志清 + 王德威 + 學界
-- ✅ 7 prose mechanics (≥5), sentence-level only
-- ✅ 6 verbatim from 5 works (≥5 / ≥2)
-- ✅ 3 specific failure modes + refined 15-word mitigation

@@ -50,9 +50,3 @@ date: 2026-04-21
 - Over-mimic risk: LOW
 - Pairs with form: [short-form, mid-form, long-form-extended]
 
-## Coverage self-check
-- ✅ 8 critics' read (≥3), all JP verbatim attributed
-- ✅ 7 prose mechanics (≥5), all sentence-level
-- ✅ 6 verbatim examples (≥5) across 4 works (≥2)
-- ✅ Specific failure mode + ≤15-word mitigation
-- ✅ Zero biography in Layer 1

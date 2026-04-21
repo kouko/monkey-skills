@@ -25,10 +25,19 @@ Q3 = Affinity × Emotion. EN canonical:
 - **Nora Ephron — warm-wit personal essay** (author, 1941-2012) — [anchor-en-ephron-warm-wit.md](anchor-en-ephron-warm-wit.md)
   - Slug: `en-ephron-warm-wit`
 
-**Moved to format-templates / deferred**:
-- MailChimp Voice & Tone → Kate Kiefer Lee recast pending (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §MailChimp
-- Innocent Drinks "wackaging" → Richard Reed recast pending (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Innocent
-- Oatly center mode → Schoolcraft audit pending (v1.7.0+); see [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Oatly
+- **Kate Kiefer Lee — Mailchimp Voice & Tone** (named content strategist, style guide author 2013-) — [anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md](anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md)
+  - Slug: `en-kate-kiefer-lee-mailchimp-voice-tone`
+  - Register: conversational-clear without corporate softeners; "we" as specific people; bullet-heavy microcopy; context-switching voice-vs-tone discipline
+  - ⚠ Over-mimic HIGH (template for 2015-2023 SaaS UX-writing style guides)
+  - Recast from: MailChimp Voice & Tone brand anchor (v1.3.x) → named content strategist (v1.8.0)
+
+- **Richard Reed — Innocent Drinks "wackaging"** (named founder, 1999-2009 STRICT era) — [anchor-en-richard-reed-innocent-wackaging.md](anchor-en-richard-reed-innocent-wackaging.md)
+  - Slug: `en-richard-reed-innocent-wackaging`
+  - Register: handwritten-feel fragments; hedged-ingredient joke ("and stuff"); banana-phone CTA; stats-as-trivia
+  - ⚠ Over-mimic HIGH; era lock STRICT 1999-2009 pre-Coca-Cola-majority 2013
+  - Recast from: Innocent Drinks brand anchor (v1.3.x) → named founder Richard Reed (v1.8.0)
+
+- **John Schoolcraft — Oatly irreverent peer** (Q3 center mode, same anchor as Q2 toward-Q3 activist mode) — [anchor-en-schoolcraft-oatly-activist-typewriter.md](anchor-en-schoolcraft-oatly-activist-typewriter.md) — see [en-q2-anchors.md §toward-Q3](en-q2-anchors.md) for primary entry
 
 ## Landmark: extreme
 
