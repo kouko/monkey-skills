@@ -1,5 +1,55 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.4.1 — 2026-04-21 (Phase A batch 2 — 8 Layer 1 v2 individual-creator entries)
+
+Eight additional individual-creator voice anchor entries researched + formatted to Layer 1 v2 schema. All 8 hit full 5/5 coverage under refined research-agent prompt with hard rules (no bio, no structural, ≥5 verbatim, native vocab, ≥5 mechanics).
+
+### Batch 2 deliveries
+
+Cross-culture / cross-type coverage (eight individual creators):
+
+| Anchor | Culture | Quadrant | Creator type |
+|---|---|---|---|
+| 谷川俊太郎 | JP | Q3 extreme | poet |
+| 王家衛 Wong Kar-wai | zh-HK | Q2 extreme | screenwriter/director |
+| 吳念真 | zh-TW | Q3 center | named CW + VO + director |
+| 朱天文 | zh-TW | Q2 toward-Q3 | novelist + screenwriter |
+| David Ogilvy | EN | Q1 center | named copywriter (craft-gate) |
+| Ernest Hemingway | EN | Q1 toward-Q4 | author |
+| Raymond Chandler | EN | Q4 toward-Q3 | author |
+| 夏目漱石 | JP | Q1 toward-Q2 | author |
+
+### Cumulative v1.4.0 + v1.4.1 Layer 1 v2 entries
+
+12 individual-creator anchors fully documented at Layer 1 v2:
+- Round 1 (v1.4.0): 向田邦子 / 張愛玲 / Joan Didion / 糸井重里
+- Round 2 (v1.4.1): 谷川俊太郎 / 王家衛 / 吳念真 / 朱天文 / Ogilvy / Hemingway / Chandler / 夏目漱石
+
+**12/12 = 100% 5/5 coverage pass rate**. Schema v2 validated across 7 creator types and 4 languages (JP / zh-HK / zh-TW / EN).
+
+### Per-entry refinements beyond meta-core over-mimic registry
+
+- Hemingway: added "4-turn tag-less cap" (beyond registry's 2) + "named-physical-object discipline" (addresses generic-object vague nouns)
+- Chandler: suggested registry upgrade — "cap similes to 1 per scene; single adjectives only; no abstract emotional nouns in narrator voice; aphorism once per chapter max" (beyond existing "1 per 50 words")
+- 王家衛: refined to "三件套替代形容詞堆疊" rule (addresses 形容詞堆疊 specific failure)
+- 吳念真: added 勿堆鄉愁形容詞 anti-kitsch guard
+- 夏目漱石: 3-sub failure mode (archaic 文末 / 一方向 snark / 漢語羅列 misread)
+
+### Observations for Phase A (continued)
+
+- Research-agent prompt v2 is stable across 8 parallel independent dispatches — hard rules consistently respected
+- Zero attribution bugs surfaced in batch 2 (batch 1 surfaced Mike Chu / KC Tsang split + 康熙 / 雍正 correction)
+- Copywriter mechanics cluster observation (糸井 from v1.4.0) holds: Ogilvy also clusters in 4 families (punctuation / elision / specificity / structure-doctrine). Non-copywriter anchors span wider
+- `pairs_with_form` continues to hint at Phase 4 form taxonomy refinement needs (Ogilvy: long-form-pasona + long-form-extended + mid-form)
+
+### Still deferred to later versions
+
+- No actual `standards/*.md` integration yet (Layer 1 v2 entries remain in `docs/voice-anchor-deep-dives/` as pilots)
+- No `voice-anchor-meta-core.md` schema update
+- No Pass 3 SKILL.md routing change
+- No format-templates/ / register-references/ directory created
+- ~40 individual-creator anchors remaining in audit KEEP list
+
 ## v1.4.0 — 2026-04-21 (Anchor Schema v2 — purpose-centric, individual-creator-only)
 
 Major rethinking of anchor content design. v1.3.x schema was researcher-catalog-centric (Era / Agency / Primary sources / Representative lines / Voice signature / Over-mimic / Cross-ref / Trigger slug), mixing three readers' needs in one bullet list. v2 splits into layers, keeps only **Layer 1 inside skill**, moves Layer 2/3 (biographical / agency / awards / provenance) to `docs/voice-anchor-deep-dives/` as research artifacts.
