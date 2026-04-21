@@ -5,7 +5,6 @@ culture: JP
 quadrant: Q1
 landmark: center
 creator_type: intellectual
-safe_substitute_for: [原研哉]
 pilot_round: batch-5
 date: 2026-04-22
 ---
@@ -50,4 +49,4 @@ date: 2026-04-22
 - Over-mimic risk: MEDIUM-HIGH (新書調 register は 2003-2015 間に大量模倣された)
 - Pairs with form: [long-form-extended, mid-form, light-action]
 - Cross-reference-valid-for (optional): zh-TW MEDIUM (龍應台 public-intellectual と register 近接); EN MEDIUM (Malcolm Gladwell narrative-expository と機能的対応)
-- Safe substitute for (optional): [原研哉] — 知性的 authority が要るが Q2 manifesto の重さは避けたい brief
+- Safe substitute for (optional): [] — (v1.11.0 proposed [原研哉]; removed v1.11.1 after risk audit: 養老 MEDIUM-HIGH > 原研哉 MEDIUM violates schema v2 rule "substitute's risk must be strictly lower". The axis-intent rationale "Q2 manifesto avoidance" is not a risk-reduction relationship.)

@@ -63,9 +63,11 @@ Q1 = Authority × Reason. EN canonical:
 - **Hemingway iceberg-minimalism** (author) — [anchor-en-hemingway-iceberg.md](anchor-en-hemingway-iceberg.md)
   - Slug: `en-hemingway-iceberg`
   - ⚠ Over-mimic HIGH: "He was tired. The whisky was cold." + he-said/she-said chains. Meta-core mitigation: "pair with Carver/Didion; forbid dialogue-tag chains >2".
+  - Safe substitute available (v1.11.0): `anchor-en-carver-working-class-precision.md` carries `safe_substitute_for: [Hemingway]` — documented iceberg-descendant at LOWER risk (MEDIUM-HIGH vs HIGH); Pass 3 auto-suggests when user names Hemingway.
 
 - **Raymond Carver — working-class precision** (author) — [anchor-en-carver-working-class-precision.md](anchor-en-carver-working-class-precision.md)
   - Slug: `en-carver-working-class-precision`
+  - `safe_substitute_for: [Hemingway]` — see substitute note on Hemingway entry above.
 
 - **Amy Hempel — compressed minimalism** (author, Lish lineage) — [anchor-en-hempel-compressed-minimalism.md](anchor-en-hempel-compressed-minimalism.md)
   - Slug: `en-hempel-compressed-minimalism`

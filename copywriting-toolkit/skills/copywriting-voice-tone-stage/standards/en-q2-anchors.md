@@ -74,6 +74,7 @@ Q2 = Authority × Emotion. EN canonical:
 - **Joan Didion — observational essay** (author) — [anchor-en-didion-observational-essay.md](anchor-en-didion-observational-essay.md)
   - Slug: `en-didion-observational-essay`
   - ⚠ Over-mimic registry: "It meant nothing. It meant everything." antithesis tic — meta-core mitigation: "cap rhetorical-antithesis to 1 per 150 words".
+  - Safe substitute available (v1.11.0): `anchor-en-ephron-warm-wit.md` carries `safe_substitute_for: [Didion, Joan Didion]` — same Didion/Ephron personal-essay line at MEDIUM vs Didion's HIGH; list-as-argument replaces antithesis tic.
 
 - **John Schoolcraft — Oatly activist-typewriter** (named CCO recast, 2012-, pre-2021-IPO canonical window) — [anchor-en-schoolcraft-oatly-activist-typewriter.md](anchor-en-schoolcraft-oatly-activist-typewriter.md)
   - Slug: `en-schoolcraft-oatly-activist-typewriter`

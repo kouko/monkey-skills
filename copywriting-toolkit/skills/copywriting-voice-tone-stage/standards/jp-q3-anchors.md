@@ -33,6 +33,7 @@ Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-me
 
 - **谷川俊太郎 — 詩のことば** (poet, 1931-2024) — [anchor-jp-tanikawa-shi-no-kotoba.md](anchor-jp-tanikawa-shi-no-kotoba.md)
   - Slug: `jp-tanikawa-shi-no-kotoba`
+  - `safe_substitute_for: [糸井重里]` (v1.11.0) — 糸井重里 documented lineage (ほぼ日『ぼく』2013 collab); 谷川 LOW vs 糸井 HIGH+ craft-gate; 谷川 mechanics 仮名過半+breath-line avoid 糸井's「。」-on-fragment surface-mimic trap.
 
 - **宮沢賢治 — 心象スケッチ** (author, 1896-1933) — [anchor-jp-miyazawa-shinshou-sketch.md](anchor-jp-miyazawa-shinshou-sketch.md)
   - Slug: `jp-miyazawa-shinshou-sketch`
