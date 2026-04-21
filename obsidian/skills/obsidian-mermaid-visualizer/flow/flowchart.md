@@ -327,6 +327,48 @@ graph LR
 - CI/CD pipelines (build / test / staging / production)
 - Multi-team handoff processes (design / engineering / QA / deploy)
 
+### Example 8: Vertical variant (TB outer + LR inner) — for narrow preview panes
+
+Same technique as Example 7 with orientation flipped. Use this when Obsidian's preview pane is narrow (typical sidebar preview) or when the workflow reads more naturally as top-to-bottom phases:
+
+```mermaid
+graph TB
+    subgraph stageA["Stage A — 使用者提交"]
+        direction LR
+        A1["Submit"] --> A2["Wait 3 days"] --> A3["Email feedback"]
+    end
+
+    subgraph stageB["Stage B — 員工處理"]
+        direction LR
+        B1["Processed by Staff"] --> B2["Reply to customers"]
+    end
+
+    subgraph stageC["Stage C — 歸檔"]
+        direction LR
+        C1["Archive"]
+    end
+
+    stageA --> stageB
+    stageB --> stageC
+
+    style stageA fill:#f8f9fa,stroke:#868e96,stroke-width:2px
+    style stageB fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    style stageC fill:#d5f9f8,stroke:#2c9ec4,stroke-width:2px
+```
+
+**When to prefer Example 8 (TB outer) over Example 7 (LR outer)**:
+
+| Condition | Example 7 (LR + inner TB) | Example 8 (TB + inner LR) |
+|---|:---:|:---:|
+| Obsidian preview pane is narrow (sidebar mode) | 🟡 horizontal scroll | ✅ vertical scroll (natural) |
+| Many stages (≥5), each 2-4 steps | 🟡 row gets long | ✅ fits vertical |
+| Stages ~equal length, pipeline / timeline feel | ✅ | 🟡 |
+| Export to PDF / print | 🟡 landscape needed | ✅ portrait native |
+| Reader scrolls vertically (default reading) | 🟡 requires H-scroll | ✅ |
+| Reader has wide screen / full-width editor | ✅ | 🟡 feels short-wide |
+
+Both variants apply the same technique — **subgraph-level connections** (`stageA --> stageB`) — and the same `direction` preservation rule. Pick based on preview / screen / reading orientation.
+
 ## Error prevention
 
 ### Specific to flowchart
