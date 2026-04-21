@@ -90,4 +90,4 @@ Both arms run Phase 6 on identical envelope + identical Phase 4 draft. Only diff
 - Q2 craft-gate（許舜英 / 李欣頻）apply-rewrite 的 ROI 是否高於 Q3 Register Signal？（hypothesis：high，因為 Q2 craft-gate register distinctive）
 - Q4 helpful-practical anchor ROI？
 - Native reviewer 盲評 — 真 TW/JP copywriter 看 A1 vs A2、B1 vs B2 哪個更 fit brief？（本輪未做）
-- `anchor_marginal_value` flag（meta-core 新 column）— 對 LOW-marginal anchor 跳過 Pass 3、省 token
+- Anchor skip-optimization for registers where LLM baseline already covers（需先做 Tier 1 自動化評估 pipeline；v1.3.5 stub 已於 v1.3.6 reverted 為 premature optimization）

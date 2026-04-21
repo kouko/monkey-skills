@@ -1,5 +1,29 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.3.6 — 2026-04-21 (Revert `anchor_marginal_value` — premature optimization)
+
+Removes the `anchor_marginal_value` schema field added in v1.3.5 Item 3. Decision: the field was a typed slot for future Pass 3 skip-on-LOW optimization (estimated savings ~1.7% of total pipeline tokens), but:
+
+- v1.3.5 shipped it unpopulated (all 105 anchors marked `unevaluated`), creating fabrication pressure
+- Populating properly requires ~$50 + 3 hours of cross-model-judge automation (Tier 1 pipeline designed but not built)
+- Skip-on-LOW saves ~1.7% cost but carries maintenance overhead (field documentation, Pass 3 branching, evidence standard enforcement)
+- Alternative observability already in place: `docs/voice-anchor-e2e-tests/` regression baseline + Dimension 6/7 gates + `cw_toolkit` CHANGELOG per-run token estimates
+
+Net: a field that doesn't pay for its upkeep yet. Removed to reduce schema entropy. If Pass 3 token cost becomes an observed bottleneck, reintroduce alongside a built Tier 1 evaluation pipeline.
+
+### Changes
+
+- `voice-anchor-meta-core.md` — removed `anchor marginal value` row in anchor entry schema + field semantics table + entire `§anchor_marginal_value semantics` section
+- `docs/voice-anchor-e2e-tests/findings-apply-rewrite.md` — updated pending-work bullet to note revert rationale
+- No anchor file content changed
+- No SKILL.md / gate rubric / Pass 3 logic changed (v1.3.5 already specified field was read-only, no skip-logic was ever wired)
+
+### Retained from v1.3.5
+
+- Item 1 (`anchor_candidates_ranked[]` output) — kept
+- Item 2 (Pass 3 thesis-conflict self-check) — kept
+- Item 3 (`anchor_marginal_value` field) — **reverted**
+
 ## v1.3.5 — 2026-04-21 (Pass 3 transparency + thesis self-check + marginal-value schema stub)
 
 Three small improvements folded in after v1.3.4 e2e testing, each addressing a specific gap surfaced during the apply-rewrite round. Token cost estimate: +2-4% per pipeline run short-term, +1-2.6% long-term once `anchor_marginal_value` populates.

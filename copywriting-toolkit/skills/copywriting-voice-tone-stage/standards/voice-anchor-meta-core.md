@@ -38,7 +38,6 @@ Every anchor entry across all files follows this structure:
 - **Cross-reference-valid-for** (optional):
   - {other lang}: STRONG / MEDIUM / WEAK
 - **Cross-cultural equivalents**: {parallel anchors in other cultures}
-- **Anchor marginal value** (v1.3.5, optional): HIGH / MEDIUM / LOW / unevaluated
 - **Trigger slug**: `{culture}-{name-kebab-case}-{style-label}`
 ```
 
@@ -53,26 +52,7 @@ Every anchor entry across all files follows this structure:
 | `LLM corpus depth` | Proxy for retrieval reliability | Anchor selection rubric condition 1 |
 | `over-mimic risk` + mitigation | Load-bearing guardrail against pastiche | Pass 3 application + Voice Consistency gate |
 | `cross-reference-valid-for` | Target-language strengths | Phase 5 cross-lang resolver + Pass 3 cross-lang load |
-| `anchor marginal value` (v1.3.5) | Register-distinctiveness proxy — whether applying the anchor changes draft shape vs a no-anchor baseline | Future Pass 3 skip-load optimization (LOW-value anchors can be skipped to save ~1.5K tokens per invocation) |
 | `trigger slug` | Kebab-case reference token | `brief.voice_reference` matching |
-
-### `anchor_marginal_value` semantics (v1.3.5, stub)
-
-Introduced as a schema field so future iterations have a typed slot for per-anchor empirical data. v1.3.5 **does not populate values on existing anchors** — all anchors are treated as `unevaluated` until a dedicated evaluation round ships. The field is defined now to prevent schema drift when values are filled in later.
-
-Values:
-- **HIGH** — applying the anchor produces a clearly distinct draft shape vs no-anchor baseline (e.g. 向田邦子 ト書き register; 許舜英 definitional inversion). Confirmed via apply-rewrite test.
-- **MEDIUM** — applying the anchor changes cadence / discipline but not structural shape.
-- **LOW** — baseline Q{N} + landmark sensibility already produces a similar draft (e.g. zh-TW Q3 center peer-warm is generic enough that adding an anchor gives细微 delta). Pass 3 **may skip** anchor load for these.
-- **unevaluated** — default until apply-rewrite evidence exists.
-
-Pass 3 behavior in v1.3.5: **does NOT act on `anchor_marginal_value` yet**. The field is read for transparency but does not gate any load decision. Future version will add the skip-on-LOW optimization once enough anchors are evaluated to justify it.
-
-Evidence sources accepted for marking a non-`unevaluated` value:
-- Apply-rewrite A/B test with concrete before/after pair (baseline vs anchor-applied)
-- Cross-brief consistency (same anchor tested on ≥2 briefs, same marginal-value signal)
-
-Do NOT mark a value based on rationale-only tests or LLM self-report — `native_critical_vocab_cited` count is not a marginal-value proxy (v1.3.3 A/B test showed count is a misleading signal; see `docs/voice-anchor-e2e-tests/findings.md`).
 
 ## Anchor selection rubric — 4 conditions
 
