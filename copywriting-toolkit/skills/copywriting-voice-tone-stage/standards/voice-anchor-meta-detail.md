@@ -179,4 +179,3 @@ Corrections that must propagate through active inventory. Each was identified du
 
 - [voice-anchor-meta-core.md](voice-anchor-meta-core.md) — schema + rubric + over-mimic mitigation index (always loaded with this file)
 - Per-quadrant anchor files: citations for specific anchors live there; this file is metadata reference
-- [voice-anchor-archived-references.md](../../copywriting-toolkit/docs/voice-anchor-archived-references.md) (out-of-skill doc) — preserved but not-referenced research for out-of-scope anchors
