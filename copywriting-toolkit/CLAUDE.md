@@ -35,12 +35,22 @@ Plugin files fall into two provenance tiers. The original v1.0.x "Copy-First" ru
 
 Files in this tier MUST match the source verbatim. No divergence allowed. Verify via `diff -q` against `domain-teams/skills/copywriting-team/`.
 
-- `skills/*/standards/*.md` — academic canon: 神田 PASONA / 谷山 discipline / 今泉 曼陀羅 / 川喜田 KJ / Cialdini / Schwartz / Vaughn / Halliday / Fortin / Edwards / 小霜 / Kaushik / 秋山・杉山 AISAS / 飯髙 ULSSAS / McQuarrie & Mick / Lakoff & Johnson / Thornton etc.
+- **Third-party academic canon prose within `skills/*/standards/*.md`** — the specific framework text from: 神田 PASONA / 谷山 discipline / 今泉 曼陀羅 / 川喜田 KJ / Cialdini / Schwartz / Vaughn / Halliday / Fortin / Edwards / 小霜 / Kaushik / 秋山・杉山 AISAS / 飯髙 ULSSAS / McQuarrie & Mick / Lakoff & Johnson / Thornton etc.
 - `skills/using-copywriting-toolkit/research/*.md` — grounding notes (historical versioning artifacts)
 
-Rationale: these files carry third-party canon (books, papers, TCC 年鑑 citations). They should never drift per-plugin. A plugin has no authority to edit 神田昌典's PASONA definitions. `diff -q` must return empty.
+Rationale: these segments carry third-party canon (books, papers, TCC 年鑑 citations). They should never drift per-plugin. A plugin has no authority to edit 神田昌典's PASONA definitions.
+
+**Scope refinement (v1.11.2)**: Tier 1 applies to **third-party framework text within standards files**, NOT to the entire `standards/` directory. Many standards files mix two layers:
+- (Tier 1) academic framework prose — e.g., Halliday Tenor theory, Vaughn FCB Think/Feel grid, Schwartz 5-level awareness taxonomy, PASONA acronym definitions
+- (Tier 2) team-curated examples / exemplar lists / Brand Corpus — e.g., "which brand represents Q1 best?" — this is editorial curation by the team, not third-party canon
+
+Example: `copywriting-voice-quadrant-stage/standards/voice-quadrant-positioning.md` contains BOTH the 2-axis synthesis theory (Tier 1 — Halliday + Vaughn grounding) AND a Canonical Brand Corpus curation (Tier 2 — editorial selection of which brands exemplify each quadrant). The Brand Corpus section may diverge per-plugin to align with plugin-specific anchor library decisions (e.g., v2 schema inclusion criterion prefers individual-creator anchors over rotating-author institutions).
+
+Pre-v1.11.2 default was conservative (whole `standards/` = Tier 1), requiring `diff -q` against upstream. Post-v1.11.2, `diff -q` applies only to third-party framework segments; team-curated segments inside standards files are Tier 2.
 
 **Exception** — ZH voice lineage: `skills/copywriting-voice-tone-stage/standards/zh-copy-craft-lineage.md` is **newly authored for this toolkit in v1.0.1** (not cp'd from domain-teams source — the source never had a ZH counterpart to `jp-copy-craft-lineage.md`). It is Tier 1 in the sense of "immutable canon", but has no upstream source to diff against.
+
+**Plugin-native standards** (post v1.4.0 anchor library expansion): the entire voice anchor system — 87 `anchor-*.md` files, `voice-anchor-meta-core.md`, `voice-anchor-meta-detail.md`, 12 quadrant router files (`{lang}-q{N}-anchors.md`), `anchor-schema-v2.md` — is plugin-native. No upstream counterpart in domain-teams. Not subject to `diff -q`; plugin owns it fully.
 
 ### Tier 2 — MAY DIVERGE with explicit documentation
 

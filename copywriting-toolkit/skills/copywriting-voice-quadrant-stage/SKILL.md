@@ -169,10 +169,14 @@ The `position` field gives Phase 6 Pass 3 Register Signal branch a more precise 
    - Tenor (Authority vs Affinity) from brief's audience + channel + brand relationship.
    - Think/Feel (Reason vs Emotion) from message_thesis + decision type.
 4. **Apply Schwartz × Quadrant table** if `brief.schwartz_level` is present. If the quadrant chosen on voice grounds collides with Schwartz preference, the Schwartz hard rule (Level 5 ≠ Q4) wins; soft mismatches surface as `schwartz_alignment: "conflict_flagged"` with rationale.
-5. **Resolve cross-language execution anchor** (v1.2.1). If `brief.voice_notes.user_intent_signal` is present AND the cited maestro's native language ≠ `brief.output_language`, the maestro is a **quadrant signal**, NOT a source text:
-   - Parse the maestro → quadrant mapping per `standards/voice-quadrant-positioning.md` (e.g. 糸井重里 → Q3 / Ogilvy → Q1 / 許舜英 → Q2).
-   - Select the **target-language native anchor(s)** in that same quadrant from the standard's Per-quadrant anchors section — e.g. zh-TW Q3 → 龔大中 / 全聯經濟美學派; zh-TW Q2 → 許舜英 / 李欣頻 / 葉明桂; EN Q3 → MailChimp / Innocent.
-   - Record as `voice_quadrant.execution_reference` (target-language anchor name(s)) alongside `voice_quadrant.user_intent_signal` (original maestro, preserved for audit).
+5. **Resolve cross-language execution anchor** (v1.2.1, refreshed v1.11.2). If `brief.voice_notes.user_intent_signal` is present AND the cited maestro's native language ≠ `brief.output_language`, the maestro is a **quadrant signal**, NOT a source text:
+   - Parse the maestro → quadrant mapping per `standards/voice-quadrant-positioning.md` (e.g. 糸井重里 → Q3 / Ogilvy → Q1 / 許舜英 → Q2 / Lee Clow → Q2 / 佐藤可士和 → Q4).
+   - Select the **target-language native anchor(s)** in that same quadrant from Phase 6's anchor library at `../copywriting-voice-tone-stage/standards/anchor-*.md`. Examples (individual-creator anchors per v2 schema):
+     - zh-TW Q3 → `anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md` (龔大中 / 全聯 2015-)
+     - zh-TW Q2 → `anchor-zh-tw-xu-shunying-*` (許舜英) / `anchor-zh-tw-lee-hsin-ping-*` (李欣頻) / `anchor-zh-tw-ye-mingui-*` (葉明桂)
+     - EN Q3 → `anchor-en-kate-kiefer-lee-mailchimp-voice-tone.md` (Kate Kiefer Lee, Mailchimp recast) / `anchor-en-richard-reed-innocent-wackaging.md` (Richard Reed, Innocent recast) / `anchor-en-nora-ephron-warm-wit.md`
+     - JP Q3 → `anchor-jp-itoi-shigesato-state-proposal.md` (糸井重里) / `anchor-jp-iwasaki-shunichi-yonin.md` (岩崎俊一)
+   - Record as `voice_quadrant.execution_reference` (target-language anchor slug[s]) alongside `voice_quadrant.user_intent_signal` (original maestro, preserved for audit).
    - Downstream Phase 4 drafter ideates **natively in `output_language`** using `execution_reference` register. Do NOT instruct the drafter to "translate from" or "channel" the cross-language maestro — that path produces 翻譯腔 (translation-flavored prose) which fails Voice Consistency.
 6. **Check adjacency**: if the draft shows legitimate edge positioning, record it. If it shows diagonal mixing, flag as voice-collapse risk before Phase 6.
 7. **Emit** output envelope with `next_stage: copywriting-voice-tone-stage`.
@@ -194,6 +198,18 @@ If the Phase 6 evaluator returns NEEDS_REVISION citing quadrant mismatch, the re
 
 ## References
 
-- `standards/voice-quadrant-positioning.md` — full 658-line canon (quadrants, brand corpora, Schwartz integration, anti-patterns, primary sources).
-- Phase 6: `copywriting-voice-tone-stage` — 4-axis tone tuning + Voice Consistency gate.
+- `standards/voice-quadrant-positioning.md` — quadrant theory + Brand Corpus landmarks for diagnosis. v1.11.2 adds Phase 6 anchor cross-refs inline per entry.
+- **Phase 6 anchor library** (for per-sentence voice rewrite targets): `../copywriting-voice-tone-stage/standards/anchor-*.md` (87 individual-creator anchors) + router indexes `{lang}-q{N}-anchors.md`. Phase 5 diagnoses quadrant; Phase 6 owns anchor selection + `safe_substitute_for` query + Voice Consistency gate.
 - Phase 4 upstream: `copywriting-long-form-pasona`, `copywriting-mid-form`, `copywriting-short-form`, `copywriting-light-action`, `copywriting-long-form-extended` — each carries `persuasion-psychology-anchor.md` for Schwartz levels.
+
+### Two-tier voice curation (v1.11.2 clarification)
+
+Phase 5 and Phase 6 maintain **complementary curations**, not competing ones:
+
+| | Phase 5 Brand Corpus (this skill) | Phase 6 Anchor Library (voice-tone-stage) |
+|---|---|---|
+| Purpose | Quadrant landmark for **diagnosis** | Individual voice for **rewrite** |
+| Entry type | Brand (institutional OR individual-led) | Individual creator (per v2 schema inclusion criterion) |
+| Scope | ~19 exemplars across 4 quadrants | 87 anchors + routers |
+
+When Phase 5's landmark entry has a Phase 6 individual-creator anchor, the entry's `**Phase 6 anchor**` line links directly. When it doesn't (institutional / rotating / campaign-level), the entry's `**Phase 6 handoff**` line names the nearest individual anchor for Phase 6 rewrite.
