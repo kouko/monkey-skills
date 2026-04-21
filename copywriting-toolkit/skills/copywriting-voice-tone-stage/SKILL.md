@@ -210,16 +210,22 @@ Pass 3 branches into **three mutually exclusive load paths** based on voice_refe
 # Pass 3 activation predicate (outer gate, v1.2.0 preserved)
 if Pass 3 triggered:
 
-    # Tier 1 — Craft Gate (existing 6 canonical masters, v1.2.0 behavior)
+    # Tier 1 — Craft Gate (v1.7.0: load per-master v2 anchor as primary,
+    #                      craft-lineage only for attribution corrections / lineage context)
     if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}:
-        load standards/jp-copy-craft-lineage.md
-        load standards/voice-anchor-meta-core.md  (for over-mimic mitigation)
-        # NO meta-detail, NO per-quadrant, NO axis-extreme
+        master_slug = JP_CRAFT_MASTER_MAP[voice_reference]
+        load standards/anchor-jp-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
+        load standards/voice-anchor-meta-core.md    # over-mimic mitigation registry
+        # Conditional: if brief needs lineage / era / cross-master context
+        # OR attribution correction risk flagged → load jp-copy-craft-lineage.md
         proceed to Pass 3a
 
     elif voice_reference ∈ {許舜英, 李欣頻, 葉明桂}:
-        load standards/zh-copy-craft-lineage.md
+        master_slug = ZH_CRAFT_MASTER_MAP[voice_reference]
+        load standards/anchor-zh-tw-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
         load standards/voice-anchor-meta-core.md
+        # Conditional: zh-copy-craft-lineage.md loads only for attribution corrections /
+        # cross-master lineage (e.g. Peter Altenberg origin, 寺山 1967 allusion)
         proceed to Pass 3b
 
     # Tier 3 — Axis Extreme (new, v1.3.2)
@@ -245,52 +251,100 @@ else (Pass 3 not triggered):
     tone_notes.axis_extreme_applied = null
 ```
 
+**Craft-gate master → anchor file mapping** (v1.7.0):
+
+```
+JP_CRAFT_MASTER_MAP = {
+  糸井重里: itoi-shigesato-state-proposal,
+  岩崎俊一: iwasaki-shunichi-yonin,
+  眞木準: maki-jun-craft-aphorism,
+  谷山雅計: taniyama-masakazu-discipline,
+}
+
+ZH_CRAFT_MASTER_MAP = {
+  許舜英: xu-shunying-ideological-definitional,
+  李欣頻: lee-hsin-ping-literary-consumption,
+  葉明桂: ye-mingui-strategic-aphorism,
+}
+```
+
 **If no branch condition is TRUE → Pass 3 MUST NOT load any standards.** Record the null annotations and skip. Do NOT load "just in case".
 
-**Rationale** (v1.2.0 §Verification Density Principle + v1.3.2 optimization 1-4):
+**Rationale** (v1.2.0 §Verification Density Principle + v1.3.2 optimization 1-4 + v1.7.0 craft-gate v2 alignment):
 - v1.2.0 preserved craft-gate gate (6 masters); lineage standards 700 lines / 8-10K tokens load only when craft master cited
 - v1.3.2 adds register-signal + axis-extreme branches with **landmark-targeted section read** (~1.5K per section) and **meta-core vs meta-detail split** (core ~2K always when Pass 3 triggers; detail ~3K only when Register Signal)
-- Net: Pass 3 per-trigger weighted cost ~5-7K (down from 8-10K pre-split)
+- v1.7.0 Pass 3a/3b shift to **per-master v2 anchor load** (~1.2K per anchor body) as primary, with `{jp,zh}-copy-craft-lineage.md` becoming **conditional-only** load (cross-master lineage / attribution corrections / era context). Eliminates the 7 orphan craft-gate anchor-*.md files + saves ~5K per craft-gate trigger (from 8-10K wholesale craft-lineage load to 1.2K focused anchor body).
+- Net: Pass 3 per-trigger weighted cost ~3-5K (craft-gate path); ~5-7K (register-signal path)
 
 **If predicate is TRUE → proceed to Pass 3a / 3b / 3c / 3d as applicable**.
 
-#### Pass 3a — JP lineage (JP trigger matched)
+#### Pass 3a — JP lineage (JP trigger matched, v1.7.0 per-master v2 load)
 
-Load `standards/jp-copy-craft-lineage.md`. Apply the master-specific voice
-signature for the referenced maestro:
+Load the master-specific v2 anchor file (from JP_CRAFT_MASTER_MAP above).
+Each anchor carries the full v2 schema (Voice direction / Native critical
+read / Prose mechanics / Examples / Don't / Metadata) tailored to that
+master:
 
-- **糸井重里** — state-proposal grammar (「おいしい生活。」), non-imperative
-  句読点 discipline, 平仮名 over-index, 体言止め ending preference.
-- **岩崎俊一** — 余韻 / 無常 compound (「やがて、いのちに変わるもの。」),
-  Buddhist finiteness undertone, rejects direct CTA.
-- **眞木準** — Q2↔Q3 border, 諧謔 + 知性 blend (see `voice-and-tone.md §JP
-  emotional-resonance tradition` cross-link).
-- **谷山雅計** — discipline-centric (see `jp-copy-craft-lineage.md` for
-  full signature).
+- **糸井重里** → `standards/anchor-jp-itoi-shigesato-state-proposal.md` —
+  state-proposal grammar (「おいしい生活。」), non-imperative 句読点
+  discipline, 平仮名 over-index, 体言止め ending preference.
+- **岩崎俊一** → `standards/anchor-jp-iwasaki-shunichi-yonin.md` — 余韻
+  / 無常 compound (「やがて、いのちに変わるもの。」), Buddhist
+  finiteness undertone, rejects direct CTA.
+- **眞木準** → `standards/anchor-jp-maki-jun-craft-aphorism.md` — Q2↔Q3
+  border, 諧謔 + 知性 blend (see `voice-and-tone.md §JP emotional-
+  resonance tradition` cross-link).
+- **谷山雅計** → `standards/anchor-jp-taniyama-masakazu-discipline.md`
+  — discipline-centric (3-reason test per candidate + compressive
+  restraint).
+
+**Conditional load of `jp-copy-craft-lineage.md`** — load ONLY when:
+1. Brief explicitly requires cross-master lineage / historical era /
+   critical debate context
+2. Attribution risk triggered (e.g. rival-of-master misattribution
+   common in user briefs)
+3. Draft involves multiple JP masters side-by-side comparison
+
+Default: do NOT load craft-lineage.md. v2 anchor body carries sufficient
+voice signature for standalone rewrite.
 
 **Critical attribution corrections (JP)** — 『リゲイン「24時間戦えますか？」』
-is NOT 岩崎俊一 (jp-copy-craft-lineage.md §Critical Attribution
-Corrections). Do not attribute misattributed copies during reference lookup.
+is NOT 岩崎俊一 (authoritative source:
+`jp-copy-craft-lineage.md §Critical Attribution Corrections`). Do not
+attribute misattributed copies during reference lookup. If brief cites
+disputed attribution, trigger conditional load of craft-lineage.
 
-#### Pass 3b — ZH lineage (ZH trigger matched)
+#### Pass 3b — ZH lineage (ZH trigger matched, v1.7.0 per-master v2 load)
 
-Load `standards/zh-copy-craft-lineage.md`. Apply the master-specific voice
-signature for the referenced maestro:
+Load the master-specific v2 anchor file (from ZH_CRAFT_MASTER_MAP above):
 
-- **許舜英** — definitional inversion (「服裝就是一種高明的政治」), cross-
-  domain vocabulary transplant (政治 / 姿態 / 命題 / 邏輯), cultural-
-  critique payload density, paradox-as-hook ("不是 X, 是 Y"). 意識形態
-  廣告 中興百貨 1988-1999 canon.
-- **李欣頻** — 書店 / 閱讀 philosophical prose (「閱讀是唯一的迷信」),
-  existential-aphorism register, 誠品敦南 1990s-2000s canon. Voice is
-  Q2 tipping into Q2-Q3 edge (warmer than 許舜英's cool-aesthetic).
-- **葉明桂** — brand-personality mapping via systematic strategic
-  frameworks. 左岸咖啡館 1998- canon. Voice is Q2-Q3 edge (authority
-  framing via warmth). Distinguished from 許舜英's cool manifesto
-  register by brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
+- **許舜英** → `standards/anchor-zh-tw-xu-shunying-ideological-definitional.md`
+  — definitional inversion (「服裝就是一種高明的政治」), cross-domain
+  vocabulary transplant (政治 / 姿態 / 命題 / 邏輯), cultural-critique
+  payload density, paradox-as-hook ("不是 X, 是 Y"). 意識形態廣告 中興
+  百貨 1988-1999 canon.
+- **李欣頻** → `standards/anchor-zh-tw-lee-hsin-ping-literary-consumption.md`
+  — 書店 / 閱讀 philosophical prose (「閱讀是唯一的迷信」), existential-
+  aphorism register, 誠品敦南 1990s-2000s canon. Voice is Q2 tipping
+  into Q2-Q3 edge (warmer than 許舜英's cool-aesthetic).
+- **葉明桂** → `standards/anchor-zh-tw-ye-mingui-strategic-aphorism.md`
+  — brand-personality mapping via systematic strategic frameworks.
+  左岸咖啡館 1998- canon. Voice is Q2-Q3 edge (authority framing via
+  warmth). Distinguished from 許舜英's cool manifesto register by
+  brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
 
-**Critical attribution corrections (ZH)** — see
-`zh-copy-craft-lineage.md §Critical Attribution Corrections`:
+**Conditional load of `zh-copy-craft-lineage.md`** — load ONLY when:
+1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register
+   differentiation)
+2. Attribution correction risk triggered (see below — Peter Altenberg /
+   寺山 allusion chains)
+3. Brief references 意識形態 廣告 institutional-era context
+
+Default: do NOT load craft-lineage.md.
+
+**Critical attribution corrections (ZH)** — authoritative source is
+`zh-copy-craft-lineage.md §Critical Attribution Corrections`. Summary
+(trigger conditional load for full context):
 - 「我不在咖啡館...」originates from Peter Altenberg (German poet,
   sinicized); NOT an original 葉明桂 line, though used in 左岸 campaigns.
 - 「拋開書本到街上去」references 寺山修司 1967 book title; 李欣頻
