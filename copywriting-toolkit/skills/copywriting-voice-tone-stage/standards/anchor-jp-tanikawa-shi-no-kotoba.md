@@ -6,6 +6,7 @@ quadrant: Q3
 landmark: extreme
 creator_type: poet
 pilot_round: batch-2
+safe_substitute_for: [糸井重里]
 date: 2026-04-21
 ---
 

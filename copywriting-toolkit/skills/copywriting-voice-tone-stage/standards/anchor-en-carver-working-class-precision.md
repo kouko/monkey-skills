@@ -6,6 +6,7 @@ quadrant: Q1
 landmark: toward-Q4
 creator_type: author
 pilot_round: batch-4
+safe_substitute_for: [Hemingway]
 date: 2026-04-21
 ---
 

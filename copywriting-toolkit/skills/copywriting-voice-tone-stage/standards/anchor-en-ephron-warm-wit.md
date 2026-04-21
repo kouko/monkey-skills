@@ -6,6 +6,7 @@ quadrant: Q3
 landmark: center
 creator_type: essayist + screenwriter
 pilot_round: batch-6
+safe_substitute_for: [Didion, Joan Didion]
 date: 2026-04-21
 ---
 

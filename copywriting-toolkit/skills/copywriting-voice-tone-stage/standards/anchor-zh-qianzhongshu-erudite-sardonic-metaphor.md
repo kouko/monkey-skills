@@ -6,6 +6,7 @@ quadrant: Q2
 landmark: toward-Q1
 creator_type: author/scholar
 pilot_round: batch-4
+safe_substitute_for: [David Foster Wallace, DFW]
 date: 2026-04-21
 ---
 

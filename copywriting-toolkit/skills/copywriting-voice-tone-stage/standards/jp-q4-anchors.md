@@ -42,6 +42,13 @@ Cross-load: 伊丹十三 `anchor-jp-itami-juzo-keimyou-shadatsu.md` (Q1 toward-Q
   - Slug: `jp-uniqlo-sato-kashiwa-lifewear`
   - Register: 視覚先行 + コピー最小; 体言止め+句点 記号化; 「〜ではなく〜」 転倒レトリック; LifeWear 固有名化; グローバル機能 minimalism (vs 原研哉 和的 minimalism 区別要注意)
 
+- **外山滋比古 — 思考エッセイ / 英文学者的随筆** (scholar-essayist, お茶の水女子大学名誉教授, 1923-2020) — [anchor-jp-toyama-shigehiko-shikou-seiri.md](anchor-jp-toyama-shigehiko-shikou-seiri.md) (v1.11.0)
+  - Slug: `jp-toyama-shigehiko-shikou-seiri`
+  - Register: 『思考の整理学』系思考エッセイ; 比喩先行・抽象後追い + 日常ことわざを論証の骨に + 「〜ではないか」dialogic 語尾 + Charles Lamb / Chesterton familiar essay 系譜
+  - ⚠ Over-mimic MEDIUM: 比喩の骨格化 + dialogic 語尾 surface mimic. Mitigation: 比喩は章の骨、語尾は 〜ではないか、原語は一度だけ
+  - Differentiation vs 池上彰: 池上は「わかる」ゴール(解説ジャーナリズム), 外山は「考える」プロセス(思考エッセイ)
+  - `safe_substitute_for: [伊丹十三]` — essay register lineage、教養背骨と dialogic reasoning が必要な brief では外山
+
 ## Landmark: toward-Q3
 
 **Moved out to format templates** (v1.6.0):

@@ -1,5 +1,68 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.11.0 — 2026-04-22 (anchor gap-fill — 6 new + 1 research-only + 6 safe_substitute_for relationships)
+
+Research-first, fallback-to-note protocol per user directive: "先深入研究候選 如果研究後發現資料不足以規則化語氣 那就只留研究筆記但放棄成為 anchor". 8 parallel research agents dispatched; 6 candidates passed the v2 Layer-1 eligibility gate (≥5 verbatim + ≥3 attributed native critical read + ≥5 actionable sentence-level mechanics + failure mode + ≤15-word mitigation), 1 candidate failed and produced a research note, 1 agent ran the Phase C cross-anchor sweep.
+
+### Anchor count: 81 → 87 (+6)
+
+### 6 new v2 anchors
+
+**JP (+4)**:
+- `anchor-jp-ikegami-akira-kaisetsu-journalism.md` (JP Q1 center) — 池上彰 わかりやすさ解説; 和文和訳 + 擬人化直接話法. Over-mimic MEDIUM.
+- `anchor-jp-yoro-takeshi-baka-no-kabe.md` (JP Q1 center, toward-Q2 secondary) — 養老孟司 口述→整文 intellectual register; 『バカの壁』『死の壁』. `safe_substitute_for: [原研哉]`. Over-mimic MEDIUM-HIGH.
+- `anchor-jp-matsuura-yataro-teinei-essay.md` (JP Q3 toward-Q4) — 松浦弥太郎「今日もていねいに」; 暮しの手帖 + 100の基本. Over-mimic HIGH. (Agent re-slotted Q4→Q3 based on ですます調+一人称ぼく evidence.)
+- `anchor-jp-toyama-shigehiko-shikou-seiri.md` (JP Q4 toward-Q1) — 外山滋比古 思考エッセイ; 『思考の整理学』+ 英文学者的 familiar essay. `safe_substitute_for: [伊丹十三]`. Over-mimic MEDIUM.
+
+**EN (+2)**:
+- `anchor-en-schwartz-eugene-direct-response-breakthrough.md` (EN Q4 center) — Eugene Schwartz direct-response canon; *Breakthrough Advertising* 1966 + Rodale seminar 1994. Over-mimic HIGH.
+- `anchor-en-levine-matt-money-stuff.md` (EN Q4 center) — Matt Levine insider-wry financial exegesis; Bloomberg Money Stuff 2015-present. Over-mimic HIGH.
+
+### 1 research-only note (candidate rejected)
+
+- `docs/voice-anchor-research-notes/zh-tw-lin-chun-ming-tw-4a-canon.md` — 林俊明 candidate FAILED. Research surfaced biographical misattribution (Jimmy Lam is 香港 Leo Burnett/DDB lineage, not 台灣 4A 奧美), corpus thin (2 verbatim, need ≥5), culture category error (zh-HK / 粵語 register, not zh-TW). Note preserves research trail + recommends 孫大偉 as true zh-TW Q4 candidate for future research.
+
+### 6 `safe_substitute_for:` cross-references added (from Phase C sweep)
+
+Sweep agent analyzed 81 existing anchors for valid substitute relationships (target in meta-core registry OR widely-pastiched; mechanics overlap documented; substitute's over-mimic risk < target's).
+
+| Anchor modified | safe_substitute_for added | Justification |
+|---|---|---|
+| `anchor-en-carver-working-class-precision.md` | `[Hemingway]` | Self-declared Hemingway descendant; iceberg omission + flat declarative + said-only tags; brand-name load-bearing nouns resist generic-object parody trap |
+| `anchor-en-ephron-warm-wit.md` | `[Didion, Joan Didion]` | Ephron in "Didion/Ephron/Dunham personal-essay line" (Sloane Crosley NYTBR); list-as-argument + flat punchline replaces Didion's antithesis-tic |
+| `anchor-en-hammett-terse-procedural.md` | `[Chandler, Raymond Chandler]` | Chandler names Hammett as progenitor (1944 essay); Hammett's own Don't block explicitly targets "Chandler-contaminated Hammett" |
+| `anchor-jp-tanikawa-shi-no-kotoba.md` | `[糸井重里]` | Documented lineage (ほぼ日『ぼく』2013 collab); ひらがな優位 + breath-scaled lines; avoids 糸井's「。」-on-fragment surface-mimic trap |
+| `anchor-zh-tw-pai-hsien-yung-elegiac-diaspora.md` | `[張愛玲]` | 白's own Don't block flags Chang-contamination; Chang-mechanics sans aphoristic-metaphor density that drives 張's failure modes |
+| `anchor-zh-qianzhongshu-erudite-sardonic-metaphor.md` | `[David Foster Wallace, DFW]` | Cross-cultural equivalent declared in own Metadata; 博喻三連 + 譏誚 delivers recursive erudite maximalism without DFW's nested-footnote failure |
+
+### 1 substitution pair REJECTED
+
+- Allebach ↔ Parvez (same HIGH risk; violates schema rule "substitute's risk must be LOWER than target's"). Both anchors retained independently as era-locked individual SM operators; cross-reference kept prose-only.
+
+### Router updates (4 files)
+
+- `jp-q1-anchors.md` Landmark: center filled (was pointing to toward-edges only) — 池上彰 + 養老孟司
+- `jp-q3-anchors.md` Landmark: toward-Q4 added — 松浦弥太郎
+- `jp-q4-anchors.md` Landmark: toward-Q1 extended — 外山滋比古 (alongside 佐藤可士和)
+- `en-q4-anchors.md` Landmark: center extended — Eugene Schwartz + Matt Levine (alongside Basecamp)
+
+### Flagged for future research (HIGH-risk masters with NO current substitute)
+
+- Aaron Sorkin — unique register, no JP/ZH/EN candidate covers rhetorical-Q-plus-self-answer + walk-and-talk
+- 坂元裕二 — no adjacent JP craft-gate anchor covers 具体数字+固有名詞積層 + 敬語 peer-warm + 比喩の橋は張らない
+- 許舜英 ↔ 李欣頻 — both HIGH, mechanism-distinct per 許's Metadata ("Stylistic-sibling — not transferability"); no safe substitute
+- David Foster Wallace — EN-native lower-risk substitute does not exist (錢鍾書 is cross-lang only)
+
+### Eligibility discipline
+
+Research-first protocol prevented 1/8 candidates (12.5%) from entering the library despite having a proposed slot. Demonstrates the protocol's value: user directive ensured research gate held even when an anchor name was on the plan. Research notes preserve the trail so future corpus access (e.g., 《廣告痴人說夢話》紙本掃描) can revisit.
+
+### New directory
+
+- `copywriting-toolkit/docs/voice-anchor-research-notes/` — holds rejected-candidate research artifacts. Distinct from `voice-anchor-deep-dives/` (Layer 2/3 research for accepted anchors) and `voice-anchor-gap-research.md` (planning doc).
+
+---
+
 ## v1.10.0 — 2026-04-22 (auto-selection polish — 3 improvements from v1.9.x E2E findings)
 
 Post-v1.9.x E2E (6 agent-simulated Pass 3 runs, 3 explicit-voice + 3 auto-select) surfaced 3 architectural improvements, all shipped together as v1.10.0:
