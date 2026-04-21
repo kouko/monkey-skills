@@ -267,9 +267,14 @@ graph TB
 
 CJK labels work reliably when wrapped in `"..."` per the unified quote rule (see [obsidian-common-quirks.md § Quirk 4.5](../obsidian-common-quirks.md)). Without quotes, CJK characters in node labels may fail to render or break parsing.
 
-### Example 7: Multi-stage pipeline (subgraph direction preserved via subgraph-level linking)
+### Example 7: Multi-stage pipeline (compact display for long workflows)
 
-When you need horizontal stage-to-stage flow AND vertical sub-step flow within each stage, use **subgraph-level connections** (`stageA --> stageB`) rather than node-to-node cross-boundary links. This preserves each subgraph's internal `direction`:
+**When to use this pattern**:
+- **Long workflows that would overflow horizontally or vertically if flat**. A 10-20 node linear flowchart becomes either very wide (`LR`) or very tall (`TB`) — both cramp into Obsidian's preview pane and strain reader focus.
+- **Solution**: chunk the flow into phases (Stage A / B / C ...) with each phase as a subgraph containing its internal sub-steps. Parent graph `LR` arranges phases horizontally; each subgraph `direction TB` stacks sub-steps vertically. Same content, **~2× information density** vs flat layout, much better readability.
+- **Bonus**: phase grouping also adds **semantic structure** — reader sees "user phase / staff phase / archive phase" at a glance before reading details.
+
+The syntax trick: use **subgraph-level connections** (`stageA --> stageB`) rather than node-to-node cross-boundary links. This preserves each subgraph's internal `direction`:
 
 ```mermaid
 graph LR
@@ -305,10 +310,22 @@ graph LR
 
 **Anti-pattern** — if you connected via `A3 --> B1` instead of `stageA --> stageB`, Mermaid would ignore `direction TB` and render each subgraph in parent's `LR` direction, collapsing the intended column layout.
 
-**When to use this pattern**:
-- Multi-stage workflows with distinct phases (approval / procurement / deployment etc.)
-- Each stage has multiple sequential steps you want displayed vertically
-- Overall flow should read horizontally
+**Pattern fit checklist** — use this pattern when:
+- ✅ Workflow has **≥8-10 nodes** total (flat layout would be too wide or too tall)
+- ✅ Flow has **natural phase boundaries** (handoff between teams / systems / contexts)
+- ✅ Each phase has **2-5 sub-steps** (if just 1 step per phase, no grouping benefit)
+- ✅ Obsidian preview pane is limited width — vertical chunks fit better than long horizontal snake
+
+**When NOT to use**:
+- ❌ Workflow has ≤5 nodes total — flat flowchart is simpler
+- ❌ Workflow has many cross-phase jumps — subgraph grouping fights the content
+- ❌ No clear phase boundaries — grouping would be arbitrary
+
+**Typical use cases**:
+- Multi-stage approval workflows (submission / review / approval / archive)
+- Customer service pipelines (intake / triage / resolution / follow-up)
+- CI/CD pipelines (build / test / staging / production)
+- Multi-team handoff processes (design / engineering / QA / deploy)
 
 ## Error prevention
 
