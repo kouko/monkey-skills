@@ -27,6 +27,13 @@ Q3 = Affinity × Emotion. JP canonical: 向田邦子 (center, 真打ち random),
   - Slug: `jp-sawamoto-yoshimitsu-shiroto-family`
   - Recast from v1 「Brand-era pointer: SoftBank 白戸家（佐々木宏 + 澤本嘉光）」→ named CD 澤本嘉光 selected (Phase B v1.5.0).
 
+- **仲畑貴志 — 口語直言 / 肉声ウィット** (named CW, craft-gate master, TCC 殿堂 2015) — [anchor-jp-nakahata-takashi-kougo-chokugen.md](anchor-jp-nakahata-takashi-kougo-chokugen.md) (v1.12.0)
+  - Slug: `jp-nakahata-takashi-kougo-chokugen`
+  - Register: 口語終止形 + 俗語 + 商品ベネフィット 1 行着地 + ウィット 1 拍 → 商品 2 拍構造; TOTO ウォシュレット「おしりだって、洗ってほしい。」/ シャープ「目のつけどころが、シャープでしょ。」/ コスモ石油「ココロも満タンに。」
+  - **JP craft-gate: 5th master** (after 糸井 / 岩崎 / 眞木 / 谷山); `JP_CRAFT_MASTER_MAP` extended v1.12.0
+  - ⚠ Over-mimic HIGH+: 口語規律 LLM 崩れ多発 (「です・ます」親しみ化 + ウィット 1 拍で止める). Mitigation: 商品名を一句内に着地させ、俗語を 1 つ残し、余韻副詞を禁じよ
+  - Secondary register overlap: JR 九州 1994「愛とか、勇気とか、見えないものも乗せている。」は例外的 Q3 余韻 mode → `anchor-jp-iwasaki-shunichi-yonin.md` 併読推奨
+
 Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 ## Landmark: extreme
@@ -46,6 +53,12 @@ Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-me
 
 - **梅田悟司 — 内なる言葉の方法論** (named CW, ジョージア「世界は誰かの仕事でできている。」) — [anchor-jp-umeda-satoshi-uchinaru-kotoba.md](anchor-jp-umeda-satoshi-uchinaru-kotoba.md)
   - Slug: `jp-umeda-satoshi-uchinaru-kotoba`
+
+- **宮藤官九郎 — 若者口語 × 時代 mashup グルーヴ** (playwright + screenwriter) — [anchor-jp-kudo-kankuro-youth-colloquial-mashup.md](anchor-jp-kudo-kankuro-youth-colloquial-mashup.md) (v1.12.0)
+  - Slug: `jp-kudo-kankuro-youth-colloquial-mashup`
+  - Register: 圧倒的な会話手数 + 方言+造語積層 + ポップカルチャー引用 + 時代 mashup + 5-6 人群像ツッコミ;『あまちゃん』「じぇじぇじぇ」/『いだてん』落語章タイトル + 明治若者口語
+  - ⚠ Over-mimic HIGH: 方言・造語の誤用コスト高;地域 authenticity 侵害リスク. Mitigation: 群像でグルーヴ。手数は構造、引用は文脈
+  - 坂元裕二 substitute として不適 (register family 反対 — 動的 vs 静的)
 
 ## Landmark: toward-Q4
 

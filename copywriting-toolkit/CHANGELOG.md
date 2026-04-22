@@ -1,5 +1,77 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.12.0 — 2026-04-22 (anchor gap-fill round 2 — 3 new anchors + 5th JP craft-gate + 2 research notes + cross-anchor analysis)
+
+Research-first protocol continues (user directive from v1.11.0: "如果研究後發現資料不足以規則化語氣 那就只留研究筆記"). 6 parallel research agents dispatched; 3 candidates passed v2 eligibility gate, 2 failed (produced research notes), 1 cross-anchor analysis produced findings note.
+
+### Anchor count: 87 → 90 (+3)
+
+### 3 new v2 anchors
+
+- **`anchor-jp-nakahata-takashi-kougo-chokugen.md`** (JP Q3 center, toward-Q2 hinge) — 仲畑貴志 口語直言 / 肉声ウィット; TCC 殿堂 2015; 「おしりだって、洗ってほしい。」(TOTO 1982-83) /「目のつけどころが、シャープでしょ。」/「ココロも満タンに。」. **5th JP craft-gate master** — `JP_CRAFT_MASTER_MAP` extended. Over-mimic HIGH+.
+- **`anchor-jp-mitani-koki-group-scene-dialogue-comedy.md`** (JP Q2 toward-Q1) — 三谷幸喜 群像会話劇 + 遮り + 敬語ズレ + Billy Wilder 系譜; 『古畑任三郎』『12人の優しい日本人』. Over-mimic MEDIUM.
+- **`anchor-jp-kudo-kankuro-youth-colloquial-mashup.md`** (JP Q3 toward-Q2) — 宮藤官九郎 若者口語×時代 mashup グルーヴ; 『あまちゃん』「じぇじぇじぇ」/『いだてん』落語章 mashup. Over-mimic HIGH.
+
+### 5th JP craft-gate master
+
+`JP_CRAFT_MASTER_MAP` in SKILL.md extended from 4 to 5 masters:
+
+```
+JP_CRAFT_MASTER_MAP = {
+  糸井重里: itoi-shigesato-state-proposal,
+  岩崎俊一: iwasaki-shunichi-yonin,
+  眞木準: maki-jun-craft-aphorism,
+  谷山雅計: taniyama-masakazu-discipline,
+  仲畑貴志: nakahata-takashi-kougo-chokugen,    # v1.12.0 NEW
+}
+```
+
+Pass 3a JP craft-gate activation list expands accordingly. TCC ホール・オブ・フェイム 2015 顕彰 + 糸井重里 50 年来の親友 peer attribution + 谷山雅計 "日本のコピー20本" 仲畑作選 = 同業評価確立.
+
+### 2 research-only notes (candidates rejected)
+
+- **`zh-tw-sun-dawei-taiwan-advertising-canon.md`** — 孫大偉 FAILED. 2/4 gate pass: verbatim slogans 齊備 + native critical read 足 + failure-mode 可寫,但 sentence-level prose mechanics <5 (body copy corpus 線上不可及;slogan layer ≤12 字不足歸納機制;散文 register ≠ 廣告 register). zh-TW Q4 槽位**預留**給孫大偉不另覓替代 (其「台灣 4A 奧美 canon」條件在華文圈無對等人選). Next-round strategy: 由線上搜尋升級至圖書館 + 紙本 archive.
+- **`zh-tw-ho-jung-hsing-investigative-journalism.md`** — 何榮幸 FAILED. Personal-vs-institutional voice mismatch: 調查記者 register 早已內化為報導者集體 style; 個人散文 register 屬社運世代通用抒情體不 distinctive. 建議下一輪候選: 房慧真 / 張娟芬 / 阿潑 / 吳介民 / 吳叡人.
+
+### 1 cross-anchor analysis note
+
+- **`zh-tw-li-xu-stylistic-siblings-analysis.md`** — 李欣頻 ↔ 許舜英 substitute feasibility. **Verdict**: confirm reject (Option V1 + partial V2). Even with risk-differential correction (李 MEDIUM vs 許 HIGH — could pass strict-lower-rule in 李→許 direction), mechanism is fundamentally distinct (許's `X 是一種 Y` definitional-inversion + power-disparity payload ≠ 李's 排比枚舉 + antecedent-work dialogue + 具名文化座標). Neither direction qualifies as substitute per schema v2 condition 2 ("delivers adjacent register empirically verified").
+
+### Stylistic-sibling annotations added (mirror 許↔張愛玲 precedent)
+
+- `anchor-zh-tw-xu-shunying-ideological-definitional.md` now carries `Stylistic-sibling (not transferability): 李欣頻` with mechanism-distinct rationale
+- `anchor-zh-tw-lee-hsin-ping-literary-consumption.md` now carries reciprocal `Stylistic-sibling (not transferability): 許舜英`
+
+Prevents future re-proposal of the pairing as substitute.
+
+### Rejected safe_substitute_for relationships (research discipline)
+
+Research agents proposed several `safe_substitute_for` candidates that were rejected on v1.11.1 strict-lower-risk rule:
+- 仲畑 HIGH+ → 坂元 MEDIUM-HIGH: rejected (仲畑 higher risk; mechanics overlap PARTIAL-only)
+- 仲畑 HIGH+ → 谷山 LOW: rejected (仲畑 higher risk; mechanics overlap WEAK)
+- 三谷 → Sorkin: rejected (Sorkin's 3 核心技法 — rhetorical Q-plus-self-answer / moral verdict / walk-and-talk — 全欠落)
+- クドカン → 坂元裕二: rejected (register family 反対 — 動的 grooves vs 静的 peer-warm)
+
+HIGH-risk masters still gap-flagged for substitute: Sorkin, 坂元裕二, DFW (EN-native).
+
+### Router updates
+
+- `jp-q3-anchors.md`: Landmark center +仲畑貴志; Landmark toward-Q2 +宮藤官九郎
+- `jp-q2-anchors.md`: Landmark toward-Q1 +三谷幸喜
+- `SKILL.md`: Pass 3a JP craft-gate activation list + `JP_CRAFT_MASTER_MAP` code block both extended to 5 masters
+
+### Files touched
+
+- `copywriting-toolkit/skills/copywriting-voice-tone-stage/standards/` — 3 new anchor-*.md + 2 router updates (jp-q2, jp-q3) + 2 anchor updates (許, 李 stylistic-sibling lines)
+- `copywriting-toolkit/skills/copywriting-voice-tone-stage/SKILL.md` — JP_CRAFT_MASTER_MAP + Pass 3a activation list
+- `copywriting-toolkit/docs/voice-anchor-research-notes/` — +3 notes (孫大偉 / 何榮幸 / 李許 analysis)
+
+### Eligibility discipline recap
+
+Research-first protocol rate: 3/6 PASS → anchor, 2/6 FAIL → research note, 1/6 cross-anchor-analysis. Protocol prevented biographical-overclaim pollution (孫大偉 slogan-only corpus / 何榮幸 institutional-voice conflation) while capturing positive additions (仲畑 completes craft-gate roster; 三谷 + クドカン fill distinct registers).
+
+---
+
 ## v1.11.2 — 2026-04-22 (Phase 5 / Phase 6 unification — Brand Corpus ↔ anchor library cross-refs)
 
 User-directed consolidation: Phase 5 quadrant diagnosis landmarks now explicitly link to Phase 6 anchor library entries, eliminating two-tier confusion.
