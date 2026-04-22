@@ -325,12 +325,29 @@ def lint_anchor_file(filepath: Path) -> LintResult:
     return result
 
 
+def load_baseline(path: Path) -> set[str]:
+    """Parse baseline file — one anchor filename per line, # comments ignored."""
+    if not path.is_file():
+        print(f"ERROR: baseline file not found: {path}", file=sys.stderr)
+        sys.exit(1)
+    names = set()
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if line:
+            names.add(line)
+    return names
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("paths", nargs="*", type=Path, help="anchor files to lint (default: all)")
     parser.add_argument("--strict", action="store_true", help="exit non-zero on warnings too")
     parser.add_argument("--anchor-dir", type=Path, default=DEFAULT_ANCHOR_DIR,
                         help=f"directory to scan (default: {DEFAULT_ANCHOR_DIR})")
+    parser.add_argument("--baseline", type=Path, default=None,
+                        help="path to baseline exception file (list of known-failing anchor filenames); "
+                             "failures in this list do not trigger non-zero exit. "
+                             "Enables CI to block new drift while permitting known backlog.")
     args = parser.parse_args()
 
     if args.paths:
@@ -356,6 +373,37 @@ def main() -> int:
     print()
     print(f"Summary: {n_pass_clean} clean / {n_warned} with warnings / {n_failed} failed / {n_total} total")
 
+    # Baseline exception handling: allow known-failing files, block new drift.
+    if args.baseline is not None:
+        baseline = load_baseline(args.baseline)
+        current_failing = {r.filepath.name for r in results if r.errors}
+        new_failures = current_failing - baseline
+        fixed_in_current = baseline - current_failing
+
+        print(f"\nBaseline: {args.baseline}")
+        print(f"  Known failures in baseline: {len(baseline)}")
+        print(f"  New failures (not in baseline): {len(new_failures)}")
+        print(f"  Baseline entries now passing: {len(fixed_in_current)}")
+
+        if new_failures:
+            print("\nNew drift introduced — these anchors failed lint but are NOT in baseline:")
+            for name in sorted(new_failures):
+                print(f"  - {name}")
+            print(
+                "\nFix the listed anchor(s), OR if the failure is intentional and accepted, "
+                "add the filename to the baseline file and explain in PR description."
+            )
+            return 1
+
+        if fixed_in_current:
+            print("\nGood news: baseline entries now passing — update baseline file to remove:")
+            for name in sorted(fixed_in_current):
+                print(f"  - {name}")
+            # Not an error — CI stays green but nudges to tighten baseline.
+
+        return 0 if not (args.strict and n_warned > 0) else 2
+
+    # No baseline mode — strict by default: any failure = non-zero exit.
     if n_failed > 0:
         return 1
     if args.strict and n_warned > 0:

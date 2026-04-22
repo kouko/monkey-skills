@@ -109,13 +109,37 @@ Files that pass lint but surface non-canonical values (warnings only):
 
 These are acceptable; future release may normalize.
 
-## CI integration (now feasible)
+## CI integration (wired in v1.13.3)
 
-With only 3 remaining real failures, CI lint gate via baseline exception list becomes practical. Not wired in v1.13.3 itself (scope: format unification); follow-up PR will add workflow + baseline file.
+CI lint gate lives in `.github/workflows/skill-structure.yml` → job `copywriting-anchor-lint`. On every push to `main` and every PR targeting `main`:
 
-Exit codes (existing):
-- 0 — all files pass
-- 1 — at least one ERROR (blocks merge)
+```yaml
+- name: Lint voice anchor library (v1.13.3 canonical format)
+  run: |
+    python3 copywriting-toolkit/scripts/lint-anchor-library.py \
+      --baseline copywriting-toolkit/scripts/lint-baseline.txt
+```
+
+### Baseline exception mechanism
+
+`scripts/lint-baseline.txt` lists the 3 currently-accepted failures (2 dual-quadrant + 1 Examples<5). Under `--baseline` mode:
+
+| Condition | Exit | CI behavior |
+|---|---|---|
+| Failures ⊆ baseline | 0 | ✅ PASS |
+| New failure not in baseline | 1 | ❌ FAIL — block merge |
+| Baseline entry now passes | 0 + nudge | ✅ PASS + reminder to prune baseline |
+
+This lets CI block new drift while allowing progressive cleanup of existing debt.
+
+### Updating the baseline
+
+When an anchor in `lint-baseline.txt` is fixed, delete the line. CI will print a "baseline entries now passing" nudge until you prune, but does not fail. When adding a new accepted-failure (rare — should mostly happen when intentionally deferring research), add the filename + comment explaining rationale.
+
+### Exit codes (existing, unchanged)
+
+- 0 — all files pass (or all failures covered by baseline when `--baseline` used)
+- 1 — at least one ERROR outside baseline (blocks merge)
 - 2 — warnings only, `--strict` mode (soft block)
 
 ## Reproducing this baseline

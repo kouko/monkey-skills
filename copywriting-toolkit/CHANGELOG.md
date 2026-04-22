@@ -44,12 +44,18 @@ Rules are STRICTER in v1.13.3 yet clean count rose. Two mechanisms:
 - 1 file: bilingual label → English (龔大中; content prose unchanged)
 - 1 file: missing label added (Tim Delaney)
 
+**CI lint gate** (bundled in this release — previously deferred pending baseline reduction):
+
+- New `scripts/lint-baseline.txt` lists 3 accepted failures (2 dual-quadrant + 1 Examples<5) as exception list.
+- Lint script adds `--baseline <file>` flag. Under baseline mode: current failures ⊆ baseline → exit 0; new failure outside baseline → exit 1; baseline entry now passing → exit 0 + nudge.
+- New job `copywriting-anchor-lint` in `.github/workflows/skill-structure.yml` runs on push to main + every PR targeting main. Consumes `--baseline` mode so only NEW drift blocks merge.
+
 **Other changes**:
 
-- `docs/tests/lint-baseline-v1.13.2.md` → `docs/tests/lint-baseline-v1.13.3.md` (full rewrite with canonical structure documented + migration audit trail).
+- `docs/tests/lint-baseline-v1.13.2.md` → `docs/tests/lint-baseline-v1.13.3.md` (full rewrite with canonical structure documented + migration audit trail + CI integration).
 - `plugin.json`: 1.13.2 → 1.13.3
 
-**Supersedes PR #129**: that PR added Pattern A + Pattern B fallback logic to lint — rendered obsolete by v1.13.3's canonical-only enforcement. #129 to be closed.
+**Supersedes PR #129**: that PR added Pattern A + Pattern B fallback logic to lint — rendered obsolete by v1.13.3's canonical-only enforcement. #129 closed.
 
 **Meta-reflection**: fourth consecutive audit in the v1.13.x series surfacing the "dead ceremony" pattern — v1.13.3 closes the main format-drift surface. With 3 substantive failures remaining (vs 19 in v1.13.0), CI lint gate becomes practical (follow-up PR).
 
