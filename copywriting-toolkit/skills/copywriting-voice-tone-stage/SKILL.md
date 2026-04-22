@@ -1,6 +1,6 @@
 ---
 name: copywriting-voice-tone-stage
-description: Fix voice drift / tone inconsistency and apply maestro lineage register — Ogilvy 4-axis + JP (糸井 / 岩崎 / 眞木 / 谷山) + ZH (許舜英 / 李欣頻 / 葉明桂 / 龔大中) lineage craft. Use when you have a draft with a quadrant assigned AND need sentence-level tone polish — 語尾 / 呼吸 / rhythm refinement — before ethics gate. Not for macro quadrant selection (use copywriting-voice-quadrant-stage) or legal / ethics review (use copywriting-ethics-check-stage). ボイス・トーン調整・系譜クラフト。文案聲調修飾・語氣校正。
+description: Fix voice drift / tone inconsistency and apply voice anchor register — Ogilvy 4-axis + individual-creator anchors (JP / ZH / EN). Use when you have a draft with a quadrant assigned AND need sentence-level tone polish — 語尾 / 呼吸 / rhythm refinement — before ethics gate. Not for macro quadrant selection (use copywriting-voice-quadrant-stage) or legal / ethics review (use copywriting-ethics-check-stage). ボイス・トーン調整・系譜クラフト。文案聲調修飾・語氣校正。
 ---
 
 # copywriting-voice-tone-stage
@@ -8,9 +8,9 @@ description: Fix voice drift / tone inconsistency and apply maestro lineage regi
 Phase 6 — **tactical** voice + tone fine-tuning. Phase 5 fixed the macro
 quadrant (Authority↔Affinity × Reason↔Emotion); this phase works *inside*
 that quadrant: 4-axis micro voice calibration, Mailchimp-style tone
-context-switching, and — when a JP voice reference is in force — lineage-
-craft deep voice signature application (糸井 / 岩崎 / 眞木) with explicit
-LLM reproduction gap awareness.
+context-switching, and voice-anchor register application (80+ individual-
+creator anchors across JP / ZH / EN / zh-HK with explicit LLM reproduction
+gap awareness).
 
 Output is a polished draft + structured `tone_notes`, handed to Phase 7
 ethics check.
@@ -26,33 +26,24 @@ Skip only when:
 
 - The brief is single-sentence short-form (≤15 chars) AND no voice maestro
   is referenced — Phase 5 output already embodies tone; no micro-tuning
-  adds value. (Voice Consistency gate trigger condition also not met — see
-  §Gate.)
+  adds value.
 - The run is an `audit` — audit re-runs Phase 5-8 against existing copy;
   this skill still runs, but treats the provided copy as the draft input
   rather than regenerating.
 
-### When lineage craft applies (Pass 3, v1.9.0)
+### When Pass 3 (Voice Anchor) applies
 
-Pass 3 triggers per the 4-branch dispatch (§Pass 3 activation guard). Post-v1.7.0, **Pass 3a/3b load per-master `anchor-{slug}.md` files directly** (via JP_CRAFT_MASTER_MAP / ZH_CRAFT_MASTER_MAP) — no wholesale craft-lineage load.
+Pass 3 activates iff either condition holds:
 
-**JP craft-gate (Pass 3a)** — activates when:
+1. `brief.voice_reference` names a specific creator (any language — 糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 / 仲畑貴志 / 許舜英 / 李欣頻 / 葉明桂 / or any named author with a matching `anchor-{slug}.md` in the library).
 
-1. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計, 仲畑貴志}, OR
-2. `brief.output_language == "ja"` AND Q3 state-proposal / 余韻 register is declared (routes through Pass 3d to JP Q3 quadrant router; returns to craft-gate if master identified)
+2. `voice_quadrant.primary` + `voice_quadrant.position` are set AND the brief requires register-signal-level voice lock (beyond 4-axis tuning). Signals: `tone_cue` contains register keywords, `message_thesis` is stance-loaded, or upstream skill annotates `register_lock_required: true`.
 
-**ZH craft-gate (Pass 3b)** — activates when:
+Otherwise Pass 3 is skipped; `tone_notes.register_signal_applied = null`.
 
-1. `brief.voice_reference` ∈ {許舜英, 李欣頻, 葉明桂}, OR
-2. `brief.output_language` is `zh-TW` or `zh-HK` AND Q2-maestro voice declared (routes through Pass 3d register-signal)
+**Cross-tradition transplant forbidden** — never force JP signatures onto ZH output (or vice versa), never force either onto Anglo output. `voice-and-tone.md §Anti-Patterns` + `voice-anchor-meta.md §Cross-Master Context` document the ban. Cross-language BORROWING allowed only when anchor frontmatter's `cross-reference-valid-for[target_lang] == STRONG` AND brief explicitly permits it.
 
-Note: `voice_quadrant` is the object emitted by Phase 5 (`{primary, edge, rationale, schwartz_alignment}`) — always dereference `.primary`, never read as string.
-
-**Non-craft-gate Pass 3 paths**: Pass 3c (axis-extreme), Pass 3d (register-signal via quadrant router) — see §Pass 3 activation guard below for full dispatch logic.
-
-**Cross-tradition transplant forbidden** — never force JP lineage onto ZH output (or vice versa), never force either onto Anglo output. `voice-and-tone.md §Anti-Patterns` + `voice-anchor-meta.md §Cross-Master Context` document the ban.
-
-**If both lineage triggers match** (e.g., `voice_reference: 糸井重里` but `output_language: zh-TW`) → emit `violation` envelope per `../../CLAUDE.md §Envelope Violation`; router routes to `copywriting-intake`. Do NOT self-dispatch bounce (fragments `bounce_round` counter).
+**If lineage-language conflict detected** (e.g., `voice_reference: 糸井重里` but `output_language: zh-TW`) → emit `violation` envelope per `../../CLAUDE.md §Envelope Violation`; router routes to `copywriting-intake`.
 
 Violation payload:
 ```json
@@ -74,18 +65,12 @@ Violation payload:
 ## What This Skill Owns
 
 - **Standards**:
-  - `standards/voice-and-tone.md` — Tier 2 cross-framework voice SSOT.
-    Ogilvy 1963/1983 Anglo long-copy canon + JP emotional-resonance
-    tradition (糸井 state-proposal, 岩崎 余韻) + 18F / Mailchimp 4-axis
-    voice model + Mailchimp "one voice, multiple tones" + tone context-
-    switching table (onboarding / error / crisis / celebration).
-  - `standards/anchor-jp-{itoi-shigesato,iwasaki-shunichi,maki-jun,taniyama-masakazu}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 糸井 / 岩崎 / 眞木 / 谷山 (Pass 3a craft-gate). Replace the former `voice-anchor-meta.md §Cross-Master Context (JP)` Tier 3 deep-dive; cross-master content absorbed into `voice-anchor-meta.md §Cross-Master Context`.
-  - `standards/anchor-zh-tw-{xu-shunying,lee-hsin-ping,ye-mingui}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 許舜英 / 李欣頻 / 葉明桂 (Pass 3b craft-gate). Replace the former `voice-anchor-meta.md §Cross-Master Context (ZH)` Tier 3 deep-dive; Z1-Z8 attribution corrections absorbed into `voice-anchor-meta.md §Cross-Master Context` + inlined per-anchor Metadata (Z1 → 葉明桂; Z2 → 李欣頻; Z3/Z4 → 許舜英; Z5/Z7 → 吳念真; Z8 → 龔大中).
+  - `standards/voice-and-tone.md` — Tier 2 cross-framework voice SSOT. Ogilvy 1963/1983 Anglo long-copy canon + JP emotional-resonance tradition + 18F / Mailchimp 4-axis voice model + Mailchimp "one voice, multiple tones" + tone context-switching table.
+  - `standards/voice-anchor-meta.md` — consolidated voice anchor metadata (schema + selection rubric + over-mimic fallback registry + verified lineage map + cross-reference registry + cross-cultural label rubric + drift corrections + cross-master context + axis extreme candidates). Consolidated in v1.13.0 from former meta-core + meta-detail + axis-extreme files.
+  - `standards/{jp,zh,en}-q{1,2,3,4}-anchors.md` (12 files) — quadrant router index, landmark-organized (center / extreme / toward-Q{N}).
+  - `standards/anchor-{slug}.md` (80+ files, all schema_version: 2.0) — per-creator v2 anchor bodies (Voice direction / Native critical read / Prose mechanics / Examples / Don't-over-mimic / Metadata).
 - **Rubric (SHOULD gate)**:
-  - `rubrics/voice-consistency-gate.md` — cross-stage / cross-candidate
-    voice stability + tone contextual appropriateness + maestro fidelity.
-    Run AFTER tone tuning as the last voice-layer check before handing to
-    Phase 7 ethics gates.
+  - `rubrics/voice-consistency-gate.md` — cross-stage / cross-candidate voice stability + tone contextual appropriateness + anchor fidelity. Runs AFTER tone tuning as the last voice-layer check before handing to Phase 7 ethics gates.
 
 This skill does **not** own:
 
@@ -93,27 +78,11 @@ This skill does **not** own:
 - Framework structure (PASONA stage ordering etc.) — Phase 4 workflow skills.
 - Ethics / legal / ステマ — `copywriting-ethics-check-stage` (Phase 7).
 - Form-appropriate character discipline — `copywriting-form-check-stage` (Phase 8).
+- Library curation (4-condition rubric enforcement) — `scripts/lint-anchor-library.py` at CI time (v1.13.0+).
 
 ## Phase 6 Operating Model
 
-Three sequential passes on the `draft`. Each pass returns either an edited
-draft or an annotation the next pass must honor. No pass may silently
-rewrite Phase 4's structural skeleton — frameworks are replaceable, voice
-is an irreplaceable asset, but structural edits belong to Phase 4 re-runs,
-not here.
-
-### Pre-pass: `schwartz_alignment` awareness note (v1.2.0 — downgraded from consumer)
-
-**v1.2.0 change**: The authoritative consumer of `schwartz_alignment` moved to Phase 8 8b rubric (single enforcement point per §Verification Density Principle). Pre-pass now downgraded to a lightweight awareness note.
-
-If `envelope.voice_quadrant.schwartz_alignment == "conflict_flagged"`:
-
-- Record it in `tone_notes.schwartz_awareness_note` (one-line acknowledgement; do NOT elaborate full rationale here — Phase 5 already recorded it in `voice_quadrant.rationale`).
-- Pass 1 may lightly compensate 4-axis defaults (e.g., avoid double-mismatch by keeping enthusiasm matter-of-fact when L2 forced into Q2) but is NOT responsible for rigorous compensation verification — that's Phase 8 8b's job.
-- If `hard_rule_applied`, acknowledge but do not attempt to revert.
-- Pass `voice_quadrant` (including `schwartz_alignment`) forward unchanged per `../../CLAUDE.md §Immutable fields`.
-
-**Rationale for downgrade**: Phase 5 writes the flag; Phase 8 8b consumes it at the form-fidelity level. Phase 6 pre-pass previously did a third pass of compensation reasoning that duplicated Phase 5's rationale emit and Phase 8's fidelity check — redundant per v1.2.0 §Verification Density Principle. Lightweight note keeps the flag visible to Pass 1 without re-verifying.
+Three sequential passes on the `draft`. Each pass returns either an edited draft or an annotation the next pass must honor. No pass may silently rewrite Phase 4's structural skeleton — frameworks are replaceable, voice is an irreplaceable asset, but structural edits belong to Phase 4 re-runs, not here.
 
 ### Pass 1 — 4-axis micro calibration (always runs)
 
@@ -126,28 +95,16 @@ Per `standards/voice-and-tone.md §Voice definition — 4 axes`:
 | Respectfulness | respectful | irreverent |
 | Enthusiasm | matter-of-fact | enthusiastic |
 
+**Schwartz alignment passthrough**: `voice_quadrant` (including `schwartz_alignment`) passes through Phase 6 unchanged per `../../CLAUDE.md §Immutable fields`. If `schwartz_alignment == "conflict_flagged"`, Pass 1 MAY lightly soften axis defaults (e.g., keep enthusiasm matter-of-fact when L2 forced into Q2), but does NOT elaborate rationale — Phase 8 8b owns the rigorous consumer check.
+
 Action:
 
-1. Extract brand voice axis positions from `brief.voice_reference` +
-   `voice_quadrant`. If absent, derive default from Phase 5 quadrant
-   (Q1 ≈ formal / serious / respectful / matter-of-fact; Q3 ≈ casual /
-   warm / respectful / warm-enthusiastic; etc.) and **disclose** the
-   derivation in `tone_notes.axis_default_derived`.
-2. **Self-check for axis drift** (v1.2.0 — downgraded from full scan):
-   lightly scan the draft for sentences whose axis reading obviously
-   conflicts with the target vector by ≥2 steps. Rewrite the flagged
-   sentences. Do NOT do a rigorous per-sentence enumeration — that is
-   the Voice Consistency SHOULD gate's job (single authoritative
-   enforcement per §Verification Density Principle). Pass 1 is "catch
-   the obvious" not "catch everything".
-3. Preserve framework stage boundaries (PASONA A / S / O labels, BEAF
-   stages, etc.) verbatim.
-4. Apply Ogilvy commandments explicitly: no empty-hype vocabulary
-   (amazing / revolutionary / game-changing), headline voice = body voice
-   (no click-bait exemption), long-copy must earn every body sentence.
+1. Extract brand voice axis positions from `brief.voice_reference` + `voice_quadrant`. If absent, derive default from Phase 5 quadrant (Q1 ≈ formal / serious / respectful / matter-of-fact; Q3 ≈ casual / warm / respectful / warm-enthusiastic; etc.) and **disclose** the derivation in `tone_notes.axis_default_derived`.
+2. **Self-check for axis drift**: lightly scan the draft for sentences whose axis reading obviously conflicts with the target vector by ≥2 steps. Rewrite the flagged sentences. The Voice Consistency SHOULD gate handles rigorous per-sentence enumeration; Pass 1 catches obvious drift.
+3. Preserve framework stage boundaries (PASONA A / S / O labels, BEAF stages, etc.) verbatim.
+4. Apply Ogilvy commandments explicitly: no empty-hype vocabulary (amazing / revolutionary / game-changing), headline voice = body voice (no click-bait exemption), long-copy must earn every body sentence.
 
-### Pass 2 — tone context-switching (runs if the draft contains
-context-sensitive segments)
+### Pass 2 — tone context-switching (runs if the draft contains context-sensitive segments)
 
 Per `standards/voice-and-tone.md §Tone context-switching table`:
 
@@ -158,222 +115,174 @@ Per `standards/voice-and-tone.md §Tone context-switching table`:
 | Crisis / Incident | serious, timely, transparent | no jokes, no hype, label uncertainty |
 | Celebration / Launch | enthusiastic, user-grateful | user is subject, not brand |
 
-**Voice stays constant; tone varies.** If brand voice is "playful,"
-error-state remains playful in voice, but tone becomes calm and joke-free.
-Mailchimp-explicit rule (§voice-and-tone §Tone context-switching table).
+**Voice stays constant; tone varies.** If brand voice is "playful," error-state remains playful in voice, but tone becomes calm and joke-free. Mailchimp-explicit rule (§voice-and-tone §Tone context-switching table).
 
-For non-SaaS copy (product ads, long-form sales, キャッチコピー), the four
-contexts still map — e.g., PASONA's Affinity stage ≈ Onboarding tone;
-Offer stage ≈ Celebration tone (see `voice-and-tone.md §Integration with
-PASONA / BEAF / キャッチコピー frameworks`).
+For non-SaaS copy (product ads, long-form sales, キャッチコピー), the four contexts still map — e.g., PASONA's Affinity stage ≈ Onboarding tone; Offer stage ≈ Celebration tone (see `voice-and-tone.md §Integration with PASONA / BEAF / キャッチコピー frameworks`).
 
-### Pass 3 — Lineage craft / register signal / axis extreme (runs only per §When lineage craft applies)
+### Pass 3 — Voice Anchor Selection (runs only per §When Pass 3 applies)
 
-Pass 3 branches into **three mutually exclusive load paths** based on voice_reference + voice_quadrant configuration. v1.3.2 expanded v1.2.0's single "craft gate" path into 3 tiers for the voice anchor library (PR 1 foundation v1.3.0 + content v1.3.1).
+**One linear 8-step flow.** v1.13.0 collapsed the former 4-branch dispatch (Pass 3a/3b/3c/3d) into a single flow — named creator, axis-extreme landmark, and register-signal routing all traverse the same steps; differences are candidate-pool filters or Step 2.3 priority, not separate control paths.
 
-#### Pass 3 activation guard (v1.3.2 — 3-tier branching)
-
-**Before loading any standards**, the agent MUST verify Pass 3 trigger evaluates to TRUE per §When lineage craft applies. Then branch:
+#### Step 1 — Load
 
 ```
-# Pass 3 activation predicate (outer gate, v1.2.0 preserved)
-if Pass 3 triggered:
-
-    # Tier 1 — Craft Gate (v1.7.0: load per-master v2 anchor as primary,
-    #                      craft-lineage only for attribution corrections / lineage context)
-    if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計, 仲畑貴志}:
-        master_slug = JP_CRAFT_MASTER_MAP[voice_reference]
-        load standards/anchor-jp-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
-        load standards/voice-anchor-meta.md    # over-mimic mitigation registry
-        # Conditional: if brief needs cross-master context / era / attribution risk
-        # → load standards/voice-anchor-meta.md §Cross-Master Context (section-targeted)
-        proceed to Pass 3a
-
-    elif voice_reference ∈ {許舜英, 李欣頻, 葉明桂}:
-        master_slug = ZH_CRAFT_MASTER_MAP[voice_reference]
-        load standards/anchor-zh-tw-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
-        load standards/voice-anchor-meta.md
-        # Conditional: attribution corrections (Z1-Z8) / cross-master lineage / 意識形態 era
-        # → load standards/voice-anchor-meta.md §Cross-Master Context
-        proceed to Pass 3b
-
-    # Tier 3 — Axis Extreme (new, v1.3.2)
-    elif voice_quadrant.position starts with "axis-":
-        load standards/voice-anchor-meta.md
-        load standards/voice-anchor-meta.md §Axis Extreme
-        proceed to Pass 3c
-
-    # Tier 2 — Register Signal (new, v1.3.2) — default for any other Pass-3-triggered case
-    else:
-        load standards/voice-anchor-meta.md
-        load standards/voice-anchor-meta.md
-        position = voice_quadrant.position OR "center" (default fallback)
-        load standards/{output_language}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
-        if cross-reference-valid-for[output_language] == STRONG for cited anchor:
-            load standards/{cross-ref-lang}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
-        proceed to Pass 3d
-
-else (Pass 3 not triggered):
-    # No load, skip to Phase 7
-    tone_notes.lineage_applied = null
-    tone_notes.register_signal_applied = null
-    tone_notes.axis_extreme_applied = null
+load standards/voice-anchor-meta.md
+load standards/{output_language}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
 ```
 
-**Craft-gate master → anchor file mapping** (v1.7.0):
+`{position}` ∈ {`center`, `extreme`, `toward-Q1`..`toward-Q4`, `axis-authority`, `axis-affinity`, `axis-reason`, `axis-emotion`}. Axis-extreme landmarks live in `voice-anchor-meta.md §Axis Extreme candidates` (cross-language section); per-quadrant router holds center / extreme / toward-Q{N} sections.
 
-```
-JP_CRAFT_MASTER_MAP = {
-  糸井重里: itoi-shigesato-state-proposal,
-  岩崎俊一: iwasaki-shunichi-yonin,
-  眞木準: maki-jun-craft-aphorism,
-  谷山雅計: taniyama-masakazu-discipline,
-  仲畑貴志: nakahata-takashi-kougo-chokugen,  # v1.12.0 — 5th master, TCC 殿堂 2015
-}
+**Cross-lang opt-in**: additionally load `standards/{cross_ref_lang}-q{primary}-anchors.md §Landmark: {position}` ONLY when:
+- Some candidate anchor's frontmatter has `cross-reference-valid-for[{output_language}] == STRONG`
+- `brief.cross_lang_borrowing_allowed == true` (default false)
 
-ZH_CRAFT_MASTER_MAP = {
-  許舜英: xu-shunying-ideological-definitional,
-  李欣頻: lee-hsin-ping-literary-consumption,
-  葉明桂: ye-mingui-strategic-aphorism,
-}
-```
+#### Step 2 — Candidate pool
 
-**If no branch condition is TRUE → Pass 3 MUST NOT load any standards.** Record the null annotations and skip. Do NOT load "just in case".
+Read all anchor entries in the Landmark section. Apply three filters in order:
 
-**Rationale** (v1.2.0 §Verification Density Principle + v1.3.2 optimization 1-4 + v1.7.0 craft-gate v2 alignment):
-- v1.2.0 preserved craft-gate gate (6 masters); lineage standards 700 lines / 8-10K tokens load only when craft master cited
-- v1.3.2 adds register-signal + axis-extreme branches with **landmark-targeted section read** (~1.5K per section) and **meta-core vs meta-detail split** (core ~2K always when Pass 3 triggers; detail ~3K only when Register Signal)
-- v1.7.0 Pass 3a/3b shift to **per-master v2 anchor load** (~1.2K per anchor body) as primary, with `{jp,zh}-copy-craft-lineage.md` becoming **conditional-only** load (cross-master lineage / attribution corrections / era context). Eliminates the 7 orphan craft-gate anchor-*.md files + saves ~5K per craft-gate trigger (from 8-10K wholesale craft-lineage load to 1.2K focused anchor body).
-- Net: Pass 3 per-trigger weighted cost ~3-5K (craft-gate path); ~5-7K (register-signal path)
+**2.1 Automatic rejection** — exclude anchors matching `voice-anchor-meta.md §Automatic rejection`:
+- Voice inseparable from ideological / traumatic content
+- Biographical-tragic weight overpowers style on bare name
+- Corpus LLM-latent-space illegible
+- Register non-transferable to commercial frame
+- Corpus THIN in target language
 
-**If predicate is TRUE → proceed to Pass 3a / 3b / 3c / 3d as applicable**.
+**2.2 Negation-of-axis** — if `brief.tone_cue` contains explicit axis negation (e.g. "not corporate", "not preachy"):
+1. Forbid the negated axis; exclude candidates whose primary axis is negated
+2. Record forbidden axis in `voice_quadrant.rationale` (carry-forward) for Phase 8 verification
+3. If post-filter candidate pool is empty → emit `violation` envelope to intake requesting tone_cue clarification
 
-#### Pass 3a — JP lineage (JP trigger matched, v1.7.0 per-master v2 load)
+**2.3 Named-creator forced rank 1** — if `brief.voice_reference` names a creator AND the corresponding `anchor-{slug}.md` is in the candidate pool:
+- The named anchor is FORCED to rank 1 (primary). No override. User intent is authoritative.
+- Agent still MUST evaluate fit relative to the brief. If `fit_score < MEDIUM-HIGH`, emit warning:
 
-Load the master-specific v2 anchor file (from JP_CRAFT_MASTER_MAP above).
-Each anchor carries the full v2 schema (Voice direction / Native critical
-read / Prose mechanics / Examples / Don't / Metadata) tailored to that
-master:
-
-- **糸井重里** → `standards/anchor-jp-itoi-shigesato-state-proposal.md` —
-  state-proposal grammar (「おいしい生活。」), non-imperative 句読点
-  discipline, 平仮名 over-index, 体言止め ending preference.
-- **岩崎俊一** → `standards/anchor-jp-iwasaki-shunichi-yonin.md` — 余韻
-  / 無常 compound (「やがて、いのちに変わるもの。」), Buddhist
-  finiteness undertone, rejects direct CTA.
-- **眞木準** → `standards/anchor-jp-maki-jun-craft-aphorism.md` — Q2↔Q3
-  border, 諧謔 + 知性 blend (see `voice-and-tone.md §JP emotional-
-  resonance tradition` cross-link).
-- **谷山雅計** → `standards/anchor-jp-taniyama-masakazu-discipline.md`
-  — discipline-centric (3-reason test per candidate + compressive
-  restraint).
-
-**Conditional load of `voice-anchor-meta.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
-1. Brief explicitly requires cross-master lineage / historical era / critical debate context (genuinely cross-master)
-2. Draft involves multiple JP masters side-by-side comparison
-
-Default: do NOT load meta-detail. v2 anchor body carries sufficient voice signature + per-master `Don't` block + inline drift #JP-8 correction for standalone rewrite. v1.9.2 note: attribution-risk no longer auto-triggers meta-detail — all JP drift corrections are inlined in the corresponding anchor's Metadata.
-
-**Critical attribution corrections (JP)** — drift #JP-8 (リゲイン「24時間戦えますか？」NOT 岩崎) inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. Authoritative drift index in `voice-anchor-meta.md §Drift corrections catalog`.
-
-#### Pass 3b — ZH lineage (ZH trigger matched, v1.7.0 per-master v2 load)
-
-Load the master-specific v2 anchor file (from ZH_CRAFT_MASTER_MAP above):
-
-- **許舜英** → `standards/anchor-zh-tw-xu-shunying-ideological-definitional.md`
-  — definitional inversion (「服裝就是一種高明的政治」), cross-domain
-  vocabulary transplant (政治 / 姿態 / 命題 / 邏輯), cultural-critique
-  payload density, paradox-as-hook ("不是 X, 是 Y"). 意識形態廣告 中興
-  百貨 1988-1999 canon.
-- **李欣頻** → `standards/anchor-zh-tw-lee-hsin-ping-literary-consumption.md`
-  — 書店 / 閱讀 philosophical prose (「閱讀是唯一的迷信」), existential-
-  aphorism register, 誠品敦南 1990s-2000s canon. Voice is Q2 tipping
-  into Q2-Q3 edge (warmer than 許舜英's cool-aesthetic).
-- **葉明桂** → `standards/anchor-zh-tw-ye-mingui-strategic-aphorism.md`
-  — brand-personality mapping via systematic strategic frameworks.
-  左岸咖啡館 1998- canon. Voice is Q2-Q3 edge (authority framing via
-  warmth). Distinguished from 許舜英's cool manifesto register by
-  brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
-
-**Conditional load of `voice-anchor-meta.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
-1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register differentiation)
-2. Brief references 意識形態 廣告 institutional-era context (1987-1999 decade) — Generational Context section
-3. Brief references **孫大偉** (only ZH drift without an anchor home — Z6 lives in meta-detail)
-
-Default: do NOT load meta-detail. Per-anchor `Don't` block + anchor Metadata carry inlined Z1 (葉明桂 anchor) + Z2 (李欣頻 anchor) + Z3/Z4/Z11 (許舜英 anchor) + Z5/Z7 (吳念真 anchor) + Z8/Z10 (龔大中 anchor + zh-q3 router) + Z9 (KC Tsang anchor). v1.9.2 note: attribution-risk triggers no longer need meta-detail unless Z6-specific.
-
-**Critical attribution corrections (ZH)** — authoritative drift index in `voice-anchor-meta.md §Drift corrections catalog`. Per-anchor inlines are SSOT. Exception: Z6 (孫大偉 agency = 奧美 → 偉太, NOT JWT) has no anchor home; lives in meta-detail Z6 section.
-
-#### Pass 3 cross-branch common rules
-
-**LLM reproduction gap — mandatory disclosure**. Each master in each
-lineage has a documented gap between surface mimicry and true voice
-signature; the standard's per-master §LLM Reproduction Gap section
-names the specific failure mode. When Pass 3 outputs a rewrite,
-`tone_notes.lineage_gap` must record which gap the rewrite is most at
-risk of falling into + what mitigation was applied. Examples:
-
-- JP 岩崎: "gap = direct emotional statement where 余韻 is required;
-  mitigation = replaced 形容詞 + 句点 with 体言止め + 読点 tail"
-- ZH 許舜英: "gap = hollow definitional inversion without cultural-
-  critique payload; mitigation = forced concrete target audience tension
-  before drafting, verified inversion lands on a real social observation
-  not a decorative paradox"
-
-**Forbidden cross-transplant**: Pass 3a and Pass 3b are mutually
-exclusive — never apply JP signatures to ZH output or vice versa.
-Both lineage standards' §Anti-Patterns sections ban this explicitly.
-
-#### Pass 3c — Axis Extreme branch (v1.3.2, new)
-
-When `voice_quadrant.position` starts with `axis-*` (e.g. `axis-authority-extreme`), Pass 3 loads `voice-anchor-meta.md §Axis Extreme` — a cross-language file covering 4 axis-extreme positions (authority/affinity/reason/emotion). **MVP**: file is placeholder with candidate lists; V2 research will populate with full entries (BBC News / Supreme Court / Hallmark / Wikipedia / Mailchimp help center neutral etc.).
-
-During MVP period: if brief triggers `axis-*` position, agent should note the placeholder status in `tone_notes.axis_extreme_applied = "mvp-stub-{position}"` and apply best-effort register matching from candidate list in the file. If V2 content is present, apply per standard anchor entry.
-
-#### Pass 3d — Register Signal branch (v1.3.2, new)
-
-When voice_reference is not a craft-gate master AND position is not axis-extreme (the default Pass-3-triggered case), Pass 3 loads the per-quadrant anchor file matching `output_language` × `voice_quadrant.primary`. **Landmark-targeted read**: only the `## Landmark: {position}` section is consumed (~1.5K tokens vs ~3K whole file). Fallback to whole-file read when position is missing.
-
-When cross-reference registry (meta-detail) shows `cross-reference-valid-for[output_language] == STRONG` for any anchor in the target section, ALSO load the corresponding cross-lang file's same Landmark section. Most common: JP→zh-TW STRONG (zh-TW Q3 brief with 糸井 cross-ref loads jp-q3 center).
-
-Register-Signal apply:
-1. Read per-quadrant Landmark section — extract anchor entries + metadata. **Schema auto-detect (v1.5.0)**: inspect anchor file frontmatter. If `schema_version: 2.0`, extract Layer 1 v2 fields (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata) per `voice-anchor-meta.md §v2 schema`. Otherwise extract v1 fields (Era / Representative lines / Voice signature / LLM corpus depth / Over-mimic risk) per `voice-anchor-meta.md §v1 schema`. Both schemas coexist during migration window. Additional v2 entries live in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` — consult `docs/voice-library-recast-audit.md` for the mapping from v1 brand/campaign entries to v2 individual-creator recasts.
-2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions). For v2 entries, the over-mimic mitigation clause is in the anchor's own `Don't / Over-mimic` block (single source of truth). For v1 entries, consult meta-core's §Over-mimic mitigation registry.
-3. **Rank top-3 candidates** by fit — emit `anchor_candidates_ranked` list (v1.3.5); then apply the primary (rank 1) voice signature to draft rewrite
-3.5. **Self-report selection confidence** (v1.12.1, instrumentation-only): after ranking, emit `agent_selection_confidence ∈ {HIGH, MEDIUM, LOW}` using this scale:
-   - `HIGH` — rank 1 明顯優於 rank 2;配對機制 (anchor mechanic × brief signal) 到位;無指名 master 誤配疑慮
-   - `MEDIUM` — rank 1 略優於 rank 2,或配對有疑慮 (payload 不足 / audience mismatch / register 略偏)
-   - `LOW` — 候選池整體弱 / 配對勉強 / 指名 master 疑似不合 brief / thesis
-   This field is **non-blocking instrumentation for data collection (v1.12.1)** — does NOT change routing or gate behavior. Used to measure correlation between agent meta-cognition and downstream mediocrity判定.
-4. **Thesis-conflict self-check** (v1.3.5): after the rewrite but BEFORE emit, scan the polished draft for spans that reintroduce a concept `envelope.message_thesis` explicitly negates, or undermine its assertion. If detected, revise the draft dropping the conflicting imagery (keep the anchor's cadence / discipline). Record the self-check outcome in `tone_notes.register_signal_applied.thesis_self_check` as `clear` / `revised_once` / `escalate` (escalate when revise-once still conflicts — downstream Dimension 7 will catch).
-5. **Secondary anchor application** (v1.10.0): if a brief's register benefits from combining a primary register anchor + a supplementary discipline anchor (e.g. Fried+DHH antithesis primary + Stratechery "earn every declarative" discipline secondary), emit secondary anchors in the `secondary_anchors[]` array with `role` label. Common roles: `"secondary-discipline"` (borrow sentence-level rule only), `"secondary-cadence"` (borrow rhythm only), `"cross-lang-borrowing"` (borrow structure across language without vocabulary). Max 1 secondary per rewrite — 3+ anchors compose as pastiche.
-6. **Safe-substitute suggestion** (v1.10.0, broadened v1.11.1): when `brief.voice_reference` names ANY master, query `{anchor for anchor where named-master ∈ anchor.frontmatter.safe_substitute_for}`. If a candidate exists AND its over-mimic risk is **strictly lower** than the named master's (LOW < MEDIUM < MEDIUM-HIGH < HIGH < HIGH+), emit `substitute_suggested = {slug, rationale}`. Read named-master risk from its own anchor file's `Over-mimic risk:` line first; fallback to meta-core §Over-mimic mitigation registry; default to MEDIUM if in neither. User-specified master remains default primary unless user confirms substitute in follow-up turn. **v1.11.1 contamination upgrade**: if `brief.tone_cue` contains tokens matching the substitute anchor's `Don't / Failure mode` warning about named-master contamination (e.g., tone_cue "華麗頹廢" matches 白先勇's anchor's warning about 張愛玲-style "華麗頹廢"), upgrade to `substitute_recommended_strong` — substitute isn't just safer but likely necessary.
-7. Record `tone_notes.register_signal_applied = {primary_anchor_slug, secondary_anchors[], landmark_position, mitigation_clauses_applied, anchor_candidates_ranked[], substitute_suggested?, thesis_self_check, agent_selection_confidence}`
-
-**v1.10.0 output schema** (register_signal_applied):
 ```json
-{
-  "primary_anchor_slug": "en-basecamp-fried-dhh-contrarian-manifesto",
-  "landmark_position": "toward-Q1",
-  "secondary_anchors": [
-    {"slug": "en-stratechery-peer-analytical", "role": "secondary-discipline", "rationale": "apply 'earn every declarative' to technical claims"}
-  ],
-  "mitigation_clauses_applied": ["name the exact received wisdom being punctured; claim must survive without the contrarian frame"],
-  "anchor_candidates_ranked": [
-    {"rank": 1, "slug": "en-basecamp-fried-dhh-contrarian-manifesto", "fit_score": "HIGH", "fit_reasoning": "peer-to-peer developer register; antithesis matches 'deploy without anxiety' thesis"},
-    {"rank": 2, "slug": "en-stratechery-peer-analytical", "fit_score": "MEDIUM-HIGH", "fit_reasoning": "analyst register skews essayistic for 3-paragraph landing hero"},
-    {"rank": 3, "slug": "en-bernbach-ddb-confession-plain-style", "fit_score": "MEDIUM", "fit_reasoning": "historically Q1-anchored; VW-Think-Small less native to backend-eng audience"}
-  ],
-  "substitute_suggested": null,
-  "thesis_self_check": "clear | revised_once | escalate",
-  "agent_selection_confidence": "HIGH | MEDIUM | LOW",
-  "native_critical_vocab_cited": ["peer-to-peer", "antithesis-headline", "earn every declarative"]
+tone_notes.register_signal_applied.named_master_fit_warning = {
+  "slug": "...",
+  "user_specified": true,
+  "agent_fit_assessment": "MEDIUM | LOW",
+  "mismatch_reasoning": "cite specific brief signals (thesis / target / scene / tone_cue tokens) — not generic prose",
+  "proceeded_anyway": true
 }
 ```
 
-Emitting ranked candidates + optional secondary anchors surfaces Pass 3's interpretation space for downstream review and regression auditing — the same brief across runs may legitimately select different primaries, but the candidate set should be stable.
+Warning is non-blocking. User intent executes; warning surfaces in envelope for user's next-turn review / substitution decision.
 
-**Cross-branch rule**: if multiple branches' conditions match (e.g. voice_reference names a craft-gate master AND voice_quadrant.position = axis-*), Craft Gate wins. Tier precedence: Craft Gate > Axis Extreme > Register Signal.
+#### Step 3 — Fit judgment and ranking + confidence self-report
+
+**Skipped if Step 2.3 forced rank 1**. Otherwise: agent ranks top-3 from remaining candidates, each emits `{rank, slug, fit_score, fit_reasoning}`:
+
+- `fit_score` ∈ {`HIGH`, `MEDIUM-HIGH`, `MEDIUM`, `LOW`}
+- `fit_reasoning` — must cite concrete brief signals (`message_thesis` clause, `target_audience` descriptor, scene keyword, tone_cue token). Generic prose ("matches quadrant") is unacceptable.
+
+Rank 1 = primary.
+
+**Step 3.5 — Self-report selection confidence** (v1.12.1 instrumentation, retained):
+
+`agent_selection_confidence ∈ {HIGH, MEDIUM, LOW}`:
+- `HIGH` — rank 1 明顯優於 rank 2;配對機制 (anchor mechanic × brief signal) 到位;無指名 master 誤配疑慮
+- `MEDIUM` — rank 1 略優於 rank 2,或配對有疑慮 (payload 不足 / audience mismatch / register 略偏)
+- `LOW` — 候選池整體弱 / 配對勉強 / 指名 master 疑似不合 brief / thesis
+
+Non-blocking instrumentation; does NOT change routing. Used for data collection + downstream audit.
+
+Library curation (`scripts/lint-anchor-library.py` at CI time) guarantees all candidates are baseline-eligible; runtime does NOT re-validate the legacy 4-condition rubric (Corpus-depth / Label-density / Commercial-register bridge / Over-mimic control) — moved to library-entry lint in v1.13.0.
+
+#### Step 4 — Apply primary + mitigation inline
+
+1. Read primary anchor's `§Prose mechanics` + `§Examples` as rewrite reference
+2. Read primary anchor's `§Don't / Over-mimic §Mitigation` (≤15-word clause). Inject inline into rewrite prompt.
+3. Rewrite `draft`, following anchor's mechanics
+
+**Mitigation fallback**: if primary references one of the 9 no-anchor-file authors (村上春樹 / 金庸 / 三島 / 莫言 / 太宰 / 余華 / Cormac McCarthy / DFW / James Ellroy) or the 3 movement/campaign entries (XR Declaration / Nike "Dream Crazy" / Luxury manifesto generic), read mitigation from `voice-anchor-meta.md §Over-mimic mitigation fallback registry`. All other cases: anchor file is the single source of truth.
+
+#### Step 5 — Thesis-conflict self-check
+
+After the rewrite but BEFORE emit, scan the polished draft:
+- Does any span introduce a concept `envelope.message_thesis` explicitly negates?
+- Does any span undermine the thesis assertion?
+
+If conflict detected:
+1. `revise_once`: rewrite the conflicting span while preserving anchor cadence / discipline
+2. If revise-once still conflicts → `escalate` (Phase 8 Dimension 7 catches)
+
+Record: `register_signal_applied.thesis_self_check ∈ {clear, revised_once, escalate}`.
+
+#### Step 6 — Safe-substitute suggestion (conditional)
+
+If `brief.voice_reference` names a specific creator, query:
+
+```
+substitute_candidates = [anchor for anchor in standards/anchor-*.md 
+                         if named-creator ∈ anchor.frontmatter.safe_substitute_for]
+```
+
+**Qualifying rule**: candidate's over-mimic risk must be **strictly lower** than named creator's (ordering: `LOW < MEDIUM < MEDIUM-HIGH < HIGH < HIGH+`). Read named creator's risk from its own anchor frontmatter `Over-mimic risk:` line; fallback to `voice-anchor-meta.md §Over-mimic mitigation fallback registry`; default to `MEDIUM` if in neither.
+
+If a qualifying candidate exists:
+- Emit `substitute_suggested = {slug, rationale, strength: "suggested"}`
+- **Contamination upgrade**: if `brief.tone_cue` contains tokens matching the substitute anchor's `§Don't / Failure mode` warning about named-creator contamination → upgrade to `strength: "strong"`. Signals to user that substitute isn't just safer but likely necessary.
+
+Named creator remains default primary (Step 2.3 still holds). Substitute travels in envelope; user confirms switch in next turn.
+
+#### Step 7 — Secondary anchor (opt-in, max 1)
+
+Triggered by any of:
+- (a) `brief` explicitly requests multi-anchor combination
+- (b) Upstream skill annotates `envelope.secondary_anchor_requested = true`
+- (c) Agent self-judges that primary anchor lacks a specific discipline / cadence AND a second anchor demonstrably fills the gap
+
+If path (c), emit with `auto_triggered: true` flag for audit review:
+
+```json
+register_signal_applied.secondary_anchors[0] = {
+  "slug": "...",
+  "role": "secondary-discipline | secondary-cadence | cross-lang-borrowing",
+  "rationale": "...",
+  "auto_triggered": true
+}
+```
+
+Hard constraints (unchanged):
+- Max 1 secondary (no 3+ anchor pastiche composition)
+- Cross-transplant ban still holds: JP signatures do not combine with ZH/EN anchors; same for ZH and EN
+
+#### Step 8 — Output
+
+```json
+tone_notes.register_signal_applied = {
+  "primary_anchor_slug": "...",
+  "landmark_position": "center | extreme | toward-Q{N} | axis-{axis}",
+  "named_master_forced_primary": true | false,
+  "named_master_fit_warning": null | {
+    "slug": "...",
+    "user_specified": true,
+    "agent_fit_assessment": "MEDIUM | LOW",
+    "mismatch_reasoning": "...",
+    "proceeded_anyway": true
+  },
+  "mitigation_clauses_applied": ["..."],
+  "anchor_candidates_ranked": [
+    {"rank": 1, "slug": "...", "fit_score": "HIGH | MEDIUM-HIGH | MEDIUM | LOW", "fit_reasoning": "..."}
+  ],
+  "substitute_suggested": null | {
+    "slug": "...",
+    "rationale": "...",
+    "strength": "suggested | strong"
+  },
+  "secondary_anchors": [
+    {
+      "slug": "...",
+      "role": "secondary-discipline | secondary-cadence | cross-lang-borrowing",
+      "rationale": "...",
+      "auto_triggered": true | false
+    }
+  ],
+  "thesis_self_check": "clear | revised_once | escalate | not_applicable",
+  "agent_selection_confidence": "HIGH | MEDIUM | LOW",
+  "native_critical_vocab_cited": ["..."]
+}
+```
 
 ## Preconditions
 
@@ -387,15 +296,18 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 | `voice_quadrant.primary` | enum Q1-Q4 | Phase 5 | required — macro quadrant before tactical tuning |
 | `draft` | string | Phase 4 | non-empty |
 | `form` | enum | intake | |
-| `brief.output_language` | enum | intake | `ja` / `en` / `zh-TW` / etc. — activates JP lineage pass when `ja` |
+| `brief.output_language` | enum | intake | `ja` / `en` / `zh-TW` / etc. |
 
 ### Optional fields (activate extra passes)
 
 | Field | Type | Notes |
 |---|---|---|
-| `brief.voice_reference` | string | 糸井 / 岩崎 / 眞木 / 谷山 → activates Pass 3 JP lineage |
+| `brief.voice_reference` | string | names a creator → Pass 3 Step 2.3 forces rank 1 |
 | `voice_quadrant.edge` | enum | Q2-Q3 / Q1-Q4 allowed edge positions |
-| `message_thesis` | string | state-proposal vs action-prompting classification → Q3 JP lineage trigger |
+| `voice_quadrant.position` | enum | center / extreme / toward-Q{N} / axis-{axis} — activates Pass 3 if non-null with register-lock signal |
+| `message_thesis` | string | consumed by Pass 3 Step 5 thesis-conflict self-check |
+| `brief.tone_cue` | string | activates Step 2.2 negation-of-axis + Step 6 contamination upgrade |
+| `brief.cross_lang_borrowing_allowed` | bool | enables Step 1 cross-lang opt-in |
 
 ### Upstream bounce target on violation
 
@@ -405,18 +317,18 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
 
 ## Input Envelope (consumed)
 
-Shape inherited from `copywriting-toolkit/CLAUDE.md §Handoff Envelope`,
-post-Phase 5:
+Shape inherited from `copywriting-toolkit/CLAUDE.md §Handoff Envelope`, post-Phase 5:
 
 ```json
 {
   "phase": "phase-5-voice-positioned",
   "form": "long-form-pasona | long-form-extended | mid-form | short-form | light-action | audit",
-  "brief": { "voice_reference": "...", "output_language": "ja | en | zh-TW", "...": "..." },
+  "brief": { "voice_reference": "...", "output_language": "ja | en | zh-TW", "tone_cue": "...", "...": "..." },
   "message_thesis": "...",
   "voice_quadrant": {
     "primary": "Q1 | Q2 | Q3 | Q4",
     "edge": "Q2-Q3 | Q1-Q4 | null",
+    "position": "center | extreme | toward-Q{N} | axis-{axis} | null",
     "rationale": "Phase 5 rationale",
     "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
   },
@@ -425,8 +337,7 @@ post-Phase 5:
 }
 ```
 
-Required keys: `voice_quadrant`, `draft`. Missing either → return to
-orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
+Required keys: `voice_quadrant`, `draft`. Missing either → return to orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
 
 ## Output Envelope (produced)
 
@@ -436,8 +347,13 @@ orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
   "form": "long-form-pasona | ...",
   "brief": { "..." : "..." },
   "message_thesis": "...",
-  "voice_quadrant": "Q1 | Q2 | Q3 | Q4",
-  "voice_quadrant_rationale": "...",
+  "voice_quadrant": {
+    "primary": "Q1 | Q2 | Q3 | Q4",
+    "edge": "Q2-Q3 | Q1-Q4 | null",
+    "position": "...",
+    "rationale": "...",
+    "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
+  },
   "draft": "the polished draft after 3 passes",
   "tone_notes": {
     "axis_target": { "formality": "casual", "seriousness": "serious", "respectfulness": "respectful", "enthusiasm": "warm" },
@@ -446,18 +362,19 @@ orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
     "tone_adjustments": [
       { "span": "sentence 3 of stage A", "context": "error", "before": "...", "after": "...", "rationale": "calm + non-deflecting" }
     ],
-    "lineage_applied": "岩崎俊一 | null",
-    "lineage_gap": "direct emotional statement risk; mitigated via 体言止め tail | null",
     "register_signal_applied": {
-      "primary_anchor_slug": "zh-tw-wu-nien-jen-taiyu-peer-intimate | null",
-      "landmark_position": "center | extreme | toward-Q{N} | null",
+      "primary_anchor_slug": "...",
+      "landmark_position": "center | extreme | toward-Q{N} | axis-{axis} | null",
+      "named_master_forced_primary": true | false,
+      "named_master_fit_warning": null,
       "mitigation_clauses_applied": ["..."],
       "anchor_candidates_ranked": [{"rank": 1, "slug": "...", "fit_score": "HIGH", "fit_reasoning": "..."}],
+      "substitute_suggested": null,
+      "secondary_anchors": [],
       "thesis_self_check": "clear | revised_once | escalate | not_applicable",
       "agent_selection_confidence": "HIGH | MEDIUM | LOW",
       "native_critical_vocab_cited": ["..."]
     },
-    "axis_extreme_applied": "mvp-stub-{position} | null",
     "ogilvy_flags": ["removed 'revolutionary' empty-hype token in stage S"]
   },
   "gate_verdict": "PASS | PASS_WITH_NOTES | NEEDS_REVISION",
@@ -466,72 +383,49 @@ orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
 }
 ```
 
-Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes`
-+ `brief`. `tone_notes.ogilvy_flags` can surface
-景品表示法 / FTC-relevant removals for Phase 7 cross-check.
+**Breaking changes from v1.12.x → v1.13.0**:
+
+Three `tone_notes` top-level fields are REMOVED and their semantics merged into `register_signal_applied`:
+
+- `tone_notes.lineage_applied` → `register_signal_applied.primary_anchor_slug`
+- `tone_notes.lineage_gap` → `register_signal_applied.named_master_fit_warning` (richer structured warning)
+- `tone_notes.axis_extreme_applied` → `register_signal_applied.landmark_position` (axis landmarks flow through uniformly)
+
+Downstream Phase 7/8 evaluators that read the old field paths must migrate. See `rubrics/voice-consistency-gate.md` for the updated Dimension 6 / Dimension 7 read paths.
+
+Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes` + `brief`. `tone_notes.ogilvy_flags` can surface 景品表示法 / FTC-relevant removals for Phase 7 cross-check.
 
 ## Gate — SHOULD (Voice Consistency)
 
 - **Rubric**: `rubrics/voice-consistency-gate.md`
 - **Agent**: `copywriting-toolkit/agents/copywriter-evaluator.md`
-- **Trigger**: multi-stage OR multi-candidate artifact (PASONA 6 stages,
-  BEAF 4 stages, ideation N candidates, or a series). Per the rubric's
-  §Scope Boundary: single-stage / single short-form only → gate is
-  skipped with `reason: cross-stage evaluation not possible` recorded in
-  the envelope.
-- **Position**: runs AFTER all 3 passes, as the last voice-layer check
-  before Phase 7 legal gates pick up the artifact.
-- **Dimensions** (per rubric): brand voice stability, tone contextual
-  appropriateness, maestro style fidelity (if lineage applied), JP
-  emotional-resonance vs Anglo benefit-clear fit, voice quadrant
-  coherence, over-mimic adherence (v1.3.2, scoped to Pass 3), and
-  **thesis alignment** (v1.3.4, scoped to Pass 3 — catches anchor-
-  induced drift from `envelope.message_thesis`).
+- **Trigger**: multi-stage OR multi-candidate artifact (PASONA 6 stages, BEAF 4 stages, ideation N candidates, or a series). Per the rubric's §Scope Boundary: single-stage / single short-form only → gate is skipped with `reason: cross-stage evaluation not possible` recorded in the envelope.
+- **Position**: runs AFTER all 3 passes, as the last voice-layer check before Phase 7 legal gates pick up the artifact.
+- **Dimensions** (per rubric): brand voice stability, tone contextual appropriateness, anchor style fidelity (if Pass 3 ran), JP emotional-resonance vs Anglo benefit-clear fit, voice quadrant coherence, over-mimic adherence (scoped to Pass 3), and **thesis alignment** (scoped to Pass 3 — catches anchor-induced drift from `envelope.message_thesis`).
 
 Verdict handling:
 
 - `PASS` → emit envelope; `next_stage: copywriting-ethics-check-stage`.
-- `PASS_WITH_NOTES` (≤2 WARNINGS, no FATAL) → apply named fixes in one
-  auto-revise round, re-run gate; if still `PASS_WITH_NOTES`, emit with
-  notes disclosed (handoff-format §Section 3 max-2-rounds rule).
-- `NEEDS_REVISION` (any FATAL or ≥3 WARNINGS) → BLOCKED. Return to the
-  specific pass the rubric's `next_action` names. Do not forward to
-  Phase 7.
+- `PASS_WITH_NOTES` (≤2 WARNINGS, no FATAL) → apply named fixes in one auto-revise round, re-run gate; if still `PASS_WITH_NOTES`, emit with notes disclosed (handoff-format §Section 3 max-2-rounds rule).
+- `NEEDS_REVISION` (any FATAL or ≥3 WARNINGS) → BLOCKED. Return to the specific pass the rubric's `next_action` names. Do not forward to Phase 7.
 
 ## Anti-Patterns
 
-- Rewriting framework stage structure during voice tuning. PASONA A / S /
-  O boundaries are not Phase 6's territory.
-- Swapping voice mid-artifact to match tone context ("error → serious
-  voice"). `voice-and-tone.md §Anti-Patterns`: voice stays constant, only
-  tone shifts.
-- Force-fitting JP lineage onto Anglo / ZH output when the trigger
-  conditions (§When lineage craft applies — JP branch) are unmet.
-- Force-fitting ZH lineage onto JP / Anglo output when the ZH branch
-  trigger conditions are unmet.
-- Cross-transplanting JP signatures (体言止め, 余韻) into ZH output or
-  ZH signatures (definitional inversion, cultural-critique density)
-  into JP output. Both lineage standards ban this in §Anti-Patterns.
-- Attributing 『24時間戦えますか？』to 岩崎俊一 (documented drift #8 in
-  voice-anchor-meta.md §Cross-Master Context).
-- Attributing 「我不在咖啡館...」as original 葉明桂 line (actually Peter
-  Altenberg sinicized — voice-anchor-meta.md §Cross-Master Context drift #Z1).
-- Citing "中興百貨 文案" from content-farm reprint lists without
-  anchoring to 許舜英購物日記 + 意識形態 archives (drift #Z4).
-- Filling the Voice Guide axes abstractly ("friendly, professional") with
-  no side-by-side on-brand / off-brand examples (`voice-and-tone.md §Brand
-  Voice Guide checklist`).
-- Headline breaks voice for attention, then body "returns" — trust
-  already lost at headline layer.
+- Rewriting framework stage structure during voice tuning. PASONA A / S / O boundaries are not Phase 6's territory.
+- Swapping voice mid-artifact to match tone context ("error → serious voice"). `voice-and-tone.md §Anti-Patterns`: voice stays constant, only tone shifts.
+- Transplanting signature mechanics across traditions (JP ↔ ZH ↔ EN). Cross-transplant ban is absolute; cross-language BORROWING (via STRONG cross-reference + brief opt-in) is the only permitted cross-tradition path.
+- Re-running Step 2 `voice-anchor-meta.md` 4-condition validation at runtime. Library curation (`scripts/lint-anchor-library.py`) owns baseline eligibility; runtime trusts the library.
+- Overriding Step 2.3 named-creator forced rank 1. User intent is authoritative; agent emits `named_master_fit_warning` but does NOT reassign primary.
+- Filling the Voice Guide axes abstractly ("friendly, professional") with no side-by-side on-brand / off-brand examples (`voice-and-tone.md §Brand Voice Guide checklist`).
+- Headline breaks voice for attention, then body "returns" — trust already lost at headline layer.
 - Swallowing a `NEEDS_REVISION` gate verdict and forwarding to Phase 7.
+
+**Drift callouts** (attribution corrections for 『24時間戦えますか？』NOT 岩崎, 「我不在咖啡館」is Altenberg sinicized NOT 葉明桂, 中興百貨 content-farm source discipline, etc.) are inlined in the corresponding anchor file's `§Don't / Over-mimic §Metadata` block; authoritative drift index lives at `voice-anchor-meta.md §Drift corrections catalog`.
 
 ## Files
 
-- `standards/voice-and-tone.md` — Tier 2 voice SSOT (verbatim copy from
-  `domain-teams:copywriting-team`).
-- `standards/voice-anchor-meta.md §Cross-Master Context` — Tier 3 JP lineage deep-dive
-  (verbatim copy from `domain-teams:copywriting-team`).
-- `standards/voice-anchor-meta.md §Cross-Master Context` — Tier 3 ZH lineage deep-dive
-  (NEW in v1.0.0; primary-source-researched; not cp'd from
-  `domain-teams:copywriting-team`).
-- `rubrics/voice-consistency-gate.md` — SHOULD gate rubric (verbatim copy).
+- `standards/voice-and-tone.md` — Tier 2 cross-framework voice SSOT (third-party framework text byte-identical to `domain-teams:copywriting-team`; Brand Corpus curation Tier 2 per `CLAUDE.md §Provenance`).
+- `standards/voice-anchor-meta.md` — consolidated voice anchor metadata (schema + selection rubric + over-mimic fallback + lineage map + cross-ref + cross-cultural label rubric + drift corrections + cross-master context + axis extreme candidates). New in v1.13.0 (supersedes split meta-core + meta-detail + axis-extreme).
+- `standards/{jp,zh,en}-q{1,2,3,4}-anchors.md` — 12 quadrant router files (landmark-organized).
+- `standards/anchor-{slug}.md` — 80+ per-creator v2 anchor body files. Library curation enforced by `scripts/lint-anchor-library.py` at CI time.
+- `rubrics/voice-consistency-gate.md` — SHOULD gate rubric (scope boundary + dimensions + verdict thresholds).

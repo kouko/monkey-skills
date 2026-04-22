@@ -177,16 +177,20 @@ declared quadrant. Grounded in `voice-quadrant-positioning.md`.
 - **Note**: For artifacts without a quadrant declaration, this
   dimension is `not_applicable` (excluded from verdict calculation).
 
-### Dimension 6: Over-Mimic Adherence (RUB-CTW-VC-006) — v1.3.2
+### Dimension 6: Over-Mimic Adherence (RUB-CTW-VC-006) — v1.13.0 (simplified)
 
-When Pass 3 Register Signal or Axis Extreme branch activates (per [SKILL.md §Pass 3 activation guard](../SKILL.md)), the selected anchor may carry over-mimic mitigation clauses defined in [voice-anchor-meta.md §Over-mimic mitigation registry](../standards/voice-anchor-meta.md). This dimension checks the output for leaked tropes forbidden by the applicable mitigation.
+When Pass 3 runs (unified flow, v1.13.0), the selected anchor may carry over-mimic mitigation clauses. This dimension checks the output for leaked tropes forbidden by the applicable mitigation.
 
-**Scope**: applies ONLY when `tone_notes.register_signal_applied` or `tone_notes.axis_extreme_applied` is non-null AND the anchor has a registered mitigation clause. If anchor is not in over-mimic registry, this dimension is `not_applicable`.
+**SSOT precedence (v1.13.0 simplified)**:
+1. If anchor has an `anchor-{slug}.md` file: read mitigation from its `§Don't / Over-mimic §Mitigation` block (anchor file is authoritative).
+2. Else (9 no-anchor-file authors like 村上 / DFW / Ellroy, or 3 movement/campaign entries like XR Declaration / Nike "Dream Crazy" / Luxury manifesto generic): read mitigation from `voice-anchor-meta.md §Over-mimic mitigation fallback registry`.
+
+**Scope**: applies ONLY when `tone_notes.register_signal_applied.primary_anchor_slug` is non-null AND the anchor has a registered mitigation clause. If no mitigation exists for this anchor, this dimension is `not_applicable`.
 
 **Verification procedure**:
-1. Read `tone_notes.register_signal_applied.anchor_slug` (or axis_extreme equivalent)
-2. Look up anchor in voice-anchor-meta.md over-mimic mitigation fallback registry
-3. If anchor is listed, verify output against its "auto-leaked tropes" column
+1. Read `tone_notes.register_signal_applied.primary_anchor_slug` (and `secondary_anchors[].slug` if applicable)
+2. Look up mitigation per SSOT precedence above
+3. Verify output against the anchor's "auto-leaked tropes" / failure mode
 4. Mark the dimension accordingly
 
 **Registry-referenced mitigations include** (non-exhaustive):
@@ -214,7 +218,7 @@ Full 20-entry registry in [voice-anchor-meta.md §Over-mimic mitigation registry
 
 When Pass 3 rewrites the draft (any branch: Craft Gate / Register Signal / Axis Extreme), the anchor's voice signature can pull the text toward register-canonical tropes that **subtly contradict** `envelope.message_thesis`. This dimension checks the Pass 3 output against the thesis to catch anchor-induced thesis drift.
 
-**Scope**: applies ONLY when `envelope.message_thesis` is non-empty AND Pass 3 ran (any of `tone_notes.lineage_applied` / `register_signal_applied` / `axis_extreme_applied` is non-null). If Pass 3 skipped, `not_applicable`.
+**Scope**: applies ONLY when `envelope.message_thesis` is non-empty AND Pass 3 ran (i.e., `tone_notes.register_signal_applied` is non-null). If Pass 3 skipped, `not_applicable`.
 
 **Verification procedure**:
 1. Read `envelope.message_thesis` and identify its explicit negations / assertions (e.g. thesis「古早味不是懷舊，是日常」→ negation: "NOT nostalgia" + assertion: "IS daily").

@@ -125,7 +125,17 @@
       "type": "object",
       "properties": {
         "axis_default_derived": { "type": "boolean" },
-        "lineage_gap": { "type": "string" }
+        "register_signal_applied": {
+          "type": ["object", "null"],
+          "properties": {
+            "primary_anchor_slug": { "type": ["string", "null"] },
+            "landmark_position": { "type": ["string", "null"] },
+            "named_master_forced_primary": { "type": "boolean" },
+            "named_master_fit_warning": { "type": ["object", "null"] },
+            "agent_selection_confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+            "thesis_self_check": { "type": "string", "enum": ["clear", "revised_once", "escalate", "not_applicable"] }
+          }
+        }
       }
     },
     "ethics_verdict": {
