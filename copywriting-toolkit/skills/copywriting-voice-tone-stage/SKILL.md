@@ -340,10 +340,15 @@ Register-Signal apply:
 1. Read per-quadrant Landmark section — extract anchor entries + metadata. **Schema auto-detect (v1.5.0)**: inspect anchor file frontmatter. If `schema_version: 2.0`, extract Layer 1 v2 fields (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata) per `voice-anchor-meta-core.md §v2 schema`. Otherwise extract v1 fields (Era / Representative lines / Voice signature / LLM corpus depth / Over-mimic risk) per `voice-anchor-meta-core.md §v1 schema`. Both schemas coexist during migration window. Additional v2 entries live in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` — consult `docs/voice-library-recast-audit.md` for the mapping from v1 brand/campaign entries to v2 individual-creator recasts.
 2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions). For v2 entries, the over-mimic mitigation clause is in the anchor's own `Don't / Over-mimic` block (single source of truth). For v1 entries, consult meta-core's §Over-mimic mitigation registry.
 3. **Rank top-3 candidates** by fit — emit `anchor_candidates_ranked` list (v1.3.5); then apply the primary (rank 1) voice signature to draft rewrite
+3.5. **Self-report selection confidence** (v1.12.1, instrumentation-only): after ranking, emit `agent_selection_confidence ∈ {HIGH, MEDIUM, LOW}` using this scale:
+   - `HIGH` — rank 1 明顯優於 rank 2;配對機制 (anchor mechanic × brief signal) 到位;無指名 master 誤配疑慮
+   - `MEDIUM` — rank 1 略優於 rank 2,或配對有疑慮 (payload 不足 / audience mismatch / register 略偏)
+   - `LOW` — 候選池整體弱 / 配對勉強 / 指名 master 疑似不合 brief / thesis
+   This field is **non-blocking instrumentation for data collection (v1.12.1)** — does NOT change routing or gate behavior. Used to measure correlation between agent meta-cognition and downstream mediocrity判定.
 4. **Thesis-conflict self-check** (v1.3.5): after the rewrite but BEFORE emit, scan the polished draft for spans that reintroduce a concept `envelope.message_thesis` explicitly negates, or undermine its assertion. If detected, revise the draft dropping the conflicting imagery (keep the anchor's cadence / discipline). Record the self-check outcome in `tone_notes.register_signal_applied.thesis_self_check` as `clear` / `revised_once` / `escalate` (escalate when revise-once still conflicts — downstream Dimension 7 will catch).
 5. **Secondary anchor application** (v1.10.0): if a brief's register benefits from combining a primary register anchor + a supplementary discipline anchor (e.g. Fried+DHH antithesis primary + Stratechery "earn every declarative" discipline secondary), emit secondary anchors in the `secondary_anchors[]` array with `role` label. Common roles: `"secondary-discipline"` (borrow sentence-level rule only), `"secondary-cadence"` (borrow rhythm only), `"cross-lang-borrowing"` (borrow structure across language without vocabulary). Max 1 secondary per rewrite — 3+ anchors compose as pastiche.
 6. **Safe-substitute suggestion** (v1.10.0, broadened v1.11.1): when `brief.voice_reference` names ANY master, query `{anchor for anchor where named-master ∈ anchor.frontmatter.safe_substitute_for}`. If a candidate exists AND its over-mimic risk is **strictly lower** than the named master's (LOW < MEDIUM < MEDIUM-HIGH < HIGH < HIGH+), emit `substitute_suggested = {slug, rationale}`. Read named-master risk from its own anchor file's `Over-mimic risk:` line first; fallback to meta-core §Over-mimic mitigation registry; default to MEDIUM if in neither. User-specified master remains default primary unless user confirms substitute in follow-up turn. **v1.11.1 contamination upgrade**: if `brief.tone_cue` contains tokens matching the substitute anchor's `Don't / Failure mode` warning about named-master contamination (e.g., tone_cue "華麗頹廢" matches 白先勇's anchor's warning about 張愛玲-style "華麗頹廢"), upgrade to `substitute_recommended_strong` — substitute isn't just safer but likely necessary.
-7. Record `tone_notes.register_signal_applied = {primary_anchor_slug, secondary_anchors[], landmark_position, mitigation_clauses_applied, anchor_candidates_ranked[], substitute_suggested?, thesis_self_check}`
+7. Record `tone_notes.register_signal_applied = {primary_anchor_slug, secondary_anchors[], landmark_position, mitigation_clauses_applied, anchor_candidates_ranked[], substitute_suggested?, thesis_self_check, agent_selection_confidence}`
 
 **v1.10.0 output schema** (register_signal_applied):
 ```json
@@ -361,6 +366,7 @@ Register-Signal apply:
   ],
   "substitute_suggested": null,
   "thesis_self_check": "clear | revised_once | escalate",
+  "agent_selection_confidence": "HIGH | MEDIUM | LOW",
   "native_critical_vocab_cited": ["peer-to-peer", "antithesis-headline", "earn every declarative"]
 }
 ```
@@ -448,6 +454,7 @@ orchestrator with `status: upstream-incomplete` (Phase 5 must run first).
       "mitigation_clauses_applied": ["..."],
       "anchor_candidates_ranked": [{"rank": 1, "slug": "...", "fit_score": "HIGH", "fit_reasoning": "..."}],
       "thesis_self_check": "clear | revised_once | escalate | not_applicable",
+      "agent_selection_confidence": "HIGH | MEDIUM | LOW",
       "native_critical_vocab_cited": ["..."]
     },
     "axis_extreme_applied": "mvp-stub-{position} | null",
