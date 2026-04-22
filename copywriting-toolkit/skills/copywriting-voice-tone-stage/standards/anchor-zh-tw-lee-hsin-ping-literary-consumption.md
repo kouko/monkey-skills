@@ -49,4 +49,4 @@ date: 2026-04-21
 - Over-mimic risk: MEDIUM
 - Pairs with form: [mid-form, long-form-extended, short-form-brand-tagline]
 - Documented lineage: ✅ 李欣頻 → 寺山修司 + 阿莫多瓦 + 徐四金 + 村上春樹 (《誠品副作用》1998 自述)
-- Stylistic-sibling (not transferability): 許舜英 ideological-definitional (`anchor-zh-tw-xu-shunying-ideological-definitional.md`) — shares 1990s 意識形態 Q2 lineage + 商業文化批評 angle, but 李's 排比枚舉 + antecedent-work dialogue + 具名文化座標 spine diverges structurally from 許's `X 是一種 Y` definitional-inversion + power-disparity payload. Mechanism-distinct per v1.12.0 cross-anchor analysis (see `docs/voice-anchor-research-notes/zh-tw-li-xu-stylistic-siblings-analysis.md`)
+- Stylistic-sibling (not transferability): 許舜英 ideological-definitional (`anchor-zh-tw-xu-shunying-ideological-definitional.md`) — shares 1990s 意識形態 Q2 lineage + 商業文化批評 angle, but 李's 排比枚舉 + antecedent-work dialogue + 具名文化座標 spine diverges structurally from 許's `X 是一種 Y` definitional-inversion + power-disparity payload. Mechanism-distinct per v1.12.0 cross-anchor analysis (see `docs/voice-anchor-notes/zh-tw-li-xu-stylistic-siblings-analysis.md`)

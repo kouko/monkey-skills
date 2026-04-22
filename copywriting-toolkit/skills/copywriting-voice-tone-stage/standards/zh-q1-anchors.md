@@ -19,9 +19,9 @@ Q1 = Authority × Reason. **zh-TW Q1 individual-creator pool is currently thin**
 
 All v1 entries moved out (v1.6.0):
 
-- **天下雜誌 CommonWealth** (殷允芃-era institutional register) → [../../../../docs/register-references/zh-tw-tianxia-structural-analytical.md](../../../../docs/register-references/zh-tw-tianxia-structural-analytical.md)
-- **報導者 The Reporter** (center + investigative-extreme registers, non-profit journalism) → [../../../../docs/register-references/zh-tw-reporter-explanatory-journalism.md](../../../../docs/register-references/zh-tw-reporter-explanatory-journalism.md)
-- **研之有物 Research @ Sinica** (institutional 科普 platform) → [../../../../docs/format-templates/zh-tw-research-sinica-popularization.md](../../../../docs/format-templates/zh-tw-research-sinica-popularization.md)
+- **天下雜誌 CommonWealth** (殷允芃-era institutional register) → [../../../../docs/anchor-references/zh-tw-tianxia-structural-analytical.md](../../../../docs/anchor-references/zh-tw-tianxia-structural-analytical.md)
+- **報導者 The Reporter** (center + investigative-extreme registers, non-profit journalism) → [../../../../docs/anchor-references/zh-tw-reporter-explanatory-journalism.md](../../../../docs/anchor-references/zh-tw-reporter-explanatory-journalism.md)
+- **研之有物 Research @ Sinica** (institutional 科普 platform) → [../../../../docs/anchor-references/zh-tw-research-sinica-popularization.md](../../../../docs/anchor-references/zh-tw-research-sinica-popularization.md)
 
 Strategy: select individual voice anchor from the v1.8.0 additions below, or cross-load from JP/EN Q1 + use institutional register reference for structural layer.
 
@@ -44,7 +44,7 @@ Moved out: 報導者 investigative-extreme register (consolidated with center en
 
 ## Landmark: toward-Q4
 
-**商業周刊 Business Weekly** (金惟純-era institutional strategy-imperative) → [../../../../docs/register-references/zh-tw-business-weekly-strategy-imperative.md](../../../../docs/register-references/zh-tw-business-weekly-strategy-imperative.md)
+**商業周刊 Business Weekly** (金惟純-era institutional strategy-imperative) → [../../../../docs/anchor-references/zh-tw-business-weekly-strategy-imperative.md](../../../../docs/anchor-references/zh-tw-business-weekly-strategy-imperative.md)
 
 - **楊照 — lecture-hall essay** (essayist / 誠品講堂 + podcast host) — [anchor-zh-tw-yang-zhao-lecture-hall-essay.md](anchor-zh-tw-yang-zhao-lecture-hall-essay.md)
   - Slug: `zh-tw-yang-zhao-lecture-hall-essay`

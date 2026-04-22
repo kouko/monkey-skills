@@ -37,8 +37,8 @@ Q2 = Authority × Emotion. EN canonical:
 ## Landmark: extreme
 
 **Moved to format-templates / register-references**:
-- Extinction Rebellion Declaration (civic-only mitigation) → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §XR Declaration
-- Nike "Dream Crazy / Crazier" (campaign team, mitigation-only) → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Nike Dream Crazy
+- Extinction Rebellion Declaration (civic-only mitigation) → [aggregate](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §XR Declaration
+- Nike "Dream Crazy / Crazier" (campaign team, mitigation-only) → [aggregate](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §Nike Dream Crazy
 
 (Previously Apple Think Different was Q2 extreme; recast to Lee Clow as Q2 center per voice-direction.)
 

@@ -13,7 +13,7 @@ date: 2026-04-21
 | Layer | Location | Consumed by | Content |
 |---|---|---|---|
 | **Layer 1** (voice body) | `skills/copywriting-voice-tone-stage/standards/anchor-{slug}.md` | Pass 3 (hot path) | Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata — the fields Pass 3 needs to rewrite a draft in this voice |
-| **Layer 2/3** (research) | `docs/voice-anchor-deep-dives/{slug}.md` (this folder) | Audit / evaluator rationale (optional) / future researchers | Full research notes / primary source URLs & ISBNs / biographical & era context / awards timeline / critical history / documented lineage influences |
+| **Layer 2/3** (research) | `docs/voice-anchor-notes/{slug}.md` (this folder) | Audit / evaluator rationale (optional) / future researchers | Full research notes / primary source URLs & ISBNs / biographical & era context / awards timeline / critical history / documented lineage influences + rejected-candidate research trails (consolidated in v1.13.1 from former voice-anchor-deep-dives + voice-anchor-research-notes) |
 
 ## Current state (v1.6.1)
 

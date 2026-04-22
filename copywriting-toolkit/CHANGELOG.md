@@ -1,5 +1,28 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.13.1 — 2026-04-22 (docs reorg + schema/CLAUDE.md cleanup)
+
+Pure housekeeping release. No runtime behavior change. No API / envelope field change.
+
+**docs/ subdirectory consolidation (7 → 3)**:
+- `docs/voice-anchor-deep-dives/` + `docs/voice-anchor-research-notes/` → `docs/voice-anchor-notes/` (69 files; layer 2/3 research + rejected-candidate trails in one place)
+- `docs/voice-anchor-e2e-tests/` + `docs/e2e-tests/` + `docs/data-collection/` → `docs/tests/` (test artifacts across versions unified; data-collection retained as subdir)
+- `docs/format-templates/` + `docs/register-references/` → `docs/anchor-references/` (18 files; non-Layer-1 references — institutional / platform / format-template + movement / campaign / register-reference — unified per consolidated README)
+
+All `git mv` with preserved history. All active path references updated in standards files (9 quadrant routers + voice-anchor-meta.md + 2 anchor files) + docs/anchor-schema-v2.md + docs/voice-library-recast-audit.md + docs/voice-anchor-notes/README.md. Historical snapshots (CHANGELOG past entries / ab-retrospective / anchor-schema-v2-pilot-findings / implementation-plan / E2E test snapshots) retain original path references as-is (those describe state at time of writing).
+
+**`.claude-plugin/envelope.schema.json` cleanup**: `immutable_fields_enforced.description` dropped the "(was tone_notes.lineage_gap pre-v1.13.0)" legacy annotation. v1.13.0 shipped; migration note no longer needed in schema comment.
+
+**`CLAUDE.md §Immutable fields — preservation contract` cleanup**: split one 8-row table into two coherent tables:
+- Voice-pipeline fields (5 rows): voice_quadrant object, schwartz_alignment, named_master_fit_warning, brief.* L1, express_mode_used
+- Router bookkeeping (3 rows): audit_trail, retries.*, violation
+
+Router bookkeeping table drops the "Readers" column since router is the sole writer AND reader; reduces table clutter. Voice-pipeline table drops the "(was lineage_gap)" legacy annotation.
+
+**`plugin.json` version**: 1.13.0 → 1.13.1
+
+No CI behavior, no Pass 3 behavior, no envelope field additions/renames.
+
 ## v1.13.0 — 2026-04-22 (Pass 3 simplification — consolidate meta files + linear-flow Pass 3 + library CI lint)
 
 Pure simplification release. Three commits in one PR, each leaves repo in valid state:
