@@ -272,6 +272,191 @@ Estimated scope: ~1-2 session, single PR, no new content authored. Mostly deleti
 - **Medium confidence**: cost delta claim (A ~30-40% cheaper per full run). Based on plugin self-report (`CLAUDE.md §Verification Density Principle`); not independently measured in this retrospective. Does not materially change recommendation — cost advantage is addressable via Express Mode in B.
 - **Low-stakes decision**: consolidation scope is mostly deletion + stub. Reversible if needed.
 
+---
+
+## Part 5 — Actual copy output (E2E follow-up, 3 briefs through both plugins)
+
+The Part 2 E2E tests were **predictions/simulations** — agents walked through pipeline logic without producing final copy. User requested actual copy to evaluate craft differences directly. This section captures the 3-brief actual-copy run.
+
+### Brief 1 — Tagline (茶聲 Cha Sheng 有機茶, zh-TW Q3)
+
+**Completed intake**: 台灣阿里山海拔 1,500m 有機轉型認證中小農單一產地烏龍茶 / 30-45 都會女性 / 短文案 5-20字 / 捷運+雜誌 / $30-45 per 100g / Schwartz Level 3
+
+**Plugin A output** (Q3 center, no anchor auto-select):
+
+| # | 切入點 | Copy |
+|---|---|---|
+| 1 | benefit | 一片葉子,一座山的回音 |
+| 2 | benefit | 海拔一千五的從容 |
+| 3 | target call-out | 給懂得放慢的人 |
+| 4 | interactive question | 今天,泡一壺山的時間 |
+| 5 | disruptive | 不急的茶,才叫好茶 |
+| 6 | benefit | 山上的空氣,杯裡的安靜 |
+
+A's top pick: 「海拔一千五的從容」(8 字)
+
+**Plugin B output** (Q3 center, 龔大中 全聯經濟美學 anchor auto-selected):
+
+| # | 切入點 | Copy | Anchor mechanic applied |
+|---|---|---|---|
+| 1 | benefit (對仗) | 喝得慢是閒情,喝得對是本事 | A是X B是Y + 動作態度落點 |
+| 2 | target call-out (素人) | 知道好茶很多之後,我決定只喝一座山 | 「知道 A 之後我決定 B」句型 + 第一人稱 |
+| 3 | benefit (對仗) | 山上有人顧茶,杯裡有人顧我 | 前後對仗 + 地點落點 |
+| 4 | disruptive (自嘲) | 土的是茶園,不土的是泡它的人 | 台式自嘲「土」+ 對仗翻轉 |
+| 5 | benefit (素人) | 我不在喝茶,就在去阿里山的路上 | 直借「不在 A 就在去 A 的路上」 |
+| 6 | target call-out | 送禮是心意,送山是本事 | A是X B是Y + 動作落點 |
+
+B's top pick: 「知道好茶很多之後,我決定只喝一座山」(15 字)
+
+**Both plugins correctly blocked** 「有機」candidate (認證未完成 → 景表法 §5-1 優良誤認).
+
+**B's anchor saturation is visibly deep**: 3/7 candidates use 對仗 A是X B是Y, 3/7 use 第一人稱「我」, 1/7 directly borrows 龔大中 signature 句型 (「不在 A 就在去 A 的路上」). A has 0/6 of these mechanics.
+
+### Brief 2 — Sales email (SleepEase supplement, EN Q4)
+
+**Completed intake**: natural sleep supplement (valerian/magnesium/L-theanine/chamomile) / 35-55 US knowledge workers, melatonin-skeptical / PASONA / structure-function claim compliant / $39.99/month / 60-day guarantee / Schwartz Level 3-4
+
+**Plugin A** opens with Problem-first lead:
+> "You close the laptop at 11:47 PM and your body is tired but your mind is still on the 2 PM call..."
+
+**Plugin B** opens with Schwartz literal lead template:
+> "Give me the 90 seconds it takes to read this, and I'll give you a specific reason the sleep aid in your nightstand drawer stopped working..."
+
+**Key craft differences**:
+
+1. **Awareness-stage calibration**: A's Problem-first lead is a Schwartz violation for Level 3-4 (Problem-first leads belong to Levels 1-2 Unaware). B leads with mechanism-differentiated offer per Schwartz canon.
+
+2. **Bullet structure**: A uses conventional benefit bullets that resolve (ingredient + claim); B uses fascination bullets that withhold (e.g., "The single word on most sleep-supplement labels that tells you the dose is wrong" — names category + hook, withholds resolution).
+
+3. **Specificity discipline** (Schwartz market-sophistication rule): A says "third-party tested"; B says "certificate of analysis published for every batch by a third-party lab" — specific mechanism, not generic claim.
+
+4. **Form disambiguation**: A says "magnesium"; B says "magnesium glycinate, not citrate, not oxide, not 'magnesium complex'" — anti-generic specificity.
+
+**Ethics behavior**:
+- A: PASS clean (no testimonials invented, disciplined throughout)
+- B: PASS_WITH_NOTES — Phase 7 flagged FIXABLE (fabricated Boston portfolio manager anecdote, FTC §255.1). **B's anchor register pulled writer toward persuasive pressure that required ethics-gate revision**; A's blander register never reached for the risky move.
+
+**Shipping readiness**:
+- A ships clean immediately, zero revision cycles needed
+- B ships after 1 revision round (remove anecdote or reframe as illustrative)
+
+### Brief 3 — Banner audit (MeltFit 減肥廣告, 8 risk flags)
+
+Banner: "Revolutionary breakthrough! Doctors HATE this one weird trick that melts belly fat in 7 days guaranteed. Limited time offer — only $29.99. Join 50,000+ satisfied customers today!"
+
+**Risk-flag coverage on ORIGINAL (formal verdict, not prose mention)**:
+
+| Plugin | Formal verdicts on original | Structure |
+|---|---|---|
+| A | **0 / 8** (prose diagnosis only; ethics gate runs only on rewrites per SKILL.md:461) | Markdown prose |
+| B | **8 / 8** (4 FATAL + 4 FIXABLE with gate-item IDs + statute citations) | JSON envelope with `ethics_verdict_on_original: "NEEDS_REVISION"` + `fatal_findings[]` enumerated |
+
+**B's FATAL findings** (directly usable for legal defense):
+- `"guaranteed"` → CHK-CTW-ETH-005, 景表法 §5-1
+- `"melts belly fat in 7 days"` → CHK-CTW-ETH-004, 薬機法 §68 + FDA structure-function boundary
+- `"Doctors HATE"` → CHK-CTW-ETH-002, FTC §255.1
+- `"50,000+ satisfied customers"` → CHK-CTW-ETH-006, FTC §255.1
+
+**Rewrite variants**: Both plugins produce 3 compliant rewrites of comparable quality. B's output includes `three_reasons[]` per variant (auditable rationale) and `third-party test results posted` (falsifiable verification hook) that A's top rewrite lacks.
+
+### Actual copy delta summary
+
+| Brief | A char | B char |
+|---|---|---|
+| 1 (tagline) | Generic Q3 wellness, ambient register, non-anchored | Anchor-saturated 對仗 + 第一人稱 borrowed句型, identifiable as 全聯-adjacent |
+| 2 (email) | Competent modern DR, Problem-first lead (Schwartz violation) | Schwartz-canon lead template, fascination withhold-bullets, mechanism-specific dose disambiguation. Requires 1 revision (anecdote) |
+| 3 (audit) | Prose findings + 3 clean rewrites, ethics gate on rewrites only | 8/8 structured FATAL/FIXABLE verdicts on original + 3 rewrites with per-variant gated rationale |
+
+---
+
+## Part 6 — Deeper analysis beyond agent reports
+
+The Part 5 actual-copy run surfaced 3 insights that neither Part 1 inventory nor Part 2 simulations predicted:
+
+### Insight 1 — Anchor saturation is bimodal (structural vs stylistic)
+
+**Structural anchors** (Schwartz in Brief 2) carry a generalizable framework — awareness-stage calibration, market-sophistication rule, fascination-withhold mechanics. Saturation delivers methodological upgrade independent of the brief's specific content. The anchor's craft TRANSFERS.
+
+**Stylistic anchors** (龔大中 in Brief 1) carry signature句型 and voice fingerprints. Saturation delivers recognizability at the cost of pastiche risk. The anchor's voice LEAKS.
+
+Current toolkit treats both as the same "anchor" with uniform `over-mimic risk` scale. The mechanic of over-mimic is actually different:
+- Stylistic-anchor over-mimic = readers recognize the borrowed voice ("這不就是全聯嗎")
+- Structural-anchor over-mimic = readers get generic pastiche of the method (carnival-barker Hopkins-era for Schwartz)
+
+The existing `safe_substitute_for` + over-mimic mitigation system handles stylistic risk well but doesn't distinguish the two types. Possible future schema field: `anchor_type: structural | stylistic | hybrid`.
+
+### Insight 2 — Anchor pressure creates ethics-gate work
+
+Brief 2 observation: B's Schwartz anchor pulled writer toward fabricated testimonial (Boston portfolio manager). Phase 7 Ethics MUST gate caught it as FIXABLE. System working as designed, BUT the work arose from the anchor's persuasive pressure.
+
+Two readings:
+- **Optimistic**: defense-in-depth working. Higher-rigor anchor produces more persuasive copy; higher persuasive copy risks more ethics drift; gate catches drift. Net positive.
+- **Pessimistic**: the system creates work for itself. A's blander register produced clean output with fewer gate cycles. Rigor has ethics-handling overhead.
+
+For this trade-off to be net-positive, the copy improvement from anchor application must justify the revision-cycle cost. E2E evidence suggests it does for Level 3-4 skeptic audiences but may not for simpler briefs.
+
+### Insight 3 — Audit architecture wins independently of anchor system
+
+Brief 3's B advantage has nothing to do with the 90-anchor library. B wins on architectural choice: Phase 7 Ethics MUST runs on ORIGINAL (not only rewrites) + structured JSON envelope with statute citations.
+
+This is important because:
+- It means B's consolidation argument is **strongest for audit use case**
+- The generative use case consolidation argument has trade-offs (anchor pastiche risk, revision-cycle cost)
+- If future consolidation work is modular, audit-path consolidation could precede generative-path with less controversy
+
+---
+
+## Part 7 — Reader goal sensitivity (critical reframe)
+
+The Part 4 recommendation ("consolidate into toolkit") was framed neutrally — "B is strict functional superset". The Part 5 actual copy evidence reveals this neutral framing misses a crucial variable: **user's goal**.
+
+### Goal spectrum
+
+| User goal | Correct tool | Why |
+|---|---|---|
+| "Just ship something safe and pass legal review" | A (or B with Express Mode + no anchor selection) | Bland output ships cleaner, zero revision cycles |
+| "Avoid mediocrity — I want distinctive craft" | **B (strictly)** | A is structurally incapable of non-generic output. A's cleanest ships are generic-by-construction, not safe-by-design |
+| "Audit existing copy for legal exposure" | B (unambiguously) | Structured verdict on original + statute citations |
+| "Sophisticated reader conversion lift" | B + Schwartz anchor | Awareness-stage calibration is only in B's library |
+
+### Anti-mediocrity framing (critical for this plugin's intent)
+
+If the plugin's intended user persona is "copywriter avoiding AI-generic output" (which is B's origin per CHANGELOG v1.0 — "defense against AI-voice generic failure mode"), the retrospective recommendation shifts:
+
+- Not "B is better" — **A is disqualified**. A's "safety" is its mediocrity, not a feature
+- A's cleaner-ships property is a byproduct of lacking anchor system, not a virtue
+- Consolidation isn't "B incrementally preferred" — **it's "A is the wrong tool for the plugin's core value proposition"**
+
+For anti-mediocrity users, the previously-flagged concerns (龔大中 句型 borrowing, Schwartz anchor ethics-pressure) become **acceptable costs for distinctiveness**. The alternative isn't "safe clean output" — it's "mediocrity forever".
+
+### Product implications (may guide future work, separate from consolidation)
+
+Insight from anti-mediocrity lens:
+
+1. **Anchor selection fit-to-positioning is a gap**. Brief 1 Pass 3d auto-selected 龔大中 (全聯-adjacent 庶民-aspirational register). But 茶聲 is 輕奢送禮 positioning — probably better fit: 李欣頻 literary-consumption or 原研哉 minimalism. Current Pass 3d matches on language + quadrant only, not positioning axis. **Candidate feature**: positioning-to-anchor register-family matrix.
+
+2. **New-brand briefs should FORCE anchor selection, not auto-select**. Previous analysis suggested "no-signal → anchor-free fallback". For anti-mediocrity users this is wrong direction. Correct behavior: **3-5 anchor candidates presented with sample outputs**, user picks deliberately. Fail loud with choices, not silent default.
+
+3. **Gate revision policy needs "preserve distinctive" rule**. Gate NEEDS_REVISION currently may revise away signature language alongside FATAL issues. Should distinguish "must-fix legal" vs "must-preserve style signature" in revision loop.
+
+4. **Anchor type classification** (structural vs stylistic) — see Insight 1. Different over-mimic characteristics need different mitigation logic.
+
+---
+
+## Revised recommendation (v1.12.0 final)
+
+Consolidation into toolkit remains correct. **Revised rationale**:
+
+**Pre-v1.12.0 framing** (Part 4): B is functional superset. A provides no unique capability. Keep A/B drift risk accumulating.
+
+**Post-actual-copy framing** (Parts 5-7): B is a **tunable spectrum** from generic fallback to highly-anchored distinctive craft. A is a **fixed bland point** on that spectrum. Consolidation isn't removing a viable option — it's removing a redundant fixed point that the spectrum already contains.
+
+For users with anti-mediocrity goal (plugin's stated value proposition): **A is disqualified by mission, not merely dominated on metrics**.
+
+Execution plan from Part 4 stands. Follow-up work (anchor-type classification, positioning-to-anchor matrix, new-brand forced-deliberation, gate revision policy refinement) belongs to separate roadmap — not blocker for consolidation.
+
+---
+
 ## Appendix: files cited
 
 - `/Users/kouko/GitHub/monkey-skills/domain-teams/skills/copywriting-team/SKILL.md`
