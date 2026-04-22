@@ -262,7 +262,7 @@
     },
     "immutable_fields_enforced": {
       "type": "array",
-      "description": "READ-ONLY marker list. See copywriting-toolkit/CLAUDE.md §Handoff Envelope §Immutable fields — preservation contract. Router enforces these via Step 2.4 re-entry invariant check. Listed here so external callers know which fields MUST pass through unchanged: voice_quadrant (object), voice_quadrant.schwartz_alignment, tone_notes.schwartz_conflict_carried, tone_notes.lineage_gap, brief.* Level 1 fields, audit_trail (append-only), retries.* (monotonic), express_mode_used, violation.",
+      "description": "READ-ONLY marker list. See copywriting-toolkit/CLAUDE.md §Handoff Envelope §Immutable fields — preservation contract. Router enforces these via Step 2.4 re-entry invariant check. Listed here so external callers know which fields MUST pass through unchanged: voice_quadrant (object), voice_quadrant.schwartz_alignment, tone_notes.register_signal_applied.named_master_fit_warning (was tone_notes.lineage_gap pre-v1.13.0), brief.* Level 1 fields, audit_trail (append-only), retries.* (monotonic), express_mode_used, violation.",
       "items": { "type": "string" }
     }
   },
