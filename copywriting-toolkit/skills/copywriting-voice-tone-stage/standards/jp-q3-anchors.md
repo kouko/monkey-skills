@@ -34,7 +34,7 @@ Q3 = Affinity × Emotion. JP canonical: 向田邦子 (center, 真打ち random),
   - ⚠ Over-mimic HIGH+: 口語規律 LLM 崩れ多発 (「です・ます」親しみ化 + ウィット 1 拍で止める). Mitigation: 商品名を一句内に着地させ、俗語を 1 つ残し、余韻副詞を禁じよ
   - Secondary register overlap: JR 九州 1994「愛とか、勇気とか、見えないものも乗せている。」は例外的 Q3 余韻 mode → `anchor-jp-iwasaki-shunichi-yonin.md` 併読推奨
 
-Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-meta-detail.md §Cross-Master Context`.
+Craft-gate pointer: 糸井重里 状態提案 register — load `voice-anchor-meta.md §Cross-Master Context`.
 
 ## Landmark: extreme
 

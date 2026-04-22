@@ -1,5 +1,94 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.13.0 — 2026-04-22 (Pass 3 simplification — consolidate meta files + linear-flow Pass 3 + library CI lint)
+
+Pure simplification release. Three commits in one PR, each leaves repo in valid state:
+
+### Commit 1 — Library standards consolidation
+
+Merged `voice-anchor-meta-core.md` + `voice-anchor-meta-detail.md` + `axis-extreme-anchors.md` into single `voice-anchor-meta.md` (499 lines). Former split (hot path vs deep path) optimized token budget but produced mental overhead tracking which file held which rule; v1.13.0 collapses into unified SSOT. axis-extreme content absorbed as `§Axis Extreme candidates` section (orthogonal cross-language concept preserved).
+
+All active consumers updated: SKILL.md Pass 3 load instructions, voice-consistency-gate.md Dimension 6, 4 quadrant router cross-ref sections (jp-q2, jp-q3, zh-q2, zh-q3), voice-and-tone.md, intake express-mode protocol, ideation SKILL + protocol, plugin CLAUDE.md, active docs. Historical snapshots (data-collection/, e2e-tests/v*.md, test-*.md, CHANGELOG entries, implementation-plan) preserved as-is.
+
+Commit 1 ships mechanical changes only — no runtime behavior change, Pass 3 still runs as 4-branch dispatch.
+
+### Commit 2 — Library CI lint introduction
+
+New `scripts/lint-anchor-library.py` implements v2 schema structural check + machine-checkable portions of 4-condition rubric. Baseline run on 90 anchors: 71 pass clean / 19 have pre-existing structural drift documented in `docs/lint-baseline-v1.13.0.md`. Lint prepares for commit 3's removal of runtime 4-condition check.
+
+### Commit 3 — Pass 3 simplification + breaking envelope field renames
+
+Pass 3 refactored from 4-branch dispatch (Pass 3a JP Craft Gate / 3b ZH Craft Gate / 3c Axis Extreme / 3d Register Signal) to single 8-step linear flow:
+
+1. Load `voice-anchor-meta.md` + landmark-targeted quadrant router section
+2. Build candidate pool (automatic rejection + negation-of-axis + named-creator forced rank 1)
+3. Fit judgment + ranking + self-report confidence (v1.12.1 instrumentation retained)
+4. Apply primary + mitigation inline (anchor file SSOT + 9-author fallback registry)
+5. Thesis-conflict self-check
+6. Safe-substitute suggestion (conditional)
+7. Secondary anchor (opt-in, max 1)
+8. Output
+
+Named-creator routing (formerly JP/ZH_CRAFT_MASTER_MAP 1:1 lookup) absorbed into Step 2.3 as candidate-pool priority — named anchor forced rank 1 with optional `named_master_fit_warning` if agent's fit assessment is MEDIUM or LOW.
+
+Removed:
+- `§Pass 3 activation guard` 3-tier branching (replaced by §When Pass 3 applies single predicate)
+- `§Pre-pass schwartz_alignment awareness note` (v1.2.0 downgraded; v1.13.0 removes residual ceremony — Phase 8 8b remains sole consumer)
+- v1 schema dual detection (all 81 anchors are v2)
+- Runtime 4-condition rubric re-validation (moved to CI lint per commit 2)
+- JP_CRAFT_MASTER_MAP / ZH_CRAFT_MASTER_MAP lookup tables (collapsed into candidate-pool priority)
+
+**Breaking: envelope field renames**
+
+Three `tone_notes` top-level fields REMOVED; semantics merged into `register_signal_applied`:
+
+- `tone_notes.lineage_applied` → `tone_notes.register_signal_applied.primary_anchor_slug`
+- `tone_notes.lineage_gap` → `tone_notes.register_signal_applied.named_master_fit_warning` (richer structured warning)
+- `tone_notes.axis_extreme_applied` → `tone_notes.register_signal_applied.landmark_position` (axis landmarks flow through uniformly)
+
+Downstream updated in same commit:
+- `rubrics/voice-consistency-gate.md` — Dimension 6 simplified SSOT precedence (anchor file first, fallback registry second); Dimension 7 read path updated
+- `CLAUDE.md §Immutable fields` — `lineage_gap` row replaced with `register_signal_applied.named_master_fit_warning`
+- `.claude-plugin/envelope.schema.json` — `tone_notes` schema updated with `register_signal_applied` object (primary_anchor_slug / named_master_fit_warning / agent_selection_confidence / thesis_self_check)
+
+### Impact (measured, not estimated)
+
+**Static files** (`git diff main...HEAD` + `wc -l` / `wc -w`):
+
+| Dimension | v1.12.1 | v1.13.0 | Delta |
+|---|---|---|---|
+| SKILL.md total lines | 537 | 431 | −20% |
+| SKILL.md word count | 4,301 | 3,227 | −25% |
+| Standards files count (meta) | 3 (core + detail + axis-extreme) | 1 (voice-anchor-meta.md) | −67% |
+| Meta files total words | 5,442 (2,253+2,613+576) | 4,600 | −15% |
+| SKILL+meta total words | 9,743 | 7,827 | **−20% (~−3K tokens at 1.5 tok/word)** |
+| Branch dispatch control paths | 4 mutually exclusive | 1 linear flow | simpler |
+| Runtime 4-condition re-validation | yes | no (CI lint) | removed |
+| Schwartz pre-pass ceremony | present | removed (inline passthrough only) | removed |
+| v1/v2 schema dual detection | present | v2-only | removed |
+| Library CI lint | none | 90 anchors / 71 clean / 19 drift documented | new |
+
+**Runtime per-Pass-3-invocation** (depends on path):
+
+| Path | v1.12.1 load (words) | v1.13.0 load (words) | Delta |
+|---|---|---|---|
+| Register Signal (most common) | SKILL 4.3K + meta-core 2.3K + meta-detail 2.6K + router ~0.5K ≈ **9.7K** | SKILL 3.2K + meta 4.6K + router ~0.5K ≈ **8.3K** | **−14%** |
+| Craft Gate (named master) | SKILL 4.3K + meta-core 2.3K (+conditional meta-detail 2.6K) + anchor ≈ 6.6-9.2K | same as Register Signal ≈ **8.3K** | neutral to +10% |
+| Axis Extreme (rare) | SKILL 4.3K + meta-core 2.3K + axis-extreme 0.6K ≈ **7.2K** | same as Register Signal ≈ **8.3K** | +15% |
+
+**Honest note**: the "−30 to −50% token load" wording in early drafts was over-optimistic. True savings are **~−14% on the common Register Signal path**; Axis Extreme slightly increased because the unified flow loads the merged meta file rather than only the relevant slice. The primary value of v1.13.0 is **mental-model simplification + SSOT + removing dead ceremony (schwartz pre-pass, v1 schema detection, 4-branch dispatch, runtime 4-condition re-validation)** — not raw token count.
+
+### Not done in this PR (deferred to future releases)
+
+- Fix the 19 pre-existing anchor lint failures (baseline documented in `docs/lint-baseline-v1.13.0.md`; mechanical fixes in v1.13.x patches, content/schema fixes in v1.14.x)
+- Thesis weight range mechanism (new intake schema for thesis element priorities — Brief 1 / 4 pattern from v1.12.1 data collection; deferred to v1.14.0 design)
+- Pass 3 degradation detection (Pre-Pass-3 vs Post-Pass-3 delta check — Brief 3 / 4 pattern from v1.12.1 data collection; needs design)
+- Wire CI GitHub Actions step for `scripts/lint-anchor-library.py` (manual invocation only in v1.13.0; CI block gating after baseline cleanup)
+
+## v1.12.1 — 2026-04-22 (Step 3 confidence instrumentation + 5-brief data collection)
+
+v1.12.1 is a non-breaking additive patch. Added `agent_selection_confidence ∈ {HIGH, MEDIUM, LOW}` self-report field to Pass 3d Step 3 output schema. 5 engineered test briefs run to measure correlation between agent meta-cognition and user-graded copy mediocrity. Full data-collection results + decision rationale in `docs/data-collection/v1.12.1-step3-confidence-vs-mediocrity/results-summary.md`. Findings informed v1.13.0 direction (external simplification first, thesis weight range + Pass 3 degradation detection deferred).
+
 ## v1.12.0 — 2026-04-22 (anchor gap-fill round 2 — 3 new anchors + 5th JP craft-gate + 2 research notes + cross-anchor analysis)
 
 Research-first protocol continues (user directive from v1.11.0: "如果研究後發現資料不足以規則化語氣 那就只留研究筆記"). 6 parallel research agents dispatched; 3 candidates passed v2 eligibility gate, 2 failed (produced research notes), 1 cross-anchor analysis produced findings note.

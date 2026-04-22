@@ -30,7 +30,7 @@ Q2 = Authority × Emotion. Manifesto / 文学 / 陰翳 / brand-philosophy regist
 - **寺山修司 — 言葉の錬金術師** (poet / playwright, 1935-1983) — [anchor-jp-terayama-kotoba-no-renkinjutsushi.md](anchor-jp-terayama-kotoba-no-renkinjutsushi.md)
   - Slug: `jp-terayama-kotoba-no-renkinjutsushi`
 
-Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load `voice-anchor-meta-detail.md §Cross-Master Context` when trigger matches.
+Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load `voice-anchor-meta.md §Cross-Master Context` when trigger matches.
 
 ## Landmark: toward-Q1
 
@@ -43,18 +43,18 @@ Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load `voi
   - ⚠ Over-mimic MEDIUM: 遮り乱発 / キメ台詞飽和 / 敬語ズレ誤用は検知しやすい. Mitigation: 遮りは 3 発話に 1 回まで、キメ台詞は 1 シーン 1 回、敬語ズレは意味のある時だけ
   - Sorkin substitute として不適 (rhetorical Q-plus-self-answer / moral verdict / walk-and-talk の 3 核心技法すべて欠落)
 
-Craft-gate pointer: 秋山晶 aphoristic time-philosophy — load `voice-anchor-meta-detail.md §Cross-Master Context`.
+Craft-gate pointer: 秋山晶 aphoristic time-philosophy — load `voice-anchor-meta.md §Cross-Master Context`.
 
 ## Landmark: toward-Q3
 
 - **川端康成『雪国』— 新感覚派** (novelist, 1899-1972) — [anchor-jp-kawabata-shinkankaku-ha.md](anchor-jp-kawabata-shinkankaku-ha.md)
   - Slug: `jp-kawabata-shinkankaku-ha`
 
-Craft-gate pointer: 糸井重里 「おいしい生活」Q2-edge — load `voice-anchor-meta-detail.md §Cross-Master Context`.
+Craft-gate pointer: 糸井重里 「おいしい生活」Q2-edge — load `voice-anchor-meta.md §Cross-Master Context`.
 
 ## Cross-references
 
-- **zh Q2 STRONG**: 中興百貨 (許舜英) / 誠品書店 (李欣頻) / 左岸咖啡館 (葉明桂) — load `voice-anchor-meta-detail.md §Cross-Master Context`
+- **zh Q2 STRONG**: 中興百貨 (許舜英) / 誠品書店 (李欣頻) / 左岸咖啡館 (葉明桂) — load `voice-anchor-meta.md §Cross-Master Context`
 - **EN Q2**: Apple Lee Clow `anchor-en-lee-clow-visionary-manifesto.md`, Nike Dan Wieden `anchor-en-dan-wieden-*`, Patek Philippe Tim Delaney `anchor-en-tim-delaney-patek-philippe-stewardship.md`, Yvon Chouinard `anchor-en-yvon-chouinard-patagonia-conscience.md`
 
 ## Migration history

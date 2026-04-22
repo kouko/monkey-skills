@@ -50,7 +50,7 @@ Pre-v1.11.2 default was conservative (whole `standards/` = Tier 1), requiring `d
 
 **Exception** — ZH voice lineage: `skills/copywriting-voice-tone-stage/standards/zh-copy-craft-lineage.md` is **newly authored for this toolkit in v1.0.1** (not cp'd from domain-teams source — the source never had a ZH counterpart to `jp-copy-craft-lineage.md`). It is Tier 1 in the sense of "immutable canon", but has no upstream source to diff against.
 
-**Plugin-native standards** (post v1.4.0 anchor library expansion): the entire voice anchor system — 87 `anchor-*.md` files, `voice-anchor-meta-core.md`, `voice-anchor-meta-detail.md`, 12 quadrant router files (`{lang}-q{N}-anchors.md`), `anchor-schema-v2.md` — is plugin-native. No upstream counterpart in domain-teams. Not subject to `diff -q`; plugin owns it fully.
+**Plugin-native standards** (post v1.4.0 anchor library expansion): the entire voice anchor system — 90+ `anchor-*.md` files, `voice-anchor-meta.md` (consolidated in v1.13.0), 12 quadrant router files (`{lang}-q{N}-anchors.md`), `anchor-schema-v2.md` — is plugin-native. No upstream counterpart in domain-teams. Not subject to `diff -q`; plugin owns it fully.
 
 ### Tier 2 — MAY DIVERGE with explicit documentation
 
@@ -130,10 +130,9 @@ Certain envelope fields MUST pass through downstream skills unchanged. A skill i
 
 | Field | Writer | Readers | Mutability |
 |---|---|---|---|
-| `voice_quadrant` (entire object) | Phase 5 | Phase 6 Pre-pass + Phase 6 Pass 1 + Phase 8 8b | **Immutable** after Phase 5 |
-| `voice_quadrant.schwartz_alignment` | Phase 5 | Phase 6 Pre-pass + Phase 8 8b rubric | **Immutable** — consumers rely on the exact enum value (`ok` / `hard_rule_applied` / `conflict_flagged`) |
-| `tone_notes.schwartz_conflict_carried` | Phase 6 Pre-pass | Phase 8 8b | **Immutable** after Phase 6 |
-| `tone_notes.lineage_gap` | Phase 6 Pass 3 | Phase 8 8b | **Immutable** after Phase 6 |
+| `voice_quadrant` (entire object) | Phase 5 | Phase 6 Pass 1 + Phase 8 8b | **Immutable** after Phase 5 |
+| `voice_quadrant.schwartz_alignment` | Phase 5 | Phase 6 Pass 1 (passthrough) + Phase 8 8b rubric | **Immutable** — consumers rely on the exact enum value (`ok` / `hard_rule_applied` / `conflict_flagged`) |
+| `tone_notes.register_signal_applied.named_master_fit_warning` | Phase 6 Pass 3 Step 2.3 | Phase 8 8b + user review | **Immutable** after Phase 6 (was `tone_notes.lineage_gap` pre-v1.13.0) |
 | `brief.*` Level 1 fields | Phase 0 intake | All downstream | **Immutable** unless user explicitly edits brief in a user-override turn (e.g., Phase 7 NEEDS_REVISION Option 2) |
 | `audit_trail[]` | Any skill / router | All skills, user on halt | **Append-only** — no skill may remove or reorder entries |
 | `retries.*` counters | Router | Router | **Monotonic** — counters only increment, never reset by a downstream skill (resetting is how stall-loops hide) |

@@ -131,7 +131,7 @@ Advanced (only when overlay activated):
 Scope boundary — this skill is self-contained. It does NOT load standards from other skills. Concepts that belong downstream (SNS-era seed behavior per AISAS / ULSSAS, JP voice lineage signatures, form-specific approach canons) are applied by their owning skills, not here:
 
 - SNS-native seed filtering — `copywriting-long-form-pasona` / `copywriting-light-action` handle ULSSAS / AISAS routing at Phase 4 drafting time via their own `standards/sns-evolution-aisas-ulssas.md`. Ideation's SNS-native trigger (advanced overlay activation rule above) only signals that the downstream drafter should engage SNS behavior models; ideation itself does not apply them.
-- JP voice lineage calibration — `copywriting-voice-tone-stage` applies 糸井 / 岩崎 / 眞木 signatures in Phase 6 via its own `standards/voice-anchor-meta-detail.md §Cross-Master Context`. Ideation emits candidates free-form; voice tuning happens after Phase 4 draft.
+- JP voice lineage calibration — `copywriting-voice-tone-stage` applies 糸井 / 岩崎 / 眞木 signatures in Phase 6 via its own `standards/voice-anchor-meta.md §Cross-Master Context`. Ideation emits candidates free-form; voice tuning happens after Phase 4 draft.
 - Form-specific approach seeds (5 切入點 for short-form, BEAF stages for mid-form) — applied by the form's own drafter skill during Phase 4. Ideation's form-aware rules (Hard rules below) operate on structural layout only, not on standard content.
 
 ## Hard rules
