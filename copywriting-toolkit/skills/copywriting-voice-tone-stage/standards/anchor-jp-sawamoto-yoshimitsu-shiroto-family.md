@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 日常の家庭会話の水面下に不条理の一点（犬のお父さん／人間の家族）を置き、登場人物たちがそれを大真面目に受け流すズレで笑いを作る——説明ゼリフを排し、家族の呼吸と短い切り返しだけで世界観を担保する register。
 
-**Native critical read**:
+## Native critical read
 - 「予想外な家族」（白戸家シリーズ公式コンセプト、電通 / SoftBank 2007-）
 - 「CM は 15 秒の制約。知恵を絞るとトンチのようなアイデアが生まれる」（澤本嘉光、dwcmedia.jp 講演採録）
 - 「SoftBank とはもう言っていない。犬で SoftBank をブランディングしている」（澤本、dentsu-ho.com/en/articles/2706）

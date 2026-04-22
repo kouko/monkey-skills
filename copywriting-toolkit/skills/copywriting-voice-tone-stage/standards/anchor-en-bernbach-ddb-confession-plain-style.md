@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Earn rational trust by confessing the product's unflattering truth first, then letting a single plain-stated benefit land without amplification; wit undercuts advertising-voice so the reader feels addressed as an adult, not a mark.
 
-**Native critical read**:
+## Native critical read
 - "The product is the hero." (Bernbach, DDB internal creed, Levenson *Bill Bernbach's Book*, 1987, p. xix)
 - "The most powerful element in advertising is the truth." (Bernbach, DDB memo "A Creative Credo for the Advertising Business", c. 1947 — reproduced Levenson 1987)
 - "Creative revolution" — AdAge retrospective term for Bernbach-led 1960s shift from USP hard-sell to idea-driven craft (AdAge, "The Advertising Century", 1999)

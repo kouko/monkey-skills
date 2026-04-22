@@ -13,7 +13,7 @@ pilot_source: research-agent 2026-04-21
 
 **What this register achieves**: 日常の細部と宇宙的スケールを同一文に同居させ、科学語と叙情語が共棲する voice。オノマトペは装飾ではなく骨格として機能し、構文と同等にテキストの拍子を担う。
 
-**Native critical read** (6):
+## Native critical read
 - 「心象スケッチ」(賢治自称ジャンル名、『春と修羅』序文)
 - 「非慣習的オノマトペ」(田守育啓 2011『賢治独特の非慣習的オノマトペ』人文論集 46 巻で定式化)
 - 「音韻変化による派生オノマトペ — 濁音化・母音延長・反復・domain hijacking」(田守 分類軸)
@@ -44,7 +44,8 @@ pilot_source: research-agent 2026-04-21
 - **Failure mode**: LLM は賢治を模倣する際、表層の 4-セット（「〜のやうな」＋オノマトペ連打＋擬古仮名遣い＋「ほんたうの」連呼）に収束し、domain hijacking・cosmic-predicate・名詞連鎖修飾などの構造的移動を欠いて「なんとなく賢治っぽいけど薄い」pastiche を生む。商業コピーでは「すきとおった／ほんとうの」が generic Q3 warmth の safe-word として消費されてしまう。
 - **Mitigation** (15 chars): "オノマトペ・すきとおった・ほんとうの は各 1 piece 内 1 回まで"
 
-## Trigger slug: `jp-miyazawa-shinshou-sketch`
-## Over-mimic risk: MEDIUM-HIGH
-## Cross-reference-valid-for: zh-TW: STRONG (糸井 ほぼ日 collab 経由 TW 文青 reference に既流入)
-## Documented stylistic parallel: 糸井「このへんないきもの」「生きろ。」— critical-consensus parallel, NOT documented citation
+## Metadata
+- Trigger slug: `jp-miyazawa-shinshou-sketch`
+- Over-mimic risk: MEDIUM-HIGH
+- Cross-reference-valid-for: zh-TW: STRONG (糸井 ほぼ日 collab 経由 TW 文青 reference に既流入)
+- Documented stylistic parallel: 糸井「このへんないきもの」「生きろ。」— critical-consensus parallel, NOT documented citation

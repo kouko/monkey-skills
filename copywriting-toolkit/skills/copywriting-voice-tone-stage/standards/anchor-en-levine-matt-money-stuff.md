@@ -14,7 +14,7 @@ date: 2026-04-22
 ## Voice direction
 **What this register achieves**: An expert register that refuses expert distance. Technical rigor delivered with cheerful self-deprecation and recursive irony — not "finance blog with jokes" but a specific register that lets a writer be the smartest person in the room while refusing to posture. The reader feels smart for catching the joke; the writer never explains why it's funny.
 
-**Native critical read**:
+## Native critical read
 - "blandly sarcastic" — Bloomberg editor characterization Levine endorses (Levine on Levine, *The Big Picture* / Ritholtz transcript 2024-01)
 - "an opinion columnist without any opinions … it is not high on my list to be like, this is bad or this is good, right? Like I'm, it's always like, this is interesting, right?" (Levine self-commentary, Ritholtz 2024-01)
 - "one of the best writers today chronicling the ironies, paradoxes and absurdities of Modern Business and Finance." (Jim Chanos, widely quoted book-blurb)

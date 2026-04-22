@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Transmutes Black-church pulpit rhetoric into secular prose — the "I" stands simultaneously as witness (testifying what I have seen) and accuser (indicting what America refuses to see), binding moral authority to a periodic sentence whose long cumulative clauses swerve at the end into judgment.
 
-**Native critical read**:
+## Native critical read
 - "The artist's struggle for his integrity must be considered as a kind of *metaphor* for the struggle, which is universal and daily, of all human beings on the face of this globe to get to become human beings." (Baldwin, "The Creative Process," *Creative America*, 1962)
 - "witness to whence I came, where I am" (Baldwin on his own vocation)
 - "Jeremiad / sermonic form associated with Jeremiah" (critical tag applied to *The Fire Next Time*, Massingale *America Magazine* 2024)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: A wise-cracking first-person narrator who converts observational detail into violent, incongruous simile — cynicism as survival posture, compassion hidden under a jaded adjective. The register anchors moral bearing inside a corrupt world via the narrator's register alone (no exposition).
 
-**Native critical read**:
+## Native critical read
 - "hard-boiled" — trade term Chandler accepted; reframed in his essay as *realism* about language, not brutality (Chandler, "The Simple Art of Murder," *Atlantic Monthly* 1944, repub. 1950)
 - "down these mean streets a man must go who is not himself mean, who is neither tarnished nor afraid" — Chandler's self-description of the Marlowe hero (same essay)
 - "wise-cracking" — conventional critical descriptor for Marlowe dialogue register (OED / *Oxford Companion to Crime & Mystery Writing*)

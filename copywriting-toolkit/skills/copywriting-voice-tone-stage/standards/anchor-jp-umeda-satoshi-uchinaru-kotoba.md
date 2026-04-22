@@ -13,7 +13,7 @@ pilot_source: research-agent 2026-04-21
 
 **What this register achieves**: 読者の立ち位置を「応援される側」から「既に世界を支える側」へ反転させる第三人称陳述形のマニフェスト。同時代の社会診断を先に据え、言葉はその上に載るため、コピー自体が時代の重みを帯びる。
 
-**Native critical read** (5):
+## Native critical read
 - 「内なる言葉 / 外に向かう言葉」(本人定義、『「言葉にできる」は武器になる。』日経BP 2016)
 - 「言葉にできないということは、言葉にできるほどには、考えられていないのと同じである」(電通報 本人寄稿 定型テーゼ)
 - 「解像度を上げる」(内なる言葉の方法論、本書第 1 章)
@@ -43,6 +43,7 @@ pilot_source: research-agent 2026-04-21
 - **Failure mode**: LLM は表層文法（第三人称陳述形）を真似ても、社会診断 anchor と主格反転の positional move を欠くため、「頑張れ」の換言を陳述形で装ったものか、説教調の教訓に退化する。子ども視点フレームも省略されがちで、観察者ポジションが崩れる。
 - **Mitigation** (15 chars): "社会診断 anchor なしに第三人称陳述を書かない — 説教調退化を招く"
 
-## Trigger slug: `jp-umeda-satoshi-uchinaru-kotoba`
-## Over-mimic risk: MEDIUM-HARD
-## Cross-reference-valid-for: zh-TW: MEDIUM (全聯經濟美學 aphoristic pivot 結構 parallel)
+## Metadata
+- Trigger slug: `jp-umeda-satoshi-uchinaru-kotoba`
+- Over-mimic risk: MEDIUM-HARD
+- Cross-reference-valid-for: zh-TW: MEDIUM (全聯經濟美學 aphoristic pivot 結構 parallel)

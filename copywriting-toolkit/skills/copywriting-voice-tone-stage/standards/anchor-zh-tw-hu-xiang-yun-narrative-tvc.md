@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 以真人真事改編為骨，讓「不平凡的平凡大眾」經由紀錄感長鏡頭與內斂旁白自我揭示；情感由事件密度與留白節奏生成，拒絕明言「感動」二字。
 
-**Native critical read**:
+## Native critical read
 - 「不平凡的平凡大眾」(大眾銀行 × 奧美 campaign tagline, 2010-2015, 亦為批評界 recurring label)
 - 「真人真事改編」(campaign 自述；amarylliss 部落格、動腦雜誌沿用)
 - 「堅韌勇敢母愛」(campaign 自述母題語；動腦〈蔡鶯妹話題創造了什麼〉評論沿用)

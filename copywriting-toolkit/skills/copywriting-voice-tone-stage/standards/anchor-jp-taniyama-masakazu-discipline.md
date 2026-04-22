@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 商品を描写しない register。商品が読者の生活に加える「新しい意味」を名指し、読者自身では言語化できなかった 解決 を差し出す。短く、音を設計し、最後の一歩は読者に委ねる。
 
-**Native critical read**:
+## Native critical read
 - 「描写じゃなく、解決」(谷山雅計『広告コピーってこう書くんだ！読本』宣伝会議 2007, §なんかいいよね禁止)
 - 「新しい意味提案」(谷山雅計 2007 / 2024 増補新版, 対 descriptive copy の対概念)
 - 「なんかいいよね禁止」(谷山雅計 2007, core rule / AdverTimes 宣伝会議 解説)

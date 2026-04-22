@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Puncture received wisdom of the tech-startup / hustle industry by stating the opposite as plain fact, in sentences short enough that rebuttal feels pedantic; two-to-three-sentence chapter blocks make each claim feel aphoristic and already-settled. Reader is addressed as a competent adult lied to by business-book convention.
 
-**Native critical read**:
+## Native critical read
 - "Plain-style manifesto" / "anti-hustle" register (NYT Book Review on *It Doesn't Have to Be Crazy at Work*, 2018: "stripped-down counter-manifesto to startup machismo")
 - "Contrarian startup philosophy" (Wired profile on Fried + DHH's anti-VC-scale stance, 2018)
 - "Rework-style contrarian chapter" — Inc. / Atlantic shorthand for the two-page aphoristic chapter form (Inc. cover "The 37signals Way", 2010)

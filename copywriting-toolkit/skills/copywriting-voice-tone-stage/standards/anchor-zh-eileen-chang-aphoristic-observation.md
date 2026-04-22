@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 以日常細節的比喻密度，讓讀者在華美表層上突然撞見破敗底色 — aphoristic 觀察的 payload = 美與蝕同時到場，不靠抒情詞完成。
 
-**Native critical read**:
+## Native critical read
 - 「蒼涼」(張自述，《自己的文章》— 自訂美學基調，對立於「悲壯」)
 - 「參差的對照 / 蔥綠配桃紅」(張自述，《自己的文章》— 反對斬釘截鐵的衝突，改用不調和的並置)
 - 「不徹底的人物」(張自述，《自己的文章》— 拒寫英雄，只寫軟弱時代下的蒼生)

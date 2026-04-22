@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Make political and moral argument visible by stripping language down to concrete Anglo-Saxon nouns and verbs, so orthodoxy cannot hide inside stale phrasing; the sentence becomes a windowpane through which the reader sees the thing, not the writer.
 
-**Native critical read**:
+## Native critical read
 - "Good prose is like a windowpane." (Orwell, "Why I Write", *Gangrel* No.4, 1946 — author self-citation)
 - "Political language is designed to make lies sound truthful and murder respectable, and to give an appearance of solidity to pure wind." ("Politics and the English Language", *Horizon*, April 1946)
 - "The great enemy of clear language is insincerity." ("Politics and the English Language", 1946)

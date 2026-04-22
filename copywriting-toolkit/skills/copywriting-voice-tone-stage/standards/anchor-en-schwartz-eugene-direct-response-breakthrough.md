@@ -14,7 +14,7 @@ date: 2026-04-22
 ## Voice direction
 **What this register achieves**: Long-form direct-response sales copy that enters the reader's existing desire at its current awareness stage, stacks curiosity via tight fascination bullets, and earns the sale through specificity and proof rather than hyperbole. Authoritative but disciplined — Schwartz explicitly rejects the "create want" posture.
 
-**Native critical read**:
+## Native critical read
 - "not to create this mass desire — but to channel and direct it." (Schwartz, *Breakthrough Advertising*, 1966, opening chapter on Mass Desire)
 - "I don't write them. I listen them." / "Lazy ears produce bad ads." (Schwartz, "I Write With My Ears" essay)
 - "Write to the chimpanzee brain, simply, directly." (Schwartz, Rodale Press seminar, May 11 1994)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Technical-specific vocabulary deployed at sentence level so reader absorbs domain knowledge through the grain of the prose itself; author recedes behind accumulated particulars, letting objects and quoted experts carry meaning.
 
-**Native critical read**:
+## Native critical read
 - "structure" — McPhee's own term for load-bearing skeleton of a piece (*Draft No. 4*, FSG 2017, makes it a noun of craft)
 - "greenlight writing" — McPhee's term for first-draft permission to write badly until shape appears (*Draft No. 4* 2017, title essay)
 - "Art of Nonfiction No. 3" Paris Review (2010, Peter Hessler interviewing) — Hessler reads McPhee as "factual writing that reads as carefully as a poem"

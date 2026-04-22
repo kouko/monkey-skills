@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 用「定義反轉」把商品文案改寫成文化批判 — 先丟出一個帶權力意味的等式（「X 是一種 Y」），再把整個框架翻轉，逼讀者在面對政治／性別／危險／禁慾等詞彙之後才能進入 pitch。箴言密度承載所有 payload，品牌是「讀懂這個句子」之後的副產品。
 
-**Native critical read**:
+## Native critical read
 - 「意識形態廣告」(campaign-house name used natively by 動腦雜誌 / 時報廣告金像獎 archives as register label)
 - 「文化批判 payload underneath definitional inversion」(meta-detail §Cross-Master Context)
 - 「power-disparity word」(政治 / 統治 / 殖民 / 失敗 / 禁慾 / 危險 — named by meta-detail §Cross-Master Context §LLM Reproduction Gap)

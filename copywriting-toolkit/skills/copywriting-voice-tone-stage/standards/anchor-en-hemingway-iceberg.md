@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Convey emotional weight through omitted interior and flat concrete surface — declarative sentences, named physical objects, and dialogue do the lifting; feeling registers as pressure under the sentence, never as stated content.
 
-**Native critical read**:
+## Native critical read
 - "iceberg theory / theory of omission" — "If a writer of prose knows enough of what he is writing about he may omit things that he knows and the reader… will have a feeling of those things as strongly as though the writer had stated them." (Hemingway, *Death in the Afternoon*, 1932, Ch. 16)
 - "I always try to write on the principle of the iceberg. There is seven-eighths of it under water for every part that shows." (Paris Review Art of Fiction No. 21, 1958)
 - "the one true sentence" — "All you have to do is write one true sentence. Write the truest sentence that you know." (*A Moveable Feast*, 1964)

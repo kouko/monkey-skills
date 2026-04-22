@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 將「未說出口的情感」折疊進第一人稱獨白，以時間刻度與物件隱喻替代直接抒情，讓讀者在語序斷裂中自行填補情緒缺口。
 
-**Native critical read**:
+## Native critical read
 - 「獨白體 / 內心獨白」(華語影評 canonical；羅卡、李焯桃 香港電影評論學會)
 - 「碎片敘事」(批評定型；張建德《香港電影：額外的維度》)
 - 「時間感 / 時間壓縮」(《花樣年華》影評 recurring — 焦雄屏、舒明論述)

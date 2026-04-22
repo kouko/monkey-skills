@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Founder-as-spokesperson deadpan: direct-to-camera sincerity cut with improv-trained absurdist asides. Converts the category's over-engineered premium pitch into a guy walking through his own warehouse explaining why the expensive version is bullshit — low-budget production becomes a feature ("the $4,500 video") because visible cheapness authenticates the cost claim.
 
-**Native critical read**:
+## Native critical read
 - "deadpan delivery and bold positioning" — Adweek on the DSC launch video's signature register
 - "direct attack on market over-serving" — Ben Thompson, Stratechery, 2016 on the manifesto's rhetorical stance
 - "category-defining DTC launch video" / "one of the best introductory videos of all time" — industry retrospectives (Stratechery; The Drum "World's Best Ads #19", 2022)

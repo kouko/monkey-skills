@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Build conspiratorial intimacy by turning reader into the only confidant, then detonate that intimacy with a confession or grief-beat the reader wasn't braced for. The fourth wall is not a trick — it is the entire love affair; breaking it is how the speaker flirts, deflects, and eventually tells the truth.
 
-**Native critical read**:
+## Native critical read
 - "She's a seductress narrator — she's trying to get the audience to fancy her, and then she has to earn back their trust." (Waller-Bridge, BAFTA Screenwriters' Lecture, April 2019)
 - "Complicity is the engine. The camera-look makes you the accomplice — so when she turns, you've already been in the crime." (Waller-Bridge, *Fleabag: The Scriptures* foreword, Faber 2019)
 - "Filthy, funny and devastating — a dirty joke that suddenly asks you to hold its hand." (Lucy Mangan, *The Guardian* S2 review, March 2019)

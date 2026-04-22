@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: flat-affect observational authority — the sentence performs diagnosis while pretending only to report, so the reader mistakes conclusion for description.
 
-**Native critical read**:
+## Native critical read
 - "sentences that shimmer around the edges / writing from pictures in my mind" (Didion, "Why I Write," 1976 self-description)
 - "deceptively simple sentences — prose that appeared to be so simple, but they weren't" (Didion on Hemingway influence, Paris Review Art of Nonfiction No. 1, 2006)
 - "awful and beautiful light on a world we half see but don't want to see" (Hilton Als, NYRB 2020)

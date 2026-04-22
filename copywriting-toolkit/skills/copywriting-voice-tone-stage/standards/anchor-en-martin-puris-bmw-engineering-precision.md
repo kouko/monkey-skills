@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Treat the product-as-machine as a technical specification read aloud with quiet reverence; the sentence becomes a proof where engineering facts, not adjectives, carry the persuasion. Headlines name a singular mechanical truth; body copy verifies it with torque figures, chassis geometry, and test-track numbers — the reader is addressed as a fellow engineer, not a consumer.
 
-**Native critical read**:
+## Native critical read
 - "The Ultimate Driving Machine" — the 1975 launch tagline Puris coined when BMW had <15,000 U.S. units/year; Advertising Age later listed it among the "Top 100 Advertising Campaigns of the 20th Century" (Ad Age Special Report, 1999)
 - "Technical specification as headline" — Adweek's recurring shorthand for the Ammirati & Puris BMW template: a spec-sheet number (0-60, hp, drag coefficient) elevated to display type
 - "Precision engineering" / "fahrvergnügen of fact" — trade-press (Adweek, Automotive News) critical vocabulary distinguishing Puris-era BMW from Mercedes prestige-register and Detroit emotion-register

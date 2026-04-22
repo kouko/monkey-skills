@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render blue-collar domestic unease as a chain of plain physical acts and flat speech — the reader senses dread, loss, or tenderness only through what the sentences refuse to name. Emotion is load-bearing but never stated.
 
-**Native critical read**:
+## Native critical read
 - "dirty realism" (Bill Buford, editorial intro *Granta* 8: "Dirty Realism — New Writing from America," 1983 — coined for the Carver / Ford / Wolff / Mason / Phillips cluster)
 - "K-Mart realism" (1980s US trade-press label, applied critically to Carver's brand-name-dropping blue-collar surfaces)
 - "commonplace but precise language … [to] endow those things — a chair, a window curtain, a fork, a stone, a woman's earring — with immense, even startling power" (Carver self-description, "On Writing," 1981)

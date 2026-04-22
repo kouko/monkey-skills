@@ -16,7 +16,7 @@ cross-ref: zh-TW STRONG
 
 **What this register achieves**: 一件產品（一隻手錶）在戰爭、失散、時間的距離之間成為記憶載體的電影級敘事。Copy 只在最後出現一次 — 以句點之姿，落在一個「物件交付」的手勢上。Tagline 直接否定產品上刻著的那句話。
 
-**Native critical read** (6):
+## Native critical read
 - 「天長地久三部曲」(港台廣告史 canonical 命名)
 - 「電影感 / 史詩般的廣告片」(Sohu 2019 / pixnet 電影朝聖 評定型)
 - 「家國情懷」(digitaling — romance-scale stakes upgraded to national-wartime)
@@ -48,6 +48,7 @@ cross-ref: zh-TW STRONG
 - **Failure mode**: LLM 易漂向瓊瑤腔（抽象「淚／愛／風／雨／今生今世」名詞堆疊）或王家衛內心獨白 cadence。Titus 的氣質兩者皆非 — 而是「錨定真實歷史事件的留白 + 讓步否定句，一支片只在物件交付的肢體動作之後出一次 tagline」。
 - **Mitigation** (14 words): "`不在乎 X 只在乎 Y` 句型 1 次；錨定真實歷史事件；避免抽象情緒名詞堆疊"
 
-## Trigger slug: `zh-hk-mike-chu-titus-cinematic-romance-inversion`
-## Over-mimic risk: HARD
-## Cross-reference-valid-for: zh-TW: STRONG (HK→TW 1990s 文化流；TW 文藝市場 吸收 HK 浪漫 aesthetic)
+## Metadata
+- Trigger slug: `zh-hk-mike-chu-titus-cinematic-romance-inversion`
+- Over-mimic risk: HARD
+- Cross-reference-valid-for: zh-TW: STRONG (HK→TW 1990s 文化流；TW 文藝市場 吸收 HK 浪漫 aesthetic)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 建構一個第一人稱的氛圍場景，讓品牌成為「讀者本來就屬於這裡」的那個地方，不是被兜售的產品 — 氛圍承載的是事先決定好的 category-reframe 命題，從來不是裝飾某個產品特色。
 
-**Native critical read**:
+## Native critical read
 - 「場景敘事」— voice emerges inside an inhabited scene; product names embed, never headline (葉明桂《品牌的技術和藝術》天下文化 2017)
 - 「策略先行，文案後發」— brand-positioning decision precedes any sentence (葉明桂 自述, 同書)
 - 「異國氛圍借景」— Parisian / Viennese / literary-European signifier-set as brand's sensory universe (奧美策略派 trade; 動腦雜誌 左岸 case retrospective)

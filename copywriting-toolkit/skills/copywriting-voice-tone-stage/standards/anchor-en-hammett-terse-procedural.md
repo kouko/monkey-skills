@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Record human action and appearance as if dictated by a neutral witness; withhold the narrator's interior entirely so the reader must infer motive, feeling, and judgment from observable surface.
 
-**Native critical read**:
+## Native critical read
 - "He was spare, frugal, hard-boiled, but he did over and over again what only the best writers can ever do at all. He wrote scenes that seemed never to have been written before." (Raymond Chandler, "The Simple Art of Murder", 1944)
 - "Hammett gave murder back to the kind of people that commit it for reasons, not just to provide a corpse… He put these people down on paper as they are, and he made them talk and think in the language they customarily used for these purposes." (Chandler, same essay)
 - "Hammett was the ace performer… He is said to have lacked heart, yet the story he thought most of himself is the record of a man's devotion to a friend." (Chandler, 1944)

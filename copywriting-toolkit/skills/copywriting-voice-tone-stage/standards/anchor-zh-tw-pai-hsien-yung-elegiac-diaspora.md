@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 以優雅節制的白描句法承載時代更迭的巨大失落，讓歷史感從具體細節滲出，而非抒情直陳。
 
-**Native critical read**:
+## Native critical read
 - 「中國式的傳奇」(夏志清《中國現代小說史》附錄論白先勇)
 - 「放逐文學」(白先勇自述、《驀然回首》)
 - 「今昔之感 / 歷史感」(歐陽子《王謝堂前的燕子》論《台北人》核心母題)

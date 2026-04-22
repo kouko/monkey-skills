@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sell through specific, verifiable fact delivered in patrician, conversational prose — long copy that reads like a thoughtful letter from a knowledgeable friend, not a shout. Headline as news-bearing promise; body as unhurried reason-why cascade that earns the reader past line five.
 
-**Native critical read**:
+## Native critical read
 - "The consumer isn't a moron, she is your wife." (*Confessions of an Advertising Man*, 1963) — dignity of address, forbids condescension
 - "When I write an advertisement, I don't want you to tell me that you find it 'creative.' I want you to find it so interesting that you buy the product." (*Ogilvy on Advertising*, 1983) — subordinates style to persuasion-effect
 - "On the average, five times as many people read the headline as read the body copy. When you have written your headline, you have spent eighty cents out of your dollar." (*Confessions*, 1963) — headline-leverage doctrine

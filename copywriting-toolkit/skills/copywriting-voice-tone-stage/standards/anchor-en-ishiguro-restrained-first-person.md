@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: first-person narration that performs composure while leaking its own pressure — the sentence stays dignified, qualified, periodic; feeling surfaces through hedge, pause, and refusal, not through statement.
 
-**Native critical read**:
+## Native critical read
 - "unreliable narrator of dignity" (James Wood, *The Broken Estate* / *New Yorker* essays)
 - "what is said beneath what is said" (Ishiguro, *Nobel Lecture* 2017)
 - "writing what the characters don't want to say" (Ishiguro, *Paris Review* Art of Fiction No. 196, 2008)

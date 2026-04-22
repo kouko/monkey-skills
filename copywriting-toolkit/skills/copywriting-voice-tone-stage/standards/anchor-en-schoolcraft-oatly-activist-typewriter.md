@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Turn FMCG packaging into a reader's-digest-of-a-manifesto — small-print activism dressed as self-deprecating ramble — so the consumer feels they caught the brand being honest instead of being sold to. Antithesis does the heavy lifting ("like milk, but made for humans"); the rest of the carton disarms with typewriter-aesthetic confession that admits the copy exists to fill white space. Irreverence earns the right to scold the food industry on the next panel.
 
-**Native critical read**:
+## Native critical read
 - "Activist packaging" / "CO2e numbers on the back" — Oatly / Schoolcraft self-description, "Hey Food Industry, Show Us Your Numbers" campaign, 2020-
 - "Department of Mind Control" — Schoolcraft's replacement for a marketing department (Contagious, "Most Contagious Talk", 2019; MAD//Fest 2023)
 - "Wow no cow" — Fast Company / Ad Age / Adweek shorthand for the Super Bowl LV register (Adweek, "Oatly's CEO Wrote That Song", 2021)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Collapse the brand/person fourth wall mid-tweet so a frozen-meat corporate account speaks as a sincere, burnt-out, over-online peer — sincerity lands precisely *because* the brand openly admits it is an ad account performing sincerity.
 
-**Native critical read**:
+## Native critical read
 - "Weird Twitter" lineage — Allebach credits Something Awful / 4chan-descended absurdist accounts as tonal ancestors (Know Your Meme interview, 2021)
 - "Brands aren't your friends / break down the fourth walls that prevent any kind of authenticity from showing up" (Allebach, MEL Magazine, 2018)
 - "Own the cringe" — Allebach's stated discipline: advertising is structurally cringe; register survives by acknowledging, not disguising, that fact (Know Your Meme, 2021)

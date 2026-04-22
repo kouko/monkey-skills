@@ -21,7 +21,7 @@ attribution_note: |
 ## Voice direction
 **What this register achieves**: Compress the ad to a two-word joke — "Absolut" plus a second word carried (punned, subverted, geographically re-framed) by the visual of the bottle. Headline names the pun in the smallest possible syntactic unit; the reader's eye does the work the copy refuses to do. No body copy ever. Register is deadpan, cross-referential, art-literate — it trusts the reader to complete the joke.
 
-**Native critical read**:
+## Native critical read
 - "Visual-pun formula" — Richard W. Lewis, *Absolut Book: The Absolut Vodka Advertising Story* (Journey Editions, 1996), canonical vocabulary for the two-word bottle template
 - "One of the most successful print campaigns in history" — Advertising Age; Ad Age "Top 100 Advertising Campaigns of the 20th Century" (1999) ranked Absolut top tier
 - "Longest-running print-ad campaign in advertising history" — trade-press shorthand for the 1980-2000+ run (1,500+ ads)

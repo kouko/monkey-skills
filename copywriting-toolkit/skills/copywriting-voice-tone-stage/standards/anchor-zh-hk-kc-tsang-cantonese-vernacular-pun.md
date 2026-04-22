@@ -15,7 +15,7 @@ pilot_source: research-agent 2026-04-21
 
 **What this register achieves**: 同輩位、帶點不正經的粵語口語，一個 slogan 裡壓著至少兩層 pun。機智而非電影化，品牌說的是「茶餐廳朋友」的話，不是宿命先知。數字的文字遊戲是結構，不是裝飾。
 
-**Native critical read** (4):
+## Native critical read
 - 「廣告符號意義」(自述《十個廣告九個醜》博益 2000, ISBN 9621780233, with 陳大仁 framework)
 - 「廣告策略對與錯」(同書自述)
 - 「天馬行空」(自述創意哲學)
@@ -43,9 +43,10 @@ pilot_source: research-agent 2026-04-21
 - **Failure mode**: LLM 容易滑向兩種錯誤 — (a) 寫成 generic 的俏皮體，pun 只剩一層、粵語口語指紋消失；(b) Mandarin drama 化，把 KC Tsang 誤讀成電影浪漫派。粵語口語本身 LLM 的 coverage 薄，退化尤其快
 - **Mitigation** (≤15 words): 「保留粵語結構；pun 必須雙層；禁 Mandarin 化」
 
-## Trigger slug: `zh-hk-kc-tsang-cantonese-vernacular-pun`
-## Over-mimic risk: MEDIUM (LLM Cantonese corpus thin, pun auto-mimic hard)
-## Cross-reference-valid-for: zh-TW: MEDIUM (港式 puns have historical TW comedy exposure)
+## Metadata
+- Trigger slug: `zh-hk-kc-tsang-cantonese-vernacular-pun`
+- Over-mimic risk: MEDIUM (LLM Cantonese corpus thin, pun auto-mimic hard)
+- Cross-reference-valid-for: zh-TW: MEDIUM (港式 puns have historical TW comedy exposure)
 
 ---
 

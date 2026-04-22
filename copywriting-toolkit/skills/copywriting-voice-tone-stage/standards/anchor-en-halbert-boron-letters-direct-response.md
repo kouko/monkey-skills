@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Collapses seller-reader distance to a one-on-one hand-written letter — confessional, urgent, specific, proof-stacked — so the reader feels personally addressed rather than marketed to. Emotion lands via vulnerable admission and concrete detail; persuasion travels on the warmth of a friend who happens to be selling something.
 
-**Native critical read**:
+## Native critical read
 - "A-list copywriter" (DR-industry trade term; Halbert used it as internal caste line — *The Gary Halbert Letter* newsletter archive)
 - "Dear Friend," (Halbert's canonical salutation — *The Boron Letters* Ch.9)
 - "starving crowd" (Halbert's own principle — "the only advantage I want is a starving crowd" — *The Boron Letters* Ch.8)
