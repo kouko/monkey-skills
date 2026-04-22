@@ -19,15 +19,15 @@ Q4 = Affinity × Reason. **TW Q4 原生 individual-creator corpus is thin** — 
 
 All v1 entries moved out (v1.6.0):
 
-- **PChome 24h / MOMO 購物專家** → [aggregate](../../../../docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md) §PChome/MOMO
-- **7-ELEVEN OPEN 將 IP** → [aggregate](../../../../docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md) §OPEN 將
+- **PChome 24h / MOMO 購物專家** → [aggregate](../../../../docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md) §PChome/MOMO
+- **7-ELEVEN OPEN 將 IP** → [aggregate](../../../../docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md) §OPEN 將
 
 ## Landmark: extreme
 
 Moved out:
-- **全聯 SNS-era post-2020** → [aggregate](../../../../docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md) §全聯 SNS post-2020
+- **全聯 SNS-era post-2020** → [aggregate](../../../../docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md) §全聯 SNS post-2020
   - ⚠ Distinct from 全聯 TV-era (2006-2014) which is Q3-CENTER, recast to 龔大中 `anchor-zh-tw-gong-dazhong-quanlian-economics-aesthetics.md`
-- **蝦皮 Shopee / PChome 雙11 short-promo** → [aggregate](../../../../docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md) §Shopee
+- **蝦皮 Shopee / PChome 雙11 short-promo** → [aggregate](../../../../docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md) §Shopee
 
 Cross-ref pointer: [jp-q4-anchors.md](jp-q4-anchors.md) ジャパネットたかた 高田明 (anchor) — JP Q4 extreme primary for TV-shopping register.
 
@@ -37,7 +37,7 @@ Cross-quadrant pointer: 商業周刊 strategy-imperative — see [zh-q1-anchors.
 
 ## Landmark: toward-Q3
 
-- **Pinkoi 商品故事** (designer-story platform) → [aggregate](../../../../docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md) §Pinkoi
+- **Pinkoi 商品故事** (designer-story platform) → [aggregate](../../../../docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md) §Pinkoi
 
 Cross-quadrant pointer: 胡湘雲 大眾銀行 narrative-TVC → `anchor-zh-tw-hu-xiang-yun-narrative-tvc.md` (zh-q3).
 
@@ -59,4 +59,4 @@ zh-TW Q4 brief 主要為 JP/EN Q4 craft 的 **importer** (HEAVY cross-ref 預期
 ## Migration history
 
 - **v1.0-v1.5.x**: aggregate with 5 platform/institutional entries inline
-- **v1.6.0** (this file): all 5 entries consolidated into `docs/format-templates/zh-tw-ec-platforms-q4-aggregate.md`; zh-TW Q4 individual-creator pool gap-flagged
+- **v1.6.0** (this file): all 5 entries consolidated into `docs/anchor-references/zh-tw-ec-platforms-q4-aggregate.md`; zh-TW Q4 individual-creator pool gap-flagged

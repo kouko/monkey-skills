@@ -54,8 +54,8 @@ Peer-intimate 最大值 / cross-pollination registers. Apply mitigation per anch
   - Cross-ref note: CN anchor; zh-TW registry 用作 register-pattern reference 不作 fuel (TW 商業文化 ≠ CN 微博 ecosystem)
 
 **Moved out of voice library** (per audit, v1.6.0):
-- 故宮粉絲團「朕知道了」era → rotating 6-10-person 小編 team, no isolable creator → see [../../../../docs/format-templates/zh-tw-npm-zhen-zhidaole-institutional-meme.md](../../../../docs/format-templates/zh-tw-npm-zhen-zhidaole-institutional-meme.md) (format template, NOT voice anchor)
-- 台灣吧 Taiwan Bar → dual-founder team register → see [../../../../docs/register-references/zh-tw-taiwan-bar-educational-comedy.md](../../../../docs/register-references/zh-tw-taiwan-bar-educational-comedy.md) (register reference, NOT voice anchor)
+- 故宮粉絲團「朕知道了」era → rotating 6-10-person 小編 team, no isolable creator → see [../../../../docs/anchor-references/zh-tw-npm-zhen-zhidaole-institutional-meme.md](../../../../docs/anchor-references/zh-tw-npm-zhen-zhidaole-institutional-meme.md) (format template, NOT voice anchor)
+- 台灣吧 Taiwan Bar → dual-founder team register → see [../../../../docs/anchor-references/zh-tw-taiwan-bar-educational-comedy.md](../../../../docs/anchor-references/zh-tw-taiwan-bar-educational-comedy.md) (register reference, NOT voice anchor)
 
 ## Landmark: toward-Q2
 
@@ -92,5 +92,5 @@ zh-TW Q3 toward-Q4 edge 在 active library 偏薄。Brief 需要 Q3-warmth bridg
 ## Migration history (audit trail)
 
 - **v1.0-v1.4.x**: aggregate `zh-q3-anchors.md` with 7 entries inline (龔大中 + 吳念真 + 胡湘雲 + 故宮 + 台灣吧 + 杜蕾斯 + 黃春明 + 三毛)
-- **v1.5.0**: Phase B recasts — 龔大中 / 金鵬遠 individual-creator recasts added to `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md`; schema v2 spec added to meta-core
+- **v1.5.0**: Phase B recasts — 龔大中 / 金鵬遠 individual-creator recasts added to `docs/voice-anchor-notes/pilot-layer1-v2-*.md`; schema v2 spec added to meta-core
 - **v1.6.0 (this file)**: 6 v2 entries moved to standards/ as `anchor-*.md` per-entry files; 故宮 + 台灣吧 moved out of voice library to `format-templates/` + `register-references/`; this file becomes router index

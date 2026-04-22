@@ -35,9 +35,9 @@ Q4 = Affinity × Reason. EN canonical:
   - Dual placement: Q4 center + Q1 toward-Q2 (manifesto mode) — see [en-q1-anchors.md](en-q1-anchors.md) for primary entry
 
 **Moved to format-templates**:
-- Amazon product copy → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Amazon
-- REI expert-advice → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §REI
-- IKEA assembly → [aggregate](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §IKEA (SKIP note: visual-dominant, >50% signal off-text)
+- Amazon product copy → [aggregate](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §Amazon
+- REI expert-advice → [aggregate](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §REI
+- IKEA assembly → [aggregate](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §IKEA (SKIP note: visual-dominant, >50% signal off-text)
 
 ## Landmark: extreme
 

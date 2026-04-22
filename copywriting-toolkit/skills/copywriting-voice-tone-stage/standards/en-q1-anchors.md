@@ -34,7 +34,7 @@ Q1 = Authority × Reason. EN canonical:
   - Recast from: AMV BBDO The Economist campaign anchor (v1.3.x) → named CW David Abbott (v1.8.0)
 
 **Moved to format-templates**:
-- Economist institutional (post-Abbott brand voice, separate from AMV ad campaigns) → [en-institutional-and-platform-aggregate.md](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md) §Economist
+- Economist institutional (post-Abbott brand voice, separate from AMV ad campaigns) → [en-institutional-and-platform-aggregate.md](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md) §Economist
 
 ## Landmark: extreme
 
@@ -42,7 +42,7 @@ Q1 = Authority × Reason. EN canonical:
   - Slug: `en-hopkins-scientific-reason-why`
 
 **Moved to format-templates**:
-- WebMD / Reuters / Bloomberg wire-reference register → [en-institutional-and-platform-aggregate.md](../../../../docs/format-templates/en-institutional-and-platform-aggregate.md)
+- WebMD / Reuters / Bloomberg wire-reference register → [en-institutional-and-platform-aggregate.md](../../../../docs/anchor-references/en-institutional-and-platform-aggregate.md)
 
 ## Landmark: toward-Q2
 

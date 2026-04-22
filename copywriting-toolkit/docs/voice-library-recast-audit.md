@@ -216,6 +216,8 @@ Result: voice library shrinks from ~105 to ~67 valid entries; 26 moves to `forma
 - Move 25 move-out entries; preserve content but out of voice library path
 - Pass 3 SKILL.md updated: no longer loads these files
 
+**v1.13.1 consolidation note**: `format-templates/` and `register-references/` both merged into single `copywriting-toolkit/docs/anchor-references/` — same content, single navigation target. Phase C content preserved, structure flattened.
+
 ### Phase D (v1.7.0+) — fill new-anchor gaps
 
 - zh-Q1 has 0 individual anchors after audit → need new research on individual zh-TW essayists / long-form authors

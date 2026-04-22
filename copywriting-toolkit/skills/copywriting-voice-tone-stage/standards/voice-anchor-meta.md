@@ -487,7 +487,7 @@ Is voice_reference a craft-gate master?
 ## Cross-references
 
 - Per-quadrant anchor files: `{jp,zh,en}-q{1,2,3,4}-anchors.md` — register-signal inventory
-- Per-master biographical arc + campaign detail: see `docs/voice-anchor-deep-dives/pilot-layer1-v2-{slug}.md` files (Layer 2/3 research artifacts, Pass 3 does NOT load)
+- Per-master biographical arc + campaign detail: see `docs/voice-anchor-notes/pilot-layer1-v2-{slug}.md` files (Layer 2/3 research artifacts, Pass 3 does NOT load)
 - Anchor schema spec: `docs/anchor-schema-v2.md`
 
 ## Migration history
