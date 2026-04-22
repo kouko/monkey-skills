@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Deliver a hard, often unflattering observation about aging, female bodies, domestic failure, or New York life — then land the sentence with a deadpan punchline that converts private embarrassment into shared adult comedy. The register is confessional but brisk; refuses both sentimentality and grievance.
 
-**Native critical read**:
+## Native critical read
 - "self-deprecation without self-pity" — recurring descriptor in NYT obituary (2012) and Ephron retrospectives
 - "everything is copy" — Ephron's own lifelong maxim (inherited from mother Phoebe Ephron), cited as essayist's contract with reader: private material becomes public text without apology (HBO doc title, 2015)
 - "personal essay" in the Didion / Ephron / Dunham line (Sloane Crosley *NYT Book Review*; Ariel Levy *New Yorker* profile 2009) — first-person as investigative instrument, not therapy

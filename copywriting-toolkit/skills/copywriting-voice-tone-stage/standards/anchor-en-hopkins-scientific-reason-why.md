@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sell one concrete, testable product-benefit with specifics, pre-emptive ownership of a generic claim, and zero adjective hype — the sentence is an argument that could be audited.
 
-**Native critical read**:
+## Native critical read
 - "Salesmanship in print" (Hopkins, *Scientific Advertising* Ch. 1, 1923)
 - "Reason-why copy" (Lord & Thomas / Hopkins trade vocabulary; canonical school label)
 - "The time has come when advertising has in some hands reached the status of a science." (Hopkins, *Scientific Advertising*, opening line, 1923)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render grief, dread, or intimacy at maximum compression — a sentence carries emotional weight by what it refuses to say. Surface is glassy, composed, slightly deadpan; the unsaid does the work.
 
-**Native critical read**:
+## Native critical read
 - "miniaturist" (widely applied in US review press — *NYT* on *Collected Stories*, 2006)
 - "The Cliff Notes of stories" (Hempel self-description, *Paris Review*, The Art of Fiction No. 176, 2003)
 - Gordon Lish "consecution" — sentence-by-sentence sonic/syntactic compression, acknowledged by Hempel (*Paris Review*); shared lineage with Carver, Robison, Hannah

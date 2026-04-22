@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 読者が住み込める「状態」を名指す — 行動でも、機能でも、主張でもなく。コピーは読者自身の頭の中で完結する「おまじない」として働く。
 
-**Native critical read**:
+## Native critical read
 - 「意図的な曖昧さ」(谷山雅計 対談『コピー 10』ほぼ日刊イトイ新聞)
 - 「状態提案型」(TCC コピー年鑑 / ほぼ日 自述の register)
 - 「おまじない性」(糸井 自述, ほぼ日刊イトイ新聞 コピー論)

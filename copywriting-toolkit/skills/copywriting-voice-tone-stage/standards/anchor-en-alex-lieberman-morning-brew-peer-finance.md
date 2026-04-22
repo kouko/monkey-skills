@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Translate Wall-Street-Journal-grade financial news into a register a 25-year-old reads voluntarily at 6am — irreverent, punny, bullet-dense, and parenthetically self-aware, without sacrificing factual load or ticker-level specificity.
 
-**Native critical read**:
+## Native critical read
 - "serious-but-fun financial news" (Lieberman, Businessweek profile 2019; stated mission since founding)
 - "the Wall Street Journal for Gen-Z" (NYT, Business section profile of Morning Brew 2020)
 - "smart but not stiff" (Lieberman, Businessbarista tweet / podcast interview recurring phrase)

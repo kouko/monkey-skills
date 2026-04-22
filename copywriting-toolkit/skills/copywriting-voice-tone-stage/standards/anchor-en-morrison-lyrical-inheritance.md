@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Transmit Black American memory as heritable cadence — sentences that carry ancestor-presence into the reader's ear through sermonic rhythm, vernacular compression, and matrilineal intimacy, so a fact about a body becomes a fact about a people.
 
-**Native critical read**:
+## Native critical read
 - "the ancestor" (Morrison, "Rootedness: The Ancestor as Foundation," 1984 — "timeless people whose relationships to the characters are benevolent, instructive, and protective")
 - "the presence of an ancestor" as craft requirement distinguishing Black literature from "city values" writing (Morrison, "Rootedness," 1984)
 - "oral quality" — Morrison: "my writing expects, demands participatory reading… the affective and the cognitive experience must be invited in" (Paris Review, *Art of Fiction No. 134*, 1993)

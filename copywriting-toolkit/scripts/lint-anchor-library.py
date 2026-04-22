@@ -48,12 +48,15 @@ REQUIRED_FRONTMATTER_FIELDS = {
 
 REQUIRED_BODY_SECTIONS = [
     # (section header pattern, human-readable name)
+    # Canonical order (v1.13.3): Voice direction → Native critical read → Prose mechanics →
+    # Examples → Don't / Over-mimic → Metadata. Enforced as presence-only; order is
+    # documented convention, not lint-enforced.
     (r"^##\s+Voice direction\s*$", "## Voice direction"),
+    (r"^##\s+Native critical read\s*$", "## Native critical read"),
     (r"^##\s+Prose mechanics", "## Prose mechanics"),
     (r"^##\s+Examples", "## Examples"),
     (r"^##\s+Don't\s*/\s*Over-mimic", "## Don't / Over-mimic"),
-    # Metadata check is flexible (handled by check_metadata) — some anchors use ## Metadata
-    # section, others use flat ## Trigger slug: / ## Over-mimic risk: H2 headers. Either is valid.
+    (r"^##\s+Metadata\s*$", "## Metadata"),
 ]
 
 VALID_CULTURES = {"jp", "zh", "zh-TW", "zh-HK", "zh-CN", "en", "kr"}
@@ -179,20 +182,40 @@ def count_list_items(section_text: str) -> int:
     return count
 
 
-def check_native_critical_read(body: str, result: LintResult) -> None:
-    """Check that Voice direction section contains Native critical read with ≥3 entries."""
-    vd_section = extract_section(body, r"^##\s+Voice direction\s*$")
-    if not vd_section:
+def check_voice_direction(body: str, result: LintResult) -> None:
+    """Check ## Voice direction opens with canonical `**What this register achieves**` label.
+
+    v1.13.3 canonical label: `**What this register achieves**: ...` (English only).
+    Bilingual variants like `**What this register achieves (中文)**` are discouraged
+    for consistency; prose below the label remains free-form in any language.
+    """
+    section = extract_section(body, r"^##\s+Voice direction\s*$")
+    if section is None:
         return  # already flagged by body section check
-    ncr_match = re.search(r"\*\*Native critical read\*\*", vd_section)
-    if not ncr_match:
-        result.errors.append("§Voice direction missing **Native critical read** block")
+    if not re.search(r"\*\*What this register achieves\*\*\s*:", section):
+        result.errors.append(
+            "§Voice direction missing canonical `**What this register achieves**:` label "
+            "(v1.13.3 canonical — language annotations in the label not accepted)"
+        )
+
+
+def check_native_critical_read(body: str, result: LintResult) -> None:
+    """Check ## Native critical read H2 section present with ≥3 entries.
+
+    v1.13.3 canonical format: `## Native critical read` as its own H2 section,
+    between `## Voice direction` and `## Prose mechanics`. Pre-v1.13.3 the
+    library mixed two formats (inline `**Native critical read**:` bold label
+    nested in Voice direction vs standalone H2); v1.13.3 unified to standalone
+    H2 and lint now enforces this single canonical form.
+    """
+    section = extract_section(body, r"^##\s+Native critical read\s*$")
+    if section is None:
+        result.errors.append(
+            "missing required section: ## Native critical read "
+            "(canonical form since v1.13.3 — standalone H2 between Voice direction and Prose mechanics)"
+        )
         return
-    ncr_text = vd_section[ncr_match.end():]
-    # Count bullet items until next bold header or section end
-    next_bold = re.search(r"\n\*\*", ncr_text)
-    ncr_body = ncr_text[:next_bold.start()] if next_bold else ncr_text
-    count = count_list_items(ncr_body)
+    count = count_list_items(section)
     if count < 3:
         result.errors.append(f"Native critical read has {count} entries; v2 schema requires ≥3")
 
@@ -238,9 +261,13 @@ def check_dont_over_mimic(body: str, result: LintResult) -> None:
 
 
 def check_metadata(body: str, result: LintResult) -> None:
-    """Check metadata fields exist (in ## Metadata section OR as flat ## <field>: headers).
+    """Check metadata fields exist within the `## Metadata` grouped section.
 
-    Only enforces fields with actual runtime consumers (v1.13.2 audit):
+    v1.13.3 canonical format: fields live under `## Metadata` H2 section
+    (presence already checked by check_body_sections). Flat `## Trigger slug:` /
+    `## Over-mimic risk:` H2-per-field layout no longer accepted.
+
+    Only enforces fields with actual runtime consumers:
     - `Over-mimic risk:` — required. Consumed by Pass 3 Step 6 safe-substitute + Dimension 6 gate.
 
     Intentionally NOT enforced (documentation-only, no runtime consumer):
@@ -251,11 +278,17 @@ def check_metadata(body: str, result: LintResult) -> None:
     2. Bold-wrapped: `Over-mimic risk: **HIGH** (rationale)` — common in practice
     Regex accepts both by stripping surrounding `**`.
     """
+    metadata_section = extract_section(body, r"^##\s+Metadata\s*$")
+    # If ## Metadata section is missing, check_body_sections already flagged it.
+    # Use the whole body as fallback search scope so Over-mimic risk is still reported
+    # meaningfully (duplicate error with more context rather than cascading generic failure).
+    scope = metadata_section if metadata_section is not None else body
+
     # Over-mimic risk (required — real runtime consumer)
     # Regex handles both plain `HIGH` and bold-wrapped `**HIGH**` forms.
-    risk_in_body = re.search(r"Over-mimic risk\s*:\s*\*{0,2}([A-Z+\-]+)\*{0,2}", body)
+    risk_in_body = re.search(r"Over-mimic risk\s*:\s*\*{0,2}([A-Z+\-]+)\*{0,2}", scope)
     if not risk_in_body:
-        result.errors.append("missing `Over-mimic risk:` line (looked in §Metadata section and flat H2 headers)")
+        result.errors.append("missing `Over-mimic risk:` line inside ## Metadata section")
     else:
         risk = risk_in_body.group(1).strip()
         if risk not in VALID_OVER_MIMIC_RISK:
@@ -263,8 +296,12 @@ def check_metadata(body: str, result: LintResult) -> None:
                 f"Over-mimic risk {risk!r} not in canonical set {sorted(VALID_OVER_MIMIC_RISK)}"
             )
 
-    # Trigger slug + Pairs with form: no runtime consumer, lint does not enforce.
-    # ## Metadata section vs flat ## Trigger slug: H2 headers: either accepted; no lint preference.
+    # Warn on legacy flat-H2 pattern so future edits can spot pre-v1.13.3 format.
+    for legacy_header in ("Trigger slug", "Over-mimic risk", "Pairs with form"):
+        if re.search(rf"^##\s+{re.escape(legacy_header)}\s*:", body, re.MULTILINE):
+            result.warnings.append(
+                f"legacy flat H2 `## {legacy_header}:` detected — v1.13.3 canonical is grouped ## Metadata"
+            )
 
 
 def lint_anchor_file(filepath: Path) -> LintResult:
@@ -279,6 +316,7 @@ def lint_anchor_file(filepath: Path) -> LintResult:
     frontmatter, body = parse_frontmatter(content)
     check_frontmatter(frontmatter, result)
     check_body_sections(body, result)
+    check_voice_direction(body, result)
     check_native_critical_read(body, result)
     check_prose_mechanics(body, result)
     check_examples(body, result)
@@ -287,12 +325,29 @@ def lint_anchor_file(filepath: Path) -> LintResult:
     return result
 
 
+def load_baseline(path: Path) -> set[str]:
+    """Parse baseline file — one anchor filename per line, # comments ignored."""
+    if not path.is_file():
+        print(f"ERROR: baseline file not found: {path}", file=sys.stderr)
+        sys.exit(1)
+    names = set()
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if line:
+            names.add(line)
+    return names
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("paths", nargs="*", type=Path, help="anchor files to lint (default: all)")
     parser.add_argument("--strict", action="store_true", help="exit non-zero on warnings too")
     parser.add_argument("--anchor-dir", type=Path, default=DEFAULT_ANCHOR_DIR,
                         help=f"directory to scan (default: {DEFAULT_ANCHOR_DIR})")
+    parser.add_argument("--baseline", type=Path, default=None,
+                        help="path to baseline exception file (list of known-failing anchor filenames); "
+                             "failures in this list do not trigger non-zero exit. "
+                             "Enables CI to block new drift while permitting known backlog.")
     args = parser.parse_args()
 
     if args.paths:
@@ -318,6 +373,37 @@ def main() -> int:
     print()
     print(f"Summary: {n_pass_clean} clean / {n_warned} with warnings / {n_failed} failed / {n_total} total")
 
+    # Baseline exception handling: allow known-failing files, block new drift.
+    if args.baseline is not None:
+        baseline = load_baseline(args.baseline)
+        current_failing = {r.filepath.name for r in results if r.errors}
+        new_failures = current_failing - baseline
+        fixed_in_current = baseline - current_failing
+
+        print(f"\nBaseline: {args.baseline}")
+        print(f"  Known failures in baseline: {len(baseline)}")
+        print(f"  New failures (not in baseline): {len(new_failures)}")
+        print(f"  Baseline entries now passing: {len(fixed_in_current)}")
+
+        if new_failures:
+            print("\nNew drift introduced — these anchors failed lint but are NOT in baseline:")
+            for name in sorted(new_failures):
+                print(f"  - {name}")
+            print(
+                "\nFix the listed anchor(s), OR if the failure is intentional and accepted, "
+                "add the filename to the baseline file and explain in PR description."
+            )
+            return 1
+
+        if fixed_in_current:
+            print("\nGood news: baseline entries now passing — update baseline file to remove:")
+            for name in sorted(fixed_in_current):
+                print(f"  - {name}")
+            # Not an error — CI stays green but nudges to tighten baseline.
+
+        return 0 if not (args.strict and n_warned > 0) else 2
+
+    # No baseline mode — strict by default: any failure = non-zero exit.
     if n_failed > 0:
         return 1
     if args.strict and n_warned > 0:

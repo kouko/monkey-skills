@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Speak as the reluctant capitalist-conscience — indict the product and the purchase in the same breath that sells them; surface material supply-chain facts (cotton, water, CO2, waste) inside the sentence itself so the reader cannot separate the pitch from its cost.
 
-**Native critical read**:
+## Native critical read
 - "anti-marketing marketing" (phrase attached to Patagonia / Chouinard's Don't Buy This Jacket in Harvard Business Review case + Fast Company 2013 coverage)
 - "conscience of the outdoor industry" (recurring trade-press framing, Outside Magazine profile language 2005-2016)
 - "material-transparency copy" (CSR/marketing-ethics literature describing Patagonia's Footprint Chronicles + MIR disclosure register)

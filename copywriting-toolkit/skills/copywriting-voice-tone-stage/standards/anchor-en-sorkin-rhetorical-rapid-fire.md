@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Stage an argument as kinetic, competitive talk — speakers out-think each other in real time, domain jargon lands as moral weight, and a rhetorical question unlocks a declarative verdict. The aim is persuasion through velocity: the reader/listener feels outpaced, then convinced.
 
-**Native critical read**:
+## Native critical read
 - "Sorkin dialogue" / "Sorkinese" — canonical industry shorthand (Michael Schulman, *The New Yorker*, 2020)
 - "walk-and-talk" — staging vocabulary Sorkin himself credits to *Sports Night* and *The West Wing* (Sorkin *MasterClass* "Screenwriting", 2016)
 - "rhetorical Q-and-A / the Sorkin setup" (Emily Nussbaum, *The New Yorker* — "a rhetorical question answered by the same speaker a half-beat later, with escalating specificity")

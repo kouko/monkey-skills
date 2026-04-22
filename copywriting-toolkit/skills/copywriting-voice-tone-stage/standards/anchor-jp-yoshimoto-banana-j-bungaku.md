@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 日常の台所・寝床・海辺といった私的空間を起点に、喪失・倦怠・生活実感を「大胆な省略」と独自のリズムで掬い上げ、読者を作中の体温にそっと同席させる register。感情は名指しせず、物・音・肌ざわりに仮託して立ち上げる。
 
-**Native critical read**:
+## Native critical read
 - 「大胆な省略」(批評標準語／吉本ばなな本人発言、1988- 以降 J-lit 批評で定着)
 - 「既成の作法を超えるリズム」(辻井喬 書評, ALL REVIEWS)
 - 「マスコミに汚された言葉を逆手にとる」(辻井喬 書評, ALL REVIEWS)

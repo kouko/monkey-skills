@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 音と意味の 掛詞 を、商品の真実と deadpan で結ぶ register。読者はまず音に笑い、次に意味で笑う — その二重の笑いは必ず商品に戻ってくる。単なる駄洒落ではなく「オシャレ」として着地させる。
 
-**Native critical read**:
+## Native critical read
 - 「ダジャレではなくオシャレ」(眞木準 自己規定, Wikipedia / 宣伝会議賞 眞木準賞 由来)
 - 「眞木さんのコピーの本質はダジャレではない」(山本高史『宣伝会議』2016 年 6 月号 連載「『でっかいどお。北海道』のコピーから読む『知性』のこと」)
 - 「知性」— the lens 宣伝会議 assigns to 「でっかいどお。」読解 (山本高史, 同誌)

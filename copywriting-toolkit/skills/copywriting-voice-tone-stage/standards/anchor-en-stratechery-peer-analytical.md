@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Position the reader as an equally-intelligent peer thinking alongside the analyst; convert messy industry developments into a named conceptual framework whose logic feels inevitable once stated.
 
-**Native critical read**:
+## Native critical read
 - "Aggregation Theory" (Thompson's own framework name, *Aggregation Theory*, 2015 — spine of the Stratechery canon)
 - "peer-analytical" (industry-trade characterization — analyst writing AT his readers' level, not DOWN to them)
 - "The End of the Beginning" (Thompson's self-titled thesis-essay, 2017)

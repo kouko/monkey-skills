@@ -1,5 +1,64 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.13.3 — 2026-04-22 (format unification — single canonical anchor structure)
+
+Unifies three silent-alternative formats that accumulated during v1.4.0-v1.12.x anchor library expansion. All 90 anchors now conform to one canonical structure; lint enforces the single form.
+
+**Problem**: v1.13.2 lint was tolerant of two formats for `Native critical read` (inline bold vs standalone H2) and two for Metadata (grouped vs flat). This meant two invisible sub-standards coexisted in the library — same content, different structural layout. Cosmetic inconsistency, no runtime impact, but unmanageable for future edits.
+
+**Decision**: Pattern B (standalone H2) as canonical for `Native critical read`, despite being the 9-file minority. Chosen over Pattern A (81 files) because:
+- Semantic clarity: separate H2 reflects distinct function (evidence vs framing)
+- Parseable structure: H2 is load-bearing Markdown; nested bold is decoration
+- Lint simplicity: one-step H2 lookup
+
+Paid the 81-file migration cost via one-off mechanical script (no prose rewrite).
+
+**Format unification scope**:
+
+1. **Native critical read** — 81 files: inline `**Native critical read**:` bold (Pattern A) → `## Native critical read` standalone H2 (Pattern B canonical). Migrated via one-off script.
+2. **Metadata grouping** — 5 files: flat `## Trigger slug:` / `## Over-mimic risk:` H2-per-field → grouped `## Metadata` with bullet items. Manually fixed (Miyazawa / Sakamoto / Umeda / KC Tsang / Mike Chu).
+3. **Voice direction label** — 1 file (龔大中): bilingual `**What this register achieves (中文)**:` → English canonical `**What this register achieves**:`. 1 file (Tim Delaney): missing label → added.
+
+**Lint tightening** (`scripts/lint-anchor-library.py`):
+
+- `REQUIRED_BODY_SECTIONS` — added `## Native critical read` and `## Metadata` as required H2 sections.
+- `check_native_critical_read()` — now checks for H2 section only (Pattern B). Pattern A no longer accepted.
+- `check_metadata()` — now requires fields inside grouped `## Metadata` H2 section. Warns on legacy flat `## <field>:` H2 headers.
+- `check_voice_direction()` — NEW. Enforces canonical `**What this register achieves**:` label (blocks bilingual or missing variants).
+
+**Baseline change**:
+
+| | v1.13.2 | v1.13.3 |
+|---|---|---|
+| Clean | 76 | 85 |
+| Clean with warnings | 2 | 2 |
+| Failed | 12 | 3 |
+
+Rules are STRICTER in v1.13.3 yet clean count rose. Two mechanisms:
+- 9 Pattern B files that v1.13.2 lint false-positive-failed (mismatched regex for "missing Native critical read") now genuinely clean under canonical-only rule.
+- Format unification removed format-drift failures; remaining 3 are substantive (2 dual-quadrant + 1 KC Tsang Examples<5).
+
+**Affected files**: 88 of 90 anchors edited (structural only — zero prose rewrites):
+- 81 files: Native critical read label → H2 migration
+- 5 files: flat Metadata → grouped
+- 1 file: bilingual label → English (龔大中; content prose unchanged)
+- 1 file: missing label added (Tim Delaney)
+
+**CI lint gate** (bundled in this release — previously deferred pending baseline reduction):
+
+- New `scripts/lint-baseline.txt` lists 3 accepted failures (2 dual-quadrant + 1 Examples<5) as exception list.
+- Lint script adds `--baseline <file>` flag. Under baseline mode: current failures ⊆ baseline → exit 0; new failure outside baseline → exit 1; baseline entry now passing → exit 0 + nudge.
+- New job `copywriting-anchor-lint` in `.github/workflows/skill-structure.yml` runs on push to main + every PR targeting main. Consumes `--baseline` mode so only NEW drift blocks merge.
+
+**Other changes**:
+
+- `docs/tests/lint-baseline-v1.13.2.md` → `docs/tests/lint-baseline-v1.13.3.md` (full rewrite with canonical structure documented + migration audit trail + CI integration).
+- `plugin.json`: 1.13.2 → 1.13.3
+
+**Supersedes PR #129**: that PR added Pattern A + Pattern B fallback logic to lint — rendered obsolete by v1.13.3's canonical-only enforcement. #129 closed.
+
+**Meta-reflection**: fourth consecutive audit in the v1.13.x series surfacing the "dead ceremony" pattern — v1.13.3 closes the main format-drift surface. With 3 substantive failures remaining (vs 19 in v1.13.0), CI lint gate becomes practical (follow-up PR).
+
 ## v1.13.2 — 2026-04-22 (lint rule audit — drop no-consumer field checks, fix bold-markup regex)
 
 Pure housekeeping. No runtime behavior change. No anchor file content modified.

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Frame a product launch or brand stance as a civilizational turning point; recruit the reader into a lineage of dissidents by citing historical geniuses as permission structure, delivered in declarative-poetic sentences that sound like scripture read over black-and-white newsreel footage.
 
-**Native critical read**:
+## Native critical read
 - "advertising that celebrates the crazy ones" (Clow's recurring ECD-philosophy phrase, Adweek profile + multiple Apple keynote citations)
 - "mythic register" / "secular liturgy for the tech age" (Ad Age retrospective on Think Different)
 - "the closest thing advertising has to a sermon" (Fast Company feature on the 1997 Apple relaunch)

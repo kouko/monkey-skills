@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Address one specific person — not "users," not "our community" — in the plain, uninflated English of a helpful colleague who just walked over to your desk. Warmth comes from precision, honesty, and context-appropriate restraint (the voice/tone split), NOT from corporate softeners ("we're so excited," "please kindly," "amazing community"). Humor is permitted but surgically excluded from error, money, privacy, and compliance states.
 
-**Native critical read** (5):
+## Native critical read
 - "Our voice doesn't change much from day to day, but our tone changes all the time" (Kate Kiefer Lee, styleguide.mailchimp.com/voice-and-tone/, 2013 — the voice-vs-tone split she codified, now the canonical distinction in UX writing)
 - "Mailchimp's sense of humor is dry, and our mouth is clean. We're friendly without being folksy, and smart without being stuffy" (styleguide.mailchimp.com/voice-and-tone/, Kate's authored brand-voice line — "friendly but not folksy, smart but not stuffy" travels as the shorthand)
 - "When in doubt, be plain. Plain is almost always better than clever" (Lee & Fenton, *Nicely Said*, 2014, Ch.2 "Principles" — the clear-over-clever operating rule)

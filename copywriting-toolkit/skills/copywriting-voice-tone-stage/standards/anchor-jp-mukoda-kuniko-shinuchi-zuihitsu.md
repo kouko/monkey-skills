@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 心理語を書かずに人物の所作・物・音を淡々と積むことで、読者が行間で情景と情を補完する peer-warm 随筆の register。
 
-**Native critical read**:
+## Native critical read
 - 「エッセイの真打ち」(文春文庫裏表紙・書評定型, bunshun.jp)
 - 「心理描写がなく、人物の行動が淡々と記述されているだけで、ごてごてした形容も一切ない」(高橋行徳『向田邦子の優しい眼差し』)
 - 「シナリオ特有の簡にして要を得た文章／ト書にあたる部分を大幅に増やせる」(高橋行徳)

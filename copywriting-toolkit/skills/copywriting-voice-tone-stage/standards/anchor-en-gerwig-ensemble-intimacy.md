@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Stage several voices at once so affection, argument, and self-discovery surface together — no single speaker owns the scene, and tenderness is carried by hyper-specific domestic detail rather than stated feeling.
 
-**Native critical read**:
+## Native critical read
 - "gentle specificity" (A.O. Scott, *NYT* review of *Lady Bird*, 2017)
 - "a symphony of female voices, overlapping and interrupting" (Manohla Dargis, *NYT* on *Little Women*, 2019)
 - "writes love as attention" (Richard Brody, *The New Yorker*, 2017)

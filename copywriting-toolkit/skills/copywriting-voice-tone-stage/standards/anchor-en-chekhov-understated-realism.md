@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render ordinary lives with moral tenderness and zero verdict; let a single physical detail carry the emotional freight the narrator refuses to name.
 
-**Native critical read**:
+## Native critical read
 - "In descriptions of Nature one must seize on small details, grouping them so that when the reader closes his eyes he gets a picture." (Chekhov, letter to brother Alexander, 10 May 1886 — widely paraphrased as "don't tell me the moon is shining; show me the glint of light on broken glass")
 - "If in Act One you have a pistol hanging on the wall, then it must fire in the last act." (Chekhov's gun, attributed in S. Shchukin's *Memoirs* 1911; Chekhov to Lazarev-Gruzinsky, 1 Nov 1889)
 - "The artist must be, not the judge of his characters and of what they say, but merely an impartial witness." (Chekhov, letter to Suvorin, 30 May 1888)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sustain an underplayed deadpan surface so that genuine tenderness, grief, or political horror can surface a beat later and land harder for having been ambushed by a joke. Emotion arrives via interrupted sincerity, not declared feeling.
 
-**Native critical read**:
+## Native critical read
 - "Kiwi deadpan" — recurring NZ/UK critical shorthand (*The Guardian* on *Wilderpeople*, *Boy*; NZ On Screen profile)
 - "awkward tenderness / sincerity ambushed by a joke" (A.O. Scott, Manohla Dargis in *NYT* on *Jojo Rabbit*, *Wilderpeople*)
 - "mockumentary fourth wall" (critical term for *What We Do in the Shadows* confessional; RogerEbert.com, BFI, *The Guardian*)

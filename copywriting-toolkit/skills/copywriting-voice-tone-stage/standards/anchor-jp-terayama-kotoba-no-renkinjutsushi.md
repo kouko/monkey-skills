@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 箴言的断定と疑問句で読者を椅子から立ち上がらせる register。命令形の短句 × 固有名詞の具象 × 抽象概念の暴力的な並置により、日常語を街頭の挑発へと引き上げる。
 
-**Native critical read**:
+## Native critical read
 - 「言葉の錬金術師」(思潮社『寺山修司の時代』特集號, 寺山語 self-citation via 「ぼくにとって、言葉は錬金術だった」)
 - 「アジテーションの詩学」(岩波『現代詩手帖』寺山特集, critic evaluation of 煽動性箴言)
 - 「疑似イベント / 疑似家族 / 疑似言語」(寺山 self-description, エッセイ『迷路と死海』)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Hijack the brand mascot into a horny, unhinged, perpetually-online Gen-Z persona so that a language-learning app reads as a parasocial chaos agent — every post is a bit, the product becomes the punchline, and the algorithm rewards commitment to the joke over commitment to the product.
 
-**Native critical read**:
+## Native critical read
 - "unhinged" — Parvez's own recurring descriptor (Adweek, "How a 23-year-old TikTok intern turned Duolingo's owl into a celebrity", 2022)
 - "chaos marketing / chaotic brand TikTok" (Fast Company Most Creative People coverage, 2022)
 - "It's not about the app. It's about Duo." (Parvez on inversion of product-first social, Adweek 2022)

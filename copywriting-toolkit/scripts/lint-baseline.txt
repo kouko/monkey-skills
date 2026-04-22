@@ -1,0 +1,20 @@
+# Anchor Library Lint Baseline — known-failing anchors (v1.13.3)
+#
+# Each line is an anchor filename that currently fails lint. CI gate
+# consumes this file via `lint-anchor-library.py --baseline <this-file>`:
+# failures listed here do NOT block merge; failures OUTSIDE this list
+# (i.e., new drift) DO block merge.
+#
+# Empty lines and # comments are ignored.
+#
+# When an anchor here is fixed, delete the line. CI will nudge if
+# baseline entries pass lint (no error, just a reminder to prune).
+#
+# Failures categorized — see docs/tests/lint-baseline-v1.13.3.md for full context.
+#
+# Dual-quadrant schema ambiguity (v1.14.x schema design):
+anchor-en-basecamp-fried-dhh-contrarian-manifesto.md
+anchor-en-schoolcraft-oatly-activist-typewriter.md
+#
+# Examples count < 5 (v1.14.x content research):
+anchor-zh-hk-kc-tsang-cantonese-vernacular-pun.md

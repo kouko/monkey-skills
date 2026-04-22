@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Sell the most boring category (canned water) as if it were a thrash-metal merch drop — death-metal naming register + environmentalist punk copy weaponized so the brand itself is entertainment, not advertising for a product.
 
-**Native critical read**:
+## Native critical read
 - "Murder Your Thirst" — Cessario's founding tagline, stamped on every tallboy since the 2019 launch; he calls it the "three-word brief" the whole company writes against (Cessario, Kickstarter pitch video, 2019)
 - "Heavy metal marketing" — Cessario's self-applied genre label across the 2020-2023 podcast circuit (Modern Retail, Marketing Brew, How I Built This, 2022-2023)
 - "Death to Plastic" — in-house campaign platform for aluminum-over-PET advocacy, printed on cans and used as hashtag (Liquid Death packaging + social, 2019-present)

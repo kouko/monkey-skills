@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Compress English prose to irreducible declarative force — vigorous, specific, active — so the reader grasps the thought without detour or decoration.
 
-**Native critical read**:
+## Native critical read
 - "Required reading" for anyone aspiring to write well (David Ogilvy, *Ogilvy on Advertising*, Ch.1, 1983)
 - "Vigorous writing is concise" (Strunk, *Elements of Style*, Rule 17, 1918)
 - "Write with nouns and verbs, not with adjectives and adverbs" (White, *Elements of Style*, "An Approach to Style", 1959)

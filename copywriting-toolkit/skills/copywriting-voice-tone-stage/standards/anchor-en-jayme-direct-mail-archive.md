@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Seduce the prospect into reading long copy as pleasure, not sales — the envelope teaser lands a curiosity-jolt, the letter unfolds as fireside narrative with commercial attraction "cleverly disguised," every word earning its slot and ornate specificity replacing generic benefit-speak.
 
-**Native critical read**:
+## Native critical read
 - "Master of the direct mail letter / there has never been anyone better, before or since" (Andy Owen, *Bill Jayme — the greatest copywriter of them all*)
 - Envelope as "hot pants on the hooker" (Jayme self-description, widely cited trade archive)
 - "Pure poetry / eloquently about anything to anyone" (Brian Kurtz, briankurtz.net/bill-jayme)

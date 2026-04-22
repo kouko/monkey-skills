@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Render late-capitalist indignity (theme-park serfs, chemo trials, suburban dads failing the moment) so the narrator's embarrassment and tenderness arrive simultaneously — absurdity exposes the wound, kindness refuses to moralize. Earnestness survives by routing through bureaucratic euphemism, not despite it.
 
-**Native critical read**:
+## Native critical read
 - "compassionate absurdism" (standard Saunders-crit term, used across *NYT* / *New Yorker* profile coverage since *Tenth of December*)
 - "kindness without sentimentality" — Saunders's own phrasing, Syracuse commencement address, 2013 ("What I regret most… are failures of kindness")
 - "the moral fiction of the corporate hellscape" (Joel Lovell, *NYT Magazine* cover profile, 6 Jan 2013)

@@ -14,7 +14,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: 以排比枚舉 + 具名文化座標建構「讀者—作者—品牌」三方已然對等的閱讀場；把購買動作改寫為存在主義式的生活命題，不說服、不教育，只開啟一個「你也在這裡嗎」的識別信號。
 
-**Native critical read**:
+## Native critical read
 - 「誠品副作用」(李欣頻 自述書名 /《誠品副作用》新新聞文化 1998 — 指文案讀完後殘留的 after-effect)
 - 「排比枚舉」(craft-lineage 深度檔 pattern 名；即四連 / 五連 / 七連具名名單構成的呼吸節奏)
 - 「具名引用 / 文化座標」(craft-lineage — 寺山修司 / 阿莫多瓦 / 徐四金 / 村上春樹 / 彼得梅爾等具名 signifier 承重)

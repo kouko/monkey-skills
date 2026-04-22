@@ -39,6 +39,28 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
+  copywriting-anchor-lint:
+    name: copywriting-toolkit anchor library lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Lint voice anchor library (v1.13.3 canonical format)
+        # Baseline file lists 3 known-failing anchors (2 dual-quadrant schema
+        # ambiguity + 1 Examples count < 5) accepted as backlog. Failures outside
+        # that list — e.g., a new anchor with drifted format, or an edit that
+        # breaks an existing clean anchor — block the merge. See
+        # copywriting-toolkit/docs/tests/lint-baseline-v1.13.3.md for details.
+        run: |
+          python3 copywriting-toolkit/scripts/lint-anchor-library.py \
+            --baseline copywriting-toolkit/scripts/lint-baseline.txt
+
   scraper-deps:
     name: Scraper dependency freshness (report-only)
     runs-on: ubuntu-latest

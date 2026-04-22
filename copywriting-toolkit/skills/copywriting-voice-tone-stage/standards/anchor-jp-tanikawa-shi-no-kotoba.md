@@ -15,7 +15,7 @@ date: 2026-04-21
 ## Voice direction
 **What this register achieves**: Plain, breath-scaled 日本語 where kana outweighs kanji and a child could read aloud, yet cosmic / existential scale is carried underneath — 「伝達のことば」では答えられない、からだと心からおのずと流れ出る言葉。
 
-**Native critical read**:
+## Native critical read
 - 「詩のことば」≠「伝達のことば」(谷川自身、ほぼ日「ことばの授業」糸井 × 谷川 對談)
 - 「ことばは、からだと心からおのずと出てくるもの / 辞書から選ばない」(谷川、ほぼ日自己解説定型)
 - 「音読性 / 身体性 — 声に出して読めるリズム」(今野真二『谷川俊太郎の日本語』光文社新書)
