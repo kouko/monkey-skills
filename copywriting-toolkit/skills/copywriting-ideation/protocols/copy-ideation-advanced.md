@@ -13,7 +13,7 @@
 - `../standards/verbalized-sampling.md` — VS probability (base)
 - `../standards/kosimo-instinct-analysis.md` — 小霜 本能 lens (advanced)
 - `../standards/sns-evolution-aisas-ulssas.md` — ULSSAS seed criteria (advanced)
-- `../standards/voice-anchor-meta-detail.md §Cross-Master Context` — voice reference calibration (advanced)
+- `../standards/voice-anchor-meta.md §Cross-Master Context` — voice reference calibration (advanced)
 
 ## Pre-Phase: Method Selection
 

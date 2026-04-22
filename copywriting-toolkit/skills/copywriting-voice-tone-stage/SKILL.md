@@ -50,7 +50,7 @@ Note: `voice_quadrant` is the object emitted by Phase 5 (`{primary, edge, ration
 
 **Non-craft-gate Pass 3 paths**: Pass 3c (axis-extreme), Pass 3d (register-signal via quadrant router) — see §Pass 3 activation guard below for full dispatch logic.
 
-**Cross-tradition transplant forbidden** — never force JP lineage onto ZH output (or vice versa), never force either onto Anglo output. `voice-and-tone.md §Anti-Patterns` + `voice-anchor-meta-detail.md §Cross-Master Context` document the ban.
+**Cross-tradition transplant forbidden** — never force JP lineage onto ZH output (or vice versa), never force either onto Anglo output. `voice-and-tone.md §Anti-Patterns` + `voice-anchor-meta.md §Cross-Master Context` document the ban.
 
 **If both lineage triggers match** (e.g., `voice_reference: 糸井重里` but `output_language: zh-TW`) → emit `violation` envelope per `../../CLAUDE.md §Envelope Violation`; router routes to `copywriting-intake`. Do NOT self-dispatch bounce (fragments `bounce_round` counter).
 
@@ -79,8 +79,8 @@ Violation payload:
     tradition (糸井 state-proposal, 岩崎 余韻) + 18F / Mailchimp 4-axis
     voice model + Mailchimp "one voice, multiple tones" + tone context-
     switching table (onboarding / error / crisis / celebration).
-  - `standards/anchor-jp-{itoi-shigesato,iwasaki-shunichi,maki-jun,taniyama-masakazu}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 糸井 / 岩崎 / 眞木 / 谷山 (Pass 3a craft-gate). Replace the former `voice-anchor-meta-detail.md §Cross-Master Context (JP)` Tier 3 deep-dive; cross-master content absorbed into `voice-anchor-meta-detail.md §Cross-Master Context`.
-  - `standards/anchor-zh-tw-{xu-shunying,lee-hsin-ping,ye-mingui}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 許舜英 / 李欣頻 / 葉明桂 (Pass 3b craft-gate). Replace the former `voice-anchor-meta-detail.md §Cross-Master Context (ZH)` Tier 3 deep-dive; Z1-Z8 attribution corrections absorbed into `voice-anchor-meta-detail.md §Cross-Master Context` + inlined per-anchor Metadata (Z1 → 葉明桂; Z2 → 李欣頻; Z3/Z4 → 許舜英; Z5/Z7 → 吳念真; Z8 → 龔大中).
+  - `standards/anchor-jp-{itoi-shigesato,iwasaki-shunichi,maki-jun,taniyama-masakazu}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 糸井 / 岩崎 / 眞木 / 谷山 (Pass 3a craft-gate). Replace the former `voice-anchor-meta.md §Cross-Master Context (JP)` Tier 3 deep-dive; cross-master content absorbed into `voice-anchor-meta.md §Cross-Master Context`.
+  - `standards/anchor-zh-tw-{xu-shunying,lee-hsin-ping,ye-mingui}-*.md` (v1.9.0) — per-master v2 Layer 1 voice bodies for 許舜英 / 李欣頻 / 葉明桂 (Pass 3b craft-gate). Replace the former `voice-anchor-meta.md §Cross-Master Context (ZH)` Tier 3 deep-dive; Z1-Z8 attribution corrections absorbed into `voice-anchor-meta.md §Cross-Master Context` + inlined per-anchor Metadata (Z1 → 葉明桂; Z2 → 李欣頻; Z3/Z4 → 許舜英; Z5/Z7 → 吳念真; Z8 → 龔大中).
 - **Rubric (SHOULD gate)**:
   - `rubrics/voice-consistency-gate.md` — cross-stage / cross-candidate
     voice stability + tone contextual appropriateness + maestro fidelity.
@@ -184,29 +184,29 @@ if Pass 3 triggered:
     if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計, 仲畑貴志}:
         master_slug = JP_CRAFT_MASTER_MAP[voice_reference]
         load standards/anchor-jp-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
-        load standards/voice-anchor-meta-core.md    # over-mimic mitigation registry
+        load standards/voice-anchor-meta.md    # over-mimic mitigation registry
         # Conditional: if brief needs cross-master context / era / attribution risk
-        # → load standards/voice-anchor-meta-detail.md §Cross-Master Context (section-targeted)
+        # → load standards/voice-anchor-meta.md §Cross-Master Context (section-targeted)
         proceed to Pass 3a
 
     elif voice_reference ∈ {許舜英, 李欣頻, 葉明桂}:
         master_slug = ZH_CRAFT_MASTER_MAP[voice_reference]
         load standards/anchor-zh-tw-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
-        load standards/voice-anchor-meta-core.md
+        load standards/voice-anchor-meta.md
         # Conditional: attribution corrections (Z1-Z8) / cross-master lineage / 意識形態 era
-        # → load standards/voice-anchor-meta-detail.md §Cross-Master Context
+        # → load standards/voice-anchor-meta.md §Cross-Master Context
         proceed to Pass 3b
 
     # Tier 3 — Axis Extreme (new, v1.3.2)
     elif voice_quadrant.position starts with "axis-":
-        load standards/voice-anchor-meta-core.md
-        load standards/axis-extreme-anchors.md
+        load standards/voice-anchor-meta.md
+        load standards/voice-anchor-meta.md §Axis Extreme
         proceed to Pass 3c
 
     # Tier 2 — Register Signal (new, v1.3.2) — default for any other Pass-3-triggered case
     else:
-        load standards/voice-anchor-meta-core.md
-        load standards/voice-anchor-meta-detail.md
+        load standards/voice-anchor-meta.md
+        load standards/voice-anchor-meta.md
         position = voice_quadrant.position OR "center" (default fallback)
         load standards/{output_language}-q{voice_quadrant.primary}-anchors.md §Landmark: {position}
         if cross-reference-valid-for[output_language] == STRONG for cited anchor:
@@ -268,13 +268,13 @@ master:
   — discipline-centric (3-reason test per candidate + compressive
   restraint).
 
-**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
+**Conditional load of `voice-anchor-meta.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
 1. Brief explicitly requires cross-master lineage / historical era / critical debate context (genuinely cross-master)
 2. Draft involves multiple JP masters side-by-side comparison
 
 Default: do NOT load meta-detail. v2 anchor body carries sufficient voice signature + per-master `Don't` block + inline drift #JP-8 correction for standalone rewrite. v1.9.2 note: attribution-risk no longer auto-triggers meta-detail — all JP drift corrections are inlined in the corresponding anchor's Metadata.
 
-**Critical attribution corrections (JP)** — drift #JP-8 (リゲイン「24時間戦えますか？」NOT 岩崎) inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. Authoritative drift index in `voice-anchor-meta-detail.md §Drift corrections catalog`.
+**Critical attribution corrections (JP)** — drift #JP-8 (リゲイン「24時間戦えますか？」NOT 岩崎) inlined in `anchor-jp-iwasaki-shunichi-yonin.md §Don't / Over-mimic` + Metadata footer. Authoritative drift index in `voice-anchor-meta.md §Drift corrections catalog`.
 
 #### Pass 3b — ZH lineage (ZH trigger matched, v1.7.0 per-master v2 load)
 
@@ -295,14 +295,14 @@ Load the master-specific v2 anchor file (from ZH_CRAFT_MASTER_MAP above):
   warmth). Distinguished from 許舜英's cool manifesto register by
   brand-construction thesis (「不是賣咖啡，是經營咖啡館」).
 
-**Conditional load of `voice-anchor-meta-detail.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
+**Conditional load of `voice-anchor-meta.md §Cross-Master Context`** (v1.9.2 trigger simplified) — load ONLY when:
 1. Brief cites cross-master comparison (許舜英 vs 李欣頻 register differentiation)
 2. Brief references 意識形態 廣告 institutional-era context (1987-1999 decade) — Generational Context section
 3. Brief references **孫大偉** (only ZH drift without an anchor home — Z6 lives in meta-detail)
 
 Default: do NOT load meta-detail. Per-anchor `Don't` block + anchor Metadata carry inlined Z1 (葉明桂 anchor) + Z2 (李欣頻 anchor) + Z3/Z4/Z11 (許舜英 anchor) + Z5/Z7 (吳念真 anchor) + Z8/Z10 (龔大中 anchor + zh-q3 router) + Z9 (KC Tsang anchor). v1.9.2 note: attribution-risk triggers no longer need meta-detail unless Z6-specific.
 
-**Critical attribution corrections (ZH)** — authoritative drift index in `voice-anchor-meta-detail.md §Drift corrections catalog`. Per-anchor inlines are SSOT. Exception: Z6 (孫大偉 agency = 奧美 → 偉太, NOT JWT) has no anchor home; lives in meta-detail Z6 section.
+**Critical attribution corrections (ZH)** — authoritative drift index in `voice-anchor-meta.md §Drift corrections catalog`. Per-anchor inlines are SSOT. Exception: Z6 (孫大偉 agency = 奧美 → 偉太, NOT JWT) has no anchor home; lives in meta-detail Z6 section.
 
 #### Pass 3 cross-branch common rules
 
@@ -326,7 +326,7 @@ Both lineage standards' §Anti-Patterns sections ban this explicitly.
 
 #### Pass 3c — Axis Extreme branch (v1.3.2, new)
 
-When `voice_quadrant.position` starts with `axis-*` (e.g. `axis-authority-extreme`), Pass 3 loads `axis-extreme-anchors.md` — a cross-language file covering 4 axis-extreme positions (authority/affinity/reason/emotion). **MVP**: file is placeholder with candidate lists; V2 research will populate with full entries (BBC News / Supreme Court / Hallmark / Wikipedia / Mailchimp help center neutral etc.).
+When `voice_quadrant.position` starts with `axis-*` (e.g. `axis-authority-extreme`), Pass 3 loads `voice-anchor-meta.md §Axis Extreme` — a cross-language file covering 4 axis-extreme positions (authority/affinity/reason/emotion). **MVP**: file is placeholder with candidate lists; V2 research will populate with full entries (BBC News / Supreme Court / Hallmark / Wikipedia / Mailchimp help center neutral etc.).
 
 During MVP period: if brief triggers `axis-*` position, agent should note the placeholder status in `tone_notes.axis_extreme_applied = "mvp-stub-{position}"` and apply best-effort register matching from candidate list in the file. If V2 content is present, apply per standard anchor entry.
 
@@ -337,7 +337,7 @@ When voice_reference is not a craft-gate master AND position is not axis-extreme
 When cross-reference registry (meta-detail) shows `cross-reference-valid-for[output_language] == STRONG` for any anchor in the target section, ALSO load the corresponding cross-lang file's same Landmark section. Most common: JP→zh-TW STRONG (zh-TW Q3 brief with 糸井 cross-ref loads jp-q3 center).
 
 Register-Signal apply:
-1. Read per-quadrant Landmark section — extract anchor entries + metadata. **Schema auto-detect (v1.5.0)**: inspect anchor file frontmatter. If `schema_version: 2.0`, extract Layer 1 v2 fields (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata) per `voice-anchor-meta-core.md §v2 schema`. Otherwise extract v1 fields (Era / Representative lines / Voice signature / LLM corpus depth / Over-mimic risk) per `voice-anchor-meta-core.md §v1 schema`. Both schemas coexist during migration window. Additional v2 entries live in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` — consult `docs/voice-library-recast-audit.md` for the mapping from v1 brand/campaign entries to v2 individual-creator recasts.
+1. Read per-quadrant Landmark section — extract anchor entries + metadata. **Schema auto-detect (v1.5.0)**: inspect anchor file frontmatter. If `schema_version: 2.0`, extract Layer 1 v2 fields (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata) per `voice-anchor-meta.md §v2 schema`. Otherwise extract v1 fields (Era / Representative lines / Voice signature / LLM corpus depth / Over-mimic risk) per `voice-anchor-meta.md §v1 schema`. Both schemas coexist during migration window. Additional v2 entries live in `docs/voice-anchor-deep-dives/pilot-layer1-v2-*.md` — consult `docs/voice-library-recast-audit.md` for the mapping from v1 brand/campaign entries to v2 individual-creator recasts.
 2. For each candidate anchor, verify anchor selection rubric (meta-core 4 conditions). For v2 entries, the over-mimic mitigation clause is in the anchor's own `Don't / Over-mimic` block (single source of truth). For v1 entries, consult meta-core's §Over-mimic mitigation registry.
 3. **Rank top-3 candidates** by fit — emit `anchor_candidates_ranked` list (v1.3.5); then apply the primary (rank 1) voice signature to draft rewrite
 3.5. **Self-report selection confidence** (v1.12.1, instrumentation-only): after ranking, emit `agent_selection_confidence ∈ {HIGH, MEDIUM, LOW}` using this scale:
@@ -513,9 +513,9 @@ Verdict handling:
   ZH signatures (definitional inversion, cultural-critique density)
   into JP output. Both lineage standards ban this in §Anti-Patterns.
 - Attributing 『24時間戦えますか？』to 岩崎俊一 (documented drift #8 in
-  voice-anchor-meta-detail.md §Cross-Master Context).
+  voice-anchor-meta.md §Cross-Master Context).
 - Attributing 「我不在咖啡館...」as original 葉明桂 line (actually Peter
-  Altenberg sinicized — voice-anchor-meta-detail.md §Cross-Master Context drift #Z1).
+  Altenberg sinicized — voice-anchor-meta.md §Cross-Master Context drift #Z1).
 - Citing "中興百貨 文案" from content-farm reprint lists without
   anchoring to 許舜英購物日記 + 意識形態 archives (drift #Z4).
 - Filling the Voice Guide axes abstractly ("friendly, professional") with
@@ -529,9 +529,9 @@ Verdict handling:
 
 - `standards/voice-and-tone.md` — Tier 2 voice SSOT (verbatim copy from
   `domain-teams:copywriting-team`).
-- `standards/voice-anchor-meta-detail.md §Cross-Master Context` — Tier 3 JP lineage deep-dive
+- `standards/voice-anchor-meta.md §Cross-Master Context` — Tier 3 JP lineage deep-dive
   (verbatim copy from `domain-teams:copywriting-team`).
-- `standards/voice-anchor-meta-detail.md §Cross-Master Context` — Tier 3 ZH lineage deep-dive
+- `standards/voice-anchor-meta.md §Cross-Master Context` — Tier 3 ZH lineage deep-dive
   (NEW in v1.0.0; primary-source-researched; not cp'd from
   `domain-teams:copywriting-team`).
 - `rubrics/voice-consistency-gate.md` — SHOULD gate rubric (verbatim copy).

@@ -24,7 +24,7 @@ tone-switching rules defined here.
 - Mailchimp Voice and Tone Guide — https://styleguide.mailchimp.com/voice-and-tone/ — industry benchmark for SaaS voice guides. "One voice, multiple tones" principle and context-switching table are secondary sources for the Tone section.
 
 For JP copywriter voice-signature deep-dives (糸井重里 / 岩崎俊一 /
-眞木準 / 谷山雅計), see `voice-anchor-meta-detail.md §Cross-Master Context (JP)`. For brand-level
+眞木準 / 谷山雅計), see `voice-anchor-meta.md §Cross-Master Context (JP)`. For brand-level
 voice positioning with EN/JP/ZH canonical corpus (19 brands across
 Q1-Q4), see `voice-quadrant-positioning.md`.
 
@@ -88,7 +88,7 @@ friendly↔professional axis. Memory-heavy repetition is standard
 
 **Quadrant + deep-dive**: 糸井 / 岩崎 live in **Q3 Affinity-Emotion**;
 眞木準 at **Q2↔Q3 border**. See `voice-quadrant-positioning.md` for
-quadrant typology; see `voice-anchor-meta-detail.md §Cross-Master Context §糸井 / §岩崎 /
+quadrant typology; see `voice-anchor-meta.md §Cross-Master Context §糸井 / §岩崎 /
 §眞木準` for voice-signature deep-dives.
 
 ## ZH TW copywriting tradition

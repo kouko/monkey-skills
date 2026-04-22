@@ -16,7 +16,7 @@ v1.11.0 Phase C sweep 的 reject rationale（「both HIGH risk, mechanism-distin
 ## What was investigated
 
 1. 兩個 anchor 檔案全文（voice direction / native critical read / prose mechanics / examples / don't-over-mimic / metadata）
-2. `voice-anchor-meta-core.md §Safe-substitute lookup` 與 §Condition 5 (negation-of-axis) — 確認 v1.11.1 substitute 合格判準 = 「substitute 的 over-mimic risk 必須『嚴格低於』named master」
+2. `voice-anchor-meta.md §Safe-substitute lookup` 與 §Condition 5 (negation-of-axis) — 確認 v1.11.1 substitute 合格判準 = 「substitute 的 over-mimic risk 必須『嚴格低於』named master」
 3. `docs/anchor-schema-v2.md §Safe substitute for` — 確認欄位只接受 frontmatter 陣列，且需通過三個 conditions（higher-risk 入 registry / 經驗證 adjacent / 嚴格低 risk）
 4. 兩者 Over-mimic risk 都在 anchor body 標為 HIGH（許 line 49 `Over-mimic risk: HIGH`；李 line 49 `Over-mimic risk: MEDIUM` — **此處有一個關鍵 finding，見下**）
 
@@ -83,7 +83,7 @@ v1.11.0 Phase C sweep 的 reject rationale（「both HIGH risk, mechanism-distin
    - 許 anchor 現有對張愛玲的 stylistic-sibling 行下方加一行對李欣頻的平行敘述。
    - 落實「書面記錄 reject rationale」，防止 v1.13.0+ 再度誤提案。
 
-2. **【建議】在 `voice-anchor-meta-core.md` §Safe-substitute lookup 末尾加一行 "Documented non-substitutes (reviewed + rejected)" 段落**
+2. **【建議】在 `voice-anchor-meta.md` §Safe-substitute lookup 末尾加一行 "Documented non-substitutes (reviewed + rejected)" 段落**
    - 列出至少兩個已 review 且 reject 的 pairing 案例（許↔李 + 許↔張愛玲）與 2-3 行機制差異說明。
    - 讓未來 reviewer 在同一個 hot-path 檔案看到 "哪些對看似可配但不成立" 而不用挖 research note。
 

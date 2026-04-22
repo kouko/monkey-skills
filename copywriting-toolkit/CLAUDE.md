@@ -50,7 +50,7 @@ Pre-v1.11.2 default was conservative (whole `standards/` = Tier 1), requiring `d
 
 **Exception** — ZH voice lineage: `skills/copywriting-voice-tone-stage/standards/zh-copy-craft-lineage.md` is **newly authored for this toolkit in v1.0.1** (not cp'd from domain-teams source — the source never had a ZH counterpart to `jp-copy-craft-lineage.md`). It is Tier 1 in the sense of "immutable canon", but has no upstream source to diff against.
 
-**Plugin-native standards** (post v1.4.0 anchor library expansion): the entire voice anchor system — 87 `anchor-*.md` files, `voice-anchor-meta-core.md`, `voice-anchor-meta-detail.md`, 12 quadrant router files (`{lang}-q{N}-anchors.md`), `anchor-schema-v2.md` — is plugin-native. No upstream counterpart in domain-teams. Not subject to `diff -q`; plugin owns it fully.
+**Plugin-native standards** (post v1.4.0 anchor library expansion): the entire voice anchor system — 90+ `anchor-*.md` files, `voice-anchor-meta.md` (consolidated in v1.13.0), 12 quadrant router files (`{lang}-q{N}-anchors.md`), `anchor-schema-v2.md` — is plugin-native. No upstream counterpart in domain-teams. Not subject to `diff -q`; plugin owns it fully.
 
 ### Tier 2 — MAY DIVERGE with explicit documentation
 

@@ -7,7 +7,7 @@ status: pilot
 
 **Status**: pilot (v1.4.0), validating via 8-anchor reformat before full migration.
 
-**Motivation**: v1 schema (`voice-anchor-meta-core.md`) is researcher-catalog-centric, mixing 3 readers' needs (Pass 3 copywriter / Gate evaluator / Human researcher) in one bullet list. v2 splits into layers, keeps only Layer 1 inside skill, moves Layer 2/3 to `docs/voice-anchor-deep-dives/` as research artifacts.
+**Motivation**: v1 schema (formerly in `voice-anchor-meta-core.md`, now consolidated into `voice-anchor-meta.md`) was researcher-catalog-centric, mixing 3 readers' needs (Pass 3 copywriter / Gate evaluator / Human researcher) in one bullet list. v2 splits into layers, keeps only Layer 1 inside skill, moves Layer 2/3 to `docs/voice-anchor-deep-dives/` as research artifacts.
 
 ## Design principle
 
@@ -182,7 +182,7 @@ Dimension 6 (voice-consistency-gate) reads this directly from the anchor file (v
 - Cross-cultural equivalents
 - LLM corpus depth (relocated to `docs/voice-anchor-deep-dives/{slug}.md`)
 - Cultural / historical context
-- Lineage documentation (who influenced whom — moves to `voice-anchor-meta-detail.md`)
+- Lineage documentation (who influenced whom — moves to `voice-anchor-meta.md §Verified lineage map`)
 
 **Test**: if you can't explain how a field helps Pass 3 rewrite a draft, it doesn't belong in Layer 1.
 

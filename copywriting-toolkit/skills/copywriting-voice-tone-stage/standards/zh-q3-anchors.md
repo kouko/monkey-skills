@@ -14,7 +14,7 @@ migrated_date: 2026-04-21
 1. **This file (router)**: lists anchors in each landmark group with one-line voice direction + slug + relative path (single-folder flat)
 2. **Per-anchor file** `anchor-{slug}.md`: full Layer 1 v2 entry (Voice direction / Native critical read / Prose mechanics / Examples / Don't / Metadata)
 
-Pass 3 consumes router to select candidate → loads the named anchor file(s) for body. See `voice-anchor-meta-core.md §v2 schema` for field schema and selection rubric.
+Pass 3 consumes router to select candidate → loads the named anchor file(s) for body. See `voice-anchor-meta.md §Schema (v2 — single active schema)` for field schema and selection rubric.
 
 ## Overview
 
