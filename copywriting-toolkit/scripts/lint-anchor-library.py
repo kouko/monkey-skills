@@ -180,16 +180,38 @@ def count_list_items(section_text: str) -> int:
 
 
 def check_native_critical_read(body: str, result: LintResult) -> None:
-    """Check that Voice direction section contains Native critical read with ≥3 entries."""
+    """Check Native critical read present with ≥3 entries.
+
+    Two structural patterns are valid (both observed in the library):
+    - Pattern A: `**Native critical read**:` bold label nested inside `## Voice direction`
+      (used by Itoi / Gong / Ogilvy / etc. — inline format)
+    - Pattern B: `## Native critical read` as standalone H2 section
+      (used by Abbott / Reed / Wieden / Hara / etc. — separated format)
+
+    v1.13.3 — previously regex only matched Pattern A, flagging 9 files with
+    valid Pattern B content as failures. Same dead-ceremony pattern as v1.13.2
+    `**HIGH**` bold-wrapped regex bug.
+    """
+    # Pattern B: standalone H2 section (check first — cleaner signal)
+    h2_section = extract_section(body, r"^##\s+Native critical read\s*$")
+    if h2_section is not None:
+        count = count_list_items(h2_section)
+        if count < 3:
+            result.errors.append(f"Native critical read has {count} entries; v2 schema requires ≥3")
+        return
+
+    # Pattern A: inline bold label within Voice direction
     vd_section = extract_section(body, r"^##\s+Voice direction\s*$")
     if not vd_section:
         return  # already flagged by body section check
     ncr_match = re.search(r"\*\*Native critical read\*\*", vd_section)
     if not ncr_match:
-        result.errors.append("§Voice direction missing **Native critical read** block")
+        result.errors.append(
+            "Native critical read block not found "
+            "(expected `## Native critical read` H2 section OR `**Native critical read**` inline label in §Voice direction)"
+        )
         return
     ncr_text = vd_section[ncr_match.end():]
-    # Count bullet items until next bold header or section end
     next_bold = re.search(r"\n\*\*", ncr_text)
     ncr_body = ncr_text[:next_bold.start()] if next_bold else ncr_text
     count = count_list_items(ncr_body)

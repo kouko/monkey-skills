@@ -1,5 +1,49 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.13.3 — 2026-04-22 (lint regex fix — accept both Native critical read patterns)
+
+Pure housekeeping. No runtime behavior change. No anchor file content modified.
+
+**Problem discovered**: when evaluating effort to fix the 9 "missing Native critical read" baseline failures (v1.13.2 deferred these as `content debt requiring primary-source research`), inspection of `anchor-en-david-abbott-economist-aphoristic.md` and 8 peers revealed all 9 files HAVE complete Native critical read content — 4-6 entries per file with media + year attribution. The files use `## Native critical read` as a standalone H2 section (Pattern B) instead of `**Native critical read**:` bold label nested inside `## Voice direction` (Pattern A).
+
+v1.13.0 lint only recognised Pattern A. 9 Pattern B files → false-positive failures.
+
+**Lint rule change** (`scripts/lint-anchor-library.py`):
+
+- `check_native_critical_read()` now tries Pattern B (`## Native critical read` H2 section) first, falls back to Pattern A (`**Native critical read**` inline bold label within `## Voice direction`). Both enforce ≥3 entries.
+- Error message updated to name both valid forms.
+- Docstring explicitly documents the two patterns and their historical usage.
+
+**Baseline change**:
+
+| | v1.13.2 | v1.13.3 |
+|---|---|---|
+| Clean | 76 | 85 |
+| Clean with warnings | 2 | 2 |
+| Failed | 12 | 3 |
+
+Removed from failure set (all 9 Pattern B files):
+- `anchor-en-david-abbott-economist-aphoristic.md`
+- `anchor-en-richard-reed-innocent-wackaging.md`
+- `anchor-en-tim-delaney-patek-philippe-stewardship.md`
+- `anchor-en-wieden-just-do-it-minimal-imperative.md`
+- `anchor-jp-hara-kenya-design-manifesto.md`
+- `anchor-jp-jr-central-souda-kyoto-discovery.md`
+- `anchor-jp-kurashicom-aoki-kohei-lifestyle-narrative.md`
+- `anchor-jp-uniqlo-sato-kashiwa-lifewear.md`
+- `anchor-zh-tw-nan-fang-shuo-lexical-archaeology.md`
+
+Remaining 3 failures are substantive (v1.14.x):
+- 2 dual-quadrant descriptive (schema design decision)
+- 1 Examples count < 5 (`anchor-zh-hk-kc-tsang-cantonese-vernacular-pun.md`)
+
+**Other changes**:
+
+- `docs/tests/lint-baseline-v1.13.2.md` → `docs/tests/lint-baseline-v1.13.3.md` (rewritten with new numbers + dead-ceremony pattern audit).
+- `plugin.json`: 1.13.2 → 1.13.3
+
+**Meta-reflection**: third audit in a row surfacing the same dead-ceremony pattern — v1.13.0 removed Pass 3 runtime dead checks; v1.13.2 removed no-runtime-consumer lint fields + fixed bold-wrapped regex; v1.13.3 fixes regex that missed a second valid structural pattern. Each round was triggered by a user question asking "is this actually enforcing something real?" — the answer was no. CI lint gate (previously deferred due to 12 failures) is now feasible with only 3 real exceptions remaining.
+
 ## v1.13.2 — 2026-04-22 (lint rule audit — drop no-consumer field checks, fix bold-markup regex)
 
 Pure housekeeping. No runtime behavior change. No anchor file content modified.
