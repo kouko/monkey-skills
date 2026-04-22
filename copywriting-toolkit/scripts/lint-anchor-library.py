@@ -29,13 +29,21 @@ from typing import List, Optional
 DEFAULT_ANCHOR_DIR = Path(__file__).parent.parent / "skills" / "copywriting-voice-tone-stage" / "standards"
 ANCHOR_FILENAME_GLOB = "anchor-*.md"
 
+# Required fields limited to runtime consumers. Fields kept in anchor frontmatter
+# for human documentation (creator_type, pilot_round, date, etc.) are NOT enforced.
+# Runtime-consumed fields audit (v1.13.2):
+# - schema_version: Pass 3 Step 1 schema version gate
+# - anchor_slug: Pass 3 Step 2 candidate pool matching
+# - culture / quadrant / landmark: Pass 3 Step 2 filtering
+# Metadata (not frontmatter) runtime consumers:
+# - Over-mimic risk: Pass 3 Step 6 safe-substitute + Dimension 6 gate (required, see check_metadata)
+# - Cross-reference-valid-for: Pass 3 Step 1 cross-lang opt-in (optional)
 REQUIRED_FRONTMATTER_FIELDS = {
     "schema_version",
     "anchor_slug",
     "culture",
     "quadrant",
     "landmark",
-    "creator_type",
 }
 
 REQUIRED_BODY_SECTIONS = [
@@ -232,39 +240,31 @@ def check_dont_over_mimic(body: str, result: LintResult) -> None:
 def check_metadata(body: str, result: LintResult) -> None:
     """Check metadata fields exist (in ## Metadata section OR as flat ## <field>: headers).
 
-    Two valid patterns:
-    1. Grouped: `## Metadata` section containing `- Trigger slug:`, `- Over-mimic risk:`, etc.
-    2. Flat: top-level H2 headers like `## Trigger slug: ...`, `## Over-mimic risk: ...`
-    Either is accepted; the check scans the whole body for the field.
-    """
-    # Check for ## Metadata section
-    metadata_section = extract_section(body, r"^##\s+Metadata")
-    has_metadata_section = metadata_section is not None
+    Only enforces fields with actual runtime consumers (v1.13.2 audit):
+    - `Over-mimic risk:` — required. Consumed by Pass 3 Step 6 safe-substitute + Dimension 6 gate.
 
-    # Over-mimic risk (required)
-    risk_in_section = re.search(r"Over-mimic risk\s*:\s*([A-Z+\-]+)", body)
-    if not risk_in_section:
+    Intentionally NOT enforced (documentation-only, no runtime consumer):
+    - `Trigger slug`, `Pairs with form` — historical metadata. If added, good; if missing, fine.
+
+    Two valid patterns for `Over-mimic risk:` value:
+    1. Plain: `Over-mimic risk: HIGH`
+    2. Bold-wrapped: `Over-mimic risk: **HIGH** (rationale)` — common in practice
+    Regex accepts both by stripping surrounding `**`.
+    """
+    # Over-mimic risk (required — real runtime consumer)
+    # Regex handles both plain `HIGH` and bold-wrapped `**HIGH**` forms.
+    risk_in_body = re.search(r"Over-mimic risk\s*:\s*\*{0,2}([A-Z+\-]+)\*{0,2}", body)
+    if not risk_in_body:
         result.errors.append("missing `Over-mimic risk:` line (looked in §Metadata section and flat H2 headers)")
     else:
-        risk = risk_in_section.group(1).strip()
+        risk = risk_in_body.group(1).strip()
         if risk not in VALID_OVER_MIMIC_RISK:
             result.warnings.append(
                 f"Over-mimic risk {risk!r} not in canonical set {sorted(VALID_OVER_MIMIC_RISK)}"
             )
 
-    # Trigger slug (recommended)
-    if not re.search(r"Trigger slug", body):
-        result.warnings.append("missing `Trigger slug` entry (non-blocking but recommended)")
-
-    # Pairs with form (recommended, non-blocking)
-    if not re.search(r"Pairs with form", body):
-        result.warnings.append("missing `Pairs with form` entry (non-blocking but recommended)")
-
-    # Encourage grouped Metadata section for consistency
-    if not has_metadata_section:
-        result.warnings.append(
-            "metadata uses flat H2 headers; v2 schema prefers grouped `## Metadata` section (non-blocking)"
-        )
+    # Trigger slug + Pairs with form: no runtime consumer, lint does not enforce.
+    # ## Metadata section vs flat ## Trigger slug: H2 headers: either accepted; no lint preference.
 
 
 def lint_anchor_file(filepath: Path) -> LintResult:

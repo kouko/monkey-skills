@@ -1,5 +1,42 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.13.2 — 2026-04-22 (lint rule audit — drop no-consumer field checks, fix bold-markup regex)
+
+Pure housekeeping. No runtime behavior change. No anchor file content modified.
+
+**Problem discovered**: when user questioned whether `creator_type` has any runtime use, a grep audit found ZERO consumers — neither SKILL.md nor any rubric / agent / protocol reads the value. The lint script (introduced in v1.13.0 C2) was enforcing presence of a field nothing uses. Similar dead-ceremony for `Trigger slug` and `Pairs with form` (also zero consumers).
+
+Separately: re-inspection of the 3 "missing Over-mimic risk:" baseline failures revealed the files DID have the line, written as `Over-mimic risk: **HIGH**`. Lint regex `([A-Z+\-]+)` didn't match through the `**bold**` markup — a false-positive lint bug.
+
+**Lint rule changes** (`scripts/lint-anchor-library.py`):
+
+1. `REQUIRED_FRONTMATTER_FIELDS` — dropped `creator_type` (no runtime consumer). Reduced from 6 fields to 5: `schema_version`, `anchor_slug`, `culture`, `quadrant`, `landmark`.
+2. `check_metadata()` — `Over-mimic risk:` regex changed from `([A-Z+\-]+)` to `\*{0,2}([A-Z+\-]+)\*{0,2}` to accept bold-wrapped values.
+3. `check_metadata()` — removed warnings for `Trigger slug:` / `Pairs with form:` missing (no runtime consumer; documentation-only).
+4. `check_metadata()` — removed "prefer grouped `## Metadata` section" warning (formatting preference, no functional impact).
+5. Docstring updated to explicitly list which fields have runtime consumers (schema_version / anchor_slug / culture / quadrant / landmark / Over-mimic risk) vs which are documentation-only (creator_type / Trigger slug / Pairs with form).
+
+**Baseline change**:
+
+| | v1.13.0 | v1.13.2 |
+|---|---|---|
+| Clean | 71 | 76 |
+| Clean with warnings | 0 | 2 |
+| Failed | 19 | 12 |
+
+Removed from failure set:
+- 5 files missing `creator_type` → lint no longer requires
+- 3 files with bold-wrapped `Over-mimic risk: **HIGH**` → regex now matches
+
+Remaining 12 failures are real content/schema drift (deferred to v1.14.x): 9 missing Native critical read + 2 dual-quadrant descriptive + 1 Examples count < 5.
+
+**Other changes**:
+
+- `docs/lint-baseline-v1.13.0.md` → `docs/tests/lint-baseline-v1.13.2.md` (moved into tests/ per v1.13.1 reorg; rewritten with new numbers + runtime-consumer audit table).
+- `plugin.json`: 1.13.1 → 1.13.2
+
+**Meta-reflection**: this finding was itself an example of the same dead-ceremony pattern v1.13.0 Pass 3 simplification tackled. The original v1.13.0 C2 commit added a lint that enforced fields no runtime consumer cares about — my own defense-in-depth accumulation, caught by user's "does this field actually matter?" challenge. Lint now mirrors the v1.13.0 principle: enforce only what is verifiably load-bearing.
+
 ## v1.13.1 — 2026-04-22 (docs reorg + schema/CLAUDE.md cleanup)
 
 Pure housekeeping release. No runtime behavior change. No API / envelope field change.
