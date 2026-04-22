@@ -37,6 +37,12 @@ Craft-gate pointers (Q2 extreme): 糸井重里 Q2-edge + 秋山晶 — load `voi
 - **谷崎潤一郎『陰翳礼讃』** (novelist, 1886-1965) — [anchor-jp-tanizaki-inei.md](anchor-jp-tanizaki-inei.md)
   - Slug: `jp-tanizaki-inei`
 
+- **三谷幸喜 — 群像会話劇・軽妙コメディ** (playwright + screenwriter) — [anchor-jp-mitani-koki-group-scene-dialogue-comedy.md](anchor-jp-mitani-koki-group-scene-dialogue-comedy.md) (v1.12.0)
+  - Slug: `jp-mitani-koki-group-scene-dialogue-comedy`
+  - Register: 群像会話リレー + 遮り (えっ/あの/ちょっと待って) + 敬語ズレ + ビリー・ワイルダー系譜 JP 適応;『古畑任三郎』『12 人の優しい日本人』『鎌倉殿の 13 人』
+  - ⚠ Over-mimic MEDIUM: 遮り乱発 / キメ台詞飽和 / 敬語ズレ誤用は検知しやすい. Mitigation: 遮りは 3 発話に 1 回まで、キメ台詞は 1 シーン 1 回、敬語ズレは意味のある時だけ
+  - Sorkin substitute として不適 (rhetorical Q-plus-self-answer / moral verdict / walk-and-talk の 3 核心技法すべて欠落)
+
 Craft-gate pointer: 秋山晶 aphoristic time-philosophy — load `voice-anchor-meta-detail.md §Cross-Master Context`.
 
 ## Landmark: toward-Q3

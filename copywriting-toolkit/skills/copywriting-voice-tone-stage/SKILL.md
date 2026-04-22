@@ -38,7 +38,7 @@ Pass 3 triggers per the 4-branch dispatch (§Pass 3 activation guard). Post-v1.7
 
 **JP craft-gate (Pass 3a)** — activates when:
 
-1. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}, OR
+1. `brief.voice_reference` ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計, 仲畑貴志}, OR
 2. `brief.output_language == "ja"` AND Q3 state-proposal / 余韻 register is declared (routes through Pass 3d to JP Q3 quadrant router; returns to craft-gate if master identified)
 
 **ZH craft-gate (Pass 3b)** — activates when:
@@ -181,7 +181,7 @@ if Pass 3 triggered:
 
     # Tier 1 — Craft Gate (v1.7.0: load per-master v2 anchor as primary,
     #                      craft-lineage only for attribution corrections / lineage context)
-    if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計}:
+    if voice_reference ∈ {糸井重里, 岩崎俊一, 眞木準, 谷山雅計, 仲畑貴志}:
         master_slug = JP_CRAFT_MASTER_MAP[voice_reference]
         load standards/anchor-jp-{master_slug}.md   # v2 Layer 1 voice body (PRIMARY)
         load standards/voice-anchor-meta-core.md    # over-mimic mitigation registry
@@ -228,6 +228,7 @@ JP_CRAFT_MASTER_MAP = {
   岩崎俊一: iwasaki-shunichi-yonin,
   眞木準: maki-jun-craft-aphorism,
   谷山雅計: taniyama-masakazu-discipline,
+  仲畑貴志: nakahata-takashi-kougo-chokugen,  # v1.12.0 — 5th master, TCC 殿堂 2015
 }
 
 ZH_CRAFT_MASTER_MAP = {
