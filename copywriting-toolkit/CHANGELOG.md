@@ -51,17 +51,32 @@ Downstream updated in same commit:
 - `CLAUDE.md §Immutable fields` — `lineage_gap` row replaced with `register_signal_applied.named_master_fit_warning`
 - `.claude-plugin/envelope.schema.json` — `tone_notes` schema updated with `register_signal_applied` object (primary_anchor_slug / named_master_fit_warning / agent_selection_confidence / thesis_self_check)
 
-### Impact
+### Impact (measured, not estimated)
+
+**Static files** (`git diff main...HEAD` + `wc -l` / `wc -w`):
 
 | Dimension | v1.12.1 | v1.13.0 | Delta |
 |---|---|---|---|
 | SKILL.md total lines | 537 | 431 | −20% |
-| §Pass 3 line count | ~200 (4-branch) | ~130 (8-step linear) | −35% |
+| SKILL.md word count | 4,301 | 3,227 | −25% |
 | Standards files count (meta) | 3 (core + detail + axis-extreme) | 1 (voice-anchor-meta.md) | −67% |
-| Pass 3 runtime token load | ~6-10K (meta-core + meta-detail conditional) | ~4-5K (single meta file) | −30 to −50% |
-| Branch dispatch control paths | 4 mutually exclusive | 1 linear flow | simpler mental model |
-| Runtime 4-condition re-validation | yes, each invocation | no (CI lint owns library curation) | removed |
-| Library CI lint | none | `scripts/lint-anchor-library.py` (90 anchors, 71 clean / 19 pre-existing drift documented) | new |
+| Meta files total words | 5,442 (2,253+2,613+576) | 4,600 | −15% |
+| SKILL+meta total words | 9,743 | 7,827 | **−20% (~−3K tokens at 1.5 tok/word)** |
+| Branch dispatch control paths | 4 mutually exclusive | 1 linear flow | simpler |
+| Runtime 4-condition re-validation | yes | no (CI lint) | removed |
+| Schwartz pre-pass ceremony | present | removed (inline passthrough only) | removed |
+| v1/v2 schema dual detection | present | v2-only | removed |
+| Library CI lint | none | 90 anchors / 71 clean / 19 drift documented | new |
+
+**Runtime per-Pass-3-invocation** (depends on path):
+
+| Path | v1.12.1 load (words) | v1.13.0 load (words) | Delta |
+|---|---|---|---|
+| Register Signal (most common) | SKILL 4.3K + meta-core 2.3K + meta-detail 2.6K + router ~0.5K ≈ **9.7K** | SKILL 3.2K + meta 4.6K + router ~0.5K ≈ **8.3K** | **−14%** |
+| Craft Gate (named master) | SKILL 4.3K + meta-core 2.3K (+conditional meta-detail 2.6K) + anchor ≈ 6.6-9.2K | same as Register Signal ≈ **8.3K** | neutral to +10% |
+| Axis Extreme (rare) | SKILL 4.3K + meta-core 2.3K + axis-extreme 0.6K ≈ **7.2K** | same as Register Signal ≈ **8.3K** | +15% |
+
+**Honest note**: the "−30 to −50% token load" wording in early drafts was over-optimistic. True savings are **~−14% on the common Register Signal path**; Axis Extreme slightly increased because the unified flow loads the merged meta file rather than only the relevant slice. The primary value of v1.13.0 is **mental-model simplification + SSOT + removing dead ceremony (schwartz pre-pass, v1 schema detection, 4-branch dispatch, runtime 4-condition re-validation)** — not raw token count.
 
 ### Not done in this PR (deferred to future releases)
 
