@@ -1,5 +1,52 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.14.0 — 2026-04-23 (anchor autonomy on voice conflicts)
+
+Addresses the `anchor-honoring reflex is addition-oriented when subtraction would be correct` pattern surfaced in v1.12.1 data-collection (Briefs 1/3/4). Root cause: when `brief.form_hint` / `brief.tone_cue` / Phase 4 draft structure conflicts with anchor's voice mechanics, LLM default is compromise — producing graft-feel copy that does Xu-style language inside 3-bullet container (or any similar structural-voice mismatch). This release clarifies the conflict-resolution hierarchy: **anchor wins on voice conflicts**.
+
+**Change scope**:
+
+- `skills/copywriting-voice-tone-stage/SKILL.md` §Pass 3 Step 4 — adds rule 4 (anchor autonomy on voice conflicts) — ~3-4 lines.
+- `plugin.json`: 1.13.3 → 1.14.0
+
+**What the rule says**:
+
+```
+Step 4 rule 4 (v1.14.0): when anchor's §Prose mechanics or §Don't
+conflicts with brief.form_hint / brief.tone_cue / Phase 4 draft structure,
+anchor wins. Mechanics are binding requirements, not suggestions.
+Do NOT override brief.output_language / audience / product / goal
+(intake Level-1 fields, immutable). Example: form_hint "3 feature bullets"
+vs anchor refusing enumeration → bullets subtracted.
+```
+
+**What the rule does NOT change**:
+
+- anchor file contents (zero anchor edits)
+- envelope schema (zero new fields)
+- intake UX (zero new questions)
+- lint (zero new checks)
+- gate dimensions (zero new gates)
+- anchor selection (Step 2 unchanged)
+
+Pure behavioral instruction at Pass 3 Step 4. Tiebreaker rule, not new mechanism.
+
+**Validation path**:
+
+- N=10 dry-runs across 10 briefs + 4 mechanism variants (baseline / thesis_core hint / yaml discipline schema / prompt autonomy) converged on: prompt-level clarification is sufficient; additional taxonomy (MAY override lists, SUBTRACTION LICENSE naming, yaml schema) is either redundant with anchor prose or inducing compliance theater.
+- Final 1-sentence vs 3-4 line comparison (Briefs 1+4, 2026-04-23) showed: 1 sentence worked on both, but agents flagged variance risk; adding explicit immutable-field clause + concrete example reduces variance without scope creep.
+- Dry-run research archive: `docs/tests/v1.14.0-anchor-autonomy-research.md` (to be authored post-ship).
+
+**What's explicitly NOT in v1.14.0 (deferred to v1.14.x research)**:
+
+- Dual license (subtraction + addition) for JP/ZH craft-gate anchors whose Don't blocks are addition-oriented (require concrete payload) rather than subtraction-oriented. N=10 showed autonomy framing works well on EN commercial anchors with subtraction-oriented Don't blocks; less well on payload-depth masters.
+- Anchor §Don't block quality audit. N=10 suggests unevenness (岩崎 / Chouinard / 許舜英 / 青木耕平 prescriptive and work well; thinner Don't blocks may degrade autonomy to agent aesthetic). No library-wide audit in v1.14.0; real usage signal drives prioritization.
+- Library coverage gap mitigation (zh-HK has only 3 anchors all Q2). Cross-lang borrowing policy formalization deferred.
+- Origin-tell handling (when anchor itself is the cliché the brief is trying to escape — e.g., Chouinard for anti-greenwashing briefs). Second-order subtraction deferred.
+- `named_master_fit_warning` extension to log autonomy overrides. Current field only fires on forced-rank conflicts; autonomy-triggered element de-emphasis not logged. Deferred.
+
+**Meta-reflection**: this release is 4 lines of SKILL.md after a long design exploration. Iteration path (thesis_core → yaml discipline schema → 15-line autonomy framework → 1-sentence → 3-4 lines) kept shrinking scope as each larger proposal was audited for complexity. Load-bearing change is `anchor wins on voice conflicts` — everything else is elaboration or scope expansion that N=10 testing did not justify.
+
 ## v1.13.3 — 2026-04-22 (format unification — single canonical anchor structure)
 
 Unifies three silent-alternative formats that accumulated during v1.4.0-v1.12.x anchor library expansion. All 90 anchors now conform to one canonical structure; lint enforces the single form.
