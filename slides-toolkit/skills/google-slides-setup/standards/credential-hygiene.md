@@ -205,7 +205,7 @@ Console → Logging）確認無可疑存取。雖然 MVP scope 最小（只有
 
 ### Step 7 — 寫 incident log
 
-建立 `plugins/slides-toolkit/incidents/YYYY-MM-DD-<short-description>.md`
+建立 `slides-toolkit/incidents/YYYY-MM-DD-<short-description>.md`
 （目錄採 on-demand 建立，對齊 TECH-SPEC §2.1、§8.4）。內容含：
 
 - 發現時間 / 發現方式（grep? GitHub secret scan alert?）

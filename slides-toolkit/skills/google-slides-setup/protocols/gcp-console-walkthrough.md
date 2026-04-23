@@ -197,7 +197,7 @@ chain）。
 **操作**：
 
 ```bash
-cd /path/to/monkey-skills/plugins/slides-toolkit
+cd /path/to/monkey-skills/slides-toolkit
 bash scripts/google-slides/bootstrap.sh
 ```
 

@@ -214,5 +214,5 @@ pre-flight 偵測到 token 過期會 exit 10，Claude 讀到此 exit code 自動
 - `protocols/issue-119-workaround.md` — gws 個人 Gmail workaround 詳解
 - `standards/credential-hygiene.md` — 5 條硬規則 + incident response + ASVS L1 mapping
 - `checklists/setup-state.md` — 6 項 state check
-- 上游 TECH-SPEC：`plugins/slides-toolkit/TECH-SPEC.md` §3.2, §4.2, §6.1, §6.2, §8
-- 上游 PRODUCT-SPEC：`plugins/slides-toolkit/PRODUCT-SPEC.md` §6.3.3 risks
+- 上游 TECH-SPEC：`slides-toolkit/TECH-SPEC.md` §3.2, §4.2, §6.1, §6.2, §8
+- 上游 PRODUCT-SPEC：`slides-toolkit/PRODUCT-SPEC.md` §6.3.3 risks

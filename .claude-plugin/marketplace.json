@@ -33,6 +33,11 @@
       "name": "copywriting-toolkit",
       "description": "Pipeline-structured copywriting toolkit — 14 specialized skills (intake, ideation, neta injection, 5 form-specific drafters, voice positioning, voice tone, ethics gate, form gate, audit). Grounded in 神田昌典 PASONA, 谷山雅計 discipline, Cialdini, Schwartz, FTC Endorsement / 景品表示法 ethics. 文案寫作工具組。コピーライティング・パイプライン。",
       "source": "./copywriting-toolkit/"
+    },
+    {
+      "name": "slides-toolkit",
+      "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。",
+      "source": "./slides-toolkit/"
     }
   ]
 }
