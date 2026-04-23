@@ -193,6 +193,7 @@ Library curation (`scripts/lint-anchor-library.py` at CI time) guarantees all ca
 1. Read primary anchor's `§Prose mechanics` + `§Examples` as rewrite reference
 2. Read primary anchor's `§Don't / Over-mimic §Mitigation` (≤15-word clause). Inject inline into rewrite prompt.
 3. Rewrite `draft`, following anchor's mechanics
+4. **Anchor autonomy on voice conflicts (v1.14.0)**: when anchor's `§Prose mechanics` or `§Don't` conflicts with `brief.form_hint` / `brief.tone_cue` / Phase 4 draft structure, **anchor wins** — mechanics are binding requirements, not suggestions. Do NOT override `brief.output_language` / `brief.audience` / `brief.product` / `brief.goal` (intake Level-1 fields, immutable). Example: `form_hint: "3 feature bullets"` vs anchor refusing feature enumeration → bullets subtracted and rewritten in anchor's native form.
 
 **Mitigation fallback**: if primary references one of the 9 no-anchor-file authors (村上春樹 / 金庸 / 三島 / 莫言 / 太宰 / 余華 / Cormac McCarthy / DFW / James Ellroy) or the 3 movement/campaign entries (XR Declaration / Nike "Dream Crazy" / Luxury manifesto generic), read mitigation from `voice-anchor-meta.md §Over-mimic mitigation fallback registry`. All other cases: anchor file is the single source of truth.
 
