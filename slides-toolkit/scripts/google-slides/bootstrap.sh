@@ -181,6 +181,9 @@ verify_sha256() {
 }
 
 # --- 下載 + 驗 + 安裝單一 binary --------------------------------------------
+# Dry-run contract (TECH-SPEC §7.3)：**完全不連網**、不 curl、不 verify；
+# 僅印出計畫的 URL + 預期 SHA-256 pin，讓使用者在無網路 / 未填 version pin
+# 的情境下驗證 URL 構造 + SHA 映射邏輯。
 install_one() {
   local tool="$1"
   local platform="$2"
@@ -189,6 +192,14 @@ install_one() {
   expected="$(expected_sha_for "${tool}" "${platform}")"
   tmp_file="${TMP}/${tool}"
   dest="${CACHE_DIR}/${tool}"
+
+  if (( DRY_RUN == 1 )); then
+    printf '[bootstrap] --dry-run plan for %s:\n' "${tool}" >&2
+    printf '              url: %s\n' "${url}" >&2
+    printf '     expected_sha: %s\n' "${expected}" >&2
+    printf '             dest: %s\n' "${dest}" >&2
+    return
+  fi
 
   printf '[bootstrap] fetching %s from %s\n' "${tool}" "${url}" >&2
 
@@ -199,11 +210,6 @@ install_one() {
   fi
 
   verify_sha256 "${tmp_file}" "${expected}"
-
-  if (( DRY_RUN == 1 )); then
-    printf '[bootstrap] --dry-run: SHA OK for %s; not installing\n' "${tool}" >&2
-    return
-  fi
 
   mkdir -p "${CACHE_DIR}"
   mv "${tmp_file}" "${dest}"

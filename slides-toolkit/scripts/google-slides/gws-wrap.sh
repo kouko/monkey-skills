@@ -88,7 +88,47 @@ parse_args() {
   GWS_ARGS=("$@")
 }
 
-# --- pre-flight：env-guard + credential-check -------------------------------
+# --- pre-flight report（dry-run 專用；collect status，不 exit on issue） ----
+# Stdout: 結構化 pre-flight 狀態 JSON
+preflight_report() {
+  local issue_119="false"
+  local cred_backend="unknown"
+  local cred_token_valid="false"
+  local gws_present="false"
+
+  if [[ -f "${GWS_ENV_FILE}" ]]; then
+    # shellcheck disable=SC1090
+    source "${GWS_ENV_FILE}"
+  fi
+
+  if [[ -x "${ENV_GUARD}" ]]; then
+    local guard_exit=0
+    "${ENV_GUARD}" check >/dev/null 2>&1 || guard_exit=$?
+    if (( guard_exit == 16 )); then
+      issue_119="true"
+    fi
+  fi
+
+  if [[ -x "${CRED_CHECK}" ]]; then
+    local cred_out
+    cred_out="$("${CRED_CHECK}" 2>/dev/null || true)"
+    if [[ -n "${cred_out}" ]]; then
+      cred_backend="$(printf '%s' "${cred_out}" | jq -r '.backend // "unknown"' 2>/dev/null || printf 'unknown')"
+      cred_token_valid="$(printf '%s' "${cred_out}" | jq -r '.token_valid // false' 2>/dev/null || printf 'false')"
+    fi
+  fi
+
+  [[ -x "${GWS}" ]] && gws_present="true"
+
+  jq -n \
+    --argjson issue_119 "${issue_119}" \
+    --arg cred_backend "${cred_backend}" \
+    --argjson cred_valid "${cred_token_valid}" \
+    --argjson gws_present "${gws_present}" \
+    '{issue_119_workaround_needed: $issue_119, credential_backend: $cred_backend, token_valid: $cred_valid, gws_binary_present: $gws_present}'
+}
+
+# --- pre-flight（real-run 專用；exit on blocking issue） --------------------
 preflight() {
   # issue #119：若 env.sh 存在就 source（靜默；不將任何 secret echo 到 stdout）
   # ASVS V13：secrets 由 shell environment 注入，不記 log
@@ -213,15 +253,18 @@ invoke_with_retry() {
   done
 }
 
-# --- dry-run：只印即將執行的命令 ---------------------------------------------
+# --- dry-run：印將執行命令 + pre-flight 狀態（不 enforce）---------------------
+# 契約：dry-run 永遠 exit 0（只要 args 合法）；pre-flight 問題以狀態欄位回報，
+# 不 block dry-run。真正執行才由 preflight() enforce。
 emit_dry_run() {
-  # 用 jq 做 safe JSON encoding（ASVS V1）
-  local args_json
+  local args_json preflight_json
   args_json="$(printf '%s\n' "${GWS_ARGS[@]}" | jq -R -s 'split("\n") | map(select(length > 0))')"
+  preflight_json="$(preflight_report)"
   jq -n \
     --arg bin "${GWS}" \
     --argjson args "${args_json}" \
-    '{dry_run: true, command: $bin, args: $args}'
+    --argjson preflight "${preflight_json}" \
+    '{dry_run: true, command: $bin, args: $args, preflight: $preflight}'
 }
 
 # --- main -------------------------------------------------------------------
@@ -231,8 +274,7 @@ main() {
   parse_args "$@"
 
   if (( DRY_RUN == 1 )); then
-    # dry-run 仍做 pre-flight（讓 #119 問題能被早期 surface）
-    preflight
+    # dry-run：emit_dry_run 內部會做 preflight_report（non-enforcing）
     emit_dry_run
     exit 0
   fi

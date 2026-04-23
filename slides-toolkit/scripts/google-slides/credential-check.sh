@@ -25,13 +25,17 @@ set -euo pipefail
 # Args: none
 #
 # Stdin: none
-# Stdout: JSON `{"backend":"keychain"|"file","token_valid":bool,"expires_in_days":int}`
+# Stdout: JSON `{"backend":"keychain"|"file"|"none","token_valid":bool,"expires_in_days":int}`
+#        — 永遠回結構化狀態 JSON，不在 no-backend 情境退化為 error JSON（讓
+#          caller 如 gws-wrap.sh 能統一 parse）。嚴重度走 exit code。
 # Stderr: 人讀 progress（不含 secret）
 #
 # Exit codes (per TECH-SPEC §4.2)：
-#   0   success（正常報告；可能 token_valid=false 但不致命）
-#   1   generic error
+#   0   success（backend 可用；token_valid 可能 true 或 false）
+#   1   generic error（必要指令缺失等）
 #   18  Keychain unavailable AND file backend 也不可用（需跑 `gws auth`）
+#       — 注意：stdout 仍回 `{"backend":"none",...}` 結構化狀態；exit code
+#         表達嚴重度，errors-out-of-band 原則
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
@@ -131,25 +135,33 @@ main() {
   require_cmd date
 
   local backend=""
+  local backend_usable=1
   if check_keychain; then
     backend="keychain"
   elif check_file_backend; then
     backend="file"
     printf '[credential-check] keychain silent-fail or absent; using file backend\n' >&2
   else
-    # 兩邊都不可用 → 需 re-auth
-    die_json 18 "neither Keychain nor file backend is usable; run: gws auth"
+    # 兩邊都不可用：stdout 仍回結構化狀態（backend=none），exit 18 表嚴重度
+    backend="none"
+    backend_usable=0
+    printf '[credential-check] no backend usable; run: gws auth\n' >&2
   fi
 
   local remaining
   remaining="$(compute_expires_in_days)"
 
+  # token_valid 的語意：有可用 backend **且** credentials file 在 7 天內
   local token_valid="false"
-  if (( remaining > 0 )); then
+  if (( backend_usable == 1 )) && (( remaining > 0 )); then
     token_valid="true"
   fi
 
   emit_result "${backend}" "${token_valid}" "${remaining}"
+
+  if (( backend_usable == 0 )); then
+    exit 18
+  fi
 }
 
 main "$@"
