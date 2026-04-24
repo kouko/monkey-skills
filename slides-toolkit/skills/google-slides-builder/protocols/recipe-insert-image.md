@@ -1,31 +1,36 @@
 # Recipe — insert-image
 
-把本機圖片上傳 Drive → 取得 public URL → 用 `replaceAllShapesWithImage`（或等價 API）把圖片嵌入 deck 對應 placeholder。對應 TECH-SPEC §4.3 table row 3。
+把本機圖片上傳 Drive → 設 `anyoneWithLink` reader permission → 取 `webContentLink` → 用 `createImage` 帶**明確 `pageElementProperties`** 把圖片插入對應 slide 的對應位置。對應 TECH-SPEC §4.3 recipe table row 4。
+
+v0.3 改動：不再使用 `replaceAllShapesWithImage`（需 template 文字錨點）；改用 `createImage` 直接指定 `pageObjectId` + `size` + `transform`，與 `recipe-create-slides` 建的 layout placeholder 對位。
 
 ## 目的
 
-- 處理 `slides[].images[]` 陣列中的每張本機圖片
-- 逐張上傳 Drive、設 public reader permission、取 `webContentLink`
-- 用 batchUpdate `replaceAllShapesWithImage` 把圖片塞進 template 預留的 placeholder shape
-- 可選：完成後刪除 Drive 上的暫存圖片檔（避免 Drive 堆積）
+- 逐張處理 `slides[].images[]` 中的本機圖片
+- 上傳 Drive、設 public reader permission、取 `webContentLink`
+- `createImage` 帶 `pageElementProperties`（pageObjectId + 尺寸 + transform）明確放到目標 slide 對應位置
+- 失敗時 stdout + exit code 清楚指出哪一張
 
-## 為什麼不能直接用 Drive 私有檔
+## 為什麼需要 Drive upload + public permission
 
-Google Slides API 的 `replaceAllShapesWithImage` / `createImage` 的 `imageUrl` 欄位要求 **publicly accessible URL**（issue #2215、Slides API docs）。若圖片是 Drive 私有檔，即便 caller 有權限，Slides render pipeline 也抓不到 → 結果為空白。**唯一可靠做法**：上傳後加一筆 `role: reader / type: anyone` 的 permission，取 `webContentLink`。
+Google Slides API 的 `createImage.url` 欄位要求 **publicly accessible URL**（Slides API docs）。Drive 私有檔即使 caller 有權限，Slides render pipeline 也抓不到。**唯一可靠做法**：上傳後加 `role: reader / type: anyone` permission，取 `webContentLink`。
 
-**Because** 這是 Google 端架構限制、MVP 無法繞過。
+**Because** 此為 Google 端架構限制，MVP 無法繞過。
 
 ## Input
 
 ```json
 {
-  "presentation_id": "1NewCopy_AbCdEf",
+  "presentation_id": "1NewDeckAbCdEf",
+  "placeholder_map": {
+    "slide_2": {"TITLE": "g_2_title", "BODY_1": "g_2_body"}
+  },
   "slides": [
     {
-      "slide_index": 3,
+      "slide_index": 2,
       "images": [
         {
-          "placeholder_id": "IMG_MAIN",
+          "placeholder_id": "BODY_1",
           "local_path": "~/Desktop/chart.png"
         }
       ]
@@ -36,22 +41,22 @@ Google Slides API 的 `replaceAllShapesWithImage` / `createImage` 的 `imageUrl`
 
 | Field | Required | Note |
 |---|---|---|
-| `presentation_id` | yes | 由 `recipe-copy-template` 傳來 |
-| `slides[].images[].placeholder_id` | yes | Template 中 shape 的 placeholder token（建議 `{{IMG_N}}` 命名慣例） |
-| `slides[].images[].local_path` | yes | 支援絕對 / `~` 展開 / cwd-relative（見 TECH-SPEC §9 OPEN-8） |
+| `presentation_id` | yes | 由 `recipe-create-presentation` 傳來 |
+| `placeholder_map` | yes | 由 `recipe-create-slides` 傳來 |
+| `slides[].images[].placeholder_id` | yes | 對應 `placeholder_map[slide_X]` 的 key（`TITLE` / `BODY_1` / ...）；圖片將放到該 placeholder 所在位置 |
+| `slides[].images[].local_path` | yes | 絕對 / `~` 展開 / cwd-relative（TECH-SPEC §9 OPEN-8） |
 
 ## 步驟
 
 ### 1. 路徑解析（TECH-SPEC §9 OPEN-8）
 
-按順序嘗試，第一個成功即採：
+按順序嘗試：
 
-1. **Absolute path**（以 `/` 開頭）→ 直接用
-2. **`~` 展開**（以 `~/` 開頭）→ `eval echo "$path"`（**只** eval path value，不 eval 其他內容；防 injection）
-3. **Relative to Claude Code cwd** → `"$PWD/$path"`
+1. Absolute path（以 `/` 開頭）→ 直接用
+2. `~/` 展開 → `eval echo "$path"`（只 eval path value）
+3. cwd-relative → `"$PWD/$path"`
 
 ```bash
-# Pseudo-code intent
 resolve_path() {
   case "$1" in
     /*)   echo "$1" ;;
@@ -61,41 +66,33 @@ resolve_path() {
 }
 ```
 
-### 2. 檔案檢查
+### 2. 檔案檢查（pre-flight 已做；此處 defence-in-depth）
 
-- **存在性**：`[[ -f "$resolved" ]]`；否則 **exit 14**
-- **Size**：`<  50 MB`（Drive 單檔上傳 multipart 限制，安全邊界）；超過 → exit 14 + hint「請先 resize，MVP 不做自動前處理」
-- **Format**：副檔名 `.png` / `.jpg` / `.jpeg` / `.gif`；其他格式 → exit 14
+- 存在性：`[[ -f "$resolved" ]]` 否則 exit 14
+- Size：`< 50 MB`（Drive multipart upload 安全邊界）
+- Format：副檔名 `.png` / `.jpg` / `.jpeg` / `.gif`；其他 → exit 14
 
 ### 3. Upload to Drive
 
 ```bash
 scripts/google-slides/gws-wrap.sh drive files create \
-  --json '{"name": "slides-img-'"$stamp"'.png", "mimeType": "image/png"}' \
+  --json '{"name":"slides-img-'"$stamp"'.png","mimeType":"image/png"}' \
   --upload="$resolved"
 ```
 
-Response：
-
-```json
-{"kind":"drive#file","id":"1ImgFileId...","name":"slides-img-xxx.png"}
-```
-
-取 `.id` = `upload_file_id`。
-
-上傳失敗 → **exit 12**（Drive 權限 / quota 問題）或 11（429 重試耗盡）。
+Response → 取 `.id` 為 `upload_file_id`。上傳失敗 → exit 12（權限 / quota）或 11（429 耗盡）。
 
 ### 4. Grant public reader permission
 
 ```bash
 scripts/google-slides/gws-wrap.sh drive permissions create \
   --fileId="$upload_file_id" \
-  --json '{"role": "reader", "type": "anyone"}'
+  --json '{"role":"reader","type":"anyone"}'
 ```
 
-**Because** 若 skip 此步，下一步 `replaceAllShapesWithImage` 的 `imageUrl` Google 取不到圖，結果空白（見本檔開頭警告）。
+**Because** 若 skip，下一步 Slides render pipeline 抓不到圖。
 
-### 5. 取 webContentLink
+### 5. 取 `webContentLink`
 
 ```bash
 scripts/google-slides/gws-wrap.sh drive files get \
@@ -103,24 +100,43 @@ scripts/google-slides/gws-wrap.sh drive files get \
   --fields=webContentLink
 ```
 
-Response：
-
-```json
-{"webContentLink": "https://drive.google.com/uc?id=1ImgFileId&export=download"}
-```
-
 取 `.webContentLink` 為 `image_url`。
 
-### 6. batchUpdate `replaceAllShapesWithImage`
+### 6. 解析目標位置（從 placeholder_map 對位）
+
+```bash
+slide_key="slide_${slide_index}"
+target_object_id=$(jq -r --arg sk "$slide_key" --arg pid "$placeholder_id" \
+  '.[$sk][$pid]' <<< "$placeholder_map")
+```
+
+若 `target_object_id == "null"` → **13b warning**（placeholder_id 在當前 layout 不存在），略過此圖。
+
+**決定 size / transform**：
+
+- **MVP 策略**：查 `presentations.get` 取 target placeholder 的 `size` + `transform`，沿用同樣座標（圖片覆蓋到 placeholder 位置）
+- Slides API 要求 `pageElementProperties` 必填 `pageObjectId`；`size` 可省（預設），`transform` 建議明確指定以避免落到左上角
+
+### 7. batchUpdate `createImage`
 
 ```json
 {
   "requests": [
     {
-      "replaceAllShapesWithImage": {
-        "imageUrl": "https://drive.google.com/uc?id=1ImgFileId&export=download",
-        "containsText": {"text": "{{IMG_MAIN}}", "matchCase": true},
-        "replaceMethod": "CENTER_INSIDE"
+      "createImage": {
+        "url": "https://drive.google.com/uc?id=1ImgFileId&export=download",
+        "elementProperties": {
+          "pageObjectId": "slide_2",
+          "size": {
+            "height": {"magnitude": 3000000, "unit": "EMU"},
+            "width":  {"magnitude": 4500000, "unit": "EMU"}
+          },
+          "transform": {
+            "scaleX": 1, "scaleY": 1,
+            "translateX": 500000, "translateY": 500000,
+            "unit": "EMU"
+          }
+        }
       }
     }
   ]
@@ -135,102 +151,100 @@ echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdat
   --json-stdin
 ```
 
-### 7. 解析 replies
+**注意**：`pageObjectId` 是**slide 的 objectId**（`slide_<index>`），不是 placeholder 的 objectId。圖片會蓋到 slide 平面上，位置由 `transform` 決定；`placeholder_id` 僅用於**讀取原 placeholder 座標**，本 recipe 不呼叫 `replaceAllShapesWithImage`。
+
+### 8. 解析 replies
 
 ```json
-{
-  "replies": [
-    {"replaceAllShapesWithImage": {"occurrencesChanged": 1}}
-  ]
-}
+{"replies":[{"createImage":{"objectId":"new_image_g1"}}]}
 ```
 
-- `occurrencesChanged == 0` → **warning 13c**（placeholder text 在 template shape 內找不到）
-- 若改用 `createImage` + `objectId` 路徑（Phase 2 優化），對應 warning 為 **13b**
+成功則 reply 帶新圖片元素的 `objectId`。
 
-### 8. Cleanup（可選）
+### 9. Cleanup（可選）
 
-完成所有 image 嵌入後，可刪除 Drive 上的暫存圖片：
+完成所有 image 嵌入後，可刪 Drive 暫存圖片：
 
 ```bash
 scripts/google-slides/gws-wrap.sh drive files delete --fileId="$upload_file_id"
 ```
 
-**MVP 預設不刪**（便於 debug）；`slide-plan.json` 可在 `backend_config` 加 `cleanup_uploads: true` 觸發（Phase 2 擴充）。
+**MVP 預設不刪**（便於 debug）；若 `slide-plan.json` 擴充 `cleanup_uploads: true` 則觸發（Phase 2）。
 
 ## 錯誤對映
 
 | 情境 | Exit | Stderr |
 |---|---|---|
 | `local_path` 不存在 | 14 | `local file not found: <resolved>` |
-| 檔案 > 50MB 或格式不支援 | 14 | `unsupported image format / size` |
+| 檔案 > 50MB / 格式不支援 | 14 | `unsupported image size / format` |
 | Drive upload 失敗 | 12 | `upload failed: <reason>` |
-| `replaceAllShapesWithImage` 找不到 placeholder text | **13c**（warning） | `[warn 13c] placeholder {{IMG_MAIN}} 未命中` |
-| `createImage` 找不到 placeholder object id（Phase 2 路徑） | **13b**（warning） | `[warn 13b] placeholder_id IMG_MAIN not found` |
-| Permission grant 失敗 | 10 / 12 | 視 error 性質 |
-| 429 重試 5 次仍敗 | 11 | `rate limit exhausted` |
+| Permission grant 失敗 | 12 | `permission grant failed` |
+| `placeholder_id` 在當前 slide `placeholder_map` 不存在 | **13b**（warning；non-fatal） | `[warn 13b] placeholder_id=<id> not found in slide_<N>` |
+| `createImage` 回 400（pageObjectId 錯 / URL 抓不到） | 12 | `createImage failed: <reason>` |
+| 429 重試 5 次耗盡 | 11 | `rate limit exhausted` |
 
-## 警告 — Phase 2+ Non-Goal
+## Phase 2+ Non-Goal（PRODUCT-SPEC §3.2）
 
-以下**不**在 MVP 範圍（見 PRODUCT-SPEC §3.2）：
-- 圖片 resize / crop / format conversion（需 ImageMagick 或 Pillow runtime）
-- 從 URL fetch 圖片（需處理 auth / CORS / retry；MVP 只收 local path）
+以下**不**在 MVP 範圍：
+- 圖片 resize / crop / format conversion（需 ImageMagick / Pillow runtime）
+- 從 URL fetch 圖片（需 auth / CORS / retry；MVP 只收 local path）
 - 自動壓縮到 Slides 建議尺寸
 - EXIF 清除
 
-user 需預先把圖片處理到「尺寸合適、格式 PNG/JPEG/GIF、<50MB」狀態。
+使用者需預先把圖處理到「尺寸合適、格式 PNG/JPEG/GIF、<50MB」狀態。
 
 ## Example
 
-**Input**:
+**Input**：
 
 ```json
 {
-  "presentation_id": "1NewCopy_AbCdEf",
+  "presentation_id": "1NewDeckAbCdEf",
+  "placeholder_map": {"slide_5": {"BODY_1": "g_5_body"}},
   "slides": [
     {
       "slide_index": 5,
       "images": [
-        {"placeholder_id": "IMG_CHART", "local_path": "~/Desktop/revenue_q2.png"}
+        {"placeholder_id": "BODY_1", "local_path": "~/Desktop/revenue_q2.png"}
       ]
     }
   ]
 }
 ```
 
-**Resolved path**: `/Users/kouko/Desktop/revenue_q2.png`
+**Resolved path**：`/Users/kouko/Desktop/revenue_q2.png`
 
-**Upload 回傳**:
+**Upload**：`{"id":"1AbCdImgFile"}`
 
-```json
-{"id": "1AbCdImgFile", "name": "slides-img-20260423.png"}
-```
+**Permission**：`{"role":"reader","type":"anyone"}`
 
-**Permission 回傳**: `{"id":"anyoneWithLink","role":"reader","type":"anyone"}`
+**webContentLink**：`https://drive.google.com/uc?id=1AbCdImgFile&export=download`
 
-**webContentLink**: `https://drive.google.com/uc?id=1AbCdImgFile&export=download`
-
-**batchUpdate body**:
+**batchUpdate body**：
 
 ```json
 {
   "requests": [{
-    "replaceAllShapesWithImage": {
-      "imageUrl": "https://drive.google.com/uc?id=1AbCdImgFile&export=download",
-      "containsText": {"text": "{{IMG_CHART}}", "matchCase": true},
-      "replaceMethod": "CENTER_INSIDE"
+    "createImage": {
+      "url": "https://drive.google.com/uc?id=1AbCdImgFile&export=download",
+      "elementProperties": {
+        "pageObjectId": "slide_5",
+        "size": {"height":{"magnitude":3000000,"unit":"EMU"},
+                 "width": {"magnitude":4500000,"unit":"EMU"}},
+        "transform": {"scaleX":1,"scaleY":1,"translateX":500000,"translateY":500000,"unit":"EMU"}
+      }
     }
   }]
 }
 ```
 
-**Response**: `{"replies":[{"replaceAllShapesWithImage":{"occurrencesChanged":1}}]}`
+**Response**：`{"replies":[{"createImage":{"objectId":"new_img_g1"}}]}`
 
-**Output**（給 builder 的彙總）：
+**Output**（給 builder 彙總）：
 
 ```json
 {
-  "presentation_id": "1NewCopy_AbCdEf",
+  "presentation_id": "1NewDeckAbCdEf",
   "images_inserted": 1,
   "warnings": []
 }
@@ -238,4 +252,9 @@ user 需預先把圖片處理到「尺寸合適、格式 PNG/JPEG/GIF、<50MB」
 
 ---
 
-**See also**: TECH-SPEC §4.2 exit 13b / 13c、§4.3、§9 OPEN-8（path 解析）；PRODUCT-SPEC §3.2 Non-Goals（圖片前處理）。
+**See also**: TECH-SPEC §4.2 exit 13b + 14、§4.3 recipe row 4、§4.6 E2E data flow step 4、§9 OPEN-8（path 解析）；PRODUCT-SPEC §3.2 Non-Goals（圖片前處理）。
+
+<!-- TODO: `createImage.elementProperties.size / transform` 的具體 EMU 值應從
+`presentations.get` 讀原 placeholder 座標帶入；本檔示例用固定值。EMU 定義與
+預設 slide 尺寸（10"×5.63"）對照見 Google Slides API 官方文件：
+https://developers.google.com/slides/api/concepts/page-elements -->

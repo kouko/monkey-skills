@@ -5,19 +5,22 @@ set -euo pipefail
 # bootstrap.sh — slides-toolkit google-slides backend binary bootstrapper
 # -----------------------------------------------------------------------------
 # 用途：
-#   偵測 macOS 平台 → 從 GitHub release 下載 pin 過的 gws / jq binary 到
-#   ~/.cache/slides-toolkit/bin/ → SHA-256 verify → chmod +x → 寫 .version。
+#   偵測 macOS 平台 → 從 GitHub release 以 HTTPS + `curl -fLSs` 下載 pin 過的
+#   gws / jq binary 到 ~/.cache/slides-toolkit/bin/ → chmod +x → 寫 .version。
 #   Idempotent：若 .version 已匹配則跳過（除非 --force）。
 #
+# v0.3: SHA-256 verification removed; see TECH-SPEC v0.3 §2.3 for
+#       HTTPS-only integrity model (URL pin + `curl -f` 防 HTTP error；
+#       不再做 shasum 比對)。
+#
 # Upstream refs:
-#   - TECH-SPEC §2.3 Binary distribution strategy
-#   - TECH-SPEC §4.2 `scripts/google-slides/bootstrap.sh` contract
+#   - TECH-SPEC v0.3 §2.3 Binary distribution strategy (HTTPS-only integrity)
+#   - TECH-SPEC v0.3 §4.2 `scripts/google-slides/bootstrap.sh` contract
 #   - TECH-SPEC §7.3 Dry-run 模式
-#   - TECH-SPEC §8.6 ASVS V13 supply-chain integrity
 #
 # Args:
 #   --force                         忽略 .version 比對，強制重下載
-#   --dry-run                       只 fetch + SHA-256 check，不寫 cache dir
+#   --dry-run                       只印計畫，不連網、不寫 cache dir
 #   --platform <darwin-arm64|darwin-x86_64>
 #                                   override auto-detect (CI / 跨機器測試用)
 #
@@ -25,10 +28,9 @@ set -euo pipefail
 # Stdout: JSON `{"gws":"<path>","jq":"<path>","version":{"gws":"...","jq":"..."},"cache_dir":"..."}`
 # Stderr: 人讀 progress（含錯誤 JSON on failure）
 #
-# Exit codes (per TECH-SPEC §4.2)：
+# Exit codes (per TECH-SPEC v0.3 §4.2)：
 #   0  success
-#   1  generic error（unknown platform / network / usage）
-#   17 SHA-256 mismatch on binary fetch
+#   1  generic error（unknown platform / network / usage / download failure）
 # =============================================================================
 
 # --- UTF-8 locale（§8.5；best-effort，若系統無此 locale 則保持預設） ---
@@ -39,13 +41,6 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 # gws：googleworkspace/cli release tag (e.g. "v0.1.0")
 GWS_VERSION="${GWS_VERSION:-v0.0.0-TODO}"
 JQ_VERSION="${JQ_VERSION:-jq-1.7.1}"
-
-# SHA-256 pin（TODO: 首次 C3 commit 時填入實際 shasum；以下為 placeholder）
-# 來源：`shasum -a 256` 對下載的 release binary 跑一次後貼入。
-GWS_SHA256_DARWIN_ARM64="${GWS_SHA256_DARWIN_ARM64:-TODO_FILL_REAL_SHA256_64HEX}"
-GWS_SHA256_DARWIN_X86_64="${GWS_SHA256_DARWIN_X86_64:-TODO_FILL_REAL_SHA256_64HEX}"
-JQ_SHA256_DARWIN_ARM64="${JQ_SHA256_DARWIN_ARM64:-TODO_FILL_REAL_SHA256_64HEX}"
-JQ_SHA256_DARWIN_X86_64="${JQ_SHA256_DARWIN_X86_64:-TODO_FILL_REAL_SHA256_64HEX}"
 
 # --- 常數 -------------------------------------------------------------------
 readonly CACHE_DIR="${HOME}/.cache/slides-toolkit/bin"
@@ -127,20 +122,6 @@ detect_platform() {
   esac
 }
 
-# --- 取得 expected SHA-256 -------------------------------------------------
-# 用 case 映射，避免 eval。
-expected_sha_for() {
-  local tool="$1"
-  local platform="$2"
-  case "${tool}:${platform}" in
-    gws:darwin-arm64)  printf '%s' "${GWS_SHA256_DARWIN_ARM64}" ;;
-    gws:darwin-x86_64) printf '%s' "${GWS_SHA256_DARWIN_X86_64}" ;;
-    jq:darwin-arm64)   printf '%s' "${JQ_SHA256_DARWIN_ARM64}" ;;
-    jq:darwin-x86_64)  printf '%s' "${JQ_SHA256_DARWIN_X86_64}" ;;
-    *)                 die_json 1 "no SHA pin for ${tool}:${platform}" ;;
-  esac
-}
-
 # --- 構造 download URL ------------------------------------------------------
 url_for() {
   local tool="$1"
@@ -168,35 +149,24 @@ url_for() {
   esac
 }
 
-# --- SHA-256 verify（security-critical；TECH-SPEC §7.1） ---------------------
-verify_sha256() {
-  local file="$1"
-  local expected="$2"
-  local actual
-  actual="$(shasum -a 256 "${file}" | awk '{print $1}')"
-  if [[ "${actual}" != "${expected}" ]]; then
-    # 清理可能的暫檔由 trap 處理
-    die_json 17 "SHA-256 mismatch for ${file}: expected=${expected} actual=${actual}"
-  fi
-}
-
-# --- 下載 + 驗 + 安裝單一 binary --------------------------------------------
-# Dry-run contract (TECH-SPEC §7.3)：**完全不連網**、不 curl、不 verify；
-# 僅印出計畫的 URL + 預期 SHA-256 pin，讓使用者在無網路 / 未填 version pin
-# 的情境下驗證 URL 構造 + SHA 映射邏輯。
+# --- 下載 + 安裝單一 binary --------------------------------------------------
+# Dry-run contract (TECH-SPEC §7.3)：**完全不連網**、不 curl；
+# 僅印出計畫的 URL + dest，讓使用者在無網路 / 未填 version pin
+# 的情境下驗證 URL 構造邏輯。
+#
+# Integrity model (TECH-SPEC v0.3 §2.3)：HTTPS + `curl -f` + URL pin；
+# 不做 shasum 比對。
 install_one() {
   local tool="$1"
   local platform="$2"
-  local url expected tmp_file dest
+  local url tmp_file dest
   url="$(url_for "${tool}" "${platform}")"
-  expected="$(expected_sha_for "${tool}" "${platform}")"
   tmp_file="${TMP}/${tool}"
   dest="${CACHE_DIR}/${tool}"
 
   if (( DRY_RUN == 1 )); then
     printf '[bootstrap] --dry-run plan for %s:\n' "${tool}" >&2
     printf '              url: %s\n' "${url}" >&2
-    printf '     expected_sha: %s\n' "${expected}" >&2
     printf '             dest: %s\n' "${dest}" >&2
     return
   fi
@@ -208,8 +178,6 @@ install_one() {
   if ! curl -fLSs -o "${tmp_file}" "${url}"; then
     die_json 1 "download failed: ${url}"
   fi
-
-  verify_sha256 "${tmp_file}" "${expected}"
 
   mkdir -p "${CACHE_DIR}"
   mv "${tmp_file}" "${dest}"
@@ -265,13 +233,12 @@ emit_result() {
 # --- main -------------------------------------------------------------------
 main() {
   parse_args "$@"
-  # curl + shasum + jq + awk 為必備；jq 第一次 bootstrap 時可能還沒裝，
+  # curl + jq + uname 為必備；jq 第一次 bootstrap 時可能還沒裝，
   # 但我們要求使用者系統已有 jq（jq 本身也是 bootstrap target；此 contract
   # 允許 system-wide jq 先存在用於 JSON encoding，稍後會把 pinned jq 放入
   # cache）。這是 step-down rule 的 main 層次：僅檢查先決條件。
+  # v0.3: shasum 不再需要（SHA-256 verification removed；TECH-SPEC v0.3 §2.3）。
   require_cmd curl
-  require_cmd shasum
-  require_cmd awk
   require_cmd uname
   require_cmd jq  # system-wide jq 供 bootstrap 自身用；pinned jq 供下游 script 用
 
