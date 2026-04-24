@@ -7,11 +7,75 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.5.0 release 前，kouko 需完成）
+### 即將 unblock（在 0.6.0 release 前，kouko 需完成）
 
-- 跑 `google-slides-setup` 完成首次 GCP Console OAuth
-- 實測 end-to-end：brief → URL ≤ 3 分鐘（KR1）；Google 內建 predefined
-  layouts 覆蓋率 ≥ 80%（`[ASSUMPTION-2]` revalidation）
+- 跑 10 份真實 deck 驗 KR1（brief → URL ≤ 3 分鐘）+ `[ASSUMPTION-2]`
+  Google predefined layouts 覆蓋率 ≥ 80%
+
+## [0.5.0-live-validated] - 2026-04-24
+
+**Live E2E Validated**（非 pivot；無 scope 變動）— 首次在真實環境完整跑
+過 4 recipes 端對端流程。OAuth 認證 + 建 deck + 建 slides + 填文字 +
+插入圖片全綠。過程中暴露出 walkthrough / recipes 與真實 gws CLI 行為的
+若干 drift，全數修正。同時新增 `auto-setup.sh` 把可自動化部分 codify。
+
+### Added
+
+- `scripts/google-slides/auto-setup.sh` — 535 行 shell script，idempotent
+  7 步自動化：detect/install gcloud → gcloud auth → GCP project create
+  → enable APIs → open Console URLs → wait for client_secret → install
+  credentials + write env.sh → gws auth login → verify。支援
+  `--dry-run` / `--force-reinstall`；`SLIDES_TOOLKIT_PROJECT_ID` env
+  override；stdout JSON contract `{status, project_id, account, scopes,
+  elapsed_sec, dry_run}`
+- `skills/google-slides-setup/protocols/gcp-console-walkthrough.md` 重寫
+  為雙路徑：**Path A (Fast, ~6-8 min)** 走 auto-setup.sh；**Path B
+  (Manual, ~10-15 min)** 純 Console；共用 §Local 結尾
+- 4 個 recipe md 檔尾加「## Live-tested behavior (2026-04-24)」區塊，引用
+  實測出的 JSON 片段
+
+### Changed
+
+- `gcp-console-walkthrough.md` 全面更新為 Google Cloud Console **新 UI**
+  語言：Google Auth Platform / Branding / Audience / Clients（舊版
+  "APIs & Services → OAuth consent screen → Test users" → 新版
+  "Google Auth Platform → Audience → Test users section"）。每步 URL
+  帶 `?project=<PROJECT_ID>` placeholder
+- `recipe-create-presentation.md` — default slide placeholder 更正為
+  `CENTERED_TITLE` + `SUBTITLE`（非 TITLE），加 `presentations.get`
+  正確呼叫示範（`presentationId` / `fields` 皆入 `--params`）
+- `recipe-create-slides.md` — `batchUpdate` 呼叫修正為
+  `--params '{"presentationId":"..."}'`（非獨立 flag）；加 layout →
+  placeholder type 對照表（TITLE 用 `CENTERED_TITLE` + `SUBTITLE`；
+  其他 layout 用 `TITLE` + `BODY` etc.）
+- `recipe-insert-text.md` — 加 `{{TITLE}} → CENTERED_TITLE` fallback
+  mapping rule；`batchUpdate` 呼叫改 `--params`；修正 reply object
+  為 `{}`（非 `{"insertText":{}}`）；刪除不必要的 `insertionIndex: 0`
+- `recipe-insert-image.md` — **最大 delta**：
+  - 加 ⚠️ cwd sandbox 警示：`gws drive files create --upload` 要求檔案
+    在 cwd 或其子目錄；absolute path 會被 reject
+  - `--upload-file` → `--upload`（flag 名字錯）
+  - `drive permissions create` 的 `fileId` 入 `--params`
+  - Image URL 手動拼 `https://drive.google.com/uc?id=<FILE_ID>`（
+    **不用** response 的 `webContentLink`，後者帶 `&export=download`
+    會讓 Slides createImage render 失敗）
+  - 加 Gotchas 表（7 條 trap + fix）
+  - EMU 座標值更新為實測驗證過的數字
+
+### Rationale
+
+Live E2E 在 kouko 本機跑過（macOS arm64、個人 @gmail）：
+- gcloud 首次裝 + auth + project create + enable APIs 全自動
+- Console 手動 2 步（Audience 加 test user / Clients 建 Desktop client +
+  download JSON）— 無法自動化（Google IAP OAuth Admin API 已 2025-01-22
+  deprecated，證據見 gws source `setup.rs:913` 註解）
+- gws auth login 走 `--scopes=<URL>,<URL>` 而非 `-s`（後者是 service
+  filter 不是 scope 指定）
+- 實測產物：<https://docs.google.com/presentation/d/1rCqdw0HvYow4Hr5l38Ark1ZzpDsGYptWtW-dHkYT6lY/edit>
+  （含 2 slides + 1 image，全部 4 recipes 實證有效）
+
+此 validation round 把過往「spec 內寫的 recipe」變成「spec 內寫的是**實測
+驗證過的** recipe」，是 MVP 從 paper design → working system 的關鍵里程碑。
 
 ## [0.4.2-api-sibling-skill] - 2026-04-24
 

@@ -80,8 +80,22 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 
 ```bash
 echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
-  --presentationId="$presentation_id" \
+  --params "{\"presentationId\":\"$presentation_id\"}" \
   --json-stdin
+```
+
+**實測 gws CLI 規則**：
+
+- `presentationId` 是 path parameter → 必須塞入 `--params '{"presentationId":"..."}'` JSON，**不是**獨立 `--presentationId=` flag
+- `requests` body 放 `--json` 或 `--json-stdin`
+- 呼叫時 stderr 印 `Using keyring backend: keyring`（正常訊息）
+
+**gws 命令**（完整範例）：
+
+```bash
+gws slides presentations batchUpdate \
+  --params "{\"presentationId\":\"$DECK_ID\"}" \
+  --json '{"requests":[{"createSlide":{"objectId":"slide_body","slideLayoutReference":{"predefinedLayout":"TITLE_AND_BODY"}}}]}'
 ```
 
 ### 4. 解析 response → `placeholder_map`
@@ -99,21 +113,22 @@ Response 結構（簡化）：
 
 **但 `createSlide` reply 不含 placeholder objectId**——須另發一次 `presentations.get` 或每個 slide 跑 `pages.get` 取得 `pageElements`（每個 `pageElement.shape.placeholder` 帶 `type` 與 `objectId`）。
 
-**推薦流程**（最小 API call）：`createSlide` 後直接 `presentations.get --fields='slides(objectId,pageElements(objectId,shape(placeholder)))'`：
+**推薦流程**（最小 API call）：`createSlide` 後直接 `presentations.get`，在 `fields` 一次把 `placeholder.type` + `placeholder.index` 都帶回來：
 
 ```bash
 scripts/google-slides/gws-wrap.sh slides presentations get \
-  --presentationId="$presentation_id" \
-  --fields='slides(objectId,pageElements(objectId,shape(placeholder)))'
+  --params "{\"presentationId\":\"$presentation_id\",\"fields\":\"slides(objectId,pageElements(objectId,shape(placeholder(type,index))))\"}"
 ```
+
+**實測 gws CLI 規則**：`presentationId` + `fields` 都塞入 `--params` JSON；不可用 `--presentationId=` / `--fields=` 獨立 flag。
 
 從結果建 `placeholder_map`（key 為 **placeholder role**，符合下游 insertText 的 key 對映；見 `recipe-insert-text.md`）：
 
 ```json
 {
   "slide_0": {
-    "TITLE":    "g1a2b3_0",
-    "SUBTITLE": "g1a2b3_1"
+    "CENTERED_TITLE": "g1a2b3_0",
+    "SUBTITLE":       "g1a2b3_1"
   },
   "slide_1": {
     "TITLE":  "g4c5d6_0",
@@ -122,7 +137,21 @@ scripts/google-slides/gws-wrap.sh slides presentations get \
 }
 ```
 
-**對映規則**：`shape.placeholder.type` 值（e.g. `TITLE` / `SUBTITLE` / `BODY`）→ `placeholder_map` 的 key。同 type 多個 placeholder（e.g. `TITLE_AND_TWO_COLUMNS` 會有兩個 `BODY`）則以 `BODY_1` / `BODY_2` 編號（依 `shape.placeholder.index` 或出現順序）。
+**對映規則**：`shape.placeholder.type` 值直接作為 `placeholder_map` 的 key。常見 type：
+
+| Layout | placeholder.type 實測值 |
+|---|---|
+| `TITLE`（封面） | `CENTERED_TITLE` + `SUBTITLE` |
+| `TITLE_AND_BODY` | `TITLE` + `BODY`（BODY 一個；role key 記成 `BODY_1`） |
+| `TITLE_AND_TWO_COLUMNS` | `TITLE` + `BODY` × 2 |
+| `SECTION_HEADER` | `TITLE`（主大標） |
+| `MAIN_POINT` | `TITLE` |
+| `BIG_NUMBER` | `TITLE`（大數字）+ `BODY` |
+| `BLANK` | （無 placeholder） |
+
+同 type 多個 placeholder（`TITLE_AND_TWO_COLUMNS` 的 2 個 `BODY`）以 `BODY_1` / `BODY_2` 編號，依 `shape.placeholder.index`（0 → `_1`, 1 → `_2`）；`index` 欄位實測會一起回。
+
+**TITLE layout 的 role 差異**：封面頁 placeholder.type 是 `CENTERED_TITLE`（不是 `TITLE`）；plan 寫 `{{TITLE}}` 的情境下，`recipe-insert-text` 的對映規則必須能把 `TITLE` 對到 layout 實際的 `CENTERED_TITLE`（見 `recipe-insert-text.md` 對映表）。
 
 ### 5. 傳給下游
 
@@ -184,7 +213,7 @@ scripts/google-slides/gws-wrap.sh slides presentations get \
 {
   "presentation_id": "1NewDeckAbCdEf",
   "placeholder_map": {
-    "slide_0": {"TITLE": "g_0_title", "SUBTITLE": "g_0_sub"},
+    "slide_0": {"CENTERED_TITLE": "g_0_title", "SUBTITLE": "g_0_sub"},
     "slide_1": {"TITLE": "g_1_title"},
     "slide_2": {"TITLE": "g_2_title", "BODY_1": "g_2_body"}
   },
@@ -192,10 +221,16 @@ scripts/google-slides/gws-wrap.sh slides presentations get \
 }
 ```
 
+## Live-tested behavior (2026-04-24)
+
+實測 `gws slides presentations batchUpdate` + `presentations.get` 後觀察：
+
+- `createSlide` request 若指定 `objectId: "slide_body"`（caller-assigned），reply 會原樣回：`{"replies":[{"createSlide":{"objectId":"slide_body"}}]}`
+- Caller-assigned objectId 接受 6–50 字元，`a–z A–Z 0–9 _ -`；指定不衝突可用（沒衝突的話）
+- `presentations.get` 的 `--params` 內 `fields` 用 field mask 語法（e.g. `slides(objectId,pageElements(objectId,shape(placeholder(type,index))))`）；回 JSON 按 mask 樹狀精簡
+- TITLE layout 的 default slide 回的是 `CENTERED_TITLE` + `SUBTITLE`（**不是** `TITLE`）；其他 layout（`TITLE_AND_BODY` / `SECTION_HEADER` 等）才是 `TITLE`
+- stderr 印 `Using keyring backend: keyring` 每次呼叫必出現（正常）
+
 ---
 
 **See also**: TECH-SPEC §4.1 schema v1.2（`layout_hint` enum）、§4.3 recipe row 2、§4.6 E2E data flow step 2；PRODUCT-SPEC §4.4 Principle 2。
-
-<!-- TODO: `predefinedLayout` 7 enum 實際 string 值應以 Google Slides API 官方文件為準：
-https://developers.google.com/slides/api/reference/rest/v1/presentations.pages#predefinedlayout
-本檔列 7 個為最穩定常見子集；若官方 API 有新增（如 ONE_COLUMN_TEXT）屬 Phase 2 enum 擴充。 -->

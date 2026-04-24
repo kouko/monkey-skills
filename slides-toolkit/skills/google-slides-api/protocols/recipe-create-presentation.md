@@ -37,33 +37,63 @@ title=$(jq -r '.output_title' slide-plan.json)
 ```bash
 body=$(jq -n --arg t "$title" '{title: $t}')
 
-echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations create \
-  --json-stdin
+resp=$(echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations create \
+  --json-stdin)
 ```
 
-**gws 命令 intent**：`gws slides presentations create --json '{"title":"<output_title>"}'`
+**實測 gws CLI 命令**：
+
+```bash
+gws slides presentations create --json '{"title":"<output_title>"}'
+```
+
+- 無 path param（`presentations.create` 無 `presentationId` 輸入）
+- body 全部放 `--json`（或 `--json-stdin`）
+- 呼叫時 stderr 會印 `Using keyring backend: keyring`（正常訊息，非錯誤；stdout 乾淨為 JSON）
 
 ### 3. 解析 response
 
-Response（簡化）：
+實測 response（刪節）：
 
 ```json
 {
   "presentationId": "1NewDeckAbCdEf",
   "title": "2026-W17 Weekly Report",
+  "pageSize": {"width": {...}, "height": {...}, "unit": "EMU"},
+  "layouts": [ /* 所有 predefined layout 定義（TITLE / TITLE_AND_BODY / ... ） */ ],
+  "masters": [ /* master slide */ ],
   "slides": [
-    {"objectId": "p", "pageElements": []}
+    {
+      "objectId": "<default_slide_id>",
+      "pageElements": [
+        {"objectId": "...", "shape": {"placeholder": {"type": "CENTERED_TITLE"}}},
+        {"objectId": "...", "shape": {"placeholder": {"type": "SUBTITLE"}}}
+      ]
+    }
   ]
 }
 ```
 
-**注意**：`presentations.create` 會回一個**預設首頁**（通常 `objectId: "p"`，layout 為 `TITLE`）。下游 `recipe-create-slides` 須把此預設首頁納入 placeholder_map（視為 `slide_index: 0` 若 plan 第 0 頁為 `TITLE`；否則 `batchUpdate` 先 `deleteObject` 刪除再 `createSlide` 補回）。實際策略見 `recipe-create-slides.md` §1。
+**注意**：`presentations.create` 會回**一個預設首頁**（layout 為 `TITLE`），內含 2 個 placeholder：**`CENTERED_TITLE`** + **`SUBTITLE`**（注意不是 `TITLE`；Google Slides `Placeholder.type` 對 TITLE layout 用 `CENTERED_TITLE`）。`layouts[]` 頂層也帶回所有 predefined layout 的完整定義，可供下游 debug / 參考。
+
+下游 `recipe-create-slides` 的處理策略：若 plan `slides[0].layout_hint == "TITLE"`，把此預設首頁納入 placeholder_map（role 對映 `CENTERED_TITLE` / `SUBTITLE`）；否則先 `deleteObject` 刪除。
 
 取 `presentationId`：
 
 ```bash
 deck_id=$(echo "$resp" | jq -r '.presentationId')
 ```
+
+### 3b. 取預設首頁 placeholder 物件 ID（若要複用）
+
+```bash
+gws slides presentations get \
+  --params "{\"presentationId\":\"$deck_id\",\"fields\":\"slides(objectId,pageElements(objectId,shape(placeholder(type))))\"}"
+```
+
+- **注意**：`presentationId` 放 `--params` 的 JSON 裡，**不是**獨立 flag（gws CLI 把 path parameter 一律塞 `--params`）
+- `fields` 也放 `--params` 裡同一個 JSON
+- 回的 JSON 頂層是 `{"slides":[{"objectId":"...","pageElements":[...]}]}`
 
 ### 4. 傳給下游
 
@@ -103,19 +133,25 @@ deck_id=$(echo "$resp" | jq -r '.presentationId')
 }
 ```
 
-**gws 命令**（intent）：
+**gws 命令**：
 
 ```bash
 gws slides presentations create --json '{"title":"2026-W17 週報"}'
 ```
 
-**Response**（簡化）：
+**Response**（刪節）：
 
 ```json
 {
   "presentationId": "1Xyz123NewDeck",
   "title": "2026-W17 週報",
-  "slides": [{"objectId": "p"}]
+  "slides": [{
+    "objectId": "g_default_slide",
+    "pageElements": [
+      {"objectId": "g_default_title", "shape": {"placeholder": {"type": "CENTERED_TITLE"}}},
+      {"objectId": "g_default_sub",   "shape": {"placeholder": {"type": "SUBTITLE"}}}
+    ]
+  }]
 }
 ```
 
@@ -128,8 +164,16 @@ gws slides presentations create --json '{"title":"2026-W17 週報"}'
 }
 ```
 
+## Live-tested behavior (2026-04-24)
+
+實際跑 `gws slides presentations create --json '{"title":"..."}'` 觀察：
+
+- stderr 必定印 `Using keyring backend: keyring`（一行，非錯誤，表示 gws 正在讀 token store）；呼叫者若要捕 stdout 純 JSON，請 `2>/dev/null` 或 `2>err.log`
+- stdout 回的頂層 JSON 含 `presentationId` / `title` / `pageSize` / `slides[]` / `layouts[]`（所有 predefined layout 的完整定義）/ `masters[]` / `notesMaster` / `revisionId`
+- 新 deck **已含一個 default slide**（layout = TITLE），帶 **2 個 placeholder**：`CENTERED_TITLE`（注意：不是 `TITLE`）+ `SUBTITLE`
+- Deck URL 固定格式：`https://docs.google.com/presentation/d/<presentationId>/edit`
+- `presentations.get` 用 `--params` 傳 `presentationId` + `fields`：`gws slides presentations get --params "{\"presentationId\":\"$DECK_ID\",\"fields\":\"slides(objectId,pageElements(objectId,shape(placeholder(type))))\"}"`
+
 ---
 
 **See also**: TECH-SPEC §4.2 exit code、§4.3 recipe table row 1、§4.6 E2E data flow step 1；PRODUCT-SPEC §4.4 Principle 2 Layout-based。
-
-<!-- TODO: 實際 `gws slides presentations create` 的 flag 命名（`--json` vs `--json-stdin`）與 response envelope 應以 `gws --help` 最新輸出為準；此檔以 intent 層描述。 -->

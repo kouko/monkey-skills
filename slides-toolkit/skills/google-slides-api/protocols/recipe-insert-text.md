@@ -23,11 +23,11 @@
 
 ## Key → placeholder role 對映規則
 
-`slide-plan.json` 中 `replacements` 的 key 形式為 `{{ROLE}}`（雙大括號包 role 名），**剝殼後**直接對應 `placeholder_map[slide_X]` 的 key：
+`slide-plan.json` 中 `replacements` 的 key 形式為 `{{ROLE}}`（雙大括號包 role 名），**剝殼後**對應 `placeholder_map[slide_X]` 的 key：
 
 | replacements key | role (剝殼後) | 對應 placeholder_map key |
 |---|---|---|
-| `{{TITLE}}` | `TITLE` | `TITLE` |
+| `{{TITLE}}` | `TITLE` | `TITLE`，**若該 slide 是 TITLE layout 則 fallback 到 `CENTERED_TITLE`** |
 | `{{SUBTITLE}}` | `SUBTITLE` | `SUBTITLE` |
 | `{{BODY_1}}` | `BODY_1` | `BODY_1` |
 | `{{BODY_2}}` | `BODY_2` | `BODY_2` |
@@ -37,9 +37,10 @@
 1. `{{` 與 `}}` 剝殼
 2. 剝殼後**轉大寫**（`HEADING` / `TITLE` / `BODY_1`）
 3. 必須屬 layout 內實際存在的 placeholder role（由 `placeholder_map[slide_X]` 提供）
-4. 找不到 → **13a warning**（non-fatal；記到 warnings[]）
+4. **`TITLE` fallback**：若 `placeholder_map[slide_X]` 無 `TITLE` 但有 `CENTERED_TITLE`（封面頁 TITLE layout 情境），把 `{{TITLE}}` 導向 `CENTERED_TITLE` 的 objectId
+5. 找不到 → **13a warning**（non-fatal；記到 warnings[]）
 
-**Because** placeholder role 名（`TITLE` / `BODY` / `SUBTITLE` 等）來自 Google Slides API `Placeholder.type` enum（見 TECH-SPEC §4.1），對映規則以此為唯一真相來源。
+**Because** placeholder role 名（`TITLE` / `CENTERED_TITLE` / `BODY` / `SUBTITLE` 等）來自 Google Slides API `Placeholder.type` enum（見 TECH-SPEC §4.1）；TITLE layout 實測只會回 `CENTERED_TITLE`（不是 `TITLE`），所以 `{{TITLE}}` 對映邏輯要加這層 fallback 才不會把封面頁全部擲到 13a warning。
 
 ## 步驟
 
@@ -51,35 +52,40 @@
 # Pseudo-code intent
 for slide in plan.slides:
     slide_key = "slide_" + slide.slide_index
+    pm = placeholder_map[slide_key]
     for k, v in slide.replacements.items():
         role = k.strip("{}").upper()  # {{TITLE}} -> TITLE
-        obj_id = placeholder_map[slide_key].get(role)
+        obj_id = pm.get(role)
+        # TITLE layout fallback: {{TITLE}} → CENTERED_TITLE if TITLE absent
+        if obj_id is None and role == "TITLE":
+            obj_id = pm.get("CENTERED_TITLE")
         if obj_id is None:
             warnings.append(f"13a: slide_{slide.slide_index} role={role} not found in layout")
             continue
         requests.append({
           "insertText": {
             "objectId": obj_id,
-            "insertionIndex": 0,
             "text": v
           }
         })
 ```
 
-jq 等價（pseudo）：
+jq 等價（pseudo；含 TITLE → CENTERED_TITLE fallback）：
 
 ```bash
 requests=$(jq --argjson pm "$placeholder_map" '
   [ .slides[] as $s
+    | ("slide_" + ($s.slide_index | tostring)) as $sk
     | ($s.replacements // {}) | to_entries[]
     | . as $kv
     | ($kv.key | gsub("[{}]"; "") | ascii_upcase) as $role
-    | ($pm[("slide_" + ($s.slide_index | tostring))][$role]) as $oid
+    | ( $pm[$sk][$role]
+        // ( if $role == "TITLE" then $pm[$sk]["CENTERED_TITLE"] else null end )
+      ) as $oid
     | select($oid != null)
     | {
         insertText: {
           objectId: $oid,
-          insertionIndex: 0,
           text: $kv.value
         }
       }
@@ -93,17 +99,27 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 
 ```bash
 echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
-  --presentationId="$presentation_id" \
+  --params "{\"presentationId\":\"$presentation_id\"}" \
   --json-stdin
+```
+
+**實測 gws CLI 規則**：`presentationId` 塞 `--params`（不是 `--presentationId=` flag）；body requests 放 `--json` / `--json-stdin`。
+
+**gws 命令**：
+
+```bash
+gws slides presentations batchUpdate \
+  --params "{\"presentationId\":\"$DECK_ID\"}" \
+  --json '{"requests":[{"insertText":{"objectId":"<placeholder_object_id>","text":"<content>"}}]}'
 ```
 
 ### 3. 解析 replies
 
 ```json
-{"replies":[{"insertText":{}}, {"insertText":{}}, ...]}
+{"replies":[{}, {}, ...]}
 ```
 
-`insertText` reply 為空物件即代表成功（API 不回 occurrence count；不存在的 objectId 會在 request 層即回 400 → exit 12/15）。
+實測 `insertText` 的 reply 是**空物件 `{}`**（不是 `{"insertText":{}}`）即代表成功（API 不回 occurrence count；不存在的 objectId 會在 request 層即回 400 → exit 12/15）。
 
 ### 4. 整理 warnings
 
@@ -121,11 +137,12 @@ echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdat
 
 ## 注意事項
 
-- **`insertionIndex: 0`**：一律從文字框開頭插入；MVP 不支援 append / specific position（Phase 2+ 若需要 rich text style 才擴充）
+- **省略 `insertionIndex`**：實測 `insertText` 省略 `insertionIndex` 即 append 到 text box 末端（一般 placeholder 初始為空，append 等同從頭寫入）；若明確要從 0 插入，Google API 規範仍允許帶 `insertionIndex: 0`，但非必要
 - **UTF-8 only**：value 含日文 / 中文 / emoji 時 `jq` + `gws` 處理無虞；`gws-wrap.sh` 首行 `export LC_ALL=en_US.UTF-8`（TECH-SPEC §8.5）
 - **`BLANK` layout slide**：無 placeholder；對 `BLANK` slide 下 replacements 一律為 13a warning（layout 選擇階段就該避免）
 - **空 `replacements`**：若整份 deck 無 replacements → skip 本 recipe，直接進 `recipe-insert-image`
 - **Key 大小寫**：建議 plan 產出時就用大寫 key（如 `{{TITLE}}` 而非 `{{title}}`）；本 recipe 的 upper-case 規則是 fallback
+- **`{{TITLE}}` → `CENTERED_TITLE` fallback**：封面頁 TITLE layout 只有 `CENTERED_TITLE`，plan 側用 `{{TITLE}}` 仍可命中（本 recipe 的對映規則第 4 條）
 
 ## Example
 
@@ -145,23 +162,25 @@ echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdat
 }
 ```
 
-**展開後 requests**：
+**展開後 requests**（`{{TITLE}}` on slide_0 經 fallback 對到 `CENTERED_TITLE` 的 objectId）：
 
 ```json
 [
-  {"insertText":{"objectId":"g_0_title","insertionIndex":0,"text":"週報 W17"}},
-  {"insertText":{"objectId":"g_0_sub","insertionIndex":0,"text":"2026-04-23"}},
-  {"insertText":{"objectId":"g_2_title","insertionIndex":0,"text":"Shipped v1.14.0"}},
-  {"insertText":{"objectId":"g_2_body","insertionIndex":0,"text":"anchor autonomy\\nformat unification"}}
+  {"insertText":{"objectId":"g_0_title","text":"週報 W17"}},
+  {"insertText":{"objectId":"g_0_sub","text":"2026-04-23"}},
+  {"insertText":{"objectId":"g_2_title","text":"Shipped v1.14.0"}},
+  {"insertText":{"objectId":"g_2_body","text":"anchor autonomy\nformat unification"}}
 ]
 ```
 
-**gws 呼叫 intent**：
+注意 slide_0 的 `placeholder_map` 實際是 `{"CENTERED_TITLE": "g_0_title", "SUBTITLE": "g_0_sub"}`（非 `TITLE`）；`{{TITLE}}` 由對映規則第 4 條 fallback 到 `CENTERED_TITLE`。
+
+**gws 呼叫**：
 
 ```bash
 gws slides presentations batchUpdate \
-  --presentationId=1NewDeckAbCdEf \
-  --json '{"requests":[{"insertText":{...}}, ...]}'
+  --params '{"presentationId":"1NewDeckAbCdEf"}' \
+  --json '{"requests":[{"insertText":{"objectId":"g_0_title","text":"週報 W17"}}, ...]}'
 ```
 
 **Output**（往下游傳）：
@@ -174,11 +193,14 @@ gws slides presentations batchUpdate \
 }
 ```
 
+## Live-tested behavior (2026-04-24)
+
+- `insertText` request body 最精簡寫法：`{"objectId":"<placeholder_object_id>","text":"<content>"}`；`insertionIndex` 可省
+- `text` 欄位支援 UTF-8：繁中 / 日文 / emoji（✓ / 🎉 等）實測可直接寫入 Slides placeholder，無需 escape
+- `\n` 在 `text` 內實測能建立換行段落（Slides 內即 shift+enter 的軟換行）
+- Batch reply 每個成功的 `insertText` 對映一個 `{}` 空物件（整個 reply 不重複 request 類型名）：`{"replies":[{}, {}, {}, {}]}`
+- stderr 每次印 `Using keyring backend: keyring`（正常，非錯誤）
+
 ---
 
 **See also**: TECH-SPEC §4.2 exit 13a、§4.3 recipe row 3、§4.6 E2E data flow step 3、§8.5（UTF-8）；PRODUCT-SPEC §4.4 Principle 2。
-
-<!-- TODO: placeholder role 的精確 enum 清單應以 Google Slides API
-`Placeholder.type` 為準：
-https://developers.google.com/slides/api/reference/rest/v1/presentations.pages#Placeholder
-常見值：TITLE / CENTERED_TITLE / SUBTITLE / BODY / ... 本檔以 TITLE / SUBTITLE / BODY_N 為對映示範。 -->
