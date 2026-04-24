@@ -24,6 +24,26 @@
 
 set -euo pipefail
 
+# Render a trailer group as one or more indented lines.
+#   $1 — label (e.g. "Decision")
+#   $2 — raw value from git log with %x1F separators between entries
+# Single entry:   "  Decision: <text>"
+# Multiple:       "  Decision (1/N): <text>" one per line
+render_group() {
+  [ -z "${2:-}" ] && return 0
+  local entries
+  entries=$(printf '%s' "$2" | tr $'\x1F' '\n' | sed '/^$/d')
+  [ -z "$entries" ] && return 0
+  local n
+  n=$(printf '%s\n' "$entries" | wc -l | tr -d ' ')
+  if [ "$n" -eq 1 ]; then
+    printf '  %s: %s\n' "$1" "$entries"
+  else
+    printf '%s\n' "$entries" \
+      | awk -v L="$1" -v N="$n" '{printf "  %s (%d/%d): %s\n", L, NR, N, $0}'
+  fi
+}
+
 SINCE='3 months ago'
 LIMIT=50
 REPO='.'
@@ -147,10 +167,10 @@ case "$FORMAT" in
       echo "$commit_records" | while IFS='|' read -r sha subject date decision learning gotcha related; do
         [ -z "$sha" ] && continue
         echo "### $sha  $date  $subject"
-        [ -n "$decision" ] && printf '  Decision: %s\n' "$(echo "$decision" | tr $'\x1F' '\n' | sed '/^$/d' | paste -sd '; ' -)"
-        [ -n "$learning" ] && printf '  Learning: %s\n' "$(echo "$learning" | tr $'\x1F' '\n' | sed '/^$/d' | paste -sd '; ' -)"
-        [ -n "$gotcha" ]   && printf '  Gotcha:   %s\n' "$(echo "$gotcha"   | tr $'\x1F' '\n' | sed '/^$/d' | paste -sd '; ' -)"
-        [ -n "$related" ]  && printf '  Related:  %s\n' "$(echo "$related"  | tr $'\x1F' '\n' | sed '/^$/d' | paste -sd '; ' -)"
+        render_group "Decision" "$decision"
+        render_group "Learning" "$learning"
+        render_group "Gotcha"   "$gotcha"
+        render_group "Related"  "$related"
         echo
       done
     else
