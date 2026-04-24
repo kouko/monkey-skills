@@ -1,16 +1,16 @@
 # Recipe — insert-image
 
-把本機圖片上傳 Drive → 設 `anyoneWithLink` reader permission → 手動組 public URL → 用 `createImage` 帶**明確 `elementProperties`** 把圖片插入對應 slide 的對應位置。對應 TECH-SPEC §4.3 recipe table row 4。
+Upload a local image to Drive → grant `anyoneWithLink` reader permission → manually compose a public URL → call `createImage` with **explicit `elementProperties`** to place the image on the target slide. Corresponds to TECH-SPEC §4.3 recipe table row 4.
 
-v0.3 改動：不再使用 `replaceAllShapesWithImage`（需 template 文字錨點）；改用 `createImage` 直接指定 `pageObjectId` + `size` + `transform`，與 `recipe-create-slides` 建的 layout placeholder 對位。
+v0.3 change: `replaceAllShapesWithImage` (which required text-anchor placeholders in a template) is no longer used. `createImage` now specifies `pageObjectId` + `size` + `transform` directly, aligning with the layout placeholders created by `recipe-create-slides`.
 
-## ⚠️ 重要：cwd sandbox 限制
+## ⚠️ Important: cwd sandbox constraint
 
-**`gws drive files create --upload <path>` 要求 `<path>` 落在 cwd 或其子目錄內**。絕對路徑或走出 cwd 的相對路徑會被 reject，錯誤訊息：`resolves to /private/tmp/xxx which is outside the current directory`。
+**`gws drive files create --upload <path>` requires `<path>` to be inside the current working directory (or a subdirectory)**. An absolute path, or a relative path that escapes cwd, is rejected with: `resolves to /private/tmp/xxx which is outside the current directory`.
 
-→ 本 recipe 正確做法：**呼叫 upload 前先 `cd` 到圖片所在目錄，再用 basename（純檔名）當 `--upload` 參數**。
+→ The correct pattern: **`cd` into the image's directory before calling upload, and pass the basename (filename only) as `--upload`**.
 
-範例：
+Example:
 
 ```bash
 IMG_PATH="/Users/kouko/Desktop/chart.png"
@@ -22,18 +22,18 @@ gws drive files create \
   --params '{"fields":"id,name"}'
 ```
 
-## 目的
+## Purpose
 
-- 逐張處理 `slides[].images[]` 中的本機圖片
-- 上傳 Drive、設 public reader permission、取 `webContentLink`
-- `createImage` 帶 `pageElementProperties`（pageObjectId + 尺寸 + transform）明確放到目標 slide 對應位置
-- 失敗時 stdout + exit code 清楚指出哪一張
+- Process each local image in `slides[].images[]` one at a time
+- Upload to Drive, grant public reader permission, compose the image URL
+- Call `createImage` with `pageElementProperties` (pageObjectId + size + transform) to place the image at a specific spot on the target slide
+- On failure, make stdout + exit code identify exactly which image
 
-## 為什麼需要 Drive upload + public permission
+## Why we need Drive upload + public permission
 
-Google Slides API 的 `createImage.url` 欄位要求 **publicly accessible URL**（Slides API docs）。Drive 私有檔即使 caller 有權限，Slides render pipeline 也抓不到。**唯一可靠做法**：上傳後加 `role: reader / type: anyone` permission，取 `webContentLink`。
+The Google Slides API `createImage.url` field requires a **publicly accessible URL** (per Slides API docs). Private Drive files are unreachable from the Slides render pipeline even if the caller has access. The only reliable approach: upload, then add `role: reader / type: anyone` permission, and compose the `webContentLink`.
 
-**Because** 此為 Google 端架構限制，MVP 無法繞過。
+**Because** this is a Google-side architectural constraint; the MVP cannot work around it.
 
 ## Input
 
@@ -59,19 +59,19 @@ Google Slides API 的 `createImage.url` 欄位要求 **publicly accessible URL**
 
 | Field | Required | Note |
 |---|---|---|
-| `presentation_id` | yes | 由 `recipe-create-presentation` 傳來 |
-| `placeholder_map` | yes | 由 `recipe-create-slides` 傳來 |
-| `slides[].images[].placeholder_id` | yes | 對應 `placeholder_map[slide_X]` 的 key（`TITLE` / `BODY_1` / ...）；圖片將放到該 placeholder 所在位置 |
-| `slides[].images[].local_path` | yes | 絕對 / `~` 展開 / cwd-relative（TECH-SPEC §9 OPEN-8） |
+| `presentation_id` | yes | from `recipe-create-presentation` |
+| `placeholder_map` | yes | from `recipe-create-slides` |
+| `slides[].images[].placeholder_id` | yes | matches a key in `placeholder_map[slide_X]` (`TITLE` / `BODY_1` / ...); the image is placed at that placeholder's position |
+| `slides[].images[].local_path` | yes | absolute / `~`-expanded / cwd-relative (TECH-SPEC §9 OPEN-8) |
 
-## 步驟
+## Steps
 
-### 1. 路徑解析（TECH-SPEC §9 OPEN-8）
+### 1. Resolve the path (TECH-SPEC §9 OPEN-8)
 
-按順序嘗試：
+Try in order:
 
-1. Absolute path（以 `/` 開頭）→ 直接用
-2. `~/` 展開 → `eval echo "$path"`（只 eval path value）
+1. Absolute path (starts with `/`) → use as-is
+2. `~/` expansion → `eval echo "$path"` (eval the path value only)
 3. cwd-relative → `"$PWD/$path"`
 
 ```bash
@@ -84,13 +84,13 @@ resolve_path() {
 }
 ```
 
-### 2. 檔案檢查（pre-flight 已做；此處 defence-in-depth）
+### 2. File checks (pre-flight already runs these; defense-in-depth here)
 
-- 存在性：`[[ -f "$resolved" ]]` 否則 exit 14
-- Size：`< 50 MB`（Drive multipart upload 安全邊界）
-- Format：副檔名 `.png` / `.jpg` / `.jpeg` / `.gif`；其他 → exit 14
+- Existence: `[[ -f "$resolved" ]]` — otherwise exit 14
+- Size: `< 50 MB` (safe Drive multipart upload margin)
+- Format: extension `.png` / `.jpg` / `.jpeg` / `.gif`; otherwise exit 14
 
-### 3. Upload to Drive（cd 後用純檔名）
+### 3. Upload to Drive (cd first, pass basename)
 
 ```bash
 cd "$(dirname "$resolved")"
@@ -104,12 +104,12 @@ upload=$(scripts/google-slides/gws-wrap.sh drive files create \
 upload_file_id=$(echo "$upload" | jq -r '.id')
 ```
 
-**實測 gws CLI 規則**：
+**Live-tested gws CLI rules**:
 
-- `--upload` 是 flag（**不是** `--upload-file`；舊文件曾誤寫）
-- `--upload` 參數必須相對於 cwd（見頂部 cwd sandbox 警告）
-- `fields` 放 `--params`（Drive API 的 query param），回 JSON 只帶 `id` + `name`，降低雜訊
-- Response → 取 `.id` 為 `upload_file_id`；上傳失敗 → exit 12（權限 / quota）或 11（429 耗盡）
+- The flag is `--upload` (**not** `--upload-file`; older docs had this wrong)
+- `--upload` must resolve relative to cwd (see the cwd-sandbox warning above)
+- `fields` goes inside `--params` (a Drive API query parameter); the reply JSON carries only `id` + `name`, reducing noise
+- Take `.id` from the response as `upload_file_id`; upload failure → exit 12 (permission / quota) or 11 (429 exhausted)
 
 ### 4. Grant public reader permission
 
@@ -119,21 +119,21 @@ scripts/google-slides/gws-wrap.sh drive permissions create \
   --json '{"role":"reader","type":"anyone"}'
 ```
 
-**實測 gws CLI 規則**：`fileId` 是 path parameter → **必須塞 `--params`，不是獨立 `--fileId=` flag**。body（`role` / `type`）放 `--json`。若用錯 flag 會被 gws parser reject。
+**Live-tested gws CLI rules**: `fileId` is a path parameter → **must go inside `--params`, not as a standalone `--fileId=` flag**. The body (`role` / `type`) goes in `--json`. Using the wrong flag is rejected by the gws parser.
 
-**Because** 若 skip，下一步 Slides render pipeline 抓不到圖。
+**Because** without this permission, the Slides render pipeline cannot fetch the image in the next step.
 
-### 5. 組 image URL（手動拼，不要用 response 的 `webContentLink`）
+### 5. Compose the image URL (construct manually; do not use the response's `webContentLink`)
 
 ```bash
 image_url="https://drive.google.com/uc?id=$upload_file_id"
 ```
 
-**實測關鍵差異**：Drive API response 帶的 `webContentLink` 形如 `https://drive.google.com/uc?id=XXX&export=download`，**帶 `&export=download` 會讓 Slides createImage fetch 失敗**（render pipeline 拿到的是下載 response 而非圖片 raw bytes）。
+**Critical live-tested distinction**: the Drive API response returns a `webContentLink` of the form `https://drive.google.com/uc?id=XXX&export=download`. **The `&export=download` suffix makes Slides `createImage` fetch fail** (the render pipeline receives the download response rather than the raw image bytes).
 
-→ **正確做法**：**不讀 response 的 `webContentLink`**；直接用 `FILE_ID` 手拼 `https://drive.google.com/uc?id=<FILE_ID>`（不帶 `&export=download`）。此 URL 型式實測可被 Slides render 正確抓到 PNG/JPEG。
+→ **Correct approach**: **do not read `webContentLink` from the response**; construct the URL from `FILE_ID` directly as `https://drive.google.com/uc?id=<FILE_ID>` (no `&export=download`). This URL form has been verified to fetch correctly from the Slides render pipeline for PNG/JPEG.
 
-### 6. 解析目標位置（從 placeholder_map 對位）
+### 6. Resolve the target position (look up the placeholder map)
 
 ```bash
 slide_key="slide_${slide_index}"
@@ -141,12 +141,12 @@ target_object_id=$(jq -r --arg sk "$slide_key" --arg pid "$placeholder_id" \
   '.[$sk][$pid]' <<< "$placeholder_map")
 ```
 
-若 `target_object_id == "null"` → **13b warning**（placeholder_id 在當前 layout 不存在），略過此圖。
+If `target_object_id == "null"` → **13b warning** (the `placeholder_id` does not exist on the current layout); skip this image.
 
-**決定 size / transform**：
+**Deciding size / transform**:
 
-- **MVP 策略**：查 `presentations.get` 取 target placeholder 的 `size` + `transform`，沿用同樣座標（圖片覆蓋到 placeholder 位置）
-- Slides API 要求 `pageElementProperties` 必填 `pageObjectId`；`size` 可省（預設），`transform` 建議明確指定以避免落到左上角
+- **MVP strategy**: call `presentations.get` to read the target placeholder's `size` + `transform`, and reuse the same coordinates (the image overlays the placeholder's position)
+- The Slides API requires `pageElementProperties.pageObjectId`; `size` may be omitted (defaults apply), but `transform` should be specified explicitly to avoid defaulting to the top-left corner
 
 ### 7. batchUpdate `createImage`
 
@@ -174,7 +174,7 @@ target_object_id=$(jq -r --arg sk "$slide_key" --arg pid "$placeholder_id" \
 }
 ```
 
-呼叫：
+Invoke:
 
 ```bash
 echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
@@ -182,58 +182,58 @@ echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdat
   --json-stdin
 ```
 
-**實測 gws CLI 規則**：`presentationId` 塞 `--params`（不是 `--presentationId=` 獨立 flag）；`requests` body 放 `--json` / `--json-stdin`。
+**Live-tested gws CLI rules**: `presentationId` goes inside `--params` (not `--presentationId=` as a standalone flag); the `requests` body goes into `--json` / `--json-stdin`.
 
-**URL 注意**：上面 `url` 用 `https://drive.google.com/uc?id=<FILE_ID>`（不帶 `&export=download`）——見 §5。
+**URL note**: use `https://drive.google.com/uc?id=<FILE_ID>` without `&export=download` — see step 5.
 
-**注意**：`pageObjectId` 是**slide 的 objectId**（`slide_<index>`），不是 placeholder 的 objectId。圖片會蓋到 slide 平面上，位置由 `transform` 決定；`placeholder_id` 僅用於**讀取原 placeholder 座標**，本 recipe 不呼叫 `replaceAllShapesWithImage`。
+**Note**: `pageObjectId` is the **slide's objectId** (`slide_<index>`), not the placeholder's objectId. The image is placed on the slide plane at coordinates driven by `transform`; `placeholder_id` is used **only to read the original placeholder's coordinates**. This recipe never calls `replaceAllShapesWithImage`.
 
-### 8. 解析 replies
+### 8. Parse replies
 
 ```json
 {"replies":[{"createImage":{"objectId":"new_image_g1"}}]}
 ```
 
-成功則 reply 帶新圖片元素的 `objectId`。
+On success, the reply includes the `objectId` of the new image element.
 
-### 9. Cleanup（可選）
+### 9. Cleanup (optional)
 
-完成所有 image 嵌入後，可刪 Drive 暫存圖片：
+After all images are inserted, you can delete the temporary Drive uploads:
 
 ```bash
 scripts/google-slides/gws-wrap.sh drive files delete \
   --params "{\"fileId\":\"$upload_file_id\"}"
 ```
 
-**實測**：`fileId` 同樣塞 `--params`，不是獨立 flag。
+**Live-tested**: `fileId` likewise goes inside `--params`, not as a standalone flag.
 
-**MVP 預設不刪**（便於 debug）；若 `slide-plan.json` 擴充 `cleanup_uploads: true` 則觸發（Phase 2）。
+**MVP default is not to clean up** (easier debugging). A future `cleanup_uploads: true` field on the slide plan can trigger deletion (Phase 2).
 
-## 錯誤對映
+## Error mapping
 
-| 情境 | Exit | Stderr |
+| Situation | Exit | Stderr |
 |---|---|---|
-| `local_path` 不存在 | 14 | `local file not found: <resolved>` |
-| 檔案 > 50MB / 格式不支援 | 14 | `unsupported image size / format` |
-| Drive upload 失敗 | 12 | `upload failed: <reason>` |
-| Permission grant 失敗 | 12 | `permission grant failed` |
-| `placeholder_id` 在當前 slide `placeholder_map` 不存在 | **13b**（warning；non-fatal） | `[warn 13b] placeholder_id=<id> not found in slide_<N>` |
-| `createImage` 回 400（pageObjectId 錯 / URL 抓不到） | 12 | `createImage failed: <reason>` |
-| 429 重試 5 次耗盡 | 11 | `rate limit exhausted` |
+| `local_path` does not exist | 14 | `local file not found: <resolved>` |
+| File > 50MB or unsupported format | 14 | `unsupported image size / format` |
+| Drive upload fails | 12 | `upload failed: <reason>` |
+| Permission grant fails | 12 | `permission grant failed` |
+| `placeholder_id` not in the slide's `placeholder_map` | **13b** (warning; non-fatal) | `[warn 13b] placeholder_id=<id> not found in slide_<N>` |
+| `createImage` returns 400 (bad pageObjectId / URL unreachable) | 12 | `createImage failed: <reason>` |
+| 429 still failing after 5 retries | 11 | `rate limit exhausted` |
 
-## Phase 2+ Non-Goal（PRODUCT-SPEC §3.2）
+## Phase 2+ Non-Goals (PRODUCT-SPEC §3.2)
 
-以下**不**在 MVP 範圍：
-- 圖片 resize / crop / format conversion（需 ImageMagick / Pillow runtime）
-- 從 URL fetch 圖片（需 auth / CORS / retry；MVP 只收 local path）
-- 自動壓縮到 Slides 建議尺寸
-- EXIF 清除
+Out of MVP scope:
+- Image resize / crop / format conversion (would need an ImageMagick or Pillow runtime)
+- Fetching images from a URL (requires auth / CORS / retry; MVP only accepts local paths)
+- Auto-compressing to Slides' recommended dimensions
+- EXIF scrubbing
 
-使用者需預先把圖處理到「尺寸合適、格式 PNG/JPEG/GIF、<50MB」狀態。
+Users must pre-process images to "appropriate size, PNG/JPEG/GIF format, < 50 MB".
 
 ## Example
 
-**Input**：
+**Input**:
 
 ```json
 {
@@ -250,9 +250,9 @@ scripts/google-slides/gws-wrap.sh drive files delete \
 }
 ```
 
-**Resolved path**：`/Users/kouko/Desktop/revenue_q2.png`
+**Resolved path**: `/Users/kouko/Desktop/revenue_q2.png`
 
-**cd 後 upload**（圖片路徑落在 cwd）：
+**Upload after cd** (image path resolves inside cwd):
 
 ```bash
 cd /Users/kouko/Desktop
@@ -263,7 +263,7 @@ gws drive files create \
 # → {"id":"1AbCdImgFile","name":"revenue_q2.png"}
 ```
 
-**Permission**（`fileId` 在 params）：
+**Permission** (`fileId` in params):
 
 ```bash
 gws drive permissions create \
@@ -271,9 +271,9 @@ gws drive permissions create \
   --json '{"role":"reader","type":"anyone"}'
 ```
 
-**Image URL**（手拼；不從 response 讀 `webContentLink`）：`https://drive.google.com/uc?id=1AbCdImgFile`
+**Image URL** (constructed manually; ignoring the response's `webContentLink`): `https://drive.google.com/uc?id=1AbCdImgFile`
 
-**batchUpdate body**：
+**batchUpdate body**:
 
 ```json
 {
@@ -291,9 +291,9 @@ gws drive permissions create \
 }
 ```
 
-**Response**：`{"replies":[{"createImage":{"objectId":"new_img_g1"}}]}`
+**Response**: `{"replies":[{"createImage":{"objectId":"new_img_g1"}}]}`
 
-**Output**（給 builder 彙總）：
+**Output** (reported to the builder):
 
 ```json
 {
@@ -303,26 +303,26 @@ gws drive permissions create \
 }
 ```
 
-## Gotchas（實測踩到的坑）
+## Gotchas (pitfalls encountered in live testing)
 
-| 坑 | 正確做法 |
+| Pitfall | Correct approach |
 |---|---|
-| `--upload` 傳絕對路徑 → reject `resolves to ... which is outside the current directory` | 先 `cd "$(dirname $PATH)"`，用純檔名 `$(basename $PATH)` |
-| 寫成 `--upload-file` | gws CLI 是 `--upload`（單字） |
-| `drive permissions create --fileId=$ID` | `fileId` 塞 `--params '{"fileId":"..."}'`；Drive path param 一律走 params |
-| `drive files delete --fileId=$ID` | 同上，用 `--params` |
-| `slides presentations batchUpdate --presentationId=$ID` | 同上，用 `--params` |
-| 直接把 response 的 `webContentLink`（`?id=XXX&export=download`）塞 `createImage.url` → Slides render 失敗 | 手拼 `https://drive.google.com/uc?id=<FILE_ID>`（不要 `&export=download`） |
-| stderr 出現 `Using keyring backend: keyring` 誤判為錯誤 | 這是 gws 正常訊息；stdout 乾淨為 JSON。若要分離捕捉：`gws ... 2>/dev/null` 或 `2>err.log` |
+| `--upload` with an absolute path → rejected with `resolves to ... which is outside the current directory` | `cd "$(dirname $PATH)"` first, then pass `$(basename $PATH)` |
+| Typing `--upload-file` | The gws CLI flag is `--upload` (single word) |
+| `drive permissions create --fileId=$ID` | `fileId` goes inside `--params '{"fileId":"..."}'`; every Drive path parameter uses `--params` |
+| `drive files delete --fileId=$ID` | Same — use `--params` |
+| `slides presentations batchUpdate --presentationId=$ID` | Same — use `--params` |
+| Passing the response's `webContentLink` (`?id=XXX&export=download`) straight into `createImage.url` → Slides render fails | Construct `https://drive.google.com/uc?id=<FILE_ID>` manually (no `&export=download`) |
+| Mistaking stderr `Using keyring backend: keyring` for an error | This is a normal gws message; stdout is clean JSON. To separate streams: `gws ... 2>/dev/null` or `2>err.log` |
 
 ## Live-tested behavior (2026-04-24)
 
-- `gws drive files create --upload <name> --params '{"fields":"id,name"}' --json '{...}'` 回：`{"id":"<FILE_ID>","name":"<FILENAME>"}`
-- `gws drive permissions create --params '{"fileId":"<FILE_ID>"}' --json '{"role":"reader","type":"anyone"}'` 回：`{"id":"anyoneWithLink","type":"anyone","role":"reader"}`（或類似，帶 permission id）
-- 公用 URL `https://drive.google.com/uc?id=<FILE_ID>` 在 Slides `createImage.url` 實測可成功 embed PNG
-- `createImage` reply 帶新圖的 `objectId`：`{"replies":[{"createImage":{"objectId":"SLIDES_API<random>"}}]}`
-- cwd sandbox 錯誤實際訊息（stderr）："file path resolves to /private/tmp/xxx which is outside the current directory"（走出 cwd 時 gws 直接 reject，不進 API call）
+- `gws drive files create --upload <name> --params '{"fields":"id,name"}' --json '{...}'` returns: `{"id":"<FILE_ID>","name":"<FILENAME>"}`
+- `gws drive permissions create --params '{"fileId":"<FILE_ID>"}' --json '{"role":"reader","type":"anyone"}'` returns: `{"id":"anyoneWithLink","type":"anyone","role":"reader"}` (or similar, with a permission id)
+- The public URL `https://drive.google.com/uc?id=<FILE_ID>` embeds PNG successfully when used as `createImage.url` in Slides
+- The `createImage` reply carries the new image's `objectId`: `{"replies":[{"createImage":{"objectId":"SLIDES_API<random>"}}]}`
+- The exact cwd-sandbox error message (stderr): `file path resolves to /private/tmp/xxx which is outside the current directory` — gws rejects the request before making the API call
 
 ---
 
-**See also**: TECH-SPEC §4.2 exit 13b + 14、§4.3 recipe row 4、§4.6 E2E data flow step 4、§9 OPEN-8（path 解析）；PRODUCT-SPEC §3.2 Non-Goals（圖片前處理）。
+**See also**: TECH-SPEC §4.2 exit 13b + 14, §4.3 recipe row 4, §4.6 E2E data flow step 4, §9 OPEN-8 (path resolution); PRODUCT-SPEC §3.2 Non-Goals (image preprocessing).

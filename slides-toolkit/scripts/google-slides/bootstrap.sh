@@ -2,48 +2,60 @@
 set -euo pipefail
 
 # =============================================================================
-# bootstrap.sh — slides-toolkit google-slides backend binary bootstrapper
+# bootstrap.sh — slides-toolkit google-slides backend binary self-fetch
 # -----------------------------------------------------------------------------
-# 用途：
-#   偵測 macOS 平台 → 從 GitHub release 以 HTTPS + `curl -fLSs` 下載
-#   gws / jq binary 到 ~/.cache/slides-toolkit/bin/ → chmod +x → 寫 .version。
-#   Idempotent：binary 存在且未超過 TTL 則 skip（除非 --force）。
-#   Auto-refresh：若 .version 的 installed_at 超過 TTL（預設 30 天），自
-#   動重抓 latest；失敗則保留 cached binary 並 exit 0（不阻斷日常使用）。
+# Detects the macOS platform, then downloads the gws and jq binaries from
+# GitHub releases over HTTPS via `curl -fLSs` into
+# ~/.cache/slides-toolkit/bin/, marks them executable, and writes a .version
+# manifest. Idempotent: if the binaries already exist and are within TTL,
+# the script skips the download (unless --force is given).
+#
+# Auto-refresh: when .version.installed_at is older than TTL (default 30
+# days), the script re-fetches the latest release. If that fetch fails, the
+# existing cached binaries are kept and the script exits 0 so everyday use
+# is not blocked by transient network issues.
 #
 # v0.3.1: latest-URL resolution + auto-refresh after TTL
-#   - URL 改用 GitHub /releases/latest/download/ redirect（零 version pin）
-#   - `.version` 多記 installed_at + resolved tag（透過 GitHub API）
-#   - `GWS_VERSION` env 可 override 停用 auto-refresh（stability pin）
+#   - URL switched to the GitHub /releases/latest/download/ redirect
+#     (no version pin required)
+#   - .version now records installed_at plus the resolved tag (via the
+#     GitHub API)
+#   - GWS_VERSION env may override to disable auto-refresh (stability pin)
 #
-# v0.3: SHA-256 verification removed; see TECH-SPEC v0.3 §2.3 for
+# v0.3: SHA-256 verification removed; see TECH-SPEC v0.3 §2.3 for the
 #       HTTPS-only integrity model.
 #
 # Upstream refs:
 #   - TECH-SPEC v0.3 §2.3 Binary distribution strategy
 #   - TECH-SPEC v0.3 §4.2 `scripts/google-slides/bootstrap.sh` contract
-#   - TECH-SPEC §7.3 Dry-run 模式
+#   - TECH-SPEC §7.3 Dry-run mode
 #
 # Args:
-#   --force                         忽略 cache + TTL，強制重下載
-#   --dry-run                       只印計畫，不連網、不寫 cache dir
+#   --force                         Ignore cache + TTL; force a re-download.
+#   --dry-run                       Print the plan only; no network, no
+#                                   cache-dir writes.
 #   --platform <darwin-arm64|darwin-x86_64>
-#                                   override auto-detect (CI / 跨機器測試用)
+#                                   Override auto-detect (for CI / cross-host
+#                                   testing).
 #
 # Env:
-#   GWS_VERSION                     pin 某 tag（e.g. v0.23.0）→ 停用 auto-refresh
-#   JQ_VERSION                      pin jq version（預設 jq-1.7.1）
-#   SLIDES_TOOLKIT_BINARY_TTL_DAYS  auto-refresh 門檻（預設 30）
+#   GWS_VERSION                     Pin a specific tag (e.g. v0.23.0);
+#                                   disables auto-refresh.
+#   JQ_VERSION                      Pin jq version (default jq-1.7.1).
+#   SLIDES_TOOLKIT_BINARY_TTL_DAYS  Auto-refresh threshold in days
+#                                   (default 30).
 #
 # Stdin: none
 # Stdout: JSON `{"gws":"<path>","jq":"<path>","version":{"gws":"...","jq":"..."},"cache_dir":"...","dry_run":bool}`
-# Stderr: 人讀 progress（含錯誤 JSON on failure）
+# Stderr: human-readable progress (plus an error JSON on failure).
 #
-# Exit codes (per TECH-SPEC v0.3 §4.2)：
+# Exit codes (per TECH-SPEC v0.3 §4.2):
 #   0  success
-#   1  generic error（unknown platform / network on initial install / usage）
+#   1  generic error (unknown platform / network failure on initial
+#      install / usage error)
 #
-# 注：auto-refresh 失敗不 die；保留 cached binary 並 exit 0（見 install_one）。
+# Note: auto-refresh failures do not die; the cached binary is preserved
+# and the script exits 0 (see install_one).
 # =============================================================================
 
 # --- UTF-8 locale（§8.5；best-effort，若系統無此 locale 則保持預設） ---

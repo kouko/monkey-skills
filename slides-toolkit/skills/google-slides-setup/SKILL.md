@@ -5,36 +5,41 @@ description: First-time Google Slides backend onboarding for slides-toolkit — 
 
 # google-slides-setup
 
-一次性把機器設定好，讓 `google-slides-builder` 可以呼叫 gws CLI 操作
-Google Slides。MVP scope = 個人 `@gmail.com` + macOS；Workspace 企業
-帳號與 Linux / CI 屬 Phase 2+。
+One-time machine setup so that `google-slides-builder` can call the gws
+CLI against Google Slides. MVP scope is personal `@gmail.com` accounts
+on macOS. Workspace accounts, Linux, and CI are Phase 2+.
 
 ## When to use
 
-呼叫本 skill 的四個時機：
+Invoke this skill in any of these four situations:
 
-1. **首次設定** — 全新機器 / 全新 Google 帳號，還沒有 `~/.config/gws/`
-2. **憑證過期** — 距離上次 `gws auth` 已超過 7 天（Google External +
-   Testing policy 硬邊界；見 [Every 7 days maintenance](#every-7-days-maintenance)）
-3. **Auth error** — `google-slides-builder` 回傳 exit code 10 / 16 /
-   18，或 stderr 出現 `401` / `403` / `invalid_scope` / `invalid_client`
-4. **State detect** — 不確定目前狀態（binary 裝了沒？token 還有效嗎？）
-   先跑 `scripts/google-slides/credential-check.sh`，依回傳 JSON 決定分支
+1. **First-time setup** — brand-new machine or brand-new Google
+   account, no `~/.config/gws/` yet.
+2. **Expired credentials** — more than 7 days since the last
+   `gws auth` (Google's hard limit for External + Testing; see
+   [Every 7 days maintenance](#every-7-days-maintenance)).
+3. **Auth error** — `google-slides-builder` returns exit code 10 / 16 /
+   18, or stderr shows `401` / `403` / `invalid_scope` /
+   `invalid_client`.
+4. **State detection** — you're unsure where things stand (is the
+   binary installed? is the token still valid?). Run
+   `scripts/google-slides/credential-check.sh` first and branch on the
+   JSON it returns.
 
 ## Prerequisites
 
-| 項 | 要求 | 備註 |
+| Item | Requirement | Notes |
 |---|---|---|
-| OS | macOS (darwin-arm64 或 darwin-x86_64) | MVP 唯一支援平台；Linux / WSL 屬 Phase 2+ |
-| Shell | zsh 或 bash | 預設 macOS zsh 即可 |
-| 網路工具 | `curl` | macOS 預裝 |
-| 瀏覽器 | Chrome 或 Safari | 一次性 GCP Console 操作用 |
-| Google 帳號 | 個人 `@gmail.com` | Workspace 企業帳號 Phase 2+ |
-| 密碼管理 | macOS Keychain 可用（預設） | Keychain silent fail 時自動 fallback 到 file backend，見 [Workarounds](#workarounds) |
+| OS | macOS (darwin-arm64 or darwin-x86_64) | The only MVP-supported platform. Linux / WSL are Phase 2+. |
+| Shell | zsh or bash | The default macOS zsh is fine. |
+| Network tool | `curl` | Preinstalled on macOS. |
+| Browser | Chrome or Safari | Needed once for the GCP Console steps. |
+| Google account | Personal `@gmail.com` | Workspace accounts are Phase 2+. |
+| Credential store | macOS Keychain available (default) | If Keychain silently fails, the tooling falls back to a file backend. See [Workarounds](#workarounds). |
 
-**不需要**：Python、uv、gcloud、brew、npm。所有 binary (`gws`, `jq`)
-由 `scripts/google-slides/bootstrap.sh` 自抓至 `~/.cache/slides-toolkit/bin/`
-並做 SHA-256 驗證（TECH-SPEC §2.3）。
+**Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
+binaries are fetched by `scripts/google-slides/bootstrap.sh` into
+`~/.cache/slides-toolkit/bin/` and verified by SHA-256 (TECH-SPEC §2.3).
 
 ## Workflow overview
 
@@ -43,176 +48,193 @@ Google Slides。MVP scope = 個人 `@gmail.com` + macOS；Workspace 企業
      │
      ▼
 ┌─────────────────────────────┐
-│ State detection             │   ← 必跑第一步
+│ State detection             │   ← always run this first
 │ credential-check.sh         │
 └──────────┬──────────────────┘
            │ JSON: {backend, token_valid, expires_in_sec}
            ▼
  ┌─────────┴──────────────┬──────────────────────┬─────────────────┐
- │ binary 缺              │ binary 有 / 未 auth   │ token 過期       │ 全部就緒
- ▼                        ▼                      ▼                  ▼
- [Setup flow] 10 步        [從 Setup step 8 起]    [Re-auth only]     [結束]
- ├─ Console 6 步           ├─ env var workaround   ├─ gws auth 重登
- └─ 本機 4 步              └─ gws auth login       └─ 10 秒搞定
+ │ binary missing          │ binary present / not  │ token expired    │ all green
+ │                         │ yet authed            │                  │
+ ▼                         ▼                      ▼                  ▼
+ [Setup flow, 10 steps]    [Resume at step 8]     [Re-auth only]     [Done]
+ ├─ 6 Console steps        ├─ apply env workaround ├─ gws auth login
+ └─ 4 local steps          └─ gws auth login       └─ 10-second job
 ```
 
-詳細分支對照：`checklists/setup-state.md`。
+Full branch table: `checklists/setup-state.md`.
 
 ## State detection
 
-**先跑 state detect，再決定進哪條分支。**不要盲衝 setup flow。
+**Run state detection first. Don't charge straight into the setup
+flow.**
 
 ```bash
 bash scripts/google-slides/credential-check.sh
 ```
 
-預期 JSON 輸出：
+Expected JSON output:
 
 ```json
 {"backend":"keychain","token_valid":true,"expires_in_sec":518400}
 ```
 
-依結果分支：
+Branch on the result:
 
-| 回傳 | 分支 | 進入點 |
+| Result | Branch | Entry point |
 |---|---|---|
-| `credential-check.sh` 本身找不到 / `~/.cache/slides-toolkit/bin/` 空 | 全新機器 | Setup flow step 1 |
-| `backend=keychain`, `token_valid=true`, `expires_in_sec > 0` | 全部就緒 | 直接跑 `google-slides-builder` |
-| `backend=keychain`, `token_valid=false` 或 `expires_in_sec <= 0` | 過期 | [Every 7 days maintenance](#every-7-days-maintenance) |
-| `backend=file` | Keychain silent fail，已 fallback | 繼續，但請閱讀 [Workarounds](#workarounds) Keychain 段 |
-| exit 18 | Keychain 不可讀 + file backend 也失敗 | 重跑 Setup step 3（Client Secret 下載）與 step 8–9 |
+| `credential-check.sh` not found, or `~/.cache/slides-toolkit/bin/` empty | Fresh machine | Setup flow step 1 |
+| `backend=keychain`, `token_valid=true`, `expires_in_sec > 0` | All green | Run `google-slides-builder` directly |
+| `backend=keychain`, `token_valid=false` or `expires_in_sec <= 0` | Expired | [Every 7 days maintenance](#every-7-days-maintenance) |
+| `backend=file` | Keychain silently failed, fell back to file | Continue, but read the Keychain note in [Workarounds](#workarounds) |
+| exit 18 | Keychain unreadable and file backend also failed | Rerun setup step 3 (download the Client Secret) and steps 8–9 |
 
-完整檢查清單：`checklists/setup-state.md`。
+Full checklist: `checklists/setup-state.md`.
 
 ## Setup flow
 
-總共 **10 步**，拆成兩段：6 步瀏覽器 Console 操作 + 4 步本機命令。
+**10 steps total**, split into two segments: 6 browser steps in the
+Console, then 4 local steps.
 
-**完整逐步 tutorial**：`protocols/gcp-console-walkthrough.md`（預估 10–15 分鐘）
+**Full walkthrough**: `protocols/gcp-console-walkthrough.md`
+(estimate: 10–15 minutes).
 
-| # | 地點 | 做什麼 | 出錯時回到 |
+| # | Where | What to do | On failure, return to |
 |---|---|---|---|
-| 1 | 瀏覽器 | Create GCP project | walkthrough §1 |
-| 2 | 瀏覽器 | OAuth consent screen → External + Testing | walkthrough §2 |
-| 3 | 瀏覽器 | Add yourself as Test user（**漏這步 = 403**） | walkthrough §3 |
-| 4 | 瀏覽器 | Create OAuth 2.0 Client ID → **Desktop app**（不是 Web） | walkthrough §4 |
-| 5 | 瀏覽器 | Download `client_secret.json` → `~/.config/gws/` | walkthrough §5 |
-| 6 | 瀏覽器 | Enable APIs：Google Slides API + Google Drive API | walkthrough §6 |
-| 7 | Terminal | `bash scripts/google-slides/bootstrap.sh`（抓 gws + jq） | walkthrough §7 |
-| 8 | Terminal | Export issue #119 env vars（見下節） | `protocols/issue-119-workaround.md` |
-| 9 | Terminal | `gws auth login -s presentations,drive.file`（**不要用 `recommended` preset**） | walkthrough §9 |
-| 10 | 瀏覽器 | 同意頁面 → Advanced → Go to app (unsafe) → Approve | walkthrough §10 |
+| 1 | Browser | Create a GCP project | walkthrough §1 |
+| 2 | Browser | Google Auth Platform → Branding → External + Testing | walkthrough §2 |
+| 3 | Browser | Audience → add yourself as a Test user (**skipping this = 403 later**) | walkthrough §3 |
+| 4 | Browser | Clients → Create client → **Desktop app** (not Web) | walkthrough §4 |
+| 5 | Browser | Download `client_secret.json` → `~/.config/gws/` | walkthrough §5 |
+| 6 | Browser | Enable APIs: Google Slides API + Google Drive API | walkthrough §6 |
+| 7 | Terminal | `bash scripts/google-slides/bootstrap.sh` (installs gws + jq) | walkthrough §7 |
+| 8 | Terminal | Export the issue #119 env vars (see below) | `protocols/issue-119-workaround.md` |
+| 9 | Terminal | `gws auth login -s presentations,drive.file` (**never use the `recommended` preset**) | walkthrough §9 |
+| 10 | Browser | Consent screen → Advanced → Go to app (unsafe) → Allow | walkthrough §10 |
 
-**完成判準**：
+**Done when**:
 
 ```bash
 gws auth whoami
-# 預期輸出：your_email@gmail.com
+# Expected: your_email@gmail.com
 ```
 
 ## Workarounds
 
-### Issue #119（個人 Gmail invalid_scope / invalid_client）
+### Issue #119 — `invalid_scope` / `invalid_client` on personal Gmail
 
-gws CLI 內建 OAuth client 對個人 `@gmail.com` 帳號會踩 `invalid_scope`
-或 `invalid_client`。解法：export 自建 OAuth Client 的 ID + Secret 為
-env var，gws 會改用它。
+The gws CLI ships with a built-in OAuth client that trips
+`invalid_scope` or `invalid_client` on personal `@gmail.com`
+accounts. The fix is to export your own OAuth Client ID + Secret as
+env vars; gws picks them up and uses yours instead.
 
-快速命令（完整版 + 寫入 shell profile 步驟見 `protocols/issue-119-workaround.md`）：
+Quick command (full version plus shell-profile setup is in
+`protocols/issue-119-workaround.md`):
 
 ```bash
 export GOOGLE_WORKSPACE_CLI_CLIENT_ID=$(jq -r .installed.client_id ~/.config/gws/client_secret.json)
 export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET=$(jq -r .installed.client_secret ~/.config/gws/client_secret.json)
 ```
 
-或用 `scripts/google-slides/env-guard.sh`：
+Or delegate to `scripts/google-slides/env-guard.sh`:
 
 ```bash
-bash scripts/google-slides/env-guard.sh check   # 偵測是否需要 workaround
-bash scripts/google-slides/env-guard.sh apply   # 寫入 ~/.config/gws/env.sh (chmod 600)
+bash scripts/google-slides/env-guard.sh check   # detect whether the workaround is needed
+bash scripts/google-slides/env-guard.sh apply   # write ~/.config/gws/env.sh (chmod 600)
 ```
 
-追蹤上游修復：`googleworkspace/cli` issue #119（TODO：填入 upstream 討論連結）。
+Upstream fix tracking: `googleworkspace/cli` issue #119 (TODO:
+fill in upstream discussion link).
 
-### macOS Keychain silent fail（fallback 到 file backend）
+### macOS Keychain silent fail (fallback to file backend)
 
-gws 預設把 refresh token 寫進 macOS Keychain，但偶爾會在特定 profile
-狀態下 silent fail（寫入看似成功、下次讀不到）。`credential-check.sh`
-偵測到此情況會自動 fallback：
+gws writes the refresh token to the macOS Keychain by default, but
+under certain profile states the write appears to succeed while the
+token can't be read back. When `credential-check.sh` detects this,
+it falls back automatically:
 
 ```bash
 export KEYRING_BACKEND=file
 ```
 
-Token 改存 `~/.config/gws/keyring-file.json`（chmod 600，`.gitignore`
-已擋）。與 Keychain 的差異：安全等級略降（明文檔案 vs Keychain 加
-密），但在**個人機器 + home 目錄權限正確**的前提下，ASVS V14 L1 可接受。
+The token is then stored in `~/.config/gws/keyring-file.json`
+(chmod 600, already covered by `.gitignore`). The trade-off versus
+Keychain is a small drop in security (plaintext-at-rest versus
+OS-level encryption), but on a personal machine with correct home
+directory permissions this stays within ASVS V14 L1.
 
-**不要在 personal machine 預設設 `KEYRING_BACKEND=file`** —
-`standards/credential-hygiene.md` 規則 5。
+**Do not set `KEYRING_BACKEND=file` by default on a personal
+machine** — that violates rule 5 of `standards/credential-hygiene.md`.
 
 ## Credential hygiene
 
-本 skill 處理的都是敏感 credential。**必讀**：`standards/credential-hygiene.md`
+Everything this skill touches is sensitive credential material.
+**Required reading**: `standards/credential-hygiene.md`.
 
-五條硬規則（摘要）：
+Five hard rules (summarized):
 
-1. Skill repo 絕不儲存任何 credential（repo 只放 code + docs）
-2. 使用者 credential 統一放 `~/.config/gws/`（由 gws 管）
-3. `.claude/settings.json` deny rule 防止 Claude 讀 credential 進 context
-4. `.gitignore` pattern 防止誤 commit
-5. macOS 優先 Keychain；Linux/CI 才降級 file backend
+1. The skill repo never stores credentials of any kind (repo holds
+   code + docs only).
+2. User credentials live exclusively in `~/.config/gws/` (managed by
+   gws).
+3. A `.claude/settings.json` deny rule prevents Claude from reading
+   credentials into context.
+4. `.gitignore` patterns prevent accidental commits.
+5. Prefer Keychain on macOS; only drop to the file backend on Linux/CI.
 
-洩漏 incident response playbook 與 ASVS v5.0.0 L1 mapping（V1 / V13 /
-V14 / V16）同樣在該 standards 檔。
+The same file contains the incident response playbook and the
+ASVS v5.0.0 L1 mapping (V1 / V13 / V14 / V16).
 
 ## Every 7 days maintenance
 
-**Google External + Testing mode refresh token 壽命 = 7 天**（Google
-OAuth policy 硬邊界，MVP 不申請 production 過審，故無法繞）。
+**Refresh tokens issued under External + Testing last 7 days** — this
+is a Google OAuth policy. Since the MVP intentionally does not pursue
+production verification, there's no way around it.
 
-每 7 天（或看到 exit 10 `token expired`）跑一次：
+Every 7 days (or whenever you see exit 10 `token expired`):
 
 ```bash
 gws auth login -s presentations,drive.file
-# 瀏覽器跳出 → 同意 → 回 callback
-# 10 秒搞定
+# Browser opens → consent → callback returns
+# Takes about 10 seconds
 ```
 
-**不需要重跑 setup flow**，Client Secret 與 OAuth Client 仍有效，只是
-refresh token 過期。
+**No need to rerun the setup flow** — your Client Secret and OAuth
+client are still valid, only the refresh token expired.
 
-**Passive 告知策略（TECH-SPEC §6.3）**：`google-slides-builder`
-pre-flight 偵測到 token 過期會 exit 10，Claude 讀到此 exit code 自動
-提示 re-auth，而非每次主動 prompt 打斷使用者。
+**Passive notification strategy (TECH-SPEC §6.3)**: when
+`google-slides-builder`'s pre-flight sees an expired token it exits
+with code 10. Claude sees that exit code and prompts you to re-auth
+on demand, rather than nagging you on every run.
 
 ## Error messages guide
 
-| 訊息 / 狀態 | 根因 | 回到 |
+| Message / state | Root cause | Go to |
 |---|---|---|
-| `401 Unauthorized` | token 過期或未 auth | [Every 7 days maintenance](#every-7-days-maintenance) |
-| `403 Forbidden` + `access_denied` | 你的 Gmail 不在 Test users | walkthrough §3（Add test user） |
-| `403 Forbidden` + `API not enabled` | Slides / Drive API 未啟用 | walkthrough §6 |
-| `invalid_scope` | gws 內建 client 對個人 Gmail 不認 scope | [Issue #119 workaround](#issue-119個人-gmail-invalid_scope--invalid_client) |
-| `invalid_client` | Client ID / Secret 未 export，或 `client_secret.json` 缺 | walkthrough §5、§8 |
-| `Google hasn't verified this app` | 正常；點 Advanced → Go to app (unsafe) | walkthrough §10 |
-| exit 17 `SHA-256 mismatch` | binary 校驗失敗（可能網路受攻擊 / release 變動） | 確認網路，重跑 bootstrap；若持續，檢查 upstream release + SHA256SUMS |
-| exit 18 `Keychain unavailable and file-backend also failed` | Keychain 權限異常 + `~/.config/gws/` 權限異常 | 檢查 `~/.config/gws/` 是否 chmod 600，重跑 Setup step 8–9 |
-| `gws auth login` 卡住在 localhost callback | 防火牆擋 loopback，或瀏覽器視窗已關 | 重跑 step 9；確認 127.0.0.1 可通 |
+| `401 Unauthorized` | Token expired or never authed | [Every 7 days maintenance](#every-7-days-maintenance) |
+| `403 Forbidden` + `access_denied` | Your Gmail is not in Test users | walkthrough §3 (add test user) |
+| `403 Forbidden` + `API not enabled` | Slides or Drive API not enabled | walkthrough §6 |
+| `invalid_scope` | gws built-in client rejects the scope on personal Gmail | [Issue #119 workaround](#issue-119--invalid_scope--invalid_client-on-personal-gmail) |
+| `invalid_client` | Client ID / Secret not exported, or `client_secret.json` missing | walkthrough §5, §8 |
+| `Google hasn't verified this app` | Expected; click Advanced → Go to app (unsafe) | walkthrough §10 |
+| exit 17 `SHA-256 mismatch` | Binary checksum failed (possible network attack or upstream release change) | Check the network and rerun bootstrap. If it persists, check upstream releases and SHA256SUMS. |
+| exit 18 `Keychain unavailable and file-backend also failed` | Keychain permissions broken and `~/.config/gws/` permissions broken | Verify `~/.config/gws/` is chmod 600, rerun setup steps 8–9 |
+| `gws auth login` hangs on the localhost callback | Firewall blocking loopback, or the browser window was closed | Rerun step 9; verify `127.0.0.1` is reachable |
 
 ## Checklist
 
-每次跑完 setup，用 `checklists/setup-state.md` 的 6 項 state check 自
-驗一遍：(1) gws binary / (2) jq binary / (3) gcloud 可選 /
-(4) `client_secret.json` 存在 / (5) issue #119 env vars /
-(6) `gws auth whoami` 回傳 email。任一項失敗 → checklist 會指向
-`gcp-console-walkthrough.md` 對應步驟。
+After every setup run, self-verify using the 6 state checks in
+`checklists/setup-state.md`: (1) gws binary / (2) jq binary /
+(3) gcloud (optional) / (4) `client_secret.json` present / (5) issue
+#119 env vars / (6) `gws auth whoami` returns your email. Any
+failure points you back to the matching step in
+`gcp-console-walkthrough.md`.
 
 ## References
 
-- `protocols/gcp-console-walkthrough.md` — 完整 10 步 tutorial
-- `protocols/issue-119-workaround.md` — gws 個人 Gmail workaround 詳解
-- `standards/credential-hygiene.md` — 5 條硬規則 + incident response + ASVS L1 mapping
-- `checklists/setup-state.md` — 6 項 state check
-- 上游 TECH-SPEC：`slides-toolkit/TECH-SPEC.md` §3.2, §4.2, §6.1, §6.2, §8
-- 上游 PRODUCT-SPEC：`slides-toolkit/PRODUCT-SPEC.md` §6.3.3 risks
+- `protocols/gcp-console-walkthrough.md` — full 10-step tutorial
+- `protocols/issue-119-workaround.md` — gws personal-Gmail workaround, full detail
+- `standards/credential-hygiene.md` — 5 hard rules + incident response + ASVS L1 mapping
+- `checklists/setup-state.md` — 6 state checks
+- Upstream TECH-SPEC: `slides-toolkit/TECH-SPEC.md` §3.2, §4.2, §6.1, §6.2, §8
+- Upstream PRODUCT-SPEC: `slides-toolkit/PRODUCT-SPEC.md` §6.3.3 risks

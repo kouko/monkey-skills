@@ -7,10 +7,75 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.6.0 release 前，kouko 需完成）
+### 即將 unblock（在 0.7.0 release 前，kouko 需完成）
 
 - 跑 10 份真實 deck 驗 KR1（brief → URL ≤ 3 分鐘）+ `[ASSUMPTION-2]`
   Google predefined layouts 覆蓋率 ≥ 80%
+
+## [0.6.0-i18n] - 2026-04-24
+
+**Language strategy formalisation** — technical layers rewritten in
+native English; design / content layer gains trilingual (EN / JP / ZH)
+anchors at key terminology points. No functional change; entirely a
+documentation-voice refactor. `docs/*` keeps its Chinese-primary
+narrative per user directive (internal maintenance notes).
+
+### Changed
+
+- **Technical skills — English-native rewrite** (not translation):
+  - `skills/google-slides-api/SKILL.md` + all 4 recipe protocols
+    (`recipe-create-presentation.md`, `recipe-create-slides.md`,
+    `recipe-insert-text.md`, `recipe-insert-image.md`) +
+    `references/api-error-codes.md`
+  - `skills/google-slides-builder/SKILL.md` +
+    `checklists/pre-flight.md`
+  - `skills/google-slides-setup/SKILL.md` +
+    `protocols/gcp-console-walkthrough.md` +
+    `protocols/issue-119-workaround.md` +
+    `standards/credential-hygiene.md` +
+    `checklists/setup-state.md`
+- **Shell script header docstrings — English rewrite**:
+  - `scripts/google-slides/bootstrap.sh`, `gws-wrap.sh`, `env-guard.sh`,
+    `credential-check.sh`, `auto-setup.sh`, `refresh-auth.sh`
+  - Script body code, function-level comments, variable / function
+    names unchanged
+- **Design / content layer — trilingual anchors added**:
+  - `skills/slides-design/SKILL.md` + `references/minto-scqa.md` +
+    `references/chart-selection.md` +
+    `rubrics/slide-plan-self-check.md`
+  - `skills/using-slides-toolkit/SKILL.md` routing table
+  - Anchor format: `English term (日本語 / 中文)` at key concept
+    points; downstream references reuse the English term
+  - Anchor density: ~8 per slides-design SKILL.md, ~19 on
+    minto-scqa.md, ~25 on chart-selection.md, ~8 in router routing
+    table, ~4 on self-check rubric
+- **PRODUCT-SPEC** — added `§6.4 Language strategy` formalising (A)
+  technical EN-primary / (B) design trilingual / (C) frontmatter multi
+  / (D) maintenance rules
+
+### Preserved
+
+- All SKILL.md frontmatter `description` fields (bilingual / trilingual
+  keyword triggers for Claude Code auto-routing — unchanged)
+- Technical facts (commands, exit codes, JSON shapes, file paths, EMU
+  values) — all v0.5.0 live-validated semantics intact
+- Primary source citations (Minto 1987, Cleveland & McGill 1984, Few
+  2012, Duarte 2008/2010, Tufte 2001)
+- `docs/*.md` — still Chinese-primary per user directive (internal
+  maintenance notes / implementation journals)
+- Version history and revision annotations in script headers (`v0.3`,
+  `v0.3.1`, `v0.3.2`, `v0.5.1`)
+
+### Rationale
+
+Technical content is 95% code-surface terms (gws commands, JSON, API
+fields) that are inherently English; Chinese translation noise
+outweighs readability gain. Design / content layer meets the user in
+natural-language conversation ("棒グラフ" / "長條圖" / "bar chart"
+should all route to the same recipe), so trilingual anchors preserve
+alignment without bloating the prose. `docs/*` stays Chinese-primary
+because it serves as internal maintenance record where authorial
+velocity > international reach.
 
 ## [0.5.1-smooth-reauth] - 2026-04-24
 

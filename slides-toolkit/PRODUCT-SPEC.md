@@ -621,6 +621,47 @@ gws binary" 原則；觸發 Phase 2+ 實作時，需在對應 builder skill 內
 單獨評估是否引入 runtime（例如 `pptx-builder` 若需 Python，應 scope
 到該 skill 內部，不污染其他 backend）。
 
+### 6.4 Language strategy（v0.6.0）
+
+針對 skill 內容語言選擇，依**使用場景**切兩層：
+
+**(A) Technical layers — English-primary body**
+
+適用於 `google-slides-api` / `google-slides-builder` / `google-slides-setup`
++ 所有 `scripts/*.sh` header comments。理由：
+
+- 內容絕大多數是 gws CLI 命令、JSON payload、API field name、file path、
+  exit code —— 這些本來就是英文世界的術語
+- 跨語言使用者若要 debug / fork / contribute，英文 body 降低摩擦
+- `gws-cli-quirks.md` 等 `docs/*` 仍保留繁中（內部維護紀錄性質）
+
+**(B) Design / content layer — trilingual anchors (EN / JP / ZH)**
+
+適用於 `slides-design/*` + `using-slides-toolkit` routing table。理由：
+
+- 設計層面對使用者自然語言（「棒グラフ」/「長條圖」/「bar chart」應
+  觸發同一 recipe）
+- Minto / SCQA narrative 概念在 3 種語言中有 canonical 翻譯對照
+- Anchor 格式 `English term (日本語 / 中文)` — 每個 concept 在文件內 anchor
+  一次，後續引用用英文
+
+**(C) Frontmatter description — 保持多語 keyword triggers**
+
+所有 5 個 SKILL.md 的 `description` 欄位保留多語 keyword（EN + 繁中 +
+日文 + 簡中 + 其他觸發詞），確保 Claude Code 的 skill auto-routing 對
+不同語言的使用者意圖都能命中。
+
+**(D) 持續性維護規則**
+
+- 新增 technical 檔 → 直接英文寫
+- 新增 design / content 檔 → 在 key term 處加 trilingual anchor
+- 現有檔案 i18n 方向已固定（v0.6.0 commit），維護者跟進該檔既定語言
+- `docs/*` 維護者紀錄 — 允許繁中 / 中英混寫（以速度優先）
+
+**Because** 語言選擇應服務「誰會讀 / 如何觸發 / 什麼語境」三個軸，而非
+統一規格。拆成 technical vs design / content 兩層正好對應「code-like
+precision」vs 「user-natural-language alignment」兩種需求。
+
 ---
 
 ## 7. Success Criteria

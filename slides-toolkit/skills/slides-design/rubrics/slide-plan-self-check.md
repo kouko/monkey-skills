@@ -1,76 +1,76 @@
 # Slide-plan self-check rubric
 
-**用途**：draft 完 `slide-plan.json` 後、交給 `google-slides-builder`（或 Phase 2+ 其他 backend builder）前，跑以下 binary checklist 做 advisory self-check。
+**Purpose**: after drafting `slide-plan.json` and before handing it to `google-slides-builder` (or a Phase 2+ backend builder), run this binary checklist as an advisory self-check.
 
-**性質**：**Advisory only**——MVP 不 hard-gate（不阻擋 pipeline）。目的是在執行前捕捉常見敘事 / layout / 資產問題，降低 deck 生成後的人工微調時間。
+**Nature**: **Advisory only** — MVP does not hard-gate (does not block the pipeline). The goal is to catch common narrative / layout / asset problems before the deck is built, so you spend less time hand-fixing afterwards.
 
-**何時用**：
-- draft `slide-plan.json` 完成後
-- 交給 builder 執行前
-- 懷疑 deck 品質不穩定時，拿這份回頭檢查
-
----
-
-## Checklist（9 項；全 binary）
-
-### 敘事與資訊層級
-
-- [ ] **每張 slide 只有一個主結論** — `replacements.{{title}}` / `{{headline}}` 只出現 1 個論點；一頁多結論 → 拆頁（Minto 1987）
-- [ ] **Title 可獨立讀懂（不依賴口頭補充）** — 讀每張 slide 的 title，能否單獨理解該頁訊息？若只看到「Revenue breakdown」→ 改寫為結論式 title（例「APAC 驅動 45% revenue」）
-- [ ] **敘事流有開場（SCQA）與結構（Minto Pyramid）** — 第 1–2 頁能辨識到 Situation → Complication → Question → Answer；中段依 Pyramid 主幹分支展開，sibling slides MECE（互斥且窮盡）
-
-### 視覺與 layout
-
-- [ ] **圖表選型合理** — 每個 chart 依 `references/chart-selection.md` 的對照表選型（Pie slice > 5 已改 Bar；類別比較用 Bar；時序用 Line；部分 vs 整體且 slice ≤ 5 才用 Pie）
-- [ ] **`layout_hint` 欄位與內容匹配** — 有 image 的 slide 設 `headline-image`；純文字結論設 `title-body`；金句設 `quote`；與實際 `replacements` / `images` 內容一致
-
-### 資產與 placeholder 對位
-
-- [ ] **圖片路徑已確認存在** — 每個 `slides[].images[].local_path` 指向的本機檔案實際存在（`ls` 驗證）；無 broken path
-- [ ] **Placeholder 命名對應 template** — `replacements` 的 key（e.g. `{{title}}`, `{{headline}}`, `{{date}}`）與 template deck 內的 placeholder 一致；參照 `google-slides-builder/templates/registry.md` 確認
-
-### Backend 設定
-
-- [ ] **`target` 欄位設為 `"google-slides"`** — MVP 唯一支援 backend；缺欄或設為 `"html"` / `"pptx"` / `"marp"` → builder exit 12（Phase 2+ trigger 未達）
-
-### 安全
-
-- [ ] **無敏感資訊** — `replacements` 內無 credential / API key / PII / 未遮蔽的個資；`images[].local_path` 非 screenshot of credential / token 等敏感內容
+**When to run**:
+- Right after the `slide-plan.json` draft is complete
+- Before passing the plan to the builder
+- When a deck feels inconsistent and you want to trace the cause
 
 ---
 
-## 使用方式
+## Checklist (9 items, all binary)
 
-### 對 Claude
+### Narrative and information hierarchy
 
-逐項過 checklist；每項 PASS 打勾，FAIL 記錄具體問題 + 修法建議。全部跑完產出一段 summary：
+- [ ] **Each slide carries one main conclusion** (一主張 / 單一結論) — `replacements.{{title}}` or `{{headline}}` states exactly one claim. A slide with two conclusions dilutes both; split it (Minto 1987).
+- [ ] **Title reads standalone** (独立して読める / 可獨立讀懂) — the title is understandable without narration or the chart. If it only says "Revenue breakdown", rewrite it as a conclusion (e.g. "APAC drives 45% of revenue").
+- [ ] **Narrative has an SCQA opener and Minto Pyramid structure** (SCQA 導入 + ピラミッド構造 / SCQA 開場 + 金字塔結構) — slides 1–2 show Situation → Complication → Question → Answer; the body unfolds along Pyramid branches and sibling slides are MECE.
+
+### Visual and layout
+
+- [ ] **Chart type is appropriate** (図表選型 / 圖表選型) — every chart follows `references/chart-selection.md` (pie with > 5 slices is converted to bar; category comparison uses bar; time series uses line; part-to-whole with ≤ 5 slices may use pie).
+- [ ] **`layout_hint` matches the content** — slides with an image use `headline-image`; pure-text conclusions use `title-body`; pull quotes use `quote`; the hint agrees with the actual `replacements` / `images`.
+
+### Assets and placeholder alignment
+
+- [ ] **Image paths exist** — every `slides[].images[].local_path` points to a file that actually exists (verify with `ls`); no broken paths.
+- [ ] **Placeholder names match the template** — the `replacements` keys (e.g. `{{title}}`, `{{headline}}`, `{{date}}`) match the placeholders in the template deck; cross-reference `google-slides-builder/templates/registry.md`.
+
+### Backend setup
+
+- [ ] **`target` field is `"google-slides"`** — MVP supports only this backend; missing or set to `"html"` / `"pptx"` / `"marp"` causes the builder to exit 12 (Phase 2+ trigger not met).
+
+### Security
+
+- [ ] **No sensitive data** — `replacements` contains no credentials / API keys / PII / unredacted personal data; `images[].local_path` is not a screenshot of a credential / token.
+
+---
+
+## How to use
+
+### For Claude
+
+Walk through the checklist item by item; mark each PASS or record the concrete FAIL plus a suggested fix. Finish with a summary:
 
 ```
-Self-check summary：
-  ✅ 8 / 9 passed
-  ❌ 1 failed: 「Title 可獨立讀懂」— slide 3 title 「Revenue breakdown」為主題非結論
-  建議修法：改寫為 「APAC 驅動 Q1 45% YoY」
+Self-check summary:
+  PASS 8 / 9
+  FAIL 1: "Title reads standalone" — slide 3 title "Revenue breakdown" names a topic, not a conclusion
+  Suggested fix: "APAC drives Q1 45% YoY"
 ```
 
-### 對使用者
+### For the user
 
-跑完後：
-- 全 pass → 可交給 builder
-- 有 fail → 視嚴重度決定是否修（MVP advisory，不強制 block）
-- 敏感資訊 fail → **建議 block**（非 hard-gate，但強烈建議先修）
-
----
-
-## 與 hard-gate 的關係
-
-MVP **沒有** hard-gate（見 PRODUCT-SPEC §3.2 Non-Goal「design-quality-gate」）。kouko 親自當 gate。Phase 2+ 若 publish 給外部使用者，可能升級此 rubric 為 hard-gate（trigger：外部使用者需不依賴 kouko 判斷）。
+After running:
+- All pass: hand it to the builder.
+- Any fail: decide whether to fix based on severity (MVP advisory, not a hard block).
+- Sensitive-data fail: **strongly suggest blocking** (still not a hard gate, but fix before building).
 
 ---
 
-## Primary sources（rubric 依據）
+## Relationship to hard gates
 
-- Minto (1987) *The Pyramid Principle* — 「每張 1 個結論」、「Title 可獨立讀懂」、SCQA 開場
-- Cleveland & McGill (1984) — 圖表選型準則
-- Few (2012) *Show Me the Numbers* 2nd ed. — chart type 對照
-- 本 plugin PRODUCT-SPEC v0.2 §4.4 design principles — backend-agnostic、credential never in repo
-- 本 plugin TECH-SPEC v0.2 §4.1 — schema v1.1（`target` 欄位）
+MVP has **no** hard gate (see PRODUCT-SPEC §3.2 Non-Goal "design-quality-gate"). kouko acts as the gate personally. Phase 2+, if this plugin ships to external users, this rubric may be promoted to a hard gate (trigger: external users who cannot rely on kouko's judgement).
+
+---
+
+## Primary sources behind this rubric
+
+- Minto (1987) *The Pyramid Principle* — "one conclusion per slide", "title reads standalone", SCQA opener
+- Cleveland & McGill (1984) — chart-type selection principles
+- Few (2012) *Show Me the Numbers* 2nd ed. — chart-type mapping
+- This plugin's PRODUCT-SPEC v0.2 §4.4 design principles — backend-agnostic, credentials never in repo
+- This plugin's TECH-SPEC v0.2 §4.1 — schema v1.1 (`target` field)

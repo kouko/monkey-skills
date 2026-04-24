@@ -1,66 +1,80 @@
-# Issue #119 Workaround — gws 個人 Gmail OAuth
+# Issue #119 Workaround — gws on Personal Gmail OAuth
 
-> 上游 issue：`googleworkspace/cli#119`（TODO：填入 issue URL）
-> 狀態：MVP 實裝時已確認 workaround 有效；[ASSUMPTION-3]（PRODUCT-SPEC
-> §3.3）。若上游修復，見本文末 [何時可移除 workaround](#何時可移除-workaround)。
+> Upstream issue: `googleworkspace/cli#119` (TODO: fill in issue URL).
+> Status: the workaround was confirmed effective when the MVP was
+> implemented ([ASSUMPTION-3], PRODUCT-SPEC §3.3). If the upstream
+> fix ever lands, see
+> [When you can drop the workaround](#when-you-can-drop-the-workaround)
+> at the end of this document.
 
-## 問題背景
+## Background
 
-`gws` CLI（`googleworkspace/cli`）內建了一組 OAuth Client ID + Secret，
-用來讓 `gws auth login` 在 Google Workspace tenant 下 out-of-box 可用。
+The `gws` CLI (`googleworkspace/cli`) ships with a built-in OAuth
+Client ID + Secret so that `gws auth login` works out of the box for
+Google Workspace tenants.
 
-但在 **個人 `@gmail.com`** + **External + Testing consent screen** 組合
-下，這組內建 Client 會拋出：
+But under the combination of **personal `@gmail.com`** +
+**External + Testing consent screen**, this built-in client
+consistently throws one of:
 
-- `invalid_scope` — Google 拒絕 gws 要求的 scope 清單（通常是
-  `--preset recommended` 拉的那組）
-- `invalid_client` — Google 不承認 gws 內建 Client 對個人 Gmail 的合
-  法性（因為 Workspace tenant 的 client 不能跨 tenant 使用）
+- `invalid_scope` — Google rejects the scope list gws requested
+  (typically the set pulled by `--preset recommended`).
+- `invalid_client` — Google does not recognize the gws built-in
+  client as valid for a personal Gmail user. (Workspace-tenant
+  clients cannot be used across tenants.)
 
-## 根因
+## Root cause
 
-gws 預設 OAuth 流程設計面向 **Google Workspace tenant**（有
-Admin Console、有公司 domain、有被 Admin 授權的 internal app）。
-個人 `@gmail.com` 的 unverified External consent screen 不在這條路
-徑上 —— Google 會把「Workspace tenant client × 個人 Gmail user」視
-為跨 tenant 非法使用。
+gws's default OAuth flow is designed for **Google Workspace
+tenants** — the ones with an Admin Console, a company domain, and
+internal apps sanctioned by an Admin. Personal `@gmail.com` accounts
+with an unverified External consent screen don't sit on that path —
+Google treats "Workspace-tenant client × personal Gmail user" as
+illegal cross-tenant use.
 
-對 gws 團隊來說這不是 bug，是設計目標客群（Workspace）不包含個人
-Gmail。對 kouko 來說這是硬阻塞（PRODUCT-SPEC §6.3.3 Risk：gws issue
-#119，likelihood 高、impact 高）。
+From the gws team's point of view this is not a bug; the target user
+base (Workspace) explicitly doesn't include personal Gmail. From
+this project's point of view it's a hard blocker (PRODUCT-SPEC
+§6.3.3 Risk: gws issue #119, likelihood high, impact high).
 
-## Workaround
+## The workaround
 
-**用你自己 GCP project 建的 OAuth Client 取代 gws 內建的。**
+**Override the built-in client with the OAuth client you created in
+your own GCP project.**
 
-gws 支援兩個 env var，存在時會覆寫內建 Client：
+gws honors two env vars that, when present, override its built-in
+client:
 
 - `GOOGLE_WORKSPACE_CLI_CLIENT_ID`
 - `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET`
 
-你的 Client（由 `gcp-console-walkthrough.md` §4–§5 下載的
-`client_secret.json`）對你自己 GCP project 內的 OAuth consent screen
-來說是「合法 first-party client」，不會踩 invalid_client；而且 scope
-要什麼就要什麼（consent screen 自己定），不會踩 invalid_scope。
+The client you downloaded in `gcp-console-walkthrough.md` §4–§5
+(`client_secret.json`) is a legitimate first-party client against
+the OAuth consent screen *you* own in *your own* GCP project, so you
+won't hit `invalid_client`. And the scope list is whatever your
+consent screen accepts (you define it), so `invalid_scope` goes away
+too.
 
-## 具體命令
+## Concrete commands
 
-### 一次性 export（只在當前 shell session 生效）
+### One-shot export (current shell only)
 
 ```bash
 export GOOGLE_WORKSPACE_CLI_CLIENT_ID=$(jq -r .installed.client_id ~/.config/gws/client_secret.json)
 export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET=$(jq -r .installed.client_secret ~/.config/gws/client_secret.json)
 ```
 
-**前置條件**：
+**Prerequisites**:
 
-- `~/.config/gws/client_secret.json` 存在（`gcp-console-walkthrough.md` §5）
-- `jq` 在 PATH 內（`bootstrap.sh` 把 `~/.cache/slides-toolkit/bin/` 加進 PATH
-  是一種作法；另一種是 alias `jq=~/.cache/slides-toolkit/bin/jq`）
+- `~/.config/gws/client_secret.json` exists
+  (`gcp-console-walkthrough.md` §5).
+- `jq` is on PATH. Either put `~/.cache/slides-toolkit/bin/` on PATH,
+  or alias `jq=~/.cache/slides-toolkit/bin/jq`.
 
-### 寫入 shell profile（永久生效）
+### Write to shell profile (persistent)
 
-把上述兩行加到 `~/.zshrc`（zsh，macOS 預設）或 `~/.bashrc`（bash）：
+Append the block below to `~/.zshrc` (the zsh default on macOS) or
+`~/.bashrc` (for bash):
 
 ```bash
 # slides-toolkit — gws issue #119 workaround
@@ -70,75 +84,89 @@ if [ -f ~/.config/gws/client_secret.json ]; then
 fi
 ```
 
-`2>/dev/null` 避免 `jq` 未裝時每次開 terminal 噴錯。
+The `2>/dev/null` keeps your terminal quiet when `jq` isn't on PATH
+yet.
 
-重啟 terminal 或 `source ~/.zshrc` 生效。
+Open a new terminal or run `source ~/.zshrc` to activate.
 
-### 用 `env-guard.sh apply`（推薦）
+### Use `env-guard.sh apply` (recommended)
 
-讓 skill 幫你把 env var 寫進獨立的 `~/.config/gws/env.sh`（chmod
-600），`scripts/google-slides/gws-wrap.sh` 每次呼叫前會 source 它：
+Let the skill write the env vars into a standalone
+`~/.config/gws/env.sh` (chmod 600) which
+`scripts/google-slides/gws-wrap.sh` sources on every call:
 
 ```bash
 bash scripts/google-slides/env-guard.sh apply
 ```
 
-**優點**：
+**Advantages**:
 
-- 獨立檔案好管理（想移除 workaround 直接刪 `env.sh`）
-- chmod 600 自動設對
-- `gws-wrap.sh` 內部 source，不污染你的全域 shell profile
-- 對齊 `standards/credential-hygiene.md` 規則 2（credential 集中 `~/.config/gws/`）
+- Standalone file is easy to manage (remove the workaround by simply
+  deleting `env.sh`).
+- chmod 600 is set automatically.
+- `gws-wrap.sh` sources it internally, so your global shell profile
+  stays clean.
+- Aligns with rule 2 of `standards/credential-hygiene.md`
+  (credentials centralized under `~/.config/gws/`).
 
-## 如何驗證 workaround 生效
+## How to verify the workaround is active
 
-**負驗證**（設定前跑一次）：
+**Negative check** (before applying):
 
 ```bash
 unset GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
 gws auth login -s presentations,drive.file
-# 預期：錯誤訊息含 invalid_scope 或 invalid_client
+# Expected: error message containing invalid_scope or invalid_client
 ```
 
-**正驗證**（設定後）：
+**Positive check** (after applying):
 
 ```bash
-source ~/.config/gws/env.sh   # 或重開 terminal（若寫進 profile）
+source ~/.config/gws/env.sh   # or reopen the terminal if persisted to profile
 gws auth login -s presentations,drive.file
-# 預期：瀏覽器開啟 consent screen；完成後 `gws auth whoami` 回 email
+# Expected: browser opens consent screen; afterwards `gws auth whoami` returns your email
 ```
 
-或者用 `env-guard.sh check`：
+Or use `env-guard.sh check`:
 
 ```bash
 bash scripts/google-slides/env-guard.sh check
-# 預期：{"workaround_needed":false}  ← 代表已生效
-# 若回 {"workaround_needed":true} 代表尚未 export，需重跑
+# Expected: {"workaround_needed":false}  ← already active
+# If it returns {"workaround_needed":true} then env vars are not
+# exported — rerun env-guard.sh apply.
 ```
 
-## 何時可移除 workaround
+## When you can drop the workaround
 
-以下條件**同時**滿足時可考慮移除：
+You can consider removing this workaround only when **all** of these
+are true:
 
-1. `googleworkspace/cli` 官方修復 issue #119（例如：內建 Client 改為
-   支援個人 Gmail；或 CLI 新增 `--use-external-oauth-client` 官方旗標）
-2. 你把 `~/.cache/slides-toolkit/bin/gws` 升級到修復版
-3. `scripts/google-slides/env-guard.sh` 的 feature flag 判定 version
-   >= known-fixed version（TECH-SPEC §6.1 最後一段）
+1. `googleworkspace/cli` officially fixes issue #119 (e.g. the
+   built-in client starts accepting personal Gmail, or the CLI adds
+   an official `--use-external-oauth-client` flag).
+2. `~/.cache/slides-toolkit/bin/gws` has been upgraded to the fixed
+   version.
+3. `scripts/google-slides/env-guard.sh`'s feature flag detects a
+   version >= known-fixed (see TECH-SPEC §6.1 final paragraph).
 
-在此之前**保留 workaround**。每次 `bootstrap.sh` 升級 gws binary 版
-本時重新驗證一次（負驗證 + 正驗證）即可 —— gws 改版有可能無聲中修復、
-也有可能無聲中破壞 workaround，兩種方向都要警覺。
+Until then **keep the workaround**. Every time `bootstrap.sh`
+upgrades the gws binary, re-run both checks above (negative +
+positive) — gws releases can silently fix the issue *or* silently
+break the workaround. Either direction matters.
 
-追蹤方式：訂閱 upstream issue 通知、或於 `bootstrap.sh` pin 新版本
-時在 PR description 附上 issue 最新狀態。
+To stay on top of this: subscribe to the upstream issue, or attach
+the latest issue status to the PR whenever `bootstrap.sh` pins a new
+version.
 
-## 相關檔案
+## Related files
 
-- `protocols/gcp-console-walkthrough.md` §8 — setup flow 的第 8 步
-- `standards/credential-hygiene.md` — credential 放 `~/.config/gws/` 的硬規則
-- `../../scripts/google-slides/env-guard.sh` — check / apply 實作
-- `../../scripts/google-slides/gws-wrap.sh` — 每次呼叫前 source `env.sh`
-- TECH-SPEC §4.2 — `env-guard.sh` 契約、exit 16
-- TECH-SPEC §6.1 — workaround 完整實作描述
-- PRODUCT-SPEC §3.3 [ASSUMPTION-3] — workaround 穩定性假設
+- `protocols/gcp-console-walkthrough.md` §8 — setup flow step 8
+- `standards/credential-hygiene.md` — the hard rule that credentials
+  live in `~/.config/gws/`
+- `../../scripts/google-slides/env-guard.sh` — check / apply
+  implementation
+- `../../scripts/google-slides/gws-wrap.sh` — sources `env.sh`
+  before every call
+- TECH-SPEC §4.2 — `env-guard.sh` contract, exit 16
+- TECH-SPEC §6.1 — full workaround implementation notes
+- PRODUCT-SPEC §3.3 [ASSUMPTION-3] — workaround-stability assumption

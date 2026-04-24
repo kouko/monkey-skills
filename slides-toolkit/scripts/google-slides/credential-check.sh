@@ -2,40 +2,47 @@
 set -euo pipefail
 
 # =============================================================================
-# credential-check.sh — Keychain / file backend 偵測 + token 過期 metadata
+# credential-check.sh — Keychain / file backend detection + token-age metadata
 # -----------------------------------------------------------------------------
-# 用途：
-#   - 偵測 macOS Keychain 是否可用於 gws refresh_token 儲存（常見 silent-fail
-#     symptom：exit 非 0 + stderr 含 "could not be found" → 轉 file backend）。
-#   - 偵測 file fallback（~/.config/gws/keyring-file.json）是否存在。
-#   - 讀 ~/.config/gws/credentials.enc 的 metadata（mtime）推估 token 年齡
-#     （不讀內容！ASVS V14 secrets-at-rest：metadata-only）。
+# Responsibilities:
+#   - Detect whether the macOS Keychain is usable for gws refresh_token
+#     storage (the common silent-fail symptom is a non-zero exit with
+#     "could not be found" on stderr — fall through to the file backend).
+#   - Detect whether the file fallback
+#     (~/.config/gws/keyring-file.json) exists.
+#   - Read metadata (mtime) from ~/.config/gws/credentials.enc to estimate
+#     token age. Contents are never read (ASVS V14 secrets-at-rest:
+#     metadata-only).
 #
-# 安全重點（本 script 專屬）：
-#   - 絕不讀 credential 檔內容；只 stat metadata（存在 + mtime）
-#   - 絕不 echo env var / credential 到 stdout
-#   - 絕不將 stderr 中的 system error message 直接 passthrough（可能含 path）
+# Security rules specific to this script:
+#   - Never read credential-file contents; only stat metadata (existence +
+#     mtime).
+#   - Never echo env vars or credentials to stdout.
+#   - Never pass through system error messages from stderr verbatim (they
+#     may include paths).
 #
 # Upstream refs:
 #   - TECH-SPEC §4.2 `scripts/google-slides/credential-check.sh` contract
-#   - TECH-SPEC §4.8 Credential flow（ASVS V14）
-#   - TECH-SPEC §6.2 Keychain silent fail fallback
-#   - TECH-SPEC §6.3 7 天 token 過期 UX
+#   - TECH-SPEC §4.8 Credential flow (ASVS V14)
+#   - TECH-SPEC §6.2 Keychain silent-fail fallback
+#   - TECH-SPEC §6.3 7-day token expiry UX
 #
 # Args: none
 #
 # Stdin: none
 # Stdout: JSON `{"backend":"keychain"|"file"|"none","token_valid":bool,"expires_in_days":int}`
-#        — 永遠回結構化狀態 JSON，不在 no-backend 情境退化為 error JSON（讓
-#          caller 如 gws-wrap.sh 能統一 parse）。嚴重度走 exit code。
-# Stderr: 人讀 progress（不含 secret）
+#        — always a structured status JSON; the no-backend case does NOT
+#          degrade to an error JSON, so callers such as gws-wrap.sh can
+#          parse uniformly. Severity is signalled via the exit code.
+# Stderr: human-readable progress (no secrets).
 #
-# Exit codes (per TECH-SPEC §4.2)：
-#   0   success（backend 可用；token_valid 可能 true 或 false）
-#   1   generic error（必要指令缺失等）
-#   18  Keychain unavailable AND file backend 也不可用（需跑 `gws auth`）
-#       — 注意：stdout 仍回 `{"backend":"none",...}` 結構化狀態；exit code
-#         表達嚴重度，errors-out-of-band 原則
+# Exit codes (per TECH-SPEC §4.2):
+#   0   success (backend usable; token_valid may be true or false)
+#   1   generic error (missing required command, etc.)
+#   18  Keychain unavailable AND file backend also unavailable
+#       (run `gws auth`). Note: stdout still returns the structured
+#       `{"backend":"none",...}` status; the exit code signals severity
+#       (errors-out-of-band principle).
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"

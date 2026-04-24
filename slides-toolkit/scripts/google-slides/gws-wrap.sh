@@ -2,36 +2,40 @@
 set -euo pipefail
 
 # =============================================================================
-# gws-wrap.sh — gws CLI wrapper with pre-flight + 429 退避
+# gws-wrap.sh — gws CLI wrapper with pre-flight + 429 backoff
 # -----------------------------------------------------------------------------
-# 用途：
-#   在每次呼叫 gws 前跑 env-guard（issue #119 pre-flight 檢測，不 apply）+
-#   credential-check（token 有效性 / backend 偵測），然後以指數退避重試
-#   429 / 5xx 錯誤；解析 structured error 映射到 TECH-SPEC §4.2 exit code。
+# Before each gws invocation, the wrapper runs env-guard (issue #119
+# pre-flight check, no apply) and credential-check (token validity and
+# backend detection), then retries 429 / 5xx errors with exponential
+# backoff. Structured errors are parsed and mapped to the TECH-SPEC §4.2
+# exit-code table.
 #
 # Upstream refs:
 #   - TECH-SPEC §3.4 google-slides-builder
 #   - TECH-SPEC §4.2 `scripts/google-slides/gws-wrap.sh` contract
 #   - TECH-SPEC §4.3 gws CLI recipe mapping
-#   - TECH-SPEC §6.4 Rate limit (429) 指數退避實作
+#   - TECH-SPEC §6.4 Rate-limit (429) exponential-backoff implementation
 #
 # Args:
-#   --dry-run                不呼叫 gws，只印出將執行的 command + args
-#   <subcommand> <args...>   完整轉傳給 gws（例：`slides presentations batchUpdate ...`）
+#   --dry-run                Do not call gws; print the command + args that
+#                            would run.
+#   <subcommand> <args...>   Forwarded verbatim to gws
+#                            (e.g. `slides presentations batchUpdate ...`).
 #
-# Stdin: raw JSON（若 subcommand 需要）— 直接 passthrough 給 gws
-# Stdout: gws 回傳的 JSON，原樣 passthrough
-# Stderr: 人讀 progress + 結構化 error JSON on failure
+# Stdin: raw JSON (if the subcommand needs it) — passed through to gws.
+# Stdout: gws response JSON, passed through unchanged.
+# Stderr: human-readable progress + structured error JSON on failure.
 #
-# Exit codes (per TECH-SPEC §4.2)：
+# Exit codes (per TECH-SPEC §4.2):
 #   0   success
-#   1   generic error（usage / pre-flight）
+#   1   generic error (usage / pre-flight)
 #   10  token expired / unauthenticated (401/403)
 #   11  rate limit exhausted after retry (429 × 5)
 #   12  Google resource not found / API error
-#   16  issue #119 workaround needed（env-guard check fail）
+#   16  issue #119 workaround needed (env-guard check failed)
 #
-# 預設：`BIN_DIR=${HOME}/.cache/slides-toolkit/bin`（由 bootstrap.sh 填入）
+# Default: `BIN_DIR=${HOME}/.cache/slides-toolkit/bin` (populated by
+# bootstrap.sh).
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
