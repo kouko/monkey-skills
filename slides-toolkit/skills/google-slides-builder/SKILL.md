@@ -156,15 +156,44 @@ stderr 印人讀 progress + TaskUpdate 訊息（recipe 開始 / 結束、429 ret
 
 **13a / 13b 為 warning**：pipeline 繼續走完、最後一併回報到 `warnings[]`；不 abort。
 
-## Token expiry（passive）
+## Token expiry（smooth re-auth）— v0.5.1
 
-依 TECH-SPEC §6.3 策略——**不**主動 refresh：
+依 TECH-SPEC §6.3 策略——**不**主動背景 refresh，但 Claude 偵測 exit 10
+時應**自動觸發 re-auth**（browser opens → user clicks Allow → retry
+pipeline）。使用者只需點一次「允許」，不需 copy-paste 長指令。
 
-- Pre-flight 的 `credential-check.sh` 若回 `expires_in_sec < 0` → exit 10
-- stderr 印：`Your gws refresh token has expired (Google External + Testing policy: 7-day lifetime). Please run: gws auth login then retry.`
-- Claude 讀到 exit 10 → 自動路由到 `google-slides-setup` re-auth
+### Exit 10 recovery protocol（Claude 依此處理）
 
-**Because** 每週 3–5 份的使用頻率下，user 有節奏感；非必要時 auto-prompt 會打斷。
+1. **偵測**：pre-flight 的 `credential-check.sh` 回 `expires_in_days <= 0`，
+   或 builder 呼叫 `gws-wrap.sh` 收到 exit 10（`invalid_grant` /
+   `token.*expired`）
+2. **告知使用者**：stderr 印
+   > `Your gws refresh token has expired (Google External + Testing mode
+   > 7-day lifetime). Launching re-auth now — browser will open, please
+   > click "Allow".`
+3. **自動觸發 re-auth**：呼叫
+   `bash slides-toolkit/scripts/google-slides/refresh-auth.sh`
+   - 該 script 會 source env.sh + export env vars + 呼叫
+     `gws auth login --scopes=<presentations,drive.file>`
+   - 瀏覽器自動開；使用者點 Allow；localhost callback；exit 0
+4. **Retry 原 operation**：re-auth 成功後（script exit 0），**重新跑**
+   被中斷的 pipeline step（create-presentation / batchUpdate / etc.）
+5. **若 re-auth 失敗**（script exit 10；使用者點 Cancel / scope 錯誤等）：
+   - 不再 retry；直接報錯給使用者
+   - 指引到 `google-slides-setup` SKILL 做完整 diagnose
+
+### Alias 建議（non-Claude context）
+
+使用者在 terminal 手動跑時（例：懷疑 token 快到期想 proactive refresh）：
+```bash
+# ~/.zshrc
+alias gws-relogin='bash ~/GitHub/monkey-skills/slides-toolkit/scripts/google-slides/refresh-auth.sh'
+```
+
+**Because** 每週 3–5 份的使用頻率下，user 有節奏感，但不該被 copy-paste
+長指令打擾；把 scope clamp + env vars handling 收到 helper script 內是
+ETC / DRY（多個 entry point — Claude orchestration / user alias /
+cron — 共用同一 re-auth 路徑）。
 
 ## Output contract
 

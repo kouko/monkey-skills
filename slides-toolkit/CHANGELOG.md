@@ -12,6 +12,50 @@ All notable changes to `slides-toolkit` are documented in this file.
 - 跑 10 份真實 deck 驗 KR1（brief → URL ≤ 3 分鐘）+ `[ASSUMPTION-2]`
   Google predefined layouts 覆蓋率 ≥ 80%
 
+## [0.5.1-smooth-reauth] - 2026-04-24
+
+**UX refinement**（非 pivot；無 scope 變動）— 把「7 天 token 過期」的
+recovery 從「使用者 copy-paste 長指令」提升為「Claude 偵測 exit 10 →
+自動呼叫 helper → browser open → user 點 Allow → retry」，無痛體驗。
+
+### Added
+
+- `scripts/google-slides/refresh-auth.sh`（60 lines）— 一鍵 re-auth helper：
+  - 自動 source `~/.config/gws/env.sh`（issue #119 workaround env vars）
+  - 呼叫 `gws auth login --scopes=<presentations,drive.file>`（完整 URL，
+    避免 `-s` service filter 陷阱）
+  - Pre-flight 驗 `client_secret.json` / `env.sh` / `gws` binary 存在
+  - Exit 0 success / 10 gws auth fail / 1 generic
+  - `SLIDES_TOOLKIT_SCOPES` env override
+  - 三個 entry point 共用：Claude orchestration / user alias
+    (`gws-relogin`) / cron（未來若加）
+
+### Changed
+
+- `skills/google-slides-builder/SKILL.md` §Token expiry — 從 "passive
+  detect + 告知使用者手動跑" 升級為「exit 10 recovery protocol」5-step
+  明文（偵測 → 告知 → 自動觸發 refresh-auth.sh → retry 原 op → 失敗
+  才 escalate）。加 zsh alias `gws-relogin` 建議。
+- `skills/google-slides-api/references/api-error-codes.md` exit 10 section
+  — Recovery 指令從 `gws auth login -s presentations,drive.file`（錯的
+  scope 語法）改為推薦 `refresh-auth.sh` helper + 保留手動展開版供 fallback。
+  指向 `google-slides-builder/SKILL.md §Token expiry` 為權威 orchestration
+  protocol。
+
+### Rationale
+
+v0.5.0 live E2E 驗證後，唯一 recurring friction 是每 7 天重跑 `gws auth
+login`——該指令含兩條完整 scope URL + 需先 source env.sh + export。複
+製貼上易出錯（例：`-s` vs `--scopes=` 語法差異）。
+
+v0.5.1 把這一長串收斂到單一 helper script：
+- **Claude 偵測 exit 10 → 呼叫 helper**：無需 Claude 記住長指令
+- **User 偏好手動**：alias 一個 `gws-relogin` 詞即可
+- **未來 cron / launchd 自動提醒**：仍指向同一 helper（DRY）
+
+唯一仍需使用者互動的是瀏覽器點「Allow」（Google OAuth policy 強制，
+`docs/google-oauth-automation-limits.md` 已記錄為永久邊界），約 10 秒。
+
 ## [0.5.0-live-validated] - 2026-04-24
 
 **Live E2E Validated**（非 pivot；無 scope 變動）— 首次在真實環境完整跑

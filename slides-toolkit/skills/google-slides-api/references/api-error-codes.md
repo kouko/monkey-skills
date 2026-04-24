@@ -21,12 +21,32 @@ All recipes in `protocols/` reference this file for exit-code semantics.
 - Required scope missing（e.g. requested `presentations.batchUpdate` but login only granted `drive.file`）
 - Revoked OAuth consent（user removed access via myaccount.google.com）
 
-**Recovery**:
+**Recovery**（v0.5.1 起 smooth re-auth）:
+
+**建議用 helper script**（Claude orchestration + user alias 共用此入口）：
 ```bash
-gws auth login -s presentations,drive.file
+bash ~/GitHub/monkey-skills/slides-toolkit/scripts/google-slides/refresh-auth.sh
 ```
 
-Then rerun the recipe. Token becomes fresh for another 7 days.
+該 script 自動：source `env.sh`（issue #119 env vars）+ call
+`gws auth login --scopes=<presentations,drive.file>`（完整 URL，避免
+`-s` service filter 陷阱 — 見 `docs/gws-cli-quirks.md` §3）。
+
+**手動展開版**（若不想用 helper）：
+```bash
+source ~/.config/gws/env.sh
+export GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
+gws auth login \
+  --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive.file
+```
+
+Browser opens → click "Allow" → exit 0 → rerun the recipe. Token fresh
+for another ~7 days（Testing mode）。
+
+**Claude orchestration pattern**：偵測 exit 10 時**不要**只告訴使用者指
+令；直接呼叫 `refresh-auth.sh`（瀏覽器自動開）→ user 點 Allow → retry
+原 operation。見 `google-slides-builder/SKILL.md §Token expiry` 完整
+recovery protocol。
 
 ---
 
