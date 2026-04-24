@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.0] — 2026-04-24
+
+### Context
+
+`research-team` adopts three deep-mode pre-writing / synthesis hooks
+to close gaps identified in an industry survey of research-agent
+patterns (Anthropic Multi-Agent Research, Stanford STORM, LangGraph
+`open_deep_research`, OpenAI Deep Research, GPT Researcher,
+Perplexity). Hooks live in `protocols/hooks/` and are lazy-loaded
+only when `mode=deep` — quick mode (default, ~80% of usage)
+loads zero hook content.
+
+Implementation deliberately picks the **smallest viable version**
+of each pattern (not the full reference implementation):
+
+- **multi-perspective**: STORM's perspective-mining step only;
+  omits the simulated expert-writer dialogue
+- **self-critique**: LangGraph `think_tool`'s disclosure pattern
+  only; omits the iterative critique→revise loop (saves an LLM pass)
+- **parallel-fanout**: Anthropic Multi-Agent Research lead/worker
+  fan-out without a dedicated coordinator agent (main agent
+  coordinates)
+
+Token impact: quick mode 0; deep mode ±5% (hook content offset by
+parallel-fanout's isolated context with subset-only standards).
+
+### Added
+
+- `research-team/protocols/hooks/multi-perspective.md` — Phase 0
+  stakeholder/contrarian seeding (≥3 distinct perspectives) for
+  deep-mode framing diversification
+- `research-team/protocols/hooks/self-critique.md` — Phase 3 worker
+  self-critique block (≤200 words: weakest evidence link, ignored
+  opposing evidence, confidence-evidence match) appended to deep-mode
+  artifacts before evaluator review
+- `research-team/protocols/hooks/parallel-fanout.md` — Phase 1
+  decision rule for spawning N≤4 parallel sub-workers with isolated
+  context and subset-only standards loading; integration in Phase 3
+- `research-team/research/grounding-v5.3.0.md` — industry survey
+  audit trail (14 reference systems compared) + design-trade-off
+  rationale for each minimum-disruption hook variant
+
+### Changed
+
+- `research-team/SKILL.md`:
+  - Resource Manifest: added Deep-mode hooks lazy-load entry
+  - Compressed prose to free headroom (485 → 460 lines): Investment
+    Analysis Delegation 16L→6L, Note on Global Context 10L→6L,
+    persona primary-sources block tightened, Behavioral Rules dedupe
+- `research-team/protocols/research.md` — added §Deep-Mode Hooks
+  trigger map (central; inherited by 4 specialized protocols)
+- `research-team/protocols/{academic-research,market-analysis,competitive-analysis,stack-evaluation}.md`
+  — each gains 1-line pointer to research.md §Deep-Mode Hooks
+- `research-team/rubrics/research-quality-gate.md` — added
+  Self-Critique Honesty dimension (Fatal if absent or vacuous in
+  deep mode); SHOULD gate dimensions 4 → 5
+- `.claude-plugin/plugin.json` — version `5.2.0` → `5.3.0`
+
 ## [5.1.0] — 2026-04-17
 
 ### Context

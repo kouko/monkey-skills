@@ -58,6 +58,12 @@ See `standards/confidence-and-claim-language.md` §Cost-Aware
 Early-Exit Rule for the mode-specific exit thresholds and the
 per-claim (not per-deliverable) policy.
 
+**Deep-mode hooks**: load per the trigger map in
+`protocols/research.md` §Deep-Mode Hooks (multi-perspective at
+end of scope-definition Step 1-2; parallel-fanout at candidate
+discovery Step 3 when ≥3 independent candidates; self-critique
+at end of Step 7 / Synthesize recommendation). Quick mode skips.
+
 ## Protocol
 
 ### Step 1. Define evaluation scope
