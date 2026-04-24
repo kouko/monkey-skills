@@ -29,7 +29,7 @@ tags: [research, domain-teams, research-team, grounding, hooks, multi-agent, dee
 
 | File-organization decision | Rationale |
 |---|---|
-| Lazy-loaded `protocols/hooks/` sub-dir (vs embedded into protocols) | Quick mode (~80% of usage) avoids reading deep-only dead text — net token win even though file Read overhead exists for deep mode |
+| Lazy-loaded flat `protocols/hook-*.md` files (vs embedded into protocols) | Quick mode (~80% of usage) avoids reading deep-only dead text — net token win even though file Read overhead exists for deep mode |
 | One central trigger map in `protocols/research.md` §Deep-Mode Hooks | 4 specialized protocols inherit via 1-line pointer — no duplication |
 
 ---
@@ -148,7 +148,7 @@ PRISMA 2020, Cochrane Handbook v6.5, IPCC AR5 Mastrandrea 2010, Kent 1964, Tetlo
 
 # File-Organization Trade-Off (拆檔 vs 嵌入)
 
-The most-debated design decision was whether to inline hook rules into existing protocols (`research.md` Phase 0/1/3) or split into `protocols/hooks/` sub-files. Decision: **split**.
+The most-debated design decision was whether to inline hook rules into existing protocols (`research.md` Phase 0/1/3) or split into separate hook files. Decision: **split**.
 
 | Dimension | Embed (rejected) | Split (chosen) |
 |---|---|---|
@@ -164,10 +164,17 @@ The most-debated design decision was whether to inline hook rules into existing 
 
 For quick mode (default, ~80% of usage), split saves ~150–200 tokens per call. For deep mode (~20% of usage at ~30k–150k token scale), the difference rounds out to <±5%. Split wins on quick mode and is neutral on deep mode → split.
 
-**Sub-directory choice (`protocols/hooks/`)** vs flat `protocols/hook-*.md`:
-- Sub-dir signals semantically that hooks are protocol-internal flow modifiers, not standalone workflows
-- Compatible with CLAUDE.md "one level deep, no nesting" rule (sub-dir is organizational, not a reference depth)
-- Future hooks (clarification gate / failure-recovery) can colocate without polluting `protocols/` root
+**Naming convention — flat `protocols/hook-*.md`** (originally proposed
+sub-dir `protocols/hooks/` but blocked by CHK-SKL-012, which forbids
+nested subdirectories under any required/optional skill subdir):
+- `hook-` prefix preserves the original semantic intent (these are
+  protocol-internal flow modifiers, not standalone workflows)
+- Stays compatible with the existing flat layout convention all other
+  monkey-skills team skills follow
+- Future hooks (clarification gate / failure-recovery) colocate via
+  prefix, not via sub-dir
+- Sorted file listing keeps hooks adjacent (`hook-*` lexicographically
+  groups them together within `protocols/`)
 
 ---
 

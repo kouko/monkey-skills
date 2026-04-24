@@ -242,9 +242,9 @@ Additional standards (load when workflow requires):
 - `standards/information-infrastructure.md` (Tier 3) — 倉田 2007 + NDL リサーチ・ナビ + CiNii 2022 + ACRL frames; JP database / academic (self-contained preamble)
 
 Deep-mode hooks (lazy-loaded only when `mode=deep`; quick mode skips):
-- `protocols/hooks/multi-perspective.md` — Phase 0 stakeholder/contrarian seeding
-- `protocols/hooks/self-critique.md` — Phase 3 worker self-critique block
-- `protocols/hooks/parallel-fanout.md` — Phase 1 parallel sub-worker fan-out
+- `protocols/hook-multi-perspective.md` — Phase 0 stakeholder/contrarian seeding
+- `protocols/hook-self-critique.md` — Phase 3 worker self-critique block
+- `protocols/hook-parallel-fanout.md` — Phase 1 parallel sub-worker fan-out
 
 Trigger map for hooks lives in `protocols/research.md` §Deep-Mode Hooks
 and is inherited by all specialized protocols.

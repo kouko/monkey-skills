@@ -90,7 +90,7 @@ not the author's performance of knowledge.
 
 ### Self-Critique Honesty (deep mode only)
 
-Grounded in `protocols/hooks/self-critique.md` (LangGraph
+Grounded in `protocols/hook-self-critique.md` (LangGraph
 `open_deep_research` `think_tool`-inspired disclosure pattern).
 Worker MUST append a `## Self-Critique` section in deep mode
 covering weakest evidence link, ignored opposing evidence, and
