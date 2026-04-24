@@ -188,15 +188,28 @@ so `git log --oneline` does not explode.
 
 ## Retrieval expectations
 
-These conventions make retrieval cheap:
+These conventions make retrieval cheap, but use **git's own trailer
+parser** — do not invent a custom delimiter scheme on top of
+`--pretty=format:'%(trailers:...)'`, because trailer values can
+contain any character (pipes in shell snippets, colons in prose,
+etc.) and will collide with any delimiter you choose.
 
 ```bash
-# All Decision trailers in the last quarter
-git log --since='3 months ago' --pretty=format:'%h %s%n%(trailers:key=Decision,valueonly)' --no-merges
+# Per commit: extract all memory trailers via git's native parser
+git log -1 --format='%B' "$sha" \
+  | git interpret-trailers --parse --unfold \
+  | grep -E '^(Decision|Learning|Gotcha|Related):'
 
 # All PR bodies with a ## Memory section
 gh pr list --state merged --limit 50 --json number,title,body \
   | jq '.[] | select(.body | contains("## Memory"))'
 ```
+
+**Avoid** patterns like
+`git log --pretty=format:'%h|%s|%(trailers:...)'` followed by
+`IFS='|' read`, because a trailer value containing `|` (e.g.
+`` Gotcha: `wc -l | tr -d ' '` matters here... ``) will split
+the record incorrectly. Always round-trip through
+`git interpret-trailers --parse`.
 
 See `scripts/memory-grep.sh` for the packaged version.
