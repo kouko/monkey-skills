@@ -23,6 +23,15 @@
 #   --repo=.           (current working tree)
 #   --format=plain
 #
+# Filtering semantics (intentional asymmetry):
+#   --since  applies to COMMITS only. Uses git log --since under the hood.
+#   --limit  applies to PRS only. Caps the number of merged PRs fetched
+#            by `gh pr list` (newest first). PRs are not date-filtered
+#            because `gh pr list` does not take a date argument without
+#            falling back to a search query. If you need date-bounded
+#            PRs, re-run with a tighter `--limit` or post-filter the
+#            JSON output with jq on `.mergedAt`.
+#
 # Exit codes:
 #   0  success
 #   1  usage error
@@ -49,12 +58,15 @@ Usage:
                  [--format=plain|json] [--no-pr] [--no-commit]
 
 Options:
-  --since=<period>   git log --since value (default: "3 months ago")
-  --limit=<n>        max PRs to inspect (default: 50)
+  --since=<period>   date filter for COMMITS (default: "3 months ago")
+  --limit=<n>        cap on number of merged PRs fetched (default: 50)
   --repo=<path>      working tree path (default: current dir)
   --format=<f>       output format: plain | json (default: plain)
   --no-pr            skip PR body extraction
   --no-commit        skip commit trailer extraction
+
+Note: --since filters commits by date; --limit caps PR count.
+      PRs are not date-filtered (newest N are always taken).
 
 Examples:
   memory-grep.sh --since='6 months ago' --limit=100
@@ -102,6 +114,15 @@ case "$FORMAT" in
   plain|json) ;;
   *) echo "Invalid --format: $FORMAT (plain|json)" >&2; exit 1 ;;
 esac
+
+# --limit must be a positive integer. Without this guard a non-numeric
+# value silently passes through to `gh pr list --limit abc`, which
+# returns zero rows and produces the misleading message
+# "(none found in last abc merged PRs)".
+if ! [[ "$LIMIT" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Invalid --limit: $LIMIT (expected positive integer)" >&2
+  exit 1
+fi
 
 if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
   echo "Not a git repository: $REPO" >&2
@@ -219,27 +240,28 @@ case "$FORMAT" in
   plain)
     echo "# git-memory digest — repo=$REPO since=\"$SINCE\""
     echo
-    if [ -n "$commit_records" ]; then
+    if [ "$INCLUDE_COMMIT" = 1 ]; then
       echo "## Commit trailers"
-      echo
-      printf '%s\n' "$commit_records" | while IFS= read -r rec; do
-        [ -z "$rec" ] && continue
-        sha=$(printf '%s' "$rec" | jq -r '.sha')
-        date=$(printf '%s' "$rec" | jq -r '.date')
-        subject=$(printf '%s' "$rec" | jq -r '.subject')
-        echo "### $sha  $date  $subject"
-        for key_pair in 'decision Decision' 'learning Learning' 'gotcha Gotcha' 'related Related'; do
-          k=${key_pair% *}
-          label=${key_pair#* }
-          entries=$(printf '%s' "$rec" | jq -r ".${k}[]" 2>/dev/null || true)
-          render_group "$label" "$entries"
-        done
+      if [ -n "$commit_records" ]; then
         echo
-      done
-    else
-      echo "## Commit trailers"
-      echo "(none in range)"
-      echo
+        printf '%s\n' "$commit_records" | while IFS= read -r rec; do
+          [ -z "$rec" ] && continue
+          sha=$(printf '%s' "$rec" | jq -r '.sha')
+          date=$(printf '%s' "$rec" | jq -r '.date')
+          subject=$(printf '%s' "$rec" | jq -r '.subject')
+          echo "### $sha  $date  $subject"
+          for key_pair in 'decision Decision' 'learning Learning' 'gotcha Gotcha' 'related Related'; do
+            k=${key_pair% *}
+            label=${key_pair#* }
+            entries=$(printf '%s' "$rec" | jq -r ".${k}[]" 2>/dev/null || true)
+            render_group "$label" "$entries"
+          done
+          echo
+        done
+      else
+        echo "(none in range)"
+        echo
+      fi
     fi
 
     if [ -n "$pr_records" ]; then

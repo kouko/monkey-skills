@@ -21,7 +21,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer workflow skills — skill creation, evaluation, and iterative improvement",
+      "description": "Developer workflow skills — skill creation (skill-creator-advance) and portable git-backed project memory (git-memory). Git コミット・メモリ。可攜式專案記憶。",
       "source": "./dev-workflow/"
     },
     {
