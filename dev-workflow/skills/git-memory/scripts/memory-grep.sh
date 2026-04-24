@@ -115,6 +115,15 @@ case "$FORMAT" in
   *) echo "Invalid --format: $FORMAT (plain|json)" >&2; exit 1 ;;
 esac
 
+# --limit must be a positive integer. Without this guard a non-numeric
+# value silently passes through to `gh pr list --limit abc`, which
+# returns zero rows and produces the misleading message
+# "(none found in last abc merged PRs)".
+if ! [[ "$LIMIT" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Invalid --limit: $LIMIT (expected positive integer)" >&2
+  exit 1
+fi
+
 if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
   echo "Not a git repository: $REPO" >&2
   exit 2
