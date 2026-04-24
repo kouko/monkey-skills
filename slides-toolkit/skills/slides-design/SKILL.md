@@ -64,10 +64,10 @@ Slide 3 建議：
 
 本 skill **沒有**以下內容（皆屬執行層或特定 backend 知識）：
 
-- ❌ Google Drive ID / template_ref 查詢
+- ❌ Google Slides API 呼叫 / `layout_hint` enum 實際值
 - ❌ gws CLI 指令、OAuth scope
 - ❌ HTML / reveal.js / PPTX / Marp 語法
-- ❌ Placeholder 命名 convention（此屬 `google-slides-builder/templates/registry.md`）
+- ❌ Placeholder object ID 對位邏輯（此屬 `google-slides-builder` 執行層）
 
 **Because** 設計原則跨輸出格式穩定（Minto 1987 對 Google Slides 跟 Marp 一樣適用），執行技術會演化——解耦讓未來新增 backend 不需改動知識層。
 
