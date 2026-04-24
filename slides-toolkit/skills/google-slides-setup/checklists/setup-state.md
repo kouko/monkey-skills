@@ -1,106 +1,117 @@
 # Setup State Checklist — google-slides-setup
 
-> 跑完 setup 或回頭排查問題時，按順序跑以下 6 項 state check。**任一
-> 項失敗即找對應 walkthrough 步驟修復，不要跳過。**
+> After running setup — or when coming back to diagnose a problem —
+> work through the 6 state checks below in order. **If any check
+> fails, fix it using the matching walkthrough section before moving
+> on. Don't skip ahead.**
 
-## 使用方法
+## How to use this checklist
 
-依 1 → 6 順序跑；每項給你：
+Run checks 1 through 6 in order. Each check gives you:
 
-- **Check 命令**（可直接 copy-paste）
-- **預期 output**（含成功判準）
-- **失敗分支**（指向 `protocols/gcp-console-walkthrough.md` 對應步驟）
+- **Check command** (copy-paste ready)
+- **Expected output** (and what counts as pass)
+- **Failure branch** (pointer into
+  `protocols/gcp-console-walkthrough.md` or elsewhere)
 
-若要自動化，可把全部整合到 `scripts/google-slides/credential-check.sh`
-的延伸版；本 checklist 走人工驗證版本，便於首次 setup + debug。
+If you want to automate, fold the checks into an extended version
+of `scripts/google-slides/credential-check.sh`. This checklist is
+the manual version — useful during first-time setup and debugging.
 
 ---
 
-## 1. gws binary 是否已抓？
+## 1. Is the `gws` binary present?
 
-**Why**：`~/.cache/slides-toolkit/bin/gws` 是所有 Google Slides backend
-操作的執行點。沒它就沒戲。
+**Why**: `~/.cache/slides-toolkit/bin/gws` is the execution point
+for every Google Slides backend operation. No binary, no show.
 
-**Check**：
+**Check**:
 
 ```bash
 ls ~/.cache/slides-toolkit/bin/gws
 ```
 
-**預期 output**：
+**Expected output**:
 
 ```
 /Users/<you>/.cache/slides-toolkit/bin/gws
 ```
 
-並能跑：
+And it should run:
 
 ```bash
 ~/.cache/slides-toolkit/bin/gws --version
-# 預期：gws vX.Y.Z（版本號取決於 bootstrap.sh pin；TODO：填當前 pin 版本）
+# Expected: gws vX.Y.Z (version depends on bootstrap.sh pin; TODO: fill in current pin)
 ```
 
-**失敗分支**：
+**Failure branch**:
 
-- 檔案不存在 → `gcp-console-walkthrough.md` §7（跑 `bootstrap.sh`）
-- 存在但不可執行（`Permission denied`）→ `chmod +x ~/.cache/slides-toolkit/bin/gws`，
-  或重跑 `bash scripts/google-slides/bootstrap.sh --force`
-- `--version` 報 SHA mismatch 類錯 → 重跑 bootstrap，若持續 exit 17 見
-  SKILL.md [Error messages guide](../SKILL.md#error-messages-guide)
+- File missing → `gcp-console-walkthrough.md` §7 (run
+  `bootstrap.sh`).
+- Present but not executable (`Permission denied`) →
+  `chmod +x ~/.cache/slides-toolkit/bin/gws`, or rerun
+  `bash scripts/google-slides/bootstrap.sh --force`.
+- `--version` reports a SHA mismatch-style error → rerun bootstrap.
+  If exit 17 persists, see SKILL.md
+  [Error messages guide](../SKILL.md#error-messages-guide).
 
 ---
 
-## 2. jq binary 是否已抓？
+## 2. Is the `jq` binary present?
 
-**Why**：issue #119 workaround 的 env var 設定靠 `jq` 從
-`client_secret.json` 解欄位；builder pipeline 也靠 `jq` 驗 slide-plan
-schema。
+**Why**: the issue #119 workaround uses `jq` to extract fields from
+`client_secret.json` when setting env vars; the builder pipeline
+also uses `jq` to validate slide-plan schemas.
 
-**Check**：
+**Check**:
 
 ```bash
 ls ~/.cache/slides-toolkit/bin/jq
 ~/.cache/slides-toolkit/bin/jq --version
-# 預期：jq-1.7.1 或更新
+# Expected: jq-1.7.1 or newer
 ```
 
-**失敗分支**：
+**Failure branch**:
 
-- 檔案不存在 → `gcp-console-walkthrough.md` §7（`bootstrap.sh` 會同時
-  抓 gws + jq，通常兩個一起成功 / 一起失敗）
-- 存在但版本 < 1.7.1 → `bash scripts/google-slides/bootstrap.sh --force`
-- 版本正確但跑時 `command not found` → PATH 未包含
-  `~/.cache/slides-toolkit/bin`；選一種：
-  1. 臨時：`export PATH="$HOME/.cache/slides-toolkit/bin:$PATH"`
-  2. 永久：加入 `~/.zshrc`
-  3. 指令級：直接用絕對路徑 `~/.cache/slides-toolkit/bin/jq`
+- File missing → `gcp-console-walkthrough.md` §7
+  (`bootstrap.sh` fetches gws and jq together — they usually
+  succeed or fail as a pair).
+- Present but version < 1.7.1 →
+  `bash scripts/google-slides/bootstrap.sh --force`.
+- Correct version but `command not found` at runtime → PATH doesn't
+  include `~/.cache/slides-toolkit/bin`. Pick one:
+  1. Temporary: `export PATH="$HOME/.cache/slides-toolkit/bin:$PATH"`
+  2. Permanent: append to `~/.zshrc`
+  3. Per-call: use the absolute path
+     `~/.cache/slides-toolkit/bin/jq`
 
 ---
 
-## 3. gcloud 是否已裝？（optional）
+## 3. Is `gcloud` installed? (optional)
 
-**Why**：**MVP 不依賴 gcloud**（runtime minimalism，PRODUCT-SPEC §4.4
-principle 1）。本項列為 optional check —— **有 gcloud 可以加速某些
-GCP Console 操作（例：切 project、看 quota）**，沒有也完全不影響本
-skill 運作。
+**Why**: **the MVP does not depend on gcloud** (runtime
+minimalism — PRODUCT-SPEC §4.4 principle 1). This check is
+optional: **gcloud can speed up some Console tasks (switching
+project, checking quota), but its absence doesn't affect this
+skill.**
 
-**Check**：
+**Check**:
 
 ```bash
 which gcloud && gcloud --version
 ```
 
-**預期 output**（兩種情況皆可視為 pass）：
+**Expected output** (either case counts as pass):
 
-- Case A（**推薦**，對齊 runtime minimalism）：
+- Case A (**recommended**, aligned with runtime minimalism):
 
   ```
   gcloud not found
   ```
 
-  完全沒裝 = 符合 MVP 純 shell 路線。
+  Not installed = matches the MVP pure-shell path.
 
-- Case B（已裝）：
+- Case B (installed):
 
   ```
   /opt/homebrew/bin/gcloud
@@ -108,156 +119,172 @@ which gcloud && gcloud --version
   ...
   ```
 
-  已裝無副作用，可保留。
+  Installed, no side effects, feel free to keep it.
 
-**失敗分支**：無 —— 此項不會造成 setup 卡關。如未來 Phase 2+ 引入
-gcloud 依賴，再更新本 check。
+**Failure branch**: none — this check never blocks setup. If a
+future Phase 2+ introduces a gcloud dependency, update this check.
 
 ---
 
-## 4. `~/.config/gws/client_secret.json` 是否存在？
+## 4. Does `~/.config/gws/client_secret.json` exist?
 
-**Why**：gws 需要讀這個檔才知道 Client ID / Client Secret；issue
-#119 workaround 的 env var 也從這個檔撈（`protocols/issue-119-workaround.md`
-§具體命令）。
+**Why**: gws reads this file to find the Client ID / Client Secret.
+The issue #119 workaround env vars are also extracted from it (see
+`protocols/issue-119-workaround.md` §Concrete commands).
 
-**Check**：
+**Check**:
 
 ```bash
 ls -l ~/.config/gws/client_secret.json
 ```
 
-**預期 output**：
+**Expected output**:
 
 ```
 -rw-------  1 <you>  staff  ~400  ...  client_secret.json
 ```
 
-關鍵點：
+Key points:
 
-- **存在**
-- **權限 = `600`**（`-rw-------`）—— `standards/credential-hygiene.md` 規則 2
+- **Exists**
+- **Permissions = `600`** (`-rw-------`) — enforced by
+  `standards/credential-hygiene.md` rule 2.
 
-進階驗證（Client type 正確為 Desktop）：
+Deeper check (confirms the client type is Desktop):
 
 ```bash
 ~/.cache/slides-toolkit/bin/jq -r '.installed.client_id' ~/.config/gws/client_secret.json
-# 預期：非空字串，通常結尾為 .apps.googleusercontent.com
+# Expected: non-empty string, usually ending in .apps.googleusercontent.com
 ```
 
-如果 `jq` 回傳 `null` 或 `key "installed" not found` → 表示你下載的
-是 Web 類型的 `client_secret.json`（內層是 `.web.client_id`），需回
-`gcp-console-walkthrough.md` §4 重建為 Desktop 類型。
+If `jq` returns `null` or `key "installed" not found`, you
+downloaded a Web-type `client_secret.json` (it uses `.web.client_id`
+internally) — return to `gcp-console-walkthrough.md` §4 and
+recreate as Desktop type.
 
-**失敗分支**：
+**Failure branch**:
 
-- 檔案不存在 → `gcp-console-walkthrough.md` §5（下載 + mv + chmod）
-- 權限非 600 → `chmod 600 ~/.config/gws/client_secret.json`；同時檢查
-  `chmod 700 ~/.config/gws/`
-- `jq ... .installed.client_id` 回 null → client type 錯（Web 而非
-  Desktop），回 `gcp-console-walkthrough.md` §4 重建
+- File missing → `gcp-console-walkthrough.md` §5 (download + mv +
+  chmod).
+- Permissions not 600 → `chmod 600 ~/.config/gws/client_secret.json`,
+  and verify `chmod 700 ~/.config/gws/` while you're at it.
+- `jq ... .installed.client_id` returns null → wrong client type
+  (Web instead of Desktop); return to `gcp-console-walkthrough.md`
+  §4 and recreate.
 
 ---
 
-## 5. issue #119 env vars 是否已 export？
+## 5. Are the issue #119 env vars exported?
 
-**Why**：個人 Gmail 上 gws 內建 Client 踩 `invalid_scope` /
-`invalid_client`；需 export `GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET`
-覆寫（詳解：`protocols/issue-119-workaround.md`）。
+**Why**: on personal Gmail, the gws built-in client trips
+`invalid_scope` / `invalid_client`; you must export
+`GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET` to override it (full
+details: `protocols/issue-119-workaround.md`).
 
-**Check**：
+**Check**:
 
 ```bash
-# 若走 env-guard.sh 路線：
+# If you went through env-guard.sh:
 ls -l ~/.config/gws/env.sh
-# 預期：存在且 chmod 600
+# Expected: exists, chmod 600
 
-# 或當前 shell 直接驗 env var：
+# Or check the current shell directly:
 echo "ID length: ${#GOOGLE_WORKSPACE_CLI_CLIENT_ID}"
 echo "SECRET length: ${#GOOGLE_WORKSPACE_CLI_CLIENT_SECRET}"
-# 預期：兩者長度都 > 20
+# Expected: both > 20
 ```
 
-或用 `env-guard.sh check`：
+Or use `env-guard.sh check`:
 
 ```bash
 bash scripts/google-slides/env-guard.sh check
-# 預期：{"workaround_needed":false}
+# Expected: {"workaround_needed":false}
 ```
 
-**預期 output 判準**：
+**Pass criteria**:
 
-- 兩個 env var 在當前 shell 中長度 > 20，**且**
-- `env-guard.sh check` 回 `workaround_needed: false`
+- Both env vars in the current shell have length > 20, **and**
+- `env-guard.sh check` returns `workaround_needed: false`.
 
-**失敗分支**：
+**Failure branch**:
 
-- env var 空 / 未 export → `protocols/issue-119-workaround.md` §具體命令
-  （三種路線選一：一次性 export / 寫 shell profile / `env-guard.sh apply`）
-- `env.sh` 存在但 Terminal session 中沒生效 → `source ~/.config/gws/env.sh`
-  或重開 terminal（若寫進 `~/.zshrc`）
-- `env.sh` 權限非 600 → `chmod 600 ~/.config/gws/env.sh`
+- Env vars empty / not exported →
+  `protocols/issue-119-workaround.md` §Concrete commands (pick one
+  of the three options: one-shot export, shell profile, or
+  `env-guard.sh apply`).
+- `env.sh` exists but isn't active in the current terminal →
+  `source ~/.config/gws/env.sh`, or reopen the terminal (if
+  persisted to `~/.zshrc`).
+- `env.sh` permissions not 600 → `chmod 600 ~/.config/gws/env.sh`.
 
 ---
 
-## 6. `gws auth whoami` 回傳是否正常？
+## 6. Does `gws auth whoami` return correctly?
 
-**Why**：這是整個 setup 的 **end-to-end 驗證**。whoami 能回 email =
-Client Secret 配對正確、issue #119 workaround 生效、Test user 已加、
-API 已啟用、refresh token 有效、Keychain / file backend 至少一種可讀。
-**whoami 過 = setup 全綠。**
+**Why**: this is the **end-to-end check** for the whole setup.
+`whoami` returning your email means: the Client Secret is paired
+correctly, the issue #119 workaround is active, your Test user is
+on the list, the APIs are enabled, the refresh token is valid, and
+at least one of Keychain / file backend is readable. **whoami passing
+= the entire setup is green.**
 
-**Check**：
+**Check**:
 
 ```bash
 gws auth whoami
 ```
 
-**預期 output**：
+**Expected output**:
 
 ```
 your_email@gmail.com
 ```
 
-對比 expected：跟你在 `gcp-console-walkthrough.md` §3 加進 Test users
-的 email 完全一致。
+Compare against expected: exactly the email you added as a Test
+user in `gcp-console-walkthrough.md` §3.
 
-**失敗分支**（依錯誤訊息分流）：
+**Failure branch** (routed by error message):
 
-| 錯誤 | 根因 | 回到 |
+| Error | Root cause | Go to |
 |---|---|---|
-| `401 Unauthorized` / `token expired` | token 過期（>7 天沒用） | SKILL.md [Every 7 days maintenance](../SKILL.md#every-7-days-maintenance) |
-| `403 access_denied` | 登入的 Gmail 不在 Test users | `gcp-console-walkthrough.md` §3 |
-| `403` + `API not enabled` | Slides / Drive API 未啟用 | `gcp-console-walkthrough.md` §6 |
-| `invalid_scope` / `invalid_client` | issue #119 env var 未生效 | check 5 失敗 + `protocols/issue-119-workaround.md` |
-| `Keychain item not found` / `KeyError` | Keychain silent fail | SKILL.md [Workarounds](../SKILL.md#workarounds) Keychain 段（自動 fallback 到 file backend） |
-| `No such file or directory` `gws` | gws 不在 PATH | check 1 失敗 |
-| 命令沒輸出就 exit 0 | 狀態異常 / 舊版 gws | `bash scripts/google-slides/bootstrap.sh --force` 重抓 |
+| `401 Unauthorized` / `token expired` | Token expired (>7 days unused) | SKILL.md [Every 7 days maintenance](../SKILL.md#every-7-days-maintenance) |
+| `403 access_denied` | The Gmail you signed in with isn't in Test users | `gcp-console-walkthrough.md` §3 |
+| `403` + `API not enabled` | Slides / Drive API not enabled | `gcp-console-walkthrough.md` §6 |
+| `invalid_scope` / `invalid_client` | Issue #119 env vars aren't active | Check 5 failed + `protocols/issue-119-workaround.md` |
+| `Keychain item not found` / `KeyError` | Keychain silent fail | SKILL.md [Workarounds](../SKILL.md#workarounds), Keychain section (automatic fallback to file backend) |
+| `No such file or directory` `gws` | gws not on PATH | Check 1 failed |
+| Command exits 0 with no output | Unusual state / outdated gws | `bash scripts/google-slides/bootstrap.sh --force` to refetch |
 
 ---
 
 ## Quick run-all
 
-想一次跑完所有 6 項，可手動組合：
+Run all 6 checks in one go:
 
 ```bash
-echo "--- 1. gws binary ---"      && ls ~/.cache/slides-toolkit/bin/gws && ~/.cache/slides-toolkit/bin/gws --version
-echo "--- 2. jq binary ---"       && ls ~/.cache/slides-toolkit/bin/jq && ~/.cache/slides-toolkit/bin/jq --version
+echo "--- 1. gws binary ---"        && ls ~/.cache/slides-toolkit/bin/gws && ~/.cache/slides-toolkit/bin/gws --version
+echo "--- 2. jq binary ---"         && ls ~/.cache/slides-toolkit/bin/jq && ~/.cache/slides-toolkit/bin/jq --version
 echo "--- 3. gcloud (optional) ---" && (which gcloud && gcloud --version 2>/dev/null) || echo "gcloud not installed (OK, MVP doesn't need it)"
 echo "--- 4. client_secret.json ---" && ls -l ~/.config/gws/client_secret.json
-echo "--- 5. env vars ---"        && bash scripts/google-slides/env-guard.sh check
-echo "--- 6. gws auth whoami ---" && gws auth whoami
+echo "--- 5. env vars ---"          && bash scripts/google-slides/env-guard.sh check
+echo "--- 6. gws auth whoami ---"   && gws auth whoami
 ```
 
-第一個報錯的地方 = 卡點。依上面的「失敗分支」欄修復，然後從卡點重跑。
+The first line that errors out is your blocker. Use the "Failure
+branch" column above to fix it, then rerun from that point.
 
-## 相關檔案
+## Related files
 
-- `../SKILL.md`（主流程 + error messages guide）
-- `../protocols/gcp-console-walkthrough.md`（10 步 tutorial）
-- `../protocols/issue-119-workaround.md`（env var workaround 詳解）
-- `../standards/credential-hygiene.md`（`client_secret.json` / `env.sh` chmod 規則）
-- `../../scripts/google-slides/credential-check.sh`（自動化版 state detection）
-- `../../scripts/google-slides/env-guard.sh`（check / apply issue #119 workaround）
-- TECH-SPEC §3.2（google-slides-setup state detection 契約）
-- TECH-SPEC §4.2（credential-check.sh / env-guard.sh script contract）
+- `../SKILL.md` (main flow + error messages guide)
+- `../protocols/gcp-console-walkthrough.md` (10-step tutorial)
+- `../protocols/issue-119-workaround.md` (env var workaround, full
+  detail)
+- `../standards/credential-hygiene.md` (`client_secret.json` /
+  `env.sh` chmod rules)
+- `../../scripts/google-slides/credential-check.sh` (automated
+  state detection)
+- `../../scripts/google-slides/env-guard.sh` (check / apply for
+  the issue #119 workaround)
+- TECH-SPEC §3.2 (google-slides-setup state-detection contract)
+- TECH-SPEC §4.2 (`credential-check.sh` / `env-guard.sh` script
+  contract)

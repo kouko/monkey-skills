@@ -5,73 +5,73 @@ description: Router skill for slides-toolkit. Route the user to the right skill 
 
 # using-slides-toolkit
 
-Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read `slide-plan.json` `target` field（若已備），路由到正確 skill。**不**執行 shell、**不**呼叫 API、**不**做設計判斷——純 routing。
+Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read the `slide-plan.json` `target` field (if one exists), and route to the right skill. This router **does not** execute shell commands, call APIs, or make design decisions — routing only.
 
 ## When to use
 
-- 使用者描述 vague（「幫我做簡報」/「プレゼン作って」/「做一份 deck」），尚未選定具體 skill
-- 使用者手上有 `slide-plan.json` 但不確定下一步要呼叫哪個 builder
-- 第一次使用 slides-toolkit、遇到 auth 或 setup 相關錯誤
+- The user's request is vague ("make me a deck", 「プレゼン作って」, 「做一份 deck」) and no specific skill is named yet.
+- The user has a `slide-plan.json` but is not sure which builder to call next.
+- First-time use of slides-toolkit, or an auth / setup error.
 
 ## When NOT to use
 
-- 使用者明確指定目標 skill（例：「跑 google-slides-builder」）→ 直接呼叫該 skill
-- 任務不在 slides-toolkit 範圍（文案撰寫 → `copywriting-toolkit`；投資分析 → `investing-toolkit`）
+- The user names a target skill explicitly ("run google-slides-builder") → call it directly.
+- The task is outside slides-toolkit (copywriting → `copywriting-toolkit`; investment analysis → `investing-toolkit`).
 
-## Routing table（intent → skill）
+## Routing table (intent to skill)
 
-| Intent 訊號 | Route to |
+| Intent signals (EN / JP / ZH) | Route to |
 |---|---|
-| 「幫我想敘事結構」「這張該放什麼圖表」「Minto / SCQA / chart selection」「資訊層級怎麼安排」 | `slides-design` |
-| 「第一次用」「401 / 403 / invalid_scope」「auth 失敗」「setup」「gws 還沒裝」「token 過期」 | `google-slides-setup` |
-| 「生成 deck」「把 slide-plan 變 Google Slides」「匯出」「執行 pipeline」 | `google-slides-builder` |
-| 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」（低層）| `google-slides-api` |
-| 模糊或「做 simple deck」無明確 target | 預設 `target: "google-slides"`（MVP 唯一 backend），繼續走 setup → builder |
+| Design consultation (デザイン相談 / 設計諮詢) — EN: "narrative structure", "which chart type", "information hierarchy", "Minto / SCQA". JP: 「敘事構成」「どの図表」「情報階層」「Minto / SCQA」. ZH: 「敘事結構」「哪種圖表」「資訊層級」「Minto / SCQA」 | `slides-design` |
+| Setup / auth (初期設定 / 初次設定) — EN: "first time", "401 / 403 / invalid_scope", "auth failed", "gws not installed", "token expired". JP: 「初めて使う」「認証エラー」「gws まだ入れてない」「token 切れ」. ZH: 「第一次用」「auth 失敗」「gws 還沒裝」「token 過期」 | `google-slides-setup` |
+| Deck generation (デッキ生成 / 生成 deck) — EN: "generate the deck", "turn slide-plan into Google Slides", "export", "run pipeline". JP: 「deck を作る」「slide-plan を Google Slides に」「エクスポート」「パイプライン実行」. ZH: 「生成 deck」「把 slide-plan 變 Google Slides」「匯出」「執行 pipeline」 | `google-slides-builder` |
+| Low-level API learning / debugging (API 学習・デバッグ / API 學習・除錯) — EN: "how do I call this op", "debug a Slides error", "learn batchUpdate", "tweak a recipe". JP: 「この API の使い方」「Slides のエラーをデバッグ」「batchUpdate を学ぶ」「recipe を改造」. ZH: 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」 | `google-slides-api` |
+| Vague or "make a simple deck" with no explicit target | Default `target: "google-slides"` (MVP's only backend); continue through setup → builder. |
 
-**Example A**（設計諮詢）：
-> User: 「我要做一份產品提案，開場怎麼鋪？」
-> Route → `slides-design`（讀 `references/minto-scqa.md`），回 SCQA 建議，不生成 deck。
+**Example A** (design consultation):
+> User: "I'm making a product proposal — how should the opener flow?"
+> Route → `slides-design` (reads `references/minto-scqa.md`), replies with an SCQA suggestion; no deck is generated.
 
-**Example B**（執行 pipeline）：
-> User: 「這份 `slide-plan.json` 幫我跑」
-> 檢查 `slide-plan.target == "google-slides"` → 確認 setup 完成 → Route `google-slides-builder`。
+**Example B** (pipeline execution):
+> User: "Run this `slide-plan.json` for me."
+> Check `slide-plan.target == "google-slides"` → confirm setup is complete → route to `google-slides-builder`.
 
-**Example C**（低層 API 學習 / debug，v0.3.2 新增）：
-> User: 「gws 的 `createSlide` 到底怎麼帶 predefinedLayout？」
-> Route → `google-slides-api`（讀 `protocols/recipe-create-slides.md` + `references/api-error-codes.md`）。不跑 pipeline、不生成 deck。
+**Example C** (low-level API learning / debugging, added in v0.3.2):
+> User: "How exactly do I pass `predefinedLayout` to gws `createSlide`?"
+> Route → `google-slides-api` (reads `protocols/recipe-create-slides.md` + `references/api-error-codes.md`). Does not run the pipeline or generate a deck.
 
 ## Target backend detection
 
-讀 `slide-plan.json` 頂層 `target` 欄位（schema v1.2, TECH-SPEC §4.1）：
+Read the top-level `target` field in `slide-plan.json` (schema v1.2, TECH-SPEC §4.1):
 
 ```
-target == "google-slides"  → 走 google-slides-setup / google-slides-builder
-target missing             → 假設 "google-slides"（MVP 唯一 backend），明示告知 user
-target ∈ {"html","pptx","marp"}  → 報錯並指向下方 Phase 2+ trigger
-target == 其他字串         → 報錯：unsupported backend
+target == "google-slides"  → route through google-slides-setup / google-slides-builder
+target missing             → assume "google-slides" (MVP's only backend); tell the user explicitly
+target ∈ {"html","pptx","marp"}  → error out and point at the Phase 2+ trigger below
+target == anything else    → error: unsupported backend
 ```
 
-若 user 已有 plan 但缺 `target`，router 可代填 `"google-slides"` 並提醒「Phase 2+ 才支援其他 backend」。
+If the user has a plan without `target`, the router may fill in `"google-slides"` and note that other backends are Phase 2+.
 
-## Phase 2+ backends（trigger-gated，非承諾）
+## Phase 2+ backends (trigger-gated, not a commitment)
 
-以下 backend **未在 MVP 實作**；列出僅供 forward-looking。trigger 條件見 PRODUCT-SPEC §3.5：
+The backends below are **not implemented in MVP**. They are listed as forward-looking only. Trigger conditions live in PRODUCT-SPEC §3.5:
 
-| Backend | Skill（未來） | Trigger |
+| Backend | Skill (future) | Trigger |
 |---|---|---|
-| `html` | `html-builder` | 首次出現 HTML / reveal.js / remark 輸出需求 |
-| `pptx` | `pptx-builder` | 首次 `.pptx` 輸出需求（e.g. 交付給 MS Office 收件人） |
-| `marp` | `marp-builder` | 首次 Marp CLI 輸出需求（engineering tech talk / markdown-native） |
+| `html` | `html-builder` | First request for HTML / reveal.js / remark output |
+| `pptx` | `pptx-builder` | First `.pptx` output request (e.g. delivery to an MS Office recipient) |
+| `marp` | `marp-builder` | First Marp CLI output request (engineering tech talk / markdown-native) |
 
-使用者若在 `target` 指定上述值，回訊：「backend `<value>` 尚未實作；MVP 僅支援 `google-slides`。trigger 條件見 PRODUCT-SPEC §3.5。」
+If the user sets `target` to one of these, reply: "Backend `<value>` is not yet implemented; MVP only supports `google-slides`. Trigger conditions are in PRODUCT-SPEC §3.5."
 
 ## Out of scope — hand off
 
 | Need | Target |
 |---|---|
-| 文案撰寫 / headline / PASONA / QUEST | `copywriting-toolkit:using-copywriting-toolkit` |
-| 投資分析 / 簡報內含財報內容 | `investing-toolkit:using-investing-toolkit` |
-| 技術文件 / API reference | `domain-teams:docs-team` |
+| Copywriting / headlines / PASONA / QUEST | `copywriting-toolkit:using-copywriting-toolkit` |
+| Investment analysis / decks that embed financial content | `investing-toolkit:using-investing-toolkit` |
+| Technical documentation / API reference | `domain-teams:docs-team` |
 
 ---
 

@@ -5,84 +5,95 @@ description: Backend-agnostic design knowledge layer for slides-toolkit. Minto P
 
 # slides-design
 
-**Backend-agnostic design knowledge layer**。提供敘事結構與圖表選型 reference，讓 Claude 在生成 / 審視 slide plan 時有可錨定的設計原則。設計原則對**任何輸出格式**都適用——Google Slides、HTML、PPTX、Marp 共用同一份 reference。
+Backend-agnostic design knowledge layer for slides-toolkit. This skill supplies narrative-structure and chart-selection references so that Claude can anchor its reasoning to named design principles when generating or reviewing a slide plan. The principles apply to **any output format** — Google Slides, HTML, PPTX, and Marp all share the same reference.
 
-> 設計知識層與執行層解耦（PRODUCT-SPEC §4.4 principle 3）：本 skill **不**產生圖表、**不**寫 boilerplate、**不**呼叫 backend API。執行歸 `google-slides-builder`（或 Phase 2+ 新 backend builder）。
+> Design knowledge and execution are decoupled (PRODUCT-SPEC §4.4 principle 3). This skill **does not** generate charts, write boilerplate, or call backend APIs. Execution belongs to `google-slides-builder` (or a Phase 2+ backend builder).
 
 ## When to use
 
-- 使用者要「敘事建議」：開場怎麼鋪、一份 30 頁 deck 怎麼組織、主結論該放哪頁
-- 使用者問「哪種圖表」：手上是時序 / 類別比較 / 部分 vs 整體資料，問該選 Bar / Line / Pie / Scatter
-- 使用者想先確認**資訊層級**（主結論 → 支持論點 → 證據）再動手填 slide plan
-- `slide-plan.json` 已 draft 但要做敘事流 / layout hint self-check
+Route to this skill when the user is asking about design, not execution:
+
+- **Narrative structure** (ナラティブ構成 / 敘事結構) — how to open a deck, how to organize 30 pages, where the main conclusion belongs.
+  - EN: "how should I open", "structure this deck", "where does the conclusion go"
+  - JP: 「導入どう組む」「構成を組みたい」「結論はどこに」
+  - ZH: 「開場怎麼鋪」「幫我組架構」「結論放哪頁」
+- **Chart selection** (図表の選び方 / 圖表選型) — time series vs category vs part-to-whole data, deciding between bar chart (棒グラフ / 長條圖), line chart (折れ線 / 折線圖), pie chart (円グラフ / 圓餅圖), or scatter plot (散布図 / 散點圖).
+  - EN: "which chart type", "should I use a pie", "compare categories"
+  - JP: 「どの図表を使う」「円グラフでいい？」「カテゴリ比較」
+  - ZH: 「哪種圖表」「用圓餅好嗎」「類別比較」
+- **Information hierarchy** (情報階層 / 資訊層級) — confirming main conclusion → supporting arguments → evidence before filling the slide plan.
+  - EN: "what's the main message", "information hierarchy"
+  - JP: 「主結論は」「情報の階層」
+  - ZH: 「主結論是什麼」「資訊層級」
+- **Self-check on a draft plan** — `slide-plan.json` already drafted and you want narrative-flow / layout-hint sanity checks.
 
 ## When NOT to use
 
-- 使用者要**執行** pipeline（生成 deck / 匯出）→ `google-slides-builder`
-- 首次設定、auth 問題 → `google-slides-setup`
-- 使用者要**生成**圖表（CSV → PNG）→ 非 MVP scope（PRODUCT-SPEC §3.2 Non-Goal）；自行用 matplotlib / Excel 產好 PNG 再交給 builder
-- 使用者要深度 reference（Tufte / Duarte / 高橋メソッド）→ 見下方 Phase 2+ 擴展點
+- The user wants to **execute** the pipeline (build the deck, export it) → `google-slides-builder`
+- First-time setup or auth problems → `google-slides-setup`
+- The user wants to **generate** a chart (CSV → PNG) → out of MVP scope (PRODUCT-SPEC §3.2 Non-Goal); produce the PNG in matplotlib / Excel, then pass it to the builder
+- The user wants deep references (Tufte / Duarte / Takahashi method) → see Phase 2+ extensions below
 
-## References（backend-agnostic）
+## References (backend-agnostic)
 
-本 skill 只讀以下 reference；不做 I/O。
+This skill reads only the following references; it performs no I/O.
 
-- `references/minto-scqa.md` — Minto Pyramid（Minto 1987）+ SCQA 開場（Minto 1987 introduction template）。用於決定**敘事結構**與**資訊層級**
-- `references/chart-selection.md` — 資料形態 → chart type 對照表 + decision tree。用於決定**每張 slide 該用哪種圖表 / 視覺元件**（MVP **不含**圖表生成）
+- `references/minto-scqa.md` — Minto Pyramid (Minto 1987) + SCQA opener (Minto 1987 introduction template). Used to decide **narrative structure** and **information hierarchy**.
+- `references/chart-selection.md` — data-shape to chart-type table + decision tree. Used to decide **which chart or visual element** each slide should use (MVP **does not** generate charts).
 
-**Example A**（敘事結構）：
-> User: 「12 頁的 SaaS 提案，該怎麼組？」
-> → 讀 `references/minto-scqa.md` → 建議：封面放主結論（Answer）、第 2 頁 SCQA 開場、第 3–10 頁依 Pyramid 主幹分支展開、第 11 頁橫向推論（deduction）、第 12 頁 CTA。
+**Example A** (narrative structure):
+> User: "I have a 12-page SaaS proposal — how should I organize it?"
+> → Read `references/minto-scqa.md` → suggest: cover = main conclusion (Answer), slide 2 = SCQA opener, slides 3–10 = Pyramid main branches, slide 11 = horizontal deduction, slide 12 = CTA.
 
-**Example B**（圖表選型）：
-> User: 「我有 8 個類別的 revenue 佔比，用 pie chart 好嗎？」
-> → 讀 `references/chart-selection.md` → 超過 5 slice 改 Bar（Pie 易誤判）；若強調「部分 vs 整體」可用 Stacked bar。
+**Example B** (chart selection):
+> User: "I have revenue share across 8 categories — is a pie chart fine?"
+> → Read `references/chart-selection.md` → more than 5 slices means switch to bar (pie is hard to read); if the point is part-to-whole, use stacked bar.
 
 ## Self-check rubric
 
-draft 完 `slide-plan.json` 後（或要交給 builder 前），跑 `rubrics/slide-plan-self-check.md` 的 6–10 項 binary checklist，確認敘事 / layout / 圖片路徑 / target 欄位皆就緒。MVP 為 **advisory only**，不 hard-gate。
+Once `slide-plan.json` is drafted (or before handing it to a builder), run the 9-item binary checklist in `rubrics/slide-plan-self-check.md` to confirm narrative / layout / image paths / `target` fields are ready. MVP treats this as **advisory only** — it does not hard-gate the pipeline.
 
 ## Output
 
-本 skill 產出**文字建議**，可被使用者或 Claude 直接 paste 進 `slide-plan.json` 的對應欄位：
+This skill produces **text recommendations** that the user or Claude can paste directly into `slide-plan.json`:
 
-- 敘事流 → 反映在 `slides[].slide_index` 的排序 + 每張的 `replacements.{{headline}}`
-- 圖表型別 → 反映在 `slides[].layout_hint`（通用 hint，例：`title-body` / `headline-image` / `bullets` / `quote`；backend 自行解讀）
-- 每張 slide 的 1 個主結論 → 反映在 `replacements.{{title}}` 或 `{{headline}}`
+- Narrative flow → becomes `slides[].slide_index` ordering plus per-slide `replacements.{{headline}}`
+- Chart type → becomes `slides[].layout_hint` (generic hint; backend-specific interpretation happens in the builder — examples: `title-body`, `headline-image`, `bullets`, `quote`)
+- One main conclusion per slide → becomes `replacements.{{title}}` or `{{headline}}`
 
-**Output 範例**（可交給 builder 或 user）：
+**Example output** (ready for the builder or the user):
 
 ```
-Slide 3 建議：
+Slide 3 suggestion:
 - headline: "Q1 revenue 45% YoY growth driven by APAC expansion"
 - layout_hint: "headline-image"
-- chart type: horizontal bar（8 個地區比較，Pie 會超過 5 slice 門檻）
-- narrative role: Pyramid 的第一層支持論點（證據）
+- chart type: horizontal bar (8 regions; pie would exceed the 5-slice threshold)
+- narrative role: first-level supporting argument (evidence) in the Pyramid
 ```
 
-## Backend-agnostic 聲明
+## Backend-agnostic declaration
 
-本 skill **沒有**以下內容（皆屬執行層或特定 backend 知識）：
+This skill **does not** contain any of the following (they belong to the execution layer or to specific backends):
 
-- ❌ Google Slides API 呼叫 / `layout_hint` enum 實際值
-- ❌ gws CLI 指令、OAuth scope
-- ❌ HTML / reveal.js / PPTX / Marp 語法
-- ❌ Placeholder object ID 對位邏輯（此屬 `google-slides-builder` 執行層）
+- Google Slides API calls or the actual enum values for `layout_hint`
+- gws CLI commands or OAuth scopes
+- HTML / reveal.js / PPTX / Marp syntax
+- Placeholder-object-ID mapping logic (that lives in `google-slides-builder`)
 
-**Because** 設計原則跨輸出格式穩定（Minto 1987 對 Google Slides 跟 Marp 一樣適用），執行技術會演化——解耦讓未來新增 backend 不需改動知識層。
+**Because** design principles stay stable across output formats (Minto 1987 applies equally to Google Slides and Marp), decoupling them from execution lets future backends be added without touching the knowledge layer.
 
-## Phase 2+ 擴展點（trigger-gated）
+## Phase 2+ extensions (trigger-gated)
 
-以下深度 reference **未在 MVP**，trigger 條件達成後才加（PRODUCT-SPEC §3.5）：
+The deep references below are **not in MVP**. They are added once the trigger condition fires (PRODUCT-SPEC §3.5):
 
-| 擴展 | Primary source | Trigger |
+| Extension | Primary source | Trigger |
 |---|---|---|
-| Visual display of quantitative info 深化 | Tufte (2001) *The Visual Display of Quantitative Information* 2nd ed.; Cleveland & McGill (1984) | 外部使用者回饋「圖表 reference 不夠」 |
-| Presentation design 深化 | Duarte (2008) *slide:ology*; Duarte (2010) *Resonate* | 外部使用者回饋「簡報 flow 不夠」 |
-| 高橋メソッド（大字一行流） | 高橋征義 presentations 2005–; 公開資料 | 出現日文技術 talk 場景 |
-| Data dashboard design | Few (2012) *Show Me the Numbers* 2nd ed. | 出現 dashboard-style deck 需求 |
+| Visual display of quantitative info deep-dive | Tufte (2001) *The Visual Display of Quantitative Information* 2nd ed.; Cleveland & McGill (1984) | External feedback: "chart reference is not deep enough" |
+| Presentation design deep-dive | Duarte (2008) *slide:ology*; Duarte (2010) *Resonate* | External feedback: "narrative flow is not deep enough" |
+| Takahashi method (single-phrase style) | Takahashi Masayuki presentations, 2005–; public materials | Japanese technical talk scenario appears |
+| Data dashboard design | Few (2012) *Show Me the Numbers* 2nd ed. | Dashboard-style deck request appears |
 
-MVP 若被問深度 reference，回「Phase 2 trigger 條件未達；現有 Minto + chart-selection baseline 已足以覆蓋 ≥ 80% 場景」並提供現有 reference。
+In MVP, if asked for a deeper reference, reply: "Phase 2 trigger not met; the current Minto + chart-selection baseline already covers ≥ 80% of scenarios", and point back to the existing references.
 
 ---
 

@@ -2,54 +2,64 @@
 set -euo pipefail
 
 # =============================================================================
-# auto-setup.sh — slides-toolkit 端到端 GCP/OAuth 自動化 setup
+# auto-setup.sh — slides-toolkit end-to-end GCP / OAuth setup automation
 # -----------------------------------------------------------------------------
-# 用途：
-#   把 live E2E 驗證過的 Google Slides backend 自動化 bootstrap codify 成
-#   idempotent script。涵蓋：
-#     1. gcloud CLI 偵測 / 安裝（brew cask 或官方 installer）
-#     2. gcloud auth login（已登入則 skip）
-#     3. GCP project 建立 + Slides/Drive API enable
-#     4. 印出 Console 手動步驟 URL（OAuth consent / Audience / Clients）並
-#        `open` 瀏覽器；等使用者下載 client_secret_*.json 到 ~/Downloads
-#     5. 搬 JSON → ~/.config/gws/client_secret.json（chmod 600）+ 寫 env.sh
-#     6. `gws auth login --scopes=presentations,drive.file`（正確 scope 語法）
-#     7. 驗證 `gws auth status` 為 oauth2
+# Codifies the live-E2E-verified Google Slides backend bootstrap as an
+# idempotent script. Steps:
+#   1. Detect / install gcloud CLI (brew cask or the official installer).
+#   2. gcloud auth login (skipped if already signed in).
+#   3. Create the GCP project and enable the Slides + Drive APIs.
+#   4. Print Console URLs for the manual steps (OAuth consent / Audience /
+#      Clients) and `open` them in the browser; wait for the user to
+#      download client_secret_*.json into ~/Downloads.
+#   5. Move the JSON to ~/.config/gws/client_secret.json (chmod 600) and
+#      write env.sh.
+#   6. `gws auth login --scopes=presentations,drive.file` (correct scope
+#      syntax).
+#   7. Verify `gws auth status` reports oauth2.
 #
-#   Idempotent：每個 function 偵測當前 state；已完成則 skip + stderr 印
-#   "already done"。--force-reinstall 可強制重跑 auth step。
+# Idempotent: each function probes the current state and skips with an
+# "already done" stderr line when the step is complete. --force-reinstall
+# forces the auth step to re-run.
 #
-# 設計原則：
-#   - 「自動化可以可靠自動化的部分」：UI 操作（Console 點按鈕 / add test user
-#     / download JSON）由使用者完成；script 只開瀏覽器 + 等檔案出現
-#   - 不跑 smoke test（建 test deck）於主流程，避免產生垃圾資源
-#   - 全部動態偵測 gmail 帳號，不 hardcode
-#   - Secrets ASVS V14：client_secret.json / env.sh 均 chmod 600，0700 dir
+# Design principles:
+#   - Automate what can be reliably automated. UI actions (clicking in the
+#     Console, adding a test user, downloading the JSON) remain manual;
+#     the script only opens the browser and waits for the file to appear.
+#   - The main flow does not run a smoke test (no test-deck creation) to
+#     avoid leaving stray resources behind.
+#   - The Gmail account is detected dynamically — never hardcoded.
+#   - Secrets (ASVS V14): client_secret.json and env.sh are chmod 600,
+#     inside a 0700 directory.
 #
 # Upstream refs:
 #   - TECH-SPEC v0.3 §4.2 Exit code table
-#   - TECH-SPEC §4.8 Credential flow（ASVS V14 secrets-at-rest）
-#   - TECH-SPEC §7.3 Dry-run 模式
+#   - TECH-SPEC §4.8 Credential flow (ASVS V14 secrets-at-rest)
+#   - TECH-SPEC §7.3 Dry-run mode
 #
 # Args:
-#   --dry-run                 只印計畫，不執行任何 gcloud/gws 命令或檔案操作
-#   --force-reinstall         即使 gws 已 authed，仍重跑 gws auth login
-#   -h|--help                 印使用說明
+#   --dry-run                 Print the plan only; no gcloud/gws commands
+#                             or filesystem changes.
+#   --force-reinstall         Re-run gws auth login even if gws is already
+#                             authed.
+#   -h|--help                 Print usage.
 #
 # Env:
-#   SLIDES_TOOLKIT_PROJECT_ID  optional；預設 slides-toolkit-<YYMMDD>
+#   SLIDES_TOOLKIT_PROJECT_ID  Optional; defaults to slides-toolkit-<YYMMDD>.
 #
 # Stdin: none
 # Stdout: JSON
 #   {"status":"success","project_id":"...","account":"...",
 #    "scopes":["presentations","drive.file"],"elapsed_sec":N}
-# Stderr: 人讀 `[auto-setup] step N/7: ...` progress + 結構化 error JSON
+# Stderr: human-readable `[auto-setup] step N/7: ...` progress +
+#         structured error JSON on failure.
 #
-# Exit codes (per TECH-SPEC v0.3 §4.2)：
+# Exit codes (per TECH-SPEC v0.3 §4.2):
 #   0   success
-#   1   generic error（usage / platform / unknown state）
-#   10  auth error（gcloud/gws login 失敗；使用者拒絕授權；timeout 等 JSON）
-#   12  API error（enable services / create project 失敗）
+#   1   generic error (usage / platform / unknown state)
+#   10  auth error (gcloud/gws login failed; user declined consent;
+#       timeout; etc.)
+#   12  API error (enable services / create project failed)
 # =============================================================================
 
 # --- UTF-8 locale ---
@@ -121,7 +131,7 @@ parse_args() {
 Usage: auto-setup.sh [--dry-run] [--force-reinstall]
 
 Env:
-  SLIDES_TOOLKIT_PROJECT_ID    GCP project id（預設 slides-toolkit-<YYMMDD>）
+  SLIDES_TOOLKIT_PROJECT_ID    GCP project id (default: slides-toolkit-<YYMMDD>)
 
 Exit codes:
   0  success

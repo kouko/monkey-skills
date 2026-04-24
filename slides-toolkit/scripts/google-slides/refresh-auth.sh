@@ -4,36 +4,39 @@ set -euo pipefail
 # =============================================================================
 # refresh-auth.sh — slides-toolkit gws refresh-token re-auth helper
 # -----------------------------------------------------------------------------
-# 用途：
-#   一鍵重新向 Google 取得 gws refresh token（當 Testing mode 7 天過期時）。
-#   包住完整 scope URL 和 issue #119 env vars export，免背長指令。
+# One-shot helper to re-obtain a gws refresh token from Google (used when
+# the 7-day Testing-mode expiry hits). Wraps the full scope URLs and the
+# issue #119 env-var exports so the user does not need to memorize the
+# long command.
 #
-#   使用場景：
-#     1. 每 7 天主動跑一次（alias: `gws-relogin`）
-#     2. 被 gws-wrap.sh 或 google-slides-builder 在偵測 exit 10 時自動 invoke
-#     3. 手動 `bash refresh-auth.sh` 當 debug 用
+# Usage scenarios:
+#   1. Run proactively every 7 days (alias: `gws-relogin`).
+#   2. Auto-invoked by gws-wrap.sh or google-slides-builder when exit 10
+#      is detected.
+#   3. Manual `bash refresh-auth.sh` for debugging.
 #
-# 前置條件：
-#   - `google-slides-setup` 已完成首次設定
-#   - `~/.config/gws/client_secret.json` 存在
-#   - `~/.config/gws/env.sh` 存在（issue #119 workaround env vars）
-#   - `~/.cache/slides-toolkit/bin/gws` 存在
+# Preconditions:
+#   - `google-slides-setup` has completed the first-time setup.
+#   - `~/.config/gws/client_secret.json` exists.
+#   - `~/.config/gws/env.sh` exists (issue #119 workaround env vars).
+#   - `~/.cache/slides-toolkit/bin/gws` exists.
 #
-# Args: none（flag 走 env）
+# Args: none (flags via env).
 #
 # Env:
-#   SLIDES_TOOLKIT_SCOPES  override scope clamp
-#                          default: presentations,drive.file
-#                          為完整 URL 的 comma-separated list
+#   SLIDES_TOOLKIT_SCOPES  Override the scope clamp.
+#                          Default: presentations,drive.file (as full URLs,
+#                          comma-separated).
 #
 # Stdin: none
-# Stdout: gws auth login 的 stdout（含 URL + 成功訊息）
-# Stderr: 人讀 progress
+# Stdout: gws auth login stdout (consent URL + success message).
+# Stderr: human-readable progress.
 #
 # Exit codes:
-#   0  success（re-auth 完成，credentials.enc 已更新）
-#   1  generic error（missing client_secret / env.sh / gws binary）
-#   10 gws auth login fail（user 取消瀏覽器 consent / scope 錯等）
+#   0  success (re-auth complete; credentials.enc refreshed)
+#   1  generic error (missing client_secret / env.sh / gws binary)
+#   10 gws auth login failed (user cancelled browser consent, scope
+#      mismatch, etc.)
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"

@@ -2,39 +2,42 @@
 set -euo pipefail
 
 # =============================================================================
-# env-guard.sh — gws issue #119 偵測 + workaround apply（ISP 拆 subcommand）
+# env-guard.sh — gws issue #119 detection + workaround apply (ISP split)
 # -----------------------------------------------------------------------------
-# 用途：
-#   - `check`：偵測是否需 issue #119 workaround（缺 GOOGLE_WORKSPACE_CLI_CLIENT_ID
-#     / CLIENT_SECRET env var、或 gws auth 回 invalid_scope / invalid_client）→
-#     輸出 JSON `{"workaround_needed": bool, "reason": "..."}`。
-#     若需 workaround 但未設 env → exit 16；其他正常情況 exit 0。
-#   - `apply`：從 `~/.config/gws/client_secret.json` 讀 client ID / secret 並
-#     輸出 shell-eval 指令（KISS：不直接 mutate caller env，讓 caller `eval`
-#     或 `source` 一個 wrapper；避免 side effect 洩漏）。
+# Two subcommands with separate responsibilities (Interface Segregation):
+#   - `check`: Detect whether the issue #119 workaround is needed (missing
+#     GOOGLE_WORKSPACE_CLI_CLIENT_ID / CLIENT_SECRET env vars, or gws auth
+#     returning invalid_scope / invalid_client). Emits JSON
+#     `{"workaround_needed": bool, "reason": "..."}`. Exits 16 when the
+#     workaround is needed but not applied; exits 0 otherwise.
+#   - `apply`: Read client ID / secret from
+#     `~/.config/gws/client_secret.json` and emit shell-eval lines (KISS:
+#     the caller's env is not mutated directly — the caller must `eval` or
+#     `source` the output, avoiding side-effect leakage).
 #
-# ISP（TECH-SPEC §6.1）：setup caller 走 check + apply；builder caller 只走 check
-# —— 不同 subcommand 不同責任。
+# ISP (TECH-SPEC §6.1): the setup caller runs check + apply; the builder
+# caller only runs check — different subcommands, different responsibilities.
 #
 # Upstream refs:
 #   - TECH-SPEC §4.2 `scripts/google-slides/env-guard.sh` contract
 #   - TECH-SPEC §6.1 gws issue #119 workaround
-#   - TECH-SPEC §8.1 settings.json deny rule（credential-at-rest 防護）
+#   - TECH-SPEC §8.1 settings.json deny rule (credential-at-rest guard)
 #
 # Args:
-#   check              偵測 workaround 需求
-#   apply              印出 export shell 指令（供 caller eval）；**不** echo 明文
-#                      secret 到 stdout 的註解—只有 export 指令本身，並將其
-#                      redirect 到 stderr 的明文 log 被 trim 為 "***"
+#   check              Detect whether the workaround is needed.
+#   apply              Emit `export ...` shell lines for the caller to eval.
+#                      The only plaintext secret appears on stdout (the
+#                      export lines themselves); the stderr progress log is
+#                      masked to "***".
 #
 # Stdin:  none
-# Stdout: JSON（check）或 shell eval 指令（apply；無明文 log）
-# Stderr: 人讀訊息，不含明文 secret
+# Stdout: JSON (check) or shell-eval lines (apply; no plaintext log).
+# Stderr: human-readable messages, no plaintext secrets.
 #
-# Exit codes (per TECH-SPEC §4.2)：
-#   0   success / workaround 不需要
-#   1   generic error（usage / 找不到 client_secret.json）
-#   16  需 workaround 但未套用（check 時）
+# Exit codes (per TECH-SPEC §4.2):
+#   0   success / workaround not required
+#   1   generic error (usage / client_secret.json not found)
+#   16  workaround required but not applied (check subcommand)
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"

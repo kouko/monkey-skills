@@ -2,7 +2,7 @@
 
 Maps Google Slides / Drive API HTTP error symptoms → `gws-wrap.sh` stderr patterns → TECH-SPEC §4.2 exit codes → recommended recovery path.
 
-All recipes in `protocols/` reference this file for exit-code semantics.
+Every recipe in `protocols/` references this file for exit-code semantics.
 
 ---
 
@@ -12,27 +12,27 @@ All recipes in `protocols/` reference this file for exit-code semantics.
 
 **Upstream signals**:
 - HTTP 401 Unauthorized
-- HTTP 403 Forbidden（when scope mismatch rather than resource permission）
+- HTTP 403 Forbidden (when it is a scope mismatch rather than a resource permission)
 - OAuth error codes: `invalid_grant` / `invalid_token` / `token_expired`
 
 **Root causes**:
-- Refresh token 7-day expiration（External + Testing mode；Google OAuth policy）
-- `gws auth login` never completed
-- Required scope missing（e.g. requested `presentations.batchUpdate` but login only granted `drive.file`）
-- Revoked OAuth consent（user removed access via myaccount.google.com）
+- Refresh token hit the 7-day expiration window (External + Testing mode; Google OAuth policy)
+- `gws auth login` was never completed
+- Required scope missing (e.g. the call needs `presentations.batchUpdate` but login only granted `drive.file`)
+- User revoked OAuth consent via myaccount.google.com
 
-**Recovery**（v0.5.1 起 smooth re-auth）:
+**Recovery** (smooth re-auth since v0.5.1):
 
-**建議用 helper script**（Claude orchestration + user alias 共用此入口）：
+**Recommended — use the helper script** (shared entry point for Claude orchestration and the user alias):
 ```bash
 bash ~/GitHub/monkey-skills/slides-toolkit/scripts/google-slides/refresh-auth.sh
 ```
 
-該 script 自動：source `env.sh`（issue #119 env vars）+ call
-`gws auth login --scopes=<presentations,drive.file>`（完整 URL，避免
-`-s` service filter 陷阱 — 見 `docs/gws-cli-quirks.md` §3）。
+The script sources `env.sh` (issue #119 env vars) and calls
+`gws auth login --scopes=<presentations,drive.file>` with full URLs,
+avoiding the `-s` service-filter pitfall — see `docs/gws-cli-quirks.md` §3.
 
-**手動展開版**（若不想用 helper）：
+**Manual expansion** (if you prefer not to use the helper):
 ```bash
 source ~/.config/gws/env.sh
 export GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
@@ -40,13 +40,14 @@ gws auth login \
   --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive.file
 ```
 
-Browser opens → click "Allow" → exit 0 → rerun the recipe. Token fresh
-for another ~7 days（Testing mode）。
+Browser opens → click "Allow" → exit 0 → rerun the recipe. Token stays
+fresh for another ~7 days (Testing mode).
 
-**Claude orchestration pattern**：偵測 exit 10 時**不要**只告訴使用者指
-令；直接呼叫 `refresh-auth.sh`（瀏覽器自動開）→ user 點 Allow → retry
-原 operation。見 `google-slides-builder/SKILL.md §Token expiry` 完整
-recovery protocol。
+**Claude orchestration pattern**: when exit 10 is detected, **do not**
+just tell the user the command; invoke `refresh-auth.sh` directly
+(browser opens automatically) → user clicks Allow → retry the original
+operation. See `google-slides-builder/SKILL.md §Token expiry` for the
+full recovery protocol.
 
 ---
 
@@ -54,16 +55,16 @@ recovery protocol。
 
 **Upstream signals**:
 - HTTP 429 with retry-after > 30 seconds
-- Error body contains `quotaExceeded` / `userRateLimitExceeded` persisting across `gws-wrap.sh` retry loop
-- `gws-wrap.sh` exponential backoff（5s → 10s → 20s, 3 attempts）exhausted
+- Error body contains `quotaExceeded` / `userRateLimitExceeded` persisting across the `gws-wrap.sh` retry loop
+- `gws-wrap.sh` exponential backoff (5s → 10s → 20s, 3 attempts) exhausted
 
 **Root causes**:
-- Personal GCP project default quota hit（60 write/min/user for Slides API）
-- Batch too large（> 1000 requests in single batchUpdate）
+- Personal GCP project default quota hit (60 write/min/user for Slides API)
+- Batch too large (> 1000 requests in a single batchUpdate)
 
 **Recovery**:
-- Wait 1 minute + retry
-- Split large batchUpdate into chunks（recipe-create-slides.md documents chunking pattern for > 50 slides）
+- Wait 1 minute and retry
+- Split a large batchUpdate into chunks (`recipe-create-slides.md` documents the chunking pattern for > 50 slides)
 - Check GCP Console → APIs & Services → Quotas for actual usage
 
 ---
@@ -71,29 +72,29 @@ recovery protocol。
 ### `exit 12` — Generic Google API error
 
 **Upstream signals**:
-- HTTP 400 Bad Request（malformed batchUpdate body）
-- HTTP 404 Not Found（presentationId / fileId invalid）
-- HTTP 500 / 502 / 503（transient; but gws-wrap.sh retry already ran）
+- HTTP 400 Bad Request (malformed batchUpdate body)
+- HTTP 404 Not Found (invalid `presentationId` / `fileId`)
+- HTTP 500 / 502 / 503 (transient; but the `gws-wrap.sh` retry loop already ran)
 - Error body contains `invalidArgument` / `failedPrecondition`
 
 **Root causes**:
-- `jq` assembled batchUpdate body with syntactically valid but semantically wrong request（e.g. insertText into non-text shape; createImage size > 25 megapixels）
-- Resource deleted between API calls（e.g. presentation deleted right after `presentations.create`）
-- Google-side transient failure not recoverable within retry window
+- `jq` produced a syntactically valid but semantically wrong batchUpdate request (e.g. insertText into a non-text shape; createImage with size > 25 megapixels)
+- Resource was deleted between API calls (e.g. presentation deleted immediately after `presentations.create`)
+- Google-side transient failure not recoverable within the retry window
 
 **Recovery**:
-- Read stderr JSON for specific API error message
-- Consult Slides API error table: https://developers.google.com/slides/api/guides/troubleshoot
-- If repeatable: check recipe input validation
+- Read the structured stderr JSON for the specific API error message
+- Consult the Slides API error table: https://developers.google.com/slides/api/guides/troubleshoot
+- If reproducible: check the recipe's input validation
 
 ---
 
 ### `exit 15` — Invalid `layout_hint` enum
 
-**Upstream signal**（from recipe-create-slides.md pre-check, before API call）:
+**Upstream signal** (from the recipe-create-slides pre-check, before the API call):
 - Input `layout_hint` is not one of the 7 allowed values
 
-**Allowed values**（Google Slides API `predefinedLayout`）:
+**Allowed values** (Google Slides API `predefinedLayout`):
 - `TITLE`
 - `TITLE_AND_BODY`
 - `TITLE_AND_TWO_COLUMNS`
@@ -103,8 +104,8 @@ recovery protocol。
 - `BLANK`
 
 **Recovery**:
-- Fix caller's `slide-plan.json` / arguments to use one of the 7 values
-- Pre-flight checklist in `google-slides-builder` catches this before here
+- Fix the caller's slide plan / arguments to use one of the 7 values
+- The pre-flight checklist in `google-slides-builder` catches this before the recipe runs
 
 ---
 
@@ -112,11 +113,11 @@ recovery protocol。
 
 **Upstream signal**:
 - `env-guard.sh check` returns `workaround_needed: true` + `exit 16`
-- OAuth error includes `invalid_scope` / `invalid_client` despite `client_secret.json` present
+- OAuth error includes `invalid_scope` / `invalid_client` despite `client_secret.json` being present
 
 **Root cause**:
-- `gws` CLI's hardcoded OAuth client fails on personal `@gmail.com` accounts
-- Workaround: export `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET` from user's own GCP OAuth client
+- The `gws` CLI's hardcoded OAuth client fails on personal `@gmail.com` accounts
+- Workaround: export `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET` from the user's own GCP OAuth client
 
 **Recovery**:
 - Run `google-slides-setup` → `protocols/issue-119-workaround.md`
@@ -128,63 +129,63 @@ recovery protocol。
 
 **Upstream signal**:
 - `credential-check.sh` stdout: `{"backend": "none", "token_valid": false, ...}` + `exit 18`
-- Neither macOS Keychain (`security find-generic-password -s gws -a $USER`) nor file backend (`~/.config/gws/keyring-file.json`) usable
+- Neither macOS Keychain (`security find-generic-password -s gws -a $USER`) nor the file backend (`~/.config/gws/keyring-file.json`) is usable
 
 **Root cause**:
-- First-time use, `gws auth login` never run
-- Keychain silent-fail in SSH / CI / sandbox context
+- First use — `gws auth login` has never run
+- Keychain silently fails in SSH / CI / sandbox contexts
 - File backend not enabled via `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`
 
 **Recovery**:
 - Run `gws auth login -s presentations,drive.file`
-- If Keychain fails on headless host: `export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`
+- On a headless host where Keychain fails: `export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`
 
 ---
 
-## Non-fatal warnings（exit 0 but recipe records warning）
+## Non-fatal warnings (exit 0, but the recipe records a warning)
 
-### `exit 13a` — InsertText: placeholder role not found in target slide
+### `exit 13a` — InsertText: placeholder role not found on the target slide
 
 **Upstream signal**:
-- `recipe-insert-text.md` tries to resolve `{{ROLE}}` via `placeholder_map[slide_index][ROLE]` → map entry missing
-- API call itself succeeds for other entries; this one skipped
+- `recipe-insert-text.md` tries to resolve `{{ROLE}}` via `placeholder_map[slide_index][ROLE]` and the map entry is missing
+- The API call itself succeeds for the other entries; this one is skipped
 
 **Root cause**:
-- `slide-plan.json` `replacements` key references a role that doesn't exist on the chosen `layout_hint`
+- The slide plan's `replacements` key references a role that does not exist on the chosen `layout_hint`
   - e.g. `layout_hint: "TITLE"` + `replacements: {"{{BODY_1}}": "..."}` — TITLE layout has no BODY role
-- Google Slides layout schema changed upstream（rare）
+- Google Slides layout schema changed upstream (rare)
 
 **Recovery**:
-- Caller (builder) collects warnings in `warnings[]` array, emits at end of pipeline
-- Human review: adjust `layout_hint` or remove unused `replacements` key
+- The caller (builder) collects warnings in the `warnings[]` array and emits them at the end of the pipeline
+- Human review: adjust `layout_hint` or remove the unused `replacements` key
 
 ### `exit 13b` — InsertImage: placeholder objectId not found
 
 **Upstream signal**:
-- `recipe-insert-image.md` tries to resolve `placeholder_id` via `placeholder_map[slide_index][IMG_ROLE]` → map entry missing
+- `recipe-insert-image.md` tries to resolve `placeholder_id` via `placeholder_map[slide_index][IMG_ROLE]` and the map entry is missing
 
 **Root cause**:
-- Image role not in `placeholder_map`（e.g. `IMG_MAIN` specified but layout only has TITLE + BODY, no image placeholder）
-- Must use `BLANK` layout + manually position images via `pageElementProperties` for custom placements
+- The image role is absent from the placeholder map (e.g. `IMG_MAIN` was specified, but the layout only has TITLE + BODY, with no image placeholder)
+- For custom placements, use `BLANK` layout + explicit `pageElementProperties`
 
 **Recovery**:
-- If intent is "image on a specific layout slot": ensure layout has image placeholder
-- If intent is "image anywhere": use `BLANK` layout + explicit `pageElementProperties.{size, transform}`
+- If the intent is "image in a specific layout slot": ensure the layout has an image placeholder
+- If the intent is "image anywhere": use `BLANK` layout + explicit `pageElementProperties.{size, transform}`
 
 ---
 
-## Quick reference table
+## Quick reference
 
-| exit | Kind | Semantic | Typical fix |
+| exit | Kind | Semantics | Typical fix |
 |---|---|---|---|
-| 0 | success | API call(s) succeeded; warnings may exist in output | — |
+| 0 | success | API call(s) succeeded; warnings may appear in output | — |
 | 10 | fatal | Auth: token expired / scope missing / revoked | `gws auth login -s ...` |
-| 11 | fatal | Rate limit: retry exhausted | Wait 1 min + chunk batchUpdate |
+| 11 | fatal | Rate limit: retries exhausted | Wait 1 min; chunk the batchUpdate |
 | 12 | fatal | Generic API error (400/404/500 etc.) | Inspect stderr; consult Slides API docs |
 | 13a | warning | InsertText: role not in layout | Review `replacements` keys vs `layout_hint` |
-| 13b | warning | InsertImage: role not in layout | Use `BLANK` layout or pick layout with image slot |
-| 15 | fatal | `layout_hint` enum invalid | Fix input to one of 7 allowed values |
-| 16 | fatal | Issue #119 workaround needed | Run setup skill; export client_id/secret env |
+| 13b | warning | InsertImage: role not in layout | Use `BLANK` layout or pick a layout with an image slot |
+| 15 | fatal | `layout_hint` enum invalid | Fix input to one of the 7 allowed values |
+| 16 | fatal | Issue #119 workaround needed | Run the setup skill; export client_id/secret env |
 | 18 | fatal | Credential backend unavailable | `gws auth login`; consider `KEYRING_BACKEND=file` |
 
 ---
@@ -193,6 +194,6 @@ recovery protocol。
 
 - Google Slides API troubleshooting: https://developers.google.com/slides/api/guides/troubleshoot
 - Google OAuth 2.0 error responses: https://developers.google.com/identity/protocols/oauth2#errors
-- Google Cloud Quotas: https://console.cloud.google.com/apis/api/slides.googleapis.com/quotas
-- TECH-SPEC §4.2 (full exit code table + `gws-wrap.sh` mapping logic)
-- TECH-SPEC §6 (risk workaround implementations)
+- Google Cloud quotas: https://console.cloud.google.com/apis/api/slides.googleapis.com/quotas
+- TECH-SPEC §4.2 (full exit-code table + `gws-wrap.sh` mapping logic)
+- TECH-SPEC §6 (risk-workaround implementations)
