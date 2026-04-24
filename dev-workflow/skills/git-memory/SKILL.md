@@ -117,8 +117,11 @@ reflects project decisions without manual transcription.
 - **Phase 1 (MVP, this version)** — conventions + a retrieval
   primitive. Claude helps compose commit trailers and the PR
   `## Memory` section when prompted.
-- **Phase 2** — PR template, install script for `attribution.commit`
-  integration, optional pre-commit validate hook.
+- **Phase 2** — install script for `attribution.commit` integration,
+  optional pre-commit validate hook. (A static PR template under
+  `.github/` is deferred until humans-opening-PRs-via-GitHub-UI
+  becomes a real use case in this repo — Claude-authored PRs
+  bypass the template entirely via `gh pr create --body`.)
 - **Phase 3** — rebuild pipeline: `git log --trailer` + PR body
   extraction → distilled `MEMORY.md` entries.
 
