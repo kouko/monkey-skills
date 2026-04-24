@@ -3,8 +3,15 @@
 # memory-grep.sh — retrieval primitive for git-memory skill.
 #
 # Dumps all memory trailers from git log plus all `## Memory` sections
-# from merged PR bodies, producing a plain-text digest that any tool
-# (Claude Code, Cursor, Codex, aider, a human) can ingest.
+# from merged PR bodies, producing a plain-text or JSON digest that
+# any tool (Claude Code, Cursor, Codex, aider, a human) can ingest.
+#
+# Parsing strategy:
+#   Commit trailers are parsed by `git interpret-trailers --parse`, not
+#   by re-splitting a `--pretty=format:` field-delimited output. This
+#   eliminates separator-collision bugs (e.g. a trailer value containing
+#   `|` or any other ASCII character) — git's own parser is the source
+#   of truth for what counts as a trailer.
 #
 # Usage:
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
@@ -20,29 +27,9 @@
 #   0  success
 #   1  usage error
 #   2  not a git repo
-#   3  external dependency missing (gh / jq when required)
+#   3  external dependency missing (jq always required; gh required if PR path enabled)
 
 set -euo pipefail
-
-# Render a trailer group as one or more indented lines.
-#   $1 — label (e.g. "Decision")
-#   $2 — raw value from git log with %x1F separators between entries
-# Single entry:   "  Decision: <text>"
-# Multiple:       "  Decision (1/N): <text>" one per line
-render_group() {
-  [ -z "${2:-}" ] && return 0
-  local entries
-  entries=$(printf '%s' "$2" | tr $'\x1F' '\n' | sed '/^$/d')
-  [ -z "$entries" ] && return 0
-  local n
-  n=$(printf '%s\n' "$entries" | wc -l | tr -d ' ')
-  if [ "$n" -eq 1 ]; then
-    printf '  %s: %s\n' "$1" "$entries"
-  else
-    printf '%s\n' "$entries" \
-      | awk -v L="$1" -v N="$n" '{printf "  %s (%d/%d): %s\n", L, NR, N, $0}'
-  fi
-}
 
 SINCE='3 months ago'
 LIMIT=50
@@ -50,6 +37,8 @@ REPO='.'
 FORMAT='plain'
 INCLUDE_PR=1
 INCLUDE_COMMIT=1
+
+TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
 
 usage() {
   cat <<'EOF'
@@ -74,6 +63,28 @@ Examples:
 EOF
 }
 
+# ─── render helper (plain format) ──────────────────────────────────
+#
+# Render a trailer group as one or more indented lines.
+#   $1 — label (e.g. "Decision")
+#   $2 — newline-separated entries
+# Single entry:   "  Decision: <text>"
+# Multiple:       "  Decision (1/N): <text>" one per line
+render_group() {
+  [ -z "${2:-}" ] && return 0
+  local entries="$2"
+  local n
+  n=$(printf '%s\n' "$entries" | wc -l | tr -d ' ')
+  if [ "$n" -eq 1 ]; then
+    printf '  %s: %s\n' "$1" "$entries"
+  else
+    printf '%s\n' "$entries" \
+      | awk -v L="$1" -v N="$n" '{printf "  %s (%d/%d): %s\n", L, NR, N, $0}'
+  fi
+}
+
+# ─── argument parsing ──────────────────────────────────────────────
+
 for arg in "$@"; do
   case "$arg" in
     --since=*)   SINCE="${arg#*=}" ;;
@@ -97,27 +108,77 @@ if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
   exit 2
 fi
 
-if [ "$FORMAT" = 'json' ] && ! command -v jq >/dev/null 2>&1; then
-  echo "--format=json requires jq" >&2
+# jq is required for both formats now — the commit extractor builds NDJSON
+# regardless of the output format.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "memory-grep.sh requires jq" >&2
   exit 3
 fi
 
-# ─── commit trailer extraction ─────────────────────────────────────
+# ─── commit trailer extraction (Layer 2 — git's own parser) ────────
+#
+# Emits NDJSON (one object per line) for each memory-worthy commit:
+#   {sha, date, subject, decision:[...], learning:[...], gotcha:[...], related:[...]}
+
+extract_commits_ndjson() {
+  git -C "$REPO" log \
+    --since="$SINCE" \
+    --no-merges \
+    --format='%H' \
+    | while read -r full_sha; do
+        [ -z "$full_sha" ] && continue
+
+        # Extract trailer lines via git's own parser, filtered to our keys.
+        local trailer_lines
+        trailer_lines=$(
+          git -C "$REPO" log -1 --format='%B' "$full_sha" \
+            | git interpret-trailers --parse --unfold 2>/dev/null \
+            | grep -E "$TRAILER_KEYS_REGEX" \
+            || true
+        )
+
+        # No memory trailers → skip this commit entirely.
+        [ -z "$trailer_lines" ] && continue
+
+        # Group trailer lines by key into {decision, learning, gotcha, related} arrays.
+        local trailers_obj
+        trailers_obj=$(
+          printf '%s\n' "$trailer_lines" \
+            | jq -R -n '
+                [inputs | capture("^(?<k>[^:]+): (?<v>.*)$")
+                        | {key: (.k | ascii_downcase), value: .v}]
+                | group_by(.key)
+                | map({(.[0].key): map(.value)})
+                | add // {}
+                | {decision: (.decision // []),
+                   learning: (.learning // []),
+                   gotcha:   (.gotcha   // []),
+                   related:  (.related  // [])}
+              '
+        )
+
+        # Metadata for header. Use %x1F as local separator — we control these fields
+        # (short-sha is hex, date is YYYY-MM-DD, subject can contain any char
+        # except 0x1F in practice).
+        local meta sha_short date subject
+        meta=$(git -C "$REPO" log -1 --format='%h%x1F%ad%x1F%s' --date=short "$full_sha")
+        sha_short=${meta%%$'\x1F'*}
+        meta=${meta#*$'\x1F'}
+        date=${meta%%$'\x1F'*}
+        subject=${meta#*$'\x1F'}
+
+        jq -nc \
+          --arg sha "$sha_short" \
+          --arg date "$date" \
+          --arg subject "$subject" \
+          --argjson trailers "$trailers_obj" \
+          '$trailers + {sha: $sha, date: $date, subject: $subject}'
+      done
+}
 
 commit_records=''
 if [ "$INCLUDE_COMMIT" = 1 ]; then
-  # For each commit in the range, emit a pipe-delimited record:
-  #   <short-sha>|<subject>|<iso-date>|<Decision trailer>|<Learning trailer>|<Gotcha trailer>|<Related trailer>
-  # Missing trailers come back as empty strings.
-  commit_records=$(
-    git -C "$REPO" log \
-      --since="$SINCE" \
-      --no-merges \
-      --pretty=format:'%h|%s|%ad|%(trailers:key=Decision,valueonly,separator=%x1F)|%(trailers:key=Learning,valueonly,separator=%x1F)|%(trailers:key=Gotcha,valueonly,separator=%x1F)|%(trailers:key=Related,valueonly,separator=%x1F)' \
-      --date=short \
-      2>/dev/null \
-      | awk -F'|' 'NF>=7 && ($4!="" || $5!="" || $6!="")' || true
-  )
+  commit_records=$(extract_commits_ndjson)
 fi
 
 # ─── PR body Memory-section extraction ─────────────────────────────
@@ -125,8 +186,6 @@ fi
 pr_records=''
 if [ "$INCLUDE_PR" = 1 ]; then
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    # Fetch recent merged PRs, filter down to those containing `## Memory`.
-    # Output one JSON object per line (jq -c): {number, title, mergedAt, memory}
     pr_records=$(
       gh pr list \
         --repo "$(git -C "$REPO" config --get remote.origin.url 2>/dev/null || echo '')" \
@@ -163,14 +222,18 @@ case "$FORMAT" in
     if [ -n "$commit_records" ]; then
       echo "## Commit trailers"
       echo
-      # Render each record as a human-readable block.
-      echo "$commit_records" | while IFS='|' read -r sha subject date decision learning gotcha related; do
-        [ -z "$sha" ] && continue
+      printf '%s\n' "$commit_records" | while IFS= read -r rec; do
+        [ -z "$rec" ] && continue
+        sha=$(printf '%s' "$rec" | jq -r '.sha')
+        date=$(printf '%s' "$rec" | jq -r '.date')
+        subject=$(printf '%s' "$rec" | jq -r '.subject')
         echo "### $sha  $date  $subject"
-        render_group "Decision" "$decision"
-        render_group "Learning" "$learning"
-        render_group "Gotcha"   "$gotcha"
-        render_group "Related"  "$related"
+        for key_pair in 'decision Decision' 'learning Learning' 'gotcha Gotcha' 'related Related'; do
+          k=${key_pair% *}
+          label=${key_pair#* }
+          entries=$(printf '%s' "$rec" | jq -r ".${k}[]" 2>/dev/null || true)
+          render_group "$label" "$entries"
+        done
         echo
       done
     else
@@ -182,7 +245,7 @@ case "$FORMAT" in
     if [ -n "$pr_records" ]; then
       echo "## PR Memory sections"
       echo
-      echo "$pr_records" | jq -r '
+      printf '%s\n' "$pr_records" | jq -r '
         "### PR #" + (.number|tostring) + "  " + (.mergedAt[:10]) + "  " + .title + "\n" +
         (.memory | split("\n") | map("  " + .) | join("\n")) + "\n"
       '
@@ -200,7 +263,6 @@ case "$FORMAT" in
     ;;
 
   json)
-    # Build a single JSON object: {commits: [...], prs: [...]}
     jq -n \
       --arg since "$SINCE" \
       --arg repo "$REPO" \
@@ -208,25 +270,14 @@ case "$FORMAT" in
         if [ -z "$commit_records" ]; then
           echo '[]'
         else
-          echo "$commit_records" | jq -R -s 'split("\n") | map(select(length > 0)) | map(
-            split("|") as $f |
-            {
-              sha:      $f[0],
-              subject:  $f[1],
-              date:     $f[2],
-              decision: ($f[3] | split("") | map(select(length > 0))),
-              learning: ($f[4] | split("") | map(select(length > 0))),
-              gotcha:   ($f[5] | split("") | map(select(length > 0))),
-              related:  ($f[6] | split("") | map(select(length > 0)))
-            }
-          )'
+          printf '%s\n' "$commit_records" | jq -s '.'
         fi
       )" \
       --argjson prs "$(
         if [ -z "$pr_records" ]; then
           echo '[]'
         else
-          echo "$pr_records" | jq -s '.'
+          printf '%s\n' "$pr_records" | jq -s '.'
         fi
       )" \
       '{repo: $repo, since: $since, commits: $commits, prs: $prs}'
