@@ -82,8 +82,7 @@ dev-workflow/
         ├── SKILL.md
         ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
         ├── protocols/             ← compose-commit / compose-pr
-        ├── scripts/               ← memory-grep retrieval primitive
-        └── templates/             ← pull_request_template with ## Memory section
+        └── scripts/               ← memory-grep retrieval primitive
 ```
 
 ## License
