@@ -523,10 +523,14 @@ slides-toolkit (plugin root)
 │   ├── slides-design/                   # 設計知識層（backend-agnostic）
 │   ├── google-slides-setup/             # [renamed] gws + GCP Console onboarding
 │   │                                    #   (Google Slides backend 專屬)
-│   └── google-slides-builder/           # [renamed] gws 呼叫 + presentations.create
-│                                        #   + predefined layout 套用 + replaceAllText
-│                                        #   + insert image（v0.3: 無 templates/ 目錄、
-│                                        #   無 registry.md；使用 Google 內建 layouts）
+│   ├── google-slides-api/               # [v0.3.2] 低層 per-op recipe reference
+│   │                                    #   (Google Slides backend 專屬；全 MIT 自主；
+│   │                                    #    與 gws-slides Apache-2.0 無程式碼 dep)
+│   └── google-slides-builder/           # [renamed] 高層 orchestration：
+│                                        #   slide-plan.json v1.2 → pre-flight → 串接
+│                                        #   google-slides-api 的 4 recipes → deck URL
+│                                        #   （v0.3: 無 templates/；v0.3.2: recipes 移至
+│                                        #    sibling skill google-slides-api）
 ├── scripts/
 │   ├── common/                          # 跨 backend 共用 shell helpers (e.g. jq fetcher)
 │   └── google-slides/                   # gws 相關 shell (Google Slides backend 專屬)

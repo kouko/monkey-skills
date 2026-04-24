@@ -25,6 +25,7 @@ and is referenced by `§` number.
 | 2026-04-?? | v0.1 — Initial MVP TECH-SPEC | Single-backend (Google Slides only); 4 skills = `using-slides-toolkit` / `slides-setup` / `slides-design` / `slides-builder` |
 | 2026-04-23 | **v0.2 — Platform Pivot alignment** | 對齊 PRODUCT-SPEC v0.2。`slides-setup` → `google-slides-setup`；`slides-builder` → `google-slides-builder`（通用 router / 知識層不變）。目錄分 `scripts/common/` + `scripts/google-slides/`。`slide-plan.json` schema v1 → v1.1（新增 `target` + `backend_config`）。Phase 2+ backend（html / pptx / marp）保留擴充點，MVP 僅實作 `target: "google-slides"`。新增 OPEN-11 回答（§9） |
 | 2026-04-23 | **v0.3 — Scope Refinement alignment** | 對齊 PRODUCT-SPEC v0.3：**移除 template-based workflow + SHA-256 binary pin 兩塊 MVP scope**。`slide-plan.json` schema v1.1 → v1.2（刪除 `backend_config.template_ref`、`layout_hint` 從自由字串改為 Google Slides API predefined layout enum）。Recipe 表重寫：由 `copy-template / replace-text / insert-image` 改為 `create-presentation / create-slides / insert-text / insert-image`（以 `presentations.create` + `batchUpdate createSlide` 指定 `predefinedLayout` 建 deck，不再 copy template deck）。`bootstrap.sh` 移除 SHA-256 pin 邏輯（exit 17 自 exit code 表移除），改用 HTTPS + `curl -f`。刪除 `skills/google-slides-builder/templates/registry.md` 與 `recipe-copy-template.md`。§9 OPEN-5 / OPEN-6 的 integrity 面向、OPEN-2（registry format）、OPEN-10（template schema fingerprint）均隨 scope 移除而退休。**不做** schema v1.1 → v1.2 backward compat（MVP 無既有 user）。**Because** PRODUCT-SPEC v0.3 把個人使用情境下「template 管理 overhead > 視覺品質邊際」「SHA pin 維護成本 > 邊際安全增益」兩條 trade-off 解為刪除，本 TECH-SPEC 同步移除對應模組。原兩塊範圍改為 Phase 2+ trigger-gated（PRODUCT-SPEC §3.5） |
+| 2026-04-24 | **v0.3.2 — Architectural layer split** | 抽出 sibling skill `google-slides-api` 作為低層 per-op recipe reference 層；`google-slides-builder` 保留為高層 orchestration（讀 `slide-plan.json` v1.2、pre-flight、串接 4 recipes）。4 個 recipe 檔 `git mv` 自 `google-slides-builder/protocols/` 至 `google-slides-api/protocols/`；新建 `google-slides-api/SKILL.md` 與 `references/api-error-codes.md`。Router `using-slides-toolkit` 加第 4 分支（低層 API 學習 / debug → google-slides-api）。**Because** (1) SRP 架構更乾淨：per-op recipe 與 pipeline orchestration 為兩種變動維度，分離後各自獨立演進（OCP）；(2) 授權自主：新 skill 全為我們原創 MIT，不需引用 `gws-slides` Apache-2.0 SKILL 內容（`gws` binary 仍為 runtime dep，不影響 repo licensing）；(3) 為 Phase 2+ 潛在 second consumer（e.g. slide-deck-auditor, deck-diff tool）預留低耦合入口。無 scope 變動、無 API 功能變動、無 4 Big Risks 變動（非 pivot、非 scope refinement；純 refactor） |
 
 ---
 
@@ -92,8 +93,8 @@ builder skill 的獨立交付物，不改動 backend-agnostic layer。
 slides-toolkit/
 ├── .claude-plugin/
 │   └── plugin.json                # plugin manifest
-├── PRODUCT-SPEC.md                # (existing; v0.3 Scope Refinement)
-├── TECH-SPEC.md                   # this file (v0.3 Scope Refinement)
+├── PRODUCT-SPEC.md                # (existing; v0.3.2 Architectural split)
+├── TECH-SPEC.md                   # this file (v0.3.2 Architectural split)
 ├── README.md                      # user-facing entry (docs-team)
 ├── CHANGELOG.md
 ├── commands/                      # optional slash-command shims
@@ -139,21 +140,23 @@ slides-toolkit/
     │       ├── gws-install.md
     │       ├── keychain-fallback.md
     │       └── token-lifecycle.md
-    └── google-slides-builder/     # [renamed from slides-builder; v0.3: no templates/]
-        ├── SKILL.md                 # execution layer；Google Slides backend 專屬
-        ├── protocols/
-        │   ├── plan-to-deck.md
-        │   ├── recipe-create-presentation.md  # v0.3 new: presentations.create 建空 deck
-        │   ├── recipe-create-slides.md        # v0.3 new: batchUpdate createSlide + predefinedLayout
-        │   ├── recipe-insert-text.md          # v0.3 取代 recipe-replace-all-text
-        │   └── recipe-insert-image.md         # v0.3 改 createImage + pageElementProperties
+    ├── google-slides-api/         # [v0.3.2] 低層 per-op recipe reference
+    │   ├── SKILL.md                 # entry + op list + composition (placeholder_map) + when-to-use
+    │   ├── protocols/               # (自 google-slides-builder 移至此 sibling skill)
+    │   │   ├── recipe-create-presentation.md
+    │   │   ├── recipe-create-slides.md
+    │   │   ├── recipe-insert-text.md
+    │   │   └── recipe-insert-image.md
+    │   └── references/
+    │       └── api-error-codes.md  # HTTP → exit code 對映 + 救援 playbook
+    └── google-slides-builder/     # [renamed from slides-builder; v0.3: no templates/; v0.3.2: no protocols/]
+        ├── SKILL.md                 # execution layer；slide-plan.json v1.2 consumer
         ├── checklists/
-        │   ├── pre-flight-check.md         # target==google-slides + layout_hint enum validate + token + quota
-        │   └── error-triage.md
+        │   └── pre-flight.md               # target + schema + layout_hint enum + token + quota + image + env
         ├── standards/
         │   └── slide-plan-schema.md        # schema v1.2（target + layout_hint enum；無 backend_config.template_ref）
         └── references/
-            ├── predefined-layouts-map.md   # v0.3 new: Google Slides API predefined layout enum 對照（取代 registry-format.md）
+            ├── predefined-layouts-map.md   # Google Slides API predefined layout enum 對照
             └── gws-command-map.md
 
 # Phase 2+（trigger-gated per PRODUCT-SPEC §3.5；MVP 不建立）

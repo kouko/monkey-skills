@@ -7,12 +7,63 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.4.1 release 前，kouko 需完成）
+### 即將 unblock（在 0.5.0 release 前，kouko 需完成）
 
 - 跑 `google-slides-setup` 完成首次 GCP Console OAuth
 - 實測 end-to-end：brief → URL ≤ 3 分鐘（KR1）；Google 內建 predefined
   layouts 覆蓋率 ≥ 80%（`[ASSUMPTION-2]` revalidation）
-- `bootstrap.sh` 已無 TODO placeholder；首次執行自動解析 gws latest tag
+
+## [0.4.2-api-sibling-skill] - 2026-04-24
+
+**Architectural layer split**（純 refactor；無 scope / 功能變動）— 把
+`google-slides-builder/protocols/` 下的 4 個 per-op recipe 抽出成 sibling
+skill `google-slides-api`，builder 變薄保留 pipeline orchestration 職責。
+
+### Added
+
+- `skills/google-slides-api/SKILL.md` — 低層入口（op list + composition
+  pattern via placeholder_map + when-to-use boundary）
+- `skills/google-slides-api/references/api-error-codes.md` — 10/11/12/
+  13a/13b/14/15/16/18 exit code 語意 + 救援 playbook，集中於此 reference
+
+### Changed
+
+- `skills/google-slides-api/protocols/recipe-create-presentation.md` ←
+  `git mv` from `google-slides-builder/protocols/`
+- `skills/google-slides-api/protocols/recipe-create-slides.md` ← git mv
+- `skills/google-slides-api/protocols/recipe-insert-text.md` ← git mv
+- `skills/google-slides-api/protocols/recipe-insert-image.md` ← git mv
+- `skills/google-slides-builder/SKILL.md` — 變薄：改為引用 sibling
+  skill 的 recipes；Step 2-4 路徑改為 `../google-slides-api/protocols/*`
+- `skills/google-slides-builder/checklists/pre-flight.md` — 下游 recipe
+  連結改為 sibling skill 路徑
+- `skills/using-slides-toolkit/SKILL.md` — routing table 加第 4 分支
+  （「單一 API op / debug / 學 batchUpdate」→ `google-slides-api`）
+- `PRODUCT-SPEC.md` §6.3.1 + `TECH-SPEC.md` §2.1 目錄樹更新
+- `TECH-SPEC.md` Revision History 加 v0.3.2 條目
+
+### Rationale
+
+- **SRP**：per-op recipe（low-level API wrapping）與 pipeline
+  orchestration（high-level slide-plan.json consumer）為兩種獨立變動
+  維度。分離後各自演進；Slides API 升版只動 api skill，pipeline 設計
+  改動只動 builder。
+- **OCP**：Phase 2+ 出現 second consumer（e.g. slide-deck-auditor,
+  deck-diff tool）時，可直接引用 `google-slides-api` 而不需經 builder
+  的 slide-plan.json schema 層。
+- **授權自主**：新 skill 為原創 MIT 內容，與 gws-slides（Apache-2.0
+  SKILL.md，僅 44 行 API 目錄）**無程式碼依賴**。`gws` binary 仍為
+  runtime 被動呼叫（subprocess），不入 repo。未來想引用 gws-slides 成
+  optional cross-reference link，不需 NOTICE / attribution。
+- **架構對照 gws-slides**：研究確認 gws-slides 只是 API discovery
+  reference（44 lines, 無 recipes），我們的 4 recipe 對其**非 redundant**
+  （~20% overlap）— builder 層的 orchestration + placeholder_map 組裝 +
+  error handling 為我們獨有價值。詳見研究結論（conversation record
+  2026-04-24）。
+
+### Removed
+
+- `skills/google-slides-builder/protocols/` 目錄（內容移至 sibling skill）
 
 ## [0.4.1-auto-refresh-binary] - 2026-04-24
 

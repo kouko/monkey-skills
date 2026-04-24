@@ -25,6 +25,7 @@ Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read `s
 | 「幫我想敘事結構」「這張該放什麼圖表」「Minto / SCQA / chart selection」「資訊層級怎麼安排」 | `slides-design` |
 | 「第一次用」「401 / 403 / invalid_scope」「auth 失敗」「setup」「gws 還沒裝」「token 過期」 | `google-slides-setup` |
 | 「生成 deck」「把 slide-plan 變 Google Slides」「匯出」「執行 pipeline」 | `google-slides-builder` |
+| 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」（低層）| `google-slides-api` |
 | 模糊或「做 simple deck」無明確 target | 預設 `target: "google-slides"`（MVP 唯一 backend），繼續走 setup → builder |
 
 **Example A**（設計諮詢）：
@@ -35,9 +36,13 @@ Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read `s
 > User: 「這份 `slide-plan.json` 幫我跑」
 > 檢查 `slide-plan.target == "google-slides"` → 確認 setup 完成 → Route `google-slides-builder`。
 
+**Example C**（低層 API 學習 / debug，v0.3.2 新增）：
+> User: 「gws 的 `createSlide` 到底怎麼帶 predefinedLayout？」
+> Route → `google-slides-api`（讀 `protocols/recipe-create-slides.md` + `references/api-error-codes.md`）。不跑 pipeline、不生成 deck。
+
 ## Target backend detection
 
-讀 `slide-plan.json` 頂層 `target` 欄位（schema v1.1, TECH-SPEC §4.1）：
+讀 `slide-plan.json` 頂層 `target` 欄位（schema v1.2, TECH-SPEC §4.1）：
 
 ```
 target == "google-slides"  → 走 google-slides-setup / google-slides-builder
