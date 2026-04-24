@@ -7,13 +7,51 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.4.0 release 前，kouko 需完成）
+### 即將 unblock（在 0.4.1 release 前，kouko 需完成）
 
-- `scripts/google-slides/bootstrap.sh` 的 `GWS_VERSION` pin（目前為
-  `v0.0.0-TODO` placeholder；SHA-256 pin 已於 v0.4 scope refinement 移除）
 - 跑 `google-slides-setup` 完成首次 GCP Console OAuth
 - 實測 end-to-end：brief → URL ≤ 3 分鐘（KR1）；Google 內建 predefined
   layouts 覆蓋率 ≥ 80%（`[ASSUMPTION-2]` revalidation）
+- `bootstrap.sh` 已無 TODO placeholder；首次執行自動解析 gws latest tag
+
+## [0.4.1-auto-refresh-binary] - 2026-04-24
+
+**Runtime simplification**（非 pivot）— 消除 `GWS_VERSION` TODO；gws
+binary 改為解析 GitHub `/releases/latest/download/` redirect；加入 TTL
+based auto-refresh。jq 繼續 pin `1.7.1`（release 穩定）。
+
+### Added
+
+- `bootstrap.sh` TTL-based auto-refresh：`.version.installed_at` 超過
+  `SLIDES_TOOLKIT_BINARY_TTL_DAYS`（預設 30）時，自動重抓 latest
+- `bootstrap.sh` auto-refresh 安全網：refresh 失敗（網路 / 上游 503）
+  **保留既有 binary**、印 stderr warning、exit 0，不阻斷日常使用
+- `bootstrap.sh` 透過 GitHub REST API（`/repos/.../releases/latest`）
+  解析實際 tag 並寫入 `.version.gws_tag`，供 debug / audit
+- `.version.source` 欄：`env-pinned` / `auto-resolved` / `auto-resolve-failed`
+- Env `GWS_VERSION=v0.X.Y`：pin 某版（停用 auto-refresh）— 用於救火
+  或固守穩定版
+- Env `SLIDES_TOOLKIT_BINARY_TTL_DAYS`：客製 TTL
+
+### Changed
+
+- `bootstrap.sh` 預設 URL：`/releases/download/<tag>/` →
+  `/releases/latest/download/`（GitHub 原生 302 redirect）
+- `.version` schema：`{gws, jq, written_at}` →
+  `{gws_tag, jq_tag, source, installed_at}`
+- `GWS_VERSION` 環境變數從必填 → **optional pin override**
+
+### Removed
+
+- `bootstrap.sh` 的 `GWS_VERSION="v0.0.0-TODO"` default（改為空字串
+  表 auto-resolve）
+
+### Rationale
+
+- `GWS_VERSION` pin 是 v0.3 唯一剩下的 TODO；auto-resolve 消掉它
+- 30 天 TTL 讓 binary 自動跟上 upstream bugfix，不需使用者手動操作
+- Pin override 給「upstream breaking change」的救火窗口
+- jq 不走 latest：jq 1.7.1 已穩定 > 12 個月，無需自動追蹤
 
 ### Phase 2+（trigger-gated；見 `PRODUCT-SPEC.md §3.5`）
 

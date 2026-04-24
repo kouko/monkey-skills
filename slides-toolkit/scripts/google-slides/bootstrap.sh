@@ -5,47 +5,64 @@ set -euo pipefail
 # bootstrap.sh — slides-toolkit google-slides backend binary bootstrapper
 # -----------------------------------------------------------------------------
 # 用途：
-#   偵測 macOS 平台 → 從 GitHub release 以 HTTPS + `curl -fLSs` 下載 pin 過的
+#   偵測 macOS 平台 → 從 GitHub release 以 HTTPS + `curl -fLSs` 下載
 #   gws / jq binary 到 ~/.cache/slides-toolkit/bin/ → chmod +x → 寫 .version。
-#   Idempotent：若 .version 已匹配則跳過（除非 --force）。
+#   Idempotent：binary 存在且未超過 TTL 則 skip（除非 --force）。
+#   Auto-refresh：若 .version 的 installed_at 超過 TTL（預設 30 天），自
+#   動重抓 latest；失敗則保留 cached binary 並 exit 0（不阻斷日常使用）。
+#
+# v0.3.1: latest-URL resolution + auto-refresh after TTL
+#   - URL 改用 GitHub /releases/latest/download/ redirect（零 version pin）
+#   - `.version` 多記 installed_at + resolved tag（透過 GitHub API）
+#   - `GWS_VERSION` env 可 override 停用 auto-refresh（stability pin）
 #
 # v0.3: SHA-256 verification removed; see TECH-SPEC v0.3 §2.3 for
-#       HTTPS-only integrity model (URL pin + `curl -f` 防 HTTP error；
-#       不再做 shasum 比對)。
+#       HTTPS-only integrity model.
 #
 # Upstream refs:
-#   - TECH-SPEC v0.3 §2.3 Binary distribution strategy (HTTPS-only integrity)
+#   - TECH-SPEC v0.3 §2.3 Binary distribution strategy
 #   - TECH-SPEC v0.3 §4.2 `scripts/google-slides/bootstrap.sh` contract
 #   - TECH-SPEC §7.3 Dry-run 模式
 #
 # Args:
-#   --force                         忽略 .version 比對，強制重下載
+#   --force                         忽略 cache + TTL，強制重下載
 #   --dry-run                       只印計畫，不連網、不寫 cache dir
 #   --platform <darwin-arm64|darwin-x86_64>
 #                                   override auto-detect (CI / 跨機器測試用)
 #
+# Env:
+#   GWS_VERSION                     pin 某 tag（e.g. v0.23.0）→ 停用 auto-refresh
+#   JQ_VERSION                      pin jq version（預設 jq-1.7.1）
+#   SLIDES_TOOLKIT_BINARY_TTL_DAYS  auto-refresh 門檻（預設 30）
+#
 # Stdin: none
-# Stdout: JSON `{"gws":"<path>","jq":"<path>","version":{"gws":"...","jq":"..."},"cache_dir":"..."}`
+# Stdout: JSON `{"gws":"<path>","jq":"<path>","version":{"gws":"...","jq":"..."},"cache_dir":"...","dry_run":bool}`
 # Stderr: 人讀 progress（含錯誤 JSON on failure）
 #
 # Exit codes (per TECH-SPEC v0.3 §4.2)：
 #   0  success
-#   1  generic error（unknown platform / network / usage / download failure）
+#   1  generic error（unknown platform / network on initial install / usage）
+#
+# 注：auto-refresh 失敗不 die；保留 cached binary 並 exit 0（見 install_one）。
 # =============================================================================
 
 # --- UTF-8 locale（§8.5；best-effort，若系統無此 locale 則保持預設） ---
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
-# --- 版本 pin（TODO: 首次 C3 commit 時 fill actual latest stable） ------------
-# NOTE: 以下常數於發 release 前由維護者更新；目前為 placeholder。
-# gws：googleworkspace/cli release tag (e.g. "v0.1.0")
-GWS_VERSION="${GWS_VERSION:-v0.0.0-TODO}"
+# --- 版本 pin / TTL --------------------------------------------------------
+# 預設空字串 = auto-resolve latest；若使用者 export GWS_VERSION=v0.X.Y 則
+# 停用 auto-refresh，固守該版。jq 預設 pin 1.7.1（jq release 極穩定，
+# 不需 latest）。
+GWS_VERSION="${GWS_VERSION:-}"
 JQ_VERSION="${JQ_VERSION:-jq-1.7.1}"
+TTL_DAYS="${SLIDES_TOOLKIT_BINARY_TTL_DAYS:-30}"
 
 # --- 常數 -------------------------------------------------------------------
 readonly CACHE_DIR="${HOME}/.cache/slides-toolkit/bin"
 readonly VERSION_FILE="${CACHE_DIR}/.version"
 readonly GWS_RELEASE_BASE="https://github.com/googleworkspace/cli/releases/download"
+readonly GWS_LATEST_BASE="https://github.com/googleworkspace/cli/releases/latest/download"
+readonly GWS_API_LATEST="https://api.github.com/repos/googleworkspace/cli/releases/latest"
 readonly JQ_RELEASE_BASE="https://github.com/jqlang/jq/releases/download"
 
 # --- 臨時目錄 + 清理 trap ---------------------------------------------------
@@ -56,30 +73,30 @@ trap 'rm -rf "${TMP}"' EXIT
 FORCE=0
 DRY_RUN=0
 PLATFORM_OVERRIDE=""
+# 是否為 auto-refresh（由 needs_install 推斷）— 影響 download 失敗語意
+AUTO_REFRESH=0
+# Resolved tag（auto-resolve 後填入；用於 .version 紀錄）
+RESOLVED_GWS_TAG=""
 
 # --- helper：stderr 印 JSON error 後 exit ------------------------------------
-# 所有對 stderr 的 JSON 使用者資料皆過 jq -R（ASVS V1 output encoding）。
 die_json() {
   local code="$1"
   local msg="$2"
-  # jq -R 把任意字串安全編碼為 JSON string
   local encoded_msg
   encoded_msg="$(printf '%s' "${msg}" | jq -R -s '.' 2>/dev/null || printf '"%s"' "${msg//\"/\\\"}")"
   printf '{"error":true,"exit_code":%s,"message":%s}\n' "${code}" "${encoded_msg}" >&2
   exit "${code}"
 }
 
-# --- helper：check 相依命令 --------------------------------------------------
 require_cmd() {
   local cmd="$1"
   if ! command -v "${cmd}" >/dev/null 2>&1; then
-    # 注意：在 jq 尚未 bootstrap 之前，die_json 可能無 jq；fallback 純文字
     printf '{"error":true,"exit_code":1,"message":"required command not found: %s"}\n' "${cmd}" >&2
     exit 1
   fi
 }
 
-# --- 解析 args（do-one-thing；SOLID SRP） ------------------------------------
+# --- 解析 args --------------------------------------------------------------
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -93,6 +110,11 @@ parse_args() {
       -h|--help)
         cat <<'USAGE' >&2
 Usage: bootstrap.sh [--force] [--dry-run] [--platform darwin-arm64|darwin-x86_64]
+
+Env:
+  GWS_VERSION=v0.23.0                 pin a specific tag (disables auto-refresh)
+  JQ_VERSION=jq-1.7.1                 pin jq version (default)
+  SLIDES_TOOLKIT_BINARY_TTL_DAYS=30   auto-refresh threshold in days
 USAGE
         exit 0
         ;;
@@ -122,19 +144,30 @@ detect_platform() {
   esac
 }
 
+# --- 從 GitHub API 解析 gws latest tag（best-effort；失敗則 fallback） ------
+# 成功：印 tag（e.g. "v0.23.0"）到 stdout
+# 失敗：印空字串，caller 視為無法 resolve
+resolve_latest_gws_tag() {
+  curl -sfL "${GWS_API_LATEST}" 2>/dev/null \
+    | jq -r '.tag_name // ""' 2>/dev/null \
+    || printf ''
+}
+
 # --- 構造 download URL ------------------------------------------------------
+# gws：若 GWS_VERSION 有值 → 用 /releases/download/<tag>/；否則用 /releases/latest/download/
+# jq ：用 JQ_VERSION pin
 url_for() {
   local tool="$1"
   local platform="$2"
   case "${tool}" in
     gws)
-      # e.g. https://github.com/googleworkspace/cli/releases/download/v0.1.0/gws-darwin-arm64
-      printf '%s/%s/gws-%s' "${GWS_RELEASE_BASE}" "${GWS_VERSION}" "${platform}"
+      if [[ -n "${GWS_VERSION}" ]]; then
+        printf '%s/%s/gws-%s' "${GWS_RELEASE_BASE}" "${GWS_VERSION}" "${platform}"
+      else
+        printf '%s/gws-%s' "${GWS_LATEST_BASE}" "${platform}"
+      fi
       ;;
     jq)
-      # jq 的 macOS release artifact 命名（1.7.1 起）：jq-macos-arm64 / jq-macos-amd64
-      # 為避免 drift，這裡用 platform 作 naming pivot；實際 artifact 名稱在
-      # C3 commit 時由維護者校對（TODO）。
       local jq_suffix
       case "${platform}" in
         darwin-arm64)  jq_suffix="macos-arm64" ;;
@@ -150,12 +183,10 @@ url_for() {
 }
 
 # --- 下載 + 安裝單一 binary --------------------------------------------------
-# Dry-run contract (TECH-SPEC §7.3)：**完全不連網**、不 curl；
-# 僅印出計畫的 URL + dest，讓使用者在無網路 / 未填 version pin
-# 的情境下驗證 URL 構造邏輯。
-#
-# Integrity model (TECH-SPEC v0.3 §2.3)：HTTPS + `curl -f` + URL pin；
-# 不做 shasum 比對。
+# Dry-run contract：完全不連網、不 curl、不寫磁碟
+# Integrity model：HTTPS + `curl -f` + URL pin
+# Auto-refresh 安全網：若 AUTO_REFRESH=1 且 download 失敗，保留既有 binary
+#   並印 stderr warning（不 die），讓 skill 日常使用不被網路問題阻斷。
 install_one() {
   local tool="$1"
   local platform="$2"
@@ -173,9 +204,12 @@ install_one() {
 
   printf '[bootstrap] fetching %s from %s\n' "${tool}" "${url}" >&2
 
-  # curl: -f fail on HTTP error, -L follow redirect, -S show err on silent,
-  # -s silent progress, -o output file
   if ! curl -fLSs -o "${tmp_file}" "${url}"; then
+    if (( AUTO_REFRESH == 1 )) && [[ -x "${dest}" ]]; then
+      printf '[bootstrap] WARN: auto-refresh of %s failed (keeping existing binary at %s)\n' \
+        "${tool}" "${dest}" >&2
+      return
+    fi
     die_json 1 "download failed: ${url}"
   fi
 
@@ -185,45 +219,99 @@ install_one() {
   printf '[bootstrap] installed %s → %s\n' "${tool}" "${dest}" >&2
 }
 
-# --- idempotence check：比對 .version 看是否需重下載 -------------------------
-# 回傳 0 = 需重下載；1 = 可 skip
+# --- .version 判讀：計算 installed_at 距今幾天 -------------------------------
+# 回傳整數到 stdout；若無法計算回 -1。macOS `date -j -f`；不支援 GNU 的
+# `date -d`。
+cached_age_days() {
+  [[ -f "${VERSION_FILE}" ]] || { printf -- '-1'; return; }
+  local installed_at
+  installed_at="$(jq -r '.installed_at // ""' "${VERSION_FILE}" 2>/dev/null || printf '')"
+  [[ -n "${installed_at}" ]] || { printf -- '-1'; return; }
+  local installed_epoch now_epoch
+  installed_epoch="$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "${installed_at}" '+%s' 2>/dev/null || printf '0')"
+  if [[ "${installed_epoch}" == "0" ]]; then
+    printf -- '-1'; return
+  fi
+  now_epoch="$(date -u +%s)"
+  printf '%d' $(( (now_epoch - installed_epoch) / 86400 ))
+}
+
+# --- idempotence check + TTL 自動更新 ---------------------------------------
+# 回傳 0 = 需下載（初次 or auto-refresh）；1 = 可 skip。
+# 若決定 auto-refresh（因 age > TTL），設 AUTO_REFRESH=1 讓 install_one
+# 失敗時走安全網而非 die。
 needs_install() {
   (( FORCE == 1 )) && return 0
   [[ -f "${VERSION_FILE}" ]] || return 0
   [[ -x "${CACHE_DIR}/gws" ]] || return 0
   [[ -x "${CACHE_DIR}/jq" ]]  || return 0
 
-  # 讀 .version，比對 pinned 版本
-  local cached_gws cached_jq
-  cached_gws="$(jq -r '.gws // ""' "${VERSION_FILE}" 2>/dev/null || printf '')"
-  cached_jq="$(jq -r '.jq // ""'  "${VERSION_FILE}" 2>/dev/null || printf '')"
-  if [[ "${cached_gws}" == "${GWS_VERSION}" && "${cached_jq}" == "${JQ_VERSION}" ]]; then
+  # pin override：若 GWS_VERSION 明示設 env，比對 cached tag
+  if [[ -n "${GWS_VERSION}" ]]; then
+    local cached_gws
+    cached_gws="$(jq -r '.gws_tag // .gws // ""' "${VERSION_FILE}" 2>/dev/null || printf '')"
+    if [[ "${cached_gws}" != "${GWS_VERSION}" ]]; then
+      return 0
+    fi
+    # Pin 模式：跳過 age check（使用者明示控版）
     return 1
   fi
-  return 0
+
+  # Auto-refresh 模式：看 installed_at 年齡
+  local age
+  age="$(cached_age_days)"
+  if [[ "${age}" -ge 0 && "${age}" -gt "${TTL_DAYS}" ]]; then
+    printf '[bootstrap] cache age %d days > TTL %d; auto-refresh\n' \
+      "${age}" "${TTL_DAYS}" >&2
+    AUTO_REFRESH=1
+    return 0
+  fi
+  return 1
 }
 
-# --- 寫 .version file（版本 metadata；非 secret） ----------------------------
+# --- 寫 .version file（版本 metadata + installed_at） -----------------------
+# 優先順序決定 gws_tag 欄位：
+#   1. GWS_VERSION env（pin 模式）
+#   2. RESOLVED_GWS_TAG（從 GitHub API 取到 tag）
+#   3. 空字串 "unknown"（API 失敗但 download 成功）
 write_version_file() {
   (( DRY_RUN == 1 )) && return
-  # 用 jq 產生 JSON（ASVS V1 encoding）
+  local gws_tag source
+  if [[ -n "${GWS_VERSION}" ]]; then
+    gws_tag="${GWS_VERSION}"
+    source="env-pinned"
+  elif [[ -n "${RESOLVED_GWS_TAG}" ]]; then
+    gws_tag="${RESOLVED_GWS_TAG}"
+    source="auto-resolved"
+  else
+    gws_tag="unknown"
+    source="auto-resolve-failed"
+  fi
   jq -n \
-    --arg gws "${GWS_VERSION}" \
+    --arg gws "${gws_tag}" \
     --arg jq_v "${JQ_VERSION}" \
+    --arg src "${source}" \
     --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    '{gws: $gws, jq: $jq_v, written_at: $ts}' \
+    '{gws_tag: $gws, jq_tag: $jq_v, source: $src, installed_at: $ts}' \
     > "${VERSION_FILE}"
 }
 
 # --- 印最終 stdout JSON ------------------------------------------------------
 emit_result() {
-  local gws_path jq_path
+  local gws_path jq_path gws_display
   gws_path="${CACHE_DIR}/gws"
   jq_path="${CACHE_DIR}/jq"
+  if [[ -n "${GWS_VERSION}" ]]; then
+    gws_display="${GWS_VERSION}"
+  elif [[ -n "${RESOLVED_GWS_TAG}" ]]; then
+    gws_display="${RESOLVED_GWS_TAG}"
+  else
+    gws_display="latest"
+  fi
   jq -n \
     --arg gws "${gws_path}" \
     --arg jqp "${jq_path}" \
-    --arg gws_v "${GWS_VERSION}" \
+    --arg gws_v "${gws_display}" \
     --arg jq_v "${JQ_VERSION}" \
     --arg cache "${CACHE_DIR}" \
     --argjson dry_run "$([[ ${DRY_RUN} -eq 1 ]] && printf 'true' || printf 'false')" \
@@ -233,25 +321,33 @@ emit_result() {
 # --- main -------------------------------------------------------------------
 main() {
   parse_args "$@"
-  # curl + jq + uname 為必備；jq 第一次 bootstrap 時可能還沒裝，
-  # 但我們要求使用者系統已有 jq（jq 本身也是 bootstrap target；此 contract
-  # 允許 system-wide jq 先存在用於 JSON encoding，稍後會把 pinned jq 放入
-  # cache）。這是 step-down rule 的 main 層次：僅檢查先決條件。
-  # v0.3: shasum 不再需要（SHA-256 verification removed；TECH-SPEC v0.3 §2.3）。
   require_cmd curl
   require_cmd uname
-  require_cmd jq  # system-wide jq 供 bootstrap 自身用；pinned jq 供下游 script 用
+  require_cmd date
+  require_cmd jq
 
   local platform
   platform="$(detect_platform)"
-  printf '[bootstrap] platform=%s force=%d dry_run=%d\n' "${platform}" "${FORCE}" "${DRY_RUN}" >&2
+  printf '[bootstrap] platform=%s force=%d dry_run=%d ttl_days=%d\n' \
+    "${platform}" "${FORCE}" "${DRY_RUN}" "${TTL_DAYS}" >&2
 
   if needs_install; then
+    # 若非 pin 模式（無 GWS_VERSION）且 non-dry-run，嘗試解析 latest tag
+    # 供 .version 紀錄用；失敗不阻斷（URL 仍用 /latest/download/ redirect）。
+    if [[ -z "${GWS_VERSION}" ]] && (( DRY_RUN == 0 )); then
+      RESOLVED_GWS_TAG="$(resolve_latest_gws_tag)"
+      if [[ -n "${RESOLVED_GWS_TAG}" ]]; then
+        printf '[bootstrap] resolved latest gws tag: %s\n' "${RESOLVED_GWS_TAG}" >&2
+      else
+        printf '[bootstrap] WARN: could not resolve latest tag via GitHub API; proceeding with /latest/download/ redirect\n' >&2
+      fi
+    fi
+
     install_one "gws" "${platform}"
     install_one "jq"  "${platform}"
     write_version_file
   else
-    printf '[bootstrap] cache hit: %s already at pinned versions; skip\n' "${CACHE_DIR}" >&2
+    printf '[bootstrap] cache hit: %s (within TTL); skip\n' "${CACHE_DIR}" >&2
   fi
 
   emit_result
