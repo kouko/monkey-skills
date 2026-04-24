@@ -7,24 +7,83 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.3.0 release 前，kouko 需完成）
+### 即將 unblock（在 0.4.0 release 前，kouko 需完成）
 
-- `scripts/google-slides/bootstrap.sh` 的版本 pin + SHA-256 常數
-  （目前為 `TODO_FILL_REAL_SHA256_64HEX` placeholder）
-- `skills/google-slides-builder/templates/registry.md` 加入 kouko 實際
-  template 的 Drive ID（目前 3 筆 `client_proposal_v3` / `weekly_report`
-  / `tech_talk` 皆為 `TODO` 骨架）
+- `scripts/google-slides/bootstrap.sh` 的 `GWS_VERSION` pin（目前為
+  `v0.0.0-TODO` placeholder；SHA-256 pin 已於 v0.4 scope refinement 移除）
 - 跑 `google-slides-setup` 完成首次 GCP Console OAuth
-- 實測 end-to-end：brief → URL ≤ 3 分鐘（KR1 驗證）
+- 實測 end-to-end：brief → URL ≤ 3 分鐘（KR1）；Google 內建 predefined
+  layouts 覆蓋率 ≥ 80%（`[ASSUMPTION-2]` revalidation）
 
 ### Phase 2+（trigger-gated；見 `PRODUCT-SPEC.md §3.5`）
 
 - `html-builder` skill（首次 HTML 輸出需求觸發）
 - `pptx-builder` skill（首次 `.pptx` 輸出需求觸發）
 - `marp-builder` skill（首次 Marp 輸出需求觸發）
+- Template-based workflow return（Google predefined layouts 視覺品質不足
+  或需品牌一致性時觸發）
+- SHA-256 supply-chain pin（publish / CI / 安全事件觸發）
 - `helpers/build_plan.py`（shell 組 JSON 首次出現痛苦時觸發）
 - slide-plan schema 正式 backend-agnostic / backend-specific 切分
   （第二個 backend 實作時觸發）
+
+## [0.4.0-scope-refinement] - 2026-04-24
+
+**Scope Refinement**（非 pivot）— 對齊 PRODUCT-SPEC v0.3 + TECH-SPEC v0.3。
+Job Story、4 Big Risks、MVP validated-learning 核心假設、OKR / NSM 皆未動。
+
+### Removed
+
+- `skills/google-slides-builder/templates/`（整個目錄 + `registry.md`）
+  — 使用者自備 template + Drive ID lookup 不再是 MVP 路徑
+- `skills/google-slides-builder/protocols/recipe-copy-template.md`
+  — `gws drive files copy` 流程不再需要
+- `skills/google-slides-builder/protocols/recipe-replace-text.md`
+  — 改名為 `recipe-insert-text.md`（new file）
+- `bootstrap.sh` 的 SHA-256 驗證：`GWS_SHA256_*` / `JQ_SHA256_*` 4 個常數、
+  `verify_sha256()` / `expected_sha_for()` 函式、exit code 17 `SHA mismatch`
+  — 改以 HTTPS + `curl -fLSs` + URL pin 為 integrity 邊界
+
+### Added
+
+- `skills/google-slides-builder/protocols/recipe-create-presentation.md`
+  — `gws slides presentations create --json '{"title":"..."}'` 建空 deck
+- `skills/google-slides-builder/protocols/recipe-create-slides.md`
+  — `batchUpdate createSlide` 搭配 `layout_hint` enum（7 個 Google 預設
+  predefinedLayout 值）逐 slide 建構
+- `skills/google-slides-builder/protocols/recipe-insert-text.md`
+  — `batchUpdate insertText` 到 placeholder object ID（不再用
+  `{{PLACEHOLDER}}` 文字錨點）
+- slide-plan.json schema v1.1 → **v1.2**：新增 `slides[].layout_hint`
+  （必填 enum）；刪除 `backend_config.template_ref`
+
+### Changed
+
+- `skills/google-slides-builder/SKILL.md` — 重寫 workflow 為 4-step
+  （pre-flight → create → build slides → insert text/image）
+- `skills/google-slides-builder/protocols/recipe-insert-image.md`
+  — 從 `replaceAllShapesWithImage` 改為 `createImage` with explicit
+  `pageElementProperties`，接 `placeholder_map` 對位
+- `skills/google-slides-builder/checklists/pre-flight.md` — 10 項 check
+  更新（刪 registry 檢查、加 `layout_hint` enum 檢查）
+- `PRODUCT-SPEC.md` v0.2 → v0.3（Scope Refinement；+2 Non-Goals
+  template/SHA + 2 Future Phases trigger + Principle 2 rewrite
+  Template-based → Layout-based）
+- `TECH-SPEC.md` v0.2 → v0.3（schema v1.2 + 4 recipes + SHA 移除 +
+  C13 refactor commit）
+
+### Rationale
+
+個人使用閉環下：
+- **Template overhead > 視覺品質邊際增益** — maintain template deck +
+  registry.md + placeholder drift 的成本大於 Google 預設 layout 不精美
+  帶來的微差
+- **SHA 維護成本 > 邊際安全增益** — 個人 scope 下，HTTPS + `curl -f`
+  + GitHub org 信任邊界足夠；SHA pin 每次 upstream release 都要更新
+  的 overhead 不成比例
+
+兩條都列 Phase 2+ trigger：publish 給外部 / CI / 視覺不足 / 安全事件
+→ 隨時可恢復。
 
 ## [0.3.0-scaffold] - 2026-04-23
 
