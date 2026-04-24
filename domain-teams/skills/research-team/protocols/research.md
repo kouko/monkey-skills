@@ -57,6 +57,21 @@ See `standards/confidence-and-claim-language.md` §Cost-Aware
 Early-Exit Rule for the mode-specific exit thresholds and the
 per-claim (not per-deliverable) policy.
 
+## Deep-Mode Hooks
+
+Deep mode lazy-loads three pre-writing / synthesis hooks. Quick
+mode skips them to preserve the ~15k token budget.
+
+| Hook | File | Trigger phase |
+|---|---|---|
+| Multi-perspective seeding | `protocols/hooks/multi-perspective.md` | end of Phase 0 (before Phase 1 Scoping) |
+| Parallel sub-worker fan-out | `protocols/hooks/parallel-fanout.md` | start of Phase 1 (after sub-questions defined) |
+| Self-critique block | `protocols/hooks/self-critique.md` | end of Phase 3 (before artifact handoff) |
+
+Worker reads the relevant hook file at each trigger phase and
+follows its rule. Specialized protocols (academic / market /
+competitive / stack) inherit the same trigger map.
+
 ## Protocol
 
 ### Phase 1: Scoping

@@ -241,6 +241,14 @@ Additional standards (load when workflow requires):
 - `standards/oss-safety.md` (Tier 2) — OpenSSF Scorecard + NIST SSDF 1.1 + SLSA v1.1 + CVSS v4.0 + SPDX v3.0 + license taxonomy; OSS / tech stack
 - `standards/information-infrastructure.md` (Tier 3) — 倉田 2007 + NDL リサーチ・ナビ + CiNii 2022 + ACRL frames; JP database / academic (self-contained preamble)
 
+Deep-mode hooks (lazy-loaded only when `mode=deep`; quick mode skips):
+- `protocols/hooks/multi-perspective.md` — Phase 0 stakeholder/contrarian seeding
+- `protocols/hooks/self-critique.md` — Phase 3 worker self-critique block
+- `protocols/hooks/parallel-fanout.md` — Phase 1 parallel sub-worker fan-out
+
+Trigger map for hooks lives in `protocols/research.md` §Deep-Mode Hooks
+and is inherited by all specialized protocols.
+
 Protocols selected per-workflow from `protocols/`. Evaluator loads
 the same standards plus the gate file (`checklists/` or `rubrics/`).
 

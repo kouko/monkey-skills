@@ -60,6 +60,11 @@ See `standards/confidence-and-claim-language.md` §Cost-Aware
 Early-Exit Rule for the mode-specific exit thresholds and the
 per-claim (not per-deliverable) policy.
 
+**Deep-mode hooks**: load per the trigger map in
+`protocols/research.md` §Deep-Mode Hooks (multi-perspective end
+of Phase 0; parallel-fanout start of Phase 1; self-critique end
+of Phase 4 / Synthesis). Quick mode skips.
+
 ## Protocol
 
 ### Phase 1: Market Definition

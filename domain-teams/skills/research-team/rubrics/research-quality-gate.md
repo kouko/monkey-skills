@@ -88,6 +88,20 @@ not the author's performance of knowledge.
 - 🟡 **Warning**: No clear next steps or actionable items at the end
 - 🟢 **Clear**: Recommendations are specific, prioritized, and actionable
 
+### Self-Critique Honesty (deep mode only)
+
+Grounded in `protocols/hooks/self-critique.md` (LangGraph
+`open_deep_research` `think_tool`-inspired disclosure pattern).
+Worker MUST append a `## Self-Critique` section in deep mode
+covering weakest evidence link, ignored opposing evidence, and
+confidence-vs-evidence match. Evaluator judges honesty and
+specificity, not whether weaknesses exist (they always do).
+
+- 🔴 **Fatal**: `## Self-Critique` section absent in a deep-mode artifact
+- 🔴 **Fatal**: Self-Critique is vacuous ("no major weaknesses identified", "all claims well-supported") — overconfidence flag
+- 🟡 **Warning**: Self-Critique is generic (does not reference specific claims, sources, or numbers from this artifact)
+- 🟢 **Clear**: Self-Critique names specific claims, identifies thinnest evidence, and acknowledges confidence-evidence mismatches honestly
+
 ## Verdict Rules
 
 1. **NEEDS_REVISION**: Any 1 🔴 fatal flag
