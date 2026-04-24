@@ -6,11 +6,33 @@
 Skill creation and eval workflows — iterative draft → test → review → improve
 loop for authoring new Claude skills.
 
-## Skill
+## Skills
 
 | Skill | Slash cmd | Role |
 |-------|-----------|------|
 | `skill-creator-advance` | `/skill-creator-advance` | Create new skills and iteratively improve them via eval-driven loop |
+| `git-memory` | — | Portable, tool-agnostic project memory via git commit trailers + PR body `## Memory` section |
+
+### git-memory — three pillars
+
+Memory lives in git artifacts themselves, so any tool that reads git
+(Claude Code / Cursor / Codex / aider / human) can reconstruct
+project knowledge without a separate store.
+
+1. **Carrier = git artifacts themselves** — commit messages and PR
+   bodies are the substrate. `git clone` brings the memory; no
+   separate DB, embedding index, or vendor-specific file required.
+2. **Structure = commit trailers** — `Decision:` / `Learning:` /
+   `Gotcha:` ride in the commit footer alongside `Co-Authored-By:`
+   (the `git-interpret-trailers(1)` mechanism). Machine-readable via
+   `git log --pretty='%(trailers)'`, human-readable in prose body.
+3. **Content = decision context, not code** — record **why**, not
+   **what**. The diff already shows what; memory records the
+   reasoning, alternatives rejected, and gotchas for future self.
+
+git-memory complements Claude Code's native `~/.claude/.../MEMORY.md`
+(user-level preferences). Project-level decisions live in git;
+user-level preferences stay in Claude native memory.
 
 ## Upstream Chain (MIT)
 
@@ -49,13 +71,19 @@ dev-workflow/
 ├── commands/
 │   └── skill-creator-advance.md
 └── skills/
-    └── skill-creator-advance/
+    ├── skill-creator-advance/
+    │   ├── SKILL.md
+    │   ├── LICENSE               ← AllanYiin + kouko copyright
+    │   ├── NOTICE                ← Upstream chain detail
+    │   ├── agents/               ← grader / comparator / analyzer
+    │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
+    │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
+    └── git-memory/
         ├── SKILL.md
-        ├── LICENSE               ← AllanYiin + kouko copyright
-        ├── NOTICE                ← Upstream chain detail
-        ├── agents/               ← grader / comparator / analyzer
-        ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
-        └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
+        ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
+        ├── protocols/             ← compose-commit / compose-pr
+        ├── scripts/               ← memory-grep retrieval primitive
+        └── templates/             ← pull_request_template with ## Memory section
 ```
 
 ## License
