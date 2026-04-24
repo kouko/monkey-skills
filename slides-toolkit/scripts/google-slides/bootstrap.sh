@@ -153,19 +153,35 @@ resolve_latest_gws_tag() {
     || printf ''
 }
 
+# --- platform → Rust target triple（gws release 命名使用 Rust triple） ------
+# darwin-arm64  → aarch64-apple-darwin
+# darwin-x86_64 → x86_64-apple-darwin
+rust_triple_for() {
+  case "$1" in
+    darwin-arm64)  printf 'aarch64-apple-darwin' ;;
+    darwin-x86_64) printf 'x86_64-apple-darwin' ;;
+    *)             die_json 1 "no Rust triple for platform: $1" ;;
+  esac
+}
+
 # --- 構造 download URL ------------------------------------------------------
-# gws：若 GWS_VERSION 有值 → 用 /releases/download/<tag>/；否則用 /releases/latest/download/
-# jq ：用 JQ_VERSION pin
+# gws：tar.gz archive，命名 `google-workspace-cli-<rust-triple>.tar.gz`；若
+#      GWS_VERSION 有值用 /releases/download/<tag>/，否則 /latest/download/
+# jq ：raw binary，命名 `jq-macos-{arm64,amd64}`；固定 pin JQ_VERSION
 url_for() {
   local tool="$1"
   local platform="$2"
   case "${tool}" in
     gws)
+      local triple asset base
+      triple="$(rust_triple_for "${platform}")"
+      asset="google-workspace-cli-${triple}.tar.gz"
       if [[ -n "${GWS_VERSION}" ]]; then
-        printf '%s/%s/gws-%s' "${GWS_RELEASE_BASE}" "${GWS_VERSION}" "${platform}"
+        base="${GWS_RELEASE_BASE}/${GWS_VERSION}"
       else
-        printf '%s/gws-%s' "${GWS_LATEST_BASE}" "${platform}"
+        base="${GWS_LATEST_BASE}"
       fi
+      printf '%s/%s' "${base}" "${asset}"
       ;;
     jq)
       local jq_suffix
@@ -187,24 +203,37 @@ url_for() {
 # Integrity model：HTTPS + `curl -f` + URL pin
 # Auto-refresh 安全網：若 AUTO_REFRESH=1 且 download 失敗，保留既有 binary
 #   並印 stderr warning（不 die），讓 skill 日常使用不被網路問題阻斷。
+#
+# Post-download：
+#   gws → tar.gz，需 tar -xzf 解出 `gws` binary
+#   jq  → raw binary，直接 chmod +x
 install_one() {
   local tool="$1"
   local platform="$2"
-  local url tmp_file dest
+  local url download_path dest
   url="$(url_for "${tool}" "${platform}")"
-  tmp_file="${TMP}/${tool}"
   dest="${CACHE_DIR}/${tool}"
+
+  # gws 下載的是 tar.gz；jq 是 raw binary
+  local is_archive=0
+  case "${tool}" in
+    gws) is_archive=1; download_path="${TMP}/gws.tar.gz" ;;
+    jq)  download_path="${TMP}/jq" ;;
+  esac
 
   if (( DRY_RUN == 1 )); then
     printf '[bootstrap] --dry-run plan for %s:\n' "${tool}" >&2
     printf '              url: %s\n' "${url}" >&2
     printf '             dest: %s\n' "${dest}" >&2
+    if (( is_archive == 1 )); then
+      printf '          extract: tar -xzf → ./gws\n' >&2
+    fi
     return
   fi
 
   printf '[bootstrap] fetching %s from %s\n' "${tool}" "${url}" >&2
 
-  if ! curl -fLSs -o "${tmp_file}" "${url}"; then
+  if ! curl -fLSs -o "${download_path}" "${url}"; then
     if (( AUTO_REFRESH == 1 )) && [[ -x "${dest}" ]]; then
       printf '[bootstrap] WARN: auto-refresh of %s failed (keeping existing binary at %s)\n' \
         "${tool}" "${dest}" >&2
@@ -214,8 +243,33 @@ install_one() {
   fi
 
   mkdir -p "${CACHE_DIR}"
-  mv "${tmp_file}" "${dest}"
-  chmod +x "${dest}"
+
+  local staged="${TMP}/${tool}.staged"
+  if (( is_archive == 1 )); then
+    # 解壓到 TMP/gws-extract，取內部 gws binary
+    local extract_dir="${TMP}/${tool}-extract"
+    mkdir -p "${extract_dir}"
+    if ! tar -xzf "${download_path}" -C "${extract_dir}"; then
+      if (( AUTO_REFRESH == 1 )) && [[ -x "${dest}" ]]; then
+        printf '[bootstrap] WARN: extract failed (keeping existing %s)\n' "${tool}" >&2
+        return
+      fi
+      die_json 1 "extract failed: ${download_path}"
+    fi
+    # archive 結構：./LICENSE ./CHANGELOG.md ./gws ./README.md
+    # 找內部 gws binary（不寫死路徑，適應未來 upstream 可能調整）
+    local inner
+    inner="$(find "${extract_dir}" -type f -name 'gws' -perm -u+x 2>/dev/null | head -1)"
+    if [[ -z "${inner}" || ! -f "${inner}" ]]; then
+      die_json 1 "gws binary not found inside archive: ${download_path}"
+    fi
+    cp "${inner}" "${staged}"
+  else
+    cp "${download_path}" "${staged}"
+  fi
+
+  chmod +x "${staged}"
+  mv "${staged}" "${dest}"
   printf '[bootstrap] installed %s → %s\n' "${tool}" "${dest}" >&2
 }
 
@@ -325,6 +379,8 @@ main() {
   require_cmd uname
   require_cmd date
   require_cmd jq
+  require_cmd tar
+  require_cmd find
 
   local platform
   platform="$(detect_platform)"
