@@ -78,10 +78,27 @@ When invoked, run these 5 steps in order:
 - **KEEP** — ship as-is.
 - **KEEP-WITH-CAVEAT** — ship but mark the weak grounding ("n=1",
   "industry intuition", "no benchmark yet") so the user knows.
-- **DEFER** — record with re-trigger condition ("do this when X
-  observed"); do NOT ship in the current proposal.
+- **DEFER** — record with **an articulable re-trigger condition**
+  ("do this when X observed"); do NOT ship in the current proposal.
 - **DROP** — cut entirely; the underlying assumption isn't worth
   the cost.
+
+### Fall-through rule (must apply in step 4)
+
+DEFER is only valid when you can name the event that would change
+the verdict. If no plausible re-trigger condition can be articulated,
+**fall through DEFER to DROP**.
+
+> Example: a "cross-framework comparison" item triages to DEFER on
+> the matrix (HEURISTIC-OK × SPECULATIVE), but no future event would
+> reliably change the verdict (frameworks update gradually; "the
+> comparison would help if X" produces no concrete X). With no
+> articulable re-trigger, this is DROP, not DEFER.
+
+This rule is the matrix-level expression of the §Common Failures
+row "P2/P3 used as 'ship later' instead of DEFER" — promote items
+to DROP rather than parking them in DEFER without exit conditions,
+or DEFER becomes the new "ship everything" disguise.
 
 ## Common Failures
 
