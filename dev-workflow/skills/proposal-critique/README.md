@@ -37,6 +37,30 @@ explicit verdict per item: **KEEP**, **DEFER**, or **DROP**.
 
 ## How does it work?
 
+### Operational flow at a glance
+
+```mermaid
+flowchart TD
+    P([User invokes skill on a proposal]) --> S{What shape?}
+    S -->|List / backlog<br/>P0/P1/P2 / numbered items| E[ENUMERATE<br/>each item is a target]
+    S -->|Prose / single recommendation<br/>with supporting claims| D[DECOMPOSE<br/>main verb + 'because/since/given'<br/>clauses → atomic claims]
+    E --> G[GROUND per item<br/>cited / heuristic-OK / speculative]
+    D --> G
+    G --> N[ESSENTIAL? per item<br/>load-bearing / speculative]
+    N --> T{Triage<br/>matrix}
+    T -->|grounded × essential| K[KEEP]
+    T -->|grounded × speculative<br/>or heuristic × speculative| F[DEFER<br/>with re-trigger condition]
+    T -->|heuristic-OK × essential<br/>or speculative × essential| KC[KEEP-WITH-CAVEAT<br/>mark weak grounding]
+    T -->|speculative × speculative| X[DROP]
+    K --> R([PRESENT 3 buckets<br/>one-line reason per item])
+    F --> R
+    KC --> R
+    X --> R
+```
+
+The flow is the same shape regardless of input form — **list and prose
+both feed the same downstream gate**; only the entry step differs.
+
 ### The triage matrix
 
 Two axes, three buckets:
