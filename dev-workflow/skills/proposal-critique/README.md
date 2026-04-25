@@ -74,10 +74,26 @@ Two axes, three buckets:
 - **KEEP** — ship as-is.
 - **KEEP-WITH-CAVEAT** — ship but explicitly mark the weak grounding
   ("n=1", "no benchmark yet") so the reader sees the limitation.
-- **DEFER** — record with a re-trigger condition ("do this when X is
-  observed"); does not ship in the current proposal.
+- **DEFER** — record with **an articulable re-trigger condition**
+  ("do this when X is observed"); does not ship in the current
+  proposal.
 - **DROP** — cut entirely; the underlying assumption isn't worth the
   cost.
+
+#### Fall-through rule
+
+DEFER is only valid when you can name the event that would change
+the verdict. If no plausible re-trigger condition can be articulated,
+**DEFER falls through to DROP**. Without an exit condition, DEFER
+becomes "ship everything later" — the failure mode the matrix is
+designed to prevent.
+
+This rule was added in v0.1.2 after the v0.1 dogfood test caught a
+case where the matrix produced a valid-looking DEFER verdict on an
+item that actually had no plausible re-trigger (a "cross-framework
+comparison" item — frameworks update gradually, no concrete event
+would change the calculus). Ground truth was DROP. The fall-through
+rule closes the gap.
 
 ### The 5-step gate
 
@@ -194,6 +210,14 @@ which Claude over-proposed four times within a single artifact's
 development. Each time, the user manually triaged via natural-
 language pushback ("業界證實 嗎?" / "is this over-engineered?").
 The recurring shape — three buckets, two checks — became this skill.
+
+The first iteration after v0.1.0 came from running the skill on its
+own birth backlog (1/3/3 KEEP/DEFER/DROP) and comparing to the
+user's manual triage (1/2/4). The matrix produced one too many
+DEFERs because the §Common Failures rule "DEFER without re-trigger
+→ DROP" wasn't visible at the matrix-consumption point. v0.1.2
+added the §Fall-through rule directly under the matrix, closing
+that gap. Ship-then-test caught what static review wouldn't have.
 
 That's both the strength and the limit:
 
