@@ -13,21 +13,9 @@ Skill name + description are pre-loaded into the system prompt at
 session start, wrapped inside the Skill tool's metadata. Claude
 decides which skill to invoke via a **forward pass** — semantic match
 against the description, not a regex / fuzzy-string / vector-embedding
-filter at the runtime level. Three implications follow:
-
-1. **Use natural language the user would actually say.** Putting
-   "git commit", "open a PR", "merge", "rebase" beats abstract terms
-   like "version control operations". Claude's semantic match favors
-   the same words a human would speak.
-2. **Multilingual keyword belts are belt-and-suspenders.** Claude is
-   itself multilingual; an English description matches a 中文 / 日本語
-   prompt natively via semantic equivalence. Adding a short keyword
-   belt at the end is low-cost insurance, not the primary mechanism.
-3. **Front-load the triggers.** Claude Code truncates the combined
-   description + when-to-use text at **1,536 characters** per skill
-   listing under context-budget pressure. Anything past that gets
-   cut. Place the most important trigger phrases in the first ~150
-   chars.
+filter at the runtime level. Practical implications surface in
+§Six principles below (natural keywords, multilingual belt,
+front-loading under the 1,536-char Claude Code listing truncation).
 
 ## The Anthropic-vs-Superpowers tension (resolved)
 
@@ -211,19 +199,6 @@ Before shipping a description, verify:
 - [ ] If close skills exist: explicit negative trigger ("Do NOT use
       for X — use other-skill instead")
 
-## Anti-patterns
-
-| Anti-pattern | Example | Why it hurts |
-|---|---|---|
-| Workflow recap | "Use for TDD — write test first, watch it fail, write minimal code, refactor" | Claude shortcuts into following the recap instead of reading SKILL.md's actual TDD discipline |
-| Mechanism prose | "Capture and retrieve project decision context using git commit messages and PR body as the substrate — a portable, tool-agnostic memory layer that complements Claude Code's native memory" | 100+ chars of HOW that doesn't help discovery; tells Claude the implementation, not when to load |
-| First-person | "I can help you process Excel files" | Pronoun inconsistency in system prompt causes selection problems (Anthropic Warning) |
-| No triggers | "Generates commit messages." | Claude has to infer when; loses to skills with explicit `Use when` |
-| Vague filler | "Helps with documents" / "Processes data" | Matches everything, triggers nothing |
-| Trailing keyword salad without context | "git, commit, PR, merge, rebase, diff, stage, branch" | Bare keywords without grammar reduce semantic match quality |
-| Bloated multilingual block | A full sentence in each of EN / 日本語 / 中文 | Triples the description length; LLM matches across languages without it |
-| Length over 500 chars | A 700-char description | Eats context budget that should belong to SKILL.md body |
-
 ## Worked example: git-memory v0.1.0 → v0.1.5
 
 The `git-memory` skill went through a description rewrite that hit
@@ -264,17 +239,9 @@ description: >-
   context). Triggers: commit / PR / merge / decision / 為什麼 / commit メモ / 決定記録.
 ```
 
-Changes:
-
-1. WHAT in 6 words (`Capture and recall git decision context`) — outcome,
-   not mechanism
-2. About-to-violate symptoms front-loaded:
-   `about to commit or open a PR` + `before running git commit, gh pr
-   create, or staging changes for merge`
-3. Read-path symptoms preserved but tightened: `references an old branch`,
-   `revisits earlier work without context`
-4. Multilingual block compressed from full sentences to a keyword belt
-5. Length cut 56% (650 → 287)
+The Before / After diff shows the audit applied: WHAT clause replaces
+mechanism prose; about-to-violate symptoms front-loaded; multilingual
+sentences compressed to a keyword belt; length cut 56% (650 → 287).
 
 ## References
 
