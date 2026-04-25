@@ -1,15 +1,11 @@
 ---
 name: git-memory
 description: >-
-  Capture and retrieve project decision context using git commit messages
-  and PR body as the substrate — a portable, tool-agnostic memory layer
-  that complements Claude Code's native memory. Use when the user wants
-  to record why a decision was made, surface past decisions in a new
-  session, or make project knowledge survive across machines and tools
-  (Claude Code / Cursor / Codex / aider / human collaborators).
-  Also use when the user says "why did we do this", "record this
-  decision", "what did we learn", "git memory", "portable memory".
-  Git コミット・メモリ。可攜式プロジェクト記憶。可攜式專案記憶。
+  Capture and recall git decision context. Use when about to commit or open
+  a PR (before running git commit, gh pr create, or staging changes for
+  merge), or when recalling why a past decision was made (user asks "why
+  did we do X", references an old branch, or revisits earlier work without
+  context). Triggers: commit / PR / merge / decision / 為什麼 / commit メモ / 決定記録.
 ---
 
 # Git Memory
