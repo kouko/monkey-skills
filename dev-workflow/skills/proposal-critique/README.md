@@ -272,12 +272,26 @@ MIT — see [repository root LICENSE](../../../../LICENSE).
 
 ```
 proposal-critique/
-├── README.md     ← this file (for humans)
-└── SKILL.md      ← operational file (for Claude)
+├── README.md           ← this file (for humans)
+├── SKILL.md            ← operational file (for Claude)
+└── evals/
+    ├── trigger-eval.json   ← 16 trigger queries (8 should-fire,
+    │                         8 should-not), drafted for run_loop.py
+    │                         optimization (deferred to Phase 2)
+    └── body-validation.md  ← frozen reference run of the gate
+                              against the v0.1 dogfood backlog;
+                              expected output 1 KEEP / 2 DEFER /
+                              4 DROP after v0.1.2 fall-through rule
 ```
 
-The two artifacts have different audiences and different jobs. They
-intentionally do not duplicate content: `SKILL.md` is terse,
-instructional, and structured as a gate (Iron Law / Gate Function /
-Triage Matrix); this README is narrative and explanatory. Claude
-reads `SKILL.md`; humans read this.
+`README.md` and `SKILL.md` have different audiences and different
+jobs. They intentionally do not duplicate content: `SKILL.md` is
+terse, instructional, and structured as a gate (Iron Law / Gate
+Function / Triage Matrix); this README is narrative and explanatory.
+Claude reads `SKILL.md`; humans read this.
+
+`evals/` contains test fixtures. They were ephemeral until v0.1.3
+(`trigger-eval.json` lived in a private plan file; `body-validation`
+existed only in conversation history and PR commit trailers).
+Codifying them as files lets future sessions re-run the validation
+and grow the n=1 sample over time.
