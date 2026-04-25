@@ -78,5 +78,20 @@
     "query": "Add a new column to the table",
     "should_trigger": false,
     "rationale": "single-action change; not a multi-item proposal"
+  },
+  {
+    "query": "simplify this function — it's too long and has too many nested conditionals",
+    "should_trigger": false,
+    "rationale": "skill-collision case: code-level simplification, should route to Anthropic `simplify` skill, NOT proposal-critique. Tests whether description disambiguates 'proposal critique' from 'code simplify'"
+  },
+  {
+    "query": "are these tests really passing? I'm about to claim the task done",
+    "should_trigger": false,
+    "rationale": "skill-collision case: pre-completion verification, should route to `superpowers:verification-before-completion`, NOT proposal-critique. Tests whether description distinguishes proposal-time critique from claim-time verification"
+  },
+  {
+    "query": "this code is over-engineered — refactor it to be simpler",
+    "should_trigger": false,
+    "rationale": "BORDERLINE skill-collision: 'over-engineered' is a proposal-critique keyword, but the request is for code refactoring (Anthropic `simplify` territory). Tests whether description's keyword pull dominates over the actual ask. If skill triggers here, that's the v0.2 signal to add explicit negative trigger ('Do NOT use for code-level simplification')"
   }
 ]

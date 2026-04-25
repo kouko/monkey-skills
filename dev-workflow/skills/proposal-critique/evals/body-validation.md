@@ -119,6 +119,73 @@ n=1. Indicative, not authoritative — same discipline as
 `description-design.md` §Length §Caveat block. Future versions
 should add fixtures from independent sessions / projects to grow n.
 
+## Fixture #2 — prose-shape proposal (JWT architecture decision)
+
+### Input proposal (prose form)
+
+> "We should rewrite the auth module to use JWT instead of session
+> cookies because JWT is stateless, scales better horizontally, and
+> is the industry standard for microservices."
+
+This is the proposal used in SKILL.md §Worked Examples Example 2.
+That instance is a **teaching example** demonstrating DECOMPOSE; this
+instance is a **validation fixture** with frozen ground truth.
+
+### DECOMPOSE step output
+
+The §Gate Function step 1 (ENUMERATE-OR-DECOMPOSE) extracts:
+
+| # | Type | Content |
+|---|---|---|
+| 1 | recommendation | Refactor auth module → JWT |
+| 2 | claim | JWT is stateless |
+| 3 | claim | JWT scales better horizontally than session cookies |
+| 4 | claim | JWT is the industry standard for microservices |
+
+Heuristic applied: main verb phrase = recommendation; "because" /
+"since" / "given" clauses = supporting claims. The proposal had one
+"because" introducing three clauses (joined by "," and "and").
+
+### Ground truth (manual triage with current SKILL.md gate)
+
+| # | Item | GROUND | ESSENTIAL? | Bucket | Reason |
+|---|---|---|---|---|---|
+| 2 | JWT is stateless | GROUNDED | ESSENTIAL | KEEP | RFC 7519 codifies stateless property; the recommendation rests primarily on this |
+| 1 | refactor auth → JWT | HEURISTIC-OK | ESSENTIAL | KEEP-WITH-CAVEAT | rec is essential to the proposal but evidence rests on weaker claims #3 + #4 |
+| 3 | scales better horizontally | GROUNDED | SPECULATIVE | DEFER | causal claim verifiable via benchmark; defer until measured for THIS specific workload |
+| 4 | industry standard for microservices | SPECULATIVE | SPECULATIVE | DROP | classic ungrounded sociological assertion ("everyone does it") with no source; common-knowledge appeal |
+
+**Total**: 1 KEEP / 1 KEEP-WITH-CAVEAT / 1 DEFER / 1 DROP
+
+### What this fixture validates
+
+- The DECOMPOSE step (§Gate Function step 1, prose path) correctly
+  separates recommendation from supporting claims using the main-verb
+  + "because/since/given" heuristic
+- The matrix produces sound verdicts when items have **different**
+  grounding × essentialness profiles within a single proposal
+  (Fixture #1 was 7 items with similar profiles; this is 4 items
+  spanning all 4 corners of the matrix)
+- The KEEP-WITH-CAVEAT bucket is exercised (Fixture #1 has 0 of these)
+- The DEFER fall-through rule is **not** triggered (claim #3 has a
+  plausible re-trigger: "when this team's specific workload is
+  benchmarked")
+- Different shapes (list in #1, prose in #2) flow into the same
+  downstream gate as designed in §Operational flow
+
+### What this fixture does NOT validate
+
+- Multi-paragraph prose (this is one sentence with three clauses;
+  real architecture decisions span paragraphs)
+- Nested claims (claim that itself has supporting sub-claims)
+- Contradictory claims within the same proposal
+- Adversarial decomposition (claims phrased to evade the
+  "because/since/given" heuristic — e.g. "...; this is good for X;
+  also helps with Y")
+
+n=2 fixtures total. Still indicative, not authoritative — same
+discipline as Fixture #1's caveat.
+
 ## Re-running the fixture
 
 There is no automation. Re-validate manually:
