@@ -1,0 +1,82 @@
+[
+  {
+    "query": "ok so I have these 7 ideas for the next quarter, can you tell me which ones we should actually do? Pretty sure I'm overthinking it",
+    "should_trigger": true,
+    "rationale": "explicit ask for triage advice on a multi-item plan; 'overthinking it' is YAGNI signal"
+  },
+  {
+    "query": "is this over-engineered? I just listed P0/P1/P2 backlog of 6 items",
+    "should_trigger": true,
+    "rationale": "explicit 'over-engineered' keyword + P0/P1/P2 backlog structure"
+  },
+  {
+    "query": "業界真的這樣做嗎？我們應該用 GraphQL + Apollo + Hasura",
+    "should_trigger": true,
+    "rationale": "業界證實 keyword + multi-tech advocacy stack"
+  },
+  {
+    "query": "這個方案有點複雜 想看看能不能簡化",
+    "should_trigger": true,
+    "rationale": "可以簡化 keyword + complexity self-doubt"
+  },
+  {
+    "query": "Help me critique my proposal — should we rewrite the auth as JWT microservice because stateless / horizontal scale / industry standard?",
+    "should_trigger": true,
+    "rationale": "explicit 'critique my proposal' + prose-shaped advocacy with ≥3 supporting claims"
+  },
+  {
+    "query": "complexity audit — three options: SSR, SPA, or hybrid",
+    "should_trigger": true,
+    "rationale": "explicit 'complexity audit' keyword + three-options framing"
+  },
+  {
+    "query": "I keep adding 'nice to haves' to this PRD. Can you tell me what to cut?",
+    "should_trigger": true,
+    "rationale": "explicit 'nice to haves' (YAGNI signal) + 'what to cut' triage ask"
+  },
+  {
+    "query": "OK 但我寫了 12 條 backlog items 真的需要全做嗎",
+    "should_trigger": true,
+    "rationale": "12-item backlog + necessity self-doubt"
+  },
+  {
+    "query": "Use HashMap instead of List for O(1) lookup",
+    "should_trigger": false,
+    "rationale": "single-fact technical recommendation; no multi-item or advocacy structure"
+  },
+  {
+    "query": "What's the difference between let and const?",
+    "should_trigger": false,
+    "rationale": "Q&A factual question; not a proposal at all"
+  },
+  {
+    "query": "Fix the typo in line 42",
+    "should_trigger": false,
+    "rationale": "single-fix change; nothing to triage"
+  },
+  {
+    "query": "Read this PDF and summarize",
+    "should_trigger": false,
+    "rationale": "utility task; not a proposal"
+  },
+  {
+    "query": "Why does this test fail?",
+    "should_trigger": false,
+    "rationale": "debugging request; not proposal critique"
+  },
+  {
+    "query": "Reformat this JSON to be pretty-printed",
+    "should_trigger": false,
+    "rationale": "utility task; mechanical transformation, not advocacy"
+  },
+  {
+    "query": "Three reasons why I love TypeScript: type safety, refactoring, IDE support",
+    "should_trigger": false,
+    "rationale": "explanatory list, not advocacy; user is sharing affection, not asking for triage. BORDERLINE — 3-item shape might over-fire trigger; this is the v0.1 trigger-test borderline case"
+  },
+  {
+    "query": "Add a new column to the table",
+    "should_trigger": false,
+    "rationale": "single-action change; not a multi-item proposal"
+  }
+]
