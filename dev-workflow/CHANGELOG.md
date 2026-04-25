@@ -4,6 +4,51 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-04-25
+
+### Context
+
+This session repeatedly demonstrated a recurring failure mode: when
+Claude proposes a multi-item plan / backlog / recommendation list,
+the default behavior is to over-engineer (7-item P0–P3 lists,
+speculative content, YAGNI violations). Without explicit user
+pushback ("業界證實了嗎", "可以簡化嗎", "複雜度評估"), bloated
+proposals ship as-is. The pattern recurred 4 times in this session
+within a single artifact (description-design.md): a 7-item backlog
+got triaged to 1 KEEP / 1 DEFER / 5 DROP; a 4-section anti-pattern
+duplication got deleted; a "research → apply → reflect → simplify"
+4-step pipeline proposal got narrowed to a single post-proposal
+checkpoint. The recurring fix had a clear shape — three buckets and
+two checks — that's now a skill anyone can invoke.
+
+### Added (proposal-critique)
+
+New `dev-workflow/skills/proposal-critique/` — single-file gate
+skill (~215 lines) for triaging proposals into KEEP / DEFER / DROP
+via evidence grounding (cited / heuristic / speculative) and YAGNI
+(essential / speculative). User-invoked primary mechanism; auto-
+trigger on Claude's own list-shape output explicitly **deferred to
+Phase 2** until v0.1 dogfood proves user-driven triggering reliable.
+
+The body adapts the `superpowers:verification-before-completion`
+idiom: Iron Law / Gate Function / Triage Matrix / Common Failures /
+Red Flags / Rationalization Prevention / Composes With / Worked
+Examples (×2: list shape + prose shape with DECOMPOSE step) / When
+To Apply / Bottom Line.
+
+The skill is **shape-agnostic** — handles list-shaped proposals
+(numbered backlog, P0/P1/P2) and prose-shaped proposals
+(architecture decisions, strategy memos, single recommendations
+with supporting claims) via an `ENUMERATE-OR-DECOMPOSE` first step.
+
+### Changed
+
+`dev-workflow/.claude-plugin/plugin.json` version 1.2.0 → 1.3.0
+(minor, additive). `description` extended to name 3 skills.
+`dev-workflow/README.md` Skills table extended; directory tree
+updated. Repo-root `.claude-plugin/marketplace.json` description
+extended (multilingual belt now includes 提案審查).
+
 ## [1.2.0] — 2026-04-25
 
 ### Context

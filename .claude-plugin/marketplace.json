@@ -21,7 +21,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer workflow skills — skill creation (skill-creator-advance) and portable git-backed project memory (git-memory). Git コミット・メモリ。可攜式專案記憶。",
+      "description": "Developer workflow skills — skill creation (skill-creator-advance), portable git-backed project memory (git-memory), and multi-item proposal triage (proposal-critique). Git コミット・メモリ。可攜式專案記憶。提案審查。",
       "source": "./dev-workflow/"
     },
     {
