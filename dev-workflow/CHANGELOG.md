@@ -4,6 +4,81 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-04-25
+
+### Context
+
+Distills lessons from the `git-memory` skill's v0.1.5 description rewrite
+(monkey-skills PR #142) into reusable guidance for `skill-creator-advance`.
+The git-memory rewrite cut its `description` from 650 chars (read-path
+triggers only, mechanism prose front-loaded) to 287 chars (Anthropic-aligned
+WHAT+WHEN, both write/read paths, "about-to-violate" symptoms). The full
+research — covering Anthropic Skills docs, Anthropic best-practices,
+Agent Skills spec, and an empirical study of all 14 official superpowers
+SKILL.md descriptions — is now reusable for any future skill author via
+`skill-creator-advance`.
+
+### Added (skill-creator-advance)
+
+New `references/description-design.md` (~250 lines). Covers:
+
+- How skill discovery actually works (LLM semantic match in the forward
+  pass, not regex / fuzzy / vector embedding) and the three implications
+- The Anthropic-vs-Superpowers tension resolved: WHAT (outcome) is
+  Anthropic-approved; WORKFLOW (process steps) is what Superpowers
+  warns against — different phenomena conflated by the rule statement
+- Six design principles (WHAT+WHEN front-loading, third-person,
+  about-to-violate symptoms, natural keywords, length budget,
+  multilingual belt as optional insurance)
+- "About-to-violate" symptom catalog drawn from 14 superpowers skills
+  (`before writing implementation code`, `before merging`, etc.)
+- Length empirics: superpowers median 107 chars, range 79–234, all
+  well under 1024-char Agent Skills cap and 1536-char Claude Code
+  truncation point
+- YAML `>-` block-folded rendered length gotcha
+- Validation checklist + anti-patterns table
+- Worked example: git-memory v0.1.0 → v0.1.5 before/after rewrite
+
+§Description Best Practices in SKILL.md reorganized into 7 numbered
+patterns with a pointer to the new reference for the deep dive.
+Existing guidance ("pushy", "negative triggers", "multilingual",
+"before/after example") preserved verbatim.
+
+### Changed
+
+`dev-workflow/.claude-plugin/plugin.json` version 1.1.0 → 1.2.0
+(minor: additive reference content + reorganized SKILL.md section,
+backwards-compatible).
+
+## [1.1.0] — 2026-04-24
+
+### Context
+
+monkey-skills PR #137 added the `git-memory` skill (portable
+git-backed project memory via commit trailers + PR `## Memory`
+section) to the `dev-workflow` plugin alongside the existing
+`skill-creator-advance`. plugin.json version was bumped at PR #140
+but the CHANGELOG entry was missed at the time; this entry is
+retroactive to mark the additive skill addition.
+
+### Added
+
+`dev-workflow/skills/git-memory/` — portable, tool-agnostic project
+memory using git commit messages and PR bodies as the substrate.
+Phase 1 MVP includes:
+
+- `SKILL.md` with the three pillars (carrier / structure / content)
+- `standards/memory-conventions.md` — trailer schema (`Decision:` /
+  `Learning:` / `Gotcha:` / `Related:`), PR body `## Memory`
+  section layout, ASCII-vs-Mermaid diagram venue rules
+- `protocols/compose-commit.md` + `protocols/compose-pr.md` — Claude
+  authoring guidance for the write paths
+- `scripts/memory-grep.sh` — retrieval primitive emitting plain or
+  JSON output, parses trailers via `git interpret-trailers --parse`
+  (added v0.1.2) and validates `--limit` as positive integer (v0.1.3)
+
+dev-workflow plugin description updated to name both skills.
+
 ## [1.0.4] — 2026-04-15
 
 ### Context
