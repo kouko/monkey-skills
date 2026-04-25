@@ -144,6 +144,17 @@ Empirical data from 14 superpowers SKILL.md descriptions:
 - All 14 are well under a self-imposed ~500-char heuristic the
   superpowers author uses
 
+> **Caveat (sample size and selection bias)**: n=14 is a small,
+> single-author sample (obra/superpowers). The numbers are
+> **indicative, not authoritative** — they describe one
+> well-regarded skill collection's house style, not a measured
+> industry-wide best practice. As counter-points: Anthropic's own
+> `skill-creator` ships at ~640 chars (~6× the superpowers median),
+> and many production skills in the broader ecosystem run longer.
+> Treat the 100–250 target as a default-cheap heuristic for new
+> skills; over the ~500 ceiling is where the case for trimming
+> becomes hard to ignore.
+
 Long descriptions burn system-prompt context that competes with the
 SKILL.md body itself. If your description is over 500 chars, audit
 for prose that belongs in SKILL.md `## Overview`, not the metadata.
