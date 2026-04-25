@@ -12,6 +12,7 @@ loop for authoring new Claude skills.
 |-------|-----------|------|
 | `skill-creator-advance` | `/skill-creator-advance` | Create new skills and iteratively improve them via eval-driven loop |
 | `git-memory` | — | Portable, tool-agnostic project memory via git commit trailers + PR body `## Memory` section |
+| `proposal-critique` | — | Triage a proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
 
 ### git-memory — three pillars
 
@@ -78,11 +79,13 @@ dev-workflow/
     │   ├── agents/               ← grader / comparator / analyzer
     │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
     │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
-    └── git-memory/
-        ├── SKILL.md
-        ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
-        ├── protocols/             ← compose-commit / compose-pr
-        └── scripts/               ← memory-grep retrieval primitive
+    ├── git-memory/
+    │   ├── SKILL.md
+    │   ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
+    │   ├── protocols/             ← compose-commit / compose-pr
+    │   └── scripts/               ← memory-grep retrieval primitive
+    └── proposal-critique/
+        └── SKILL.md               ← single-file gate skill (Iron Law / Gate Function / Triage Matrix)
 ```
 
 ## License
