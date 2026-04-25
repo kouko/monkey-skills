@@ -243,6 +243,35 @@ The Before / After diff shows the audit applied: WHAT clause replaces
 mechanism prose; about-to-violate symptoms front-loaded; multilingual
 sentences compressed to a keyword belt; length cut 56% (650 → 287).
 
+## Observation: diagrams as a thinking aid (n=4, indicative not authoritative)
+
+Empirical pattern noted across the monkey-skills development sessions
+that produced this reference: drafting a Mermaid flowchart for a
+proposed design / workflow has, on multiple occasions, surfaced
+relationships the prose form had left implicit — merge points,
+feedback loops, asymmetric data flows, parallel-then-converge
+patterns. Once. Then again. Then twice more.
+
+Hypothesized mechanism (not confirmed): writing a structured DSL
+forces explicit naming of every node and every edge. Implicit
+relationships in prose ("...and then it joins back up with...")
+become drawn lines in Mermaid. The act of writing the diagram, not
+viewing the rendered output, is where the surfacing happens — which
+matters because LLMs reading the source file process Mermaid as
+text, not visually. The constraint is the cognitive aid, not the
+picture.
+
+This is **not a rule**. n=4 in one project's sessions is too small
+to generalize. But for high-stakes design work, drafting a Mermaid
+flowchart before finalizing — even if the diagram never ships — is
+a cheap discipline. Re-evaluate as a stronger recommendation if the
+pattern is observed across ≥3 independent projects / authors.
+
+Until then, treat this as a developer's note: when a design feels
+"almost right" but you can't articulate why, try writing it as
+Mermaid before shipping prose. The act may surface what's bothering
+you.
+
 ## References
 
 - Anthropic Skills docs: https://code.claude.com/docs/en/skills
