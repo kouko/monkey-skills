@@ -66,12 +66,50 @@ Based on the user interview, fill in these components:
 
 #### Description Best Practices
 
-Beyond being "pushy" to avoid under-triggering, good descriptions also include:
+For a deep dive on description design (Anthropic vs Superpowers
+conventions, LLM semantic-match mechanics, length guidelines, and a
+worked git-memory case study), see [references/description-design.md](references/description-design.md).
 
-**Negative triggers** — Explicitly state when NOT to use the skill to avoid collisions with similar skills:
+Quick summary of the patterns covered there:
+
+**1. WHAT + WHEN, not WHAT + WORKFLOW.** Anthropic's three official
+examples all open with a one-sentence outcome ("Generate commit
+messages…") followed by `Use when …`. Superpowers' "ONLY when, NOT
+what" rule is a defensive override against descriptions summarizing
+the workflow (which lets Claude shortcut SKILL.md). Brief outcome
+clauses are fine; step-by-step process recaps are not.
+
+**2. "About-to-violate" symptoms.** The most discoverable trigger is
+the moment **just before** the user takes the action your skill
+should intercept. Pattern: `Use when [situation], before [action]`
+(e.g. "before writing implementation code", "before merging",
+"before running `git commit`"). After the action, the skill is too
+late to help.
+
+**3. Third-person.** Anthropic best-practices has an explicit Warning
+block: pronoun inconsistency in the system prompt causes selection
+problems. ✓ "Processes Excel files…" ✗ "I can help you process…"
+
+**4. Natural keywords the user would type.** Claude's matcher favors
+direct lexical overlap with everyday verbs and nouns. `git commit`
+beats `version control commit operation`; `pivot table` beats
+`cross-tabulation analysis`.
+
+**5. Length 100–250 chars, ceiling ~500.** Empirical median of all
+14 superpowers SKILL.md descriptions is ~107 chars; max is 234. The
+1,024-char Agent Skills spec ceiling is generous, but long
+descriptions burn system-prompt context that competes with the
+SKILL.md body itself.
+
+**6. Negative triggers** — Explicitly state when NOT to use the skill
+to avoid collisions with similar skills:
 > Do NOT use for domain-team skills (use skill-team instead). Do NOT use for simple file edits that don't need a skill.
 
-**Multilingual trigger keywords** — If the skill's users speak multiple languages, add keywords at the end of the description in those languages. This helps Claude match the skill even when the user prompts in another language:
+**7. Multilingual trigger keywords (optional, low-cost insurance).**
+If the skill's users speak multiple languages, add a short keyword
+belt at the end. Claude is itself multilingual and semantic-matches
+across languages without this — it's belt-and-suspenders, not the
+primary mechanism.
 > スキル作成・評価。技能建立・評估。
 
 **Before/after example:**
