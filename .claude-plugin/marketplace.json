@@ -41,7 +41,7 @@
     },
     {
       "name": "kobodl-toolkit",
-      "description": "Kobo e-book library toolkit — search by title / author / series / publication date / category / description text / reading status / language, present matches as rich cards, then download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader. Optional Calibre PDF conversion. macOS only. 電子書庫搜尋・下載。Koboライブラリ検索・DRMフリーEPUBダウンロード。",
+      "description": "Kobo e-book library toolkit — search by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, then convert downloaded EPUBs into chunked-by-chapter Markdown (NCX-driven) for LLM ingestion and book→skill workflows. Optional Calibre PDF conversion. macOS / Linux. 電子書庫搜尋・下載・分章Markdown化。Koboライブラリ検索・DRMフリーEPUBダウンロード・章ごとMarkdown抽出。",
       "source": "./kobodl-toolkit/"
     }
   ]

@@ -1,16 +1,17 @@
 # kobodl-toolkit
 
-**Version**: 0.3.0
+**Version**: 0.4.0
 **Part of**: [monkey-skills](../)
 
 Search a Kobo e-book library by **title / author / series / publication date /
 category / description text / reading status / language**, present matches as
-cards, then download the chosen books as DRM-free EPUBs. Wraps
-[`subdavis/kobo-book-downloader`][kobodl] and exposes the rich library JSON
-(Title / Authors / Publisher / Series / Description / Genre / Categories /
-ReadingState / CoverImageUrl).
+cards, download the chosen books as DRM-free EPUBs, then convert downloaded
+EPUBs into chunked-by-chapter Markdown for LLM ingestion (book → skill
+workflow). Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses
+[pandoc][pandoc] for the EPUB→Markdown stage.
 
 [kobodl]: https://github.com/subdavis/kobo-book-downloader
+[pandoc]: https://pandoc.org
 
 ## Skills
 
@@ -18,9 +19,10 @@ ReadingState / CoverImageUrl).
 |---|---|
 | [`kobodl-auth`](skills/kobodl-auth/SKILL.md) | First-time setup, login, account migration, credential rotation |
 | [`kobodl-library`](skills/kobodl-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
+| [`kobodl-extract`](skills/kobodl-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
 
-Auth is a separate skill because login is a one-time-per-account event while
-search/download is daily.
+Auth is a one-time event; library is daily search+download; extract is opt-in
+post-processing for "I want Claude to read this book".
 
 ## Quick Start
 
@@ -74,6 +76,22 @@ python3 kobodl-toolkit/skills/kobodl-library/scripts/kobodl_query.py \
   | bash kobodl-toolkit/skills/kobodl-library/scripts/kobodl_get.sh --convert-pdf
 ```
 
+### D. EPUB → chunked Markdown (for book→skill)
+
+```bash
+# one-time: ensure pandoc is installed
+bash kobodl-toolkit/skills/kobodl-extract/scripts/install_pandoc.sh
+
+# convert an EPUB into NN-chapter.md files + index.md + metadata.json
+python3 kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
+    --epub "$EPUB_PATH" --out-dir "$KOBODL_DATA/markdown/<title>" \
+    --strip-images --strip-frontmatter
+```
+
+Then read `index.md` first (TOC + token estimates), distill into an outline,
+and finally hand off to `dev-workflow:skill-creator-advance` to produce the
+new skill.
+
 ## Storage Layout (XDG-respecting, owner-only)
 
 | What | Default path | Override |
@@ -104,18 +122,26 @@ kobodl-toolkit/
     │       ├── kobodl_paths.sh      # source-able path resolver (shared)
     │       ├── kobodl_install.sh    # binary download (idempotent)
     │       └── kobodl_login.sh      # add / status / remove / import-from / path
-    └── kobodl-library/
+    ├── kobodl-library/
+    │   ├── SKILL.md
+    │   └── scripts/
+    │       ├── kobodl_query.py      # filter --export-library JSON, 5 formats
+    │       └── kobodl_get.sh        # download by RevisionId (args or stdin)
+    └── kobodl-extract/
         ├── SKILL.md
         └── scripts/
-            ├── kobodl_query.py      # filter --export-library JSON, 5 formats
-            └── kobodl_get.sh        # download by RevisionId (args or stdin)
+            ├── install_pandoc.sh    # brew → standalone fallback
+            └── kobodl_to_markdown.py # NCX-driven chapter split + pandoc + clean
 ```
 
 ## Requirements
 
-- macOS (kobodl ships a macOS binary; auto-installed on first run)
-- Python 3.9+ (query script uses stdlib only)
+- macOS or Linux (kobodl ships macOS binary auto-installed; Linux users
+  can `pipx install kobodl` and override `KOBODL_BINARY`)
+- Python 3.9+ (query / extract scripts use stdlib only)
 - A Kobo account with at least one purchased book
+- Optional: pandoc (for `kobodl-extract` — auto-installed via brew or
+  standalone GitHub release; no-op if already installed)
 - Optional: [Calibre][calibre] for EPUB → PDF conversion
 
 [calibre]: https://calibre-ebook.com/download_osx
