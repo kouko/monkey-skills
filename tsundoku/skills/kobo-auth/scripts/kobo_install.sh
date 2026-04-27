@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# kobodl_install.sh — download the kobodl macOS binary if not present.
+# kobo_install.sh — download the kobodl macOS binary if not present.
 #
-# Idempotent. Does NOT touch credentials. Auth lives in kobodl_login.sh.
+# Idempotent. Does NOT touch credentials. Auth lives in kobo_login.sh.
 #
 # Exit codes:
 #   0  binary ready (either already present or freshly downloaded)
@@ -29,16 +29,16 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-mkdir -p "$(dirname "$TSUNDOKU_BINARY")" "$TSUNDOKU_TMPDIR"
+mkdir -p "$(dirname "$TSUNDOKU_KOBO_BINARY")" "$TSUNDOKU_TMPDIR"
 
-if [[ -x "$TSUNDOKU_BINARY" && "$FORCE" != true ]]; then
-    echo "[install] kobodl binary already present: $TSUNDOKU_BINARY" >&2
-    "$TSUNDOKU_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
+if [[ -x "$TSUNDOKU_KOBO_BINARY" && "$FORCE" != true ]]; then
+    echo "[install] kobodl binary already present: $TSUNDOKU_KOBO_BINARY" >&2
+    "$TSUNDOKU_KOBO_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
     exit 0
 fi
 
 echo "[install] downloading kobodl from $URL" >&2
-tmp_path="$TSUNDOKU_BINARY.partial"
+tmp_path="$TSUNDOKU_KOBO_BINARY.partial"
 trap 'rm -f "$tmp_path"' EXIT
 
 if ! curl --fail --location --output "$tmp_path" "$URL"; then
@@ -53,9 +53,9 @@ if [[ "$size_bytes" -lt 1000000 ]]; then
     exit 1
 fi
 
-mv "$tmp_path" "$TSUNDOKU_BINARY"
-chmod +x "$TSUNDOKU_BINARY"
-xattr -d com.apple.quarantine "$TSUNDOKU_BINARY" 2>/dev/null || true
+mv "$tmp_path" "$TSUNDOKU_KOBO_BINARY"
+chmod +x "$TSUNDOKU_KOBO_BINARY"
+xattr -d com.apple.quarantine "$TSUNDOKU_KOBO_BINARY" 2>/dev/null || true
 
-echo "[install] kobodl binary installed: $TSUNDOKU_BINARY" >&2
-"$TSUNDOKU_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
+echo "[install] kobodl binary installed: $TSUNDOKU_KOBO_BINARY" >&2
+"$TSUNDOKU_KOBO_BINARY" --version 2>/dev/null | head -n 1 >&2 || true

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# kobodl_get.sh — download books by RevisionId, idempotent.
+# kobo_get.sh — download books by RevisionId, idempotent.
 #
 # Takes one or more RevisionIds from command-line args OR stdin (one per line).
 # Skips books whose <id8>.epub already exists in $TSUNDOKU_DOWNLOADS.
 # Optionally runs Calibre to produce a matching PDF.
 #
 # Usage:
-#   kobodl_get.sh [options] REVISION_ID [REVISION_ID ...]
-#   echo REVISION_ID | kobodl_get.sh [options]
-#   kobodl_query.py ... --format ids | kobodl_get.sh [options]
+#   kobo_get.sh [options] REVISION_ID [REVISION_ID ...]
+#   echo REVISION_ID | kobo_get.sh [options]
+#   kobo_query.py ... --format ids | kobo_get.sh [options]
 #
 # Options:
 #   --convert-pdf      after each download, convert EPUB → PDF via Calibre
@@ -62,14 +62,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pre-flight checks
-if [[ ! -x "$TSUNDOKU_BINARY" ]]; then
-    echo "kobodl_get: binary not installed at $TSUNDOKU_BINARY" >&2
-    echo "            run kobodl-auth/scripts/kobodl_install.sh" >&2
+if [[ ! -x "$TSUNDOKU_KOBO_BINARY" ]]; then
+    echo "kobodl_get: binary not installed at $TSUNDOKU_KOBO_BINARY" >&2
+    echo "            run kobo-auth/scripts/kobo_install.sh" >&2
     exit 3
 fi
-if [[ ! -f "$TSUNDOKU_CONFIG" ]]; then
-    echo "kobodl_get: no auth at $TSUNDOKU_CONFIG" >&2
-    echo "            run kobodl-auth/scripts/kobodl_login.sh add" >&2
+if [[ ! -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
+    echo "kobodl_get: no auth at $TSUNDOKU_KOBO_CONFIG" >&2
+    echo "            run kobo-auth/scripts/kobo_login.sh add" >&2
     exit 3
 fi
 
@@ -124,7 +124,7 @@ for id in "${IDS[@]}"; do
             continue
         fi
         $QUIET || echo "[$idx/$total] [get] $id" >&2
-        if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" "${USER_ARGS[@]}" \
+        if "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" "${USER_ARGS[@]}" \
                 book get --output-dir "$OUTPUT_DIR" "$id" >&2
         then
             new_files=( "$OUTPUT_DIR"/*"${short_id}.epub" )

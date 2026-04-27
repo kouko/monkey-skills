@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# kobodl_cache_clear.sh — wipe the toolkit's cache (regenerable derived data).
+# kobo_cache_clear.sh — wipe the toolkit's cache (regenerable derived data).
 #
 # By default removes:
 #   $TSUNDOKU_MARKDOWN_DIR/*    (all extracted-markdown subdirs)
-#   $TSUNDOKU_LIBRARY_JSON      (cached library export)
+#   $TSUNDOKU_KOBO_LIBRARY_JSON      (cached library export)
 #
 # Auth ($TSUNDOKU_ROOT/auth/), binary ($TSUNDOKU_ROOT/bin/),
 # and downloaded EPUBs ($TSUNDOKU_DOWNLOADS) are NEVER touched.
 #
 # Usage:
-#   kobodl_cache_clear.sh [--markdown-only|--library-only] [--dry-run] [--book SLUG]
+#   kobo_cache_clear.sh [--markdown-only|--library-only] [--dry-run] [--book SLUG]
 #
 # Options:
 #   --markdown-only   wipe only the markdown directory; keep library.json
@@ -77,10 +77,10 @@ if [[ "$MODE" == "all" || "$MODE" == "markdown" ]]; then
 fi
 
 if [[ "$MODE" == "all" || "$MODE" == "library" ]]; then
-    if [[ -f "$TSUNDOKU_LIBRARY_JSON" ]]; then
-        run "remove library.json" rm -f -- "$TSUNDOKU_LIBRARY_JSON"
+    if [[ -f "$TSUNDOKU_KOBO_LIBRARY_JSON" ]]; then
+        run "remove library.json" rm -f -- "$TSUNDOKU_KOBO_LIBRARY_JSON"
     else
-        echo "[skip] library.json does not exist: $TSUNDOKU_LIBRARY_JSON"
+        echo "[skip] library.json does not exist: $TSUNDOKU_KOBO_LIBRARY_JSON"
     fi
 fi
 

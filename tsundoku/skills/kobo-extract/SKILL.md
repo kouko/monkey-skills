@@ -1,5 +1,5 @@
 ---
-name: kobodl-extract
+name: kobo-extract
 description: >-
   Convert a downloaded EPUB into chunked-by-chapter Markdown for LLM
   ingestion. Designed for 400+ page expository books where chapter-level
@@ -35,7 +35,7 @@ headings, which kills downstream chunking. This skill:
 
 ## Pre-conditions
 
-- An EPUB file (typically from `kobodl-library` `kobodl_get.sh`)
+- An EPUB file (typically from `kobo-library` `kobo_get.sh`)
 - pandoc installed — run `install_pandoc.sh` once
 
 ## Components
@@ -43,8 +43,8 @@ headings, which kills downstream chunking. This skill:
 | Path | Role |
 |---|---|
 | `scripts/install_pandoc.sh` | brew → standalone fallback installer |
-| `scripts/kobodl_to_markdown.py` | the converter (Python stdlib only + pandoc subprocess) |
-| `scripts/kobodl_cache_clear.sh` | wipe extracted markdown / library cache |
+| `scripts/kobo_to_markdown.py` | the converter (Python stdlib only + pandoc subprocess) |
+| `scripts/kobo_cache_clear.sh` | wipe extracted markdown / library cache |
 | `pandoc` | external dependency, ~50 MB |
 
 ## One-time Setup
@@ -61,7 +61,7 @@ on PATH.
 ## Conversion
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/kobo_to_markdown.py \
     --epub  path/to/book.epub \
     [--out-dir path/to/library-root] \
     [options]
@@ -77,7 +77,7 @@ appended for dedupe.
 
 **Why cache?** Extracted markdown is regenerable from the EPUB at any time,
 so it lives under XDG cache (not config, not data). Safe to wipe between
-projects. See `scripts/kobodl_cache_clear.sh`.
+projects. See `scripts/kobo_cache_clear.sh`.
 
 | Option | Effect |
 |---|---|
@@ -136,7 +136,7 @@ source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
 EPUB="$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null
-python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/kobo_to_markdown.py \
     --epub "$EPUB" --strip-images --strip-frontmatter --quiet
 # → creates $TSUNDOKU_MARKDOWN_DIR/<title-slug>-<id8>/index.md + chapter files
 # (= ~/.cache/tsundoku/markdown/<title-slug>-<id8>/...)
@@ -201,16 +201,16 @@ After finishing a book→skill task, wipe to reclaim disk:
 
 ```bash
 # wipe everything (markdown + library.json), keep auth and EPUBs
-bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_cache_clear.sh
 
 # wipe only one book's markdown
-bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --book 一九八四-b9152ffe
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_cache_clear.sh --book 一九八四-b9152ffe
 
 # preview what would be removed
-bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --dry-run
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_cache_clear.sh --dry-run
 
 # wipe only library.json (force fresh re-export next time)
-bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --library-only
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_cache_clear.sh --library-only
 ```
 
 Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
@@ -228,7 +228,7 @@ Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
 - **Image-only chapters**: some EPUBs have a "chapter" that's just a cover
   illustration. With `--strip-images` these become empty (5-20 tokens) and
   may merge with `--merge-small`.
-- **Description ≤ 500 chars**: comes from `kobodl-library`, not this skill —
+- **Description ≤ 500 chars**: comes from `kobo-library`, not this skill —
   not relevant here, but a reminder that book metadata from Kobo is summary,
   not synopsis.
 - **Front-matter heuristic**: pattern-matches on common labels (書封 / 目錄 /
@@ -250,7 +250,7 @@ Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
 
 | Input from | This skill | Output to |
 |---|---|---|
-| `kobodl-library:kobodl_get.sh` (EPUB) | converts | `dev-workflow:skill-creator-advance` (skill creation) |
+| `kobo-library:kobo_get.sh` (EPUB) | converts | `dev-workflow:skill-creator-advance` (skill creation) |
 | Manual EPUB drop | converts | `obsidian:obsidian-markdown` (vault notes) |
 | Manual EPUB drop | converts | direct LLM context |
 

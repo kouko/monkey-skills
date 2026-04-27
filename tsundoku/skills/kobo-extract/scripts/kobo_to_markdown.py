@@ -18,7 +18,7 @@ Pipeline:
   6. Write index.md (TOC w/ links + token estimates) + metadata.json.
 
 Usage:
-  kobodl_to_markdown.py --epub PATH --out-dir DIR [options]
+  kobo_to_markdown.py --epub PATH --out-dir DIR [options]
 
 Options:
   --pandoc PATH         pandoc binary (default: $PANDOC or `pandoc` on PATH)

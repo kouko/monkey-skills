@@ -1,6 +1,6 @@
 # tsundoku 積読
 
-**Version**: 0.6.0
+**Version**: 0.7.0
 **Part of**: [monkey-skills](../)
 
 > *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
@@ -20,13 +20,13 @@ workflow). Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses
 
 | Skill | When to use |
 |---|---|
-| [`kobodl-auth`](skills/kobodl-auth/SKILL.md) | First-time setup, login, account migration, credential rotation |
-| [`kobodl-library`](skills/kobodl-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
-| [`kobodl-extract`](skills/kobodl-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
+| [`kobo-auth`](skills/kobo-auth/SKILL.md) | First-time setup, login, account migration, credential rotation |
+| [`kobo-library`](skills/kobo-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
+| [`kobo-extract`](skills/kobo-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
 
-Skills are named after the upstream tool they wrap (`kobodl`). The plugin
-itself is the brand umbrella, ready to grow toward other sources (Kindle,
-Apple Books) later.
+Skills are named after the e-book platform they target (`kobo-*`). When
+Kindle / Apple Books / BookWalker support is added, sibling skills like
+`kindle-*` will sit alongside under the same `tsundoku` plugin.
 
 ## Quick Start
 
@@ -34,8 +34,8 @@ Apple Books) later.
 
 ```bash
 # install binary + run device-flow login (opens kobo.com/activate code)
-bash tsundoku/skills/kobodl-auth/scripts/kobodl_install.sh
-bash tsundoku/skills/kobodl-auth/scripts/kobodl_login.sh add
+bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
+bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
 ```
 
 Follow the prompts: open `https://www.kobo.com/activate` in a browser, sign in,
@@ -48,8 +48,8 @@ If you already have credentials elsewhere (e.g. legacy `~/KobodlLibrarySync/`
 shell script, or upstream's `~/.config/kobodl/`), skip the activation flow:
 
 ```bash
-bash tsundoku/skills/kobodl-auth/scripts/kobodl_install.sh
-bash tsundoku/skills/kobodl-auth/scripts/kobodl_login.sh \
+bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
+bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
     import-from ~/KobodlLibrarySync/config/kobodl.json
 ```
 
@@ -61,58 +61,62 @@ export TMPDIR="$TSUNDOKU_TMPDIR"
 mkdir -p "$TSUNDOKU_DOWNLOADS"
 
 # refresh library index
-"$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" \
-    book list --export-library "$TSUNDOKU_LIBRARY_JSON"
+"$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" \
+    book list --export-library "$TSUNDOKU_KOBO_LIBRARY_JSON"
 
 # search (e.g. "books that mention behavioral economics, published since 2020,
 # not yet read") — preview as rich cards
-python3 tsundoku/skills/kobodl-library/scripts/kobodl_query.py \
-    --library "$TSUNDOKU_LIBRARY_JSON" \
+python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
+    --library "$TSUNDOKU_KOBO_LIBRARY_JSON" \
     --description "行為經濟,行為金融,Behavioral" \
     --pub-after 2020 --status ReadyToRead --format markdown
 
 # download chosen RevisionIds (idempotent — skips books already on disk)
-bash tsundoku/skills/kobodl-library/scripts/kobodl_get.sh "$REVISION_ID"
+bash tsundoku/skills/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
 
 # or pipe a filtered set
-python3 tsundoku/skills/kobodl-library/scripts/kobodl_query.py \
-    --library "$TSUNDOKU_LIBRARY_JSON" --series "Silent Witch" --format ids \
-  | bash tsundoku/skills/kobodl-library/scripts/kobodl_get.sh --convert-pdf
+python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
+    --library "$TSUNDOKU_KOBO_LIBRARY_JSON" --series "Silent Witch" --format ids \
+  | bash tsundoku/skills/kobo-library/scripts/kobo_get.sh --convert-pdf
 ```
 
 ### D. EPUB → chunked Markdown (for book→skill)
 
 ```bash
 # one-time: ensure pandoc is installed
-bash tsundoku/skills/kobodl-extract/scripts/install_pandoc.sh
+bash tsundoku/skills/kobo-extract/scripts/install_pandoc.sh
 
 # convert (uses $TSUNDOKU_MARKDOWN_DIR by default — no --out-dir needed)
-python3 tsundoku/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
+python3 tsundoku/skills/kobo-extract/scripts/kobo_to_markdown.py \
     --epub "$EPUB_PATH" --strip-images --strip-frontmatter
 # → writes to ~/.tsundoku/cache/markdown/<title-slug>-<id8>/index.md + chapters
 
 # clear the cache when finished with a book→skill task
-bash tsundoku/skills/kobodl-extract/scripts/kobodl_cache_clear.sh
+bash tsundoku/skills/kobo-extract/scripts/kobo_cache_clear.sh
 ```
 
 Then read `index.md` first (TOC + token estimates), distill into an outline,
 and finally hand off to `dev-workflow:skill-creator-advance` to produce the
 new skill.
 
-## Storage Layout (single root)
+## Storage Layout (single root, per-platform subdirs)
 
 ```
 ~/.tsundoku/                  ← TSUNDOKU_ROOT
-├── auth/                       chmod 700
-│   └── kobodl.json             chmod 600  (Kobo session credentials)
-├── bin/kobodl-macos
-├── tmp/                        TMPDIR override (PYI-1270 fix)
+├── kobo/                       Kobo platform state
+│   ├── auth/                    chmod 700
+│   │   └── kobodl.json          chmod 600 (Kobo session credentials)
+│   └── bin/kobodl-macos         14 MB upstream binary
+├── tmp/                        shared TMPDIR override (PYI-1270 fix)
 └── cache/                      regenerable, wipe-able as a unit
-    ├── library.json
-    └── markdown/<book>/...
+    ├── kobo/library.json        cached library export
+    └── markdown/<book>/...      EPUB → MD (platform-agnostic)
 
 ~/Books/kobo/                 ← TSUNDOKU_DOWNLOADS (user-visible EPUBs)
 ```
+
+When `kindle-*` / `apple-books-*` skills land later, they'll mirror under
+`~/.tsundoku/kindle/`, `~/.tsundoku/cache/kindle/`, etc.
 
 **Two decision-point env vars** — set these to relocate things:
 
@@ -122,13 +126,20 @@ new skill.
 | `TSUNDOKU_DOWNLOADS` | `~/Books/kobo` | User-visible EPUB downloads |
 
 **Five derived paths** computed from the two above (don't set directly):
-`TSUNDOKU_CONFIG`, `TSUNDOKU_BINARY`, `TSUNDOKU_LIBRARY_JSON`,
-`TSUNDOKU_MARKDOWN_DIR`, `TSUNDOKU_TMPDIR`. They're exported for convenience
-when sourcing `lib/tsundoku_paths.sh`.
 
-The `auth/` subdirectory is `chmod 700`, the `kobodl.json` file is `chmod 600`.
-The `cache/` subtree is regenerable — wipe at any time via
-`kobodl-extract/scripts/kobodl_cache_clear.sh`.
+| Var | Scope |
+|---|---|
+| `TSUNDOKU_TMPDIR` | shared |
+| `TSUNDOKU_MARKDOWN_DIR` | shared (cache/markdown) |
+| `TSUNDOKU_KOBO_CONFIG` | Kobo: kobodl.json |
+| `TSUNDOKU_KOBO_BINARY` | Kobo: kobodl-macos |
+| `TSUNDOKU_KOBO_LIBRARY_JSON` | Kobo: library export |
+
+All exported when sourcing `lib/tsundoku_paths.sh`.
+
+The `kobo/auth/` subdirectory is `chmod 700`, the `kobodl.json` file is
+`chmod 600`. The `cache/` subtree is regenerable — wipe at any time via
+`kobo-extract/scripts/kobo_cache_clear.sh`.
 
 ## Repository Structure
 
@@ -139,31 +150,31 @@ tsundoku/
 ├── lib/
 │   └── tsundoku_paths.sh        # plugin-wide path resolver (source-able)
 └── skills/
-    ├── kobodl-auth/
+    ├── kobo-auth/
     │   ├── SKILL.md
     │   └── scripts/
-    │       ├── kobodl_install.sh    # binary download (idempotent)
-    │       └── kobodl_login.sh      # add / status / remove / import-from / path
-    ├── kobodl-library/
+    │       ├── kobo_install.sh    # binary download (idempotent)
+    │       └── kobo_login.sh      # add / status / remove / import-from / path
+    ├── kobo-library/
     │   ├── SKILL.md
     │   └── scripts/
-    │       ├── kobodl_query.py      # filter --export-library JSON, 5 formats
-    │       └── kobodl_get.sh        # download by RevisionId (args or stdin)
-    └── kobodl-extract/
+    │       ├── kobo_query.py      # filter --export-library JSON, 5 formats
+    │       └── kobo_get.sh        # download by RevisionId (args or stdin)
+    └── kobo-extract/
         ├── SKILL.md
         └── scripts/
             ├── install_pandoc.sh     # brew → standalone fallback
-            ├── kobodl_to_markdown.py # NCX-driven chapter split + pandoc + clean
-            └── kobodl_cache_clear.sh # wipe extracted markdown / library cache
+            ├── kobo_to_markdown.py # NCX-driven chapter split + pandoc + clean
+            └── kobo_cache_clear.sh # wipe extracted markdown / library cache
 ```
 
 ## Requirements
 
 - macOS or Linux (kobodl ships macOS binary auto-installed; Linux users
-  can `pipx install kobodl` and override `TSUNDOKU_BINARY`)
+  can `pipx install kobodl` and override `TSUNDOKU_KOBO_BINARY`)
 - Python 3.9+ (query / extract scripts use stdlib only)
 - A Kobo account with at least one purchased book
-- Optional: pandoc (for `kobodl-extract` — auto-installed via brew or
+- Optional: pandoc (for `kobo-extract` — auto-installed via brew or
   standalone GitHub release; no-op if already installed)
 - Optional: [Calibre][calibre] for EPUB → PDF conversion
 
@@ -173,7 +184,7 @@ tsundoku/
 
 - `kobodl.json` contains your **Kobo session credentials** — equivalent to a
   password. Never commit, paste into chat, or upload
-- `kobodl_login.sh` enforces `chmod 600` after every operation that touches
+- `kobo_login.sh` enforces `chmod 600` after every operation that touches
   the file
 - Revoke a session by deleting `kobodl.json` AND visiting Kobo's
   [Authorized Devices](https://www.kobo.com/account/devices) page
@@ -186,7 +197,7 @@ tsundoku/
 - `Description` field is capped at 500 chars by Kobo's API (publisher ONIX
   copy, not a synopsis)
 - macOS gets a pre-built kobodl binary auto-installed; Linux/Windows users
-  install kobodl via `pipx install kobodl` and override `TSUNDOKU_BINARY`
+  install kobodl via `pipx install kobodl` and override `TSUNDOKU_KOBO_BINARY`
   after sourcing `tsundoku_paths.sh`
 
 ## Lineage

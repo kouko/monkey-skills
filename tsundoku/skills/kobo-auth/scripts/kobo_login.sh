@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# kobodl_login.sh — manage Kobo authentication for the toolkit.
+# kobo_login.sh — manage Kobo authentication for the toolkit.
 #
 # Subcommands:
 #   status                check auth state, print user list (default if no args)
 #   add                   start interactive activation flow (`kobodl user add`)
 #   remove EMAIL          remove a user from the config
 #   import-from PATH      copy an existing kobodl.json into TSUNDOKU_ROOT
-#   path                  print the canonical TSUNDOKU_CONFIG path and exit
+#   path                  print the canonical TSUNDOKU_KOBO_CONFIG path and exit
 #
 # Flags:
 #   -h, --help            show this header
@@ -24,11 +24,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
 
 ensure_binary() {
-    if [[ ! -x "$TSUNDOKU_BINARY" ]]; then
+    if [[ ! -x "$TSUNDOKU_KOBO_BINARY" ]]; then
         cat >&2 <<EOF
 [login] kobodl binary not installed at:
-        $TSUNDOKU_BINARY
-        Run kobodl_install.sh first.
+        $TSUNDOKU_KOBO_BINARY
+        Run kobo_install.sh first.
 EOF
         exit 3
     fi
@@ -40,19 +40,19 @@ ensure_config_dir() {
 }
 
 secure_config_file() {
-    if [[ -f "$TSUNDOKU_CONFIG" ]]; then
-        chmod 600 "$TSUNDOKU_CONFIG"
+    if [[ -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
+        chmod 600 "$TSUNDOKU_KOBO_CONFIG"
     fi
 }
 
 cmd_status() {
     ensure_binary
-    if [[ ! -f "$TSUNDOKU_CONFIG" ]]; then
-        echo "[status] no config at $TSUNDOKU_CONFIG — not authed" >&2
+    if [[ ! -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
+        echo "[status] no config at $TSUNDOKU_KOBO_CONFIG — not authed" >&2
         return 1
     fi
-    if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list 2>/dev/null | grep -q "@"; then
-        "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list
+    if "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user list 2>/dev/null | grep -q "@"; then
+        "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user list
         return 0
     fi
     echo "[status] config exists but contains no logged-in user" >&2
@@ -72,10 +72,10 @@ cmd_add() {
         DO NOT cancel this command — it can take up to 60 seconds for the polling
         to register.
 EOF
-    "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user add
+    "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user add
     secure_config_file
-    if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list 2>/dev/null | grep -q "@"; then
-        echo "[login] success — auth saved to $TSUNDOKU_CONFIG (mode 600)" >&2
+    if "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user list 2>/dev/null | grep -q "@"; then
+        echo "[login] success — auth saved to $TSUNDOKU_KOBO_CONFIG (mode 600)" >&2
         return 0
     fi
     echo "[login] activation did not complete — re-run when ready" >&2
@@ -86,47 +86,47 @@ cmd_remove() {
     ensure_binary
     local target="${1:-}"
     if [[ -z "$target" ]]; then
-        echo "[remove] usage: kobodl_login.sh remove <email>" >&2
+        echo "[remove] usage: kobo_login.sh remove <email>" >&2
         return 2
     fi
-    "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user rm "$target"
+    "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user rm "$target"
     secure_config_file
 }
 
 cmd_import_from() {
     local src="${1:-}"
     if [[ -z "$src" ]]; then
-        echo "[import] usage: kobodl_login.sh import-from <path-to-kobodl.json>" >&2
+        echo "[import] usage: kobo_login.sh import-from <path-to-kobodl.json>" >&2
         return 2
     fi
     if [[ ! -f "$src" ]]; then
         echo "[import] source file not found: $src" >&2
         return 1
     fi
-    if [[ -f "$TSUNDOKU_CONFIG" ]]; then
-        local backup="$TSUNDOKU_CONFIG.bak.$(date +%Y%m%d-%H%M%S)"
-        cp "$TSUNDOKU_CONFIG" "$backup"
+    if [[ -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
+        local backup="$TSUNDOKU_KOBO_CONFIG.bak.$(date +%Y%m%d-%H%M%S)"
+        cp "$TSUNDOKU_KOBO_CONFIG" "$backup"
         chmod 600 "$backup"
         echo "[import] existing config backed up to $backup" >&2
     fi
     ensure_config_dir
-    cp "$src" "$TSUNDOKU_CONFIG"
+    cp "$src" "$TSUNDOKU_KOBO_CONFIG"
     secure_config_file
-    echo "[import] copied $src → $TSUNDOKU_CONFIG (mode 600)" >&2
-    if [[ -x "$TSUNDOKU_BINARY" ]]; then
+    echo "[import] copied $src → $TSUNDOKU_KOBO_CONFIG (mode 600)" >&2
+    if [[ -x "$TSUNDOKU_KOBO_BINARY" ]]; then
         if cmd_status >/dev/null 2>&1; then
             echo "[import] verified — auth ready" >&2
         else
-            echo "[import] note: imported file did not pass verification — re-run 'kobodl_login.sh add'" >&2
+            echo "[import] note: imported file did not pass verification — re-run 'kobo_login.sh add'" >&2
             return 1
         fi
     else
-        echo "[import] note: binary not yet installed — run kobodl_install.sh then kobodl_login.sh status to verify" >&2
+        echo "[import] note: binary not yet installed — run kobo_install.sh then kobo_login.sh status to verify" >&2
     fi
 }
 
 cmd_path() {
-    echo "$TSUNDOKU_CONFIG"
+    echo "$TSUNDOKU_KOBO_CONFIG"
 }
 
 # Dispatch

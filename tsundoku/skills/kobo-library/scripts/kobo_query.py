@@ -8,7 +8,7 @@ Outputs a table (default) or full JSON, suitable for piping into shell loops or
 LLM consumption.
 
 Usage:
-  kobodl_query.py --library FILE [filters] [--format FMT] [--fields F1,F2,...]
+  kobo_query.py --library FILE [filters] [--format FMT] [--fields F1,F2,...]
 
 Filters (all optional, AND-combined):
   --title PATTERN          substring match on Title (case-insensitive)
