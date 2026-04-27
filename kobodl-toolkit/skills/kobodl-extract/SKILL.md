@@ -44,6 +44,7 @@ headings, which kills downstream chunking. This skill:
 |---|---|
 | `scripts/install_pandoc.sh` | brew → standalone fallback installer |
 | `scripts/kobodl_to_markdown.py` | the converter (Python stdlib only + pandoc subprocess) |
+| `scripts/kobodl_cache_clear.sh` | wipe extracted markdown / library cache |
 | `pandoc` | external dependency, ~50 MB |
 
 ## One-time Setup
@@ -62,15 +63,21 @@ on PATH.
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
     --epub  path/to/book.epub \
-    --out-dir path/to/library-root \
+    [--out-dir path/to/library-root] \
     [options]
 ```
 
-`--out-dir` is treated as a **library root**: the script auto-creates a
-per-book subdirectory inside it so you can convert many books into the same
-root without overwrites. The subdir name uses the EPUB's title; if the input
+`--out-dir` is **optional** — defaults to `$KOBODL_MARKDOWN_DIR`
+(= `$KOBODL_CACHE/markdown` = `~/.cache/claude-kobodl/markdown`). It's
+treated as a **library root**: the script auto-creates a per-book
+subdirectory inside it so you can convert many books into the same root
+without overwrites. The subdir name uses the EPUB's title; if the input
 filename matches the kobodl pattern (`... <8-hex>.epub`), the 8-char id is
 appended for dedupe.
+
+**Why cache?** Extracted markdown is regenerable from the EPUB at any time,
+so it lives under XDG cache (not config, not data). Safe to wipe between
+projects. See `scripts/kobodl_cache_clear.sh`.
 
 | Option | Effect |
 |---|---|
@@ -127,13 +134,18 @@ first before extracting frameworks.
 ```bash
 source ${CLAUDE_PLUGIN_ROOT}/skills/kobodl-auth/scripts/kobodl_paths.sh
 EPUB="$KOBODL_DOWNLOADS/<author> - <title> <id8>.epub"
-LIB="$KOBODL_DATA/markdown"          # library root for ALL converted books
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
-    --epub "$EPUB" --out-dir "$LIB" \
-    --strip-images --strip-frontmatter --quiet
-# → creates $LIB/<title-slug>-<id8>/index.md and chapter files
+    --epub "$EPUB" --strip-images --strip-frontmatter --quiet
+# → creates $KOBODL_MARKDOWN_DIR/<title-slug>-<id8>/index.md + chapter files
+# (= ~/.cache/claude-kobodl/markdown/<title-slug>-<id8>/...)
+```
+
+For a permanent home (e.g. checking into a vault), pass `--out-dir`:
+
+```bash
+python3 ... --epub "$EPUB" --out-dir ~/Documents/vault/books/
 ```
 
 ### Step 2 — Pass 1: build outline
@@ -181,6 +193,28 @@ context if the skill behaves wrong. Example footer:
 Based on *<title>* by <author>, chapters X / Y / Z.
 See [`references/source-book.md`](references/source-book.md) for outline.
 ```
+
+## Cache Management
+
+Extracted markdown is regenerable, so it lives in `$KOBODL_CACHE/markdown/`.
+After finishing a book→skill task, wipe to reclaim disk:
+
+```bash
+# wipe everything (markdown + library.json), keep auth and EPUBs
+bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh
+
+# wipe only one book's markdown
+bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --book 一九八四-b9152ffe
+
+# preview what would be removed
+bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --dry-run
+
+# wipe only library.json (force fresh re-export next time)
+bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --library-only
+```
+
+Auth (`$KOBODL_HOME`), binary (`$KOBODL_DATA/bin/`), and EPUB downloads
+(`$KOBODL_DOWNLOADS`) are **never** touched.
 
 ## Known Quirks
 

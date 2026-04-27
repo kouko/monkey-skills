@@ -388,9 +388,13 @@ def main() -> int:
         epilog=__doc__,
     )
     p.add_argument("--epub", required=True, help="path to .epub file")
-    p.add_argument("--out-dir", required=True,
+    p.add_argument("--out-dir", default=None,
                    help="output ROOT directory; per-book subdir is auto-created "
-                        "(see --no-subdir to disable)")
+                        "(see --no-subdir to disable). "
+                        "Default: $KOBODL_MARKDOWN_DIR or "
+                        "$KOBODL_CACHE/markdown or "
+                        "$XDG_CACHE_HOME/claude-kobodl/markdown or "
+                        "~/.cache/claude-kobodl/markdown")
     p.add_argument("--no-subdir", action="store_true",
                    help="disable per-book subdir; write straight into --out-dir")
     p.add_argument("--pandoc", default=os.environ.get("PANDOC", "pandoc"))
@@ -407,7 +411,17 @@ def main() -> int:
         print(f"error: epub not found: {epub_path}", file=sys.stderr)
         return 2
 
-    out_root = Path(args.out_dir).resolve()
+    # Resolve out_dir: explicit --out-dir wins; else KOBODL_MARKDOWN_DIR;
+    # else XDG cache fallback chain.
+    if args.out_dir:
+        out_root = Path(args.out_dir).resolve()
+    elif "KOBODL_MARKDOWN_DIR" in os.environ:
+        out_root = Path(os.environ["KOBODL_MARKDOWN_DIR"]).resolve()
+    elif "KOBODL_CACHE" in os.environ:
+        out_root = (Path(os.environ["KOBODL_CACHE"]) / "markdown").resolve()
+    else:
+        cache_home = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+        out_root = (Path(cache_home) / "claude-kobodl" / "markdown").resolve()
     # out_dir is finalized AFTER parsing metadata so the per-book subdir
     # name can come from the EPUB's title.
     out_dir: Path = out_root

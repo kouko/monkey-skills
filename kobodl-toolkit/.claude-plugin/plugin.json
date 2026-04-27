@@ -1,5 +1,5 @@
 {
   "name": "kobodl-toolkit",
   "description": "Kobo e-book library toolkit — search your library by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, and convert downloaded EPUBs into chunked-by-chapter Markdown for LLM ingestion (book → skill workflow). Optional Calibre PDF conversion. macOS / Linux.",
-  "version": "0.4.1"
+  "version": "0.5.0"
 }

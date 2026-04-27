@@ -28,18 +28,24 @@ other skills depend on.
   `~/KobodlLibrarySync/` shell script)
 - Auditing or rotating credentials
 
-## Storage Layout (XDG-respecting)
+## Storage Layout (XDG-respecting, four-tier)
 
-| What | Default path | Override env var |
-|---|---|---|
-| Credentials | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
-| Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
-| Library index | `~/.local/share/claude-kobodl/library.json` | `KOBODL_DATA` |
-| Tmp (PYI-1270 fix) | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
-| Downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
+| Tier | What | Default path | Override env var |
+|---|---|---|---|
+| **Config** | Credentials | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
+| **Data** | Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
+| **Data** | Tmp (PYI-1270 fix) | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
+| **Cache** | Library index (regenerable) | `~/.cache/claude-kobodl/library.json` | `KOBODL_CACHE` |
+| **Cache** | Extracted markdown | `~/.cache/claude-kobodl/markdown/` | `KOBODL_CACHE` |
+| **Visible** | EPUB downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
 
-`XDG_CONFIG_HOME` and `XDG_DATA_HOME` are also honored if the user sets them
-without setting the toolkit-specific override.
+`XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` are honored as
+fallbacks; toolkit-specific `KOBODL_*` overrides win when both are set.
+
+The cache tier holds **regenerable derived data** — safe to wipe at any time
+(see `kobodl-extract:kobodl_cache_clear.sh`). It is intentionally NOT in the
+config dir so dotfile-sync tools (chezmoi / dotdrop) won't accidentally
+backup hundreds of megabytes of book content alongside settings.
 
 **Permissions enforced:**
 - `KOBODL_HOME` directory: `chmod 700` (owner-only)

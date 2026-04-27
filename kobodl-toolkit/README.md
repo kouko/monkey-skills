@@ -1,6 +1,6 @@
 # kobodl-toolkit
 
-**Version**: 0.4.1
+**Version**: 0.5.0
 **Part of**: [monkey-skills](../)
 
 Search a Kobo e-book library by **title / author / series / publication date /
@@ -82,33 +82,38 @@ python3 kobodl-toolkit/skills/kobodl-library/scripts/kobodl_query.py \
 # one-time: ensure pandoc is installed
 bash kobodl-toolkit/skills/kobodl-extract/scripts/install_pandoc.sh
 
-# convert into a library root — auto-creates per-book subdir from EPUB title
+# convert (uses $KOBODL_MARKDOWN_DIR by default — no --out-dir needed)
 python3 kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
-    --epub "$EPUB_PATH" --out-dir "$KOBODL_DATA/markdown" \
-    --strip-images --strip-frontmatter
-# → writes to $KOBODL_DATA/markdown/<title-slug>-<id8>/index.md + chapter files
+    --epub "$EPUB_PATH" --strip-images --strip-frontmatter
+# → writes to ~/.cache/claude-kobodl/markdown/<title-slug>-<id8>/index.md + chapters
+
+# clear the cache when finished with a book→skill task
+bash kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_cache_clear.sh
 ```
 
 Then read `index.md` first (TOC + token estimates), distill into an outline,
 and finally hand off to `dev-workflow:skill-creator-advance` to produce the
 new skill.
 
-## Storage Layout (XDG-respecting, owner-only)
+## Storage Layout (XDG four-tier)
 
-| What | Default path | Override |
-|---|---|---|
-| Credentials (mode 600) | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
-| Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
-| Library index | `~/.local/share/claude-kobodl/library.json` | `KOBODL_DATA` |
-| Tmp | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
-| Downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
+| Tier | What | Default path | Override |
+|---|---|---|---|
+| **Config** (chmod 700) | Credentials | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
+| **Data** | Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
+| **Data** | Tmp (PYI-1270 fix) | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
+| **Cache** | Library index | `~/.cache/claude-kobodl/library.json` | `KOBODL_CACHE` |
+| **Cache** | Extracted markdown | `~/.cache/claude-kobodl/markdown/<book>/` | `KOBODL_CACHE` |
+| **Visible** | EPUB downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
 
-`XDG_CONFIG_HOME` and `XDG_DATA_HOME` are honored. The toolkit-specific
-overrides win when both are set.
+Three categories are intentionally separated:
+- **Config**: secrets, owner-only, do not back up to dotfiles
+- **Data**: binaries + persistent state
+- **Cache**: regenerable derived data — safe to wipe, won't get pulled into
+  dotfile syncs (chezmoi / dotdrop default-exclude `~/.cache/`)
 
-The credentials directory is `chmod 700`, the file is `chmod 600`.
-**Independent** of any prior install — the legacy `~/KobodlLibrarySync/`
-directory is left untouched.
+`XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` are honored as
+fallbacks. The legacy `~/KobodlLibrarySync/` directory is left untouched.
 
 ## Repository Structure
 
@@ -131,8 +136,9 @@ kobodl-toolkit/
     └── kobodl-extract/
         ├── SKILL.md
         └── scripts/
-            ├── install_pandoc.sh    # brew → standalone fallback
-            └── kobodl_to_markdown.py # NCX-driven chapter split + pandoc + clean
+            ├── install_pandoc.sh     # brew → standalone fallback
+            ├── kobodl_to_markdown.py # NCX-driven chapter split + pandoc + clean
+            └── kobodl_cache_clear.sh # wipe extracted markdown / library cache
 ```
 
 ## Requirements

@@ -54,7 +54,7 @@ before sourcing.
 | `scripts/kobodl_query.py` | Filter `--export-library` JSON, multiple output formats |
 | `scripts/kobodl_get.sh` | Download books by RevisionId (args or stdin), idempotent |
 | `$KOBODL_BINARY` | The kobodl CLI itself |
-| `$KOBODL_LIBRARY_JSON` | Local cache of the user's library |
+| `$KOBODL_LIBRARY_JSON` | Cached export at `~/.cache/claude-kobodl/library.json` (regenerable) |
 
 ## Workflow — Search → Confirm → Download
 
