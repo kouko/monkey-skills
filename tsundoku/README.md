@@ -1,6 +1,6 @@
 # tsundoku 積読
 
-**Version**: 0.7.0
+**Version**: 0.8.0
 **Part of**: [monkey-skills](../)
 
 > *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
@@ -8,13 +8,18 @@
 
 Search a Kobo e-book library by **title / author / series / publication date /
 category / description text / reading status / language**, present matches as
-cards, download the chosen books as DRM-free EPUBs, then convert downloaded
-EPUBs into chunked-by-chapter Markdown for LLM ingestion (book → skill
-workflow). Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses
-[pandoc][pandoc] for the EPUB→Markdown stage.
+cards, download the chosen books as DRM-free EPUBs, convert downloaded EPUBs
+into chunked-by-chapter Markdown, and **distill the book into atomic agent
+skills** via the RIA-TV++ pipeline (Adler analytical read → 5 parallel
+extractors → triple verification → RIA++ render → Zettelkasten linking →
+adversarial pressure test). Language-adaptive output (EN / 日本語 / 繁體中文).
+Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses [pandoc][pandoc]
+for the EPUB→Markdown stage. Distillation methodology adapted from
+[`kangarooking/cangjie-skill`][cangjie] (MIT).
 
 [kobodl]: https://github.com/subdavis/kobo-book-downloader
 [pandoc]: https://pandoc.org
+[cangjie]: https://github.com/kangarooking/cangjie-skill
 
 ## Skills
 
@@ -23,6 +28,7 @@ workflow). Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses
 | [`kobo-auth`](skills/kobo-auth/SKILL.md) | First-time setup, login, account migration, credential rotation |
 | [`kobo-library`](skills/kobo-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
 | [`kobo-extract`](skills/kobo-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
+| [`kobo-distill`](skills/kobo-distill/SKILL.md) | Markdown → atomic agent skills via RIA-TV++ (Adler / parallel extract / triple verify / RIA++ / Zettel / pressure test) |
 
 Skills are named after the e-book platform they target (`kobo-*`). When
 Kindle / Apple Books / BookWalker support is added, sibling skills like
@@ -91,13 +97,31 @@ python3 tsundoku/skills/kobo-extract/scripts/kobo_to_markdown.py \
     --epub "$EPUB_PATH" --strip-images --strip-frontmatter
 # → writes to ~/.tsundoku/cache/markdown/<title-slug>-<id8>/index.md + chapters
 
-# clear the cache when finished with a book→skill task
+# clear the markdown cache when finished
 bash tsundoku/skills/kobo-extract/scripts/kobo_cache_clear.sh
 ```
 
-Then read `index.md` first (TOC + token estimates), distill into an outline,
-and finally hand off to `dev-workflow:skill-creator-advance` to produce the
-new skill.
+### E. Markdown → atomic skill set (book → skill)
+
+```bash
+# bootstrap a kobo-distill working dir from the extracted markdown
+bash tsundoku/skills/kobo-distill/scripts/kobo_distill_init.sh \
+    一九八四-b9152ffe
+# → ~/.tsundoku/cache/distilled/一九八四-b9152ffe/{candidates/, rejected/,
+#                                                   BOOK_OVERVIEW.md.draft,
+#                                                   metadata.snapshot.json,
+#                                                   chapters.list}
+
+# Then Claude reads kobo-distill's SKILL.md and runs the 6-stage pipeline:
+#   Stage 0: Adler analytical read         → BOOK_OVERVIEW.md
+#   Stage 1: 5 parallel extractors          → candidates/
+#   Stage 1.5: Triple verification           → verified.md (~30-50% pass)
+#   Stage 2: RIA++ skill render             → <skill-slug>/SKILL.md
+#   Stage 3: Zettelkasten linking            → INDEX.md
+#   Stage 4: Adversarial pressure test       → test-prompts.json
+```
+
+Output sections in source language; YAML metadata + slugs in English.
 
 ## Storage Layout (single root, per-platform subdirs)
 
@@ -160,12 +184,25 @@ tsundoku/
     │   └── scripts/
     │       ├── kobo_query.py      # filter --export-library JSON, 5 formats
     │       └── kobo_get.sh        # download by RevisionId (args or stdin)
-    └── kobo-extract/
-        ├── SKILL.md
+    ├── kobo-extract/
+    │   ├── SKILL.md
+    │   └── scripts/
+    │       ├── install_pandoc.sh     # brew → standalone fallback
+    │       ├── kobo_to_markdown.py   # NCX-driven chapter split + pandoc + clean
+    │       └── kobo_cache_clear.sh   # wipe extracted markdown / library cache
+    └── kobo-distill/                 # RIA-TV++ pipeline (forked from cangjie-skill, MIT)
+        ├── SKILL.md                  # top-level orchestrator
+        ├── ATTRIBUTION.md             # upstream credits + license
+        ├── methodology/              # 7 files: 00-overview + 01-06 stage details
+        ├── extractors/               # 5 parallel sub-agent prompts
+        │   ├── framework-extractor.md
+        │   ├── principle-extractor.md
+        │   ├── case-extractor.md
+        │   ├── counter-example-extractor.md
+        │   └── glossary-extractor.md
+        ├── templates/                # BOOK_OVERVIEW / SKILL / INDEX / test-prompts
         └── scripts/
-            ├── install_pandoc.sh     # brew → standalone fallback
-            ├── kobo_to_markdown.py # NCX-driven chapter split + pandoc + clean
-            └── kobo_cache_clear.sh # wipe extracted markdown / library cache
+            └── kobo_distill_init.sh  # bootstrap distill dir from kobo-extract output
 ```
 
 ## Requirements

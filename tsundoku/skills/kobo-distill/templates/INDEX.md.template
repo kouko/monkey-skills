@@ -1,0 +1,72 @@
+# {{BOOK_TITLE}} — Skill Index
+
+> Distilled by kobo-distill. **{{N}}** skills produced.
+> Distillation timestamp: {{DATE}}
+
+## About this book
+
+- **Author(s)**: {{AUTHOR}}
+- **Published**: {{YEAR}}
+- **One-sentence thesis**: {{ONE_LINE_THEME}}
+- **Source language**: {{SOURCE_LANG}}
+- **Whole-book overview**: see [BOOK_OVERVIEW.md](./BOOK_OVERVIEW.md)
+
+---
+
+## Skills (grouped by topic)
+
+### {{Topic 1, in source language}}
+
+- [`{{skill-slug-1}}`](./{{skill-slug-1}}/SKILL.md) — {{one-line description in source language}}
+- [`{{skill-slug-2}}`](./{{skill-slug-2}}/SKILL.md) — {{one-line description}}
+
+### {{Topic 2}}
+
+- [`{{skill-slug-3}}`](./{{skill-slug-3}}/SKILL.md) — {{...}}
+
+---
+
+## Reference graph
+
+```mermaid
+graph LR
+    A[skill-a] -->|depends-on| B[skill-b]
+    A -.->|contrasts-with| C[skill-c]
+    B ===>|composes-with| D[skill-d]
+```
+
+Legend:
+- `-->`  depends-on
+- `-.->` contrasts-with
+- `===>` composes-with
+
+(Node labels stay as English slugs for graph stability across languages)
+
+---
+
+## Recommended learning order
+
+(derived from `depends-on` topology — leaves first)
+
+1. **{{skill-a}}** — foundational, no prerequisites
+2. **{{skill-b}}** — depends on `skill-a`
+3. **{{skill-c}}** — depends on `skill-a`, complements `skill-b`
+...
+
+---
+
+## Audit trail
+
+- Candidate pool: [candidates/](./candidates/)
+- Rejected (with reasons): [rejected/](./rejected/)
+- Whole-book overview: [BOOK_OVERVIEW.md](./BOOK_OVERVIEW.md)
+- Verified survivors: [verified.md](./verified.md)
+
+---
+
+## Provenance
+
+- Source EPUB: {{SOURCE_EPUB_PATH}}
+- Chapter MD path: {{MARKDOWN_DIR}}
+- Pipeline: kobo-distill (RIA-TV++)
+- See `ATTRIBUTION.md` at the kobo-distill skill root for upstream credits.

@@ -1,0 +1,116 @@
+# {{BOOK_TITLE}} — Whole-book overview (Stage 0)
+
+> Stage 0 output of the kobo-distill pipeline. All downstream extractors
+> and skills consume this as global context.
+
+## Basic information
+
+- **Title**: {{BOOK_TITLE}}
+- **Author(s)**: {{AUTHOR}}
+- **Published**: {{YEAR}}
+- **Source EPUB**: {{SOURCE_FILE}}
+- **Chapter MD path**: {{MARKDOWN_DIR}}
+- **Distillation timestamp**: {{DATE}}
+- **Source language**: {{SOURCE_LANG}}
+- **Output language for body sections below**: {{SOURCE_LANG}} (per
+  output language rule; section headers stay English)
+
+---
+
+## 1. Structural
+
+### Type
+{{ methodology / biography / philosophy / practical manual / ... }}
+
+### One-sentence thesis
+{{ one sentence — must literally be one }}
+
+### Skeleton (top-level arguments and their relations)
+
+1. {{argument 1}}
+2. {{argument 2}}
+3. {{argument 3}}
+... (3-7 entries)
+
+**Inter-argument relation**: {{ parallel / progressive / contrasting / refutational / nested }}
+
+### Core problem the author is trying to solve
+{{ what question is this book answering }}
+
+---
+
+## 2. Interpretive
+
+### Key terms (author's specific usage)
+
+| Term | Author's definition | Difference from common usage |
+|---|---|---|
+| {{term}} | {{author's def}} | {{what's different}} |
+| {{term}} | {{author's def}} | {{what's different}} |
+
+(≥5 entries)
+
+### Core propositions (in your own words)
+
+1. {{proposition 1}}
+2. {{proposition 2}}
+... (5-15 entries)
+
+### Argument chain
+{{ how do these propositions derive from one another? what evidence supports each? }}
+
+---
+
+## 3. Critical ★
+
+### Period limitations
+{{ when was this written? which premises may no longer hold? }}
+
+### Stance blind spots
+{{ what does the author's identity / industry / culture cause them to miss? }}
+
+### Unproven assumptions
+{{ what does the author treat as self-evident but that actually requires argument? }}
+
+### Strongest opposing view
+{{ if someone wanted to refute this book, what would their best argument be? }}
+
+> **Output of this section directly populates the Boundary (B) field
+> of every downstream skill. If this section is thin, every skill will
+> be brittle.**
+
+(≥3 limits / blind spots / unproven assumptions identified)
+
+---
+
+## 4. Applicability
+
+### Skill-distillable content
+- [ ] {{candidate theme 1}}
+- [ ] {{candidate theme 2}}
+...
+
+### Content NOT suitable for skills
+{{ retained as `example` / `quote` material in supporting roles }}
+
+### Estimated skill count
+**~{{N}}** (final count determined by Stage 1.5; this is a rough
+estimate — do not pad)
+
+### Priority ordering ("most empowering to ordinary users")
+1. {{top priority}}
+2. {{...}}
+3. {{...}}
+
+---
+
+## ✅ Quality gate
+
+- [ ] One-sentence thesis present and actually one sentence
+- [ ] Skeleton has 3-7 top-level arguments
+- [ ] Key-term dictionary has ≥5 entries
+- [ ] Critical phase has ≥3 author limits / blind spots
+- [ ] User has reviewed this overview and confirmed before proceeding
+      to Stage 1
+
+**User confirmation timestamp**: {{ }}
