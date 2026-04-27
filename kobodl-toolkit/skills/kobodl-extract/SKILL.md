@@ -62,12 +62,19 @@ on PATH.
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
     --epub  path/to/book.epub \
-    --out-dir path/to/output \
+    --out-dir path/to/library-root \
     [options]
 ```
 
+`--out-dir` is treated as a **library root**: the script auto-creates a
+per-book subdirectory inside it so you can convert many books into the same
+root without overwrites. The subdir name uses the EPUB's title; if the input
+filename matches the kobodl pattern (`... <8-hex>.epub`), the 8-char id is
+appended for dedupe.
+
 | Option | Effect |
 |---|---|
+| `--no-subdir` | disable per-book subdir; write straight into `--out-dir` |
 | `--strip-images` | drop image references (Markdown + raw `<img>`) — recommended for text-heavy books |
 | `--strip-frontmatter` | skip 書封 / 目錄 / 版權 / cover / contents / colophon / etc. |
 | `--strip-backmatter` | skip 索引 / 致謝 / index / acknowledg / about-the-author. **Note**: 附錄 / 譯後記 are kept by default — they're often essential to non-fiction |
@@ -78,18 +85,26 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
 ### Output layout
 
 ```
-out-dir/
-├── index.md              ← TOC + per-chapter token estimate
-├── metadata.json         ← title, authors, publisher, ISBN, chapters[]
-├── 01-cover.md           ← (skipped if --strip-frontmatter)
-├── 02-序.md
-├── 03-chapter-01.md      ← H1 = chapter label from NCX
-├── 04-chapter-02.md
-...
+out-dir/                            ← --out-dir (library root)
+└── 一九八四-b9152ffe/               ← auto-created per-book subdir
+    ├── index.md                    ← TOC + per-chapter token estimate
+    ├── metadata.json               ← title, authors, publisher, ISBN, chapters[]
+    ├── 01-cover.md                 ← (skipped if --strip-frontmatter)
+    ├── 02-序.md
+    ├── 03-chapter-01.md            ← H1 = chapter label from NCX
+    ├── 04-chapter-02.md
+    ...
 ```
 
-Filenames are `NN-<slugified-label>.md`, padded to 2-digit prefix. Slugs keep
-CJK characters intact, replace path-unsafe punctuation with `-`.
+Subdir naming:
+- **Default**: `<slug-of-title>` from EPUB metadata
+- **kobodl-sourced files** (filename ends in 8-hex): `<slug-of-title>-<id8>`,
+  giving deterministic dirs that dedupe re-purchased editions
+- **No title in metadata**: falls back to slugified EPUB filename stem
+- **Re-running on the same EPUB**: same subdir name → idempotent overwrite
+
+Chapter filenames inside: `NN-<slugified-label>.md`, padded to 2-digit prefix.
+Slugs keep CJK characters intact, replace path-unsafe punctuation with `-`.
 
 ## Token Budget Reference
 
@@ -112,12 +127,13 @@ first before extracting frameworks.
 ```bash
 source ${CLAUDE_PLUGIN_ROOT}/skills/kobodl-auth/scripts/kobodl_paths.sh
 EPUB="$KOBODL_DOWNLOADS/<author> - <title> <id8>.epub"
-OUT="$KOBODL_DATA/markdown/<title>"
+LIB="$KOBODL_DATA/markdown"          # library root for ALL converted books
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
-    --epub "$EPUB" --out-dir "$OUT" \
+    --epub "$EPUB" --out-dir "$LIB" \
     --strip-images --strip-frontmatter --quiet
+# → creates $LIB/<title-slug>-<id8>/index.md and chapter files
 ```
 
 ### Step 2 — Pass 1: build outline

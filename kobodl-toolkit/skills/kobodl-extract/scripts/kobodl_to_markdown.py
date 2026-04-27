@@ -388,7 +388,11 @@ def main() -> int:
         epilog=__doc__,
     )
     p.add_argument("--epub", required=True, help="path to .epub file")
-    p.add_argument("--out-dir", required=True, help="output directory (created if absent)")
+    p.add_argument("--out-dir", required=True,
+                   help="output ROOT directory; per-book subdir is auto-created "
+                        "(see --no-subdir to disable)")
+    p.add_argument("--no-subdir", action="store_true",
+                   help="disable per-book subdir; write straight into --out-dir")
     p.add_argument("--pandoc", default=os.environ.get("PANDOC", "pandoc"))
     p.add_argument("--strip-images", action="store_true")
     p.add_argument("--strip-frontmatter", action="store_true")
@@ -403,8 +407,10 @@ def main() -> int:
         print(f"error: epub not found: {epub_path}", file=sys.stderr)
         return 2
 
-    out_dir = Path(args.out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = Path(args.out_dir).resolve()
+    # out_dir is finalized AFTER parsing metadata so the per-book subdir
+    # name can come from the EPUB's title.
+    out_dir: Path = out_root
 
     # Locate pandoc
     if subprocess.run(["which", args.pandoc], capture_output=True).returncode != 0:
@@ -428,6 +434,20 @@ def main() -> int:
         # Annotate spine with NCX labels
         for item in spine:
             item.label = ncx_labels.get(item.abs_path, "")
+
+        # Resolve final out_dir (per-book subdir unless --no-subdir).
+        # Slug priority: title (+ kobodl id8 suffix if present in filename),
+        #                fall back to EPUB filename stem.
+        if args.no_subdir:
+            out_dir = out_root
+        else:
+            slug_base = slugify(meta.title) if meta.title else slugify(epub_path.stem)
+            id8_match = re.search(r"\b([0-9a-f]{8})$", epub_path.stem)
+            if id8_match:
+                slug_base = f"{slug_base}-{id8_match.group(1)}"
+            out_dir = out_root / slug_base
+        out_dir.mkdir(parents=True, exist_ok=True)
+        log(f"[extract] output dir: {out_dir}")
 
         chapters: list[ChapterOut] = []
         idx = 0

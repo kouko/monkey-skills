@@ -1,6 +1,6 @@
 # kobodl-toolkit
 
-**Version**: 0.4.0
+**Version**: 0.4.1
 **Part of**: [monkey-skills](../)
 
 Search a Kobo e-book library by **title / author / series / publication date /
@@ -82,10 +82,11 @@ python3 kobodl-toolkit/skills/kobodl-library/scripts/kobodl_query.py \
 # one-time: ensure pandoc is installed
 bash kobodl-toolkit/skills/kobodl-extract/scripts/install_pandoc.sh
 
-# convert an EPUB into NN-chapter.md files + index.md + metadata.json
+# convert into a library root — auto-creates per-book subdir from EPUB title
 python3 kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
-    --epub "$EPUB_PATH" --out-dir "$KOBODL_DATA/markdown/<title>" \
+    --epub "$EPUB_PATH" --out-dir "$KOBODL_DATA/markdown" \
     --strip-images --strip-frontmatter
+# → writes to $KOBODL_DATA/markdown/<title-slug>-<id8>/index.md + chapter files
 ```
 
 Then read `index.md` first (TOC + token estimates), distill into an outline,
