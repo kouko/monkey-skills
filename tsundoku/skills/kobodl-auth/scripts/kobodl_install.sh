@@ -11,8 +11,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./kobodl_paths.sh
-source "$SCRIPT_DIR/kobodl_paths.sh"
+# shellcheck source=./tsundoku_paths.sh
+source "$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
 
 URL="https://github.com/subdavis/kobo-book-downloader/releases/latest/download/kobodl-macos"
 FORCE=false
@@ -29,16 +29,16 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-mkdir -p "$(dirname "$KOBODL_BINARY")" "$KOBODL_TMPDIR"
+mkdir -p "$(dirname "$TSUNDOKU_BINARY")" "$TSUNDOKU_TMPDIR"
 
-if [[ -x "$KOBODL_BINARY" && "$FORCE" != true ]]; then
-    echo "[install] kobodl binary already present: $KOBODL_BINARY" >&2
-    "$KOBODL_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
+if [[ -x "$TSUNDOKU_BINARY" && "$FORCE" != true ]]; then
+    echo "[install] kobodl binary already present: $TSUNDOKU_BINARY" >&2
+    "$TSUNDOKU_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
     exit 0
 fi
 
 echo "[install] downloading kobodl from $URL" >&2
-tmp_path="$KOBODL_BINARY.partial"
+tmp_path="$TSUNDOKU_BINARY.partial"
 trap 'rm -f "$tmp_path"' EXIT
 
 if ! curl --fail --location --output "$tmp_path" "$URL"; then
@@ -53,9 +53,9 @@ if [[ "$size_bytes" -lt 1000000 ]]; then
     exit 1
 fi
 
-mv "$tmp_path" "$KOBODL_BINARY"
-chmod +x "$KOBODL_BINARY"
-xattr -d com.apple.quarantine "$KOBODL_BINARY" 2>/dev/null || true
+mv "$tmp_path" "$TSUNDOKU_BINARY"
+chmod +x "$TSUNDOKU_BINARY"
+xattr -d com.apple.quarantine "$TSUNDOKU_BINARY" 2>/dev/null || true
 
-echo "[install] kobodl binary installed: $KOBODL_BINARY" >&2
-"$KOBODL_BINARY" --version 2>/dev/null | head -n 1 >&2 || true
+echo "[install] kobodl binary installed: $TSUNDOKU_BINARY" >&2
+"$TSUNDOKU_BINARY" --version 2>/dev/null | head -n 1 >&2 || true

@@ -4,9 +4,9 @@
 # Tries in order:
 #   1. `pandoc --version` — already on PATH? done.
 #   2. brew install pandoc (if Homebrew is available)
-#   3. Download standalone binary tarball from GitHub releases into KOBODL_DATA
+#   3. Download standalone binary tarball from GitHub releases into TSUNDOKU_ROOT
 #
-# If installed via #3, the binary is at $KOBODL_DATA/bin/pandoc and printed at
+# If installed via #3, the binary is at $TSUNDOKU_ROOT/bin/pandoc and printed at
 # the end so callers can capture it via `eval "$(install_pandoc.sh)"`.
 #
 # Usage:
@@ -25,9 +25,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../kobodl-auth/scripts/kobodl_paths.sh"
+PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
 [[ -f "$PATHS_SCRIPT" ]] && source "$PATHS_SCRIPT" || {
-    KOBODL_DATA="${KOBODL_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/claude-kobodl}"
+    TSUNDOKU_ROOT="${TSUNDOKU_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/tsundoku}"
 }
 
 FORCE_STANDALONE=false
@@ -105,7 +105,7 @@ if [[ "$VERSION" == "latest" ]]; then
     VERSION="$tag"
 fi
 
-dl_dir="$KOBODL_DATA/bin"
+dl_dir="$TSUNDOKU_ROOT/bin"
 mkdir -p "$dl_dir"
 fname="pandoc-${VERSION}-${arch}-${platform}.${ext}"
 url="https://github.com/jgm/pandoc/releases/download/${VERSION}/${fname}"

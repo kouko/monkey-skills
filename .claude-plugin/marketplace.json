@@ -40,9 +40,9 @@
       "source": "./slides-toolkit/"
     },
     {
-      "name": "kobodl-toolkit",
-      "description": "Kobo e-book library toolkit — search by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, then convert downloaded EPUBs into chunked-by-chapter Markdown (NCX-driven) for LLM ingestion and book→skill workflows. Optional Calibre PDF conversion. macOS / Linux. 電子書庫搜尋・下載・分章Markdown化。Koboライブラリ検索・DRMフリーEPUBダウンロード・章ごとMarkdown抽出。",
-      "source": "./kobodl-toolkit/"
+      "name": "tsundoku",
+      "description": "Tsundoku 積読 — turn your owned-but-unread e-book pile into actionable knowledge. Search a Kobo library by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, then convert into chunked-by-chapter Markdown (NCX-driven) for LLM ingestion and book→skill workflows. Optional Calibre PDF conversion. macOS / Linux. 積読を蒸餾為 skill。電子書庫搜尋・下載・分章Markdown化。",
+      "source": "./tsundoku/"
     }
   ]
 }

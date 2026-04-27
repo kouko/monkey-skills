@@ -12,7 +12,7 @@ description: >-
 
 # Kobo Auth
 
-Owns the **authentication lifecycle** for `kobodl-toolkit`. Separated from the
+Owns the **authentication lifecycle** for `tsundoku`. Separated from the
 runtime `kobodl-library` skill because login is a once-per-account event,
 while search/download is daily use.
 
@@ -28,45 +28,53 @@ other skills depend on.
   `~/KobodlLibrarySync/` shell script)
 - Auditing or rotating credentials
 
-## Storage Layout (XDG-respecting, four-tier)
+## Storage Layout (single root)
 
-| Tier | What | Default path | Override env var |
-|---|---|---|---|
-| **Config** | Credentials | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
-| **Data** | Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
-| **Data** | Tmp (PYI-1270 fix) | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
-| **Cache** | Library index (regenerable) | `~/.cache/claude-kobodl/library.json` | `KOBODL_CACHE` |
-| **Cache** | Extracted markdown | `~/.cache/claude-kobodl/markdown/` | `KOBODL_CACHE` |
-| **Visible** | EPUB downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
+```
+~/.tsundoku/                     ← TSUNDOKU_ROOT
+├── auth/                          chmod 700
+│   └── kobodl.json                chmod 600  (Kobo session credentials)
+├── bin/kobodl-macos
+├── tmp/                           TMPDIR override (PYI-1270 fix)
+└── cache/                         regenerable, wipe-able as a unit
+    ├── library.json
+    └── markdown/<book>/...
 
-`XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` are honored as
-fallbacks; toolkit-specific `KOBODL_*` overrides win when both are set.
+~/Books/kobo/                    ← TSUNDOKU_DOWNLOADS (user-visible EPUBs)
+```
 
-The cache tier holds **regenerable derived data** — safe to wipe at any time
-(see `kobodl-extract:kobodl_cache_clear.sh`). It is intentionally NOT in the
-config dir so dotfile-sync tools (chezmoi / dotdrop) won't accidentally
-backup hundreds of megabytes of book content alongside settings.
+**Two decision-point env vars** (set these to relocate things):
+- `TSUNDOKU_ROOT` — default `~/.tsundoku`
+- `TSUNDOKU_DOWNLOADS` — default `~/Books/kobo`
 
-**Permissions enforced:**
-- `KOBODL_HOME` directory: `chmod 700` (owner-only)
+**Five derived paths** (computed from the two above; do not set directly):
+`TSUNDOKU_CONFIG`, `TSUNDOKU_BINARY`, `TSUNDOKU_LIBRARY_JSON`,
+`TSUNDOKU_MARKDOWN_DIR`, `TSUNDOKU_TMPDIR`.
+
+**Permissions enforced** by `kobodl_login.sh`:
+- `TSUNDOKU_ROOT/auth/` directory: `chmod 700` (owner-only)
 - `kobodl.json` file: `chmod 600` (owner read/write only)
-- All other locations: default permissions (binary is `755`)
+- Other directories: default `755`; binary stays `755` for execution
 
-**Independence**: This layout is intentionally separate from any prior install.
-The legacy `~/KobodlLibrarySync/` directory is left untouched — see the
-**Migration** section below for how to import from it.
+**Cache wipe**: `cache/` is a single subtree of regenerable derived data
+(see `kobodl-extract:kobodl_cache_clear.sh`). Auth, binary, and downloaded
+EPUBs are never touched.
+
+**Independence**: This layout is separate from any prior `kobodl` install.
+The upstream tool's default `~/.config/kobodl/` and the legacy
+`~/KobodlLibrarySync/` shell-script directory are left untouched.
 
 ## Helper Scripts
 
-All in `scripts/`. Source `kobodl_paths.sh` first to populate path variables,
-or invoke individual scripts directly (they source `kobodl_paths.sh`
-internally).
+`tsundoku_paths.sh` lives at the plugin root (`tsundoku/lib/`) and is shared
+by every skill. Source it once to populate path env vars, then invoke the
+auth scripts.
 
-| Script | Role |
+| Path | Role |
 |---|---|
-| `kobodl_paths.sh` | Source-able OR runnable. Resolves and emits all path env vars |
-| `kobodl_install.sh` | Downloads `kobodl-macos` to `KOBODL_DATA/bin/`. Idempotent |
-| `kobodl_login.sh`   | Subcommand router — see below |
+| `tsundoku/lib/tsundoku_paths.sh` | Source-able OR runnable. Resolves and emits all path env vars |
+| `scripts/kobodl_install.sh` | Downloads `kobodl-macos` to `$TSUNDOKU_ROOT/bin/`. Idempotent |
+| `scripts/kobodl_login.sh`   | Subcommand router — see below |
 
 `kobodl_login.sh` subcommands:
 
@@ -75,7 +83,7 @@ internally).
 | `status` (default) | Print `user list`; exit 0 if authed, 1 if not, 3 if binary missing |
 | `add` | Run interactive `kobodl user add`; chmod 600 on success |
 | `remove EMAIL` | Remove a user from the config |
-| `import-from PATH` | Copy an existing `kobodl.json` into `$KOBODL_CONFIG` |
+| `import-from PATH` | Copy an existing `kobodl.json` into `$TSUNDOKU_CONFIG` |
 | `path` | Print the canonical config path and exit |
 
 ## Standard Flows
@@ -84,7 +92,7 @@ internally).
 
 ```bash
 # 1. Resolve paths into shell
-source ${CLAUDE_SKILL_DIR}/scripts/kobodl_paths.sh
+source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
 
 # 2. Install binary (no-op if already present)
 bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_install.sh
@@ -128,7 +136,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_login.sh status
 
 `import-from`:
 - Backs up any existing config to `kobodl.json.bak.<timestamp>` first
-- Copies the source file into `$KOBODL_CONFIG`
+- Copies the source file into `$TSUNDOKU_CONFIG`
 - Sets `chmod 600`
 - Verifies via `user list` if the binary is installed
 
@@ -159,7 +167,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_login.sh add
 bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_login.sh remove old@example.com
 
 # Nuclear option — wipe and start over
-rm "$KOBODL_CONFIG"
+rm "$TSUNDOKU_CONFIG"
 bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_login.sh add
 ```
 
@@ -179,7 +187,7 @@ the user has multiple accounts and wants a specific one.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `[login] activation did not complete` | User cancelled, code expired (10 min), or browser flow failed | Re-run `kobodl_login.sh add` |
-| `Traceback ... PermissionError ... /var/folders/.../tmp` | PYI-1270 (PyInstaller temp dir issue) | Already handled — `kobodl_paths.sh` sets TMPDIR. If still failing, manually `export TMPDIR=$KOBODL_TMPDIR` |
+| `Traceback ... PermissionError ... /var/folders/.../tmp` | PYI-1270 (PyInstaller temp dir issue) | Already handled — `tsundoku_paths.sh` sets TMPDIR. If still failing, manually `export TMPDIR=$TSUNDOKU_TMPDIR` |
 | `xattr: ... No such xattr` | macOS quarantine flag absent | Harmless; install script suppresses |
 | `book list` returns auth error after weeks | Session token expired | Run `kobodl_login.sh add` to refresh |
 | `[install] downloaded file is suspiciously small` | GitHub returned 404 HTML | Check the release URL or pass `--url` to override |
@@ -197,9 +205,9 @@ the user has multiple accounts and wants a specific one.
 
 After successful auth, hand off to **`kobodl-library`** for the actual
 search/download work. That skill assumes:
-- `kobodl_paths.sh` is source-able (resolves paths)
+- `tsundoku_paths.sh` is source-able (resolves paths)
 - `kobodl_login.sh status` returns 0 (auth ready)
-- `KOBODL_BINARY` is executable
+- `TSUNDOKU_BINARY` is executable
 
 If any precondition fails, route the user back to this skill.
 

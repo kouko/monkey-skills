@@ -5,8 +5,8 @@
 #   status                check auth state, print user list (default if no args)
 #   add                   start interactive activation flow (`kobodl user add`)
 #   remove EMAIL          remove a user from the config
-#   import-from PATH      copy an existing kobodl.json into KOBODL_HOME
-#   path                  print the canonical KOBODL_CONFIG path and exit
+#   import-from PATH      copy an existing kobodl.json into TSUNDOKU_ROOT
+#   path                  print the canonical TSUNDOKU_CONFIG path and exit
 #
 # Flags:
 #   -h, --help            show this header
@@ -20,14 +20,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./kobodl_paths.sh
-source "$SCRIPT_DIR/kobodl_paths.sh"
+# shellcheck source=./tsundoku_paths.sh
+source "$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
 
 ensure_binary() {
-    if [[ ! -x "$KOBODL_BINARY" ]]; then
+    if [[ ! -x "$TSUNDOKU_BINARY" ]]; then
         cat >&2 <<EOF
 [login] kobodl binary not installed at:
-        $KOBODL_BINARY
+        $TSUNDOKU_BINARY
         Run kobodl_install.sh first.
 EOF
         exit 3
@@ -35,24 +35,24 @@ EOF
 }
 
 ensure_config_dir() {
-    mkdir -p "$KOBODL_HOME"
-    chmod 700 "$KOBODL_HOME"
+    mkdir -p "$TSUNDOKU_ROOT"
+    chmod 700 "$TSUNDOKU_ROOT"
 }
 
 secure_config_file() {
-    if [[ -f "$KOBODL_CONFIG" ]]; then
-        chmod 600 "$KOBODL_CONFIG"
+    if [[ -f "$TSUNDOKU_CONFIG" ]]; then
+        chmod 600 "$TSUNDOKU_CONFIG"
     fi
 }
 
 cmd_status() {
     ensure_binary
-    if [[ ! -f "$KOBODL_CONFIG" ]]; then
-        echo "[status] no config at $KOBODL_CONFIG — not authed" >&2
+    if [[ ! -f "$TSUNDOKU_CONFIG" ]]; then
+        echo "[status] no config at $TSUNDOKU_CONFIG — not authed" >&2
         return 1
     fi
-    if "$KOBODL_BINARY" --config "$KOBODL_CONFIG" user list 2>/dev/null | grep -q "@"; then
-        "$KOBODL_BINARY" --config "$KOBODL_CONFIG" user list
+    if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list 2>/dev/null | grep -q "@"; then
+        "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list
         return 0
     fi
     echo "[status] config exists but contains no logged-in user" >&2
@@ -72,10 +72,10 @@ cmd_add() {
         DO NOT cancel this command — it can take up to 60 seconds for the polling
         to register.
 EOF
-    "$KOBODL_BINARY" --config "$KOBODL_CONFIG" user add
+    "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user add
     secure_config_file
-    if "$KOBODL_BINARY" --config "$KOBODL_CONFIG" user list 2>/dev/null | grep -q "@"; then
-        echo "[login] success — auth saved to $KOBODL_CONFIG (mode 600)" >&2
+    if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user list 2>/dev/null | grep -q "@"; then
+        echo "[login] success — auth saved to $TSUNDOKU_CONFIG (mode 600)" >&2
         return 0
     fi
     echo "[login] activation did not complete — re-run when ready" >&2
@@ -89,7 +89,7 @@ cmd_remove() {
         echo "[remove] usage: kobodl_login.sh remove <email>" >&2
         return 2
     fi
-    "$KOBODL_BINARY" --config "$KOBODL_CONFIG" user rm "$target"
+    "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" user rm "$target"
     secure_config_file
 }
 
@@ -103,17 +103,17 @@ cmd_import_from() {
         echo "[import] source file not found: $src" >&2
         return 1
     fi
-    if [[ -f "$KOBODL_CONFIG" ]]; then
-        local backup="$KOBODL_CONFIG.bak.$(date +%Y%m%d-%H%M%S)"
-        cp "$KOBODL_CONFIG" "$backup"
+    if [[ -f "$TSUNDOKU_CONFIG" ]]; then
+        local backup="$TSUNDOKU_CONFIG.bak.$(date +%Y%m%d-%H%M%S)"
+        cp "$TSUNDOKU_CONFIG" "$backup"
         chmod 600 "$backup"
         echo "[import] existing config backed up to $backup" >&2
     fi
     ensure_config_dir
-    cp "$src" "$KOBODL_CONFIG"
+    cp "$src" "$TSUNDOKU_CONFIG"
     secure_config_file
-    echo "[import] copied $src → $KOBODL_CONFIG (mode 600)" >&2
-    if [[ -x "$KOBODL_BINARY" ]]; then
+    echo "[import] copied $src → $TSUNDOKU_CONFIG (mode 600)" >&2
+    if [[ -x "$TSUNDOKU_BINARY" ]]; then
         if cmd_status >/dev/null 2>&1; then
             echo "[import] verified — auth ready" >&2
         else
@@ -126,7 +126,7 @@ cmd_import_from() {
 }
 
 cmd_path() {
-    echo "$KOBODL_CONFIG"
+    echo "$TSUNDOKU_CONFIG"
 }
 
 # Dispatch

@@ -1,7 +1,10 @@
-# kobodl-toolkit
+# tsundoku 積読
 
-**Version**: 0.5.0
+**Version**: 0.6.0
 **Part of**: [monkey-skills](../)
+
+> *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
+> This plugin turns that pile into actionable knowledge.
 
 Search a Kobo e-book library by **title / author / series / publication date /
 category / description text / reading status / language**, present matches as
@@ -21,8 +24,9 @@ workflow). Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses
 | [`kobodl-library`](skills/kobodl-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
 | [`kobodl-extract`](skills/kobodl-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
 
-Auth is a one-time event; library is daily search+download; extract is opt-in
-post-processing for "I want Claude to read this book".
+Skills are named after the upstream tool they wrap (`kobodl`). The plugin
+itself is the brand umbrella, ready to grow toward other sources (Kindle,
+Apple Books) later.
 
 ## Quick Start
 
@@ -30,8 +34,8 @@ post-processing for "I want Claude to read this book".
 
 ```bash
 # install binary + run device-flow login (opens kobo.com/activate code)
-bash kobodl-toolkit/skills/kobodl-auth/scripts/kobodl_install.sh
-bash kobodl-toolkit/skills/kobodl-auth/scripts/kobodl_login.sh add
+bash tsundoku/skills/kobodl-auth/scripts/kobodl_install.sh
+bash tsundoku/skills/kobodl-auth/scripts/kobodl_login.sh add
 ```
 
 Follow the prompts: open `https://www.kobo.com/activate` in a browser, sign in,
@@ -40,92 +44,104 @@ activation registers.
 
 ### B. Migrate from existing kobodl install
 
-If you already have credentials at `~/KobodlLibrarySync/config/kobodl.json`
-(or another location), skip the activation flow:
+If you already have credentials elsewhere (e.g. legacy `~/KobodlLibrarySync/`
+shell script, or upstream's `~/.config/kobodl/`), skip the activation flow:
 
 ```bash
-bash kobodl-toolkit/skills/kobodl-auth/scripts/kobodl_install.sh
-bash kobodl-toolkit/skills/kobodl-auth/scripts/kobodl_login.sh \
+bash tsundoku/skills/kobodl-auth/scripts/kobodl_install.sh
+bash tsundoku/skills/kobodl-auth/scripts/kobodl_login.sh \
     import-from ~/KobodlLibrarySync/config/kobodl.json
 ```
 
 ### C. Search and download
 
 ```bash
-source kobodl-toolkit/skills/kobodl-auth/scripts/kobodl_paths.sh
-export TMPDIR="$KOBODL_TMPDIR"
-mkdir -p "$KOBODL_DOWNLOADS"
+source tsundoku/lib/tsundoku_paths.sh
+export TMPDIR="$TSUNDOKU_TMPDIR"
+mkdir -p "$TSUNDOKU_DOWNLOADS"
 
 # refresh library index
-"$KOBODL_BINARY" --config "$KOBODL_CONFIG" \
-    book list --export-library "$KOBODL_LIBRARY_JSON"
+"$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" \
+    book list --export-library "$TSUNDOKU_LIBRARY_JSON"
 
 # search (e.g. "books that mention behavioral economics, published since 2020,
 # not yet read") — preview as rich cards
-python3 kobodl-toolkit/skills/kobodl-library/scripts/kobodl_query.py \
-    --library "$KOBODL_LIBRARY_JSON" \
+python3 tsundoku/skills/kobodl-library/scripts/kobodl_query.py \
+    --library "$TSUNDOKU_LIBRARY_JSON" \
     --description "行為經濟,行為金融,Behavioral" \
     --pub-after 2020 --status ReadyToRead --format markdown
 
 # download chosen RevisionIds (idempotent — skips books already on disk)
-bash kobodl-toolkit/skills/kobodl-library/scripts/kobodl_get.sh "$REVISION_ID"
+bash tsundoku/skills/kobodl-library/scripts/kobodl_get.sh "$REVISION_ID"
 
 # or pipe a filtered set
-python3 kobodl-toolkit/skills/kobodl-library/scripts/kobodl_query.py \
-    --library "$KOBODL_LIBRARY_JSON" --series "Silent Witch" --format ids \
-  | bash kobodl-toolkit/skills/kobodl-library/scripts/kobodl_get.sh --convert-pdf
+python3 tsundoku/skills/kobodl-library/scripts/kobodl_query.py \
+    --library "$TSUNDOKU_LIBRARY_JSON" --series "Silent Witch" --format ids \
+  | bash tsundoku/skills/kobodl-library/scripts/kobodl_get.sh --convert-pdf
 ```
 
 ### D. EPUB → chunked Markdown (for book→skill)
 
 ```bash
 # one-time: ensure pandoc is installed
-bash kobodl-toolkit/skills/kobodl-extract/scripts/install_pandoc.sh
+bash tsundoku/skills/kobodl-extract/scripts/install_pandoc.sh
 
-# convert (uses $KOBODL_MARKDOWN_DIR by default — no --out-dir needed)
-python3 kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
+# convert (uses $TSUNDOKU_MARKDOWN_DIR by default — no --out-dir needed)
+python3 tsundoku/skills/kobodl-extract/scripts/kobodl_to_markdown.py \
     --epub "$EPUB_PATH" --strip-images --strip-frontmatter
-# → writes to ~/.cache/claude-kobodl/markdown/<title-slug>-<id8>/index.md + chapters
+# → writes to ~/.tsundoku/cache/markdown/<title-slug>-<id8>/index.md + chapters
 
 # clear the cache when finished with a book→skill task
-bash kobodl-toolkit/skills/kobodl-extract/scripts/kobodl_cache_clear.sh
+bash tsundoku/skills/kobodl-extract/scripts/kobodl_cache_clear.sh
 ```
 
 Then read `index.md` first (TOC + token estimates), distill into an outline,
 and finally hand off to `dev-workflow:skill-creator-advance` to produce the
 new skill.
 
-## Storage Layout (XDG four-tier)
+## Storage Layout (single root)
 
-| Tier | What | Default path | Override |
-|---|---|---|---|
-| **Config** (chmod 700) | Credentials | `~/.config/claude-kobodl/kobodl.json` | `KOBODL_HOME` |
-| **Data** | Binary | `~/.local/share/claude-kobodl/bin/kobodl-macos` | `KOBODL_DATA` |
-| **Data** | Tmp (PYI-1270 fix) | `~/.local/share/claude-kobodl/tmp/` | `KOBODL_DATA` |
-| **Cache** | Library index | `~/.cache/claude-kobodl/library.json` | `KOBODL_CACHE` |
-| **Cache** | Extracted markdown | `~/.cache/claude-kobodl/markdown/<book>/` | `KOBODL_CACHE` |
-| **Visible** | EPUB downloads | `~/Books/kobo/` | `KOBODL_DOWNLOADS` |
+```
+~/.tsundoku/                  ← TSUNDOKU_ROOT
+├── auth/                       chmod 700
+│   └── kobodl.json             chmod 600  (Kobo session credentials)
+├── bin/kobodl-macos
+├── tmp/                        TMPDIR override (PYI-1270 fix)
+└── cache/                      regenerable, wipe-able as a unit
+    ├── library.json
+    └── markdown/<book>/...
 
-Three categories are intentionally separated:
-- **Config**: secrets, owner-only, do not back up to dotfiles
-- **Data**: binaries + persistent state
-- **Cache**: regenerable derived data — safe to wipe, won't get pulled into
-  dotfile syncs (chezmoi / dotdrop default-exclude `~/.cache/`)
+~/Books/kobo/                 ← TSUNDOKU_DOWNLOADS (user-visible EPUBs)
+```
 
-`XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` are honored as
-fallbacks. The legacy `~/KobodlLibrarySync/` directory is left untouched.
+**Two decision-point env vars** — set these to relocate things:
+
+| Var | Default | Purpose |
+|---|---|---|
+| `TSUNDOKU_ROOT` | `~/.tsundoku` | All toolkit state (auth + binary + cache) |
+| `TSUNDOKU_DOWNLOADS` | `~/Books/kobo` | User-visible EPUB downloads |
+
+**Five derived paths** computed from the two above (don't set directly):
+`TSUNDOKU_CONFIG`, `TSUNDOKU_BINARY`, `TSUNDOKU_LIBRARY_JSON`,
+`TSUNDOKU_MARKDOWN_DIR`, `TSUNDOKU_TMPDIR`. They're exported for convenience
+when sourcing `lib/tsundoku_paths.sh`.
+
+The `auth/` subdirectory is `chmod 700`, the `kobodl.json` file is `chmod 600`.
+The `cache/` subtree is regenerable — wipe at any time via
+`kobodl-extract/scripts/kobodl_cache_clear.sh`.
 
 ## Repository Structure
 
 ```
-kobodl-toolkit/
+tsundoku/
 ├── .claude-plugin/plugin.json
 ├── README.md
+├── lib/
+│   └── tsundoku_paths.sh        # plugin-wide path resolver (source-able)
 └── skills/
     ├── kobodl-auth/
     │   ├── SKILL.md
     │   └── scripts/
-    │       ├── kobodl_paths.sh      # source-able path resolver (shared)
     │       ├── kobodl_install.sh    # binary download (idempotent)
     │       └── kobodl_login.sh      # add / status / remove / import-from / path
     ├── kobodl-library/
@@ -144,7 +160,7 @@ kobodl-toolkit/
 ## Requirements
 
 - macOS or Linux (kobodl ships macOS binary auto-installed; Linux users
-  can `pipx install kobodl` and override `KOBODL_BINARY`)
+  can `pipx install kobodl` and override `TSUNDOKU_BINARY`)
 - Python 3.9+ (query / extract scripts use stdlib only)
 - A Kobo account with at least one purchased book
 - Optional: pandoc (for `kobodl-extract` — auto-installed via brew or
@@ -169,14 +185,15 @@ kobodl-toolkit/
   `book list` is supported
 - `Description` field is capped at 500 chars by Kobo's API (publisher ONIX
   copy, not a synopsis)
-- This toolkit is macOS-only by default. Linux/Windows users can install
-  kobodl via `pipx install kobodl` and override `KOBODL_BINARY` after sourcing
-  `kobodl_paths.sh`
+- macOS gets a pre-built kobodl binary auto-installed; Linux/Windows users
+  install kobodl via `pipx install kobodl` and override `TSUNDOKU_BINARY`
+  after sourcing `tsundoku_paths.sh`
 
 ## Lineage
 
 Generalizes the [`kobodl-library-sync.sh`][ancestor] single-file shell script
-into a search-first toolkit with proper separation of auth and runtime,
-metadata-rich queries, and XDG-compliant credential storage.
+into a search-first toolkit with proper separation of auth, runtime, and
+extraction; metadata-rich queries; chunked Markdown for LLM ingestion; and
+a single-root storage layout under `~/.tsundoku/`.
 
 [ancestor]: https://github.com/kouko/kobodl-library-sync

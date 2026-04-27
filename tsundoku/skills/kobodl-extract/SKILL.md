@@ -55,7 +55,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh
 ```
 
 The installer tries Homebrew first, falls back to GitHub-release standalone
-binary download into `$KOBODL_DATA/bin/pandoc`. No-op if pandoc is already
+binary download into `$TSUNDOKU_ROOT/bin/pandoc`. No-op if pandoc is already
 on PATH.
 
 ## Conversion
@@ -67,8 +67,8 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
     [options]
 ```
 
-`--out-dir` is **optional** — defaults to `$KOBODL_MARKDOWN_DIR`
-(= `$KOBODL_CACHE/markdown` = `~/.cache/claude-kobodl/markdown`). It's
+`--out-dir` is **optional** — defaults to `$TSUNDOKU_MARKDOWN_DIR`
+(= `$TSUNDOKU_ROOT/cache/markdown` = `~/.cache/tsundoku/markdown`). It's
 treated as a **library root**: the script auto-creates a per-book
 subdirectory inside it so you can convert many books into the same root
 without overwrites. The subdir name uses the EPUB's title; if the input
@@ -132,14 +132,14 @@ first before extracting frameworks.
 ### Step 1 — Convert
 
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/skills/kobodl-auth/scripts/kobodl_paths.sh
-EPUB="$KOBODL_DOWNLOADS/<author> - <title> <id8>.epub"
+source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
+EPUB="$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_to_markdown.py \
     --epub "$EPUB" --strip-images --strip-frontmatter --quiet
-# → creates $KOBODL_MARKDOWN_DIR/<title-slug>-<id8>/index.md + chapter files
-# (= ~/.cache/claude-kobodl/markdown/<title-slug>-<id8>/...)
+# → creates $TSUNDOKU_MARKDOWN_DIR/<title-slug>-<id8>/index.md + chapter files
+# (= ~/.cache/tsundoku/markdown/<title-slug>-<id8>/...)
 ```
 
 For a permanent home (e.g. checking into a vault), pass `--out-dir`:
@@ -196,7 +196,7 @@ See [`references/source-book.md`](references/source-book.md) for outline.
 
 ## Cache Management
 
-Extracted markdown is regenerable, so it lives in `$KOBODL_CACHE/markdown/`.
+Extracted markdown is regenerable, so it lives in `$TSUNDOKU_ROOT/cache/markdown/`.
 After finishing a book→skill task, wipe to reclaim disk:
 
 ```bash
@@ -213,8 +213,8 @@ bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --dry-run
 bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_cache_clear.sh --library-only
 ```
 
-Auth (`$KOBODL_HOME`), binary (`$KOBODL_DATA/bin/`), and EPUB downloads
-(`$KOBODL_DOWNLOADS`) are **never** touched.
+Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
+(`$TSUNDOKU_DOWNLOADS`) are **never** touched.
 
 ## Known Quirks
 

@@ -2,7 +2,7 @@
 # kobodl_get.sh — download books by RevisionId, idempotent.
 #
 # Takes one or more RevisionIds from command-line args OR stdin (one per line).
-# Skips books whose <id8>.epub already exists in $KOBODL_DOWNLOADS.
+# Skips books whose <id8>.epub already exists in $TSUNDOKU_DOWNLOADS.
 # Optionally runs Calibre to produce a matching PDF.
 #
 # Usage:
@@ -13,7 +13,7 @@
 # Options:
 #   --convert-pdf      after each download, convert EPUB → PDF via Calibre
 #                      (requires /Applications/calibre.app)
-#   --output-dir DIR   override $KOBODL_DOWNLOADS for this run
+#   --output-dir DIR   override $TSUNDOKU_DOWNLOADS for this run
 #   --user EMAIL       scope to a specific Kobo user (multi-user configs)
 #   --dry-run          print "would download X" without calling kobodl
 #   --quiet            only print resulting filenames to stdout
@@ -30,19 +30,19 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../kobodl-auth/scripts/kobodl_paths.sh"
+PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
 if [[ ! -f "$PATHS_SCRIPT" ]]; then
-    echo "kobodl_get: cannot locate kobodl_paths.sh at $PATHS_SCRIPT" >&2
+    echo "kobodl_get: cannot locate tsundoku_paths.sh at $PATHS_SCRIPT" >&2
     exit 2
 fi
-# shellcheck source=../../kobodl-auth/scripts/kobodl_paths.sh
+# shellcheck source=../../lib/tsundoku_paths.sh
 source "$PATHS_SCRIPT"
 
 CONVERT_PDF=false
 DRY_RUN=false
 QUIET=false
 USER_SCOPE=""
-OUTPUT_DIR="$KOBODL_DOWNLOADS"
+OUTPUT_DIR="$TSUNDOKU_DOWNLOADS"
 CALIBRE="/Applications/calibre.app/Contents/MacOS/ebook-convert"
 
 POSITIONAL=()
@@ -62,20 +62,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pre-flight checks
-if [[ ! -x "$KOBODL_BINARY" ]]; then
-    echo "kobodl_get: binary not installed at $KOBODL_BINARY" >&2
+if [[ ! -x "$TSUNDOKU_BINARY" ]]; then
+    echo "kobodl_get: binary not installed at $TSUNDOKU_BINARY" >&2
     echo "            run kobodl-auth/scripts/kobodl_install.sh" >&2
     exit 3
 fi
-if [[ ! -f "$KOBODL_CONFIG" ]]; then
-    echo "kobodl_get: no auth at $KOBODL_CONFIG" >&2
+if [[ ! -f "$TSUNDOKU_CONFIG" ]]; then
+    echo "kobodl_get: no auth at $TSUNDOKU_CONFIG" >&2
     echo "            run kobodl-auth/scripts/kobodl_login.sh add" >&2
     exit 3
 fi
 
 mkdir -p "$OUTPUT_DIR"
-export TMPDIR="$KOBODL_TMPDIR"
-mkdir -p "$KOBODL_TMPDIR"
+export TMPDIR="$TSUNDOKU_TMPDIR"
+mkdir -p "$TSUNDOKU_TMPDIR"
 
 # Collect IDs: positional first, then stdin (only if stdin is a pipe/file)
 IDS=("${POSITIONAL[@]}")
@@ -124,7 +124,7 @@ for id in "${IDS[@]}"; do
             continue
         fi
         $QUIET || echo "[$idx/$total] [get] $id" >&2
-        if "$KOBODL_BINARY" --config "$KOBODL_CONFIG" "${USER_ARGS[@]}" \
+        if "$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" "${USER_ARGS[@]}" \
                 book get --output-dir "$OUTPUT_DIR" "$id" >&2
         then
             new_files=( "$OUTPUT_DIR"/*"${short_id}.epub" )

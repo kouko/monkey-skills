@@ -36,15 +36,15 @@ login, Flow B for migration).
 
 ## Path Resolution
 
-All paths come from `kobodl-auth/scripts/kobodl_paths.sh`. Source it once:
+All paths come from `lib/tsundoku_paths.sh`. Source it once:
 
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/skills/kobodl-auth/scripts/kobodl_paths.sh
-export TMPDIR="$KOBODL_TMPDIR"
-mkdir -p "$KOBODL_DOWNLOADS" "$KOBODL_TMPDIR"
+source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
+export TMPDIR="$TSUNDOKU_TMPDIR"
+mkdir -p "$TSUNDOKU_DOWNLOADS" "$TSUNDOKU_TMPDIR"
 ```
 
-Override with `KOBODL_HOME` / `KOBODL_DATA` / `KOBODL_DOWNLOADS` env vars
+Override with `TSUNDOKU_ROOT` / `TSUNDOKU_ROOT` / `TSUNDOKU_DOWNLOADS` env vars
 before sourcing.
 
 ## Components
@@ -53,16 +53,16 @@ before sourcing.
 |---|---|
 | `scripts/kobodl_query.py` | Filter `--export-library` JSON, multiple output formats |
 | `scripts/kobodl_get.sh` | Download books by RevisionId (args or stdin), idempotent |
-| `$KOBODL_BINARY` | The kobodl CLI itself |
-| `$KOBODL_LIBRARY_JSON` | Cached export at `~/.cache/claude-kobodl/library.json` (regenerable) |
+| `$TSUNDOKU_BINARY` | The kobodl CLI itself |
+| `$TSUNDOKU_LIBRARY_JSON` | Cached export at `~/.cache/tsundoku/library.json` (regenerable) |
 
 ## Workflow — Search → Confirm → Download
 
 ### Step 1 — Refresh the library index (once per session)
 
 ```bash
-"$KOBODL_BINARY" --config "$KOBODL_CONFIG" \
-    book list --export-library "$KOBODL_LIBRARY_JSON"
+"$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" \
+    book list --export-library "$TSUNDOKU_LIBRARY_JSON"
 ```
 
 Run this whenever the user mentions newly-purchased books, or if it has been
@@ -100,7 +100,7 @@ title:
 ```bash
 # Books with "AI" / "人工智慧" / "機器學習" anywhere in title or description
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_query.py \
-    --library "$KOBODL_LIBRARY_JSON" \
+    --library "$TSUNDOKU_LIBRARY_JSON" \
     --description "AI,人工智慧,機器學習,大數據"
 ```
 
@@ -110,15 +110,15 @@ Three presentation styles depending on context:
 
 ```bash
 # Compact list (use when many matches, user just wants to scan)
-python3 kobodl_query.py --library "$KOBODL_LIBRARY_JSON" [filters] \
+python3 kobodl_query.py --library "$TSUNDOKU_LIBRARY_JSON" [filters] \
     --format table --sort pub_date
 
 # Rich card with cover + description (use when a few matches)
-python3 kobodl_query.py --library "$KOBODL_LIBRARY_JSON" [filters] \
+python3 kobodl_query.py --library "$TSUNDOKU_LIBRARY_JSON" [filters] \
     --format markdown --limit 5
 
 # Aggregate stats (use when user wants overview before deciding)
-python3 kobodl_query.py --library "$KOBODL_LIBRARY_JSON" [filters] \
+python3 kobodl_query.py --library "$TSUNDOKU_LIBRARY_JSON" [filters] \
     --format summary
 ```
 
@@ -128,7 +128,7 @@ or "all of them". Translate their choice into a list of RevisionIds.
 ### Step 4 — Download the chosen books
 
 `kobodl_get.sh` accepts RevisionIds via positional args OR stdin.
-Skips books whose `<id8>.epub` already exists in `$KOBODL_DOWNLOADS`.
+Skips books whose `<id8>.epub` already exists in `$TSUNDOKU_DOWNLOADS`.
 
 ```bash
 # Single book (positional)
@@ -139,7 +139,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_get.sh "$ID1" "$ID2" "$ID3"
 
 # Pipe from query (most common — filtered set)
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_query.py \
-    --library "$KOBODL_LIBRARY_JSON" --series "Silent Witch" --format ids \
+    --library "$TSUNDOKU_LIBRARY_JSON" --series "Silent Witch" --format ids \
   | bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_get.sh
 
 # Preview before committing (show what would download)
@@ -227,12 +227,12 @@ User: "找一本講行為經濟學的，最近五年內出版的，我還沒讀�
 
 ```bash
 # Step 1: refresh
-"$KOBODL_BINARY" --config "$KOBODL_CONFIG" \
-    book list --export-library "$KOBODL_LIBRARY_JSON"
+"$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" \
+    book list --export-library "$TSUNDOKU_LIBRARY_JSON"
 
 # Step 2: query
 python3 ${CLAUDE_SKILL_DIR}/scripts/kobodl_query.py \
-    --library "$KOBODL_LIBRARY_JSON" \
+    --library "$TSUNDOKU_LIBRARY_JSON" \
     --description "行為經濟,行為金融,經濟學家,Behavioral" \
     --pub-after 2020 \
     --status ReadyToRead \
@@ -249,8 +249,8 @@ bash ${CLAUDE_SKILL_DIR}/scripts/kobodl_get.sh "$picked_id"
 If `kobodl.json` holds multiple Kobo accounts, scope every command:
 
 ```bash
-"$KOBODL_BINARY" --config "$KOBODL_CONFIG" book list \
-    -u alice@example.com --export-library "$KOBODL_LIBRARY_JSON"
+"$TSUNDOKU_BINARY" --config "$TSUNDOKU_CONFIG" book list \
+    -u alice@example.com --export-library "$TSUNDOKU_LIBRARY_JSON"
 
 bash kobodl_get.sh --user alice@example.com "$REVISION_ID"
 ```
@@ -261,8 +261,8 @@ bash kobodl_get.sh --user alice@example.com "$REVISION_ID"
   flavored, may contain spoilers, max 500 chars
 - Removed books (`IsRemoved=True`) often fail to download — excluded by default
 - This skill is macOS-specific. Linux/Windows users install kobodl via
-  `pipx install kobodl` and override `KOBODL_BINARY` after sourcing
-  `kobodl_paths.sh`
+  `pipx install kobodl` and override `TSUNDOKU_BINARY` after sourcing
+  `tsundoku_paths.sh`
 
 ## Cross-Skill Handoff
 
