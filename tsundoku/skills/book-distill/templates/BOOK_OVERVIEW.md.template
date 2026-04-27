@@ -1,6 +1,6 @@
 # {{BOOK_TITLE}} — Whole-book overview (Stage 0)
 
-> Stage 0 output of the kobo-distill pipeline. All downstream extractors
+> Stage 0 output of the book-distill pipeline. All downstream extractors
 > and skills consume this as global context.
 
 ## Basic information

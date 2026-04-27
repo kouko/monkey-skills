@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# kobo_cache_clear.sh — wipe the toolkit's cache (regenerable derived data).
+# cache_clear.sh — wipe the toolkit's cache (regenerable derived data).
 #
 # By default removes:
 #   $TSUNDOKU_MARKDOWN_DIR/*    (all extracted-markdown subdirs)
 #   $TSUNDOKU_KOBO_LIBRARY_JSON      (cached library export)
 #
-# Auth ($TSUNDOKU_ROOT/auth/), binary ($TSUNDOKU_ROOT/bin/),
+# Auth ($TSUNDOKU_ROOT/kobo/auth/), binary ($TSUNDOKU_ROOT/kobo/bin/),
 # and downloaded EPUBs ($TSUNDOKU_DOWNLOADS) are NEVER touched.
 #
 # Usage:
-#   kobo_cache_clear.sh [--markdown-only|--library-only] [--dry-run] [--book SLUG]
+#   cache_clear.sh [--markdown-only|--library-only] [--dry-run] [--book SLUG]
 #
 # Options:
 #   --markdown-only   wipe only the markdown directory; keep library.json
@@ -86,5 +86,5 @@ fi
 
 echo
 echo "[done] cache cleared (mode: $MODE${BOOK:+, book: $BOOK})"
-echo "       auth ($TSUNDOKU_ROOT/auth/), binary ($TSUNDOKU_ROOT/bin/),"
+echo "       auth ($TSUNDOKU_ROOT/kobo/auth/), binary ($TSUNDOKU_ROOT/kobo/bin/),"
 echo "       and downloads ($TSUNDOKU_DOWNLOADS) untouched"

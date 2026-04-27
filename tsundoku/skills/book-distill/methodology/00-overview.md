@@ -1,6 +1,6 @@
 # RIA-TV++ Methodology Overview
 
-Design rationale for the `kobo-distill` pipeline. For per-stage execution
+Design rationale for the `book-distill` pipeline. For per-stage execution
 detail, read `01-stage0-adler.md` through `06-stage4-pressure-test.md`.
 
 ## Naming
@@ -29,7 +29,7 @@ detail, read `01-stage0-adler.md` through `06-stage4-pressure-test.md`.
 > **Existing reading methodologies were designed to distill books for
 > human readers, not for agent executors.**
 
-| Dimension | For human reading | For agent execution (kobo-distill goal) |
+| Dimension | For human reading | For agent execution (book-distill goal) |
 |---|---|---|
 | Key fields | story / quotable lines / emotional hook | trigger / executable steps / halt criteria |
 | Failure mode | "I read it and forgot" | "trigger imprecise → never invoked or wrongly invoked" |

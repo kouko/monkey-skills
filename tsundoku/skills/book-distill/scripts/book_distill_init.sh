@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# kobo_distill_init.sh — bootstrap a kobo-distill working directory from an
+# book_distill_init.sh — bootstrap a book-distill working directory from an
 # already-extracted book in $TSUNDOKU_MARKDOWN_DIR.
 #
-# This is the bridge between kobo-extract (which produces chapter markdown
-# + metadata.json) and kobo-distill (which expects a working directory
+# This is the bridge between book-extract (which produces chapter markdown
+# + metadata.json) and book-distill (which expects a working directory
 # under $TSUNDOKU_ROOT/cache/distilled/<slug>/).
 #
 # What this script does NOT do:
@@ -14,16 +14,16 @@
 #     starting point.
 #
 # What it DOES:
-#   - Verifies the source book has been processed by kobo-extract
+#   - Verifies the source book has been processed by book-extract
 #   - Creates $TSUNDOKU_ROOT/cache/distilled/<slug>/ with:
 #       candidates/ rejected/ (empty subdirs, audit-trail-ready)
 #       BOOK_OVERVIEW.md.draft   ← copy of template, ready for Stage 0 fill
-#       metadata.snapshot.json   ← copy of kobo-extract's metadata.json
+#       metadata.snapshot.json   ← copy of book-extract's metadata.json
 #       chapters.list            ← list of chapter MD paths in spine order
 #
 # Usage:
-#   bash kobo_distill_init.sh <book-slug-id8>
-#   bash kobo_distill_init.sh 一九八四-b9152ffe
+#   bash book_distill_init.sh <book-slug-id8>
+#   bash book_distill_init.sh 一九八四-b9152ffe
 #
 # Exit codes:
 #   0  ready
@@ -45,13 +45,13 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --force) FORCE=true; shift ;;
         -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-        -*) echo "kobo_distill_init: unknown option: $1" >&2; exit 2 ;;
+        -*) echo "book_distill_init: unknown option: $1" >&2; exit 2 ;;
         *) SLUG="$1"; shift ;;
     esac
 done
 
 if [[ -z "$SLUG" ]]; then
-    echo "kobo_distill_init: missing <book-slug-id8>" >&2
+    echo "book_distill_init: missing <book-slug-id8>" >&2
     echo "usage: $0 <book-slug-id8> [--force]" >&2
     exit 2
 fi
@@ -63,33 +63,33 @@ TEMPLATE_DIR="$SCRIPT_DIR/../templates"
 # Verify source
 if [[ ! -d "$SRC" ]]; then
     cat >&2 <<EOF
-kobo_distill_init: source book directory not found:
+book_distill_init: source book directory not found:
                    $SRC
 
-Did you run kobo-extract first?
+Did you run book-extract first?
 
   source ${TSUNDOKU_ROOT%/*}/lib/tsundoku_paths.sh
   EPUB="\$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
-  python3 .../kobo-extract/scripts/kobo_to_markdown.py --epub "\$EPUB" \\
+  python3 .../book-extract/scripts/epub_to_markdown.py --epub "\$EPUB" \\
       --strip-images --strip-frontmatter
 EOF
     exit 1
 fi
 
 if [[ ! -f "$SRC/metadata.json" ]]; then
-    echo "kobo_distill_init: $SRC has no metadata.json — re-run kobo-extract" >&2
+    echo "book_distill_init: $SRC has no metadata.json — re-run book-extract" >&2
     exit 1
 fi
 
 if [[ ! -f "$SRC/index.md" ]]; then
-    echo "kobo_distill_init: $SRC has no index.md — re-run kobo-extract" >&2
+    echo "book_distill_init: $SRC has no index.md — re-run book-extract" >&2
     exit 1
 fi
 
 # Check for pre-existing
 if [[ -d "$DST" && "$FORCE" != true ]]; then
     cat >&2 <<EOF
-kobo_distill_init: distill dir already exists:
+book_distill_init: distill dir already exists:
                    $DST
                    Use --force to overwrite (will preserve audit trail).
 EOF
@@ -118,7 +118,7 @@ cp "$SRC/metadata.json" "$DST/metadata.snapshot.json"
 cp "$TEMPLATE_DIR/BOOK_OVERVIEW.md.template" "$DST/BOOK_OVERVIEW.md.draft"
 
 # Sentinel marker
-cat > "$DST/.kobo-distill-state" <<EOF
+cat > "$DST/.book-distill-state" <<EOF
 stage: 0
 initialized_at: $(date -Iseconds)
 source_book_slug: $SLUG
@@ -126,7 +126,7 @@ source_markdown_dir: $SRC
 EOF
 
 cat <<EOF
-[init] kobo-distill working directory ready:
+[init] book-distill working directory ready:
        $DST
 
 Source:        $SRC
@@ -135,7 +135,7 @@ Authors:       $(python3 -c "import json; print(', '.join(json.load(open('$SRC/m
 Total tokens:  $(python3 -c "import json; print(f\"{json.load(open('$SRC/metadata.json'))['total_tokens']:,}\")")
 Chapters:      $(grep -cE '^\| [0-9]+ \|' "$SRC/index.md" || echo "?")
 
-Next: Claude follows kobo-distill's SKILL.md, starting with Stage 0
+Next: Claude follows book-distill's SKILL.md, starting with Stage 0
 (Adler analytical read), filling BOOK_OVERVIEW.md.draft → BOOK_OVERVIEW.md.
 
 Cache layout:
@@ -145,5 +145,5 @@ Cache layout:
   ├── chapters.list            ← spine order, for chapter iteration
   ├── candidates/              ← Stage 1 outputs
   ├── rejected/                ← Stage 1.5 audit
-  └── .kobo-distill-state      ← pipeline state marker
+  └── .book-distill-state      ← pipeline state marker
 EOF

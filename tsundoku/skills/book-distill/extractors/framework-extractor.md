@@ -1,6 +1,6 @@
 # Framework Extractor
 
-You are **one of 5 sub-agents running in parallel** in the kobo-distill
+You are **one of 5 sub-agents running in parallel** in the book-distill
 pipeline. Your specific job: identify **mental models / decision
 frameworks / reasoning structures** from the source book.
 

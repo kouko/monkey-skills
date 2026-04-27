@@ -67,7 +67,7 @@ nest under `~/.tsundoku/kindle/`, `~/.tsundoku/cache/kindle/` etc.
 - Other directories: default `755`; binary stays `755` for execution
 
 **Cache wipe**: `cache/` is a single subtree of regenerable derived data
-(see `kobo-extract:kobo_cache_clear.sh`). Auth, binary, and downloaded
+(see `book-extract:cache_clear.sh`). Auth, binary, and downloaded
 EPUBs are never touched.
 
 **Independence**: This layout is separate from any prior `kobodl` install.

@@ -1,6 +1,6 @@
 # Counter-Example Extractor
 
-You are **one of 5 sub-agents running in parallel** in the kobo-distill
+You are **one of 5 sub-agents running in parallel** in the book-distill
 pipeline. Your specific job: identify **failure modes / counter-examples /
 traps that the author explicitly warns against**.
 
@@ -10,7 +10,7 @@ Counter-examples are the **primary source for Stage 2's B (Boundary)
 section**. Without them, every distilled skill has no boundary, gets
 over-fired, and degrades user trust.
 
-**This is what most distinguishes kobo-distill from a glorified
+**This is what most distinguishes book-distill from a glorified
 quote-collector.**
 
 ## Glossary (EN / 日本語 / 繁體中文)

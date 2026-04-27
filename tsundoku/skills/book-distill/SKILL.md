@@ -1,7 +1,7 @@
 ---
-name: kobo-distill
+name: book-distill
 description: >-
-  Distill a book (already converted to chunked Markdown by kobo-extract) into
+  Distill a book (already converted to chunked Markdown by book-extract) into
   a coherent set of executable agent skills. Use when the user wants to "拆書"
   / "蒸留する" / "turn this book into skills" — i.e. extract the book's
   frameworks, principles, decision rules, and methodologies into atomic,
@@ -14,7 +14,7 @@ description: >-
   書籍 → エージェント skill 蒸留パイプライン。書籍を skill に蒸餾。
 ---
 
-# kobo-distill — Distill a book into a coherent set of executable skills
+# book-distill — Distill a book into a coherent set of executable skills
 
 ## Mission
 
@@ -92,14 +92,14 @@ User says something like:
 
 ## Pre-conditions (HARD GATES — verify before starting)
 
-1. **Book has been processed by kobo-extract.** Required artifacts:
+1. **Book has been processed by book-extract.** Required artifacts:
    - `$TSUNDOKU_MARKDOWN_DIR/<slug-id8>/index.md`
    - `$TSUNDOKU_MARKDOWN_DIR/<slug-id8>/metadata.json`
    - `$TSUNDOKU_MARKDOWN_DIR/<slug-id8>/NN-chapter.md` (chapters)
-   - If absent, route the user to **`kobo-library` → `kobo-extract`** first.
+   - If absent, route the user to **`kobo-library` → `book-extract`** first.
    - **Do NOT distill from memory** — stop and ask the user for the book.
 2. **First-time pilot signal.** If this is the user's first time using
-   `kobo-distill`, recommend processing **one book** to validate the pipeline
+   `book-distill`, recommend processing **one book** to validate the pipeline
    before any batch run.
 
 ## Output structure
@@ -130,7 +130,7 @@ ${TSUNDOKU_ROOT}/cache/distilled/<book-slug>/
 
 1. Resolve the book's markdown directory:
    ```bash
-   bash ${CLAUDE_SKILL_DIR}/scripts/kobo_distill_init.sh <book-slug-id8>
+   bash ${CLAUDE_SKILL_DIR}/scripts/book_distill_init.sh <book-slug-id8>
    # writes: $TSUNDOKU_ROOT/cache/distilled/<book-slug>/{BOOK_OVERVIEW.md.template, metadata.snapshot.json}
    ```
 2. Read `metadata.json` and all `NN-chapter.md` files in order. For very
@@ -243,7 +243,7 @@ Per `methodology/06-stage4-pressure-test.md`:
 - **Report progress between stages** — don't run silently and dump at
   the end
 - **Never distill from memory** — if `metadata.json` is missing, stop and
-  route to `kobo-extract`
+  route to `book-extract`
 - **Preserve audit trail** — keep `candidates/` and `rejected/`; don't
   delete to "clean up"
 
@@ -253,18 +253,18 @@ Per `methodology/06-stage4-pressure-test.md`:
 |---|---|
 | `kobo-auth` | one-time login |
 | `kobo-library` | search + download EPUBs |
-| `kobo-extract` | EPUB → chunked Markdown |
-| **`kobo-distill`** (this) | **Markdown → atomic skill set** |
+| `book-extract` | EPUB → chunked Markdown |
+| **`book-distill`** (this) | **Markdown → atomic skill set** |
 
 ## Ecosystem positioning
 
-- **kobo-distill** (this skill, books): distills *what the book teaches*
+- **book-distill** (this skill, books): distills *what the book teaches*
   — frameworks, decision rules
 - **persona-distill** (separate, future): would distill *how a person
   thinks* — voice, mental models, biographical context
 - **skill-creator-advance** (`dev-workflow:skill-creator-advance`):
   packages a hand-written skill draft into Claude Code spec; you can
-  pipe a kobo-distill output through it for final QA
+  pipe a book-distill output through it for final QA
 
 ## Reference
 

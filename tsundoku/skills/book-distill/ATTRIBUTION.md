@@ -30,7 +30,7 @@ originally designed by [kangarooking](https://github.com/kangarooking) in
 - Added a **trilingual glossary (EN / 日本語 / 繁體中文)** at the top of
   each extractor for term alignment across languages
 - Replaced the upstream entry contract: tsundoku auto-feeds chapter
-  markdown + `metadata.json` from `kobo-extract`'s output directory
+  markdown + `metadata.json` from `book-extract`'s output directory
   (Cangjie expected the user to manually supply book text + metadata)
 - Removed the explicit `darwin-skill` integration (kept the
   `test-prompts.json` artifact format for future compatibility, but

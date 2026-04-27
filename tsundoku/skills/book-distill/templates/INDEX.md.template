@@ -1,6 +1,6 @@
 # {{BOOK_TITLE}} — Skill Index
 
-> Distilled by kobo-distill. **{{N}}** skills produced.
+> Distilled by book-distill. **{{N}}** skills produced.
 > Distillation timestamp: {{DATE}}
 
 ## About this book
@@ -68,5 +68,5 @@ Legend:
 
 - Source EPUB: {{SOURCE_EPUB_PATH}}
 - Chapter MD path: {{MARKDOWN_DIR}}
-- Pipeline: kobo-distill (RIA-TV++)
-- See `ATTRIBUTION.md` at the kobo-distill skill root for upstream credits.
+- Pipeline: book-distill (RIA-TV++)
+- See `ATTRIBUTION.md` at the book-distill skill root for upstream credits.

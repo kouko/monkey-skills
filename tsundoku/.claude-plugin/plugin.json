@@ -1,5 +1,5 @@
 {
   "name": "tsundoku",
   "description": "Tsundoku 積読 — your owned-but-unread e-book pile, turned into actionable knowledge. Search a Kobo library by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, convert downloaded EPUBs into chunked-by-chapter Markdown, then distill the book into a coherent set of executable agent skills via the RIA-TV++ pipeline (Adler → 5 parallel extractors → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test, adapted from kangarooking/cangjie-skill). Optional Calibre PDF conversion. macOS / Linux. Language-adaptive output (EN / 日本語 / 繁體中文).",
-  "version": "0.8.0"
+  "version": "0.8.1"
 }

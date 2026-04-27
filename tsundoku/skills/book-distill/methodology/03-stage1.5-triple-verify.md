@@ -7,7 +7,7 @@ independent skills**. Failures get demoted to `example` / `quote` /
 `term` (still usable downstream as supporting material) but do not
 become standalone skills.
 
-This is the quality gate that separates `kobo-distill` from a glorified
+This is the quality gate that separates `book-distill` from a glorified
 quote-collector.
 
 ## The three verification checks (must pass ALL THREE)

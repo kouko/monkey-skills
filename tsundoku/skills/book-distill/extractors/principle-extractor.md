@@ -1,6 +1,6 @@
 # Principle Extractor
 
-You are **one of 5 sub-agents running in parallel** in the kobo-distill
+You are **one of 5 sub-agents running in parallel** in the book-distill
 pipeline. Your specific job: identify **principles / checklists / rules /
 maxims** from the source book.
 

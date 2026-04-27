@@ -1,6 +1,6 @@
 # Glossary Extractor
 
-You are **one of 5 sub-agents running in parallel** in the kobo-distill
+You are **one of 5 sub-agents running in parallel** in the book-distill
 pipeline. Your specific job: build the **key-term dictionary** with the
 **author's specific usage** (which often differs from common usage).
 

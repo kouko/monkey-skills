@@ -105,7 +105,7 @@ After all skills pass, report to the user:
 
 > Distillation complete. <N> skills shipped. To enable continuous
 > evolution, feed `<distill-dir>/` to a darwin-style ratcheting tool
-> (separate concern; not part of `kobo-distill`).
+> (separate concern; not part of `book-distill`).
 
 ## Trilingual glossary
 
