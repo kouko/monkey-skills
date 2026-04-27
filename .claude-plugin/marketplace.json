@@ -38,6 +38,11 @@
       "name": "slides-toolkit",
       "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。",
       "source": "./slides-toolkit/"
+    },
+    {
+      "name": "kobodl-toolkit",
+      "description": "Kobo e-book library toolkit — search by title / author / series / publication date / category / description text / reading status / language, present matches as rich cards, then download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader. Optional Calibre PDF conversion. macOS only. 電子書庫搜尋・下載。Koboライブラリ検索・DRMフリーEPUBダウンロード。",
+      "source": "./kobodl-toolkit/"
     }
   ]
 }

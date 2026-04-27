@@ -1,0 +1,5 @@
+{
+  "name": "kobodl-toolkit",
+  "description": "Kobo e-book library toolkit — search your library by title / author / series / publication date / category / description text / reading status / language, then download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader. Optional Calibre PDF conversion. macOS only.",
+  "version": "0.3.0"
+}
