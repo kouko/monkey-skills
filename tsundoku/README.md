@@ -1,6 +1,6 @@
 # tsundoku 積読
 
-**Version**: 0.10.0
+**Version**: 0.11.0
 **Part of**: [monkey-skills](../)
 
 > *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
@@ -23,19 +23,21 @@ for the EPUB→Markdown stage. Distillation methodology adapted from
 
 ## Skills
 
-| Skill | When to use |
-|---|---|
-| [`kobo-auth`](skills/kobo-auth/SKILL.md) | First-time setup, login, account migration, credential rotation |
-| [`kobo-library`](skills/kobo-library/SKILL.md) | Daily use — search, list, batch-download EPUBs |
-| [`book-extract`](skills/book-extract/SKILL.md) | Convert EPUB → chunked-by-chapter Markdown (for book→skill, RAG, Obsidian notes) |
-| [`book-distill`](skills/book-distill/SKILL.md) | Markdown → atomic agent skills via RIA-TV++ (Adler / parallel extract / triple verify / RIA++ / Zettel / pressure test) |
+| Skill | Slash command | When to use |
+|---|---|---|
+| [`kobo-auth`](skills/kobo-auth/SKILL.md) | `/kobo-auth` | First-time setup, login, account migration, credential rotation |
+| [`kobo-library`](skills/kobo-library/SKILL.md) | `/kobo-library` | Daily use — search, list, batch-download EPUBs |
+| [`book-extract`](skills/book-extract/SKILL.md) | `/book-extract` | Convert EPUB → chunked-by-chapter Markdown |
+| [`book-distill`](skills/book-distill/SKILL.md) | `/book-distill` | Markdown → atomic agent skills via RIA-TV++ |
+| (router) | `/tsundoku` | Auto-route based on intent; ambiguous request → asks which step |
 
 Naming convention:
-- **`kobo-*`** — source-platform layer (auth + library + extract): bound to
-  Kobo. Future `kindle-*` / `apple-books-*` siblings would mirror this.
-- **`book-*`** — format-agnostic processing layer: works on any chunked
-  Markdown regardless of source. Future `paper-distill` (academic papers)
-  or `transcript-distill` (podcasts) would join here.
+- **`kobo-*`** — source-platform layer (auth + library): bound to Kobo /
+  kobodl. Future `kindle-*` / `apple-books-*` siblings would mirror this.
+- **`book-*`** — format-agnostic processing layer (extract + distill): works
+  on any EPUB / any chunked Markdown regardless of source. Future
+  `paper-distill` (academic papers) or `transcript-distill` (podcasts) would
+  join here.
 
 ## Quick Start
 
@@ -174,8 +176,12 @@ The `kobo/auth/` subdirectory is `chmod 700`, the `kobodl.json` file is
 tsundoku/
 ├── .claude-plugin/plugin.json
 ├── README.md
-├── lib/
-│   └── tsundoku_paths.sh        # plugin-wide path resolver (source-able)
+├── commands/                    # slash commands (1:1 with skills + 1 router)
+│   ├── tsundoku.md              #   /tsundoku (router)
+│   ├── kobo-auth.md             #   /kobo-auth
+│   ├── kobo-library.md          #   /kobo-library
+│   ├── book-extract.md          #   /book-extract
+│   └── book-distill.md          #   /book-distill
 └── skills/
     ├── kobo-auth/
     │   ├── SKILL.md
