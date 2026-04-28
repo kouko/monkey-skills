@@ -2,9 +2,10 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-Personal agent skills marketplace — **6 plugins** covering domain-team quality
+Personal agent skills marketplace — **8 plugins** covering domain-team quality
 gates, Obsidian vault workflows, philosophical thinking frameworks,
-skill-authoring tools, investing research, and pipeline-structured copywriting.
+skill-authoring tools, investing research, pipeline-structured copywriting,
+Google Slides generation, and Kobo-library skill distillation.
 
 ## Plugins
 
@@ -16,8 +17,10 @@ skill-authoring tools, investing research, and pipeline-structured copywriting.
 | [`dev-workflow`](dev-workflow/README.md) | 1.0.4 | 1 | 1 | Skill creation and eval workflows (adapted from Anthropic → AllanYiin chain) |
 | [`investing-toolkit`](investing-toolkit/README.md) | 1.16.5 | 15 | 5 | Investing research — US/JP/TW/KR/CN macro regime diagnosis, DCF, screening, equity snapshots |
 | [`copywriting-toolkit`](copywriting-toolkit/README.md) | 1.14.0 | 14 | 1 | Pipeline-structured copywriting — 9-phase pipeline, 90-anchor voice library, ethics + form gates. A/B coexistence with `domain-teams:copywriting-team` |
+| [`slides-toolkit`](slides-toolkit/README.md) | 0.1.0-mvp | 5 | 0 | Google Slides generation — brief → deck URL pipeline via `gws` CLI, backend-agnostic design knowledge (Minto / SCQA / chart-selection), Platform-Pivot multi-backend architecture |
+| [`tsundoku`](tsundoku/README.md) | 0.11.0 | 4 | 5 | Kobo library search → DRM-free EPUB download → chunked Markdown → atomic agent skill distillation via RIA-TV++ pipeline (Adler / 5 parallel extractors / triple verification / Zettelkasten) |
 
-**Total**: 65 skills, 29 slash commands across 6 plugins.
+**Total**: 74 skills, 34 slash commands across 8 plugins.
 
 Each plugin has its own `README.md` with full skill inventory, architecture,
 and usage detail. This root README only indexes the plugins.
@@ -28,9 +31,9 @@ and usage detail. This root README only indexes the plugins.
 
 ```bash
 claude plugin marketplace add kouko/monkey-skills
-# All 6 plugins become available:
+# All 8 plugins become available:
 #   domain-teams, obsidian, philosophers-toolkit, dev-workflow,
-#   investing-toolkit, copywriting-toolkit
+#   investing-toolkit, copywriting-toolkit, slides-toolkit, tsundoku
 ```
 
 Install specific plugins only:
@@ -55,13 +58,15 @@ See [`.codex/INSTALL.md`](.codex/INSTALL.md).
 
 ```
 monkey-skills/
-├── .claude-plugin/marketplace.json   ← Lists all 6 plugins
+├── .claude-plugin/marketplace.json   ← Lists all 8 plugins
 ├── domain-teams/                     ← Plugin (see domain-teams/README.md)
 ├── obsidian/                         ← Plugin (see obsidian/README.md)
 ├── philosophers-toolkit/             ← Plugin (see philosophers-toolkit/README.md)
 ├── dev-workflow/                     ← Plugin (see dev-workflow/README.md)
 ├── investing-toolkit/                ← Plugin (see investing-toolkit/README.md)
 ├── copywriting-toolkit/              ← Plugin (see copywriting-toolkit/README.md)
+├── slides-toolkit/                   ← Plugin (see slides-toolkit/README.md)
+├── tsundoku/                         ← Plugin (see tsundoku/README.md)
 │
 ├── LICENSE                           ← Project MIT (kouko) + third-party pointer
 ├── ATTRIBUTION.md                    ← Summary of all 3rd-party imports
