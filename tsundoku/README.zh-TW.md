@@ -33,91 +33,151 @@
 
 ## Quick Start
 
-### A. 全新設定（互動式啟用）
+所有流程都從在 Claude Code 內呼叫 slash command 開始。Skill 會處理
+binary 安裝、提示對話、credentials 儲存與 pipeline orchestration —
+不需要直接執行 shell script。
 
-```bash
-# 安裝 binary + 執行 device-flow login（會開啟 kobo.com/activate 的 code）
-bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
+### A. 全新設定（首次登入）
+
+```
+/kobo-auth
 ```
 
-依提示操作：在瀏覽器打開 `https://www.kobo.com/activate`、登入、輸入 kobodl
-顯示的 6 位數 code。Activation 註冊完成後，指令會自動結束。
+或用自然語：「幫我設定 Kobo 登入」。
 
-### B. 從既有的 kobodl 安裝移轉
+Skill 會安裝 kobodl binary，引導你完成 device-flow activation
+（開啟 `kobo.com/activate`，詢問 6 位數 code），並以 `chmod 600`
+將 credentials 存到 `~/.tsundoku/kobo/auth/` 底下。
 
-如果你已在他處有 credentials（例如舊版 `~/KobodlLibrarySync/` shell script，
-或 upstream 的 `~/.config/kobodl/`），可跳過 activation flow：
+### B. 從既有 kobodl 安裝移轉
+
+```
+/kobo-auth
+```
+
+接著告訴它：「我在 `~/KobodlLibrarySync/config/kobodl.json` 已有
+`kobodl.json`，請 import 進來」。Skill 會 import 既有 credentials，
+跳過 activation flow。
+
+### C. 搜尋與下載
+
+```
+/kobo-library
+```
+
+或：「搜尋我 Kobo 書庫裡提到 behavioral economics、2020 年後出版、尚未讀的書」。
+
+Skill 會 refresh library index、跑 multi-criteria filter、把結果以
+精緻卡片預覽、並把選定的書下載成 DRM-free EPUB 到 `~/Books/kobo/`。
+Idempotent — 已在 disk 上的書會自動跳過。
+
+### D. EPUB → 依章節切分的 Markdown
+
+```
+/book-extract
+```
+
+或：「把這個 EPUB 轉成依章節切分的 Markdown」。
+
+Skill 會在缺 pandoc 時自動安裝、依 EPUB 的 NCX table-of-contents
+切章、剝除圖片與 frontmatter、寫入
+`~/.tsundoku/cache/markdown/<title-slug>-<id8>/`。
+
+### E. Markdown → 原子化 agent skill 集
+
+```
+/book-distill
+```
+
+或：「把這本書蒸餾成可重用的 agent skill」。
+
+Skill 會 bootstrap 工作目錄並執行 6 個 stage 的 RIA-TV++ pipeline：
+
+| Stage | 動作 | 輸出 |
+|---|---|---|
+| 0 | Adler analytical read | `BOOK_OVERVIEW.md` |
+| 1 | 5 個 parallel extractor | `candidates/` |
+| 1.5 | Triple verification | `verified.md`（約 30-50% 通過） |
+| 2 | RIA++ skill render | `<skill-slug>/SKILL.md` |
+| 3 | Zettelkasten linking | `INDEX.md` |
+| 4 | Adversarial pressure test | `test-prompts.json` |
+
+各 section 的內文使用來源語言；YAML metadata + slug 使用英文。
+
+### 不確定該從哪裡開始？
+
+```
+/tsundoku
+```
+
+Router skill — 描述你的意圖，它會 dispatch 到對應的 sub-skill；
+模糊請求會反問「要走哪一步？」。
+
+## Under the Hood（直接呼叫 script）
+
+上面的 slash command 是建議用法。如需 debug、CI scripting 或 power-user
+場景，每個 skill 底層的 script 都可以直接呼叫。Skill 即委派給這些 script：
+
+### Auth (kobo-auth)
 
 ```bash
+# 安裝 binary + device-flow activation
 bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
+bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
+
+# 或 import 既有 credentials
 bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
     import-from ~/KobodlLibrarySync/config/kobodl.json
 ```
 
-### C. 搜尋與下載
+### Library (kobo-library)
 
 ```bash
-source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh  # 或任何其他 skill
+source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh
 export TMPDIR="$TSUNDOKU_TMPDIR"
 mkdir -p "$TSUNDOKU_DOWNLOADS"
 
-# 重新整理 library index
+# refresh library index
 "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" \
     book list --export-library "$TSUNDOKU_KOBO_LIBRARY_JSON"
 
-# 搜尋（例如「提到 behavioral economics、2020 年後出版、尚未讀」的書）—
-# 以精緻卡片預覽
+# 搜尋（5 種輸出格式：markdown / json / table / ids / paths）
 python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" \
-    --description "行為經濟,行為金融,Behavioral" \
+    --description "behavioral,economics,行為經濟" \
     --pub-after 2020 --status ReadyToRead --format markdown
 
-# 下載選定的 RevisionId（idempotent — 已在 disk 上的會跳過）
+# 依 RevisionId 下載（idempotent）
 bash tsundoku/skills/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
 
-# 或以 pipe 傳入過濾後的集合
+# 以 pipe 傳入過濾後的集合
 python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" --series "Silent Witch" --format ids \
   | bash tsundoku/skills/kobo-library/scripts/kobo_get.sh --convert-pdf
 ```
 
-### D. EPUB → 依章節切分的 Markdown（為 book→skill 鋪路）
+### Extract (book-extract)
 
 ```bash
-# 一次性：確認已安裝 pandoc
+# 一次性確認 pandoc
 bash tsundoku/skills/book-extract/scripts/install_pandoc.sh
 
-# 轉檔（預設使用 $TSUNDOKU_MARKDOWN_DIR — 不需要 --out-dir）
+# 轉檔（預設使用 $TSUNDOKU_MARKDOWN_DIR）
 python3 tsundoku/skills/book-extract/scripts/epub_to_markdown.py \
     --epub "$EPUB_PATH" --strip-images --strip-frontmatter
-# → 寫入 ~/.tsundoku/cache/markdown/<title-slug>-<id8>/index.md + 章節檔
 
-# 完成後清掉 markdown cache
+# 完成後清 cache
 bash tsundoku/skills/book-extract/scripts/cache_clear.sh
 ```
 
-### E. Markdown → 原子化 skill 集（book → skill）
+### Distill (book-distill)
 
 ```bash
-# 從 extracted markdown 啟動一個 book-distill 工作目錄
+# 從 extracted markdown 啟動工作目錄
 bash tsundoku/skills/book-distill/scripts/book_distill_init.sh \
     一九八四-b9152ffe
-# → ~/.tsundoku/cache/distilled/一九八四-b9152ffe/{candidates/, rejected/,
-#                                                   BOOK_OVERVIEW.md.draft,
-#                                                   metadata.snapshot.json,
-#                                                   chapters.list}
-
-# 接著 Claude 會讀取 book-distill 的 SKILL.md，跑完 6 個 stage 的 pipeline：
-#   Stage 0: Adler analytical read         → BOOK_OVERVIEW.md
-#   Stage 1: 5 個 parallel extractor        → candidates/
-#   Stage 1.5: Triple verification          → verified.md（約 30-50% 通過）
-#   Stage 2: RIA++ skill render             → <skill-slug>/SKILL.md
-#   Stage 3: Zettelkasten linking           → INDEX.md
-#   Stage 4: Adversarial pressure test       → test-prompts.json
+# Claude 接著會讀取 book-distill/SKILL.md，跑完 6 個 stage 的 pipeline
 ```
-
-各 section 的內文使用來源語言；YAML metadata + slug 使用英文。
 
 ## 儲存配置（單一 root，依平台分子目錄）
 
