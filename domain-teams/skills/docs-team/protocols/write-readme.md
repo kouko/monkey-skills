@@ -120,10 +120,19 @@ success on first try (Tutorial mode).
 
 If the project has international users, provide translated READMEs:
 
-- Named with BCP 47 tags: `README.ja.md`, `README.zh-CN.md`
-- Linked from the main README at the top: "Read this in: [English] | [日本語] | [中文]"
+- Named with BCP 47 tags. **monkey-skills convention is `en` / `ja` /
+  `zh-TW`**: `README.md` (English, default), `README.ja.md`,
+  `README.zh-TW.md`. Other projects may use different sets (e.g.
+  `README.zh-CN.md`, `README.fr.md`); always match the project's
+  existing convention rather than introducing a new one.
+- Linked from the main README at the top: e.g. "Read this in:
+  [English] | [日本語] | [繁體中文]"
 - Translations kept in sync when the main README changes (track via
   `last_reviewed` in frontmatter)
+- Use the project's i18n glossary if one exists (monkey-skills uses
+  `docs/i18n/glossary-ja.md` and `docs/i18n/glossary-zh-TW.md`) to
+  preserve English tech terms (skill, plugin, agent, workflow, gate,
+  MUST / SHOULD / MAY, etc.) consistently across translations
 
 ## Rules
 

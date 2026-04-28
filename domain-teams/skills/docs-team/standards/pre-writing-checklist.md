@@ -59,7 +59,7 @@ Every assumption is a potential error. Always verify against actual repo state.
 | **Tech stack labels** | "Node project" may actually be Deno / Bun; "Python" may be 3.8 vs 3.12 | Check `package.json` / `deno.json` / `pyproject.toml` |
 | **Quickstart commands** | Generic install commands often fail | Verify against actual project setup |
 | **Badge presence** | Not every project wants badges | Check existing README; follow suit |
-| **Internationalization** | `README.zh-CN.md` vs `README.zh-TW.md` vs `README.zh.md` differs by project | Match existing translation file naming |
+| **Internationalization** | Project conventions vary: `README.zh-TW.md` (Taiwan / monkey-skills default), `README.zh-CN.md` (Mainland), `README.zh.md` (locale-neutral); same applies to `ja` vs `ja-JP` | Match the project's existing translation file naming exactly. monkey-skills convention is `en` / `ja` / `zh-TW` |
 | **Diátaxis directory layout** | `docs/tutorials/` vs `docs/guides/` vs `docs/learn/` varies | Check existing layout |
 
 ## When in Doubt, Ask
