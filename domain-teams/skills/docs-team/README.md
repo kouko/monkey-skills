@@ -1,5 +1,7 @@
 # docs-team
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Diátaxis-grounded documentation skill with checkpoint quality gates and an opt-in 4× cost-saving quick mode.
 
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) → `domain-teams`
