@@ -8,6 +8,7 @@ the structural order and required sections.
 **Spec source**: [github.com/RichardLitt/standard-readme](https://github.com/RichardLitt/standard-readme/blob/main/spec.md)
 **Vocabulary reference**: `standards/diataxis-taxonomy.md`
 **Style reference**: `standards/style-conventions.md`
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
 
 ## README as Composite
 
@@ -177,6 +178,107 @@ If the project has international users, provide translated READMEs:
 
 See [LICENSE]({path}) for details.
 ```
+
+## Examples
+
+### Example 1: Small Go library (~30 lines)
+
+```markdown
+# isoduration
+
+Parse and format ISO 8601 durations in Go. Supports `P3Y6M4DT12H30M5S`
+and all valid subsets.
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/org/isoduration.svg)](https://pkg.go.dev/github.com/org/isoduration)
+
+## Install
+
+​```bash
+go get github.com/org/isoduration
+​```
+
+## Usage
+
+​```go
+package main
+
+import (
+    "fmt"
+    "github.com/org/isoduration"
+)
+
+func main() {
+    d, _ := isoduration.Parse("P1Y2M3DT4H5M6S")
+    fmt.Println(d.Days()) // 428
+}
+​```
+
+## Contributing
+
+PRs welcome. Run `go test ./...` before submitting.
+
+## License
+
+MIT
+```
+
+**Why this works**: 30 lines. One example. Clear scope. Required sections
+(Title / Short description / Install / Usage / Contributing / License) all
+present, in order, License last. No fluff.
+
+### Example 2: Full-stack application (~70 lines)
+
+```markdown
+# Taskflow
+
+> Self-hosted task management with real-time collaboration. Designed for
+> teams of 5-50 who outgrew spreadsheets but do not need enterprise
+> complexity.
+
+![Build](https://img.shields.io/github/actions/workflow/status/org/taskflow/ci.yml)
+![License](https://img.shields.io/github/license/org/taskflow)
+
+## Background
+
+Built because existing tools either cost too much per seat or required a
+SaaS dependency we did not want.
+
+## Quickstart
+
+Prerequisites: Docker, Docker Compose
+
+​```bash
+git clone https://github.com/org/taskflow.git
+cd taskflow
+docker-compose up
+​```
+
+Open http://localhost:8080. Default login: `admin@example.com` / `changeme`.
+
+## Configuration
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | — | Min 32 characters |
+| `PORT` | No | `8080` | HTTP server port |
+
+## Architecture
+
+See `docs/architecture.md` for component overview and data flow.
+
+## Contributing
+
+See `CONTRIBUTING.md`. All changes require tests.
+
+## License
+
+GPL-3.0
+```
+
+**Why this works**: Quickstart is one command (`docker-compose up`).
+Configuration is a table, not prose. Architecture and Contributing are
+linked, not inlined. License last.
 
 ## Completeness Check
 

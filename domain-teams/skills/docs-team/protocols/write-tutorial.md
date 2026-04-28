@@ -6,6 +6,7 @@ achievement.
 
 **Vocabulary reference**: `standards/diataxis-taxonomy.md` §Tutorial
 **Style reference**: `standards/style-conventions.md`
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
 
 ## Tutorial vs Other Modes
 
@@ -129,6 +130,67 @@ mode: tutorial
 
 {One link — either to the next tutorial, or to the how-to section for real use}
 ```
+
+## Example
+
+```markdown
+---
+title: Your first Taskflow board
+last_reviewed: 2026-04-29
+applies_to: v2.x
+owner: docs-team
+mode: tutorial
+---
+
+# Your first Taskflow board
+
+In this tutorial you will create a Taskflow board, add three cards, and
+move one card across columns. By the end you will see Taskflow's core
+loop in action.
+
+Time required: ~15 minutes.
+
+## Before you begin
+
+- Taskflow running locally (see Quickstart in README)
+- Logged in as `admin@example.com`
+
+## Step 1: Create a new board
+
+Click **New Board** in the sidebar. Name it `My First Board`. Click
+**Create**.
+
+You should see an empty board with three columns: To Do, Doing, Done.
+
+## Step 2: Add three cards
+
+In the **To Do** column, click **+ Add Card**. Type `Try Taskflow` and
+press Enter. Repeat for `Read the docs` and `Invite a teammate`.
+
+You now have three cards in the To Do column.
+
+## Step 3: Move a card to Doing
+
+Drag `Try Taskflow` from To Do to Doing.
+
+The card animates across, and the board's last-updated timestamp refreshes.
+
+## What you accomplished
+
+You created your first board, added cards, and moved one across columns.
+This is Taskflow's core flow.
+
+## What's next
+
+Read the [Boards reference](../reference/boards.md) for the full list of
+board options, or follow the [Invite a teammate](../how-to/invite-teammate.md)
+how-to guide.
+```
+
+**Why this works**: One success path, no branching. Each step has a
+verifiable observable outcome. Conclusion links to exactly one follow-up
+per Diátaxis quadrant. Frontmatter declares `mode: tutorial` so the gate
+can verify per-section mode clarity.
 
 ## Rules Summary
 

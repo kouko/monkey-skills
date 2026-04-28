@@ -183,6 +183,7 @@ Worker default resources:
   - `standards/docs-as-code.md` — Write the Docs operational philosophy
   - `standards/freshness-metadata.md` — frontmatter convention
   - `standards/api-reference-structure.md` — OpenAPI 3.2.0 structure
+  - `standards/pre-writing-checklist.md` — LLM-defensive pre-writing reading + Never Assume Defaults
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
@@ -226,7 +227,8 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {base_path}/standards/style-conventions.md,
     {base_path}/standards/docs-as-code.md,
     {base_path}/standards/freshness-metadata.md,
-    {base_path}/standards/api-reference-structure.md
+    {base_path}/standards/api-reference-structure.md,
+    {base_path}/standards/pre-writing-checklist.md
   ]
 
 ### Input
@@ -243,7 +245,8 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {base_path}/standards/style-conventions.md,
     {base_path}/standards/docs-as-code.md,
     {base_path}/standards/freshness-metadata.md,
-    {base_path}/standards/api-reference-structure.md
+    {base_path}/standards/api-reference-structure.md,
+    {base_path}/standards/pre-writing-checklist.md
   ]
 
 ### Artifact
