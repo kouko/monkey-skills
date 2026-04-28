@@ -1,6 +1,6 @@
 # tsundoku 積読
 
-**Version**: 0.9.0
+**Version**: 0.10.0
 **Part of**: [monkey-skills](../)
 
 > *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
@@ -65,7 +65,7 @@ bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
 ### C. Search and download
 
 ```bash
-source tsundoku/lib/tsundoku_paths.sh
+source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh  # or any other skill
 export TMPDIR="$TSUNDOKU_TMPDIR"
 mkdir -p "$TSUNDOKU_DOWNLOADS"
 
@@ -162,7 +162,7 @@ When `kindle-*` / `apple-books-*` skills land later, they'll mirror under
 | `TSUNDOKU_KOBO_BINARY` | Kobo: kobodl-macos |
 | `TSUNDOKU_KOBO_LIBRARY_JSON` | Kobo: library export |
 
-All exported when sourcing `lib/tsundoku_paths.sh`.
+All exported when sourcing `each skill's `scripts/tsundoku_paths.sh``.
 
 The `kobo/auth/` subdirectory is `chmod 700`, the `kobodl.json` file is
 `chmod 600`. The `cache/` subtree is regenerable — wipe at any time via

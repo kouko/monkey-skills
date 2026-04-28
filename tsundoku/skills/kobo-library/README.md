@@ -34,7 +34,7 @@ first.
 
 ```bash
 # Source paths (gets TSUNDOKU_KOBO_BINARY / _CONFIG / _LIBRARY_JSON / etc.)
-source ../../lib/tsundoku_paths.sh
+source scripts/tsundoku_paths.sh
 mkdir -p "$TSUNDOKU_DOWNLOADS"
 
 # Refresh the library index (export Kobo's metadata to local JSON)

@@ -25,7 +25,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
+PATHS_SCRIPT="$SCRIPT_DIR/tsundoku_paths.sh"
 [[ -f "$PATHS_SCRIPT" ]] && source "$PATHS_SCRIPT" || {
     TSUNDOKU_ROOT="${TSUNDOKU_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/tsundoku}"
 }

@@ -43,7 +43,7 @@ NN-<slugified-label>.md      ← H1 = chapter label from NCX
 bash scripts/install_pandoc.sh
 
 # Source paths
-source ../../lib/tsundoku_paths.sh
+source scripts/tsundoku_paths.sh
 EPUB=~/Books/kobo/"<author> - <title> b9152ffe.epub"
 
 # Convert (uses $TSUNDOKU_MARKDOWN_DIR by default — no --out-dir needed)

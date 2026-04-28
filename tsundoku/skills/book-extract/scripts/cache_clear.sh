@@ -24,8 +24,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
-# shellcheck source=../../lib/tsundoku_paths.sh
+PATHS_SCRIPT="$SCRIPT_DIR/tsundoku_paths.sh"
+# shellcheck source=./tsundoku_paths.sh
 source "$PATHS_SCRIPT"
 
 MODE="all"

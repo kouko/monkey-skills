@@ -132,7 +132,7 @@ first before extracting frameworks.
 ### Step 1 — Convert
 
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
+source ${CLAUDE_SKILL_DIR}/scripts/tsundoku_paths.sh
 EPUB="$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null

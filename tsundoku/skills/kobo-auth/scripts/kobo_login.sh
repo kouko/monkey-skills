@@ -21,7 +21,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./tsundoku_paths.sh
-source "$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
+source "$SCRIPT_DIR/tsundoku_paths.sh"
 
 ensure_binary() {
     if [[ ! -x "$TSUNDOKU_KOBO_BINARY" ]]; then

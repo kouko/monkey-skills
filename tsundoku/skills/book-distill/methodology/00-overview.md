@@ -63,7 +63,7 @@ problems caused by retargeting from "reader" to "agent".
         ┌────────────────────────┐
         │ Stage 2: RIA++ render  │  R / I / A1 / A2 / E / B
         └────────┬───────────────┘
-                 │ <skill>/SKILL.md
+                 │ <skill-slug>/SKILL.md
                  ▼
         ┌────────────────────────┐
         │ Stage 3: Zettelkasten  │  + INDEX.md w/ ref graph

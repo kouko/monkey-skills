@@ -30,12 +30,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
+PATHS_SCRIPT="$SCRIPT_DIR/tsundoku_paths.sh"
 if [[ ! -f "$PATHS_SCRIPT" ]]; then
     echo "kobodl_get: cannot locate tsundoku_paths.sh at $PATHS_SCRIPT" >&2
     exit 2
 fi
-# shellcheck source=../../lib/tsundoku_paths.sh
+# shellcheck source=./tsundoku_paths.sh
 source "$PATHS_SCRIPT"
 
 CONVERT_PDF=false

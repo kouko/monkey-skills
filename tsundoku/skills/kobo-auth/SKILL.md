@@ -82,7 +82,7 @@ auth scripts.
 
 | Path | Role |
 |---|---|
-| `tsundoku/lib/tsundoku_paths.sh` | Source-able OR runnable. Resolves and emits all path env vars |
+| `scripts/tsundoku_paths.sh` (per skill — copied to each one) | Source-able OR runnable. Resolves and emits all path env vars |
 | `scripts/kobo_install.sh` | Downloads `kobodl-macos` to `$TSUNDOKU_ROOT/bin/`. Idempotent |
 | `scripts/kobo_login.sh`   | Subcommand router — see below |
 
@@ -102,7 +102,7 @@ auth scripts.
 
 ```bash
 # 1. Resolve paths into shell
-source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
+source ${CLAUDE_SKILL_DIR}/scripts/tsundoku_paths.sh
 
 # 2. Install binary (no-op if already present)
 bash ${CLAUDE_SKILL_DIR}/scripts/kobo_install.sh

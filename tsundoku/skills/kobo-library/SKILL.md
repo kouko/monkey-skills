@@ -36,10 +36,10 @@ login, Flow B for migration).
 
 ## Path Resolution
 
-All paths come from `lib/tsundoku_paths.sh`. Source it once:
+All paths come from this skill's `scripts/tsundoku_paths.sh`. Source it once:
 
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/lib/tsundoku_paths.sh
+source ${CLAUDE_SKILL_DIR}/scripts/tsundoku_paths.sh
 export TMPDIR="$TSUNDOKU_TMPDIR"
 mkdir -p "$TSUNDOKU_DOWNLOADS" "$TSUNDOKU_TMPDIR"
 ```

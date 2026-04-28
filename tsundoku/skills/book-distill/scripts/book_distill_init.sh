@@ -34,8 +34,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATHS_SCRIPT="$SCRIPT_DIR/../../../lib/tsundoku_paths.sh"
-# shellcheck source=../../../lib/tsundoku_paths.sh
+PATHS_SCRIPT="$SCRIPT_DIR/tsundoku_paths.sh"
+# shellcheck source=./tsundoku_paths.sh
 source "$PATHS_SCRIPT"
 
 FORCE=false
@@ -68,7 +68,7 @@ book_distill_init: source book directory not found:
 
 Did you run book-extract first?
 
-  source ${TSUNDOKU_ROOT%/*}/lib/tsundoku_paths.sh
+  source ${CLAUDE_SKILL_DIR}/scripts/tsundoku_paths.sh
   EPUB="\$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
   python3 .../book-extract/scripts/epub_to_markdown.py --epub "\$EPUB" \\
       --strip-images --strip-frontmatter
