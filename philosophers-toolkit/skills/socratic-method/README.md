@@ -1,5 +1,7 @@
 # Socratic Method Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 A dialogue-driven guidance framework built on the Socratic method.
 
 ## What This Skill Contains

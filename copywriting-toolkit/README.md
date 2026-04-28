@@ -1,5 +1,7 @@
 # copywriting-toolkit
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Pipeline-structured copywriting plugin. Refactored from `domain-teams:copywriting-team` into 14 specialized skills — each with ONE job, self-contained standards, and JSON-Schema-validated hand-off envelopes between stages. Two execution paths (Express Mode + Q1-Q10 intake), layered precondition / bounce-back mechanics, and primary-source-grounded JP + ZH voice lineage craft.
 
 ## Status

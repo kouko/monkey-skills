@@ -1,5 +1,7 @@
 # Monkey Skills
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Personal agent skills marketplace — **6 plugins** covering domain-team quality
 gates, Obsidian vault workflows, philosophical thinking frameworks,
 skill-authoring tools, investing research, and pipeline-structured copywriting.

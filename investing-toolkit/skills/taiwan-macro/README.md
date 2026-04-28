@@ -1,5 +1,7 @@
 # taiwan-macro
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Taiwan macroeconomic data skill for investing-toolkit.
 台灣宏觀經濟資料技能。台湾マクロ経済データスキル。
 

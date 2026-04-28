@@ -1,5 +1,7 @@
 # kobo-library
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Search a Kobo e-book library by 10+ filter axes, present matches as cards,
 > download the chosen books as DRM-free EPUBs.
 

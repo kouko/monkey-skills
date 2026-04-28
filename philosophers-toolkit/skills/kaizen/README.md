@@ -1,5 +1,7 @@
 # Kaizen Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Identify and implement small, continuous improvements in existing processes
 through a structured 6-step cycle.
 

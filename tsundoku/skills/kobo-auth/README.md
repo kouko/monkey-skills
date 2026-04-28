@@ -1,5 +1,7 @@
 # kobo-auth
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Authentication lifecycle for Kobo. Owns the credential file and binary.
 
 Part of the [tsundoku](../..) plugin. The skill that Claude actually loads

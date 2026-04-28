@@ -1,5 +1,7 @@
 # Obsidian Markdown
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Create and edit Obsidian Flavored Markdown with wikilinks, embeds, callouts, properties, and other Obsidian-specific syntax.
 
 ## Original Source

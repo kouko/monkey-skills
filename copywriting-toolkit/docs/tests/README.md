@@ -1,5 +1,7 @@
 # Voice Anchor E2E Tests
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Test harness to validate Phase 6 Pass 3 Register Signal branch actually works end-to-end with v1.3.3 native-vocabulary anchors.
 
 ## Gap being tested

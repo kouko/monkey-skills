@@ -1,5 +1,7 @@
 # Obsidian Canvas Creator
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Create Obsidian Canvas files from text content, supporting both MindMap and freeform layouts.
 
 ## Original Source

@@ -1,5 +1,7 @@
 # japan-macro
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Japan macroeconomic data skill for investing-toolkit.
 日本マクロ経済データスキル。日本宏觀經濟資料技能。
 

@@ -1,5 +1,7 @@
 # Hegelian Dialectics Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Examine any position through thesis, antithesis, and synthesis
 to find higher-order solutions that transcend binary choices.
 

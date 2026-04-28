@@ -1,5 +1,7 @@
 # china-macro / docs
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Developer-facing reference material. Not loaded by the skill at runtime —
 kept here so future implementation work (e.g. a supplementary
 `nbs_client.py` to replace stale akshare mirrors for industrial / trade

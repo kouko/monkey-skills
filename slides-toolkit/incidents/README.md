@@ -1,5 +1,7 @@
 # incidents/
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Credential-leak incident playbook output location. **On-demand** — 僅在
 實際發生 credential-leak incident 時才於此目錄新增 markdown 檔案，每
 起 incident 一份。平時此目錄只保留本 README。

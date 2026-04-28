@@ -1,5 +1,7 @@
 # Philosophers Toolkit
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Philosophical thinking frameworks that guide users through structured
 reasoning — not lectures, but interactive methods for deeper thinking.
 

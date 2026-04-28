@@ -1,5 +1,7 @@
 # china-macro / docs / tools
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 One-shot admin scripts used to capture the NBS indicator catalog under
 `docs/`. These are NOT part of the runtime skill — only run when NBS
 publishes a new base-period segment (every ~5 years) or when the

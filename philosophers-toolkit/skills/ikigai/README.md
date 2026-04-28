@@ -1,5 +1,7 @@
 # Ikigai Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Analyze any project, product, or career through the 4-axis Ikigai framework
 to find its purpose and diagnose gaps.
 

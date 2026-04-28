@@ -1,5 +1,7 @@
 # investing-toolkit
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 **Version**: 1.16.5
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 

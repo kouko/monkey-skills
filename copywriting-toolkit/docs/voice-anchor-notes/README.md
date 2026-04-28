@@ -6,6 +6,8 @@ date: 2026-04-21
 
 # Voice Anchor Deep Dives
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 **Purpose**: Layer 2/3 research artifacts per `docs/anchor-schema-v2.md`. Pass 3 does NOT load these files; they exist for audit / provenance / future deep-dive research expansion.
 
 ## Layer separation (per `anchor-schema-v2.md`)

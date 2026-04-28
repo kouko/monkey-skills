@@ -1,5 +1,7 @@
 # Aristotle's Four Causes Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Analyze any subject through four fundamental dimensions of understanding.
 
 ## The Four Causes

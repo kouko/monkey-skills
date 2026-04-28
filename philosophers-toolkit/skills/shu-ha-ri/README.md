@@ -1,5 +1,7 @@
 # Shu-Ha-Ri Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Diagnose mastery stages and provide stage-appropriate guidance for any skill domain.
 
 ## The Three Stages

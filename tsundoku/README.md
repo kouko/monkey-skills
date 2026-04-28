@@ -1,5 +1,7 @@
 # tsundoku 積読
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 **Version**: 0.11.0
 **Part of**: [monkey-skills](../)
 
