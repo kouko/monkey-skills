@@ -7,10 +7,9 @@
 Part of the [tsundoku](../..) plugin. Skill spec Claude loads is
 [`SKILL.md`](SKILL.md); this README is for humans.
 
-> ⚠️ **Status (v0.8.1)**: pipeline structure landed; **trilingual
-> glossaries are scheduled for a research-grounded revision** (current
-> entries are direct translations rather than each language community's
-> canonical technical terms). See "Known limitations" below.
+> **Status (v0.9.0)**: pipeline structure + research-grounded trilingual
+> glossaries (EN / 日本語 / 繁體中文) using canonical published-translation
+> terms. Sources cited in `ATTRIBUTION.md`.
 
 ## What it does (and doesn't)
 
@@ -135,7 +134,7 @@ the list of upstream → tsundoku changes.
 
 The whole architecture comes from cangjie-skill; tsundoku contributes:
 1. English-canonical instructions + adaptive output language rule
-2. **Trilingual glossaries** (EN / 日本語 / 繁體中文) — *being revised*
+2. **Trilingual glossaries** (EN / 日本語 / 繁體中文) using canonical published-translation terms
 3. tsundoku-specific entry hook (`book_distill_init.sh`) so the upstream's
    biggest friction point ("user must supply book + metadata") disappears
 
@@ -148,12 +147,6 @@ processing layer. Only `kobo-auth` and `kobo-library` are bound to the
 Kobo platform.
 
 ## Known limitations
-
-- **Trilingual glossaries** in `methodology/*.md` and `extractors/*.md`
-  contain direct translations rather than each language community's
-  canonical technical terms. **Pending revision** with researched
-  domain-specific equivalents (e.g. for cognitive-bias / decision-theory
-  / philosophy / 認知行動学 / 認識論 vocabulary).
 
 - **No coverage proof** — distillation may miss the book's most important
   framework. Roadmap item: TOC reconstruction test (given the distilled
