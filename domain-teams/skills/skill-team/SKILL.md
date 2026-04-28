@@ -140,7 +140,7 @@ dependency graph analysis.
 
 For MUST and SHOULD gates, launch `evaluator` with:
 - The gate file (checklist or rubric)
-- Standards: all 7 skill-team standards (see Resource Manifest below)
+- Standards: all 8 skill-team standards (see Resource Manifest below)
 - The artifact to evaluate
 - Original requirements
 
@@ -170,10 +170,11 @@ Worker default resources:
   - `standards/agent-interface.md` — Resource Paths Input Contract, behavioral boundaries
   - `standards/commit-convention.md` — 3-commit split, Conventional Commits, Semver
   - `standards/mermaid-usage-guidelines.md` — when to use Mermaid (decision trees / state machines / routing) vs prose, syntax conventions, integration with 4-tier gate system
+  - `standards/user-terminal-handoff.md` — when an interactive / TTY-bound command MUST be handed off to the user's own terminal instead of running via Bash tool (device-flow auth, OTP, sudo, TUIs)
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: same 7 files as worker
+- standards: same 8 files as worker
 - Skill Completeness gate: `checklists/skill-completeness-checklist.md`
 - Commit Split Validity gate: `checklists/commit-split-checklist.md`
 - Primary Source Grounding gate: `rubrics/primary-source-grounding.md`
@@ -214,7 +215,8 @@ skill's base directory to get absolute paths.
     {base_path}/standards/grounding-principle.md,
     {base_path}/standards/agent-interface.md,
     {base_path}/standards/commit-convention.md,
-    {base_path}/standards/mermaid-usage-guidelines.md
+    {base_path}/standards/mermaid-usage-guidelines.md,
+    {base_path}/standards/user-terminal-handoff.md
   ]
 
 ### Input
@@ -233,7 +235,8 @@ skill's base directory to get absolute paths.
     {base_path}/standards/grounding-principle.md,
     {base_path}/standards/agent-interface.md,
     {base_path}/standards/commit-convention.md,
-    {base_path}/standards/mermaid-usage-guidelines.md
+    {base_path}/standards/mermaid-usage-guidelines.md,
+    {base_path}/standards/user-terminal-handoff.md
   ]
 
 ### Artifact
