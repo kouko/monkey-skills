@@ -1,5 +1,7 @@
 # china-macro
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 China macroeconomic data skill for investing-toolkit.
 中国宏观经济数据技能。中國宏觀經濟資料技能。
 

@@ -1,5 +1,7 @@
 # book-distill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Distill a book (already converted to chunked Markdown by
 > [`book-extract`](../book-extract)) into a coherent set of executable agent
 > skills via the **RIA-TV++ pipeline**.

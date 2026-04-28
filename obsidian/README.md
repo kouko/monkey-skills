@@ -1,5 +1,7 @@
 # obsidian
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 **Version**: 3.5.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 

@@ -1,5 +1,7 @@
 # investing-toolkit Scripts
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Python data adapters for fetching market and macro data.
 
 ## Setup

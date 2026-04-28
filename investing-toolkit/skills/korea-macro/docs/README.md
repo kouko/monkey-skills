@@ -1,5 +1,7 @@
 # korea-macro/docs
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Developer-facing documentation and tooling for maintaining `korea-macro`.
 
 ## Contents

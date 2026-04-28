@@ -7,6 +7,8 @@ date: 2026-04-22
 
 # Anchor References
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 **Purpose**: hold register / format / movement descriptions that do NOT qualify as Layer 1 voice anchors under v2 inclusion criterion (individual creator with identifiable sentence-level register). These remain valuable — Pass 3 over-mimic registry cites some as mitigation-only; Phase 8 form-check may consult others as format conventions — but they are NOT loaded as voice anchors.
 
 **Consolidated in v1.13.1** from former `docs/format-templates/` + `docs/register-references/`. Both folders held non-Layer-1 references with overlapping purposes; single folder reduces navigation overhead.

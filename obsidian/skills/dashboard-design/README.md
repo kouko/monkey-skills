@@ -1,5 +1,7 @@
 # dashboard-design
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 デジタル庁「ダッシュボードデザインの実践ガイドブック」に基づき、提示型ダッシュボードの設計を要件整理からプロトタイピングまで引導する skill。
 
 ## Workflow

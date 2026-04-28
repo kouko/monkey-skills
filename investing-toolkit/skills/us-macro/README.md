@@ -1,5 +1,7 @@
 # us-macro
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 US macroeconomic and sector-level data skill for investing-toolkit.
 
 ## Overview

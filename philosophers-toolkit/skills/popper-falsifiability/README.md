@@ -1,5 +1,7 @@
 # Popper's Falsifiability Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Turn vague claims into testable hypotheses and design tests that
 could prove them wrong.
 

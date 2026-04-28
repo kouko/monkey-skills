@@ -1,5 +1,7 @@
 # korea-macro
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Korea macroeconomic data skill for investing-toolkit.
 한국 매크로 경제 데이터 스킬. 韓國宏觀經濟資料技能。
 

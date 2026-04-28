@@ -1,5 +1,7 @@
 # Descartes' Methodical Doubt Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Systematically strip away every uncertain premise until only the
 indubitable remains, then rebuild from that foundation.
 

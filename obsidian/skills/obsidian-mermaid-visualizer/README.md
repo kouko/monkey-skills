@@ -1,5 +1,7 @@
 # Mermaid Visualizer
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Transform text content into Mermaid diagrams across **17 diagram types** — primarily optimized for Obsidian 11.4.1 native viewer, but output is portable to any Mermaid-compatible renderer supporting v11.4.1+ (GitHub, GitLab, Mermaid Live Editor, Notion, Confluence, HackMD, Docusaurus, MkDocs, etc.).
 
 ## Why Obsidian-first?

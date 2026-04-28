@@ -1,5 +1,7 @@
 # Using Philosophers Toolkit
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Routing skill that helps users find the right philosophical method.
 
 ## How It Works

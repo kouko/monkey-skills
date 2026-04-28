@@ -1,5 +1,7 @@
 # Aristotle's First Principles Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Decompose problems to fundamental truths and rebuild from scratch,
 rejecting analogy and convention.
 

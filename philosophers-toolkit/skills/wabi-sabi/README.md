@@ -1,5 +1,7 @@
 # Wabi-Sabi Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Assess imperfection through three lenses to judge when something is
 "good enough" and counter over-engineering and perfectionism.
 

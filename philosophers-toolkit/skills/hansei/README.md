@@ -1,5 +1,7 @@
 # Hansei Skill
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 Conduct blame-free retrospection after projects, decisions, or events
 to extract structural insights and concrete next steps.
 

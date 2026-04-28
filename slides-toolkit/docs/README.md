@@ -1,5 +1,7 @@
 # slides-toolkit/docs — 實作經驗文件
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 這個目錄收錄 slides-toolkit 開發過程中累積的**實證資料**與**外部邊界觀察**。和 `PRODUCT-SPEC.md` / `TECH-SPEC.md` 的差異：
 
 - **PRODUCT-SPEC / TECH-SPEC** = 規格與設計決策（should-be）

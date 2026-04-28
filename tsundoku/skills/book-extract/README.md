@@ -1,5 +1,7 @@
 # book-extract
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Convert an EPUB into chunked-by-chapter Markdown for LLM ingestion.
 > Format-agnostic — works on any EPUB, not just Kobo-sourced.
 
