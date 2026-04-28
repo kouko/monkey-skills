@@ -46,6 +46,7 @@ README Completeness, ADR Structure, Style Convention, etc.).
 - Writing explanation docs (design rationale, concept clarification)
 - Writing README files (Standard README spec)
 - Writing architecture decision records (ADRs)
+- Writing architecture documentation (overview, component spec, data flow, deployment, security)
 - Writing API reference with OpenAPI structure
 - Auditing existing documentation for Diátaxis mode clarity
 - Codebase health assessment and tech debt audit
@@ -136,6 +137,7 @@ You may reference any domain file (checklists, rubrics, standards) during self-c
 | Diátaxis Mode Clarity | Output is a single-quadrant doc (Tutorial/How-to/Reference/Explanation) or a labeled-section README | `evaluator` + `rubrics/diataxis-mode-clarity.md` |
 | README Completeness | Output is a README.md file | `evaluator` + `checklists/readme-completeness.md` |
 | ADR Structure | Output is an Architecture Decision Record | `evaluator` + `rubrics/adr-structure.md` |
+| Architecture Doc Completeness | Output is an L1 overview, L2 component spec, data flow, deployment topology, or security model | `evaluator` + `rubrics/architecture-doc-completeness.md` |
 
 ### SHOULD Gates (auto-trigger, skippable with stated reason)
 
@@ -184,13 +186,15 @@ Worker default resources:
   - `standards/freshness-metadata.md` — frontmatter convention
   - `standards/api-reference-structure.md` — OpenAPI 3.2.0 structure
   - `standards/pre-writing-checklist.md` — LLM-defensive pre-writing reading + Never Assume Defaults
+  - `standards/architecture-doc-structure.md` — L0–L4 hierarchy, Mermaid rules, component spec template
 - protocol: (selected per-workflow from `protocols/`)
 
 Evaluator default resources:
-- standards: same 5 files as worker
+- standards: same 7 files as worker
 - Diátaxis Mode Clarity gate: `rubrics/diataxis-mode-clarity.md`
 - README Completeness gate: `checklists/readme-completeness.md`
 - ADR Structure gate: `rubrics/adr-structure.md`
+- Architecture Doc Completeness gate: `rubrics/architecture-doc-completeness.md`
 - Style Convention gate: `rubrics/style-convention.md`
 - Freshness gate: `rubrics/freshness.md`
 - Tech Debt Audit gate: `checklists/tech-debt-checklist.md`
@@ -228,7 +232,8 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {base_path}/standards/docs-as-code.md,
     {base_path}/standards/freshness-metadata.md,
     {base_path}/standards/api-reference-structure.md,
-    {base_path}/standards/pre-writing-checklist.md
+    {base_path}/standards/pre-writing-checklist.md,
+    {base_path}/standards/architecture-doc-structure.md
   ]
 
 ### Input
@@ -246,7 +251,8 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {base_path}/standards/docs-as-code.md,
     {base_path}/standards/freshness-metadata.md,
     {base_path}/standards/api-reference-structure.md,
-    {base_path}/standards/pre-writing-checklist.md
+    {base_path}/standards/pre-writing-checklist.md,
+    {base_path}/standards/architecture-doc-structure.md
   ]
 
 ### Artifact
@@ -345,6 +351,18 @@ is not in the hard-block list.
 | 2. MUST gates | evaluator | (per artifact: mode-clarity / readme-completeness / adr-structure) | artifact | verdicts | standard gate handling |
 | 3. SHOULD gates | evaluator | `rubrics/style-convention.md` (+ freshness if metadata) | artifact | verdicts | skippable with reason |
 | 4. Apply verdicts | main | gate verdict rules | verdicts | revised or escalated | PASS_WITH_NOTES auto-revises; NEEDS_REVISION escalates |
+
+### Write Architecture Documentation
+
+**Trigger**: User wants to document system architecture — overview,
+component spec, data flow, deployment topology, or security model.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Route | main | `protocols/doc-writing-router.md` | user request | level confirmation | optional if user specifies L1/L2/etc |
+| 2. Write | worker | `protocols/write-architecture.md` | system context + level | architecture doc | also loads `standards/architecture-doc-structure.md` |
+| 3. Completeness Gate | evaluator | `rubrics/architecture-doc-completeness.md` | architecture doc | verdict | MUST gate |
+| 4. Style Gate | evaluator | `rubrics/style-convention.md` | architecture doc | verdict | SHOULD gate |
 
 ### Documentation Audit
 

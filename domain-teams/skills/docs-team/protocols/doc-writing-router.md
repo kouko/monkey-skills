@@ -60,6 +60,7 @@ Read the user request and ask: **what does the reader need?**
 | "I need a README for this project" | Composite | `write-readme.md` |
 | "We need to record this architectural decision" | ADR | `write-adr.md` |
 | "Document this API" | Reference sub-case | `write-reference.md` + `api-reference-structure.md` |
+| "Document the system architecture" / "component spec" / "data flow" / "deployment topology" / "security model" | Architecture | `write-architecture.md` + `architecture-doc-structure.md` |
 
 If the request genuinely needs multiple modes (e.g., "write tutorial and reference
 for feature X"), **split into separate invocations** — one per mode. Do not try
