@@ -43,33 +43,107 @@ Naming convention:
 
 ## Quick Start
 
-### A. Brand-new setup (interactive activation)
+All flows start by invoking a slash command in Claude Code. The skill
+handles binary install, prompts, credential storage, and pipeline
+orchestration — you do not run shell scripts directly.
 
-```bash
-# install binary + run device-flow login (opens kobo.com/activate code)
-bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
+### A. Brand-new setup (first-time login)
+
+```
+/kobo-auth
 ```
 
-Follow the prompts: open `https://www.kobo.com/activate` in a browser, sign in,
-enter the 6-digit code shown by kobodl. The command auto-completes once the
-activation registers.
+Or in natural language: *"Set up Kobo login for me."*
+
+The skill installs the kobodl binary, walks you through device-flow
+activation (opens `kobo.com/activate`, asks for the 6-digit code), and
+stores credentials with `chmod 600` under `~/.tsundoku/kobo/auth/`.
 
 ### B. Migrate from existing kobodl install
 
-If you already have credentials elsewhere (e.g. legacy `~/KobodlLibrarySync/`
-shell script, or upstream's `~/.config/kobodl/`), skip the activation flow:
+```
+/kobo-auth
+```
+
+Then tell it: *"I already have a `kobodl.json` at `~/KobodlLibrarySync/config/kobodl.json` — please import."* The skill imports the credentials instead of running the activation flow.
+
+### C. Search and download
+
+```
+/kobo-library
+```
+
+Or: *"Search my Kobo library for books that mention behavioral economics, published since 2020, that I haven't read yet."*
+
+The skill refreshes the library index, runs the multi-criteria filter,
+previews matches as rich cards, and downloads chosen books as DRM-free
+EPUBs to `~/Books/kobo/`. Idempotent — books already on disk are skipped.
+
+### D. EPUB → chunked Markdown
+
+```
+/book-extract
+```
+
+Or: *"Convert this EPUB to chapter-split Markdown."*
+
+The skill auto-installs pandoc if missing, splits on the EPUB's NCX
+table-of-contents, strips images / frontmatter, and writes to
+`~/.tsundoku/cache/markdown/<title-slug>-<id8>/`.
+
+### E. Markdown → atomic agent skill set
+
+```
+/book-distill
+```
+
+Or: *"Distill this book into reusable agent skills."*
+
+The skill bootstraps the working directory and runs the 6-stage
+RIA-TV++ pipeline:
+
+| Stage | Action | Output |
+|---|---|---|
+| 0 | Adler analytical read | `BOOK_OVERVIEW.md` |
+| 1 | 5 parallel extractors | `candidates/` |
+| 1.5 | Triple verification | `verified.md` (~30-50% pass) |
+| 2 | RIA++ skill render | `<skill-slug>/SKILL.md` |
+| 3 | Zettelkasten linking | `INDEX.md` |
+| 4 | Adversarial pressure test | `test-prompts.json` |
+
+Output prose stays in the source language; YAML metadata + slugs are English.
+
+### Not sure which step?
+
+```
+/tsundoku
+```
+
+Router skill — describe your intent and it dispatches to the right
+sub-skill. Ambiguous requests get a "which step?" clarifying question.
+
+## Under the Hood (direct script invocation)
+
+The slash commands above are the recommended interface. For debugging,
+CI scripting, or power-user flows, every skill's underlying scripts can
+be invoked directly. The skills delegate to these:
+
+### Auth (kobo-auth)
 
 ```bash
+# install binary + device-flow activation
 bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
+bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
+
+# or import existing credentials
 bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
     import-from ~/KobodlLibrarySync/config/kobodl.json
 ```
 
-### C. Search and download
+### Library (kobo-library)
 
 ```bash
-source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh  # or any other skill
+source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh
 export TMPDIR="$TSUNDOKU_TMPDIR"
 mkdir -p "$TSUNDOKU_DOWNLOADS"
 
@@ -77,58 +151,43 @@ mkdir -p "$TSUNDOKU_DOWNLOADS"
 "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" \
     book list --export-library "$TSUNDOKU_KOBO_LIBRARY_JSON"
 
-# search (e.g. "books that mention behavioral economics, published since 2020,
-# not yet read") — preview as rich cards
+# search (5 output formats: markdown / json / table / ids / paths)
 python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" \
-    --description "行為經濟,行為金融,Behavioral" \
+    --description "behavioral,economics,行為經濟" \
     --pub-after 2020 --status ReadyToRead --format markdown
 
-# download chosen RevisionIds (idempotent — skips books already on disk)
+# download chosen RevisionIds (idempotent)
 bash tsundoku/skills/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
 
-# or pipe a filtered set
+# pipe filtered set
 python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" --series "Silent Witch" --format ids \
   | bash tsundoku/skills/kobo-library/scripts/kobo_get.sh --convert-pdf
 ```
 
-### D. EPUB → chunked Markdown (for book→skill)
+### Extract (book-extract)
 
 ```bash
-# one-time: ensure pandoc is installed
+# one-time pandoc check
 bash tsundoku/skills/book-extract/scripts/install_pandoc.sh
 
-# convert (uses $TSUNDOKU_MARKDOWN_DIR by default — no --out-dir needed)
+# convert (uses $TSUNDOKU_MARKDOWN_DIR by default)
 python3 tsundoku/skills/book-extract/scripts/epub_to_markdown.py \
     --epub "$EPUB_PATH" --strip-images --strip-frontmatter
-# → writes to ~/.tsundoku/cache/markdown/<title-slug>-<id8>/index.md + chapters
 
-# clear the markdown cache when finished
+# clear cache when done
 bash tsundoku/skills/book-extract/scripts/cache_clear.sh
 ```
 
-### E. Markdown → atomic skill set (book → skill)
+### Distill (book-distill)
 
 ```bash
-# bootstrap a book-distill working dir from the extracted markdown
+# bootstrap working dir from extracted markdown
 bash tsundoku/skills/book-distill/scripts/book_distill_init.sh \
     一九八四-b9152ffe
-# → ~/.tsundoku/cache/distilled/一九八四-b9152ffe/{candidates/, rejected/,
-#                                                   BOOK_OVERVIEW.md.draft,
-#                                                   metadata.snapshot.json,
-#                                                   chapters.list}
-
-# Then Claude reads book-distill's SKILL.md and runs the 6-stage pipeline:
-#   Stage 0: Adler analytical read         → BOOK_OVERVIEW.md
-#   Stage 1: 5 parallel extractors          → candidates/
-#   Stage 1.5: Triple verification           → verified.md (~30-50% pass)
-#   Stage 2: RIA++ skill render             → <skill-slug>/SKILL.md
-#   Stage 3: Zettelkasten linking            → INDEX.md
-#   Stage 4: Adversarial pressure test       → test-prompts.json
+# Claude then reads book-distill/SKILL.md and runs the 6-stage pipeline
 ```
-
-Output sections in source language; YAML metadata + slugs in English.
 
 ## Storage Layout (single root, per-platform subdirs)
 
