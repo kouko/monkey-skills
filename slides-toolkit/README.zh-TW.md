@@ -2,6 +2,8 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
+> ⚠️ **Cowork 相容性**：僅支援 Claude Code CLI / Code tab。Cowork tab 被 sandbox URL allowlist 擋住 Google Slides API 呼叫。完整 retrospective 見 [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md)。
+
 **Version**: 0.1.0-mvp
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 **License**: MIT

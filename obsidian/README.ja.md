@@ -2,6 +2,8 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
+> ⚠️ **Cowork 互換性**：ほとんどの skill は全環境で動作する。`defuddle` skill は Claude Code CLI が必要 — Cowork sandbox が plugin subprocess からの外部 HTTP をブロックするため。他の skill（vault management、daily note、diagram、canvas、dashboard、file-intel）は Cowork 対応。詳細な retrospective は [`../investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) を参照。
+
 **Version**: 3.5.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 

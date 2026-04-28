@@ -1,7 +1,7 @@
 {
   "name": "investing-toolkit",
   "version": "1.16.5",
-  "description": "Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF and screening workflows, equity snapshots via yfinance, FRED, BOJ, FinMind, FinanceDataReader, and akshare adapters. 投資調査・美股・台股・日股・韓股・中國股。投資研究工具組。",
+  "description": "Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF and screening workflows, equity snapshots via yfinance, FRED, BOJ, FinMind, FinanceDataReader, and akshare adapters. 投資調査・美股・台股・日股・韓股・中國股。投資研究工具組。 ⚠️ Claude Code CLI only — Cowork sandbox blocks external data fetches.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
