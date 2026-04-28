@@ -19,12 +19,14 @@ Without a case pool, Stage 1.5 and Stage 2 A1 stall.
 
 ## Glossary (EN / 日本語 / 繁體中文)
 
-- **case / 事例 / 案例**: a concrete instance of methodology application
+- **case / 事例 / 案例**: concrete instance of methodology application
   documented in the book
-- **bound_to / 紐づけ / 綁定**: the methodology that this case
-  illustrates (≥1 required)
-- **outcome / 結果 / 結果**: what actually happened (if the book
-  reports it)
+- **bound_to (binding) / 紐づけ / 綁定**: the methodology this case
+  illustrates (≥1 required to make the case extraction-worthy)
+- **outcome / 結果 / 結果**: what actually happened (if the book reports
+  it — distinguishes case from anecdote)
+- **anecdote / エピソード / 軼事**: a story without methodology binding —
+  NOT in scope; do not extract
 
 ## Your inputs
 

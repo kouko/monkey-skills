@@ -65,12 +65,20 @@ you're stretching connections.
 - INDEX.md per-skill description — match source book language
 - mermaid graph node labels — English slug for stability
 
-## Trilingual glossary
+## Trilingual glossary (Stage 3 — Zettelkasten linking)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| depends-on | 前提とする | 依賴 |
-| contrasts-with | 対比される | 對比 |
-| composes-with | 組み合わせ | 組合 |
-| reference graph | 参照グラフ | 引用圖 |
-| atomization | 原子化 | 原子化 |
+Source: Sönke Ahrens *How to Take Smart Notes* — JP edition 『TAKE NOTES!』
+日経BP 二木夢子 訳 / TW edition 《卡片盒筆記》遠流.
+
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| Zettelkasten | ツェッテルカステン | 卡片盒筆記法 | (loanword in JP — no native term) |
+| atomicity | 原子性 | 原子化 | Ahrens |
+| linking | リンク（する） | 連結 / 建立連結 | Ahrens |
+| permanent note | 永久保存メモ | 永久筆記 | Ahrens |
+| literature note | 文献メモ | 文獻筆記 | Ahrens |
+| fleeting note | 走り書きメモ | 靈感筆記 | Ahrens |
+| depends-on | 前提とする | 依賴 | relation type |
+| contrasts-with | 対比される | 對比 | relation type |
+| composes-with | 組み合わせる | 組合 | relation type |
+| reference graph | 参照グラフ | 引用圖 | |

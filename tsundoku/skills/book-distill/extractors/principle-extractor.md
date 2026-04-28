@@ -6,14 +6,20 @@ maxims** from the source book.
 
 ## Glossary (EN / 日本語 / 繁體中文)
 
-- **principle / 原則 / 原則**: an explicit "should" / "should never"
+- **principle / 原則 / 原則**: explicit "should" / "should never"
   assertion ("Never invest in a business you don't understand")
-- **checklist / チェックリスト / 清單**: a structured list of items to
-  verify before acting (investment checklist; pre-decision questions)
-- **rule / ルール / 規則**: a directly applicable judgment rule
+- **checklist / チェックリスト / 檢查清單**: structured list to verify
+  before acting (investment checklist; pre-decision questions)
+- **rule / ルール / 規則**: directly applicable judgment rule
   ("Never X when Y" / "Only X if Y")
-- **maxim / 格言 / 格言**: a short imperative phrase the author uses
+- **maxim / 格言 / 格言**: short imperative phrase the author uses
   repeatedly with action-guiding intent
+- **stop-doing list / やらないことリスト (descriptive) ・ ストップ・ドゥーイング・リスト (loanword) / "stop doing list" (英文借用) ・ 不為清單**:
+  list of things to deliberately NOT do (Jim Collins *Good to Great* /
+  段永平 — both originate the English term; ZH 段永平 originated
+  「不為清單」)
+- **margin of safety / 安全域 / 安全邊際**: investing decision rule
+  (Graham; Pan Rolling『賢明なる投資家』/ 寰宇《智慧型股票投資人》)
 
 ## Your inputs
 

@@ -99,13 +99,23 @@ critique are written in Japanese.
 4. **One-sentence thesis cheating** — concatenating three claims with
    semicolons isn't "one sentence"; it's an outline. Compress further.
 
-## Trilingual glossary
+## Trilingual glossary (Adler analytical reading)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| thesis | テーゼ / 主旨 | 主旨 / 中心論點 |
-| skeleton | 骨格 | 骨架 |
-| proposition | 命題 | 命題 |
-| blind spot | 盲点 | 盲點 |
-| argument chain | 論証の鎖 | 論證鏈 |
-| applicability | 応用可能性 | 應用潛力 |
+Canonical published-translation terms — sources: 講談社学術文庫『本を読む本』
+(外山滋比古・槇未知子 訳); 臺灣商務《如何閱讀一本書》(郝明義・朱衣 譯).
+
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| analytical reading | 分析読書 | 分析閱讀 | Adler — both editions |
+| inspectional reading | 点検読書 | 檢視閱讀 | NOT 略讀 / 速読 |
+| syntopical reading | シントピカル読書 | 主題閱讀 | JP keeps katakana loanword |
+| stage 1 — structural | 構造段階 | 結構性 | 商務 wording |
+| stage 2 — interpretive | 解釈段階 | 詮釋性 | 商務 (NOT 解釋性) |
+| stage 3 — critical | 批評段階 | 評論性 | 商務 (NOT 批判性) |
+| thesis | 主旨 / 中心命題 | 主旨 | NOT テーゼ — wrong register in JP reading-method |
+| skeleton | 骨組み | 骨架 | NOT スケルトン (IT/programming sense) |
+| proposition | 命題 | 命題 | |
+| argument chain | 論証 / 議論の筋道 | 論述 / 論述鏈 | |
+| blind spot | 盲点 | 盲點 | |
+| period limitation | 時代的制約 | 時代局限 | |
+| applicability | 応用可能性 / 実用性 | 應用潛力 / 適用性 | |

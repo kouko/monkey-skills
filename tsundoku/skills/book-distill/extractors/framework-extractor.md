@@ -6,16 +6,27 @@ frameworks / reasoning structures** from the source book.
 
 ## Glossary (EN / 日本語 / 繁體中文)
 
-- **framework / フレームワーク / 框架**: a transferable thinking
-  structure that can be applied to new problems (e.g. inversion, OODA,
-  first-principles)
-- **mental model / メンタルモデル / 心智模型**: a stable representation
-  of how something works (e.g. "circle of competence", "antifragile")
-- **decision framework / 意思決定フレーム / 決策框架**: a structured
-  procedure for making a class of decisions (e.g. "ask the worst case
-  first, then expected value")
-- **reasoning method / 推論方法 / 推理方法**: a specific path from
-  knowns to unknowns (e.g. "from first principles", "by analogy")
+Canonical terms from published translations where applicable
+(see `ATTRIBUTION.md` and per-extractor sources).
+
+- **framework / フレームワーク / 架構 (academic) ・ 框架 (general)**:
+  transferable thinking structure (e.g. inversion, OODA, first-principles)
+- **mental model / メンタルモデル / 心智模式 (Senge 第五項修練) ・ 心智模型 (general)**:
+  stable representation of how something works
+- **decision framework / 意思決定フレームワーク / 決策框架**:
+  structured procedure for a class of decisions
+- **reasoning method / 推論方法 / 推理方法**: specific path from knowns
+  to unknowns ("from first principles", "by analogy")
+- **inversion / 逆転思考 / 逆向思考**: ask "what causes failure?" first
+  (Munger; Pan Rolling 譯 / 商業周刊《窮查理的普通常識》)
+- **circle of competence / 能力の輪 / 能力圈**: judgment range that
+  beats market average (Munger; Pan Rolling 譯)
+- **first principles / 第一原理思考 / 第一性原理 (modern) ・ 第一原理 (academic)**:
+  reason from foundational truths, not analogy
+- **margin of safety / 安全域 / 安全邊際**: Graham canonical
+  (Pan Rolling『賢明なる投資家』/ 寰宇《智慧型股票投資人》)
+- **antifragile / 反脆弱性 / 反脆弱**: gains from disorder (Taleb;
+  ダイヤモンド社 千葉敏生 譯 / 大塊文化 羅耀宗 譯)
 
 ## Your inputs
 

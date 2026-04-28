@@ -15,14 +15,29 @@ quote-collector.**
 
 ## Glossary (EN / 日本語 / 繁體中文)
 
-- **counter-example / 反例 / 反例**: an instance the author cites to
-  warn AGAINST a behavior
-- **failure mode / 失敗モード / 失敗模式**: the recurring shape of how
-  things go wrong
-- **mechanism / メカニズム / 機制**: the underlying cause of the
-  failure (so future agents can recognize it)
-- **warning sign / 警告サイン / 警告信號**: an early signal that the
-  failure mode is starting to materialize
+- **counter-example / 反例 / 反例**: instance the author cites to warn
+  AGAINST a behavior
+- **failure mode / 失敗モード / 失敗モード**: recurring shape of how things
+  go wrong
+- **mechanism / メカニズム / 機制**: underlying cause (so future agents
+  can recognize it)
+- **warning sign / 警告サイン / 警告信號**: early signal of materializing
+  failure
+- **cognitive bias / 認知バイアス / 認知偏誤**: systematic deviation from
+  rationality (TW canon: 認知偏誤 per Wikipedia zh-tw + Cambridge zh-tw)
+- **overconfidence (bias) / 自信過剰バイアス / 過度自信偏誤**:
+  (industry standard: 自信過剰 — Nomura, Daiwa, 三井住友DS, Globis)
+- **anchoring effect / アンカリング効果 / 錨定效應**: Kahneman/Tversky
+- **confirmation bias / 確証バイアス / 確認偏誤**: tendency to seek
+  confirming evidence (TW: 確認偏誤 per Wikipedia zh-tw)
+- **availability heuristic / 利用可能性ヒューリスティック / 可得性捷思法**:
+  Kahneman canon (天下文化 洪蘭 譯《快思慢想》)
+- **representativeness heuristic / 代表性ヒューリスティック / 代表性捷思法**:
+  Kahneman canon
+- **loss aversion / 損失回避 / 損失趨避**: losses loom larger than gains
+  (TW: 損失趨避 per 洪蘭《快思慢想》)
+- **sunk cost fallacy / サンクコスト効果 / 沉沒成本謬誤**: continuing
+  because of past investment
 
 ## Your inputs
 

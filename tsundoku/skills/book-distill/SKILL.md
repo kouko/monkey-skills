@@ -66,21 +66,31 @@ signals match natural user queries.
 
 ## Trilingual glossary — RIA-TV++ key terms
 
-For cross-language readers; extractors and methodology files repeat the
-relevant subset.
+Each entry uses the **canonical published-translation term** in each
+language where one exists. Sources cited in `ATTRIBUTION.md`. Where
+competing standards exist, both are listed.
 
-| English | 日本語 | 繁體中文 | Definition |
+| English | 日本語 | 繁體中文 | Definition / source |
 |---|---|---|---|
-| **framework** | フレームワーク | 框架 | a transferable thinking structure (e.g. inversion, OODA) |
-| **principle** | 原則 | 原則 | an "always / never / only when X" rule |
-| **case** | 事例 | 案例 | author's documented application of a methodology |
-| **counter-example** | 反例 | 反例 | failure mode the author explicitly warns about |
-| **mental model** | メンタルモデル | 心智模型 | a stable representation of how X works |
-| **decision rule** | 意思決定ルール | 決策規則 | an if-then heuristic for runtime |
-| **trigger** | トリガー | 觸發信號 | a user-query pattern that should activate a skill |
-| **boundary** | 境界 / 適用範囲 | 邊界 / 適用範圍 | when NOT to use the skill |
-| **inversion** | 反転思考 | 逆向思維 | "what would cause failure?" instead of "how to succeed?" |
-| **circle of competence** | 自分の理解圏 | 能力圈 | the boundary of where your judgment beats market average |
+| **framework** | フレームワーク | 架構 / 框架 | transferable thinking structure (架構 academic; 框架 general) |
+| **principle** | 原則 | 原則 | "always / never / only when X" rule |
+| **case** | 事例 | 案例 | author's documented application |
+| **counter-example** | 反例 | 反例 | failure mode the author warns about |
+| **mental model** | メンタルモデル | 心智模式 / 心智模型 | (心智模式: Senge 《第五項修練》 天下文化; 心智模型: general cognitive register) |
+| **decision rule** | 決定ルール | 決策規則 | if-then heuristic |
+| **heuristic** | ヒューリスティック | 捷思法 | rule-of-thumb (Kahneman: 早川書房 村井章子 譯 / 天下文化 洪蘭 譯) |
+| **trigger / activation** | トリガー条件 / 発動条件 | 觸發條件 | user-query pattern that should activate a skill (Google/MS docs zh-tw) |
+| **boundary / scope** | 適用範囲 / 適用外 | 適用範圍 / 不適用情境 | when NOT to use the skill |
+| **inversion** | 逆転思考 | 逆向思考 | "what would cause failure?" — Munger (Pan Rolling 譯 / 商業周刊《窮查理的普通常識》) |
+| **circle of competence** | 能力の輪 | 能力圈 | judgment range that beats market avg — Munger (Pan Rolling 譯) |
+| **margin of safety** | 安全域 | 安全邊際 | Graham canonical (Pan Rolling『賢明なる投資家』/ 寰宇《智慧型股票投資人》) |
+| **cognitive bias** | 認知バイアス | 認知偏誤 | systematic deviation from rationality (TW: 認知偏誤; 简: 认知偏差) |
+| **adversarial test** | 敵対的テスト | 對抗式測試 | (NIST IR 8269 邦訳 / NTU 計中 epaper) |
+| **pressure / stress test** | ストレステスト | 壓力測試 | (in software/finance; NOT 圧力テスト = mechanical engineering register) |
+| **edge case** | エッジケース | 邊緣案例 | rare extreme inputs (e-Words / zh.wikipedia) |
+| **audit trail** | 監査証跡 | 稽核軌跡 | tamper-resistant assembled record (TW industry: iThome 稽核軌跡) |
+| **falsifiability** | 反証可能性 | 可證偽性 / 可否證性 | Popper (法政大学出版局 訳 / 林正弘 引介) |
+| **triangulation** | トライアンギュレーション | 三角驗證 | qualitative-research register (NOT 三角測量 = surveying) |
 
 ## When to invoke this skill
 

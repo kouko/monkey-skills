@@ -129,12 +129,23 @@ related_skills: []                        # filled by Stage 3
 5. **Skipping A1, going I → E directly** — without "the author actually
    applied this to X", the skill loses authority.
 
-## Trilingual glossary
+## Trilingual glossary (Stage 2 — RIA++ render)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| paraphrase | 自分の言葉で言い換える | 自家話重述 |
-| trigger signal | トリガー信号 | 觸發信號 |
-| halt condition | 停止条件 / 中断条件 | 判停條件 |
-| anti-scenario | 反シナリオ / 不適用例 | 反場景 |
-| over-firing | 過剰発火 | 過度調用 / 亂激活 |
+RIA original ZH terms from 趙周《這樣讀書就夠了》 / 拆書幫 canonical:
+
+| RIA | EN (趙周's English) | 繁體中文 (canonical) | 日本語 (descriptive — no published edition) |
+|---|---|---|---|
+| R | Reading | 閱讀片段 / 原文片段 | 引用箇所 / 原文の抜き書き |
+| I | Interpretation | **重述** (NOT 詮釋) | 自分の言葉で言い直し |
+| A1 | Appropriation — past | **經驗** (NOT 過去應用) | 過去の経験との接続 |
+| A2 | Appropriation — future | **應用** (NOT 未來應用) | 今後どう使うかの計画 |
+
+Other Stage 2 terms:
+
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| paraphrase | 自分の言葉で言い直す | 用自己的話重述 | Ahrens canonical |
+| trigger / activation | トリガー条件 / 発動条件 | 觸發條件 | NOT 觸發信號 (electronics narrow sense) |
+| halt condition | 停止条件 / 中断条件 | 判停條件 | |
+| anti-scenario | 適用外 / 不適用例 | 不適用情境 | NOT 反場景 (calque) |
+| over-firing | 過剰発動 | 過度激活 / 過度調用 | |

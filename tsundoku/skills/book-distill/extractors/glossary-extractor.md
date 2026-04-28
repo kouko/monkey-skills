@@ -17,14 +17,18 @@ The glossary does NOT become standalone skills, but it is referenced
 
 ## Glossary (EN / 日本語 / 繁體中文)
 
-- **term / 用語 / 術語**: a word the author uses with a specific
-  technical meaning
-- **author definition / 著者の定義 / 作者本人的定義**: how the AUTHOR
-  uses this word — not what the dictionary says
+- **term / 用語 / 術語**: a word the author uses with specific technical
+  meaning
+- **author definition / 著者の定義 / 作者本人的定義**: how the AUTHOR uses
+  this word — not what the dictionary says
 - **key distinction / 主要な区別 / 關鍵區別**: how the author's usage
   differs from common usage (the most valuable field)
 - **why it matters / なぜ重要か / 為何重要**: which downstream skills
   depend on this clarification
+- **canonical translation / 公式訳語 / 公定譯名**: term used in the
+  published translation of the source book — prefer this over your own
+  rendering (e.g. Munger's "circle of competence" → 「能力の輪」 per
+  Pan Rolling's published translation, NOT a free-translated coinage)
 
 ## Your inputs
 

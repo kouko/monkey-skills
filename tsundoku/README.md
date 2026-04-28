@@ -1,6 +1,6 @@
 # tsundoku 積読
 
-**Version**: 0.8.1
+**Version**: 0.9.0
 **Part of**: [monkey-skills](../)
 
 > *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.

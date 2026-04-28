@@ -107,13 +107,18 @@ After all skills pass, report to the user:
 > evolution, feed `<distill-dir>/` to a darwin-style ratcheting tool
 > (separate concern; not part of `book-distill`).
 
-## Trilingual glossary
+## Trilingual glossary (Stage 4 — adversarial pressure test)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| trigger / activation | トリガー / 起動 | 觸發 / 激活 |
-| lure | おとり / 誘い | 誘餌 |
-| edge case | 境界ケース | 邊界場景 |
-| ratcheting | ラチェット式 | 棘輪式進化 |
-| ship gate | リリース門 | 發布門檻 |
-| fix-skill / fix-test | スキル修正 / テスト修正 | 修 skill / 修測試 |
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| trigger / activation | トリガー条件 / 発動条件 | 觸發條件 | Google/MS official zh-tw |
+| adversarial test | 敵対的テスト | 對抗式測試 | NIST IR 8269 邦訳 / NTU 計中 |
+| stress / pressure test | ストレステスト | 壓力測試 | NOT 圧力テスト = mechanical |
+| lure / distractor | 錯乱肢 / おとり | 誘答選項 / 干擾項 | educational measurement: 誘答 (TW MCQ) / 干擾項 (Cambridge zh-tw) |
+| edge case | エッジケース | 邊緣案例 | NOT 境界条件 (= BVA testing technique) |
+| sanity check | サニティチェック | 合理性檢查 | NOT 妥当性確認 (= ISO validation) |
+| ground truth | 正解データ | 標準答案 / 真實標籤 | NOT 真値 (= metrology) / NOT 基準真相 (calque) |
+| ship gate / release criteria | リリース基準 / 品質ゲート | 發布條件 / 品質關卡 | Stage-Gate / Azure DevOps register |
+| ratcheting | ラチェット式 | 棘輪式 | progressive evolution metaphor |
+| regression test | リグレッションテスト / 回帰テスト | 迴歸測試 | well-established |
+| fix-skill / fix-test | スキル修正 / テスト修正 | 修正 skill / 修正測試 | |

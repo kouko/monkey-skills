@@ -92,12 +92,19 @@ problems caused by retargeting from "reader" to "agent".
 
 ## Trilingual glossary (key methodology terms)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| analytical reading | 分析的読書 | 分析閱讀 |
-| atomicity | 原子性 | 原子化 |
-| trigger | トリガー | 觸發信號 |
-| boundary | 適用境界 | 適用邊界 |
-| pressure test | プレッシャーテスト | 壓力測試 |
-| audit trail | 監査トレイル | 審計軌跡 |
-| canonical | 標準 / 正式版 | 標準 / 規範 |
+Canonical published-translation terms. See per-file glossaries for
+context-specific extensions.
+
+| English | 日本語 | 繁體中文 | Source / note |
+|---|---|---|---|
+| analytical reading | 分析読書 | 分析閱讀 | Adler 講談社学術文庫 / 商務印書館 |
+| structural (stage 1) | 構造段階 | 結構性 | Adler 商務 |
+| interpretive (stage 2) | 解釈段階 | 詮釋性 | Adler 商務 (NOT 解釋性) |
+| critical (stage 3) | 批評段階 | 評論性 | Adler 商務 (NOT 批判性) |
+| atomicity (Zettelkasten) | 原子性 | 原子化 | Ahrens 日経BP / 遠流 |
+| Zettelkasten | ツェッテルカステン | 卡片盒筆記法 | (loanword in JP) |
+| Progressive Summarization | 漸進的要約 | 累進式摘要 | Forte 東洋経済 / 商周 (NOT 漸進式) |
+| trigger / activation | トリガー条件 | 觸發條件 | Google/MS Power Automate zh-tw |
+| boundary / scope | 適用範囲 / 適用外 | 適用範圍 / 不適用情境 | (NOT 適用境界 — too formal/ISO) |
+| stress / pressure test | ストレステスト | 壓力測試 | (NOT 圧力テスト = mechanical) |
+| audit trail | 監査証跡 | 稽核軌跡 | (NOT トレーサビリティ; TW industry: iThome) |

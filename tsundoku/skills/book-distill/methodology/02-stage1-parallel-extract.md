@@ -85,12 +85,12 @@ If your numbers are an order of magnitude off, suspect either: extractor
 is broken, or this book isn't really methodology-dense (consider
 rejecting before Stage 1.5).
 
-## Trilingual glossary
+## Trilingual glossary (Stage 1 — extraction)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| candidate unit | 候補単位 | 候選單元 |
-| extractor | 抽出器 | 提取器 |
-| over-extract | 過剰抽出 | 寧錯殺 / 過度提取 |
-| trespass | 越境 | 越界 |
-| dedupe | 重複排除 | 去重 |
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| candidate unit | 候補項目 | 候選條目 | NOT 候補単位 / 候選單元 — 単位/單元 carry wrong sense (physical unit / module) |
+| extractor (sub-agent) | 抽出器 | 提取器 | software/research register |
+| over-extract | 過剰抽出 | 過度提取 | 寧錯殺 is the principle name |
+| trespass (cross extractor turf) | 越境 | 越界 | |
+| dedupe | 重複排除 | 去重 | |

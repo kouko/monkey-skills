@@ -157,14 +157,20 @@ disposition: |
 **> 80%** → suspect verification standards too lax; re-tighten the
 checks.
 
-## Trilingual glossary
+## Trilingual glossary (Stage 1.5 — Triple Verification)
 
-| English | 日本語 | 繁體中文 |
-|---|---|---|
-| cross-domain | 横断的 | 跨域 |
-| predictive power | 予測能力 | 預測力 |
-| exclusivity | 独自性 | 獨特性 |
-| common sense | 常識 | 常識 |
-| extrapolate | 外挿 | 外推 |
-| audit trail | 監査トレイル | 審計軌跡 |
-| disposition | 処分 / 扱い | 處置 |
+| English | 日本語 | 繁體中文 | Note |
+|---|---|---|---|
+| cross-domain | クロスドメイン / 領域横断 | 跨領域 / 跨情境 | software register vs academic |
+| triangulation | トライアンギュレーション | 三角驗證 | NOT 三角測量 (= surveying register) |
+| predictive power | 予測力 | 預測力 | NOT 予測精度 (= measured accuracy) |
+| distinctiveness / non-obviousness | 独自性 / 非自明性 | 獨特性 / 非顯而易見性 | "exclusivity" was a stretch term |
+| common sense | 常識 | 常識 | |
+| truism | 自明の理 / 当たり前のこと | 老生常談 / 不證自明 | distinct nuances: trite vs self-evident |
+| non-trivial | 非自明 | 非平凡 | math/algorithm sense |
+| non-obvious | 非自明 | 非顯而易見 | patent law 103 sense |
+| extrapolate | 外挿 | 外推 | (NOT 推論延伸 — descriptive paraphrase) |
+| falsifiability | 反証可能性 | 可證偽性 / 可否證性 | Popper (法政大学 / 林正弘) |
+| corroboration | 確証 | 驗證 | distinct from verification in Popper |
+| audit trail | 監査証跡 | 稽核軌跡 | NOT トレーサビリティ (= property, not artifact) |
+| disposition (audit) | 処分 / 扱い | 處置 | |
