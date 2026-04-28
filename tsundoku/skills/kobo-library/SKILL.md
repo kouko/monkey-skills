@@ -83,6 +83,10 @@ Map the user's natural-language request to `kobo_query.py` filters:
 | "簡介同時提到 X 和 Y" | `--description-all X,Y` |
 | "2020 年以後的書" | `--pub-after 2020` |
 | "2024 年出版的" | `--pub-after 2024 --pub-before 2024` |
+| "2024 年買的" / "最近 6 個月買的" | `--purchased-after 2024` / `--purchased-after 2025-10` |
+| "買兩年以上但還沒讀的" | `--purchased-before 2024 --status ReadyToRead` (對照當前年份計算) |
+| "今年讀完的" | `--finished-after 2026 --status Finished` |
+| "Trial / KoboPlus 訂閱來的" | `--origin Trial` / `--origin KoboPlus` |
 | "已讀完的" / "讀過的" | `--status Finished` |
 | "在讀的" | `--status Reading` |
 | "還沒讀過的" | `--status ReadyToRead` |
@@ -178,6 +182,11 @@ Exit codes: `0` = all attempted books succeeded or were already present;
 | `--isbn ISBN` | exact ISBN |
 | `--pub-after YYYY[-MM[-DD]]` | publication date >= |
 | `--pub-before YYYY[-MM[-DD]]` | publication date <= |
+| `--purchased-after YYYY[-MM[-DD]]` | acquisition date >= (`BookEntitlement.Created`) |
+| `--purchased-before YYYY[-MM[-DD]]` | acquisition date <= |
+| `--finished-after YYYY[-MM[-DD]]` | `LastTimeFinished` >= |
+| `--finished-before YYYY[-MM[-DD]]` | `LastTimeFinished` <= |
+| `--origin CAT` | exact `OriginCategory` (`Purchased` / `Trial` / `KoboPlus` / ...) |
 | `--genre UUID` | exact UUID match on `BookMetadata.Genre` |
 | `--category UUID` | UUID present in `BookMetadata.Categories` |
 | `--revision-id UUID` | exact RevisionId (for resolving a single book) |
@@ -189,10 +198,12 @@ Output formats:
 - `json` — full structured data, description HTML stripped
 - `ids` — one RevisionId per line, pipe to `kobo_get.sh`
 - `markdown` — Obsidian-friendly card with cover + description
-- `summary` — count / status / language / top series / total reading minutes
+- `summary` — count / status / language / top series / total reading minutes / purchase year histogram
 
-Sort keys (ascending): `title` / `author` / `series` / `pub_date`, or
-descending for `progress` / `spent`.
+Sort keys:
+- **Ascending**: `title` / `author` / `series` / `pub_date`
+- **Descending (highest first)**: `progress` / `spent`
+- **Descending (newest first)**: `purchase_date` / `last_started` / `last_finished` (books with empty values for the chosen date sort to the end)
 
 ## Library JSON Reference
 
@@ -201,13 +212,18 @@ Three subobjects per entry:
 
 ```
 NewEntitlement
-├─ BookEntitlement   { RevisionId, IsRemoved, IsHidden, OriginCategory, ... }
+├─ BookEntitlement   { RevisionId, CrossRevisionId, Created (acquisition date),
+│                      LastModified, OriginCategory (Purchased / Trial /
+│                      KoboPlus), IsRemoved, IsHiddenFromArchive, Status,
+│                      Accessibility, ... }
 ├─ BookMetadata      { Title, Subtitle, Description (HTML, ≤500 chars),
 │                      Contributors, Publisher.Name, Series {Name, Number},
 │                      Isbn, Language, Locale, PublicationDate,
 │                      Genre, Categories, CoverImageUrl, ... }
-└─ ReadingState      { StatusInfo.Status, ProgressPercent, SpentReadingMinutes,
-                       LastTimeFinished, ... }
+└─ ReadingState      { StatusInfo { Status, TimesStartedReading,
+                       LastTimeStartedReading, LastTimeFinished },
+                       Statistics { SpentReadingMinutes, RemainingTimeMinutes },
+                       CurrentBookmark { ProgressPercent, Location, ... } }
 ```
 
 **Caveats**:
