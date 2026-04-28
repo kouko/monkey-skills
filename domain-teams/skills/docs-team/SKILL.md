@@ -143,7 +143,7 @@ You may reference any domain file (checklists, rubrics, standards) during self-c
 
 | Gate | Trigger | File |
 |------|---------|------|
-| Style Convention | Any prose-producing workflow (not Codebase Assessment) | `evaluator` + `rubrics/style-convention.md` |
+| Style Convention | Any prose-producing workflow (not Codebase Assessment) | `evaluator` + `rubrics/style.md` |
 | Freshness | Documentation audit, or docs with existing `last_reviewed` metadata | `evaluator` + `rubrics/freshness.md` |
 
 ### MAY Gates (on request or when relevant)
@@ -195,7 +195,7 @@ Evaluator default resources:
 - README Completeness gate: `checklists/readme-completeness.md`
 - ADR Structure gate: `rubrics/adr-structure.md`
 - Architecture Doc Completeness gate: `rubrics/architecture-doc-completeness.md`
-- Style Convention gate: `rubrics/style-convention.md`
+- Style Convention gate: `rubrics/style.md`
 - Freshness gate: `rubrics/freshness.md`
 - Tech Debt Audit gate: `checklists/tech-debt-checklist.md`
 
@@ -275,7 +275,7 @@ Agents will Read these files themselves. Do NOT embed file content in the prompt
 | 1. Route | main | `protocols/doc-writing-router.md` | user request | mode confirmation | optional if user specifies |
 | 2. Write | worker | `protocols/write-tutorial.md` | context + target state | tutorial doc | — |
 | 3. Mode Gate | evaluator | `rubrics/diataxis-mode-clarity.md` | tutorial doc | verdict | MUST gate |
-| 4. Style Gate | evaluator | `rubrics/style-convention.md` | tutorial doc | verdict | SHOULD gate |
+| 4. Style Gate | evaluator | `rubrics/style.md` | tutorial doc | verdict | SHOULD gate |
 
 ### Write How-to Guide
 
@@ -292,7 +292,7 @@ Same structure as Write Tutorial but with `protocols/write-how-to.md` in Phase 2
 | 1. Route | main | `protocols/doc-writing-router.md` | user request | mode confirmation | optional |
 | 2. Write | worker | `protocols/write-reference.md` | subject + source of truth | reference doc | for API, also load `standards/api-reference-structure.md` |
 | 3. Mode Gate | evaluator | `rubrics/diataxis-mode-clarity.md` | reference doc | verdict | MUST gate |
-| 4. Style Gate | evaluator | `rubrics/style-convention.md` | reference doc | verdict | SHOULD gate |
+| 4. Style Gate | evaluator | `rubrics/style.md` | reference doc | verdict | SHOULD gate |
 
 ### Write Explanation
 
@@ -309,7 +309,7 @@ Same structure as Write Tutorial but with `protocols/write-explanation.md` in Ph
 | 1. Write | worker | `protocols/write-readme.md` | project context | README.md with labeled sections | — |
 | 2. Completeness Gate | evaluator | `checklists/readme-completeness.md` | README.md | verdict | MUST gate |
 | 3. Mode Gate (per section) | evaluator | `rubrics/diataxis-mode-clarity.md` | README.md | verdict | MUST gate — runs per section |
-| 4. Style Gate | evaluator | `rubrics/style-convention.md` | README.md | verdict | SHOULD gate |
+| 4. Style Gate | evaluator | `rubrics/style.md` | README.md | verdict | SHOULD gate |
 
 ### Write ADR
 
@@ -319,14 +319,17 @@ Same structure as Write Tutorial but with `protocols/write-explanation.md` in Ph
 |-------|-------|----------|-------|--------|-------|
 | 1. Write | worker | `protocols/write-adr.md` | decision context | ADR file at `docs/adr/NNNN-title.md` | — |
 | 2. Structure Gate | evaluator | `rubrics/adr-structure.md` | ADR file | verdict | MUST gate |
-| 3. Style Gate | evaluator | `rubrics/style-convention.md` | ADR file | verdict | SHOULD gate |
+| 3. Style Gate | evaluator | `rubrics/style.md` | ADR file | verdict | SHOULD gate |
 
 ### Write API Reference
 
 **Trigger**: User wants API reference docs (HTTP, GraphQL, library API).
 
-Uses `protocols/write-reference.md` with `standards/api-reference-structure.md`
-as an additional required standard. Same gate structure as Write Reference.
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Write | worker | `protocols/write-api-reference.md` | API spec or source of truth | API reference doc | mandatory `standards/api-reference-structure.md` |
+| 2. Mode Gate | evaluator | `rubrics/diataxis-mode-clarity.md` | API reference doc | verdict | MUST gate |
+| 3. Style Gate | evaluator | `rubrics/style.md` | API reference doc | verdict | SHOULD gate |
 
 ### Quick Write (Cost-Saving Mode)
 
@@ -349,7 +352,7 @@ is not in the hard-block list.
 |-------|-------|----------|-------|--------|-------|
 | 1. Identify gates | main | `protocols/quick-write.md` §Upgrade Path | artifact + type | gate list | per artifact type |
 | 2. MUST gates | evaluator | (per artifact: mode-clarity / readme-completeness / adr-structure) | artifact | verdicts | standard gate handling |
-| 3. SHOULD gates | evaluator | `rubrics/style-convention.md` (+ freshness if metadata) | artifact | verdicts | skippable with reason |
+| 3. SHOULD gates | evaluator | `rubrics/style.md` (+ freshness if metadata) | artifact | verdicts | skippable with reason |
 | 4. Apply verdicts | main | gate verdict rules | verdicts | revised or escalated | PASS_WITH_NOTES auto-revises; NEEDS_REVISION escalates |
 
 ### Write Architecture Documentation
@@ -362,7 +365,7 @@ component spec, data flow, deployment topology, or security model.
 | 1. Route | main | `protocols/doc-writing-router.md` | user request | level confirmation | optional if user specifies L1/L2/etc |
 | 2. Write | worker | `protocols/write-architecture.md` | system context + level | architecture doc | also loads `standards/architecture-doc-structure.md` |
 | 3. Completeness Gate | evaluator | `rubrics/architecture-doc-completeness.md` | architecture doc | verdict | MUST gate |
-| 4. Style Gate | evaluator | `rubrics/style-convention.md` | architecture doc | verdict | SHOULD gate |
+| 4. Style Gate | evaluator | `rubrics/style.md` | architecture doc | verdict | SHOULD gate |
 
 ### Documentation Audit
 
