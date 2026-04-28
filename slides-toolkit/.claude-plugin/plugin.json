@@ -1,5 +1,23 @@
 {
   "name": "slides-toolkit",
+  "version": "0.1.0-mvp",
   "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。",
-  "version": "0.1.0-mvp"
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/slides-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "google-slides",
+    "slides",
+    "deck",
+    "presentation",
+    "scqa",
+    "minto",
+    "gws",
+    "googleworkspace",
+    "platform-pivot"
+  ]
 }

@@ -1,5 +1,28 @@
 {
   "name": "philosophers-toolkit",
+  "version": "1.0.4",
   "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning. 哲學思考框架・問題釐清。哲学的思考フレームワーク。",
-  "version": "1.0.4"
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "philosophy",
+    "thinking",
+    "brainstorming",
+    "first-principles",
+    "socratic",
+    "hegelian-dialectics",
+    "kaizen",
+    "hansei",
+    "ikigai",
+    "wabi-sabi",
+    "shu-ha-ri",
+    "popper",
+    "descartes",
+    "aristotle"
+  ]
 }
