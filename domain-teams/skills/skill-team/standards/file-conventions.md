@@ -166,11 +166,51 @@ Precedent: qa-team v4.2.0 deleted `test-conventions.md` (self-invented,
 superseded by ISTQB grounding); docs-team v4.3.0 deleted `qa-gate.md`
 and `doc-writing.md` (split into Diátaxis-specific files).
 
+## Top-Level Files
+
+A skill directory may contain these files at the top level:
+
+| File | Required? | Purpose |
+|------|-----------|---------|
+| `SKILL.md` | Required | LLM-discovery SSOT — frontmatter + workflows + gate triggers. Read by Claude when the skill is invoked. |
+| `README.md` | Optional | Human-facing GitHub-rendered overview. Optional sibling to `SKILL.md`; the two serve different audiences. See §README.md and SKILL.md Coexistence below. |
+| `README.{lang}.md` | Optional | i18n translations of `README.md` using BCP 47 tags (e.g., `README.ja.md`, `README.zh-TW.md`). Only meaningful when `README.md` exists. |
+
+No other files at the skill top level.
+
+### README.md and SKILL.md Coexistence
+
+**`SKILL.md` is the LLM-discovery SSOT.** Frontmatter (`name`, `description`),
+workflow tables, gate triggers, and resource manifest live here. Claude
+reads it when the skill is invoked.
+
+**`README.md` is the human-facing overview.** GitHub renders `README.md`
+when present (preferred over `SKILL.md` because of YAML frontmatter at the
+top of the latter). Use `README.md` for: project background, install
+instructions, usage examples, file-layout map, contributing notes,
+license. It is **explanatory and accessibility-oriented**, not a
+duplicate of `SKILL.md`'s LLM-discovery content.
+
+When both exist:
+
+- They MUST NOT contradict each other (e.g., different gate lists, different
+  workflow names)
+- `README.md` SHOULD link to `SKILL.md` for the authoritative workflow /
+  gate / agent definitions; `README.md` summarizes, `SKILL.md` specifies
+- Updates to gate names, workflow phases, or resource paths land in
+  `SKILL.md` first; `README.md` follows in the same PR if affected
+
+This dual-file pattern was adopted in v5.3.0 to improve GitHub UX without
+sacrificing LLM-discovery clarity. The pattern is **opt-in per skill** —
+skills without `README.md` continue to use `SKILL.md` as the only
+top-level file.
+
 ## Anti-Patterns
 
 - ❌ Nested directories under `standards/`, `protocols/`, `checklists/`, `rubrics/`
-- ❌ Files outside these four directories (except SKILL.md itself)
+- ❌ Files at the skill top level other than `SKILL.md`, `README.md`, or `README.{lang}.md`
 - ❌ Absolute paths or plugin-rooted paths inside SKILL.md
 - ❌ Stub files or deprecation redirects
 - ❌ Files with `.old`, `.bak`, `.legacy` suffixes
-- ❌ `README.md` inside a skill directory (SKILL.md *is* the readme)
+- ❌ `README.md` that duplicates `SKILL.md` content verbatim — they serve
+  different audiences and must be intentionally distinct
