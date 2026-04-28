@@ -1,0 +1,54 @@
+{
+  "skill": "{{skill-slug}}",
+  "version": "0.1.0",
+  "source_book": "{{BOOK_TITLE}} — {{AUTHOR}}",
+  "source_language": "{{lang code, e.g. zh-TW / ja / en}}",
+  "darwin_compatible": true,
+  "_comment": "Test prompts in source language; field names + types in English. Minimum 6: ≥3 should_trigger, ≥2 should_not_trigger (lures), ≥1 edge_case.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "{{user's typical phrasing 1 — positive scenario, in source language}}",
+      "expected_behavior": "Activate {{skill-slug}}; {{specific expected action, source language}}",
+      "notes": "{{why this is a positive scenario}}"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "{{user's typical phrasing 2}}",
+      "expected_behavior": "...",
+      "notes": "..."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "{{user's typical phrasing 3}}",
+      "expected_behavior": "...",
+      "notes": "..."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "{{lure 1 — surface-similar but should NOT activate}}",
+      "expected_behavior": "Do NOT activate this skill, because {{reason}}",
+      "notes": "lure: {{lure type}}"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "{{lure 2 — different reason for NOT activating}}",
+      "expected_behavior": "...",
+      "notes": "..."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "{{ambiguous boundary scenario}}",
+      "expected_behavior": "{{the reasonable judgment — may activate or abstain, but state why}}",
+      "notes": "boundary: {{why this is a boundary case}}"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

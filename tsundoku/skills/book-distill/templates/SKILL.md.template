@@ -1,0 +1,117 @@
+---
+name: {{skill-slug}}                          # English kebab-case (machine identifier)
+description: |                                # In source-book language; ≤300 chars
+  {{when to activate + when NOT + key trigger signals}}
+  Concretely from the A2 section, condensed for Claude's activation
+  matching.
+source_book: 《{{BOOK_TITLE}}》 — {{AUTHOR}}
+source_chapter: {{verbatim chapter label}}
+source_language: {{lang code, e.g. zh-TW / ja / en}}
+tags: [{{tag1}}, {{tag2}}]                    # English (machine taxonomy)
+related_skills: []                            # populated in Stage 3
+---
+
+# {{Skill Title — in source language}}
+
+## R — Reading
+
+> {{verbatim source quote, ≤150 chars, in source language}}
+>
+> — {{AUTHOR}}, {{CHAPTER}}
+
+---
+
+## I — Interpretation
+
+{{ Methodology skeleton in your own words, in source language. 5-15 lines.
+   After reading this section ALONE, a reader who hasn't seen the source
+   book should understand what this methodology does.
+   Forbidden: copying source phrasing; rhetorical inflation. }}
+
+---
+
+## A1 — Past Application
+
+### Case 1: {{case name in source language}}
+- **Problem**: {{what the author encountered}}
+- **Methodology applied**: {{how the author used this methodology to think}}
+- **Conclusion**: {{what the author concluded}}
+- **Outcome**: {{what actually happened}}
+
+### Case 2 (if available)
+...
+
+---
+
+## A2 — Future Trigger ★
+
+### When will the user need this skill?
+
+1. {{Scenario 1 — concrete enough to recognize}}
+2. {{Scenario 2}}
+3. {{Scenario 3}}
+
+### Language signals (user phrasings that should activate)
+
+- "{{typical user phrasing 1, in source language}}"
+- "{{typical user phrasing 2}}"
+- "{{typical user phrasing 3}}"
+
+### Distinction from neighboring skills
+
+- vs. `{{related-skill-a}}`: {{difference}}
+- vs. `{{related-skill-b}}`: {{difference}}
+
+---
+
+## E — Execution
+
+When this skill activates, the agent follows these steps:
+
+1. **{{Step 1}}**
+   - Completion criterion: {{how to tell this step is done}}
+
+2. **{{Step 2}}**
+   - Completion criterion: {{...}}
+   - Halt condition: if {{X}}, jump to step {{N}}
+
+3. **{{Step 3}}**
+   - Completion criterion: {{...}}
+
+---
+
+## B — Boundary ★
+
+### Do NOT use this skill in:
+
+- {{Anti-scenario 1 — and why}}
+- {{Anti-scenario 2}}
+
+### Author-warned failure modes
+
+- {{from `counter-example-extractor`'s pool, bound to this methodology}}
+
+### Author's blind spots / period limitations
+
+- {{from Stage 0's Critical step}}
+
+### Easily-confused neighboring methodologies
+
+- {{ ... }}
+
+---
+
+## Related skills (Stage 3)
+
+- depends-on: {{}}
+- contrasts-with: {{}}
+- composes-with: {{}}
+
+---
+
+## Audit metadata
+
+- **Verification status**: V1 ✓ / V2 ✓ / V3 ✓
+- **Test pass rate**: {{%}} (see `test-prompts.json` and `test-results.md`)
+- **Distilled at**: {{DATE}}
+- **Output language**: body — {{source_language}}; metadata — English

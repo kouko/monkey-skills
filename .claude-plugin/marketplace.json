@@ -38,6 +38,11 @@
       "name": "slides-toolkit",
       "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。",
       "source": "./slides-toolkit/"
+    },
+    {
+      "name": "tsundoku",
+      "description": "Tsundoku 積読 — turn your owned-but-unread e-book pile into actionable agent skills. 4-stage pipeline: search Kobo library by title / author / series / publication date / category / description text / reading status / language → download DRM-free EPUBs via subdavis/kobo-book-downloader → convert to chunked-by-chapter Markdown (NCX-driven) → distill into atomic agent skills via RIA-TV++ (Adler analytical read / 5 parallel extractors / triple verification / RIA++ render / Zettelkasten / pressure test, adapted from kangarooking/cangjie-skill, MIT). Language-adaptive output (EN / 日本語 / 繁體中文). Optional Calibre PDF conversion. macOS / Linux. 積読を skill 蒸餾。書庫搜尋・下載・分章Markdown・蒸餾管線。",
+      "source": "./tsundoku/"
     }
   ]
 }
