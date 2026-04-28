@@ -85,6 +85,38 @@ Prerequisites (inline hint for orientation synthesis):
 - Doc type preference (Tutorial / How-to / Explanation / Reference)
 - Target audience (beginner / API consumer / contributor / operator)
 
+## Mode Selection (Full vs Quick)
+
+Two execution modes are available. The router selects between them based on
+trigger signals; the user may also request a mode explicitly.
+
+| Mode | Cost (per task) | What runs | When to use |
+|------|----------------:|-----------|-------------|
+| **Full** (default) | ~46K tokens | Worker + Evaluator × MUST/SHOULD gates + auto-revision loop | Production docs, ADRs, API references, public release READMEs, anything requiring gate verdict as audit trail |
+| **Quick** (opt-in) | ~11K tokens | Main agent inline + SELF check only | Personal notes, drafts, scratch, low-stakes iteration on existing docs |
+
+### Quick Mode Triggers
+
+Quick mode applies when **any** of:
+
+- User says: "quick", "draft", "rough", "簡單", "草稿", "ざっくり", "ラフ"
+- User explicitly requests: `--quick`, `quick mode`, `cost-saving`
+- Target file is in a personal vault / scratch directory
+
+### Quick Mode Hard Block
+
+Quick mode is **refused** for these artifact types regardless of triggers:
+
+- ADR — decisions are immutable; structure errors are unrecoverable
+- API reference — reader contract requires mechanical consistency
+- Public-facing release README, architecture documentation
+- User states "production", "for clients", "team review", "release"
+
+If a request hits the hard block, fall back to Full mode and explain why.
+
+See `protocols/quick-write.md` for the quick-mode execution flow and
+`/docs verify` upgrade path (post-hoc gate review on a quick-mode artifact).
+
 ## Quality Gates
 
 ### SELF Check (every delivery)
@@ -286,6 +318,30 @@ Same structure as Write Tutorial but with `protocols/write-explanation.md` in Ph
 
 Uses `protocols/write-reference.md` with `standards/api-reference-structure.md`
 as an additional required standard. Same gate structure as Write Reference.
+
+### Quick Write (Cost-Saving Mode)
+
+**Trigger**: Quick mode triggers fire (see Mode Selection above) AND artifact
+is not in the hard-block list.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Pre-writing | main | `standards/pre-writing-checklist.md` | user request | acceptance brief | mandatory in quick mode |
+| 2. Read protocol | main | `protocols/quick-write.md` | doc type | inline plan | reads ONE write-* protocol |
+| 3. Write | main | selected `protocols/write-*.md` | brief | artifact | no worker dispatch |
+| 4. SELF check | main | protocol's Mode Clarity Check | artifact | self-verified artifact | only quality gate |
+| 5. Deliver | main | — | artifact + disclosure | output | discloses "Quick mode: gates skipped" |
+
+### Verify (Quick → Full Upgrade)
+
+**Trigger**: User requests `/docs verify` on a quick-mode artifact.
+
+| Phase | Agent | Protocol | Input | Output | Notes |
+|-------|-------|----------|-------|--------|-------|
+| 1. Identify gates | main | `protocols/quick-write.md` §Upgrade Path | artifact + type | gate list | per artifact type |
+| 2. MUST gates | evaluator | (per artifact: mode-clarity / readme-completeness / adr-structure) | artifact | verdicts | standard gate handling |
+| 3. SHOULD gates | evaluator | `rubrics/style-convention.md` (+ freshness if metadata) | artifact | verdicts | skippable with reason |
+| 4. Apply verdicts | main | gate verdict rules | verdicts | revised or escalated | PASS_WITH_NOTES auto-revises; NEEDS_REVISION escalates |
 
 ### Documentation Audit
 

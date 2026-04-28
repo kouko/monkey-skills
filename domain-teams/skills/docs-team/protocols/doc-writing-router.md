@@ -18,6 +18,35 @@ type. Routes to exactly one downstream protocol.
   router and invoke the mode-specific protocol directly
 - Codebase assessment workflows — use `codebase-assessment.md` instead
 
+## Phase 0: Mode Selection (Full vs Quick)
+
+Before classifying the request, decide whether full or quick mode applies.
+
+### Quick mode triggers
+
+Use quick mode if **any** of:
+
+- User says: "quick", "draft", "rough", "簡單", "草稿", "ざっくり", "ラフ"
+- User explicitly requests: `--quick`, `quick mode`, `cost-saving`
+- Target file is in a personal vault / scratch directory
+- Iteration on an existing doc the user is actively editing (small touch-up)
+
+### Quick mode hard block
+
+Refuse quick mode (use full mode and explain) if **any** of:
+
+| Artifact / Signal | Reason |
+|-------------------|--------|
+| Target is an **ADR** | Decisions are immutable; structure errors are unrecoverable |
+| Target is an **API reference** | Reader contract requires mechanical consistency |
+| Target is a **public-facing release README** or **architecture document** | First-impression / contract artifacts need gate audit trail |
+| User states: "production", "for clients", "team review", "release" | Stated stakes |
+
+### Routing decision
+
+- Quick mode triggers + not blocked → hand off to `protocols/quick-write.md`
+- Otherwise → continue to Phase 1 below for full-mode classification
+
 ## Phase 1: Classify the Request
 
 Read the user request and ask: **what does the reader need?**
@@ -53,6 +82,9 @@ Invoke the selected downstream protocol with a context summary:
 ```
 ### Selected Mode
 {tutorial | how-to | reference | explanation | composite-readme | adr | api-reference}
+
+### Execution Mode
+{full | quick}  # from Phase 0
 
 ### Reader Profile
 - Audience: {beginner | competent | expert}
