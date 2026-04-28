@@ -1,5 +1,19 @@
 {
   "name": "dev-workflow",
-  "description": "Developer workflow skills — skill creation (skill-creator-advance), portable git-backed project memory (git-memory), and multi-item proposal triage (proposal-critique)",
-  "version": "1.3.0"
+  "version": "1.3.0",
+  "description": "Developer workflow skills — skill creation (skill-creator-advance), portable git-backed project memory (git-memory), and multi-item proposal triage (proposal-critique). Git コミット・メモリ。可攜式專案記憶。提案審查。",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/dev-workflow",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "skill-creation",
+    "skill-creator",
+    "git-memory",
+    "proposal-critique",
+    "developer-workflow"
+  ]
 }

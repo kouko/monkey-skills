@@ -1,5 +1,24 @@
 {
   "name": "obsidian",
-  "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design",
-  "version": "3.5.0"
+  "version": "3.5.0",
+  "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. ⚠️ Most skills are Cowork-compatible; the `defuddle` skill needs Claude Code CLI (subprocess + external URL fetch).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "vault",
+    "daily-notes",
+    "markdown",
+    "bases",
+    "canvas",
+    "mermaid",
+    "excalidraw",
+    "dashboard",
+    "file-intel"
+  ]
 }

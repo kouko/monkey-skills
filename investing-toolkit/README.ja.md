@@ -2,6 +2,8 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
+> ⚠️ **Cowork 互換性**：Claude Code CLI / Code tab のみ動作。Cowork tab は sandbox の URL allowlist により外部 data fetch がブロックされる。詳細な retrospective は [`docs/mcp-setup.md`](docs/mcp-setup.md) を参照。
+
 **Version**：1.16.5
 **所属**：[monkey-skills](https://github.com/kouko/monkey-skills)
 

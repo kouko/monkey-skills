@@ -2,6 +2,8 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
+> ⚠️ **Cowork 互換性**：Claude Code CLI / Code tab のみ動作。Cowork tab は sandbox の URL allowlist によりブロックされる（kobo.com ログイン、EPUB ダウンロード、pandoc fetch）。詳細な retrospective は [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) を参照。
+
 **Version**: 0.11.0
 **Part of**: [monkey-skills](../)
 
