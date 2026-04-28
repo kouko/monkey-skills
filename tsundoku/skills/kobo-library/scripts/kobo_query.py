@@ -25,6 +25,11 @@ Filters (all optional, AND-combined):
   --isbn ISBN              exact match on ISBN
   --pub-after YYYY[-MM-DD] only books with PublicationDate >= this
   --pub-before YYYY[-MM-DD] only books with PublicationDate <= this
+  --purchased-after YYYY[-MM-DD] BookEntitlement.Created >= this (acquisition date)
+  --purchased-before YYYY[-MM-DD] BookEntitlement.Created <= this
+  --finished-after YYYY[-MM-DD] StatusInfo.LastTimeFinished >= this
+  --finished-before YYYY[-MM-DD] StatusInfo.LastTimeFinished <= this
+  --origin CAT             BookEntitlement.OriginCategory exact match (Purchased / Trial / KoboPlus)
   --genre UUID             exact match on BookMetadata.Genre
   --category UUID          UUID present in BookMetadata.Categories list
   --include-removed        include books with IsRemoved=True (excluded by default)
@@ -91,10 +96,12 @@ class Book:
     is_hidden: bool
     accessibility: str
     origin: str
+    purchase_date: str
     status: str
     progress_pct: float
     spent_minutes: int
     times_started: int
+    last_started: str
     last_finished: str
 
     @classmethod
@@ -135,10 +142,12 @@ class Book:
             is_hidden=bool(be.get("IsHiddenFromArchive", False)),
             accessibility=be.get("Accessibility", "") or "",
             origin=be.get("OriginCategory", "") or "",
+            purchase_date=(be.get("Created", "") or "")[:10],
             status=si.get("Status", "") or "",
             progress_pct=float(bm.get("ProgressPercent", 0) or 0),
             spent_minutes=int(st.get("SpentReadingMinutes", 0) or 0),
             times_started=int(si.get("TimesStartedReading", 0) or 0),
+            last_started=(si.get("LastTimeStartedReading", "") or "")[:10],
             last_finished=(si.get("LastTimeFinished", "") or "")[:10],
         )
 
@@ -187,6 +196,16 @@ def matches(b: Book, args: argparse.Namespace) -> bool:
     if args.pub_after and b.pub_date < normalize_date(args.pub_after):
         return False
     if args.pub_before and b.pub_date > normalize_date(args.pub_before, end=True):
+        return False
+    if args.purchased_after and (not b.purchase_date or b.purchase_date < normalize_date(args.purchased_after)):
+        return False
+    if args.purchased_before and (not b.purchase_date or b.purchase_date > normalize_date(args.purchased_before, end=True)):
+        return False
+    if args.finished_after and (not b.last_finished or b.last_finished < normalize_date(args.finished_after)):
+        return False
+    if args.finished_before and (not b.last_finished or b.last_finished > normalize_date(args.finished_before, end=True)):
+        return False
+    if args.origin and b.origin != args.origin:
         return False
     if args.genre and b.genre != args.genre:
         return False
@@ -249,10 +268,12 @@ FIELD_HEADERS = {
     "country": "CC",
     "isbn": "ISBN",
     "pub_date": "Published",
+    "purchase_date": "Purchased",
     "status": "Status",
     "progress_pct": "Prog%",
     "spent_minutes": "Min",
     "times_started": "Reads",
+    "last_started": "LastStarted",
     "last_finished": "LastFinished",
     "origin": "Origin",
     "is_removed": "Rm",
@@ -335,11 +356,13 @@ def render_json(books: list[Book]) -> str:
                 "is_hidden": b.is_hidden,
                 "accessibility": b.accessibility,
                 "origin": b.origin,
+                "purchase_date": b.purchase_date,
                 "reading": {
                     "status": b.status,
                     "progress_pct": b.progress_pct,
                     "spent_minutes": b.spent_minutes,
                     "times_started": b.times_started,
+                    "last_started": b.last_started,
                     "last_finished": b.last_finished,
                 },
             }
@@ -369,9 +392,17 @@ def render_markdown(books: list[Book]) -> str:
             parts.append(" | ".join(meta_bits))
         if b.series_name:
             parts.append(f"**系列**: {b.series_name} #{b.series_number}")
+        if b.purchase_date:
+            origin = f" ({b.origin})" if b.origin and b.origin != "Purchased" else ""
+            parts.append(f"**購入**: {b.purchase_date}{origin}")
         if b.status:
             prog = f"{b.progress_pct:.0f}%" if b.progress_pct else ""
-            parts.append(f"**閱讀**: {b.status} {prog} ({b.spent_minutes} 分鐘)")
+            timeline = ""
+            if b.last_finished:
+                timeline = f" — 完成 {b.last_finished}"
+            elif b.last_started:
+                timeline = f" — 開讀 {b.last_started}"
+            parts.append(f"**閱讀**: {b.status} {prog} ({b.spent_minutes} 分鐘){timeline}")
         parts.append(f"**RevisionId**: `{b.revision_id}`")
         if b.cover_url:
             parts.append(f"![cover]({b.cover_url})")
@@ -395,6 +426,7 @@ def render_summary(books: list[Book]) -> str:
     lang = Counter(b.language for b in books)
     series = Counter(b.series_name for b in books if b.series_name)
     total_min = sum(b.spent_minutes for b in books)
+    purchase_year = Counter(b.purchase_date[:4] for b in books if b.purchase_date)
     lines = [
         f"matches: {len(books)}",
         f"status: {dict(status)}",
@@ -402,6 +434,9 @@ def render_summary(books: list[Book]) -> str:
         f"top series: {dict(series.most_common(5))}",
         f"total reading: {total_min} min ({total_min/60:.1f} h)",
     ]
+    if purchase_year:
+        sorted_years = dict(sorted(purchase_year.items()))
+        lines.append(f"purchase year: {sorted_years}")
     return "\n".join(lines)
 
 
@@ -426,6 +461,11 @@ def main() -> int:
     p.add_argument("--isbn")
     p.add_argument("--pub-after", help="YYYY or YYYY-MM or YYYY-MM-DD")
     p.add_argument("--pub-before", help="YYYY or YYYY-MM or YYYY-MM-DD")
+    p.add_argument("--purchased-after", help="acquisition date >= YYYY[-MM[-DD]]")
+    p.add_argument("--purchased-before", help="acquisition date <= YYYY[-MM[-DD]]")
+    p.add_argument("--finished-after", help="LastTimeFinished >= YYYY[-MM[-DD]]")
+    p.add_argument("--finished-before", help="LastTimeFinished <= YYYY[-MM[-DD]]")
+    p.add_argument("--origin", help="OriginCategory exact match (Purchased / Trial / KoboPlus / ...)")
     p.add_argument("--genre", help="exact UUID match on BookMetadata.Genre")
     p.add_argument("--category", help="UUID present in BookMetadata.Categories list")
     p.add_argument("--revision-id")
@@ -438,8 +478,14 @@ def main() -> int:
     p.add_argument("--limit", type=int)
     p.add_argument(
         "--sort",
-        choices=["title", "author", "series", "progress", "spent", "pub_date"],
-        help="sort key (ascending)",
+        choices=[
+            "title", "author", "series", "progress", "spent", "pub_date",
+            "purchase_date", "last_started", "last_finished",
+        ],
+        help="sort key. Date sorts (purchase_date / last_started / last_finished) "
+             "are descending (newest first); progress / spent are descending "
+             "(highest first); the rest are ascending. Books with empty values "
+             "for date sorts sort to the end.",
     )
     args = p.parse_args()
 
@@ -462,8 +508,15 @@ def main() -> int:
         "spent": lambda b: -b.spent_minutes,
         "pub_date": lambda b: b.pub_date,
     }
-    if args.sort:
+    DATE_DESC_SORTS = ("purchase_date", "last_started", "last_finished")
+    if args.sort in sort_keys:
         filtered.sort(key=sort_keys[args.sort])
+    elif args.sort in DATE_DESC_SORTS:
+        # Newest first; empty values sort to the end so they don't block useful results.
+        filled = [b for b in filtered if getattr(b, args.sort)]
+        empty = [b for b in filtered if not getattr(b, args.sort)]
+        filled.sort(key=lambda b: getattr(b, args.sort), reverse=True)
+        filtered = filled + empty
 
     if args.limit:
         filtered = filtered[: args.limit]
