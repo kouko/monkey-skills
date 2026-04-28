@@ -100,35 +100,70 @@ auth scripts.
 
 ### Flow A — First-time setup (interactive activation)
 
+> **Why this flow runs in the user's terminal, not via Bash tool**: kobodl's
+> device-flow login prints a 6-digit code to stdout that the user must read
+> and type into `https://www.kobo.com/activate`. When run via Claude Code's
+> Bash tool, that output is buffered and truncated in the UI ("+N lines"
+> indicator) while the process is mid-flight, so the user can't see the code
+> as it appears. In Claude Desktop's Cowork tab, the same Bash subprocess is
+> additionally blocked from reaching `kobo.com` by the sandbox URL allowlist
+> — kobodl hangs forever on a network call that never resolves. Even on Code
+> CLI, kobodl's polling loop expects a real TTY for clean cancellation. The
+> reliable pattern is: print the command for the user to run in their own
+> terminal, wait for them to confirm activation, then verify auth state from
+> Claude. See `domain-teams:skill-team / standards/user-terminal-handoff.md`
+> for the general convention.
+
+#### Step 1 — Install binary (Bash-OK, no interaction)
+
 ```bash
-# 1. Resolve paths into shell
-source ${CLAUDE_SKILL_DIR}/scripts/tsundoku_paths.sh
-
-# 2. Install binary (no-op if already present)
 bash ${CLAUDE_SKILL_DIR}/scripts/kobo_install.sh
-
-# 3. Start activation
-bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh add
 ```
 
-When `kobo_login.sh add` runs, kobodl prints something like:
+#### Step 2 — Skip if already authed (Bash-OK, no interaction)
+
+```bash
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh status
 ```
-Open https://www.kobo.com/activate and enter 123456.
+
+If exit code 0 → already authed; print the user list and stop. Otherwise
+proceed to Step 3.
+
+#### Step 3 — Hand off device-flow to user's terminal (DO NOT Bash-run)
+
+Print this block to the user verbatim — substitute `${CLAUDE_SKILL_DIR}`
+with the actual resolved path so the user can copy-paste:
+
+```
+Please open a NEW terminal (outside Claude) and run:
+
+    source <CLAUDE_SKILL_DIR>/scripts/tsundoku_paths.sh
+    "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" user add
+
+kobodl will print a 6-digit code and a URL. Open the URL in your browser,
+sign in to your Kobo account, enter the 6-digit code, and wait — kobodl
+polls in the background and exits automatically when activation registers
+(usually <60 seconds after you enter the code on the website).
+
+Reply "done" once kobodl has exited successfully.
 ```
 
-**Claude must relay this code to the user clearly**, then wait for the command
-to return. The user's job is:
-1. Open `https://www.kobo.com/activate` in a browser
-2. Sign in to their Kobo account
-3. Enter the 6-digit code shown above
-4. Wait — kobodl polls in the background and exits when activation completes
+Do NOT wrap this in a Bash tool call. Claude must wait for the user's
+"done" reply before proceeding.
 
-Do **not** cancel the command early. Polling can take up to ~60 seconds after
-the user enters the code on the website.
+#### Step 4 — Verify auth state from Claude (Bash-OK)
 
-On success:
-- The script prints `[login] success — auth saved to <path> (mode 600)`
-- `kobo_login.sh status` returns exit 0 with the user's email
+After the user replies "done":
+
+```bash
+bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh status
+```
+
+- Exit 0 + email printed → ✓ auth complete; hand off to `kobo-library`
+- Exit 1 → activation didn't register. Likely causes:
+  - Code expired (10-minute window) — re-run Step 3 to get a fresh code
+  - User cancelled before kobodl finished polling — same fix
+  - Network issue between user's terminal and `kobo.com` — out of scope
 
 ### Flow B — Migrate from existing kobodl install
 
@@ -169,17 +204,27 @@ Exit codes:
 
 ### Flow D — Re-authenticate / rotate / switch account
 
+`add` is a device-flow command (same TTY constraints as Flow A) — hand
+off to the user's terminal, do NOT run via Bash. `remove` is purely local
+file mutation, so Bash is fine.
+
+**Add another account** (kobodl supports multiple users in one config):
+follow Flow A Steps 1–4. The new user appends to `kobodl.json`.
+
+**Remove an old account** (Bash-OK):
+
 ```bash
-# Add another account (kobodl supports multiple users in one config)
-bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh add
-
-# Remove an old account
 bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh remove old@example.com
-
-# Nuclear option — wipe and start over
-rm "$TSUNDOKU_KOBO_CONFIG"
-bash ${CLAUDE_SKILL_DIR}/scripts/kobo_login.sh add
 ```
+
+**Nuclear option — wipe and start over**: combine both patterns —
+
+```bash
+# Step 1 (Bash-OK): remove the file
+rm "$TSUNDOKU_KOBO_CONFIG"
+```
+
+Then run Flow A Steps 1–4 to re-authenticate.
 
 After removing credentials locally, the user should also visit Kobo's
 **Authorized Devices** page and revoke the device entry to fully invalidate
