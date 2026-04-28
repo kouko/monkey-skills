@@ -5,8 +5,10 @@ every assumption is a potential error. This standard codifies what to read
 before writing and which defaults are dangerous.
 
 Primary source: observed LLM failure modes in documentation generation
-(synthesized from Trong-Tra/agent-skills documentation-specialist v1
-prescriptive rules + Anthropic agent skills failure patterns).
+(synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
+v1 prescriptive rules — specifically `AGENTS.md` §Read Before You Write
+and §Never Assume Defaults — plus Anthropic agent skills failure
+patterns).
 
 ## Why This Standard Exists
 
@@ -108,8 +110,9 @@ satisfied implicitly when codebase assessment runs first.
 
 ## Sources
 
-- Synthesized from Trong-Tra/agent-skills documentation-specialist
-  prescriptive rules ("Read Before You Write" + "Never Assume Defaults")
+- Synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
+  prescriptive rules — specifically `AGENTS.md` §Read Before You Write
+  and §Never Assume Defaults table
 - LLM failure-mode patterns observed across documentation generation tasks
 - `standards/docs-as-code.md` — review checklist for PR reviewers (this
   standard is its pre-write counterpart)

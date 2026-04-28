@@ -156,3 +156,7 @@ Applies to all diagrams in any architecture artifact.
 - `protocols/write-architecture.md` — workflow that produces architecture docs
 - [C4 model](https://c4model.com/) — Simon Brown's diagram hierarchy
 - [arc42](https://arc42.org/) — full architecture documentation template
+- Gate criteria derived from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
+  `architecture/SKILL.md` §Common Pitfalls table (failure-modes mandatory,
+  one-concern-per-diagram, aspiration-vs-reality flag) — converted to
+  docs-team's 🔴/🟡/🟢 rubric format with explicit verdict thresholds

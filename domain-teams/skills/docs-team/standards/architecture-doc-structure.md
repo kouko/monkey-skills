@@ -9,7 +9,7 @@ Primary sources:
 - [C4 model — Simon Brown](https://c4model.com/) — context / container / component / code hierarchy
 - [arc42 — Architecture documentation template](https://arc42.org/) — German enterprise standard
 - [Mermaid diagram syntax](https://mermaid.js.org/) — markdown-native diagrams
-- Synthesized from Trong-Tra/agent-skills documentation-specialist
+- Synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
   architecture module + observed industry practice
 
 ## Document Hierarchy (L0–L4)
@@ -171,5 +171,8 @@ informed the decisions**.
 - [arc42](https://arc42.org/) — full architecture documentation template
 - [Mermaid](https://mermaid.js.org/) — markdown-native diagram syntax
 - `standards/diataxis-taxonomy.md` — Architecture docs are Reference + Explanation hybrid; component specs are Reference, design rationale is Explanation
-- Synthesized from Trong-Tra/agent-skills documentation-specialist
-  architecture module v1
+- Synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
+  architecture module — specifically `architecture/SKILL.md` L0–L4
+  hierarchy, 5 Mermaid rules, component-spec template, and data-flow
+  conventions; runbook (L4) intentionally excluded from this standard
+  and routed to devops-team

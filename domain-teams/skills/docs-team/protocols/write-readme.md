@@ -190,6 +190,12 @@ See [LICENSE]({path}) for details.
 
 ## Examples
 
+The two examples below are adapted from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
+`readme/examples.md` Example 1 (`isoduration` Go library) and Example 2
+(`Taskflow` full-stack app). Adaptations: condensed length, added
+`mode:`-style frontmatter context for Diátaxis per-section gating, and
+adjusted prose to the docs-team Google + Microsoft style register.
+
 ### Example 1: Small Go library (~30 lines)
 
 ```markdown

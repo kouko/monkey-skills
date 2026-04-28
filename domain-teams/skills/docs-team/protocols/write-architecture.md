@@ -11,6 +11,7 @@ follow a fixed template more like Reference.
 **Style reference**: `standards/style-conventions.md`
 **Structure reference**: `standards/architecture-doc-structure.md`
 **Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
+**Origin**: protocol synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist) `architecture/SKILL.md` workflow phases, adapted to docs-team's worker/evaluator dispatch model and Diátaxis Reference + Explanation hybrid framing. The Payment Service example below is adapted from Trong-Tra's `architecture/examples.md` Example 2.
 
 ## Architecture Doc vs Other Modes
 
