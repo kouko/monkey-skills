@@ -183,6 +183,28 @@ change more than necessary.
   and Shotgun Surgery are symptoms of
 - `tdd-standard.md` — the Refactor step of Red/Green/Refactor
 
+### Mindsets (design-time philosophical anchors)
+
+When a refactor decision is non-mechanical — "should we do this at
+all", "what's the smallest result", "is this complexity essential"
+— consult the on-demand mindsets:
+
+- `mindset-data-over-abstractions.md` — when the refactor question
+  is "should this become its own class / type / wrapper"
+- `mindset-design-is-taking-apart.md` — when the refactor question
+  is "are these concerns complected, or just tidy-looking"
+- `mindset-expensive-to-add-later.md` — when the refactor adds
+  infrastructure (timestamps, audit, versioning) and YAGNI vs PAGNI
+  is the question
+- `mindset-simplicity-vs-easy.md` — when the easy / familiar option
+  is being chosen over a less-familiar simpler one
+
+These are not gates — they are reference vocabulary to sharpen the
+design conversation. The rules in this standard remain authoritative
+for the mechanics of refactoring (behavior preservation, Two Hats,
+Bad Smells); the mindsets clarify the design judgment about *which*
+refactor is worth doing.
+
 ## Anti-Patterns
 
 - ❌ **Refactoring without tests** on a critical path (Feathers

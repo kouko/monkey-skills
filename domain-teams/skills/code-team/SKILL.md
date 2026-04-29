@@ -193,6 +193,14 @@ Worker default resources:
   - `standards/character-encoding-security.md` — 徳丸本 Ch.6 JP multi-byte security preamble
 - protocol: (selected per-workflow from `protocols/`)
 
+On-demand mindsets (philosophical anchors; load when relevant during brainstorming, refactoring, or design discussion — NOT auto-loaded by worker/evaluator launch templates to keep token budget bounded):
+- `standards/mindset-data-over-abstractions.md` — Perlis Epigram #9 / Hickey *Value of Values*: prefer generic data + free functions over custom types
+- `standards/mindset-design-is-taking-apart.md` — Hickey *Simple Made Easy* / Moseley & Marks *Out of the Tar Pit* / Ousterhout *APoSD*: design is separation, not addition
+- `standards/mindset-expensive-to-add-later.md` — Willison PAGNI / Plant / Kaplan-Moss: named exceptions to YAGNI when retrofit cost is dramatic
+- `standards/mindset-simplicity-vs-easy.md` — Hickey *Simple Made Easy*: simple (objective, not braided) vs easy (subjective, familiar)
+
+Cross-plugin consumers: `dev-workflow:complexity-critique` references the 4 mindsets as design-time philosophical anchors (per CLAUDE.md §Cross-Plugin Delegation Contract — paths only, no content duplication).
+
 Evaluator default resources:
 - standards: same 7 files as worker
 - Security gate: `checklists/security-checklist.md`
