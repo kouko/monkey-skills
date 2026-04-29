@@ -39,6 +39,28 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
+  shared-conventions-drift:
+    name: dev-workflow shared conventions drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check-shared-conventions-drift.py
+        # Verifies that SSOT-and-functional-copy convention files
+        # (golden-anchor-protocol, test-prompts-schema, constitution-schema)
+        # stay in sync across skill-refactor (canonical SoT) and
+        # skill-tasting (functional copies). Header blockquotes that
+        # mark canonical-vs-copy are stripped before diff so legitimate
+        # SSOT-vs-copy header divergence does not trigger false positives.
+        # Same-PR drift rule from dev-workflow PR-2/PR-3 NOTICE.
+        run: python3 scripts/check-shared-conventions-drift.py
+
   copywriting-anchor-lint:
     name: copywriting-toolkit anchor library lint
     runs-on: ubuntu-latest

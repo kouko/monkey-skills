@@ -845,6 +845,48 @@ What gets compressed must be things Claude doesn't have. Otherwise, it's garbage
 
 ---
 
+## Optional: Score History Tracking (Drift Detection)
+
+Skill-judge runs are stateless by default — each evaluation produces
+a score independent of past evaluations. For longer-lived skills
+that get refactored, retasted, or otherwise modified over time, an
+optional companion script tracks score history per skill and flags
+**drift** (significant drops in score across evaluations).
+
+`scripts/score_history.py` — appends evaluation results to
+`<skill>/.skill-judge-history.jsonl` and supports a drift query that
+returns a z-score relative to the historical baseline. When a
+drift is flagged (current z-score < -1.0σ by default), it's a
+signal of subtle quality regression that the skill-refactor
+equivalence check may have missed — recommend running
+`dev-workflow:skill-tasting` on the affected skill to capture human
+preference signal.
+
+The drift detection is **advisory** like the rest of skill-judge —
+it does not auto-revert anything. Use it as a periodic regression
+check or as part of the quarterly audit (see
+`dev-workflow/docs/quarterly-audit-runbook.md`).
+
+Quick invocation:
+
+```bash
+# Append a fresh evaluation result
+python3 scripts/score_history.py append \
+    <skill>/.skill-judge-history.jsonl \
+    '{"timestamp": "...", "skill_path": "...", "total_score": 87, ...}'
+
+# Check current vs historical baseline
+python3 scripts/score_history.py drift <skill>/.skill-judge-history.jsonl
+
+# List recent N entries
+python3 scripts/score_history.py query <skill>/.skill-judge-history.jsonl --limit 5
+```
+
+Standard library only — no external dependencies. See the script's
+docstring for the full JSONL schema.
+
+---
+
 ## Self-Evaluation Note
 
 This Skill (skill-judge) should itself pass evaluation:
