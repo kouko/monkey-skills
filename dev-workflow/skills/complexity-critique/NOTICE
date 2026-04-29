@@ -78,7 +78,7 @@ Software. The upstream joshuadavidthomas, the intermediate softaworks,
 and the downstream kouko copyright are all preserved in the
 accompanying LICENSE file in this directory. The mindset standards
 in domain-teams:code-team carry an attribution note in their research
-file (`code-team/research/grounding-mindsets-2026-04-29.md`) but cite
+file (`code-team/research/grounding-v5.5.0.md`) but cite
 their underlying primary sources directly (Hickey, Perlis, Moseley &
 Marks, etc.); the philosophical content of those primary sources is
 not under the MIT chain and does not require attribution beyond
