@@ -198,8 +198,9 @@ On-demand mindsets (philosophical anchors; load when relevant during brainstormi
 - `standards/mindset-design-is-taking-apart.md` — Hickey *Simple Made Easy* / Moseley & Marks *Out of the Tar Pit* / Ousterhout *APoSD*: design is separation, not addition
 - `standards/mindset-expensive-to-add-later.md` — Willison PAGNI / Plant / Kaplan-Moss: named exceptions to YAGNI when retrofit cost is dramatic
 - `standards/mindset-simplicity-vs-easy.md` — Hickey *Simple Made Easy*: simple (objective, not braided) vs easy (subjective, familiar)
+- `standards/mindset-extension-standard.md` — meta-standard for extending the mindset library (Quality Checklist, primary-source bar, anti-shapes); read **before** proposing a 5th mindset
 
-Cross-plugin consumers: `dev-workflow:complexity-critique` references the 4 mindsets as design-time philosophical anchors (per CLAUDE.md §Cross-Plugin Delegation Contract — paths only, no content duplication).
+Cross-plugin consumers: `dev-workflow:complexity-critique` references the 4 mindsets as design-time philosophical anchors AND requires loading at least one before its three-question gate runs (per its §Before You Begin preamble; CLAUDE.md §Cross-Plugin Delegation Contract — paths only, no content duplication).
 
 Evaluator default resources:
 - standards: same 7 files as worker
