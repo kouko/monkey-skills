@@ -490,6 +490,8 @@ For situations where you want a more rigorous comparison between two versions of
 
 This is optional, requires subagents, and most users won't need it. The human review loop is usually sufficient.
 
+> **Boundary note vs `dev-workflow:skill-tasting`** *(when available)*: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tasting` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tasting` for subjective / creative outputs (writing style, design feel, persuasive copy).
+
 ---
 
 ## Description Optimization
