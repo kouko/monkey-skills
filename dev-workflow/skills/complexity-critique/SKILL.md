@@ -1,0 +1,266 @@
+---
+name: complexity-critique
+description: >-
+  Gate for evaluating any change to an existing codebase — refactor,
+  feature add, or technical-debt cleanup — through a deletion-first
+  lens. Forces three checks: smallest possible result, before/after
+  LOC count, what the change makes obsolete. Biases toward removing
+  code over adding. Use when the user asks whether a change is worth
+  the lines it adds, what can be deleted, or how to keep a refactor
+  small. Triggers: complexity audit / can this be simpler / what can
+  we delete / worth the lines / 降低複雜度 / 可以再小一點 / リファクタ
+  すべきか / 最佳實踐. Not-triggers: greenfield design (use
+  superpowers:brainstorming), multi-item proposal triage (use
+  proposal-critique), post-implementation diff review (use Anthropic
+  simplify), trivial single-line edits.
+---
+
+# Complexity Critique
+
+A user-invoked gate skill: forces any change to an **existing
+codebase** — refactor, feature add to existing code, technical-debt
+cleanup — through a deletion-first design pass before the change is
+implemented.
+
+## Overview
+
+More code begets more code. Every change is an opportunity to ask not
+"how do I add this" but "what's the smallest end state that solves
+this, and what can I delete in the process?". This skill turns that
+question into three mechanical checks before the change is committed
+to.
+
+**Core question:** *What does the codebase look like* after *the
+change?* — not *what's the smallest change*.
+
+This skill operates on **proposed changes to existing code**. It is
+not a multi-item proposal triage (use `proposal-critique`), not a
+greenfield brainstorm (use `superpowers:brainstorming`), and not a
+post-implementation diff review (use Anthropic `simplify`).
+
+## The Iron Law
+
+```
+NO CHANGE TO EXISTING CODE SHIPS WITHOUT THE THREE QUESTIONS
+```
+
+Three-question discipline is non-negotiable. "It's just a small
+change" is exactly when the question goes unasked and the codebase
+grows for no good reason.
+
+## The Gate Function
+
+When invoked, run these 3 questions in order:
+
+### Q1. What's the smallest end state that solves this?
+
+Not "what's the smallest change" — what's the smallest **result**.
+
+- Could this be 2 functions instead of the 14 currently here?
+- Could this be 0 functions — i.e., delete the feature?
+- If we were starting from scratch with the current requirement,
+  what would we build?
+
+The change you would make to reach the smallest end state is often
+not the change you were originally proposing.
+
+### Q2. Does the proposed change result in less total code?
+
+Count lines / functions / files **before** and **after** the
+proposed change.
+
+| If after > before | Reject the change as proposed |
+| If after = before | OK — net-neutral on volume; assess Q3 |
+| If after < before | Strong signal; usually correct |
+
+Common false-positive arguments to refuse:
+- "Better organized" but more code = more entropy
+- "More flexible" but more code = more entropy (and YAGNI)
+- "Cleaner separation" but more code = the separation is shallow
+  (Ousterhout, *A Philosophy of Software Design*)
+- "Type safety" worth N lines is a real trade-off, not an automatic
+  pass — name N
+
+### Q3. What can we delete?
+
+Every change makes something else *available* to delete. Ask:
+
+- What does this change make obsolete?
+- What was only there because of what we're replacing?
+- What's the maximum we could remove while making the change?
+
+A change that adds 50 lines and deletes 200 is a net win
+(-150 lines). A change that keeps 14 functions to avoid writing 2
+is a net loss (+12 functions). **Effort is not the metric. End-state
+volume is.**
+
+## Verdict
+
+After the three questions, emit one of:
+
+- **PROCEED** — change reduces total code; ship it.
+- **PROCEED-WITH-CAVEAT** — change is net-neutral or marginally
+  positive; ship but name the trade-off the user is choosing
+  ("type safety worth ~30 lines", "explicit error path worth ~12
+  lines").
+- **RESHAPE** — change as proposed adds more than it removes; the
+  user is choosing easy over simple. Propose the smallest-end-state
+  alternative from Q1.
+- **REJECT** — change adds code with no end-state justification;
+  redirect the user to Q1's alternative or to deletion.
+
+Do NOT silently approve a change that fails Q2 without naming the
+trade-off. Hidden growth is the failure mode this skill exists to
+prevent.
+
+## Red Flags — STOP
+
+These thoughts mean you are rationalizing your way past the gate:
+
+| Argument | Why it fails |
+|---|---|
+| "Keep what exists" | Status quo bias. The metric is total code, not churn. |
+| "This adds flexibility" | Flexibility for what? YAGNI. (See `domain-teams:code-team/standards/pragmatic-principles.md` §YAGNI.) |
+| "Better separation of concerns" | More files / functions = more code. Separation is not free. (See `mindset-design-is-taking-apart.md` Ousterhout deep-vs-shallow.) |
+| "Type safety" | Worth how many lines? Sometimes runtime checks in less code wins. Name the line cost. |
+| "Easier to understand" | 14 things are not easier than 2 things. (See `mindset-simplicity-vs-easy.md`.) |
+| "Industry standard pattern" | Industry standard is not a primary source. Either cite the source or mark it speculative. |
+| "We might need this later" | YAGNI. PAGNI is the named exception — see `mindset-expensive-to-add-later.md` for the *high* bar. |
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "It's just a small change." | Small changes accumulate. Run the gate anyway. |
+| "Refactoring it later is fine." | Later is more expensive than not adding it. |
+| "The diff looks clean." | Clean diff ≠ clean end state. Q1 is about end state. |
+| "All these classes are already there." | The current state is not a justification; it's the evidence Q1 might disagree with. |
+| "I don't have time for the gate." | The gate is one read of the file plus three questions. The cost of skipping it is permanent. |
+
+## Reference Mindsets
+
+When the three questions need deeper grounding, load the
+philosophical anchors from `domain-teams:code-team`:
+
+- `mindset-data-over-abstractions.md` — when Q1 / Q2 are arguing
+  about whether something deserves its own class / type / wrapper
+- `mindset-design-is-taking-apart.md` — when Q3 is asking whether
+  concerns are *complected* (must be combined) or merely tidy-looking
+- `mindset-expensive-to-add-later.md` — when "we might need this
+  later" is being invoked; PAGNI's three-test bar is the discipline
+- `mindset-simplicity-vs-easy.md` — when an "easy" / familiar choice
+  is being made over a less-familiar simpler one
+
+These are reference vocabulary, not gates. Load on demand when the
+discussion warrants. They live in `domain-teams:code-team/standards/`
+as a single source of truth (per CLAUDE.md §Cross-Plugin Delegation
+Contract — paths only, no content duplication). If `domain-teams` is
+not installed, the three questions above are self-sufficient; the
+mindsets are advisory deepening.
+
+## Composes With
+
+This skill triages **a proposed change to existing code**. It does
+not do deeper research, multi-item triage, or post-implementation
+review. Hand off when the case calls for it:
+
+- **Multi-item proposal triage** — when the input is a list / plan /
+  prose with ≥3 separate proposals, see `proposal-critique` first.
+  This skill operates on a *single change*, not a backlog.
+- **Greenfield design** — when there is no existing code to compare
+  before/after against, see `superpowers:brainstorming`. Q2's LOC
+  count requires existing code as the baseline.
+- **Post-implementation simplification** — when the change is
+  already written and the question is "can this diff be smaller",
+  see Anthropic `simplify`. This skill runs *before* the change.
+- **Refactor mechanics** — when the change is approved and the
+  question is "how to do the refactor safely", see
+  `domain-teams:code-team/protocols/refactoring.md` (Two Hats, Bad
+  Smells, Feathers seam model).
+
+This skill names those tools but does not invoke them.
+
+## Worked Examples
+
+### Example 1 — feature add to existing forms
+
+**Input**: "I need to add validation to these 5 forms."
+
+**Q1 (smallest end state)**:
+- Could the codebase have 1 validator instead of 5 form-specific
+  schemas? (Often yes if the rules overlap.)
+- Could 3 of the 5 forms be merged or deleted? (Forms accumulate
+  faster than they prove useful.)
+- Smallest end state candidate: 2 forms + 1 validator function.
+
+**Q2 (LOC count)**:
+- Current: 5 forms (~500 lines), 0 validation
+- Proposed (5 schemas + helper file + 5 form updates): ~800 lines
+- Q1 alternative (delete 3 forms, add 1 validator): ~350 lines
+- Q1 wins by 450 lines.
+
+**Q3 (what becomes obsolete)**:
+- 3 of the deleted forms had only 2 users / month — usage data
+  available; deletion is justified.
+- The 2 surviving forms can share one validator → no per-form schema
+  duplication.
+
+**Verdict**: RESHAPE — original proposal grows the codebase by 300
+lines for marginal validation coverage. Q1 alternative reduces total
+code by 150 lines and delivers the validation as a side effect.
+
+### Example 2 — refactor to "improve type safety"
+
+**Input**: "Convert this 80-line module to use a tagged union for
+result types."
+
+**Q1**: smallest end state is either (a) keep current module, (b)
+add tagged union, (c) inline the module entirely if its only caller
+could read the raw value.
+
+**Q2**: tagged union adds ~30 lines (new type, constructor variants,
+exhaustiveness handling). 80 → 110 lines, +30.
+
+**Q3**: nothing in the module becomes obsolete; the existing
+runtime checks stay because callers don't all migrate at once.
+
+**Verdict**: PROCEED-WITH-CAVEAT — the 30 lines buy compile-time
+exhaustiveness, which the user explicitly chose. Name the trade-off:
+"30 lines bought, 0 lines saved, exhaustiveness check enforced".
+This is a legitimate choice — but call it what it is.
+
+## When To Apply
+
+**Primary triggers (user-spoken)**:
+
+- "Should I add this?" / "is this worth the code?"
+- "Can this be simpler?" / "可以再小一點 嗎"
+- "What can we delete here?" / "リファクタすべきか"
+- "降低複雜度" / "complexity audit on this change"
+
+**Shape**: A *single proposed change* to *existing* code. The change
+can be a refactor, a feature add, a debt cleanup, or a "should we
+even do this" question.
+
+**Not-triggers** — do NOT invoke for:
+
+- **Greenfield design** — no existing code to compare against; use
+  `superpowers:brainstorming`.
+- **Multi-item proposal triage** — a list / plan with ≥3 separate
+  recommendations; use `proposal-critique` first, then this skill on
+  surviving items if they touch existing code.
+- **Post-implementation review** — the change is already written;
+  use Anthropic `simplify`.
+- **Trivial micro-changes** — single-line fixes, variable renames,
+  comment updates. The gate cost exceeds the change cost.
+- **External-API constraints driving the addition** — when an
+  upstream API mandates the structure, Q1's alternatives may not
+  exist. Note the constraint and proceed.
+
+## Bottom Line
+
+```
+The end state is the metric.
+Bias toward deletion.
+Name the trade-off when you choose to add.
+```

@@ -1,0 +1,85 @@
+complexity-critique
+===================
+
+Upstream chain
+--------------
+
+This skill is adapted from a chain of MIT-licensed upstream projects:
+
+1. joshuadavidthomas `agent-skills/skills/reducing-entropy` — the
+   earliest upstream.
+   https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy
+   License: MIT. Copyright (c) joshuadavidthomas. Contributes the
+   philosophical mindset selection (data-over-abstractions,
+   design-is-taking-apart, expensive-to-add-later, simplicity-vs-easy)
+   and the deletion-first three-question gate concept.
+
+2. softaworks `agent-toolkit/skills/reducing-entropy` — direct
+   upstream (fork of #1).
+   https://github.com/softaworks/agent-toolkit/tree/main/skills/reducing-entropy
+   License: MIT. Carries forward the original skill structure with
+   minor packaging adjustments. The kouko fork-of-fork lineage flows
+   from this distribution.
+
+3. kouko monkey-skills — this distribution, renamed to
+   `complexity-critique`.
+   https://github.com/kouko/monkey-skills
+   Path: dev-workflow/skills/complexity-critique/
+   License: MIT. Copyright (c) 2026 kouko.
+
+Modifications in this distribution (kouko)
+------------------------------------------
+
+See dev-workflow/CHANGELOG.md for the full per-version modification
+list. High-level summary (v1.5.0):
+
+- Renamed `reducing-entropy` → `complexity-critique` for clearer
+  trigger semantics (entropy is jargon; complexity-critique parallels
+  the existing `proposal-critique` skill in dev-workflow)
+- Mindset library extracted to `domain-teams:code-team/standards/`
+  as 4 separate standards (`mindset-data-over-abstractions.md`,
+  `mindset-design-is-taking-apart.md`,
+  `mindset-expensive-to-add-later.md`,
+  `mindset-simplicity-vs-easy.md`) with primary-source citations
+  rewritten against the underlying books / talks / papers
+  (Perlis 1982, Hickey 2011/2012, Moseley & Marks 2006, Ousterhout
+  2018, Brooks 1986, Willison/Plant/Kaplan-Moss 2021)
+- Cross-plugin delegation: this skill references the mindsets via
+  `domain-teams:code-team` paths, not by content duplication, per
+  monkey-skills CLAUDE.md §Cross-Plugin Delegation Contract
+- Restructured SKILL.md to mirror dev-workflow conventions
+  (frontmatter description with negative triggers, multilingual
+  Triggers, Composes With section, Worked Examples, When To Apply
+  with Not-triggers)
+- Three-question gate retained but tightened: explicit verdict
+  vocabulary (PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT)
+  parallel to `proposal-critique`'s KEEP / KEEP-WITH-CAVEAT / DEFER /
+  DROP
+- Scope clarified to *changes to existing codebase*; greenfield
+  design and post-implementation review explicitly out of scope
+  (delegated to `superpowers:brainstorming` and Anthropic `simplify`
+  respectively)
+- Removed the "load at least one mindset before proceeding" hard
+  precondition; mindsets are now advisory deepening, not a forced
+  preamble (the three questions stand on their own)
+- Added Worked Examples section (form-validation feature add;
+  type-safety refactor) demonstrating the verdict vocabulary
+- Removed the upstream `references/` directory (mindsets moved to
+  domain-teams:code-team) and `adding-reference-mindsets.md`
+  meta-skill (replaced by skill-team conventions for adding new
+  standards)
+
+MIT license preservation
+------------------------
+
+The MIT license requires that the copyright notice and permission
+notice be included in all copies or substantial portions of the
+Software. The upstream joshuadavidthomas, the intermediate softaworks,
+and the downstream kouko copyright are all preserved in the
+accompanying LICENSE file in this directory. The mindset standards
+in domain-teams:code-team carry an attribution note in their research
+file (`code-team/research/grounding-mindsets-2026-04-29.md`) but cite
+their underlying primary sources directly (Hickey, Perlis, Moseley &
+Marks, etc.); the philosophical content of those primary sources is
+not under the MIT chain and does not require attribution beyond
+academic citation.
