@@ -130,7 +130,7 @@ prompt フレーミングで spawn する：
 ### 以下の場合は呼び出**さない**…
 
 - **skill 出力が悪い / 間違っている** → `dev-workflow:skill-tasting`
-  *(利用可能時)* を使う — 品質改善は人間 A/B 必要、等価保持
+  を使う — 品質改善は人間 A/B 必要、等価保持
   リファクタではない
 - **phase 追加 / agent 変更 / workflow 再構築** →
   `dev-workflow:skill-creator-advance` — 構造的書き直しは feature hat
@@ -214,7 +214,7 @@ ensemble が存在する理由。
   refactor 呼び出し）
 - **`dev-workflow:skill-creator-advance`** — 変更が構造的
   （phase 追加 / agent 変更 / 再設計）
-- **`dev-workflow:skill-tasting`** *(利用可能時)* — 問いが
+- **`dev-workflow:skill-tasting`** — 問いが
   「出力は等価か」から「どちらの出力が良いか」に変わったとき
 - **`dev-workflow:skill-judge`** — オプショナル advisory；
   refactor 前 / 後にスコアを取り、等価チェックが通り続けても

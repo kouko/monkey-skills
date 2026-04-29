@@ -212,7 +212,7 @@ into "which output is better?", we've left refactor territory.
 - **`dev-workflow:skill-creator-advance`** — when refactor reveals a
   structural problem that needs redesign (not equivalence-preserving
   cleanup), hand off here.
-- **`dev-workflow:skill-tasting`** *(when available)* — when the
+- **`dev-workflow:skill-tasting`** — when the
   question turns from "are the outputs equivalent" to "which output
   is better", hand off here.
 - **`dev-workflow:skill-judge`** — optional advisory check before /

@@ -132,7 +132,7 @@ Full protocol: [`references/multi-judge-ensemble.md`](references/multi-judge-ens
 ### Don't invoke when…
 
 - **Skill output is bad / wrong** — use
-  `dev-workflow:skill-tasting` *(when available)* — taste
+  `dev-workflow:skill-tasting` — taste
   improvement requires human-judged A/B, not equivalence-preserving
   refactor
 - **You want to add a phase / change agent / restructure
@@ -220,7 +220,7 @@ preserved**. Hand off when:
   thinking before invoking refactor)
 - **`dev-workflow:skill-creator-advance`** — when the change is
   structural (add phase, change agents, redesign workflow)
-- **`dev-workflow:skill-tasting`** *(when available)* — when the
+- **`dev-workflow:skill-tasting`** — when the
   question turns from "are outputs equivalent" to "which output is
   better"
 - **`dev-workflow:skill-judge`** — optional advisory check before /

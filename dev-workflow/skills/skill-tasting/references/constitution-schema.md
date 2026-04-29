@@ -1,10 +1,11 @@
 # Constitution Schema
 
-> **Shared convention — canonical SoT.** This file is bundled in
-> both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tasting/references/` as functional copies.
-> This location is the canonical SoT for evolution; same-PR drift
-> rule mirrors edits to the `skill-tasting` copy.
+> **Shared convention — bundled functional copy.** This file is
+> bundled in both `dev-workflow:skill-refactor/references/` and
+> `dev-workflow:skill-tasting/references/`. Same-PR drift rule:
+> edits land in `skill-refactor/references/constitution-schema.md`
+> first (canonical SoT location, shipped v1.6.0), then mirror here
+> in the same PR. Runtime self-containment preserved on each side.
 
 Schema for `constitution.md` — a per-skill MUST / MUST NOT
 specification used as invariant input by `skill-refactor` Q3 and as

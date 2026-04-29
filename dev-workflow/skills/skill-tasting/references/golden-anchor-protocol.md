@@ -1,12 +1,16 @@
 # Golden Anchor Protocol
 
-> **Shared convention — canonical SoT.** This file is bundled in
-> both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tasting/references/` as functional copies.
-> This location is the canonical SoT for the convention's
-> evolution; the `skill-tasting` copy is updated to match in the
-> same PR (drift rule). Runtime self-containment preserved on
-> each side.
+> **Shared convention — bundled functional copy.** This file is
+> bundled in both `dev-workflow:skill-refactor/references/` and
+> `dev-workflow:skill-tasting/references/`. Same-PR drift rule:
+> any edit to this protocol must update both copies in the same
+> PR. The two copies are intentionally synchronized functional
+> copies, not delegated paths — runtime self-containment is
+> preserved on each side. This copy lives in `skill-tasting`;
+> the canonical SoT location for this convention's evolution is
+> `skill-refactor/references/golden-anchor-protocol.md` (which
+> shipped first in v1.6.0); when proposing changes, edit that
+> path first then mirror here in the same PR.
 
 How to maintain a `golden/` directory of curated reference outputs
 for a skill, used as a stable evaluation anchor for refactor and

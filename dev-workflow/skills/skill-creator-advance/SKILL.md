@@ -15,9 +15,11 @@ description: >-
   slash command", "write a new skill", or "test my skill". Do NOT
   use for token / structure refactor of an existing skill with
   output equivalence preserved (use dev-workflow:skill-refactor
-  instead). Do NOT use for domain-team skills with convention
-  discipline (use domain-teams:skill-team instead). スキル作成・
-  大規模再設計・評価ループ。技能建立・大幅重設計・評估迴圈。
+  instead). Do NOT use for output quality A/B testing of an
+  existing skill (use dev-workflow:skill-tasting instead). Do NOT
+  use for domain-team skills with convention discipline (use
+  domain-teams:skill-team instead). スキル作成・大規模再設計・
+  評価ループ。技能建立・大幅重設計・評估迴圈。
 ---
 
 # Skill Creator Advance
@@ -291,17 +293,15 @@ Ask the user to clarify (or infer from their phrasing):
 
 | Improvement type | Signal | Handler |
 |---|---|---|
-| **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `dev-workflow:skill-refactor` *(when available)*. Do not handle here. |
-| **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `dev-workflow:skill-tasting` *(when available)*. Do not handle here. |
+| **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `dev-workflow:skill-refactor`. Do not handle here. |
+| **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `dev-workflow:skill-tasting`. Do not handle here. |
 | **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Continue with the full creation flow below, using the existing skill as the starting baseline rather than starting from scratch. |
 
 If the user's intent is unclear, ask them to clarify which of (a), (b), or (c) applies. Do **not** default into the creation flow without confirming — picking the wrong tool wastes time on the wrong type of work.
 
-> Note (PR-1 transitional state): `skill-refactor` and `skill-tasting` are referenced above but not yet shipped. Until those land, treat (a) and (b) as a conversation with the user about whether the change is small enough to defer or large enough to fold into (c). The router itself is intentionally forward-looking so that the entry point is correct from day one; the handoffs activate as the sibling skills ship.
-
 ### Case (c): Structural Rewrite Flow
 
-For case (c), use this flow (steps 1–4). Cases (a) and (b) do **not** use these steps once the sibling skills exist.
+For case (c), use this flow (steps 1–4). Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps.
 
 #### 1. Assess the Current State
 
@@ -492,7 +492,7 @@ For situations where you want a more rigorous comparison between two versions of
 
 This is optional, requires subagents, and most users won't need it. The human review loop is usually sufficient.
 
-> **Boundary note vs `dev-workflow:skill-tasting`** *(when available)*: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tasting` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tasting` for subjective / creative outputs (writing style, design feel, persuasive copy).
+> **Boundary note vs `dev-workflow:skill-tasting`**: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tasting` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tasting` for subjective / creative outputs (writing style, design feel, persuasive copy).
 
 ---
 

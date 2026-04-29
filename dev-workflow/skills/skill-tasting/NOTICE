@@ -1,0 +1,125 @@
+skill-tasting
+=============
+
+Original design — not a port
+-----------------------------
+
+This skill is an **original design** authored for monkey-skills.
+It is **not** a port, fork, or adaptation of any existing skill.
+
+The broader idea of "autonomous skill optimization with git
+ratchet" was popularized by `alchaincyf/darwin-skill` (which was
+inspired by Andrej Karpathy's `autoresearch`). However, the design
+of this skill — Phase B of the Two-Hats split, deliberately
+separated from skill-refactor to handle taste-sensitive output via
+human judgment — is independent work. Specifically: `darwin-skill`
+mixes structural refactoring with output quality evaluation in a
+single 8-dim rubric using LLM-as-judge throughout. This skill
+recognizes that LLM-as-judge cannot reliably evaluate
+taste-sensitive output (verbosity bias, position bias,
+self-preference, insensitivity to subtle quality), and routes that
+work through human preference capture instead.
+
+Specific design distinctions from `darwin-skill`:
+
+1. **Phase B isolation** — `skill-tasting` only handles
+   taste-sensitive A/B; structural refactor goes to
+   `skill-refactor`. `darwin-skill` does both in one rubric. The
+   split is foundational to avoiding LLM-as-judge / Goodhart drift
+   on taste dimensions.
+2. **Human-in-loop is non-skippable** — every iteration requires a
+   human pick. `darwin-skill`'s "Human in the loop" is between
+   skills (review at end); this skill's HITL is per-A/B iteration.
+3. **Constitutional pre-filter** — variants violating MUST clauses
+   are filtered before human judgment. `darwin-skill` lacks this
+   layer; variants are scored without contract floor.
+4. **Blind A/B with random label assignment** — position bias
+   mitigation. The user does not know which variant is the
+   baseline.
+5. **4-option capture** — single / multiple / none / refine.
+   `darwin-skill` uses a binary keep/revert; the 4-option matches
+   the actual decision space humans face on taste judgments.
+6. **Preference log as durable RLHF-lite dataset** — every pick is
+   logged with full context (label assignment, rejected variants,
+   constitutional rejection record, decision time) for future
+   self-trained judge training. `darwin-skill` records
+   results.tsv but not in preference-pair training format.
+7. **Self-trained judge scaffold** — H4 horizon explicitly
+   designed for trainable preference model that replaces
+   LLM-judge once log is dense (≥1000 entries). `darwin-skill`
+   does not have this trajectory.
+8. **Verdict vocabulary** — ADOPT / DROP / DEFER / REFINE /
+   ESCALATE. Parallels `complexity-critique` /
+   `proposal-critique` / `skill-refactor` discipline; differs
+   from `darwin-skill`'s keep/revert.
+9. **No auto-revert** — unlike `skill-refactor` (which auto-reverts
+   on equivalence failure) and `darwin-skill` (which auto-reverts
+   on score drop), this skill **does not auto-revert** because
+   "score drop" cannot be reliably computed by LLM on taste
+   dimensions. Variants ship only on human ADOPT; absence of pick
+   = no change.
+
+Inspirations acknowledged
+-------------------------
+
+1. Andrej Karpathy — `autoresearch` (https://github.com/karpathy/autoresearch).
+   Original "autonomous loop" pattern.
+
+2. alchaincyf — `darwin-skill` (MIT,
+   https://github.com/alchaincyf/darwin-skill).
+   First application to Claude Agent Skills.
+
+3. monkey-skills `copywriting-toolkit:voice-anchors` (MIT). The
+   golden anchor / constitutional discipline borrows curation
+   patterns from voice-anchor work (90 anchors validated via
+   N=10 dry runs).
+
+4. RLHF / preference-modeling literature — the preference log →
+   trained-judge pipeline draws on Bradley-Terry-style preference
+   loss methodology (used in Anthropic / OpenAI preference
+   modeling work).
+
+5. Fowler, M. — *Refactoring* (2nd ed, 2018) Two Hats principle.
+   Grounds the refactor-vs-feature split that separates
+   skill-refactor from skill-tasting at the architectural level.
+
+6. monkey-skills `dev-workflow/docs/skill-evolution-architecture.md`
+   captures the full rationale for the Two-Hats split applied to
+   skills, the cost-blind H1-H4 horizons, and the trained-judge
+   trajectory.
+
+License
+-------
+
+MIT — see LICENSE in this directory.
+
+Copyright (c) 2026 kouko.
+
+No copyright dependencies on the inspirations above; design
+borrowing is acknowledged here for transparency, not because the
+license requires it.
+
+Convention sharing with skill-refactor
+---------------------------------------
+
+This skill bundles **functional copies** of 3 shared convention
+files in `references/`:
+
+- `golden-anchor-protocol.md`
+- `test-prompts-schema.md`
+- `constitution-schema.md`
+
+Same-PR drift rule (per
+`dev-workflow/docs/skill-evolution-architecture.md` and the SSOT-
+and-functional-copy precedent set in PR #159):
+
+- The canonical SoT for these conventions lives in
+  `dev-workflow:skill-refactor/references/`
+- Edits to a convention land in skill-refactor first, then mirror
+  here in the **same PR**
+- Bundled copies in this skill carry header blockquotes pointing
+  back to the canonical location for clarity
+
+This arrangement preserves runtime self-containment (each skill
+runs with `dev-workflow` alone, no cross-plugin or cross-skill
+runtime dependency) while keeping evolution coherent.
