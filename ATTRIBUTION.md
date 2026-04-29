@@ -45,6 +45,16 @@ Upstream chain:
 |-----------|-------------|--------|
 | `dev-workflow/skills/skill-creator-advance/` | [LICENSE](dev-workflow/skills/skill-creator-advance/LICENSE) | [NOTICE](dev-workflow/skills/skill-creator-advance/NOTICE) |
 
+### skill-judge (dev-workflow plugin)
+
+Upstream: [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit/tree/main/skills/skill-judge) — direct upstream, MIT, Copyright (c) 2026 Leonardo Flores; provides the 8-dimension rubric, E:A:R knowledge classification, evaluation protocol, and 9 common failure patterns.
+
+Modifications by kouko: frontmatter rewritten to dev-workflow plugin convention; new "Adaptation for monkey-skills domain-team skills" section added (D7 rescaling, D4/D5 supplementary checks against `domain-teams:skill-team` gates, focus dimensions D1/D3/D6); cross-references inserted to `dev-workflow:skill-creator-advance` and `domain-teams:skill-team` for scope disambiguation.
+
+| Component | License file | NOTICE |
+|-----------|-------------|--------|
+| `dev-workflow/skills/skill-judge/` | [LICENSE](dev-workflow/skills/skill-judge/LICENSE) | [NOTICE](dev-workflow/skills/skill-judge/NOTICE) |
+
 ## Original Work (this project)
 
 The following components are original to this project, authored under the
