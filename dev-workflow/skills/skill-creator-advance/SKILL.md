@@ -13,9 +13,11 @@ description: >-
   proceeding (router behavior — see Improving an Existing Skill
   section). Also use when the user says "build a skill", "make a
   slash command", "write a new skill", or "test my skill". Do NOT
-  use for domain-team skills with convention discipline (use
-  domain-teams:skill-team instead). スキル作成・大規模再設計・
-  評価ループ。技能建立・大幅重設計・評估迴圈。
+  use for token / structure refactor of an existing skill with
+  output equivalence preserved (use dev-workflow:skill-refactor
+  instead). Do NOT use for domain-team skills with convention
+  discipline (use domain-teams:skill-team instead). スキル作成・
+  大規模再設計・評価ループ。技能建立・大幅重設計・評估迴圈。
 ---
 
 # Skill Creator Advance

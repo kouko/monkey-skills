@@ -1,0 +1,108 @@
+skill-refactor
+==============
+
+Original design — not a port
+-----------------------------
+
+This skill is an **original design** authored for monkey-skills.
+It is **not** a port, fork, or adaptation of any existing skill.
+
+Although the broader idea of "autonomous skill optimization with
+git ratchet" was popularized by `alchaincyf/darwin-skill` (which
+was inspired by Andrej Karpathy's `autoresearch`), the architecture,
+gate function, evaluation rubric, multi-judge ensemble protocol,
+refactor moves catalog, and integration with the broader monkey-
+skills convention library are all independent design.
+
+Specific design distinctions from `darwin-skill`:
+
+1. **Phase A / Phase B split** — `darwin-skill` mixes structural
+   refactoring with output quality evaluation in a single 8-dim
+   rubric. `skill-refactor` deliberately handles only Phase A
+   (structure with output preservation); Phase B (output quality
+   A/B) is the separate `dev-workflow:skill-tasting` skill. This
+   split avoids the LLM-as-judge / Goodhart drift problems that
+   monolithic taste-rubrics produce — see
+   `dev-workflow/docs/skill-evolution-architecture.md` §1.
+2. **Multi-judge ensemble** — `skill-refactor` uses a 3-judge
+   ensemble with varied prompt framing (utility / content /
+   boundary) for Q1's semantic equivalence check, rather than a
+   single judge subagent. Ensemble disagreement is itself a signal
+   that auto-escalates to human review.
+3. **Specific-behavior-diff override** — a single dissenting judge
+   citing concrete behavior change outranks numeric majority. This
+   prevents subtle regressions from sneaking through "2/3 says
+   equivalent" votes when one judge's specific reason was correct.
+4. **Three-question gate (Q1 equivalence + Q2 token reduction ≥10%
+   + Q3 invariant preservation)** — vs `darwin-skill`'s 8-dim
+   weighted score. The three-question shape parallels other
+   dev-workflow critique skills (`proposal-critique`,
+   `complexity-critique`).
+5. **Verdict vocabulary** — PROCEED / RESHAPE / REJECT — parallel
+   to `complexity-critique`. `darwin-skill` uses keep / revert.
+6. **Tier 1 / 2 / 3 cascade** — graceful degradation from
+   automatic verdict to human escalation to human-judge handoff
+   (`skill-tasting`). `darwin-skill` does not have this cascade.
+7. **Refactor-hat editor prompt explicitly excludes
+   behavior-changing moves** — Out-of-Scope Moves table in the
+   refactor-moves catalog enforces Fowler's Two Hats discipline
+   from `domain-teams:code-team/standards/refactoring-standard.md`.
+8. **Bundled convention files** — `golden-anchor-protocol.md` /
+   `test-prompts-schema.md` / `constitution-schema.md` ride in this
+   skill's `references/` for runtime self-containment. They are
+   shared with `dev-workflow:skill-tasting` (when shipped) via the
+   same-PR drift rule, not via cross-skill runtime path delegation.
+
+Inspirations acknowledged
+-------------------------
+
+The autonomous-loop concept that informs this skill traces:
+
+1. Andrej Karpathy — `autoresearch` (https://github.com/karpathy/autoresearch)
+   Original "keep only measurable improvements, revert everything else"
+   pattern applied to ML research / code optimization.
+
+2. alchaincyf — `darwin-skill` (MIT,
+   https://github.com/alchaincyf/darwin-skill)
+   First published application of the autoresearch pattern to
+   Claude Agent Skills. Demonstrated that the autonomous-loop +
+   git ratchet shape works for skill optimization.
+
+3. Fowler, M. — *Refactoring* (2nd ed, 2018) and the Two Hats
+   principle. Grounds this skill's discipline of refusing
+   behavior-changing edits in refactor scope.
+
+4. monkey-skills `dev-workflow/docs/skill-evolution-architecture.md`
+   captures the full rationale for splitting Phase A / Phase B and
+   the cost-blind H1-H4 horizons that informed PR-2's scope.
+
+License
+-------
+
+MIT — see LICENSE in this directory.
+
+Copyright (c) 2026 kouko.
+
+No copyright dependencies on the inspirations above; design
+borrowing is acknowledged here for transparency, not because the
+license requires it. (`darwin-skill` is MIT, `autoresearch` is MIT;
+neither was modified or directly incorporated.)
+
+Convention sharing with skill-tasting
+--------------------------------------
+
+When `dev-workflow:skill-tasting` ships (PR-3 of this series), the
+following 3 convention files will be present as functional copies
+in both skills' `references/`:
+
+- `golden-anchor-protocol.md`
+- `test-prompts-schema.md`
+- `constitution-schema.md`
+
+**Same-PR drift rule** (per
+`dev-workflow/docs/skill-evolution-architecture.md`): any edit to
+the protocol must update both copies in the same PR. This skill
+ships the canonical content for these conventions in PR-2;
+`skill-tasting` will copy them verbatim plus a header blockquote
+pointing back. Drift between the two copies is a regression
+caught by future cross-skill CI (PR-4 of this series).

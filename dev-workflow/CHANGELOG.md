@@ -4,6 +4,120 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] — 2026-04-29
+
+### Context
+
+Second-of-five PR series implementing the skill-evolution
+architecture (see `dev-workflow/docs/skill-evolution-architecture.md`).
+PR-1 (v1.5.0 + skill-creator-advance scope tightening) prepared the
+ground; this PR-2 / v1.6.0 lands `skill-refactor` — Phase A of the
+Two-Hats split — with all H1-H3 features in one shot.
+
+PR-3 will add `skill-tasting` (Phase B); PR-4 / PR-5 add governance,
+cross-skill CI, telemetry, and self-training judge scaffolding.
+
+### Why skill-refactor exists
+
+Skills accumulate tokens. SKILL.md files grow over edits. Most
+edits are additive — fixing corner cases, adding examples — and
+result in larger skills with the same (or worse) output behavior.
+Without an explicit gate, every edit defaults additive.
+
+`skill-refactor` is the **refactor hat** applied to skills:
+improve structure / shrink tokens **without changing what the skill
+does**. Output equivalence is enforced by a multi-judge ensemble +
+structured comparison; any behavior-changing edit is out-of-scope
+and routes to `skill-creator-advance` (structural redesign) or
+`skill-tasting` (output quality, taste-sensitive).
+
+### Added (skill-refactor)
+
+New `dev-workflow/skills/skill-refactor/`:
+
+- **`SKILL.md`** — Iron Law (3-part discipline: equivalence + ≥10%
+  token reduction + invariant preservation), Before-You-Begin
+  baseline capture, Gate Function (Q1 multi-judge ensemble +
+  structured comparison; Q2 token threshold; Q3 invariant snapshot
+  diff), verdict vocabulary (PROCEED / RESHAPE / REJECT) parallel
+  to `complexity-critique`, refactor moves catalog with risk
+  classification, Tier 1/2/3 cascade for ensemble disagreement,
+  Red Flags, Rationalization Prevention, 2 worked examples (token
+  bloat success + subtle behavior-change rejection)
+- **`commands/skill-refactor.md`** — slash command redirect
+- **`references/equivalence-check-protocol.md`** — Q1 two-layer
+  check details (Layer 1 structural / Layer 2 LLM-judge ensemble);
+  consensus matrix; specific-behavior-diff override rule
+- **`references/multi-judge-ensemble.md`** — 3-judge spawn protocol
+  with varied prompt framing (utility / content / boundary);
+  random output labeling for position-bias mitigation
+- **`references/refactor-moves-catalog.md`** — Fowler-inspired
+  catalog of refactor-hat-safe moves (Low/Medium/High risk);
+  out-of-scope moves table routes to other skills
+- **`references/golden-anchor-protocol.md`** — *shared convention*
+  (also in skill-tasting when shipped); same-PR drift rule
+- **`references/test-prompts-schema.md`** — *shared convention*
+- **`references/constitution-schema.md`** — *shared convention*
+- **`scripts/equivalence_check.py`** — Layer 1 structural
+  comparison (5 deterministic checks); standalone Python, stdlib
+  only
+- **`scripts/multi_judge.py`** — Layer 2 ensemble aggregation +
+  consensus rule application; specific-behavior-diff override via
+  regex pattern matcher
+- **`scripts/golden_compare.py`** — Tier 2 anchor similarity
+  comparison (Jaccard + length ratio)
+- **`LICENSE`** — MIT, single copyright (c) 2026 kouko, original
+  design (not a port or fork)
+- **`NOTICE`** — explicit design distinctions vs darwin-skill
+  (8 enumerated differences); inspirations acknowledged
+  (autoresearch, darwin-skill, Fowler Refactoring); no copyright
+  dependencies
+- **`README.{en,ja,zh-TW}.md`** — three-language READMEs
+
+### Changed (skill-creator-advance)
+
+- Description: added negative trigger routing token / structure
+  refactor work to `skill-refactor`. Held back from PR-1 to avoid
+  dangling reference; activated in this PR now that skill-refactor
+  exists.
+
+### Changed (plugin)
+
+- `plugin.json`: 1.5.0 → 1.6.0; description appended with
+  "skill-refactor (multi-judge ensemble + git ratchet)"; multilingual
+  postfix updated (skill リファクタ / skill 重構); keywords gain
+  "skill-refactor"
+- `README.{en,ja,zh-TW}.md`: skills table adds skill-refactor row;
+  "the critique line" diagram extended to show
+  skill-refactor / skill-tasting positioning; Repository Structure
+  tree adds the new skill folder
+
+### Cross-plugin / inter-skill independence
+
+`skill-refactor` is **runtime self-contained**. No cross-plugin
+dependency. The 3 shared convention files (golden-anchor /
+test-prompts / constitution) are bundled in the skill's own
+`references/` directory. When `skill-tasting` ships in PR-3, the
+same 3 convention files will be **functional copies** in that
+skill's `references/`, governed by a same-PR drift rule. This
+mirrors the SSOT-and-functional-copy pattern established for
+code-team mindsets in PR #159.
+
+### Validation status
+
+⚠️ Validation gate per `dev-workflow/docs/skill-evolution-architecture.md`
+§6: dry-run on ≥2 existing skills with ≥90% equivalence-check
+agreement. **OUTSTANDING** — this PR ships the skill before formal
+validation. PR description notes the caveat. Recommended first
+validation target: skill-creator-advance itself (already over the
+soft cap and a natural test bed).
+
+### Bump rationale
+
+Minor (1.5.0 → 1.6.0): new skill addition; no breaking change to
+existing skills' behavior. skill-creator-advance description gains
+a not-trigger, which is a refinement, not a behavior change.
+
 ## [1.5.0] — 2026-04-29
 
 ### Context
