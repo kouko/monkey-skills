@@ -280,6 +280,114 @@ sacrificing LLM-discovery clarity. The pattern is **opt-in per skill** —
 skills without `README.md` continue to use `SKILL.md` as the only
 top-level file.
 
+### Skill-Internal README Authoring Discipline
+
+A **skill-internal README** is `README.md` (and any `README.{lang}.md`
+siblings) inside a `skills/<skill-name>/` directory. Audience: a human
+browsing the skill on GitHub. Typical length: ~280–340 lines. Tightly
+coupled to a single sibling `SKILL.md`.
+
+**Skill-internal READMEs do NOT require the `docs-team` workflow** —
+they are written directly by the skill author. This is **deliberate
+scope decision**, not a routing oversight.
+
+#### Why skill-internal READMEs are exempt from docs-team
+
+| `docs-team` is designed for | Skill-internal README is |
+|---|---|
+| Project-level / plugin-level / public-release READMEs | Single-skill technical overview |
+| Multi-author co-authoring with role / voice consistency | Single-author within a skill's scope |
+| Architecture documentation L0–L4 hierarchy | Implementation overview without architectural depth |
+| Diátaxis-mode discipline (Tutorial / How-to / Reference / Explanation) | Mixed-mode by nature — describes *what / why / how / when* in one short doc |
+| ADR / API reference / Runbook deliverables | None of these |
+| Pre-writing checklist + quick-mode vs full-mode decision | Inline writing alongside SKILL.md |
+
+Forcing skill-internal READMEs through `docs-team` would over-engineer a
+small artifact whose quality discipline is already handled by:
+- Tight coupling to `SKILL.md` (the SSOT). README rephrases for humans;
+  `SKILL.md` specifies for LLMs. Drift between them is caught by the
+  Coexistence rule above.
+- The skill's own constitution / test prompts / evaluation gates.
+- The `skill-team` conventions in this very file (`SKILL.md` discipline,
+  file naming, path discipline).
+
+#### Required discipline (still applies — these are the lighter rules)
+
+A skill-internal README MUST:
+
+1. **Open with a language switcher** if i18n siblings exist:
+   ```
+   **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+   ```
+2. **Honor the repo's English-noun-preservation rule** for technical
+   terms (skill names / framework names / API terms — kept English).
+   See `docs/i18n/glossary-{lang}.md` for established exceptions.
+3. **Link to `SKILL.md`** explicitly with a sentence acknowledging that
+   `SKILL.md` is the operational file Claude actually loads.
+4. **Not contradict `SKILL.md`** on workflow / gate / agent definitions
+   (per §README.md and SKILL.md Coexistence above).
+5. **Document upstream chain if derivative** (typically in an
+   "Origin / lineage" section pointing to LICENSE / NOTICE).
+
+A skill-internal README SHOULD include some subset of:
+
+- Why this skill exists (problem framing)
+- How it works (operational flow, optionally Mermaid diagram)
+- When to / not to invoke (trigger / not-trigger lists)
+- Worked example(s) (1–2 inline; if 3+, consider a companion file
+  per §Protocol Companion Files)
+- How it relates to other skills (composes-with section)
+- Known limitations
+- File structure tree
+- License + Bottom Line
+
+A skill-internal README MAY be skipped entirely — if the skill is
+small / utility / single-shot, `SKILL.md` alone is sufficient. The
+dual-file pattern is **opt-in per skill** as stated above.
+
+#### When `docs-team` IS required
+
+Use `docs-team` for these artifacts (regardless of which skill they
+belong to):
+
+| Artifact | Why docs-team is required |
+|---|---|
+| Plugin-level `README.md` (e.g., `dev-workflow/README.md`) | Multi-skill scope; needs cross-skill consistency; public-facing |
+| Repo-level `README.md` (root of monkey-skills) | Maximum scope; multiple plugins; project identity |
+| Public release READMEs / changelogs | External-user-facing; tone / voice gates apply |
+| ADR / API reference / Runbook | Diátaxis-mode discipline mandatory |
+| Codebase architecture docs (L0-L4) | Architecture documentation gate (CHK-DOC-ARCH) |
+| Tutorial / how-to / explanation docs at project level | Diátaxis-mode discipline |
+
+For these, `docs-team`'s `pre-writing-checklist.md` + appropriate
+protocol (`write-readme.md` / `write-architecture.md` / etc.) +
+relevant gates apply normally.
+
+#### Quick decision rule
+
+```
+Is the README inside skills/<name>/ (skill-internal)?
+  → Skip docs-team. Write directly. Apply lighter rules above.
+
+Is the README at plugin level or repo root, or is it ADR / API ref / 
+runbook / public release / architecture L0-L4?
+  → Use docs-team. Follow standard write-* protocol + gates.
+```
+
+#### Anti-patterns
+
+- ❌ **Forcing docs-team on skill-internal README** — over-engineers
+  a small artifact; introduces gate friction without quality gain
+- ❌ **Skipping docs-team on plugin-level / public-facing README** —
+  the lighter rules above are NOT a substitute when scope demands
+  full discipline
+- ❌ **Treating skill-internal README as duplicate of SKILL.md** —
+  defeats the purpose of the dual-file pattern (per Coexistence rule)
+- ❌ **Skill-internal README without language switcher** when i18n
+  siblings exist — breaks the multi-language reading flow
+- ❌ **README that contradicts SKILL.md** on operational details — drift
+  caught at PR review by maintainer; CI does not currently enforce this
+
 ## Anti-Patterns
 
 - ❌ Nested directories under `standards/`, `protocols/`, `checklists/`, `rubrics/`

@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.1] — 2026-04-29
+
+### Context
+
+Patch-level clarification of the existing dual-file pattern in
+`skill-team/standards/file-conventions.md` §README.md and
+SKILL.md Coexistence (introduced v5.3.0).
+
+The convention now explicitly documents that **skill-internal
+READMEs do not require the `docs-team` workflow**. Audit revealed
+that across recent dev-workflow PRs (#161 – #165), 21 skill-internal
+README files (en/ja/zh-TW × 7 skills) were authored directly without
+docs-team routing — and the resulting quality was fit-for-purpose.
+This patch formalizes that as the intended convention rather than
+treating it as a routing oversight.
+
+### Added (skill-team)
+
+- `standards/file-conventions.md` §Skill-Internal README Authoring
+  Discipline (new sub-subsection under §README.md and SKILL.md
+  Coexistence) covering:
+  - Definition of skill-internal README (`skills/<name>/README.md`
+    + i18n siblings; ~280–340 lines; technical reader; tightly
+    coupled to sibling SKILL.md)
+  - Why exempt from docs-team (table comparing docs-team scope vs
+    skill-internal README scope: project-level vs single-skill,
+    multi-author vs single-author, architecture-doc vs
+    implementation-overview, Diátaxis-strict vs mixed-mode, ADR /
+    API ref / runbook deliverables vs none)
+  - Required discipline (lighter rules): language switcher,
+    English-noun-preservation, link to SKILL.md, no contradiction
+    with SKILL.md, upstream attribution if derivative
+  - Recommended sections (Why / How / When / Worked example /
+    Relates to / Limitations / Files / License / Bottom Line)
+  - When `docs-team` IS required: plugin-level README, repo-level
+    README, public release READMEs, ADR / API ref / runbook,
+    architecture L0-L4 docs
+  - Quick decision rule
+  - 5 anti-patterns
+
+### Bump rationale
+
+Patch (5.5.0 → 5.5.1): documentation correction / clarification.
+Existing convention (dual-file pattern) is unchanged; this patch
+makes the implicit "skill-internal READMEs are exempt from
+docs-team" rule explicit. No new behavior; no new gate.
+
 ## [5.5.0] — 2026-04-29
 
 ### Context

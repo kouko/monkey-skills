@@ -197,6 +197,32 @@ operational checklist.
 
 ---
 
+## README Authoring Discipline
+
+dev-workflow follows the repo-wide convention that **skill-internal
+READMEs do not require the `docs-team` workflow**. They are written
+directly by the skill author against a lighter rule set (language
+switcher, English-noun-preservation, no contradiction with `SKILL.md`,
+upstream attribution if derivative).
+
+The full convention lives in
+`domain-teams:skill-team/standards/file-conventions.md` §Skill-Internal
+README Authoring Discipline. dev-workflow inherits that convention.
+
+The 7 dev-workflow skills (skill-creator-advance / skill-judge /
+git-memory / proposal-critique / complexity-critique / skill-refactor
+/ skill-tuning) follow this lighter discipline. Dev-workflow's
+plugin-level READMEs (`dev-workflow/README.{md,ja.md,zh-TW.md}`)
+should be authored / updated via `docs-team` per the same convention,
+since they are plugin-level not skill-internal.
+
+When a skill-internal README needs significant restructuring (e.g.,
+adding architecture-doc-grade content, splitting into Diátaxis
+modes), that's a signal it should be promoted to a docs-team
+artifact — typically by extracting content into a separate
+`docs/` file at plugin level rather than enlarging the
+skill-internal README beyond its lighter-discipline scope.
+
 ## Anti-Patterns
 
 | Anti-pattern | Why bad |
