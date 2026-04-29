@@ -1,0 +1,29 @@
+{
+  "skill_name": "skill-judge",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Evaluate this SKILL.md against the 8-dimension rubric: <inline 200-line skill that handles JSON-to-CSV conversion with frontmatter, workflow, and 2 edge case examples>",
+      "expected_behavior": "Skill produces an 8-dimension scoring report with knowledge delta / mindset / anti-pattern / spec compliance / progressive disclosure / freedom calibration / pattern recognition / practical usability scored 0-15 each. Computes total score 0-120 and letter grade A-F. Identifies critical issues and top 3 improvements.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Score this skill: <a meta-skill that itself documents how to evaluate skills (a self-referential case)>. Apply the rubric and call out any self-evaluation issues.",
+      "expected_behavior": "Skill applies the rubric reflexively, notes self-evaluation aspects per the SKILL.md 'Self-Evaluation Note' section, and produces a normal 8-dimension report. Should not get into infinite recursion or refuse to evaluate.",
+      "edge_case_dimensions": ["self-referential", "meta-skill", "reflexive evaluation"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "is this skill good",
+      "expected_behavior": "Skill asks for the SKILL.md content (not in current context). If the user provides it, runs the full rubric. If they refuse, explains that scoring requires the actual SKILL.md text and offers a brief checklist for the user to self-evaluate.",
+      "edge_case_dimensions": ["vague request", "no skill content provided", "intake clarification"]
+    }
+  ]
+}

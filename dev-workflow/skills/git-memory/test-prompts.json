@@ -1,0 +1,29 @@
+{
+  "skill_name": "git-memory",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Compose a commit message for the current staged changes. The commit fixes a race condition in the order-processing pipeline where two concurrent updates to the same order would sometimes both succeed. Add a Decision: trailer noting we chose pessimistic locking over optimistic retry because the conflict rate was >5%.",
+      "expected_behavior": "Skill produces a commit message with type / scope / subject and a Decision: trailer in the footer. Format follows git-interpret-trailers convention. Subject is human-readable, no trailing period. Decision: trailer captures the why (conflict rate threshold), not just the what.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Compose a PR body for a refactor that touched 23 files across 4 modules. The change extracts a shared validation helper. Include a ## Memory section documenting the alternatives considered (inline duplication / per-module helpers / shared library) and why we chose shared library.",
+      "expected_behavior": "Skill produces PR body with summary + test plan + ## Memory section listing the 3 alternatives considered with one-line rationale each, and the chosen path with explanation. The ## Memory section uses the standard structure (Decision / Learning / Gotcha conventions where applicable).",
+      "edge_case_dimensions": ["large-scale change", "alternatives memory", "PR body discipline"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "what did we learn from the auth incident",
+      "expected_behavior": "Skill recommends running memory-grep over recent commits and PRs filtered to auth-related work. Notes that without a date range the search is unbounded; asks the user to constrain (e.g., 'last quarter' or 'since v2.0'). If user provides constraint, executes the grep against current repo's git log + gh pr list.",
+      "edge_case_dimensions": ["retrieval rather than composition", "intake clarification", "memory-grep workflow"]
+    }
+  ]
+}

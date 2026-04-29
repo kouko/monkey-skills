@@ -1,0 +1,29 @@
+{
+  "skill_name": "skill-tasting",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "The status-report skill produces dry, formal prose. I want warmer, more direct outputs without losing the 3-fact information density (shipped / in-flight / blocked). Run a tasting round.",
+      "expected_behavior": "Skill verifies prerequisites (test-prompts.json present, constitution.md ideally present with the 3-fact MUST). Runs Phase 0 baseline, Phase 1 generates 2-3 variants (warmer tone / list-first / human-story-first), Phase 2 constitutional pre-filter (rejects any variant that drops a fact), Phase 3 blind A/B with random labels. Captures user pick and writes preference log entry.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "I want to A/B different variants for my inventory-snapshot skill. The constitution requires exact integers from input. One of the variants the editor generated is using approximations like 'about 200' for warmth. Run tasting.",
+      "expected_behavior": "Skill runs Phase 1 generation, then Phase 2 catches the approximation variant as constitution violation (MUST exact integers). Reports the rejection to user explicitly (not silent). Proceeds to Phase 3 with surviving variants only. Logs the constitutional rejection in preference log alongside the user's pick on the surviving variants.",
+      "edge_case_dimensions": ["constitutional pre-filter rejection", "explicit user notification", "rejection logging"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "improve this skill's output",
+      "expected_behavior": "Skill asks which skill (no target in context). Asks user whether they have or want to write a constitution for the target (strongly recommended for taste-sensitive A/B). If neither test-prompts.json nor constitution exists, declines to run and recommends foundation work first via skill-creator-advance.",
+      "edge_case_dimensions": ["missing target", "missing prerequisites", "delegate to skill-creator-advance for foundation"]
+    }
+  ]
+}
