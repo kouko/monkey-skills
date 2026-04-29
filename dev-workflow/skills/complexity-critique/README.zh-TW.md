@@ -73,18 +73,21 @@ DEFER / DROP 平行：
 （例如「30 lines 換到 exhaustiveness check」）。Hidden growth 正是
 此 skill 要防的失敗模式。
 
-### 三個 reference mindsets（跨 plugin）
+### 四個 reference mindsets（內建、必載 preamble）
 
-當三問需要更深的 grounding，四個哲學 anchor 住在
-`domain-teams:code-team/standards/`：
+Skill 在 `references/` 內建 4 個哲學 anchor。回答 Q1 之前必須先載
+入至少一個（依上游 `reducing-entropy` 設計）：
 
-- **`mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
-- **`mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit
-- **`mindset-expensive-to-add-later.md`** — Willison PAGNI
-- **`mindset-simplicity-vs-easy.md`** — Hickey
+- **`references/mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
+- **`references/mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit / Ousterhout
+- **`references/mindset-expensive-to-add-later.md`** — Willison PAGNI
+- **`references/mindset-simplicity-vs-easy.md`** — Hickey
 
-這些不是 gate — 是 reference 詞彙。Mindsets 是 advisory
-deepening；當 `domain-teams` 沒裝時，三問本身可獨立運作。
+此 skill **完全自包含** — 只需安裝 `dev-workflow` 即可運作
+complexity-critique。同樣 4 個 mindsets 的 canonical SSOT 版本也住
+在 `domain-teams:code-team/standards/mindset-*.md`（被 code-team
+brainstorming / refactoring protocols 使用）；本 skill 內建副本帶
+header note 指回 SSOT 處進行 evolution。
 
 ---
 
@@ -221,10 +224,10 @@ MIT chain 保留見 [`LICENSE`](LICENSE)。
 
 | 限制 | 意義 | 緩解 |
 |---|---|---|
-| **需要既存 code** | Q2 的 LOC count 需要 baseline。Greenfield 沒有「before」。 | 交給 `superpowers:brainstorming`。 |
+| **Greenfield Q2 降級** | Q2 的 LOC count 需要 `before`。純 greenfield「該不該做這個 feature」沒有 baseline 可比。 | Q2 替換成「shipping 此 feature 的最小 code 是？是否「0 = 不做」也在桌上？」— Q1 / Q3 仍 anchor gate；deletion bias 帶入 build decision。 |
 | **LOC 是 proxy 不是 truth** | Line 不等於 complexity，但有相關。30 行 type-system 技巧可能比 100 行直白 code 密集得多。 | Q1「smallest end state」問題涵蓋概念尺寸；Q2 的 LOC 是好驗證的 proxy。 |
 | **PROCEED-WITH-CAVEAT 依賴使用者誠實** | Verdict 要求 *命名* 買到了什麼。跳過此步等於 hidden growth 通過。 | Skill 明確拒絕靜默 approve net-additive 改動；rationalization-prevention 表在 `SKILL.md`。 |
-| **Mindsets 需要 code-team 安裝** | 跨 plugin delegation；`domain-teams` 不存在時 mindsets 不會 load。 | 三問 gate 自包含；mindsets 是 advisory deepening。 |
+| **Mindset 擴充政策住在 code-team** | `references/` 內建的 4 個 mindset 是 functional copies。新增第 5 個 mindset 的規則住在 `domain-teams:code-team/standards/mindset-extension-standard.md`。 | Runtime 完全自包含，毋須其他 plugin。只在 *提議擴充* mindset 庫本身時才需要安裝 `domain-teams`。 |
 
 ---
 
@@ -242,7 +245,12 @@ complexity-critique/
 ├── README.zh-TW.md     ← 本檔（繁體中文）
 ├── SKILL.md            ← operational 檔（給 Claude）
 ├── LICENSE             ← MIT, joshuadavidthomas → softaworks → kouko
-└── NOTICE              ← upstream chain 細節 + 修改 summary
+├── NOTICE              ← upstream chain 細節 + 修改 summary
+└── references/         ← 4 個內建 mindset functional copies
+    ├── mindset-data-over-abstractions.md
+    ├── mindset-design-is-taking-apart.md
+    ├── mindset-expensive-to-add-later.md
+    └── mindset-simplicity-vs-easy.md
 ```
 
 `README.*.md` 與 `SKILL.md` 受眾與工作不同。它們刻意不重複內容：

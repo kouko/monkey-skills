@@ -36,17 +36,24 @@ list. High-level summary (v1.5.0):
 - Renamed `reducing-entropy` → `complexity-critique` for clearer
   trigger semantics (entropy is jargon; complexity-critique parallels
   the existing `proposal-critique` skill in dev-workflow)
-- Mindset library extracted to `domain-teams:code-team/standards/`
-  as 4 separate standards (`mindset-data-over-abstractions.md`,
-  `mindset-design-is-taking-apart.md`,
-  `mindset-expensive-to-add-later.md`,
-  `mindset-simplicity-vs-easy.md`) with primary-source citations
-  rewritten against the underlying books / talks / papers
-  (Perlis 1982, Hickey 2011/2012, Moseley & Marks 2006, Ousterhout
-  2018, Brooks 1986, Willison/Plant/Kaplan-Moss 2021)
-- Cross-plugin delegation: this skill references the mindsets via
-  `domain-teams:code-team` paths, not by content duplication, per
-  monkey-skills CLAUDE.md §Cross-Plugin Delegation Contract
+- Mindset library bundled at `references/` (4 files), matching the
+  upstream `reducing-entropy/references/` layout. The same 4
+  mindsets also live as canonical SSOT in
+  `domain-teams:code-team/standards/mindset-*.md` (used by code-team
+  brainstorming / refactoring protocols). Primary-source citations
+  in both locations are rewritten against the underlying books /
+  talks / papers (Perlis 1982, Hickey 2011/2012, Moseley & Marks
+  2006, Ousterhout 2018, Brooks 1986, Willison/Plant/Kaplan-Moss
+  2021)
+- SSOT-and-functional-copy policy: edits to mindset content land
+  in `domain-teams:code-team/standards/` first; the bundled copies
+  in this skill's `references/` are updated to match in the same
+  PR. Drift management policy lives at
+  `domain-teams:code-team/standards/mindset-extension-standard.md`.
+  At runtime this skill is fully self-contained — `dev-workflow` is
+  the only plugin needed for the gate to run; `domain-teams` is
+  only required when *proposing* changes to the mindset library
+  itself.
 - Restructured SKILL.md to mirror dev-workflow conventions
   (frontmatter description with negative triggers, multilingual
   Triggers, Composes With section, Worked Examples, When To Apply

@@ -79,19 +79,23 @@ but *names what was bought* ("30 lines bought, exhaustiveness check
 enforced"). Hidden growth is the failure mode this skill exists to
 prevent.
 
-### Three reference mindsets (cross-plugin)
+### Four reference mindsets (bundled, required preamble)
 
-When the questions need deeper grounding, four philosophical anchors
-live in `domain-teams:code-team/standards/`:
+The skill bundles 4 philosophical anchors at `references/`. Loading
+at least one before answering Q1 is required (per the upstream
+`reducing-entropy` design):
 
-- **`mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
-- **`mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit
-- **`mindset-expensive-to-add-later.md`** — Willison PAGNI
-- **`mindset-simplicity-vs-easy.md`** — Hickey
+- **`references/mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
+- **`references/mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit / Ousterhout
+- **`references/mindset-expensive-to-add-later.md`** — Willison PAGNI
+- **`references/mindset-simplicity-vs-easy.md`** — Hickey
 
-These are not gates — they are reference vocabulary. The mindsets
-are advisory deepening; the three questions stand on their own when
-`domain-teams` is not installed.
+The skill is **fully self-contained** — `dev-workflow` is the only
+plugin you need installed for complexity-critique to run. The
+canonical SSOT versions of the same mindsets also live at
+`domain-teams:code-team/standards/mindset-*.md` (used by code-team's
+brainstorming / refactoring protocols); the bundled copies in this
+skill carry a header note pointing back to the SSOT for evolution.
 
 ---
 
@@ -237,10 +241,10 @@ summary, and [`LICENSE`](LICENSE) for MIT chain preservation.
 
 | Limitation | What it means | Mitigation |
 |---|---|---|
-| **Existing code required** | Q2's LOC count needs a baseline. Greenfield work has no "before". | Hand off to `superpowers:brainstorming`. |
+| **Greenfield Q2 degrades** | Q2's LOC count needs a `before`. For pure greenfield "should we build this", there's no baseline to count against. | Q2 substitutes "what's the smallest code that ships this, and is `0 = decline to build` on the table?" — Q1 / Q3 still anchor the gate; deletion bias carries into the build decision. |
 | **LOC is a proxy, not the truth** | Lines aren't complexity, but they correlate. A 30-line type-system trick may be denser than 100 lines of straightforward code. | Q1's "smallest end state" question covers conceptual size; Q2's LOC count is the easy-to-check proxy. |
 | **PROCEED-WITH-CAVEAT depends on user honesty** | The verdict requires *naming* what was bought. A user who skips that just got a hidden growth approval. | The skill explicitly refuses to silently approve net-additive changes; the rationalization-prevention table is in `SKILL.md`. |
-| **Mindsets require code-team installed** | Cross-plugin delegation; if `domain-teams` is absent the mindsets aren't loaded. | Three-question gate is self-sufficient; mindsets are advisory deepening. |
+| **Mindset extension policy lives in code-team** | The 4 bundled mindsets in `references/` are functional copies. The rules for adding a 5th mindset live at `domain-teams:code-team/standards/mindset-extension-standard.md`. | None at runtime — the skill runs fully bundled. Install `domain-teams` only when *proposing* changes to the mindset library itself. |
 
 ---
 
@@ -259,7 +263,12 @@ complexity-critique/
 ├── README.zh-TW.md     ← 繁體中文 README
 ├── SKILL.md            ← operational file (for Claude)
 ├── LICENSE             ← MIT, joshuadavidthomas → softaworks → kouko
-└── NOTICE              ← upstream chain detail + modification summary
+├── NOTICE              ← upstream chain detail + modification summary
+└── references/         ← 4 bundled mindset functional copies
+    ├── mindset-data-over-abstractions.md
+    ├── mindset-design-is-taking-apart.md
+    ├── mindset-expensive-to-add-later.md
+    └── mindset-simplicity-vs-easy.md
 ```
 
 `README.*.md` and `SKILL.md` have different audiences and different

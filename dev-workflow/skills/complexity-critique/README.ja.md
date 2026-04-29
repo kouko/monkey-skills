@@ -78,19 +78,23 @@ DEFER / DROP と並行：
 名指す（例：「30 lines bought, exhaustiveness check enforced」）。
 Hidden growth がまさにこの skill が防ごうとする失敗モード。
 
-### 3 つの reference mindsets（cross-plugin）
+### 4 つの reference mindsets（同梱、必須プリアンブル）
 
-3 つの質問により深い grounding が必要なとき、4 つの哲学 anchor が
-`domain-teams:code-team/standards/` に住んでいる：
+Skill は `references/` に 4 つの哲学 anchor を同梱する。Q1 に答え
+る前に少なくとも 1 つを load することが必須（上游
+`reducing-entropy` の設計どおり）：
 
-- **`mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
-- **`mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit
-- **`mindset-expensive-to-add-later.md`** — Willison PAGNI
-- **`mindset-simplicity-vs-easy.md`** — Hickey
+- **`references/mindset-data-over-abstractions.md`** — Perlis Epigram #9 / Hickey
+- **`references/mindset-design-is-taking-apart.md`** — Hickey / Out of the Tar Pit / Ousterhout
+- **`references/mindset-expensive-to-add-later.md`** — Willison PAGNI
+- **`references/mindset-simplicity-vs-easy.md`** — Hickey
 
-これらは gate ではない — reference 語彙である。Mindsets は advisory
-deepening；`domain-teams` がインストールされていないとき、3 つの
-質問は単独で機能する。
+この skill は **完全に self-contained** — complexity-critique を
+動かすには `dev-workflow` のインストールだけで足りる。同じ 4 つの
+mindsets の canonical SSOT 版本は
+`domain-teams:code-team/standards/mindset-*.md` にも住んでいる
+（code-team の brainstorming / refactoring protocols が使用）；
+本 skill 内の同梱コピーには SSOT を指すヘッダーノートが付いている。
 
 ---
 
@@ -233,10 +237,10 @@ MIT chain 保存は [`LICENSE`](LICENSE) を参照。
 
 | 限界 | 意味 | 緩和策 |
 |---|---|---|
-| **既存 code が必要** | Q2 の LOC count は baseline が必要。Greenfield には「before」がない。 | `superpowers:brainstorming` にハンドオフ。 |
+| **Greenfield Q2 が degrade** | Q2 の LOC count は `before` が必要。純 greenfield「この feature を作るべきか」には baseline がない。 | Q2 を「この feature を ship する最小コードは？`0 = 作らない` も俎上に載っているか？」に置き換える — Q1 / Q3 が gate を anchor し続け、deletion bias を build decision に持ち込む。 |
 | **LOC は proxy であり truth ではない** | Line は complexity と等価ではないが相関する。30 行の type-system トリックは 100 行のストレートな code より密度が高いことがある。 | Q1 の「smallest end state」質問が概念サイズをカバー；Q2 の LOC は検証しやすい proxy。 |
 | **PROCEED-WITH-CAVEAT はユーザーの誠実さに依存** | Verdict は何を買ったかを *名指す* ことを要求する。それを飛ばせば hidden growth が approve されるだけ。 | Skill は net-additive 改動を黙って approve することを明示的に拒否する；rationalization-prevention テーブルは `SKILL.md` にある。 |
-| **Mindsets は code-team のインストールを要求** | Cross-plugin delegation；`domain-teams` がなければ mindsets は load されない。 | 3 つの質問の gate は self-sufficient；mindsets は advisory deepening。 |
+| **Mindset 拡張ポリシーは code-team に住む** | `references/` 内の 4 つの同梱 mindset は functional copies。5 つ目の mindset を追加するルールは `domain-teams:code-team/standards/mindset-extension-standard.md` に住む。 | Runtime は完全に self-contained。mindset ライブラリ自体への変更を *提案する* ときだけ `domain-teams` をインストールする。 |
 
 ---
 
@@ -254,7 +258,12 @@ complexity-critique/
 ├── README.zh-TW.md     ← 繁體中文 README
 ├── SKILL.md            ← operational ファイル（Claude 向け）
 ├── LICENSE             ← MIT, joshuadavidthomas → softaworks → kouko
-└── NOTICE              ← upstream chain 詳細 + 修正 summary
+├── NOTICE              ← upstream chain 詳細 + 修正 summary
+└── references/         ← 4 つの同梱 mindset functional copies
+    ├── mindset-data-over-abstractions.md
+    ├── mindset-design-is-taking-apart.md
+    ├── mindset-expensive-to-add-later.md
+    └── mindset-simplicity-vs-easy.md
 ```
 
 `README.*.md` と `SKILL.md` は読者と役目が異なる。意図的に内容を重複
