@@ -1,42 +1,51 @@
 ---
 name: complexity-critique
 description: >-
-  Gate for evaluating any change to an existing codebase — refactor,
-  feature add, or technical-debt cleanup — through a deletion-first
+  Gate for evaluating a specific proposed change — refactor, feature
+  add, technical-debt cleanup, or even a should-we-build-this-at-all
+  question with no existing code yet — through a deletion-first
   lens. Forces three checks: smallest possible result, before/after
-  LOC count, what the change makes obsolete. Biases toward removing
-  code over adding. Use when the user asks whether a change is worth
-  the lines it adds, what can be deleted, or how to keep a refactor
+  LOC count (N/A for pure greenfield; Q1 alternatives include
+  "0 functions = decline to build"), what the change makes obsolete.
+  Biases toward removing code over adding. Use when the user asks
+  whether a change is worth the lines it adds, what can be deleted,
+  whether a feature should exist at all, or how to keep a refactor
   small. Triggers: complexity audit / can this be simpler / what can
-  we delete / worth the lines / 降低複雜度 / 可以再小一點 / リファクタ
-  すべきか / 最佳實踐. Not-triggers: greenfield design (use
-  superpowers:brainstorming), multi-item proposal triage (use
-  proposal-critique), post-implementation diff review (use Anthropic
-  simplify), trivial single-line edits.
+  we delete / worth the lines / should we build this / 降低複雜度 /
+  可以再小一點 / 該不該做這個功能 / リファクタすべきか / 最佳實踐.
+  Not-triggers: open-ended exploratory brainstorming with no specific
+  feature or change proposed (use superpowers:brainstorming),
+  multi-item proposal triage (use proposal-critique),
+  post-implementation diff review (use Anthropic simplify), trivial
+  single-line edits.
 ---
 
 # Complexity Critique
 
-A user-invoked gate skill: forces any change to an **existing
-codebase** — refactor, feature add to existing code, technical-debt
-cleanup — through a deletion-first design pass before the change is
-implemented.
+A user-invoked gate skill: forces any specific proposed change —
+refactor, feature add to existing code, technical-debt cleanup, or
+a should-we-build-this question with no existing code yet — through
+a deletion-first design pass before the change is implemented.
 
 ## Overview
 
 More code begets more code. Every change is an opportunity to ask not
 "how do I add this" but "what's the smallest end state that solves
-this, and what can I delete in the process?". This skill turns that
-question into three mechanical checks before the change is committed
-to.
+this, and what can I delete (or never add) in the process?". This
+skill turns that question into three mechanical checks before the
+change is committed to.
 
 **Core question:** *What does the codebase look like* after *the
 change?* — not *what's the smallest change*.
 
-This skill operates on **proposed changes to existing code**. It is
-not a multi-item proposal triage (use `proposal-critique`), not a
-greenfield brainstorm (use `superpowers:brainstorming`), and not a
-post-implementation diff review (use Anthropic `simplify`).
+This skill operates on a **specific proposed change**, whether to
+existing code (refactor, feature add, debt cleanup) or proposed for
+addition with no existing code yet ("should we build this feature
+at all?" — Q2's LOC count gracefully degrades; Q1 / Q3 still anchor
+the gate). It is not a multi-item proposal triage (use
+`proposal-critique`), not an open-ended brainstorm without a
+specific change in mind (use `superpowers:brainstorming`), and not
+a post-implementation diff review (use Anthropic `simplify`).
 
 ## Before You Begin — Load a Mindset
 
@@ -106,6 +115,14 @@ proposed change.
 | If after > before | Reject the change as proposed |
 | If after = before | OK — net-neutral on volume; assess Q3 |
 | If after < before | Strong signal; usually correct |
+
+**Pure greenfield handling**: when there is no existing code
+("should we build this feature at all?"), Q2's LOC comparison
+degrades — there's no `before`. Substitute: *what's the smallest
+code that ships this feature, and is "0 lines = decline to build"
+on the table?* Carry the deletion bias into the build decision; the
+upstream skill explicitly listed "Evaluating feature requests
+(should we add this?)" as a primary use case.
 
 Common false-positive arguments to refuse:
 - "Better organized" but more code = more entropy
@@ -267,21 +284,29 @@ This is a legitimate choice — but call it what it is.
 **Primary triggers (user-spoken)**:
 
 - "Should I add this?" / "is this worth the code?"
+- "Should we build this feature at all?" / "該不該做這個功能"
 - "Can this be simpler?" / "可以再小一點 嗎"
 - "What can we delete here?" / "リファクタすべきか"
 - "降低複雜度" / "complexity audit on this change"
 
-**Shape**: A *single proposed change* to *existing* code. The change
-can be a refactor, a feature add, a debt cleanup, or a "should we
-even do this" question.
+**Shape**: A *specific proposed change*. The change can be a
+refactor, a feature add to existing code, a debt cleanup, or a
+should-we-build-this-feature-at-all question with no existing code
+yet. The upstream skill (`reducing-entropy`) explicitly lists
+"Evaluating feature requests (should we add this?)" as a primary
+use case alongside refactor / debt cleanup; this distribution
+preserves that scope.
 
 **Not-triggers** — do NOT invoke for:
 
-- **Greenfield design** — no existing code to compare against; use
-  `superpowers:brainstorming`.
+- **Open-ended exploratory brainstorming** — no specific change or
+  feature proposed yet, just "what could we build". Use
+  `superpowers:brainstorming` to land on a specific proposal first;
+  then complexity-critique applies. Pure greenfield with a *named*
+  proposal IS in scope.
 - **Multi-item proposal triage** — a list / plan with ≥3 separate
   recommendations; use `proposal-critique` first, then this skill on
-  surviving items if they touch existing code.
+  surviving items.
 - **Post-implementation review** — the change is already written;
   use Anthropic `simplify`.
 - **Trivial micro-changes** — single-line fixes, variable renames,

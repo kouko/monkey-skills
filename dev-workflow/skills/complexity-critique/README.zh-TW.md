@@ -105,10 +105,14 @@ deepening；當 `domain-teams` 沒裝時，三問本身可獨立運作。
 
 ### 在以下情境**不**呼叫…
 
-- **Greenfield design** — 沒有既存 code 可比。使用
-  `superpowers:brainstorming`。
+- **開放式探索 brainstorming** — 桌上還沒有具體的改動或 feature
+  提案，只是在問「我們可以做什麼」。先用
+  `superpowers:brainstorming` 落到具體提案，complexity-critique
+  接著就適用。**有具體 feature 提案的純 greenfield 是 in scope** —
+  Q1 / Q3 仍然 anchor gate；Q2 的 LOC count 優雅降級，「0 lines =
+  決定不做」是 Q1 的有效答案。
 - **多項目提案 triage** — 輸入是 ≥3 個建議的 list / plan。先用
-  `proposal-critique`；倖存項目若觸及既存 code 再回來這裡。
+  `proposal-critique`；倖存項目再回來這裡。
 - **Post-implementation review** — 改動已經寫完。使用 Anthropic
   `simplify`。
 - **瑣碎 micro-changes** — 單行修正、變數改名、註解更新。Gate 成本

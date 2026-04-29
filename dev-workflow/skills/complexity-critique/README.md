@@ -112,11 +112,16 @@ are advisory deepening; the three questions stand on their own when
 
 ### Don't invoke when…
 
-- **Greenfield design** — there's no existing code to compare
-  against. Use `superpowers:brainstorming` instead.
+- **Open-ended exploratory brainstorming** — no specific change or
+  feature is on the table yet, just "what could we build". Use
+  `superpowers:brainstorming` to land on a specific proposal first;
+  then complexity-critique applies. Pure greenfield with a *named*
+  feature proposal IS in scope (Q1 / Q3 anchor the gate; Q2's LOC
+  count gracefully degrades — "0 lines = decline to build" is a
+  valid Q1 answer).
 - **Multi-item proposal triage** — input is a list / plan with ≥3
   separate recommendations. Use `proposal-critique` first; come back
-  here for surviving items that touch existing code.
+  here for surviving items.
 - **Post-implementation review** — the change is already written.
   Use Anthropic `simplify` instead.
 - **Trivial micro-changes** — single-line fixes, variable renames,

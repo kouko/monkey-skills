@@ -55,10 +55,17 @@ list. High-level summary (v1.5.0):
   vocabulary (PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT)
   parallel to `proposal-critique`'s KEEP / KEEP-WITH-CAVEAT / DEFER /
   DROP
-- Scope clarified to *changes to existing codebase*; greenfield
-  design and post-implementation review explicitly out of scope
-  (delegated to `superpowers:brainstorming` and Anthropic `simplify`
-  respectively)
+- Scope: this distribution preserves the upstream's scope, which
+  the README explicitly listed as including "Refactoring existing
+  code", "Evaluating feature requests (should we add this?)",
+  "Cleaning up technical debt", "Deciding between implementation
+  approaches", and "User explicitly asks to reduce entropy". Pure
+  greenfield with a *named feature proposal* is in scope; Q2's LOC
+  count gracefully degrades to "what's the smallest code that ships
+  this, and is 0 = decline to build on the table?". Only
+  *open-ended exploratory brainstorming with no specific proposal*
+  is delegated to `superpowers:brainstorming`. Post-implementation
+  diff review is delegated to Anthropic `simplify`.
 - **Restored** (v1.5.0 fidelity follow-up) the "load at least one
   mindset before proceeding" hard precondition that an earlier
   draft of this distribution had removed. The original author

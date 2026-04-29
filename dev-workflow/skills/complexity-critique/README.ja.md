@@ -111,11 +111,15 @@ deepening；`domain-teams` がインストールされていないとき、3 つ
 
 ### 以下の場合は呼び出**さない**…
 
-- **Greenfield design** — 比較対象の既存 code がない。
-  `superpowers:brainstorming` を使う。
+- **開放的な探索 brainstorming** — 具体的な改動や feature の提案が
+  まだなく、「何を作れるか」を探している段階。先に
+  `superpowers:brainstorming` で具体的な提案に落とし、その後
+  complexity-critique が適用される。**具体的な feature 提案を持つ
+  純 greenfield は scope 内** — Q1 / Q3 が gate を anchor する；
+  Q2 の LOC count は優雅に degrade し、「0 lines = 作らない決定」が
+  Q1 の有効な答え。
 - **複数項目提案 triage** — 入力が ≥3 件の推奨の list / plan。先に
-  `proposal-critique` を使い、生き残った項目で既存 code に触れるもの
-  だけここに戻る。
+  `proposal-critique` を使い、生き残った項目だけここに戻る。
 - **Post-implementation review** — 改動はすでに書かれている。
   Anthropic `simplify` を使う。
 - **些細な micro-changes** — 1 行修正、変数リネーム、コメント更新。
