@@ -7,6 +7,203 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] — 2026-04-29
+
+### Context
+
+`docs-team` adopts the full Trong-Tra/agent-skills `documentation-specialist`
+content (readme + architecture sub-skills, ~100% coverage; Runbook L4
+intentionally excluded → devops-team domain) and gains four foundational
+features that were missing:
+
+- **Quick mode** — opt-in cost-saving execution (~46K → ~11K tokens per
+  task, 4× cheaper) with hard-block list (ADR / API reference / public
+  release README / architecture docs always run full mode) and a
+  `/docs verify` post-hoc upgrade path
+- **Pre-writing checklist** — LLM-defensive reading rules (Read Before
+  You Write + Never Assume Defaults) preventing common LLM failure
+  modes (license invention, package-manager mismatch, file-naming
+  drift, tone whiplash, frontmatter invention)
+- **Architecture documentation module** — first-class L0–L4 hierarchy
+  + Mermaid 5 rules + component spec template + Architecture Doc
+  Completeness MUST gate. Previously authors had to squeeze
+  architecture docs into write-explanation
+- **Write API Reference protocol** — extracted from write-reference as
+  an OpenAPI-shaped specialization with cross-cutting-concerns-first
+  ordering and consistency-pass discipline
+
+`skill-team` gains two reusable conventions, validated by docs-team
+adoption:
+
+- **Dual-file pattern** (README.md + SKILL.md coexistence) — `SKILL.md`
+  remains the LLM-discovery SSOT; `README.md` is an optional
+  human-facing GitHub-rendered overview. Files MUST NOT contradict
+  each other; updates land in `SKILL.md` first
+- **Companion file pattern** (`{protocol-name}-examples.md`) —
+  protocols with 3+ worked examples extract them to a sibling
+  companion file; worker loads via existing `additional:` field; quick
+  mode hard-forbids loading. 1-2 examples stay inline as quick-mode
+  pattern anchor. Documented threshold + naming + worker dispatch
+  rules in `file-conventions.md`
+
+i18n convention codified as **en / ja / zh-TW** for monkey-skills
+plugin (per PR #150 i18n rollout, now reflected in
+`pre-writing-checklist.md` and `write-readme.md` Phase 4 internal
+references). All adopting skills (docs-team, skill-team) ship 3-language
+READMEs.
+
+Token cost impact (per task, cold cache):
+- Full mode README: ~54.5K → ~58.5K (+7%)
+- Full mode Architecture: new workflow ~46.7K
+- Quick mode README: ~11K → ~16.7K (10 new rule sections; companion
+  examples deferred so quick mode does NOT pay for them)
+- Other artifact types (tutorial / how-to / reference / explanation /
+  ADR): unchanged
+
+All conventions are opt-in. Skills not yet adopting README.md or
+companion files remain valid; existing docs-team workflows unaffected
+unless protocols cross thresholds defined by the new conventions.
+
+### Added
+
+**docs-team — new functionality**
+
+- `docs-team/protocols/quick-write.md` — cost-saving inline execution
+  protocol (no worker/evaluator dispatch; SELF check only). Hard-block
+  list, trigger signals, No Companion Load rule, `/docs verify` upgrade
+  path
+- `docs-team/standards/pre-writing-checklist.md` — LLM-defensive
+  pre-writing rules (Read Before You Write + Never Assume Defaults
+  table covering license, package manager, file naming, tone,
+  frontmatter, tech stack, badge, i18n, Diátaxis directory layout)
+- `docs-team/standards/architecture-doc-structure.md` — L0–L4 document
+  hierarchy, Mermaid 5 rules, 7-required-section L1 overview template,
+  10-field L2 component spec template, dependency / configuration /
+  security boundary conventions
+- `docs-team/protocols/write-architecture.md` — workflow for system
+  overviews, component specs, data flow, deployment topology, security
+  models. Failure modes mandatory in L2; aspiration-vs-reality
+  discipline; runbook deliberately routed to devops-team
+- `docs-team/protocols/write-api-reference.md` — OpenAPI-shaped HTTP /
+  GraphQL / library API reference protocol; cross-cutting concerns
+  documented once; per-operation template; realistic placeholder values
+  (no `foo`/`bar`)
+- `docs-team/rubrics/architecture-doc-completeness.md` — MUST gate for
+  architecture documentation (required-sections by level, Mermaid
+  discipline, failure-modes mandatory for L2, aspiration-vs-reality
+  flag)
+- `docs-team/protocols/write-readme-examples.md` — companion file with
+  5 worked examples (Go library, full-stack app, CLI tool, Bad → Good
+  rewrite, Monorepo) adapted from Trong-Tra `readme/examples.md`
+- `docs-team/protocols/write-architecture-examples.md` — companion
+  file with 5 worked examples (System Context, Component Spec, Data
+  Flow + Error Path, Deployment Topology, Security Model) adapted from
+  Trong-Tra `architecture/examples.md`
+- `docs-team/README.md` + `README.ja.md` + `README.zh-TW.md` —
+  human-facing 3-language overviews (first dual-file adopter)
+- `skill-team/README.md` + `README.ja.md` + `README.zh-TW.md` —
+  human-facing 3-language overviews (second dual-file adopter)
+
+**docs-team — Trong-Tra rule sections (in `write-readme.md`)**
+
+10 prescriptive sections adapted from Trong-Tra `readme/SKILL.md`:
+30-Second Test, One-Liner Formula, Quickstart Patterns A–D
+(library / app / CLI / infra), Feature Communication, Configuration
+Documentation, Troubleshooting Section, Badge Strategy, README Length
+Guide, Language-Specific Conventions, Common Pitfalls.
+
+**docs-team — inline worked examples (1 per protocol)**
+
+- `write-tutorial.md`: Taskflow first-board walk-through
+- `write-how-to.md`: API key rotation
+- `write-reference.md`: myapp-cli command reference
+- `write-explanation.md`: token bucket rate limiter rationale
+- `write-adr.md`: ADR-0017 rate limiter algorithm
+- `write-readme.md`: 2 examples (Go library, full-stack app) — later
+  extracted to companion when total reached 5
+- `write-architecture.md`: Payment Service component spec — later
+  extracted to companion
+- `write-api-reference.md`: Notes API operation template
+
+### Changed
+
+**docs-team**
+
+- `docs-team/SKILL.md`:
+  - Added "Mode Selection (Full vs Quick)" section with trigger / hard-block tables
+  - Added "Write Architecture Documentation" workflow phase table
+  - Added "Write API Reference" workflow phase table (extracted from
+    Write Reference)
+  - Added "Quick Write" and "Verify" workflow phase tables
+  - MUST gates: added Architecture Doc Completeness (4 MUST total)
+  - Resource Manifest: added pre-writing-checklist, architecture-doc-
+    structure (7 standards total); added architecture-doc-completeness
+    rubric
+  - Worker launch template: added `additional:` field with Companion
+    Files table
+  - Per-workflow phase notes: write-readme and write-architecture rows
+    annotate companion file loading
+  - When to Use bullet list: added architecture documentation
+- `docs-team/protocols/doc-writing-router.md`:
+  - Added Phase 0 Mode Selection (full vs quick triggers + hard-block list)
+  - Added ambiguity fallback (2-3 bootstrap questions before classifying
+    rather than silently defaulting to Explanation)
+  - Routing table: added architecture and updated API reference target
+- `docs-team/protocols/write-readme.md` — extracted Examples 1+2 to
+  companion; gained 10 Trong-Tra rule sections; Phase 4
+  Internationalization clarifies en / ja / zh-TW monkey-skills
+  convention
+- `docs-team/protocols/write-architecture.md` — extracted Payment
+  Service example to companion; "Origin" attribution updated
+- `docs-team/protocols/quick-write.md` — added "No Companion Load" rule
+  forbidding any `protocols/*-examples.md` Read in quick mode
+- `docs-team/protocols/write-{tutorial,how-to,reference,explanation,adr}.md`
+  — each gained "Pre-writing reference" header pointing to the new
+  pre-writing-checklist standard, plus 1 inline worked example
+- `docs-team/standards/pre-writing-checklist.md` Internationalization
+  row clarifies en / ja / zh-TW monkey-skills convention
+- `docs-team/rubrics/`: renamed `style-convention.md` → `style.md` to
+  disambiguate from `standards/style-conventions.md` (8 references
+  updated across SKILL.md and standards/style-conventions.md)
+- `docs-team/standards/architecture-doc-structure.md` and
+  `docs-team/standards/pre-writing-checklist.md` — Trong-Tra
+  attribution upgraded to clickable URLs; specifies which exact
+  sub-sections (`AGENTS.md` §Read Before You Write, `architecture/SKILL.md`
+  §Component Spec, etc.) were sourced
+- `docs-team/protocols/write-readme.md` and
+  `docs-team/protocols/write-architecture.md` — Trong-Tra attribution
+  added (was missing in PR 2 / PR 3); Origin lines + Sources sections
+  link to canonical Trong-Tra repo URL
+- `docs-team/rubrics/architecture-doc-completeness.md` — Sources
+  section credits Trong-Tra `architecture/SKILL.md` §Common Pitfalls
+  as gate-criteria source
+
+**skill-team**
+
+- `skill-team/standards/file-conventions.md`:
+  - New "Top-Level Files" section codifying SKILL.md (required) +
+    optional README.md + optional README.{lang}.md BCP 47 translations
+  - New "README.md and SKILL.md Coexistence" subsection — files MUST
+    NOT contradict; updates land in SKILL.md first; README summarizes,
+    SKILL specifies
+  - New "Protocol Companion Files (`*-examples.md`)" section codifying
+    the 3+-examples threshold, naming convention, worker launch via
+    `additional:` field, and quick-mode exclusion rule
+  - Anti-patterns: `README.md inside skill directory` removed (was the
+    old prohibition); replaced by "README.md duplicating SKILL.md
+    content verbatim"
+- `skill-team/checklists/skill-completeness-checklist.md` —
+  CHK-SKL-012 (directory structure) loosened to permit README.md and
+  README.{lang}.md at the top level. Any OTHER top-level file remains
+  FATAL
+
+**plugin metadata**
+
+- `domain-teams/.claude-plugin/plugin.json` — version `5.3.0` → `5.4.0`
+- `domain-teams/README.md` + `README.ja.md` + `README.zh-TW.md` —
+  Version field updated `5.2.0` → `5.4.0` (was lagging by one minor
+  version since 5.3.0 release)
+
 ## [5.3.0] — 2026-04-24
 
 ### Context

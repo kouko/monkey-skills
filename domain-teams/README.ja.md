@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-**Version**: 5.2.0
+**Version**: 5.4.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 primary-source grounding と checkpoint-based quality gates を備えた domain team skills。9 つの team が単一の `worker`（sonnet）+ `evaluator`（opus）agent ペアを共有します。
