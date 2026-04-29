@@ -1,9 +1,45 @@
-# Skill Evolution Architecture — Planning Doc
+# Skill Evolution Architecture — Planning + Status Doc
 
-**Status**: DRAFT — pre-implementation planning artifact. Not committed for production.
+**Status**: LIVING DOCUMENT. Originally pre-implementation planning;
+now also tracks implementation status across the 5-PR rollout.
 **Scope**: dev-workflow plugin's family of skill-modifying skills.
 **Created**: 2026-04-29
+**Last status update**: 2026-04-29 (post-PR-5, v1.9.0)
 **Trigger**: research into `alchaincyf/darwin-skill` + critique of LLM-as-judge for taste-sensitive output.
+
+## Implementation Status (as of v1.9.0)
+
+| PR | Version | Scope | Status |
+|---|---|---|---|
+| PR-1 | v1.5.0 | Architecture doc + skill-creator-advance scope tightening | ✅ Merged |
+| PR-2 | v1.6.0 | skill-refactor (Phase A — refactor hat) | ✅ Merged |
+| PR-3 | v1.7.0 | skill-tasting (Phase B — feature hat) | ✅ Merged |
+| PR-4 | v1.8.0 | Governance layer: convention drift CI + skill-judge drift detection + governance / audit docs | ✅ Merged |
+| PR-5 | v1.9.0 | Telemetry scaffold + self-training stub enhancement + test-prompts.json bootstrap × 7 + this status section | ✅ Merged |
+
+### Horizon coverage
+
+| Horizon | Items | Coverage |
+|---|---|---|
+| **H1** (Option II baseline) | skill-creator-advance scope; skill-refactor; skill-tasting | ✅ Complete |
+| **H2** (Layer 2 upgrades to refactor / tasting) | Multi-judge ensemble (refactor); structured equivalence; constitutional pre-filter (tasting); blind A/B; per-iteration human gate | ✅ Complete |
+| **H3** (Layer 3 / governance) | Cross-skill regression CI (drift); skill-judge drift detection; SSOT registry; quarterly audit runbook | ✅ Complete |
+| **H4** (Foundation + closed-loop) | Test-prompts.json bootstrap × 7; telemetry scaffold; self-training stub | ✅ Scaffolded (training pipeline activates at ≥1000 preference pairs per skill — currently far below threshold; stub fails fast with activation methodology) |
+
+### Outstanding validation gates
+
+These are validation gates from earlier PRs not yet performed:
+
+| Gate | From | Status | Tracked in |
+|---|---|---|---|
+| skill-refactor: dry-run on ≥2 existing skills, ≥90% equivalence-check agreement | PR-2 | OUTSTANDING | quarterly-audit-runbook step 5 |
+| skill-tasting: 1 real-skill walkthrough validating A/B flow | PR-3 | OUTSTANDING | quarterly-audit-runbook step 5 |
+
+These do not block any further work — they're tracked as audit
+items per the runbook. If outstanding for >2 quarters, an
+explicit accept-risk or schedule-validation decision is required.
+
+## Original Planning Doc Begins Below
 
 ---
 
