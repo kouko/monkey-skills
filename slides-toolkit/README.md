@@ -2,167 +2,217 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> ⚠️ **Cowork compatibility**: Claude Code CLI / Code tab only. Cowork tab is blocked by sandbox URL allowlist for Google Slides API calls. See [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) for the full retrospective.
+> Brief → Google Slides deck via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 
-**Version**: 0.1.0-mvp
-**Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
-**License**: MIT
+> ⚠️ **Cowork compatibility — Claude Code CLI / Code tab only.** Google
+> Slides and Drive API calls are blocked by the Claude Desktop Cowork
+> sandbox URL allowlist (same constraint as `investing-toolkit`; see
+> [investing-toolkit MCP setup retrospective](../investing-toolkit/docs/mcp-setup.md)).
+> If you are on Cowork, switch to Claude Code CLI or the Claude Desktop
+> Code tab.
 
-Google Slides generation toolkit — turn structured briefs (outline + tables +
-local images) into finished Google Slides decks through Claude Code skills.
-Single-command pipeline: `brief → deck URL ≤ 3 min`.
+## Background
 
-Backend-agnostic design knowledge layer (`slides-design`) plus pluggable
-backend builders. MVP ships the Google Slides backend only; HTML / PPTX /
-Marp backends are Phase 2+ and trigger-gated (see `PRODUCT-SPEC.md §3.5`).
+Producing Google Slides decks regularly involves a large mechanical
+share — text replacement, image upload, placeholder alignment.
+`slides-toolkit` skills the repetitive layer so time and attention
+land on content and design judgement, not deck plumbing.
+
+The toolkit follows the **Platform Pivot architecture** (PRODUCT-SPEC
+v0.2): a backend-agnostic design knowledge layer (`slides-design`) is
+decoupled from a pluggable execution layer. MVP ships the
+`google-slides` backend only; `html` / `pptx` / `marp` backends are
+Phase 2+, trigger-gated.
 
 ## Status
 
-- **Release**: MVP v0.1.0-mvp (pre-release; Platform-Pivot spec frozen 2026-04-23)
-- **Backends**: `google-slides` only
-- **Platform**: macOS 14+ (darwin-arm64 / darwin-x64)
-- **Primary user**: kouko (個人生產力工具)
-- **Runtime posture**: pure shell + `curl` + browser; `gws` / `jq` binaries
-  self-fetched to `~/.cache/slides-toolkit/bin/` with SHA-256 verification
+| Aspect | Value |
+|---|---|
+| Release | `0.1.0-mvp` (see [`CHANGELOG.md`](CHANGELOG.md)) |
+| Backends | `google-slides` (MVP) · `html` / `pptx` / `marp` Phase 2+ trigger-gated |
+| Platform | macOS (darwin-arm64 / darwin-x86_64) |
+| Account scope | Personal Google account (`@gmail.com`); Workspace accounts Phase 2+ |
+| Runtime posture | shell + curl + browser; toolkit self-fetches `gws` and `jq` binaries |
+| License | MIT |
 
-## Quick Start
+## Install
 
-Three steps from fresh machine to first deck.
-
-### 1. Install
+Add the plugin via the `monkey-skills` marketplace, then restart Claude
+Code so it discovers the skills.
 
 ```bash
-# Add the plugin through the monkey-skills Claude Code marketplace
-# (plugin auto-activates once registered in marketplace.json)
+# from inside Claude Code
+/plugin install slides-toolkit@monkey-skills
 ```
 
-### 2. Setup (first-time onboarding, ~20 min)
+## Quick start
 
-Inside Claude Code, invoke the setup skill:
+Two phases. The first-time setup is a one-shot. After that, every deck
+goes through the second phase.
 
-```
-/google-slides-setup
-```
-
-Walks you through:
-
-- `gws` binary fetch + SHA-256 verify
-- Google Cloud Console 4-step OAuth client setup (External + Testing mode)
-- Keychain / file-backend credential storage detection
-- Issue-119 workaround env var guard (`GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET`)
-- First-login auth + token smoke test
-
-Budget: **≤ 20 min** on a clean macOS box (KR2).
-
-### 3. Generate your first deck
+### 1. First-time setup (target: ≤ 20 minutes — KR2)
 
 ```
-/using-slides-toolkit
+> /google-slides-setup
 ```
 
-Pick `slides-design` if you want narrative + chart-type guidance first,
-then `google-slides-builder` to build the deck. Or go straight to the
-builder if you already have a `slide-plan.json` and a template Drive ID
-registered.
+Routes to the `google-slides-setup` skill. It detects current state,
+fetches `gws` + `jq` to `~/.cache/slides-toolkit/bin/`, walks you
+through the manual GCP Console steps (OAuth Client + Test User), and
+writes `~/.config/gws/env.sh` with the issue #119 workaround if your
+account needs it.
 
-Budget: **≤ 3 min** from brief submission to Drive URL (KR1).
+This is bounded by Google's OAuth policy (External + Testing mode); see
+[`docs/google-oauth-automation-limits.md`](docs/google-oauth-automation-limits.md)
+for what can and cannot be automated.
 
-## Skills Inventory
+### 2. Generate a deck (target: ≤ 3 minutes — KR1)
+
+```
+> /using-slides-toolkit
+> "Turn this outline into a 6-slide product proposal"
+```
+
+The router (`using-slides-toolkit`) inspects intent, optionally
+delegates to `slides-design` for narrative structure (Minto / SCQA /
+chart selection), and hands a `slide-plan.json` v1.2 to
+`google-slides-builder`. The builder runs the four-step pipeline —
+create blank deck → create slides with predefined layouts → insert
+text → insert local images — and returns the Drive URL.
+
+Both `/using-slides-toolkit` and `/google-slides-setup` are skill
+auto-routes (no `commands/` shims; the plugin ships zero slash
+commands). Type the skill name and Claude Code dispatches.
+
+## Skills
+
+The plugin ships five skills across three layers.
 
 | Skill | Layer | Purpose |
-|-------|-------|---------|
-| `using-slides-toolkit` | router (backend-agnostic) | Entry point — routes to setup / design / builder by `target` |
-| `slides-design` | knowledge (backend-agnostic) | Minto Pyramid + SCQA + chart-selection reference; applies to any backend |
-| `google-slides-setup` | google-slides backend | First-time onboarding (gws + GCP + auth); state-aware branching |
-| `google-slides-builder` | google-slides backend | Execution layer — copy template / replaceAllText / insert-image via gws |
+|---|---|---|
+| `using-slides-toolkit` | Router (backend-agnostic) | Inspect user intent, read `slide-plan.target`, route to the right skill |
+| `slides-design` | Knowledge (backend-agnostic) | Minto Pyramid + SCQA narrative, chart-type selection — applies to any backend |
+| `google-slides-setup` | google-slides backend | First-time GCP Console / OAuth / `gws` bootstrap; state detection on subsequent runs |
+| `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`, `batchUpdate createSlide`, `insertText`, `createImage` |
+| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL |
 
-Phase 2+ (trigger-gated; not in MVP): `html-builder`, `pptx-builder`,
-`marp-builder`.
+`using-slides-toolkit` and `slides-design` are deliberately
+backend-agnostic so future `html-builder` / `pptx-builder` /
+`marp-builder` skills can reuse the same routing entrypoint and design
+references without changes.
 
 ## Prerequisites
 
-All built into macOS 14+:
+| Item | Requirement |
+|---|---|
+| OS | macOS 14+ (darwin-arm64 / darwin-x86_64). Linux / WSL are Phase 2+. |
+| Shell | zsh or bash (default macOS zsh is fine) |
+| Network tool | `curl` (preinstalled on macOS) |
+| Browser | Chrome or Safari (needed once for the GCP Console steps) |
+| Google account | Personal `@gmail.com`. Workspace accounts are Phase 2+. |
 
-- `zsh` / `bash`
-- `curl`
-- Any modern browser (Google OAuth consent flow)
-
-The toolkit self-fetches the rest:
-
-- `gws` binary → `~/.cache/slides-toolkit/bin/gws` (SHA-256 pinned)
-- `jq` binary → `~/.cache/slides-toolkit/bin/jq` (SHA-256 pinned)
-
-**Not required**: Python, uv, gcloud, Homebrew, Node.js. Zero language
-runtimes beyond the shell.
+**Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
+binaries are fetched into `~/.cache/slides-toolkit/bin/` by
+`scripts/google-slides/bootstrap.sh` over HTTPS with `curl -f`.
 
 ## Architecture
 
-Three-layer design (see `PRODUCT-SPEC.md §6.3.1` + `TECH-SPEC.md §2.1-§2.2`
-for the full picture):
+Three layers. The router and the design knowledge layer are
+backend-agnostic; only the execution layer binds to a concrete output
+format.
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Layer 1 — Router (backend-agnostic)                  │
-│   using-slides-toolkit                               │
-│     → dispatches by slide-plan target field          │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 2 — Design knowledge (backend-agnostic)        │
-│   slides-design                                      │
-│     → Minto / SCQA / chart-selection                 │
-│     → applies to google-slides / html / pptx / marp  │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 3 — Backend execution (backend-specific)       │
-│   google-slides-setup     [MVP]                      │
-│   google-slides-builder   [MVP]                      │
-│   html-builder            [Phase 2+]                 │
-│   pptx-builder            [Phase 2+]                 │
-│   marp-builder            [Phase 2+]                 │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — Router (backend-agnostic)                        │
+│  using-slides-toolkit                                       │
+│  inspect intent · read slide-plan.target · dispatch         │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────────┐
+        ▼                    ▼                        ▼
+┌─────────────────┐  ┌─────────────────┐  ┌──────────────────────┐
+│  Layer 2 —      │  │  Layer 3 —      │  │  Layer 3 —           │
+│  Design         │  │  Backend exec   │  │  Backend exec        │
+│  knowledge      │  │  (onboarding)   │  │  (build pipeline)    │
+│  (agnostic)     │  │                 │  │                      │
+│  slides-design  │  │  google-slides- │  │  google-slides-      │
+│                 │  │  setup          │  │  builder             │
+│  Minto · SCQA · │  │                 │  │      ↓ uses          │
+│  chart pick     │  │  GCP / OAuth /  │  │  google-slides-api   │
+│                 │  │  gws bootstrap  │  │  (per-op recipes)    │
+└─────────────────┘  └────────┬────────┘  └──────────┬───────────┘
+                              │                      │
+                              └──────────┬───────────┘
+                                         ▼
+                              scripts/google-slides/*.sh
+                              gws CLI · ~/.cache binaries
+                                         ▼
+                              Google Slides + Drive API
+                                         ▼
+                                   Deck URL
 ```
 
-**Because** the design principles (narrative structure, chart selection)
-are stable across output formats, while execution technology (gws / pandoc
-/ python-pptx / marp-cli) evolves per backend. Decoupling keeps the
-knowledge layer from churning whenever a new backend is added.
+Phase 2+ backends (`html-builder` / `pptx-builder` / `marp-builder`)
+slot into Layer 3 alongside `google-slides-builder` without changing
+Layer 1 or Layer 2. See PRODUCT-SPEC §2.1, §2.2 and TECH-SPEC §2.1,
+§2.2.
 
-See `PRODUCT-SPEC.md` for the cross-domain product view (vision + MVP
-scope + Job Story + 4 Big Risks) and `TECH-SPEC.md` for module design,
-data flow, and interface contracts.
+## Security
 
-## Security Notes
+Credentials never enter the repo. Two complementary mechanisms enforce
+this (TECH-SPEC §8):
 
-Credentials never enter the repository. Two defence layers:
+**Claude tool-layer block** — `.claude/settings.json` denies any
+Read / Bash / Write that touches the gws credential store:
 
-1. **`.claude/settings.json` deny rule** — blocks Claude tool-level Read /
-   Bash / Write access to credential files (home-dir + repo-relative).
-   Repo-relative `.gitignore` cannot protect `~/.config/gws/**` because
-   git does not expand `~`; the deny rule closes that gap.
-2. **`.gitignore`** — excludes repo-relative secret patterns:
-   `.config/gws/`, `**/client_secret*.json`, `**/credentials.enc`,
-   `**/.encryption_key`, `.env*`, `.cache/`, local test fixtures.
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.config/gws/**)",
+      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Bash(cat ~/.config/gws/*)",
+      "Bash(cat ~/.config/gws/**)",
+      "Bash(cp ~/.config/gws/* *)",
+      "Bash(git add ~/.config/gws/*)",
+      "Write(~/.config/gws/**)"
+    ]
+  }
+}
+```
 
-See `TECH-SPEC.md §8 Security & Credential Hygiene` for the full threat
-model (OWASP ASVS v5.0.0 L1 — V1 / V2 / V5 / V13 / V14 / V16 mapping),
-pre-commit hook recommendation, and credential-leak incident response
-playbook.
+**Repo-relative ignore** — `.gitignore` blocks credential files that
+might land inside the repo tree:
 
-Incident logs (if ever triggered) live in `incidents/` on demand — not
-pre-created. See `incidents/README.md` for the playbook entry format.
+```
+.config/gws/
+*/keyring-file.json
+*/env.sh
+.cache/slides-toolkit/
+```
 
-## License
-
-MIT — aligns with the parent `monkey-skills` repository. See `/LICENSE`
-at the repo root.
+`.gitignore` cannot match `~/.config/gws/**` (git uses repo-relative
+paths and does not expand `~`); the home-directory leg is owned by the
+`settings.json` deny rule above. If credentials are ever leaked,
+follow the incident playbook in TECH-SPEC §8.4.
 
 ## Links
 
-- [PRODUCT-SPEC.md](./PRODUCT-SPEC.md) — planning-team spec (vision, users,
-  goals, non-goals, Platform Pivot rationale)
-- [TECH-SPEC.md](./TECH-SPEC.md) — code-team spec (architecture, modules,
-  interfaces, testing, security, OPEN answers)
-- [CHANGELOG.md](./CHANGELOG.md) — version history
-- [parent repo](https://github.com/kouko/monkey-skills)
+- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — product direction, Job Story, OKR / KR, Non-Goals, Phase 2+ triggers
+- [TECH-SPEC.md](TECH-SPEC.md) — module design, `slide-plan.json` v1.2, shell script contracts, security
+- [CHANGELOG.md](CHANGELOG.md) — version history (`0.1.0-spec` → `0.6.0-i18n`)
+- [docs/console-ui-reference.md](docs/console-ui-reference.md) — current Google Cloud Console UI walkthrough
+- [docs/google-oauth-automation-limits.md](docs/google-oauth-automation-limits.md) — what cannot be automated and why
+- [docs/gws-cli-quirks.md](docs/gws-cli-quirks.md) — gws CLI gotchas discovered in live testing
+- Parent repository: [`monkey-skills`](https://github.com/kouko/monkey-skills)
+
+## Contributing
+
+This plugin is part of the [`monkey-skills`](https://github.com/kouko/monkey-skills)
+repository. Open issues or PRs against that repo. The skill structure
+follows the conventions in the repo-root `CLAUDE.md` and the
+`domain-teams:skill-team` skill.
+
+## License
+
+MIT — see [LICENSE](../LICENSE) at the repository root.

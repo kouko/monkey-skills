@@ -2,170 +2,219 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> ⚠️ **Cowork 互換性**：Claude Code CLI / Code tab のみ動作。Cowork tab は sandbox の URL allowlist により Google Slides API 呼び出しがブロックされる。詳細な retrospective は [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) を参照。
+> Brief から Google Slides deck を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
 
-**Version**: 0.1.0-mvp
-**Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
-**License**: MIT
+> ⚠️ **Cowork 互換性 — Claude Code CLI / Code tab のみ対応。** Google
+> Slides / Drive API 呼び出しは Claude Desktop Cowork sandbox の URL
+> allowlist によって blocked されます（`investing-toolkit` と同じ
+> 制約。詳細は
+> [investing-toolkit MCP setup retrospective](../investing-toolkit/docs/mcp-setup.md)）。
+> Cowork 利用者は Claude Code CLI または Claude Desktop Code tab に
+> 切り替えてください。
 
-Google Slides 生成 toolkit — 構造化された brief（outline + tables +
-ローカル画像）を Claude Code skills 経由で完成した Google Slides
-deck に変換します。単一コマンドの pipeline：`brief → deck URL ≤ 3 分`。
+## Background
 
-Backend-agnostic な設計知識層（`slides-design`）と、差し替え可能な
-backend builders を組み合わせる構成。MVP は Google Slides backend
-のみ提供；HTML / PPTX / Marp backends は Phase 2+ で trigger-gated
-（`PRODUCT-SPEC.md §3.5` 参照）。
+Google Slides deck を継続的に作成する作業には、機械的な要素が大き
+な比重を占める — 文字差し替え、画像 upload、placeholder の位置合
+わせ。`slides-toolkit` はこの繰り返し layer を skill 化し、残った
+時間を deck 配管ではなく内容と design 判断に向けるためのものです。
+
+設計は **Platform Pivot architecture**（PRODUCT-SPEC v0.2）に従い
+ます — backend-agnostic な設計知識 layer（`slides-design`）と、
+plug 可能な execution layer を切り離しています。MVP では
+`google-slides` backend のみを実装。`html` / `pptx` / `marp` backend
+は Phase 2+ の trigger-gated 範囲です。
 
 ## Status
 
-- **Release**：MVP v0.1.0-mvp（pre-release；Platform-Pivot spec は 2026-04-23 に凍結）
-- **Backends**：`google-slides` のみ
-- **Platform**：macOS 14+（darwin-arm64 / darwin-x64）
-- **Primary user**：kouko（個人の生産性ツール）
-- **Runtime posture**：純粋な shell + `curl` + ブラウザ；`gws` / `jq` の
-  binary は `~/.cache/slides-toolkit/bin/` へ self-fetch し SHA-256 で検証
+| 項目 | 値 |
+|---|---|
+| Release | `0.1.0-mvp`（[`CHANGELOG.md`](CHANGELOG.md) 参照） |
+| Backends | `google-slides`（MVP）・`html` / `pptx` / `marp` は Phase 2+ trigger-gated |
+| Platform | macOS（darwin-arm64 / darwin-x86_64） |
+| Account scope | 個人 Google アカウント（`@gmail.com`）；Workspace アカウントは Phase 2+ |
+| Runtime posture | shell + curl + browser のみ。`gws` / `jq` binary は toolkit が自動取得 |
+| License | MIT |
 
-## Quick Start
+## インストール
 
-クリーンなマシンから最初の deck まで 3 ステップ。
-
-### 1. インストール
+`monkey-skills` marketplace 経由で plugin を追加し、Claude Code を
+再起動して skill を読み込ませます。
 
 ```bash
-# monkey-skills Claude Code marketplace 経由で plugin を追加
-# （marketplace.json に登録すれば plugin は自動で有効化される）
+# Claude Code 内から
+/plugin install slides-toolkit@monkey-skills
 ```
 
-### 2. Setup（初回 onboarding、約 20 分）
+## Quick start
 
-Claude Code 内で setup skill を呼び出す：
+2 phase 構成。初回 setup は一度だけ。以降は毎回 deck 生成 phase の
+みを使います。
 
-```
-/google-slides-setup
-```
-
-以下を順に案内：
-
-- `gws` binary の取得 + SHA-256 検証
-- Google Cloud Console 4 ステップの OAuth client 設定（External + Testing モード）
-- Keychain / file-backend credential 保存方式の検出
-- Issue-119 workaround 環境変数 guard（`GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET`）
-- 初回ログイン認証 + token smoke test
-
-予算：クリーンな macOS マシンで **≤ 20 分**（KR2）。
-
-### 3. 最初の deck を生成
+### 1. 初回 setup（目標：≤ 20 分 — KR2）
 
 ```
-/using-slides-toolkit
+> /google-slides-setup
 ```
 
-まず物語構成 + chart-type のガイダンスを得たい場合は `slides-design`
-を選び、その後 `google-slides-builder` で deck をビルドします。
-すでに `slide-plan.json` と登録済みの template Drive ID があれば、
-直接 builder へ進む形でも可。
+`google-slides-setup` skill に route。現在の状態を検出し、`gws` +
+`jq` を `~/.cache/slides-toolkit/bin/` に取得、GCP Console での
+手動設定（OAuth Client + Test User）を案内し、必要なら issue #119
+の workaround を `~/.config/gws/env.sh` に書き込みます。
 
-予算：brief 提出から Drive URL まで **≤ 3 分**（KR1）。
+Google の OAuth policy（External + Testing mode）による境界が
+あります。何が自動化できて何ができないかは
+[`docs/google-oauth-automation-limits.md`](docs/google-oauth-automation-limits.md)
+を参照してください。
 
-## Skills Inventory
+### 2. Deck 生成（目標：≤ 3 分 — KR1）
 
-| Skill | Layer | 用途 |
-|-------|-------|------|
-| `using-slides-toolkit` | router（backend-agnostic） | エントリーポイント — `target` で setup / design / builder へ振り分け |
-| `slides-design` | knowledge（backend-agnostic） | Minto Pyramid + SCQA + chart-selection リファレンス；どの backend にも適用 |
-| `google-slides-setup` | google-slides backend | 初回 onboarding（gws + GCP + auth）；状態に応じた分岐 |
-| `google-slides-builder` | google-slides backend | 実行層 — gws 経由で copy template / replaceAllText / insert-image |
+```
+> /using-slides-toolkit
+> 「この outline を 6 枚の product proposal に」
+```
 
-Phase 2+（trigger-gated；MVP には含めない）：`html-builder`、`pptx-builder`、
-`marp-builder`。
+router の `using-slides-toolkit` が意図を判定し、必要に応じて
+`slides-design` に narrative 構造（Minto / SCQA / chart 選択）を
+委譲し、最終的に `slide-plan.json` v1.2 を `google-slides-builder`
+に渡します。builder は 4 step pipeline（空 deck 作成 → predefined
+layout で slide 作成 → text 挿入 → ローカル画像挿入）を実行し、
+Drive URL を返します。
 
-## Prerequisites
+`/using-slides-toolkit` と `/google-slides-setup` はどちらも skill
+の auto-route です（`commands/` shim はなく、plugin に slash
+command は含まれません）。skill 名を入力すれば Claude Code が
+dispatch します。
 
-すべて macOS 14+ に同梱：
+## Skills
 
-- `zsh` / `bash`
-- `curl`
-- 任意のモダンブラウザ（Google OAuth 同意フロー用）
+5 つの skill が 3 layer に分かれています。
 
-その他は toolkit が自動取得：
+| Skill | Layer | 役割 |
+|---|---|---|
+| `using-slides-toolkit` | Router（backend-agnostic） | 意図を判定し `slide-plan.target` を読み、適切な skill に route |
+| `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選択。すべての backend に適用可 |
+| `google-slides-setup` | google-slides backend | 初回 GCP Console / OAuth / `gws` bootstrap、以降の state detection |
+| `google-slides-api` | google-slides backend | Low-level な per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
+| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
 
-- `gws` binary → `~/.cache/slides-toolkit/bin/gws`（SHA-256 pinned）
-- `jq` binary → `~/.cache/slides-toolkit/bin/jq`（SHA-256 pinned）
+`using-slides-toolkit` と `slides-design` は意図的に
+backend-agnostic にしてあるため、将来の `html-builder` /
+`pptx-builder` / `marp-builder` skill が同じ routing entry と設計
+reference を変更なしで再利用できます。
 
-**不要**：Python、uv、gcloud、Homebrew、Node.js。shell 以外の言語
-runtime はゼロ。
+## 前提条件
+
+| 項目 | 要件 |
+|---|---|
+| OS | macOS 14+（darwin-arm64 / darwin-x86_64）。Linux / WSL は Phase 2+ |
+| Shell | zsh または bash（macOS 標準の zsh で OK） |
+| ネットワーク tool | `curl`（macOS 標準） |
+| Browser | Chrome または Safari（GCP Console step で 1 回だけ必要） |
+| Google アカウント | 個人 `@gmail.com`。Workspace アカウントは Phase 2+ |
+
+**不要**：Python、uv、gcloud、brew、npm。`gws` と `jq` の binary
+は `scripts/google-slides/bootstrap.sh` が HTTPS + `curl -f` で
+`~/.cache/slides-toolkit/bin/` に取得します。
 
 ## Architecture
 
-3 層構成（全体像は `PRODUCT-SPEC.md §6.3.1` + `TECH-SPEC.md §2.1-§2.2`
-を参照）：
+3 layer 構成。router と design 知識 layer は backend-agnostic で、
+出力 format に bind されるのは execution layer のみです。
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Layer 1 — Router (backend-agnostic)                  │
-│   using-slides-toolkit                               │
-│     → dispatches by slide-plan target field          │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 2 — Design knowledge (backend-agnostic)        │
-│   slides-design                                      │
-│     → Minto / SCQA / chart-selection                 │
-│     → applies to google-slides / html / pptx / marp  │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 3 — Backend execution (backend-specific)       │
-│   google-slides-setup     [MVP]                      │
-│   google-slides-builder   [MVP]                      │
-│   html-builder            [Phase 2+]                 │
-│   pptx-builder            [Phase 2+]                 │
-│   marp-builder            [Phase 2+]                 │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — Router（backend-agnostic）                       │
+│  using-slides-toolkit                                       │
+│  意図判定 · slide-plan.target 読み込み · dispatch            │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────────┐
+        ▼                    ▼                        ▼
+┌─────────────────┐  ┌─────────────────┐  ┌──────────────────────┐
+│  Layer 2 —      │  │  Layer 3 —      │  │  Layer 3 —           │
+│  Design         │  │  Backend exec   │  │  Backend exec        │
+│  knowledge      │  │ （onboarding） │  │ （build pipeline）   │
+│ （agnostic）    │  │                 │  │                      │
+│  slides-design  │  │  google-slides- │  │  google-slides-      │
+│                 │  │  setup          │  │  builder             │
+│  Minto · SCQA · │  │                 │  │      ↓ uses          │
+│  chart 選択     │  │  GCP / OAuth /  │  │  google-slides-api   │
+│                 │  │  gws bootstrap  │  │  (per-op recipes)    │
+└─────────────────┘  └────────┬────────┘  └──────────┬───────────┘
+                              │                      │
+                              └──────────┬───────────┘
+                                         ▼
+                              scripts/google-slides/*.sh
+                              gws CLI · ~/.cache binaries
+                                         ▼
+                              Google Slides + Drive API
+                                         ▼
+                                   Deck URL
 ```
 
-**なぜ**：設計原則（物語構成、chart 選択）は出力フォーマットを跨いで
-安定する一方、実行技術（gws / pandoc / python-pptx / marp-cli）は
-backend ごとに進化するため。分離することで、新しい backend を追加
-するたびに知識層が揺さぶられるのを防ぐ。
+Phase 2+ backend（`html-builder` / `pptx-builder` /
+`marp-builder`）は `google-slides-builder` の隣に Layer 3 として
+追加でき、Layer 1 / Layer 2 には変更が不要です。詳細は PRODUCT-SPEC
+§2.1 / §2.2 と TECH-SPEC §2.1 / §2.2 を参照してください。
 
-クロスドメインのプロダクト観点（vision + MVP scope + Job Story + 4 Big Risks）
-は `PRODUCT-SPEC.md`、モジュール設計・データフロー・interface contract
-は `TECH-SPEC.md` を参照。
+## セキュリティ
 
-## Security Notes
+Credential を repo に入れない。これを 2 つの仕組みで担保しています
+（TECH-SPEC §8）。
 
-Credentials は repository に決して入らない。二重の防御層：
+**Claude tool layer block** — `.claude/settings.json` で gws の
+credential store に触れる Read / Bash / Write をすべて deny：
 
-1. **`.claude/settings.json` deny rule** — credential ファイル
-   （home-dir + repo-relative）への Claude 側ツール（Read / Bash /
-   Write）アクセスを遮断。Repo-relative の `.gitignore` は git が `~`
-   を展開しないため `~/.config/gws/**` を保護できない；deny rule が
-   その隙間を埋める。
-2. **`.gitignore`** — repo-relative の機密パターンを除外：
-   `.config/gws/`、`**/client_secret*.json`、`**/credentials.enc`、
-   `**/.encryption_key`、`.env*`、`.cache/`、ローカルテスト fixture。
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.config/gws/**)",
+      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Bash(cat ~/.config/gws/*)",
+      "Bash(cat ~/.config/gws/**)",
+      "Bash(cp ~/.config/gws/* *)",
+      "Bash(git add ~/.config/gws/*)",
+      "Write(~/.config/gws/**)"
+    ]
+  }
+}
+```
 
-完全な脅威モデル（OWASP ASVS v5.0.0 L1 — V1 / V2 / V5 / V13 / V14 / V16
-マッピング）、pre-commit hook の推奨事項、credential 流出時の incident
-response playbook は `TECH-SPEC.md §8 Security & Credential Hygiene`
-を参照。
+**Repo-relative な ignore** — `.gitignore` で repo tree に
+入り込み得る credential を弾く：
 
-Incident log（万が一トリガーされた場合）は要求ベースで `incidents/`
-に置く — 事前作成はしない。Playbook の項目フォーマットは
-`incidents/README.md` を参照。
+```
+.config/gws/
+*/keyring-file.json
+*/env.sh
+.cache/slides-toolkit/
+```
+
+`.gitignore` は `~/.config/gws/**` には match できません（git は
+repo-relative path のみで `~` を展開しないため）。home directory
+側は上の `settings.json` deny rule が責任を持ちます。万一
+credential を漏洩した場合は TECH-SPEC §8.4 の incident playbook
+に従ってください。
+
+## リンク
+
+- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — product 方向、Job Story、OKR / KR、Non-Goals、Phase 2+ trigger
+- [TECH-SPEC.md](TECH-SPEC.md) — module 設計、`slide-plan.json` v1.2、shell script 契約、セキュリティ
+- [CHANGELOG.md](CHANGELOG.md) — version 履歴（`0.1.0-spec` → `0.6.0-i18n`）
+- [docs/console-ui-reference.md](docs/console-ui-reference.md) — 現在の Google Cloud Console UI walkthrough
+- [docs/google-oauth-automation-limits.md](docs/google-oauth-automation-limits.md) — 自動化できないものとその理由
+- [docs/gws-cli-quirks.md](docs/gws-cli-quirks.md) — live test で発見した gws CLI の罠
+- 親 repository：[`monkey-skills`](https://github.com/kouko/monkey-skills)
+
+## 貢献
+
+本 plugin は [`monkey-skills`](https://github.com/kouko/monkey-skills)
+repository の一部です。Issue / PR は同 repo に投げてください。skill
+構造は repo root の `CLAUDE.md` と `domain-teams:skill-team` skill
+の慣例に従います。
 
 ## License
 
-MIT — 親リポジトリ `monkey-skills` と整合。repo ルートの `/LICENSE`
-を参照。
-
-## Links
-
-- [PRODUCT-SPEC.md](./PRODUCT-SPEC.md) — planning-team spec（vision、ユーザー、
-  ゴール、非ゴール、Platform Pivot の根拠）
-- [TECH-SPEC.md](./TECH-SPEC.md) — code-team spec（アーキテクチャ、モジュール、
-  インターフェース、テスト、セキュリティ、OPEN answers）
-- [CHANGELOG.md](./CHANGELOG.md) — バージョン履歴
-- [parent repo](https://github.com/kouko/monkey-skills)
+MIT — 詳細は repository root の [LICENSE](../LICENSE) を参照。

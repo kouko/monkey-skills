@@ -1,92 +1,89 @@
-# Monkey Skills
+# monkey-skills
 
-**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-Personal agent skills marketplace — **8 plugins** covering domain-team quality
-gates, Obsidian vault workflows, philosophical thinking frameworks,
-skill-authoring tools, investing research, pipeline-structured copywriting,
-Google Slides generation, and Kobo-library skill distillation.
+> Personal Claude Code plugin marketplace — 8 plugins covering domain-team workflows, skill development, philosophical thinking, Obsidian, investing, copywriting, slides, and book distillation.
 
 ## Plugins
 
 | Plugin | Version | Skills | Commands | Description |
-|--------|--------:|-------:|---------:|-------------|
-| [`domain-teams`](domain-teams/README.md) | 5.2.0 | 10 | 9 | 9-team skill suite with checkpoint-based quality gates (planning / code / docs / qa / devops / design / research / investing / copywriting) + skill-team meta-skill + router |
-| [`obsidian`](obsidian/README.md) | 3.5.0 | 13 (+1 agent) | 1 | Obsidian vault workflows — daily notes, diagrams, dashboards + imported kepano & axtonliu visual skills |
-| [`philosophers-toolkit`](philosophers-toolkit/README.md) | 1.0.4 | 12 | 12 | Philosophical thinking frameworks for problem clarification and deeper reasoning |
-| [`dev-workflow`](dev-workflow/README.md) | 1.0.4 | 1 | 1 | Skill creation and eval workflows (adapted from Anthropic → AllanYiin chain) |
-| [`investing-toolkit`](investing-toolkit/README.md) | 1.16.5 | 15 | 5 | Investing research — US/JP/TW/KR/CN macro regime diagnosis, DCF, screening, equity snapshots |
-| [`copywriting-toolkit`](copywriting-toolkit/README.md) | 1.14.0 | 14 | 1 | Pipeline-structured copywriting — 9-phase pipeline, 90-anchor voice library, ethics + form gates. A/B coexistence with `domain-teams:copywriting-team` |
-| [`slides-toolkit`](slides-toolkit/README.md) | 0.1.0-mvp | 5 | 0 | Google Slides generation — brief → deck URL pipeline via `gws` CLI, backend-agnostic design knowledge (Minto / SCQA / chart-selection), Platform-Pivot multi-backend architecture |
-| [`tsundoku`](tsundoku/README.md) | 0.11.0 | 4 | 5 | Kobo library search → DRM-free EPUB download → chunked Markdown → atomic agent skill distillation via RIA-TV++ pipeline (Adler / 5 parallel extractors / triple verification / Zettelkasten) |
+|--------|---------|-------:|---------:|-------------|
+| [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skills — planning, code, design, research, copywriting with checkpoint-based quality gates. |
+| [`dev-workflow`](dev-workflow/) | 2.0.0 | 7 | 4 | Skill creation, skill quality scoring, git-backed project memory, proposal triage, complexity critique, skill refactor, and skill tuning. |
+| [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | Philosophical thinking frameworks for problem clarification and deeper reasoning. |
+| [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. |
+| [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF, screener, equity snapshots via primary-source adapters. |
+| [`copywriting-toolkit`](copywriting-toolkit/) | 1.14.0 | 14 | 1 | Pipeline-structured copywriting — intake, ideation, neta injection, 5 form-specific drafters, voice positioning, ethics + form gates, audit. |
+| [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides generation toolkit — template-based deck pipeline via `gws`, backend-agnostic design knowledge, Platform-Pivot architecture. |
+| [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
 
-**Total**: 74 skills, 34 slash commands across 8 plugins.
+**Totals:** 81 skills and 37 slash commands across 8 plugins.
 
-Each plugin has its own `README.md` with full skill inventory, architecture,
-and usage detail. This root README only indexes the plugins.
+> Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
 
-## Installation
+## Install
 
-### Claude Code
-
-```bash
-claude plugin marketplace add kouko/monkey-skills
-# All 8 plugins become available:
-#   domain-teams, obsidian, philosophers-toolkit, dev-workflow,
-#   investing-toolkit, copywriting-toolkit, slides-toolkit, tsundoku
-```
-
-Install specific plugins only:
+### Claude Code (marketplace)
 
 ```bash
-claude plugin install domain-teams@kouko/monkey-skills
-claude plugin install obsidian@kouko/monkey-skills
-# ...etc.
+/plugin marketplace add kouko/monkey-skills
+/plugin install <plugin-name>@monkey-skills
 ```
 
-### Gemini CLI
+Replace `<plugin-name>` with any name from the table above.
+
+### Gemini CLI (extension)
 
 ```bash
 gemini extensions install https://github.com/kouko/monkey-skills
 ```
 
+The extension manifest lives at [`gemini-extension.json`](gemini-extension.json).
+
 ### Codex
 
-See [`.codex/INSTALL.md`](.codex/INSTALL.md).
+See [`.codex/INSTALL.md`](.codex/INSTALL.md) for symlink and plugin installation modes.
 
-## Repository Layout
+## Repository layout
 
 ```
 monkey-skills/
-├── .claude-plugin/marketplace.json   ← Lists all 8 plugins
-├── domain-teams/                     ← Plugin (see domain-teams/README.md)
-├── obsidian/                         ← Plugin (see obsidian/README.md)
-├── philosophers-toolkit/             ← Plugin (see philosophers-toolkit/README.md)
-├── dev-workflow/                     ← Plugin (see dev-workflow/README.md)
-├── investing-toolkit/                ← Plugin (see investing-toolkit/README.md)
-├── copywriting-toolkit/              ← Plugin (see copywriting-toolkit/README.md)
-├── slides-toolkit/                   ← Plugin (see slides-toolkit/README.md)
-├── tsundoku/                         ← Plugin (see tsundoku/README.md)
-│
-├── LICENSE                           ← Project MIT (kouko) + third-party pointer
-├── ATTRIBUTION.md                    ← Summary of all 3rd-party imports
-├── CLAUDE.md                         ← Claude Code context (skill conventions)
-├── GEMINI.md                         ← Gemini CLI context
-├── AGENTS.md                         ← Codex / Copilot CLI context
-├── gemini-extension.json             ← Gemini CLI extension manifest
-└── .github/workflows/
-    └── skill-structure.yml           ← CI: SKILL.md structure + Conventional Commits
+├── .claude-plugin/
+│   └── marketplace.json          # plugin registry (8 entries)
+├── .codex/
+│   └── INSTALL.md                # Codex install instructions
+├── .github/workflows/
+│   ├── skill-structure.yml       # CI: enforce skill conventions
+│   └── scraper-deps-monthly.yml  # CI: monthly dep refresh
+├── domain-teams/                 # plugin
+├── dev-workflow/                 # plugin
+├── philosophers-toolkit/         # plugin
+├── obsidian/                     # plugin
+├── investing-toolkit/            # plugin
+├── copywriting-toolkit/          # plugin
+├── slides-toolkit/               # plugin
+├── tsundoku/                     # plugin
+├── docs/                         # cross-cutting docs (i18n glossary, etc.)
+├── scripts/                      # repo-level tooling
+├── CLAUDE.md                     # project conventions for Claude Code
+├── GEMINI.md                     # project conventions for Gemini CLI
+├── AGENTS.md                     # generic agent conventions
+├── ATTRIBUTION.md                # third-party imports & licenses
+├── LICENSE                       # MIT
+└── gemini-extension.json         # Gemini CLI extension manifest
 ```
+
+## Contributing
+
+This is a personal marketplace. Issues and PRs are welcome via the
+[GitHub repository](https://github.com/kouko/monkey-skills). For
+skill-development conventions (file paths, two-layer spec, quality
+gates, agent roles, cross-plugin delegation), see [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for the
-project-level notice and pointers to per-component license files.
+MIT — see [`LICENSE`](LICENSE).
 
-Third-party components retain their original copyright notices (Steph Ango,
-Axton Liu, AllanYiin / 尹相志, Anthropic). Full attribution with upstream
-URLs, licenses, and modification summaries: see
-[ATTRIBUTION.md](ATTRIBUTION.md).
-
-To report a license or attribution concern, open an issue at
-https://github.com/kouko/monkey-skills/issues.
+Third-party components (Obsidian skills from kepano and axtonliu,
+`skill-creator-advance` from AllanYiin, `skill-judge` from softaworks,
+and others) are MIT-licensed and credited in [`ATTRIBUTION.md`](ATTRIBUTION.md).

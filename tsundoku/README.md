@@ -1,319 +1,309 @@
 # tsundoku 積読
 
-**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> ⚠️ **Cowork compatibility**: Claude Code CLI / Code tab only. Cowork tab is blocked by sandbox URL allowlist (kobo.com auth + EPUB downloads + pandoc fetch). See [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) for the full retrospective.
+> Turn your owned-but-unread e-book pile into actionable agent skills — login, search, download, extract, distill.
 
-**Version**: 0.11.0
-**Part of**: [monkey-skills](../)
+> ⚠️ **Claude Code CLI only.** Cowork sandbox blocks `kobo.com` device-flow auth + EPUB downloads. See [Cowork compatibility](#cowork-compatibility) below.
 
-> *tsundoku (積読)* — Japanese for the books you've bought but haven't read yet.
-> This plugin turns that pile into actionable knowledge.
+**Version**: 0.11.0 · **License**: MIT · **Part of**: [monkey-skills](../README.md)
 
-Search a Kobo e-book library by **title / author / series / publication date /
-category / description text / reading status / language**, present matches as
-cards, download the chosen books as DRM-free EPUBs, convert downloaded EPUBs
-into chunked-by-chapter Markdown, and **distill the book into atomic agent
-skills** via the RIA-TV++ pipeline (Adler analytical read → 5 parallel
-extractors → triple verification → RIA++ render → Zettelkasten linking →
-adversarial pressure test). Language-adaptive output (EN / 日本語 / 繁體中文).
-Wraps [`subdavis/kobo-book-downloader`][kobodl] and uses [pandoc][pandoc]
-for the EPUB→Markdown stage. Distillation methodology adapted from
-[`kangarooking/cangjie-skill`][cangjie] (MIT).
+## Cowork compatibility
 
-[kobodl]: https://github.com/subdavis/kobo-book-downloader
-[pandoc]: https://pandoc.org
-[cangjie]: https://github.com/kangarooking/cangjie-skill
+This plugin is **incompatible with Claude Desktop's Cowork tab**. Two of the four skills (`kobo-auth`, `kobo-library`) make outbound calls to `kobo.com` and `kobodl`'s download CDN, both of which sit outside Cowork's URL allowlist. The remaining skills (`book-extract`, `book-distill`) operate purely on local files and would work in Cowork, but the pipeline is only useful end-to-end.
+
+Run this plugin from **Claude Code CLI** (or the Code tab embedded in Claude Desktop). The same sandbox finding documented for [`investing-toolkit`](../investing-toolkit/docs/mcp-setup.md) applies here.
+
+## Background
+
+積読 (tsundoku) is the Japanese word for the pile of books you bought, meant to read, and never opened. The pile compounds: each new purchase adds knowledge you owned but never extracted. This plugin treats that pile as the source — take an e-book you already paid for, surface it on demand, and convert it into reusable methodology your agent can invoke.
+
+The pipeline is four stages, separated by stable on-disk artifacts so any stage can re-run independently:
+
+```
+kobo-auth ──▶ kobo-library ──▶ book-extract ──▶ book-distill
+ (once)        (daily)           (per book)       (per book)
+
+   login  ──▶  EPUB on disk ──▶ chunked .md  ──▶ atomic SKILL.md set
+```
+
+The split between `kobo-*` (Kobo-platform-specific) and `book-*` (format-agnostic) is deliberate: future siblings like `kindle-*` or `apple-books-*` would slot in alongside the `kobo-*` peers, while `book-extract` / `book-distill` accept any EPUB / Markdown directory regardless of source.
 
 ## Skills
 
-| Skill | Slash command | When to use |
+| Skill | Layer | Role |
 |---|---|---|
-| [`kobo-auth`](skills/kobo-auth/SKILL.md) | `/kobo-auth` | First-time setup, login, account migration, credential rotation |
-| [`kobo-library`](skills/kobo-library/SKILL.md) | `/kobo-library` | Daily use — search, list, batch-download EPUBs |
-| [`book-extract`](skills/book-extract/SKILL.md) | `/book-extract` | Convert EPUB → chunked-by-chapter Markdown |
-| [`book-distill`](skills/book-distill/SKILL.md) | `/book-distill` | Markdown → atomic agent skills via RIA-TV++ |
-| (router) | `/tsundoku` | Auto-route based on intent; ambiguous request → asks which step |
+| [`tsundoku`](commands/tsundoku.md) | router | Routes to the right skill based on intent (login / search / convert / distill) |
+| [`kobo-auth`](skills/kobo-auth/SKILL.md) | source-platform (`kobo-*`) | First-time setup, device-flow activation, credential rotation, multi-account |
+| [`kobo-library`](skills/kobo-library/SKILL.md) | source-platform (`kobo-*`) | Search the Kobo library by title / author / series / publication date / category / description text / reading status / language; download chosen books as DRM-free EPUBs |
+| [`book-extract`](skills/book-extract/SKILL.md) | format-agnostic (`book-*`) | EPUB → chunked-by-chapter Markdown via NCX-driven splitting; CJK-safe |
+| [`book-distill`](skills/book-distill/SKILL.md) | format-agnostic (`book-*`) | Markdown → atomic SKILL.md set via RIA-TV++ (Adler analytical read → 5 parallel extractors → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test) |
 
-Naming convention:
-- **`kobo-*`** — source-platform layer (auth + library): bound to Kobo /
-  kobodl. Future `kindle-*` / `apple-books-*` siblings would mirror this.
-- **`book-*`** — format-agnostic processing layer (extract + distill): works
-  on any EPUB / any chunked Markdown regardless of source. Future
-  `paper-distill` (academic papers) or `transcript-distill` (podcasts) would
-  join here.
+**Naming convention**: `kobo-*` skills are bound to the Kobo platform (auth, library API, kobodl binary). `book-*` skills work on any EPUB or chunked Markdown, with no Kobo dependency. This means `book-extract` and `book-distill` are reusable on books you obtained any other way (manual EPUB drop, library loan, public domain).
 
-## Quick Start
+## Quick start
 
-All flows start by invoking a slash command in Claude Code. The skill
-handles binary install, prompts, credential storage, and pipeline
-orchestration — you do not run shell scripts directly.
+Five common scenarios. The router skill picks for you if you describe the intent in natural language.
 
-### A. Brand-new setup (first-time login)
-
-```
-/kobo-auth
-```
-
-Or in natural language: *"Set up Kobo login for me."*
-
-The skill installs the kobodl binary, walks you through device-flow
-activation (opens `kobo.com/activate`, asks for the 6-digit code), and
-stores credentials with `chmod 600` under `~/.tsundoku/kobo/auth/`.
-
-### B. Migrate from existing kobodl install
-
-```
-/kobo-auth
-```
-
-Then tell it: *"I already have a `kobodl.json` at `~/KobodlLibrarySync/config/kobodl.json` — please import."* The skill imports the credentials instead of running the activation flow.
-
-### C. Search and download
-
-```
-/kobo-library
-```
-
-Or: *"Search my Kobo library for books that mention behavioral economics, published since 2020, that I haven't read yet."*
-
-The skill refreshes the library index, runs the multi-criteria filter,
-previews matches as rich cards, and downloads chosen books as DRM-free
-EPUBs to `~/Books/kobo/`. Idempotent — books already on disk are skipped.
-
-### D. EPUB → chunked Markdown
-
-```
-/book-extract
-```
-
-Or: *"Convert this EPUB to chapter-split Markdown."*
-
-The skill auto-installs pandoc if missing, splits on the EPUB's NCX
-table-of-contents, strips images / frontmatter, and writes to
-`~/.tsundoku/cache/markdown/<title-slug>-<id8>/`.
-
-### E. Markdown → atomic agent skill set
-
-```
-/book-distill
-```
-
-Or: *"Distill this book into reusable agent skills."*
-
-The skill bootstraps the working directory and runs the 6-stage
-RIA-TV++ pipeline:
-
-| Stage | Action | Output |
-|---|---|---|
-| 0 | Adler analytical read | `BOOK_OVERVIEW.md` |
-| 1 | 5 parallel extractors | `candidates/` |
-| 1.5 | Triple verification | `verified.md` (~30-50% pass) |
-| 2 | RIA++ skill render | `<skill-slug>/SKILL.md` |
-| 3 | Zettelkasten linking | `INDEX.md` |
-| 4 | Adversarial pressure test | `test-prompts.json` |
-
-Output prose stays in the source language; YAML metadata + slugs are English.
-
-### Not sure which step?
+### A. Router — "I want to use tsundoku"
 
 ```
 /tsundoku
 ```
 
-Router skill — describe your intent and it dispatches to the right
-sub-skill. Ambiguous requests get a "which step?" clarifying question.
+Describes the four stages and asks which step to start with. First-time users should run B → C → D → E in sequence.
 
-## Under the Hood (direct script invocation)
+### B. First-time login (`kobo-auth`)
 
-The slash commands above are the recommended interface. For debugging,
-CI scripting, or power-user flows, every skill's underlying scripts can
-be invoked directly. The skills delegate to these:
-
-### Auth (kobo-auth)
-
-```bash
-# install binary + device-flow activation
-bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
-
-# or import existing credentials
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
-    import-from ~/KobodlLibrarySync/config/kobodl.json
+```
+/tsundoku-kobo-auth
 ```
 
-### Library (kobo-library)
+The skill installs the kobodl binary into `~/.tsundoku/kobo/bin/`, then **hands off the device-flow activation to your terminal** — kobodl prints a 6-digit code that you enter at `https://www.kobo.com/activate`, and running this through Claude's Bash tool buffers and truncates the code mid-flight. Claude waits for you to reply "done", then verifies via `kobo_login.sh status`.
+
+If you already have a `kobodl.json` from a prior install:
+
+```
+"Import my existing kobodl credentials from ~/KobodlLibrarySync/config/kobodl.json"
+```
+
+### C. Search and download (`kobo-library`)
+
+```
+/tsundoku-kobo-library
+```
+
+Then describe what you want in natural language. Examples:
+
+```
+"Find books on behavioral economics published in the last five years that I haven't read"
+"Show me everything in the Silent Witch series and download all of them"
+"Books I bought more than two years ago and never started"
+```
+
+The skill maps your intent to `kobo_query.py` filters (title / author / series / publisher / `--description` keyword search across title + description text / `--pub-after` / `--purchased-after` / `--status` / `--language` / ...), presents matches as table / markdown cards / summary, asks you to confirm, then downloads via `kobodl book get` into `~/Books/kobo/`.
+
+### D. Convert (`book-extract`)
+
+```
+/tsundoku-book-extract
+```
+
+Pass an EPUB path (it does not have to be from Kobo). The skill installs pandoc on first run, parses the EPUB's NCX (table of contents) for canonical chapter boundaries, pre-cleans Kobo-specific markup (`<span class="koboSpan">`), runs pandoc per chapter, and writes per-chapter Markdown into `~/.tsundoku/cache/markdown/<title-slug>-<id8>/`.
+
+Output: `index.md` (TOC + per-chapter token estimates) + `metadata.json` + `NN-<chapter>.md` files.
+
+### E. Distill (`book-distill`)
+
+```
+/tsundoku-book-distill
+```
+
+Distills the chunked Markdown into an atomic skill set via the **RIA-TV++** pipeline:
+
+```
+Stage 0: Adler analytical read           → BOOK_OVERVIEW.md
+Stage 1: 5 parallel sub-agent extractors → frameworks / principles / cases /
+                                            counter-examples / glossary
+Stage 1.5: Triple verification filter    → ~30-50% pass for methodology-dense books
+Stage 2: RIA++ render per skill          → SKILL.md per unit (R / I / A1 / A2 / E / B)
+Stage 3: Zettelkasten linking            → INDEX.md + cross-refs
+Stage 4: Adversarial pressure test       → test-prompts.json (lures non-negotiable)
+```
+
+Output is **language-adaptive**: if the source book is in Japanese, the resulting SKILL.md description and trigger signals are in Japanese, so Claude's activation matches natural user queries. R-field quotes are always verbatim source language.
+
+## Under the hood
+
+All four skills are thin wrappers over shell + Python scripts. You can invoke them directly without going through the skill if you prefer:
 
 ```bash
-source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh
-export TMPDIR="$TSUNDOKU_TMPDIR"
-mkdir -p "$TSUNDOKU_DOWNLOADS"
+# Source path env vars (works from any skill's scripts/ directory)
+source ~/.claude/plugins/cache/monkey-skills/tsundoku/0.11.0/skills/kobo-library/scripts/tsundoku_paths.sh
 
-# refresh library index
+# Auth lifecycle
+bash <skill-dir>/kobo-auth/scripts/kobo_install.sh           # install kobodl
+bash <skill-dir>/kobo-auth/scripts/kobo_login.sh status      # 0=authed, 1=missing, 3=binary missing
+bash <skill-dir>/kobo-auth/scripts/kobo_login.sh import-from PATH
+
+# Search + download
 "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" \
     book list --export-library "$TSUNDOKU_KOBO_LIBRARY_JSON"
-
-# search (5 output formats: markdown / json / table / ids / paths)
-python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
+python3 <skill-dir>/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" \
-    --description "behavioral,economics,行為經濟" \
-    --pub-after 2020 --status ReadyToRead --format markdown
+    --description "behavioral economics,行為經濟" --pub-after 2020 --status ReadyToRead \
+    --format markdown
+bash <skill-dir>/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
 
-# download chosen RevisionIds (idempotent)
-bash tsundoku/skills/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
+# Extract
+bash <skill-dir>/book-extract/scripts/install_pandoc.sh
+python3 <skill-dir>/book-extract/scripts/epub_to_markdown.py \
+    --epub "$EPUB" --strip-images --strip-frontmatter
 
-# pipe filtered set
-python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
-    --library "$TSUNDOKU_KOBO_LIBRARY_JSON" --series "Silent Witch" --format ids \
-  | bash tsundoku/skills/kobo-library/scripts/kobo_get.sh --convert-pdf
+# Distill bootstrap
+bash <skill-dir>/book-distill/scripts/book_distill_init.sh <book-slug-id8>
 ```
 
-### Extract (book-extract)
+This keeps the skills auditable — nothing happens that you cannot reproduce by reading a script.
 
-```bash
-# one-time pandoc check
-bash tsundoku/skills/book-extract/scripts/install_pandoc.sh
+## Storage layout
 
-# convert (uses $TSUNDOKU_MARKDOWN_DIR by default)
-python3 tsundoku/skills/book-extract/scripts/epub_to_markdown.py \
-    --epub "$EPUB_PATH" --strip-images --strip-frontmatter
-
-# clear cache when done
-bash tsundoku/skills/book-extract/scripts/cache_clear.sh
-```
-
-### Distill (book-distill)
-
-```bash
-# bootstrap working dir from extracted markdown
-bash tsundoku/skills/book-distill/scripts/book_distill_init.sh \
-    一九八四-b9152ffe
-# Claude then reads book-distill/SKILL.md and runs the 6-stage pipeline
-```
-
-## Storage Layout (single root, per-platform subdirs)
+Single root, per-platform subdirs. Future `kindle-*` / `apple-books-*` siblings would mirror the `kobo/` branch.
 
 ```
-~/.tsundoku/                  ← TSUNDOKU_ROOT
-├── kobo/                       Kobo platform state
-│   ├── auth/                    chmod 700
-│   │   └── kobodl.json          chmod 600 (Kobo session credentials)
-│   └── bin/kobodl-macos         14 MB upstream binary
-├── tmp/                        shared TMPDIR override (PYI-1270 fix)
-└── cache/                      regenerable, wipe-able as a unit
-    ├── kobo/library.json        cached library export
-    └── markdown/<book>/...      EPUB → MD (platform-agnostic)
+~/.tsundoku/                       ← TSUNDOKU_ROOT (default)
+├── kobo/                            Kobo platform state
+│   ├── auth/                         chmod 700
+│   │   └── kobodl.json               chmod 600  (Kobo session credentials)
+│   └── bin/kobodl-macos              ~14 MB upstream binary
+├── tmp/                             shared TMPDIR override (PYI-1270 fix)
+└── cache/                           regenerable, wipe-able as a unit
+    ├── kobo/library.json             cached library export
+    ├── markdown/<book>/...           EPUB → chunked Markdown (platform-agnostic)
+    └── distilled/<book>/...          book-distill output
 
-~/Books/kobo/                 ← TSUNDOKU_DOWNLOADS (user-visible EPUBs)
+~/Books/kobo/                       ← TSUNDOKU_DOWNLOADS (user-visible EPUBs)
+├── <author> - <title> <id8>.epub
+└── ...
 ```
 
-When `kindle-*` / `apple-books-*` skills land later, they'll mirror under
-`~/.tsundoku/kindle/`, `~/.tsundoku/cache/kindle/`, etc.
+The `cache/` subtree is regenerable (re-export the library, re-extract the EPUBs); `auth/`, `bin/`, and `~/Books/kobo/` are not.
 
-**Two decision-point env vars** — set these to relocate things:
+## Environment variables
 
-| Var | Default | Purpose |
-|---|---|---|
-| `TSUNDOKU_ROOT` | `~/.tsundoku` | All toolkit state (auth + binary + cache) |
-| `TSUNDOKU_DOWNLOADS` | `~/Books/kobo` | User-visible EPUB downloads |
+Two decision-point variables you set; five derived paths the scripts compute. Override the two roots before sourcing `tsundoku_paths.sh`.
 
-**Five derived paths** computed from the two above (don't set directly):
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `TSUNDOKU_ROOT` | No | `~/.tsundoku` | Root for auth, binary, cache, tmp |
+| `TSUNDOKU_DOWNLOADS` | No | `~/Books/kobo` | User-visible EPUB downloads |
+| `TSUNDOKU_TMPDIR` | derived | `$TSUNDOKU_ROOT/tmp` | TMPDIR override (PyInstaller PYI-1270 fix) |
+| `TSUNDOKU_MARKDOWN_DIR` | derived | `$TSUNDOKU_ROOT/cache/markdown` | EPUB → Markdown output root |
+| `TSUNDOKU_KOBO_CONFIG` | derived | `$TSUNDOKU_ROOT/kobo/auth/kobodl.json` | Kobo session credentials |
+| `TSUNDOKU_KOBO_BINARY` | derived | `$TSUNDOKU_ROOT/kobo/bin/kobodl-macos` | kobodl CLI binary |
+| `TSUNDOKU_KOBO_LIBRARY_JSON` | derived | `$TSUNDOKU_ROOT/cache/kobo/library.json` | Cached `book list --export-library` output |
 
-| Var | Scope |
-|---|---|
-| `TSUNDOKU_TMPDIR` | shared |
-| `TSUNDOKU_MARKDOWN_DIR` | shared (cache/markdown) |
-| `TSUNDOKU_KOBO_CONFIG` | Kobo: kobodl.json |
-| `TSUNDOKU_KOBO_BINARY` | Kobo: kobodl-macos |
-| `TSUNDOKU_KOBO_LIBRARY_JSON` | Kobo: library export |
+Do not set the derived variables directly — change `TSUNDOKU_ROOT` instead.
 
-All exported when sourcing `each skill's `scripts/tsundoku_paths.sh``.
-
-The `kobo/auth/` subdirectory is `chmod 700`, the `kobodl.json` file is
-`chmod 600`. The `cache/` subtree is regenerable — wipe at any time via
-`book-extract/scripts/cache_clear.sh`.
-
-## Repository Structure
+## Repository structure
 
 ```
 tsundoku/
-├── .claude-plugin/plugin.json
+├── .claude-plugin/
+│   └── plugin.json
+├── commands/                          slash-command surfaces
+│   ├── tsundoku.md                     router
+│   ├── kobo-auth.md
+│   ├── kobo-library.md
+│   ├── book-extract.md
+│   └── book-distill.md
+├── skills/
+│   ├── kobo-auth/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── tsundoku_paths.sh       shared path resolver (copy)
+│   │       ├── kobo_install.sh         download kobodl binary
+│   │       └── kobo_login.sh           subcommand router (status / add / remove / import-from / path)
+│   ├── kobo-library/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── tsundoku_paths.sh       shared path resolver (copy)
+│   │       ├── kobo_query.py           filter + format library JSON
+│   │       └── kobo_get.sh             download by RevisionId, idempotent
+│   ├── book-extract/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── install_pandoc.sh       brew → standalone fallback
+│   │       ├── epub_to_markdown.py     NCX-driven chapter splitter + pandoc
+│   │       └── cache_clear.sh          wipe markdown / library cache
+│   └── book-distill/
+│       ├── SKILL.md
+│       ├── ATTRIBUTION.md              cangjie-skill / nuwa-skill / Adler / RIA / Munger
+│       ├── methodology/                  per-stage design rationale
+│       │   ├── 00-overview.md
+│       │   ├── 01-stage0-adler.md
+│       │   ├── 02-stage1-parallel-extract.md
+│       │   ├── 03-stage1.5-triple-verify.md
+│       │   ├── 04-stage2-ria-plus.md
+│       │   ├── 05-stage3-zettelkasten.md
+│       │   └── 06-stage4-pressure-test.md
+│       ├── extractors/                   5 parallel sub-agent prompts
+│       │   ├── framework-extractor.md
+│       │   ├── principle-extractor.md
+│       │   ├── case-extractor.md
+│       │   ├── counter-example-extractor.md
+│       │   └── glossary-extractor.md
+│       ├── templates/
+│       └── scripts/
+│           └── book_distill_init.sh
 ├── README.md
-├── commands/                    # slash commands (1:1 with skills + 1 router)
-│   ├── tsundoku.md              #   /tsundoku (router)
-│   ├── kobo-auth.md             #   /kobo-auth
-│   ├── kobo-library.md          #   /kobo-library
-│   ├── book-extract.md          #   /book-extract
-│   └── book-distill.md          #   /book-distill
-└── skills/
-    ├── kobo-auth/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── kobo_install.sh    # binary download (idempotent)
-    │       └── kobo_login.sh      # add / status / remove / import-from / path
-    ├── kobo-library/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── kobo_query.py      # filter --export-library JSON, 5 formats
-    │       └── kobo_get.sh        # download by RevisionId (args or stdin)
-    ├── book-extract/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── install_pandoc.sh     # brew → standalone fallback
-    │       ├── epub_to_markdown.py   # NCX-driven chapter split + pandoc + clean
-    │       └── cache_clear.sh   # wipe extracted markdown / library cache
-    └── book-distill/                 # RIA-TV++ pipeline (forked from cangjie-skill, MIT)
-        ├── SKILL.md                  # top-level orchestrator
-        ├── ATTRIBUTION.md             # upstream credits + license
-        ├── methodology/              # 7 files: 00-overview + 01-06 stage details
-        ├── extractors/               # 5 parallel sub-agent prompts
-        │   ├── framework-extractor.md
-        │   ├── principle-extractor.md
-        │   ├── case-extractor.md
-        │   ├── counter-example-extractor.md
-        │   └── glossary-extractor.md
-        ├── templates/                # BOOK_OVERVIEW / SKILL / INDEX / test-prompts
-        └── scripts/
-            └── book_distill_init.sh  # bootstrap distill dir from book-extract output
+├── README.ja.md
+└── README.zh-TW.md
 ```
 
 ## Requirements
 
-- macOS or Linux (kobodl ships macOS binary auto-installed; Linux users
-  can `pipx install kobodl` and override `TSUNDOKU_KOBO_BINARY`)
-- Python 3.9+ (query / extract scripts use stdlib only)
-- A Kobo account with at least one purchased book
-- Optional: pandoc (for `book-extract` — auto-installed via brew or
-  standalone GitHub release; no-op if already installed)
-- Optional: [Calibre][calibre] for EPUB → PDF conversion
+| Requirement | Notes |
+|---|---|
+| **macOS** or **Linux** | `kobo-*` skills ship a macOS kobodl binary; Linux users `pipx install kobodl` and override `TSUNDOKU_KOBO_BINARY`. `book-*` skills are platform-agnostic. |
+| **Python 3.9+** | stdlib only; no extra packages |
+| **Kobo account** with purchased books | Required for `kobo-auth` / `kobo-library`. Trial / KoboPlus titles work too. |
+| **pandoc** | Installed automatically by `book-extract/scripts/install_pandoc.sh` (Homebrew first, GitHub-release standalone fallback) |
+| **Calibre** (optional) | Only needed for `kobo_get.sh --convert-pdf`. Install separately if you want PDF output alongside EPUB. |
 
-[calibre]: https://calibre-ebook.com/download_osx
+Claude Code CLI is required for end-to-end use. Cowork tab will not work — see [Cowork compatibility](#cowork-compatibility).
 
 ## Security
 
-- `kobodl.json` contains your **Kobo session credentials** — equivalent to a
-  password. Never commit, paste into chat, or upload
-- `kobo_login.sh` enforces `chmod 600` after every operation that touches
-  the file
-- Revoke a session by deleting `kobodl.json` AND visiting Kobo's
-  [Authorized Devices](https://www.kobo.com/account/devices) page
-- For shared machines, use a dedicated macOS user account
+`kobodl.json` holds your Kobo session token. **Treat it as a password.**
+
+| Control | Enforced by | Notes |
+|---|---|---|
+| `chmod 700` on `~/.tsundoku/kobo/auth/` | `kobo_login.sh` on every write | Owner-only directory |
+| `chmod 600` on `kobodl.json` | `kobo_login.sh` after `add` and `import-from` | Owner read/write only |
+| Backup before overwrite (`import-from`) | `kobo_login.sh` | Writes `kobodl.json.bak.<timestamp>` |
+| Multi-user scoping | `-u EMAIL` flag on every command | If `kobodl.json` holds multiple accounts |
+
+**Do not** commit `kobodl.json`, paste it into chat, or upload it. To revoke a leaked or rotated session, sign in to Kobo and remove the device entry at <https://www.kobo.com/account/devices> — local file deletion alone does not invalidate the upstream token.
 
 ## Notes
 
-- `book wishlist` subcommand currently broken upstream (kobodl 0.10.x); only
-  `book list` is supported
-- `Description` field is capped at 500 chars by Kobo's API (publisher ONIX
-  copy, not a synopsis)
-- macOS gets a pre-built kobodl binary auto-installed; Linux/Windows users
-  install kobodl via `pipx install kobodl` and override `TSUNDOKU_KOBO_BINARY`
-  after sourcing `tsundoku_paths.sh`
+- **kobodl bugs**: `book wishlist` is broken in kobodl 0.10.x and is not used. Removed books (`IsRemoved=True`) often fail to download and are excluded from query results by default.
+- **Description cap**: Kobo's API truncates `Description` at 500 chars and serves it as HTML; `kobo_query.py` strips the HTML for matching and output. Treat descriptions as ONIX marketing copy, not synopses.
+- **OS support**: macOS is the tested path. Linux works with `pipx install kobodl` plus a manual `TSUNDOKU_KOBO_BINARY` override. Windows is untested — accept PRs.
+- **Furigana**: pandoc drops `<rt>` content by default, so Japanese ruby text is lost during EPUB → Markdown conversion. See [`waldeir/pandoc-filter-furigana`](https://github.com/waldeir/pandoc-filter-furigana) if you need it preserved.
 
 ## Lineage
 
-Generalizes the [`kobodl-library-sync.sh`][ancestor] single-file shell script
-into a search-first toolkit with proper separation of auth, runtime, and
-extraction; metadata-rich queries; chunked Markdown for LLM ingestion; and
-a single-root storage layout under `~/.tsundoku/`.
+- `kobo-auth` + `kobo-library` are forked from an earlier shell-script sync tool (`kobodl-library-sync.sh`, the `~/KobodlLibrarySync/` legacy directory). The `import-from` subcommand exists specifically to migrate users from that tool.
+- `book-distill` is a fork of [`kangarooking/cangjie-skill` (蒼頡-skill)](https://github.com/kangarooking/cangjie-skill) (MIT, 2026), with full English translation, language-adaptive output, and an entry contract that auto-feeds from `book-extract`. The Triple Verification filter is itself adapted from [`alchaincyf/nuwa-skill`](https://github.com/alchaincyf/nuwa-skill). See [`skills/book-distill/ATTRIBUTION.md`](skills/book-distill/ATTRIBUTION.md) for the full credit chain (Adler / Luhmann / 趙周 RIA / Forte / Munger).
+- `kobodl` itself is [`subdavis/kobo-book-downloader`](https://github.com/subdavis/kobo-book-downloader). This plugin only orchestrates it.
 
-[ancestor]: https://github.com/kouko/kobodl-library-sync
+## Install
+
+In Claude Code CLI:
+
+```bash
+/plugin marketplace add kouko/monkey-skills
+/plugin install tsundoku
+```
+
+Verify by invoking the router:
+
+```
+/tsundoku
+```
+
+Then run `/tsundoku-kobo-auth` to set up Kobo login.
+
+## Contributing
+
+- **Questions / bug reports**: open an issue at <https://github.com/kouko/monkey-skills/issues>.
+- **PRs**: target `main`. Conventional Commits required. New skill content (especially `book-distill` methodology changes) needs primary-source citation in the commit body.
+- **Cowork-related issues**: read the [Cowork compatibility](#cowork-compatibility) section first; it is almost certainly the documented sandbox limitation, not a plugin bug.
+
+## License
+
+MIT — see [LICENSE](../LICENSE) at the repository root.
+
+`book-distill` carries an additional `Copyright (c) 2026 kangarooking` for the upstream cangjie-skill architecture; see [`skills/book-distill/ATTRIBUTION.md`](skills/book-distill/ATTRIBUTION.md).

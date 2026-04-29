@@ -1,308 +1,309 @@
 # tsundoku 積読
 
-[English](README.md) | [日本語](README.ja.md) | **繁體中文**
+語言：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> ⚠️ **Cowork 相容性**：僅支援 Claude Code CLI / Code tab。Cowork tab 被 sandbox URL allowlist 擋住（kobo.com 登入、EPUB 下載、pandoc fetch）。完整 retrospective 見 [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md)。
+> 把買了卻沒讀的 e-book 山，轉成 agent 可呼叫的 skill — login、search、download、extract、distill。
 
-**Version**: 0.11.0
-**Part of**: [monkey-skills](../)
+> ⚠️ **僅支援 Claude Code CLI**。Cowork sandbox 會阻擋 `kobo.com` 的 device-flow 認證與 EPUB 下載。請見下方 [Cowork 相容性](#cowork-相容性)。
 
-> *tsundoku（積読）* — 日文，指買了卻還沒讀的書堆。
-> 此 plugin 把這座書堆轉成可執行的知識。
+**Version**：0.11.0 ・ **License**：MIT ・ **Part of**：[monkey-skills](../README.md)
 
-依 **title / author / series / 出版日期 / category / description 全文 / 閱讀狀態 / 語言** 搜尋 Kobo 電子書 library，把符合的書以卡片呈現，下載選定的書為無 DRM 的 EPUB，將下載的 EPUB 轉為依章節切分的 Markdown，並透過 RIA-TV++ pipeline **將書蒸餾成原子化的 agent skill**（Adler analytical read → 5 個 parallel extractor → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test）。輸出語言會自適應（EN / 日本語 / 繁體中文）。底層包裝 [`subdavis/kobo-book-downloader`][kobodl]，並以 [pandoc][pandoc] 處理 EPUB→Markdown 階段。蒸餾方法論改編自 [`kangarooking/cangjie-skill`][cangjie]（MIT）。
+## Cowork 相容性
 
-[kobodl]: https://github.com/subdavis/kobo-book-downloader
-[pandoc]: https://pandoc.org
-[cangjie]: https://github.com/kangarooking/cangjie-skill
+此 plugin **與 Claude Desktop 的 Cowork tab 不相容**。4 個 skill 中有 2 個（`kobo-auth`、`kobo-library`）會對 `kobo.com` 與 kobodl 下載 CDN 發出對外請求，而這兩個目標都不在 Cowork 的 URL allowlist 內。剩下 2 個 skill（`book-extract`、`book-distill`）只處理本機檔案，單獨在 Cowork 內可動，但 pipeline 必須整段串起來才有意義。
+
+請從 **Claude Code CLI** 執行此 plugin（或使用 Claude Desktop 內嵌的 Code tab）。同樣的 sandbox 結論在 [`investing-toolkit`](../investing-toolkit/docs/mcp-setup.md) 也有完整文件。
+
+## Background
+
+積読（つんどく）是日文，指買回家卻沒讀、堆在那邊的書。每次新買就多累積一份「擁有但沒被取出的知識」。此 plugin 把這座書山當成起點 — 把已經付過錢的 e-book 隨需取出，轉成 agent 可重複呼叫的方法論。
+
+pipeline 共 4 stage，每段之間以磁碟上的穩定 artifact 隔開，每個 stage 都能獨立重跑：
+
+```
+kobo-auth ──▶ kobo-library ──▶ book-extract ──▶ book-distill
+ (一次)         (日常)            (每本書)         (每本書)
+
+   login  ──▶  EPUB on disk ──▶ chunked .md  ──▶ atomic SKILL.md set
+```
+
+`kobo-*`（綁 Kobo platform）與 `book-*`（與格式無關）的分層是刻意的：未來的同層 sibling 例如 `kindle-*` 或 `apple-books-*` 會排在 `kobo-*` 旁邊，而 `book-extract` / `book-distill` 接受任何來源的 EPUB / Markdown 目錄。
 
 ## Skills
 
-| Skill | Slash command | 何時使用 |
+| Skill | Layer | 角色 |
 |---|---|---|
-| [`kobo-auth`](skills/kobo-auth/SKILL.md) | `/kobo-auth` | 首次設定、登入、帳號移轉、credential 輪替 |
-| [`kobo-library`](skills/kobo-library/SKILL.md) | `/kobo-library` | 日常使用 — 搜尋、列表、批次下載 EPUB |
-| [`book-extract`](skills/book-extract/SKILL.md) | `/book-extract` | 將 EPUB → 依章節切分的 Markdown |
-| [`book-distill`](skills/book-distill/SKILL.md) | `/book-distill` | Markdown → 原子化的 agent skill（透過 RIA-TV++） |
-| (router) | `/tsundoku` | 依意圖自動 route；模糊請求會詢問要走哪一步 |
+| [`tsundoku`](commands/tsundoku.md) | router | 依使用者意圖（login / search / convert / distill）派送到對應 skill |
+| [`kobo-auth`](skills/kobo-auth/SKILL.md) | source-platform（`kobo-*`） | 首次 setup、device-flow 認證、credential 輪換、multi-account |
+| [`kobo-library`](skills/kobo-library/SKILL.md) | source-platform（`kobo-*`） | 以 title / author / series / publication date / category / description text / reading status / language 搜尋 Kobo library，下載挑選的書為 DRM-free EPUB |
+| [`book-extract`](skills/book-extract/SKILL.md) | format-agnostic（`book-*`） | 透過 NCX 驅動的章節切分把 EPUB 轉成逐章 Markdown；CJK 安全 |
+| [`book-distill`](skills/book-distill/SKILL.md) | format-agnostic（`book-*`） | 以 RIA-TV++（Adler 分析閱讀 → 5 個並行 extractor → 三重驗證 → RIA++ render → Zettelkasten linking → 對抗式壓力測試）把 Markdown 蒸餾為 atomic SKILL.md 集 |
 
-命名慣例：
-- **`kobo-*`** — 來源平台層（auth + library）：與 Kobo / kobodl 綁定。未來的
-  `kindle-*` / `apple-books-*` 兄弟 skill 會比照此模式。
-- **`book-*`** — 不分格式的處理層（extract + distill）：可作用於任何 EPUB /
-  任何依章節切分的 Markdown，不論來源。未來的 `paper-distill`（學術論文）
-  或 `transcript-distill`（podcast）會加入此層。
+**命名規則**：`kobo-*` skill 綁定 Kobo platform（auth、library API、kobodl binary）。`book-*` skill 接受任何 EPUB 或 chunked Markdown，不依賴 Kobo。也就是 `book-extract` 與 `book-distill` 對其他來源（手動丟進來的 EPUB、圖書館借閱、public domain）也直接適用。
 
-## Quick Start
+## Quick start
 
-所有流程都從在 Claude Code 內呼叫 slash command 開始。Skill 會處理
-binary 安裝、提示對話、credentials 儲存與 pipeline orchestration —
-不需要直接執行 shell script。
+5 個常見情境。把意圖用自然語言講出來，router skill 會自動派送。
 
-### A. 全新設定（首次登入）
-
-```
-/kobo-auth
-```
-
-或用自然語：「幫我設定 Kobo 登入」。
-
-Skill 會安裝 kobodl binary，引導你完成 device-flow activation
-（開啟 `kobo.com/activate`，詢問 6 位數 code），並以 `chmod 600`
-將 credentials 存到 `~/.tsundoku/kobo/auth/` 底下。
-
-### B. 從既有 kobodl 安裝移轉
-
-```
-/kobo-auth
-```
-
-接著告訴它：「我在 `~/KobodlLibrarySync/config/kobodl.json` 已有
-`kobodl.json`，請 import 進來」。Skill 會 import 既有 credentials，
-跳過 activation flow。
-
-### C. 搜尋與下載
-
-```
-/kobo-library
-```
-
-或：「搜尋我 Kobo 書庫裡提到 behavioral economics、2020 年後出版、尚未讀的書」。
-
-Skill 會 refresh library index、跑 multi-criteria filter、把結果以
-精緻卡片預覽、並把選定的書下載成 DRM-free EPUB 到 `~/Books/kobo/`。
-Idempotent — 已在 disk 上的書會自動跳過。
-
-### D. EPUB → 依章節切分的 Markdown
-
-```
-/book-extract
-```
-
-或：「把這個 EPUB 轉成依章節切分的 Markdown」。
-
-Skill 會在缺 pandoc 時自動安裝、依 EPUB 的 NCX table-of-contents
-切章、剝除圖片與 frontmatter、寫入
-`~/.tsundoku/cache/markdown/<title-slug>-<id8>/`。
-
-### E. Markdown → 原子化 agent skill 集
-
-```
-/book-distill
-```
-
-或：「把這本書蒸餾成可重用的 agent skill」。
-
-Skill 會 bootstrap 工作目錄並執行 6 個 stage 的 RIA-TV++ pipeline：
-
-| Stage | 動作 | 輸出 |
-|---|---|---|
-| 0 | Adler analytical read | `BOOK_OVERVIEW.md` |
-| 1 | 5 個 parallel extractor | `candidates/` |
-| 1.5 | Triple verification | `verified.md`（約 30-50% 通過） |
-| 2 | RIA++ skill render | `<skill-slug>/SKILL.md` |
-| 3 | Zettelkasten linking | `INDEX.md` |
-| 4 | Adversarial pressure test | `test-prompts.json` |
-
-各 section 的內文使用來源語言；YAML metadata + slug 使用英文。
-
-### 不確定該從哪裡開始？
+### A. Router — 「我想用 tsundoku」
 
 ```
 /tsundoku
 ```
 
-Router skill — 描述你的意圖，它會 dispatch 到對應的 sub-skill；
-模糊請求會反問「要走哪一步？」。
+說明 4 stage、問你要從哪一步開始。第一次使用請依 B → C → D → E 順序執行。
 
-## Under the Hood（直接呼叫 script）
+### B. 首次 login（`kobo-auth`）
 
-上面的 slash command 是建議用法。如需 debug、CI scripting 或 power-user
-場景，每個 skill 底層的 script 都可以直接呼叫。Skill 即委派給這些 script：
-
-### Auth (kobo-auth)
-
-```bash
-# 安裝 binary + device-flow activation
-bash tsundoku/skills/kobo-auth/scripts/kobo_install.sh
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh add
-
-# 或 import 既有 credentials
-bash tsundoku/skills/kobo-auth/scripts/kobo_login.sh \
-    import-from ~/KobodlLibrarySync/config/kobodl.json
+```
+/tsundoku-kobo-auth
 ```
 
-### Library (kobo-library)
+skill 會把 kobodl binary 安裝到 `~/.tsundoku/kobo/bin/`，然後**把 device-flow 認證交回你的終端機執行** — kobodl 會印出一組 6 位數驗證碼，需要你到 `https://www.kobo.com/activate` 輸入；若透過 Claude 的 Bash tool 跑，畫面會 buffer 起來、驗證碼在執行中途被 truncate 看不到。Claude 等你回覆「done」之後，再用 `kobo_login.sh status` 確認認證狀態。
+
+如果你已經有現成的 `kobodl.json`：
+
+```
+「把 ~/KobodlLibrarySync/config/kobodl.json 的 kobodl 認證匯入」
+```
+
+### C. 搜尋與下載（`kobo-library`）
+
+```
+/tsundoku-kobo-library
+```
+
+接著用自然語言描述要找的東西。例如：
+
+```
+「找書名有行為經濟學的，最近五年內出版的，我還沒讀過的」
+「Silent Witch 系列全部，整套下載」
+「兩年以上前買的、還沒開始讀的」
+```
+
+skill 會把意圖映射成 `kobo_query.py` filter（title / author / series / publisher / `--description` 在 title + description text 跨欄位關鍵字搜尋 / `--pub-after` / `--purchased-after` / `--status` / `--language` / ...），把比對結果以 table / markdown card / summary 呈現，讓你確認後透過 `kobodl book get` 下載到 `~/Books/kobo/`。
+
+### D. 轉換（`book-extract`）
+
+```
+/tsundoku-book-extract
+```
+
+把 EPUB 路徑丟進來（不一定要是 Kobo 的）。skill 第一次會 install pandoc，parse EPUB 的 NCX（目次）取得正規章節邊界，pre-clean Kobo 特有的 markup（`<span class="koboSpan">`），逐章跑 pandoc，把每章 Markdown 寫到 `~/.tsundoku/cache/markdown/<title-slug>-<id8>/` 底下。
+
+輸出：`index.md`（TOC + 各章 token 估算）+ `metadata.json` + `NN-<chapter>.md` 檔案群。
+
+### E. Distill（`book-distill`）
+
+```
+/tsundoku-book-distill
+```
+
+把 chunked Markdown 透過 **RIA-TV++** pipeline 蒸餾成 atomic skill set：
+
+```
+Stage 0: Adler 分析閱讀                 → BOOK_OVERVIEW.md
+Stage 1: 5 個並行 sub-agent extractor   → frameworks / principles / cases /
+                                            counter-examples / glossary
+Stage 1.5: 三重驗證 filter              → 方法論密度高的書 ~30-50% 通過
+Stage 2: 每個 skill 走 RIA++ render     → SKILL.md（R / I / A1 / A2 / E / B）
+Stage 3: Zettelkasten linking          → INDEX.md + 交叉引用
+Stage 4: 對抗式壓力測試                 → test-prompts.json（lure 必備）
+```
+
+輸出**會適配語言**：原書是日文，產出的 SKILL.md description 與 trigger signal 也會是日文，這樣 Claude 才能對上使用者實際 query 的語言。R 欄位的引用永遠保持原書 verbatim。
+
+## Under the hood
+
+4 個 skill 都是 shell + Python script 的薄層 wrapper。如果你想直接呼叫底層 script 不走 skill 也可以：
 
 ```bash
-source tsundoku/skills/kobo-library/scripts/tsundoku_paths.sh
-export TMPDIR="$TSUNDOKU_TMPDIR"
-mkdir -p "$TSUNDOKU_DOWNLOADS"
+# 載入路徑環境變數（任一 skill 的 scripts/ 都可以 source）
+source ~/.claude/plugins/cache/monkey-skills/tsundoku/0.11.0/skills/kobo-library/scripts/tsundoku_paths.sh
 
-# refresh library index
+# Auth lifecycle
+bash <skill-dir>/kobo-auth/scripts/kobo_install.sh           # 安裝 kobodl
+bash <skill-dir>/kobo-auth/scripts/kobo_login.sh status      # 0=已認證 / 1=未認證 / 3=binary 未安裝
+bash <skill-dir>/kobo-auth/scripts/kobo_login.sh import-from PATH
+
+# Search 與 download
 "$TSUNDOKU_KOBO_BINARY" --config "$TSUNDOKU_KOBO_CONFIG" \
     book list --export-library "$TSUNDOKU_KOBO_LIBRARY_JSON"
-
-# 搜尋（5 種輸出格式：markdown / json / table / ids / paths）
-python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
+python3 <skill-dir>/kobo-library/scripts/kobo_query.py \
     --library "$TSUNDOKU_KOBO_LIBRARY_JSON" \
-    --description "behavioral,economics,行為經濟" \
-    --pub-after 2020 --status ReadyToRead --format markdown
+    --description "行為經濟,behavioral economics" --pub-after 2020 --status ReadyToRead \
+    --format markdown
+bash <skill-dir>/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
 
-# 依 RevisionId 下載（idempotent）
-bash tsundoku/skills/kobo-library/scripts/kobo_get.sh "$REVISION_ID"
+# Extract
+bash <skill-dir>/book-extract/scripts/install_pandoc.sh
+python3 <skill-dir>/book-extract/scripts/epub_to_markdown.py \
+    --epub "$EPUB" --strip-images --strip-frontmatter
 
-# 以 pipe 傳入過濾後的集合
-python3 tsundoku/skills/kobo-library/scripts/kobo_query.py \
-    --library "$TSUNDOKU_KOBO_LIBRARY_JSON" --series "Silent Witch" --format ids \
-  | bash tsundoku/skills/kobo-library/scripts/kobo_get.sh --convert-pdf
+# Distill bootstrap
+bash <skill-dir>/book-distill/scripts/book_distill_init.sh <book-slug-id8>
 ```
 
-### Extract (book-extract)
+這保持 skill 是可稽核的 — 凡是發生的事，讀 script 就能複現。
 
-```bash
-# 一次性確認 pandoc
-bash tsundoku/skills/book-extract/scripts/install_pandoc.sh
+## Storage layout
 
-# 轉檔（預設使用 $TSUNDOKU_MARKDOWN_DIR）
-python3 tsundoku/skills/book-extract/scripts/epub_to_markdown.py \
-    --epub "$EPUB_PATH" --strip-images --strip-frontmatter
-
-# 完成後清 cache
-bash tsundoku/skills/book-extract/scripts/cache_clear.sh
-```
-
-### Distill (book-distill)
-
-```bash
-# 從 extracted markdown 啟動工作目錄
-bash tsundoku/skills/book-distill/scripts/book_distill_init.sh \
-    一九八四-b9152ffe
-# Claude 接著會讀取 book-distill/SKILL.md，跑完 6 個 stage 的 pipeline
-```
-
-## 儲存配置（單一 root，依平台分子目錄）
+單一 root，下面按 platform 分 subdir。未來的 `kindle-*` / `apple-books-*` 會在 `kobo/` 旁邊以同樣方式並列。
 
 ```
-~/.tsundoku/                  ← TSUNDOKU_ROOT
-├── kobo/                       Kobo 平台狀態
-│   ├── auth/                    chmod 700
-│   │   └── kobodl.json          chmod 600（Kobo session credentials）
-│   └── bin/kobodl-macos         14 MB upstream binary
-├── tmp/                        共用的 TMPDIR override（PYI-1270 修正）
-└── cache/                      可重生、可整批清空
-    ├── kobo/library.json        cached library export
-    └── markdown/<book>/...      EPUB → MD（不分平台）
+~/.tsundoku/                       ← TSUNDOKU_ROOT（default）
+├── kobo/                            Kobo platform 狀態
+│   ├── auth/                         chmod 700
+│   │   └── kobodl.json               chmod 600（Kobo session credentials）
+│   └── bin/kobodl-macos              ~14 MB upstream binary
+├── tmp/                             共用 TMPDIR override（PYI-1270 修正）
+└── cache/                           可重新產生、可整批 wipe
+    ├── kobo/library.json             cached library export
+    ├── markdown/<book>/...           EPUB → chunked Markdown（與 platform 無關）
+    └── distilled/<book>/...          book-distill 輸出
 
-~/Books/kobo/                 ← TSUNDOKU_DOWNLOADS（使用者可見的 EPUB）
+~/Books/kobo/                       ← TSUNDOKU_DOWNLOADS（使用者可見的 EPUB）
+├── <author> - <title> <id8>.epub
+└── ...
 ```
 
-未來 `kindle-*` / `apple-books-*` skill 落地後，會比照配置在
-`~/.tsundoku/kindle/`、`~/.tsundoku/cache/kindle/` 等目錄底下。
+`cache/` 子樹是可重新產生的（library 重新 export、EPUB 重新 extract）；`auth/`、`bin/`、`~/Books/kobo/` 不是。
 
-**兩個決策點 env 變數** — 設定這些可重新定位：
+## 環境變數
 
-| Var | 預設 | 用途 |
-|---|---|---|
-| `TSUNDOKU_ROOT` | `~/.tsundoku` | 全部 toolkit 狀態（auth + binary + cache） |
-| `TSUNDOKU_DOWNLOADS` | `~/Books/kobo` | 使用者可見的 EPUB 下載 |
+兩個由你設定的 decision-point 變數，五個由 script 推導的 derived path。在 source `tsundoku_paths.sh` 之前覆寫兩個 root 即可。
 
-**五個衍生路徑**由上面兩個計算得出（不要直接設定）：
+| 變數 | 必須 | Default | 說明 |
+|---|---|---|---|
+| `TSUNDOKU_ROOT` | No | `~/.tsundoku` | auth、binary、cache、tmp 的 root |
+| `TSUNDOKU_DOWNLOADS` | No | `~/Books/kobo` | 使用者可見的 EPUB 下載位置 |
+| `TSUNDOKU_TMPDIR` | derived | `$TSUNDOKU_ROOT/tmp` | TMPDIR override（PyInstaller PYI-1270 修正） |
+| `TSUNDOKU_MARKDOWN_DIR` | derived | `$TSUNDOKU_ROOT/cache/markdown` | EPUB → Markdown 輸出 root |
+| `TSUNDOKU_KOBO_CONFIG` | derived | `$TSUNDOKU_ROOT/kobo/auth/kobodl.json` | Kobo session credentials |
+| `TSUNDOKU_KOBO_BINARY` | derived | `$TSUNDOKU_ROOT/kobo/bin/kobodl-macos` | kobodl CLI binary |
+| `TSUNDOKU_KOBO_LIBRARY_JSON` | derived | `$TSUNDOKU_ROOT/cache/kobo/library.json` | `book list --export-library` 的 cache |
 
-| Var | 範圍 |
-|---|---|
-| `TSUNDOKU_TMPDIR` | 共用 |
-| `TSUNDOKU_MARKDOWN_DIR` | 共用（cache/markdown） |
-| `TSUNDOKU_KOBO_CONFIG` | Kobo：kobodl.json |
-| `TSUNDOKU_KOBO_BINARY` | Kobo：kobodl-macos |
-| `TSUNDOKU_KOBO_LIBRARY_JSON` | Kobo：library export |
+請不要直接設 derived 變數 — 改 `TSUNDOKU_ROOT` 才是正確做法。
 
-source 任一 skill 的 `scripts/tsundoku_paths.sh` 時都會 export 這些變數。
-
-`kobo/auth/` 子目錄是 `chmod 700`，`kobodl.json` 檔案是 `chmod 600`。
-`cache/` 子樹可重生 — 任何時候都能透過
-`book-extract/scripts/cache_clear.sh` 清空。
-
-## 儲存庫結構
+## Repository 結構
 
 ```
 tsundoku/
-├── .claude-plugin/plugin.json
+├── .claude-plugin/
+│   └── plugin.json
+├── commands/                          slash-command 介面
+│   ├── tsundoku.md                     router
+│   ├── kobo-auth.md
+│   ├── kobo-library.md
+│   ├── book-extract.md
+│   └── book-distill.md
+├── skills/
+│   ├── kobo-auth/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── tsundoku_paths.sh       共用 path resolver（複本）
+│   │       ├── kobo_install.sh         下載 kobodl binary
+│   │       └── kobo_login.sh           subcommand router（status / add / remove / import-from / path）
+│   ├── kobo-library/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── tsundoku_paths.sh       共用 path resolver（複本）
+│   │       ├── kobo_query.py           library JSON 的 filter + format
+│   │       └── kobo_get.sh             以 RevisionId 下載，冪等
+│   ├── book-extract/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── install_pandoc.sh       brew → standalone fallback
+│   │       ├── epub_to_markdown.py     NCX 驅動章節切分 + pandoc
+│   │       └── cache_clear.sh          清除 markdown / library cache
+│   └── book-distill/
+│       ├── SKILL.md
+│       ├── ATTRIBUTION.md              cangjie-skill / nuwa-skill / Adler / RIA / Munger
+│       ├── methodology/                  各 stage 設計依據
+│       │   ├── 00-overview.md
+│       │   ├── 01-stage0-adler.md
+│       │   ├── 02-stage1-parallel-extract.md
+│       │   ├── 03-stage1.5-triple-verify.md
+│       │   ├── 04-stage2-ria-plus.md
+│       │   ├── 05-stage3-zettelkasten.md
+│       │   └── 06-stage4-pressure-test.md
+│       ├── extractors/                   5 個並行 sub-agent prompt
+│       │   ├── framework-extractor.md
+│       │   ├── principle-extractor.md
+│       │   ├── case-extractor.md
+│       │   ├── counter-example-extractor.md
+│       │   └── glossary-extractor.md
+│       ├── templates/
+│       └── scripts/
+│           └── book_distill_init.sh
 ├── README.md
-├── commands/                    # slash command（與 skill 1:1 + 1 個 router）
-│   ├── tsundoku.md              #   /tsundoku（router）
-│   ├── kobo-auth.md             #   /kobo-auth
-│   ├── kobo-library.md          #   /kobo-library
-│   ├── book-extract.md          #   /book-extract
-│   └── book-distill.md          #   /book-distill
-└── skills/
-    ├── kobo-auth/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── kobo_install.sh    # binary 下載（idempotent）
-    │       └── kobo_login.sh      # add / status / remove / import-from / path
-    ├── kobo-library/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── kobo_query.py      # 過濾 --export-library JSON、5 種輸出格式
-    │       └── kobo_get.sh        # 依 RevisionId 下載（args 或 stdin）
-    ├── book-extract/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       ├── install_pandoc.sh     # brew → standalone fallback
-    │       ├── epub_to_markdown.py   # NCX 驅動章節切分 + pandoc + 清理
-    │       └── cache_clear.sh   # 清除 extracted markdown / library cache
-    └── book-distill/                 # RIA-TV++ pipeline（fork 自 cangjie-skill，MIT）
-        ├── SKILL.md                  # 頂層 orchestrator
-        ├── ATTRIBUTION.md             # upstream credits + license
-        ├── methodology/              # 7 個檔案：00-overview + 01-06 各 stage 詳解
-        ├── extractors/               # 5 個 parallel sub-agent prompt
-        │   ├── framework-extractor.md
-        │   ├── principle-extractor.md
-        │   ├── case-extractor.md
-        │   ├── counter-example-extractor.md
-        │   └── glossary-extractor.md
-        ├── templates/                # BOOK_OVERVIEW / SKILL / INDEX / test-prompts
-        └── scripts/
-            └── book_distill_init.sh  # 從 book-extract 輸出啟動 distill 目錄
+├── README.ja.md
+└── README.zh-TW.md
 ```
 
 ## 系統需求
 
-- macOS 或 Linux（kobodl 出貨 macOS binary 並自動安裝；Linux 使用者可
-  `pipx install kobodl` 並 override `TSUNDOKU_KOBO_BINARY`）
-- Python 3.9+（query / extract scripts 只用 stdlib）
-- 至少有一本已購書的 Kobo 帳號
-- 選用：pandoc（給 `book-extract` 用 — 透過 brew 或 GitHub release standalone
-  自動安裝；如已安裝則 no-op）
-- 選用：[Calibre][calibre] 用於 EPUB → PDF 轉檔
+| 項目 | 備註 |
+|---|---|
+| **macOS** 或 **Linux** | `kobo-*` skill 內附 macOS 用 kobodl binary；Linux 使用者請 `pipx install kobodl` 並覆寫 `TSUNDOKU_KOBO_BINARY`。`book-*` skill 與 platform 無關。 |
+| **Python 3.9+** | 只用 stdlib，沒有額外套件需求 |
+| 有購書的 **Kobo account** | `kobo-auth` / `kobo-library` 需要。Trial / KoboPlus 來的書也可。 |
+| **pandoc** | 由 `book-extract/scripts/install_pandoc.sh` 自動安裝（先試 Homebrew，失敗 fallback 到 GitHub release 的 standalone binary） |
+| **Calibre**（選用） | 只在使用 `kobo_get.sh --convert-pdf` 時才需要。如果你想連 PDF 一起產出，請另外安裝。 |
 
-[calibre]: https://calibre-ebook.com/download_osx
+完整 end-to-end 流程需要 Claude Code CLI；Cowork tab 不能用 — 請見 [Cowork 相容性](#cowork-相容性)。
 
-## 安全性
+## Security
 
-- `kobodl.json` 內含你的 **Kobo session credentials** — 等同密碼。
-  絕不 commit、不貼到聊天、不上傳
-- `kobo_login.sh` 在每次觸碰該檔的操作後都會強制 `chmod 600`
-- 撤銷 session 的方法：刪除 `kobodl.json`，並造訪 Kobo 的
-  [Authorized Devices](https://www.kobo.com/account/devices) 頁面
-- 共用機器上請使用獨立的 macOS 使用者帳號
+`kobodl.json` 等同你的 Kobo session token，**請當成密碼處理**。
 
-## 注意事項
+| 控制 | 由誰強制 | 備註 |
+|---|---|---|
+| `~/.tsundoku/kobo/auth/` 設 `chmod 700` | 每次寫入時由 `kobo_login.sh` 強制 | 僅擁有者可進入 |
+| `kobodl.json` 設 `chmod 600` | `add` 與 `import-from` 完成後 `kobo_login.sh` 強制 | 僅擁有者可讀寫 |
+| `import-from` 覆寫前先備份 | `kobo_login.sh` | 留下 `kobodl.json.bak.<timestamp>` |
+| Multi-user scope 限制 | 所有 command 都接受 `-u EMAIL` flag | 當 `kobodl.json` 內有多個 account 時 |
 
-- `book wishlist` 子指令目前在 upstream 損壞（kobodl 0.10.x）；只支援
-  `book list`
-- `Description` 欄位被 Kobo 的 API 限制在 500 字元（出版社 ONIX copy，
-  不是 synopsis）
-- macOS 會自動安裝預先建構的 kobodl binary；Linux/Windows 使用者請以
-  `pipx install kobodl` 安裝 kobodl，並在 source `tsundoku_paths.sh` 後
-  override `TSUNDOKU_KOBO_BINARY`
+**不要** commit `kobodl.json`、不要貼到 chat、不要上傳到 cloud。如果不慎外洩或想輪換，請登入 Kobo 並到 <https://www.kobo.com/account/devices> 把對應的 device entry 撤銷 — 只刪本機檔案不會讓 upstream 的 token 失效。
 
-## 由來
+## Notes
 
-把 [`kobodl-library-sync.sh`][ancestor] 單檔 shell script 一般化為一套
-search-first 的 toolkit，並把 auth、runtime、extraction 適當切分；提供
-metadata-rich query；產出供 LLM ingest 的依章節切分 Markdown；並把所有
-資料統一收在 `~/.tsundoku/` 單一 root 底下。
+- **kobodl 的 bug**：`book wishlist` 在 kobodl 0.10.x 是壞的，本 plugin 不使用。Removed books（`IsRemoved=True`）下載常失敗，預設會從 query 結果排除。
+- **Description 上限**：Kobo API 把 `Description` 截在 500 字、以 HTML 回傳。`kobo_query.py` 在比對與輸出時會 strip HTML。請把 description 視為 ONIX 的行銷文案，不是真正的 synopsis。
+- **OS 支援**：實測過的 path 是 macOS。Linux 可用 `pipx install kobodl` 加上手動覆寫 `TSUNDOKU_KOBO_BINARY`。Windows 沒測過 — PR 歡迎。
+- **Furigana**：pandoc 預設會把 `<rt>` 內容 drop 掉，所以 EPUB → Markdown 過程中日文振り仮名會遺失。如需保留請參考 [`waldeir/pandoc-filter-furigana`](https://github.com/waldeir/pandoc-filter-furigana)。
 
-[ancestor]: https://github.com/kouko/kobodl-library-sync
+## Lineage
+
+- `kobo-auth` + `kobo-library` 是從早期的 shell-script sync tool（`kobodl-library-sync.sh`、`~/KobodlLibrarySync/` 舊目錄）fork 出來的。`import-from` subcommand 就是為了讓舊 tool 使用者可以平順遷移。
+- `book-distill` 是 [`kangarooking/cangjie-skill`（蒼頡-skill）](https://github.com/kangarooking/cangjie-skill)（MIT，2026）的 fork，做了完整的英譯、語言適配輸出、自動讀取 `book-extract` 輸出的 entry contract。其中 Triple Verification filter 本身又是從 [`alchaincyf/nuwa-skill`](https://github.com/alchaincyf/nuwa-skill) adapt 來的。完整 credit chain（Adler / Luhmann / 趙周 RIA / Forte / Munger）請見 [`skills/book-distill/ATTRIBUTION.md`](skills/book-distill/ATTRIBUTION.md)。
+- `kobodl` 本身是 [`subdavis/kobo-book-downloader`](https://github.com/subdavis/kobo-book-downloader)。本 plugin 只是 orchestrate 它。
+
+## Install
+
+在 Claude Code CLI 內：
+
+```bash
+/plugin marketplace add kouko/monkey-skills
+/plugin install tsundoku
+```
+
+呼叫 router 確認可用：
+
+```
+/tsundoku
+```
+
+接著執行 `/tsundoku-kobo-auth` 完成 Kobo login。
+
+## Contributing
+
+- **問題回報**：請到 <https://github.com/kouko/monkey-skills/issues> 開 issue。
+- **PR**：請以 `main` 為 target，使用 Conventional Commits。skill 內容更動（特別是 `book-distill` 的 methodology）請在 commit body 附上 primary source citation。
+- **Cowork 相關問題**：請先讀 [Cowork 相容性](#cowork-相容性)；幾乎可以肯定是已被文件化的 sandbox 限制，不是 plugin 的 bug。
+
+## License
+
+MIT — 詳見 repository root 的 [LICENSE](../LICENSE)。
+
+`book-distill` 另外保留 upstream cangjie-skill architecture 的 `Copyright (c) 2026 kangarooking`；請見 [`skills/book-distill/ATTRIBUTION.md`](skills/book-distill/ATTRIBUTION.md)。

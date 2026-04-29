@@ -2,86 +2,208 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> ⚠️ **Cowork compatibility**: Most skills work in all environments. The `defuddle` skill needs Claude Code CLI — Cowork sandbox blocks plugin subprocesses from external HTTP. Other skills (vault management, daily notes, diagrams, canvas, dashboard, file-intel) are Cowork-compatible. See [`../investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md) for the full retrospective.
+> Obsidian vault workflows — daily notes, markdown, Bases, diagrams, Canvas, file intel, vault management, and dashboard design, packaged as a Claude Code plugin.
 
-**Version**: 3.5.0
-**Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
+## ⚠️ Cowork compatibility
 
-Obsidian vault workflows — daily notes, visual tools, file intelligence,
-dashboard design. Combines original skills with MIT-licensed imports from
-the Obsidian community (kepano / axtonliu).
+Most skills in this plugin are Cowork-compatible. The `defuddle` skill is the
+exception — it shells out to the [Defuddle CLI](https://github.com/kepano/defuddle)
+to fetch and clean external URLs, which Cowork's sandbox URL allowlist blocks.
+Use Claude Code CLI for `defuddle`. The same pattern is documented in
+[`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md):
+plugin-installed subprocesses run inside the same sandbox as plugin MCPs, so
+both paths get blocked equally on Cowork.
 
-## Router + Agent
+| Skill | Cowork | Claude Code CLI |
+|---|---|---|
+| `defuddle` | Blocked (URL fetch) | Works |
+| All other obsidian skills | Works | Works |
 
-| Type | Name | Role |
-|------|------|------|
-| Skill | `using-obsidian` | Entry point — routes vault tasks to the right skill |
-| Agent | `obsidian-vault-organizer` | Vault cleanup and organization (haiku) |
+## Version
 
-## Original skills (this project)
+3.5.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
 
-| Skill | Slash cmd | Role |
-|-------|-----------|------|
-| `obsidian-daily` | `/obsidian` | Start the day — daily note, priorities |
-| `obsidian-vault-setup` | — | Interactive vault configurator |
-| `obsidian-tldr` | — | Save conversation summary to vault |
-| `obsidian-file-intel` | — | Extract file content (PDF/PPTX/XLSX/DOCX/etc.) into Obsidian notes |
-| `dashboard-design` | — | Dashboard design workflow |
+## Part of
 
-## Imported from Steph Ango (kepano) — MIT
+This plugin is part of [`monkey-skills`](https://github.com/kouko/monkey-skills),
+a marketplace of Claude Code plugins for daily knowledge work, investing,
+copywriting, and skill development.
+
+## Background
+
+Obsidian is a local-first markdown knowledge base. Day-to-day vault work
+involves many small, repetitive tasks: opening today's daily note, sweeping the
+inbox, writing valid Bases YAML, drawing a Mermaid diagram inside a note,
+importing a folder of PDFs as summarized notes, and saving a conversation
+summary at the end of the session.
+
+This plugin packages those tasks as skills that Claude Code can dispatch on
+intent. Original skills cover the daily workflow, file intel, dashboard
+design, vault setup, and conversation summary. Imported skills cover
+Obsidian-specific markdown, Bases, the Obsidian CLI, Defuddle web extraction,
+Canvas authoring, Excalidraw diagrams, and Mermaid diagrams.
+
+## Router and agent
+
+### Router
+
+`using-obsidian` is the entry skill. It routes intent to the right skill based
+on what the user asks for — daily notes, vault setup, file processing,
+diagrams, or cleanup.
+
+The slash command `/obsidian` invokes `using-obsidian`.
+
+### Agent
+
+`obsidian-vault-organizer` is a vault-maintenance agent for periodic hygiene:
+sorting `inbox/`, fixing broken wikilinks, normalizing frontmatter, flagging
+duplicates, and standardizing tags. It never deletes files — only moves or
+edits — and asks before reorganizing when the destination is ambiguous.
+
+## Skills
+
+### Original skills (this project)
+
+| Skill | Purpose |
+|---|---|
+| `using-obsidian` | Router — routes vault-workflow intent to the right skill. |
+| `obsidian-daily` | Read or create today's daily note, sweep `inbox/`, surface the top 3 priorities. |
+| `obsidian-vault-setup` | Interactive first-time vault configurator — infers role and scope from free-text answers. |
+| `obsidian-tldr` | Save a conversation summary to the vault and update `memory.md`. |
+| `obsidian-file-intel` | Extract content from PDF / PPTX / XLSX / DOCX / CSV / JSON via Gemini and produce Obsidian-ready summaries. |
+| `dashboard-design` | Guide dashboard design from requirements to layout, grounded in Japan Digital Agency dashboard guidelines. |
+
+### Imported from kepano (Steph Ango)
 
 Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
+— MIT, Copyright (c) 2026 Steph Ango.
 
-| Skill | Role |
-|-------|------|
-| `defuddle` | Extract clean markdown from web pages (removes clutter) |
-| `obsidian-bases` | Create and edit Obsidian Bases (.base files) |
-| `obsidian-cli` | Interact with vaults via Obsidian CLI |
-| `obsidian-markdown` | Obsidian-flavored Markdown (wikilinks, embeds, callouts, properties) |
+| Skill | Purpose |
+|---|---|
+| `obsidian-markdown` | Author Obsidian Flavored Markdown — wikilinks, embeds, callouts, properties, comments. |
+| `obsidian-bases` | Create and edit `.base` files with views, filters, formulas, and summaries. |
+| `obsidian-cli` | Drive a running Obsidian instance via the official CLI — read, create, search, plugin and theme dev. |
+| `defuddle` | Extract clean markdown from web pages via Defuddle CLI (token-saving alternative to WebFetch). |
 
-## Imported from Axton Liu (axtonliu) — MIT
+### Imported from axtonliu (Axton Liu)
 
 Upstream: [`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu/axton-obsidian-visual-skills)
+— MIT, Copyright (c) 2025 Axton Liu.
 
-| Skill | Role |
-|-------|------|
-| `obsidian-canvas-creator` | Create Canvas files (MindMap / freeform layouts) — combines axtonliu base with kepano's json-canvas |
-| `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams (mind maps, animated flowcharts) |
-| `obsidian-mermaid-visualizer` | Create Mermaid diagrams — 17 types covering flowcharts, sequence / state / class / ER / C4 / git-branch, charts, schedules, architecture / block diagrams |
+| Skill | Purpose |
+|---|---|
+| `obsidian-canvas-creator` | Create Obsidian Canvas files with MindMap or freeform layouts. (Combined with json-canvas integration from kepano.) |
+| `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams in Obsidian / Standard / Animated formats. |
+| `obsidian-mermaid-visualizer` | 17 Mermaid diagram types — flow, data-viz, structural, time — optimized for Obsidian 11.4.1, portable to GitHub / Notion / HackMD. |
 
-13 skills total + 1 agent + 1 slash command.
+## Install
 
-## Repository Structure
+```bash
+# Inside Claude Code (CLI)
+/plugin marketplace add kouko/monkey-skills
+/plugin install obsidian
+```
+
+The `defuddle` skill needs the Defuddle CLI:
+
+```bash
+npm install -g defuddle
+```
+
+The `obsidian-cli` skill needs the official Obsidian CLI and a running
+Obsidian instance — see [help.obsidian.md/cli](https://help.obsidian.md/cli).
+
+The `obsidian-file-intel` skill needs the bundled
+`scripts/process_files_with_gemini.py` and a Gemini API key configured in your
+vault.
+
+## Usage
+
+Start the day:
+
+```
+/obsidian
+> Start my day
+```
+
+`using-obsidian` routes to `obsidian-daily`, which reads or creates
+`daily/YYYY-MM-DD.md`, lists `inbox/` items, and surfaces the top 3
+priorities.
+
+Save a conversation summary at the end of the session:
+
+```
+> Save a TLDR of this conversation
+```
+
+`using-obsidian` routes to `obsidian-tldr`, which writes a markdown summary
+into the relevant folder and updates `memory.md`.
+
+Draw a diagram inside a note:
+
+```
+> Make a Mermaid sequence diagram of the OAuth device flow
+```
+
+`using-obsidian` routes to `obsidian-mermaid-visualizer`, which picks the
+sequence diagram type, applies Obsidian 11.4.1 quirks, and emits a
+` ```mermaid ` block.
+
+## Repository structure
 
 ```
 obsidian/
-├── .claude-plugin/plugin.json
+├── .claude-plugin/
+│   └── plugin.json              # plugin metadata, version 3.5.0
 ├── agents/
-│   └── obsidian-vault-organizer.md  ← haiku
+│   └── obsidian-vault-organizer.md  # vault hygiene agent
 ├── commands/
-│   └── obsidian.md                  ← /obsidian
-└── skills/
-    ├── README.md                    ← Skill attribution table
-    ├── using-obsidian/              ← Router
-    ├── obsidian-daily/
-    ├── obsidian-vault-setup/
-    ├── obsidian-tldr/
-    ├── obsidian-file-intel/
-    ├── dashboard-design/
-    ├── defuddle/                    ← 3rd-party (kepano, MIT)
-    ├── obsidian-bases/              ← 3rd-party (kepano, MIT)
-    ├── obsidian-cli/                ← 3rd-party (kepano, MIT)
-    ├── obsidian-markdown/           ← 3rd-party (kepano, MIT)
-    ├── obsidian-canvas-creator/     ← 3rd-party (axtonliu + kepano, MIT)
-    ├── obsidian-excalidraw-diagram/ ← 3rd-party (axtonliu, MIT)
-    └── obsidian-mermaid-visualizer/ ← 3rd-party (axtonliu, MIT)
+│   └── obsidian.md              # /obsidian → using-obsidian
+├── skills/
+│   ├── README.md                # per-skill attribution table
+│   ├── using-obsidian/          # router (original)
+│   ├── obsidian-daily/          # daily workflow (original)
+│   ├── obsidian-vault-setup/    # vault configurator (original)
+│   ├── obsidian-tldr/           # conversation summary (original)
+│   ├── obsidian-file-intel/     # file → Obsidian summaries (original)
+│   ├── dashboard-design/        # dashboard design (original)
+│   ├── obsidian-markdown/       # imported from kepano
+│   ├── obsidian-bases/          # imported from kepano
+│   ├── obsidian-cli/            # imported from kepano
+│   ├── defuddle/                # imported from kepano
+│   ├── obsidian-canvas-creator/ # imported from axtonliu
+│   ├── obsidian-excalidraw-diagram/ # imported from axtonliu
+│   └── obsidian-mermaid-visualizer/ # imported from axtonliu
+├── README.md
+├── README.ja.md
+└── README.zh-TW.md
 ```
 
-Per-skill attribution table: [`skills/README.md`](skills/README.md).
-Repo-wide attribution with upstream URLs + modification summaries:
-[`../ATTRIBUTION.md`](../ATTRIBUTION.md).
+Per-skill attribution lives in [`skills/README.md`](skills/README.md).
+Repo-wide attribution lives in [`../ATTRIBUTION.md`](../ATTRIBUTION.md).
+
+## Contributing
+
+- Bug reports and feature requests: open an issue at
+  [github.com/kouko/monkey-skills/issues](https://github.com/kouko/monkey-skills/issues).
+- Pull requests welcome. Match the existing skill structure (frontmatter +
+  workflow + reference files) and use Conventional Commits.
+- For imported skills, upstream changes flow from kepano and axtonliu; please
+  also consider opening upstream PRs when fixes apply there.
 
 ## License
 
-MIT — see repository root [`LICENSE`](../LICENSE). Third-party components
-retain their original copyright notices (Steph Ango, Axton Liu).
+MIT — see [LICENSE](../LICENSE) at the repository root.
+
+Imported skills retain their original copyright notices in each skill's
+`LICENSE` file:
+
+- `defuddle`, `obsidian-bases`, `obsidian-cli`, `obsidian-markdown` — MIT,
+  Copyright (c) 2026 Steph Ango. See the per-skill `LICENSE`.
+- `obsidian-canvas-creator`, `obsidian-excalidraw-diagram`,
+  `obsidian-mermaid-visualizer` — MIT, Copyright (c) 2025 Axton Liu. See the
+  per-skill `LICENSE`. (`obsidian-canvas-creator` also bundles json-canvas
+  integration from kepano.)
+
+See [LICENSE](../LICENSE) for the overall project license, and
+[ATTRIBUTION.md](../ATTRIBUTION.md) for the full third-party component map.
