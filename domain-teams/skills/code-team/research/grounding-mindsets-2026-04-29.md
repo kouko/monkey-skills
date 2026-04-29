@@ -2,7 +2,7 @@
 title: code-team mindset standards 研究 — Hickey / Brooks / Moseley & Marks / Willison
 date: 2026-04-29
 team: code-team
-refactor_version: v5.4.1
+refactor_version: v5.5.0
 tags:
   - research
   - domain-teams
@@ -208,6 +208,6 @@ dev-workflow:complexity-critique skill
   on-demand reference）
 - ☐ Commit 2: `code-team/standards/refactoring-standard.md` 加 cross-link
   到 4 個 mindsets
-- ☐ Commit 3: `domain-teams/.claude-plugin/plugin.json` 5.4.0 → 5.4.1
+- ☐ Commit 3: `domain-teams/.claude-plugin/plugin.json` 5.4.0 → 5.5.0
 - ☐ Commit 4-6: dev-workflow `complexity-critique` skill 跨 plugin
   delegation

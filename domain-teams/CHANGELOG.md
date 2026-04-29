@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.0] — 2026-04-29
+
+### Context
+
+`code-team` gains 4 *philosophical mindset* standards alongside the
+existing 7 *mechanical* standards (Clean Code naming, Pragmatic
+principles, SOLID, TDD, Refactoring, OWASP ASVS, character-encoding
+security). The mindsets are design-time anchors for non-mechanical
+judgment calls — "should we add this at all", "is this complexity
+essential", "what's the smallest result" — that the mechanical
+standards do not directly speak to.
+
+Curation lineage: selection range and philosophical position adapted
+from `softaworks/agent-toolkit/skills/reducing-entropy` (MIT, fork of
+`@joshuadavidthomas/agent-skills`), but mindset bodies rewritten to
+cite primary sources directly (Hickey talks, Perlis 1982 epigram,
+Moseley & Marks 2006 paper, Ousterhout 2018 book, Willison 2021 blog
+post chain), per `skill-team/standards/grounding-principle.md` rules
+on primary-source anchoring. Full lineage and citation verification
+in `domain-teams/skills/code-team/research/grounding-mindsets-2026-04-29.md`.
+
+### Added (code-team)
+
+- `standards/mindset-data-over-abstractions.md` — Perlis Epigram #9
+  ("100 functions on 1 data structure > 10 functions on 10");
+  Hickey *Value of Values*; Fabian *Data-Oriented Design*; Acton
+  CppCon 2014. Anchors design-time decisions to "prefer generic
+  data + free functions over custom types".
+- `standards/mindset-design-is-taking-apart.md` — Hickey *Simple
+  Made Easy* (the *complect* / *compose* distinction); Moseley &
+  Marks *Out of the Tar Pit* (essential vs accidental complexity);
+  Ousterhout *A Philosophy of Software Design* 2nd ed (deep modules
+  vs shallow modules); Brooks *No Silver Bullet*. Anchors design as
+  *separation* not *addition*.
+- `standards/mindset-expensive-to-add-later.md` (PAGNI) — Willison
+  2021 PAGNI post; Plant 2021 YAGNI Exceptions; Kaplan-Moss 2021
+  AppSec PAGNIs; Fowler bliki Yagni. The named dual to YAGNI for
+  the small set of cases where retrofit is dramatically more
+  expensive (timestamps, audit, API versioning, security
+  fundamentals).
+- `standards/mindset-simplicity-vs-easy.md` — Hickey *Simple Made
+  Easy* (etymology: *simple* = "one fold", *easy* = "near at hand");
+  Hickey *Value of Values*; Moseley & Marks *Out of the Tar Pit*.
+  Anchors the discipline of choosing simple over easy when they
+  disagree.
+- `research/grounding-mindsets-2026-04-29.md` — citation verification
+  per mindset, curation lineage from upstream MIT skill, and
+  skill-team `grounding-principle.md` compliance check (4/5 rules
+  green; PAGNI documented as practitioner-coined neologism exception
+  parallel to Hickey's "complect").
+
+### Changed (code-team)
+
+- `SKILL.md` — new *On-demand mindsets* sub-section under Resource
+  Manifest. Mindsets are explicitly NOT in worker/evaluator default
+  standards list to keep token budget bounded; they are reference
+  vocabulary loaded by `protocols/code-brainstorming.md` and
+  `protocols/refactoring.md` when design judgment warrants.
+- `standards/refactoring-standard.md` — new *Mindsets* sub-section
+  under Cross-References naming when each mindset's question
+  applies during a refactor decision. Explicit "not gates" framing
+  — the standard remains authoritative for refactor mechanics
+  (behavior preservation, Two Hats, Bad Smells); mindsets clarify
+  *which* refactor is worth doing.
+
+### Cross-plugin downstream
+
+`dev-workflow:complexity-critique` (added in dev-workflow v1.5.0)
+references the 4 mindsets as design-time philosophical anchors via
+the Cross-Plugin Delegation Contract (paths only, no content
+duplication). Mindsets remain a single source of truth in code-team.
+
+### Bump rationale
+
+Minor (5.4.0 → 5.5.0): new mindset standards within an existing
+skill, no breaking change to existing standards / protocols / gates.
+
 ## [5.4.0] — 2026-04-29
 
 ### Context
