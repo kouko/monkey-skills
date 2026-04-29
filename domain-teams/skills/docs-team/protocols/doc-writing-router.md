@@ -18,7 +18,55 @@ type. Routes to exactly one downstream protocol.
   router and invoke the mode-specific protocol directly
 - Codebase assessment workflows — use `codebase-assessment.md` instead
 
+## Phase 0: Mode Selection (Full vs Quick)
+
+Before classifying the request, decide whether full or quick mode applies.
+
+### Quick mode triggers
+
+Use quick mode if **any** of:
+
+- User says: "quick", "draft", "rough", "簡單", "草稿", "ざっくり", "ラフ"
+- User explicitly requests: `--quick`, `quick mode`, `cost-saving`
+- Target file is in a personal vault / scratch directory
+- Iteration on an existing doc the user is actively editing (small touch-up)
+
+### Quick mode hard block
+
+Refuse quick mode (use full mode and explain) if **any** of:
+
+| Artifact / Signal | Reason |
+|-------------------|--------|
+| Target is an **ADR** | Decisions are immutable; structure errors are unrecoverable |
+| Target is an **API reference** | Reader contract requires mechanical consistency |
+| Target is a **public-facing release README** or **architecture document** | First-impression / contract artifacts need gate audit trail |
+| User states: "production", "for clients", "team review", "release" | Stated stakes |
+
+### Routing decision
+
+- Quick mode triggers + not blocked → hand off to `protocols/quick-write.md`
+- Otherwise → continue to Phase 1 below for full-mode classification
+
 ## Phase 1: Classify the Request
+
+### Ambiguity Fallback (run first)
+
+If the user request is too vague to map to a quadrant — e.g. "write me
+docs", "document this", "幫我寫 docs"、"ドキュメント書いて" — **do not
+default to a quadrant.** Ask 2-3 bootstrap questions before classifying:
+
+1. **What is the artifact type?** (README / tutorial / how-to / reference /
+   API reference / ADR / architecture doc / explanation)
+2. **Who is the reader?** (beginner / contributor / API consumer / operator /
+   maintainer)
+3. **What is the source of truth?** (existing code / running system / spec
+   document / decision being made now)
+
+Wait for at least artifact type + reader before proceeding to classification.
+If the user has not specified mode after answering, use the table below;
+classification rules apply once enough signal is present.
+
+### Classification
 
 Read the user request and ask: **what does the reader need?**
 
@@ -30,7 +78,8 @@ Read the user request and ask: **what does the reader need?**
 | "Help me understand why this exists / how it works" | Explanation | `write-explanation.md` |
 | "I need a README for this project" | Composite | `write-readme.md` |
 | "We need to record this architectural decision" | ADR | `write-adr.md` |
-| "Document this API" | Reference sub-case | `write-reference.md` + `api-reference-structure.md` |
+| "Document this API" / HTTP / GraphQL / library API | Reference sub-case | `write-api-reference.md` (specialization of `write-reference.md`) |
+| "Document the system architecture" / "component spec" / "data flow" / "deployment topology" / "security model" | Architecture | `write-architecture.md` + `architecture-doc-structure.md` |
 
 If the request genuinely needs multiple modes (e.g., "write tutorial and reference
 for feature X"), **split into separate invocations** — one per mode. Do not try
@@ -54,6 +103,9 @@ Invoke the selected downstream protocol with a context summary:
 ### Selected Mode
 {tutorial | how-to | reference | explanation | composite-readme | adr | api-reference}
 
+### Execution Mode
+{full | quick}  # from Phase 0
+
 ### Reader Profile
 - Audience: {beginner | competent | expert}
 - Prior knowledge: {what they already know}
@@ -73,8 +125,11 @@ Invoke the selected downstream protocol with a context summary:
   into multiple workflows.
 - **No content writing in the router.** This protocol selects; it does not
   write. Content writing happens in the downstream protocol.
-- **Default to Explanation if unclear** — most ambiguous requests are about
-  understanding, and Explanation is the easiest mode to re-classify later.
+- **Do NOT default to Explanation when the request is fully ambiguous.**
+  The Phase 1 Ambiguity Fallback handles this case by asking bootstrap
+  questions. Defaulting silently produces docs the user did not ask for.
+  Only default to Explanation when the request is partially clear (topic
+  known, mode unclear) — never when both are unclear.
 - **Cite the reasoning.** When handing off, include a one-sentence rationale
   for why this mode was selected.
 

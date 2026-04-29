@@ -6,6 +6,7 @@ a concrete goal.
 
 **Vocabulary reference**: `standards/diataxis-taxonomy.md` §How-to Guide
 **Style reference**: `standards/style-conventions.md`
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
 
 ## How-to vs Other Modes
 
@@ -154,6 +155,79 @@ mode: how-to
 
 {Common failures and fixes, scoped to this goal}
 ```
+
+## Example
+
+```markdown
+---
+title: How to rotate an API key without downtime
+last_reviewed: 2026-04-29
+applies_to: v3.x
+owner: platform
+mode: how-to
+---
+
+# How to rotate an API key without downtime
+
+This guide shows you how to rotate a production API key while keeping all
+services running.
+
+## Before you begin
+
+- Required access: admin console, kubectl access to the production cluster
+- Required tools: `myapp-cli` v3.2 or later
+- Required knowledge: see the [Authentication concepts](../explanation/auth.md)
+  if API keys are unfamiliar
+- Required state: existing API key visible in the admin console
+
+## Steps
+
+1. **Generate the new key** in the admin console:
+   `Settings → API keys → Create new`. Copy the value.
+
+2. **Add the new key to the application**, alongside the old one. Two
+   keys can be active simultaneously during rotation:
+
+   ​```bash
+   myapp-cli secrets set api_key_secondary "<new-key>"
+   ​```
+
+3. **Roll the deployment** so all pods read the new secret:
+
+   ​```bash
+   kubectl rollout restart deployment/myapp -n production
+   ​```
+
+4. **Switch the primary key** in the admin console:
+   `Settings → API keys → Promote secondary to primary`.
+
+5. **Wait 60 seconds**, then revoke the old key in the admin console.
+
+## Verify the result
+
+Send a test request with the old key. It should return 401 Unauthorized:
+
+```bash
+curl -H "Authorization: Bearer <old-key>" https://api.example.com/v1/health
+# Expected: HTTP/1.1 401 Unauthorized
+```
+
+Send a test request with the new key. It should return 200 OK.
+
+## Troubleshooting
+
+**Old key still works after revocation**
+Cache propagation takes up to 60 seconds. Wait and retry.
+
+**New key returns 403 instead of 200**
+The new key has fewer permissions than the old one. Check role assignment
+in `Settings → API keys → <key> → Permissions`.
+```
+
+**Why this works**: Goal stated in the first line. Prerequisites listed
+before steps. Steps solve the goal (not introduce features). Branching
+acceptable because reader knows their context. Verification step gives an
+observable check. Troubleshooting scoped to this specific goal.
 
 ## Mode Clarity Check
 

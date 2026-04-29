@@ -119,7 +119,7 @@ Microsoft's overarching mantra: **"Above all, simple and human."**
 ## Mechanical Enforcement
 
 Most of these rules can be enforced with linting tools, but docs-team evaluates
-them via the **Style Convention SHOULD gate** (`rubrics/style-convention.md`)
+them via the **Style Convention SHOULD gate** (`rubrics/style.md`)
 which uses judgment-based scoring because we cannot run Vale or markdownlint
 inside Claude Code.
 

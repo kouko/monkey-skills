@@ -96,6 +96,81 @@ contract.
 The main agent resolves relative paths to absolute when launching a
 worker or evaluator. See `agent-interface.md` for the exact protocol.
 
+## Protocol Companion Files (`*-examples.md`)
+
+Some protocols accumulate multiple worked examples. Inlining them
+inflates the protocol file (hurts scannability) AND inflates the
+quick-mode token cost for skills that have a quick mode (because
+quick mode loads the full protocol into the main agent's context).
+
+The companion file pattern solves this:
+
+- A protocol may have a sibling `{protocol-name}-examples.md` file in
+  the same `protocols/` directory containing only worked examples
+- The protocol references the companion file with an explicit pointer
+  in its top-of-file references and in a `## Worked Examples (Companion
+  File)` section
+- The worker agent loads the companion via the existing `additional:`
+  field in the worker launch template (see `agent-interface.md`
+  §Worker Input Contract). No new launch field is needed
+- Quick mode (where a skill has one) MUST NOT load
+  `protocols/*-examples.md` files. The quick-mode protocol enforces
+  this with a "No Companion Load" rule
+
+### When to use a companion file
+
+Threshold: **3 or more worked examples** for the same protocol.
+
+| Example count | Pattern | Rationale |
+|---------------|---------|-----------|
+| 0 examples | Inline `Output Structure` template only | Template is sufficient pattern context |
+| 1-2 examples | Inline `## Example` section in protocol | Cost of a separate file > cost of inline; quick mode benefits from at least 1 anchor example |
+| **3+ examples** | **Companion `{protocol-name}-examples.md` file** | Aggregate example bulk would dominate the protocol file; companion enables quick-mode exclusion |
+
+### Naming
+
+`{protocol-name}-examples.md` — same kebab-case stem as the parent
+protocol, `-examples.md` suffix. Example: `write-readme.md` →
+`write-readme-examples.md`.
+
+The companion is a regular file in `protocols/` (not a new
+subdirectory). `file-conventions.md` §Directory Semantics already
+permits multiple files in `protocols/`; this is filename grouping per
+the §One level flat — no nesting rule.
+
+### Worker launch with companion
+
+When the worker is dispatched and a companion exists, the main agent
+includes the companion path in `additional:`:
+
+```
+- protocol: {base_path}/protocols/write-readme.md
+- additional: [{base_path}/protocols/write-readme-examples.md]
+```
+
+Quick mode dispatches do not include companion paths and explicitly
+forbid the worker (or main agent acting as worker) from Reading any
+`protocols/*-examples.md` file.
+
+### Single-example protocols keep inline
+
+A protocol with exactly 1 inline `## Example` is **not** required to
+extract to a companion. The inline example serves as the quick-mode
+pattern anchor. Extracting a single example into a companion file
+removes that anchor without meaningful token savings.
+
+### Precedent (v5.4.0)
+
+docs-team v5.4.0 introduced this pattern with two companion files:
+`protocols/write-readme-examples.md` (5 examples covering Go library,
+full-stack app, CLI tool, Bad → Good rewrite, and Monorepo archetypes)
+and `protocols/write-architecture-examples.md` (5 examples covering
+System Context, Component Spec, Data Flow + Error Path, Deployment
+Topology, and Security Model). Other docs-team protocols
+(`write-tutorial.md`, `write-how-to.md`, `write-reference.md`,
+`write-explanation.md`, `write-adr.md`) retain a single inline
+example each — they fall under the 1-2 examples → inline rule.
+
 ## Standards Splitting Discipline
 
 When a standards file grows beyond its Tier-appropriate token budget
@@ -166,11 +241,51 @@ Precedent: qa-team v4.2.0 deleted `test-conventions.md` (self-invented,
 superseded by ISTQB grounding); docs-team v4.3.0 deleted `qa-gate.md`
 and `doc-writing.md` (split into Diátaxis-specific files).
 
+## Top-Level Files
+
+A skill directory may contain these files at the top level:
+
+| File | Required? | Purpose |
+|------|-----------|---------|
+| `SKILL.md` | Required | LLM-discovery SSOT — frontmatter + workflows + gate triggers. Read by Claude when the skill is invoked. |
+| `README.md` | Optional | Human-facing GitHub-rendered overview. Optional sibling to `SKILL.md`; the two serve different audiences. See §README.md and SKILL.md Coexistence below. |
+| `README.{lang}.md` | Optional | i18n translations of `README.md` using BCP 47 tags (e.g., `README.ja.md`, `README.zh-TW.md`). Only meaningful when `README.md` exists. |
+
+No other files at the skill top level.
+
+### README.md and SKILL.md Coexistence
+
+**`SKILL.md` is the LLM-discovery SSOT.** Frontmatter (`name`, `description`),
+workflow tables, gate triggers, and resource manifest live here. Claude
+reads it when the skill is invoked.
+
+**`README.md` is the human-facing overview.** GitHub renders `README.md`
+when present (preferred over `SKILL.md` because of YAML frontmatter at the
+top of the latter). Use `README.md` for: project background, install
+instructions, usage examples, file-layout map, contributing notes,
+license. It is **explanatory and accessibility-oriented**, not a
+duplicate of `SKILL.md`'s LLM-discovery content.
+
+When both exist:
+
+- They MUST NOT contradict each other (e.g., different gate lists, different
+  workflow names)
+- `README.md` SHOULD link to `SKILL.md` for the authoritative workflow /
+  gate / agent definitions; `README.md` summarizes, `SKILL.md` specifies
+- Updates to gate names, workflow phases, or resource paths land in
+  `SKILL.md` first; `README.md` follows in the same PR if affected
+
+This dual-file pattern was adopted in v5.3.0 to improve GitHub UX without
+sacrificing LLM-discovery clarity. The pattern is **opt-in per skill** —
+skills without `README.md` continue to use `SKILL.md` as the only
+top-level file.
+
 ## Anti-Patterns
 
 - ❌ Nested directories under `standards/`, `protocols/`, `checklists/`, `rubrics/`
-- ❌ Files outside these four directories (except SKILL.md itself)
+- ❌ Files at the skill top level other than `SKILL.md`, `README.md`, or `README.{lang}.md`
 - ❌ Absolute paths or plugin-rooted paths inside SKILL.md
 - ❌ Stub files or deprecation redirects
 - ❌ Files with `.old`, `.bak`, `.legacy` suffixes
-- ❌ `README.md` inside a skill directory (SKILL.md *is* the readme)
+- ❌ `README.md` that duplicates `SKILL.md` content verbatim — they serve
+  different audiences and must be intentionally distinct

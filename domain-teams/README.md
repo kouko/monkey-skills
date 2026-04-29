@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 5.2.0
+**Version**: 5.4.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Domain team skills with primary-source grounding and checkpoint-based quality

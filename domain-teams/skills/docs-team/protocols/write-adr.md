@@ -9,6 +9,8 @@ consequences at the time the decision was made.
 - [Michael Nygard — Documenting Architecture Decisions (2011)](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
 - [MADR — Markdown Architecture Decision Records](https://adr.github.io/madr/)
 
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
+
 ## When to Write an ADR
 
 Write an ADR when:
@@ -170,6 +172,92 @@ We will... / We choose...
 **Neutral**
 - ...
 ```
+
+## Example
+
+```markdown
+# ADR-0017: Use token bucket rate limiter for ingress
+
+## Status
+
+Accepted
+
+## Date
+
+2025-08-12
+
+## Deciders
+
+Platform team (Sarah K., Alex C., Mei T.)
+
+## Context
+
+Traffic to our ingress is bursty by design. Login storms peak at 09:00
+local time across regions; flash sales create 10-minute traffic spikes
+that are 5× steady-state. We need a rate limiter at the ingress that:
+
+- Absorbs short bursts without queuing requests
+- Has predictable steady-state behavior
+- Has a Go implementation with battle-tested production usage
+- Can be deployed without an external dependency
+
+## Alternatives considered
+
+### Leaky bucket
+
+- **Pros**: Strict outflow ceiling. Smooth traffic shape.
+- **Cons**: Smoothing causes user-visible latency at exactly the burst
+  windows users care about. Queue depth becomes a hidden SLO.
+- **Rejected because**: Latency under burst is the user-facing failure
+  mode we need to avoid.
+
+### Fixed-window counter
+
+- **Pros**: Trivial to implement.
+- **Cons**: Allows up to 2× the configured limit at window boundaries
+  (a request at 11:59:59 and another at 12:00:00 fall in different
+  windows). For our 1-second window, this defeats the limiter.
+- **Rejected because**: Boundary burst is unbounded relative to the
+  configured limit.
+
+### External managed service (Cloudflare / AWS)
+
+- **Pros**: No code to maintain.
+- **Cons**: External dependency at the request critical path. Latency
+  cost. Cost scales with traffic.
+- **Rejected because**: We want ingress rate limiting to be in our
+  failure domain, not a vendor's.
+
+## Decision
+
+We will use a token bucket rate limiter, implemented in Go using
+`golang.org/x/time/rate`. Bucket capacity = 10 seconds of steady-state
+traffic. Refill rate = configured per-route limit.
+
+## Consequences
+
+**Positive**:
+- Bursts up to 10 seconds of traffic are absorbed without latency
+- No external dependency
+- Battle-tested implementation (`x/time/rate`)
+- Per-route configuration via existing config system
+
+**Negative**:
+- Under sustained overload, effective rate depends on bucket state, not
+  a strict ceiling. Acceptable because overload protection sits
+  downstream.
+- Operators must understand bucket vs ceiling distinction. Documentation
+  burden.
+
+**Neutral**:
+- Migration from existing leaky bucket requires a one-week dual-running
+  period to verify identical behavior under steady-state load.
+```
+
+**Why this works**: Status is one of the four valid values. Context
+states forces neutrally. Alternatives have explicit Pros/Cons/Reject
+reason. Decision uses "We will..." active voice. Consequences lists
+both positive and negative honestly.
 
 ## Structure Check
 

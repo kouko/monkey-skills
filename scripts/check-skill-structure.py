@@ -387,12 +387,35 @@ def _is_noise_file(name: str) -> bool:
     return name == ".DS_Store" or name.startswith("._") or name == "Thumbs.db"
 
 
+_README_TOP_LEVEL_RE = re.compile(r"^README(?:\.[A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?)?\.md$")
+
+
+def _is_allowed_top_level_file(name: str) -> bool:
+    """Top-level files allowed in a skill directory.
+
+    Per `domain-teams:skill-team/standards/file-conventions.md` §Top-Level
+    Files (v5.4.0+):
+      - SKILL.md — required, LLM-discovery SSOT
+      - README.md — optional, human-facing GitHub-rendered overview
+      - README.{lang}.md — optional BCP 47-tagged translations
+        (e.g., README.ja.md, README.zh-TW.md, README.fr.md)
+
+    Other top-level files are FATAL per CHK-SKL-012.
+    """
+    if name == "SKILL.md":
+        return True
+    if _README_TOP_LEVEL_RE.match(name):
+        return True
+    return False
+
+
 def check_chk_skl_012(skill_dir: Path) -> list[CheckError]:
     name = skill_dir.name
     errors: list[CheckError] = []
-    # Top-level files: only SKILL.md is allowed (noise files ignored).
+    # Top-level files: SKILL.md (required), README.md, README.{lang}.md
+    # (optional per file-conventions.md §Top-Level Files); noise files ignored.
     for entry in sorted(skill_dir.iterdir()):
-        if entry.is_file() and entry.name != "SKILL.md" and not _is_noise_file(entry.name):
+        if entry.is_file() and not _is_allowed_top_level_file(entry.name) and not _is_noise_file(entry.name):
             errors.append(
                 CheckError(
                     "CHK-SKL-012",

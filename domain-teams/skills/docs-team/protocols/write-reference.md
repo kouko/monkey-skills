@@ -7,6 +7,7 @@ structure of what it describes (API, CLI, config schema).
 **Vocabulary reference**: `standards/diataxis-taxonomy.md` §Reference
 **Style reference**: `standards/style-conventions.md`
 **API sub-case**: `standards/api-reference-structure.md`
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
 
 ## Reference vs Other Modes
 
@@ -167,6 +168,88 @@ mode: reference
 For **API reference** specifically, also cover the required fields from
 `standards/api-reference-structure.md` (request body schema, error responses,
 authentication per operation, runnable example).
+
+## Example
+
+```markdown
+---
+title: myapp-cli Reference
+last_reviewed: 2026-04-29
+applies_to: v3.5.x
+owner: platform
+mode: reference
+---
+
+# myapp-cli Reference
+
+Command-line interface for managing myapp deployments.
+
+## Cross-cutting concerns
+
+### Authentication
+
+All commands require `MYAPP_TOKEN` to be set. Generate a token in
+`Settings → CLI tokens`.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Generic failure |
+| 2 | Authentication error |
+| 3 | Network error |
+| 4 | Validation error |
+
+## Commands
+
+### `secrets set`
+
+**Signature**: `myapp-cli secrets set <name> <value>`
+
+Sets a named secret in the current environment.
+
+**Parameters**:
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `name` | string | yes | — | Secret name. Must match `[a-zA-Z_][a-zA-Z0-9_]*` |
+| `value` | string | yes | — | Secret value. Quoted to preserve whitespace. |
+| `--env` | string | no | `production` | Target environment |
+
+**Returns**: 0 on success; 4 if name is invalid; 2 if not authenticated.
+
+**Example**:
+
+​```bash
+myapp-cli secrets set api_key "sk-abc123"
+​```
+
+### `secrets list`
+
+**Signature**: `myapp-cli secrets list [--env=<environment>]`
+
+Lists secret names (values are never printed).
+
+**Parameters**:
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--env` | string | no | `production` | Target environment |
+
+**Returns**: 0 on success; 2 if not authenticated.
+
+**Example**:
+
+​```bash
+myapp-cli secrets list --env=staging
+​```
+```
+
+**Why this works**: Structure mirrors the CLI itself (commands → flags →
+exit codes). Every entry follows the same template. Cross-cutting concerns
+documented once at the top, linked from individual entries. Examples are
+minimal — they show shape, not workflow.
 
 ## Mode Clarity Check
 

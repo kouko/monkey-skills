@@ -6,6 +6,7 @@ trade-offs considered, and the alternatives rejected.
 
 **Vocabulary reference**: `standards/diataxis-taxonomy.md` §Explanation
 **Style reference**: `standards/style-conventions.md`
+**Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
 
 ## Explanation vs Other Modes
 
@@ -140,6 +141,69 @@ mode: explanation
 - How-to: {link to practical use}
 - ADR: {link to the specific decision, if any}
 ```
+
+## Example
+
+```markdown
+---
+title: Why we use a token bucket rate limiter
+last_reviewed: 2026-04-29
+applies_to: design
+owner: platform
+mode: explanation
+---
+
+# Why we use a token bucket rate limiter
+
+## The question
+
+Why does this system use a token bucket rate limiter instead of a leaky
+bucket or fixed-window counter?
+
+## The short answer
+
+Our traffic is bursty by design (login storms at 09:00, flash sales).
+Token bucket absorbs short bursts up to bucket capacity; the alternatives
+either smooth them away (causing user-visible latency) or fail open at
+window boundaries.
+
+## The trade-offs
+
+We considered three alternatives:
+
+**Leaky bucket** smooths traffic by enforcing a constant outflow rate. We
+rejected it because smoothing happens at exactly the times users care most
+(login storms become login queues), and the queue depth becomes a
+user-visible latency.
+
+**Fixed-window counter** is simple but allows 2× burst at window
+boundaries — a request at 11:59:59 and another at 12:00:00 both count
+against different windows. For our 1-second window, this means real-world
+peaks can exceed the configured limit by 100%, defeating the limiter.
+
+**Token bucket** absorbs bursts up to bucket capacity (10 seconds of
+traffic) and refills at the configured steady-state rate. The cost is
+that under sustained overload, the effective rate depends on bucket
+state rather than being a strict ceiling — but our overload protection
+sits downstream of the rate limiter, so this is acceptable.
+
+## Historical context
+
+We tried leaky bucket in v1 and saw exactly the queue-depth problem
+described above. The migration to token bucket happened in v2.3 and is
+recorded in [ADR-0017](../adr/0017-rate-limiter-algorithm.md).
+
+## Related
+
+- Reference: [Rate limiter configuration](../reference/rate-limit.md)
+- How-to: [Tune rate limits for a new endpoint](../how-to/tune-rate-limits.md)
+- ADR: [ADR-0017 — Rate limiter algorithm](../adr/0017-rate-limiter-algorithm.md)
+```
+
+**Why this works**: Opens with a question, not a conclusion. Discusses
+alternatives with their trade-offs. Names the cost honestly (no strict
+ceiling under sustained overload). Links to Reference / How-to / ADR for
+the action-oriented content explanation intentionally avoids.
 
 ## Mode Clarity Check
 
