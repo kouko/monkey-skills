@@ -1,15 +1,21 @@
 ---
 name: skill-creator-advance
 description: >-
-  Create new skills, improve existing skills, and measure skill performance
-  with iterative eval-driven development. Use when users want to create a
-  skill from scratch, edit or optimize an existing skill, run evals to test
-  a skill, benchmark skill performance with variance analysis, or optimize
-  a skill's description for better triggering accuracy. Also use when the
-  user says "build a skill", "make a slash command", "write a new skill",
-  "improve this skill", or "test my skill". Do NOT use for domain-team
-  skills with convention discipline (use domain-teams:skill-team instead).
-  スキル作成・スキル改善・評価ループ。技能建立・技能改善・評估迴圈。
+  Create new skills, do major redesigns of existing skills (add, split,
+  or merge phases; change agent decomposition; redesign workflow;
+  change input/output contract), measure skill performance with
+  iterative eval-driven development, and optimize a skill's
+  description for better triggering accuracy. Use when users want to
+  create a skill from scratch, redesign or significantly rewrite a
+  skill, run evals, benchmark performance, or optimize description
+  triggering. Also responds to vague "improve this skill" requests
+  by asking the user to clarify the type of improvement before
+  proceeding (router behavior — see Improving an Existing Skill
+  section). Also use when the user says "build a skill", "make a
+  slash command", "write a new skill", or "test my skill". Do NOT
+  use for domain-team skills with convention discipline (use
+  domain-teams:skill-team instead). スキル作成・大規模再設計・
+  評価ループ。技能建立・大幅重設計・評估迴圈。
 ---
 
 # Skill Creator Advance
@@ -38,6 +44,47 @@ When in doubt, briefly define terms inline. It's better to over-explain once tha
 ---
 
 ## Creating a skill
+
+### Pre-Creation Gates (recommended; skip only with stated reason)
+
+Before launching into intake / interview / drafting, run two
+lightweight gates against the user's request. Each is one or two
+focused questions; together they prevent shipping a skill that
+should not have been built.
+
+**Gate 1 — Worth-it check (`dev-workflow:proposal-critique`)** —
+applicable when the user proposes ≥2 skills at once, or one skill
+with multiple supporting claims ("we need this because A, B, and
+C"). The triage matrix sorts items into KEEP / DEFER / DROP via
+evidence grounding + YAGNI. If the proposal is a single skill with
+a single load-bearing reason, this gate is naturally low-cost —
+skip after a short check rather than running the full 5-step flow.
+
+**Gate 2 — Smallest-end-state check (`dev-workflow:complexity-critique`)** —
+applicable to **every** new skill proposal, single or multi. The
+three questions:
+
+1. What's the smallest end state that solves this? (Could it be 0
+   functions — i.e., this isn't really a skill, just a one-off
+   prompt? Could it be one existing skill plus a new section
+   instead of a new skill?)
+2. Does this result in less total skill-ecosystem code than not
+   building it? (A new skill adds to the ecosystem's surface area;
+   defaults toward "no" unless the skill subtracts other artifacts
+   or replaces ad-hoc prompts.)
+3. What does this skill make obsolete? (If nothing, the rationale
+   is purely additive — apply the same skepticism `complexity-critique`
+   applies to feature adds.)
+
+Skip explicitly if the user has already done the equivalent
+analysis ("we discussed this last week and concluded we need a
+dedicated skill"). Do NOT skip just to move faster — these gates
+are short, and the cost of building the wrong skill is permanent.
+
+If a gate produces a verdict of DROP / REJECT / RESHAPE, surface
+the verdict to the user and ask how to proceed (drop the skill
+proposal, defer, or reshape into a smaller scope) before
+continuing to intake.
 
 ### Capture Intent
 
@@ -234,31 +281,49 @@ See `references/schemas.md` for the full schema (including the `assertions` fiel
 
 ## Improving an Existing Skill
 
-When the user wants to improve a skill rather than build one from scratch, follow this flow instead of the full creation process:
+When a user asks to "improve" or "optimize" an existing skill, **first determine which kind of improvement** before doing any work. Three distinct shapes — they need different tools:
 
-### 1. Assess the Current State
+### Router: Identify the Improvement Type
+
+Ask the user to clarify (or infer from their phrasing):
+
+| Improvement type | Signal | Handler |
+|---|---|---|
+| **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `dev-workflow:skill-refactor` *(when available)*. Do not handle here. |
+| **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `dev-workflow:skill-tasting` *(when available)*. Do not handle here. |
+| **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Continue with the full creation flow below, using the existing skill as the starting baseline rather than starting from scratch. |
+
+If the user's intent is unclear, ask them to clarify which of (a), (b), or (c) applies. Do **not** default into the creation flow without confirming — picking the wrong tool wastes time on the wrong type of work.
+
+> Note (PR-1 transitional state): `skill-refactor` and `skill-tasting` are referenced above but not yet shipped. Until those land, treat (a) and (b) as a conversation with the user about whether the change is small enough to defer or large enough to fold into (c). The router itself is intentionally forward-looking so that the entry point is correct from day one; the handoffs activate as the sibling skills ship.
+
+### Case (c): Structural Rewrite Flow
+
+For case (c), use this flow (steps 1–4). Cases (a) and (b) do **not** use these steps once the sibling skills exist.
+
+#### 1. Assess the Current State
 
 Read the existing SKILL.md and all bundled files. Understand:
 - What the skill does and how it's structured
 - What conventions it follows (check the parent plugin's style)
 - Known issues the user reports or you observe
 
-### 2. Diagnose Improvement Areas
+#### 2. Diagnose Improvement Areas
 
-Look at these dimensions:
+Look at these dimensions (these apply to **structural** rewrites; they are not the right lens for token refactor or output A/B):
 - **Triggering**: Is the description specific enough? Does it undertrigger or overtrigger?
 - **Instructions**: Are they clear? Do they explain the "why"? Are there gaps?
 - **Structure**: Is the directory organization appropriate for the skill's complexity?
 - **Coverage**: Are edge cases handled? Are there missing workflows?
 - **Bundled files**: Are reference files up to date? Are scripts working?
 
-### 3. Propose Changes
+#### 3. Propose Changes
 
 Present a concise improvement plan to the user before making changes. Group changes by impact:
 - **High impact**: Changes that affect the skill's core behavior or triggering
 - **Low impact**: Cleanup, reorganization, wording improvements
 
-### 4. Evaluate
+#### 4. Evaluate
 
 Use the eval workflow (quick or full path, depending on complexity) to verify improvements. When improving an existing skill, the baseline should be the original version — snapshot it before editing (`cp -r <skill-path> <workspace>/skill-snapshot/`).
 
@@ -424,6 +489,8 @@ Keep going until:
 For situations where you want a more rigorous comparison between two versions of a skill (e.g., the user asks "is the new version actually better?"), there's a blind comparison system. Read `agents/comparator.md` and `agents/analyzer.md` for the details. The basic idea is: give two outputs to an independent agent without telling it which is which, and let it judge quality. Then analyze why the winner won.
 
 This is optional, requires subagents, and most users won't need it. The human review loop is usually sufficient.
+
+> **Boundary note vs `dev-workflow:skill-tasting`** *(when available)*: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tasting` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tasting` for subjective / creative outputs (writing style, design feel, persuasive copy).
 
 ---
 
