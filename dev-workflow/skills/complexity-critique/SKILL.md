@@ -38,15 +38,49 @@ not a multi-item proposal triage (use `proposal-critique`), not a
 greenfield brainstorm (use `superpowers:brainstorming`), and not a
 post-implementation diff review (use Anthropic `simplify`).
 
+## Before You Begin — Load a Mindset
+
+**Required preamble**, carried forward from the upstream
+`reducing-entropy` skill. The three questions below are mechanical
+on their own; the mindset is what gives them weight. Skipping this
+step is the single most common way to produce a competent-looking
+critique with no actual deletion bias.
+
+When `domain-teams:code-team` is installed:
+
+1. Read the file list at
+   `domain-teams/skills/code-team/standards/mindset-*.md` (4 files).
+2. Read the frontmatter / opening section of each to see which
+   applies to the change in front of you.
+3. **Load at least one** by reading the full file.
+4. Before answering Q1, state to the user which mindset you loaded
+   and its core principle in one sentence.
+
+When `domain-teams:code-team` is NOT installed:
+
+1. State explicitly: "complexity-critique is running in advisory
+   mode — mindset library unavailable; the user is asked to
+   anchor the gate on one of the four upstream mindsets in plain
+   language."
+2. Recite, in one sentence each, the four mindset core principles
+   from this file's §Reference Mindsets section so the user can
+   pick.
+3. Wait for the user to nominate one (or accept "design-is-taking-
+   apart" as default — the most broadly applicable).
+
+**Do not proceed to Q1 until a mindset is named and acknowledged.**
+This is non-negotiable.
+
 ## The Iron Law
 
 ```
-NO CHANGE TO EXISTING CODE SHIPS WITHOUT THE THREE QUESTIONS
+NO CHANGE SHIPS WITHOUT (1) A NAMED MINDSET AND (2) THE THREE QUESTIONS
 ```
 
-Three-question discipline is non-negotiable. "It's just a small
-change" is exactly when the question goes unasked and the codebase
-grows for no good reason.
+Two-part discipline is non-negotiable. "It's just a small
+change" is exactly when the discipline goes unrun and the codebase
+grows for no good reason. Skipping the mindset turns the three
+questions into a counting exercise with no design judgment.
 
 ## The Gate Function
 
@@ -139,24 +173,23 @@ These thoughts mean you are rationalizing your way past the gate:
 
 ## Reference Mindsets
 
-When the three questions need deeper grounding, load the
-philosophical anchors from `domain-teams:code-team`:
+The four mindsets that anchor this skill (one of which MUST be
+loaded per §Before You Begin). They live in
+`domain-teams:code-team/standards/` as the single source of truth
+(per CLAUDE.md §Cross-Plugin Delegation Contract — paths only, no
+content duplication).
 
-- `mindset-data-over-abstractions.md` — when Q1 / Q2 are arguing
-  about whether something deserves its own class / type / wrapper
-- `mindset-design-is-taking-apart.md` — when Q3 is asking whether
-  concerns are *complected* (must be combined) or merely tidy-looking
-- `mindset-expensive-to-add-later.md` — when "we might need this
-  later" is being invoked; PAGNI's three-test bar is the discipline
-- `mindset-simplicity-vs-easy.md` — when an "easy" / familiar choice
-  is being made over a less-familiar simpler one
+| Mindset | Core principle | Use when… |
+|---|---|---|
+| `mindset-data-over-abstractions.md` | Perlis #9 / Hickey: 100 functions on 1 data structure beats 10 on 10 | Q1 / Q2 are arguing about whether something deserves its own class / type / wrapper |
+| `mindset-design-is-taking-apart.md` | Hickey: design is separation, not addition; *complect* vs *compose* | Q3 is asking whether concerns are *complected* (must be combined) or merely tidy-looking; **default if unsure** |
+| `mindset-expensive-to-add-later.md` | Willison: PAGNI is YAGNI's named exception; high bar | "we might need this later" is being invoked; need the PAGNI three-test bar |
+| `mindset-simplicity-vs-easy.md` | Hickey: simple = objective, not braided; easy = subjective, familiar | An "easy" / familiar choice is being made over a less-familiar simpler one |
 
-These are reference vocabulary, not gates. Load on demand when the
-discussion warrants. They live in `domain-teams:code-team/standards/`
-as a single source of truth (per CLAUDE.md §Cross-Plugin Delegation
-Contract — paths only, no content duplication). If `domain-teams` is
-not installed, the three questions above are self-sufficient; the
-mindsets are advisory deepening.
+If `domain-teams` is not installed, recite the four core principles
+above to the user verbatim and accept their nomination in plain
+language; the gate runs in advisory mode but still requires a named
+anchor before Q1.
 
 ## Composes With
 

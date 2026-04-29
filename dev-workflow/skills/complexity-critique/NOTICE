@@ -59,9 +59,15 @@ list. High-level summary (v1.5.0):
   design and post-implementation review explicitly out of scope
   (delegated to `superpowers:brainstorming` and Anthropic `simplify`
   respectively)
-- Removed the "load at least one mindset before proceeding" hard
-  precondition; mindsets are now advisory deepening, not a forced
-  preamble (the three questions stand on their own)
+- **Restored** (v1.5.0 fidelity follow-up) the "load at least one
+  mindset before proceeding" hard precondition that an earlier
+  draft of this distribution had removed. The original author
+  designed this as a deliberate gate — the three questions on their
+  own are mechanical (count lines, list obsolete) and the mindset
+  is what gives them design judgment. The §Before You Begin
+  preamble enforces it; an advisory-mode fallback is provided when
+  `domain-teams:code-team` is not installed (mindsets recited inline
+  and user nominates a plain-language anchor)
 - Added Worked Examples section (form-validation feature add;
   type-safety refactor) demonstrating the verdict vocabulary
 - Removed the upstream `references/` directory (mindsets moved to
