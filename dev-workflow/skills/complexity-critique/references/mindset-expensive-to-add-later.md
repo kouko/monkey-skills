@@ -1,5 +1,16 @@
 # Expensive-To-Add-Later Mindset (PAGNI)
 
+> **Bundled functional copy.** Canonical version with full
+> cross-references lives at
+> `domain-teams:code-team/standards/mindset-expensive-to-add-later.md`.
+> References below to sibling mindsets (`mindset-*.md`) resolve in
+> this `references/` directory. References to other code-team
+> standards (e.g. `pragmatic-principles.md`, `app-security-standard.md`)
+> are descriptive — install `domain-teams` to read them. Drift
+> between this copy and the canonical version is governed by the
+> SSOT policy in
+> `domain-teams:code-team/standards/mindset-extension-standard.md`.
+
 A philosophical anchor for design-time decisions: a small set of
 things are *Probably Are Gonna Need It* — the cost of retrofitting
 later is so disproportionately high that paying the small cost now

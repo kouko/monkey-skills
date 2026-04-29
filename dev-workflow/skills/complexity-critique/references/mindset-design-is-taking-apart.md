@@ -1,5 +1,16 @@
 # Design-Is-Taking-Apart Mindset
 
+> **Bundled functional copy.** Canonical version with full
+> cross-references lives at
+> `domain-teams:code-team/standards/mindset-design-is-taking-apart.md`.
+> References below to sibling mindsets (`mindset-*.md`) resolve in
+> this `references/` directory. References to other code-team
+> standards (e.g. `pragmatic-principles.md`, `solid-principles.md`,
+> `refactoring-standard.md`) are descriptive — install `domain-teams`
+> to read them. Drift between this copy and the canonical version
+> is governed by the SSOT policy in
+> `domain-teams:code-team/standards/mindset-extension-standard.md`.
+
 A philosophical anchor for design-time decisions: good design is the
 work of separating concerns and removing dependencies, not the work
 of adding structure or features. The mindset reframes "design"
