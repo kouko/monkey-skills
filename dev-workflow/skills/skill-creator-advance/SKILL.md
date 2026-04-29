@@ -45,6 +45,47 @@ When in doubt, briefly define terms inline. It's better to over-explain once tha
 
 ## Creating a skill
 
+### Pre-Creation Gates (recommended; skip only with stated reason)
+
+Before launching into intake / interview / drafting, run two
+lightweight gates against the user's request. Each is one or two
+focused questions; together they prevent shipping a skill that
+should not have been built.
+
+**Gate 1 — Worth-it check (`dev-workflow:proposal-critique`)** —
+applicable when the user proposes ≥2 skills at once, or one skill
+with multiple supporting claims ("we need this because A, B, and
+C"). The triage matrix sorts items into KEEP / DEFER / DROP via
+evidence grounding + YAGNI. If the proposal is a single skill with
+a single load-bearing reason, this gate is naturally low-cost —
+skip after a short check rather than running the full 5-step flow.
+
+**Gate 2 — Smallest-end-state check (`dev-workflow:complexity-critique`)** —
+applicable to **every** new skill proposal, single or multi. The
+three questions:
+
+1. What's the smallest end state that solves this? (Could it be 0
+   functions — i.e., this isn't really a skill, just a one-off
+   prompt? Could it be one existing skill plus a new section
+   instead of a new skill?)
+2. Does this result in less total skill-ecosystem code than not
+   building it? (A new skill adds to the ecosystem's surface area;
+   defaults toward "no" unless the skill subtracts other artifacts
+   or replaces ad-hoc prompts.)
+3. What does this skill make obsolete? (If nothing, the rationale
+   is purely additive — apply the same skepticism `complexity-critique`
+   applies to feature adds.)
+
+Skip explicitly if the user has already done the equivalent
+analysis ("we discussed this last week and concluded we need a
+dedicated skill"). Do NOT skip just to move faster — these gates
+are short, and the cost of building the wrong skill is permanent.
+
+If a gate produces a verdict of DROP / REJECT / RESHAPE, surface
+the verdict to the user and ask how to proceed (drop the skill
+proposal, defer, or reshape into a smaller scope) before
+continuing to intake.
+
 ### Capture Intent
 
 Start by understanding the user's intent. The current conversation might already contain a workflow the user wants to capture (e.g., "turn this into a skill"). If so, **extract answers from the conversation history first** — the tools used, the sequence of steps, corrections the user made, input/output formats observed. The user may need to fill gaps, and should confirm before proceeding.
