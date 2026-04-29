@@ -1,15 +1,21 @@
 ---
 name: skill-creator-advance
 description: >-
-  Create new skills, improve existing skills, and measure skill performance
-  with iterative eval-driven development. Use when users want to create a
-  skill from scratch, edit or optimize an existing skill, run evals to test
-  a skill, benchmark skill performance with variance analysis, or optimize
-  a skill's description for better triggering accuracy. Also use when the
-  user says "build a skill", "make a slash command", "write a new skill",
-  "improve this skill", or "test my skill". Do NOT use for domain-team
-  skills with convention discipline (use domain-teams:skill-team instead).
-  スキル作成・スキル改善・評価ループ。技能建立・技能改善・評估迴圈。
+  Create new skills, do major redesigns of existing skills (add, split,
+  or merge phases; change agent decomposition; redesign workflow;
+  change input/output contract), measure skill performance with
+  iterative eval-driven development, and optimize a skill's
+  description for better triggering accuracy. Use when users want to
+  create a skill from scratch, redesign or significantly rewrite a
+  skill, run evals, benchmark performance, or optimize description
+  triggering. Also responds to vague "improve this skill" requests
+  by asking the user to clarify the type of improvement before
+  proceeding (router behavior — see Improving an Existing Skill
+  section). Also use when the user says "build a skill", "make a
+  slash command", "write a new skill", or "test my skill". Do NOT
+  use for domain-team skills with convention discipline (use
+  domain-teams:skill-team instead). スキル作成・大規模再設計・
+  評価ループ。技能建立・大幅重設計・評估迴圈。
 ---
 
 # Skill Creator Advance
