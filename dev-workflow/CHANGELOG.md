@@ -4,6 +4,148 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — 2026-04-29
+
+### Context
+
+dev-workflow's "critique" line previously had one skill —
+`proposal-critique` — that operates on multi-item proposals (lists,
+plans, prose) **before any code is written**. A second failure mode
+sits one stage downstream: a *single proposed change* to *existing
+code* (refactor, feature add, debt cleanup) defaults to *additive*
+unless something forces the design conversation to ask "what's the
+smallest end state and what becomes obsolete".
+
+Anthropic's `simplify` skill catches additive code *after* it is
+written; `superpowers:brainstorming` catches greenfield design *with
+no existing code as baseline*. The gap was the design-time gate for
+*existing-code change decisions*.
+
+`complexity-critique` (this release) closes that gap and forms a
+sibling to `proposal-critique` with parallel gate-skill shape but
+distinct scope:
+
+```
+proposal-critique  →  complexity-critique  →  Anthropic simplify
+(list / plan       (single change to       (post-implementation
+ / prose,           existing code,           diff review)
+ before any code)   before implementing
+                    the change)
+```
+
+### Added (complexity-critique)
+
+New `dev-workflow/skills/complexity-critique/` — single-file gate
+skill (~270 lines SKILL.md + 3-language READMEs) for evaluating any
+change to an existing codebase through a deletion-first lens. Three
+mechanical questions:
+
+1. **Q1 — smallest end state.** Not the smallest *change* — the
+   smallest *result*. Could the feature be deleted entirely? Could
+   2 functions replace 14?
+2. **Q2 — before/after LOC count.** If after > before, reject the
+   change as proposed. The metric is end-state volume, not effort.
+3. **Q3 — what becomes obsolete.** Every change makes something
+   else available to delete.
+
+Verdict vocabulary parallel to proposal-critique:
+- **PROCEED** — change reduces total code; ship.
+- **PROCEED-WITH-CAVEAT** — net-neutral or marginal; ship but name
+  the trade-off bought ("30 lines bought, exhaustiveness check
+  enforced"). Hidden growth is the failure mode this skill exists
+  to prevent.
+- **RESHAPE** — change adds; Q1 produced a smaller end state; propose
+  the alternative.
+- **REJECT** — change adds with no end-state justification; redirect
+  to deletion.
+
+The body adapts the same idiom as proposal-critique: Iron Law / Gate
+Function / Verdict / Red Flags / Rationalization Prevention /
+Reference Mindsets / Composes With / Worked Examples (×2: form
+validation feature add + type-safety refactor) / When To Apply
+(with explicit Not-triggers) / Bottom Line.
+
+Three-language READMEs (en / ja / zh-TW) follow the dev-workflow
+pattern with mermaid flow + verdict table + worked example +
+relate-to-others + lineage + known limitations.
+
+### Cross-plugin reference
+
+The skill references 4 philosophical mindsets that live in
+`domain-teams:code-team/standards/` (released in domain-teams v5.5.0):
+
+- `mindset-data-over-abstractions.md` — Perlis Epigram #9 / Hickey
+- `mindset-design-is-taking-apart.md` — Hickey / Out of the Tar Pit
+- `mindset-expensive-to-add-later.md` — Willison PAGNI
+- `mindset-simplicity-vs-easy.md` — Hickey
+
+Per CLAUDE.md §Cross-Plugin Delegation Contract: paths only, no
+content duplication. Mindsets are advisory deepening, not gates;
+the three-question gate is self-sufficient when domain-teams is not
+installed.
+
+### Upstream chain (MIT)
+
+```
+joshuadavidthomas/agent-skills (MIT, original)
+  → softaworks/agent-toolkit/skills/reducing-entropy (MIT, fork)
+    → kouko monkey-skills/dev-workflow/complexity-critique (this)
+```
+
+Renamed from `reducing-entropy` for clearer trigger semantics
+("entropy" is jargon; "complexity-critique" parallels the existing
+`proposal-critique` skill). The 4 mindsets that lived inside the
+upstream skill's `references/` directory are extracted to
+`domain-teams:code-team` as separate standards with primary-source
+citations rewritten against the underlying books / talks / papers
+(Perlis 1982, Hickey 2011/2012, Moseley & Marks 2006, Ousterhout
+2018, Brooks 1986, Willison/Plant/Kaplan-Moss 2021). Full chain
+detail in `skills/complexity-critique/NOTICE`.
+
+### Modifications vs upstream
+
+- Renamed `reducing-entropy` → `complexity-critique` (rationale above)
+- Mindset library extracted to `domain-teams:code-team/standards/`
+  with primary-source citation rewrite
+- Cross-plugin delegation: skill references mindsets via paths, not
+  content duplication
+- Added explicit verdict vocabulary (PROCEED / PROCEED-WITH-CAVEAT /
+  RESHAPE / REJECT) parallel to proposal-critique
+- Restructured frontmatter (negative triggers, multilingual keywords)
+  to match dev-workflow conventions
+- Scope clarified to *changes to existing codebase*; greenfield
+  design and post-implementation review explicitly out of scope and
+  delegated to `superpowers:brainstorming` and Anthropic `simplify`
+  respectively
+- Removed the upstream "load at least one mindset before proceeding"
+  hard precondition; mindsets are now advisory deepening
+- Added 2 worked examples (form validation feature add demonstrating
+  RESHAPE; type-safety refactor demonstrating PROCEED-WITH-CAVEAT)
+- Added 3-language READMEs following dev-workflow i18n pattern
+- Removed upstream `references/` directory and
+  `adding-reference-mindsets.md` meta-skill (replaced by skill-team
+  conventions for adding new standards in domain-teams)
+
+### Changed (plugin)
+
+- `plugin.json` — version 1.4.0 → 1.5.0; description and keywords
+  updated to include `complexity-critique`
+- `README.md` / `README.ja.md` / `README.zh-TW.md` — Skills table
+  adds `complexity-critique` row; Repository Structure tree adds
+  the new skill directory; version line bumped (also catches up
+  the missed bump from PR #158 / v1.4.0 skill-judge release —
+  README version field was stuck at 1.0.4)
+
+### Note on missed [1.4.0] CHANGELOG entry
+
+The PR #158 / v1.4.0 release (skill-judge integration, 2026-04-29
+earlier today) updated `plugin.json` to 1.4.0 but did not add a
+[1.4.0] entry to this CHANGELOG. The [1.4.0] gap between [1.3.0]
+and [1.5.0] is intentional in this release; a retroactive [1.4.0]
+entry can be added in a separate housekeeping commit if desired.
+The skill itself is fully documented in
+`skills/skill-judge/README.md` and `skills/skill-judge/NOTICE`.
+
 ## [1.3.0] — 2026-04-25
 
 ### Context

@@ -2,19 +2,38 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 1.0.4
+**Version**: 1.5.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
-Skill creation and eval workflows — iterative draft → test → review → improve
-loop for authoring new Claude skills.
+Developer workflow skills — skill authoring, skill quality scoring,
+portable git-backed project memory, and a *critique* line for design
+decisions (proposals before code, single changes to existing code).
 
 ## Skills
 
 | Skill | Slash cmd | Role |
 |-------|-----------|------|
 | `skill-creator-advance` | `/skill-creator-advance` | Create new skills and iteratively improve them via eval-driven loop |
+| `skill-judge` | — | 8-dimension quality rubric for scoring an existing skill (advisory, 0-120 scale) |
 | `git-memory` | — | Portable, tool-agnostic project memory via git commit trailers + PR body `## Memory` section |
-| `proposal-critique` | — | Triage a proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
+| `proposal-critique` | — | Triage a multi-item proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
+| `complexity-critique` | `/complexity-critique` | Gate a single proposed change to existing code (refactor, feature add, debt cleanup) through three deletion-first questions before implementing |
+
+### The "critique" line
+
+`proposal-critique` and `complexity-critique` are siblings — same
+gate-skill shape, different scope and lifecycle stage:
+
+```
+proposal-critique  →  complexity-critique  →  Anthropic simplify
+(list / plan       (single change to       (post-implementation
+ / prose,           existing code,           diff review)
+ before any code)   before implementing
+                    the change)
+```
+
+Together they cover most of the "is this worth it" decision space
+without duplicating the gate logic.
 
 ### git-memory — three pillars
 
@@ -72,7 +91,8 @@ dev-workflow/
 ├── .claude-plugin/plugin.json
 ├── CHANGELOG.md
 ├── commands/
-│   └── skill-creator-advance.md
+│   ├── skill-creator-advance.md
+│   └── complexity-critique.md
 └── skills/
     ├── skill-creator-advance/
     │   ├── SKILL.md
@@ -81,13 +101,22 @@ dev-workflow/
     │   ├── agents/               ← grader / comparator / analyzer
     │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
     │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
+    ├── skill-judge/
+    │   ├── SKILL.md              ← 8-dimension rubric (E:A:R + 5-pattern + 9 failure-pattern)
+    │   ├── LICENSE / NOTICE      ← upstream attribution
+    │   └── README.{en,ja,zh-TW}.md
     ├── git-memory/
     │   ├── SKILL.md
     │   ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
     │   ├── protocols/             ← compose-commit / compose-pr
     │   └── scripts/               ← memory-grep retrieval primitive
-    └── proposal-critique/
-        └── SKILL.md               ← single-file gate skill (Iron Law / Gate Function / Triage Matrix)
+    ├── proposal-critique/
+    │   ├── SKILL.md               ← single-file gate skill (Iron Law / Gate Function / Triage Matrix)
+    │   └── README.{en,ja,zh-TW}.md
+    └── complexity-critique/
+        ├── SKILL.md               ← single-file gate skill (Iron Law / 3 Questions / Verdict)
+        ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
+        └── README.{en,ja,zh-TW}.md
 ```
 
 ## License

@@ -193,6 +193,15 @@ Worker default resources:
   - `standards/character-encoding-security.md` — 徳丸本 Ch.6 JP multi-byte security preamble
 - protocol: (selected per-workflow from `protocols/`)
 
+On-demand mindsets (philosophical anchors; load when relevant during brainstorming, refactoring, or design discussion — NOT auto-loaded by worker/evaluator launch templates to keep token budget bounded):
+- `standards/mindset-data-over-abstractions.md` — Perlis Epigram #9 / Hickey *Value of Values*: prefer generic data + free functions over custom types
+- `standards/mindset-design-is-taking-apart.md` — Hickey *Simple Made Easy* / Moseley & Marks *Out of the Tar Pit* / Ousterhout *APoSD*: design is separation, not addition
+- `standards/mindset-expensive-to-add-later.md` — Willison PAGNI / Plant / Kaplan-Moss: named exceptions to YAGNI when retrofit cost is dramatic
+- `standards/mindset-simplicity-vs-easy.md` — Hickey *Simple Made Easy*: simple (objective, not braided) vs easy (subjective, familiar)
+- `standards/mindset-extension-standard.md` — meta-standard for extending the mindset library (Quality Checklist, primary-source bar, anti-shapes); read **before** proposing a 5th mindset
+
+Cross-plugin SSOT-and-functional-copy arrangement: `dev-workflow:complexity-critique` bundles **functional copies** of the 4 mindsets at `dev-workflow/skills/complexity-critique/references/` for runtime self-containment (matches upstream `reducing-entropy/references/` layout). The bundled copies carry a header blockquote pointing back to this directory as the canonical SSOT. Drift management policy: edits to mindset content land in **this directory first** (`code-team/standards/mindset-*.md`), then propagate to the dev-workflow bundled copies in the same PR. The cross-plugin contract here is *evolution-time* (where to add or edit a mindset), not *runtime* (which files to load) — runtime is fully self-contained on each side. Adding a 5th mindset is governed by `standards/mindset-extension-standard.md`.
+
 Evaluator default resources:
 - standards: same 7 files as worker
 - Security gate: `checklists/security-checklist.md`

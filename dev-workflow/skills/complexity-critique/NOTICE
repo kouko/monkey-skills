@@ -1,0 +1,105 @@
+complexity-critique
+===================
+
+Upstream chain
+--------------
+
+This skill is adapted from a chain of MIT-licensed upstream projects:
+
+1. joshuadavidthomas `agent-skills/skills/reducing-entropy` — the
+   earliest upstream.
+   https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy
+   License: MIT. Copyright (c) joshuadavidthomas. Contributes the
+   philosophical mindset selection (data-over-abstractions,
+   design-is-taking-apart, expensive-to-add-later, simplicity-vs-easy)
+   and the deletion-first three-question gate concept.
+
+2. softaworks `agent-toolkit/skills/reducing-entropy` — direct
+   upstream (fork of #1).
+   https://github.com/softaworks/agent-toolkit/tree/main/skills/reducing-entropy
+   License: MIT. Carries forward the original skill structure with
+   minor packaging adjustments. The kouko fork-of-fork lineage flows
+   from this distribution.
+
+3. kouko monkey-skills — this distribution, renamed to
+   `complexity-critique`.
+   https://github.com/kouko/monkey-skills
+   Path: dev-workflow/skills/complexity-critique/
+   License: MIT. Copyright (c) 2026 kouko.
+
+Modifications in this distribution (kouko)
+------------------------------------------
+
+See dev-workflow/CHANGELOG.md for the full per-version modification
+list. High-level summary (v1.5.0):
+
+- Renamed `reducing-entropy` → `complexity-critique` for clearer
+  trigger semantics (entropy is jargon; complexity-critique parallels
+  the existing `proposal-critique` skill in dev-workflow)
+- Mindset library bundled at `references/` (4 files), matching the
+  upstream `reducing-entropy/references/` layout. The same 4
+  mindsets also live as canonical SSOT in
+  `domain-teams:code-team/standards/mindset-*.md` (used by code-team
+  brainstorming / refactoring protocols). Primary-source citations
+  in both locations are rewritten against the underlying books /
+  talks / papers (Perlis 1982, Hickey 2011/2012, Moseley & Marks
+  2006, Ousterhout 2018, Brooks 1986, Willison/Plant/Kaplan-Moss
+  2021)
+- SSOT-and-functional-copy policy: edits to mindset content land
+  in `domain-teams:code-team/standards/` first; the bundled copies
+  in this skill's `references/` are updated to match in the same
+  PR. Drift management policy lives at
+  `domain-teams:code-team/standards/mindset-extension-standard.md`.
+  At runtime this skill is fully self-contained — `dev-workflow` is
+  the only plugin needed for the gate to run; `domain-teams` is
+  only required when *proposing* changes to the mindset library
+  itself.
+- Restructured SKILL.md to mirror dev-workflow conventions
+  (frontmatter description with negative triggers, multilingual
+  Triggers, Composes With section, Worked Examples, When To Apply
+  with Not-triggers)
+- Three-question gate retained but tightened: explicit verdict
+  vocabulary (PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT)
+  parallel to `proposal-critique`'s KEEP / KEEP-WITH-CAVEAT / DEFER /
+  DROP
+- Scope: this distribution preserves the upstream's scope, which
+  the README explicitly listed as including "Refactoring existing
+  code", "Evaluating feature requests (should we add this?)",
+  "Cleaning up technical debt", "Deciding between implementation
+  approaches", and "User explicitly asks to reduce entropy". Pure
+  greenfield with a *named feature proposal* is in scope; Q2's LOC
+  count gracefully degrades to "what's the smallest code that ships
+  this, and is 0 = decline to build on the table?". Only
+  *open-ended exploratory brainstorming with no specific proposal*
+  is delegated to `superpowers:brainstorming`. Post-implementation
+  diff review is delegated to Anthropic `simplify`.
+- **Restored** (v1.5.0 fidelity follow-up) the "load at least one
+  mindset before proceeding" hard precondition that an earlier
+  draft of this distribution had removed. The original author
+  designed this as a deliberate gate — the three questions on their
+  own are mechanical (count lines, list obsolete) and the mindset
+  is what gives them design judgment. The §Before You Begin
+  preamble enforces it; an advisory-mode fallback is provided when
+  `domain-teams:code-team` is not installed (mindsets recited inline
+  and user nominates a plain-language anchor)
+- Added Worked Examples section (form-validation feature add;
+  type-safety refactor) demonstrating the verdict vocabulary
+- Removed the upstream `references/` directory (mindsets moved to
+  domain-teams:code-team) and `adding-reference-mindsets.md`
+  meta-skill (replaced by skill-team conventions for adding new
+  standards)
+
+MIT license preservation
+------------------------
+
+The MIT license requires that the copyright notice and permission
+notice be included in all copies or substantial portions of the
+Software. The upstream joshuadavidthomas, the intermediate softaworks,
+and the downstream kouko copyright are all preserved in the
+accompanying LICENSE file in this directory. The mindset standards
+in domain-teams:code-team carry an attribution note in their research
+file (`code-team/research/grounding-v5.5.0.md`) but cite
+their underlying primary sources directly (Hickey, Perlis, Moseley &
+Marks, etc.); the philosophical content of those primary sources is
+not under the MIT chain and does not require attribution beyond
+academic citation.

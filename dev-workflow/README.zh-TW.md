@@ -2,18 +2,36 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-**Version**：1.0.4
+**Version**：1.5.0
 **Part of**：[monkey-skills](https://github.com/kouko/monkey-skills)
 
-Skill 建立與 eval workflow — 用於撰寫新 Claude skill 的迭代式 draft → test → review → improve loop。
+Developer workflow skills — skill 撰寫、skill 品質評分、可攜式
+git-backed 專案記憶，以及一條 design 決策的「critique」線（程式
+寫之前的提案、對既存 code 的單一改動）。
 
 ## Skills
 
 | Skill | Slash cmd | Role |
 |-------|-----------|------|
 | `skill-creator-advance` | `/skill-creator-advance` | 建立新 skill 並透過 eval-driven loop 持續改進 |
+| `skill-judge` | — | 八維度 quality rubric 評分既存 skill（advisory、0-120 量表）|
 | `git-memory` | — | 透過 git commit trailer + PR body `## Memory` 區段提供可攜、與工具無關的專案記憶 |
-| `proposal-critique` | — | 以 evidence grounding + YAGNI 將提案（list、plan 或 prose）分類為 KEEP / DEFER / DROP |
+| `proposal-critique` | — | 以 evidence grounding + YAGNI 將多項目提案（list、plan 或 prose）分類為 KEEP / DEFER / DROP |
+| `complexity-critique` | `/complexity-critique` | 在實作之前，用三個 deletion-first 問題 gate「對既存 code 的單一改動」（refactor、feature add、debt cleanup）|
+
+### 「critique」線
+
+`proposal-critique` 與 `complexity-critique` 是姊妹 — 相同 gate-skill
+形狀、不同 scope 與 lifecycle 階段：
+
+```
+proposal-critique  →  complexity-critique  →  Anthropic simplify
+（list / plan      （對既存 code 的單一    （事後 diff review）
+ / prose，          改動，實作前）
+ 還沒寫 code 時）
+```
+
+兩者共同覆蓋大部分「值不值得做」的決策空間，gate 邏輯不重複。
 
 ### git-memory — 三大支柱
 
@@ -71,7 +89,8 @@ dev-workflow/
 ├── .claude-plugin/plugin.json
 ├── CHANGELOG.md
 ├── commands/
-│   └── skill-creator-advance.md
+│   ├── skill-creator-advance.md
+│   └── complexity-critique.md
 └── skills/
     ├── skill-creator-advance/
     │   ├── SKILL.md
@@ -80,13 +99,22 @@ dev-workflow/
     │   ├── agents/               ← grader / comparator / analyzer
     │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
     │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
+    ├── skill-judge/
+    │   ├── SKILL.md              ← 八維度 rubric（E:A:R + 5-pattern + 9 failure-pattern）
+    │   ├── LICENSE / NOTICE      ← upstream attribution
+    │   └── README.{en,ja,zh-TW}.md
     ├── git-memory/
     │   ├── SKILL.md
     │   ├── standards/             ← memory-conventions（trailer schema、PR body、diagram venue）
     │   ├── protocols/             ← compose-commit / compose-pr
     │   └── scripts/               ← memory-grep retrieval primitive
-    └── proposal-critique/
-        └── SKILL.md               ← 單檔 gate skill（Iron Law / Gate Function / Triage Matrix）
+    ├── proposal-critique/
+    │   ├── SKILL.md               ← 單檔 gate skill（Iron Law / Gate Function / Triage Matrix）
+    │   └── README.{en,ja,zh-TW}.md
+    └── complexity-critique/
+        ├── SKILL.md               ← 單檔 gate skill（Iron Law / 三問 / Verdict）
+        ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
+        └── README.{en,ja,zh-TW}.md
 ```
 
 ## License
