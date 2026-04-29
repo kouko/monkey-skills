@@ -108,31 +108,50 @@ def main() -> int:
     if len(pairs) < args.min_entries:
         print(
             f"\nInsufficient training data. The self-trained judge pipeline "
-            f"is scaffolded but not active in v1.7.0. Threshold is "
+            f"is scaffolded but not active. Threshold is "
             f"≥{args.min_entries} preference pairs; you have {len(pairs)}.",
             file=sys.stderr,
         )
         print(
-            "Continue using LLM-as-judge in skill-tasting until the "
-            "preference log accumulates more entries. See "
-            "references/self-trained-judge-pipeline.md §When this "
-            "activates.",
+            "\nWhat would happen at threshold:\n"
+            "  1. Load all preference pairs from the log (filter on this skill)\n"
+            "  2. Split 80/20 train/held-out\n"
+            "  3. Train a small preference model (likely a fine-tuned\n"
+            "     small LM with Bradley-Terry pairwise loss)\n"
+            "  4. Evaluate on held-out set; require ≥80% agreement with\n"
+            "     user picks before deploying\n"
+            "  5. Compare against generic LLM-as-judge on N=50 fresh\n"
+            "     examples; trained judge must outperform\n"
+            "  6. If both gates pass: deploy as Tier-1 pre-filter that\n"
+            "     ranks variants before showing to user (user still has\n"
+            "     final pick)\n"
+            "\n"
+            "Until then, continue using LLM-as-judge in skill-tasting.\n"
+            "See references/self-trained-judge-pipeline.md for the full\n"
+            "training methodology, evaluation criteria, deployment\n"
+            "model, and privacy / data-handling considerations.\n",
             file=sys.stderr,
         )
         return 1
 
     # If we ever reach here in a future PR's activated pipeline:
     print(
-        "\nThreshold met but training pipeline not yet implemented in this PR. "
-        "Activation is planned in PR-5+ once at least one skill crosses the "
-        "threshold. See references/self-trained-judge-pipeline.md for the "
-        "training methodology.",
+        f"\nThreshold met ({len(pairs)} ≥ {args.min_entries}) but training "
+        f"pipeline activation is not yet implemented. The presence of this "
+        f"path indicates {args.skill} has accumulated enough preference data "
+        f"that activating real training is now warranted — open a PR to "
+        f"replace this stub with the training implementation per the "
+        f"methodology in references/self-trained-judge-pipeline.md.",
         file=sys.stderr,
     )
     raise NotImplementedError(
-        "Training pipeline scaffolded but not implemented in v1.7.0. "
-        "Will be activated in a future PR when ≥1000 pairs are available "
-        "for at least one skill (currently nobody has reached the threshold)."
+        f"Training pipeline scaffolded but not implemented. Reaching this "
+        f"path is itself a signal that activation is now needed: skill "
+        f"{args.skill!r} has {len(pairs)} preference pairs (≥ threshold "
+        f"{args.min_entries}). Implement training and replace this stub. "
+        "Activation methodology: 80/20 train/eval split + Bradley-Terry "
+        "preference loss + held-out ≥80% agreement gate + comparison vs "
+        "LLM-as-judge baseline."
     )
 
 
