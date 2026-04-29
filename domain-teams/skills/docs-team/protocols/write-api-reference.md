@@ -214,6 +214,102 @@ curl -X POST https://api.example.com/v1/payments \
 {Same template}
 ```
 
+## Example
+
+Single-operation walk-through showing the per-operation template
+filled out for a different domain (Notes API). Cross-cutting concerns
+have been documented separately at the top of the reference (not shown
+here) so the operation page links to them rather than restating.
+
+```markdown
+## Notes
+
+### Create a note
+
+**Method**: `POST /v1/notes`
+**Auth**: Bearer token (see [Authentication](#authentication))
+**Idempotency**: yes (`Idempotency-Key` header)
+**Rate limit**: 60 req/min per token (see [Rate limiting](#rate-limiting))
+
+Creates a new note under the authenticated user's workspace.
+
+**Request body**:
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `title` | string | yes | — | 1-200 chars; trimmed |
+| `body` | string | yes | — | Markdown; max 100,000 chars |
+| `tags` | string[] | no | `[]` | Lowercase, kebab-case; max 16 items |
+| `pinned` | boolean | no | `false` | Pinned notes appear first in the workspace list |
+
+**Responses**:
+
+| Status | Description |
+|--------|-------------|
+| `201` | Note created |
+| `400` | Validation failed — see error envelope |
+| `409` | Duplicate `Idempotency-Key` with a different body |
+| `429` | Rate limit exceeded — `Retry-After` header set |
+
+**Example request**:
+
+​```bash
+curl -X POST https://api.example.com/v1/notes \
+  -H "Authorization: Bearer sk_test_abc123" \
+  -H "Idempotency-Key: 7f3e2a8d-1b4c-4f5a-9e2d-8c1a3b4f5e6d" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Q3 launch checklist",
+    "body": "# Ship plan\n\n- Code freeze 2026-09-15\n- Soak window 3 days",
+    "tags": ["launch", "q3"],
+    "pinned": true
+  }'
+​```
+
+**Example response** (201):
+
+​```json
+{
+  "id": "note_01HF8XK7P2Q4R5S6T7U8V9W0XY",
+  "title": "Q3 launch checklist",
+  "body": "# Ship plan\n\n- Code freeze 2026-09-15\n- Soak window 3 days",
+  "tags": ["launch", "q3"],
+  "pinned": true,
+  "created_at": "2026-04-29T10:30:00Z",
+  "workspace_id": "ws_01HF7..."
+}
+​```
+
+**Example error** (400):
+
+​```json
+{
+  "error": {
+    "code": "validation_failed",
+    "message": "title must be 1-200 characters",
+    "field": "title"
+  }
+}
+​```
+
+### List notes
+
+**Method**: `GET /v1/notes`
+{...same template — pagination via `?cursor=` and `?limit=` per
+[Pagination](#pagination)}
+```
+
+**Why this works**: every operation field documented (method / auth /
+idempotency / rate limit / request fields with type-required-default-
+description / response status table / runnable curl / realistic JSON
+response / error example). Cross-cutting concerns (auth, rate limiting,
+pagination) link to top-of-reference sections instead of restating.
+Realistic placeholder values (`sk_test_abc123`, ULID-style IDs,
+markdown body content) reduce reader cognitive load. The second
+operation (`GET /v1/notes`) is sketched to show the template is
+consistent across all operations — readers expect the same fields in
+the same order on every page.
+
 ## Mode Clarity Check
 
 This API reference passes the Mode Clarity gate (run via
