@@ -9,18 +9,21 @@ description: >-
   (variants violating MUST clauses auto-rejected before user sees
   them); preference log accumulates as RLHF-lite dataset; H4
   self-trained judge replaces LLM-judge once log is dense enough.
-  Use when the user wants to improve a skill's output style /
+  Use when the user wants to tune a skill's output style /
   quality / voice / tone, explore variant phrasings, or accumulate
   preference signal for taste-sensitive skill work. Triggers:
-  improve skill output / A/B variants / output quality / 改善 skill
-  輸出 / 風格優化 / 跑 A/B 測試 / 出力品質 / 試不同 phrasing /
-  taste-sensitive skill. Do NOT use for token / structure refactor
-  with output preserved (use dev-workflow:skill-refactor),
-  structural redesign (use dev-workflow:skill-creator-advance),
-  creating new skill (use dev-workflow:skill-creator-advance), or
-  deterministic / mechanical skills where output is binary
-  correct / incorrect (no taste dimension to A/B). スキル出力 A/B
-  ・人間判定・選好ログ。技能輸出 A/B・人類判斷・偏好累積。
+  tune skill / skill tuning / fine-tune skill output / improve
+  skill output / A/B variants / output quality / preference
+  tuning / RLHF skill / 調整 skill 輸出 / 風格優化 / 跑 A/B 測試
+  / 改善 skill 輸出 / 出力品質 / スキル チューニング / 試不同
+  phrasing / taste-sensitive skill. Do NOT use for token /
+  structure refactor with output preserved (use
+  dev-workflow:skill-refactor), structural redesign (use
+  dev-workflow:skill-creator-advance), creating new skill (use
+  dev-workflow:skill-creator-advance), or deterministic /
+  mechanical skills where output is binary correct / incorrect
+  (no taste dimension to A/B). スキル チューニング・出力 A/B
+  ・人間判定・選好ログ。技能調整・輸出 A/B・人類判斷・偏好累積。
 ---
 
 # Skill Tuning
