@@ -4,6 +4,102 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] — 2026-04-29
+
+### Context
+
+Fourth-of-five PR series (PR-4 of 5) implementing the
+skill-evolution architecture. With the Two-Hats split complete in
+v1.7.0, this release adds the **governance layer**: cross-skill
+regression CI, optional skill-judge drift detection, SSOT registry
+documentation, and quarterly audit runbook. The architecture doc
+called this "Layer 4 — Governance"; PR-5 will add Layer 0
+(telemetry) + Layer 5 (closed-loop self-training judge stub).
+
+### Added (governance & CI)
+
+**Cross-skill regression CI** — `scripts/check-shared-conventions-drift.py`
+- Iterates a manifest of (canonical, functional-copies) pairs and
+  diffs body content (header blockquote stripped before diff)
+- Currently checks 3 conventions (golden-anchor-protocol /
+  test-prompts-schema / constitution-schema) between skill-refactor
+  (canonical SoT) and skill-tasting (functional copies)
+- Verified locally: all 3 in sync at v1.7.0 baseline
+- New CI job `shared-conventions-drift` in
+  `.github/workflows/skill-structure.yml`; runs on every PR + push
+  to main
+- Enforces the same-PR drift rule documented in skill-refactor and
+  skill-tasting NOTICE files
+- Future extension: per-plugin convention manifests; test-prompts
+  regression detection when skills have them
+
+**skill-judge score history + drift detection** —
+`dev-workflow/skills/skill-judge/scripts/score_history.py`
+- New optional companion script (skill-judge remains stateless by
+  default; opt-in per skill)
+- Operations: append / query / drift
+- Drift signal: z-score of most recent vs historical baseline;
+  flags if z < -1.0σ (configurable); insufficient-history (<3)
+  exits with clear message
+- Constant-baseline edge case: absolute drop > 1 point flags
+- Drift recommendation: run skill-tasting on flagged skill to
+  capture human preference signal
+- New "Optional: Score History Tracking (Drift Detection)" section
+  in skill-judge SKILL.md (~32 lines added; explains advisory-only
+  nature, drift signal mechanics, quick invocation)
+
+**Skill governance documentation** —
+`dev-workflow/docs/skill-governance.md`
+- SSOT Registry: every shared resource's canonical location,
+  functional copies, and CI enforcement mechanism (dev-workflow
+  internal + cross-plugin entries)
+- Ownership table per skill with attribution chain notes
+- Skill Lifecycle States (Active / Deprecated / Retired) with
+  transition criteria and current state of all 7 dev-workflow
+  skills
+- Convention evolution protocol (add / edit / delete)
+- Cross-plugin contract reaffirmation
+- Versioning policy with examples from dev-workflow history
+- Decision authority table
+- Anti-patterns
+
+**Quarterly audit runbook** —
+`dev-workflow/docs/quarterly-audit-runbook.md`
+- 7-step audit checklist:
+  1. SSOT registry verification
+  2. Skill lifecycle state review
+  3. Convention drift inspection
+  4. External dependency audit (upstream MIT chains)
+  5. Validation gate status
+  6. Skill-judge score history drift detection
+  7. Documentation freshness
+- Audit report template
+- Decision matrix for handling each finding type
+- Self-extending guidance
+
+### Changed
+
+- `dev-workflow/.claude-plugin/plugin.json`: 1.7.0 → 1.8.0 (minor
+  bump for governance additions; no skill behavior changes)
+
+### Validation status carry-over
+
+Outstanding from earlier PRs (now formally documented as audit-
+trackable in the runbook):
+- skill-refactor: dry-run on ≥2 existing skills, ≥90% equivalence-
+  check agreement
+- skill-tasting: 1 real-skill walkthrough validating A/B flow
+  produces meaningful preference signal
+
+These will be tracked as "Outstanding validation gates" in the
+quarterly audit until completion.
+
+### Bump rationale
+
+Minor (1.7.0 → 1.8.0): governance additions (CI, scripts, docs);
+no breaking change to skill behavior. The skill-judge SKILL.md
+addition is opt-in (script is purely supplemental).
+
 ## [1.7.0] — 2026-04-29
 
 ### Context
