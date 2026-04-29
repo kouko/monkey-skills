@@ -1,0 +1,29 @@
+{
+  "skill_name": "skill-refactor",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "skill-creator-advance is at 5627 words, way over the 4500 soft cap. Refactor it to get back under cap without changing what it does.",
+      "expected_behavior": "Skill verifies prerequisites (test-prompts.json present? baseline run available? invariant snapshot taken?). Runs Phase 0 baseline. Generates refactor moves from the catalog (likely: extract Description Optimization to references/, dedupe overlap, tighten verbose phrasing). For each move runs Q1 (multi-judge equivalence) + Q2 (≥10% reduction) + Q3 (invariants intact). Emits PROCEED on successful rounds, git commit each. Stops when under cap or no more safe moves available.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Refactor my-creative-skill to be shorter. The skill produces marketing copy in different tones.",
+      "expected_behavior": "Skill detects the target produces taste-sensitive output (marketing copy / tone). Self-aborts and recommends skill-tasting instead — equivalence check is unreliable for creative output where 'same content' is fuzzy. Notes that token savings are still possible but should be evaluated by human preference, not LLM-judge equivalence.",
+      "edge_case_dimensions": ["taste-sensitive target", "self-abort + handoff to skill-tasting", "equivalence check unreliable"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "shrink this skill",
+      "expected_behavior": "Skill asks which skill (no target in context). Once provided, checks prerequisites; if test-prompts.json missing, asks user to provide ≥3 representative prompts before proceeding (gate cannot run safely without baseline). Does NOT proceed with refactor moves until baseline + invariants are captured.",
+      "edge_case_dimensions": ["missing target", "missing test-prompts", "prerequisite enforcement"]
+    }
+  ]
+}

@@ -4,6 +4,142 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] — 2026-04-29
+
+### Context
+
+**Final PR of the 5-PR skill-evolution series.** With this release,
+H1–H4 horizons from `dev-workflow/docs/skill-evolution-architecture.md`
+are all addressed at the scaffolding level. Specifically Layer 0
+(foundation telemetry), Layer 5 (closed-loop self-training), and
+test-prompts.json bootstrap for the 7 dev-workflow skills.
+
+After this release the skill-evolution rollout is complete at
+scaffold level; future work is data-driven (telemetry accumulation
+→ audit decisions; preference log accumulation → trained-judge
+activation). No further PRs in this series planned.
+
+### Added (Layer 0 — Telemetry foundation)
+
+`scripts/skill-telemetry.py`:
+- log / summarize / export operations
+- Append skill invocation events to opt-in per-user JSONL log
+  (default `~/.claude/skill-telemetry.jsonl`)
+- Privacy-conscious by default: prompt content hashed (sha256),
+  not stored; prompt_summary opt-in
+- Sanitized export with `--strip-*` flags
+- Standard library only; standalone executable
+
+`dev-workflow/docs/telemetry-setup.md` (~165 lines):
+- Why telemetry (Layer 0 rationale; quarterly audit consumer)
+- Privacy stance (local-only, hashed prompts, sanitized export)
+- Setup options (manual logging vs hook-driven via Claude Code
+  settings.json)
+- Running summaries + sanitized export workflows
+- Telemetry → quarterly audit integration queries
+- What this scaffold does NOT do (no auto-aggregation, no
+  cross-skill correlation, no hook event translation — deliberate
+  gaps; user chooses what to build on top)
+- Troubleshooting + schema versioning
+
+### Changed (Layer 5 — Self-training stub enhancement)
+
+`dev-workflow/skills/skill-tasting/scripts/judge_train_stub.py`:
+- Insufficient-data path now prints 6-step activation methodology
+  inline (load pairs → 80/20 split → Bradley-Terry training →
+  ≥80% held-out gate → vs LLM-judge baseline → deploy as Tier-1
+  pre-filter)
+- Threshold-met path message now self-documents: reaching this
+  path IS the activation signal; open a PR to replace the stub
+- Removed version-specific language so the stub ages cleanly
+- Reference doc (skill-tasting/references/self-trained-judge-pipeline.md)
+  remains the canonical training methodology source; this stub
+  output is a tighter pointer
+
+### Added (test-prompts.json bootstrap)
+
+`test-prompts.json` added to all 7 dev-workflow skills:
+- skill-creator-advance: build new / redesign existing / vague
+  improve (router test)
+- skill-judge: 200-line skill scoring / self-referential meta /
+  vague request
+- git-memory: commit composition with trailers / PR body with
+  Memory section / retrieval query
+- proposal-critique: 7-item backlog / prose with supporting
+  claims / user resistance to triage
+- complexity-critique: feature add LOC eval / PAGNI greenfield
+  test / vague "make simpler"
+- skill-refactor: shrink-skill-creator-advance canonical case /
+  taste-sensitive target self-abort / vague target
+- skill-tasting: status-report tone / constitution rejection /
+  vague output improvement
+
+Each file follows references/test-prompts-schema.md format with
+3 prompts (happy / edge / stress categories). These serve dual
+purposes:
+1. Manual validation by user (closing some validation gates)
+2. Future cross-skill regression CI consumer
+3. Future self-trained-judge training data
+
+### Changed (architecture doc)
+
+`dev-workflow/docs/skill-evolution-architecture.md`:
+- Added "Implementation Status (as of v1.9.0)" section at top
+  showing PR-1 through PR-5 status (all merged)
+- Horizon coverage table: H1 / H2 / H3 / H4 all marked Complete
+  (H4 explicitly noted as scaffolded; training activates at
+  ≥1000 preference pairs per skill)
+- Outstanding validation gates table: skill-refactor +
+  skill-tasting gates noted as audit-tracked, not blocking
+- Title bumped from "Planning Doc" to "Planning + Status Doc"
+- Status banner: LIVING DOCUMENT
+- "Original Planning Doc Begins Below" delimiter so the original
+  planning content is preserved verbatim below the new status
+  section
+
+### Changed
+
+- `dev-workflow/.claude-plugin/plugin.json`: 1.8.0 → 1.9.0
+
+### Bump rationale
+
+Minor (1.8.0 → 1.9.0): foundation / scaffold additions; no
+breaking changes. The telemetry script is opt-in; the trained-
+judge stub still fails fast (no behavior change for users who
+weren't using it); test-prompts.json files are new artifacts
+that don't change skill behavior.
+
+### Final state of the skill-evolution architecture
+
+After this release, dev-workflow ships:
+
+```
+proposal-critique  → complexity-critique → skill-creator-advance
+(list / plan         (single change gate)   (creation + redesign)
+ triage)
+
+skill-judge          skill-refactor        skill-tasting
+(advisory score      (Phase A: tokens /    (Phase B: output A/B,
+ + drift detection)   structure, output     human judge,
+                      preserved; multi-     preference log,
+                      judge ensemble +      constitutional
+                      git ratchet)          pre-filter)
+```
+
+Plus governance infrastructure:
+- Cross-skill regression CI (shared-conventions-drift)
+- Skill governance doc (SSOT registry, lifecycle states)
+- Quarterly audit runbook (7-step checklist)
+- Telemetry scaffold (Layer 0)
+- Self-trained judge scaffold (Layer 5; activates at threshold)
+- test-prompts.json × 7 bootstrap
+
+The 4-skill family (creator / judge / refactor / tasting) +
+3 critique skills (proposal / complexity / git-memory) compose to
+cover skill creation, evaluation, behavior-preserving refactor,
+taste-sensitive A/B, and lifecycle governance — all with explicit
+SSOT discipline and same-PR drift rules enforced by CI.
+
 ## [1.8.0] — 2026-04-29
 
 ### Context

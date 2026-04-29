@@ -1,0 +1,29 @@
+{
+  "skill_name": "skill-creator-advance",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "I want to build a new skill that takes a markdown file and converts it to a structured outline. The skill should ask the user how deep the outline should go (2 levels vs 4 levels) and what format (numbered, bulleted, or roman numerals). Help me create this skill from scratch.",
+      "expected_behavior": "Skill runs Pre-Creation Gates (proposal-critique + complexity-critique) on the proposal, runs the Capture Intent / Interview / Write SKILL.md flow, drafts test cases, and offers eval workflow. Outputs an initial SKILL.md draft and asks for confirmation before saving.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "I want to redesign my existing 'invoice-processor' skill — currently it has 3 phases (parse / validate / format), but I want to split it into two skills: one for parsing and one for formatting, with validation moved into a shared library. Help me redesign this.",
+      "expected_behavior": "Skill recognizes this is the 'major redesign / structural rewrite' case in the Improving Existing Skill router. Reads the existing skill, helps plan the split, drafts new SKILL.md files for both targets, and notes the migration path for callers.",
+      "edge_case_dimensions": ["structural rewrite", "skill-splitting", "migration path required"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "improve my skill",
+      "expected_behavior": "Skill triggers the Improving Existing Skill router; asks the user to clarify which type of improvement (a) token / structure refactor [→ skill-refactor], (b) output quality A/B [→ skill-tasting], or (c) structural rewrite [→ continue here]. Does NOT default into the creation flow.",
+      "edge_case_dimensions": ["vague intent", "router behavior test", "ambiguous request"]
+    }
+  ]
+}

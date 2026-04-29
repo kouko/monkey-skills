@@ -1,0 +1,29 @@
+{
+  "skill_name": "proposal-critique",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-04-29",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Triage this 7-item backlog: 1) refactor auth, 2) add OAuth login, 3) cache user sessions in Redis, 4) audit log every API call, 5) move to gRPC, 6) standardize error responses, 7) add rate limiting. The goal is improved security posture before our SOC 2 audit in Q3.",
+      "expected_behavior": "Skill enumerates 7 items, marks each Grounded / Heuristic-OK / Speculative on grounding axis and Essential / Speculative on necessity axis, applies the Triage Matrix, and presents 3 buckets (KEEP / DEFER / DROP). For each item shows one-line reason. Audit-related items (4, 7) likely KEEP; gRPC migration (5) likely DROP or DEFER given the goal is security-focused.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "We should rewrite the order-processing system in Rust because Rust is memory-safe, the team has been wanting to learn it, and our current Python service handles 50K req/sec but we expect 200K next year.",
+      "expected_behavior": "Skill recognizes prose-shape input. Decomposes into recommendation (rewrite to Rust) + 3 supporting claims (memory-safe / team wants to / scale projection). Triages each claim independently — memory-safety is Grounded but maybe not Essential for this domain; team-learning is Speculative; scale projection is Grounded if traffic data cited. Produces verdict per claim with KEEP-WITH-CAVEAT pattern likely on the recommendation.",
+      "edge_case_dimensions": ["prose-shape input", "decompose required", "recommendation-with-supporting-claims"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "we should do everything in this list",
+      "expected_behavior": "Skill asks for the actual list (it's not in current context). Once provided, runs the standard 5-step gate. If the user pushes back ('I really mean everything'), the skill explains that the Iron Law is non-negotiable: triage produces a verdict per item, even if every item ends up KEEP.",
+      "edge_case_dimensions": ["missing input", "user resistance to triage", "Iron Law enforcement"]
+    }
+  ]
+}
