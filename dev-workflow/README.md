@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 1.5.0
+**Version**: 1.6.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Developer workflow skills — skill authoring, skill quality scoring,
@@ -18,6 +18,7 @@ decisions (proposals before code, single changes to existing code).
 | `git-memory` | — | Portable, tool-agnostic project memory via git commit trailers + PR body `## Memory` section |
 | `proposal-critique` | — | Triage a multi-item proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
 | `complexity-critique` | `/complexity-critique` | Gate a single proposed change to existing code (refactor, feature add, debt cleanup) through three deletion-first questions before implementing |
+| `skill-refactor` | `/skill-refactor` | Token / structure refactor of an existing skill with output equivalence guaranteed via multi-judge ensemble + git ratchet (Phase A of skill-evolution architecture) |
 
 ### The "critique" line
 
@@ -34,6 +35,27 @@ proposal-critique  →  complexity-critique  →  Anthropic simplify
 
 Together they cover most of the "is this worth it" decision space
 without duplicating the gate logic.
+
+### Skill-evolution architecture (skill-refactor + future skill-tasting)
+
+The dev-workflow plugin is rolling out a four-skill family for
+authoring, evaluating, and evolving skills:
+
+```
+skill-creator-advance  →  skill-refactor  →  skill-tasting  →  skill-judge
+(creation + redesign;     (Phase A: token /    (Phase B: output    (advisory
+ spec-first; full         structure refactor;  quality A/B; human  scoring;
+ eval loop)               output preserved;    judge; preference   never
+                          git ratchet)         log)                modifies)
+```
+
+- `skill-refactor` (this PR, v1.6.0) handles *behavior-preserving*
+  refactor of existing skills
+- `skill-tasting` (planned PR-3) will handle taste-sensitive output
+  A/B with human judgment
+- The split avoids the LLM-as-judge / Goodhart drift that monolithic
+  taste-rubrics produce — see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)
+  for the full rationale
 
 ### git-memory — three pillars
 
@@ -93,6 +115,8 @@ dev-workflow/
 ├── commands/
 │   ├── skill-creator-advance.md
 │   └── complexity-critique.md
+├── docs/
+│   └── skill-evolution-architecture.md   ← H1-H4 horizon planning doc
 └── skills/
     ├── skill-creator-advance/
     │   ├── SKILL.md
@@ -113,10 +137,16 @@ dev-workflow/
     ├── proposal-critique/
     │   ├── SKILL.md               ← single-file gate skill (Iron Law / Gate Function / Triage Matrix)
     │   └── README.{en,ja,zh-TW}.md
-    └── complexity-critique/
-        ├── SKILL.md               ← single-file gate skill (Iron Law / 3 Questions / Verdict)
-        ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
-        └── README.{en,ja,zh-TW}.md
+    ├── complexity-critique/
+    │   ├── SKILL.md               ← single-file gate skill (Iron Law / 3 Questions / Verdict)
+    │   ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
+    │   └── README.{en,ja,zh-TW}.md
+    └── skill-refactor/
+        ├── SKILL.md               ← Phase A: token / structure refactor with equivalence guarantee
+        ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted
+        ├── README.{en,ja,zh-TW}.md
+        ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema
+        └── scripts/               ← equivalence_check / multi_judge / golden_compare
 ```
 
 ## License
