@@ -1,234 +1,227 @@
 # copywriting-toolkit
 
-[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
+> パイプライン構造の copywriting plugin — 14 skills + 2 agents + envelope contract、JP / Anglo / 中華圏のコピー伝統に grounded。
 
-pipeline 構造の copywriting plugin。`domain-teams:copywriting-team` から、それぞれ 1 つのジョブだけを担当し、self-contained な standards を持ち、stage 間を JSON-Schema で検証された hand-off envelope で受け渡す 14 個の専門 skill にリファクタリングしたもの。2 つの実行 path（Express Mode + Q1-Q10 intake）、層状の precondition / bounce-back メカニクス、primary source に錨を打った JP + ZH の voice lineage 工法を備える。
+Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
+
+raw な copywriting brief を、polished landing page / sales letter / headline / audit へと 9-phase pipeline で変換する Claude Code plugin。各 phase はそれぞれ独立した skill — intake が brief を明確化し、ideation が散らかして選び、neta injection が文化的フックを足し、5 つの form 別 drafter のいずれかが本文を書き、voice / tone tuning が register を整え、ethics + form gate が legal / framework 違反で配信を止める。神田昌典 PASONA / 谷山雅計 discipline / 今泉 曼陀羅 / Cialdini / Schwartz / 景品表示法 / FTC Endorsement に grounded。
 
 ## Status
 
-- **v1.14.0** — 現行版（2026-04-23）。voice 衝突時の anchor autonomy：`anchor §Prose mechanics / §Don't` が `brief.form_hint` / `brief.tone_cue` / Phase 4 draft 構造と衝突したときは anchor が勝つ；Level-1 フィールドは引き続き immutable。
-- **v1.13.3 / v1.13.4** — フォーマット統一（90 個の anchor を単一 canonical 構造に）+ CI lint gate。
-- **v1.4.0+ anchor library** — EN / JP / ZH / zh-TW / zh-HK にまたがる 90 個の voice anchor を、12 個の quadrant router（`{lang}-q{N}-anchors.md`）+ `voice-anchor-meta.md` に分割。plugin-native standards（`domain-teams` には upstream 対応物なし）。
-- **v1.0.x** — 初期リリース。A/B 比較のため `domain-teams:copywriting-team` と並走。
+- **Version**: 1.14.0（voice 衝突時の anchor autonomy、2026-04-23）
+- **License**: MIT
+- **Stability**: Active。14 skills + 2 agents + 90 voice anchors + 12 quadrant routers + envelope contract + CI lint baseline（accepted failure 3 件）。
+- **A/B coexistence**: この plugin は `domain-teams:copywriting-team` と並列で動作する。original team skill は無変更。両 pipeline は意図的に並存しており、統合は post-A/B retrospective 後に判断。1 回の run では片方を選び、混在させない。
 
-完全な履歴は [`CHANGELOG.md`](CHANGELOG.md) を参照。
+## Background
 
-## 9-Phase Pipeline
+汎用 agent に copywriting を任せると、observable な失敗 mode が 2 つある：
 
-```
-Phase 0  copywriting-intake                       mandatory (Q1-Q10 or Express)
-Phase 1  [inline in intake]                       mandatory, LOOSE recommend planning-team
-Phase 2  copywriting-ideation                     skippable
-Phase 3  copywriting-neta-injection               skippable, hybrid pre/post
-Phase 4  one of:                                  mandatory
-           copywriting-short-form
-           copywriting-mid-form
-           copywriting-long-form-pasona
-           copywriting-long-form-extended
-           copywriting-light-action
-Phase 5  copywriting-voice-quadrant-stage      mandatory
-Phase 6  copywriting-voice-tone-stage             mandatory
-Phase 7  copywriting-ethics-check-stage           mandatory, evaluator-only
-Phase 8  copywriting-form-check-stage             mandatory, evaluator-only
-Alt      copywriting-audit-stage                  alternate entry for external copy
-```
+1. **Aesthetic capture（美的捕獲）** — copywriter persona の model は legal / ethics / framework 判定の lens として不適切。景品表示法違反を綺麗な文章へと「軟化」させてしまう。
+2. **Lineage flattening（系譜の平板化）** — brief が zh-TW なのに「糸井風で書いて」と指示すると 翻譯腔（translation-flavored prose）になる。voice lineage の選択は brief 中の maestro 名ではなく、`output_language` で governed されるべき。
 
-Entry router：`using-copywriting-toolkit`。
+この plugin は (a) persona の異なる 2 agent — drafting する `copywriter`（sonnet）と判定する `copywriter-evaluator`（opus、別 model）、(b) 9-phase の envelope-passing pipeline — 各 phase が scoped responsibility / machine-checkable preconditions / bounded retry cap を持つ — の 2 軸で関心を分離する。
 
-## Pipeline Flow
+## 9-Phase pipeline
 
-happy-path の背骨。bounce-back、retry caps、Express vs Q1-Q10 grill、Phase 6 JP/ZH dual-trigger conflict、audit のサブ stage は §Envelope Contract、§Two Execution Paths、各 skill の SKILL.md を参照。
+| Phase | Skill | 役割 |
+|---|---|---|
+| 0 | `copywriting-intake` | Q1-Q10 brief intake、Level 1/2/3 field elicitation |
+| 1 | `copywriting-intake`（inline） | Message Confirmation、Understanding Summary、Intake Completeness MUST gate |
+| 2 | `copywriting-ideation` | 曼陀羅 + Verbalized Sampling で散らかし → KJ法 + 谷山「なんかいいよね禁止」で選ぶ |
+| 3 | `copywriting-neta-injection` | WebSearch 経由の metaphor / pun / meme / 文学引用 overlay（4 技法） |
+| 4 | 5 drafter のいずれか | Form 別 draft（short / mid / long-pasona / long-extended / light-action） |
+| 5 | `copywriting-voice-quadrant-stage` | Authority↔Affinity × Reason↔Emotion 4 象限への positioning |
+| 6 | `copywriting-voice-tone-stage` | 4-axis tone tuning + 90 anchor の register signal application |
+| 7 | `copywriting-ethics-check-stage` | 景品表示法 / FTC / Cialdini / 小霜「嘘をつかない」 MUST gate |
+| 8 | `copywriting-form-check-stage` | PASONA / BEAF / QUEST / PASTOR / PREP / CREMA stage 完備性 MUST gate |
+
+Phase 0, 1, 4, 5, 6, 7, 8 は必須。Phase 2 / 3 は理由を明記すれば skip 可。Phase 7 + 8 は evaluator-only — 判定するのみで、draft を編集しない。
+
+### Pipeline flow
 
 ```mermaid
 flowchart TD
-    Start([User brief]) --> Router[using-copywriting-toolkit<br/>router + validator]
-    Alt([External copy]) --> Audit[copywriting-audit-stage]
-
-    Router --> P0[Phase 0 · intake<br/>Q1-Q10 or Express]
-    P0 --> G0{Intake MUST}
-    G0 -->|PASS| P2[Phase 2 · ideation<br/><i>skippable</i>]
-    G0 -->|FAIL| P0
-    P2 --> P3[Phase 3 · neta injection<br/><i>skippable, pre- or post-draft</i>]
-    P3 --> P4[Phase 4 · drafter<br/>short / mid / long-pasona / long-extended / light-action]
-    P4 --> P5[Phase 5 · voice quadrant]
-    P5 --> P6[Phase 6 · voice tone<br/>+ JP/ZH lineage Pass 3]
-    P6 --> P7{Phase 7 · ethics MUST}
-    P7 -->|PASS| P8{Phase 8 · form MUST}
-    P7 -->|NEEDS_REVISION| P4
-    P8 -->|PASS| Deliver([Deliver])
-    P8 -->|NEEDS_REVISION| P4
-
-    Audit --> P5
-
-    Router -.->|total_retries ≥ 4| Halt([HALT · ask user])
-
-    classDef gate fill:#fff3e0,stroke:#e65100
-    classDef exit fill:#e8f5e9,stroke:#2e7d32
-    class G0,P7,P8 gate
-    class Deliver,Halt exit
+    R([User brief]) --> I[Phase 0-1<br/>copywriting-intake]
+    R -. 既存コピー .-> A[Audit alt-entry<br/>copywriting-audit-stage]
+    I --> ID[Phase 2<br/>copywriting-ideation]
+    ID --> N[Phase 3<br/>copywriting-neta-injection]
+    N --> D[Phase 4 drafter<br/>short / mid / long-pasona / long-extended / light-action]
+    D --> VQ[Phase 5<br/>voice-quadrant-stage]
+    VQ --> VT[Phase 6<br/>voice-tone-stage]
+    VT --> E[Phase 7<br/>ethics-check-stage]
+    E -- NEEDS_REVISION --> D
+    E -- PASS --> F[Phase 8<br/>form-check-stage]
+    F -- NEEDS_REVISION --> D
+    F -- PASS --> OUT([Delivered])
+    A --> VQ
+    I -. bounce-back .-> I
 ```
 
-## Example Brief — Pipeline への参照入力
+Bounce-back ルール（router 強制）：`bounce_round >= 3` で HALT、`revise_round_count >= 2`（per phase）で HALT、`total_retries >= 4`（合計）で HALT。詳細は `CLAUDE.md §Envelope Violation`。
 
-**brief**（業界用語：creative brief）は pipeline に渡すタスク記述。Phase 0 intake はこれを `envelope.brief{}` フィールドに整形する。完全な brief は Express Mode（単ターン確認）を、不完全な brief は Q1-Q10 マルチターン intake を発火し、欠落を埋める。
+## Brief field 構造
 
-### brief フィールド構造（pipeline が期待するもの）
+Field tier は `copywriting-intake/SKILL.md §Field tiers` 由来。Level 1 が欠けると pipeline は BLOCK される。
 
-| フィールド | Level | 役割 | 例 |
-|---|---|---|---|
-| `product` | 1 — required | 売っているもの、命名済み | 「禾井」台灣在地職人手工醬油 |
-| `value_proposition` | 1 — required | 一文で語るコア価値 | 台灣本土非基改黑豆 + 木桶發酵 18 個月, 月訂 NT$680 含冷藏宅配 |
-| `target_audience` | 1 — required | 具体的な demographic / psychographic | 30-50 歲, 注重料理品質, 已接觸日本職人醬油 / 有機食品店消費 |
-| `schwartz_level` | 1 — required | awareness level（Schwartz 1966）L1-L5 | L2-L3（product-aware → solution-aware）|
-| `form` | 1 — required | copy form | long-form-pasona（新 PASONA, ~3500 字 LP）|
-| `channel` | 1 — required | 配信面 | landing-page hero + body |
-| `target_length` | 1 — long-form 必須 | 想定字数 | ~3500 字 |
-| `output_language` | 1 — required | ja / zh-TW / zh-HK / en など | zh-TW |
-| `voice_reference` | 2 — AI-recommend-or-user-stated | maestro 名（user-quoted only）または記述子 | 糸井重里 / 許舜英 / "default" + voice_description |
-| `voice_description` | 2 — optional | 自由文の style 記述 | "溫暖 / 狀態提案 / 體言止め / 不直接呼籲 / 余韻" |
-| `framework` | 2 — AI-recommend | PASONA family / BEAF / QUEST / PASTOR / PREP / CREMA | 新 PASONA |
-| `claims[]` | context | 比較級・最上級・実証必要な claim（Phase 7 裁定用）| 「全世界最長發酵時間 18 個月」（T2 — benchmark-required）|
-| `neta_opt_in` | 3 — default false | pop-culture / meme / 文学レイヤーを許可するか | false |
-
-**Level 1 = 欠落 → BLOCKED**（intake が Q1-Q10 elicitation を強制）。
-**Level 2 = AI-recommend + user-confirm**（Express では `[AI-recommend]` または `[user-stated]` をラベル付け）。
-**Level 3 = opt-in / default**（`[default]` ラベル）。
-
-### 参照 brief — 「禾井」醤油月額 LP（v1.1.0 E2E test 用）
-
-```
-產品：台灣在地職人手工醬油品牌「禾井」
-受眾：30-50 歲、注重料理品質、已接觸過日本職人醬油 / 有機食品店消費
-      習慣 (Schwartz L2-L3)
-價值主張：使用台灣本土非基改黑豆 + 純手工木桶發酵 18 個月，
-          每瓶 500ml，月訂閱 NT$680 含冷藏宅配
-Voice：糸井重里 ほぼ日 Q3 Affinity-Emotion — 溫暖 / 狀態提案 / 體言止め
-       (user explicitly named 糸井)
-Output language：zh-TW
-Form：long-form-pasona 新 PASONA (6-stage, ~3500 字)
-Channel：landing page hero + body
-
-Claim to test:「全世界最長發酵時間 18 個月」— 最上級 No.1 claim;
-              triggers 景表法 §5-1 優良誤認 if no benchmark
-```
-
-### なぜこの brief か — 何を行使しているか
-
-この brief は pipeline regression のアンカーとして設計されている。toolkit を通すと v1.1.0 のメカニクス一式が行使される：
-
-| Brief 特徴 | 何を発火するか |
+| Tier | Fields |
 |---|---|
-| Level 1 フィールド全揃い | Express Mode が Step 0.5 で適格判定（Q1-Q10 fallback なし）|
-| 糸井重里 user-stated + output `zh-TW` | **Dual-lineage trigger conflict** — router が violation を出し、intake で再確認；user が解決策を選ぶ（典型は Option C：`voice_reference = "default"` + `voice_description` で糸井の規律を prose posture として捉える、JP→ZH の越境移植を避けるため Pass 3 は起動しない）|
-| `「全世界最」` claim | Phase 0.5-B grill での **T2 tier classification** — user-stated + benchmark_missing + 直接違反ではない → `benchmark_required_before_phase_7` flag 付きで Phase 7 へ持ち越し |
-| target_length 3500 字 vs 新 PASONA の帯 3000-10000 | Phase 8 8b の字数帯 → 🟢 in-band（117%）, framework のダウングレード不要 |
-| L2-L3 Schwartz × Q3 voice | `schwartz_alignment: ok` — conflict_flagged の持ち越し不要 |
-| Phase 2 ideation 必須（v1.1.0）| Scoped depth（Express デフォルト）— 8-12 candidates の単一 pass、KJ で 3-5 winners に収束；`ideation_skip_rationale` は設定しない |
-| Phase 4 inline micro-ideation（v1.1.0）| stage ごとに 3-5 候補 paragraph leads + 谷山 3-reason selection；落選候補は `draft_inline_ideation.rejected[]` に記録 |
+| **Level 1**（Must、欠落で BLOCKED） | `form_type`、`product` + `value_proposition`、`target_audience`、form 別 must field（word-count + Schwartz / benefits + channel / emotion + char-limit / candidate count / external_copy 全文） |
+| **Level 2**（Should、AI が推奨し user が承認） | `voice_reference`（糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / 龔大中 / 許舜英 / default）、`framework` / `approach` |
+| **Level 3**（May、opt-in） | `neta_opt_in`（default No）、`neta_source_type_preference` |
 
-期待される最終納品物：~3500 字の zh-TW 新 PASONA 6-stage LP、糸井-spirit-in-zh-TW voice、ethics gate は 1 回 auto-revise 後 PASS（「全世界最」を実証可能な比較級に置換）、Phase 8 PASS（in-band + voice 一貫）、`total_retries = 2`（1 回の dual-trigger bounce + 1 回の ethics auto-revise）、cap of 4 を十分下回る。
+## 2 つの execution path
 
-### この参照 brief の使い方
+`copywriting-intake` は 2 つの path のいずれかで Understanding Summary を生成する：
 
-- 将来の各バージョンの **regression test input** として — toolkit のリリースごとに再走させて catch rate / 出力品質が後退しないか確認
-- 新規ユーザーが brief の構造化を学ぶ **worked onboarding example** として
-- 同一入力で本 plugin と `domain-teams:copywriting-team` を比較する **A/B baseline anchor** として
-- **prompt template** として — 上記の brief block をコピー、product / audience / claim を差し替えて router に貼り付け
-
-この brief はあえて trick の効くケースを表面化するように選ばれている（JP maestro + zh-TW output の衝突、benchmark 無しの最上級 claim）— 普通の vanilla brief ではメカニクスを十分検証できない。
-
-## Intake の 2 つの実行 path
-
-両 path は意図的に異なる方法で FATAL candidate を解決する（`superpowers:brainstorming` vs `superpowers:subagent-driven-development` を踏襲）：
-
-| Path | 発火条件 | ターン数 | Grill resolution |
+| Path | Protocol | 適用条件 | Elicitation |
 |---|---|---|---|
-| **Q1-Q10** | brief が Level 1 フィールドを欠く / bounce-back / user が full intake を要求 | 約 10-14 user ターン | **Inline probe-and-resolve** — agent が Q8 で 3-option menu（supply / rewrite / drop）を提示；tier 概念なし |
-| **Express** | brief が Level 1 フィールドを全部持ち；red flag なし | 約 3 user ターン | **Structured tier return** — T1 ABORT / T2 CARRY / T3 ABORT；tier は evaluator の output contract、`superpowers` subagent status code に類比 |
+| **Q1-Q10**（default） | `copywriting-brainstorming.md` | brief が rough / Level 1 fields 欠落 / bounce-back 後の re-entry | 1 ターンに 1 質問、recommended answer 付き multiple-choice |
+| **Express Mode** | `express-mode.md` | router の Step 0.5 Express Qualification が「raw brief は Level-1-complete」と判定 | 合成 + single-turn confirmation |
 
-[`skills/copywriting-intake/SKILL.md §Execution Paths`](skills/copywriting-intake/SKILL.md) を参照。
+両 path とも同一の Intake Completeness MUST gate を通過する。Express Mode は fast-path であって rigor を緩めた path ではない — rigor は質問数ではなく gate に宿る。bounce-back は re-entry 時の Express を disqualify し、失敗 envelope は user 発話から Q1-Q10 を再走（stale な合成は使わない）。
 
 ## Skills
 
 | Skill | Phase | 役割 |
 |---|---|---|
-| `using-copywriting-toolkit` | router | Entry + Preconditions validator + Express qualification + bounce-back enforcement |
-| `copywriting-intake` | 0-1 | brief intake（Q1-Q10 または Express）+ Intake Completeness MUST gate |
-| `copywriting-ideation` | 2 | Mandalart + KJ + Taniyama + VS divergence / convergence |
-| `copywriting-neta-injection` | 3 | neta overlay（pre-draft bake-in / post-draft overlay）+ Neta Safety SHOULD gate |
-| `copywriting-short-form` | 4 | キャッチコピー / headline（7-15 字, AIDMA A+I, 5 切入點）|
-| `copywriting-mid-form` | 4 | EC product copy（BEAF: Benefit → Evidence → Advantage → Feature）|
-| `copywriting-long-form-pasona` | 4 | PASONA / 新PASONA / PASBECONA（神田昌典 canonical）|
-| `copywriting-long-form-extended` | 4 | QUEST（Fortin 2005）/ PASTOR（Edwards 2016）|
-| `copywriting-light-action` | 4 | PREP / CREMA micro-conversion（Kaushik 2007）|
-| `copywriting-voice-quadrant-stage` | 5 | Voice Quadrant（Authority↔Affinity × Reason↔Emotion）+ Schwartz routing |
-| `copywriting-voice-tone-stage` | 6 | 4-axis tone + Mailchimp context-switching + JP/ZH lineage Pass 3 |
-| `copywriting-ethics-check-stage` | 7 | 景品表示法 / FTC / Cialdini misuse / dark-pattern MUST gate |
-| `copywriting-form-check-stage` | 8 | framework 遵守度（8a MUST）+ qualitative（8b SHOULD）|
-| `copywriting-audit-stage` | alt | 外部 copy を Phase 5-8 で audit |
+| `using-copywriting-toolkit` | router | Route + validate + Express qualify。preconditions の単一強制点 |
+| `copywriting-intake` | 0-1 | Brief intake + Message Confirmation、Q1-Q10 か Express、Intake Completeness MUST gate |
+| `copywriting-ideation` | 2 | 散らかし（曼陀羅 + VS + 小霜）→ 選ぶ（KJ + 谷山 3-reason）、scoped 8-12 / standard 40-64 / full 64-100+ |
+| `copywriting-neta-injection` | 3 | WebSearch pipeline A-D、4 技法、Neta Safety SHOULD gate（景品表示法 ステマ + copyright veto） |
+| `copywriting-short-form` | 4 | キャッチコピー / headline / tagline（7-15 字、AIDMA A+I、3 秒ルール、5 切入點） |
+| `copywriting-mid-form` | 4 | EC product copy を BEAF（Benefit → Evidence → Advantage → Feature）で |
+| `copywriting-long-form-pasona` | 4 | LP / sales letter / 記事広告 を 旧 PASONA（5）/ 新 PASONA（6）/ PASBECONA（9）で |
+| `copywriting-long-form-extended` | 4 | EN / 国際 long-form を QUEST / PASTOR（5/6 stage、expert / shepherd / guide positioning） |
+| `copywriting-light-action` | 4 | Opt-in / subscribe / download / LINE 登録 を PREP / CREMA で（Kaushik 2007 micro-conversion） |
+| `copywriting-voice-quadrant-stage` | 5 | 2 軸 4 象限 — Q1 Authority-Reason / Q2 Authority-Emotion / Q3 Affinity-Emotion / Q4 Affinity-Reason |
+| `copywriting-voice-tone-stage` | 6 | 4-axis tone tuning + Pass 3 voice anchor register signal（90 anchor、12 quadrant router） |
+| `copywriting-ethics-check-stage` | 7 | 景品表示法 2023 / ステマ告示 / FTC 16 CFR 255 / Cialdini misuse / 小霜「嘘をつかない」 MUST gate |
+| `copywriting-form-check-stage` | 8 | PASONA / BEAF / QUEST / PASTOR / PREP / CREMA stage 完備性 + length band + CTA 適切性 MUST gate |
+| `copywriting-audit-stage` | alt | 既存外部コピーに対し Phase 5-8 を走らせる（intake / ideation / draft なし） |
+
+各 skill が自身の `## Preconditions` schema を持ち、router は launch 前に envelope を該当表に対して検証する。schema は各 `SKILL.md` に、envelope vocabulary は `.claude-plugin/envelope.schema.json` に置く。
 
 ## Agents
 
-plugin-local の対（`domain-teams` とは共有しない）：
+Plugin local pair — `domain-teams` とは共有しない。2 agent、2 persona、2 model tier。
 
-| Agent | Persona | Model | 役割 |
+| Agent | Tier | 役割 | Persona |
 |---|---|---|---|
-| `copywriter` | reader-first、糸井 / Ogilvy / Cialdini / Schwartz lineage + 谷山 規律 + 小霜「嘘をつかない」 | sonnet | drafting、ideation、audit バリアント |
-| `copywriter-evaluator` | 厳格な法務 / framework reviewer — NOT a copywriter；aesthetic-capture は明示的に anti-pattern | opus | gate verdict のみ；draft も softening もしない |
+| `copywriter` | sonnet | Drafting / ideation / audit-variant 生成 | 糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計（JP）と Ogilvy / Schwartz / Halbert / Cialdini（Anglo）の系譜を持つ reader-first copywriter、小霜「嘘をつかない」 discipline |
+| `copywriter-evaluator` | opus | Gate verdict（legal / framework / voice / form） | 厳格な legal + framework reviewer、意図的に copywriter ではない |
 
-persona の分離は意図的 — charm された copywriter は 景表法 claim を通してしまう；慎重な evaluator は臨床的な copy を生む。両者を分けることで、それぞれの役割を honest に保てる。
+### なぜ 2 persona か
 
-## Envelope Contract
+aesthetic capture は実際に観察される anti-pattern：copywriter persona の model は景品表示法違反を綺麗な文章に軟化させる。legal-reviewer persona は信頼できる verdict を出す代わりに、rhetorical force を欠く risk-averse なコピーを書く。1 つの multi-role agent でこれを兼ねると両方が濁る。分離が両 role の正直さを保つ。
 
-skill 間の hand-off は JSON-Schema で検証する。[`.claude-plugin/envelope.schema.json`](.claude-plugin/envelope.schema.json) を参照。
+tier を区別できない platform では、両方を opus に default する。両方を sonnet に default するのは **NG** — evaluator の aesthetic-capture 抵抗は低 tier ほど維持しにくい。
 
-主要な invariant：
+## Envelope contract
 
-- **router が単一の enforcement point** — 各 skill の `## Preconditions` schema を launch 前に検証する。下流 skill は self-validate しない。
-- **violation envelope** — precondition 失敗時、router が bounce-back shape（`detected_by`、`missing`、`bounce_to`、`bounce_round`、`user_message`）を発出し、上流に route する。
-- **retry caps** — `bounce_round ≥ 3` → HALT；phase ごとに `revise_round_count ≥ 2` → HALT；`total_retries ≥ 4` 累積 → HALT。
-- **audit trail** — envelope 上の `audit_trail[]` に skill-entered / gate-verdict / violation-detected / bounce-dispatched / halt-ask-user イベントを記録する。
+Phase 間は JSON envelope で受け渡しする。field 名と型は `.claude-plugin/envelope.schema.json` に固定、skill 別 preconditions は各 `SKILL.md §Preconditions` に置く。router（`using-copywriting-toolkit`）が単一強制点 — launch 前に target skill の Preconditions table と envelope を照合し、違反時は target を起動せず `violation` envelope を上流に route する。
 
-## Grounding（一次資料）
+### Retry 上限
 
-`domain-teams:copywriting-team` から byte-identical で保持した standards：
+3 つの counter が 1 つの集計値に集約される。すべて monotonic、すべて router-owned。
 
-- 神田昌典 2016/2021 PASONA / 新PASONA / PASBECONA
-- 谷山雅計 2007 散らかす→選ぶ→磨く + なんかいいよね禁止
-- 今泉浩晃 1987 曼陀羅発想法
-- 川喜田二郎 1967 KJ法
-- Cialdini 1984 *Influence*
-- Schwartz 1966 *Breakthrough Advertising*
-- Zhang et al. 2025 Verbalized Sampling（arXiv:2510.01171）
-- Fortin 2005 QUEST / Edwards 2016 PASTOR
-- 小霜和也 2010/2014 本能分析
-- 秋山隆平・杉山恒太郎 2004 AISAS / 飯髙悠太 2019 ULSSAS
-- Kaushik 2007 micro/macro conversion
-- McQuarrie & Mick 1996 rhetorical operations / Lakoff & Johnson 1980 conceptual metaphor / Thornton 1995 subcultural capital
-- 景品表示法（2023 年改正、2024-10-01 施行）+ FTC Endorsement Guides（16 CFR 255）
-- Vaughn 1980 FCB × Halliday 1978 SFL（2-axis Voice Quadrant — team synthesis）
+| Counter | Trigger | Hard cap |
+|---|---|---|
+| `bounce_round` | skill 起動前の schema 違反 | `>= 3` で HALT |
+| `revise_round_count` | evaluator verdict による auto-revise（per phase） | `>= 2`（per phase）で HALT |
+| `total_retries` | `bounce_round + revise_round_count` | `>= 4`（合算）で HALT |
 
-voice lineage 工法（Tier 3 deep-dive standards）：
+合算 cap は、schema bounce と verdict revision を交互に発生させて個別 cap を回避する pathological cycle を塞ぐためにある。`superpowers:executing-plans` の stop-and-ask に倣う：進捗が出せないときは止まって聞く。
 
-- **JP** — `jp-copy-craft-lineage.md`（cp from domain-teams）：糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 via TCC 年鑑
-- **ZH** — `zh-copy-craft-lineage.md`（v1.0.1 で新規、本 toolkit 用に primary-source で調査）：許舜英（意識形態 / 中興百貨 1988-1999、日付付き 11 件のコーパス）/ 李欣頻（誠品敦南 1990s-2000s、7 件）/ 葉明桂（奧美 / 左岸 1998-、3 件 + 戦略 framework）。4 件の attribution 修正（#Z1-#Z4）と master ごとの LLM 再現 gap analysis を含む。
+### Immutable fields
 
-voice anchor library（v1.4.0+ plugin-native、upstream 対応物なし）：
+特定の envelope field は変更せず通過させなければならない。最後にその field を書いた skill へ、router が envelope を bounce-back する。
 
-- **90 個の anchor**、EN / JP / ZH / zh-TW / zh-HK にまたがる。1 ファイル 1 anchor、統一 canonical 構造（v1.13.3）で `## Metadata`、`## Native critical read`、`## Prose mechanics`、`## Don't`、`## What this register achieves` をカバー
-- **12 個の quadrant router**（`{lang}-q{N}-anchors.md`）が anchor を Voice Quadrant × Schwartz × output language に index 化
-- **Lint 強制** via CI の `scripts/lint-anchor-library.py`；単一 canonical フォーマット、暗黙の代替なし
+- `voice_quadrant`（object 全体、`schwartz_alignment` を含む）
+- `tone_notes.register_signal_applied.named_master_fit_warning`
+- `brief.*` Level 1 fields
+- `audit_trail[]`（append-only）
+- `retries.*`（monotonic — 下流 skill が reset してはならない）
+- `express_mode_used`
+- `violation`（bounce-back 消費まで）
 
-## `domain-teams:copywriting-team` との A/B
+詳細は `CLAUDE.md §Handoff Envelope §Immutable fields`。
 
-オリジナルの `domain-teams:copywriting-team` は無修正で残す（copy-first 原則 — cp 済みファイルは byte-identical）。同一 brief で両者を走らせ、出力品質、gate catch rate、対話コストを比較する。両 plugin は並走；統合は A/B retrospective 後に判断。
+## Grounding
 
-## インストール
+load-bearing なすべての主張は一次資料に anchored される。standards file が原典を引用し、`copywriter` agent は attribution の捏造を禁じられる。
 
-plugin は `monkey-skills` marketplace 経由でロードされる。repo ルートの `.claude-plugin/marketplace.json` の entry を参照。marketplace がロードされれば、14 個の skill + 2 個の agent + plugin レベルの convention（CLAUDE.md）が自動 resolve される。
+| 領域 | Primary sources |
+|---|---|
+| JP long-form | 神田昌典 PASONA / 新 PASONA / PASBECONA |
+| JP discipline | 谷山雅計 2007『広告コピーってこう書くんだ！読本』（なんかいいよね禁止） |
+| Ideation | 今泉 1987 曼陀羅；川喜田 1967 KJ 法；小霜和也 本能分析；Zhang et al. 2025 Verbalized Sampling |
+| Persuasion | Cialdini 1984 *Influence*；Schwartz 1966 *Breakthrough Advertising*（5 levels of awareness） |
+| EN long-form | Fortin 2005 QUEST；Edwards 2016 PASTOR；Hopkins / Halbert / Schwartz / Ogilvy DR canon |
+| Voice 軸 | Halliday 1978 Tenor（Authority↔Affinity）；Vaughn 1980/1986 FCB（Reason↔Emotion） |
+| Mid-form | BEAF（Benefit-first ordering、6-Layer Marketing Pyramid 系譜） |
+| SNS evolution | 秋山・杉山 AISAS；飯髙 ULSSAS |
+| Metaphor / neta | McQuarrie & Mick 1996；Lakoff & Johnson 1980；Thornton 1995（subcultural capital） |
+| Ethics — JP | 景品表示法 2023 改正；ステマ告示（消費者庁 2023） |
+| Ethics — EN | FTC Endorsement Guides 16 CFR 255；Brignull dark patterns |
 
-setup の詳細、permissions、model tier、persistence model：[`CLAUDE.md §Setup`](CLAUDE.md) を参照。
+## Voice anchor library
 
-## ライセンス
+JP / ZH（TW + HK + 大陸）/ EN にまたがる 90 個の individual-creator anchor、12 個の quadrant router file（`{lang}-q{N}-anchors.md`）から address される。各 anchor file は v2 schema に従う（canonical 構造を `scripts/lint-anchor-library.py` が CI baseline 3 件で強制）：
 
-MIT — repository ルートを参照。
+- frontmatter：`schema_version`、`anchor_slug`、`culture`、`quadrant`、`landmark`
+- `## Native critical read`（H2）
+- `## Metadata`（grouped — `Over-mimic risk` + canonical attribution rule）
+- `## What this register achieves`
+- `## Prose mechanics` + `## Don't`
+- 5 件以上の dated / attributable な作例
+
+`voice-anchor-meta.md` 由来の選定ルール：
+
+- lineage は `envelope.brief.output_language` が決める。brief 中の maestro 名ではない。cross-language brief 中の maestro 引用は quadrant signal となり、anchor は target-language の native creator のうち同 quadrant のものになる。
+- Cross-master context：cross-tradition transplant（例：体言止めを zh-TW に強制）は禁止。cross-language borrowing は frontmatter `cross-reference-valid-for[target_lang] == STRONG` かつ brief が許可する場合のみ。
+- Named-creator routing：`brief.voice_reference` が `anchor-{slug}.md` を持つ creator を指名すると、その anchor は forced rank 1 になる。agent の fit-judgement が MEDIUM / LOW のとき `named_master_fit_warning` が発火し、下流 phase へ immutable に伝搬する。
+- v1.14.0 conflict rule：anchor の `§Prose mechanics` / `§Don't` が `brief.form_hint` / `brief.tone_cue` / Phase 4 draft 構造と衝突したとき、anchor が勝つ。mechanics は binding requirement であって示唆ではない。ただし anchor は Level 1 brief field（output_language / audience / product / goal）を override できない。
+
+## Install
+
+```bash
+# Claude Code 上、monkey-skills marketplace 有効化済みで
+/plugin install copywriting-toolkit@monkey-skills
+```
+
+plugin は self-contained：API key 不要、cache path 不要、persistent state なし。skill は自身の directory + plugin-root の共有 resource（`agents/`、`CLAUDE.md`、`envelope.schema.json`）を読む。network access は `copywriting-neta-injection` Phase A の WebSearch（source-taxonomy allow-list — Path A-1 SNS / meme、Path A-2 文学）でのみ必要。
+
+## Usage
+
+すべての copywriting work は slash command で起動：
+
+```
+/using-copywriting-toolkit
+```
+
+intake の shape は 3 種、いずれも同じ entry point から route される：
+
+| Shape | Trigger | Path |
+|---|---|---|
+| **Shape A** — new brief | "X の LP 書いて" / "Y の headline 候補" | Q1-Q10 か Express → ideation → neta → drafter → voice → ethics → form → 配信 |
+| **Shape B** — audit | "この既存コピー review して" + 全文 | `copywriting-audit-stage` が `external_copy` に対し Phase 5-8 を走らせる |
+| **Shape C** — pipeline 途中再開 | 過去 session の envelope | router が `envelope.phase` + 直近 verdict を読み、再開 |
+
+target skill が判明している場合（例：user が明示的に「form gate を走らせて」）は直接呼び出しも可。external caller が initial envelope を構築する際は `CLAUDE.md §External Caller Guide` に従うこと — 事前に `voice_quadrant` を埋めたり手動で `gate_verdict: "PASS"` を立てると下流 gate を silently bypass してしまう。
+
+## Contributing
+
+PR は `https://github.com/kouko/monkey-skills` 経由で歓迎。conventions：
+
+- **Tier 1（byte-identical）** — `skills/*/standards/*.md` 内の third-party academic canon prose（神田 PASONA / 谷山 / Cialdini / Schwartz / Halliday / Vaughn 等）。`domain-teams/skills/copywriting-team/` に対し `diff -q` で検証。神田昌典の PASONA 定義を plugin が編集する権限はない。
+- **Tier 2（divergence 許容）** — `protocols/*.md` / `checklists/*.md` / `rubrics/*.md`。改変時は `<!-- DIVERGED FROM -->` header を付け、original prose をすべて保存（additive only — 削除 / 並び替え / 書き換え禁止）、plugin 固有の追加は `<!-- v1.x.y addition: <topic> -->` block で印を付け、各 divergence を `CHANGELOG.md` に記録。
+- **Plugin-native** — voice anchor library（90 anchor + 12 quadrant router + `voice-anchor-meta.md` + `anchor-schema-v2.md`）には upstream 相当物が存在しない。plugin が完全に own する。
+
+Commit prefix は `feat(copywriting-toolkit)` か `chore(copywriting-toolkit)` のみ — CC CI whitelist。`test:` / `ci:` commit は使わない（fixture は関連 `feat` commit に同梱）。
+
+CI：`scripts/lint-anchor-library.py` が PR ごとに走る。baseline は accepted failure 3 件。それ以外の新規 drift は merge を block する。
+
+## License
+
+MIT — 詳細は repository root の [LICENSE](../LICENSE) を参照。

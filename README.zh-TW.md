@@ -1,90 +1,89 @@
-# Monkey Skills
+# monkey-skills
 
-[English](README.md) | [日本語](README.ja.md) | **繁體中文**
+語言：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-個人 agent skills marketplace — **8 個 plugin**，涵蓋 domain-team quality gate、
-Obsidian vault workflow、哲學思考框架、skill 撰寫工具、investing research、
-pipeline 化的 copywriting、Google Slides 自動生成、以及 Kobo 書庫 skill 蒸餾。
+> 個人 Claude Code plugin marketplace — 8 個 plugin，涵蓋 domain-team workflow、skill 開發、哲學思考、Obsidian、投資、copywriting、slides、書籍 distillation。
 
-## Plugins
+## Plugin 列表
 
-| Plugin | 版本 | Skills | Commands | 說明 |
-|--------|--------:|-------:|---------:|-------------|
-| [`domain-teams`](domain-teams/README.md) | 5.2.0 | 10 | 9 | 9 個團隊的 skill 套件，內建 checkpoint 式 quality gate（planning / code / docs / qa / devops / design / research / investing / copywriting）+ skill-team meta-skill + router |
-| [`obsidian`](obsidian/README.md) | 3.5.0 | 13 (+1 agent) | 1 | Obsidian vault workflow — daily note、diagram、dashboard，整合 kepano 與 axtonliu 的視覺化 skill |
-| [`philosophers-toolkit`](philosophers-toolkit/README.md) | 1.0.4 | 12 | 12 | 哲學思考框架，用於釐清問題與深化推論 |
-| [`dev-workflow`](dev-workflow/README.md) | 1.0.4 | 1 | 1 | Skill 創建與評估流程（改編自 Anthropic → AllanYiin 鏈） |
-| [`investing-toolkit`](investing-toolkit/README.md) | 1.16.5 | 15 | 5 | Investing research — US/JP/TW/KR/CN macro regime 診斷、DCF、stock screener、stock snapshot |
-| [`copywriting-toolkit`](copywriting-toolkit/README.md) | 1.14.0 | 14 | 1 | Pipeline 化 copywriting — 9-phase pipeline、90 voice anchor 資料庫、ethics + form gate。與 `domain-teams:copywriting-team` A/B 並存 |
-| [`slides-toolkit`](slides-toolkit/README.md) | 0.1.0-mvp | 5 | 0 | Google Slides 自動生成 — brief → deck URL pipeline 透過 `gws` CLI、backend-agnostic 設計知識（Minto / SCQA / chart-selection）、Platform-Pivot 多 backend 架構 |
-| [`tsundoku`](tsundoku/README.md) | 0.11.0 | 4 | 5 | Kobo 書庫搜尋 → DRM-free EPUB 下載 → 分章 Markdown → 原子化 agent skill 蒸餾，透過 RIA-TV++ pipeline（Adler 解析閱讀 / 5 個 parallel extractor / triple verification / Zettelkasten） |
+| Plugin | 版本 | Skill 數 | Command 數 | 說明 |
+|--------|------|---------:|-----------:|------|
+| [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting，搭配 checkpoint 為基礎的 quality gate。 |
+| [`dev-workflow`](dev-workflow/) | 2.0.0 | 7 | 4 | Skill 建立、skill 品質評分、git 為基底的 project memory、proposal triage、complexity critique、skill refactor、skill tuning。 |
+| [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 用於釐清問題與深化推理的哲學思考 framework。 |
+| [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
+| [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資研究 toolkit — macro regime 診斷（US/JP/TW/KR/CN）、DCF、screener、透過 primary source adapter 取得的 equity snapshot。 |
+| [`copywriting-toolkit`](copywriting-toolkit/) | 1.14.0 | 14 | 1 | Pipeline 結構的 copywriting — intake、ideation、neta 投入、5 種 form 專屬 drafter、voice 定位、ethics + form gate、audit。 |
+| [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides 產生 toolkit — 透過 `gws` 的 template 化 deck pipeline、backend 中立的 design 知識、Platform-Pivot 架構。 |
+| [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — 把 Kobo 上「買了沒讀」的 e-book，透過 RIA-TV++ distillation pipeline 變成可執行的 agent skill 集。 |
 
-**合計**：74 skills、34 slash commands、8 個 plugin。
+**總計**：81 個 skill、37 個 slash command（橫跨 8 個 plugin）。
 
-每個 plugin 都有自己的 `README.md`，內含完整 skill 清單、架構與用法說明。
-本根目錄 README 僅作為 plugin 索引。
+> 在自身 description 中標示 ⚠️ 的 plugin（`investing-toolkit`、`slides-toolkit`、`tsundoku`，以及 `obsidian` 中的 `defuddle` skill）必須在 Claude Code CLI 環境執行 — Cowork sandbox 會封鎖其對外網路或 subprocess 操作。
 
-## Install
+## 安裝
 
-### Claude Code
+### Claude Code（marketplace）
 
 ```bash
-claude plugin marketplace add kouko/monkey-skills
-# 8 個 plugin 全部可用：
-#   domain-teams, obsidian, philosophers-toolkit, dev-workflow,
-#   investing-toolkit, copywriting-toolkit, slides-toolkit, tsundoku
+/plugin marketplace add kouko/monkey-skills
+/plugin install <plugin-name>@monkey-skills
 ```
 
-只安裝特定 plugin：
+`<plugin-name>` 替換為上表中任一 plugin 名稱。
 
-```bash
-claude plugin install domain-teams@kouko/monkey-skills
-claude plugin install obsidian@kouko/monkey-skills
-# ...其他依此類推
-```
-
-### Gemini CLI
+### Gemini CLI（extension）
 
 ```bash
 gemini extensions install https://github.com/kouko/monkey-skills
 ```
 
+Extension manifest 位於 [`gemini-extension.json`](gemini-extension.json)。
+
 ### Codex
 
-請見 [`.codex/INSTALL.md`](.codex/INSTALL.md)。
+Symlink 與 plugin 兩種安裝方式請見 [`.codex/INSTALL.md`](.codex/INSTALL.md)。
 
 ## Repository 結構
 
 ```
 monkey-skills/
-├── .claude-plugin/marketplace.json   ← 列出所有 8 個 plugin
-├── domain-teams/                     ← Plugin（見 domain-teams/README.md）
-├── obsidian/                         ← Plugin（見 obsidian/README.md）
-├── philosophers-toolkit/             ← Plugin（見 philosophers-toolkit/README.md）
-├── dev-workflow/                     ← Plugin（見 dev-workflow/README.md）
-├── investing-toolkit/                ← Plugin（見 investing-toolkit/README.md）
-├── copywriting-toolkit/              ← Plugin（見 copywriting-toolkit/README.md）
-├── slides-toolkit/                   ← Plugin（見 slides-toolkit/README.md）
-├── tsundoku/                         ← Plugin（見 tsundoku/README.md）
-│
-├── LICENSE                           ← 專案 MIT（kouko）+ 第三方授權指引
-├── ATTRIBUTION.md                    ← 第三方匯入內容彙整
-├── CLAUDE.md                         ← Claude Code context（skill 撰寫慣例）
-├── GEMINI.md                         ← Gemini CLI context
-├── AGENTS.md                         ← Codex / Copilot CLI context
-├── gemini-extension.json             ← Gemini CLI extension manifest
-└── .github/workflows/
-    └── skill-structure.yml           ← CI：SKILL.md 結構 + Conventional Commits 檢查
+├── .claude-plugin/
+│   └── marketplace.json          # plugin 註冊表（8 筆）
+├── .codex/
+│   └── INSTALL.md                # Codex 安裝指南
+├── .github/workflows/
+│   ├── skill-structure.yml       # CI：強制 skill 結構規範
+│   └── scraper-deps-monthly.yml  # CI：每月相依套件更新
+├── domain-teams/                 # plugin
+├── dev-workflow/                 # plugin
+├── philosophers-toolkit/         # plugin
+├── obsidian/                     # plugin
+├── investing-toolkit/            # plugin
+├── copywriting-toolkit/          # plugin
+├── slides-toolkit/               # plugin
+├── tsundoku/                     # plugin
+├── docs/                         # 橫切文件（i18n glossary 等）
+├── scripts/                      # repo 等級的工具
+├── CLAUDE.md                     # 給 Claude Code 的專案慣例
+├── GEMINI.md                     # 給 Gemini CLI 的專案慣例
+├── AGENTS.md                     # 通用 agent 慣例
+├── ATTRIBUTION.md                # 第三方來源與授權
+├── LICENSE                       # MIT
+└── gemini-extension.json         # Gemini CLI extension manifest
 ```
 
-## License
+## 貢獻
 
-本專案採用 MIT License — 詳見 [LICENSE](LICENSE)，內含專案層級宣告與
-各組件授權檔的指引。
+本 repository 屬個人 marketplace，但仍歡迎在
+[GitHub repository](https://github.com/kouko/monkey-skills) 提交 issue 與 PR。
+Skill 開發慣例（檔案路徑、Two-Layer Spec、quality gate、agent role、跨 plugin
+delegation）請參閱 [`CLAUDE.md`](CLAUDE.md)。
 
-第三方組件保留原作者著作權（Steph Ango、Axton Liu、AllanYiin / 尹相志、
-Anthropic）。完整 attribution（含上游 URL、授權條款、修改摘要）請見
-[ATTRIBUTION.md](ATTRIBUTION.md)。
+## 授權
 
-如需回報授權或 attribution 問題，請至
-https://github.com/kouko/monkey-skills/issues 開 issue。
+MIT — 詳細請見 [`LICENSE`](LICENSE)。
+
+第三方來源元件（kepano / axtonliu 的 Obsidian skill、AllanYiin 的
+`skill-creator-advance`、softaworks 的 `skill-judge` 等）皆為 MIT 授權，
+出處列於 [`ATTRIBUTION.md`](ATTRIBUTION.md)。

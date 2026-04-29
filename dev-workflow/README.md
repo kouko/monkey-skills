@@ -1,162 +1,177 @@
 # dev-workflow
 
-**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 1.7.0
-**Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
+> Developer workflow plugin for Claude Code — skill creation, scoring, refactor, tuning, deletion-first critique gates, and git-native project memory.
 
-Developer workflow skills — skill authoring, skill quality scoring,
-portable git-backed project memory, and a *critique* line for design
-decisions (proposals before code, single changes to existing code).
+**Version**: 2.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+
+## Background
+
+Building skills for Claude Code is iterative. You draft a skill, ship it, find that it's too long or that the output is off-tone, and want to improve it — but *how* you improve it depends on the kind of change. **Token / structure refactor** is mechanically verifiable (output should be the same after). **Output quality tuning** is taste-sensitive (only a human can say which variant is better). Mixing the two into one rubric, as `darwin-skill`-style approaches do, lets an LLM-as-judge hill-climb away from human preference (Goodhart drift).
+
+`dev-workflow` ships a family of skills built around two architectural moves:
+
+1. **Two Hats split for skills** (Fowler refactor-vs-feature, applied to skill authoring) — `skill-refactor` (Phase A: behavior-preserving, auto-evaluable) is separate from `skill-tuning` (Phase B: taste-sensitive, human-judged).
+2. **A critique-gate line** that intercepts proposals before they become commits — `proposal-critique` (multi-item triage) → `complexity-critique` (single-change deletion-first gate) → simplify (post-implementation review, lives in Anthropic's own toolkit).
+
+The plugin also bundles `skill-creator-advance` (creation + major redesign), `skill-judge` (advisory 8-dimension quality rubric, never modifies), and `git-memory` (portable project memory written into commit trailers and PR bodies, recoverable by any tool that can read git).
+
+Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md). Operational governance: [`docs/skill-governance.md`](docs/skill-governance.md). Quarterly health checks: [`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md).
 
 ## Skills
 
-| Skill | Slash cmd | Role |
-|-------|-----------|------|
-| `skill-creator-advance` | `/skill-creator-advance` | Create new skills and iteratively improve them via eval-driven loop |
-| `skill-judge` | — | 8-dimension quality rubric for scoring an existing skill (advisory, 0-120 scale) |
-| `git-memory` | — | Portable, tool-agnostic project memory via git commit trailers + PR body `## Memory` section |
-| `proposal-critique` | — | Triage a multi-item proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
-| `complexity-critique` | `/complexity-critique` | Gate a single proposed change to existing code (refactor, feature add, debt cleanup) through three deletion-first questions before implementing |
-| `skill-refactor` | `/skill-refactor` | Token / structure refactor of an existing skill with output equivalence guaranteed via multi-judge ensemble + git ratchet (Phase A of skill-evolution architecture) |
-| `skill-tuning` | `/skill-tuning` | Output quality A/B for an existing skill — generate variants with different output traits, run them blind, capture user preference. Constitution as floor; taste as ceiling; preference log accumulates as RLHF-lite dataset (Phase B of skill-evolution architecture) |
+| Skill | Role |
+|---|---|
+| [`skill-creator-advance`](skills/skill-creator-advance/) | Create new skills or do major redesigns (add / split / merge phases, change agent decomposition, change input/output contract). Iterative eval-driven development with description optimization. |
+| [`skill-refactor`](skills/skill-refactor/) | Token / structure refactor for an existing skill, **preserving output behavior**. Three-question gate: equivalence (multi-judge ensemble) + token reduction (≥10%) + invariant preservation. PROCEED / RESHAPE / REJECT verdict with git ratchet (auto-revert on failure). |
+| [`skill-tuning`](skills/skill-tuning/) | Output quality A/B for an existing skill — generate variants, run them blind, capture human preference (A / B / both / neither). Constitution is the floor; taste is the ceiling. Preference log accumulates as RLHF-lite dataset. |
+| [`skill-judge`](skills/skill-judge/) | Advisory 8-dimension design rubric (Knowledge Delta · Mindset+Procedures · Anti-Pattern · Spec Compliance · Progressive Disclosure · Freedom Calibration · Pattern Recognition · Practical Usability), 0–120 score + A–F grade. Never modifies. |
+| [`proposal-critique`](skills/proposal-critique/) | Triage a multi-item proposal — list, plan, prose recommendation — into KEEP / DEFER / DROP using evidence grounding and YAGNI. |
+| [`complexity-critique`](skills/complexity-critique/) | Gate one specific proposed change through three deletion-first questions: smallest possible end state, before/after LOC, what becomes obsolete. PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT. |
+| [`git-memory`](skills/git-memory/) | Capture decision context (the **why**, not the diff) into commit trailers and PR bodies so any future session — Claude Code, Cursor, Codex, aider, or a human — can reconstruct project knowledge from `git log` alone. |
 
-### The "critique" line
+All seven skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
-`proposal-critique` and `complexity-critique` are siblings — same
-gate-skill shape, different scope and lifecycle stage:
+## The critique line
 
-```
-proposal-critique  →  complexity-critique  →  Anthropic simplify
-(list / plan       (single change to       (post-implementation
- / prose,           existing code,           diff review)
- before any code)   before implementing
-                    the change)
-```
-
-Together they cover most of the "is this worth it" decision space
-without duplicating the gate logic.
-
-### Skill-evolution architecture (skill-refactor + future skill-tuning)
-
-The dev-workflow plugin is rolling out a four-skill family for
-authoring, evaluating, and evolving skills:
+Three skills form a deletion-first review pipeline, each tuned to a different proposal shape:
 
 ```
-skill-creator-advance  →  skill-refactor  →  skill-tuning  →  skill-judge
-(creation + redesign;     (Phase A: token /    (Phase B: output    (advisory
- spec-first; full         structure refactor;  quality A/B; human  scoring;
- eval loop)               output preserved;    judge; preference   never
-                          git ratchet)         log)                modifies)
+proposal-critique           complexity-critique           Anthropic simplify
+─────────────────           ─────────────────────         ──────────────────
+Multi-item proposal         One specific proposed         Post-implementation
+(list / plan / prose)       change (refactor, feature     diff review
+                            add, debt cleanup, or
+                            "should we build this")
+
+Triage: each item gets      Gate: three deletion-first    Review what shipped:
+  KEEP / DEFER / DROP         questions                     reuse, quality,
+based on evidence + YAGNI     • smallest end state          efficiency
+                              • before/after LOC
+                              • what becomes obsolete
+
+Verdict: KEEP / DEFER       Verdict: PROCEED /            (lives outside this
+         / DROP                      PROCEED-WITH-CAVEAT  plugin)
+                                   / RESHAPE / REJECT
 ```
 
-- `skill-refactor` (v1.6.0) handles *behavior-preserving* refactor
-  of existing skills
-- `skill-tuning` (this PR, v1.7.0) handles taste-sensitive output
-  A/B with human judgment + preference log
-- The split avoids the LLM-as-judge / Goodhart drift that monolithic
-  taste-rubrics produce — see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)
-  for the full rationale
+Use `proposal-critique` when handed a backlog or numbered plan. Use `complexity-critique` when one specific change is on the table. Use Anthropic's `simplify` after the change has shipped.
 
-### git-memory — three pillars
+## Skill-evolution architecture
 
-Memory lives in git artifacts themselves, so any tool that reads git
-(Claude Code / Cursor / Codex / aider / human) can reconstruct
-project knowledge without a separate store.
-
-1. **Carrier = git artifacts themselves** — commit messages and PR
-   bodies are the substrate. `git clone` brings the memory; no
-   separate DB, embedding index, or vendor-specific file required.
-2. **Structure = commit trailers** — `Decision:` / `Learning:` /
-   `Gotcha:` ride in the commit footer alongside `Co-Authored-By:`
-   (the `git-interpret-trailers(1)` mechanism). Machine-readable via
-   `git log --pretty='%(trailers)'`, human-readable in prose body.
-3. **Content = decision context, not code** — record **why**, not
-   **what**. The diff already shows what; memory records the
-   reasoning, alternatives rejected, and gotchas for future self.
-
-git-memory complements Claude Code's native `~/.claude/.../MEMORY.md`
-(user-level preferences). Project-level decisions live in git;
-user-level preferences stay in Claude native memory.
-
-## Upstream Chain (MIT)
+`skill-creator-advance`, `skill-refactor`, `skill-tuning`, and `skill-judge` cover the full lifecycle of a skill, split by **size of change × evaluation mode**:
 
 ```
-Anthropic skill-creator (MIT)
-  → AllanYiin (尹相志) skill-creator-advanced (MIT, github.com/AllanYiin/Amon)
-    → kouko dev-workflow/skill-creator-advance (MIT)
+size →    small                medium                large                new
+       ┌────────────────┐  ┌────────────────┐  ┌──────────────────────────────┐
+       │ skill-tuning   │  │ skill-refactor │  │ skill-creator-advance        │
+       │                │  │                │  │ (creation + major redesign)  │
+       │ output quality │  │ token / struct │  │                              │
+       │ A/B variants   │  │ same behavior  │  │ spec-first redesign / new    │
+       │                │  │                │  │                              │
+       │ HUMAN judge    │  │ LLM equiv.     │  │ user-led iteration loop +    │
+       │ each iteration │  │ + git ratchet  │  │ optional AI A/B comparator   │
+       └────────────────┘  └────────────────┘  └──────────────────────────────┘
+
+       skill-judge: advisory 0–120 score, doesn't modify, runs at any time
 ```
 
-Full license / attribution detail in the skill directory's `LICENSE` and
-`NOTICE` files; repo-wide summary in [`../ATTRIBUTION.md`](../ATTRIBUTION.md).
+The split is forced by the cost of evaluation: mechanical changes (refactor) tolerate auto-evaluation because LLM-as-judge can reliably check binary equivalence; taste-sensitive changes (tuning) require a human because LLM-as-judge is unreliable on style, voice, persuasive force, and design feel. Picking the right skill is a question of *what kind of change* you're making, not *how much automation* you want.
 
-## 7 enhancements added in this distribution
+## git-memory pillars
 
-1. monkey-skills ecosystem integration guidance
-2. Description best practices (negative triggers, multilingual keywords)
-3. Eval flow tiering (quick path vs full path)
-4. Existing skill improvement workflow
-5. Slash command creation guidance
-6. Self-assessment pass (auto-fix obvious defects before human review)
-7. Auto-regression detection across iterations
+`git-memory` rests on three claims:
 
-## Design decisions
+1. **Carrier — git artifacts themselves.** Commit messages and PR bodies are the substrate. Any tool that can read git can read the memory. `git clone` brings it with you. No server, no embedding store, no vendor lock-in.
+2. **Structure — commit trailers.** Structured facts ride in git trailers — same mechanism as `Co-Authored-By:` and `Signed-off-by:`. Three trailers cover ~80% of value: `Decision:` (why this approach), `Learning:` (what was discovered), `Gotcha:` (a trap for future you).
+3. **Content — decision context, not code.** The diff already shows *what* changed. Memory records *why*. Aim for entries still valuable six months later when the original context is gone — not entries redundant with the code itself.
 
-- Eval results presented **inline + markdown report** (no browser-based eval-viewer; removed Python web server + browser dependency)
-- **Token-based budget** (~6,000 tokens) instead of line-based (500 lines)
-- Platform adaptations extracted to reference file (optional, loaded on demand)
-- Eval methodology grounded with primary-source citations (Fisher 1935, Beck 2002, Hastie et al. 2009, Myers et al. 2011, ISTQB v4.0)
+`git-memory` complements (does not replace) Claude Code's native `~/.claude/.../MEMORY.md`. Native memory holds user-level preferences across projects; `git-memory` holds project decisions inside the repo.
 
-## Repository Structure
+## Upstream chain
+
+Three of the seven skills derive from MIT-licensed upstreams. Full attribution lives in each skill's `NOTICE` file.
+
+| Skill | Upstream chain |
+|---|---|
+| `skill-creator-advance` | Anthropic [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) → AllanYiin (尹相志) [`skill-creator-advanced`](https://github.com/AllanYiin/Amon) → monkey-skills |
+| `skill-judge` | Leonardo Flores [`skill-judge`](https://github.com/softaworks/agent-toolkit) → monkey-skills |
+| `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills (renamed `reducing-entropy` → `complexity-critique`) |
+
+`skill-refactor`, `skill-tuning`, `proposal-critique`, and `git-memory` are original designs. `skill-refactor` and `skill-tuning` acknowledge `alchaincyf/darwin-skill` (MIT) and Andrej Karpathy's `autoresearch` (MIT) as conceptual inspirations for the autonomous-loop + git-ratchet pattern, but the architecture, gate functions, and evaluation rubrics are independent. Details in each skill's `NOTICE`.
+
+## Repository structure
 
 ```
 dev-workflow/
-├── .claude-plugin/plugin.json
-├── CHANGELOG.md
+├── .claude-plugin/
+│   └── plugin.json
 ├── commands/
+│   ├── complexity-critique.md
 │   ├── skill-creator-advance.md
-│   └── complexity-critique.md
+│   ├── skill-refactor.md
+│   └── skill-tuning.md
 ├── docs/
-│   └── skill-evolution-architecture.md   ← H1-H4 horizon planning doc
-└── skills/
-    ├── skill-creator-advance/
-    │   ├── SKILL.md
-    │   ├── LICENSE               ← AllanYiin + kouko copyright
-    │   ├── NOTICE                ← Upstream chain detail
-    │   ├── agents/               ← grader / comparator / analyzer
-    │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
-    │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
-    ├── skill-judge/
-    │   ├── SKILL.md              ← 8-dimension rubric (E:A:R + 5-pattern + 9 failure-pattern)
-    │   ├── LICENSE / NOTICE      ← upstream attribution
-    │   └── README.{en,ja,zh-TW}.md
-    ├── git-memory/
-    │   ├── SKILL.md
-    │   ├── standards/             ← memory-conventions (trailer schema, PR body, diagram venue)
-    │   ├── protocols/             ← compose-commit / compose-pr
-    │   └── scripts/               ← memory-grep retrieval primitive
-    ├── proposal-critique/
-    │   ├── SKILL.md               ← single-file gate skill (Iron Law / Gate Function / Triage Matrix)
-    │   └── README.{en,ja,zh-TW}.md
-    ├── complexity-critique/
-    │   ├── SKILL.md               ← single-file gate skill (Iron Law / 3 Questions / Verdict)
-    │   ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
-    │   └── README.{en,ja,zh-TW}.md
-    ├── skill-refactor/
-    │   ├── SKILL.md               ← Phase A: token / structure refactor with equivalence guarantee
-    │   ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted
-    │   ├── README.{en,ja,zh-TW}.md
-    │   ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema (canonical SoT for shared conventions)
-    │   └── scripts/               ← equivalence_check / multi_judge / golden_compare
-    └── skill-tuning/
-        ├── SKILL.md               ← Phase B: output quality A/B with human judge + preference log
-        ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted (9 differences)
-        ├── README.{en,ja,zh-TW}.md
-        ├── references/            ← ab-harness / constitutional-judging / preference-log-schema / self-trained-judge-pipeline + 3 shared convention bundled functional copies
-        └── scripts/               ← ab_harness / preference_log / judge_train_stub
+│   ├── skill-evolution-architecture.md
+│   ├── skill-governance.md
+│   ├── quarterly-audit-runbook.md
+│   └── telemetry-setup.md
+├── skills/
+│   ├── complexity-critique/
+│   ├── git-memory/
+│   ├── proposal-critique/
+│   ├── skill-creator-advance/
+│   ├── skill-judge/
+│   ├── skill-refactor/
+│   └── skill-tuning/
+├── CHANGELOG.md
+├── README.md          (this file)
+├── README.ja.md
+└── README.zh-TW.md
 ```
+
+## Install
+
+`dev-workflow` is distributed as part of the [monkey-skills](https://github.com/kouko/monkey-skills) marketplace. Add the marketplace and install the plugin:
+
+```bash
+/plugin marketplace add kouko/monkey-skills
+/plugin install dev-workflow@monkey-skills
+```
+
+## Usage
+
+Four slash commands ship with the plugin:
+
+```
+/skill-creator-advance      # create new or major-redesign existing
+/skill-refactor             # token / structure refactor, equivalence-preserving
+/skill-tuning               # human-judged output A/B
+/complexity-critique        # deletion-first gate on a specific change
+```
+
+The remaining three skills (`skill-judge`, `proposal-critique`, `git-memory`) auto-trigger from natural language — for example:
+
+```
+"Score this skill against the 8-dimension rubric"     → skill-judge
+"Critique this 12-item plan"                          → proposal-critique
+"I'm about to commit — help me write the trailer"     → git-memory
+```
+
+For a worked walk-through of the Two-Hats split (refactor vs tuning), see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) §2.
+
+## Contributing
+
+Contributions follow the repo-wide convention in [`CLAUDE.md`](../CLAUDE.md) at the repo root.
+
+- **Questions**: open a GitHub Discussion or an issue on [kouko/monkey-skills](https://github.com/kouko/monkey-skills/issues).
+- **PRs**: branch from `main`, follow Conventional Commits, run the convention-drift CI script (`scripts/check-shared-conventions-drift.py`) locally before pushing.
+- **Skill-internal READMEs** are authored directly by the skill owner against a lighter rule set (see [`docs/skill-governance.md`](docs/skill-governance.md) §README Authoring Discipline). Plugin-level READMEs (this file and its translations) go through `domain-teams:docs-team`.
+- **New shared conventions** must update the SSOT registry in [`docs/skill-governance.md`](docs/skill-governance.md) and add a pair to the drift CI manifest in the same PR.
 
 ## License
 
-MIT — see repository root [`LICENSE`](../LICENSE) and skill-level
-[`LICENSE`](skills/skill-creator-advance/LICENSE) / [`NOTICE`](skills/skill-creator-advance/NOTICE).
+MIT. Skills with MIT-licensed upstreams (`skill-creator-advance`, `skill-judge`, `complexity-critique`) preserve their full copyright chain in their per-skill `LICENSE` and `NOTICE` files.
+
+See [LICENSE](../LICENSE) at the repo root for the umbrella license.

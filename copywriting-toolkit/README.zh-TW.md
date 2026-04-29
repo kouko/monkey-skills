@@ -1,234 +1,227 @@
 # copywriting-toolkit
 
-[English](README.md) | [日本語](README.ja.md) | **繁體中文**
+> Pipeline 結構化的 copywriting plugin — 14 skills + 2 agents + envelope contract，grounded 於 JP / Anglo / 華語文案傳統。
 
-Pipeline 化的 copywriting plugin。從 `domain-teams:copywriting-team` 重構為 14 個專職 skill — 每個 skill 只做一件事、自包含 standards、各 stage 之間以 JSON-Schema 驗證的 hand-off envelope 交接。提供兩條執行路徑（Express Mode + Q1-Q10 intake）、層次化的 precondition / bounce-back 機制，以及以 primary source 錨定的 JP + ZH voice lineage 工法。
+Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文**
+
+把 raw 的 copywriting brief 透過 9-phase pipeline 變成精修過的 landing page、sales letter、headline 或 audit 的 Claude Code plugin。每個 phase 都是獨立的 skill — intake 釐清需求、ideation 先發散後收斂、neta injection 加上文化鉤子、5 個 form 對應的 drafter 之一寫稿、voice / tone tuning 對齊 register、ethics + form gate 在 legal 或 framework 違規時擋下交付。Grounded 於 神田昌典 PASONA / 谷山雅計 discipline / 今泉 曼陀羅 / Cialdini / Schwartz / 景品表示法 / FTC Endorsement。
 
 ## Status
 
-- **v1.14.0** — 目前版本（2026-04-23）。Voice 衝突時的 anchor autonomy：當 `anchor §Prose mechanics / §Don't` 與 `brief.form_hint` / `brief.tone_cue` / Phase 4 draft 結構衝突時，由 anchor 勝出；Level-1 欄位仍維持 immutable。
-- **v1.13.3 / v1.13.4** — 格式統一（90 個 anchor 採用單一 canonical 結構）+ CI lint gate。
-- **v1.4.0+ anchor library** — 跨 EN / JP / ZH / zh-TW / zh-HK 共 90 個 voice anchor，分到 12 個 quadrant router（`{lang}-q{N}-anchors.md`）+ `voice-anchor-meta.md`。Plugin-native standards（`domain-teams` 沒有對應 upstream）。
-- **v1.0.x** — 初始發行版。與 `domain-teams:copywriting-team` 並存以利 A/B 比較。
+- **Version**：1.14.0（voice 衝突時的 anchor autonomy，2026-04-23）
+- **License**：MIT
+- **Stability**：Active。14 skills + 2 agents + 90 voice anchors + 12 quadrant routers + envelope contract + CI lint baseline（accepted failure 3 件）。
+- **A/B coexistence**：本 plugin 與 `domain-teams:copywriting-team` 並行運作。原始 team skill 不動。兩條 pipeline 是刻意並存，整合延後到 post-A/B retrospective 再決定。單次 run 擇一使用，不要交錯。
 
-完整歷史請見 [`CHANGELOG.md`](CHANGELOG.md)。
+## Background
 
-## 9-Phase Pipeline
+通用 agent 處理 copywriting 時有兩種可觀察的失敗 mode：
 
-```
-Phase 0  copywriting-intake                       mandatory (Q1-Q10 or Express)
-Phase 1  [inline in intake]                       mandatory, LOOSE recommend planning-team
-Phase 2  copywriting-ideation                     skippable
-Phase 3  copywriting-neta-injection               skippable, hybrid pre/post
-Phase 4  one of:                                  mandatory
-           copywriting-short-form
-           copywriting-mid-form
-           copywriting-long-form-pasona
-           copywriting-long-form-extended
-           copywriting-light-action
-Phase 5  copywriting-voice-quadrant-stage      mandatory
-Phase 6  copywriting-voice-tone-stage             mandatory
-Phase 7  copywriting-ethics-check-stage           mandatory, evaluator-only
-Phase 8  copywriting-form-check-stage             mandatory, evaluator-only
-Alt      copywriting-audit-stage                  alternate entry for external copy
-```
+1. **Aesthetic capture（美學捕獲）** — copywriter persona 的 model 不適合做 legal / ethics / framework 判斷。它會把景品表示法違規軟化成漂亮文字。
+2. **Lineage flattening（語系扁平化）** — brief 是 zh-TW 卻叫 model「用糸井的風格寫」會產生翻譯腔。voice lineage 應由 `output_language` governed，而不是 brief 裡提到的 maestro 名。
 
-Entry router：`using-copywriting-toolkit`。
+本 plugin 透過兩條軸線分離關注點：(a) persona 不同的兩個 agent — 負責 drafting 的 `copywriter`（sonnet）跟負責判定的 `copywriter-evaluator`（opus，永遠不是同一個 model）；(b) 9-phase 的 envelope-passing pipeline — 每個 phase 都有 scoped responsibility、machine-checkable preconditions、bounded retry cap。
 
-## Pipeline Flow
+## 9-Phase pipeline
 
-Happy-path 主幹。Bounce-back、retry caps、Express vs Q1-Q10 grill、Phase 6 JP/ZH dual-trigger conflict、audit 子 stage 等內容請見 §Envelope Contract、§Two Execution Paths 與各 skill 的 SKILL.md。
+| Phase | Skill | 角色 |
+|---|---|---|
+| 0 | `copywriting-intake` | Q1-Q10 brief intake、Level 1/2/3 field elicitation |
+| 1 | `copywriting-intake`（inline） | Message Confirmation、Understanding Summary、Intake Completeness MUST gate |
+| 2 | `copywriting-ideation` | 曼陀羅 + Verbalized Sampling 發散 → KJ法 + 谷山「なんかいいよね禁止」收斂 |
+| 3 | `copywriting-neta-injection` | 透過 WebSearch 取得 metaphor / pun / meme / 文學引用做 overlay（4 種技法） |
+| 4 | 5 個 drafter 之一 | Form 對應的 draft（short / mid / long-pasona / long-extended / light-action） |
+| 5 | `copywriting-voice-quadrant-stage` | Authority↔Affinity × Reason↔Emotion 4 象限 positioning |
+| 6 | `copywriting-voice-tone-stage` | 4-axis tone tuning + 90 anchor 的 register signal application |
+| 7 | `copywriting-ethics-check-stage` | 景品表示法 / FTC / Cialdini / 小霜「嘘をつかない」 MUST gate |
+| 8 | `copywriting-form-check-stage` | PASONA / BEAF / QUEST / PASTOR / PREP / CREMA stage 完整性 MUST gate |
+
+Phase 0、1、4、5、6、7、8 必跑。Phase 2 / 3 提供理由可以 skip。Phase 7 + 8 是 evaluator-only — 只判定，不修改 draft。
+
+### Pipeline flow
 
 ```mermaid
 flowchart TD
-    Start([User brief]) --> Router[using-copywriting-toolkit<br/>router + validator]
-    Alt([External copy]) --> Audit[copywriting-audit-stage]
-
-    Router --> P0[Phase 0 · intake<br/>Q1-Q10 or Express]
-    P0 --> G0{Intake MUST}
-    G0 -->|PASS| P2[Phase 2 · ideation<br/><i>skippable</i>]
-    G0 -->|FAIL| P0
-    P2 --> P3[Phase 3 · neta injection<br/><i>skippable, pre- or post-draft</i>]
-    P3 --> P4[Phase 4 · drafter<br/>short / mid / long-pasona / long-extended / light-action]
-    P4 --> P5[Phase 5 · voice quadrant]
-    P5 --> P6[Phase 6 · voice tone<br/>+ JP/ZH lineage Pass 3]
-    P6 --> P7{Phase 7 · ethics MUST}
-    P7 -->|PASS| P8{Phase 8 · form MUST}
-    P7 -->|NEEDS_REVISION| P4
-    P8 -->|PASS| Deliver([Deliver])
-    P8 -->|NEEDS_REVISION| P4
-
-    Audit --> P5
-
-    Router -.->|total_retries ≥ 4| Halt([HALT · ask user])
-
-    classDef gate fill:#fff3e0,stroke:#e65100
-    classDef exit fill:#e8f5e9,stroke:#2e7d32
-    class G0,P7,P8 gate
-    class Deliver,Halt exit
+    R([User brief]) --> I[Phase 0-1<br/>copywriting-intake]
+    R -. 既有文案 .-> A[Audit alt-entry<br/>copywriting-audit-stage]
+    I --> ID[Phase 2<br/>copywriting-ideation]
+    ID --> N[Phase 3<br/>copywriting-neta-injection]
+    N --> D[Phase 4 drafter<br/>short / mid / long-pasona / long-extended / light-action]
+    D --> VQ[Phase 5<br/>voice-quadrant-stage]
+    VQ --> VT[Phase 6<br/>voice-tone-stage]
+    VT --> E[Phase 7<br/>ethics-check-stage]
+    E -- NEEDS_REVISION --> D
+    E -- PASS --> F[Phase 8<br/>form-check-stage]
+    F -- NEEDS_REVISION --> D
+    F -- PASS --> OUT([Delivered])
+    A --> VQ
+    I -. bounce-back .-> I
 ```
 
-## Example Brief — Pipeline 的參考輸入
+Bounce-back 規則（router 強制執行）：`bounce_round >= 3` HALT、`revise_round_count >= 2`（per phase）HALT、`total_retries >= 4`（合計）HALT。詳見 `CLAUDE.md §Envelope Violation`。
 
-**brief**（業界術語：creative brief）是你交給 pipeline 的任務描述。Phase 0 intake 會把它整理成 `envelope.brief{}` 的各欄位。完整的 brief 會觸發 Express Mode（單輪確認）；不完整的 brief 則會走 Q1-Q10 多輪 intake 來補齊資訊。
+## Brief 欄位結構
 
-### Brief 欄位結構（pipeline 預期的格式）
+Field tier 來自 `copywriting-intake/SKILL.md §Field tiers`。Level 1 缺少會 BLOCK pipeline。
 
-| 欄位 | Level | 角色 | 範例 |
-|---|---|---|---|
-| `product` | 1 — required | 你要賣的東西、有命名 | 「禾井」台灣在地職人手工醬油 |
-| `value_proposition` | 1 — required | 一句話的核心價值 | 台灣本土非基改黑豆 + 木桶發酵 18 個月, 月訂 NT$680 含冷藏宅配 |
-| `target_audience` | 1 — required | 具體 demographic / psychographic | 30-50 歲, 注重料理品質, 已接觸日本職人醬油 / 有機食品店消費 |
-| `schwartz_level` | 1 — required | Awareness level（Schwartz 1966）L1-L5 | L2-L3（product-aware → solution-aware）|
-| `form` | 1 — required | Copy form | long-form-pasona（新 PASONA, ~3500 字 LP）|
-| `channel` | 1 — required | 投放介面 | landing-page hero + body |
-| `target_length` | 1 — long-form 必填 | 預期字數 | ~3500 字 |
-| `output_language` | 1 — required | ja / zh-TW / zh-HK / en 等 | zh-TW |
-| `voice_reference` | 2 — AI-recommend-or-user-stated | Maestro 名稱（user-quoted only）或描述詞 | 糸井重里 / 許舜英 / "default" + voice_description |
-| `voice_description` | 2 — optional | 自由文字風格描述 | "溫暖 / 狀態提案 / 體言止め / 不直接呼籲 / 余韻" |
-| `framework` | 2 — AI-recommend | PASONA family / BEAF / QUEST / PASTOR / PREP / CREMA | 新 PASONA |
-| `claims[]` | context | 任何比較級 / 最高級 / 需佐證的 claim（供 Phase 7 裁決）| 「全世界最長發酵時間 18 個月」（T2 — benchmark-required）|
-| `neta_opt_in` | 3 — default false | 是否允許 pop-culture / meme / 文學疊層 | false |
-
-**Level 1 = 缺少時 BLOCKED**（intake 強制走 Q1-Q10 elicitation）。
-**Level 2 = AI-recommend + user-confirm**（Express 會標註 `[AI-recommend]` 或 `[user-stated]`）。
-**Level 3 = opt-in / 預設**（標註 `[default]`）。
-
-### 參考 brief — 「禾井」醬油月訂閱 LP（v1.1.0 E2E test 使用）
-
-```
-產品：台灣在地職人手工醬油品牌「禾井」
-受眾：30-50 歲、注重料理品質、已接觸過日本職人醬油 / 有機食品店消費
-      習慣 (Schwartz L2-L3)
-價值主張：使用台灣本土非基改黑豆 + 純手工木桶發酵 18 個月，
-          每瓶 500ml，月訂閱 NT$680 含冷藏宅配
-Voice：糸井重里 ほぼ日 Q3 Affinity-Emotion — 溫暖 / 狀態提案 / 體言止め
-       (user explicitly named 糸井)
-Output language：zh-TW
-Form：long-form-pasona 新 PASONA (6-stage, ~3500 字)
-Channel：landing page hero + body
-
-Claim to test:「全世界最長發酵時間 18 個月」— 最上級 No.1 claim;
-              triggers 景表法 §5-1 優良誤認 if no benchmark
-```
-
-### 為何用這個 brief — 它能驗證的東西
-
-這個 brief 設計成 pipeline regression 的錨點。把它跑過 toolkit 可以驗證 v1.1.0 的整套機制：
-
-| Brief 特徵 | 觸發了什麼 |
+| Tier | 欄位 |
 |---|---|
-| 全部 Level 1 欄位齊全 | Express Mode 在 Step 0.5 直接通過（不需要 Q1-Q10 fallback）|
-| 糸井重里 user-stated + output `zh-TW` | **Dual-lineage trigger conflict** — router 發出 violation、透過 intake 重新確認；user 選擇解法（通常是 Option C：`voice_reference = "default"` + `voice_description` 把糸井紀律當成 prose posture 帶過去, Pass 3 不啟動以避免 JP→ZH 跨語移植）|
-| `「全世界最」` claim | Phase 0.5-B grill 中的 **T2 tier classification** — user-stated + benchmark_missing + 不是直接違規 → 帶到 Phase 7 並掛上 `benchmark_required_before_phase_7` flag |
-| target_length 3500 字 vs 新 PASONA 區間 3000-10000 | Phase 8 8b 字數區間 → 🟢 in-band（117%）, 不需要 framework 降級 |
-| L2-L3 Schwartz × Q3 voice | `schwartz_alignment: ok` — 不需要 conflict_flagged 跨 phase 帶過去 |
-| Phase 2 ideation 強制（v1.1.0）| Scoped depth（Express 預設）— 8-12 candidates 單輪、KJ 收斂為 3-5 winners；`ideation_skip_rationale` 不設定 |
-| Phase 4 inline micro-ideation（v1.1.0）| 每個 stage 3-5 candidate paragraph leads + 谷山 3-reason selection；被淘汰的候選記錄在 `draft_inline_ideation.rejected[]` |
+| **Level 1**（Must，缺少即 BLOCKED） | `form_type`、`product` + `value_proposition`、`target_audience`、form 對應的 must field（word-count + Schwartz / benefits + channel / emotion + char-limit / candidate count / external_copy 全文） |
+| **Level 2**（Should，AI 推薦使用者核可） | `voice_reference`（糸井 / 岩崎 / 眞木 / 谷山 / Ogilvy / 龔大中 / 許舜英 / default）、`framework` / `approach` |
+| **Level 3**（May，opt-in） | `neta_opt_in`（default No）、`neta_source_type_preference` |
 
-預期最終交付：~3500 字 zh-TW 新 PASONA 6-stage LP，糸井-spirit-in-zh-TW voice，ethics gate 經 1 次 auto-revise 後 PASS（拿掉「全世界最」→ 替換為可佐證的比較級）, Phase 8 PASS（in-band + voice 一致）, `total_retries = 2`（1 次 dual-trigger bounce + 1 次 ethics auto-revise）, 遠低於 cap of 4。
+## 兩條 execution path
 
-### 怎麼用這個參考 brief
+`copywriting-intake` 透過下列其中一條 path 產出 Understanding Summary：
 
-- 當作未來各版本的 **regression test input** — 每次 toolkit 釋出後重跑一次, 檢查 catch rate / 輸出品質有沒有 regress
-- 當作新使用者學怎麼結構化 brief 的 **worked onboarding example**
-- 當作把這個 plugin 與 `domain-teams:copywriting-team` 在同一個 input 上對比的 **A/B baseline anchor**
-- 當作 **prompt template** — 把上面 brief block 複製過去, 替換 product / audience / claim, 再貼進 router
-
-這個 brief 刻意挑了會浮現 tricky cases 的設計（JP maestro + zh-TW output 衝突、最上級 claim 沒有 benchmark），而不是一個普通直通的 case — 普通 brief 能驗證的機制比較少。
-
-## Intake 的兩條執行路徑
-
-兩條路徑刻意用不同方式處理 FATAL candidate（仿照 `superpowers:brainstorming` vs `superpowers:subagent-driven-development`）：
-
-| Path | 觸發條件 | 輪數 | Grill resolution |
+| Path | Protocol | 適用時機 | Elicitation |
 |---|---|---|---|
-| **Q1-Q10** | Brief 缺 Level 1 欄位、被 bounce-back、或 user 主動要求完整 intake | 約 10-14 個 user 輪次 | **Inline probe-and-resolve** — agent 在 Q8 提供 3-option menu（supply / rewrite / drop）；沒有 tier 概念 |
-| **Express** | Brief 帶齊所有 Level 1 欄位；無紅旗 | 約 3 個 user 輪次 | **Structured tier return** — T1 ABORT / T2 CARRY / T3 ABORT；tier 是 evaluator 的 output contract，類似 `superpowers` subagent status code |
+| **Q1-Q10**（default） | `copywriting-brainstorming.md` | brief 粗糙 / Level 1 fields 缺漏 / bounce-back 後 re-entry | 1 turn 1 題、附 recommended answer 的多選 |
+| **Express Mode** | `express-mode.md` | router Step 0.5 Express Qualification 判定 raw brief 已 Level-1-complete | 合成 + single-turn confirmation |
 
-詳見 [`skills/copywriting-intake/SKILL.md §Execution Paths`](skills/copywriting-intake/SKILL.md)。
+兩條 path 都跑同一個 Intake Completeness MUST gate。Express Mode 是快速通道，不是寬鬆通道 — rigor 在 gate 而不在題數。bounce-back 會讓 re-entry 失去 Express 資格，失敗的 envelope 會從使用者原話重跑 Q1-Q10（不沿用 stale 合成）。
 
 ## Skills
 
 | Skill | Phase | 角色 |
 |---|---|---|
-| `using-copywriting-toolkit` | router | Entry + Preconditions validator + Express qualification + bounce-back enforcement |
-| `copywriting-intake` | 0-1 | Brief intake（Q1-Q10 或 Express）+ Intake Completeness MUST gate |
-| `copywriting-ideation` | 2 | Mandalart + KJ + Taniyama + VS divergence / convergence |
-| `copywriting-neta-injection` | 3 | Neta overlay（pre-draft bake-in 或 post-draft overlay）+ Neta Safety SHOULD gate |
-| `copywriting-short-form` | 4 | キャッチコピー / headline（7-15 字, AIDMA A+I, 5 切入點）|
-| `copywriting-mid-form` | 4 | EC product copy（BEAF: Benefit → Evidence → Advantage → Feature）|
-| `copywriting-long-form-pasona` | 4 | PASONA / 新PASONA / PASBECONA（神田昌典 canonical）|
-| `copywriting-long-form-extended` | 4 | QUEST（Fortin 2005）/ PASTOR（Edwards 2016）|
-| `copywriting-light-action` | 4 | PREP / CREMA micro-conversion（Kaushik 2007）|
-| `copywriting-voice-quadrant-stage` | 5 | Voice Quadrant（Authority↔Affinity × Reason↔Emotion）+ Schwartz routing |
-| `copywriting-voice-tone-stage` | 6 | 4-axis tone + Mailchimp context-switching + JP/ZH lineage Pass 3 |
-| `copywriting-ethics-check-stage` | 7 | 景品表示法 / FTC / Cialdini misuse / dark-pattern MUST gate |
-| `copywriting-form-check-stage` | 8 | Framework 遵循度（8a MUST）+ qualitative（8b SHOULD）|
-| `copywriting-audit-stage` | alt | 用 Phase 5-8 audit 外部 copy |
+| `using-copywriting-toolkit` | router | Route + validate + Express qualify。preconditions 的單一強制點 |
+| `copywriting-intake` | 0-1 | Brief intake + Message Confirmation、Q1-Q10 或 Express、Intake Completeness MUST gate |
+| `copywriting-ideation` | 2 | 發散（曼陀羅 + VS + 小霜）→ 收斂（KJ + 谷山 3-reason），scoped 8-12 / standard 40-64 / full 64-100+ |
+| `copywriting-neta-injection` | 3 | WebSearch pipeline A-D、4 種技法、Neta Safety SHOULD gate（景品表示法 ステマ + 著作權 veto） |
+| `copywriting-short-form` | 4 | キャッチコピー / headline / tagline（7-15 字、AIDMA A+I、3 秒原則、5 切入點） |
+| `copywriting-mid-form` | 4 | EC product copy 用 BEAF（Benefit → Evidence → Advantage → Feature） |
+| `copywriting-long-form-pasona` | 4 | LP / sales letter / 記事広告 用 旧 PASONA（5）/ 新 PASONA（6）/ PASBECONA（9） |
+| `copywriting-long-form-extended` | 4 | EN / 國際 long-form 用 QUEST / PASTOR（5/6 stage、expert / shepherd / guide positioning） |
+| `copywriting-light-action` | 4 | Opt-in / subscribe / download / LINE 登錄 用 PREP / CREMA（Kaushik 2007 micro-conversion） |
+| `copywriting-voice-quadrant-stage` | 5 | 2 軸 4 象限 — Q1 Authority-Reason / Q2 Authority-Emotion / Q3 Affinity-Emotion / Q4 Affinity-Reason |
+| `copywriting-voice-tone-stage` | 6 | 4-axis tone tuning + Pass 3 voice anchor register signal（90 anchor、12 quadrant router） |
+| `copywriting-ethics-check-stage` | 7 | 景品表示法 2023 / ステマ告示 / FTC 16 CFR 255 / Cialdini misuse / 小霜「嘘をつかない」 MUST gate |
+| `copywriting-form-check-stage` | 8 | PASONA / BEAF / QUEST / PASTOR / PREP / CREMA stage 完整性 + length band + CTA 適切性 MUST gate |
+| `copywriting-audit-stage` | alt | 對既有外部文案跑 Phase 5-8（不做 intake / ideation / draft） |
+
+每個 skill 都帶自己的 `## Preconditions` schema，router 啟動 skill 之前會用該表驗證 envelope。schema 在各 `SKILL.md` 裡，envelope 詞彙在 `.claude-plugin/envelope.schema.json`。
 
 ## Agents
 
-Plugin-local 的搭檔（不與 `domain-teams` 共用）：
+Plugin 本地的成對 agent — 不與 `domain-teams` 共用。兩個 agent、兩種 persona、兩種 model tier。
 
-| Agent | Persona | Model | 角色 |
+| Agent | Tier | 角色 | Persona |
 |---|---|---|---|
-| `copywriter` | 以讀者為先, 走 糸井 / Ogilvy / Cialdini / Schwartz lineage + 谷山 紀律 + 小霜「嘘をつかない」 | sonnet | Drafting、ideation、audit 變體 |
-| `copywriter-evaluator` | 嚴格的法務 / framework 審稿者 — NOT a copywriter；aesthetic-capture 明確列為 anti-pattern | opus | 只給 gate verdict；不 draft 也不軟化 |
+| `copywriter` | sonnet | Drafting / ideation / audit-variant 產出 | reader-first 的文案撰寫者，承襲糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計（JP）與 Ogilvy / Schwartz / Halbert / Cialdini（Anglo）兩條系譜，奉行小霜「嘘をつかない」 discipline |
+| `copywriter-evaluator` | opus | Gate verdict（legal / framework / voice / form） | 嚴格的 legal + framework reviewer，刻意不是 copywriter |
 
-Persona 切分是刻意的 — 一個被 charm 到的 copywriter 會放行 景表法 claim；一個謹慎的 evaluator 會生出臨床式的 copy。把兩者分開, 才能讓兩個角色都保持誠實。
+### 為何兩種 persona
 
-## Envelope Contract
+aesthetic capture 是真實可觀察的 anti-pattern：copywriter persona 的 model 會把景品表示法違規軟化成漂亮文字。legal-reviewer persona 給得出可靠的 verdict，但寫出來的稿欠缺修辭力，過度避險。把這兩件事塞進同一個 multi-role agent 兩邊都會糊掉。分離才能讓兩種角色各自誠實。
 
-Skill 之間的 hand-off 都用 JSON-Schema 驗證。詳見 [`.claude-plugin/envelope.schema.json`](.claude-plugin/envelope.schema.json)。
+無法區分 tier 的 platform 上，請把兩者都 default 成 opus。**不要**兩者都 default 成 sonnet — evaluator 抗 aesthetic-capture 的能力在低 tier 更難維持。
 
-關鍵 invariant：
+## Envelope contract
 
-- **Router 是單一 enforcement point** — 在 launch 之前對每個 skill 的 `## Preconditions` schema 做驗證。下游 skill 不自我驗證。
-- **Violation envelope** — precondition 失敗時, router 發出 bounce-back 形狀（`detected_by`、`missing`、`bounce_to`、`bounce_round`、`user_message`）並向上 route。
-- **Retry caps** — `bounce_round ≥ 3` → HALT；每個 phase `revise_round_count ≥ 2` → HALT；`total_retries ≥ 4` 累計 → HALT。
-- **Audit trail** — envelope 上的 `audit_trail[]` 紀錄 skill-entered / gate-verdict / violation-detected / bounce-dispatched / halt-ask-user 等事件。
+phase 之間靠 JSON envelope 傳遞。field 名與型別固定在 `.claude-plugin/envelope.schema.json`，每個 skill 的 preconditions 在各自 `SKILL.md §Preconditions` 裡。router（`using-copywriting-toolkit`）是單一強制點 — 啟動 target skill 前用 Preconditions table 驗證 envelope，違規時不啟動 target，改 emit `violation` envelope 往上游 route。
 
-## Grounding（一手來源）
+### Retry 上限
 
-從 `domain-teams:copywriting-team` byte-identical 保留的 standards：
+3 個 counter 匯到 1 個合計值，全部 monotonic、全部 router 持有：
 
-- 神田昌典 2016/2021 PASONA / 新PASONA / PASBECONA
-- 谷山雅計 2007 散らかす→選ぶ→磨く + なんかいいよね禁止
-- 今泉浩晃 1987 曼陀羅発想法
-- 川喜田二郎 1967 KJ法
-- Cialdini 1984 *Influence*
-- Schwartz 1966 *Breakthrough Advertising*
-- Zhang et al. 2025 Verbalized Sampling（arXiv:2510.01171）
-- Fortin 2005 QUEST / Edwards 2016 PASTOR
-- 小霜和也 2010/2014 本能分析
-- 秋山隆平・杉山恒太郎 2004 AISAS / 飯髙悠太 2019 ULSSAS
-- Kaushik 2007 micro/macro conversion
-- McQuarrie & Mick 1996 rhetorical operations / Lakoff & Johnson 1980 conceptual metaphor / Thornton 1995 subcultural capital
-- 景品表示法（2023 年修法, 2024-10-01 生效）+ FTC Endorsement Guides（16 CFR 255）
-- Vaughn 1980 FCB × Halliday 1978 SFL（2-axis Voice Quadrant — team synthesis）
+| Counter | Trigger | Hard cap |
+|---|---|---|
+| `bounce_round` | skill 啟動前的 schema 違規 | `>= 3` HALT |
+| `revise_round_count` | evaluator verdict 觸發的 auto-revise（per phase） | `>= 2`（per phase）HALT |
+| `total_retries` | `bounce_round + revise_round_count` | `>= 4`（合計）HALT |
 
-Voice lineage 工法（Tier 3 deep-dive standards）：
+合計 cap 的存在是因為 schema bounce 與 verdict revision 可能交替發生繞過個別 cap 的 pathological cycle。對應 `superpowers:executing-plans` 的 stop-and-ask 原則：跑不動的時候就停下來問人。
 
-- **JP** — `jp-copy-craft-lineage.md`（cp from domain-teams）：糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計 via TCC 年鑑
-- **ZH** — `zh-copy-craft-lineage.md`（v1.0.1 新增, 為本 toolkit 進行 primary-source 研究）：許舜英（意識形態 / 中興百貨 1988-1999, 11 條已標日期語料）/ 李欣頻（誠品敦南 1990s-2000s, 7 條）/ 葉明桂（奧美 / 左岸 1998-, 3 條 + 策略性 framework）。包含 4 條 attribution 修正（#Z1-#Z4）以及 per-master 的 LLM 重現 gap analysis。
+### Immutable fields
 
-Voice anchor library（v1.4.0+ plugin-native, upstream 沒有對應）：
+特定 envelope field 必須原樣 pass through。router 會把丟掉 immutable field 的 envelope 退回最後寫入該 field 的 skill。
 
-- **90 個 anchor**, 跨 EN / JP / ZH / zh-TW / zh-HK；每個檔案一個 anchor, 統一的 canonical 結構（v1.13.3）涵蓋 `## Metadata`、`## Native critical read`、`## Prose mechanics`、`## Don't`、`## What this register achieves`
-- **12 個 quadrant router**（`{lang}-q{N}-anchors.md`）把 anchor index 到 Voice Quadrant × Schwartz × output language
-- **Lint enforced** via CI 中的 `scripts/lint-anchor-library.py`；單一 canonical 格式, 沒有沉默的替代格式
+- `voice_quadrant`（整個 object，含 `schwartz_alignment`）
+- `tone_notes.register_signal_applied.named_master_fit_warning`
+- `brief.*` Level 1 fields
+- `audit_trail[]`（append-only）
+- `retries.*`（monotonic — 下游 skill 不得 reset）
+- `express_mode_used`
+- `violation`（消化 bounce-back 之前）
 
-## 與 `domain-teams:copywriting-team` 的 A/B
+詳見 `CLAUDE.md §Handoff Envelope §Immutable fields`。
 
-原 `domain-teams:copywriting-team` 維持原狀（copy-first 原則 — 所有 cp 過來的檔案 byte-identical）。在同一個 brief 上跑兩邊, 比較輸出品質、gate catch rate、互動成本。兩個 plugin 並存；整併推遲到 A/B 結束後的回顧再決定。
+## Grounding
 
-## 安裝
+每一個 load-bearing 的論述都 anchored 在一手來源上。standards 檔案引述原典，`copywriter` agent 被禁止憑空捏造 attribution。
 
-Plugin 透過 `monkey-skills` marketplace 載入。詳見 repo 根目錄的 `.claude-plugin/marketplace.json` entry。Marketplace 載入後, 所有 14 個 skill + 2 個 agent + plugin-level convention（CLAUDE.md）會自動 resolve。
+| 領域 | Primary sources |
+|---|---|
+| JP long-form | 神田昌典 PASONA / 新 PASONA / PASBECONA |
+| JP discipline | 谷山雅計 2007《広告コピーってこう書くんだ！読本》（なんかいいよね禁止） |
+| Ideation | 今泉 1987 曼陀羅；川喜田 1967 KJ 法；小霜和也 本能分析；Zhang et al. 2025 Verbalized Sampling |
+| Persuasion | Cialdini 1984 *Influence*；Schwartz 1966 *Breakthrough Advertising*（5 levels of awareness） |
+| EN long-form | Fortin 2005 QUEST；Edwards 2016 PASTOR；Hopkins / Halbert / Schwartz / Ogilvy DR canon |
+| Voice 軸 | Halliday 1978 Tenor（Authority↔Affinity）；Vaughn 1980/1986 FCB（Reason↔Emotion） |
+| Mid-form | BEAF（Benefit-first ordering，6-Layer Marketing Pyramid 系譜） |
+| SNS evolution | 秋山・杉山 AISAS；飯髙 ULSSAS |
+| Metaphor / neta | McQuarrie & Mick 1996；Lakoff & Johnson 1980；Thornton 1995（subcultural capital） |
+| Ethics — JP | 景品表示法 2023 修正；ステマ告示（消費者庁 2023） |
+| Ethics — EN | FTC Endorsement Guides 16 CFR 255；Brignull dark patterns |
 
-Setup 細節、權限、model tier、persistence model：見 [`CLAUDE.md §Setup`](CLAUDE.md)。
+## Voice anchor library
 
-## 授權
+橫跨 JP / ZH（TW + HK + 大陸）/ EN 共 90 個 individual-creator anchor，由 12 個 quadrant router file（`{lang}-q{N}-anchors.md`）索引。每個 anchor file 遵循 v2 schema（canonical 結構由 `scripts/lint-anchor-library.py` 在 CI baseline 3 件下強制）：
 
-MIT — 見 repository 根目錄。
+- frontmatter：`schema_version`、`anchor_slug`、`culture`、`quadrant`、`landmark`
+- `## Native critical read`（H2）
+- `## Metadata`（grouped — `Over-mimic risk` + canonical attribution rule）
+- `## What this register achieves`
+- `## Prose mechanics` + `## Don't`
+- 5 件以上有日期、可歸屬的範例
+
+來自 `voice-anchor-meta.md` 的選用規則：
+
+- lineage 由 `envelope.brief.output_language` 決定，不是 brief 裡的 maestro 名。跨語言 brief 中提到的 maestro 會被視為 quadrant signal，anchor 改用 target-language 在同 quadrant 的 native creator。
+- Cross-master context：cross-tradition transplant（例如把体言止め硬套到 zh-TW）禁止。cross-language borrowing 僅限 frontmatter `cross-reference-valid-for[target_lang] == STRONG` 且 brief 允許時。
+- Named-creator routing：當 `brief.voice_reference` 指名某個有 `anchor-{slug}.md` 的 creator，該 anchor 強制 rank 1。如果 agent 的 fit-judgement 是 MEDIUM / LOW，會觸發 `named_master_fit_warning`，並 immutable 地往下游 phase 傳遞。
+- v1.14.0 conflict rule：當 anchor 的 `§Prose mechanics` / `§Don't` 跟 `brief.form_hint` / `brief.tone_cue` / Phase 4 draft 結構衝突時，anchor 勝出。mechanics 是 binding requirement，不是建議。但 anchor 不能 override Level 1 brief field（output_language / audience / product / goal）。
+
+## Install
+
+```bash
+# 在已啟用 monkey-skills marketplace 的 Claude Code 中
+/plugin install copywriting-toolkit@monkey-skills
+```
+
+plugin 是 self-contained：不需 API key、不需 cache path、無 persistent state。skill 讀取自身 directory 與 plugin-root 的共用 resource（`agents/`、`CLAUDE.md`、`envelope.schema.json`）。network access 只在 `copywriting-neta-injection` Phase A 的 WebSearch 時才需要（source-taxonomy allow-list — Path A-1 SNS / meme、Path A-2 文學）。
+
+## Usage
+
+所有 copywriting work 都從 slash command 起動：
+
+```
+/using-copywriting-toolkit
+```
+
+intake 共 3 種 shape，全部從同一個 entry point route：
+
+| Shape | Trigger | Path |
+|---|---|---|
+| **Shape A** — 新 brief | "幫我寫 X 的 LP" / "Y 的 headline 候選" | Q1-Q10 或 Express → ideation → neta → drafter → voice → ethics → form → 交付 |
+| **Shape B** — audit | "幫我審這份既有文案" + 全文 | `copywriting-audit-stage` 對 `external_copy` 跑 Phase 5-8 |
+| **Shape C** — pipeline 中途繼續 | 上次 session 留下的 envelope | router 讀 `envelope.phase` + 最近 verdict 後續跑 |
+
+如果已經知道 target skill（例如使用者明確說「幫我跑 form gate」），可直接呼叫該 skill。external caller 自行構建初始 envelope 時請依 `CLAUDE.md §External Caller Guide` — 預先填 `voice_quadrant` 或手動標 `gate_verdict: "PASS"` 會 silently 跳過下游 gate。
+
+## Contributing
+
+PR 透過 `https://github.com/kouko/monkey-skills` 提交。conventions：
+
+- **Tier 1（byte-identical）** — `skills/*/standards/*.md` 內的 third-party academic canon prose（神田 PASONA / 谷山 / Cialdini / Schwartz / Halliday / Vaughn 等）。用 `diff -q` 對 `domain-teams/skills/copywriting-team/` 驗證。plugin 沒有權限改寫神田昌典的 PASONA 定義。
+- **Tier 2（允許 divergence）** — `protocols/*.md` / `checklists/*.md` / `rubrics/*.md`。修改時必須加 `<!-- DIVERGED FROM -->` header、保留所有原始 prose（additive only — 不刪、不重排、不改寫）、用 `<!-- v1.x.y addition: <topic> -->` 區塊標出 plugin 專屬 addition、並把每次 divergence 記入 `CHANGELOG.md`。
+- **Plugin-native** — voice anchor library（90 anchor + 12 quadrant router + `voice-anchor-meta.md` + `anchor-schema-v2.md`）沒有 upstream 對應物，整套由 plugin 完整 own。
+
+Commit prefix 只用 `feat(copywriting-toolkit)` 或 `chore(copywriting-toolkit)` — CC CI whitelist。不用 `test:` / `ci:` commit（fixture 隨對應 `feat` commit 一起 bundle）。
+
+CI：`scripts/lint-anchor-library.py` 在每次 PR 跑，baseline 為 3 件 accepted failure；超出 baseline 的新 drift 會 block merge。
+
+## License
+
+MIT — 詳見 repository root 的 [LICENSE](../LICENSE)。

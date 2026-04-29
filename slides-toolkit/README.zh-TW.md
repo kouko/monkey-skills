@@ -2,165 +2,209 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> ⚠️ **Cowork 相容性**：僅支援 Claude Code CLI / Code tab。Cowork tab 被 sandbox URL allowlist 擋住 Google Slides API 呼叫。完整 retrospective 見 [`investing-toolkit/docs/mcp-setup.md`](../investing-toolkit/docs/mcp-setup.md)。
+> 透過 Claude Code skill 從 brief 一鍵生成 Google Slides deck。純 shell + `gws` CLI，免 Python / gcloud。
 
-**Version**: 0.1.0-mvp
-**Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
-**License**: MIT
+> ⚠️ **Cowork 相容性 — 僅支援 Claude Code CLI / Code tab。** Google
+> Slides 與 Drive API 呼叫會被 Claude Desktop Cowork sandbox 的 URL
+> allowlist blocked（與 `investing-toolkit` 同一限制；參考
+> [investing-toolkit MCP setup retrospective](../investing-toolkit/docs/mcp-setup.md)）。
+> 若你在 Cowork 環境，請改用 Claude Code CLI 或 Claude Desktop Code
+> tab。
 
-Google Slides 產生 toolkit — 將結構化 brief（outline + tables +
-本地圖片）透過 Claude Code skills 轉成完成的 Google Slides 簡報。
-單指令 pipeline：`brief → deck URL ≤ 3 min`。
+## Background
 
-Backend-agnostic 的設計知識層（`slides-design`）加上可插拔的
-backend builders。MVP 僅內建 Google Slides backend；HTML / PPTX /
-Marp backends 屬 Phase 2+ 並採 trigger-gated（見 `PRODUCT-SPEC.md §3.5`）。
+固定產出 Google Slides deck 的工作中，機械性勞動佔很大比重 ——
+文字替換、圖片 upload、placeholder 對位。`slides-toolkit` 把這層
+重複勞動 skill 化，讓時間與注意力落在內容與 design 判斷上，而不
+是 deck 配管。
+
+設計上採用 **Platform Pivot architecture**（PRODUCT-SPEC v0.2）—
+backend-agnostic 的設計知識 layer（`slides-design`）與可插拔的
+execution layer 解耦。MVP 僅實作 `google-slides` backend；
+`html` / `pptx` / `marp` backend 屬 Phase 2+ trigger-gated 範圍。
 
 ## Status
 
-- **Release**：MVP v0.1.0-mvp（pre-release；Platform-Pivot spec 於 2026-04-23 凍結）
-- **Backends**：僅 `google-slides`
-- **Platform**：macOS 14+（darwin-arm64 / darwin-x64）
-- **Primary user**：kouko（個人生產力工具）
-- **Runtime posture**：純 shell + `curl` + 瀏覽器；`gws` / `jq` binary
-  自動下載到 `~/.cache/slides-toolkit/bin/` 並驗證 SHA-256
+| 項目 | 值 |
+|---|---|
+| Release | `0.1.0-mvp`（見 [`CHANGELOG.md`](CHANGELOG.md)） |
+| Backends | `google-slides`（MVP）· `html` / `pptx` / `marp` 為 Phase 2+ trigger-gated |
+| Platform | macOS（darwin-arm64 / darwin-x86_64） |
+| Account scope | 個人 Google 帳號（`@gmail.com`）；Workspace 帳號屬 Phase 2+ |
+| Runtime posture | shell + curl + 瀏覽器；toolkit 自動取得 `gws` / `jq` binary |
+| License | MIT |
 
-## Quick Start
+## 安裝
 
-從全新機器到第一份 deck 共三步。
-
-### 1. 安裝
+透過 `monkey-skills` marketplace 加入 plugin，然後重啟 Claude
+Code 讓它讀取 skill。
 
 ```bash
-# 透過 monkey-skills Claude Code marketplace 加入此 plugin
-# （在 marketplace.json 註冊後 plugin 會自動啟用）
+# 在 Claude Code 內執行
+/plugin install slides-toolkit@monkey-skills
 ```
 
-### 2. Setup（首次 onboarding，約 20 分鐘）
+## Quick start
 
-於 Claude Code 內呼叫 setup skill：
+兩階段流程。第一次 setup 為一次性，之後每次生 deck 只走第二階段。
 
-```
-/google-slides-setup
-```
-
-會引導你完成：
-
-- `gws` binary 下載 + SHA-256 驗證
-- Google Cloud Console 4 步驟 OAuth client 設定（External + Testing 模式）
-- Keychain / file-backend credential 儲存方式偵測
-- Issue-119 workaround 環境變數 guard（`GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET`）
-- 首次登入授權 + token smoke test
-
-預算：乾淨 macOS 機器上 **≤ 20 分鐘**（KR2）。
-
-### 3. 產出第一份 deck
+### 1. 第一次 setup（目標：≤ 20 分鐘 — KR2）
 
 ```
-/using-slides-toolkit
+> /google-slides-setup
 ```
 
-若想先取得敘事 + chart-type 指引，挑 `slides-design`，
-再交由 `google-slides-builder` 建立 deck。或者若你已有
-`slide-plan.json` 並註冊好 template Drive ID，可直接走
-builder。
+route 到 `google-slides-setup` skill。它會偵測目前狀態，把 `gws` +
+`jq` 抓到 `~/.cache/slides-toolkit/bin/`，引導你完成 GCP Console
+的手動步驟（OAuth Client + Test User），如帳號需要的話會把 issue
+#119 workaround 寫入 `~/.config/gws/env.sh`。
 
-預算：從 brief 提交到 Drive URL **≤ 3 分鐘**（KR1）。
+此流程受 Google OAuth policy（External + Testing mode）邊界限制，
+哪些可自動化、哪些不行請參考
+[`docs/google-oauth-automation-limits.md`](docs/google-oauth-automation-limits.md)。
 
-## Skills Inventory
+### 2. 生成 deck（目標：≤ 3 分鐘 — KR1）
 
-| Skill | Layer | 用途 |
-|-------|-------|------|
-| `using-slides-toolkit` | router（backend-agnostic） | 入口點 — 依 `target` 路由到 setup / design / builder |
-| `slides-design` | knowledge（backend-agnostic） | Minto Pyramid + SCQA + chart-selection reference；適用任一 backend |
-| `google-slides-setup` | google-slides backend | 首次 onboarding（gws + GCP + auth）；具狀態感知分支 |
-| `google-slides-builder` | google-slides backend | 執行層 — 透過 gws 進行 copy template / replaceAllText / insert-image |
+```
+> /using-slides-toolkit
+> 「把這份 outline 做成 6 頁的 product proposal」
+```
 
-Phase 2+（trigger-gated；不在 MVP 內）：`html-builder`、`pptx-builder`、
-`marp-builder`。
+router（`using-slides-toolkit`）判讀意圖，必要時委派
+`slides-design` 給出 narrative 結構建議（Minto / SCQA / chart 選
+型），然後把 `slide-plan.json` v1.2 交給 `google-slides-builder`。
+builder 跑 4 步 pipeline（建空 deck → 用 predefined layout 建
+slide → 插入文字 → 插入本機圖片），回傳 Drive URL。
 
-## Prerequisites
+`/using-slides-toolkit` 與 `/google-slides-setup` 都是 skill 的
+auto-route（plugin 沒有 `commands/` shim，未提供 slash command）。
+直接打 skill 名稱，Claude Code 就會 dispatch。
 
-macOS 14+ 內建：
+## Skills
 
-- `zsh` / `bash`
-- `curl`
-- 任一現代瀏覽器（Google OAuth 同意流程）
+plugin 提供 5 個 skill，分為 3 層。
 
-Toolkit 自行下載其餘元件：
+| Skill | Layer | 角色 |
+|---|---|---|
+| `using-slides-toolkit` | Router（backend-agnostic） | 判讀意圖、讀 `slide-plan.target`、route 到對應 skill |
+| `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選型；對所有 backend 通用 |
+| `google-slides-setup` | google-slides backend | 第一次 GCP Console / OAuth / `gws` bootstrap，後續做 state detection |
+| `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
+| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
 
-- `gws` binary → `~/.cache/slides-toolkit/bin/gws`（SHA-256 pinned）
-- `jq` binary → `~/.cache/slides-toolkit/bin/jq`（SHA-256 pinned）
+`using-slides-toolkit` 與 `slides-design` 刻意設計為 backend-agnostic，
+未來 `html-builder` / `pptx-builder` / `marp-builder` skill 可重用同
+一個 routing 入口與設計 reference，不需修改。
 
-**不需要**：Python、uv、gcloud、Homebrew、Node.js。除 shell 外
-零語言 runtime。
+## 前置條件
+
+| 項目 | 要求 |
+|---|---|
+| OS | macOS 14+（darwin-arm64 / darwin-x86_64）；Linux / WSL 屬 Phase 2+ |
+| Shell | zsh 或 bash（macOS 預設 zsh 即可） |
+| 網路 tool | `curl`（macOS 預載） |
+| 瀏覽器 | Chrome 或 Safari（GCP Console 步驟需要一次） |
+| Google 帳號 | 個人 `@gmail.com`；Workspace 帳號屬 Phase 2+ |
+
+**不需要**：Python、uv、gcloud、brew、npm。`gws` 與 `jq` binary 由
+`scripts/google-slides/bootstrap.sh` 透過 HTTPS + `curl -f` 抓到
+`~/.cache/slides-toolkit/bin/`。
 
 ## Architecture
 
-三層設計（完整內容見 `PRODUCT-SPEC.md §6.3.1` + `TECH-SPEC.md §2.1-§2.2`）：
+3 層架構。router 與設計知識層 backend-agnostic；唯一綁定特定輸出
+format 的是 execution 層。
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Layer 1 — Router (backend-agnostic)                  │
-│   using-slides-toolkit                               │
-│     → dispatches by slide-plan target field          │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 2 — Design knowledge (backend-agnostic)        │
-│   slides-design                                      │
-│     → Minto / SCQA / chart-selection                 │
-│     → applies to google-slides / html / pptx / marp  │
-└────────┬─────────────────────────────────────────────┘
-         │
-┌────────▼─────────────────────────────────────────────┐
-│ Layer 3 — Backend execution (backend-specific)       │
-│   google-slides-setup     [MVP]                      │
-│   google-slides-builder   [MVP]                      │
-│   html-builder            [Phase 2+]                 │
-│   pptx-builder            [Phase 2+]                 │
-│   marp-builder            [Phase 2+]                 │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — Router（backend-agnostic）                       │
+│  using-slides-toolkit                                       │
+│  判讀意圖 · 讀 slide-plan.target · dispatch                 │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────────┐
+        ▼                    ▼                        ▼
+┌─────────────────┐  ┌─────────────────┐  ┌──────────────────────┐
+│  Layer 2 —      │  │  Layer 3 —      │  │  Layer 3 —           │
+│  Design         │  │  Backend exec   │  │  Backend exec        │
+│  knowledge      │  │ （onboarding）  │  │ （build pipeline）   │
+│ （agnostic）    │  │                 │  │                      │
+│  slides-design  │  │  google-slides- │  │  google-slides-      │
+│                 │  │  setup          │  │  builder             │
+│  Minto · SCQA · │  │                 │  │      ↓ 使用          │
+│  chart 選型     │  │  GCP / OAuth /  │  │  google-slides-api   │
+│                 │  │  gws bootstrap  │  │  (per-op recipes)    │
+└─────────────────┘  └────────┬────────┘  └──────────┬───────────┘
+                              │                      │
+                              └──────────┬───────────┘
+                                         ▼
+                              scripts/google-slides/*.sh
+                              gws CLI · ~/.cache binaries
+                                         ▼
+                              Google Slides + Drive API
+                                         ▼
+                                   Deck URL
 ```
 
-**因為**設計原則（敘事結構、chart 選擇）跨輸出格式皆穩定，
-而執行技術（gws / pandoc / python-pptx / marp-cli）每個 backend
-各自演進。解耦可避免每新增一個 backend 就動到知識層。
+Phase 2+ backend（`html-builder` / `pptx-builder` /
+`marp-builder`）可作為 Layer 3 與 `google-slides-builder` 並列加
+入，Layer 1 / Layer 2 不需更動。詳見 PRODUCT-SPEC §2.1 / §2.2 與
+TECH-SPEC §2.1 / §2.2。
 
-跨域產品觀點（願景 + MVP 範圍 + Job Story + 4 Big Risks）見
-`PRODUCT-SPEC.md`；模組設計、資料流、interface contract 見
-`TECH-SPEC.md`。
+## 安全性
 
-## Security Notes
+Credential 絕不入 repo。透過兩個互補機制守住此邊界（TECH-SPEC §8）：
 
-Credentials 絕不進入 repository。雙層防護：
+**Claude tool layer block** — `.claude/settings.json` 拒絕任何接
+觸 gws credential store 的 Read / Bash / Write：
 
-1. **`.claude/settings.json` deny rule** — 阻擋 Claude 工具層級對
-   credential 檔案（home-dir + repo-relative）的 Read /
-   Bash / Write 存取。Repo-relative `.gitignore` 無法保護
-   `~/.config/gws/**`，因為 git 不會展開 `~`；deny rule 用以填補
-   此缺口。
-2. **`.gitignore`** — 排除 repo-relative 的祕密 pattern：
-   `.config/gws/`、`**/client_secret*.json`、`**/credentials.enc`、
-   `**/.encryption_key`、`.env*`、`.cache/`、本地測試 fixture。
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.config/gws/**)",
+      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Bash(cat ~/.config/gws/*)",
+      "Bash(cat ~/.config/gws/**)",
+      "Bash(cp ~/.config/gws/* *)",
+      "Bash(git add ~/.config/gws/*)",
+      "Write(~/.config/gws/**)"
+    ]
+  }
+}
+```
 
-完整威脅模型（OWASP ASVS v5.0.0 L1 — V1 / V2 / V5 / V13 / V14 / V16
-mapping）、pre-commit hook 建議、credential 洩漏 incident response
-playbook 見 `TECH-SPEC.md §8 Security & Credential Hygiene`。
+**Repo-relative ignore** — `.gitignore` 阻擋可能落入 repo tree 的
+credential 檔：
 
-Incident log（若有觸發）依需求放在 `incidents/` — 不預先建立。
-Playbook 條目格式見 `incidents/README.md`。
+```
+.config/gws/
+*/keyring-file.json
+*/env.sh
+.cache/slides-toolkit/
+```
+
+`.gitignore` 無法 match `~/.config/gws/**`（git 只用 repo-relative
+path、不展開 `~`），home directory 路徑由上方 `settings.json` deny
+rule 負責。如果不慎洩漏 credential，請依 TECH-SPEC §8.4 的 incident
+playbook 處理。
+
+## 連結
+
+- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — product 方向、Job Story、OKR / KR、Non-Goals、Phase 2+ trigger
+- [TECH-SPEC.md](TECH-SPEC.md) — module 設計、`slide-plan.json` v1.2、shell script 契約、安全性
+- [CHANGELOG.md](CHANGELOG.md) — 版本歷史（`0.1.0-spec` → `0.6.0-i18n`）
+- [docs/console-ui-reference.md](docs/console-ui-reference.md) — 目前的 Google Cloud Console UI walkthrough
+- [docs/google-oauth-automation-limits.md](docs/google-oauth-automation-limits.md) — 哪些無法自動化、為什麼
+- [docs/gws-cli-quirks.md](docs/gws-cli-quirks.md) — live test 中發現的 gws CLI 陷阱
+- 母 repository：[`monkey-skills`](https://github.com/kouko/monkey-skills)
+
+## 貢獻
+
+本 plugin 屬 [`monkey-skills`](https://github.com/kouko/monkey-skills)
+repository 的一部分。Issue / PR 請開在該 repo。skill 結構遵循 repo
+root 的 `CLAUDE.md` 與 `domain-teams:skill-team` skill 的慣例。
 
 ## License
 
-MIT — 與 parent `monkey-skills` repository 一致。詳見 repo root 的
-`/LICENSE`。
-
-## Links
-
-- [PRODUCT-SPEC.md](./PRODUCT-SPEC.md) — planning-team spec（願景、使用者、
-  目標、非目標、Platform Pivot 理由）
-- [TECH-SPEC.md](./TECH-SPEC.md) — code-team spec（架構、模組、
-  介面、測試、安全性、OPEN answers）
-- [CHANGELOG.md](./CHANGELOG.md) — 版本歷程
-- [parent repo](https://github.com/kouko/monkey-skills)
+MIT — 詳見 repository root 的 [LICENSE](../LICENSE)。

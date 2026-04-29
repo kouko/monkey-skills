@@ -1,160 +1,177 @@
 # dev-workflow
 
-[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
+Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-**Version**：1.7.0
-**Part of**：[monkey-skills](https://github.com/kouko/monkey-skills)
+> Claude Code 用の developer workflow plugin — skill 作成・採点・refactor・tuning、deletion-first な critique gate、git-native な project memory。
 
-Developer workflow skills — skill 作成、skill 品質採点、ポータブルな
-git ベースのプロジェクト記憶、そして design 判断のための「critique」
-ライン（コード前の提案 / 既存コードへの単一改動）。
+**Version**: 2.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
+
+## Background
+
+Claude Code 向けの skill 開発は反復的な作業です。skill を draft してリリースしたあと、長すぎる、出力が tone 外れだといった問題を見つけて改善したくなります — ただし *どう* 改善するかは変更の種類によって変わります。**token / structure の refactor** は機械的に検証可能（変更後も output が同じはず）。**output quality の tuning** は taste-sensitive（どの variant が良いかは人間にしか判断できない）。`darwin-skill` 系のアプローチのように両者を 1 つの rubric に混ぜると、LLM-as-judge が人間の選好から離れた方向へ hill-climb してしまいます（Goodhart drift）。
+
+`dev-workflow` は次の 2 つのアーキテクチャ的判断のもとに skill 群を提供します：
+
+1. **Two Hats split for skills**（Fowler の refactor-vs-feature を skill authoring に適用）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）と `skill-tuning`（Phase B：taste-sensitive、human-judged）を分離。
+2. **critique-gate のライン** — proposal が commit になる前に介入する：`proposal-critique`（複数項目の triage）→ `complexity-critique`（単一変更の deletion-first gate）→ simplify（実装後の review、Anthropic 純正 toolkit に存在）。
+
+この plugin はさらに `skill-creator-advance`（作成 + 大規模再設計）、`skill-judge`（advisory な 8 次元品質 rubric、変更を加えない）、`git-memory`（commit trailer と PR 本文に書き込む可搬な project memory、git を読める任意のツールから復元可能）を同梱しています。
+
+設計の全体像：[`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)。運用ガバナンス：[`docs/skill-governance.md`](docs/skill-governance.md)。四半期ヘルスチェック：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
 
 ## Skills
 
-| Skill | Slash cmd | Role |
-|-------|-----------|------|
-| `skill-creator-advance` | `/skill-creator-advance` | 新しい skill を作成し、eval-driven loop で反復的に改善する |
-| `skill-judge` | — | 8 観点の品質ルーブリックで既存 skill を採点する（advisory、0-120 スケール）|
-| `git-memory` | — | git commit trailer + PR body `## Memory` セクション経由で、ポータブルかつツール非依存のプロジェクト記憶を実現 |
-| `proposal-critique` | — | evidence grounding + YAGNI により多項目提案（list、plan、prose）を KEEP / DEFER / DROP に振り分ける |
-| `complexity-critique` | `/complexity-critique` | 既存 code に対する単一の提案改動（refactor、feature add、debt cleanup）を、実装前に 3 つの deletion-first 質問で gate する |
-| `skill-refactor` | `/skill-refactor` | 既存 skill のトークン / 構造リファクタを、出力動作保持の保証付きで実行（multi-judge ensemble + git ratchet；skill-evolution アーキテクチャの Phase A）|
-| `skill-tuning` | `/skill-tuning` | 既存 skill の出力品質 A/B — 異なる出力傾向の variant 生成、ブラインド実行、ユーザー選好捕捉。Constitution が床、taste が天井、preference log は RLHF-lite データセット（skill-evolution の Phase B）|
+| Skill | 役割 |
+|---|---|
+| [`skill-creator-advance`](skills/skill-creator-advance/) | 新規 skill の作成、または既存 skill の大規模再設計（phase の追加 / 分割 / 統合、agent 分解の変更、input/output contract の変更）。description optimization を含む反復的 eval-driven development。 |
+| [`skill-refactor`](skills/skill-refactor/) | 既存 skill の token / structure refactor、**output behavior を保持**。3 段階 gate：equivalence（multi-judge ensemble）+ token reduction（≥10%）+ invariant preservation。PROCEED / RESHAPE / REJECT を判定し、git ratchet で失敗時に自動 revert。 |
+| [`skill-tuning`](skills/skill-tuning/) | 既存 skill の output quality A/B — variant を生成し blind で実行、人間の preference を捕捉（A / B / both / neither）。Constitution は床、taste は天井。preference log は RLHF-lite データセットとして蓄積。 |
+| [`skill-judge`](skills/skill-judge/) | Advisory な 8 次元設計 rubric（Knowledge Delta・Mindset+Procedures・Anti-Pattern・Spec Compliance・Progressive Disclosure・Freedom Calibration・Pattern Recognition・Practical Usability）、0–120 点 + A–F grade。変更は加えない。 |
+| [`proposal-critique`](skills/proposal-critique/) | 複数項目の proposal（list / plan / 散文の推奨）を evidence grounding と YAGNI で KEEP / DEFER / DROP に triage。 |
+| [`complexity-critique`](skills/complexity-critique/) | 1 つの具体的な提案変更を 3 つの deletion-first 質問で gate：最小到達状態、before/after の LOC、何が obsolete になるか。PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
+| [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
 
-### "critique" ライン
+7 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
-`proposal-critique` と `complexity-critique` は姉妹である — 同じ
-gate-skill の形、異なる scope とライフサイクル段階：
+## critique のライン
 
-```
-proposal-critique  →  complexity-critique  →  Anthropic simplify
-（list / plan      （既存 code に対する     （post-implementation
- / prose、          単一改動、              diff review）
- まだ code がない）  実装前）
-```
-
-両者で「やる価値があるか」の判断空間の大部分を、gate ロジックを
-重複させずにカバーする。
-
-### Skill-evolution アーキテクチャ（skill-refactor + 将来の skill-tuning）
-
-dev-workflow plugin は skill 作成・評価・進化のための 4-skill
-ファミリーを段階的に展開中：
+3 つの skill が deletion-first な review pipeline を構成し、それぞれ異なる proposal の形に合わせて調整されています：
 
 ```
-skill-creator-advance  →  skill-refactor  →  skill-tuning  →  skill-judge
-（作成 + 再設計；spec-     （Phase A: トークン   （Phase B: 出力品質   （advisory
- first；フル eval ループ）  / 構造リファクタ；    A/B；人間 judge；    スコア；改変
-                            出力保持；git ratchet）preference log）    なし）
+proposal-critique           complexity-critique           Anthropic simplify
+─────────────────           ─────────────────────         ──────────────────
+複数項目の proposal         1 つの具体的な提案変更       実装後の diff review
+（list / plan / 散文）       （refactor、feature 追加、
+                            debt cleanup、または
+                            「そもそも作るべきか」）
+
+triage：各項目を            gate：3 つの deletion-first   出荷後の review：
+  KEEP / DEFER / DROP         questions                     reuse、品質、効率
+evidence + YAGNI で判定     • 最小到達状態
+                              • before/after の LOC
+                              • 何が obsolete になるか
+
+判定：KEEP / DEFER          判定：PROCEED /              （この plugin の外に
+       / DROP                      PROCEED-WITH-CAVEAT     存在）
+                                   / RESHAPE / REJECT
 ```
 
-- `skill-refactor`（v1.6.0）は既存 skill の*動作保持*リファクタ
-  を扱う
-- `skill-tuning`（このリリース、v1.7.0）は taste-sensitive な
-  出力 A/B を人間判断 + preference log で扱う
-- 分割は単一 rubric が抱える LLM-as-judge / Goodhart drift 問題を
-  避ける — 完全な根拠は [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)
+backlog や番号付きの plan を渡されたら `proposal-critique`。1 つの具体的変更が table の上にあるなら `complexity-critique`。変更が出荷された後は Anthropic の `simplify`。
 
-### git-memory — 3 つの柱
+## skill-evolution architecture
 
-記憶は git artifact 自体に存在するため、git を読めるあらゆるツール
-（Claude Code / Cursor / Codex / aider / 人間）が、別途ストアを
-用意しなくてもプロジェクト知識を再構築できる。
-
-1. **Carrier = git artifact 自体** — commit message と PR body
-   が基盤となる。`git clone` で記憶も一緒に取得できる；別個の
-   DB、embedding index、ベンダー固有ファイルは不要。
-2. **Structure = commit trailer** — `Decision:` / `Learning:` /
-   `Gotcha:` を `Co-Authored-By:` と並んで commit footer に
-   記載する（`git-interpret-trailers(1)` の仕組み）。
-   `git log --pretty='%(trailers)'` で機械可読、prose body で人間可読。
-3. **Content = decision context、コードではない** — **なぜ**を
-   記録し、**何を**ではない。diff がすでに「何を」を示している；
-   記憶は推論過程、却下された代替案、将来の自分への注意点を記録する。
-
-git-memory は Claude Code ネイティブの `~/.claude/.../MEMORY.md`
-（user レベルの設定）を補完する。プロジェクトレベルの決定は git に、
-user レベルの設定は Claude ネイティブ記憶に残す。
-
-## Upstream Chain（MIT）
+`skill-creator-advance`・`skill-refactor`・`skill-tuning`・`skill-judge` は skill のライフサイクル全体を、**変更のサイズ × 評価モード**でカバーします：
 
 ```
-Anthropic skill-creator (MIT)
-  → AllanYiin (尹相志) skill-creator-advanced (MIT, github.com/AllanYiin/Amon)
-    → kouko dev-workflow/skill-creator-advance (MIT)
+size →    small                medium                large                new
+       ┌────────────────┐  ┌────────────────┐  ┌──────────────────────────────┐
+       │ skill-tuning   │  │ skill-refactor │  │ skill-creator-advance        │
+       │                │  │                │  │ (作成 + 大規模再設計)        │
+       │ output quality │  │ token / struct │  │                              │
+       │ A/B variants   │  │ 同一 behavior  │  │ spec-first 再設計 / 新規     │
+       │                │  │                │  │                              │
+       │ HUMAN judge    │  │ LLM equiv.     │  │ user 主導の iteration loop + │
+       │ each iteration │  │ + git ratchet  │  │ optional な AI A/B 比較      │
+       └────────────────┘  └────────────────┘  └──────────────────────────────┘
+
+       skill-judge：advisory な 0–120 点。変更を加えず、いつでも実行可能
 ```
 
-完全な license / attribution の詳細は skill ディレクトリの `LICENSE` と
-`NOTICE` を、repo 全体のまとめは [`../ATTRIBUTION.md`](../ATTRIBUTION.md) を参照。
+この分割は評価コストによって規定されます：機械的変更（refactor）は LLM-as-judge による binary equivalence の信頼性が高いので auto-evaluation に耐えます。taste-sensitive な変更（tuning）は style・voice・persuasive force・design feel に対する LLM-as-judge が信頼できないため、人間が必要です。どの skill を使うかは「どれくらい自動化したいか」ではなく「どんな種類の変更を行うか」の問題です。
 
-## 本ディストリビューションで追加した 7 つの強化
+## git-memory の 3 本柱
 
-1. monkey-skills エコシステム統合ガイド
-2. Description のベストプラクティス（negative trigger、多言語 keyword）
-3. Eval flow の階層化（quick path vs full path）
-4. 既存 skill の改善 workflow
-5. Slash command 作成ガイド
-6. 自己評価 pass（人間 review 前に明らかな欠陥を自動修正）
-7. イテレーション間の auto-regression 検出
+`git-memory` は次の 3 つの主張に基づきます：
 
-## Design 決定
+1. **Carrier — git 成果物そのもの**。commit message と PR 本文が substrate。git を読めるツールならどれでも memory を読めます。`git clone` が memory を一緒に持ってきます。サーバーも embedding store も vendor lock-in もなし。
+2. **Structure — commit trailer**。構造化された事実は git trailer に乗ります — `Co-Authored-By:` や `Signed-off-by:` と同じ仕組み。3 つの trailer で価値の ~80% をカバー：`Decision:`（なぜこのアプローチか）、`Learning:`（何を発見したか）、`Gotcha:`（未来の自分への trap）。
+3. **Content — code ではなく決定の文脈**。diff は *何が* 変わったかをすでに示しています。memory は *why* を記録します。半年後に元の文脈が失われた時にもまだ価値がある entry を目指す — code そのものと冗長な entry ではなく。
 
-- Eval 結果を **inline + markdown report** で提示（browser-based eval-viewer は廃止；Python web server + ブラウザ依存を除去）
-- **token ベース budget**（約 6,000 token）を採用、行ベース（500 行）から変更
-- Platform adaptation は reference file に切り出し（任意、必要に応じてロード）
-- Eval 方法論は一次資料 citation で根拠付け（Fisher 1935、Beck 2002、Hastie et al. 2009、Myers et al. 2011、ISTQB v4.0）
+`git-memory` は Claude Code 純正の `~/.claude/.../MEMORY.md` を補完します（置き換えません）。純正 memory は project 横断の user-level 選好を保持し、`git-memory` は repo 内に project 決定を保持します。
 
-## Repository 構造
+## Upstream chain
+
+7 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
+
+| Skill | Upstream chain |
+|---|---|
+| `skill-creator-advance` | Anthropic [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) → AllanYiin（尹相志）[`skill-creator-advanced`](https://github.com/AllanYiin/Amon) → monkey-skills |
+| `skill-judge` | Leonardo Flores [`skill-judge`](https://github.com/softaworks/agent-toolkit) → monkey-skills |
+| `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム） |
+
+`skill-refactor`・`skill-tuning`・`proposal-critique`・`git-memory` はオリジナル設計。`skill-refactor` と `skill-tuning` は autonomous-loop + git-ratchet パターンの概念的影響源として `alchaincyf/darwin-skill`（MIT）と Andrej Karpathy の `autoresearch`（MIT）に言及しますが、architecture・gate function・evaluation rubric は独立した設計です。詳細は各 skill の `NOTICE` 参照。
+
+## Repository 構成
 
 ```
 dev-workflow/
-├── .claude-plugin/plugin.json
-├── CHANGELOG.md
+├── .claude-plugin/
+│   └── plugin.json
 ├── commands/
+│   ├── complexity-critique.md
 │   ├── skill-creator-advance.md
-│   └── complexity-critique.md
-└── skills/
-    ├── skill-creator-advance/
-    │   ├── SKILL.md
-    │   ├── LICENSE               ← AllanYiin + kouko copyright
-    │   ├── NOTICE                ← Upstream chain 詳細
-    │   ├── agents/               ← grader / comparator / analyzer
-    │   ├── scripts/              ← aggregate_benchmark / run_eval / run_loop / improve_description / package_skill / quick_validate / generate_report
-    │   └── references/           ← plugin-conventions / iteration-automation / platform-adaptations / eval-methodology / schemas / mermaid-usage-guidelines
-    ├── skill-judge/
-    │   ├── SKILL.md              ← 8 観点ルーブリック（E:A:R + 5-pattern + 9 failure-pattern）
-    │   ├── LICENSE / NOTICE      ← upstream attribution
-    │   └── README.{en,ja,zh-TW}.md
-    ├── git-memory/
-    │   ├── SKILL.md
-    │   ├── standards/             ← memory-conventions（trailer schema、PR body、diagram venue）
-    │   ├── protocols/             ← compose-commit / compose-pr
-    │   └── scripts/               ← memory-grep retrieval primitive
-    ├── proposal-critique/
-    │   ├── SKILL.md               ← 単一ファイル gate skill（Iron Law / Gate Function / Triage Matrix）
-    │   └── README.{en,ja,zh-TW}.md
-    ├── complexity-critique/
-    │   ├── SKILL.md               ← 単一ファイル gate skill（Iron Law / 3 Questions / Verdict）
-    │   ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
-    │   └── README.{en,ja,zh-TW}.md
-    ├── skill-refactor/
-    │   ├── SKILL.md               ← Phase A: トークン / 構造リファクタ、等価性保証
-    │   ├── LICENSE / NOTICE       ← 独自設計；darwin-skill との設計差異を記載
-    │   ├── README.{en,ja,zh-TW}.md
-    │   ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema（共有 convention の canonical SoT）
-    │   └── scripts/               ← equivalence_check / multi_judge / golden_compare
-    └── skill-tuning/
-        ├── SKILL.md               ← Phase B: 出力品質 A/B、人間 judge + preference log
-        ├── LICENSE / NOTICE       ← 独自設計；darwin-skill との設計差異 9 点
-        ├── README.{en,ja,zh-TW}.md
-        ├── references/            ← ab-harness / constitutional-judging / preference-log-schema / self-trained-judge-pipeline + 3 共有 convention の同梱 functional copy
-        └── scripts/               ← ab_harness / preference_log / judge_train_stub
+│   ├── skill-refactor.md
+│   └── skill-tuning.md
+├── docs/
+│   ├── skill-evolution-architecture.md
+│   ├── skill-governance.md
+│   ├── quarterly-audit-runbook.md
+│   └── telemetry-setup.md
+├── skills/
+│   ├── complexity-critique/
+│   ├── git-memory/
+│   ├── proposal-critique/
+│   ├── skill-creator-advance/
+│   ├── skill-judge/
+│   ├── skill-refactor/
+│   └── skill-tuning/
+├── CHANGELOG.md
+├── README.md
+├── README.ja.md       (このファイル)
+└── README.zh-TW.md
 ```
 
-dev-workflow/ 直下に `docs/skill-evolution-architecture.md` も追加
-（H1-H4 horizon プランニング doc）。
+## インストール
+
+`dev-workflow` は [monkey-skills](https://github.com/kouko/monkey-skills) marketplace の一部として配布されています。marketplace を追加して plugin をインストール：
+
+```bash
+/plugin marketplace add kouko/monkey-skills
+/plugin install dev-workflow@monkey-skills
+```
+
+## 使い方
+
+4 つの slash command が plugin に同梱されています：
+
+```
+/skill-creator-advance      # 新規作成 または 既存の大規模再設計
+/skill-refactor             # token / structure refactor、equivalence 保持
+/skill-tuning               # human-judged な出力 A/B
+/complexity-critique        # 具体的変更に対する deletion-first gate
+```
+
+残り 3 つの skill（`skill-judge`・`proposal-critique`・`git-memory`）は自然言語から auto-trigger します — 例：
+
+```
+「この skill を 8 次元 rubric で採点して」               → skill-judge
+「この 12 項目の plan を critique して」                 → proposal-critique
+「これから commit する — trailer 書くの手伝って」       → git-memory
+```
+
+Two-Hats split（refactor vs tuning）の walk-through は [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) §2 参照。
+
+## Contributing
+
+貢献は repo 全体の convention（repo ルートの [`CLAUDE.md`](../CLAUDE.md)）に従います。
+
+- **質問**：[kouko/monkey-skills](https://github.com/kouko/monkey-skills/issues) で GitHub Discussion または issue を開いてください。
+- **PR**：`main` から branch を切り、Conventional Commits に従い、push 前にローカルで convention-drift CI script（`scripts/check-shared-conventions-drift.py`）を実行。
+- **skill 内部の README** は skill owner が直接、より軽い rule set に従って執筆します（[`docs/skill-governance.md`](docs/skill-governance.md) §README Authoring Discipline 参照）。plugin レベルの README（このファイルとその翻訳）は `domain-teams:docs-team` を経由します。
+- **新しい shared convention** を追加する際は、同じ PR 内で [`docs/skill-governance.md`](docs/skill-governance.md) の SSOT registry を更新し、drift CI manifest にもペアを追加してください。
 
 ## License
 
-MIT — repository root [`LICENSE`](../LICENSE) および skill レベルの
-[`LICENSE`](skills/skill-creator-advance/LICENSE) / [`NOTICE`](skills/skill-creator-advance/NOTICE) を参照。
+MIT。MIT-licensed な upstream を持つ skill（`skill-creator-advance`・`skill-judge`・`complexity-critique`）は、各 skill の `LICENSE` と `NOTICE` で完全な copyright chain を保持しています。
+
+repo ルートの umbrella license は [LICENSE](../LICENSE) 参照。
