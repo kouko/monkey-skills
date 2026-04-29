@@ -4,18 +4,19 @@
 now also tracks implementation status across the 5-PR rollout.
 **Scope**: dev-workflow plugin's family of skill-modifying skills.
 **Created**: 2026-04-29
-**Last status update**: 2026-04-29 (post-PR-5, v1.9.0)
+**Last status update**: 2026-04-29 (post-v2.0.0 rename)
 **Trigger**: research into `alchaincyf/darwin-skill` + critique of LLM-as-judge for taste-sensitive output.
 
-## Implementation Status (as of v1.9.0)
+## Implementation Status (as of v2.0.0)
 
 | PR | Version | Scope | Status |
 |---|---|---|---|
 | PR-1 | v1.5.0 | Architecture doc + skill-creator-advance scope tightening | ✅ Merged |
 | PR-2 | v1.6.0 | skill-refactor (Phase A — refactor hat) | ✅ Merged |
-| PR-3 | v1.7.0 | skill-tuning (Phase B — feature hat) | ✅ Merged |
+| PR-3 | v1.7.0 | skill-tuning (Phase B — feature hat) — originally shipped as `skill-tasting`; renamed in v2.0.0 (see below) | ✅ Merged |
 | PR-4 | v1.8.0 | Governance layer: convention drift CI + skill-judge drift detection + governance / audit docs | ✅ Merged |
 | PR-5 | v1.9.0 | Telemetry scaffold + self-training stub enhancement + test-prompts.json bootstrap × 7 + this status section | ✅ Merged |
+| (rename) | v2.0.0 | **BREAKING**: skill-tasting → skill-tuning. Slash command + directory + cross-references. Skill semantics / gate function unchanged from v1.7.0. Mental-model stick failure observed + multi-language friction + H4 trajectory mismatch — see CHANGELOG [2.0.0] for full rationale. | ✅ Merged |
 
 ### Horizon coverage
 
