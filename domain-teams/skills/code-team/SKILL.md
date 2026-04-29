@@ -200,7 +200,7 @@ On-demand mindsets (philosophical anchors; load when relevant during brainstormi
 - `standards/mindset-simplicity-vs-easy.md` — Hickey *Simple Made Easy*: simple (objective, not braided) vs easy (subjective, familiar)
 - `standards/mindset-extension-standard.md` — meta-standard for extending the mindset library (Quality Checklist, primary-source bar, anti-shapes); read **before** proposing a 5th mindset
 
-Cross-plugin consumers: `dev-workflow:complexity-critique` references the 4 mindsets as design-time philosophical anchors AND requires loading at least one before its three-question gate runs (per its §Before You Begin preamble; CLAUDE.md §Cross-Plugin Delegation Contract — paths only, no content duplication).
+Cross-plugin SSOT-and-functional-copy arrangement: `dev-workflow:complexity-critique` bundles **functional copies** of the 4 mindsets at `dev-workflow/skills/complexity-critique/references/` for runtime self-containment (matches upstream `reducing-entropy/references/` layout). The bundled copies carry a header blockquote pointing back to this directory as the canonical SSOT. Drift management policy: edits to mindset content land in **this directory first** (`code-team/standards/mindset-*.md`), then propagate to the dev-workflow bundled copies in the same PR. The cross-plugin contract here is *evolution-time* (where to add or edit a mindset), not *runtime* (which files to load) — runtime is fully self-contained on each side. Adding a 5th mindset is governed by `standards/mindset-extension-standard.md`.
 
 Evaluator default resources:
 - standards: same 7 files as worker

@@ -114,6 +114,19 @@ design-time questions in a way the existing 4 mindsets do not:
 If the mindset doesn't directly inform one of those questions, it
 likely belongs in a mechanical standard, a protocol, or nowhere.
 
+## SSOT and Functional-Copy Policy
+
+The 4 mindsets live in **two locations** by design:
+
+| Location | Role | Updated by |
+|---|---|---|
+| `domain-teams/skills/code-team/standards/mindset-*.md` | **SSOT** — canonical version with full cross-references to mechanical standards (Pragmatic, SOLID, Refactoring, etc.). Used by code-team brainstorming / refactoring protocols. | All edits land here first. |
+| `dev-workflow/skills/complexity-critique/references/mindset-*.md` | **Functional copy** — bundled with the dev-workflow skill so that `complexity-critique` runs without `domain-teams` installed (matches upstream `reducing-entropy/references/` layout). Each file carries a "Bundled functional copy" header blockquote pointing back to the SSOT. | Updated to match the SSOT in the **same PR** as the SSOT edit. |
+
+**Why both**: the upstream `reducing-entropy` skill was zero-runtime-dependency self-contained. `complexity-critique` preserves that property by bundling. But code-team also gains real value from the mindsets being in its own standards library (they ground refactoring decisions; they fit the existing "primary-source-grounded standards" pattern). The two locations are reconciled by treating code-team as the SSOT and dev-workflow as a functional copy.
+
+**Drift detection**: a CI sanity check (planned, not yet implemented) can diff the body text (excluding the header blockquote) and fail if they disagree. Until that exists, the same-PR rule is the discipline.
+
 ## Process for Adding a New Mindset
 
 1. **Spike against existing 4** — write a 5-line summary of the
@@ -130,15 +143,24 @@ likely belongs in a mechanical standard, a protocol, or nowhere.
 3. **Run the Quality Checklist** — all 5 items must pass; document
    "distinct from existing" by naming what design-time question the
    new mindset answers that the existing 4 do not.
-4. **Add the file** at `code-team/standards/mindset-{concept}.md`
+4. **Add the SSOT file** at `code-team/standards/mindset-{concept}.md`
    in the same body shape as the initial 4 (no frontmatter; `# Title`
-   header; `## Primary Sources` with full citations; sections; 
+   header; `## Primary Sources` with full citations; sections;
    `## Anti-Patterns` at end).
-5. **Wire it** in `code-team/SKILL.md` *On-demand mindsets* section
-   and (if applicable) update `dev-workflow:complexity-critique`
-   §Reference Mindsets table.
-6. **Bump versions** — `domain-teams` minor (new standard) +
-   `dev-workflow` patch if cross-plugin reference table is updated.
+5. **Bundle the functional copy** at
+   `dev-workflow/skills/complexity-critique/references/mindset-{concept}.md`
+   — copy the SSOT body verbatim and prepend the standard
+   "Bundled functional copy" header blockquote (template in the
+   existing 4 references files). Same PR as step 4.
+6. **Wire it** in:
+   - `code-team/SKILL.md` *On-demand mindsets* section
+   - `dev-workflow:complexity-critique/SKILL.md` §Reference
+     Mindsets table (the "Use when…" column row)
+   - All 3 `complexity-critique` READMEs (en / ja / zh-TW)
+     reference-mindsets bullet list and Files tree
+7. **Bump versions** — `domain-teams` minor (new SSOT standard);
+   `dev-workflow` patch (bundled functional copy + SKILL.md /
+   READMEs reference table updates).
 
 ## Cross-References
 
