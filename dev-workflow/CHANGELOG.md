@@ -4,6 +4,149 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-04-29
+
+### Context
+
+Third-of-five PR series implementing the skill-evolution
+architecture (`dev-workflow/docs/skill-evolution-architecture.md`).
+PR-1 (v1.5.0) prepared scope; PR-2 (v1.6.0) shipped `skill-refactor`
+(Phase A); this PR-3 / v1.7.0 ships `skill-tasting` (Phase B) — the
+feature-hat counterpart to refactor's refactor-hat. The Two-Hats
+split is now complete.
+
+PR-4 / PR-5 will add governance (cross-skill regression CI,
+skill-judge drift detection, audit runbook) and telemetry +
+self-training pipeline scaffolding.
+
+### Why skill-tasting exists
+
+Skill outputs have *taste-sensitive dimensions* (style, voice,
+tone, rhythm, persuasive force) that LLM-as-judge cannot reliably
+evaluate. A skill that "works" can still produce outputs that are
+flat, off-tone, or just not what the user wanted.
+
+`skill-tasting` is the **feature hat** counterpart to
+skill-refactor's refactor hat: refactor preserves behavior (using
+LLM-as-judge to verify equivalence — a binary check LLMs handle
+well); tasting deliberately changes behavior to find better outputs
+(using human judgment because taste is exactly where LLM-as-judge
+fails).
+
+### Added (skill-tasting)
+
+New `dev-workflow/skills/skill-tasting/`:
+
+- **`SKILL.md`** — Iron Law (3-part: constitution honored + human
+  preference captured + log updated), Before-You-Begin baseline +
+  constitution + goldens prerequisites, 4-phase Gate Function
+  (variant generation + constitutional pre-filter + blind A/B
+  harness + verdict + log), verdict vocabulary (ADOPT / DROP /
+  DEFER / REFINE / ESCALATE) parallel to other dev-workflow
+  critique skills, Constitutional Judging mechanic, Preference
+  Log → Self-Trained Judge horizon scaffold (H4), Red Flags,
+  Rationalization Prevention, 2 worked examples (status-report
+  tone improvement + variant rejected by constitution)
+- **`commands/skill-tasting.md`** — slash command redirect
+- Tasting-specific references (4 files):
+  - `references/ab-harness-protocol.md` — variant generation
+    rules, random label assignment, side-by-side display, 4-option
+    capture, multi-evaluator extension, truncation, atomicity
+  - `references/constitutional-judging.md` — how MUST clauses test
+    variants in pre-filter; binary satisfied/violated; ambiguity
+    handling; reporting filtered variants; constitution evolution
+    from tasting; constitutional ratchet
+  - `references/preference-log-schema.md` — JSONL format
+    (append-only), per-pick entry schema, per-session summary,
+    privacy considerations, retention, lifecycle events, querying
+  - `references/self-trained-judge-pipeline.md` — H4 horizon
+    scaffold; activation thresholds (≥1000 entries); training
+    methodology (Bradley-Terry-style); deployment as Tier 1
+    pre-filter; cross-skill transfer (research territory)
+- Bundled functional copies of 3 shared conventions:
+  - `references/golden-anchor-protocol.md`
+  - `references/test-prompts-schema.md`
+  - `references/constitution-schema.md`
+  All carry "bundled functional copy" header blockquote pointing
+  to skill-refactor as the canonical SoT for evolution. Same-PR
+  drift rule documented in NOTICE.
+- Scripts (3 scaffold files):
+  - `scripts/ab_harness.py` — Phase 3 blind A/B orchestration
+    (variant collection, random labels, side-by-side rendering,
+    truncation, atomic decision capture)
+  - `scripts/preference_log.py` — JSONL operations (append /
+    query / summarize / export-for-training with ≥N threshold)
+  - `scripts/judge_train_stub.py` — H4 stub; documents training
+    interface; fails fast with "scaffolded, not active in v1.7.0"
+- **`LICENSE`** — MIT, single copyright (c) 2026 kouko, original
+  design (not a port or fork)
+- **`NOTICE`** — 9 enumerated design distinctions vs darwin-skill;
+  inspirations (autoresearch, darwin-skill, voice-anchors
+  curation, RLHF/preference-modeling literature, Fowler Two Hats,
+  internal architecture doc); convention sharing arrangement with
+  skill-refactor
+- **`README.{en,ja,zh-TW}.md`** — three-language READMEs
+
+### Changed (skill-creator-advance)
+
+- Description: added negative trigger routing output A/B testing
+  to `skill-tasting`. The "Improving Existing Skill" router's
+  case (b) now hands off to a real skill (was forward-reference
+  in PR-1).
+- Removed PR-1 transitional note about skill-refactor / skill-
+  tasting being "referenced but not yet shipped" — both now ship.
+  Case (c) intro text simplified accordingly.
+
+### Changed (skill-refactor)
+
+- All `*(when available)*` parenthetical placeholders next to
+  skill-tasting references stripped — skill-tasting is now a
+  concrete sibling, not a forward-reference. Affects SKILL.md
+  and 3 READMEs.
+- 3 shared convention files (golden-anchor-protocol /
+  test-prompts-schema / constitution-schema): header blockquotes
+  updated to mark skill-refactor as canonical SoT location and
+  skill-tasting as functional copy. Same-PR drift rule documented.
+
+### Changed (plugin)
+
+- `plugin.json`: 1.6.0 → 1.7.0; description appended with
+  "skill-tasting (blind variants + constitutional pre-filter +
+  preference log)"; multilingual postfix updated; keywords gain
+  "skill-tasting"
+- `README.{en,ja,zh-TW}.md`: skills table adds skill-tasting row;
+  Skill-evolution architecture diagram updated (Phase B no longer
+  marked planned — it shipped); Repository Structure tree adds
+  skill-tasting/ folder
+
+### Cross-skill independence statement
+
+`skill-tasting` is **runtime self-contained**. No cross-plugin
+dependency. The 3 shared convention files are bundled functional
+copies; runtime works with `dev-workflow` alone (no `domain-teams`,
+no `skill-refactor` even — though they compose well together).
+
+The SSOT-and-functional-copy pattern continues from PR #159
+(code-team mindsets) and PR-2 (skill-refactor canonical conventions).
+
+### Validation status
+
+⚠️ Validation gate per architecture doc §6: "manually run
+skill-tasting through 1 real-skill walkthrough; verify the A/B
+flow produces meaningful preference signal."
+
+**OUTSTANDING** — this PR ships before formal validation. PR
+description notes the caveat. Recommended first validation
+target: a copywriting / status-report style skill where taste-
+sensitive output is the natural test case.
+
+### Bump rationale
+
+Minor (1.6.0 → 1.7.0): new skill addition; no breaking change.
+skill-creator-advance description gains another not-trigger
+(refinement, not behavior change). skill-refactor's
+forward-reference cleanup is also a refinement.
+
 ## [1.6.0] — 2026-04-29
 
 ### Context

@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 1.6.0
+**Version**: 1.7.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 
 Developer workflow skills — skill authoring, skill quality scoring,
@@ -19,6 +19,7 @@ decisions (proposals before code, single changes to existing code).
 | `proposal-critique` | — | Triage a multi-item proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
 | `complexity-critique` | `/complexity-critique` | Gate a single proposed change to existing code (refactor, feature add, debt cleanup) through three deletion-first questions before implementing |
 | `skill-refactor` | `/skill-refactor` | Token / structure refactor of an existing skill with output equivalence guaranteed via multi-judge ensemble + git ratchet (Phase A of skill-evolution architecture) |
+| `skill-tasting` | `/skill-tasting` | Output quality A/B for an existing skill — generate variants with different output traits, run them blind, capture user preference. Constitution as floor; taste as ceiling; preference log accumulates as RLHF-lite dataset (Phase B of skill-evolution architecture) |
 
 ### The "critique" line
 
@@ -49,10 +50,10 @@ skill-creator-advance  →  skill-refactor  →  skill-tasting  →  skill-judge
                           git ratchet)         log)                modifies)
 ```
 
-- `skill-refactor` (this PR, v1.6.0) handles *behavior-preserving*
-  refactor of existing skills
-- `skill-tasting` (planned PR-3) will handle taste-sensitive output
-  A/B with human judgment
+- `skill-refactor` (v1.6.0) handles *behavior-preserving* refactor
+  of existing skills
+- `skill-tasting` (this PR, v1.7.0) handles taste-sensitive output
+  A/B with human judgment + preference log
 - The split avoids the LLM-as-judge / Goodhart drift that monolithic
   taste-rubrics produce — see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)
   for the full rationale
@@ -141,12 +142,18 @@ dev-workflow/
     │   ├── SKILL.md               ← single-file gate skill (Iron Law / 3 Questions / Verdict)
     │   ├── LICENSE / NOTICE       ← joshuadavidthomas → softaworks → kouko MIT chain
     │   └── README.{en,ja,zh-TW}.md
-    └── skill-refactor/
-        ├── SKILL.md               ← Phase A: token / structure refactor with equivalence guarantee
-        ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted
+    ├── skill-refactor/
+    │   ├── SKILL.md               ← Phase A: token / structure refactor with equivalence guarantee
+    │   ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted
+    │   ├── README.{en,ja,zh-TW}.md
+    │   ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema (canonical SoT for shared conventions)
+    │   └── scripts/               ← equivalence_check / multi_judge / golden_compare
+    └── skill-tasting/
+        ├── SKILL.md               ← Phase B: output quality A/B with human judge + preference log
+        ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted (9 differences)
         ├── README.{en,ja,zh-TW}.md
-        ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema
-        └── scripts/               ← equivalence_check / multi_judge / golden_compare
+        ├── references/            ← ab-harness / constitutional-judging / preference-log-schema / self-trained-judge-pipeline + 3 shared convention bundled functional copies
+        └── scripts/               ← ab_harness / preference_log / judge_train_stub
 ```
 
 ## License
