@@ -26,7 +26,7 @@ cite primary sources directly (Hickey talks, Perlis 1982 epigram,
 Moseley & Marks 2006 paper, Ousterhout 2018 book, Willison 2021 blog
 post chain), per `skill-team/standards/grounding-principle.md` rules
 on primary-source anchoring. Full lineage and citation verification
-in `domain-teams/skills/code-team/research/grounding-mindsets-2026-04-29.md`.
+in `domain-teams/skills/code-team/research/grounding-v5.5.0.md`.
 
 ### Added (code-team)
 
@@ -52,7 +52,7 @@ in `domain-teams/skills/code-team/research/grounding-mindsets-2026-04-29.md`.
   Hickey *Value of Values*; Moseley & Marks *Out of the Tar Pit*.
   Anchors the discipline of choosing simple over easy when they
   disagree.
-- `research/grounding-mindsets-2026-04-29.md` — citation verification
+- `research/grounding-v5.5.0.md` — citation verification
   per mindset, curation lineage from upstream MIT skill, and
   skill-team `grounding-principle.md` compliance check (4/5 rules
   green; PAGNI documented as practitioner-coined neologism exception
