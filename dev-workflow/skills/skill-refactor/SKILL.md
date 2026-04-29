@@ -12,7 +12,7 @@ description: >-
   Triggers: shorten skill / reduce tokens / 縮減 SKILL.md / 整理結構
   / refactor skill / behavior unchanged / 保留行為的前提下 / リファクタ
   with output preservation. Do NOT use for output quality A/B (use
-  dev-workflow:skill-tasting), structural redesign / phase changes
+  dev-workflow:skill-tuning), structural redesign / phase changes
   (use dev-workflow:skill-creator-advance), creating a new skill (use
   dev-workflow:skill-creator-advance), or single-line cosmetic edits
   (just edit directly). スキル refactor・トークン削減・等価保証。
@@ -38,7 +38,7 @@ than they need to, with output behavior that's the same as before
 internal structure without changing external behavior. Output
 equivalence is enforced by a multi-judge ensemble + structured
 comparison; behavior changes are out of scope (route to
-`dev-workflow:skill-tasting` for output quality work or
+`dev-workflow:skill-tuning` for output quality work or
 `dev-workflow:skill-creator-advance` for structural redesign).
 
 This skill is **runtime self-contained** — `dev-workflow` is the
@@ -79,7 +79,7 @@ Before proposing any refactor, the target skill needs:
 If any of (1)-(4) cannot be obtained (e.g., skill has no
 deterministic test prompts because output is purely creative), the
 gate cannot run safely. Report the blocker to the user and suggest
-`dev-workflow:skill-tasting` if the underlying intent was quality
+`dev-workflow:skill-tuning` if the underlying intent was quality
 improvement, or manual edit if only cosmetic.
 
 ## The Gate Function (per round)
@@ -169,7 +169,7 @@ Quick reference:
 **Out-of-scope moves** (these are not refactor; route elsewhere):
 - Adding new behavior or capability → `skill-creator-advance`
 - Changing input/output format → `skill-creator-advance`
-- Different prompt phrasing aimed at *different* output → `skill-tasting`
+- Different prompt phrasing aimed at *different* output → `skill-tuning`
 - Removing a fallback / edge case handler → `skill-creator-advance`
 
 ## Tier Cascade (when Q1's ensemble disagrees)
@@ -181,7 +181,7 @@ cascade governs how to handle disagreement:
 |---|---|---|
 | **Tier 1** | All 3 judges agree (equivalent or not) | Auto verdict |
 | **Tier 2** | 2-of-3 agree | Auto verdict but flag as "uncertain", show user |
-| **Tier 3** | Judges all disagree, or >50% probability of taste-call | Hand off to `dev-workflow:skill-tasting` (the equivalence question is masking a taste question; skill-refactor is the wrong tool) |
+| **Tier 3** | Judges all disagree, or >50% probability of taste-call | Hand off to `dev-workflow:skill-tuning` (the equivalence question is masking a taste question; skill-refactor is the wrong tool) |
 
 Tier 3 is the safety valve: when "is the output the same?" turns
 into "which output is better?", we've left refactor territory.
@@ -190,7 +190,7 @@ into "which output is better?", we've left refactor territory.
 
 | Flag | Why STOP |
 |---|---|
-| User wants the output to *improve*, not preserve | This is `skill-tasting` territory |
+| User wants the output to *improve*, not preserve | This is `skill-tuning` territory |
 | Refactor adds new sections that change behavior | Two Hats violation — feature smuggled into refactor |
 | Q1 says equivalent but token reduction <5% | The refactor cost exceeds the gain; reject |
 | Q1's ensemble disagrees and you want to "majority-rules" anyway | Don't — that's how taste creep enters via judge bias |
@@ -203,7 +203,7 @@ into "which output is better?", we've left refactor territory.
 |---|---|
 | "It's just a small reorg." | Small reorgs accumulate. Run the gate anyway. |
 | "Output is *probably* the same." | "Probably" isn't a verdict. Run the equivalence check. |
-| "Token reduction is only 7% but it reads better." | "Reads better" is a `skill-tasting` claim, not a refactor claim. |
+| "Token reduction is only 7% but it reads better." | "Reads better" is a `skill-tuning` claim, not a refactor claim. |
 | "I'll skip the baseline this once." | Without baseline, Q1 cannot run. The skill self-aborts. |
 | "The judge is wrong, my refactor is fine." | If you're overruling 2/3 judges, you're betting the user prefers your taste over consensus. Don't. |
 
@@ -212,7 +212,7 @@ into "which output is better?", we've left refactor territory.
 - **`dev-workflow:skill-creator-advance`** — when refactor reveals a
   structural problem that needs redesign (not equivalence-preserving
   cleanup), hand off here.
-- **`dev-workflow:skill-tasting`** — when the
+- **`dev-workflow:skill-tuning`** — when the
   question turns from "are the outputs equivalent" to "which output
   is better", hand off here.
 - **`dev-workflow:skill-judge`** — optional advisory check before /
@@ -296,7 +296,7 @@ the symptom; output behavior is the invariant.
 
 **Not-triggers** — do NOT invoke for:
 
-- **Skill output is bad / wrong** → use `skill-tasting` (taste
+- **Skill output is bad / wrong** → use `skill-tuning` (taste
   improvement, not equivalence-preserving)
 - **Want to add a phase / change agent / restructure workflow** →
   use `skill-creator-advance` (structural rewrite)
@@ -308,7 +308,7 @@ the symptom; output behavior is the invariant.
   `skill-creator-advance` to redesign with proper test infra
 - **Skill output is creative / non-deterministic** (writing style,
   prose, design feel) — equivalence check unreliable; use
-  `skill-tasting`
+  `skill-tuning`
 
 ## Bundled Resources
 
@@ -321,12 +321,12 @@ This skill is fully self-contained at runtime. References:
 - `references/refactor-moves-catalog.md` — full catalog of
   refactor-hat-safe moves with examples
 - `references/golden-anchor-protocol.md` — golden anchor schema and
-  curation policy (shared convention with `skill-tasting`; same-PR
+  curation policy (shared convention with `skill-tuning`; same-PR
   drift rule)
 - `references/test-prompts-schema.md` — `test-prompts.json` schema
-  (shared convention with `skill-tasting`; same-PR drift rule)
+  (shared convention with `skill-tuning`; same-PR drift rule)
 - `references/constitution-schema.md` — `constitution.md` schema
-  used as Q3 invariant input (shared convention with `skill-tasting`;
+  used as Q3 invariant input (shared convention with `skill-tuning`;
   same-PR drift rule)
 
 Scripts:

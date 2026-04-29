@@ -55,7 +55,7 @@ jobs:
         # Verifies that SSOT-and-functional-copy convention files
         # (golden-anchor-protocol, test-prompts-schema, constitution-schema)
         # stay in sync across skill-refactor (canonical SoT) and
-        # skill-tasting (functional copies). Header blockquotes that
+        # skill-tuning (functional copies). Header blockquotes that
         # mark canonical-vs-copy are stripped before diff so legitimate
         # SSOT-vs-copy header divergence does not trigger false positives.
         # Same-PR drift rule from dev-workflow PR-2/PR-3 NOTICE.

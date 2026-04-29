@@ -127,7 +127,7 @@ Skills with NOTICE files (as of v1.7.0):
 - skill-judge (Leonardo Flores → kouko)
 - complexity-critique (joshuadavidthomas → softaworks → kouko)
 - skill-refactor (original; design influence from darwin-skill)
-- skill-tasting (original; design influence from darwin-skill)
+- skill-tuning (original; design influence from darwin-skill)
 
 Action items:
 - [ ] All upstream URLs resolve
@@ -152,7 +152,7 @@ For each outstanding gate:
 Currently outstanding (as of v1.7.0):
 - skill-refactor: dry-run on ≥2 existing skills; ≥90% equivalence-
   check agreement with manual review
-- skill-tasting: 1 real-skill walkthrough verifying A/B flow
+- skill-tuning: 1 real-skill walkthrough verifying A/B flow
   produces meaningful preference signal
 
 Action items:
@@ -173,8 +173,8 @@ python3 dev-workflow/skills/skill-judge/scripts/score_history.py \
 ```
 
 If drift flagged: investigate (refactor introduced subtle
-regression? tasting moved skill in unintended direction?). Recommend
-running skill-tasting to capture human preference signal before
+regression? tuning moved skill in unintended direction?). Recommend
+running skill-tuning to capture human preference signal before
 deciding action.
 
 Action items:
@@ -239,7 +239,7 @@ prior one's open action items.
 | Validation gate complete | Update CHANGELOG / governance doc; close gate |
 | Validation gate >2 quarters outstanding | Decision: schedule validation (one-shot PR) OR formally accept-risk (note in governance doc) |
 | External upstream broken | Investigate; if upstream gone, update NOTICE; if MIT changed, follow license terms |
-| Score-history drift | Investigate; possibly run skill-tasting; possibly accept (taste evolved with intent) |
+| Score-history drift | Investigate; possibly run skill-tuning; possibly accept (taste evolved with intent) |
 
 ---
 

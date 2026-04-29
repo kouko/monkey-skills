@@ -21,16 +21,16 @@ via the same-PR drift rule.
 
 | Convention / Resource | Canonical Location | Functional Copies | Enforced By |
 |---|---|---|---|
-| `golden-anchor-protocol` | `skills/skill-refactor/references/golden-anchor-protocol.md` | `skills/skill-tasting/references/golden-anchor-protocol.md` | `scripts/check-shared-conventions-drift.py` (CI) |
-| `test-prompts-schema` | `skills/skill-refactor/references/test-prompts-schema.md` | `skills/skill-tasting/references/test-prompts-schema.md` | `scripts/check-shared-conventions-drift.py` (CI) |
-| `constitution-schema` | `skills/skill-refactor/references/constitution-schema.md` | `skills/skill-tasting/references/constitution-schema.md` | `scripts/check-shared-conventions-drift.py` (CI) |
+| `golden-anchor-protocol` | `skills/skill-refactor/references/golden-anchor-protocol.md` | `skills/skill-tuning/references/golden-anchor-protocol.md` | `scripts/check-shared-conventions-drift.py` (CI) |
+| `test-prompts-schema` | `skills/skill-refactor/references/test-prompts-schema.md` | `skills/skill-tuning/references/test-prompts-schema.md` | `scripts/check-shared-conventions-drift.py` (CI) |
+| `constitution-schema` | `skills/skill-refactor/references/constitution-schema.md` | `skills/skill-tuning/references/constitution-schema.md` | `scripts/check-shared-conventions-drift.py` (CI) |
 | Multi-judge ensemble protocol | `skills/skill-refactor/references/multi-judge-ensemble.md` | (none — skill-refactor specific) | none needed |
 | Refactor moves catalog | `skills/skill-refactor/references/refactor-moves-catalog.md` | (none — skill-refactor specific) | none needed |
 | Equivalence check protocol | `skills/skill-refactor/references/equivalence-check-protocol.md` | (none — skill-refactor specific) | none needed |
-| AB harness protocol | `skills/skill-tasting/references/ab-harness-protocol.md` | (none — skill-tasting specific) | none needed |
-| Constitutional judging | `skills/skill-tasting/references/constitutional-judging.md` | (none — skill-tasting specific) | none needed |
-| Preference log schema | `skills/skill-tasting/references/preference-log-schema.md` | (none — skill-tasting specific) | none needed |
-| Self-trained judge pipeline | `skills/skill-tasting/references/self-trained-judge-pipeline.md` | (none — skill-tasting specific) | none needed |
+| AB harness protocol | `skills/skill-tuning/references/ab-harness-protocol.md` | (none — skill-tuning specific) | none needed |
+| Constitutional judging | `skills/skill-tuning/references/constitutional-judging.md` | (none — skill-tuning specific) | none needed |
+| Preference log schema | `skills/skill-tuning/references/preference-log-schema.md` | (none — skill-tuning specific) | none needed |
+| Self-trained judge pipeline | `skills/skill-tuning/references/self-trained-judge-pipeline.md` | (none — skill-tuning specific) | none needed |
 | Architecture planning doc | `dev-workflow/docs/skill-evolution-architecture.md` | (none — single canonical) | none needed |
 
 ### Cross-plugin SSOT
@@ -54,7 +54,7 @@ Each skill has an **owner** responsible for its lifecycle:
 | `proposal-critique` | kouko | original |
 | `complexity-critique` | kouko (with joshuadavidthomas/softaworks lineage) | MIT chain in NOTICE |
 | `skill-refactor` | kouko | original design (darwin-skill inspiration only) |
-| `skill-tasting` | kouko | original design (darwin-skill inspiration only) |
+| `skill-tuning` | kouko | original design (darwin-skill inspiration only) |
 
 Ownership transfers require:
 1. Update LICENSE / NOTICE to reflect new owner
@@ -83,7 +83,7 @@ Annotation in plugin README:
 | proposal-critique | Active | 2026-04-25 (v1.3.0) |
 | complexity-critique | Active | 2026-04-29 (v1.5.0) |
 | skill-refactor | Active | 2026-04-29 (v1.6.0) |
-| skill-tasting | Active | 2026-04-29 (v1.7.0) |
+| skill-tuning | Active | 2026-04-29 (v1.7.0) |
 
 (Updated on state transitions; default Active.)
 
@@ -135,7 +135,7 @@ Per repo-level `CLAUDE.md` §Cross-Plugin Delegation Contract:
   (PR #159 precedent)
 
 dev-workflow internal cross-skill follows the same contract. The
-Two-Hats split (skill-refactor / skill-tasting) shares 3
+Two-Hats split (skill-refactor / skill-tuning) shares 3
 conventions via SSOT-and-functional-copy specifically to preserve
 runtime independence (each skill installable / runnable without
 the other).
@@ -156,7 +156,7 @@ Examples from dev-workflow history:
 
 - v1.5.0 (PR #159): added complexity-critique → minor
 - v1.6.0 (PR-2): added skill-refactor → minor
-- v1.7.0 (PR-3): added skill-tasting → minor
+- v1.7.0 (PR-3): added skill-tuning → minor
 - (future) v2.0.0: would be reserved for a breaking change such as
   removing skill-creator-advance description optimization or
   dropping a slash command
@@ -176,7 +176,7 @@ Quarterly audits review:
 3. **Convention SSOT** — any drift not caught by CI?
 4. **External dependencies** — upstream MIT chains still intact?
    New skills derived from external sources properly attributed?
-5. **Validation gates outstanding** — skill-refactor / skill-tasting
+5. **Validation gates outstanding** — skill-refactor / skill-tuning
    still need formal dry-run validation per architecture doc §6;
    audit checks whether validation has been performed
 

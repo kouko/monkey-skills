@@ -2,13 +2,13 @@
 
 > **Shared convention — canonical SoT.** This file is bundled in
 > both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tasting/references/` as functional copies.
+> `dev-workflow:skill-tuning/references/` as functional copies.
 > This location is the canonical SoT for evolution; same-PR drift
-> rule mirrors edits to the `skill-tasting` copy.
+> rule mirrors edits to the `skill-tuning` copy.
 
 Schema for `constitution.md` — a per-skill MUST / MUST NOT
 specification used as invariant input by `skill-refactor` Q3 and as
-judging criteria by `skill-tasting`.
+judging criteria by `skill-tuning`.
 
 ## Purpose
 
@@ -160,7 +160,7 @@ A refactor that breaks a MUST is **not a refactor** — it's a
 behavior change. Constitutional check is what catches "smuggled
 feature work".
 
-## How `skill-tasting` uses constitution
+## How `skill-tuning` uses constitution
 
 In its variant evaluation:
 
@@ -212,7 +212,7 @@ specifically that a human committed to these guarantees.
 
 Re-review every 6 months or when:
 
-- A refactor / tasting round reveals a MUST that's actually
+- A refactor / tuning round reveals a MUST that's actually
   weaker than written
 - User feedback identifies a behavior the skill should commit
   to that's not yet in MUST

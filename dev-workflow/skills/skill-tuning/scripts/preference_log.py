@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""preference_log.py — append / query / aggregate skill-tasting preference log entries.
+"""preference_log.py — append / query / aggregate skill-tuning preference log entries.
 
 The preference log is a JSONL file at <skill>/preference-log.jsonl.
 Each line is one entry per pick or session summary.
@@ -144,7 +144,7 @@ def op_export_training(log_path: Path, skill: str, out_path: Path, min_entries: 
             file=sys.stderr,
         )
         print(
-            "Continue using LLM-as-judge in skill-refactor / skill-tasting "
+            "Continue using LLM-as-judge in skill-refactor / skill-tuning "
             "until log denser. See "
             "references/self-trained-judge-pipeline.md §When this activates.",
             file=sys.stderr,

@@ -859,7 +859,7 @@ returns a z-score relative to the historical baseline. When a
 drift is flagged (current z-score < -1.0σ by default), it's a
 signal of subtle quality regression that the skill-refactor
 equivalence check may have missed — recommend running
-`dev-workflow:skill-tasting` on the affected skill to capture human
+`dev-workflow:skill-tuning` on the affected skill to capture human
 preference signal.
 
 The drift detection is **advisory** like the rest of skill-judge —

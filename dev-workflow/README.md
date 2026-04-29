@@ -19,7 +19,7 @@ decisions (proposals before code, single changes to existing code).
 | `proposal-critique` | — | Triage a multi-item proposal (list, plan, or prose) into KEEP / DEFER / DROP via evidence grounding + YAGNI |
 | `complexity-critique` | `/complexity-critique` | Gate a single proposed change to existing code (refactor, feature add, debt cleanup) through three deletion-first questions before implementing |
 | `skill-refactor` | `/skill-refactor` | Token / structure refactor of an existing skill with output equivalence guaranteed via multi-judge ensemble + git ratchet (Phase A of skill-evolution architecture) |
-| `skill-tasting` | `/skill-tasting` | Output quality A/B for an existing skill — generate variants with different output traits, run them blind, capture user preference. Constitution as floor; taste as ceiling; preference log accumulates as RLHF-lite dataset (Phase B of skill-evolution architecture) |
+| `skill-tuning` | `/skill-tuning` | Output quality A/B for an existing skill — generate variants with different output traits, run them blind, capture user preference. Constitution as floor; taste as ceiling; preference log accumulates as RLHF-lite dataset (Phase B of skill-evolution architecture) |
 
 ### The "critique" line
 
@@ -37,13 +37,13 @@ proposal-critique  →  complexity-critique  →  Anthropic simplify
 Together they cover most of the "is this worth it" decision space
 without duplicating the gate logic.
 
-### Skill-evolution architecture (skill-refactor + future skill-tasting)
+### Skill-evolution architecture (skill-refactor + future skill-tuning)
 
 The dev-workflow plugin is rolling out a four-skill family for
 authoring, evaluating, and evolving skills:
 
 ```
-skill-creator-advance  →  skill-refactor  →  skill-tasting  →  skill-judge
+skill-creator-advance  →  skill-refactor  →  skill-tuning  →  skill-judge
 (creation + redesign;     (Phase A: token /    (Phase B: output    (advisory
  spec-first; full         structure refactor;  quality A/B; human  scoring;
  eval loop)               output preserved;    judge; preference   never
@@ -52,7 +52,7 @@ skill-creator-advance  →  skill-refactor  →  skill-tasting  →  skill-judge
 
 - `skill-refactor` (v1.6.0) handles *behavior-preserving* refactor
   of existing skills
-- `skill-tasting` (this PR, v1.7.0) handles taste-sensitive output
+- `skill-tuning` (this PR, v1.7.0) handles taste-sensitive output
   A/B with human judgment + preference log
 - The split avoids the LLM-as-judge / Goodhart drift that monolithic
   taste-rubrics produce — see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)
@@ -148,7 +148,7 @@ dev-workflow/
     │   ├── README.{en,ja,zh-TW}.md
     │   ├── references/            ← equivalence-check / multi-judge / refactor-moves / golden-anchor / test-prompts-schema / constitution-schema (canonical SoT for shared conventions)
     │   └── scripts/               ← equivalence_check / multi_judge / golden_compare
-    └── skill-tasting/
+    └── skill-tuning/
         ├── SKILL.md               ← Phase B: output quality A/B with human judge + preference log
         ├── LICENSE / NOTICE       ← original design; design distinctions vs darwin-skill noted (9 differences)
         ├── README.{en,ja,zh-TW}.md

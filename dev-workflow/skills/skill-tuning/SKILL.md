@@ -1,5 +1,5 @@
 ---
-name: skill-tasting
+name: skill-tuning
 description: >-
   Output quality A/B for an existing skill — generate variants with
   different output traits, run them blind against the same test
@@ -9,21 +9,24 @@ description: >-
   (variants violating MUST clauses auto-rejected before user sees
   them); preference log accumulates as RLHF-lite dataset; H4
   self-trained judge replaces LLM-judge once log is dense enough.
-  Use when the user wants to improve a skill's output style /
+  Use when the user wants to tune a skill's output style /
   quality / voice / tone, explore variant phrasings, or accumulate
   preference signal for taste-sensitive skill work. Triggers:
-  improve skill output / A/B variants / output quality / 改善 skill
-  輸出 / 風格優化 / 跑 A/B 測試 / 出力品質 / 試不同 phrasing /
-  taste-sensitive skill. Do NOT use for token / structure refactor
-  with output preserved (use dev-workflow:skill-refactor),
-  structural redesign (use dev-workflow:skill-creator-advance),
-  creating new skill (use dev-workflow:skill-creator-advance), or
-  deterministic / mechanical skills where output is binary
-  correct / incorrect (no taste dimension to A/B). スキル出力 A/B
-  ・人間判定・選好ログ。技能輸出 A/B・人類判斷・偏好累積。
+  tune skill / skill tuning / fine-tune skill output / improve
+  skill output / A/B variants / output quality / preference
+  tuning / RLHF skill / 調整 skill 輸出 / 風格優化 / 跑 A/B 測試
+  / 改善 skill 輸出 / 出力品質 / スキル チューニング / 試不同
+  phrasing / taste-sensitive skill. Do NOT use for token /
+  structure refactor with output preserved (use
+  dev-workflow:skill-refactor), structural redesign (use
+  dev-workflow:skill-creator-advance), creating new skill (use
+  dev-workflow:skill-creator-advance), or deterministic /
+  mechanical skills where output is binary correct / incorrect
+  (no taste dimension to A/B). スキル チューニング・出力 A/B
+  ・人間判定・選好ログ。技能調整・輸出 A/B・人類判斷・偏好累積。
 ---
 
-# Skill Tasting
+# Skill Tuning
 
 A user-invoked gate skill: forces variant exploration of an
 existing skill's output quality through **human-judged blind A/B
@@ -32,9 +35,9 @@ decision basis for current iteration and a future RLHF-lite
 dataset.
 
 This skill is the **feature hat** counterpart to `skill-refactor`'s
-refactor hat: where refactor preserves behavior, tasting deliberately
+refactor hat: where refactor preserves behavior, tuning deliberately
 explores behavior changes to find better outputs. Where refactor
-uses LLM-as-judge (reliable for binary equivalence), tasting uses
+uses LLM-as-judge (reliable for binary equivalence), tuning uses
 human judgment (necessary because taste cannot be reliably
 LLM-judged).
 
@@ -217,7 +220,7 @@ Parallel to other dev-workflow critique skills:
 | **REFINE** | User needs different test inputs / variants | Re-run with revised generation; no decision yet |
 | **ESCALATE** | Multi-evaluator disagreement >30% | Block decision; resolve human-to-human first |
 
-Note: skill-tasting **does not auto-revert** the way skill-refactor
+Note: skill-tuning **does not auto-revert** the way skill-refactor
 does. There is no LLM judge that can reliably say "this variant is
 worse" — only the human can. Without a human pick, no variant ships,
 period.
@@ -229,7 +232,7 @@ are **non-negotiable** — taste does not override constitution. A
 variant that violates a MUST is rejected even if a user might
 "prefer" the violating output.
 
-This is the difference between *taste* and *negligence*. Tasting
+This is the difference between *taste* and *negligence*. Tuning
 explores legitimate quality variation within the skill's contract.
 Constitutional violation is contract breach, not taste — it gets
 caught before it ever reaches user judgment.
@@ -237,7 +240,7 @@ caught before it ever reaches user judgment.
 See `references/constitutional-judging.md` for full protocol
 including: how to test MUST clauses against variants, what counts
 as "violated", how to handle MUST clauses that are themselves
-ambiguous, and how to evolve constitution when tasting reveals
+ambiguous, and how to evolve constitution when tuning reveals
 implicit constraints.
 
 ## Preference Log → Self-Trained Judge (H4 horizon)
@@ -271,7 +274,7 @@ training methodology.
 | Flag | Why STOP |
 |---|---|
 | User wants behavior preserved (not different) | This is `skill-refactor` territory |
-| Output is deterministic / mechanical (file transform, JSON spec) | No taste dimension; tasting is overkill |
+| Output is deterministic / mechanical (file transform, JSON spec) | No taste dimension; tuning is overkill |
 | User wants to skip blind labeling ("just show me which is the new one") | Blind protocol exists for position-bias reasons; honoring user request would compromise the data |
 | Constitution is missing AND skill has taste-sensitive output | Strongly recommend writing constitution first; without floor, variants drift unpredictably |
 | Variants are too similar (cosmetic phrasing changes) | Wasted A/B; user can't distinguish; widen variant generation |
@@ -290,7 +293,7 @@ training methodology.
 
 ## Composes With
 
-- **`dev-workflow:skill-creator-advance`** — when tasting reveals a
+- **`dev-workflow:skill-creator-advance`** — when tuning reveals a
   structural problem (no variant in the same shape gets preferred,
   user wants fundamentally different shape), hand off to redesign
 - **`dev-workflow:skill-refactor`** — when the variant the user
@@ -394,7 +397,7 @@ feel, structural choices that aren't load-bearing. Skill must have
 - **New skill creation** — use `skill-creator-advance`
 - **Deterministic / mechanical skills** (file transforms, JSON
   spec generation, fixed-format report) — output is binary
-  correct/incorrect; taste doesn't apply; tasting is overkill
+  correct/incorrect; taste doesn't apply; tuning is overkill
 - **Single-iteration vibes-check** — don't create a preference log
   for a one-off "does this look right?"; just edit
 - **Skill with no constitution AND no goldens AND no test prompts**

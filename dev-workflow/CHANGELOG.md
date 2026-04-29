@@ -4,6 +4,106 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] — 2026-04-29
+
+### BREAKING
+
+**`skill-tasting` is renamed to `skill-tuning`.**
+
+- Slash command: `/skill-tasting` → `/skill-tuning`
+- Skill directory: `skills/skill-tasting/` → `skills/skill-tuning/`
+- All cross-skill forward references updated (skill-creator-advance
+  not-trigger; skill-refactor handoff in SKILL.md / READMEs;
+  skill-refactor's bundled functional copy headers in 3 shared
+  conventions; plugin.json description and keywords; plugin
+  READMEs × 3; architecture doc; governance doc; audit runbook;
+  telemetry-setup doc; check-shared-conventions-drift.py manifest)
+- Migration: anyone using `/skill-tasting` should update to
+  `/skill-tuning`. The skill's behavior, frontmatter description
+  semantics, gate function, verdict vocabulary (ADOPT / DROP /
+  DEFER / REFINE / ESCALATE), and references / scripts are
+  otherwise unchanged from v1.7.0.
+
+### Why rename
+
+The "tasting" metaphor (wine/food tasting → subjective judgment)
+was chosen in v1.7.0 PR-3 to evoke human-judgment / preference
+accumulation and to distinguish from mechanical "testing". In
+practice the metaphor proved insufficiently sticky:
+
+- **Mental-model failure** observed: even the original maintainer
+  recalled the skill as "skill-testing" rather than "skill-tasting"
+  — t/t similarity defeats recognition
+- **Multi-language friction**: "tasting" doesn't translate
+  naturally; "tuning" maps cleanly via "チューニング" / "調整"
+- **Cultural specificity**: wine/food tasting metaphor doesn't
+  carry universally
+- **Trajectory mismatch**: H4 horizon trains a preference judge
+  from the log — that activity is industry-standardly called
+  "fine-tuning" / "RLHF tuning". The new name echoes the
+  long-term target.
+- **Adjacency to anti-trigger**: skill-creator-advance has an
+  explicit "Do NOT use /skill-test" anti-trigger; t/t collision
+  created ambient confusion
+
+Per the dev-workflow Goodhart audit pattern: when stick failure
+is observed, name early and fix early. Cost of renaming at v1 /
+single active user is far cheaper than future cross-reference
+accumulation.
+
+### Changed (skill-tuning vocabulary)
+
+- Activity-noun replacements throughout skill-tuning's body:
+  "tasting reveals" → "tuning reveals"; "tasting session" →
+  "tuning session"; "tasting is overkill" → "tuning is overkill";
+  "Skill Tasting" → "Skill Tuning"
+- **Preserved deliberately**: "taste-sensitive", "Taste is the
+  ceiling", "taste does not override", "taste dimension" — these
+  use "taste" (the property / abstract concept), not "tasting"
+  (the activity). The activity got renamed; the property
+  descriptor stays. Skills produce taste-sensitive output; the
+  workflow that improves it is now called tuning.
+- Trigger keywords expanded with tuning-vocabulary:
+  - English: "tune skill", "skill tuning",
+    "fine-tune skill output", "preference tuning", "RLHF skill"
+  - Chinese: "調整 skill 輸出"
+  - Japanese: "スキル チューニング"
+  - Multilingual postfix updated: "スキル チューニング" /
+    "技能調整"
+- Existing triggers preserved: "improve skill output",
+  "A/B variants", "output quality", "taste-sensitive skill",
+  "改善 skill 輸出", "試不同 phrasing", "出力品質"
+
+### Changed (architecture doc Implementation Status)
+
+`dev-workflow/docs/skill-evolution-architecture.md`:
+- Implementation Status table extended with v2.0.0 row
+- Note added explaining the rename rationale and that semantics
+  / gate function are unchanged from v1.7.0
+
+### Changed (plugin metadata)
+
+- `plugin.json`: 1.9.0 → 2.0.0; description and multilingual
+  postfix updated to reference skill-tuning; keywords already
+  reflect the rename (set in this commit's bulk replace)
+- Plugin READMEs (en/ja/zh-TW): skills table row updated;
+  Skill-evolution architecture diagram updated; Repository
+  Structure tree updated
+
+### Bump rationale
+
+**Major (1.9.0 → 2.0.0)**: per `skill-governance.md` versioning
+policy, "removal of slash command" / "removal of public protocol"
+is a major bump. The slash command rename is functionally a removal
+of `/skill-tasting` (it no longer triggers anything) plus addition
+of `/skill-tuning`. Even though the skill's underlying behavior
+is unchanged, the user-facing interface broke.
+
+This is the **first major bump** in dev-workflow's history.
+Future breaking changes should follow the same naming-failure-
+caught-early pattern: identify, surface, decide quickly, version-
+bump rather than letting drift accumulate.
+
 ## [1.9.0] — 2026-04-29
 
 ### Context

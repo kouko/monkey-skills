@@ -15,8 +15,8 @@
       "id": 2,
       "category": "edge-case",
       "prompt": "Refactor my-creative-skill to be shorter. The skill produces marketing copy in different tones.",
-      "expected_behavior": "Skill detects the target produces taste-sensitive output (marketing copy / tone). Self-aborts and recommends skill-tasting instead — equivalence check is unreliable for creative output where 'same content' is fuzzy. Notes that token savings are still possible but should be evaluated by human preference, not LLM-judge equivalence.",
-      "edge_case_dimensions": ["taste-sensitive target", "self-abort + handoff to skill-tasting", "equivalence check unreliable"]
+      "expected_behavior": "Skill detects the target produces taste-sensitive output (marketing copy / tone). Self-aborts and recommends skill-tuning instead — equivalence check is unreliable for creative output where 'same content' is fuzzy. Notes that token savings are still possible but should be evaluated by human preference, not LLM-judge equivalence.",
+      "edge_case_dimensions": ["taste-sensitive target", "self-abort + handoff to skill-tuning", "equivalence check unreliable"]
     },
     {
       "id": 3,

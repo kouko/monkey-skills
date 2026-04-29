@@ -1,7 +1,7 @@
 # Preference Log Schema
 
 The preference log is the durable record of every A/B decision
-made during `skill-tasting` sessions. It serves two purposes:
+made during `skill-tuning` sessions. It serves two purposes:
 
 1. **Decision basis for current iteration** — what variant did the
    user prefer for this prompt?
@@ -64,7 +64,7 @@ ISO 8601 UTC. When this pick was made.
 
 ### `session_id`
 Short identifier (UUID or `<skill>-<date>-<seq>`) grouping all
-picks within one tasting session. Useful for "all picks in
+picks within one tuning session. Useful for "all picks in
 session X".
 
 ### `skill`
@@ -129,7 +129,7 @@ How long the user took to pick. Useful for fatigue detection
 (very fast = guess; very slow = genuinely hard).
 
 ### `verdict`
-The skill-tasting verdict applied: `ADOPT` / `DROP` / `DEFER` /
+The skill-tuning verdict applied: `ADOPT` / `DROP` / `DEFER` /
 `REFINE` / `ESCALATE`.
 
 ## Per-session summary entry

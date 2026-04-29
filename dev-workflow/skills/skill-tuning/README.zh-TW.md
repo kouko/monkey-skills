@@ -1,4 +1,4 @@
-# Skill Tasting
+# Skill Tuning
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
@@ -24,7 +24,7 @@
 
 此 skill 是 [`skill-refactor`](../skill-refactor/) refactor hat 的
 **feature hat** 對偶：refactor 保留行為（用 LLM-as-judge 驗等價，
-這是 LLM 處理得好的二元檢查），tasting 刻意改變行為以找更好的輸出
+這是 LLM 處理得好的二元檢查），tuning 刻意改變行為以找更好的輸出
 （用人類判斷，因為 taste 正是 LLM-as-judge 失靈的地方）。
 
 此分割是基礎性的。完整理由見
@@ -80,7 +80,7 @@ flowchart TD
 | **ESCALATE** | Multi-evaluator 分歧 >30% | 阻擋；先 human-to-human 解決 |
 
 **沒有 auto-revert**。不像 skill-refactor（LLM equivalence check
-驅動 auto-revert），skill-tasting 需要人類 ADOPT 才能 ship。沒有
+驅動 auto-revert），skill-tuning 需要人類 ADOPT 才能 ship。沒有
 人類選擇 = 沒有改動。
 
 ### 憲法判定（底線）
@@ -184,15 +184,15 @@ A 與 B 進到 A/B。User 選 A。
 ## 它與其他 skill 的關係？
 
 - **`dev-workflow:skill-refactor`** — 姊妹 Phase A skill；保留行為、
-  LLM-judge 等價；tasting 改變行為、人類 judge。可組合：先 refactor
+  LLM-judge 等價；tuning 改變行為、人類 judge。可組合：先 refactor
   縮短 token，再 taste 優化品質。
-- **`dev-workflow:skill-creator-advance`** — 當 tasting 顯示同形狀
+- **`dev-workflow:skill-creator-advance`** — 當 tuning 顯示同形狀
   下沒有變體產出偏好輸出時，handoff 到重設計。
 - **`dev-workflow:skill-judge`** — 對變體的 advisory check（advisory
   only；不懂 taste）。
 - **`copywriting-toolkit:voice-anchors`** — 寫作層的對應概念；此
   skill 借鑑其策展紀律。
-- **`dev-workflow:proposal-critique`** — 多個 tasting 提案要 triage 時。
+- **`dev-workflow:proposal-critique`** — 多個 tuning 提案要 triage 時。
 
 ---
 
@@ -205,15 +205,15 @@ proposal-critique  → complexity-critique → skill-creator-advance
 （list / plan         （單變更 gate）         （建立 + 重設計）
  triage）
 
-skill-judge          skill-refactor        skill-tasting
+skill-judge          skill-refactor        skill-tuning
 （advisory 評分）    （Phase A: token /     （Phase B: 輸出 A/B,
                        結構, 行為保留）       人類 judge,
                                               preference log）
 ```
 
-`skill-refactor`（Phase A）跟 `skill-tasting`（Phase B）的拆分是
+`skill-refactor`（Phase A）跟 `skill-tuning`（Phase B）的拆分是
 基礎性的 — 反映 Fowler Two Hats 套到 skill：refactor 保留行為、
-tasting 改變行為。把它們混在一個 skill（如 `darwin-skill` 用 8 維
+tuning 改變行為。把它們混在一個 skill（如 `darwin-skill` 用 8 維
 rubric）會讓 LLM-as-judge 在 taste 維度不可靠。拆開讓每個工具用對
 的評估機制。
 
@@ -261,7 +261,7 @@ acknowledgments）。Repository root：[`../../../../LICENSE`](../../../../LICEN
 ## Files
 
 ```
-skill-tasting/
+skill-tuning/
 ├── README.md           ← English README
 ├── README.ja.md        ← 日本語 README
 ├── README.zh-TW.md     ← 本檔（繁體中文）

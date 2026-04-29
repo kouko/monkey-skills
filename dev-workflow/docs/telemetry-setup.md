@@ -16,7 +16,7 @@ Per the skill-evolution architecture (Layer 0 — Foundation):
 
 - **Identify which skills are actually used** — invocation
   frequency informs which skills to prioritize for refactor /
-  tasting / retirement
+  tuning / retirement
 - **Detect failure patterns** — frequent errors or re-runs on a
   skill signal it needs improvement
 - **Inform quarterly audits** — see
@@ -188,7 +188,7 @@ python3 scripts/skill-telemetry.py summarize | jq '.by_skill | to_entries[] | se
 Skills with persistent low usage become candidates for
 **Deprecated** state (per `skill-governance.md` Skill Lifecycle
 States). Skills with high re-run / error rates become candidates
-for **Refactor** or **Tasting** intervention.
+for **Refactor** or **Tuning** intervention.
 
 Without telemetry, this analysis is impossible; the audit
 defaults to "everything is Active because no one's complained".

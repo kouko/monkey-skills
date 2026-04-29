@@ -169,7 +169,7 @@ def op_drift(history_path: Path, sigma_threshold: float) -> int:
             f"({mean:.1f} ± {stddev:.1f}). "
             f"This may indicate subtle quality regression that the "
             f"skill-refactor equivalence check missed. Recommend running "
-            f"skill-tasting on this skill to capture human preference signal.",
+            f"skill-tuning on this skill to capture human preference signal.",
             file=sys.stderr,
         )
         return 1

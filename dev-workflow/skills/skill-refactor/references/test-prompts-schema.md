@@ -2,9 +2,9 @@
 
 > **Shared convention — canonical SoT.** This file is bundled in
 > both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tasting/references/` as functional copies.
+> `dev-workflow:skill-tuning/references/` as functional copies.
 > This location is the canonical SoT for evolution; same-PR drift
-> rule mirrors edits to the `skill-tasting` copy.
+> rule mirrors edits to the `skill-tuning` copy.
 
 Schema for the `test-prompts.json` file maintained per skill.
 
@@ -12,7 +12,7 @@ Schema for the `test-prompts.json` file maintained per skill.
 
 `test-prompts.json` is the **input set** that drives evaluation
 work for a skill — equivalence checks (skill-refactor), A/B
-variant testing (skill-tasting), and creation eval (when
+variant testing (skill-tuning), and creation eval (when
 skill-creator-advance produces a new skill).
 
 Without test prompts, evaluation tools can't run. The first action
@@ -133,14 +133,14 @@ stress) is sufficient for most skills. More is better but
 diminishing returns; 5-7 is typical for mature skills.
 
 A skill with **fewer than 3 test prompts cannot be evaluated by
-skill-refactor or skill-tasting** — the evaluation gates self-abort
+skill-refactor or skill-tuning** — the evaluation gates self-abort
 and prompt the user to provide more.
 
 ## Curation responsibility
 
 Test prompts are user-confirmed (or at least user-acknowledged):
 
-1. The skill's author (or refactor / tasting orchestrator) drafts
+1. The skill's author (or refactor / tuning orchestrator) drafts
    prompts based on the skill's documented use cases
 2. User reviews — does this look like what real users would type?
 3. User confirms or edits
@@ -176,7 +176,7 @@ handle, rather than what users actually do.
 The same `test-prompts.json` is used by:
 
 - `skill-refactor` Q1 baseline + comparison runs
-- `skill-tasting` for A/B variant runs
+- `skill-tuning` for A/B variant runs
 - `skill-creator-advance` Full Eval Path
 - `skill-judge` (advisory; doesn't require but can use for context)
 

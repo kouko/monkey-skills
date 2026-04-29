@@ -1,4 +1,4 @@
-# Skill Tasting
+# Skill Tuning
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
@@ -30,7 +30,7 @@ signal**, not more rule-following.
 This skill is the **feature hat** counterpart to
 [`skill-refactor`](../skill-refactor/)'s refactor hat: where
 refactor preserves behavior (and uses LLM-as-judge to verify
-equivalence — a binary check LLMs handle well), tasting
+equivalence — a binary check LLMs handle well), tuning
 deliberately changes behavior to find better outputs (and uses
 human judgment because taste is exactly where LLM-as-judge fails).
 
@@ -87,7 +87,7 @@ Parallel to other dev-workflow critique skills:
 | **ESCALATE** | Multi-evaluator disagreement >30% | Block; resolve human-to-human |
 
 **No auto-revert.** Unlike skill-refactor (where LLM equivalence
-check drives auto-revert), skill-tasting requires a human ADOPT
+check drives auto-revert), skill-tuning requires a human ADOPT
 to ship anything. Absence of human pick = no change.
 
 ### Constitutional judging (the floor)
@@ -210,10 +210,10 @@ non-negotiable accuracy contract.
 ## How does it relate to other skills?
 
 - **`dev-workflow:skill-refactor`** — sibling Phase A skill;
-  preserves behavior, LLM-judge equivalence; tasting changes
+  preserves behavior, LLM-judge equivalence; tuning changes
   behavior, human judges. They compose: refactor first to shrink
   tokens, then taste to optimize quality.
-- **`dev-workflow:skill-creator-advance`** — when tasting reveals
+- **`dev-workflow:skill-creator-advance`** — when tuning reveals
   no variant in the same shape produces preferred output, hand off
   to redesign.
 - **`dev-workflow:skill-judge`** — optional advisory check on
@@ -221,7 +221,7 @@ non-negotiable accuracy contract.
 - **`copywriting-toolkit:voice-anchors`** — analogous concept at
   the copywriting level; this skill borrows curation discipline.
 - **`dev-workflow:proposal-critique`** — when faced with multiple
-  tasting proposals, triage which to do first.
+  tuning proposals, triage which to do first.
 
 ---
 
@@ -234,15 +234,15 @@ proposal-critique  → complexity-critique → skill-creator-advance
 (list / plan         (single change gate)   (creation + redesign)
  triage)
 
-skill-judge          skill-refactor        skill-tasting
+skill-judge          skill-refactor        skill-tuning
 (advisory score)     (Phase A: tokens /    (Phase B: output A/B,
                       structure, output      human judge,
                       preserved)             preference log)
 ```
 
-The split between `skill-refactor` (Phase A) and `skill-tasting`
+The split between `skill-refactor` (Phase A) and `skill-tuning`
 (Phase B) is foundational — it reflects Fowler's Two Hats applied
-to skills: refactor preserves behavior, tasting changes it.
+to skills: refactor preserves behavior, tuning changes it.
 Mixing them in one skill (as `darwin-skill` does with its 8-dim
 rubric) makes LLM-as-judge unreliable on taste-sensitive
 dimensions. Splitting them lets each tool use the right
@@ -293,7 +293,7 @@ influence acknowledgments. Repository root: [`../../../../LICENSE`](../../../../
 ## Files
 
 ```
-skill-tasting/
+skill-tuning/
 ├── README.md           ← English (this file)
 ├── README.ja.md        ← 日本語
 ├── README.zh-TW.md     ← 繁體中文

@@ -2,15 +2,15 @@
 
 > **Shared convention — canonical SoT.** This file is bundled in
 > both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tasting/references/` as functional copies.
+> `dev-workflow:skill-tuning/references/` as functional copies.
 > This location is the canonical SoT for the convention's
-> evolution; the `skill-tasting` copy is updated to match in the
+> evolution; the `skill-tuning` copy is updated to match in the
 > same PR (drift rule). Runtime self-containment preserved on
 > each side.
 
 How to maintain a `golden/` directory of curated reference outputs
 for a skill, used as a stable evaluation anchor for refactor and
-tasting work.
+tuning work.
 
 ## What goldens are
 
@@ -120,7 +120,7 @@ Goldens become stale. The curator should re-review:
 - Every 6 months as a default rhythm
 - When the skill has had a major rewrite (post-skill-creator-advance)
 - When user feedback on the skill changes
-- When a refactor or tasting round reveals goldens no longer
+- When a refactor or tuning round reveals goldens no longer
   reflect current judgment
 
 Stale goldens are worse than no goldens — they create false
@@ -149,9 +149,9 @@ golden anchors exist for this skill:
 Golden-anchored equivalence is stronger than judge-only equivalence
 because the comparison target is human-fixed, not LLM-floating.
 
-## How `skill-tasting` uses goldens
+## How `skill-tuning` uses goldens
 
-In `skill-tasting` (per its protocol), goldens serve as the
+In `skill-tuning` (per its protocol), goldens serve as the
 ground-truth direction for variant exploration:
 
 ```
