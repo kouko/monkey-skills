@@ -155,7 +155,7 @@ These are not refactors. If proposed, route elsewhere:
 | Add a new phase | New behavior | `skill-creator-advance` |
 | Remove a fallback / edge case handler | Behavior change | `skill-creator-advance` (with explicit user decision) |
 | Change input/output format | Contract change | `skill-creator-advance` |
-| Reword for "clarity" with judgment call | Taste, not refactor | `skill-tasting` |
+| Reword for "clarity" with judgment call | Taste, not refactor | `skill-tuning` |
 | Remove "deprecated" instruction | Behavior change | `skill-creator-advance` |
 | Add example / pattern | Additive | `skill-creator-advance` (or just direct edit if trivial) |
 | Strengthen / weaken a constraint | Behavior change | `skill-creator-advance` |

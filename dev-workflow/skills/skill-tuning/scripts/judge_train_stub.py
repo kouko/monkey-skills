@@ -126,7 +126,7 @@ def main() -> int:
             "     ranks variants before showing to user (user still has\n"
             "     final pick)\n"
             "\n"
-            "Until then, continue using LLM-as-judge in skill-tasting.\n"
+            "Until then, continue using LLM-as-judge in skill-tuning.\n"
             "See references/self-trained-judge-pipeline.md for the full\n"
             "training methodology, evaluation criteria, deployment\n"
             "model, and privacy / data-handling considerations.\n",

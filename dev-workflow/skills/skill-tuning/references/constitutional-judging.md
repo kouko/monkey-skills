@@ -1,13 +1,13 @@
 # Constitutional Judging
 
-How `skill-tasting` Phase 2 (constitutional pre-filter) uses the
+How `skill-tuning` Phase 2 (constitutional pre-filter) uses the
 target skill's `constitution.md` to filter variants before user
 judgment.
 
 The full constitution schema lives in
 `references/constitution-schema.md` (shared convention with
 `skill-refactor`). This file documents the *judging mechanics*
-specific to skill-tasting.
+specific to skill-tuning.
 
 ## Why pre-filter
 
@@ -38,7 +38,7 @@ For each MUST clause C:
         - Yes: this prompt's check passes
         - No: variant violates C; record in rejected_by_constitution
         - Ambiguous: variant gets benefit of doubt; flag for human review
-            in tasting session
+            in tuning session
 ```
 
 If ANY prompt produces a violation, the variant is rejected.
@@ -138,9 +138,9 @@ If the target skill has no `constitution.md`:
 Skills without constitutions can still be tasted — just with
 more user burden per round.
 
-## Constitution evolution from tasting
+## Constitution evolution from tuning
 
-Tasting sessions sometimes reveal **implicit constraints** the
+Tuning sessions sometimes reveal **implicit constraints** the
 user has but never wrote down. Example:
 
 - User's pick rationale: "I picked A because B doesn't mention
@@ -148,7 +148,7 @@ user has but never wrote down. Example:
 - Implication: user has an unstated MUST "include signoff"
 - This should be **promoted to explicit MUST** in constitution.md
 
-The tasting session should surface these moments:
+The tuning session should surface these moments:
 
 ```
 After each round, ask:
@@ -164,7 +164,7 @@ listing.
 ## Constitutional ratchet
 
 When constitution is updated mid-session (a new MUST is added
-because tasting revealed it):
+because tuning revealed it):
 
 1. Re-run pre-filter on remaining rounds against new constitution
 2. Variants that violated new MUST are retroactively flagged
@@ -194,4 +194,4 @@ version.
   are logged per round
 - `dev-workflow:skill-refactor` references the same constitution
   but uses it differently — refactor checks Q3 invariants don't
-  break MUSTs; tasting filters variants before they reach the user
+  break MUSTs; tuning filters variants before they reach the user

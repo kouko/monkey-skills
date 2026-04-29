@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ab_harness.py — orchestrates skill-tasting Phase 3 blind A/B presentation.
+"""ab_harness.py — orchestrates skill-tuning Phase 3 blind A/B presentation.
 
 This script handles the deterministic parts of the A/B harness:
 random label assignment, side-by-side rendering for terminal display,

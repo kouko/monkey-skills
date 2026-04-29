@@ -105,12 +105,12 @@ regression**; the equivalence check needs to cover both.
 | **Verbosity bias** | Judge prefers longer output → marks shorter candidate as "less complete" | Layer 1 token-count rule prevents this from auto-rejecting; Layer 2 sees both with neutral framing |
 | **Position bias** | Judge prefers `Output_A` over `Output_B` | Random labeling in Layer 2 (sometimes baseline = A, sometimes = B) |
 | **Self-preference** | Judge prefers output it would have produced | Use different prompt frames per judge |
-| **Insensitivity to subtle change** | Judges miss a small but load-bearing word change | Fall back to `skill-tasting` if you suspect this; refactor is the wrong tool for subtle taste |
+| **Insensitivity to subtle change** | Judges miss a small but load-bearing word change | Fall back to `skill-tuning` if you suspect this; refactor is the wrong tool for subtle taste |
 
 ## When this protocol is the wrong fit
 
 If the target skill produces non-deterministic / creative output
 (writing tone, design choices, persuasive copy), Layer 2's judge
 becomes unreliable — taste enters. The skill self-aborts and
-recommends `skill-tasting` instead. This is documented in
+recommends `skill-tuning` instead. This is documented in
 SKILL.md §Not-triggers.

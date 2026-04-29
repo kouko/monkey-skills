@@ -1,6 +1,6 @@
 # Self-Trained Judge Pipeline (H4 Horizon Scaffold)
 
-The skill-tasting preference log accumulates over time. At
+The skill-tuning preference log accumulates over time. At
 sufficient density, it becomes training data for a domain-specific
 preference model — a **self-trained judge** that approximates the
 user's taste better than any general-purpose LLM judge can.
@@ -175,7 +175,7 @@ out-of-scope until single-skill training proves valuable.
 | User has multiple "modes" of taste (depending on context) | Single judge averages contexts | Context-conditional judge: take additional context features as input |
 | Constitution updates retroactively change what's valid | Old entries against old constitution mismatch new one | `applies_to_constitution_version` filter at training time |
 | Judge over-fits to specific examples | Not enough variance in log | Ensure log captures variant diversity (random labeling helps) |
-| Judge fails to outperform random | Genuinely hard task; signal too weak | Document; don't deploy; consider whether tasting is the right tool for this skill |
+| Judge fails to outperform random | Genuinely hard task; signal too weak | Document; don't deploy; consider whether tuning is the right tool for this skill |
 
 ## Cross-references
 

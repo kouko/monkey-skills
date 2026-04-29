@@ -132,7 +132,7 @@ Full protocol: [`references/multi-judge-ensemble.md`](references/multi-judge-ens
 ### Don't invoke when…
 
 - **Skill output is bad / wrong** — use
-  `dev-workflow:skill-tasting` — taste
+  `dev-workflow:skill-tuning` — taste
   improvement requires human-judged A/B, not equivalence-preserving
   refactor
 - **You want to add a phase / change agent / restructure
@@ -146,7 +146,7 @@ Full protocol: [`references/multi-judge-ensemble.md`](references/multi-judge-ens
   use `skill-creator-advance` to redesign with proper test infra
 - **Skill output is creative / non-deterministic** (writing style,
   prose, design feel) — equivalence check unreliable; use
-  `skill-tasting`
+  `skill-tuning`
 
 ---
 
@@ -220,7 +220,7 @@ preserved**. Hand off when:
   thinking before invoking refactor)
 - **`dev-workflow:skill-creator-advance`** — when the change is
   structural (add phase, change agents, redesign workflow)
-- **`dev-workflow:skill-tasting`** — when the
+- **`dev-workflow:skill-tuning`** — when the
   question turns from "are outputs equivalent" to "which output is
   better"
 - **`dev-workflow:skill-judge`** — optional advisory check before /
@@ -237,15 +237,15 @@ The dev-workflow skill family now reads:
 proposal-critique  → complexity-critique → skill-creator-advance
 (list/plan triage)   (single change gate)   (creation + redesign)
 
-skill-judge          skill-refactor       skill-tasting
+skill-judge          skill-refactor       skill-tuning
 (advisory score)     (Phase A: tokens     (Phase B: output A/B,
                       / structure with     human judge)
                       output preserved)    [coming PR-3]
 ```
 
-The split between `skill-refactor` (Phase A) and `skill-tasting`
+The split between `skill-refactor` (Phase A) and `skill-tuning`
 (Phase B) reflects Fowler's Two Hats applied to skills: refactor
-preserves behavior, tasting changes it. They are deliberately
+preserves behavior, tuning changes it. They are deliberately
 separate skills to prevent rubric-mixing that LLM-as-judge cannot
 reliably handle.
 
@@ -264,7 +264,7 @@ The "autonomous loop with git ratchet" concept was popularized by
 structural refactoring with output quality evaluation in a single
 8-dim rubric. This skill (skill-refactor) deliberately handles only
 Phase A (structure with output preservation); Phase B (output
-quality A/B) is the separate `skill-tasting` skill. The split avoids
+quality A/B) is the separate `skill-tuning` skill. The split avoids
 the LLM-as-judge / Goodhart drift that monolithic taste-rubrics
 produce — see [`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
 §1 for the architectural reasoning.
@@ -285,7 +285,7 @@ Full design-influence detail in [`NOTICE`](NOTICE).
 | **Requires test-prompts.json** | Skills without ≥3 documented test prompts can't run the gate. | Skill self-aborts and asks user to write prompts (or use skill-creator-advance to redesign with test infra). |
 | **LLM-judge is not infallible** | Even 3-judge ensemble can miss subtle behavior changes. | Specific-behavior-diff override + Tier 2 human escalation + (optional) golden anchor anchoring. |
 | **Token-only metric is coarse** | A 30-line type-system trick may be denser than 100 lines of straightforward prose. | The 10% reduction threshold prevents tiny-win refactors; substantial refactors are visible. |
-| **Output preservation is ill-defined for creative skills** | Skills producing prose / writing style have no objective "equivalent". | Self-aborts and recommends `skill-tasting` for those skills. |
+| **Output preservation is ill-defined for creative skills** | Skills producing prose / writing style have no objective "equivalent". | Self-aborts and recommends `skill-tuning` for those skills. |
 | **Cumulative drift across rounds** | 3 consecutive moderate-confidence PROCEEDs can compound subtle drift. | Auto-flag for human review of cumulative diff after 3 such rounds. |
 | **Validation not yet performed** | This skill ships before dry-run validation against ≥2 real skills. | Validation gate per architecture doc §6 is OUTSTANDING; PR-2 ships with this caveat noted in PR description. |
 
@@ -310,7 +310,7 @@ skill-refactor/
 │   ├── equivalence-check-protocol.md   ← Q1 Layer 1+2 details
 │   ├── multi-judge-ensemble.md         ← 3-judge spawn protocol
 │   ├── refactor-moves-catalog.md       ← Fowler-inspired moves
-│   ├── golden-anchor-protocol.md       ← shared convention (also in skill-tasting)
+│   ├── golden-anchor-protocol.md       ← shared convention (also in skill-tuning)
 │   ├── test-prompts-schema.md          ← shared convention
 │   └── constitution-schema.md          ← shared convention
 └── scripts/

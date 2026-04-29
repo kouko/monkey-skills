@@ -22,7 +22,7 @@
       "id": 3,
       "category": "stress",
       "prompt": "improve my skill",
-      "expected_behavior": "Skill triggers the Improving Existing Skill router; asks the user to clarify which type of improvement (a) token / structure refactor [→ skill-refactor], (b) output quality A/B [→ skill-tasting], or (c) structural rewrite [→ continue here]. Does NOT default into the creation flow.",
+      "expected_behavior": "Skill triggers the Improving Existing Skill router; asks the user to clarify which type of improvement (a) token / structure refactor [→ skill-refactor], (b) output quality A/B [→ skill-tuning], or (c) structural rewrite [→ continue here]. Does NOT default into the creation flow.",
       "edge_case_dimensions": ["vague intent", "router behavior test", "ambiguous request"]
     }
   ]

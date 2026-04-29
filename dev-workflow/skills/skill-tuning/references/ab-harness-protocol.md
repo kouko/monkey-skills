@@ -1,6 +1,6 @@
 # A/B Harness Protocol
 
-How `skill-tasting` Phase 3 presents variants to a human and
+How `skill-tuning` Phase 3 presents variants to a human and
 captures their preference.
 
 ## Design constraints
@@ -108,7 +108,7 @@ If 2+ humans review the same A/B independently:
    - Majority (≥⅔ pick same letter) → that's the verdict, log as
      "majority"
    - Tie or wide spread (<⅔ agreement) → ESCALATE — this is a
-     human-to-human resolution, not a tasting decision
+     human-to-human resolution, not a tuning decision
 
 For 1-evaluator workflow (the common case), skip aggregation;
 their pick is the verdict.
@@ -166,7 +166,7 @@ preference log alongside the per-pick entries:
 ```
 
 This summary is the human-time-cost record — useful when
-evaluating whether tasting investments are worth it.
+evaluating whether tuning investments are worth it.
 
 ## When the harness fails
 

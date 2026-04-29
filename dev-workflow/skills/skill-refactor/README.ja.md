@@ -129,7 +129,7 @@ prompt フレーミングで spawn する：
 
 ### 以下の場合は呼び出**さない**…
 
-- **skill 出力が悪い / 間違っている** → `dev-workflow:skill-tasting`
+- **skill 出力が悪い / 間違っている** → `dev-workflow:skill-tuning`
   を使う — 品質改善は人間 A/B 必要、等価保持
   リファクタではない
 - **phase 追加 / agent 変更 / workflow 再構築** →
@@ -141,7 +141,7 @@ prompt フレーミングで spawn する：
   等価チェックが走れない、prompt を用意するか
   `skill-creator-advance` で test infra 含めて再設計
 - **skill 出力が創造的 / 非決定論的**（文体、散文、デザイン感）—
-  等価チェック不信頼、`skill-tasting` を使う
+  等価チェック不信頼、`skill-tuning` を使う
 
 ---
 
@@ -214,7 +214,7 @@ ensemble が存在する理由。
   refactor 呼び出し）
 - **`dev-workflow:skill-creator-advance`** — 変更が構造的
   （phase 追加 / agent 変更 / 再設計）
-- **`dev-workflow:skill-tasting`** — 問いが
+- **`dev-workflow:skill-tuning`** — 問いが
   「出力は等価か」から「どちらの出力が良いか」に変わったとき
 - **`dev-workflow:skill-judge`** — オプショナル advisory；
   refactor 前 / 後にスコアを取り、等価チェックが通り続けても
@@ -230,15 +230,15 @@ dev-workflow skill ファミリーは現在こう：
 proposal-critique  → complexity-critique → skill-creator-advance
 （list/plan triage）  （単一変更 gate）        （作成 + 再設計）
 
-skill-judge          skill-refactor       skill-tasting
+skill-judge          skill-refactor       skill-tuning
 （advisory スコア）   （Phase A: トークン /  （Phase B: 出力 A/B、
                         構造, 動作保持）       人間 judge）
                                               [PR-3 で追加予定]
 ```
 
-`skill-refactor`（Phase A）と `skill-tasting`（Phase B）の分割
+`skill-refactor`（Phase A）と `skill-tuning`（Phase B）の分割
 は、Fowler の Two Hats を skill に適用したもの：refactor は動作
-保持、tasting は動作変更。**意図的に分離**することで、LLM-as-judge
+保持、tuning は動作変更。**意図的に分離**することで、LLM-as-judge
 が確実に扱えない rubric-mixing を避ける。
 
 ---
@@ -256,7 +256,7 @@ skill-judge          skill-refactor       skill-tasting
 **なぜ独自で派生でないのか**：`darwin-skill` は構造リファクタと
 出力品質評価を単一の 8 次元 rubric で混ぜている。この skill
 （skill-refactor）は意図的に Phase A（構造 + 動作保持）のみを
-扱い、Phase B（出力品質 A/B）は別 skill `skill-tasting`。この
+扱い、Phase B（出力品質 A/B）は別 skill `skill-tuning`。この
 分割は単一 rubric が抱える LLM-as-judge / Goodhart drift 問題
 を回避する — 詳細は
 [`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
@@ -278,7 +278,7 @@ keep/revert）。
 | **test-prompts.json が必要** | ≥3 文書化 test prompt なしでは gate が走らない | skill が self-abort、user に作成を依頼（または skill-creator-advance で test infra 含め再設計）|
 | **LLM-judge は無謬ではない** | 3-judge ensemble でも微妙な動作変更を見逃す可能性 | Specific-behavior-diff override + Tier 2 人間エスカレーション +（オプショナル）golden anchor 錨定 |
 | **Token-only metric は粗い** | 30 行の型システムトリックは 100 行のストレートな散文より密度が高いことも | 10% 削減しきい値で tiny-win refactor 防止；実質的 refactor は可視 |
-| **創造的 skill では「出力保持」が定義困難** | 文体 / 散文 skill には客観的な「等価」がない | 自動 abort、`skill-tasting` を推奨 |
+| **創造的 skill では「出力保持」が定義困難** | 文体 / 散文 skill には客観的な「等価」がない | 自動 abort、`skill-tuning` を推奨 |
 | **ラウンド間の累積 drift** | 連続 3 回 moderate-confidence PROCEED が微細な drift を複合 | 連続 3 ラウンド moderate 後、累積 diff を人間 review にフラグ |
 | **未検証で出荷** | この skill は ≥2 実 skill での dry-run validation 前に出荷 | アーキテクチャ doc §6 の validation gate が OUTSTANDING；PR-2 は PR description にこの caveat 記載 |
 
@@ -303,7 +303,7 @@ skill-refactor/
 │   ├── equivalence-check-protocol.md   ← Q1 Layer 1+2 詳細
 │   ├── multi-judge-ensemble.md         ← 3-judge spawn protocol
 │   ├── refactor-moves-catalog.md       ← Fowler-inspired moves
-│   ├── golden-anchor-protocol.md       ← 共有 convention（skill-tasting にも）
+│   ├── golden-anchor-protocol.md       ← 共有 convention（skill-tuning にも）
 │   ├── test-prompts-schema.md          ← 共有 convention
 │   └── constitution-schema.md          ← 共有 convention
 └── scripts/
