@@ -11,7 +11,7 @@ follow a fixed template more like Reference.
 **Style reference**: `standards/style-conventions.md`
 **Structure reference**: `standards/architecture-doc-structure.md`
 **Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
-**Origin**: protocol synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist) `architecture/SKILL.md` workflow phases, adapted to docs-team's worker/evaluator dispatch model and Diátaxis Reference + Explanation hybrid framing. The Payment Service example below is adapted from Trong-Tra's `architecture/examples.md` Example 2.
+**Origin**: protocol synthesized from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist) `architecture/SKILL.md` workflow phases, adapted to docs-team's worker/evaluator dispatch model and Diátaxis Reference + Explanation hybrid framing. Worked examples adapted from Trong-Tra's `architecture/examples.md` live in the companion file (see §Worked Examples below).
 
 ## Architecture Doc vs Other Modes
 
@@ -218,63 +218,28 @@ sequenceDiagram
 - Runbooks: {link to runbook directory}
 ```
 
-## Example: Component Specification
+## Worked Examples (Companion File)
 
-```markdown
-## Payment Service
+Five complete architecture documentation examples (System Context,
+Component Spec, Data Flow + Error Path, Deployment Topology,
+Security Model) live in the companion file:
 
-**Purpose**: Processes customer payments, handles refunds, and manages
-payout schedules.
-
-**Responsibilities**:
-1. Validate payment requests (amount, currency, method)
-2. Route to appropriate processor (Stripe for cards, ACH for bank)
-3. Handle processor webhooks and update internal state
-4. Calculate and schedule payouts to merchants
-5. Maintain idempotency for all payment operations
-
-**Tech stack**: Python 3.11, FastAPI, PostgreSQL 16, Redis, Celery
-
-**API surface**:
-- Public REST: `POST /v1/payments`, `POST /v1/refunds`
-- Internal gRPC: `payment.v1.PaymentService`
-- Webhooks: `POST /webhooks/stripe`, `POST /webhooks/ach`
-
-**Inbound data**: payment requests from API Gateway, webhook events from
-Stripe and ACH, refund requests from Support Dashboard.
-
-**Outbound data**: payment events to Event Bus, payout instructions to
-Stripe Connect, metrics to Prometheus, logs to Loki.
-
-**State**:
-
-| Store | Data | Retention |
-|-------|------|-----------|
-| PostgreSQL | Payments, refunds, payouts | 7 years (regulatory) |
-| Redis | Idempotency keys, rate-limit counters | 24 hours |
-| S3 | Webhook payloads (audit trail) | 7 years |
-
-**Failure modes**:
-
-| Scenario | Behavior | Alert |
-|----------|----------|-------|
-| Stripe API timeout | Retry 3× with exponential backoff; return 202 | `stripe_timeout_rate > 5%` |
-| Database unavailable | Queue request in Redis; return 503 with Retry-After | `db_connection_pool_exhausted` |
-| Duplicate idempotency key | Return cached response; log warning | None (expected) |
-| Invalid webhook signature | Reject with 401; log security event | `webhook_auth_failure > 1/min` |
-
-**Scaling**: stateless horizontal; database sharded by `merchant_id`;
-Celery workers scale on `celery_queue_length`.
-
-**Security notes**: card numbers never touch our servers (Stripe Elements);
-webhook signatures verified with HMAC; database stores only token
-references, not PANs.
+```
+protocols/write-architecture-examples.md
 ```
 
-**Why this works**: Every required field present. Failure modes table
-covers Stripe timeout, database outage, expected duplicates, security
-events. Scaling notes are specific (sharded by merchant_id), not vague
-("scale horizontally"). Security notes are concrete and verifiable.
+The `worker` agent loads this companion via the `additional:` field.
+Architecture documentation is hard-blocked from quick mode (per
+`protocols/quick-write.md` §Hard Block List), so the companion is
+always available when this protocol runs.
+
+When dispatching a worker for an architecture task, the main agent
+passes:
+
+```
+- protocol: {base_path}/protocols/write-architecture.md
+- additional: [{base_path}/protocols/write-architecture-examples.md]
+```
 
 ## Mode Clarity Check
 

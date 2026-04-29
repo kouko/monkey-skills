@@ -9,6 +9,7 @@ the structural order and required sections.
 **Vocabulary reference**: `standards/diataxis-taxonomy.md`
 **Style reference**: `standards/style-conventions.md`
 **Pre-writing reference**: `standards/pre-writing-checklist.md` — apply before Phase 0
+**Worked examples**: `protocols/write-readme-examples.md` (companion file, full mode only)
 
 ## README as Composite
 
@@ -134,6 +135,179 @@ If the project has international users, provide translated READMEs:
   preserve English tech terms (skill, plugin, agent, workflow, gate,
   MUST / SHOULD / MAY, etc.) consistently across translations
 
+## The 30-Second Test
+
+A reader decides whether to keep reading within 30 seconds. The top of
+the README must pass:
+
+- [ ] First line says what the project IS, not what language it uses
+- [ ] First paragraph explains the problem it solves
+- [ ] A visible quickstart (or link to one) appears above the fold
+- [ ] Build / version badges appear if the project has CI
+- [ ] A screenshot or demo (for UI projects) or a code sample (for
+      libraries) appears within the first ~30 lines
+
+## The One-Liner Formula
+
+The first line is a contract. Form: `[Project name]` is `[what it
+does]` for `[who uses it]`.
+
+| Bad | Why | Good |
+|-----|-----|------|
+| "A CLI tool" | Too vague | "A CLI tool for visualizing Docker container resource usage" |
+| "React component library" | No differentiator | "React component library with built-in accessibility and dark mode" |
+| "The best X" | Marketing, not information | "X with automatic failover and sub-millisecond latency" |
+
+## Quickstart Patterns by Project Type
+
+The right Quickstart shape depends on the project archetype.
+
+### Pattern A: Library or package
+
+Single install command, then a minimal import + function call. No
+prerequisites beyond the package manager. See worked Example 1 in the
+companion file.
+
+### Pattern B: Application or service
+
+Prerequisites listed first (Docker, Node version, database). Clone +
+configure + run. End with a verification step ("Open http://localhost:N").
+See worked Example 2 in the companion file.
+
+### Pattern C: CLI tool
+
+Multi-channel install (`curl | sh`, `brew`, package managers). First-run
+walk-through showing the canonical command sequence. See worked Example 3
+in the companion file.
+
+### Pattern D: Infrastructure or config
+
+Init + plan + apply (Terraform pattern), or render + apply (Helm
+pattern). End with a verification command. Backend matrix if applicable.
+
+## Feature Communication
+
+Do not list every feature. Group features by user goal.
+
+**Before** (lists technical components):
+
+```markdown
+## Features
+- JWT authentication
+- Role-based access control
+- PostgreSQL support
+- Redis caching
+- WebSocket support
+- Rate limiting
+```
+
+**After** (groups by user goal):
+
+```markdown
+## Features
+
+**Authentication that stays out of your way**
+JWT-based auth with automatic refresh. RBAC built in. No boilerplate.
+
+**Performance by default**
+Redis caching, connection pooling, and query optimization out of the box.
+
+**Real-time where you need it**
+WebSocket support with automatic fallback to SSE for older clients.
+```
+
+## Configuration Documentation
+
+Every environment variable and config option must be documented in a
+table — not prose:
+
+```markdown
+## Configuration
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `REDIS_URL` | No | — | Redis for caching. Omit to disable caching. |
+| `PORT` | No | `3000` | HTTP server port |
+| `LOG_LEVEL` | No | `info` | One of: `debug`, `info`, `warn`, `error` |
+```
+
+Rules:
+- State the default. If there is no default, say `—` and mark required.
+- Explain the unit. Is `TIMEOUT` in seconds or milliseconds?
+- Explain the consequence of omission. What breaks if you do not set it?
+
+## Troubleshooting Section
+
+Every error message you have personally debugged belongs here. Place
+this section before the FAQ.
+
+```markdown
+## Troubleshooting
+
+**Error: `connection refused` on startup**
+The database is not running or `DATABASE_URL` is wrong. Verify with
+`psql $DATABASE_URL -c "SELECT 1"`.
+
+**Error: `module not found` after install**
+You are on an old Node version. Check `node --version` (must be ≥ 20).
+
+**Build fails with `out of memory`**
+Increase the Node memory limit:
+`NODE_OPTIONS="--max-old-space-size=4096" npm run build`
+```
+
+## Badge Strategy
+
+Badges are signals. Use them sparingly and intentionally.
+
+| Badge | When to use | When to skip |
+|-------|-------------|--------------|
+| Build status | Always | Never |
+| Version | Published packages | Internal tools |
+| Coverage | Public OSS with CI | Prototype, WIP |
+| License | Always | Never |
+| Downloads | Libraries, packages | Applications |
+| Chat / Discord | Active community | Solo project |
+
+More than 6 badges is badge spam. Group related badges if needed.
+
+## README Length Guide
+
+Match length to project type:
+
+| Project type | Target length |
+|--------------|---------------|
+| Simple library | 50-100 lines |
+| Framework or tool | 100-200 lines |
+| Complex application | 200-400 lines |
+| Platform or monorepo | 300-500 lines + links to sub-READMEs |
+
+If the README exceeds these bounds, move sections to `docs/` and link
+to them.
+
+## Language-Specific Conventions
+
+| Language | Required README content |
+|----------|------------------------|
+| Go | `go get` install command; complete `main.go` example, not just snippets; document `context.Context` usage patterns |
+| Rust | `Cargo.toml` dependency line; feature flags if the crate has them; document MSRV (Minimum Supported Rust Version) |
+| Python | `pip install` (or `uv add` / `poetry add` per project); show import + basic usage; document Python version compatibility |
+| TypeScript / JavaScript | `npm install` (or `pnpm add` / `yarn add` per lockfile); show both ESM and CommonJS if supporting both; document Node version |
+
+## Common Pitfalls
+
+| Pitfall | Fix |
+|---------|-----|
+| No install instructions | Always include install or clone steps |
+| Broken quickstart | Test on a clean machine regularly |
+| Missing prerequisites | List them before the first command |
+| No verification step | Tell the user what success looks like |
+| Outdated screenshots | Audit quarterly or use auto-generated diagrams |
+| Assuming domain knowledge | Define acronyms on first use |
+| Hiding the license | Put LICENSE near the top or badge it |
+| Vague feature lists | Group by user goal, not technical component |
+
 ## Rules
 
 - **Required sections are required.** Do not skip Install / Usage / Contributing / License.
@@ -188,112 +362,26 @@ If the project has international users, provide translated READMEs:
 See [LICENSE]({path}) for details.
 ```
 
-## Examples
+## Worked Examples (Companion File)
 
-The two examples below are adapted from [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist)
-`readme/examples.md` Example 1 (`isoduration` Go library) and Example 2
-(`Taskflow` full-stack app). Adaptations: condensed length, added
-`mode:`-style frontmatter context for Diátaxis per-section gating, and
-adjusted prose to the docs-team Google + Microsoft style register.
+Five complete README examples (Go library, full-stack app, CLI tool,
+Bad → Good rewrite, Monorepo) live in the companion file:
 
-### Example 1: Small Go library (~30 lines)
-
-```markdown
-# isoduration
-
-Parse and format ISO 8601 durations in Go. Supports `P3Y6M4DT12H30M5S`
-and all valid subsets.
-
-[![Go Reference](https://pkg.go.dev/badge/github.com/org/isoduration.svg)](https://pkg.go.dev/github.com/org/isoduration)
-
-## Install
-
-​```bash
-go get github.com/org/isoduration
-​```
-
-## Usage
-
-​```go
-package main
-
-import (
-    "fmt"
-    "github.com/org/isoduration"
-)
-
-func main() {
-    d, _ := isoduration.Parse("P1Y2M3DT4H5M6S")
-    fmt.Println(d.Days()) // 428
-}
-​```
-
-## Contributing
-
-PRs welcome. Run `go test ./...` before submitting.
-
-## License
-
-MIT
+```
+protocols/write-readme-examples.md
 ```
 
-**Why this works**: 30 lines. One example. Clear scope. Required sections
-(Title / Short description / Install / Usage / Contributing / License) all
-present, in order, License last. No fluff.
+The `worker` agent loads this companion via the `additional:` field in
+full mode. **Quick mode does NOT load it** — quick mode trades example
+context for token savings (see `protocols/quick-write.md` §No Companion
+Load).
 
-### Example 2: Full-stack application (~70 lines)
+When dispatching a worker for a README task, the main agent passes:
 
-```markdown
-# Taskflow
-
-> Self-hosted task management with real-time collaboration. Designed for
-> teams of 5-50 who outgrew spreadsheets but do not need enterprise
-> complexity.
-
-![Build](https://img.shields.io/github/actions/workflow/status/org/taskflow/ci.yml)
-![License](https://img.shields.io/github/license/org/taskflow)
-
-## Background
-
-Built because existing tools either cost too much per seat or required a
-SaaS dependency we did not want.
-
-## Quickstart
-
-Prerequisites: Docker, Docker Compose
-
-​```bash
-git clone https://github.com/org/taskflow.git
-cd taskflow
-docker-compose up
-​```
-
-Open http://localhost:8080. Default login: `admin@example.com` / `changeme`.
-
-## Configuration
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | — | Min 32 characters |
-| `PORT` | No | `8080` | HTTP server port |
-
-## Architecture
-
-See `docs/architecture.md` for component overview and data flow.
-
-## Contributing
-
-See `CONTRIBUTING.md`. All changes require tests.
-
-## License
-
-GPL-3.0
 ```
-
-**Why this works**: Quickstart is one command (`docker-compose up`).
-Configuration is a table, not prose. Architecture and Contributing are
-linked, not inlined. License last.
+- protocol: {base_path}/protocols/write-readme.md
+- additional: [{base_path}/protocols/write-readme-examples.md]
+```
 
 ## Completeness Check
 
@@ -325,3 +413,4 @@ The Diátaxis Mode Clarity gate checks each section against its expected mode.
 
 - [Standard README spec (RichardLitt)](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) — required sections and order
 - [The Good Docs Project — README template](https://www.thegooddocsproject.dev/template) — Diátaxis-aligned alternative
+- [Trong-Tra/agent-skills `documentation-specialist`](https://github.com/Trong-Tra/agent-skills/tree/main/documentation-specialist) `readme/SKILL.md` — 30-Second Test, One-Liner Formula, Quickstart Patterns, Feature Communication, Configuration Documentation, Troubleshooting Section, Badge Strategy, README Length Guide, Language-Specific Conventions, Common Pitfalls (all adapted to docs-team's prose style)

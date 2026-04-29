@@ -66,6 +66,21 @@ Identify the Diátaxis quadrant from the request and read **only one** of:
 Do NOT read multiple protocols. If the request is ambiguous, ask the user
 to clarify the mode rather than reading all of them.
 
+#### No Companion Load Rule
+
+Some protocols have a companion `*-examples.md` file in `protocols/`
+(currently: `write-readme-examples.md`, `write-architecture-examples.md`).
+**Quick mode MUST NOT load these companion files.** They exist
+specifically to defer worked examples out of quick mode's token budget;
+loading them defeats the cost-saving purpose.
+
+If you need the breadth of examples, that signals the task is not
+actually quick mode — fall back to full mode and let the worker load
+the companion via `additional:`.
+
+The current rule is: **no file path matching `protocols/*-examples.md`
+may be Read in any quick-mode phase.**
+
 ### Phase 2: Read Minimal Standards
 
 Read **exactly two** standards:

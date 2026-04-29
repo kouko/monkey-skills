@@ -235,10 +235,28 @@ Resolve relative paths against this skill's base directory to get absolute paths
     {base_path}/standards/pre-writing-checklist.md,
     {base_path}/standards/architecture-doc-structure.md
   ]
+- additional: [
+    {optional companion file paths — see Companion Files below}
+  ]
 
 ### Input
 {Artifact or context from previous phase}
 ```
+
+#### Companion files (`additional:` field)
+
+Some protocols have companion `*-examples.md` files containing worked
+examples that are deferred out of the main protocol to keep it scannable
+and to keep quick mode cheap. When dispatching a worker in **full mode**,
+the main agent SHOULD pass the companion via `additional:`:
+
+| Protocol | Companion file (full mode only) |
+|----------|--------------------------------|
+| `protocols/write-readme.md` | `protocols/write-readme-examples.md` |
+| `protocols/write-architecture.md` | `protocols/write-architecture-examples.md` |
+
+Quick mode MUST NOT load these companions (per
+`protocols/quick-write.md` §No Companion Load).
 
 ### Evaluator launch template
 
@@ -306,7 +324,7 @@ Same structure as Write Tutorial but with `protocols/write-explanation.md` in Ph
 
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
-| 1. Write | worker | `protocols/write-readme.md` | project context | README.md with labeled sections | — |
+| 1. Write | worker | `protocols/write-readme.md` | project context | README.md with labeled sections | full mode also loads `protocols/write-readme-examples.md` via `additional:` |
 | 2. Completeness Gate | evaluator | `checklists/readme-completeness.md` | README.md | verdict | MUST gate |
 | 3. Mode Gate (per section) | evaluator | `rubrics/diataxis-mode-clarity.md` | README.md | verdict | MUST gate — runs per section |
 | 4. Style Gate | evaluator | `rubrics/style.md` | README.md | verdict | SHOULD gate |
@@ -363,7 +381,7 @@ component spec, data flow, deployment topology, or security model.
 | Phase | Agent | Protocol | Input | Output | Notes |
 |-------|-------|----------|-------|--------|-------|
 | 1. Route | main | `protocols/doc-writing-router.md` | user request | level confirmation | optional if user specifies L1/L2/etc |
-| 2. Write | worker | `protocols/write-architecture.md` | system context + level | architecture doc | also loads `standards/architecture-doc-structure.md` |
+| 2. Write | worker | `protocols/write-architecture.md` | system context + level | architecture doc | also loads `standards/architecture-doc-structure.md` and `protocols/write-architecture-examples.md` (companion) via `additional:` |
 | 3. Completeness Gate | evaluator | `rubrics/architecture-doc-completeness.md` | architecture doc | verdict | MUST gate |
 | 4. Style Gate | evaluator | `rubrics/style.md` | architecture doc | verdict | SHOULD gate |
 
