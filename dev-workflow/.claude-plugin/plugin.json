@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
-  "version": "1.4.0",
-  "description": "Developer workflow skills — skill creation (skill-creator-advance), skill quality scoring (skill-judge, 8-dimension rubric), portable git-backed project memory (git-memory), and multi-item proposal triage (proposal-critique). Git コミット・メモリ・スキル品質評価。可攜式專案記憶・技能品質評估・提案審查。",
+  "version": "1.5.0",
+  "description": "Developer workflow skills — skill creation (skill-creator-advance), skill quality scoring (skill-judge, 8-dimension rubric), portable git-backed project memory (git-memory), multi-item proposal triage (proposal-critique), and deletion-first change critique (complexity-critique). Git コミット・メモリ・スキル品質評価・複雑度クリティーク。可攜式專案記憶・技能品質評估・提案審查・複雜度評析。",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -16,6 +16,7 @@
     "skill-evaluation",
     "git-memory",
     "proposal-critique",
+    "complexity-critique",
     "developer-workflow"
   ]
 }
