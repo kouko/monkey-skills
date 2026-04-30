@@ -1,0 +1,61 @@
+{
+  "skill": "4dx-d4-member-account-debrief",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Member-voice debrief BEFORE walking into a team WIG Session, processing last week's kept/partial/missed commitment. Lures cover leader-misfire (session-lead receives accounts), personal-misfire (solo lapse), and chronic-misfire (3+ misses = redesign problem). Edge case = kept commitment but no understanding why (fire because Crisafulli discipline applies to wins too).",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "I missed my commitment last week. The team WIG Session is tomorrow morning — what do I say? I don't want to make excuses but I also don't want to grovel.",
+      "expected_behavior": "Activate 4dx-d4-member-account-debrief; run the 8-step pre-session debrief — restate verbatim → classify (kept / partial / missed) → factual cause → learning → re-commit vs redesign → produce the ~30-second Account-segment script. Reject excuse-mode AND shame-mode.",
+      "notes": "positive scenario: classic missed-commitment pre-session prep (member voice, EN)"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "先週のコミットメントが果たせませんでした。明日 session があるんですが、どう振り返って何て言えばいいか整理したいです。",
+      "expected_behavior": "4dx-d4-member-account-debrief を発動。8 ステップで verbatim 再述 → 分類 → 事実的原因 → 学び → 再 commit か再設計か → 30 秒の Account script を作る。言い訳・自虐・物語化を排除。",
+      "notes": "positive scenario: JP member-voice, missed-commitment, session imminent"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "上週的 commitment 沒達成，這次 session 我不知道怎麼面對。help me think through how to debrief 這件事。",
+      "expected_behavior": "啟動 4dx-d4-member-account-debrief；走 8 步：逐字重述上週承諾 → kept/partial/missed 分類 → 事實原因（不要找藉口，也不要自責）→ 學到什麼 → 同 scope 再 commit / 縮小 / 重新設計 → 產出 30 秒的 Account 腳本。",
+      "notes": "positive scenario: zh-TW member-voice, missed-commitment, dread before session"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "One of my team members missed their commitment last week. I'm running the WIG Session tomorrow — how should I address it without crushing them?",
+      "expected_behavior": "Do NOT activate this skill. The user is the LEADER asking how to receive a missed-commitment account (Susan-side dialogue, Ch. 10), not the member preparing what to say. Route to the team-wig-session-lead skill.",
+      "notes": "lure: leader-misfire — same 'missed commitment' keyword but leader-side facilitation, not member-side self-account"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "I dropped my solo weekly review cadence three weeks ago and I'm trying to get back on track. No team, just me — help me restart.",
+      "expected_behavior": "Do NOT activate this skill. The user is in solo / no-team context with collapsed personal cadence. Route to 4dx-sustain-personal-momentum-rescue.",
+      "notes": "lure: personal-misfire — 'missed' / 'commitment'-adjacent vocabulary but solo lapse, not team-session pre-process"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I've missed my commitment four weeks in a row at this point. The session is tomorrow. What do I say?",
+      "expected_behavior": "The skill MAY fire on the trigger surface (session-tomorrow + missed-commitment is exactly the language signal), but per the Boundary section + step 6 decision rule, 3+ misses in a row is a COMMITMENT-DESIGN problem, not a debrief problem. Correct behavior: briefly acknowledge the trigger, then hand off to 4dx-d4-member-commitment-prep for redesign of the commitment shape (smaller scope, different mechanism). Do NOT run a fourth one-week debrief on the same broken commitment.",
+      "notes": "lure: chronic-misfire — surface looks like a debrief but the in-skill boundary correctly routes to redesign instead. The skill must recognize and route, not silently produce a stale debrief."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "Actually I kept my commitment last week — finished the deliverable, on time. But the team's lead measure didn't move much and I'm not sure if it was because of what I did or something else. WIG Session is Friday. Should I bother debriefing?",
+      "expected_behavior": "DO activate 4dx-d4-member-account-debrief. The skill explicitly covers kept commitments (Case 3 — Crisafulli's discipline of refusing favourable results without understanding the mechanism). Run the protocol with the kept-commitment branch in step 5 ('what did you learn about the lead-measure mechanism — did doing this actually move the lead?'). Produce a 30-second script that names: kept + the open mechanism question + the learning + the next-step (re-commit or sharpen the lead-measure understanding).",
+      "notes": "boundary: kept-but-mechanism-unclear is a real and underappreciated debrief case. The book's Crisafulli case anchors it. Skill should fire, not abstain."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

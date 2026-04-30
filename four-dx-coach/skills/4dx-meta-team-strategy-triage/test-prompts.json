@@ -1,0 +1,63 @@
+{
+  "skill": "4dx-meta-team-strategy-triage",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Stage 4 adversarial pressure test. ≥3 should_trigger (EN/JP/zh-TW), ≥2 should_not_trigger lures (personal-misfire / member-misfire / cross-team-skill misfire), ≥1 edge_case.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Should our 8-person team adopt 4DX? I'm the team lead and I keep hearing about it but I'm not sure it fits us.",
+      "expected_behavior": "Activate 4dx-meta-team-strategy-triage; run the 6-verdict gate (TEAM-APPLICABLE / stroke-of-pen / whirlwind-handleable / wrong-team-shape / single-shot-project / mission-misaligned).",
+      "notes": "positive scenario EN — canonical leader-asks-fit phrasing, team size in 3-12 band, BEFORE any D1 work."
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "うちのチーム（6人）に 4DX 合うか診断してほしい。導入前に判断したい。",
+      "expected_behavior": "Activate 4dx-meta-team-strategy-triage; run the 6-verdict gate in Japanese.",
+      "notes": "positive scenario JP — canonical 「うちのチームに 4DX 合うか」 phrasing in description."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我們團隊適合導入 4DX 嗎？10 個人，主管想推但我怕水土不服。",
+      "expected_behavior": "Activate 4dx-meta-team-strategy-triage; run the 6-verdict gate in Traditional Chinese.",
+      "notes": "positive scenario zh-TW — canonical 「我們團隊適合導入 4DX 嗎？」 phrasing in description."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Should I use 4DX for my marathon training goal? I want to break 3:30 next year.",
+      "expected_behavior": "Do NOT activate this skill. Solo individual goal — should route to 4dx-meta-personal-strategy-triage instead.",
+      "notes": "lure: personal-misfire — 'should I use 4DX' surface match but solo-individual context, no team."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "I just joined a team that already uses 4DX. Can you explain how the WIG and lead measures work so I understand the cadence?",
+      "expected_behavior": "Do NOT activate this skill. Team member comprehension query, not leader fit-gate — should route to 4dx-meta-member-comprehension (or equivalent member skill).",
+      "notes": "lure: member-misfire — team context but role is member-not-leader, and the team has already adopted 4DX (post-triage)."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "Our team already decided to do 4DX. Help me pick our Primary WIG — we have 4 candidate Battles on the table.",
+      "expected_behavior": "Do NOT activate this skill. Triage already passed; should route to 4dx-d1-team-primary-wig-selection.",
+      "notes": "lure: cross-team-skill misfire — team-leader phrasing but past the triage gate, into D1 selection."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I lead an 8-person ER (emergency room) trauma team. My boss wants us to adopt 4DX. Should we?",
+      "expected_behavior": "Activate 4dx-meta-team-strategy-triage AND return wrong-team-shape (firefighting role) verdict — 4DX inverts wrong even at the team-size sweet spot when the team's mission IS the whirlwind.",
+      "notes": "boundary: team size in 3-12 band but role is structurally firefighting — the description's 'wrong-team-shape (firefighting role)' verdict path must catch this, not just size-out-of-band cases."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "pass_rate_breakdown": "8/8 — all 3 should_trigger PASS (direct match to EN/JP/ZH phrasings in description), all 3 should_not_trigger PASS (description names personal-triage, member-comprehension, and primary-wig-selection as the explicit alternate routes), edge-01 firefighting-ER team PASS (description lists 'wrong-team-shape (firefighting role)' as one of the 6 verdicts).",
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

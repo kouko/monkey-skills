@@ -1,0 +1,61 @@
+{
+  "skill": "4dx-meta-team-leader-onboarding",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Pre-cascade buy-in coaching for leader-of-leaders. Distinct from triage (still deciding 4DX fit), cascade (already-bought-in technical Team-WIG drafting), and personal/member-scope skills.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "I've decided to roll out 4DX in my division and I have draft Primary + Key Battle WIGs. Now I need to get my five direct-report leaders genuinely on board — not just nodding in the meeting. How do I prepare for that conversation?",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding; confirm fit-decision precondition, then walk leader through naming reports + skepticism levels + steel-manned objections + pilot/hold-back classification.",
+      "notes": "EN canonical positive — pre-cascade anxiety with named direct-report leaders, draft WIGs in hand."
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "来月から 4DX を導入したいんだけど、部下リーダー 4 人にどう伝えれば腹落ちしてくれるか悩んでる。特に田中さんは絶対「また流行りの施策？」って反発しそう。",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding; 田中さんを含む 4 人を名指しさせ、それぞれの懐疑度・関心ある成果・最強の反対論を steel-man させ、最後に田中さん向けの会話を rehearse する。",
+      "notes": "JP positive — anticipated specific resister (田中さん), 'flavor of the month' phrasing matches description verbatim."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我已經決定要在部門推 4DX 了，Primary WIG 跟 Key Battles 也草擬好了。但我的三個下屬 leader 個性差很多——一個是熱衷派、一個中立、一個鐵定會抵抗。我不想被當成又一個流行 KPI 工具，要怎麼跟他們開這個會？",
+      "expected_behavior": "啟動 4dx-meta-team-leader-onboarding；確認前提（已決定 4DX 適合 + WIG 草稿在手），引導使用者命名三人、評估懷疑度、steel-man 各人最強反對論、做 pilot/hold-back 分類，最後針對最高槓桿那位演練對話。",
+      "notes": "ZH positive — three named direct reports with varied skepticism, explicit 'flavor KPI tool' anti-pattern flag."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I keep hearing about 4DX from a peer CEO. Is this actually the right operating system for a 200-person SaaS company, or is it overkill? I haven't decided yet.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-meta-team-strategy-triage — fit-for-org decision is upstream of the buy-in conversation.",
+      "notes": "lure: triage misfire — user explicitly hasn't decided 4DX fits, so the buy-in skill skips a precondition."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "My direct reports are bought in and excited. Now we need to actually run the cascade meeting next Monday and turn the Primary WIG into Team WIGs for each of their teams. Walk me through the structural cascade.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-d1-team-wig-cascade — buy-in is already secured; user wants the technical cascade choreography.",
+      "notes": "lure: cascade misfire — buy-in solved, user is asking for downstream technical artifact."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I'm a frontline team lead and I want my 6 team members on board with our new Team WIG before the first WIG Session. How do I get them excited about it?",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Wrong scale — this skill is leader-of-leaders → leaders-of-frontline-teams, not leader → individual contributors. Route to D1 Team-WIG-choosing process or D4 session prep.",
+      "notes": "lure: member-misfire — user is one level below the skill's intended scope (frontline leader, not leader-of-leaders)."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I have positional authority — these leaders technically report to me and have to go along. But two of them have lived through three failed corporate initiatives in five years and I suspect 4DX won't actually take root unless they choose it. How do I roll this out?",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding AND surface the compliance-vs-commitment issue explicitly (Boundary section: positional-authority warning). The skill should fire because the user is actually trying for genuine commitment, not just softer-sounding mandate language — but flag the failure mode where 'I have authority, I just want a softer script' produces 4DX-shaped paperwork without execution.",
+      "notes": "boundary: positional-authority + suspects-no-root-take — exactly the case Chapter 8 + Boundary section addresses; should fire AND warn, not abstain."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

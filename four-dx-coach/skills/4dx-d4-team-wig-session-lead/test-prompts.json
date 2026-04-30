@@ -1,0 +1,68 @@
+{
+  "skill": "4dx-d4-team-wig-session-lead",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Live-cadence facilitation for a team leader running 20-30 min weekly WIG Session with 3-12 reports. Distinct from solo personal session, member commitment prep, daily standups, and post-collapse rescue.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Tomorrow morning I'm running my team's weekly WIG Session for the eight engineers reporting to me. We have a Team WIG and a scoreboard. Walk me through how to lead it — what to say, what order, when to push back on people's commitments.",
+      "expected_behavior": "Activate 4dx-d4-team-wig-session-lead; coach the leader through pre-session check + three-segment agenda (Account/Review/Plan) + specificity gate + veto-not-dictate.",
+      "notes": "EN canonical positive — first-session-walkthrough trigger, leader running the room, ≥3 members."
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "毎週月曜の朝、チーム 6 人で WIG Session を運営してるんだけど、最近メンバーが「先週忙しくて…」って言うだけになってる。コミットメントを引き出すファシリテーションを助けてほしい。",
+      "expected_behavior": "Activate 4dx-d4-team-wig-session-lead; 渦巻き侵入を排除するリダイレクト、'moment that matters most' の三段ステップ（Respect → Accountability → Encourage）、specificity gate を通すコーチングを提供。",
+      "notes": "JP positive — drifted-into-status-meeting trigger, leader running cadence, members bringing whirlwind into the room."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "下週要帶我們團隊跑 weekly WIG Session，有 5 個直屬部屬。我自己第一次主持，緊張 specificity gate 怎麼把關、有人沒達成 commitment 又該怎麼講才不會傷感情。",
+      "expected_behavior": "啟動 4dx-d4-team-wig-session-lead；引導前置檢查、三段議程、specificity gate 四項標準、以及 'moment that matters most' 三步回應（尊重 → 究責 → 鼓勵）。提醒 leader 自己先報告 commitments 以樹立標準。",
+      "notes": "ZH positive — first-time-facilitating + missed-commitment anxiety, leader-as-room-runner."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I want to run a weekly review for my own writing goal — just me, no team. Can you help me set up a 20-minute ritual to keep myself accountable each week?",
+      "expected_behavior": "Do NOT activate 4dx-d4-team-wig-session-lead. Route to 4dx-d4-personal-wig-session — solo user, no peers in the room; agent serves as peer-witness instead.",
+      "notes": "lure: solo-personal-wig misfire — same cadence shape, wrong scale (no team)."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "My team WIG Session is tomorrow at 10am. I'm a member, not the leader. I need to draft my own commitment for this week — last week I said 'I'll work on outreach' and the leader vetoed it. How do I propose something that won't get bounced?",
+      "expected_behavior": "Do NOT activate 4dx-d4-team-wig-session-lead. Route to 4dx-d4-member-commitment-prep — user is preparing FOR the session, not running it.",
+      "notes": "lure: member-commitment-prep misfire — same artifact (WIG Session) but user is on the receiving side of the specificity gate."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I lead a team of 5 engineers. Every morning we do a 15-minute standup — yesterday/today/blockers. How can I make our daily standups more effective?",
+      "expected_behavior": "Do NOT activate 4dx-d4-team-wig-session-lead. Wrong cadence (daily ≠ weekly) and wrong format (status report ≠ Account/Review/Plan with self-chosen commitments). Recommend a Scrum / standup-improvement resource.",
+      "notes": "lure: daily-standup misfire — sounds team-leadery but is the wrong artifact entirely."
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "Every Friday I do a GTD weekly review on my own — clear inbox, review projects, set next-week priorities. I want to make this routine stick better.",
+      "expected_behavior": "Do NOT activate 4dx-d4-team-wig-session-lead. GTD weekly review is a solo organizational ritual, not a team WIG cadence. Different methodology, no peer accountability mechanism.",
+      "notes": "lure: GTD-weekly-review misfire — surface keyword 'weekly review' overlaps but no team / no WIG / no peer accountability."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I missed last week's WIG Session because of a customer crisis, and the team didn't run it without me. This week feels awkward — should I pretend nothing happened and just resume tomorrow, or do I need to address the lapse?",
+      "expected_behavior": "Activate 4dx-d4-team-wig-session-lead — the leader is running this week's session and needs in-room facilitation help (acknowledge the cadence break in the leader's own Account segment, model the standard, then run a normal session). The skill is correct here even though a sustain-rescue skill could also be relevant; one missed week is salvageable inside the live cadence. If it had been 4+ consecutive misses, route to 4dx-sustain-personal-momentum-rescue (or its team equivalent) for cadence-collapse repair.",
+      "notes": "boundary: one-miss vs cadence-collapse threshold — d4-session is correct for ≤1 miss with intent to resume; sustain-rescue is for systemic collapse. Should fire d4-session AND note the line."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

@@ -1,0 +1,394 @@
+---
+name: 4dx-sustain-personal-momentum-rescue
+description: |
+  Activate when the user reports their 4DX implementation has stalled
+  or lapsed — WIG cadence broken, scoreboard ignored, lead measures
+  abandoned, or motivation gone. Diagnoses where the four-discipline
+  stack actually broke (D1 wrong WIG / D2 wrong leads / D3 invisible
+  scoreboard / D4 cadence drift / whirlwind escalation / personal
+  substrate) and routes to the matching restart, instead of generic
+  "try harder." Trigger phrases: "WIG cadence broke", "haven't done
+  my 4DX in weeks", "lost momentum on my goal", "scoreboard feels
+  pointless now", 「WIG セッションが続かない」「4DX が止まった」
+  「我的 4DX 已經幾週沒做了」. NOT for first-time WIG setup, NOT for
+  org-wide engagement surveys, NOT for clinical burnout/depression.
+source_book: The 4 Disciplines of Execution — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
+source_chapter: Chapter 10 "Sustaining 4DX Results and Engagement" + "The Missing Ingredient"
+source_language: en
+tags: [execution, momentum, diagnosis, recovery, accountability, mindset]
+related_skills: []
+---
+
+# 4DX Sustain & Momentum Rescue
+
+## R — Reading
+
+> "If you're not getting the results you expect from your lead measures,
+> don't try harder on the same lead measures. Change the lead measures."
+>
+> — McChesney, Covey & Huling, *Ch. 10, "Sustaining 4DX Results and Engagement"*
+
+> "Without humility, determination, courage, and love, the disciplines
+> fail to take root."
+>
+> — *Ch. "The Missing Ingredient"*
+
+---
+
+## I — Interpretation
+
+When a 4DX practice stalls, the instinctive move — "I just need more
+discipline" — is almost always wrong. Failure localizes structurally,
+not characterologically. This skill is a diagnostic before it is a
+restart: it walks back through the stack (D1 → D2 → D3 → D4 → whirlwind →
+substrate) and asks, at each layer, *is this still working, and is it
+still right?* Restarting D4 sessions on top of a wrong WIG produces
+faster failure, not recovery. Restarting D2 with un-influenceable lead
+measures produces invisible progress and renewed surrender. Restarting
+D3 on a coach's-style dashboard reproduces the original disengagement.
+
+The book's claim is that engagement follows winning more than it
+precedes it: if the user has lost the *sense of playing a winnable
+game*, the fix is to restore winnability — usually by changing the leads
+or rebuilding the scoreboard — not by demanding more effort. Recognition
+matters too: in the absence of a manager, self-recognition (logging
+small wins explicitly) substitutes for the book's "catch them doing
+something right" mechanic and counters the extinction-burst that
+accompanies invisible effort.
+
+The "Missing Ingredient" frame protects against shame. The book
+explicitly treats humility, determination, courage, and love as
+*preconditions* — the substrate underneath the method. When the
+substrate is depleted (life event, exhaustion, depression), 4DX is not
+the right intervention; rest, coaching, or therapy is. The skill must
+be willing to say so.
+
+---
+
+## A1 — Past Application
+
+### Case 1: Store 334 — re-adding D4 rescued a dying D1-3 stack
+- **Problem**: A grocery store ranked 250th of 250. WIG, lead measures,
+  and scoreboard were in place but the operation kept declining; manager
+  Jim Dixon was working 16 days straight, micromanaging, no vacation.
+- **Methodology applied**: Diagnostic localized the break at D4 — there
+  was no cadence of accountability. D1-3 alone were dying. The
+  intervention was *only* re-installing weekly WIG Sessions with
+  self-chosen peer commitments.
+- **Conclusion**: The cadence was the active ingredient holding the
+  other three together. Without D4, D1-3 decay.
+- **Outcome**: Store 334 became a top performer.
+
+### Case 2: Stengel's 2 a.m. Beijing WIG Session
+- **Problem**: A senior leader's travel schedule put him 13 time zones
+  away from his team's normal session time; the easy choice was to skip
+  one week.
+- **Methodology applied**: He held the cadence sacred — got up at 2 a.m.
+  Beijing time so the team's session went ahead at its normal hour.
+- **Conclusion**: Cadence-sacred is itself a leadership signal;
+  rescheduling teaches the team that the WIG is optional.
+- **Outcome**: The team's commitment-fulfillment rate held; the
+  alternative — one skip — empirically tends to cascade into permanent
+  drift (CE-11).
+
+### Case 3: Mike Crisafulli — refusing unexplained results
+- **Problem**: An IT executive received unexpectedly good lag-measure
+  numbers; the natural move was to celebrate and move on.
+- **Methodology applied**: He declined to claim the win until he could
+  trace it to specific lead-measure behavior — humility as diagnostic
+  discipline.
+- **Conclusion**: Unexplained wins are as dangerous as unexplained
+  losses; both indicate the model isn't actually understood.
+- **Outcome**: The team learned to attribute results, which made the
+  scoreboard credible long-term.
+
+### Case 4: Susan / Bianca / Marcus — accountability with respect
+- **Problem**: A direct report (Bianca) repeatedly missed commitments;
+  another (Marcus) was so overwhelmed he was hijacking his team's
+  frontline work instead of leading.
+- **Methodology applied**: A non-judgmental dialogue pattern — name the
+  miss, ask what happened, ask what's needed, re-commit to a smaller
+  scope — applied without blame but without skipping the conversation.
+- **Conclusion**: Accountability conversations work when they're
+  diagnostic and respectful; they fail when they're punitive or skipped.
+- **Outcome**: Re-engagement without rupture. (Re-anchored for solo:
+  the same dialogue runs between user and self, with the agent as
+  witness.)
+
+---
+
+## A2 — Future Trigger ★
+
+### When will the user need this skill?
+
+1. **Cadence drift** — User set up 4DX (WIG, leads, scoreboard, weekly
+   session) several weeks ago, the WIG Session has been skipped for 2+
+   weeks, and they feel guilty / stuck / don't want to "open the file."
+2. **Invisible-progress surrender** — Lead measures got logged for a
+   while but the lag never moved; user concluded the goal is impossible
+   and stopped tracking. (Often the leads were wrong, not the user.)
+3. **Wrong-WIG fatigue** — User is hitting their leads at 90%+ but
+   doesn't care anymore; the WIG itself stopped feeling wildly
+   important. (Life context changed.)
+4. **Whirlwind escalation** — A real external load spike (job change,
+   family event, illness, deadline) crowded out WIG work. User is now
+   blaming themselves for "lacking discipline."
+5. **Self-blame loop** — User is articulating a character story: "I
+   have no discipline / I always quit / I'm bad at follow-through." The
+   substrate signal is showing through; structural causes need to be
+   ruled in or out before that self-story is accepted.
+6. **Returning after a long gap** — User lapsed weeks/months ago,
+   wants to restart, and is uncertain whether to "make up" missed
+   weeks or just resume.
+
+### Language signals (user phrasings that should activate)
+
+EN:
+- "I haven't done my WIG session in weeks"
+- "I lost momentum on my goal"
+- "My scoreboard feels pointless now"
+- "I keep tracking but nothing changes"
+- "I have no discipline"
+- "I want to restart but I don't know where"
+
+JP:
+- 「WIG セッションが続かなくなった」
+- 「４DX が止まってしまった」
+- 「やる気が出ない、もう諦めようかと思っている」
+- 「リード指標は達成しているのに結果が動かない」
+
+ZH-TW:
+- 「我的 4DX 已經幾週沒做了」
+- 「我覺得自己沒有紀律」
+- 「lead measure 都做到了但還是沒進展」
+- 「想重啟但不知道從哪開始」
+
+### Non-trigger examples (do NOT activate)
+
+- "I want to set up 4DX for the first time" → route to
+  `4dx-meta-personal-strategy-triage` then `4dx-d1-personal-wig-defining`
+- "How do I write a WIG?" → `4dx-d1-personal-wig-defining`
+- "What's a good lead measure for X?" → `4dx-d2-personal-lead-measure-discovery`
+- "I'm running an org-wide engagement survey" → out of scope (this
+  skill is for individual-scale rescue, not enterprise diagnostics)
+- "I think I'm clinically depressed / burned out" → out of scope; refer
+  to professional support
+- "Is 4DX even right for my situation?" → `4dx-meta-personal-strategy-triage`
+
+### Distinction from neighboring skills
+
+- vs. `4dx-d4-personal-wig-session`: D4 builds the weekly session from scratch
+  for an active practice. This skill diagnoses *which layer broke*
+  before any restart — and may route away from D4 entirely if the
+  break is at D1, D2, D3, whirlwind, or substrate.
+- vs. `4dx-d2-personal-lead-measure-discovery`: D2 is the original discovery
+  procedure. This skill *invokes* D2 only after diagnosis confirms
+  leads are the broken layer (e.g. green leads, flat lag).
+- vs. `4dx-meta-personal-strategy-triage`: Meta-triage decides whether 4DX
+  applies at all (stroke-of-pen vs. whirlwind vs. behavioral). This
+  skill assumes 4DX was already chosen and applied; it asks where the
+  applied stack failed.
+
+---
+
+## E — Execution
+
+When activated, the agent runs a Socratic, non-judgmental dialogue:
+
+1. **Open without judgment.**
+   - Ask: "When did the cadence start to slip? What was happening in
+     your life around then?"
+   - Tone: diagnostic, not corrective. The user is in motion, not stuck.
+   - Completion criterion: user has named a rough timeline and a
+     situational context, not just "I'm lazy."
+
+2. **Walk back through the stack — D1 first.**
+   - Ask: "Is the WIG itself still wildly important to you? Has the
+     'why' changed?"
+   - Halt condition: if the WIG is no longer right (life pivoted, the
+     breakthrough already happened, or it was wrong from the start) →
+     **route to `4dx-d1-personal-wig-defining`** and stop here. Do not restart
+     D4 on a dead WIG.
+   - Completion criterion: explicit verdict — WIG is still alive, or
+     WIG needs replacement.
+
+3. **D2 — leads.**
+   - Ask: "When you were doing the leads, did the lag actually move?
+     Were the leads things you could directly influence?"
+   - Apply the five optimizing questions (predictive? influenceable?
+     scorekeeping credible? quality vs. consistency? leader's-game vs.
+     team's-game?).
+   - Halt condition: if leads were green but lag flat → leads were
+     wrong. **Route to `4dx-d2-personal-lead-measure-discovery`**. Do *not*
+     prescribe "try harder on the same leads."
+   - Completion criterion: verdict — leads still valid, or leads need
+     redesign.
+
+4. **D3 — scoreboard.**
+   - Ask: "Could you tell at a glance, in 5 seconds, whether you were
+     winning this week? Was the scoreboard visible without effort?"
+   - Halt condition: if scoreboard got hidden, stopped being updated,
+     or was a coach's dashboard masquerading as a player's scoreboard
+     → **route to `4dx-d3-personal-scoreboard`**.
+   - Completion criterion: verdict on visibility + glance-readability.
+
+5. **D4 — cadence.**
+   - Ask: "When the session started getting skipped, what was crowding
+     it out? Was it whirlwind, or was the session itself feeling
+     pointless?"
+   - If pointless: that's a D1/D2/D3 signal in disguise — go back to
+     step 2-4. Cadence collapses *because* an upstream layer is broken
+     more often than because of laziness.
+   - If whirlwind crowd-out: **route to `4dx-d4-personal-wig-session` next
+     week** with the don't-skip-but-don't-catch-up rule (no make-up
+     sessions; resume, don't repair).
+   - Completion criterion: cause of cadence break is named.
+
+6. **Whirlwind escalation check.**
+   - Ask: "Did external load actually spike — job change, illness,
+     family, deadline — during the lapse?"
+   - If yes: this is structural, not characterological. Either
+     **route to `4dx-d1-personal-whirlwind-triage`** to redesign capacity, or
+     pause the WIG explicitly until the spike subsides. An explicit
+     pause is *not* a failure.
+   - Completion criterion: whirlwind ruled in or out.
+
+7. **Substrate check — the off-ramp.**
+   - Ask: "Underneath the 4DX system — how are you doing? Sleep,
+     energy, mood, life events?"
+   - If the user describes burnout, depression, grief, or sustained
+     exhaustion: **stop the 4DX rescue.** State plainly: "4DX is not
+     the right intervention here. Rest, professional coaching, or
+     therapy is upstream of method." Do not pathologize, do not push.
+   - Completion criterion: substrate addressed, even if the answer is
+     "we're not doing 4DX right now."
+
+8. **Recognize without shame.**
+   - Before the restart commitment, name 1-3 specific things the user
+     *did* accomplish before the lapse — credible, brief, personal,
+     authentic. (No formulaic praise; no "you're amazing.")
+   - Completion criterion: at least one explicit small win logged.
+
+9. **Re-commit at minimum scope.**
+   - If returning to D4: one tiny commitment for next week, not a full
+     restart. The book's rule: *don't skip, don't catch up.* Resume,
+     don't repair.
+   - If returning earlier (D1/D2/D3): route to that skill at minimum
+     scope — fix one thing, not the whole stack.
+   - Completion criterion: a specific, deliverable, sub-30-min
+     commitment is named for the next 7 days.
+
+---
+
+## B — Boundary ★
+
+### Do NOT use this skill in:
+
+- **First-time 4DX setup.** This skill assumes a prior implementation
+  exists. Use `4dx-meta-personal-strategy-triage` then `4dx-d1-personal-wig-defining`.
+- **Org-wide engagement surveys / enterprise diagnostics.** This skill
+  is individual-scale rescue. Enterprise momentum loss has political,
+  structural, and HR dimensions beyond a Socratic diagnostic.
+- **Clinical mental-health territory.** If the user describes
+  depression, sustained burnout, grief, or substance issues — stop and
+  recommend professional support. The book itself names humility,
+  determination, courage, and love as *preconditions*; when they are
+  depleted by life events, method is downstream of care.
+- **Reactive / emergency domains where the whirlwind IS the work.**
+  On-call SREs, ER staff, frontline crisis responders, parents of
+  newborns. Cadence break may be appropriate, not a problem. Apply
+  `4dx-d1-personal-whirlwind-triage` instead.
+
+### Author-warned failure modes (rescue anti-patterns)
+
+- **CE-11 — restarting D4 on a broken upstream layer.** Most common
+  rescue mistake. Produces faster discouragement.
+- **CE-15 — compliance without commitment.** "I'll force myself" /
+  "I'll be more disciplined this time." Authority-driven restart on
+  oneself; predicts another break in 2-4 weeks.
+- **CE-22 — vague / formulaic / insincere recognition.** "Great job!"
+  without specifics. Doesn't fight extinction-burst; can deepen it.
+- **CE-23 — Marcus pattern (operator hijacks the architect).** User
+  is so overwhelmed by frontline work they stop doing the
+  meta-level work (designing leads, maintaining scoreboard). Switch
+  to second-level (architect-mode) commitments before resuming
+  first-level execution.
+- **Catch-up trap.** Trying to "make up" missed weeks. The book is
+  explicit: don't skip, don't catch up. Resume next week at normal
+  scope.
+
+### Author blind spots / period limitations
+
+- **No protocol for solo / no-peer setup.** The book assumes a team;
+  for solo users the agent must function as peer-witness, and the
+  book offers no language for this. (CE-28 — book gap.)
+- **High-context-culture face-loss on public peer commitment.** The
+  diagnostic dialogue here is private (between user and agent), which
+  sidesteps but does not solve the cultural-fit issue.
+- **Self-Determination Theory critique.** "Winning" may not be the
+  user's primary motivator — autonomy and mastery may be. If the
+  language of "winnable game" repels the user, reframe to mastery /
+  autonomy / craft and continue.
+- **FranklinCovey selection bias.** The book's confidence in 4DX
+  recoverability is built on consulting cases. If three honest
+  rescue cycles fail, the right verdict may be *4DX wasn't the right
+  tool for this goal in this season*, not *try a fourth time.*
+
+### Easily-confused neighboring methodologies
+
+- **Generic productivity / habit-tracker advice.** This skill is
+  not "improve your habits"; it's structural diagnosis bound to a
+  specific four-discipline architecture. Do not import generic
+  habit-loop language.
+- **Annual goal review / retrospective.** This is not a year-end
+  reflection. It's an in-flight rescue with a routing decision at
+  the end.
+- **Coaching / therapy.** The skill stops at substrate. It will
+  refuse to act as a substitute for those.
+
+### Industry-experience addendum (habit + Path + grit literature)
+
+The book localizes sustain-failure at the substrate. Behavioral-science
+literature adds three structural mechanisms upstream of substrate,
+each more actionable for the rescue dialogue. Primary citations in
+`references/industry-grounding.md`:
+
+- **Clear, *Atomic Habits* (Avery, 2018)** — "never miss twice":
+  missing once is an accident, missing twice starts a new bad habit.
+  Rescue threshold is **week-2, not week-4** — the second skipped
+  WIG Session is the intervention trigger, not the fourth.
+- **Heath & Heath, *Switch* (Crown, 2010)** — Direct/Motivate/**Shape
+  the Path**. When motivation drops, change the environment, not the
+  will. "Don't catch up, just resume" *is* Path-shaping; rescue
+  commitments must be the smallest unmistakable next move (≤30 min,
+  single commitment).
+- **Duckworth, *Grit* (Scribner, 2016)** — passion (long-term direction)
+  vs perseverance (effort despite setbacks). Step 2's "is the WIG
+  still wildly important?" *is* the passion test; without it, rescue
+  reinstalls perseverance on a passion the user has quietly outgrown.
+  Caveat: Crede et al. (2017) meta-analysis shows grit's predictive
+  validity is largely conscientiousness — treat passion-vs-perseverance
+  as a diagnostic frame, not an independent trait.
+
+---
+
+## Related skills
+
+- `4dx-meta-personal-strategy-triage` — depends-on — re-triage if WIG itself is wrong-shaped
+- `4dx-d4-personal-wig-session` — contrasts-with — build cadence vs rescue lapsed cadence
+- `4dx-d4-personal-wig-session` — composes-with — rescue typically follows broken sessions
+- `4dx-d1-personal-wig-defining` — composes-with — D1 break routes back to redefine the WIG
+- `4dx-d2-personal-lead-measure-discovery` — composes-with — leads green but lag flat → redesign
+- `4dx-d3-personal-scoreboard` — composes-with — hidden / coach-only scoreboard → rebuild
+- `4dx-meta-team-xps-evaluation` — contrasts-with — solo rescue vs team-leader audit; both diagnostic
+
+---
+
+## Audit metadata
+
+- **Verification status**: V1 ✓ / V2 ✓ / V3 ✓
+- **Test pass rate**: pending (see `test-prompts.json` and
+  `test-results.md`)
+- **Distilled at**: 2026-04-29
+- **Output language**: body — English (source); description —
+  multilingual triggers; metadata — English

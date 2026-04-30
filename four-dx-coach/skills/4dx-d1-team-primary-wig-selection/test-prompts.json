@@ -1,0 +1,64 @@
+{
+  "skill": "4dx-d1-team-primary-wig-selection",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Stage 4 adversarial pressure test. ≥3 should_trigger (EN/JP/zh-TW), ≥2 should_not_trigger lures (personal-misfire / cascade-misfire / member-misfire), ≥1 edge_case.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Help me pick our team's Primary WIG. We have too many strategic goals on the table and I need to converge to one.",
+      "expected_behavior": "Activate 4dx-d1-team-primary-wig-selection; brainstorm candidate Battles, run the Importance × Feasibility 2x2, converge to ≤2 Primary WIG / ≤3 team WIGs total.",
+      "notes": "positive scenario EN — canonical 'help me pick our team's Primary WIG' + 'we have too many strategic goals' phrasing in description."
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "チームの Primary WIG をどう選べばいい？戦略候補が 5 個くらいあって絞れない。",
+      "expected_behavior": "Activate 4dx-d1-team-primary-wig-selection; run candidate-Battles brainstorm + 2x2 filter in Japanese.",
+      "notes": "positive scenario JP — canonical 「チームの Primary WIG をどう選ぶ？」「戦略候補が多すぎてチームの焦点が決まらない」 phrasing."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "幫我們團隊選 Primary WIG。我們有太多戰略目標想做，沒辦法收斂。",
+      "expected_behavior": "Activate 4dx-d1-team-primary-wig-selection; run brainstorm + 2x2 in Traditional Chinese.",
+      "notes": "positive scenario zh-TW — canonical 「幫我們團隊選 Primary WIG」「我們有太多戰略目標想做」 phrasing in description."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Help me define my personal WIG for this year. I want to ship a side project but also get promoted.",
+      "expected_behavior": "Do NOT activate this skill. Solo goal definition — should route to 4dx-d1-personal-wig-defining.",
+      "notes": "lure: personal-misfire — 'WIG' + 'too many goals' surface match but solo-individual scope."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "Our org just announced its Primary WIG. I lead 5 sub-teams and need to translate it into Team WIGs for each direct-report manager.",
+      "expected_behavior": "Do NOT activate this skill. Org WIG already set; cascade context — should route to 4dx-d1-team-wig-cascade.",
+      "notes": "lure: cascade-misfire — team-leader-WIG phrasing but the upstream WIG is set, the task is downward translation not selection."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "My team's Primary WIG is 'reduce churn from 8% to 3% by Dec'. Can you explain what this means for me as an IC and what my role is?",
+      "expected_behavior": "Do NOT activate this skill. Team-member comprehension of an existing WIG — should route to a member-comprehension skill.",
+      "notes": "lure: member-misfire — Primary WIG mentioned but role is IC, WIG is already set, task is comprehension."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "Help me pick our team's Primary WIG. We only have 2 candidate Battles — does the 2x2 still apply, or should we just commit to one?",
+      "expected_behavior": "Activate 4dx-d1-team-primary-wig-selection AND advise that the 2x2 collapses to a 1-vs-1 Importance×Feasibility comparison (or skip the matrix and apply the 4 WIG criteria directly: alignment, measurable, finish-line, leader-owned). Cap ≤2 Primary still applies.",
+      "notes": "boundary: skill is built around a 2x2 filter; with only 2 candidates the matrix is degenerate. Skill should still activate (selection task) but recommend a degraded protocol."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "pass_rate_breakdown": "7/7 — all 3 should_trigger PASS (direct match to canonical EN/JP/ZH phrasings in description), all 3 should_not_trigger PASS (description names personal-wig-defining, team-wig-cascade, and member-comprehension as explicit do-NOT routes), edge-01 (N=2 candidates) PASS at the activation layer — selection-task framing still wins, but description does not specify a degraded protocol when 2x2 collapses; that is a body-level handling concern flagged for follow-up.",
+  "description_issues_flagged": "Description-level activation is clean, but the description prescribes a 2x2 filter without addressing the N=2 degenerate case. If skill body does not handle N=2 / N=1 explicitly, consider a one-line note in description ('also handles N≤2 via direct 4-WIG-criteria check').",
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

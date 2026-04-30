@@ -1,0 +1,89 @@
+{
+  "skill": "4dx-d1-personal-wig-defining",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Test prompts mixed across en / ja / zh-TW to mirror the trilingual signals declared in the skill description. Field names + types in English. 6 should_trigger, 4 should_not_trigger (lures), 1 edge_case.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "I have too many priorities — help me pick the one that matters.",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; run the count test (step 7) and force narrowing to one breakthrough WIG by leverage, not by 'most important' ranking.",
+      "notes": "positive: matches EN signal 'too many priorities' / 'where should I focus?' in description"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "目標が多すぎて何に集中すべきか分からない。",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; surface multi-WIG drift (CE-03) and coach toward one WIG via Socratic dialogue.",
+      "notes": "positive: JP signal 「優先順位が多すぎて決められない」/「どこに集中すべきか」"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我想設定一個目標但太模糊，不知道怎麼下手。",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; force lag-measure surfacing (step 2) and pin X / Y / When.",
+      "notes": "positive: zh-TW signal 「目標太模糊」/「幫我訂一個目標」"
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "Help me write a 'From X to Y by When' goal for growing my consulting business this year.",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; the user explicitly invokes the WIG canonical form; run steps 2-10 to extract X, Y, deadline.",
+      "notes": "positive: explicit invocation of the From-X-to-Y-by-When framework; description names this exact verb 'write'"
+    },
+    {
+      "id": "should-trigger-05",
+      "type": "should_trigger",
+      "prompt": "I want to be healthier but I don't know what that actually means in terms of a goal.",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; the goal is verb-less + number-less + deadline-less — exactly the A2 trigger #1 pattern.",
+      "notes": "positive: matches EN example phrasing 'I want to be healthier' literally cited in description"
+    },
+    {
+      "id": "should-trigger-06",
+      "type": "should_trigger",
+      "prompt": "This quarter I want to launch the product, write a book, learn Korean, and run a marathon.",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining; trigger count test (step 7), push back hard on 4-WIG drift, force user to pick the one with biggest transformation leverage.",
+      "notes": "positive: matches description's 'juggling 3+ top priorities and can't commit'"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I have my WIG defined — From 78kg to 70kg by Dec 31. What lead measure should I track?",
+      "expected_behavior": "Do NOT activate 4dx-d1-personal-wig-defining. WIG is already in canonical From-X-to-Y-by-When form. Route to 4dx-d2-personal-lead-measure-discovery.",
+      "notes": "lure: already-well-formed numeric goal — description explicitly excludes this case ('already-well-formed numeric goals')"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "Help us cascade WIGs from CEO down to every team in our 5,000-person org.",
+      "expected_behavior": "Do NOT activate 4dx-d1-personal-wig-defining. This is enterprise WIG cascade (org-level), not personal WIG defining. The skill is scoped to individual / personal coaching per the description's 'For an individual, the cap is one WIG' framing.",
+      "notes": "lure: enterprise rollout vs. personal — surface keyword 'WIG' shared but scope is org cascade"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "How do I write a SMART goal? I keep hearing about it but don't know the format.",
+      "expected_behavior": "Do NOT activate 4dx-d1-personal-wig-defining. SMART is a different framework; description explicitly distinguishes WIG from SMART ('SMART permits achievable goals that are merely incremental').",
+      "notes": "lure: SMART-goal generic — surface similarity (goal-setting) but framework is different"
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "I want to build a daily meditation habit — help me design the habit stack.",
+      "expected_behavior": "Do NOT activate 4dx-d1-personal-wig-defining. Description's last sentence: 'Do NOT activate for ... pure habit-design asks where no breakthrough is at stake.' Habits have no fixed lag-measurable end-state.",
+      "notes": "lure: habit-stacking — explicitly excluded by the description's last clause"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I want to launch a podcast in 6 months.",
+      "expected_behavior": "Activate 4dx-d1-personal-wig-defining (reasonable judgment): the user states an aspirational outcome with a deadline but no measurable X/Y, and it's unclear whether this is project-shaped (Ch. 9 deliverables-list variant) or behavior-change-shaped. The skill should fire and run the project-as-WIG check (step 9) to disambiguate, then output deliverables-list+date OR redirect to project planning if there's no breakthrough at stake.",
+      "notes": "boundary: project-vs-WIG ambiguity — the skill itself contains the disambiguation protocol (step 9), so firing is the correct call. If the user resists outcome framing, the skill's own boundary clause routes out."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

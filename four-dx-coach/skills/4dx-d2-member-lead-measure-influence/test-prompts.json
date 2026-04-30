@@ -1,0 +1,68 @@
+{
+  "skill": "4dx-d2-member-lead-measure-influence",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Member-voice influence-mapping on team-inherited lead measures. Lures cover personal-D2 misfire (solo lead discovery), leader-D2 misfire (facilitation), D1 comprehension misfire (still upstream of leads), and D4 commitment-prep misfire (downstream of focus pick). Edge case = no-influence escalation must fire AND route through step 6 instead of forcing a fake focus.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "I'm on a team running 4DX. The leader just announced our team's lead measures last week. I get what they are, but I don't know which one is *mine* to actually move from where I sit. Can you help me figure out where I have real influence?",
+      "expected_behavior": "Activate 4dx-d2-member-lead-measure-influence; run the 8-step coaching flow starting with the comprehension gate, then ladder check, then per-lead 0-5 influence audit, then map check → focus pick (1-2 leads) → daily question anchoring → influence card output.",
+      "notes": "positive scenario: classic inherited-lead influence-mapping (member voice, EN)"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "チームの lead measure はもう決まっています。3つあるんですが、自分の立場でどれを動かせるのか分からなくて、今は全部薄く対応している感じです。週次でどこに集中すればいいか整理したい。",
+      "expected_behavior": "4dx-d2-member-lead-measure-influence を発動。step 1 で 3 つの lead を確認、step 2 で各々の causal chain、step 3 で 0-5 の影響度評価、step 4 で分布解釈、step 5 で focus 1-2 本選定、step 7 で daily question を focus lead に紐づけ、step 8 で influence card 出力。「全部薄く」が whirlwind 化のサインであることを名指しする。",
+      "notes": "positive scenario: JP member-voice, coverage-instead-of-focus complaint"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "團隊的 lead measure 已經訂好了，我也知道是哪幾個。可是我是後勤位置，主要的 lead 都是 customer-facing，我根本不知道自己這個位置怎麼影響它們。是我自己想不到，還是真的就是位置不對？",
+      "expected_behavior": "啟動 4dx-d2-member-lead-measure-influence；走 step 1-3 把每個 lead 的個人影響力 0-5 audit 出來。如果 audit 結果分數確實全低，路由到 step 6 的 no-influence escalation：協助 member rehearse 跟 leader 對話的措辭（'I want to be useful on the team WIG. I've mapped my position against each lead and I don't see a daily-influence handle. Can we look at this together?'）。明確支持 honest 'no influence here' 的訊號，不強迫硬挑 focus。",
+      "notes": "positive scenario: zh-TW member-voice, role-fit signal — explicitly tests the no-influence escalation branch (step 6)"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I have a personal goal — write a novel by year-end — and I want to figure out the right lead measures to track for myself. What should I focus on daily?",
+      "expected_behavior": "Do NOT activate this skill. The user is selecting their own leads against a personal (solo) WIG, not mapping influence on team-inherited leads. Route to 4dx-d2-personal-lead-measure-discovery.",
+      "notes": "lure: personal-D2 misfire — same D2 territory but solo selection, not inherited mapping"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "I'm the team leader. I need to run a session with my team next week to brainstorm and pick our team's lead measures. Help me facilitate that — what's the agenda, how do I run the two-axis scoring?",
+      "expected_behavior": "Do NOT activate this skill. The user is the facilitator picking leads with the team, not a member receiving them. Route to 4dx-d2-team-lead-measure-facilitation.",
+      "notes": "lure: leader-D2 misfire — 'lead measure' keyword present but selection-side, not member influence-mapping"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I joined a team running 4DX last month. Honestly I don't really know what their team WIG is — my manager mentioned it once but I couldn't tell you the From-X-to-Y form. And lead measures? No idea. Help me get oriented.",
+      "expected_behavior": "Do NOT activate this skill. The user is upstream of leads — they don't even know the team WIG yet. Route to 4dx-d1-member-team-wig-comprehension first; influence-mapping requires the leads to be known.",
+      "notes": "lure: D1-comprehension misfire — same member-on-4DX-team frame but the comprehension layer hasn't happened yet"
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "I know our team's lead measure (it's 'discovery calls completed per week' for our team) and I know my focus lead. WIG Session is tomorrow morning — help me prep my actual commitment for what I'll voice in the room.",
+      "expected_behavior": "Do NOT activate this skill. The user has already mapped influence and picked a focus lead — they need weekly commitment writing now, which is downstream. Route to 4dx-d4-member-commitment-prep.",
+      "notes": "lure: D4 commitment-prep misfire — same member voice + lead-measure context, but past influence-mapping into commitment-writing territory"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "Our team has three lead measures. I scored myself per the influence map and got 1, 1, 2 — basically no real handle on any of them. I'm in a back-office support role and the leads are all about closing deals. I feel like I should just pick one anyway and pretend, because saying 'I can't influence any of these' will look like I'm slacking.",
+      "expected_behavior": "Do fire 4dx-d2-member-lead-measure-influence (the trigger language and influence-audit output are clearly in scope), AND route the flow to step 6 (no-influence escalation), NOT step 5 (focus pick). Validate the signal explicitly: low scores across all leads is information, not a failure. Reject the 'pick one and pretend' move (compliance-without-commitment, CE-15 mirror). Help the member rehearse the framing for the leader conversation: 'I want to be useful on the team WIG. I've mapped my position and I don't see a daily-influence handle on the current leads — can we look at this together and either find one I'm missing or rescope my contribution?' Position the ask as team learning (Argyris / Edmondson cross-ref), not as a complaint or admission of incompetence.",
+      "notes": "boundary: edge case — influence map comes back genuinely empty. The skill's value is in NOT forcing a fake focus pick and giving the no-influence finding a legitimate escalation path. Tests the step-4 → step-6 routing logic and the 'pick one and pretend' rejection."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance — any false-positive on personal-D2 / leader-D2 / D1-comprehension / D4-commitment-prep collapses the cross-skill routing of the four-dx-coach plugin."
+}
