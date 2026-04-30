@@ -88,7 +88,7 @@
       "id": "T-10-enterprise-rollout",
       "type": "should_not_trigger",
       "prompt": "我們公司 50 個 team 要導入 4DX，下個季度開始。請幫我設計 cascade WIG 的部署計畫，包含 leader-of-leaders training schedule。",
-      "expected_behavior": "Do NOT activate this skill. Enterprise multi-team rollout. Per description: 'NOT for enterprise multi-team rollout (read book Ch 6-10 directly + 4dx-d1-team-wig-cascade)'. Single-team scope only.",
+      "expected_behavior": "Do NOT activate this skill. Enterprise multi-team rollout. Per description: 'NOT for enterprise multi-team rollout (read book Ch 6-10 directly + 4dx-d1-wig-cascade)'. Single-team scope only.",
       "activation_judgment": "PASS",
       "notes": "Lure: enterprise-rollout — actor model (50 teams + leader-of-leaders) differs from single-team triage scope."
     },

@@ -222,7 +222,7 @@ verbatim or as a stable spine in tomorrow's Account segment.
 
 ### Do NOT use this protocol for:
 - **Solo / no-team contexts** — load `protocols/solo-session.md`; or
-  for solo lapse, `4dx-sustain-personal-momentum-rescue`.
+  for solo lapse, `4dx-sustain-momentum-rescue`.
 - **Chronic underperformance (3+ misses in a row)** — that's a
   commitment-design problem; route to member-prep mode for redesign.
 - **Picking the next commitment** — load `protocols/member-prep.md`.

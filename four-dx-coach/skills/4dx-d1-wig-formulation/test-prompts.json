@@ -52,7 +52,7 @@
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "How do I cascade my org's Primary WIG down to 5 sub-teams?",
-      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Description explicitly excludes cascade queries — different verb (translate, not select) and different skill: 4dx-d1-team-wig-cascade.",
+      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Description explicitly excludes cascade queries — different verb (translate, not select) and different skill: 4dx-d1-wig-cascade.",
       "notes": "lure: cascade is a sibling D1 topic explicitly excluded by description ('cascading downward to subordinate teams')"
     },
     {

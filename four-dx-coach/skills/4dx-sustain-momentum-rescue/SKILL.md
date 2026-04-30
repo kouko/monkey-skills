@@ -1,5 +1,5 @@
 ---
-name: 4dx-sustain-personal-momentum-rescue
+name: 4dx-sustain-momentum-rescue
 description: |
   Activate when the user reports their 4DX implementation has stalled
   or lapsed — WIG cadence broken, scoreboard ignored, lead measures
@@ -380,7 +380,7 @@ each more actionable for the rescue dialogue. Primary citations in
 - `4dx-d1-wig-formulation` — composes-with — D1 break routes back to redefine the WIG
 - `4dx-d2-lead-measures` — composes-with — leads green but lag flat → redesign
 - `4dx-d3-scoreboard` — composes-with — hidden / coach-only scoreboard → rebuild
-- `4dx-meta-team-xps-evaluation` — contrasts-with — solo rescue vs team-leader audit; both diagnostic
+- `4dx-meta-xps-evaluation` — contrasts-with — solo rescue vs team-leader audit; both diagnostic
 
 ---
 

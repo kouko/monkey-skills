@@ -15,7 +15,7 @@ description: |
   Do NOT activate when the user has not yet decided 4DX fits their org
   (route to 4dx-meta-strategy-triage first), or when buy-in is already
   secured and the user is asking for the technical WIG cascade
-  (route to 4dx-d1-team-wig-cascade).
+  (route to 4dx-d1-wig-cascade).
 source_book: The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
 source_chapter: Chapter 8 — Getting Your Leaders on Board
 source_language: en
@@ -160,7 +160,7 @@ The output is a plan they can act on this week — not a rollout document.
   `4dx-meta-strategy-triage` first.
 - Buy-in is already secured and the user is asking *how to actually run
   the cascade meeting / draft Team WIGs* — route to
-  `4dx-d1-team-wig-cascade` (the technical cascade).
+  `4dx-d1-wig-cascade` (the technical cascade).
 - User is a frontline-team leader trying to get *their own team members*
   bought in — different scale; the book treats individual contributors
   via the Team WIG-choosing process at D1, not Chapter 8.
@@ -172,7 +172,7 @@ The output is a plan they can act on this week — not a rollout document.
 - vs. `4dx-meta-strategy-triage`: that skill asks *"is 4DX the right
   fit for our org?"*; this skill assumes fit-for-org is settled and asks
   *"how do I earn commitment from the specific humans who will run it?"*
-- vs. `4dx-d1-team-wig-cascade`: that skill is the **technical** cascade
+- vs. `4dx-d1-wig-cascade`: that skill is the **technical** cascade
   (Primary WIG → Key Battles → Team WIGs as a structural exercise); this
   skill is the **social** precondition that makes the technical cascade
   produce commitment instead of compliance.
@@ -399,7 +399,7 @@ mechanism, not ceremony.
 ## Related skills
 
 - `4dx-meta-strategy-triage` — depends-on — fit-for-org decision must precede onboarding
-- `4dx-d1-team-wig-cascade` — composes-with — cascade commits only when leaders bought in
+- `4dx-d1-wig-cascade` — composes-with — cascade commits only when leaders bought in
 - `4dx-d4-cadence` — composes-with — onboarded leaders run the live cadence
 
 ---

@@ -37,7 +37,7 @@ If the user's query is ambiguous on scope, the skill asks ONE Socratic disambigu
 | Already committed to 4DX, asking "how do I start?" | D1 skills (whirlwind-triage / primary-wig-selection / wig-formulation) |
 | Specific-discipline question (lead measures / scoreboard / WIG session) | Matching D-skill |
 | Member receiving inherited WIG from a leader | `4dx-d1-wig-formulation` (members don't triage) |
-| Enterprise multi-team rollout (cascading WIGs) | Book Ch 6-10 directly + `4dx-d1-team-wig-cascade` |
+| Enterprise multi-team rollout (cascading WIGs) | Book Ch 6-10 directly + `4dx-d1-wig-cascade` |
 | Non-4DX methodology (OKR / agile / habit-stacking) | Plugin router `using-four-dx-coach` |
 
 ## Source citation

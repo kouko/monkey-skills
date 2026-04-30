@@ -99,7 +99,7 @@ status-checker. Steps below run sequentially in one session.
    - Ask user to interpret first: "What do you make of that?"
    - **Diagnostic boundary**: if lead green + lag flat for ≥3 weeks,
      flag P-50 ("change the leads, don't push harder") and route to
-     `4dx-sustain-personal-momentum-rescue` after the session.
+     `4dx-sustain-momentum-rescue` after the session.
    - Completion: user has stated lead trend, lag trend, and their own
      interpretation aloud.
 

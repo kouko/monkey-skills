@@ -15,7 +15,7 @@ description: |
   / consultant-to-leader / personal coach to member). Goodhart self-check
   applies to all 3. NOT for WIG definition (→ 4dx-d1-*), scoreboard / display
   (→ 4dx-d3-scoreboard), weekly review cadence (→ 4dx-d4-cadence), or stuck
-  cadence (→ 4dx-sustain-personal-momentum-rescue). Member-influence mode is
+  cadence (→ 4dx-sustain-momentum-rescue). Member-influence mode is
   V1 ⚠️ partial (member POV inferred from leader-side cases).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2
@@ -26,7 +26,7 @@ related_skills:
   - 4dx-d1-wig-formulation
   - 4dx-d3-scoreboard
   - 4dx-d4-cadence
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-sustain-momentum-rescue
   - 4dx-meta-team-leader-onboarding
   - using-four-dx-coach
 ---
@@ -100,7 +100,7 @@ of those collapses.
 - **Weekly review / commitment / WIG Session** — `4dx-d4-cadence` is the
   cadence that REVIEWS lead performance.
 - **Lead measures already exist but lag is flat ≥4 weeks** — that's a
-  diagnosis-and-redesign job for `4dx-sustain-personal-momentum-rescue`,
+  diagnosis-and-redesign job for `4dx-sustain-momentum-rescue`,
   not first-time selection.
 - **Stroke-of-pen WIG** — goal achieved by single decision/purchase
   (sign contract, hire, reorg). No daily behavior to discover.
@@ -166,7 +166,7 @@ does not run any D2 content directly.
 - **Leader-of-leaders / multi-team cascade** → out of plugin scope; route
   via `using-four-dx-coach`.
 - **Leads already chosen but stale (lead green, lag flat ≥4 weeks)** →
-  fire `4dx-sustain-personal-momentum-rescue`, not this skill.
+  fire `4dx-sustain-momentum-rescue`, not this skill.
 
 ## Shared standards
 
@@ -194,7 +194,7 @@ Each protocol references these standards (load on demand):
 - **Downstream composers** — `4dx-d3-scoreboard` displays the chosen
   leads; `4dx-d4-cadence` runs the weekly review of lead performance vs
   targets and converts a focus lead into a specific weekly commitment.
-- **Diagnostic neighbour** — `4dx-sustain-personal-momentum-rescue` runs
+- **Diagnostic neighbour** — `4dx-sustain-momentum-rescue` runs
   *after* leads have been chosen and proven stale (green lead, flat lag
   for 4+ weeks). The boundary is sharp: this skill picks/maps leads;
   rescue redesigns existing ones.

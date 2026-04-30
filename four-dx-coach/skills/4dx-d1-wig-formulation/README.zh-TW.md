@@ -23,7 +23,7 @@
 | 「組織 Primary WIG，用 Battles 2x2」 | 直接 `4dx-d1-wig-formulation` |
 | 「老闆給的 WIG」 | 直接 `4dx-d1-wig-formulation` |
 | whirlwind / 時間 audit | `4dx-meta-whirlwind-triage` |
-| 往下 cascade 到 N 個 sub-team | `4dx-d1-team-wig-cascade` |
+| 往下 cascade 到 N 個 sub-team | `4dx-d1-wig-cascade` |
 | lead measure / scoreboard / cadence | D2 / D3 / D4 |
 
 ## 配下的 atomic skill

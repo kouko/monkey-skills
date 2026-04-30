@@ -35,7 +35,7 @@
 
 | 情境 | 改去 |
 |---|---|
-| cadence 已經斷好幾週 | `4dx-sustain-personal-momentum-rescue`（先 rescue 再 restart） |
+| cadence 已經斷好幾週 | `4dx-sustain-momentum-rescue`（先 rescue 再 restart） |
 | 還沒有 WIG / lead measure / scoreboard | 先做 D1 / D2 / D3，D4 沒東西可跑 |
 | sprint review / PI planning / OKR check-in / 1-on-1 / status report | 4DX 範圍外 — `using-four-dx-coach` |
 | daily stand-up / scrum daily | cadence 錯（每日 ≠ 每週）、format 錯 |

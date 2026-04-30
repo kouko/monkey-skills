@@ -35,7 +35,7 @@
 
 | 状況 | 代わりの行き先 |
 |---|---|
-| 数週間 cadence が崩れている | `4dx-sustain-personal-momentum-rescue`（再起動より rescue が先） |
+| 数週間 cadence が崩れている | `4dx-sustain-momentum-rescue`（再起動より rescue が先） |
 | WIG / lead measure / scoreboard 未整備 | まず D1 / D2 / D3、D4 は載せる対象がない |
 | sprint review / PI planning / OKR check-in / 1-on-1 / status report | 4DX 圏外 — `using-four-dx-coach` |
 | daily stand-up / scrum daily | 間違った cadence（毎日 ≠ 毎週）、間違った format |

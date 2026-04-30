@@ -1,4 +1,4 @@
-# Industry-experience grounding for 4dx-meta-team-xps-evaluation
+# Industry-experience grounding for 4dx-meta-xps-evaluation
 
 Benchmarks the book's 4-component XPS (Execution Performance Score) against
 three older organizational-health / process-maturity frameworks. Helps the

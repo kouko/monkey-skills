@@ -29,7 +29,7 @@ Auditor / consultant 聲音 — 只給事實、分數、fix priority；不教練
 
 | 情境 | 改去 |
 |---|---|
-| solo / personal coach 模式 | `4dx-sustain-personal-momentum-rescue` |
+| solo / personal coach 模式 | `4dx-sustain-momentum-rescue` |
 | 要跑這週的 WIG session（不是稽核過往） | `4dx-d4-cadence` |
 | 「我們到底要不要用 4DX？」 | `4dx-meta-strategy-triage` |
 | 跨團隊頭對頭排名 | XPS 是 intra-team self-diagnostic，不是 leaderboard |

@@ -142,8 +142,8 @@ individual. Verdicts come from `../standards/6-verdict-rubric.md`.
 ### Do NOT use this protocol for:
 
 - **Solo / individual-contributor goals** — load `protocols/personal-mode.md` instead. The team-shape gates (size 3-12, peer accountability, leader authority) are nonsensical for one person.
-- **Already-committed teams asking how to start D1** — route to `4dx-d1-wig-formulation` and `4dx-d1-team-wig-cascade`; don't re-gate work past this stage.
-- **Leader-of-Leaders multi-team rollout** — single-team scope only. For VPs / division leads cascading 4DX across multiple teams, recommend book Ch 6-10 + `4dx-d1-team-wig-cascade` once each team is scoped.
+- **Already-committed teams asking how to start D1** — route to `4dx-d1-wig-formulation` and `4dx-d1-wig-cascade`; don't re-gate work past this stage.
+- **Leader-of-Leaders multi-team rollout** — single-team scope only. For VPs / division leads cascading 4DX across multiple teams, recommend book Ch 6-10 + `4dx-d1-wig-cascade` once each team is scoped.
 - **Specific-discipline questions** ("how do we pick lead measures?", "what goes on the scoreboard?") — route to the matching D-skill.
 
 ### Author-warned failure modes

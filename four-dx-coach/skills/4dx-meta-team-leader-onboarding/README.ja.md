@@ -29,7 +29,7 @@
 | 状況 | 代わりの行き先 |
 |---|---|
 | 組織への 4DX 適合判断が未了 | まず `4dx-meta-strategy-triage` |
-| Buy-in 確保済、技術 cascade が次 | `4dx-d1-team-wig-cascade` |
+| Buy-in 確保済、技術 cascade が次 | `4dx-d1-wig-cascade` |
 | frontline メンバーの buy-in | D1 Team WIG 選択プロセス、Ch 8 ではない |
 | 4DX 非依存の一般 change management | Kotter / ADKAR / Bridges |
 | 実は commitment ではなく compliance が欲しい | 停止 — この skill では助けにならない |

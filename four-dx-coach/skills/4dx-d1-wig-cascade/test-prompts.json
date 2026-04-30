@@ -1,5 +1,5 @@
 {
-  "skill": "4dx-d1-team-wig-cascade",
+  "skill": "4dx-d1-wig-cascade",
   "version": "0.1.0",
   "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
@@ -10,21 +10,21 @@
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "How do I translate the org Primary WIG to my 5 sub-teams? Each direct-report manager needs their own Team WIG and I need to make sure they ladder up.",
-      "expected_behavior": "Activate 4dx-d1-team-wig-cascade; produce cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) applying Targets-not-Plans / Battles-to-win-the-war / Veto-don't-Dictate / one-WIG-per-individual; run ladder-up + veto tests.",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade; produce cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) applying Targets-not-Plans / Battles-to-win-the-war / Veto-don't-Dictate / one-WIG-per-individual; run ladder-up + veto tests.",
       "notes": "positive scenario EN — canonical 'translate the org WIG to my team' + 'each manager needs a WIG' phrasing in description, 5 sub-teams in 3-7 band."
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "上から降りてきた Primary WIG を、配下の 4 チームに翻訳したい。各マネージャーの Team WIG をどう決めればいい？",
-      "expected_behavior": "Activate 4dx-d1-team-wig-cascade; run the Ch 7 four-rule cascade in Japanese, output cascade map + ladder-up/veto tests.",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade; run the Ch 7 four-rule cascade in Japanese, output cascade map + ladder-up/veto tests.",
       "notes": "positive scenario JP — canonical 「上から降りた WIG をチーム単位に落とす」「直属マネージャー毎の Team WIG をどう決める」 phrasing."
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "上面定的 Primary WIG 我要怎麼分到我帶的 6 個 team？每個主管要有自己的 Team WIG，怎麼選？",
-      "expected_behavior": "Activate 4dx-d1-team-wig-cascade; run cascade in Traditional Chinese, output cascade map + ladder-up/veto tests.",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade; run cascade in Traditional Chinese, output cascade map + ladder-up/veto tests.",
       "notes": "positive scenario zh-TW — canonical 「上面定的 WIG 我要怎麼分到我帶的 team」「每位主管要有自己的 Team WIG，怎麼選？」 phrasing."
     },
     {
@@ -52,7 +52,7 @@
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I run a division with 4 cascade layers: division → group (3) → team (2-3 each) → squad (2 each). How do I cascade the division Primary WIG all the way down?",
-      "expected_behavior": "Activate 4dx-d1-team-wig-cascade AND advise: book caps cascade depth — re-run this skill once per layer (division→group, then group→team, then team→squad). Veto test must run at every layer. Do not flatten 4 layers into one cascade map.",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade AND advise: book caps cascade depth — re-run this skill once per layer (division→group, then group→team, then team→squad). Veto test must run at every layer. Do not flatten 4 layers into one cascade map.",
       "notes": "boundary: description explicitly says 'cascade depth >2 layers (rerun this skill per layer)'. Edge tests whether skill catches the depth cap and prescribes the re-run pattern instead of attempting one mega-cascade."
     }
   ],

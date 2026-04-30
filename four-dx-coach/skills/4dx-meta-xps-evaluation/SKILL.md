@@ -1,13 +1,13 @@
 ---
-name: 4dx-meta-team-xps-evaluation
+name: 4dx-meta-xps-evaluation
 description: |
-  Audit a team's 4DX execution quality using the book-canonical XPS (Execution Performance Score) — four components (cadence, commitments, lead-measures, lag/WIG-results) each scored 0-1, totaled to a 0-4 score, mapped to the book's four diagnostic bands (3.6-4.0 excellence / 3.2-3.59 good / 2.5-3.19 fair / 0-2.49 significant concern), with a weakest-discipline fix priority. Activate on EN: "Audit our team's 4DX execution quality", "Score our 4DX implementation", "Is our 4DX actually working?". JP: 「チームの 4DX 実行品質を評価」「うちの 4DX 機能してる？」「XPS 出して」. ZH: 「稽核我們團隊的 4DX 執行品質」「幫我們團隊打 XPS 分數」「我們 4DX 跑得怎麼樣？」. Do NOT activate for solo / personal-coach use (route to 4dx-sustain-personal-momentum-rescue), running a live WIG session (route to 4dx-d4-cadence), or cross-team comparisons (XPS measures intra-team execution quality, not team-vs-team performance).
+  Audit a team's 4DX execution quality using the book-canonical XPS (Execution Performance Score) — four components (cadence, commitments, lead-measures, lag/WIG-results) each scored 0-1, totaled to a 0-4 score, mapped to the book's four diagnostic bands (3.6-4.0 excellence / 3.2-3.59 good / 2.5-3.19 fair / 0-2.49 significant concern), with a weakest-discipline fix priority. Activate on EN: "Audit our team's 4DX execution quality", "Score our 4DX implementation", "Is our 4DX actually working?". JP: 「チームの 4DX 実行品質を評価」「うちの 4DX 機能してる？」「XPS 出して」. ZH: 「稽核我們團隊的 4DX 執行品質」「幫我們團隊打 XPS 分數」「我們 4DX 跑得怎麼樣？」. Do NOT activate for solo / personal-coach use (route to 4dx-sustain-momentum-rescue), running a live WIG session (route to 4dx-d4-cadence), or cross-team comparisons (XPS measures intra-team execution quality, not team-vs-team performance).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
 source_chapter: Chapter 10 (Sustaining 4DX Results and Engagement)
 source_language: en
 tags: [meta-evaluation, audit, xps, team-coach, leader-of-leaders, diagnostic, fix-priority]
 related_skills:
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-sustain-momentum-rescue
   - 4dx-d4-cadence
   - 4dx-meta-strategy-triage
 ---
@@ -80,7 +80,7 @@ The agent's role here is auditor / consultant, not coach-rescuer. The deliverabl
 
 ### Non-activation signals (do NOT trigger when…)
 
-- User is solo and asks about getting their personal 4DX back on track — route to `4dx-sustain-personal-momentum-rescue`.
+- User is solo and asks about getting their personal 4DX back on track — route to `4dx-sustain-momentum-rescue`.
 - User wants to *run* this week's WIG session, not audit past performance — route to `4dx-d4-cadence`.
 - User asks "should we even be using 4DX?" — route to `4dx-meta-strategy-triage`.
 - User wants to compare two teams head-to-head ("which team is winning?") — XPS is intra-team execution quality, not a leaderboard; the book frames it as a self-diagnostic.
@@ -88,7 +88,7 @@ The agent's role here is auditor / consultant, not coach-rescuer. The deliverabl
 
 ### Distinction from neighboring skills
 
-- vs. `4dx-sustain-personal-momentum-rescue`: rescue is for a solo user whose personal cadence has slipped; XPS evaluation is for a team / team-of-teams and produces a numeric score, not a recovery script.
+- vs. `4dx-sustain-momentum-rescue`: rescue is for a solo user whose personal cadence has slipped; XPS evaluation is for a team / team-of-teams and produces a numeric score, not a recovery script.
 - vs. `4dx-d4-cadence`: that skill is the *practitioner* role (run the meeting); this skill is the *auditor* role (evaluate whether the meeting is being run well).
 - vs. `4dx-meta-strategy-triage`: triage decides whether to use 4DX at all; XPS evaluation assumes 4DX is in flight and asks how well it's running.
 
@@ -150,7 +150,7 @@ The agent runs an audit walkthrough as an external evaluator. The voice is consu
 
 ### Do NOT use this skill in:
 
-- **Solo / personal-coach mode.** XPS is a *team* metric. A solo user whose personal 4DX has slipped should route to `4dx-sustain-personal-momentum-rescue`, which is a recovery script, not an audit.
+- **Solo / personal-coach mode.** XPS is a *team* metric. A solo user whose personal 4DX has slipped should route to `4dx-sustain-momentum-rescue`, which is a recovery script, not an audit.
 - **Live WIG-session running.** This skill audits past sessions; running this week's session is `4dx-d4-cadence`.
 - **"Should we use 4DX?" decisions.** That's `4dx-meta-strategy-triage`. Auditing a methodology that doesn't fit is wasted time.
 - **Cross-team head-to-head comparison.** XPS is an intra-team self-diagnostic; the book never frames it as a leaderboard. Using XPS to rank teams against each other corrupts its purpose (teams gaming the score) and is not what Chapter 10 prescribes.
@@ -201,8 +201,8 @@ Three older frameworks tackle similar diagnostic problems; XPS occupies a specif
 - `4dx-d2-lead-measures` — composes-with — C3 failure → redo lead-measure discovery
 - `4dx-d3-scoreboard` — composes-with — scoreboard not player-updated → rebuild
 - `4dx-d4-cadence` — composes-with — C1 cadence weakness → reinstall session protocol
-- `4dx-sustain-personal-momentum-rescue` — composes-with — systemic team-lead drift → personal rescue
-- `4dx-sustain-personal-momentum-rescue` — contrasts-with — leader-side audit vs solo rescue; both diagnostic
+- `4dx-sustain-momentum-rescue` — composes-with — systemic team-lead drift → personal rescue
+- `4dx-sustain-momentum-rescue` — contrasts-with — leader-side audit vs solo rescue; both diagnostic
 
 ---
 

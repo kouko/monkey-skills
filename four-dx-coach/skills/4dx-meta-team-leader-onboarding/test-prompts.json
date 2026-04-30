@@ -38,7 +38,7 @@
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "My direct reports are bought in and excited. Now we need to actually run the cascade meeting next Monday and turn the Primary WIG into Team WIGs for each of their teams. Walk me through the structural cascade.",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-d1-team-wig-cascade — buy-in is already secured; user wants the technical cascade choreography.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-d1-wig-cascade — buy-in is already secured; user wants the technical cascade choreography.",
       "notes": "lure: cascade misfire — buy-in solved, user is asking for downstream technical artifact."
     },
     {

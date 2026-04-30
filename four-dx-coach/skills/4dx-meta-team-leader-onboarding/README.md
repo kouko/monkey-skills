@@ -29,7 +29,7 @@ Consultant-to-single-leader-of-leaders. Output is a per-leader plan + one rehear
 | Situation | Where to go instead |
 |---|---|
 | Haven't decided 4DX fits the org | `4dx-meta-strategy-triage` first |
-| Buy-in already secured; need the technical cascade | `4dx-d1-team-wig-cascade` |
+| Buy-in already secured; need the technical cascade | `4dx-d1-wig-cascade` |
 | Frontline-team-member buy-in | Use D1 Team WIG-choosing process, not Ch 8 |
 | Generic change management not 4DX-specific | Kotter / ADKAR / Bridges |
 | You actually want compliance, not commitment | Stop — this skill won't help |

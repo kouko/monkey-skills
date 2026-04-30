@@ -24,9 +24,9 @@ related_skills:
   - 4dx-d1-wig-formulation
   - 4dx-d2-lead-measures
   - 4dx-d3-scoreboard
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-sustain-momentum-rescue
   - 4dx-meta-team-leader-onboarding
-  - 4dx-meta-team-xps-evaluation
+  - 4dx-meta-xps-evaluation
   - using-four-dx-coach
 ---
 
@@ -68,7 +68,7 @@ counts as a session, what counts as a commitment, what counts as cadence.
 
 ### Non-activation signals (DO NOT fire when…)
 
-- Cadence has already broken (multiple skipped weeks, engagement collapsed) → `4dx-sustain-personal-momentum-rescue` first
+- Cadence has already broken (multiple skipped weeks, engagement collapsed) → `4dx-sustain-momentum-rescue` first
 - Pre-D4 (no WIG defined, no lead measure picked, no scoreboard built) → D1 / D2 / D3 first
 - Out of 4DX — sprint review / PI planning / OKR check-in / 1-on-1 / status report / agile retro / GTD weekly review → hand off via `using-four-dx-coach`
 - Annual / quarterly / monthly retrospective → wrong cadence scope (WIG Session is weekly only)
@@ -112,7 +112,7 @@ After loading the protocol, follow its E section step-by-step. Each protocol car
 - **Member + during session** — member doesn't have a separate during-session skill; the leader runs the agenda. Suggest member-prep ahead of the next session, OR member-debrief for the just-ended one.
 - **Solo + before / after** — `solo-session.md` is single-protocol (covers prep + agenda + close internally). Fire it directly.
 - **Facilitator + before / after** — `team-leader-session.md` handles the full lifecycle (pre-session check + agenda + post-session reminders) within its protocol. Fire it directly.
-- **Cadence broken multiple weeks** — fire `4dx-sustain-personal-momentum-rescue` first; do NOT pretend a fresh cadence works on top of a broken one.
+- **Cadence broken multiple weeks** — fire `4dx-sustain-momentum-rescue` first; do NOT pretend a fresh cadence works on top of a broken one.
 - **WIG / lead measure / scoreboard not yet set** — fire D1 / D2 / D3 skills first; D4 has nothing to operate on without upstream.
 
 ## Shared standards
@@ -127,8 +127,8 @@ Each protocol references these standards (load on demand):
 ## Cross-skill relations
 
 - **Upstream (D1/D2/D3 prerequisites)** — `4dx-d1-wig-formulation` defines the WIG; `4dx-d2-lead-measures` picks the lever this cadence drives; `4dx-d3-scoreboard` is the artifact Segment 2 (Review) reads from. D4 has nothing to operate on if any of these is missing.
-- **Compose-with neighbour** — `4dx-sustain-personal-momentum-rescue` runs *after* this cadence has broken. The boundary is sharp: this skill runs the *live* cadence; sustain-rescue *re-engages* a collapsed one.
-- **Compose-with team-context** — `4dx-meta-team-leader-onboarding` is upstream of the leader running this cadence; `4dx-meta-team-xps-evaluation` audits this cadence's C1 (Cadence) component. Both treat the WIG Session as the artifact this skill produces.
+- **Compose-with neighbour** — `4dx-sustain-momentum-rescue` runs *after* this cadence has broken. The boundary is sharp: this skill runs the *live* cadence; sustain-rescue *re-engages* a collapsed one.
+- **Compose-with team-context** — `4dx-meta-team-leader-onboarding` is upstream of the leader running this cadence; `4dx-meta-xps-evaluation` audits this cadence's C1 (Cadence) component. Both treat the WIG Session as the artifact this skill produces.
 - **Plugin-router fallback** — `using-four-dx-coach` handles cold-start triage and out-of-4DX queries (sprint review, OKR check-in, 1-on-1, status report); not a substitute for this skill, but the right hand-off when the user's question turns out not to be 4DX D4.
 
 ## Boundary (cross-mode common)

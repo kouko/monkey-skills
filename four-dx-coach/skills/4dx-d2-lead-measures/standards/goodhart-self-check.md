@@ -16,7 +16,7 @@ defensive moves are mandatory:
 2. **Re-validate the causal chain on a 4-week cadence.** If leads are
    green but lag is flat for 4+ weeks, the lead is being gamed or was
    wrong. Treat green-lead-flat-lag as a redesign signal, not a "push
-   harder" signal. Route to `4dx-sustain-personal-momentum-rescue`.
+   harder" signal. Route to `4dx-sustain-momentum-rescue`.
 3. **Keep the falsifiable forecast written down.** D2 protocols all
    produce a written paragraph: "if I/we hit lead targets every week
    for 6 weeks, here's why I/we expect the lag to have moved by [Y]."

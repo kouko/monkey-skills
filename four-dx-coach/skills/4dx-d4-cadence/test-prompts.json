@@ -53,7 +53,7 @@
       "id": "should-not-trigger-non-d4-momentum",
       "type": "should_not_trigger",
       "prompt": "I keep losing momentum on my goal — I've skipped my weekly review for 3 weeks now.",
-      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Cadence has already broken (3 weeks skipped). Description explicitly excludes broken-cadence; route to 4dx-sustain-personal-momentum-rescue first, then resume D4 cadence.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Cadence has already broken (3 weeks skipped). Description explicitly excludes broken-cadence; route to 4dx-sustain-momentum-rescue first, then resume D4 cadence.",
       "notes": "lure: cadence-already-broken — surface keyword 'weekly review' + 'momentum' could pull D4, but 3-week gap = collapsed cadence per CE-11; rescue precedes restart"
     },
     {

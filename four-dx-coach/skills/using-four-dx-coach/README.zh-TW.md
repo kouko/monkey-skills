@@ -23,7 +23,7 @@ Socratic 決策樹，把使用者 signal 對應到 7 個 atomic skill 之一：
 | 4 | WIG 已定，不知道每天要幹嘛 | `4dx-d2-lead-measures`（predictive + influenceable） |
 | 5 | tracking 太雜 / 沒在看 / 30 個 metric 的 DB | `4dx-d3-scoreboard`（≤4 元素、5 秒測試） |
 | 6 | D1-D3 都齊了但沒有 cadence | `4dx-d4-cadence`（週次 Account → Review → Plan） |
-| 7 | 實踐已停滯 / 中斷 / momentum 沒了 | `4dx-sustain-personal-momentum-rescue`（診斷壞掉的那一層） |
+| 7 | 實踐已停滯 / 中斷 / momentum 沒了 | `4dx-sustain-momentum-rescue`（診斷壞掉的那一層） |
 
 新使用者的 canonical 順序是 1 → 2 → 3 → 4 → 5 → 6，7 在 cadence 斷掉時（不是「如果斷掉」是「斷掉的時候」）才呼叫。順序不是 optional — 4DX 是 "a matched set, not a menu"。
 

@@ -17,7 +17,7 @@ description: |
   NOT for team members inheriting a WIG (route to
   4dx-d1-wig-formulation — members don't triage methodology
   fit). NOT for enterprise multi-team rollout (read book Ch 6-10 directly +
-  4dx-d1-team-wig-cascade).
+  4dx-d1-wig-cascade).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)
 source_language: en
@@ -26,10 +26,10 @@ related_skills:
   - 4dx-meta-whirlwind-triage
   - 4dx-d1-wig-formulation
   - 4dx-d1-wig-formulation
-  - 4dx-d1-team-wig-cascade
+  - 4dx-d1-wig-cascade
   - 4dx-d1-wig-formulation
   - 4dx-meta-team-leader-onboarding
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-sustain-momentum-rescue
   - using-four-dx-coach
 ---
 
@@ -68,7 +68,7 @@ logic across modes; voice and gates differ per scope.
 - User has already committed to 4DX and asks *"how do I start?"* / *"where do I begin?"* — route to `4dx-meta-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team).
 - User asks about a specific discipline (lead measures, scoreboard, WIG session mechanics) — route to the matching D-skill.
 - User is a team-member who **inherits** a WIG already chosen by a leader — members don't triage methodology fit; route to `4dx-d1-wig-formulation`.
-- User runs a multi-team enterprise rollout (cascading WIGs across many teams) — read book chapters 6-10 directly + `4dx-d1-team-wig-cascade`.
+- User runs a multi-team enterprise rollout (cascading WIGs across many teams) — read book chapters 6-10 directly + `4dx-d1-wig-cascade`.
 - User asks about non-4DX methodologies (OKR / agile / habit-stacking / scrum / kanban) — hand off via `using-four-dx-coach`.
 - User is in the middle of an active triage session — do not re-route mid-flow.
 
@@ -114,8 +114,8 @@ Each protocol references these standards (load on demand):
 ## Cross-skill relations
 
 - **Downstream after APPLICABLE** — `4dx-meta-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team) is the next gate; `4dx-d1-wig-formulation` follows for WIG drafting.
-- **Compose-with team-context** — `4dx-meta-team-leader-onboarding` follows TEAM-APPLICABLE to get leaders bought in; `4dx-d1-team-wig-cascade` translates an upper-level WIG down through sub-teams (out of scope for this skill).
-- **Rescue back-loop** — `4dx-sustain-personal-momentum-rescue` runs after a stalled WIG and may route back here if the original triage was wrong-shaped.
+- **Compose-with team-context** — `4dx-meta-team-leader-onboarding` follows TEAM-APPLICABLE to get leaders bought in; `4dx-d1-wig-cascade` translates an upper-level WIG down through sub-teams (out of scope for this skill).
+- **Rescue back-loop** — `4dx-sustain-momentum-rescue` runs after a stalled WIG and may route back here if the original triage was wrong-shaped.
 - **Plugin-router fallback** — `using-four-dx-coach` handles cold-start and out-of-4DX queries (OKR, agile, habit stacking); not a substitute for this skill, but the right hand-off when the user's question turns out not to be 4DX-fit triage at all.
 
 ## Boundary (cross-mode common)

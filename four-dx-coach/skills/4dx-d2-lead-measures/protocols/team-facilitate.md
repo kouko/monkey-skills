@@ -193,7 +193,7 @@ post-session debrief if needed).
      week for 6 weeks, here's why we expect [Team WIG] to have moved
      by [Y]…"
    - Falsifiable forecast — anchor for D4 weekly review and trigger
-     for `4dx-sustain-personal-momentum-rescue` if the lag stays flat.
+     for `4dx-sustain-momentum-rescue` if the lag stays flat.
 
 10. **Output & hand-off**
     - 2-3 named lead measures, each with team-authored operational
@@ -271,7 +271,7 @@ post-session debrief if needed).
   `member-influence.md`.
 - **Single-team leader vs leader-of-leaders** — leaders of leaders
   should NOT have lead measures at their level (P-10). Route to
-  `4dx-meta-team-xps-evaluation`.
+  `4dx-meta-xps-evaluation`.
 
 ## Standards used
 

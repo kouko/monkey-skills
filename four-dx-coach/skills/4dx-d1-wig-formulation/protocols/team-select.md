@@ -103,7 +103,7 @@ Agent runs a **consultant-to-leader dialogue**. Walk the leader through brainsto
 
 1. **Frame the team's mission and strategic context.**
    - Ask: "Briefly — what is your team's mission, and what's the strategic context for this WIG cycle? (1-2 sentences each.) Is there an org-level WIG above you, or are you the top of the chain for this team?"
-   - Completion: mission stated; strategic context noted; cascade-vs-selection confirmed (if cascade, redirect to `4dx-d1-team-wig-cascade`).
+   - Completion: mission stated; strategic context noted; cascade-vs-selection confirmed (if cascade, redirect to `4dx-d1-wig-cascade`).
 
 2. **Brainstorm 5-10 candidate Battles.**
    - Ask: "If every other area of your team's operation stayed at its current level of performance, in which *one area* would a breakthrough matter most? Generate 5-10 candidates — go broad, no filtering yet. Each should be a possible breakthrough outcome, not an activity."
@@ -155,14 +155,14 @@ Agent runs a **consultant-to-leader dialogue**. Walk the leader through brainsto
 
 11. **Output: WIG + parked Battles list.**
     - Final output: (a) 1-2 Primary WIGs in *From X to Y by When* form; (b) parked Battles list — high-importance / low-feasibility candidates dropped from this cycle, kept visible; (c) explicit Approach declaration (A or B); (d) confirmation the four traps clear and the WIG is mission-aligned.
-    - Hand-off: if leader now needs to translate this Primary WIG down to sub-team Battles → `4dx-d1-team-wig-cascade`. If they need lead measures next → D2.
+    - Hand-off: if leader now needs to translate this Primary WIG down to sub-team Battles → `4dx-d1-wig-cascade`. If they need lead measures next → D2.
 
 ## B — Boundary (mode-specific)
 
 ### Do NOT use this protocol for:
 - **Solo / individual goal definition** — load `protocols/personal-define.md`. The 2x2 is a leadership-team artifact; running it alone collapses to ranking-by-vibes.
 - **Team-member-level WIG comprehension** — load `protocols/member-comprehend.md`. This skill is for the leader making the pick, not the people receiving it.
-- **Cascading an already-set org Primary WIG** — translation, not selection. Hand off to `4dx-d1-team-wig-cascade`.
+- **Cascading an already-set org Primary WIG** — translation, not selection. Hand off to `4dx-d1-wig-cascade`.
 - **Stroke-of-pen organizational decisions** — restructuring, vendor switch, hiring decision. Strategy Map's *left column* by definition does not need 4DX.
 - **Reactive / on-call team domains** — SRE incident teams, ER medicine, customer support — where the whirlwind *is* the strategic work.
 - **Pre-strategy organizations** — if the team has no defined mission/vision yet, Trap 4 cannot be evaluated. Define mission first; then return.

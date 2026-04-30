@@ -60,7 +60,7 @@ Line-of-sight is what makes D1 *aligned* rather than merely *focused*:
    that drift from mission cause organizations to "achieve their
    goals but lose their soul."
 4. **Cascade integrity depends on this test** — when a Primary WIG
-   gets cascaded down (`4dx-d1-team-wig-cascade`), the ensure-not-
+   gets cascaded down (`4dx-d1-wig-cascade`), the ensure-not-
    support test is the cascade's hard gate. Same test, same logic,
    different cycle position.
 

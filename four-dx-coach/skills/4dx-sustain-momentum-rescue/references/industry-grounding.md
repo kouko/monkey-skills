@@ -1,4 +1,4 @@
-# Industry-experience grounding for 4dx-sustain-personal-momentum-rescue
+# Industry-experience grounding for 4dx-sustain-momentum-rescue
 
 Supplements the book's "Sustaining 4DX Results and Engagement" + "The Missing
 Ingredient" chapters with the broader behavioral-science literature on habit

@@ -1,4 +1,4 @@
-# Industry-experience grounding for 4dx-d1-team-wig-cascade
+# Industry-experience grounding for 4dx-d1-wig-cascade
 
 Supplements the book's cascade methodology by anchoring it against three older
 cascade frameworks the book does not name. Helps practitioners distinguish what

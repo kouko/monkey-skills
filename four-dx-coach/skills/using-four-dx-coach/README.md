@@ -23,7 +23,7 @@ A Socratic decision tree that maps the user's signal to one of seven atomic skil
 | 4 | WIG defined; no idea what to DO daily | `4dx-d2-lead-measures` (predictive + influenceable) |
 | 5 | Tracking is noisy / invisible / 30-metric DB | `4dx-d3-scoreboard` (≤4 elements, 5-second test) |
 | 6 | D1-D3 in place but cadence is missing | `4dx-d4-cadence` (weekly Account → Review → Plan) |
-| 7 | Practice has stalled / lapsed / lost momentum | `4dx-sustain-personal-momentum-rescue` (diagnoses broken layer) |
+| 7 | Practice has stalled / lapsed / lost momentum | `4dx-sustain-momentum-rescue` (diagnoses broken layer) |
 
 For users starting fresh, the canonical sequence is 1 → 2 → 3 → 4 → 5 → 6, with 7 invoked when (not if) cadence breaks. The path is sequential, not optional — 4DX is "a matched set, not a menu."
 

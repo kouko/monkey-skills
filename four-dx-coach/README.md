@@ -60,10 +60,10 @@ These topics live in one scope only because the source book has no cross-scope v
 | Skill | Scope | What it does |
 |---|---|---|
 | [`4dx-meta-whirlwind-triage`](skills/4dx-meta-whirlwind-triage/) | Personal | 7-day time audit; surface BAU vs WIG conflict; protect ~20% WIG slot |
-| [`4dx-d1-team-wig-cascade`](skills/4dx-d1-team-wig-cascade/) | Team-leader | Translate Primary WIG into Battle WIGs (Targets-not-Plans); multi-team-only concept |
+| [`4dx-d1-wig-cascade`](skills/4dx-d1-wig-cascade/) | Team-leader | Translate Primary WIG into Battle WIGs (Targets-not-Plans); multi-team-only concept |
 | [`4dx-meta-team-leader-onboarding`](skills/4dx-meta-team-leader-onboarding/) | Team-leader | Direct-report leader buy-in (commitment vs compliance) |
-| [`4dx-meta-team-xps-evaluation`](skills/4dx-meta-team-xps-evaluation/) | Team-leader | Post-quarter XPS audit (0-4 scale; C1-C4 layers) |
-| [`4dx-sustain-personal-momentum-rescue`](skills/4dx-sustain-personal-momentum-rescue/) | Personal | Diagnose where the 4-discipline stack broke and route to the matching restart |
+| [`4dx-meta-xps-evaluation`](skills/4dx-meta-xps-evaluation/) | Team-leader | Post-quarter XPS audit (0-4 scale; C1-C4 layers) |
+| [`4dx-sustain-momentum-rescue`](skills/4dx-sustain-momentum-rescue/) | Personal | Diagnose where the 4-discipline stack broke and route to the matching restart |
 
 ## How scope detection works
 
@@ -138,16 +138,16 @@ Skill `description` and trigger signals support **English / 日本語 / 繁體�
 4. `4dx-d2-lead-measures` → `personal-discover.md` — find your 2-3 lead measures
 5. `4dx-d3-scoreboard` → `personal-design.md` — design a glance-readable scoreboard
 6. `4dx-d4-cadence` → `solo-session.md` — start the weekly cadence
-7. `4dx-sustain-personal-momentum-rescue` — load on demand when momentum slips
+7. `4dx-sustain-momentum-rescue` — load on demand when momentum slips
 
 ### Team-leader — starting from zero
 
 1. `4dx-meta-strategy-triage` → `team-mode.md` — confirm 4DX is the right move for your team
 2. `4dx-d1-wig-formulation` → `team-select.md` — Battles 2x2 to pick the Primary WIG
-3. `4dx-d1-team-wig-cascade` — cascade to team WIGs as Targets-not-Plans
+3. `4dx-d1-wig-cascade` — cascade to team WIGs as Targets-not-Plans
 4. `4dx-meta-team-leader-onboarding` — secure commitment (not compliance) from direct reports
 5. `4dx-d4-cadence` → `team-leader-session.md` — run the weekly WIG Session as facilitator
-6. `4dx-meta-team-xps-evaluation` — periodically audit your team's 4DX implementation
+6. `4dx-meta-xps-evaluation` — periodically audit your team's 4DX implementation
 
 ### Team-member — joining a team that already runs 4DX
 

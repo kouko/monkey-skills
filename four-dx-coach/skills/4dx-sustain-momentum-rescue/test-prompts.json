@@ -1,5 +1,5 @@
 {
-  "skill": "4dx-sustain-personal-momentum-rescue",
+  "skill": "4dx-sustain-momentum-rescue",
   "version": "0.1.0",
   "source_book": "The 4 Disciplines of Execution — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
@@ -10,28 +10,28 @@
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "My WIG cadence broke 3 weeks ago. How do I restart?",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue; open with non-judgmental cadence-slip diagnostic (when did it start, what was happening), then walk back through D1→D4 + whirlwind + substrate before any restart.",
+      "expected_behavior": "Activate 4dx-sustain-momentum-rescue; open with non-judgmental cadence-slip diagnostic (when did it start, what was happening), then walk back through D1→D4 + whirlwind + substrate before any restart.",
       "notes": "positive scenario: explicit cadence break + restart intent — exact description trigger phrase 'WIG cadence broke'."
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "「WIG セッションが続かなくなった」",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue; run Socratic diagnostic in Japanese, locate which discipline broke before prescribing restart.",
+      "expected_behavior": "Activate 4dx-sustain-momentum-rescue; run Socratic diagnostic in Japanese, locate which discipline broke before prescribing restart.",
       "notes": "positive scenario (JP): exact trigger-phrase match in description's multilingual list."
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "「我的 4DX 已經幾週沒做了」",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue; diagnose stack break before any restart commitment, in Traditional Chinese.",
+      "expected_behavior": "Activate 4dx-sustain-momentum-rescue; diagnose stack break before any restart commitment, in Traditional Chinese.",
       "notes": "positive scenario (zh-TW): exact trigger-phrase match in description."
     },
     {
       "id": "should-trigger-04",
       "type": "should_trigger",
       "prompt": "I lost momentum on my goal — what now?",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue; treat 'lost momentum' as lapse signal, run stack diagnostic before any restart.",
+      "expected_behavior": "Activate 4dx-sustain-momentum-rescue; treat 'lost momentum' as lapse signal, run stack diagnostic before any restart.",
       "notes": "positive scenario: exact trigger-phrase match 'lost momentum on my goal'."
     },
     {
@@ -66,7 +66,7 @@
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I haven't done my WIG Session for a month, but I'm actually thinking my WIG was wrong from the start.",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue (lapse signal is real). Diagnostic should localize the break at D1 (wrong WIG), halt the stack walk, and route to 4dx-d1-wig-formulation instead of restarting D4 on a dead WIG.",
+      "expected_behavior": "Activate 4dx-sustain-momentum-rescue (lapse signal is real). Diagnostic should localize the break at D1 (wrong WIG), halt the stack walk, and route to 4dx-d1-wig-formulation instead of restarting D4 on a dead WIG.",
       "notes": "boundary: ambiguous lapse-vs-pivot. Skill must fire (lapse genuine) but NOT prescribe D4 restart — must route upstream to D1 redefinition. Tests whether description correctly frames the skill as diagnostic-then-route, not D4-restart."
     }
   ],

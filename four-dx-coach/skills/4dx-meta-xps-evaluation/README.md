@@ -29,7 +29,7 @@ Auditor / consultant voice — facts, scores, fix priority. No coaching, no enco
 
 | Situation | Where to go instead |
 |---|---|
-| Solo / personal-coach mode | `4dx-sustain-personal-momentum-rescue` |
+| Solo / personal-coach mode | `4dx-sustain-momentum-rescue` |
 | Running this week's WIG session (not auditing past) | `4dx-d4-cadence` |
 | "Should we use 4DX at all?" | `4dx-meta-strategy-triage` |
 | Cross-team head-to-head ranking | XPS is intra-team self-diagnostic, not a leaderboard |

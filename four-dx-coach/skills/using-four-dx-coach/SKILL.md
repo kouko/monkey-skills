@@ -33,10 +33,10 @@ related_skills:
   - 4dx-d3-scoreboard
   - 4dx-d4-cadence
   - 4dx-meta-whirlwind-triage
-  - 4dx-d1-team-wig-cascade
+  - 4dx-d1-wig-cascade
   - 4dx-meta-team-leader-onboarding
-  - 4dx-meta-team-xps-evaluation
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-meta-xps-evaluation
+  - 4dx-sustain-momentum-rescue
 ---
 
 # using-four-dx-coach — 4DX Router (entry point)
@@ -84,10 +84,10 @@ single-file with no internal protocol switch.
 | Skill slug | Scope | Stage | Canonical activation signals |
 |---|---|---|---|
 | `4dx-meta-whirlwind-triage` | Personal | D1 prereq | "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」 |
-| `4dx-d1-team-wig-cascade` | Team-leader | D1 (cascade) | "Cascade the org WIG to sub-teams" / "How do I split the Primary WIG into Battles" |
+| `4dx-d1-wig-cascade` | Team-leader | D1 (cascade) | "Cascade the org WIG to sub-teams" / "How do I split the Primary WIG into Battles" |
 | `4dx-meta-team-leader-onboarding` | Team-leader | Leader prep | "I'm about to lead a 4DX team" / "Get my direct-report leaders bought in" |
-| `4dx-meta-team-xps-evaluation` | Team-leader | XPS audit | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
-| `4dx-sustain-personal-momentum-rescue` | Personal | Recovery | "Haven't done my 4DX in weeks / lost momentum" |
+| `4dx-meta-xps-evaluation` | Team-leader | XPS audit | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
+| `4dx-sustain-momentum-rescue` | Personal | Recovery | "Haven't done my 4DX in weeks / lost momentum" |
 
 ---
 
@@ -141,18 +141,18 @@ not need to ask the same question twice.
 4. WIG set, daily action unclear → `4dx-d2-lead-measures` (loads `personal-discover`)
 5. Tracker noisy / unread → `4dx-d3-scoreboard` (loads `personal-design`)
 6. Need weekly cadence → `4dx-d4-cadence` (loads `solo-session`)
-7. Lapsed practice → `4dx-sustain-personal-momentum-rescue`
+7. Lapsed practice → `4dx-sustain-momentum-rescue`
 
 #### Team-leader scope routing
 
 1. Fit unsure (team) → `4dx-meta-strategy-triage` (loads `team-mode`)
 2. About to lead → `4dx-meta-team-leader-onboarding`
 3. Need a single org-level WIG → `4dx-d1-wig-formulation` (loads `team-select`)
-4. Need to cascade Primary WIG to sub-teams → `4dx-d1-team-wig-cascade`
+4. Need to cascade Primary WIG to sub-teams → `4dx-d1-wig-cascade`
 5. Need to facilitate team picking lead measures → `4dx-d2-lead-measures` (loads `team-facilitate`)
 6. Need to facilitate team building scoreboard → `4dx-d3-scoreboard` (loads `team-lead-design`)
 7. Need to run weekly team session → `4dx-d4-cadence` (loads `team-leader-session`)
-8. Auditing whether 4DX is actually working → `4dx-meta-team-xps-evaluation`
+8. Auditing whether 4DX is actually working → `4dx-meta-xps-evaluation`
 
 #### Team-member scope routing
 

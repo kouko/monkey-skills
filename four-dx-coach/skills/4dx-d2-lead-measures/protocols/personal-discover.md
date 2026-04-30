@@ -169,7 +169,7 @@ leads on the user's behalf.
      for 6 weeks, here's why I expect the lag to have moved by [Y]:
      ..."
    - This is a falsifiable forecast — the anchor for D4 review and the
-     trigger for `4dx-sustain-personal-momentum-rescue` if the lag
+     trigger for `4dx-sustain-momentum-rescue` if the lag
      stays flat at 4 weeks.
    - Completion: written paragraph linking lead activity → lag movement
      with explicit mechanism.
@@ -205,7 +205,7 @@ leads on the user's behalf.
 - **Team / leader / member contexts** — load `team-facilitate.md` or
   `member-influence.md` instead.
 - **Stale leads** — if leads exist but lag is flat for 4+ weeks, route
-  to `4dx-sustain-personal-momentum-rescue`, not first-time selection.
+  to `4dx-sustain-momentum-rescue`, not first-time selection.
 
 ### Author-warned failure modes (cluster CEs)
 

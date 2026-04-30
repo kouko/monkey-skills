@@ -1,5 +1,5 @@
 {
-  "skill": "4dx-meta-team-xps-evaluation",
+  "skill": "4dx-meta-xps-evaluation",
   "version": "0.1.0",
   "source_book": "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
@@ -10,49 +10,49 @@
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "We've been running 4DX on my 8-person team for about 10 weeks. Lag measure is creeping but I'm not sure if we're really executing or just going through the motions. Can you audit our 4DX execution quality?",
-      "expected_behavior": "Activate 4dx-meta-team-xps-evaluation; walk component-by-component (cadence / commitments / lead measures / lag) → total 0-4 → band → weakest-component fix priority. Enforce no-compensation rule.",
+      "expected_behavior": "Activate 4dx-meta-xps-evaluation; walk component-by-component (cadence / commitments / lead measures / lag) → total 0-4 → band → weakest-component fix priority. Enforce no-compensation rule.",
       "notes": "EN canonical positive — quarter-end-style health check, intra-team scope, 'going through the motions' verbatim from book + description."
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "うちのチーム、半年前に 4DX 始めたけど最近セッションがダラけてきた感じ。XPS 出して、4 つの構成要素どこが弱いか診断してほしい。",
-      "expected_behavior": "Activate 4dx-meta-team-xps-evaluation; 4 components × 0-1 each → 0-4 total → 4 つの診断バンド → 最弱コンポーネントの fix priority。No-compensation rule を厳守し、強い lag が弱い cadence を隠さないようにする。",
+      "expected_behavior": "Activate 4dx-meta-xps-evaluation; 4 components × 0-1 each → 0-4 total → 4 つの診断バンド → 最弱コンポーネントの fix priority。No-compensation rule を厳守し、強い lag が弱い cadence を隠さないようにする。",
       "notes": "JP positive — 'XPS 出して' is the description's direct verbatim trigger; sustained-operation-drift use case."
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "我接手一個團隊，他們說已經在跑 4DX 三個月了，但 lag 完全沒動。我想稽核一下他們真的有在執行還是裝的——幫我們團隊打 XPS 分數。",
-      "expected_behavior": "啟動 4dx-meta-team-xps-evaluation；外部稽核者口吻，逐項評分（cadence / commitments / lead / lag），總分對映四個診斷帶，指出最弱元件的 fix priority。提醒 no-compensation 原則，強 lag 不能掩蓋弱 cadence。",
+      "expected_behavior": "啟動 4dx-meta-xps-evaluation；外部稽核者口吻，逐項評分（cadence / commitments / lead / lag），總分對映四個診斷帶，指出最弱元件的 fix priority。提醒 no-compensation 原則，強 lag 不能掩蓋弱 cadence。",
       "notes": "ZH positive — coaching-engagement-entry use case, 'pretending vs really executing' framing matches description."
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "I've been running 4DX solo for a few months on my personal writing goal and the cadence has totally collapsed — haven't done a personal WIG session in 5 weeks. How do I get back on track?",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-xps-evaluation. Route to 4dx-sustain-personal-momentum-rescue — solo scope + broken cadence calls for a recovery script, not an audit (XPS is intra-team and assumes operation in flight).",
+      "expected_behavior": "Do NOT activate 4dx-meta-xps-evaluation. Route to 4dx-sustain-momentum-rescue — solo scope + broken cadence calls for a recovery script, not an audit (XPS is intra-team and assumes operation in flight).",
       "notes": "lure: rescue misfire — collapsed cadence + solo, both disqualifiers from XPS Boundary."
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "Tomorrow morning I'm running my team's weekly WIG Session and want to make sure I run it properly — what to say, when to push back on commitments, how to handle someone who missed last week.",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-xps-evaluation. Route to 4dx-d4-cadence — user wants to RUN the session, not AUDIT past performance.",
+      "expected_behavior": "Do NOT activate 4dx-meta-xps-evaluation. Route to 4dx-d4-cadence — user wants to RUN the session, not AUDIT past performance.",
       "notes": "lure: session-lead misfire — practitioner role (running) vs auditor role (evaluating)."
     },
     {
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "私個人で 4DX をやってるんだけど、ここ 2-3 週間モチベーションが落ちてきてる。自分の cadence を立て直したい。",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-xps-evaluation. Solo / personal scope — route to 4dx-sustain-personal-momentum-rescue. XPS is a team metric.",
+      "expected_behavior": "Do NOT activate 4dx-meta-xps-evaluation. Solo / personal scope — route to 4dx-sustain-momentum-rescue. XPS is a team metric.",
       "notes": "lure: personal-momentum-rescue (JP) misfire — explicitly solo, XPS doesn't apply."
     },
     {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I run two teams — East team (Bianca, on pace) and West team (Marcus, behind). I want to compare their XPS scores side-by-side to figure out where to focus my own leader-of-leaders attention this quarter.",
-      "expected_behavior": "Activate 4dx-meta-team-xps-evaluation BUT immediately clarify the scope: XPS is intra-team self-diagnostic, not a leaderboard. The book frames XPS as a *targeting* lens for a leader-of-leaders to direct second-level commitments — auditing both teams independently and using the lower-XPS team to focus YOUR support is correct (book Case 2: Susan/Bianca/Marcus). Auditing them as a competitive ranking corrupts the score (CE-36, gaming). The skill should fire AND reframe: separate per-team audits, fix-priority each, then point leader's attention at the weakest component of the weaker team.",
+      "expected_behavior": "Activate 4dx-meta-xps-evaluation BUT immediately clarify the scope: XPS is intra-team self-diagnostic, not a leaderboard. The book frames XPS as a *targeting* lens for a leader-of-leaders to direct second-level commitments — auditing both teams independently and using the lower-XPS team to focus YOUR support is correct (book Case 2: Susan/Bianca/Marcus). Auditing them as a competitive ranking corrupts the score (CE-36, gaming). The skill should fire AND reframe: separate per-team audits, fix-priority each, then point leader's attention at the weakest component of the weaker team.",
       "notes": "boundary: cross-team intent matches a description non-activation lure ('cross-team comparison'), BUT the book explicitly endorses this exact use case (Susan/Bianca/Marcus, A1 Case 2) when used for leader-of-leaders targeting, not leaderboard ranking. Should fire AND clarify the intra-team-each-but-not-vs-each-other distinction."
     }
   ],

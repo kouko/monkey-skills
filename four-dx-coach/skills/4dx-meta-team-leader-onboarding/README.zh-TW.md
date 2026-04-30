@@ -29,7 +29,7 @@
 | 情境 | 改去 |
 |---|---|
 | 還沒決定 4DX 適合組織 | 先 `4dx-meta-strategy-triage` |
-| Buy-in 已搞定，要做技術性 cascade | `4dx-d1-team-wig-cascade` |
+| Buy-in 已搞定，要做技術性 cascade | `4dx-d1-wig-cascade` |
 | frontline 成員的 buy-in | 走 D1 Team WIG 選擇流程，不是第 8 章 |
 | 跟 4DX 無關的一般 change management | Kotter / ADKAR / Bridges |
 | 你其實只想要 compliance，不是 commitment | 停 — 這個 skill 沒辦法幫你 |

@@ -35,7 +35,7 @@ If the user's query is ambiguous on (role, timing), the skill asks ONE Socratic 
 
 | Situation | Where to go instead |
 |---|---|
-| Cadence already broken (multiple skipped weeks) | `4dx-sustain-personal-momentum-rescue` (rescue precedes restart) |
+| Cadence already broken (multiple skipped weeks) | `4dx-sustain-momentum-rescue` (rescue precedes restart) |
 | No WIG / lead measure / scoreboard yet | D1 / D2 / D3 first; D4 has nothing to operate on |
 | Sprint review / PI planning / OKR check-in / 1-on-1 / status report | Out of 4DX — `using-four-dx-coach` |
 | Daily stand-up / scrum daily | Wrong cadence (daily ≠ weekly), wrong format |

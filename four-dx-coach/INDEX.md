@@ -39,10 +39,10 @@ These topics live in one scope only — the source book has no cross-scope varia
 | Slug | Scope | Role |
 |---|---|---|
 | [`4dx-meta-whirlwind-triage`](./skills/4dx-meta-whirlwind-triage/SKILL.md) | Personal | 7-day time audit; surface 80/20 BAU-vs-WIG split; protect ~20% slot. (No team variant — team whirlwind is implicit and addressed in `team-leader-session.md` instead.) |
-| [`4dx-d1-team-wig-cascade`](./skills/4dx-d1-team-wig-cascade/SKILL.md) | Team-leader | Translate Primary WIG into Battle WIGs for sub-teams (single-tier cascade — Targets-not-Plans). Multi-team-only concept. |
+| [`4dx-d1-wig-cascade`](./skills/4dx-d1-wig-cascade/SKILL.md) | Team-leader | Translate Primary WIG into Battle WIGs for sub-teams (single-tier cascade — Targets-not-Plans). Multi-team-only concept. |
 | [`4dx-meta-team-leader-onboarding`](./skills/4dx-meta-team-leader-onboarding/SKILL.md) | Team-leader | Get direct-report leaders bought in; social precondition for cascade. Commitment vs compliance framing. |
-| [`4dx-meta-team-xps-evaluation`](./skills/4dx-meta-team-xps-evaluation/SKILL.md) | Team-leader | Post-quarter XPS audit (0-4 scale; C1 cadence / C2 commitment / C3 leads / C4 scoreboard). |
-| [`4dx-sustain-personal-momentum-rescue`](./skills/4dx-sustain-personal-momentum-rescue/SKILL.md) | Personal | Diagnose where the 4-discipline stack broke and route to the matching restart. Currently no team / member variant; team rescue is folded into `meta-team-xps-evaluation`. |
+| [`4dx-meta-xps-evaluation`](./skills/4dx-meta-xps-evaluation/SKILL.md) | Team-leader | Post-quarter XPS audit (0-4 scale; C1 cadence / C2 commitment / C3 leads / C4 scoreboard). |
+| [`4dx-sustain-momentum-rescue`](./skills/4dx-sustain-momentum-rescue/SKILL.md) | Personal | Diagnose where the 4-discipline stack broke and route to the matching restart. Currently no team / member variant; team rescue is folded into `meta-team-xps-evaluation`. |
 
 ---
 
@@ -62,10 +62,10 @@ graph LR
 
     %% Single-file scope-specific skills
     wt[4dx-meta-whirlwind-triage]
-    cascade[4dx-d1-team-wig-cascade]
+    cascade[4dx-d1-wig-cascade]
     onboard[4dx-meta-team-leader-onboarding]
-    xps[4dx-meta-team-xps-evaluation]
-    rescue[4dx-sustain-personal-momentum-rescue]
+    xps[4dx-meta-xps-evaluation]
+    rescue[4dx-sustain-momentum-rescue]
 
     %% Router dispatches everywhere (omitted for legibility — pr defers to all)
 
@@ -120,15 +120,15 @@ Edge count: **13** (9 depends-on + 4 composes-with + 2 contrasts-with). Within t
 4. `4dx-d2-lead-measures` (→ `personal-discover.md`)
 5. `4dx-d3-scoreboard` (→ `personal-design.md`)
 6. `4dx-d4-cadence` (→ `solo-session.md`)
-7. `4dx-sustain-personal-momentum-rescue` — load on demand when the cadence breaks.
+7. `4dx-sustain-momentum-rescue` — load on demand when the cadence breaks.
 
 ### Team leader (5 steps)
 
 1. `4dx-meta-strategy-triage` (→ `team-mode.md`)
-2. `4dx-d1-wig-formulation` (→ `team-select.md`) and / or `4dx-d1-team-wig-cascade` if multi-tier.
+2. `4dx-d1-wig-formulation` (→ `team-select.md`) and / or `4dx-d1-wig-cascade` if multi-tier.
 3. `4dx-meta-team-leader-onboarding` — get direct-report leaders bought in.
 4. `4dx-d4-cadence` (→ `team-leader-session.md`) — facilitate the live cadence.
-5. `4dx-meta-team-xps-evaluation` — post-quarter audit; routes back to the broken layer.
+5. `4dx-meta-xps-evaluation` — post-quarter audit; routes back to the broken layer.
 
 ### Team member (3 steps weekly loop)
 
@@ -147,12 +147,12 @@ The plugin router (`using-four-dx-coach`) uses scope signals in user phrasing to
 | "*my* goal / *I* want / personal habit" | Personal | `4dx-meta-strategy-triage` | `personal-mode.md` |
 | "should *I* use 4DX for X" | Personal (gate) | `4dx-meta-strategy-triage` | `personal-mode.md` |
 | "*my team* / *we* / I'm a manager / 部下 / 下屬" | Team-leader | `4dx-meta-strategy-triage` | `team-mode.md` |
-| "cascade / split into sub-teams / Battle WIG" | Team-leader (multi-tier) | `4dx-d1-team-wig-cascade` | (single-file) |
-| "post-quarter audit / XPS / why is execution stalling" | Team-leader | `4dx-meta-team-xps-evaluation` | (single-file) |
+| "cascade / split into sub-teams / Battle WIG" | Team-leader (multi-tier) | `4dx-d1-wig-cascade` | (single-file) |
+| "post-quarter audit / XPS / why is execution stalling" | Team-leader | `4dx-meta-xps-evaluation` | (single-file) |
 | "*my* team has a WIG, what does it mean for me" | Team-member | `4dx-d1-wig-formulation` | `member-comprehend.md` |
 | "what do I say in tomorrow's WIG Session" | Team-member | `4dx-d4-cadence` | `member-prep.md` |
 | "I missed last week's commitment, what now" | Team-member | `4dx-d4-cadence` | `member-debrief.md` |
-| "the cadence broke / I gave up / momentum died" (solo) | Personal | `4dx-sustain-personal-momentum-rescue` | (single-file) |
+| "the cadence broke / I gave up / momentum died" (solo) | Personal | `4dx-sustain-momentum-rescue` | (single-file) |
 | Enterprise rollout / cascading across departments | OUT OF SCOPE | book chapters 6-10 directly | — |
 | Habit / OKR / GTD / atomic-habits / pure creative | OUT OF SCOPE | decline; recommend fitter framework | — |
 

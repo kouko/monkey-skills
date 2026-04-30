@@ -22,7 +22,7 @@ related_skills:
   - 4dx-d1-wig-formulation
   - 4dx-d2-lead-measures
   - 4dx-d4-cadence
-  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-sustain-momentum-rescue
   - 4dx-meta-team-leader-onboarding
   - using-four-dx-coach
 ---
@@ -179,7 +179,7 @@ Each protocol references these standards (load on demand):
   reads the artifact this skill produces; the scoreboard is the
   artifact, the WIG Session is the cadence. They compose, not
   compete.
-- **Compose-with rescue** — `4dx-sustain-personal-momentum-rescue`
+- **Compose-with rescue** — `4dx-sustain-momentum-rescue`
   routes back here when the diagnosis is "scoreboard hidden" or
   "scoreboard is a coach's view only".
 - **Compose-with team-context** — `4dx-meta-team-leader-onboarding`

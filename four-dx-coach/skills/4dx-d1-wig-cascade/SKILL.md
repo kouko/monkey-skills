@@ -1,5 +1,5 @@
 ---
-name: 4dx-d1-team-wig-cascade
+name: 4dx-d1-wig-cascade
 description: |
   Coach a leader-of-leaders to translate an already-set org Primary WIG into Team WIGs across 3-7 subordinate teams via Ch 7's four cascade rules — Targets-not-Plans, Battles-to-win-the-war, Veto-don't-Dictate, one-WIG-per-individual. Output: cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) passing ladder-up + veto tests. EN: "How do I translate the org WIG to my team?", "Cascade our Primary WIG to direct-report teams", "Each manager needs a WIG — how do we pick them?". JP: 「上から降りた WIG をチーム単位に落とす」「Primary WIG を各チームに翻訳」「直属マネージャー毎の Team WIG をどう決める」. ZH: 「上面定的 WIG，我團隊要怎麼接？」「Primary WIG 怎麼拆給下面各個團隊？」「每位主管要有自己的 Team WIG，怎麼選？」. Do NOT activate if org Primary WIG not yet set (use `4dx-d1-wig-formulation`), leader runs only one team (no cascade), cascade depth >2 layers (rerun this skill per layer), or solo goal (use `4dx-d1-wig-formulation`).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
@@ -9,7 +9,7 @@ tags: [wig-cascade, team-wig, leader-of-leaders, key-battles, targets-not-plans,
 related_skills: []
 ---
 
-# 4dx-d1-team-wig-cascade — Translate the Org Primary WIG into Team WIGs
+# 4dx-d1-wig-cascade — Translate the Org Primary WIG into Team WIGs
 
 ## R — Reading
 
