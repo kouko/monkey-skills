@@ -4,7 +4,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 0.6.0
+**Version**: 0.7.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 **License**: MIT
 
@@ -23,23 +23,43 @@ The book is written primarily for **leaders rolling 4DX out across teams**. This
 - **Team-leader** — a leader running 4DX inside a single team (not multi-team rollout); agent acts as consultant.
 - **Team-member** — a contributor on a team where the leader has already chosen a WIG; agent helps you participate well, not redesign the system.
 
+## Two modes: coach vs consultant
+
+The plugin operates in **two complementary modes**:
+
+- **Coach mode** (11 skills) — dialogue-driven, Socratic, step-by-step. Best when you're starting from zero (or a fragment) and want to *think through* the methodology one decision at a time. The agent asks; you answer; we converge.
+- **Consultant mode** (1 skill — `4dx-audit`) — artifact-synthesis, diagnostic, roadmap-output. Best when you already have rich context (strategy doc / OKR sheet / KPI dashboard / WIG-Session notes / chat history of past attempts) and want a consultant to *map what you have onto 4DX*, diagnose per-layer status, and prescribe sequenced next steps that route back into the coach skills.
+
+When to use which:
+
+| You have… | Use… |
+|---|---|
+| A vague intent ("I want to start using 4DX") | Coach mode → `using-four-dx-coach` (router) |
+| A specific stage question ("how do I write a WIG?") | Coach mode → matching `4dx-d{1-4}` skill directly |
+| Pre-existing artifacts + "help me 4DX this" | Consultant mode → `4dx-audit` |
+| 4DX already running but stalled and you can't yet name what broke | Consultant mode → `4dx-audit` |
+
+The audit ends by routing into specific coach skills for the deep work — consultant-mode is an entry point + roadmap, not a substitute for the coach skills.
+
 ## Architecture
 
-11 skills in three categories:
+12 skills in four categories:
 
-- **1 plugin router** (`using-four-dx-coach`) — cold-start dispatcher for ambiguous, cross-topic, or out-of-4DX queries.
+- **1 plugin router** (`using-four-dx-coach`) — cold-start dispatcher for ambiguous, cross-topic, or out-of-4DX queries (coach mode).
+- **1 consultant-mode entry point** (`4dx-audit`) — synthesizes user-provided artifacts against the 5-layer 4DX model, diagnoses status, and routes back to coach skills.
 - **5 multi-file scope-flex skills** — one topic each, with 2-4 internal protocol files covering personal / team-leader / team-member variants. The skill auto-detects scope via a one-question Socratic check, then loads the matching protocol. This replaces the 2026-04-30 pre-merge state of 15 atomic skills + 5 topic-routers.
 - **5 single-file scope-specific skills** — one scope each, no internal split. The source book has no cross-scope variant for these topics, so they remain compact single-file `SKILL.md` skills.
 
 Multi-file skills consolidate scope-overlap surface area without losing primary-source grounding: every protocol still carries its `### Industry-experience addendum` and shares the parent skill's `references/industry-grounding.md`.
 
-## Skills (11 total)
+## Skills (12 total)
 
-### 1. Plugin router (1)
+### 1. Entry points (2)
 
-| Skill | What it does |
-|---|---|
-| [`using-four-dx-coach`](skills/using-four-dx-coach/) | Entry point for cold-start / cross-topic / out-of-4DX queries — scope-triages to personal / team-leader / team-member or hands off if 4DX doesn't fit |
+| Skill | Mode | What it does |
+|---|---|---|
+| [`using-four-dx-coach`](skills/using-four-dx-coach/) | Coach (router) | Entry point for cold-start / cross-topic / out-of-4DX queries — scope-triages to personal / team-leader / team-member or hands off if 4DX doesn't fit |
+| [`4dx-audit`](skills/4dx-audit/) | Consultant | Reads provided artifacts (strategy doc / OKR / dashboard / WIG-Session notes), maps content to the 4DX 5-layer model (WIG / Lead / Lag+Scoreboard / Cadence / Substrate), diagnoses per-layer status, outputs prioritized recommendations + routes to coach skills |
 
 ### 2. Multi-file scope-flex skills (5)
 
@@ -121,8 +141,9 @@ Every topical skill (5 multi-file + 5 single-file = 10 atomic-equivalents) carri
 - D4 solo + team WIG-Session: Rogelberg 2019 / Lencioni 2004 / Edmondson 2012 — meeting-science empirical warrant
 - Member protocols: Edmondson 2018 / Grant 2016 / Meyer 2014 / Pfeffer 2010 / Drucker HBR 1999 / Cialdini 1984 / Eurich 2017 / Wiseman 2010 — fills the book's leader-POV gap
 - Team-leader skills: Akao 1991 / Doerr 2018 / Kaplan & Norton 2001 / Ryan & Deci 2017 / Argyris HBR 1991 / Kotter 1996 / Galbraith / Schein / Rumelt / Porter / Mintzberg / Hambrick & Fredrickson / CMMI / McKinsey OHI / Gallup Q12
+- Consultant-mode (`4dx-audit`): Block 2011 *Flawless Consulting* / Schein 1999 *Process Consultation* / Maister 2000 *The Trusted Advisor* — consultant-craft posture (synthesize-from-artifacts, diagnose-then-prescribe, route to deep work) is derived from consulting-craft sources, not 4DX-craft (book is dialogue-coaching POV)
 
-48 verified primary-source citations preserved through the Plan U merge.
+48 verified primary-source citations preserved through the Plan U merge; consultant-craft references added in v0.7.0 for the `4dx-audit` skill.
 
 ## Multilingual triggers
 

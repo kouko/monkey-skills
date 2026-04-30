@@ -1,15 +1,20 @@
 ---
 name: using-four-dx-coach
 description: |
-  Router for the four-dx-coach plugin. Activates on generic / vague 4DX
-  queries OR when the user's scope is unclear OR on **short scope-less
-  fragment queries** that mention 4DX vocabulary without specifying
-  scope (e.g. 「目標卡住」 / 「scoreboard 看不懂」 / 「WIG 不會訂」
-  / "stuck on my goal" / "4DX where to start"). Triages by scope first
-  — personal (solo) / team-leader / team-member — then by 4DX stage,
-  and dispatches across 10 topical skills (5 multi-file scope-flex +
-  5 single-file scope-specific). Multi-file skills self-route to their
-  internal protocol; this router only picks the right door. EN: "I
+  Router for the four-dx-coach plugin (coach-mode entry point). Activates
+  on generic / vague 4DX queries OR when the user's scope is unclear OR
+  on **short scope-less fragment queries** that mention 4DX vocabulary
+  without specifying scope (e.g. 「目標卡住」 / 「scoreboard 看不懂」 /
+  「WIG 不會訂」 / "stuck on my goal" / "4DX where to start"). Triages
+  by scope first — personal (solo) / team-leader / team-member — then by
+  4DX stage, and dispatches across 11 skills total: 10 coach-mode
+  topical skills (5 multi-file scope-flex + 5 single-file scope-specific)
+  plus 1 consultant-mode entry point (`4dx-audit`). When the user
+  arrives with **rich pre-existing artifacts** (strategy doc / OKR /
+  dashboard / WIG-Session notes / past attempts) and wants synthesis
+  rather than dialogue, route to `4dx-audit` instead of running scope
+  triage. Multi-file skills self-route to their internal protocol; this
+  router only picks the right door. EN: "I
   want to start using 4DX", "help my team apply 4 Disciplines", "where
   do I begin with 4DX?", "I joined a team using 4DX", "4DX 不知道從何
   開始". JP: 「4DX を使い始めたい」「4 つの規律をチームに導入したい」
@@ -35,6 +40,7 @@ source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele,
 source_language: en
 tags: [router, entry-point, dispatcher, 4dx, scope-triage, personal, team-leader, team-member, multi-file]
 related_skills:
+  - 4dx-audit
   - 4dx-meta-strategy-triage
   - 4dx-d1-wig-formulation
   - 4dx-d2-lead-measures
@@ -68,7 +74,26 @@ when handing off to a multi-file skill — just pass the query through.
 
 ---
 
-## The 10 topical skills indexed by scope and stage
+## Pre-routing check — coach mode vs consultant mode
+
+Before scope triage, check whether the user has provided **rich pre-existing artifacts** (a strategy doc, OKR sheet, KPI dashboard, scoreboard image / description, past WIG-Session notes, chat history of attempts). If yes, hand off to `4dx-audit` (consultant mode) instead of running scope triage:
+
+- **Coach mode (default)** — user has a vague intent or fragment ("I want to start using 4DX", "should I use 4DX?", "WIG 怎麼寫"). Run scope triage below and dispatch to a topical coach skill.
+- **Consultant mode (`4dx-audit`)** — user pastes / attaches / describes existing artifacts AND asks for 4DX-framed clarification, audit, or recommendations ("here's our strategy doc, help me 4DX it" / "audit our 4DX given this context" / 「這是我們的策略 doc，幫看 4DX 怎麼套」). The audit reads the artifacts, maps to the 4DX 5-layer model, diagnoses per-layer status, and routes back into specific coach skills for deep work.
+
+Audit and the router are **complementary entry points**: router handles cold-start dialogue, audit handles artifact synthesis. Neither replaces the topical coach skills; both route into them.
+
+---
+
+## The 11 topical skills indexed by scope and stage
+
+### Consultant-mode entry point (1 — sibling, not dispatched-into by this router)
+
+| Skill slug | Mode | Activation signals |
+|---|---|---|
+| `4dx-audit` | Consultant | "Here's our [strategy / OKR / dashboard], 4DX it" / "Audit our 4DX setup" / "Translate our quarterly plan into 4DX terms" / 「うちの OKR を 4DX 視点で診断」 / 「資料丟給你，幫我用 4DX 釐清」 |
+
+When pre-routing detects rich artifacts + audit intent, hand off to `4dx-audit` directly — do not run the scope-triage decision tree below.
 
 ### Multi-file scope-flex skills (5 — auto-detect scope internally)
 
@@ -325,7 +350,10 @@ for the deferral table.
   router = 26 total) /
   2026-04-30 (v0.6 — Plan U merge: 20 atomic + 5 topic-routers consolidated
   into 5 multi-file scope-flex skills + 5 single-file scope-specific skills
-  + 1 plugin router = 11 total)
+  + 1 plugin router = 11 total) /
+  2026-04-30 (v0.7 — consultant-mode `4dx-audit` added as sibling entry
+  point: 11 → 12 total. Pre-routing check added to detect artifact-rich
+  starts and hand off to audit instead of running scope triage.)
 - **Output language**: description multilingual (EN + JP + zh-TW); body
   English; A2 trigger phrasings multilingual; metadata English.
 - **Source basis**: BOOK_OVERVIEW.md + 10 topical skill SKILL.md

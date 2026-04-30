@@ -1,6 +1,6 @@
 # four-dx-coach — Skill Index
 
-> Distilled by `tsundoku:book-distill` (RIA-TV++ pipeline). **11** skills total: 1 plugin router + 5 multi-file scope-flex skills + 5 single-file scope-specific skills. Source distillation 2026-04-29 / 2026-04-30; **Plan U merge 2026-04-30** consolidated 20 atomic + 5 topic-routers into 5 multi-file scope-flex skills (each bundles 2-4 internal protocols), keeping 5 single-file skills that the source book treats as single-scope. Industry grounding (`references/industry-grounding.md` + `### Industry-experience addendum`) preserved in every multi-file and single-file skill.
+> Distilled by `tsundoku:book-distill` (RIA-TV++ pipeline). **12** skills total split across two modes — **coach mode** (11 skills: 1 plugin router + 5 multi-file scope-flex + 5 single-file scope-specific) + **consultant mode** (1 skill: `4dx-audit`). Source distillation 2026-04-29 / 2026-04-30; **Plan U merge 2026-04-30** consolidated 20 atomic + 5 topic-routers into 5 multi-file scope-flex skills (each bundles 2-4 internal protocols), keeping 5 single-file skills that the source book treats as single-scope. **v0.7.0 (2026-04-30)** added the consultant-mode `4dx-audit` entry point for artifact-rich starts. Industry grounding (`references/industry-grounding.md` + `### Industry-experience addendum`) preserved in every multi-file and single-file skill.
 
 ## Plugin metadata
 
@@ -8,17 +8,20 @@
 - **One-line thesis**: Strategic goals that require behavioral change die under the daily operational "whirlwind" unless leaders install a four-step operating system — narrow focus to one Wildly Important Goal, act on a few influenceable lead measures, keep a players-style scoreboard, and run a weekly cadence of peer commitments — applied as a **matched set, not a menu**.
 - **Scope statement**: This plugin covers three actor scopes — **personal** (solo individual coaching), **team-leader** (manager / leader-of-team installation + cadence + audit), and **team-member** (individual contributor inside someone else's 4DX cadence). Enterprise / multi-team rollout (book chapters 6-10 — Leader-of-Leaders) is out of scope; route to the book directly.
 - **Source language**: English; trigger phrasings multilingual (EN / JP / zh-TW).
-- **Architecture**: 11 skills in three categories — 1 plugin router (cold-start dispatcher), 5 multi-file **scope-flex** skills (one topic, multiple internal scope variants, auto-route via Socratic disambiguation), 5 single-file **scope-specific** skills (book has no cross-scope variant for these topics).
+- **Architecture**: 12 skills in four categories — 1 plugin router (cold-start dispatcher, coach mode), 1 consultant-mode entry point (`4dx-audit`, artifact synthesis + diagnosis + roadmap), 5 multi-file **scope-flex** skills (one topic, multiple internal scope variants, auto-route via Socratic disambiguation), 5 single-file **scope-specific** skills (book has no cross-scope variant for these topics).
 
 ---
 
 ## Skills by category
 
-### 1. Plugin router (1)
+### 1. Entry points (2)
 
-| Slug | Role |
-|---|---|
-| [`using-four-dx-coach`](./skills/using-four-dx-coach/SKILL.md) | Cold-start / cross-topic / out-of-4DX dispatcher across the 10 topical skills. Defers to multi-file skills for in-topic disambiguation; declines if 4DX doesn't fit (habit-stacking / OKR / agile / burnout). |
+Two doors into the plugin — pick by what you have on hand.
+
+| Slug | Mode | Role |
+|---|---|---|
+| [`using-four-dx-coach`](./skills/using-four-dx-coach/SKILL.md) | Coach (router) | Cold-start / cross-topic / out-of-4DX dispatcher across the 10 topical coach skills. Defers to multi-file skills for in-topic disambiguation; declines if 4DX doesn't fit (habit-stacking / OKR / agile / burnout). |
+| [`4dx-audit`](./skills/4dx-audit/SKILL.md) | Consultant | Artifact-synthesis entry point for users who arrive with rich context (strategy doc / OKR / dashboard / WIG-Session notes). Maps content to 4DX 5-layer model, diagnoses per-layer status (well-formed / malformed / absent / wrong-shape), outputs prioritized recommendations + routes to the coach skills for deep work. |
 
 ### 2. Multi-file scope-flex skills (5)
 
@@ -50,8 +53,11 @@ These topics live in one scope only — the source book has no cross-scope varia
 
 ```mermaid
 graph LR
-    %% Plugin router
+    %% Coach-mode plugin router
     pr[using-four-dx-coach]
+
+    %% Consultant-mode entry point
+    audit[4dx-audit]
 
     %% Multi-file scope-flex skills
     meta[4dx-meta-strategy-triage]
@@ -79,16 +85,28 @@ graph LR
     onboard --> meta
     xps --> d4
     rescue --> meta
+    audit --> meta
 
     %% Composes-with (thick) — typically used together
     d2 ===> d3
     d3 ===> d4
     onboard ===> cascade
     xps ===> rescue
+    audit ===> d1wig
+    audit ===> d2
+    audit ===> d3
+    audit ===> d4
+    audit ===> wt
+    audit ===> cascade
+    audit ===> onboard
+    audit ===> xps
+    audit ===> rescue
 
     %% Contrasts-with (dotted) — same domain, alternative scope/phase
     rescue -.-> xps
     wt -.-> cascade
+    audit -.-> pr
+    audit -.-> xps
 ```
 
 **Legend**:
@@ -96,7 +114,7 @@ graph LR
 - `===>` thick arrow — `composes-with` (typically used together)
 - `-.->` dotted arrow — `contrasts-with` (alternative-choice; same domain, different scope/phase)
 
-Edge count: **13** (9 depends-on + 4 composes-with + 2 contrasts-with). Within the 10-15 empirical band for an 11-skill plugin. Plugin-router edges (1 → 10) intentionally omitted from the diagram — the router defers to every topical skill.
+Edge count: **24** (10 depends-on + 12 composes-with + 4 contrasts-with). v0.7.0 delta: +11 edges from `4dx-audit` (1 depends-on to meta-strategy-triage; 8 composes-with to all coach skills it routes into after diagnosis; 2 contrasts-with vs router and vs xps). Plugin-router edges (1 → 10) intentionally omitted from the diagram — the router defers to every topical skill. Audit's composes-with edges are kept explicit because the audit's value *is* the routing roadmap.
 
 (Node labels are English skill slugs for graph stability across languages.)
 
@@ -106,7 +124,8 @@ Edge count: **13** (9 depends-on + 4 composes-with + 2 contrasts-with). Within t
 - **`4dx-d1-wig-formulation` is the formulation hub** — D2 / D3 / D4 / cascade all depend on a well-formed WIG. Inside the multi-file skill, `personal-define.md` / `team-select.md` / `member-comprehend.md` share the same X-Y-When grammar.
 - **`4dx-d4-cadence` is the cross-scope cadence node** — solo / team-leader / member protocols all live inside the same multi-file skill so the agent can switch role without leaving the cadence topic.
 - **`xps-evaluation` and `momentum-rescue` are the matched diagnostic pair** — leader-side audit vs solo-side rescue. Both run *after* a cadence has been established and stress-tested. They contrast across scope (team vs solo).
-- **Plan U merge**: 5 multi-file scope-flex skills replaced 15 atomic + 5 topic-routers, reducing surface area while preserving every protocol. 5 single-file keepers retained because the book treats those topics as single-scope.
+- **`4dx-audit` is the consultant-mode entry sibling to the plugin router** — both are entry points but they target different starting states: router for vague / cold-start, audit for artifact-rich. Audit *contrasts-with* router (different mode) but *composes-with* every coach skill it routes into. It is broader than `xps-evaluation` (5-layer audit including artifact-quality, not just 0-4 score on running 4DX).
+- **Plan U merge**: 5 multi-file scope-flex skills replaced 15 atomic + 5 topic-routers, reducing surface area while preserving every protocol. 5 single-file keepers retained because the book treats those topics as single-scope. **v0.7.0 (2026-04-30) added `4dx-audit` as the consultant-mode entry sibling** — coach mode (Socratic dialogue) and consultant mode (artifact synthesis) cover complementary starting states.
 
 ---
 
@@ -144,6 +163,8 @@ The plugin router (`using-four-dx-coach`) uses scope signals in user phrasing to
 
 | User signal | Likely scope | First skill to load | Internal protocol |
 |---|---|---|---|
+| "Here's our [strategy doc / OKR / dashboard], help me 4DX it" | Any (consultant) | `4dx-audit` | (single-file, all-layer audit) |
+| "We have WIG + leads but cadence broken — diagnose" | Any (consultant) | `4dx-audit` | (single-file, all-layer audit) |
 | "*my* goal / *I* want / personal habit" | Personal | `4dx-meta-strategy-triage` | `personal-mode.md` |
 | "should *I* use 4DX for X" | Personal (gate) | `4dx-meta-strategy-triage` | `personal-mode.md` |
 | "*my team* / *we* / I'm a manager / 部下 / 下屬" | Team-leader | `4dx-meta-strategy-triage` | `team-mode.md` |
@@ -165,4 +186,5 @@ The plugin router (`using-four-dx-coach`) uses scope signals in user phrasing to
 - Distillation cache: `~/.tsundoku/cache/distilled/The-4-Disciplines-of-Execution/`
 - Pipeline: `tsundoku:book-distill` (RIA-TV++ — Adler analytical reading + verification triplet)
 - Plan U merge audit: 26 → 11 skills, 2026-04-30
+- v0.7.0 add: 11 → 12 skills (`4dx-audit` consultant-mode entry), 2026-04-30
 - See [`ATTRIBUTION.md`](./ATTRIBUTION.md) for upstream credits.

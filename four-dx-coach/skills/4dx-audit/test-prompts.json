@@ -1,0 +1,69 @@
+{
+  "skill": "4dx-audit",
+  "version": "0.7.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Consultant-mode entry-point skill. Triggers on artifact-rich queries asking for 4DX framing/diagnosis. Distinct from coach-mode D-skills (Socratic step-by-step) and from using-four-dx-coach (cold-start router). Test cases: ≥3 should_trigger across EN/JP/zh-TW; ≥3 should_not_trigger lures (cold-start / single-discipline / non-4DX framework / Socratic-preference); ≥1 edge case (ambiguous artifact-vs-no-artifact).",
+  "test_cases": [
+    {
+      "id": "should-trigger-en-strategy-doc",
+      "type": "should_trigger",
+      "prompt": "Here's the 5-page strategy doc we sent the board last quarter — 9 priorities, 4 flagged 'critical', plus our Q3 OKR sheet (3 objectives / 9 KRs) and a Notion dashboard with 12 retention/acquisition KPIs. We want to run things via 4DX next quarter. Help us audit what we have and frame it in 4DX terms.",
+      "expected_behavior": "Activate 4dx-audit. User has provided multi-artifact context (strategy doc, OKR sheet, KPI dashboard) AND explicitly asks for 4DX framing/audit. Run 5-step protocol: inventory artifacts, map content to 5 layers (L1 WIG / L2 Lead / L3 Scoreboard / L4 Cadence / L5 Substrate), diagnose status per layer (well-formed / malformed / absent / wrong-shape), identify cross-layer gaps, prescribe 3-5 prioritized recommendations each routing to a specific D-skill. Output the audit-report markdown structure from SKILL.md Step 5.",
+      "notes": "positive EN: explicit artifact bundle + explicit '4DX framing' ask = canonical consultant-mode entry trigger"
+    },
+    {
+      "id": "should-trigger-jp-handover",
+      "type": "should_trigger",
+      "prompt": "資料を渡すから 4DX 視点で見てほしい。来週の経営会議向けに、うちの戦略 doc と OKR シートと週次レビューの議事録 4 週分を共有する。何が抜けてて、何が形になってないか診断してくれ。",
+      "expected_behavior": "Activate 4dx-audit. JP query: user announces artifact handover (strategy doc + OKR sheet + 4 weeks of weekly-review notes) and asks for 4DX-lens diagnosis ('何が抜けてて、何が形になってないか'). Run audit protocol; map across all 5 layers; flag malformed/absent layers; output prioritized recommendations with skill-routes. Note: meeting-notes coverage allows L4 cadence quality to be diagnosed (commitment specificity / Account-Review-Plan grammar / whirlwind exclusion).",
+      "notes": "positive JP: 「4DX 視点で見て」 + multi-artifact mention + 「診断」 = consultant-mode trigger; 4 weeks of meeting notes = sufficient L4 signal"
+    },
+    {
+      "id": "should-trigger-zhtw-okr-dashboard",
+      "type": "should_trigger",
+      "prompt": "我們團隊有 OKR (3 個 O / 9 個 KR) 跟 dashboard (15 個指標)，最近導入 4DX 但卡住。幫我用 4DX 框架釐清現況，看哪些可以對應、哪些是錯的層級、下一步該怎麼動。",
+      "expected_behavior": "Activate 4dx-audit. zh-TW query: user has OKR + KPI dashboard + attempted-4DX-implementation context, explicitly asks for 4DX-frame clarification ('用 4DX 框架釐清現況'). Run audit; pay special attention to wrong-shape diagnosis (OKR Objectives vs WIGs; KRs vs lead-measures; 15-metric dashboard vs ≤4 scoreboard). Output prioritized actions with D-skill routes (likely d1-wig-formulation for WIG reformulation; d2-lead-measures for two-axis test on KRs; d3-scoreboard for cull-to-≤4).",
+      "notes": "positive zh-TW: artifact-rich + 「4DX 框架釐清」 + 「下一步該怎麼動」 = audit + roadmap ask"
+    },
+    {
+      "id": "should-not-trigger-cold-start-no-artifacts",
+      "type": "should_not_trigger",
+      "prompt": "I want to start using 4DX. Where do I begin?",
+      "expected_behavior": "Do NOT activate 4dx-audit. User has no artifacts, no context — just intent to begin. Audit has nothing to read. Route to using-four-dx-coach (router) for cold-start scope triage (solo vs team; current state; entry point selection).",
+      "notes": "lure: cold-start with bare intent; surface keyword '4DX' but no artifact-bundle = router territory, not audit territory"
+    },
+    {
+      "id": "should-not-trigger-single-discipline-full-context",
+      "type": "should_not_trigger",
+      "prompt": "I want to formulate my personal WIG for next quarter. My situation: I'm a solo PhD student, dissertation due May 2027, currently writing chapter 2 of 5, advisor wants 3 chapters drafted by Sep. Help me write the WIG.",
+      "expected_behavior": "Do NOT activate 4dx-audit. User has rich context but it's all single-discipline (D1 WIG formulation) and explicitly asks for guided formulation, not cross-discipline diagnosis. Route directly to 4dx-d1-wig-formulation (personal-define mode). Audit is for cross-discipline synthesis when multiple layers are present and unclear; this is single-discipline coaching from concrete context.",
+      "notes": "lure: artifact-like context + specific ask, but single-discipline scope + Socratic-coaching intent = coach-mode D-skill, not audit"
+    },
+    {
+      "id": "should-not-trigger-okr-audit-non-4dx",
+      "type": "should_not_trigger",
+      "prompt": "Here's our Q3 OKR sheet (3 Os / 9 KRs). Audit it for OKR best practices — alignment, measurability, ambition level. We're not using 4DX; we're a pure OKR shop.",
+      "expected_behavior": "Do NOT activate 4dx-audit. User explicitly asks for OKR-framework audit ('OKR best practices — alignment, measurability, ambition') and explicitly states 'not using 4DX'. 4dx-audit's lens is specifically 4DX; forcing 4DX overlay on a pure-OKR org would mis-frame their question. Hand off via using-four-dx-coach (out-of-4DX → external/other tool).",
+      "notes": "lure: artifact-rich + 'audit' keyword, but wrong framework lens; honors 4dx-audit boundary 'NOT for non-4DX framework audits'"
+    },
+    {
+      "id": "should-not-trigger-socratic-step-by-step",
+      "type": "should_not_trigger",
+      "prompt": "Coach me through 4DX one discipline at a time, Socratically. I want to discover the answers myself, not get a diagnosis. Start from scratch.",
+      "expected_behavior": "Do NOT activate 4dx-audit. User explicitly states preference for Socratic step-by-step coaching from scratch and explicitly rejects diagnosis-mode ('not get a diagnosis'). Audit is consultant-mode synthesis; this is coach-mode preference. Route to using-four-dx-coach for scope triage, then to D1 coach skill for stepwise start.",
+      "notes": "lure: 4DX keyword + 'coach' keyword, but explicit Socratic preference + 'from scratch' = coach-mode, not consultant-mode"
+    },
+    {
+      "id": "edge-01-ambiguous-have-stuff",
+      "type": "edge_case",
+      "prompt": "I have stuff to share but I'm not sure what's relevant. Some goal docs, some metrics — can we look at it through 4DX?",
+      "expected_behavior": "Activate 4dx-audit (default to audit when user signals artifact provision + 4DX-framing intent, even if vague about specifics). Run Step 1 (inventory) by asking ONCE for the user to paste/describe what they have ('share what you've got — goal docs, metric lists, meeting notes, scoreboard images or descriptions — and I'll map to the 5 layers'). Do NOT invent content. If user reveals on follow-up that they have nothing concrete (just intent), exit audit and hand off to using-four-dx-coach for cold-start. Acceptable alternative: ask one clarifying question first ('do you have artifacts to paste, or is this still at the intent stage?') before activating — both behaviors honor SKILL.md guidance.",
+      "notes": "boundary: ambiguous artifact-vs-no-artifact; SKILL.md Step 1 says 'if user mentions context but hasn't actually provided it, ask ONCE for the missing pieces' — audit activates, asks for the pieces, then proceeds or exits depending on what comes back. Default-to-audit on artifact-provision-signal is correct per consultant-mode posture."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 0.88,
+  "self_evaluation_note": "8 cases evaluated. 3 should_trigger: EN strategy-doc bundle, JP multi-artifact handover, zh-TW OKR + dashboard + attempted-4DX. 4 should_not_trigger lures: cold-start (router), single-discipline-with-context (D-skill direct), non-4DX framework (out-of-scope), Socratic-step-by-step preference (coach-mode). 1 edge case: ambiguous 'I have stuff' — defaults to audit per consultant-mode posture, asks once for artifacts, exits if none. Pass rate = 0.88 honest: edge-01 admits two acceptable behaviors (activate-then-ask vs ask-first-then-activate); a strict judge could call ask-first a non-activation. If both are counted as correct activation per SKILL.md Step 1 'ask ONCE for missing pieces' clause, pass_rate = 1.0. Trigger discrimination is sharp on the 3 positive vs 4 negative cases — multi-artifact + explicit 4DX-framing-ask is the consistent activation signature."
+}

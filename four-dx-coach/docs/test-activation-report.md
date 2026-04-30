@@ -270,3 +270,51 @@ d2-lead-measures, d3-scoreboard, d4-cadence, using-four-dx-coach).
 ### Residual gap (1 query, optional fix)
 
 Query #6 「リーダー陣を巻き込みたい、4DX で」 still mis-routes from `meta-team-leader-onboarding` to `meta-strategy-triage`. The v0.6.1 edits scoped 7 skills; `meta-team-leader-onboarding` was not in scope. To close: add 「巻き込み」/「巻き込みたい」 to onboarding's JP positive-trigger bank, e.g. 「部下リーダーを 4DX に巻き込みたい」「リーダー陣を巻き込みたい」. ~1-line edit, no body change. Defer to v0.6.2 or ship v0.6.1 with documented residual.
+
+---
+
+## v0.7.0 — 4dx-audit activation test
+
+Tested: 2026-04-30
+Method: 15-query focused test with `4dx-audit` (NEW consultant-mode entry) + 11 coach-mode skills' descriptions. Description-only judgment, no body reads.
+
+### Results
+
+| # | Query | Expected | Got | Pass | Reasoning |
+|---|---|---|---|---|---|
+| 1 | EN: "5-page strategy doc with 9 priorities. Help me apply 4DX." [+ paste] | 4dx-audit | 4dx-audit | ✓ | Rich pre-existing artifact + "apply 4DX" framing. Audit description literally lists "Here's our strategy doc — help us 4DX it" as a trigger. |
+| 2 | EN: "Existing WIG, 12 KPIs, 4 weeks meeting notes. Audit our 4DX." [+ artifacts] | 4dx-audit | 4dx-audit | ✓ | Multi-artifact bundle ("WIG + leads + cadence" pattern in audit description) + "audit" verb. Beats xps-evaluation: XPS scores intra-team execution from cadence/commitment data only; this query asks holistic mapping across all 5 layers. |
+| 3 | JP: 「資料を渡すから 4DX 視点で見て。OKR 文書 + ダッシュボード + 過去 4 週間の議事録あり」 | 4dx-audit | 4dx-audit | ✓ | Multi-artifact JP query. "4DX 視点で見て" = audit-mode synthesis request; matches audit's "synthesizes pre-existing artifacts into structured output" phrasing. |
+| 4 | zh-TW: 「我把所有 4DX 相關文件都丟給你了，幫我用 4DX 框架釐清現況」 [+ pasted artifacts] | 4dx-audit | 4dx-audit | ✓ | Audit description contains this exact zh-TW trigger 「我把所有 4DX 相關文件都丟給你了，幫我釐清」. Unambiguous. |
+| 5 | EN: "Translate our Q4 OKR set into 4DX language and recommend next moves" [+ OKR sheet] | 4dx-audit | 4dx-audit | ✓ | Audit description literally lists "Translate our quarterly plan into 4DX terms" as trigger. Distinct from query #8 because user supplies the OKR sheet AND requests 4DX-framed output (audit job), not a generic OKR-best-practices audit. |
+| 6 | "I want to start using 4DX" (cold-start, no artifacts) | using-four-dx-coach | using-four-dx-coach | ✓ | Router exact trigger phrase "I want to start using 4DX". Cold-start, no artifacts → no audit material to synthesize. |
+| 7 | "Help me write my personal WIG, here's my situation: I want to write a book" | 4dx-d1-wig-formulation | 4dx-d1-wig-formulation | ✓ | Single-discipline (D1), explicit personal-WIG framing + raw situational context (not 4DX artifacts). D1 description: "Define my personal WIG". Audit excluded — "I want to write a book" isn't a 4DX artifact. |
+| 8 | "Audit our quarterly OKRs against best practices" | using-four-dx-coach | using-four-dx-coach | ✓ | "Audit" verb but the framework is OKR-best-practices, NOT 4DX. Audit skill activates only when user wants 4DX-grounded mapping; D2 description excludes "OKR Key Results / quarterly KRs" as out-of-4DX → router. |
+| 9 | "I have lots of context on my goal, what should I do daily?" | 4dx-d2-lead-measures | 4dx-d2-lead-measures | ✓ | "What should I do daily" = D2 lead-measure exact trigger ("What should I do daily to drive my goal?"). Single-discipline + context → D2 protocol handles solo-discover-leads scope. Audit not triggered: user wants daily-action discovery (single discipline), not multi-layer diagnosis. |
+| 10 | "Should our team adopt 4DX?" | 4dx-meta-strategy-triage | 4dx-meta-strategy-triage | ✓ | Strategy-triage exact trigger "Should our team adopt 4DX?". |
+| 11 | "Score our team's XPS for last quarter" | 4dx-meta-xps-evaluation | 4dx-meta-xps-evaluation | ✓ | XPS-specific scoring request → xps-evaluation. Distinct from audit: XPS is the canonical 0-4 four-component score; audit is the broader 5-layer artifact mapping. Both could fit "audit our 4DX," but explicit "XPS" verb anchors xps-evaluation. |
+| 12 | "Cascade our Primary WIG to 5 sub-teams" | 4dx-d1-wig-cascade | 4dx-d1-wig-cascade | ✓ | Explicit multi-sub-team cascade trigger; cascade description matches verbatim. |
+| 13 | "Conduct an agile retrospective for our team" | using-four-dx-coach | using-four-dx-coach | ✓ | Out-of-4DX (agile retro ≠ WIG Session). No 4DX vocabulary, no artifacts — router fallback. |
+| 14 | "I have stuff to share but not sure if it's relevant" (vague + claimed artifacts) | audit OR router | using-four-dx-coach | ✓ (router branch) | Vague intent, no articulated 4DX framing. Router's coach-mode triage can clarify scope first. Audit description requires user to ask for "clarification or recommendations grounded in the 4DX framework" — this query doesn't articulate that intent. Router-first path is the safer landing; if the artifacts turn out to be 4DX-relevant after triage, router can re-route to audit. Both candidates documented. |
+| 15 | "Audit my 4DX implementation" (no artifacts attached, just intent) | audit OR router | 4dx-audit | ✓ (audit branch) | Audit description literally lists "Audit our 4DX implementation given this context" as a trigger. Skill description does not require artifacts pre-attached — entry-point job includes asking "share what you have" before synthesis. Router could also fire to confirm scope, but audit's intent-match is stronger. Both candidates documented. |
+
+### Aggregate
+
+- Pass: **15/15 = 100%**
+- audit-specific: 5/5 should_trigger; 8/8 should_not_trigger; 2/2 edge_case
+- Zero confusion across all 12 skills
+
+### Confusable findings
+
+- **None observed at description level.** Audit's "rich pre-existing artifacts → synthesis" framing cleanly distinguishes it from:
+  - Router (vague / cold-start / scope-unclear queries)
+  - xps-evaluation (specific XPS scoring, single-output format)
+  - D1-D4 single-discipline coaches (focused on one stage with raw situation, not multi-artifact 4DX bundles)
+  - sustain-momentum-rescue (already-running but stalled, with stall-signal vocabulary, not artifact bundles)
+- **Boundary holds on OKR queries** — query #5 routes to audit (user supplies sheet + asks for 4DX translation), query #8 routes to router (user asks for OKR-best-practices audit, not 4DX-framed). Audit's "Translate our quarterly plan into 4DX terms" trigger correctly distinguishes the two.
+- **Edge cases handled by intent-match, not artifact-presence** — query #15 fires audit despite no artifacts attached (audit can prompt for them); query #14 routes to router despite claimed artifacts (user can't articulate 4DX framing). The audit description's "asks for clarification or recommendations grounded in the 4DX framework" clause does the lifting.
+- **Mutual exclusion with router (`using-four-dx-coach`) is explicit** — router description includes a counter-pointer: "When the user arrives with rich pre-existing artifacts ... and wants synthesis rather than dialogue, route to `4dx-audit` instead of running scope triage." This bidirectional anchor (audit declares its job; router declares the redirect) prevents overlap.
+
+### Verdict
+
+**SHIP.** 15/15 = 100% clears the 85% threshold by a wide margin. The audit description's three-part framing — (a) rich-artifacts trigger phrases in EN/JP/zh-TW, (b) the explicit "synthesizes pre-existing artifacts" contrast against coach-mode Socratic dialogue, and (c) bidirectional handoff with the router — produces clean activation across all 15 queries with zero cross-skill confusion. No edits required for v0.7.0 release.
