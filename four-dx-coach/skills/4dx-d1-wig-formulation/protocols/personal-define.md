@@ -140,7 +140,7 @@ When this protocol activates, the agent runs a Socratic coaching dialogue. **Do 
 - **Pure habit design** ("Help me meditate daily"). Habits are recurring behaviors with no fixed lag-measurable end-state.
 - **Already-well-formed numeric goals** with X / Y / When already explicit. Skip to D2.
 - **Reactive / on-call domains** where the whirlwind *is* the strategic work (SRE incident response, ER medicine, customer support).
-- **Capacity / time-audit questions** ("do I have time for this?") → `4dx-d1-personal-whirlwind-triage`.
+- **Capacity / time-audit questions** ("do I have time for this?") → `4dx-meta-whirlwind-triage`.
 
 ### Author-warned failure modes
 - **Multi-WIG drift (CE-03)**: User claims 3-5 WIGs simultaneously. Book is unambiguous: this kills all of them. Push back hard.

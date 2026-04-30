@@ -32,7 +32,7 @@ related_skills:
   - 4dx-d2-lead-measures
   - 4dx-d3-scoreboard
   - 4dx-d4-cadence
-  - 4dx-d1-personal-whirlwind-triage
+  - 4dx-meta-whirlwind-triage
   - 4dx-d1-team-wig-cascade
   - 4dx-meta-team-leader-onboarding
   - 4dx-meta-team-xps-evaluation
@@ -83,7 +83,7 @@ single-file with no internal protocol switch.
 
 | Skill slug | Scope | Stage | Canonical activation signals |
 |---|---|---|---|
-| `4dx-d1-personal-whirlwind-triage` | Personal | D1 prereq | "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」 |
+| `4dx-meta-whirlwind-triage` | Personal | D1 prereq | "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」 |
 | `4dx-d1-team-wig-cascade` | Team-leader | D1 (cascade) | "Cascade the org WIG to sub-teams" / "How do I split the Primary WIG into Battles" |
 | `4dx-meta-team-leader-onboarding` | Team-leader | Leader prep | "I'm about to lead a 4DX team" / "Get my direct-report leaders bought in" |
 | `4dx-meta-team-xps-evaluation` | Team-leader | XPS audit | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
@@ -136,7 +136,7 @@ not need to ask the same question twice.
 #### Personal scope routing
 
 1. Fit unsure → `4dx-meta-strategy-triage` (loads `personal-mode`)
-2. No time / always firefighting → `4dx-d1-personal-whirlwind-triage`
+2. No time / always firefighting → `4dx-meta-whirlwind-triage`
 3. Goal vague / multi-priority → `4dx-d1-wig-formulation` (loads `personal-define`)
 4. WIG set, daily action unclear → `4dx-d2-lead-measures` (loads `personal-discover`)
 5. Tracker noisy / unread → `4dx-d3-scoreboard` (loads `personal-design`)

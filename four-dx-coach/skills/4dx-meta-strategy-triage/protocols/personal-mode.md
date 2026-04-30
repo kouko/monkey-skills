@@ -112,7 +112,7 @@ proceed or route out. Verdicts come from `../standards/6-verdict-rubric.md`.
    - **Halt**: if user wants to cherry-pick → flag P-23 (matched set, not menu) and offer either commit-to-all-four or use a lighter framework instead.
 
 7. **Verdict + handoff.**
-   - If all gates passed → return verdict **APPLICABLE — proceed to `4dx-d1-personal-whirlwind-triage`**.
+   - If all gates passed → return verdict **APPLICABLE — proceed to `4dx-meta-whirlwind-triage`**.
    - In all other branches the redirect verdict is the output; do not bend the goal back into 4DX shape.
    - Completion: a single verdict has been issued from the 6-category set.
 

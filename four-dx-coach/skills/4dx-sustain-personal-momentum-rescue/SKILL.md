@@ -248,7 +248,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
    - Ask: "Did external load actually spike — job change, illness,
      family, deadline — during the lapse?"
    - If yes: this is structural, not characterological. Either
-     **route to `4dx-d1-personal-whirlwind-triage`** to redesign capacity, or
+     **route to `4dx-meta-whirlwind-triage`** to redesign capacity, or
      pause the WIG explicitly until the spike subsides. An explicit
      pause is *not* a failure.
    - Completion criterion: whirlwind ruled in or out.
@@ -297,7 +297,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
 - **Reactive / emergency domains where the whirlwind IS the work.**
   On-call SREs, ER staff, frontline crisis responders, parents of
   newborns. Cadence break may be appropriate, not a problem. Apply
-  `4dx-d1-personal-whirlwind-triage` instead.
+  `4dx-meta-whirlwind-triage` instead.
 
 ### Author-warned failure modes (rescue anti-patterns)
 

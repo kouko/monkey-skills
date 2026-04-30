@@ -22,7 +22,7 @@ A non-judgmental Socratic walk-back through the stack. Each step localizes the b
 3. **D2 — leads** — were they predictive *and* influenceable? Lead green + lag flat = leads were wrong; route to `4dx-d2-lead-measures`
 4. **D3 — scoreboard** — could you tell in 5 seconds whether you were winning? If hidden / coach's-style → route to `4dx-d3-scoreboard`
 5. **D4 — cadence** — what crowded out the session? If pointless = upstream signal in disguise; if whirlwind crowd-out = resume next week (no make-up)
-6. **Whirlwind escalation check** — real external load spike? Route to `4dx-d1-personal-whirlwind-triage` to redesign capacity, or pause WIG explicitly (an explicit pause is *not* failure)
+6. **Whirlwind escalation check** — real external load spike? Route to `4dx-meta-whirlwind-triage` to redesign capacity, or pause WIG explicitly (an explicit pause is *not* failure)
 7. **Substrate check (the off-ramp)** — burnout / depression / grief / sustained exhaustion → stop the 4DX rescue; recommend rest / coaching / therapy
 8. **Recognize without shame** — name 1-3 specific things the user *did* accomplish before the lapse (no formulaic praise)
 9. **Re-commit at minimum scope** — *don't skip, don't catch up*; resume, don't repair; one tiny commitment for next 7 days
@@ -34,7 +34,7 @@ A non-judgmental Socratic walk-back through the stack. Each step localizes the b
 | First-time 4DX setup | `4dx-meta-strategy-triage` then `4dx-d1-wig-formulation` |
 | Org-wide engagement surveys / enterprise diagnostics | Out of scope — this skill is individual rescue |
 | Clinical depression / sustained burnout / grief | Professional support; method is downstream of care |
-| Reactive / emergency domains where whirlwind IS the work | `4dx-d1-personal-whirlwind-triage` instead — cadence break may be appropriate |
+| Reactive / emergency domains where whirlwind IS the work | `4dx-meta-whirlwind-triage` instead — cadence break may be appropriate |
 
 ## Source
 

@@ -22,7 +22,7 @@
 | scope + verb 明示（「自分の WIG: From X to Y」） | `4dx-d1-wig-formulation` に直接 |
 | 「組織の Primary WIG を Battles 2x2 で」 | `4dx-d1-wig-formulation` に直接 |
 | 「上司から降りてきた WIG」 | `4dx-d1-wig-formulation` に直接 |
-| whirlwind / 時間 audit | `4dx-d1-personal-whirlwind-triage` |
+| whirlwind / 時間 audit | `4dx-meta-whirlwind-triage` |
 | 下位 N team への cascade | `4dx-d1-team-wig-cascade` |
 | lead measure / scoreboard / cadence | D2 / D3 / D4 |
 

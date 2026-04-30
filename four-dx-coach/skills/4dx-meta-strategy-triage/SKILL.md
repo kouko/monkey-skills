@@ -23,7 +23,7 @@ source_chapter: Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosin
 source_language: en
 tags: [decision-gate, scope-triage, methodology-fit, 4dx, meta-gate, pre-d1, multi-scope, solo, team-leader]
 related_skills:
-  - 4dx-d1-personal-whirlwind-triage
+  - 4dx-meta-whirlwind-triage
   - 4dx-d1-wig-formulation
   - 4dx-d1-wig-formulation
   - 4dx-d1-team-wig-cascade
@@ -65,7 +65,7 @@ logic across modes; voice and gates differ per scope.
 
 ### Non-activation signals (DO NOT fire when…)
 
-- User has already committed to 4DX and asks *"how do I start?"* / *"where do I begin?"* — route to `4dx-d1-personal-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team).
+- User has already committed to 4DX and asks *"how do I start?"* / *"where do I begin?"* — route to `4dx-meta-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team).
 - User asks about a specific discipline (lead measures, scoreboard, WIG session mechanics) — route to the matching D-skill.
 - User is a team-member who **inherits** a WIG already chosen by a leader — members don't triage methodology fit; route to `4dx-d1-wig-formulation`.
 - User runs a multi-team enterprise rollout (cascading WIGs across many teams) — read book chapters 6-10 directly + `4dx-d1-team-wig-cascade`.
@@ -113,7 +113,7 @@ Each protocol references these standards (load on demand):
 
 ## Cross-skill relations
 
-- **Downstream after APPLICABLE** — `4dx-d1-personal-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team) is the next gate; `4dx-d1-wig-formulation` follows for WIG drafting.
+- **Downstream after APPLICABLE** — `4dx-meta-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team) is the next gate; `4dx-d1-wig-formulation` follows for WIG drafting.
 - **Compose-with team-context** — `4dx-meta-team-leader-onboarding` follows TEAM-APPLICABLE to get leaders bought in; `4dx-d1-team-wig-cascade` translates an upper-level WIG down through sub-teams (out of scope for this skill).
 - **Rescue back-loop** — `4dx-sustain-personal-momentum-rescue` runs after a stalled WIG and may route back here if the original triage was wrong-shaped.
 - **Plugin-router fallback** — `using-four-dx-coach` handles cold-start and out-of-4DX queries (OKR, agile, habit stacking); not a substitute for this skill, but the right hand-off when the user's question turns out not to be 4DX-fit triage at all.

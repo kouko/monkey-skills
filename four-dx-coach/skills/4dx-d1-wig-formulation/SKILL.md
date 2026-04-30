@@ -23,7 +23,7 @@ source_language: en
 tags: [d1, wig, multi-scope, goal-setting, focus, from-x-to-y-by-when, 4dx, personal, team-leader, team-member]
 related_skills:
   - 4dx-meta-strategy-triage
-  - 4dx-d1-personal-whirlwind-triage
+  - 4dx-meta-whirlwind-triage
   - 4dx-d1-team-wig-cascade
   - 4dx-d2-lead-measures
   - 4dx-d3-scoreboard
@@ -67,7 +67,7 @@ verb they apply** (define / select / comprehend), and the **agent voice**
 ### Non-activation signals (DO NOT fire when…)
 
 - **Strategy fit not yet decided** (user hasn't classified the situation as behavioral-change vs stroke-of-pen vs reactive whirlwind) → `4dx-meta-strategy-triage` first
-- **Whirlwind / capacity audit** (the question is "do I have time?", not "what's the goal?") → `4dx-d1-personal-whirlwind-triage`
+- **Whirlwind / capacity audit** (the question is "do I have time?", not "what's the goal?") → `4dx-meta-whirlwind-triage`
 - **Cascading an already-set Primary WIG to N sub-teams** (translation downward, not selection or definition) → `4dx-d1-team-wig-cascade`
 - **WIG already well-formed** (X / Y / When all explicit) — skip D1 entirely; route to D2 lead-measure discovery
 - **Habit design** ("help me meditate daily") — no fixed lag-measurable end-state; not a WIG
@@ -123,7 +123,7 @@ Each protocol references these standards (load on demand):
 
 ## Cross-skill relations
 
-- **Upstream (prerequisite)** — `4dx-meta-strategy-triage` confirms the user's situation is behavioral-change (not stroke-of-pen, not whirlwind-as-strategic-value); this skill assumes triage already concluded "use 4DX." `4dx-d1-personal-whirlwind-triage` is the capacity-side D1 skill (different topic — "do I have time?"); both can run before this one.
+- **Upstream (prerequisite)** — `4dx-meta-strategy-triage` confirms the user's situation is behavioral-change (not stroke-of-pen, not whirlwind-as-strategic-value); this skill assumes triage already concluded "use 4DX." `4dx-meta-whirlwind-triage` is the capacity-side D1 skill (different topic — "do I have time?"); both can run before this one.
 - **Downstream (sequels)** — `4dx-d2-lead-measures` finds the daily lever once the WIG is well-formed; `4dx-d3-scoreboard` builds the artifact the lead is tracked on; `4dx-d4-cadence` runs the weekly cadence that drives lead → lag.
 - **Compose-with neighbour** — `4dx-d1-team-wig-cascade` runs *after* `team-select.md` produces a Primary WIG, when that WIG must be translated into Battle WIGs for sub-teams. Sharp boundary: this skill *selects* / *defines* / *comprehends*; cascade *translates downward*.
 - **Plugin-router fallback** — `using-four-dx-coach` handles cold-start triage and out-of-4DX queries (SMART goals, OKR migration, generic alignment coaching); not a substitute for this skill, but the right hand-off when the user's question turns out not to be 4DX D1.

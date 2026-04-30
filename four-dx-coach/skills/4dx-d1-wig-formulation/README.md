@@ -22,7 +22,7 @@ Catches ambiguous "help me with my WIG" / "how do I set a WIG?" queries. Asks ON
 | Scope + verb explicit ("my personal WIG: From X to Y") | `4dx-d1-wig-formulation` directly |
 | "Our org's Primary WIG via Battles 2x2" | `4dx-d1-wig-formulation` directly |
 | "The WIG my manager assigned" | `4dx-d1-wig-formulation` directly |
-| Whirlwind / time-audit query | `4dx-d1-personal-whirlwind-triage` |
+| Whirlwind / time-audit query | `4dx-meta-whirlwind-triage` |
 | Cascading downward to N sub-teams | `4dx-d1-team-wig-cascade` |
 | Lead measures / scoreboard / cadence | D2 / D3 / D4 skills |
 

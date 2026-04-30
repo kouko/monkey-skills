@@ -1,5 +1,5 @@
 {
-  "skill": "4dx-d1-personal-whirlwind-triage",
+  "skill": "4dx-meta-whirlwind-triage",
   "version": "0.1.0",
   "source_book": "The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker",
   "source_language": "en",
@@ -10,49 +10,49 @@
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "I want to start writing a book on the side, but honestly every week my day job eats my whole calendar and I never get to it. Help me figure out how to actually move on it.",
-      "expected_behavior": "Activate 4dx-d1-personal-whirlwind-triage; surface the whirlwind/WIG split, propose a 7-day time audit before any goal commitment.",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; surface the whirlwind/WIG split, propose a 7-day time audit before any goal commitment.",
       "notes": "positive scenario: canonical 'day job eats my whole week' phrasing matching the description's English signal verbatim, with a strategic-goal frame (book = behavioral-change project, not BAU)."
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "毎日日常業務に追われて、自分が立てた目標に全く手がつかない。どうすれば前に進めますか?",
-      "expected_behavior": "Activate 4dx-d1-personal-whirlwind-triage; run capacity diagnosis (whirlwind vs WIG ratio) before goal-setting; offer 7-day time audit.",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; run capacity diagnosis (whirlwind vs WIG ratio) before goal-setting; offer 7-day time audit.",
       "notes": "positive scenario (JP): exact match for the description's Japanese signal 「日常業務に追われて目標に手がつかない」 — strategic-goal framing intact."
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "我每天都在救火,日常雜事吃掉所有時間,我想推進的副業項目一直擱置。可以幫我想辦法嗎?",
-      "expected_behavior": "Activate 4dx-d1-personal-whirlwind-triage; surface whirlwind/WIG capacity reality; propose time audit + protected WIG slot before defining the goal.",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; surface whirlwind/WIG capacity reality; propose time audit + protected WIG slot before defining the goal.",
       "notes": "positive scenario (zh-TW): exact match for description's two zh-TW signals 「每天都在救火」+「日常雜事吃掉所有時間」, with a side-project (behavioral-change) goal."
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "我們公司有 50 個團隊,主管說導入 4DX 之前要先做全公司的時間稽核,請幫我規劃跨部門的 capacity audit 流程。",
-      "expected_behavior": "Do NOT activate 4dx-d1-personal-whirlwind-triage. The description explicitly scopes this skill to individual-level triage and warns against firing on enterprise rollout / organizational cadence-setting queries. Route to an organizational-rollout skill instead (not yet built).",
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly scopes this skill to individual-level triage and warns against firing on enterprise rollout / organizational cadence-setting queries. Route to an organizational-rollout skill instead (not yet built).",
       "notes": "lure: enterprise-misfire — surface keywords (4DX, time audit, capacity) match strongly but scope is org-level, not individual. Description's last sentence (`Do NOT fire for...`) and the B-section enterprise-rollout boundary should suppress."
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "I want to set up a proper GTD system in Notion — capture inbox, next actions, weekly review templates. Can you help me design it?",
-      "expected_behavior": "Do NOT activate 4dx-d1-personal-whirlwind-triage. The description explicitly excludes productivity-tool / system requests. This is task-management tooling, not WIG-vs-whirlwind capacity diagnosis.",
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly excludes productivity-tool / system requests. This is task-management tooling, not WIG-vs-whirlwind capacity diagnosis.",
       "notes": "lure: productivity-system shopping — adjacent domain (time, productivity) but wrong methodology and wrong question. Description's `Do NOT fire for productivity-tool requests` clause should suppress."
     },
     {
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "I've been working 80-hour weeks for three months, I can't sleep, I'm dreading every Monday, and I feel hollowed out. I don't even know what I want anymore.",
-      "expected_behavior": "Do NOT activate 4dx-d1-personal-whirlwind-triage. The description excludes burnout. Running a time audit on someone in this state weaponizes awareness without solving it. Route to coaching / clinical / managerial support.",
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description excludes burnout. Running a time audit on someone in this state weaponizes awareness without solving it. Route to coaching / clinical / managerial support.",
       "notes": "lure: burnout / overwork — surface 'no time' theme but the underlying issue is mental-health, not strategic capacity. Description's `Do NOT fire for ... burnout` clause should suppress."
     },
     {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I'm an ER physician — my whole shift is firefighting by definition. I want to learn Spanish on the side but I never have time. Should I do a 4DX time audit?",
-      "expected_behavior": "Do NOT activate 4dx-d1-personal-whirlwind-triage as the primary action. The description names ER as a reactive role where firefighting IS the work (CE-26). Route to 4dx-meta-strategy-triage to ask whether 4DX is the right tool at all; the language-learning sub-goal may need a different methodology (habit-stacking, not WIG carve-out from a non-existent surplus).",
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage as the primary action. The description names ER as a reactive role where firefighting IS the work (CE-26). Route to 4dx-meta-strategy-triage to ask whether 4DX is the right tool at all; the language-learning sub-goal may need a different methodology (habit-stacking, not WIG carve-out from a non-existent surplus).",
       "notes": "boundary: surface English signal 'I'm always firefighting / never have time' is verbatim, BUT role is in the description's reactive-role exclusion list (oncall SRE, ER, infant-care). Tests whether the model honors the Do-NOT clause over the surface trigger phrase. The 'should I' framing makes routing-to-meta-triage the right reasonable judgment rather than silent abstention."
     }
   ],

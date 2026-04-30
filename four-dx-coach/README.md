@@ -59,7 +59,7 @@ These topics live in one scope only because the source book has no cross-scope v
 
 | Skill | Scope | What it does |
 |---|---|---|
-| [`4dx-d1-personal-whirlwind-triage`](skills/4dx-d1-personal-whirlwind-triage/) | Personal | 7-day time audit; surface BAU vs WIG conflict; protect ~20% WIG slot |
+| [`4dx-meta-whirlwind-triage`](skills/4dx-meta-whirlwind-triage/) | Personal | 7-day time audit; surface BAU vs WIG conflict; protect ~20% WIG slot |
 | [`4dx-d1-team-wig-cascade`](skills/4dx-d1-team-wig-cascade/) | Team-leader | Translate Primary WIG into Battle WIGs (Targets-not-Plans); multi-team-only concept |
 | [`4dx-meta-team-leader-onboarding`](skills/4dx-meta-team-leader-onboarding/) | Team-leader | Direct-report leader buy-in (commitment vs compliance) |
 | [`4dx-meta-team-xps-evaluation`](skills/4dx-meta-team-xps-evaluation/) | Team-leader | Post-quarter XPS audit (0-4 scale; C1-C4 layers) |
@@ -133,7 +133,7 @@ Skill `description` and trigger signals support **English / 日本語 / 繁體�
 ### Personal (solo) — starting from zero
 
 1. `4dx-meta-strategy-triage` → `personal-mode.md` — verify 4DX fits your goal (or get redirected)
-2. `4dx-d1-personal-whirlwind-triage` — clarify BAU vs WIG-work
+2. `4dx-meta-whirlwind-triage` — clarify BAU vs WIG-work
 3. `4dx-d1-wig-formulation` → `personal-define.md` — formulate the WIG (X → Y → When)
 4. `4dx-d2-lead-measures` → `personal-discover.md` — find your 2-3 lead measures
 5. `4dx-d3-scoreboard` → `personal-design.md` — design a glance-readable scoreboard

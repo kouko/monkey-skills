@@ -38,7 +38,7 @@ These topics live in one scope only — the source book has no cross-scope varia
 
 | Slug | Scope | Role |
 |---|---|---|
-| [`4dx-d1-personal-whirlwind-triage`](./skills/4dx-d1-personal-whirlwind-triage/SKILL.md) | Personal | 7-day time audit; surface 80/20 BAU-vs-WIG split; protect ~20% slot. (No team variant — team whirlwind is implicit and addressed in `team-leader-session.md` instead.) |
+| [`4dx-meta-whirlwind-triage`](./skills/4dx-meta-whirlwind-triage/SKILL.md) | Personal | 7-day time audit; surface 80/20 BAU-vs-WIG split; protect ~20% slot. (No team variant — team whirlwind is implicit and addressed in `team-leader-session.md` instead.) |
 | [`4dx-d1-team-wig-cascade`](./skills/4dx-d1-team-wig-cascade/SKILL.md) | Team-leader | Translate Primary WIG into Battle WIGs for sub-teams (single-tier cascade — Targets-not-Plans). Multi-team-only concept. |
 | [`4dx-meta-team-leader-onboarding`](./skills/4dx-meta-team-leader-onboarding/SKILL.md) | Team-leader | Get direct-report leaders bought in; social precondition for cascade. Commitment vs compliance framing. |
 | [`4dx-meta-team-xps-evaluation`](./skills/4dx-meta-team-xps-evaluation/SKILL.md) | Team-leader | Post-quarter XPS audit (0-4 scale; C1 cadence / C2 commitment / C3 leads / C4 scoreboard). |
@@ -61,7 +61,7 @@ graph LR
     d4[4dx-d4-cadence]
 
     %% Single-file scope-specific skills
-    wt[4dx-d1-personal-whirlwind-triage]
+    wt[4dx-meta-whirlwind-triage]
     cascade[4dx-d1-team-wig-cascade]
     onboard[4dx-meta-team-leader-onboarding]
     xps[4dx-meta-team-xps-evaluation]
@@ -115,7 +115,7 @@ Edge count: **13** (9 depends-on + 4 composes-with + 2 contrasts-with). Within t
 ### Solo user (personal — 7 steps)
 
 1. `4dx-meta-strategy-triage` (→ enter `personal-mode.md`)
-2. `4dx-d1-personal-whirlwind-triage` — protect a ~20% WIG slot via 7-day audit.
+2. `4dx-meta-whirlwind-triage` — protect a ~20% WIG slot via 7-day audit.
 3. `4dx-d1-wig-formulation` (→ `personal-define.md`)
 4. `4dx-d2-lead-measures` (→ `personal-discover.md`)
 5. `4dx-d3-scoreboard` (→ `personal-design.md`)

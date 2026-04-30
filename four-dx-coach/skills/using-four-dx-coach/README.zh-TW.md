@@ -18,7 +18,7 @@ Socratic 決策樹，把使用者 signal 對應到 7 個 atomic skill 之一：
 | # | Signal | Route 到 |
 |---|---|---|
 | 1 | 不確定 4DX 適不適合這個 goal | `4dx-meta-strategy-triage`（6 verdict gate） |
-| 2 | 「日常業務吃掉所有時間，沒空推 goal」 | `4dx-d1-personal-whirlwind-triage`（7 日 audit、80/20 capacity） |
+| 2 | 「日常業務吃掉所有時間，沒空推 goal」 | `4dx-meta-whirlwind-triage`（7 日 audit、80/20 capacity） |
 | 3 | goal 模糊 / 多優先 / 只有 activity 沒結果 | `4dx-d1-wig-formulation`（一條 *From X to Y by When*） |
 | 4 | WIG 已定，不知道每天要幹嘛 | `4dx-d2-lead-measures`（predictive + influenceable） |
 | 5 | tracking 太雜 / 沒在看 / 30 個 metric 的 DB | `4dx-d3-scoreboard`（≤4 元素、5 秒測試） |

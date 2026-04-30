@@ -11,7 +11,7 @@ wastes attention). When in doubt, the default is NOT-APPLICABLE.
 
 | Verdict | Trigger | Hand-off |
 |---|---|---|
-| **APPLICABLE** | All gates passed: behavioral-change goal + no anti-pattern + time-sovereignty + matched-set commitment | `4dx-d1-personal-whirlwind-triage` → `4dx-d1-wig-formulation` |
+| **APPLICABLE** | All gates passed: behavioral-change goal + no anti-pattern + time-sovereignty + matched-set commitment | `4dx-meta-whirlwind-triage` → `4dx-d1-wig-formulation` |
 | **stroke-of-the-pen** | Single decision / purchase / hire / rule change suffices | Pull the lever; 4DX is ceremony |
 | **whirlwind-handleable** | Existing routine working better suffices | GTD / time-blocking |
 | **habit-formation** | "Do tiny thing X every day" (floss / meditate) | Atomic-habits / habit-stacking (Clear) |

@@ -59,7 +59,7 @@ Multi-file skill は scope 重複の表面積を縮小しつつ primary-source g
 
 | Skill | Scope | 役割 |
 |---|---|---|
-| [`4dx-d1-personal-whirlwind-triage`](skills/4dx-d1-personal-whirlwind-triage/) | Personal | 7 日間 time audit；BAU vs WIG 衝突を可視化；~20% WIG slot を確保 |
+| [`4dx-meta-whirlwind-triage`](skills/4dx-meta-whirlwind-triage/) | Personal | 7 日間 time audit；BAU vs WIG 衝突を可視化；~20% WIG slot を確保 |
 | [`4dx-d1-team-wig-cascade`](skills/4dx-d1-team-wig-cascade/) | Team-leader | Primary WIG を Battle WIG に翻訳（Targets-not-Plans）；multi-team 場面のみ出現 |
 | [`4dx-meta-team-leader-onboarding`](skills/4dx-meta-team-leader-onboarding/) | Team-leader | Direct-report leader の本気の buy-in（commitment vs compliance） |
 | [`4dx-meta-team-xps-evaluation`](skills/4dx-meta-team-xps-evaluation/) | Team-leader | Post-quarter XPS audit（0-4 scale；C1-C4 layer） |
@@ -133,7 +133,7 @@ Skill の `description` と trigger signal は **English / 日本語 / 繁體中
 ### Personal（solo）—— ゼロから始める場合
 
 1. `4dx-meta-strategy-triage` → `personal-mode.md` —— 4DX が目標に合うかを確認（or hand-off）
-2. `4dx-d1-personal-whirlwind-triage` —— BAU vs WIG 仕事を明確化
+2. `4dx-meta-whirlwind-triage` —— BAU vs WIG 仕事を明確化
 3. `4dx-d1-wig-formulation` → `personal-define.md` —— WIG を書く（X → Y → When）
 4. `4dx-d2-lead-measures` → `personal-discover.md` —— 2-3 個の lead measure を発見
 5. `4dx-d3-scoreboard` → `personal-design.md` —— 一目で分かる scoreboard を design

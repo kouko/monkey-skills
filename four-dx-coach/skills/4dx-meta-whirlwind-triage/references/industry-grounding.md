@@ -1,4 +1,4 @@
-# Industry-experience grounding for 4dx-d1-personal-whirlwind-triage
+# Industry-experience grounding for 4dx-meta-whirlwind-triage
 
 The book treats the whirlwind as a rhetorical antagonist — the "day job" that
 competes with strategic work for time. It is correct that this competition

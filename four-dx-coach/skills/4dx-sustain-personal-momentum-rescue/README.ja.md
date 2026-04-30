@@ -22,7 +22,7 @@
 3. **D2 — lead** — predictive かつ influenceable だったか。lead green + lag flat なら lead が間違い → `4dx-d2-lead-measures`
 4. **D3 — scoreboard** — 5 秒で勝敗が分かったか。隠れていた / coach 用に化けていたら → `4dx-d3-scoreboard`
 5. **D4 — cadence** — session を押し出したのは何か。pointless = 上流の問題が変装している（D1-3 へ戻る）；whirlwind crowd-out = 来週再開（make-up しない）
-6. **whirlwind エスカレーション check** — 実際の外的負荷スパイクがあったか。あれば `4dx-d1-personal-whirlwind-triage` で容量再設計、または WIG を explicit に pause（pause は failure ではない）
+6. **whirlwind エスカレーション check** — 実際の外的負荷スパイクがあったか。あれば `4dx-meta-whirlwind-triage` で容量再設計、または WIG を explicit に pause（pause は failure ではない）
 7. **substrate check（off-ramp）** — burnout / 抑うつ / 喪失 / 慢性疲労 → 4DX rescue を停止し、休息 / コーチング / 治療を推奨
 8. **shame なしで recognition** — 中断前に user が *実際に* 達成したことを 1-3 個、具体的に言語化（formulaic な「すごい」は禁止）
 9. **最小 scope で再 commitment** — *don't skip, don't catch up*。修復ではなく再開。次 7 日に 1 つ tiny commitment
@@ -34,7 +34,7 @@
 | 初めての 4DX セットアップ | `4dx-meta-strategy-triage` → `4dx-d1-wig-formulation` |
 | 組織横断 engagement survey / enterprise 診断 | scope 外。このスキルは個人 rescue |
 | 臨床的な抑うつ / 慢性 burnout / 喪失 | 専門的支援を。method は care の下流 |
-| reactive / 緊急対応領域で whirlwind 自体が業務 | `4dx-d1-personal-whirlwind-triage`。cadence 中断は問題ではないかもしれない |
+| reactive / 緊急対応領域で whirlwind 自体が業務 | `4dx-meta-whirlwind-triage`。cadence 中断は問題ではないかもしれない |
 
 ## 出典
 
