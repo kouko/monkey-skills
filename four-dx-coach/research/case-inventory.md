@@ -276,6 +276,69 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 ---
 
+## Failure-mode dictionary (highest-ROI material per the 8-purpose analysis)
+
+> **Why this section exists**: per the 8-purpose ROI analysis, the single highest-ROI use of case research for `four-dx-coach` is **anti-pattern recognition for audit-mode verdicts**. This section consolidates failure-mode anchors across the 5-layer 4DX stack, drawn from authoritative sources (a FranklinCovey insider, the Leader-In-Me education-context companion, an academic critique with meta-analysis support, two transparent real-org failures, and one anonymous frontline complaint).
+>
+> Failure-mode dictionary entries are reference material for the agent's verdict-shape calibration. They are NOT case banks themselves — when an actual artifact triggers audit-mode, route to the verbatim-disclosed Tier 1 case (Bravelab is the gold standard for D2 / D4 collapse) and use this dictionary for the rule-mapping table headings.
+
+### Failure-mode source inventory
+
+| # | Source | Coverage | Authority | Verification |
+|---|---|---|---|---|
+| F1 | Andy Cindrich (FranklinCovey insider) "5 Things Leaders Get Wrong" — LinkedIn | 5 canonical failure modes named by a member of the team that developed 4DX | Insider | ★★★ direct WebFetch read |
+| F2 | Leader In Me Education "5 Things Educators Get Wrong" | Same 5 modes + 4 verbatim education micro-WIG/lead examples | FranklinCovey-aligned | ★★★ direct WebFetch read |
+| F3 | Kay C Dee, "The 4 Disciplines of Execution – Keeping Score" — Academic Change Happen blog | Academic critique + Harkin et al. (Psychological Bulletin) meta-analysis on monitoring | Academic | ★★★ direct WebFetch read |
+| F4 | Bravelab.io (already Tier 1) | D2 collapse + D4 session creep + onboarding-prep failure | Real-org | ★★★ direct read |
+| F5 | Anonymous IT employee, Chesapeake Energy IT (thelayoff.com 2017) | Frontline view of mandatory-rollout failure + wrong-fit (CE-26 boundary) | Anonymous frontline | ★★★ direct playwright read |
+
+**Public URLs**:
+- F1: https://www.linkedin.com/pulse/5-things-leaders-get-wrong-franklincoveys-4-execution-andy-cindrich
+- F2: https://www.leaderinme.org/blog/4-disciplines-of-execution-5-things-educators-get-wrong/
+- F3: https://academicchange.org/2018/01/30/the-4-disciplines-of-execution-keeping-score/
+- F4: (see Bravelab.io entry in Tier 1)
+- F5: https://www.thelayoff.com/t/MoBMa7A
+
+### Failure-mode coverage matrix (per skill)
+
+| 4DX layer | Failure mode | Best anchor source | Verbatim quote / spec |
+|---|---|---|---|
+| **Treat as program not OS** | Implementing 4DX as a one-off training initiative rather than the team's operating system | F1 + F2 (mistake 1) | "Treat it like a program, and results will be fleeting" — Cindrich |
+| **D1 too many WIGs** | Teams ending up with 3+ WIGs because they can't pick one | F1 (mistake 2) + book Ch 1 | "Hitting your sales number is your job – it is not a WIG" — Cindrich |
+| **D1 metrics that move <monthly** | Tying WIG to lag that only shifts annually (state test scores, year-end revenue) | F2 (mistake 2) | "For a Wildly Important Goal® to be effective… it needs to be a metric that can be moved at least monthly if not every week" |
+| **D1 lag-as-WIG (your-job-is-not-a-WIG)** | WIG = "hit Q4 number" / "operate the call center" — already the job | F1 (mistake 2) | Cindrich verbatim above |
+| **D2 leveraged-behavior boredom** | Lead measures = "do X activity 5x/week"; gets boring; team disengages | F1 + F2 (mistake 3) | F2 has 4 small-outcome examples: SSR (20 min × 3/wk = boring), AP essays (75% scoring 4-5 = small-outcome), basketball offensive rebounds (10+ per game), band sections mastering one movement weekly |
+| **D2 leads can't actually be influenced weekly** | Picking "increase NPS" / "improve customer satisfaction" as a "lead" — neither team-influenceable nor weekly-movable | F1 (mistake 3) + Bravelab F4 | "LEAD measures didn't work. Not everyone was able to define what he needs to do to bring our efforts closer to our LAG measure" — Bravelab verbatim |
+| **D3 dashboard not scoreboard** | Scoreboard becomes "passive dashboard," gets more metrics, lives in a tool nobody opens, dies | Common across F1-F5 | "Once the scoreboard dies, the system dies" |
+| **D3 scoreboards used to name-and-shame** | Public posting weaponized as embarrassment / pressure / firing tool | F1 + F2 (mistake 4) | Brené Brown research cited: shame "crushes our tolerance for vulnerability, thereby killing engagement, innovation, creativity, productivity, and trust" |
+| **D3 evidence base** | Public + physical recording > private + not recorded; behavior monitoring → behavior change; outcome monitoring → outcome change | F3 (Harkin et al. Psychological Bulletin meta-analysis) | "monitoring progress in public and physically recording progress had larger effects on goal attainment than monitoring that was done in private and not recorded" (pg. 219); "monitoring behavior is more likely to lead to changes in behavior than is monitoring outcomes, whereas changes in outcomes are more likely to occur when people monitor outcomes rather than behaviors" (pg. 219) |
+| **D4 session creep** | WIG Sessions ≥30min, sometimes 1hr — defeats brevity discipline | F4 Bravelab verbatim | "WIG Sessions required more than 30 minutes. Sometimes up to 1h" |
+| **D4 member prep failure** | Members arrive without their measurements / current numbers, blocking accountability flow | F4 Bravelab verbatim | "Everyone has to be prepared before the WIG Session (everyone needs to know their current measurements)" |
+| **D4 leadership disengagement** | Execs treat WIG sessions as "something teams do," not something leaders run; cadence fades within a quarter | F1 (mistake 5) | "Goal Clarity + Commitment + Cadence = Results" equation — Cindrich |
+| **D4 accountability-as-control vs commitment** | Manager runs WIG Session as performance review / surveillance; commitment never internalized | F1 + F2 (mistake 5) | "High clarity with low commitment produces only compliance" — F2 |
+| **Ch 8 onboarding mandatory-not-voluntary** | Forcing single department / IT / support org into 4DX while peers exempt; produces "fake smile" compliance | F5 Chesapeake Energy IT (anonymous frontline) | "we are punished by having to act like 4DX is cool, when the REST OF THE COMPANY does not have to do this silly program… we are going to fake smile our way though this junk" — anonymous IT employee, March 2017 |
+| **Ch 8 wrong-fit (CE-26 boundary)** | Imposing 4DX on intrinsically reactive / support / on-call work where whirlwind IS the strategic value | F5 Chesapeake Energy IT | "If our IT leadership was worth one bucket of piss they would have pushed back and explained this would not work in a support organization" — same source |
+| **Ch 8 skipping pre-onboarding training** | Launching 4DX without grounding team in foundational concepts first | F4 Bravelab verbatim | "People who will be using 4DX should learn the basics of this method before we start" |
+| **Sustaining: cadence collapse** | After multi-week skip, teams cannot re-enter cadence; whole system dies | Common observation across F1-F5 | (anchor case absent — search future round) |
+| **Sustaining: WIG forgotten** | Year-end review reveals nobody remembered the WIG mid-year | Common | (anchor case absent — search future round) |
+
+### Cross-axis truths from failure-mode aggregation
+
+- **D2 is the most-failed discipline** — confirmed by Cindrich (mistake 3), Bravelab (verbatim "didn't work"), book Ch 3 ("most-misunderstood discipline"). All 5 sources circle around D2 as the breakdown point. Audit-mode for `4dx-d2-lead-measures` should treat D2 collapse as the **most likely** verdict, not the rarest.
+- **Mandatory rollout = compliance, not commitment** — Cindrich's mistake 5 + Chesapeake F5 + book Ch 8 all align: voluntary opt-in is sacred, coercion produces "fake smile" theater. The audit-mode for `4dx-meta-team-leader-onboarding` should weight mandatory-rollout signals heavily.
+- **Goal Clarity + Commitment + Cadence = Results** — Cindrich's diagnostic equation (mistake 5). When audit reveals one of these three is missing, that's the gap to surface.
+- **Lead measures that aren't weekly-influenceable look like leads but aren't** — most common D2 trap per Cindrich. "Increase NPS" / "improve customer satisfaction" / "raise revenue" all fail this test. Audit-mode should test "what would moving the needle on this lead THIS WEEK look like?" — if no answer, FAIL.
+
+### Notable UNDERdocumented failure modes (search future rounds)
+
+- **Cadence collapse after week 8-12** — common observation but no verbatim case
+- **WIG forgotten at month 6** — common observation but no verbatim case
+- **Successful pilot, failed scale-up** — implied by some sources but no verbatim case
+- **Cross-team WIG conflict** — when team A's WIG depends on team B's resources; no public case
+- **Member-side: inherited a WIG that doesn't ladder** — frontline frustration with poorly-cascaded WIGs; no public case beyond Chesapeake F5
+
+---
+
 ## Tier 2 — Useful supplements (★★ disclosure × ≥★★ verification, NOT primary anchor)
 
 | # | Case | Disclosure | Verification | Best use |
