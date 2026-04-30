@@ -34,7 +34,6 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 **Source**: FranklinCovey Center for Advanced Research, "Guest Satisfaction at Gaylord Opryland" by Dean W. Collinwood Ph.D. (March 2007, rev July 2009). 5 pages. Date of study: May 2006 – June 2009.
 **Public URL**: https://www.vidartop.no/uploads/9/4/6/7/9467257/cfr070815_oprlnd_casstu__r1.1.5__lr.pdf
-**Cached at**: `/Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/d3a8448e-9700-4357-93f1-589640555d7a/tool-results/webfetch-1777588572915-6oslea.pdf`
 **License note**: © FranklinCovey CFR. Designed for academic / external distribution. Cite verbatim with attribution; do not redistribute the PDF itself.
 
 **Company**: Gaylord Opryland Resort & Convention Center, Nashville TN; 4000 employees / 75 departments / 2,881 rooms / $300M annual revenue / 1.5M guests/year.
@@ -79,7 +78,6 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 **Source**: CSN 4DX Support & Guidance Packet, September 2024. 38 pages.
 **Public URL**: https://news.csn.edu/wp-content/uploads/2024/10/4DX-Support-Guidance-Packet-September-2024.pdf
-**Cached at**: `/Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/d3a8448e-9700-4357-93f1-589640555d7a/tool-results/webfetch-1777588470712-ojpg7d.pdf`
 **License note**: published for CSN faculty / staff internal use; publicly accessible. Cite as "CSN 4DX Support & Guidance Packet, Sept 2024."
 
 **Company**: College of Southern Nevada — public higher-education institution. Established long-term FranklinCovey relationship 2021. Pre-4DX: graduation rate <10% (pre-2019), 17% (2024) vs national community-college avg 33%.
@@ -297,7 +295,7 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 | # | Case | Disclosure | Verification | Note |
 |---|---|---|---|---|
-| 11 | ノーリツ V プラン23 | ★ marketing — D1-D4 specifics absent | ★★★ direct PDF read | JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); see [memory](file:///Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/memory/feedback_marketing_cases_lack_d1_d4_specifics.md) |
+| 11 | ノーリツ V プラン23 | ★ marketing — D1-D4 specifics absent | ★★★ direct PDF read | JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); see memory note `feedback_marketing_cases_lack_d1_d4_specifics` for full reasoning |
 | 12 | マルハン (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | Summary only: "マルハンイズム浸透" |
 | 13 | 公益社 (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | "サービス品質向上 + 風土変革" |
 | 14 | アスクレップ | ❌ inaccessible | — | Original PDF redirect to FCE-publishing 301; no longer accessible |
