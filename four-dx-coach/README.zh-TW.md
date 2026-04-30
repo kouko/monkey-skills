@@ -31,9 +31,9 @@
 
 ```mermaid
 flowchart LR
-    Time[Working capacity] --> Whirlwind["~80%<br/>WHIRLWIND<br/>day-to-day urgency"]
-    Time --> WIGwork["~20%<br/>WIG WORK<br/>strategic / breakthrough"]
-    Whirlwind -.->|consumes if<br/>not protected| WIGwork
+    Time[工作容量] --> Whirlwind["~80%<br/>WHIRLWIND<br/>日常急迫業務"]
+    Time --> WIGwork["~20%<br/>WIG WORK<br/>策略性 / 突破性"]
+    Whirlwind -.->|沒保護<br/>就被吞掉| WIGwork
 
     style Whirlwind fill:#fee,stroke:#a33
     style WIGwork fill:#efe,stroke:#3a3
@@ -43,20 +43,20 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    D1["<b>D1 — Wildly Important Goal</b><br/><i>From X to Y by When</i><br/>1-2 WIGs maximum"]
-    D2["<b>D2 — Lead Measures</b><br/>Predictive AND Influenceable<br/>2-3 leads per WIG"]
-    D3["<b>D3 — Compelling Scoreboard</b><br/>Players' (not Coaches')<br/>5-second 'are we winning?' test"]
-    D4["<b>D4 — WIG Session</b><br/>Weekly, ≤30 min<br/>Account → Review → Plan"]
-    Lag["Lag measure<br/>= the WIG outcome<br/>(historical, slow)"]
-    Action["New commitments<br/>this week"]
+    D1["<b>D1 — Wildly Important Goal</b><br/><i>From X to Y by When</i><br/>最多 1-2 個 WIG"]
+    D2["<b>D2 — Lead Measures</b><br/>可預測 AND 可影響<br/>每個 WIG 配 2-3 個 lead"]
+    D3["<b>D3 — Compelling Scoreboard</b><br/>Players'（不是 Coaches'）<br/>5 秒『有沒有在贏？』測試"]
+    D4["<b>D4 — WIG Session</b><br/>每週、≤30 分<br/>Account → Review → Plan"]
+    Lag["Lag measure<br/>= WIG 結果<br/>（歷史性、動得慢）"]
+    Action["本週新<br/>commitment"]
 
-    D1 -->|sets target for| D2
-    D2 -->|tracked on| D3
-    D3 -->|reviewed in| D4
-    D4 -->|generates| Action
-    Action -.->|moves| D2
-    D2 -.->|predicts| Lag
-    Lag -.->|reports back to| D1
+    D1 -->|設定目標| D2
+    D2 -->|顯示| D3
+    D3 -->|檢視| D4
+    D4 -->|產出| Action
+    Action -.->|推動| D2
+    D2 -.->|預測| Lag
+    Lag -.->|回報| D1
 ```
 
 ### 每個規律的角色 + 最常見失敗
