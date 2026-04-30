@@ -1,0 +1,69 @@
+{
+  "skill": "4dx-meta-strategy-triage",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Topic-router for ambiguous-scope strategy-triage queries. Test prompts mixed across en / ja / zh-TW. ≥3 should_trigger (genuinely scope-ambiguous), ≥2 should_not_trigger lures (one with explicit scope, one wrong topic), ≥1 edge_case. Activation criterion comes from description only.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Is 4DX a good fit? I'm not sure if it would help.",
+      "expected_behavior": "Activate 4dx-meta-strategy-triage. Query asks methodology-fit but does not name actor (I-personally vs my-team). Router should ask ONE Socratic disambiguation question, then route to 4dx-meta-personal-strategy-triage or 4dx-meta-team-strategy-triage.",
+      "notes": "positive: matches EN signal 'Is 4DX a good fit?' literally cited in description; scope ambiguous (no 'I' / 'we' anchor)"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "4DX 適してるかどうか分からない。本を読んだだけ。",
+      "expected_behavior": "Activate 4dx-meta-strategy-triage. JP fit query without scope marker. Ask whether the user is thinking solo or team, then route to scope-specific triage.",
+      "notes": "positive: matches JP signal 「4DX 適してる？」 in description; no 自分/チーム anchor"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "想知道 4DX 適不適合，但還沒想清楚是要自己用還是團隊用。",
+      "expected_behavior": "Activate 4dx-meta-strategy-triage. zh-TW fit query that EXPLICITLY surfaces the ambiguity. Router should still ask the disambiguation question (or accept the user's open framing) then route.",
+      "notes": "positive: zh-TW signal 「4DX 適合嗎？」+ explicit scope-ambiguity statement"
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "Should we use 4DX? Or is it overkill?",
+      "expected_behavior": "Activate 4dx-meta-strategy-triage. 'we' is genuinely ambiguous (could be 'we = me + co-founder solo bet' or 'we = my team of 12'). Router asks ONE clarifying question.",
+      "notes": "positive: 'we' alone is NOT a strong team-scope signal — could be informal plural; description explicitly cites 'Should we use 4DX?' as a router trigger"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Should I use 4DX for my personal goal of writing a novel by year-end?",
+      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Scope is explicit (I / my personal goal) → fire 4dx-meta-personal-strategy-triage directly. Router would add unnecessary friction.",
+      "notes": "lure: explicit-scope query — description explicitly excludes this case ('Do NOT activate when the user's scope is already explicit')"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "What should our team's lead measures be once the WIG is set?",
+      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Topic is wrong — query is about D2 lead measures, not strategy-triage methodology fit. Route to 4dx-d2-personal-lead-measure-discovery (or team equivalent).",
+      "notes": "lure: wrong topic — surface 4DX vocabulary but is D2 territory, not pre-D1 fit gate"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "うちの team で 4DX を導入したい。何から始めれば？",
+      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Scope is explicit (うちの team) and user is past the fit-question — they want to start. Route directly to 4dx-meta-team-strategy-triage (if fit still unverified) or 4dx-meta-team-leader-onboarding.",
+      "notes": "lure: explicit team-scope; description excludes scope-explicit and 'how to start' queries"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "Should our team use 4DX? I'm just a member but I want to suggest it to my manager.",
+      "expected_behavior": "Activate 4dx-meta-strategy-triage with care. Surface signals: scope = team (proposed) but USER role = member, not the deciding leader. Router should note that a member cannot install methodology unilaterally; suggest user share team-strategy-triage with their manager OR run personal-strategy-triage for their own slice. Do NOT silently route to team-triage as if user were the leader.",
+      "notes": "boundary: member-framed-as-team-leader question; description's non-activation list calls out 'member receiving an existing WIG' but here the WIG doesn't yet exist — member is advocating. Expect router to disambiguate role+authority, not just scope."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "self_evaluation_note": "All 8 cases reviewed against description-only activation criterion. 4 should_trigger fire on ambiguous fit-queries; 3 should_not_trigger lures (explicit personal scope / wrong topic D2 / explicit team scope) all land outside router. 1 edge case correctly invokes router with role-clarification overlay. No surface-keyword-only confusions identified."
+}

@@ -1,0 +1,104 @@
+{
+  "skill": "using-four-dx-coach",
+  "version": "0.2.0",
+  "source_book": "The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker (2nd ed., 2021)",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Router skill — different test logic than atomic skills. v0.2 upgrade: now triages by scope (personal / team-leader / team-member) before stage. Activates on generic/vague/multi-intent OR scope-ambiguous 4DX queries. Does NOT activate when an atomic skill's signal is unambiguous (skill name, scope + stage both clear). MUST activate-then-decline on enterprise / habit / OKR / agile / mental-health lures. Test types: should_trigger (router activates and routes downstream OR asks scope question), should_not_trigger (atomic skill should fire instead, router stays silent), should_decline (router activates but produces hand-off message instead of routing). Plus 1 edge_case for scope-ambiguous queries that activate AND ask scope.",
+  "pass_rate": 1.0,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "I want to start using 4DX. Where do I begin?",
+      "expected_behavior": "Activate using-four-dx-coach. Scope is ambiguous — ask the Step-2 scope question (personal / team-leader / team-member). Once scope is clarified, route to the appropriate stage entry skill (likely meta-personal-triage or meta-team-triage).",
+      "notes": "positive scenario: vague entry point with no scope marker — canonical EN trigger phrase, exercises Step-1 → Step-2 (scope ambiguous → ask)."
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "4DX を使い始めたい。実行の 4 つの規律で目標を達成したい。",
+      "expected_behavior": "Activate using-four-dx-coach. Scope ambiguous (個人 / リーダー / メンバー どれか不明) — ask the JP scope clarification question, then route based on the answer.",
+      "notes": "positive scenario: JP canonical trigger phrasing — multilingual coverage + scope-ambiguous flow."
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我想要開始用 4DX。從哪裡開始？",
+      "expected_behavior": "Activate using-four-dx-coach. Scope ambiguous — ask the zh-TW scope clarification question (個人目標 / 帶領團隊 / 加入了團隊), then route based on the answer.",
+      "notes": "positive scenario: zh-TW canonical trigger phrasing — multilingual coverage + scope-ambiguous flow."
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "Tell me what 4DX is and how to apply it to my goal.",
+      "expected_behavior": "Activate using-four-dx-coach. 'My goal' weakly implies personal scope but is not definitive — brief framing then ask the Socratic clarifying question (scope + stage) to determine which atomic skill to invoke.",
+      "notes": "positive scenario: multi-intent (explain + apply), scope weakly personal — squarely router territory."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I have too many priorities and need to narrow my personal goal down to one Wildly Important Goal.",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (personal — 'my personal goal') and stage (D1 WIG-defining — 'narrow down to one WIG') are both unambiguous. Fire 4dx-d1-personal-wig-defining directly. Router would add latency without value.",
+      "notes": "lure: personal + D1-WIG both clear — atomic skill owns the trigger."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "Help my team pick our Primary WIG for the next quarter.",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-leader — 'my team', 'our Primary WIG') and stage (D1 Primary-WIG selection) are both unambiguous. Fire 4dx-d1-team-primary-wig-selection directly.",
+      "notes": "lure: team-leader + D1-primary-WIG both clear — atomic skill owns the trigger."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I missed my weekly commitment last week. WIG Session is tomorrow — how do I debrief honestly?",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-member — 'my commitment' inside a 'WIG Session' someone else runs) and stage (D4 account-debrief) are both unambiguous. Fire 4dx-d4-member-account-debrief directly.",
+      "notes": "lure: team-member + D4-debrief both clear — atomic skill owns the trigger."
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "What's the best habit tracker app — Notion vs Sunsama vs Things?",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Productivity-tool shopping; not a 4DX execution-strategy query at all. Router's explicit non-activation list covers this.",
+      "notes": "lure: tool selection (not strategy) — router must stay silent entirely (no decline either)."
+    },
+    {
+      "id": "should-decline-01",
+      "type": "should_decline",
+      "prompt": "我們公司有 50 個 team，想要 rollout 4DX 到整個組織。要怎麼開始？",
+      "expected_behavior": "Activate using-four-dx-coach BUT produce the enterprise hand-off script — refer to book Part 2 (Chapters 6-10) and FranklinCovey consulting. Do NOT route to any atomic skill (the team-leader skills cap at single intact team or ≤5 sub-team cascade; 50-team rollout exceeds plugin scope).",
+      "notes": "decline lure: enterprise / multi-team rollout — router activates to gate, then declines with hand-off."
+    },
+    {
+      "id": "should-decline-02",
+      "type": "should_decline",
+      "prompt": "I want to build a daily meditation habit using 4DX.",
+      "expected_behavior": "Activate using-four-dx-coach BUT produce the habit-formation hand-off script — recommend Atomic Habits (Clear) since habit formation has no breakthrough lag measure. Note the conditional re-entry path (habit in service of a WIG → come back via d2-personal-lead-measure-discovery).",
+      "notes": "decline lure: habit formation — surface mentions 4DX but problem shape doesn't fit."
+    },
+    {
+      "id": "should-decline-03",
+      "type": "should_decline",
+      "prompt": "Help me write OKRs for next quarter.",
+      "expected_behavior": "Activate using-four-dx-coach BUT produce the OKR hand-off script — explain the OKR vs 4DX distinction (OKR finds the right WIG; 4DX executes once validated). Do NOT route to atomic skills.",
+      "notes": "decline lure: OKR — different framework with kill criteria; router declines."
+    },
+    {
+      "id": "should-decline-04",
+      "type": "should_decline",
+      "prompt": "I want to use 4DX to plan my team's next sprint and run our daily standup better.",
+      "expected_behavior": "Activate using-four-dx-coach BUT produce the agile / scrum hand-off script — sprint planning and standups are software-delivery cadence frameworks, different problem shape from 4DX strategic execution. Do NOT route.",
+      "notes": "decline lure: agile/scrum surface-language with 4DX wrapper — wrong methodology."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I want to use 4DX.",
+      "expected_behavior": "Activate using-four-dx-coach. Maximally scope-ambiguous (no scope marker, no stage marker). Router should ASK the Step-2 scope question (personal / team-leader / team-member) before any routing. Activation correct; downstream depends on user's answer.",
+      "notes": "boundary: scope-ambiguous bare query — router's primary disambiguation role. Tests Step-1 → Step-2 transition explicitly."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance. Router-specific note: should_decline cases test that the router activates AND produces a hand-off (not routing) — failure mode = either non-activation (silent miss) OR routing to an atomic skill (gate bypass). Both are FAIL. should_not_trigger tension note: should_not_trigger requires BOTH scope AND stage to be unambiguous; if only one is clear (e.g. clear scope + vague stage, or clear stage + ambiguous scope) the router should still activate to disambiguate."
+}

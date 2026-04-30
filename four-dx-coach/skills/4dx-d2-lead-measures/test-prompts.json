@@ -1,0 +1,69 @@
+{
+  "skill": "4dx-d2-lead-measures",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Topic-router for ambiguous-role D2 lead-measure queries. Tests cover EN/JP/zh-TW. Activation criterion = ambiguous on role (solo / leader-facilitator / member-influencer) per description.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Help me with lead measures. I have the goal but no idea where to start.",
+      "expected_behavior": "Activate 4dx-d2-lead-measures. No role marker — could be solo picking own leads, leader facilitating team, or member working with inherited leads. Router asks ONE Socratic question on role then routes.",
+      "notes": "positive: matches EN signal 'Help me with lead measures' literally cited in description"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "lead measure の探し方を教えてください。",
+      "expected_behavior": "Activate 4dx-d2-lead-measures. JP query 'lead measure の探し方' without role signal. Router disambiguates (solo / leader-facilitator / member-influencer) before any D2 protocol.",
+      "notes": "positive: matches JP signal 「lead measure の探し方」 literally cited in description"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "幫我找 lead measure，每天到底該做什麼才會推動目標？",
+      "expected_behavior": "Activate 4dx-d2-lead-measures. zh-TW query with no role marker. Router should ask the role question (solo / leader 帶 team / member 接收已訂好的) then route.",
+      "notes": "positive: matches zh-TW signal 「幫我找 lead measure」「每天該做什麼才會推動目標」 in description"
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "What's a daily action driver for an already-defined goal? Need leading-indicator advice.",
+      "expected_behavior": "Activate 4dx-d2-lead-measures. 'Daily action driver' / 'leading-indicator advice' is described as trigger phrasing. No role named. Router disambiguates.",
+      "notes": "positive: description lists 'Daily action that drives the goal' / 'Lead measure advice' as EN trigger; role unclear"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Help me facilitate my team picking 2-3 lead measures for our Team WIG (currently 0 → 30% by Dec).",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Role explicit (leader-facilitator). Fire 4dx-d2-team-lead-measure-facilitation directly.",
+      "notes": "lure: explicit-role (leader facilitating team) — description excludes role-explicit cases"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "Our team's lead measures are set. How should I display them on the scoreboard?",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Topic is wrong — query is D3 scoreboard, not D2 lead-measure discovery. Route to 4dx-d3-scoreboard topic-router.",
+      "notes": "lure: wrong-stage — surface 'lead measures' word present but downstream D3 question"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I haven't set my goal yet — what's a good lead measure for general productivity?",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. WIG prerequisite missing. Description explicitly excludes pre-WIG queries; route to 4dx-d1-wig-formulation first.",
+      "notes": "lure: D2 prerequisite missing — leads built on no-WIG are noise"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我是 team lead，但我老闆要我先自己想 2-3 個 lead 候選再帶 team 討論。算 solo 還是 facilitator？",
+      "expected_behavior": "Activate 4dx-d2-lead-measures. Edge case: leader doing pre-work before facilitating — between solo-discovery and facilitation. Router should surface this and likely route to team-lead-measure-facilitation (since the eventual venue is the team session, and the book's anti-pattern is 'leader pre-writes leads to save team time'). Should warn user about veto-not-dictate principle even if they prepare candidates.",
+      "notes": "boundary: leader-doing-pre-work — sits between personal-discovery and team-facilitation; correctly disambiguated by surfacing the team-build risk"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "self_evaluation_note": "All 8 cases reviewed against description-only activation. 4 should_trigger genuinely role-ambiguous (EN/JP/zh-TW + EN paraphrase); 3 should_not_trigger lures (role explicit / wrong-stage D3 / wrong-stage D1 prerequisite) correctly excluded. Edge case forces router to surface the leader-pre-work tension and route to team-facilitation while flagging veto-not-dictate. Description boundary clauses ('Do NOT activate when role is explicit / WIG not yet defined / scoreboard / cadence') align with all 4 should_not lures."
+}

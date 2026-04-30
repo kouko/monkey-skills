@@ -1,0 +1,69 @@
+{
+  "skill": "4dx-d3-scoreboard",
+  "version": "0.1.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Topic-router for ambiguous-role D3 scoreboard queries. Tests cover EN/JP/zh-TW. Activation criterion = ambiguous on role + verb (solo design / leader-facilitate-build / member-read) per description.",
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "Help me with the scoreboard. I have a WIG and leads but no display yet.",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. No role marker — could be solo designing private board, leader facilitating public team build, or member reading what's already there. Router asks ONE Socratic question on role + verb then routes.",
+      "notes": "positive: matches EN signal 'Help me with the scoreboard' literally cited in description"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "scoreboard を設計したい。どう可視化すれば？",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. JP query without role signal — could be solo or leader. Router disambiguates (solo design / leader-facilitate / member-read) before any D3 protocol.",
+      "notes": "positive: matches JP signal 「scoreboard を設計したい」「どう可視化すれば」 in description"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "幫我搞 scoreboard，怎麼追蹤才看得出在贏？",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. zh-TW query with no role marker. Router should ask role + verb question (自己用 / 帶 team / 讀 team 已有的) then route.",
+      "notes": "positive: matches zh-TW signal 「幫我搞 scoreboard」「怎麼追蹤」 in description"
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "Players' scoreboard advice — how do I make one that passes the 5-second test?",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. 'Players' scoreboard' is described as a trigger phrasing; no role named. Router disambiguates whether the user is designing their own / facilitating team build / reading inherited.",
+      "notes": "positive: description lists 'Players' scoreboard' as EN trigger; role unclear"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Help me design my own personal scoreboard for my running goal — solo, just for me.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Role + verb explicit (solo design own). Fire 4dx-d3-personal-scoreboard directly.",
+      "notes": "lure: explicit role+verb (solo design) — description excludes role-explicit cases"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "We do weekly WIG Sessions but I'm not sure how to run the agenda — Account / Review / Plan timing?",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Topic is wrong — query is D4 cadence / WIG Session, not D3 scoreboard. Route to 4dx-d4-cadence.",
+      "notes": "lure: wrong-stage — D4 question, not D3"
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "We need an enterprise BI dashboard rolling up KPIs across 30 product teams in Tableau.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Description explicitly excludes enterprise BI / multi-team aggregated dashboards. Hand off via using-four-dx-coach.",
+      "notes": "lure: out-of-4DX — enterprise BI is correctly excluded by description"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我們 team 有 scoreboard 但設計很爛、5-second test 過不了。我是成員，可以自己重做一個給自己看嗎？",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. Edge case: member with broken team scoreboard considering personal substitute. Router should surface that this is the explicit anti-pattern in 4dx-d3-member-scoreboard-reading boundary section ('member-substitution failure'). Route to member-scoreboard-reading (which has escalation script) rather than to personal-scoreboard. Member shouldn't unilaterally redesign or substitute.",
+      "notes": "boundary: broken-board-member-substitution — disambiguate to member-reading (has escalation), NOT to personal-scoreboard (would mask the team-side gap)"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "self_evaluation_note": "All 8 cases reviewed against description-only activation. 4 should_trigger genuinely role-ambiguous (EN/JP/zh-TW + EN paraphrase); 3 should_not_trigger lures (explicit-role solo / wrong-stage D4 / out-of-4DX BI) correctly excluded. Edge case forces router to surface the member-substitution anti-pattern and route to member-reading (which has escalation script) rather than to personal-scoreboard. Description boundary clauses ('role+verb explicit / D4 / enterprise BI / multi-team') align with all 4 should_not lures."
+}
