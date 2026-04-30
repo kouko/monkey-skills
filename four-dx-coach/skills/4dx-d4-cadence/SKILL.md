@@ -6,11 +6,14 @@ description: |
   from past minutes / commitment logs / stakeholder critique). Coach
   EN: "Run my weekly WIG Session", "Facilitate our WIG meeting", "Prep
   my commitment", "I missed last week". Audit EN: "Audit our WIG
-  meetings — 4 weeks of notes", "Boss says meetings are pointless,
-  diagnose". JP coach:「WIG Session 回したい」「commitment 準備」「果た
+  meetings — 4 weeks of notes", "Got feedback our weekly review isn't
+  working", "Stakeholder wants to revisit the WIG Session format",
+  "Boss says meetings are pointless, diagnose". JP coach:「WIG Session 回したい」「commitment 準備」「果た
   せなかった」. JP audit:「会議録を見て何がダメか」「WIG Session 機能し
-  てない診断して」. zh-TW coach:「每週 review」「commitment 怎麼準備」.
-  zh-TW audit:「老闆說週會浪費時間幫我診斷」「四週會議記錄哪裡走樣」.
+  てない診断して」「上司にフィードバックされた、WIG ミーティング見て」
+  「マネージャーから方向性を直したいと言われた」. zh-TW coach:「每週 review」「commitment 怎麼準備」.
+  zh-TW audit:「主管覺得週會要調整，幫看」「review 後想討論週會方向」
+  「老闆說週會浪費時間幫我診斷」「四週會議記錄哪裡走樣」.
   NOT for daily standup / sprint review / OKR check-in / agile retro /
   annual retro. NOT pre-D4. NOT cross-layer audit (→ `4dx-audit`).
   **Critical boundary — multi-week collapse ≠ malformed-but-running**:
@@ -70,9 +73,9 @@ counts as a session, what counts as a commitment, what counts as cadence.
 - zh-TW: 「上週 commitment 沒達成，這次 session 怎麼面對？」「半完成的承諾要怎麼講？」
 
 **Audit-mode (diagnose running-but-malformed cadence from artifacts):**
-- EN: "Audit our weekly WIG meetings — here are 4 weeks of notes", "Team says meetings are pointless — what's wrong?", "Here's our session log — diagnose what's malformed", "Boss says weekly review is pointless, help me see why"
-- JP: 「うちの WIG Session 機能してない、診断して」「会議録を見て何がダメか教えて」「過去 4 週分の議事録 audit して」
-- zh-TW: 「我們的 weekly meeting 沒效果，幫看哪裡有問題」「老闆說週會浪費時間，幫我診斷」「過去四週會議記錄，幫我看 4DX 角度哪裡走樣了」
+- EN: "Audit our weekly WIG meetings — here are 4 weeks of notes", "Team says meetings are pointless — what's wrong?", "Got feedback our weekly review isn't quite working — diagnose", "Stakeholder wants to revisit the WIG Session format", "Manager flagged we should sharpen the cadence", "Here's our session log — diagnose what's malformed", "Boss says weekly review is pointless, help me see why"
+- JP: 「うちの WIG Session 機能してない、診断して」「会議録を見て何がダメか教えて」「過去 4 週分の議事録 audit して」「上司にフィードバックされた、WIG ミーティング見て」「マネージャーから方向性を直したいと言われた、cadence チェックして」
+- zh-TW: 「我們的 weekly meeting 沒效果，幫看哪裡有問題」「主管覺得週會要調整，幫看哪裡」「review 後 stakeholder 想討論週會方向」「老闆說週會浪費時間，幫我診斷」「過去四週會議記錄，幫我看 4DX 角度哪裡走樣了」
 
 ### Non-activation signals (DO NOT fire when…)
 

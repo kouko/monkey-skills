@@ -5,13 +5,14 @@ description: |
   solo personal-define From-X-to-Y-by-When; team-leader team-select via
   Battles 2x2; team-member member-comprehend inherited WIG. Audit
   (consultant): user provides WIG draft / candidates for diagnostic, OR
-  WIG + stakeholder critique ("boss says too abstract"). EN: "Define my
-  personal WIG", "Pick our team's Primary WIG", "Understand the WIG my
-  manager set", "Audit our WIG — boss says it's too abstract".
-  JP: 「自分の WIG を決めたい」「Primary WIG をどう選ぶ」「降りてきた WIG
-  を理解したい」「WIG を診断して」「上司が WIG ダメ出ししてる」. zh-TW:
-  「幫我訂個人 WIG」「team 選 Primary WIG」「主管定的 WIG 看懂」「WIG
-  哪裡有問題」「老闆說 WIG 不行幫我診斷」. Voice: coach / consultant-to-
+  WIG + stakeholder critique (direct "boss says too abstract" OR softer
+  "got feedback our WIG isn't quite right" / 「上司にフィードバックされた」
+  / 「主管覺得要調整」). EN: "Define my personal WIG", "Pick our team's
+  Primary WIG", "Audit our WIG — got feedback it's too abstract".
+  JP: 「自分の WIG を決めたい」「Primary WIG をどう選ぶ」「WIG を診断して」
+  「上司にフィードバックされた、WIG 見て」「マネージャーから方向性を直したい
+  と言われた」. zh-TW: 「幫我訂個人 WIG」「team 選 Primary WIG」「WIG 哪裡
+  有問題」「主管覺得 WIG 要調整，幫看」「review 後想討論 WIG 方向」. Voice: coach / consultant-to-
   leader / coach-to-member / consultant-audit. NOT for cross-layer audit
   (→ 4dx-audit), cascading Primary WIG to sub-teams (→ 4dx-d1-wig-
   cascade), lead / scoreboard / cadence (→ D2 / D3 / D4), or pre-D1
@@ -72,9 +73,9 @@ leader / personal-coach-to-member / consultant-audit).
 - zh-TW: 「主管定了 WIG 但我不知道我這個位置該怎麼接」「團隊有 WIG 但我不知道我該做什麼」「團隊目標跟我的工作有什麼關係」
 
 **Audit-mode (any scope, agent = consultant on existing artifact):**
-- EN: "Here's our WIG draft — what's wrong?", "Audit my Primary WIG against 4DX", "Boss says our WIG is too abstract — diagnose", "Is this WIG well-formed?", "Diagnose this WIG against 4DX rules"
-- JP: 「うちの WIG を診断して」「上司が WIG ダメ出ししてるけど何が原因？」「この WIG、4DX 的に OK？」「Primary WIG をチェックして」
-- zh-TW: 「我們的 WIG 你看一下哪裡有問題」「老闆說 WIG 不行，幫我診斷」「幫我審核這個 WIG 有沒有過 4DX 規則」「這個 WIG 寫得對嗎？」
+- EN: "Here's our WIG draft — what's wrong?", "Audit my Primary WIG against 4DX", "Got feedback our WIG isn't quite right — can you diagnose?", "Stakeholder wants to revisit our WIG framing", "Manager flagged we should sharpen this WIG", "Boss says our WIG is too abstract — diagnose", "Is this WIG well-formed?", "Diagnose this WIG against 4DX rules"
+- JP: 「うちの WIG を診断して」「上司にフィードバックされた、WIG どこ直すべき？」「マネージャーから方向性を直したいと言われた、WIG 見て」「上司が WIG ダメ出ししてるけど何が原因？」「この WIG、4DX 的に OK？」「Primary WIG をチェックして」
+- zh-TW: 「我們的 WIG 你看一下哪裡有問題」「主管覺得 WIG 需要再調整，幫我看哪裡」「review 後 stakeholder 想討論 WIG 方向」「老闆說 WIG 不行，幫我診斷」「幫我審核這個 WIG 有沒有過 4DX 規則」「這個 WIG 寫得對嗎？」
 
 ### Non-activation signals (DO NOT fire when…)
 
@@ -104,7 +105,7 @@ When this skill activates:
 | Signal in user query | Mode |
 |---|---|
 | User pastes / quotes a WIG sentence (or candidate list) and asks "what's wrong?" / "diagnose" / "audit" / 「診断して」/「哪裡有問題」 | **audit-mode** |
-| User pastes a WIG + a stakeholder complaint ("boss says…", 「上司が…」, 「老闆說…」) | **audit-mode** |
+| User pastes a WIG + a stakeholder complaint ("boss says…" / "got feedback…" / "manager flagged…", 「上司が…」/「フィードバックされた」/「指摘を受けた」, 「老闆說…」/「主管覺得要調整」/「review 後需要修正」) | **audit-mode** |
 | User has no draft, asks to be coached / guided / "help me set" / 「決めたい」/「訂個 WIG」 | **coach-mode** |
 | Vague / ambiguous on whether artifact exists | ask ONE clarifying question (below) |
 

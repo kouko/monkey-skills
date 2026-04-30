@@ -6,12 +6,13 @@ description: |
   an existing lead list or KPI dashboard against two-axis test + Goodhart
   + Ch.3 cap. EN: "Help me find lead measures", "Run a lead-measure
   session with my team", "Our team's leads are set — how do I influence
-  them?", "Audit our lead measures", "Boss says these aren't real lead
-  measures", "Are our 12 KPIs the right leads?". JP:「lead measure を
+  them?", "Audit our lead measures", "Got feedback our leads aren't right",
+  "Stakeholder wants to revisit our lead measures", "Boss says these aren't
+  real lead measures", "Are our 12 KPIs the right leads?". JP:「lead measure を
   決めたい」「team で lead measure を一緒に決めたい」「うちの lead measure
-  を診断して」「これ本当に lead measure？」. zh-TW:「幫我找 lead measure」
-  「帶 team 一起找 lead」「老闆說我們的 lead 不對」「12 個指標哪些是真
-  lead？」. Two-axis test + Goodhart shared across all modes. NOT for
+  を診断して」「上司にフィードバックされた、lead 見て」「これ本当に lead？」. zh-TW:「幫我找 lead measure」
+  「帶 team 一起找 lead」「主管覺得我們的 lead 要調整」「老闆說我們的 lead
+  不對」「review 後想討論 lead 方向」「12 個指標哪些是真 lead？」. Two-axis test + Goodhart shared across all modes. NOT for
   WIG (→ 4dx-d1-*), scoreboard (→ 4dx-d3-scoreboard), cadence
   (→ 4dx-d4-cadence), stale leads (→ 4dx-sustain-momentum-rescue),
   cross-layer audit (→ 4dx-audit), or OKR/KPI audit without 4DX framing
@@ -89,15 +90,19 @@ of those collapses.
   知道哪些跟我的位置有關」「我支援全部 lead 但完全被攤薄」
 
 **Audit (existing artifact + optional stakeholder critique, voice = consultant-to-stakeholder):**
-- EN: "Audit our lead measures", "Boss says these aren't real lead
-  measures — help me see what's wrong", "Are our 12 KPIs the right
-  leads?", "Diagnose this list against 4DX", "Which of these pass the
-  two-axis test?"
+- EN: "Audit our lead measures", "Got feedback our leads aren't quite
+  right — help me see what's wrong", "Stakeholder wants to revisit our
+  lead measures — diagnose", "Manager flagged we should sharpen the
+  leads", "Boss says these aren't real lead measures", "Are our 12 KPIs
+  the right leads?", "Diagnose this list against 4DX", "Which of these
+  pass the two-axis test?"
 - JP:「うちの lead measure を診断して」「これ本当に lead measure？」
-  「ボスに『これは lead じゃない』と言われた、どこが違う？」「KPI 12 個
-  あるが、どれが本当の lead？」
-- zh-TW:「老闆說我們的 lead 不對，幫看哪裡」「我們列了 12 個指標，哪些是
-  真 lead？」「幫我用 two-axis test 過一遍這份清單」「診斷這份 lead 清單」
+  「上司にフィードバックされた、lead どこ直すべき？」「マネージャーから
+  方向性を直したいと言われた、lead 見て」「ボスに『これは lead じゃない』
+  と言われた、どこが違う？」「KPI 12 個あるが、どれが本当の lead？」
+- zh-TW:「主管覺得我們的 lead 要調整，幫看哪裡」「review 後 stakeholder 想
+  討論 lead 方向」「老闆說我們的 lead 不對，幫看哪裡」「我們列了 12 個指標，
+  哪些是真 lead？」「幫我用 two-axis test 過一遍這份清單」「診斷這份 lead 清單」
 
 ### Non-activation signals (DO NOT fire when…)
 

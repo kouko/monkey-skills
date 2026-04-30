@@ -9,11 +9,14 @@ description: |
   Coach EN: "How do I get my team-leaders on board with 4DX?", "Direct
   reports will resist this", "Pilot or mandate?"
   Audit EN: "Audit our onboarding — team isn't bought in", "Leaders
-  complying not committing — what went wrong?"
+  complying not committing — what went wrong?", "Got feedback our rollout
+  didn't land", "Stakeholder wants to revisit how we onboarded leaders".
   JP coach:「部下リーダーに 4DX を腹落ちさせたい」「全社展開かパイロットか」。
-  JP audit:「チーム導入したが反発が強い、何が間違ってた？」「表面的に従ってるだけ」。
+  JP audit:「チーム導入したが反発が強い、何が間違ってた？」「表面的に従ってる
+  だけ」「上司にフィードバックされた、rollout 見て」。
   zh-TW coach:「下屬 leader 真心接受 4DX？」「pilot 還是全面導入？」。
-  zh-TW audit:「導入了但團隊不買單，幫我診斷」「leader 表面配合心裡抗拒」。
+  zh-TW audit:「導入了但團隊不買單，幫我診斷」「leader 表面配合心裡抗拒」
+  「主管覺得 rollout 沒做好，幫看」。
   NOT pre-fit-decision (→ `4dx-meta-strategy-triage`). NOT already-bought-in
   technical cascade (→ `4dx-d1-wig-cascade`). NOT frontline-member buy-in.
   NOT cross-layer audit (→ `4dx-audit`). NOT collapsed-cadence post-cascade
@@ -65,14 +68,19 @@ audit-mode.
 ### Audit-mode triggers (past onboarding ran; diagnosing from artifacts)
 
 - EN: "Audit our onboarding — team isn't bought in", "Leaders
-  complying not committing — what went wrong?", "Here's the rollout
-  email + 1:1 transcripts — diagnose"
+  complying not committing — what went wrong?", "Got feedback our
+  rollout didn't land — diagnose", "Stakeholder wants to revisit how
+  we onboarded leaders", "My boss flagged the team isn't really
+  bought in — help me see why", "Here's the rollout email + 1:1
+  transcripts — diagnose"
 - JP: 「チーム導入したが反発が強い、何が間違ってた？」「リーダー陣が
-  表面的に従ってるだけ、何が抜けた？」「ロールアウトメールと議事録、
-  見て診断して」
+  表面的に従ってるだけ、何が抜けた？」「上司にフィードバックされた、
+  rollout 見て」「マネージャーから方向性を直したいと言われた、
+  onboarding 診断して」「ロールアウトメールと議事録、見て診断して」
 - zh-TW: 「導入了 4DX 但團隊不買單，幫我診斷」「下屬 leader 表面配合
-  心裡抗拒，問題在哪？」「rollout 信件加上幾週的 leader 回饋，幫我看
-  哪裡走樣」
+  心裡抗拒，問題在哪？」「主管覺得 rollout 沒做好，幫看哪裡」「review
+  後想討論 onboarding 方向」「rollout 信件加上幾週的 leader 回饋，幫
+  我看哪裡走樣」
 
 ### Non-activation signals (DO NOT fire when…)
 

@@ -7,12 +7,14 @@ description: |
   coaches' / ≤4 elements + KEEP/DROP/RESTYLE). EN: "Design my
   scoreboard", "Design our team scoreboard", "Read my team's
   scoreboard", "Audit our scoreboard", "Team doesn't look at the
-  scoreboard", "Boss says our dashboard isn't useful". JP:「自分用の
-  scoreboard を設計」「team scoreboard 設計」「scoreboard をどう読む」
-  「うちの scoreboard 誰も見てない、診断して」「dashboard を 4DX 視点
+  scoreboard", "Got feedback the dashboard isn't useful", "Stakeholder
+  wants to revisit our scoreboard", "Boss says our dashboard isn't
+  useful". JP:「自分用の scoreboard を設計」「team scoreboard 設計」
+  「scoreboard をどう読む」「うちの scoreboard 誰も見てない、診断して」
+  「上司にフィードバックされた、scoreboard 見て」「dashboard を 4DX 視点
   で見て」. zh-TW:「設計自己的計分板」「幫團隊設計 scoreboard」「team
-  scoreboard 怎麼看」「scoreboard 沒人看，幫我看哪裡有問題」「dashboard
-  老闆說沒用」. NOT for enterprise BI / KPI dashboards, agile burndown,
+  scoreboard 怎麼看」「scoreboard 沒人看，幫我看哪裡有問題」「主管覺得
+  dashboard 要調整」「review 後想討論 scoreboard 方向」. NOT for enterprise BI / KPI dashboards, agile burndown,
   OKR scorecards, before D1/D2 are defined, D4 cadence questions, or
   **scoreboard-as-stalled-cadence-signal** ("hasn't updated in a month"
   / "WIG Sessions stopped" → `4dx-sustain-momentum-rescue`; audit-mode
@@ -81,13 +83,18 @@ players' from coaches', and what visual elements belong on the board.
 
 **Audit-mode (existing scoreboard, voice = consultant-to-user):**
 - EN: "Audit our scoreboard", "Team doesn't look at the scoreboard",
-  "Boss says our dashboard isn't useful", "Here's our scoreboard —
-  what's wrong with it?", "We put it on the wall and the team
-  ignores it"
-- JP: 「うちの scoreboard 誰も見てない、診断して」「dashboard を 4DX
-  視点で見て」「scoreboard はあるけど機能してない、何が問題？」
-- zh-TW: 「scoreboard 沒人看，幫我看哪裡有問題」「我們的 dashboard
-  老闆說沒用」「計分板做了但沒人理，幫我審一下」
+  "Got feedback our dashboard isn't useful", "Stakeholder wants to
+  revisit the scoreboard design", "Manager flagged we should rework the
+  board", "Boss says our dashboard isn't useful", "Here's our scoreboard
+  — what's wrong with it?", "We put it on the wall and the team ignores
+  it"
+- JP: 「うちの scoreboard 誰も見てない、診断して」「上司にフィードバック
+  された、scoreboard 見て」「マネージャーから方向性を直したいと言われた、
+  dashboard チェックして」「dashboard を 4DX 視点で見て」「scoreboard は
+  あるけど機能してない、何が問題？」
+- zh-TW: 「scoreboard 沒人看，幫我看哪裡有問題」「主管覺得 dashboard 要
+  調整，幫看哪裡」「review 後 stakeholder 想討論 scoreboard 方向」「我們的
+  dashboard 老闆說沒用」「計分板做了但沒人理，幫我審一下」
 
 ### Non-activation signals (DO NOT fire when…)
 

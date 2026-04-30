@@ -399,3 +399,35 @@ The 4 v0.7.0-style coach queries (Q13-16) all routed identically to v0.7.0. The 
 - Edge cases handled by description-text intent-matching, not heuristics
 
 The dual-mode pattern's discriminator is **layer-count + ownership**, encoded twice (positively in topic-skill description audit-mode triggers, negatively in 4dx-audit's "NOT single-layer — route to topic audit-mode" clause). No description edits required for v0.8.0 release.
+
+---
+
+## v0.8.1 — soft-phrased audit-trigger expansion (2026-05-01)
+
+### Why
+
+Direct stakeholder-critique phrasings ("boss says X 不行" / "上司にダメ出しされた" / "老闆說 lead 不對") were anglo-direct and miss the JP / zh-TW high-context-culture norm where users more often phrase the same situation as「上司にフィードバックされた」/「主管覺得要調整」/「review 後想討論方向」. Direct phrasings remain (cover the explicit case); soft phrasings added (cover the indirect / face-saving case).
+
+### Scope
+
+Audit-mode trigger lists + frontmatter descriptions softened across 8 topic skills:
+- 4dx-meta-strategy-triage / 4dx-meta-whirlwind-triage / 4dx-meta-team-leader-onboarding
+- 4dx-d1-wig-formulation / 4dx-d1-wig-cascade
+- 4dx-d2-lead-measures / 4dx-d3-scoreboard / 4dx-d4-cadence
+
+Soft-phrasing template:
+- EN: "got feedback our X needs work" / "stakeholder wants to revisit Y" / "manager flagged Z"
+- JP: 「上司にフィードバックされた、X 見て」/「マネージャーから方向性を直したいと言われた」
+- zh-TW: 「主管覺得 X 要調整」/「review 後想討論 Y 方向」
+
+### Sanity-test result (12 soft-phrased queries)
+
+| Query type | Total | Routed correctly | Confidence |
+|---|---|---|---|
+| EN soft + discipline noun | 7 | 7/7 | high |
+| JP soft + discipline noun | 2 | 2/2 | high |
+| zh-TW soft + discipline noun | 3 | 3/3 | high (1 medium on rollout/cascade noun ambiguity, inherited not introduced) |
+
+**Verdict**: precision preserved. The discipline noun (WIG / lead measures / scoreboard / weekly review / cascade map / calendar / 4DX choice / rollout) does the routing; the soft framing only signals audit-mode. No regression from v0.8.0.
+
+**One inherited weak edge**: 「主管覺得 rollout 沒做好」 — "rollout" is ambiguous between team-leader-onboarding (Ch 8 buy-in) and cascade (Ch 7 translation); already disambiguated via team-leader-onboarding's existing NOT-list redirect to `4dx-d1-wig-cascade`. Not a v0.8.1-introduced issue.

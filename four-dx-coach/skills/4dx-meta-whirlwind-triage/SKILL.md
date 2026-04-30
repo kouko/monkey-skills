@@ -1,7 +1,7 @@
 ---
 name: 4dx-meta-whirlwind-triage
 description: |
-  Pre-D1 capacity triage — whirlwind vs WIG split. Coach-mode (no artifact, vague firefighting): Socratic 7-day live time audit. Audit-mode (artifact provided + diagnostic intent): consultant verdict on existing time log / calendar export + stakeholder critique → protected-slot redesign + theater-reduction targets. Coach EN: "I'm always firefighting", "day job eats my whole week". Audit EN: "Audit my time log against 4DX", "Boss says I'm wasting time — here's my calendar". JP coach: 「日常業務に追われて目標に手がつかない」. JP audit: 「カレンダーを 4DX 視点で診断して」「上司にダメ出しされた」. zh-TW coach: 「每天都在救火」. zh-TW audit: 「老闆看我時間紀錄說亂忙」. NOT for productivity-tool requests, burnout / chronic overwork (→ professional support), reactive roles where firefighting IS the work (oncall SRE / ER / infant-care, CE-26), 4DX-fit questions (→ `4dx-meta-strategy-triage`), already-running 4DX cadence collapse (→ `4dx-sustain-momentum-rescue`), enterprise rollout audits (individual-scale only).
+  Pre-D1 capacity triage — whirlwind vs WIG split. Coach-mode (no artifact, vague firefighting): Socratic 7-day live time audit. Audit-mode (artifact provided + diagnostic intent): consultant verdict on existing time log / calendar export + stakeholder critique → protected-slot redesign + theater-reduction targets. Coach EN: "I'm always firefighting", "day job eats my whole week". Audit EN: "Audit my time log against 4DX", "Got feedback I'm focused on the wrong things — here's my calendar", "Stakeholder wants to revisit my time allocation", "Boss says I'm wasting time — here's my calendar". JP coach: 「日常業務に追われて目標に手がつかない」. JP audit: 「カレンダーを 4DX 視点で診断して」「上司にフィードバックされた、時間の使い方見て」「上司にダメ出しされた」. zh-TW coach: 「每天都在救火」. zh-TW audit: 「主管覺得我時間分配要調整」「review 後想討論時間配置」「老闆看我時間紀錄說亂忙」. NOT for productivity-tool requests, burnout / chronic overwork (→ professional support), reactive roles where firefighting IS the work (oncall SRE / ER / infant-care, CE-26), 4DX-fit questions (→ `4dx-meta-strategy-triage`), already-running 4DX cadence collapse (→ `4dx-sustain-momentum-rescue`), enterprise rollout audits (individual-scale only).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
 source_chapter: Chapter 1 — The Real Problem with Execution
 source_language: en
@@ -28,9 +28,9 @@ Surface the whirlwind/WIG capacity reality before the user formulates a WIG. Sam
 - zh-TW: 「每天都在救火」「日常雜事吃掉所有時間」「想推進的事一直擱置」「想設目標但根本沒空執行」
 
 **Audit-mode (consultant verdict on existing artifact, often + stakeholder critique):**
-- EN: "Audit my time log against 4DX", "Boss says I'm wasting time on the wrong stuff — here's my calendar", "Diagnose my last 2 weeks of calendar — am I in whirlwind theater?", "Check my time log: do I actually have a protected WIG slot?"
-- JP: 「カレンダーを 4DX 視点で診断して」「上司に時間の使い方ダメ出しされた、何が違う？」「直近 2 週間の予定表を見て whirlwind 比率を出して」
-- zh-TW: 「老闆看我時間紀錄說亂忙，幫我用 4DX 診斷」「我的 calendar 在這，幫我看 whirlwind 比例」「過去兩週的時間表幫我審 4DX 角度看哪裡走樣」
+- EN: "Audit my time log against 4DX", "Got feedback I'm focused on the wrong things — here's my calendar", "Stakeholder wants to revisit my time allocation", "Manager flagged my time use — diagnose", "Boss says I'm wasting time on the wrong stuff — here's my calendar", "Diagnose my last 2 weeks of calendar — am I in whirlwind theater?", "Check my time log: do I actually have a protected WIG slot?"
+- JP: 「カレンダーを 4DX 視点で診断して」「上司にフィードバックされた、時間の使い方見て」「マネージャーから方向性を直したいと言われた、calendar チェック」「上司に時間の使い方ダメ出しされた、何が違う？」「直近 2 週間の予定表を見て whirlwind 比率を出して」
+- zh-TW: 「主管覺得我時間分配要調整，幫看哪裡」「review 後想討論時間配置」「老闆看我時間紀錄說亂忙，幫我用 4DX 診斷」「我的 calendar 在這，幫我看 whirlwind 比例」「過去兩週的時間表幫我審 4DX 角度看哪裡走樣」
 
 ### Non-activation signals (DO NOT fire when…)
 

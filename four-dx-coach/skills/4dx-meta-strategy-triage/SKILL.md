@@ -5,10 +5,13 @@ description: |
   Execution fits BEFORE installing D1-D4. Coach-mode (Socratic from zero,
   solo or team-leader) + audit-mode (diagnose strategy doc / artifact +
   stakeholder critique). EN: "Should I use 4DX for X?", "Should our team
-  adopt 4DX?", "Audit whether 4DX fits given this strategy doc", "Boss says
-  4DX won't work — diagnose". JP: 「この目標に 4DX 使える？」「うちの 4DX
-  適合性を診断して」「会社の状況見て 4DX 合うか判定」. zh-TW: 「4DX 適合我這個目標嗎？」
-  「幫我看 4DX 適不適合我們團隊」「策略 doc 在這，4DX 適合嗎？」. Returns one
+  adopt 4DX?", "Audit whether 4DX fits given this strategy doc", "Got
+  feedback 4DX may not fit us", "Stakeholder wants to revisit 4DX choice",
+  "Boss says 4DX won't work — diagnose". JP: 「この目標に 4DX 使える？」
+  「うちの 4DX 適合性を診断して」「上司にフィードバックされた、4DX 合うか
+  判定」「会社の状況見て 4DX 合うか判定」. zh-TW: 「4DX 適合我這個目標嗎？」
+  「幫我看 4DX 適不適合我們團隊」「主管覺得 4DX 不太合，幫看」「策略 doc
+  在這，4DX 適合嗎？」. Returns one
   verdict (APPLICABLE / TEAM-APPLICABLE / stroke-of-pen / whirlwind /
   habit / portfolio / emergency / creative / no-time-sovereignty /
   wrong-team-shape / single-shot / mission-misaligned / TEAM-NOT-YET-READY).
@@ -74,7 +77,7 @@ logic across modes; voice and gates differ per scope.
 
 Before scope detection, decide **mode**:
 
-- **Audit-mode** — user provides current-state artifacts (strategy doc, OKR sheet, leadership-team note, annual plan, written goal statement, current-methodology description, team charter) AND asks for fit-diagnosis ("audit", "diagnose", "is 4DX right for us given this", 「診断」, 「判定」, 「適不適合」). Often paired with a stakeholder critique ("boss says 4DX won't work", 「上司が反対」, 「老闆覺得不合適」). User is NOT yet 4DX-committed — this skill IS the gate. Load `protocols/audit-mode.md`.
+- **Audit-mode** — user provides current-state artifacts (strategy doc, OKR sheet, leadership-team note, annual plan, written goal statement, current-methodology description, team charter) AND asks for fit-diagnosis ("audit", "diagnose", "is 4DX right for us given this", 「診断」, 「判定」, 「適不適合」). Often paired with a stakeholder critique — direct ("boss says 4DX won't work", 「上司が反対」, 「老闆覺得不合適」) OR softer ("got feedback 4DX may not fit", "stakeholder wants to revisit", 「上司にフィードバックされた」, 「主管覺得 4DX 不太合」). User is NOT yet 4DX-committed — this skill IS the gate. Load `protocols/audit-mode.md`.
 - **Coach-mode** — user has no artifact (or only a sentence-level goal) and wants Socratic walk-through. Proceed to scope detection (solo / team-leader) below.
 
 If signals are mixed (artifact present but user explicitly asks "talk me through it"), default to coach-mode and offer audit-mode as alternative.

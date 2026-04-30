@@ -62,9 +62,9 @@ the artifact already exists** (audit) or is being built (coach), and the
 - zh-TW: 「上面定的 WIG，**我下面各個團隊**要怎麼接？」「Primary WIG 怎麼拆給**下面各個團隊**？」「**我帶的各位主管**要有自己的 Team WIG，怎麼選？」
 
 **Audit-mode (diagnose existing cascade artifact, agent = consultant-from-artifact):**
-- EN: "Audit our cascade — sub-leaders complaining about it", "Boss says cascade is wrong, here's the map", "Here's our cascade map — sub-team-leaders say it's imposed", "Diagnose this cascade against 4DX"
-- JP: 「うちの cascade を診断して、下のリーダー達が文句言ってる」「cascade map 見て何がダメか教えて」「cascade を audit して、現場が押し付けって言ってる」
-- zh-TW: 「幫我看 cascade 哪裡有問題，下面的 leader 都在抱怨」「上面說 cascade 不對，這是 map」「cascade map 給你看，下面說是硬塞下來的」
+- EN: "Audit our cascade — sub-leaders complaining about it", "Got feedback our cascade map needs work", "Stakeholder wants to revisit how we cascaded the WIG", "Manager flagged the cascade — diagnose", "Boss says cascade is wrong, here's the map", "Here's our cascade map — sub-team-leaders say it's imposed", "Diagnose this cascade against 4DX"
+- JP: 「うちの cascade を診断して、下のリーダー達が文句言ってる」「上司にフィードバックされた、cascade 見て」「マネージャーから方向性を直したいと言われた、cascade map チェック」「cascade map 見て何がダメか教えて」「cascade を audit して、現場が押し付けって言ってる」
+- zh-TW: 「幫我看 cascade 哪裡有問題，下面的 leader 都在抱怨」「主管覺得 cascade 要調整，幫看哪裡」「review 後想討論 cascade 方向」「上面說 cascade 不對，這是 map」「cascade map 給你看，下面說是硬塞下來的」
 
 ### Non-activation signals (DO NOT fire when…)
 
