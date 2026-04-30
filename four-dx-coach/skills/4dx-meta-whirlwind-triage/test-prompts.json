@@ -1,62 +1,104 @@
 {
   "skill": "4dx-meta-whirlwind-triage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "source_book": "The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Test prompts in source language (with JP/zh-TW where the SKILL description explicitly lists those signals); field names + types in English. Activation judged solely from the description field.",
+  "_comment": "Test prompts in source language (with JP/zh-TW where the SKILL description explicitly lists those signals); field names + types in English. Activation judged solely from the description field. v0.2.0 adds audit-mode cases (path B refactor — Wave 2: skill is now multi-file orchestrator with coach-mode + audit-mode protocols).",
   "test_cases": [
     {
-      "id": "should-trigger-01",
+      "id": "should-trigger-coach-01",
       "type": "should_trigger",
+      "mode": "coach",
       "prompt": "I want to start writing a book on the side, but honestly every week my day job eats my whole calendar and I never get to it. Help me figure out how to actually move on it.",
-      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; surface the whirlwind/WIG split, propose a 7-day time audit before any goal commitment.",
-      "notes": "positive scenario: canonical 'day job eats my whole week' phrasing matching the description's English signal verbatim, with a strategic-goal frame (book = behavioral-change project, not BAU)."
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to coach-mode (no artifact, vague firefighting); surface the whirlwind/WIG split, propose a 7-day time audit before any goal commitment.",
+      "notes": "positive scenario: canonical 'day job eats my whole week' phrasing matching the description's English coach-mode signal verbatim, with a strategic-goal frame (book = behavioral-change project, not BAU)."
     },
     {
-      "id": "should-trigger-02",
+      "id": "should-trigger-coach-02",
       "type": "should_trigger",
+      "mode": "coach",
       "prompt": "毎日日常業務に追われて、自分が立てた目標に全く手がつかない。どうすれば前に進めますか?",
-      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; run capacity diagnosis (whirlwind vs WIG ratio) before goal-setting; offer 7-day time audit.",
-      "notes": "positive scenario (JP): exact match for the description's Japanese signal 「日常業務に追われて目標に手がつかない」 — strategic-goal framing intact."
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to coach-mode (no artifact); run capacity diagnosis (whirlwind vs WIG ratio) before goal-setting; offer 7-day time audit.",
+      "notes": "positive scenario (JP coach): exact match for description's Japanese coach signal 「日常業務に追われて目標に手がつかない」 — strategic-goal framing intact, no time log attached."
     },
     {
-      "id": "should-trigger-03",
+      "id": "should-trigger-coach-03",
       "type": "should_trigger",
+      "mode": "coach",
       "prompt": "我每天都在救火,日常雜事吃掉所有時間,我想推進的副業項目一直擱置。可以幫我想辦法嗎?",
-      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; surface whirlwind/WIG capacity reality; propose time audit + protected WIG slot before defining the goal.",
-      "notes": "positive scenario (zh-TW): exact match for description's two zh-TW signals 「每天都在救火」+「日常雜事吃掉所有時間」, with a side-project (behavioral-change) goal."
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to coach-mode; surface whirlwind/WIG capacity reality; propose 7-day time audit + protected WIG slot before defining the goal.",
+      "notes": "positive scenario (zh-TW coach): exact match for description's two zh-TW coach signals 「每天都在救火」+「日常雜事吃掉所有時間」, with a side-project (behavioral-change) goal."
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "mode": "audit",
+      "prompt": "Here's my Google Calendar export for the past 2 weeks (attached). Boss says I'm wasting time on the wrong stuff. Audit it against 4DX — am I actually in whirlwind theater or is the critique unfair?",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to audit-mode (artifact + stakeholder critique present); tag every block WHIRLWIND/WIG/NEITHER, sub-tag whirlwind BAU-real vs BAU-theater, map 'wasting time' critique to the protected-slot or theater-dominance rule, recommend redesign.",
+      "notes": "positive scenario (EN audit): canonical audit-mode trigger — calendar export attached + stakeholder critique. Description's audit-mode signal 'Boss says I'm wasting time on the wrong stuff — here's my calendar' matched almost verbatim."
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "mode": "audit",
+      "prompt": "上司に時間の使い方をダメ出しされた。直近 2 週間のカレンダーをコピペするから、4DX 視点で何が違うのか診断してほしい。",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to audit-mode; tag artifact blocks, compute WHIRLWIND/WIG/NEITHER ratio, sub-tag whirlwind, map ダメ出し critique to whirlwind/WIG rule, recommend protected-slot redesign + theater-reduction targets.",
+      "notes": "positive scenario (JP audit): description's JP audit signals 「カレンダーを 4DX 視点で診断して」+「上司にダメ出しされた」 both matched. Stakeholder critique + artifact intent both present."
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "mode": "audit",
+      "prompt": "我老闆看了我上週的時間紀錄,說我整天在亂忙、focus 不對。我把過去兩週的 calendar 貼給你,幫我用 4DX 角度看 whirlwind 比例哪裡走樣。",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to audit-mode; tag blocks, compute ratio, map 「亂忙」 critique to (a) WIG% ≈ 0 OR (b) whirlwind theater dominance, recommend redesign with named protector.",
+      "notes": "positive scenario (zh-TW audit): description's zh-TW audit signals 「老闆看我時間紀錄說亂忙」+「我的 calendar 在這，幫我看 whirlwind 比例」 both matched."
+    },
+    {
+      "id": "should-trigger-audit-04",
+      "type": "should_trigger",
+      "mode": "audit",
+      "prompt": "I've been running RescueTime for 6 weeks. Pasting the weekly summaries below — does my schedule actually have a protected WIG slot, or am I lying to myself? I'm trying to ship a portfolio site on the side.",
+      "expected_behavior": "Activate 4dx-meta-whirlwind-triage; route to audit-mode (time-tracker artifact present, stated goal = portfolio site); compute WIG% across the 6-week window, check for recurring/defended WIG block, return PASS/PARTIAL/FAIL verdict with evidence cites.",
+      "notes": "positive scenario (EN audit, no stakeholder critique but artifact + diagnostic intent): description signal 'Check my time log: do I actually have a protected WIG slot?' matched almost verbatim. Tests audit-mode without critique component."
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "我們公司有 50 個團隊,主管說導入 4DX 之前要先做全公司的時間稽核,請幫我規劃跨部門的 capacity audit 流程。",
-      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly scopes this skill to individual-level triage and warns against firing on enterprise rollout / organizational cadence-setting queries. Route to an organizational-rollout skill instead (not yet built).",
-      "notes": "lure: enterprise-misfire — surface keywords (4DX, time audit, capacity) match strongly but scope is org-level, not individual. Description's last sentence (`Do NOT fire for...`) and the B-section enterprise-rollout boundary should suppress."
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly scopes this skill to individual-level triage and excludes 'enterprise rollout audits (individual-scale only)'. Route to an organizational-rollout skill instead (not yet built).",
+      "notes": "lure: enterprise-misfire — surface keywords (4DX, time audit, capacity) match strongly but scope is org-level, not individual. Description's exclusion clause should suppress."
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "I want to set up a proper GTD system in Notion — capture inbox, next actions, weekly review templates. Can you help me design it?",
-      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly excludes productivity-tool / system requests. This is task-management tooling, not WIG-vs-whirlwind capacity diagnosis.",
-      "notes": "lure: productivity-system shopping — adjacent domain (time, productivity) but wrong methodology and wrong question. Description's `Do NOT fire for productivity-tool requests` clause should suppress."
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description explicitly excludes productivity-tool requests. This is task-management tooling, not WIG-vs-whirlwind capacity diagnosis.",
+      "notes": "lure: productivity-system shopping — adjacent domain (time, productivity) but wrong methodology and wrong question. Description's 'NOT for productivity-tool requests' clause should suppress."
     },
     {
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "I've been working 80-hour weeks for three months, I can't sleep, I'm dreading every Monday, and I feel hollowed out. I don't even know what I want anymore.",
-      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description excludes burnout. Running a time audit on someone in this state weaponizes awareness without solving it. Route to coaching / clinical / managerial support.",
-      "notes": "lure: burnout / overwork — surface 'no time' theme but the underlying issue is mental-health, not strategic capacity. Description's `Do NOT fire for ... burnout` clause should suppress."
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description excludes burnout / chronic overwork (→ professional support). Running a time audit on someone in this state weaponizes awareness without solving it. Route to coaching / clinical / managerial support.",
+      "notes": "lure: burnout / overwork — surface 'no time' theme but the underlying issue is mental-health, not strategic capacity. Description's burnout / chronic-overwork exclusion should suppress."
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "I started 4DX three months ago and it was working — but I haven't done a WIG Session in 5 weeks, my scoreboard's gone cold, and I want to get back on track. Where do I even start?",
+      "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage. The description excludes already-running 4DX cadence collapse — this is `4dx-sustain-momentum-rescue` territory, not first-time capacity audit. Multi-week skip = rescue, not whirlwind triage.",
+      "notes": "lure: rescue-vs-triage boundary — surface 4DX language present but situation is post-launch cadence collapse, not pre-D1 capacity. Description's 'NOT for already-running 4DX cadence collapse' clause should suppress and route to rescue skill."
     },
     {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I'm an ER physician — my whole shift is firefighting by definition. I want to learn Spanish on the side but I never have time. Should I do a 4DX time audit?",
       "expected_behavior": "Do NOT activate 4dx-meta-whirlwind-triage as the primary action. The description names ER as a reactive role where firefighting IS the work (CE-26). Route to 4dx-meta-strategy-triage to ask whether 4DX is the right tool at all; the language-learning sub-goal may need a different methodology (habit-stacking, not WIG carve-out from a non-existent surplus).",
-      "notes": "boundary: surface English signal 'I'm always firefighting / never have time' is verbatim, BUT role is in the description's reactive-role exclusion list (oncall SRE, ER, infant-care). Tests whether the model honors the Do-NOT clause over the surface trigger phrase. The 'should I' framing makes routing-to-meta-triage the right reasonable judgment rather than silent abstention."
+      "notes": "boundary: surface English signal 'I'm always firefighting / never have time' is verbatim, BUT role is in the description's reactive-role exclusion list (oncall SRE, ER, infant-care). Tests whether the model honors the Do-NOT clause over the surface trigger phrase."
     }
   ],
   "minimum_pass_rate": 0.8,
   "pass_rate": 1.0,
-  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance. Pass rate computed from description-only activation simulation: all 8 cases align with description's positive signals (EN/JP/zh-TW) and explicit Do-NOT exclusions (productivity tools, burnout, reactive roles, enterprise rollout)."
+  "ship_threshold_note": "100% to ship cleanly. >=80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance. Pass rate computed from description-only activation simulation: all 12 cases align with description's positive signals (EN/JP/zh-TW for both coach-mode and audit-mode) and explicit Do-NOT exclusions (productivity tools, burnout, reactive roles, enterprise rollout, post-launch cadence collapse). v0.2.0 expanded test set from 7 → 12 to cover audit-mode triggers (4 added) + new rescue-vs-triage boundary (1 added)."
 }

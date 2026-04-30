@@ -109,18 +109,62 @@
       "expected_behavior": "Activate skill; scope = solo; load protocols/personal-mode.md. Step 1 (Surface goal in concrete terms) forces disambiguation — could be habit-formation ('read 10 min/night') OR behavioral-change WIG ('From 4 books/yr to 24 books/yr by Dec 31'). Routes via Step 4 habit screen vs Step 7 APPLICABLE based on user's clarification.",
       "activation_judgment": "PASS",
       "notes": "Boundary: ambiguous goal scale within solo mode. Tests that Step 1 (concrete-terms forcing) correctly handles habit-vs-WIG ambiguity rather than collapsing one way."
+    },
+    {
+      "id": "T-13-audit-en-strategy-doc",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "Audit whether 4DX fits our team given this strategy doc: 'Team of 9 customer-success engineers. Goal: improve renewal rate from 78% to 88% by FY-end. Currently we operate by ad-hoc weekly standups. Bonus structure rewards quarterly revenue.' Is 4DX right for us?",
+      "expected_behavior": "Activate skill; mode pre-check identifies audit-mode (artifact-rich + fit-check intent + 'audit' verb); load protocols/audit-mode.md; extract scope=team-leader (size 9), goal=From 78% to 88% by FY-end, current-method=ad-hoc standups, incentive-conflict signal. Run gate-check: stroke-of-pen FAIL (renewal lag is multi-touch behavioral), whirlwind FAIL (sharper standups insufficient), team-shape PASS (size 9), goal-shape PASS (From-X-to-Y-by-When clear), Galbraith STAR FAIL (bonus rewards revenue not renewal). Verdict likely TEAM-NOT-YET-READY — fix incentives before installing.",
+      "activation_judgment": "PASS",
+      "notes": "Audit-mode canonical: strategy doc + fit-check intent. Tests that Galbraith reward-system check fires from artifact line, not Socratic question."
+    },
+    {
+      "id": "T-14-audit-jp-stakeholder-critique",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "うちの 4DX 適合性を診断してほしい。チーム 6 人、SREのオンコール対応がメイン業務。社長は 4DX 入れたがってるけど、現場は『うちは無理』って言ってる。会社の状況見て 4DX 合うか判定してください。",
+      "expected_behavior": "発動; mode pre-check で audit-mode 識別 (「診断」「判定」+ artifact: チーム規模 6 + 業務内容 + stakeholder critique); load protocols/audit-mode.md。Step 6 で 「うちは無理」 を emergency-role / wrong-team-shape (firefighting) にマッピング。Verdict: wrong-team-shape (firefighting) — SRE オンコールは whirlwind IS strategic value、4DX inverts wrong。社長への defensible な書面 verdict を返す。",
+      "activation_judgment": "PASS",
+      "notes": "JP audit-mode: stakeholder critique + reactive role artifact. Tests CE-26 whirlwind-as-strategic-work catch from artifact text."
+    },
+    {
+      "id": "T-15-audit-zh-fit-check",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "策略 doc 在這：「12 人開發團隊，要在 Q4 完成 v3 平台改版上線，已有完整 spec 和 timeline」。老闆說 4DX 不行，幫我診斷 4DX 適不適合我們團隊。",
+      "expected_behavior": "啟動 skill; mode pre-check 識別 audit-mode (「診斷」「適不適合」+ strategy doc artifact + stakeholder critique); load protocols/audit-mode.md。Extract: scope=team-leader (size 12), goal=v3 改版上線 + 既定 spec + timeline。Gate-check: 反 single-shot-project anti-pattern 觸發 — 「完整 spec 和 timeline」是 fixed-plan deliverable，4DX 重複 PMI/Agile 的價值。Verdict: single-shot-project — 用 project management 而非 4DX。stakeholder critique 「不行」 mapping 到 single-shot-project。",
+      "activation_judgment": "PASS",
+      "notes": "ZH audit-mode: single-shot-project anti-pattern detected from artifact ('完整 spec 和 timeline' = fixed-plan signal)."
+    },
+    {
+      "id": "T-16-audit-applicable",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "Here's our annual plan: 'Marriott property, 7-person front-desk team. Goal: lift NPS from 72 to 85 by year-end. Capital renovation already done. Leader can carve 20% protected time. Team is 4 Models / 2 Not-Yets / 1 Never. Bonus tied to NPS. Friday-commitment culture established.' Is 4DX the right operating system?",
+      "expected_behavior": "Activate; audit-mode (artifact-rich + 'is 4DX right' fit-check); load protocols/audit-mode.md. All gates PASS: stroke-of-pen done (capital), behavioral residual remains (front-desk daily action), team-shape OK (size 7), time-authority PASS, F-28 split healthy, Galbraith aligned (bonus = NPS), Schein OK (Friday-commitment culture). Verdict: TEAM-APPLICABLE → next step 4dx-meta-team-leader-onboarding → 4dx-d1-wig-formulation.",
+      "activation_judgment": "PASS",
+      "notes": "Audit-mode positive case: all gates PASS from artifact. Mirrors Spartanburg Marriott Case 1 in protocol A1."
+    },
+    {
+      "id": "T-17-audit-lure-already-committed",
+      "type": "should_not_trigger",
+      "prompt": "We've already committed to 4DX. Here's our WIG draft and lead-measure list — audit it for me, our boss says it's too abstract.",
+      "expected_behavior": "Do NOT activate this skill (or activate but immediately route out). User is already 4DX-committed and providing WIG / lead-measure artifacts for within-discipline diagnosis — this is cross-layer audit territory. Per description: 'NOT for cross-layer audit when 4DX already chosen (→ 4dx-audit)'. Route to 4dx-audit (full-stack) or D1-specific audit-mode for WIG-only audit.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: 4DX-committed user using 'audit' verb. The skill's audit-mode is FIT-CHECK pre-commit; once committed, route to 4dx-audit / D-skill audit-modes. Tests boundary clarity between meta-strategy audit-mode vs 4dx-audit."
     }
   ],
   "minimum_pass_rate": 0.8,
   "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance.",
   "pass_rate": 1.0,
   "pass_summary": {
-    "total": 12,
-    "passed": 12,
+    "total": 17,
+    "passed": 17,
     "failed": 0,
     "by_type": {
-      "should_trigger": "5/5 (3 explicit-scope solo+team + 1 ambiguous-disambiguation + 1 explicit-scope no-disambiguation)",
-      "should_not_trigger": "4/4 (already-triaged / member-misfire / non-4DX / enterprise-rollout)",
+      "should_trigger": "9/9 (3 coach-mode explicit-scope + 1 ambiguous-disambiguation + 1 explicit-scope no-disambiguation + 4 audit-mode EN/JP/ZH/positive)",
+      "should_not_trigger": "5/5 (already-triaged / member-misfire / non-4DX / enterprise-rollout / audit-but-already-committed)",
       "edge_case": "2/2 (firefighting team + ambiguous-goal-scale within solo)"
     }
   },

@@ -1,26 +1,25 @@
 ---
 name: 4dx-d1-wig-formulation
 description: |
-  Multi-scope coach for D1 WIG formulation across the 3 actor-scopes the
-  user might occupy: solo individual defining a personal From-X-to-Y-by-
-  When WIG; team-leader picking the team's Primary WIG from candidate
-  Battles via a 2x2 of importance × feasibility; team-member comprehending
-  a WIG inherited from above and locating their personal slice. Detects
-  scope (personal-define / team-select / member-comprehend) and loads the
-  matching protocol. EN: "Define my personal WIG", "Pick our team's
-  Primary WIG", "Help me understand the WIG my manager handed down".
-  JP: 「自分の WIG を決めたい」「チームの Primary WIG をどう選ぶ」「上から
-  降りてきた team WIG を理解したい」. zh-TW: 「幫我訂個人 WIG」「幫我們
-  team 選 Primary WIG」「主管定的 team WIG 我要看懂」. Shared *From X to Y
-  by When* grammar; voice differs (personal-coach / consultant-to-leader /
-  personal-coach-to-member). NOT for whirlwind audit (→ 4dx-d1-personal-
-  whirlwind-triage), cascading an already-set Primary WIG to N sub-teams
-  (→ 4dx-d1-wig-cascade), lead measures / scoreboard / cadence
-  (→ D2 / D3 / D4), or pre-D1 strategy fit (→ 4dx-meta-strategy-triage).
+  D1 WIG formulation — 3 coach-mode scopes + audit-mode. Coach (Socratic):
+  solo personal-define From-X-to-Y-by-When; team-leader team-select via
+  Battles 2x2; team-member member-comprehend inherited WIG. Audit
+  (consultant): user provides WIG draft / candidates for diagnostic, OR
+  WIG + stakeholder critique ("boss says too abstract"). EN: "Define my
+  personal WIG", "Pick our team's Primary WIG", "Understand the WIG my
+  manager set", "Audit our WIG — boss says it's too abstract".
+  JP: 「自分の WIG を決めたい」「Primary WIG をどう選ぶ」「降りてきた WIG
+  を理解したい」「WIG を診断して」「上司が WIG ダメ出ししてる」. zh-TW:
+  「幫我訂個人 WIG」「team 選 Primary WIG」「主管定的 WIG 看懂」「WIG
+  哪裡有問題」「老闆說 WIG 不行幫我診斷」. Voice: coach / consultant-to-
+  leader / coach-to-member / consultant-audit. NOT for cross-layer audit
+  (→ 4dx-audit), cascading Primary WIG to sub-teams (→ 4dx-d1-wig-
+  cascade), lead / scoreboard / cadence (→ D2 / D3 / D4), or pre-D1
+  strategy fit (→ 4dx-meta-strategy-triage).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 2 — Discipline 1: Focus on the Wildly Important; Chapter 6 — Choosing Where to Focus; Chapter 7 — Defining the WIG; Chapter 12 — Applying Discipline 1
 source_language: en
-tags: [d1, wig, multi-scope, goal-setting, focus, from-x-to-y-by-when, 4dx, personal, team-leader, team-member]
+tags: [d1, wig, multi-scope, goal-setting, focus, from-x-to-y-by-when, 4dx, personal, team-leader, team-member, audit-mode, coach-mode]
 related_skills:
   - 4dx-meta-strategy-triage
   - 4dx-meta-whirlwind-triage
@@ -28,22 +27,30 @@ related_skills:
   - 4dx-d2-lead-measures
   - 4dx-d3-scoreboard
   - 4dx-d4-cadence
+  - 4dx-audit
   - using-four-dx-coach
 ---
 
-# 4dx-d1-wig-formulation — Formulate a WIG across all roles (multi-scope)
+# 4dx-d1-wig-formulation — Formulate a WIG across all roles (multi-scope, two interaction modes)
 
 ## Mission
 
-Coach the user through the D1 act of **formulating a Wildly Important
-Goal** in whichever of three scopes they occupy: defining their own
-personal WIG from a fuzzy aspiration; selecting the team's Primary WIG
-from candidate Battles as a leader; or comprehending a team WIG inherited
-from above and locating their own contribution slice. The same shared
-*From X to Y by When* sentence form anchors every protocol; what differs
-is **who acts** (solo individual / team-leader / team-member), **what
-verb they apply** (define / select / comprehend), and the **agent voice**
-(personal coach / consultant-to-leader / personal-coach-to-member).
+Coach or audit the user through the D1 act of **formulating a Wildly
+Important Goal**. The skill supports two interaction protocols across
+three actor-scopes:
+
+- **Coach-mode** (Socratic, from zero) — runs in three scopes: solo
+  defining a personal WIG; team-leader selecting Primary WIG; team-
+  member comprehending an inherited WIG.
+- **Audit-mode** (consultant, on existing artifact) — runs when the
+  user provides a WIG draft / candidates for D1-only diagnostic, with
+  optional stakeholder critique mapped to 4DX rules.
+
+The same shared *From X to Y by When* sentence form anchors every
+protocol; what differs is **who acts** (solo / team-leader / team-
+member), **what verb they apply** (define / select / comprehend /
+audit), and the **agent voice** (personal coach / consultant-to-
+leader / personal-coach-to-member / consultant-audit).
 
 ## When this skill activates
 
@@ -64,6 +71,11 @@ verb they apply** (define / select / comprehend), and the **agent voice**
 - JP: 「チームの WIG が降りてきたけど自分の役割が分からない」「上司が WIG を決めたが自分が何をすればいいか分からない」「チームの目標と自分の仕事のつながりが見えない」
 - zh-TW: 「主管定了 WIG 但我不知道我這個位置該怎麼接」「團隊有 WIG 但我不知道我該做什麼」「團隊目標跟我的工作有什麼關係」
 
+**Audit-mode (any scope, agent = consultant on existing artifact):**
+- EN: "Here's our WIG draft — what's wrong?", "Audit my Primary WIG against 4DX", "Boss says our WIG is too abstract — diagnose", "Is this WIG well-formed?", "Diagnose this WIG against 4DX rules"
+- JP: 「うちの WIG を診断して」「上司が WIG ダメ出ししてるけど何が原因？」「この WIG、4DX 的に OK？」「Primary WIG をチェックして」
+- zh-TW: 「我們的 WIG 你看一下哪裡有問題」「老闆說 WIG 不行，幫我診斷」「幫我審核這個 WIG 有沒有過 4DX 規則」「這個 WIG 寫得對嗎？」
+
 ### Non-activation signals (DO NOT fire when…)
 
 - **Strategy fit not yet decided** (user hasn't classified the situation as behavioral-change vs stroke-of-pen vs reactive whirlwind) → `4dx-meta-strategy-triage` first
@@ -75,15 +87,26 @@ verb they apply** (define / select / comprehend), and the **agent voice**
 - **Reactive / on-call domains** where the whirlwind IS the strategic value → `4dx-meta-strategy-triage`
 - **Lead measure / scoreboard / cadence queries** → `4dx-d2-lead-measures` / `4dx-d3-scoreboard` / `4dx-d4-cadence`
 - **Multi-team rollout / Leader-of-Leaders coordination** → out of plugin scope; hand off via `using-four-dx-coach`
+- **Cross-layer / full-stack audit** (user provides WIG + lead measures + scoreboard + cadence and wants the whole 5-layer diagnosed) → `4dx-audit`. This skill's audit-mode is D1-only.
 
-## Scope detection
+## Mode + scope detection
 
 When this skill activates:
 
-1. Determine **scope**: personal-define (solo individual) / team-select (team-leader picking) / member-comprehend (team-member receiving)
-2. Determine **verb**: define a new WIG / select from candidates / comprehend an inherited one
-3. Load the matching protocol file from `protocols/`
-4. Follow that protocol's E section step-by-step
+1. Determine **interaction mode**: coach-mode (no artifact, Socratic from zero) vs audit-mode (artifact provided + diagnostic intent, OR artifact + stakeholder critique).
+2. If coach-mode: determine **scope** (personal-define / team-select / member-comprehend) and **verb** (define / select / comprehend).
+3. If audit-mode: determine artifact scope (personal / team-select / member-inherited) — but the audit protocol handles all three uniformly via the rule-check matrix.
+4. Load the matching protocol file from `protocols/`.
+5. Follow that protocol's E section step-by-step.
+
+### Mode triage (apply first)
+
+| Signal in user query | Mode |
+|---|---|
+| User pastes / quotes a WIG sentence (or candidate list) and asks "what's wrong?" / "diagnose" / "audit" / 「診断して」/「哪裡有問題」 | **audit-mode** |
+| User pastes a WIG + a stakeholder complaint ("boss says…", 「上司が…」, 「老闆說…」) | **audit-mode** |
+| User has no draft, asks to be coached / guided / "help me set" / 「決めたい」/「訂個 WIG」 | **coach-mode** |
+| Vague / ambiguous on whether artifact exists | ask ONE clarifying question (below) |
 
 If ambiguous after reading the user's query, ask ONE Socratic question:
 
@@ -97,11 +120,12 @@ If the signal in the original query is strong, skip the question and load the pr
 
 ## Protocol routing table
 
-| Detected scope | Verb | Load protocol | Agent voice |
-|---|---|---|---|
-| Personal (solo individual) | Define | `protocols/personal-define.md` | personal coach |
-| Team-leader | Select | `protocols/team-select.md` | consultant-to-leader |
-| Team-member | Comprehend | `protocols/member-comprehend.md` | personal coach to member |
+| Mode | Detected scope | Verb | Load protocol | Agent voice |
+|---|---|---|---|---|
+| Coach | Personal (solo individual) | Define | `protocols/personal-define.md` | personal coach |
+| Coach | Team-leader | Select | `protocols/team-select.md` | consultant-to-leader |
+| Coach | Team-member | Comprehend | `protocols/member-comprehend.md` | personal coach to member |
+| Audit | Any (personal / team-select / member-inherited) | Diagnose | `protocols/audit-mode.md` | consultant-audit |
 
 After loading the protocol, follow its E section step-by-step. Each protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator does not run any WIG content directly.
 
@@ -110,16 +134,21 @@ After loading the protocol, follow its E section step-by-step. Each protocol car
 - **Solo + "select from candidates"** — the personal-define protocol handles candidate evaluation internally (its count test in step 7 narrows multiple aspirations to one). Fire `protocols/personal-define.md`; do NOT misroute to team-select.
 - **Leader + cascade to N sub-teams** — that's translation, not selection. Hand off to `4dx-d1-wig-cascade`. This skill does NOT run cascade.
 - **Member + "I disagree with the WIG, want to redefine it"** — member doesn't redefine. Load `protocols/member-comprehend.md` to surface the rationale first, then route the disagreement upward to the leader as a 1:1 conversation (out of this skill's scope).
-- **Already-well-formed WIG (X / Y / When explicit)** — skip D1; route directly to D2.
+- **Already-well-formed WIG (X / Y / When explicit) + no diagnostic intent** — skip D1; route directly to D2.
+- **Already-well-formed WIG + diagnostic intent** ("audit this") — load `protocols/audit-mode.md`; the audit will likely PASS the rule-check, and the recommendation is to route to D2.
 - **Mission / vision not yet defined (team)** — Trap 4 (mission alignment) cannot be evaluated; advise the leader to establish mission first, then return.
+- **Artifact-rich + cross-layer (lead / scoreboard / cadence too)** — route to `4dx-audit` (full-stack), not this skill's audit-mode.
+- **Artifact present but vague + user wants rebuild from scratch** — confirm with one question; if user wants to rebuild rather than revise, prefer coach-mode protocol.
 
 ## Shared standards
 
-Each protocol references these standards (load on demand):
+All four protocols reference the same three standards (load on demand). Coach-mode protocols use them as Socratic checkpoints; audit-mode uses them as the per-rule verdict matrix:
 
 - `standards/from-x-to-y-by-when-grammar.md` — the WIG sentence form (lag-measurable starting state X, lag-measurable target Y, fixed calendar deadline When); rejects verb-less / number-less / deadline-less / activity-as-outcome forms
 - `standards/wig-discipline.md` — the focus cap (≤1-3 WIGs per organizational layer; one WIG per individual, max 2 only when independent and non-conflicting; 1 Primary WIG per team is preferred, 2 acceptable only via Approach B with genuinely segmented teams)
 - `standards/ladder-up-test.md` — every team WIG must demonstrably serve the org WIG, every individual's slice must demonstrably serve the team WIG; book's veto rule (Ch 7) on team WIGs that fail line-of-sight upward
+
+Audit-mode applies the same standards but in **verdict mode** (PASS / FAIL / PARTIAL with cite) rather than coach-mode's step-by-step extraction. Same rules, different posture.
 
 ## Cross-skill relations
 
@@ -132,6 +161,7 @@ Each protocol references these standards (load on demand):
 
 The scope-specific boundary lives in each protocol's B section. The cross-scope common boundary:
 
+- **Cross-mode disambiguation** — coach-mode is for users *without* a WIG artifact who need Socratic extraction; audit-mode is for users *with* an artifact (draft / candidates) who need verdict-style diagnostic. Artifact-rich → audit; vague / cold-start → coach-mode. When in doubt, ask one clarifying question (mode triage table above). Never run audit-mode on an absent artifact (no draft = nothing to grade); never run coach-mode on an artifact the user explicitly wants graded (the Socratic walk-through wastes their time and ignores their input).
 - **A WIG is a *single-bet, lag-measurable, deadline-bound* outcome** — not a habit (no end-state), not a project tracked as % complete (use deliverables-list-with-deadline variant), not an activity ("exercise more"), not a stroke-of-pen decision, not the whole job. The shape is the discipline.
 - **Discovery-vs-execution distinction matters across all 3 scopes** — 4DX assumes the right WIG is *discoverable*. In genuinely uncertain domains (early-stage research, novel creative work, post-pivot product), the right WIG may not yet be knowable; the OKR / lean-startup tradition would say *run small experiments first*. If the user's situation is exploratory, flag the mismatch rather than force a single-WIG commitment. (March 1991, Mintzberg 1994.)
 - **Selection / definition / comprehension never substitutes for the user's own choice** — the agent does not pick the WIG (personal), name the Primary WIG (team-leader), or invent the rationale (member). Ownership is the load-bearing mechanism. The agent's job is to surface, sharpen, push back, route to ask — never to dictate.
@@ -140,7 +170,8 @@ The scope-specific boundary lives in each protocol's B section. The cross-scope 
 
 ## Audit metadata
 
-- **Skill type**: multi-file orchestrator (Plan U merged from 4 source skills — 3 atomic D1-WIG skills + 1 topic-router)
-- **Verification status**: V1 ✓ for personal-define + team-select scopes (book is leader-POV throughout Ch 6/7/12); V1 ⚠️ partial for member-comprehend scope (book authors the leader side of the line-of-sight conversation; member-side protocol is the symmetric inverse, with industry grounding from Edmondson / Grant / Meyer)
-- **Created**: 2026-04-30
+- **Skill type**: multi-file orchestrator (Plan U merged from 4 source skills — 3 atomic D1-WIG coach skills + 1 topic-router; audit-mode added 2026-04-30 as path-B refactor)
+- **Verification status**: V1 ✓ for personal-define + team-select scopes (book is leader-POV throughout Ch 6/7/12); V1 ⚠️ partial for member-comprehend scope (book authors the leader side of the line-of-sight conversation; member-side protocol is the symmetric inverse, with industry grounding from Edmondson / Grant / Meyer); V1 ✓ for audit-mode (D1-only application of Ch 2 grammar + Ch 6 four traps + Ch 7 four rules — all primary-source rules; consultant-from-artifact posture is derived per the same convention as `4dx-audit`)
+- **Protocols**: `personal-define.md` (coach), `team-select.md` (coach), `member-comprehend.md` (coach), `audit-mode.md` (consultant)
+- **Created**: 2026-04-30 (audit-mode added same day)
 - **Output language**: SKILL.md body + protocols/standards in English; description + scope-detection prompts multilingual EN/JP/zh-TW

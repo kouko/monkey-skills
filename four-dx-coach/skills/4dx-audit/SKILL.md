@@ -1,36 +1,22 @@
 ---
 name: 4dx-audit
 description: |
-  Consultant-mode entry point for 4DX-framed audit when user provides
-  rich existing context (strategy doc / quarterly plan / OKR sheet /
-  KPI dashboard / existing WIG / scoreboard / past WIG Session notes /
-  chat history of attempts so far) and asks for clarification or
-  recommendations grounded in the 4 Disciplines of Execution
-  framework. Reads ALL provided artifacts, maps content to the 4DX
-  5-layer model (WIG / Lead measures / Lag + Scoreboard / Cadence /
-  Substrate), diagnoses per-layer status (well-formed / malformed /
-  absent), identifies gaps, and outputs a structured audit report
-  with concrete next-step recommendations + routes to deep-dive coach
-  skills for follow-up. Distinct from coach-mode skills: those run
-  Socratic dialogue from scratch one step at a time; this skill
-  synthesizes pre-existing artifacts into structured output. EN:
-  "Here's our strategy doc — help us 4DX it", "Audit our 4DX
-  implementation given this context", "We have WIG + leads but
-  cadence broken — diagnose", "Translate our quarterly plan into
-  4DX terms", "我把所有 4DX 相關文件都丟給你了，幫我釐清". JP:
-  「策略 doc を 4DX 視点で診断して」「うちの OKR を 4DX に整理し
-  たい」「4DX 入れたが何が抜けてるか見て」「複数の文書から 4DX
-  の現状を整理して」. zh-TW: 「這是我們的策略 doc，幫看 4DX 怎麼
-  套」「OKR 翻成 4DX」「我們導入 4DX 但卡住，幫我診斷」「整理現
-  況 + 建議下一步」「資料都在這，幫我用 4DX 框架釐清」. NOT for
-  cold-start queries with no provided context (→
-  using-four-dx-coach for scope triage). NOT when user wants
-  Socratic step-by-step coaching from scratch (→ d-skills directly).
-  NOT when user names a single discipline + has full context for
-  that discipline only (→ that specific skill — audit is for
-  cross-discipline synthesis). NOT for non-4DX framework audits —
-  this skill structures findings IN 4DX terms; for general
-  strategy / OKR / agile audits use other tools.
+  Cross-layer 4DX aggregator. Fires when artifacts span ≥2 of the 5
+  D-layers (WIG / Lead / Scoreboard / Cadence / Substrate) OR user
+  cannot name which layer is broken. Diagnoses per-layer status, finds
+  cross-layer sequencing gaps, routes to topic skills. v0.8.0 dual-mode:
+  each topic skill owns single-layer audit-mode; this skill = cross-layer
+  only. EN: "Strategy + OKR + dashboard + meeting notes — audit 4DX",
+  "WIG + leads + scoreboard but cadence broken — diagnose layers",
+  "Don't know which layer is broken". JP:「複数文書から 4DX 現状整理」
+  「どの layer 壊れてるか分からない」. zh-TW:「資料跨好幾層幫整理」
+  「不知道哪層斷跨層診斷」. NOT single-layer — route to topic
+  audit-mode: WIG → 4dx-d1-wig-formulation; leads → 4dx-d2-lead-measures;
+  scoreboard → 4dx-d3-scoreboard; cadence → 4dx-d4-cadence; cascade →
+  4dx-d1-wig-cascade; fit → 4dx-meta-strategy-triage; capacity →
+  4dx-meta-whirlwind-triage; onboarding → 4dx-meta-team-leader-onboarding.
+  NOT cold-start (→ using-four-dx-coach). NOT Socratic (→ coach-mode).
+  NOT non-4DX audits.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Cross-cutting (Foreword + Ch 1 framing + Ch 6 selection + Ch 10 sustaining)
 source_language: en
@@ -49,13 +35,17 @@ related_skills:
   - 4dx-sustain-momentum-rescue
 ---
 
-# 4dx-audit — Consultant-mode 4DX framework audit from existing context
+# 4dx-audit — Cross-layer 4DX aggregator (multi-artifact synthesis)
 
 ## Mission
 
-When the user **already has 4DX-relevant artifacts** (or attempts at 4DX) and needs a consultant to clarify the situation in 4DX terms + recommend concrete next steps, this skill provides the audit + routing entry point.
+This skill is the **cross-layer aggregator** for the four-dx-coach plugin. v0.8.0 introduced dual-mode topic skills — every topic skill (D1 / D2 / D3 / D4 / cascade / strategy-triage / whirlwind-triage / leader-onboarding) now ships with its own `audit-mode.md` for **single-layer** synthesis from one artifact at that layer. This skill is reserved for cases the topic skills cannot own:
 
-The plugin's other 11 skills are **coach-mode**: Socratic dialogue, step-by-step, dialogue-driven from zero. This skill is **consultant-mode**: synthesize messy artifacts, diagnose against 4DX rules, prescribe concrete next moves.
+- **Artifacts spanning ≥2 D-layers** — e.g. user pastes strategy doc (L1 candidates) + OKR sheet (L1 + L2 mixed) + 12-metric dashboard (L3) + 4 weeks of meeting notes (L4 + L5). No single topic skill owns this scope; cross-layer synthesis is required to identify which layer is the bottleneck and what sequence to repair in.
+- **Layer-unknown failure** — user knows 4DX is broken but cannot name which discipline collapsed. The audit's job is to map artifacts onto all 5 layers, then point at the broken layer (which then routes to that topic skill's audit-mode or coach-mode).
+- **Cross-layer sequencing gaps** — even when layers are individually well-formed, cross-layer dependencies can be wrong (e.g. leads picked before WIG was well-formed; scoreboard built without cadence to populate it).
+
+For **single-layer audits**, do NOT activate; route to the topic skill's audit-mode instead. The topic-skill audit-mode owns its layer's standards verbatim and is more depth-appropriate than this aggregator.
 
 ## R — Reading
 
@@ -117,25 +107,28 @@ The user has invested in some attempt at strategy / goals / metrics / cadence �
 
 ## A2 — Future Trigger ★
 
-### When the user needs this skill
+### When the user needs this skill (cross-layer signals only)
 
-1. User pastes / attaches / describes existing artifacts AND asks for 4DX-framed clarification or recommendations. Trigger language:
-   - EN: "Here's our [doc/OKR/dashboard] — help me 4DX it", "Audit our 4DX given this context", "Translate this to 4DX terms", "We have [WIG/leads/scoreboard] but [problem] — diagnose", "What's missing in our 4DX setup?"
-   - JP: 「[策略 / OKR / dashboard] を 4DX 視点で診断して」「うちの状況を 4DX で整理したい」「文書を渡すから 4DX 視点で見て」「4DX 入れたが何が抜けてる？」
-   - zh-TW:「[策略 / OKR / dashboard]，幫我看 4DX 怎麼套」「我把資料丟給你，用 4DX 整理現況」「我們有 [WIG / leads]，但 [問題]，幫診斷」「幫我釐清 4DX 還缺什麼」
+1. **Multi-artifact spanning ≥2 D-layers**. User pastes / attaches / describes artifacts that map to multiple 4DX layers simultaneously:
+   - EN: "Here's our strategy doc + OKR + dashboard + meeting notes — audit 4DX across the board", "We have WIG + leads + scoreboard but cadence broken — diagnose across layers", "Our quarterly plan covers goal + metrics + weekly review — translate to 4DX", "What's missing in our 4DX setup across all 5 layers?"
+   - JP:「策略 doc + OKR + dashboard + meeting notes をまとめて 4DX 視点で診断」「複数文書から 4DX 現状整理」「四半期 plan を全層 4DX に展開」
+   - zh-TW:「資料跨好幾層（WIG + leads + scoreboard + cadence）都有，幫我整理現況 + 建議下一步」「我們 4DX 整套都有但卡住，跨層診斷」
 
-2. User describes a complex multi-layer state (some 4DX layers in place, some missing/broken) — needs diagnostic synthesis, not single-discipline coaching.
+2. **Layer-unknown failure**. User cannot name which discipline collapsed:
+   - EN: "I don't know which layer is broken — look at the whole picture", "Something's wrong with our 4DX but I can't tell what"
+   - JP:「どの layer が壊れてるか分からない、全体を見て」
+   - zh-TW:「我們導入 4DX 但卡住，不知道哪一層斷掉」
 
-3. User has tried 4DX, hit friction, and wants a consultant to "look at the whole picture" before deciding next move.
+3. **Cross-layer sequencing diagnostic**. User suspects layers are individually OK but the sequence is wrong (e.g. leads chosen before WIG locked).
 
 ### Non-activation signals (do NOT trigger when…)
 
-- **Cold-start with no artifacts** — user just says "I want to use 4DX" with no context → `using-four-dx-coach` (router does scope triage)
-- **Single-discipline question with full context for that one** — "help me write a WIG, here's my situation" → `4dx-d1-wig-formulation` directly (no audit needed)
-- **Socratic step-by-step preference** — user wants to be coached one step at a time → coach-mode D-skills
-- **Non-4DX framework audit** — user wants OKR audit, agile retro, BSC scorecard — out of scope; hand off via `using-four-dx-coach`
-- **Mid-flow inside an active deep-dive coach skill** — don't interrupt with audit reframing
-- **Pure venting / emotional support** — "我們團隊一團糟" without artifacts or audit-intent → router or external support
+- **Single-layer audit** — user provides artifacts at exactly ONE layer → route to that topic skill's audit-mode (see redirect table below in Boundary). E.g. only a WIG to diagnose → `4dx-d1-wig-formulation` audit-mode; only a lead-measure list → `4dx-d2-lead-measures` audit-mode; only a scoreboard → `4dx-d3-scoreboard` audit-mode; only a cadence log → `4dx-d4-cadence` audit-mode.
+- **Cold-start with no artifacts** — user just says "I want to use 4DX" with no context → `using-four-dx-coach`.
+- **Single-discipline question + Socratic preference** — "help me write a WIG, here's my situation" → `4dx-d1-wig-formulation` coach-mode directly.
+- **Non-4DX framework audit** — OKR audit, agile retro, BSC scorecard — out of scope.
+- **Mid-flow inside an active deep-dive coach skill** — don't interrupt with audit reframing.
+- **Pure venting / emotional support** — "我們團隊一團糟" without artifacts → router or external support.
 
 ### Distinction from neighbors
 
@@ -250,13 +243,30 @@ End the audit with: "These are diagnostic findings + sequenced recommendations. 
 
 ## B — Boundary ★
 
+### Single-layer audit redirect table
+
+If the user's artifacts cover ONE layer only, this skill is the wrong tool — the corresponding topic skill's `audit-mode.md` owns that layer's standards verbatim and is depth-appropriate. Hand off via:
+
+| If user provides artifacts at this layer only | Route to topic skill's audit-mode |
+|---|---|
+| WIG statement / goal candidates only | `4dx-d1-wig-formulation` audit-mode (`protocols/audit-mode.md`) |
+| Lead-measure list / candidate metrics only | `4dx-d2-lead-measures` audit-mode |
+| Scoreboard / KPI dashboard only | `4dx-d3-scoreboard` audit-mode |
+| WIG-Session / cadence log only | `4dx-d4-cadence` audit-mode |
+| Multi-team cascade tree only | `4dx-d1-wig-cascade` audit-mode |
+| Strategy-fit gate / "should we use 4DX" memo only | `4dx-meta-strategy-triage` audit-mode |
+| 7-day time log / capacity audit only | `4dx-meta-whirlwind-triage` audit-mode |
+| Direct-report leader-onboarding artifacts only | `4dx-meta-team-leader-onboarding` audit-mode |
+
+Only fire `4dx-audit` itself when the user crosses ≥2 of these rows OR cannot yet name the broken layer.
+
 ### Do NOT use this skill in:
 
-- **Cold-start with no artifacts** — user has nothing to audit yet → `using-four-dx-coach` for scope triage
-- **Single-discipline deep-dive** — user has rich context but only for ONE discipline + wants to work on that → fire that skill directly (e.g. "here's my goal, help me make it a WIG" → `4dx-d1-wig-formulation`)
-- **Socratic preference** — user wants step-by-step coaching, not synthesis → coach-mode D-skills
-- **Non-4DX audits** — OKR audit, agile retro, BSC review — wrong framework lens
-- **Pure dialogue / venting** — without 4DX-framing intent → router
+- **Single-layer scope** — see redirect table above; route to that topic skill's audit-mode.
+- **Cold-start with no artifacts** — user has nothing to audit yet → `using-four-dx-coach` for scope triage.
+- **Socratic preference** — user wants step-by-step coaching → topic-skill coach-mode.
+- **Non-4DX audits** — OKR audit, agile retro, BSC review — wrong framework lens.
+- **Pure dialogue / venting** — without 4DX-framing intent → router.
 
 ### Author-warned failure modes (consultant-mode specific)
 
@@ -290,9 +300,10 @@ End the audit with: "These are diagnostic findings + sequenced recommendations. 
 
 ## Audit metadata
 
-- **Skill type**: consultant-mode entry point (single-file MVP, distinct from 11 coach-mode skills)
+- **Skill type**: cross-layer aggregator (single-file; distinct from topic-skill audit-mode protocols)
 - **Verification status**: V1 ⚠️ partial — book is leader-dialogue POV; consultant-from-artifacts posture is derived
 - **Test pass rate**: see `test-prompts.json`
-- **Created**: 2026-04-30 (v0.7.0 MVP)
+- **Created**: 2026-04-30 (v0.7.0 MVP — universal 5-layer synthesis)
+- **Repositioned**: 2026-04-30 (v0.8.0 — narrowed to cross-layer / multi-artifact only; per-layer audit moved into topic-skill `audit-mode.md` protocols)
 - **Output language**: body — English; description + trigger phrasings — multilingual EN/JP/zh-TW
 - **Future**: if MVP proves valuable, consider expanding to multi-file with per-artifact-type sub-protocols (strategy-doc-specific / OKR-specific / scoreboard-specific / cadence-specific / full-stack)

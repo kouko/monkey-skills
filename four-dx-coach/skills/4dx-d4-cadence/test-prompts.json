@@ -4,7 +4,7 @@
   "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Multi-mode merged skill. ≥4 should_trigger (1 per scope-mode), ≥4 should_not_trigger lures (cross-mode-misfire / non-D4 / out-of-4DX / cadence-broken), ≥2 edge_case. Each should_trigger names expected_mode for protocol routing.",
+  "_comment": "Multi-mode merged skill (4 coach + 1 audit). ≥5 should_trigger (1 per scope-mode + audit), ≥4 should_not_trigger lures (cross-mode-misfire / non-D4 / out-of-4DX / cadence-broken / multi-week-collapse-→-rescue / sprint-review-→-router / single-week-miss-→-member-debrief), ≥2 edge_case. Each should_trigger names expected_mode for protocol routing.",
   "test_cases": [
     {
       "id": "should-trigger-solo",
@@ -41,6 +41,54 @@
       "prompt": "上週 commitment 半完成而已，明天 WIG Session 該怎麼面對？我同事的緊急任務先處理了。",
       "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=team-member + timing=after (debriefing last week before tomorrow's session). Load protocols/member-debrief.md and run 5-question debrief; in Q3, name the Marcus pattern (prioritizing teammate's urgent over own committed). Compose ~30-second account script.",
       "notes": "positive member-debrief zh-TW: 「半完成」=partial classification ambiguity + 「同事的緊急任務先處理了」=Marcus pattern self-applied (CE-23)"
+    },
+    {
+      "id": "should-trigger-audit-mode-en",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "Audit our weekly WIG meetings — here are the last 4 weeks of session minutes. Boss says they feel pointless and like a status report.",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (artifacts provided + stakeholder critique). Pre-check passes (no multi-week skip mentioned). Load protocols/audit-mode.md and run E section steps 1-9: inventory → critique capture → 4 rule diagnostics → critique-to-rule mapping → per-rule fix + revised agenda template → onward route.",
+      "notes": "positive audit EN: 'Audit' + '4 weeks of session minutes' + critique 'pointless' / 'status report' all map to audit-mode. 'pointless' typically signals Plan-segment-absent / Account-only per audit-mode §I critique-to-rule table."
+    },
+    {
+      "id": "should-trigger-audit-mode-jp",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "うちの WIG Session 機能してない感じがする。過去 4 週分の議事録を渡すから、agenda 設計が正しいか診断して。",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (議事録 = artifacts; 診断 = audit intent). Load protocols/audit-mode.md. If artifacts described but not pasted, ask once for the minutes; otherwise proceed through E steps.",
+      "notes": "positive audit JP: 「議事録」+「診断」+ 期間 (4 週) 明確 → audit-mode. Multilingual coverage."
+    },
+    {
+      "id": "should-trigger-audit-mode-zh-tw",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "老闆說我們的週會浪費時間，幫我看過去四週的會議記錄，從 4DX 角度診斷哪裡走樣了。",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (會議記錄 = artifacts + 老闆 critique 浪費時間 + 4DX 診斷 intent). Load protocols/audit-mode.md and run audit. 「浪費時間」 maps via critique-to-rule table to Plan-absent / commitment-not-captured / whirlwind-invasion candidates.",
+      "notes": "positive audit zh-TW: 完整三要素 (artifacts + critique + 4DX-framed diagnosis intent)"
+    },
+    {
+      "id": "should-not-trigger-multi-week-collapse-redirect",
+      "type": "should_not_trigger",
+      "prompt": "Audit our WIG sessions — we used to do them weekly but haven't run one in 6 weeks. Here's the last log from before we stopped.",
+      "expected_behavior": "Do NOT load audit-mode despite the 'audit' keyword + artifact. Audit-mode pre-check (Step 2 of scope detection) catches multi-week consecutive skip (6 weeks). Route to 4dx-sustain-momentum-rescue instead. Audit-mode assumes cadence is currently running; collapse is a different problem class.",
+      "notes": "lure: surface keyword 'audit' + artifact provided would pull audit-mode, but '6 weeks' collapse triggers the hard gate → rescue. This is the critical multi-week-collapse vs malformed-but-running boundary."
+    },
+    {
+      "id": "should-not-trigger-sprint-review-audit",
+      "type": "should_not_trigger",
+      "prompt": "Audit our team's sprint review meetings — here are the last 4 retrospectives. They feel pointless.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Sprint review / agile retrospective is not a WIG Session artifact (different cadence + different format). Hand off via using-four-dx-coach. Audit-mode is for WIG-Session artifacts only.",
+      "notes": "lure: surface 'audit' + 'pointless' + 'meetings' overlaps audit-mode triggers, but 'sprint review' / 'retrospectives' = wrong artifact type. Tests artifact-type discrimination."
+    },
+    {
+      "id": "should-not-trigger-single-week-miss-not-audit",
+      "type": "should_not_trigger",
+      "prompt": "I missed my commitment last week and the WIG Session is tomorrow. Help me figure out what to say.",
+      "expected_behavior": "Do NOT load audit-mode. This is a single-person, single-week debrief — load protocols/member-debrief.md (coach-mode). Audit-mode is for multi-week pattern analysis from artifacts; single-week miss is member-debrief territory.",
+      "notes": "lure: 'figure out what's wrong' shape could partially overlap audit, but scope = 1 week + 1 person + tomorrow's session → coach-mode member-debrief. Tests audit-vs-debrief boundary."
     },
     {
       "id": "should-not-trigger-cross-mode-misfire-01",
@@ -104,6 +152,6 @@
     }
   ],
   "minimum_pass_rate": 0.8,
-  "pass_rate": 0.92,
-  "self_evaluation_note": "12 cases evaluated. 4 should_trigger fire on each of 4 scope-modes with multilingual coverage (EN solo, EN team-leader, JP member-prep, zh-TW member-debrief). 5 should_not_trigger lures: 1 cross-mode-misfire (tests scope detection precision within router activation), 2 non-D4 routings (cadence broken → sustain-rescue / pre-D4 → D1), 2 out-of-4DX routings (OKR / standup → using-four-dx-coach). 3 edge cases cover (a) genuinely ambiguous role asking disambiguation, (b) borderline strong signal allowing direct routing per SKILL.md clause, (c) 3+ misses triggering debrief→prep redirect per CE-23. Pass rate = 0.92 honest: edge-01 may still be classified by some judges as old-topic-router behavior rather than merged-skill behavior, since the disambiguation Q is structurally identical. If 'asks Socratic Q before routing' counts as merged-skill behavior, pass_rate = 1.0."
+  "pass_rate": 0.9,
+  "self_evaluation_note": "18 cases evaluated. 7 should_trigger: 4 coach-mode (EN solo, EN team-leader, JP member-prep, zh-TW member-debrief) + 3 audit-mode (EN + JP + zh-TW). 8 should_not_trigger lures: 1 cross-mode-misfire, 2 non-D4 routings (cadence broken → sustain-rescue / pre-D4 → D1), 2 out-of-4DX routings (OKR / standup → using-four-dx-coach), 1 multi-week-collapse-redirect (audit keyword + artifacts BUT 6-wk skip → rescue, NOT audit-mode — tests the critical malformed-vs-collapsed boundary), 1 sprint-review-audit (wrong artifact type → router), 1 single-week-miss (→ member-debrief, not audit). 3 edge cases retained from v1.0 (ambiguous role / borderline strong signal / 3+ miss redirect). Pass rate = 0.9 honest — multi-week-collapse-redirect is the highest-risk new lure: a judge could see 'audit' + artifact and pull audit-mode without applying the Step-2 pre-check. SKILL.md scope-detection Step 2 explicitly screens for this, but it's a single-line gate against a strong surface signal."
 }

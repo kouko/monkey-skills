@@ -1,45 +1,66 @@
 {
   "skill": "4dx-d1-wig-formulation",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Topic-router for ambiguous-scope D1 WIG-formulation queries. Tests cover EN/JP/zh-TW. Activation criterion = ambiguous on (scope, verb) per description.",
+  "_comment": "Topic-router for D1 WIG-formulation queries — coach-mode (Socratic, scope-ambiguous cold-start) + audit-mode (consultant on existing artifact, with optional stakeholder critique). Tests cover EN/JP/zh-TW. Activation criterion = (a) ambiguous on (scope, verb) per coach-mode description OR (b) artifact + diagnostic intent per audit-mode description.",
   "test_cases": [
     {
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "Help me with my WIG. I don't know where to start.",
-      "expected_behavior": "Activate 4dx-d1-wig-formulation. 'My WIG' is ambiguous — could mean solo personal WIG, or a member's view of the team WIG, or a leader thinking 'my (team's) WIG'. Router asks ONE Socratic question on (scope, verb) then routes.",
-      "notes": "positive: matches EN signal 'Help me with my WIG' literally cited in description"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation. 'My WIG' is ambiguous — could mean solo personal WIG, or a member's view of the team WIG, or a leader thinking 'my (team's) WIG'. Router asks ONE Socratic question on (scope, verb) then routes to coach-mode protocol.",
+      "notes": "positive: matches EN signal 'Help me with my WIG' literally cited in description; coach-mode (no artifact)"
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "WIG をどう設定すればいいですか？",
-      "expected_behavior": "Activate 4dx-d1-wig-formulation. JP query 'WIG をどう選ぶ / 作り方' without actor or verb. Router disambiguates scope (solo / team-leader / member) and verb (define / select / comprehend).",
-      "notes": "positive: matches JP signal 「WIG をどう選ぶ」「WIG の作り方」 in description"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation. JP query 'WIG をどう選ぶ / 作り方' without actor or verb. Router disambiguates scope (solo / team-leader / member) and verb (define / select / comprehend), then routes to coach-mode protocol.",
+      "notes": "positive: matches JP coach-mode signal; no artifact provided"
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "幫我搞 WIG，目標太多不知道怎麼挑。",
-      "expected_behavior": "Activate 4dx-d1-wig-formulation. zh-TW query with no scope/verb marker. Router should ask the 2-part question (whose WIG / which verb) then route.",
-      "notes": "positive: matches zh-TW signal 「幫我搞 WIG」「目標太多怎麼挑」 in description"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation. zh-TW query with no scope/verb marker. Router should ask the 2-part question (whose WIG / which verb) then route to coach-mode protocol.",
+      "notes": "positive: matches zh-TW coach-mode signal; no artifact"
     },
     {
       "id": "should-trigger-04",
       "type": "should_trigger",
       "prompt": "How do I pick the right goal for the next quarter? Multiple things on my plate.",
-      "expected_behavior": "Activate 4dx-d1-wig-formulation. 'Pick the right goal' is described as a trigger phrasing. No actor named (could be solo or leader). Router disambiguates.",
-      "notes": "positive: description lists 'Pick the right goal' as EN trigger phrasing; scope unclear"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation. 'Pick the right goal' is described as a coach-mode trigger phrasing. No actor named (could be solo or leader). Router disambiguates.",
+      "notes": "positive: scope unclear, no artifact — coach-mode"
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "prompt": "Audit our team's Primary WIG. We have 'From 35% Q3 retention to 50% by March 31' and the boss says it's too abstract. What's wrong?",
+      "expected_behavior": "Activate 4dx-d1-wig-formulation in audit-mode. Artifact (the WIG sentence) + stakeholder critique ('boss says too abstract') + diagnostic intent ('audit', 'what's wrong'). Load `protocols/audit-mode.md`. Per-rule verdict matrix + map 'too abstract' to Ch 2 grammar / Ch 6 Trap 2.",
+      "notes": "positive: matches EN audit-mode trigger 'Audit my Primary WIG' + boss-critique signal in description"
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "prompt": "うちの WIG「売上を伸ばす」を診断して。上司が「曖昧すぎる」って言ってる。",
+      "expected_behavior": "Activate 4dx-d1-wig-formulation in audit-mode. JP artifact + stakeholder critique. Load `protocols/audit-mode.md`. Verdict: Ch 2 grammar FAIL (no X / no Y / no When), Ch 6 Trap 2 FAIL (too broad). Map「曖昧すぎる」→ Ch 2 grammar.",
+      "notes": "positive: JP audit-mode signal 「WIG を診断して」+「上司が…」; artifact provided"
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "prompt": "幫我看一下我們這個 WIG 哪裡有問題：「提升客戶滿意度，年底前完成」。老闆說不行。",
+      "expected_behavior": "Activate 4dx-d1-wig-formulation in audit-mode. zh-TW artifact + stakeholder critique. Load `protocols/audit-mode.md`. Per-rule verdict: Ch 2 grammar FAIL (X absent, Y not numeric, When vague '年底前'), Ch 6 Trap 3 FAIL (aspirational unmeasurable). Map 「老闆說不行」 to specific rules.",
+      "notes": "positive: zh-TW audit-mode signal 「哪裡有問題」+「老闆說 WIG 不行」; artifact provided"
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me write my personal WIG: From 78kg to 70kg by Dec 31.",
-      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Scope (personal) and verb (define) both explicit + canonical From-X-to-Y-by-When form already supplied. Fire 4dx-d1-wig-formulation directly.",
-      "notes": "lure: explicit personal+define — description excludes scope-explicit cases"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation BUT not the topic-disambiguation path: scope (personal) and verb (define) both explicit + canonical From-X-to-Y-by-When form already supplied. Coach-mode personal-define would simply confirm and pass forward. NOT audit-mode (no diagnostic intent — user wants help WRITING, not GRADING).",
+      "notes": "lure: artifact-shaped but no diagnostic intent; clarify mode triage doesn't misroute to audit"
     },
     {
       "id": "should-not-trigger-02",
@@ -53,17 +74,24 @@
       "type": "should_not_trigger",
       "prompt": "How do I cascade my org's Primary WIG down to 5 sub-teams?",
       "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Description explicitly excludes cascade queries — different verb (translate, not select) and different skill: 4dx-d1-wig-cascade.",
-      "notes": "lure: cascade is a sibling D1 topic explicitly excluded by description ('cascading downward to subordinate teams')"
+      "notes": "lure: cascade is a sibling D1 topic explicitly excluded by description"
+    },
+    {
+      "id": "should-not-trigger-cross-layer-01",
+      "type": "should_not_trigger",
+      "prompt": "Here's our 4DX setup: WIG = 'From 60 NPS to 75 by Q4', lead measures = '5 customer interviews/week + 3 NPS-driver fixes/sprint', scoreboard in Notion 12 metrics, weekly cadence skipped 4 weeks. Audit the whole thing.",
+      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation audit-mode. This is cross-layer (WIG + lead + scoreboard + cadence) and explicitly asks 'audit the whole thing' — full-stack diagnostic. Route to `4dx-audit`. This skill's audit-mode is D1-only by design.",
+      "notes": "cross-mode lure: artifact-rich + diagnostic intent BUT spans 5 layers → 4dx-audit not this skill"
     },
     {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "我老闆要我幫忙想 team 的 WIG，可是最後決定權在他。我要怎麼準備？",
-      "expected_behavior": "Activate 4dx-d1-wig-formulation. Edge case: user is a member contributing to leader's selection. Not pure 'comprehend an inherited WIG' (no WIG yet) and not 'select' (member lacks authority). Router should surface this hybrid and likely route to member-team-wig-comprehension framing (member's perspective on candidate WIGs) OR suggest user pass team-primary-wig-selection content to the leader.",
-      "notes": "boundary: member-contributing-to-selection — sits between team-select (leader's verb) and member-comprehend (post-decision); router's disambiguation question is exactly the right tool"
+      "expected_behavior": "Activate 4dx-d1-wig-formulation. Edge case: user is a member contributing to leader's selection. Not pure 'comprehend an inherited WIG' (no WIG yet) and not 'select' (member lacks authority). Router should surface this hybrid via the disambiguation question. Likely route to coach-mode member-comprehend framing for input preparation.",
+      "notes": "boundary: member-contributing-to-selection — sits between team-select and member-comprehend; coach-mode"
     }
   ],
   "minimum_pass_rate": 0.8,
   "pass_rate": 1.0,
-  "self_evaluation_note": "All 8 cases reviewed against description-only activation. 4 should_trigger genuinely scope-ambiguous; 3 should_not_trigger lures (scope+verb explicit / wrong topic D2 / wrong topic cascade) correctly excluded. Edge case forces router to hold the hybrid case open via Socratic disambiguation rather than silently picking a path."
+  "self_evaluation_note": "All 12 cases reviewed against description-based activation. Coach-mode: 4 should_trigger (scope-ambiguous cold-start), 1 edge case. Audit-mode: 3 should_trigger (artifact + diagnostic intent, with stakeholder critique multilingual EN/JP/zh-TW). Should_not_trigger: 4 lures (scope+verb explicit no-diag-intent / wrong topic D2 / sibling cascade / cross-layer full-stack → 4dx-audit). Cross-mode lure (audit-mode test cross-layer-01) explicitly verifies audit-mode stays D1-only and yields to 4dx-audit on multi-layer artifacts. Mode triage table in SKILL.md guides the coach-vs-audit fork before scope detection."
 }

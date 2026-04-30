@@ -1,23 +1,21 @@
 ---
 name: 4dx-meta-strategy-triage
 description: |
-  Multi-scope gate for "Should X use 4DX?" — decides whether 4 Disciplines of
-  Execution even fits the user's situation BEFORE installing D1-D4. Detects
-  scope (solo individual / team-leader) and loads the matching triage
-  protocol. EN: "Should I use 4DX for X?", "Will 4DX work for my goal?",
-  "Should our team adopt 4DX?", "Is 4DX right for a team of N?". JP:
-  「この目標に 4DX 使える？」「私たちのチームに 4DX 合うか？」「4DX 合ってる？」.
-  zh-TW: 「4DX 適合我這個目標嗎？」「我們團隊適合導入 4DX 嗎？」「4DX 適合嗎？」.
-  Returns one of 6 verdicts per mode (solo: APPLICABLE / habit / portfolio /
-  emergency / creative / no-time-sovereignty; team-leader: TEAM-APPLICABLE /
-  stroke-of-pen / whirlwind-handleable / wrong-team-shape / single-shot-project
-  / mission-misaligned, with TEAM-NOT-YET-READY variant for change-readiness
-  failures). Stroke-of-pen vs behavioral-change distinction shared.
-  NOT for already-committed users asking "how do I start?" (route to D1).
-  NOT for team members inheriting a WIG (route to
-  4dx-d1-wig-formulation — members don't triage methodology
-  fit). NOT for enterprise multi-team rollout (read book Ch 6-10 directly +
-  4dx-d1-wig-cascade).
+  Multi-scope gate for "Should X use 4DX?" — decides if 4 Disciplines of
+  Execution fits BEFORE installing D1-D4. Coach-mode (Socratic from zero,
+  solo or team-leader) + audit-mode (diagnose strategy doc / artifact +
+  stakeholder critique). EN: "Should I use 4DX for X?", "Should our team
+  adopt 4DX?", "Audit whether 4DX fits given this strategy doc", "Boss says
+  4DX won't work — diagnose". JP: 「この目標に 4DX 使える？」「うちの 4DX
+  適合性を診断して」「会社の状況見て 4DX 合うか判定」. zh-TW: 「4DX 適合我這個目標嗎？」
+  「幫我看 4DX 適不適合我們團隊」「策略 doc 在這，4DX 適合嗎？」. Returns one
+  verdict (APPLICABLE / TEAM-APPLICABLE / stroke-of-pen / whirlwind /
+  habit / portfolio / emergency / creative / no-time-sovereignty /
+  wrong-team-shape / single-shot / mission-misaligned / TEAM-NOT-YET-READY).
+  NOT for already-committed users asking "how to start" (→ D1). NOT for
+  members inheriting a WIG (→ 4dx-d1-wig-formulation). NOT for cross-layer
+  audit when 4DX already chosen (→ 4dx-audit). NOT for enterprise rollout
+  (→ book Ch 6-10 + 4dx-d1-wig-cascade).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)
 source_language: en
@@ -72,9 +70,18 @@ logic across modes; voice and gates differ per scope.
 - User asks about non-4DX methodologies (OKR / agile / habit-stacking / scrum / kanban) — hand off via `using-four-dx-coach`.
 - User is in the middle of an active triage session — do not re-route mid-flow.
 
-## Scope detection
+## Mode pre-check (audit vs coach)
 
-When this skill activates:
+Before scope detection, decide **mode**:
+
+- **Audit-mode** — user provides current-state artifacts (strategy doc, OKR sheet, leadership-team note, annual plan, written goal statement, current-methodology description, team charter) AND asks for fit-diagnosis ("audit", "diagnose", "is 4DX right for us given this", 「診断」, 「判定」, 「適不適合」). Often paired with a stakeholder critique ("boss says 4DX won't work", 「上司が反対」, 「老闆覺得不合適」). User is NOT yet 4DX-committed — this skill IS the gate. Load `protocols/audit-mode.md`.
+- **Coach-mode** — user has no artifact (or only a sentence-level goal) and wants Socratic walk-through. Proceed to scope detection (solo / team-leader) below.
+
+If signals are mixed (artifact present but user explicitly asks "talk me through it"), default to coach-mode and offer audit-mode as alternative.
+
+## Scope detection (coach-mode)
+
+When this skill activates in coach-mode:
 
 1. Determine **scope**: solo (one person, one goal) vs team-leader (3-12 person team, leader judging team adoption).
 2. Load the matching protocol file from `protocols/`.
@@ -98,8 +105,9 @@ If user identifies as a **member** receiving an inherited WIG ("my manager alrea
 
 | Detected mode | Load protocol | Agent voice |
 |---|---|---|
-| Solo individual | `protocols/personal-mode.md` | personal coach |
-| Team-leader (3-12 reports) | `protocols/team-mode.md` | consultant to leader |
+| Solo individual (coach-mode) | `protocols/personal-mode.md` | personal coach |
+| Team-leader (coach-mode, 3-12 reports) | `protocols/team-mode.md` | consultant to leader |
+| Artifact-rich + fit-check intent (audit-mode) | `protocols/audit-mode.md` | diagnostic consultant |
 
 After loading the protocol, follow its E section step-by-step. Each protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator does not run any triage content directly.
 

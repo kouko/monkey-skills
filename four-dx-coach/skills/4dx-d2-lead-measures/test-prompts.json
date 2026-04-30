@@ -1,51 +1,72 @@
 {
   "skill": "4dx-d2-lead-measures",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Topic-router for ambiguous-role D2 lead-measure queries. Tests cover EN/JP/zh-TW. Activation criterion = ambiguous on role (solo / leader-facilitator / member-influencer) per description.",
+  "_comment": "Dual-mode skill: 3 coach-mode protocols (solo/leader/member) + audit-mode protocol. Tests cover EN/JP/zh-TW activation across both modes. Coach-mode activates on role-ambiguous discovery queries; audit-mode activates on artifact + optional stakeholder critique.",
   "test_cases": [
     {
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "Help me with lead measures. I have the goal but no idea where to start.",
-      "expected_behavior": "Activate 4dx-d2-lead-measures. No role marker — could be solo picking own leads, leader facilitating team, or member working with inherited leads. Router asks ONE Socratic question on role then routes.",
-      "notes": "positive: matches EN signal 'Help me with lead measures' literally cited in description"
+      "expected_behavior": "Activate 4dx-d2-lead-measures coach-mode. No role marker — could be solo picking own leads, leader facilitating team, or member working with inherited leads. Router asks ONE Socratic question on role then routes.",
+      "notes": "positive: matches EN signal 'Help me find lead measures' literally cited in description"
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "lead measure の探し方を教えてください。",
-      "expected_behavior": "Activate 4dx-d2-lead-measures. JP query 'lead measure の探し方' without role signal. Router disambiguates (solo / leader-facilitator / member-influencer) before any D2 protocol.",
-      "notes": "positive: matches JP signal 「lead measure の探し方」 literally cited in description"
+      "expected_behavior": "Activate 4dx-d2-lead-measures coach-mode. JP query without role signal. Router disambiguates (solo / leader-facilitator / member-influencer) before any D2 protocol.",
+      "notes": "positive: matches JP signal 「lead measure を決めたい」 in description"
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "幫我找 lead measure，每天到底該做什麼才會推動目標？",
-      "expected_behavior": "Activate 4dx-d2-lead-measures. zh-TW query with no role marker. Router should ask the role question (solo / leader 帶 team / member 接收已訂好的) then route.",
-      "notes": "positive: matches zh-TW signal 「幫我找 lead measure」「每天該做什麼才會推動目標」 in description"
+      "expected_behavior": "Activate 4dx-d2-lead-measures coach-mode. zh-TW query with no role marker. Router should ask the role question (solo / leader 帶 team / member 接收已訂好的) then route.",
+      "notes": "positive: matches zh-TW signal 「幫我找 lead measure」 in description"
     },
     {
       "id": "should-trigger-04",
       "type": "should_trigger",
       "prompt": "What's a daily action driver for an already-defined goal? Need leading-indicator advice.",
-      "expected_behavior": "Activate 4dx-d2-lead-measures. 'Daily action driver' / 'leading-indicator advice' is described as trigger phrasing. No role named. Router disambiguates.",
-      "notes": "positive: description lists 'Daily action that drives the goal' / 'Lead measure advice' as EN trigger; role unclear"
+      "expected_behavior": "Activate 4dx-d2-lead-measures coach-mode. 'Daily action driver' / 'leading-indicator advice' is described as trigger phrasing. No role named. Router disambiguates.",
+      "notes": "positive: description lists 'what should I do daily' as EN trigger; role unclear"
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "prompt": "Audit our lead measures. We picked these 4: (1) discovery calls per week, (2) MQL conversion rate, (3) NPS score weekly, (4) close the Q4 cache rewrite. Boss says some of these aren't really lead measures. Which are wrong?",
+      "expected_behavior": "Activate 4dx-d2-lead-measures audit-mode. Artifact provided (4 named leads) + stakeholder critique ('boss says some aren't really lead measures'). Load `protocols/audit-mode.md`. Apply two-axis test per candidate, map boss critique to rule violations: (3) NPS = lag-shape, (4) cache rewrite = task-not-measure. Output KEEP/REVISE/DROP per candidate + Goodhart per surviving lead.",
+      "notes": "positive: matches EN signal 'Audit our lead measures' + 'Boss says these aren't real lead measures' literally in description; artifact + critique together"
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "prompt": "うちの 4DX team で lead measure として 12 個の KPI を dashboard に並べてるんだが、これ本当に lead measure？診断して。",
+      "expected_behavior": "Activate 4dx-d2-lead-measures audit-mode. JP artifact-with-critique scenario: 12-KPI dashboard described as leads, user questions whether they're real leads. Load `protocols/audit-mode.md`. Cap check fails immediately (12 ≫ 3); output category-mismatch verdict (KPI dashboard ≠ 4DX lead set) + recommend rebuild via coach-mode `team-facilitate`.",
+      "notes": "positive: matches JP signal 「これ本当に lead measure？」 + 12-KPI dashboard scenario in description"
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "prompt": "老闆說我們列的 lead 不對。我們現在有：每週 demo 場次、retention rate、產品 bug 數、ship 3 features by Q4。幫我看哪裡不對。",
+      "expected_behavior": "Activate 4dx-d2-lead-measures audit-mode. zh-TW artifact + stakeholder critique. Load `protocols/audit-mode.md`. Per-candidate diagnosis: demo 場次 likely PASS both axes; retention rate = lag-shape (DROP); bug 數 likely influenceable but predictive needs WIG check; ship 3 features = task-not-measure (DROP/REVISE). Map boss critique → predictive-fail / lag-shape rule violation.",
+      "notes": "positive: matches zh-TW signal 「老闆說我們的 lead 不對，幫看哪裡」 in description"
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me facilitate my team picking 2-3 lead measures for our Team WIG (currently 0 → 30% by Dec).",
-      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Role explicit (leader-facilitator). Fire 4dx-d2-lead-measures directly.",
-      "notes": "lure: explicit-role (leader facilitating team) — description excludes role-explicit cases"
+      "expected_behavior": "Activate 4dx-d2-lead-measures but skip the disambiguation question — role is explicit (leader-facilitator). Load `protocols/team-facilitate.md` directly.",
+      "notes": "lure: explicit-role coach-mode (leader facilitating team) — should bypass router question, not skip skill"
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "Our team's lead measures are set. How should I display them on the scoreboard?",
-      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Topic is wrong — query is D3 scoreboard, not D2 lead-measure discovery. Route to 4dx-d3-scoreboard topic-router.",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Topic is wrong — query is D3 scoreboard, not D2 lead-measure discovery or audit. Route to 4dx-d3-scoreboard.",
       "notes": "lure: wrong-stage — surface 'lead measures' word present but downstream D3 question"
     },
     {
@@ -56,14 +77,28 @@
       "notes": "lure: D2 prerequisite missing — leads built on no-WIG are noise"
     },
     {
+      "id": "should-not-trigger-audit-01",
+      "type": "should_not_trigger",
+      "prompt": "Audit our OKRs for the quarter. Are these KRs measurable, aligned, and ambitious enough? Here's our O+KR sheet.",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures audit-mode. User wants generic OKR audit (measurability / alignment / ambition rubric), not 4DX rules. Description explicitly excludes 'OKR-KR / KPI audit without 4DX framing'. Route via using-four-dx-coach (out-of-4DX).",
+      "notes": "lure: audit-shaped but wrong-framework — surface 'audit' word + KR list, but user is not asking for 4DX two-axis test, they want OKR-rubric audit"
+    },
+    {
+      "id": "should-not-trigger-audit-02",
+      "type": "should_not_trigger",
+      "prompt": "Audit our entire 4DX implementation. Here's our WIG, our lead measures, our scoreboard description, and 4 weeks of WIG Session notes. Where are we breaking?",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures audit-mode. Cross-layer audit spanning WIG + leads + scoreboard + cadence — out of D2 single-layer scope. Route to 4dx-audit (5-layer consultant audit) instead.",
+      "notes": "lure: cross-layer audit — looks audit-shaped but spans all 5 layers; D2 audit-mode is L2-only"
+    },
+    {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "我是 team lead，但我老闆要我先自己想 2-3 個 lead 候選再帶 team 討論。算 solo 還是 facilitator？",
-      "expected_behavior": "Activate 4dx-d2-lead-measures. Edge case: leader doing pre-work before facilitating — between solo-discovery and facilitation. Router should surface this and likely route to team-lead-measure-facilitation (since the eventual venue is the team session, and the book's anti-pattern is 'leader pre-writes leads to save team time'). Should warn user about veto-not-dictate principle even if they prepare candidates.",
-      "notes": "boundary: leader-doing-pre-work — sits between personal-discovery and team-facilitation; correctly disambiguated by surfacing the team-build risk"
+      "expected_behavior": "Activate 4dx-d2-lead-measures coach-mode. Edge case: leader doing pre-work before facilitating — between solo-discovery and facilitation. Router should surface this and likely route to team-facilitate (since the eventual venue is the team session, and the book's anti-pattern is 'leader pre-writes leads to save team time'). Should warn user about veto-not-dictate principle even if they prepare candidates.",
+      "notes": "boundary: leader-doing-pre-work — sits between personal-discovery and team-facilitation"
     }
   ],
   "minimum_pass_rate": 0.8,
   "pass_rate": 1.0,
-  "self_evaluation_note": "All 8 cases reviewed against description-only activation. 4 should_trigger genuinely role-ambiguous (EN/JP/zh-TW + EN paraphrase); 3 should_not_trigger lures (role explicit / wrong-stage D3 / wrong-stage D1 prerequisite) correctly excluded. Edge case forces router to surface the leader-pre-work tension and route to team-facilitation while flagging veto-not-dictate. Description boundary clauses ('Do NOT activate when role is explicit / WIG not yet defined / scoreboard / cadence') align with all 4 should_not lures."
+  "self_evaluation_note": "All 13 cases reviewed against description-only activation. 4 should_trigger coach-mode (EN/JP/zh-TW + EN paraphrase) genuinely role-ambiguous. 3 should_trigger audit-mode (EN with 4-lead artifact + boss critique; JP with 12-KPI dashboard; zh-TW with 4-candidate list + boss critique) match description triggers verbatim. 3 should_not_trigger lures: explicit-role coach (still routes within skill, just skips disambiguation), wrong-stage D3 scoreboard, pre-WIG D1 prerequisite. 2 audit-specific lures: OKR-KR audit without 4DX framing → using-four-dx-coach; cross-layer audit → 4dx-audit. Edge case forces router to surface leader-pre-work tension. Description boundary clauses align with all lures (NOT for cross-layer audit / NOT for OKR audit without 4DX framing / NOT for pre-WIG / NOT for scoreboard)."
 }

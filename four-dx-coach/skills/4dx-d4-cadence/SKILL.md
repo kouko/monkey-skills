@@ -1,31 +1,28 @@
 ---
 name: 4dx-d4-cadence
 description: |
-  Multi-scope coach for D4 Cadence of Accountability across the 4 roles
-  the WIG Session puts the user into. Detects scope (solo / team-leader-
-  facilitator / team-member-before / team-member-after) and loads the
-  matching protocol. EN: "Run my weekly WIG Session", "Facilitate our
-  team's WIG meeting", "Prep my commitment for tomorrow", "I missed last
-  week — what do I say?". JP:「毎週の WIG Session を回したい」「team の
-  WIG ミーティングを進める」「session の commitment を準備したい」
-  「先週果たせなかった、どう振り返る？」. zh-TW:「每週固定 review 維持
-  目標進度」「帶團隊 weekly WIG Session」「下次 commitment 怎麼準備」
-  「上週 commitment 沒達成怎麼面對」. Account → Review → Plan grammar
-  shared; voice differs (peer-witness / consultant-to-leader / personal-
-  coach). NOT for daily standups, sprint review, OKR check-in, 1-on-1,
-  annual retro. NOT pre-D4 (D1 / D2 / D3 first). **Boundary against
-  rescue**: a single missed commitment in one otherwise-running week IS
-  D4 territory (member-debrief protocol handles "I missed last week"
-  / "上週 commitment 沒達成"). But **multi-week lapse** ("WIG Sessions
-  stopped 3 weeks ago" / "haven't done this in a month" / "我的 4DX
-  已經幾週沒做了") is rescue territory → `4dx-sustain-momentum-rescue`.
-  D4 assumes the cadence is currently running; rescue handles cadence
-  collapse / restart.
+  D4 Cadence skill: 4 coach modes (solo / team-leader / member-prep /
+  member-debrief) + audit mode (diagnose running-but-malformed cadence
+  from past minutes / commitment logs / stakeholder critique). Coach
+  EN: "Run my weekly WIG Session", "Facilitate our WIG meeting", "Prep
+  my commitment", "I missed last week". Audit EN: "Audit our WIG
+  meetings — 4 weeks of notes", "Boss says meetings are pointless,
+  diagnose". JP coach:「WIG Session 回したい」「commitment 準備」「果た
+  せなかった」. JP audit:「会議録を見て何がダメか」「WIG Session 機能し
+  てない診断して」. zh-TW coach:「每週 review」「commitment 怎麼準備」.
+  zh-TW audit:「老闆說週會浪費時間幫我診斷」「四週會議記錄哪裡走樣」.
+  NOT for daily standup / sprint review / OKR check-in / agile retro /
+  annual retro. NOT pre-D4. NOT cross-layer audit (→ `4dx-audit`).
+  **Critical boundary — multi-week collapse ≠ malformed-but-running**:
+  「3 週スキップ」「haven't done this in a month」「幾週沒做了」 →
+  `4dx-sustain-momentum-rescue`, NOT audit-mode. Audit-mode assumes
+  cadence is currently running.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 5 — Discipline 4: Create a Cadence of Accountability; Chapter 10 — Sustaining 4DX (Susan/Marcus dialogue); Chapter 15 — Applying Discipline 4
 source_language: en
 tags: [d4, cadence, multi-scope, wig-session, weekly, accountability, peer-commitment, 4dx, solo, team-leader, team-member]
 related_skills:
+  - 4dx-audit
   - 4dx-meta-strategy-triage
   - 4dx-d1-wig-formulation
   - 4dx-d2-lead-measures
@@ -72,11 +69,17 @@ counts as a session, what counts as a commitment, what counts as cadence.
 - JP: 「先週のコミットメント果たせなかった、どう振り返る？」「セッションで何て言えばいい？」
 - zh-TW: 「上週 commitment 沒達成，這次 session 怎麼面對？」「半完成的承諾要怎麼講？」
 
+**Audit-mode (diagnose running-but-malformed cadence from artifacts):**
+- EN: "Audit our weekly WIG meetings — here are 4 weeks of notes", "Team says meetings are pointless — what's wrong?", "Here's our session log — diagnose what's malformed", "Boss says weekly review is pointless, help me see why"
+- JP: 「うちの WIG Session 機能してない、診断して」「会議録を見て何がダメか教えて」「過去 4 週分の議事録 audit して」
+- zh-TW: 「我們的 weekly meeting 沒效果，幫看哪裡有問題」「老闆說週會浪費時間，幫我診斷」「過去四週會議記錄，幫我看 4DX 角度哪裡走樣了」
+
 ### Non-activation signals (DO NOT fire when…)
 
-- Cadence has already broken (multiple skipped weeks, engagement collapsed) → `4dx-sustain-momentum-rescue` first
+- Cadence has already broken (multiple skipped weeks, engagement collapsed) → `4dx-sustain-momentum-rescue` first **(this overrides audit-mode — audit-mode requires cadence to still be running)**
 - Pre-D4 (no WIG defined, no lead measure picked, no scoreboard built) → D1 / D2 / D3 first
 - Out of 4DX — sprint review / PI planning / OKR check-in / 1-on-1 / status report / agile retro / GTD weekly review → hand off via `using-four-dx-coach`
+- Cross-layer audit (WIG / leads / scoreboard / cadence diagnosed together from artifacts) → `4dx-audit` (this skill's audit-mode is **D4-layer-only**)
 - Annual / quarterly / monthly retrospective → wrong cadence scope (WIG Session is weekly only)
 - Daily standup / scrum daily → wrong cadence (daily ≠ weekly), wrong format (status three-questions ≠ Account/Review/Plan)
 - Reactive / on-call / emergency-response work where the whirlwind IS the strategic value → see `4dx-meta-strategy-triage`
@@ -87,10 +90,11 @@ counts as a session, what counts as a commitment, what counts as cadence.
 
 When this skill activates:
 
-1. Determine **role**: solo (no team) / team-leader-facilitator / team-member
-2. Determine **timing** (member only): before-session (prep) vs after-session (debrief)
-3. Load the matching protocol file from `protocols/`
-4. Follow that protocol's E section step-by-step
+1. Determine **interaction shape first**: **coach-mode** (Socratic, live dialogue, single-week scope) vs **audit-mode** (synthesis from provided artifacts — past minutes / commitment logs / cadence pattern, often + stakeholder critique). Audit signals: user pastes/attaches/references "past notes", "minutes", "last 4 weeks", "boss says...", "team says meetings are pointless".
+2. **Audit-mode pre-check** — before loading audit-mode, screen for **multi-week consecutive skip** (>2 weeks). If present, route to `4dx-sustain-momentum-rescue` instead — audit-mode assumes cadence is currently *running* but malformed.
+3. If coach-mode: determine **role** (solo / team-leader-facilitator / team-member) and **timing** for member (before/after session).
+4. Load the matching protocol file from `protocols/`.
+5. Follow that protocol's E section step-by-step.
 
 If ambiguous after reading the user's query, ask ONE Socratic question:
 
@@ -106,10 +110,11 @@ If the signal in the original query is strong, skip the question and load the pr
 
 | Detected mode | Load protocol | Agent voice |
 |---|---|---|
-| Solo, during session | `protocols/solo-session.md` | peer-witness |
-| Team-leader, during session | `protocols/team-leader-session.md` | consultant-to-leader |
-| Team-member, before session | `protocols/member-prep.md` | personal coach to member |
-| Team-member, after session | `protocols/member-debrief.md` | personal coach to member |
+| Solo, during session (coach) | `protocols/solo-session.md` | peer-witness |
+| Team-leader, during session (coach) | `protocols/team-leader-session.md` | consultant-to-leader |
+| Team-member, before session (coach) | `protocols/member-prep.md` | personal coach to member |
+| Team-member, after session (coach) | `protocols/member-debrief.md` | personal coach to member |
+| Audit (artifacts + critique, cadence running) | `protocols/audit-mode.md` | consultant-from-artifacts |
 
 After loading the protocol, follow its E section step-by-step. Each protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator does not run any session content directly.
 
@@ -118,8 +123,10 @@ After loading the protocol, follow its E section step-by-step. Each protocol car
 - **Member + during session** — member doesn't have a separate during-session skill; the leader runs the agenda. Suggest member-prep ahead of the next session, OR member-debrief for the just-ended one.
 - **Solo + before / after** — `solo-session.md` is single-protocol (covers prep + agenda + close internally). Fire it directly.
 - **Facilitator + before / after** — `team-leader-session.md` handles the full lifecycle (pre-session check + agenda + post-session reminders) within its protocol. Fire it directly.
-- **Cadence broken multiple weeks** — fire `4dx-sustain-momentum-rescue` first; do NOT pretend a fresh cadence works on top of a broken one.
+- **Cadence broken multiple weeks** — fire `4dx-sustain-momentum-rescue` first; do NOT pretend a fresh cadence works on top of a broken one. Also overrides audit-mode (audit-mode requires running cadence).
 - **WIG / lead measure / scoreboard not yet set** — fire D1 / D2 / D3 skills first; D4 has nothing to operate on without upstream.
+- **Audit request without artifacts** — if user asks for an audit but provides no minutes / log / agenda, ask once for artifacts; if none available, decline audit-mode and route to a coach-mode protocol to set up cadence properly.
+- **Cross-layer audit (WIG + leads + scoreboard + cadence)** — that's `4dx-audit`, not D4 audit-mode. Audit-mode here is **D4-only**.
 
 ## Shared standards
 
@@ -149,7 +156,7 @@ The mode-specific boundary lives in each protocol's B section. The cross-mode co
 
 ## Audit metadata
 
-- **Skill type**: multi-file orchestrator (Plan U merged from 5 source skills — 4 atomic D4 + 1 topic-router)
+- **Skill type**: multi-file orchestrator (Plan U merged from 5 source skills — 4 atomic D4 + 1 topic-router); + audit-mode protocol (path B refactor) for artifact-synthesis diagnosis of running-but-malformed cadence
 - **Verification status**: V1 ✓ for solo + team-leader modes (both leader-POV in source book); V1 ⚠️ partial for member-prep + member-debrief modes (book authors leader side of dialogue; member-side protocol = symmetric inverse, anchored on P-22 specific-deliverable test, P-39 ≥90% fulfillment bar, CE-22/23/24 self-applied, with industry grounding from Pfeffer / Drucker / Cialdini / Eurich / Edmondson / Wiseman)
 - **Created**: 2026-04-30
 - **Output language**: SKILL.md body + protocols/standards in English; description + scope-detection prompts multilingual EN/JP/zh-TW; member-debrief protocol's Step 7 spoken-script register cue is multilingual

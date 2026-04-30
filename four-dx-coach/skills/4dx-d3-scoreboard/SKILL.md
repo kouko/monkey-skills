@@ -1,24 +1,23 @@
 ---
 name: 4dx-d3-scoreboard
 description: |
-  Multi-scope coach for D3 Compelling Scoreboard across the 3 roles
-  the user can occupy. Detects scope (solo / team-leader-designer /
-  team-member-reader) and loads the matching protocol. EN: "Help me
-  design my scoreboard", "Design our team scoreboard", "How do I read
-  my team's scoreboard?". JP:「自分用の scoreboard を設計したい」
-  「チームの scoreboard を設計したい」「team の scoreboard をどう読む？」.
-  zh-TW:「設計自己的計分板」「幫團隊設計 scoreboard」「我們 team 的
-  scoreboard 怎麼看」. Players' scoreboard 5-second-test grammar shared;
-  voice differs (personal coach / consultant-to-leader / personal coach
-  to member). NOT for enterprise BI / KPI dashboards, agile burndown,
-  OKR check-in dashboards, before D1/D2 are defined, cadence
-  questions (→ 4dx-d4-cadence), or **scoreboard-as-stalled-signal**
-  ("scoreboard 沒人看" / "haven't updated in a month" / "scoreboard
-  feels pointless now" — these mean the cadence broke, not that the
-  scoreboard needs redesigning → `4dx-sustain-momentum-rescue`).
-  Activate ONLY when the user wants to design / build / read a
-  scoreboard against an active 4DX implementation, not when they're
-  reporting that an existing one stopped working.
+  Multi-scope D3 Compelling Scoreboard skill: coach-mode (Socratic
+  design / read across solo / team-leader / team-member) + audit-mode
+  (diagnose existing scoreboard against 5-second test / players'-vs-
+  coaches' / ≤4 elements + KEEP/DROP/RESTYLE). EN: "Design my
+  scoreboard", "Design our team scoreboard", "Read my team's
+  scoreboard", "Audit our scoreboard", "Team doesn't look at the
+  scoreboard", "Boss says our dashboard isn't useful". JP:「自分用の
+  scoreboard を設計」「team scoreboard 設計」「scoreboard をどう読む」
+  「うちの scoreboard 誰も見てない、診断して」「dashboard を 4DX 視点
+  で見て」. zh-TW:「設計自己的計分板」「幫團隊設計 scoreboard」「team
+  scoreboard 怎麼看」「scoreboard 沒人看，幫我看哪裡有問題」「dashboard
+  老闆說沒用」. NOT for enterprise BI / KPI dashboards, agile burndown,
+  OKR scorecards, before D1/D2 are defined, D4 cadence questions, or
+  **scoreboard-as-stalled-cadence-signal** ("hasn't updated in a month"
+  / "WIG Sessions stopped" → `4dx-sustain-momentum-rescue`; audit-mode
+  is for board-shape diagnosis, not whole-stack collapse). NOT for
+  cross-discipline 4DX audit (→ `4dx-audit`).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 4 — Discipline 3: Keep a Compelling Scoreboard; Chapter 14 — Applying Discipline 3
 source_language: en
@@ -80,6 +79,16 @@ players' from coaches', and what visual elements belong on the board.
 - zh-TW: 「我們 team 的 scoreboard 怎麼看」「scoreboard 跟我有什麼關係不知道」
   「我們的 scoreboard 看了也看不出在贏」「目標線好像跟現實對不上」
 
+**Audit-mode (existing scoreboard, voice = consultant-to-user):**
+- EN: "Audit our scoreboard", "Team doesn't look at the scoreboard",
+  "Boss says our dashboard isn't useful", "Here's our scoreboard —
+  what's wrong with it?", "We put it on the wall and the team
+  ignores it"
+- JP: 「うちの scoreboard 誰も見てない、診断して」「dashboard を 4DX
+  視点で見て」「scoreboard はあるけど機能してない、何が問題？」
+- zh-TW: 「scoreboard 沒人看，幫我看哪裡有問題」「我們的 dashboard
+  老闆說沒用」「計分板做了但沒人理，幫我審一下」
+
 ### Non-activation signals (DO NOT fire when…)
 
 - **WIG / lead measures not yet set** → run D1 / D2 first; D3 has
@@ -103,12 +112,23 @@ players' from coaches', and what visual elements belong on the board.
 
 When this skill activates:
 
-1. Determine **role**: solo (designer of own private board) /
-   team-leader-facilitator (designer of team's public board) /
+1. Determine **mode**: coach-mode (Socratic design / read from zero or
+   inherited) vs audit-mode (existing artifact + diagnostic intent +
+   stakeholder critique)
+2. If coach-mode, determine **role**: solo (designer of own private
+   board) / team-leader-facilitator (designer of team's public board) /
    team-member (reader of leader-designed board)
-2. Determine **verb**: design (build new) vs read (interpret existing)
-3. Load the matching protocol file from `protocols/`
-4. Follow that protocol's E section step-by-step
+3. If coach-mode, determine **verb**: design (build new) vs read
+   (interpret existing)
+4. Load the matching protocol file from `protocols/`
+5. Follow that protocol's E section step-by-step
+
+**Audit-mode signal**: user has provided / described an existing
+scoreboard AND asks for diagnosis or revision recommendations
+("audit", "what's wrong with this", "team doesn't look at it",
+stakeholder critique attached). If artifact present + diagnostic
+intent → load `protocols/audit-mode.md` directly; skip the role
+question (audit-mode handles solo/team uniformly).
 
 If ambiguous after reading the user's query, ask ONE Socratic
 question:
@@ -134,9 +154,10 @@ load the protocol directly.
 
 | Detected mode | Load protocol | Agent voice |
 |---|---|---|
-| Solo, design own private scoreboard | `protocols/personal-design.md` | personal coach |
-| Team-leader, facilitate team-built public scoreboard | `protocols/team-lead-design.md` | consultant-to-leader |
-| Team-member, read inherited team scoreboard | `protocols/member-read.md` (V1 ⚠️ partial) | personal coach to member |
+| Solo, design own private scoreboard (coach-mode) | `protocols/personal-design.md` | personal coach |
+| Team-leader, facilitate team-built public scoreboard (coach-mode) | `protocols/team-lead-design.md` | consultant-to-leader |
+| Team-member, read inherited team scoreboard (coach-mode) | `protocols/member-read.md` (V1 ⚠️ partial) | personal coach to member |
+| Existing scoreboard + diagnostic intent (audit-mode) | `protocols/audit-mode.md` | consultant-to-user |
 
 After loading the protocol, follow its E section step-by-step. Each
 protocol carries its own R / I / A1 / A2 / E / B sections; this
@@ -158,6 +179,14 @@ orchestrator does not run any design or reading content directly.
 - **Personal-vs-team scope ambiguous in solo professional context**
   ("I run a 1-person consultancy") — fire `personal-design.md`; the
   team-build dynamic doesn't apply when there's no peer team.
+- **Existing-board + critique** ("we have a scoreboard but team
+  ignores it") — fire `audit-mode.md`, NOT `team-lead-design.md`.
+  Audit produces dispositions on the existing artifact; coach-mode
+  rebuilds from zero.
+- **Audit-mode reveals cross-discipline issue** (WIG malformed,
+  cadence collapsed) — audit-mode names it and routes to `4dx-audit`
+  or `4dx-sustain-momentum-rescue`; do NOT expand audit-mode into a
+  5-layer diagnosis (single-layer protocol).
 
 ## Shared standards
 
@@ -230,15 +259,20 @@ cross-mode common boundary:
 
 ## Audit metadata
 
-- **Skill type**: multi-file orchestrator (merged from 3 atomic D3
-  skills + 1 topic-router; pattern matches `4dx-d4-cadence`)
+- **Skill type**: multi-file orchestrator (3 coach-mode protocols + 1
+  audit-mode protocol; pattern matches `4dx-d4-cadence` plus path-B
+  audit-mode reframing)
 - **Verification status**: V1 ✓ for personal-design + team-lead-design
   (both leader-POV in source book); V1 ⚠️ partial for member-read
   (book authors leader side of design rubric only; member-read
   protocol = symmetric inversion of the four design criteria + two
   member-only steps for locate-my-contribution and escalate-if-broken,
   anchored on Tufte / Few / Ware perception literature, Eurich 95/15
-  self-awareness gap, and Argyris Model-II inquiry)
+  self-awareness gap, and Argyris Model-II inquiry); V1 ⚠️ partial for
+  audit-mode (audit posture derived from book Ch 4 / Ch 14 cases —
+  CNRL / Marriott / Northrop Grumman — applied as artifact-shape
+  diagnosis; consultant-from-artifacts posture is consultant-craft,
+  not 4DX-craft)
 - **Created**: 2026-04-30
 - **Output language**: SKILL.md body + protocols/standards in English;
   description + scope-detection prompts multilingual EN/JP/zh-TW;

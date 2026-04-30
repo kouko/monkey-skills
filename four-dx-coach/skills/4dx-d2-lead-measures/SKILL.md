@@ -1,26 +1,21 @@
 ---
 name: 4dx-d2-lead-measures
 description: |
-  Multi-scope coach for D2 lead-measure work across the 3 roles a user might
-  hold against a Wildly Important Goal: solo (discover own leads), team-leader
-  (facilitate team picking leads), team-member (map influence on inherited
-  leads). Detects scope from the query and loads the matching protocol. EN:
-  "Help me find lead measures", "What should I do daily to drive my goal?",
-  "Run a lead-measure session with my team", "Our team's leads are set —
-  how do I influence them?". JP:「lead measure を決めたい」「team で lead
-  measure を一緒に決めたい」「team の lead measure は決まったが自分はどう
-  関われる？」. zh-TW:「幫我找 lead measure」「帶 team 一起找 lead measure」
-  「團隊的 lead measure 已經訂了，我怎麼影響？」. Two-axis test (predictive
-  AND influenceable) shared across all 3 modes; voice differs (personal coach
-  / consultant-to-leader / personal coach to member). Goodhart self-check
-  applies to all 3. NOT for WIG definition (→ 4dx-d1-*), scoreboard / display
-  (→ 4dx-d3-scoreboard), weekly review cadence (→ 4dx-d4-cadence), or stuck
-  cadence (→ 4dx-sustain-momentum-rescue), or **OKR Key Results /
-  quarterly KRs / KPI dashboards / SaaS metrics** (out-of-4DX — KRs
-  lexically resemble lead measures but are outcome-oriented and
-  quarterly, not daily-action predictive-AND-influenceable; route to
-  `using-four-dx-coach`). Member-influence mode is
-  V1 ⚠️ partial (member POV inferred from leader-side cases).
+  Dual-mode D2 lead-measure skill. Coach-mode covers 3 roles (solo /
+  team-leader / team-member, Socratic discovery); audit-mode diagnoses
+  an existing lead list or KPI dashboard against two-axis test + Goodhart
+  + Ch.3 cap. EN: "Help me find lead measures", "Run a lead-measure
+  session with my team", "Our team's leads are set — how do I influence
+  them?", "Audit our lead measures", "Boss says these aren't real lead
+  measures", "Are our 12 KPIs the right leads?". JP:「lead measure を
+  決めたい」「team で lead measure を一緒に決めたい」「うちの lead measure
+  を診断して」「これ本当に lead measure？」. zh-TW:「幫我找 lead measure」
+  「帶 team 一起找 lead」「老闆說我們的 lead 不對」「12 個指標哪些是真
+  lead？」. Two-axis test + Goodhart shared across all modes. NOT for
+  WIG (→ 4dx-d1-*), scoreboard (→ 4dx-d3-scoreboard), cadence
+  (→ 4dx-d4-cadence), stale leads (→ 4dx-sustain-momentum-rescue),
+  cross-layer audit (→ 4dx-audit), or OKR/KPI audit without 4DX framing
+  (→ using-four-dx-coach). Member-mode V1 ⚠️ partial.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2
 source_language: en
@@ -93,6 +88,17 @@ of those collapses.
 - zh-TW:「團隊的 lead measure 已經訂了，我怎麼影響？」「lead 已經選好但我不
   知道哪些跟我的位置有關」「我支援全部 lead 但完全被攤薄」
 
+**Audit (existing artifact + optional stakeholder critique, voice = consultant-to-stakeholder):**
+- EN: "Audit our lead measures", "Boss says these aren't real lead
+  measures — help me see what's wrong", "Are our 12 KPIs the right
+  leads?", "Diagnose this list against 4DX", "Which of these pass the
+  two-axis test?"
+- JP:「うちの lead measure を診断して」「これ本当に lead measure？」
+  「ボスに『これは lead じゃない』と言われた、どこが違う？」「KPI 12 個
+  あるが、どれが本当の lead？」
+- zh-TW:「老闆說我們的 lead 不對，幫看哪裡」「我們列了 12 個指標，哪些是
+  真 lead？」「幫我用 two-axis test 過一遍這份清單」「診斷這份 lead 清單」
+
 ### Non-activation signals (DO NOT fire when…)
 
 - **No defined WIG yet** — leads need a lag to be predictive of. Route to
@@ -147,15 +153,29 @@ the protocol directly.
 
 ## Protocol routing table
 
-| Detected mode | Load protocol | Agent voice |
-|---|---|---|
-| Solo (personal WIG, picks own leads) | `protocols/personal-discover.md` | personal coach |
-| Team-leader (facilitates team selection) | `protocols/team-facilitate.md` | consultant-to-leader |
-| Team-member (inherits team leads, V1 ⚠️ partial) | `protocols/member-influence.md` | personal coach to member |
+| Detected mode | Signal | Load protocol | Agent voice |
+|---|---|---|---|
+| Solo coach (personal WIG, picks own leads) | "my own goal", "what should I do daily" | `protocols/personal-discover.md` | personal coach |
+| Team-leader coach (facilitates team selection) | "facilitate my team", "run a lead-measure session" | `protocols/team-facilitate.md` | consultant-to-leader |
+| Team-member coach (inherits team leads, V1 ⚠️ partial) | "leads my manager set", "how do I influence them" | `protocols/member-influence.md` | personal coach to member |
+| Audit (existing list / KPI dashboard / OKR-KR sheet, optionally + stakeholder critique) | provided artifact + "audit", "boss says these aren't lead measures", "are our 12 KPIs the right leads" | `protocols/audit-mode.md` | consultant-to-stakeholder |
 
 After loading the protocol, follow its E section step-by-step. Each
 protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator
 does not run any D2 content directly.
+
+### Mode detection (coach vs audit)
+
+- **No artifact provided** → coach-mode. Detect role (solo / leader /
+  member) per the table above, ask one Socratic disambiguation question
+  if ambiguous.
+- **Artifact provided (named lead list / KPI dashboard / OKR-KR sheet)**
+  → audit-mode (`protocols/audit-mode.md`), regardless of role. The
+  audit's terminal recommendation routes back to coach-mode if the
+  artifact is irreparable.
+- **Artifact provided AND user explicitly asks for Socratic rebuild** →
+  coach-mode (user override). Audit-mode is the default for artifacts
+  unless the user opts out.
 
 ### Edge-case routing
 
@@ -171,10 +191,16 @@ does not run any D2 content directly.
   via `using-four-dx-coach`.
 - **Leads already chosen but stale (lead green, lag flat ≥4 weeks)** →
   fire `4dx-sustain-momentum-rescue`, not this skill.
+- **Cross-layer audit (artifact spans WIG + leads + scoreboard + cadence)**
+  → fire `4dx-audit` (5-layer consultant audit), not `audit-mode.md`
+  (which is L2-only).
 
 ## Shared standards
 
-Each protocol references these standards (load on demand):
+All four protocols (3 coach-mode + 1 audit-mode) share the same
+canonical D2 standards — coach-mode applies them via Socratic discovery,
+audit-mode applies them as PASS/FAIL synthesis on a provided artifact.
+Load on demand:
 
 - `standards/predictive-and-influenceable.md` — the book's two-axis test:
   predictive of the lag AND influenceable by the user/team without
@@ -239,8 +265,9 @@ cross-mode common boundary:
 
 ## Audit metadata
 
-- **Skill type**: multi-file orchestrator (merged from 3 atomic D2 skills
-  + 1 topic-router)
+- **Skill type**: multi-file orchestrator with dual-mode posture (3
+  coach-mode protocols: solo / team-leader / team-member; 1 audit-mode
+  protocol: artifact diagnosis)
 - **Verification status**: V1 ✓ for solo + team-leader modes (both
   leader-POV in source book Ch 3 / Ch 7 / Ch 13); V1 ⚠️ partial for
   member-influence mode (book authors leader side of selection; member-

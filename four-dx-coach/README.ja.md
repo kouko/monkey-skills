@@ -4,7 +4,7 @@
 
 言語：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-**Version**：0.7.0
+**Version**：0.8.0
 **所属**：[monkey-skills](https://github.com/kouko/monkey-skills)
 **License**：MIT
 
@@ -23,67 +23,69 @@
 - **Team-leader** —— 一つの team の中で 4DX を回す leader（multi-team rollout ではない）。Agent は consultant。
 - **Team-member** —— team の contributor で、leader がもう WIG を決めている状況。Agent は「うまく参加する」のを助ける。System を再設計する話ではない。
 
-## 二つのモード：coach と consultant
+## 二つのモード：coach と audit（v0.8.0 dual-mode architecture）
 
-このプラグインは **二つの相補的なモード** で動作する：
+各 topic skill は **両モードを内蔵** し、専用の protocol ファイルで切り替える。モードは手動で選ばない —— skill の activation signal または router がどちらを load するか判断する。
 
-- **Coach モード**（11 skill）—— 対話駆動・Socratic・step-by-step。ゼロ（または断片）から始めて、*一決断ごとに*方法論を辿りたいときに最適：agent が問い、あなたが答え、収束する。
-- **Consultant モード**（1 skill — `4dx-audit`）—— Artifact 合成型・診断型・roadmap 出力型。既に rich な context（戦略 doc / OKR sheet / KPI dashboard / WIG-Session メモ / これまでの試行 chat history）があり、consultant に*手元の素材を 4DX に対応させて*ほしいとき、layer ごとに状態を診断して順序付けされた次の一手を提示してほしいときに最適。出力は対応する coach skill に route される。
+- **Coach モード**（`protocols/coach-mode.md`）—— Socratic 対話・fit-check 込み・ゼロから step-by-step。断片から始めて*一決断ごとに*方法論を辿りたいときに最適。
+- **Audit モード（single-layer）**（`protocols/audit-mode.md`）—— その topic の layer に対応する**単一 artifact** を診断（例：既存 WIG → `4dx-d1-wig-formulation` audit-mode；12-metric dashboard → `4dx-d3-scoreboard` audit-mode；4 週の WIG-Session log → `4dx-d4-cadence` audit-mode）。layer 標準と照合し、修正版 artifact + fix list を出力。
+- **`4dx-audit`（cross-layer aggregator）**—— **5 layer のうち ≥2 layer に跨る** artifact がある場合、または layer がどこ壊れたか分からない場合のみ起動。複数 artifact を 5-layer モデルに対応付け、layer ごとに状態を診断、cross-layer の順序ギャップを surface し、対応する topic-skill audit-mode / coach-mode に route。
 
-どちらを使うか：
+モードの選び方：
 
 | 手元にあるもの | 使うもの |
 |---|---|
-| 漠然とした意図（「4DX を使い始めたい」） | Coach モード → `using-four-dx-coach`（router） |
-| 特定 stage の質問（「WIG どう書く？」） | Coach モード → 該当する `4dx-d{1-4}` skill 直接 |
-| 既存 artifact + 「これを 4DX 化して」 | Consultant モード → `4dx-audit` |
-| 4DX を回しているが詰まっている、どこが壊れたか言語化できない | Consultant モード → `4dx-audit` |
+| 漠然とした意図（「4DX を使い始めたい」） | `using-four-dx-coach` router → coach モード |
+| Stage 特定の質問（「WIG どう書く？」） | Topic skill coach-mode 直接（例：`4dx-d1-wig-formulation`） |
+| 1 layer の 1 artifact（「うちの WIG を診断して」） | Topic skill **audit-mode**（例：`4dx-d1-wig-formulation` audit-mode） |
+| Scoreboard / cadence log を批評 | Topic skill audit-mode（`4dx-d3-scoreboard` / `4dx-d4-cadence`） |
+| ≥2 layer に跨る artifact（戦略 doc + OKR + dashboard + meeting notes） | `4dx-audit` cross-layer aggregator |
+| 4DX が壊れたが、どの layer か特定できない | `4dx-audit` cross-layer aggregator |
 
-Audit は最後に具体的な coach skill へ route する —— consultant モードは entry point + roadmap であって、coach skill の代替ではない。
+`4dx-audit` の出力は具体的な topic-skill audit-mode / coach-mode に route される —— roadmap であって、topic skill の代替ではない。Topic-skill audit-mode は単一 layer の深さを担当し、aggregator は cross-layer の幅を担当する。
 
 ## Architecture
 
-12 個の skill を 4 種類に分類：
+12 個の skill を 3 種類に分類（v0.8.0）：
 
-- **1 個の plugin router**（`using-four-dx-coach`）—— cold-start / cross-topic / 4DX 圏外 query を捌く dispatcher（coach モード）。
-- **1 個の consultant-mode entry point**（`4dx-audit`）—— User 提供の artifact を 4DX 5-layer モデルに対応付け、layer ごとに状態を診断し、coach skill に route。
-- **5 個の multi-file scope-flex skill** —— 1 つの topic ごとに 2-4 個の protocol ファイルを内包し、personal / team-leader / team-member の variant をカバー。Skill が Socratic な 1 問で scope を自動判定し、対応する protocol を load。これは 2026-04-30 統合前の 15 個 atomic + 5 個 topic-router を置き換える構造。
-- **5 個の single-file scope-specific skill** —— 1 つの scope のみを扱う single-file `SKILL.md`。書籍に cross-scope の対応 variant が無い topic は single-file のまま保持。
+- **1 個の plugin router**（`using-four-dx-coach`）—— cold-start / cross-topic / 4DX 圏外 query を捌く dispatcher。
+- **10 個の dual-mode topic skill** —— 各 topic skill は `protocols/coach-mode.md`（Socratic walk-through）と `protocols/audit-mode.md`（その layer の単一 artifact を診断）を備える。Multi-file scope-flex（1 topic + 2-4 scope variant × 2 mode）が 5 個、single-file scope-specific（topic で scope locked × 2 mode）が 5 個。Multi-file skill は personal / team-leader / team-member scope を Socratic な 1 問で自動判定し、対応する scope+mode protocol を load。
+- **1 個の cross-layer aggregator**（`4dx-audit`）—— ≥2 layer に跨る multi-artifact、または layer 不明の故障のみで起動。5-layer 状態を診断し、対応する topic-skill audit-mode / coach-mode に route。
 
-Multi-file skill は scope 重複の表面積を縮小しつつ primary-source grounding を完全保持：各 protocol は依然 `### Industry-experience addendum` を備え、parent skill の `references/industry-grounding.md` を共有。
+Topic skill は scope 重複の表面積を縮小しつつ primary-source grounding を完全保持：各 protocol は依然 `### Industry-experience addendum` を備え、parent skill の `references/industry-grounding.md` を共有。Dual-mode 分割（coach vs audit）は、各 4DX layer に「ゼロから組む」path（coach）と「既にあるものを診る」path（audit）の両方が存在することを反映 —— v0.8.0 はこの区別を first-class に格上げし、すべての audit を 1 つの universal aggregator に押し込めるのを止めた。
 
 ## Skills（合計 12 個）
 
 ### 1. Entry point skill（2）
 
-| Skill | モード | 役割 |
+| Skill | 役割 | 機能 |
 |---|---|---|
-| [`using-four-dx-coach`](skills/using-four-dx-coach/) | Coach（router） | Entry point —— cold-start / cross-topic / 4DX 圏外 query；scope triage（personal / team-leader / team-member）し、4DX 非適用時は hand-off |
-| [`4dx-audit`](skills/4dx-audit/) | Consultant | User 提供の artifact（戦略 doc / OKR / dashboard / WIG-Session メモ）を読み、4DX 5-layer モデル（WIG / Lead / Lag+Scoreboard / Cadence / Substrate）に対応付け、layer ごとに状態を診断、優先順位付き推奨を出力 + 対応する coach skill に route |
+| [`using-four-dx-coach`](skills/using-four-dx-coach/) | Router | Entry point —— cold-start / cross-topic / 4DX 圏外 query；scope triage（personal / team-leader / team-member）、artifact 有無で coach-mode vs audit-mode を選択、4DX 非適用時は hand-off |
+| [`4dx-audit`](skills/4dx-audit/) | Cross-layer aggregator | **≥2 layer に跨る** artifact、または layer 不明の故障のみで起動。複数 artifact を 4DX 5-layer モデル（WIG / Lead / Lag+Scoreboard / Cadence / Substrate）に対応付け、layer ごとに状態を診断、優先順位付き推奨を出力 + 対応する topic-skill audit-mode / coach-mode に route。Single-layer audit は topic skill 自身の audit-mode に渡す |
 
-### 2. Multi-file scope-flex skills（5）
+### 2. Multi-file scope-flex topic skills（5）—— dual-mode
 
-各 skill は内部で Socratic な 1 問で scope を自動判定し、`protocols/` の対応 protocol ファイルを load。
+各 skill は内部で Socratic な 1 問で scope を自動判定し、対応する scope+mode protocol を load。各 scope に coach + audit 両モードを用意。
 
-| Skill | Topic | 内部 protocols [multi-file scope-flex] |
-|---|---|---|
-| [`4dx-meta-strategy-triage`](skills/4dx-meta-strategy-triage/) | Pre-D1 fit gate（6-verdict triage） | `personal-mode.md`、`team-mode.md` |
-| [`4dx-d1-wig-formulation`](skills/4dx-d1-wig-formulation/) | *From X to Y by When* WIG を書く / 選ぶ / 解読する | `personal-define.md`、`team-select.md`、`member-comprehend.md` |
-| [`4dx-d2-lead-measures`](skills/4dx-d2-lead-measures/) | Lead measure を発見 / facilitate / sphere-of-influence をマップ | `personal-discover.md`、`team-facilitate.md`、`member-influence.md` |
-| [`4dx-d3-scoreboard`](skills/4dx-d3-scoreboard/) | Players' scoreboard を design / facilitate / 読む | `personal-design.md`、`team-lead-design.md`、`member-read.md` |
-| [`4dx-d4-cadence`](skills/4dx-d4-cadence/) | Weekly WIG Session を運営 / 主催 / prep / debrief | `solo-session.md`、`team-leader-session.md`、`member-prep.md`、`member-debrief.md` |
+| Skill | Topic | Coach-mode protocols（Socratic） | Audit-mode protocol（single-layer） |
+|---|---|---|---|
+| [`4dx-meta-strategy-triage`](skills/4dx-meta-strategy-triage/) | Pre-D1 fit gate（6-verdict triage） | `personal-mode.md`、`team-mode.md` | `audit-mode.md` |
+| [`4dx-d1-wig-formulation`](skills/4dx-d1-wig-formulation/) | *From X to Y by When* WIG を書く / 選ぶ / 解読する | `personal-define.md`、`team-select.md`、`member-comprehend.md` | `audit-mode.md` |
+| [`4dx-d2-lead-measures`](skills/4dx-d2-lead-measures/) | Lead measure を発見 / facilitate / sphere-of-influence をマップ | `personal-discover.md`、`team-facilitate.md`、`member-influence.md` | `audit-mode.md` |
+| [`4dx-d3-scoreboard`](skills/4dx-d3-scoreboard/) | Players' scoreboard を design / facilitate / 読む | `personal-design.md`、`team-lead-design.md`、`member-read.md` | `audit-mode.md` |
+| [`4dx-d4-cadence`](skills/4dx-d4-cadence/) | Weekly WIG Session を運営 / 主催 / prep / debrief | `solo-session.md`、`team-leader-session.md`、`member-prep.md`、`member-debrief.md` | `audit-mode.md` |
 
-### 3. Single-file scope-specific skills（5）
+### 3. Single-file scope-specific topic skills（5）—— dual-mode（適用箇所のみ）
 
-書籍に cross-scope 対応 variant が無い topic は single-file のまま保持。
+書籍に cross-scope 対応 variant が無い topic は single-file のまま保持。v0.8.0 で artifact-rich start が頻出する topic に audit-mode protocol を追加；xps-evaluation と sustain-momentum-rescue は本質的に audit-shaped なので別途 audit-mode 不要。
 
-| Skill | Scope | 役割 |
-|---|---|---|
-| [`4dx-meta-whirlwind-triage`](skills/4dx-meta-whirlwind-triage/) | Personal | 7 日間 time audit；BAU vs WIG 衝突を可視化；~20% WIG slot を確保 |
-| [`4dx-d1-wig-cascade`](skills/4dx-d1-wig-cascade/) | Team-leader | Primary WIG を Battle WIG に翻訳（Targets-not-Plans）；multi-team 場面のみ出現 |
-| [`4dx-meta-team-leader-onboarding`](skills/4dx-meta-team-leader-onboarding/) | Team-leader | Direct-report leader の本気の buy-in（commitment vs compliance） |
-| [`4dx-meta-xps-evaluation`](skills/4dx-meta-xps-evaluation/) | Team-leader | Post-quarter XPS audit（0-4 scale；C1-C4 layer） |
-| [`4dx-sustain-momentum-rescue`](skills/4dx-sustain-momentum-rescue/) | Personal | 4-discipline stack のどの layer で破綻したかを diagnose し、対応する restart に route |
+| Skill | Scope | Coach-mode | Audit-mode | 役割 |
+|---|---|---|---|---|
+| [`4dx-meta-whirlwind-triage`](skills/4dx-meta-whirlwind-triage/) | Personal | `protocols/coach-mode.md` | `protocols/audit-mode.md` | 7 日間 time audit；BAU vs WIG 衝突を可視化；~20% WIG slot を確保 |
+| [`4dx-d1-wig-cascade`](skills/4dx-d1-wig-cascade/) | Team-leader | `protocols/coach-mode.md` | `protocols/audit-mode.md` | Primary WIG を Battle WIG に翻訳（Targets-not-Plans）；multi-team 場面のみ |
+| [`4dx-meta-team-leader-onboarding`](skills/4dx-meta-team-leader-onboarding/) | Team-leader | `protocols/coach-mode.md` | `protocols/audit-mode.md` | Direct-report leader の本気の buy-in（commitment vs compliance） |
+| [`4dx-meta-xps-evaluation`](skills/4dx-meta-xps-evaluation/) | Team-leader | （audit-shaped） | （intrinsic） | Post-quarter XPS audit（0-4 scale；C1-C4 layer）—— skill 自体が audit |
+| [`4dx-sustain-momentum-rescue`](skills/4dx-sustain-momentum-rescue/) | Personal | （diagnostic） | （intrinsic） | 4-discipline stack のどの layer で破綻したかを diagnose し、対応する restart に route —— skill 自体が diagnostic |
 
 ## Scope 検出の仕組み
 
@@ -178,7 +180,7 @@ Skill の `description` と trigger signal は **English / 日本語 / 繁體中
 
 ## 出典
 
-『The 4 Disciplines of Execution』（第 2 版 2021）—— Chris McChesney / Sean Covey / Jim Huling / Scott Thele / Beverly Walker（Simon & Schuster）から蒸留。Pipeline：`tsundoku:book-distill`（RIA-TV++、kangarooking/cangjie-skill から adapt、MIT）。Plan U merge（2026-04-30）で 26 skill を 11 skill に統合。詳細は [ATTRIBUTION.md](ATTRIBUTION.md)。
+『The 4 Disciplines of Execution』（第 2 版 2021）—— Chris McChesney / Sean Covey / Jim Huling / Scott Thele / Beverly Walker（Simon & Schuster）から蒸留。Pipeline：`tsundoku:book-distill`（RIA-TV++、kangarooking/cangjie-skill から adapt、MIT）。Plan U merge（2026-04-30）で 26 skill を 11 に統合；v0.7.0 で consultant-mode entry point 追加；v0.8.0 で dual-mode topic skill 導入 + `4dx-audit` を cross-layer aggregator に再配置。詳細は [ATTRIBUTION.md](ATTRIBUTION.md)。
 
 ## 関連 plugin
 

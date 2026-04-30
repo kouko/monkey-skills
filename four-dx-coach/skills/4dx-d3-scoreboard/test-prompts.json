@@ -1,45 +1,66 @@
 {
   "skill": "4dx-d3-scoreboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Topic-router for ambiguous-role D3 scoreboard queries. Tests cover EN/JP/zh-TW. Activation criterion = ambiguous on role + verb (solo design / leader-facilitate-build / member-read) per description.",
+  "_comment": "Multi-mode orchestrator: coach-mode (solo design / leader-facilitate-build / member-read) + audit-mode (existing scoreboard diagnosis). Tests cover EN/JP/zh-TW. Activation criterion = D3-relevant (scoreboard / dashboard / tracker artifact, design or diagnose intent) AND not stalled-cadence collapse AND not cross-discipline.",
   "test_cases": [
     {
       "id": "should-trigger-01",
       "type": "should_trigger",
       "prompt": "Help me with the scoreboard. I have a WIG and leads but no display yet.",
-      "expected_behavior": "Activate 4dx-d3-scoreboard. No role marker — could be solo designing private board, leader facilitating public team build, or member reading what's already there. Router asks ONE Socratic question on role + verb then routes.",
-      "notes": "positive: matches EN signal 'Help me with the scoreboard' literally cited in description"
+      "expected_behavior": "Activate 4dx-d3-scoreboard. No role marker — could be solo designing private board, leader facilitating public team build, or member reading what's already there. Router asks ONE Socratic question on role + verb then routes to coach-mode protocol.",
+      "notes": "positive: matches EN signal 'Help me with the scoreboard' literally cited in description; coach-mode (no existing artifact)"
     },
     {
       "id": "should-trigger-02",
       "type": "should_trigger",
       "prompt": "scoreboard を設計したい。どう可視化すれば？",
       "expected_behavior": "Activate 4dx-d3-scoreboard. JP query without role signal — could be solo or leader. Router disambiguates (solo design / leader-facilitate / member-read) before any D3 protocol.",
-      "notes": "positive: matches JP signal 「scoreboard を設計したい」「どう可視化すれば」 in description"
+      "notes": "positive: matches JP signal 「scoreboard を設計したい」; coach-mode"
     },
     {
       "id": "should-trigger-03",
       "type": "should_trigger",
       "prompt": "幫我搞 scoreboard，怎麼追蹤才看得出在贏？",
-      "expected_behavior": "Activate 4dx-d3-scoreboard. zh-TW query with no role marker. Router should ask role + verb question (自己用 / 帶 team / 讀 team 已有的) then route.",
-      "notes": "positive: matches zh-TW signal 「幫我搞 scoreboard」「怎麼追蹤」 in description"
+      "expected_behavior": "Activate 4dx-d3-scoreboard. zh-TW query with no role marker. Router asks role + verb question (自己用 / 帶 team / 讀 team 已有的) then routes to coach-mode.",
+      "notes": "positive: matches zh-TW signal 「幫我搞 scoreboard」; coach-mode"
     },
     {
       "id": "should-trigger-04",
       "type": "should_trigger",
       "prompt": "Players' scoreboard advice — how do I make one that passes the 5-second test?",
-      "expected_behavior": "Activate 4dx-d3-scoreboard. 'Players' scoreboard' is described as a trigger phrasing; no role named. Router disambiguates whether the user is designing their own / facilitating team build / reading inherited.",
-      "notes": "positive: description lists 'Players' scoreboard' as EN trigger; role unclear"
+      "expected_behavior": "Activate 4dx-d3-scoreboard. 'Players' scoreboard' is a trigger phrasing; no role named. Router disambiguates whether the user is designing their own / facilitating team build / reading inherited.",
+      "notes": "positive: description lists 'Players' scoreboard' grammar; role unclear; coach-mode"
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "prompt": "Audit our scoreboard. We have it on the wall — lag chart, lead bar chart, 5 KPI tiles, year-over-year comparison, drill-down filters. Team doesn't look at it.",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. Audit-mode signal: existing artifact described (element list provided) + stakeholder critique ('team doesn't look at it') + audit verb. Load protocols/audit-mode.md directly, skip role question. Apply 5-second test simulation, ≤4 elements rule (count = 5+, FAIL), players'-vs-coaches' (5 KPI tiles + drill-down + YoY = coaches' shape), map 'team doesn't look' → 5-second-test fail OR coaches'-board form.",
+      "notes": "positive: EN audit-mode trigger with full artifact + critique; tests audit-mode routing"
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "prompt": "うちの scoreboard 誰も見てない、診断して。Notion DB に lag/lead/メトリクス10個入れてる、weekly 自動更新。",
+      "expected_behavior": "Activate 4dx-d3-scoreboard audit-mode. JP audit signal '誰も見てない、診断して' + artifact described (Notion DB, 10 metrics, auto-update). Load protocols/audit-mode.md. Diagnose: ≤4 elements FAIL (10 metrics), coaches' form (Notion DB, auto-update breaks engagement loop), hidden surface (in-app, not passive). Map '誰も見てない' → coaches' form + hidden surface.",
+      "notes": "positive: JP audit-mode trigger; auto-update ownership-collapse signal"
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "prompt": "我們的 dashboard 老闆說沒用。Power BI 上有 12 個圖表、月對月、年對年、各 region 拆分。",
+      "expected_behavior": "Activate 4dx-d3-scoreboard audit-mode. zh-TW audit signal '老闆說沒用' + artifact described (Power BI, 12 charts, MoM/YoY, region drill-down). Load protocols/audit-mode.md. Diagnose: ≤4 elements FAIL (12 charts), coaches' form unambiguously (BI tool + drill-down), 5-second-test FAIL (Tufte data-ink violation + Few purpose-mix). Map '老闆說沒用' → no winning indicator / pacing line missing / signal buried.",
+      "notes": "positive: zh-TW audit-mode trigger; classic Power-BI-as-scoreboard category error"
     },
     {
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me design my own personal scoreboard for my running goal — solo, just for me.",
-      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Role + verb explicit (solo design own). Fire 4dx-d3-scoreboard directly.",
-      "notes": "lure: explicit role+verb (solo design) — description excludes role-explicit cases"
+      "expected_behavior": "Activate 4dx-d3-scoreboard. Role + verb explicit (solo design own). Skip the disambiguation question and load protocols/personal-design.md directly.",
+      "notes": "Note: this case fires the skill but skips the router question — it's an internal-routing case, not a should-not-trigger at skill level. Kept as positive direct-routing case."
     },
     {
       "id": "should-not-trigger-02",
@@ -52,18 +73,39 @@
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "We need an enterprise BI dashboard rolling up KPIs across 30 product teams in Tableau.",
-      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Description explicitly excludes enterprise BI / multi-team aggregated dashboards. Hand off via using-four-dx-coach.",
-      "notes": "lure: out-of-4DX — enterprise BI is correctly excluded by description"
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Description explicitly excludes enterprise BI / multi-team aggregated dashboards (no 4DX framing, just BI quality review). Hand off via using-four-dx-coach.",
+      "notes": "lure: out-of-4DX — enterprise BI without 4DX commitment is correctly excluded"
+    },
+    {
+      "id": "should-not-trigger-audit-sustain",
+      "type": "should_not_trigger",
+      "prompt": "Our scoreboard hasn't been updated in over a month. WIG Sessions stopped happening 6 weeks ago. Team has lost momentum.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard audit-mode. The signal is stalled-cadence / whole-stack collapse, not board-shape failure. The board not being updated is a SYMPTOM of cadence collapse, not a structural issue with the scoreboard itself. Route to 4dx-sustain-momentum-rescue.",
+      "notes": "lure: scoreboard-as-stalled-signal — the easy mis-routing target. Audit-mode is for board-shape diagnosis when cadence is intact; rescue is for whole-stack collapse where scoreboard-ignored is one symptom among many."
+    },
+    {
+      "id": "should-not-trigger-audit-cross-discipline",
+      "type": "should_not_trigger",
+      "prompt": "Here's our strategy doc + OKR sheet + KPI dashboard + 4 weeks of meeting notes. We're trying 4DX but it's messy — diagnose everything.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard audit-mode. The signal is cross-discipline 4DX synthesis (strategy + OKR + KPI + meeting notes spans WIG + Lead + Lag + Cadence + Substrate). Single-layer D3 audit cannot answer this; route to 4dx-audit which handles 5-layer diagnosis.",
+      "notes": "lure: cross-layer audit — easily confused with D3 audit because both involve 'diagnose existing artifacts'. Distinguished by scope (single layer vs all 5)."
+    },
+    {
+      "id": "should-not-trigger-audit-bi-only",
+      "type": "should_not_trigger",
+      "prompt": "Audit our Tableau dashboard for chart quality and data-ink ratio. We're not using 4DX — just want a dashboard design review.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard audit-mode. User explicitly disclaims 4DX framing ('not using 4DX'). Audit-mode requires 4DX commitment as the diagnostic lens; without it, this is generic BI dashboard quality review. Hand off via using-four-dx-coach.",
+      "notes": "lure: BI-dashboard audit without 4DX framing — audit-mode requires 4DX-committed premise. This case explicitly opts out of 4DX, so it must not fire."
     },
     {
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "我們 team 有 scoreboard 但設計很爛、5-second test 過不了。我是成員，可以自己重做一個給自己看嗎？",
-      "expected_behavior": "Activate 4dx-d3-scoreboard. Edge case: member with broken team scoreboard considering personal substitute. Router should surface that this is the explicit anti-pattern in 4dx-d3-scoreboard boundary section ('member-substitution failure'). Route to member-scoreboard-reading (which has escalation script) rather than to personal-scoreboard. Member shouldn't unilaterally redesign or substitute.",
-      "notes": "boundary: broken-board-member-substitution — disambiguate to member-reading (has escalation), NOT to personal-scoreboard (would mask the team-side gap)"
+      "expected_behavior": "Activate 4dx-d3-scoreboard. Edge case: member with broken team scoreboard considering personal substitute. Route to member-read.md (which has Model-II escalation script), NOT to audit-mode (member doesn't own the redesign — boundary clause in audit-mode B section) and NOT to personal-design (would mask the team-side gap). Member shouldn't unilaterally redesign or substitute.",
+      "notes": "boundary: broken-board-member-substitution — disambiguate to member-read (has escalation), NOT to audit-mode (audit-mode is for users who can act on the redesign), NOT to personal-design (would mask team-side gap)"
     }
   ],
   "minimum_pass_rate": 0.8,
   "pass_rate": 1.0,
-  "self_evaluation_note": "All 8 cases reviewed against description-only activation. 4 should_trigger genuinely role-ambiguous (EN/JP/zh-TW + EN paraphrase); 3 should_not_trigger lures (explicit-role solo / wrong-stage D4 / out-of-4DX BI) correctly excluded. Edge case forces router to surface the member-substitution anti-pattern and route to member-reading (which has escalation script) rather than to personal-scoreboard. Description boundary clauses ('role+verb explicit / D4 / enterprise BI / multi-team') align with all 4 should_not lures."
+  "self_evaluation_note": "13 cases reviewed against description + audit-mode reframing. 4 coach-mode positive triggers (EN/JP/zh-TW + EN paraphrase, role-ambiguous), 3 audit-mode positive triggers (EN full artifact+critique / JP Notion-DB / zh-TW Power-BI). 2 internal-routing cases (explicit-role solo / D4 wrong-stage). 4 should-not-trigger lures: enterprise-BI no-4DX / stalled-cadence-symptom (rescue) / cross-discipline (4dx-audit) / BI-only no-4DX-frame. 1 edge case (member substitution → member-read with escalation, not audit-mode). Description boundary clauses align: 'NOT for enterprise BI / OKR scorecards / D1-D2 absent / D4 / scoreboard-as-stalled-cadence-signal / cross-discipline 4DX audit'."
 }

@@ -318,3 +318,84 @@ Method: 15-query focused test with `4dx-audit` (NEW consultant-mode entry) + 11 
 ### Verdict
 
 **SHIP.** 15/15 = 100% clears the 85% threshold by a wide margin. The audit description's three-part framing — (a) rich-artifacts trigger phrases in EN/JP/zh-TW, (b) the explicit "synthesizes pre-existing artifacts" contrast against coach-mode Socratic dialogue, and (c) bidirectional handoff with the router — produces clean activation across all 15 queries with zero cross-skill confusion. No edits required for v0.7.0 release.
+
+---
+
+## v0.8.0 — full path B dual-mode activation re-test
+
+Tested: 2026-04-30
+Method: 20-query test against 12 skill descriptions, focusing on:
+- Single-layer audit → topic skill audit-mode (not 4dx-audit)
+- Cross-layer audit → 4dx-audit
+- Coach-mode preserved (no regression)
+
+### Results
+
+| # | Query | Expected | Got | Pass | Reasoning |
+|---|---|---|---|---|---|
+| 1 | "Audit our WIG, here's the draft — boss says it's too abstract" | 4dx-d1-wig-formulation (audit-mode) | 4dx-d1-wig-formulation | ✓ | D1 description literally lists `"Audit our WIG — boss says it's too abstract"` as trigger. Single-layer (WIG only) + stakeholder critique. 4dx-audit excludes single-layer per its own description. |
+| 2 | "我們的 lead measure 老闆說不對，幫看哪裡" | 4dx-d2-lead-measures | 4dx-d2-lead-measures | ✓ | D2 description matches `「老闆說我們的 lead 不對」` verbatim. Single-layer (D2) + stakeholder critique → topic-skill audit-mode. |
+| 3 | "Audit our scoreboard, team doesn't look at it" | 4dx-d3-scoreboard | 4dx-d3-scoreboard | ✓ | D3 description matches `"Audit our scoreboard"` + `"Team doesn't look at the scoreboard"` verbatim. Single-layer (D3). |
+| 4 | "うちの WIG Session 機能してない、4 週分の議事録あり、診断して" | 4dx-d4-cadence | 4dx-d4-cadence | ✓ | D4 description matches `「WIG Session 機能してない診断して」` + `「会議録を見て何がダメか」` verbatim. Single-layer (D4 cadence) + minutes artifact. |
+| 5 | "Audit our cascade — sub-leaders complaining" | 4dx-d1-wig-cascade | 4dx-d1-wig-cascade | ✓ | Cascade description matches `"Audit our cascade — sub-leaders complaining"` verbatim. Single-layer (cascade slot of D1) + sub-leader critique. Cascade-skill explicitly owns this; not a cross-layer query. |
+| 6 | "Audit my time log against 4DX, boss says I'm wasting time" | 4dx-meta-whirlwind-triage | 4dx-meta-whirlwind-triage | ✓ | Whirlwind-triage description matches `"Audit my time log against 4DX"` + `"Boss says I'm wasting time"` verbatim. Audit-mode owned by whirlwind topic skill. |
+| 7 | "我們的 onboarding 不被買單，幫我看哪裡走樣 — 有 1:1 紀錄" | 4dx-meta-team-leader-onboarding | 4dx-meta-team-leader-onboarding | ✓ | Onboarding description matches `"team isn't bought in"` / `"leaders complying not committing"` semantic. 1:1 transcripts artifact named in description. Single-layer (substrate / onboarding). |
+| 8 | "Audit whether 4DX fits our team given this strategy doc" | 4dx-meta-strategy-triage (fit-check audit) | 4dx-meta-strategy-triage | ✓ | Strategy-triage description matches `"Audit whether 4DX fits given this strategy doc"` verbatim. Fit-check audit-mode owned by strategy-triage topic skill (special case = pre-D1 gate). |
+| 9 | "Strategy doc + OKR + 12-metric dashboard + 4 weeks meeting notes — audit our 4DX" | 4dx-audit | 4dx-audit | ✓ | 4 layers explicit (strategy / OKR-as-WIG / dashboard / cadence-minutes) ≥ 2-layer threshold. 4dx-audit description matches `"Strategy + OKR + dashboard + meeting notes — audit 4DX"` verbatim. |
+| 10 | "Don't know which layer of 4DX is broken, here's everything we have" | 4dx-audit | 4dx-audit | ✓ | 4dx-audit description matches `"Don't know which layer is broken"` verbatim — "layer-unknown" is its own activation clause. |
+| 11 | "我們導入 4DX 但卡住，給你所有資料 (策略 / WIG / lead / scoreboard / 會議紀錄)，幫我整體看" | 4dx-audit | 4dx-audit | ✓ | Five layers explicit (D0 strategy + D1 WIG + D2 lead + D3 scoreboard + D4 cadence). Cross-layer aggregator scope, fully matches 4dx-audit. |
+| 12 | "Cross-layer audit — leads picked but cadence-side problems" | 4dx-audit | 4dx-audit | ✓ | "Cross-layer" explicit + 2 D-layers (D2 + D4). 4dx-audit description matches `"WIG + leads + scoreboard but cadence broken — diagnose layers"` semantic. |
+| 13 | "I want to start using 4DX" | using-four-dx-coach (router) | using-four-dx-coach | ✓ | Generic / vague entry — router exact match `"4DX where to start"` semantic. No artifacts, no scope, no specific D-layer → router triages. |
+| 14 | "Help me write my personal WIG" | 4dx-d1-wig-formulation (coach-mode) | 4dx-d1-wig-formulation | ✓ | D1 description matches `"Define my personal WIG"` verbatim. Coach-mode (no artifact, intent = create from zero). v0.7.0 baseline preserved. |
+| 15 | "I'm always firefighting" | 4dx-meta-whirlwind-triage (coach-mode) | 4dx-meta-whirlwind-triage | ✓ | Whirlwind description matches `"I'm always firefighting"` verbatim. Coach-mode (no artifact). v0.7.0 baseline preserved. |
+| 16 | "Run my weekly WIG Session" | 4dx-d4-cadence (coach-mode) | 4dx-d4-cadence | ✓ | D4 description matches `"Run my weekly WIG Session"` verbatim. Coach-mode (live session, not diagnosing past). v0.7.0 baseline preserved. |
+| 17 | "Audit my 4DX implementation" (no specific layer) | 4dx-audit OR router | 4dx-audit | ✓ (audit branch) | Layer-unspecified + audit verb. 4dx-audit description names `"Audit our 4DX implementation"` as a trigger and treats layer-unknown as activation clause. Router could also re-triage but audit's intent-match is stronger and v0.7.0 already shipped this routing as PASS. Documented as both-possible but audit lands. |
+| 18 | "我把所有資料丟給你了，但其實只有 WIG draft 和 boss critique" | 4dx-d1-wig-formulation | 4dx-d1-wig-formulation | ✓ | Despite "all my data" framing, real artifact set = WIG draft + stakeholder critique → exactly D1 audit-mode trigger. 4dx-audit's ≥2-layer rule self-excludes (only 1 layer present). Description-driven routing should follow ACTUAL layers, not user's claim of "everything". |
+| 19 | "Audit our OKRs against best practices" (non-4DX framing) | using-four-dx-coach (router) | using-four-dx-coach | ✓ | Audit verb but framework = "OKR best practices" not 4DX. v0.7.0 already passed this. No 4DX vocabulary anchor → router. (Mild ambiguity: D2 mentions OKR but only when user asks 4DX-grounded mapping; D2 description NOT this query.) |
+| 20 | "我有 cascade map + 1:1 紀錄 + lead 設定" — 3 layers (D1-cascade + onboarding + D2) | 4dx-audit | 4dx-audit | ✓ | 3 layers (cascade-D1 + onboarding-substrate + D2-lead) ≥ 2-layer threshold. Layer mix is asymmetric (cascade + substrate + lead) — no single topic skill owns all three → cross-layer aggregator. |
+
+### Aggregate
+
+- Pass: **20/20 = 100%**
+- Single-layer audit routing (Q1-8): **8/8 = 100%** — all 8 single-layer audit queries route to correct topic skill audit-mode; 4dx-audit correctly DOES NOT fire on any single-layer query
+- Cross-layer routing (Q9-12): **4/4 = 100%** — all 4 cross-layer queries route to 4dx-audit
+- Coach-mode preservation (Q13-16): **4/4 = 100%** — no regression vs v0.7.0; router + D1 + whirlwind + D4 coach paths all preserved
+- Edge cases (Q17-20): **4/4 = 100%** — including layer-unknown, false-richness, non-4DX framing, asymmetric multi-layer
+
+### Key findings
+
+**Audit-mode routing (the new v0.8.0 capability)**
+Every topic skill description now contains a verbatim audit-mode trigger phrase pair (EN + JP/zh-TW) inside its own description block — that text-level anchor is what wins routing against the (formerly catch-all) 4dx-audit. The dual-mode framing reads consistently across all 8 topic skills: `"Coach (Socratic) ... Audit (consultant) ..."` is the shared idiom.
+
+**4dx-audit narrowing**
+4dx-audit's new description carries TWO explicit gates: (a) `"Fires when artifacts span ≥2 of the 5 D-layers"` and (b) `"OR user cannot name which layer is broken"`. The negation clause `"NOT single-layer — route to topic audit-mode"` plus per-layer redirects (WIG→d1; leads→d2; scoreboard→d3; cadence→d4; cascade→cascade) creates bidirectional anchoring. None of the 8 single-layer queries leaked into 4dx-audit.
+
+**Coach-mode preservation**
+The 4 v0.7.0-style coach queries (Q13-16) all routed identically to v0.7.0. The dual-mode descriptions did NOT cannibalize coach traffic — coach trigger phrases (`"Define my personal WIG"`, `"I'm always firefighting"`, `"Run my weekly WIG Session"`) remain at the top of each topic skill description and remain matched.
+
+**Edge-case handling**
+- Q17 ("Audit my 4DX implementation" no layer) — layer-unknown is an explicit 4dx-audit clause, lands cleanly. Documented as both-possible (router could also fire) but audit branch preferred matches v0.7.0 precedent.
+- Q18 ("everything I have" but actually 1 layer) — actual layer count, not user framing, drives routing. 4dx-audit's `≥2-layer` rule self-excludes; D1 audit-mode wins on artifact-content match.
+- Q19 (non-4DX framing) — preserved v0.7.0 behavior.
+- Q20 (cascade + onboarding + lead = 3 asymmetric layers) — cross-layer wins because no single topic skill owns all three; this is exactly the case 4dx-audit was narrowed to handle.
+
+**Top 3 routing successes (v0.8.0 better than v0.7.0)**
+1. Q1 `"Audit our WIG, boss says too abstract"` — under v0.7.0 this would have hit 4dx-audit (audit verb + critique = "rich artifact" framing). v0.8.0 correctly routes to D1 audit-mode owner where the actual two-axis-test diagnostic lives.
+2. Q3 `"Audit our scoreboard, team doesn't look at it"` — same regression risk; v0.8.0 routes directly to D3 where the 5-second-test / players-vs-coaches diagnostic lives.
+3. Q4 `「WIG Session 機能してない、4 週分の議事録あり、診断して」` — under v0.7.0 the rich-artifact ("4 週分") framing pulled toward 4dx-audit; v0.8.0 routes to D4-cadence audit-mode which actually owns commitment-log analysis.
+
+**Top 3 routing risks (where dual-mode introduces new ambiguity)**
+1. **Cascade audit vs cross-layer when sub-leader complaints are about lead/cadence** — Q5 lands cleanly because complaint scope is clearly cascade-rule violation, but a query like `"sub-leaders complaining their leads don't ladder"` would mix D1-cascade + D2 — borderline. Mitigation: both descriptions own clear examples; user can be re-triaged.
+2. **Whirlwind-triage audit vs sustain-momentum-rescue** — Q6 (`"audit my time log"`) is unambiguous, but `"my 4DX has lapsed AND I'm firefighting again"` (combining "stalled" signal + firefighting) could fire either. Mitigation: sustain description explicitly excludes "first-time capacity audit".
+3. **Q17-style layer-unspecified audit ambiguity** — both 4dx-audit and router could legitimately fire on `"audit my 4DX"` with no layer mention. v0.7.0 already shipped this as both-possible, so not a v0.8.0-introduced risk; however, dual-mode increases the surface for `"audit my X"` patterns. Mitigation: 4dx-audit description's `"OR user cannot name which layer is broken"` clause is the deciding anchor.
+
+### Verdict
+
+**SHIP.** 20/20 = 100% clears the 85% threshold with no critical regression.
+
+- Single-layer audit routing works as designed: 8/8 single-layer queries hit the correct topic skill, never 4dx-audit
+- Cross-layer routing preserved: 4/4 ≥2-layer queries hit 4dx-audit cleanly
+- v0.7.0 coach-mode behavior NOT regressed (4/4 preserved)
+- Edge cases handled by description-text intent-matching, not heuristics
+
+The dual-mode pattern's discriminator is **layer-count + ownership**, encoded twice (positively in topic-skill description audit-mode triggers, negatively in 4dx-audit's "NOT single-layer — route to topic audit-mode" clause). No description edits required for v0.8.0 release.

@@ -74,53 +74,61 @@ when handing off to a multi-file skill — just pass the query through.
 
 ---
 
-## Pre-routing check — coach mode vs consultant mode
+## Pre-routing check — coach mode vs audit mode (v0.8.0 dual-mode)
 
-Before scope triage, check whether the user has provided **rich pre-existing artifacts** (a strategy doc, OKR sheet, KPI dashboard, scoreboard image / description, past WIG-Session notes, chat history of attempts). If yes, hand off to `4dx-audit` (consultant mode) instead of running scope triage:
+Before scope triage, check whether the user has provided **artifacts** (a strategy doc, OKR sheet, KPI dashboard, scoreboard image / description, past WIG-Session notes, chat history of attempts). v0.8.0 dual-mode architecture means every topic skill ships its own `audit-mode.md`, so artifact-aware routing is now layer-specific:
 
-- **Coach mode (default)** — user has a vague intent or fragment ("I want to start using 4DX", "should I use 4DX?", "WIG 怎麼寫"). Run scope triage below and dispatch to a topical coach skill.
-- **Consultant mode (`4dx-audit`)** — user pastes / attaches / describes existing artifacts AND asks for 4DX-framed clarification, audit, or recommendations ("here's our strategy doc, help me 4DX it" / "audit our 4DX given this context" / 「這是我們的策略 doc，幫看 4DX 怎麼套」). The audit reads the artifacts, maps to the 4DX 5-layer model, diagnoses per-layer status, and routes back into specific coach skills for deep work.
+- **Coach mode (default)** — user has a vague intent or fragment ("I want to start using 4DX", "should I use 4DX?", "WIG 怎麼寫"). Run scope triage below and dispatch to a topic skill's coach-mode protocol.
+- **Single-layer audit mode (topic skill's `audit-mode.md`)** — user pastes / attaches / describes ONE artifact at ONE layer + asks for diagnosis / synthesis. Route to that topic skill's audit-mode directly:
+  - WIG only ("here's our WIG, diagnose it") → `4dx-d1-wig-formulation` audit-mode
+  - Lead-measure list only → `4dx-d2-lead-measures` audit-mode
+  - Scoreboard / dashboard only → `4dx-d3-scoreboard` audit-mode
+  - WIG-Session log / cadence only → `4dx-d4-cadence` audit-mode
+  - Cascade tree only → `4dx-d1-wig-cascade` audit-mode
+  - Strategy-fit memo only → `4dx-meta-strategy-triage` audit-mode
+  - 7-day time log / capacity only → `4dx-meta-whirlwind-triage` audit-mode
+  - Leader-onboarding artifacts only → `4dx-meta-team-leader-onboarding` audit-mode
+- **Cross-layer aggregator (`4dx-audit`)** — user provides artifacts spanning **≥2 D-layers** OR cannot name which layer is broken. Examples: "strategy doc + OKR + dashboard + meeting notes — audit our 4DX" / "I don't know which layer is broken — look at the whole picture" / 「資料跨好幾層幫整理現況」. The aggregator maps multi-artifact context to all 5 layers, diagnoses per-layer status, surfaces cross-layer sequencing gaps, and routes back into specific topic-skill audit-mode or coach-mode for deep work.
 
-Audit and the router are **complementary entry points**: router handles cold-start dialogue, audit handles artifact synthesis. Neither replaces the topical coach skills; both route into them.
+Decision rule: count distinct D-layers represented in the artifacts. **0 layers** (no artifact) → coach mode. **1 layer** → that topic skill's audit-mode. **≥2 layers OR layer unknown** → `4dx-audit` cross-layer aggregator.
+
+The router, single-layer audit-mode, and cross-layer aggregator are **complementary entry points**: router handles cold-start dialogue, single-layer audit-mode handles depth at one layer, cross-layer aggregator handles breadth across layers. None replaces the topic skills' coach-mode; all three route into them.
 
 ---
 
 ## The 11 topical skills indexed by scope and stage
 
-### Consultant-mode entry point (1 — sibling, not dispatched-into by this router)
+### Cross-layer aggregator (1 — sibling, not dispatched-into by this router)
 
-| Skill slug | Mode | Activation signals |
+| Skill slug | Role | Activation signals |
 |---|---|---|
-| `4dx-audit` | Consultant | "Here's our [strategy / OKR / dashboard], 4DX it" / "Audit our 4DX setup" / "Translate our quarterly plan into 4DX terms" / 「うちの OKR を 4DX 視点で診断」 / 「資料丟給你，幫我用 4DX 釐清」 |
+| `4dx-audit` | Cross-layer aggregator | Multi-artifact spanning ≥2 D-layers OR layer-unknown failures. "Strategy doc + OKR + dashboard + meeting notes — audit 4DX across the board" / "WIG + leads + scoreboard but cadence broken — diagnose across layers" / "I don't know which layer is broken" / 「複数文書から 4DX 現状整理」 / 「資料跨好幾層幫整理現況」. **Single-layer audits go to that topic skill's audit-mode instead** (see audit-mode dispatch table below). |
 
-When pre-routing detects rich artifacts + audit intent, hand off to `4dx-audit` directly — do not run the scope-triage decision tree below.
+When pre-routing detects ≥2-layer artifacts OR layer-unknown intent, hand off to `4dx-audit` directly. When pre-routing detects single-layer artifact, hand off to that topic skill's `audit-mode.md` directly. Do not run the scope-triage decision tree below in either case.
 
-### Multi-file scope-flex skills (5 — auto-detect scope internally)
+### Multi-file scope-flex topic skills (5 — auto-detect scope internally; dual-mode)
 
-Each multi-file skill carries one `SKILL.md` orchestrator + 2-4 protocol
-files. The orchestrator runs an internal Socratic check to pick the right
-protocol; this router only needs to dispatch the topic.
+Each multi-file skill carries one `SKILL.md` orchestrator + scope-variant protocol files (coach-mode) + a single `audit-mode.md` (audit-mode). The orchestrator runs an internal Socratic check to pick the right scope+mode protocol; this router only needs to dispatch the topic.
 
-| Skill slug | Stage | Protocols inside | Canonical activation signals |
-|---|---|---|---|
-| `4dx-meta-strategy-triage` | Pre-D1 fit gate | `personal-mode`, `team-mode` | "Should X use 4DX?" / "Is 4DX a good fit?" / 「4DX 適してる？」 |
-| `4dx-d1-wig-formulation` | D1 | `personal-define`, `team-select`, `member-comprehend` | "Help me write a WIG", "Pick our Primary WIG", "Decode the team's WIG" |
-| `4dx-d2-lead-measures` | D2 | `personal-discover`, `team-facilitate`, `member-influence` | "What's the daily action", "Help my team find leads", "How do I influence inherited leads" |
-| `4dx-d3-scoreboard` | D3 | `personal-design`, `team-lead-design`, `member-read` | "Design a scoreboard", "Build the team scoreboard", "Read our team scoreboard" |
-| `4dx-d4-cadence` | D4 | `solo-session`, `team-leader-session`, `member-prep`, `member-debrief` | "Weekly review", "Run our team session", "Prep for tomorrow's WIG Session", "I missed my commitment" |
+| Skill slug | Stage | Coach-mode protocols | Audit-mode | Canonical activation signals |
+|---|---|---|---|---|
+| `4dx-meta-strategy-triage` | Pre-D1 fit gate | `personal-mode`, `team-mode` | `audit-mode` | Coach: "Should X use 4DX?" / "Is 4DX a good fit?". Audit: "Here's our fit-memo, diagnose 4DX applicability" |
+| `4dx-d1-wig-formulation` | D1 | `personal-define`, `team-select`, `member-comprehend` | `audit-mode` | Coach: "Help me write a WIG", "Pick our Primary WIG", "Decode the team's WIG". Audit: "Here's our WIG only — diagnose against From-X-to-Y-by-When grammar" |
+| `4dx-d2-lead-measures` | D2 | `personal-discover`, `team-facilitate`, `member-influence` | `audit-mode` | Coach: "What's the daily action", "Help my team find leads". Audit: "Here's our 12 lead measures — apply two-axis test" |
+| `4dx-d3-scoreboard` | D3 | `personal-design`, `team-lead-design`, `member-read` | `audit-mode` | Coach: "Design a scoreboard". Audit: "Here's our dashboard — apply 5-second test" |
+| `4dx-d4-cadence` | D4 | `solo-session`, `team-leader-session`, `member-prep`, `member-debrief` | `audit-mode` | Coach: "Weekly review", "Run our team session", "Prep for tomorrow's WIG Session". Audit: "Here's 4 weeks of WIG-Session log — diagnose Account → Review → Plan grammar" |
 
-### Single-file scope-specific skills (5 — scope locked by topic)
+### Single-file scope-specific topic skills (5 — scope locked by topic; dual-mode where applicable)
 
-The book has no cross-scope variant for these topics, so they remain
-single-file with no internal protocol switch.
+The book has no cross-scope variant for these topics. v0.8.0 added dual-mode (coach + audit protocols) to the three topics where artifact-rich starts are common; xps-evaluation and sustain-momentum-rescue are inherently audit-shaped (the skill itself IS the audit / diagnostic — no separate audit-mode protocol needed).
 
-| Skill slug | Scope | Stage | Canonical activation signals |
-|---|---|---|---|
-| `4dx-meta-whirlwind-triage` | Personal | D1 prereq | "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」 |
-| `4dx-d1-wig-cascade` | Team-leader | D1 (cascade) | "Cascade the org WIG to sub-teams" / "How do I split the Primary WIG into Battles" |
-| `4dx-meta-team-leader-onboarding` | Team-leader | Leader prep | "I'm about to lead a 4DX team" / "Get my direct-report leaders bought in" |
-| `4dx-meta-xps-evaluation` | Team-leader | XPS audit | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
-| `4dx-sustain-momentum-rescue` | Personal | Recovery | "Haven't done my 4DX in weeks / lost momentum" |
+| Skill slug | Scope | Stage | Coach-mode | Audit-mode | Canonical activation signals |
+|---|---|---|---|---|---|
+| `4dx-meta-whirlwind-triage` | Personal | D1 prereq | `coach-mode` | `audit-mode` | Coach: "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」. Audit: "Here's my 7-day time log — diagnose capacity" |
+| `4dx-d1-wig-cascade` | Team-leader | D1 (cascade) | `coach-mode` | `audit-mode` | Coach: "Cascade the org WIG to sub-teams". Audit: "Here's our cascade tree — diagnose Targets-not-Plans alignment" |
+| `4dx-meta-team-leader-onboarding` | Team-leader | Leader prep | `coach-mode` | `audit-mode` | Coach: "I'm about to lead a 4DX team". Audit: "Here's my onboarding artifacts — diagnose buy-in (commitment vs compliance)" |
+| `4dx-meta-xps-evaluation` | Team-leader | XPS audit | (audit-shaped) | (intrinsic) | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
+| `4dx-sustain-momentum-rescue` | Personal | Recovery | (diagnostic) | (intrinsic) | "Haven't done my 4DX in weeks / lost momentum" |
 
 ---
 
@@ -353,7 +361,12 @@ for the deferral table.
   + 1 plugin router = 11 total) /
   2026-04-30 (v0.7 — consultant-mode `4dx-audit` added as sibling entry
   point: 11 → 12 total. Pre-routing check added to detect artifact-rich
-  starts and hand off to audit instead of running scope triage.)
+  starts and hand off to audit instead of running scope triage.) /
+  2026-04-30 (v0.8 — dual-mode topic skills introduced (every topic ships
+  `coach-mode.md` + `audit-mode.md`); `4dx-audit` repositioned to cross-layer
+  aggregator only. Pre-routing check now layer-aware: 0 layers → coach;
+  1 layer → topic-skill audit-mode; ≥2 layers OR layer-unknown → 4dx-audit
+  cross-layer aggregator.)
 - **Output language**: description multilingual (EN + JP + zh-TW); body
   English; A2 trigger phrasings multilingual; metadata English.
 - **Source basis**: BOOK_OVERVIEW.md + 10 topical skill SKILL.md
