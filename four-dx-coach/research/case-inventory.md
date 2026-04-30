@@ -349,6 +349,38 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 | 8 | Marriott Hotels | ★ marketing — vague WIG, no specifics | ★ search snippet only | Hospitality cross-reference to Opryland |
 | 9 | Whirlpool | ★ marketing — outcome-only ($5.7M / 90 days) | ★ search snippet only | Outcome calibration only |
 | 10 | IT Lead Measures gist (meredian/GitHub) | ★★ partial — 6 example sets, no real-org context | ★★ direct read (gist text) | `4dx-d2-lead-measures` IT-context calibration; not real implementation |
+| 11 | Hashimoto note article (JP small-team) | ★★ partial — author admits 2 verbatim failure compromises (D3 scoreboard skipped, sustaining drift toward easy work) | ★★★ direct WebFetch read | **JP-context partial-failure anchor** — the only public JP source where a practitioner names compromise modes verbatim. See expanded entry below. |
+
+### #11 expanded — Hashimoto note (JP partial-failure anchor)
+
+**Source**: Hikaru Hashimoto, "チーム目標を形骸化させない！4DXのススメ" — note.com article.
+**Public URL**: https://note.com/hikaruhashimoto/n/n9d27fe5885aa
+**Title literal**: "Don't let team goals fall into formality! Recommending 4DX" — the title itself names 形骸化 (formalization / hollowing-out) as the failure mode 4DX is positioned to solve.
+
+**Naming note**: Japan does NOT use "4DX" as the framework abbreviation in widespread practice — Japanese readers default to the cinema brand "4DX" (CJ 4DPLEX). The framework is canonically called「実行の4つの規律」or sometimes「4Dx」(lowercase x) by FranklinCovey JP. Search SEO for failure cases is dominated by cinema noise; framework-failure literature in JP is structurally sparse (see Structural gap below).
+
+**Verbatim partial-failure admissions** (from Hashimoto's own implementation):
+
+1. **Sustaining drift warning (Ch 10 anchor)**:
+   > 「ふと気が緩むと、OKRをないがしろにして目の前の業務にただ取り組むという『楽』に流れてしまう」
+   ("When focus slackens, the team falls back into just dealing with day-to-day work and the OKRs / WIGs get neglected as the 'easy' path.")
+   — corresponds to Cindrich F1 mistake 5 (accountability-as-control vs commitment) + book Ch 10 cadence-collapse pattern
+
+2. **D3 scoreboard compromise (verbatim admission)**:
+   > 「この時点でOKRをメインで運用するのは5人ということもあり、可視性の強化はおサボりさせてもらい、スプレッドシートをスコアボード代わりにしていました」
+   ("Since at that time only 5 people were running OKRs as primary, we slacked on enhancing visibility and used spreadsheets as a substitute for the scoreboard.")
+   — corresponds to dashboard-not-scoreboard failure mode (no 5-second-test, no public posting, no team-built artifact); Bravelab F4 had the same compromise but was honest about it failing — Hashimoto frames it as a temporary trade-off, less honest about consequences
+
+3. **Cadence discipline maintained (verbatim, contrast point)**:
+   > 「毎週月曜日の10:30-11:00に固定で実施していました」+「セッション自体は延長せず30分で終わらせる」
+   — D4 30-min ceiling held; pattern matches Opryland / book ideal
+
+**Cross-skill applicability**: `4dx-sustain-momentum-rescue` (sustaining drift "楽に流れる" verbatim — JP-context language for the canonical failure); `4dx-d3-scoreboard` audit-mode (spreadsheet-as-scoreboard compromise visible from inside JP small-team perspective); `4dx-meta-strategy-triage` (small-team 5-person pre-condition that justifies the compromise).
+
+**Use this case when**: JP small-team / small-org context (≤10 ppl); user asks why their cadence is collapsing in JP corporate language; user has spreadsheet-as-scoreboard and asks "is this OK?"
+**Do NOT generalize this case to**: cases where Hashimoto's compromises actually DID lead to failure (the article is forward-optimistic; he doesn't track outcomes). Cite the verbatim admissions only as anti-pattern flags, not as failure-case verdicts.
+
+**Disclosure / verification grade**: ★★ partial disclosure (D3 + sustaining only; D1-D2-D4 unspecified) × ★★★ direct read.
 
 **Tier 2 promotion path**: each Tier 2 case should be re-verified via direct read before being promoted to anchor candidacy. Search snippets are summary-level and may be paraphrased.
 
@@ -358,12 +390,11 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 | # | Case | Disclosure | Verification | Note |
 |---|---|---|---|---|
-| 11 | ノーリツ V プラン23 | ★ marketing — D1-D4 specifics absent | ★★★ direct PDF read | JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); see memory note `feedback_marketing_cases_lack_d1_d4_specifics` for full reasoning |
-| 12 | マルハン (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | Summary only: "マルハンイズム浸透" |
-| 13 | 公益社 (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | "サービス品質向上 + 風土変革" |
-| 14 | アスクレップ | ❌ inaccessible | — | Original PDF redirect to FCE-publishing 301; no longer accessible |
-| 15 | 日本 NCH | ❌ insufficient | — | Mention only; no detail page |
-| 16 | Hashimoto note article | ★ marketing | ★★ WebFetch summary | "可視性の強化はおサボり、スプレッドシートをスコアボード代わりに" — JP small-team-implementation voice |
+| 12 | ノーリツ V プラン23 | ★ marketing — D1-D4 specifics absent | ★★★ direct PDF read | JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); see memory note `feedback_marketing_cases_lack_d1_d4_specifics` for full reasoning |
+| 13 | マルハン (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | Summary only: "マルハンイズム浸透" |
+| 14 | 公益社 (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | "サービス品質向上 + 風土変革" |
+| 15 | アスクレップ | ❌ inaccessible | — | Original PDF redirect to FCE-publishing 301; no longer accessible |
+| 16 | 日本 NCH | ❌ insufficient | — | Mention only; no detail page |
 | 17 | room8.co.jp | ★ marketing — generic illustrations | ★★ WebFetch summary | Generic JP industry examples (web-design / legal / coworking) |
 | 18 | Sales Tax Institute | ★ marketing — D1-D4 not disclosed | ★★ WebFetch summary | "Whether we are designing a webinar… we are always asking if this is what matters most" |
 
@@ -393,13 +424,45 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 ---
 
+## Structural gaps in publicly-available case material
+
+Documented honestly so future research rounds don't waste cycles re-discovering them.
+
+### JP-context failure cases — structural absence
+
+**The gap**: Japan has effectively zero ★★★-disclosure failure cases for the framework. Tier 1 + Tier 2 failure-mode anchors are entirely English-source (Cindrich / LiM / Kay C Dee / Bravelab / Chesapeake). The only JP partial-failure source is Hashimoto note (#11, Tier 2) — and even that frames its compromises as forward-optimistic trade-offs, not retrospective failure analysis.
+
+**Root causes** (validated through 4 search rounds across EN + JP, 2026-05-01):
+
+1. **Naming collision** — "4DX" in Japan canonically refers to the cinema brand (CJ 4DPLEX immersive theater experience). Search SEO is dominated by movie-experience reviews. Even targeted searches with the framework name「実行の4つの規律」+ failure terms surface mostly framework-explainer content + cinema noise, not real implementations.
+2. **Lower JP framework adoption vs OKR** — JP business-management failure literature for OKR is rich (Coral Capital, HR大学, 中小企業OKR, hr-mitas, proffit, hashikake, AI經營総合研究所 all have multi-page analyses). Same depth for「実行の4つの規律」does NOT exist.「実行の4つの規律」is consultant-driven (FranklinCovey JP) with shallower bottom-up community.
+3. **JP corporate culture — failures aren't published** — equivalent of Bravelab's "we screwed up" LinkedIn post in JP-speaking corporate world is nearly nonexistent. JP failure narratives stay in paid consulting reports or anonymous BBS (匿名掲示板) — the latter low-quality, hard to verify.
+4. **JP voices in public domain are FranklinCovey-aligned** — Hashimoto note / room8.co.jp / takubeen / xQソリューション / U-NOTE / SlideShare 4つの規律 — all promoting the framework, not analyzing failures.
+
+**What this means for case-bank work**:
+- Cross-framework substitution (OKR failure literature) is acceptable as long as the failure modes shared with 4DX are explicitly named (cadence collapse / 形骸化 / 週次レビュー続かない / リーダー理解不足 are all shared).
+- The JP-specific 形骸化 vocabulary is itself useful — appears in Hashimoto title + at least 6 OKR-failure articles. Worth injecting into agent's JP-context anti-pattern dictionary even without a Tier 1 JP anchor.
+- Future research direction: actively monitor JP business blogs / note.com / Qiita for failure narratives that emerge over time. Not currently in supply but may become available.
+
+### Other gaps surfaced from this research cycle
+
+- **No verbatim cadence-collapse-after-N-weeks case** in any language — common observation but not documented as a single anchor case
+- **No verbatim "WIG forgotten at month 6" case** — implied but not anchored
+- **No verbatim "successful pilot, failed scale-up" case** — implied but not anchored
+- **No verbatim cross-team WIG conflict case** (when team A's WIG depends on team B's resources)
+- **No verbatim member-side cascade frustration** beyond the Chesapeake F5 anonymous post
+
+**Compensation**: Cindrich F1 + LiM F2 cover these as failure-mode descriptions even without org-anchored cases. For audit-mode verdicts, the failure-mode dictionary is sufficient; for narrative storytelling cases, the gap remains.
+
+---
+
 ## Open questions for future research
 
 1. **More CFR PDFs?** Opryland is one; FranklinCovey CFR has produced multiple. Searching for "Center for Advanced Research" + "FranklinCovey" + case studies should surface more.
 2. **Book PDF / paid ed?** The 4DX 2nd ed. has anchor cases (Younkers / Sydney accounting / others) inline. Already partially captured in skill bodies. A complete extraction would close the loop.
 3. **Tier 2 → Tier 1 promotion?** The 4 Tier 2 education cases (STEAM K-2 / 3rd-grade reading / Cub Scouts / Marriott) could be verified via direct read of original Leader In Me PDFs / scouting.org sources. Worth one cycle if education-context anchors become priority.
 4. **Anonymized real client cases?** The user (kouko) running 4DX themselves and accumulating case data over time would produce highest-value cases.
-5. **JP-context Tier 1?** No JP case currently meets ★★★ disclosure. If FranklinCovey JP ever publishes a CFR-style research PDF for a JP client, that would be the highest-value addition.
+5. **JP-context Tier 1?** No JP case currently meets ★★★ disclosure. If FranklinCovey JP ever publishes a CFR-style research PDF for a JP client, that would be the highest-value addition. **Failure-side**: JP-context failure cases are structurally absent (see Structural gaps section above) — pursuing JP failure anchors via direct search is unlikely to yield Tier 1 results; better strategy is monitoring note.com / Qiita over time + cross-framework borrowing from JP OKR-failure literature with explicit attribution.
 
 ---
 
@@ -418,3 +481,5 @@ Total research time: 2 sessions (initial discovery 2026-05-01 morning; full Tier
 **Verification cycle history**:
 - 2026-05-01: initial inventory (Tier 1 partial verification — Opryland direct, others via search snippet)
 - 2026-05-01 (same day, second pass): full Tier 1 verification — CSN PDF read, Bravelab playwright read, Methodist Wayback read. All 4 Tier 1 cases now ★★★ verification.
+- 2026-05-01 (same day, third pass): added failure-mode dictionary (F1 Cindrich / F2 LiM / F3 Kay C Dee / F4 Bravelab / F5 Chesapeake) + 18-mode coverage matrix.
+- 2026-05-01 (same day, fourth pass): JP-focused failure search; promoted Hashimoto note to Tier 2 partial-failure anchor; documented JP-context structural gap (naming collision + lower JP framework adoption + JP corporate failure-publication norms).
