@@ -1,0 +1,39 @@
+{
+  "name": "four-dx-coach",
+  "version": "0.5.0",
+  "description": "Multi-scope coach for The 4 Disciplines of Execution — personal solo (agent = peer-witness), team-leader (agent = consultant), team-member (agent = personal coach to inherited-WIG situation). 26 skills covering all four disciplines × all three scopes: 20 atomic (7 personal + 8 team-leader + 5 team-member) + 5 topic-routers (meta-strategy-triage, d1-wig-formulation, d2-lead-measures, d3-scoreboard, d4-cadence) + 1 plugin router. Every D1-D4 stage now has full 3-scope coverage (personal / team-lead / member where applicable). All 20 atomic skills industry-grounded — Boundary sections cite primary academic + regulatory + credentialed-author sources beyond the source book (Goodhart 1975 / Kotter 1996 / Tufte 1983 / Reinertsen 2009 / Doerr 2018 / Akao 1991 / Edmondson 2018 / Pfeffer 2010 / Drucker HBR 1999 / Senge 1990 / Lencioni 2002 / Pfeffer-Sutton 2006 / CFPB / VA OIG / etc.) — addresses book's selection-bias and member-POV gaps. Topic-routers catch ambiguous-scope queries via one Socratic disambiguation. Personal scope walks one user through full 4DX adoption. Team-leader scope covers Primary WIG selection, Targets-not-Plans cascade, leader-onboarding, lead-measure facilitation, scoreboard design, facilitator-mode WIG Session, and XPS audit. Team-member scope helps you comprehend an inherited team WIG, identify sphere of influence on inherited leads, read team scoreboard, prep weekly commitment, and self-account honestly. Distilled from McChesney/Covey/Huling/Thele/Walker, *The 4 Disciplines of Execution* (2nd ed., 2021) via tsundoku:book-distill RIA-TV++ pipeline. Multilingual triggers (EN / 日本語 / 繁體中文); skill bodies in English. NOT for enterprise multi-team rollout (read book Part 2 directly), habit formation (atomic habits), or portfolio betting (OKR / lean experiments).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/four-dx-coach",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "4dx",
+    "execution",
+    "wildly-important-goal",
+    "wig",
+    "lead-measures",
+    "scoreboard",
+    "cadence-of-accountability",
+    "wig-session",
+    "personal-coaching",
+    "team-leader",
+    "team-member",
+    "topic-router",
+    "lead-measure-facilitation",
+    "scoreboard-design",
+    "scope-symmetry",
+    "primary-wig",
+    "wig-cascade",
+    "targets-not-plans",
+    "xps-evaluation",
+    "commitment-vs-compliance",
+    "goal-setting",
+    "accountability-partner",
+    "book-distill",
+    "franklincovey",
+    "mcchesney"
+  ]
+}
