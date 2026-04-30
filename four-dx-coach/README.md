@@ -23,6 +23,59 @@ The book is written primarily for **leaders rolling 4DX out across teams**. This
 - **Team-leader** — a leader running 4DX inside a single team (not multi-team rollout); agent acts as consultant.
 - **Team-member** — a contributor on a team where the leader has already chosen a WIG; agent helps you participate well, not redesign the system.
 
+## How 4DX works (mechanism in 90 seconds)
+
+### The execution-gap problem
+
+Most strategic goals fail not because the strategy is wrong but because **the day-job (the "whirlwind") consumes ~80% of working capacity**, leaving strategic work starved of attention. 4DX is a closed-loop system designed to defend a small slice of strategic capacity (~20%) and convert it into predictable behavior change.
+
+```mermaid
+flowchart LR
+    Time[Working capacity] --> Whirlwind["~80%<br/>WHIRLWIND<br/>day-to-day urgency"]
+    Time --> WIGwork["~20%<br/>WIG WORK<br/>strategic / breakthrough"]
+    Whirlwind -.->|consumes if<br/>not protected| WIGwork
+
+    style Whirlwind fill:#fee,stroke:#a33
+    style WIGwork fill:#efe,stroke:#3a3
+```
+
+### The closed loop (D1 → D2 → D3 → D4 → back to D2)
+
+```mermaid
+flowchart TD
+    D1["<b>D1 — Wildly Important Goal</b><br/><i>From X to Y by When</i><br/>1-2 WIGs maximum"]
+    D2["<b>D2 — Lead Measures</b><br/>Predictive AND Influenceable<br/>2-3 leads per WIG"]
+    D3["<b>D3 — Compelling Scoreboard</b><br/>Players' (not Coaches')<br/>5-second 'are we winning?' test"]
+    D4["<b>D4 — WIG Session</b><br/>Weekly, ≤30 min<br/>Account → Review → Plan"]
+    Lag["Lag measure<br/>= the WIG outcome<br/>(historical, slow)"]
+    Action["New commitments<br/>this week"]
+
+    D1 -->|sets target for| D2
+    D2 -->|tracked on| D3
+    D3 -->|reviewed in| D4
+    D4 -->|generates| Action
+    Action -.->|moves| D2
+    D2 -.->|predicts| Lag
+    Lag -.->|reports back to| D1
+```
+
+### Why each discipline matters (and how each fails)
+
+| Discipline | Core idea | Most common failure |
+|---|---|---|
+| **D1 — Focus** | Pick **one** WIG (no more than two). Express in *From X to Y by When* sentence form. Lag-measurable, fixed deadline. | "Hitting the sales number is your job, not a WIG." Teams declare 5+ "priorities" and execute none. |
+| **D2 — Lead Measures** | Track **behaviors you can do this week** that *predict* the lag. The book calls this "the most-misunderstood discipline" — and it's the most-failed in practice. | Picking lag-shaped "leads" (e.g. "increase NPS") that aren't weekly-influenceable. Or reusing existing KPI dashboards. |
+| **D3 — Scoreboard** | The team builds it; it's visible; you can tell at a glance if you're winning. Has lead + lag + pacing line. | Becomes a passive dashboard with 12 metrics nobody opens. Or weaponized as name-and-shame. |
+| **D4 — Cadence** | Weekly 30-min session: each member accounts for last week's commitment, reviews scoreboard, makes a new commitment for this week. | Sessions creep to 1 hour, members arrive unprepared, leaders run it as performance review (compliance instead of commitment). |
+
+### Key vocabulary (used throughout this plugin)
+
+- **Lag measure** — outcome (sales, NPS, retention). Historical, slow to move, can't be influenced directly this week.
+- **Lead measure** — behavior (sales calls per week, code reviews delivered, walk-throughs completed). Fast to move, directly influenceable, *predictive* of the lag.
+- **Players' scoreboard** — team owns + builds it; glance-readable; has lead + lag + pacing line. Distinct from a "coach's dashboard" (executive-only board with 50+ metrics).
+- **WIG Session** — weekly accountability meeting following **Account → Review → Plan**. Each member reports last week's commitment, team reviews scoreboard movement, each member commits to one new behavior for this week.
+- **Whirlwind** — the day-job urgency that consumes ~80% of capacity. 4DX assumes you can't eliminate it — only protect ~20% from it.
+
 ## Two modes: coach vs audit (v0.8.0 dual-mode architecture)
 
 Every topic skill in this plugin supports **both modes internally** via dedicated protocol files. You don't pick the mode manually — the skill's activation signals or the router decide which protocol to load.

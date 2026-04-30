@@ -23,6 +23,59 @@
 - **Team-leader** —— 一つの team の中で 4DX を回す leader（multi-team rollout ではない）。Agent は consultant。
 - **Team-member** —— team の contributor で、leader がもう WIG を決めている状況。Agent は「うまく参加する」のを助ける。System を再設計する話ではない。
 
+## 4DX の仕組み（90 秒で理解）
+
+### 実行 gap 問題
+
+戦略目標の多くは「戦略が間違っている」のではなく、**日々の業務（『竜巻 / Whirlwind』）が稼働容量の約 80% を消費し、戦略的な仕事が注意を奪われる**ことで失敗する。4DX は、その小さな戦略 slice（~20%）を守り、予測可能な行動変容に変換する閉ループ system。
+
+```mermaid
+flowchart LR
+    Time[Working capacity] --> Whirlwind["~80%<br/>WHIRLWIND<br/>day-to-day urgency"]
+    Time --> WIGwork["~20%<br/>WIG WORK<br/>strategic / breakthrough"]
+    Whirlwind -.->|consumes if<br/>not protected| WIGwork
+
+    style Whirlwind fill:#fee,stroke:#a33
+    style WIGwork fill:#efe,stroke:#3a3
+```
+
+### 閉ループ（D1 → D2 → D3 → D4 → D2 へ戻る）
+
+```mermaid
+flowchart TD
+    D1["<b>D1 — Wildly Important Goal</b><br/><i>From X to Y by When</i><br/>1-2 WIGs maximum"]
+    D2["<b>D2 — Lead Measures</b><br/>Predictive AND Influenceable<br/>2-3 leads per WIG"]
+    D3["<b>D3 — Compelling Scoreboard</b><br/>Players' (not Coaches')<br/>5-second 'are we winning?' test"]
+    D4["<b>D4 — WIG Session</b><br/>Weekly, ≤30 min<br/>Account → Review → Plan"]
+    Lag["Lag measure<br/>= the WIG outcome<br/>(historical, slow)"]
+    Action["New commitments<br/>this week"]
+
+    D1 -->|sets target for| D2
+    D2 -->|tracked on| D3
+    D3 -->|reviewed in| D4
+    D4 -->|generates| Action
+    Action -.->|moves| D2
+    D2 -.->|predicts| Lag
+    Lag -.->|reports back to| D1
+```
+
+### 各 discipline の役割と典型的な失敗 mode
+
+| Discipline | 中核 idea | 最頻出の失敗 mode |
+|---|---|---|
+| **D1 — Focus** | WIG は **一つ**（多くて二つ）。*From X to Y by When* 文型で表記。Lag 測定可、deadline 明示。 | 「売上目標を達成するのは仕事であって WIG ではない」。「重要事項」を 5 つ以上並べて結局どれも実行されない。 |
+| **D2 — Lead Measures** | **今週できる行動** で lag を予測するものを track。書籍で「最も誤解された discipline」と呼ばれ、実装でも最頻出の失敗点。 | Lag 寄りの「先行指標」（NPS 上昇など）を採用してしまい、週次で動かせないため形骸化。または既存 KPI dashboard を流用する。 |
+| **D3 — Scoreboard** | team が自分で作る；可視；一目で「勝っているか」が分かる。Lead + Lag + Pacing line を含む。 | 12 の metrics が並ぶ受動的な dashboard 化、誰も開かない。あるいは name-and-shame の道具になる。 |
+| **D4 — Cadence** | 週次 30 分 session：member 全員が先週の commitment を account、scoreboard を review、新しい commitment を Plan。 | Session が 1 時間に伸びる、member が無準備で来る、leader が performance review として運用（commitment ではなく compliance）。 |
+
+### 主要語彙（plugin 全体で使用）
+
+- **Lag measure** —— outcome（売上、NPS、retention）。Historical で動きが遅く、今週直接影響できない。
+- **Lead measure** —— 行動（週あたりの sales call、code review 提出数、walk-through 実施回数）。動きが速く、直接影響でき、lag を *predict* する。
+- **Players' scoreboard** —— team が所有 + 構築；一目読み；lead + lag + pacing line を含む。"Coach's dashboard"（経営層 read-only の 50+ 指標 board）とは別物。
+- **WIG Session** —— 週次 accountability ミーティング。**Account → Review → Plan** の順：member が先週の commitment を報告、team が scoreboard の動きを review、member が今週の新しい行動を commit。
+- **Whirlwind** —— 稼働容量の約 80% を食う日常業務の緊急度。4DX は除去できないと前提し、~20% を守ることに専念する。
+
 ## 二つのモード：coach と audit（v0.8.0 dual-mode architecture）
 
 各 topic skill は **両モードを内蔵** し、専用の protocol ファイルで切り替える。モードは手動で選ばない —— skill の activation signal または router がどちらを load するか判断する。

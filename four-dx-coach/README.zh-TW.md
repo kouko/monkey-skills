@@ -23,6 +23,59 @@
 - **Team-leader** —— 在單一 team 內部跑 4DX 的 leader（不是跨 team rollout）；agent 當 consultant。
 - **Team-member** —— team 上的 contributor，leader 已經選好 WIG 了；agent 幫你「好好參與」，不是去重新設計 system。
 
+## 4DX 怎麼運作（90 秒看懂）
+
+### 執行落差問題
+
+策略目標多半不是「策略錯」，而是 **日常業務（"竜捲 / Whirlwind"）吞掉約 80% 工作容量**，讓策略性工作失去關注。4DX 是一個閉環 system，專門保護那一小片策略容量（~20%），把它轉化為可預測的行為改變。
+
+```mermaid
+flowchart LR
+    Time[Working capacity] --> Whirlwind["~80%<br/>WHIRLWIND<br/>day-to-day urgency"]
+    Time --> WIGwork["~20%<br/>WIG WORK<br/>strategic / breakthrough"]
+    Whirlwind -.->|consumes if<br/>not protected| WIGwork
+
+    style Whirlwind fill:#fee,stroke:#a33
+    style WIGwork fill:#efe,stroke:#3a3
+```
+
+### 閉環（D1 → D2 → D3 → D4 → 回到 D2）
+
+```mermaid
+flowchart TD
+    D1["<b>D1 — Wildly Important Goal</b><br/><i>From X to Y by When</i><br/>1-2 WIGs maximum"]
+    D2["<b>D2 — Lead Measures</b><br/>Predictive AND Influenceable<br/>2-3 leads per WIG"]
+    D3["<b>D3 — Compelling Scoreboard</b><br/>Players' (not Coaches')<br/>5-second 'are we winning?' test"]
+    D4["<b>D4 — WIG Session</b><br/>Weekly, ≤30 min<br/>Account → Review → Plan"]
+    Lag["Lag measure<br/>= the WIG outcome<br/>(historical, slow)"]
+    Action["New commitments<br/>this week"]
+
+    D1 -->|sets target for| D2
+    D2 -->|tracked on| D3
+    D3 -->|reviewed in| D4
+    D4 -->|generates| Action
+    Action -.->|moves| D2
+    D2 -.->|predicts| Lag
+    Lag -.->|reports back to| D1
+```
+
+### 每個規律的角色 + 最常見失敗
+
+| Discipline | 核心 idea | 最常見的失敗模式 |
+|---|---|---|
+| **D1 — Focus** | 只挑 **一個** WIG（最多兩個）。用 *From X to Y by When* 句型寫。Lag 可量測、deadline 明確。 | 「達成業績本來就是工作，不是 WIG。」團隊宣告 5+ 個「優先事項」結果一個都沒做。 |
+| **D2 — Lead Measures** | 追蹤 **本週可以做的行為**，而且這個行為要 *能預測* lag。書中稱這是「最被誤解的規律」—— 實作上也是最常崩的點。 | 挑了 lag 形狀的「lead」（如「提升 NPS」），但週次根本動不了。或者直接套用既有 KPI dashboard。 |
+| **D3 — Scoreboard** | 團隊自己做；公開可見；一眼看出輸贏。包含 lead + lag + pacing line。 | 退化成 12 個指標的被動 dashboard，沒人在看。或被當成羞辱工具。 |
+| **D4 — Cadence** | 每週 30 分鐘 session：每個成員報告上週 commitment、看 scoreboard、為這週做出新 commitment。 | Session 拖到 1 小時、成員沒準備就來、leader 把它當績效面談（變成 compliance 而不是 commitment）。 |
+
+### 關鍵詞彙（這個 plugin 通用）
+
+- **Lag measure** —— 結果（業績、NPS、留存率）。歷史性、慢、本週直接影響不了。
+- **Lead measure** —— 行為（每週業務拜訪數、交付的 code review 數、walk-through 完成數）。動得快、可直接影響、能 *預測* lag。
+- **Players' scoreboard** —— 團隊自有 + 自建；一眼看懂；含 lead + lag + pacing line。跟「coach's dashboard」（經營層 read-only 的 50+ 指標 board）是兩回事。
+- **WIG Session** —— 每週 accountability 會議，依 **Account → Review → Plan** 三步：成員報告上週 commitment、團隊看 scoreboard 變化、成員為這週承諾一個新行為。
+- **Whirlwind** —— 吞掉約 80% 容量的日常業務急迫性。4DX 假設你消除不了它，只能保護 ~20% 不被吞掉。
+
 ## 兩種模式：coach 與 audit（v0.8.0 dual-mode 架構）
 
 每個 topic skill 都 **內建兩種模式**，透過專屬的 protocol 檔案切換。模式不需要手動選 —— skill 的 activation signal 或 router 決定要載入哪個 protocol。
