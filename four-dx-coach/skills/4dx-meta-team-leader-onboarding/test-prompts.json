@@ -31,7 +31,7 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "I keep hearing about 4DX from a peer CEO. Is this actually the right operating system for a 200-person SaaS company, or is it overkill? I haven't decided yet.",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-meta-team-strategy-triage — fit-for-org decision is upstream of the buy-in conversation.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-meta-strategy-triage — fit-for-org decision is upstream of the buy-in conversation.",
       "notes": "lure: triage misfire — user explicitly hasn't decided 4DX fits, so the buy-in skill skips a precondition."
     },
     {

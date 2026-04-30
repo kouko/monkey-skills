@@ -31,14 +31,14 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "I lead a single 8-person team (no sub-teams). Help me pick our team's Primary WIG.",
-      "expected_behavior": "Do NOT activate this skill. Single-team leader, no cascade — should route to 4dx-d1-team-primary-wig-selection.",
+      "expected_behavior": "Do NOT activate this skill. Single-team leader, no cascade — should route to 4dx-d1-wig-formulation.",
       "notes": "lure: single-team-leader — selection-not-cascade; description explicitly excludes 'leader runs only one team'."
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "Help me define my personal WIG. I want to translate my career goal into quarterly milestones.",
-      "expected_behavior": "Do NOT activate this skill. Solo goal — 'translate' + 'milestones' surface match but no org/team context. Should route to 4dx-d1-personal-wig-defining.",
+      "expected_behavior": "Do NOT activate this skill. Solo goal — 'translate' + 'milestones' surface match but no org/team context. Should route to 4dx-d1-wig-formulation.",
       "notes": "lure: personal-misfire — 'translate' verb is shared with cascade but scope is individual."
     },
     {

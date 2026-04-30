@@ -39,21 +39,21 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "I have too many priorities and need to narrow my personal goal down to one Wildly Important Goal.",
-      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (personal — 'my personal goal') and stage (D1 WIG-defining — 'narrow down to one WIG') are both unambiguous. Fire 4dx-d1-personal-wig-defining directly. Router would add latency without value.",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (personal — 'my personal goal') and stage (D1 WIG-defining — 'narrow down to one WIG') are both unambiguous. Fire 4dx-d1-wig-formulation directly. Router would add latency without value.",
       "notes": "lure: personal + D1-WIG both clear — atomic skill owns the trigger."
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "Help my team pick our Primary WIG for the next quarter.",
-      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-leader — 'my team', 'our Primary WIG') and stage (D1 Primary-WIG selection) are both unambiguous. Fire 4dx-d1-team-primary-wig-selection directly.",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-leader — 'my team', 'our Primary WIG') and stage (D1 Primary-WIG selection) are both unambiguous. Fire 4dx-d1-wig-formulation directly.",
       "notes": "lure: team-leader + D1-primary-WIG both clear — atomic skill owns the trigger."
     },
     {
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "I missed my weekly commitment last week. WIG Session is tomorrow — how do I debrief honestly?",
-      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-member — 'my commitment' inside a 'WIG Session' someone else runs) and stage (D4 account-debrief) are both unambiguous. Fire 4dx-d4-member-account-debrief directly.",
+      "expected_behavior": "Do NOT activate using-four-dx-coach. Scope (team-member — 'my commitment' inside a 'WIG Session' someone else runs) and stage (D4 account-debrief) are both unambiguous. Fire 4dx-d4-cadence directly.",
       "notes": "lure: team-member + D4-debrief both clear — atomic skill owns the trigger."
     },
     {

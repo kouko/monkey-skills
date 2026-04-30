@@ -10,7 +10,7 @@
 - "Every week the important stuff gets pushed."
 - "My day job eats my whole week."
 - A previous WIG died and the user wonders if 4DX is broken or if they need to "try harder."
-- About to invoke `4dx-d1-personal-wig-defining` but has never made the whirlwind / WIG distinction explicit.
+- About to invoke `4dx-d1-wig-formulation` but has never made the whirlwind / WIG distinction explicit.
 
 ## What it does (the protocol in brief)
 
@@ -18,14 +18,14 @@
 2. **Compute the ratio** — sum hours by tag, write down WHIRLWIND% / WIG% / NEITHER% + a one-sentence reaction comparing expected vs found.
 3. **Audit the whirlwind for theater** — re-tag every WHIRLWIND block as `BAU-real` (operation breaks without it) vs `BAU-theater` (only your image breaks).
 4. **Decide your minimum WIG allocation** — the book's anchor is ~20% (8h on a 40h week); name a numeric N + concrete calendar blocks + a named protector.
-5. **Hand off (or terminate)** — proceed to `4dx-d1-personal-wig-defining`, OR explicitly drop 4DX if step 1 revealed a genuinely reactive role.
+5. **Hand off (or terminate)** — proceed to `4dx-d1-wig-formulation`, OR explicitly drop 4DX if step 1 revealed a genuinely reactive role.
 
 ## When NOT to use
 
 | Situation | Where to go instead |
 |---|---|
 | Burnout / sustained overwhelm / depression | Coaching / clinical support — do NOT run a time audit |
-| Genuinely reactive roles (on-call SRE, ER, infant care) | The whirlwind IS the strategic value — `4dx-meta-personal-strategy-triage` (CE-26) |
+| Genuinely reactive roles (on-call SRE, ER, infant care) | The whirlwind IS the strategic value — `4dx-meta-strategy-triage` (CE-26) |
 | Stroke-of-pen / one-off task ("file my taxes") | Doesn't need 4DX at all |
 | Productivity-tool shopping (Notion vs Sunsama) | Tool selection, not capacity diagnosis |
 

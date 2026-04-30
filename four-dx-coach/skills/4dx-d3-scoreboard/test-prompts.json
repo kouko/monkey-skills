@@ -38,7 +38,7 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me design my own personal scoreboard for my running goal — solo, just for me.",
-      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Role + verb explicit (solo design own). Fire 4dx-d3-personal-scoreboard directly.",
+      "expected_behavior": "Do NOT activate 4dx-d3-scoreboard. Role + verb explicit (solo design own). Fire 4dx-d3-scoreboard directly.",
       "notes": "lure: explicit role+verb (solo design) — description excludes role-explicit cases"
     },
     {
@@ -59,7 +59,7 @@
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "我們 team 有 scoreboard 但設計很爛、5-second test 過不了。我是成員，可以自己重做一個給自己看嗎？",
-      "expected_behavior": "Activate 4dx-d3-scoreboard. Edge case: member with broken team scoreboard considering personal substitute. Router should surface that this is the explicit anti-pattern in 4dx-d3-member-scoreboard-reading boundary section ('member-substitution failure'). Route to member-scoreboard-reading (which has escalation script) rather than to personal-scoreboard. Member shouldn't unilaterally redesign or substitute.",
+      "expected_behavior": "Activate 4dx-d3-scoreboard. Edge case: member with broken team scoreboard considering personal substitute. Router should surface that this is the explicit anti-pattern in 4dx-d3-scoreboard boundary section ('member-substitution failure'). Route to member-scoreboard-reading (which has escalation script) rather than to personal-scoreboard. Member shouldn't unilaterally redesign or substitute.",
       "notes": "boundary: broken-board-member-substitution — disambiguate to member-reading (has escalation), NOT to personal-scoreboard (would mask the team-side gap)"
     }
   ],

@@ -19,9 +19,9 @@
 
 | 情境 | 改去 |
 |---|---|
-| scope + verb 都明示（「我自己的 WIG: From X to Y」） | 直接 `4dx-d1-personal-wig-defining` |
-| 「組織 Primary WIG，用 Battles 2x2」 | 直接 `4dx-d1-team-primary-wig-selection` |
-| 「老闆給的 WIG」 | 直接 `4dx-d1-member-team-wig-comprehension` |
+| scope + verb 都明示（「我自己的 WIG: From X to Y」） | 直接 `4dx-d1-wig-formulation` |
+| 「組織 Primary WIG，用 Battles 2x2」 | 直接 `4dx-d1-wig-formulation` |
+| 「老闆給的 WIG」 | 直接 `4dx-d1-wig-formulation` |
 | whirlwind / 時間 audit | `4dx-d1-personal-whirlwind-triage` |
 | 往下 cascade 到 N 個 sub-team | `4dx-d1-team-wig-cascade` |
 | lead measure / scoreboard / cadence | D2 / D3 / D4 |
@@ -30,9 +30,9 @@
 
 | Slug | Scope | Verb | 產出 |
 |---|---|---|---|
-| `4dx-d1-personal-wig-defining` | Personal（solo） | Define | From-X-to-Y-by-When 格式的個人 WIG 一條 |
-| `4dx-d1-team-primary-wig-selection` | Team-leader | Select | Battles 2x2 挑出組織級 Primary WIG |
-| `4dx-d1-member-team-wig-comprehension` | Team-member | Comprehend | member 對繼承 team WIG 如何落到自己日常的理解 |
+| `4dx-d1-wig-formulation` | Personal（solo） | Define | From-X-to-Y-by-When 格式的個人 WIG 一條 |
+| `4dx-d1-wig-formulation` | Team-leader | Select | Battles 2x2 挑出組織級 Primary WIG |
+| `4dx-d1-wig-formulation` | Team-member | Comprehend | member 對繼承 team WIG 如何落到自己日常的理解 |
 
 ## 延伸
 

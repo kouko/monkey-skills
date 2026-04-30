@@ -19,9 +19,9 @@
 
 | 情境 | 改去 |
 |---|---|
-| role 明示（「我自己的 lead 給我自己的 goal」） | 直接 `4dx-d2-personal-lead-measure-discovery` |
-| role 明示（「帶 team 挑 lead」） | 直接 `4dx-d2-team-lead-measure-facilitation` |
-| role 明示（「老闆訂的 lead」） | 直接 `4dx-d2-member-lead-measure-influence` |
+| role 明示（「我自己的 lead 給我自己的 goal」） | 直接 `4dx-d2-lead-measures` |
+| role 明示（「帶 team 挑 lead」） | 直接 `4dx-d2-lead-measures` |
+| role 明示（「老闆訂的 lead」） | 直接 `4dx-d2-lead-measures` |
 | WIG 還沒定 | 先 `4dx-d1-wig-formulation` |
 | scoreboard / 顯示問題 | `4dx-d3-scoreboard` topic-router |
 | 週 cadence / WIG Session | `4dx-d4-cadence` topic-router |
@@ -30,9 +30,9 @@
 
 | Slug | Role | Verb | 產出 |
 |---|---|---|---|
-| `4dx-d2-personal-lead-measure-discovery` | Solo | Discover | 2-3 個 personal lead（兩軸 + Goodhart 自檢） |
-| `4dx-d2-team-lead-measure-facilitation` | Team-leader | Facilitate | 2-3 個 team-owned lead（veto 不 dictate），對齊 team WIG |
-| `4dx-d2-member-lead-measure-influence` | Team-member | Influence-map | per-lead 0-5 評分 + 1-2 focus lead + 「我這沒影響力」升報路徑 |
+| `4dx-d2-lead-measures` | Solo | Discover | 2-3 個 personal lead（兩軸 + Goodhart 自檢） |
+| `4dx-d2-lead-measures` | Team-leader | Facilitate | 2-3 個 team-owned lead（veto 不 dictate），對齊 team WIG |
+| `4dx-d2-lead-measures` | Team-member | Influence-map | per-lead 0-5 評分 + 1-2 focus lead + 「我這沒影響力」升報路徑 |
 
 ## 延伸
 

@@ -19,9 +19,9 @@ Catches ambiguous "help me with my WIG" / "how do I set a WIG?" queries. Asks ON
 
 | Situation | Where to go instead |
 |---|---|
-| Scope + verb explicit ("my personal WIG: From X to Y") | `4dx-d1-personal-wig-defining` directly |
-| "Our org's Primary WIG via Battles 2x2" | `4dx-d1-team-primary-wig-selection` directly |
-| "The WIG my manager assigned" | `4dx-d1-member-team-wig-comprehension` directly |
+| Scope + verb explicit ("my personal WIG: From X to Y") | `4dx-d1-wig-formulation` directly |
+| "Our org's Primary WIG via Battles 2x2" | `4dx-d1-wig-formulation` directly |
+| "The WIG my manager assigned" | `4dx-d1-wig-formulation` directly |
 | Whirlwind / time-audit query | `4dx-d1-personal-whirlwind-triage` |
 | Cascading downward to N sub-teams | `4dx-d1-team-wig-cascade` |
 | Lead measures / scoreboard / cadence | D2 / D3 / D4 skills |
@@ -30,9 +30,9 @@ Catches ambiguous "help me with my WIG" / "how do I set a WIG?" queries. Asks ON
 
 | Slug | Scope | Verb | Returns |
 |---|---|---|---|
-| `4dx-d1-personal-wig-defining` | Personal (solo) | Define | One personal WIG in From-X-to-Y-by-When form |
-| `4dx-d1-team-primary-wig-selection` | Team-leader | Select | Org-level Primary WIG via Battles 2x2 |
-| `4dx-d1-member-team-wig-comprehension` | Team-member | Comprehend | Member's understanding of how the inherited team WIG ladders to their slice |
+| `4dx-d1-wig-formulation` | Personal (solo) | Define | One personal WIG in From-X-to-Y-by-When form |
+| `4dx-d1-wig-formulation` | Team-leader | Select | Org-level Primary WIG via Battles 2x2 |
+| `4dx-d1-wig-formulation` | Team-member | Comprehend | Member's understanding of how the inherited team WIG ladders to their slice |
 
 ## See also
 

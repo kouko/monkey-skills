@@ -38,7 +38,7 @@
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "Tomorrow morning I'm running my team's weekly WIG Session and want to make sure I run it properly — what to say, when to push back on commitments, how to handle someone who missed last week.",
-      "expected_behavior": "Do NOT activate 4dx-meta-team-xps-evaluation. Route to 4dx-d4-team-wig-session-lead — user wants to RUN the session, not AUDIT past performance.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-xps-evaluation. Route to 4dx-d4-cadence — user wants to RUN the session, not AUDIT past performance.",
       "notes": "lure: session-lead misfire — practitioner role (running) vs auditor role (evaluating)."
     },
     {

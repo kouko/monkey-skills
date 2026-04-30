@@ -89,7 +89,7 @@ gaps the literature fills:
    of execution ("is the WIG still wildly important?") is the
    passion-check; if the user has quietly outgrown the WIG, no amount of
    D2/D3/D4 repair will hold. The rescue must be willing to route to
-   `4dx-d1-personal-wig-defining` rather than reinstall mechanics on a
+   `4dx-d1-wig-formulation` rather than reinstall mechanics on a
    dead lag.
 
 For solo self-Goodharting on motivation itself ("I should feel motivated

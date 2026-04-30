@@ -31,11 +31,11 @@ Consultant 對 leader-of-leaders。這個 skill 最關鍵的工作是執行 **Ru
 
 | 情境 | 改去 |
 |---|---|
-| org Primary WIG 還沒定 | `4dx-d1-team-primary-wig-selection` |
-| Leader 只帶一個團隊（沒有下屬 team-leader） | `4dx-d1-team-primary-wig-selection` |
-| solo / 單獨目標 | `4dx-d1-personal-wig-defining` |
+| org Primary WIG 還沒定 | `4dx-d1-wig-formulation` |
+| Leader 只帶一個團隊（沒有下屬 team-leader） | `4dx-d1-wig-formulation` |
+| solo / 單獨目標 | `4dx-d1-wig-formulation` |
 | 固定終點的 single-shot project | 專案管理（WBS / Gantt） |
-| 方法論適配還不確定 | `4dx-meta-team-strategy-triage` |
+| 方法論適配還不確定 | `4dx-meta-strategy-triage` |
 
 ## 出處
 

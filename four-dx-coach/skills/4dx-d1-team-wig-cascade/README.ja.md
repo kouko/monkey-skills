@@ -31,11 +31,11 @@ Leader-of-leaders の consultant。最重要の仕事は **Rule 3 — veto, don'
 
 | 状況 | 代わりの行き先 |
 |---|---|
-| 組織 Primary WIG が未確定 | `4dx-d1-team-primary-wig-selection` |
-| leader が 1 team のみ（subordinate team-leader 不在） | `4dx-d1-team-primary-wig-selection` |
-| solo / 個人目標 | `4dx-d1-personal-wig-defining` |
+| 組織 Primary WIG が未確定 | `4dx-d1-wig-formulation` |
+| leader が 1 team のみ（subordinate team-leader 不在） | `4dx-d1-wig-formulation` |
+| solo / 個人目標 | `4dx-d1-wig-formulation` |
 | 固定終点の single-shot project | プロジェクトマネジメント（WBS / Gantt） |
-| 方法論の適合性が未確認 | `4dx-meta-team-strategy-triage` |
+| 方法論の適合性が未確認 | `4dx-meta-strategy-triage` |
 
 ## 出典
 

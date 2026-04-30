@@ -19,9 +19,9 @@ Catches ambiguous "help me with lead measures" / "how do I find lead measures?" 
 
 | Situation | Where to go instead |
 |---|---|
-| Role explicit ("my lead for my goal") | `4dx-d2-personal-lead-measure-discovery` directly |
-| Role explicit ("facilitate our team picking leads") | `4dx-d2-team-lead-measure-facilitation` directly |
-| Role explicit ("the lead my manager set") | `4dx-d2-member-lead-measure-influence` directly |
+| Role explicit ("my lead for my goal") | `4dx-d2-lead-measures` directly |
+| Role explicit ("facilitate our team picking leads") | `4dx-d2-lead-measures` directly |
+| Role explicit ("the lead my manager set") | `4dx-d2-lead-measures` directly |
 | WIG not yet defined | `4dx-d1-wig-formulation` first |
 | Scoreboard / display question | `4dx-d3-scoreboard` topic-router |
 | Weekly cadence / WIG Session | `4dx-d4-cadence` topic-router |
@@ -30,9 +30,9 @@ Catches ambiguous "help me with lead measures" / "how do I find lead measures?" 
 
 | Slug | Role | Verb | Returns |
 |---|---|---|---|
-| `4dx-d2-personal-lead-measure-discovery` | Solo | Discover | 2-3 personal leads (predictive AND influenceable, Goodhart self-check) |
-| `4dx-d2-team-lead-measure-facilitation` | Team-leader | Facilitate | Team-owned 2-3 leads (veto-not-dictate), aligned to team WIG |
-| `4dx-d2-member-lead-measure-influence` | Team-member | Influence-map | Per-lead 0-5 score + 1-2 focus leads + escalation if no influence |
+| `4dx-d2-lead-measures` | Solo | Discover | 2-3 personal leads (predictive AND influenceable, Goodhart self-check) |
+| `4dx-d2-lead-measures` | Team-leader | Facilitate | Team-owned 2-3 leads (veto-not-dictate), aligned to team WIG |
+| `4dx-d2-lead-measures` | Team-member | Influence-map | Per-lead 0-5 score + 1-2 focus leads + escalation if no influence |
 
 ## See also
 

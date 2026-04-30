@@ -4,52 +4,46 @@ description: |
   Router for the four-dx-coach plugin. Activates on generic / vague 4DX
   queries OR when the user's scope is unclear. Triages by scope first —
   personal (solo) / team-leader / team-member — then by 4DX stage, and
-  dispatches across 20 atomic skills (plus 5 topic-routers between this router
-  and the atomic skills). EN: "I want to start using 4DX",
+  dispatches across 10 topical skills (5 multi-file scope-flex skills +
+  5 single-file scope-specific skills). Multi-file skills self-route to
+  their internal protocol; this router only picks the right door.
+  EN: "I want to start using 4DX",
   "help my team apply 4 Disciplines", "where do I begin with 4DX?",
   "I joined a team using 4DX". JP: 「4DX を使い始めたい」「4 つの規律
   をチームに導入したい」「4DX の始め方」「4DX のチームに入った」.
   zh-TW: 「想要開始用 4DX」「4 個執行紀律怎麼開始」「想用 4DX 帶
-  團隊」「我加入了一個用 4DX 的團隊」. 20 atomic skills: 7 personal (meta /
-  whirlwind / WIG / leads / scoreboard / session / sustain), 8 team-leader
-  (meta / primary-WIG / cascade / onboarding / lead-measure-facilitation /
-  scoreboard-design / session-lead / XPS-eval), 5 team-member
-  (WIG-comprehension / lead-measure-influence / scoreboard-reading /
-  commitment-prep / account-debrief).
+  團隊」「我加入了一個用 4DX 的團隊」. 5 multi-file scope-flex skills:
+  meta-strategy-triage / d1-wig-formulation / d2-lead-measures /
+  d3-scoreboard / d4-cadence (each bundles 2-4 internal protocols
+  covering personal / team-leader / team-member variants). 5 single-file
+  scope-specific skills: d1-personal-whirlwind-triage (personal),
+  d1-team-wig-cascade (team-leader), meta-team-leader-onboarding
+  (team-leader), meta-team-xps-evaluation (team-leader),
+  sustain-personal-momentum-rescue (personal).
   Hands off when 4DX doesn't fit — habit-stacking / OKR / agile / burnout.
   Do NOT activate when user names a specific skill or has full WIG+leads+
   scoreboard+cadence running with a discipline-specific question.
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker (2nd ed., 2021)
 source_language: en
-tags: [router, entry-point, dispatcher, 4dx, scope-triage, personal, team-leader, team-member]
+tags: [router, entry-point, dispatcher, 4dx, scope-triage, personal, team-leader, team-member, multi-file]
 related_skills:
-  - 4dx-meta-personal-strategy-triage
+  - 4dx-meta-strategy-triage
+  - 4dx-d1-wig-formulation
+  - 4dx-d2-lead-measures
+  - 4dx-d3-scoreboard
+  - 4dx-d4-cadence
   - 4dx-d1-personal-whirlwind-triage
-  - 4dx-d1-personal-wig-defining
-  - 4dx-d2-personal-lead-measure-discovery
-  - 4dx-d3-personal-scoreboard
-  - 4dx-d4-personal-wig-session
-  - 4dx-sustain-personal-momentum-rescue
-  - 4dx-meta-team-strategy-triage
-  - 4dx-d1-team-primary-wig-selection
   - 4dx-d1-team-wig-cascade
   - 4dx-meta-team-leader-onboarding
-  - 4dx-d2-team-lead-measure-facilitation
-  - 4dx-d3-team-lead-scoreboard-design
-  - 4dx-d4-team-wig-session-lead
   - 4dx-meta-team-xps-evaluation
-  - 4dx-d1-member-team-wig-comprehension
-  - 4dx-d2-member-lead-measure-influence
-  - 4dx-d3-member-scoreboard-reading
-  - 4dx-d4-member-commitment-prep
-  - 4dx-d4-member-account-debrief
+  - 4dx-sustain-personal-momentum-rescue
 ---
 
 # using-four-dx-coach — 4DX Router (entry point)
 
 ## Mission
 
-Route generic / vague / scope-ambiguous 4DX queries to the correct atomic
+Route generic / vague / scope-ambiguous 4DX queries to the correct topical
 skill. Triage first by **scope** (personal / team-leader / team-member),
 then by **4DX stage**. If 4DX is the wrong methodology for the user's
 problem, decline and redirect — do not bend the problem onto the wrong
@@ -58,47 +52,42 @@ shape.
 > "The 4 Disciplines are a matched set, not a menu of choices."
 > — McChesney et al., *Chapter 1*
 
-This router is the entry door. Each atomic skill behind it owns its own
-gate logic; the router only decides *which door to open*.
+This router is the entry door. Each topical skill behind it owns its own
+gate logic; the router only decides *which door to open*. The 5 multi-file
+skills self-route internally to the correct protocol via a one-question
+Socratic check, so this router does **not** need to disambiguate scope
+when handing off to a multi-file skill — just pass the query through.
 
 ---
 
-## The 20 atomic skills indexed by scope
+## The 10 topical skills indexed by scope and stage
 
-### Personal scope (solo practitioner — 7 skills)
+### Multi-file scope-flex skills (5 — auto-detect scope internally)
 
-| Skill slug | Stage | Canonical activation signal | Role |
+Each multi-file skill carries one `SKILL.md` orchestrator + 2-4 protocol
+files. The orchestrator runs an internal Socratic check to pick the right
+protocol; this router only needs to dispatch the topic.
+
+| Skill slug | Stage | Protocols inside | Canonical activation signals |
 |---|---|---|---|
-| `4dx-meta-personal-strategy-triage` | Pre-D1 gate | "Should I use 4DX for [X]?" / 「4DX 適してる？」 | Decide if 4DX fits the goal at all (6-verdict triage). |
-| `4dx-d1-personal-whirlwind-triage` | D1 prereq | "I'm always firefighting / no time for the goal." | 7-day time audit; surface BAU vs strategic capacity. |
-| `4dx-d1-personal-wig-defining` | D1 | "My goal is vague / too many priorities." | Coach to one *From X to Y by When* WIG. |
-| `4dx-d2-personal-lead-measure-discovery` | D2 | "I have the goal — what do I DO daily?" | Discover 2-3 predictive AND influenceable lead measures. |
-| `4dx-d3-personal-scoreboard` | D3 | "My tracker is too complex / I don't look at it." | Players' scoreboard, ≤4 elements, 5-second test. |
-| `4dx-d4-personal-wig-session` | D4 | "I want a weekly review for goal momentum." | Run 20-30 min weekly Account → Review → Plan. |
-| `4dx-sustain-personal-momentum-rescue` | Recovery | "Haven't done my 4DX in weeks / lost momentum." | Diagnose broken layer; route to matching restart. |
+| `4dx-meta-strategy-triage` | Pre-D1 fit gate | `personal-mode`, `team-mode` | "Should X use 4DX?" / "Is 4DX a good fit?" / 「4DX 適してる？」 |
+| `4dx-d1-wig-formulation` | D1 | `personal-define`, `team-select`, `member-comprehend` | "Help me write a WIG", "Pick our Primary WIG", "Decode the team's WIG" |
+| `4dx-d2-lead-measures` | D2 | `personal-discover`, `team-facilitate`, `member-influence` | "What's the daily action", "Help my team find leads", "How do I influence inherited leads" |
+| `4dx-d3-scoreboard` | D3 | `personal-design`, `team-lead-design`, `member-read` | "Design a scoreboard", "Build the team scoreboard", "Read our team scoreboard" |
+| `4dx-d4-cadence` | D4 | `solo-session`, `team-leader-session`, `member-prep`, `member-debrief` | "Weekly review", "Run our team session", "Prep for tomorrow's WIG Session", "I missed my commitment" |
 
-### Team-leader scope (positional authority on goal-setting — 8 skills)
+### Single-file scope-specific skills (5 — scope locked by topic)
 
-| Skill slug | Stage | Canonical activation signal | Role |
+The book has no cross-scope variant for these topics, so they remain
+single-file with no internal protocol switch.
+
+| Skill slug | Scope | Stage | Canonical activation signals |
 |---|---|---|---|
-| `4dx-meta-team-strategy-triage` | Pre-D1 gate | "Should my team use 4DX vs OKR / agile?" | Verify 4DX fits the team's goal class. |
-| `4dx-d1-team-primary-wig-selection` | D1 (org) | "Help my org pick our Primary WIG." | Single Primary WIG for the whole org / division. |
-| `4dx-d1-team-wig-cascade` | D1 (cascade) | "How do I cascade WIGs to my sub-teams?" | Translate Primary WIG into team-level WIGs. |
-| `4dx-meta-team-leader-onboarding` | Leader prep | "I'm about to lead a 4DX team — where do I start?" | Leader-of-leaders cadence + ownership setup. |
-| `4dx-d2-team-lead-measure-facilitation` | D2 (lead) | "Help me facilitate my team picking 2-3 leads." | Veto-not-dictate facilitation of team's lead discovery. |
-| `4dx-d3-team-lead-scoreboard-design` | D3 (lead) | "Help me design our team scoreboard." | Facilitate team to build public players' scoreboard. |
-| `4dx-d4-team-wig-session-lead` | D4 (lead) | "How do I run my team's weekly WIG Session?" | Facilitate team's 20-30 min Account → Review → Plan. |
-| `4dx-meta-team-xps-evaluation` | XPS audit | "Is our team's 4DX execution actually scoring?" | XPS (Execution Performance Score) audit + remediation. |
-
-### Team-member scope (joined a team that runs 4DX — 5 skills)
-
-| Skill slug | Stage | Canonical activation signal | Role |
-|---|---|---|---|
-| `4dx-d1-member-team-wig-comprehension` | D1 (member) | "My manager set our team's WIG — what does it mean for me?" | Decode the team WIG; locate personal contribution. |
-| `4dx-d2-member-lead-measure-influence` | D2 (member) | "Our team's leads are set — how do I influence them?" | Map per-lead 0-5 influence; pick 1-2 focus; escalate no-influence. |
-| `4dx-d3-member-scoreboard-reading` | D3 (member) | "How do I read my team's scoreboard?" | ≤5-min weekly diagnostic + escalation if board broken. |
-| `4dx-d4-member-commitment-prep` | D4 prep | "WIG Session is tomorrow — what should I commit to?" | Prep one high-impact weekly commitment. |
-| `4dx-d4-member-account-debrief` | D4 debrief | "I missed my commitment last week — what now?" | Honest account in next session; recover ownership. |
+| `4dx-d1-personal-whirlwind-triage` | Personal | D1 prereq | "I'm always firefighting / no time for the goal" / 「日常業務に追われて目標に手がつかない」 |
+| `4dx-d1-team-wig-cascade` | Team-leader | D1 (cascade) | "Cascade the org WIG to sub-teams" / "How do I split the Primary WIG into Battles" |
+| `4dx-meta-team-leader-onboarding` | Team-leader | Leader prep | "I'm about to lead a 4DX team" / "Get my direct-report leaders bought in" |
+| `4dx-meta-team-xps-evaluation` | Team-leader | XPS audit | "Is our team's 4DX execution actually working?" / "Post-quarter audit" |
+| `4dx-sustain-personal-momentum-rescue` | Personal | Recovery | "Haven't done my 4DX in weeks / lost momentum" |
 
 ---
 
@@ -116,7 +105,7 @@ ambiguous, go to Step 2.
 | Joined a team that already uses 4DX | "I joined", "given a WIG", "manager set", "for my team's WIG Session", "missed my commitment" | **Team-member** |
 | No scope marker — vague | "I want to start using 4DX", "explain 4DX", 「4DX を使い始めたい」 | **Ambiguous → Step 2** |
 
-### Step 2 — Ask scope explicitly (only when ambiguous)
+### Step 2 — Ask scope explicitly (only when ambiguous and no clear topic)
 
 > "Before I route you to the right tool — are you applying 4DX to:
 > (a) **a personal / solo goal** (you set it, you execute it),
@@ -126,54 +115,52 @@ ambiguous, go to Step 2.
 
 Wait for the answer; do not guess.
 
-### Step 2.5 — If topic is clear but role/scope is ambiguous, defer to a topic-router
+### Step 2.5 — If topic is clear, defer to the matching multi-file skill (let IT do scope detection)
 
-If the user's **topic is already clear** (meta-strategy-triage / D1-WIG / D2-leads / D3-scoreboard / D4-cadence)
-but **role or scope is still ambiguous**, defer to the matching topic-router —
-do **NOT** route directly to atomic skills:
+If the user's **topic is already clear** (meta / D1 WIG / D2 leads / D3
+scoreboard / D4 cadence) but role is ambiguous, **defer the scope question
+to the multi-file skill**. Each one runs its own one-question Socratic
+disambiguation and loads the right internal protocol. This router does
+not need to ask the same question twice.
 
-| Topic signal in query | Defer to topic-router |
+| Topic signal in query | Defer to multi-file skill |
 |---|---|
-| "Should X use 4DX?" / "Is 4DX a good fit?" (no actor named) | `4dx-meta-strategy-triage` |
-| "Help me with my WIG" / "How do I set a WIG?" (no actor + verb) | `4dx-d1-wig-formulation` |
-| "Help me with lead measures" / "How do I find lead measures?" (no role) | `4dx-d2-lead-measures` |
-| "Help me with the scoreboard" / "How should I track this?" (no role + verb) | `4dx-d3-scoreboard` |
-| "Help with my WIG Session" / "weekly cadence" (no role + timing) | `4dx-d4-cadence` |
-
-The topic-router will run its own ONE-question disambiguation, then hand off to
-the precise atomic skill. This prevents the plugin router from guessing at
-mid-topic queries where the user's signal is locally narrow.
+| "Should X use 4DX?" / "Is 4DX a good fit?" | `4dx-meta-strategy-triage` |
+| "Help me with my WIG" / "How do I set a WIG?" | `4dx-d1-wig-formulation` |
+| "Help me with lead measures" / "How do I find lead measures?" | `4dx-d2-lead-measures` |
+| "Help me with the scoreboard" / "How should I track this?" | `4dx-d3-scoreboard` |
+| "Help with my WIG Session" / "weekly cadence" | `4dx-d4-cadence` |
 
 ### Step 3 — Route within scope by 4DX stage
 
 #### Personal scope routing
 
-1. Fit unsure → `4dx-meta-personal-strategy-triage`
+1. Fit unsure → `4dx-meta-strategy-triage` (loads `personal-mode`)
 2. No time / always firefighting → `4dx-d1-personal-whirlwind-triage`
-3. Goal vague / multi-priority → `4dx-d1-personal-wig-defining`
-4. WIG set, daily action unclear → `4dx-d2-personal-lead-measure-discovery`
-5. Tracker noisy / unread → `4dx-d3-personal-scoreboard`
-6. Need weekly cadence → `4dx-d4-personal-wig-session`
+3. Goal vague / multi-priority → `4dx-d1-wig-formulation` (loads `personal-define`)
+4. WIG set, daily action unclear → `4dx-d2-lead-measures` (loads `personal-discover`)
+5. Tracker noisy / unread → `4dx-d3-scoreboard` (loads `personal-design`)
+6. Need weekly cadence → `4dx-d4-cadence` (loads `solo-session`)
 7. Lapsed practice → `4dx-sustain-personal-momentum-rescue`
 
 #### Team-leader scope routing
 
-1. Fit unsure (team) → `4dx-meta-team-strategy-triage`
+1. Fit unsure (team) → `4dx-meta-strategy-triage` (loads `team-mode`)
 2. About to lead → `4dx-meta-team-leader-onboarding`
-3. Need a single org-level WIG → `4dx-d1-team-primary-wig-selection`
+3. Need a single org-level WIG → `4dx-d1-wig-formulation` (loads `team-select`)
 4. Need to cascade Primary WIG to sub-teams → `4dx-d1-team-wig-cascade`
-5. Need to facilitate team picking lead measures → `4dx-d2-team-lead-measure-facilitation`
-6. Need to facilitate team building scoreboard → `4dx-d3-team-lead-scoreboard-design`
-7. Need to run weekly team session → `4dx-d4-team-wig-session-lead`
+5. Need to facilitate team picking lead measures → `4dx-d2-lead-measures` (loads `team-facilitate`)
+6. Need to facilitate team building scoreboard → `4dx-d3-scoreboard` (loads `team-lead-design`)
+7. Need to run weekly team session → `4dx-d4-cadence` (loads `team-leader-session`)
 8. Auditing whether 4DX is actually working → `4dx-meta-team-xps-evaluation`
 
 #### Team-member scope routing
 
-1. New to the team's WIG, decoding it → `4dx-d1-member-team-wig-comprehension`
-2. Team leads set, mapping personal influence → `4dx-d2-member-lead-measure-influence`
-3. Reading the team scoreboard → `4dx-d3-member-scoreboard-reading`
-4. Prepping next session's commitment → `4dx-d4-member-commitment-prep`
-5. Missed a commitment / debrief needed → `4dx-d4-member-account-debrief`
+1. New to the team's WIG, decoding it → `4dx-d1-wig-formulation` (loads `member-comprehend`)
+2. Team leads set, mapping personal influence → `4dx-d2-lead-measures` (loads `member-influence`)
+3. Reading the team scoreboard → `4dx-d3-scoreboard` (loads `member-read`)
+4. Prepping next session's commitment → `4dx-d4-cadence` (loads `member-prep`)
+5. Missed a commitment / debrief needed → `4dx-d4-cadence` (loads `member-debrief`)
 
 ### Step 4 — If 4DX is wrong shape
 
@@ -186,21 +173,27 @@ Skip routing; use the hand-off scripts below.
 ### Personal — solo first-time user
 
 ```
-meta-personal-triage → d1-whirlwind → d1-wig-defining → d2-leads
-  → d3-scoreboard → d4-session → (sustain on demand)
+meta-strategy-triage (personal-mode)
+  → d1-personal-whirlwind-triage
+  → d1-wig-formulation (personal-define)
+  → d2-lead-measures (personal-discover)
+  → d3-scoreboard (personal-design)
+  → d4-cadence (solo-session)
+  → sustain-personal-momentum-rescue (on demand)
 ```
 
 Sequential — 4DX is "a matched set, not a menu" (P-23). If the user wants
-to cherry-pick (e.g. just D4 weekly reviews without a WIG), the meta-triage
-skill will flag the mismatch.
+to cherry-pick (e.g. just D4 weekly reviews without a WIG), the
+meta-strategy-triage skill will flag the mismatch.
 
 ### Team-leader — first-time team rollout
 
 ```
-meta-team-triage → meta-team-leader-onboarding
-  → (d1-primary-wig-selection OR d1-wig-cascade depending on level)
-  → d4-team-wig-session-lead (start weekly cadence)
-  → meta-team-xps-evaluation (after 4-8 weeks of cadence)
+meta-strategy-triage (team-mode)
+  → meta-team-leader-onboarding
+  → d1-wig-formulation (team-select) OR d1-team-wig-cascade depending on altitude
+  → d4-cadence (team-leader-session) — start weekly cadence
+  → meta-team-xps-evaluation — after 4-8 weeks of cadence
 ```
 
 Cascade vs Primary depends on the leader's altitude: top of the org →
@@ -209,14 +202,16 @@ Primary WIG; mid-leader inheriting one → Cascade.
 ### Team-member — joined a 4DX team mid-flight
 
 ```
-d1-member-team-wig-comprehension (one-time onboarding)
-  → d4-member-commitment-prep (each session, before)
-  → d4-member-account-debrief (each session, after)
+d1-wig-formulation (member-comprehend) — one-time onboarding
+  → d4-cadence (member-prep) — each session, before
+  → d4-cadence (member-debrief) — each session, after
   → loop weekly
 ```
 
 Members have no D2/D3 ownership — those belong to the leader. Members
-own commitment prep and honest accounting only.
+own commitment prep and honest accounting; their D2/D3 protocols
+(`member-influence`, `member-read`) are read-only diagnostics that
+escalate to the leader if the inherited leads / scoreboard look broken.
 
 ---
 
@@ -243,7 +238,7 @@ right neighborhood. Do not bend the problem.
 > finish lines. James Clear's *Atomic Habits* (habit stacking,
 > identity-based habits, 2-minute rule) is the better fit. If the habit
 > is *in service of* a 4DX-shaped WIG (e.g. daily writing → finish novel
-> by Dec 31), come back via `4dx-d2-personal-lead-measure-discovery`."
+> by Dec 31), come back via `4dx-d2-lead-measures`."
 
 ### OKR / portfolio betting / lean experimentation
 
@@ -276,11 +271,11 @@ right neighborhood. Do not bend the problem.
 Do not activate this router on:
 
 - **User names a specific skill or discipline** — e.g. "How do I write a
-  WIG?" → `4dx-d1-personal-wig-defining` directly. "Help my team pick a
-  Primary WIG" → `4dx-d1-team-primary-wig-selection` directly. "I missed
-  my commitment last week" → `4dx-d4-member-account-debrief` directly.
+  WIG?" → `4dx-d1-wig-formulation` directly. "Help my team pick a
+  Primary WIG" → `4dx-d1-wig-formulation` directly. "I missed
+  my commitment last week" → `4dx-d4-cadence` directly.
 - **User has full D1+D2+D3+D4 already running and asks a specific
-  question** — route to the matching atomic skill, skip the router.
+  question** — route to the matching topical skill, skip the router.
 - **Software / engineering process queries** — agile, scrum, kanban,
   sprint planning, story pointing, velocity, CI/CD cadence.
 - **Pure productivity-tool shopping** — "Notion vs Sunsama vs Things",
@@ -294,34 +289,21 @@ Do not activate this router on:
 
 ---
 
-## Topic routers (mid-flow disambiguation)
-
-Five **topic-router** skills sit between this plugin router and the atomic
-skills. They activate only on **ambiguous mid-topic queries** — when the user
-has a topic in mind but hasn't yet named scope or role:
-
-| Topic-router | Disambiguates | Routes to |
-|---|---|---|
-| `4dx-meta-strategy-triage` | scope (personal vs team) | `4dx-meta-personal-strategy-triage` / `4dx-meta-team-strategy-triage` |
-| `4dx-d1-wig-formulation` | scope + verb (define / select / comprehend) | `4dx-d1-personal-wig-defining` / `4dx-d1-team-primary-wig-selection` / `4dx-d1-member-team-wig-comprehension` |
-| `4dx-d2-lead-measures` | role (solo / leader-facilitator / member-influencer) | `4dx-d2-personal-lead-measure-discovery` / `4dx-d2-team-lead-measure-facilitation` / `4dx-d2-member-lead-measure-influence` |
-| `4dx-d3-scoreboard` | role + verb (solo design / leader-facilitate-build / member-read) | `4dx-d3-personal-scoreboard` / `4dx-d3-team-lead-scoreboard-design` / `4dx-d3-member-scoreboard-reading` |
-| `4dx-d4-cadence` | role + timing (solo / leader / member; before / during / after) | `4dx-d4-personal-wig-session` / `4dx-d4-team-wig-session-lead` / `4dx-d4-member-commitment-prep` / `4dx-d4-member-account-debrief` |
-
-**Division of labour**:
+## Division of labour
 
 - **This plugin router** (`using-four-dx-coach`) fires on **cold-start**,
-  **out-of-4DX**, and **cross-topic** queries — the user is at the front door,
-  hasn't named a discipline, or is asking whether 4DX even applies to a
-  domain we should hand off elsewhere.
-- **Topic-routers** fire on **mid-topic** queries — the user has clearly
-  named a topic (fit / WIG / cadence) but their actor or timing is still
-  ambiguous.
-- **Atomic skills** fire when scope + verb + role are all explicit.
+  **out-of-4DX**, and **cross-topic** queries — the user is at the front
+  door, hasn't named a discipline, or is asking whether 4DX even applies
+  to a domain we should hand off elsewhere.
+- **Multi-file scope-flex skills** fire when the topic is clear; they
+  internally pick the right protocol via one Socratic question.
+- **Single-file scope-specific skills** fire when both topic and scope
+  are constrained by the signal (e.g. cascade → team-leader only;
+  whirlwind triage → personal only).
 
-When a query already has a clear topic, defer to the topic-router rather
-than routing directly to atomic skills. See Step 2.5 above for the deferral
-table.
+When a query already has a clear topic, defer to the matching multi-file
+skill rather than asking the scope question yourself. See Step 2.5 above
+for the deferral table.
 
 ---
 
@@ -329,10 +311,14 @@ table.
 
 - **Skill type**: router (`using-*` convention)
 - **Verification**: router skill — no triple verification needed (each
-  atomic skill it dispatches to owns its own V1/V2/V3 audit).
-- **Distilled at**: 2026-04-29 (v0.2 — scope-triage upgrade for 17 skills) /
-  2026-04-30 (v0.3 — D2/D3 expansion: +4 atomic + 2 topic-routers → 20 atomic + 5 topic-routers + 1 plugin router = 26 total)
+  topical skill it dispatches to owns its own V1/V2/V3 audit).
+- **Distilled at**: 2026-04-29 (v0.2 — scope-triage upgrade) /
+  2026-04-30 (v0.3 — D2/D3 expansion: 20 atomic + 5 topic-routers + 1 plugin
+  router = 26 total) /
+  2026-04-30 (v0.6 — Plan U merge: 20 atomic + 5 topic-routers consolidated
+  into 5 multi-file scope-flex skills + 5 single-file scope-specific skills
+  + 1 plugin router = 11 total)
 - **Output language**: description multilingual (EN + JP + zh-TW); body
   English; A2 trigger phrasings multilingual; metadata English.
-- **Source basis**: BOOK_OVERVIEW.md + 20 atomic skill SKILL.md
+- **Source basis**: BOOK_OVERVIEW.md + 10 topical skill SKILL.md
   frontmatter (A2 triggers + execution outputs).

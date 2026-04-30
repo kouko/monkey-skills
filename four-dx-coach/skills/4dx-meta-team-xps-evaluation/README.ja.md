@@ -30,8 +30,8 @@ Auditor / consultant 声 — 事実、スコア、fix priority のみ。coaching
 | 状況 | 代わりの行き先 |
 |---|---|
 | solo / personal-coach モード | `4dx-sustain-personal-momentum-rescue` |
-| 今週の WIG session を回す（過去の audit ではない） | `4dx-d4-personal-wig-session` |
-| 「そもそも 4DX を使うべきか」 | `4dx-meta-team-strategy-triage` |
+| 今週の WIG session を回す（過去の audit ではない） | `4dx-d4-cadence` |
+| 「そもそも 4DX を使うべきか」 | `4dx-meta-strategy-triage` |
 | team 間の head-to-head ランキング | XPS は intra-team 自己診断、leaderboard ではない |
 | 結果に対する権限 / 意図がない | audit-without-action は禁忌 |
 

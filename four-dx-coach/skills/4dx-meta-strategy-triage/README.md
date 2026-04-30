@@ -1,40 +1,52 @@
-# 4dx-meta-strategy-triage (Topic Router)
+# 4dx-meta-strategy-triage (Multi-scope skill)
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Topic-router for 4DX-fit triage when the user's scope (personal vs team) is not yet clear.
+> Multi-scope gate for "Should X use 4DX?" — decides whether 4 Disciplines of Execution even fits the user's situation BEFORE installing D1-D4. Detects scope (solo individual vs team-leader) and loads the matching triage protocol.
 
-## What this router does
+## What this skill does
 
-Catches ambiguous "should X use 4DX?" queries that don't yet name an actor. Asks ONE Socratic question to surface scope, then hands off to the scope-specific triage skill. This router does NOT run the triage itself.
+Detects scope (solo vs team-leader) from the user's query, then loads the matching protocol from `protocols/`. Runs a Socratic triage that ends in a single discrete verdict from the rubric — either **APPLICABLE / TEAM-APPLICABLE** (proceed to D1) or one of several redirect verdicts that route to a fitter methodology. Refusing 4DX when it doesn't fit is the skill's job, not bending the goal back into 4DX shape.
 
-## When this router activates
+## Background — why merged
 
-- "Is 4DX a good fit?" / "Should we use 4DX?" / "Is 4DX overkill?"
-- 「4DX 適してる？」「4DX 使うべき？」「4DX 合ってる？」
-- 「4DX 適合嗎？」「我/我們該用 4DX 嗎？」「4DX 會不會太重？」
-- Any methodology-fit query without a clear actor (no "I personally" / "our team" anchor)
+Originally 3 skills (2 atomic triages + 1 topic-router). The router was a thin disambiguation step over 2 protocols sharing the foundational stroke-of-pen / behavioral-change distinction. Merging into one multi-file scope-flex skill: kept all execution detail, deduplicated the 6-verdict rubric and Ch 1 distinction, single audit footer, single trigger-list. SKILL.md orchestrator now does scope detection + protocol routing directly.
+
+## Indexed protocols
+
+| Mode | Load protocol | Agent voice |
+|---|---|---|
+| Solo individual | [`protocols/personal-mode.md`](protocols/personal-mode.md) | personal coach |
+| Team-leader (3-12 reports) | [`protocols/team-mode.md`](protocols/team-mode.md) | consultant to leader |
+
+(Member scope intentionally absent — members inherit the WIG, do NOT triage methodology fit. Member queries route out via SKILL.md edge-case to `4dx-d1-wig-formulation`.)
+
+## When this skill activates
+
+- **Solo** — "Should I use 4DX for X?", "Will 4DX help me with…", "Does 4DX apply to a personal goal?"
+- **Team-leader** — "Should our team adopt 4DX?", "Will 4DX work for my team?", "Is my team ready for 4DX?"
+- **Ambiguous-scope fallback** — "Is 4DX a good fit?", "Is 4DX overkill?" (no explicit actor)
+- Multilingual EN / JP / zh-TW per mode (see SKILL.md for full trigger list)
+
+If the user's query is ambiguous on scope, the skill asks ONE Socratic disambiguation question covering both modes, then routes.
 
 ## When NOT to use
 
 | Situation | Where to go instead |
 |---|---|
-| User says "for myself" / 自分 / 我自己 | `4dx-meta-personal-strategy-triage` directly |
-| User says "for our team / org" / うちの team / 我們團隊 | `4dx-meta-team-strategy-triage` directly |
-| User is past triage and wants to start | `4dx-d1-personal-whirlwind-triage` or `4dx-d1-wig-formulation` |
-| User is a member receiving an inherited WIG | `4dx-d1-member-team-wig-comprehension` |
-| Topic is lead measures / scoreboard / cadence | D2 / D3 / D4 atomic skills (wrong topic for this router) |
+| Already committed to 4DX, asking "how do I start?" | D1 skills (whirlwind-triage / primary-wig-selection / wig-formulation) |
+| Specific-discipline question (lead measures / scoreboard / WIG session) | Matching D-skill |
+| Member receiving inherited WIG from a leader | `4dx-d1-wig-formulation` (members don't triage) |
+| Enterprise multi-team rollout (cascading WIGs) | Book Ch 6-10 directly + `4dx-d1-team-wig-cascade` |
+| Non-4DX methodology (OKR / agile / habit-stacking) | Plugin router `using-four-dx-coach` |
 
-## Indexed atomic skills
+## Source citation
 
-| Slug | Scope | Returns |
-|---|---|---|
-| `4dx-meta-personal-strategy-triage` | Personal (solo) | One of 6 verdicts: APPLICABLE / habit / portfolio-bet / emergency / creative / no-time-sovereignty |
-| `4dx-meta-team-strategy-triage` | Team-leader | Team-fit verdict + leader-readiness check |
+The 4 Disciplines of Execution (2nd ed., 2021) — McChesney / Covey / Huling / Thele / Walker. Chapter 1 (The Real Problem With Execution — stroke-of-pen vs behavioral-change distinction), Chapter 6 (Choosing Where to Focus — Strategy Map; goal-shape carve).
 
-(Member scope intentionally absent — members do not triage methodology fit; they inherit the WIG.)
+Industry grounding consolidated in [`references/industry-grounding.md`](references/industry-grounding.md): Kotter (urgency upstream), Heath & Heath (Path environment), March (exploration vs exploitation), Galbraith (STAR alignment), Schein (assumption-layer culture-fit).
 
 ## See also
 
-- [`SKILL.md`](SKILL.md) for full routing logic + Socratic decision tree + hand-off scripts
+- [`SKILL.md`](SKILL.md) — orchestrator with full scope-detection logic + routing table + cross-mode boundary
 - Plugin router [`using-four-dx-coach`](../using-four-dx-coach/) for cold-start / out-of-4DX queries

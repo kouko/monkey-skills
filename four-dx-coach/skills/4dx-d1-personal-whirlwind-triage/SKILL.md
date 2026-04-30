@@ -55,7 +55,7 @@ The reframe is architectural, not motivational. You are not learning to "be more
 2. The user has tried 4DX (or OKRs / GTD / similar) and watched a previous WIG die — and is wondering whether the methodology is broken or whether they just need to "try harder this time."
 3. The user is a manager assigning a new initiative to a team and wonders why the team isn't moving on it — they have not modelled the team's whirlwind capacity and the new work has nowhere structural to land.
 4. The user explicitly asks for a time audit, productivity diagnosis, or "where does my week go" analysis with the framing of *enabling a strategic goal*, not just curiosity.
-5. The user is about to invoke `4dx-d1-personal-wig-defining` but has never made the whirlwind/WIG distinction explicit — this skill should run first.
+5. The user is about to invoke `4dx-d1-wig-formulation` but has never made the whirlwind/WIG distinction explicit — this skill should run first.
 
 ### Language signals (user phrasings that should activate)
 
@@ -80,8 +80,8 @@ The reframe is architectural, not motivational. You are not learning to "be more
 
 ### Distinction from neighboring skills
 
-- vs. `4dx-d1-personal-wig-defining`: that skill assumes the user already accepts whirlwind/WIG capacity reality and is ready to write a *From X to Y by When* WIG. This skill runs *before* it, surfacing the capacity reality so the WIG isn't aspirational fantasy.
-- vs. `4dx-meta-personal-strategy-triage`: that skill asks "should you use 4DX at all" (stroke-of-pen / whirlwind-handleable / behavioral-change). This skill assumes 4DX is the right tool and asks "do you have spare capacity to use it."
+- vs. `4dx-d1-wig-formulation`: that skill assumes the user already accepts whirlwind/WIG capacity reality and is ready to write a *From X to Y by When* WIG. This skill runs *before* it, surfacing the capacity reality so the WIG isn't aspirational fantasy.
+- vs. `4dx-meta-strategy-triage`: that skill asks "should you use 4DX at all" (stroke-of-pen / whirlwind-handleable / behavioral-change). This skill assumes 4DX is the right tool and asks "do you have spare capacity to use it."
 - vs. enterprise `4DX rollout time audits`: organizations doing 4DX deployment run capacity audits across departments to set Primary WIGs. That's a different skill (organizational cadence-setting, not yet built). This skill is individual-scale only.
 
 ---
@@ -109,9 +109,9 @@ When this skill activates, the agent (your mentor) walks you through these steps
    - **Completion criterion**: a numeric N + concrete calendar blocks + a named protector (a recurring calendar event, an accountability partner, or a WIG Session ritual).
 
 5. **Hand off (or terminate).**
-   - If steps 1–4 completed: you now have a time-allocation map and a defended WIG slot. The next skill in the chain is `4dx-d1-personal-wig-defining` — invoke it to formulate the actual *From X to Y by When* goal that fits inside the slot you just protected.
+   - If steps 1–4 completed: you now have a time-allocation map and a defended WIG slot. The next skill in the chain is `4dx-d1-wig-formulation` — invoke it to formulate the actual *From X to Y by When* goal that fits inside the slot you just protected.
    - If you halted at step 1 because your role is genuinely reactive: this skill says 4DX may not be the right tool for this objective. Flag CE-26 (whirlwind-as-the-strategic-work) and either re-scope the goal or accept the methodology mismatch.
-   - **Completion criterion**: explicit handoff to `4dx-d1-personal-wig-defining` *or* explicit decision to drop 4DX for this objective.
+   - **Completion criterion**: explicit handoff to `4dx-d1-wig-formulation` *or* explicit decision to drop 4DX for this objective.
 
 ---
 
@@ -128,7 +128,7 @@ When this skill activates, the agent (your mentor) walks you through these steps
 
 - **CE-26 (Whirlwind-as-the-strategic-work)**: 4DX assumes day-job-vs-strategic-goal as the master conflict. When the day-job IS the strategic value, separating a WIG above the whirlwind makes no sense. Author treats this implicitly via the stroke-of-pen / whirlwind / behavioral-change triage but does not name reactive-domain mismatch directly — this is a Stage-0 critical-step gap.
 - **Parkinson's-Law devouring**: F-15 (black-and-gray week) warns that simply removing a whirlwind block does not produce free time — gray fills it within hours. Carving out hours without a *protector ritual* (recurring block + WIG Session + named commitment partner) reliably fails. Most popularizations of "carve out time" omit this.
-- **Most-important confusion**: Even after a clean time audit, users often pick a WIG that is the *most important* part of their job (e.g. "do client work better"). That is whirlwind optimization, not breakthrough work. The downstream `4dx-d1-personal-wig-defining` skill enforces P-04 (where-breakthrough-needed, not what-is-most-important); this skill should warn the user the trap is coming.
+- **Most-important confusion**: Even after a clean time audit, users often pick a WIG that is the *most important* part of their job (e.g. "do client work better"). That is whirlwind optimization, not breakthrough work. The downstream `4dx-d1-wig-formulation` skill enforces P-04 (where-breakthrough-needed, not what-is-most-important); this skill should warn the user the trap is coming.
 
 ### Author's blind spots / period limitations
 
@@ -159,8 +159,8 @@ The whirlwind triage should pair the book's 80/20 capacity check with these thre
 
 ## Related skills
 
-- `4dx-meta-personal-strategy-triage` — depends-on — gates whether 4DX is the right tool at all
-- `4dx-d1-personal-wig-defining` — composes-with — protected slot + capacity number feed WIG formulation
+- `4dx-meta-strategy-triage` — depends-on — gates whether 4DX is the right tool at all
+- `4dx-d1-wig-formulation` — composes-with — protected slot + capacity number feed WIG formulation
 
 ---
 

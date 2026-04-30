@@ -18,9 +18,9 @@
 A non-judgmental Socratic walk-back through the stack. Each step localizes the break and routes — never restarts D4 on a broken upstream layer:
 
 1. **Open without judgment** — "When did the cadence start to slip? What was happening in your life?"
-2. **D1 — is the WIG itself still wildly important?** — if not, route to `4dx-d1-personal-wig-defining`; do not restart D4 on a dead WIG
-3. **D2 — leads** — were they predictive *and* influenceable? Lead green + lag flat = leads were wrong; route to `4dx-d2-personal-lead-measure-discovery`
-4. **D3 — scoreboard** — could you tell in 5 seconds whether you were winning? If hidden / coach's-style → route to `4dx-d3-personal-scoreboard`
+2. **D1 — is the WIG itself still wildly important?** — if not, route to `4dx-d1-wig-formulation`; do not restart D4 on a dead WIG
+3. **D2 — leads** — were they predictive *and* influenceable? Lead green + lag flat = leads were wrong; route to `4dx-d2-lead-measures`
+4. **D3 — scoreboard** — could you tell in 5 seconds whether you were winning? If hidden / coach's-style → route to `4dx-d3-scoreboard`
 5. **D4 — cadence** — what crowded out the session? If pointless = upstream signal in disguise; if whirlwind crowd-out = resume next week (no make-up)
 6. **Whirlwind escalation check** — real external load spike? Route to `4dx-d1-personal-whirlwind-triage` to redesign capacity, or pause WIG explicitly (an explicit pause is *not* failure)
 7. **Substrate check (the off-ramp)** — burnout / depression / grief / sustained exhaustion → stop the 4DX rescue; recommend rest / coaching / therapy
@@ -31,7 +31,7 @@ A non-judgmental Socratic walk-back through the stack. Each step localizes the b
 
 | Situation | Where to go instead |
 |---|---|
-| First-time 4DX setup | `4dx-meta-personal-strategy-triage` then `4dx-d1-personal-wig-defining` |
+| First-time 4DX setup | `4dx-meta-strategy-triage` then `4dx-d1-wig-formulation` |
 | Org-wide engagement surveys / enterprise diagnostics | Out of scope — this skill is individual rescue |
 | Clinical depression / sustained burnout / grief | Professional support; method is downstream of care |
 | Reactive / emergency domains where whirlwind IS the work | `4dx-d1-personal-whirlwind-triage` instead — cadence break may be appropriate |

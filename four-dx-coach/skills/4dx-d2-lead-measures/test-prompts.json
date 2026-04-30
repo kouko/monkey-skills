@@ -38,7 +38,7 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me facilitate my team picking 2-3 lead measures for our Team WIG (currently 0 → 30% by Dec).",
-      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Role explicit (leader-facilitator). Fire 4dx-d2-team-lead-measure-facilitation directly.",
+      "expected_behavior": "Do NOT activate 4dx-d2-lead-measures. Role explicit (leader-facilitator). Fire 4dx-d2-lead-measures directly.",
       "notes": "lure: explicit-role (leader facilitating team) — description excludes role-explicit cases"
     },
     {

@@ -1,113 +1,255 @@
 ---
 name: 4dx-d2-lead-measures
 description: |
-  [Topic-router] for D2 lead-measure queries when role (solo / leader-facilitator / member-influencer) is unclear from the user's query. Activates on ambiguous "lead measure" / "daily action driver" queries that don't yet name *who is doing what with the leads*. After ONE Socratic disambiguation question, routes to: `4dx-d2-personal-lead-measure-discovery` (solo: pick own leads), `4dx-d2-team-lead-measure-facilitation` (leader: facilitate team picking leads), or `4dx-d2-member-lead-measure-influence` (member: identify personal sphere on inherited leads). EN: "Help me with lead measures", "How do I find lead measures?", "Daily action that drives the goal". JP: 「lead measure を決めたい」「lead measure の探し方」. ZH: 「幫我找 lead measure」「怎麼挑領先指標」. Do NOT activate when role is explicit, when WIG is not yet defined (use `4dx-d1-wig-formulation` first), when the question is about scoreboard/visualization (use `4dx-d3-scoreboard`), or when query is about cadence/WIG-Session (use `4dx-d4-cadence`).
+  Multi-scope coach for D2 lead-measure work across the 3 roles a user might
+  hold against a Wildly Important Goal: solo (discover own leads), team-leader
+  (facilitate team picking leads), team-member (map influence on inherited
+  leads). Detects scope from the query and loads the matching protocol. EN:
+  "Help me find lead measures", "What should I do daily to drive my goal?",
+  "Run a lead-measure session with my team", "Our team's leads are set —
+  how do I influence them?". JP:「lead measure を決めたい」「team で lead
+  measure を一緒に決めたい」「team の lead measure は決まったが自分はどう
+  関われる？」. zh-TW:「幫我找 lead measure」「帶 team 一起找 lead measure」
+  「團隊的 lead measure 已經訂了，我怎麼影響？」. Two-axis test (predictive
+  AND influenceable) shared across all 3 modes; voice differs (personal coach
+  / consultant-to-leader / personal coach to member). Goodhart self-check
+  applies to all 3. NOT for WIG definition (→ 4dx-d1-*), scoreboard / display
+  (→ 4dx-d3-scoreboard), weekly review cadence (→ 4dx-d4-cadence), or stuck
+  cadence (→ 4dx-sustain-personal-momentum-rescue). Member-influence mode is
+  V1 ⚠️ partial (member POV inferred from leader-side cases).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 3, Chapter 13 (D2 fundamentals + frontline application across roles)
+source_chapter: Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2
 source_language: en
-tags: [topic-router, lead-measure, role-triage, d2, 4dx]
+tags: [d2, lead-measure, multi-scope, two-axis-test, predictive-influenceable, goodhart, solo, team-leader, team-member, 4dx]
 related_skills:
-  - 4dx-d2-personal-lead-measure-discovery
-  - 4dx-d2-team-lead-measure-facilitation
-  - 4dx-d2-member-lead-measure-influence
+  - 4dx-d1-wig-formulation
+  - 4dx-d1-wig-formulation
+  - 4dx-d3-scoreboard
+  - 4dx-d4-cadence
+  - 4dx-sustain-personal-momentum-rescue
+  - 4dx-meta-team-leader-onboarding
   - using-four-dx-coach
 ---
 
-# 4dx-d2-lead-measures — Topic-router for D2 lead-measure across roles
+# 4dx-d2-lead-measures — Lead-measure work across all roles (multi-scope)
 
 ## Mission
 
-Catch ambiguous lead-measure queries where the user has not yet signaled their **role** with respect to the lead measures (solo picker / team facilitator / member receiving inherited leads). Ask ONE Socratic question to surface role, then route. The 3 atomic skills routed share the predictive-AND-influenceable two-axis test but differ in *who picks*, *who facilitates*, and *who works with what's already given*.
+Coach the user through Discipline 2 — **Act on the Lead Measures** — in
+whichever of three roles they hold against a Wildly Important Goal: picking
+their own personal leads (solo); facilitating their team's selection
+without dictating (team-leader); or mapping their personal sphere of
+influence on leads someone else already chose (team-member). The same
+two-axis test (predictive AND influenceable) and the same Goodhart
+self-check apply across all three; what differs is *who picks*, *who
+facilitates*, and *who works with what's already given*.
 
-## When this router activates
+The book frames D2 as "the most-misunderstood discipline." Across all three
+modes, the central confusion is the same: lead measures are not generic
+"leading indicators" (predictive only), not habits (untied to a specific
+WIG), not sub-WIGs (lag on a smaller clock), not tasks (one-shot
+deliverables), and not OKR Key Results (mix of lag and lead). This skill's
+job is to surface the two-axis test loudly and protect the user from each
+of those collapses.
 
-### Multilingual trigger phrasings
+## When this skill activates
 
-- **EN**: "Help me with lead measures", "How do I find lead measures?", "Daily action that drives the goal", "Pick lead indicators", "Lead measure advice"
-- **JP**: 「lead measure を決めたい」「lead measure の探し方」「先行指標の選び方」「日常行動に落としたい」
-- **ZH**: 「幫我找 lead measure」「怎麼挑領先指標」「先行指標怎麼設」「每天該做什麼才會推動目標」
+### Multilingual trigger phrasings (covering all 3 modes)
+
+**Solo (personal lead-measure discovery, voice = personal coach):**
+- EN: "I have the goal but I don't know what to do every day", "What's
+  a leading indicator for [my goal]?", "I'm working hard but nothing's
+  moving — what am I missing?", "What should I track to know I'm on the
+  right path?"
+- JP:「目標は決まったが、毎日何をすればいい？」「先行指標って何を選べばいい？」
+  「頑張ってるのに数字が動かない、何が間違ってる？」
+- zh-TW:「我有目標了，但不知道每天該做什麼才會有結果」「該追蹤什麼指標才知道
+  我走在對的路上？」「我以為我在做對的事，但結果沒變化」
+
+**Team-leader (facilitate team's selection, voice = consultant-to-leader):**
+- EN: "How do I run a lead-measure session with my team without just
+  telling them the answer?", "My team brainstormed 12 candidates — how do
+  I narrow to 2-3?", "Should I prepare draft lead measures before the
+  team meeting?", "My team can't agree on what we can actually
+  influence."
+- JP:「team で lead measure を一緒に決めたい。どう facilitate すればいい？」
+  「メンバーが提案した先行指標、どう veto する？」「6 個候補が出たが、2-3 に
+  絞れない」
+- zh-TW:「帶 team 一起找 lead measure，但我不想直接給答案，怎麼引導？」
+  「成員提的指標感覺不對，但我不想 dictate，怎麼 veto？」「team 在吵某個指標
+  到底我們控不控得到」
+
+**Team-member (influence-map on inherited leads, voice = personal coach to member):**
+- EN: "Our team's lead measures are set — how do I influence them?",
+  "I'm on a 4DX team, leads are picked, what do I actually do?", "Which
+  lead measure is *mine* to move?", "I support all of them but feel
+  stretched thin."
+- JP:「team の lead measure は決まったが、自分はどう関われる？」「自分の立場
+  でどの lead を動かせるか分からない」「全部の lead を見てるが手応えがない」
+- zh-TW:「團隊的 lead measure 已經訂了，我怎麼影響？」「lead 已經選好但我不
+  知道哪些跟我的位置有關」「我支援全部 lead 但完全被攤薄」
 
 ### Non-activation signals (DO NOT fire when…)
 
-- Role explicit — "*my* lead measure for *my* goal" → personal-discovery; "facilitate *our team* picking leads" → team-facilitation; "the lead measure *my manager set*" → member-influence
-- WIG not yet defined → `4dx-d1-wig-formulation` first; D2 has nothing to operate on without a WIG
-- Query about scoreboard / visualization → `4dx-d3-scoreboard` topic-router
-- Query about WIG Session / weekly cadence → `4dx-d4-cadence` topic-router
-- Query about cascade or selection at org level → `4dx-d1-team-wig-cascade` / `4dx-d1-team-primary-wig-selection`
-- Out-of-4DX (OKR KRs, agile sprint goals, KPIs without 4DX context) → `using-four-dx-coach`
+- **No defined WIG yet** — leads need a lag to be predictive of. Route to
+  `4dx-d1-wig-formulation` (solo) or the relevant team-WIG skill first.
+- **Member doesn't know team WIG / leads** — comprehension upstream;
+  route to `4dx-d1-wig-formulation` first.
+- **Scoreboard / visualization** — `4dx-d3-scoreboard` is the artifact
+  that DISPLAYS chosen leads.
+- **Weekly review / commitment / WIG Session** — `4dx-d4-cadence` is the
+  cadence that REVIEWS lead performance.
+- **Lead measures already exist but lag is flat ≥4 weeks** — that's a
+  diagnosis-and-redesign job for `4dx-sustain-personal-momentum-rescue`,
+  not first-time selection.
+- **Stroke-of-pen WIG** — goal achieved by single decision/purchase
+  (sign contract, hire, reorg). No daily behavior to discover.
+- **Out-of-4DX** — generic "leading indicator" finance talk, OKR Key
+  Results, sprint goals, KPI dashboards without 4DX framing → hand off
+  via `using-four-dx-coach`.
+- **Multi-team / leader-of-leaders cascade** — out of plugin scope; read
+  book Part 2 directly.
 
-## Indexed atomic skills
+## Scope detection
 
-| Slug | Role | Verb | Returns |
-|---|---|---|---|
-| [`4dx-d2-personal-lead-measure-discovery`](../4dx-d2-personal-lead-measure-discovery/) | Solo | **Discover** | 2-3 personal lead measures, predictive-AND-influenceable, with Goodhart self-check |
-| [`4dx-d2-team-lead-measure-facilitation`](../4dx-d2-team-lead-measure-facilitation/) | Team-leader | **Facilitate** | Team-owned 2-3 lead measures (veto-not-dictate), aligned to team WIG, with team buy-in |
-| [`4dx-d2-member-lead-measure-influence`](../4dx-d2-member-lead-measure-influence/) | Team-member | **Influence-map** | Personal sphere of influence on each inherited lead + 1-2 focus leads + escalation script if no influence exists |
+When this skill activates:
 
-## Routing logic (Socratic decision tree)
+1. Determine **role** with respect to the lead measures: solo (no team or
+   personal-WIG context) / team-leader-facilitator / team-member.
+2. Load the matching protocol file from `protocols/`.
+3. Follow that protocol's E section step-by-step.
 
-When this router activates, do NOT run any D2 protocol. Disambiguate first:
+If the role is ambiguous after reading the user's query, ask ONE Socratic
+disambiguation question:
 
-1. **Detect implicit role**:
-   - "My lead / for my goal / solo" → **personal-discovery**
-   - "Facilitate / our team / I lead the team / picking leads with the team" → **team-facilitation**
-   - "Lead my boss / leader / manager set / inherited / 上から / 老闆訂的" → **member-influence**
-   - If signal strong → skip to step 3.
+> EN: "Quick clarification — what's your role with respect to the lead
+> measures: **picking them for yourself** (solo, your own goal),
+> **facilitating your team picking theirs** (you lead 3-9 reports), or
+> **working with leads your team already has** (you're a member receiving
+> what was chosen)? I'll route to the right protocol."
+>
+> JP:「先に確認 —— lead measure に対するあなたの役割は: **自分の goal 用に
+> 自分で選ぶ**（solo）、**team を率いて選定を facilitate**（leader、3-9 名
+> の direct reports）、それとも **既に team にあるものに対して関わる**（member）？
+> 適切な protocol に振り分けます。」
+>
+> zh-TW:「先確認一下 —— 你跟 lead measure 的關係：**自己挑給自己用**（solo）、
+> **帶 team 一起挑**（leader，3-9 名 direct report）、還是 **接收 team 已經
+> 訂好的**（member）？我幫你導到對的 protocol。」
 
-2. **If ambiguous, ask ONE question**:
-   > "Quick clarification — what's your role with respect to the lead measure: **picking it for yourself** (solo), **facilitating your team** (leader of 3-9 reports), or **working with one your team already has** (member)? I'll route to the right protocol."
-   > 日本語: 「先に確認 —— lead measure に対するあなたの役割は: **自分の goal 用に自分で選ぶ**（solo）、**team を率いて選定を facilitate**（leader、3-9 名の direct reports）、それとも **既に team にあるものに対して関わる**（member）？適切な protocol に振り分けます。」
-   > 中文: 「先確認一下 —— 你跟 lead measure 的關係：**自己挑給自己用**（solo）、**帶 team 一起挑**（leader，3-9 名 direct report）、還是 **接收 team 已經訂好的**（member）？我幫你導到對的 protocol。」
+If the signal in the original query is strong (e.g. "my own goal",
+"facilitate my team", "leads my manager set"), skip the question and load
+the protocol directly.
 
-3. **Hand off**:
-   - solo → `4dx-d2-personal-lead-measure-discovery`
-   - team-leader → `4dx-d2-team-lead-measure-facilitation`
-   - team-member → `4dx-d2-member-lead-measure-influence`
+## Protocol routing table
 
-4. **Edge cases**:
-   - "WIG not yet set" → fire `4dx-d1-wig-formulation` first; D2 has no anchor
-   - "Want to design the scoreboard for these leads" → fire `4dx-d3-scoreboard` topic-router
-   - "Multi-team / Leader-of-Leaders cascading leads" → out of plugin scope; hand off via `using-four-dx-coach`
+| Detected mode | Load protocol | Agent voice |
+|---|---|---|
+| Solo (personal WIG, picks own leads) | `protocols/personal-discover.md` | personal coach |
+| Team-leader (facilitates team selection) | `protocols/team-facilitate.md` | consultant-to-leader |
+| Team-member (inherits team leads, V1 ⚠️ partial) | `protocols/member-influence.md` | personal coach to member |
 
-## Hand-off scripts (when none of the 3 D2 skills fit)
+After loading the protocol, follow its E section step-by-step. Each
+protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator
+does not run any D2 content directly.
 
-| User signal | Hand-off |
-|---|---|
-| "WIG not yet defined" | `4dx-d1-wig-formulation` |
-| "How do I display these leads?" | `4dx-d3-scoreboard` |
-| "Weekly review / commitment / WIG Session" | `4dx-d4-cadence` |
-| "Habit / atomic habit" | Out of 4DX — `using-four-dx-coach` |
-| "OKR KR / sprint goal" | Out of 4DX — `using-four-dx-coach` |
-| "Multi-team rollout" | Read book Part 2 directly — `using-four-dx-coach` |
+### Edge-case routing
 
-## Boundary
+- **WIG not yet defined** → fire `4dx-d1-wig-formulation` first; D2 has
+  no anchor.
+- **Member-but-can't-name-team-WIG-or-leads** → fire
+  `4dx-d1-wig-formulation` first; influence-mapping over
+  unknown leads produces theatre.
+- **Member acting as facilitator (leader delegated)** → fire
+  `protocols/team-facilitate.md` with reduced veto authority noted; the
+  actual veto-on-strategic-fit belongs to the leader.
+- **Leader-of-leaders / multi-team cascade** → out of plugin scope; route
+  via `using-four-dx-coach`.
+- **Leads already chosen but stale (lead green, lag flat ≥4 weeks)** →
+  fire `4dx-sustain-personal-momentum-rescue`, not this skill.
 
-### Do NOT activate this router when…
+## Shared standards
 
-- Role explicit → fire the precise atomic skill directly
-- D2 prerequisite missing — no WIG → D1 first
-- Query is about D3 / D4 — wrong stage
-- User mid-flow inside an active D2 atomic skill — don't interrupt
+Each protocol references these standards (load on demand):
 
-### Common confusions
+- `standards/predictive-and-influenceable.md` — the book's two-axis test:
+  predictive of the lag AND influenceable by the user/team without
+  permission. Both axes must be 4-5 out of 5; failing either disqualifies
+  completely.
+- `standards/goodhart-self-check.md` — once stakes are attached, the
+  measure gets gamed. Three documented industry collapses (Wells Fargo /
+  Phoenix VA / Atlanta APS) and the three personal mitigations
+  (frequency-quality pair, 4-week causal-chain re-check, written
+  forecast).
+- `standards/lead-vs-lag-distinction.md` — what a lead measure is NOT:
+  not a lag-on-a-shorter-clock, not a sub-WIG / Battle, not a one-shot
+  task, not a generic "leading indicator," not an OKR KR.
 
-- **Personal-discovery vs member-influence**: a solo user's "discovery" is genuinely picking a lead from blank canvas. A member's "influence" is working with a lead that already exists — different starting condition.
-- **Team-facilitation vs personal-discovery**: leader running a facilitation session is NOT the same as the leader thinking about leads alone — facilitation requires team buy-in, conflict resolution, veto-not-dictate.
-- **Topic-router vs plugin-router**: `using-four-dx-coach` triages cold-start and out-of-4DX queries. This router operates only within the D2 lead-measure topic.
+## Cross-skill relations
 
-## Related skills
+- **Upstream prerequisite** — `4dx-d1-wig-formulation` (solo / leader)
+  defines the WIG; `4dx-d1-wig-formulation` confirms a
+  member can name team WIG + leads verbatim. D2 has nothing to operate on
+  without a clearly-stated WIG.
+- **Downstream composers** — `4dx-d3-scoreboard` displays the chosen
+  leads; `4dx-d4-cadence` runs the weekly review of lead performance vs
+  targets and converts a focus lead into a specific weekly commitment.
+- **Diagnostic neighbour** — `4dx-sustain-personal-momentum-rescue` runs
+  *after* leads have been chosen and proven stale (green lead, flat lag
+  for 4+ weeks). The boundary is sharp: this skill picks/maps leads;
+  rescue redesigns existing ones.
+- **Plugin-router fallback** — `using-four-dx-coach` handles cold-start
+  triage and out-of-4DX queries (KPI / OKR KR / sprint goal); not a
+  substitute for this skill, but the right hand-off when the question
+  turns out not to be 4DX D2.
 
-- `4dx-d2-personal-lead-measure-discovery` — composes-with — downstream after solo determined
-- `4dx-d2-team-lead-measure-facilitation` — composes-with — downstream after team-leader determined
-- `4dx-d2-member-lead-measure-influence` — composes-with — downstream after member determined
-- `4dx-d1-wig-formulation` — depends-on — D1 must precede D2
-- `4dx-d3-scoreboard` — composes-with — D3 typically follows D2
-- `using-four-dx-coach` — composes-with — plugin-level router for out-of-4DX
+## Boundary (cross-mode common)
+
+The mode-specific boundary lives in each protocol's B section. The
+cross-mode common boundary:
+
+- **Two-axis test is mandatory across all 3 modes** — predictive AND
+  influenceable; failing either axis disqualifies. Most-common collapse:
+  the user / team picks something predictive but not influenceable
+  ("market direction", "rainfall") or influenceable but not predictive
+  ("drink 2L water", "more meetings"). Reject both.
+- **2-3 leads cap, hard** — one frequency-based + one quality-based is
+  the canonical pair. More than 3 recreates the whirlwind under a 4DX
+  label. Solo: cap at 3; team: cap at 3, prefer 2; member focus: cap at
+  1-2 of the team's leads.
+- **Goodhart self-check applies in all 3 modes** — once stakes are
+  attached, leads get gamed. Industry: Wells Fargo / Phoenix VA /
+  Atlanta APS. Personal scale: speed-reading without comprehension,
+  screen-staring counted as writing, voicemails counted as cold calls.
+  Defend with frequency-quality pairing and 4-week causal-chain
+  re-check.
+- **Coach is Socratic; never authors leads** — solo agent doesn't invent
+  the user's leads; team-facilitator-coach doesn't author the team's
+  leads; member-coach doesn't invent the member's influence map. The
+  ownership mechanism that makes lead-keeping work depends on the user /
+  team / member doing the picking.
+- **Honest "no influence" beats faked focus (member mode)** — when a
+  member's per-lead influence audit comes back genuinely empty, the
+  right move is escalation to the leader, not picking a focus to look
+  engaged. The protocol surfaces that signal explicitly.
 
 ## Audit metadata
 
-- **Skill type**: topic-router (no V1/V2/V3 — meta-skill)
-- **Routing precision target**: ≥90% — disambiguation must reliably surface role
-- **Test pass rate**: see `test-prompts.json`
-- **Created at**: 2026-04-30
-- **Output language**: body — English; description + decision-tree prompts — multilingual EN/JP/zh-TW
+- **Skill type**: multi-file orchestrator (merged from 3 atomic D2 skills
+  + 1 topic-router)
+- **Verification status**: V1 ✓ for solo + team-leader modes (both
+  leader-POV in source book Ch 3 / Ch 7 / Ch 13); V1 ⚠️ partial for
+  member-influence mode (book authors leader side of selection; member-
+  POV inferred from Ch 3's two-axis test read from individual seat,
+  Ch 12's daily question, Ch 13's frontline implementation cases)
+- **Industry grounding**: Goodhart 1975 / Strathern 1997 (mechanism); CFPB
+  2016 / VA OIG 2014 / GBI 2011 (gaming cases); Edmondson 1999/2012
+  (psychological safety, facilitator mode); Lencioni 2002 (trust →
+  conflict → commitment, facilitator mode); Pfeffer & Sutton 2006
+  (evidence-based skepticism, facilitator mode); Pfeffer 2010 (power
+  axes, member mode); Cialdini 1984/2007 (six-principle leverage, member
+  mode); Argyris HBR 1986 (skilled incompetence / Model-II inquiry,
+  member mode)
+- **Created**: 2026-04-30
+- **Output language**: SKILL.md body + protocols + standards in English;
+  description + scope-detection prompts multilingual EN / JP / zh-TW

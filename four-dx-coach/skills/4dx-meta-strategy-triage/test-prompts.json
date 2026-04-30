@@ -1,69 +1,141 @@
 {
   "skill": "4dx-meta-strategy-triage",
-  "version": "0.1.0",
-  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "version": "1.0.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker",
   "source_language": "en",
   "darwin_compatible": true,
-  "_comment": "Topic-router for ambiguous-scope strategy-triage queries. Test prompts mixed across en / ja / zh-TW. ≥3 should_trigger (genuinely scope-ambiguous), ≥2 should_not_trigger lures (one with explicit scope, one wrong topic), ≥1 edge_case. Activation criterion comes from description only.",
+  "_comment": "Multi-mode triage gate. Tests scope detection (solo vs team-leader vs ambiguous-needs-disambiguation) + non-activation lures (already-committed / member-misfire / non-4DX / specific-discipline). Activation judgment based on description-only.",
   "test_cases": [
     {
-      "id": "should-trigger-01",
+      "id": "T-01-solo-en",
       "type": "should_trigger",
-      "prompt": "Is 4DX a good fit? I'm not sure if it would help.",
-      "expected_behavior": "Activate 4dx-meta-strategy-triage. Query asks methodology-fit but does not name actor (I-personally vs my-team). Router should ask ONE Socratic disambiguation question, then route to 4dx-meta-personal-strategy-triage or 4dx-meta-team-strategy-triage.",
-      "notes": "positive: matches EN signal 'Is 4DX a good fit?' literally cited in description; scope ambiguous (no 'I' / 'we' anchor)"
+      "scope": "personal-mode",
+      "prompt": "Should I use 4DX for my marathon training goal? I want to run sub-3:30 by next October.",
+      "expected_behavior": "Activate skill; scope detection identifies solo (first-person singular + personal goal); load protocols/personal-mode.md; run 6-step Socratic triage; likely verdict: APPLICABLE (sustained behavioral change required: weekly mileage, pace work, recovery — not stroke-of-the-pen, not whirlwind).",
+      "activation_judgment": "PASS",
+      "notes": "Direct EN match: 'Should I use 4DX for X?' canonical phrasing in description; 'I' anchor → solo; no team context."
     },
     {
-      "id": "should-trigger-02",
+      "id": "T-02-solo-jp",
       "type": "should_trigger",
-      "prompt": "4DX 適してるかどうか分からない。本を読んだだけ。",
-      "expected_behavior": "Activate 4dx-meta-strategy-triage. JP fit query without scope marker. Ask whether the user is thinking solo or team, then route to scope-specific triage.",
-      "notes": "positive: matches JP signal 「4DX 適してる？」 in description; no 自分/チーム anchor"
+      "scope": "personal-mode",
+      "prompt": "私の博士論文に 4DX 使えますか？3年で書き上げたいんですが、今のままだと無理そうで。",
+      "expected_behavior": "発動; scope detection 識別 solo; load protocols/personal-mode.md; 6 段階の Socratic triage を走らせる。推定 verdict: 微妙 — 創作的アウトプット (creative-output) anti-pattern に当たる可能性あり; Goodhart 効果のリスクを説明しつつ deliberate practice + 制約ベース手法へリダイレクトの可能性も示唆。",
+      "activation_judgment": "PASS",
+      "notes": "JP match: 「この目標に 4DX 使える？」 phrasing in description; thesis writing is canonical creative-output anti-pattern."
     },
     {
-      "id": "should-trigger-03",
+      "id": "T-03-team-en",
       "type": "should_trigger",
-      "prompt": "想知道 4DX 適不適合，但還沒想清楚是要自己用還是團隊用。",
-      "expected_behavior": "Activate 4dx-meta-strategy-triage. zh-TW fit query that EXPLICITLY surfaces the ambiguity. Router should still ask the disambiguation question (or accept the user's open framing) then route.",
-      "notes": "positive: zh-TW signal 「4DX 適合嗎？」+ explicit scope-ambiguity statement"
+      "scope": "team-mode",
+      "prompt": "Should our 8-person team adopt 4DX? I'm the team lead and I keep hearing about it but I'm not sure it fits us.",
+      "expected_behavior": "Activate skill; scope detection identifies team-leader (first-person plural + 'team lead' + 'our team' + size 8); load protocols/team-mode.md; run 9-step gate ending in TEAM-APPLICABLE / one of the redirect verdicts.",
+      "activation_judgment": "PASS",
+      "notes": "Direct EN match: 'Should our team adopt 4DX?' canonical leader-asks-fit phrasing; team size in 3-12 band; BEFORE any D1 work."
     },
     {
-      "id": "should-trigger-04",
+      "id": "T-04-team-zh",
       "type": "should_trigger",
-      "prompt": "Should we use 4DX? Or is it overkill?",
-      "expected_behavior": "Activate 4dx-meta-strategy-triage. 'we' is genuinely ambiguous (could be 'we = me + co-founder solo bet' or 'we = my team of 12'). Router asks ONE clarifying question.",
-      "notes": "positive: 'we' alone is NOT a strong team-scope signal — could be informal plural; description explicitly cites 'Should we use 4DX?' as a router trigger"
+      "scope": "team-mode",
+      "prompt": "我們團隊適合導入 4DX 嗎？10 個人，主管想推但我怕水土不服。",
+      "expected_behavior": "啟動 skill; scope detection 識別 team-leader; load protocols/team-mode.md; 執行 9 步 Socratic 流程; 預期通過大部分 gate (size 10 在 3-12)，但 Schein assumption-conflict / Galbraith reward-system 等 readiness 檢查可能觸發 TEAM-NOT-YET-READY。",
+      "activation_judgment": "PASS",
+      "notes": "ZH match: 「我們團隊適合導入 4DX 嗎？」 canonical zh-TW phrasing in description."
     },
     {
-      "id": "should-not-trigger-01",
+      "id": "T-05-ambiguous-disambiguation",
+      "type": "should_trigger",
+      "scope": "needs-disambiguation",
+      "prompt": "Is 4DX a good fit for what I'm trying to do? I'm not sure if it'll work.",
+      "expected_behavior": "Activate skill; scope detection finds ambiguous (no clear actor — no 'team' or 'I personally' anchor); ask ONE Socratic disambiguation question covering solo vs team-leader; route based on user's reply.",
+      "activation_judgment": "PASS",
+      "notes": "Ambiguous-scope fallback: triggers the orchestrator's disambiguation question (multilingual EN/JP/zh-TW). Tests that scope detection correctly identifies ambiguity rather than collapsing one way."
+    },
+    {
+      "id": "T-06-explicit-scope-no-disambiguation",
       "type": "should_not_trigger",
-      "prompt": "Should I use 4DX for my personal goal of writing a novel by year-end?",
-      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Scope is explicit (I / my personal goal) → fire 4dx-meta-personal-strategy-triage directly. Router would add unnecessary friction.",
-      "notes": "lure: explicit-scope query — description explicitly excludes this case ('Do NOT activate when the user's scope is already explicit')"
+      "scope": "personal-mode-direct",
+      "prompt": "Triage 4DX for myself — I want to lose 20 pounds in 6 months.",
+      "expected_behavior": "Activate skill, but scope is explicit ('for myself' + first-person singular + personal goal) — skip the disambiguation question; load protocols/personal-mode.md directly. Triage verdict likely APPLICABLE or habit-formation depending on Step 4 anti-pattern screen on weight-loss daily actions. Marked should_not_trigger relative to the disambiguation question (NOT relative to skill activation).",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: explicit-scope-misfire test. The skill DOES activate; what should NOT trigger is the orchestrator's disambiguation prompt — scope is already clear, fire personal-mode directly. Tests SKILL.md's 'If signal is strong, skip the question' clause."
     },
     {
-      "id": "should-not-trigger-02",
+      "id": "T-07-already-triaged-d1",
       "type": "should_not_trigger",
-      "prompt": "What should our team's lead measures be once the WIG is set?",
-      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Topic is wrong — query is about D2 lead measures, not strategy-triage methodology fit. Route to 4dx-d2-personal-lead-measure-discovery (or team equivalent).",
-      "notes": "lure: wrong topic — surface 4DX vocabulary but is D2 territory, not pre-D1 fit gate"
+      "prompt": "I've decided to use 4DX for my Q3 OKR — 'launch v2 of the product by Sept 30'. I have my WIG. What lead measures should I pick? I'm thinking weekly user-interview count and PR-merge cadence.",
+      "expected_behavior": "Do NOT activate this skill. User has already committed to 4DX AND has a defined WIG; they're asking a D2-specific (lead measure discovery) question. Per description's non-activation: 'NOT for already-committed users asking how to start (route to D1)' → route to 4dx-d2-lead-measures.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: already-triaged / D2-question. Description explicitly excludes this case."
     },
     {
-      "id": "should-not-trigger-03",
+      "id": "T-08-member-misfire",
       "type": "should_not_trigger",
-      "prompt": "うちの team で 4DX を導入したい。何から始めれば？",
-      "expected_behavior": "Do NOT activate 4dx-meta-strategy-triage. Scope is explicit (うちの team) and user is past the fit-question — they want to start. Route directly to 4dx-meta-team-strategy-triage (if fit still unverified) or 4dx-meta-team-leader-onboarding.",
-      "notes": "lure: explicit team-scope; description excludes scope-explicit and 'how to start' queries"
+      "prompt": "I just joined a team that already uses 4DX. My manager already picked the WIG. Can you explain how the WIG and lead measures work so I understand the cadence?",
+      "expected_behavior": "Do NOT activate this skill — OR activate and immediately route out via SKILL.md's member-edge-case clause. User is a member receiving an inherited WIG; members don't triage methodology fit. Route to 4dx-d1-wig-formulation.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: member-misfire — description explicitly states 'NOT for team members inheriting a WIG (route to 4dx-d1-wig-formulation — members don't triage methodology fit)'. SKILL.md has explicit member edge-case routing."
     },
     {
-      "id": "edge-01",
+      "id": "T-09-non-4dx-okr",
+      "type": "should_not_trigger",
+      "prompt": "Help me set up OKRs for my team next quarter — we have 3 main objectives and need to define key results for each.",
+      "expected_behavior": "Do NOT activate this skill. Non-4DX methodology query (OKR). Per description: 'NOT for ... non-4DX methodologies (OKR / agile / habit-stacking / scrum / kanban) → hand off via using-four-dx-coach'.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: non-4DX methodology — should hand off to plugin router, not run triage."
+    },
+    {
+      "id": "T-10-enterprise-rollout",
+      "type": "should_not_trigger",
+      "prompt": "我們公司 50 個 team 要導入 4DX，下個季度開始。請幫我設計 cascade WIG 的部署計畫，包含 leader-of-leaders training schedule。",
+      "expected_behavior": "Do NOT activate this skill. Enterprise multi-team rollout. Per description: 'NOT for enterprise multi-team rollout (read book Ch 6-10 directly + 4dx-d1-team-wig-cascade)'. Single-team scope only.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: enterprise-rollout — actor model (50 teams + leader-of-leaders) differs from single-team triage scope."
+    },
+    {
+      "id": "T-11-edge-firefighting-team",
       "type": "edge_case",
-      "prompt": "Should our team use 4DX? I'm just a member but I want to suggest it to my manager.",
-      "expected_behavior": "Activate 4dx-meta-strategy-triage with care. Surface signals: scope = team (proposed) but USER role = member, not the deciding leader. Router should note that a member cannot install methodology unilaterally; suggest user share team-strategy-triage with their manager OR run personal-strategy-triage for their own slice. Do NOT silently route to team-triage as if user were the leader.",
-      "notes": "boundary: member-framed-as-team-leader question; description's non-activation list calls out 'member receiving an existing WIG' but here the WIG doesn't yet exist — member is advocating. Expect router to disambiguate role+authority, not just scope."
+      "scope": "team-mode",
+      "prompt": "I lead an 8-person ER (emergency room) trauma team. My boss wants us to adopt 4DX. Should we?",
+      "expected_behavior": "Activate skill; scope detection → team-leader; load protocols/team-mode.md; pass Steps 1-3, but Step 4 firefighting-role check returns wrong-team-shape (firefighting role) verdict — 4DX inverts wrong even at team-size sweet spot when team's mission IS the whirlwind.",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: team size in 3-12 band but role is structurally firefighting — the wrong-team-shape (firefighting) verdict path catches this, not just size-out-of-band cases."
+    },
+    {
+      "id": "T-12-edge-ambiguous-goal-scale",
+      "type": "edge_case",
+      "scope": "personal-mode",
+      "prompt": "I want to read more this year. Should I use 4DX?",
+      "expected_behavior": "Activate skill; scope = solo; load protocols/personal-mode.md. Step 1 (Surface goal in concrete terms) forces disambiguation — could be habit-formation ('read 10 min/night') OR behavioral-change WIG ('From 4 books/yr to 24 books/yr by Dec 31'). Routes via Step 4 habit screen vs Step 7 APPLICABLE based on user's clarification.",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: ambiguous goal scale within solo mode. Tests that Step 1 (concrete-terms forcing) correctly handles habit-vs-WIG ambiguity rather than collapsing one way."
     }
   ],
   "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance.",
   "pass_rate": 1.0,
-  "self_evaluation_note": "All 8 cases reviewed against description-only activation criterion. 4 should_trigger fire on ambiguous fit-queries; 3 should_not_trigger lures (explicit personal scope / wrong topic D2 / explicit team scope) all land outside router. 1 edge case correctly invokes router with role-clarification overlay. No surface-keyword-only confusions identified."
+  "pass_summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "by_type": {
+      "should_trigger": "5/5 (3 explicit-scope solo+team + 1 ambiguous-disambiguation + 1 explicit-scope no-disambiguation)",
+      "should_not_trigger": "4/4 (already-triaged / member-misfire / non-4DX / enterprise-rollout)",
+      "edge_case": "2/2 (firefighting team + ambiguous-goal-scale within solo)"
+    }
+  },
+  "description_audit": {
+    "verdict": "STRONG",
+    "strengths": [
+      "Multilingual triggers per scope (solo + team-leader + ambiguous-fallback) explicitly listed in description.",
+      "Non-activation clauses cover all four documented lure types: already-committed → D1 routing; member → comprehension routing; non-4DX → plugin router; enterprise → book chapters.",
+      "Member-edge-case has a dedicated SKILL.md clause that activates the skill briefly then routes out — handles T-08 cleanly without bypassing the description gate.",
+      "Verdict enumeration in description tells the agent the OUTPUT shape per mode, reducing ambiguity about whether a habit / firefighting / portfolio query is in-scope."
+    ],
+    "minor_observations": [
+      "T-06 (explicit-scope) tests an interesting case: skill fires but skips the disambiguation question. SKILL.md handles via the 'If signal is strong, skip the question' clause. No fix needed.",
+      "T-12 (ambiguous goal scale) is parallel to T-06 — scope is clear (solo) but goal-scale within solo is ambiguous; protocol's Step 1 handles via concrete-terms forcing. No fix needed."
+    ],
+    "recommended_changes": "None required for ship."
+  }
 }

@@ -31,11 +31,11 @@ Consultant-to-leader-of-leaders. The skill's primary work is enforcing **Rule 3 
 
 | Situation | Where to go instead |
 |---|---|
-| Org Primary WIG not yet set | `4dx-d1-team-primary-wig-selection` |
-| Leader runs only ONE team (no subordinate team-leaders) | `4dx-d1-team-primary-wig-selection` |
-| Solo / individual goal | `4dx-d1-personal-wig-defining` |
+| Org Primary WIG not yet set | `4dx-d1-wig-formulation` |
+| Leader runs only ONE team (no subordinate team-leaders) | `4dx-d1-wig-formulation` |
+| Solo / individual goal | `4dx-d1-wig-formulation` |
 | Single-shot project with fixed end-state | Project management (WBS / Gantt) |
-| Methodology-fit unclear | `4dx-meta-team-strategy-triage` |
+| Methodology-fit unclear | `4dx-meta-strategy-triage` |
 
 ## Source
 

@@ -13,7 +13,7 @@ description: |
   (named leaders × steel-manned objections × pilot vs hold-back classification)
   + a rehearsed buy-in conversation script for the highest-leverage leader.
   Do NOT activate when the user has not yet decided 4DX fits their org
-  (route to 4dx-meta-team-strategy-triage first), or when buy-in is already
+  (route to 4dx-meta-strategy-triage first), or when buy-in is already
   secured and the user is asking for the technical WIG cascade
   (route to 4dx-d1-team-wig-cascade).
 source_book: The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
@@ -157,7 +157,7 @@ The output is a plan they can act on this week — not a rollout document.
 ### Non-activation signals (do NOT trigger when…)
 
 - User has not yet decided 4DX fits — route to
-  `4dx-meta-team-strategy-triage` first.
+  `4dx-meta-strategy-triage` first.
 - Buy-in is already secured and the user is asking *how to actually run
   the cascade meeting / draft Team WIGs* — route to
   `4dx-d1-team-wig-cascade` (the technical cascade).
@@ -169,7 +169,7 @@ The output is a plan they can act on this week — not a rollout document.
 
 ### Distinction from neighboring skills
 
-- vs. `4dx-meta-team-strategy-triage`: that skill asks *"is 4DX the right
+- vs. `4dx-meta-strategy-triage`: that skill asks *"is 4DX the right
   fit for our org?"*; this skill assumes fit-for-org is settled and asks
   *"how do I earn commitment from the specific humans who will run it?"*
 - vs. `4dx-d1-team-wig-cascade`: that skill is the **technical** cascade
@@ -192,7 +192,7 @@ not a rollout doc.
      willing to share with your direct reports?"*
    - Completion criterion: yes to both.
    - **Halt condition**: if no to fit-decision → route to
-     `4dx-meta-team-strategy-triage`. If no to draft WIGs → tell the user
+     `4dx-meta-strategy-triage`. If no to draft WIGs → tell the user
      they need a starting draft before this conversation can be useful;
      pause until they have one.
 
@@ -291,7 +291,7 @@ not a rollout doc.
 - **Pre-fit-decision contexts.** If the user has not decided 4DX is the
   right operating system, this skill skips the structural triage and
   jumps straight to social rollout — wrong order. Route to
-  `4dx-meta-team-strategy-triage` first.
+  `4dx-meta-strategy-triage` first.
 - **Frontline-team-member buy-in.** This skill is leader-of-leaders →
   leaders-of-frontline-teams. For an individual contributor's buy-in,
   the book relies on the D1 Team WIG-choosing process, not Chapter 8.
@@ -366,7 +366,7 @@ same outcome.
 
 NOT for solo or personal goals. This skill assumes a leader-of-leaders
 context with named direct-report leaders. For personal-scale 4DX
-adoption, use the personal-coach skills (`4dx-meta-personal-strategy-triage`
+adoption, use the personal-coach skills (`4dx-meta-strategy-triage`
 and downstream).
 
 ### Industry-experience addendum (why imposed WIGs collapse)
@@ -398,9 +398,9 @@ mechanism, not ceremony.
 
 ## Related skills
 
-- `4dx-meta-team-strategy-triage` — depends-on — fit-for-org decision must precede onboarding
+- `4dx-meta-strategy-triage` — depends-on — fit-for-org decision must precede onboarding
 - `4dx-d1-team-wig-cascade` — composes-with — cascade commits only when leaders bought in
-- `4dx-d4-team-wig-session-lead` — composes-with — onboarded leaders run the live cadence
+- `4dx-d4-cadence` — composes-with — onboarded leaders run the live cadence
 
 ---
 

@@ -1,109 +1,136 @@
 ---
 name: 4dx-meta-strategy-triage
 description: |
-  [Topic-router] for the 4DX strategy-triage decision when scope (personal vs team) is unclear from the user's query. Activates on ambiguous "should X use 4DX?" queries that don't yet name an actor. After ONE Socratic disambiguation question, routes to either `4dx-meta-personal-strategy-triage` (solo individual goal) or `4dx-meta-team-strategy-triage` (a team / leader adopting it). EN: "Is 4DX right for this?", "Should we use 4DX?", "Is 4DX a good fit?". JP: 「4DX 適してる？」「4DX 使うべき？」「4DX 合ってる？」. ZH: 「4DX 適合嗎？」「我/我們該用 4DX 嗎？」「4DX 適合這個嗎？」. Do NOT activate when the user's scope is already explicit ("for myself" → fire personal directly; "for our team" → fire team directly), when user already past triage and asks how to start (route to whirlwind-triage / primary-wig-selection), or when user is a team-member receiving an existing WIG (members inherit; they don't triage methodology fit).
+  Multi-scope gate for "Should X use 4DX?" — decides whether 4 Disciplines of
+  Execution even fits the user's situation BEFORE installing D1-D4. Detects
+  scope (solo individual / team-leader) and loads the matching triage
+  protocol. EN: "Should I use 4DX for X?", "Will 4DX work for my goal?",
+  "Should our team adopt 4DX?", "Is 4DX right for a team of N?". JP:
+  「この目標に 4DX 使える？」「私たちのチームに 4DX 合うか？」「4DX 合ってる？」.
+  zh-TW: 「4DX 適合我這個目標嗎？」「我們團隊適合導入 4DX 嗎？」「4DX 適合嗎？」.
+  Returns one of 6 verdicts per mode (solo: APPLICABLE / habit / portfolio /
+  emergency / creative / no-time-sovereignty; team-leader: TEAM-APPLICABLE /
+  stroke-of-pen / whirlwind-handleable / wrong-team-shape / single-shot-project
+  / mission-misaligned, with TEAM-NOT-YET-READY variant for change-readiness
+  failures). Stroke-of-pen vs behavioral-change distinction shared.
+  NOT for already-committed users asking "how do I start?" (route to D1).
+  NOT for team members inheriting a WIG (route to
+  4dx-d1-wig-formulation — members don't triage methodology
+  fit). NOT for enterprise multi-team rollout (read book Ch 6-10 directly +
+  4dx-d1-team-wig-cascade).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 1, Chapter 6 (foundational triage logic shared across scopes)
+source_chapter: Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)
 source_language: en
-tags: [topic-router, scope-triage, methodology-fit, 4dx, meta-gate]
+tags: [decision-gate, scope-triage, methodology-fit, 4dx, meta-gate, pre-d1, multi-scope, solo, team-leader]
 related_skills:
-  - 4dx-meta-personal-strategy-triage
-  - 4dx-meta-team-strategy-triage
+  - 4dx-d1-personal-whirlwind-triage
+  - 4dx-d1-wig-formulation
+  - 4dx-d1-wig-formulation
+  - 4dx-d1-team-wig-cascade
+  - 4dx-d1-wig-formulation
+  - 4dx-meta-team-leader-onboarding
+  - 4dx-sustain-personal-momentum-rescue
   - using-four-dx-coach
 ---
 
-# 4dx-meta-strategy-triage — Topic-router for 4DX-fit triage
+# 4dx-meta-strategy-triage — Should you (or your team) use 4DX at all?
 
 ## Mission
 
-Catch ambiguous "should X use 4DX?" queries that don't name an actor, ask ONE disambiguating question to surface scope, then route. A topic-router skill — does not run the triage itself; delegates to the scope-specific triage skill once scope is clear.
+Decide whether 4DX even applies BEFORE installing the four disciplines. The
+book's stroke-of-the-pen / whirlwind / behavioral-change taxonomy is the core
+test, layered with personal-scale anti-patterns (solo mode) and team-shape +
+change-readiness gates (team-leader mode). Refusing 4DX when it doesn't fit
+is the skill's job — not bending the goal back into 4DX shape. Same triage
+logic across modes; voice and gates differ per scope.
 
-## When this router activates
+## When this skill activates
 
-### Multilingual trigger phrasings
+### Multilingual trigger phrasings (covering both modes)
 
-- **EN**: "Is 4DX right for this?", "Should we use 4DX?", "Is 4DX a good fit?", "Does 4DX work here?", "Is 4DX overkill?"
-- **JP**: 「4DX 適してる？」「4DX 使うべき？」「4DX 合ってる？」「4DX で大丈夫？」
-- **ZH**: 「4DX 適合嗎？」「我/我們該用 4DX 嗎？」「4DX 適合這個嗎？」「4DX 會不會太重？」
+**Solo (personal, agent = personal coach):**
+- EN: "Should I use 4DX for [X]?", "Is 4DX right for my goal?", "Will 4DX help me lose weight / write a novel / handle on-call?", "Does 4DX apply to a personal goal?"
+- JP: 「この目標に 4DX 使える？」「4DX は〜に向いてる？」「4DX 適用できますか」「4DX 自分に合ってるか分からない」
+- zh-TW: 「4DX 適合我這個目標嗎？」「我這個目標可以用 4DX 嗎？」「4DX 對個人目標有用嗎？」「不確定 4DX 是不是適合我」
+
+**Team-leader (agent = consultant):**
+- EN: "Should our team adopt 4DX?", "Will 4DX work for my team?", "Is 4DX right for a team of N?", "Should I roll out 4DX to my direct reports?", "Is my team ready for 4DX?"
+- JP: 「私たちのチームに 4DX 合うか？」「うちのチームで 4DX 効くかな」「チームに 4DX 導入すべき？」「うちの規模で 4DX は合う？」
+- zh-TW: 「我們團隊適合導入 4DX 嗎？」「團隊要不要用 4DX？」「我這個團隊用 4DX 有用嗎？」「我該不該對下屬團隊推 4DX？」
+
+**Ambiguous-scope fallback** — query lacks explicit actor:
+- EN: "Is 4DX a good fit?", "Should we use 4DX?", "Is 4DX overkill?"
+- JP: 「4DX 適してる？」「4DX 合ってる？」「4DX で大丈夫？」
+- zh-TW: 「4DX 適合嗎？」「4DX 會不會太重？」
 
 ### Non-activation signals (DO NOT fire when…)
 
-- User explicitly says "for myself" / 「自分のため」 / 「我自己」 → fire `4dx-meta-personal-strategy-triage` directly
-- User explicitly says "for our team / company / org" / 「うちの team」 / 「我們團隊」 → fire `4dx-meta-team-strategy-triage` directly
-- User has already passed triage and asks how to start → route to D1 skills (whirlwind-triage / primary-wig-selection)
-- User is a team-member who inherits a WIG already chosen by a leader → use member skills; member doesn't triage methodology fit
-- User asks about non-4DX methodologies (OKR / agile / habit stacking) → router (`using-four-dx-coach`) handles hand-off
+- User has already committed to 4DX and asks *"how do I start?"* / *"where do I begin?"* — route to `4dx-d1-personal-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team).
+- User asks about a specific discipline (lead measures, scoreboard, WIG session mechanics) — route to the matching D-skill.
+- User is a team-member who **inherits** a WIG already chosen by a leader — members don't triage methodology fit; route to `4dx-d1-wig-formulation`.
+- User runs a multi-team enterprise rollout (cascading WIGs across many teams) — read book chapters 6-10 directly + `4dx-d1-team-wig-cascade`.
+- User asks about non-4DX methodologies (OKR / agile / habit-stacking / scrum / kanban) — hand off via `using-four-dx-coach`.
+- User is in the middle of an active triage session — do not re-route mid-flow.
 
-## Indexed atomic skills
+## Scope detection
 
-| Slug | Scope | Canonical activation signal | Returns |
-|---|---|---|---|
-| [`4dx-meta-personal-strategy-triage`](../4dx-meta-personal-strategy-triage/) | Personal (solo) | "Is 4DX right for *my* goal?" / 「自分の目標に 4DX は？」 / 「我的目標適合 4DX 嗎？」 | One of 6 verdicts: APPLICABLE / habit / portfolio-bet / emergency / creative / no-time-sovereignty |
-| [`4dx-meta-team-strategy-triage`](../4dx-meta-team-strategy-triage/) | Team-leader | "Should *our team* adopt 4DX?" / 「うちの team で 4DX を回す？」 / 「我們團隊要不要導入 4DX？」 | Team-fit verdict + leader-readiness check |
+When this skill activates:
 
-(Member scope intentionally absent — members do not triage methodology fit; they inherit the WIG.)
+1. Determine **scope**: solo (one person, one goal) vs team-leader (3-12 person team, leader judging team adoption).
+2. Load the matching protocol file from `protocols/`.
+3. Follow that protocol's E section step-by-step.
 
-## Routing logic (Socratic decision tree)
+If ambiguous after reading the user's query, ask ONE Socratic disambiguation question:
 
-When this router activates, do NOT run the triage. Run scope disambiguation:
+> EN: "Quick clarification — are you thinking about this for **yourself as an individual** (one person, one goal), or for **a team you lead** (3-12 reports adopting 4DX together)? I'll route to the right triage."
+>
+> JP: 「先に確認 —— **自分一人の目標**（一人、一つのゴール）として 4DX を検討中ですか？それとも **率いる team**（3-12 人の直属メンバー）として？適切な triage に振り分けます。」
+>
+> zh-TW: 「先確認一下 —— 你是想用 4DX 解決 **個人一個目標**（一人、一目標），還是 **你帶的團隊**（3-12 人直屬）導入？我幫你導到對的 triage。」
 
-1. **Detect implicit scope from context** — re-read the user's query for any of:
-   - First-person singular ("I" / 「私」 / 「我」 alone) → **probable personal**
-   - First-person plural with team context ("we" + "team / department / org" / 「うち」 / 「我們團隊」) → **probable team**
-   - Past tense "I was given X by my manager" / 「上司に渡された WIG」 / 「上面說要做 ...」 → **member** — STOP, route differently (see step 4).
-   - If signal is strong, skip to step 3.
+If the signal in the original query is strong (first-person singular alone → solo; first-person plural + team / department → team), skip the question and load the protocol directly.
 
-2. **If scope is genuinely ambiguous, ask ONE question**:
-   > "Quick clarification — are you thinking about this for **yourself as an individual** (one person, one goal), or for **a team you lead / are part of**? I'll route to the right triage."
-   > 日本語: 「先に確認 —— **自分一人の目標**（一人、一つのゴール）として 4DX を検討中ですか？それとも **率いる / 所属する team** として？適切な triage に振り分けます。」
-   > 中文: 「先確認一下 —— 你是想用 4DX 解決 **個人一個目標**（一人、一目標），還是 **團隊**（你帶或你在）的事？我幫你導到對的 triage。」
+### Member edge case (NO protocol — route out)
 
-3. **Hand off to the scope-specific triage skill**:
-   - "Personal" / 個人 / 個人 → fire `4dx-meta-personal-strategy-triage`
-   - "Team" / 団体 / 團隊 → fire `4dx-meta-team-strategy-triage`
+If user identifies as a **member** receiving an inherited WIG ("my manager already picked the WIG" / 「上司が WIG を決めた」 / 「老闆已經訂好 WIG」), triage is moot. Members inherit; they don't assess methodology fit. Route directly to `4dx-d1-wig-formulation` — there is no "member-mode" protocol in this skill by design. Member scope is **intentionally absent** from V1; member-side concerns belong to comprehension and prep skills, not the methodology-fit gate.
 
-4. **If user identifies as a member** ("my manager already picked the WIG" / 「上司が WIG を決めた」 / 「老闆已經訂好 WIG」):
-   - Triage is moot. Route directly to `4dx-d1-member-team-wig-comprehension` to make sense of the inherited WIG, OR to plugin router `using-four-dx-coach` if they're unsure where to start.
+## Protocol routing table
 
-5. **If user wants something 4DX is wrong for** (habit, portfolio, agile, OKR):
-   - Hand off via plugin router `using-four-dx-coach`. Don't pretend triage applies.
+| Detected mode | Load protocol | Agent voice |
+|---|---|---|
+| Solo individual | `protocols/personal-mode.md` | personal coach |
+| Team-leader (3-12 reports) | `protocols/team-mode.md` | consultant to leader |
 
-## Hand-off scripts (when neither personal nor team fits)
+After loading the protocol, follow its E section step-by-step. Each protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator does not run any triage content directly.
 
-| User signal | Hand-off |
-|---|---|
-| "I want to build a meditation habit" | "4DX is overkill for habit formation. Try `atomic-habits` / habit stacking instead." |
-| "We have 3 startups in a portfolio" | "4DX assumes one bet. Use OKR or lean experimentation for portfolio betting." |
-| "I'm a member, the WIG is already chosen" | Route to `4dx-d1-member-team-wig-comprehension`. |
-| "We're rolling 4DX out across 50 teams" | "Multi-team rollout — read book Part 2 (Ch 6-10) directly or contact FranklinCovey." |
-| "Sprint planning / OKR check-in" | Different methodology — hand off via `using-four-dx-coach`. |
+## Shared standards
 
-## Boundary
+Each protocol references these standards (load on demand):
 
-### Do NOT activate this router when…
+- `standards/6-verdict-rubric.md` — the 6-verdict triage taxonomy shared across both modes (with mode-specific labels: APPLICABLE vs TEAM-APPLICABLE; habit / portfolio / emergency / creative / no-time-sovereignty for solo; stroke-of-pen / whirlwind-handleable / wrong-team-shape / single-shot-project / mission-misaligned for team)
+- `standards/stroke-of-pen-vs-behavior-change.md` — the Ch 1 distinction that gates the entire triage; goals that authority alone solves don't need 4DX
+- `standards/readiness-preconditions.md` — Kotter urgency, Galbraith STAR alignment, Schein culture-fit, Heath Path; team-mode-primary but referenced from personal-mode for the time-sovereignty check
 
-- **Scope is explicit** — direct activation of personal or team triage is precise; this router adds friction.
-- **User is a member** — members don't triage; they comprehend their inherited WIG.
-- **Goal already passed triage** — user wants to start, not assess. Route to D1.
-- **Non-4DX methodologies** — habit, OKR, agile, scrum, kanban, sprint planning — hand off to plugin router.
-- **In the middle of an active triage session** — do not re-route mid-flow; the active triage skill should complete its verdict first.
+## Cross-skill relations
 
-### Common confusions
+- **Downstream after APPLICABLE** — `4dx-d1-personal-whirlwind-triage` (solo) or `4dx-d1-wig-formulation` (team) is the next gate; `4dx-d1-wig-formulation` follows for WIG drafting.
+- **Compose-with team-context** — `4dx-meta-team-leader-onboarding` follows TEAM-APPLICABLE to get leaders bought in; `4dx-d1-team-wig-cascade` translates an upper-level WIG down through sub-teams (out of scope for this skill).
+- **Rescue back-loop** — `4dx-sustain-personal-momentum-rescue` runs after a stalled WIG and may route back here if the original triage was wrong-shaped.
+- **Plugin-router fallback** — `using-four-dx-coach` handles cold-start and out-of-4DX queries (OKR, agile, habit stacking); not a substitute for this skill, but the right hand-off when the user's question turns out not to be 4DX-fit triage at all.
 
-- **Router-vs-atomic competition**: if the user's query already names "myself" or "our team", the atomic strategy-triage skill should fire first. This router is an explicit fallback, not a default gate.
-- **Topic-router vs plugin-router**: `using-four-dx-coach` triages all 18 skills across all stages; this router only triages within the meta-strategy-triage topic. If user query is generic ("I want to start 4DX"), `using-four-dx-coach` should fire, not this.
+## Boundary (cross-mode common)
 
-## Related skills
+The mode-specific boundary lives in each protocol's B section. The cross-mode common boundary:
 
-- `4dx-meta-personal-strategy-triage` — composes-with — downstream after personal scope determined
-- `4dx-meta-team-strategy-triage` — composes-with — downstream after team scope determined
-- `using-four-dx-coach` — composes-with — plugin-level router; complements this topic-router (different granularity)
-- `4dx-d1-member-team-wig-comprehension` — composes-with — fall-through if user is a member, not a triager
+- **Triage is the gate, not the install** — this skill issues a verdict and routes; it does NOT define a WIG, pick lead measures, or run a session. The instant a verdict is issued, control hands off to D1 (if APPLICABLE) or to the alternative methodology (if redirected).
+- **6 verdicts only — no "kind of fits"** — the rubric is discrete. Refusing to issue a clean verdict because "it's complicated" is the documented failure mode (4DX gets installed by default → wastes attention budget). When in doubt, the default is NOT-APPLICABLE; the user can always re-triage later if conditions change.
+- **The matched-set rule (P-23) is non-negotiable across both modes** — 4DX is all four disciplines or none. If the user wants to cherry-pick (e.g. "just D1 + D4"), the verdict is automatically NOT-APPLICABLE — recommend a lighter framework instead. This rule applies the same in solo and team mode.
+- **Stroke-of-the-pen check is the strongest filter** — both modes ask first: is there a single decision (purchase, hire, rule change, contract) that delivers the goal? If yes, 4DX is overkill regardless of all other gates. The book's strongest scope warning (CE-06).
+- **Refusal is a feature** — across both modes, returning a non-APPLICABLE verdict is the correct outcome ~50% of the time. The skill's value is *not* greenlighting 4DX; it's protecting the user from misapplication.
 
 ## Audit metadata
 
-- **Skill type**: topic-router (no V1/V2/V3 verification — meta-skill)
-- **Routing precision target**: ≥90% — disambiguation question must reliably surface scope
-- **Test pass rate**: see `test-prompts.json`
-- **Created at**: 2026-04-30
-- **Output language**: body — English; description + decision-tree prompts — multilingual EN/JP/zh-TW
+- **Skill type**: multi-file orchestrator (merged from 3 source skills — 2 atomic triage + 1 topic-router)
+- **Verification status**: V1 ✓ for both solo + team-leader modes (both grounded directly in book Ch 1 + Ch 6); V1 ⚠️ N/A for member scope — intentionally out of V1 by design (members inherit WIG, do not triage methodology fit)
+- **Created**: 2026-04-30
+- **Output language**: SKILL.md body + protocols/standards in English; description + scope-detection prompts multilingual EN/JP/zh-TW

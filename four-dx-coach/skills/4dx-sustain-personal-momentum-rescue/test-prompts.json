@@ -52,7 +52,7 @@
       "id": "should-not-trigger-03",
       "type": "should_not_trigger",
       "prompt": "I want to start using 4DX. Where do I begin?",
-      "expected_behavior": "Do NOT activate this skill. Description explicitly excludes 'first-time WIG setup'. Route instead to 4dx-meta-personal-strategy-triage or 4dx-d1-personal-wig-defining.",
+      "expected_behavior": "Do NOT activate this skill. Description explicitly excludes 'first-time WIG setup'. Route instead to 4dx-meta-strategy-triage or 4dx-d1-wig-formulation.",
       "notes": "lure: pre-implementation — surface '4DX' word but no lapse exists yet. Rescue presumes a prior implementation."
     },
     {
@@ -66,7 +66,7 @@
       "id": "edge-01",
       "type": "edge_case",
       "prompt": "I haven't done my WIG Session for a month, but I'm actually thinking my WIG was wrong from the start.",
-      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue (lapse signal is real). Diagnostic should localize the break at D1 (wrong WIG), halt the stack walk, and route to 4dx-d1-personal-wig-defining instead of restarting D4 on a dead WIG.",
+      "expected_behavior": "Activate 4dx-sustain-personal-momentum-rescue (lapse signal is real). Diagnostic should localize the break at D1 (wrong WIG), halt the stack walk, and route to 4dx-d1-wig-formulation instead of restarting D4 on a dead WIG.",
       "notes": "boundary: ambiguous lapse-vs-pivot. Skill must fire (lapse genuine) but NOT prescribe D4 restart — must route upstream to D1 redefinition. Tests whether description correctly frames the skill as diagnostic-then-route, not D4-restart."
     }
   ],

@@ -19,9 +19,9 @@ Catches ambiguous "help me with the scoreboard" / "how should I track this?" que
 
 | Situation | Where to go instead |
 |---|---|
-| Role + verb explicit ("my personal scoreboard") | `4dx-d3-personal-scoreboard` directly |
-| Role + verb explicit ("design our team's scoreboard") | `4dx-d3-team-lead-scoreboard-design` directly |
-| Role + verb explicit ("read the team scoreboard") | `4dx-d3-member-scoreboard-reading` directly |
+| Role + verb explicit ("my personal scoreboard") | `4dx-d3-scoreboard` directly |
+| Role + verb explicit ("design our team's scoreboard") | `4dx-d3-scoreboard` directly |
+| Role + verb explicit ("read the team scoreboard") | `4dx-d3-scoreboard` directly |
 | WIG / leads not yet set | `4dx-d1-wig-formulation` / `4dx-d2-lead-measures` first |
 | Cadence / WIG Session question | `4dx-d4-cadence` topic-router |
 | Enterprise BI dashboard (Tableau / PowerBI / multi-team rollup) | Out of 4DX — `using-four-dx-coach` |
@@ -30,9 +30,9 @@ Catches ambiguous "help me with the scoreboard" / "how should I track this?" que
 
 | Slug | Role | Verb | Returns |
 |---|---|---|---|
-| `4dx-d3-personal-scoreboard` | Solo | Design own | Glance-readable personal scoreboard (≤4 elements; 5-second test) |
-| `4dx-d3-team-lead-scoreboard-design` | Team-leader | Facilitate team-built | Public team scoreboard built BY the team (veto-not-dictate) |
-| `4dx-d3-member-scoreboard-reading` | Team-member | Read + locate | Member's read + own contribution location + escalation if broken |
+| `4dx-d3-scoreboard` | Solo | Design own | Glance-readable personal scoreboard (≤4 elements; 5-second test) |
+| `4dx-d3-scoreboard` | Team-leader | Facilitate team-built | Public team scoreboard built BY the team (veto-not-dictate) |
+| `4dx-d3-scoreboard` | Team-member | Read + locate | Member's read + own contribution location + escalation if broken |
 
 ## See also
 

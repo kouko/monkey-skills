@@ -1,42 +1,55 @@
-# 4dx-d4-cadence (Topic Router)
+# 4dx-d4-cadence (Multi-scope skill)
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Topic-router for D4 weekly-cadence queries when role (solo / leader / member) and timing (before / during / after the session) are unclear.
+> Multi-scope coach for the D4 weekly Cadence of Accountability — the WIG Session — across all four roles the user might occupy: solo participant / team-leader facilitator / team-member before the session / team-member after.
 
-## What this router does
+## What this skill does
 
-Catches ambiguous "help with my WIG Session" / "weekly cadence" queries. Asks ONE Socratic question on (role, timing), then routes to one of four atomic D4 skills. Does NOT run any session protocol itself.
+Detects scope (role + timing) from the user's query, then loads the matching protocol from `protocols/`. Same Account → Review → Plan grammar across all 4 modes; different agent voice per mode (peer-witness for solo, consultant-to-leader for facilitator, personal-coach for member). All 4 protocols share the same standards (`account-review-plan-agenda`, `commitment-shape`, `whirlwind-exclusion`, `sacred-cadence`).
 
-## When this router activates
+## Background — why merged
 
-- "Help with my WIG Session" / "Weekly cadence advice" / "WIG Session prep" / "Set up the cadence"
-- 「WIG Session のこと」「weekly cadence の運営」「毎週の WIG ミーティング」「週次レビューの相談」
-- 「WIG Session 怎麼跑」「每週節奏」「WIG 週會」「每週 review」「weekly 開會」
-- Any cadence query without a clear role + timing
+Originally 5 skills (4 atomic D4 + 1 topic-router). The router was a thin disambiguation step over 4 nearly-symmetric protocols sharing 80%+ of their R/I/E/B content. Merging into one multi-file scope-flex skill: kept all execution detail, deduplicated standards, single audit footer, single trigger-list. SKILL.md orchestrator now does scope detection + protocol routing directly, without a separate router skill.
+
+## Indexed protocols
+
+| Mode | Load protocol | Agent voice |
+|---|---|---|
+| Solo, during session | [`protocols/solo-session.md`](protocols/solo-session.md) | peer-witness |
+| Team-leader, during session | [`protocols/team-leader-session.md`](protocols/team-leader-session.md) | consultant-to-leader |
+| Team-member, before session | [`protocols/member-prep.md`](protocols/member-prep.md) | personal coach to member |
+| Team-member, after session | [`protocols/member-debrief.md`](protocols/member-debrief.md) | personal coach to member |
+
+## When this skill activates
+
+- **Solo** — "Run my weekly WIG Session", "I want a weekly review for my goal", "Help me stay on track each week"
+- **Team-leader** — "Facilitate our team WIG meeting", "Walk me through how to lead this week's session", "A member missed a commitment — what do I do?"
+- **Member-prep** — "Help me prepare my commitment for next WIG Session", "What should I commit to this week?"
+- **Member-debrief** — "I missed my commitment last week — how do I show up at the session?", "I half-did it — kept or miss?"
+- Multilingual EN / JP / zh-TW per mode (see SKILL.md for full trigger list)
+
+If the user's query is ambiguous on (role, timing), the skill asks ONE Socratic disambiguation question covering all 4 modes, then routes.
 
 ## When NOT to use
 
 | Situation | Where to go instead |
 |---|---|
-| "I'm running my own solo session" | `4dx-d4-personal-wig-session` directly |
-| "I'm facilitating my team's session" | `4dx-d4-team-wig-session-lead` directly |
-| "Prep my commitment for tomorrow" | `4dx-d4-member-commitment-prep` directly |
-| "Just had session, missed my commit" | `4dx-d4-member-account-debrief` directly |
-| Cadence broken multiple weeks | `4dx-sustain-personal-momentum-rescue` (rescue precedes restart) |
-| No WIG / lead / scoreboard yet | D1 / D2 / D3 first; D4 has nothing to operate on |
-| Sprint review / OKR check-in / 1-on-1 | Out of 4DX — `using-four-dx-coach` |
+| Cadence already broken (multiple skipped weeks) | `4dx-sustain-personal-momentum-rescue` (rescue precedes restart) |
+| No WIG / lead measure / scoreboard yet | D1 / D2 / D3 first; D4 has nothing to operate on |
+| Sprint review / PI planning / OKR check-in / 1-on-1 / status report | Out of 4DX — `using-four-dx-coach` |
+| Daily stand-up / scrum daily | Wrong cadence (daily ≠ weekly), wrong format |
+| Annual / quarterly retrospective | Wrong cadence scope |
+| Member doesn't know team's WIG / lead measure | `4dx-d1-wig-formulation` first |
+| 3+ misses in a row (member) | Commitment-design problem; redesign via member-prep mode (not debrief) |
 
-## Indexed atomic skills
+## Source citation
 
-| Slug | Role | Timing | Returns |
-|---|---|---|---|
-| `4dx-d4-personal-wig-session` | Solo (agent = peer-witness) | During | 20-30 min Account → Review → Plan with self-chosen 1-2 commitments |
-| `4dx-d4-team-wig-session-lead` | Team-leader (facilitator) | During | Agenda + Socratic prompts under commitments-not-assignments + veto-not-dictate |
-| `4dx-d4-member-commitment-prep` | Team-member | Before | Specific, influenceable, single-step commitment ready to state aloud |
-| `4dx-d4-member-account-debrief` | Team-member | After | Honest self-account: kept / partial / missed + diagnosis feeding next prep |
+The 4 Disciplines of Execution (2nd ed., 2021) — McChesney / Covey / Huling / Thele / Walker. Chapter 5 (Discipline 4: Create a Cadence of Accountability), Chapter 10 (Sustaining 4DX — Susan/Marcus dialogue), Chapter 15 (Applying Discipline 4).
+
+Industry grounding consolidated in [`references/industry-grounding.md`](references/industry-grounding.md): Rogelberg, Lencioni, Reinertsen, Edmondson (×2), Pfeffer, Drucker, Cialdini, Eurich, Wiseman.
 
 ## See also
 
-- [`SKILL.md`](SKILL.md) for full routing logic + Socratic decision tree + hand-off scripts
+- [`SKILL.md`](SKILL.md) — orchestrator with full scope-detection logic + routing table + cross-mode boundary
 - Plugin router [`using-four-dx-coach`](../using-four-dx-coach/) for cold-start / out-of-4DX queries

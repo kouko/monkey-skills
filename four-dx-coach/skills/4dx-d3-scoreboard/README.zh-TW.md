@@ -19,9 +19,9 @@
 
 | 情境 | 改去 |
 |---|---|
-| role + verb 明示（「我自己的 scoreboard」） | 直接 `4dx-d3-personal-scoreboard` |
-| role + verb 明示（「設計 team 的 scoreboard」） | 直接 `4dx-d3-team-lead-scoreboard-design` |
-| role + verb 明示（「讀 team 的 scoreboard」） | 直接 `4dx-d3-member-scoreboard-reading` |
+| role + verb 明示（「我自己的 scoreboard」） | 直接 `4dx-d3-scoreboard` |
+| role + verb 明示（「設計 team 的 scoreboard」） | 直接 `4dx-d3-scoreboard` |
+| role + verb 明示（「讀 team 的 scoreboard」） | 直接 `4dx-d3-scoreboard` |
 | WIG / lead 還沒定 | 先 `4dx-d1-wig-formulation` / `4dx-d2-lead-measures` |
 | cadence / WIG Session | `4dx-d4-cadence` topic-router |
 | enterprise BI（Tableau / PowerBI / 跨 team rollup） | 4DX 範圍外 — `using-four-dx-coach` |
@@ -30,9 +30,9 @@
 
 | Slug | Role | Verb | 產出 |
 |---|---|---|---|
-| `4dx-d3-personal-scoreboard` | Solo | Design own | 一眼可讀的 personal scoreboard（≤4 元素 / 5-second test） |
-| `4dx-d3-team-lead-scoreboard-design` | Team-leader | Facilitate team-built | 公開 team scoreboard，由 team 親手 build（veto 不 dictate） |
-| `4dx-d3-member-scoreboard-reading` | Team-member | Read + locate | member 的 read + 個人貢獻定位 + 板子壞掉的升報腳本 |
+| `4dx-d3-scoreboard` | Solo | Design own | 一眼可讀的 personal scoreboard（≤4 元素 / 5-second test） |
+| `4dx-d3-scoreboard` | Team-leader | Facilitate team-built | 公開 team scoreboard，由 team 親手 build（veto 不 dictate） |
+| `4dx-d3-scoreboard` | Team-member | Read + locate | member 的 read + 個人貢獻定位 + 板子壞掉的升報腳本 |
 
 ## 延伸
 

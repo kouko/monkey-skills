@@ -1,7 +1,7 @@
 ---
 name: 4dx-d1-team-wig-cascade
 description: |
-  Coach a leader-of-leaders to translate an already-set org Primary WIG into Team WIGs across 3-7 subordinate teams via Ch 7's four cascade rules — Targets-not-Plans, Battles-to-win-the-war, Veto-don't-Dictate, one-WIG-per-individual. Output: cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) passing ladder-up + veto tests. EN: "How do I translate the org WIG to my team?", "Cascade our Primary WIG to direct-report teams", "Each manager needs a WIG — how do we pick them?". JP: 「上から降りた WIG をチーム単位に落とす」「Primary WIG を各チームに翻訳」「直属マネージャー毎の Team WIG をどう決める」. ZH: 「上面定的 WIG，我團隊要怎麼接？」「Primary WIG 怎麼拆給下面各個團隊？」「每位主管要有自己的 Team WIG，怎麼選？」. Do NOT activate if org Primary WIG not yet set (use `4dx-d1-team-primary-wig-selection`), leader runs only one team (no cascade), cascade depth >2 layers (rerun this skill per layer), or solo goal (use `4dx-d1-personal-wig-defining`).
+  Coach a leader-of-leaders to translate an already-set org Primary WIG into Team WIGs across 3-7 subordinate teams via Ch 7's four cascade rules — Targets-not-Plans, Battles-to-win-the-war, Veto-don't-Dictate, one-WIG-per-individual. Output: cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) passing ladder-up + veto tests. EN: "How do I translate the org WIG to my team?", "Cascade our Primary WIG to direct-report teams", "Each manager needs a WIG — how do we pick them?". JP: 「上から降りた WIG をチーム単位に落とす」「Primary WIG を各チームに翻訳」「直属マネージャー毎の Team WIG をどう決める」. ZH: 「上面定的 WIG，我團隊要怎麼接？」「Primary WIG 怎麼拆給下面各個團隊？」「每位主管要有自己的 Team WIG，怎麼選？」. Do NOT activate if org Primary WIG not yet set (use `4dx-d1-wig-formulation`), leader runs only one team (no cascade), cascade depth >2 layers (rerun this skill per layer), or solo goal (use `4dx-d1-wig-formulation`).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
 source_chapter: Chapter 7 — Translating Organizational Focus Into Executable Targets
 source_language: en
@@ -88,17 +88,17 @@ The output of this skill is a cascade map: org Primary WIG → 2-3 Key Battles �
 
 ### Non-activation signals (do NOT trigger when…)
 
-- Org Primary WIG hasn't been selected yet → route to `4dx-d1-team-primary-wig-selection`. Cascade requires an upstream WIG to translate.
-- Leader runs only ONE team (no subordinate team-leaders) → use `4dx-d1-team-primary-wig-selection` directly; there is no cascade hop.
-- Solo / individual goal → use `4dx-d1-personal-wig-defining`. Cascade is a multi-team concept; it does not exist for one person.
-- Methodology-fit unclear → route to `4dx-meta-team-strategy-triage` first.
+- Org Primary WIG hasn't been selected yet → route to `4dx-d1-wig-formulation`. Cascade requires an upstream WIG to translate.
+- Leader runs only ONE team (no subordinate team-leaders) → use `4dx-d1-wig-formulation` directly; there is no cascade hop.
+- Solo / individual goal → use `4dx-d1-wig-formulation`. Cascade is a multi-team concept; it does not exist for one person.
+- Methodology-fit unclear → route to `4dx-meta-strategy-triage` first.
 - User asking about lead measures or scoreboards → route to D2 / D3 skills; cascade is a D1-only operation.
 
 ### Distinction from neighboring skills
 
-- vs. `4dx-d1-team-primary-wig-selection`: that skill chooses the *upstream* Primary WIG (single team or org-level); this skill *translates* a chosen Primary WIG downward into N Team WIGs. Selection comes before cascade.
-- vs. `4dx-d1-personal-wig-defining`: personal scope, no cascade. If the user has no subordinate team-leaders, cascade is a category error.
-- vs. `4dx-meta-team-strategy-triage`: triage decides whether 4DX *fits at all* for a single team. Cascade assumes triage already greenlit each subordinate team.
+- vs. `4dx-d1-wig-formulation`: that skill chooses the *upstream* Primary WIG (single team or org-level); this skill *translates* a chosen Primary WIG downward into N Team WIGs. Selection comes before cascade.
+- vs. `4dx-d1-wig-formulation`: personal scope, no cascade. If the user has no subordinate team-leaders, cascade is a category error.
+- vs. `4dx-meta-strategy-triage`: triage decides whether 4DX *fits at all* for a single team. Cascade assumes triage already greenlit each subordinate team.
 - vs. doing the cascade more than 2 layers deep: the book is explicit only about cascade *at each hop*; deep cascade is not a special protocol — it is *this skill, run again, at each layer*. Treat layer-N as a leader-of-leaders for layer-N+1.
 
 ---
@@ -110,12 +110,12 @@ When this skill activates, the agent acts as a consultant to a leader-of-leaders
 1. **Confirm the upstream Primary WIG.**
    - Ask: *"State your org's Primary WIG as it stands now: From X to Y by When."*
    - Completion criterion: leader produces a single sentence in From-X-to-Y-by-When form.
-   - **Halt condition**: if the Primary WIG isn't yet in this form, stop and route to `4dx-d1-team-primary-wig-selection`. Cascade has nothing to translate.
+   - **Halt condition**: if the Primary WIG isn't yet in this form, stop and route to `4dx-d1-wig-formulation`. Cascade has nothing to translate.
 
 2. **Enumerate subordinate teams.**
    - Ask: *"How many direct-report team-leaders do you have, and what does each team do? One line per team."*
    - Completion criterion: a list of N teams with named functions.
-   - **Halt condition**: if N=1, stop — there is no cascade. Route to `4dx-d1-team-primary-wig-selection` for that single team. If N>7 at this hop, flag span-of-control concern and ask whether an intermediate leadership layer exists; if yes, run cascade for *that* intermediate layer first.
+   - **Halt condition**: if N=1, stop — there is no cascade. Route to `4dx-d1-wig-formulation` for that single team. If N>7 at this hop, flag span-of-control concern and ask whether an intermediate leadership layer exists; if yes, run cascade for *that* intermediate layer first.
 
 3. **Classify cascade shape: functionally diverse vs functionally similar.**
    - Ask: *"Do these teams perform the SAME function (multi-store retail, sales territories, manufacturing units) or DIFFERENT functions (one runs marketing, one runs ops, one runs support)?"*
@@ -163,10 +163,10 @@ When this skill activates, the agent acts as a consultant to a leader-of-leaders
 
 ### Do NOT use this skill in:
 
-- **Org Primary WIG not yet set.** Cascade has nothing to translate. Route to `4dx-d1-team-primary-wig-selection`.
-- **Leader runs only one team.** No subordinate team-leaders → no cascade hop. Use `4dx-d1-team-primary-wig-selection` for that single team's WIG directly.
-- **Solo / individual goals.** Cascade is a multi-team operation; it has no meaning at solo scope. Use `4dx-d1-personal-wig-defining`.
-- **Personal-scope misfire (single-team-leader misfire).** A leader who leads ONE team but says "I want to cascade to my team members" is conflating Team WIG (one per team, owned by team-leader) with individual commitments (Discipline 4, weekly WIG Session). Cascade does not push individual-level WIGs to direct reports. If a leader has ONE team, the team has ONE Team WIG; individuals make weekly commitments inside D4, not Team-WIG-clones inside D1. Route to `4dx-d1-team-primary-wig-selection` for the single Team WIG, then to D4 for individual commitments.
+- **Org Primary WIG not yet set.** Cascade has nothing to translate. Route to `4dx-d1-wig-formulation`.
+- **Leader runs only one team.** No subordinate team-leaders → no cascade hop. Use `4dx-d1-wig-formulation` for that single team's WIG directly.
+- **Solo / individual goals.** Cascade is a multi-team operation; it has no meaning at solo scope. Use `4dx-d1-wig-formulation`.
+- **Personal-scope misfire (single-team-leader misfire).** A leader who leads ONE team but says "I want to cascade to my team members" is conflating Team WIG (one per team, owned by team-leader) with individual commitments (Discipline 4, weekly WIG Session). Cascade does not push individual-level WIGs to direct reports. If a leader has ONE team, the team has ONE Team WIG; individuals make weekly commitments inside D4, not Team-WIG-clones inside D1. Route to `4dx-d1-wig-formulation` for the single Team WIG, then to D4 for individual commitments.
 - **Single-shot project cascade.** If the work is a fixed-end-state project (build-and-ship), use project-management decomposition (work breakdown structure, Gantt) — not 4DX cascade. The continuous-cadence operating system is overhead when there's a finite task list with a known sequence.
 - **Cross-functional matrix where one team's WIG forces another team's daily work.** Cascade gives each team autonomous ownership of its Team WIG. If team A's WIG can only be hit by dictating team B's daily actions, the cascade is wrong-shaped; back up to step 5 and renegotiate proposals.
 
@@ -195,7 +195,7 @@ When this skill activates, the agent acts as a consultant to a leader-of-leaders
 
 ### NOT for: solo / single-team-leader / unset-Primary-WIG
 
-NOT for solo / individual goals — use `4dx-d1-personal-wig-defining`. NOT for a leader who runs only ONE team (no cascade exists; individual D4 commitments ≠ Team WIG cascade) — use `4dx-d1-team-primary-wig-selection` for the single Team WIG. NOT for cascading when the org Primary WIG hasn't been chosen yet — use `4dx-d1-team-primary-wig-selection` first.
+NOT for solo / individual goals — use `4dx-d1-wig-formulation`. NOT for a leader who runs only ONE team (no cascade exists; individual D4 commitments ≠ Team WIG cascade) — use `4dx-d1-wig-formulation` for the single Team WIG. NOT for cascading when the org Primary WIG hasn't been chosen yet — use `4dx-d1-wig-formulation` first.
 
 ### Industry-experience addendum (cascade-methodology peers)
 
@@ -211,10 +211,10 @@ Cascade misfires usually look like one of these three habits leaking in: rewriti
 
 ## Related skills
 
-- `4dx-d1-team-primary-wig-selection` — depends-on — org Primary WIG must exist before cascade
-- `4dx-meta-team-strategy-triage` — depends-on — each subordinate team must clear team-fit triage
+- `4dx-d1-wig-formulation` — depends-on — org Primary WIG must exist before cascade
+- `4dx-meta-strategy-triage` — depends-on — each subordinate team must clear team-fit triage
 - `4dx-meta-team-leader-onboarding` — composes-with — cascade only commits when leaders are onboarded
-- `4dx-d1-personal-wig-defining` — contrasts-with — solo scope, no cascade dynamics
+- `4dx-d1-wig-formulation` — contrasts-with — solo scope, no cascade dynamics
 
 ---
 

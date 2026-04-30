@@ -19,9 +19,9 @@
 
 | 状況 | 代わりの行き先 |
 |---|---|
-| scope + verb 明示（「自分の WIG: From X to Y」） | `4dx-d1-personal-wig-defining` に直接 |
-| 「組織の Primary WIG を Battles 2x2 で」 | `4dx-d1-team-primary-wig-selection` に直接 |
-| 「上司から降りてきた WIG」 | `4dx-d1-member-team-wig-comprehension` に直接 |
+| scope + verb 明示（「自分の WIG: From X to Y」） | `4dx-d1-wig-formulation` に直接 |
+| 「組織の Primary WIG を Battles 2x2 で」 | `4dx-d1-wig-formulation` に直接 |
+| 「上司から降りてきた WIG」 | `4dx-d1-wig-formulation` に直接 |
 | whirlwind / 時間 audit | `4dx-d1-personal-whirlwind-triage` |
 | 下位 N team への cascade | `4dx-d1-team-wig-cascade` |
 | lead measure / scoreboard / cadence | D2 / D3 / D4 |
@@ -30,9 +30,9 @@
 
 | Slug | Scope | Verb | Returns |
 |---|---|---|---|
-| `4dx-d1-personal-wig-defining` | 個人（solo） | Define | From-X-to-Y-by-When 形式の personal WIG 1 本 |
-| `4dx-d1-team-primary-wig-selection` | Team-leader | Select | Battles 2x2 で組織レベルの Primary WIG |
-| `4dx-d1-member-team-wig-comprehension` | Team-member | Comprehend | 上位 team WIG が自分の日々の slice にどう降りてくるかの理解 |
+| `4dx-d1-wig-formulation` | 個人（solo） | Define | From-X-to-Y-by-When 形式の personal WIG 1 本 |
+| `4dx-d1-wig-formulation` | Team-leader | Select | Battles 2x2 で組織レベルの Primary WIG |
+| `4dx-d1-wig-formulation` | Team-member | Comprehend | 上位 team WIG が自分の日々の slice にどう降りてくるかの理解 |
 
 ## 関連
 

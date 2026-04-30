@@ -166,25 +166,25 @@ ZH-TW:
 ### Non-trigger examples (do NOT activate)
 
 - "I want to set up 4DX for the first time" → route to
-  `4dx-meta-personal-strategy-triage` then `4dx-d1-personal-wig-defining`
-- "How do I write a WIG?" → `4dx-d1-personal-wig-defining`
-- "What's a good lead measure for X?" → `4dx-d2-personal-lead-measure-discovery`
+  `4dx-meta-strategy-triage` then `4dx-d1-wig-formulation`
+- "How do I write a WIG?" → `4dx-d1-wig-formulation`
+- "What's a good lead measure for X?" → `4dx-d2-lead-measures`
 - "I'm running an org-wide engagement survey" → out of scope (this
   skill is for individual-scale rescue, not enterprise diagnostics)
 - "I think I'm clinically depressed / burned out" → out of scope; refer
   to professional support
-- "Is 4DX even right for my situation?" → `4dx-meta-personal-strategy-triage`
+- "Is 4DX even right for my situation?" → `4dx-meta-strategy-triage`
 
 ### Distinction from neighboring skills
 
-- vs. `4dx-d4-personal-wig-session`: D4 builds the weekly session from scratch
+- vs. `4dx-d4-cadence`: D4 builds the weekly session from scratch
   for an active practice. This skill diagnoses *which layer broke*
   before any restart — and may route away from D4 entirely if the
   break is at D1, D2, D3, whirlwind, or substrate.
-- vs. `4dx-d2-personal-lead-measure-discovery`: D2 is the original discovery
+- vs. `4dx-d2-lead-measures`: D2 is the original discovery
   procedure. This skill *invokes* D2 only after diagnosis confirms
   leads are the broken layer (e.g. green leads, flat lag).
-- vs. `4dx-meta-personal-strategy-triage`: Meta-triage decides whether 4DX
+- vs. `4dx-meta-strategy-triage`: Meta-triage decides whether 4DX
   applies at all (stroke-of-pen vs. whirlwind vs. behavioral). This
   skill assumes 4DX was already chosen and applied; it asks where the
   applied stack failed.
@@ -207,7 +207,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
      'why' changed?"
    - Halt condition: if the WIG is no longer right (life pivoted, the
      breakthrough already happened, or it was wrong from the start) →
-     **route to `4dx-d1-personal-wig-defining`** and stop here. Do not restart
+     **route to `4dx-d1-wig-formulation`** and stop here. Do not restart
      D4 on a dead WIG.
    - Completion criterion: explicit verdict — WIG is still alive, or
      WIG needs replacement.
@@ -219,7 +219,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
      scorekeeping credible? quality vs. consistency? leader's-game vs.
      team's-game?).
    - Halt condition: if leads were green but lag flat → leads were
-     wrong. **Route to `4dx-d2-personal-lead-measure-discovery`**. Do *not*
+     wrong. **Route to `4dx-d2-lead-measures`**. Do *not*
      prescribe "try harder on the same leads."
    - Completion criterion: verdict — leads still valid, or leads need
      redesign.
@@ -229,7 +229,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
      winning this week? Was the scoreboard visible without effort?"
    - Halt condition: if scoreboard got hidden, stopped being updated,
      or was a coach's dashboard masquerading as a player's scoreboard
-     → **route to `4dx-d3-personal-scoreboard`**.
+     → **route to `4dx-d3-scoreboard`**.
    - Completion criterion: verdict on visibility + glance-readability.
 
 5. **D4 — cadence.**
@@ -239,7 +239,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
    - If pointless: that's a D1/D2/D3 signal in disguise — go back to
      step 2-4. Cadence collapses *because* an upstream layer is broken
      more often than because of laziness.
-   - If whirlwind crowd-out: **route to `4dx-d4-personal-wig-session` next
+   - If whirlwind crowd-out: **route to `4dx-d4-cadence` next
      week** with the don't-skip-but-don't-catch-up rule (no make-up
      sessions; resume, don't repair).
    - Completion criterion: cause of cadence break is named.
@@ -285,7 +285,7 @@ When activated, the agent runs a Socratic, non-judgmental dialogue:
 ### Do NOT use this skill in:
 
 - **First-time 4DX setup.** This skill assumes a prior implementation
-  exists. Use `4dx-meta-personal-strategy-triage` then `4dx-d1-personal-wig-defining`.
+  exists. Use `4dx-meta-strategy-triage` then `4dx-d1-wig-formulation`.
 - **Org-wide engagement surveys / enterprise diagnostics.** This skill
   is individual-scale rescue. Enterprise momentum loss has political,
   structural, and HR dimensions beyond a Socratic diagnostic.
@@ -374,12 +374,12 @@ each more actionable for the rescue dialogue. Primary citations in
 
 ## Related skills
 
-- `4dx-meta-personal-strategy-triage` — depends-on — re-triage if WIG itself is wrong-shaped
-- `4dx-d4-personal-wig-session` — contrasts-with — build cadence vs rescue lapsed cadence
-- `4dx-d4-personal-wig-session` — composes-with — rescue typically follows broken sessions
-- `4dx-d1-personal-wig-defining` — composes-with — D1 break routes back to redefine the WIG
-- `4dx-d2-personal-lead-measure-discovery` — composes-with — leads green but lag flat → redesign
-- `4dx-d3-personal-scoreboard` — composes-with — hidden / coach-only scoreboard → rebuild
+- `4dx-meta-strategy-triage` — depends-on — re-triage if WIG itself is wrong-shaped
+- `4dx-d4-cadence` — contrasts-with — build cadence vs rescue lapsed cadence
+- `4dx-d4-cadence` — composes-with — rescue typically follows broken sessions
+- `4dx-d1-wig-formulation` — composes-with — D1 break routes back to redefine the WIG
+- `4dx-d2-lead-measures` — composes-with — leads green but lag flat → redesign
+- `4dx-d3-scoreboard` — composes-with — hidden / coach-only scoreboard → rebuild
 - `4dx-meta-team-xps-evaluation` — contrasts-with — solo rescue vs team-leader audit; both diagnostic
 
 ---

@@ -38,14 +38,14 @@
       "id": "should-not-trigger-01",
       "type": "should_not_trigger",
       "prompt": "Help me write my personal WIG: From 78kg to 70kg by Dec 31.",
-      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Scope (personal) and verb (define) both explicit + canonical From-X-to-Y-by-When form already supplied. Fire 4dx-d1-personal-wig-defining directly.",
+      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Scope (personal) and verb (define) both explicit + canonical From-X-to-Y-by-When form already supplied. Fire 4dx-d1-wig-formulation directly.",
       "notes": "lure: explicit personal+define — description excludes scope-explicit cases"
     },
     {
       "id": "should-not-trigger-02",
       "type": "should_not_trigger",
       "prompt": "I have my WIG defined. What lead measures should I track?",
-      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Topic is wrong — query is D2 lead-measure discovery, not D1 WIG formulation. Route to 4dx-d2-personal-lead-measure-discovery.",
+      "expected_behavior": "Do NOT activate 4dx-d1-wig-formulation. Topic is wrong — query is D2 lead-measure discovery, not D1 WIG formulation. Route to 4dx-d2-lead-measures.",
       "notes": "lure: wrong topic — surface 'WIG' word present but scope is downstream (D2)"
     },
     {
