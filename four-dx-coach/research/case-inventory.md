@@ -1,53 +1,60 @@
 # 4DX Case Inventory — research notes (human reference, NOT loaded by skills)
 
-> **Purpose**: stable inventory of publicly-accessible 4DX implementation cases with disclosure-depth assessment, so future case-bank decisions for `four-dx-coach` skills can be made from a known-good shortlist instead of re-researching each time.
+> **Purpose**: stable inventory of publicly-accessible 4DX implementation cases with disclosure-depth + verification-strength grading, so future case-bank decisions for `four-dx-coach` skills can be made from a known-good shortlist instead of re-researching each time.
 >
 > **Status**: this file lives in `research/`, NOT in any skill directory. Per Anthropic's plugin spec (verified 2026-05-01), skills cannot reference plugin-root paths via `${CLAUDE_SKILL_DIR}` — runtime resources must be skill-internal. This inventory is for **human authoring decisions** only; agents never load it.
 >
-> **Last updated**: 2026-05-01
+> **Last updated**: 2026-05-01 (Tier 1 fully verified pass)
 >
-> **Methodology**: web search across English / Japanese sources for 4DX implementation case studies disclosing actual WIG sentences, lead measures, scoreboards, cadences, and outcomes. Cases below are graded on disclosure depth across the 5 4DX layers (D1 / D2 / D3 / D4 / Ch 8 onboarding).
+> **Methodology**: web search across English / Japanese sources for 4DX implementation case studies disclosing actual WIG sentences, lead measures, scoreboards, cadences, and outcomes. Cases below are graded on two axes: disclosure depth and verification strength.
 
-## Disclosure-grade legend
+## Two-axis grading
 
+**Disclosure depth** — how much of the 5-layer 4DX stack the source reveals:
 - **★★★ Full**: WIG句型 with X / Y / When verbatim, named lead measures, scoreboard description, cadence specifics, results
 - **★★ Partial**: 2-3 of the above
 - **★ Marketing-tier**: outcome narrative + context only; D1-D4 specifics not disclosed
 - **❌ Insufficient**: too thin to anchor anything beyond Boundary mention
 
+**Verification strength** — how directly I confirmed the disclosure:
+- **★★★ Direct read**: I personally read the full source (PDF Read tool / playwright full-page text extraction) and quote verbatim
+- **★★ WebFetch summary**: extracted via WebFetch's prompt-based summarization; key quotes presented as direct but not byte-verified
+- **★ Search snippet**: data came from third-party search-result excerpt, not from the original source itself
+- **❌ Unverified**: claims are inferred from indirect references
+
+A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★ on verification. ★★★/★★★ is gold standard.
+
 ---
 
-## Tier 1 — Anchor candidates (★★★ full disclosure)
+## Tier 1 — Anchor-eligible (★★★ disclosure × ≥★★ verification)
 
 ### 1. Gaylord Opryland Hotel (FranklinCovey CFR research PDF)
 
-**Source**: FranklinCovey Center for Advanced Research, "Guest Satisfaction at Gaylord Opryland" by Dean W. Collinwood Ph.D. (March 2007, rev July 2009). 5 pages.
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (5-page PDF read in full via Read tool, 2026-05-01)
+
+**Source**: FranklinCovey Center for Advanced Research, "Guest Satisfaction at Gaylord Opryland" by Dean W. Collinwood Ph.D. (March 2007, rev July 2009). 5 pages. Date of study: May 2006 – June 2009.
 **Public URL**: https://www.vidartop.no/uploads/9/4/6/7/9467257/cfr070815_oprlnd_casstu__r1.1.5__lr.pdf
 **Cached at**: `/Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/d3a8448e-9700-4357-93f1-589640555d7a/tool-results/webfetch-1777588572915-6oslea.pdf`
 **License note**: © FranklinCovey CFR. Designed for academic / external distribution. Cite verbatim with attribution; do not redistribute the PDF itself.
 
 **Company**: Gaylord Opryland Resort & Convention Center, Nashville TN; 4000 employees / 75 departments / 2,881 rooms / $300M annual revenue / 1.5M guests/year.
-**Date of study**: May 2006 – June 2009.
 
-**Driver**: lowest guest satisfaction of all four Gaylord properties despite $80M room upgrades since 2003 + $400M expansion underway. October 2006 monthly score 43 (all-time low). xQ Survey June 2006 baseline = 25%.
+**Driver**: lowest guest satisfaction of all four Gaylord properties despite $80M room upgrades since 2003 + $400M expansion underway. October 2006 monthly score 43 (all-time low). xQ Survey June 2006 baseline = 25%. National avg goal-clarity 54% vs Opryland post-implementation 100%.
 
-**D1 — WIGs (verbatim)**:
-- Org-level: "Hi Touch" (high guest satisfaction) + "Hi Volume" (high occupancy) — two WIGs at the org level
+**D1 — WIGs (verbatim from page 3-4)**:
+- Org-level: "**Hi Touch**" (high guest satisfaction) + "**Hi Volume**" (high occupancy) — two WIGs at the org level
 - Front-office team: **"raise their check-in efficiency score from 55 percent to 65 percent by year-end 2007"**
 - Reservation Call Center: **"improve guest satisfaction by answering 95 percent of incoming calls"** (baseline 88%)
-- Engineering team: weekly walk-through of the hotel for guidance signage (this is technically a lead-measure-as-WIG, useful as anti-pattern reference)
+- Engineering team: weekly walk-through of the hotel for guidance signage
 - Old Hickory Steakhouse (Nando Rodriguez): "implement universal service" — every waiter assists guests at any table
 
-**D2 — Lead measures (verbatim or strongly implied)**:
-- Universal service behavior change (Old Hickory)
-- Weekly hotel walk-through (Engineering)
-- "answering 95% of incoming calls" (Call Center — borderline lag)
+**D2 — Lead measures**: universal service behavior change (Old Hickory); weekly hotel walk-through (Engineering); "answering 95% of incoming calls" (Call Center — borderline lag).
 
-**D3 — Scoreboards**: "Scoreboards to show goal accomplishment were displayed prominently in the meeting room." Hi Touch / Hi Volume division-level goals "prominently posted." Each division established their own goals contributing to the two org WIGs.
+**D3 — Scoreboards (verbatim)**: "Scoreboards to show goal accomplishment were displayed prominently in the meeting room." Hi Touch / Hi Volume division-level goals "prominently posted." Each division established their own goals contributing to the two org WIGs.
 
-**D4 — Cadence**: "30-minute WIG Sessions" verbatim. Sheryl Chesnutt (Call Center & Reservations Manager) cited as having conducted **27 consecutive WIG Sessions** by April 2007. Quote: "We wouldn't think of missing a WIG meeting." Sessions described as "fun, positive, and efficiently executed" with "spirit of teamwork and open communication."
+**D4 — Cadence (verbatim)**: "30-minute WIG Sessions." Sheryl Chesnutt (Call Center & Reservations Manager) cited as having conducted **27 consecutive WIG Sessions** by April 2007. Sessions described as "fun, positive, and efficiently executed" with "spirit of teamwork and open communication." Quote: "We wouldn't think of missing a WIG meeting."
 
-**Ch 8 — Onboarding**: 2-day exec session (June 2006) → 2-day sessions per division (Convention Services / Food & Beverage / Rooms) → cross-cutting departments (HR, Engineering) → 300 employees trained by in-house leaders → cascade so far that ground-crew + shuttle-bus drivers + shop clerks were "goal-aware" by April 2007 (vs national avg 54% goal-aware).
+**Ch 8 — Onboarding**: 2-day exec session (June 2006) → 2-day sessions per division (Convention Services / Food & Beverage / Rooms) → cross-cutting departments (HR, Engineering) → 300 employees trained by in-house leaders → cascade so deep that ground-crew + shuttle-bus drivers + shop clerks were "goal-aware" by April 2007 (vs national avg 54% goal-aware).
 
 **Results (verbatim)**:
 - Customer-Loyalty: "In the period June 2006-October 2007, the 22 months before the 4 Disciplines program was started, only 34 percent of the guests said they would enthusiastically recommend Opryland to others. In the 20 months since the 4 Disciplines, 58 percent said they would recommend the hotel: a **24-point increase**."
@@ -55,221 +62,267 @@
 - xQ score: 25% (Jun 2006) → ~45% sustained (Jan 2007 onward); overall company score 77 — 20 points higher than FranklinCovey average client; top 10% globally
 - Recognition: First time Opryland achieved best guest satisfaction in entire Gaylord chain. Danny Jones nominated for Flywheel Award.
 
+**Quote (verbatim)** — anonymous leader: "The culture was already set up to provide good service, but it didn't happen until we implemented The 4 Disciplines of Execution."
+
 **Reinforcement**: "Public recognition and award items to display at home or in their offices" + "cash bonuses when goals were met."
 
-**Cross-skill applicability**: this single case can anchor `4dx-d1-wig-formulation` (multi-WIG Hi Touch/Volume + division cascade), `4dx-d2-lead-measures` (universal service), `4dx-d3-scoreboard` (prominent display + cascade), `4dx-d4-cadence` (30-min / 27-consecutive), `4dx-meta-team-leader-onboarding` (Ch 8 4-stage rollout), and `4dx-d1-wig-cascade` (4000 employee × 75 dept ladder-up).
+**Cross-skill applicability**: anchor for `4dx-d1-wig-formulation` (multi-WIG Hi Touch/Volume + division cascade), `4dx-d2-lead-measures` (universal service), `4dx-d3-scoreboard` (prominent display + cascade), `4dx-d4-cadence` (30-min / 27-consecutive), `4dx-meta-team-leader-onboarding` (Ch 8 4-stage rollout), `4dx-d1-wig-cascade` (4000 employee × 75 dept ladder-up).
 
 **Use this case when**: large org / hospitality / customer-experience WIG / multi-division cascade; full operational reference is needed.
 **Do NOT generalize this case to**: small teams (< 50 ppl); contexts without clear lag metric; B2B with long sales cycle (Opryland's lag — guest survey — has fast feedback loop).
 
 ---
 
-### 2. Bravelab.io — first 4DX implementation (failure-included)
+### 2. CSN College — institutional 4DX rollout
 
-**Source**: Mariusz Smenzyk (founder, Bravelab.io), "The very first attempt to implement 4DX in Bravelab.io" — LinkedIn post.
-**Public URL**: https://www.linkedin.com/pulse/very-first-attempt-implement-4dx-bravelabio-mariusz-smenzyk
-**License note**: LinkedIn post by author; cite with attribution. Author explicitly transparent ("90% of scoreboards fill out the date and value").
-
-**Company**: Bravelab.io — Polish digital agency (small startup). Implementation date: 2020-2021.
-
-**Driver**: 5 competing priorities; founder noticed they couldn't actually execute on any of them.
-
-**D1 — WIGs (verbatim, after refinement from initial 5)**:
-- **"To issue invoices for all contracted projects by the end of March 2021"**
-- **"To decrease unpaid invoices from 84k to 0 by the end of March 2021"**
-
-**D2 — Lead measures (FAILED — useful anti-pattern)**:
-- Reused existing project spreadsheet (income/expenses financial data)
-- Author quote: "**LEAD measures didn't work. Not everyone was able to define what he needs to do to bring our efforts closer to our LAG measure**"
-- Direct evidence of book Ch 3 claim ("D2 is the most-misunderstood discipline")
-
-**D3 — Scoreboard (PARTIAL)**:
-- Tool: Google Sheets (no suitable commercial app found)
-- Simple date + value entries; "90% of scoreboards fill out the date and value of measurement"
-
-**D4 — Cadence (PARTIAL)**:
-- Weekly sessions every Monday at 1pm
-- 85% achievement threshold (not 100%)
-- **Failure**: sessions exceeded 30-min window, sometimes reaching 1 hour
-- **Failure**: members arrived unprepared with current measurements
-- **Failure**: members lacked foundational 4DX knowledge beforehand
-
-**Cross-skill applicability**: `4dx-d2-lead-measures` (canonical "leads didn't work" failure mode); `4dx-d4-cadence` (canonical session-creep + prep-failure mode); `4dx-meta-team-leader-onboarding` (canonical "skipped pre-onboarding training" failure).
-
-**Use this case when**: user is in audit-mode and pasting an artifact that shows D2 collapse / D4 session-creep; small-org context (5-15 ppl); SaaS / digital / startup context.
-**Do NOT generalize this case to**: large org cascade; established 4DX-experienced teams; cases where the lag itself is malformed (Bravelab's lags were fine; the failure was downstream at D2).
-
----
-
-### 3. CSN College (College of Southern Nevada) — institutional 4DX rollout
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (38-page PDF read via Read tool pages 1-30, 2026-05-01)
 
 **Source**: CSN 4DX Support & Guidance Packet, September 2024. 38 pages.
 **Public URL**: https://news.csn.edu/wp-content/uploads/2024/10/4DX-Support-Guidance-Packet-September-2024.pdf
 **Cached at**: `/Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/d3a8448e-9700-4357-93f1-589640555d7a/tool-results/webfetch-1777588470712-ojpg7d.pdf`
-**Extraction note**: WebFetch failed to render text from this PDF (compressed binary). Re-extract via Read tool's PDF support if used as case-bank source.
+**License note**: published for CSN faculty / staff internal use; publicly accessible. Cite as "CSN 4DX Support & Guidance Packet, Sept 2024."
 
-**Company**: College of Southern Nevada — public higher-education institution.
+**Company**: College of Southern Nevada — public higher-education institution. Established long-term FranklinCovey relationship 2021. Pre-4DX: graduation rate <10% (pre-2019), 17% (2024) vs national community-college avg 33%.
 
-**D1 — WIGs (disclosed via search summary, verbatim)**:
-- Primary: **"Increase certificate and degree completions from 4,673 to 6,000 by June 30, 2029"**
-- Sub-WIG 1: **"Increase retention for all students Fall-to-Fall from 43% to 53% by June 20, 2029"**
-- Sub-WIG 2: **"Eliminate equity gaps in successful course completion by 74.7% to 89.7% by June 30, 2029"**
+**D1 — Org WIGs (verbatim, page 9, March 2024 crafted)**:
+- **Breakthrough WIG**: "Increase certificate and degree completions from 4,673 to 6,000 by June 30, 2029."
+- **Sub WIG A**: "Increase annual unduplicated headcount from 41,058 to 41,160 by June 30, 2029."
+- **Sub WIG B**: "Increase retention for all students Fall-to-Fall from 43% to 53% by June 20, 2029." [sic — typo in source, expected June 30]
+- **Sub WIG C**: "Eliminate equity gaps in successful course completion by 74.7% to 89.7% by June 30, 2029."
 
-**D2-D4 + Ch 8**: details should be in the 38-page packet but require deeper PDF extraction.
+**D1 — Department-level TWIG examples (verbatim, pages 17-21, 12 disclosed)**:
+- Advising/Career Services: "Increase the number of new students connected to a Field of Interest Advisor from 0% to 90% by July 1, 2026"
+- Financial Aid: "Increase the number of Federal Aid recipients from 3,704 to 3,890 by June 30, 2028"
+- Student Recruitment: "Increase the number of first-year underrepresented male student enrollment from 447 (5-year average) to 536 by August 17, 2025"
+- American Indian Program: "Increase the retention rate of Native American students from 58% to 61% by June 30, 2025"
+- Chemistry: "Increase Chemistry student successful course completion with equity for the Spring 2024 semester from 66.54% to 69.54% by October 31, 2027"
+- EWLJ: "Increase subsequent course enrollment from EWLJ's four gateway level courses semester-to-semester from an average of 55.5% to 60.5% by July 15, 2026"
+- MCSE: "Increase MCSE student successful course completion from 57.1% to 65% by October 31, 2025"
+- Media Innovation Group (IT): "Increase software update schedule from 0 to 138 classrooms by August 1, 2025"
+- Facilities/Maintenance: "Increase maintenance of learning environments from 2600 to 4600 spaces by August 1, 2026"
+- Advancement: "Increase the number of Scholarship Sponsors from 0 to 18 by September 1, 2023"
+- Business Office: "Increase the number of financially literate units from 4 to 60 by December 31, 2025"
+- Professional Development & Learning Center: "Increase professional development offerings for part-time faculty and staff from 2 offerings to 10 offerings by July 15, 2024"
 
-**Cross-skill applicability**: education context anchor; institutional / multi-year cascade; equity / DEI WIG framing (rare in book's anchors).
+**WIG句型 spec (verbatim, page 23 / 27)**:
+- "Action from X to Y by a specific date"
+- Components: Action Statement → Starting Line (X) → Finishing Line (Y) → specific Deadline (month, day, year)
+- Mandate: "Only use this format to create your Team WIG. No other format will be accepted in February 2025."
 
-**Use this case when**: education / public institution context; multi-year horizon (rare — book typically shows quarterly WIGs); compound WIG with sub-targets.
-**Do NOT generalize this case to**: short-cycle / quarterly contexts; private-sector commercial WIGs.
+**D2 — Lead Measures (verbatim per department)**:
+- Advising: 60 conversations + introductions/week (team) + 10/member/week
+- Financial Aid: 190 contacts/week + 10/member/week
+- Student Recruitment: 6 hours/week intentional activities + 2 hrs/member/week
+- American Indian Program: 15 outreach actions/week (pre-approved) + 3/member/week
+- Chemistry: 10 high-impact practices/week (pre-approved shortlist) + 1/member/week
+- EWLJ: 2 hours/week student support + 20 min/member/week
+- MCSE: 42 actions/week from "Loss Momentum Framework" + 2/member/week
+- Media Innovation: 8 classroom updates/week + 2/member/week
+- Facilities: 20 inspections/week (checklist-based) + 4/member/week
+- Advancement: 4 sponsor activities/week + 2/member/week
+- Business Office: 6 units/10 employees/week financial-awareness meetings + 1 unit/3 employees/member/week
+- Professional Development: 7 learning items/week + 2/member/week
+
+**D2 — Two-Axis Test (verbatim, page 24-25)**:
+- X-Y Scatter Plot: Y-axis Predictive (high) ↔ Not Predictive (low); X-axis Habitual Behavior (left) ↔ Chronically Inconsistent Behavior (right)
+- Top-right quadrant = Potential Lead Measures
+- 5 evaluation questions: Predictive / Measurable (≥80% influenceable) / Current Habit (chronically inconsistent vs current habit) / 4 Required Components (Verb + Focus + Consistency + Quality) / "Scoreboardable"
+
+**D3 — Scoreboard (verbatim, page 26)**:
+- "Digital and Physical Scoreboards" both used
+- Physical Scoreboard updated weekly
+- 4DX Online Portal with Red/Yellow/Green status ("Stay in the Green")
+- Sample physical scoreboard photo on page 26: 3-track race-car layout with FINISH lines + 4 monthly milestones (1M / 2M / 3M / 4M) + dial gauges underneath
+
+**D4 — Cadence (verbatim, pages 11-13)**:
+- "**Team Huddles are quick 10-15-minute meetings that follow a specific format**"
+- Frontline Team Leader hosts weekly Team Huddle
+- Frontline Team Leader attends THEIR leader's Team Huddle to report
+- "Receive weekly accountability updates from each Team Member"
+- "Update the Team's progress weekly in the 4DX Portal"
+
+**Ch 8 — Onboarding timeline (verbatim, page 14)**:
+- May 2022 – July 2023: Directors+ received 7 Habits + 4 Essential Roles training (foundation)
+- March 2024: Sr. Executives trained in 4DX, crafted 4 CSN WIGs
+- May 2024: Leaders of Leaders trained
+- September 2024: Frontline Team Leaders trained (70+); 50+ to be trained in October
+- October 2024: 4DX Coach assignment per team
+- October 2024 – January 2025: Teams draft TWIG, Lead Measures, Physical Scoreboard
+- February 2025: Frontline TWIG Review (15-min presentations of TWIGs and Lead Measures by each Team)
+- March 2025: Official launch of Accountability for the TWIGs and Lead Measures
+
+**Roles (verbatim, page 5 + 12-13)**:
+- Executive Sponsors (President + 5 VPs, all named)
+- Primary 4DX Coaches: Ayesha L. Kidd (Lead), Bob Ngo (Data), Shari Peterson, Jyoti Senthil, Chuck Dobbs, Shannon Gilliland (each named with role)
+- 4DX Coach assigned per team for "**up to eighteen months**"
+- Leaders of Leaders / Frontline Team Leaders / Individual Team Members
+
+**Cross-skill applicability**: education / public-institution context anchor; institutional / multi-year cascade; equity / DEI WIG framing (rare in book's anchors); 12 well-formed TWIG examples for d1-wig-formulation training; explicit two-axis test methodology for d2-lead-measures.
+
+**Use this case when**: education / public institution context; multi-year horizon (rare — book typically shows quarterly WIGs); compound WIG with sub-targets; need explicit "Action from X to Y by date"句型 spec.
+**Do NOT generalize this case to**: short-cycle / quarterly contexts; private-sector commercial WIGs; small teams that don't have org-level WIG to ladder to.
+
+---
+
+### 3. Bravelab.io — first 4DX implementation (failure-included)
+
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (full LinkedIn article extracted via playwright text DOM, 2026-05-01)
+
+**Source**: Mariusz Smenżyk (founder, Bravelab.io), "The very first attempt to implement 4DX in Bravelab.io" — LinkedIn post, published 2021-04-20.
+**Public URL**: https://www.linkedin.com/pulse/very-first-attempt-implement-4dx-bravelabio-mariusz-smenzyk
+**License note**: LinkedIn post by author; cite with attribution. Author explicitly transparent + provides example scoreboard spreadsheet link.
+
+**Company**: Bravelab.io — Polish digital agency (small startup, dev team ~15 people growing to 20). Implementation started March 2021.
+
+**Driver**: founder asked business developers what was vital for company in 1Q/2021; got 5 different answers. Recognized executional misalignment.
+
+**D1 — Initial 5 candidate goals (verbatim, narrowing-from-many anchor)**:
+1. To hire five developers
+2. To complete a company's website
+3. To hire Marketing Manager
+4. To implement ATS tools
+5. To deliver all of the opened projects
+
+**D1 — Refined to From-X-to-Y-by-When (verbatim, intermediate stage)**:
+1. To Increase the development team from 15 to 20 people until the end of the April
+2. To finish five pages that are still not ready by 31/03/2021
+3. To hire Marketing Manager by the end of the April
+4. To fill out 25 CV's which are on hr@bravelab to the new ATS by the end of the March
+5. To deliver projects A, B, C by the end of the March → reformulated to:
+
+**D1 — Final 2 WIGs (verbatim)**:
+- "**To issue invoices for all contracted projects by the end of March 2021**"
+- "**To decrease unpaid invoices from 84k to 0 by the end of March 2021**"
+- (Note: earlier in article said "from 80k to 0k", later corrected to 84k — captures real-world drafting iteration)
+
+**D2 — Lead measures (FAILED — useful anti-pattern, verbatim)**:
+- Reused existing project spreadsheet (income/expenses financial data) instead of designing behavioral leads
+- Author quote: "**LEAD measures didn't work. Not everyone was able to define what he needs to do to bring our efforts closer to our LAG measure**"
+- Direct evidence of book Ch 3 claim that D2 is the most-misunderstood discipline
+
+**D3 — Scoreboard (PARTIAL, verbatim)**:
+- Tool: Google Sheets (no suitable commercial app found)
+- Author observation: "**90% of scoreboards fill out the date and value of measurement**"
+- Author shared example scoreboard publicly: https://docs.google.com/spreadsheets/d/1Btvv4JVujR3UaEI4saled00JjsqCUCdp_n--mRHSMNQ/edit#gid=631824341
+
+**D4 — Cadence (PARTIAL, verbatim)**:
+- "WIG sessions every Monday at 1 p.m"
+- 85% achievement threshold (not 100%)
+- Worked: established consistent cadence; team rejected unnecessary ideas
+- **Failed**: "**WIG Sessions required more than 30 minutes. Sometimes up to 1h**"
+- **Failed**: "**Everyone has to be prepared before the WIG Session (everyone needs to know their current measurements. It's important to put them out on the scoreboard together)**"
+- **Failed**: "**People who will be using 4DX should learn the basics of this method before we start**"
+
+**What worked (verbatim)**:
+- Defined 2 WIGs (3 hours of meetings)
+- Mondays 1pm cadence
+- Accurate scoreboard data
+- Focus discipline: easy to hold off unnecessary ideas
+
+**Cross-skill applicability**: `4dx-d1-wig-formulation` (5→2 narrowing example, From-X-to-Y句型 iteration, Ch 6 narrowing-from-many anchor); `4dx-d2-lead-measures` (canonical "leads didn't work" failure mode); `4dx-d4-cadence` (canonical session-creep + prep-failure mode); `4dx-meta-team-leader-onboarding` (canonical "skipped pre-onboarding training" failure).
+
+**Use this case when**: small-org context (5-15 ppl); SaaS / digital / startup; user is in audit-mode and pasting an artifact that shows D2 collapse / D4 session-creep; user is in coach-mode and has "5 candidate WIGs" → narrowing question.
+**Do NOT generalize this case to**: large org cascade; established 4DX-experienced teams; cases where the lag itself is malformed (Bravelab's lags were fine; the failure was downstream at D2).
 
 ---
 
 ### 4. Methodist Le Bonheur Germantown Hospital
 
-**Source**: Becker's Hospital Review article on 4DX in healthcare.
-**Public URL**: https://www.beckershospitalreview.com/hospital-management-administration/how-the-4-disciplines-of-execution-can-change-healthcare/
-**Extraction note**: WebFetch returned 403; data extracted via WebSearch summary.
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (full Becker's article via Wayback Machine snapshot, playwright text DOM extraction, 2026-05-01)
 
-**Company**: Methodist Le Bonheur Germantown Hospital, 309-bed full-service hospital. Pilot scope: 58-bed unit.
+**Source**: Emily Rappleye, "How the 4 disciplines of execution can change healthcare" — Becker's Hospital Review, May 14, 2015. Based on session at Becker's Hospital Review 6th Annual Meeting, Chicago, May 7, 2015.
+**Original URL**: https://www.beckershospitalreview.com/hospital-management-administration/how-the-4-disciplines-of-execution-can-change-healthcare.html (returns 403 today)
+**Wayback URL**: https://web.archive.org/web/20161029170253/http://www.beckershospitalreview.com/hospital-management-administration/how-the-4-disciplines-of-execution-can-change-healthcare.html
+**Speakers**: William A. Kenley (CEO Methodist Le Bonheur Healthcare) + Diane Ridgway (COO Methodist Le Bonheur Germantown Hospital)
 
-**D1 — WIG**: increase **bedturns** to create "virtual capacity" in the 58-bed unit. Focused on simple discharges (total joint patients) rather than complex (SNF patients).
+**Company**: 309-bed full-service hospital. Pilot scope: 58-bed unit. Memphis-based system Methodist Le Bonheur Healthcare's Germantown TN hospital.
 
-**D2 — Lead measures (predictive)**: defined per book Ch 3 lead-vs-lag framing; specifics not disclosed in article.
-**D3 — Scoreboard**: nurses self-built scorecards tracking how lead indicators affected bedturn rate.
-**D4 — Cadence**: weekly meetings to discuss results, review lead indicators, evaluate plan.
+**Driver (verbatim)**: "delays backed up the emergency department and operating rooms… It was a flow problem that left patients in the hallways and damaged patient loyalty and satisfaction." (~2013)
 
-**Cross-skill applicability**: healthcare anchor; team-built (D3 nurse self-built scorecards = book Ch 4 "team owns the board" principle); pilot-scope rollout pattern.
+**D1 — WIG (verbatim)**:
+- "**They decided their wildly important goals would be to increase bedturns to make 'virtual capacity' in the unit**"
+- 58-bed unit pilot
+- Focused on **simple discharges (total joint patients)** rather than difficult discharges (SNF patients) — book Ch 6 "go smaller" anchor
 
-**Use this case when**: healthcare / clinical operations / patient-throughput WIG.
-**Do NOT generalize this case to**: knowledge-work or creative-work contexts (clinical workflow is highly structured).
+**D1 — anti-pattern observed (verbatim, Kenley quote)**:
+- "If you operate in that kind of environment, you are giving staff the latitude to triage what the No.1 priority is because not everything can possibly be No. 1 — which is a very scary thing frankly"
+- Book Ch 1 "too many priorities = no priority" embodied
 
----
+**D2 — Lead measure (verbatim, Ridgway insight)**:
+- "Staff determined early on they could project when patients would potentially be ready to leave the hospital"
+- "Use these estimates to manage the team's expectations and prep the patients and the patients' families for the tentative discharge time"
+- Lead = projecting + prepping for tentative discharge time (a behavioral / forecast lead, not a count)
 
-## Tier 2 — Useful supplements (★★ partial disclosure)
+**D3 — Scoreboard (verbatim)**:
+- "**The Germantown nurses created the scorecards**" (team-built principle)
+- Tracks lead indicators + reporting goal (bedturn rate)
+- Kenley quote: "**It is vital that the scorecard is made by the team and that the members of the team can see it right in front of them all the time**" (book Ch 4 visibility + ownership)
 
-### 5. STEAM K-2 school (Leader In Me network)
+**D4 — Cadence (verbatim)**:
+- "**weekly meetings to discuss their results, look at lead indicators and evaluate if their plan was working**"
+- Cadence enables team self-monitoring
 
-- **WIG (verbatim)**: "80% of K-2nd teachers will lead a STEAM thinking activity in their classroom at least twice a month by December 2018"
-- Lead measures: types of activities done, subject integration, student-product creation
-- Scoreboard: % teachers applying STEAM activities + count of activities done
-- Source: search summary on Leader-In-Me 4DX schools
+**Results (verbatim)**:
+- "**Bedturns increased from 77 in 2012 to 81 in 2013**" (~5% increase, modest but real)
+- "ER was busier"
+- "Patient communication improved"
+- "Physician satisfaction improved"
+- Kenley: "Feedback from staff was positive. They said they were very inspired by the framework because it was something they could grab onto"
 
-**Use for**: education / behavioral-change WIG; threshold-based WIG ("80% of teachers will…") rather than count-based.
+**Closing quote (Ridgway, verbatim)**: "It's really about making a point to focus on what's important for the organization and then making sure the team can focus on this too with the scorecard and the cadence of accountability"
 
-### 6. Third-grade reading (Leader In Me)
+**Cross-skill applicability**: healthcare anchor; team-built (D3 nurse self-built scorecards = book Ch 4 "team owns the board" principle); pilot-scope rollout pattern; "go smaller" Ch 6 anchor (focused on simple cases first, deferred SNF complexity); behavioral-lead pattern (forecast-and-prep, not count-based).
 
-- **WIG**: improving % of students reading at grade level by end of school year (less specific X)
-- **Lead measure (verbatim)**: "20 minutes per day, three times per week" of sustained silent reading
-
-**Use for**: education / personal-behavior lead measures (time-on-task pattern).
-
-### 7. Boy Scouts of America (Cub Scouting)
-
-- **WIG**: increase Cub Scout membership from **8,355 to 8,750 by year end** + increase number of schools having boy talks from 210
-- Source: Scouting org PDF
-
-**Use for**: nonprofit / membership-growth WIG.
-
-### 8. Marriott Hotels
-
-- **WIG**: customer satisfaction (less specific X / Y)
-- Result: rose from perpetual 2nd place to 1st place
-- Source: logmi.jp transcript referencing FranklinCovey case
-
-**Use for**: hospitality cross-reference to Opryland (same industry, same lag metric); high-level only.
-
-### 9. Whirlpool
-
-- **Result**: $5.7M incremental in first 90 days
-- WIG details: not disclosed
-
-**Use for**: outcome calibration only.
-
-### 10. IT Lead Measures compilation (GitHub gist by meredian)
-
-- **URL**: https://gist.github.com/meredian/cdb14e2ff214be0743fb3ccb400bede4
-- 6 example sets of IT-context lead measures (App Support team, code refactoring, automation, incident-management %s, etc.)
-- Source attribution: compiled from multiple articles
-
-**Use for**: `4dx-d2-lead-measures` IT-context calibration; not real implementation but vetted compilation of typical IT 4DX leads.
-
-### 11. Sales Tax Institute
-
-- WIG / leads / scoreboard / cadence: NOT disclosed
-- Only general principle: "Whether we are designing a webinar… we are always asking if this is what matters most"
-
-**Use for**: ★ marketing-tier only; demonstrates "internalized D1 principle" voice.
+**Use this case when**: healthcare / clinical operations / patient-throughput WIG; team-built scoreboard discussion; "go smaller" recommendation when WIG is too broad.
+**Do NOT generalize this case to**: knowledge-work or creative-work contexts (clinical workflow is highly structured); cases where outcome lag has long feedback loop (bedturn tracks daily).
 
 ---
 
-## Tier 3 — Insufficient for case bank (★ marketing-tier only)
+## Tier 2 — Useful supplements (★★ disclosure × ≥★★ verification, NOT primary anchor)
 
-### 12. ノーリツ Vプラン23 (FranklinCovey JP × HRpro)
+| # | Case | Disclosure | Verification | Best use |
+|---|---|---|---|---|
+| 5 | STEAM K-2 school (Leader In Me) | ★★ partial — full WIG句型, partial leads, partial scoreboard | ★ search snippet only | Education / threshold-based behavior-change WIG |
+| 6 | 3rd-grade reading (Leader In Me) | ★★ partial — vague WIG, full lead | ★ search snippet only | Education / time-on-task lead measures |
+| 7 | Boy Scouts of America Cub Scouting | ★★ partial — full WIG, no leads/scoreboard | ★ search snippet only | Nonprofit / membership-growth WIG |
+| 8 | Marriott Hotels | ★ marketing — vague WIG, no specifics | ★ search snippet only | Hospitality cross-reference to Opryland |
+| 9 | Whirlpool | ★ marketing — outcome-only ($5.7M / 90 days) | ★ search snippet only | Outcome calibration only |
+| 10 | IT Lead Measures gist (meredian/GitHub) | ★★ partial — 6 example sets, no real-org context | ★★ direct read (gist text) | `4dx-d2-lead-measures` IT-context calibration; not real implementation |
 
-**Source**: form-gated download from `franklincovey.co.jp/?handout=noritz_casestudy`.
-**Disclosure**: D1-D4 specifics absent; only context (中計 V プラン23) + Ch 8 onboarding pattern (パイロット → 階層別 Execution Design) + outcomes (118% / +285% / +4pt). Initial assessment overrated; reverted as case-bank source 2026-05-01 (see [memory note](file:///Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/memory/feedback_marketing_cases_lack_d1_d4_specifics.md)).
-
-**Use for**: JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); Ch 8 onboarding pattern reference. NOT for D1-D4 audit-mode case banks.
-
-### 13. マルハン (FranklinCovey JP)
-
-- Marketing summary only: "マルハンイズム浸透"
-- D1-D4 not disclosed
-
-### 14. 公益社 (FranklinCovey JP)
-
-- Marketing summary only: "サービス品質向上 + 風土変革"
-- 7 つの習慣 + 4DX 同時導入
-- D1-D4 not disclosed
-
-### 15. アスクレップ (FranklinCovey JP)
-
-- Original PDF redirect to FCE-publishing 301; no longer accessible
-- Was tagged "戦略実行リーダー育成"
-
-### 16. 日本 NCH (FranklinCovey JP)
-
-- Mention only; no detail page exists
-
-### 17. Hashimoto note article (note.com)
-
-- Author's team uses 4DX = OKR KR equivalence
-- Actual WIG / leads / scoreboard NOT quoted
-- Cadence: Mon 10:30-11:00 (good 30-min discipline)
-- Author admits: "可視性の強化はおサボりさせてもらい、スプレッドシートをスコアボード代わりにしていました" (used spreadsheet as scoreboard shortcut)
-
-**Use for**: JP small-team-implementation voice; not for case bank.
-
-### 18. room8.co.jp practical guide
-
-- Generic illustrations only ("月間売上 800万→1,000万"); not real Room8 case
+**Tier 2 promotion path**: each Tier 2 case should be re-verified via direct read before being promoted to anchor candidacy. Search snippets are summary-level and may be paraphrased.
 
 ---
 
-## Tier 4 — Specialized / educational (worth keeping context, NOT case-bank material)
+## Tier 3 — Insufficient (★ marketing-tier — keep for vocabulary calibration only)
 
-### Abdhi Famili General Hospital (Indonesia)
+| # | Case | Disclosure | Verification | Note |
+|---|---|---|---|---|
+| 11 | ノーリツ V プラン23 | ★ marketing — D1-D4 specifics absent | ★★★ direct PDF read | JP-context vocabulary calibration only (中計 / 方針展開 / 営業統括 / 挑戦する風土); see [memory](file:///Users/kouko/.claude/projects/-Users-kouko-GitHub-monkey-skills/memory/feedback_marketing_cases_lack_d1_d4_specifics.md) |
+| 12 | マルハン (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | Summary only: "マルハンイズム浸透" |
+| 13 | 公益社 (FranklinCovey JP) | ★ marketing | ★★ WebFetch summary | "サービス品質向上 + 風土変革" |
+| 14 | アスクレップ | ❌ inaccessible | — | Original PDF redirect to FCE-publishing 301; no longer accessible |
+| 15 | 日本 NCH | ❌ insufficient | — | Mention only; no detail page |
+| 16 | Hashimoto note article | ★ marketing | ★★ WebFetch summary | "可視性の強化はおサボり、スプレッドシートをスコアボード代わりに" — JP small-team-implementation voice |
+| 17 | room8.co.jp | ★ marketing — generic illustrations | ★★ WebFetch summary | Generic JP industry examples (web-design / legal / coworking) |
+| 18 | Sales Tax Institute | ★ marketing — D1-D4 not disclosed | ★★ WebFetch summary | "Whether we are designing a webinar… we are always asking if this is what matters most" |
 
-- Academic paper, but extraction failed (full PDF in Bahasa Indonesia)
-- Outcome: significant association between 4DX implementation and patient satisfaction (p < 0.05)
-- Operational details inaccessible without full PDF translation
+**Tier 3 use rule**: vocabulary calibration only (JP industry terms, voice samples). Never as case-bank anchor.
 
-### United Animal Health U-4DX Playbook
+---
 
-- Internal playbook PDF (40+ pages)
-- WebFetch couldn't render text via standard extraction
-- Use Read tool's PDF support if needed in future
+## Tier 4 — Specialized / educational (worth tracking, NOT case-bank material)
 
-### FranklinCovey video case studies
-
-- Multiple short videos referenced (Marriott, Opryland video, etc.)
-- Not transcribed publicly; would require manual transcription
+| Case | Status |
+|---|---|
+| Abdhi Famili General Hospital (Indonesia) | Academic paper; full PDF in Bahasa Indonesia; outcome statistically significant (p<0.05); operational details inaccessible without translation |
+| United Animal Health U-4DX Playbook | Internal playbook PDF (40+ pages); WebFetch couldn't render via standard extraction; Read tool's PDF support could be tried in future if needed |
+| FranklinCovey video case studies | Multiple short videos referenced; not transcribed publicly |
 
 ---
 
 ## Decision rubric: when to use which tier
 
-**For audit-mode-examples.md case banks** (agent runtime): only Tier 1 (★★★ full) cases qualify. Tier 2 is acceptable as supplementary anti-pattern reference but should not be the primary anchor.
+**For audit-mode-examples.md case banks** (agent runtime): only Tier 1 (★★★ disclosure × ≥★★ verification) cases qualify. Tier 2 is acceptable as supplementary anti-pattern reference but should not be the primary anchor.
 
 **For boundary references / Don't-confuse-with neighbours** (agent runtime): Tier 2-3 are fine as one-line callouts.
 
@@ -281,10 +334,11 @@
 
 ## Open questions for future research
 
-1. **Are there more CFR PDFs?** Opryland is one; FranklinCovey CFR has produced multiple. Searching for "Center for Advanced Research" + "FranklinCovey" + case studies should surface more.
+1. **More CFR PDFs?** Opryland is one; FranklinCovey CFR has produced multiple. Searching for "Center for Advanced Research" + "FranklinCovey" + case studies should surface more.
 2. **Book PDF / paid ed?** The 4DX 2nd ed. has anchor cases (Younkers / Sydney accounting / others) inline. Already partially captured in skill bodies. A complete extraction would close the loop.
-3. **Anonymized real client cases?** The user (kouko) running 4DX themselves and accumulating case data over time would produce the highest-value cases but doesn't exist yet.
-4. **JP-context Tier 1?** No JP case currently meets ★★★ disclosure. If FranklinCovey JP ever publishes a CFR-style research PDF for a JP client, that would be the highest-value addition.
+3. **Tier 2 → Tier 1 promotion?** The 4 Tier 2 education cases (STEAM K-2 / 3rd-grade reading / Cub Scouts / Marriott) could be verified via direct read of original Leader In Me PDFs / scouting.org sources. Worth one cycle if education-context anchors become priority.
+4. **Anonymized real client cases?** The user (kouko) running 4DX themselves and accumulating case data over time would produce highest-value cases.
+5. **JP-context Tier 1?** No JP case currently meets ★★★ disclosure. If FranklinCovey JP ever publishes a CFR-style research PDF for a JP client, that would be the highest-value addition.
 
 ---
 
@@ -294,7 +348,12 @@ This inventory was assembled 2026-05-01 from:
 - 5 web searches across EN + JP keyword sets
 - 8 WebFetch deep-dives into specific case URLs
 - Cross-validation of cases mentioned in multiple sources
-- Reading 1 PDF (Opryland CFR) for verbatim quotes
+- **Direct read of 3 PDFs** (Opryland CFR; CSN Support Packet; ノーリツ V プラン23)
+- **Playwright full-DOM extraction of 2 articles** (Bravelab.io LinkedIn; Methodist Le Bonheur Becker's Hospital Review via Wayback Machine)
 - 1 reverted experiment with the ノーリツ case (see memory note)
 
-Total research time: ~1 session. Re-running this inventory annually is sensible if case-bank sourcing becomes active work.
+Total research time: 2 sessions (initial discovery 2026-05-01 morning; full Tier 1 verification 2026-05-01 afternoon). Re-running this inventory annually is sensible if case-bank sourcing becomes active work.
+
+**Verification cycle history**:
+- 2026-05-01: initial inventory (Tier 1 partial verification — Opryland direct, others via search snippet)
+- 2026-05-01 (same day, second pass): full Tier 1 verification — CSN PDF read, Bravelab playwright read, Methodist Wayback read. All 4 Tier 1 cases now ★★★ verification.
