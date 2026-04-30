@@ -15,7 +15,11 @@ description: |
   / consultant-to-leader / personal coach to member). Goodhart self-check
   applies to all 3. NOT for WIG definition (→ 4dx-d1-*), scoreboard / display
   (→ 4dx-d3-scoreboard), weekly review cadence (→ 4dx-d4-cadence), or stuck
-  cadence (→ 4dx-sustain-momentum-rescue). Member-influence mode is
+  cadence (→ 4dx-sustain-momentum-rescue), or **OKR Key Results /
+  quarterly KRs / KPI dashboards / SaaS metrics** (out-of-4DX — KRs
+  lexically resemble lead measures but are outcome-oriented and
+  quarterly, not daily-action predictive-AND-influenceable; route to
+  `using-four-dx-coach`). Member-influence mode is
   V1 ⚠️ partial (member POV inferred from leader-side cases).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2

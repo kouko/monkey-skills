@@ -1,7 +1,7 @@
 ---
 name: 4dx-meta-whirlwind-triage
 description: |
-  Activate when the user says "I'm always firefighting / no time for the important stuff / day job eats my whole week" and wants a strategic goal anyway. JP: 「日常業務に追われて目標に手がつかない」「忙しすぎて目標が進まない」. zh-TW: 「每天都在救火」「日常雜事吃掉所有時間」. D1 prerequisite: surfaces whirlwind/WIG split via 7-day time audit before WIG-defining. Do NOT fire for productivity-tool requests, burnout, or reactive roles where firefighting IS the work (oncall SRE, ER, infant-care).
+  Activate when the user says "I'm always firefighting / no time for the important stuff / day job eats my whole week" AND has not yet started 4DX (capacity-check before WIG-defining). JP: 「日常業務に追われて目標に手がつかない」「忙しすぎて目標が進まない」. zh-TW: 「每天都在救火」「日常雜事吃掉所有時間」. Pre-D1 capacity audit: surfaces whirlwind/WIG split via 7-day time audit before WIG-defining. Do NOT fire for productivity-tool requests, generic burnout, or reactive roles where firefighting IS the work (oncall SRE, ER, infant-care). Do NOT fire when the user is asking whether 4DX fits at all (→ `4dx-meta-strategy-triage` for fundamental-fit triage). Do NOT fire when the user has already started 4DX and lapsed (→ `4dx-sustain-momentum-rescue` for already-running cadence collapse — multi-week miss / "haven't done my 4DX in weeks" / "WIG cadence broke" are rescue territory, not first-time capacity audit).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
 source_chapter: Chapter 1 — The Real Problem with Execution
 source_language: en

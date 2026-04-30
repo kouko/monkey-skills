@@ -13,8 +13,14 @@ description: |
   「上週 commitment 沒達成怎麼面對」. Account → Review → Plan grammar
   shared; voice differs (peer-witness / consultant-to-leader / personal-
   coach). NOT for daily standups, sprint review, OKR check-in, 1-on-1,
-  annual retro. NOT when cadence broken (→ 4dx-sustain-personal-momentum-
-  rescue). NOT pre-D4 (D1 / D2 / D3 first).
+  annual retro. NOT pre-D4 (D1 / D2 / D3 first). **Boundary against
+  rescue**: a single missed commitment in one otherwise-running week IS
+  D4 territory (member-debrief protocol handles "I missed last week"
+  / "上週 commitment 沒達成"). But **multi-week lapse** ("WIG Sessions
+  stopped 3 weeks ago" / "haven't done this in a month" / "我的 4DX
+  已經幾週沒做了") is rescue territory → `4dx-sustain-momentum-rescue`.
+  D4 assumes the cadence is currently running; rescue handles cadence
+  collapse / restart.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 5 — Discipline 4: Create a Cadence of Accountability; Chapter 10 — Sustaining 4DX (Susan/Marcus dialogue); Chapter 15 — Applying Discipline 4
 source_language: en

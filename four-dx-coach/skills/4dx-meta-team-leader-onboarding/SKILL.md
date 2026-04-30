@@ -7,7 +7,7 @@ description: |
   leaders on board with 4DX?", "My direct reports will resist this — how do
   I roll it out?", "How do I avoid this looking like another corporate
   flavor-of-the-month?". JP:「部下リーダーに 4DX を腹落ちさせたい」
-  「直属マネージャーが反発しそう、どう導入する」「また流行りの施策と思われたくない」.
+  「直属マネージャーが反発しそう、どう導入する」「また流行りの施策と思われたくない」「リーダー陣を巻き込みたい、4DX で」「メンバーをどう巻き込む」.
   ZH:「我要怎麼讓我的下屬 leader 們真心接受 4DX？」「我的直屬主管會抵抗，要怎麼導入」
   「不想被當成又一個流行 KPI 工具」. Output: a per-leader buy-in plan
   (named leaders × steel-manned objections × pilot vs hold-back classification)

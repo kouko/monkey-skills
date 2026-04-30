@@ -1,17 +1,28 @@
 ---
 name: 4dx-sustain-momentum-rescue
 description: |
-  Activate when the user reports their 4DX implementation has stalled
-  or lapsed — WIG cadence broken, scoreboard ignored, lead measures
-  abandoned, or motivation gone. Diagnoses where the four-discipline
-  stack actually broke (D1 wrong WIG / D2 wrong leads / D3 invisible
-  scoreboard / D4 cadence drift / whirlwind escalation / personal
-  substrate) and routes to the matching restart, instead of generic
-  "try harder." Trigger phrases: "WIG cadence broke", "haven't done
-  my 4DX in weeks", "lost momentum on my goal", "scoreboard feels
-  pointless now", 「WIG セッションが続かない」「4DX が止まった」
-  「我的 4DX 已經幾週沒做了」. NOT for first-time WIG setup, NOT for
-  org-wide engagement surveys, NOT for clinical burnout/depression.
+  Activate when the user reports their **already-running** 4DX
+  implementation has stalled or lapsed — multi-week WIG cadence
+  broken, scoreboard ignored / haven't updated for weeks, lead
+  measures abandoned, motivation gone after running it for a while.
+  Diagnoses where the four-discipline stack actually broke (D1 wrong
+  WIG / D2 wrong leads / D3 invisible scoreboard / D4 cadence drift
+  / whirlwind escalation / personal substrate) and routes to the
+  matching restart, instead of generic "try harder." Trigger phrases:
+  "WIG cadence broke", "haven't done my 4DX in weeks", "lost momentum
+  on my goal after N weeks", "scoreboard feels pointless now / haven't
+  updated in a month", "lost momentum on my 4DX, was firefighting all
+  week" (already-running firefighting, NOT first-time capacity audit),
+  「WIG セッションが続かない」「4DX が止まった」「我的 4DX 已經幾週
+  沒做了」「scoreboard 一個月沒更新」. NOT for first-time WIG setup
+  (→ `4dx-d1-wig-formulation`). NOT for never-started 4DX users
+  firefighting before they begin (→ `4dx-meta-whirlwind-triage` —
+  capacity audit precedes 4DX; rescue requires that 4DX was actually
+  running). NOT for one-week miss inside an otherwise-running cadence
+  (→ `4dx-d4-cadence` member-debrief — single missed commitment is
+  normal cadence work; rescue requires multi-week lapse OR
+  stack-wide breakdown). NOT for org-wide engagement surveys. NOT for
+  clinical burnout/depression.
 source_book: The 4 Disciplines of Execution — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
 source_chapter: Chapter 10 "Sustaining 4DX Results and Engagement" + "The Missing Ingredient"
 source_language: en

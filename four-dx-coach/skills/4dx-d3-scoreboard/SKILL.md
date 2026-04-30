@@ -11,8 +11,14 @@ description: |
   scoreboard 怎麼看」. Players' scoreboard 5-second-test grammar shared;
   voice differs (personal coach / consultant-to-leader / personal coach
   to member). NOT for enterprise BI / KPI dashboards, agile burndown,
-  OKR check-in dashboards, before D1/D2 are defined, or for cadence
-  questions (→ 4dx-d4-cadence).
+  OKR check-in dashboards, before D1/D2 are defined, cadence
+  questions (→ 4dx-d4-cadence), or **scoreboard-as-stalled-signal**
+  ("scoreboard 沒人看" / "haven't updated in a month" / "scoreboard
+  feels pointless now" — these mean the cadence broke, not that the
+  scoreboard needs redesigning → `4dx-sustain-momentum-rescue`).
+  Activate ONLY when the user wants to design / build / read a
+  scoreboard against an active 4DX implementation, not when they're
+  reporting that an existing one stopped working.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: Chapter 4 — Discipline 3: Keep a Compelling Scoreboard; Chapter 14 — Applying Discipline 3
 source_language: en
