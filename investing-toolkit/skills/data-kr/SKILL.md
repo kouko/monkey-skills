@@ -129,8 +129,8 @@ pack.py --pack regime-pack --indicators rates,inflation,growth,cycle
 
 PMI (S&P Global) is **not fetched** — licensed commercial data. Closest
 free proxies are the `sentiment` group (consumer-sentiment K252 +
-economic-sentiment K269). See korea-macro SKILL.md (data-kr's source
-skill) for full PMI rationale.
+economic-sentiment K269). The PMI exclusion rationale is preserved in
+git history (pre-v2.0.0 `korea-macro/SKILL.md`).
 
 ---
 
@@ -206,8 +206,8 @@ launching downstream skills.
   closest proxies are BOK BSI sentiment indicators.
 - **FinanceDataReader endpoint risk**: BOK ECOS access is via an
   undocumented internal endpoint that the FDR library reverse-engineers.
-  See korea-macro SKILL.md for fallback discussion (free ECOS API key
-  remains a deferred candidate).
+  Free ECOS API key (https://ecos.bok.or.kr/api/#/AuthKeyApply) remains a
+  deferred candidate for direct integration.
 
 ---
 
@@ -216,8 +216,9 @@ launching downstream skills.
 - Skill directory: `${CLAUDE_SKILL_DIR}` resolves to this skill's path.
 - All `pack.py` invocations preserve `INVESTING_TOOLKIT_CACHE` so cached
   client output is reused across pack types within a run.
-- Source skill `korea-macro` is **kept** during the v2.0.0 migration —
-  do not delete it until report-layer cutover is complete.
+- v1.x source skill `korea-macro` was deleted in v2.0.0; its full 54-indicator
+  catalog + grouping rationale is now embedded in this skill's pack contracts
+  above. Historical reference docs preserved in git history (pre-v2.0.0).
 
 한국어: 한국 데이터 레이어. 한국은행 ECOS-KEYSTAT 매크로 + yfinance KOSPI/KOSDAQ.
 日本語: 韓国データレイヤー（BOK ECOS マクロ + yfinance 株式）。

@@ -200,9 +200,9 @@ need to compute `roc_year` / `season` / `month` themselves.
 | 8 individual client invocations from SKILL.md prose | 1 `pack.py` facade with 5 modes |
 | ROC date arithmetic embedded in SKILL.md prose | handled inside `pack.py` |
 
-The two v1 skills (`taiwan-macro/`, `taiwan-stock-snapshot/`) remain in-place
-during the v2.0.0-rc.1 rollout window and are removed once `report-*` skills
-are wired to `data-tw`.
+The two v1.x skills (`taiwan-macro/`, `taiwan-stock-snapshot/`) were deleted
+in v2.0.0 once `report-*` skills were wired to `data-tw`. Slash commands
+continue to route through the new architecture.
 
 ---
 
@@ -232,9 +232,9 @@ calls and concatenated.
 ## Reference
 
 - Spec: `docs/superpowers/specs/2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md` §4.2
-- v1 macro detail: `investing-toolkit/skills/taiwan-macro/references/`
-- v1 stock detail: `investing-toolkit/skills/taiwan-stock-snapshot/references/`
+- ADR: `investing-toolkit/docs/adr/0001-data-analysis-report-layers.md`
 - Canonical clients: `investing-toolkit/scripts/`
+- v1.x source skills (`taiwan-macro`, `taiwan-stock-snapshot`) deleted in v2.0.0; their indicator catalogs are now embedded in `regime-pack` / `snapshot` / `memo-fetch` pack contracts above. Historical reference docs preserved in git history (pre-v2.0.0 commits)
 
 ---
 

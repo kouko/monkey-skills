@@ -26,8 +26,8 @@ score, or classify.
 | **yfinance** (Yahoo Finance, unofficial) | Tier 2 | .SS / .SZ / .HK individual stocks; market indices (CSI300, SSEC, ChiNext, HSI, HSCEI) |
 
 Auth: none required. NBS new-SPA + akshare endpoints are reachable from
-TW / US / Anthropic IPs (verified empirically — see canonical
-`china-macro/docs/nbs-indicator-catalog.md`).
+TW / US / Anthropic IPs (verified empirically; rationale preserved in git
+history pre-v2.0.0 in the deleted `china-macro/docs/` directory).
 
 ---
 
@@ -228,20 +228,17 @@ output via temp files and dispatches the next layer.
 
 ## Reference
 
-Reference materials (full NBS UUID catalog, 3-language industry research
-synthesis, akshare endpoint docs) live in the canonical `china-macro/`
-during v2.0.0-rc.1 transition. Once `china-macro/` is removed in PR 1
-finalisation, references migrate here.
-
-- `references/indicator-index.md` (post-migration)
-- `references/sources.md` (post-migration)
+- Spec: `docs/superpowers/specs/2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md` §4.2
+- ADR: `investing-toolkit/docs/adr/0001-data-analysis-report-layers.md`
+- Canonical clients: `investing-toolkit/scripts/`
+- v1.x source skill `china-macro` was deleted in v2.0.0; full NBS UUID catalog,
+  3-language industry research synthesis, and akshare endpoint docs preserved
+  in git history (pre-v2.0.0 commits)
 
 ---
 
 ## i18n
 
-- `README.md` — English overview
-- `README.zh-TW.md` — 繁體中文
-- `README.ja.md` — 日本語
-
-(Translations migrate from `china-macro/` per the v2.0.0 plan.)
+Description front-matter carries en + zh-TW + ja one-liners per repo
+i18n convention. Detailed multilingual READMEs are deferred to PR 3
+(documentation polish).

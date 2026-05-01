@@ -21,8 +21,8 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 `domain-teams:investing-team` per the Cross-Plugin Delegation Contract.
 
 > **Migration note (v2.0.0)**: This skill replaces the v1.x
-> `investment-memo-writer`. The legacy skill is preserved during the
-> transition window and will be deleted in v2.0.0 Task 5.
+> `investment-memo-writer`, which was deleted in v2.0.0. The slash command
+> `/invest-memo` continues to route here.
 
 ---
 

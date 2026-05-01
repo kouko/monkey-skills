@@ -136,11 +136,13 @@ Bundles JP macro Tier-A primary sources:
 - e-Stat preset bundle: `cpi,core-cpi,ip,unemployment,jgb10y`
 - ECB JP real 10Y yield ex-post (`ecb_client.py --series M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA`)
 
-Full BOJ + e-Stat + ECB indicator catalogue (rates / inflation / growth /
-labor / consumption / tankan / real-rates / forex / money / balance) is still
-documented in `investing-toolkit/skills/japan-macro/SKILL.md`. v2.0.0 ships a
-focused starter regime-pack; future versions will expand fields based on
-Layer-3 demand.
+v2.0.0 ships a focused starter regime-pack covering the IC / GIP regime-
+classification core (rates / inflation / growth / real-rates). The full
+BOJ + e-Stat + ECB indicator catalogue (labor / consumption / tankan /
+forex / money / balance) is preserved as fetch capability via the bundled
+clients (boj_client.py, estat_client.py, ecb_client.py); Layer 3 / 2 callers
+that need additional series can invoke the clients directly. Future versions
+will expand the pack fields based on Layer-3 demand.
 
 ---
 
@@ -221,13 +223,14 @@ This skill **must**:
 
 ## See also
 
-- `investing-toolkit/skills/japan-macro/SKILL.md` — full BOJ / e-Stat / ECB
-  indicator catalogue with bilingual reference notes (kept until v2.0.0
-  Task 4 deletes legacy skills)
-- `investing-toolkit/skills/japan-stock-snapshot/SKILL.md` — original Tier
-  A / Tier 2 routing rationale + EDINET v2 reference (kept until Task 4)
 - `docs/superpowers/specs/2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md`
   — §4.2 Layer 1 data skill spec
+- `investing-toolkit/docs/adr/0001-data-analysis-report-layers.md` — ADR
+  pinning the three-layer architecture
+- v1.x source skills (`japan-macro`, `japan-stock-snapshot`) were deleted
+  in v2.0.0; their indicator catalogues + EDINET tier-routing rationale
+  are now embedded in this skill's pack contracts. Historical reference
+  docs preserved in git history (pre-v2.0.0 commits)
 
 ---
 
