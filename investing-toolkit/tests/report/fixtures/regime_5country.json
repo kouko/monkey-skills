@@ -1,0 +1,43 @@
+{
+  "countries": {
+    "US": {
+      "growth_direction": "up",
+      "inflation_direction": "down",
+      "ic_quadrant": "1-recovery",
+      "confidence": "high"
+    },
+    "JP": {
+      "growth_direction": "flat",
+      "inflation_direction": "up",
+      "ic_quadrant": "4-reflation",
+      "confidence": "medium"
+    },
+    "TW": {
+      "growth_direction": "up",
+      "inflation_direction": "flat",
+      "ic_quadrant": "1-recovery",
+      "confidence": "high"
+    },
+    "KR": {
+      "growth_direction": "up",
+      "inflation_direction": "down",
+      "ic_quadrant": "1-recovery",
+      "confidence": "medium"
+    },
+    "CN": {
+      "growth_direction": "down",
+      "inflation_direction": "down",
+      "ic_quadrant": "3-stagflation",
+      "confidence": "low"
+    }
+  },
+  "cross_country_consensus": {
+    "ic_alignment": "mixed",
+    "note": "3/5 countries in Phase 1 (Recovery)."
+  },
+  "_provenance": {
+    "skill": "analysis-macro-regime",
+    "computed_at": "2026-04-30T12:00:00Z",
+    "input_countries": ["US", "JP", "TW", "KR", "CN"]
+  }
+}

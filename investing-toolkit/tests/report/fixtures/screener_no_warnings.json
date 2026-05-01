@@ -1,0 +1,47 @@
+{
+  "preset_used": "balanced",
+  "universe_size": 20,
+  "passed": 2,
+  "returned": 2,
+  "filters_applied": {},
+  "weights_applied": {},
+  "ranked": [
+    {
+      "rank": 1,
+      "ticker": "MSFT",
+      "composite_score": 0.85,
+      "breakdown": {"valuation": 0.8, "momentum": 0.9, "trend": 0.85, "quality": 0.85},
+      "metrics": {
+        "trailingPE": 14.0,
+        "priceToBook": 1.2,
+        "dividendYield": 2.5,
+        "rsi_14": 55.0,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 410.0
+      },
+      "warnings": []
+    },
+    {
+      "rank": 2,
+      "ticker": "AAPL",
+      "composite_score": 0.78,
+      "breakdown": {"valuation": 0.65, "momentum": 0.85, "trend": 0.85, "quality": 0.80},
+      "metrics": {
+        "trailingPE": 28.5,
+        "priceToBook": 45.2,
+        "dividendYield": 0.38,
+        "rsi_14": 62.5,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 175.0
+      },
+      "warnings": []
+    }
+  ],
+  "filtered_out": [],
+  "_provenance": {
+    "skill": "analysis-screener",
+    "computed_at": "2026-04-30T12:00:00Z"
+  }
+}

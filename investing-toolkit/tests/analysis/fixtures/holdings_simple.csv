@@ -1,0 +1,4 @@
+ticker,quantity,cost_basis
+AAPL,10,150
+MSFT,5,300
+ZZZ_MISSING,20,50

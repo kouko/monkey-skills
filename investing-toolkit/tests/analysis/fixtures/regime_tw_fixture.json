@@ -1,0 +1,8 @@
+{
+  "country": "tw",
+  "series": {
+    "cycle.signal": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+    "inflation.cpi-yoy": [1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0]
+  },
+  "_provenance": {"source": "test fixture"}
+}

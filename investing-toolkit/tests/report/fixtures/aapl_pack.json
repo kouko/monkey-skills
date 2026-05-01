@@ -1,0 +1,30 @@
+{
+  "pack": "snapshot",
+  "ticker": "AAPL",
+  "fetched_at": "2026-04-30T12:00:00Z",
+  "company_info": {
+    "longName": "Apple Inc.",
+    "shortName": "Apple",
+    "exchange": "NASDAQ",
+    "fullExchangeName": "NasdaqGS",
+    "sector": "Technology",
+    "regularMarketPrice": 175.50,
+    "currentPrice": 175.50,
+    "fiftyTwoWeekLow": 145.00,
+    "fiftyTwoWeekHigh": 199.62,
+    "trailingPE": 28.5,
+    "forwardPE": 26.0,
+    "priceToBook": 45.2,
+    "marketCap": 2750000000000,
+    "enterpriseValue": 2800000000000,
+    "beta": 1.25,
+    "dividendYield": 0.38
+  },
+  "price_history": {
+    "latest_close": 175.50,
+    "rows": [
+      {"Close": 145.0},
+      {"Close": 175.5}
+    ]
+  }
+}

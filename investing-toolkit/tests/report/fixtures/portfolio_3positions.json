@@ -1,0 +1,52 @@
+{
+  "positions": [
+    {
+      "ticker": "MSFT",
+      "quantity": 100,
+      "cost_basis": 300.00,
+      "current_price": 410.00,
+      "market_value": 41000.00,
+      "pnl_abs": 11000.00,
+      "pnl_ratio": 0.4,
+      "weight": 0.50,
+      "contribution": 0.20
+    },
+    {
+      "ticker": "AAPL",
+      "quantity": 80,
+      "cost_basis": 150.00,
+      "current_price": 175.50,
+      "market_value": 14040.00,
+      "pnl_abs": 2040.00,
+      "pnl_ratio": 0.17,
+      "weight": 0.30,
+      "contribution": 0.05
+    },
+    {
+      "ticker": "GOOGL",
+      "quantity": 50,
+      "cost_basis": 130.00,
+      "current_price": 165.00,
+      "market_value": 8250.00,
+      "pnl_abs": 1750.00,
+      "pnl_ratio": 0.27,
+      "weight": 0.20,
+      "contribution": 0.04
+    }
+  ],
+  "totals": {
+    "total_cost": 56000.00,
+    "total_market_value": 63290.00,
+    "total_pnl_abs": 7290.00,
+    "total_pnl_ratio": 0.13,
+    "position_count": 3,
+    "max_weight": 0.50,
+    "max_weight_ticker": "MSFT",
+    "top3_weight": 0.99
+  },
+  "_provenance": {
+    "skill": "analysis-portfolio",
+    "computed_at": "2026-04-30T12:00:00Z",
+    "missing_prices": []
+  }
+}
