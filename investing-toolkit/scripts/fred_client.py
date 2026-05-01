@@ -29,6 +29,7 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 import requests as _requests
@@ -134,7 +135,10 @@ def fetch_series_csv(series: str, periods: int) -> dict:
 
     for attempt in range(MAX_RETRIES):
         try:
-            resp = _requests.get(url, timeout=30, headers={"User-Agent": "investing-toolkit/1.2.0"})
+            # Use requests library default UA (python-requests/X.Y.Z) — FRED's
+            # bot filter blocks "Mozilla/*" and several custom UAs (verified 2026-05),
+            # but accepts default python-requests + curl UAs. Don't override.
+            resp = _requests.get(url, timeout=30)
             if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
                 continue
@@ -190,9 +194,10 @@ def fetch_series_api(series: str, periods: int, api_key: str) -> dict:
 
     for attempt in range(MAX_RETRIES):
         try:
+            # Default requests UA accepted by FRED API endpoint — see CSV
+            # endpoint comment in fetch_series_csv() for filter rationale.
             resp = _requests.get(
                 FRED_API_BASE, params=params, timeout=15,
-                headers={"User-Agent": "investing-toolkit/1.2.0"},
             )
             if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_BASE_DELAY * (2 ** attempt) * 2)
@@ -308,13 +313,27 @@ def main():
     if len(series_list) == 1:
         result = fetch_series(series_list[0], args.periods, api_key, args.use_api)
     else:
+        # Multi-series: fetch concurrently to avoid cumulative latency on N-series
+        # regime-pack workloads. FRED public CSV endpoint has no documented
+        # concurrency limit; ~120 req/min rate limit shared across all callers
+        # of an IP. Default 8 workers stays comfortably under (max ~60 req/min).
+        # Override via FRED_MAX_WORKERS env var (set to 1 to force serial).
+        max_workers = max(1, int(os.environ.get("FRED_MAX_WORKERS", "8")))
         result = {
             "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "series": {},
         }
-        for s in series_list:
-            data = fetch_series(s, args.periods, api_key, args.use_api)
-            result["series"][s] = data
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futures = {
+                ex.submit(fetch_series, s, args.periods, api_key, args.use_api): s
+                for s in series_list
+            }
+            for fut in as_completed(futures):
+                sid = futures[fut]
+                try:
+                    result["series"][sid] = fut.result()
+                except Exception as e:
+                    result["series"][sid] = {"error": f"fetch_failed: {e}", "series": sid}
 
     print(json.dumps(result, default=str, indent=2))
 

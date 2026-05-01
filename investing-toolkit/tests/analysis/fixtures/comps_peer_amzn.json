@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "AMZN",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "AMZN": {
+      "trailingPE": 42.0,
+      "forwardPE": 38.0,
+      "priceToSales": 3.1,
+      "priceToBook": 7.8,
+      "enterpriseToEbitda": 18.2
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}

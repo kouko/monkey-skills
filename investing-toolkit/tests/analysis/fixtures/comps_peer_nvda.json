@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "NVDA",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "NVDA": {
+      "trailingPE": 55.0,
+      "forwardPE": 40.0,
+      "priceToSales": 25.0,
+      "priceToBook": 45.0,
+      "enterpriseToEbitda": 50.0
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}

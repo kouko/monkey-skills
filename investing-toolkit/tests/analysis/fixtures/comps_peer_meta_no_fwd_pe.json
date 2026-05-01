@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "META",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "META": {
+      "trailingPE": 26.0,
+      "forwardPE": null,
+      "priceToSales": 8.2,
+      "priceToBook": 7.5,
+      "enterpriseToEbitda": 17.5
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}

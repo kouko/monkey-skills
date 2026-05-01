@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "MSFT",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "MSFT": {
+      "trailingPE": 33.1,
+      "forwardPE": 28.5,
+      "priceToSales": 11.0,
+      "priceToBook": 11.2,
+      "enterpriseToEbitda": 24.5
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}
