@@ -31,7 +31,7 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
 | `ticker` | yes | — | e.g. `AAPL`, `7203` (or `7203.T`), `2330.TW`, `005930.KS`, `600519.SS` |
-| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
+| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 2.5 comps + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
 | `output_language` | no | auto-detect | `.TW` / `.TWO` → `zh-TW`; `.T` / `.TO` / 4-digit JP → `ja`; `.KS` / `.KQ` → `ko`; `.SS` / `.SZ` / `.HK` → `zh-CN`; otherwise infer from user message |
 | `peers` | no | auto-discovery via runtime research agent | Comma-separated peer list (e.g., `MSFT,GOOGL,META,AMZN`); skips runtime peer-discovery if provided. |
 | `--interactive` | no | `false` (auto mode) | When `true`, peer-discovery agent's output is presented for user confirmation before Comps fetch + analysis. |
@@ -108,7 +108,7 @@ list scales with the memo's scope.
 
 ### Phase 2.5 — Peer Discovery + Comps Multiples
 
-**If `--peers` provided** (manual override): skip discovery, use the list verbatim.
+**If `--peers` provided** (manual override): skip discovery, use the list verbatim. (Manual-override mode: provenance shows `source: user-provided` for each peer; no rationale required.)
 
 **Else** spawn research agent for peer-discovery at runtime:
 
@@ -132,6 +132,10 @@ Use `general-purpose` subagent with this prompt template:
 >
 > Cap: 250 words total. No industry-rollup commentary — just the peer list.
 
+**Mode switch**: if `--interactive=false` (default, pipeline mode), the orchestrator
+proceeds directly from agent JSON to anchor/peer fetch. If `--interactive=true`,
+present the agent's JSON list + rationales, wait for user `/proceed` or edits, then fetch.
+
 **Default behavior** (configurable):
 
 | Context | Discovery flow |
@@ -150,11 +154,15 @@ The reader never wonders "Comps against whom?"
 **Then fetch + analyze**:
 
 ```bash
+# 0. Persist the peer-discovery agent's JSON output (or the --peers manual list
+#    converted to {"peers": [{"ticker", "rationale": null, "source": null}]})
+#    as /tmp/peer-rationales.json — analysis-comps reads this for provenance.
+
 # 1. Fetch anchor multiples
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
   ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
-    --ticker ${ANCHOR} --pack comps-multiples \
-    > /tmp/${ANCHOR_SAFE}-anchor-comps.json
+    --ticker ${TICKER} --pack comps-multiples \
+    > /tmp/${TICKER_SAFE}-anchor-comps.json
 
 # 2. Fetch peer multiples (group peers by country, run per-country batch)
 # Per peer country group:
@@ -166,13 +174,13 @@ INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
 
 # 3. Run analysis-comps
 uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
-  --anchor /tmp/${ANCHOR_SAFE}-anchor-comps.json \
+  --anchor /tmp/${TICKER_SAFE}-anchor-comps.json \
   --peers /tmp/<peer1>-comps.json,/tmp/<peer2>-comps.json,... \
   --rationale-map /tmp/peer-rationales.json \
-  > /tmp/${ANCHOR_SAFE}-comps.json
+  > /tmp/${TICKER_SAFE}-comps.json
 ```
 
-Pass `/tmp/${ANCHOR_SAFE}-comps.json` to investing-team in Phase 4 alongside `dcf.json` / `regime.json`.
+Pass `/tmp/${TICKER_SAFE}-comps.json` to investing-team in Phase 4 alongside `dcf.json` / `regime.json`.
 
 ### Phase 3 — Analysis
 
@@ -186,7 +194,7 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-dcf/scripts/dcf_compute.py \
 ```
 
 > **Comps note**: relative valuation is computed in **Phase 2.5** (peer
-> discovery + `analysis-comps`). The resulting `/tmp/${ANCHOR_SAFE}-comps.json`
+> discovery + `analysis-comps`). The resulting `/tmp/${TICKER_SAFE}-comps.json`
 > is passed to investing-team in Phase 4 alongside the DCF and regime JSONs,
 > so Phase 4's relative-valuation gates run on the structured comps JSON, not
 > prose.
@@ -234,6 +242,7 @@ when the memo is already in a target-ready shape.
 For Obsidian vault delivery (`output=obsidian` or natural-language intent),
 call `obsidian:obsidian-markdown` after docs-team formatting to apply
 frontmatter / wikilinks / callouts and write to the resolved vault path.
+If Phase 5a is skipped, 5b reads the Phase 4 memo directly.
 
 > **Cross-Plugin Contract recap (Phase 5b)**: Pass the docs-team Markdown
 > output **path** (not content) as input to obsidian-markdown — same
@@ -276,18 +285,18 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
 
 - 日本語: 株式投資メモの編成層（Layer 3）。ticker suffix で
   `data-{us,jp,tw,kr,cn}` の memo-fetch / regime-pack を country-route し、
-  `analysis-dcf` + `analysis-macro-regime` を pure compute で走らせ、Deep
+  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` を pure compute で走らせ、Deep
   Equity Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY gate）の実行を
   `domain-teams:investing-team` に委譲。最終整形は任意で
   `domain-teams:docs-team`。
 - 繁體中文: 權益投資備忘錄編排層（Layer 3）。依 ticker 後綴路由至
   `data-{us,jp,tw,kr,cn}` 的 memo-fetch / regime-pack，於
-  `analysis-dcf` + `analysis-macro-regime` 進行純計算，再將 Deep Equity
+  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` 進行純計算，再將 Deep Equity
   Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY 閘）委派給
   `domain-teams:investing-team`。最終排版可選 `domain-teams:docs-team`。
 - English: Layer 3 orchestrator for equity investment memos. Country-routes
   by ticker suffix to `data-{us,jp,tw,kr,cn}` memo-fetch / regime-pack,
-  runs `analysis-dcf` + `analysis-macro-regime` (pure compute), delegates
+  runs `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` (pure compute), delegates
   the Deep Equity Research Memo protocol (2 MUST + 4 SHOULD + 1 MAY gates)
   to `domain-teams:investing-team`, optional final formatting via
   `domain-teams:docs-team`.

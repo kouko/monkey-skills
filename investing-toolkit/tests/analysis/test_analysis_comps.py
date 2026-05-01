@@ -188,6 +188,13 @@ def test_anchor_delta_value_field(baseline_payload):
 def test_composite_ranking_cheapest_first(baseline_payload):
     """Composite_rank 1 = cheapest by composite multiples.
 
+    Composite ranking aggregates per-multiple ranks via mean (composite_rank_avg
+    field), then re-ranks ascending. GOOGL has lowest values across 4 of 5
+    multiples (META marginally lower on evEbitda 17.5 vs 18.0), so mean-rank
+    ≈ 1.4 → composite_rank=1. If the aggregation method changes (e.g.
+    sum-of-ranks, weighted by multiple importance), this test should fail and
+    be updated to reflect the new method.
+
     Hand-checked across 5 multiples (lower = cheaper):
       AAPL: trailingPE 28.5 / forwardPE 25.1 / evEbitda 21.3 / P/S 7.2  / P/B 35.4
       MSFT: 33.1 / 28.5 / 24.5 / 11.0 / 11.2
@@ -250,13 +257,16 @@ def test_missing_multiple_in_one_peer(runner, fixtures_dir):
     assert amzn_peer["multiples"].get("trailingPE") == pytest.approx(42.0)
 
 
-def test_empty_peers_single_anchor_mode(runner, fixtures_dir):
-    """No effective peers → warning emitted; statistics fall back to anchor.
+def test_self_as_peer_dedupe(runner, fixtures_dir):
+    """Self-as-peer dedupe: anchor file passed as its own peer is filtered.
 
-    The script requires --peers to have at least one path syntactically, but
-    de-duplicates any peer file that resolves to the same ticker as the
-    anchor — exercising the "no effective peers" branch via the
-    self-as-peer route.
+    Intentionally exercises the script's documented dedupe-by-ticker behavior:
+    when a --peers entry resolves to the same ticker as --anchor, it is
+    skipped with a warning. This is the only way to reach the "no effective
+    peers" branch via the CLI (argparse requires --peers to be non-empty).
+
+    Once de-duped, the script falls back to anchor-only statistics
+    (min == max == anchor value) and emits a warning naming the dedupe.
     """
     res = runner(
         COMPS_SCRIPT,
@@ -278,6 +288,91 @@ def test_empty_peers_single_anchor_mode(runner, fixtures_dir):
     assert stats_pe["max"] == pytest.approx(28.5, abs=1e-6)
     # No peers in the output list
     assert payload["peers"] == []
+
+
+def test_one_peer_only(runner, fixtures_dir):
+    """Single-peer degenerate case: every statistic collapses to the peer's value.
+
+    With N=1 peer, the script's _percentiles helper falls back to (v, v) and
+    statistics.median / fmean / min / max all return the lone value. This
+    test pins that contract so n=1 doesn't silently start producing different
+    aggregates.
+
+    Anchor AAPL trailingPE = 28.5; lone peer MSFT trailingPE = 33.1.
+    Expect every stat field for trailingPE to equal 33.1 (peer, not anchor),
+    vs_median_pct = (28.5 - 33.1) / 33.1 * 100, percentile per
+    _empirical_percentile([33.1, 28.5], 28.5) = 1/2 = 0.5 (anchor cheaper).
+    """
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", _peers_arg(fixtures_dir, "comps_peer_msft.json"),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+
+    # All trailingPE statistics collapse to the peer's value (33.1), not anchor (28.5)
+    stats_pe = payload["statistics"]["trailingPE"]
+    for stat_key in ("median", "mean", "q1", "q3", "min", "max"):
+        assert stats_pe[stat_key] == pytest.approx(33.1, abs=1e-6), (
+            f"trailingPE.{stat_key} expected 33.1; got {stats_pe[stat_key]}"
+        )
+    assert stats_pe["n"] == 1
+
+    # anchor_delta uses peer's value as the median
+    delta = payload["anchor_delta"]["trailingPE"]
+    expected_pct = ((28.5 - 33.1) / 33.1) * 100
+    assert delta["vs_median_pct"] == pytest.approx(expected_pct, abs=1e-3)
+    # Anchor (28.5) cheaper than peer (33.1) → percentile = 1/2 = 0.5
+    assert delta["percentile"] == pytest.approx(0.5, abs=1e-6)
+
+    # Same collapse holds for another multiple
+    stats_ps = payload["statistics"]["priceToSales"]
+    for stat_key in ("median", "mean", "q1", "q3", "min", "max"):
+        assert stats_ps[stat_key] == pytest.approx(11.0, abs=1e-6)
+
+
+def test_all_peers_missing_a_multiple(runner, fixtures_dir):
+    """All peers missing forwardPE → forwardPE statistics fall through cleanly.
+
+    When every peer has forwardPE = null, the script's per-multiple peer_values
+    list is empty; stats fall through the n=0 fallback (using the anchor's
+    value), and anchor_delta short-circuits via the empty-peers branch
+    (vs_median_pct = 0.0, percentile = 0.5). Other multiples remain valid.
+    """
+    peers = _peers_arg(
+        fixtures_dir,
+        "comps_peer_googl_no_fwd_pe.json",
+        "comps_peer_meta_no_fwd_pe.json",
+    )
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", peers,
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+
+    # forwardPE: peer values empty → n=0; per source contract stats use the
+    # anchor-fallback values, but the key invariant is no crash + n=0.
+    fwd = payload["statistics"]["forwardPE"]
+    assert fwd["n"] == 0
+
+    # anchor_delta.forwardPE must NOT crash; empty-peers branch returns
+    # vs_median_pct=0.0 and percentile=0.5 per _anchor_delta source.
+    fwd_delta = payload["anchor_delta"]["forwardPE"]
+    assert fwd_delta is not None
+    assert fwd_delta["value"] == pytest.approx(25.1)  # anchor's forwardPE
+    assert fwd_delta["vs_median_pct"] == pytest.approx(0.0, abs=1e-6)
+    assert fwd_delta["percentile"] == pytest.approx(0.5, abs=1e-6)
+
+    # Other 4 multiples computed normally — peer set is valid for them.
+    # trailingPE peer values [24.5, 26.0]: median = 25.25, n = 2
+    tpe = payload["statistics"]["trailingPE"]
+    assert tpe["n"] == 2
+    assert tpe["median"] == pytest.approx(25.25, abs=1e-6)
+    assert tpe["min"] == pytest.approx(24.5, abs=1e-6)
+    assert tpe["max"] == pytest.approx(26.0, abs=1e-6)
 
 
 # ---------------------------------------------------------------------------
@@ -308,6 +403,48 @@ def test_rationale_null_without_map(baseline_payload):
         )
 
 
+def test_rationale_map_partial_coverage(runner, fixtures_dir):
+    """Peer absent from --rationale-map gets rationale=null; mapped peers unaffected.
+
+    Localizes a common user mis-config: typo'd ticker in the rationale map, or
+    the user added a 5th peer to --peers but forgot to extend the map. The
+    script must populate rationales for tickers that appear in the map and
+    leave rationale=null for peers absent from the map (rather than crashing
+    or applying a wrong rationale).
+
+    Setup: pass anchor + 5 peers (MSFT, GOOGL, META, AMZN, NVDA) but
+    comps_rationale_map.json only covers the first 4. NVDA must come back
+    with rationale=null while the other 4 keep their rationale strings.
+    """
+    peers = _peers_arg(
+        fixtures_dir,
+        "comps_peer_msft.json",
+        "comps_peer_googl.json",
+        "comps_peer_meta.json",
+        "comps_peer_amzn.json",
+        "comps_peer_nvda.json",
+    )
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", peers,
+        "--rationale-map", str(fixtures_dir / "comps_rationale_map.json"),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    rationales = {p["ticker"]: p["rationale"] for p in payload["peers"]}
+    # Mapped peers keep their rationale strings.
+    assert rationales.get("MSFT") == "Direct big-tech cloud competitor"
+    assert rationales.get("GOOGL") == "Hyperscaler tier"
+    assert rationales.get("META") == "Social/AI scale"
+    assert rationales.get("AMZN") == "Marketplace + AWS"
+    # NVDA absent from map → rationale stays null (not omitted, not a typo'd value).
+    assert "NVDA" in rationales, "NVDA peer should still appear in output"
+    assert rationales["NVDA"] is None, (
+        f"NVDA absent from rationale-map; expected rationale=null, got {rationales['NVDA']!r}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Pure-compute discipline (AST scan — no HTTP / subprocess / yfinance)
 # ---------------------------------------------------------------------------
@@ -324,7 +461,9 @@ FORBIDDEN_IMPORTS = {
 }
 
 
-def _collect_top_level_imports(script_path: Path) -> set[str]:
+def _collect_all_imports(script_path: Path) -> set[str]:
+    """Walks every Import / ImportFrom node in the AST, including those nested
+    inside functions or conditional blocks (e.g. lazy imports)."""
     tree = ast.parse(script_path.read_text(encoding="utf-8"))
     names: set[str] = set()
     for node in ast.walk(tree):
@@ -339,6 +478,6 @@ def _collect_top_level_imports(script_path: Path) -> set[str]:
 
 def test_pure_compute_imports():
     """analysis-comps Layer 2 contract: no network / yfinance / subprocess imports."""
-    imports = _collect_top_level_imports(COMPS_SCRIPT)
+    imports = _collect_all_imports(COMPS_SCRIPT)
     leaked = imports & FORBIDDEN_IMPORTS
     assert not leaked, f"comps_compute.py imports forbidden modules: {leaked}"

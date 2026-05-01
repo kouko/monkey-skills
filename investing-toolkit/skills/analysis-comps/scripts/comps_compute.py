@@ -183,8 +183,8 @@ def _anchor_delta(anchor_value: float | None, peer_values: list[float]) -> dict 
 
 def _rank_ascending(pairs: list[tuple[str, float]]) -> dict[str, int]:
     """Rank tickers ascending by value (lowest = rank 1).
-    Ties get the same rank (dense ranking would cluster, but keep distinct
-    for downstream readability — use 'min' style).
+    Ties receive the same rank (competition / min ranking: e.g. values
+    [10, 20, 20, 30] → ranks [1, 2, 2, 4] — not dense [1, 2, 2, 3]).
     """
     sorted_pairs = sorted(pairs, key=lambda kv: kv[1])
     ranks: dict[str, int] = {}
@@ -284,6 +284,19 @@ def main() -> int:
 
     warnings: list[str] = []
 
+    # v2.0.0: only --mode direct is wired; --mode compute is a placeholder.
+    # If a caller explicitly requests compute, warn loudly on stderr, fall
+    # back to direct, and stamp both the actual mode and the requested mode
+    # in _provenance so the audit trail survives the fallback.
+    requested_mode = args.mode
+    effective_mode = args.mode
+    if requested_mode == "compute":
+        sys.stderr.write(
+            "[analysis-comps WARN] --mode compute not yet implemented in "
+            "v2.0.0; falling back to direct mode\n"
+        )
+        effective_mode = "direct"
+
     # Load anchor
     anchor_pack = _load_pack(args.anchor)
     anchor_ticker = _resolve_ticker(anchor_pack, fallback=args.anchor.stem.upper())
@@ -355,7 +368,8 @@ def main() -> int:
             "peer_data_sources":  [src for _t, _m, src in peer_packs],
             "computed_at":        datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "io":                 "none",
-            "mode":               args.mode,
+            "mode":               effective_mode,
+            "requested_mode":     requested_mode,
             "warnings":           warnings,
         },
     }

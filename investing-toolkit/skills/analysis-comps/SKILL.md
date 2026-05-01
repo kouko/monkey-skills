@@ -161,6 +161,8 @@ EV/Revenue + Rule-of-40) are deferred to v2.1+.
     "peer_data_sources":  ["data-us/pack.py --pack comps-multiples", ...],
     "computed_at":        "2026-05-01T12:00:00Z",
     "io":                 "none",
+    "mode":               "direct",
+    "requested_mode":     "direct",
     "warnings":           []
   }
 }
@@ -181,7 +183,23 @@ For each of the 5 multiples:
    multiple and are skipped from the average.
 4. **Composite rank** — average of per-multiple ranks across the 5
    multiples (ignoring `null`s), then re-ranked ascending. Lowest
-   composite_rank = "cheapest by composite multiples".
+   composite_rank = "cheapest by composite multiples". Ties receive the
+   same rank (competition / min ranking: e.g. values `[10, 20, 20, 30]`
+   → ranks `[1, 2, 2, 4]` — not dense `[1, 2, 2, 3]`).
+
+**Quartile convention**: `q1` / `q3` use
+`statistics.quantiles(method="inclusive")` — equivalent to R-7 / Excel
+`QUARTILE.INC`. For peer count `n=1`, `q1 = q3 =` the value.
+
+**Percentile**:
+`anchor_delta.{multiple}.percentile = #(peer_values ≤ anchor + 1) / (n + 1)`
+where `n =` peer count. Anchor at exact median yields `0.5` in symmetric
+distributions; ties bias upward (weak / inclusive ranking).
+
+**Mode fallback (v2.0.0)**: `--mode compute` is not yet implemented; if
+requested, the script emits a stderr warning, falls back to `direct`,
+stamps `_provenance.mode = "direct"` (actual computation mode) and
+`_provenance.requested_mode = "compute"` (audit trail).
 
 ### Edge cases
 
