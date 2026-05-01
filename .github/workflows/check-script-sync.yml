@@ -1,0 +1,104 @@
+name: check-script-sync
+
+# Verifies that duplicated client scripts in investing-toolkit stay byte-identical.
+# Three groups are enforced:
+#   - yfinance_client.py across all data-{country}/ skills
+#   - fred_client.py across data-us + data-cn
+#   - ta_client.py across analysis-* skills (canonical = analysis-technical/)
+#
+# Status: ADVISORY in PR 1 (this PR). Becomes a REQUIRED check in PR 3 per
+# spec §6.1 of 2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-script-sync:
+    name: investing-toolkit script MD5 sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify duplicated clients are byte-identical
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import sys
+          from pathlib import Path
+
+          ROOT = Path("investing-toolkit/skills")
+
+          def md5(path: Path) -> str:
+              return hashlib.md5(path.read_bytes()).hexdigest()
+
+          def check_group(label: str, paths: list[Path], canonical: Path | None = None) -> int:
+              existing = [p for p in paths if p.is_file()]
+              if not existing:
+                  print(f"[skip] {label}: no copies found yet")
+                  return 0
+              hashes = {p: md5(p) for p in existing}
+              if canonical is not None and canonical.is_file():
+                  canonical_hash = md5(canonical)
+              else:
+                  # Use first found as canonical when none specified.
+                  canonical = existing[0]
+                  canonical_hash = hashes[canonical]
+
+              drift = [p for p, h in hashes.items() if h != canonical_hash]
+              if drift:
+                  print(f"[FAIL] {label}: drift detected (canonical: {canonical})")
+                  print(f"  canonical md5 = {canonical_hash}")
+                  for p in drift:
+                      print(f"  DRIFT  {p}  md5={hashes[p]}")
+                  return 1
+              print(f"[ok]   {label}: {len(existing)} files, all md5={canonical_hash}")
+              return 0
+
+          errors = 0
+
+          # Group 1: yfinance_client.py across data-{country}/
+          yf_paths = sorted(ROOT.glob("data-*/scripts/yfinance_client.py"))
+          errors += check_group(
+              "yfinance_client.py (data-*/scripts/)",
+              yf_paths,
+          )
+
+          # Group 2: fred_client.py across investing-toolkit/skills/*/scripts/
+          # Spec lists data-us + data-cn as the v2.0.0 set, but tolerate transitional
+          # copies in any skill — they all must match.
+          fred_paths = sorted(ROOT.glob("*/scripts/fred_client.py"))
+          errors += check_group(
+              "fred_client.py (*/scripts/)",
+              fred_paths,
+          )
+
+          # Group 3: ta_client.py — canonical = analysis-technical/
+          canonical_ta = ROOT / "analysis-technical" / "scripts" / "ta_client.py"
+          ta_paths = sorted(ROOT.glob("*/scripts/ta_client.py"))
+          errors += check_group(
+              "ta_client.py (canonical: analysis-technical/scripts/ta_client.py)",
+              ta_paths,
+              canonical=canonical_ta,
+          )
+
+          if errors:
+              print()
+              print(f"FAIL: {errors} group(s) out of sync.")
+              print("Fix locally: bash investing-toolkit/scripts/sync-clients.sh")
+              sys.exit(1)
+
+          print()
+          print("OK: all duplicated clients in sync.")
+          PY

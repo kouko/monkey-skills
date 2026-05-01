@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["requests==2.33.1"]
+# ///
+"""
+ecb_client.py — investing-toolkit ECB Data Portal CSV adapter
+Fetches European Central Bank statistical time-series (SDMX, CSV endpoint).
+
+Default: CSV endpoint at data-api.ecb.europa.eu — no API key required.
+         This is the public SDMX 2.1 data API published by ECB.
+
+Usage:
+  uv run ecb_client.py --series M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA --periods 24
+  uv run ecb_client.py --series M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA --dataset FM
+  uv run ecb_client.py --series M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA,M.JP.JPY.4F.BB.JP10YT_RR.YLDA --periods 12
+
+Series ID format: SDMX key of the series WITHIN a given dataset (e.g. FM).
+                  Leading frequency dimension required (e.g. M. for monthly).
+
+Auth: None required for the public Data Portal CSV endpoint.
+Cache: $INVESTING_TOOLKIT_CACHE/ecb/{dataset}_{series}_{periods}.json  TTL: 24h
+       Falls back to ~/.cache/investing-toolkit/ if env var not set.
+Docs: https://data.ecb.europa.eu/help/api/overview
+"""
+
+import argparse
+import csv
+import io
+import json
+import os
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+import requests as _requests
+
+ECB_CSV_BASE = "https://data-api.ecb.europa.eu/service/data"
+DEFAULT_DATASET = "FM"  # Financial Markets dataset
+_CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(
+    Path.home() / ".cache" / "investing-toolkit"
+)
+CACHE_DIR = Path(_CACHE_BASE) / "ecb"
+CACHE_TTL_SECONDS = 86400  # 24 hours
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 2.0
+
+
+# ---------------------------------------------------------------------------
+# Cache helpers
+# ---------------------------------------------------------------------------
+
+def _safe_name(series: str) -> str:
+    return series.replace("/", "_").replace(".", "_")
+
+
+def get_cache_path(dataset: str, series: str, periods: int) -> Path:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    return CACHE_DIR / f"{dataset}_{_safe_name(series)}_{periods}.json"
+
+
+def load_cache(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    if time.time() - path.stat().st_mtime > CACHE_TTL_SECONDS:
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return None
+
+
+def save_cache(path: Path, data: dict) -> None:
+    try:
+        path.write_text(json.dumps(data, default=str, indent=2))
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Provenance helpers
+# ---------------------------------------------------------------------------
+
+def _compute_staleness(latest_date_str: str | None, fetched_at: str) -> int | None:
+    """Compute days between reference period and fetch time."""
+    if not latest_date_str:
+        return None
+    try:
+        clean = latest_date_str.replace("-", "")
+        if len(clean) == 6:
+            clean += "01"  # YYYYMM -> YYYYMM01
+        ref = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        return (now - ref).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _make_provenance(result: dict, dataset: str) -> dict:
+    """Build _provenance block for an ECB result."""
+    latest = result.get("latest")
+    ref_period = latest["date"] if latest else None
+    return {
+        "source": f"ECB Data Portal CSV (data-api.ecb.europa.eu, dataset {dataset})",
+        "source_authority": "European Central Bank (ECB)",
+        "data_type": "official_supranational_statistics",
+        "update_cycle": "monthly (varies by series)",
+        "typical_lag": "1-3 months for real-yield / CPI-derived series",
+        "fetched_at": result.get("fetched_at"),
+        "reference_period": ref_period,
+        "staleness_days": _compute_staleness(ref_period, result.get("fetched_at", "")),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Parse ECB SDMX CSV
+# ---------------------------------------------------------------------------
+
+def _parse_csv(raw_csv: str) -> tuple[list[dict], dict]:
+    """Return (observations, metadata) parsed from the ECB CSV body.
+
+    observations: [{'date': 'YYYY-MM' or 'YYYY-Q%d', 'value': float}]
+    metadata: {'title': ..., 'unit': ..., 'frequency': ...}
+    """
+    reader = csv.DictReader(io.StringIO(raw_csv))
+    observations: list[dict] = []
+    metadata: dict = {}
+
+    for row in reader:
+        date_str = row.get("TIME_PERIOD") or ""
+        value_str = row.get("OBS_VALUE")
+        if value_str in (None, "", "NaN", "."):
+            continue
+        try:
+            value = float(value_str)
+        except ValueError:
+            continue
+        observations.append({"date": date_str, "value": value})
+        # Metadata: take from any row (CSV repeats it); prefer last non-empty.
+        if row.get("TITLE"):
+            metadata["title"] = row["TITLE"]
+        if row.get("UNIT"):
+            metadata["unit"] = row["UNIT"]
+        if row.get("FREQ"):
+            metadata["frequency"] = row["FREQ"]
+
+    # ECB CSV is ascending by date already; preserve order.
+    return observations, metadata
+
+
+# ---------------------------------------------------------------------------
+# Fetch
+# ---------------------------------------------------------------------------
+
+def fetch_series_raw(
+    dataset: str, series: str, periods: int
+) -> tuple[str, str | None]:
+    """Fetch raw CSV bytes. Returns (csv_text, error_or_None)."""
+    url = f"{ECB_CSV_BASE}/{dataset}/{series}"
+    params = {
+        "format": "csvdata",
+        "lastNObservations": str(periods),
+    }
+    headers = {
+        "User-Agent": "investing-toolkit/1.10.0",
+        "Accept": "text/csv",
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = _requests.get(url, params=params, headers=headers, timeout=30)
+            if resp.status_code == 429 and attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            if resp.status_code != 200:
+                return "", f"ECB CSV HTTP {resp.status_code}"
+            return resp.text, None
+        except _requests.exceptions.Timeout:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return "", "ECB CSV request timed out"
+        except _requests.exceptions.ConnectionError as e:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BASE_DELAY * (2 ** attempt))
+                continue
+            return "", f"ECB CSV connection error: {e}"
+        except Exception as e:
+            return "", str(e)
+
+    return "", "Max retries exceeded"
+
+
+def fetch_series(
+    dataset: str, series: str, periods: int, use_cache: bool = True
+) -> dict:
+    """Fetch a single ECB series with caching + provenance."""
+    cache_path = get_cache_path(dataset, series, periods)
+    if use_cache:
+        cached = load_cache(cache_path)
+        if cached is not None:
+            cached["_cache"] = "hit"
+            if "_provenance" not in cached:
+                cached["_provenance"] = _make_provenance(cached, dataset)
+            return cached
+
+    raw, err = fetch_series_raw(dataset, series, periods)
+    if err is not None:
+        return {"error": err, "series": series, "dataset": dataset}
+
+    observations, metadata = _parse_csv(raw)
+    now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    result: dict = {
+        "series": series,
+        "dataset": dataset,
+        "periods_requested": periods,
+        "fetched_at": now,
+        "_cache": "miss",
+        "_source": "ecb_data_portal",
+        "observations": observations,
+        "latest": observations[-1] if observations else None,
+        "count": len(observations),
+        "metadata": metadata,
+    }
+    result["_provenance"] = _make_provenance(result, dataset)
+
+    if observations:
+        save_cache(cache_path, result)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# MCP tool registration (v1.16.0+)
+# ---------------------------------------------------------------------------
+
+def register_mcp_tools(mcp) -> None:
+    """Register ECB Statistical Data Warehouse tool with a FastMCP instance."""
+
+    @mcp.tool()
+    def ecb_series(
+        series: str, dataset: str = DEFAULT_DATASET, periods: int = 24,
+    ) -> dict:
+        """Fetch an ECB Statistical Data Warehouse time-series (CSV API,
+        no auth). Used by japan-macro for ex-post real-yield sub-blocks
+        (EUR inflation baseline, EUR government bond references).
+        dataset: ECB dataset code (default 'FM' = Financial Markets; other
+        common: 'BSI', 'IRS', 'ICP'). series: dot-delimited key.
+        """
+        return fetch_series(dataset, series, periods, use_cache=True)
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="ECB Data Portal CSV adapter for investing-toolkit"
+    )
+    parser.add_argument(
+        "--series", required=True,
+        help="SDMX series key(s), comma-separated "
+             "(e.g. M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA)",
+    )
+    parser.add_argument(
+        "--dataset", default=DEFAULT_DATASET,
+        help=f"ECB dataset code (default: {DEFAULT_DATASET})",
+    )
+    parser.add_argument(
+        "--periods", type=int, default=24,
+        help="Number of most-recent observations (default: 24)",
+    )
+    parser.add_argument(
+        "--no-cache", action="store_true",
+        help="Bypass cache and force fresh fetch",
+    )
+
+    args = parser.parse_args()
+    dataset = args.dataset.strip().upper()
+    series_list = [s.strip() for s in args.series.split(",") if s.strip()]
+
+    if args.no_cache:
+        for s in series_list:
+            path = get_cache_path(dataset, s, args.periods)
+            if path.exists():
+                path.unlink()
+
+    if len(series_list) == 1:
+        result = fetch_series(
+            dataset, series_list[0], args.periods, use_cache=not args.no_cache
+        )
+    else:
+        now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        result = {
+            "fetched_at": now,
+            "dataset": dataset,
+            "series": {},
+        }
+        for s in series_list:
+            result["series"][s] = fetch_series(
+                dataset, s, args.periods, use_cache=not args.no_cache
+            )
+
+    # Mirror fred_client: emit 'data' alias for observations for smoke-test pipes.
+    if isinstance(result, dict) and "observations" in result:
+        result["data"] = result["observations"]
+
+    print(json.dumps(result, default=str, indent=2))
+
+    has_error = (
+        "error" in result
+        if "observations" in result or "data" in result
+        else any(
+            isinstance(v, dict) and "error" in v
+            for v in result.get("series", {}).values()
+        )
+    )
+    if has_error:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
