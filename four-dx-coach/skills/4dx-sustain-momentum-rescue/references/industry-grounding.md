@@ -169,3 +169,33 @@ because I committed to this"): all three sources converge on the same
 counter-move — externalize a small reliable trigger, shrink the next
 move, and re-test the underlying passion every 4-8 weeks rather than
 treating motivation as a moral obligation.
+
+---
+
+## Industry-experience addendum (extracted from SKILL.md body 2026-05-01)
+
+Originally inline in SKILL.md `## B — Boundary` section. Extracted as part of skill-body refactor to keep body focused on routing logic + diagnostic invocation; this addendum loads on-demand when user needs deeper-than-book-source rescue grounding.
+
+### Industry-experience addendum (habit + Path + grit literature)
+
+The book localizes sustain-failure at the substrate. Behavioral-science
+literature adds three structural mechanisms upstream of substrate,
+each more actionable for the rescue dialogue. Primary citations in
+`references/industry-grounding.md`:
+
+- **Clear, *Atomic Habits* (Avery, 2018)** — "never miss twice":
+  missing once is an accident, missing twice starts a new bad habit.
+  Rescue threshold is **week-2, not week-4** — the second skipped
+  WIG Session is the intervention trigger, not the fourth.
+- **Heath & Heath, *Switch* (Crown, 2010)** — Direct/Motivate/**Shape
+  the Path**. When motivation drops, change the environment, not the
+  will. "Don't catch up, just resume" *is* Path-shaping; rescue
+  commitments must be the smallest unmistakable next move (≤30 min,
+  single commitment).
+- **Duckworth, *Grit* (Scribner, 2016)** — passion (long-term direction)
+  vs perseverance (effort despite setbacks). Step 2's "is the WIG
+  still wildly important?" *is* the passion test; without it, rescue
+  reinstalls perseverance on a passion the user has quietly outgrown.
+  Caveat: Crede et al. (2017) meta-analysis shows grit's predictive
+  validity is largely conscientiousness — treat passion-vs-perseverance
+  as a diagnostic frame, not an independent trait.
