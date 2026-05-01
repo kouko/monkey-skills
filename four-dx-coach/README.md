@@ -59,6 +59,26 @@ flowchart TD
     Lag -.->|reports back to| D1
 ```
 
+### The weekly cadence — what D4 actually does
+
+D4 is the most-skipped discipline in practice; without it, D1-D2-D3 collapse into a one-time plan that the whirlwind erodes within weeks. The WIG Session is the engine that defends the system. Each weekly meeting follows three steps in this fixed order:
+
+```mermaid
+flowchart LR
+    A["<b>1. Account</b><br/>Each member reports<br/>on last week's commitment<br/><i>(did I do what I said?)</i>"]
+    B["<b>2. Review Scoreboard</b><br/>Look at the board together,<br/>learn from wins / misses<br/><i>(what's the data telling us?)</i>"]
+    C["<b>3. Plan</b><br/>Each member commits<br/>to ONE new behavior<br/>for the coming week<br/><i>(what's my move?)</i>"]
+    A --> B
+    B --> C
+    C -.->|next week's session| A
+
+    style A fill:#e3f2fd,stroke:#1976d2
+    style B fill:#fff3e0,stroke:#f57c00
+    style C fill:#e8f5e9,stroke:#388e3c
+```
+
+The cycle is intentionally short (≤30 min) and intentionally repetitive. The point isn't strategic planning — it's **personal commitment witnessed by peers**, repeated weekly until execution becomes habit.
+
 ### Why each discipline matters (and how each fails)
 
 | Discipline | Core idea | Most common failure |
@@ -67,6 +87,25 @@ flowchart TD
 | **D2 — Lead Measures** | Track **behaviors you can do this week** that *predict* the lag. The book calls this "the most-misunderstood discipline" — and it's the most-failed in practice. | Picking lag-shaped "leads" (e.g. "increase NPS") that aren't weekly-influenceable. Or reusing existing KPI dashboards. |
 | **D3 — Scoreboard** | The team builds it; it's visible; you can tell at a glance if you're winning. Has lead + lag + pacing line. | Becomes a passive dashboard with 12 metrics nobody opens. Or weaponized as name-and-shame. |
 | **D4 — Cadence** | Weekly 30-min session: each member accounts for last week's commitment, reviews scoreboard, makes a new commitment for this week. | Sessions creep to 1 hour, members arrive unprepared, leaders run it as performance review (compliance instead of commitment). |
+
+### What to expect over time — the 5-stage progression
+
+4DX is not instant. The source book documents that teams pass through five distinct stages, and the most common reason implementations fail is that **teams quit at Stage 3** — they hit a plateau, conclude "it stopped working," and abandon the system right before the breakthrough.
+
+```mermaid
+flowchart LR
+    S1["<b>Stage 1</b><br/>Getting Clear<br/><i>WIG + Leads +<br/>Scoreboard set</i>"]
+    S2["<b>Stage 2</b><br/>Launch<br/><i>First weeks of<br/>execution</i>"]
+    S3["<b>Stage 3</b><br/>Adoption<br/>⚠ Plateau<br/><i>most teams quit here</i>"]
+    S4["<b>Stage 4</b><br/>Optimization<br/><i>Team self-improves<br/>lead measures</i>"]
+    S5["<b>Stage 5</b><br/>Habits<br/><i>4DX becomes<br/>'how we work'</i>"]
+    S1 --> S2 --> S3 --> S4 --> S5
+
+    style S3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style S5 fill:#e8f5e9,stroke:#2e7d32
+```
+
+If you're at Stage 3 and feel "this isn't working," that's the expected shape — not a failure signal. The plateau is when team members internalize the new behaviors; Stage 4 follows naturally if you don't quit. The agent's `4dx-sustain-momentum-rescue` skill exists specifically for this stage.
 
 ### Key vocabulary (used throughout this plugin)
 

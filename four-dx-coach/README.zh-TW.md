@@ -59,6 +59,26 @@ flowchart TD
     Lag -.->|回報| D1
 ```
 
+### 每週節奏 —— D4 實際在做什麼
+
+D4 是實作上最常被略過的規律；少了它，D1-D2-D3 就退化成一份「一次性計畫」，幾週後就被 whirlwind 沖散。WIG Session 是支撐整套系統運轉的引擎，每週固定按以下三步順序進行：
+
+```mermaid
+flowchart LR
+    A["<b>1. Account</b><br/>Each member reports<br/>on last week's commitment<br/><i>(did I do what I said?)</i>"]
+    B["<b>2. Review Scoreboard</b><br/>Look at the board together,<br/>learn from wins / misses<br/><i>(what's the data telling us?)</i>"]
+    C["<b>3. Plan</b><br/>Each member commits<br/>to ONE new behavior<br/>for the coming week<br/><i>(what's my move?)</i>"]
+    A --> B
+    B --> C
+    C -.->|next week's session| A
+
+    style A fill:#e3f2fd,stroke:#1976d2
+    style B fill:#fff3e0,stroke:#f57c00
+    style C fill:#e8f5e9,stroke:#388e3c
+```
+
+這個循環刻意短（≤30 分鐘）、刻意重複。重點不是「策略規劃」—— 而是 **個人 commitment 在同儕面前被見證**，每週重複到執行變成習慣為止。
+
 ### 每個規律的角色 + 最常見失敗
 
 | Discipline | 核心 idea | 最常見的失敗模式 |
@@ -67,6 +87,25 @@ flowchart TD
 | **D2 — Lead Measures** | 追蹤 **本週可以做的行為**，而且這個行為要 *能預測* lag。書中稱這是「最被誤解的規律」—— 實作上也是最常崩的點。 | 挑了 lag 形狀的「lead」（如「提升 NPS」），但週次根本動不了。或者直接套用既有 KPI dashboard。 |
 | **D3 — Scoreboard** | 團隊自己做；公開可見；一眼看出輸贏。包含 lead + lag + pacing line。 | 退化成 12 個指標的被動 dashboard，沒人在看。或被當成羞辱工具。 |
 | **D4 — Cadence** | 每週 30 分鐘 session：每個成員報告上週 commitment、看 scoreboard、為這週做出新 commitment。 | Session 拖到 1 小時、成員沒準備就來、leader 把它當績效面談（變成 compliance 而不是 commitment）。 |
+
+### 上路後會經歷什麼 —— 5 階段進程
+
+4DX 不是即效藥。原書記錄了團隊會經過五個明顯不同的階段，而最常見的失敗原因是 **團隊在 Stage 3 放棄** —— 撞到 plateau，得出「沒效果」的結論，剛好在突破前夕收手。
+
+```mermaid
+flowchart LR
+    S1["<b>Stage 1</b><br/>Getting Clear<br/><i>WIG + Leads +<br/>Scoreboard set</i>"]
+    S2["<b>Stage 2</b><br/>Launch<br/><i>First weeks of<br/>execution</i>"]
+    S3["<b>Stage 3</b><br/>Adoption<br/>⚠ Plateau<br/><i>most teams quit here</i>"]
+    S4["<b>Stage 4</b><br/>Optimization<br/><i>Team self-improves<br/>lead measures</i>"]
+    S5["<b>Stage 5</b><br/>Habits<br/><i>4DX becomes<br/>'how we work'</i>"]
+    S1 --> S2 --> S3 --> S4 --> S5
+
+    style S3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style S5 fill:#e8f5e9,stroke:#2e7d32
+```
+
+如果你正卡在 Stage 3 覺得「沒效」—— 那是預期中的形狀，不是失敗訊號。Plateau 階段是 team member 把新行為內化的關鍵期；只要不收手，Stage 4 自然會接著來。Agent 的 `4dx-sustain-momentum-rescue` skill 就是專門為這個階段設計的。
 
 ### 關鍵詞彙（這個 plugin 通用）
 

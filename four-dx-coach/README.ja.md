@@ -59,6 +59,26 @@ flowchart TD
     Lag -.->|報告| D1
 ```
 
+### 週次 cadence —— D4 が実際にやっていること
+
+D4 は実装上もっとも省略されやすい discipline で、これを欠くと D1-D2-D3 は「一回限りの計画」に退化し、数週間で whirlwind に飲まれる。WIG Session は系全体を支える engine であり、毎週固定の 3 ステップ順で進む：
+
+```mermaid
+flowchart LR
+    A["<b>1. Account</b><br/>Each member reports<br/>on last week's commitment<br/><i>(did I do what I said?)</i>"]
+    B["<b>2. Review Scoreboard</b><br/>Look at the board together,<br/>learn from wins / misses<br/><i>(what's the data telling us?)</i>"]
+    C["<b>3. Plan</b><br/>Each member commits<br/>to ONE new behavior<br/>for the coming week<br/><i>(what's my move?)</i>"]
+    A --> B
+    B --> C
+    C -.->|next week's session| A
+
+    style A fill:#e3f2fd,stroke:#1976d2
+    style B fill:#fff3e0,stroke:#f57c00
+    style C fill:#e8f5e9,stroke:#388e3c
+```
+
+この cycle は意図的に短く（≤30 分）、意図的に反復的。狙いは「戦略立案」ではなく、**個人 commitment が peer に witness される** こと —— それを実行が習慣になるまで毎週繰り返す。
+
 ### 各 discipline の役割と典型的な失敗 mode
 
 | Discipline | 中核 idea | 最頻出の失敗 mode |
@@ -67,6 +87,25 @@ flowchart TD
 | **D2 — Lead Measures** | **今週できる行動** で lag を予測するものを track。書籍で「最も誤解された discipline」と呼ばれ、実装でも最頻出の失敗点。 | Lag 寄りの「先行指標」（NPS 上昇など）を採用してしまい、週次で動かせないため形骸化。または既存 KPI dashboard を流用する。 |
 | **D3 — Scoreboard** | team が自分で作る；可視；一目で「勝っているか」が分かる。Lead + Lag + Pacing line を含む。 | 12 の metrics が並ぶ受動的な dashboard 化、誰も開かない。あるいは name-and-shame の道具になる。 |
 | **D4 — Cadence** | 週次 30 分 session：member 全員が先週の commitment を account、scoreboard を review、新しい commitment を Plan。 | Session が 1 時間に伸びる、member が無準備で来る、leader が performance review として運用（commitment ではなく compliance）。 |
+
+### 時間経過で何が起きるか —— 5 段階 progression
+
+4DX は即効性のある手法ではない。原書は team が 5 つの異なる stage を通過することを記録しており、実装失敗の最頻出原因は **Stage 3 で諦めること** —— plateau にぶつかり「効果がなくなった」と判断して、breakthrough の直前で system を放棄する。
+
+```mermaid
+flowchart LR
+    S1["<b>Stage 1</b><br/>Getting Clear<br/><i>WIG + Leads +<br/>Scoreboard set</i>"]
+    S2["<b>Stage 2</b><br/>Launch<br/><i>First weeks of<br/>execution</i>"]
+    S3["<b>Stage 3</b><br/>Adoption<br/>⚠ Plateau<br/><i>most teams quit here</i>"]
+    S4["<b>Stage 4</b><br/>Optimization<br/><i>Team self-improves<br/>lead measures</i>"]
+    S5["<b>Stage 5</b><br/>Habits<br/><i>4DX becomes<br/>'how we work'</i>"]
+    S1 --> S2 --> S3 --> S4 --> S5
+
+    style S3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style S5 fill:#e8f5e9,stroke:#2e7d32
+```
+
+Stage 3 で「効いていない」と感じている場合、それは予期された形であり、失敗の signal ではない。Plateau は team member が新しい行動を internalize する期間であり、諦めなければ Stage 4 が自然に続く。Agent の `4dx-sustain-momentum-rescue` skill はこの stage を狙って設計されている。
 
 ### 主要語彙（plugin 全体で使用）
 
