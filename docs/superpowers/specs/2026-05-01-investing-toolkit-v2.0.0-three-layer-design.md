@@ -75,9 +75,11 @@ User feedback (2026-05-01): "我主要的目的還是想分離 資料取得 與 
 
 | Layer | Prefix | Responsibility | I/O Rule | Cross-skill calls |
 |---|---|---|---|---|
-| **Data** | `data-` | Fetch + tier-routing + cache, by country | Pure I/O — fetch only, output structured JSON | Does NOT call other skills |
-| **Analysis** | `analysis-` | Compute / score / classify | Pure compute — input JSON, output JSON, no I/O | Does NOT call other skills (exception: `analysis-screener` may dispatch `data-{country}` fetch as pragmatic concession) |
-| **Report** | `report-` | Orchestration + formatting | Orchestrates data-* + analysis-* + cross-plugin delegation; produces human-readable Markdown | May call `data-*`, `analysis-*`, and delegate to `domain-teams:investing-team` / `domain-teams:docs-team` |
+| **Data** | `data-` | Fetch + tier-routing + cache + **batch dispatch**, by country | Pure I/O — fetch only, output structured JSON. Supports single (`--ticker`) and batch (`--tickers`) modes. | Does NOT call other skills |
+| **Analysis** | `analysis-` | Compute / score / classify | Pure compute — input JSON, output JSON, no I/O. **Zero exceptions.** | Does NOT call other skills |
+| **Report** | `report-` | Orchestration + formatting + **cross-country routing** | Orchestrates data-* + analysis-* + cross-plugin delegation; produces human-readable Markdown. Handles ticker → country grouping for batch flows. | May call `data-*`, `analysis-*`, and delegate to `domain-teams:investing-team` / `domain-teams:docs-team` |
+
+**Design principle**: complexity solvable by code (batch fetch, tier routing, source aggregation, caching) lives in the data layer. The analysis layer always sees a single structured JSON — whether it contains 1 ticker or 500 is opaque to it.
 
 ### 3.2 Cross-skill data passing
 
@@ -110,7 +112,7 @@ CI MD5 check enforces all copies stay identical.
 
 ---
 
-## 4. Final Skill List (15 → 15)
+## 4. Final Skill List (15 → 16)
 
 ### 4.1 Skill mapping table
 
@@ -123,29 +125,51 @@ CI MD5 check enforces all copies stay identical.
 | 5 | `data-cn` | Data | `china-macro` | Rename |
 | 6 | `analysis-dcf` | Analysis | `dcf-valuation` | Rename |
 | 7 | **`analysis-comps`** | Analysis | — | **NEW** |
-| 8 | `analysis-screener` | Analysis | `stock-screener` | Rename (allowed pragmatic exception: dispatches own data-* fetch) |
+| 8 | `analysis-screener` | Analysis | `stock-screener` (compute part) | Split — pure compute, no fetch |
 | 9 | `analysis-technical` | Analysis | `technical-snapshot` | Rename + remove fetch (becomes pure compute) |
 | 10 | `analysis-portfolio` | Analysis | `invest-portfolio` (compute part) | Split |
 | 11 | `analysis-macro-regime` | Analysis | `macro-regime-snapshot` | Rename |
 | 12 | `report-equity-memo` | Report | `investment-memo-writer` | Rename |
 | 13 | `report-stock-snapshot` | Report | `us/jp/taiwan-stock-snapshot` (compose part) | 3-into-1 merge with country auto-routing |
 | 14 | `report-portfolio-review` | Report | `invest-portfolio` (orchestration part) | Split |
-| 15 | `using-investing-toolkit` | Router | same | Update routing table |
+| 15 | **`report-screener-list`** | Report | `stock-screener` (orchestration part) | **NEW — split from screener** |
+| 16 | `using-investing-toolkit` | Router | same | Update routing table |
 
 ### 4.2 Layer 1 — Data skills (5)
 
 Each `data-{country}` skill bundles:
 - All clients needed for that country
-- A `pack.py` facade with `--pack {snapshot|memo-fetch|comps-multiples|...}` modes that compose multi-source pulls
+- A `pack.py` facade with `--pack {snapshot|memo-fetch|comps-multiples|screener-batch|...}` modes that compose multi-source pulls
 - Tier-routing logic (e.g. EDINET-key check for JP)
+- **Single + batch fetch modes**: `--ticker AAPL` (one) or `--tickers AAPL,MSFT,GOOGL,...` (many)
+
+#### Pack types (default contract)
+
+| Pack | Single | Batch | Use case |
+|---|---|---|---|
+| `snapshot` | ✅ | ⚠ optional (single typically sufficient) | Quick overview card |
+| `memo-fetch` | ✅ | ❌ heavy (SEC narrative + filings) — keep N=1 | Equity memo full data |
+| `comps-multiples` | n/a | ✅ inherent (anchor + N peers) | Comps analysis |
+| `screener-batch` | ❌ | ✅ required | Screener (50–500 tickers, lightweight fields) |
+| `regime-pack` | n/a | n/a | Macro indicators only (no per-ticker dimension) |
+
+#### Country bundles
 
 | Skill | Clients | Notes |
 |---|---|---|
-| `data-us` | yfinance, sec_edgar, fred | SEC EDGAR Tier A primary |
+| `data-us` | yfinance, sec_edgar, fred | SEC EDGAR Tier A primary; yfinance batch native |
 | `data-jp` | yfinance, edinet, tdnet, boj, estat, ecb | EDINET-key tier routing inside pack.py |
 | `data-tw` | yfinance, mops, twse_openapi, finmind, cbc, dgbas, ndc, statgov | MOPS + TWSE Tier A; FinMind Tier 2 fallback |
 | `data-kr` | yfinance, fdr | FDR via BOK ECOS-KEYSTAT |
 | `data-cn` | yfinance, nbs, akshare, fred | NBS new-SPA API |
+
+#### Cross-country batches handled in report layer
+
+`data-{country}/pack.py` is country-scoped. Mixed-market ticker lists (e.g. `AAPL,2330.TW,7203.T`) are split by report skills (e.g. `report-screener-list`):
+1. Group tickers by country suffix detection
+2. Run `data-{country}/pack.py --tickers <group> --pack screener-batch` per country (parallel)
+3. Concatenate batch JSONs
+4. Pass combined JSON to analysis layer
 
 ### 4.3 Layer 2 — Analysis skills (6)
 
@@ -153,18 +177,19 @@ Each `data-{country}` skill bundles:
 |---|---|---|
 | `analysis-dcf` | 3-stage DCF + 3×3 sensitivity | intrinsic value range JSON |
 | `analysis-comps` (**NEW**) | Peer multiples median/mean/quartile + anchor delta | comps table JSON |
-| `analysis-screener` | Filter + composite score + ranking | top-N JSON (pragmatic exception: includes data-* fetch dispatch) |
+| `analysis-screener` | Filter + composite score + ranking | top-N JSON (pure compute — accepts pre-batched data JSON from `report-screener-list`) |
 | `analysis-technical` | RSI / MACD / BB / ATR / SMA | indicators JSON (pure compute, no I/O) |
 | `analysis-portfolio` | Position P&L + holdings stats | review JSON |
 | `analysis-macro-regime` | IC + GIP regime classification | regime card JSON |
 
-### 4.4 Layer 3 — Report skills (3 in v2.0.0)
+### 4.4 Layer 3 — Report skills (4 in v2.0.0)
 
 | Skill | Orchestration | Final Output |
 |---|---|---|
 | `report-equity-memo` | data → analysis-* → delegate to domain-teams:investing-team → optional docs-team | Full investment memo (Markdown) |
 | `report-stock-snapshot` | data-{country} (auto-detect via ticker suffix) → format card | Snapshot card (Markdown) |
-| `report-portfolio-review` | data-* (per position) → analysis-portfolio → analysis-macro-regime overlay → format | Portfolio review document (Markdown) |
+| `report-portfolio-review` | data-* (per position, batched per country) → analysis-portfolio → analysis-macro-regime overlay → format | Portfolio review document (Markdown) |
+| `report-screener-list` (**NEW**) | parse ticker list → group by country → parallel `data-{country}/pack.py --tickers ... --pack screener-batch` → concatenate → analysis-screener → format top-N table | Screener result table (Markdown) |
 
 ### 4.5 Future Layer 3 expansion (not v2.0.0)
 
@@ -329,30 +354,31 @@ Where work is independent, dispatch agents in parallel:
 
 ```
 Batch A (5 agents in parallel) — Data skill creation:
-  - data-us (merge us-macro + us-stock-snapshot fetch)
-  - data-jp (merge japan-macro + japan-stock-snapshot fetch)
-  - data-tw (merge taiwan-macro + taiwan-stock-snapshot fetch)
-  - data-kr (rename from korea-macro)
-  - data-cn (rename from china-macro)
+  - data-us (merge us-macro + us-stock-snapshot fetch; pack.py with --tickers batch)
+  - data-jp (merge japan-macro + japan-stock-snapshot fetch; pack.py with --tickers batch)
+  - data-tw (merge taiwan-macro + taiwan-stock-snapshot fetch; pack.py with --tickers batch)
+  - data-kr (rename from korea-macro; pack.py with --tickers batch)
+  - data-cn (rename from china-macro; pack.py with --tickers batch)
 
-Batch B (6 agents in parallel) — Analysis skill creation/rename:
+Batch B (5 agents in parallel) — Analysis skill creation/rename:
   - analysis-dcf (rename + decouple from snapshot)
-  - analysis-screener (rename, retain fetch dispatch as exception)
+  - analysis-screener (split — pure compute, accepts pre-batched data JSON)
   - analysis-technical (rename + remove fetch)
   - analysis-portfolio (extract compute from invest-portfolio)
   - analysis-macro-regime (rename)
   - (analysis-comps deferred to PR 2)
 
-Batch C (3 agents sequential after A+B) — Report skill creation:
+Batch C (4 agents sequential after A+B) — Report skill creation:
   - report-equity-memo (rename, update orchestration)
   - report-stock-snapshot (3-into-1 merge with country routing)
-  - report-portfolio-review (extract orchestration from invest-portfolio)
+  - report-portfolio-review (extract orchestration from invest-portfolio; cross-country batch)
+  - report-screener-list (NEW — split from stock-screener; cross-country grouping + parallel batch fetch)
 
 Batch D (1 agent, parallel with all) — Convention/docs:
   - ADR-0001 + CI sync check + router update
 ```
 
-Total: ~10 agents in parallel for the bulk work.
+Total: ~11 agents in parallel for the bulk work.
 
 **PR 2 parallel batches:**
 
@@ -407,12 +433,15 @@ Version bump: **v1.16.4 → v2.0.0** (major, due to skill rename = breaking).
 
 For v2.0.0 release:
 
-- [ ] 15 skills present (5 data + 6 analysis + 3 report + 1 router)
-- [ ] All 15 SKILL.md files use `${CLAUDE_SKILL_DIR}/scripts/` convention
+- [ ] 16 skills present (5 data + 6 analysis + 4 report + 1 router)
+- [ ] All 16 SKILL.md files use `${CLAUDE_SKILL_DIR}/scripts/` convention
+- [ ] All `data-{country}/pack.py` support `--ticker` (single) and `--tickers` (batch) modes per the pack-type contract in §4.2
+- [ ] Analysis layer is exception-free — all `analysis-*` skills accept pre-fetched JSON only
 - [ ] CI MD5 sync check passing for all duplicated clients (yfinance × 5, fred × 2, ta × N)
-- [ ] ADR-0001 committed to `docs/adr/`
+- [ ] ADR-0001 committed to `docs/adr/` with no exception clauses
 - [ ] `analysis-comps` produces structured JSON for AAPL vs MSFT/GOOGL/META/AMZN dogfood case
 - [ ] `report-equity-memo` end-to-end run for AAPL succeeds with peer-discovery agent
-- [ ] All existing memo dogfood tickers still produce valid memos (regression check)
+- [ ] `report-screener-list` end-to-end run with mixed-country list (e.g. `AAPL,MSFT,2330.TW`) succeeds via cross-country grouping + parallel data-{country} batch fetch
+- [ ] All existing memo / screener dogfood tickers still produce valid output (regression check)
 - [ ] `using-investing-toolkit` router updated; routes correctly to new skill names
 - [ ] README + zh-TW + ja translations updated per repo convention
