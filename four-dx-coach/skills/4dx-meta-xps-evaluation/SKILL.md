@@ -1,9 +1,13 @@
 ---
 name: 4dx-meta-xps-evaluation
 description: |
-  Audit a team's 4DX execution quality using the book-canonical XPS (Execution Performance Score) — four components (cadence, commitments, lead-measures, lag/WIG-results) each scored 0-1, totaled to a 0-4 score, mapped to the book's four diagnostic bands (3.6-4.0 excellence / 3.2-3.59 good / 2.5-3.19 fair / 0-2.49 significant concern), with a weakest-discipline fix priority. Activate on EN: "Audit our team's 4DX execution quality", "Score our 4DX implementation", "Is our 4DX actually working?". JP: 「チームの 4DX 実行品質を評価」「うちの 4DX 機能してる？」「XPS 出して」. ZH: 「稽核我們團隊的 4DX 執行品質」「幫我們團隊打 XPS 分數」「我們 4DX 跑得怎麼樣？」. Do NOT activate for solo / personal-coach use (route to 4dx-sustain-momentum-rescue), running a live WIG session (route to 4dx-d4-cadence), or cross-team comparisons (XPS measures intra-team execution quality, not team-vs-team performance).
+  Audits a team's 4DX execution quality via the book-canonical XPS (4 components × 0-1 = 0-4) with a weakest-discipline fix priority. Use when a team-leader is about to renew, end, or escalate a 4DX cycle and needs an honest pulse-check on whether the team is actually executing 4DX vs going through motions.
+  EN: "Audit our team's 4DX execution", "Score our 4DX", "Is our 4DX actually working?"
+  JP: 「チームの 4DX 実行品質を評価」「うちの 4DX 機能してる？」「XPS 出して」
+  zh-TW: 「稽核我們團隊的 4DX 執行品質」「幫我們團隊打 XPS」「4DX 跑得怎麼樣？」
+  Do NOT use for solo personal rescue (→ `4dx-sustain-momentum-rescue`) or running a live WIG session (→ `4dx-d4-cadence`).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
-source_chapter: Chapter 10 (Sustaining 4DX Results and Engagement)
+source_chapter: "Chapter 10: Sustaining 4DX Results and Engagement"
 source_language: en
 tags: [meta-evaluation, audit, xps, team-coach, leader-of-leaders, diagnostic, fix-priority]
 related_skills:

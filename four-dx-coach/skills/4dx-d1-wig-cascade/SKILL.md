@@ -1,24 +1,17 @@
 ---
 name: 4dx-d1-wig-cascade
 description: |
-  D1 WIG cascade — coach + audit modes for **leader-of-leaders** (3+
-  subordinate teams, each with own leader). Coach (Socratic): translate
-  set Primary WIG → 2-3 Battles → N Team WIGs via Ch 7 four rules.
-  Audit (consultant): user gives cascade map + sub-leader complaints
-  ("imposed", "doesn't ladder") → per-rule diagnosis + re-negotiation
-  scripts. EN coach: "Translate Primary WIG to my **3-7 sub-teams**".
-  EN audit: "Audit our cascade — sub-leaders complaining". JP
-  coach:「Primary WIG を**各チーム**に翻訳」. JP audit:「cascade 診断、
-  下のリーダー文句」. zh-TW coach:「Primary WIG 怎麼拆給**下面各個團隊**」.
-  zh-TW audit:「cascade 哪裡有問題，下面 leader 抱怨」. NOT for: Primary
-  WIG unset, leader runs only ONE team / no sub-leaders, ambiguous
-  Chinese「我團隊」/「我們部門」 (default → `4dx-d1-wig-formulation`;
-  activate only if multi-sub-team explicit); **OKR / KR / quarterly
-  objectives cascade** (→ `using-four-dx-coach`); single-team WIG audit
-  (→ `4dx-d1-wig-formulation` audit); cross-layer audit (→ `4dx-audit`);
-  cascade depth >2 layers (rerun per layer); solo.
-source_book: The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
-source_chapter: Chapter 7 — Translating Organizational Focus Into Executable Targets
+  Coaches a leader-of-leaders (3+ sub-teams) to translate an org Primary
+  WIG into Team WIGs via Ch 7 four rules — coach + audit modes. Use when
+  team-leader is about to assign sub-team WIGs OR has chosen a Primary
+  WIG and is about to translate it down without an alignment check.
+  EN: "Translate Primary WIG to my 3-7 sub-teams", "Audit our cascade — sub-leaders complaining".
+  JP:「Primary WIG を各チームに翻訳」「cascade 診断、下のリーダー文句」.
+  zh-TW:「Primary WIG 怎麼拆給下面各個團隊」「cascade 哪裡有問題，下面 leader 抱怨」.
+  Do NOT use for single-team WIG (→ `4dx-d1-wig-formulation`) or
+  OKR / KR cascade (→ `using-four-dx-coach`).
+source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker"
+source_chapter: "Chapter 7 — Translating Organizational Focus Into Executable Targets"
 source_language: en
 tags: [d1, wig-cascade, team-wig, leader-of-leaders, key-battles, targets-not-plans, audit-mode, coach-mode, 4dx]
 related_skills:

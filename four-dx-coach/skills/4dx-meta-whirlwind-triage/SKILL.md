@@ -1,9 +1,13 @@
 ---
 name: 4dx-meta-whirlwind-triage
 description: |
-  Pre-D1 capacity triage — whirlwind vs WIG split. Coach-mode (no artifact, vague firefighting): Socratic 7-day live time audit. Audit-mode (artifact provided + diagnostic intent): consultant verdict on existing time log / calendar export + stakeholder critique → protected-slot redesign + theater-reduction targets. Coach EN: "I'm always firefighting", "day job eats my whole week". Audit EN: "Audit my time log against 4DX", "Got feedback I'm focused on the wrong things — here's my calendar", "Stakeholder wants to revisit my time allocation", "Boss says I'm wasting time — here's my calendar". JP coach: 「日常業務に追われて目標に手がつかない」. JP audit: 「カレンダーを 4DX 視点で診断して」「上司にフィードバックされた、時間の使い方見て」「上司にダメ出しされた」. zh-TW coach: 「每天都在救火」. zh-TW audit: 「主管覺得我時間分配要調整」「review 後想討論時間配置」「老闆看我時間紀錄說亂忙」. NOT for productivity-tool requests, burnout / chronic overwork (→ professional support), reactive roles where firefighting IS the work (oncall SRE / ER / infant-care, CE-26), 4DX-fit questions (→ `4dx-meta-strategy-triage`), already-running 4DX cadence collapse (→ `4dx-sustain-momentum-rescue`), enterprise rollout audits (individual-scale only).
+  Pre-D1 capacity triage — whirlwind vs WIG split — via Socratic 7-day live audit or consultant verdict on a provided time log / calendar. Use when the user is about to write a WIG without acknowledging that ~80% of capacity is the whirlwind, or says "I have no time for a WIG".
+  EN: "I'm always firefighting", "day job eats my whole week", "audit my calendar against 4DX"
+  JP: 「日常業務に追われて目標に手がつかない」「カレンダーを 4DX 視点で診断して」「上司に時間の使い方ダメ出しされた」
+  zh-TW: 「每天都在救火」「主管覺得我時間分配要調整」「老闆看我時間紀錄說亂忙」
+  Do NOT use for already-running cadence collapse (→ `4dx-sustain-momentum-rescue`) or 4DX-fit questions (→ `4dx-meta-strategy-triage`).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
-source_chapter: Chapter 1 — The Real Problem with Execution
+source_chapter: "Chapter 1: The Real Problem with Execution"
 source_language: en
 tags: [execution, focus, capacity-model, prerequisite, time-audit, 4dx, discipline-1]
 related_skills:

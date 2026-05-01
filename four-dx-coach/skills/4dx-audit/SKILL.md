@@ -1,24 +1,13 @@
 ---
 name: 4dx-audit
 description: |
-  Cross-layer 4DX aggregator. Fires when artifacts span ≥2 of the 5
-  D-layers (WIG / Lead / Scoreboard / Cadence / Substrate) OR user
-  cannot name which layer is broken. Diagnoses per-layer status, finds
-  cross-layer sequencing gaps, routes to topic skills. v0.8.0 dual-mode:
-  each topic skill owns single-layer audit-mode; this skill = cross-layer
-  only. EN: "Strategy + OKR + dashboard + meeting notes — audit 4DX",
-  "WIG + leads + scoreboard but cadence broken — diagnose layers",
-  "Don't know which layer is broken". JP:「複数文書から 4DX 現状整理」
-  「どの layer 壊れてるか分からない」. zh-TW:「資料跨好幾層幫整理」
-  「不知道哪層斷跨層診斷」. NOT single-layer — route to topic
-  audit-mode: WIG → 4dx-d1-wig-formulation; leads → 4dx-d2-lead-measures;
-  scoreboard → 4dx-d3-scoreboard; cadence → 4dx-d4-cadence; cascade →
-  4dx-d1-wig-cascade; fit → 4dx-meta-strategy-triage; capacity →
-  4dx-meta-whirlwind-triage; onboarding → 4dx-meta-team-leader-onboarding.
-  NOT cold-start (→ using-four-dx-coach). NOT Socratic (→ coach-mode).
-  NOT non-4DX audits.
+  Cross-layer 4DX aggregator that diagnoses per-layer status across WIG / Lead / Scoreboard / Cadence / Substrate and routes to topic skills. Use when user has artifacts spanning ≥2 D-layers OR cannot name which 4DX layer is broken, before running per-layer audits separately.
+  EN: "audit 4DX across the board", "don't know which layer is broken", "diagnose 4DX layers"
+  JP: 「複数文書から 4DX 現状整理」「どの layer 壊れてるか分からない」「全層 4DX 診断」
+  zh-TW: 「資料跨好幾層幫整理」「不知道哪層斷跨層診斷」「整套 4DX 卡住」
+  Do NOT use for single-layer artifacts (→ that topic skill's audit-mode) or cold-start with no artifacts (→ using-four-dx-coach).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Cross-cutting (Foreword + Ch 1 framing + Ch 6 selection + Ch 10 sustaining)
+source_chapter: "Cross-cutting (Foreword + Ch 1 framing + Ch 6 selection + Ch 10 sustaining)"
 source_language: en
 tags: [audit, consultant, artifact-synthesis, multi-layer, 4dx, entry-point, cross-discipline, diagnosis]
 related_skills:

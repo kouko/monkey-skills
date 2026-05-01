@@ -1,27 +1,18 @@
 ---
 name: 4dx-d4-cadence
 description: |
-  D4 Cadence skill: 4 coach modes (solo / team-leader / member-prep /
-  member-debrief) + audit mode (diagnose running-but-malformed cadence
-  from past minutes / commitment logs / stakeholder critique). Coach
-  EN: "Run my weekly WIG Session", "Facilitate our WIG meeting", "Prep
-  my commitment", "I missed last week". Audit EN: "Audit our WIG
-  meetings — 4 weeks of notes", "Got feedback our weekly review isn't
-  working", "Stakeholder wants to revisit the WIG Session format",
-  "Boss says meetings are pointless, diagnose". JP coach:「WIG Session 回したい」「commitment 準備」「果た
-  せなかった」. JP audit:「会議録を見て何がダメか」「WIG Session 機能し
-  てない診断して」「上司にフィードバックされた、WIG ミーティング見て」
-  「マネージャーから方向性を直したいと言われた」. zh-TW coach:「每週 review」「commitment 怎麼準備」.
-  zh-TW audit:「主管覺得週會要調整，幫看」「review 後想討論週會方向」
-  「老闆說週會浪費時間幫我診斷」「四週會議記錄哪裡走樣」.
-  NOT for daily standup / sprint review / OKR check-in / agile retro /
-  annual retro. NOT pre-D4. NOT cross-layer audit (→ `4dx-audit`).
-  **Critical boundary — multi-week collapse ≠ malformed-but-running**:
-  「3 週スキップ」「haven't done this in a month」「幾週沒做了」 →
-  `4dx-sustain-momentum-rescue`, NOT audit-mode. Audit-mode assumes
-  cadence is currently running.
-source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 5 — Discipline 4: Create a Cadence of Accountability; Chapter 10 — Sustaining 4DX (Susan/Marcus dialogue); Chapter 15 — Applying Discipline 4
+  Coaches the D4 weekly WIG Session across solo / team-leader / member-
+  prep / member-debrief / audit modes. Use when user is about to skip a
+  weekly WIG cadence, run the WIG Session as a status-update meeting,
+  or rebuild a session that's drifting (boss / team feedback that
+  meetings feel pointless).
+  EN: "Run my weekly WIG Session", "Prep my commitment", "Audit our WIG meetings".
+  JP:「WIG Session 回したい」「commitment 準備」「会議録を見て何がダメか」.
+  zh-TW:「每週 review」「commitment 怎麼準備」「老闆說週會浪費時間幫我診斷」.
+  Do NOT use for daily standup / sprint retro (→ `using-four-dx-coach`)
+  or multi-week collapse「幾週沒做了」(→ `4dx-sustain-momentum-rescue`).
+source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
+source_chapter: "Chapter 5 — Discipline 4: Create a Cadence of Accountability; Chapter 10 — Sustaining 4DX; Chapter 15 — Applying Discipline 4"
 source_language: en
 tags: [d4, cadence, multi-scope, wig-session, weekly, accountability, peer-commitment, 4dx, solo, team-leader, team-member]
 related_skills:

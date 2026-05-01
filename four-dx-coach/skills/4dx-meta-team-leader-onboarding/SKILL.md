@@ -1,28 +1,18 @@
 ---
 name: 4dx-meta-team-leader-onboarding
 description: |
-  Leader-of-leaders onboarding — 2 modes. Coach-mode: prepare the buy-in
-  conversation earning commitment (not compliance) from direct-report
-  team-leaders before launching 4DX. Audit-mode: diagnose a past
-  onboarding from rollout email + 1:1 transcripts + team feedback when
-  "team isn't bought in" / "leaders complying not committing".
-  Coach EN: "How do I get my team-leaders on board with 4DX?", "Direct
-  reports will resist this", "Pilot or mandate?"
-  Audit EN: "Audit our onboarding — team isn't bought in", "Leaders
-  complying not committing — what went wrong?", "Got feedback our rollout
-  didn't land", "Stakeholder wants to revisit how we onboarded leaders".
-  JP coach:「部下リーダーに 4DX を腹落ちさせたい」「全社展開かパイロットか」。
-  JP audit:「チーム導入したが反発が強い、何が間違ってた？」「表面的に従ってる
-  だけ」「上司にフィードバックされた、rollout 見て」。
-  zh-TW coach:「下屬 leader 真心接受 4DX？」「pilot 還是全面導入？」。
-  zh-TW audit:「導入了但團隊不買單，幫我診斷」「leader 表面配合心裡抗拒」
-  「主管覺得 rollout 沒做好，幫看」。
-  NOT pre-fit-decision (→ `4dx-meta-strategy-triage`). NOT already-bought-in
-  technical cascade (→ `4dx-d1-wig-cascade`). NOT frontline-member buy-in.
-  NOT cross-layer audit (→ `4dx-audit`). NOT collapsed-cadence post-cascade
-  (→ `4dx-sustain-momentum-rescue`).
-source_book: The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
-source_chapter: Chapter 8 — Getting Your Leaders on Board
+  Coaches a leader-of-leaders to earn commitment (not compliance) from
+  direct-report team-leaders before launching 4DX — coach + audit modes.
+  Use when leader is about to roll out 4DX to direct reports without
+  preparing for commitment-vs-compliance (the failure mode where reports
+  nod and don't actually buy in).
+  EN: "Get my team-leaders on board with 4DX", "Pilot or mandate?", "Audit onboarding — team not bought in".
+  JP:「部下リーダーに 4DX を腹落ちさせたい」「全社展開かパイロットか」「表面的に従ってるだけ」.
+  zh-TW:「下屬 leader 真心接受 4DX？」「pilot 還是全面導入？」「表面配合心裡抗拒」.
+  Do NOT use for pre-fit decision (→ `4dx-meta-strategy-triage`) or
+  bought-in cascade (→ `4dx-d1-wig-cascade`).
+source_book: "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker"
+source_chapter: "Chapter 8 — Getting Your Leaders on Board"
 source_language: en
 tags: [change-management, buy-in, leader-of-leaders, commitment-vs-compliance, pre-cascade, organizational-rollout, audit, onboarding-diagnosis]
 related_skills:

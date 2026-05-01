@@ -1,24 +1,13 @@
 ---
 name: 4dx-d1-wig-formulation
 description: |
-  D1 WIG formulation — 3 coach-mode scopes + audit-mode. Coach (Socratic):
-  solo personal-define From-X-to-Y-by-When; team-leader team-select via
-  Battles 2x2; team-member member-comprehend inherited WIG. Audit
-  (consultant): user provides WIG draft / candidates for diagnostic, OR
-  WIG + stakeholder critique (direct "boss says too abstract" OR softer
-  "got feedback our WIG isn't quite right" / 「上司にフィードバックされた」
-  / 「主管覺得要調整」). EN: "Define my personal WIG", "Pick our team's
-  Primary WIG", "Audit our WIG — got feedback it's too abstract".
+  Coaches the user to formulate a Wildly Important Goal in From-X-to-Y-by-When form across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing WIG draft. Use when the user is about to declare a goal lacking lag-measurable finish line, deadline, or clear scope (personal vs team), BEFORE the goal gets committed.
+  EN: "Define my personal WIG", "Pick our team's Primary WIG", "Audit our WIG — too abstract"
   JP: 「自分の WIG を決めたい」「Primary WIG をどう選ぶ」「WIG を診断して」
-  「上司にフィードバックされた、WIG 見て」「マネージャーから方向性を直したい
-  と言われた」. zh-TW: 「幫我訂個人 WIG」「team 選 Primary WIG」「WIG 哪裡
-  有問題」「主管覺得 WIG 要調整，幫看」「review 後想討論 WIG 方向」. Voice: coach / consultant-to-
-  leader / coach-to-member / consultant-audit. NOT for cross-layer audit
-  (→ 4dx-audit), cascading Primary WIG to sub-teams (→ 4dx-d1-wig-
-  cascade), lead / scoreboard / cadence (→ D2 / D3 / D4), or pre-D1
-  strategy fit (→ 4dx-meta-strategy-triage).
-source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 2 — Discipline 1: Focus on the Wildly Important; Chapter 6 — Choosing Where to Focus; Chapter 7 — Defining the WIG; Chapter 12 — Applying Discipline 1
+  zh-TW: 「幫我訂個人 WIG」「team 選 Primary WIG」「WIG 哪裡有問題」
+  Do NOT use for cascading Primary WIG to sub-teams (→ 4dx-d1-wig-cascade) or pre-D1 strategy fit (→ 4dx-meta-strategy-triage).
+source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
+source_chapter: "Chapter 2 — Discipline 1: Focus on the Wildly Important; Chapter 6 — Choosing Where to Focus; Chapter 7 — Defining the WIG; Chapter 12 — Applying Discipline 1"
 source_language: en
 tags: [d1, wig, multi-scope, goal-setting, focus, from-x-to-y-by-when, 4dx, personal, team-leader, team-member, audit-mode, coach-mode]
 related_skills:

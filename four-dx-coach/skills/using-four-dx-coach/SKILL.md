@@ -1,41 +1,11 @@
 ---
 name: using-four-dx-coach
 description: |
-  Router for the four-dx-coach plugin (coach-mode entry point). Activates
-  on generic / vague 4DX queries OR when the user's scope is unclear OR
-  on **short scope-less fragment queries** that mention 4DX vocabulary
-  without specifying scope (e.g. 「目標卡住」 / 「scoreboard 看不懂」 /
-  「WIG 不會訂」 / "stuck on my goal" / "4DX where to start"). Triages
-  by scope first — personal (solo) / team-leader / team-member — then by
-  4DX stage, and dispatches across 11 skills total: 10 coach-mode
-  topical skills (5 multi-file scope-flex + 5 single-file scope-specific)
-  plus 1 consultant-mode entry point (`4dx-audit`). When the user
-  arrives with **rich pre-existing artifacts** (strategy doc / OKR /
-  dashboard / WIG-Session notes / past attempts) and wants synthesis
-  rather than dialogue, route to `4dx-audit` instead of running scope
-  triage. Multi-file skills self-route to their internal protocol; this
-  router only picks the right door. EN: "I
-  want to start using 4DX", "help my team apply 4 Disciplines", "where
-  do I begin with 4DX?", "I joined a team using 4DX", "4DX 不知道從何
-  開始". JP: 「4DX を使い始めたい」「4 つの規律をチームに導入したい」
-  「4DX の始め方」「4DX のチームに入った」「4DX どこから始めれば」.
-  zh-TW: 「想要開始用 4DX」「4 個執行紀律怎麼開始」「想用 4DX 帶
-  團隊」「我加入了一個用 4DX 的團隊」「4DX 不知道從哪裡開始」. 5
-  multi-file scope-flex skills: 4dx-meta-strategy-triage /
-  4dx-d1-wig-formulation / 4dx-d2-lead-measures / 4dx-d3-scoreboard /
-  4dx-d4-cadence (each bundles 2-4 internal protocols covering
-  personal / team-leader / team-member variants). 5 single-file
-  scope-specific skills: 4dx-meta-whirlwind-triage (personal,
-  pre-D1), 4dx-d1-wig-cascade (team-leader, leader-of-leaders only),
-  4dx-meta-team-leader-onboarding (team-leader),
-  4dx-meta-xps-evaluation (team-leader), 4dx-sustain-momentum-rescue
-  (personal, recovery only). Hands off when 4DX doesn't fit —
-  habit-stacking / OKR KRs / agile sprint / burnout / clinical mental
-  health. **Fallback rule**: when a query is too short or vague to
-  unambiguously identify a single skill, prefer this router over a
-  guess. Do NOT activate when the user names a specific skill or has
-  a full WIG+leads+scoreboard+cadence running with a
-  discipline-specific question.
+  Routes vague or scope-ambiguous 4DX queries to the right topical skill across personal / team-leader / team-member scopes. Use when user mentions 4DX vocabulary or asks "how do I start" without specifying scope, before they pick a sub-skill manually.
+  EN: "where do I begin with 4DX", "stuck on my goal", "4DX 不知道從何開始"
+  JP: 「4DX を使い始めたい」「4DX の始め方」「4DX どこから始めれば」
+  zh-TW: 「想要開始用 4DX」「4DX 不知道從哪裡開始」「4 個執行紀律怎麼開始」
+  Do NOT use when user names a specific discipline (→ that topic skill directly) or provides multi-layer artifacts (→ 4dx-audit).
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker (2nd ed., 2021)
 source_language: en
 tags: [router, entry-point, dispatcher, 4dx, scope-triage, personal, team-leader, team-member, multi-file]

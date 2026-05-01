@@ -1,27 +1,13 @@
 ---
 name: 4dx-d3-scoreboard
 description: |
-  Multi-scope D3 Compelling Scoreboard skill: coach-mode (Socratic
-  design / read across solo / team-leader / team-member) + audit-mode
-  (diagnose existing scoreboard against 5-second test / players'-vs-
-  coaches' / ≤4 elements + KEEP/DROP/RESTYLE). EN: "Design my
-  scoreboard", "Design our team scoreboard", "Read my team's
-  scoreboard", "Audit our scoreboard", "Team doesn't look at the
-  scoreboard", "Got feedback the dashboard isn't useful", "Stakeholder
-  wants to revisit our scoreboard", "Boss says our dashboard isn't
-  useful". JP:「自分用の scoreboard を設計」「team scoreboard 設計」
-  「scoreboard をどう読む」「うちの scoreboard 誰も見てない、診断して」
-  「上司にフィードバックされた、scoreboard 見て」「dashboard を 4DX 視点
-  で見て」. zh-TW:「設計自己的計分板」「幫團隊設計 scoreboard」「team
-  scoreboard 怎麼看」「scoreboard 沒人看，幫我看哪裡有問題」「主管覺得
-  dashboard 要調整」「review 後想討論 scoreboard 方向」. NOT for enterprise BI / KPI dashboards, agile burndown,
-  OKR scorecards, before D1/D2 are defined, D4 cadence questions, or
-  **scoreboard-as-stalled-cadence-signal** ("hasn't updated in a month"
-  / "WIG Sessions stopped" → `4dx-sustain-momentum-rescue`; audit-mode
-  is for board-shape diagnosis, not whole-stack collapse). NOT for
-  cross-discipline 4DX audit (→ `4dx-audit`).
-source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 4 — Discipline 3: Keep a Compelling Scoreboard; Chapter 14 — Applying Discipline 3
+  Coaches the user to design or read a compelling players' scoreboard (≤4 elements, lead + lag with pacing line, 5-second winning test) across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing board. Use when the user is about to use a complex BI/KPI dashboard or track wrong metrics, BEFORE designing a glance-readable players' scoreboard.
+  EN: "Design my scoreboard", "Audit our scoreboard", "Team doesn't look at the scoreboard"
+  JP: 「自分用の scoreboard を設計」「うちの scoreboard 誰も見てない」「dashboard を 4DX 視点で見て」
+  zh-TW: 「設計自己的計分板」「scoreboard 沒人看，幫我看哪裡有問題」「team scoreboard 怎麼看」
+  Do NOT use for stalled-cadence signals like "hasn't updated in a month" (→ 4dx-sustain-momentum-rescue) or cross-discipline 4DX audit (→ 4dx-audit).
+source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
+source_chapter: "Chapter 4 — Discipline 3: Keep a Compelling Scoreboard; Chapter 14 — Applying Discipline 3"
 source_language: en
 tags: [d3, scoreboard, multi-scope, players-scoreboard, visualization, engagement, 4dx, solo, team-leader, team-member]
 related_skills:

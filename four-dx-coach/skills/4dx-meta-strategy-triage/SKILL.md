@@ -1,34 +1,19 @@
 ---
 name: 4dx-meta-strategy-triage
 description: |
-  Multi-scope gate for "Should X use 4DX?" — decides if 4 Disciplines of
-  Execution fits BEFORE installing D1-D4. Coach-mode (Socratic from zero,
-  solo or team-leader) + audit-mode (diagnose strategy doc / artifact +
-  stakeholder critique). EN: "Should I use 4DX for X?", "Should our team
-  adopt 4DX?", "Audit whether 4DX fits given this strategy doc", "Got
-  feedback 4DX may not fit us", "Stakeholder wants to revisit 4DX choice",
-  "Boss says 4DX won't work — diagnose". JP: 「この目標に 4DX 使える？」
-  「うちの 4DX 適合性を診断して」「上司にフィードバックされた、4DX 合うか
-  判定」「会社の状況見て 4DX 合うか判定」. zh-TW: 「4DX 適合我這個目標嗎？」
-  「幫我看 4DX 適不適合我們團隊」「主管覺得 4DX 不太合，幫看」「策略 doc
-  在這，4DX 適合嗎？」. Returns one
-  verdict (APPLICABLE / TEAM-APPLICABLE / stroke-of-pen / whirlwind /
-  habit / portfolio / emergency / creative / no-time-sovereignty /
-  wrong-team-shape / single-shot / mission-misaligned / TEAM-NOT-YET-READY).
-  NOT for already-committed users asking "how to start" (→ D1). NOT for
-  members inheriting a WIG (→ 4dx-d1-wig-formulation). NOT for cross-layer
-  audit when 4DX already chosen (→ 4dx-audit). NOT for enterprise rollout
-  (→ book Ch 6-10 + 4dx-d1-wig-cascade).
+  Multi-scope gate that decides whether 4 Disciplines of Execution fits a goal or team and returns a single verdict. Use when user is about to install 4DX or commit to a goal-system framework, before going into D1 — to verify the situation actually fits 4DX vs whirlwind / habit / portfolio / stroke-of-pen.
+  EN: "should I use 4DX for X", "should our team adopt 4DX", "is 4DX a good fit"
+  JP: 「この目標に 4DX 使える？」「うちのチームに 4DX 合うか」「4DX 適合性を診断」
+  zh-TW: 「4DX 適合我這個目標嗎」「我們團隊適合導入 4DX 嗎」「4DX 會不會太重」
+  Do NOT use for already-committed users asking "how to start" or members inheriting a WIG (→ 4dx-d1-wig-formulation).
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)
+source_chapter: "Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)"
 source_language: en
 tags: [decision-gate, scope-triage, methodology-fit, 4dx, meta-gate, pre-d1, multi-scope, solo, team-leader]
 related_skills:
   - 4dx-meta-whirlwind-triage
   - 4dx-d1-wig-formulation
-  - 4dx-d1-wig-formulation
   - 4dx-d1-wig-cascade
-  - 4dx-d1-wig-formulation
   - 4dx-meta-team-leader-onboarding
   - 4dx-sustain-momentum-rescue
   - using-four-dx-coach

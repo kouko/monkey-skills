@@ -1,24 +1,13 @@
 ---
 name: 4dx-d2-lead-measures
 description: |
-  Dual-mode D2 lead-measure skill. Coach-mode covers 3 roles (solo /
-  team-leader / team-member, Socratic discovery); audit-mode diagnoses
-  an existing lead list or KPI dashboard against two-axis test + Goodhart
-  + Ch.3 cap. EN: "Help me find lead measures", "Run a lead-measure
-  session with my team", "Our team's leads are set — how do I influence
-  them?", "Audit our lead measures", "Got feedback our leads aren't right",
-  "Stakeholder wants to revisit our lead measures", "Boss says these aren't
-  real lead measures", "Are our 12 KPIs the right leads?". JP:「lead measure を
-  決めたい」「team で lead measure を一緒に決めたい」「うちの lead measure
-  を診断して」「上司にフィードバックされた、lead 見て」「これ本当に lead？」. zh-TW:「幫我找 lead measure」
-  「帶 team 一起找 lead」「主管覺得我們的 lead 要調整」「老闆說我們的 lead
-  不對」「review 後想討論 lead 方向」「12 個指標哪些是真 lead？」. Two-axis test + Goodhart shared across all modes. NOT for
-  WIG (→ 4dx-d1-*), scoreboard (→ 4dx-d3-scoreboard), cadence
-  (→ 4dx-d4-cadence), stale leads (→ 4dx-sustain-momentum-rescue),
-  cross-layer audit (→ 4dx-audit), or OKR/KPI audit without 4DX framing
-  (→ using-four-dx-coach). Member-mode V1 ⚠️ partial.
-source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
-source_chapter: Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2
+  Coaches the user to identify weekly-actionable lead measures (predictive AND influenceable) for a WIG across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing lead list or KPI dashboard. Use when the user has a WIG but is about to track lag metrics or adopt a generic KPI dashboard, BEFORE picking the behaviors that actually move the WIG.
+  EN: "Help me find lead measures", "Audit our lead measures", "Are our 12 KPIs real leads?"
+  JP: 「lead measure を決めたい」「うちの lead measure を診断して」「これ本当に lead？」
+  zh-TW: 「幫我找 lead measure」「主管覺得我們的 lead 要調整」「12 個指標哪些是真 lead？」
+  Do NOT use for stale-lead momentum rescue (→ 4dx-sustain-momentum-rescue) or cross-discipline 4DX audit (→ 4dx-audit).
+source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
+source_chapter: "Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2"
 source_language: en
 tags: [d2, lead-measure, multi-scope, two-axis-test, predictive-influenceable, goodhart, solo, team-leader, team-member, 4dx]
 related_skills:
