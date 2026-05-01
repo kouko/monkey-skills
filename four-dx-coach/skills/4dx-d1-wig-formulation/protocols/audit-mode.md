@@ -181,6 +181,20 @@ not Socratically rebuild the WIG — diagnose, then recommend.**
      of-pen / whirlwind-as-strategic-value), route to
      `4dx-meta-strategy-triage`."
 
+7. **Run the book's official Did-You-Get-It-Right self-check.**
+   - Load `../references/book-self-check.md` — the verbatim 7-item
+     checklist from McChesney et al. 2021 p 220 ("Did You Get It
+     Right?"). This is the canonical FranklinCovey D1 verification gate
+     and runs as the last act of the audit, after the rule-check (step
+     3), critique-mapping (step 4), and revision (step 5) have produced
+     a candidate revised WIG.
+   - For team-select / member-inherited scope, apply the verbatim
+     Team-WIG version. For personal scope, apply the personal-scope
+     lens documented in the same file.
+   - Issue PASS / FAIL per item with a one-line evidence cite, citing
+     book p 220 in the audit card. Any item failing routes the user
+     back to step 5 (recommend revision) before commit.
+
 ### Output format (audit card)
 
 ```markdown
@@ -259,6 +273,8 @@ not Socratically rebuild the WIG — diagnose, then recommend.**
 - `../standards/wig-discipline.md` — Step 3 Rule 1 one-per-individual
   + Approach A vs B for team-select scope.
 - `../standards/ladder-up-test.md` — Step 3 ladder-up bonus check.
+- `../references/book-self-check.md` — Step 7 final SHOULD-gate; verbatim
+  7-item "Did You Get It Right?" checklist from book p 220.
 
 ## References
 

@@ -132,6 +132,20 @@ is a written diagnosis + disposition table, not a dialogue.
    them and route to `4dx-audit` or
    `4dx-sustain-momentum-rescue`.
 
+10. **Run the book's official Did-You-Get-It-Right self-check.**
+    — load `../references/book-self-check.md` (McChesney et al. 2021,
+    p 251). After the per-element disposition + minimum-viable
+    redesign in step 8, walk the proposed revised board through all
+    eight verbatim questions as the canonical verification gate.
+    Record per-question PASS / FAIL in the output (see Output format
+    below). Any FAIL is a return-to-bench signal — revise the
+    minimum-viable redesign until all eight pass, then emit. For
+    solo scope, use the personal-scope lens in the same file
+    (substitutes "team" → "you", "Team WIG" → "WIG"); the book
+    questions remain canonical wording. If the skill standards (steps
+    3-6) and the book self-check disagree on a borderline case, the
+    book wording wins.
+
 ### Output format
 
 ```markdown
@@ -159,6 +173,18 @@ is a written diagnosis + disposition table, not a dialogue.
 
 ## Minimum-viable redesign
 - Lag / Lead(s) / Pacing / (Delta)
+
+## Book self-check (McChesney et al. 2021, p 251)
+| # | Question | PASS / FAIL |
+|---|---|---|
+| 1 | Has the team been closely involved in creating the scoreboard? | |
+| 2 | Does the scoreboard track the Team WIG, lag measures, and lead measures? | |
+| 3 | Is there a full explanation of the WIG and measures along with the graphs? | |
+| 4 | Does every graph display both actual results and the target results? | |
+| 5 | Can the team tell at a glance on every measure if they're winning or losing? | |
+| 6 | Is the scoreboard posted in a highly visible location where the team can see it easily and often? | |
+| 7 | Is the scoreboard easy to update? | |
+| 8 | Is the scoreboard personalized — a unique expression of the team? | |
 
 ## Route
 [coach-mode / 4dx-audit / sustain-rescue]
@@ -215,6 +241,7 @@ is a written diagnosis + disposition table, not a dialogue.
 - `../standards/5-second-test.md` — Step 3 simulation
 - `../standards/players-vs-coaches-board.md` — Steps 4 + 5
 - `../standards/lead-lag-pacing-elements.md` — Step 6
+- `../references/book-self-check.md` — Step 10 canonical verification gate (McChesney et al. 2021, p 251)
 
 ## References
 

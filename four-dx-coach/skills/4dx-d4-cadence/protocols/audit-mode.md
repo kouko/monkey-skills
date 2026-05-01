@@ -177,15 +177,32 @@ revised agenda template, and an explicit onward route.
      adopt next session: 0:00-7:00 Account · 7:00-12:00 Review ·
      12:00-22:00 Plan · 22:00-25:00 close + recognition.
 
-9. **Offer onward route** (end the audit)
-   - "For a single missed-commitment debrief: run coach-mode
-     `member-debrief`."
-   - "For multi-week cadence collapse: route to
-     `4dx-sustain-momentum-rescue`."
-   - "For coach-mode dialogue rebuild of the session itself: run
-     `team-leader-session` (if leader) or `solo-session` (if solo)."
-   - "For cross-discipline audit (WIG / leads / scoreboard / cadence
-     all at once): use `4dx-audit`."
+9. **Run the book's official Did-You-Get-It-Right self-check**
+   - Load `../references/book-self-check.md` (the verbatim 10-item
+     SHOULD-checklist from book p 272) as the canonical
+     post-audit verification gate.
+   - Run each of the 10 items against the artifacts and the per-rule
+     findings already produced in steps 3-8. Any "no" is a finding
+     that must appear in the audit report (cross-reference the
+     internal standard mapped in `book-self-check.md`).
+   - For a solo cadence, apply the personal/solo lens at the bottom
+     of `book-self-check.md` (skip item 3; reinterpret "team" → "you"
+     for items 7-9).
+   - This step is the final pass before handing the report off — it
+     catches anything the four internal-rule lenses missed and
+     anchors the audit to the book's own quality bar.
+     Cite: McChesney/Covey/Huling/Thele/Walker (2021),
+     *The 4 Disciplines of Execution* 2nd ed., Simon & Schuster, p 272.
+
+10. **Offer onward route** (end the audit)
+    - "For a single missed-commitment debrief: run coach-mode
+      `member-debrief`."
+    - "For multi-week cadence collapse: route to
+      `4dx-sustain-momentum-rescue`."
+    - "For coach-mode dialogue rebuild of the session itself: run
+      `team-leader-session` (if leader) or `solo-session` (if solo)."
+    - "For cross-discipline audit (WIG / leads / scoreboard / cadence
+      all at once): use `4dx-audit`."
 
 ## B — Boundary (mode-specific)
 

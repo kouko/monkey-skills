@@ -193,6 +193,22 @@ the user did not name.
      team session), or `member-influence` (you're a member working
      with leads someone else picked)."
 
+9. **Run the book's official Did-You-Get-It-Right self-check.**
+   - Load `../references/book-self-check.md` (verbatim 6+1-item D2
+     quality gate from McChesney et al. 2021, pp 229+235) and run
+     every KEEP / REVISE candidate through all seven items. This is
+     the canonical verification gate — the two-axis test (Step 3) and
+     Goodhart self-check (Step 4) cover items 1, 2, and 6 of the
+     book gate, but items 3 (ongoing process vs one-and-done), 4
+     (leader's game vs team game), 5 (can it be measured), and 7
+     (verb-led + simple form) are independent gates the audit must
+     not skip.
+   - Any FAIL on items 3, 4, 5, or 7 → flip the candidate from KEEP
+     to REVISE (with the specific item cited) or DROP. Update the
+     per-candidate disposition table accordingly.
+   - Cite the book pages in the audit card: "Verified against book
+     pp 229+235 self-check."
+
 ### Output format (audit card)
 
 ```markdown
