@@ -33,7 +33,8 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 | `ticker` | yes | — | e.g. `AAPL`, `7203` (or `7203.T`), `2330.TW`, `005930.KS`, `600519.SS` |
 | `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
 | `output_language` | no | auto-detect | `.TW` / `.TWO` → `zh-TW`; `.T` / `.TO` / 4-digit JP → `ja`; `.KS` / `.KQ` → `ko`; `.SS` / `.SZ` / `.HK` → `zh-CN`; otherwise infer from user message |
-| `peers` | no | — | **Deferred to PR 2** (analysis-comps integration). Currently passed-through but ignored downstream — no silent peer fetch. Will accept a comma-separated peer list once PR 2 ships. |
+| `peers` | no | auto-discovery via runtime research agent | Comma-separated peer list (e.g., `MSFT,GOOGL,META,AMZN`); skips runtime peer-discovery if provided. |
+| `--interactive` | no | `false` (auto mode) | When `true`, peer-discovery agent's output is presented for user confirmation before Comps fetch + analysis. |
 
 ### Country detection
 
@@ -55,7 +56,7 @@ Set `${COUNTRY}` accordingly for the rest of the pipeline.
 
 ### Phase 1 — Data Fetch
 
-> **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
+> **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
 
 Single subprocess call per ticker. The country-bundled `pack.py --pack memo-fetch`
 facade composes all required clients (e.g. SEC EDGAR + yfinance + FRED for US;
@@ -105,6 +106,74 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-macro-regime/scripts/regime_compose
 `analysis-macro-regime` accepts any subset of `us/jp/tw/kr/cn` so the cross-country
 list scales with the memo's scope.
 
+### Phase 2.5 — Peer Discovery + Comps Multiples
+
+**If `--peers` provided** (manual override): skip discovery, use the list verbatim.
+
+**Else** spawn research agent for peer-discovery at runtime:
+
+Use `general-purpose` subagent with this prompt template:
+
+> Find 5–8 publicly-traded competitor tickers for {anchor_ticker} ({company_name}).
+>
+> Selection criteria (in order):
+> 1. Direct business-line competitor (same products/services)
+> 2. Comparable scale tier (market cap within 0.3x–3x range)
+> 3. Same primary geography or comparable geographic mix
+> 4. Listed on major exchanges (US/JP/TW/KR/CN/HK/Europe)
+>
+> For each peer, provide:
+> - Ticker symbol (with exchange suffix if non-US: .T, .TW, .KS, etc.)
+> - 1-line rationale explaining why it's a comp
+> - Source URL (corporate disclosure, industry report, or competitor analysis)
+>
+> Output as JSON:
+> {"peers": [{"ticker": "MSFT", "rationale": "...", "source": "https://..."}]}
+>
+> Cap: 250 words total. No industry-rollup commentary — just the peer list.
+
+**Default behavior** (configurable):
+
+| Context | Discovery flow |
+|---|---|
+| Pipeline mode (called by orchestrator / memo automation) | **Auto** — agent finds peers → analysis runs immediately → peer list + rationale visible in process logs and final report |
+| CLI mode (`--interactive`) | **Interactive** — agent finds peers → presents list + rationale → user `/proceed` confirms or edits → analysis runs |
+
+**Provenance transparency requirement** (per Spec §5.6 — peer list visible at three points):
+
+1. **During execution**: main agent logs `Using peers: X (reason), Y (reason), Z (reason)` before fetch starts
+2. **In analysis JSON**: `_provenance.peer_data_sources` lists each peer + how it was selected
+3. **In final memo**: Comps section header explicitly lists peers + 1-line rationale per peer
+
+The reader never wonders "Comps against whom?"
+
+**Then fetch + analyze**:
+
+```bash
+# 1. Fetch anchor multiples
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
+  ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
+    --ticker ${ANCHOR} --pack comps-multiples \
+    > /tmp/${ANCHOR_SAFE}-anchor-comps.json
+
+# 2. Fetch peer multiples (group peers by country, run per-country batch)
+# Per peer country group:
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
+  ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
+    --tickers ${PEERS_FOR_COUNTRY} --pack comps-multiples \
+    > /tmp/${COUNTRY}-peers-comps.json
+# Repeat for each country present in the peer list.
+
+# 3. Run analysis-comps
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
+  --anchor /tmp/${ANCHOR_SAFE}-anchor-comps.json \
+  --peers /tmp/<peer1>-comps.json,/tmp/<peer2>-comps.json,... \
+  --rationale-map /tmp/peer-rationales.json \
+  > /tmp/${ANCHOR_SAFE}-comps.json
+```
+
+Pass `/tmp/${ANCHOR_SAFE}-comps.json` to investing-team in Phase 4 alongside `dcf.json` / `regime.json`.
+
 ### Phase 3 — Analysis
 
 Run pure-compute analysis skills on the Phase 1 fetch JSON.
@@ -114,18 +183,13 @@ Run pure-compute analysis skills on the Phase 1 fetch JSON.
 uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-dcf/scripts/dcf_compute.py \
   --input /tmp/${TICKER_SAFE}-fetch.json \
   > /tmp/${TICKER_SAFE}-dcf.json
-
-# [PR 2: insert analysis-comps step here]
-# uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
-#   --anchor /tmp/${TICKER_SAFE}-fetch.json \
-#   --peers /tmp/peer-1-fetch.json,/tmp/peer-2-fetch.json,... \
-#   > /tmp/${TICKER_SAFE}-comps.json
-# (peer-discovery research-agent + per-peer comps-multiples fetch lands in PR 2)
 ```
 
-> **Comps caveat (until PR 2)**: investing-team produces relative valuation as
-> prose only; no structured peer table is passed from this pipeline. Phase 4's
-> relative-valuation gates run on prose, not on a comps JSON.
+> **Comps note**: relative valuation is computed in **Phase 2.5** (peer
+> discovery + `analysis-comps`). The resulting `/tmp/${ANCHOR_SAFE}-comps.json`
+> is passed to investing-team in Phase 4 alongside the DCF and regime JSONs,
+> so Phase 4's relative-valuation gates run on the structured comps JSON, not
+> prose.
 
 Each analysis skill called from Phase 3 is pure compute (Layer 2 contract).
 They emit a JSON-only payload — no Markdown, no verdict prose. That is
@@ -138,9 +202,9 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 **Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
 
-1. Pass **paths** to the Phase 1 / 2 / 3 JSONs as `### Resource Paths` — never file content
+1. Pass **paths** to the Phase 1 / 2 / 2.5 / 3 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `dcf.json` (Phase 3).
 2. Pass the ticker, scope, output_language, country code as `### Input` seed context
-3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack
+3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack — relative-valuation gates consume the structured `comps.json`, not prose
 4. Gate verdicts (PASS / NEEDS_REVISION) flow back from investing-team's evaluators — this skill does not produce verdicts
 5. Visibility Convention: include the skill-team TaskUpdate cadence clause (phase transitions / milestones / heartbeat ≤60s) so the user sees progress during the multi-minute investing-team run
 
@@ -194,11 +258,6 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
 
 ## Limitations
 
-- **Comps section** (relative valuation) is deferred to **PR 2** —
-  `analysis-comps` skill + `data-{country}/pack.py --pack comps-multiples`
-  + research-agent peer-discovery wiring. Until PR 2 lands, the memo's
-  Relative Valuation section is provided by investing-team prose only,
-  without a structured peer table.
 - yfinance is an unofficial scraper (Tier 2). Tier A primary-source paths
   are used per `data-{country}` skill defaults (SEC EDGAR for US; EDINET for
   JP when `EDINET_API_KEY` set; MOPS + TWSE OpenAPI for TW always; FDR /

@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "GOOGL",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "GOOGL": {
+      "trailingPE": 24.5,
+      "forwardPE": 22.0,
+      "priceToSales": 6.5,
+      "priceToBook": 6.8,
+      "enterpriseToEbitda": 18.0
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}

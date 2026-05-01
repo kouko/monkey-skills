@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "AAPL",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "AAPL": {
+      "trailingPE": 28.5,
+      "forwardPE": 25.1,
+      "priceToSales": 7.2,
+      "priceToBook": 35.4,
+      "enterpriseToEbitda": 21.3
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples" }
+}
