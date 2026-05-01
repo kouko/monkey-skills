@@ -1,17 +1,44 @@
 ---
 name: git-memory
 description: >-
-  Capture and recall git decision context. Use when about to commit or open
-  a PR (before running git commit, gh pr create, or staging changes for
-  merge), or when recalling why a past decision was made (user asks "why
-  did we do X", references an old branch, or revisits earlier work without
-  context). Triggers: commit / PR / merge / decision / 為什麼 / commit メモ / 決定記録.
+  MANDATORY invocation gate before every `git commit` and `gh pr create` —
+  the skill itself decides whether memory trailers (`Decision:` / `Learning:`
+  / `Gotcha:`) are warranted. Do NOT pre-decide "this commit is routine" and
+  skip the skill; that decision belongs to the skill, not the caller. Without
+  this gate, the git history loses the "why" archive that
+  `git log --grep='Decision:'` retrieves across sessions, machine changes,
+  and tool switches. Also use to recall past decisions (user asks "why did
+  we...", 為什麼, references an old branch, revisits earlier work). Triggers:
+  about-to-`git commit`, about-to-`gh pr create`, about-to-merge, "why did
+  we", 為什麼, "decision", "rationale", "commit メモ", "決定記録".
 ---
 
 # Git Memory
 
 Portable, tool-agnostic project memory using git commit messages and
 PR body as the durable substrate.
+
+## Invocation policy
+
+> **The skill is an invocation gate, not a trailer gate.**
+
+Two distinct decisions must not be conflated:
+
+| Decision | Who decides | When |
+|----------|-------------|------|
+| **Should this skill be invoked?** | The caller | Before `git commit` / `gh pr create` — answer is **always yes** in a Claude session |
+| **Should this commit carry memory trailers?** | The skill | Inside the skill — routine commits exit cleanly with no trailers |
+
+Pre-deciding "this commit is routine, I'll skip the skill" is the bug.
+The skill's classification logic (routine vs non-routine, see *When not to
+use* below) belongs **inside** the skill, not in the caller's head. Skipping
+the skill loses the audit trail of "we considered memory and decided no",
+and biases toward under-recording over time.
+
+**Concretely**: even when the skill outputs *"no trailers needed for this
+commit"*, the invocation itself ensures consistent decision-making and
+catches the cases where the caller would have wrongly classified a
+non-trivial commit as routine.
 
 ## Core thesis
 
@@ -82,15 +109,22 @@ The git diff already shows **what** changed. Memory records the **why**.
 
 ## When not to use
 
-- Routine commits (typo fixes, version bumps, formatting) — memory
-  trailers would be pure noise
-- User-level preferences that are not tied to a repo (e.g. "user
-  prefers concise responses") — those belong in Claude Code's native
-  memory, not in git
-- Secrets or sensitive context — git is public-by-default; use
-  `.gitignore`d notes or secret managers instead
-- Replacing Claude Code's memory wholesale — git-memory complements
-  it, does not substitute for it
+> The lines below describe when the skill **outputs no trailers**, not
+> when to skip invoking the skill. See *Invocation policy* above — the
+> skill is always invoked; only the trailer outcome varies.
+
+- **Routine commits → skill exits with no trailers.** Typo fixes, version
+  bumps, formatting changes — memory trailers would be pure noise. The
+  skill itself recognises these and outputs an empty trailer set.
+- **User-level preferences not tied to a repo** (e.g. "user prefers
+  concise responses") — those belong in Claude Code's native memory,
+  not in git. The skill does not write these as git-memory trailers.
+- **Secrets or sensitive context** — git is public-by-default; use
+  `.gitignore`d notes or secret managers instead. The skill refuses
+  to embed secrets in commit trailers.
+- **Replacing Claude Code's memory wholesale** — git-memory complements
+  it, does not substitute for it. Both layers coexist; see the
+  *Relationship to Claude Code native memory* table below.
 
 ## Relationship to Claude Code native memory
 
