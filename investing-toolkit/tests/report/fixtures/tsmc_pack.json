@@ -1,0 +1,65 @@
+{
+  "_pack": "snapshot",
+  "_ticker": "2330.TW",
+  "_normalized": {"market": "sii", "code": "2330"},
+  "yfinance": {
+    "info": {
+      "data": {
+        "longName": "Taiwan Semiconductor Manufacturing Company Limited",
+        "exchange": "TAI",
+        "sector": "Technology",
+        "regularMarketPrice": 1085.0,
+        "fiftyTwoWeekLow": 850.0,
+        "fiftyTwoWeekHigh": 1200.0,
+        "marketCap": 28000000000000,
+        "enterpriseValue": 27500000000000,
+        "beta": 1.10,
+        "trailingPE": 28.0,
+        "priceToBook": 7.5
+      }
+    },
+    "history": {
+      "rows": [
+        {"Close": 850.0},
+        {"Close": 1085.0}
+      ]
+    }
+  },
+  "mops": {
+    "company_basic": {
+      "data": {
+        "公司名稱": "台灣積體電路製造股份有限公司",
+        "產業類別": "半導體業"
+      }
+    }
+  },
+  "twse": {
+    "daily_price": {
+      "data": {
+        "ClosingPrice": 1085.0,
+        "fetched_at": "2026-04-30T12:00:00Z"
+      }
+    },
+    "pe_pb_yield": {
+      "data": {
+        "PEratio": 28.5,
+        "PBratio": 7.6,
+        "DividendYield": 1.85
+      }
+    }
+  },
+  "finmind": {
+    "three_investor_flow": {
+      "data": {
+        "TaiwanStockInstitutionalInvestorsBuySell": {
+          "_processed": {
+            "latest_date": "2026-04-30",
+            "foreign": 12500,
+            "trust": -3200,
+            "dealer": 850
+          }
+        }
+      }
+    }
+  }
+}

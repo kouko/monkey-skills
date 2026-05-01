@@ -1,0 +1,134 @@
+{
+  "preset_used": "balanced",
+  "universe_size": 50,
+  "passed": 5,
+  "returned": 5,
+  "filters_applied": {
+    "min_volume": 1000000,
+    "max_pe": 50
+  },
+  "weights_applied": {
+    "valuation": 0.3,
+    "momentum": 0.3,
+    "trend": 0.2,
+    "quality": 0.2
+  },
+  "ranked": [
+    {
+      "rank": 1,
+      "ticker": "MSFT",
+      "composite_score": 0.85,
+      "breakdown": {
+        "valuation": 0.80,
+        "momentum": 0.90,
+        "trend": 0.85,
+        "quality": 0.85
+      },
+      "metrics": {
+        "trailingPE": 14.0,
+        "priceToBook": 1.2,
+        "dividendYield": 2.5,
+        "rsi_14": 55.0,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 410.0
+      },
+      "warnings": []
+    },
+    {
+      "rank": 2,
+      "ticker": "AAPL",
+      "composite_score": 0.78,
+      "breakdown": {
+        "valuation": 0.65,
+        "momentum": 0.85,
+        "trend": 0.85,
+        "quality": 0.80
+      },
+      "metrics": {
+        "trailingPE": 28.5,
+        "priceToBook": 45.2,
+        "dividendYield": 0.38,
+        "rsi_14": 62.5,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 175.0
+      },
+      "warnings": ["dividendYield magnitude unusual"]
+    },
+    {
+      "rank": 3,
+      "ticker": "GOOGL",
+      "composite_score": 0.72,
+      "breakdown": {
+        "valuation": 0.70,
+        "momentum": 0.70,
+        "trend": 0.75,
+        "quality": 0.75
+      },
+      "metrics": {
+        "trailingPE": 22.0,
+        "priceToBook": 5.8,
+        "dividendYield": 0.5,
+        "rsi_14": 58.0,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 165.0
+      },
+      "warnings": []
+    },
+    {
+      "rank": 4,
+      "ticker": "MIDQ",
+      "composite_score": 0.65,
+      "breakdown": {
+        "valuation": 0.75,
+        "momentum": 0.60,
+        "trend": 0.60,
+        "quality": 0.65
+      },
+      "metrics": {
+        "trailingPE": 12.0,
+        "priceToBook": 1.4,
+        "dividendYield": 3.0,
+        "rsi_14": 60.0,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 100.0
+      },
+      "warnings": []
+    },
+    {
+      "rank": 5,
+      "ticker": "MIDQ2",
+      "composite_score": 0.62,
+      "breakdown": {
+        "valuation": 0.80,
+        "momentum": 0.55,
+        "trend": 0.55,
+        "quality": 0.60
+      },
+      "metrics": {
+        "trailingPE": 10.0,
+        "priceToBook": 1.0,
+        "dividendYield": 2.5,
+        "rsi_14": 70.0,
+        "macd_crossover": "bullish",
+        "price_vs_sma200": "above",
+        "regularMarketPrice": 80.0
+      },
+      "warnings": []
+    }
+  ],
+  "filtered_out": [
+    {"ticker": "BADP", "reason": "PE ratio 120 exceeds max_pe=50 threshold"},
+    {"ticker": "LOWV", "reason": "volume 500000 below min_volume=1000000"},
+    {"ticker": "NULLY", "reason": "missing required field: regularMarketPrice"},
+    {"ticker": "EXTRA1", "reason": "another exclusion reason"},
+    {"ticker": "EXTRA2", "reason": "yet another exclusion reason"}
+  ],
+  "_provenance": {
+    "skill": "analysis-screener",
+    "computed_at": "2026-04-30T12:00:00Z"
+  }
+}

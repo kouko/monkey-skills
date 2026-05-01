@@ -1,0 +1,14 @@
+{
+  "ticker": "TEST",
+  "income_statement": {
+    "revenue": [100000, 90000],
+    "net_income": [10000, 9000]
+  },
+  "cash_flow": {},
+  "balance_sheet": {
+    "total_debt": [10000],
+    "cash": [5000]
+  },
+  "shares_outstanding": 1000000000,
+  "current_price": 50.0
+}

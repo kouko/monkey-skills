@@ -1,0 +1,79 @@
+{
+  "tickers": [
+    {
+      "ticker": "AAPL",
+      "trailingPE": 28.5,
+      "priceToBook": 45.2,
+      "dividendYield": 0.005,
+      "returnOnEquity": 1.50,
+      "rsi_14": 62.5,
+      "macd_crossover": "bullish",
+      "price_vs_sma200": "above",
+      "regularMarketPrice": 175.0,
+      "twoHundredDayAverage": 170.0,
+      "revenueGrowth": 0.08,
+      "earningsGrowth": 0.12,
+      "volume": 50000000
+    },
+    {
+      "ticker": "MSFT",
+      "trailingPE": 14.0,
+      "priceToBook": 1.2,
+      "dividendYield": 0.025,
+      "returnOnEquity": 0.10,
+      "rsi_14": 55.0,
+      "macd_crossover": "bullish",
+      "price_vs_sma200": "above",
+      "regularMarketPrice": 410.0,
+      "twoHundredDayAverage": 390.0,
+      "revenueGrowth": 0.15,
+      "earningsGrowth": 0.18,
+      "volume": 25000000
+    },
+    {
+      "ticker": "T",
+      "trailingPE": 18.0,
+      "priceToBook": 1.1,
+      "dividendYield": 0.06,
+      "returnOnEquity": 0.06,
+      "rsi_14": 48.0,
+      "macd_crossover": "bearish",
+      "price_vs_sma200": "below",
+      "regularMarketPrice": 17.0,
+      "twoHundredDayAverage": 18.0,
+      "revenueGrowth": 0.02,
+      "earningsGrowth": -0.05,
+      "volume": 30000000
+    },
+    {
+      "ticker": "MIDQ",
+      "trailingPE": 12.0,
+      "priceToBook": 1.4,
+      "dividendYield": 0.03,
+      "returnOnEquity": 0.15,
+      "rsi_14": 60.0,
+      "macd_crossover": "bullish",
+      "price_vs_sma200": "above",
+      "regularMarketPrice": 100.0,
+      "twoHundredDayAverage": 95.0,
+      "revenueGrowth": 0.06,
+      "earningsGrowth": 0.10,
+      "volume": 1000000
+    },
+    {
+      "ticker": "MIDQ2",
+      "trailingPE": 10.0,
+      "priceToBook": 1.0,
+      "dividendYield": 0.025,
+      "returnOnEquity": 0.25,
+      "rsi_14": 70.0,
+      "macd_crossover": "bullish",
+      "price_vs_sma200": "above",
+      "regularMarketPrice": 80.0,
+      "twoHundredDayAverage": 70.0,
+      "revenueGrowth": 0.10,
+      "earningsGrowth": 0.15,
+      "volume": 2000000
+    }
+  ]
+}

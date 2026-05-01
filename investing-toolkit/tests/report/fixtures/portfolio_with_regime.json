@@ -1,0 +1,30 @@
+{
+  "positions": [
+    {
+      "ticker": "AAPL",
+      "quantity": 100,
+      "cost_basis": 150.00,
+      "current_price": 175.50,
+      "market_value": 17550.00,
+      "pnl_abs": 2550.00,
+      "pnl_ratio": 0.17,
+      "weight": 1.00,
+      "contribution": 0.17
+    }
+  ],
+  "totals": {
+    "total_cost": 15000.00,
+    "total_market_value": 17550.00,
+    "total_pnl_abs": 2550.00,
+    "total_pnl_ratio": 0.17,
+    "position_count": 1,
+    "max_weight": 1.00,
+    "max_weight_ticker": "AAPL",
+    "top3_weight": 1.00
+  },
+  "_provenance": {
+    "skill": "analysis-portfolio",
+    "computed_at": "2026-04-30T12:00:00Z",
+    "missing_prices": []
+  }
+}

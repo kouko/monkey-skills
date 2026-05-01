@@ -1,0 +1,17 @@
+{
+  "preset_used": "value",
+  "universe_size": 10,
+  "passed": 0,
+  "returned": 0,
+  "filters_applied": {"max_pe": 5},
+  "weights_applied": {},
+  "ranked": [],
+  "filtered_out": [
+    {"ticker": "AAA", "reason": "PE 28 above max_pe=5"},
+    {"ticker": "BBB", "reason": "PE 30 above max_pe=5"}
+  ],
+  "_provenance": {
+    "skill": "analysis-screener",
+    "computed_at": "2026-04-30T12:00:00Z"
+  }
+}

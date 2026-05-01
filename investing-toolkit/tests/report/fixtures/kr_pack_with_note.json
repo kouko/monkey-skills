@@ -1,0 +1,29 @@
+{
+  "pack": "snapshot",
+  "country": "kr",
+  "ticker": "005930.KS",
+  "fetched_at": "2026-04-30T12:00:00Z",
+  "info": {
+    "longName": "Samsung Electronics Co., Ltd.",
+    "exchange": "KRX",
+    "sector": "Technology",
+    "regularMarketPrice": 75000,
+    "fiftyTwoWeekLow": 60000,
+    "fiftyTwoWeekHigh": 88000,
+    "trailingPE": 14.5,
+    "forwardPE": 12.8,
+    "priceToBook": 1.3,
+    "marketCap": 450000000000000,
+    "beta": 0.95,
+    "dividendYield": 2.1
+  },
+  "history": {
+    "rows": [
+      {"close": 60000},
+      {"close": 75000}
+    ]
+  },
+  "_provenance": {
+    "primary_source_note": "DART (전자공시시스템) primary-source integration deferred to a future release."
+  }
+}
