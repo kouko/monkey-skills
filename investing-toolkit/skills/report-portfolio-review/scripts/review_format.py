@@ -260,7 +260,12 @@ def render_concentration(
     lines = [f"## {L(lang, 'concentration')}", ""]
     max_w = totals.get("max_weight") or 0.0
     max_t = totals.get("max_weight_ticker") or "—"
-    top3_sum = sum((p.get("weight") or 0.0) for p in positions[:3])
+    # top3_weight is emitted by analysis-portfolio (Layer 2) — formatter is pure.
+    # Fallback to recomputing from positions for backward compatibility with
+    # older portfolio JSONs that pre-date the totals.top3_weight field.
+    top3_sum = totals.get("top3_weight")
+    if top3_sum is None:
+        top3_sum = sum((p.get("weight") or 0.0) for p in positions[:3])
     flag = ""
     if max_w > 0.30:
         flag = f" {L(lang, 'concentrated_flag')}"

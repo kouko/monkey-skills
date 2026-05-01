@@ -74,8 +74,15 @@ Run the pure-formatter script on the captured JSON:
 ```bash
 uv run ${CLAUDE_SKILL_DIR}/scripts/snapshot_format.py \
   --input /tmp/{ticker_safe}-snap.json \
+  --country {detected_country} \
   [--lang en|zh-TW|ja]
 ```
+
+Pass `--country {detected_country}` (one of `us|jp|tw|kr|cn`) so the formatter
+honours Step 1's ticker-suffix routing as the single source of truth. The
+default `--country auto` falls back to `pack["country"]` → ticker-suffix →
+pack-shape sniffing in that order, but explicit is preferred whenever the
+country is already known.
 
 `snapshot_format.py` is **pure** — no HTTP, no subprocess. It reads the pack
 JSON, extracts whatever fields are present (different countries have different

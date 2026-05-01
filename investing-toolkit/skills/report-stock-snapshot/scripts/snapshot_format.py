@@ -22,8 +22,17 @@ The 5 country pack shapes differ:
   - data-kr:  { pack, country, ticker, info, history, _provenance }
   - data-cn:  { pack, ticker, country, yfinance_info, yfinance_history }
 
-The formatter detects the shape via the `pack`/`_pack` key + characteristic
-sub-keys, normalizes into a unified Card model, then renders.
+Country-routing precedence (resolve_country):
+  1. Explicit `--country {us,jp,tw,kr,cn}` flag (caller asserts).
+  2. `--country auto` (default):
+     a. `pack["country"]` (data-kr / data-cn carry it).
+     b. Ticker-suffix derivation from `pack["ticker" | "_ticker" | "yf_ticker"]`
+        (.T/.TO → JP; .TW/.TWO → TW; .KS/.KQ → KR; .SS/.SZ/.HK → CN; else US).
+     c. Pack-shape sniffing as last-resort fallback.
+
+SKILL.md mandates ticker-suffix routing as the single source of truth — shape-
+sniffing exists only as a defensive last resort. Callers should pass --country
+explicitly when the country is already known upstream.
 """
 from __future__ import annotations
 
@@ -108,16 +117,27 @@ def _fmt_billions(v: Any, currency: str = "") -> str:
         return "N/A"
 
 
-def _safe(d: Any, *keys: str, default: Any = None) -> Any:
-    """Walk nested dict with default fallback."""
-    cur = d
-    for k in keys:
-        if not isinstance(cur, dict):
-            return default
-        cur = cur.get(k)
-        if cur is None:
-            return default
-    return cur
+def _apply_yfinance_info(card: Card, info: dict, *, default_exchange: str) -> None:
+    """Apply the 13 common yfinance .info → Card field mappings.
+
+    Used by US / JP / KR / CN adapters (TW has its own MOPS+TWSE precedence so
+    only borrows a subset of these fields directly). Mutates `card` in place.
+    """
+    if not isinstance(info, dict):
+        return
+    card.name = info.get("longName") or info.get("shortName") or "N/A"
+    card.exchange = info.get("exchange") or default_exchange
+    card.sector = info.get("sector") or "N/A"
+    card.close = info.get("regularMarketPrice") or info.get("currentPrice")
+    card.fifty_two_w_low = info.get("fiftyTwoWeekLow")
+    card.fifty_two_w_high = info.get("fiftyTwoWeekHigh")
+    card.pe = info.get("trailingPE")
+    card.forward_pe = info.get("forwardPE")
+    card.pb = info.get("priceToBook")
+    card.market_cap = info.get("marketCap")
+    card.enterprise_value = info.get("enterpriseValue")
+    card.beta = info.get("beta")
+    card.div_yield = info.get("dividendYield")
 
 
 def _vs_52w_high_pct(close: Any, high: Any) -> str:
@@ -133,8 +153,14 @@ def _vs_52w_high_pct(close: Any, high: Any) -> str:
         return "N/A"
 
 
-def _compute_1y_return(history: dict[str, Any]) -> Any:
-    """Best-effort 1Y return from a history payload — return percent or None."""
+def _compute_period_return(history: dict[str, Any]) -> Any:
+    """Best-effort period return from a history payload (percent, or None).
+
+    Computes (last_close - first_close) / first_close * 100 over whatever range
+    the history payload happens to cover — caller is responsible for knowing
+    that range. The renderer reads the range from the history envelope and
+    labels accordingly; the function itself does NOT assume "1 year".
+    """
     if not isinstance(history, dict):
         return None
     # data-jp / data-us / data-kr / data-cn yfinance_client history shape may carry
@@ -176,21 +202,13 @@ def _adapt_us(pack: dict[str, Any]) -> Card:
         fetched_at=pack.get("fetched_at", ""),
         currency="$",
     )
-    card.name = info.get("longName") or info.get("shortName") or "N/A"
-    card.exchange = info.get("exchange") or info.get("fullExchangeName") or "NYSE/NASDAQ"
-    card.sector = info.get("sector") or "N/A"
-    card.close = info.get("regularMarketPrice") or info.get("currentPrice") \
-        or _safe(history, "latest_close")
-    card.fifty_two_w_low = info.get("fiftyTwoWeekLow")
-    card.fifty_two_w_high = info.get("fiftyTwoWeekHigh")
-    card.pe = info.get("trailingPE")
-    card.forward_pe = info.get("forwardPE")
-    card.pb = info.get("priceToBook")
-    card.market_cap = info.get("marketCap")
-    card.enterprise_value = info.get("enterpriseValue")
-    card.beta = info.get("beta")
-    card.div_yield = info.get("dividendYield")
-    card.one_year_return = _compute_1y_return(history)
+    _apply_yfinance_info(card, info, default_exchange="NYSE/NASDAQ")
+    # US-specific: fullExchangeName fallback + history latest_close fallback
+    if isinstance(info, dict) and not info.get("exchange"):
+        card.exchange = info.get("fullExchangeName") or "NYSE/NASDAQ"
+    if card.close in (None, "") and isinstance(history, dict):
+        card.close = history.get("latest_close")
+    card.one_year_return = _compute_period_return(history)
     card.disclosures_kind = "sec"
     card.disclosures = []  # snapshot pack does not carry SEC filings
     card.tier_footer = (
@@ -215,21 +233,8 @@ def _adapt_jp(pack: dict[str, Any]) -> Card:
         fetched_at=pack.get("fetched_at", ""),
         currency="¥",
     )
-    if isinstance(info, dict):
-        card.name = info.get("longName") or info.get("shortName") or "N/A"
-        card.exchange = info.get("exchange") or "TSE"
-        card.sector = info.get("sector") or "N/A"
-        card.close = info.get("regularMarketPrice") or info.get("currentPrice")
-        card.fifty_two_w_low = info.get("fiftyTwoWeekLow")
-        card.fifty_two_w_high = info.get("fiftyTwoWeekHigh")
-        card.pe = info.get("trailingPE")
-        card.forward_pe = info.get("forwardPE")
-        card.pb = info.get("priceToBook")
-        card.market_cap = info.get("marketCap")
-        card.enterprise_value = info.get("enterpriseValue")
-        card.beta = info.get("beta")
-        card.div_yield = info.get("dividendYield")
-    card.one_year_return = _compute_1y_return(history if isinstance(history, dict) else {})
+    _apply_yfinance_info(card, info if isinstance(info, dict) else {}, default_exchange="TSE")
+    card.one_year_return = _compute_period_return(history if isinstance(history, dict) else {})
 
     # TDnet disclosures (top 5 by date)
     disc_list: list[dict[str, Any]] = []
@@ -353,7 +358,7 @@ def _adapt_tw(pack: dict[str, Any]) -> Card:
     if card.pb is None and isinstance(info, dict):
         card.pb = info.get("priceToBook")
 
-    card.one_year_return = _compute_1y_return(history if isinstance(history, dict) else {})
+    card.one_year_return = _compute_period_return(history if isinstance(history, dict) else {})
 
     # 三大法人 30d net flow as the disclosure block.
     # FinMind shape: data.TaiwanStockInstitutionalInvestorsBuySell._processed
@@ -393,31 +398,23 @@ def _adapt_kr(pack: dict[str, Any]) -> Card:
         fetched_at=pack.get("fetched_at", ""),
         currency="₩",
     )
-    if isinstance(info, dict):
-        card.name = info.get("longName") or info.get("shortName") or "N/A"
-        card.exchange = info.get("exchange") or "KRX"
-        card.sector = info.get("sector") or "N/A"
-        card.close = info.get("regularMarketPrice") or info.get("currentPrice")
-        card.fifty_two_w_low = info.get("fiftyTwoWeekLow")
-        card.fifty_two_w_high = info.get("fiftyTwoWeekHigh")
-        card.pe = info.get("trailingPE")
-        card.forward_pe = info.get("forwardPE")
-        card.pb = info.get("priceToBook")
-        card.market_cap = info.get("marketCap")
-        card.enterprise_value = info.get("enterpriseValue")
-        card.beta = info.get("beta")
-        card.div_yield = info.get("dividendYield")
-    card.one_year_return = _compute_1y_return(history if isinstance(history, dict) else {})
+    _apply_yfinance_info(card, info if isinstance(info, dict) else {}, default_exchange="KRX")
+    card.one_year_return = _compute_period_return(history if isinstance(history, dict) else {})
     card.disclosures = []
     card.disclosures_kind = ""
     prov = pack.get("_provenance") or {}
     note = prov.get("primary_source_note") or ""
-    card.tier_footer = (
-        "yfinance Tier 2 (.KS/.KQ price + valuation). "
-        "DART (전자공시시스템) primary-source integration deferred."
-    )
+    # Avoid double-display: if _provenance carries a primary_source_note, surface it
+    # via warnings only and shorten the footer to a single line. Otherwise keep the
+    # explicit "deferred" note in the footer so the user still sees DART status.
     if note:
+        card.tier_footer = "yfinance Tier 2 (.KS/.KQ price + valuation)."
         card.warnings.append(note)
+    else:
+        card.tier_footer = (
+            "yfinance Tier 2 (.KS/.KQ price + valuation). "
+            "DART (전자공시시스템) primary-source integration deferred."
+        )
     return card
 
 
@@ -433,23 +430,11 @@ def _adapt_cn(pack: dict[str, Any]) -> Card:
     t = card.ticker.upper()
     if t.endswith(".HK"):
         card.currency = "HK$"
-    if isinstance(info, dict):
-        card.name = info.get("longName") or info.get("shortName") or "N/A"
-        card.exchange = info.get("exchange") or (
-            "HKEX" if t.endswith(".HK") else ("SSE" if t.endswith(".SS") else "SZSE")
-        )
-        card.sector = info.get("sector") or "N/A"
-        card.close = info.get("regularMarketPrice") or info.get("currentPrice")
-        card.fifty_two_w_low = info.get("fiftyTwoWeekLow")
-        card.fifty_two_w_high = info.get("fiftyTwoWeekHigh")
-        card.pe = info.get("trailingPE")
-        card.forward_pe = info.get("forwardPE")
-        card.pb = info.get("priceToBook")
-        card.market_cap = info.get("marketCap")
-        card.enterprise_value = info.get("enterpriseValue")
-        card.beta = info.get("beta")
-        card.div_yield = info.get("dividendYield")
-    card.one_year_return = _compute_1y_return(history if isinstance(history, dict) else {})
+    default_exchange = (
+        "HKEX" if t.endswith(".HK") else ("SSE" if t.endswith(".SS") else "SZSE")
+    )
+    _apply_yfinance_info(card, info if isinstance(info, dict) else {}, default_exchange=default_exchange)
+    card.one_year_return = _compute_period_return(history if isinstance(history, dict) else {})
     card.disclosures = []
     card.disclosures_kind = ""
     card.tier_footer = (
@@ -464,8 +449,30 @@ def _adapt_cn(pack: dict[str, Any]) -> Card:
 # --------------------------------------------------------------------------- #
 
 
+def _country_from_ticker(ticker: str) -> str | None:
+    """Derive country from yfinance ticker suffix. Returns None if unmappable."""
+    if not ticker:
+        return None
+    t = ticker.upper()
+    if t.endswith(".T") or t.endswith(".TO"):
+        return "JP"
+    if t.endswith(".TW") or t.endswith(".TWO"):
+        return "TW"
+    if t.endswith(".KS") or t.endswith(".KQ"):
+        return "KR"
+    if t.endswith(".SS") or t.endswith(".SZ") or t.endswith(".HK"):
+        return "CN"
+    if "." not in t:
+        return "US"
+    return None
+
+
 def detect_country(pack: dict[str, Any]) -> str:
-    """Identify the source country bundle by characteristic keys."""
+    """Identify the source country bundle by characteristic pack-shape keys.
+
+    LAST-RESORT fallback only — `resolve_country()` is the public entry point
+    that prefers explicit pack["country"] + ticker-suffix routing first.
+    """
     # data-tw uses _pack/_ticker prefix
     if pack.get("_pack") and "yfinance" in pack and "mops" in pack and "twse" in pack:
         return "TW"
@@ -482,6 +489,26 @@ def detect_country(pack: dict[str, Any]) -> str:
     if "company_info" in pack and "price_history" in pack:
         return "US"
     return "US"  # fallback
+
+
+def resolve_country(pack: dict[str, Any], explicit: str = "auto") -> str:
+    """Country routing with documented precedence (see module docstring).
+
+    1. `explicit` argument when not "auto" — caller asserts.
+    2. `pack["country"]` literal (data-kr / data-cn carry it).
+    3. Ticker-suffix derivation from common ticker keys.
+    4. `detect_country()` shape-sniff (last resort).
+    """
+    if explicit and explicit != "auto":
+        return explicit.upper()
+    raw = pack.get("country")
+    if isinstance(raw, str) and raw.strip():
+        return raw.upper()
+    ticker = pack.get("ticker") or pack.get("_ticker") or pack.get("yf_ticker")
+    by_ticker = _country_from_ticker(ticker if isinstance(ticker, str) else "")
+    if by_ticker:
+        return by_ticker
+    return detect_country(pack)
 
 
 # --------------------------------------------------------------------------- #
@@ -502,6 +529,7 @@ LABELS: dict[str, dict[str, str]] = {
         "div_yield": "Div Yield",
         "mcap": "Market Cap",
         "ev": "EV",
+        "fwd_pe": "Forward P/E",
         "vs_52w": "vs 52W High",
         "fifty_two_w": "52W",
         "disclosures_sec": "Recent Disclosures (SEC EDGAR)",
@@ -522,6 +550,7 @@ LABELS: dict[str, dict[str, str]] = {
         "div_yield": "殖利率",
         "mcap": "市值",
         "ev": "企業價值",
+        "fwd_pe": "預估 P/E",
         "vs_52w": "距 52W 高",
         "fifty_two_w": "52W",
         "disclosures_sec": "近期揭露（SEC EDGAR）",
@@ -542,6 +571,7 @@ LABELS: dict[str, dict[str, str]] = {
         "div_yield": "配当利回り",
         "mcap": "時価総額",
         "ev": "EV",
+        "fwd_pe": "予想 P/E",
         "vs_52w": "52W 高値比",
         "fifty_two_w": "52W",
         "disclosures_sec": "最近の開示（SEC EDGAR）",
@@ -601,31 +631,27 @@ def render(card: Card, lang: str = "en") -> str:
     )
     out.append(price_line)
 
-    # Valuation
-    val_line = (
-        f"**{L['valuation']}**: P/E {_fmt_num(card.pe)}"
-        f" | P/B {_fmt_num(card.pb)}"
-        f" | {L['mcap']}: {_fmt_billions(card.market_cap, cur)}"
-        f" | {L['ev']}: {_fmt_billions(card.enterprise_value, cur)}"
-    )
-    out.append(val_line)
+    # Valuation — Forward P/E shown only when present (yfinance's strongest
+    # forward-looking valuation signal; null for many TW / KR / CN tickers).
+    val_segments = [
+        f"**{L['valuation']}**: P/E {_fmt_num(card.pe)}",
+        f"P/B {_fmt_num(card.pb)}",
+    ]
+    if card.forward_pe not in (None, ""):
+        val_segments.append(f"{L['fwd_pe']} {_fmt_num(card.forward_pe)}")
+    val_segments.append(f"{L['mcap']}: {_fmt_billions(card.market_cap, cur)}")
+    val_segments.append(f"{L['ev']}: {_fmt_billions(card.enterprise_value, cur)}")
+    out.append(" | ".join(val_segments))
 
-    # Returns / dividends — yfinance changed dividendYield to already-percent
-    # (e.g. AAPL 0.38 == 0.38%). TW pe_pb_yield DividendYield is also in pct.
-    # Treat all sources uniformly as already-percent unless we see a fraction.
-    div_already_pct = True
-    # Heuristic safety: if value is between 0 and 1 AND it's a yfinance source,
-    # the legacy fraction shape may still appear — auto-detect by magnitude.
-    try:
-        if card.div_yield is not None and 0 < float(card.div_yield) < 0.001:
-            # Implausible as percent (< 0.001%) — must be fraction shape
-            div_already_pct = False
-    except (TypeError, ValueError):
-        pass
+    # Returns / dividends — both yfinance and TWSE pe_pb_yield emit dividendYield
+    # as already-percent as of 2026-04 (e.g. AAPL info["dividendYield"] == 0.38
+    # means 0.38%). If a future regression brings back the legacy fraction shape
+    # (0.0038 == 0.38%), fix it source-side rather than re-adding a magnitude
+    # heuristic — both shapes overlap in the 0–1 range and any guess is fragile.
     ret_line = (
         f"**{L['returns']}**: {L['1y_return']} {_fmt_pct(card.one_year_return, already_pct=True) if card.one_year_return is not None else 'N/A'}"
         f" | {L['beta']} {_fmt_num(card.beta)}"
-        f" | {L['div_yield']} {_fmt_pct(card.div_yield, already_pct=div_already_pct)}"
+        f" | {L['div_yield']} {_fmt_pct(card.div_yield, already_pct=True)}"
     )
     out.append(ret_line)
 
@@ -695,6 +721,17 @@ def main() -> int:
         default=None,
         help="Output language. Default: auto-detect from ticker suffix / country.",
     )
+    parser.add_argument(
+        "--country",
+        choices=["us", "jp", "tw", "kr", "cn", "auto"],
+        default="auto",
+        help=(
+            "Source country for adapter routing. Default 'auto' uses "
+            "pack['country'] → ticker-suffix → shape-sniff precedence. "
+            "Pass explicitly when the country is already known upstream "
+            "(SKILL.md ticker-suffix routing is the single source of truth)."
+        ),
+    )
     args = parser.parse_args()
 
     try:
@@ -711,7 +748,7 @@ def main() -> int:
         print(f"error: top-level pack JSON must be an object, got {type(pack).__name__}", file=sys.stderr)
         return 1
 
-    country = detect_country(pack)
+    country = resolve_country(pack, explicit=args.country)
     adapters = {
         "US": _adapt_us,
         "JP": _adapt_jp,

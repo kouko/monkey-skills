@@ -31,9 +31,9 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
 | `ticker` | yes | — | e.g. `AAPL`, `7203` (or `7203.T`), `2330.TW`, `005930.KS`, `600519.SS` |
-| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (per investing-team protocol routing) |
+| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
 | `output_language` | no | auto-detect | `.TW` / `.TWO` → `zh-TW`; `.T` / `.TO` / 4-digit JP → `ja`; `.KS` / `.KQ` → `ko`; `.SS` / `.SZ` / `.HK` → `zh-CN`; otherwise infer from user message |
-| `peers` | no | — | **Deferred to PR 2** (analysis-comps integration). Will accept a comma-separated peer list once PR 2 ships. |
+| `peers` | no | — | **Deferred to PR 2** (analysis-comps integration). Currently passed-through but ignored downstream — no silent peer fetch. Will accept a comma-separated peer list once PR 2 ships. |
 
 ### Country detection
 
@@ -54,6 +54,8 @@ Set `${COUNTRY}` accordingly for the rest of the pipeline.
 ## Pipeline
 
 ### Phase 1 — Data Fetch
+
+> **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
 
 Single subprocess call per ticker. The country-bundled `pack.py --pack memo-fetch`
 facade composes all required clients (e.g. SEC EDGAR + yfinance + FRED for US;
@@ -76,10 +78,15 @@ along on the payload and surface in the final memo.
 
 ### Phase 2 — Macro Regime
 
-Fetch the macro regime-pack(s) relevant to the ticker. By default fetch the
-ticker's home country. For cross-listed exposure or when `scope=deep` and
-the user has flagged macro context (e.g. an exporter sensitive to US rates),
-fetch additional countries.
+Fetch the macro regime-pack(s) relevant to the ticker.
+
+**Deterministic default rule:**
+
+> Default: fetch home country only. When `scope=deep`, also fetch US (for any
+> non-US ticker, since US rates dominate global liquidity). Cross-listed
+> exposure or sector-specific macro flags can be handled by the orchestrator's
+> main agent — but the canonical default is home + (US if non-US ticker AND
+> deep).
 
 ```bash
 # Per relevant country (always at minimum the ticker's home country)
@@ -116,8 +123,13 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-dcf/scripts/dcf_compute.py \
 # (peer-discovery research-agent + per-peer comps-multiples fetch lands in PR 2)
 ```
 
-Both analysis skills are pure I/O-free compute (Layer 2 contract). They each
-emit a JSON-only payload — no Markdown, no verdict prose. That is investing-team's job.
+> **Comps caveat (until PR 2)**: investing-team produces relative valuation as
+> prose only; no structured peer table is passed from this pipeline. Phase 4's
+> relative-valuation gates run on prose, not on a comps JSON.
+
+Each analysis skill called from Phase 3 is pure compute (Layer 2 contract).
+They emit a JSON-only payload — no Markdown, no verdict prose. That is
+investing-team's job.
 
 ### Phase 4 — Delegate to `domain-teams:investing-team`
 
@@ -146,16 +158,22 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 The investing-team output is the memo body (Markdown).
 
-### Phase 5 — Format (optional, `domain-teams:docs-team`)
+### Phase 5a — Format (optional, `domain-teams:docs-team`)
 
 If the user requests polished document output (PDF-ready memo, formatted
 report, vault-ready note), pass the Phase 4 memo as input to
 `domain-teams:docs-team`. Skip this phase for in-conversation analysis or
 when the memo is already in a target-ready shape.
 
+### Phase 5b — Obsidian vault delivery (optional, `obsidian:obsidian-markdown`)
+
 For Obsidian vault delivery (`output=obsidian` or natural-language intent),
 call `obsidian:obsidian-markdown` after docs-team formatting to apply
 frontmatter / wikilinks / callouts and write to the resolved vault path.
+
+> **Cross-Plugin Contract recap (Phase 5b)**: Pass the docs-team Markdown
+> output **path** (not content) as input to obsidian-markdown — same
+> paths-not-content discipline as Phase 4.
 
 ---
 
@@ -182,8 +200,10 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
   Relative Valuation section is provided by investing-team prose only,
   without a structured peer table.
 - yfinance is an unofficial scraper (Tier 2). Tier A primary-source paths
-  are taken automatically when available (SEC EDGAR for US; EDINET for JP
-  when `EDINET_API_KEY` set; MOPS + TWSE OpenAPI for TW always).
+  are used per `data-{country}` skill defaults (SEC EDGAR for US; EDINET for
+  JP when `EDINET_API_KEY` set; MOPS + TWSE OpenAPI for TW always; FDR /
+  BOK ECOS-KEYSTAT for KR; NBS new-SPA + akshare for CN). See each
+  `data-*` skill SKILL.md for the per-country tier matrix.
 - Analyst consensus + forward guidance are not in scope (philosophy:
   primary-source equity research). If consensus context is needed, surface
   the data gap in the memo's "Limitations" rather than mocking it.

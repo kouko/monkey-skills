@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -153,6 +154,34 @@ def _extract_price(record: dict[str, Any]) -> float | None:
     return None
 
 
+def _resolve_price(
+    prices: dict[str, float], ticker: str
+) -> tuple[float | None, str]:
+    """Resolve price for ticker with suffix fallbacks for cross-market cases.
+
+    Returns (price, resolved_ticker_form). resolved_ticker_form is the actual
+    key used in prices dict (may differ from input ticker for JP bare 4-digit
+    or KR bare 6-digit tickers that data-{country} pack normalises with a
+    suffix).
+    """
+    # Direct match
+    if ticker in prices:
+        return prices[ticker], ticker
+    # JP bare 4-digit -> try .T / .TO suffix
+    if re.fullmatch(r"\d{4}", ticker):
+        for suffix in (".T", ".TO"):
+            if (ticker + suffix) in prices:
+                return prices[ticker + suffix], ticker + suffix
+    # KR bare 6-digit -> try .KS / .KQ
+    if re.fullmatch(r"\d{6}", ticker):
+        for suffix in (".KS", ".KQ"):
+            if (ticker + suffix) in prices:
+                return prices[ticker + suffix], ticker + suffix
+    # CN bare 6-digit heuristic skipped: too lossy without exchange context.
+    # Holdings file should carry the explicit .SS / .SZ suffix for CN.
+    return None, ticker
+
+
 # --------------------------------------------------------------------------- #
 # Compute                                                                     #
 # --------------------------------------------------------------------------- #
@@ -163,15 +192,18 @@ def compute_portfolio(
 ) -> dict[str, Any]:
     positions: list[dict[str, Any]] = []
     missing: list[str] = []
+    ticker_resolutions: list[dict[str, str]] = []
 
-    # First pass — resolve prices, drop missing
+    # First pass — resolve prices (with JP/KR bare-numeric fallback), drop missing
     resolved: list[dict[str, Any]] = []
     for h in holdings:
         ticker = h["ticker"]
-        price = prices.get(ticker)
+        price, resolved_form = _resolve_price(prices, ticker)
         if price is None:
             missing.append(ticker)
             continue
+        if resolved_form != ticker:
+            ticker_resolutions.append({"input": ticker, "resolved": resolved_form})
         market_value = h["quantity"] * price
         cost = h["quantity"] * h["cost_basis"]
         pnl_abs = market_value - cost
@@ -214,6 +246,7 @@ def compute_portfolio(
     positions.sort(key=lambda x: x["weight"], reverse=True)
 
     max_weight_pos = positions[0] if positions else None
+    top3_weight = sum((p.get("weight") or 0.0) for p in positions[:3])
     totals = {
         "total_cost": round(total_cost, 4),
         "total_market_value": round(total_mv, 4),
@@ -222,9 +255,15 @@ def compute_portfolio(
         "position_count": len(positions),
         "max_weight": round(max_weight_pos["weight"], 6) if max_weight_pos else 0.0,
         "max_weight_ticker": max_weight_pos["ticker"] if max_weight_pos else None,
+        "top3_weight": round(top3_weight, 6),
     }
 
-    return {"positions": positions, "totals": totals, "missing_prices": missing}
+    return {
+        "positions": positions,
+        "totals": totals,
+        "missing_prices": missing,
+        "ticker_resolutions": ticker_resolutions,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -278,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
             "holdings_path": str(holdings_path),
             "prices_path": str(prices_path),
             "missing_prices": result["missing_prices"],
+            "ticker_resolutions": result.get("ticker_resolutions", []),
         },
     }
 

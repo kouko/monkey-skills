@@ -235,6 +235,17 @@ def _trunc_reason(reason: str, max_len: int = 80) -> str:
     return s[: max_len - 1] + "…"
 
 
+def _align(header: str, L: dict) -> str:
+    """Pick a Markdown table separator alignment for a given header label.
+
+    Numeric columns get right-aligned (`---:`); everything else is left
+    (`---`). Centralized so the column-config stays in one place.
+    """
+    numeric_keys = ("rank", "score", "pe", "pb", "div", "rsi", "price")
+    numeric_labels = {L[k] for k in numeric_keys}
+    return "---:" if header in numeric_labels else "---"
+
+
 # ---------------------------------------------------------------------------
 # Renderers
 # ---------------------------------------------------------------------------
@@ -281,10 +292,7 @@ def render_ranked_table(payload: dict, L: dict) -> list[str]:
         L["pe"], L["pb"], L["div"], L["rsi"],
         L["sma200"], L["macd"], L["price"],
     ]
-    sep = ["---:" if h in (L["rank"],) else
-           "---:" if h in (L["score"], L["pe"], L["pb"], L["div"],
-                            L["rsi"], L["price"]) else
-           "---" for h in headers]
+    sep = [_align(h, L) for h in headers]
 
     out: list[str] = []
     out.append("| " + " | ".join(headers) + " |")
@@ -341,20 +349,21 @@ def render_filtered_out(payload: dict, L: dict) -> list[str]:
 
 
 def render_warnings(payload: dict, L: dict) -> list[str]:
-    """Collapsed Markdown <details> block listing per-ticker warnings."""
+    """Collapsed Markdown <details> block listing per-ticker warnings.
+
+    Returns an empty list (suppressing the section heading entirely) when
+    no ranked records carry warnings — keeps the report Markdown clean.
+    """
     ranked = payload.get("ranked") or []
     with_warnings = [
         (r.get("ticker"), r.get("warnings") or [])
         for r in ranked
         if r.get("warnings")
     ]
+    if not with_warnings:
+        return []
     out: list[str] = []
     out.append(f"## {L['warnings_section']}")
-    if not with_warnings:
-        out.append(f"_{L['no_warnings']}_")
-        out.append("")
-        return out
-
     out.append("<details>")
     out.append(f"<summary>{L['warnings_intro']}</summary>")
     out.append("")

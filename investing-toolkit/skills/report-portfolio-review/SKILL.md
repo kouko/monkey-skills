@@ -31,7 +31,7 @@ delegate to `domain-teams:investing-team` Portfolio Review workflow when needed
 |---|---|---|
 | `holdings` | ✅ | Path to holdings file. CSV (header: `ticker,quantity,cost_basis`) or JSON list (`{ticker, quantity, cost_basis}`). `purchase_date` optional. Aliases accepted: `shares`, `avg_cost`, `cost`, `acquired_at`. |
 | `regime_overlay` | optional | Boolean (default `true`). When `true`, also fetches regime-pack and runs analysis-macro-regime. |
-| `output_language` | optional | `en` / `zh-TW` / `ja`. Default: auto-detect from holdings file content (CJK chars in headers/notes → `zh-TW` or `ja`); falls back to `en`. |
+| `output_language` | optional | `en` / `zh-TW` / `ja`. **Precedence**: explicit `output_language` param > CJK chars in holdings header (Chinese chars → `zh-TW`; Japanese kana → `ja`) > fallback `en`. |
 
 ---
 
@@ -58,11 +58,11 @@ Notes:
 For each non-empty country group, dispatch in parallel (main agent issues one Bash call per country in a single message):
 
 ```
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-us/scripts/pack.py --tickers AAPL,MSFT --pack screener-batch > /tmp/portfolio-prices-us.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-tw/scripts/pack.py --tickers 2330.TW,2317.TW --pack screener-batch > /tmp/portfolio-prices-tw.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-jp/scripts/pack.py --tickers 7203.T,9984.T --pack screener-batch > /tmp/portfolio-prices-jp.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-kr/scripts/pack.py --tickers 005930.KS --pack screener-batch > /tmp/portfolio-prices-kr.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-cn/scripts/pack.py --tickers 600519.SS,0700.HK --pack screener-batch > /tmp/portfolio-prices-cn.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py --tickers AAPL,MSFT --pack screener-batch > /tmp/portfolio-prices-us.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-tw/scripts/pack.py --tickers 2330.TW,2317.TW --pack screener-batch > /tmp/portfolio-prices-tw.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-jp/scripts/pack.py --tickers 7203.T,9984.T --pack screener-batch > /tmp/portfolio-prices-jp.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-kr/scripts/pack.py --tickers 005930.KS --pack screener-batch > /tmp/portfolio-prices-kr.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-cn/scripts/pack.py --tickers 600519.SS,0700.HK --pack screener-batch > /tmp/portfolio-prices-cn.json
 ```
 
 Each pack returns `{tickers: {<TICKER>: {...screener fields including regularMarketPrice...}}}`.
@@ -84,10 +84,18 @@ for country_path in country_paths:
 json.dump(combined, open("/tmp/portfolio-prices-combined.json", "w"))
 ```
 
+If a holdings ticker is bare 4-digit JP (e.g. `7203`), the prices map will
+key it as `7203.T` (data-jp normalises bare 4-digit → `.T` before fetch).
+`portfolio_compute.py` auto-resolves the suffix mismatch via its
+`_resolve_price` fallback (JP `.T` / `.TO`, KR `.KS` / `.KQ`) and records
+the resolution in `_provenance.ticker_resolutions`. No special handling
+needed in concat. CN bare 6-digit is **not** auto-resolved — holdings file
+must carry the explicit `.SS` / `.SZ` suffix.
+
 ### Step 4 — Compute portfolio P&L
 
 ```
-uv run ${CLAUDE_SKILL_DIR}/../analysis-portfolio/scripts/portfolio_compute.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-portfolio/scripts/portfolio_compute.py \
   --holdings <holdings-path> \
   --prices /tmp/portfolio-prices-combined.json \
   > /tmp/portfolio-review.json
@@ -106,14 +114,14 @@ If `regime_overlay = true`:
 5b. Dispatch `data-{country}/pack.py --pack regime-pack` per country in parallel:
 
 ```
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_SKILL_DIR}/../data-us/scripts/pack.py --pack regime-pack > /tmp/regime-us.json
+INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py --pack regime-pack > /tmp/regime-us.json
 # ...repeat for each country with positions
 ```
 
 5c. Run analysis-macro-regime:
 
 ```
-uv run ${CLAUDE_SKILL_DIR}/../analysis-macro-regime/scripts/regime_compose.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-macro-regime/scripts/regime_compose.py \
   --input us=/tmp/regime-us.json,jp=/tmp/regime-jp.json,tw=/tmp/regime-tw.json \
   > /tmp/regime-card.json
 ```

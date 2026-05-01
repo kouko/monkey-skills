@@ -109,11 +109,11 @@ Each call writes its country-scoped batch JSON to a unique temp file:
 
 ```bash
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_SKILL_DIR}/../data-us/scripts/pack.py \
+  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py \
   --tickers AAPL,MSFT --pack screener-batch > /tmp/screener-us.json
 
 INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_SKILL_DIR}/../data-tw/scripts/pack.py \
+  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-tw/scripts/pack.py \
   --tickers 2330.TW,2454.TWO --pack screener-batch > /tmp/screener-tw.json
 
 # … similarly for jp / kr / cn groups when present
@@ -141,28 +141,32 @@ Each `pack.py --pack screener-batch` returns:
 `analysis-screener/scripts/screener_compute.py` accepts both **bare lists** and
 **wrapped packs**, including the `{"tickers": {ticker: {...}}}` dict form
 (see `_normalize_records` in that script). To concatenate multiple country
-packs into one input, the main agent merges the `tickers` dicts:
+packs into one input, the main agent merges the `tickers` dicts and
+propagates `_partial=true` if **any** input was partial:
 
-```python
-import json, pathlib
-combined = {"tickers": {}, "_provenance": []}
-for f in ["/tmp/screener-us.json", "/tmp/screener-tw.json"]:
-    p = json.loads(pathlib.Path(f).read_text())
-    combined["tickers"].update(p.get("tickers", {}))
-    combined["_provenance"].append({
-        "source": f, "pack": p.get("pack"),
-        "fetched_at": p.get("fetched_at"),
-    })
-pathlib.Path("/tmp/screener-combined.json").write_text(json.dumps(combined))
+```bash
+python3 -c "
+import json, sys
+from pathlib import Path
+combined = {'pack': 'screener-batch', 'tickers': {}, '_partial': False}
+for p in sys.argv[1:]:
+    d = json.loads(Path(p).read_text())
+    combined['tickers'].update(d.get('tickers', {}))
+    if d.get('_partial'): combined['_partial'] = True
+print(json.dumps(combined))
+" /tmp/screener-us.json /tmp/screener-tw.json > /tmp/screener-combined.json
 ```
 
-(Or via `jq -s 'reduce .[] as $x ({tickers: {}}; .tickers += $x.tickers)'` if
-shelling out is preferred.)
+The `_partial` propagation means: if any single country batch hit network
+errors / invalid tickers, the combined input carries that flag through to
+`analysis-screener` and finally into the formatter footer. Provenance can
+optionally be added by the caller (extra dict keys are ignored by the
+compute script's `_normalize_records`).
 
 ### Step 4 — Pure-compute filter + score + rank
 
 ```bash
-uv run ${CLAUDE_SKILL_DIR}/../analysis-screener/scripts/screener_compute.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-screener/scripts/screener_compute.py \
   --input /tmp/screener-combined.json \
   --preset {preset} --top-n {N} \
   [--pe-max ...] [--rsi-min ...] [--above-sma200] \
@@ -236,6 +240,13 @@ score of 70 means this ticker ranks well against the others in your input list
 - TW / JP / KR / CN packs may have country-specific field gaps — surfaced as
   per-record `warnings` (neutral defaults applied, see `analysis-screener`)
 - TW OTC stocks (`.TWO`) sometimes lack PE / PB via yfinance
+- **US growth/quality preset gap**: `data-us/pack.py --pack screener-batch`
+  currently returns yfinance lightweight fields (price/multiples/info) but
+  may omit `returnOnEquity`, `revenueGrowth`, `earningsGrowth`. The
+  `quality`, `growth`, and `growth-value` presets fall back to neutral
+  defaults (0.50) for missing fields, with a `_warnings` entry per ticker.
+  Real differentiation on these presets requires US-side `SCREENER_FIELDS`
+  expansion (deferred to v2.0.x or PR sweep).
 
 ---
 
