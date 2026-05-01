@@ -131,6 +131,26 @@ After loading the protocol, follow its E section step-by-step. Each protocol car
 - **Audit request without artifacts** — if user asks for an audit but provides no minutes / log / agenda, ask once for artifacts; if none available, decline audit-mode and route to a coach-mode protocol to set up cadence properly.
 - **Cross-layer audit (WIG + leads + scoreboard + cadence)** — that's `4dx-audit`, not D4 audit-mode. Audit-mode here is **D4-only**.
 
+## The WIG Session cycle (canonical mechanism)
+
+The WIG Session is a fixed 3-step cycle, repeated weekly. The cycle (not strategic planning) is the engine that defends the system from the whirlwind. Source: McChesney et al. 2021, p 256.
+
+```mermaid
+flowchart LR
+    A["<b>1. Account</b><br/>Each member reports<br/>on last week's commitment<br/><i>(did I do what I said?)</i>"]
+    B["<b>2. Review Scoreboard</b><br/>Look at the board together,<br/>learn from wins / misses<br/><i>(what's the data telling us?)</i>"]
+    C["<b>3. Plan</b><br/>Each member commits<br/>to ONE new behavior<br/>for the coming week<br/><i>(what's my move?)</i>"]
+    A --> B
+    B --> C
+    C -.->|next week's session| A
+
+    style A fill:#e3f2fd,stroke:#1976d2
+    style B fill:#fff3e0,stroke:#f57c00
+    style C fill:#e8f5e9,stroke:#388e3c
+```
+
+The cycle is intentionally short (≤30 min) and intentionally repetitive. The point is **personal commitment witnessed by peers**, repeated weekly until execution becomes habit.
+
 ## Shared standards
 
 Each protocol references these standards (load on demand):

@@ -200,6 +200,32 @@ does not run any D2 content directly.
   → fire `4dx-audit` (5-layer consultant audit), not `audit-mode.md`
   (which is L2-only).
 
+## Two types of lead measures (book p 224)
+
+Both coach-mode and audit-mode protocols depend on this typology. Most
+users default to one type without realizing the other exists; the choice
+shapes scoreboard design and accountability.
+
+| Aspect | Small Outcome | Leveraged Behavior |
+|---|---|---|
+| What's measured | A weekly mini-result | A specific behavior performed throughout the week |
+| Method choice | Team chooses how to hit the result | Team must perform the specified behavior |
+| Accountability shape | Accountable for **producing the result** | Accountable for **performing the behavior** |
+| Best when | Methods vary by member or context | Consistent execution of a specific behavior is the goal |
+
+Both types are *equally valid* applications of D2. The question is not
+which is better — it's which fits *this team's* WIG and culture.
+
+### Worked examples (book pp 227-228)
+
+**Younger Brothers Construction** — WIG: *Reduce average monthly accidents from 12 to 7 by December 31*
+- Small outcome: "Achieve average safety-compliance score of 97% each week."
+- Leveraged behavior: "Ensure that 95% of associates wear safety boots every day."
+
+**Grocery chain** — WIG: *Increase average weekly sales from $1 million to $1.5 million by December 31*
+- Small outcome: "Limit out-of-stocks on top items to 20 or fewer per week."
+- Leveraged behavior: "Complete 2 additional shelf reviews each day, filling all holes on top items."
+
 ## Shared standards
 
 All four protocols (3 coach-mode + 1 audit-mode) share the same

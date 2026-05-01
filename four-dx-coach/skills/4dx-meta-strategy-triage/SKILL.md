@@ -114,6 +114,21 @@ If user identifies as a **member** receiving an inherited WIG ("my manager alrea
 
 After loading the protocol, follow its E section step-by-step. Each protocol carries its own R / I / A1 / A2 / E / B sections; this orchestrator does not run any triage content directly.
 
+## Battles 2×2 prioritization (book pp 138-140)
+
+Helper for the FIT verdict (APPLICABLE / TEAM-APPLICABLE) when the user has **multiple candidate goals** competing for the WIG slot. Originates from the leader-of-leaders "Identify the Battles" framework but transferable to personal-scope WIG selection. *Battle* = book term for an enabling / supporting WIG owned by a lower-level team; read as *Goal* / *Candidate* in solo mode.
+
+Plot each candidate by **impact on the higher-level WIG / the war** vs **likelihood the team / you can execute**:
+
+| | **Low impact** | **High impact** |
+|---|---|---|
+| **High likelihood** | *Easy Wins* — feel productive but don't move the war. Avoid as primary WIG. | ⭐ **Best Battles** — pick from this quadrant first. High-priority WIG candidates. |
+| **Low likelihood** | *Avoid* — neither valuable nor feasible. Eliminate. | *Stretch Battles* — high payoff but executionally risky. Check feasibility before committing. |
+
+Rule: **pick from the High-Impact + High-Likelihood quadrant first**. If you find yourself reaching into Low-Impact + High-Likelihood ("easy wins"), you're in the busy-but-not-winning trap that 4DX exists to eliminate. The book's principle: identify the *fewest possible* Battles to win the war — not the longest list of feasible ones.
+
+This 2×2 narrows the candidate set; it does NOT replace the 13-verdict triage. Run candidates through the matrix first to surface the WIG candidate, then run that single candidate through the protocol's E section for the methodology-fit verdict.
+
 ## Shared standards
 
 Each protocol references these standards (load on demand):

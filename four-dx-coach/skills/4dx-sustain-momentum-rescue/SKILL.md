@@ -74,6 +74,41 @@ substrate is depleted (life event, exhaustion, depression), 4DX is not
 the right intervention; rest, coaching, or therapy is. The skill must
 be willing to say so.
 
+### 5-Stage progression — locate the stalled implementation
+
+Diagnostic must place the user at one of five stages. The most common
+cause of 4DX failure is **giving up at Stage 3**, where teams hit the
+plateau, conclude "it stopped working," and quit immediately before
+the breakthrough. Recovery action differs per stage; mis-staging
+produces the wrong rescue.
+
+1. **Stage 1 — Getting Clear.** Leader and team commit to a new level
+   of performance, get oriented to 4DX, and develop crystal-clear
+   WIGs, lag and lead measures, and a compelling scoreboard. They
+   commit to regular WIG Sessions.
+2. **Stage 2 — Launch.** The team is at the starting line. A formal
+   kickoff or brief huddle launches the team into action on the WIG.
+   Like a rocket escaping gravity, the team needs intense leader
+   involvement at this point of launch.
+3. **Stage 3 — Adoption.** Team members adopt the 4DX process and new
+   behaviors drive WIG achievement. Resistance fades, enthusiasm
+   rises, and members become accountable to each other for the new
+   level of performance despite the whirlwind. **⚠ This is the
+   plateau where most teams quit.** Adherence to the process is
+   essential here — the rescue's job at Stage 3 is to refuse the
+   "it's not working" verdict and hold the cadence.
+4. **Stage 4 — Optimization.** The team shifts to a 4DX mindset:
+   more purposeful, more engaged, producing results that make a
+   difference. They start looking for ways to optimize their
+   performance — they now know what "playing to win" feels like.
+5. **Stage 5 — Habits.** When 4DX becomes habitual, the team not only
+   reaches the goal but sees a permanent rise in performance level.
+   The ultimate aim of 4DX is not just results but a culture of
+   excellent execution.
+
+Source: McChesney/Covey/Huling/Thele/Walker (2021), *The 4 Disciplines
+of Execution* 2nd ed., Simon & Schuster, p 202.
+
 ---
 
 ## A1 — Past Application
@@ -295,6 +330,53 @@ and authority note.)
      scope — fix one thing, not the whole stack.
    - Completion criterion: a specific, deliverable, sub-30-min
      commitment is named for the next 7 days.
+
+### 3 Steps to Accountability — handling a missed commitment
+
+When a team member (or, for solo users, the user themselves vis-à-vis
+the agent-as-witness) misses a commitment, the response shapes whether
+the cadence survives. Skipping the conversation teaches that
+commitments are optional; punishing it ruptures the relationship. The
+book provides a 3-step script that holds the standard *and* preserves
+the relationship. Use verbatim phrasing where shown — the wording is
+load-bearing, not decorative.
+
+1. **Demonstrate Respect.** Open by acknowledging the person and the
+   reality of the whirlwind that crowded out the commitment. Sample
+   script (Jeff/event example, book p 266): *"Jeff, I want you to
+   know that the event last week was a huge success, and without
+   you, it could have been a disaster. Everyone on this team
+   understands how hard you worked and how important this client is
+   to us. Thank you for everything you did."* What it does: shows
+   respect for the person AND for the whirlwind. Skipping this step
+   sends two incorrect messages — that the person is not valued, and
+   that the whirlwind is not important.
+2. **Reinforce Accountability.** Name the standard: commitments are
+   unconditional. Sample script (book p 267): *"Jeff, I also want
+   you to know how important your contribution is to this team.
+   Without you, we can't reach our goal. This means that when we
+   make a commitment, we have to find a way to fulfill it no matter
+   what happens during the week."* What it does: sets the discipline
+   boundary that prevents whirlwind from continually overwhelming
+   WIG-work. Without this step, the respect from step 1 is heard as
+   permission to keep slipping.
+3. **Encourage Performance.** Give the person a path back to the
+   team. Sample script (book p 267): *"Jeff, I know you want to help
+   us follow through. Can we count on you to catch up, by fulfilling
+   last week's commitment as well as the one you were planning on
+   making for next week?"* What it does: opens the door to report
+   with pride that all commitments have been fulfilled. Closes the
+   interaction without breaking the relationship.
+
+Solo adaptation: when the user runs both sides of this dialogue
+themselves (with the agent as witness), the three steps still apply —
+the agent surfaces the missed commitment, the user gives themselves
+respect for the whirlwind, names the standard out loud, and commits
+the recovery move. Skipping any step replicates the failure mode the
+book warns against.
+
+Source: McChesney/Covey/Huling/Thele/Walker (2021), *The 4 Disciplines
+of Execution* 2nd ed., Simon & Schuster, pp 266-267.
 
 ---
 

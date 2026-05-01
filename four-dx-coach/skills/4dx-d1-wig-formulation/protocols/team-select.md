@@ -25,6 +25,13 @@ as: the leadership team brainstorms a list of **candidate Battles**
 (possible breakthrough goals), then filters them through a 2x2 to
 converge on one.
 
+WIGs need both top-down strategic direction (the leader clarifies what
+matters most for the organization's WIG) AND bottom-up engagement (the
+team provides active input on how their work contributes). Pure top-
+down loses ownership; pure bottom-up loses alignment to the Primary
+WIG. Both inputs feed into the central WIG selection — the leader is
+ultimately responsible, but the team must have voice (book p 206-207).
+
 The book's canonical axes are Impact-of-Failure × At-Risk-of-Failure.
 For a team-leader workshop the equivalent everyday framing is
 **Importance** (would a breakthrough here transform the team's
@@ -54,6 +61,21 @@ Three structural patterns (Ch 6):
   International set 4 strategic objectives and let 400+ teams
   self-select. Use only at large scale; not appropriate for a single
   team.
+
+**Line-of-sight cascade (Ch 12 Step 3 "Test Top Ideas" — alignment
+check).** This is one of four checks at Step 3 (alignment / measur-
+ability / 80% ownership / leader's-vs-team's game). Every candidate
+Team WIG must trace upward to the Primary WIG (book p 213):
+
+- **Primary WIG** (organizational level)
+  - **Team WIG #1** — must trace upward to the Primary WIG
+  - **Team WIG #2** — must trace upward to the Primary WIG
+  - **Team WIG #3** — must trace upward to the Primary WIG
+
+The "line of sight" rule: you should be able to draw an unbroken arrow
+from any Team WIG up to the Primary WIG. If a Team WIG improves the
+team's performance but doesn't move the Primary WIG, it fails this
+test — eliminate it and pick the next-highest-impact idea.
 
 Voice contrast: agent is **consultant-to-leader** — does not address
 the team directly; whispers to the leader. Output is leader-facing
