@@ -16,7 +16,7 @@ related_skills:
 
 ## Mission
 
-Surface the whirlwind/WIG capacity reality before the user formulates a WIG. Same Ch. 1 anchor (~80% whirlwind / ~20% WIG, BAU-real vs BAU-theater); two delivery modes — Socratic coach over 7 days when the user starts from zero, structured consultant audit when the user already has a time-log artifact (often + a stakeholder critique).
+Surface the whirlwind/WIG capacity reality before the user formulates a WIG. Same Ch. 1 anchor (~80% whirlwind / ~20% WIG; this skill sub-classifies the whirlwind portion as BAU-real vs BAU-theater — "BAU" is this skill's working synonym for the book's *whirlwind* term, sub-tagged because BAU-real / BAU-theater is more diagnostically actionable than a flat whirlwind tag); two delivery modes — Socratic coach over 7 days when the user starts from zero, structured consultant audit when the user already has a time-log artifact (often + a stakeholder critique).
 
 ## When this skill activates
 

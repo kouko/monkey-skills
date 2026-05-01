@@ -119,6 +119,28 @@ phrasing).
 
 ---
 
+## Book endnote anchors (added Phase C 2026-05-01)
+
+These are primary sources the 4DX book itself cites in its endnotes; surfacing them here makes this skill grounded in the same primary sources the book authors used.
+
+### Gawande, *Better* (Metropolitan Books, 2007) (book-endnote-anchor: Ch 5 endnote 12)
+
+**Citation**: Atul Gawande, *Better: A Surgeon's Notes on Performance* (New York: Metropolitan Books, 2007).
+
+**Applicable to**: rescue dialogue (substrate-walkback layer; clinical-execution analogue)
+
+Gawande — surgeon, public-health researcher, *New Yorker* staff writer — examines what separates excellent execution from average in clinical settings (handwashing compliance, polio eradication, military trauma care, malpractice). The book draws on Gawande at Ch 5 to ground its claim that execution discipline is a learnable behavioral pattern, not a personality trait — the recovery curve in clinical settings is documented to depend on small, repeatable, measured behaviors, not heroics. Direct rescue application: when the user's substrate is intact but execution has collapsed, Gawande's clinical case studies (especially handwashing — every operator knows the right behavior, almost no one sustains it without measurement) are the verbatim anchor for "the rescue is not 'try harder,' it's 'measure smaller and visibly.'" Use as a non-corporate analogue when the user resists business-frame mechanics — the medical setting is high-stakes enough that the discipline transfers.
+
+### Lencioni, *The Three Signs of a Miserable Job* (Jossey-Bass, 2007) (book-endnote-anchor: Ch 5 endnote 13)
+
+**Citation**: Patrick Lencioni, *The Three Signs of a Miserable Job: A Fable for Managers (and Their Employees)* (San Francisco: Jossey-Bass, 2007), pp 136-137.
+
+**Applicable to**: rescue dialogue (substrate-walkback layer; whirlwind-meeting failure-mode origin)
+
+Lencioni names three structural causes of work misery — **immeasurement** (no way to gauge whether one's work matters), **irrelevance** (no clarity on who one's work helps), and **anonymity** (no sense of being known by the leader). The book uses this triad at Ch 5 to explain *why* whirlwind-dominated cadence collapses into demoralization even when individual workers are competent and the WIG is sound — all three Lencioni causes activate when commitment-forward conversation gets squeezed out by report-out theater. Direct rescue application: when the user reports "the sessions feel pointless" or "no one notices whether I deliver," diagnose against Lencioni's three: which of immeasurement / irrelevance / anonymity is active? Each maps to a different rescue move (immeasurement → restore scoreboard visibility; irrelevance → restore lead-measure-to-WIG line of sight; anonymity → restore peer commitment ritual). The triad is more diagnostic than the substrate (humility / determination / courage / love) framing in cases where the user can't engage at the substrate level.
+
+---
+
 ## What 4DX practitioners learn from these sources
 
 The book localizes sustain-failure at the substrate (humility / determination

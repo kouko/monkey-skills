@@ -301,6 +301,26 @@ Public URL: https://www.linkedin.com/pulse/very-first-attempt-implement-4dx-brav
 
 ---
 
+## Source 12: Case, "Keeping Score" (*Inc.* June 1998) (book-endnote-anchor: Ch 15 endnote 18)
+
+**Citation**: John Case, "Keeping Score," *Inc.*, June 1998. http://www.inc.com/magazine/19980601/945.html
+
+**Used by**: `solo-session.md`, `team-leader-session.md` (whirlwind-meeting failure mode — boards put up, ritualized, then ignored, then taken down).
+
+**Mechanism**: The verbatim source the book draws on at the start of Ch 15 to name the canonical D4 collapse pattern — visible scoreboards and review meetings get installed enthusiastically, then drift into report-out theater, then get quietly dismantled. Case's reporting predates 4DX by a decade and shows the failure is structural, not 4DX-specific: any cadence ritual decoupled from accountability and commitment-forward conversation collapses on the same arc. Cite when the user reports "we had the boards up for a while but stopped looking at them" — this is the documented failure curve, not user fault.
+
+---
+
+## Source 13: Matson, "The Discipline of High-Tech Leaders" (*Fast Company* April-May 1997) (book-endnote-anchor: Ch 15 endnote 19)
+
+**Citation**: Eric Matson, "The Discipline of High-Tech Leaders," *Fast Company*, April-May 1997.
+
+**Used by**: `team-leader-session.md` (4-min status reports + joint problem-solving discipline for weekly review meetings).
+
+**Mechanism**: Profiles Stephen Cooper at Etec Systems (Silicon Valley semiconductor capital-equipment maker) and the operating discipline Cooper installed: weekly review meetings where each leader gives a 4-minute status report, after which the rest of the room joint-problem-solves the issues raised. The verbatim source the book uses to ground its "WIG Session as commitment-and-clearance ritual, not report-out" rule. Cite when the team-leader-mode session is drifting into 15-minute updates per person — Matson's documented dosage (4 min report, then joint problem-solving) gives a specific budget, not a hand-wave.
+
+---
+
 ## Cross-source synthesis
 
 Across the ten sources:

@@ -159,6 +159,16 @@ Links: [5th ed. Wiley product page](https://www.wiley.com/en-us/Organizational+C
 
 ---
 
+## Source 6: Edward M. Hallowell, *Crazy Busy* (Random House Digital, 2007) (book-endnote-anchor: Ch 5 endnote 14)
+
+**Citation**: Edward M. Hallowell, *Crazy Busy: Overstretched, Overbooked, and About to Snap! Strategies for Coping in a World Gone ADD* (New York: Random House Digital, 2007), p 183.
+
+**Used by**: `personal-mode.md` (whirlwind-psychology layer under Step 4 / Step 5), `team-mode.md` (whirlwind-substrate framing for urgency check).
+
+**Mechanism**: Hallowell — Harvard Medical School psychiatrist, ADD/ADHD clinical researcher — documents the cognitive cost of urgency overload as a clinical syndrome rather than a productivity complaint. The book draws on Hallowell at Ch 5 to name *why* the whirlwind is a structural cognitive problem (working-memory exhaustion, attention fragmentation, inability to hold long-horizon goals in mind under sustained urgency load), not a moral failing of insufficient discipline. Triage application: when the user describes "I can't even think about the WIG, the day eats me alive," this is not a discipline failure to fix with stricter scheduling — it is the documented Hallowell condition, and the triage should route to whirlwind-reduction (delegation, batching, environmental redesign) before any 4DX install. Cite as the clinical anchor for "the whirlwind is real, not a metaphor."
+
+---
+
 ## What practitioners learn from these sources combined
 
 The 6-verdict goal-shape rubric catches *what kind of goal* fails the fit.

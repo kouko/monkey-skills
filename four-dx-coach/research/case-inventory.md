@@ -4,7 +4,7 @@
 >
 > **Status**: this file lives in `research/`, NOT in any skill directory. Per Anthropic's plugin spec (verified 2026-05-01), skills cannot reference plugin-root paths via `${CLAUDE_SKILL_DIR}` — runtime resources must be skill-internal. This inventory is for **human authoring decisions** only; agents never load it.
 >
-> **Last updated**: 2026-05-01 (Tier 1 fully verified pass)
+> **Last updated**: 2026-05-01 (Tier 1 fully verified pass + book-Ch-11 cases #5 Marilyn / #6 Jim Dixon added)
 >
 > **Methodology**: web search across English / Japanese sources for 4DX implementation case studies disclosing actual WIG sentences, lead measures, scoreboards, cadences, and outcomes. Cases below are graded on two axes: disclosure depth and verification strength.
 
@@ -276,6 +276,84 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 
 ---
 
+### 5. Marilyn — surgical nursing unit (book Ch 11 — full 5-stage trace)
+
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (book PDF, 2026-05-01)
+
+**Source**: McChesney et al. 2021, *The 4 Disciplines of Execution* 2nd ed., Simon & Schuster, pp 196-203.
+**License note**: copyrighted book material; cite verbatim with attribution; do not redistribute the PDF.
+
+**Company**: Surgical nursing unit, large inner-city hospital. Marilyn = unit leader. Team shared a passion for reducing perioperative incidents (things going wrong in surgery). Stakes: lives literally depend on execution.
+
+**Driver (verbatim context)**: sharp rise in perioperative incidents.
+
+**D1 — WIG (verbatim)**:
+- "**Increase surgeries without perioperative incidents from 89 to 98 percent by December 31**" (canonical From X to Y by When form)
+
+**D2 — Lead measures (verbatim, 2 leads — small-outcome + leveraged-behavior dual-track)**:
+1. "**Achieve 100 percent compliance on all presurgery audits at least thirty minutes before surgery**" (small-outcome lead with quantitative + qualitative + temporal standards)
+2. "**Double-count surgical items following 100 percent of surgeries**" (leveraged-behavior lead)
+
+**D3 — Scoreboard**: simple scoreboard defined at Stage 1 Getting Clear (book describes as part of standard 5-stage installation; specific layout not detailed at Marilyn-case level).
+
+**D4 — Cadence**: weekly WIG Sessions defined at Stage 1 Getting Clear.
+
+**5-Stage timeline (verbatim trace — most uniquely traceable per-stage case in the book)**:
+- **Stage 1 Getting Clear**: WIG + 2 leads + simple scoreboard + weekly WIG Sessions defined.
+- **Stage 2 Launch**: First morning the team was already struggling — lead measure required nurses to do equipment audits 20 min earlier than normal; schedule change confused everyone. Marilyn faced a "Models / Not Yets / Nevers" mix.
+- **Stage 3 Adoption**: Each week the leads slowly improved; team finding rhythm; incident rate declined; "**for the first time in many months, they felt that they were winning.**"
+- **Stage 4 Optimization**: Team self-proposed 3 changes to lead measures (reposition equipment trays / audit rooms simultaneously at start of shift / patient-transport team to notify them when patient on the way) — leader hadn't proposed any of these.
+- **Stage 5 Habits**: Final outcome — "**lowest incident rate in the hospital's history.**"
+
+**Cross-skill applicability**: `4dx-sustain-momentum-rescue` (full 5-stage trace identifies which stage a stalled implementation is in); `4dx-d2-lead-measures` (small-outcome vs leveraged-behavior dual-track in one team's two leads); `4dx-d4-cadence` (Stage 3 plateau is the period that builds the team's win-feeling); `4dx-meta-strategy-triage` (high-stakes safety-critical context fit — lives at stake).
+
+**Use this case when**: healthcare / clinical operations / safety-critical context; user is in sustain-mode and needs to identify which 5-stage stage their team is stuck in; user has only one lead and you want to show small-outcome + leveraged-behavior dual-track; user dismisses Stage 3 "winning feeling" as soft.
+**Do NOT generalize this case to**: low-stakes contexts (the safety-critical framing drives the team's adherence); contexts where leader needs to drive optimization (this case is uniquely team-driven at Stage 4); short-cycle pilots (this is a year-long arc).
+
+---
+
+### 6. Jim Dixon — Store 334 grocery (book Ch 11 — D4 missing → fix flagship)
+
+**Disclosure**: ★★★ full | **Verification**: ★★★ direct read (book PDF, 2026-05-01)
+
+**Source**: McChesney et al. 2021, *The 4 Disciplines of Execution* 2nd ed., Simon & Schuster, pp 188-194.
+**License note**: copyrighted book material; cite verbatim with attribution; do not redistribute the PDF.
+
+**Company**: Store 334, a 250-store division of a large grocery chain. Jim Dixon = General Manager. Store 334 had the worst financial performance in the division. "**People didn't want to shop there, and they didn't want to work there either.**" Jim worked 16 days straight, hadn't taken a vacation in over a year, sales way down, employee turnover up. VP of HR confided "**Jim's either going to quit, or we're going to have to let him go.**"
+
+**D1 — WIG**: set around year-over-year revenue (specific From-X-to-Y句 not disclosed in source).
+
+**D2 — Lead measures (verbatim, per department, 1-10 scale daily — 5 depts × ~2-3 measures = 50-point scoreboard)**:
+- Meat dept: fresh cuts in crystal-clear display
+- Produce dept: shelves fully stocked by 5 in morning
+- Bakery: hot fresh bread on racks every two hours
+- (Plus 2 other depts contributing to the 50-point total)
+
+**D3 — Scoreboard (initial — FAILED)**:
+- Posted in the morning; employees tore them down that night
+- Leaders put boards back up but whirlwind sucked department heads back to old habits
+- After 2 weeks: average **13 / 50 score** (whole store, all 5 departments)
+
+**Diagnosis (verbatim)**: "**Discipline 4 was completely missing. There was no cadence of accountability.**"
+
+**D4 — Cadence (recovery — INSTALLED)**:
+- Jim held first WIG Session next day
+- Canonical opening question (verbatim): "**What is the one thing you can do this week that would have the most impact on the scoreboard?**"
+- Yolanda the bakery manager: "**I guess I could get the back room cleaned out**" — "It's kind of cluttered. I've got a lot of extra racks out on the floor. If I can get the back room cleaned up, I can get some of that stuff off the floor. It'd look better."
+- Ted the seafood manager: initially proposed "I have a big promotion this week. I'll be focused on the lobster special" — Jim asked how that would move the scoreboard; Ted reflected: "Yeah, okay. Bobby's been here three weeks and doesn't know how to set up the displays in the morning… I'll get him trained, and he can back me up."
+
+**Outcome (verbatim)**:
+- After 10 weeks, scoreboard avg rose **13 → 38 (out of 50)**
+- Year-over-year revenue followed: "**Store 334 — the worst of 250 stores — went on to outproduce the rest of the zone in year-over-year sales.**"
+- Jim's debriefing quote to the divisional president (verbatim): "**I was going to carry this store on my back until I could get a transfer. Now you can leave me there as long as you want.**"
+
+**Cross-skill applicability**: `4dx-d4-cadence` (flagship "no D4 = system collapse" case); `4dx-sustain-momentum-rescue` (recovery template — D1/D2/D3 existed, missing piece was D4 cadence); `4dx-meta-team-leader-onboarding` (leader-of-leaders failure-to-recovery arc); `4dx-d4-cadence` opening-question anchor (verbatim "**What is the one thing you can do this week that would have the most impact on the scoreboard?**").
+
+**Use this case when**: user has D1/D2/D3 in place and is asking why nothing's moving (very common audit-mode pattern); user needs to see canonical WIG-Session opening question in context; user is a stressed-out team leader on the verge of giving up; you need a quantified before/after for a system-collapse-then-recovery story.
+**Do NOT generalize this case to**: cases where the WIG itself is malformed (Jim's lag was fine — revenue was clear; the failure was at D4 cadence); knowledge-work contexts (Store 334 is operational retail with daily-measurable activities); cases where the leader is the bottleneck rather than the cadence (Jim was working hard; the missing piece wasn't effort).
+
+---
+
 ## Failure-mode dictionary (highest-ROI material per the 8-purpose analysis)
 
 > **Why this section exists**: per the 8-purpose ROI analysis, the single highest-ROI use of case research for `four-dx-coach` is **anti-pattern recognition for audit-mode verdicts**. This section consolidates failure-mode anchors across the 5-layer 4DX stack, drawn from authoritative sources (a FranklinCovey insider, the Leader-In-Me education-context companion, an academic critique with meta-analysis support, two transparent real-org failures, and one anonymous frontline complaint).
@@ -539,3 +617,4 @@ Total research time: 2 sessions (initial discovery 2026-05-01 morning; full Tier
 - 2026-05-01 (same day, third pass): added failure-mode dictionary (F1 Cindrich / F2 LiM / F3 Kay C Dee / F4 Bravelab / F5 Chesapeake) + 18-mode coverage matrix.
 - 2026-05-01 (same day, fourth pass): JP-focused failure search; promoted Hashimoto note to Tier 2 partial-failure anchor; documented JP-context structural gap (naming collision + lower JP framework adoption + JP corporate failure-publication norms).
 - 2026-05-01 (same day, fifth pass): SaaS / e-commerce industry search; added Lou Franco software-founder series as Tier 2 partial-disclosure anchor (#12); documented SaaS / e-commerce structural absence (tech industry's OKR preference + acknowledged poor fit for knowledge-heavy work + Bravelab as closest team-scale evidence).
+- 2026-05-01 (same day, sixth pass): direct read of *4DX* 2nd ed. Ch 11; promoted Marilyn surgical-nursing case (#5, pp 196-203 — full 5-stage trace + dual-track leads + lowest-incident-rate outcome) and Jim Dixon Store 334 case (#6, pp 188-194 — D4-missing → fix flagship + canonical WIG-Session opening question + 13 → 38 / worst-of-250 → outproduce-zone outcome) to Tier 1. Both qualify as ★★★ disclosure × ★★★ verification — uniquely full-mechanism among the book's anchor cases.

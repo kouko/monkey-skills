@@ -300,6 +300,16 @@ effects. Strengthens the player's-scoreboard discipline against
 
 ---
 
+### Source 8: Vos et al., "5 years of MRSA search-and-destroy at Erasmus UMC" (*Infection Control and Hospital Epidemiology*, 2009) (book-endnote-anchor: Ch 11 endnote 16)
+
+**Citation**: Margreet C. Vos, Heiman F. L. Wertheim, Henri A. Verbrugh, et al., "5 years of experience implementing a methicillin-resistant Staphylococcus aureus search and destroy policy at the largest university medical center in the Netherlands," *Infection Control and Hospital Epidemiology*, vol. 30, no. 10 (October 2009), pp. 977-984. http://www.ncbi.nlm.nih.gov/pubmed/19712031
+
+**Applicable to mode(s)**: solo, team-leader, member
+
+Peer-reviewed primary source for the Erasmus University Medical Center hospital-acquired-infection (HAI) elimination case the book cites at Ch 11. Documents a 5-year implementation of a "search and destroy" MRSA policy at the Netherlands' largest university medical center, with measured year-over-year HAI reduction. The book uses this as a high-stakes exemplar of a clearly-displayed lead-and-lag scoreboard driving sustained behavioral change at scale; Vos et al. is the academic source that backs the case with measured outcomes and named protocol — not a vendor case study. Cite when team-leader or member mode needs to anchor "yes, a public lead+lag scoreboard can drive behavior change in a high-stakes / regulated / safety-critical environment" with primary-source rather than book-internal authority.
+
+---
+
 ## What 4DX practitioners learn from these sources (per mode)
 
 The six sources above stack into three layered upgrades to the book's
