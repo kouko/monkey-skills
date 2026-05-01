@@ -1,0 +1,64 @@
+{
+  "pack": "comps-multiples",
+  "country": "CN",
+  "tickers": [
+    {
+      "ticker": "600519.SS",
+      "country": "CN",
+      "multiples": {
+        "trailingPE": 20.965784,
+        "forwardPE": 18.4381,
+        "priceToBook": 6.396584
+      },
+      "_yfinance_info": {
+        "ticker": "600519.SS",
+        "fetched_at": "2026-05-01T15:09:26Z",
+        "_cache": "hit",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "600519.SS",
+        "shortName": "KWEICHOW MOUTAI",
+        "longName": "Kweichow Moutai Co., Ltd.",
+        "sector": "Consumer Defensive",
+        "industry": "Beverages - Wineries & Distilleries",
+        "country": "China",
+        "currency": "CNY",
+        "exchange": "SHH",
+        "regularMarketPrice": 1384.79,
+        "regularMarketPreviousClose": 1401.17,
+        "marketCap": 1734131318784,
+        "enterpriseValue": 1692696051712,
+        "trailingPE": 20.965784,
+        "forwardPE": 18.4381,
+        "priceToBook": 6.396584,
+        "trailingEps": 66.05,
+        "forwardEps": 75.10481,
+        "dividendYield": 3.73,
+        "payoutRatio": 0.78180003,
+        "fiftyTwoWeekHigh": 1645.0,
+        "fiftyTwoWeekLow": 1322.01,
+        "fiftyDayAverage": 1435.28,
+        "twoHundredDayAverage": 1440.4822,
+        "sharesOutstanding": 1252270215,
+        "totalRevenue": 172146393088,
+        "grossMargins": 0.90514,
+        "operatingMargins": 0.68024004,
+        "profitMargins": 0.48049,
+        "returnOnEquity": 0.31198,
+        "returnOnAssets": 0.22059,
+        "totalDebt": 242421552,
+        "totalCash": 50586689536,
+        "beta": 0.525,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:26Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      }
+    }
+  ]
+}

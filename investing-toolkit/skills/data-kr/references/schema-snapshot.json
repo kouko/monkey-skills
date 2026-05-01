@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data-kr/schema-snapshot.json",
+  "title": "data-kr snapshot pack",
+  "description": "Output of `pack.py --pack snapshot --ticker <KR ticker>`. Quick-overview card combining yfinance `info` + 1-year `history` for a single Korean equity. **Tier 2 only** — Korean primary-source equity (DART) is not wired in this skill; `_provenance.primary_source_status` is always 'deferred'.",
+  "type": "object",
+  "required": ["pack", "country", "ticker", "info", "history", "_provenance"],
+  "properties": {
+    "pack": {"type": "string", "const": "snapshot"},
+    "country": {"type": "string", "const": "kr"},
+    "ticker": {
+      "type": "string",
+      "description": "Normalized ticker — typically `<6-digit>.KS` (KOSPI) or `<6-digit>.KQ` (KOSDAQ). Bare or malformed inputs may pass through unchanged with a warning recorded in `_provenance.ticker_normalization_warnings`."
+    },
+    "info": {
+      "type": "object",
+      "description": "yfinance `info` action output. Field set is yfinance-driven and may shift; the keys below are the canonical subset emitted by `yfinance_client.py info`. Missing fields indicate yfinance returned null for the ticker.",
+      "properties": {
+        "ticker": {"type": "string"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "_warning": {"type": "string"},
+        "symbol": {"type": "string"},
+        "shortName": {"type": ["string", "null"]},
+        "longName": {"type": ["string", "null"]},
+        "sector": {"type": ["string", "null"]},
+        "industry": {"type": ["string", "null"]},
+        "country": {"type": ["string", "null"]},
+        "currency": {"type": ["string", "null"]},
+        "exchange": {"type": ["string", "null"]},
+        "regularMarketPrice": {"type": ["number", "null"]},
+        "regularMarketPreviousClose": {"type": ["number", "null"]},
+        "marketCap": {"type": ["number", "integer", "null"]},
+        "enterpriseValue": {"type": ["number", "integer", "null"]},
+        "forwardPE": {"type": ["number", "null"]},
+        "trailingPE": {"type": ["number", "null"]},
+        "dividendYield": {"type": ["number", "null"]},
+        "payoutRatio": {"type": ["number", "null"]},
+        "fiftyTwoWeekHigh": {"type": ["number", "null"]},
+        "fiftyTwoWeekLow": {"type": ["number", "null"]},
+        "fiftyDayAverage": {"type": ["number", "null"]},
+        "twoHundredDayAverage": {"type": ["number", "null"]},
+        "sharesOutstanding": {"type": ["number", "integer", "null"]},
+        "totalRevenue": {"type": ["number", "integer", "null"]},
+        "grossMargins": {"type": ["number", "null"]},
+        "operatingMargins": {"type": ["number", "null"]},
+        "profitMargins": {"type": ["number", "null"]},
+        "returnOnEquity": {"type": ["number", "null"]},
+        "returnOnAssets": {"type": ["number", "null"]},
+        "totalDebt": {"type": ["number", "integer", "null"]},
+        "totalCash": {"type": ["number", "integer", "null"]},
+        "beta": {"type": ["number", "null"]},
+        "_provenance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "history": {
+      "type": "object",
+      "description": "yfinance `history` action output for the trailing 1y period.",
+      "required": ["ticker", "data"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "period": {"type": "string", "const": "1y"},
+        "interval": {"type": "string"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "open", "high", "low", "close", "volume"],
+            "properties": {
+              "date": {"type": "string", "format": "date"},
+              "open": {"type": ["number", "null"]},
+              "high": {"type": ["number", "null"]},
+              "low": {"type": ["number", "null"]},
+              "close": {"type": ["number", "null"]},
+              "volume": {"type": ["number", "integer", "null"]}
+            },
+            "additionalProperties": true
+          }
+        },
+        "latest_close": {"type": ["number", "null"]},
+        "latest_date": {"type": ["string", "null"], "format": "date"},
+        "rows": {"type": "integer"},
+        "_provenance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "_provenance": {
+      "type": "object",
+      "required": ["tier", "primary_source_status", "primary_source_note"],
+      "properties": {
+        "tier": {"type": "string", "description": "Always 'Tier 2 (yfinance unofficial)' for KR snapshot."},
+        "primary_source_status": {"type": "string", "enum": ["deferred", "available"], "description": "Always 'deferred' for KR equity packs in v2.0.x — DART (전자공시시스템) not yet wired."},
+        "primary_source_note": {"type": "string"},
+        "exchange_suffix": {
+          "type": ["string", "null"],
+          "enum": ["KS", "KQ", null],
+          "description": "Exchange suffix parsed from the normalized ticker. `null` when the ticker has no suffix (warning case)."
+        },
+        "ticker_normalization_warnings": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Present only when the user-supplied ticker did not match the canonical 6-digit or .KS/.KQ patterns. Each entry is a stderr-style warning string."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

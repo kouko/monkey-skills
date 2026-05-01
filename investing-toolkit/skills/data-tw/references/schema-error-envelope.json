@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-tw/error-envelope.json",
+  "title": "data-tw error envelope",
+  "description": "Wrapped client output produced by pack.py's wrap() helper. Every leaf in a TW pack is an instance of this envelope. UNIQUE TO TW: all 5 country layers wrap, but data-tw's envelope is the only one that uses _tier='2-gap' and the explicit _source enum below. The data-* layers in other countries DO NOT nest the underlying client output under a top-level wrapper of this exact shape.\n\nShape comes directly from scripts/pack.py wrap(): a success envelope has {_tier, _source, _action, data}. An error envelope has {_tier, _source, _action, _error} plus optional debug fields (_stderr, _cmd, _stdout_head) that come straight from run_client().",
+  "type": "object",
+  "required": ["_tier", "_source", "_action"],
+  "properties": {
+    "_tier": {
+      "type": "string",
+      "enum": ["A", "2", "2-gap"],
+      "description": "Provenance tier. A = primary primary-source (MOPS, TWSE OpenAPI, CBC, DGBAS, NDC, statgov). 2 = cross-source convenience (yfinance, FinMind .TWO history). 2-gap = by-design Tier-A gap supplier (FinMind T86 daily flow + 融資融券時序 — no Tier A endpoint exists)."
+    },
+    "_source": {
+      "type": "string",
+      "enum": ["mops", "twse_openapi", "finmind", "yfinance", "cbc", "dgbas", "ndc", "statgov"],
+      "description": "Originating client. Maps 1:1 to scripts/{name}_client.py."
+    },
+    "_action": {
+      "type": "string",
+      "description": "Client action name (e.g. 'company-basic', 'balance-sheet', 'T86', 'preset-bundle'). Free-form string; values are documented per-pack in references/output-schema-overview.md."
+    },
+    "data": {
+      "description": "Present on success. Shape is per-action and intentionally not constrained at this layer — see per-pack schemas (schema-snapshot.json etc.) for typed leaves where they matter to consumers.",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "_error": {
+      "type": "string",
+      "description": "Present on failure. One of: 'timeout', 'exit_<rc>', 'json_decode: <msg>', 'exec_failed: <exception>'. See pack.py run_client()."
+    },
+    "_stderr": {
+      "type": "string",
+      "description": "Truncated subprocess stderr (first 600 chars). Present when _error == 'exit_<rc>'."
+    },
+    "_cmd": {
+      "type": "string",
+      "description": "The full subprocess command that failed. Present on every error envelope."
+    },
+    "_stdout_head": {
+      "type": "string",
+      "description": "First 300 chars of stdout when JSON decode fails. Present when _error starts with 'json_decode'."
+    }
+  },
+  "oneOf": [
+    {
+      "title": "success",
+      "required": ["data"],
+      "not": {"required": ["_error"]}
+    },
+    {
+      "title": "error",
+      "required": ["_error"],
+      "not": {"required": ["data"]}
+    }
+  ],
+  "additionalProperties": true
+}

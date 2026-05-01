@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-regime-pack.json",
+  "title": "data-us pack=regime-pack output",
+  "description": "Pack output for `data-us/scripts/pack.py --pack regime-pack`. No ticker dimension — fetches FRED macro indicator groups for US regime diagnosis. Tier A (FRED CSV, official Fed primary source). Groups: rates / inflation / growth / nowcast / wei / real_rates / swap_spreads.",
+  "type": "object",
+  "required": ["pack", "country", "fetched_at", "groups"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {"const": "regime-pack"},
+    "country": {"const": "US"},
+    "fetched_at": {"type": "string", "format": "date-time"},
+    "groups": {
+      "type": "object",
+      "description": "Indicator groups. Each group bundles related FRED series (e.g. `rates` = T10Y2Y/DGS10/DGS2/FEDFUNDS).",
+      "required": ["rates", "inflation", "growth", "nowcast", "wei", "real_rates", "swap_spreads"],
+      "additionalProperties": false,
+      "properties": {
+        "rates": {"$ref": "#/definitions/group_payload"},
+        "inflation": {"$ref": "#/definitions/group_payload"},
+        "growth": {"$ref": "#/definitions/group_payload"},
+        "nowcast": {"$ref": "#/definitions/group_payload"},
+        "wei": {"$ref": "#/definitions/group_payload"},
+        "real_rates": {"$ref": "#/definitions/group_payload"},
+        "swap_spreads": {"$ref": "#/definitions/group_payload"}
+      }
+    }
+  },
+  "definitions": {
+    "group_payload": {
+      "description": "One FRED indicator group. fred_client.py has two output shapes depending on series count: (a) multi-series — wrapper `{fetched_at, series: {SID: series_payload, ...}}`; (b) single-series — flat series_payload (with `series` as a string FRED ID, plus observations directly at top level). Consumers must distinguish via `typeof series` (string = single, object = multi).",
+      "oneOf": [
+        {"$ref": "#/definitions/multi_series_wrapper"},
+        {"$ref": "#/definitions/series_payload"}
+      ]
+    },
+    "multi_series_wrapper": {
+      "type": "object",
+      "required": ["fetched_at", "series"],
+      "additionalProperties": true,
+      "properties": {
+        "fetched_at": {"type": "string"},
+        "series": {
+          "type": "object",
+          "description": "Map of FRED series ID (e.g. 'DGS10', 'CPIAUCSL') → series payload.",
+          "additionalProperties": {"$ref": "#/definitions/series_payload"}
+        }
+      }
+    },
+    "series_payload": {
+      "type": "object",
+      "description": "Single FRED series payload. Note: `series` here is a STRING (the FRED series ID), not an object — distinguishing this shape from multi_series_wrapper.",
+      "required": ["series"],
+      "additionalProperties": true,
+      "properties": {
+        "series": {"type": "string", "description": "FRED series ID (e.g. 'WEI', 'DGS10')."},
+        "periods_requested": {"type": "integer"},
+        "fetched_at": {"type": "string"},
+        "_cache": {"type": "string", "description": "'hit' or 'miss'."},
+        "_source": {"type": "string", "description": "'csv' (FRED CSV API) or alternate when client falls back."},
+        "_warning": {"type": "string", "description": "Free-form (e.g. publication-lag warnings)."},
+        "observations": {
+          "type": "array",
+          "description": "Time-series observations, ascending by date. Date format depends on series frequency (daily / weekly / monthly / quarterly — FRED reports the period-start date).",
+          "items": {
+            "type": "object",
+            "required": ["date", "value"],
+            "additionalProperties": true,
+            "properties": {
+              "date": {"type": "string", "description": "YYYY-MM-DD."},
+              "value": {"type": ["number", "null"], "description": "Series value in native units (% for yields, index level for CPI, etc.). Null when FRED reports '.'."}
+            }
+          }
+        },
+        "latest": {
+          "type": "object",
+          "properties": {
+            "date": {"type": "string"},
+            "value": {"type": ["number", "null"]}
+          }
+        },
+        "count": {"type": "integer"},
+        "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+        "error": {"type": "string"}
+      }
+    }
+  }
+}

@@ -176,6 +176,24 @@ uv run skills/analysis-macro-regime/scripts/regime_compute.py --input /tmp/cn-re
 
 ---
 
+## Output schema
+
+Formal JSON Schemas for each pack type live in `references/`:
+
+| Pack | Schema |
+|---|---|
+| `snapshot` | [`references/schema-snapshot.json`](references/schema-snapshot.json) |
+| `memo-fetch` | [`references/schema-memo-fetch.json`](references/schema-memo-fetch.json) |
+| `comps-multiples` | [`references/schema-comps-multiples.json`](references/schema-comps-multiples.json) |
+| `screener-batch` | [`references/schema-screener-batch.json`](references/schema-screener-batch.json) |
+| `regime-pack` | [`references/schema-regime-pack.json`](references/schema-regime-pack.json) |
+| Error / provenance wrapper | [`references/schema-error-envelope.json`](references/schema-error-envelope.json) |
+
+CI validates each pack output against its schema (see
+`tests/data/test_pack_schemas.py`).
+
+---
+
 ## Limitations
 
 ### Data freshness

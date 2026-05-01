@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data-kr/schema-memo-fetch.json",
+  "title": "data-kr memo-fetch pack (Tier 2 only — DART deferred)",
+  "description": "Output of `pack.py --pack memo-fetch --ticker <KR ticker>`. Full data bundle for a Korean equity memo: yfinance `info` + 5y `history` + annual + quarterly financials. **Tier 2 only**: Korean primary-source equity (DART, dart.fss.or.kr) is not wired in this skill yet — `_provenance.primary_source_status` is always 'deferred'. Treat all financials as unverified scraper output and surface this caveat in any downstream memo.",
+  "type": "object",
+  "required": [
+    "pack",
+    "country",
+    "ticker",
+    "tier",
+    "info",
+    "financials_annual",
+    "financials_quarterly",
+    "history",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {"type": "string", "const": "memo-fetch"},
+    "country": {"type": "string", "const": "kr"},
+    "ticker": {"type": "string"},
+    "tier": {"type": "string", "const": "Tier 2 only"},
+    "info": {
+      "type": "object",
+      "description": "Same shape as snapshot.info — yfinance info dict.",
+      "required": ["ticker"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "symbol": {"type": "string"},
+        "marketCap": {"type": ["number", "integer", "null"]},
+        "enterpriseValue": {"type": ["number", "integer", "null"]},
+        "forwardPE": {"type": ["number", "null"]},
+        "trailingPE": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "financials_annual": {
+      "type": "object",
+      "description": "yfinance `financials --period annual` output (Tier 2 scraper). Keys are yfinance-driven; the canonical subset is enumerated below.",
+      "properties": {
+        "ticker": {"type": "string"},
+        "period": {"type": "string", "const": "annual"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "latest_period": {"type": ["string", "null"]},
+        "key_metrics": {"type": ["object", "null"]},
+        "income_statement": {"type": ["object", "null"]},
+        "balance_sheet": {"type": ["object", "null"]},
+        "cash_flow": {"type": ["object", "null"]},
+        "_warning": {"type": "string"},
+        "_provenance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "financials_quarterly": {
+      "type": "object",
+      "description": "yfinance `financials --period quarterly` output. Same shape as financials_annual but with `period: 'quarterly'`.",
+      "properties": {
+        "ticker": {"type": "string"},
+        "period": {"type": "string", "const": "quarterly"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "latest_period": {"type": ["string", "null"]},
+        "key_metrics": {"type": ["object", "null"]},
+        "income_statement": {"type": ["object", "null"]},
+        "balance_sheet": {"type": ["object", "null"]},
+        "cash_flow": {"type": ["object", "null"]},
+        "_warning": {"type": "string"},
+        "_provenance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "history": {
+      "type": "object",
+      "description": "yfinance `history --period 5y` output.",
+      "required": ["ticker", "data"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "period": {"type": "string", "const": "5y"},
+        "interval": {"type": "string"},
+        "fetched_at": {"type": "string", "format": "date-time"},
+        "_cache": {"type": "string", "enum": ["hit", "miss"]},
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "open", "high", "low", "close", "volume"],
+            "properties": {
+              "date": {"type": "string", "format": "date"},
+              "open": {"type": ["number", "null"]},
+              "high": {"type": ["number", "null"]},
+              "low": {"type": ["number", "null"]},
+              "close": {"type": ["number", "null"]},
+              "volume": {"type": ["number", "integer", "null"]}
+            },
+            "additionalProperties": true
+          }
+        },
+        "latest_close": {"type": ["number", "null"]},
+        "latest_date": {"type": ["string", "null"], "format": "date"},
+        "rows": {"type": "integer"},
+        "_provenance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "_provenance": {
+      "type": "object",
+      "required": ["tier", "primary_source_status", "primary_source_note"],
+      "properties": {
+        "tier": {"type": "string"},
+        "primary_source_status": {"type": "string", "const": "deferred"},
+        "primary_source_note": {
+          "type": "string",
+          "description": "Must mention DART (전자공시시스템, dart.fss.or.kr) and treat-as-unverified caveat."
+        },
+        "ticker_normalization_warnings": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

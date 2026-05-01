@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-memo-fetch.json",
+  "title": "data-us pack=memo-fetch output",
+  "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack memo-fetch`. Heavy bundle: yfinance info + 2y price + SEC EDGAR filings index (10-K/10-Q/8-K, last 8) + SEC XBRL us-gaap concept facts. Single ticker only by design (SEC EDGAR is rate-limited 10 req/s).",
+  "type": "object",
+  "required": ["pack", "ticker", "fetched_at", "company_info", "price_history", "sec_filings", "sec_facts"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {"const": "memo-fetch"},
+    "ticker": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9.\\-]{0,9}$"
+    },
+    "fetched_at": {"type": "string", "format": "date-time"},
+    "company_info": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "yfinance info dict — same shape as snapshot.company_info (see schema-snapshot.json). Tier 2."
+    },
+    "price_history": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "yfinance OHLCV — same shape as snapshot.price_history (see schema-snapshot.json). Tier 2."
+    },
+    "sec_filings": {
+      "type": "object",
+      "description": "SEC EDGAR filings index for the requested forms (Tier A — official primary source).",
+      "additionalProperties": true,
+      "properties": {
+        "ticker": {"type": "string"},
+        "cik": {"type": ["integer", "string"], "description": "10-digit SEC CIK (may render as int or zero-padded string)."},
+        "title": {"type": "string", "description": "Issuer name as registered with SEC."},
+        "action": {"const": "filings"},
+        "forms_filter": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Echo of `--forms` filter (e.g. ['10-K', '10-Q', '8-K'])."
+        },
+        "limit": {"type": "integer"},
+        "count": {"type": "integer", "description": "Number of filings returned (≤ limit)."},
+        "filings": {
+          "type": "array",
+          "description": "Filings list, descending by filingDate.",
+          "items": {
+            "type": "object",
+            "required": ["form", "filingDate", "accessionNumber"],
+            "additionalProperties": true,
+            "properties": {
+              "form": {"type": "string", "description": "e.g. '10-K', '10-Q', '8-K'."},
+              "filingDate": {"type": "string", "description": "YYYY-MM-DD (Eastern Time per SEC convention)."},
+              "accessionNumber": {"type": "string", "description": "SEC accession number, e.g. '0000320193-26-000013'."},
+              "primaryDocument": {"type": ["string", "null"]},
+              "primaryDocDescription": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "fetched_at": {"type": "string"},
+        "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+        "error": {"type": "string"}
+      }
+    },
+    "sec_facts": {
+      "type": "object",
+      "description": "SEC XBRL company-concept facts index (Tier A). When `concept` is null, returns the full index of available concepts (us-gaap + dei taxonomies) and their counts. Specific concept values can be fetched via separate sec_edgar_client.py calls — not bundled here for size.",
+      "additionalProperties": true,
+      "properties": {
+        "ticker": {"type": "string"},
+        "cik": {"type": ["integer", "string"]},
+        "title": {"type": "string"},
+        "action": {"const": "facts"},
+        "concept": {
+          "type": ["string", "null"],
+          "description": "Specific us-gaap concept (e.g. 'Revenues') if requested; null when fetching the full concept index."
+        },
+        "fetched_at": {"type": "string"},
+        "_cache": {"type": "string"},
+        "concept_counts": {
+          "type": "object",
+          "description": "Per-taxonomy counts: typically `{us-gaap: N, dei: M}`.",
+          "additionalProperties": {"type": "integer"}
+        },
+        "us_gaap_concepts": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of available us-gaap concept names for this issuer (e.g. 'Revenues', 'NetIncomeLoss', 'AccountsPayable', ...)."
+        },
+        "dei_concepts": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of available DEI (Document and Entity Information) concept names."
+        },
+        "entityName": {"type": "string"},
+        "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+        "error": {"type": "string"}
+      }
+    }
+  }
+}

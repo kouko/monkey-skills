@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data-kr/schema-error-envelope.json",
+  "title": "data-kr error envelope",
+  "description": "Shared error / partial-failure envelope emitted by pack.py and underlying clients. Either appears as a top-level error object (process exit 1) or embedded inline in nested fields (e.g. one regime-pack indicator fails while siblings succeed).",
+  "type": "object",
+  "required": ["error", "_partial"],
+  "properties": {
+    "error": {
+      "type": "string",
+      "description": "Human-readable error message — never machine-parsed."
+    },
+    "_partial": {
+      "type": "boolean",
+      "const": true,
+      "description": "Always true when this envelope is in use. Drives pack.py exit-1 behavior at top level."
+    },
+    "available": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "(regime-pack only) List of valid indicator groups when the user-supplied --indicators value is rejected."
+    },
+    "stderr": {
+      "type": "string",
+      "description": "Tail of underlying client stderr (max ~2000 chars) for subprocess failures."
+    },
+    "stdout_tail": {
+      "type": "string",
+      "description": "Tail of underlying client stdout when JSON parse failed."
+    },
+    "returncode": {
+      "type": "integer",
+      "description": "Subprocess exit code from the underlying client when applicable."
+    },
+    "_returncode": {
+      "type": "integer",
+      "description": "Subprocess exit code propagated when the client emitted JSON but exited non-zero."
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-screener-batch.json",
+  "title": "data-us pack=screener-batch output",
+  "description": "Pack output for `data-us/scripts/pack.py --tickers T1,T2,... --pack screener-batch`. Batch only (≥2 tickers required). Filters yfinance info to a lightweight screener-input field set: trailingPE, priceToBook, marketCap, dividendYield, beta, fiftyTwoWeekHigh, fiftyTwoWeekLow, regularMarketPrice, sector, industry, shortName. Tier 2 (yfinance unofficial).",
+  "type": "object",
+  "required": ["pack", "fetched_at", "tickers"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {"const": "screener-batch"},
+    "fetched_at": {"type": "string", "format": "date-time"},
+    "tickers": {
+      "type": "object",
+      "description": "Map of upper-case ticker → screener-input fields. Empty `{}` when batch fetch failed entirely (top-level `error` then carries the client error blob).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Per-ticker screener slice. Missing fields surface as null (not omitted).",
+        "properties": {
+          "trailingPE": {"type": ["number", "null"]},
+          "priceToBook": {"type": ["number", "null"]},
+          "marketCap": {"type": ["number", "null"], "description": "USD raw."},
+          "dividendYield": {"type": ["number", "null"], "description": "Yahoo dividendYield is a percentage (e.g. 0.38 = 0.38%) — NOT a decimal fraction."},
+          "beta": {"type": ["number", "null"]},
+          "fiftyTwoWeekHigh": {"type": ["number", "null"]},
+          "fiftyTwoWeekLow": {"type": ["number", "null"]},
+          "regularMarketPrice": {"type": ["number", "null"]},
+          "sector": {"type": ["string", "null"]},
+          "industry": {"type": ["string", "null"]},
+          "shortName": {"type": ["string", "null"]},
+          "ticker": {"type": "string"},
+          "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+          "error": {"type": "string"}
+        }
+      }
+    },
+    "error": {
+      "description": "Top-level client error blob when batch fetch failed entirely. `tickers` will be `{}` in that case.",
+      "$ref": "schema-error-envelope.json#/definitions/error_wrapper"
+    }
+  }
+}

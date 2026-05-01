@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-tw/screener-batch.json",
+  "title": "data-tw screener-batch pack",
+  "description": "Output of `pack.py --tickers <t1,t2,...> --pack screener-batch`. yfinance batch info+history (single subprocess each) plus per-ticker MOPS company_basic (Tier A). Used by `analysis-screener` and `report-screener-list`. No _partial flag at the top level — consumers should walk per-leaf _error fields.",
+  "type": "object",
+  "required": ["_pack", "_tickers", "yfinance", "mops"],
+  "properties": {
+    "_pack": {"const": "screener-batch"},
+    "_tickers": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"}
+    },
+    "yfinance": {
+      "type": "object",
+      "required": ["info_batch", "history_batch"],
+      "properties": {
+        "info_batch": {"$ref": "schema-error-envelope.json", "description": "_action='info-batch'. Single yfinance subprocess for all tickers."},
+        "history_batch": {"$ref": "schema-error-envelope.json", "description": "_action='history-batch'. Default period=1y."}
+      },
+      "additionalProperties": false
+    },
+    "mops": {
+      "type": "object",
+      "description": "Per-ticker MOPS company_basic, keyed by yfinance-style ticker (e.g. '2330.TW').",
+      "patternProperties": {
+        "^[0-9A-Z]+\\.(TW|TWO)$": {"$ref": "schema-error-envelope.json"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-snapshot.json",
+  "title": "data-us pack=snapshot output",
+  "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack snapshot`. Composes yfinance info + 2y price history for a single US ticker.",
+  "type": "object",
+  "required": ["pack", "ticker", "fetched_at", "company_info", "price_history"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {"const": "snapshot"},
+    "ticker": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9.\\-]{0,9}$",
+      "description": "Upper-case US ticker (e.g. AAPL, BRK.B)."
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp at composition time."
+    },
+    "company_info": {
+      "description": "yfinance info dict (Tier 2). Replaced with an error_wrapper if the yfinance subprocess failed.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ticker": {"type": "string"},
+        "fetched_at": {"type": "string"},
+        "_cache": {"type": "string", "description": "'hit' or 'miss'."},
+        "_warning": {"type": "string"},
+        "symbol": {"type": "string"},
+        "shortName": {"type": ["string", "null"]},
+        "longName": {"type": ["string", "null"]},
+        "sector": {"type": ["string", "null"]},
+        "industry": {"type": ["string", "null"]},
+        "country": {"type": ["string", "null"]},
+        "currency": {"type": ["string", "null"], "description": "ISO currency code; 'USD' for US tickers."},
+        "exchange": {"type": ["string", "null"]},
+        "regularMarketPrice": {"type": ["number", "null"]},
+        "regularMarketPreviousClose": {"type": ["number", "null"]},
+        "marketCap": {"type": ["number", "null"], "description": "Market cap in USD (raw, not in millions)."},
+        "enterpriseValue": {"type": ["number", "null"]},
+        "trailingPE": {"type": ["number", "null"]},
+        "forwardPE": {"type": ["number", "null"]},
+        "priceToBook": {"type": ["number", "null"]},
+        "priceToSales": {"type": ["number", "null"]},
+        "trailingEps": {"type": ["number", "null"]},
+        "forwardEps": {"type": ["number", "null"]},
+        "dividendYield": {"type": ["number", "null"], "description": "Yahoo dividendYield is a percentage (e.g. 0.38 = 0.38%) — NOT a decimal fraction. Consumers must NOT multiply by 100."},
+        "payoutRatio": {"type": ["number", "null"]},
+        "fiftyTwoWeekHigh": {"type": ["number", "null"]},
+        "fiftyTwoWeekLow": {"type": ["number", "null"]},
+        "fiftyDayAverage": {"type": ["number", "null"]},
+        "twoHundredDayAverage": {"type": ["number", "null"]},
+        "shortRatio": {"type": ["number", "null"]},
+        "sharesOutstanding": {"type": ["number", "null"]},
+        "totalRevenue": {"type": ["number", "null"]},
+        "grossMargins": {"type": ["number", "null"]},
+        "operatingMargins": {"type": ["number", "null"]},
+        "profitMargins": {"type": ["number", "null"]},
+        "returnOnEquity": {"type": ["number", "null"]},
+        "returnOnAssets": {"type": ["number", "null"]},
+        "totalDebt": {"type": ["number", "null"]},
+        "totalCash": {"type": ["number", "null"]},
+        "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+        "error": {"type": "string"}
+      }
+    },
+    "price_history": {
+      "description": "yfinance OHLCV history (Tier 2). Default period 2y, daily interval.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ticker": {"type": "string"},
+        "period": {"type": "string", "description": "e.g. '2y'."},
+        "interval": {"type": "string", "description": "e.g. '1d'."},
+        "fetched_at": {"type": "string"},
+        "_cache": {"type": "string"},
+        "data": {
+          "type": "array",
+          "description": "OHLCV observations, one per trading day, ascending by date.",
+          "items": {
+            "type": "object",
+            "required": ["date", "open", "high", "low", "close", "volume"],
+            "additionalProperties": true,
+            "properties": {
+              "date": {"type": "string", "description": "YYYY-MM-DD."},
+              "open": {"type": "number"},
+              "high": {"type": "number"},
+              "low": {"type": "number"},
+              "close": {"type": "number", "description": "Adjusted close in USD."},
+              "volume": {"type": "integer"}
+            }
+          }
+        },
+        "latest_close": {"type": ["number", "null"]},
+        "latest_date": {"type": ["string", "null"]},
+        "rows": {"type": "integer"},
+        "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
+        "error": {"type": "string"}
+      }
+    }
+  }
+}
