@@ -123,7 +123,7 @@ Slash commands track the new skill names. No alias shim — clean break per spec
 
 - **One-time slash command break**. Mitigated by prominent CHANGELOG and announcement; no alias shim.
 - **MCP tool registration audit**. `mcp.json` paths must update per skill rename. Verified at PR 1 close.
-- **Acceptable duplication of 3 client files** (yfinance × 5, fred × 2, ta × N). Mitigated by MD5 sync CI + helper script. Drift becomes a CI-blocking event in PR 3.
+- **Acceptable duplication of 4 client files** (yfinance × 5, fred × 2, nbs × 1, akshare × 1; ta_client.py = canonical only in v2.0.0). Mitigated by MD5 sync CI + helper script. Drift becomes a CI-blocking event in PR 3.
 - **Slightly more files to navigate** for a single deliverable (data → analysis → report) versus an all-in-one skill. The trade-off is paid back the first time a single source change no longer cascades through 3+ skills.
 
 ### Neutral
