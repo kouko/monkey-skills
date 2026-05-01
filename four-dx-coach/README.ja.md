@@ -4,7 +4,7 @@
 
 言語：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-**Version**：0.9.0
+**Version**：0.9.1
 **所属**：[monkey-skills](https://github.com/kouko/monkey-skills)
 **License**：MIT
 

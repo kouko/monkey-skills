@@ -73,26 +73,7 @@ The user has invested in some attempt at strategy / goals / metrics / cadence �
 
 ## A1 — Past Application
 
-### Case 1: Mid-size company with OKRs + 12-metric dashboard + collapsed weekly cadence (composite case from book Ch 10 + industry pattern)
-
-- **Problem**: A 12-person product team had: (a) annual OKR "improve user retention 15%", (b) Notion dashboard with 12 KPI metrics, (c) weekly meetings that collapsed under firefighting after 4 weeks.
-- **Audit findings**:
-  - L1 WIG: malformed (OKR has Y but no X baseline / no When fixed; "user retention" too abstract)
-  - L2 Lead: absent (12 metrics is database, not 2-3 lead measures; none pass two-axis test for daily action)
-  - L3 Scoreboard: present but failing (12 metrics violates ≤4; team doesn't look = engagement-collapsed coaches' board)
-  - L4 Cadence: broken (4-week lapse = rescue territory, not normal D4)
-  - L5 Substrate: capacity weak (firefighting indicates ~80%+ whirlwind without protected slot)
-- **Recommendations**: (1) Reformulate WIG: "From 35% Q3 retention to 50% by Mar 31" (route → `4dx-d1-wig-formulation`); (2) Cull dashboard from 12 → 2 lead measures via two-axis test (route → `4dx-d2-lead-measures` then `4dx-d3-scoreboard`); (3) Diagnose cadence collapse before restarting (route → `4dx-sustain-momentum-rescue`); (4) Capacity audit if firefighting persistent (route → `4dx-meta-whirlwind-triage`).
-- **Conclusion**: The team had artifacts in all 4 layers but only one (L3 scoreboard) was at-fault structurally; the actual collapse was at L4 (cadence) and L5 (capacity). Audit unwound the symptom from the cause.
-
-### Case 2: Strategy doc dropped at a kickoff (composite from Ch 6 worked examples)
-
-- **Problem**: A leader says: "Here's our 5-page strategy doc — pick our Primary WIG using 4DX." Doc lists 9 strategic priorities, 4 of them flagged "critical".
-- **Audit findings**:
-  - L1 WIG: candidates present but **9 is far too many**; "critical" tagging doesn't pass Battles 2×2 importance × feasibility filter; need to narrow to 1
-  - L2-L5: not yet populated — this is a pre-D2 input
-- **Recommendations**: (1) Run Battles 2×2 on the 9 → narrow to 2-3 → pick 1 Primary WIG (route → `4dx-d1-wig-formulation` team-select mode); (2) After WIG selected, identify 2-3 leads (route → `4dx-d2-lead-measures` team-facilitate); (3) Build team scoreboard (route → `4dx-d3-scoreboard` team-lead-design); (4) Set up cadence (route → `4dx-d4-cadence` team-leader-session).
-- **Conclusion**: Even artifact-rich starts need a sequenced roadmap; the audit's value is **ordering** the work, not just identifying gaps.
+Two worked composite cases illustrating cross-layer audit pattern (mid-size company OKRs+12-metric+collapsed cadence; strategy-doc kickoff with 9 priorities). Load `references/audit-cases.md` for full case writeups when the user's situation resembles either pattern OR when constructing per-layer recommendation rationale.
 
 ## A2 — Future Trigger ★
 
@@ -167,55 +148,13 @@ For each `malformed` / `wrong-shape`, cite the specific 4DX standard violated **
 - **Cadence**: weekly; **Account → Review → Plan** grammar (verbatim); commitments-not-assignments; whirlwind-excluded; sacred cadence (no skipping)
 - **Substrate**: ~20% protected WIG slot; **commitment vs compliance** distinction (Ch 8); engagement vs theater
 
-### Step 3.5 — Cross-validate against Cindrich's 5 named failure modes
+### Step 3.5 — Cross-validate against Cindrich's 5 named failure modes (load `references/cross-validation-checks.md`)
 
-After per-layer rule checks, run the artifact stack through the 5
-canonical failure modes named by Andy Cindrich (FranklinCovey insider
-who helped develop 4DX, LinkedIn 2018-2019; see `references/industry-
-grounding.md` Source 5). These are practitioner-observed implementation
-failures that may not be caught by any single layer's rule check
-because they're cross-layer in nature:
+After per-layer rule checks, run the artifact stack through 5 practitioner-named cross-layer failure modes. Load `references/cross-validation-checks.md` §Cindrich-5 for the full mode list + verbatim signal matching.
 
-| # | Failure mode | What to look for in the artifact stack | If matched, gap-name |
-|---|---|---|---|
-| 1 | **Treat as program not OS** | "Pilot project", "initiative", "this quarter we're trying 4DX" framing — implies time-box not OS | Treating the disciplines as a one-off program rather than the team's operating system |
-| 2 | **Lag-as-WIG (BAU-as-WIG)** | WIG = job-already-being-done (e.g. "hit Q4 number", "operate the call center") | Cindrich verbatim: *"Hitting your sales number is your job — it is not a WIG"* — surgical phrasing of book Ch 6's breakthrough-not-BAU rule |
-| 3 | **Leveraged-behavior boredom** | Lead measures = "do X activity Y times/week" only, no small-outcome variant | Lead-measure design fails the cognitive-engagement test; team will disengage from accountability sessions |
-| 4 | **Scoreboards used to name and shame** | Public dashboards weaponized as embarrassment / firing tool; team avoids the artifact | Shame-coupling kills engagement; cite Brené Brown via Cindrich: shame "crushes our tolerance for vulnerability, thereby killing engagement" |
-| 5 | **Accountability-as-control vs commitment** | WIG Sessions run as performance review; commitments imposed not chosen; high clarity + low commitment = compliance | Use Cindrich's diagnostic equation: **Goal Clarity + Commitment + Cadence = Results**. If any of the three is missing, name the missing factor as the gap |
+### Step 3.6 — Cross-validate against OKR-drift patterns (load `references/cross-validation-checks.md`)
 
-For each match, surface the mode in the recommendations step. The 5-mode checklist is **complementary, not replacing** the layer-by-layer rule check — a finding can fail Cindrich-mode-2 (lag-as-WIG) AND fail Ch 7 Rule 4 (no measurable Y) at the same time; cite both.
-
-### Step 3.6 — Cross-validate against OKR-drift patterns
-
-After Step 3.5 (Cindrich 5 modes), run a second cross-layer pattern check:
-**has the user's claimed-4DX implementation drifted toward OKR-shaped patterns
-or, more accurately, toward bad goal-setting in any framework?**
-
-Load `references/okr-drift-patterns.md` for the full signal checklist
-(D1 multi-WIG / aspirational-stretch / Objective+KR-split / sandbagging;
-D2 outcome-shaped leads / task-shaped leads / 5+ leads / Goodhart-vulnerable
-activity counting; D3 dashboard-with-many-metrics / read-only-coach-shape /
-OKR-tool-only; D4 quarterly-only-cadence / confidence-update-instead-of-
-hard-commitment / 60+-min-sessions / status-report-instead-of-Account-
-Review-Plan; substrate "60-70% healthy" framing / compensation-tied WIGs /
-stretch-without-commitment / "OKR culture" rationalizing failed cadence).
-
-**Key framing rule** (from `okr-drift-patterns.md` synthesis): most "drift to
-OKR" is actually drift toward **bad OKR shape that Wodtke would also reject**.
-Audit recommendations should NOT default to "you should pick OKR or 4DX." They
-should default to "your current implementation hits failure modes documented
-in BOTH frameworks; here's what to fix regardless of framework identity."
-
-For each drift signal matched:
-- Cite the specific backing source (Wodtke / Doerr / Locke-Latham / Harkin /
-  Cindrich / Bravelab) per `okr-drift-patterns.md`
-- Name it accurately: drift-to-canonical-OKR vs drift-to-bad-OKR vs drift-to-
-  neither-framework's-canonical
-- Surface in Step 5 (recommendations) with discipline-drift framing, not
-  framework-identity framing
-
-This step's outputs feed Step 4 (gaps/risks) as cross-layer pattern observations.
+After Step 3.5, run the artifact stack through OKR-drift signals across D1/D2/D3/D4/Substrate. Load `references/cross-validation-checks.md` §OKR-drift for the full per-layer signal list. Key framing rule: most "drift to OKR" is actually drift toward bad OKR shape that Wodtke would also reject — discipline-drift, not framework-drift.
 
 ### Step 4 — Identify gaps and risks
 

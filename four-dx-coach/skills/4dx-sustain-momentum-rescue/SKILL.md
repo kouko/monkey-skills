@@ -96,53 +96,7 @@ of Execution* 2nd ed., Simon & Schuster, p 202.
 
 ## A1 — Past Application
 
-### Case 1: Store 334 — re-adding D4 rescued a dying D1-3 stack
-- **Problem**: A grocery store ranked 250th of 250. WIG, lead measures,
-  and scoreboard were in place but the operation kept declining; manager
-  Jim Dixon was working 16 days straight, micromanaging, no vacation.
-- **Methodology applied**: Diagnostic localized the break at D4 — there
-  was no cadence of accountability. D1-3 alone were dying. The
-  intervention was *only* re-installing weekly WIG Sessions with
-  self-chosen peer commitments.
-- **Conclusion**: The cadence was the active ingredient holding the
-  other three together. Without D4, D1-3 decay.
-- **Outcome**: Store 334 became a top performer.
-
-### Case 2: Stengel's 2 a.m. Beijing WIG Session
-- **Problem**: A senior leader's travel schedule put him 13 time zones
-  away from his team's normal session time; the easy choice was to skip
-  one week.
-- **Methodology applied**: He held the cadence sacred — got up at 2 a.m.
-  Beijing time so the team's session went ahead at its normal hour.
-- **Conclusion**: Cadence-sacred is itself a leadership signal;
-  rescheduling teaches the team that the WIG is optional.
-- **Outcome**: The team's commitment-fulfillment rate held; the
-  alternative — one skip — empirically tends to cascade into permanent
-  drift (CE-11).
-
-### Case 3: Mike Crisafulli — refusing unexplained results
-- **Problem**: An IT executive received unexpectedly good lag-measure
-  numbers; the natural move was to celebrate and move on.
-- **Methodology applied**: He declined to claim the win until he could
-  trace it to specific lead-measure behavior — humility as diagnostic
-  discipline.
-- **Conclusion**: Unexplained wins are as dangerous as unexplained
-  losses; both indicate the model isn't actually understood.
-- **Outcome**: The team learned to attribute results, which made the
-  scoreboard credible long-term.
-
-### Case 4: Susan / Bianca / Marcus — accountability with respect
-- **Problem**: A direct report (Bianca) repeatedly missed commitments;
-  another (Marcus) was so overwhelmed he was hijacking his team's
-  frontline work instead of leading.
-- **Methodology applied**: A non-judgmental dialogue pattern — name the
-  miss, ask what happened, ask what's needed, re-commit to a smaller
-  scope — applied without blame but without skipping the conversation.
-- **Conclusion**: Accountability conversations work when they're
-  diagnostic and respectful; they fail when they're punitive or skipped.
-- **Outcome**: Re-engagement without rupture. (Re-anchored for solo:
-  the same dialogue runs between user and self, with the agent as
-  witness.)
+Four worked cases (Store 334 D4 rescue / Stengel 2am Beijing WIG-Session / Crisafulli refusing unexplained results / Susan-Bianca-Marcus accountability with respect). Load `references/rescue-cases.md` for full case writeups when constructing per-layer rescue recommendation rationale or when user's stalled-implementation pattern resembles a documented case.
 
 ---
 
@@ -314,52 +268,9 @@ and authority note.)
    - Completion criterion: a specific, deliverable, sub-30-min
      commitment is named for the next 7 days.
 
-### 3 Steps to Accountability — handling a missed commitment
+### 3 Steps to Accountability — handling a missed commitment (load `references/accountability-recovery-script.md`)
 
-When a team member (or, for solo users, the user themselves vis-à-vis
-the agent-as-witness) misses a commitment, the response shapes whether
-the cadence survives. Skipping the conversation teaches that
-commitments are optional; punishing it ruptures the relationship. The
-book provides a 3-step script that holds the standard *and* preserves
-the relationship. Use verbatim phrasing where shown — the wording is
-load-bearing, not decorative.
-
-1. **Demonstrate Respect.** Open by acknowledging the person and the
-   reality of the whirlwind that crowded out the commitment. Sample
-   script (Jeff/event example, book p 266): *"Jeff, I want you to
-   know that the event last week was a huge success, and without
-   you, it could have been a disaster. Everyone on this team
-   understands how hard you worked and how important this client is
-   to us. Thank you for everything you did."* What it does: shows
-   respect for the person AND for the whirlwind. Skipping this step
-   sends two incorrect messages — that the person is not valued, and
-   that the whirlwind is not important.
-2. **Reinforce Accountability.** Name the standard: commitments are
-   unconditional. Sample script (book p 267): *"Jeff, I also want
-   you to know how important your contribution is to this team.
-   Without you, we can't reach our goal. This means that when we
-   make a commitment, we have to find a way to fulfill it no matter
-   what happens during the week."* What it does: sets the discipline
-   boundary that prevents whirlwind from continually overwhelming
-   WIG-work. Without this step, the respect from step 1 is heard as
-   permission to keep slipping.
-3. **Encourage Performance.** Give the person a path back to the
-   team. Sample script (book p 267): *"Jeff, I know you want to help
-   us follow through. Can we count on you to catch up, by fulfilling
-   last week's commitment as well as the one you were planning on
-   making for next week?"* What it does: opens the door to report
-   with pride that all commitments have been fulfilled. Closes the
-   interaction without breaking the relationship.
-
-Solo adaptation: when the user runs both sides of this dialogue
-themselves (with the agent as witness), the three steps still apply —
-the agent surfaces the missed commitment, the user gives themselves
-respect for the whirlwind, names the standard out loud, and commits
-the recovery move. Skipping any step replicates the failure mode the
-book warns against.
-
-Source: McChesney/Covey/Huling/Thele/Walker (2021), *The 4 Disciplines
-of Execution* 2nd ed., Simon & Schuster, pp 266-267.
+Canonical 3-step recovery script (Demonstrate Respect → Reinforce Accountability → Encourage Performance) with verbatim sample dialogues from book pp 266-267 (Jeff/Serena example). Load `references/accountability-recovery-script.md` when the user reports a missed commitment, leader-vs-team confrontation moment, or when modeling the recovery dialogue. Key framing: commitments are *unconditional*; the script preserves relationship while resetting the discipline boundary.
 
 ---
 
@@ -429,29 +340,9 @@ of Execution* 2nd ed., Simon & Schuster, pp 266-267.
 - **Coaching / therapy.** The skill stops at substrate. It will
   refuse to act as a substitute for those.
 
-### Industry-experience addendum (habit + Path + grit literature)
+### Industry-experience addendum (habit + Path + grit literature) (load `references/industry-grounding.md` §addendum)
 
-The book localizes sustain-failure at the substrate. Behavioral-science
-literature adds three structural mechanisms upstream of substrate,
-each more actionable for the rescue dialogue. Primary citations in
-`references/industry-grounding.md`:
-
-- **Clear, *Atomic Habits* (Avery, 2018)** — "never miss twice":
-  missing once is an accident, missing twice starts a new bad habit.
-  Rescue threshold is **week-2, not week-4** — the second skipped
-  WIG Session is the intervention trigger, not the fourth.
-- **Heath & Heath, *Switch* (Crown, 2010)** — Direct/Motivate/**Shape
-  the Path**. When motivation drops, change the environment, not the
-  will. "Don't catch up, just resume" *is* Path-shaping; rescue
-  commitments must be the smallest unmistakable next move (≤30 min,
-  single commitment).
-- **Duckworth, *Grit* (Scribner, 2016)** — passion (long-term direction)
-  vs perseverance (effort despite setbacks). Step 2's "is the WIG
-  still wildly important?" *is* the passion test; without it, rescue
-  reinstalls perseverance on a passion the user has quietly outgrown.
-  Caveat: Crede et al. (2017) meta-analysis shows grit's predictive
-  validity is largely conscientiousness — treat passion-vs-perseverance
-  as a diagnostic frame, not an independent trait.
+Sustain-rescue's grounding extends beyond book-canonical sources to include behavioral-habit / change-Path / grit-literature anchors (Duhigg / Heath & Heath / Duckworth + others). Load `references/industry-grounding.md` §addendum (or final section) for the full citation list + mechanism notes per source.
 
 ---
 
