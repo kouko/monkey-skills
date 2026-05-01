@@ -350,6 +350,7 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 | 9 | Whirlpool | ★ marketing — outcome-only ($5.7M / 90 days) | ★ search snippet only | Outcome calibration only |
 | 10 | IT Lead Measures gist (meredian/GitHub) | ★★ partial — 6 example sets, no real-org context | ★★ direct read (gist text) | `4dx-d2-lead-measures` IT-context calibration; not real implementation |
 | 11 | Hashimoto note article (JP small-team) | ★★ partial — author admits 2 verbatim failure compromises (D3 scoreboard skipped, sustaining drift toward easy work) | ★★★ direct WebFetch read | **JP-context partial-failure anchor** — the only public JP source where a practitioner names compromise modes verbatim. See expanded entry below. |
+| 12 | Lou Franco — software-founder personal-scope 4DX series (loufranco.com, 2024) | ★★ partial — full WIG句型 + lead measures + cadence, but solo / personal scope, no D3 design, no team context | ★★★ direct playwright read | **SaaS / product-founder context anchor** — closest public case to SaaS / e-commerce industry. See expanded entry below. |
 
 ### #11 expanded — Hashimoto note (JP partial-failure anchor)
 
@@ -381,6 +382,44 @@ A case-bank-eligible source needs **both** ★★★ on disclosure AND ≥★★
 **Do NOT generalize this case to**: cases where Hashimoto's compromises actually DID lead to failure (the article is forward-optimistic; he doesn't track outcomes). Cite the verbatim admissions only as anti-pattern flags, not as failure-case verdicts.
 
 **Disclosure / verification grade**: ★★ partial disclosure (D3 + sustaining only; D1-D2-D4 unspecified) × ★★★ direct read.
+
+### #12 expanded — Lou Franco software-founder series (SaaS / product-context anchor)
+
+**Source**: Lou Franco, "4DX: Applying the Second Discipline" (and companion posts "Applying the First Discipline" / "Applying the Third Discipline"), loufranco.com personal blog, 2024-01-06. Author: software engineer + indie product founder; blog tagline "code, apps, and writings."
+**Public URL**: https://loufranco.com/blog/4dx-applying-the-second-discipline
+**License note**: Personal blog post; cite with attribution.
+
+**Naming context**: This is the closest public case to SaaS / e-commerce industry. Most 4DX implementation literature documents traditional sectors (manufacturing, hospitality, healthcare, education, government); tech industry generally uses OKR rather than 4DX. See SaaS / e-commerce structural absence note below in Structural gaps.
+
+**Scope**: Personal / solo (founder-as-individual), three concurrent WIGs spanning Work + Fitness + Personal Growth. The Work WIG sits in indie-SaaS / product-founder context.
+
+**Verbatim D1 (Work WIG only)**:
+> *"no launch blockers in the product by March 31, 2024"*
+
+**Verbatim D2 (Work lead measure)**:
+> *"4+ coding hours on launch blockers per week"*
+
+**Verbatim founder-context framing** (whirlwind / WIG distinction in indie-SaaS register):
+> *"My partner and I are still experimenting, supporting early users, and possibly pivoting. I obviously need to work more than 4 hours per week on the project, but the majority of them are spent dealing with what the business needs today. My WIG is about how we get to the next level."*
+
+This is the **whirlwind ~80% / WIG ~20% capacity model articulated in indie-SaaS founder language** — verbatim distinction between (a) "what the business needs today" (operational whirlwind: experiments, early-user support, pivot exploration) and (b) "how we get to the next level" (strategic WIG-protected slice). The "4 hours per week" target deliberately undershoots intuitive capacity; Franco notes "that might seem like too little — which is common in 4DX goals" — operationalizing the book's ≤20%-allocation rule.
+
+**Cadence**: 13-week check-in interval (longer than the standard weekly WIG Session — Franco is running solo without a team-accountability layer, so the 13-week pacing replaces the weekly session). Verbatim: *"I will be checking in every 13 weeks to see if I am moving the lag measure, and adjust if not."*
+
+**What's missing (vs Tier 1)**:
+- No D3 scoreboard design disclosed (mentions tracking but no element-by-element layout)
+- No team-context (solo only)
+- No outcome data yet (article published Jan 2024 with March 2024 deadline; no follow-up post documenting whether the WIG was achieved)
+- No failure narrative
+
+**Cross-skill applicability**: `4dx-meta-strategy-triage` (solo / founder-scope fit-check); `4dx-meta-whirlwind-triage` (founder-context whirlwind articulation — "what the business needs today" verbatim); `4dx-d1-wig-formulation` personal-define (well-formed solo WIG句型 in product context); `4dx-d2-lead-measures` personal-discover (hours-per-week behavioral lead measure pattern, with explicit modesty about the small target).
+
+**Use this case when**: indie SaaS / product founder context; solo-scope WIG formulation; user articulates whirlwind in product-development language ("supporting early users", "pivoting", "what the business needs today"); user asks "isn't 4 hours/week too little?" — Franco's verbatim acknowledgment + the book's stated rule are the answer.
+**Do NOT generalize this case to**: team-scale SaaS / e-commerce contexts (Franco is solo); contexts where the lag has fast feedback (Franco's lag is binary "no launch blockers" with hard deadline — different from SaaS metrics like MRR / CAC / churn that update continuously). Do NOT cite as evidence of "4DX works for SaaS" — N=1 personal-scope is not org-scale evidence.
+
+**Disclosure / verification grade**: ★★ partial disclosure (D1 + D2 + cadence-shape; no D3 design, no team scope, no outcome data) × ★★★ direct playwright read.
+
+---
 
 **Tier 2 promotion path**: each Tier 2 case should be re-verified via direct read before being promoted to anchor candidacy. Search snippets are summary-level and may be paraphrased.
 
@@ -444,6 +483,21 @@ Documented honestly so future research rounds don't waste cycles re-discovering 
 - The JP-specific 形骸化 vocabulary is itself useful — appears in Hashimoto title + at least 6 OKR-failure articles. Worth injecting into agent's JP-context anti-pattern dictionary even without a Tier 1 JP anchor.
 - Future research direction: actively monitor JP business blogs / note.com / Qiita for failure narratives that emerge over time. Not currently in supply but may become available.
 
+### SaaS / e-commerce industry — structural absence
+
+**The gap**: No public Tier 1 ★★★ disclosure case exists for a major SaaS company or e-commerce platform. Tier 1 cases are: hotel hospitality (Opryland), public higher-education (CSN), Polish digital agency (Bravelab.io), and US healthcare (Methodist Le Bonheur). Lou Franco (#12, Tier 2) is the closest SaaS / product-context anchor — but it's solo founder personal-scope, not team-scale.
+
+**Root causes** (validated through 4 search rounds, 2026-05-01):
+
+1. **Tech industry preference for OKR over 4DX** — Google, Atlassian, HubSpot, Salesforce, Shopify, etc. publicly use OKR. 4DX has a different positioning ("execution layer that runs underneath OKRs" per FranklinCovey + mooncamp) but didn't achieve the cultural penetration that OKR did in tech.
+2. **Acknowledged poor fit for knowledge-heavy software work** — credible practitioner commentary (mooncamp): *"Lead measures work beautifully when the right behavior is stable (dial the phone, close the ticket), but in research, engineering, or design, the right activity this week can be the wrong one next week, which can make 4DX less suitable for knowledge-heavy software engineering work."* This is structural, not incidental.
+3. **Bravelab.io is the closest evidence** — Polish digital agency (dev shop) confirmed both that 4DX *can* be applied to SaaS-adjacent contexts AND that D2 (lead measures) collapses there in practice (verbatim: "LEAD measures didn't work"). Bravelab's failure mode aligns with the structural mismatch above — knowledge-work activities aren't stable behaviors, so behavioral leads are hard to define.
+
+**What this means for case-bank work**:
+- For SaaS / e-commerce audit-mode requests: use Lou Franco for solo / founder context; use Bravelab.io for small team / digital-agency context; cite IT Lead Measures gist (Tier 2 #10) for IT-context lead-measure compilation. None give org-scale SaaS evidence.
+- For SaaS / e-commerce coach-mode requests: agent should flag the structural fit question explicitly — 4DX may be poorly-suited to engineering / design / product contexts where the "right activity this week" shifts. Route to `4dx-meta-strategy-triage` for fit re-verification before formulating a SaaS WIG.
+- The structural absence is itself a signal: agent should not pretend SaaS / e-commerce is well-validated 4DX territory.
+
 ### Other gaps surfaced from this research cycle
 
 - **No verbatim cadence-collapse-after-N-weeks case** in any language — common observation but not documented as a single anchor case
@@ -451,6 +505,7 @@ Documented honestly so future research rounds don't waste cycles re-discovering 
 - **No verbatim "successful pilot, failed scale-up" case** — implied but not anchored
 - **No verbatim cross-team WIG conflict case** (when team A's WIG depends on team B's resources)
 - **No verbatim member-side cascade frustration** beyond the Chesapeake F5 anonymous post
+- **No team-scale SaaS / e-commerce case** (see SaaS structural absence above)
 
 **Compensation**: Cindrich F1 + LiM F2 cover these as failure-mode descriptions even without org-anchored cases. For audit-mode verdicts, the failure-mode dictionary is sufficient; for narrative storytelling cases, the gap remains.
 
@@ -483,3 +538,4 @@ Total research time: 2 sessions (initial discovery 2026-05-01 morning; full Tier
 - 2026-05-01 (same day, second pass): full Tier 1 verification — CSN PDF read, Bravelab playwright read, Methodist Wayback read. All 4 Tier 1 cases now ★★★ verification.
 - 2026-05-01 (same day, third pass): added failure-mode dictionary (F1 Cindrich / F2 LiM / F3 Kay C Dee / F4 Bravelab / F5 Chesapeake) + 18-mode coverage matrix.
 - 2026-05-01 (same day, fourth pass): JP-focused failure search; promoted Hashimoto note to Tier 2 partial-failure anchor; documented JP-context structural gap (naming collision + lower JP framework adoption + JP corporate failure-publication norms).
+- 2026-05-01 (same day, fifth pass): SaaS / e-commerce industry search; added Lou Franco software-founder series as Tier 2 partial-disclosure anchor (#12); documented SaaS / e-commerce structural absence (tech industry's OKR preference + acknowledged poor fit for knowledge-heavy work + Bravelab as closest team-scale evidence).
