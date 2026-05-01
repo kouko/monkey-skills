@@ -2,7 +2,7 @@
 
 > Read this in: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Cross-country investing data plugin for Claude Code — five-market macro coverage (US/JP/TW/KR/CN), individual stock snapshots, DCF and screening workflows, and a delegating memo pipeline that hands analysis off to `domain-teams:investing-team`.
+> Cross-country investing plugin for Claude Code — three-layer architecture (Data / Analysis / Report) across 5 markets (US/JP/TW/KR/CN). 16 skills enforce strict separation: country-bundled `data-*` skills do pure I/O, `analysis-*` skills do pure compute, `report-*` skills orchestrate and delegate analysis to `domain-teams:investing-team`.
 
 ## Cowork compatibility
 
@@ -10,93 +10,120 @@
 
 ## Version and part-of
 
-- Version: 1.16.5
+- Version: 2.0.0
 - Part of: [`monkey-skills`](https://github.com/kouko/monkey-skills) plugin marketplace
 - License: MIT
 
+## Migrating from v1.x?
+
+v2.0.0 is a breaking change: every skill was renamed under the three-layer prefix convention (`data-*` / `analysis-*` / `report-*`) and slash commands moved with them. There is **no alias shim**. See [`docs/migration-v2.0.0.md`](docs/migration-v2.0.0.md) for the full v1.x → v2.0.0 rename map and migration walkthrough, and [`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md) for the architectural decision record.
+
 ## Background
 
-investing-toolkit is the **data layer** for cross-country investing research. It fetches primary-source macro and equity data from 14+ public providers, computes mechanical aggregates (regime calls, screens, DCF, P&L), and hands structured fixtures to `domain-teams:investing-team` for the actual analysis, gate enforcement, and BUY/HOLD/SELL verdicts. The plugin keeps `data ↔ analysis` strictly separated — toolkit code never embeds investment judgement, and domain-team code never reaches out to data sources directly. See the [Cross-Plugin Delegation Contract](#cross-plugin-delegation) below.
+investing-toolkit is the **toolkit layer** for cross-country investing research. It owns three concerns — fetching primary-source data, computing mechanical aggregates, and orchestrating delivery — and keeps each in its own layer. The toolkit never embeds investment judgement: BUY/HOLD/SELL verdicts, gate enforcement, and primary-source anchoring all live in `domain-teams:investing-team`, which `report-equity-memo` delegates to. See the [Cross-Plugin Delegation Contract](#cross-plugin-delegation) below.
 
-## Monthly GDP proxy framework
+## Architecture: three-layer + router
 
-All five country macros expose a consistent **monthly GDP proxy** so cross-market regime calls can compare like-for-like. Most major economies publish official GDP only quarterly — the proxy framework fills the monthly gap with the canonical pre-aggregated series each statistical authority already publishes.
+```
+┌─ Layer 1: Data (5 skills, country-bundled, pure I/O) ────┐
+│  data-us  data-jp  data-tw  data-kr  data-cn             │
+└──────────────────────────────────────────────────────────┘
+        ↓ pack.py outputs JSON (5 pack types: snapshot /
+        ↓ memo-fetch / comps-multiples / screener-batch /
+        ↓ regime-pack)
+┌─ Layer 2: Analysis (6 skills, pure compute) ─────────────┐
+│  analysis-dcf       analysis-comps     analysis-screener │
+│  analysis-technical analysis-portfolio analysis-macro-regime │
+└──────────────────────────────────────────────────────────┘
+        ↓ compute scripts output analysis JSON
+┌─ Layer 3: Report (4 skills, orchestrators) ──────────────┐
+│  report-equity-memo       report-stock-snapshot          │
+│  report-portfolio-review  report-screener-list           │
+└──────────────────────────────────────────────────────────┘
+        ↓ Markdown output
 
-| Market | Proxy type | Indicators |
-|--------|-----------|------------|
-| US | Pre-aggregated Fed nowcasts | `nowcast` group: GDPNow, CFNAI, WEI, OECD CLI |
-| JP | Pre-aggregated 内閣府 composite | 景気動向指数 CI trio: 一致 (proxy), 先行, 遅行 |
-| TW | Pre-aggregated NDC + DGBAS | `signal` (五色景氣燈號 — Taiwan-only), 領先指標, 同時指標 |
-| KR | Pre-aggregated BOK ECOS | 동행지수순환변동치 (proxy) + 선행지수순환변동치 |
-| CN | Raw components (no consensus aggregator) | 三大数据: industrial-yoy, retail-yoy, fai-yoy + services-production-yoy |
+Router: using-investing-toolkit
+```
 
-US/JP/TW/KR ship **pre-aggregated** values from the relevant statistical authority. CN keeps components raw — no market-consensus monthly composite exists (Li Keqiang Index is obsolete post-2012; SF Fed CAT is quarterly; Goldman / Bloomberg are proprietary), so synthesis lives in the analysis layer where methodology choice has accountability.
+**Layer rules** (ADR-0001):
 
-For sector-level (industry) cadence detail, see [`docs/industry-indicator-cadence.md`](docs/industry-indicator-cadence.md).
+| Layer | Owns | Forbidden | Cross-skill calls |
+|-------|------|-----------|-------------------|
+| Data (`data-*`) | Network I/O, tier routing, cache, single + batch fetch (`pack.py --ticker` / `--tickers`). 1 skill = 1 country = all clients for that country. | Computing indicators, formatting Markdown | none |
+| Analysis (`analysis-*`) | Pure functions: input JSON → output JSON. RSI/MACD/BB compute, DCF iteration, comps multiples, screener filter+score+rank, portfolio P&L, regime classification. | Network I/O, sub-agent dispatch — **zero exceptions** | none |
+| Report (`report-*`) | Orchestration via Bash + temp file (`data-X/scripts/pack.py > /tmp/data.json` then `analysis-Y/scripts/compute.py --in /tmp/data.json`), country routing by ticker suffix, Markdown formatting. May delegate to `domain-teams:investing-team` / `domain-teams:docs-team`. | Re-implementing a multiple, hand-rolling RSI inline, calling yfinance directly | yes (cross-plugin) |
+
+Layer-to-layer hand-off uses subprocess + temp file — deterministic, observable, replayable. Sub-agent dispatch is reserved for autonomy-required work like the `domain-teams:investing-team` Worker / Evaluator agents.
 
 ## Slash commands
 
 | Command | Routes to | Description |
 |---------|-----------|-------------|
 | `/invest` | `using-investing-toolkit` | Router — describe your goal, get dispatched |
-| `/invest-macro` | `macro-regime-snapshot` | 5-block regime dashboard (`--region us|japan|taiwan|korea|china|global|asia-pac|all|<comma-list>`) |
-| `/invest-memo {ticker}` | `investment-memo-writer` | Full memo pipeline → `domain-teams:investing-team` |
-| `/invest-screen {tickers}` | `stock-screener` | Multi-criteria screen with composite ranking |
-| `/invest-portfolio` | `invest-portfolio` | P&L snapshot + regime overlay + rebalance |
+| `/invest-macro` | `analysis-macro-regime` | 5-block regime dashboard (`--region us|japan|taiwan|korea|china|global|asia-pac|all|<comma-list>`) |
+| `/invest-memo {ticker}` | `report-equity-memo` | Full memo pipeline → `domain-teams:investing-team` |
+| `/invest-screen {tickers}` | `report-screener-list` | Cross-country grouped screen with composite ranking |
+| `/invest-portfolio` | `report-portfolio-review` | P&L snapshot + regime overlay + rebalance |
+| `/invest-snapshot {ticker}` | `report-stock-snapshot` | Snapshot card; auto-routes by ticker suffix to `data-{country}` |
 
-## Skills
+## Skill catalog (16)
 
-15 skills, organised in three layers + a router.
+### Layer 1: Data (5 skills)
 
-### Data layer
+Each `data-{country}/scripts/pack.py` exposes 5 pack modes — `snapshot` / `memo-fetch` / `comps-multiples` / `screener-batch` / `regime-pack` — and supports both `--ticker` (single) and `--tickers` (batch) modes.
 
-| Skill | Description |
-|-------|-------------|
-| `us-macro` | FRED CSV — 31 series across 14 groups (rates / inflation / growth / nowcast / real-rates / pmi / swap-spreads + 7 sector groups mapped to ETFs) |
-| `japan-macro` | BOJ + 統計ダッシュボード + ECB SDMX + MoF JGBi auction snapshot — 27 presets, 10 groups including `real-rates` C+D+E multi-source |
-| `taiwan-macro` | stat.gov.tw + CBC + DGBAS + NDC — 32 indicators including 五色景氣燈號 + CIER PMI/NMI |
-| `korea-macro` | FinanceDataReader BOK ECOS-KEYSTAT — 54 indicators / 13 groups including monthly industry activity layer |
-| `china-macro` | NBS new-SPA API + PBOC/Caixin via akshare + FRED + yfinance — 36 indicators including Caixin + NBS PMI dual-source |
-| `us-stock-snapshot` | yfinance price/valuation + SEC EDGAR 10-K/10-Q/8-K + XBRL facts + Item-section narrative |
-| `taiwan-stock-snapshot` | MOPS JSON + TWSE/TPEx OpenAPI Tier A primary, FinMind Tier 2 fallback (三大法人 / 月營收 / 融資融券 / 董監持股 / 重大訊息) |
-| `japan-stock-snapshot` | EDINET v2 + TDnet (Yanoshin) + yfinance `.T` — dual-mode (Tier A with `EDINET_API_KEY`, Tier 2 yfinance financials without) |
-| `technical-snapshot` | RSI-14 / MACD-12-26-9 / Bollinger-20 / ATR-14 / SMA-20-50-200 from OHLCV |
+| Skill | Clients bundled | Notes |
+|-------|----------------|-------|
+| `data-us` | yfinance, sec_edgar, fred | SEC EDGAR Tier A primary; yfinance batch native |
+| `data-jp` | yfinance, edinet, tdnet, boj, estat, ecb | EDINET-key tier routing inside `pack.py` |
+| `data-tw` | yfinance, mops, twse_openapi, finmind, cbc, dgbas, ndc, statgov | MOPS + TWSE Tier A; FinMind Tier 2 fallback |
+| `data-kr` | yfinance, fdr | FDR via BOK ECOS-KEYSTAT |
+| `data-cn` | yfinance, nbs, akshare, fred | NBS new-SPA API |
 
-### Aggregation layer
+### Layer 2: Analysis (6 skills, pure compute)
 
-| Skill | Description |
-|-------|-------------|
-| `macro-regime-snapshot` | 5-country IC + Hedgeye GIP regime call + Rate Stress Dashboard (real rate + swap spread); 5×9 cross-country coverage grid |
-| `stock-screener` | Composite-score screener over user-supplied ticker list (8 presets: value / deep-value / quality / high-dividend / growth / growth-value / momentum / balanced) |
-| `dcf-valuation` | 3-stage DCF (Damodaran 2012 Ch.12) + 3×3 sensitivity table + Graham/Klarman verdict |
-| `invest-portfolio` | Holdings parser + batch price fetch + macro overlay + position P&L |
+| Skill | Compute | Output |
+|-------|---------|--------|
+| `analysis-dcf` | 3-stage DCF (Damodaran 2012 Ch.12) + 3×3 sensitivity | Intrinsic value range JSON |
+| `analysis-comps` | Peer multiples median/mean/quartile + anchor delta (Trailing P/E, Forward P/E, EV/EBITDA, P/S, P/B) | Comps table JSON |
+| `analysis-screener` | Filter + composite score + ranking (8 presets: value / deep-value / quality / high-dividend / growth / growth-value / momentum / balanced) | Top-N JSON |
+| `analysis-technical` | RSI-14 / MACD-12-26-9 / Bollinger-20 / ATR-14 / SMA-20-50-200 from OHLCV | Indicators JSON |
+| `analysis-portfolio` | Position P&L + holdings statistics | Review JSON |
+| `analysis-macro-regime` | 5-country IC + Hedgeye GIP regime call + Rate Stress Dashboard | Regime card JSON |
 
-### Delegation layer
+### Layer 3: Report (4 skills, orchestrators)
 
-| Skill | Description |
-|-------|-------------|
-| `investment-memo-writer` | Full memo pipeline: data-fetcher agent → macro-regime-snapshot → `domain-teams:investing-team` (Deep Equity Research Memo + 2 MUST + 4 SHOULD + 1 MAY gates) → optional `domain-teams:docs-team` |
+| Skill | Orchestration | Final output |
+|-------|---------------|--------------|
+| `report-equity-memo` | data → analysis-* → delegate to `domain-teams:investing-team` (Deep Equity Research Memo + 2 MUST + 4 SHOULD + 1 MAY gates) → optional `domain-teams:docs-team` | Investment memo (Markdown) |
+| `report-stock-snapshot` | Auto-detects country via ticker suffix → `data-{country}/pack.py --pack snapshot` → format card | Snapshot card (Markdown) |
+| `report-portfolio-review` | Per position → batch `data-{country}` per country → `analysis-portfolio` → `analysis-macro-regime` overlay → format | Portfolio review (Markdown) |
+| `report-screener-list` | Parse list → group by country → parallel `data-{country} --pack screener-batch` → concatenate → `analysis-screener` → format top-N | Screener result table (Markdown) |
 
 ### Router
 
 | Skill | Description |
 |-------|-------------|
-| `using-investing-toolkit` | Entry point — intent routing for the 14 skills above |
+| `using-investing-toolkit` | Entry point — intent routing for the 15 skills above |
 
-## Architecture
+## Quick start examples
 
+```bash
+# Equity memo for AAPL — orchestrates data-us → analysis-dcf + analysis-comps + analysis-technical → investing-team
+/invest-memo AAPL
+
+# Cross-country screener over a mixed list
+/invest-screen AAPL,MSFT,2330.TW,7203.T --preset quality
+
+# Snapshot card; ticker suffix auto-routes to data-tw
+/invest-snapshot 2330.TW
+
+# Macro regime dashboard for Asia-Pac
+/invest-macro --region asia-pac
+
+# Portfolio review (CSV path or inline list)
+/invest-portfolio --holdings my-holdings.csv
 ```
-slash command           skill                       agent / delegate           data source
-─────────────           ─────                       ────────────────           ───────────
-/invest-memo NVDA   →   investment-memo-writer  →   data-fetcher (haiku)   →   yfinance, FRED, ...
-                                                ↘   macro-regime-snapshot
-                                                ↘   domain-teams:investing-team   (analysis + gates)
-                                                ↘   domain-teams:docs-team        (optional)
-```
-
-Single source of truth for adapters lives in [`scripts/`](scripts/). Each `*_client.py` is callable three ways: as a `uv run` subprocess from any skill, as an MCP tool registered in [`servers/mcp_server.py`](servers/mcp_server.py) (29 tools across 18 clients), or directly as a Python module. Both subprocess and MCP paths return byte-identical JSON; a CI guard (`tests/test_mcp_equivalence_auto.py`) keeps them in lockstep.
-
-Skill-local copies under `skills/*/scripts/` are kept in sync from the canonical `scripts/` via [`sync-scripts.sh`](scripts/sync-scripts.sh) and verified by [`sync-check.sh`](scripts/sync-check.sh) in CI.
 
 ## Setup
 
@@ -122,7 +149,7 @@ Full troubleshooting and the Cowork retrospective: [`docs/mcp-setup.md`](docs/mc
 
 ## Data sources
 
-Adapters in [`scripts/`](scripts/) — primary-source where available, free-tier only.
+Adapters live in [`scripts/`](scripts/) as the **canonical home**. Each `data-{country}/scripts/` folder receives MD5-locked copies; CI fails any drift. See [`scripts/README.md`](scripts/README.md) and [`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md) §Acceptable Duplications.
 
 | Region | Adapter | Source |
 |--------|---------|--------|
@@ -148,38 +175,39 @@ Adapters in [`scripts/`](scripts/) — primary-source where available, free-tier
 
 ## Cross-plugin delegation
 
-investing-toolkit is the data layer; analysis lives in `domain-teams:investing-team`. Delegation passes paths and structured seed context — never file contents — and lets the target skill enforce its own gates.
+investing-toolkit owns data fetch + mechanical compute + orchestration. Investment **analysis** lives in `domain-teams:investing-team`. The bridge is `report-equity-memo` — it gathers JSON outputs from Layer 1 + Layer 2 and delegates to `investing-team`, passing **paths** (not file content) and structured seed context. The target skill enforces its own gates.
 
 ```
-investing-toolkit                    domain-teams:investing-team
-  investment-memo-writer    ───→     Deep Equity Research Memo protocol
-                                       2 MUST gates
-                                       4 SHOULD gates
-                                       1 MAY gate (Taiwan Local Rigor)
-                                     verdict: BUY / HOLD / SELL  ───→ back to caller
-                                       ↓ (optional)
-                                     domain-teams:docs-team
-                                       polished formatting
+investing-toolkit                              domain-teams:investing-team
+  report-equity-memo                ───→       Deep Equity Research Memo protocol
+    Layer 1: data-{country}/pack.py              2 MUST gates
+    Layer 2: analysis-dcf + analysis-comps       4 SHOULD gates
+             + analysis-technical                1 MAY gate (Taiwan Local Rigor)
+                                               verdict: BUY / HOLD / SELL  ───→ back to caller
+                                                 ↓ (optional)
+                                               domain-teams:docs-team
+                                                 polished formatting
 ```
 
-The contract is documented at [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-Plugin Delegation Contract. Toolkit skills do not duplicate `investing-team` standards, do not run gate logic locally, and pass path references rather than file content. The `data-fetcher` agent is I/O only and never analyses.
+The contract is documented at [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-Plugin Delegation Contract. Toolkit skills do not duplicate `investing-team` standards, do not run gate logic locally, and pass path references rather than file content.
 
 ## Cross-country reference docs
 
+- [`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md) — three-layer architecture decision record
+- [`docs/migration-v2.0.0.md`](docs/migration-v2.0.0.md) — v1.x → v2.0.0 rename map and migration walkthrough
 - [`docs/design-principles.md`](docs/design-principles.md) — empirical-first design rule (lessons from v1.14.0 + v1.16.3 hypothesis-vs-reality misses)
 - [`docs/industry-indicator-cadence.md`](docs/industry-indicator-cadence.md) — sector coverage + release cadence comparison across 5 markets
 - [`docs/mcp-setup.md`](docs/mcp-setup.md) — install, troubleshooting, Cowork sandbox retrospective, MCP vs subprocess token/latency trade-off
-- Per-country deep references inside each skill: `skills/{country}-macro/references/`, `skills/{country}-macro/docs/` (BOK ECOS catalogue, NBS 2908-leaf tree, JGBi auction history, etc.)
 
 ## Version history
 
-See [`ROADMAP.md`](ROADMAP.md) for full version history (v1.0.0 → v1.16.5) and roadmap toward v2.0.0 (backtesting + factor models). Recent releases: v1.16.5 (Phase 3 retarget to investing-team), v1.16.4 (TWSE `/rwd/` wiring + design-principles doc), v1.16.3 (empirical yfinance validation).
+See [`ROADMAP.md`](ROADMAP.md) for full version history (v1.0.0 → v2.0.0). Recent: v2.0.0 (three-layer refactor + `analysis-comps`), v1.16.5 (Phase 3 retarget to investing-team), v1.16.4 (TWSE `/rwd/` wiring + design-principles doc).
 
 ## Contributing
 
 - Bug reports and PRs: [github.com/kouko/monkey-skills/issues](https://github.com/kouko/monkey-skills/issues)
 - For Cowork-related issues, please check [`docs/mcp-setup.md`](docs/mcp-setup.md) first — it is almost certainly the documented sandbox limitation, not a plugin bug
-- New data adapter PRs welcome; please follow the existing `*_client.py` pattern (`register_mcp_tools()` + subprocess CLI + cache TTL header) and add a contract test fixture
+- New data adapter PRs welcome; please follow the existing `*_client.py` pattern (`register_mcp_tools()` + subprocess CLI + cache TTL header) and add a contract test fixture. Place the adapter in `scripts/` (canonical) and add the consuming `data-{country}` skill to `scripts/sync-clients.sh`
 
 ## License
 

@@ -45,7 +45,88 @@ around hypotheses alone.
 
 ---
 
-## 2. Derived practice — the pre-design probe
+## 2. Three-layer architecture (Data / Analysis / Report) — codified v2.0.0
+
+**Rule**: Every skill belongs to exactly one of three layers
+(`data-*` / `analysis-*` / `report-*`) with strict layer-responsibility
+separation.
+
+**Why the rule exists**: Through v1.x the toolkit grew to 15 skills
+with overlapping concerns. Two structural problems became blocking:
+
+- **Mixed concerns inside a single skill** — `us-stock-snapshot`,
+  `japan-stock-snapshot`, `taiwan-stock-snapshot`, `dcf-valuation`,
+  `stock-screener`, `invest-portfolio`, `investment-memo-writer` all
+  bundled fetch + compute + format. When TWSE OpenAPI added `/rwd/`
+  in v1.16.3, edits had to be replayed across several skills with
+  subtle drift.
+- **50+ duplicate client files** — `yfinance_client.py` in 11 skills,
+  `fred_client.py` in 7, `ta_client.py` in 3, each silently drifting
+  between PRs because there was no CI gate enforcing sync.
+
+### Layer responsibilities
+
+| Layer | Owns | Forbidden | Cross-skill calls |
+|---|---|---|---|
+| **Data** (`data-*`) | Network I/O, tier routing, cache, batch dispatch. Country-bundled (1 skill = 1 country = all clients for that country). | Computing indicators, ranking, formatting Markdown | **none** — leaf nodes |
+| **Analysis** (`analysis-*`) | Pure functions: input JSON → output JSON. RSI/MACD/BB, DCF, comps multiples, screener filter+score+rank, portfolio P&L, IC+GIP regime. | Network I/O, file fetch, sub-agent dispatch — **zero exceptions** | none |
+| **Report** (`report-*`) | Orchestration, country routing (ticker suffix → which `data-{country}`), Markdown formatting. May delegate to `domain-teams:investing-team` / `domain-teams:docs-team`. | Re-implementing a multiple, hand-rolling RSI inline, calling yfinance directly | yes (cross-plugin via plugin-name path) |
+
+### Cross-skill data passing
+
+**Main agent + temp file** is the canonical pattern (NOT sub-agent
+dispatch). The orchestrating `report-*` skill calls Bash to run
+`data-X/scripts/pack.py > /tmp/data.json`, then Bash again to run
+`analysis-Y/scripts/compute.py --in /tmp/data.json > /tmp/result.json`,
+then formats. Same shape as the Cross-Plugin Delegation Contract
+(pass paths, not content). Sub-agent dispatch is reserved for
+autonomy-required work (`investing-team` Worker / Evaluator), not
+layer-to-layer hand-off — subprocess+temp-file is deterministic,
+debuggable, replayable, and round-trip lossless.
+
+### Acceptable duplications (CI-enforced sync)
+
+Bundling clients into multiple skill folders is a deliberate trade-off:
+preserves "skill folder is self-contained" at the cost of file
+duplication. Drift is prevented by MD5 check.
+
+| File | Copies | Skills |
+|---|---|---|
+| `yfinance_client.py` | 5 | `data-us`, `data-jp`, `data-tw`, `data-kr`, `data-cn` |
+| `fred_client.py` | 2 | `data-us`, `data-cn` |
+| `nbs_client.py` | 1 | `data-cn` |
+| `akshare_client.py` | 1 | `data-cn` |
+| `ta_client.py` | canonical only | `analysis-technical` (no second consumer yet) |
+
+Mechanism: `scripts/sync-clients.sh --check` (local) +
+`.github/workflows/check-script-sync.yml` (CI, advisory in PR 1 →
+required in PR 3). On drift the workflow prints canonical/drift MD5
+plus up to 50 lines of unified diff.
+
+### What this prevents
+
+- Mixed fetch+compute+format in a single skill (the v1.x lesson).
+- Cross-skill orchestration via sub-agent dispatch (token cost +
+  serialization-layer waste for pure-function compute).
+- Silent duplication drift — CI catches MD5 mismatch before merge.
+
+### What this enables
+
+- New skills follow the prefix convention (`data-*` / `analysis-*` /
+  `report-*`) — placement is mechanical, not a judgement call.
+- Layer 2 skills are pure compute → trivially testable with synthetic
+  JSON fixtures (see `tests/analysis/`); no network mocks required.
+- Country-bundled data layer hides tier-routing complexity from the
+  analysis layer — `analysis-dcf` does not know whether
+  `data-jp` used EDINET or yfinance.
+
+**Pointer**: Full architectural details, alternatives considered,
+slash-command rename map, and PR sequencing in
+`docs/adr/0001-data-analysis-report-layers.md` (ADR-0001).
+
+---
+
+## 3. Derived practice — the pre-design probe
 
 Before opening a design plan file, spend 5-30 minutes on any of these
 that apply:
@@ -63,7 +144,7 @@ direction.
 
 ---
 
-## 3. When the probe contradicts the plan
+## 4. When the probe contradicts the plan
 
 1. **Stop. Don't ship the original plan.** (Counter-example: v1.16.3
    shipped Commits 1-5 on the wrong hypothesis, then Commit 6
@@ -80,7 +161,7 @@ direction.
 
 ---
 
-## 4. When NOT to probe (don't over-apply)
+## 5. When NOT to probe (don't over-apply)
 
 Skip empirical probing when:
 
@@ -97,7 +178,7 @@ boundary you haven't recently verified", not "probe everything".
 
 ---
 
-## 5. References to incident records
+## 6. References to incident records
 
 Full retrospective notes live in commit bodies + ROADMAP.md entries:
 

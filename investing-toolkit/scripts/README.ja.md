@@ -1,8 +1,20 @@
-# investing-toolkit Scripts
+# investing-toolkit Scripts — canonical client adapter
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
 市場およびマクロ経済データを取得するための Python data adapter。
+
+## v2.0.0 アーキテクチャでの位置付け
+
+この `scripts/` ディレクトリは共有 client adapter（`yfinance_client.py`、`fred_client.py`、`nbs_client.py`、`akshare_client.py` ほか）すべての **canonical home** です。v2.0.0 の three-layer architecture では、各 `data-{country}` skill が自身の `scripts/` 配下に必要な client の **functional copy** を保持します。Anthropic の skill-folder rule に従い、これらのコピーは消費する skill 内に物理的に存在しなければなりませんが、canonical と MD5 一致を保ちます。
+
+- **Canonical SoT（single source of truth）**: `investing-toolkit/scripts/*_client.py`
+- **Functional copy**: `investing-toolkit/skills/data-{us,jp,tw,kr,cn}/scripts/*_client.py`
+- **Sync helper**: `bash scripts/sync-clients.sh` が canonical → 全コピーへ伝播。`--check` は drift を報告し、検出時 exit 1
+- **CI guard**: `.github/workflows/check-script-sync.yml` が MD5 一致を強制。v2.0.0 から drift は CI ブロック対象
+- **アーキテクチャ決定**: [`../docs/adr/0001-data-analysis-report-layers.md`](../docs/adr/0001-data-analysis-report-layers.md) §Acceptable Duplications
+
+ここの client を変更したら commit 前に `bash scripts/sync-clients.sh` を実行してください。新しい client を新規 `data-{country}` skill が使う場合、その skill を `sync-clients.sh` の該当 `*_TARGETS` 配列に追加し、**同時に** `.github/workflows/check-script-sync.yml` にもミラーしてください。
 
 ## セットアップ
 
