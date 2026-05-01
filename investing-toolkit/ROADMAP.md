@@ -1,5 +1,38 @@
 # investing-toolkit Roadmap
 
+## v2.0.0 — Three-Layer Architecture + Comps (released 2026-05-01)
+
+**Scope**: Reorganize 15 v1.x skills into 5 data-{country} + 6 analysis-* + 4 report-* + 1 router (16 total). Add `analysis-comps` (peer multiples). Add runtime peer-discovery in `report-equity-memo`. Parallelize `fred_client` multi-series fetch (8 worker default).
+
+### Skills
+- [x] 5 Layer 1 data-{country}: data-us / data-jp / data-tw / data-kr / data-cn
+- [x] 6 Layer 2 analysis-*: analysis-dcf / analysis-comps / analysis-screener / analysis-technical / analysis-portfolio / analysis-macro-regime
+- [x] 4 Layer 3 report-*: report-equity-memo / report-stock-snapshot / report-portfolio-review / report-screener-list
+- [x] using-investing-toolkit (router)
+
+### Commands
+- [x] All v1.x slash commands preserved (`/invest`, `/invest-macro`, `/invest-memo`, `/invest-screen`, `/invest-portfolio`)
+- [x] NEW `/invest-snapshot` (single-ticker quick card)
+
+### Architecture
+- [x] ADR-0001: Three-Layer Skill Architecture
+- [x] CI MD5 sync workflow (yfinance × 5, fred × 2, nbs × 1, akshare × 1)
+- [x] sync-clients.sh canonical → copies helper
+- [x] 296 non-network + 27 network automated pytest tests
+
+### Deferred to v2.1+
+- [ ] Sector-adjusted multiples for Comps (banks P/B+ROE / REITs P/AFFO / tech EV/Revenue+Rule-of-40)
+- [ ] `analysis-comps --mode compute` activation (currently placeholder)
+- [ ] JP real-rate decomposition C+D+E framework restoration (ECB ex-post + Tankan + JGBi)
+- [ ] KR DART primary-source equity integration
+- [ ] Earnings analysis workflow (waiting for free consensus data source)
+- [ ] CI script-sync check promotion to required (currently advisory)
+
+### Dropped
+- ❌ 3-statement model (sell-side artifact, philosophy mismatch with buy-side primary-source pipeline)
+
+---
+
 ## v1.0.0 — US + Macro Layer (current)
 
 **Scope**: US stocks via yfinance + FRED macro data. Core invest* slash commands.

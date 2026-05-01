@@ -1,6 +1,6 @@
 {
   "name": "investing-toolkit",
-  "version": "2.0.0-rc.2",
+  "version": "2.0.0",
   "description": "Investing research toolkit v2.0.0 — three-layer architecture (Data / Analysis / Report). 5 country-bundled data skills (US/JP/TW/KR/CN), 6 pure-compute analysis skills (DCF, comps, screener, technical, portfolio, macro-regime), 4 report orchestrators (memo, snapshot, portfolio review, screener list) with runtime peer-discovery. 投資調査・美股・台股・日股・韓股・中國股。投資研究工具組。 ⚠️ Claude Code CLI only — Cowork sandbox blocks external data fetches.",
   "author": {
     "name": "kouko",

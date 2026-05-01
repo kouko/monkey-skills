@@ -1,8 +1,20 @@
-# investing-toolkit Scripts
+# investing-toolkit Scripts — canonical client adapters
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
 Python data adapters for fetching market and macro data.
+
+## Role in v2.0.0 architecture
+
+This `scripts/` directory is the **canonical home** for every shared client adapter (`yfinance_client.py`, `fred_client.py`, `nbs_client.py`, `akshare_client.py`, …). Under the v2.0.0 three-layer architecture, each `data-{country}` skill owns a **functional copy** of the clients it needs inside its own `scripts/` folder. Per Anthropic's skill-folder rule, those copies must physically live inside the consuming skill — but they remain MD5-identical to the canonical here.
+
+- **Canonical SoT (single source of truth)**: `investing-toolkit/scripts/*_client.py`
+- **Functional copies**: `investing-toolkit/skills/data-{us,jp,tw,kr,cn}/scripts/*_client.py`
+- **Sync helper**: `bash scripts/sync-clients.sh` propagates canonical → all copies; `--check` reports drift and exits 1
+- **CI guard**: `.github/workflows/check-script-sync.yml` enforces MD5 equality for the duplicated set; drift is a CI-blocking event in v2.0.0
+- **Architecture decision**: [`../docs/adr/0001-data-analysis-report-layers.md`](../docs/adr/0001-data-analysis-report-layers.md) §Acceptable Duplications
+
+If you change a client here, run `bash scripts/sync-clients.sh` before committing. If you add a client consumed by a new `data-{country}` skill, add the skill to the appropriate `*_TARGETS` array in `sync-clients.sh` **and** mirror it in `.github/workflows/check-script-sync.yml`.
 
 ## Setup
 

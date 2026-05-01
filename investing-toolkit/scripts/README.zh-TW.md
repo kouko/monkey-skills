@@ -1,8 +1,20 @@
-# investing-toolkit Scripts
+# investing-toolkit Scripts — canonical client adapter
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-用於擷取市場與總經資料的 Python data adapters。
+用於擷取市場與總經資料的 Python data adapter。
+
+## 在 v2.0.0 架構中的角色
+
+這個 `scripts/` 目錄是所有共用 client adapter（`yfinance_client.py`、`fred_client.py`、`nbs_client.py`、`akshare_client.py` 等）的 **canonical home**。在 v2.0.0 三層架構下，每個 `data-{country}` skill 在自己的 `scripts/` 內持有它需要的 client 的 **functional copy**。依 Anthropic 的 skill-folder rule，這些副本必須實體放在使用它們的 skill 內 — 但和 canonical 維持 MD5 一致。
+
+- **Canonical SoT（single source of truth）**：`investing-toolkit/scripts/*_client.py`
+- **Functional copy**：`investing-toolkit/skills/data-{us,jp,tw,kr,cn}/scripts/*_client.py`
+- **Sync 工具**：`bash scripts/sync-clients.sh` 把 canonical 推送到所有副本；加 `--check` 只回報 drift，有 drift 則 exit 1
+- **CI guard**：`.github/workflows/check-script-sync.yml` 強制檢查 MD5 一致；v2.0.0 起，drift 即 CI block
+- **架構決策**：[`../docs/adr/0001-data-analysis-report-layers.md`](../docs/adr/0001-data-analysis-report-layers.md) §Acceptable Duplications
+
+如果你修改了這裡的 client，commit 前請先跑 `bash scripts/sync-clients.sh`。如果你新增的 client 由新的 `data-{country}` skill 使用，請把該 skill 加入 `sync-clients.sh` 對應的 `*_TARGETS` 陣列，**同時** 在 `.github/workflows/check-script-sync.yml` 內鏡射對應條目。
 
 ## 安裝
 
