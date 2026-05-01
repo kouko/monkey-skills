@@ -126,8 +126,8 @@ for the ticker. No `_partial` flag (lightest pack).
 
 ### regime-pack
 
-Macro-only — no ticker dimension. 5 sources: `cbc`, `dgbas`, `ndc`, `statgov`
-(plus FinMind/yfinance/MOPS/TWSE OpenAPI absent here).
+Macro-only — no ticker dimension. 4 sources: `cbc`, `dgbas`, `ndc`, `statgov`
+(FinMind/yfinance/MOPS/TWSE OpenAPI absent here).
 
 > **NOTE — TW differs from `data-us`:** there is **no FRED leg**. Cross-country
 > macro callers that need both TW and US should chain `data-tw --pack regime-pack`

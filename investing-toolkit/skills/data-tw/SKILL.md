@@ -193,6 +193,10 @@ Formal JSON Schemas for each pack type live in `references/`:
 | `regime-pack` | [`references/schema-regime-pack.json`](references/schema-regime-pack.json) |
 | Error / provenance wrapper | [`references/schema-error-envelope.json`](references/schema-error-envelope.json) |
 
+Cross-pack field-level conventions (currency / time-zone / units / tier
+provenance / cache TTL / error envelope / cross-skill consumers) are
+documented in [`references/output-schema-overview.md`](references/output-schema-overview.md).
+
 CI validates each pack output against its schema (see
 `tests/data/test_pack_schemas.py`).
 

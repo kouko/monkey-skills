@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://monkey-skills/investing-toolkit/data-tw/regime-pack.json",
   "title": "data-tw regime-pack",
-  "description": "Output of `pack.py --pack regime-pack`. Macro-only fetch — NO ticker dimension. 5 sources (CBC + DGBAS + NDC + statgov; UNLIKE data-us, NO FRED). Drives `analysis-macro-regime` for the TW Investment Clock mapping.\n\nIMPORTANT — NDC cycle signal score IS NOT 1–9. It is the **9-component composite score** (`景氣對策信號綜合分數`) summed from 9 sub-indicators, each scored 1–5 → composite range 9–45. The five-color light (signal-color: 紅 / 黃紅 / 綠 / 黃藍 / 藍) is derived bands on this composite, NOT the score itself. Do NOT compare this against a 1–9 scale used by some popular charts. Source: NDC `景氣指標與燈號.csv` direct parse.",
+  "description": "Output of `pack.py --pack regime-pack`. Macro-only fetch — NO ticker dimension. 4 sources (CBC + DGBAS + NDC + statgov; UNLIKE data-us, NO FRED). Drives `analysis-macro-regime` for the TW Investment Clock mapping.\n\nIMPORTANT — NDC cycle signal score IS NOT 1–9. It is the **9-component composite score** (`景氣對策信號綜合分數`) summed from 9 sub-indicators, each scored 1–5 → composite range 9–45. The five-color light (signal-color: 紅 / 黃紅 / 綠 / 黃藍 / 藍) is derived bands on this composite, NOT the score itself. Do NOT compare this against a 1–9 scale used by some popular charts. Source: NDC `景氣指標與燈號.csv` direct parse.",
   "type": "object",
   "required": ["_pack", "cbc", "dgbas", "ndc", "statgov", "_partial"],
   "properties": {
     "_pack": {"const": "regime-pack"},
     "_partial": {
       "type": "boolean",
-      "description": "True iff any leaf carries _error. All 5 sources are Tier A here so any failure flips this flag."
+      "description": "True iff any leaf carries _error. All 4 sources are Tier A here so any failure flips this flag."
     },
     "cbc": {
       "type": "object",

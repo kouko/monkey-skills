@@ -169,7 +169,7 @@ toolkit).
 
 ## Output schema
 
-Formal JSON Schemas (draft-07) for each pack type live in `references/`:
+Formal JSON Schemas for each pack type live in `references/`:
 
 | Pack | Schema |
 |---|---|
