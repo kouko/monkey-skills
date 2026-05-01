@@ -34,6 +34,18 @@ CN memo-fetch is **deliberately Tier 2 only** in v2.0.0 — see
 with data-us where memo-fetch composes Tier A SEC EDGAR filings + XBRL
 facts on top of yfinance.
 
+## Sample fixture trim convention
+
+> **Fixture trim convention**: To keep fixtures small while preserving
+> validation coverage, history `data` arrays and observation lists in
+> `tests/data/fixtures/data-cn-*.json` are **head-truncated** (oldest
+> rows kept). The summary fields `latest_close` / `latest_date` (and
+> equivalently `latest` / `reference_period` on macro indicators)
+> reflect the most-recent observation **at fixture-capture time** and
+> may not align with the head-truncated rows. Live `pack.py` output is
+> not truncated. This convention applies to all fixtures across
+> `data-{cn,jp,kr,tw,us}`.
+
 ## Ticker normalisation
 
 `pack.py` auto-suffixes bare numeric codes per the CN/HK convention:
@@ -179,11 +191,14 @@ ways:
 3. **Stderr-only ticker-normalisation warnings** — BSE codes (`/4,8`)
    and unrecognised digit lengths emit stderr warnings and pass through
    unchanged. Documented at
-   `schema-error-envelope.json#/ticker_normalization_warnings`.
+   `schema-error-envelope.json#/$defs/tickerNormalizationWarnings`
+   (under `$defs` since this is stderr-only and not a schema-validated
+   stdout field).
 
 Subprocess timeouts (reserved shape) produce
-`{"error": "client timeout after Ns", "_cmd": [...], "_returncode": -1}`.
-Aligned with the data-us contract.
+`{"_error": "client timeout after Ns", "_cmd": [...], "_returncode": -1}`.
+Aligned with the data-us contract (uses `_error`, not bare `error`,
+to match sibling shapes).
 
 ## Cross-skill consumers
 

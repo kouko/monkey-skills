@@ -358,7 +358,7 @@
           "code": "DEXKOUS",
           "fetched_at": "2026-05-01T15:10:35Z",
           "_cache": "miss",
-          "_source": "fdr_ecos",
+          "_source": "fred",
           "observations": [
             {
               "date": "20260420",
@@ -392,8 +392,8 @@
           "direction": "Falling",
           "count": 5,
           "_provenance": {
-            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
-            "source_authority": "Bank of Korea (한국은행)",
+            "source": "FRED (Federal Reserve Bank of St. Louis)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
             "data_type": "official_government_statistics",
             "fetched_at": "2026-05-01T15:10:35Z",
             "reference_period": "20260424",

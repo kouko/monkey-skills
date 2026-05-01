@@ -28,6 +28,15 @@ contracts; this document is the human-readable index.
 All fixtures validate against their corresponding schema (verified with
 `jsonschema` 4.26.0).
 
+> **Fixture trim convention**: To keep fixtures small while preserving
+> validation coverage, history `data` arrays and observation lists are
+> **head-truncated** (oldest 5 rows kept). The summary fields
+> `latest_close` / `latest_date` (and equivalently `latest` /
+> `reference_period` on macro indicators) reflect the most-recent
+> observation **at fixture-capture time** and may not align with the
+> head-truncated rows. Live pack.py output is not truncated. This
+> convention applies to all fixtures across `data-{cn,jp,kr,tw,us}`.
+
 ## Pack-by-pack notes
 
 ### snapshot

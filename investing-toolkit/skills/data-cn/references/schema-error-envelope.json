@@ -50,11 +50,11 @@
     "timeoutError": {
       "type": "object",
       "title": "Subprocess timeout",
-      "description": "Reserved shape — pack.py does not currently set a subprocess timeout, but downstream wrappers may. Aligned with data-us contract.",
-      "required": ["error"],
+      "description": "Reserved shape — pack.py does not currently set a subprocess timeout, but downstream wrappers may. Aligned with data-us contract (uses `_error` to match sibling shapes, NOT bare `error`).",
+      "required": ["_error"],
       "additionalProperties": true,
       "properties": {
-        "error": { "type": "string", "examples": ["client timeout after 300s"] },
+        "_error": { "type": "string", "examples": ["client timeout after 300s"] },
         "_cmd": { "type": "array", "items": { "type": "string" } },
         "_returncode": { "type": "integer" }
       }
@@ -68,13 +68,14 @@
       "properties": {
         "_error": { "type": "string" }
       }
+    },
+    "tickerNormalizationWarnings": {
+      "description": "STDERR-only documentation — NOT a schema-validated field of pack.py stdout. Documented here under `$defs` so orchestrators that capture stderr alongside stdout can refer to a stable contract. Two warning classes: (a) BSE ticker detected (6-digit /4,8) — yfinance does not cover Beijing Stock Exchange; pack will likely fail. (b) Unrecognized CN ticker format — passed through unchanged. Both pass through unchanged so downstream yfinance failure propagates as a batchTickerError.",
+      "type": "string",
+      "examples": [
+        "WARNING: BSE ticker '430123' detected — yfinance does not cover Beijing Stock Exchange (北京证券交易所); pack will likely fail.",
+        "WARNING: Unrecognized CN ticker format: '12345678' (expected 4-digit HK / 5-digit HK / 6-digit SSE/SZSE)."
+      ]
     }
-  },
-  "ticker_normalization_warnings": {
-    "description": "STDERR-only — NOT part of JSON output. Documented here for orchestrators that capture stderr alongside stdout. Two warning classes: (a) BSE ticker detected (6-digit /4,8) — yfinance does not cover Beijing Stock Exchange; pack will likely fail. (b) Unrecognized CN ticker format — passed through unchanged. Both pass through unchanged so downstream yfinance failure propagates as a batchTickerError.",
-    "examples": [
-      "WARNING: BSE ticker '430123' detected — yfinance does not cover Beijing Stock Exchange (北京证券交易所); pack will likely fail.",
-      "WARNING: Unrecognized CN ticker format: '12345678' (expected 4-digit HK / 5-digit HK / 6-digit SSE/SZSE)."
-    ]
   }
 }

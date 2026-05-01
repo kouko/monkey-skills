@@ -53,5 +53,5 @@
       "not": {"required": ["data"]}
     }
   ],
-  "additionalProperties": true
+  "additionalProperties": false
 }

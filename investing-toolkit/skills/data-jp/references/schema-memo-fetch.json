@@ -154,8 +154,8 @@
       ]
     },
     "material_events": {
-      "description": "Tier A: edinet_client.py list-filings output for forms 180/220/350 (180 days, limit 15). Tier 2: stub object with `_skipped` reason key. Error envelope on subprocess failure (Tier A only).",
-      "anyOf": [
+      "description": "Tier A: edinet_client.py list-filings output for forms 180/220/350 (180 days, limit 15) — always carries `filings` array. Tier 2: stub object with `_skipped` reason key. Error envelope on subprocess failure (Tier A only). Branches are mutually exclusive via discriminator-by-required-field (`filings` vs `_skipped`).",
+      "oneOf": [
         {
           "type": "object",
           "required": [
@@ -166,11 +166,20 @@
               "type": "string"
             }
           },
-          "description": "Tier 2 stub shape."
+          "description": "Tier 2 stub shape (no `filings`, no error envelope)."
         },
         {
           "type": "object",
-          "description": "Tier A list-filings payload (no required schema enforced — depends on edinet_client output)."
+          "required": [
+            "filings"
+          ],
+          "properties": {
+            "filings": {
+              "type": "array",
+              "description": "List of filing entries from edinet_client list-filings."
+            }
+          },
+          "description": "Tier A list-filings payload — always carries `filings` array (cannot satisfy Tier 2 `_skipped` requirement)."
         },
         {
           "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"

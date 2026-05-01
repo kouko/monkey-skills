@@ -20,7 +20,7 @@
         },
         "data_type": {
           "type": "string",
-          "description": "Common values: 'official_regulatory_filing', 'official_macro_indicator', 'unofficial_scraper'."
+          "description": "Common values: 'official_regulatory_filing' (SEC filings), 'official_macro_indicator' / 'official_government_statistics' (FRED — both seen in the wild; the latter used by FRED preset bundles), 'unofficial_scraper' (yfinance)."
         },
         "update_cycle": {
           "type": "string",

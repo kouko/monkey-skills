@@ -19,6 +19,18 @@ and we want forward compatibility, not lockdown.
 | `regime-pack` | [`schema-regime-pack.json`](schema-regime-pack.json) | A | FRED macro indicator groups, no ticker dimension. Feeds `analysis-macro-regime`. |
 | Shared | [`schema-error-envelope.json`](schema-error-envelope.json) | — | Reusable provenance + error wrapper definitions, `$ref`-d by all five packs. |
 
+## Sample fixture trim convention
+
+> **Fixture trim convention**: To keep fixtures small while preserving
+> validation coverage, history `data` arrays and observation lists in
+> `tests/data/fixtures/data-us-*.json` are **head-truncated** (oldest
+> rows kept). The summary fields `latest_close` / `latest_date` (and
+> equivalently `latest` / `reference_period` on macro indicators)
+> reflect the most-recent observation **at fixture-capture time** and
+> may not align with the head-truncated rows. Live `pack.py` output is
+> not truncated. This convention applies to all fixtures across
+> `data-{cn,jp,kr,tw,us}`.
+
 ## Field dictionary (cross-pack conventions)
 
 ### Currency and units
@@ -69,7 +81,10 @@ Every fetched payload carries a `_provenance` object with at minimum
 `source`, `source_authority`, `data_type`, `update_cycle`, `typical_lag`,
 `fetched_at`. See `schema-error-envelope.json#/definitions/provenance` for
 the full field set including the `tier` enum (`A`, `2`, `2-gap`,
-`tier_1`, `tier_2`).
+`tier_1`, `tier_2`). `data_type` common values: `official_regulatory_filing`
+(SEC filings), `official_macro_indicator` / `official_government_statistics`
+(FRED — both seen in the wild; the latter used by FRED preset bundles),
+`unofficial_scraper` (yfinance).
 
 Tier semantics:
 

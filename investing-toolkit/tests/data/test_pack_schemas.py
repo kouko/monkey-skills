@@ -76,8 +76,10 @@ def _build_validator(schema_path: Path):
     for sibling in sorted(refs_dir.glob("*.json")):
         try:
             content = json.loads(sibling.read_text())
-        except json.JSONDecodeError:
-            continue
+        except json.JSONDecodeError as exc:
+            # A malformed sibling schema must fail loudly — silently
+            # skipping has masked drift bugs in earlier rounds.
+            pytest.fail(f"Malformed JSON in sibling schema {sibling}: {exc}")
         res = Resource.from_contents(content)
         # 1. bare filename
         resources.append((sibling.name, res))
@@ -119,7 +121,12 @@ def test_pack_sample_validates_against_schema(country, pack):
 
     sample = json.loads(sample_path.read_text())
     validator = _build_validator(schema_path)
-    validator.validate(sample)
+    errors = list(validator.iter_errors(sample))
+    if errors:
+        msg_lines = [f"{country}/{pack}: {len(errors)} schema violation(s):"]
+        for e in errors[:5]:
+            msg_lines.append(f"  [{e.json_path}] {e.message}")
+        pytest.fail("\n".join(msg_lines))
 
 
 # ---------------------------------------------------------------------------
@@ -166,16 +173,24 @@ def test_pack_live_output_matches_schema(country, pack, ticker):
     if pack != "regime-pack" and ticker is not None:
         args.extend(["--ticker", ticker])
 
-    proc = subprocess.run(
-        ["uv", "run", *args],
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
+    try:
+        proc = subprocess.run(
+            ["uv", "run", *args],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except subprocess.TimeoutExpired as exc:
+        pytest.fail(f"{country}/{pack}: pack.py timed out after {exc.timeout}s")
     assert proc.returncode == 0, (
-        f"pack.py failed (exit {proc.returncode}): {proc.stderr[-500:]}"
+        f"pack.py failed (exit {proc.returncode}): {proc.stderr[-2000:]}"
     )
 
     output = json.loads(proc.stdout)
     validator = _build_validator(schema_path)
-    validator.validate(output)
+    errors = list(validator.iter_errors(output))
+    if errors:
+        msg_lines = [f"{country}/{pack} live: {len(errors)} schema violation(s):"]
+        for e in errors[:5]:
+            msg_lines.append(f"  [{e.json_path}] {e.message}")
+        pytest.fail("\n".join(msg_lines))

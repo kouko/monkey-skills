@@ -159,6 +159,13 @@ truncated container carries an inline `_truncated_for_fixture` /
 are schema-compatible — `pack.py` does not emit these annotations in
 production output.
 
+> **Fixture trim convention**: Truncation is **head-truncation** (oldest
+> rows kept). Summary fields (`latest_close` / `latest_date` /
+> `latest` / `reference_period`) reflect the most-recent observation
+> at fixture-capture time and may not align with the head-truncated
+> rows. Live `pack.py` output is not truncated. Same convention
+> applies across all `data-{cn,jp,kr,tw,us}` fixtures.
+
 | Fixture                                  | Bytes  | Pack            |
 |------------------------------------------|--------|-----------------|
 | `data-jp-snapshot-sample.json`           | ~7 KB  | snapshot        |

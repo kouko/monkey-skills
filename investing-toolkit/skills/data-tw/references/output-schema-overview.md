@@ -19,6 +19,15 @@ these contracts.
 All five pack schemas reference `schema-error-envelope.json` for every leaf
 node — the wrapper produced by `pack.py wrap()`.
 
+> **Fixture trim convention**: To keep fixtures small while preserving
+> validation coverage, history `data` arrays and observation lists in
+> the sample fixtures above are **head-truncated** (oldest rows kept).
+> The summary fields `latest_close` / `latest_date` (and equivalently
+> `latest` / `reference_period` on macro indicators) reflect the
+> most-recent observation **at fixture-capture time** and may not align
+> with the head-truncated rows. Live `pack.py` output is not truncated.
+> This convention applies to all fixtures across `data-{cn,jp,kr,tw,us}`.
+
 ---
 
 ## TW-SPECIFIC: nested wrapper envelope
