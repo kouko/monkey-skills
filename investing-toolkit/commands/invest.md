@@ -2,18 +2,22 @@
 
 **Trigger**: `/invest`
 
-Route to the right investing-toolkit skill or slash command. Displays available
-capabilities and asks what you want to do.
+Route to the right investing-toolkit skill based on your investing intent.
 
 ## What This Does
 
-Invokes `skills/using-investing-toolkit/SKILL.md` — the router skill.
+Invokes `skills/using-investing-toolkit/SKILL.md` — the v2.0.0 router. Three layers:
 
-If you have a specific intent, use the more direct commands:
-- `/invest-macro` — macro regime call (IC + FRED)
-- `/invest-memo {ticker}` — full investment memo pipeline
-- `/invest-screen {ticker}` — quick stock screen (v1.2.0)
-- `/invest-portfolio` — portfolio review (v1.2.0)
+- **Data** (`data-{country}`): pure I/O for US / JP / TW / KR / CN
+- **Analysis** (`analysis-*`): pure compute (DCF, screener scoring, technical, portfolio P&L, macro regime)
+- **Report** (`report-*`): orchestration + Markdown (memo, snapshot, portfolio review, screener list)
+
+If you have a specific intent, use a direct command:
+- `/invest-macro` — 5-country macro regime call
+- `/invest-memo {ticker}` — full investment memo with verdict
+- `/invest-screen {tickers}` — cross-country stock screener with 8 presets
+- `/invest-portfolio` — portfolio review with optional regime overlay
+- `/invest-snapshot {ticker}` — single-ticker quick snapshot card
 
 ## Examples
 

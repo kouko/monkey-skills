@@ -2,21 +2,13 @@
 
 **Trigger**: `/invest-macro [--region us|japan|taiwan|korea|china|global|asia-pac|all]`
 
-Diagnose the current macro regime using the Investment Clock + Hedgeye GIP
-framework, extended with an LSEG-style real-rate decomposition block for
-the US. Routes to country-specific macro skills for data; maps each country
-to an IC phase + GIP quadrant; outputs a 5-block dashboard per country:
-
-1. **Macro Summary** — growth / inflation / labor / policy with LSEG-style
-   signal labels (Expansion/Contraction, Accommodative/Restrictive)
-2. **Yield Curve Snapshot** — 2s10s slope + curve shape
-3. **Real Rate Decomposition** — US only (T5YIE/T10YIE/DFII5/DFII10)
-4. **IC + GIP Regime Call** — phase + quadrant + divergence note
-5. **Asset-Class Tilts** — 3-row equities / fixed income / commodities
+Diagnose the current macro regime using the Investment Clock + Hedgeye GIP framework, extended with US real-rate decomposition (4-tier accommodative / neutral / moderately-restrictive / clearly-restrictive). Outputs a 5-block dashboard per country.
 
 ## What This Does
 
-Invokes `skills/macro-regime-snapshot/SKILL.md`.
+Pipeline (main agent dispatches):
+1. `data-{country}/scripts/pack.py --pack regime-pack` per requested country (parallel)
+2. `analysis-macro-regime/scripts/regime_compose.py --input us=...,jp=...,...` → IC + GIP regime card
 
 ## Examples
 
@@ -27,28 +19,29 @@ Invokes `skills/macro-regime-snapshot/SKILL.md`.
 /invest-macro --region taiwan
 /invest-macro --region korea
 /invest-macro --region china
-/invest-macro --region global                   # US + JP (backward compat)
+/invest-macro --region global                   # US + JP
 /invest-macro --region asia-pac                 # JP + TW + KR + CN
 /invest-macro --region all                      # 5 markets side-by-side
 /invest-macro --region us,korea                 # Free-form comma list
 ```
 
+## Routing
+
+Each `data-{country}` bundles its country's macro sources:
+
+| Country | Sources |
+|---|---|
+| US | FRED (31 series; nowcast/rates/inflation/swap-spreads/real-rates groups) |
+| JP | BOJ + e-Stat + ECB (real-rate via Fisher decomposition; v2.1+ extends to JGBi C+D+E) |
+| TW | stat.gov.tw + CBC + DGBAS + NDC (五色景氣燈號 9-45 composite) |
+| KR | FinanceDataReader → BOK ECOS-KEYSTAT (54 indicators) |
+| CN | NBS new-SPA + akshare (PBOC + Caixin) + FRED USDCNY |
+
+`analysis-macro-regime` then classifies each country's growth × inflation directions → IC quadrant + GIP regime; emits cross-country consensus when >1 country requested.
+
 ## Notes
 
-- Countries delegate to their own macro skills: `us-macro` (FRED),
-  `japan-macro` (BOJ + e-Stat), `taiwan-macro` (stat.gov.tw + CBC + DGBAS +
-  NDC), `korea-macro` (BOK ECOS via FinanceDataReader), `china-macro`
-  (NBS + PBOC via akshare).
-- All data sources are free — no API keys required for core operation.
-  `FRED_API_KEY` optional for higher US rate limits.
-- Block 3 renamed "Rate Stress Dashboard" in v1.10.0: 3a Real Rate
-  Decomposition covers US (unchanged from v1.9.0) + JP (new via
-  C+D+E: MoF JGBi auction anchor + ECB monthly ex-post + BOJ Tankan
-  期待インフレ). 3b Swap Spread (Treasury-SOFR 3M proxy) is US-only.
-  TW has no free linker market; KR KTBi deferred to v1.11.0+ (ECOS
-  API key); CN has no linker market. Full MoF 連動係数 + QuantLib
-  YTM solver for daily JGBi real yield = v1.11.0 candidate.
-- Publication lags: CPI ~2-3 weeks, monthly GDP proxies ~3-6 weeks
-  after reference month. Always cite reference dates in Confidence Note.
-- For full analysis with investment verdict → use `/invest-memo` or
-  `domain-teams:investing-team`.
+- All data sources are free (no API key needed for core operation; `FRED_API_KEY` optional for higher US rate limits)
+- Real-rate decomposition: US uses Fisher (Nominal − Breakeven) + optional DFII identity check; JP returns null (v2.1 restoration tracked in `analysis-macro-regime/references/japan-real-rate-roadmap.md`); TW / CN have no linker market; KR KTBi deferred
+- Publication lags: CPI ~2-3 weeks, monthly GDP proxies ~3-6 weeks after reference month
+- For full analysis with investment verdict → use `/invest-memo` or `domain-teams:investing-team`
