@@ -1,0 +1,1660 @@
+{
+  "_pack": "memo-fetch",
+  "_ticker": "2330.TW",
+  "_normalized": {
+    "ticker_yf": "2330.TW",
+    "ticker_code": "2330",
+    "market": "sii"
+  },
+  "yfinance": {
+    "info": {
+      "_tier": "2",
+      "_source": "yfinance",
+      "_action": "info",
+      "data": {
+        "ticker": "2330.TW",
+        "fetched_at": "2026-05-01T15:09:00Z",
+        "_cache": "hit",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "2330.TW",
+        "shortName": "TAIWAN SEMICONDUCTOR MANUFACTUR",
+        "longName": "Taiwan Semiconductor Manufacturing Company Limited",
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "country": "Taiwan",
+        "currency": "TWD",
+        "exchange": "TAI",
+        "regularMarketPrice": 2135.0,
+        "regularMarketPreviousClose": 2180.0,
+        "marketCap": 55364816994304,
+        "enterpriseValue": 53040035921920,
+        "trailingPE": 28.984522,
+        "forwardPE": 17.678774,
+        "priceToBook": 9.398456,
+        "trailingEps": 73.66,
+        "forwardEps": 120.76629,
+        "dividendYield": 1.12,
+        "payoutRatio": 0.2785,
+        "fiftyTwoWeekHigh": 2330.0,
+        "fiftyTwoWeekLow": 911.0,
+        "fiftyDayAverage": 1947.2,
+        "twoHundredDayAverage": 1560.175,
+        "sharesOutstanding": 25932000000,
+        "totalRevenue": 4103903379456,
+        "grossMargins": 0.61873,
+        "operatingMargins": 0.58105,
+        "profitMargins": 0.46505,
+        "returnOnEquity": 0.3621,
+        "returnOnAssets": 0.17322001,
+        "totalDebt": 1016267997184,
+        "totalCash": 3383600873472,
+        "beta": 1.251,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:00Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      }
+    },
+    "history": {
+      "_tier": "2",
+      "_source": "yfinance",
+      "_action": "history",
+      "data": {
+        "ticker": "2330.TW",
+        "period": "1y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:09:01Z",
+        "_cache": "hit",
+        "data": [
+          {
+            "date": "2026-04-24",
+            "open": 2110.0,
+            "high": 2190.0,
+            "low": 2105.0,
+            "close": 2185.0,
+            "volume": 45088050
+          },
+          {
+            "date": "2026-04-27",
+            "open": 2280.0,
+            "high": 2330.0,
+            "low": 2265.0,
+            "close": 2265.0,
+            "volume": 68696037
+          },
+          {
+            "date": "2026-04-28",
+            "open": 2245.0,
+            "high": 2280.0,
+            "low": 2215.0,
+            "close": 2215.0,
+            "volume": 47175356
+          },
+          {
+            "date": "2026-04-29",
+            "open": 2175.0,
+            "high": 2210.0,
+            "low": 2165.0,
+            "close": 2180.0,
+            "volume": 42895935
+          },
+          {
+            "date": "2026-04-30",
+            "open": 2205.0,
+            "high": 2215.0,
+            "low": 2135.0,
+            "close": 2135.0,
+            "volume": 48975164
+          }
+        ],
+        "latest_close": 2135.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:01Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        }
+      }
+    }
+  },
+  "mops": {
+    "company_basic": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "company-basic",
+      "data": {
+        "action": "company-basic",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": null,
+          "staleness_days": null
+        },
+        "data": {
+          "listingDate": {
+            "isHidden": false,
+            "value": "83/09/05"
+          },
+          "annualFinancialReport": {
+            "isHidden": true,
+            "value": ""
+          },
+          "reviewAccountingOffice": {
+            "isHidden": true,
+            "value": ""
+          },
+          "industryCategory": {
+            "isHidden": false,
+            "value": "半導體業"
+          },
+          "isTechnology": {
+            "isHidden": true,
+            "value": false
+          },
+          "stockTransferAgency": {
+            "isHidden": false,
+            "value": "中國信託商業銀行 代理部"
+          },
+          "isTDR": {
+            "isHidden": true,
+            "value": false
+          },
+          "companyName": {
+            "isHidden": false,
+            "value": "台灣積體電路製造股份有限公司"
+          },
+          "spokesperson": {
+            "isHidden": false,
+            "value": "黃仁昭"
+          },
+          "publishDate": {
+            "isHidden": false,
+            "value": "81/10/30"
+          },
+          "subSpokesperson": {
+            "isHidden": false,
+            "value": "高孟華"
+          },
+          "internetAddress": {
+            "isHidden": false,
+            "value": "https://www.tsmc.com"
+          },
+          "spokespersonTelephone": {
+            "isHidden": false,
+            "value": "03-563-6688"
+          },
+          "reportType": {
+            "isHidden": false,
+            "value": "合併"
+          },
+          "lawsuitTelephone": {
+            "isHidden": true,
+            "value": ""
+          },
+          "beforeChangeName": {
+            "isHidden": false,
+            "value": ""
+          },
+          "accounting1": {
+            "isHidden": false,
+            "value": "吳世宗"
+          },
+          "accounting2": {
+            "isHidden": false,
+            "value": "林尚志"
+          },
+          "foreignCompanyRegisterPlace": {
+            "isHidden": false,
+            "value": "-"
+          },
+          "investorLiaison": {
+            "isHidden": false,
+            "value": "蘇志凱"
+          },
+          "semi_annualFinancialReport": {
+            "isHidden": true,
+            "value": ""
+          },
+          "firstSeasonFinancialReport": {
+            "isHidden": true,
+            "value": ""
+          },
+          "corporateGovernanceLink": {
+            "isHidden": false,
+            "value": "https://investor.tsmc.com/chinese/corporate-governance"
+          },
+          "perUnitAmount": {
+            "isHidden": true,
+            "value": "1.00"
+          },
+          "companyEnglishAbbreviation": {
+            "isHidden": false,
+            "value": "TSMC"
+          },
+          "haveCompanyBonds": {
+            "isHidden": false,
+            "value": true
+          },
+          "englishAddress_County": {
+            "isHidden": false,
+            "value": "Hsin-Chu 300096, Taiwan, R.O.C."
+          },
+          "investorLiaisonEmail": {
+            "isHidden": false,
+            "value": "jeff_su@tsmc.com"
+          },
+          "telephone": {
+            "isHidden": false,
+            "value": "03-5636688"
+          },
+          "establishDate": {
+            "isHidden": false,
+            "value": "76/02/21"
+          },
+          "isStartup": {
+            "isHidden": true,
+            "value": false
+          },
+          "lawsuitAgentName": {
+            "isHidden": true,
+            "value": ""
+          },
+          "approvedDate": {
+            "isHidden": true,
+            "value": ""
+          },
+          "accountingOffice": {
+            "isHidden": false,
+            "value": "勤業眾信聯合會計師事務所"
+          },
+          "changeApprovedDate": {
+            "isHidden": false,
+            "value": ""
+          },
+          "commonStockDistribute": {
+            "isHidden": false,
+            "value": "每季"
+          },
+          "keepOrganization": {
+            "isHidden": true,
+            "value": ""
+          },
+          "transferAddress": {
+            "isHidden": false,
+            "value": "台北市重慶南路一段83號5樓"
+          },
+          "accountingRule": {
+            "isHidden": true,
+            "value": ""
+          },
+          "financialReportRule": {
+            "isHidden": true,
+            "value": ""
+          },
+          "TDR_Stock": {
+            "isHidden": true,
+            "value": ""
+          },
+          "note": {
+            "isHidden": false,
+            "value": "　"
+          },
+          "oldAccountingYear": {
+            "isHidden": false,
+            "value": ""
+          },
+          "specialStockAmount": {
+            "isHidden": false,
+            "value": "0股"
+          },
+          "investorLiaisonTitle": {
+            "isHidden": false,
+            "value": "處長"
+          },
+          "lawsuitAddress": {
+            "isHidden": true,
+            "value": ""
+          },
+          "mainBusiness": {
+            "isHidden": false,
+            "value": "依客戶之訂單與其提供之產品設計說明，以從事製造與銷售積體電路、以及其他晶圓半導體裝置。提供前述產品之封裝與測試服務、積體電、路之電腦輔助設計技術服務。提供製造光罩及其設計服務。"
+          },
+          "spokespersonTitle": {
+            "isHidden": false,
+            "value": "資深副總經理暨財務長"
+          },
+          "englishAddress_Street": {
+            "isHidden": false,
+            "value": "No. 8, Li-Hsin Rd. 6, Hsinchu Science Park,"
+          },
+          "oldExpirationDate": {
+            "isHidden": false,
+            "value": ""
+          },
+          "lawsuitAgentEnglishName": {
+            "isHidden": true,
+            "value": ""
+          },
+          "TDR_StockMarket": {
+            "isHidden": true,
+            "value": ""
+          },
+          "commonStockAmount": {
+            "isHidden": false,
+            "value": "25,932,524,521股（含私募0股）"
+          },
+          "industryRiskDescription": {
+            "isHidden": true,
+            "value": ""
+          },
+          "depositOrganization": {
+            "isHidden": true,
+            "value": ""
+          },
+          "beforeChangeAbbreviation": {
+            "isHidden": false,
+            "value": ""
+          },
+          "investorLiaisonTelephone": {
+            "isHidden": false,
+            "value": "03-563-6688"
+          },
+          "lawsuitEnglishAddress": {
+            "isHidden": true,
+            "value": ""
+          },
+          "commonStockLevel": {
+            "isHidden": false,
+            "value": "董事會"
+          },
+          "capitalAmount": {
+            "isHidden": false,
+            "value": "259,325,245,210元"
+          },
+          "commonStockPrice": {
+            "isHidden": false,
+            "value": "新台幣                 10.0000元"
+          },
+          "email": {
+            "isHidden": false,
+            "value": "invest@tsmc.com"
+          },
+          "reviewAccounting2": {
+            "isHidden": true,
+            "value": ""
+          },
+          "reviewAccounting1": {
+            "isHidden": true,
+            "value": ""
+          },
+          "address": {
+            "isHidden": false,
+            "value": "新竹科學園區力行六路8號"
+          },
+          "companyEnglishName": {
+            "isHidden": false,
+            "value": "Taiwan Semiconductor Manufacturing Co., Ltd."
+          },
+          "mops_url_1": {
+            "isHidden": true,
+            "value": "https://esg.tsmc.com/zh-Hant/sustainable-management/materiality-analysis"
+          },
+          "chairman": {
+            "isHidden": false,
+            "value": "魏哲家"
+          },
+          "startupRiskDescription": {
+            "isHidden": true,
+            "value": ""
+          },
+          "mops_url_2": {
+            "isHidden": false,
+            "value": "https://esg.tsmc.com/zh-Hant/sustainable-management/materiality-analysis"
+          },
+          "ROTCDate": {
+            "isHidden": false,
+            "value": ""
+          },
+          "haveSpecialStock": {
+            "isHidden": false,
+            "value": false
+          },
+          "marketName": {
+            "isHidden": false,
+            "value": "上市公司"
+          },
+          "enterpriseUnifiedNumber": {
+            "isHidden": false,
+            "value": "22099131"
+          },
+          "thirdSeasonFinancialReport": {
+            "isHidden": true,
+            "value": ""
+          },
+          "isPublishedAndStartup": {
+            "isHidden": true,
+            "value": ""
+          },
+          "stockId": {
+            "isHidden": false,
+            "value": "2330"
+          },
+          "accountingYear": {
+            "isHidden": false,
+            "value": ""
+          },
+          "faxNumber": {
+            "isHidden": false,
+            "value": "03-5797337"
+          },
+          "applyDate": {
+            "isHidden": true,
+            "value": ""
+          },
+          "approvedOrganization": {
+            "isHidden": true,
+            "value": ""
+          },
+          "isJapaneseCompany": {
+            "isHidden": true,
+            "value": false
+          },
+          "companyAbbreviation": {
+            "isHidden": false,
+            "value": "台積電"
+          },
+          "transferAgencyTelephone": {
+            "isHidden": false,
+            "value": "02-6636-5566"
+          },
+          "president": {
+            "isHidden": false,
+            "value": "總裁: 魏哲家"
+          },
+          "OTCDate": {
+            "isHidden": false,
+            "value": ""
+          }
+        },
+        "ticker": "2330"
+      }
+    },
+    "balance_sheet": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "balance-sheet",
+      "data": {
+        "action": "balance-sheet",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": "2025-Q4",
+          "staleness_days": 151
+        },
+        "data": {
+          "reportType": "合併",
+          "year": "114",
+          "reportList": [
+            [
+              "　　非控制權益",
+              "41,199,289",
+              "0.52",
+              "35,030,698",
+              "0.52"
+            ],
+            [
+              "　權益總額",
+              "5,460,795,283",
+              "68.84",
+              "4,323,575,865",
+              "64.61"
+            ],
+            [
+              "　負債及權益總計",
+              "7,933,023,878",
+              "100.00",
+              "6,691,938,000",
+              "100.00"
+            ],
+            [
+              "　預收股款（權益項下）之約當發行股數（單位：股）",
+              "0",
+              "",
+              "0",
+              ""
+            ],
+            [
+              "　母公司暨子公司所持有之母公司庫藏股股數（單位：股）",
+              "0",
+              "",
+              "0",
+              ""
+            ]
+          ],
+          "season": "4",
+          "urlList": [
+            {
+              "url": "https://mopsov.twse.com.tw/server-java/t164sb01?step=1&CO_ID=2330&SYEAR=2025&SSEASON=4&REPORT_ID=C",
+              "name": "XBRL資訊平台"
+            },
+            {
+              "url": "http://doc.twse.com.tw/server-java/t57sb01?step=1&colorchg=1&co_id=2330&year=114&mtype=A",
+              "name": "電子書查詢"
+            }
+          ],
+          "titles": [
+            {
+              "sub": [],
+              "main": "會計項目"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                },
+                {
+                  "sub": [],
+                  "main": "%"
+                }
+              ],
+              "main": "114年12月31日"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                },
+                {
+                  "sub": [],
+                  "main": "%"
+                }
+              ],
+              "main": "113年12月31日"
+            }
+          ],
+          "fiscalYear": " ",
+          "subsidiary": [],
+          "companyAbbreviation": "台積電"
+        },
+        "ticker": "2330",
+        "year": 114,
+        "season": 4
+      }
+    },
+    "income_statement": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "income-statement",
+      "data": {
+        "action": "income-statement",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": "2025-Q4",
+          "staleness_days": 151
+        },
+        "data": {
+          "reportType": "合併",
+          "year": "114",
+          "reportList": [
+            [
+              "　非控制權益（綜合損益）",
+              "-2,183,630",
+              "-0.06",
+              "-1,819,211",
+              "-0.06"
+            ],
+            [
+              "基本每股盈餘",
+              "",
+              "",
+              "",
+              ""
+            ],
+            [
+              "　基本每股盈餘",
+              "66.26",
+              "",
+              "45.25",
+              ""
+            ],
+            [
+              "稀釋每股盈餘",
+              "",
+              "",
+              "",
+              ""
+            ],
+            [
+              "　稀釋每股盈餘",
+              "66.25",
+              "",
+              "45.25",
+              ""
+            ]
+          ],
+          "season": "4",
+          "urlList": [
+            {
+              "url": "https://mopsov.twse.com.tw/server-java/t164sb01?step=1&CO_ID=2330&SYEAR=2025&SSEASON=4&REPORT_ID=C",
+              "name": "XBRL資訊平台"
+            },
+            {
+              "url": "http://doc.twse.com.tw/server-java/t57sb01?step=1&colorchg=1&co_id=2330&year=114&mtype=A",
+              "name": "電子書查詢"
+            }
+          ],
+          "titles": [
+            {
+              "sub": [],
+              "main": "會計項目"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                },
+                {
+                  "sub": [],
+                  "main": "%"
+                }
+              ],
+              "main": "114年度"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                },
+                {
+                  "sub": [],
+                  "main": "%"
+                }
+              ],
+              "main": "113年度"
+            }
+          ],
+          "fiscalYear": " ",
+          "subsidiary": [],
+          "companyAbbreviation": "台積電"
+        },
+        "ticker": "2330",
+        "year": 114,
+        "season": 4
+      }
+    },
+    "cash_flow": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "cash-flow",
+      "data": {
+        "action": "cash-flow",
+        "fetched_at": "2026-05-01T15:12:14Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:14Z",
+          "reference_period": "2025-Q4",
+          "staleness_days": 151
+        },
+        "data": {
+          "reportType": "合併",
+          "year": "114",
+          "reportList": [
+            [
+              "匯率變動對現金及約當現金之影響",
+              "-50,008,167",
+              "47,165,901"
+            ],
+            [
+              "本期現金及約當現金增加（減少）數",
+              "640,229,359",
+              "662,199,290"
+            ],
+            [
+              "期初現金及約當現金餘額",
+              "2,127,627,043",
+              "1,465,427,753"
+            ],
+            [
+              "期末現金及約當現金餘額",
+              "2,767,856,402",
+              "2,127,627,043"
+            ],
+            [
+              "　資產負債表帳列之現金及約當現金",
+              "2,767,856,402",
+              "2,127,627,043"
+            ]
+          ],
+          "season": "4",
+          "urlList": [
+            {
+              "url": "https://mopsov.twse.com.tw/server-java/t164sb01?step=1&CO_ID=2330&SYEAR=2025&SSEASON=4&REPORT_ID=C",
+              "name": "XBRL資訊平台"
+            },
+            {
+              "url": "http://doc.twse.com.tw/server-java/t57sb01?step=1&colorchg=1&co_id=2330&year=114&mtype=A",
+              "name": "電子書查詢"
+            }
+          ],
+          "titles": [
+            {
+              "sub": [],
+              "main": "會計項目"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                }
+              ],
+              "main": "114年度"
+            },
+            {
+              "sub": [
+                {
+                  "sub": [],
+                  "main": "金額"
+                }
+              ],
+              "main": "113年度"
+            }
+          ],
+          "fiscalYear": " ",
+          "subsidiary": [],
+          "companyAbbreviation": "台積電"
+        },
+        "ticker": "2330",
+        "year": 114,
+        "season": 4
+      }
+    },
+    "monthly_revenue": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "monthly-revenue",
+      "data": {
+        "action": "monthly-revenue",
+        "fetched_at": "2026-05-01T15:12:14Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:14Z",
+          "reference_period": "2026-03",
+          "staleness_days": 61
+        },
+        "data": {
+          "note": " 1.各項增減百分比資訊，如數值逾越999999.99或分母為零（無法計算），則以999999.99表示。\n 2.合併營業收入係將母子公司及各子公司間重複營收部分消除後所得數字。\n 3.自民國95年1月起,金融業之各項營業收入係以淨額申報，其營業收入淨額係指「淨收益」。\n 4.上市櫃公司、興櫃公司、及金管會主管之金融業自民國102年起適用IFRSs；非上市上櫃興櫃之公發公司(含金控子公司為公發公司之非金融業、投控子公司為公發公司者)，自民國104年起適用IFRSs。配合IFRSs實施，營業收入係以合併營業收入申報；無子公司者，則以個別營業收入申報；自願提前適用IFRSs者亦同。\n 5.自民國102年1月起，配合IFRSs實施，金控業之營業收入係以淨額申報，其營業收入淨額係指「淨收益」。\n 6.上市櫃及興櫃公司，本月營收或本年累計營收較去年同期增減變動達50％以上者，需於備註欄位說明增減變動...[truncated]",
+          "data": [
+            [
+              "本年累計",
+              "1,134,103,440"
+            ],
+            [
+              "去年累計",
+              "839,253,664"
+            ],
+            [
+              "增減金額",
+              "294,849,776"
+            ],
+            [
+              "增減百分比",
+              "35.13"
+            ],
+            [
+              "備註/營收變化原因說明",
+              ""
+            ]
+          ],
+          "yymm": "11503",
+          "titles": [
+            {
+              "sub": [],
+              "main": "項目"
+            },
+            {
+              "sub": [],
+              "main": "營業收入淨額"
+            }
+          ],
+          "companyAbbreviation": "台積電",
+          "marketKindName": "上市公司"
+        },
+        "ticker": "2330",
+        "year": 115,
+        "month": 3
+      }
+    },
+    "dividends": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "dividends",
+      "data": {
+        "action": "dividends",
+        "fetched_at": "2026-05-01T15:12:15Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:15Z",
+          "reference_period": null,
+          "staleness_days": null
+        },
+        "data": {
+          "marketName": "上市公司",
+          "commonStock": {
+            "data": [
+              [
+                "董事會決議",
+                "109年第4季",
+                "109/10/01~109/12/31",
+                1,
+                "110/02/09",
+                "不適用",
+                "1,095,744,391,061",
+                "142,766,433,883",
+                "1,222,859,308,690",
+                "1,158,033,357,545",
+                "2.5",
+                "0.0",
+                "0.0",
+                "64,825,951,145",
+                "0.0",
+                "0.0",
+                "0.0",
+                "0",
+                "第三十三條本公司盈餘分派或虧損撥補得於每季終了後為之，盈餘分派以現金發放者，依公司法第二百二十八條之一及第二百四十條第五項規定由董事會決議辦理，並報告股東會，無須提交股東會請求承認。本公司無盈餘時，不得分派股息及紅利。本公司分派盈餘時，應先預估並保留應納稅捐、彌補虧損及提撥十分之一（10%）為法定盈餘公積；但法定盈餘公積累積已達本公司實收資本額時，不在此限。次依法令或主管機關規定提撥特別盈餘公積。本公司分派盈餘前，應提撥所分派期間獲利不高於百分之零點三作為董事酬勞，及不低於百分之一作為員工酬勞，但公司尚有累積虧損時，應預先保留彌補數額。董事酬勞依董事會訂定之相關辦法決定，其給付之對象，不包括兼任經理人之董事。員工酬勞由董事會以董事三分之二以上出席及出席董事過半數同意之決議行之，並報告股東會，其分配之對象，得包括符合董事會或其授權之人所訂條件之從屬公司員工。本公司依本條第二項提撥盈餘公積後，嗣餘盈餘應依法令、本章程所定程序及下列原則分派之：本公司得依財務、業務及經營面等因素之考量將可分配盈餘全數分派。盈餘之分派得以現金股利或股票股利之方式為之，因本公司屬資金密集之產業，目前進入營運穩定成長期，盈餘之分派以現金股利為優先，亦得以股票股利之方式分派，惟股票股利分派之比例以不高於股利總額之百分之五十（50%）為原則。於本公司無盈餘可分派，或雖有盈餘但盈餘數額遠低於本公司先前實際分派之盈餘，或依公司財務、業務及經營面等因素之考量，得將公積全部或一部依法令或主管機關規定分派，其以現金分派者，得由董事會依公司法第二百四十一條規定決議辦理，並報告股東會，無須提交股東會請求承認。",
+                "無",
+                "新台幣10元"
+              ],
+              [
+                "董事會決議",
+                "109年第3季",
+                "109/07/01~109/09/30",
+                1,
+                "109/11/10",
+                "不適用",
+                "1,028,761,344,630",
+                "137,310,040,361",
+                "1,160,570,342,206",
+                "1,095,744,391,061",
+                "2.5",
+                "0.0",
+                "0.0",
+                "64,825,951,145",
+                "0.0",
+                "0.0",
+                "0.0",
+                "0",
+                "第三十三條本公司盈餘分派或虧損撥補得於每季終了後為之，盈餘分派以現金發放者，依公司法第二百二十八條之一及第二百四十條第五項規定由董事會決議辦理，並報告股東會，無須提交股東會請求承認。本公司無盈餘時，不得分派股息及紅利。本公司分派盈餘時，應先預估並保留應納稅捐、彌補虧損及提撥十分之一（10%）為法定盈餘公積；但法定盈餘公積累積已達本公司實收資本額時，不在此限。次依法令或主管機關規定提撥特別盈餘公積。本公司分派盈餘前，應提撥所分派期間獲利不高於百分之零點三作為董事酬勞，及不低於百分之一作為員工酬勞，但公司尚有累積虧損時，應預先保留彌補數額。董事酬勞依董事會訂定之相關辦法決定，其給付之對象，不包括兼任經理人之董事。員工酬勞由董事會以董事三分之二以上出席及出席董事過半數同意之決議行之，並報告股東會，其分配之對象，得包括符合董事會或其授權之人所訂條件之從屬公司員工。本公司依本條第二項提撥盈餘公積後，嗣餘盈餘應依法令、本章程所定程序及下列原則分派之：本公司得依財務、業務及經營面等因素之考量將可分配盈餘全數分派。盈餘之分派得以現金股利或股票股利之方式為之，因本公司屬資金密集之產業，目前進入營運穩定成長期，盈餘之分派以現金股利為優先，亦得以股票股利之方式分派，惟股票股利分派之比例以不高於股利總額之百分之五十（50%）為原則。於本公司無盈餘可分派，或雖有盈餘但盈餘數額遠低於本公司先前實際分派之盈餘，或依公司財務、業務及經營面等因素之考量，得將公積全部或一部依法令或主管機關規定分派，其以現金分派者，得由董事會依公司法第二百四十一條規定決議辦理，並報告股東會，無須提交股東會請求承認。",
+                "無。",
+                "新台幣10元"
+              ],
+              [
+                "董事會決議",
+                "109年第2季",
+                "109/04/01~109/06/30",
+                1,
+                "109/08/11",
+                "不適用",
+                "984,649,559,544",
+                "120,822,192,747",
+                "1,093,587,295,775",
+                "1,028,761,344,630",
+                "2.5",
+                "0.0",
+                "0.0",
+                "64,825,951,145",
+                "0.0",
+                "0.0",
+                "0.0",
+                "0",
+                "第三十三條本公司盈餘分派或虧損撥補得於每季終了後為之，盈餘分派以現金發放者，依公司法第二百二十八條之一及第二百四十條第五項規定由董事會決議辦理，並報告股東會，無須提交股東會請求承認。本公司無盈餘時，不得分派股息及紅利。本公司分派盈餘時，應先預估並保留應納稅捐、彌補虧損及提撥十分之一（10%）為法定盈餘公積；但法定盈餘公積累積已達本公司實收資本額時，不在此限。次依法令或主管機關規定提撥特別盈餘公積。本公司分派盈餘前，應提撥所分派期間獲利不高於百分之零點三作為董事酬勞，及不低於百分之一作為員工酬勞，但公司尚有累積虧損時，應預先保留彌補數額。董事酬勞依董事會訂定之相關辦法決定，其給付之對象，不包括兼任經理人之董事。員工酬勞由董事會以董事三分之二以上出席及出席董事過半數同意之決議行之，並報告股東會，其分配之對象，得包括符合董事會或其授權之人所訂條件之從屬公司員工。本公司依本條第二項提撥盈餘公積後，嗣餘盈餘應依法令、本章程所定程序及下列原則分派之：本公司得依財務、業務及經營面等因素之考量將可分配盈餘全數分派。盈餘之分派得以現金股利或股票股利之方式為之，因本公司屬資金密集之產業，目前進入營運穩定成長期，盈餘之分派以現金股利為優先，亦得以股票股利之方式分派，惟股票股利分派之比例以不高於股利總額之百分之五十（50%）為原則。於本公司無盈餘可分派，或雖有盈餘但盈餘數額遠低於本公司先前實際分派之盈餘，或依公司財務、業務及經營面等因素之考量，得將公積全部或一部依法令或主管機關規定分派，其以現金分派者，得由董事會依公司法第二百四十一條規定決議辦理，並報告股東會，無須提交股東會請求承認。",
+                "無。",
+                "新台幣10元"
+              ],
+              [
+                "董事會決議",
+                "109年第1季",
+                "109/01/01~109/03/31",
+                1,
+                "109/05/12",
+                "不適用",
+                "929,793,948,972",
+                "116,986,720,020",
+                "1,049,475,510,689",
+                "984,649,559,544",
+                "2.5",
+                "0.0",
+                "0.0",
+                "64,825,951,145",
+                "0.0",
+                "0.0",
+                "0.0",
+                "0",
+                "第三十三條本公司盈餘分派或虧損撥補得於每季終了後為之，盈餘分派以現金發放者，依公司法第二百二十八條之一及第二百四十條第五項規定由董事會決議辦理，並報告股東會，無須提交股東會請求承認。本公司無盈餘時，不得分派股息及紅利。本公司分派盈餘時，應先預估並保留應納稅捐、彌補虧損及提撥十分之一（10%）為法定盈餘公積；但法定盈餘公積累積已達本公司實收資本額時，不在此限。次依法令或主管機關規定提撥特別盈餘公積。本公司分派盈餘前，應提撥所分派期間獲利不高於百分之零點三作為董事酬勞，及不低於百分之一作為員工酬勞，但公司尚有累積虧損時，應預先保留彌補數額。董事酬勞依董事會訂定之相關辦法決定，其給付之對象，不包括兼任經理人之董事。員工酬勞由董事會以董事三分之二以上出席及出席董事過半數同意之決議行之，並報告股東會，其分配之對象，得包括符合董事會或其授權之人所訂條件之從屬公司員工。本公司依本條第二項提撥盈餘公積後，嗣餘盈餘應依法令、本章程所定程序及下列原則分派之：本公司得依財務、業務及經營面等因素之考量將可分配盈餘全數分派。盈餘之分派得以現金股利或股票股利之方式為之，因本公司屬資金密集之產業，目前進入營運穩定成長期，盈餘之分派以現金股利為優先，亦得以股票股利之方式分派，惟股票股利分派之比例以不高於股利總額之百分之五十（50%）為原則。於本公司無盈餘可分派，或雖有盈餘但盈餘數額遠低於本公司先前實際分派之盈餘，或依公司財務、業務及經營面等因素之考量，得將公積全部或一部依法令或主管機關規定分派，其以現金分派者，得由董事會依公司法第二百四十一條規定決議辦理，並報告股東會，無須提交股東會請求承認。",
+                "無。",
+                "新台幣10元"
+              ],
+              [
+                "董事會決議",
+                "108年第4季",
+                "108/10/01~108/12/31",
+                1,
+                "109/02/11",
+                "",
+                "895,258,481,715",
+                "116,035,081,038",
+                "994,619,900,117",
+                "929,793,948,972",
+                "2.5",
+                "0.0",
+                "0.0",
+                "64,825,951,145",
+                "0.0",
+                "0.0",
+                "0.0",
+                "0",
+                "第三十三條本公司盈餘分派或虧損撥補得於每季終了後為之，盈餘分派以現金發放者，依公司法第二百二十八條之一及第二百四十條第五項規定由董事會決議辦理，並報告股東會，無須提交股東會請求承認。本公司無盈餘時，不得分派股息及紅利。本公司分派盈餘時，應先預估並保留應納稅捐、彌補虧損及提撥十分之一（10%）為法定盈餘公積；但法定盈餘公積累積已達本公司實收資本額時，不在此限。次依法令或主管機關規定提撥特別盈餘公積。本公司分派盈餘前，應提撥所分派期間獲利不高於百分之零點三作為董事酬勞，及不低於百分之一作為員工酬勞，但公司尚有累積虧損時，應預先保留彌補數額。董事酬勞依董事會訂定之相關辦法決定，其給付之對象，不包括兼任經理人之董事。員工酬勞由董事會以董事三分之二以上出席及出席董事過半數同意之決議行之，並報告股東會，其分配之對象，得包括符合董事會或其授權之人所訂條件之從屬公司員工。本公司依本條第二項提撥盈餘公積後，嗣餘盈餘應依法令、本章程所定程序及下列原則分派之：本公司得依財務、業務及經營面等因素之考量將可分配盈餘全數分派。盈餘之分派得以現金股利或股票股利之方式為之，因本公司屬資金密集之產業，目前進入營運穩定成長期，盈餘之分派以現金股利為優先，亦得以股票股利之方式分派，惟股票股利分派之比例以不高於股利總額之百分之五十（50%）為原則。於本公司無盈餘可分派，或雖有盈餘但盈餘數額遠低於本公司先前實際分派之盈餘，或依公司財務、業務及經營面等因素之考量，得將公積全部或一部依法令或主管機關規定分派，其以現金分派者，得由董事會依公司法第二百四十一條規定決議辦理，並報告股東會，無須提交股東會請求承認。",
+                "無。",
+                "新台幣10元"
+              ]
+            ],
+            "titles": [
+              {
+                "sub": [],
+                "main": "分配後期未分配盈餘（元）"
+              },
+              {
+                "sub": [
+                  {
+                    "sub": [],
+                    "main": "股東配發之現金（股利）總金額（元）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "盈餘轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "法定盈餘公積轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "資本公積轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "股東配股總股數（股）"
+                  }
+                ],
+                "main": "股東配發內容"
+              },
+              {
+                "sub": [],
+                "main": "股利分派之公司章程"
+              },
+              {
+                "sub": [],
+                "main": "備註"
+              },
+              {
+                "sub": [],
+                "main": "普通股每股面額"
+              }
+            ]
+          },
+          "specialStock": {
+            "data": [],
+            "titles": [
+              {
+                "sub": [],
+                "main": "分配後期未分配盈餘（元）"
+              },
+              {
+                "sub": [
+                  {
+                    "sub": [],
+                    "main": "股東配發之現金（股利）總金額（元）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "盈餘轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "法定盈餘公積轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "資本公積轉增資配股（元/股）"
+                  },
+                  {
+                    "sub": [],
+                    "main": "股東配股總股數（股）"
+                  }
+                ],
+                "main": "股東配發內容"
+              },
+              {
+                "sub": [],
+                "main": "股利分派之公司章程"
+              },
+              {
+                "sub": [],
+                "main": "備註"
+              },
+              {
+                "sub": [],
+                "main": "普通股每股面額"
+              }
+            ],
+            "isHidden": true
+          },
+          "companyAbbreviation": "台積電"
+        },
+        "ticker": "2330",
+        "first_year": 109,
+        "last_year": 114
+      }
+    },
+    "director_holdings": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "director-holdings",
+      "_error": "exit_1",
+      "_stderr": "action 'director-holdings' requires: --year, --month. (ROC calendar for --year: 西元 - 1911; e.g. 2026 → 115)\n",
+      "_cmd": "uv run /Users/kouko/GitHub/monkey-skills/investing-toolkit/skills/data-tw/scripts/mops_client.py --ticker 2330 --action director-holdings"
+    },
+    "insider_trades": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "insider-trades",
+      "_error": "exit_1",
+      "_stderr": "action 'insider-trades' requires: --year, --month. (ROC calendar for --year: 西元 - 1911; e.g. 2026 → 115)\n",
+      "_cmd": "uv run /Users/kouko/GitHub/monkey-skills/investing-toolkit/skills/data-tw/scripts/mops_client.py --ticker 2330 --action insider-trades"
+    },
+    "announcements": {
+      "_tier": "A",
+      "_source": "mops",
+      "_action": "realtime-announcements",
+      "data": {
+        "action": "realtime-announcements",
+        "fetched_at": "2026-05-01T15:12:16Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "MOPS JSON API (mops.twse.com.tw/mops/api)",
+          "source_authority": "金管會證期局 / 台灣證券交易所",
+          "data_type": "official_regulatory_disclosure",
+          "update_cycle": "filing-driven",
+          "typical_lag": "varies by form; quarterly FS ~45 days after period-end",
+          "fetched_at": "2026-05-01T15:12:16Z",
+          "reference_period": null,
+          "staleness_days": null
+        },
+        "data": {
+          "data": [
+            {
+              "date": "115/05/01",
+              "companyId": "3049",
+              "subject": "本公司處分南科廠廠房及廠務附屬設施(補充說明)",
+              "time": "18:22",
+              "companyAbbreviation": "精金",
+              "url": {
+                "apiName": "t05sr01_1_detail",
+                "parameters": {
+                  "date": "1150501",
+                  "companyId": "3049",
+                  "serialNumber": 1
+                }
+              }
+            },
+            {
+              "date": "115/05/01",
+              "companyId": "1466",
+              "subject": "公告本公司民國115年第1季合併財務報告董事會召開日期",
+              "time": "18:06",
+              "companyAbbreviation": "聚隆",
+              "url": {
+                "apiName": "t05sr01_1_detail",
+                "parameters": {
+                  "date": "1150501",
+                  "companyId": "1466",
+                  "serialNumber": 1
+                }
+              }
+            },
+            {
+              "date": "115/05/01",
+              "companyId": "2603",
+              "subject": "代本公司之子公司Italia Marittima S.p.A.公告\r\n副董事長異動(補充115/4/29公告)",
+              "time": "15:43",
+              "companyAbbreviation": "長榮",
+              "url": {
+                "apiName": "t05sr01_1_detail",
+                "parameters": {
+                  "date": "1150501",
+                  "companyId": "2603",
+                  "serialNumber": 1
+                }
+              }
+            },
+            {
+              "date": "115/05/01",
+              "companyId": "2248",
+              "subject": "公告本公司115年第一季合併財務報告董事會召開日期為\r\n115年5月9日",
+              "time": "12:21",
+              "companyAbbreviation": "華勝-KY",
+              "url": {
+                "apiName": "t05sr01_1_detail",
+                "parameters": {
+                  "date": "1150501",
+                  "companyId": "2248",
+                  "serialNumber": 1
+                }
+              }
+            },
+            {
+              "date": "115/05/01",
+              "companyId": "1463",
+              "subject": "公告本公司名稱由「強盛新股份有限公司」\r\n更名為「強盛新投資控股股份有限公司」，\r\n公告期間：115年2月12日至115年5月11日。",
+              "time": "07:00",
+              "companyAbbreviation": "強盛新",
+              "url": {
+                "apiName": "t05sr01_1_detail",
+                "parameters": {
+                  "date": "1150501",
+                  "companyId": "1463",
+                  "serialNumber": 1
+                }
+              }
+            }
+          ]
+        },
+        "market": "sii",
+        "count": 10
+      }
+    }
+  },
+  "twse": {
+    "daily_price": {
+      "_tier": "A",
+      "_source": "twse_openapi",
+      "_action": "daily-price",
+      "data": {
+        "action": "daily-price",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "TWSE OpenAPI (openapi.twse.com.tw)",
+          "source_authority": "臺灣證券交易所 (Taiwan Stock Exchange Corporation)",
+          "data_type": "official_market_data",
+          "update_cycle": "daily after market close",
+          "typical_lag": "end-of-day T+0 for daily snapshots",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "data": {
+          "Date": "1150430",
+          "Code": "2330",
+          "Name": "台積電",
+          "TradeVolume": "59584011",
+          "TradeValue": "129082703075",
+          "OpeningPrice": "2205.00",
+          "HighestPrice": "2215.00",
+          "LowestPrice": "2135.00",
+          "ClosingPrice": "2135.00",
+          "Change": "-45.0000",
+          "Transaction": "290470"
+        },
+        "ticker": "2330",
+        "note": null
+      }
+    },
+    "pe_pb_yield": {
+      "_tier": "A",
+      "_source": "twse_openapi",
+      "_action": "pe-pb-yield",
+      "data": {
+        "action": "pe-pb-yield",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "TWSE OpenAPI (openapi.twse.com.tw)",
+          "source_authority": "臺灣證券交易所 (Taiwan Stock Exchange Corporation)",
+          "data_type": "official_market_data",
+          "update_cycle": "daily after market close",
+          "typical_lag": "end-of-day T+0 for daily snapshots",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "data": {
+          "Date": "1150430",
+          "Code": "2330",
+          "Name": "台積電",
+          "PEratio": "32.23",
+          "DividendYield": "1.03",
+          "PBratio": "10.22"
+        },
+        "ticker": "2330"
+      }
+    },
+    "margin_balance": {
+      "_tier": "A",
+      "_source": "twse_openapi",
+      "_action": "margin-balance",
+      "data": {
+        "action": "margin-balance",
+        "fetched_at": "2026-05-01T15:12:13Z",
+        "_cache": "hit",
+        "_provenance": {
+          "source": "TWSE OpenAPI (openapi.twse.com.tw)",
+          "source_authority": "臺灣證券交易所 (Taiwan Stock Exchange Corporation)",
+          "data_type": "official_market_data",
+          "update_cycle": "daily after market close",
+          "typical_lag": "end-of-day T+0 for daily snapshots",
+          "fetched_at": "2026-05-01T15:12:13Z",
+          "reference_period": null,
+          "staleness_days": null
+        },
+        "data": {
+          "股票代號": "2330",
+          "股票名稱": "台積電",
+          "融資買進": "1511",
+          "融資賣出": "1650",
+          "融資現金償還": "38",
+          "融資前日餘額": "28995",
+          "融資今日餘額": "28818",
+          "融資限額": "6483131",
+          "融券買進": "12",
+          "融券賣出": "15",
+          "融券現券償還": "",
+          "融券前日餘額": "97",
+          "融券今日餘額": "100",
+          "融券限額": "6483131",
+          "資券互抵": "4",
+          "註記": " "
+        },
+        "ticker": "2330"
+      }
+    },
+    "three_investor": {
+      "_tier": "A",
+      "_source": "twse_openapi",
+      "_action": "three-investor",
+      "data": {
+        "action": "three-investor",
+        "fetched_at": "2026-05-01T15:12:16Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "TWSE OpenAPI (openapi.twse.com.tw)",
+          "source_authority": "臺灣證券交易所 (Taiwan Stock Exchange Corporation)",
+          "data_type": "official_market_data",
+          "update_cycle": "daily after market close",
+          "typical_lag": "end-of-day T+0 for daily snapshots",
+          "fetched_at": "2026-05-01T15:12:16Z",
+          "reference_period": null,
+          "staleness_days": null
+        },
+        "data": {
+          "Rank": "18",
+          "Code": "2330",
+          "Name": "台積電",
+          "ShareNumber": "25932524521",
+          "AvailableShare": "7605214519",
+          "SharesHeld": "18327310002",
+          "AvailableInvestPer": "29.32",
+          "SharesHeldPer": "70.67",
+          "Upperlimit": "100.00"
+        },
+        "ticker": "2330",
+        "note": "TWSE OpenAPI exposes only MI_QFIIS_sort_20 (top-20 foreign shareholder snapshot, NOT daily buy/sell flow). For daily 三大法人 per-stock flow, use FinMind TaiwanStockInstitutionalInvestorsBuySell."
+      }
+    },
+    "stock_day_history": {
+      "_tier": "A",
+      "_source": "twse_openapi",
+      "_action": "stock-day-history",
+      "data": {
+        "action": "stock-day-history",
+        "fetched_at": "2026-05-01T15:12:20Z",
+        "_cache": "miss",
+        "_provenance": {
+          "source": "TWSE OpenAPI (openapi.twse.com.tw)",
+          "source_authority": "臺灣證券交易所 (Taiwan Stock Exchange Corporation)",
+          "data_type": "official_market_data",
+          "update_cycle": "daily after market close",
+          "typical_lag": "end-of-day T+0 for daily snapshots",
+          "fetched_at": "2026-05-01T15:12:20Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "data": [
+          {
+            "date": "2026-04-24",
+            "open": 2110.0,
+            "high": 2190.0,
+            "low": 2105.0,
+            "close": 2185.0,
+            "volume": 52391785.0
+          },
+          {
+            "date": "2026-04-27",
+            "open": 2280.0,
+            "high": 2330.0,
+            "low": 2265.0,
+            "close": 2265.0,
+            "volume": 79778277.0
+          },
+          {
+            "date": "2026-04-28",
+            "open": 2245.0,
+            "high": 2280.0,
+            "low": 2215.0,
+            "close": 2215.0,
+            "volume": 57336004.0
+          },
+          {
+            "date": "2026-04-29",
+            "open": 2175.0,
+            "high": 2210.0,
+            "low": 2165.0,
+            "close": 2180.0,
+            "volume": 49147402.0
+          },
+          {
+            "date": "2026-04-30",
+            "open": 2205.0,
+            "high": 2215.0,
+            "low": 2135.0,
+            "close": 2135.0,
+            "volume": 59584011.0
+          }
+        ],
+        "ticker": "2330",
+        "period": "12mo",
+        "rows": 5,
+        "latest_date": "2026-04-30",
+        "latest_close": 2135.0,
+        "_months_fetched": [
+          "2025-10=miss",
+          "2025-09=miss",
+          "2025-08=miss",
+          "2025-07=miss",
+          "2025-06=miss"
+        ],
+        "_endpoint": "twse.com.tw/rwd/zh/afterTrading/STOCK_DAY (Tier A, not in openapi.twse.com.tw catalogue; month-granularity; discovered via stock-day.html 2026-04-19)"
+      }
+    }
+  },
+  "finmind": {
+    "three_investor_flow": {
+      "_tier": "2-gap",
+      "_source": "finmind",
+      "_action": "T86",
+      "data": {
+        "_meta": {
+          "ticker": "2330",
+          "original_ticker": "2330",
+          "date_start": "2026-01-31",
+          "date_end": "2026-05-01",
+          "auth": "anonymous",
+          "_warning": "Anonymous limit: 300 req/hr. Set FINMIND_API_TOKEN env var for 600 req/hr. Register free at https://finmindtrade.com"
+        },
+        "_summary": {
+          "TaiwanStockInstitutionalInvestorsBuySell": "ok (270 rows, cache: hit)"
+        },
+        "_partial": false,
+        "TaiwanStockInstitutionalInvestorsBuySell": {
+          "dataset": "TaiwanStockInstitutionalInvestorsBuySell",
+          "ticker": "2330",
+          "date_start": "2026-01-31",
+          "date_end": "2026-05-01",
+          "fetched_at": "2026-05-01T15:09:05Z",
+          "_cache": "hit",
+          "rows": 5,
+          "data": [
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "buy": 0,
+              "name": "Foreign_Dealer_Self",
+              "sell": 0
+            },
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "buy": 347050,
+              "name": "Dealer_self",
+              "sell": 261953
+            },
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "buy": 772973,
+              "name": "Dealer_Hedging",
+              "sell": 743518
+            },
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "buy": 26725954,
+              "name": "Foreign_Investor",
+              "sell": 47908603
+            },
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "buy": 753000,
+              "name": "Investment_Trust",
+              "sell": 156958
+            }
+          ],
+          "_provenance": {
+            "source": "FinMind API (finmindtrade.com)",
+            "source_authority": "FinMind (open-source aggregator, data from TWSE/MOPS)",
+            "data_type": "open_source_aggregator",
+            "update_cycle": "daily (T+1 for most datasets)",
+            "typical_lag": "1 business day",
+            "fetched_at": "2026-05-01T15:09:05Z",
+            "reference_period": "2026-04-30",
+            "staleness_days": 1
+          },
+          "_processed": {
+            "latest_date": "2026-04-30",
+            "foreign": null,
+            "trust": null,
+            "dealer": null
+          }
+        }
+      }
+    },
+    "margin_history": {
+      "_tier": "2-gap",
+      "_source": "finmind",
+      "_action": "TaiwanStockMarginPurchaseShortSale",
+      "data": {
+        "_meta": {
+          "ticker": "2330",
+          "original_ticker": "2330",
+          "date_start": "2026-01-31",
+          "date_end": "2026-05-01",
+          "auth": "anonymous",
+          "_warning": "Anonymous limit: 300 req/hr. Set FINMIND_API_TOKEN env var for 600 req/hr. Register free at https://finmindtrade.com"
+        },
+        "_summary": {
+          "TaiwanStockMarginPurchaseShortSale": "ok (54 rows, cache: miss)"
+        },
+        "_partial": false,
+        "TaiwanStockMarginPurchaseShortSale": {
+          "dataset": "TaiwanStockMarginPurchaseShortSale",
+          "ticker": "2330",
+          "date_start": "2026-01-31",
+          "date_end": "2026-05-01",
+          "fetched_at": "2026-05-01T15:12:20Z",
+          "_cache": "miss",
+          "rows": 5,
+          "data": [
+            {
+              "date": "2026-04-24",
+              "stock_id": "2330",
+              "MarginPurchaseBuy": 3179,
+              "MarginPurchaseCashRepayment": 34,
+              "MarginPurchaseLimit": 6483131,
+              "MarginPurchaseSell": 1657,
+              "MarginPurchaseTodayBalance": 25958,
+              "MarginPurchaseYesterdayBalance": 24470,
+              "Note": " ",
+              "OffsetLoanAndShort": 9,
+              "ShortSaleBuy": 5,
+              "ShortSaleCashRepayment": 1,
+              "ShortSaleLimit": 6483131,
+              "ShortSaleSell": 40,
+              "ShortSaleTodayBalance": 115,
+              "ShortSaleYesterdayBalance": 81
+            },
+            {
+              "date": "2026-04-27",
+              "stock_id": "2330",
+              "MarginPurchaseBuy": 4712,
+              "MarginPurchaseCashRepayment": 19,
+              "MarginPurchaseLimit": 6483131,
+              "MarginPurchaseSell": 1692,
+              "MarginPurchaseTodayBalance": 28959,
+              "MarginPurchaseYesterdayBalance": 25958,
+              "Note": " ",
+              "OffsetLoanAndShort": 21,
+              "ShortSaleBuy": 10,
+              "ShortSaleCashRepayment": 6,
+              "ShortSaleLimit": 6483131,
+              "ShortSaleSell": 27,
+              "ShortSaleTodayBalance": 126,
+              "ShortSaleYesterdayBalance": 115
+            },
+            {
+              "date": "2026-04-28",
+              "stock_id": "2330",
+              "MarginPurchaseBuy": 2015,
+              "MarginPurchaseCashRepayment": 62,
+              "MarginPurchaseLimit": 6483131,
+              "MarginPurchaseSell": 2145,
+              "MarginPurchaseTodayBalance": 28767,
+              "MarginPurchaseYesterdayBalance": 28959,
+              "Note": " ",
+              "OffsetLoanAndShort": 7,
+              "ShortSaleBuy": 28,
+              "ShortSaleCashRepayment": 1,
+              "ShortSaleLimit": 6483131,
+              "ShortSaleSell": 2,
+              "ShortSaleTodayBalance": 99,
+              "ShortSaleYesterdayBalance": 126
+            },
+            {
+              "date": "2026-04-29",
+              "stock_id": "2330",
+              "MarginPurchaseBuy": 1211,
+              "MarginPurchaseCashRepayment": 76,
+              "MarginPurchaseLimit": 6483131,
+              "MarginPurchaseSell": 907,
+              "MarginPurchaseTodayBalance": 28995,
+              "MarginPurchaseYesterdayBalance": 28767,
+              "Note": " ",
+              "OffsetLoanAndShort": 5,
+              "ShortSaleBuy": 11,
+              "ShortSaleCashRepayment": 0,
+              "ShortSaleLimit": 6483131,
+              "ShortSaleSell": 9,
+              "ShortSaleTodayBalance": 97,
+              "ShortSaleYesterdayBalance": 99
+            },
+            {
+              "date": "2026-04-30",
+              "stock_id": "2330",
+              "MarginPurchaseBuy": 1511,
+              "MarginPurchaseCashRepayment": 38,
+              "MarginPurchaseLimit": 6483131,
+              "MarginPurchaseSell": 1650,
+              "MarginPurchaseTodayBalance": 28818,
+              "MarginPurchaseYesterdayBalance": 28995,
+              "Note": " ",
+              "OffsetLoanAndShort": 4,
+              "ShortSaleBuy": 12,
+              "ShortSaleCashRepayment": 0,
+              "ShortSaleLimit": 6483131,
+              "ShortSaleSell": 15,
+              "ShortSaleTodayBalance": 100,
+              "ShortSaleYesterdayBalance": 97
+            }
+          ],
+          "_provenance": {
+            "source": "FinMind API (finmindtrade.com)",
+            "source_authority": "FinMind (open-source aggregator, data from TWSE/MOPS)",
+            "data_type": "open_source_aggregator",
+            "update_cycle": "daily (T+1 for most datasets)",
+            "typical_lag": "1 business day",
+            "fetched_at": "2026-05-01T15:12:20Z",
+            "reference_period": "2026-04-30",
+            "staleness_days": 1
+          },
+          "_processed": {
+            "latest_date": "2026-04-30",
+            "margin_purchase_balance": null,
+            "short_sale_balance": null,
+            "_note": "融資餘額↑ = 散戶加碼多單（看漲）；融券餘額↑ = 放空部位增加（看跌）。方向相反，不可合併。"
+          }
+        }
+      }
+    }
+  },
+  "_partial": true
+}

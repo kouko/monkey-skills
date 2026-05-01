@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/memo-fetch.json",
+  "title": "data-jp memo-fetch pack output (tier-routed)",
+  "description": "Output of `pack.py --pack memo-fetch --ticker {4-digit-code}`. Composes the full `snapshot` pack and appends `fundamentals` + `material_events` blocks. Tier-routed at runtime by `EDINET_API_KEY`: when set, Tier A (EDINET 金融庁 primary-source filings + 180/220/350 material events); when unset, Tier 2 fallback (yfinance financials annual + quarterly + `_skipped` material_events note + `upgrade_hint` URL in `_provenance`). Two output paths expressed via `oneOf` on `_provenance.tier` discriminator.",
+  "type": "object",
+  "required": [
+    "pack",
+    "ticker",
+    "yf_ticker",
+    "fetched_at",
+    "info",
+    "price_history",
+    "timely_disclosures",
+    "fundamentals",
+    "material_events",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "const": "memo-fetch"
+    },
+    "ticker": {
+      "type": "string",
+      "pattern": "^[0-9A-Z]{4,5}$"
+    },
+    "yf_ticker": {
+      "type": "string",
+      "pattern": "^[0-9A-Z]{4,5}\\.(T|TO)$"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "info": {
+      "description": "Same as snapshot.info — yfinance info payload or error envelope.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker"
+          ]
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "price_history": {
+      "description": "Same as snapshot.price_history.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker",
+            "period"
+          ]
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "timely_disclosures": {
+      "description": "Same as snapshot.timely_disclosures (TDnet).",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker"
+          ]
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "fundamentals": {
+      "description": "Tier-routed fundamentals block. `tier_a` shape: EDINET filing-summary structured payload. `tier_2` shape: yfinance financials annual + quarterly.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "tier",
+            "tier_label",
+            "filing_summary"
+          ],
+          "properties": {
+            "tier": {
+              "type": "string",
+              "const": "tier_a"
+            },
+            "tier_label": {
+              "type": "string",
+              "const": "Tier A (EDINET)"
+            },
+            "filing_summary": {
+              "description": "edinet_client.py --action filing-summary output. Object or error envelope.",
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "tier",
+            "tier_label",
+            "annual",
+            "quarterly"
+          ],
+          "properties": {
+            "tier": {
+              "type": "string",
+              "const": "tier_2"
+            },
+            "tier_label": {
+              "type": "string",
+              "const": "Tier 2 fallback"
+            },
+            "annual": {
+              "description": "yfinance financials annual payload. Typically includes ticker, period, latest_period, key_metrics, income_statement, balance_sheet, cash_flow.",
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            },
+            "quarterly": {
+              "description": "yfinance financials quarterly payload (same shape as annual).",
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "material_events": {
+      "description": "Tier A: edinet_client.py list-filings output for forms 180/220/350 (180 days, limit 15) — always carries `filings` array. Tier 2: stub object with `_skipped` reason key. Error envelope on subprocess failure (Tier A only). Branches are mutually exclusive via discriminator-by-required-field (`filings` vs `_skipped`).",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "_skipped"
+          ],
+          "properties": {
+            "_skipped": {
+              "type": "string"
+            }
+          },
+          "description": "Tier 2 stub shape (no `filings`, no error envelope)."
+        },
+        {
+          "type": "object",
+          "required": [
+            "filings"
+          ],
+          "properties": {
+            "filings": {
+              "type": "array",
+              "description": "List of filing entries from edinet_client list-filings."
+            }
+          },
+          "description": "Tier A list-filings payload — always carries `filings` array (cannot satisfy Tier 2 `_skipped` requirement)."
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "_provenance": {
+      "description": "Tier discriminator. Tier A path includes `license: PDL 1.0 (EDINET)`. Tier 2 fallback includes `upgrade_hint` URL pointing at EDINET registration.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "tier",
+            "tier_label",
+            "sources"
+          ],
+          "properties": {
+            "tier": {
+              "type": "string",
+              "const": "tier_a"
+            },
+            "tier_label": {
+              "type": "string",
+              "const": "Tier A (EDINET 金融庁 primary-source)"
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "license": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "tier",
+            "tier_label",
+            "sources",
+            "upgrade_hint"
+          ],
+          "properties": {
+            "tier": {
+              "type": "string",
+              "const": "tier_2"
+            },
+            "tier_label": {
+              "type": "string",
+              "const": "Tier 2 fallback"
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "upgrade_hint": {
+              "type": "string",
+              "description": "Must contain the EDINET registration URL (https://disclosure2dl.edinet-fsa.go.jp/guide/static/disclosure/WZEK0110.html)."
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

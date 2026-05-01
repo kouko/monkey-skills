@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-cn/snapshot.json",
+  "title": "data-cn snapshot pack",
+  "description": "Quick overview pack for a single CN/HK ticker. yfinance_info (Tier 2) + 6mo daily OHLCV history. Country-scoped to CN — Shanghai/Shenzhen/Hong Kong only.",
+  "type": "object",
+  "required": ["pack", "ticker", "country", "yfinance_info", "yfinance_history"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": { "const": "snapshot" },
+    "ticker": {
+      "type": "string",
+      "description": "Normalised ticker. Auto-suffix heuristic: 6-digit /6,9 -> .SS; 6-digit /0,2,3 -> .SZ; 4-digit -> .HK; 5-digit -> .HK (leading-zero form e.g. 09988.HK). 6-digit /4,8 (BSE) emits stderr warning and passes through.",
+      "examples": ["600519.SS", "000858.SZ", "0700.HK", "09988.HK"]
+    },
+    "country": { "const": "CN" },
+    "yfinance_info": { "$ref": "#/$defs/yfinanceInfo" },
+    "yfinance_history": { "$ref": "#/$defs/yfinanceHistory" }
+  },
+  "$defs": {
+    "yfinanceInfo": {
+      "type": "object",
+      "description": "yfinance .info() output. Tier 2 unofficial scraper. Currency is CNY for .SS/.SZ, HKD for .HK.",
+      "additionalProperties": true,
+      "properties": {
+        "ticker": { "type": "string" },
+        "fetched_at": { "type": "string", "format": "date-time" },
+        "_cache": { "type": "string", "enum": ["hit", "miss"] },
+        "_warning": { "type": "string" },
+        "symbol": { "type": "string" },
+        "shortName": { "type": ["string", "null"] },
+        "longName": { "type": ["string", "null"] },
+        "sector": { "type": ["string", "null"] },
+        "industry": { "type": ["string", "null"] },
+        "country": { "type": ["string", "null"] },
+        "currency": { "type": ["string", "null"], "examples": ["CNY", "HKD"] },
+        "exchange": { "type": ["string", "null"], "examples": ["SHH", "SHZ", "HKG"] },
+        "regularMarketPrice": { "type": ["number", "null"] },
+        "regularMarketPreviousClose": { "type": ["number", "null"] },
+        "marketCap": { "type": ["number", "null"] },
+        "enterpriseValue": { "type": ["number", "null"] },
+        "trailingPE": { "type": ["number", "null"] },
+        "forwardPE": { "type": ["number", "null"] },
+        "priceToBook": { "type": ["number", "null"] },
+        "trailingEps": { "type": ["number", "null"] },
+        "forwardEps": { "type": ["number", "null"] },
+        "dividendYield": { "type": ["number", "null"] },
+        "payoutRatio": { "type": ["number", "null"] },
+        "fiftyTwoWeekHigh": { "type": ["number", "null"] },
+        "fiftyTwoWeekLow": { "type": ["number", "null"] },
+        "fiftyDayAverage": { "type": ["number", "null"] },
+        "twoHundredDayAverage": { "type": ["number", "null"] },
+        "sharesOutstanding": { "type": ["number", "null"] },
+        "totalRevenue": { "type": ["number", "null"] },
+        "grossMargins": { "type": ["number", "null"] },
+        "operatingMargins": { "type": ["number", "null"] },
+        "profitMargins": { "type": ["number", "null"] },
+        "returnOnEquity": { "type": ["number", "null"] },
+        "returnOnAssets": { "type": ["number", "null"] },
+        "totalDebt": { "type": ["number", "null"] },
+        "totalCash": { "type": ["number", "null"] },
+        "beta": { "type": ["number", "null"] },
+        "_provenance": { "$ref": "#/$defs/yfinanceProvenance" }
+      }
+    },
+    "yfinanceHistory": {
+      "type": "object",
+      "description": "yfinance OHLCV daily history. snapshot uses period=6mo, memo-fetch uses period=2y.",
+      "additionalProperties": true,
+      "required": ["ticker", "period", "interval", "data"],
+      "properties": {
+        "ticker": { "type": "string" },
+        "period": { "type": "string", "examples": ["6mo", "1y", "2y"] },
+        "interval": { "type": "string", "examples": ["1d"] },
+        "fetched_at": { "type": "string", "format": "date-time" },
+        "_cache": { "type": "string", "enum": ["hit", "miss"] },
+        "data": {
+          "type": "array",
+          "description": "Daily OHLCV bars sorted ascending by date.",
+          "items": {
+            "type": "object",
+            "required": ["date", "open", "high", "low", "close", "volume"],
+            "additionalProperties": true,
+            "properties": {
+              "date": { "type": "string", "description": "ISO date string (YYYY-MM-DD)." },
+              "open": { "type": ["number", "null"] },
+              "high": { "type": ["number", "null"] },
+              "low": { "type": ["number", "null"] },
+              "close": { "type": ["number", "null"] },
+              "volume": { "type": ["number", "integer", "null"] }
+            }
+          }
+        },
+        "latest_close": { "type": ["number", "null"] },
+        "latest_date": { "type": ["string", "null"] },
+        "rows": { "type": "integer", "minimum": 0 },
+        "_provenance": { "$ref": "#/$defs/yfinanceProvenance" }
+      }
+    },
+    "yfinanceProvenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "source": { "type": "string" },
+        "source_authority": { "type": "string" },
+        "data_type": { "type": "string" },
+        "update_cycle": { "type": ["string", "null"] },
+        "typical_lag": { "type": ["string", "null"] },
+        "fetched_at": { "type": "string", "format": "date-time" },
+        "reference_period": { "type": ["string", "null"] },
+        "staleness_days": { "type": ["integer", "number", "null"] }
+      }
+    }
+  }
+}

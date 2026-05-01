@@ -1,0 +1,78 @@
+{
+  "pack": "screener-batch",
+  "fetched_at": "2026-05-01T15:07:59.909395+00:00",
+  "tickers": {
+    "AAPL": {
+      "trailingPE": 35.67911,
+      "priceToBook": 46.99316,
+      "marketCap": 4138099539968,
+      "dividendYield": 0.38,
+      "beta": null,
+      "fiftyTwoWeekHigh": 288.62,
+      "fiftyTwoWeekLow": 193.25,
+      "regularMarketPrice": 281.865,
+      "sector": "Technology",
+      "industry": "Consumer Electronics",
+      "shortName": "Apple Inc.",
+      "ticker": "AAPL",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:54Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    },
+    "MSFT": {
+      "trailingPE": 24.59524,
+      "priceToBook": 7.853274,
+      "marketCap": 3069429415936,
+      "dividendYield": 0.89,
+      "beta": 1.107,
+      "fiftyTwoWeekHigh": 555.45,
+      "fiftyTwoWeekLow": 356.28,
+      "regularMarketPrice": 413.2,
+      "sector": "Technology",
+      "industry": "Software - Infrastructure",
+      "shortName": "Microsoft Corporation",
+      "ticker": "MSFT",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:59Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    },
+    "GOOGL": {
+      "trailingPE": 29.206554,
+      "priceToBook": 11.154484,
+      "marketCap": 4642516762624,
+      "dividendYield": 0.24,
+      "beta": 1.128,
+      "fiftyTwoWeekHigh": 386.3,
+      "fiftyTwoWeekLow": 147.84,
+      "regularMarketPrice": 383.19,
+      "sector": "Communication Services",
+      "industry": "Internet Content & Information",
+      "shortName": "Alphabet Inc.",
+      "ticker": "GOOGL",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:59Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    }
+  }
+}

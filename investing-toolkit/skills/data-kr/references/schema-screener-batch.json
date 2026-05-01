@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/screener-batch.json",
+  "title": "data-kr screener-batch pack",
+  "description": "Output of `pack.py --pack screener-batch --tickers <list>`. Lightweight batch info pull for screening 50–500 KR tickers. Returns the raw yfinance batch envelope under `batch` — analysis-screener projects fields downstream.",
+  "type": "object",
+  "required": ["pack", "country", "tickers", "batch", "_provenance"],
+  "properties": {
+    "pack": {"type": "string", "const": "screener-batch"},
+    "country": {"type": "string", "const": "kr"},
+    "tickers": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "batch": {
+      "type": "object",
+      "description": "Raw yfinance_client batch envelope (mode='batch', action='info').",
+      "required": ["mode", "action", "tickers"],
+      "properties": {
+        "mode": {"type": "string", "const": "batch"},
+        "action": {"type": "string", "const": "info"},
+        "tickers": {
+          "type": "object",
+          "description": "Per-ticker info dict, keyed by ticker.",
+          "patternProperties": {
+            "^[A-Za-z0-9._-]+$": {
+              "type": "object",
+              "description": "yfinance info payload for one ticker.",
+              "properties": {
+                "ticker": {"type": "string"},
+                "fetched_at": {"type": "string", "format": "date-time"},
+                "_cache": {"type": "string", "enum": ["hit", "miss"]},
+                "symbol": {"type": "string"},
+                "marketCap": {"type": ["number", "integer", "null"]},
+                "trailingPE": {"type": ["number", "null"]},
+                "forwardPE": {"type": ["number", "null"]}
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "_partial": {"type": "boolean"},
+        "_summary": {
+          "type": "object",
+          "description": "Per-ticker fetch status — typically 'ok' or an error string.",
+          "additionalProperties": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "_provenance": {
+      "type": "object",
+      "required": ["tier", "primary_source_status", "primary_source_note", "ticker_count"],
+      "properties": {
+        "tier": {"type": "string"},
+        "primary_source_status": {"type": "string", "const": "deferred"},
+        "primary_source_note": {"type": "string"},
+        "ticker_count": {"type": "integer", "minimum": 1},
+        "ticker_normalization_warnings": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

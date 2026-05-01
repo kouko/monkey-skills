@@ -1,0 +1,65 @@
+{
+  "pack": "comps-multiples",
+  "fetched_at": "2026-05-01T15:08:57+00:00",
+  "tickers": [
+    {
+      "ticker": "7203",
+      "yf_ticker": "7203.T",
+      "multiples": {
+        "trailingPE": 10.557432,
+        "forwardPE": 9.252976,
+        "priceToSales": null,
+        "priceToBook": 1.0032194,
+        "enterpriseToEbitda": null,
+        "enterpriseToRevenue": null,
+        "marketCap": 35523162800128,
+        "enterpriseValue": 65953370996736
+      }
+    },
+    {
+      "ticker": "7267",
+      "yf_ticker": "7267.T",
+      "multiples": {
+        "trailingPE": 10.12024,
+        "forwardPE": 5.5338826,
+        "priceToSales": null,
+        "priceToBook": 0.39423066,
+        "enterpriseToEbitda": null,
+        "enterpriseToRevenue": null,
+        "marketCap": 4914345934848,
+        "enterpriseValue": 13754969358336
+      }
+    },
+    {
+      "ticker": "7269",
+      "yf_ticker": "7269.T",
+      "multiples": {
+        "trailingPE": 8.642706,
+        "forwardPE": 9.946099,
+        "priceToSales": null,
+        "priceToBook": 1.0238338,
+        "enterpriseToEbitda": null,
+        "enterpriseToRevenue": null,
+        "marketCap": 3382017261568,
+        "enterpriseValue": 3992902696960
+      }
+    }
+  ],
+  "_provenance": {
+    "tier": "tier_1",
+    "tier_label": "Tier 1 (yfinance multiples)",
+    "sources": [
+      "Yahoo Finance (.T)"
+    ],
+    "fields": [
+      "trailingPE",
+      "forwardPE",
+      "priceToSales",
+      "priceToBook",
+      "enterpriseToEbitda",
+      "enterpriseToRevenue",
+      "marketCap",
+      "enterpriseValue"
+    ]
+  }
+}

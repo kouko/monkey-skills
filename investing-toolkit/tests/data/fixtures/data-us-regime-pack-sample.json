@@ -1,0 +1,703 @@
+{
+  "pack": "regime-pack",
+  "country": "US",
+  "fetched_at": "2026-05-01T15:08:12.886614+00:00",
+  "groups": {
+    "rates": {
+      "fetched_at": "2026-05-01T15:08:01Z",
+      "series": {
+        "FEDFUNDS": {
+          "series": "FEDFUNDS",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:01Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series FEDFUNDS has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 3.64
+            },
+            {
+              "date": "2026-02-01",
+              "value": 3.64
+            },
+            {
+              "date": "2026-03-01",
+              "value": 3.64
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": 3.64
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:01Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        },
+        "T10Y2Y": {
+          "series": "T10Y2Y",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:01Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series T10Y2Y has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-28",
+              "value": 0.52
+            },
+            {
+              "date": "2026-04-29",
+              "value": 0.5
+            },
+            {
+              "date": "2026-04-30",
+              "value": 0.52
+            }
+          ],
+          "latest": {
+            "date": "2026-04-30",
+            "value": 0.52
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:01Z",
+            "reference_period": "2026-04-30",
+            "staleness_days": 1
+          }
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:01Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series DGS10 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-27",
+              "value": 4.35
+            },
+            {
+              "date": "2026-04-28",
+              "value": 4.36
+            },
+            {
+              "date": "2026-04-29",
+              "value": 4.42
+            }
+          ],
+          "latest": {
+            "date": "2026-04-29",
+            "value": 4.42
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:01Z",
+            "reference_period": "2026-04-29",
+            "staleness_days": 2
+          }
+        },
+        "DGS2": {
+          "series": "DGS2",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:03Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series DGS2 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-27",
+              "value": 3.78
+            },
+            {
+              "date": "2026-04-28",
+              "value": 3.84
+            },
+            {
+              "date": "2026-04-29",
+              "value": 3.92
+            }
+          ],
+          "latest": {
+            "date": "2026-04-29",
+            "value": 3.92
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:03Z",
+            "reference_period": "2026-04-29",
+            "staleness_days": 2
+          }
+        }
+      }
+    },
+    "inflation": {
+      "fetched_at": "2026-05-01T15:08:04Z",
+      "series": {
+        "CPIAUCSL": {
+          "series": "CPIAUCSL",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:04Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series CPIAUCSL has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 326.588
+            },
+            {
+              "date": "2026-02-01",
+              "value": 327.46
+            },
+            {
+              "date": "2026-03-01",
+              "value": 330.293
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": 330.293
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:04Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        },
+        "CPILFESL": {
+          "series": "CPILFESL",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:04Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series CPILFESL has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 332.793
+            },
+            {
+              "date": "2026-02-01",
+              "value": 333.512
+            },
+            {
+              "date": "2026-03-01",
+              "value": 334.165
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": 334.165
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:04Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        }
+      }
+    },
+    "growth": {
+      "fetched_at": "2026-05-01T15:08:04Z",
+      "series": {
+        "GDPC1": {
+          "series": "GDPC1",
+          "periods_requested": 12,
+          "fetched_at": "2026-05-01T15:08:05Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series GDPC1 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2025-07-01",
+              "value": 24026.834
+            },
+            {
+              "date": "2025-10-01",
+              "value": 24055.749
+            },
+            {
+              "date": "2026-01-01",
+              "value": 24174.527
+            }
+          ],
+          "latest": {
+            "date": "2026-01-01",
+            "value": 24174.527
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:05Z",
+            "reference_period": "2026-01-01",
+            "staleness_days": 120
+          }
+        },
+        "INDPRO": {
+          "series": "INDPRO",
+          "periods_requested": 12,
+          "fetched_at": "2026-05-01T15:08:05Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series INDPRO has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 101.5954
+            },
+            {
+              "date": "2026-02-01",
+              "value": 102.344
+            },
+            {
+              "date": "2026-03-01",
+              "value": 101.7898
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": 101.7898
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:05Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        }
+      }
+    },
+    "nowcast": {
+      "fetched_at": "2026-05-01T15:08:05Z",
+      "series": {
+        "GDPNOW": {
+          "series": "GDPNOW",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:06Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series GDPNOW has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2025-10-01",
+              "value": 4.2373
+            },
+            {
+              "date": "2026-01-01",
+              "value": 1.2392
+            },
+            {
+              "date": "2026-04-01",
+              "value": 3.7007
+            }
+          ],
+          "latest": {
+            "date": "2026-04-01",
+            "value": 3.7007
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:06Z",
+            "reference_period": "2026-04-01",
+            "staleness_days": 30
+          }
+        },
+        "CFNAI": {
+          "series": "CFNAI",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:06Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series CFNAI has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 0.08
+            },
+            {
+              "date": "2026-02-01",
+              "value": 0.03
+            },
+            {
+              "date": "2026-03-01",
+              "value": -0.2
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": -0.2
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:06Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        },
+        "USALOLITOAASTSAM": {
+          "series": "USALOLITOAASTSAM",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:06Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series USALOLITOAASTSAM has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-01-01",
+              "value": 100.618964678604
+            },
+            {
+              "date": "2026-02-01",
+              "value": 100.773584150807
+            },
+            {
+              "date": "2026-03-01",
+              "value": 100.889483786715
+            }
+          ],
+          "latest": {
+            "date": "2026-03-01",
+            "value": 100.889483786715
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:06Z",
+            "reference_period": "2026-03-01",
+            "staleness_days": 61
+          }
+        }
+      }
+    },
+    "wei": {
+      "series": "WEI",
+      "periods_requested": 52,
+      "fetched_at": "2026-05-01T15:08:07Z",
+      "_cache": "miss",
+      "_source": "csv",
+      "_warning": "FRED series WEI has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+      "observations": [
+        {
+          "date": "2026-04-11",
+          "value": 2.73
+        },
+        {
+          "date": "2026-04-18",
+          "value": 2.52
+        },
+        {
+          "date": "2026-04-25",
+          "value": 2.96
+        }
+      ],
+      "latest": {
+        "date": "2026-04-25",
+        "value": 2.96
+      },
+      "count": 3,
+      "_provenance": {
+        "source": "FRED CSV (fred.stlouisfed.org)",
+        "source_authority": "Federal Reserve Bank of St. Louis",
+        "data_type": "official_government_statistics",
+        "update_cycle": "varies by series",
+        "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+        "fetched_at": "2026-05-01T15:08:07Z",
+        "reference_period": "2026-04-25",
+        "staleness_days": 6
+      }
+    },
+    "real_rates": {
+      "fetched_at": "2026-05-01T15:08:07Z",
+      "series": {
+        "DFII10": {
+          "series": "DFII10",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:07Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series DFII10 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-27",
+              "value": 1.91
+            },
+            {
+              "date": "2026-04-28",
+              "value": 1.92
+            },
+            {
+              "date": "2026-04-29",
+              "value": 1.96
+            }
+          ],
+          "latest": {
+            "date": "2026-04-29",
+            "value": 1.96
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:07Z",
+            "reference_period": "2026-04-29",
+            "staleness_days": 2
+          }
+        },
+        "T5YIE": {
+          "series": "T5YIE",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:09Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series T5YIE has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-28",
+              "value": 2.63
+            },
+            {
+              "date": "2026-04-29",
+              "value": 2.67
+            },
+            {
+              "date": "2026-04-30",
+              "value": 2.67
+            }
+          ],
+          "latest": {
+            "date": "2026-04-30",
+            "value": 2.67
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:09Z",
+            "reference_period": "2026-04-30",
+            "staleness_days": 1
+          }
+        },
+        "DFII5": {
+          "series": "DFII5",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:12Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series DFII5 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-27",
+              "value": 1.32
+            },
+            {
+              "date": "2026-04-28",
+              "value": 1.34
+            },
+            {
+              "date": "2026-04-29",
+              "value": 1.38
+            }
+          ],
+          "latest": {
+            "date": "2026-04-29",
+            "value": 1.38
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:12Z",
+            "reference_period": "2026-04-29",
+            "staleness_days": 2
+          }
+        },
+        "T10YIE": {
+          "series": "T10YIE",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:12Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series T10YIE has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-28",
+              "value": 2.44
+            },
+            {
+              "date": "2026-04-29",
+              "value": 2.46
+            },
+            {
+              "date": "2026-04-30",
+              "value": 2.46
+            }
+          ],
+          "latest": {
+            "date": "2026-04-30",
+            "value": 2.46
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:12Z",
+            "reference_period": "2026-04-30",
+            "staleness_days": 1
+          }
+        }
+      }
+    },
+    "swap_spreads": {
+      "fetched_at": "2026-05-01T15:08:12Z",
+      "series": {
+        "DGS3MO": {
+          "series": "DGS3MO",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:12Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series DGS3MO has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-27",
+              "value": 3.68
+            },
+            {
+              "date": "2026-04-28",
+              "value": 3.68
+            },
+            {
+              "date": "2026-04-29",
+              "value": 3.68
+            }
+          ],
+          "latest": {
+            "date": "2026-04-29",
+            "value": 3.68
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:12Z",
+            "reference_period": "2026-04-29",
+            "staleness_days": 2
+          }
+        },
+        "SOFR30DAYAVG": {
+          "series": "SOFR30DAYAVG",
+          "periods_requested": 24,
+          "fetched_at": "2026-05-01T15:08:12Z",
+          "_cache": "miss",
+          "_source": "csv",
+          "_warning": "FRED series SOFR30DAYAVG has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "observations": [
+            {
+              "date": "2026-04-29",
+              "value": 3.64917
+            },
+            {
+              "date": "2026-04-30",
+              "value": 3.64917
+            },
+            {
+              "date": "2026-05-01",
+              "value": 3.6485
+            }
+          ],
+          "latest": {
+            "date": "2026-05-01",
+            "value": 3.6485
+          },
+          "count": 3,
+          "_provenance": {
+            "source": "FRED CSV (fred.stlouisfed.org)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "update_cycle": "varies by series",
+            "typical_lag": "0 days (daily) to 4 weeks (CPI/GDP)",
+            "fetched_at": "2026-05-01T15:08:12Z",
+            "reference_period": "2026-05-01",
+            "staleness_days": 0
+          }
+        }
+      }
+    }
+  }
+}

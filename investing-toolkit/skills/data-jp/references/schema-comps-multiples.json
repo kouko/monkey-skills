@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/comps-multiples.json",
+  "title": "data-jp comps-multiples pack output",
+  "description": "Output of `pack.py --pack comps-multiples` for one or many tickers. Single batch yfinance call, then per-ticker filtered to the multiples-only whitelist defined in `pack.py:COMPS_FIELDS`. Currency: JPY for marketCap / enterpriseValue when ticker is .T-listed.",
+  "type": "object",
+  "required": [
+    "pack",
+    "fetched_at",
+    "tickers",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "const": "comps-multiples"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tickers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ticker",
+          "yf_ticker",
+          "multiples"
+        ],
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "pattern": "^[0-9A-Z]{4,5}$"
+          },
+          "yf_ticker": {
+            "type": "string",
+            "pattern": "^[0-9A-Z]{4,5}\\.(T|TO)$"
+          },
+          "multiples": {
+            "description": "Multiples + size whitelist. All fields are emitted (key always present); value may be null when yfinance has no data for that field. On batch-level fetch error, this object is replaced by `{\"error\": \"...\"}` (error envelope shape).",
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "trailingPE",
+                  "forwardPE",
+                  "priceToSales",
+                  "priceToBook",
+                  "enterpriseToEbitda",
+                  "enterpriseToRevenue",
+                  "marketCap",
+                  "enterpriseValue"
+                ],
+                "properties": {
+                  "trailingPE": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "forwardPE": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "priceToSales": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "priceToBook": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "enterpriseToEbitda": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "enterpriseToRevenue": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "marketCap": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "enterpriseValue": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "_provenance": {
+      "type": "object",
+      "required": [
+        "tier",
+        "tier_label",
+        "sources",
+        "fields"
+      ],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "const": "tier_1"
+        },
+        "tier_label": {
+          "type": "string",
+          "const": "Tier 1 (yfinance multiples)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The COMPS_FIELDS whitelist; serves as a self-documenting field manifest."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

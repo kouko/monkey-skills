@@ -1,0 +1,452 @@
+{
+  "pack": "memo-fetch",
+  "ticker": "7203",
+  "yf_ticker": "7203.T",
+  "fetched_at": "2026-05-01T15:08:54+00:00",
+  "info": {
+    "ticker": "7203.T",
+    "fetched_at": "2026-05-01T15:08:49Z",
+    "_cache": "hit",
+    "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+    "symbol": "7203.T",
+    "shortName": "TOYOTA MOTOR CORP",
+    "longName": "Toyota Motor Corporation",
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "country": "Japan",
+    "currency": "JPY",
+    "exchange": "JPX",
+    "regularMarketPrice": 3000.0,
+    "regularMarketPreviousClose": 3023.0,
+    "marketCap": 35523162800128,
+    "enterpriseValue": 65953370996736,
+    "trailingPE": 10.557432,
+    "forwardPE": 9.252976,
+    "priceToBook": 1.0032194,
+    "trailingEps": 284.16,
+    "forwardEps": 324.22,
+    "dividendYield": 3.14,
+    "payoutRatio": 0.3343,
+    "fiftyTwoWeekHigh": 4000.0,
+    "fiftyTwoWeekLow": 2434.0,
+    "fiftyDayAverage": 3401.34,
+    "twoHundredDayAverage": 3172.905,
+    "sharesOutstanding": 11841053512,
+    "totalRevenue": 50450762039296,
+    "grossMargins": 0.17597,
+    "operatingMargins": 0.08851,
+    "profitMargins": 0.073249996,
+    "returnOnEquity": 0.10032,
+    "returnOnAssets": 0.0273,
+    "totalDebt": 42127681650688,
+    "totalCash": 16592086761472,
+    "beta": 0.357,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:08:49Z",
+      "reference_period": null,
+      "staleness_days": null
+    }
+  },
+  "price_history": {
+    "ticker": "7203.T",
+    "period": "2y",
+    "interval": "1d",
+    "fetched_at": "2026-05-01T15:08:49Z",
+    "_cache": "hit",
+    "data": [
+      {
+        "date": "2024-05-01",
+        "open": 3381.3291,
+        "high": 3436.7453,
+        "low": 3358.7869,
+        "close": 3386.0254,
+        "volume": 27076000
+      },
+      {
+        "date": "2024-05-02",
+        "open": 3363.4832,
+        "high": 3401.9927,
+        "low": 3342.8195,
+        "close": 3363.4832,
+        "volume": 20164900
+      },
+      {
+        "date": "2024-05-07",
+        "open": 3428.2923,
+        "high": 3428.2923,
+        "low": 3345.6376,
+        "close": 3380.3901,
+        "volume": 25496600
+      },
+      {
+        "date": "2024-05-08",
+        "open": 3331.5485,
+        "high": 3450.8343,
+        "low": 3243.2582,
+        "close": 3361.6047,
+        "volume": 68295000
+      },
+      {
+        "date": "2024-05-09",
+        "open": 3376.6327,
+        "high": 3376.6327,
+        "low": 3262.0432,
+        "close": 3313.7024,
+        "volume": 40742400
+      }
+    ],
+    "latest_close": 3023.0,
+    "latest_date": "2026-04-30",
+    "rows": 5,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:08:49Z",
+      "reference_period": "2026-04-30",
+      "staleness_days": 1
+    },
+    "_truncated_for_fixture": "original 488 rows truncated to 5"
+  },
+  "timely_disclosures": {
+    "ticker": "7203",
+    "normalized_ticker": "7203",
+    "keyword": null,
+    "limit": 20,
+    "count": 20,
+    "total_available": 20,
+    "disclosures": [
+      {
+        "id": "1243043",
+        "pubdate": "2026-04-28 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "自己株式の公開買付けの結果ならびに自己株式の取得終了および消却に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260428513263.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1235413",
+        "pubdate": "2026-03-30 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "自己株式の公開買付け及び自己株式の取得に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260330592169.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1230694",
+        "pubdate": "2026-03-06 16:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "自己株式の公開買付けの条件等変更及び自己株式取得に係る事項の変更等に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260306577638.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      }
+    ],
+    "fetched_at": "2026-05-01T15:08:50Z",
+    "_cache": "hit",
+    "_provenance": {
+      "source": "Yanoshin TDnet WEB-API (webapi.yanoshin.jp/tdnet)",
+      "source_authority": "JPX TDnet via unofficial Yanoshin aggregator — index only; full documents served from release.tdnet.info (JPX-hosted)",
+      "data_type": "third_party_aggregated_index",
+      "data_tier": "tier_2_index",
+      "update_cycle": "event-driven, polled every few minutes by aggregator",
+      "typical_lag": "~5 min from TDnet official publication",
+      "license_note": "Yanoshin terms informal; do NOT re-host response payloads. Follow document_url for content (JPX-served PDFs under TDnet ToS).",
+      "fetched_at": "2026-05-01T15:08:50Z",
+      "reference_period": "2026-04-28 15:30:00",
+      "count": 20
+    },
+    "_truncated_for_fixture": "original 20 disclosures truncated to 3"
+  },
+  "_provenance": {
+    "tier": "tier_2",
+    "tier_label": "Tier 2 fallback",
+    "sources": [
+      "Yahoo Finance (.T) financials (Yahoo-scraped, may diverge from regulator filings)",
+      "TDnet via Yanoshin"
+    ],
+    "upgrade_hint": "Set EDINET_API_KEY to switch to Tier A primary-source 金融庁 filings. Register free at https://disclosure2dl.edinet-fsa.go.jp/guide/static/disclosure/WZEK0110.html"
+  },
+  "fundamentals": {
+    "tier": "tier_2",
+    "tier_label": "Tier 2 fallback",
+    "annual": {
+      "ticker": "7203.T",
+      "period": "annual",
+      "fetched_at": "2026-05-01T15:08:55Z",
+      "_cache": "miss",
+      "latest_period": "2025-03-31",
+      "key_metrics": {
+        "eps": {
+          "value": 359.56,
+          "source_label": "Basic EPS",
+          "period": "2025-03-31"
+        },
+        "net_income": {
+          "value": 4765086000000.0,
+          "source_label": "Net Income Common Stockholders",
+          "period": "2025-03-31"
+        },
+        "operating_income": {
+          "value": 4795586000000.0,
+          "source_label": "Operating Income",
+          "period": "2025-03-31"
+        },
+        "revenue": {
+          "value": 48036704000000.0,
+          "source_label": "Total Revenue",
+          "period": "2025-03-31"
+        },
+        "net_assets": {
+          "value": 36878914000000.0,
+          "source_label": "Total Equity Gross Minority Interest",
+          "period": "2025-03-31"
+        },
+        "total_assets": {
+          "value": 93601350000000.0,
+          "source_label": "Total Assets",
+          "period": "2025-03-31"
+        },
+        "cash_and_equivalents": {
+          "value": 8982404000000.0,
+          "source_label": "Cash And Cash Equivalents",
+          "period": "2025-03-31"
+        },
+        "free_cash_flow": {
+          "value": -1560993000000.0,
+          "source_label": "Free Cash Flow",
+          "period": "2025-03-31"
+        },
+        "financing_cash_flow": {
+          "value": 197236000000.0,
+          "source_label": "Financing Cash Flow",
+          "period": "2025-03-31"
+        },
+        "investing_cash_flow": {
+          "value": -4189736000000.0,
+          "source_label": "Investing Cash Flow",
+          "period": "2025-03-31"
+        },
+        "operating_cash_flow": {
+          "value": 3696934000000.0,
+          "source_label": "Operating Cash Flow",
+          "period": "2025-03-31"
+        }
+      },
+      "income_statement": {
+        "2025-03-31": {
+          "Tax Effect Of Unusual Items": 208908931000.0,
+          "Tax Rate For Calcs": 0.253
+        },
+        "2024-03-31": {
+          "Tax Effect Of Unusual Items": 85610912000.0,
+          "Tax Rate For Calcs": 0.272
+        },
+        "2023-03-31": {
+          "Tax Effect Of Unusual Items": 74823680000.0,
+          "Tax Rate For Calcs": 0.32
+        }
+      },
+      "balance_sheet": {
+        "2025-03-31": {
+          "Treasury Shares Number": 2746057686.0,
+          "Ordinary Shares Number": 13048929774.0
+        },
+        "2024-03-31": {
+          "Treasury Shares Number": 2840815433.0,
+          "Ordinary Shares Number": 13474172027.0
+        },
+        "2023-03-31": {
+          "Treasury Shares Number": 2749807731.0,
+          "Ordinary Shares Number": 13565179729.0
+        }
+      },
+      "cash_flow": {
+        "2025-03-31": {
+          "Free Cash Flow": -1560993000000.0,
+          "Repayment Of Debt": -10872262000000.0
+        },
+        "2024-03-31": {
+          "Free Cash Flow": -842021000000.0,
+          "Repayment Of Debt": -8752329000000.0
+        },
+        "2023-03-31": {
+          "Free Cash Flow": -750756000000.0,
+          "Repayment Of Debt": -8353033000000.0
+        }
+      },
+      "_warning": "Yahoo Finance is an unofficial scraper. Financial statements may be stale, incomplete, or diverge from regulator filings. For JP tickers (.T), prefer edinet_client.py (primary-source 金融庁 Tier A) when EDINET_API_KEY is set.",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:08:55Z",
+        "reference_period": null,
+        "staleness_days": null,
+        "data_tier": "tier_2",
+        "note": "Unofficial Yahoo scraper; not regulator-filed."
+      },
+      "_income_statement_truncated": "first 3 line items, first 2 periods kept for fixture",
+      "_balance_sheet_truncated": "first 3 line items, first 2 periods kept for fixture",
+      "_cash_flow_truncated": "first 3 line items, first 2 periods kept for fixture"
+    },
+    "quarterly": {
+      "ticker": "7203.T",
+      "period": "quarterly",
+      "fetched_at": "2026-05-01T15:08:57Z",
+      "_cache": "miss",
+      "latest_period": "2025-12-31",
+      "key_metrics": {
+        "net_income": {
+          "value": 1257465000000.0,
+          "source_label": "Net Income Common Stockholders",
+          "period": "2025-12-31"
+        },
+        "operating_income": {
+          "value": 1191030000000.0,
+          "source_label": "Operating Income",
+          "period": "2025-12-31"
+        },
+        "revenue": {
+          "value": 13456852000000.0,
+          "source_label": "Total Revenue",
+          "period": "2025-12-31"
+        },
+        "net_assets": {
+          "value": 39992539000000.0,
+          "source_label": "Total Equity Gross Minority Interest",
+          "period": "2025-12-31"
+        },
+        "total_assets": {
+          "value": 102344599000000.0,
+          "source_label": "Total Assets",
+          "period": "2025-12-31"
+        },
+        "cash_and_equivalents": {
+          "value": 7918907000000.0,
+          "source_label": "Cash And Cash Equivalents",
+          "period": "2025-12-31"
+        },
+        "free_cash_flow": {
+          "value": -488899000000.0,
+          "source_label": "Free Cash Flow",
+          "period": "2025-12-31"
+        },
+        "financing_cash_flow": {
+          "value": -313023000000.0,
+          "source_label": "Financing Cash Flow",
+          "period": "2025-12-31"
+        },
+        "investing_cash_flow": {
+          "value": -834326000000.0,
+          "source_label": "Investing Cash Flow",
+          "period": "2025-12-31"
+        },
+        "operating_cash_flow": {
+          "value": 825130000000.0,
+          "source_label": "Operating Cash Flow",
+          "period": "2025-12-31"
+        }
+      },
+      "income_statement": {
+        "2025-12-31": {
+          "Tax Effect Of Unusual Items": 78235607867.8311,
+          "Tax Rate For Calcs": 0.240416
+        },
+        "2025-09-30": {
+          "Tax Effect Of Unusual Items": 32938020752.462326,
+          "Tax Rate For Calcs": 0.206394
+        },
+        "2025-06-30": {
+          "Tax Effect Of Unusual Items": -64444087159.54613,
+          "Tax Rate For Calcs": 0.303445
+        }
+      },
+      "balance_sheet": {
+        "2025-12-31": {
+          "Treasury Shares Number": 2761600733.0,
+          "Ordinary Shares Number": 13033386727.0
+        },
+        "2025-09-30": {
+          "Treasury Shares Number": 2761598241.0,
+          "Ordinary Shares Number": 13033389219.0
+        },
+        "2025-06-30": {
+          "Treasury Shares Number": 2761596216.0,
+          "Ordinary Shares Number": 13033391244.0
+        }
+      },
+      "cash_flow": {
+        "2025-12-31": {
+          "Free Cash Flow": -488899000000.0,
+          "Repayment Of Debt": -2832192000000.0
+        },
+        "2025-09-30": {
+          "Free Cash Flow": -204078000000.0,
+          "Repayment Of Debt": -2206414000000.0
+        },
+        "2025-06-30": {
+          "Free Cash Flow": 633559000000.0,
+          "Repayment Of Debt": -3197589000000.0
+        }
+      },
+      "_warning": "Yahoo Finance is an unofficial scraper. Financial statements may be stale, incomplete, or diverge from regulator filings. For JP tickers (.T), prefer edinet_client.py (primary-source 金融庁 Tier A) when EDINET_API_KEY is set.",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:08:57Z",
+        "reference_period": null,
+        "staleness_days": null,
+        "data_tier": "tier_2",
+        "note": "Unofficial Yahoo scraper; not regulator-filed."
+      },
+      "_income_statement_truncated": "first 3 line items, first 2 periods kept for fixture",
+      "_balance_sheet_truncated": "first 3 line items, first 2 periods kept for fixture",
+      "_cash_flow_truncated": "first 3 line items, first 2 periods kept for fixture"
+    }
+  },
+  "material_events": {
+    "_skipped": "EDINET_API_KEY not set; material events (180/220/350) unavailable in Tier 2 fallback"
+  }
+}

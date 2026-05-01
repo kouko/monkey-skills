@@ -1,0 +1,433 @@
+{
+  "pack": "memo-fetch",
+  "country": "kr",
+  "ticker": "005930.KS",
+  "tier": "Tier 2 only",
+  "info": {
+    "ticker": "005930.KS",
+    "fetched_at": "2026-05-01T15:09:33Z",
+    "_cache": "hit",
+    "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+    "symbol": "005930.KS",
+    "shortName": "SamsungElec",
+    "longName": "Samsung Electronics Co., Ltd.",
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "country": "South Korea",
+    "currency": "KRW",
+    "exchange": "KSC",
+    "regularMarketPrice": 220500.0,
+    "regularMarketPreviousClose": 226000.0,
+    "marketCap": 1447927159455744,
+    "enterpriseValue": 1373473230290944,
+    "forwardPE": 5.4149647,
+    "dividendYield": 1.03,
+    "payoutRatio": 0.2526,
+    "fiftyTwoWeekHigh": 230000.0,
+    "fiftyTwoWeekLow": 53700.0,
+    "fiftyDayAverage": 198901.0,
+    "twoHundredDayAverage": 127987.75,
+    "sharesOutstanding": 5764191903,
+    "totalRevenue": 333605947572224,
+    "grossMargins": 0.39379,
+    "operatingMargins": 0.21322,
+    "profitMargins": 0.13267,
+    "returnOnEquity": 0.10783,
+    "returnOnAssets": 0.0504,
+    "totalDebt": 25239138336768,
+    "totalCash": 125847113564160,
+    "beta": 1.211,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:09:33Z",
+      "reference_period": null,
+      "staleness_days": null
+    }
+  },
+  "financials_annual": {
+    "ticker": "005930.KS",
+    "period": "annual",
+    "fetched_at": "2026-05-01T15:09:51Z",
+    "_cache": "miss",
+    "latest_period": "2025-12-31",
+    "key_metrics": {
+      "eps": {
+        "value": 6605.0,
+        "source_label": "Basic EPS",
+        "period": "2025-12-31"
+      },
+      "net_income": {
+        "value": 44260956000000.0,
+        "source_label": "Net Income Common Stockholders",
+        "period": "2025-12-31"
+      },
+      "operating_income": {
+        "value": 43601051000000.0,
+        "source_label": "Operating Income",
+        "period": "2025-12-31"
+      },
+      "revenue": {
+        "value": 333605938000000.0,
+        "source_label": "Total Revenue",
+        "period": "2025-12-31"
+      },
+      "net_assets": {
+        "value": 436320337000000.0,
+        "source_label": "Total Equity Gross Minority Interest",
+        "period": "2025-12-31"
+      },
+      "total_assets": {
+        "value": 566942110000000.0,
+        "source_label": "Total Assets",
+        "period": "2025-12-31"
+      },
+      "cash_and_equivalents": {
+        "value": 57856378000000.0,
+        "source_label": "Cash And Cash Equivalents",
+        "period": "2025-12-31"
+      },
+      "free_cash_flow": {
+        "value": 33161999000000.0,
+        "source_label": "Free Cash Flow",
+        "period": "2025-12-31"
+      },
+      "financing_cash_flow": {
+        "value": -13478040000000.0,
+        "source_label": "Financing Cash Flow",
+        "period": "2025-12-31"
+      },
+      "investing_cash_flow": {
+        "value": -68512206000000.0,
+        "source_label": "Investing Cash Flow",
+        "period": "2025-12-31"
+      },
+      "operating_cash_flow": {
+        "value": 85315148000000.0,
+        "source_label": "Operating Cash Flow",
+        "period": "2025-12-31"
+      }
+    },
+    "income_statement": {
+      "2025-12-31": {
+        "Tax Effect Of Unusual Items": 30219728891.932095,
+        "Tax Rate For Calcs": 0.086389,
+        "Normalized EBITDA": 96664037000000.0
+      },
+      "2024-12-31": {
+        "Tax Effect Of Unusual Items": -7643351884.3752,
+        "Tax Rate For Calcs": 0.082025,
+        "Normalized EBITDA": 81157657000000.0
+      },
+      "2023-12-31": {
+        "Tax Effect Of Unusual Items": -22864080000.0,
+        "Tax Rate For Calcs": 0.24,
+        "Normalized EBITDA": 50698344000000.0
+      },
+      "2022-12-31": {
+        "Tax Effect Of Unusual Items": -25405600000.0,
+        "Tax Rate For Calcs": 0.275,
+        "Normalized EBITDA": 86403532000000.0
+      }
+    },
+    "balance_sheet": {
+      "2025-12-31": {
+        "Treasury Shares Number": 140942617.0,
+        "Preferred Shares Number": 802437676.0,
+        "Ordinary Shares Number": 6686083126.0
+      },
+      "2024-12-31": {
+        "Treasury Shares Number": 29700000.0,
+        "Preferred Shares Number": 818836700.0,
+        "Ordinary Shares Number": 5940082550.0
+      },
+      "2023-12-31": {
+        "Treasury Shares Number": 0.0,
+        "Preferred Shares Number": 822886700.0,
+        "Ordinary Shares Number": 5969782550.0
+      },
+      "2022-12-31": {
+        "Treasury Shares Number": 0.0,
+        "Preferred Shares Number": 822886700.0,
+        "Ordinary Shares Number": 5969782550.0
+      }
+    },
+    "cash_flow": {
+      "2025-12-31": {
+        "Free Cash Flow": 33161999000000.0,
+        "Repurchase Of Capital Stock": -8189263000000.0,
+        "Repayment Of Debt": -2852971000000.0
+      },
+      "2024-12-31": {
+        "Free Cash Flow": 19240982000000.0,
+        "Repurchase Of Capital Stock": -1811775000000.0,
+        "Repayment Of Debt": -1364508000000.0
+      },
+      "2023-12-31": {
+        "Free Cash Flow": -16396740000000.0,
+        "Repayment Of Debt": -1219579000000.0,
+        "Issuance Of Debt": 2500112000000.0
+      },
+      "2022-12-31": {
+        "Free Cash Flow": 9054614000000.0,
+        "Repayment Of Debt": -9847614000000.0,
+        "Issuance Of Debt": 271997000000.0
+      },
+      "2021-12-31": {
+        "Other Cash Adjustment Inside Changein Cash": 139000000.0,
+        "Short Term Debt Payments": -2616943000000.0
+      }
+    },
+    "_warning": "Yahoo Finance is an unofficial scraper. Financial statements may be stale, incomplete, or diverge from regulator filings. For JP tickers (.T), prefer edinet_client.py (primary-source 金融庁 Tier A) when EDINET_API_KEY is set.",
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:09:51Z",
+      "reference_period": null,
+      "staleness_days": null,
+      "data_tier": "tier_2",
+      "note": "Unofficial Yahoo scraper; not regulator-filed."
+    }
+  },
+  "financials_quarterly": {
+    "ticker": "005930.KS",
+    "period": "quarterly",
+    "fetched_at": "2026-05-01T15:09:52Z",
+    "_cache": "miss",
+    "latest_period": "2025-12-31",
+    "key_metrics": {
+      "net_income": {
+        "value": 19292054000000.0,
+        "source_label": "Net Income Common Stockholders",
+        "period": "2025-12-31"
+      },
+      "operating_income": {
+        "value": 20073660000000.0,
+        "source_label": "Operating Income",
+        "period": "2025-12-31"
+      },
+      "revenue": {
+        "value": 93837371000000.0,
+        "source_label": "Total Revenue",
+        "period": "2025-12-31"
+      },
+      "net_assets": {
+        "value": 436320337000000.0,
+        "source_label": "Total Equity Gross Minority Interest",
+        "period": "2025-12-31"
+      },
+      "total_assets": {
+        "value": 566942110000000.0,
+        "source_label": "Total Assets",
+        "period": "2025-12-31"
+      },
+      "cash_and_equivalents": {
+        "value": 57856378000000.0,
+        "source_label": "Cash And Cash Equivalents",
+        "period": "2025-12-31"
+      },
+      "free_cash_flow": {
+        "value": 16040162000000.0,
+        "source_label": "Free Cash Flow",
+        "period": "2025-12-31"
+      },
+      "financing_cash_flow": {
+        "value": 5458103000000.0,
+        "source_label": "Financing Cash Flow",
+        "period": "2025-12-31"
+      },
+      "investing_cash_flow": {
+        "value": -30991028000000.0,
+        "source_label": "Investing Cash Flow",
+        "period": "2025-12-31"
+      },
+      "operating_cash_flow": {
+        "value": 28799652000000.0,
+        "source_label": "Operating Cash Flow",
+        "period": "2025-12-31"
+      }
+    },
+    "income_statement": {
+      "2025-12-31": {
+        "Tax Effect Of Unusual Items": -3543055654.636775,
+        "Tax Rate For Calcs": 0.065933,
+        "Normalized EBITDA": 33479214000000.0
+      },
+      "2025-09-30": {
+        "Tax Effect Of Unusual Items": -4903528927.959657,
+        "Tax Rate For Calcs": 0.097435,
+        "Normalized EBITDA": 25530861000000.0
+      },
+      "2025-06-30": {
+        "Tax Effect Of Unusual Items": -481982401.367308,
+        "Tax Rate For Calcs": 0.111133,
+        "Normalized EBITDA": 20561542000000.0
+      },
+      "2025-03-31": {
+        "Tax Effect Of Unusual Items": 51186295256.685844,
+        "Tax Rate For Calcs": 0.10148,
+        "Normalized EBITDA": 20342053000000.0
+      },
+      "2024-12-31": {
+        "Tax Effect Of Unusual Items": 2233473281.688778,
+        "Tax Rate For Calcs": 0.019332,
+        "Normalized EBITDA": 19513723000000.0
+      },
+      "2024-09-30": {
+        "Diluted Average Shares": 6792740972.0,
+        "Basic Average Shares": 6792740972.0,
+        "Diluted EPS": 1440.0
+      }
+    },
+    "balance_sheet": {
+      "2025-12-31": {
+        "Treasury Shares Number": 140942617.0,
+        "Preferred Shares Number": 802437676.0,
+        "Ordinary Shares Number": 6686083126.0
+      },
+      "2025-09-30": {
+        "Treasury Shares Number": 91413157.0,
+        "Preferred Shares Number": 802437676.0,
+        "Ordinary Shares Number": 5828224765.0
+      },
+      "2025-06-30": {
+        "Treasury Shares Number": 42892472.0,
+        "Preferred Shares Number": 809337676.0,
+        "Ordinary Shares Number": 5876745450.0
+      },
+      "2025-03-31": {
+        "Treasury Shares Number": 27000000.0,
+        "Preferred Shares Number": 812249664.0,
+        "Ordinary Shares Number": 5892637922.0
+      },
+      "2024-12-31": {
+        "Treasury Shares Number": 29700000.0,
+        "Preferred Shares Number": 818836700.0,
+        "Ordinary Shares Number": 5940082550.0
+      },
+      "2024-09-30": {
+        "Capital Lease Obligations": 4810234000000.0,
+        "Investmentsin Joint Venturesat Cost": 212557000000.0,
+        "Investmentsin Associatesat Cost": 12023417000000.0
+      }
+    },
+    "cash_flow": {
+      "2025-12-31": {
+        "Free Cash Flow": 16040162000000.0,
+        "Repurchase Of Capital Stock": -39968000000.0,
+        "Repayment Of Debt": 2491401000000.0
+      },
+      "2025-09-30": {
+        "Free Cash Flow": 10383396000000.0,
+        "Repurchase Of Capital Stock": -3872331000000.0,
+        "Repayment Of Debt": 2147530000000.0
+      },
+      "2025-06-30": {
+        "Free Cash Flow": 3543053000000.0,
+        "Repurchase Of Capital Stock": -1321113000000.0,
+        "Repayment Of Debt": 816940000000.0
+      },
+      "2025-03-31": {
+        "Free Cash Flow": 3195388000000.0,
+        "Repurchase Of Capital Stock": -2955851000000.0,
+        "Repayment Of Debt": -8308842000000.0
+      },
+      "2024-12-31": {
+        "Free Cash Flow": 6278502000000.0,
+        "Repayment Of Debt": -359784000000.0,
+        "Issuance Of Debt": 1847825000000.0
+      },
+      "2024-09-30": {
+        "Short Term Debt Issuance": 524357000000.0,
+        "Long Term Debt Issuance": 68136000000.0,
+        "Sale Of PPE": 33126000000.0
+      }
+    },
+    "_warning": "Yahoo Finance is an unofficial scraper. Financial statements may be stale, incomplete, or diverge from regulator filings. For JP tickers (.T), prefer edinet_client.py (primary-source 金融庁 Tier A) when EDINET_API_KEY is set.",
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:09:52Z",
+      "reference_period": null,
+      "staleness_days": null,
+      "data_tier": "tier_2",
+      "note": "Unofficial Yahoo scraper; not regulator-filed."
+    }
+  },
+  "history": {
+    "ticker": "005930.KS",
+    "period": "5y",
+    "interval": "1d",
+    "fetched_at": "2026-05-01T15:09:53Z",
+    "_cache": "miss",
+    "data": [
+      {
+        "date": "2021-04-30",
+        "open": 73849.3603,
+        "high": 74029.7006,
+        "low": 73488.6797,
+        "close": 73488.6797,
+        "volume": 18673197
+      },
+      {
+        "date": "2021-05-03",
+        "open": 73037.8168,
+        "high": 74300.1988,
+        "low": 73037.8168,
+        "close": 73669.0078,
+        "volume": 15710336
+      },
+      {
+        "date": "2021-05-04",
+        "open": 73849.3403,
+        "high": 74480.5312,
+        "low": 73759.1702,
+        "close": 74480.5312,
+        "volume": 12532550
+      },
+      {
+        "date": "2021-05-06",
+        "open": 73669.0104,
+        "high": 74210.0312,
+        "low": 73669.0104,
+        "close": 74210.0312,
+        "volume": 17047511
+      },
+      {
+        "date": "2021-05-07",
+        "open": 73759.1736,
+        "high": 74029.684,
+        "low": 73488.6632,
+        "close": 73849.3438,
+        "volume": 14154882
+      }
+    ],
+    "latest_close": 220500.0,
+    "latest_date": "2026-04-30",
+    "rows": 5,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:09:53Z",
+      "reference_period": "2026-04-30",
+      "staleness_days": 1
+    }
+  },
+  "_provenance": {
+    "tier": "Tier 2 (yfinance unofficial)",
+    "primary_source_status": "deferred",
+    "primary_source_note": "Korea has no primary-source equity client wired in data-kr yet. Tier A would be DART (전자공시시스템, dart.fss.or.kr) — integration deferred to a future minor version. Treat all financials below as unverified scraper output."
+  }
+}

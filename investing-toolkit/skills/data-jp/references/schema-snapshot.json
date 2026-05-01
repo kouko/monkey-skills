@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/snapshot.json",
+  "title": "data-jp snapshot pack output",
+  "description": "Output of `pack.py --pack snapshot --ticker {4-digit-code}`. Bundles yfinance .T `info`, 2y price `history`, and TDnet recent timely-disclosure index. Always Tier 1 (no key required). 4-digit JP 証券コード auto-appends `.T` for yfinance and is stripped for TDnet.",
+  "type": "object",
+  "required": [
+    "pack",
+    "ticker",
+    "yf_ticker",
+    "fetched_at",
+    "info",
+    "price_history",
+    "timely_disclosures",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "const": "snapshot"
+    },
+    "ticker": {
+      "type": "string",
+      "description": "Bare 4-digit JP 証券コード (e.g. '7203'). No suffix. Used for EDINET / TDnet identifier alignment.",
+      "pattern": "^[0-9A-Z]{4,5}$"
+    },
+    "yf_ticker": {
+      "type": "string",
+      "description": "Yahoo Finance ticker with `.T` suffix (e.g. '7203.T'). `.TO` accepted on input and preserved.",
+      "pattern": "^[0-9A-Z]{4,5}\\.(T|TO)$"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Top-level pack fetch timestamp (UTC, ISO 8601 with offset, second precision)."
+    },
+    "info": {
+      "description": "yfinance `info` payload — symbol/sector/industry, price snapshot, marketCap, multiples (trailingPE, forwardPE, priceToBook, ...), dividend yield, 52w hi/lo, sharesOutstanding, etc. Currency: JPY for prices and JP-denominated fields. May be a per-client error envelope on subprocess failure.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker"
+          ]
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "price_history": {
+      "description": "yfinance OHLCV history payload — `data` rows + `latest_close`, `latest_date`, `rows`. Default lookback 2y, override via `--period`. May be a per-client error envelope.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker",
+            "period"
+          ],
+          "properties": {
+            "period": {
+              "type": "string"
+            },
+            "interval": {
+              "type": "string"
+            },
+            "data": {
+              "type": [
+                "array",
+                "object"
+              ]
+            },
+            "latest_close": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "latest_date": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rows": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "timely_disclosures": {
+      "description": "TDnet (via Yanoshin) recent timely-disclosure index, bare ticker, limit=20. May be a per-client error envelope.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ticker"
+          ],
+          "properties": {
+            "ticker": {
+              "type": "string"
+            },
+            "normalized_ticker": {
+              "type": "string"
+            },
+            "keyword": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "limit": {
+              "type": "integer"
+            },
+            "count": {
+              "type": "integer"
+            },
+            "total_available": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "disclosures": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Each disclosure typically has keys like `pubdate`, `company_code`, `company_name`, `title`, `url`, `pdf_url` etc. (Yanoshin schema)."
+            }
+          }
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "_provenance": {
+      "type": "object",
+      "required": [
+        "tier",
+        "tier_label",
+        "sources"
+      ],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "const": "tier_1"
+        },
+        "tier_label": {
+          "type": "string",
+          "const": "Tier 1 (yfinance + TDnet, no key needed)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

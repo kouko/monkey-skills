@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/screener-batch.json",
+  "title": "data-jp screener-batch pack output",
+  "description": "Output of `pack.py --pack screener-batch --tickers a,b,c,...`. Lightweight yfinance batch — one batch info call + one batch history call. No EDINET, no TDnet. Designed for `report-screener-list` consumption where Layer 3 splits a mixed-market ticker list and dispatches per-country pack scripts in parallel.",
+  "type": "object",
+  "required": [
+    "pack",
+    "fetched_at",
+    "tickers",
+    "yf_tickers",
+    "info_batch",
+    "history_batch",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "const": "screener-batch"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tickers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9A-Z]{4,5}$"
+      },
+      "description": "Bare 4-digit JP codes, in input order."
+    },
+    "yf_tickers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9A-Z]{4,5}\\.(T|TO)$"
+      },
+      "description": "yfinance .T tickers, parallel to `tickers[]`."
+    },
+    "info_batch": {
+      "description": "yfinance batch info payload, typically `{mode: 'batch', tickers: {<YF>: {...}}}`. May be the error envelope on batch-level failure.",
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "history_batch": {
+      "description": "yfinance batch history payload (1y default). May be the error envelope on batch-level failure.",
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+        }
+      ]
+    },
+    "_provenance": {
+      "type": "object",
+      "required": [
+        "tier",
+        "tier_label",
+        "sources"
+      ],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "const": "tier_1"
+        },
+        "tier_label": {
+          "type": "string",
+          "const": "Tier 1 (yfinance batch)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

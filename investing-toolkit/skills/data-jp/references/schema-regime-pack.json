@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/regime-pack.json",
+  "title": "data-jp regime-pack output",
+  "description": "Output of `pack.py --pack regime-pack`. JP macro indicators — BOJ Call Rate O/N + Tankan inflation outlook (1/3/5y), e-Stat preset bundle (cpi / core-cpi / ip / unemployment / jgb10y), ECB JP real 10Y yield. Always Tier A (BOJ + 統計DB + ECB are all primary-source / no key required). Note: `groups.real_rates.real_10y_monthly_ecb` may be null or carry an empty `observations` array per `analysis-macro-regime/references/japan-real-rate-roadmap.md` — Layer 2 callers must handle missing real-rate observations gracefully.",
+  "type": "object",
+  "required": [
+    "pack",
+    "fetched_at",
+    "groups",
+    "_provenance"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "const": "regime-pack"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "groups": {
+      "type": "object",
+      "required": [
+        "rates",
+        "inflation",
+        "real_rates"
+      ],
+      "properties": {
+        "rates": {
+          "type": "object",
+          "required": [
+            "call_rate_on"
+          ],
+          "properties": {
+            "call_rate_on": {
+              "description": "BOJ Time-Series API — Call Rate Overnight (FM01/STRDCLUCON). Object includes `series`, `name`, `unit`, `frequency`, `observations`, `latest`, `count`. May be error envelope.",
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "series": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "unit": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "frequency": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "observations": {
+                      "type": [
+                        "array",
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "latest": {
+                      "type": [
+                        "number",
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "count": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          }
+        },
+        "inflation": {
+          "type": "object",
+          "required": [
+            "estat"
+          ],
+          "properties": {
+            "estat": {
+              "description": "e-Stat / 統計ダッシュボード preset bundle (cpi,core-cpi,ip,unemployment,jgb10y). Typical shape: `{indicators: {<key>: {...}}}`.",
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "indicators": {
+                      "type": "object"
+                    }
+                  }
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          }
+        },
+        "real_rates": {
+          "type": "object",
+          "required": [
+            "real_10y_monthly_ecb",
+            "tankan_inflation_outlook"
+          ],
+          "description": "Real-rate group. `real_10y_monthly_ecb` MAY be null or carry an empty `observations` array — Layer 2 must check before reading. See analysis-macro-regime/references/japan-real-rate-roadmap.md.",
+          "properties": {
+            "real_10y_monthly_ecb": {
+              "description": "ECB JP real 10Y yield ex-post (M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA). `observations` may be empty if ECB data dropped.",
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "series": {
+                      "type": "string"
+                    },
+                    "dataset": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "observations": {
+                      "type": [
+                        "array",
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "latest": {
+                      "type": [
+                        "number",
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "count": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            },
+            "tankan_inflation_outlook": {
+              "description": "BOJ Tankan 企業物価見通し 1Y/3Y/5Y. Object with per-horizon series.",
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "_provenance": {
+      "type": "object",
+      "required": [
+        "tier",
+        "tier_label",
+        "sources"
+      ],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "const": "tier_a"
+        },
+        "tier_label": {
+          "type": "string",
+          "const": "Tier A (BOJ + 統計DB + ECB primary-source)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

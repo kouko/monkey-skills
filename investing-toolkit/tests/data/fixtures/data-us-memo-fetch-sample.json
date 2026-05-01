@@ -1,0 +1,173 @@
+{
+  "pack": "memo-fetch",
+  "ticker": "AAPL",
+  "fetched_at": "2026-05-01T15:08:18.512925+00:00",
+  "company_info": {
+    "ticker": "AAPL",
+    "fetched_at": "2026-05-01T15:07:54Z",
+    "_cache": "hit",
+    "symbol": "AAPL",
+    "shortName": "Apple Inc.",
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "currency": "USD",
+    "regularMarketPrice": 281.865,
+    "marketCap": 4138099539968,
+    "trailingPE": 35.67911,
+    "forwardPE": 29.995882,
+    "priceToBook": 46.99316,
+    "dividendYield": 0.38,
+    "fiftyTwoWeekHigh": 288.62,
+    "fiftyTwoWeekLow": 193.25,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:07:54Z",
+      "reference_period": null,
+      "staleness_days": null
+    }
+  },
+  "price_history": {
+    "ticker": "AAPL",
+    "period": "2y",
+    "interval": "1d",
+    "fetched_at": "2026-05-01T15:07:55Z",
+    "_cache": "hit",
+    "data": [
+      {
+        "date": "2026-04-27",
+        "open": 266.09,
+        "high": 268.36,
+        "low": 265.07,
+        "close": 267.61,
+        "volume": 41466800
+      },
+      {
+        "date": "2026-04-28",
+        "open": 272.34,
+        "high": 273.23,
+        "low": 268.66,
+        "close": 270.71,
+        "volume": 40018900
+      },
+      {
+        "date": "2026-04-29",
+        "open": 267.55,
+        "high": 271.04,
+        "low": 267.04,
+        "close": 270.17,
+        "volume": 30047900
+      },
+      {
+        "date": "2026-04-30",
+        "open": 270.5,
+        "high": 276.0,
+        "low": 268.14,
+        "close": 271.35,
+        "volume": 90134300
+      },
+      {
+        "date": "2026-05-01",
+        "open": 278.94,
+        "high": 287.21,
+        "low": 278.37,
+        "close": 281.865,
+        "volume": 36603691
+      }
+    ],
+    "latest_close": 281.865,
+    "latest_date": "2026-05-01",
+    "rows": 5,
+    "_provenance": {
+      "source": "yfinance (unofficial Yahoo Finance scraper)",
+      "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+      "data_type": "unofficial_scraper",
+      "update_cycle": "near-real-time (15 min delay)",
+      "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+      "fetched_at": "2026-05-01T15:07:55Z",
+      "reference_period": "2026-05-01",
+      "staleness_days": 0
+    }
+  },
+  "sec_filings": {
+    "ticker": "AAPL",
+    "cik": 320193,
+    "title": "Apple Inc.",
+    "action": "filings",
+    "forms_filter": [
+      "10-K",
+      "10-Q",
+      "8-K"
+    ],
+    "limit": 3,
+    "count": 3,
+    "filings": [
+      {
+        "form": "10-Q",
+        "filingDate": "2026-05-01",
+        "accessionNumber": "0000320193-26-000013",
+        "primaryDocument": "aapl-20260328.htm",
+        "primaryDocDescription": "10-Q"
+      },
+      {
+        "form": "8-K",
+        "filingDate": "2026-04-30",
+        "accessionNumber": "0000320193-26-000011",
+        "primaryDocument": "aapl-20260430.htm",
+        "primaryDocDescription": "8-K"
+      },
+      {
+        "form": "8-K",
+        "filingDate": "2026-04-20",
+        "accessionNumber": "0001140361-26-015711",
+        "primaryDocument": "ef20071035_8k.htm",
+        "primaryDocDescription": "8-K"
+      }
+    ],
+    "fetched_at": "2026-05-01T15:08:17Z",
+    "_provenance": {
+      "source": "SEC EDGAR (data.sec.gov)",
+      "source_authority": "U.S. Securities and Exchange Commission",
+      "data_type": "official_regulatory_filing",
+      "update_cycle": "filing-driven",
+      "typical_lag": "0-60 days depending on form",
+      "fetched_at": "2026-05-01T15:08:17Z",
+      "reference_period": "2026-05-01",
+      "staleness_days": 0
+    }
+  },
+  "sec_facts": {
+    "ticker": "AAPL",
+    "cik": 320193,
+    "title": "Apple Inc.",
+    "action": "facts",
+    "concept": null,
+    "fetched_at": "2026-05-01T15:08:18Z",
+    "_cache": "miss",
+    "concept_counts": {
+      "us-gaap": 5,
+      "dei": 2
+    },
+    "us_gaap_concepts": [
+      "AccountsPayable",
+      "AccountsPayableCurrent",
+      "AccountsReceivableNetCurrent",
+      "AccruedIncomeTaxesCurrent",
+      "AccruedIncomeTaxesNoncurrent"
+    ],
+    "entityName": "Apple Inc.",
+    "_provenance": {
+      "source": "SEC EDGAR (data.sec.gov)",
+      "source_authority": "U.S. Securities and Exchange Commission",
+      "data_type": "official_regulatory_filing",
+      "update_cycle": "filing-driven",
+      "typical_lag": "0-60 days depending on form",
+      "fetched_at": "2026-05-01T15:08:18Z",
+      "reference_period": null,
+      "staleness_days": null
+    }
+  }
+}

@@ -322,9 +322,24 @@ def _compute_staleness(latest_date_str: str | None) -> int | None:
         return None
 
 
-def _make_provenance(result: dict) -> dict:
+def _make_provenance(result: dict, source: str = "keystat") -> dict:
+    """Build a provenance block reflecting the actual upstream API.
+
+    `source` mirrors the PRESET routing key:
+      - "keystat" → BOK ECOS via FinanceDataReader (ECOS-KEYSTAT codes)
+      - "fred"    → FRED CSV (e.g. DEXKOUS for KRW/USD)
+    """
     latest = result.get("latest")
     ref_period = latest["date"] if latest else None
+    if source == "fred":
+        return {
+            "source": "FRED (Federal Reserve Bank of St. Louis)",
+            "source_authority": "Federal Reserve Bank of St. Louis",
+            "data_type": "official_government_statistics",
+            "fetched_at": result.get("fetched_at"),
+            "reference_period": ref_period,
+            "staleness_days": _compute_staleness(ref_period),
+        }
     return {
         "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
         "source_authority": "Bank of Korea (한국은행)",
@@ -408,20 +423,25 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
         else:
             direction = "Flat"
 
+    # Reflect actual upstream API in `_source`:
+    #   - source == "fred"    → "fred" (e.g. DEXKOUS for krw-usd)
+    #   - source == "keystat" → "fdr_ecos" (BOK ECOS via FinanceDataReader)
+    source_label = "fred" if source == "fred" else "fdr_ecos"
+
     result: dict = {
         "preset": preset,
         "name": config["name"],
         "code": code,
         "fetched_at": now,
         "_cache": "miss",
-        "_source": "fdr_ecos",
+        "_source": source_label,
         "observations": observations,
         "latest": latest,
         "prior": prior,
         "direction": direction,
         "count": len(observations),
     }
-    result["_provenance"] = _make_provenance(result)
+    result["_provenance"] = _make_provenance(result, source=source)
 
     if "error" not in result and observations:
         save_cache(cache_path, result)

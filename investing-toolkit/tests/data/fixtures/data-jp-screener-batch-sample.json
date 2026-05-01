@@ -1,0 +1,612 @@
+{
+  "pack": "screener-batch",
+  "fetched_at": "2026-05-01T15:09:07+00:00",
+  "tickers": [
+    "7203",
+    "6758",
+    "9984",
+    "8035",
+    "8316"
+  ],
+  "yf_tickers": [
+    "7203.T",
+    "6758.T",
+    "9984.T",
+    "8035.T",
+    "8316.T"
+  ],
+  "info_batch": {
+    "mode": "batch",
+    "action": "info",
+    "tickers": {
+      "7203.T": {
+        "ticker": "7203.T",
+        "fetched_at": "2026-05-01T15:08:49Z",
+        "_cache": "hit",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "7203.T",
+        "shortName": "TOYOTA MOTOR CORP",
+        "longName": "Toyota Motor Corporation",
+        "sector": "Consumer Cyclical",
+        "industry": "Auto Manufacturers",
+        "country": "Japan",
+        "currency": "JPY",
+        "exchange": "JPX",
+        "regularMarketPrice": 3000.0,
+        "regularMarketPreviousClose": 3023.0,
+        "marketCap": 35523162800128,
+        "enterpriseValue": 65953370996736,
+        "trailingPE": 10.557432,
+        "forwardPE": 9.252976,
+        "priceToBook": 1.0032194,
+        "trailingEps": 284.16,
+        "forwardEps": 324.22,
+        "dividendYield": 3.14,
+        "payoutRatio": 0.3343,
+        "fiftyTwoWeekHigh": 4000.0,
+        "fiftyTwoWeekLow": 2434.0,
+        "fiftyDayAverage": 3401.34,
+        "twoHundredDayAverage": 3172.905,
+        "sharesOutstanding": 11841053512,
+        "totalRevenue": 50450762039296,
+        "grossMargins": 0.17597,
+        "operatingMargins": 0.08851,
+        "profitMargins": 0.073249996,
+        "returnOnEquity": 0.10032,
+        "returnOnAssets": 0.0273,
+        "totalDebt": 42127681650688,
+        "totalCash": 16592086761472,
+        "beta": 0.357,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:08:49Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "6758.T": {
+        "ticker": "6758.T",
+        "fetched_at": "2026-05-01T15:09:05Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "6758.T",
+        "shortName": "SONY GROUP CORPORATION",
+        "longName": "Sony Group Corporation",
+        "sector": "Technology",
+        "industry": "Consumer Electronics",
+        "country": "Japan",
+        "currency": "JPY",
+        "exchange": "JPX",
+        "regularMarketPrice": 3127.0,
+        "regularMarketPreviousClose": 3113.0,
+        "marketCap": 18473275097088,
+        "enterpriseValue": 18504965160960,
+        "trailingPE": 15.150928,
+        "forwardPE": 17.068777,
+        "priceToBook": 2.2861612,
+        "trailingEps": 206.39,
+        "forwardEps": 183.2,
+        "dividendYield": 0.8,
+        "payoutRatio": 0.109,
+        "fiftyTwoWeekHigh": 4776.0,
+        "fiftyTwoWeekLow": 3075.0,
+        "fiftyDayAverage": 3338.9,
+        "twoHundredDayAverage": 3880.6514,
+        "sharesOutstanding": 5907667254,
+        "totalRevenue": 13170287575040,
+        "grossMargins": 0.29479,
+        "operatingMargins": 0.13736,
+        "profitMargins": -0.0161,
+        "returnOnEquity": 0.14917,
+        "returnOnAssets": 0.0396,
+        "totalDebt": 1656855986176,
+        "totalCash": 2086500040704,
+        "beta": 0.751,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:05Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "9984.T": {
+        "ticker": "9984.T",
+        "fetched_at": "2026-05-01T15:09:05Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "9984.T",
+        "shortName": "SOFTBANK GROUP CORP",
+        "longName": "SoftBank Group Corp.",
+        "sector": "Communication Services",
+        "industry": "Telecom Services",
+        "country": "Japan",
+        "currency": "JPY",
+        "exchange": "JPX",
+        "regularMarketPrice": 5424.0,
+        "regularMarketPreviousClose": 5219.0,
+        "marketCap": 30910095294464,
+        "enterpriseValue": 52257882112000,
+        "trailingPE": 10.139265,
+        "forwardPE": 18.368383,
+        "priceToBook": 2.001244,
+        "trailingEps": 534.95,
+        "forwardEps": 295.29,
+        "dividendYield": 0.21,
+        "payoutRatio": 0.020599999,
+        "fiftyTwoWeekHigh": 6923.75,
+        "fiftyTwoWeekLow": 1797.75,
+        "fiftyDayAverage": 4142.54,
+        "twoHundredDayAverage": 4373.904,
+        "sharesOutstanding": 5698763936,
+        "totalRevenue": 7660422823936,
+        "grossMargins": 0.5162,
+        "operatingMargins": 0.03838,
+        "profitMargins": 0.48167,
+        "returnOnEquity": 0.26023,
+        "returnOnAssets": 0.00695,
+        "totalDebt": 24250192756736,
+        "totalCash": 4406672097280,
+        "beta": 0.687,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:05Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "8035.T": {
+        "ticker": "8035.T",
+        "fetched_at": "2026-05-01T15:09:06Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "8035.T",
+        "shortName": "TOKYO ELECTRON",
+        "longName": "Tokyo Electron Limited",
+        "sector": "Technology",
+        "industry": "Semiconductor Equipment & Materials",
+        "country": "Japan",
+        "currency": "JPY",
+        "exchange": "JPX",
+        "regularMarketPrice": 47450.0,
+        "regularMarketPreviousClose": 44390.0,
+        "marketCap": 21675976425472,
+        "enterpriseValue": 19766613901312,
+        "trailingPE": 37.905415,
+        "forwardPE": 37.06452,
+        "priceToBook": 10.847198,
+        "trailingEps": 1251.8,
+        "forwardEps": 1280.2,
+        "dividendYield": 1.63,
+        "payoutRatio": 0.48049998,
+        "fiftyTwoWeekHigh": 48190.0,
+        "fiftyTwoWeekLow": 19870.0,
+        "fiftyDayAverage": 41947.0,
+        "twoHundredDayAverage": 33399.477,
+        "sharesOutstanding": 454847594,
+        "totalRevenue": 2443533090816,
+        "grossMargins": 0.45339,
+        "operatingMargins": 0.2889,
+        "profitMargins": 0.23509,
+        "returnOnEquity": 0.2927,
+        "returnOnAssets": 0.14237,
+        "totalDebt": 0,
+        "totalCash": 506250002432,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:06Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "8316.T": {
+        "ticker": "8316.T",
+        "fetched_at": "2026-05-01T15:09:06Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "8316.T",
+        "shortName": "SUMITOMO MITSUI FINANCIAL GROUP",
+        "longName": "Sumitomo Mitsui Financial Group, Inc.",
+        "sector": "Financial Services",
+        "industry": "Banks - Diversified",
+        "country": "Japan",
+        "currency": "JPY",
+        "exchange": "JPX",
+        "regularMarketPrice": 5541.0,
+        "regularMarketPreviousClose": 5512.0,
+        "marketCap": 21155557670912,
+        "enterpriseValue": -27668296761344,
+        "trailingPE": 14.827005,
+        "forwardPE": 17.434946,
+        "priceToBook": 1.3552231,
+        "trailingEps": 373.71,
+        "forwardEps": 317.81,
+        "dividendYield": 2.85,
+        "payoutRatio": 0.3747,
+        "fiftyTwoWeekHigh": 6284.0,
+        "fiftyTwoWeekLow": 3238.0,
+        "fiftyDayAverage": 5453.5,
+        "twoHundredDayAverage": 4739.455,
+        "sharesOutstanding": 3818003356,
+        "totalRevenue": 3707428929536,
+        "grossMargins": 0.0,
+        "operatingMargins": 0.39305001,
+        "profitMargins": 0.20729999,
+        "returnOnEquity": 0.04933,
+        "returnOnAssets": 0.00244,
+        "totalDebt": 60888639864832,
+        "totalCash": 109792509034496,
+        "beta": 0.349,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:06Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      }
+    },
+    "_partial": false,
+    "_summary": {
+      "7203.T": "ok",
+      "6758.T": "ok",
+      "9984.T": "ok",
+      "8035.T": "ok",
+      "8316.T": "ok"
+    }
+  },
+  "history_batch": {
+    "mode": "batch",
+    "action": "history",
+    "tickers": {
+      "7203.T": {
+        "ticker": "7203.T",
+        "period": "2y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:08:49Z",
+        "_cache": "hit",
+        "data": [
+          {
+            "date": "2024-05-01",
+            "open": 3381.3291,
+            "high": 3436.7453,
+            "low": 3358.7869,
+            "close": 3386.0254,
+            "volume": 27076000
+          },
+          {
+            "date": "2024-05-02",
+            "open": 3363.4832,
+            "high": 3401.9927,
+            "low": 3342.8195,
+            "close": 3363.4832,
+            "volume": 20164900
+          },
+          {
+            "date": "2024-05-07",
+            "open": 3428.2923,
+            "high": 3428.2923,
+            "low": 3345.6376,
+            "close": 3380.3901,
+            "volume": 25496600
+          },
+          {
+            "date": "2024-05-08",
+            "open": 3331.5485,
+            "high": 3450.8343,
+            "low": 3243.2582,
+            "close": 3361.6047,
+            "volume": 68295000
+          },
+          {
+            "date": "2024-05-09",
+            "open": 3376.6327,
+            "high": 3376.6327,
+            "low": 3262.0432,
+            "close": 3313.7024,
+            "volume": 40742400
+          }
+        ],
+        "latest_close": 3023.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:08:49Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "_truncated_for_fixture": "original 488 rows truncated to first 5"
+      },
+      "6758.T": {
+        "ticker": "6758.T",
+        "period": "2y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:09:07Z",
+        "_cache": "miss",
+        "data": [
+          {
+            "date": "2024-05-01",
+            "open": 2554.6463,
+            "high": 2589.1952,
+            "low": 2552.6721,
+            "close": 2586.2339,
+            "volume": 9805000
+          },
+          {
+            "date": "2024-05-02",
+            "open": 2578.3367,
+            "high": 2582.2851,
+            "low": 2559.5815,
+            "close": 2578.3367,
+            "volume": 9238000
+          },
+          {
+            "date": "2024-05-07",
+            "open": 2519.1102,
+            "high": 2532.9298,
+            "low": 2469.7546,
+            "close": 2503.3164,
+            "volume": 28968500
+          },
+          {
+            "date": "2024-05-08",
+            "open": 2444.0896,
+            "high": 2466.7932,
+            "low": 2378.9402,
+            "close": 2378.9402,
+            "volume": 34840500
+          },
+          {
+            "date": "2024-05-09",
+            "open": 2389.7986,
+            "high": 2403.6181,
+            "low": 2343.4043,
+            "close": 2343.4043,
+            "volume": 32704000
+          }
+        ],
+        "latest_close": 3113.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:07Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "_truncated_for_fixture": "original 488 rows truncated to first 5"
+      },
+      "9984.T": {
+        "ticker": "9984.T",
+        "period": "2y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:09:07Z",
+        "_cache": "miss",
+        "data": [
+          {
+            "date": "2024-05-01",
+            "open": 1931.1547,
+            "high": 1943.5578,
+            "low": 1922.7207,
+            "close": 1932.147,
+            "volume": 15641600
+          },
+          {
+            "date": "2024-05-02",
+            "open": 1912.3022,
+            "high": 1935.6199,
+            "low": 1904.3642,
+            "close": 1933.1393,
+            "volume": 14898000
+          },
+          {
+            "date": "2024-05-07",
+            "open": 1988.2087,
+            "high": 2003.8365,
+            "low": 1968.1158,
+            "close": 2003.8365,
+            "volume": 25408800
+          },
+          {
+            "date": "2024-05-08",
+            "open": 1984.4879,
+            "high": 1987.7127,
+            "low": 1969.3562,
+            "close": 1969.8523,
+            "volume": 20120800
+          },
+          {
+            "date": "2024-05-09",
+            "open": 1932.6431,
+            "high": 1943.0617,
+            "low": 1915.2788,
+            "close": 1918.9998,
+            "volume": 21050000
+          }
+        ],
+        "latest_close": 5219.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:07Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "_truncated_for_fixture": "original 488 rows truncated to first 5"
+      },
+      "8035.T": {
+        "ticker": "8035.T",
+        "period": "2y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:09:07Z",
+        "_cache": "miss",
+        "data": [
+          {
+            "date": "2024-05-01",
+            "open": 33431.4171,
+            "high": 33775.775,
+            "low": 33029.6661,
+            "close": 33421.8516,
+            "volume": 2677700
+          },
+          {
+            "date": "2024-05-02",
+            "open": 33000.972,
+            "high": 33794.9085,
+            "low": 32838.3586,
+            "close": 33488.8125,
+            "volume": 2426500
+          },
+          {
+            "date": "2024-05-07",
+            "open": 35392.3449,
+            "high": 35401.9104,
+            "low": 34521.8845,
+            "close": 35239.2969,
+            "volume": 3882000
+          },
+          {
+            "date": "2024-05-08",
+            "open": 35344.5173,
+            "high": 35430.6068,
+            "low": 34703.6289,
+            "close": 34703.6289,
+            "volume": 2742000
+          },
+          {
+            "date": "2024-05-09",
+            "open": 34550.5815,
+            "high": 34655.802,
+            "low": 33574.9006,
+            "close": 33680.1211,
+            "volume": 2979900
+          }
+        ],
+        "latest_close": 44390.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:07Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "_truncated_for_fixture": "original 488 rows truncated to first 5"
+      },
+      "8316.T": {
+        "ticker": "8316.T",
+        "period": "2y",
+        "interval": "1d",
+        "fetched_at": "2026-05-01T15:09:07Z",
+        "_cache": "miss",
+        "data": [
+          {
+            "date": "2024-05-01",
+            "open": 2783.4532,
+            "high": 2805.2329,
+            "low": 2748.6057,
+            "close": 2798.3879,
+            "volume": 20541300
+          },
+          {
+            "date": "2024-05-02",
+            "open": 2783.7645,
+            "high": 2785.3202,
+            "low": 2746.1167,
+            "close": 2759.8069,
+            "volume": 14352900
+          },
+          {
+            "date": "2024-05-07",
+            "open": 2775.3636,
+            "high": 2778.4751,
+            "low": 2746.1166,
+            "close": 2771.3188,
+            "volume": 12602700
+          },
+          {
+            "date": "2024-05-08",
+            "open": 2753.5839,
+            "high": 2767.8962,
+            "low": 2734.2932,
+            "close": 2738.3381,
+            "volume": 12285600
+          },
+          {
+            "date": "2024-05-09",
+            "open": 2754.8282,
+            "high": 2782.8308,
+            "low": 2747.3609,
+            "close": 2773.1855,
+            "volume": 13459200
+          }
+        ],
+        "latest_close": 5512.0,
+        "latest_date": "2026-04-30",
+        "rows": 5,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-01T15:09:07Z",
+          "reference_period": "2026-04-30",
+          "staleness_days": 1
+        },
+        "_truncated_for_fixture": "original 488 rows truncated to first 5"
+      }
+    },
+    "_partial": false,
+    "_summary": {
+      "7203.T": "ok",
+      "6758.T": "ok",
+      "9984.T": "ok",
+      "8035.T": "ok",
+      "8316.T": "ok"
+    }
+  },
+  "_provenance": {
+    "tier": "tier_1",
+    "tier_label": "Tier 1 (yfinance batch)",
+    "sources": [
+      "Yahoo Finance (.T)"
+    ]
+  }
+}

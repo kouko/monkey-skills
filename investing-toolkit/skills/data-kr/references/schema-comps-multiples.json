@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/comps-multiples.json",
+  "title": "data-kr comps-multiples pack",
+  "description": "Output of `pack.py --pack comps-multiples`. Multiples-only fetch for anchor + peers via yfinance `info`. **Schema is normalized**: regardless of single (`--ticker`) or batch (`--tickers`) invocation, the result always exposes `info` keyed by ticker — `info: {ticker: {...}}` — so `analysis-comps` consumes one shape. The batch-extraction step in pack.py unwraps the inner per-ticker dict from yfinance_client's batch envelope.",
+  "type": "object",
+  "required": ["pack", "country", "tickers", "info", "_provenance"],
+  "properties": {
+    "pack": {"type": "string", "const": "comps-multiples"},
+    "country": {"type": "string", "const": "kr"},
+    "tickers": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Normalized ticker list (length 1 for single mode, >=2 for batch mode)."
+    },
+    "info": {
+      "type": "object",
+      "description": "Per-ticker yfinance info dict, keyed by ticker. Single and batch invocations BOTH produce this shape (single = single-key dict).",
+      "patternProperties": {
+        "^[A-Za-z0-9._-]+$": {
+          "type": "object",
+          "description": "yfinance info payload for one ticker. The fields below are the canonical subset relevant for multiples extraction (analysis-comps reads trailingPE / forwardPE / evEbitda / priceToSales / priceToBook).",
+          "properties": {
+            "ticker": {"type": "string"},
+            "fetched_at": {"type": "string", "format": "date-time"},
+            "_cache": {"type": "string", "enum": ["hit", "miss"]},
+            "symbol": {"type": "string"},
+            "shortName": {"type": ["string", "null"]},
+            "marketCap": {"type": ["number", "integer", "null"]},
+            "enterpriseValue": {"type": ["number", "integer", "null"]},
+            "trailingPE": {"type": ["number", "null"]},
+            "forwardPE": {"type": ["number", "null"]},
+            "evEbitda": {"type": ["number", "null"]},
+            "priceToSales": {"type": ["number", "null"]},
+            "priceToBook": {"type": ["number", "null"]},
+            "_provenance": {"type": "object"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "_provenance": {
+      "type": "object",
+      "required": ["tier", "primary_source_status", "primary_source_note", "multiples_set"],
+      "properties": {
+        "tier": {"type": "string"},
+        "primary_source_status": {"type": "string", "const": "deferred"},
+        "primary_source_note": {"type": "string"},
+        "multiples_set": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Canonical multiples extracted downstream by analysis-comps."
+        },
+        "ticker_normalization_warnings": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

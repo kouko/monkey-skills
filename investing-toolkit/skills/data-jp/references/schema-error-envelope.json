@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json",
+  "title": "data-jp client error envelope",
+  "description": "Error shape returned by `pack.py:_run_client(...)` when a sibling client script fails (subprocess error, non-JSON stdout, non-zero exit, or timeout). Embedded inline at the position where the successful client payload would normally appear (e.g. `info`, `price_history`, `timely_disclosures`, `fundamentals.annual`, `groups.rates.call_rate_on`). Layer 2/3 consumers MUST defensively handle this shape — presence of `error` (non-null) means the block is unusable.",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "string",
+      "description": "Human-readable error description. Examples: 'uv not on PATH', 'client returned non-JSON: ...', 'exit 1; stderr=...', 'client timeout after 300s', 'ticker missing from batch response'."
+    },
+    "_cmd": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Optional. Argv array of the failed subprocess for debugging."
+    },
+    "_stdout_head": {
+      "type": "string",
+      "description": "Optional. First 500 chars of stdout, present only on JSONDecodeError."
+    },
+    "_stderr": {
+      "type": "string",
+      "description": "Optional. Last 500 chars of stderr, present only on subprocess failure."
+    }
+  },
+  "additionalProperties": true
+}

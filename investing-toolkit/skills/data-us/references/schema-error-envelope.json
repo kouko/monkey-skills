@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-error-envelope.json",
+  "title": "data-us shared provenance + error envelope",
+  "description": "Reusable definitions for tier-aware provenance metadata and partial-failure error wrappers used across all data-us pack outputs. Referenced via $ref by the per-pack schemas.",
+  "type": "object",
+  "definitions": {
+    "provenance": {
+      "type": "object",
+      "description": "Source-tier metadata attached to fetched payloads. Tier A = official primary source (SEC EDGAR, FRED). Tier 2 = unofficial/scraper (yfinance). tier_1 / tier_2 / 2-gap are alternate spellings used by various clients; consumers should accept all five strings.",
+      "additionalProperties": true,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Free-form source label, e.g. 'yfinance (unofficial Yahoo Finance scraper)', 'SEC EDGAR (data.sec.gov)', 'FRED CSV (fred.stlouisfed.org)'."
+        },
+        "source_authority": {
+          "type": "string",
+          "description": "Issuing institution. Common values: 'U.S. Securities and Exchange Commission', 'Federal Reserve Bank of St. Louis', 'Yahoo Finance (unofficial, not endorsed)'."
+        },
+        "data_type": {
+          "type": "string",
+          "description": "Common values: 'official_regulatory_filing' (SEC filings), 'official_macro_indicator' / 'official_government_statistics' (FRED — both seen in the wild; the latter used by FRED preset bundles), 'unofficial_scraper' (yfinance)."
+        },
+        "update_cycle": {
+          "type": "string",
+          "description": "Free-form description of the upstream update cadence (e.g. 'near-real-time (15 min delay)', 'filing-driven', 'daily / weekly / monthly')."
+        },
+        "typical_lag": {
+          "type": "string",
+          "description": "Human-readable typical publication lag (e.g. '15 minutes (price) / 1 day (fundamentals)', '0-60 days depending on form')."
+        },
+        "fetched_at": {
+          "type": "string",
+          "description": "ISO 8601 timestamp at fetch time (UTC, second precision typical)."
+        },
+        "reference_period": {
+          "type": ["string", "null"],
+          "description": "Period that the fetched payload describes (e.g. observation date for FRED, latest filing date for SEC). Null when not meaningful."
+        },
+        "staleness_days": {
+          "type": ["integer", "null"],
+          "description": "Days between reference_period and fetched_at; null when reference_period is null."
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["A", "2", "2-gap", "tier_1", "tier_2"],
+          "description": "Coarse tier classification. 'A' / 'tier_1' = official primary source. '2' / 'tier_2' = unofficial fallback. '2-gap' = Tier 2 used because Tier A is unavailable for this field."
+        },
+        "tier_label": {
+          "type": "string",
+          "description": "Human-readable expansion of `tier`, e.g. 'Tier A (SEC EDGAR official)' or 'Tier 2 (yfinance unofficial)'."
+        },
+        "upgrade_hint": {
+          "type": "string",
+          "description": "When tier is '2' / '2-gap' / 'tier_2': URL or instruction to upgrade to a Tier A source (e.g. 'Use SEC EDGAR for verdict-grade fundamentals')."
+        }
+      }
+    },
+    "error_wrapper": {
+      "type": "object",
+      "description": "Replaces a payload slot when the underlying client subprocess failed (non-zero exit, JSON parse error, timeout). The pack itself still exits 0; consumers detect failure by `_error` (or `error`) key presence. Both spellings appear in real output: top-level packs use `error`, nested slots can carry `_error`.",
+      "anyOf": [
+        {"required": ["error"]},
+        {"required": ["_error"]}
+      ],
+      "properties": {
+        "error": {
+          "type": "string",
+          "description": "Error category: 'client_failed', 'invalid_json', 'client timeout after Ns'."
+        },
+        "_error": {
+          "type": "string",
+          "description": "Alternate spelling of `error`."
+        },
+        "script": {
+          "type": "string",
+          "description": "Failing client script filename (e.g. 'yfinance_client.py')."
+        },
+        "args": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Argv passed to the failing client."
+        },
+        "returncode": {
+          "type": "integer",
+          "description": "Subprocess return code; -1 indicates timeout."
+        },
+        "_returncode": {
+          "type": "integer",
+          "description": "Alternate spelling of `returncode`."
+        },
+        "stderr": {
+          "type": "string",
+          "description": "Truncated stderr (last 2000 chars) from the failing subprocess."
+        },
+        "_stderr": {
+          "type": "string",
+          "description": "Alternate spelling of `stderr`."
+        },
+        "_cmd": {
+          "type": ["string", "array"],
+          "description": "Failed subprocess argv list (for reproducibility); string form may appear when the failure is at the pack-orchestration level."
+        },
+        "detail": {
+          "type": "string",
+          "description": "Free-form error detail (e.g. JSON parse exception message)."
+        },
+        "stdout_head": {
+          "type": "string",
+          "description": "First 500 chars of stdout when JSON parse failed."
+        },
+        "_partial": {
+          "type": "boolean",
+          "description": "True when the pack succeeded overall but one or more nested slots are error wrappers (partial-failure semantics)."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
