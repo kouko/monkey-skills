@@ -148,6 +148,12 @@ not Socratically rebuild the WIG — diagnose, then recommend.**
        absent) AND/OR Ch 6 Trap 2 (too broad).
      - "not measurable" / 「測れない」/「無法衡量」 → Ch 7 Rule 4 / Ch 2.
      - "covers too much" / 「広すぎ」/「太大」 → Ch 7 Rule 1 / Ch 6 Trap 2.
+     - "that's just our job" / "BAU dressed as WIG" / 「日常業務じゃん」/「本業でしょ」
+       → Ch 6 breakthrough-not-BAU. **Verbatim anchor (Cindrich,
+       FranklinCovey insider, LinkedIn 2018-2019)**: *"Hitting your sales
+       number is your job — it is not a WIG."* Cite this phrasing directly
+       in the audit verdict when the artifact is a job-already-being-done
+       rather than a breakthrough goal.
      - "we'll never hit it by then" / 「無理」/「來不及」 → Feasibility
        (Ch 6 2x2) — flag for re-scoping.
    - Cite the rule explicitly in the audit output so the user can

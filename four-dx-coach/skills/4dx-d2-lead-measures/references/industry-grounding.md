@@ -346,6 +346,53 @@ observe, share the reasoning, invite joint diagnosis.
 
 ---
 
+### Source 12: Bravelab.io / Smenżyk — "The very first attempt to implement 4DX" (LinkedIn Pulse, 2021)
+
+**Citation**: Mariusz Smenżyk (founder, Bravelab.io), "The very first
+attempt to implement 4DX in Bravelab.io," LinkedIn Pulse article,
+published 2021-04-20.
+
+**Applicable to mode(s)**: audit (any scope)
+
+Self-disclosed real-world implementation report from a Polish digital
+agency (~15 ppl). Explicitly transparent about what worked and what
+failed. Most useful as a verbatim anchor for the canonical D2 failure
+mode — "lead measures didn't work" — that the book asserts ("D2 is
+the most-misunderstood discipline," Ch 3) but does not anchor with a
+named real-world case.
+
+Verbatim D2 failure quote:
+
+> *"LEAD measures didn't work. Not everyone was able to define what he
+> needs to do to bring our efforts closer to our LAG measure."*
+
+The team had two well-formed WIGs (lag-measurable, From-X-to-Y-by-When
+sentence form: "decrease unpaid invoices from 84k to 0 by end of March
+2021"; "issue invoices for all contracted projects by end of March 2021")
+but failed to design lead measures behind them. Their compromise — reuse
+the existing project income/expense spreadsheet as a substitute for
+behavioral leads — is exactly the "leveraged-behavior boredom" + "leads
+you cannot actually influence weekly" failure modes named by Cindrich
+(see d1-wig-formulation Source 11 + 4dx-audit Source 5).
+
+Direct application: when audit-mode receives a lead-measure list that
+(a) reuses existing KPI dashboards, (b) names lag-shaped indicators as
+"leads," or (c) fails the "what would moving the needle on this THIS
+WEEK look like?" test, cite Bravelab as the verbatim anchor: real-world
+4DX implementation that hit this specific failure even after getting D1
+right. The point is calibration — D2 collapse is the modal failure, not
+the rare one. Audit verdicts should treat D2 collapse as the most-likely
+finding, not the rarest.
+
+**Authority note**: LinkedIn Pulse self-disclosure by company founder
+running 4DX in production. Treat as **credentialed self-disclosure** —
+single data point, but verbatim and transparently honest. Strength is
+verbatim quotability; weakness is N=1.
+
+Public URL: https://www.linkedin.com/pulse/very-first-attempt-implement-4dx-bravelabio-mariusz-smenzyk
+
+---
+
 ## What 4DX practitioners learn from these sources (per mode)
 
 The eleven sources above stack into three layered upgrades to the book's

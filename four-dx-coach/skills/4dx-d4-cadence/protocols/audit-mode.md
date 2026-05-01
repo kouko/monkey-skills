@@ -245,4 +245,10 @@ Meeting* Weekly Tactical taxonomy validates the segment-grammar
 diagnostic), **Reinertsen** (Cadence Principle F6 grounds the sacred-
 cadence threshold), **Edmondson** (psychological-safety lens for
 "feels pointless" critique that often masks discomfort with public
-accountability rather than mechanism failure).
+accountability rather than mechanism failure), and **Source 11:
+Bravelab.io / Smenżyk** (real-world D4 failure verbatim anchors —
+quote *"WIG Sessions required more than 30 minutes. Sometimes up to
+1h"* for session-creep finding, and *"Everyone has to be prepared
+before the WIG Session"* for member-prep failure finding; cite when
+audit reveals 30-min ceiling violations or members arriving without
+their measurements).

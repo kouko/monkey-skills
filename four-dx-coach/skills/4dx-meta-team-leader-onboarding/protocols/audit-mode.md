@@ -286,4 +286,13 @@ compliance), **Argyris** (HBR 1991, double-loop learning lens for
 clarifying-questions skip), plus secondary anchor: **Kotter**
 (*Leading Change*, 1996/2012, Stage 1 — establish urgency)
 implicitly invoked when the rollout email reads as "another
-corporate initiative".
+corporate initiative", and **Chesapeake Energy IT (anonymous, 2017)**
+— frontline-voice failure anchor for mandatory-rollout-under-coercion.
+Quote *"we are punished by having to act like 4DX is cool, when the
+REST OF THE COMPANY does not have to do this silly program… we are
+going to fake smile our way though this junk"* when audit reveals (a)
+silo'd target department with peer exemption (Ch 8 voluntary-opt-in
+violation), (b) frontline wrong-fit language ("won't work in our
+function" — escalate to `4dx-meta-strategy-triage` CE-26 check), or
+(c) verbatim "going through the motions" / 「形だけ」 / 「表面的に
+従う」 compliance-theater signals.

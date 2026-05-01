@@ -69,6 +69,56 @@ actionable* for the rescue dialogue.
   ([Scribner / Simon & Schuster product page](https://www.simonandschuster.com/books/Grit/Angela-Duckworth/9781501111105),
   [Personnel Psychology review (Wiley, 2016)](https://onlinelibrary.wiley.com/doi/abs/10.1111/peps.12198))
 
+## Cindrich diagnostic equation — Goal Clarity + Commitment + Cadence = Results
+
+**Source**: Andy Cindrich (FranklinCovey insider, helped develop 4DX in
+the early 2000s), "5 Things Leaders Get Wrong with FranklinCovey's 4
+Disciplines of Execution," LinkedIn Pulse, c. 2018-2019.
+Public URL: https://www.linkedin.com/pulse/5-things-leaders-get-wrong-franklincoveys-4-execution-andy-cindrich
+
+**Applicable to**: rescue dialogue (this skill's E — Execution flow)
+
+Cindrich names "Getting accountability all wrong" as the fifth canonical
+4DX implementation failure mode. The verbatim diagnostic equation
+captures the gap-attribution heuristic:
+
+> ***Goal Clarity + Commitment + Cadence = Results***
+
+When a 4DX implementation has lost momentum, one of these three is
+typically the missing factor:
+
+- **Goal Clarity gap** — team can't articulate the WIG cleanly anymore;
+  the "why" has faded; D1 needs re-grounding (route to `4dx-d1-wig-formulation`).
+- **Commitment gap** — team can articulate the WIG but no longer chooses
+  it (motivation collapsed; SDT-style autonomy compromised; meaning loss).
+  This is substrate work — the rescue dialogue's most delicate territory.
+- **Cadence gap** — team still believes in the WIG and is committed,
+  but the operational rhythm (D4) broke. This is the most-rescuable
+  failure mode — restart cadence at minimum scope.
+
+Cindrich's diagnostic value: when the rescue walk-back surfaces "we
+just stopped doing the sessions," ask which of the three actually
+collapsed first. If clarity and commitment are intact, the rescue is
+operational (resume D4). If commitment collapsed, no amount of D4
+restart fixes it. If clarity collapsed, the WIG itself needs work
+before anything downstream resumes.
+
+This complements the book's substrate-walkback (humility /
+determination / courage / love) by giving the rescue agent a
+mechanistic-language alternative — the substrate framing is moral; the
+Cindrich equation is operational. Both should be available; pick the
+language that matches the user's own register.
+
+**Authority note**: Cindrich's article is a LinkedIn Pulse piece by an
+acknowledged FranklinCovey insider, not peer-reviewed. Treat as
+**credentialed-author meta-reflection on practice**. Same source is
+cited in `4dx-audit/references/industry-grounding.md` Source 5 (where
+the full 5-mode checklist is documented) and `4dx-d1-wig-formulation/
+references/industry-grounding.md` Source 11 (for the lag-as-WIG
+phrasing).
+
+---
+
 ## What 4DX practitioners learn from these sources
 
 The book localizes sustain-failure at the substrate (humility / determination

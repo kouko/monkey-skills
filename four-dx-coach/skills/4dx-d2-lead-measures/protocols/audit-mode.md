@@ -296,5 +296,11 @@ Or: "List is irreparable — rebuild via coach-mode (`personal-discover` /
 
 See `../references/industry-grounding.md` sections **Goodhart /
 Strathern** (mechanism), **Wells Fargo / Phoenix VA / Atlanta APS**
-(documented gaming patterns cited in Step 4), and **Argyris** (Model-II
-inquiry for Step 6 reply-language to stakeholder critique).
+(documented gaming patterns cited in Step 4), **Argyris** (Model-II
+inquiry for Step 6 reply-language to stakeholder critique), and
+**Source 12: Bravelab.io / Smenżyk** (real-world D2 failure verbatim
+anchor — quote *"LEAD measures didn't work. Not everyone was able to
+define what he needs to do to bring our efforts closer to our LAG
+measure"* when audit reveals the team has well-formed WIGs but reused
+KPI dashboards as substitute for behavioral leads — D2 collapse is the
+modal failure mode per Bravelab + book Ch 3, not the rare one).

@@ -170,6 +170,73 @@ Links:
 [Simon & Schuster product page](https://www.simonandschuster.com/books/How-to-Read-a-Book/Mortimer-J-Adler/9781476790152),
 [1972 edition (archive.org)](https://archive.org/details/a-touchstone-book-mortimer-j.-adler-charles-van-doren-how-to-read-a-book-a-touch).
 
+### Source 5: Cindrich, "5 Things Leaders Get Wrong with FranklinCovey's 4 Disciplines of Execution" (LinkedIn Pulse)
+
+**Citation**: Andy Cindrich, "5 Things Leaders Get Wrong with FranklinCovey's
+4 Disciplines of Execution," LinkedIn Pulse article, c. 2018-2019. Author
+self-describes: "I was on the team that developed them back in the early
+2000s." Cindrich is a credentialed FranklinCovey practitioner-author writing
+post-hoc on observed implementation failures across the consulting practice.
+Companion: same five mistakes adapted to education context in "5 Things
+Educators Get Wrong with Discipline" on leaderinme.org (Leader-In-Me, FranklinCovey
+education arm).
+
+**Applicable to**: cross-layer audit (this skill); supplementary to topic-skill
+audit-modes when the rule-check matrix needs failure-pattern anchoring beyond
+book-internal rule citations.
+
+Cindrich names five canonical 4DX implementation failure modes from inside
+the consulting practice that developed the framework. The five (verbatim
+short-form):
+
+1. **Failure to use 4DX as your operating system** — treating it as a
+   one-off training program; "results will be fleeting." Counter: 4DX
+   is the team's OS, not an initiative.
+2. **Failure to pick a strategic goal** — choosing a job-already-being-done
+   as a WIG. Verbatim: *"Hitting your sales number is your job — it is
+   not a WIG."* This is the operationalization of book Ch 6's "WIG must
+   be breakthrough not BAU" but with surgical phrasing.
+3. **Failure to get to small-outcome lead measures** — using only
+   "leveraged behaviors" (do X activity Y times/week) which become
+   boring; cognitive engagement requires small-outcome lead measures
+   that allow multiple paths.
+4. **Using scoreboards to name and shame** — scoreboards weaponized as
+   public embarrassment; cites Brené Brown that shame "crushes our
+   tolerance for vulnerability, thereby killing engagement, innovation,
+   creativity, productivity, and trust."
+5. **Getting accountability all wrong** — leaders treat accountability
+   as control rather than personal commitment. Cindrich's diagnostic
+   equation: **Goal Clarity + Commitment + Cadence = Results**.
+
+The companion Leader-In-Me education adaptation provides the same five
+modes plus four verbatim micro-WIG-and-lead exemplars (third-grade SSR
+20 min × 3/week; AP essays 75% scoring 4-5; basketball offensive rebounds
+≥10/game; band sections mastering one movement weekly) that calibrate
+what "small-outcome lead measure" looks like vs the boring "leveraged-
+behavior" trap.
+
+Direct application: this skill's cross-layer audit runs the user's
+multi-artifact context against the 5 layers (WIG / Lead / Lag-Scoreboard
+/ Cadence / Substrate). Cindrich's five modes give the audit a second
+diagnostic axis — not "is the layer well-formed by book rule?" but "is
+this one of the 5 named failure patterns FranklinCovey practitioners see
+most often?" Use the 5-mode checklist after the layer-by-layer rule
+check; surface mode-matches in the recommendation step. Cindrich's
+diagnostic equation (Goal Clarity + Commitment + Cadence = Results)
+gives the gap-naming heuristic when audit reveals that one of the
+three is missing.
+
+**Authority note**: Cindrich's article is a LinkedIn Pulse piece by an
+acknowledged FranklinCovey insider, not a peer-reviewed publication.
+Treat as **credentialed-author meta-reflection on practice** — equivalent
+in grounding strength to an HBR practitioner essay or the book's own
+McChesney-Covey-Huling chapter framings, but not equivalent to the
+peer-reviewed academic sources elsewhere in this file.
+
+Public URL: https://www.linkedin.com/pulse/5-things-leaders-get-wrong-franklincoveys-4-execution-andy-cindrich
+
+---
+
 ## What 4DX consultant-auditors learn from these sources
 
 The book's chapter rules tell the auditor *what* to look for in

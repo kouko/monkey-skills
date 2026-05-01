@@ -81,6 +81,66 @@ itself. The book reports the empirical finding ("thorough Step 2
 reduces Step 3 effort") without naming the mechanism. Argyris named
 it 33 years earlier.
 
+## Frontline failure-anchor: mandatory-rollout under coercion (Chesapeake Energy IT, anonymous, 2017)
+
+**Source**: Anonymous IT employee, "IT WIGS and 4DX are a joke" — post on
+thelayoff.com (Chesapeake Energy Corp. layoff forum), March 20, 2017.
+Public URL: https://www.thelayoff.com/t/MoBMa7A
+
+**Applicable to mode(s)**: audit-mode (any onboarding artifact)
+
+A rare verbatim frontline data point on what mandatory 4DX rollout looks
+like from inside a target department. Chesapeake's IT group was forced
+into 4DX while peer departments were not. The anonymous post captures
+the exact failure mode the book's Ch 8 voluntary-opt-in rule is
+designed to prevent — compliance theater, not commitment:
+
+> *"IT gets booted from Nick and lands with Jason, and now we are
+> punished by having to act like 4DX is cool, when the REST OF THE
+> COMPANY does not have to do this silly program… Just had our first
+> session. Dumb as hell. Another waste of time because some bookish
+> executive thinks this will help us cut more jobs and money. If our
+> IT leadership was worth one bucket of piss they would have pushed
+> back and explained this would not work in a support organization.
+> Instead we are going to fake smile our way though this junk."*
+
+Three diagnostically useful signals from this single post:
+
+1. **"REST OF THE COMPANY does not have to do this"** — silo'd mandatory
+   rollout (target department forced; peer departments exempt) is
+   prima facie a Ch 8 voluntary-opt-in violation. Audit verdict: forced
+   participation will produce performance theater, not engagement.
+2. **"Will not work in a support organization"** — frontline-named
+   wrong-fit signal. Maps to CE-26 boundary in `4dx-meta-strategy-triage`
+   (intrinsically reactive / on-call / support roles where the whirlwind
+   IS the strategic value). Audit-mode should escalate this to
+   strategy-fit re-examination, not push through onboarding.
+3. **"Fake smile our way though this junk"** — verbatim self-description
+   of compliance theater. The anonymous voice articulates exactly what
+   Argyris (Source 2 above) labels "Model-I defensive routine" and what
+   SDT (Source 1) predicts when autonomy is removed. Treat this kind
+   of frontline language as evidence — not noise — when audit input
+   includes anonymous / off-record team-feedback channels.
+
+Direct application: when audit-mode receives onboarding artifacts that
+indicate (a) silo'd target department + peer exemption, (b) frontline
+language about wrong-fit ("won't work in our function"), or (c) "going
+through the motions" / 「形だけ」 / 「表面的に従う」 signals, cite
+this case as the verbatim anchor. Single-source N=1 but the post
+operates as a frontline failure-mode demonstration — useful precisely
+because most 4DX failures are not publicly self-disclosed by frontline
+voices (most published material is leader-side).
+
+**Authority note**: Anonymous post on a layoff-forum BBS. Treat as
+**frontline-voice data point**, not as authoritative source. Verbatim
+reliability is high (the post exists, the language is unmistakable);
+external corroboration is impossible (anonymous + Chesapeake-internal
+context not externally verifiable). Strength is illustrative; weakness
+is unverifiable. Cite alongside Argyris + SDT for mechanism-level
+grounding so the verbatim quote is anchored to research-level theory.
+
+---
+
 ## What 4DX practitioners learn from these sources
 
 The book's voluntary-opt-in onboarding pattern is, mechanistically:

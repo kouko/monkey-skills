@@ -254,6 +254,53 @@ documented behavioral class with field prevalence.
 
 ---
 
+## Source 11: Bravelab.io / Smenżyk — "The very first attempt to implement 4DX" (LinkedIn Pulse, 2021)
+
+**Citation**: Mariusz Smenżyk (founder, Bravelab.io), "The very first
+attempt to implement 4DX in Bravelab.io," LinkedIn Pulse article,
+published 2021-04-20.
+
+**Applicable to mode(s)**: audit-mode (any scope)
+
+Self-disclosed real-world implementation report from a Polish digital
+agency. Most useful as a verbatim anchor for two D4 failure modes the
+book warns about (≤30-min ceiling; member-prep necessity) but doesn't
+anchor with a named real-world case.
+
+Verbatim D4 failure quotes:
+
+> *"WIG Sessions required more than 30 minutes. Sometimes up to 1h."*
+
+> *"Everyone has to be prepared before the WIG Session (everyone needs
+> to know their current measurements. It's important to put them out
+> on the scoreboard together)."*
+
+> *"People who will be using 4DX should learn the basics of this method
+> before we start."*
+
+The team established the right cadence shape (every Monday at 1pm,
+85% achievement threshold, accurate scoreboard data) but failed three
+operational disciplines simultaneously: session creep (30 → 60 min),
+unprepared members, and skipping pre-onboarding training. Each is a
+distinct D4 failure mode that compounds — a 60-min unprepared session
+with untrained members is qualitatively worse than any of the three
+in isolation.
+
+Direct application: when audit-mode receives a cadence log showing
+sessions running past 30 min, members arriving without numbers, or
+team-wide unfamiliarity with 4DX vocabulary in early sessions, cite
+Bravelab as the verbatim anchor. The point is calibration — these
+are the canonical operational-discipline failures, not exotic edge
+cases.
+
+**Authority note**: LinkedIn Pulse self-disclosure by company founder.
+Treat as **credentialed self-disclosure** — single-org data point, but
+verbatim and transparently honest about what failed.
+
+Public URL: https://www.linkedin.com/pulse/very-first-attempt-implement-4dx-bravelabio-mariusz-smenzyk
+
+---
+
 ## Cross-source synthesis
 
 Across the ten sources:

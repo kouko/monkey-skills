@@ -304,6 +304,42 @@ register without dropping it entirely.
 
 ---
 
+### Source 11: Cindrich, "5 Things Leaders Get Wrong with FranklinCovey's 4 Disciplines of Execution" (LinkedIn Pulse)
+
+**Citation**: Andy Cindrich, "5 Things Leaders Get Wrong with FranklinCovey's
+4 Disciplines of Execution," LinkedIn Pulse, c. 2018-2019. Author was on
+the FranklinCovey team that developed 4DX in the early 2000s.
+
+**Applicable to mode(s)**: audit (any scope); supplementary anchor for
+coach-mode (any scope) when articulating breakthrough-not-BAU rule.
+
+Cindrich names "Failure to pick a strategic goal" as the second of five
+canonical 4DX implementation failures. The verbatim phrasing is
+operationally useful for audit-mode verdicts:
+
+> *"Hitting your sales number is your job — it is not a WIG."*
+
+This is a sharper restatement of the book's Ch 6 breakthrough-vs-BAU
+rule. The book argues that a WIG must move the team beyond business-as-
+usual; Cindrich's framing converts that into a single-sentence
+diagnostic: if the proposed WIG is something the team is *already
+expected to do as part of their job description*, it fails the
+breakthrough test and is BAU dressed as WIG.
+
+Direct application: when audit-mode receives a WIG candidate that maps
+1:1 to the team's existing job duties (e.g. "hit Q4 number", "operate
+the support queue", "deliver the projects we're contracted for"), cite
+Cindrich's phrasing as the verbatim anchor for the BAU-as-WIG verdict.
+The Ch 6 rule is the underlying authority; Cindrich's wording is the
+operational handle.
+
+**Authority note**: LinkedIn Pulse article by acknowledged FranklinCovey
+insider; treat as credentialed-author meta-reflection, not peer-reviewed
+academic source. Public URL:
+https://www.linkedin.com/pulse/5-things-leaders-get-wrong-franklincoveys-4-execution-andy-cindrich
+
+---
+
 ## What 4DX practitioners learn from these sources (per mode)
 
 The ten sources above stack into three layered upgrades to the book's

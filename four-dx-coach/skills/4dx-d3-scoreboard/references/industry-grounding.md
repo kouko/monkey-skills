@@ -257,6 +257,49 @@ boundary on saying "no."
 
 ---
 
+### Source 7: Harkin et al., "Does monitoring goal progress promote goal attainment?" — meta-analysis (*Psychological Bulletin*, 2016)
+
+**Citation**: Benjamin Harkin, Thomas L. Webb, Betty P. I. Chang,
+Andrew Prestwich, Mark Conner, Ian Kellar, Yael Benn, & Paschal
+Sheeran, "Does Monitoring Goal Progress Promote Goal Attainment? A
+Meta-Analysis of the Experimental Evidence," *Psychological Bulletin*,
+vol. 142, no. 2 (2016), pp. 198–229. DOI: 10.1037/bul0000025.
+
+**Applicable to mode(s)**: solo, team-leader, member
+
+Meta-analysis of 138 experimental studies (~19,951 participants) on
+whether progress-monitoring causally promotes goal attainment. Two
+findings load-bearing for D3 design choices the book treats as
+heuristic:
+
+1. **"Monitoring progress in public and physically recording progress
+   had larger effects on goal attainment than monitoring that was done
+   in private and not recorded" (pg. 219).** This is the empirical
+   warrant for two D3 rules the book asserts without citation: (a) the
+   scoreboard must be team-visible (not personal-private), and (b) the
+   update ritual must produce a physical artifact (whiteboard, posted
+   chart, scorecard) — a passive notion of "the metrics are accessible
+   in the BI tool" does not produce the same effect.
+2. **"Monitoring behavior is more likely to lead to changes in
+   behavior than is monitoring outcomes, whereas changes in outcomes
+   are more likely to occur when people monitor outcomes rather than
+   behaviors" (pg. 219).** This grounds the D3 dual-display rule —
+   show **both** lead (behavior) and lag (outcome). Showing only lag
+   produces outcome-fixation without behavior change; showing only
+   lead produces behavior compliance without outcome verification.
+   The book's "lead AND lag on one board" rule is the operational
+   form of this finding.
+
+Direct application: when a skill audit finds a candidate "scoreboard"
+that is (a) private, (b) digital-only with no physical/posted form,
+or (c) lag-only or lead-only, cite this meta-analysis as the warrant
+for surfacing the gap — these are not stylistic preferences but
+empirically-distinct conditions that produce different goal-attainment
+effects. Strengthens the player's-scoreboard discipline against
+"why does it have to be visible / physical / dual-axis?" pushback.
+
+---
+
 ## What 4DX practitioners learn from these sources (per mode)
 
 The six sources above stack into three layered upgrades to the book's

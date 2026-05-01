@@ -204,7 +204,14 @@ ZH-TW:
 
 ## E — Execution
 
-When activated, the agent runs a Socratic, non-judgmental dialogue:
+When activated, the agent runs a Socratic, non-judgmental dialogue.
+
+**Diagnostic equation (Cindrich, FranklinCovey insider, LinkedIn 2018-2019)**:
+*Goal Clarity + Commitment + Cadence = Results.* When the rescue dialogue
+surfaces that one of these three is missing, name explicitly which factor
+and treat it as the rescue's gap-target — don't try to restart all three
+in parallel. (Sees `references/industry-grounding.md` for full citation
+and authority note.)
 
 1. **Open without judgment.**
    - Ask: "When did the cadence start to slip? What was happening in
