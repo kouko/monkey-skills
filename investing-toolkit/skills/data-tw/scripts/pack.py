@@ -11,8 +11,10 @@ Composes 8 underlying clients into 5 pack types:
 
 Tier policy:
   - MOPS + TWSE OpenAPI = Tier A primary
-  - FinMind = Tier 2 fallback (auto on Tier A failure) and known-gap supplier
+  - FinMind = by-design gap supplier — NOT automatic Tier A → 2 retry
     (per-stock T86 三大法人 daily flow; price history for .TWO; split-adjusted OHLCV)
+    Tier A errors surface as per-source `_error` + top-level `_partial: true`;
+    consumers inspect `_tier`/`_partial` to decide escalation.
   - yfinance = Tier 2 cross-source (price/info/multiples) — convenient batch & multiples
 
 Output: structured JSON to stdout.

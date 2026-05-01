@@ -36,7 +36,7 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/pack.py --ticker 2330.TW --pack memo-fetch \
 |---|---|---|
 | `mops_client.py` | **A primary** | 公司基本資料、財報 BS/IS/CF、月營收、董監持股、內部人申報、股利、除權息、重大訊息 (16 actions) |
 | `twse_openapi_client.py` | **A primary** | TWSE/TPEx OpenAPI: 日行情 snapshot、PE/PB/殖利率、融資融券、三大法人 snapshot、產業 EPS、除權息日曆、`/rwd/` 歷史 OHLCV (sii only) |
-| `finmind_client.py` | **2 fallback / by-design gap** | 自動 fallback 對象；亦提供日 per-stock T86 三大法人、`.TWO` OHLCV、split-adjusted 價格、融資融券時序 (Tier A 缺) |
+| `finmind_client.py` | **2 by-design gap** | 提供 Tier A 缺的資料：日 per-stock T86 三大法人、`.TWO` OHLCV、split-adjusted 價格、融資融券時序。**非** Tier A 失敗自動 fallback — Tier A 出錯時 pack 會回 `_partial: true` + 各 source `_error`，由 consumer (analysis / report layer) 決定是否升級 |
 | `yfinance_client.py` | **2 cross-source** | 價格 / info / multiples / batch 取得（`.TW` / `.TWO` 自動分發） |
 | `cbc_client.py` | **A primary** | 央行：重貼現率、TWD/USD、M2、準備貨幣 |
 | `dgbas_client.py` | **A primary** | 主計總處 Excel：CPI / 核心 CPI / PPI / 進出口物價 |
@@ -52,9 +52,14 @@ All 8 client scripts are **MD5-identical copies** of the canonical files at
 
 ```
 Tier A primary  : MOPS + TWSE/TPEx OpenAPI + CBC + DGBAS + NDC + stat.gov.tw
-Tier 2 fallback : FinMind  (auto on Tier A failure / .TWO price / T86 daily flow)
+Tier 2 by-gap   : FinMind  (.TWO price / T86 daily flow / 融資融券時序 — Tier A 缺項由 FinMind 補)
 Tier 2 cross-src: yfinance (price snapshot, multiples, batch convenience)
 ```
+
+**No automatic Tier A → 2 fallback**. When a Tier A source errors, pack.py records
+the error in the wrapped output's `_error` field and flips top-level `_partial: true`.
+Downstream analysis / report skills inspect `_tier` + `_partial` + `_error` to decide
+whether to escalate (e.g. retry, request a different action, or surface the gap to user).
 
 Provenance labels are embedded in every wrapped output:
 
