@@ -1,0 +1,22 @@
+[
+  {"query": "WIG 跑了 8 週 然後就斷了 已經 3 週沒開 WIG Session 想重啟但不知道從哪開始", "should_trigger": true},
+  {"query": "feels like 4DX stopped working — scoreboard hasn't moved in 4 weeks and team energy is gone, should I just quit?", "should_trigger": true},
+  {"query": "Stage 3 の plateau だと思う 続けるか 4 ヶ月目で諦めるか迷っている", "should_trigger": true},
+  {"query": "we ran 4DX for 2 months and the team stopped looking at the scoreboard, lead measures are green but lag is flat, what now", "should_trigger": true},
+  {"query": "連續 4 週都沒達成 commitment 累積下來感覺整個 cadence 都垮了 怎麼救", "should_trigger": true},
+  {"query": "WIG セッションが続かなくなって 1 ヶ月以上経つ もう一度立ち上げたいが何から手をつければいいか分からない", "should_trigger": true},
+  {"query": "I lost momentum on my goal — haven't done the WIG session in weeks and I keep telling myself I have no discipline", "should_trigger": true},
+  {"query": "lead measure 都做到了但 lag 完全沒動 我是不是該換 WIG 還是放棄整套 4DX", "should_trigger": true},
+  {"query": "4DX が止まってしまった 自分には継続力がないのかもしれない 再開するべきか諦めるべきか", "should_trigger": true},
+  {"query": "scoreboard feels pointless now, we used to update it every week but the last 6 weeks nobody touched it — is the WIG dead?", "should_trigger": true},
+  {"query": "第一次想用 4DX 不知道從哪開始 該先寫 WIG 嗎", "should_trigger": false},
+  {"query": "想設 WIG 但每天都被瑣事吃掉 根本沒空做", "should_trigger": false},
+  {"query": "今週 commitment 達成しなかった 来週どう向き合えばいい cadence はまだ回っている", "should_trigger": false},
+  {"query": "我們 cadence 還在跑 但 WIG Session 感覺越來越像 status report 怎麼診斷會議品質", "should_trigger": false},
+  {"query": "整套 4DX 跑了 6 週 想做一個 cross-layer audit 看 D1-D4 哪裡需要調整", "should_trigger": false},
+  {"query": "4DX 真的適合我的目標嗎 還是我應該用 OKR 或別的方法", "should_trigger": false},
+  {"query": "how do I write a good lead measure for a sales WIG", "should_trigger": false},
+  {"query": "過去 4 週的 WIG meeting notes 都在這 幫我看看會議結構哪裡走樣", "should_trigger": false},
+  {"query": "i want to set up 4DX for my team next quarter, where do I start", "should_trigger": false},
+  {"query": "リード指標を設計したいんだけど どんな観点で選べばいい", "should_trigger": false}
+]

@@ -1,0 +1,157 @@
+{
+  "skill": "4dx-d4-cadence",
+  "version": "1.0.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Multi-mode merged skill (4 coach + 1 audit). ≥5 should_trigger (1 per scope-mode + audit), ≥4 should_not_trigger lures (cross-mode-misfire / non-D4 / out-of-4DX / cadence-broken / multi-week-collapse-→-rescue / sprint-review-→-router / single-week-miss-→-member-debrief), ≥2 edge_case. Each should_trigger names expected_mode for protocol routing.",
+  "test_cases": [
+    {
+      "id": "should-trigger-solo",
+      "type": "should_trigger",
+      "expected_mode": "solo",
+      "expected_protocol": "protocols/solo-session.md",
+      "prompt": "I want to run my own weekly WIG Session for my dissertation. No team — just me.",
+      "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=solo + timing=during. Load protocols/solo-session.md and follow E section as peer-witness through Account/Review/Plan with self-chosen 1-2 commitments.",
+      "notes": "positive solo: explicit 'just me' / 'no team' marker resolves role unambiguously; agent fills peer-witness role"
+    },
+    {
+      "id": "should-trigger-team-leader",
+      "type": "should_trigger",
+      "expected_mode": "team-leader",
+      "expected_protocol": "protocols/team-leader-session.md",
+      "prompt": "Walk me through how to facilitate tomorrow's weekly WIG Session for my team of 6 — first time running it.",
+      "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=team-leader-facilitator + timing=during (with pre-session check). Load protocols/team-leader-session.md and provide leader-facing scripts for pre-check + frame + Account (leader-first) + Review + Plan (veto-not-dictate) + close.",
+      "notes": "positive team-leader: 'facilitate' + 'my team of 6' marks leader role; first-time = full walkthrough mode"
+    },
+    {
+      "id": "should-trigger-member-prep",
+      "type": "should_trigger",
+      "expected_mode": "member-prep",
+      "expected_protocol": "protocols/member-prep.md",
+      "prompt": "明日の WIG Session の前に commitment を準備したい。チームの lead measure に効くやつを考えたい。",
+      "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=team-member + timing=before. Load protocols/member-prep.md and run private prep conversation in personal-coach voice through 5 filters + rehearse wording.",
+      "notes": "positive member-prep JP: 「session の前に commitment を準備」 explicitly names timing=before + role=member (チーム + lead measure 言及)"
+    },
+    {
+      "id": "should-trigger-member-debrief",
+      "type": "should_trigger",
+      "expected_mode": "member-debrief",
+      "expected_protocol": "protocols/member-debrief.md",
+      "prompt": "上週 commitment 半完成而已，明天 WIG Session 該怎麼面對？我同事的緊急任務先處理了。",
+      "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=team-member + timing=after (debriefing last week before tomorrow's session). Load protocols/member-debrief.md and run 5-question debrief; in Q3, name the Marcus pattern (prioritizing teammate's urgent over own committed). Compose ~30-second account script.",
+      "notes": "positive member-debrief zh-TW: 「半完成」=partial classification ambiguity + 「同事的緊急任務先處理了」=Marcus pattern self-applied (CE-23)"
+    },
+    {
+      "id": "should-trigger-audit-mode-en",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "Audit our weekly WIG meetings — here are the last 4 weeks of session minutes. Boss says they feel pointless and like a status report.",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (artifacts provided + stakeholder critique). Pre-check passes (no multi-week skip mentioned). Load protocols/audit-mode.md and run E section steps 1-9: inventory → critique capture → 4 rule diagnostics → critique-to-rule mapping → per-rule fix + revised agenda template → onward route.",
+      "notes": "positive audit EN: 'Audit' + '4 weeks of session minutes' + critique 'pointless' / 'status report' all map to audit-mode. 'pointless' typically signals Plan-segment-absent / Account-only per audit-mode §I critique-to-rule table."
+    },
+    {
+      "id": "should-trigger-audit-mode-jp",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "うちの WIG Session 機能してない感じがする。過去 4 週分の議事録を渡すから、agenda 設計が正しいか診断して。",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (議事録 = artifacts; 診断 = audit intent). Load protocols/audit-mode.md. If artifacts described but not pasted, ask once for the minutes; otherwise proceed through E steps.",
+      "notes": "positive audit JP: 「議事録」+「診断」+ 期間 (4 週) 明確 → audit-mode. Multilingual coverage."
+    },
+    {
+      "id": "should-trigger-audit-mode-zh-tw",
+      "type": "should_trigger",
+      "expected_mode": "audit",
+      "expected_protocol": "protocols/audit-mode.md",
+      "prompt": "老闆說我們的週會浪費時間，幫我看過去四週的會議記錄，從 4DX 角度診斷哪裡走樣了。",
+      "expected_behavior": "Activate 4dx-d4-cadence; mode detection identifies audit-mode (會議記錄 = artifacts + 老闆 critique 浪費時間 + 4DX 診斷 intent). Load protocols/audit-mode.md and run audit. 「浪費時間」 maps via critique-to-rule table to Plan-absent / commitment-not-captured / whirlwind-invasion candidates.",
+      "notes": "positive audit zh-TW: 完整三要素 (artifacts + critique + 4DX-framed diagnosis intent)"
+    },
+    {
+      "id": "should-not-trigger-multi-week-collapse-redirect",
+      "type": "should_not_trigger",
+      "prompt": "Audit our WIG sessions — we used to do them weekly but haven't run one in 6 weeks. Here's the last log from before we stopped.",
+      "expected_behavior": "Do NOT load audit-mode despite the 'audit' keyword + artifact. Audit-mode pre-check (Step 2 of scope detection) catches multi-week consecutive skip (6 weeks). Route to 4dx-sustain-momentum-rescue instead. Audit-mode assumes cadence is currently running; collapse is a different problem class.",
+      "notes": "lure: surface keyword 'audit' + artifact provided would pull audit-mode, but '6 weeks' collapse triggers the hard gate → rescue. This is the critical multi-week-collapse vs malformed-but-running boundary."
+    },
+    {
+      "id": "should-not-trigger-sprint-review-audit",
+      "type": "should_not_trigger",
+      "prompt": "Audit our team's sprint review meetings — here are the last 4 retrospectives. They feel pointless.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Sprint review / agile retrospective is not a WIG Session artifact (different cadence + different format). Hand off via using-four-dx-coach. Audit-mode is for WIG-Session artifacts only.",
+      "notes": "lure: surface 'audit' + 'pointless' + 'meetings' overlaps audit-mode triggers, but 'sprint review' / 'retrospectives' = wrong artifact type. Tests artifact-type discrimination."
+    },
+    {
+      "id": "should-not-trigger-single-week-miss-not-audit",
+      "type": "should_not_trigger",
+      "prompt": "I missed my commitment last week and the WIG Session is tomorrow. Help me figure out what to say.",
+      "expected_behavior": "Do NOT load audit-mode. This is a single-person, single-week debrief — load protocols/member-debrief.md (coach-mode). Audit-mode is for multi-week pattern analysis from artifacts; single-week miss is member-debrief territory.",
+      "notes": "lure: 'figure out what's wrong' shape could partially overlap audit, but scope = 1 week + 1 person + tomorrow's session → coach-mode member-debrief. Tests audit-vs-debrief boundary."
+    },
+    {
+      "id": "should-not-trigger-cross-mode-misfire-01",
+      "type": "should_not_trigger",
+      "prompt": "I'm running my team's weekly WIG Session.",
+      "expected_behavior": "Activate 4dx-d4-cadence (router-level), but MUST NOT load protocols/solo-session.md — explicit team-leader role. Load protocols/team-leader-session.md. The cross-mode-misfire test is whether scope detection correctly distinguishes 'my team' from solo.",
+      "notes": "lure: surface keyword 'my' + 'WIG Session' could pull solo-session.md, but 'my team' + 'running' = team-leader-facilitator. Tests scope detection precision, NOT non-activation."
+    },
+    {
+      "id": "should-not-trigger-non-d4-momentum",
+      "type": "should_not_trigger",
+      "prompt": "I keep losing momentum on my goal — I've skipped my weekly review for 3 weeks now.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Cadence has already broken (3 weeks skipped). Description explicitly excludes broken-cadence; route to 4dx-sustain-momentum-rescue first, then resume D4 cadence.",
+      "notes": "lure: cadence-already-broken — surface keyword 'weekly review' + 'momentum' could pull D4, but 3-week gap = collapsed cadence per CE-11; rescue precedes restart"
+    },
+    {
+      "id": "should-not-trigger-non-d4-pre-d4",
+      "type": "should_not_trigger",
+      "prompt": "我團隊還沒有 WIG，要怎麼開始？",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Pre-D4 (no WIG defined). D4 has nothing to operate on. Route to 4dx-d1-wig-formulation or 4dx-d1-wig-formulation.",
+      "notes": "lure: pre-D4 — no WIG yet means D4 cadence has no anchor; route upstream"
+    },
+    {
+      "id": "should-not-trigger-out-of-4dx-okr",
+      "type": "should_not_trigger",
+      "prompt": "Help me run our team's weekly OKR check-in.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. OKR check-in is a different artifact (status-update format, often manager-driven, no peer-commitment-making segment, no whirlwind-exclusion). Hand off via using-four-dx-coach.",
+      "notes": "lure: out-of-4DX — surface 'weekly check-in' keyword overlap, but wrong methodology"
+    },
+    {
+      "id": "should-not-trigger-out-of-4dx-standup",
+      "type": "should_not_trigger",
+      "prompt": "Walk me through running a daily stand-up for our scrum team.",
+      "expected_behavior": "Do NOT activate 4dx-d4-cadence. Daily stand-up = wrong cadence (daily ≠ weekly), wrong format (yesterday/today/blockers ≠ Account/Review/Plan), wrong scope (sprint task ≠ WIG-lead-measure action). Hand off via using-four-dx-coach.",
+      "notes": "lure: out-of-4DX agile — surface 'running' + 'team meeting' keyword overlap, but wrong methodology entirely"
+    },
+    {
+      "id": "edge-01-ambiguous-role",
+      "type": "edge_case",
+      "expected_mode": "ambiguous-ask-disambiguation",
+      "prompt": "Help with my WIG Session. Not sure how to approach it.",
+      "expected_behavior": "Activate 4dx-d4-cadence. Role + timing both ambiguous ('my WIG Session' could be solo-run, member-prep, member-debrief, or leader-facilitate). Run scope-detection step 1; ask the ONE Socratic disambiguation question covering the 4 modes; route based on response.",
+      "notes": "boundary: genuinely ambiguous — surface phrase matches old topic-router activation criterion; merged skill must still ask before routing"
+    },
+    {
+      "id": "edge-02-borderline-strong-signal",
+      "type": "edge_case",
+      "expected_mode": "member-prep",
+      "expected_protocol": "protocols/member-prep.md",
+      "prompt": "今度の WIG Session で何を commit するか考えたい。チームで動いてる。",
+      "expected_behavior": "Activate 4dx-d4-cadence. Role implied (member: チームで動いてる + commit を考える before session) and timing implied (before, 今度の session). Per SKILL.md scope-detection rule 'If signal in original query is strong, skip the question and load the protocol directly.' — load protocols/member-prep.md without disambiguation. Acceptable to ask one confirmation if uncertain.",
+      "notes": "boundary: signal strength borderline. Either router-level confirmation OR direct member-prep load — both acceptable per SKILL.md routing logic"
+    },
+    {
+      "id": "edge-03-three-misses-redirect",
+      "type": "edge_case",
+      "expected_mode": "redirect-to-prep-not-debrief",
+      "prompt": "I've missed my commitment three weeks in a row, WIG Session is tomorrow — what do I say?",
+      "expected_behavior": "Activate 4dx-d4-cadence; scope detection identifies role=team-member + timing=after (debrief). BUT the SKILL.md non-activation signal '3+ misses in a row → commitment-design problem' AND the member-debrief Step 6 decision rule both redirect: do NOT run member-debrief in full; surface the redesign hand-off and load protocols/member-prep.md instead. Optionally compose a brief honest 30-second account first ('three misses in a row, I'm bringing a redesign'), then move to prep mode for the redesign.",
+      "notes": "boundary: 3+ misses crosses the debrief→prep redirect threshold (CE-23 reflexed); tests that scope detection respects the multi-miss reframing rule"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 0.9,
+  "self_evaluation_note": "18 cases evaluated. 7 should_trigger: 4 coach-mode (EN solo, EN team-leader, JP member-prep, zh-TW member-debrief) + 3 audit-mode (EN + JP + zh-TW). 8 should_not_trigger lures: 1 cross-mode-misfire, 2 non-D4 routings (cadence broken → sustain-rescue / pre-D4 → D1), 2 out-of-4DX routings (OKR / standup → using-four-dx-coach), 1 multi-week-collapse-redirect (audit keyword + artifacts BUT 6-wk skip → rescue, NOT audit-mode — tests the critical malformed-vs-collapsed boundary), 1 sprint-review-audit (wrong artifact type → router), 1 single-week-miss (→ member-debrief, not audit). 3 edge cases retained from v1.0 (ambiguous role / borderline strong signal / 3+ miss redirect). Pass rate = 0.9 honest — multi-week-collapse-redirect is the highest-risk new lure: a judge could see 'audit' + artifact and pull audit-mode without applying the Step-2 pre-check. SKILL.md scope-detection Step 2 explicitly screens for this, but it's a single-line gate against a strong surface signal."
+}

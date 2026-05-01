@@ -1,0 +1,82 @@
+[
+  {
+    "query": "我們 12 人 team 跑完 Q3 一整季 4DX 想做個 0-4 分的正式 audit 看執行品質",
+    "should_trigger": true
+  },
+  {
+    "query": "we've been doing 4DX for 6 months and i can't tell if we're actually executing or just doing the motions — need an objective pulse",
+    "should_trigger": true
+  },
+  {
+    "query": "Q4 続けるか決める前に 今期の XPS evaluation 走らせたい うちの team 機能してる？",
+    "should_trigger": true
+  },
+  {
+    "query": "明年要不要續做 4DX 老闆問我 先給團隊跑個正式 XPS 評分再決定",
+    "should_trigger": true
+  },
+  {
+    "query": "score our team's 4DX execution by component — cadence, commitments, lead-measures, lag — across the last cycle",
+    "should_trigger": true
+  },
+  {
+    "query": "感覺團隊只是在演 4DX 周會照開但好像在走形式 怎麼客觀評估執行品質",
+    "should_trigger": true
+  },
+  {
+    "query": "うちの 3 つの sub-team 全部 4DX 回してて 各チームの実行品質を XPS で診断したい 一つずつ",
+    "should_trigger": true
+  },
+  {
+    "query": "post-quarter pulse-check on our team's 4DX — give me C1 through C4 scores and the weakest-component fix priority",
+    "should_trigger": true
+  },
+  {
+    "query": "外部 coach 進來接手這個 team 想先抓個 baseline 看他們現在 4DX 跑得怎樣再決定怎麼介入",
+    "should_trigger": true
+  },
+  {
+    "query": "ローンチから 8 週たった チームの 4DX が本物か theatrical か正直に audit してほしい",
+    "should_trigger": true
+  },
+  {
+    "query": "跑到一半 卡住了 給你看 WIG + scoreboard + 會議紀錄 哪一層壞掉",
+    "should_trigger": false
+  },
+  {
+    "query": "我們的 WIG Session 過去 4 週紀錄在這 幫我看 cadence 跑得怎樣",
+    "should_trigger": false
+  },
+  {
+    "query": "i'm running 4DX solo as an individual contributor and want to self-assess at quarter-end — am I keeping the discipline",
+    "should_trigger": false
+  },
+  {
+    "query": "WIG 跑斷了 兩個禮拜沒開會了 怎麼救回來",
+    "should_trigger": false
+  },
+  {
+    "query": "うちのチーム 4DX 入れるかどうか まだ決めてない fit するか先に判断したい",
+    "should_trigger": false
+  },
+  {
+    "query": "want to run a head-to-head comparison between East team and West team — which one is winning on 4DX execution this quarter",
+    "should_trigger": false
+  },
+  {
+    "query": "lead measure 看起來不太預測 lag 想單獨 deep-dive 我們 D2 的選擇對不對",
+    "should_trigger": false
+  },
+  {
+    "query": "this week's WIG session i need to facilitate — give me the 20-30 min agenda and meeting protocol",
+    "should_trigger": false
+  },
+  {
+    "query": "scoreboard 沒人在更新 想重做 player-updated 的版本 怎麼設計",
+    "should_trigger": false
+  },
+  {
+    "query": "team launch 第 2 週 想先看看狀況 給個 XPS 分",
+    "should_trigger": true
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {"query": "ok i've been hearing about this 4 disciplines thing at work and want to try using it for my own side project — no idea where to start though, can you walk me through?", "should_trigger": true},
+  {"query": "我老闆叫我們團隊下季開始導入 4DX，但我自己連看書都還沒看完，不知道從哪一塊先動手", "should_trigger": true},
+  {"query": "4DX を使い始めたいんだけど、個人目標と部下のチーム目標どっちに先に当てるべき？まだ何も決まってない", "should_trigger": true},
+  {"query": "目標立てたけど続かない 4DX に頼ってみたい どこから始めれば？", "should_trigger": true},
+  {"query": "4 disciplines of execution — should i even bother for a 2-person startup? where do i begin if yes", "should_trigger": true},
+  {"query": "我想用某個方法整頓我自己的目標 但不知道從哪開始 朋友推薦 4 disciplines", "should_trigger": true},
+  {"query": "4dx 完全初心者です 何からやればいいか教えて", "should_trigger": true},
+  {"query": "Q3 我們團隊要開始用四個執行紀律 我是 lead 但完全沒概念 給個方向", "should_trigger": true},
+  {"query": "i keep hearing wig wig wig at standups and have no clue what's happening — i'm new to the team and they're already deep into this", "should_trigger": true},
+  {"query": "4DX 興味あるけど自分のケースに合うかも分からない とりあえず話聞いて", "should_trigger": true},
+
+  {"query": "我們團隊已經選好 WIG 是「Q4 客戶留存從 65% 提到 75%」現在卡在不知道 lead measure 該怎麼挑 給點建議", "should_trigger": false},
+  {"query": "幫我寫一個 personal WIG，目標是今年底前完成第一本小說初稿", "should_trigger": false},
+  {"query": "想用 OKR 來追 Q4 目標 給點建議 之前用 SMART 不太順", "should_trigger": false},
+  {"query": "WIG 跑了三個月斷掉了快一個月沒開 WIG session 了 想重啟", "should_trigger": false},
+  {"query": "ここに弊チームの戦略ドキュメント、KPI ダッシュボード、過去 4 週の WIG セッション議事録があります。4DX 全体を診断してほしい", "should_trigger": false},
+  {"query": "scrum sprint planning ばっかりで疲れた もっと長期目標に focus したい framework ない？", "should_trigger": false},
+  {"query": "i missed my wig session commitment last week — what do i say at tomorrow's session", "should_trigger": false},
+  {"query": "design a scoreboard for my team's customer-onboarding cycle-time WIG — should it be on TV in office?", "should_trigger": false},
+  {"query": "最近毎日 firefighting で日常業務に追われて自分の目標に手がつかない どうすれば", "should_trigger": false},
+  {"query": "我下週要 cascade 公司 primary WIG 給 5 個 sub-team leader 怎麼設計 cascade 樹？", "should_trigger": false}
+]

@@ -1,0 +1,89 @@
+{
+  "skill": "4dx-meta-team-leader-onboarding",
+  "version": "0.2.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Pre-cascade buy-in coaching for leader-of-leaders, dual-mode (coach + audit). Coach: forward-Socratic prep with no past artifacts. Audit: backward-synthesis from rollout email / 1:1 transcripts / team feedback when onboarding produced compliance / pushback. Distinct from triage (still deciding 4DX fit), cascade (already-bought-in technical Team-WIG drafting), member-scope skills, sustain-rescue (post-cascade cadence collapse), and 4dx-audit (cross-layer).",
+  "test_cases": [
+    {
+      "id": "should-trigger-coach-01",
+      "type": "should_trigger",
+      "prompt": "I've decided to roll out 4DX in my division and I have draft Primary + Key Battle WIGs. Now I need to get my five direct-report leaders genuinely on board — not just nodding in the meeting. How do I prepare for that conversation?",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding in coach-mode (no past artifacts, forward-looking prep). Confirm fit-decision precondition, then walk leader through naming reports + skepticism levels + steel-manned objections + pilot/hold-back classification.",
+      "notes": "EN coach-mode canonical positive — pre-cascade anxiety with named direct-report leaders, draft WIGs in hand, no past onboarding."
+    },
+    {
+      "id": "should-trigger-coach-02",
+      "type": "should_trigger",
+      "prompt": "来月から 4DX を導入したいんだけど、部下リーダー 4 人にどう伝えれば腹落ちしてくれるか悩んでる。特に田中さんは絶対「また流行りの施策？」って反発しそう。",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding in coach-mode; 田中さんを含む 4 人を名指しさせ、それぞれの懐疑度・関心ある成果・最強の反対論を steel-man させ、最後に田中さん向けの会話を rehearse する。",
+      "notes": "JP coach-mode positive — anticipated specific resister (田中さん), 'flavor of the month' phrasing matches description verbatim, no past artifacts."
+    },
+    {
+      "id": "should-trigger-coach-03",
+      "type": "should_trigger",
+      "prompt": "我已經決定要在部門推 4DX 了，Primary WIG 跟 Key Battles 也草擬好了。但我的三個下屬 leader 個性差很多——一個是熱衷派、一個中立、一個鐵定會抵抗。我不想被當成又一個流行 KPI 工具，要怎麼跟他們開這個會？",
+      "expected_behavior": "啟動 4dx-meta-team-leader-onboarding 的 coach-mode；確認前提，引導使用者命名三人、評估懷疑度、steel-man 各人最強反對論、做 pilot/hold-back 分類，最後針對最高槓桿那位演練對話。",
+      "notes": "ZH coach-mode positive — three named direct reports with varied skepticism, explicit 'flavor KPI tool' anti-pattern flag."
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "prompt": "I rolled out 4DX to my five direct-report leaders three weeks ago — kickoff email, slides, 1:1 with each. Now my boss says 'team isn't bought in, leaders are complying not committing'. Here's the rollout email and the 1:1 notes from each leader. Can you audit what went wrong?",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding in audit-mode (past artifacts provided, backward-synthesis). Apply commitment-vs-compliance + Kotter Stage-1 urgency + per-leader steel-manning + pilot-vs-hold-back checks. Map 'team isn't bought in' / 'complying not committing' to violated rules. Output per-leader recovery plan + revised conversation for highest-leverage missed leader.",
+      "notes": "EN audit-mode canonical positive — onboarding ran, artifacts provided (rollout email + 1:1 notes), critique matches verbatim ('team isn't bought in' + 'complying not committing')."
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "prompt": "先月 4DX を全社導入したんですが、リーダー陣が表面的に従ってるだけで全然 commitment が出てこない。ロールアウトメールと kickoff スライド、各リーダーとの 1:1 議事録、それからチームから上がってきたフィードバック、これ全部見て何が間違ってたか診断してほしい。",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding in audit-mode; 4 種類のアーティファクトを inventory し、commitment-vs-compliance / Kotter Stage-1 / per-leader steel-manning / pilot-vs-hold-back の 4 lens で診断。「表面的に従ってるだけ」を self-chosen-commitment 不在 / Team WIG 押し付けにマップし、per-leader recovery plan と最高 leverage の missed leader 向け会話 revision を出力。",
+      "notes": "JP audit-mode positive — 「表面的に従ってるだけ」 phrasing matches description verbatim, full artifact bundle provided, '全社導入' flags pilot-vs-hold-back fail (CE-36)."
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "prompt": "我們上個月導入 4DX 了，但團隊不買單，下屬幾位 leader 表面配合心裡抗拒。我把當初的 rollout 信件、kickoff slides、跟每個 leader 的 1:1 紀錄、還有這幾週收到的團隊回饋整理出來了。幫我從 4DX 角度診斷哪裡走樣。",
+      "expected_behavior": "啟動 4dx-meta-team-leader-onboarding 的 audit-mode；inventory 4 類 artifacts，跑 commitment-vs-compliance / Kotter Stage-1 / per-leader steel-manning / pilot-vs-hold-back 四 lens 診斷。把「不買單」「表面配合心裡抗拒」mapping 到對應 rule 違反，輸出 per-leader recovery plan + 最高槓桿 missed leader 的對話 revision + onward route。",
+      "notes": "ZH audit-mode positive — 「不買單」「表面配合心裡抗拒」 phrasings match description verbatim, full artifact bundle, post-onboarding diagnosis ask."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I keep hearing about 4DX from a peer CEO. Is this actually the right operating system for a 200-person SaaS company, or is it overkill? I haven't decided yet.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Route to 4dx-meta-strategy-triage — fit-for-org decision is upstream of both coach-mode and audit-mode.",
+      "notes": "lure: triage misfire — user explicitly hasn't decided 4DX fits, so onboarding skill skips a precondition."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "My direct reports are bought in and excited. Now we need to actually run the cascade meeting next Monday and turn the Primary WIG into Team WIGs for each of their teams. Walk me through the structural cascade.",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding (coach-mode is for pre-cascade buy-in prep; audit-mode is for past failed onboarding — neither fits a buy-in-already-secured technical cascade ask). Route to 4dx-d1-wig-cascade.",
+      "notes": "lure: cascade misfire — buy-in solved, user is asking for downstream technical artifact."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "I'm a frontline team lead and I want my 6 team members on board with our new Team WIG before the first WIG Session. How do I get them excited about it?",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding. Wrong scale — both modes are leader-of-leaders → leaders-of-frontline-teams, not leader → individual contributors. Route to D1 Team-WIG-choosing process or D4 session prep.",
+      "notes": "lure: member-misfire — user is one level below the skill's intended scope (frontline leader, not leader-of-leaders); applies to both modes."
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "We onboarded all our team-leaders to 4DX six weeks ago and the WIG Sessions started fine for the first two weeks, but we've now skipped three weeks in a row and engagement has collapsed. Can you audit what's going wrong?",
+      "expected_behavior": "Do NOT activate 4dx-meta-team-leader-onboarding audit-mode. Multi-week consecutive skip = cadence collapse, not malformed onboarding. Route to 4dx-sustain-momentum-rescue. (Audit-mode here is onboarding-layer-only and assumes the buy-in itself was malformed; cadence-collapse is downstream of buy-in.)",
+      "notes": "lure: audit-mode misfire — past-onboarding language + audit ask, but the actual problem is post-cascade cadence collapse (sustain-rescue territory, not onboarding audit)."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I have positional authority — these leaders technically report to me and have to go along. But two of them have lived through three failed corporate initiatives in five years and I suspect 4DX won't actually take root unless they choose it. How do I roll this out?",
+      "expected_behavior": "Activate 4dx-meta-team-leader-onboarding in coach-mode AND surface the compliance-vs-commitment issue explicitly (Boundary section: positional-authority warning). The skill should fire because the user is actually trying for genuine commitment, not just softer-sounding mandate language — but flag the failure mode where 'I have authority, I just want a softer script' produces 4DX-shaped paperwork without execution.",
+      "notes": "boundary: positional-authority + suspects-no-root-take — exactly the case Chapter 8 + Boundary section addresses; should fire AND warn, not abstain. Coach-mode (no past artifacts)."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

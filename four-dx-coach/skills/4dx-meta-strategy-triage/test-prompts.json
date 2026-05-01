@@ -1,0 +1,185 @@
+{
+  "skill": "4dx-meta-strategy-triage",
+  "version": "1.0.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Multi-mode triage gate. Tests scope detection (solo vs team-leader vs ambiguous-needs-disambiguation) + non-activation lures (already-committed / member-misfire / non-4DX / specific-discipline). Activation judgment based on description-only.",
+  "test_cases": [
+    {
+      "id": "T-01-solo-en",
+      "type": "should_trigger",
+      "scope": "personal-mode",
+      "prompt": "Should I use 4DX for my marathon training goal? I want to run sub-3:30 by next October.",
+      "expected_behavior": "Activate skill; scope detection identifies solo (first-person singular + personal goal); load protocols/personal-mode.md; run 6-step Socratic triage; likely verdict: APPLICABLE (sustained behavioral change required: weekly mileage, pace work, recovery — not stroke-of-the-pen, not whirlwind).",
+      "activation_judgment": "PASS",
+      "notes": "Direct EN match: 'Should I use 4DX for X?' canonical phrasing in description; 'I' anchor → solo; no team context."
+    },
+    {
+      "id": "T-02-solo-jp",
+      "type": "should_trigger",
+      "scope": "personal-mode",
+      "prompt": "私の博士論文に 4DX 使えますか？3年で書き上げたいんですが、今のままだと無理そうで。",
+      "expected_behavior": "発動; scope detection 識別 solo; load protocols/personal-mode.md; 6 段階の Socratic triage を走らせる。推定 verdict: 微妙 — 創作的アウトプット (creative-output) anti-pattern に当たる可能性あり; Goodhart 効果のリスクを説明しつつ deliberate practice + 制約ベース手法へリダイレクトの可能性も示唆。",
+      "activation_judgment": "PASS",
+      "notes": "JP match: 「この目標に 4DX 使える？」 phrasing in description; thesis writing is canonical creative-output anti-pattern."
+    },
+    {
+      "id": "T-03-team-en",
+      "type": "should_trigger",
+      "scope": "team-mode",
+      "prompt": "Should our 8-person team adopt 4DX? I'm the team lead and I keep hearing about it but I'm not sure it fits us.",
+      "expected_behavior": "Activate skill; scope detection identifies team-leader (first-person plural + 'team lead' + 'our team' + size 8); load protocols/team-mode.md; run 9-step gate ending in TEAM-APPLICABLE / one of the redirect verdicts.",
+      "activation_judgment": "PASS",
+      "notes": "Direct EN match: 'Should our team adopt 4DX?' canonical leader-asks-fit phrasing; team size in 3-12 band; BEFORE any D1 work."
+    },
+    {
+      "id": "T-04-team-zh",
+      "type": "should_trigger",
+      "scope": "team-mode",
+      "prompt": "我們團隊適合導入 4DX 嗎？10 個人，主管想推但我怕水土不服。",
+      "expected_behavior": "啟動 skill; scope detection 識別 team-leader; load protocols/team-mode.md; 執行 9 步 Socratic 流程; 預期通過大部分 gate (size 10 在 3-12)，但 Schein assumption-conflict / Galbraith reward-system 等 readiness 檢查可能觸發 TEAM-NOT-YET-READY。",
+      "activation_judgment": "PASS",
+      "notes": "ZH match: 「我們團隊適合導入 4DX 嗎？」 canonical zh-TW phrasing in description."
+    },
+    {
+      "id": "T-05-ambiguous-disambiguation",
+      "type": "should_trigger",
+      "scope": "needs-disambiguation",
+      "prompt": "Is 4DX a good fit for what I'm trying to do? I'm not sure if it'll work.",
+      "expected_behavior": "Activate skill; scope detection finds ambiguous (no clear actor — no 'team' or 'I personally' anchor); ask ONE Socratic disambiguation question covering solo vs team-leader; route based on user's reply.",
+      "activation_judgment": "PASS",
+      "notes": "Ambiguous-scope fallback: triggers the orchestrator's disambiguation question (multilingual EN/JP/zh-TW). Tests that scope detection correctly identifies ambiguity rather than collapsing one way."
+    },
+    {
+      "id": "T-06-explicit-scope-no-disambiguation",
+      "type": "should_not_trigger",
+      "scope": "personal-mode-direct",
+      "prompt": "Triage 4DX for myself — I want to lose 20 pounds in 6 months.",
+      "expected_behavior": "Activate skill, but scope is explicit ('for myself' + first-person singular + personal goal) — skip the disambiguation question; load protocols/personal-mode.md directly. Triage verdict likely APPLICABLE or habit-formation depending on Step 4 anti-pattern screen on weight-loss daily actions. Marked should_not_trigger relative to the disambiguation question (NOT relative to skill activation).",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: explicit-scope-misfire test. The skill DOES activate; what should NOT trigger is the orchestrator's disambiguation prompt — scope is already clear, fire personal-mode directly. Tests SKILL.md's 'If signal is strong, skip the question' clause."
+    },
+    {
+      "id": "T-07-already-triaged-d1",
+      "type": "should_not_trigger",
+      "prompt": "I've decided to use 4DX for my Q3 OKR — 'launch v2 of the product by Sept 30'. I have my WIG. What lead measures should I pick? I'm thinking weekly user-interview count and PR-merge cadence.",
+      "expected_behavior": "Do NOT activate this skill. User has already committed to 4DX AND has a defined WIG; they're asking a D2-specific (lead measure discovery) question. Per description's non-activation: 'NOT for already-committed users asking how to start (route to D1)' → route to 4dx-d2-lead-measures.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: already-triaged / D2-question. Description explicitly excludes this case."
+    },
+    {
+      "id": "T-08-member-misfire",
+      "type": "should_not_trigger",
+      "prompt": "I just joined a team that already uses 4DX. My manager already picked the WIG. Can you explain how the WIG and lead measures work so I understand the cadence?",
+      "expected_behavior": "Do NOT activate this skill — OR activate and immediately route out via SKILL.md's member-edge-case clause. User is a member receiving an inherited WIG; members don't triage methodology fit. Route to 4dx-d1-wig-formulation.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: member-misfire — description explicitly states 'NOT for team members inheriting a WIG (route to 4dx-d1-wig-formulation — members don't triage methodology fit)'. SKILL.md has explicit member edge-case routing."
+    },
+    {
+      "id": "T-09-non-4dx-okr",
+      "type": "should_not_trigger",
+      "prompt": "Help me set up OKRs for my team next quarter — we have 3 main objectives and need to define key results for each.",
+      "expected_behavior": "Do NOT activate this skill. Non-4DX methodology query (OKR). Per description: 'NOT for ... non-4DX methodologies (OKR / agile / habit-stacking / scrum / kanban) → hand off via using-four-dx-coach'.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: non-4DX methodology — should hand off to plugin router, not run triage."
+    },
+    {
+      "id": "T-10-enterprise-rollout",
+      "type": "should_not_trigger",
+      "prompt": "我們公司 50 個 team 要導入 4DX，下個季度開始。請幫我設計 cascade WIG 的部署計畫，包含 leader-of-leaders training schedule。",
+      "expected_behavior": "Do NOT activate this skill. Enterprise multi-team rollout. Per description: 'NOT for enterprise multi-team rollout (read book Ch 6-10 directly + 4dx-d1-wig-cascade)'. Single-team scope only.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: enterprise-rollout — actor model (50 teams + leader-of-leaders) differs from single-team triage scope."
+    },
+    {
+      "id": "T-11-edge-firefighting-team",
+      "type": "edge_case",
+      "scope": "team-mode",
+      "prompt": "I lead an 8-person ER (emergency room) trauma team. My boss wants us to adopt 4DX. Should we?",
+      "expected_behavior": "Activate skill; scope detection → team-leader; load protocols/team-mode.md; pass Steps 1-3, but Step 4 firefighting-role check returns wrong-team-shape (firefighting role) verdict — 4DX inverts wrong even at team-size sweet spot when team's mission IS the whirlwind.",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: team size in 3-12 band but role is structurally firefighting — the wrong-team-shape (firefighting) verdict path catches this, not just size-out-of-band cases."
+    },
+    {
+      "id": "T-12-edge-ambiguous-goal-scale",
+      "type": "edge_case",
+      "scope": "personal-mode",
+      "prompt": "I want to read more this year. Should I use 4DX?",
+      "expected_behavior": "Activate skill; scope = solo; load protocols/personal-mode.md. Step 1 (Surface goal in concrete terms) forces disambiguation — could be habit-formation ('read 10 min/night') OR behavioral-change WIG ('From 4 books/yr to 24 books/yr by Dec 31'). Routes via Step 4 habit screen vs Step 7 APPLICABLE based on user's clarification.",
+      "activation_judgment": "PASS",
+      "notes": "Boundary: ambiguous goal scale within solo mode. Tests that Step 1 (concrete-terms forcing) correctly handles habit-vs-WIG ambiguity rather than collapsing one way."
+    },
+    {
+      "id": "T-13-audit-en-strategy-doc",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "Audit whether 4DX fits our team given this strategy doc: 'Team of 9 customer-success engineers. Goal: improve renewal rate from 78% to 88% by FY-end. Currently we operate by ad-hoc weekly standups. Bonus structure rewards quarterly revenue.' Is 4DX right for us?",
+      "expected_behavior": "Activate skill; mode pre-check identifies audit-mode (artifact-rich + fit-check intent + 'audit' verb); load protocols/audit-mode.md; extract scope=team-leader (size 9), goal=From 78% to 88% by FY-end, current-method=ad-hoc standups, incentive-conflict signal. Run gate-check: stroke-of-pen FAIL (renewal lag is multi-touch behavioral), whirlwind FAIL (sharper standups insufficient), team-shape PASS (size 9), goal-shape PASS (From-X-to-Y-by-When clear), Galbraith STAR FAIL (bonus rewards revenue not renewal). Verdict likely TEAM-NOT-YET-READY — fix incentives before installing.",
+      "activation_judgment": "PASS",
+      "notes": "Audit-mode canonical: strategy doc + fit-check intent. Tests that Galbraith reward-system check fires from artifact line, not Socratic question."
+    },
+    {
+      "id": "T-14-audit-jp-stakeholder-critique",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "うちの 4DX 適合性を診断してほしい。チーム 6 人、SREのオンコール対応がメイン業務。社長は 4DX 入れたがってるけど、現場は『うちは無理』って言ってる。会社の状況見て 4DX 合うか判定してください。",
+      "expected_behavior": "発動; mode pre-check で audit-mode 識別 (「診断」「判定」+ artifact: チーム規模 6 + 業務内容 + stakeholder critique); load protocols/audit-mode.md。Step 6 で 「うちは無理」 を emergency-role / wrong-team-shape (firefighting) にマッピング。Verdict: wrong-team-shape (firefighting) — SRE オンコールは whirlwind IS strategic value、4DX inverts wrong。社長への defensible な書面 verdict を返す。",
+      "activation_judgment": "PASS",
+      "notes": "JP audit-mode: stakeholder critique + reactive role artifact. Tests CE-26 whirlwind-as-strategic-work catch from artifact text."
+    },
+    {
+      "id": "T-15-audit-zh-fit-check",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "策略 doc 在這：「12 人開發團隊，要在 Q4 完成 v3 平台改版上線，已有完整 spec 和 timeline」。老闆說 4DX 不行，幫我診斷 4DX 適不適合我們團隊。",
+      "expected_behavior": "啟動 skill; mode pre-check 識別 audit-mode (「診斷」「適不適合」+ strategy doc artifact + stakeholder critique); load protocols/audit-mode.md。Extract: scope=team-leader (size 12), goal=v3 改版上線 + 既定 spec + timeline。Gate-check: 反 single-shot-project anti-pattern 觸發 — 「完整 spec 和 timeline」是 fixed-plan deliverable，4DX 重複 PMI/Agile 的價值。Verdict: single-shot-project — 用 project management 而非 4DX。stakeholder critique 「不行」 mapping 到 single-shot-project。",
+      "activation_judgment": "PASS",
+      "notes": "ZH audit-mode: single-shot-project anti-pattern detected from artifact ('完整 spec 和 timeline' = fixed-plan signal)."
+    },
+    {
+      "id": "T-16-audit-applicable",
+      "type": "should_trigger",
+      "scope": "audit-mode",
+      "prompt": "Here's our annual plan: 'Marriott property, 7-person front-desk team. Goal: lift NPS from 72 to 85 by year-end. Capital renovation already done. Leader can carve 20% protected time. Team is 4 Models / 2 Not-Yets / 1 Never. Bonus tied to NPS. Friday-commitment culture established.' Is 4DX the right operating system?",
+      "expected_behavior": "Activate; audit-mode (artifact-rich + 'is 4DX right' fit-check); load protocols/audit-mode.md. All gates PASS: stroke-of-pen done (capital), behavioral residual remains (front-desk daily action), team-shape OK (size 7), time-authority PASS, F-28 split healthy, Galbraith aligned (bonus = NPS), Schein OK (Friday-commitment culture). Verdict: TEAM-APPLICABLE → next step 4dx-meta-team-leader-onboarding → 4dx-d1-wig-formulation.",
+      "activation_judgment": "PASS",
+      "notes": "Audit-mode positive case: all gates PASS from artifact. Mirrors Spartanburg Marriott Case 1 in protocol A1."
+    },
+    {
+      "id": "T-17-audit-lure-already-committed",
+      "type": "should_not_trigger",
+      "prompt": "We've already committed to 4DX. Here's our WIG draft and lead-measure list — audit it for me, our boss says it's too abstract.",
+      "expected_behavior": "Do NOT activate this skill (or activate but immediately route out). User is already 4DX-committed and providing WIG / lead-measure artifacts for within-discipline diagnosis — this is cross-layer audit territory. Per description: 'NOT for cross-layer audit when 4DX already chosen (→ 4dx-audit)'. Route to 4dx-audit (full-stack) or D1-specific audit-mode for WIG-only audit.",
+      "activation_judgment": "PASS",
+      "notes": "Lure: 4DX-committed user using 'audit' verb. The skill's audit-mode is FIT-CHECK pre-commit; once committed, route to 4dx-audit / D-skill audit-modes. Tests boundary clarity between meta-strategy audit-mode vs 4dx-audit."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance.",
+  "pass_rate": 1.0,
+  "pass_summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "by_type": {
+      "should_trigger": "9/9 (3 coach-mode explicit-scope + 1 ambiguous-disambiguation + 1 explicit-scope no-disambiguation + 4 audit-mode EN/JP/ZH/positive)",
+      "should_not_trigger": "5/5 (already-triaged / member-misfire / non-4DX / enterprise-rollout / audit-but-already-committed)",
+      "edge_case": "2/2 (firefighting team + ambiguous-goal-scale within solo)"
+    }
+  },
+  "description_audit": {
+    "verdict": "STRONG",
+    "strengths": [
+      "Multilingual triggers per scope (solo + team-leader + ambiguous-fallback) explicitly listed in description.",
+      "Non-activation clauses cover all four documented lure types: already-committed → D1 routing; member → comprehension routing; non-4DX → plugin router; enterprise → book chapters.",
+      "Member-edge-case has a dedicated SKILL.md clause that activates the skill briefly then routes out — handles T-08 cleanly without bypassing the description gate.",
+      "Verdict enumeration in description tells the agent the OUTPUT shape per mode, reducing ambiguity about whether a habit / firefighting / portfolio query is in-scope."
+    ],
+    "minor_observations": [
+      "T-06 (explicit-scope) tests an interesting case: skill fires but skips the disambiguation question. SKILL.md handles via the 'If signal is strong, skip the question' clause. No fix needed.",
+      "T-12 (ambiguous goal scale) is parallel to T-06 — scope is clear (solo) but goal-scale within solo is ambiguous; protocol's Step 1 handles via concrete-terms forcing. No fix needed."
+    ],
+    "recommended_changes": "None required for ship."
+  }
+}

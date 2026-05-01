@@ -1,0 +1,98 @@
+{
+  "skill": "4dx-d1-wig-cascade",
+  "version": "0.2.0",
+  "source_book": "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker",
+  "source_language": "en",
+  "darwin_compatible": true,
+  "_comment": "Stage 4 adversarial pressure test. Path-B refactor (2026-04-30) — coach-mode + audit-mode. ≥3 should_trigger coach (EN/JP/zh-TW), ≥3 should_trigger audit (EN/JP/zh-TW), ≥3 should_not_trigger lures (single-team-leader / personal-misfire / member-misfire), ≥1 edge_case (cascade depth), ≥1 audit-mode boundary (single-team WIG audit → wig-formulation; cross-layer → 4dx-audit).",
+  "test_cases": [
+    {
+      "id": "should-trigger-coach-01",
+      "type": "should_trigger",
+      "prompt": "How do I translate the org Primary WIG to my 5 sub-teams? Each direct-report manager needs their own Team WIG and I need to make sure they ladder up.",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in coach-mode (no cascade artifact yet, building from scratch); load `protocols/coach-mode.md`; produce cascade map (Primary WIG → 2-3 Key Battles → N Team WIGs) applying Targets-not-Plans / Battles-to-win-the-war / Veto-don't-Dictate / one-WIG-per-individual; run ladder-up + veto tests.",
+      "notes": "positive coach-mode EN — canonical 'translate the org WIG to my team' phrasing, 5 sub-teams in 3-7 band, no existing artifact."
+    },
+    {
+      "id": "should-trigger-coach-02",
+      "type": "should_trigger",
+      "prompt": "上から降りてきた Primary WIG を、配下の 4 チームに翻訳したい。各マネージャーの Team WIG をどう決めればいい？",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in coach-mode; load `protocols/coach-mode.md`; run the Ch 7 four-rule cascade in Japanese, output cascade map + ladder-up/veto tests.",
+      "notes": "positive coach-mode JP — canonical 「直属マネージャー毎の Team WIG をどう決める」 phrasing."
+    },
+    {
+      "id": "should-trigger-coach-03",
+      "type": "should_trigger",
+      "prompt": "上面定的 Primary WIG 我要怎麼分到我帶的 6 個 team？每個主管要有自己的 Team WIG，怎麼選？",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in coach-mode; load `protocols/coach-mode.md`; run cascade in Traditional Chinese, output cascade map + ladder-up/veto tests.",
+      "notes": "positive coach-mode zh-TW — canonical 「每位主管要有自己的 Team WIG，怎麼選？」 phrasing, multi-sub-team explicit."
+    },
+    {
+      "id": "should-trigger-audit-01",
+      "type": "should_trigger",
+      "prompt": "Audit our cascade — here's the map: Primary WIG = 'lift NPS from 30 to 50 by Dec 31'; 5 Battles; 5 Team WIGs (one per district), each with the SAME From-X-to-Y-by-When numbers. Sub-leaders are saying 'these were imposed on us, we don't own them'. What's wrong?",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in audit-mode; load `protocols/audit-mode.md`; produce per-rule verdict table (Rule 3 FAIL — uniform numbers across districts is dictation pattern, sub-leader complaint confirms; Battles-count PARTIAL — 5 Battles, borderline); recommend cascade revision + conversation script for re-negotiation.",
+      "notes": "positive audit-mode EN — full cascade artifact + sub-leader critique 'imposed', maps to Rule 3 violation."
+    },
+    {
+      "id": "should-trigger-audit-02",
+      "type": "should_trigger",
+      "prompt": "うちの cascade を診断してほしい。Primary WIG は決まってて、Battle 4 つ、配下 6 チームに Team WIG 振った。下のリーダー達が「上に繋がらない」「色々やらされる」って文句言ってる。何がダメ？",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in audit-mode; load `protocols/audit-mode.md`; map 「上に繋がらない」 → Rule 2 violation, 「色々やらされる」 → Rule 1 violation; issue per-rule verdicts in Japanese; recommend revisions + 1:1 re-negotiation script (high-context culture adaptation).",
+      "notes": "positive audit-mode JP — cascade artifact described + dual sub-leader critique mapping to Rule 2 + Rule 1."
+    },
+    {
+      "id": "should-trigger-audit-03",
+      "type": "should_trigger",
+      "prompt": "幫我看我們的 cascade 哪裡有問題。上面 Primary WIG，下面 3 個 Battle，5 個團隊各自 Team WIG。下面 leader 都在抱怨「這跟我們的工作沒關係」「沒辦法判斷有沒有達成」。",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in audit-mode; load `protocols/audit-mode.md`; map 「跟我們的工作沒關係」 → Targets-not-Plans + ladder-up issue, 「沒辦法判斷」 → Rule 4 (X→Y→When grammar) violation; issue per-rule verdicts in Traditional Chinese.",
+      "notes": "positive audit-mode zh-TW — cascade artifact + sub-leader critique mapping to Rule 4 + ladder-up failure."
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "I lead a single 8-person team (no sub-teams). Help me pick our team's Primary WIG.",
+      "expected_behavior": "Do NOT activate this skill. Single-team leader, no cascade — should route to 4dx-d1-wig-formulation team-select coach-mode.",
+      "notes": "lure: single-team-leader — selection-not-cascade; description explicitly excludes 'leader runs only one team'."
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "Help me define my personal WIG. I want to translate my career goal into quarterly milestones.",
+      "expected_behavior": "Do NOT activate this skill. Solo goal — 'translate' verb surface match but scope is individual. Should route to 4dx-d1-wig-formulation personal-define.",
+      "notes": "lure: personal-misfire — 'translate' verb shared with cascade but scope is individual."
+    },
+    {
+      "id": "should-not-trigger-03",
+      "type": "should_not_trigger",
+      "prompt": "My manager just shared our Team WIG: 'cut response time from 6h to 2h by Q3'. Can you explain what cadence I should expect for the WIG sessions?",
+      "expected_behavior": "Do NOT activate this skill. Team-member comprehension of an already-cascaded Team WIG — should route to 4dx-d1-wig-formulation member-comprehend OR 4dx-d4-cadence (depending on the question focus).",
+      "notes": "lure: member-misfire — Team WIG mentioned but role is member, cascade already complete, task is comprehension."
+    },
+    {
+      "id": "should-not-trigger-04",
+      "type": "should_not_trigger",
+      "prompt": "Audit my Primary WIG: 'improve customer satisfaction by Dec 31'. Boss says it's too abstract.",
+      "expected_behavior": "Do NOT activate this skill (cascade audit-mode). Single Team WIG audit, no cascade — should route to 4dx-d1-wig-formulation audit-mode.",
+      "notes": "lure: audit-mode boundary — 'audit' verb + WIG present, but no cascade map (no Battles, no N Team WIGs); description excludes 'single-team WIG audit'."
+    },
+    {
+      "id": "should-not-trigger-05",
+      "type": "should_not_trigger",
+      "prompt": "Audit our 4DX install — here's the cascade map, lead measures, scoreboard, and 4 weeks of WIG-Session minutes. Diagnose what's broken across the board.",
+      "expected_behavior": "Do NOT activate this skill. Cross-layer audit (cascade + leads + scoreboard + cadence) — should route to 4dx-audit (full-stack).",
+      "notes": "lure: cross-layer audit boundary — cascade present but multiple D-layers in scope; description excludes 'cross-layer audit'."
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "I run a division with 4 cascade layers: division → group (3) → team (2-3 each) → squad (2 each). How do I cascade the division Primary WIG all the way down?",
+      "expected_behavior": "Activate 4dx-d1-wig-cascade in coach-mode AND advise: book caps cascade depth — re-run this skill once per layer (division→group, then group→team, then team→squad). Veto test must run at every layer. Do not flatten 4 layers into one cascade map.",
+      "notes": "boundary: description says 'cascade depth >2 layers (rerun per layer)'. Edge tests whether skill catches the depth cap and prescribes the re-run pattern instead of attempting one mega-cascade."
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "pass_rate": 1.0,
+  "pass_rate_breakdown": "12/12 — 3 coach-mode triggers PASS (EN/JP/ZH; multi-sub-team explicit, no artifact → coach), 3 audit-mode triggers PASS (EN/JP/ZH; cascade artifact + sub-leader critique → audit, complaints map cleanly to Rule 3 / Rule 2 / Rule 1 / Rule 4 / Targets-not-Plans), 5 should_not_trigger PASS (single-team-leader, personal-misfire, member-misfire, single-team WIG audit boundary, cross-layer audit boundary), edge-01 (4-layer cascade) PASS — re-run per layer rule explicit in description.",
+  "ship_threshold_note": "100% to ship cleanly. ≥80% allowed only with explicit failure analysis. <80% must redo Stage 2 A2/E/B. should_not_trigger has zero tolerance."
+}

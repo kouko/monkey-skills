@@ -1,0 +1,23 @@
+[
+  {"query": "我們 WIG + lead + scoreboard 都好了，週會該怎麼跑？", "should_trigger": true},
+  {"query": "我是 team leader，第一次主持 WIG Session，怎麼開？", "should_trigger": true},
+  {"query": "明天要參加 WIG Session，這週的 commitment 我該怎麼準備？上次太模糊", "should_trigger": true},
+  {"query": "剛開完 WIG Session，我這週 commitment 沒達成，下次怎麼面對？", "should_trigger": true},
+  {"query": "got feedback our weekly WIG review is just a status update — diagnose what's wrong, here are the last 4 weeks of meeting notes", "should_trigger": true},
+  {"query": "Run my weekly solo WIG Session, I want to keep my personal goal on track", "should_trigger": true},
+  {"query": "Someone on my team didn't keep their commitment last week — what do I do at this week's session?", "should_trigger": true},
+  {"query": "明日の WIG Session の commitment どう準備すれば？前回の約束を半分しか果たせなかった", "should_trigger": true},
+  {"query": "うちの WIG Session、毎回 1 時間以上かかってメンバーがダレてる、過去の議事録見て診断して", "should_trigger": true},
+  {"query": "主管說我們週會浪費時間，想調整 WIG Session 格式，幫我看哪裡走樣", "should_trigger": true},
+
+  {"query": "我們 WIG cadence 已經斷了 4 週了，怎麼重新啟動？", "should_trigger": false},
+  {"query": "Our team does a daily Scrum standup — how should we run it better?", "should_trigger": false},
+  {"query": "Sprint review 該怎麼開？我們是 Scrum 團隊", "should_trigger": false},
+  {"query": "OKR weekly check-in 的範本給我一份", "should_trigger": false},
+  {"query": "整套 4DX 我們都跑得不順，WIG / lead / scoreboard / cadence 全部都有問題，幫我整體 audit", "should_trigger": false},
+  {"query": "我們的 scoreboard 多久該 update 一次？要怎麼設計？", "should_trigger": false},
+  {"query": "3 週没やってないんだけど、どうやって WIG Session を再開する？", "should_trigger": false},
+  {"query": "I want to do a quarterly retrospective for my team — what's the agenda?", "should_trigger": false},
+  {"query": "我想做 GTD weekly review，怎麼跑？", "should_trigger": false},
+  {"query": "我還沒選 WIG，也還沒挑 lead measure，但想先把週會排好", "should_trigger": false}
+]

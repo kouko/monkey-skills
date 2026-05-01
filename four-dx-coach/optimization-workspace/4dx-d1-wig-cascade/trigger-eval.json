@@ -1,0 +1,22 @@
+[
+  {"query": "I'm VP of revenue with a Primary WIG of 'Q4 ARR +30% to $52M' and need to cascade it to my sales / marketing / product orgs — how do I split the Battles?", "should_trigger": true},
+  {"query": "i'm director of engineering with a primary WIG of '50% reduction in customer-reported bugs by EOY' and 4 squad leads — how do i cascade?", "should_trigger": true},
+  {"query": "We just locked the company Primary WIG (customer retention 65→72% by year-end). I have 3 sub-team leaders (product, CS, marketing) — walk me through Battles 2x2 to choose Team WIGs", "should_trigger": true},
+  {"query": "Here's our cascade map — Primary WIG → 3 Battles → 5 Team WIGs. Sub-team leaders are saying it was 'imposed' on them. Diagnose against 4DX rules.", "should_trigger": true},
+  {"query": "Primary WIG を各チームに翻訳したい。営業・マーケ・プロダクト 3 チームのリーダーがいて、Targets-not-Plans でどう Battle を切るか教えて", "should_trigger": true},
+  {"query": "うちの cascade map できてるけど、下のリーダー達が「押し付け」って文句言ってる。4DX で audit して", "should_trigger": true},
+  {"query": "私は事業部長で、5 つの sub-team を持ってる。会社の Primary WIG を各チームの Team WIG にどう落とすか相談したい", "should_trigger": true},
+  {"query": "我是 VP，公司 Primary WIG = 'Q4 客戶留存 65→72%' 要分配給 product / cs / marketing 三組，Battles 2x2 怎麼跑", "should_trigger": true},
+  {"query": "上面定的 Primary WIG，我下面 6 個 sub-team leader 要怎麼接？怎麼用 Targets-not-Plans 切 Battle", "should_trigger": true},
+  {"query": "我們的 cascade map 已經畫好了，附在這裡。下面 leader 都說是硬塞下來的，幫我用 4DX 四個規則 audit", "should_trigger": true},
+  {"query": "I lead a single team of 8 engineers and we need to pick our team WIG for Q4 — what's the framework?", "should_trigger": false},
+  {"query": "I want to set a personal Q4 goal for myself — can you help me write a WIG?", "should_trigger": false},
+  {"query": "My boss handed me a WIG and I don't understand it — can you help me decode what it means?", "should_trigger": false},
+  {"query": "Once we cascade Primary WIG down, how do each sub-team's lead measures get chosen? I want to facilitate that with my managers.", "should_trigger": false},
+  {"query": "Is 4DX even the right framework for our company before we start? We're 200 people, B2B SaaS.", "should_trigger": false},
+  {"query": "各 sub-team が WIG セッションをどう開けばいいか教えて。cadence の運用方法", "should_trigger": false},
+  {"query": "私は 6 人のチームリーダーで、Q4 の Team WIG を一つ選びたい。フレームワーク教えて", "should_trigger": false},
+  {"query": "我帶一個 6 人 team，要選一個 Q4 的 WIG。怎麼挑？", "should_trigger": false},
+  {"query": "我自己想設個 Q4 個人目標，要怎麼用 4DX 寫 WIG？", "should_trigger": false},
+  {"query": "Primary WIG 拆下去後，各組的 lead measure 怎麼配？我要主持各 sub-team leader 的 D2 討論", "should_trigger": false}
+]
