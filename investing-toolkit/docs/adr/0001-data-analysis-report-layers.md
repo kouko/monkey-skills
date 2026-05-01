@@ -68,7 +68,7 @@ Other clients (boj, edinet, fdr, sec_edgar, mops, etc.) are single-country and l
 - Scope is **explicit** (skill list per group), not glob-based — prevents silent widening if a non-listed skill ever drops in a copy.
 - On drift, the workflow prints the canonical/drift MD5 plus up to 50 lines of unified diff so reviewers see what changed, not just that something changed.
 - Status during this PR: **advisory**. Workflow runs and reports a red X on drift but is NOT in branch protection's required-checks list. PR 3 promotes it to required (branch-protection settings change; no YAML edit needed at that point).
-- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates canonical → all copies. `sync-clients.sh` supersedes the legacy `sync-check.sh` + `sync-scripts.sh` pair, which are retained until PR 3 cutover (deletion + CI required-flip in same commit).
+- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates canonical → all copies. The legacy `sync-check.sh` + `sync-scripts.sh` pair was deleted in PR 1 alongside the new mechanism (the v1.x scripts referenced soon-to-be-deleted skill paths and would have broken at Task 5); the CI required-flip remains a PR 3 step.
 
 ## Slash-Command Rename Map (16 entries)
 

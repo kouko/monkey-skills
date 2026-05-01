@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # sync-clients.sh — Synchronize duplicated clients across investing-toolkit skills.
 #
-# Supersedes investing-toolkit/scripts/sync-check.sh + sync-scripts.sh in v2.0.0.
-# Legacy scripts retained until PR 3 cutover (deletion + CI required-flip happen
-# in the same commit so branch protection and on-disk reality stay aligned).
+# v2.0.0 sole sync mechanism. Replaced the legacy v1.x pair
+# (sync-check.sh + sync-scripts.sh), which were deleted in the v2.0.0
+# three-layer refactor — they hardcoded v1.x skill names (us-macro,
+# us-stock-snapshot, etc.) that no longer exist. All skill targets here
+# are v2.0.0 data-{country} skills, matching ADR-0001's acceptable-
+# duplication table.
 #
 # Modes:
 #   bash investing-toolkit/scripts/sync-clients.sh           # copy canonical → all targets
