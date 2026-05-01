@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "data-kr/schema-memo-fetch.json",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/memo-fetch.json",
   "title": "data-kr memo-fetch pack (Tier 2 only — DART deferred)",
   "description": "Output of `pack.py --pack memo-fetch --ticker <KR ticker>`. Full data bundle for a Korean equity memo: yfinance `info` + 5y `history` + annual + quarterly financials. **Tier 2 only**: Korean primary-source equity (DART, dart.fss.or.kr) is not wired in this skill yet — `_provenance.primary_source_status` is always 'deferred'. Treat all financials as unverified scraper output and surface this caveat in any downstream memo.",
   "type": "object",

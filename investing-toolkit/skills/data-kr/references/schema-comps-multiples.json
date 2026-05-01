@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "data-kr/schema-comps-multiples.json",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/comps-multiples.json",
   "title": "data-kr comps-multiples pack",
   "description": "Output of `pack.py --pack comps-multiples`. Multiples-only fetch for anchor + peers via yfinance `info`. **Schema is normalized**: regardless of single (`--ticker`) or batch (`--tickers`) invocation, the result always exposes `info` keyed by ticker — `info: {ticker: {...}}` — so `analysis-comps` consumes one shape. The batch-extraction step in pack.py unwraps the inner per-ticker dict from yfinance_client's batch envelope.",
   "type": "object",

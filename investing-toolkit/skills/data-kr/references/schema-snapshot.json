@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "data-kr/schema-snapshot.json",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/snapshot.json",
   "title": "data-kr snapshot pack",
   "description": "Output of `pack.py --pack snapshot --ticker <KR ticker>`. Quick-overview card combining yfinance `info` + 1-year `history` for a single Korean equity. **Tier 2 only** — Korean primary-source equity (DART) is not wired in this skill; `_provenance.primary_source_status` is always 'deferred'.",
   "type": "object",

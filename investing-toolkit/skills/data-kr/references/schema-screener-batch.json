@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "data-kr/schema-screener-batch.json",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/screener-batch.json",
   "title": "data-kr screener-batch pack",
   "description": "Output of `pack.py --pack screener-batch --tickers <list>`. Lightweight batch info pull for screening 50–500 KR tickers. Returns the raw yfinance batch envelope under `batch` — analysis-screener projects fields downstream.",
   "type": "object",

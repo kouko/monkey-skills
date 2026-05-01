@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "data-kr/schema-regime-pack.json",
+  "$id": "https://monkey-skills/investing-toolkit/data-kr/regime-pack.json",
   "title": "data-kr regime-pack (BOK ECOS-KEYSTAT, 54 indicators / 13 groups)",
   "description": "Output of `pack.py --pack regime-pack`. Macro pull from BOK ECOS-KEYSTAT via FinanceDataReader (Tier A primary). 54 indicators across 13 groups: rates, inflation, growth, industry, labor, trade, money, sentiment, cycle (선행/동행 CI pair = monthly GDP proxy), markets (KOSPI/KOSDAQ), fx, realestate, demographics. KRW/USD (`fx.krw-usd`) is sourced via FRED DEXKOUS — ECOS-KEYSTAT does not expose a clean KRW/USD series. PMI (S&P Global) is **not fetched** — licensed commercial data; closest free proxies are the `sentiment` group (consumer-sentiment K252 + economic-sentiment K269).",
   "type": "object",
@@ -57,7 +57,11 @@
         "required": ["fetched_at", "_source", "indicators"],
         "properties": {
           "fetched_at": {"type": "string", "format": "date-time"},
-          "_source": {"type": "string", "const": "fdr_ecos"},
+          "_source": {
+            "type": "string",
+            "const": "fdr_ecos",
+            "description": "Aggregator label — always 'fdr_ecos' because the multi-preset wrapper is emitted by the FinanceDataReader/ECOS entrypoint regardless of per-indicator routing. The actual upstream API for each indicator lives at `indicators.{preset}._source` and may be 'fdr_ecos' (BOK ECOS-KEYSTAT) or 'fred' (FRED CSV — currently only krw-usd via DEXKOUS fallback). Consumers needing the true upstream MUST drill into the per-indicator `_source`, not this wrapper field."
+          },
           "indicators": {
             "type": "object",
             "description": "Per-preset indicator payload, keyed by preset slug (e.g. 'policy-rate', 'cpi', 'krw-usd').",
@@ -70,7 +74,11 @@
                 "code": {"type": "string", "description": "ECOS-KEYSTAT code (e.g. 'K051') OR FRED series id ('DEXKOUS' for krw-usd fallback)."},
                 "fetched_at": {"type": "string", "format": "date-time"},
                 "_cache": {"type": "string", "enum": ["hit", "miss"]},
-                "_source": {"type": "string"},
+                "_source": {
+                  "type": "string",
+                  "enum": ["fdr_ecos", "fred"],
+                  "description": "Authoritative upstream-API label for THIS indicator. 'fdr_ecos' = BOK ECOS-KEYSTAT (Tier A primary). 'fred' = FRED CSV fallback (currently only krw-usd via DEXKOUS — ECOS does not expose a clean KRW/USD series). Use this field, NOT the wrapper-level `_source`, to route source-specific logic (e.g. citation strings, primary-source caveats)."
+                },
                 "observations": {
                   "type": "array",
                   "items": {
