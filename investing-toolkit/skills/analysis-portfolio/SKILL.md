@@ -39,8 +39,10 @@ ticker,quantity,cost_basis
 AAPL,100,150.00
 MSFT,50,300.00
 ```
-Optional column: `purchase_date` (ISO `YYYY-MM-DD`) — passed through to
-output, not used in compute.
+Holdings CSV columns: `ticker`, `quantity` (alias: `shares`),
+`cost_basis` (aliases: `avg_cost` / `cost`), `purchase_date` (optional,
+ISO `YYYY-MM-DD`; alias: `acquired_at`). `purchase_date` is passed
+through to output, not used in compute.
 
 **Holdings — JSON** (equivalent shape):
 ```json
@@ -73,7 +75,7 @@ extracts a price for each ticker present in holdings.
       "current_price": 180.50,
       "market_value": 18050.00,
       "pnl_abs": 3050.00,
-      "pnl_pct": 20.33,
+      "pnl_ratio": 0.2033,
       "weight": 0.32,
       "contribution": 0.0541
     }
@@ -82,7 +84,7 @@ extracts a price for each ticker present in holdings.
     "total_cost": 56500.00,
     "total_market_value": 56300.00,
     "total_pnl_abs": -200.00,
-    "total_pnl_pct": -0.354,
+    "total_pnl_ratio": -0.00354,
     "position_count": 3,
     "max_weight": 0.37,
     "max_weight_ticker": "MSFT"
@@ -97,9 +99,21 @@ extracts a price for each ticker present in holdings.
 }
 ```
 
-`weight` = position market value / total portfolio market value
-(0.0–1.0). `contribution` = position pnl_abs / total cost (signed,
-fractional).
+**Units** — all ratio fields are fractional (0.0–1.0):
+- `pnl_ratio`: position-level return on cost basis (e.g. `0.4033` = +40.33%)
+- `total_pnl_ratio`: portfolio return on cost basis
+- `weight`: position market value / total portfolio market value
+- `contribution`: position pnl / total portfolio cost (signed)
+- `max_weight`: largest position weight
+
+**Formulas**:
+- `pnl_ratio = pnl_abs / (quantity × cost_basis)`
+- `total_pnl_ratio = total_pnl_abs / total_cost` (return on cost basis;
+  analogous to time-weighted-return-on-invested-capital)
+- `weight = market_value / total_market_value`
+- `contribution = pnl_abs / total_cost`
+
+Positions are sorted by descending `weight` in the output array.
 
 Currency is **not converted** — multi-currency portfolios produce a
 notional sum and rely on the caller (or report layer) to flag

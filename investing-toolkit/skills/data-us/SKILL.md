@@ -40,7 +40,7 @@ repo `scripts/sync-check.sh`).
 |------|---------------|---------------|----------|
 | `snapshot` | required | n/a | Quick overview (yfinance info + 2y price) |
 | `memo-fetch` | required | n/a (heavy) | Equity memo full bundle (yfinance + SEC filings + XBRL facts) |
-| `comps-multiples` | optional | optional | Comps anchor + peers; multiples-only fields |
+| `comps-multiples` | exactly one of `--ticker` / `--tickers` (mutually exclusive) | — | Comps anchor + peers; multiples-only fields |
 | `screener-batch` | n/a | required (≥2) | Screener input; lightweight info fields |
 | `regime-pack` | n/a | n/a | FRED macro indicators only (no ticker dimension) |
 
@@ -69,8 +69,8 @@ repo `scripts/sync-check.sh`).
 | Parameter | Required | Notes |
 |-----------|----------|-------|
 | `--pack` | yes | One of: `snapshot`, `memo-fetch`, `comps-multiples`, `screener-batch`, `regime-pack` |
-| `--ticker` | conditional | Single ticker (e.g. `AAPL`). Required for `snapshot` / `memo-fetch`. |
-| `--tickers` | conditional | Comma-separated (e.g. `AAPL,MSFT,GOOGL`). Required for `screener-batch`; allowed for `comps-multiples`. |
+| `--ticker` | conditional | Single ticker (e.g. `AAPL`). Required for `snapshot` / `memo-fetch`. Mutually exclusive with `--tickers` (argparse-enforced). |
+| `--tickers` | conditional | Comma-separated (e.g. `AAPL,MSFT,GOOGL`). Required for `screener-batch`; one of `--ticker` / `--tickers` (exactly one) for `comps-multiples`. |
 
 `INVESTING_TOOLKIT_CACHE` env var is passed through to all three underlying
 clients (yfinance / SEC EDGAR / FRED), enabling cache reuse across packs.
@@ -155,9 +155,15 @@ All packs return a JSON object on stdout with these top-level keys:
 | `company_info`, `price_history`, `sec_filings`, `sec_facts` | Per-pack payload keys |
 
 If an underlying client fails, its slot is replaced with a structured error
-object: `{ "error": "...", "script": "...", "stderr": "..." }`. The pack
-itself still exits 0 (partial-failure semantics — aligned with batch
-contract elsewhere in the toolkit).
+object: `{ "error": "...", "script": "...", "stderr": "..." }`. For batch
+packs (`comps-multiples` / `screener-batch`), if the entire batch fetch
+fails, the result has an empty `tickers: {}` map and a top-level `error`
+field carrying the client error blob (the `tickers` map never contains a
+`_error` sentinel — consumers may safely iterate `tickers.items()`).
+Subprocess timeouts are reported as `{ "error": "client timeout after 300s",
+"_cmd": [...], "_returncode": -1 }`. The pack itself still exits 0
+(partial-failure semantics — aligned with batch contract elsewhere in the
+toolkit).
 
 ---
 

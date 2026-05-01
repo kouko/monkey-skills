@@ -92,15 +92,29 @@ REGIME_SERIES_GROUPS = {
 # Subprocess helper — invoke a client script with current env
 # ---------------------------------------------------------------------------
 
-def run_client(script: Path, extra_args: list[str]) -> dict:
-    """Run a client script with `uv run`, return parsed JSON, raise on non-zero."""
+CLIENT_TIMEOUT_SECONDS = 300
+
+
+def run_client(script: Path, extra_args: list[str], timeout: int = CLIENT_TIMEOUT_SECONDS) -> dict:
+    """Run a client script with `uv run`, return parsed JSON.
+
+    Returns a structured error dict on non-zero exit, JSON parse failure, or timeout.
+    """
     cmd = ["uv", "run", str(script)] + extra_args
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        env=os.environ.copy(),
-    )
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            env=os.environ.copy(),
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "error": f"client timeout after {timeout}s",
+            "_cmd": cmd,
+            "_returncode": -1,
+        }
     if proc.returncode != 0:
         return {
             "error": "client_failed",
@@ -187,16 +201,22 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
         YF,
         ["--tickers", ",".join(tickers), "--action", "info"],
     )
-    per_ticker = {}
     if isinstance(batch, dict) and isinstance(batch.get("tickers"), dict):
-        for t, d in batch["tickers"].items():
-            per_ticker[t] = filter_fields(d, MULTIPLES_FIELDS)
-    else:
-        per_ticker["_error"] = batch
+        per_ticker = {
+            t: filter_fields(d, MULTIPLES_FIELDS)
+            for t, d in batch["tickers"].items()
+        }
+        return {
+            "pack": "comps-multiples",
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "tickers": per_ticker,
+        }
+    # Batch failure: surface error at top level, keep tickers map clean
     return {
         "pack": "comps-multiples",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
-        "tickers": per_ticker,
+        "tickers": {},
+        "error": batch,
     }
 
 
@@ -206,16 +226,22 @@ def pack_screener_batch(tickers: list[str]) -> dict:
         YF,
         ["--tickers", ",".join(tickers), "--action", "info"],
     )
-    per_ticker = {}
     if isinstance(batch, dict) and isinstance(batch.get("tickers"), dict):
-        for t, d in batch["tickers"].items():
-            per_ticker[t] = filter_fields(d, SCREENER_FIELDS)
-    else:
-        per_ticker["_error"] = batch
+        per_ticker = {
+            t: filter_fields(d, SCREENER_FIELDS)
+            for t, d in batch["tickers"].items()
+        }
+        return {
+            "pack": "screener-batch",
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "tickers": per_ticker,
+        }
+    # Batch failure: surface error at top level, keep tickers map clean
     return {
         "pack": "screener-batch",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
-        "tickers": per_ticker,
+        "tickers": {},
+        "error": batch,
     }
 
 

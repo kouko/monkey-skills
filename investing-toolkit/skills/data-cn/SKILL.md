@@ -37,12 +37,21 @@ TW / US / Anthropic IPs (verified empirically — see canonical
 |---|---|---|
 | `.SS` | Shanghai Stock Exchange | `600519.SS` (Kweichow Moutai), `601318.SS` (Ping An) |
 | `.SZ` | Shenzhen Stock Exchange | `000858.SZ` (Wuliangye), `300750.SZ` (CATL) |
-| `.HK` | Hong Kong Stock Exchange | `0700.HK` (Tencent), `9988.HK` (Alibaba) |
+| `.HK` (4-digit) | Hong Kong Stock Exchange | `0700.HK` (Tencent), `9988.HK` (Alibaba) |
+| `.HK` (5-digit) | Hong Kong Stock Exchange (leading-zero form) | `09988.HK` (Alibaba), `02318.HK` (Ping An H), `03690.HK` (Meituan) |
 
 `pack.py` auto-appends suffix when a bare numeric code is passed
 (heuristic: 6-digit starting with `6`/`9` → `.SS`; 6-digit starting with
-`0`/`2`/`3` → `.SZ`; 4-digit → `.HK`). Tickers with explicit suffix or
-`^`-prefix indices pass through unchanged.
+`0`/`2`/`3` → `.SZ`; 4-digit or 5-digit numeric → `.HK`). Tickers with
+explicit suffix or `^`-prefix indices pass through unchanged.
+
+**Not supported:**
+- **BSE (北京证券交易所)** — 6-digit codes starting with `4` or `8`
+  (e.g. `430xxx`, `830xxx`, `870xxx`). yfinance does not cover BSE;
+  `pack.py` emits a stderr warning and passes through unchanged.
+  BSE primary-source disclosure is out of v2.0.0 scope.
+- Bare numeric codes outside `{4, 5, 6}` digits emit a stderr warning
+  ("Unrecognized CN ticker format") and pass through unchanged.
 
 ---
 

@@ -65,8 +65,9 @@ to all five).
 The classifier uses the **last 4 readings** of each series (latest +
 prior 3-month average) to compute direction. Series naming follows the
 country's primary source (FRED for US, BOJ/eStat for JP, NDC/CBC for
-TW, ECOS for KR, NBS/PBOC for CN). See `references/proxy-series-map.md`
-for the full mapping.
+TW, ECOS for KR, NBS/PBOC for CN). The full proxy mapping lives in
+`GROWTH_KEYS` / `INFLATION_KEYS` resolvers in `scripts/regime_compose.py`
+plus per-country threshold context in `references/thresholds-{country}.md`.
 
 ### Output JSON
 
@@ -128,7 +129,7 @@ Per-country growth + inflation proxies (canonical, v1.7.0+):
 |---|---|---|
 | US | `nowcast.CFNAI` primary + `WEI` secondary, fallback `GDPC1` | `CPIAUCSL` YoY |
 | JP | `coincident-index` (景気動向指数 CI) | 全国 CPI YoY |
-| TW | `cycle.signal` (NDC 五色景氣燈號 1-9 score) | CPI YoY |
+| TW | `cycle.signal` (NDC 景氣對策信號綜合分數 9-45 composite) | CPI YoY |
 | KR | `coincident-cycle` K253 (동행지수순환변동치) | K401 CPI YoY |
 | CN | `industrial-yoy` primary + 3-component overlay | CPI YoY |
 
@@ -151,14 +152,31 @@ implementation; v2.0.0 keeps the simple mapping — second-derivative
 divergence is documented in `references/investment-clock-cheatsheet.md`
 but not auto-flagged).
 
+**`flat` handling convention** (regime/policy context):
+- **flat growth → treated as rising-side** (Recovery / Overheat).
+  Rationale: in policy regime context, "flat growth" is the neutral
+  state on the expansion side — informs forward-looking allocation
+  toward Phase 1/2 rather than Phase 3/4.
+- **flat inflation → treated as falling-side** (Recovery / Reflation).
+  Rationale: flat inflation in a 2% target regime leans toward
+  disinflation interpretation rather than overheating.
+
+Net effect: `(flat, flat) → 1-recovery`, `(flat, rising) → 2-overheat`,
+`(rising, flat) → 1-recovery`, `(falling, flat) → 4-reflation`. The
+direction strings (`rising` / `falling` / `flat`) are still emitted
+verbatim in the regime card, so memo readers can see the lean.
+
 **Country-specific notes** (preserved from v1.x):
 - **JP**: low-inflation regime — apply IC to **direction of change**, not
   level. "Inflation Rising" may still be below 2%.
 - **CN**: `industrial-yoy` is the primary Growth proxy; 4-component
   overlay (industrial / retail / fai / services) flagged when components
   disagree by > 2%.
-- **TW**: 五色景氣燈號 score is pre-aggregated by NDC. Score ≥ 32
-  (綠燈+) = Rising; < 23 (黃藍燈) = Falling.
+- **TW**: NDC 景氣對策信號綜合分數 is the pre-aggregated 9-45 composite
+  (9 indicators × 1-5 points each). Color thresholds:
+  紅燈 38-45 / 黃紅燈 32-37 / 綠燈 23-31 / 黃藍燈 17-22 / 藍燈 9-16.
+  Heuristic for the IC growth axis: score ≥ 32 (黃紅燈+) = Rising;
+  ≤ 22 (黃藍燈-) = Falling; 23-31 (綠燈) = Flat unless 3-month trend.
 
 ### Step 3 — US real-rate decomposition
 
@@ -233,8 +251,15 @@ non-US countries, US in v2.0.0 always supported).
   and primary sources. Re-read before making a regime call.
 - **JP real-rate deferred**: v1.10.0's C+D+E framework (ECB ex-post +
   Tankan + JGBi auction) is not in the v2.0.0 minimum regime-pack.
-  Signalled as `null` with `notes`. Restore in v2.1+ once the data-jp
-  regime-pack contract stabilises.
+  Signalled as `null` with `notes`. Restoration roadmap +
+  data-jp regime-pack requirements: `references/japan-real-rate-roadmap.md`.
+- **Series-key resolver permissiveness (v2.1 follow-up)**: `GROWTH_KEYS`
+  / `INFLATION_KEYS` accept multiple naming conventions per country to
+  tolerate evolving regime-pack contracts. Trade-off: permissive
+  resolvers can mask data-contract drift (e.g. a renamed key silently
+  falls through to a fallback). v2.1 plan: tighten to a single canonical
+  key per country once `data-{country}/pack.py --pack regime-pack`
+  contracts stabilise.
 
 ---
 
@@ -245,6 +270,9 @@ non-US countries, US in v2.0.0 always supported).
   glossary, threshold provenance
 - `references/recalibration-protocol.md` — when & how to re-verify
   threshold files against primary sources
+- `references/japan-real-rate-roadmap.md` — v1.10.0 C+D+E framework
+  (ECB ex-post + Tankan + JGBi), what data-jp regime-pack needs to
+  emit to restore the JP real-rate block, and v2.1 timeline
 - `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW /
   Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
 - `references/thresholds-japan.md` — BOJ 2% target, JILPT NAIRU

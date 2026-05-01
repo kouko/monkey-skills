@@ -57,14 +57,18 @@ Bundling the same client into multiple skill folders is a deliberate trade-off: 
 |---|---|---|---|
 | `yfinance_client.py` | `investing-toolkit/scripts/yfinance_client.py` | 5 | `data-us`, `data-jp`, `data-tw`, `data-kr`, `data-cn` |
 | `fred_client.py` | `investing-toolkit/scripts/fred_client.py` | 2 | `data-us`, `data-cn` (China uses FRED for cross-checks) |
-| `ta_client.py` | `investing-toolkit/skills/analysis-technical/scripts/ta_client.py` | N | `analysis-technical` (canonical), plus any analysis skill that consumes TA primitives |
+| `nbs_client.py` | `investing-toolkit/scripts/nbs_client.py` | 1 | `data-cn` |
+| `akshare_client.py` | `investing-toolkit/scripts/akshare_client.py` | 1 | `data-cn` |
+| `ta_client.py` | `investing-toolkit/skills/analysis-technical/scripts/ta_client.py` | 1 (canonical only in v2.0.0) | `analysis-technical` only — no second consumer yet; CI group will be added when an analysis skill consumes TA primitives |
 
-Other clients (boj, edinet, fdr, nbs, sec_edgar, mops, etc.) are single-country and live only in their owning `data-{country}/` skill.
+Other clients (boj, edinet, fdr, sec_edgar, mops, etc.) are single-country and live only in their owning `data-{country}/` skill.
 
 **CI check** (`.github/workflows/check-script-sync.yml`):
 - For each duplicated file, compute MD5 across all known locations. Fail the build if MD5 differs.
-- Status during this PR: **optional** (advisory). Becomes **required** in PR 3 per spec §6.1.
-- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates canonical → all copies.
+- Scope is **explicit** (skill list per group), not glob-based — prevents silent widening if a non-listed skill ever drops in a copy.
+- On drift, the workflow prints the canonical/drift MD5 plus up to 50 lines of unified diff so reviewers see what changed, not just that something changed.
+- Status during this PR: **advisory**. Workflow runs and reports a red X on drift but is NOT in branch protection's required-checks list. PR 3 promotes it to required (branch-protection settings change; no YAML edit needed at that point).
+- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates canonical → all copies. `sync-clients.sh` supersedes the legacy `sync-check.sh` + `sync-scripts.sh` pair, which are retained until PR 3 cutover (deletion + CI required-flip in same commit).
 
 ## Slash-Command Rename Map (16 entries)
 

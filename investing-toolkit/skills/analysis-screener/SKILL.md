@@ -42,6 +42,17 @@ moved to `data-{country}/pack.py --pack screener-batch`.
 | `--w-trend` | no | preset | Override trend weight |
 | `--w-quality` | no | preset | Override quality weight |
 
+### Override semantics
+
+Overrides **add to or replace** preset filter values, but cannot
+**remove** an existing preset filter. To disable a preset filter,
+either:
+
+1. Use the `balanced` preset (no filters) and add only the filters
+   you want via overrides, or
+2. Pass a permissive sentinel value (e.g. `--pe-max 99999`,
+   `--roe-min -1`) as a soft disable.
+
 ---
 
 ## Input JSON Schema
@@ -128,7 +139,7 @@ valuation_score = clamp(1 / max(trailingPE, 1), 0, 1)    # lower PE → higher
 trend_score     = (1.0 if price_vs_sma200 == "above" else 0.5)
                 + (0.5 if macd_crossover == "Bullish" else 0.0)
                 # then clamped to [0, 1]
-quality_score   = clamp(returnOnEquity, 0, 1)            # 0.30 ROE = 0.30
+quality_score   = clamp(returnOnEquity / 0.30, 0, 1)     # anchors 30% ROE = excellent
 
 composite = (W_v * valuation + W_m * momentum + W_t * trend + W_q * quality) * 100
 ```
@@ -140,8 +151,14 @@ Defaults when data missing:
   `twoHundredDayAverage`; if both missing → `trend_score = 0.50`
 - `returnOnEquity` missing → `quality_score = 0.50`
 
-Weights that aren't part of a preset default to 0; remaining weights
-auto-renormalize to sum to 1 if user overrides one component.
+Weights that aren't part of a preset default to 0. Weights are always
+normalized to sum to 1 before scoring (defensive against floating-point
+drift and partial overrides).
+
+`quality_score` formula: `clamp(ROE / 0.30, 0, 1)` — anchors 30% ROE
+as "excellent quality". The 5–25% ROE band (most non-saturated
+companies) spreads across 0.17–0.83, leaving headroom above for
+top-tier compounders (e.g. Apple, Costco) that all saturate at 1.0.
 
 ---
 
@@ -160,7 +177,7 @@ auto-renormalize to sum to 1 if user overrides one component.
       "ticker": "BRK-B",
       "composite_score": 74.2,
       "breakdown": {
-        "valuation": 0.71, "momentum": 0.55, "trend": 1.5, "quality": 0.13
+        "valuation": 0.71, "momentum": 0.55, "trend": 1.0, "quality": 0.43
       },
       "metrics": {
         "trailingPE": 14.1, "priceToBook": 1.42, "rsi_14": 55.0,

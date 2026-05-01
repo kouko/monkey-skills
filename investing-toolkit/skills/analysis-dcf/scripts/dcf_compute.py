@@ -132,15 +132,15 @@ def _intrinsic_per_share(
     equity_value = pv_fcf_sum + pv_tv - net_debt  # in $M (revenue input is $M)
     # Unit-normalisation: revenue / FCF / debt / cash inputs are in $M (the
     # SEC EDGAR XBRL + MOPS pack convention). Shares outstanding is absolute
-    # count (yfinance / EDGAR convention). To get $/share, convert equity
-    # from $M to $ before dividing.
+    # count (yfinance / EDGAR convention) per the input contract. To get
+    # $/share, convert equity from $M to $ before dividing.
+    #
+    # NOTE: No heuristic auto-conversion. The contract is explicit
+    # (shares_outstanding = absolute count). Auto-detecting "millions" via
+    # a threshold misclassifies low-share-count issuers like BRK.A
+    # (~550K shares outstanding). Validation/warning happens at parse time.
     if shares_outstanding > 0:
-        # Heuristic: if shares < 1e7, caller passed shares in millions (older
-        # interactive convention); else absolute count.
-        if shares_outstanding < 1e7:
-            per_share = equity_value / shares_outstanding  # $M / Mshares = $/share
-        else:
-            per_share = (equity_value * 1_000_000) / shares_outstanding  # $ / shares
+        per_share = (equity_value * 1_000_000) / shares_outstanding  # $ / shares
     else:
         per_share = 0.0
 
@@ -295,13 +295,61 @@ def _verdict_thresholds(intrinsic_mid: float) -> dict[str, Any]:
 def _validate(a: dict[str, Any]) -> list[str]:
     warns: list[str] = []
     if a["terminal_g"] >= a["wacc"]:
-        warns.append("terminal_g >= wacc — degenerate; clamped to wacc - 0.0025 internally")
+        warns.append("terminal_g >= wacc — degenerate; wacc clamped to terminal_g + 0.0025 internally")
     if a["terminal_g"] > 0.04:
         warns.append("terminal_g > 4% — likely double-counting inflation; verify ≤ risk-free rate")
     if a["growth_1_5"] > 0.20:
         warns.append("growth_1_5 > 20% — verify ROIC × reinvestment supports this")
     if a["reinvestment_rate"] < 0.05 and a["growth_1_5"] > 0.10:
         warns.append("low reinvestment with high growth — implies high ROIC; verify capital-light claim")
+    return warns
+
+
+def _validate_input_shape(data: dict) -> list[str]:
+    """Pre-derivation input-contract checks — surface contract violations
+    as warnings rather than silently auto-correcting. Intentionally NOT in
+    `_validate` because these are about input shape, not assumption sanity.
+    """
+    warns: list[str] = []
+    shares = float(data.get("shares_outstanding") or 0)
+    # Contract: absolute share count. < 1e6 is suspiciously small for a
+    # listed equity, but DO NOT auto-correct — BRK.A (~550K) is legit.
+    if 0 < shares < 1e6:
+        warns.append(
+            f"shares_outstanding looks suspiciously small ({shares:.0f}). "
+            "Contract requires absolute count, not millions. If this is "
+            "intentional (e.g. BRK.A), ignore."
+        )
+    inc = data.get("income_statement") or {}
+    revenue = _safe_get_series(inc, "revenue")
+    # Contract: most-recent-first. If series is monotonically increasing
+    # (first < last) and length >= 3, likely oldest-first.
+    if len(revenue) >= 3 and revenue[0] < revenue[-1]:
+        warns.append(
+            "revenue series appears oldest-first; expected most-recent-first "
+            "([r_t0, r_t-1, r_t-2, ...]). CAGR direction will be wrong."
+        )
+    return warns
+
+
+def _check_grid_degeneracy(a: dict[str, Any], wacc_step: float, g_step: float) -> list[str]:
+    """Detect cell-level wacc <= terminal_g in the 3x3 sensitivity grid.
+    Bear/mid/bull semantic ordering depends on no internal clamp firing in
+    any cell. If the bear corner (low wacc, high g) crosses the boundary,
+    surface it.
+    """
+    warns: list[str] = []
+    waccs = [a["wacc"] - wacc_step, a["wacc"], a["wacc"] + wacc_step]
+    gs = [a["terminal_g"] - g_step, a["terminal_g"], a["terminal_g"] + g_step]
+    for w in waccs:
+        for g in gs:
+            if w <= g:
+                warns.append(
+                    "sensitivity grid contains degenerate cells "
+                    "(wacc-step ≤ terminal_g+step) — bear/mid/bull ordering "
+                    "may not hold"
+                )
+                return warns  # one warning is enough
     return warns
 
 
@@ -320,17 +368,11 @@ def main() -> int:
     p.add_argument("--input", required=True, help="Path to pre-fetched JSON")
     # Optional override sliders
     p.add_argument("--wacc", type=float, default=None)
-    p.add_argument("--wacc-low", dest="wacc_low", type=float, default=None,
-                   help="Sensitivity low-side WACC (default: base - wacc-step)")
-    p.add_argument("--wacc-high", dest="wacc_high", type=float, default=None,
-                   help="Sensitivity high-side WACC (default: base + wacc-step)")
     p.add_argument("--wacc-step", dest="wacc_step", type=float, default=0.01,
-                   help="WACC sensitivity step (default 1pp)")
+                   help="WACC sensitivity step (default 0.01 = 1pp)")
     p.add_argument("--terminal-g", dest="terminal_g", type=float, default=None)
-    p.add_argument("--terminal-g-low", dest="terminal_g_low", type=float, default=None)
-    p.add_argument("--terminal-g-high", dest="terminal_g_high", type=float, default=None)
     p.add_argument("--g-step", dest="g_step", type=float, default=0.005,
-                   help="Terminal-g sensitivity step (default 0.5pp)")
+                   help="Terminal-g sensitivity step (default 0.005 = 0.5pp)")
     p.add_argument("--growth-1-5", dest="growth_1_5", type=float, default=None)
     p.add_argument("--growth-6-10", dest="growth_6_10", type=float, default=None)
     p.add_argument("--ebit-margin", dest="ebit_margin", type=float, default=None)
@@ -348,6 +390,8 @@ def main() -> int:
     except json.JSONDecodeError as e:
         print(json.dumps({"error": f"input not valid JSON: {e}"}), file=sys.stderr)
         return 2
+
+    input_warnings = _validate_input_shape(data)
 
     try:
         a = _derive_assumptions(data, args)
@@ -404,7 +448,7 @@ def main() -> int:
             "net_debt": round(a["net_debt"], 2),
             "shares_outstanding": a["shares_outstanding"],
         },
-        "warnings": _validate(a),
+        "warnings": input_warnings + _validate(a) + _check_grid_degeneracy(a, args.wacc_step, args.g_step),
         "_provenance": {
             "input_path": str(input_path),
             "computed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

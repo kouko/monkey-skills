@@ -211,7 +211,10 @@ def score_record(record: dict, weights: dict) -> tuple[float, dict, list[str]]:
         quality = 0.50
         warnings.append("returnOnEquity missing — neutral 0.50")
     else:
-        quality = _clamp(float(roe), 0.0, 1.0)
+        # Anchor: 30% ROE = excellent quality (1.0). Spreads 5-25% ROE
+        # band across 0.17-0.83. Top-tier compounders (Apple/MSFT) saturate
+        # at the principled threshold rather than at any positive ROE.
+        quality = _clamp(float(roe) / 0.30, 0.0, 1.0)
 
     breakdown = {
         "valuation": round(valuation, 4),

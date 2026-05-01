@@ -88,14 +88,37 @@ REGIME_GROUPS: dict[str, list[str]] = {
 # Ticker normalization (.KS / .KQ auto-suffix)
 # ---------------------------------------------------------------------------
 
+# Module-level collector for ticker-normalization warnings. Each call to
+# normalize_ticker may append a string here; pack functions surface this
+# under _provenance.ticker_normalization_warnings so consumers can audit.
+TICKER_NORMALIZATION_WARNINGS: list[str] = []
+
+
 def normalize_ticker(ticker: str, force_kosdaq: bool = False) -> str:
-    """Append .KS (or .KQ if --kosdaq) to bare 6-digit numeric tickers."""
+    """Append .KS (or .KQ if --kosdaq) to bare 6-digit numeric tickers.
+
+    Edge-case handling:
+      - 6-digit numeric: auto-suffix .KS (or .KQ with --kosdaq).
+      - Already-suffixed (.KS / .KQ): pass through.
+      - Bare numeric of any other length (e.g. 4/5/7-digit typo or
+        leading-zero strip): pass through unchanged but warn to stderr
+        and record under TICKER_NORMALIZATION_WARNINGS.
+      - Non-numeric, non-suffixed token: pass through unchanged but warn.
+    """
     t = ticker.strip().upper()
     if t.endswith(".KS") or t.endswith(".KQ"):
         return t
     # Bare 6-digit Korean ticker code (e.g. 005930)
     if t.isdigit() and len(t) == 6:
         return f"{t}.KQ" if force_kosdaq else f"{t}.KS"
+    # Edge cases: bare numeric of wrong length, or non-numeric token.
+    msg = (
+        f"Unrecognized KR ticker format: '{ticker}' — expected 6-digit "
+        f"(.KS auto-append) or explicit .KS/.KQ suffix; passing through "
+        f"unchanged (yfinance lookup will likely fail)."
+    )
+    print(f"[data-kr WARN] {msg}", file=sys.stderr)
+    TICKER_NORMALIZATION_WARNINGS.append(msg)
     return t
 
 
@@ -103,6 +126,13 @@ def normalize_tickers(tickers: str, force_kosdaq: bool = False) -> str:
     return ",".join(
         normalize_ticker(t, force_kosdaq) for t in tickers.split(",") if t.strip()
     )
+
+
+def _consume_ticker_warnings() -> list[str]:
+    """Drain and return the current ticker-normalization warning list."""
+    out = list(TICKER_NORMALIZATION_WARNINGS)
+    TICKER_NORMALIZATION_WARNINGS.clear()
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -152,17 +182,27 @@ def pack_snapshot(ticker: str) -> dict:
     info = _run([str(YFINANCE), "--ticker", ticker, "--action", "info"])
     history = _run([str(YFINANCE), "--ticker", ticker, "--action", "history",
                     "--period", "1y"])
+    provenance: dict = {
+        "tier": "Tier 2 (yfinance unofficial)",
+        "primary_source_status": "deferred",
+        "primary_source_note": (
+            "Korea has no primary-source equity client wired in data-kr "
+            "yet. Tier A would be DART (전자공시시스템, dart.fss.or.kr) — "
+            "integration deferred to a future minor version. Snapshot "
+            "fields are yfinance-derived (Tier 2)."
+        ),
+        "exchange_suffix": ticker.split(".")[-1] if "." in ticker else None,
+    }
+    warnings = _consume_ticker_warnings()
+    if warnings:
+        provenance["ticker_normalization_warnings"] = warnings
     return {
         "pack": "snapshot",
         "country": "kr",
         "ticker": ticker,
         "info": info,
         "history": history,
-        "_provenance": {
-            "tier": "Tier 2 (yfinance unofficial)",
-            "primary_source": "deferred — DART (전자공시시스템) integration not yet wired in data-kr",
-            "exchange_suffix": ticker.split(".")[-1] if "." in ticker else None,
-        },
+        "_provenance": provenance,
     }
 
 
@@ -175,6 +215,19 @@ def pack_memo_fetch(ticker: str) -> dict:
                                  "--action", "financials", "--period", "quarterly"])
     history = _run([str(YFINANCE), "--ticker", ticker, "--action", "history",
                     "--period", "5y"])
+    provenance: dict = {
+        "tier": "Tier 2 (yfinance unofficial)",
+        "primary_source_status": "deferred",
+        "primary_source_note": (
+            "Korea has no primary-source equity client wired in data-kr "
+            "yet. Tier A would be DART (전자공시시스템, "
+            "dart.fss.or.kr) — integration deferred to a future minor "
+            "version. Treat all financials below as unverified scraper output."
+        ),
+    }
+    warnings = _consume_ticker_warnings()
+    if warnings:
+        provenance["ticker_normalization_warnings"] = warnings
     return {
         "pack": "memo-fetch",
         "country": "kr",
@@ -184,44 +237,61 @@ def pack_memo_fetch(ticker: str) -> dict:
         "financials_annual": financials_annual,
         "financials_quarterly": financials_quarterly,
         "history": history,
-        "_provenance": {
-            "tier": "Tier 2 (yfinance unofficial)",
-            "primary_source_status": "deferred",
-            "primary_source_note": (
-                "Korea has no primary-source equity client wired in data-kr "
-                "yet. Tier A would be DART (전자공시시스템, "
-                "dart.fss.or.kr) — integration deferred to a future minor "
-                "version. Treat all financials below as unverified scraper output."
-            ),
-        },
+        "_provenance": provenance,
     }
 
 
 def pack_comps_multiples(tickers: list[str]) -> dict:
-    """Multiples-only fetch for anchor + peers. Single or batch."""
+    """Multiples-only fetch for anchor + peers. Single or batch.
+
+    Schema is normalized: regardless of single or batch, the result always
+    exposes `info` keyed by ticker so analysis-comps consumes one shape:
+        {"info": {"005930.KS": {...}, "000660.KS": {...}}}
+    """
     if len(tickers) == 1:
-        info = _run([str(YFINANCE), "--ticker", tickers[0], "--action", "info"])
-        result = {
-            "pack": "comps-multiples",
-            "country": "kr",
-            "tickers": tickers,
-            "info": {tickers[0]: info},
-        }
+        single = _run([str(YFINANCE), "--ticker", tickers[0], "--action", "info"])
+        info_by_ticker: dict = {tickers[0]: single}
     else:
         batch = _run([str(YFINANCE), "--tickers", ",".join(tickers),
                       "--action", "info"])
-        result = {
-            "pack": "comps-multiples",
-            "country": "kr",
-            "tickers": tickers,
-            "batch": batch,
-        }
-    result["_provenance"] = {
+        # yfinance_client batch shape (canonical):
+        #   {"mode": "batch", "action": "info", "tickers": {ticker: {...}}, ...}
+        # We extract the inner per-ticker dict so consumers always see
+        # `info: {ticker: {...}}` regardless of single vs batch.
+        if (
+            isinstance(batch, dict)
+            and isinstance(batch.get("tickers"), dict)
+        ):
+            info_by_ticker = batch["tickers"]
+        elif isinstance(batch, dict) and "results" in batch and isinstance(
+            batch["results"], dict
+        ):
+            info_by_ticker = batch["results"]
+        else:
+            # Fallback: wrap whole payload under a sentinel so consumer can
+            # still inspect it; analysis-comps will treat as partial.
+            info_by_ticker = {"_batch_unparsed": batch}
+    result: dict = {
+        "pack": "comps-multiples",
+        "country": "kr",
+        "tickers": tickers,
+        "info": info_by_ticker,
+    }
+    provenance: dict = {
         "tier": "Tier 2 (yfinance unofficial)",
+        "primary_source_status": "deferred",
+        "primary_source_note": (
+            "Korea multiples are yfinance-derived. DART (전자공시시스템) "
+            "integration deferred. Multiples extraction is downstream "
+            "(analysis-comps)."
+        ),
         "multiples_set": ["trailingPE", "forwardPE", "evEbitda",
                           "priceToSales", "priceToBook"],
-        "note": "Multiples extraction is downstream (analysis-comps).",
     }
+    warnings = _consume_ticker_warnings()
+    if warnings:
+        provenance["ticker_normalization_warnings"] = warnings
+    result["_provenance"] = provenance
     return result
 
 
@@ -229,15 +299,24 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     """Batch info pull for screener (lightweight fields)."""
     batch = _run([str(YFINANCE), "--tickers", ",".join(tickers),
                   "--action", "info"])
+    provenance: dict = {
+        "tier": "Tier 2 (yfinance unofficial)",
+        "primary_source_status": "deferred",
+        "primary_source_note": (
+            "Screener batch is yfinance-derived. DART (전자공시시스템) "
+            "integration deferred."
+        ),
+        "ticker_count": len(tickers),
+    }
+    warnings = _consume_ticker_warnings()
+    if warnings:
+        provenance["ticker_normalization_warnings"] = warnings
     return {
         "pack": "screener-batch",
         "country": "kr",
         "tickers": tickers,
         "batch": batch,
-        "_provenance": {
-            "tier": "Tier 2 (yfinance unofficial)",
-            "ticker_count": len(tickers),
-        },
+        "_provenance": provenance,
     }
 
 
@@ -267,8 +346,11 @@ def pack_regime_pack(indicators: str) -> dict:
         "groups_requested": groups,
         "data": by_group,
         "_provenance": {
-            "primary_source": "BOK ECOS-KEYSTAT via FinanceDataReader",
-            "secondary_source": "FRED (krw-usd only — DEXKOUS)",
+            "primary_source_status": "available",
+            "primary_source_note": (
+                "BOK ECOS-KEYSTAT via FinanceDataReader (Tier A primary). "
+                "Secondary fallback: FRED (krw-usd only — DEXKOUS)."
+            ),
             "indicator_count_total": sum(len(v) for k, v in REGIME_GROUPS.items()
                                          if k in groups),
         },

@@ -42,6 +42,53 @@ from ta_client import (  # noqa: E402
 
 SUPPORTED_INDICATORS = {"rsi", "macd", "bb", "atr", "sma"}
 
+# ---------------------------------------------------------------------------
+# Signal normalization
+#
+# ta_client.py (canonical, MD5-locked) emits human-readable Title-Case strings.
+# This skill's contract emits a closed lowercase snake_case enum so downstream
+# consumers can rely on a stable vocabulary. We translate ta_client's output
+# here without modifying the canonical source.
+# ---------------------------------------------------------------------------
+
+_RSI_SIGNAL_MAP = {
+    "Overbought": "overbought",
+    "Oversold": "oversold",
+    "Neutral": "neutral",
+    "N/A": "n/a",
+}
+
+_MACD_CROSSOVER_MAP = {
+    "Bullish": "bullish",
+    "Bearish": "bearish",
+    "N/A": "n/a",
+}
+
+_BB_SIGNAL_MAP = {
+    "Above Upper": "above_upper",
+    "Below Lower": "below_lower",
+    "Upper Half": "upper_half",
+    "Lower Half": "lower_half",
+    "N/A": "n/a",
+}
+
+_TREND_ALIGNMENT_MAP = {
+    "Strong Bullish": "strong_bullish",
+    "Bullish": "bullish",
+    "Mixed": "neutral",
+    "Strong Bearish": "strong_bearish",
+    # Note: ta_client does not currently emit a plain "Bearish" tier, but
+    # we map it defensively in case the canonical evolves.
+    "Bearish": "bearish",
+    "N/A": "n/a",
+}
+
+
+def _normalize(value: str, mapping: dict, fallback: str = "n/a") -> str:
+    if value is None:
+        return fallback
+    return mapping.get(value, fallback)
+
 
 def _row_field(row: dict, *keys: str):
     """Return the first present key (handles capitalised + lower-case aliases)."""
@@ -91,15 +138,15 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
 
     out_indicators: dict = {}
     out_signals: dict = {}
-
-    sma20_val = sma50_val = sma200_val = None
-    bb_u = bb_l = None
+    warnings: list[str] = []
 
     if "rsi" in indicators:
         rsi_vals = compute_rsi([v for v in closes if v is not None], 14)
         rsi_val = last(rsi_vals)
         out_indicators["rsi_14"] = rsi_val
-        out_signals["rsi_signal"] = rsi_signal(rsi_val)
+        out_signals["rsi_signal"] = _normalize(rsi_signal(rsi_val), _RSI_SIGNAL_MAP)
+        if rsi_val is None:
+            warnings.append(f"rsi_14 unavailable: rows_consumed={len(rows)} < 14")
 
     if "macd" in indicators:
         macd_line, signal_line, histogram = compute_macd(closes)
@@ -111,7 +158,11 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
             "signal": sig_val,
             "histogram": hist_val,
         }
-        out_signals["macd_crossover"] = macd_crossover(macd_val, sig_val)
+        out_signals["macd_crossover"] = _normalize(
+            macd_crossover(macd_val, sig_val), _MACD_CROSSOVER_MAP
+        )
+        if macd_val is None:
+            warnings.append(f"macd unavailable: rows_consumed={len(rows)} < 26")
 
     if "bb" in indicators:
         bb_upper, bb_mid, bb_lower = compute_bollinger(closes)
@@ -127,7 +178,11 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
             "lower": bb_l,
             "pct_b": pct_b,
         }
-        out_signals["bb_signal"] = bb_signal(close, bb_u, bb_l)
+        out_signals["bb_signal"] = _normalize(
+            bb_signal(close, bb_u, bb_l), _BB_SIGNAL_MAP
+        )
+        if bb_u is None:
+            warnings.append(f"bollinger unavailable: rows_consumed={len(rows)} < 20")
 
     if "atr" in indicators:
         atr_vals = compute_atr(highs, lows, closes)
@@ -137,6 +192,8 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
             atr_pct = round(atr_val / close * 100, 2)
         out_indicators["atr_14"] = atr_val
         out_indicators["atr_pct"] = atr_pct
+        if atr_val is None:
+            warnings.append(f"atr_14 unavailable: rows_consumed={len(rows)} < 14")
 
     if "sma" in indicators:
         sma20_val = last(sma(closes, 20))
@@ -147,14 +204,22 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
             "50": sma50_val,
             "200": sma200_val,
         }
-        out_signals["price_vs_sma200"] = (
-            "above" if (close and sma200_val and close > sma200_val)
-            else "below" if (close and sma200_val)
-            else "N/A"
+        if close and sma200_val and close > sma200_val:
+            out_signals["price_vs_sma200"] = "above"
+        elif close and sma200_val:
+            out_signals["price_vs_sma200"] = "below"
+        else:
+            out_signals["price_vs_sma200"] = "n/a"
+        out_signals["trend_alignment"] = _normalize(
+            trend_alignment(close, sma20_val, sma50_val, sma200_val),
+            _TREND_ALIGNMENT_MAP,
         )
-        out_signals["trend_alignment"] = trend_alignment(
-            close, sma20_val, sma50_val, sma200_val
-        )
+        if sma20_val is None:
+            warnings.append(f"sma_20 unavailable: rows_consumed={len(rows)} < 20")
+        if sma50_val is None:
+            warnings.append(f"sma_50 unavailable: rows_consumed={len(rows)} < 50")
+        if sma200_val is None:
+            warnings.append(f"sma_200 unavailable: rows_consumed={len(rows)} < 200")
 
     return {
         "ticker": ticker,
@@ -164,9 +229,16 @@ def compute(ohlcv_json: dict, indicators: set[str]) -> dict:
         "signals": out_signals,
         "_provenance": {
             "skill": "analysis-technical",
-            "ta_client": "canonical (this skill is the master copy)",
+            # Version tag matching MD5 of canonical ta_client.py — bump when
+            # the canonical is edited so consumers can detect TA-logic changes.
+            "ta_client_version": "v1.16.3",
+            # Role of this skill's local ta_client.py copy. This skill is the
+            # canonical master; sibling skills (e.g. analysis-screener) embed
+            # a "functional-copy" with MD5 enforced to match.
+            "ta_client_role": "canonical-master",
             "rows_consumed": len(rows),
             "indicators_requested": sorted(indicators),
+            "warnings": warnings,
         },
     }
 

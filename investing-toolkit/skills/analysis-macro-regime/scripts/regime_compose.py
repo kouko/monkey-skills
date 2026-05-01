@@ -140,10 +140,17 @@ def map_ic_quadrant(growth: str, inflation: str) -> str:
     Growth Rising     Phase 2 Overheat       Phase 1 Recovery
     Growth Falling    Phase 3 Stagflation    Phase 4 Reflation
 
-    'flat' is treated as the neutral side (lean toward 'falling' for
-    inflation, 'rising' for growth) but tagged in notes upstream.
+    'flat' handling (regime/policy-context convention):
+      - flat growth    → treated as **rising-side** (Recovery/Overheat).
+        Rationale: in policy regime context, "flat growth" is the
+        neutral state on the expansion side — informs forward-looking
+        allocation toward Phase 1/2 rather than Phase 3/4.
+      - flat inflation → treated as **falling-side** (Recovery/Reflation).
+        Rationale: flat inflation in a 2% target regime leans toward
+        the disinflation interpretation rather than overheating.
+    These are tagged in `notes` upstream so memo readers see the lean.
     """
-    g_up = growth == "rising"
+    g_up = growth in {"rising", "flat"}
     i_up = inflation == "rising"
     if g_up and i_up:
         return "2-overheat"
@@ -262,8 +269,10 @@ def classify_country(country: str, regime_pack: dict[str, Any]) -> dict[str, Any
         notes.append("JP: inflation below BOJ 2% target — IC applied to direction, not level")
     if country == "tw" and growth_values is not None:
         score = growth_values[-1]
-        if 1 <= score <= 9:
-            notes.append(f"TW: NDC 五色景氣燈號 score={score} (1-9 scale)")
+        # NDC 景氣對策信號綜合分數: 9 indicators × 1-5 points each → 9-45 composite
+        # (藍燈 9-16 / 黃藍燈 17-22 / 綠燈 23-31 / 黃紅燈 32-37 / 紅燈 38-45)
+        if 9 <= score <= 45:
+            notes.append(f"TW: NDC 五色景氣燈號 score={score} (9-45 composite scale)")
     if country == "cn":
         overlay = cn_component_overlay(series)
         if overlay and overlay["disagreement_flag"]:

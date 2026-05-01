@@ -1,13 +1,20 @@
 name: check-script-sync
 
 # Verifies that duplicated client scripts in investing-toolkit stay byte-identical.
-# Three groups are enforced:
-#   - yfinance_client.py across all data-{country}/ skills
-#   - fred_client.py across data-us + data-cn
-#   - ta_client.py across analysis-* skills (canonical = analysis-technical/)
+# Groups enforced (scoped to ADR-0001 §"Acceptable Duplications"):
+#   - yfinance_client.py: data-us, data-jp, data-tw, data-kr, data-cn (5 copies)
+#   - fred_client.py:     data-us, data-cn                            (2 copies)
+#   - nbs_client.py:      data-cn                                     (canonical = investing-toolkit/scripts/)
+#   - akshare_client.py:  data-cn                                     (canonical = investing-toolkit/scripts/)
 #
-# Status: ADVISORY in PR 1 (this PR). Becomes a REQUIRED check in PR 3 per
-# spec §6.1 of 2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md.
+# ta_client.py: v2.0.0 has only one consumer (analysis-technical, the canonical
+# owner). No second-consumer duplication exists yet, so the group is omitted.
+# Add it back here when another analysis-* skill consumes ta_client.py.
+#
+# Status: ADVISORY in PR 1.
+# This workflow runs and reports a red X on drift, but is NOT in branch
+# protection's required-checks list. PR 3 promotes it to required (settings
+# change in branch-protection UI; no YAML edit needed at that point).
 
 on:
   pull_request:
@@ -35,13 +42,34 @@ jobs:
         run: |
           python3 - <<'PY'
           import hashlib
+          import subprocess
           import sys
           from pathlib import Path
 
           ROOT = Path("investing-toolkit/skills")
+          TOOLKIT_SCRIPTS = Path("investing-toolkit/scripts")
 
           def md5(path: Path) -> str:
               return hashlib.md5(path.read_bytes()).hexdigest()
+
+          def show_diff(canonical: Path, drift_path: Path) -> None:
+              # On drift, surface up to 50 lines of unified diff so reviewers see
+              # WHAT differs, not just THAT it differs.
+              try:
+                  out = subprocess.run(
+                      ["diff", "-u", str(canonical), str(drift_path)],
+                      capture_output=True,
+                      text=True,
+                      check=False,
+                  )
+                  text = out.stdout or out.stderr or ""
+                  lines = text.splitlines()
+                  for line in lines[:50]:
+                      print(f"    {line}")
+                  if len(lines) > 50:
+                      print(f"    ... ({len(lines) - 50} more lines truncated)")
+              except FileNotFoundError:
+                  print("    (diff binary unavailable; md5 hashes above)")
 
           def check_group(label: str, paths: list[Path], canonical: Path | None = None) -> int:
               existing = [p for p in paths if p.is_file()]
@@ -62,36 +90,70 @@ jobs:
                   print(f"  canonical md5 = {canonical_hash}")
                   for p in drift:
                       print(f"  DRIFT  {p}  md5={hashes[p]}")
+                      show_diff(canonical, p)
                   return 1
               print(f"[ok]   {label}: {len(existing)} files, all md5={canonical_hash}")
               return 0
 
           errors = 0
 
-          # Group 1: yfinance_client.py across data-{country}/
-          yf_paths = sorted(ROOT.glob("data-*/scripts/yfinance_client.py"))
+          # Group 1: yfinance_client.py — explicit ADR-0001 scope (5 copies).
+          # Brace expansion is shell-only; Python glob needs an explicit list.
+          yf_paths = []
+          for skill in ["data-us", "data-jp", "data-tw", "data-kr", "data-cn"]:
+              p = ROOT / skill / "scripts" / "yfinance_client.py"
+              if p.exists():
+                  yf_paths.append(p)
           errors += check_group(
-              "yfinance_client.py (data-*/scripts/)",
-              yf_paths,
+              "yfinance_client.py (data-us/jp/tw/kr/cn)",
+              sorted(yf_paths),
           )
 
-          # Group 2: fred_client.py across investing-toolkit/skills/*/scripts/
-          # Spec lists data-us + data-cn as the v2.0.0 set, but tolerate transitional
-          # copies in any skill — they all must match.
-          fred_paths = sorted(ROOT.glob("*/scripts/fred_client.py"))
+          # Group 2: fred_client.py — explicit ADR-0001 scope (2 copies).
+          # Tightened from `*/scripts/fred_client.py` glob to prevent silent
+          # widening if a non-listed skill ever drops a copy in.
+          fred_paths = []
+          for skill in ["data-us", "data-cn"]:
+              p = ROOT / skill / "scripts" / "fred_client.py"
+              if p.exists():
+                  fred_paths.append(p)
           errors += check_group(
-              "fred_client.py (*/scripts/)",
-              fred_paths,
+              "fred_client.py (data-us, data-cn)",
+              sorted(fred_paths),
           )
 
-          # Group 3: ta_client.py — canonical = analysis-technical/
-          canonical_ta = ROOT / "analysis-technical" / "scripts" / "ta_client.py"
-          ta_paths = sorted(ROOT.glob("*/scripts/ta_client.py"))
+          # Group 3: nbs_client.py — canonical = investing-toolkit/scripts/
+          # Targets: data-cn/scripts/ (post-china-macro-removal)
+          canonical_nbs = TOOLKIT_SCRIPTS / "nbs_client.py"
+          nbs_paths = []
+          for skill in ["data-cn"]:
+              p = ROOT / skill / "scripts" / "nbs_client.py"
+              if p.exists():
+                  nbs_paths.append(p)
           errors += check_group(
-              "ta_client.py (canonical: analysis-technical/scripts/ta_client.py)",
-              ta_paths,
-              canonical=canonical_ta,
+              "nbs_client.py (canonical: investing-toolkit/scripts/nbs_client.py)",
+              sorted(nbs_paths),
+              canonical=canonical_nbs,
           )
+
+          # Group 4: akshare_client.py — canonical = investing-toolkit/scripts/
+          # Targets: data-cn/scripts/ (post-china-macro-removal)
+          canonical_akshare = TOOLKIT_SCRIPTS / "akshare_client.py"
+          akshare_paths = []
+          for skill in ["data-cn"]:
+              p = ROOT / skill / "scripts" / "akshare_client.py"
+              if p.exists():
+                  akshare_paths.append(p)
+          errors += check_group(
+              "akshare_client.py (canonical: investing-toolkit/scripts/akshare_client.py)",
+              sorted(akshare_paths),
+              canonical=canonical_akshare,
+          )
+
+          # ta_client.py: intentionally NOT checked here. v2.0.0 has only one
+          # consumer (analysis-technical, the canonical owner). When another
+          # analysis-* skill consumes TA primitives, add a Group 5 here mirroring
+          # the explicit-list pattern above and update sync-clients.sh in lockstep.
 
           if errors:
               print()

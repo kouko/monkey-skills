@@ -1,18 +1,27 @@
 #!/usr/bin/env bash
 # sync-clients.sh — Synchronize duplicated clients across investing-toolkit skills.
 #
+# Supersedes investing-toolkit/scripts/sync-check.sh + sync-scripts.sh in v2.0.0.
+# Legacy scripts retained until PR 3 cutover (deletion + CI required-flip happen
+# in the same commit so branch protection and on-disk reality stay aligned).
+#
 # Modes:
 #   bash investing-toolkit/scripts/sync-clients.sh           # copy canonical → all targets
 #   bash investing-toolkit/scripts/sync-clients.sh --check   # report drift, exit 1 on any
 #
-# Canonical sources (per ADR-0001):
+# Canonical sources (per ADR-0001 §"Acceptable Duplications"):
 #   - yfinance_client.py: investing-toolkit/scripts/yfinance_client.py
 #       → data-us, data-jp, data-tw, data-kr, data-cn (5 skills)
 #   - fred_client.py:     investing-toolkit/scripts/fred_client.py
 #       → data-us, data-cn (2 skills)
-#   - ta_client.py:       investing-toolkit/skills/analysis-technical/scripts/ta_client.py
-#       → analysis-technical (canonical home), plus any analysis skill that uses TA
-#         (currently: analysis-technical only; expand list below as needed)
+#   - nbs_client.py:      investing-toolkit/scripts/nbs_client.py
+#       → data-cn (1 skill)
+#   - akshare_client.py:  investing-toolkit/scripts/akshare_client.py
+#       → data-cn (1 skill)
+#
+# v2.0.0 has only one ta_client.py consumer (analysis-technical, the canonical
+# owner). When other analysis skills consume TA primitives, add their dirs to a
+# TA_TARGETS array here AND mirror in .github/workflows/check-script-sync.yml.
 #
 # Compatible with macOS (md5) and Linux (md5sum).
 
@@ -58,10 +67,19 @@ FRED_TARGETS=(
   "data-cn"
 )
 
-TA_CANONICAL="$SKILLS_DIR/analysis-technical/scripts/ta_client.py"
-TA_TARGETS=(
-  "analysis-technical"
+NBS_CANONICAL="$TOOLKIT_DIR/scripts/nbs_client.py"
+NBS_TARGETS=(
+  "data-cn"
 )
+
+AKSHARE_CANONICAL="$TOOLKIT_DIR/scripts/akshare_client.py"
+AKSHARE_TARGETS=(
+  "data-cn"
+)
+
+# ta_client.py: no second consumer in v2.0.0 (only analysis-technical, which IS
+# the canonical owner). Section intentionally omitted — see header for when to
+# re-introduce.
 
 SYNCED=0
 UNCHANGED=0
@@ -146,11 +164,19 @@ for skill in "${FRED_TARGETS[@]}"; do
 done
 echo
 
-echo "== ta_client.py =="
-for skill in "${TA_TARGETS[@]}"; do
-  process_one "$TA_CANONICAL" "$skill"
+echo "== nbs_client.py =="
+for skill in "${NBS_TARGETS[@]}"; do
+  process_one "$NBS_CANONICAL" "$skill"
 done
 echo
+
+echo "== akshare_client.py =="
+for skill in "${AKSHARE_TARGETS[@]}"; do
+  process_one "$AKSHARE_CANONICAL" "$skill"
+done
+echo
+
+# == ta_client.py == intentionally absent — see header.
 
 echo "Summary:"
 if [ "$CHECK_ONLY" -eq 1 ]; then

@@ -91,7 +91,9 @@ def _normalise_ticker(t: str) -> str:
       - starts with '6' or '9' (6-digit) -> .SS  (Shanghai: 600/601/603/605/688/900)
       - starts with '0', '2', '3' (6-digit) -> .SZ  (Shenzhen: 000/002/300/301)
       - 4 digits (e.g. '0700', '9988') -> .HK  (Hong Kong)
-      - otherwise unchanged (caller responsibility)
+      - 5 digits (e.g. '09988', '02318', '03690') -> .HK  (Hong Kong, leading-zero form)
+      - otherwise unchanged + stderr warning. BSE (北京证券交易所, 4xx/8xx)
+        and other unsupported formats fall through unchanged.
     """
     t = t.strip().upper()
     if "." in t or t.startswith("^"):
@@ -100,12 +102,30 @@ def _normalise_ticker(t: str) -> str:
         return t
     if len(t) == 4:
         return f"{t}.HK"
+    if len(t) == 5:
+        return f"{t}.HK"
     if len(t) == 6:
         first = t[0]
         if first in ("6", "9"):
             return f"{t}.SS"
         if first in ("0", "2", "3"):
             return f"{t}.SZ"
+        # 6-digit BSE codes start with 4 or 8 (e.g. 430xxx, 830xxx, 870xxx) —
+        # yfinance does not cover BSE; warn and pass through.
+        if first in ("4", "8"):
+            print(
+                f"WARNING: BSE ticker '{t}' detected — yfinance does not cover "
+                "Beijing Stock Exchange (北京证券交易所); pack will likely fail. "
+                "BSE primary-source disclosure is not in v2.0.0 scope.",
+                file=sys.stderr,
+            )
+            return t
+    print(
+        f"WARNING: Unrecognized CN ticker format: '{t}' "
+        "(expected 4-digit HK / 5-digit HK / 6-digit SSE/SZSE). "
+        "Passing through unchanged — yfinance may fail.",
+        file=sys.stderr,
+    )
     return t
 
 
@@ -186,9 +206,16 @@ def pack_memo_fetch(ticker: str) -> dict:
         "pack": "memo-fetch",
         "ticker": t,
         "country": "CN",
+        "_provenance": {
+            "tier": 2,
+            "tier_reason": ("CN primary-source individual-stock disclosure "
+                            "not in v2.0.0 scope"),
+            "primary_source_status": "deferred",
+            "primary_source_candidates": ["cninfo (CSRC)", "HKEXnews"],
+        },
         "tier_note": ("Tier 2 only — CN primary-source individual-stock "
-                      "disclosure (cninfo / HKEXnews) not in v2.0.0 scope; "
-                      "see roadmap for analyst follow-up."),
+                      "disclosure (cninfo / HKEXnews) not in v2.0.0 scope. "
+                      "yfinance financials is the current floor."),
         "yfinance_info": _yf(["--ticker", t, "--action", "info"]),
         "yfinance_history": _yf(["--ticker", t, "--action", "history",
                                  "--period", "2y", "--interval", "1d"]),
@@ -229,13 +256,17 @@ def pack_comps_multiples_batch(tickers: list[str]) -> dict:
 
 
 def pack_screener_batch(tickers: list[str]) -> dict:
-    """Lightweight batch fetch via yfinance batch mode."""
-    norm = [_normalise_ticker(t) for t in tickers]
-    csv = ",".join(norm)
+    """Lightweight batch fetch via yfinance batch mode.
+
+    Note: tickers are expected to be already normalised by the CLI dispatch
+    (mirrors comps-multiples pattern); this function is a no-op on
+    already-normalised input.
+    """
+    csv = ",".join(tickers)
     return {
         "pack": "screener-batch",
         "country": "CN",
-        "tickers": norm,
+        "tickers": tickers,
         "yfinance_info_batch": _yf(["--tickers", csv, "--action", "info"]),
         "yfinance_history_batch": _yf(["--tickers", csv, "--action", "history",
                                        "--period", "6mo", "--interval", "1d"]),
@@ -308,7 +339,7 @@ def main() -> None:
     elif args.pack == "screener-batch":
         if not args.tickers:
             parser.error("--pack screener-batch requires --tickers")
-        out = pack_screener_batch([t.strip() for t in args.tickers.split(",") if t.strip()])
+        out = pack_screener_batch(_normalise_ticker_list(args.tickers))
     else:
         parser.error(f"unhandled pack: {args.pack}")
 

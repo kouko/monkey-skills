@@ -72,8 +72,15 @@ Provenance labels are embedded in every wrapped output:
 }
 ```
 
-`_tier: "2-gap"` marks the **known Tier A gap** cases (T86 daily 三大法人, `.TWO` history)
-where FinMind is the **by-design** source — not a fallback.
+`_tier: "2-gap"` marks the **known Tier A gap** cases where FinMind is the
+**by-design** primary source (not a fallback) because no Tier A endpoint exists:
+- T86 daily 三大法人 per-stock flow (`finmind/three_investor_flow`)
+- 融資融券時序 history (`finmind/margin_history`)
+
+`.TWO` price history (`finmind/price_history`) is `_tier: "2"` (cross-source),
+not `2-gap`: TPEx has no `/rwd/` historical OHLCV endpoint, so FinMind acts as
+a generic Tier 2 source rather than a gap-filling primary. (For sii listings,
+`twse/stock_day_history` via TWSE `/rwd/` covers the same need at Tier A.)
 
 ---
 
@@ -179,8 +186,8 @@ Common args:
 need to compute `roc_year` / `season` / `month` themselves.
 
 - ROC year = Gregorian year − 1911
-- Latest filed quarter: 4-month conservative shift (Q4 filed by Mar 31; Q1 by May 15; etc.)
-- Latest 月營收 month: 月10日 publication rule + 5-day buffer
+- Latest filed quarter: filing-deadline-aware (Q4 filed by Mar 31 → safe Apr 1+; Q1 by May 15 → safe May 16+; Q2 by Aug 14 → safe Aug 15+; Q3 by Nov 14 → safe Nov 15+). Pre-Apr 1 falls back to prior year's Q3 (the year-end Q4 filing has not yet landed).
+- Latest 月營收 month: 月10日 publication rule + 5-day buffer (`day < 15` falls back two months)
 
 ---
 

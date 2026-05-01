@@ -54,7 +54,7 @@ Callers (e.g. `report-equity-memo`) compose this skill with the data layer.
     "total_debt": [td_t0, ...],
     "cash":       [cash_t0, ...]
   },
-  "shares_outstanding": 15728000000,      // absolute count
+  "shares_outstanding": 15728000000,      // absolute count (NOT millions)
   "current_price": 175.0                   // optional; for margin-of-safety
 }
 ```
@@ -62,6 +62,17 @@ Callers (e.g. `report-equity-memo`) compose this skill with the data layer.
 Both the `data-us` (SEC EDGAR XBRL facts) and `data-tw` (MOPS t164sb04 /
 sb05 / sb03) shapes conform — `pack.py --pack memo-fetch` is responsible
 for normalising into this contract.
+
+**Contract notes (no auto-correction):**
+
+- `shares_outstanding` MUST be the absolute share count — the raw count
+  reported by yfinance / EDGAR / MOPS, **not** divided by 1e6. Low-share
+  issuers (e.g. BRK.A ≈ 550K shares) are valid and will not be auto-rescaled.
+  Inputs `< 1e6` emit a warning but the value is trusted as-is.
+- Revenue / FCF / debt / cash arrays MUST be **most-recent-first**
+  (`[r_t0, r_t-1, r_t-2, ...]`). CAGR derivation depends on this ordering.
+  Oldest-first ordering is detected heuristically (monotonically increasing
+  series) and surfaced as a warning, but **not** auto-flipped.
 
 ## CLI
 
@@ -75,16 +86,21 @@ from the input JSON:
 | Override flag           | Default behaviour                                         |
 |-------------------------|-----------------------------------------------------------|
 | `--wacc`                | base WACC (default 0.085)                                 |
-| `--wacc-low/--wacc-high`| sensitivity bounds (default `wacc ± wacc-step`)           |
-| `--wacc-step`           | sensitivity grid step (default 0.01 = 1pp)                |
+| `--wacc-step`           | symmetric sensitivity step around base WACC (default 0.01 = 1pp) |
 | `--terminal-g`          | base terminal growth (default 0.025)                      |
-| `--terminal-g-low/high` | sensitivity bounds (default `g ± g-step`)                 |
-| `--g-step`              | sensitivity grid step (default 0.005 = 0.5pp)             |
+| `--g-step`              | symmetric sensitivity step around base terminal-g (default 0.005 = 0.5pp) |
 | `--growth-1-5`          | stage-1 growth (default = clamped historical revenue CAGR)|
 | `--growth-6-10`         | stage-2 growth (default = `growth_1_5 × 0.5`, floor 2.5%) |
 | `--ebit-margin`         | derived from EBIT/revenue or NI/revenue                   |
 | `--tax-rate`            | default 0.21 (US federal)                                 |
 | `--reinvestment-rate`   | derived from `1 − FCF / EBIT(1−t)`; fallback 0.30         |
+
+> **v2.0.0 simplification.** Earlier prototypes accepted asymmetric
+> sensitivity bounds (`--wacc-low/--wacc-high`, `--terminal-g-low/high`).
+> These were never wired into the grid computation and are removed in
+> v2.0.0. Use `--wacc-step` / `--g-step` for symmetric grids only. If
+> asymmetric bounds are needed in the future, re-introduce alongside a
+> `_sensitivity_grid` rewrite.
 
 ## Output Contract
 
@@ -174,12 +190,31 @@ emitted; the caller selects.
 
 The script emits `warnings[]` for any of:
 
-1. **Terminal growth ≥ WACC** — degenerate; clamped internally.
+**Assumption sanity:**
+
+1. **Terminal growth ≥ WACC** — degenerate; WACC is clamped to
+   `terminal_g + 0.0025` internally to avoid divide-by-zero in the
+   Gordon-growth terminal value.
 2. **Terminal growth > 4%** — likely double-counts inflation already in
    WACC. Use real GDP growth or lower (typically 1–3%); ≤ risk-free rate.
 3. **Stage-1 growth > 20%** — verify ROIC × reinvestment supports it.
 4. **Low reinvestment with high growth** — implies high ROIC; verify the
    capital-light claim.
+
+**Input-contract sanity (no auto-correction):**
+
+5. **shares_outstanding < 1e6** — looks suspiciously small. Contract
+   requires absolute count, not millions. Trusted as-is (BRK.A is valid).
+6. **Revenue series oldest-first** — first value < last value over ≥3
+   periods triggers this; CAGR direction will be wrong if true. Caller
+   must reverse the array; the skill does not auto-flip.
+
+**Sensitivity grid:**
+
+7. **Degenerate cells in 3×3 grid** — when `wacc - wacc-step ≤
+   terminal_g + g-step`, internal clamping fires inside cells and the
+   bear/mid/bull semantic ordering may not hold. Surfaced rather than
+   silently sorted away.
 
 ## Cross-Plugin Handoff
 

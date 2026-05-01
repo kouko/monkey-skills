@@ -13,6 +13,9 @@ Input:
 
 Output: JSON {positions, totals, _provenance} on stdout.
 
+All ratio fields (pnl_ratio, total_pnl_ratio, weight, contribution, max_weight)
+are fractional (0.0–1.0). e.g. pnl_ratio=0.4033 means +40.33%.
+
 NO network I/O. NO macro overlay. NO rebalance logic.
 """
 from __future__ import annotations
@@ -172,7 +175,7 @@ def compute_portfolio(
         market_value = h["quantity"] * price
         cost = h["quantity"] * h["cost_basis"]
         pnl_abs = market_value - cost
-        pnl_pct = (pnl_abs / cost) if cost else 0.0
+        pnl_ratio = (pnl_abs / cost) if cost else 0.0
         resolved.append(
             {
                 **h,
@@ -180,14 +183,14 @@ def compute_portfolio(
                 "_market_value": market_value,
                 "_cost": cost,
                 "_pnl_abs": pnl_abs,
-                "_pnl_pct": pnl_pct,
+                "_pnl_ratio": pnl_ratio,
             }
         )
 
     total_cost = sum(p["_cost"] for p in resolved)
     total_mv = sum(p["_market_value"] for p in resolved)
     total_pnl_abs = total_mv - total_cost
-    total_pnl_pct = (total_pnl_abs / total_cost) if total_cost else 0.0
+    total_pnl_ratio = (total_pnl_abs / total_cost) if total_cost else 0.0
 
     for p in resolved:
         weight = (p["_market_value"] / total_mv) if total_mv else 0.0
@@ -199,7 +202,7 @@ def compute_portfolio(
             "current_price": p["current_price"],
             "market_value": round(p["_market_value"], 4),
             "pnl_abs": round(p["_pnl_abs"], 4),
-            "pnl_pct": round(p["_pnl_pct"] * 100, 4),  # report as percentage
+            "pnl_ratio": round(p["_pnl_ratio"], 6),  # fractional (0.0–1.0); 0.4033 = +40.33%
             "weight": round(weight, 6),
             "contribution": round(contribution, 6),
         }
@@ -215,7 +218,7 @@ def compute_portfolio(
         "total_cost": round(total_cost, 4),
         "total_market_value": round(total_mv, 4),
         "total_pnl_abs": round(total_pnl_abs, 4),
-        "total_pnl_pct": round(total_pnl_pct * 100, 4),
+        "total_pnl_ratio": round(total_pnl_ratio, 6),
         "position_count": len(positions),
         "max_weight": round(max_weight_pos["weight"], 6) if max_weight_pos else 0.0,
         "max_weight_ticker": max_weight_pos["ticker"] if max_weight_pos else None,

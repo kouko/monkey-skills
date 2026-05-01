@@ -46,7 +46,7 @@ remain primary-source-grounded.
 | Inputs | `--ticker` / `--tickers` (equity packs) or `--indicators` (regime-pack) |
 | Output | Structured JSON to stdout, exit 0 on success / exit 1 on partial failure |
 | Side effects | Cache writes to `$INVESTING_TOOLKIT_CACHE` (yfinance: 1h TTL; fdr: 24h TTL) |
-| Provenance | Every pack includes `_provenance` block (tier, primary-source status, source URLs) |
+| Provenance | Every pack includes `_provenance` block with unified fields: `primary_source_status` (`available` / `deferred`), `primary_source_note` (free-form context), `tier`, plus pack-specific fields. Normalization warnings (if any) surface under `ticker_normalization_warnings`. |
 | Cross-skill | Other skills MAY invoke `pack.py` via Bash — bundled-file ownership ≠ execution permission |
 
 ---
@@ -80,6 +80,16 @@ INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
 Multiples-only fetch (yfinance `info`) for anchor + peers. Used by
 `analysis-comps` to compute peer-multiple statistics. Multiples extracted
 downstream: trailingPE, forwardPE, evEbitda, priceToSales, priceToBook.
+
+**Schema is normalized**: single and batch both emit `info: {ticker:
+{...}}` so `analysis-comps` consumes one contract:
+
+```jsonc
+// Single (--ticker 005930.KS)
+{"info": {"005930.KS": {...multiples_dict...}}}
+// Batch (--tickers 005930.KS,000660.KS)
+{"info": {"005930.KS": {...}, "000660.KS": {...}}}
+```
 
 ```
 # Anchor only
@@ -143,6 +153,8 @@ suffix:
 | `005930.KS` | `005930.KS` (unchanged) | `005930.KS` (unchanged) |
 | `005930` | `005930.KS` | `005930.KQ` |
 | `005930.KQ` | `005930.KQ` (unchanged) | `005930.KQ` (unchanged) |
+| `5930` (4-digit, leading-zero strip) | `5930` (passes through, **warns**) | `5930` (passes through, **warns**) |
+| `XYZ` (non-numeric, no suffix) | `XYZ` (passes through, **warns**) | `XYZ` (passes through, **warns**) |
 
 The default of `.KS` reflects KOSPI being the primary exchange.
 
@@ -150,6 +162,13 @@ For ambiguous numeric tickers known to be KOSDAQ-listed, pass `--kosdaq`
 or supply the suffix explicitly. Tickers with already-set suffixes
 (including `.KS` while `--kosdaq` is set) pass through unchanged so a
 mixed list can be normalized in one pass.
+
+**Edge-case warnings**: if a token is neither suffixed nor a valid
+6-digit code (e.g. 4/5/7-digit typo or non-numeric noise), `pack.py`
+emits a stderr warning and records it under
+`_provenance.ticker_normalization_warnings: [...]`. The token is **not
+refused** — it passes through unchanged so the consumer can investigate
+the resulting yfinance lookup failure with full context.
 
 ---
 

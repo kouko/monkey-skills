@@ -98,22 +98,43 @@ def _bare_ticker(code: str) -> str:
     return code
 
 
+def _client_timeout() -> int:
+    """Per-subprocess timeout in seconds. Override via DATA_JP_CLIENT_TIMEOUT env."""
+    raw = os.environ.get("DATA_JP_CLIENT_TIMEOUT", "").strip()
+    if raw:
+        try:
+            val = int(raw)
+            if val > 0:
+                return val
+        except ValueError:
+            pass
+    return 300
+
+
 def _run_client(script: str, args: list[str]) -> dict[str, Any]:
     """Run a sibling client script and return its parsed JSON.
 
     Cache is honored via env (INVESTING_TOOLKIT_CACHE / CLAUDE_PLUGIN_DATA);
     we just inherit the parent's environment.
+
+    Subprocess wall-clock timeout defaults to 300s; override with the
+    DATA_JP_CLIENT_TIMEOUT env var. On timeout, returns a structured-error
+    payload matching the existing shape.
     """
     cmd = ["uv", "run", str(SCRIPT_DIR / script), *args]
+    timeout = _client_timeout()
     try:
         proc = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             check=False,
+            timeout=timeout,
         )
     except FileNotFoundError as e:
         return {"error": f"uv not on PATH: {e}", "_cmd": cmd}
+    except subprocess.TimeoutExpired:
+        return {"error": f"client timeout after {timeout}s", "_cmd": cmd}
 
     payload: dict[str, Any]
     if proc.stdout.strip():
@@ -131,7 +152,14 @@ def _run_client(script: str, args: list[str]) -> dict[str, Any]:
         payload["error"] = (
             f"exit {proc.returncode}; stderr={proc.stderr.strip()[:300]}"
         )
-    if proc.stderr.strip() and "_stderr" not in payload:
+    # Only attach _stderr on failure — yfinance / other libs print
+    # FutureWarning / DeprecationWarning to stderr on success, and Layer 2/3
+    # consumers may treat the field as an error signal.
+    if (
+        proc.stderr.strip()
+        and (proc.returncode != 0 or "error" in payload)
+        and "_stderr" not in payload
+    ):
         payload["_stderr"] = proc.stderr.strip()[:500]
     return payload
 
@@ -221,6 +249,7 @@ def pack_memo_fetch(
         )
         base["fundamentals"] = {
             "tier": "tier_a",
+            "tier_label": "Tier A (EDINET)",
             "filing_summary": filing_summary,
         }
         base["material_events"] = material_events
@@ -283,7 +312,15 @@ def _filter_multiples(info_payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
-    """yfinance multiples-only fields for one ticker or a batch (anchor + peers)."""
+    """yfinance multiples-only fields for one ticker or a batch (anchor + peers).
+
+    Uses a single batch `yfinance_client.py --tickers a,b,c --action info`
+    invocation (one Python interpreter spin-up + one uv resolution) and splits
+    the result per ticker, instead of N serial subprocesses.
+    """
+    yf_tickers = [_to_yf_ticker(c) for c in ticker_codes]
+    bare_tickers = [_bare_ticker(c) for c in ticker_codes]
+
     out: dict[str, Any] = {
         "pack": "comps-multiples",
         "fetched_at": _now_iso(),
@@ -295,12 +332,28 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
             "fields": list(COMPS_FIELDS),
         },
     }
-    for code in ticker_codes:
-        yf = _to_yf_ticker(code)
-        bare = _bare_ticker(code)
-        info = _run_client(
-            "yfinance_client.py", ["--ticker", yf, "--action", "info"]
-        )
+
+    batch = _run_client(
+        "yfinance_client.py",
+        ["--tickers", ",".join(yf_tickers), "--action", "info"],
+    )
+
+    # Batch shape: {"mode": "batch", "tickers": {"7203.T": {...}, ...}, ...}
+    # On batch-level error (e.g. uv missing, timeout), `error` is set and
+    # `tickers` is absent — fall back to per-ticker error payloads so the
+    # output shape stays stable for downstream consumers.
+    per_ticker_info = batch.get("tickers") if isinstance(batch, dict) else None
+    batch_error = (
+        batch.get("error") if isinstance(batch, dict) and "error" in batch else None
+    )
+
+    for yf, bare in zip(yf_tickers, bare_tickers):
+        if isinstance(per_ticker_info, dict) and yf.upper() in per_ticker_info:
+            info = per_ticker_info[yf.upper()]
+        elif batch_error is not None:
+            info = {"error": batch_error}
+        else:
+            info = {"error": "ticker missing from batch response"}
         out["tickers"].append(
             {
                 "ticker": bare,

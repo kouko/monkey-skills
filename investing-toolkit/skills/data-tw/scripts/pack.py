@@ -71,35 +71,44 @@ def normalize_ticker(raw: str) -> dict[str, str]:
 
 
 def latest_roc_quarter(today: datetime | None = None) -> tuple[int, int]:
-    """Return (roc_year, season) for the most recently-reported quarter.
+    """Return (roc_year, season) for the most recently-FILED quarter.
 
-    TW quarterly statements are filed:
-      Q4 (consolidated 年報): by Mar 31 of next year → safe Apr+
-      Q1: by May 15 → safe Jun+
-      Q2 (半年報): by Aug 14 → safe Sep+
-      Q3: by Nov 14 → safe Dec+
-    Use a conservative shift: subtract one quarter from the calendar quarter
-    so we always request a quarter likely to be filed.
+    TW quarterly statements filing deadlines (TWSE/TPEx-listed, consolidated):
+      Q4 (年報): by Mar 31 of next year → safe Apr 1+
+      Q1:       by May 15              → safe May 16+
+      Q2 (半年報): by Aug 14            → safe Aug 15+
+      Q3:       by Nov 14              → safe Nov 15+
+
+    Filing-aware logic: use buffered deadlines (one day after the deadline) so
+    we never request a quarter whose deadline has not yet passed (which would
+    cause MOPS to return an empty result / error).
     """
     today = today or _UTCNOW()
-    # Conservative: report the most recently-COMPLETED quarter that's likely filed.
-    # Calendar Q = (month-1)//3 + 1. Filed quarter typically lags 1-2 quarters.
-    # Use simple rule: the quarter from 4 months ago.
-    target = today - timedelta(days=120)
-    season = (target.month - 1) // 3 + 1
-    roc_year = target.year - 1911
-    return roc_year, season
+    month, day = today.month, today.day
+    if (month, day) >= (11, 15):
+        season, year = 3, today.year
+    elif (month, day) >= (8, 15):
+        season, year = 2, today.year
+    elif (month, day) >= (5, 16):
+        season, year = 1, today.year
+    elif (month, day) >= (4, 1):
+        season, year = 4, today.year - 1
+    else:
+        # Jan 1 – Mar 31: previous year's Q4 not yet filed → fall back to Q3
+        season, year = 3, today.year - 1
+    return year - 1911, season
 
 
 def latest_revenue_month(today: datetime | None = None) -> tuple[int, int]:
     """Return (roc_year, month) for the most recently-published 月營收.
 
-    月營收 published by the 10th of the following month → use 2 months ago
-    to be safe.
+    月營收 published by the 10th of the following month. Use a 5-day buffer
+    (day < 15) before treating last month's number as available — disclosures
+    occasionally trickle in past the 10th.
     """
     today = today or _UTCNOW()
-    if today.day < 12:
-        # last month not yet published; go 2 back
+    if today.day < 15:
+        # last month not yet (reliably) published; go 2 back
         ref = today - timedelta(days=40)
     else:
         ref = today - timedelta(days=15)
@@ -274,6 +283,18 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
         run_client("finmind_client.py",
                    ["--ticker", code, "--dataset", "TaiwanStockMarginPurchaseShortSale",
                     "--date-start", date_3mo]))
+
+    # Re-walk every Tier A entry (snapshot only checked its own subset; memo-fetch
+    # added 8 more A-tier fetches). Flip _partial=True if any Tier A entry errored.
+    if not out.get("_partial"):
+        for group in (out.get("yfinance", {}), out.get("mops", {}),
+                       out.get("twse", {}), out.get("finmind", {})):
+            for entry in group.values():
+                if isinstance(entry, dict) and entry.get("_tier") == "A" and "_error" in entry:
+                    out["_partial"] = True
+                    break
+            if out["_partial"]:
+                break
     return out
 
 
@@ -287,19 +308,16 @@ def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
         yf_t = norm["ticker_yf"]
         out["_tickers"].append(yf_t)
         info = run_client("yfinance_client.py", ["--ticker", yf_t, "--action", "info"])
-        # extract just the multiples block if present
+        if isinstance(info, dict) and "_error" in info:
+            # let wrap() surface the error envelope
+            out["tickers"][yf_t] = wrap("2", "yfinance", "info-multiples", info)
+            continue
+        # extract just the multiples block
         multiples_keys = ["trailingPE", "forwardPE", "priceToSalesTrailing12Months",
                           "priceToBook", "enterpriseToEbitda", "enterpriseToRevenue",
                           "marketCap", "enterpriseValue"]
-        multiples = {}
-        if isinstance(info, dict) and "_error" not in info:
-            for k in multiples_keys:
-                if k in info:
-                    multiples[k] = info[k]
-        out["tickers"][yf_t] = wrap("2", "yfinance", "info-multiples",
-                                     {"multiples": multiples, "raw_info": info if "_error" in info else {"_omitted": True}})
-        if "_error" in info:
-            out["tickers"][yf_t]["data"] = info  # surface error
+        multiples = {k: info[k] for k in multiples_keys if isinstance(info, dict) and k in info}
+        out["tickers"][yf_t] = wrap("2", "yfinance", "info-multiples", {"multiples": multiples})
     return out
 
 
