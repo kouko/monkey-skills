@@ -359,6 +359,111 @@ This is the FranklinCovey-endorsed hybrid pattern. It explicitly is NOT "SaaS co
 
 ---
 
+## Part 7 — Cross-framework coordination: "engineering uses OKR, sales uses 4DX" pattern
+
+### The honest empirical finding
+
+**No verified named real-company case** exists for "engineering team uses OKR + sales team uses 4DX simultaneously in the same company." The hybrid pattern is widely promoted theoretically by FranklinCovey, Workpath, Simplamo, mooncamp, and others — but the published case literature does not document a specific named company running this dual-framework horizontal split. (Workpath's only named case study is DB Schenker, which uses OKR alone, not OKR+4DX hybrid.)
+
+Sources searched 2026-05-01: 5 EN web searches across "OKR + 4DX hybrid", "FranklinCovey hybrid model", "dual framework engineering sales different department", "4DX sales SaaS implementation", "channel sales 4DX". All surface theoretical hybrid guidance; none surface a named real-company case for the specific horizontal pattern.
+
+### Why the published guidance describes vertical hybrid, not horizontal
+
+The hybrid model FranklinCovey + practitioner-blog literature describes is **vertical**, not **horizontal**:
+
+- **Vertical hybrid** (the documented pattern): Same goal exists in BOTH frameworks at different layers. OKR sets quarterly Objective ("grow ARR by $5M in Q3"); 4DX wraps this Objective as a WIG with weekly cadence ("from $X ARR to $Y ARR by Sept 30"). Each team uses BOTH layers.
+- **Horizontal hybrid** (the user's question): DIFFERENT goals exist in DIFFERENT frameworks across departments. Engineering team has OKR ("ship feature set X by Q3"); sales team has independent 4DX WIG ("close $5M ARR by Sept 30"). Each team uses ONE framework.
+
+FranklinCovey's recommended pattern is vertical because it preserves single-language alignment across the org. Horizontal hybrid is rare in published literature because it introduces coordination friction (documented below). When companies in practice run "different frameworks for different departments," the coordination cost is usually absorbed quietly without published case studies.
+
+### Where horizontal hybrid coordination friction actually surfaces
+
+Four predictable friction points if engineering runs OKR (quarterly, aspirational, knowledge-work-shaped) and sales runs 4DX (weekly, winnable-game, behavioral-lead-shaped):
+
+#### Friction 1: Goal cycle mismatch (quarterly vs weekly)
+
+Sales' weekly WIG Session surfaces a roadblock that depends on engineering's quarterly OKR deliverable. Engineering's natural cycle is "we'll re-evaluate at Q3 retro"; sales needs an answer this week. This is the most common friction point — sales perceives engineering as unresponsive; engineering perceives sales as panicked.
+
+**Coordination pattern**: agree at quarterly OKR boundary which engineering deliverables sales can depend on this quarter; engineering creates sub-OKR specifically for sales-enabling deliverables; sales' WIG depends only on this sub-OKR (NOT engineering's broader roadmap); cross-team weekly 1:1 reviews this slice only.
+
+#### Friction 2: Achievement-culture mismatch (60-70% vs winnable-game)
+
+Engineering OKR culture: stretch goals, 60-70% achievement is healthy. Sales 4DX culture: winnable game, hit the WIG by deadline. When sales-depends-on-engineering, sales models engineering's deliverables as commitments (4DX framing); engineering models them as stretch goals (OKR framing). Same artifact gets read two ways.
+
+**Coordination pattern**: engineering's sales-enabling sub-OKR explicitly carries WINNABLE-game framing (no 60-70% target — these are commitments, not stretch). Engineering's broader strategic OKR keeps stretch framing. The dual framing is explicit at sub-OKR level, with documented expectation that sales-enabling sub-OKR achievement target = 95-100%.
+
+#### Friction 3: Metric-shape mismatch (KR-as-outcome vs Lead-as-behavior)
+
+Engineering KRs are usually outcome-shaped lag metrics ("ship feature X"; "reduce p99 latency to 200ms"). Sales 4DX leads are behavior-shaped predictive metrics ("50 outreach emails per week"; "3 demos per week per AE"). When sales asks engineering for a "lead measure on the engineering deliverable," engineering doesn't have one — they have a milestone-shaped KR.
+
+**Coordination pattern**: when an engineering deliverable is on the sales-WIG critical path, ask engineering to surface a *behavioral lead measure* alongside the milestone-shaped KR. E.g., milestone-KR = "feature X shipped"; behavioral lead = "code reviews on feature X completed within 24h" (engineering can run this weekly; sales can see it weekly). Engineering may resist (this isn't OKR-natural language) — the workaround is asking engineering to add the behavioral lead as a *4DX-style annotation* on the sub-OKR, not as a full new KR.
+
+#### Friction 4: Cadence rhythm mismatch (sprint review / quarterly retro vs weekly WIG Session)
+
+Engineering's natural meetings: sprint review (2-3 weekly) + quarterly OKR retro. Sales' natural meeting: weekly WIG Session (≤30 min). If a cross-functional WIG depends on engineering deliverables, weekly WIG Session attempts to put engineering on the hot seat each week, which engineering can't sustain.
+
+**Coordination pattern**: weekly WIG Session has a *brief* engineering-status segment (2 min, slot-locked) where engineering rep reports binary "on track / blocker surfaced". Detail-level engineering review happens in engineering's own sprint review or sub-OKR check-in. Engineering rep at WIG Session functions as a one-way status conduit, not a debate partner.
+
+### Cross-framework coordination patterns (synthesized)
+
+If you decided to run horizontal hybrid (engineering OKR + sales 4DX) despite the friction points above, four practical patterns:
+
+#### Pattern A — Sub-OKR / WIG-dependency contract (highest discipline)
+
+1. At quarterly OKR-setting boundary, sales WIG owner + engineering OKR owner negotiate *sales-enabling sub-OKR*: a slice of engineering's quarter explicitly committed to sales' WIG critical path
+2. Sub-OKR has WINNABLE-game framing (95-100% target), not stretch framing
+3. Sub-OKR carries milestone-KR (engineering's natural shape) + behavioral-lead annotation (4DX shape) so sales can read it weekly
+4. Sales' WIG depends ONLY on this sub-OKR, not on engineering's broader roadmap
+5. Cross-team weekly 1:1 (sales lead + engineering lead) reviews sub-OKR slice; lasts ≤15 min; not the same as sales' WIG Session
+
+#### Pattern B — Embedded engineering rep at sales WIG Session (medium discipline)
+
+1. Sales WIG Session has a 2-min slot for engineering rep to report sub-OKR status
+2. Engineering rep is the sub-OKR owner, not a generalist
+3. Status format: "on track / blocker surfaced [if blocker, owner-of-blocker-resolution named]"
+4. Detail discussion deferred to async or to engineering's own sprint review
+5. Engineering rep does NOT make weekly behavioral commitments at sales WIG Session — that's the engineering OKR cycle's job
+
+#### Pattern C — Joint scoreboard for the cross-functional WIG (highest visibility)
+
+1. Sales WIG scoreboard shows BOTH sales execution (lead+lag) AND engineering deliverable status (sub-OKR milestone)
+2. Both teams can see "are we winning the joint outcome?" at one glance
+3. Eliminates the "we did our part, you missed yours" framing — both teams own the WIG
+4. Most useful when sales and engineering share an outcome metric (e.g. enterprise-deal close, where engineering's feature shipping is critical-path)
+
+#### Pattern D — Quarterly re-anchoring (bookend pattern)
+
+1. At quarter boundary, both teams attend joint OKR-WIG retro
+2. Sales WIG carried forward, retired, or replaced based on quarter results
+3. Engineering OKR cycle generates next quarter's sales-enabling sub-OKR
+4. Cross-functional dependencies for next quarter explicitly negotiated, not assumed
+5. Bookend prevents drift between weekly cadence and quarterly cadence
+
+### What goes wrong if coordination is not designed deliberately
+
+Four predictable failure modes:
+
+1. **Sales blames engineering for WIG slip** — sales' WIG misses target because engineering didn't deliver; sales-side post-mortem reads "blocked by engineering"; engineering-side OKR retro reads "shipped 70% of stretch goals = healthy quarter". Both interpretations are internally coherent, opposite in implication.
+2. **Engineering feels overrun by weekly demands** — sales' WIG Session generates weekly questions for engineering ("when is feature X shipping?"); engineering's natural rhythm is bi-weekly sprint review or quarterly OKR; engineering rep at WIG Session feels like reporting to a different cadence-clock than the rest of engineering.
+3. **Cultural-bonus mismatch resentment** — sales hits 100% of WIGs (winnable-game); engineering hits 70% of OKRs (stretch); if compensation is tied to achievement %, sales gets bonuses, engineering doesn't, despite engineering doing harder work. This corrodes cross-team trust over multiple quarters.
+4. **Cadence drift** — engineering treats weekly WIG Session attendance as low-priority; engineering rep increasingly skips; weekly visibility into sub-OKR status degrades; sales loses early-warning on engineering blockers; WIG slips at quarter end without intermediate signals.
+
+### What this means for the four-dx-coach plugin
+
+When a SaaS / tech user describes a horizontal-hybrid context (engineering OKR + their own team running 4DX) and asks the plugin for help:
+
+1. **Surface the four friction points proactively** — agent should not pretend the horizontal hybrid is simple to run. Ch 8 onboarding skill should flag this as an extra layer of coordination work.
+2. **Recommend Pattern A (sub-OKR / WIG-dependency contract)** as the highest-discipline coordination pattern — explicitly named at quarterly boundary, dependencies negotiated not assumed, sub-OKR carries winnable-game framing.
+3. **Treat the engineering rep at WIG Session as a 2-min slot, not a debate partner** — protects the 30-min ceiling.
+4. **Joint scoreboard recommended when** sales and engineering share an outcome metric (enterprise deals, feature-driven adoption, etc.).
+5. **Cultural-bonus mismatch is a Ch 8 onboarding risk** that the plugin should flag at WIG-formulation time if compensation is tied to achievement %.
+
+### Honest caveat
+
+This entire Part 7 is **synthesized from the four practitioner sources documented in Parts 1-4 + first-principles reasoning about cycle / culture / metric / cadence mismatches**, not from a verified named real-company case of horizontal hybrid. The patterns above are the *expected* coordination friction and the *recommended* coordination patterns based on what we know about the two frameworks individually. If a specific named company publicly documents this horizontal hybrid in the future, this section should be revised against actual implementation evidence.
+
+---
+
 ## Provenance
 
 This research note was assembled 2026-05-01 in response to user request for deeper investigation of (1) why 4DX is industry-considered poorly-suited to SaaS / software-tech with specific focus on iCHEF and 91APP, and (2) substantive OKR vs 4DX comparison.
@@ -366,3 +471,5 @@ This research note was assembled 2026-05-01 in response to user request for deep
 Total research: 6 web searches + 4 direct primary-source reads (2 via WebFetch, 2 via playwright after redirects / SSL issues) + cross-validation against existing case-inventory.md Tier 1 + Tier 2 entries.
 
 Re-running annually is sensible if the SaaS / tech 4DX adoption landscape changes (e.g. if FranklinCovey publishes a new SaaS-specific case study, or if iCHEF / 91APP publicly change their goal-setting framework).
+
+**Update 2026-05-01 (same day, second pass)**: added Part 7 on horizontal-hybrid coordination pattern (engineering OKR + sales 4DX). Five additional searches + 4 verified WebFetch reads (Workpath / Simplamo / FranklinCovey blog / mooncamp 4DX-vs-OKR). Honest finding: no verified named real-company case for this specific horizontal pattern; FranklinCovey's documented hybrid is vertical (same goal at OKR + 4DX layers), not horizontal (different goals across departments). Part 7 synthesizes expected friction points + recommended coordination patterns from first principles + practitioner-blog convergence. Section explicitly labeled as synthesis, not as verified case-anchored guidance.
