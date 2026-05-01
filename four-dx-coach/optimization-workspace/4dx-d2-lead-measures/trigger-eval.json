@@ -1,0 +1,23 @@
+[
+  {"query": "WIG 是 Q4 客戶留存 65→75% 我該追什麼週次行為才會推動這個 lag", "should_trigger": true},
+  {"query": "we're tracking NPS as our 'lead measure' but it doesn't move week-to-week — is that even a lead?", "should_trigger": true},
+  {"query": "我們業務部 lead 是 'sales calls per week' 我懷疑會被 game，怎麼判斷有沒有 Goodhart 風險", "should_trigger": true},
+  {"query": "WIG 訂好了，retention rate 算 lead 還是 lag？我有點搞不清楚", "should_trigger": true},
+  {"query": "我們團隊列了 12 個 KPI，幫我用 two-axis test 過一遍哪些是真 lead", "should_trigger": true},
+  {"query": "team の WIG は決まったが、自分は member として与えられた lead measure のうちどれを動かせるか分からない", "should_trigger": true},
+  {"query": "I'm a team leader running a lead-measure session next week with 6 reports — how do I facilitate without dictating the answer?", "should_trigger": true},
+  {"query": "うちの leads は demo count + email opened + sales calls の3つだけど、どれが本当に予測力あるか診断して", "should_trigger": true},
+  {"query": "WIG = 月平均事故 12→7 件、毎週どんな behavior を追えば lag が動く？small outcome と leveraged behavior どっち？", "should_trigger": true},
+  {"query": "boss says these aren't real lead measures — help me see what's wrong with our list", "should_trigger": true},
+
+  {"query": "我們還沒寫 WIG，先幫我把目標想清楚再說", "should_trigger": false},
+  {"query": "lead 都選好了，怎麼設計一個 5 秒看得懂的 scoreboard？", "should_trigger": false},
+  {"query": "WIG Session 怎麼開？每週的 cadence 應該長什麼樣？", "should_trigger": false},
+  {"query": "Primary WIG 已經訂了，要怎麼分配給各 sub-team 配對應的 sub-WIG？", "should_trigger": false},
+  {"query": "幫我設計一個 KPI dashboard for engineering team 用來追 velocity 跟 bug count", "should_trigger": false},
+  {"query": "幫我訂 Q3 OKR 的 Key Results，Objective 是 expand into SEA market", "should_trigger": false},
+  {"query": "我們 lead measure 已經訂 6 週了，但 lag 完全沒動，這該怎麼救？", "should_trigger": false},
+  {"query": "want to run a 4DX audit across our WIG + leads + scoreboard + cadence — full 5-layer diagnosis", "should_trigger": false},
+  {"query": "sprint goal の決め方を教えて、Scrum で planning する時の良い practice は？", "should_trigger": false},
+  {"query": "what's a good leading indicator for the S&P 500 next quarter — like ISM PMI or yield curve?", "should_trigger": false}
+]

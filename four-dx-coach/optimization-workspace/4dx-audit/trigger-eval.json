@@ -1,0 +1,22 @@
+[
+  {"query": "我們 4DX 跑了 Q3 一整季 給你看：WIG 是 retention 65→72% + 3 個 lead measures + Looker dashboard 12 metrics + 過去 8 次 weekly meeting minutes — 哪一層卡住？", "should_trigger": true},
+  {"query": "we have an OKR doc + KPI dashboard + 4 weekly retro notes and our team isn't moving the needle. don't know if it's the goal, the metrics, or the meetings", "should_trigger": true},
+  {"query": "戦略 doc 5 ページ + OKR シート + 12 指標 dashboard + 過去 6 週の議事録 全部見て 4DX 視点で診断して", "should_trigger": true},
+  {"query": "跑了 6 個月 4DX 卡住但不知道哪裡卡 — 我把 WIG / leads / scoreboard 截圖 + cadence 紀錄都貼上來 幫看", "should_trigger": true},
+  {"query": "lead measures 跟 WIG 對不上 — WIG 是 customer retention 但 leads 看起來像 sales activity 還有 scoreboard 也很怪 一起幫我診斷跨層問題", "should_trigger": true},
+  {"query": "I'll paste our strategy memo, the OKR sheet our exec wrote, our metrics dashboard, and the last month of WIG session notes — please diagnose where 4DX is breaking across the layers", "should_trigger": true},
+  {"query": "うちの 4DX 何かが壊れてる気がするけど、どの discipline か特定できない — 全体を見て診断してほしい（資料は全部用意してある）", "should_trigger": true},
+  {"query": "我們同時有 OKR 又有 4DX，分不清哪個是 WIG 哪個是 lead，scoreboard 跟 OKR dashboard 重疊 — 幫我把所有東西攤開重新對 4DX 5 層", "should_trigger": true},
+  {"query": "quarterly plan covers goal + metrics + weekly review process — translate the whole thing to 4DX and tell me what's missing across all 5 layers", "should_trigger": true},
+  {"query": "leads 個別看起來都 ok / scoreboard 也漂亮 / cadence 也有跑 但結果就是不動 — 是不是順序錯了？跨層診斷一下", "should_trigger": true},
+  {"query": "我們的 WIG 是 'increase customer satisfaction' 看起來太抽象 幫看 well-formed 嗎", "should_trigger": false},
+  {"query": "過去 4 週的 WIG Session meeting notes 在這 幫看週會跑得對不對", "should_trigger": false},
+  {"query": "我們的 scoreboard 12 metrics 沒人在看 怎麼修", "should_trigger": false},
+  {"query": "lead measure 是 NPS 對嗎？我們團隊在爭論", "should_trigger": false},
+  {"query": "想用 4DX 但不知道從哪開始 我們團隊還沒選 WIG", "should_trigger": false},
+  {"query": "WIG 跑了一陣子斷掉了 cadence 收不回來 幫我重啟", "should_trigger": false},
+  {"query": "4DX 適合我們公司嗎？我們是 30 人 SaaS 團隊", "should_trigger": false},
+  {"query": "私たちのリード指標これで合ってますか — 候補 4 つあります、診断して", "should_trigger": false},
+  {"query": "here's our WIG draft: 'From 35% to 50% retention by Q4'. is this well-formed?", "should_trigger": false},
+  {"query": "OKR audit してほしい — KR の measurability と alignment を見て", "should_trigger": false}
+]

@@ -1,0 +1,22 @@
+[
+  {"query": "我們的 WIG 跟 lead measures 都定好了，現在要設計一個 5 秒看出輸贏的 scoreboard 怎麼開始", "should_trigger": true},
+  {"query": "we have a 12-metric Notion dashboard tracking our retention WIG and nobody on the team opens it anymore. how do i fix this?", "should_trigger": true},
+  {"query": "team 自己看的 board 跟主管 review 的 dashboard 應該長一樣嗎？我搞混了", "should_trigger": true},
+  {"query": "うちの BI dashboard を 4DX 視点で audit してほしい、誰も見てないので原因を診断したい", "should_trigger": true},
+  {"query": "I just joined a team and they have a scoreboard on the wall but I can't tell where my own contribution shows up — how do I read it?", "should_trigger": true},
+  {"query": "個人で WIG と lead 決めたけど、自分用の scoreboard を sticky note にするか Notion にするか迷ってる、設計を help してほしい", "should_trigger": true},
+  {"query": "我們追了 6 個 KPI 兩季，WIG 還是沒進展，是不是 scoreboard 追錯東西", "should_trigger": true},
+  {"query": "team scoreboard 我們做了但目標線（pacing line）跟現實對不上，看了也看不出在贏，怎麼修", "should_trigger": true},
+  {"query": "リーダーとしてチームの public な scoreboard を build するのを facilitate したい、wall に貼るか Slack channel か迷ってる", "should_trigger": true},
+  {"query": "boss says our Looker dashboard isn't useful for the team, here's the screenshot — what's wrong with it from a 4DX players' scoreboard perspective?", "should_trigger": true},
+  {"query": "我們還沒挑出 lead measures，先幫我看怎麼決定要追什麼領先指標", "should_trigger": false},
+  {"query": "WIG 主管寫的我看不太懂，幫我拆解成自己的版本", "should_trigger": false},
+  {"query": "幫我設計一個 BI dashboard for sales team，我們沒在用 4DX，就是想看月度業績趨勢", "should_trigger": false},
+  {"query": "4DX 整套導入 6 個月了，我把 WIG / lead / scoreboard / cadence 全部 artifact 給你看，幫我診斷整體哪裡卡", "should_trigger": false},
+  {"query": "WIG Session 的議程跟頻率怎麼設計？我們現在每週開但都在報 whirlwind 的事", "should_trigger": false},
+  {"query": "scoreboard 一個月沒更新了，team 也不主動填，怎麼辦", "should_trigger": false},
+  {"query": "Tableau で executive review 用の KPI scorecard を作りたい、drill-down できるように", "should_trigger": false},
+  {"query": "Scrum の sprint burndown chart の見方を教えて、velocity が落ちてる原因を分析したい", "should_trigger": false},
+  {"query": "我想用 OKR 做季度 check-in，KR 的進度要怎麼跟主管同步", "should_trigger": false},
+  {"query": "我是新主管，要先 onboard 整個 4DX，從哪裡開始比較好", "should_trigger": false}
+]

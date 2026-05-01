@@ -1,0 +1,23 @@
+[
+  {"query": "我想設個 Q4 個人 WIG 主題是「考過日文 N1」 怎麼寫成 4DX 的 From X to Y by When 句型", "should_trigger": true},
+  {"query": "Help me write my personal WIG — I want to increase team velocity from 18 to 30 by EOQ but not sure if that's well-formed", "should_trigger": true},
+  {"query": "上司から「今期の Primary WIG を選んでくれ」と言われた、候補が 5 つあって絞り込めない、相談したい", "should_trigger": true},
+  {"query": "我帶 8 人團隊 想訂年度 Primary WIG 但戰略候選有 4 個 不知道怎麼挑", "should_trigger": true},
+  {"query": "我加入新團隊 主管丟了個 WIG 給我「improve customer satisfaction by Q4」 這算 well-formed 嗎 我該怎麼 onboard", "should_trigger": true},
+  {"query": "新しいチームに配属された、上司の WIG が「顧客体験を向上させる」だけで自分が何すればいいか分からない、解読してほしい", "should_trigger": true},
+  {"query": "這是我們團隊 WIG「提升用戶體驗」 review 後主管覺得太空 要我重寫 幫我看哪裡有問題", "should_trigger": true},
+  {"query": "boss says our WIG 'reduce customer churn' is too vague — can you diagnose what's wrong against 4DX rules?", "should_trigger": true},
+  {"query": "我想 Q4 把客戶留存從 65% 拉到 75% 這個目標寫法 OK 嗎 還是要再調", "should_trigger": true},
+  {"query": "Audit this WIG: 'Be the best engineering team in the company by year-end'. Manager flagged it. What's wrong?", "should_trigger": true},
+
+  {"query": "Primary WIG 已經選好是 'Q4 營收 +30%' 要分配給 sales / marketing / product 三個 sub-team 怎麼 cascade", "should_trigger": false},
+  {"query": "我們 WIG 已經訂好了 lead measure 該選 sales calls per week 還是 demo bookings per week", "should_trigger": false},
+  {"query": "WIG 跟 lead measure 都訂了 接下來 scoreboard 怎麼設計才能讓團隊一眼看出輸贏", "should_trigger": false},
+  {"query": "my team has been at this WIG for 4 weeks and the weekly cadence is collapsing — people stop committing, what now?", "should_trigger": false},
+  {"query": "4DX 適不適合我們 reactive 維運型團隊 還是說我們應該用 OKR 比較合適", "should_trigger": false},
+  {"query": "うちのチームは on-call 中心の運用組織だけど、4DX を導入すべきかどうか判断したい", "should_trigger": false},
+  {"query": "WIG + lead + scoreboard + cadence 都跑了 3 個月 整體沒進展 想做完整的 5-layer 全棧診斷", "should_trigger": false},
+  {"query": "I want to build a daily meditation habit — help me set this up like a WIG", "should_trigger": false},
+  {"query": "should I switch from Salesforce to Hubspot — should I run this decision through 4DX?", "should_trigger": false},
+  {"query": "我們同時要跑 Leader-of-Leaders 跨 3 個事業部的 WIG roll-out 怎麼協調", "should_trigger": false}
+]

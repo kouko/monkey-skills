@@ -1,0 +1,22 @@
+[
+  {"query": "下週一要跟我 8 人 team 介紹 4DX 但擔心他們只是表面 nodding 怎麼讓他們真 commit", "should_trigger": true},
+  {"query": "i'm rolling out 4DX to 6 direct reports next quarter — what's the playbook for getting genuine buy-in vs compliance?", "should_trigger": true},
+  {"query": "うちのチーム 12 人に 4DX 入れる 反対しそうな 2 人をどう steel-man する", "should_trigger": true},
+  {"query": "我們團有 2 個資深 leader 一定會反對 4DX 怎麼處理才不會變成上對下強推", "should_trigger": true},
+  {"query": "should I run 4DX as a full-team mandate or pilot it with the willing first?", "should_trigger": true},
+  {"query": "部下リーダー 5 人に 4DX を腹落ちさせたい 流行りの施策と思われないために何を準備すべき", "should_trigger": true},
+  {"query": "rollout 信件已經發出去兩週了 leader 都說 ok 但實際沒人動 怎麼判斷他們是真 commit 還是表面 compliance", "should_trigger": true},
+  {"query": "my boss flagged that the team isn't really bought in to 4DX — here's the kickoff deck and 1:1 transcripts, can you diagnose what went wrong?", "should_trigger": true},
+  {"query": "チーム導入したけど反発が強い ロールアウトメールと議事録あるから何が抜けたか診断して", "should_trigger": true},
+  {"query": "怎麼跟下屬 leader 開那場介紹 4DX 的會 才不會被當成又一個 corporate flavor-of-the-month", "should_trigger": true},
+  {"query": "幫我帶 team 選 Primary WIG 還沒決定要做什麼", "should_trigger": false},
+  {"query": "Primary WIG 已經選好 怎麼分到 5 個 sub-team", "should_trigger": false},
+  {"query": "下週 team 第一次開 WIG Session 怎麼 facilitate 議程要怎麼跑", "should_trigger": false},
+  {"query": "我自己想用 4DX 沒有 team 怎麼開始", "should_trigger": false},
+  {"query": "我剛加入一個用 4DX 的 team 怎麼參與才對", "should_trigger": false},
+  {"query": "我們團隊到底適不適合導入 4DX 還沒決定要不要做", "should_trigger": false},
+  {"query": "how do I cascade the corporate WIG into team-level WIGs for my 4 sub-teams?", "should_trigger": false},
+  {"query": "4DX 已經跑半年 cadence 開始崩 大家都不來 WIG Session 了怎麼救", "should_trigger": false},
+  {"query": "Lead Measure 怎麼選 我們 team 的 WIG 是 reduce churn 30%", "should_trigger": false},
+  {"query": "scoreboard 應該放哪些指標 視覺化要怎麼設計才有 player 感", "should_trigger": false}
+]

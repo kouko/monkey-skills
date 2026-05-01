@@ -1,0 +1,23 @@
+[
+  {"query": "I want to run a 100km ultra marathon by next year. Is 4DX a good fit for this kind of personal goal?", "should_trigger": true},
+  {"query": "should our 8-person product team adopt 4DX or is it overkill at our size?", "should_trigger": true},
+  {"query": "i'm an SRE doing 24/7 oncall rotation — pretty sure 4DX won't fit my work but want a sanity check", "should_trigger": true},
+  {"query": "thinking about rolling out 4DX to my 10 direct reports next quarter. can you diagnose whether it's the right move before i commit?", "should_trigger": true},
+  {"query": "我想學日文 N1 一年內考過 4DX 適合用在這種個人學習目標嗎", "should_trigger": true},
+  {"query": "我們公司 50 人準備衝 Q4 業績 老闆問我 4DX 適不適合 幫我判斷", "should_trigger": true},
+  {"query": "我是寫小說的 想一年內完成第一部長篇 4DX 適合創作型工作嗎", "should_trigger": true},
+  {"query": "うちは 12 人のリモート product team。4DX 入れる価値あるか診断してほしい", "should_trigger": true},
+  {"query": "個人で習慣化（毎日瞑想 + ジム 3 回/週）したいんだけど、4DX って合ってるかな", "should_trigger": true},
+  {"query": "上司にフィードバックされて 4DX が本当にうちのチームに合うか再検討したい。strategy doc 見せるから判定して", "should_trigger": true},
+
+  {"query": "我們團隊用 4DX 半年了 lead measure 已經選好 想優化 scoreboard 怎麼設計比較好", "should_trigger": false},
+  {"query": "boss handed me a WIG to deliver by EOQ — what's the right way to read it and break it down?", "should_trigger": false},
+  {"query": "我們 4DX 跑了 6 個月 給你看 WIG + scoreboard + 會議紀錄 幫我看哪裡卡住", "should_trigger": false},
+  {"query": "4DX app 怎麼用 有官方軟體推薦嗎", "should_trigger": false},
+  {"query": "我們已經決定用 4DX 了 怎麼挑 lead measure 比較好", "should_trigger": false},
+  {"query": "うちのチームは 4DX 導入決定済み。WIG セッションって週何回やればいい？", "should_trigger": false},
+  {"query": "OKR と 4DX の違いを教えて。うちは OKR でいくつもりなんだけど。", "should_trigger": false},
+  {"query": "我加入了一個用 4DX 的 team 主管給我一個 WIG 但我看不太懂 怎麼拆解", "should_trigger": false},
+  {"query": "we're rolling out 4DX across 6 sub-teams in the engineering org — how do i cascade WIGs from the org-level WIG?", "should_trigger": false},
+  {"query": "habit stacking と atomic habits ってどう違うの？", "should_trigger": false}
+]

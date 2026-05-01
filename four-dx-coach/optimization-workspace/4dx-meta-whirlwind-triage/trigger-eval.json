@@ -1,0 +1,23 @@
+[
+  {"query": "i want to set a Q4 WIG but every week the day-job eats my whole calendar — can you walk me through a 7-day audit?", "should_trigger": true},
+  {"query": "audit my last 2 weeks of google calendar against 4DX — am i in whirlwind theater or is the BAU real?", "should_trigger": true},
+  {"query": "boss says i'm wasting time on the wrong stuff and wants me to revisit my time allocation, here's my time log", "should_trigger": true},
+  {"query": "i'm always firefighting, never have bandwidth for strategic work — help me figure out where the hours actually go before i pick a goal", "should_trigger": true},
+  {"query": "想設個年度 WIG 但每週都被瑣事塞滿，帶我跑 7 天看時間都花到哪裡去了", "should_trigger": true},
+  {"query": "我的 google calendar 在這，幫我用 4DX 角度看 whirlwind 比例多少、有沒有真的留 20% 給目標", "should_trigger": true},
+  {"query": "主管 review 完覺得我時間配置不對，幫我用 4DX 診斷過去兩週的行事曆", "should_trigger": true},
+  {"query": "毎日雑用と火消しに追われて目標が一ミリも進まない、ゼロから時間の使い方見直したい", "should_trigger": true},
+  {"query": "上司に時間の使い方ダメ出しされた、直近 2 週間の予定表を見て whirlwind 比率を診断して", "should_trigger": true},
+  {"query": "WIG を立てる前にカレンダーを 4DX 視点で audit してほしい、time log 添付します", "should_trigger": true},
+
+  {"query": "我們團隊的 4DX cadence 跑了 6 週後斷掉了，怎麼把 WIG session 拉回來", "should_trigger": false},
+  {"query": "4DX 適合我這種 SRE oncall 輪班的角色嗎？我整天都在處理告警", "should_trigger": false},
+  {"query": "WIG 我已經寫好了，要怎麼挑對應的 lead measure？", "should_trigger": false},
+  {"query": "幫我學 GTD 把收件匣清乾淨，想找個一般性的時間管理流程", "should_trigger": false},
+  {"query": "Notion vs Sunsama vs Akiflow 哪個比較適合做每週規劃？", "should_trigger": false},
+  {"query": "i've been working 70-hour weeks for 4 months straight, sleeping 4 hours, can't keep going — help", "should_trigger": false},
+  {"query": "we ran 4DX for a quarter and the WIG session collapsed two months ago, how do we restart cadence?", "should_trigger": false},
+  {"query": "should i even use 4DX or is OKR a better fit for my startup team of 8?", "should_trigger": false},
+  {"query": "今週末に確定申告を片付けたいだけ、長期目標とかじゃなくて単発タスクの段取り組んで", "should_trigger": false},
+  {"query": "WIG の文言が「売上を伸ばす」しかなくて弱い、from-X-to-Y-by-when の形に書き直したい", "should_trigger": false}
+]

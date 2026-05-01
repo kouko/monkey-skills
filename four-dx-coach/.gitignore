@@ -1,0 +1,5 @@
+# Transient outputs from description-optimization experiments
+# (Negative result archived in optimization-workspace/README.md)
+optimization-workspace/_logs/
+optimization-workspace/*/results/
+optimization-workspace/*/pilot/
