@@ -378,13 +378,15 @@ FranklinCovey's recommended pattern is vertical because it preserves single-lang
 
 ### Where horizontal hybrid coordination friction actually surfaces
 
-Four predictable friction points if engineering runs OKR (quarterly, aspirational, knowledge-work-shaped) and sales runs 4DX (weekly, winnable-game, behavioral-lead-shaped):
+Four predictable friction points if engineering runs OKR (quarterly cycle + aspirational stretch + outcome-shaped KRs + knowledge-work-shaped) and sales runs 4DX (weekly cadence + winnable-game commitment + behavioral-lead-shaped):
 
-#### Friction 1: Goal cycle mismatch (quarterly vs weekly)
+> **Cadence-framing correction (2026-05-01 same-day update)**: an earlier draft of this section framed the cycle distinction as "OKR=quarterly only vs 4DX=weekly". This was inaccurate. **Canonical OKR has a weekly cadence too** — Wodtke's *Radical Focus* (2016/2021) explicitly recommends Monday commitments + Friday wins meetings; Doerr's *Measure What Matters* (2018) documents Google's weekly OKR check-ins. See `okr-primary-sources.md` Sources 2-3. The structural difference between OKR weekly and 4DX weekly is **what gets committed**: OKR weekly = confidence-update + priorities; 4DX weekly = hard behavioral commitment via Account → Review → Plan. The friction below is therefore not "weekly vs quarterly" but rather "confidence-update cadence vs hard-commitment cadence" plus the OKR vs 4DX cycle-boundary structure (OKR has clear quarterly bookends; 4DX runs continuously until WIG hit/replaced).
 
-Sales' weekly WIG Session surfaces a roadblock that depends on engineering's quarterly OKR deliverable. Engineering's natural cycle is "we'll re-evaluate at Q3 retro"; sales needs an answer this week. This is the most common friction point — sales perceives engineering as unresponsive; engineering perceives sales as panicked.
+#### Friction 1: Cycle-boundary mismatch (engineering's quarterly bookend vs sales' continuous WIG)
 
-**Coordination pattern**: agree at quarterly OKR boundary which engineering deliverables sales can depend on this quarter; engineering creates sub-OKR specifically for sales-enabling deliverables; sales' WIG depends only on this sub-OKR (NOT engineering's broader roadmap); cross-team weekly 1:1 reviews this slice only.
+Engineering's OKR quarter has a clear bookend: "we'll re-evaluate at Q3 retro." Sales' 4DX WIG runs continuously until achieved or replaced. When sales' weekly WIG Session surfaces a roadblock that depends on an engineering quarterly OKR deliverable, sales needs an answer THIS week — but engineering's natural bookend is the quarter end, even though engineering DOES have weekly OKR check-ins of its own. The mismatch isn't that engineering doesn't run weekly cadence; it's that engineering's weekly cadence is *confidence-update-shaped* not *hard-commitment-shaped*, so engineering's weekly answer to sales is "still on track / might slip / blocker noted" rather than "I commit to delivering X by Friday."
+
+**Coordination pattern**: agree at quarterly OKR boundary which engineering deliverables sales can depend on this quarter; engineering creates sub-OKR specifically for sales-enabling deliverables; this sub-OKR carries 4DX-style WINNABLE-game commitment framing (sub-OKR's KRs explicitly become committed, not aspirational); sales' WIG depends only on this sub-OKR (NOT engineering's broader roadmap); cross-team weekly 1:1 reviews this slice only with explicit hard-commitment language. The friction-resolving move is **converting the relevant slice of engineering's OKR to 4DX-flavor hard commitments**, not changing engineering's broader cycle.
 
 #### Friction 2: Achievement-culture mismatch (60-70% vs winnable-game)
 
@@ -398,9 +400,9 @@ Engineering KRs are usually outcome-shaped lag metrics ("ship feature X"; "reduc
 
 **Coordination pattern**: when an engineering deliverable is on the sales-WIG critical path, ask engineering to surface a *behavioral lead measure* alongside the milestone-shaped KR. E.g., milestone-KR = "feature X shipped"; behavioral lead = "code reviews on feature X completed within 24h" (engineering can run this weekly; sales can see it weekly). Engineering may resist (this isn't OKR-natural language) — the workaround is asking engineering to add the behavioral lead as a *4DX-style annotation* on the sub-OKR, not as a full new KR.
 
-#### Friction 4: Cadence rhythm mismatch (sprint review / quarterly retro vs weekly WIG Session)
+#### Friction 4: Meeting-rhythm mismatch (sprint review + quarterly OKR retro + OKR weekly check-in vs WIG Session weekly)
 
-Engineering's natural meetings: sprint review (2-3 weekly) + quarterly OKR retro. Sales' natural meeting: weekly WIG Session (≤30 min). If a cross-functional WIG depends on engineering deliverables, weekly WIG Session attempts to put engineering on the hot seat each week, which engineering can't sustain.
+Engineering's natural meeting stack: sprint review (2-3 weekly) + OKR weekly check-in (Wodtke Mondays/Fridays) + quarterly OKR retro. Sales' natural meeting: weekly WIG Session (≤30 min, Account → Review → Plan). If a cross-functional WIG depends on engineering deliverables, the question is which of engineering's three meetings is the right place for sales-side accountability — sprint review is too internal-engineering, OKR weekly check-in is confidence-update-shaped (not commitment-shaped), and engineering rep showing up at sales WIG Session adds a fourth meeting to engineering's calendar.
 
 **Coordination pattern**: weekly WIG Session has a *brief* engineering-status segment (2 min, slot-locked) where engineering rep reports binary "on track / blocker surfaced". Detail-level engineering review happens in engineering's own sprint review or sub-OKR check-in. Engineering rep at WIG Session functions as a one-way status conduit, not a debate partner.
 

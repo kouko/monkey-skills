@@ -237,6 +237,26 @@ Public URL: https://www.linkedin.com/pulse/5-things-leaders-get-wrong-franklinco
 
 ---
 
+### Source 6: OKR canonical sources for cross-framework drift detection (Step 3.6)
+
+**Citations**:
+- Andrew S. Grove, *High Output Management*, Random House (1983; Vintage paperback 1995). ISBN 978-0679762881. Origin of the Object/Key-Result managerial framing at Intel; Drucker-MBO evolution. ★★★ canonical origin.
+- John Doerr, *Measure What Matters: How Google, Bono, and the Gates Foundation Rock the World with OKRs*, Portfolio/Penguin (2018). ISBN 978-0525536222. Modern OKR canon; documents Google practice including the 0.6-0.7 achievement-target convention; Committed-vs-Aspirational OKRs distinction. ★★★ canonical modern.
+- Christina Wodtke, *Radical Focus: Achieving Your Most Important Goals with Objectives and Key Results*, Cucina Media (1st ed. 2016) / self-published 2nd ed. (2021). ISBN 978-0996006040 / 978-1737626305. Practitioner implementation manual; Mondays/Fridays weekly cadence; documented OKR failure modes (sandbagging / too many / KR-as-task-list / disconnected / compensation-tied). ★★★ canonical practitioner.
+- Edwin A. Locke & Gary P. Latham, *A Theory of Goal Setting and Task Performance*, Prentice Hall (1990); plus "New Directions in Goal-Setting Theory," *Current Directions in Psychological Science* 15(5) (2006), pp. 265-268. DOI 10.1111/j.1467-8721.2006.00449.x. 35-year empirical program on goal-setting; specific+difficult goals only outperform vague+easy WHEN commitment + feedback + ability are present; stretch-without-supports backfires. ★★★ peer-reviewed academic.
+
+**Applicable to**: Step 3.6 (OKR-drift cross-layer scan)
+
+**Why these are grounded here, not in topic-skill references**: OKR-drift is a cross-layer pattern check — it operates on the multi-artifact stack as a whole, not on any single layer. It belongs to `4dx-audit` (which is the cross-layer aggregator) rather than to topic skills (which handle layer-local rule checks).
+
+**How to use**: see `references/okr-drift-patterns.md` for the full signal checklist + procedure. Each drift signal in that file cites which of the four sources above provides the specific grounding (Wodtke for failure modes, Doerr for the 60-70% framing + Committed-vs-Aspirational, Grove for the Object/KR origin, Locke-Latham for the academic warrant on stretch-with-supports vs stretch-without-supports). Companion research-tier reference (full primary-source synthesis): `four-dx-coach/research/okr-primary-sources.md`.
+
+**Authority note**: each of the four sources is ★★★ in its own tier. The composite grounding for OKR-drift detection is therefore as strong as the existing 4DX-rule grounding (book + Goodhart 1975 + Tufte 1983 + Edmondson 2018 + Cindrich + Harkin 2016). When citing a drift signal, cite the specific source per `okr-drift-patterns.md`'s mapping table.
+
+**Cross-source unifying insight (load-bearing for audit framing)**: Wodtke's documented OKR failure modes overlap heavily with 4DX failure modes. Most "drift to OKR" is actually drift to bad-OKR shape that Wodtke would also reject. Audit recommendations should frame this as **discipline-drift, not framework-drift** — both frameworks are valid, both have failure modes, and the signal is "user adopted goal-setting vocabulary without either framework's discipline." See `okr-drift-patterns.md` "How to use this checklist" section for the recommendation language pattern.
+
+---
+
 ## What 4DX consultant-auditors learn from these sources
 
 The book's chapter rules tell the auditor *what* to look for in

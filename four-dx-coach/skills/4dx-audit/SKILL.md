@@ -197,6 +197,37 @@ because they're cross-layer in nature:
 
 For each match, surface the mode in the recommendations step. The 5-mode checklist is **complementary, not replacing** the layer-by-layer rule check — a finding can fail Cindrich-mode-2 (lag-as-WIG) AND fail Ch 7 Rule 4 (no measurable Y) at the same time; cite both.
 
+### Step 3.6 — Cross-validate against OKR-drift patterns
+
+After Step 3.5 (Cindrich 5 modes), run a second cross-layer pattern check:
+**has the user's claimed-4DX implementation drifted toward OKR-shaped patterns
+or, more accurately, toward bad goal-setting in any framework?**
+
+Load `references/okr-drift-patterns.md` for the full signal checklist
+(D1 multi-WIG / aspirational-stretch / Objective+KR-split / sandbagging;
+D2 outcome-shaped leads / task-shaped leads / 5+ leads / Goodhart-vulnerable
+activity counting; D3 dashboard-with-many-metrics / read-only-coach-shape /
+OKR-tool-only; D4 quarterly-only-cadence / confidence-update-instead-of-
+hard-commitment / 60+-min-sessions / status-report-instead-of-Account-
+Review-Plan; substrate "60-70% healthy" framing / compensation-tied WIGs /
+stretch-without-commitment / "OKR culture" rationalizing failed cadence).
+
+**Key framing rule** (from `okr-drift-patterns.md` synthesis): most "drift to
+OKR" is actually drift toward **bad OKR shape that Wodtke would also reject**.
+Audit recommendations should NOT default to "you should pick OKR or 4DX." They
+should default to "your current implementation hits failure modes documented
+in BOTH frameworks; here's what to fix regardless of framework identity."
+
+For each drift signal matched:
+- Cite the specific backing source (Wodtke / Doerr / Locke-Latham / Harkin /
+  Cindrich / Bravelab) per `okr-drift-patterns.md`
+- Name it accurately: drift-to-canonical-OKR vs drift-to-bad-OKR vs drift-to-
+  neither-framework's-canonical
+- Surface in Step 5 (recommendations) with discipline-drift framing, not
+  framework-identity framing
+
+This step's outputs feed Step 4 (gaps/risks) as cross-layer pattern observations.
+
 ### Step 4 — Identify gaps and risks
 
 Cross-layer synthesis:
