@@ -4,6 +4,54 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] — 2026-05-03
+
+### Added — plugin-shipped Stop hook for skill folder structure validation
+
+dev-workflow now ships a `PostToolUse` hook on `Write|Edit` that
+validates skill folder structure against the Anthropic convention
+(subfolders may not themselves contain subfolders). The hook fires
+in any project where dev-workflow is installed, catching nested
+subdirectory violations the moment they're written.
+
+**Files added**:
+- `hooks/hooks.json` — registers `PostToolUse` hook on `Write|Edit`
+  matcher pointing to `${CLAUDE_PLUGIN_ROOT}/scripts/validate-skill-folder-structure.sh`
+- `scripts/validate-skill-folder-structure.sh` — bash validator. Reads
+  PostToolUse JSON from stdin, extracts `tool_input.file_path`, finds
+  the affected skill root, runs `find <skill-root> -mindepth 2 -type d`
+  to detect nested subdirs. Exit 2 (blocking) on violation, 0 otherwise.
+
+**Plugin manifest** (`.claude-plugin/plugin.json`):
+- Added `"hooks": "./hooks/hooks.json"` field
+
+**Coexistence with repo-level hook (no duplicate firing)**:
+The script includes explicit dedup logic: if the current repo has
+its own `.claude/hooks/validate-skill-folder-structure.sh` (the
+"D" pattern from the design discussion), this plugin hook SKIPS
+and lets D handle it. This means:
+
+- **In monkey-skills repo** (which ships D as part of its own
+  `.claude/hooks/`): D is authoritative, plugin hook (B) defers
+- **In any other repo where dev-workflow is installed**: B is the
+  only hook, fires normally
+
+Result: zero double-firing in the most common case (you developing
+skills inside monkey-skills repo with dev-workflow loaded), AND
+extended coverage to the previously-unprotected case (you or others
+developing skills outside monkey-skills with dev-workflow installed).
+
+**Test cases verified locally** (all 4 pass):
+1. D exists in repo → plugin hook exits 0 (skip, defer to D)
+2. No D, valid skill file → exit 0 (no nesting found)
+3. No D, synthetic violation in /tmp → exit 2 + clear error message
+4. Non-skill file → exit 0 (fast path, doesn't recurse)
+
+**Why bump to 2.1.0** (minor not patch): adding plugin-shipped
+hooks materially expands what users get when they install
+dev-workflow — they now get runtime enforcement, not just
+documentation. New optional capability = minor bump per SemVer.
+
 ## [2.0.0] — 2026-04-29
 
 ### BREAKING
