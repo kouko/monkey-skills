@@ -704,6 +704,21 @@ def test_chain_tw_classifier_e2e():
     assert cpi_ctx.get("cbc_framing") == "彈性定義", (
         f"TW cbc_framing must be '彈性定義', got: {cpi_ctx.get('cbc_framing')!r}"
     )
+    # Per ROADMAP §v2.1.x-c: cpi_context.latest_yoy must be non-null —
+    # the fixture's `dgbas.cpi-yoy` series resolves to a true YoY%
+    # (年增率 sheet of cpispl.xls), not the INDEX values that the
+    # legacy `cpi` preset emitted.
+    assert cpi_ctx.get("latest_yoy") is not None, (
+        "cpi_context.latest_yoy is None — fixture missing cpi-yoy series? "
+        f"cpi_context: {cpi_ctx}"
+    )
+    # Sanity-check magnitude: TW CPI YoY runs in the -5%..+20% band.
+    # If the value lands outside this it usually means the parser is
+    # reading the INDEX sheet (~110) instead of the YoY% sheet.
+    assert -5.0 <= cpi_ctx["latest_yoy"] <= 20.0, (
+        f"cpi_context.latest_yoy {cpi_ctx['latest_yoy']} outside plausible "
+        f"YoY band [-5, 20] — parser may be reading INDEX not YoY"
+    )
 
     # IC quadrant alias for backward compat (legacy schema readers)
     assert nv.get("ic_quadrant") in {
