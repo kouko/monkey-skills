@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | いつ | 主入力 |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | リポジトリごとに 1 回（再実行安全） | Phase 1: `git ls-files`（src/ 全体）+ module 毎 last-5 commits。Phase 2: 90 日 global git scan（最大 50 commits / 15 source pages）。Phase 3（`init full-history` でオプトイン）: era-grouped 完全履歴 backfill。 |
+| [`/repo-wiki:init`](skills/init/) | リポジトリごとに 1 回（再実行安全） | Phase 1: author-boundary pre-scan（workspaces / TS paths / go.mod / pyproject / README H2）→ `git ls-files`（src/ 全体）+ module 毎 last-5 commits。Phase 2: 90 日 global git scan（最大 50 commits / 15 source pages）。Phase 3（`init full-history` でオプトイン）: era-grouped 完全履歴 backfill。 |
 | [`/repo-wiki:ingest`](skills/ingest/) | 意義のある変更後 OR コンテキスト捕捉時 | 前回 ingest 以降の git diff、テキスト引数、またはファイルパス |
 | [`/repo-wiki:query`](skills/query/) | コードベースについて聞きたいとき | `.repo-wiki/index.md` + 関連ページ、重要な瞬間に `src/` で verify |
 

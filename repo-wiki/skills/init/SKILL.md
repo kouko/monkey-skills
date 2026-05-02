@@ -131,6 +131,58 @@ backfill — it produces era pages and increases token cost.
 This phase ensures **every module in src/ becomes a knowledge entity**,
 not just modules that happened to change in the last 90 days.
 
+### Step 4a-pre — High-Entropy Author-Boundary Pre-Scan
+
+Before path-based heuristics, read **structural fields** from root
+configuration files to extract **author-declared module boundaries**.
+This aligns the entity tree with what the project's maintainers
+officially treat as a module — not just what the directory layout
+implies. Without this step, monorepo workspaces, TypeScript path
+aliases, and README-declared subsystems get treated identically to
+incidental directories like `utils/`.
+
+**Allowed reads** (structural metadata only — NOT implementation code):
+
+| File | Field to read | Boundary signal |
+|---|---|---|
+| `package.json` (root) | `workspaces` array | npm/yarn workspace packages |
+| `pnpm-workspace.yaml` | `packages` globs | pnpm workspace packages |
+| `lerna.json` | `packages` array | Lerna workspaces |
+| `nx.json` + `**/project.json` | `projects` keys + roots | Nx project boundaries |
+| `tsconfig.json` (root + nested) | `compilerOptions.paths` keys | TypeScript path aliases |
+| `go.mod` | `module` line + `replace` directives | Go module + local replacements |
+| `pyproject.toml` | `[tool.poetry.packages]` / `[project]` `packages` | Python package paths |
+| `setup.py` | `packages=` / `package_dir=` | Python (legacy) package paths |
+| `Cargo.toml` (root) | `[workspace] members` + `[lib]/[bin] path` | Rust crate boundaries |
+| `Gemfile` + root `*.gemspec` | gem names + `lib/` paths | Ruby gem boundaries |
+| `composer.json` | `autoload.psr-4` keys + paths | PHP namespace roots |
+| `pom.xml` / `build.gradle(.kts)` | `<module>` / `include(...)` | Maven/Gradle subprojects |
+| `README.md` (root) | `## H2` headings only (titles, not body) | Author-declared subsystem categories |
+
+**Process**:
+
+1. For each present file, parse the named field. Tolerate missing files
+   silently — most repos have only 1-3 of these.
+2. Build `author_declared_boundaries` = ordered list of
+   `(path_or_alias, source_config, declared_name)` tuples.
+3. Resolve glob patterns (e.g. `packages/*`) against `git ls-files` to
+   get concrete directory paths.
+4. README H2 entries that don't map to a path stay as **named-only
+   boundaries** — they inform entity grouping in overview.md but don't
+   create entities by themselves.
+
+**Why this is allowed under WHY-not-WHAT**: configs are not
+implementation. They declare structure. Reading `workspaces: ["packages/*"]`
+is metadata equivalent to reading `git ls-files` — it tells you what
+exists, not how it works. Code files (`*.ts`, `*.py`, `*.go`) remain
+**off-limits** for content reads through every phase.
+
+**If no config files exist**: `author_declared_boundaries = []`. Step 4a
+proceeds purely on heuristics, identical to v1.1 behavior. Existing
+single-package repos see no behavior change.
+
+**Output**: pass `author_declared_boundaries` to Step 4a as input.
+
 ### Step 4a — Discover Modules
 
 ```bash
@@ -158,6 +210,24 @@ Examples:
 - `src/auth/middleware/` → module `AuthMiddleware`
 - `src/auth/middleware/jwt/handler.ts` → its path goes into
   `AuthMiddleware`'s `paths:`, no separate entity
+
+**Author-declared boundary override** (consumes Step 4a-pre output):
+
+For each `(path, source_config, declared_name)` in
+`author_declared_boundaries`:
+
+- **Always create an entity** at `path`, even if the depth rule wouldn't
+  (e.g., `packages/billing/` is depth-2 outside `src/` — heuristic might
+  skip; author declaration forces inclusion)
+- **Use `declared_name` as the entity name** when it diverges from path
+  normalization (e.g., `tsconfig.json paths: { "@auth/*": ["src/auth/*"] }`
+  → entity name `Auth` with `aliases: ["@auth"]` recorded in `paths:`)
+- **Author-declared paths shadow heuristic ones** if they overlap — only
+  one entity gets created, with author name winning
+
+Heuristic depth-1/2 modules fill the **gaps** not covered by author
+declarations. Together they form the entity set: author-declared (high
+fidelity to maintainer intent) + heuristic (fills the rest).
 
 Apply the **Entity Name Normalization Rule** in `.repo-wiki/SCHEMA.md`
 to derive entity names — strip prefix (`src/`, `lib/`, etc.), split on
@@ -577,7 +647,9 @@ Append a new entry:
 - Mode: default
 - Run type: <fresh | re-run>
 - Source root: <detected root>
-- Modules discovered: N
+- Modules discovered: N (author-declared: A, heuristic: H)
+- Boundary configs scanned: <e.g. package.json:workspaces, tsconfig.json:paths, README.md:H2>
+  (or "none — pure heuristic" if no config files matched)
 - Per-module history: 5 commits each (N total)
 - Window: <fresh: 90 days, max 50 commits | re-run: incremental from <prev_sha>>
 - Last commit SHA: <HEAD sha at scan time>
@@ -602,7 +674,7 @@ Print to user:
 ✓ Knowledge base initialized at .repo-wiki/
 
   Phase 1 (src/ scan + per-module history):
-    - N modules discovered
+    - N modules discovered (A author-declared from <configs>, H heuristic)
     - N entity stubs (paths + Common Entry Points + last 5 commits each)
 
   Phase 2 (recent global git scan):
@@ -636,8 +708,13 @@ Print to user:
 NEVER:
 - Modify any file under `src/` or anywhere outside `.repo-wiki/` and `CLAUDE.md`
 - **Open and read src/ file contents** — only `git ls-files` paths,
-  entry-point file paths (not contents), and `git log` metadata are
-  allowed inputs
+  entry-point file paths (not contents), `git log` metadata, and
+  **structural fields from root configuration files** (Step 4a-pre
+  whitelist) are allowed inputs. Reading `*.ts` / `*.py` / `*.go` /
+  `*.rs` / etc. source files for content remains forbidden.
+- Read configuration file fields **outside the Step 4a-pre whitelist**
+  (e.g., reading `package.json` `scripts` or `dependencies` to infer
+  module purpose — that's analysis, not boundary metadata)
 - Write content into entity stubs that the LLM cannot ground in
   observable facts (paths, commit messages) — don't fabricate WHY
 - Touch `CLAUDE.md` content outside the `<!-- repo-wiki:start/end -->` block

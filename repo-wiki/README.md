@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | When | Primary input |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | Once per repo (idempotent re-run safe) | Phase 1: `git ls-files` (full src/ tree) + per-module last-5 commits. Phase 2: 90d global git scan (bounded: max 50 commits / 15 source pages). Phase 3 (opt-in via `init full-history`): era-grouped full-history backfill. |
+| [`/repo-wiki:init`](skills/init/) | Once per repo (idempotent re-run safe) | Phase 1: author-boundary pre-scan (workspaces / TS paths / go.mod / pyproject / README H2) → `git ls-files` (full src/ tree) + per-module last-5 commits. Phase 2: 90d global git scan (bounded: max 50 commits / 15 source pages). Phase 3 (opt-in via `init full-history`): era-grouped full-history backfill. |
 | [`/repo-wiki:ingest`](skills/ingest/) | After meaningful changes OR to capture context | Git diff since last ingest, OR text arg, OR file path |
 | [`/repo-wiki:query`](skills/query/) | Whenever asking about codebase | `.repo-wiki/index.md` + relevant pages, with `src/` verification at key moments |
 

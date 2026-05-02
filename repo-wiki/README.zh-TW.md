@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | 何時用 | 主要輸入 |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次（重跑安全） | Phase 1：`git ls-files`（src/ 完整目錄）+ 每 module 最近 5 commits。Phase 2：90 天 global git scan（最多 50 commits / 15 source pages）。Phase 3（`init full-history` opt-in）：era 分組完整歷史 backfill。 |
+| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次（重跑安全） | Phase 1：author-boundary 預掃（workspaces / TS paths / go.mod / pyproject / README H2）→ `git ls-files`（src/ 完整目錄）+ 每 module 最近 5 commits。Phase 2：90 天 global git scan（最多 50 commits / 15 source pages）。Phase 3（`init full-history` opt-in）：era 分組完整歷史 backfill。 |
 | [`/repo-wiki:ingest`](skills/ingest/) | 完成有意義變更後 OR 想捕捉 context 時 | 自上次 ingest 起的 git diff、文字 arg、或檔案路徑 |
 | [`/repo-wiki:query`](skills/query/) | 想問 codebase 任何問題時 | `.repo-wiki/index.md` + 相關頁面，關鍵時刻自動讀 `src/` 驗證 |
 
