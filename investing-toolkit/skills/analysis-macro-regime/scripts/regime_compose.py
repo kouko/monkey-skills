@@ -153,7 +153,9 @@ def main() -> int:
         "phase": "1",
     }
 
-    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False)
+    # default=str coerces YAML-loaded date / datetime objects (e.g.
+    # calibration provenance dates) to ISO-format strings.
+    json.dump(payload, sys.stdout, indent=2, ensure_ascii=False, default=str)
     sys.stdout.write("\n")
     return 0
 

@@ -615,6 +615,51 @@ def test_chain_country_regime_to_macroregime(country):
 
 
 # ---------------------------------------------------------------------------
+# Phase 1 per-country classifiers (per ADR-0004) — independent functions
+# (NOT parametrize) to avoid file conflicts across PR-3-6 parallel work
+# ---------------------------------------------------------------------------
+
+def test_chain_us_classifier_e2e():
+    """data-us regime-pack → classify_us → CountryRegimeCard with valid
+    Phase 1 envelope. Per ADR-0004 PR-2."""
+    fixture = FIXTURES / "data-us-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", f"us={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+
+    us = out.get("by_country", {}).get("us")
+    assert us is not None, (
+        f"by_country.us missing — classify_us not picked up by dispatcher. "
+        f"output keys: {list(out.keys())}; by_country keys: {list(out.get('by_country', {}).keys())}"
+    )
+    assert us["country"] == "us"
+    assert us["framework_used"], "framework_used empty"
+    nv = us["native_verdict"]
+    assert "framework_label" in nv
+    assert nv["ic_quadrant"] in {
+        "1-recovery", "2-overheat", "3-stagflation", "4-reflation"
+    }
+    assert nv["gip_regime"] in {"quad1", "quad2", "quad3", "quad4"}
+    assert us["confidence"] in ("low", "medium", "high")
+    assert us["provenance"]["calibration_doc"] == "thresholds-us.md"
+    # 4-tier real-rate band derived from calibration
+    rrd = nv.get("real_rate_decomposition")
+    if rrd is not None:
+        assert rrd["band"] in {
+            "accommodative", "neutral",
+            "moderately_restrictive", "clearly_restrictive",
+        }
+    # Yield curve overlay
+    yc = nv.get("yield_curve", {})
+    assert yc.get("state") in {
+        "inverted", "flat", "normal", "steep", "unknown",
+    }
+
+
+# ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).
 # ---------------------------------------------------------------------------
