@@ -72,30 +72,64 @@ PRESETS: dict[str, dict] = {
         "sheet": "年增率",
         "name": "Consumer Price Index YoY% (消費者物價指數年增率, 年增率 sheet)",
     },
+    # core-cpi / ppi / import-pi / export-pi each have an INDEX sheet
+    # and a 年增率 sheet, mirroring cpispl.xls. Pre-v2.1.1 the legacy
+    # presets used ASCII sheet hints ("CPI"/"PPI"/"IPI"/"EPI") that
+    # never matched the actual Chinese sheet names — _parse_xls fell
+    # back to the first sheet (INDEX) and the YoY% label was a lie.
+    # Ported per ROADMAP cleanup follow-up (2026-05-02).
     "core-cpi": {
         "url": f"{DGBAS_PRICE_BASE}/cpisplexvfe.xls",
-        "sheet": "CPI",
-        "name": "Core CPI YoY% (核心CPI 不含蔬果及能源)",
+        "sheet": "不含蔬果",
+        "name": "Core CPI INDEX (核心CPI 不含蔬果及能源, 民國110=100)",
+    },
+    "core-cpi-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/cpisplexvfe.xls",
+        "sheet": "年增率",
+        "name": "Core CPI YoY% (核心CPI 不含蔬果及能源年增率)",
     },
     "cpi-sa": {
+        # cpisplsa.xls — seasonally adjusted CPI series. Single-sheet
+        # file labelled "CPI"; emits the seasonally-adjusted index
+        # (no YoY companion published).
         "url": f"{DGBAS_PRICE_BASE}/cpisplsa.xls",
         "sheet": "CPI",
-        "name": "CPI Seasonally Adjusted (季調CPI)",
+        "name": "CPI Seasonally Adjusted (季調CPI 指數)",
     },
     "ppi": {
         "url": f"{DGBAS_PRICE_BASE}/ppispl.xls",
-        "sheet": "PPI",
-        "name": "Producer Price Index YoY% (躉售物價指數年增率)",
+        "sheet": "生產者物價指數",
+        "name": "Producer Price Index INDEX (生產者物價指數, 民國105=100)",
     },
+    "ppi-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/ppispl.xls",
+        "sheet": "年增率",
+        "name": "Producer Price Index YoY% (生產者物價指數年增率)",
+    },
+    # import-pi / export-pi .xls files publish multiple price bases
+    # (新臺幣計價 vs 美元計價, plus 進口物價 also has 農工原料 sub-bundle).
+    # The presets surface the headline 新臺幣計價 series; future work
+    # may add `*-usd` / `*-raw-materials` variants if a downstream
+    # consumer needs them.
     "import-pi": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
-        "sheet": "IPI",
-        "name": "Import Price Index YoY% (進口物價指數年增率)",
+        "sheet": "總指數(新臺幣計價)",
+        "name": "Import Price Index INDEX, TWD-priced (進口物價總指數, 新臺幣計價)",
+    },
+    "import-pi-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "年增率(新臺幣計價)",
+        "name": "Import Price Index YoY%, TWD-priced (進口物價年增率, 新臺幣計價)",
     },
     "export-pi": {
         "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
-        "sheet": "EPI",
-        "name": "Export Price Index YoY% (出口物價指數年增率)",
+        "sheet": "指數(新臺幣計價)",
+        "name": "Export Price Index INDEX, TWD-priced (出口物價總指數, 新臺幣計價)",
+    },
+    "export-pi-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
+        "sheet": "年增率(新臺幣計價)",
+        "name": "Export Price Index YoY%, TWD-priced (出口物價年增率, 新臺幣計價)",
     },
 }
 
