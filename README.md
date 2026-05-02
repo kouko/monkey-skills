@@ -2,7 +2,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Personal Claude Code plugin marketplace — 8 plugins covering domain-team workflows, skill development, philosophical thinking, Obsidian, investing, copywriting, slides, and book distillation.
+> Personal Claude Code plugin marketplace — 9 plugins covering domain-team workflows, skill development, philosophical thinking, Obsidian, investing, copywriting, slides, book distillation, and repo knowledge.
 
 ## Plugins
 
@@ -16,8 +16,9 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`copywriting-toolkit`](copywriting-toolkit/) | 1.14.0 | 14 | 1 | Pipeline-structured copywriting — intake, ideation, neta injection, 5 form-specific drafters, voice positioning, ethics + form gates, audit. |
 | [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides generation toolkit — template-based deck pipeline via `gws`, backend-agnostic design knowledge, Platform-Pivot architecture. |
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
+| [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | LLM Wiki Pattern for code repos — seed `.repo-wiki/` from git history (init), grow from changes / context / external docs (ingest, polymorphic), query with verification against `src/` (Eager triggers + segmented output). |
 
-**Totals:** 81 skills and 37 slash commands across 8 plugins.
+**Totals:** 84 skills and 40 slash commands across 9 plugins.
 
 > Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
 
@@ -49,7 +50,7 @@ See [`.codex/INSTALL.md`](.codex/INSTALL.md) for symlink and plugin installation
 ```
 monkey-skills/
 ├── .claude-plugin/
-│   └── marketplace.json          # plugin registry (8 entries)
+│   └── marketplace.json          # plugin registry
 ├── .codex/
 │   └── INSTALL.md                # Codex install instructions
 ├── .github/workflows/
@@ -63,6 +64,7 @@ monkey-skills/
 ├── copywriting-toolkit/          # plugin
 ├── slides-toolkit/               # plugin
 ├── tsundoku/                     # plugin
+├── repo-wiki/                    # plugin
 ├── docs/                         # cross-cutting docs (i18n glossary, etc.)
 ├── scripts/                      # repo-level tooling
 ├── CLAUDE.md                     # project conventions for Claude Code
