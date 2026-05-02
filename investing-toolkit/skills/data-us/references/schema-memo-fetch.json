@@ -103,6 +103,34 @@
         "required": ["date", "open", "high", "low", "close", "volume"],
         "additionalProperties": true
       }
+    },
+    "income_statement": {
+      "type": "object",
+      "description": "T3 canonical income statement (annual, most-recent-first, depth 5). Per ADR-0003. Contains revenue / operating_income / ebit / net_income arrays plus _meta provenance.",
+      "additionalProperties": true
+    },
+    "cash_flow": {
+      "type": "object",
+      "description": "T3 canonical cash flow statement. Contains operating_cash_flow / capex / fcf (derived = OCF - capex) plus _meta. Per ADR-0003.",
+      "additionalProperties": true
+    },
+    "balance_sheet": {
+      "type": "object",
+      "description": "T3 canonical balance sheet. Contains long_term_debt / short_term_debt / total_debt (derived = LTD + STD) / cash plus _meta. Per ADR-0003.",
+      "additionalProperties": true
+    },
+    "shares_outstanding": {
+      "type": ["integer", "number", "null"],
+      "description": "Absolute share count from yfinance company_info.sharesOutstanding (NOT XBRL dei). T3 canonical."
+    },
+    "current_price": {
+      "type": ["number", "null"],
+      "description": "Latest market price from yfinance company_info.regularMarketPrice. T3 canonical."
+    },
+    "us_specific": {
+      "type": "object",
+      "description": "US-specific extension block per Principle 3. v1 placeholders for known T3 gaps (non-GAAP EPS in 8-K narratives, segment revenue).",
+      "additionalProperties": true
     }
   }
 }
