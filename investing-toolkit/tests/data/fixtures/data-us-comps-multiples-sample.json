@@ -65,5 +65,70 @@
         "staleness_days": null
       }
     }
+  },
+  "info": {
+    "AAPL": {
+      "trailingPE": 35.67911,
+      "forwardPE": 29.995882,
+      "priceToSales": null,
+      "priceToBook": 46.99316,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 4138099539968,
+      "enterpriseValue": 3996281208832,
+      "ticker": "AAPL",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:54Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    },
+    "MSFT": {
+      "trailingPE": 24.59524,
+      "forwardPE": 21.411777,
+      "priceToSales": null,
+      "priceToBook": 7.853274,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 3069429415936,
+      "enterpriseValue": 3076370989056,
+      "ticker": "MSFT",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:59Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    },
+    "GOOGL": {
+      "trailingPE": 29.206554,
+      "forwardPE": 28.325485,
+      "priceToSales": null,
+      "priceToBook": 11.154484,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 4642516762624,
+      "enterpriseValue": 4173377306624,
+      "ticker": "GOOGL",
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-01T15:07:59Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    }
   }
 }

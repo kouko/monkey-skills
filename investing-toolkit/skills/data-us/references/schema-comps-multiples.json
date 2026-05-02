@@ -34,6 +34,11 @@
     "error": {
       "description": "Top-level client error blob when batch fetch failed entirely. `tickers` will be `{}` in that case. Aligned with shared error envelope.",
       "$ref": "schema-error-envelope.json#/definitions/error_wrapper"
+    },
+    "info": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "T1 canonical multiples alias — same dict reference as `tickers`. Top-level key for analysis-comps / comps_compute (which reads pack.info[ticker]). See docs/normalization-contract.md."
     }
   }
 }
