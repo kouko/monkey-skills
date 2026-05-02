@@ -72,6 +72,8 @@ query     (general wiki)  →  /repo-wiki:query
 
 文字裡**有提到路徑但沒有 import marker**（`import`、`import doc`、`讀取`、`匯入`、`読み込んで` 等）會留在 context mode — 避免意外讀檔。
 
+**Volume-triggered 分類（git mode，commits ≥ 5）**：當 ingest 跨越大量 commits（例如停一個月後 catch-up），commits 會做 entropy 分類——HIGH（動到 config / 跨模組 / `feat`/`refactor` / 新增 top-level 目錄）獨立成 source page；MEDIUM（`fix`+ 本文 / 動到多 entity）依檔案重疊度批次；LOW（純 test / 純 docs / `chore`）合併成 roll-up。Source-page 預算是 `min(15, ceil(commits/5))`。少量 ingest（commits < 5）跳過分類，產出單一 page——保留 v1.1 在「做完 feature 順手 ingest」場景的行為。
+
 ## `.repo-wiki/` 是 AI 擁有，但 `src/` 才是當前權威
 
 最重要的設計決策：**`.repo-wiki/` 是 best-effort cache，不是真實的源頭**。entity page 裡的實作描述會 stale。為了讓這件事誠實，`/repo-wiki:query` 跑一個 **Eager verification** pipeline：
