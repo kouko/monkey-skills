@@ -55,6 +55,50 @@ modules entirely.
   recent activity (Phase 2's 90d/15-page cap); historical era backfill
   must be requested explicitly.
 
+### Re-run idempotency (init can now safely run more than once)
+
+The v1.0 / early-v1.1 design had a Step 1 prompt promising "preserve
+human-edited sections" on re-run, but the workflow steps did not
+implement this — re-running init would truncate `log.md`, overwrite
+ingest-accumulated entity sections (`Responsibility`, `Architecture
+Snapshot`, `Gotchas`, `Dependencies`), and re-process the same Phase 2
+commits as duplicates. This release fixes the gap so init's prompt and
+behavior agree.
+
+Changes:
+- **Step 2 (Scaffold)**: conditional template copy. `SCHEMA.md` always
+  overwrites (frozen, plugin-controlled); `index.md` / `log.md` /
+  `overview.md` skip if file exists (regenerate or append in later
+  steps).
+- **Step 4d (Entity stubs)**: re-run merges instead of overwriting.
+  Init-owned sections (`paths` frontmatter, `Common Entry Points`,
+  seeded `Recorded Decisions`) refresh; user/ingest-owned sections
+  (`Responsibility` / `Architecture Snapshot` / `Gotchas & Non-Obvious
+  Design` / `Dependencies` if non-`TODO`, plus ingest-appended
+  `Recorded Decisions` entries) are preserved verbatim.
+- **Step 5 (Phase 2 scan)**: re-run reads `log.md`'s most recent
+  `Last commit SHA` and scopes the git scan to new commits only —
+  same idempotency model `/repo-wiki:ingest` already uses.
+- **Step 6 (Source pages)**: filename collision check — skip if
+  identical batch already exists, append `-2`/`-3` suffix if
+  different commits collide on same date+slug.
+- **Step 8 (Overview)**: re-run regenerates `## All Modules` /
+  `## Recent Themes` / `## What Lives Where`; preserves
+  `## Repository` section if user edited it (within new
+  `<!-- repo-wiki:repository:start/end -->` markers).
+- **Step 9 (Log)**: `log.md` is **append-only across all init runs**.
+  Never truncated. Re-run records `Run type: re-run` plus
+  `Window: incremental from <prev_sha>` for clarity.
+- **Hard rules**: `## Rules` section adds three NEVER clauses
+  (truncate log, overwrite ingest-filled sections, re-process covered
+  commits) and one ALWAYS clause (re-run safety contract: prompt
+  promises must be honored by the workflow).
+
+User-facing impact: init can now be safely re-run after ingest has
+populated entity content. No data loss. The Step 1 prompt is also
+rewritten to honestly describe what re-run does (preserve / refresh /
+skip per file).
+
 ### Plugin layout: templates/ → skills/init/assets/
 
 To comply with Anthropic's plugin-conventions ("bundled resources live

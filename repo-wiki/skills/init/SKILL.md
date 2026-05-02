@@ -33,19 +33,30 @@ src/ file contents (this preserves WHY-not-WHAT — see Decision 14).
 test -d .git || { echo "Not a git repo. Aborting."; exit 1; }
 ```
 
-If `.repo-wiki/` already exists, ask the user:
+If `.repo-wiki/` already exists, set `is_rerun = true` and ask the user:
 
-> `.repo-wiki/` already exists. Re-running init will:
->  - Add a new init entry to log.md
->  - Re-scan src/ and refresh entity stubs (overwriting earlier
->    auto-generated stubs but preserving any human-edited sections)
->  - Append additional source pages from the global scan window
+> `.repo-wiki/` already exists. Re-running init will (idempotent merge):
+>  - **Preserve** `log.md` (append a new init entry)
+>  - **Preserve** `index.md` / `overview.md` (regenerate listings, keep human-edited prose)
+>  - **Refresh** entity init-owned sections (`paths`, `Common Entry Points`,
+>    seeded `Recorded Decisions`); **preserve** `Responsibility`,
+>    `Architecture Snapshot`, `Gotchas & Non-Obvious Design`, `Dependencies`
+>    if you've filled them via ingest
+>  - **Skip** Phase 2 source pages already covered (read `log.md` last commit SHA)
+>  - **Overwrite** `SCHEMA.md` (frozen schema; plugin-controlled)
+>  - **Never touch** `concepts/`, `syntheses/`, or any human-content
 >
 >  Continue? (yes/no)
 
 Abort on "no".
 
+**Re-run safety contract**: every step below has explicit first-run vs
+re-run behavior documented. The skill MUST follow these rules — Step 1's
+prompt promises preservation; the rest of the workflow MUST deliver it.
+
 ## Step 2: Scaffold Directory Structure
+
+`mkdir -p` is always safe (no-op if dirs exist):
 
 ```bash
 mkdir -p .repo-wiki/sources
@@ -54,11 +65,24 @@ mkdir -p .repo-wiki/concepts
 mkdir -p .repo-wiki/syntheses
 ```
 
-Copy plugin templates into `.repo-wiki/`:
-- `assets/SCHEMA.md` → `.repo-wiki/SCHEMA.md`
-- `assets/index.md` → `.repo-wiki/index.md`
-- `assets/log.md` → `.repo-wiki/log.md`
-- `assets/overview.md` → `.repo-wiki/overview.md`
+Copy plugin templates into `.repo-wiki/` with **conditional rules**:
+
+| Target | First-run | Re-run |
+|---|---|---|
+| `.repo-wiki/SCHEMA.md` | Copy from `assets/SCHEMA.md` | **Always overwrite** (frozen schema; plugin-controlled, user shouldn't edit) |
+| `.repo-wiki/index.md` | Copy from `assets/index.md` | **Skip if exists** (Step 9 regenerates from current entity / source listing — preserves any human-readable additions between re-generations) |
+| `.repo-wiki/log.md` | Copy from `assets/log.md` | **Skip if exists** (Step 9 appends new init entry; never wipe history) |
+| `.repo-wiki/overview.md` | Copy from `assets/overview.md` | **Skip if exists** (Step 8 updates module listings + recent themes; preserves human-edited "Repository" section between markers if any) |
+
+Pseudocode:
+
+```
+if not exists(.repo-wiki/SCHEMA.md) or schema_version_outdated:
+    copy assets/SCHEMA.md → .repo-wiki/SCHEMA.md
+for f in [index.md, log.md, overview.md]:
+    if not exists(.repo-wiki/<f>):
+        copy assets/<f> → .repo-wiki/<f>
+```
 
 (Resolve asset path relative to this SKILL.md location: `assets/<file>.md`.)
 
@@ -178,7 +202,37 @@ easy parsing.
 If a module has fewer than 5 commits in its history, capture what's
 available (could be just 1-2 entries).
 
-### Step 4d — Write Entity Stubs
+### Step 4d — Write or Merge Entity Stubs
+
+For each discovered module, the behavior depends on whether the entity
+file already exists:
+
+**First-run (file does not exist)**: write the full stub from scratch.
+
+**Re-run (file exists)**: merge — **refresh init-owned sections only**,
+**preserve all other sections** to keep ingest-accumulated content.
+
+| Section | Init-owned (refresh on re-run) | User/ingest-owned (preserve on re-run) |
+|---|---|---|
+| frontmatter `paths:` | ✓ refresh from `git ls-files` | — |
+| frontmatter `last_updated` | ✓ refresh to today | — |
+| frontmatter `sources:` | — | ✓ preserve (ingest manages) |
+| `## Common Entry Points` | ✓ refresh from entry-point detection | — |
+| `## Recorded Decisions` (only the seeded `<date> — <subject> (<sha>)` entries from per-module git log) | ✓ refresh seeds (replace with current top-5) | ✓ preserve any entries appended by ingest (`<date> — <batch title> (see [<source-slug>](...))`) |
+| `## Responsibility` | — | ✓ preserve unless still `TODO` (then re-write `TODO` line) |
+| `## Architecture Snapshot` | — | ✓ preserve unless still `TODO` |
+| `## Gotchas & Non-Obvious Design` | — | ✓ preserve unless still `TODO` |
+| `## Dependencies` | — | ✓ preserve unless still `TODO` |
+
+Re-run merge algorithm:
+1. Read existing entity file (parse frontmatter + section markers)
+2. Build new frontmatter: take `sources:` from existing; take `last_updated` = today; take `paths:` from current `git ls-files`
+3. For `## Common Entry Points`: replace with current detection
+4. For `## Recorded Decisions`: split entries by source — keep ingest-appended entries (those with markdown link to source slug) verbatim, replace per-module-git-log seed entries with current top-5
+5. For other sections: keep verbatim
+6. Write back
+
+**First-run write — full stub format**:
 
 For each discovered module, write `.repo-wiki/entities/<EntityName>.md`:
 
@@ -250,21 +304,41 @@ inlined in Step 4c).
 
 ### Step 5 — Scan recent commits
 
-Default window: last 90 days OR last 50 commits, whichever hits first.
-User may override via natural-language arg:
+**Re-run dedup first**: read `.repo-wiki/log.md` and find the most
+recent `init` or `ingest:git` entry that recorded a `Last commit SHA`.
+If `is_rerun` and a previous SHA exists, scope the scan to only commits
+after that SHA — same idempotency model ingest uses.
+
+```
+if is_rerun and exists(prev_last_sha in log.md):
+    git_range = "<prev_last_sha>..HEAD"
+else:
+    git_range = "since 90 days ago, max 50 commits"
+```
+
+Default window for fresh init: last 90 days OR last 50 commits,
+whichever hits first. User may override via natural-language arg:
 - "init from last year" → 365 days
 - "init last 100 commits" → 100 commit cap
 - "init from 2026-01-01" → date floor
 
+For fresh init:
 ```bash
 git log --since='90 days ago' --max-count=50 \
   --pretty=format:'%H|%ai|%an|%s%n%b%n----' \
   --name-only --stat
 ```
 
-If git log is empty (brand-new repo with only init commit): skip Steps
-5-7, write a log entry noting "no recent history to seed beyond per-module
-stubs", and finish.
+For re-run incremental:
+```bash
+git log <prev_last_sha>..HEAD \
+  --pretty=format:'%H|%ai|%an|%s%n%b%n----' \
+  --name-only --stat
+```
+
+If git log is empty (brand-new repo OR re-run with no new commits since
+last init): skip Steps 5-7, append a log entry noting the dedup ("no
+new commits since previous init at <sha>"), and proceed to Step 8.
 
 ### Step 5a — Logical Batching
 
@@ -296,7 +370,15 @@ yields >15 batches, downsample:
 
 ### Step 6 — Write Source Pages + Backfill Entity Cross-Refs
 
-For each batch, write `.repo-wiki/sources/YYYY-MM-DD-<slug>.md`:
+**Filename collision check**: before writing a source page, check if a
+file at `.repo-wiki/sources/<filename>.md` already exists.
+- If exists with same `commits:` frontmatter → **skip** (already covered
+  by previous init / ingest)
+- If exists with different `commits:` → append `-2`, `-3`, ... suffix
+  to the slug to avoid collision (rare; happens when same date + topic
+  recurs)
+
+For each batch (with no collision), write `.repo-wiki/sources/YYYY-MM-DD-<slug>.md`:
 
 ```markdown
 ---
@@ -422,7 +504,16 @@ For each era page, also backfill entity `Recorded Decisions`:
 
 ## Step 8 — Overview Synthesis
 
-Write `.repo-wiki/overview.md`:
+**Re-run preservation**: if `.repo-wiki/overview.md` exists and contains
+a section between `<!-- repo-wiki:repository:start -->` /
+`<!-- repo-wiki:repository:end -->` markers (user-customized "Repository"
+section), preserve that block verbatim. Init only regenerates the
+`## All Modules`, `## Recent Themes`, and `## What Lives Where` sections.
+
+If the markers don't exist, init writes a default "Repository" paragraph
+wrapped in those markers — so future re-runs preserve it once user edits.
+
+Write or update `.repo-wiki/overview.md`:
 
 ```markdown
 ---
@@ -461,29 +552,47 @@ changes have been happening.>
 
 ## Step 9 — Index + Log
 
-Update `.repo-wiki/index.md` to list all created pages.
+### Index
 
-Append to `.repo-wiki/log.md`:
+`.repo-wiki/index.md` is regenerated from current entity / source /
+synthesis listings on every init run. It has no human-edited regions —
+the catalog is fully derived. Re-run is safe: it produces the same
+index.md the first run would, plus any new entries.
+
+(If user has added inline notes outside the standard sections, those are
+considered human-content; init should preserve unknown sections rather
+than nuking. Default-template sections are: `## Overview`, `## Sources
+(recent → old)`, `## Entities`, `## Concepts`, `## Syntheses`. Anything
+outside these gets preserved verbatim.)
+
+### Log
+
+`.repo-wiki/log.md` is **append-only** in all phases. Init **never
+truncates** the log; even on re-run, history is preserved.
+
+Append a new entry:
 
 ```
-## [<date>] init | scaffold + per-module history (N modules) + 90d global scan (M source pages)
+## [<date>] init | scaffold + per-module history (N modules) + <X>d global scan (M source pages)
 - Mode: default
+- Run type: <fresh | re-run>
 - Source root: <detected root>
 - Modules discovered: N
 - Per-module history: 5 commits each (N total)
-- Window: 90 days, max 50 commits (override: <if user customized>)
+- Window: <fresh: 90 days, max 50 commits | re-run: incremental from <prev_sha>>
 - Last commit SHA: <HEAD sha at scan time>
-- Phase 2 source pages created: M (cap: 15)
-- Entity stubs created: N
-- Overview written: yes
+- Phase 2 source pages created: M (skipped: K already covered)
+- Entity stubs: <N created | N refreshed (preserved K user-edited sections)>
+- Overview: <written fresh | regenerated, preserved Repository section>
 - CLAUDE.md drop-in: <created | appended | replaced>
 ```
 
 If `init full-history` was used, follow with the Phase 3 log entry
 from Step 7d.
 
-**Recording the "Last commit SHA" is critical** — `/repo-wiki:ingest`
-uses this to know where to start incrementally.
+**Recording the "Last commit SHA" is critical** — both `/repo-wiki:ingest`
+and future `/repo-wiki:init` re-runs use this to know where to start
+incrementally.
 
 ## Step 10 — Summary Report
 
@@ -536,15 +645,25 @@ NEVER:
 - Add naming suffixes like `Module` / `Service` — name comes from
   Entity Name Normalization Rule
 - Run Phase 3 by default (only when user explicitly says full-history)
+- **Truncate `log.md`** — log is append-only across all init runs
+- **Overwrite ingest-accumulated entity sections** on re-run (Responsibility,
+  Architecture, Gotchas, Dependencies that have been filled past `TODO`)
+- **Re-process Phase 2 commits already covered** — read log.md last SHA
+  on re-run and only handle new commits
 
 ALWAYS:
 - Apply Entity Name Normalization Rule for all entity filenames
 - Make CLAUDE.md drop-in idempotent
 - Bound Phase 2 with the 15 source page cap (Phase 1 + Phase 3 are
   uncapped because they have natural bounds: # of modules + # of eras)
-- Record the last commit SHA in log.md (ingest depends on it)
+- Record the last commit SHA in log.md (ingest depends on it; future
+  init re-runs depend on it)
 - Mark uncertain entity claims with TODO
 - For Phase 1, build entity stub for **every** detected module (no threshold)
+- **Re-run safety**: every step that touches an existing file must check
+  whether the file exists and follow its documented merge / preserve /
+  overwrite behavior (Step 1's prompt promises preservation; the rest of
+  the workflow MUST honor that promise)
 
 ## Why this design (rationale anchored in spec Decisions)
 
