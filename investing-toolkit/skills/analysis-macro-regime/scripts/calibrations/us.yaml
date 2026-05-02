@@ -1,0 +1,71 @@
+# US calibration plumbed from references/thresholds-us.md (per ADR-0004).
+# Vintage: 2026-Q1 (full grounding 2026-04-18 v1.9.0; v1.11.0 partial refresh
+# 2026-04-19; this 2026-05-02 partial delta — no material policy events).
+#
+# Authority: Federal Reserve System | Currency: USD
+country: us
+authority: Federal Reserve System
+currency: USD
+
+inflation_target: 2.0
+inflation_target_type: central_tendency
+inflation_target_framework: FIT  # post-FAIT 2025; Powell Jackson Hole 2025-08-22 dropped FAIT "makeup" strategy
+inflation_target_authority_date: 2012-01-25  # FOMC statement adopting 2% target
+
+# Real rate r* estimates (2025-Q4 vintage)
+policy_rate_neutrality:
+  hlw_real: 0.75       # NY Fed 2025-Q4; Williams maintains r* not meaningfully risen post-COVID
+  lubik_matthes_real: 1.68  # Richmond Fed 2025-Q4 updated 2026-03-10
+  fomc_sep_longer_run_real: 1.0  # Dec 2025 SEP median (CT 0.8-1.5%, range 0.6-1.9%)
+  ny_fed_composite_real: 1.7  # 2025-08 Liberty Street; 0.9-2.5% band; 77% probability current stance is restrictive
+  cross_method_central_band: [0.5, 1.9]
+  term_premium_estimate_bp: 50  # ACM 10Y term premium estimate
+
+# 4-tier real-rate signal threshold (DFII10)
+real_rate_4tier:
+  accommodative: { upper: 0.0 }
+  neutral: { lower: 0.0, upper: 1.0 }
+  moderately_restrictive: { lower: 1.0, upper: 1.75 }
+  clearly_restrictive: { lower: 1.75 }
+
+# Fed qualitative anchor (Williams Dec 2025 / Jan 2026 speeches)
+fed_qualitative_anchor: |
+  Williams Dec 2025 "Resilience" + Jan 2026 "A Few Words for the New Year"
+  speeches label current policy "modestly restrictive". Current DFII10 ≈ 1.93%
+  → maps to "moderately_restrictive" or "clearly_restrictive" per 4-tier.
+
+nairu:
+  point_estimate: 4.5  # CBO 2026 forecast (4.5-4.6 range)
+  band: [4.4, 4.6]
+
+# Direction-classification calibration
+direction_band_stdev: 0.5
+normalised_indicators:
+  - nowcast.CFNAI    # Chicago Fed National Activity Index
+  - nowcast.WEI      # NY Fed Weekly Economic Index
+
+# Structural overlays applied by classify_us.py
+structural_overlays:
+  - yield_curve            # T10Y2Y inversion signal
+  - real_rate_decomposition  # 4-tier per real_rate_4tier above
+  - fed_qualitative_anchor
+
+# Yield curve overlay thresholds
+yield_curve_4tier:
+  inverted: { upper: -0.10 }      # T10Y2Y < -10bp → inversion (recession signal)
+  flat: { lower: -0.10, upper: 0.20 }
+  normal: { lower: 0.20, upper: 1.50 }
+  steep: { lower: 1.50 }
+
+provenance:
+  calibration_doc: thresholds-us.md
+  calibration_vintage: 2026-Q1
+  last_full_grounding: 2026-04-18
+  partial_refresh: 2026-04-19  # v1.11.0 addendum
+  this_pr_partial_refresh: 2026-05-02  # PR-2 delta — no material events
+  authority_sources:
+    - Federal Reserve / FOMC (SEP, statements, minutes)
+    - NY Fed (HLW vintage, Liberty Street)
+    - Richmond Fed (Lubik-Matthes)
+    - CBO Budget & Economic Outlook (NAIRU)
+    - Williams speeches (qualitative anchor)
