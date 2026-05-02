@@ -619,6 +619,113 @@ def test_chain_country_regime_to_macroregime(country):
 # (NOT parametrize) to avoid file conflicts across PR-3-6 parallel work
 # ---------------------------------------------------------------------------
 
+def test_chain_tw_classifier_e2e():
+    """data-tw regime-pack → classify_tw → CountryRegimeCard with valid
+    Phase 1 envelope. Per ADR-0004 PR-4.
+
+    TW native verdict leads with NDC 五色景氣燈號 (signal_color + score)
+    rather than IC quadrant. components_9 must have 9 named slots
+    (one may be None — TIER often missing in older fixtures predating
+    the ndc_client TIER preset). tsmc_concentration_overlay must be
+    populated from calibration vintage.
+    """
+    fixture = FIXTURES / "data-tw-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", f"tw={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+
+    tw = out.get("by_country", {}).get("tw")
+    assert tw is not None, (
+        f"by_country.tw missing — classify_tw not picked up by dispatcher. "
+        f"output keys: {list(out.keys())}; "
+        f"by_country keys: {list(out.get('by_country', {}).keys())}"
+    )
+    # Surface envelope
+    assert tw["country"] == "tw"
+    assert tw["framework_used"], "framework_used empty"
+    assert "NDC 五色" in tw["framework_used"], (
+        f"TW framework_used does not lead with NDC 五色: {tw['framework_used']!r}"
+    )
+    assert tw["confidence"] in ("low", "medium", "high")
+    assert tw["provenance"]["calibration_doc"] == "thresholds-taiwan.md"
+
+    # Native verdict — TW-specific shape
+    nv = tw["native_verdict"]
+    assert "framework_label" in nv
+    # Signal color must be one of NDC 5 colors (or 'unknown' if score missing)
+    assert nv["signal_color"] in {"紅", "黃紅", "綠", "黃藍", "藍", "unknown"}, (
+        f"unexpected signal_color: {nv['signal_color']!r}"
+    )
+    # Signal score must be in 9-45 range when populated
+    score = nv.get("signal_score")
+    if score is not None:
+        assert 9 <= score <= 45, (
+            f"signal_score {score} out of NDC 9-45 range"
+        )
+    # Score band meaning is a non-empty narrative string
+    assert isinstance(nv.get("score_band_meaning"), str)
+    assert nv["score_band_meaning"], "score_band_meaning is empty"
+
+    # 9 構成 — must have all 9 expected slot keys (TIER may be None,
+    # other 8 should be present in fixture).
+    components = nv.get("components_9", {})
+    expected_slots = {
+        "貨幣總計數M1B",
+        "股價指數",
+        "工業生產指數",
+        "工業及服務業加班工時",
+        "海關出口值",
+        "機械及電機設備進口值",
+        "製造業銷售量指數",
+        "批發、零售及餐飲業營業額",
+        "製造業營業氣候測驗點",
+    }
+    assert expected_slots.issubset(set(components.keys())), (
+        f"components_9 missing expected slots: "
+        f"{expected_slots - set(components.keys())}"
+    )
+    # Dispersion summary must be present
+    dispersion = components.get("_dispersion", {})
+    assert dispersion.get("components_expected") == 9
+    assert dispersion.get("components_found", 0) >= 6, (
+        f"too few components found in fixture: {dispersion.get('components_found')}"
+    )
+
+    # TSMC concentration overlay — populated from calibration
+    tsmc = nv.get("tsmc_concentration_overlay", {})
+    assert tsmc.get("weight_pct") is not None, (
+        f"tsmc weight_pct missing — calibration not loaded? overlay: {tsmc}"
+    )
+    assert tsmc["weight_pct"] >= 40, (
+        f"TSMC weight {tsmc['weight_pct']} below historical 40%+ band"
+    )
+    assert tsmc.get("top_10_pct") is not None
+    assert tsmc.get("historic_5y_delta_pp") is not None
+
+    # CBC framing must be 彈性定義 (not rigid 2%)
+    cpi_ctx = nv.get("cpi_context", {})
+    assert cpi_ctx.get("cbc_framing") == "彈性定義", (
+        f"TW cbc_framing must be '彈性定義', got: {cpi_ctx.get('cbc_framing')!r}"
+    )
+
+    # IC quadrant alias for backward compat (legacy schema readers)
+    assert nv.get("ic_quadrant") in {
+        "1-recovery", "2-overheat", "3-stagflation", "4-reflation"
+    }
+
+    # PMI block exists (manufacturing + non-manufacturing)
+    pmi = nv.get("pmi", {})
+    assert "manufacturing" in pmi
+    assert "non_manufacturing" in pmi
+
+    # Indicators_used must include the NDC + statgov primary inputs
+    ind = tw.get("indicators_used", [])
+    assert "ndc.signal-score" in ind, f"ndc.signal-score missing from indicators_used: {ind}"
+
+
 def test_chain_us_classifier_e2e():
     """data-us regime-pack → classify_us → CountryRegimeCard with valid
     Phase 1 envelope. Per ADR-0004 PR-2."""
