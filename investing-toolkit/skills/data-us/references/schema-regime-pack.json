@@ -83,6 +83,14 @@
         "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
         "error": {"type": "string"}
       }
+    },
+    "series": {
+      "type": "object",
+      "description": "T2 canonical flat alias — FRED IDs keyed to chronological-order float arrays (most-recent-last). Flattens groups.{group}.series.{fred_id}.observations[].value into pack.series[fred_id]. analysis-macro-regime / regime_compose reads pack.series directly. See docs/normalization-contract.md.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "number"}
+      }
     }
   }
 }

@@ -34,7 +34,7 @@ passing.
 |   2   | xfail      | PR #180 — Tier 3 (XBRL → flat)      |
 |   3   | passing    | PR #178 (T1 multiples alias) ✓      |
 |   4   | passing    | n/a — Layer 1 emit already matches  |
-|   5   | xfail      | PR #179 — Tier 2 (groups flatten)   |
+|   5   | passing    | PR #179 (T2 macro flatten) ✓ landed |
 
 If an xfail test unexpectedly passes (XPASS), pytest fails the run with
 strict=True — that signals an undocumented chain fix and the marker
@@ -265,14 +265,6 @@ def test_chain_screenerbatch_to_screener():
 # Chain 5: data-us regime-pack → analysis-macro-regime
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Chain 5 broken (silent corruption): regime-pack emits "
-           "pack.groups.{*}.series (nested), regime_compose reads pack.series "
-           "(flat top-level). Layer 2 returns all-flat defaults + real_rates: "
-           "null without crashing. Fix in PR #179 (Tier 2 macro time-series "
-           "flatten per docs/normalization-contract.md).",
-)
 def test_chain_regimepack_to_macroregime():
     """data-us regime-pack pack feeds analysis-macro-regime without adapter.
 

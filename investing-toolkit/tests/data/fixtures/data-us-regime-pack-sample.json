@@ -12,7 +12,7 @@
           "fetched_at": "2026-05-01T15:08:01Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series FEDFUNDS has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series FEDFUNDS has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -49,7 +49,7 @@
           "fetched_at": "2026-05-01T15:08:01Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series T10Y2Y has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series T10Y2Y has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-28",
@@ -86,7 +86,7 @@
           "fetched_at": "2026-05-01T15:08:01Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series DGS10 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series DGS10 has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-27",
@@ -123,7 +123,7 @@
           "fetched_at": "2026-05-01T15:08:03Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series DGS2 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series DGS2 has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-27",
@@ -165,7 +165,7 @@
           "fetched_at": "2026-05-01T15:08:04Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series CPIAUCSL has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series CPIAUCSL has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -202,7 +202,7 @@
           "fetched_at": "2026-05-01T15:08:04Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series CPILFESL has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series CPILFESL has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -244,7 +244,7 @@
           "fetched_at": "2026-05-01T15:08:05Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series GDPC1 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series GDPC1 has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2025-07-01",
@@ -281,7 +281,7 @@
           "fetched_at": "2026-05-01T15:08:05Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series INDPRO has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series INDPRO has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -323,7 +323,7 @@
           "fetched_at": "2026-05-01T15:08:06Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series GDPNOW has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series GDPNOW has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2025-10-01",
@@ -360,7 +360,7 @@
           "fetched_at": "2026-05-01T15:08:06Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series CFNAI has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series CFNAI has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -397,7 +397,7 @@
           "fetched_at": "2026-05-01T15:08:06Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series USALOLITOAASTSAM has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series USALOLITOAASTSAM has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-01-01",
@@ -436,7 +436,7 @@
       "fetched_at": "2026-05-01T15:08:07Z",
       "_cache": "miss",
       "_source": "csv",
-      "_warning": "FRED series WEI has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+      "_warning": "FRED series WEI has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
       "observations": [
         {
           "date": "2026-04-11",
@@ -476,7 +476,7 @@
           "fetched_at": "2026-05-01T15:08:07Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series DFII10 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series DFII10 has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-27",
@@ -513,7 +513,7 @@
           "fetched_at": "2026-05-01T15:08:09Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series T5YIE has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series T5YIE has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-28",
@@ -550,7 +550,7 @@
           "fetched_at": "2026-05-01T15:08:12Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series DFII5 has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series DFII5 has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-27",
@@ -587,7 +587,7 @@
           "fetched_at": "2026-05-01T15:08:12Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series T10YIE has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series T10YIE has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-28",
@@ -629,7 +629,7 @@
           "fetched_at": "2026-05-01T15:08:12Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series DGS3MO has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series DGS3MO has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-27",
@@ -666,7 +666,7 @@
           "fetched_at": "2026-05-01T15:08:12Z",
           "_cache": "miss",
           "_source": "csv",
-          "_warning": "FRED series SOFR30DAYAVG has publication lag \u2014 latest value may be 1-4 weeks behind real-world data depending on release schedule.",
+          "_warning": "FRED series SOFR30DAYAVG has publication lag — latest value may be 1-4 weeks behind real-world data depending on release schedule.",
           "observations": [
             {
               "date": "2026-04-29",
@@ -699,5 +699,97 @@
         }
       }
     }
+  },
+  "series": {
+    "FEDFUNDS": [
+      3.64,
+      3.64,
+      3.64
+    ],
+    "T10Y2Y": [
+      0.52,
+      0.5,
+      0.52
+    ],
+    "DGS10": [
+      4.35,
+      4.36,
+      4.42
+    ],
+    "DGS2": [
+      3.78,
+      3.84,
+      3.92
+    ],
+    "CPIAUCSL": [
+      326.588,
+      327.46,
+      330.293
+    ],
+    "CPILFESL": [
+      332.793,
+      333.512,
+      334.165
+    ],
+    "GDPC1": [
+      24026.834,
+      24055.749,
+      24174.527
+    ],
+    "INDPRO": [
+      101.5954,
+      102.344,
+      101.7898
+    ],
+    "GDPNOW": [
+      4.2373,
+      1.2392,
+      3.7007
+    ],
+    "CFNAI": [
+      0.08,
+      0.03,
+      -0.2
+    ],
+    "USALOLITOAASTSAM": [
+      100.618964678604,
+      100.773584150807,
+      100.889483786715
+    ],
+    "WEI": [
+      2.73,
+      2.52,
+      2.96
+    ],
+    "DFII10": [
+      1.91,
+      1.92,
+      1.96
+    ],
+    "T5YIE": [
+      2.63,
+      2.67,
+      2.67
+    ],
+    "DFII5": [
+      1.32,
+      1.34,
+      1.38
+    ],
+    "T10YIE": [
+      2.44,
+      2.46,
+      2.46
+    ],
+    "DGS3MO": [
+      3.68,
+      3.68,
+      3.68
+    ],
+    "SOFR30DAYAVG": [
+      3.64917,
+      3.64917,
+      3.6485
+    ]
   }
 }
