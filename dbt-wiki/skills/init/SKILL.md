@@ -1,15 +1,29 @@
 ---
 name: init
 description: |
-  First-time setup for dbt-wiki: scaffold .dbt-wiki/ knowledge base
-  from target/manifest.json + target/compiled/**/*.sql (parsed via
-  sqlglot for column-level lineage). Generates one markdown page per
-  model / source / macro / seed / snapshot, plus index + lineage DAG.
-  Pre-condition: user must have run `dbt parse && dbt compile` first.
-  Triggers on "init dbt-wiki", "set up dbt-wiki", "scaffold dbt model
-  knowledge base", "/dbt-wiki:init", "初始化 dbt-wiki", "建立 dbt 知識庫".
+  First-time setup for dbt-wiki: scaffold .dbt-wiki/ knowledge base from
+  target/manifest.json (model / source / macro / seed / snapshot / test /
+  exposure metadata, ref/source dependencies, schema.yml columns and
+  tests), plus target/compiled/<project>/**/*.sql parsed via sqlglot for
+  column-level lineage, plus dbt/models/**/*.sql raw files parsed via
+  regex for inline SQL/jinja comments. Generates one markdown page per
+  resource, plus index.md (grouped by tier / materialization / tag /
+  group), lineage.md (ASCII DAG + adjacency list), log.md, SCHEMA.md,
+  and an idempotent CLAUDE.md drop-in. Re-runnable: refreshes
+  manifest-derived fields, archives orphans, preserves user-owned body
+  sections.
+  Pre-condition: dbt parse && dbt compile must be run first (init
+  checks for target/manifest.json and target/compiled/), and sqlglot
+  must be installed (pip install sqlglot).
+  Triggers on "init dbt-wiki", "set up dbt-wiki", "scaffold dbt
+  knowledge base", "seed dbt model wiki", "build dbt-wiki from
+  manifest", "first-time dbt knowledge", "/dbt-wiki:init",
+  "初始化 dbt-wiki", "建立 dbt 知識庫", "從 manifest 建立 dbt wiki",
+  "dbt-wiki 第一次", "scaffold dbt knowledge", "dbt-wiki セットアップ".
   Do NOT trigger for: incremental updates after dbt parse (use
-  /dbt-wiki:refresh), answering questions (use /dbt-wiki:query).
+  /dbt-wiki:refresh), adding user context / tribal knowledge (use
+  /dbt-wiki:ingest), answering questions (use /dbt-wiki:query),
+  running dbt itself (use dbt CLI).
 ---
 
 # dbt-wiki — Init Workflow (v1.0)
