@@ -263,6 +263,90 @@ def test_chain_screenerbatch_to_screener():
 
 
 # ---------------------------------------------------------------------------
+# data-kr cross-layer chains (Tier 2 yfinance fallback per ADR-0003)
+# ---------------------------------------------------------------------------
+
+def test_chain_kr_snapshot_to_technical():
+    """data-kr snapshot pack feeds analysis-technical without adapter."""
+    fixture = FIXTURES / "data-kr-snapshot-sample.json"
+    script = SKILLS / "analysis-technical" / "scripts" / "ta_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    assert "error" not in out, f"ta_compute error: {out.get('error')!r}"
+    indicators = out.get("indicators") or {}
+    non_none = [k for k, v in indicators.items() if v is not None]
+    assert non_none, f"all indicators None — chain wiring failed: {indicators}"
+
+
+def test_chain_kr_memofetch_to_dcf():
+    """data-kr memo-fetch pack feeds analysis-dcf without adapter (T3 yfinance fallback)."""
+    fixture = FIXTURES / "data-kr-memo-fetch-sample.json"
+    script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    intrinsic = out.get("intrinsic_value") or {}
+    intrinsic_mid = intrinsic.get("mid") if isinstance(intrinsic, dict) else None
+    base_revenue = (out.get("assumptions") or {}).get("base_revenue")
+    assert intrinsic_mid is not None and intrinsic_mid > 0, (
+        f"data-kr DCF degenerate: {intrinsic_mid!r}; base_revenue={base_revenue!r}"
+    )
+    # Samsung FY25 revenue = 333.6T KRW. Expect non-trivial scale.
+    assert base_revenue is not None and base_revenue > 1e12, (
+        f"data-kr base_revenue too small ({base_revenue!r}) — canonical wiring broken"
+    )
+
+
+def test_chain_kr_comps_to_comps_compute(tmp_path):
+    """data-kr comps-multiples pack feeds analysis-comps without adapter."""
+    fixture = FIXTURES / "data-kr-comps-multiples-sample.json"
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    pack = json.loads(fixture.read_text())
+    info = pack.get("info") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"fixture needs >=2 tickers, has {len(tickers)}")
+
+    anchor_ticker, peer_ticker = tickers[0], tickers[1]
+    anchor_file = tmp_path / f"{anchor_ticker.replace('.', '_')}-anchor.json"
+    peer_file = tmp_path / f"{peer_ticker.replace('.', '_')}-peer.json"
+    anchor_payload = {anchor_ticker: info[anchor_ticker]}
+    peer_payload = {peer_ticker: info[peer_ticker]}
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "tickers": [anchor_ticker],
+        "info": anchor_payload,
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_ticker,
+        "tickers": [peer_ticker],
+        "info": peer_payload,
+    }))
+
+    rc, out, stderr = _run_layer2(script, [
+        "--anchor", str(anchor_file),
+        "--peers", str(peer_file),
+    ])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    anchor_block = out.get("anchor") or {}
+    multiples = anchor_block.get("multiples") or {}
+    non_none = {k: v for k, v in multiples.items() if v is not None}
+    assert non_none, (
+        f"data-kr comps extracted all-None for {anchor_ticker}: {multiples}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).
 # ---------------------------------------------------------------------------

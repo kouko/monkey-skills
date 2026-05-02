@@ -391,7 +391,9 @@ def _adapt_tw(pack: dict[str, Any]) -> Card:
 
 def _adapt_kr(pack: dict[str, Any]) -> Card:
     info = pack.get("info") or {}
-    history = pack.get("history") or {}
+    # data-kr emits both `price_history` (raw envelope) and `history` (T1
+    # canonical flat list). _compute_period_return needs the envelope.
+    history = pack.get("price_history") or pack.get("history") or {}
     card = Card(
         ticker=pack.get("ticker", "?"),
         country="KR",
