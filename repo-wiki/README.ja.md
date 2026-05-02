@@ -72,6 +72,8 @@ query     (general wiki)  →  /repo-wiki:query
 
 明示的 import マーカー（`import`、`import doc`、`讀取`、`匯入`、`読み込んで` 等）なしでパスに言及しても、context mode のままになる — 偶発的なファイル読み込みを避けるため。
 
+**Volume-triggered classification（git mode、5 commits 以上）**: ingest が多くの commits をまたぐ場合（例：1 ヶ月後の catch-up）、commits は entropy 分類される — HIGH（config / cross-module / `feat`/`refactor` / 新 top-level dir）は専用 source page；MEDIUM（`fix`+本文 / 複数 entity への変更）は file-overlap でバッチ；LOW（test 専用 / docs 専用 / `chore`）は roll-up。Source-page 予算は `min(15, ceil(commits/5))`。少量 ingest（5 commits 未満）は分類を skip し 1 page のみ — 通常のフィーチャー後 ingest では v1.1 動作を維持。
+
 ## `.repo-wiki/` は AI 所有、しかし `src/` が権威
 
 最重要の設計判断：**`.repo-wiki/` はベストエフォートのキャッシュであり、真実の源ではない**。entity ページの実装記述は古くなる可能性がある。これを誠実に保つため、`/repo-wiki:query` は **Eager verification** パイプラインを実行する：
