@@ -253,6 +253,57 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     }
 
 
+def _flatten_regime_series(groups: dict) -> dict:
+    """T2 canonical: flatten groups.{group}.series.{fred_id}.observations
+    into a flat top-level `series: {fred_id: [float, float, ...]}` block.
+
+    Values are extracted in chronological order (most-recent-last). Missing
+    or non-numeric observations are dropped. Empty series (no usable values)
+    are omitted from the flat block.
+
+    Per docs/normalization-contract.md Tier 2 — analysis-macro-regime
+    (regime_compose.resolve_series) reads `pack.series[fred_id]` directly
+    as a list of floats, not the nested fred_client envelope.
+    """
+    def _extract_values(series_payload: dict) -> list[float]:
+        """Extract chronological-order float values from a FRED series payload."""
+        if not isinstance(series_payload, dict):
+            return []
+        obs = series_payload.get("observations") or []
+        out: list[float] = []
+        for o in obs:
+            if not isinstance(o, dict):
+                continue
+            v = o.get("value")
+            if v is None:
+                continue
+            try:
+                out.append(float(v))
+            except (TypeError, ValueError):
+                continue
+        return out
+
+    flat: dict[str, list[float]] = {}
+    for group_payload in groups.values():
+        if not isinstance(group_payload, dict):
+            continue
+        nested = group_payload.get("series")
+        if isinstance(nested, dict):
+            # Multi-series group: {fetched_at, series: {fred_id: payload, ...}}
+            for fred_id, series_payload in nested.items():
+                values = _extract_values(series_payload)
+                if values:
+                    flat[fred_id] = values
+        elif isinstance(nested, str):
+            # Single-series group: the group itself IS the FRED payload, with
+            # `series: "WEI"` as the FRED ID and `observations: [...]` alongside.
+            fred_id = nested
+            values = _extract_values(group_payload)
+            if values:
+                flat[fred_id] = values
+    return flat
+
+
 def pack_regime() -> dict:
     """FRED macro series only — no ticker dimension."""
     groups: dict[str, dict] = {}
@@ -266,6 +317,7 @@ def pack_regime() -> dict:
         "country": "US",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "groups": groups,
+        "series": _flatten_regime_series(groups),  # T2 canonical flat alias
     }
 
 
