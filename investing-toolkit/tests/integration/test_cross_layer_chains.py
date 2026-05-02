@@ -969,14 +969,13 @@ def test_chain_us_classifier_e2e():
 
 def test_chain_jp_classifier_e2e():
     """data-jp regime-pack → classify_jp → CountryRegimeCard with valid
-    Phase 1 envelope. Per ADR-0004 PR-3.
+    Phase 1 envelope. Per ADR-0004 PR-3 + ROADMAP §v2.1.x-a (fixture
+    refreshed 2026-05-02 against live BOJ + ESRI APIs).
 
-    The bundled JP fixture is from a pre-PR-3 fetch and lacks Tankan
-    business DI + ESRI coincident-index in its `series` block, so this
-    test asserts on the envelope shape + classifier outputs that DO
-    derive from the present series (CPI, IP, JGB10y, STRDCLUCON, ECB
-    real yield, Tankan inflation outlook). Tankan business DI / ESRI CI
-    will populate after a fresh JP regime-pack fetch post-PR-3.
+    Post-refresh acceptance:
+      - cycle_proxy.source == "coincident-index" (not "ip" fallback)
+      - tankan_business_di.large_mfg populated from BOJ Tankan
+      - confidence == "high" (from medium pre-refresh)
     """
     fixture = FIXTURES / "data-jp-regime-pack-sample.json"
     script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
@@ -1017,13 +1016,38 @@ def test_chain_jp_classifier_e2e():
     }
     assert nv.get("gip_regime_legacy") in {"quad1", "quad2", "quad3", "quad4"}
 
-    # Confidence: PR-3 acceptance criterion — JP must rise from low to
-    # medium or high after coincident-index + Tankan business DI fetches
-    # are wired. The bundled fixture predates the new fetches but still
-    # has CPI + STRDCLUCON + IP, which gives medium confidence.
-    assert jp["confidence"] in ("medium", "high"), (
-        f"JP confidence must be medium/high post-PR-3 (was low pre-PR-3); "
-        f"got {jp['confidence']}; data_quality={jp.get('data_quality')}"
+    # Confidence: post v2.1.x-a fixture refresh (Tankan + ESRI CI live),
+    # JP must hit "high" stable. Regression to medium would indicate the
+    # fixture went stale or BOJ/ESRI series codes drifted.
+    assert jp["confidence"] == "high", (
+        f"JP confidence must be high post v2.1.x-a refresh; got "
+        f"{jp['confidence']!r}. data_quality={jp.get('data_quality')}"
+    )
+
+    # cycle_proxy must lead with the ESRI coincident-index (not the IP
+    # fallback) — fixture refresh per v2.1.x-a brings the coincident
+    # series in via the e-Stat preset bundle.
+    cycle = nv.get("cycle_proxy", {})
+    assert cycle.get("source") == "coincident-index", (
+        f"cycle_proxy.source must be 'coincident-index' (not IP fallback); "
+        f"got {cycle.get('source')!r}. cycle_proxy={cycle}"
+    )
+    assert cycle.get("value") is not None, (
+        f"cycle_proxy.value None despite source=coincident-index; "
+        f"cycle_proxy={cycle}"
+    )
+
+    # Tankan business DI block must surface large_mfg from BOJ
+    # TK99F1000601GCQ01000 series. dispersion_pp must be a number
+    # (not None) once all 4 categories are populated.
+    tdi = nv.get("tankan_business_di", {})
+    assert tdi.get("large_mfg") is not None, (
+        f"tankan_business_di.large_mfg None — Tankan fetch chain broke. "
+        f"tankan_business_di={tdi}"
+    )
+    assert tdi.get("dispersion_pp") is not None, (
+        f"tankan_business_di.dispersion_pp None — only some of the 4 "
+        f"Tankan categories present. tankan_business_di={tdi}"
     )
 
     # Provenance points at JP threshold doc
