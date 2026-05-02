@@ -132,7 +132,7 @@ current_phase: exit_deflation_phase_2   # as of 2026-Q2 grounding
 structural_overlays:
   - boj_stance                 # Policy rate level + direction relative to neutral
   - tankan_business_di         # Mean + dispersion across 4 categories
-  - esri_coincident_index      # Cycle direction + level vs 100 trend
+  - cycle_proxy                # Cycle direction + level (ESRI CI primary, IP fallback)
   - deflation_phase_detection  # Multi-signal deflation/inflation regime
   - real_rate_4tier            # ECB ex-post real-yield 4-tier
   - boj_qualitative_anchor     # Surfaced when restrictive

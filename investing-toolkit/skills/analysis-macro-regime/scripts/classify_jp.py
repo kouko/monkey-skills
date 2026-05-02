@@ -13,7 +13,8 @@ native_verdict carrying:
   - boj_stance: ZIRP | post_zirp | exit_deflation | normalising
   - policy_target_pct (currently 0.75)
   - tankan_business_di: 4 categories + mean + dispersion (omitted on missing)
-  - esri_coincident_index: latest + trend (rising / falling / flat)
+  - cycle_proxy: latest + trend (rising / falling / flat); source field
+    indicates whether ESRI coincident-index or IP fallback drove the read
   - deflation_phase: in_deflation | exit_deflation_phase_1/2 | post_deflation
   - real_rate_block: ECB ex-post real-10y monthly + 4-tier band
   - boj_qualitative_anchor: surfaced when restrictive
@@ -407,7 +408,7 @@ def classify_jp(regime_pack: dict[str, Any]) -> CountryRegimeCard:
         "inflation_direction": inflation_dir,
         "ic_quadrant_legacy": ic_quadrant,    # for backward reference, not load-bearing
         "gip_regime_legacy": gip_regime,
-        "esri_coincident_index": coincident_block,
+        "cycle_proxy": coincident_block,
         "tankan_business_di": tankan_block,
         "unemployment_band": unemp_band,
         "real_rate_block": real_rate_block,
