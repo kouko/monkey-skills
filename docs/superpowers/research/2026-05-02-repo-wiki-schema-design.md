@@ -328,17 +328,18 @@ not need to plan for migrations within v1.x.
   plugins/
     monkey-skills/
       repo-wiki/
-        skills/init/SKILL.md     ← 設計見 2026-05-02-repo-wiki-skill-init.md
+        skills/init/
+          SKILL.md               ← 設計見 2026-05-02-repo-wiki-skill-init.md
+          assets/                ← init-owned bundled resources（v1.1+）
+            SCHEMA.md            ← 本頁設計
+            index.md log.md overview.md
+            claude-md-snippet.md ← drop-in 用
         skills/ingest/SKILL.md   ← 設計見 2026-05-02-repo-wiki-skill-ingest.md
         skills/query/SKILL.md    ← 設計見 2026-05-02-repo-wiki-skill-query.md
-        templates/
-          SCHEMA.md              ← 本頁設計
-          index.md log.md overview.md
-          claude-md-snippet.md   ← drop-in 用
 
 your-repo/
 ├── CLAUDE.md                   ← init 自動寫入 drop-in 區塊
-├── .repo-wiki/                  ← 從 templates/ 初始化
+├── .repo-wiki/                  ← 從 init/assets/ 初始化
 │   ├── SCHEMA.md               (本頁內容)
 │   ├── index.md                (init / ingest 維護)
 │   ├── log.md                  (init / ingest / query 維護)

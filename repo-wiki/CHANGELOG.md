@@ -55,6 +55,19 @@ modules entirely.
   recent activity (Phase 2's 90d/15-page cap); historical era backfill
   must be requested explicitly.
 
+### Plugin layout: templates/ → skills/init/assets/
+
+To comply with Anthropic's plugin-conventions ("bundled resources live
+inside the skill folder, referenced via paths relative to the skill
+directory"), the `templates/` directory is moved from plugin root to
+`skills/init/assets/`. init owns these files (it copies them at
+runtime); ingest/query never touch them (they read the user-repo's
+`.repo-wiki/` instead).
+
+Path references in init SKILL.md change from `../../templates/<file>.md`
+to `assets/<file>.md`. No user-facing impact — init still produces the
+same `.repo-wiki/` output.
+
 ### Schema (frozen, only additive)
 
 - Source page `origin: git` filename pattern adds `era-YYYY-HX.md` for Phase 3

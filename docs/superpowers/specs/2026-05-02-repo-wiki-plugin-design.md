@@ -81,17 +81,17 @@ monkey-skills/
     │   └── plugin.json              # name, version, description, keywords
     ├── skills/
     │   ├── init/
-    │   │   └── SKILL.md             # /repo-wiki:init  (one-time seed)
+    │   │   ├── SKILL.md             # /repo-wiki:init  (one-time seed)
+    │   │   └── assets/              # init-owned bundled resources
+    │   │       ├── SCHEMA.md        # .repo-wiki/SCHEMA.md starter
+    │   │       ├── index.md         # .repo-wiki/index.md skeleton
+    │   │       ├── log.md           # .repo-wiki/log.md skeleton
+    │   │       ├── overview.md      # .repo-wiki/overview.md skeleton
+    │   │       └── claude-md-snippet.md  # CLAUDE.md drop-in for init
     │   ├── ingest/
     │   │   └── SKILL.md             # /repo-wiki:ingest (incremental)
     │   └── query/
     │       └── SKILL.md             # /repo-wiki:query  (read)
-    ├── templates/
-    │   ├── SCHEMA.md                # .repo-wiki/SCHEMA.md starter
-    │   ├── index.md                 # .repo-wiki/index.md skeleton
-    │   ├── log.md                   # .repo-wiki/log.md skeleton
-    │   ├── overview.md              # .repo-wiki/overview.md skeleton
-    │   └── claude-md-snippet.md     # CLAUDE.md drop-in for init
     ├── README.md
     ├── README.ja.md
     ├── README.zh-TW.md
@@ -102,7 +102,7 @@ monkey-skills/
 
 ```
 .repo-wiki/
-  SCHEMA.md        Rules and conventions (from plugin templates/)
+  SCHEMA.md        Rules and conventions (from plugin assets/)
   index.md         Master catalog — updated on every ingest
   log.md           Append-only operation record
   overview.md      Living synthesis of the full codebase

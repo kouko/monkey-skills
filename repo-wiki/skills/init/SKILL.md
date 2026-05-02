@@ -55,18 +55,17 @@ mkdir -p .repo-wiki/syntheses
 ```
 
 Copy plugin templates into `.repo-wiki/`:
-- `templates/SCHEMA.md` → `.repo-wiki/SCHEMA.md`
-- `templates/index.md` → `.repo-wiki/index.md`
-- `templates/log.md` → `.repo-wiki/log.md`
-- `templates/overview.md` → `.repo-wiki/overview.md`
+- `assets/SCHEMA.md` → `.repo-wiki/SCHEMA.md`
+- `assets/index.md` → `.repo-wiki/index.md`
+- `assets/log.md` → `.repo-wiki/log.md`
+- `assets/overview.md` → `.repo-wiki/overview.md`
 
-(Resolve template path relative to this SKILL.md location:
-`../../templates/<file>.md`.)
+(Resolve asset path relative to this SKILL.md location: `assets/<file>.md`.)
 
 ## Step 3: CLAUDE.md Drop-in
 
 Read or create `CLAUDE.md` in the repo root. The drop-in block (also
-available as `templates/claude-md-snippet.md`):
+available as `assets/claude-md-snippet.md`):
 
 ```markdown
 <!-- repo-wiki:start -->
