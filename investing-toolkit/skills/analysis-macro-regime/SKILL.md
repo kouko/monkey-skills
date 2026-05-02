@@ -69,43 +69,72 @@ TW, ECOS for KR, NBS/PBOC for CN). The full proxy mapping lives in
 `GROWTH_KEYS` / `INFLATION_KEYS` resolvers in `scripts/regime_compose.py`
 plus per-country threshold context in `references/thresholds-{country}.md`.
 
-### Output JSON
+### Output JSON (Phase 1, schema_version 2.0-phase1)
+
+Per [ADR-0004](../../docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md):
+the v2.1.0 output is a **Phase 1 staging shape** while per-country
+classifiers (`classify_us / jp / tw / kr / cn`) are being built. Each
+country's rich `native_verdict` lives under `by_country.{cc}`; the v1.x
+unified IC+GIP classifier output continues to populate `_legacy.by_country`
+for backward compatibility.
+
+`cross_country` is hardcoded `null` in Phase 1. Phase 2 (deferred ADR-0005)
+will design the cross-country comparable surface bottom-up after observing
+actual native verdict shapes.
 
 ```json
 {
-  "schema_version": "1.0",
-  "countries": {
+  "schema_version": "2.0-phase1",
+  "by_country": {
     "us": {
-      "growth_direction": "rising" | "falling" | "flat",
-      "inflation_direction": "rising" | "falling" | "flat",
-      "ic_quadrant": "1-recovery" | "2-overheat" | "3-stagflation" | "4-reflation",
-      "gip_regime": "quad1" | "quad2" | "quad3" | "quad4",
-      "real_rates": {                             // US only — null elsewhere
-        "nominal_10y": 4.2,
-        "breakeven_10y": 2.2,
-        "real_10y": 2.0,
-        "signal": "moderately-restrictive"
-      },
+      "country": "us",
+      "framework_used": "IC + Hedgeye GIP + Fed FIT + 4-tier real-rate",
+      "native_verdict": { /* country-specific schema, no shape constraint */ },
+      "indicators_used": ["CFNAI", "CPIAUCSL", "DGS10", "T10YIE", "DFII10"],
+      "data_quality": {"missing": [], "stale": []},
       "confidence": "high" | "medium" | "low",
-      "notes": ["data lag note", ...]
+      "provenance": {
+        "calibration_doc": "thresholds-us.md",
+        "calibration_vintage": "2026-Q1",
+        "last_grounded": "2026-04-19",
+        "fetched_at": "2026-05-02T..."
+      }
     },
-    "jp": { ... },
+    "jp": { /* similar shape, jp-specific native_verdict */ },
     "tw": { ... },
     "kr": { ... },
     "cn": { ... }
   },
-  "cross_country_consensus": {
-    "ic_alignment": "aligned" | "divergent",
-    "regimes_present": ["2-overheat", "4-reflation"],
-    "note": "US Phase 2 / CN Phase 4 — classic USD-strength setup"
+  "cross_country": null,
+  "_legacy": {
+    "by_country": {
+      "us": {
+        "growth_direction": "rising" | "falling" | "flat",
+        "inflation_direction": "rising" | "falling" | "flat",
+        "ic_quadrant": "1-recovery" | "2-overheat" | "3-stagflation" | "4-reflation",
+        "gip_regime": "quad1" | "quad2" | "quad3" | "quad4",
+        "real_rates": { "nominal_10y": 4.2, "breakeven_10y": 2.2, "real_10y": 2.0, "signal": "moderately-restrictive" },
+        "confidence": "high" | "medium" | "low",
+        "notes": [...]
+      },
+      "jp": { ... }, "tw": { ... }, "kr": { ... }, "cn": { ... }
+    },
+    "note": "Phase 1 transition fallback per ADR-0004. Will be removed at Phase 2 start or v2.2.0, whichever earlier."
   },
   "_provenance": {
-    "computed_at": "2026-05-01T...",
+    "computed_at": "2026-05-02T...",
     "input_countries": ["us", "jp", ...],
-    "skill": "analysis-macro-regime"
+    "skill": "analysis-macro-regime",
+    "phase": "1"
   }
 }
 ```
+
+**Migration note for downstream consumers**: the v1.x `countries.{cc}` and
+`cross_country_consensus` blocks are no longer emitted. Read `by_country.{cc}`
+for new per-country native verdicts, or `_legacy.by_country.{cc}` for the
+v1.x IC+GIP shape during Phase 1 transition. After PR-7 cleanup the
+`_legacy` block will be set to null.
 
 ---
 
