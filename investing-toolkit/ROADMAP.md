@@ -21,14 +21,13 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Acceptance**: JP test asserts `confidence == "high"`, `cycle_proxy.source == "coincident-index"` (not `"ip"`), `tankan_business_di.large_mfg` populated.
 - **Reference**: PR-3 #188; ADR-0004 §"JP Tankan series code resolution".
 
-### v2.1.x-b — TW TIER as standalone NDC preset
+### ~~v2.1.x-b — TW TIER as standalone NDC preset~~ → **demoted to v2.2.0-g**
 
-- **What**: Add `tier` preset to `data-tw/scripts/ndc_client.py` PRESETS dict (currently only available via `signal-components` 9 構成 bundle). Wire into `pack.py pack_regime()`. Update fixture so `signal-components.data` includes TIER as an explicit field.
-- **Why**: PR-4 #187 found TIER missing from existing TW fixture even though `signal-components` preset claims to include it. classify_tw degrades to medium confidence with `tier_manufacturing_climate.value: None`. Standalone preset + fixture refresh fixes both.
-- **Files**: `investing-toolkit/skills/data-tw/scripts/ndc_client.py` (add preset); `investing-toolkit/skills/data-tw/scripts/pack.py` (wire); `tests/data/fixtures/data-tw-regime-pack-sample.json` (regenerate); `tests/integration/test_cross_layer_chains.py::test_chain_tw_classifier_e2e`.
-- **Blocker**: NDC ws.ndc.gov.tw availability.
-- **Acceptance**: TW fixture has `tier_manufacturing_climate.value` populated; test asserts `confidence == "high"`.
-- **Reference**: PR-4 #187 grounding-tw-2026-05.md "fixture predates TIER preset" note.
+- **Status**: Premise empirically false (verified 2026-05-02). Demoted to v2.2.0-g; see below.
+- **What was found**: NDC's bulk-download ZIP (`ws.ndc.gov.tw/Download.ashx?...景氣指標及燈號.zip`) publishes `景氣對策信號構成項目.csv` with **8 components, not 9**. The TIER 9th component (`製造業營業氣候測驗點`) is published by 台灣經濟研究院 — a different institution — as a monthly press-release **PDF only**. It is not in `data.gov.tw`, not in NDC's ZIP, and `index.ndc.gov.tw/n/zh_tw/lightscore` is Cloudflare-protected with no public API contract. The original premise that TIER "lives in `signal-components` and just needs a standalone preset" is wrong.
+- **What v2.1.x-b actually delivered**: Documentation correction — `grounding-tw-2026-05.md` updated to reflect the structural NDC bundle gap (8/9 schema lag); ROADMAP demotion to v2.2.0-g; integration test `test_chain_tw_classifier_e2e` tightened to lock `confidence == "high"` (which `v2.1.x-c` already achieved by fixing CPI YoY).
+- **Why confidence is already high without TIER**: classify_tw confidence threshold is `≥ 6 components found + leading + coincident + cpi-yoy present`. v2.1.x-c (CPI YoY 修正) unblocked the cpi-yoy condition; 8/9 ≥ 6 satisfies the dispersion check. Adding TIER would close the dispersion gap (8/9 → 9/9) but would not change the confidence verdict.
+- **Reference**: PR-4 #187 grounding-tw-2026-05.md; v2.1.x-b research session 2026-05-02.
 
 ### v2.1.x-c — DGBAS CPI YoY label correction
 
@@ -95,6 +94,19 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Blocker**: DART API key (already applied; check expiry); K-IFRS taxonomy mapping; iXBRL parser. ~2-3 weeks total.
 - **Acceptance**: Samsung 005930.KS memo-fetch returns `_provenance.tier == "A"` with `accession` field per FY; DCF integration test green.
 - **Reference**: ADR-0003 (US T3 mapping pattern); v2.0.0 deferred list.
+
+### v2.2.0-g — TW TIER 製造業營業氣候測驗點 fetcher
+
+- **What**: Build a TIER (製造業營業氣候測驗點) fetcher so classify_tw's 9th 構成 dispersion slot is populated. Feed `tier_manufacturing_climate.value` from a real upstream rather than calibration vintage.
+- **Why**: NDC's 對策信號 2024-revision officially lists TIER as the 9th component, but NDC's bulk-download CSV stops at 8 columns (verified 2026-05-02). classify_tw degrades dispersion to 8/9 — confidence is already high (cpi-yoy + 8 components passes the threshold), but the dispersion 完備 narrative is incomplete.
+- **Source-research blocker (must resolve first)**: TIER is published by 台灣經濟研究院, NOT NDC. Available routes, all with caveats:
+  1. **TIER monthly-PDF scrape** (`tier.org.tw/forecast/forecast.aspx → YYYYMM.pdf`) — fragile parser, layout-shift risk, one number per month
+  2. **Aremos 經統資料庫** (`net.tedc.org.tw`) — paid subscription
+  3. **NDC `index.ndc.gov.tw/n/zh_tw/lightscore` web-app** — Cloudflare-protected XHR; would need Playwright-grade fetch + reverse engineering
+  4. **MoneyDJ chart endpoint** (`moneydj.com/funddj/yl/BFRK01.djhtm?a=EI010150`) — third-party scrape, ToS unclear
+- **Files (when ready)**: new `data-tw/scripts/tier_client.py` (or extend `ndc_client.py`); pack.py wiring; fixture refresh; classify_tw drops the "9th component" missing flag once `tier_value is not None`.
+- **Acceptance**: classify_tw `tier_manufacturing_climate.value` non-null from a live source; integration test asserts `components_9._dispersion.components_found == 9`.
+- **Reference**: ROADMAP §v2.1.x-b empirical-finding note; grounding-tw-2026-05.md §"Fixture inspection — 8 of 9 components present (structural NDC bundle gap)".
 
 ### v2.2.0-f — CN credit impulse upgrade to true stock-yoy
 

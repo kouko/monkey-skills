@@ -82,6 +82,13 @@ RETRY_BASE_DELAY = 2.0
 # The ZIP contains CSVs with Big5-encoded filenames but UTF-8 content.
 # We match files by content pattern rather than filename.
 SIGNAL_FILE_PATTERN = "景氣指標與燈號"
+# 景氣對策信號構成項目.csv — empirically 2026-05-02, this CSV publishes
+# 8 components, NOT the 9 listed in NDC's 2024-revision narrative. The
+# 9th component, 製造業營業氣候測驗點 (TIER), is published by 台灣經濟研究院
+# as a monthly press-release PDF and has no path through this ZIP. See
+# ROADMAP §v2.2.0-g for the deferred TIER-fetcher work and
+# `analysis-macro-regime/research/grounding-tw-2026-05.md` for the
+# empirical schema check.
 COMPONENTS_FILE_PATTERN = "景氣對策信號構成項目"
 LEADING_FILE_PATTERN = "領先指標構成項目"
 COINCIDENT_FILE_PATTERN = "同時指標構成項目"

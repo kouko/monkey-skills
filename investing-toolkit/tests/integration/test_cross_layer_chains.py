@@ -643,7 +643,16 @@ def test_chain_tw_classifier_e2e():
     assert "NDC 五色" in tw["framework_used"], (
         f"TW framework_used does not lead with NDC 五色: {tw['framework_used']!r}"
     )
-    assert tw["confidence"] in ("low", "medium", "high")
+    # Per ROADMAP §v2.1.x-b/c (resolved 2026-05-02): with cpi-yoy fixed
+    # and 8 NDC components present, classify_tw thresholds yield "high".
+    # TIER (9th component) is structurally unavailable from NDC's bulk
+    # ZIP — its absence is expected and does not regress confidence.
+    # See ROADMAP §v2.2.0-g for the deferred TIER fetcher.
+    assert tw["confidence"] == "high", (
+        f"TW confidence regressed to {tw['confidence']!r} — likely "
+        f"cpi-yoy or NDC components broke. data_quality.missing: "
+        f"{tw.get('data_quality', {}).get('missing')}"
+    )
     assert tw["provenance"]["calibration_doc"] == "thresholds-taiwan.md"
 
     # Native verdict — TW-specific shape
