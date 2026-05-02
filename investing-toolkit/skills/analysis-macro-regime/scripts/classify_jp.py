@@ -11,7 +11,7 @@ Reads calibrations/jp.yaml. Produces CountryRegimeCard with rich
 native_verdict carrying:
   - growth_direction / inflation_direction (legacy IC dimensions for parity)
   - boj_stance: ZIRP | post_zirp | exit_deflation | normalising
-  - policy_target_pct (currently 0.75)
+  - boj_call_rate_target_pct (currently 0.75)
   - tankan_business_di: 4 categories + mean + dispersion (omitted on missing)
   - cycle_proxy: latest + trend (rising / falling / flat); source field
     indicates whether ESRI coincident-index or IP fallback drove the read
@@ -30,7 +30,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from _legacy_ic import (
+from _helpers import (
     GROWTH_KEYS, INFLATION_KEYS,
     classify_direction, map_ic_quadrant, map_gip_quad,
     resolve_series, normalised_country,
@@ -399,7 +399,7 @@ def classify_jp(regime_pack: dict[str, Any]) -> CountryRegimeCard:
     native_verdict: dict[str, Any] = {
         "framework_label": framework_label,
         "boj_stance": boj_stance,
-        "policy_target_pct": calib.get("policy_target_pct", 0.75),
+        "boj_call_rate_target_pct": calib.get("boj_call_rate_target_pct", 0.75),
         "policy_rate_market_latest_pct": (
             round(latest_call_rate, 4) if latest_call_rate is not None else None
         ),

@@ -27,7 +27,7 @@
 |---|---|---|
 | `inflation_target` | 2.0 | BOJ 物価安定の目標 (2013-01-22 共同声明) |
 | `inflation_target_type` | `central_tendency_qualitative` | BOJ 「概ね整合的な水準」 framing — no numerical band published |
-| `policy_target_pct` | 0.75 | BOJ 2025-12-19 利上げ; 2026-04-28 据え置き継続 |
+| `boj_call_rate_target_pct` | 0.75 | BOJ 2025-12-19 利上げ; 2026-04-28 据え置き継続 |
 | `policy_rate_3tier.guidance_target` | 0.75 | BOJ 2026-01-23 / 03-19 / 04-28 議決文「0.75% 程度で推移するよう促す」 |
 | `policy_rate_3tier.ioer` | 0.75 | 補完当座預金 適用利率 |
 | `policy_rate_3tier.lombard_ceiling` | 1.00 | 基準貸付利率 (公定歩合) |

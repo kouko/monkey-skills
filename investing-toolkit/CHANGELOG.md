@@ -5,6 +5,42 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.0] — 2026-05-02
+
+`analysis-macro-regime` Phase 1 per-country classifier refactor. Decomposed the v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) for design rationale + Phase 2 deferral.
+
+### Added
+
+- **5 per-country classifier modules** (`classify_{us,jp,tw,kr,cn}.py`) — each implements its country's native framework rather than re-labeling legacy IC:
+  - **US**: IC + Hedgeye GIP + Fed FIT (post-FAIT 2025) + 4-tier real-rate decomposition (HLW / LM / SEP / NY Fed composite) + yield-curve overlay.
+  - **JP**: BOJ stance + Tankan business sentiment DI (大企業/中小企業 × 製造/非製造) + ESRI 景気動向指数 CI + deflation/inflation regime detection + ECB ex-post real-yield 4-tier band.
+  - **TW**: NDC 五色景氣燈號 score-led (9-45 composite) + 9 構成項目 dispersion (per 2024 revision) + TIER 製造業營業氣候測驗點 + TSMC TAIEX concentration overlay.
+  - **KR**: BOK 단일 2% target alignment + KOSTAT 동행지수순환변동치 cycle phase + 가계부채 GDP overlay + KOSPI 삼성+SK 하이닉스 ~40.96% concentration overlay.
+  - **CN**: PBOC reaction (7天逆回购 1.40% post-2024-07) + credit impulse (CICC TSF flow-yoy 2nd-derivative) + 4-component dispersion alarm + 房地产 GDP-share overlay (3 definitions disclosed) + CPI framing enum (`supportive_recovery_below_target` captures PBOC's "wants inflation up" stance).
+- **5 calibration YAMLs** (`scripts/calibrations/{us,jp,tw,kr,cn}.yaml`) — machine-readable extracts of `references/thresholds-{country}.md` (2026-Q1/Q2 vintages). All numeric thresholds plumbed into classifier code instead of sitting as un-executed documentation.
+- **5 grounding research notes** (`research/grounding-{country}-2026-05.md`) — partial-recalibration delta refreshes per `recalibration-protocol.md` template. JP captured 4 material BOJ events 2026-04-19 → 2026-05-02 (FY2026 核 CPI 1.9%→2.7-2.8% upward revision, 6-3 vote, Ueda 4/30 anchor).
+- **Output schema `2.0-phase1`** with `by_country.{cc}` envelope (country / framework_used / native_verdict / indicators_used / data_quality / confidence / provenance). `cross_country` hardcoded `null` (deferred to Phase 2).
+- **Per-country fetch additions**:
+  - JP: `boj_client.py --tankan-business-di` (4 series codes verified vs BOJ official docs); `pack.py` wires Tankan + ESRI coincident-index / leading-index / 機械受注 e-Stat presets.
+  - CN: `pack.py:_compute_credit_impulse()` (CICC TSF flow → trailing-12m-sum YoY → 12-month change); methodology doc at `references/credit-impulse-methodology.md`.
+
+### Changed
+
+- **Output schema migration** for direct `regime_compose.py` consumers: read `out["by_country"][cc]` instead of `out["countries"][cc]`. `out["cross_country"]` is `null` in Phase 1.
+- **Per-country threshold reference docs** (`references/thresholds-{country}.md`) — partial-recalibration refresh from v1.11.0 (2026-04-19) to 2026-05-02. JP captures 4 material BOJ policy events.
+
+### Removed
+
+- `_legacy_ic.py` — the v1.9.0 unified `classify_country()` IC + GIP fallback path. Helpers migrated to `_helpers.py`; per-country classifiers import from there.
+- `out["countries"]` and `out["cross_country_consensus"]` schema fields (replaced by `out["by_country"]`; consensus deferred to Phase 2).
+
+### Deferred (per fresh-eyes audit + ADR-0004)
+
+- **Cross-country comparable surface** (Phase 2 / ADR-0005). Re-trigger: Phase 1 stable ≥4 weeks, ≥5 multi-country invocations, or memo workflow surfacing concrete need. If none fire within 6 months, evaluate whether comparable surface is needed at all.
+- **KR ESI explicit ECOS API integration** — current code uses fdr_client KEYSTAT 'sentiment' group as best-effort fallback; explicit ECOS key-based integration deferred to v2.2.0.
+- **TW TIER preset wiring at NDC client level** + live TWSE monthly weight ingestion — deferred to v2.1.x or v2.2.0.
+- **CN true stock-yoy credit impulse** — current implementation uses flow-yoy second-derivative with explicit honest methodology label; switch when PBOC publishes stock series via akshare or direct scrape.
+
 ## [v2.0.0] — 2026-05-01
 
 Three-Layer Skill Architecture (Data / Analysis / Report). See [ADR-0001](docs/adr/0001-data-analysis-report-layers.md) for the architectural decision and [migration guide](docs/migration-v2.0.0.md) for v1.x → v2.0.0 upgrade instructions.

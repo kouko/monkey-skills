@@ -41,16 +41,25 @@ class CountryRegimeCard:
 
 @dataclass
 class Phase1Output:
-    """Top-level regime_compose.py output schema for Phase 1."""
+    """Top-level regime_compose.py output schema for Phase 1.
+
+    `_legacy` was populated during the PR-1 → PR-6 transition with
+    `classify_country()` IC + GIP output for backward compat. Per
+    ADR-0004 PR-7 cleanup, it is now hardcoded `None` (kept as a
+    field for schema stability — downstream consumers reading
+    `out["_legacy"]` get None instead of KeyError).
+    """
     schema_version: str = "2.0-phase1"
     by_country: dict[str, dict[str, Any]] = field(default_factory=dict)
     cross_country: None = None  # Phase 2 placeholder per ADR-0004
-    _legacy: dict[str, Any] = field(default_factory=dict)
+    _legacy: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": self.schema_version,
             "by_country": dict(self.by_country),
             "cross_country": self.cross_country,
-            "_legacy": dict(self._legacy),
+            "_legacy": (
+                dict(self._legacy) if isinstance(self._legacy, dict) else self._legacy
+            ),
         }

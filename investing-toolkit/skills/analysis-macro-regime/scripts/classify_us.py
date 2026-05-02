@@ -15,7 +15,7 @@ native_verdict carrying:
   - real_rate_decomposition: dfii10 + 4-tier band + Fed qualitative anchor
   - yield_curve: t10y2y + state (inverted / flat / normal / steep)
   - policy_framework: FIT
-  - policy_target_pct: 2.0
+  - inflation_target_pct: 2.0
 
 This is the **reference pattern** for PR-3-6 (JP/TW/KR/CN). Subsequent
 country classifiers should mirror this module's structure: signature
@@ -30,7 +30,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from _legacy_ic import (
+from _helpers import (
     GROWTH_KEYS, INFLATION_KEYS,
     classify_direction, map_ic_quadrant, map_gip_quad,
     resolve_series, normalised_country,
@@ -190,7 +190,7 @@ def classify_us(regime_pack: dict[str, Any]) -> CountryRegimeCard:
         },
         "fed_qualitative_anchor": fed_anchor,
         "policy_framework": calib.get("inflation_target_framework", "FIT"),
-        "policy_target_pct": calib.get("inflation_target", 2.0),
+        "inflation_target_pct": calib.get("inflation_target", 2.0),
     }
 
     prov = calib.get("provenance", {}) or {}

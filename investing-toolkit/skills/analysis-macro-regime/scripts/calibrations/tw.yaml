@@ -18,7 +18,7 @@ currency: TWD
 inflation_target: null  # explicitly no numeric target
 inflation_target_type: flexible
 inflation_target_framework: 彈性定義  # CBC informal framing
-inflation_target_authority_date: 2024-06-19  # CNA primary report
+inflation_target_authority_date: "2024-06-19"  # CNA primary report
 cbc_framing: 彈性定義
 cbc_formal_language: 適時調整貨幣政策，以達成物價穩定與金融穩定
 inflation_watchline_pct: 2.0  # informal alert level — non-binding
@@ -34,9 +34,9 @@ policy_rate:
   discount_rate: 2.00       # CBC 2024-09 cut to 2.00, maintained 2026-03-19
   collateralized_lending: 2.375
   short_term_financing: 4.25
-  last_change: 2024-09-19   # 25 bp cut
-  last_meeting: 2026-03-19  # all-pass continuation
-  next_meeting: 2026-06-18  # CBC Q2 理監事
+  last_change: "2024-09-19"   # 25 bp cut
+  last_meeting: "2026-03-19"  # all-pass continuation
+  next_meeting: "2026-06-18"  # CBC Q2 理監事
 policy_rate_neutrality:
   nominal_estimate_band: [1.75, 2.0]  # academic + market estimates (no CBC official r*)
   real_estimate_band: [0.0, 0.5]      # implied real r*
@@ -203,9 +203,9 @@ heuristics:
 provenance:
   calibration_doc: thresholds-taiwan.md
   calibration_vintage: 2026-Q1
-  last_full_grounding: 2026-04-18
-  partial_refresh: 2026-04-19  # v1.11.0 addendum
-  this_pr_partial_refresh: 2026-05-02  # PR-4 delta — no material events
+  last_full_grounding: "2026-04-18"
+  partial_refresh: "2026-04-19"  # v1.11.0 addendum
+  this_pr_partial_refresh: "2026-05-02"  # PR-4 delta — no material events
   authority_sources:
     - 中央銀行 CBC (理監事聯席會議新聞稿; 季刊 NAIRU 專題)
     - 國家發展委員會 NDC (景氣指標查詢系統; 景氣對策信號 methodology)

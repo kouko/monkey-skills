@@ -4,16 +4,25 @@
 # dependencies = []
 # ///
 """
-_legacy_ic.py — Phase 1 transition fallback (per ADR-0004).
+_helpers.py — shared compute helpers for per-country regime classifiers.
 
-Preserves the v1.9.0 single-classifier IC + Hedgeye GIP logic verbatim,
-with one targeted patch (TW GROWTH_KEYS — see below). Populates the
-`_legacy.by_country` block of the new Phase 1 schema so memo / portfolio
-consumers continue to work during the transition.
+Used by classify_{us,jp,tw,kr,cn}.py modules. Provides:
 
-Will be removed at Phase 2 start or v2.2.0, whichever earlier.
+  - Series resolution (`resolve_series`) for multi-key lookup tolerance
+  - Direction classification (`classify_direction`) — latest vs trailing 3-mo
+    average ±0.5σ band, with `normalised` mode for indices like CFNAI / K253
+  - IC 2x2 quadrant mapping (`map_ic_quadrant`) — used by classifiers that
+    emit `ic_quadrant_legacy` / `ic_quadrant` for backward-compat parity
+  - Hedgeye GIP refinement mapping (`map_gip_quad`)
+  - US-specific Fisher real-rate decomposition (`compute_us_real_rate`)
+  - CN-specific 4-component dispersion overlay (`cn_component_overlay`)
+  - Per-country GROWTH_KEYS / INFLATION_KEYS lookup tables
 
-See ADR-0004 (analysis-macro-regime per-country classifiers) for context.
+Pure stdlib (statistics, typing). No I/O.
+
+Migrated from `_legacy_ic.py` in Phase 1 PR-7 (ADR-0004) — the v1.9.0
+unified `classify_country()` was removed once all 5 per-country
+classifiers shipped. The helpers themselves remain useful and shared.
 """
 
 from __future__ import annotations
@@ -21,12 +30,7 @@ from __future__ import annotations
 import statistics
 from typing import Any
 
-# Country-specific series resolvers — multiple naming conventions tolerated
-#
-# TW patch (ADR-0004 PR-1): the original list (cycle.signal / signal /
-# ndc-signal / gdp) does not match what TW's flatten emits — add the
-# actual indicator IDs (signal-score, coincident-index, leading-index)
-# so the legacy fallback resolves a non-degenerate growth proxy.
+# Country-specific series resolvers — multiple naming conventions tolerated.
 GROWTH_KEYS: dict[str, list[str]] = {
     "us": ["nowcast.CFNAI", "CFNAI", "WEI", "GDPC1", "growth.gdp", "gdp"],
     "jp": ["coincident-index", "growth.coincident-index", "ci", "gdp"],
@@ -35,7 +39,6 @@ GROWTH_KEYS: dict[str, list[str]] = {
         "signal-score",           # NDC 五色燈號 9-45 composite
         "ndc.signal-score",
         "leading-index",
-        # legacy keys preserved as last-resort fallback
         "cycle.signal", "signal", "ndc-signal", "gdp",
     ],
     "kr": ["coincident-cycle", "K253", "cycle.coincident-cycle", "gdp"],
@@ -56,7 +59,7 @@ INFLATION_KEYS: dict[str, list[str]] = {
     "cn": ["inflation.cpi-yoy", "cpi-yoy", "cpi"],
 }
 
-# CN component overlay — flagged if components disagree > 2%
+# CN component overlay — flagged if components disagree > 2pp
 CN_COMPONENT_KEYS = [
     "industrial-yoy",
     "retail-yoy",
@@ -114,7 +117,7 @@ def classify_direction(values: list[float], normalised: bool = False) -> str:
 
 
 def map_ic_quadrant(growth: str, inflation: str) -> str:
-    """IC 2x2 mapping with 'flat' lean conventions (see v1.9.0 doc)."""
+    """IC 2x2 mapping with 'flat' lean conventions (see investment-clock-cheatsheet.md)."""
     g_up = growth in {"rising", "flat"}
     i_up = inflation == "rising"
     if g_up and i_up:
@@ -137,7 +140,11 @@ def map_gip_quad(ic_quadrant: str) -> str:
 
 
 def compute_us_real_rate(series: dict[str, Any]) -> dict[str, Any] | None:
-    """US real-rate decomposition: nominal − breakeven = real (Fisher)."""
+    """US real-rate decomposition: nominal − breakeven = real (Fisher).
+
+    Used by classify_us.py. Kept here for now because it's pure compute
+    and country-coupled lookup logic.
+    """
     nominal_keys = ["DGS10", "rates.DGS10", "nominal-10y"]
     breakeven_keys = ["T10YIE", "real-rates.T10YIE", "breakeven-10y"]
     tips_keys = ["DFII10", "real-rates.DFII10", "real-10y"]
@@ -208,77 +215,3 @@ def cn_component_overlay(series: dict[str, Any]) -> dict[str, Any] | None:
 def normalised_country(country: str) -> bool:
     """CFNAI (US) and K253 (KR) cycle indices are normalised — apply NORMALISED_BAND."""
     return country in {"us", "kr"}
-
-
-def classify_country(country: str, regime_pack: dict[str, Any]) -> dict[str, Any]:
-    """Classify one country's regime from its regime-pack JSON (legacy IC + GIP)."""
-    series = regime_pack.get("series", {})
-    notes: list[str] = []
-
-    growth_values = resolve_series(series, GROWTH_KEYS.get(country, []))
-    inflation_values = resolve_series(series, INFLATION_KEYS.get(country, []))
-
-    if growth_values is None:
-        notes.append(f"growth proxy missing for {country}; defaulted to flat")
-    if inflation_values is None:
-        notes.append(f"inflation proxy missing for {country}; defaulted to flat")
-
-    growth_dir = classify_direction(growth_values or [], normalised=normalised_country(country))
-    inflation_dir = classify_direction(inflation_values or [], normalised=False)
-
-    if country == "jp" and inflation_values is not None and inflation_values[-1] < 2.0:
-        notes.append("JP: inflation below BOJ 2% target — IC applied to direction, not level")
-    if country == "tw" and growth_values is not None:
-        score = growth_values[-1]
-        if 9 <= score <= 45:
-            notes.append(f"TW: NDC 五色景氣燈號 score={score} (9-45 composite scale)")
-    if country == "cn":
-        overlay = cn_component_overlay(series)
-        if overlay and overlay["disagreement_flag"]:
-            notes.append(
-                f"CN: 4-component spread {overlay['spread_pp']}pp > 2pp — components disagree"
-            )
-
-    ic_quadrant = map_ic_quadrant(growth_dir, inflation_dir)
-    gip_regime = map_gip_quad(ic_quadrant)
-
-    real_rates: dict[str, Any] | None = None
-    if country == "us":
-        real_rates = compute_us_real_rate(series)
-        if real_rates is None:
-            notes.append("US real-rate block: missing DGS10 or T10YIE in regime-pack")
-
-    has_g = growth_values is not None and len(growth_values) >= 4
-    has_i = inflation_values is not None and len(inflation_values) >= 4
-    if has_g and has_i:
-        confidence = "high"
-    elif growth_values is not None and inflation_values is not None:
-        confidence = "medium"
-    else:
-        confidence = "low"
-
-    return {
-        "growth_direction": growth_dir,
-        "inflation_direction": inflation_dir,
-        "ic_quadrant": ic_quadrant,
-        "gip_regime": gip_regime,
-        "real_rates": real_rates,
-        "confidence": confidence,
-        "notes": notes,
-    }
-
-
-def cross_country_consensus(per_country: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """Summarise IC alignment across countries (legacy)."""
-    quadrants = [c["ic_quadrant"] for c in per_country.values() if "ic_quadrant" in c]
-    unique = sorted(set(quadrants))
-    aligned = len(unique) == 1
-    note_parts = []
-    for cc, body in per_country.items():
-        if "ic_quadrant" in body:
-            note_parts.append(f"{cc.upper()} {body['ic_quadrant']}")
-    return {
-        "ic_alignment": "aligned" if aligned else "divergent",
-        "regimes_present": unique,
-        "note": " / ".join(note_parts),
-    }
