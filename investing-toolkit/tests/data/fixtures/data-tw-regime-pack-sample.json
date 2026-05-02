@@ -6,14 +6,14 @@
       "_source": "cbc",
       "_action": "preset-bundle",
       "data": {
-        "fetched_at": "2026-05-01T15:12:02Z",
+        "fetched_at": "2026-05-02T08:40:35Z",
         "_source": "cbc",
         "items": {
           "rediscount-rate": {
             "item": "EG2AM01en",
             "preset": "rediscount-rate",
             "name": "Rediscount Rate (重貼現率)",
-            "fetched_at": "2026-05-01T15:12:02Z",
+            "fetched_at": "2026-05-02T08:40:35Z",
             "_cache": "miss",
             "_source": "cbc",
             "observations": [
@@ -47,23 +47,23 @@
               "value": 2.0
             },
             "direction": "Flat",
-            "count": 5,
+            "count": 459,
             "_provenance": {
               "source": "CBC Statistical Data (cpx.cbc.gov.tw)",
               "source_authority": "Central Bank of the Republic of China (Taiwan) (中央銀行)",
               "data_type": "official_government_statistics",
               "update_cycle": "varies by indicator",
               "typical_lag": "1-4 weeks after reference period",
-              "fetched_at": "2026-05-01T15:12:02Z",
+              "fetched_at": "2026-05-02T08:40:35Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "twdusd": {
             "item": "BP01D01",
             "preset": "twdusd",
             "name": "TWD/USD Exchange Rate (新臺幣對美元匯率)",
-            "fetched_at": "2026-05-01T15:12:02Z",
+            "fetched_at": "2026-05-02T08:40:35Z",
             "_cache": "miss",
             "_source": "cbc",
             "observations": [
@@ -97,23 +97,23 @@
               "value": 31.996
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 8263,
             "_provenance": {
               "source": "CBC Statistical Data (cpx.cbc.gov.tw)",
               "source_authority": "Central Bank of the Republic of China (Taiwan) (中央銀行)",
               "data_type": "official_government_statistics",
               "update_cycle": "varies by indicator",
               "typical_lag": "1-4 weeks after reference period",
-              "fetched_at": "2026-05-01T15:12:02Z",
+              "fetched_at": "2026-05-02T08:40:35Z",
               "reference_period": "20260331",
-              "staleness_days": 31
+              "staleness_days": 32
             }
           },
           "m2": {
             "item": "EF15M01en",
             "preset": "m2",
             "name": "Monetary Aggregates M2 (貨幣總計數 M2)",
-            "fetched_at": "2026-05-01T15:12:02Z",
+            "fetched_at": "2026-05-02T08:40:35Z",
             "_cache": "miss",
             "_source": "cbc",
             "observations": [
@@ -147,23 +147,23 @@
               "value": 3796906.0
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 467,
             "_provenance": {
               "source": "CBC Statistical Data (cpx.cbc.gov.tw)",
               "source_authority": "Central Bank of the Republic of China (Taiwan) (中央銀行)",
               "data_type": "official_government_statistics",
               "update_cycle": "varies by indicator",
               "typical_lag": "1-4 weeks after reference period",
-              "fetched_at": "2026-05-01T15:12:02Z",
+              "fetched_at": "2026-05-02T08:40:35Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "reserve-money": {
             "item": "EF11M01en",
             "preset": "reserve-money",
             "name": "Reserve Money (準備貨幣)",
-            "fetched_at": "2026-05-01T15:12:03Z",
+            "fetched_at": "2026-05-02T08:40:35Z",
             "_cache": "miss",
             "_source": "cbc",
             "observations": [
@@ -197,16 +197,16 @@
               "value": 3831118.0
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 351,
             "_provenance": {
               "source": "CBC Statistical Data (cpx.cbc.gov.tw)",
               "source_authority": "Central Bank of the Republic of China (Taiwan) (中央銀行)",
               "data_type": "official_government_statistics",
               "update_cycle": "varies by indicator",
               "typical_lag": "1-4 weeks after reference period",
-              "fetched_at": "2026-05-01T15:12:03Z",
+              "fetched_at": "2026-05-02T08:40:35Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -219,13 +219,13 @@
       "_source": "dgbas",
       "_action": "preset-bundle",
       "data": {
-        "fetched_at": "2026-05-01T15:12:03Z",
+        "fetched_at": "2026-05-02T08:40:35Z",
         "_source": "dgbas",
         "indicators": {
           "cpi": {
             "preset": "cpi",
-            "name": "Consumer Price Index YoY% (消費者物價指數年增率)",
-            "fetched_at": "2026-05-01T15:12:03Z",
+            "name": "Consumer Price Index INDEX (消費者物價指數, 民國110=100)",
+            "fetched_at": "2026-05-02T08:40:35Z",
             "_cache": "miss",
             "_source": "dgbas",
             "observations": [
@@ -259,22 +259,71 @@
               "value": 110.93
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 807,
             "_provenance": {
               "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/cpispl.xls)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:03Z",
+              "fetched_at": "2026-05-02T08:40:35Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
+            }
+          },
+          "cpi-yoy": {
+            "preset": "cpi-yoy",
+            "name": "Consumer Price Index YoY% (消費者物價指數年增率, 年增率 sheet)",
+            "fetched_at": "2026-05-02T08:40:24Z",
+            "_cache": "hit",
+            "_source": "dgbas",
+            "observations": [
+              {
+                "date": "202511",
+                "value": 1.21
+              },
+              {
+                "date": "202512",
+                "value": 1.3
+              },
+              {
+                "date": "202601",
+                "value": 0.7
+              },
+              {
+                "date": "202602",
+                "value": 1.77
+              },
+              {
+                "date": "202603",
+                "value": 1.2
+              }
+            ],
+            "latest": {
+              "date": "202603",
+              "value": 1.2
+            },
+            "prior": {
+              "date": "202602",
+              "value": 1.77
+            },
+            "direction": "Falling",
+            "count": 795,
+            "_provenance": {
+              "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/cpispl.xls)",
+              "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "monthly",
+              "typical_lag": "3-4 weeks after reference month",
+              "fetched_at": "2026-05-02T08:40:24Z",
+              "reference_period": "202603",
+              "staleness_days": 62
             }
           },
           "core-cpi": {
             "preset": "core-cpi",
             "name": "Core CPI YoY% (核心CPI 不含蔬果及能源)",
-            "fetched_at": "2026-05-01T15:12:03Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "dgbas",
             "observations": [
@@ -308,22 +357,22 @@
               "value": 111.03
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 543,
             "_provenance": {
               "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/cpisplexvfe.xls)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:03Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "ppi": {
             "preset": "ppi",
             "name": "Producer Price Index YoY% (躉售物價指數年增率)",
-            "fetched_at": "2026-05-01T15:12:03Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "dgbas",
             "observations": [
@@ -357,22 +406,22 @@
               "value": 112.59
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 63,
             "_provenance": {
               "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/ppispl.xls)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:03Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "import-pi": {
             "preset": "import-pi",
             "name": "Import Price Index YoY% (進口物價指數年增率)",
-            "fetched_at": "2026-05-01T15:12:03Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "dgbas",
             "observations": [
@@ -406,22 +455,22 @@
               "value": 111.87
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 603,
             "_provenance": {
               "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/ipispl.xls)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:03Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "export-pi": {
             "preset": "export-pi",
             "name": "Export Price Index YoY% (出口物價指數年增率)",
-            "fetched_at": "2026-05-01T15:12:04Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "dgbas",
             "observations": [
@@ -455,16 +504,16 @@
               "value": 119.2
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 603,
             "_provenance": {
               "source": "DGBAS Excel (https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/epispl.xls)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -477,19 +526,19 @@
       "_source": "ndc",
       "_action": "signal",
       "data": {
-        "fetched_at": "2026-05-01T15:12:04Z",
+        "fetched_at": "2026-05-02T08:40:36Z",
         "_source": "ndc",
         "presets": {
           "signal": {
             "preset": "signal",
             "name": "Business Cycle Signal (景氣對策信號)",
-            "fetched_at": "2026-05-01T15:12:04Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-01T10:56:11Z",
+            "_cache": "hit",
             "_source": "ndc",
             "score": {
               "preset": "signal-score",
               "name": "Signal Score (綜合分數)",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-01T10:56:11Z",
               "_cache": "miss",
               "_source": "ndc",
               "observations": [
@@ -523,14 +572,14 @@
                 "value": 41.0
               },
               "direction": "Falling",
-              "count": 5,
+              "count": 507,
               "_provenance": {
                 "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                 "source_authority": "National Development Council (國家發展委員會)",
                 "data_type": "official_government_statistics",
                 "update_cycle": "monthly",
                 "typical_lag": "~6 weeks after reference month",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-01T10:56:11Z",
                 "reference_period": "202603",
                 "staleness_days": 61
               }
@@ -538,7 +587,7 @@
             "color": {
               "preset": "signal-color",
               "name": "Signal Color (燈號)",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-01T10:56:11Z",
               "_cache": "miss",
               "_source": "ndc",
               "observations": [
@@ -572,14 +621,14 @@
                 "value": "紅"
               },
               "direction": null,
-              "count": 5,
+              "count": 531,
               "_provenance": {
                 "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                 "source_authority": "National Development Council (國家發展委員會)",
                 "data_type": "official_government_statistics",
                 "update_cycle": "monthly",
                 "typical_lag": "~6 weeks after reference month",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-01T10:56:11Z",
                 "reference_period": "202603",
                 "staleness_days": 61
               }
@@ -590,7 +639,7 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "~6 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-01T10:56:11Z",
               "reference_period": "202603",
               "staleness_days": 61
             }
@@ -598,14 +647,14 @@
           "signal-components": {
             "preset": "signal-components",
             "name": "Signal Components (對策信號構成項目)",
-            "fetched_at": "2026-05-01T15:12:04Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "ndc",
             "components": {
               "貨幣總計數M1B(百萬元)": {
                 "preset": "signal-components",
                 "name": "貨幣總計數M1B(百萬元)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -639,22 +688,22 @@
                   "value": 30016162.0
                 },
                 "direction": "Rising",
-                "count": 5,
+                "count": 531,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               },
               "股價指數(Index1966=100)": {
                 "preset": "signal-components",
                 "name": "股價指數(Index1966=100)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -688,22 +737,22 @@
                   "value": 33173.19417
                 },
                 "direction": "Rising",
-                "count": 5,
+                "count": 531,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               },
               "工業及服務業加班工時(小時)": {
                 "preset": "signal-components",
                 "name": "工業及服務業加班工時(小時)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -737,22 +786,22 @@
                   "value": 9.1
                 },
                 "direction": "Falling",
-                "count": 5,
+                "count": 530,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202602",
-                  "staleness_days": 89
+                  "staleness_days": 90
                 }
               },
               "海關出口值(十億元)": {
                 "preset": "signal-components",
                 "name": "海關出口值(十億元)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -786,22 +835,22 @@
                   "value": 1367.004417
                 },
                 "direction": "Falling",
-                "count": 5,
+                "count": 531,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               },
               "製造業銷售量指數(Index2021=100)": {
                 "preset": "signal-components",
                 "name": "製造業銷售量指數(Index2021=100)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -835,22 +884,22 @@
                   "value": 117.06
                 },
                 "direction": "Falling",
-                "count": 5,
+                "count": 530,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202602",
-                  "staleness_days": 89
+                  "staleness_days": 90
                 }
               },
               "機械及電機設備進口值(十億元)": {
                 "preset": "signal-components",
                 "name": "機械及電機設備進口值(十億元)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -884,22 +933,22 @@
                   "value": 518.3163333
                 },
                 "direction": "Rising",
-                "count": 5,
+                "count": 459,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               },
               "工業生產指數(Index2021=100)": {
                 "preset": "signal-components",
                 "name": "工業生產指數(Index2021=100)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -933,22 +982,22 @@
                   "value": 108.35
                 },
                 "direction": "Rising",
-                "count": 5,
+                "count": 363,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               },
               "批發、零售及餐飲業營業額(十億元)": {
                 "preset": "signal-components",
                 "name": "批發、零售及餐飲業營業額(十億元)",
-                "fetched_at": "2026-05-01T15:12:04Z",
+                "fetched_at": "2026-05-02T08:40:36Z",
                 "_cache": "miss",
                 "_source": "ndc",
                 "observations": [
@@ -982,16 +1031,16 @@
                   "value": 1602.538098
                 },
                 "direction": "Rising",
-                "count": 5,
+                "count": 327,
                 "_provenance": {
                   "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
                   "source_authority": "National Development Council (國家發展委員會)",
                   "data_type": "official_government_statistics",
                   "update_cycle": "monthly",
                   "typical_lag": "~6 weeks after reference month",
-                  "fetched_at": "2026-05-01T15:12:04Z",
+                  "fetched_at": "2026-05-02T08:40:36Z",
                   "reference_period": "202603",
-                  "staleness_days": 61
+                  "staleness_days": 62
                 }
               }
             },
@@ -1001,9 +1050,9 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "~6 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -1014,13 +1063,13 @@
       "_source": "ndc",
       "_action": "pmi",
       "data": {
-        "fetched_at": "2026-05-01T15:12:04Z",
+        "fetched_at": "2026-05-02T08:40:36Z",
         "_source": "ndc",
         "presets": {
           "pmi-mfg": {
             "preset": "pmi-mfg",
             "name": "Taiwan Manufacturing PMI (製造業採購經理人指數)",
-            "fetched_at": "2026-05-01T15:12:04Z",
+            "fetched_at": "2026-05-02T08:40:36Z",
             "_cache": "miss",
             "_source": "ndc",
             "observations": [
@@ -1054,22 +1103,22 @@
               "value": 58.5
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 165,
             "_provenance": {
               "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
               "source_authority": "National Development Council (國家發展委員會)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "~6 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-02T08:40:36Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "pmi-nmi": {
             "preset": "pmi-nmi",
             "name": "Taiwan Non-Manufacturing NMI (非製造業經理人指數)",
-            "fetched_at": "2026-05-01T15:12:04Z",
+            "fetched_at": "2026-05-02T08:40:37Z",
             "_cache": "miss",
             "_source": "ndc",
             "observations": [
@@ -1103,16 +1152,16 @@
               "value": 53.4
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 140,
             "_provenance": {
               "source": "NDC Business Cycle Indicators (ws.ndc.gov.tw)",
               "source_authority": "National Development Council (國家發展委員會)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "~6 weeks after reference month",
-              "fetched_at": "2026-05-01T15:12:04Z",
+              "fetched_at": "2026-05-02T08:40:37Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -1125,13 +1174,13 @@
       "_source": "statgov",
       "_action": "preset-growth",
       "data": {
-        "fetched_at": "2026-05-01T15:12:04Z",
+        "fetched_at": "2026-05-02T08:40:37Z",
         "_source": "statgov",
         "indicators": {
           "gdp-yoy": {
             "preset": "gdp-yoy",
             "name": "GDP Growth YoY% (經濟成長率 季)",
-            "fetched_at": "2026-05-01T15:12:05Z",
+            "fetched_at": "2026-05-02T08:40:37Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1165,21 +1214,21 @@
               "value": 12.65
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 261,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:05Z",
+              "fetched_at": "2026-05-02T08:40:37Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "ipi": {
             "preset": "ipi",
             "name": "Industrial Production YoY% (工業生產指數年增率)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1213,21 +1262,21 @@
               "value": 16.63
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 351,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "manufacturing-yoy": {
             "preset": "manufacturing-yoy",
             "name": "Manufacturing Production YoY% (製造業生產指數年增率)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1261,21 +1310,21 @@
               "value": 18.34
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 519,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "retail-yoy": {
             "preset": "retail-yoy",
             "name": "Retail Sales YoY% (零售業營業額年增率)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1309,15 +1358,15 @@
               "value": 7.73
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 315,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -1328,13 +1377,13 @@
       "_source": "statgov",
       "_action": "preset-trade",
       "data": {
-        "fetched_at": "2026-05-01T15:12:06Z",
+        "fetched_at": "2026-05-02T08:40:40Z",
         "_source": "statgov",
         "indicators": {
           "export-orders": {
             "preset": "export-orders",
             "name": "Export Orders (外銷訂單 百萬USD)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1368,21 +1417,21 @@
               "value": 63877.0
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 507,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "exports": {
             "preset": "exports",
             "name": "Exports (出口金額 億USD)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1416,21 +1465,21 @@
               "value": 497.9
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 579,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "imports": {
             "preset": "imports",
             "name": "Imports (進口金額 億USD)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1464,21 +1513,21 @@
               "value": 370.3
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 579,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "exports-yoy": {
             "preset": "exports-yoy",
             "name": "Exports YoY% (出口年增率)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1512,21 +1561,21 @@
               "value": 20.6
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 555,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "imports-yoy": {
             "preset": "imports-yoy",
             "name": "Imports YoY% (進口年增率)",
-            "fetched_at": "2026-05-01T15:12:06Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1560,15 +1609,15 @@
               "value": 6.8
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 555,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:06Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -1579,13 +1628,13 @@
       "_source": "statgov",
       "_action": "preset-bundle",
       "data": {
-        "fetched_at": "2026-05-01T15:12:06Z",
+        "fetched_at": "2026-05-02T08:40:40Z",
         "_source": "statgov",
         "indicators": {
           "unemployment": {
             "preset": "unemployment",
             "name": "Unemployment Rate % (失業率)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1619,21 +1668,21 @@
               "value": 3.32
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 579,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "unemployment-sa": {
             "preset": "unemployment-sa",
             "name": "Unemployment Rate SA % (季調失業率)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:40Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1667,21 +1716,21 @@
               "value": 3.33
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 579,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:40Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "leading-index": {
             "preset": "leading-index",
             "name": "Leading Index ex-trend (景氣領先指標不含趨勢)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:41Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1715,21 +1764,21 @@
               "value": 102.72
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 531,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:41Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "coincident-index": {
             "preset": "coincident-index",
             "name": "Coincident Index ex-trend (景氣同時指標不含趨勢)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:41Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1763,21 +1812,21 @@
               "value": 107.36
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 531,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:41Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "fx-reserves": {
             "preset": "fx-reserves",
             "name": "FX Reserves (外匯存底 十億USD)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:41Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1811,21 +1860,21 @@
               "value": 605.49
             },
             "direction": "Falling",
-            "count": 5,
+            "count": 685,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:41Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "taiex": {
             "preset": "taiex",
             "name": "TAIEX Monthly Average (加權股價指數)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:41Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1859,21 +1908,21 @@
               "value": 33173.19
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 699,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:41Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           },
           "m2-yoy": {
             "preset": "m2-yoy",
             "name": "M2 YoY% (貨幣總計數M2年增率)",
-            "fetched_at": "2026-05-01T15:12:07Z",
+            "fetched_at": "2026-05-02T08:40:41Z",
             "_cache": "miss",
             "_source": "statgov",
             "observations": [
@@ -1907,15 +1956,15 @@
               "value": 5.38
             },
             "direction": "Rising",
-            "count": 5,
+            "count": 519,
             "_provenance": {
               "source": "National Statistics R.O.C. (stat.gov.tw)",
               "source_authority": "Directorate-General of Budget, Accounting and Statistics (行政院主計總處)",
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
-              "fetched_at": "2026-05-01T15:12:07Z",
+              "fetched_at": "2026-05-02T08:40:41Z",
               "reference_period": "202603",
-              "staleness_days": 61
+              "staleness_days": 62
             }
           }
         }
@@ -1993,6 +2042,20 @@
       110.21,
       110.93,
       110.36
+    ],
+    "cpi-yoy": [
+      1.21,
+      1.3,
+      0.7,
+      1.77,
+      1.2
+    ],
+    "dgbas.cpi-yoy": [
+      1.21,
+      1.3,
+      0.7,
+      1.77,
+      1.2
     ],
     "core-cpi": [
       109.64,

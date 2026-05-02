@@ -594,7 +594,7 @@ def pack_regime() -> dict[str, Any]:
         run_client("cbc_client.py", ["--preset", "rediscount-rate,twdusd,m2,reserve-money"]))
     # DGBAS — inflation
     out["dgbas"]["inflation"] = wrap("A", "dgbas", "preset-bundle",
-        run_client("dgbas_client.py", ["--preset", "cpi,core-cpi,ppi,import-pi,export-pi"]))
+        run_client("dgbas_client.py", ["--preset", "cpi,cpi-yoy,core-cpi,ppi,import-pi,export-pi"]))
     # NDC — 五色景氣燈號 + components
     out["ndc"]["signal"] = wrap("A", "ndc", "signal",
         run_client("ndc_client.py", ["--preset", "signal,signal-components"]))
