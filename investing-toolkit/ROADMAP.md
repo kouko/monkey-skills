@@ -99,14 +99,21 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 - **What**: Build a TIER (製造業營業氣候測驗點) fetcher so classify_tw's 9th 構成 dispersion slot is populated. Feed `tier_manufacturing_climate.value` from a real upstream rather than calibration vintage.
 - **Why**: NDC's 對策信號 2024-revision officially lists TIER as the 9th component, but NDC's bulk-download CSV stops at 8 columns (verified 2026-05-02). classify_tw degrades dispersion to 8/9 — confidence is already high (cpi-yoy + 8 components passes the threshold), but the dispersion 完備 narrative is incomplete.
-- **Source-research blocker (must resolve first)**: TIER is published by 台灣經濟研究院, NOT NDC. Available routes, all with caveats:
-  1. **TIER monthly-PDF scrape** (`tier.org.tw/forecast/forecast.aspx → YYYYMM.pdf`) — fragile parser, layout-shift risk, one number per month
-  2. **Aremos 經統資料庫** (`net.tedc.org.tw`) — paid subscription
-  3. **NDC `index.ndc.gov.tw/n/zh_tw/lightscore` web-app** — Cloudflare-protected XHR; would need Playwright-grade fetch + reverse engineering
-  4. **MoneyDJ chart endpoint** (`moneydj.com/funddj/yl/BFRK01.djhtm?a=EI010150`) — third-party scrape, ToS unclear
-- **Files (when ready)**: new `data-tw/scripts/tier_client.py` (or extend `ndc_client.py`); pack.py wiring; fixture refresh; classify_tw drops the "9th component" missing flag once `tier_value is not None`.
-- **Acceptance**: classify_tw `tier_manufacturing_climate.value` non-null from a live source; integration test asserts `components_9._dispersion.components_found == 9`.
-- **Reference**: ROADMAP §v2.1.x-b empirical-finding note; grounding-tw-2026-05.md §"Fixture inspection — 8 of 9 components present (structural NDC bundle gap)".
+- **Importance — medium-low** (re-assessed 2026-05-02): TIER is **already a constituent of NDC 領先指標** (which we fetch via the same bulk ZIP), so its forward-looking signal is ~80% covered by leading-index + CIER PMI we already pull. NDC 對策信號 score / color is unaffected (NDC computes the score internally with TIER). Adding TIER would close 8/9 → 9/9 dispersion + give a discrete monthly mom number for memo narrative, but is **not load-bearing** for regime classification. Defer until a TW-focused buy-side memo workflow concretely needs it.
+- **Source-research blocker — partially resolved 2026-05-02**: 4 candidate routes evaluated; PDF route is the only viable free path:
+  1. ✅ **TIER monthly-PDF scrape** — **viable, regex pattern verified**. URL: `https://www.tier.org.tw/forecast/{YYYYMM}.pdf`. PDF structure (verified against 202604.pdf, 15 pages): page 9 prose contains a 製造業 line, page 10 prose contains 服務業 + 營造業 lines. Regex template:
+     ```
+     (\d{4})年(\d+)月(製造|服務|營造)業營業氣候測驗點為([\d.]+)點
+     [，,]\s*較(\d+)月修正後[之的為]([\d.]+)點
+     ```
+     One PDF yields 3 industry values + last-month revision. URL pattern stable since 2025-05 (12+ months observed). Fragility risks: TIER may reword «修正後之/的/為», month segment order may swap, or version footer may shift. **Before building**: regress regex against 5+ historical months to confirm pattern stability; add fallback to extract via positional Chinese-number normalization.
+  2. ❌ **Aremos 經統資料庫** (`net.tedc.org.tw`) — paid subscription, ruled out.
+  3. ❌ **NDC `index.ndc.gov.tw/n/zh_tw/lightscore` web-app** — origin server returned 522/504 during 2026-05-02 probe; even if reachable, would need browser-grade fetch + reverse-engineered XHR contract. Higher fragility than route #1.
+  4. ❌ **MoneyDJ chart endpoint** (`moneydj.com/funddj/yl/BFRK01.djhtm?a=EI010150`) — third-party scrape, ToS unclear, dropped.
+  - **Untried (open)**: writing to `service@tier.org.tw` to ask for a structured CSV/Excel monthly feed. Worth a single email before building the PDF parser.
+- **Files (when ready)**: new `data-tw/scripts/tier_client.py` with `pdfplumber` or `pymupdf` for text extract + regex above + per-month cache (`~/.cache/investing-toolkit/tier/{YYYYMM}.json`); pack.py wires `tier` preset into regime-pack; classify_tw drops the "9th component" missing flag once `tier_value is not None`. Roughly 1.5–2 hr build + 5-month regex regression.
+- **Acceptance**: classify_tw `tier_manufacturing_climate.value` non-null from a live source; integration test asserts `components_9._dispersion.components_found == 9`; per-PDF parser unit test covers ≥5 historical months.
+- **Reference**: ROADMAP §v2.1.x-b empirical-finding note; grounding-tw-2026-05.md §"Fixture inspection — 8 of 9 components present (structural NDC bundle gap)"; v2.1.x research session (2026-05-02 Playwright + PDF probe).
 
 ### v2.2.0-f — CN credit impulse upgrade to true stock-yoy
 
