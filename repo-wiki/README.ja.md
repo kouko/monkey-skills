@@ -100,9 +100,15 @@ trigger 発動時、回答は **segmented**：
 ## Discrepancies Found
 - entity に "throws AuthError" とあるが src/auth/jwt.ts:42 は JwtError を throw
   → 提案：/repo-wiki:ingest "AuthError was renamed to JwtError"
+
+## Verification Coverage
+- Triggers fired: T2
+- Files read: 3 of 80 candidate paths (3.8%)
+- Selection: claim-mentioned + entry points
+- Uncovered: src/auth/session.ts, src/auth/refresh.ts, ... (75 more)
 ```
 
-純粋な決定問題（「なぜ Postgres を選んだのか」）は verification を起動しない — 過去の決定は陳腐化しない。
+Verification depth は `budget = max(1, min(10, ceil(0.05 × total_paths)))` で制限される — 1 つの query で `src/` ファイルを 10 件以上開かない。Coverage section により実際の verification 深度が見える。純粋な決定問題（「なぜ Postgres を選んだのか」）は verification を起動しない — 過去の決定は陳腐化しない。
 
 ## 日常ワークフロー
 
