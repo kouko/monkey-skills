@@ -278,12 +278,19 @@ def fetch_facts(cik: int, concept: str | None) -> dict:
 
 
 def summarize_concept(raw_concept: dict) -> list[dict]:
-    """Extract USD time-series from companyconcept response."""
+    """Extract USD time-series from companyconcept response.
+
+    Preserves `start` alongside `end` so downstream consumers can
+    distinguish annual (12-month window) from quarterly observations
+    when both are tagged `fp: FY` in a single 10-K filing (common for
+    Revenues with disaggregated quarterly + annual values).
+    """
     units = raw_concept.get("units", {})
     # Prefer USD, fall back to first available unit
     series = units.get("USD") or next(iter(units.values()), [])
     return [
         {
+            "start": row.get("start"),
             "end": row.get("end"),
             "value": row.get("val"),
             "accn": row.get("accn"),

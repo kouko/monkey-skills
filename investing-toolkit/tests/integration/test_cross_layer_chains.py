@@ -31,10 +31,13 @@ passing.
 | Chain | Status     | Fix PR                              |
 |-------|------------|-------------------------------------|
 |   1   | passing    | PR #178 (T1 OHLCV alias) ✓ landed   |
-|   2   | xfail      | PR #180 — Tier 3 (XBRL → flat)      |
+|   2   | passing    | PR #181 (T3 XBRL → flat) ✓ landed   |
 |   3   | passing    | PR #178 (T1 multiples alias) ✓      |
 |   4   | passing    | n/a — Layer 1 emit already matches  |
 |   5   | passing    | PR #179 (T2 macro flatten) ✓ landed |
+
+All 5 chains pass. Future PRs (#178a/b/c/d, #181a/b/c/d) extend to
+data-jp/tw/kr/cn — those will add their own integration tests.
 
 If an xfail test unexpectedly passes (XPASS), pytest fails the run with
 strict=True — that signals an undocumented chain fix and the marker
@@ -112,14 +115,6 @@ def test_chain_snapshot_to_technical():
 # Chain 2: data-us memo-fetch → analysis-dcf
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Chain 2 broken: memo-fetch emits sec_facts (raw XBRL), dcf_compute "
-           "reads top-level income_statement/cash_flow/balance_sheet (flat). "
-           "Fix in PR #180 (Tier 3 financial statement normalization with "
-           "country-specific XBRL/EDINET/MOPS concept mapping; requires its "
-           "own ADR per docs/normalization-contract.md).",
-)
 def test_chain_memofetch_to_dcf():
     """data-us memo-fetch pack feeds analysis-dcf without adapter.
 
@@ -137,20 +132,26 @@ def test_chain_memofetch_to_dcf():
 
     rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
 
-    # DCF may not crash — it may silently produce zero/None values.
-    # The real test: did it derive anything sensible from the input?
-    valuation = out.get("valuation") or {}
-    intrinsic = valuation.get("intrinsic_value_per_share")
-    revenue_cagr = (out.get("assumptions") or {}).get("revenue_cagr")
+    # The real test: did DCF derive sensible numbers from the input?
+    intrinsic = out.get("intrinsic_value") or {}
+    intrinsic_mid = intrinsic.get("mid") if isinstance(intrinsic, dict) else None
+    assumptions = out.get("assumptions") or {}
+    base_revenue = assumptions.get("base_revenue")
+    cagr = assumptions.get("historical_revenue_cagr")
 
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    assert intrinsic is not None and intrinsic > 0, (
-        f"DCF produced degenerate intrinsic value {intrinsic!r} — likely "
-        f"because dcf_compute could not find income_statement/cash_flow/"
-        f"balance_sheet at top level (memo-fetch puts them under sec_facts)."
+    assert intrinsic_mid is not None and intrinsic_mid > 0, (
+        f"DCF intrinsic_value.mid is degenerate ({intrinsic_mid!r}) — "
+        f"normalize did not populate income_statement / cash_flow / "
+        f"balance_sheet correctly."
     )
-    assert revenue_cagr is not None and revenue_cagr != 0, (
-        f"DCF produced degenerate revenue CAGR {revenue_cagr!r}"
+    assert base_revenue is not None and base_revenue > 0, (
+        f"DCF base_revenue is degenerate ({base_revenue!r}) — canonical "
+        f"income_statement.revenue is empty."
+    )
+    assert cagr is not None, (
+        f"DCF historical_revenue_cagr is None — canonical revenue series "
+        f"too short to derive CAGR."
     )
 
 
@@ -259,6 +260,41 @@ def test_chain_screenerbatch_to_screener():
         f"screener saw {universe_size} tickers but fixture has {expected_size}; "
         f"shape mismatch likely — output keys: {list(out.keys())}"
     )
+
+
+# ---------------------------------------------------------------------------
+# T3 lossless invariant — canonical income_statement traces back to raw
+# concept observations (per docs/normalization-contract.md Principle 5).
+# ---------------------------------------------------------------------------
+
+def test_t3_lossless_invariant_revenue():
+    """Each canonical revenue value MUST exist in raw sec_facts.concepts
+    under one of the chain entries. If this fails, _normalize_dcf has
+    drifted from raw — bug in normalize logic.
+    """
+    fixture = FIXTURES / "data-us-memo-fetch-sample.json"
+    if not fixture.exists():
+        pytest.skip("missing fixture")
+    pack = json.loads(fixture.read_text())
+
+    canonical_revenues = pack["income_statement"]["revenue"]
+    raw_concepts = pack["sec_facts"]["concepts"]
+    per_year_concept = pack["income_statement"]["_meta"]["revenue"]["per_year_concept"]
+
+    assert len(canonical_revenues) == len(per_year_concept), (
+        f"per_year_concept length ({len(per_year_concept)}) does not match "
+        f"canonical revenue length ({len(canonical_revenues)})"
+    )
+
+    for canonical_val, source_concept in zip(canonical_revenues, per_year_concept):
+        raw_payload = raw_concepts.get(source_concept) or {}
+        raw_obs = raw_payload.get("observations") or []
+        raw_values = [o.get("value") for o in raw_obs if isinstance(o, dict)]
+        assert canonical_val in raw_values, (
+            f"canonical revenue {canonical_val} (source: {source_concept}) "
+            f"not found in raw concept observations. "
+            f"raw values: {raw_values[:5]}..."
+        )
 
 
 # ---------------------------------------------------------------------------
