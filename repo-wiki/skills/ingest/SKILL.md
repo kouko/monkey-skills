@@ -102,6 +102,48 @@ intending context capture never trip into doc-import unintentionally.
 - Verify file exists; if not, ask for correct path
 - Read the full file content as input payload
 
+## Step 1.5: Entropy-Weighted Classification (Git Mode Only)
+
+**When this step runs**: Git mode AND `commits_count >= 5`. Below 5
+commits, skip classification — small ingests preserve v1.1 behavior
+(one source page covering the batch).
+
+**Why**: when 30 commits accumulate (e.g., user stops for a month),
+producing one mega source page dilutes architectural signal. When 3
+commits accumulate (typical post-feature ingest), one page is right.
+The threshold makes classification volume-triggered, not always-on.
+
+**Classification heuristics** (observable git metadata only — NO file
+content reads):
+
+| Weight | Signal (any one matches) | Source page treatment |
+|---|---|---|
+| **HIGH** | (a) touches root config from Step 4a-pre whitelist (`package.json`, `pnpm-workspace.yaml`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `tsconfig.json`, etc.); (b) touches 3+ entities (cross-module); (c) touches any file listed in an entity's `Common Entry Points`; (d) subject matches `feat(...)` / `refactor(...)` / `arch:` OR body contains `BREAKING CHANGE`; (e) adds new top-level directory under source root; (f) tagged release commit | **Own source page** (one page per HIGH commit) |
+| **MEDIUM** | (a) touches 2 entities; (b) subject `fix(...)` with body ≥ 1 line of explanation; (c) adds new file in existing module | **Batched** by file-overlap adjacency (Jaccard >50% on changed paths → same batch); each batch → one source page |
+| **LOW** | (a) touches only test files (`**/test*/**`, `**/__tests__/**`, `*test*.{ts,tsx,py,go,rs,kt,rb,java}`); (b) touches only docs (`docs/**`, `*.md`); (c) subject contains `chore` / `style` / `format` / `lint` keyword; (d) single-file change touching neither config nor entry point | **Roll-up** (one combined source page per ingest); skipped (log-only) if <3 LOW commits in this batch |
+
+**Source page budget**:
+
+```
+budget = min(15, ceil(commits_count / 5))
+```
+
+Examples:
+- 5 commits → budget 1 page
+- 15 commits → budget 3 pages
+- 30 commits → budget 6 pages
+- 100 commits → budget 20 → cap → budget 15 pages
+
+**Allocation order** (when classified-page-count > budget):
+
+1. Allocate every HIGH commit a page first
+2. If budget remains, allocate MEDIUM batches
+3. If budget remains, allocate LOW roll-up
+4. If HIGH alone exceeds budget → keep most recent HIGH commits up to budget; remaining HIGH commits go into a single overflow source page noted as "additional architectural commits not individually documented; re-ingest with smaller windows for fuller coverage"
+
+**Output**: pass `(commit, weight, source_page_assignment)` tuples to
+Step 3.
+
 ## Step 2: Read Current Wiki State
 
 Read `.repo-wiki/index.md` (catalog) and `.repo-wiki/overview.md`
@@ -111,6 +153,17 @@ Read `.repo-wiki/index.md` (catalog) and `.repo-wiki/overview.md`
 
 Filename and frontmatter vary by mode. Slug is derived from the
 title — kebab-case, ASCII when possible.
+
+**Git mode with classification** (Step 1.5 ran): create one source page
+per assigned page from Step 1.5's allocation. HIGH commit pages use the
+HIGH commit's subject as the title; MEDIUM batch pages derive title from
+the batch's leading commit; LOW roll-up uses
+`"Routine commits — <date range>"`. All variants share the same git-mode
+frontmatter shape below; multi-commit pages list all commits in the
+`commits:` array.
+
+**Git mode without classification** (commits < 5): one source page
+covering all commits in the batch — v1.1 behavior.
 
 ### Git mode → `.repo-wiki/sources/YYYY-MM-DD-<slug>.md`
 
@@ -307,9 +360,11 @@ Append a new entry. Mode is encoded in the operation name:
 
 ```
 ## [YYYY-MM-DD] ingest:git | <description>
-- Commits: <sha range>
+- Commits: <sha range> (<count> total)
+- Classification: <H> HIGH / <M> MEDIUM / <L> LOW (skipped log-only: <K>)
+  (omit line if commits < 5 — classification did not run)
 - Last commit SHA: <new HEAD sha>   ← critical for next ingest
-- Sources created: .repo-wiki/sources/<slug>.md
+- Sources created: <list of slugs> (budget: <used>/<budget>)
 - Entities updated: <list>
 - Concepts updated: <list>
 ```
@@ -367,4 +422,11 @@ ALWAYS:
 - Update `log.md` on every operation, with mode-specific entry format
 - Keep entity pages module-bounded (one module = one entity page)
 - Use descriptive judgment for page creation, not numeric thresholds
+  (the entropy classification in Step 1.5 is a budget allocator, not a
+  page-content quality gate — page content still requires judgment)
 - Maintain `paths:` frontmatter on entity updates (verification depends on it)
+- Run Step 1.5 classification when git-mode commit count ≥ 5; skip it
+  for smaller ingests (preserves single-page behavior for typical
+  post-feature use)
+- Respect the source-page budget `min(15, ceil(commits/5))` — overflow
+  HIGH commits go into a noted single page, never silently dropped

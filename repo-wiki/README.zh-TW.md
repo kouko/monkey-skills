@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | 何時用 | 主要輸入 |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次（重跑安全） | Phase 1：`git ls-files`（src/ 完整目錄）+ 每 module 最近 5 commits。Phase 2：90 天 global git scan（最多 50 commits / 15 source pages）。Phase 3（`init full-history` opt-in）：era 分組完整歷史 backfill。 |
+| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次（重跑安全） | Phase 1：author-boundary 預掃（workspaces / TS paths / go.mod / pyproject / README H2）→ `git ls-files`（src/ 完整目錄）+ 每 module 最近 5 commits。Phase 2：90 天 global git scan（最多 50 commits / 15 source pages）。Phase 3（`init full-history` opt-in）：era 分組完整歷史 backfill。 |
 | [`/repo-wiki:ingest`](skills/ingest/) | 完成有意義變更後 OR 想捕捉 context 時 | 自上次 ingest 起的 git diff、文字 arg、或檔案路徑 |
 | [`/repo-wiki:query`](skills/query/) | 想問 codebase 任何問題時 | `.repo-wiki/index.md` + 相關頁面，關鍵時刻自動讀 `src/` 驗證 |
 
@@ -72,6 +72,8 @@ query     (general wiki)  →  /repo-wiki:query
 
 文字裡**有提到路徑但沒有 import marker**（`import`、`import doc`、`讀取`、`匯入`、`読み込んで` 等）會留在 context mode — 避免意外讀檔。
 
+**Volume-triggered 分類（git mode，commits ≥ 5）**：當 ingest 跨越大量 commits（例如停一個月後 catch-up），commits 會做 entropy 分類——HIGH（動到 config / 跨模組 / `feat`/`refactor` / 新增 top-level 目錄）獨立成 source page；MEDIUM（`fix`+ 本文 / 動到多 entity）依檔案重疊度批次；LOW（純 test / 純 docs / `chore`）合併成 roll-up。Source-page 預算是 `min(15, ceil(commits/5))`。少量 ingest（commits < 5）跳過分類，產出單一 page——保留 v1.1 在「做完 feature 順手 ingest」場景的行為。
+
 ## `.repo-wiki/` 是 AI 擁有，但 `src/` 才是當前權威
 
 最重要的設計決策：**`.repo-wiki/` 是 best-effort cache，不是真實的源頭**。entity page 裡的實作描述會 stale。為了讓這件事誠實，`/repo-wiki:query` 跑一個 **Eager verification** pipeline：
@@ -100,9 +102,15 @@ Trigger 命中時，答案以 **分段格式** 呈現：
 ## Discrepancies Found
 - entity 寫 "throws AuthError" 但 src/auth/jwt.ts:42 throw 的是 JwtError
   → 建議：/repo-wiki:ingest "AuthError 已 rename 為 JwtError"
+
+## Verification Coverage
+- Triggers fired: T2
+- Files read: 3 of 80 candidate paths (3.8%)
+- Selection: claim-mentioned + entry points
+- Uncovered: src/auth/session.ts, src/auth/refresh.ts, ... (75 more)
 ```
 
-純決策問題（「為什麼當初選 Postgres」）不會 trigger verification — 過去決策不會回溯改變。
+驗證深度由 `budget = max(1, min(10, ceil(0.05 × total_paths)))` 設上限——單次 query 最多開 10 個 `src/` 檔案，Coverage section 讓實際驗證深度公開可見。純決策問題（「為什麼當初選 Postgres」）不會 trigger verification — 過去決策不會回溯改變。
 
 ## 日常工作流
 

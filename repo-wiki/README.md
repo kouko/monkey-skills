@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | When | Primary input |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | Once per repo (idempotent re-run safe) | Phase 1: `git ls-files` (full src/ tree) + per-module last-5 commits. Phase 2: 90d global git scan (bounded: max 50 commits / 15 source pages). Phase 3 (opt-in via `init full-history`): era-grouped full-history backfill. |
+| [`/repo-wiki:init`](skills/init/) | Once per repo (idempotent re-run safe) | Phase 1: author-boundary pre-scan (workspaces / TS paths / go.mod / pyproject / README H2) → `git ls-files` (full src/ tree) + per-module last-5 commits. Phase 2: 90d global git scan (bounded: max 50 commits / 15 source pages). Phase 3 (opt-in via `init full-history`): era-grouped full-history backfill. |
 | [`/repo-wiki:ingest`](skills/ingest/) | After meaningful changes OR to capture context | Git diff since last ingest, OR text arg, OR file path |
 | [`/repo-wiki:query`](skills/query/) | Whenever asking about codebase | `.repo-wiki/index.md` + relevant pages, with `src/` verification at key moments |
 
@@ -72,6 +72,8 @@ The same skill handles three input modes — picked from the argument:
 
 Mentioning a path *without* an explicit import marker (`import`, `import doc`, `讀取`, `匯入`, `読み込んで`, etc.) stays in context mode — this avoids accidental file reads.
 
+**Volume-triggered classification (git mode, ≥5 commits)**: when an ingest spans many commits (e.g., catching up after a month), commits are entropy-classified — HIGH (config / cross-module / `feat`/`refactor` / new top-level dir) gets its own source page; MEDIUM (`fix`+body / multi-entity touches) batches by file-overlap; LOW (test-only / docs-only / `chore`) rolls up. Source-page budget is `min(15, ceil(commits/5))`. Small ingests (<5 commits) skip classification and produce one page — v1.1 behavior preserved for typical post-feature use.
+
 ## `.repo-wiki/` is AI-owned, but `src/` remains authoritative
 
 The most important design decision: **`.repo-wiki/` is a best-effort cache, not a source of truth**. Implementation descriptions in entity pages may go stale. To keep this honest, `/repo-wiki:query` runs an **Eager verification** pipeline:
@@ -100,9 +102,15 @@ When triggered, the answer is **segmented**:
 ## Discrepancies Found
 - entity says "throws AuthError" but src/auth/jwt.ts:42 throws JwtError
   → Suggest: /repo-wiki:ingest "AuthError was renamed to JwtError"
+
+## Verification Coverage
+- Triggers fired: T2
+- Files read: 3 of 80 candidate paths (3.8%)
+- Selection: claim-mentioned + entry points
+- Uncovered: src/auth/session.ts, src/auth/refresh.ts, ... (75 more)
 ```
 
-Pure decision questions ("why did we choose Postgres") don't trigger verification — past decisions are immune to staleness.
+Verification depth is bounded by `budget = max(1, min(10, ceil(0.05 × total_paths)))` — so a single query never opens more than 10 `src/` files, and the Coverage section makes the actual depth visible. Pure decision questions ("why did we choose Postgres") don't trigger verification — past decisions are immune to staleness.
 
 ## Daily workflow
 
