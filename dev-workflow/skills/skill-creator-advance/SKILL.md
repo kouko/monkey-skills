@@ -176,10 +176,37 @@ skill-name/
 ├── SKILL.md (required)
 │   ├── YAML frontmatter (name, description required)
 │   └── Markdown instructions
-└── Bundled Resources (optional)
+└── Bundled Resources (optional, single-level subdirectories ONLY)
     ├── scripts/    - Executable code for deterministic/repetitive tasks
-    └── references/ - Docs loaded into context as needed
+    ├── references/ - Docs loaded into context as needed
+    ├── assets/     - Templates / fixtures / static files
+    ├── agents/     - Sub-agent definitions
+    └── ... (any other single-level subdirectory you need)
 ```
+
+#### CRITICAL: Folder structure must be flat — NO nested subdirectories
+
+Anthropic skill convention forbids subdirectories inside subdirectories under a skill root. A skill may contain `SKILL.md` plus any number of single-level subdirectories; those subdirectories must themselves be flat.
+
+```
+✅ CORRECT:
+skill-name/SKILL.md
+skill-name/scripts/extract_lineage.py
+skill-name/scripts/extract_lineage_test.py
+skill-name/references/spec.md
+skill-name/assets/template.md
+
+❌ FORBIDDEN (will fail validation hooks in repos that enforce):
+skill-name/assets/scripts/extract_lineage.py     ← assets/ contains scripts/
+skill-name/scripts/python/foo.py                 ← scripts/ contains python/
+skill-name/references/v1/spec.md                 ← references/ contains v1/
+skill-name/agents/sub/worker.md                  ← agents/ contains sub/
+```
+
+When creating a new skill or adding bundled resources to an existing one:
+- Group files by **subdirectory at skill root** (scripts/, assets/, references/, agents/, etc.) — choose meaningful names
+- Inside each subdirectory, use **descriptive filenames** (e.g., `extract_column_lineage.py`, `extract_column_lineage_test.py`) rather than further nesting
+- If you feel the need to subdivide, extract into a new top-level subdirectory at the skill root instead (e.g., `scripts-redshift/` and `scripts-snowflake/` rather than `scripts/redshift/` and `scripts/snowflake/`)
 
 Each skill should also have a corresponding **slash command** entry point in the plugin's `commands/` directory. See `references/plugin-conventions.md` for the format and examples.
 
