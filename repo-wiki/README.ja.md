@@ -2,9 +2,9 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> Karpathy の LLM Wiki Pattern をコードリポジトリに適用。git 履歴から隠し `.repo-wiki/` ナレッジベースを seed し、変更や会話から成長させ、自然言語でクエリ。`src/` が常に真実の源 — wiki は重要な瞬間にキャッシュをverifyする。
+> Karpathy の LLM Wiki Pattern をコードリポジトリに適用。隠し `.repo-wiki/` ナレッジベースを src/ ツリー全体のスキャン（全 module に entity stub）+ module 毎の直近 5 commits + 90 日 bounded global git scan で seed。変更と会話から成長させ、自然言語でクエリ。`src/` が常に真実の源 — wiki は重要な瞬間にキャッシュを verify する。
 
-**Version**: 1.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 1.1.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## 背景
 
@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | いつ | 主入力 |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | リポジトリごとに 1 回 | 過去 90 日の git 履歴（最大 50 commits / 15 source pages） |
+| [`/repo-wiki:init`](skills/init/) | リポジトリごとに 1 回（再実行安全） | Phase 1: `git ls-files`（src/ 全体）+ module 毎 last-5 commits。Phase 2: 90 日 global git scan（最大 50 commits / 15 source pages）。Phase 3（`init full-history` でオプトイン）: era-grouped 完全履歴 backfill。 |
 | [`/repo-wiki:ingest`](skills/ingest/) | 意義のある変更後 OR コンテキスト捕捉時 | 前回 ingest 以降の git diff、テキスト引数、またはファイルパス |
 | [`/repo-wiki:query`](skills/query/) | コードベースについて聞きたいとき | `.repo-wiki/index.md` + 関連ページ、重要な瞬間に `src/` で verify |
 
@@ -47,7 +47,13 @@ query     (general wiki)  →  /repo-wiki:query
 /repo-wiki:query "AuthModule はどう動いてる？"
 ```
 
-`init` は `.repo-wiki/` を `SCHEMA.md` + `index.md` + `log.md` + `overview.md` と seed された source pages + entity stubs で scaffolding。同時に `CLAUDE.md` に小さな idempotent ブロックを書き込み、将来のセッションが `.repo-wiki/` は AI 所有だと知るようにする。
+`init` は `.repo-wiki/` を `SCHEMA.md` + `index.md` + `log.md` + `overview.md` で scaffolding し、src/ ツリー全体をスキャンして完全な entity カバレッジを構築（検出された全 module に stub: `paths` + `Common Entry Points` + 直近 5 commits を `Recorded Decisions` として seed）、続いて 90 日 bounded global git scan で cross-module 変更の source page を生成。同時に `CLAUDE.md` に小さな idempotent ブロックを書き込み、将来のセッションが `.repo-wiki/` は AI 所有だと知るようにする。
+
+`init` は **再実行安全**：`log.md` 履歴、ingest で蓄積された entity セクション（`Responsibility`、`Architecture Snapshot`、`Gotchas`、`Dependencies`）、`overview.md` の `## Repository` 自定義セクションを保持。再実行は init 所有データ（paths、entry points、seed された直近 commits）のみリフレッシュし、`log.md` の last commit SHA を使って新 commit のみ増分処理。
+
+**デフォルトモード**（`/repo-wiki:init`）は実用 80% をカバー：完全な現状 + 直近活動。**完全履歴モード**（`/repo-wiki:init full-history`、または `"full backfill"` / `"完整歷史"`）は Phase 3 を追加：era-grouped（6 ヶ月単位）の歴史的 major commit backfill。Era pages は 15-page Phase 2 cap の対象外。
+
+**init が読まないもの**：src/ ファイル内容。`git ls-files` のパス、entry-point ファイルのパス、`git log` メタデータのみ使用。WHY-not-WHAT 原則を維持し、Greptile/DeepWiki スタイルのコード要約ツールと区別される。
 
 ## ingest は多態的
 

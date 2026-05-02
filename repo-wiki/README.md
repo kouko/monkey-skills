@@ -2,9 +2,9 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Karpathy's LLM Wiki Pattern, applied to code repos. Seed a hidden `.repo-wiki/` knowledge base from git history, grow it from changes and conversations, query it with natural language. `src/` stays the source of truth — the wiki verifies cached claims at key moments.
+> Karpathy's LLM Wiki Pattern, applied to code repos. Seed a hidden `.repo-wiki/` knowledge base by scanning the entire src/ tree (every module gets an entity stub) plus per-module last-5 commits, then a bounded 90-day global git scan. Grow incrementally from changes and conversations; query with natural language. `src/` stays the source of truth — the wiki verifies cached claims at key moments.
 
-**Version**: 1.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 1.1.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | When | Primary input |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | Once per repo | Last 90 days of git history (bounded: max 50 commits / 15 source pages) |
+| [`/repo-wiki:init`](skills/init/) | Once per repo (idempotent re-run safe) | Phase 1: `git ls-files` (full src/ tree) + per-module last-5 commits. Phase 2: 90d global git scan (bounded: max 50 commits / 15 source pages). Phase 3 (opt-in via `init full-history`): era-grouped full-history backfill. |
 | [`/repo-wiki:ingest`](skills/ingest/) | After meaningful changes OR to capture context | Git diff since last ingest, OR text arg, OR file path |
 | [`/repo-wiki:query`](skills/query/) | Whenever asking about codebase | `.repo-wiki/index.md` + relevant pages, with `src/` verification at key moments |
 
@@ -47,7 +47,13 @@ Install via the [monkey-skills marketplace](https://github.com/kouko/monkey-skil
 /repo-wiki:query "how does AuthModule work"
 ```
 
-`init` scaffolds `.repo-wiki/` with `SCHEMA.md` + `index.md` + `log.md` + `overview.md` and seeded source pages + entity stubs. It also writes a small idempotent block into `CLAUDE.md` so any future session knows `.repo-wiki/` is AI-owned.
+`init` scaffolds `.repo-wiki/` with `SCHEMA.md` + `index.md` + `log.md` + `overview.md`, scans the entire src/ tree to build complete entity coverage (every detected module gets a stub with `paths` + `Common Entry Points` + last 5 commits as `Recorded Decisions`), then runs a bounded 90-day global git scan for cross-module change source pages. It also writes a small idempotent block into `CLAUDE.md` so any future session knows `.repo-wiki/` is AI-owned.
+
+`init` is **safe to re-run**: it preserves `log.md` history, ingest-accumulated entity sections (`Responsibility`, `Architecture Snapshot`, `Gotchas`, `Dependencies`), and any `## Repository` section you customized in `overview.md`. Re-run only refreshes init-owned data (paths, entry points, seeded recent commits) and processes new commits incrementally via `log.md`'s last commit SHA.
+
+**Default mode** (`/repo-wiki:init`) covers the practical 80%: complete current state + recent activity. **Full-history mode** (`/repo-wiki:init full-history`, also `"full backfill"` / `"完整歷史"`) adds Phase 3: era-grouped (6-month) backfill of major historical commits. Era pages are exempt from the 15-page Phase 2 cap.
+
+**What init never reads**: src/ file contents. It uses only `git ls-files` paths, entry-point file paths, and `git log` metadata. This preserves the WHY-not-WHAT principle and keeps repo-wiki distinct from Greptile/DeepWiki-style code summarizers.
 
 ## ingest is polymorphic
 

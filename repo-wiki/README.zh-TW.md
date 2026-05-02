@@ -2,9 +2,9 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 把 Karpathy 的 LLM Wiki Pattern 套到 code repo。從 git 歷史 seed 一個隱藏的 `.repo-wiki/` 知識庫，從變更與對話中成長，用自然語言 query。`src/` 永遠是當前狀態的權威 — wiki 在關鍵時刻自動 verify cache。
+> 把 Karpathy 的 LLM Wiki Pattern 套到 code repo。隱藏的 `.repo-wiki/` 知識庫由 src/ 完整目錄掃描（每個 module 都有 entity stub）+ 每 module 最近 5 commits + 90 天 bounded global git scan seed。從變更與對話中成長，用自然語言 query。`src/` 永遠是當前狀態的權威 — wiki 在關鍵時刻自動 verify cache。
 
-**Version**: 1.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 1.1.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## 背景
 
@@ -28,7 +28,7 @@ query     (general wiki)  →  /repo-wiki:query
 
 | Skill | 何時用 | 主要輸入 |
 |---|---|---|
-| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次 | 最近 90 天的 git 歷史（最多 50 commits / 15 source pages） |
+| [`/repo-wiki:init`](skills/init/) | 每個 repo 一次（重跑安全） | Phase 1：`git ls-files`（src/ 完整目錄）+ 每 module 最近 5 commits。Phase 2：90 天 global git scan（最多 50 commits / 15 source pages）。Phase 3（`init full-history` opt-in）：era 分組完整歷史 backfill。 |
 | [`/repo-wiki:ingest`](skills/ingest/) | 完成有意義變更後 OR 想捕捉 context 時 | 自上次 ingest 起的 git diff、文字 arg、或檔案路徑 |
 | [`/repo-wiki:query`](skills/query/) | 想問 codebase 任何問題時 | `.repo-wiki/index.md` + 相關頁面，關鍵時刻自動讀 `src/` 驗證 |
 
@@ -47,7 +47,13 @@ query     (general wiki)  →  /repo-wiki:query
 /repo-wiki:query "AuthModule 是怎麼運作的？"
 ```
 
-`init` 會 scaffold `.repo-wiki/`（含 `SCHEMA.md` + `index.md` + `log.md` + `overview.md` 跟 seed 出的 source pages + entity stubs），同時在 `CLAUDE.md` 寫入一個小的 idempotent 區塊，讓未來的 session 知道 `.repo-wiki/` 是 AI 擁有的。
+`init` 會 scaffold `.repo-wiki/`（含 `SCHEMA.md` + `index.md` + `log.md` + `overview.md`），掃描整個 src/ 目錄建立完整 entity 覆蓋（每個偵測到的 module 都建 stub：`paths` + `Common Entry Points` + 最近 5 commits 作為 `Recorded Decisions` seed），接著跑 90 天 bounded global git scan 產生跨模組變更的 source page。同時在 `CLAUDE.md` 寫入一個小的 idempotent 區塊，讓未來的 session 知道 `.repo-wiki/` 是 AI 擁有的。
+
+`init` **重跑安全**：保留 `log.md` 歷史、ingest 累積的 entity 段（`Responsibility`、`Architecture Snapshot`、`Gotchas`、`Dependencies`）、`overview.md` 的 `## Repository` 自定義段。重跑只 refresh init-owned 資料（paths、entry points、seeded 最近 commits），用 `log.md` 的 last commit SHA 增量處理新 commit。
+
+**預設模式**（`/repo-wiki:init`）涵蓋實用 80%：完整當前狀態 + 最近活動。**完整歷史模式**（`/repo-wiki:init full-history`，也可用 `"full backfill"` / `"完整歷史"`）加上 Phase 3：era 分組（6 個月一段）的歷史性 major commit backfill。Era pages 不受 15-page Phase 2 cap 限制。
+
+**init 永遠不讀**：src/ 任何檔案內容。只用 `git ls-files` 路徑、entry-point 檔案路徑、`git log` metadata。維持 WHY-not-WHAT 原則，跟 Greptile/DeepWiki 風格的 code 摘要工具區隔。
 
 ## ingest 是多態的
 
