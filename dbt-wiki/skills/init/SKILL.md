@@ -189,103 +189,104 @@ for node_id, node in manifest['nodes'].items():
 
 ## Step 4: Column-Level Lineage via sqlglot
 
-For each model, parse its compiled SQL with sqlglot to extract per-column
-sources. **Critical**: parse `compiled/*.sql`, NOT `raw_code` (jinja-laden).
+dbt-wiki ships a tested Python script that uses sqlglot's `lineage` API
+to extract per-column source references from compiled dbt SQL. Copy it
+from the plugin's assets to the project's `.dbt-wiki/_internal/`:
 
 ```bash
-# Find compiled file for a model
-COMPILED_PATH="$DBT_DIR/target/compiled/$PROJECT_NAME/${original_file_path}"
-# original_file_path is from manifest, e.g., "models/marts/fct_orders.sql"
+mkdir -p .dbt-wiki/_internal
+cp <SKILL_DIR>/assets/scripts/extract_column_lineage.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/scripts/extract_column_lineage_test.py .dbt-wiki/_internal/
 ```
 
-Use the following Python script (invoke once per model via Bash, or batch):
+(Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
 
-```python
-#!/usr/bin/env python3
-"""sqlglot column lineage extractor for one compiled SQL file."""
-import json
-import sys
-import sqlglot
-from sqlglot import exp
-from sqlglot.optimizer.scope import build_scope
-
-def extract_column_lineage(sql: str, dialect: str = "redshift") -> dict:
-    """Returns {column_name: [list of "table.column" sources]}.
-
-    Handles top-level SELECT, CTEs, and joins. For column expressions
-    (CASE WHEN, COALESCE, function calls), all referenced columns become
-    sources for the output column.
-    """
-    try:
-        ast = sqlglot.parse_one(sql, dialect=dialect)
-    except Exception as e:
-        return {"_error": f"parse failed: {e}"}
-
-    # Find the outermost SELECT
-    if not isinstance(ast, exp.Select) and not ast.find(exp.Select):
-        return {"_error": "no SELECT found"}
-    outer = ast if isinstance(ast, exp.Select) else ast.find(exp.Select)
-
-    # Use sqlglot's scope/lineage helper for accurate resolution
-    scope = build_scope(ast)
-    if not scope:
-        return {"_error": "scope build failed"}
-
-    column_sources = {}
-    for projection in outer.expressions:
-        # Get output column name
-        if isinstance(projection, exp.Alias):
-            out_name = projection.alias
-            expr = projection.this
-        elif isinstance(projection, exp.Column):
-            out_name = projection.alias_or_name
-            expr = projection
-        else:
-            out_name = projection.alias_or_name or "<unnamed>"
-            expr = projection
-
-        # Walk expr to find all Column references
-        sources = set()
-        for col in expr.find_all(exp.Column):
-            table = col.table or "<unqualified>"
-            col_name = col.name
-            sources.add(f"{table}.{col_name}")
-
-        column_sources[out_name] = sorted(sources)
-
-    return column_sources
-
-if __name__ == "__main__":
-    sql = open(sys.argv[1]).read()
-    dialect = sys.argv[2] if len(sys.argv) > 2 else "redshift"
-    print(json.dumps(extract_column_lineage(sql, dialect), indent=2))
-```
-
-**Save this script** as `.dbt-wiki/_internal/extract_column_lineage.py`
-(create `_internal/` dir under `.dbt-wiki/`; this is the only place dbt-wiki
-puts non-markdown files).
-
-For each model, invoke:
+The script CLI:
 
 ```bash
+# Single file (used during refresh):
+python3 .dbt-wiki/_internal/extract_column_lineage.py <compiled_sql_path> [dialect]
+
+# Batch (used during init — much faster than per-file invocation):
+python3 .dbt-wiki/_internal/extract_column_lineage.py --batch <compiled_dir> [dialect]
+```
+
+**Critical**: parse `target/compiled/*.sql`, NOT `raw_code` (jinja-laden by
+definition; sqlglot can't parse `{{ ref(...) }}`).
+
+### Step 4a: Determine dialect from dbt_project.yml + profiles.yml
+
+Read `dbt_project.yml`'s `profile:` field, then look up that profile in
+`~/.dbt/profiles.yml` (or `$DBT_DIR/profiles.yml` if local) to find `type:`.
+Map dbt adapter to sqlglot dialect:
+
+| dbt adapter | sqlglot dialect |
+|---|---|
+| redshift | redshift |
+| postgres | postgres |
+| snowflake | snowflake |
+| bigquery | bigquery |
+| databricks / spark | databricks |
+| duckdb | duckdb |
+| clickhouse | clickhouse |
+| trino / presto | presto |
+| (unknown / not found) | postgres (closest neutral default) |
+
+Export as `DIALECT=...` for use in batch invocation below.
+
+### Step 4b: Run batch extraction
+
+```bash
+PROJECT_NAME=$(grep -E '^name:' "$DBT_DIR/dbt_project.yml" | head -1 | awk '{print $2}' | tr -d "'\"")
 python3 .dbt-wiki/_internal/extract_column_lineage.py \
-    "$DBT_DIR/target/compiled/$PROJECT_NAME/${original_file_path}" \
-    redshift > /tmp/col_lineage_$model_name.json
+    --batch "$DBT_DIR/target/compiled/$PROJECT_NAME/" \
+    "$DIALECT" > /tmp/dbt-wiki-col-lineage.jsonl
 ```
 
-(Adjust `redshift` to actual dialect — read from `dbt_project.yml`'s
-`profile`, or default to redshift if unknown.)
+Output is JSONL — one record per `.sql` file under compiled/, e.g.:
 
-### Step 4a: Reconcile sqlglot output with manifest columns
+```json
+{"path": "models/marts/fct_orders.sql",
+ "result": {"customer_id": ["o.customer_id", "c.id"], "order_id": ["o.order_id"], ...}}
+```
 
-For each model:
+If `result` contains `_error`, that model's column lineage failed —
+record the failure (Step 4d), still create the model page in Step 5
+with empty `sources:` per column.
+
+### Step 4c: (Optional but recommended on first run) Verify the script
+
+The script ships with a 7-case smoke test. Run once before processing:
+
+```bash
+python3 .dbt-wiki/_internal/extract_column_lineage_test.py
+```
+
+Expects "7/7 passed". If failures appear, sqlglot version mismatch is
+likely — request `pip install --upgrade 'sqlglot>=25.0'`.
+
+### Step 4d: Reconcile sqlglot output with manifest columns
+
+For each model, merge schema.yml-declared columns with sqlglot-extracted
+sources. Iterate the JSONL output from Step 4b, keyed by `path`:
 
 ```python
-manifest_columns = {c['name']: c for c in model['columns'].values()}  # from schema.yml
-sqlglot_columns = json.load(open(f"/tmp/col_lineage_{model_name}.json"))
+# Load batch output once
+sqlglot_by_path = {}
+for line in open('/tmp/dbt-wiki-col-lineage.jsonl'):
+    rec = json.loads(line)
+    sqlglot_by_path[rec['path']] = rec['result']
+
+# Per model: merge
+manifest_columns = {c['name']: c for c in model['columns'].values()}  # schema.yml
+# original_file_path is e.g. "models/marts/fct_orders.sql"; strip leading "models/"
+# so it matches the path key under target/compiled/<project>/models/...
+sqlglot_columns = sqlglot_by_path.get(model['original_file_path'], {})
 
 merged = {}
 for col_name in set(manifest_columns) | set(sqlglot_columns):
+    if col_name in ('_error',):
+        continue
     merged[col_name] = {
         'name': col_name,
         'declared_in_schema_yml': col_name in manifest_columns,
@@ -294,11 +295,18 @@ for col_name in set(manifest_columns) | set(sqlglot_columns):
         'tests': [t['name'] for t in tests_by_model.get(model['unique_id'], []) if t.get('column') == col_name],
         'sources': sqlglot_columns.get(col_name, []),  # may be empty if sqlglot missed
     }
+
+# Determine extraction status for the model
+if '_error' in sqlglot_columns:
+    extraction_status = 'failed'  # log the error
+elif not sqlglot_columns:
+    extraction_status = 'schema_yml_only'  # no compiled SQL or batch missed it
+else:
+    extraction_status = 'sqlglot'
 ```
 
-Track failures: if sqlglot returned `_error`, mark model with
-`columns_extracted_via: failed` and log reason. The model page still
-gets created — just with no `sources:` per column.
+Set frontmatter `columns_extracted_via: <extraction_status>`. The model
+page is always created — failures just mean empty `sources:` per column.
 
 ## Step 5: Write Model / Source / Macro Pages
 
