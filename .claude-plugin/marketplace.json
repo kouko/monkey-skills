@@ -13,6 +13,7 @@
     { "name": "slides-toolkit", "source": "./slides-toolkit/" },
     { "name": "tsundoku", "source": "./tsundoku/" },
     { "name": "four-dx-coach", "source": "./four-dx-coach/" },
-    { "name": "repo-wiki", "source": "./repo-wiki/" }
+    { "name": "repo-wiki", "source": "./repo-wiki/" },
+    { "name": "dbt-wiki", "source": "./dbt-wiki/" }
   ]
 }
