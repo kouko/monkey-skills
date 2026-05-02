@@ -659,6 +659,78 @@ def test_chain_us_classifier_e2e():
     }
 
 
+def test_chain_jp_classifier_e2e():
+    """data-jp regime-pack → classify_jp → CountryRegimeCard with valid
+    Phase 1 envelope. Per ADR-0004 PR-3.
+
+    The bundled JP fixture is from a pre-PR-3 fetch and lacks Tankan
+    business DI + ESRI coincident-index in its `series` block, so this
+    test asserts on the envelope shape + classifier outputs that DO
+    derive from the present series (CPI, IP, JGB10y, STRDCLUCON, ECB
+    real yield, Tankan inflation outlook). Tankan business DI / ESRI CI
+    will populate after a fresh JP regime-pack fetch post-PR-3.
+    """
+    fixture = FIXTURES / "data-jp-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", f"jp={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+
+    jp = out.get("by_country", {}).get("jp")
+    assert jp is not None, (
+        f"by_country.jp missing — classify_jp not picked up by dispatcher. "
+        f"output keys: {list(out.keys())}; "
+        f"by_country keys: {list(out.get('by_country', {}).keys())}"
+    )
+    assert jp["country"] == "jp"
+    assert jp["framework_used"], "framework_used empty"
+
+    nv = jp["native_verdict"]
+    assert "framework_label" in nv, "framework_label missing as first verdict key"
+    # JP-specific shape assertions
+    assert "boj_stance" in nv
+    assert nv["boj_stance"] in {"ZIRP", "post_zirp", "exit_deflation", "unknown"}
+    assert "policy_target_pct" in nv
+    assert nv["policy_target_pct"] == 0.75, (
+        f"policy_target_pct should match calibration (0.75 post-2025-12), got {nv['policy_target_pct']}"
+    )
+    assert "deflation_phase" in nv
+    assert nv["deflation_phase"] in {
+        "in_deflation",
+        "exit_deflation_phase_1",
+        "exit_deflation_phase_2",
+        "post_deflation",
+    }
+    # IC dimensions retained for parity with legacy
+    assert nv.get("ic_quadrant_legacy") in {
+        "1-recovery", "2-overheat", "3-stagflation", "4-reflation"
+    }
+    assert nv.get("gip_regime_legacy") in {"quad1", "quad2", "quad3", "quad4"}
+
+    # Confidence: PR-3 acceptance criterion — JP must rise from low to
+    # medium or high after coincident-index + Tankan business DI fetches
+    # are wired. The bundled fixture predates the new fetches but still
+    # has CPI + STRDCLUCON + IP, which gives medium confidence.
+    assert jp["confidence"] in ("medium", "high"), (
+        f"JP confidence must be medium/high post-PR-3 (was low pre-PR-3); "
+        f"got {jp['confidence']}; data_quality={jp.get('data_quality')}"
+    )
+
+    # Provenance points at JP threshold doc
+    assert jp["provenance"]["calibration_doc"] == "thresholds-japan.md"
+    assert jp["provenance"]["calibration_vintage"] == "2026-Q2"
+
+    # Real-rate block — fixture has ECB JP real yield, so this MUST resolve.
+    rrb = nv.get("real_rate_block")
+    assert rrb is not None, (
+        f"real_rate_block None — ECB real-yield fixture chain broken. "
+        f"indicators_used={jp.get('indicators_used')}"
+    )
+    assert rrb["band"] in {"accommodative", "neutral", "restrictive", "unknown"}
+
+
 # ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).

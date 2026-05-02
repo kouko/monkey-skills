@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://monkey-skills/investing-toolkit/data-jp/regime-pack.json",
   "title": "data-jp regime-pack output",
-  "description": "Output of `pack.py --pack regime-pack`. JP macro indicators — BOJ Call Rate O/N + Tankan inflation outlook (1/3/5y), e-Stat preset bundle (cpi / core-cpi / ip / unemployment / jgb10y), ECB JP real 10Y yield. Always Tier A (BOJ + 統計DB + ECB are all primary-source / no key required). Note: `groups.real_rates.real_10y_monthly_ecb` may be null or carry an empty `observations` array per `analysis-macro-regime/references/japan-real-rate-roadmap.md` — Layer 2 callers must handle missing real-rate observations gracefully.",
+  "description": "Output of `pack.py --pack regime-pack`. JP macro indicators — BOJ Call Rate O/N + Tankan inflation outlook (1/3/5y) + Tankan 業況判断 DI (4 categories: large/small × mfg/non-mfg, ADR-0004 PR-3), e-Stat preset bundle (cpi / core-cpi / ip / unemployment / jgb10y / coincident-index / leading-index / machine-orders), ECB JP real 10Y yield. Always Tier A (BOJ + 統計DB + ECB are all primary-source / no key required). Note: `groups.real_rates.real_10y_monthly_ecb` may be null or carry an empty `observations` array per `analysis-macro-regime/references/japan-real-rate-roadmap.md` — Layer 2 callers must handle missing real-rate observations gracefully.",
   "type": "object",
   "required": [
     "pack",
@@ -178,9 +178,31 @@
               ]
             }
           }
+        },
+        "cycle": {
+          "type": "object",
+          "description": "PR-3 (ADR-0004): cycle-group placeholder — ESRI 景気動向指数 CI 一致/先行 + 機械受注 are fetched via the e-Stat preset bundle and surface as top-level series keys via the T2 flatten helper. This sub-object holds an alias note pointing at groups.inflation.estat for canonical observation paths.",
+          "additionalProperties": true
+        },
+        "business_sentiment": {
+          "type": "object",
+          "description": "PR-3 (ADR-0004): Tankan 業況判断 DI — Large/Small × Manufacturing/Non-manufacturing (4 categories). Used by classify_jp.py. May be an error envelope on fetch failure (graceful degradation).",
+          "properties": {
+            "tankan_business_di": {
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "$ref": "https://monkey-skills/investing-toolkit/data-jp/error-envelope.json"
+                }
+              ]
+            }
+          },
+          "additionalProperties": true
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "_provenance": {
       "type": "object",

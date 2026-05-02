@@ -23,6 +23,17 @@ Convenience preset — Tankan 企業物価見通し (Average Inflation Outlook, 
     TK99F0000206HCQ00000  Outlook for General Prices / 5 years ahead
   All: All Enterprises / All industries / Average of Enterprises' Inflation Outlook.
 
+Convenience preset — Tankan 業況判断 DI (Business Conditions Diffusion Index):
+  uv run boj_client.py --tankan-business-di --periods 8
+
+  Maps to DB=CO codes (Simple aggregate / Actual / Ordinary figures):
+    TK99F1000601GCQ01000  Large Enterprises / Manufacturing
+    TK99F2000601GCQ01000  Large Enterprises / Non-manufacturing
+    TK99F1000601GCQ03000  Small Enterprises / Manufacturing
+    TK99F2000601GCQ03000  Small Enterprises / Non-manufacturing
+  Series-code structure verified via stat-search.boj.or.jp/info/tankan_code_en.html.
+  Used by analysis-macro-regime/classify_jp.py for native business-sentiment overlay.
+
 Auth: None required.
 Cache: $INVESTING_TOOLKIT_CACHE/boj/{db}_{code}_{start}_{end}.json  TTL: 24h
        Falls back to ~/.cache/investing-toolkit/ if env var not set.
@@ -359,6 +370,22 @@ TANKAN_PRICE_OUTLOOK_CODES: dict[int, str] = {
     5: "TK99F0000206HCQ00000",   # 5Y ahead
 }
 
+# ---------------------------------------------------------------------------
+# Tankan 業況判断 DI — Business Conditions Diffusion Index preset
+# ---------------------------------------------------------------------------
+#
+# Series-code structure (per stat-search.boj.or.jp/info/tankan_code_en.html):
+#   CO db, prefix TK99 + F (simple aggregate) + industry (1=mfg, 2=nonmfg)
+#   + 000 + 601 (Business Conditions DI) + G (DI) + CQ (quarterly) + 0
+#   (actual) + size (1=large, 3=small) + 000 (ordinary figure).
+# Categories surveyed by classify_jp.py:
+TANKAN_BUSINESS_DI_CODES: dict[str, str] = {
+    "large_mfg": "TK99F1000601GCQ01000",
+    "large_nonmfg": "TK99F2000601GCQ01000",
+    "small_mfg": "TK99F1000601GCQ03000",
+    "small_nonmfg": "TK99F2000601GCQ03000",
+}
+
 
 def _periods_to_start_yyyymm(periods: int, freq: str = "quarterly") -> str:
     """Rough backward calendar offset from today for --periods semantics.
@@ -403,6 +430,30 @@ def register_mcp_tools(mcp) -> None:
         start_date / end_date: 'YYYYMM' or 'YYYYMMDD' (end_date='' = latest).
         """
         return fetch_series(db, code, start_date, end_date, use_cache=True)
+
+    @mcp.tool()
+    def boj_tankan_business_di(periods: int = 8) -> dict:
+        """Fetch Tankan 業況判断 DI (Business Conditions Diffusion Index)
+        across 4 categories: large/small × manufacturing/non-manufacturing.
+        Surveyed quarterly. Used by analysis-macro-regime/classify_jp.py for
+        native business-sentiment overlay.
+        periods: number of quarterly observations (default 8 = 2 years).
+        """
+        codes = ",".join(TANKAN_BUSINESS_DI_CODES.values())
+        start_date = _periods_to_start_yyyymm(periods, freq="quarterly")
+        raw = fetch_series("CO", codes, start_date, "", use_cache=True)
+        category_by_code = {v: k for k, v in TANKAN_BUSINESS_DI_CODES.items()}
+        if "series" in raw and isinstance(raw["series"], dict):
+            for sc, entry in raw["series"].items():
+                if isinstance(entry, dict) and "observations" in entry:
+                    obs = entry["observations"][-periods:]
+                    entry["observations"] = obs
+                    entry["count"] = len(obs)
+                    entry["latest"] = obs[-1] if obs else None
+                    entry["category"] = category_by_code.get(sc)
+                    entry["indicator"] = "tankan_business_di"
+        raw["_preset"] = "tankan-business-di"
+        return raw
 
     @mcp.tool()
     def boj_tankan_inflation_outlook(
@@ -468,6 +519,11 @@ def main() -> None:
              "Pairs with --horizons and --periods.",
     )
     parser.add_argument(
+        "--tankan-business-di", action="store_true",
+        help="Fetch Tankan 業況判断 DI (Business Conditions DI) across 4 "
+             "categories (large/small × mfg/non-mfg). Pairs with --periods.",
+    )
+    parser.add_argument(
         "--horizons", default="1,3,5",
         help="Comma-separated horizons in years for --tankan-price-outlook "
              "(default: 1,3,5). Valid: 1, 3, 5.",
@@ -484,7 +540,42 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # ---- Tankan preset path -------------------------------------------------
+    # ---- Tankan business DI preset path -------------------------------------
+    if args.tankan_business_di:
+        db = "CO"
+        codes = ",".join(TANKAN_BUSINESS_DI_CODES.values())
+        start_date = _periods_to_start_yyyymm(args.periods, freq="quarterly")
+        end_date = ""
+
+        if args.no_cache:
+            cache_path = get_cache_path(db, codes, start_date, end_date)
+            if cache_path.exists():
+                cache_path.unlink()
+
+        raw = fetch_series(db, codes, start_date, end_date, use_cache=not args.no_cache)
+
+        category_by_code = {v: k for k, v in TANKAN_BUSINESS_DI_CODES.items()}
+        if "series" in raw and isinstance(raw["series"], dict):
+            for sc, entry in raw["series"].items():
+                if isinstance(entry, dict) and "observations" in entry:
+                    obs = entry["observations"][-args.periods:]
+                    entry["observations"] = obs
+                    entry["count"] = len(obs)
+                    entry["latest"] = obs[-1] if obs else None
+                    entry["category"] = category_by_code.get(sc)
+                    entry["indicator"] = "tankan_business_di"
+
+        raw["_preset"] = "tankan-business-di"
+        print(json.dumps(raw, default=str, indent=2))
+
+        if "error" in raw:
+            sys.exit(1)
+        if "series" in raw and isinstance(raw["series"], dict):
+            if any("error" in v for v in raw["series"].values() if isinstance(v, dict)):
+                sys.exit(1)
+        return
+
+    # ---- Tankan price outlook preset path -----------------------------------
     if args.tankan_price_outlook:
         try:
             horizons = [int(h.strip()) for h in args.horizons.split(",") if h.strip()]
@@ -543,7 +634,7 @@ def main() -> None:
     # ---- Generic path -------------------------------------------------------
     if not args.db or not args.code or not args.start_date:
         parser.error("--db, --code, and --start-date are required "
-                     "(or use --tankan-price-outlook).")
+                     "(or use --tankan-price-outlook / --tankan-business-di).")
 
     db = args.db.upper()
     code = args.code.strip()
