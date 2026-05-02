@@ -11,10 +11,12 @@ name: check-script-sync
 # owner). No second-consumer duplication exists yet, so the group is omitted.
 # Add it back here when another analysis-* skill consumes ta_client.py.
 #
-# Status: ADVISORY in PR 1.
-# This workflow runs and reports a red X on drift, but is NOT in branch
-# protection's required-checks list. PR 3 promotes it to required (settings
-# change in branch-protection UI; no YAML edit needed at that point).
+# Status: REQUIRED (promoted from advisory in v2.1.x-d, 2026-05-02).
+# Branch protection's required-checks list for `main` includes
+# "investing-toolkit script MD5 sync" — drift now blocks merge.
+# Promotion blocker cleared: 60/60 runs since 2026-05-01 succeeded with
+# zero false-positives; deliberate-drift smoke test fails as expected
+# (exit=1 with diff surfaced).
 
 on:
   pull_request:
