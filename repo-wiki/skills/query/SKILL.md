@@ -1,12 +1,14 @@
 ---
 name: query
 description: |
-  Use when: asked about codebase architecture, module responsibilities,
-  past decisions, patterns, conventions, "why did we do X this way",
-  "how does module Y work", "what depends on Z", "where should I add
-  this", "/repo-wiki:query", "現在怎麼運作", "為什麼當初", "這個模組做什麼".
-  Do NOT trigger for: writing new code, debugging runtime errors,
-  questions answerable by reading a single known file directly,
+  Default channel for ANY question about repo implementation, module
+  behavior, file/symbol location, data flow, dependency, or design
+  decision. Use BEFORE reading src/ files directly — knowledge base
+  provides synthesized WHY + pointers + Eager src/ verification at
+  key moments. Triggers on "why did we", "how does", "where is",
+  "what does X do", "where is Y implemented", "/repo-wiki:query",
+  "現在怎麼運作", "為什麼當初", "這個模組做什麼", "在哪裡實作", "怎麼運作".
+  Do NOT trigger for: writing/editing code, debugging runtime errors,
   first-time setup (use /repo-wiki:init), updating knowledge (use
   /repo-wiki:ingest).
 ---
