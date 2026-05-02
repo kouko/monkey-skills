@@ -209,10 +209,10 @@ from the plugin's assets to the project's `.dbt-wiki/_internal/`:
 
 ```bash
 mkdir -p .dbt-wiki/_internal
-cp <SKILL_DIR>/assets/scripts/extract_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/scripts/extract_column_lineage_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/scripts/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/scripts/extract_sql_comments_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_column_lineage.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_column_lineage_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 ```
 
 (Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
@@ -289,8 +289,8 @@ no sqlglot dep — works on jinja-laden raw_code). It's already copied
 to `.dbt-wiki/_internal/` in Step 4 alongside the lineage script:
 
 ```bash
-cp <SKILL_DIR>/assets/scripts/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/scripts/extract_sql_comments_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 ```
 
 Batch-extract all model file comments (uses `dbt/models/` raw paths,
