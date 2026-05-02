@@ -4,6 +4,94 @@ All notable changes to the `repo-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v1.2.0 precision fusion
+
+Three independent precision improvements inspired by SourceAtlas's
+information-theory analysis discipline (Article I — high-entropy priority,
+scan-ratio bounds), adapted to repo-wiki's three skills along three
+different axes. Schema-zero — no v1.x freeze break.
+
+### Added — `BENCHMARK.md` baseline schema
+
+- New top-level `BENCHMARK.md` establishes the measurement harness:
+  5 public repos (fastapi, hono, loki, rails, Signal-Android) × 3 skills
+  (init, ingest, query) with reproducible methodology.
+- Measurement cells start as `TBD`; v1.2 PRs append delta columns.
+- Establishes ground-truth conventions (author-declared module list,
+  hand-labelled architectural commits, sealed reference query answers).
+
+### Changed — `/repo-wiki:query` adds verification scan budget + coverage reporting
+
+- Step 3.5 gains a **Verification Budget** subsection with formula
+  `budget = max(1, min(10, ceil(0.05 × total_paths)))` so a single query
+  never opens more than 10 `src/` files. T7 (explicit verify) keeps the
+  same cap; uncovered claims surface in Unverified.
+- Deterministic file selection: claim-mentioned → entry points →
+  most-recently-modified → stop when budget exhausted.
+- Step 4 segmented format gains mandatory `## Verification Coverage`
+  section reporting triggers fired, files-read / total-paths, selection
+  rationale, and uncovered paths in scope. Makes verification depth a
+  first-class output instead of a hidden side-effect.
+- Synthesis frontmatter gains optional `verification_budget` and
+  `verification_coverage_pct`; `log.md` query entry gains
+  `Verification: N/M (P%)` line when triggers fired.
+
+### Changed — `/repo-wiki:init` adds high-entropy author-boundary pre-scan to Phase 1
+
+- New **Step 4a-pre — High-Entropy Author-Boundary Pre-Scan** runs
+  before `git ls-files` heuristics. Reads structural fields only (NOT
+  source code) from root configs to extract author-declared module
+  boundaries: `package.json` workspaces, `pnpm-workspace.yaml`,
+  `lerna.json`, `nx.json` + `project.json`, `tsconfig.json` paths,
+  `go.mod` module + replace, `pyproject.toml` packages, `setup.py`,
+  `Cargo.toml` workspace + lib/bin paths, `Gemfile` + gemspecs,
+  `composer.json` autoload.psr-4, `pom.xml` / `build.gradle` modules,
+  root `README.md` H2 titles.
+- Step 4a's depth rule gains an **author-declared boundary override**:
+  author-declared paths always become entities (depth rule overridden);
+  declared name wins over path-normalized name; author paths shadow
+  heuristic paths on overlap. Heuristic depth-1/2 modules fill the gaps.
+- `log.md` init entry gains `Modules discovered: N (author-declared: A,
+  heuristic: H)` and `Boundary configs scanned: <list>`.
+- Single-package repos with no matching configs see zero behavior change.
+
+### Changed — `/repo-wiki:ingest` adds entropy-weighted commit sampling for large git-mode batches
+
+- New **Step 1.5 — Entropy-Weighted Classification (Git Mode Only)**
+  runs when `commits_count >= 5`. Below 5 commits, classification is
+  skipped — v1.1 single-page behavior preserved for typical post-feature
+  ingests.
+- Three weight classes, observable git metadata only (no file content reads):
+  - **HIGH**: touches root config (Step 4a-pre whitelist), 3+ entities,
+    Common Entry Point, `feat(...)` / `refactor(...)` / `BREAKING CHANGE`,
+    new top-level dir, or tagged release → own source page
+  - **MEDIUM**: touches 2 entities, `fix(...)` with body, or new file in
+    existing module → file-overlap-batched (Jaccard >50%)
+  - **LOW**: test-only, docs-only, `chore` / `style` / `format`, or
+    single-file non-config non-entry → roll-up; log-only if <3 LOW commits
+- Source-page budget `min(15, ceil(commits/5))`. HIGH-first allocation;
+  overflow HIGH commits go into one noted overflow page (never silently
+  dropped).
+- `log.md` ingest entry gains `Classification: H/M/L (skipped: K)` and
+  `Sources created (budget: used/budget)` lines when classification ran.
+
+### Schema impact
+
+Zero. SCHEMA.md unchanged. New optional frontmatter keys
+(`verification_budget`, `verification_coverage_pct`) are additive — old
+syntheses parse unchanged. v1.x freeze respected.
+
+### Migration notes
+
+- v1.1 → v1.2: re-running `/repo-wiki:init` on an existing knowledge base
+  re-detects author-declared boundaries; existing entity stubs are
+  preserved per the v1.1 idempotency contract.
+- v1.1 → v1.2: existing syntheses without `verification_budget` continue
+  to work; new queries write the new fields.
+- v1.1 → v1.2: ingest behavior unchanged for any ingest with <5 commits.
+
+---
+
 ## [1.1.0] — 2026-05-02
 
 ### Changed — `/repo-wiki:init` now provides complete src/ coverage
