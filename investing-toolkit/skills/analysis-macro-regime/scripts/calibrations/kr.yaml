@@ -1,0 +1,170 @@
+# KR calibration plumbed from references/thresholds-korea.md (per ADR-0004).
+# Vintage: 2026-Q1 (full grounding 2026-04-18 v1.9.0; v1.11.0 partial refresh
+# 2026-04-19; this 2026-05-02 partial delta — no mandatory triggers fired
+# between 2026-04-19 and 2026-05-02; cosmetic refresh of KOSPI concentration
+# 40.90% → 40.96% per 2026-04-23 close).
+#
+# Authority: 한국은행 (Bank of Korea, BOK) + 통계청 (KOSTAT)
+# Currency: KRW
+country: kr
+authority: Bank of Korea (한국은행) + KOSTAT (통계청)
+currency: KRW
+
+# --- Inflation target ---
+# BOK 2% point target since 2019; 2018-12-26 합의 후 적용기간 무기한
+# (이전 3 년 주기 재설정 관행 폐기). 2 년 주기 운영 점검 + 정부 협의.
+inflation_target: 2.0
+inflation_target_type: point  # not central_tendency, not band — single point
+inflation_target_framework: inflation_targeting  # FIT-style; "균형있게 고려" qualitative bias
+inflation_target_authority_date: 2018-12-26
+inflation_target_horizon: medium-term
+inflation_target_band:
+  at_target: { lower: 1.7, upper: 2.3 }  # 무기한 적용; band is BOK communication, not policy mechanic
+  above_target_threshold: 2.3
+  below_target_threshold: 1.7
+
+# --- Policy rate (BOK 기준금리) ---
+# 7 회 연속 동결 since 2025-05-29 인하 (3.00 → 2.50). Last decision 2026-04-10.
+policy_rate_level: 2.50
+policy_rate_authority_date: 2026-04-10  # 가장 최근 동결 결정
+policy_rate_path_note: "7 회 연속 동결 since 2025-05 (2025-05-29 인하 후 7 차례 동결: 2025-07/08/10/11, 2026-01/02/04)"
+policy_rate_neutrality:
+  # BOK 연구원 Do/Ahn/Jung 2024 (SSRN 5009627) multi-model:
+  # 실질 r* ~0-1% range (분포 하단 마이너스 근접 가능)
+  bok_research_real_lower: 0.0
+  bok_research_real_upper: 1.0
+  # 2% 물가 가정시 nominal neutral
+  nominal_neutral_lower: 2.0
+  nominal_neutral_upper: 3.0
+  # Historical BOK base rate range 2000-2024
+  historical_min: 1.25
+  historical_max: 5.25
+  notes: |
+    BOK has historically been reluctant to publish explicit r*. Do/Ahn/Jung 2024
+    multi-model 추정 ~0-1% real (lower bound can approach negative). Current
+    nominal 2.50% with CPI ~2.1% → real ~0.4% — within neutral band, slight
+    accommodative bias. BOK MPC framework more flexible than Fed FIT;
+    decisions tied strongly to household debt + FX + semi-cycle.
+
+# --- NAIRU / labor market ---
+# BOK does not publish official NAIRU; relies on KDI / KIEP / 한양대 academic
+# literature (신석하 2004 KDI JEP; Semi-Parametric Analysis).
+nairu:
+  point_estimate: 3.2  # 학술 컨센서스 중점 (3.0-3.5% range)
+  band: [3.0, 3.5]
+  source: "KDI / KIEP / 한양대 학술 컨센서스 (post-2010 trending down)"
+unemployment_bands:
+  tight_threshold: 2.8
+  balanced_lower: 2.8
+  balanced_upper: 3.6
+  slack_threshold: 3.6
+youth_unemployment:
+  pct: 7.7  # KOSTAT 2026-02 (5 년 최고; 2021-02 10.1% 이후 최고)
+  date: 2026-02
+  five_year_high_flag: true
+  note: "청년 (15-29세) 실업률 5 년 최고; 청년 고용률 22 개월 연속 하락 trend"
+
+# --- Cycle (KOSTAT 경기종합지수 동행지수순환변동치) ---
+# 동행지수 순환변동치 = 동행지수에서 추세변동분 제거; 100 = 추세선
+# ≥100 → 확장 국면, <100 → 수축 국면
+cycle_threshold: 100.0
+cycle_phase_bands:
+  expansion_threshold: 100.0
+  contraction_threshold: 100.0  # symmetric — single threshold; phase modifier from rising/falling
+  rising_band_pct: 0.5  # 0.5pp move = signal (smaller than CFNAI band)
+
+# --- Household debt overlay (BIS + BOK macroprudential) ---
+# BIS 2025-Q3 89.4%; BOK 2025-09 92.3%; 2021-Q3 피크 99.1% (실제 — prior draft
+# 잘못 105% 기록). 정부 80% by 2030 target 검토 (Herald 2026-03-24 단독).
+household_debt_overlay:
+  ratio_bis: 0.894          # BIS 2025-Q3
+  ratio_bok: 0.923          # BOK 기준 2025-09
+  peak_2021q3: 0.991        # 역사적 피크 (NOT 1.05 — that was prior-draft error)
+  long_term_average: 0.837  # 2010- 평균
+  govt_target_2030: 0.80    # 정부 정책 검토 (정식 발표 전)
+  macroprudential_concern_threshold: 0.80  # BOK 분석 — >80% 시 소비 위축
+  macroprudential_concern: true            # current 89.4% > 80% → flagged
+  bis_warning: "다음 금융위기 촉발 가능성이 높은 국가 중 하나 (BIS 2025-05)"
+
+# --- KOSPI concentration overlay (Samsung + SK Hynix) ---
+# 2026-04-23 11:30 기준 = 40.96% (refreshed from v1.11.0's 40.90%).
+# 2026-04-21 장중 41.11% peak. 4 월 7 일 첫 40% 돌파 (HBM 랠리).
+# 삼성그룹 + SK그룹 전체 = 61.29% (2026-02; 1 년 전의 약 2 배).
+kospi_concentration_overlay:
+  samsung_skhynix: 0.4096            # 2026-04-23 close
+  samsung_skhynix_intraday_peak: 0.4111  # 2026-04-21
+  samsung_sk_groups: 0.6129           # 2026-02 그룹 전체
+  date: 2026-04-23
+  one_year_ago_skhynix: 0.1453        # 2025-06 삼성전자 단독 9 년 저점 → 9 개월 급반등
+  exceeds_sp500_mag7_flag: true       # > S&P500 Mag-7 33.41%
+  semiconductor_cycle_dependency: |
+    KR 지수 사이클 = DRAM 사이클. 기재부 정책 반응이 directly driven by
+    반도체. HBM 경쟁력 + AI 데이터센터 수요로 추가 확대 여지 (Phase 2
+    Overheat / 반도체 사이클 정점 근접 위험 주시 요인).
+
+# --- Direction-classification calibration (from _legacy_ic.py) ---
+direction_band_stdev: 0.5
+normalised_indicators:
+  - cycle.coincident-cycle  # K253 동행지수 순환변동치 (normalised)
+  - coincident-cycle
+  - cycle.leading-cycle     # K254 선행지수 순환변동치
+
+# --- Structural overlays applied by classify_kr.py ---
+structural_overlays:
+  - bok_target_alignment       # CPI yoy vs 2% point target
+  - cycle_phase                # KOSTAT 동행지수 순환변동치 vs 100
+  - household_debt_overlay     # BIS / BOK ratios + macroprudential flag
+  - kospi_concentration_overlay  # 삼성+SK하이닉스 + 그룹 전체
+  - youth_unemployment         # KOSTAT 청년 (15-29세) 실업률
+  - esi_status                 # BOK 경제심리지수 — best-effort overlay
+
+# --- ESI (경제심리지수) overlay ---
+# K269 in fdr_client.py PRESETS; pulled by pack.py REGIME_GROUPS["sentiment"].
+# Best-effort per ADR-0004 PR-5: classify_kr surfaces fetched value when
+# present in regime-pack series; degrades gracefully (esi_status =
+# "unavailable_via_fdr", confidence floor "medium") when absent.
+esi_overlay:
+  long_run_average_band:
+    upper: 100.0
+    at_average_lower: 95.0
+    at_average_upper: 105.0
+  recent_reading: 91.7    # 2026-04 (전월대비 -2.3p)
+  recent_date: 2026-04
+  cbsi_2026_04: 94.9      # 기업심리지수 (전월 +0.8p — 4 개월 만 최대)
+  cbsi_excl_inventory_note: |
+    재고 효과 제외 시 4월 실적 + 5월 전망 모두 소폭 하락 — sentiment
+    underlying tone 약화.
+
+# --- KR-specific structural notes (from thresholds-korea.md §Structural) ---
+structural_notes:
+  export_dependency: 0.42   # exports ~40-45% GDP (G20 최고)
+  export_band: [0.40, 0.45]
+  export_cycle_anchor: "global semi + auto cycle"
+  bis_classification: "advanced economy (2026-01 from)"  # 시계열 그룹 변경
+  fertility_rate: 0.72  # OECD 최저
+  fertility_demographic_overhang_flag: true
+  krw_managed: true     # free-floating but BOK intervenes on large moves
+  krw_2026_q1_note: "원화 16 년 저점 근접 유지"
+
+# --- Provenance ---
+provenance:
+  calibration_doc: thresholds-korea.md
+  calibration_vintage: 2026-Q1
+  last_full_grounding: 2026-04-18  # v1.9.0 KR section
+  partial_refresh: 2026-04-19      # v1.11.0 addendum (7 연속 동결 + 40.90%)
+  this_pr_partial_refresh: 2026-05-02  # PR-5 delta — cosmetic 40.90→40.96 refresh
+  authority_sources:
+    - 한국은행 (BOK) — 기준금리, 물가안정목표, 통화정책방향, ECOS, ESI/CBSI
+    - 통계청 (KOSTAT) — 경기종합지수, 동행지수순환변동치, 고용동향
+    - BIS — 가계부채/GDP, country reclassification (2026-01 advanced)
+    - KDI / KIEP / 한양대 — NAIRU 학술 추정
+    - Do/Ahn/Jung 2024 (SSRN 5009627) — BOK 연구원 multi-model r*
+  primary_source_urls:
+    - https://www.bok.or.kr/portal/main/contents.do?menuNo=200291  # 물가안정목표제
+    - https://www.bok.or.kr/portal/bbs/P0000559/  # 통화정책방향
+    - https://www.bok.or.kr/portal/singl/baseRate/list.do?dataSeCd=01&menuNo=200643  # 기준금리 추이
+    - https://snapshot.bok.or.kr/?en=y  # ESI/CBSI/가계부채 snapshot
+    - https://ecos.bok.or.kr/  # ECOS API
+    - https://kostat.go.kr/  # KOSTAT
+    - https://www.index.go.kr/unify/idx-info.do?idxCd=5028  # 청년실업률
+    - https://www.index.go.kr/unity/potal/indicator/IndexInfo.do?idxCd=F0140  # GDP 대비 가계신용
