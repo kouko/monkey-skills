@@ -3,12 +3,13 @@
   "country": "kr",
   "tickers": [
     "005930.KS",
-    "000660.KS"
+    "000660.KS",
+    "051910.KS"
   ],
   "info": {
     "005930.KS": {
       "ticker": "005930.KS",
-      "fetched_at": "2026-05-01T15:09:33Z",
+      "fetched_at": "2026-05-02T01:38:34Z",
       "_cache": "hit",
       "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
       "symbol": "005930.KS",
@@ -46,14 +47,14 @@
         "data_type": "unofficial_scraper",
         "update_cycle": "near-real-time (15 min delay)",
         "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-        "fetched_at": "2026-05-01T15:09:33Z",
+        "fetched_at": "2026-05-02T01:38:34Z",
         "reference_period": null,
         "staleness_days": null
       }
     },
     "000660.KS": {
       "ticker": "000660.KS",
-      "fetched_at": "2026-05-01T15:09:55Z",
+      "fetched_at": "2026-05-02T01:40:00Z",
       "_cache": "miss",
       "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
       "symbol": "000660.KS",
@@ -91,7 +92,52 @@
         "data_type": "unofficial_scraper",
         "update_cycle": "near-real-time (15 min delay)",
         "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-        "fetched_at": "2026-05-01T15:09:55Z",
+        "fetched_at": "2026-05-02T01:40:00Z",
+        "reference_period": null,
+        "staleness_days": null
+      }
+    },
+    "051910.KS": {
+      "ticker": "051910.KS",
+      "fetched_at": "2026-05-02T01:40:00Z",
+      "_cache": "miss",
+      "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+      "symbol": "051910.KS",
+      "shortName": "LGCHEM",
+      "longName": "LG Chem, Ltd.",
+      "sector": "Basic Materials",
+      "industry": "Chemicals",
+      "country": "South Korea",
+      "currency": "KRW",
+      "exchange": "KSC",
+      "regularMarketPrice": 397000.0,
+      "regularMarketPreviousClose": 407500.0,
+      "marketCap": 31075216654336,
+      "enterpriseValue": 68245864316928,
+      "forwardPE": 16.993826,
+      "dividendYield": 0.5,
+      "payoutRatio": 0.0,
+      "fiftyTwoWeekHigh": 428500.0,
+      "fiftyTwoWeekLow": 181500.0,
+      "fiftyDayAverage": 339570.0,
+      "twoHundredDayAverage": 330622.5,
+      "sharesOutstanding": 70592341,
+      "totalRevenue": 45932167036928,
+      "grossMargins": 0.17002001,
+      "operatingMargins": -0.03688,
+      "profitMargins": -0.03961,
+      "returnOnEquity": -0.03778,
+      "returnOnAssets": -0.00299,
+      "totalDebt": 33813495283712,
+      "totalCash": 10902789160960,
+      "beta": 1.351,
+      "_provenance": {
+        "source": "yfinance (unofficial Yahoo Finance scraper)",
+        "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+        "data_type": "unofficial_scraper",
+        "update_cycle": "near-real-time (15 min delay)",
+        "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+        "fetched_at": "2026-05-02T01:40:00Z",
         "reference_period": null,
         "staleness_days": null
       }

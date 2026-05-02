@@ -2,7 +2,8 @@
   "_pack": "comps-multiples",
   "_tickers": [
     "2330.TW",
-    "2454.TW"
+    "2454.TW",
+    "2317.TW"
   ],
   "tickers": {
     "2330.TW": {
@@ -32,6 +33,43 @@
           "enterpriseValue": 3985525964800
         }
       }
+    },
+    "2317.TW": {
+      "_tier": "2",
+      "_source": "yfinance",
+      "_action": "info-multiples",
+      "data": {
+        "multiples": {
+          "trailingPE": 16.39283,
+          "forwardPE": 10.889841,
+          "priceToBook": 1.7288365,
+          "marketCap": 3064821186560,
+          "enterpriseValue": 2960559702016
+        }
+      }
+    }
+  },
+  "info": {
+    "2330.TW": {
+      "trailingPE": 28.984522,
+      "forwardPE": 17.678774,
+      "priceToBook": 9.398456,
+      "marketCap": 55364816994304,
+      "enterpriseValue": 53040035921920
+    },
+    "2454.TW": {
+      "trailingPE": 39.52749,
+      "forwardPE": 24.273758,
+      "priceToBook": 10.399028,
+      "marketCap": 4165847744512,
+      "enterpriseValue": 3985525964800
+    },
+    "2317.TW": {
+      "trailingPE": 16.39283,
+      "forwardPE": 10.889841,
+      "priceToBook": 1.7288365,
+      "marketCap": 3064821186560,
+      "enterpriseValue": 2960559702016
     }
   }
 }

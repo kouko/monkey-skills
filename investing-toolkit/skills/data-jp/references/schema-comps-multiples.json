@@ -145,7 +145,15 @@
         }
       },
       "additionalProperties": true
+    },
+    "info": {
+      "type": "object",
+      "description": "T1 canonical multiples alias — dict keyed by 4-digit JP ticker. analysis-comps reads pack.info[ticker]. Cross-country symmetric per docs/normalization-contract.md.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

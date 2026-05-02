@@ -27,9 +27,10 @@
       "required": ["info", "history"],
       "properties": {
         "info": {"$ref": "schema-error-envelope.json"},
-        "history": {"$ref": "schema-error-envelope.json", "description": "Tier 2. Default period=2y for memo-fetch (vs 1y for snapshot)."}
+        "history": {"$ref": "schema-error-envelope.json", "description": "Tier 2. Default period=2y for memo-fetch (vs 1y for snapshot)."},
+        "financials_annual": {"$ref": "schema-error-envelope.json", "description": "T3 Tier 2 yfinance financials annual (income / balance / cash flow). Per ADR-0003."}
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "mops": {
       "type": "object",
@@ -74,5 +75,5 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

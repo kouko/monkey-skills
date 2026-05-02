@@ -4,7 +4,7 @@
   "title": "data-kr snapshot pack",
   "description": "Output of `pack.py --pack snapshot --ticker <KR ticker>`. Quick-overview card combining yfinance `info` + 1-year `history` for a single Korean equity. **Tier 2 only** — Korean primary-source equity (DART) is not wired in this skill; `_provenance.primary_source_status` is always 'deferred'.",
   "type": "object",
-  "required": ["pack", "country", "ticker", "info", "history", "_provenance"],
+  "required": ["pack", "country", "ticker", "info", "price_history", "_provenance"],
   "properties": {
     "pack": {"type": "string", "const": "snapshot"},
     "country": {"type": "string", "const": "kr"},
@@ -55,8 +55,17 @@
       "additionalProperties": true
     },
     "history": {
+      "type": "array",
+      "description": "T1 canonical OHLCV alias — flat list of OHLCV rows (same content as price_history.data). Top-level for analysis-technical / ta_compute. Cross-country symmetric with data-us per docs/normalization-contract.md.",
+      "items": {
+        "type": "object",
+        "required": ["date", "open", "high", "low", "close", "volume"],
+        "additionalProperties": true
+      }
+    },
+    "price_history": {
       "type": "object",
-      "description": "yfinance `history` action output for the trailing 1y period.",
+      "description": "Raw yfinance `history` action envelope for the trailing 1y period. Renamed from `history` per ADR-0002 staging-tier (Principle 1: raw never deleted).",
       "required": ["ticker", "data"],
       "properties": {
         "ticker": {"type": "string"},

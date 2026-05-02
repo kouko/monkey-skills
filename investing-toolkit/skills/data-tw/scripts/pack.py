@@ -168,6 +168,143 @@ def wrap(tier: str, source: str, action: str, data: Any) -> dict[str, Any]:
 
 # ----------------------------- pack: snapshot -----------------------------
 
+_YF_LABEL_MAP_TW = {
+    "revenue": ["Total Revenue", "Operating Revenue"],
+    "operating_income": ["Operating Income", "Total Operating Income As Reported"],
+    "net_income": ["Net Income", "Net Income Common Stockholders"],
+    "operating_cash_flow": ["Operating Cash Flow"],
+    "capex": ["Capital Expenditure"],
+    "free_cash_flow": ["Free Cash Flow"],
+    "long_term_debt": ["Long Term Debt"],
+    "short_term_debt": ["Current Debt"],
+    "total_debt": ["Total Debt"],
+    "cash": ["Cash And Cash Equivalents"],
+}
+
+
+def _build_canonical_from_yf_financials_tw(financials: dict) -> dict:
+    """T3 (yfinance Tier 2 fallback for TW) — extract canonical from
+    yfinance --action financials annual. Per ADR-0003.
+
+    Note: MOPS Tier A canonical extraction (中文 t164sb04/05/03 → flat
+    income_statement) is deferred to a future PR — see tw_specific block.
+    Most-recent-first, depth 5.
+    """
+    if not isinstance(financials, dict):
+        financials = {}
+    income = financials.get("income_statement") or {}
+    balance = financials.get("balance_sheet") or {}
+    cashflow = financials.get("cash_flow") or {}
+    periods = sorted(set(income) | set(balance) | set(cashflow), reverse=True)[:5]
+
+    def _extract(src: dict, canonical: str) -> tuple[list[float], str | None]:
+        labels = _YF_LABEL_MAP_TW.get(canonical, [])
+        used_label: str | None = None
+        out: list[float] = []
+        for p in periods:
+            row = src.get(p, {})
+            v = None
+            for label in labels:
+                if label in row and row[label] is not None:
+                    v = row[label]
+                    if used_label is None:
+                        used_label = label
+                    break
+            if v is not None:
+                try:
+                    out.append(float(v))
+                except (TypeError, ValueError):
+                    pass
+        return out, used_label
+
+    revenue, rev_label = _extract(income, "revenue")
+    operating_income, op_label = _extract(income, "operating_income")
+    net_income, ni_label = _extract(income, "net_income")
+    ocf, ocf_label = _extract(cashflow, "operating_cash_flow")
+    capex_raw, capex_label = _extract(cashflow, "capex")
+    fcf, fcf_label = _extract(cashflow, "free_cash_flow")
+    long_term_debt, ltd_label = _extract(balance, "long_term_debt")
+    short_term_debt, std_label = _extract(balance, "short_term_debt")
+    total_debt_raw, td_label = _extract(balance, "total_debt")
+    cash, cash_label = _extract(balance, "cash")
+
+    capex = [abs(v) for v in capex_raw]
+    total_debt = total_debt_raw if total_debt_raw else [
+        (long_term_debt[i] if i < len(long_term_debt) else 0.0)
+        + (short_term_debt[i] if i < len(short_term_debt) else 0.0)
+        for i in range(max(len(long_term_debt), len(short_term_debt)))
+    ]
+
+    def _meta(canonical: str, label: str | None, periods_used: list[str]) -> dict:
+        return {
+            "source_label": label,
+            "source_labels_tried": _YF_LABEL_MAP_TW.get(canonical, []),
+            "fiscal_year_ends": periods_used[: len(periods_used)],
+            "accounting_standard": "tifrs",  # Taiwan IFRS (slight variance from international IFRS)
+            "unit": "TWD",
+            "tier": "Tier 2 (yfinance scraper — MOPS t164sb04/05/03 Tier A T3 deferred)",
+        }
+
+    return {
+        "income_statement": {
+            "revenue": revenue,
+            "operating_income": operating_income,
+            "ebit": operating_income,
+            "net_income": net_income,
+            "_meta": {
+                "revenue": _meta("revenue", rev_label, periods[: len(revenue)]),
+                "operating_income": _meta("operating_income", op_label, periods[: len(operating_income)]),
+                "ebit": {**_meta("operating_income", op_label, periods[: len(operating_income)]), "note": "alias of operating_income"},
+                "net_income": _meta("net_income", ni_label, periods[: len(net_income)]),
+            },
+        },
+        "cash_flow": {
+            "operating_cash_flow": ocf,
+            "capex": capex,
+            "fcf": fcf,
+            "_meta": {
+                "operating_cash_flow": _meta("operating_cash_flow", ocf_label, periods[: len(ocf)]),
+                "capex": {**_meta("capex", capex_label, periods[: len(capex)]), "note": "absolute value"},
+                "fcf": _meta("free_cash_flow", fcf_label, periods[: len(fcf)]),
+            },
+        },
+        "balance_sheet": {
+            "long_term_debt": long_term_debt,
+            "short_term_debt": short_term_debt,
+            "total_debt": total_debt,
+            "cash": cash,
+            "_meta": {
+                "long_term_debt": _meta("long_term_debt", ltd_label, periods[: len(long_term_debt)]),
+                "short_term_debt": _meta("short_term_debt", std_label, periods[: len(short_term_debt)]),
+                "total_debt": (
+                    _meta("total_debt", td_label, periods[: len(total_debt)])
+                    if total_debt_raw
+                    else {
+                        "source_label": None,
+                        "derivation": "long_term_debt + short_term_debt",
+                        "components": {"long_term_debt": ltd_label, "short_term_debt": std_label},
+                    }
+                ),
+                "cash": _meta("cash_and_equivalents", cash_label, periods[: len(cash)]),
+            },
+        },
+    }
+
+
+def _extract_ohlcv_rows_from_tw_yf(yf_history_wrapped: dict) -> list[dict]:
+    """Unwrap data-tw's nested yfinance history envelope to the OHLCV
+    rows list. Handles the {_tier, _source, _action, data: {data: [...]}}
+    wrapper shape that data-tw uses (uniquely among 5 country packs).
+    """
+    if not isinstance(yf_history_wrapped, dict):
+        return []
+    inner = yf_history_wrapped.get("data")
+    if not isinstance(inner, dict):
+        return []
+    rows = inner.get("data")
+    return rows if isinstance(rows, list) else []
+
+
 def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
     norm = normalize_ticker(ticker)
     yf_ticker = norm["ticker_yf"]
@@ -224,6 +361,8 @@ def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
             if "_error" in entry:
                 out["_partial"] = True
                 break
+    # T1 canonical OHLCV alias — flatten yfinance.history wrapper to top-level
+    out["history"] = _extract_ohlcv_rows_from_tw_yf(out["yfinance"]["history"])
     return out
 
 
@@ -295,6 +434,37 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
                     break
             if out["_partial"]:
                 break
+
+    # T3 canonical staging — yfinance Tier 2 fallback per ADR-0003.
+    # MOPS Tier A canonical extraction (中文 t164sb04/05/03 → flat) is deferred.
+    yf_ticker = norm["ticker_yf"]
+    yf_fin = run_client(
+        "yfinance_client.py",
+        ["--ticker", yf_ticker, "--action", "financials", "--period", "annual"],
+    )
+    canonical = _build_canonical_from_yf_financials_tw(yf_fin)
+    out["yfinance"]["financials_annual"] = wrap("2", "yfinance", "financials-annual", yf_fin)
+    out["income_statement"] = canonical["income_statement"]
+    out["cash_flow"] = canonical["cash_flow"]
+    out["balance_sheet"] = canonical["balance_sheet"]
+
+    # shares_outstanding / current_price from yfinance.info (already fetched in snapshot)
+    yf_info_wrapped = out.get("yfinance", {}).get("info") or {}
+    yf_info_data = yf_info_wrapped.get("data") if isinstance(yf_info_wrapped, dict) else None
+    if isinstance(yf_info_data, dict):
+        out["shares_outstanding"] = yf_info_data.get("sharesOutstanding")
+        out["current_price"] = yf_info_data.get("regularMarketPrice")
+    else:
+        out["shares_outstanding"] = None
+        out["current_price"] = None
+
+    out["tw_specific"] = {
+        "monthly_revenue_note": "TW-unique: 上市公司每月強制公告月營收 (mops/monthly-revenue is Tier A primary). NOT in canonical income_statement (5-country LCD). See out.mops.monthly_revenue raw block.",
+        "report_basis_note": "yfinance reports consolidated (合併) statements. MOPS exposes both 母公司 (parent-only) and 合併 — see out.mops raw block. Canonical defaults to 合併.",
+        "primary_source_status": "MOPS Tier A available for raw (out.mops.income_statement / balance_sheet / cash_flow are 中文 ROC-dated structured). T3 normalize from MOPS into canonical 5-year arrays is deferred to a follow-up PR.",
+        "three_investor_flow_note": "TW-unique: out.finmind.three_investor_flow / out.twse.three_investor.",
+        "margin_trading_note": "TW-unique: out.twse.margin_balance / out.finmind.margin_history.",
+    }
     return out
 
 
@@ -303,6 +473,7 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
 def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
     """yfinance info (multiples-only) for one or many tickers."""
     out: dict[str, Any] = {"_pack": "comps-multiples", "_tickers": [], "tickers": {}}
+    info_alias: dict[str, dict] = {}  # T1 canonical: pack.info[ticker] → multiples
     for t in tickers:
         norm = normalize_ticker(t)
         yf_t = norm["ticker_yf"]
@@ -318,6 +489,10 @@ def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
                           "marketCap", "enterpriseValue"]
         multiples = {k: info[k] for k in multiples_keys if isinstance(info, dict) and k in info}
         out["tickers"][yf_t] = wrap("2", "yfinance", "info-multiples", {"multiples": multiples})
+        if multiples:
+            info_alias[yf_t] = multiples
+    # T1 canonical multiples alias — analysis-comps reads pack.info[ticker]
+    out["info"] = info_alias
     return out
 
 

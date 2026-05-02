@@ -1,47 +1,47 @@
 {
   "pack": "comps-multiples",
-  "fetched_at": "2026-05-01T15:08:57+00:00",
+  "fetched_at": "2026-05-02T01:51:12+00:00",
   "tickers": [
     {
       "ticker": "7203",
       "yf_ticker": "7203.T",
       "multiples": {
-        "trailingPE": 10.557432,
+        "trailingPE": 10.559662,
         "forwardPE": 9.252976,
         "priceToSales": null,
         "priceToBook": 1.0032194,
         "enterpriseToEbitda": null,
         "enterpriseToRevenue": null,
         "marketCap": 35523162800128,
-        "enterpriseValue": 65953370996736
+        "enterpriseValue": 65653599895552
       }
     },
     {
-      "ticker": "7267",
-      "yf_ticker": "7267.T",
+      "ticker": "6758",
+      "yf_ticker": "6758.T",
       "multiples": {
-        "trailingPE": 10.12024,
-        "forwardPE": 5.5338826,
+        "trailingPE": 15.151662,
+        "forwardPE": 17.068777,
         "priceToSales": null,
-        "priceToBook": 0.39423066,
+        "priceToBook": 2.2861612,
         "enterpriseToEbitda": null,
         "enterpriseToRevenue": null,
-        "marketCap": 4914345934848,
-        "enterpriseValue": 13754969358336
+        "marketCap": 18473275097088,
+        "enterpriseValue": 18588517793792
       }
     },
     {
-      "ticker": "7269",
-      "yf_ticker": "7269.T",
+      "ticker": "9984",
+      "yf_ticker": "9984.T",
       "multiples": {
-        "trailingPE": 8.642706,
-        "forwardPE": 9.946099,
+        "trailingPE": 10.141919,
+        "forwardPE": 18.368383,
         "priceToSales": null,
-        "priceToBook": 1.0238338,
+        "priceToBook": 2.001244,
         "enterpriseToEbitda": null,
         "enterpriseToRevenue": null,
-        "marketCap": 3382017261568,
-        "enterpriseValue": 3992902696960
+        "marketCap": 30910095294464,
+        "enterpriseValue": 53426129993728
       }
     }
   ],
@@ -61,5 +61,37 @@
       "marketCap",
       "enterpriseValue"
     ]
+  },
+  "info": {
+    "7203": {
+      "trailingPE": 10.559662,
+      "forwardPE": 9.252976,
+      "priceToSales": null,
+      "priceToBook": 1.0032194,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 35523162800128,
+      "enterpriseValue": 65653599895552
+    },
+    "6758": {
+      "trailingPE": 15.151662,
+      "forwardPE": 17.068777,
+      "priceToSales": null,
+      "priceToBook": 2.2861612,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 18473275097088,
+      "enterpriseValue": 18588517793792
+    },
+    "9984": {
+      "trailingPE": 10.141919,
+      "forwardPE": 18.368383,
+      "priceToSales": null,
+      "priceToBook": 2.001244,
+      "enterpriseToEbitda": null,
+      "enterpriseToRevenue": null,
+      "marketCap": 30910095294464,
+      "enterpriseValue": 53426129993728
+    }
   }
 }

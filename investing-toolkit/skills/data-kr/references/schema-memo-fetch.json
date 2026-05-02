@@ -12,7 +12,7 @@
     "info",
     "financials_annual",
     "financials_quarterly",
-    "history",
+    "price_history",
     "_provenance"
   ],
   "properties": {
@@ -73,8 +73,45 @@
       "additionalProperties": true
     },
     "history": {
+      "type": "array",
+      "description": "T1 canonical OHLCV alias — flat list of OHLCV rows (same content as price_history.data). Top-level for analysis-technical. Cross-country symmetric with data-us per docs/normalization-contract.md.",
+      "items": {
+        "type": "object",
+        "required": ["date", "open", "high", "low", "close", "volume"],
+        "additionalProperties": true
+      }
+    },
+    "income_statement": {
       "type": "object",
-      "description": "yfinance `history --period 5y` output.",
+      "description": "T3 canonical income statement (Tier 2 yfinance fallback per ADR-0003). Annual depth 5, most-recent-first. Contains revenue / operating_income / ebit / net_income arrays + _meta.",
+      "additionalProperties": true
+    },
+    "cash_flow": {
+      "type": "object",
+      "description": "T3 canonical cash flow (Tier 2 yfinance). operating_cash_flow / capex / fcf + _meta.",
+      "additionalProperties": true
+    },
+    "balance_sheet": {
+      "type": "object",
+      "description": "T3 canonical balance sheet (Tier 2 yfinance). long_term_debt / short_term_debt / total_debt / cash + _meta.",
+      "additionalProperties": true
+    },
+    "shares_outstanding": {
+      "type": ["integer", "number", "null"],
+      "description": "Absolute share count from yfinance info.sharesOutstanding."
+    },
+    "current_price": {
+      "type": ["number", "null"],
+      "description": "Latest market price from yfinance info.regularMarketPrice (KRW)."
+    },
+    "kr_specific": {
+      "type": "object",
+      "description": "KR-specific extension block per Principle 3. Notes for DART deferral, K-IFRS consolidated-basis caveat.",
+      "additionalProperties": true
+    },
+    "price_history": {
+      "type": "object",
+      "description": "Raw yfinance `history --period 5y` envelope. Renamed from `history` per ADR-0002 staging-tier (Principle 1: raw never deleted).",
       "required": ["ticker", "data"],
       "properties": {
         "ticker": {"type": "string"},

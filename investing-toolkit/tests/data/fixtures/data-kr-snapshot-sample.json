@@ -4,8 +4,8 @@
   "ticker": "005930.KS",
   "info": {
     "ticker": "005930.KS",
-    "fetched_at": "2026-05-01T15:09:33Z",
-    "_cache": "miss",
+    "fetched_at": "2026-05-02T01:38:34Z",
+    "_cache": "hit",
     "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
     "symbol": "005930.KS",
     "shortName": "SamsungElec",
@@ -42,16 +42,16 @@
       "data_type": "unofficial_scraper",
       "update_cycle": "near-real-time (15 min delay)",
       "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-      "fetched_at": "2026-05-01T15:09:33Z",
+      "fetched_at": "2026-05-02T01:38:34Z",
       "reference_period": null,
       "staleness_days": null
     }
   },
-  "history": {
+  "price_history": {
     "ticker": "005930.KS",
     "period": "1y",
     "interval": "1d",
-    "fetched_at": "2026-05-01T15:09:34Z",
+    "fetched_at": "2026-05-02T01:39:59Z",
     "_cache": "miss",
     "data": [
       {
@@ -72,18 +72,18 @@
       },
       {
         "date": "2025-05-07",
-        "open": 53555.4129,
-        "high": 54046.7469,
-        "low": 53358.8792,
-        "close": 53653.6797,
+        "open": 53555.4168,
+        "high": 54046.7509,
+        "low": 53358.8831,
+        "close": 53653.6836,
         "volume": 17136991
       },
       {
         "date": "2025-05-08",
-        "open": 54145.0138,
-        "high": 54538.081,
-        "low": 53555.4129,
-        "close": 53653.6797,
+        "open": 54145.0177,
+        "high": 54538.085,
+        "low": 53555.4168,
+        "close": 53653.6836,
         "volume": 16320532
       },
       {
@@ -104,11 +104,53 @@
       "data_type": "unofficial_scraper",
       "update_cycle": "near-real-time (15 min delay)",
       "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-      "fetched_at": "2026-05-01T15:09:34Z",
+      "fetched_at": "2026-05-02T01:39:59Z",
       "reference_period": "2026-04-30",
-      "staleness_days": 1
+      "staleness_days": 2
     }
   },
+  "history": [
+    {
+      "date": "2025-04-30",
+      "open": 54931.1532,
+      "high": 55029.42,
+      "low": 54341.5523,
+      "close": 54538.0859,
+      "volume": 13014189
+    },
+    {
+      "date": "2025-05-02",
+      "open": 54046.7505,
+      "high": 54538.0846,
+      "low": 53260.616,
+      "close": 53358.8828,
+      "volume": 22454204
+    },
+    {
+      "date": "2025-05-07",
+      "open": 53555.4168,
+      "high": 54046.7509,
+      "low": 53358.8831,
+      "close": 53653.6836,
+      "volume": 17136991
+    },
+    {
+      "date": "2025-05-08",
+      "open": 54145.0177,
+      "high": 54538.085,
+      "low": 53555.4168,
+      "close": 53653.6836,
+      "volume": 16320532
+    },
+    {
+      "date": "2025-05-09",
+      "open": 53751.9519,
+      "high": 54046.7524,
+      "low": 53457.1515,
+      "close": 53850.2188,
+      "volume": 7814322
+    }
+  ],
   "_provenance": {
     "tier": "Tier 2 (yfinance unofficial)",
     "primary_source_status": "deferred",
