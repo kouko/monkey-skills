@@ -589,8 +589,22 @@ def test_chain_country_regime_to_macroregime(country):
         pytest.skip("missing fixture or script")
     rc, out, stderr = _run_layer2(script, ["--input", f"{country}={fixture}"])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    countries = out.get("countries") or out.get("by_country") or {}
+    # Schema lookup order:
+    # - v1.x: out["countries"][cc] holds ic_quadrant
+    # - Phase 1 (ADR-0004): classify_X output in out["by_country"][cc],
+    #   legacy IC fallback in out["_legacy"]["by_country"][cc]
+    countries = (
+        out.get("countries")
+        or out.get("by_country")
+        or out.get("_legacy", {}).get("by_country")
+        or {}
+    )
     block = countries.get(country) if isinstance(countries, dict) else None
+    if block is None or "ic_quadrant" not in block:
+        # PR-1 state: by_country is empty; legacy fallback carries ic_quadrant
+        legacy = out.get("_legacy", {}).get("by_country", {}).get(country)
+        if legacy and "ic_quadrant" in legacy:
+            block = legacy
     assert block is not None, (
         f"data-{country} regime: no {country} block produced. output keys: "
         f"{list(out.keys())}"
@@ -660,8 +674,18 @@ def test_chain_regimepack_to_macroregime():
     ])
 
     assert rc == 0, f"exit {rc}\nstderr: {stderr}\nstdout: {out}"
-    countries = out.get("countries") or out.get("by_country") or {}
+    # Schema lookup order (see test_chain_country_regime_to_macroregime above)
+    countries = (
+        out.get("countries")
+        or out.get("by_country")
+        or out.get("_legacy", {}).get("by_country")
+        or {}
+    )
     us = countries.get("us") if isinstance(countries, dict) else None
+    if us is None or "real_rates" not in us:
+        legacy = out.get("_legacy", {}).get("by_country", {}).get("us")
+        if legacy:
+            us = legacy
     assert us is not None, (
         f"regime_compose did not produce a US classification; "
         f"output keys: {list(out.keys())}"

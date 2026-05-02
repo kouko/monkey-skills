@@ -20,8 +20,9 @@ def test_smoke_us_only(runner, fixtures_dir):
     )
     assert res.returncode == 0, res.stderr
     payload = json.loads(res.stdout)
-    assert "countries" in payload
-    assert "us" in payload["countries"]
+    # Phase 1 schema (ADR-0004): legacy IC output under _legacy.by_country
+    assert "_legacy" in payload
+    assert "us" in payload["_legacy"]["by_country"]
 
 
 def test_schema_us(runner, fixtures_dir):
@@ -30,7 +31,7 @@ def test_schema_us(runner, fixtures_dir):
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
-    us = payload["countries"]["us"]
+    us = payload["_legacy"]["by_country"]["us"]
     for key in (
         "growth_direction", "inflation_direction", "ic_quadrant",
         "gip_regime", "real_rates", "confidence", "notes",
@@ -82,19 +83,23 @@ def test_5_country_emits_consensus(runner, fixtures_dir):
     )
     assert res.returncode == 0, res.stderr
     payload = json.loads(res.stdout)
-    assert "cross_country_consensus" in payload
-    consensus = payload["cross_country_consensus"]
-    assert consensus["ic_alignment"] in {"aligned", "divergent"}
-    assert "regimes_present" in consensus
+    # Phase 1 schema (ADR-0004): cross_country is null; consensus deferred
+    # to Phase 2. All 5 countries appear under _legacy.by_country instead.
+    assert payload["cross_country"] is None
+    legacy_countries = payload["_legacy"]["by_country"]
+    for cc in ("us", "jp", "tw", "kr", "cn"):
+        assert cc in legacy_countries
 
 
 def test_single_country_no_consensus(runner, fixtures_dir):
-    """Per spec: single country → no cross_country_consensus block."""
+    """Phase 1 (ADR-0004): cross_country is hardcoded null regardless of
+    country count; consensus is deferred to Phase 2."""
     res = runner(
         REGIME_SCRIPT,
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
+    assert payload["cross_country"] is None
     assert "cross_country_consensus" not in payload
 
 
@@ -111,7 +116,7 @@ def test_flat_growth_flat_inflation_is_recovery(runner, fixtures_dir):
     )
     assert res.returncode == 0, res.stderr
     payload = json.loads(res.stdout)
-    us = payload["countries"]["us"]
+    us = payload["_legacy"]["by_country"]["us"]
     assert us["growth_direction"] == "flat"
     assert us["inflation_direction"] == "flat"
     assert us["ic_quadrant"] == "1-recovery"
@@ -124,7 +129,7 @@ def test_flat_growth_rising_inflation_is_overheat(runner, fixtures_dir):
         "--input", f"us={fixtures_dir / 'regime_us_overheat.json'}",
     )
     payload = json.loads(res.stdout)
-    us = payload["countries"]["us"]
+    us = payload["_legacy"]["by_country"]["us"]
     assert us["growth_direction"] == "flat"
     assert us["inflation_direction"] == "rising"
     assert us["ic_quadrant"] == "2-overheat"
@@ -142,7 +147,7 @@ def test_us_fisher_real_rate_clearly_restrictive(runner, fixtures_dir):
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
-    rr = payload["countries"]["us"]["real_rates"]
+    rr = payload["_legacy"]["by_country"]["us"]["real_rates"]
     assert abs(rr["nominal_10y"] - 4.5) < 0.01
     assert abs(rr["breakeven_10y"] - 2.5) < 0.01
     assert abs(rr["real_10y"] - 2.0) < 0.01
@@ -161,7 +166,7 @@ def test_jp_real_rates_null(runner, fixtures_dir):
         "--input", f"jp={fixtures_dir / 'regime_jp_no_rates.json'}",
     )
     payload = json.loads(res.stdout)
-    jp = payload["countries"]["jp"]
+    jp = payload["_legacy"]["by_country"]["jp"]
     assert jp["real_rates"] is None
 
 
@@ -172,5 +177,5 @@ def test_tw_9_45_composite_note(runner, fixtures_dir):
         "--input", f"tw={fixtures_dir / 'regime_tw_fixture.json'}",
     )
     payload = json.loads(res.stdout)
-    notes = " ".join(payload["countries"]["tw"]["notes"])
+    notes = " ".join(payload["_legacy"]["by_country"]["tw"]["notes"])
     assert "9-45" in notes
