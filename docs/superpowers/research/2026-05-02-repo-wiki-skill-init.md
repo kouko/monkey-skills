@@ -17,14 +17,37 @@ reference: https://github.com/SamurAIGPT/llm-wiki-agent
 > [!abstract] 這個檔案是什麼
 > 這是 `repo-wiki/skills/init/SKILL.md` 的設計稿。
 > `/repo-wiki:init` 在 user 安裝 plugin 後第一次跑——一次性 seed .repo-wiki base：scaffold 目錄、寫入 CLAUDE.md drop-in、用 git history 建立第一批 source pages 和 entity stubs。
+>
+> **v1.1 重構（2026-05-02）**：dogfood feedback 後 init 從「bounded recent activity」改為「complete current state + recent decisions」。新增 Phase 1 (src/ scan + per-module last-5 commits)，Phase 2 維持 90d 全域掃描，Phase 3 (era backfill) 改為 opt-in (`init full-history`)。Plan: [/Users/kouko/.claude/plans/immutable-growing-codd.md]，spec Decision 14 + 15。
 
 ---
 
-## 設計脈絡
+## v1.1 設計脈絡（2026-05-02 更新）
+
+v1.0 dogfood 後 user 反映「init 只取過去一定量的 git record... 但沒有針對完整的歷史 也沒有解析當前所有的原始碼」。原 90d / 50 commits / 15 source page cap 設計刻意 bounded，但實際使用後發現會漏掉**老舊但仍存在的 module**。
+
+User 拍板折衷：**「預設 scan 整個 repo 原始碼以及每個檔案相關的少數幾個歷史；當使用者明確指定要回溯完整歷史時才做完整歷史回溯」**。
+
+v1.1 三 phase 結構：
+
+| Phase | 預設跑？ | 回答 |
+|---|---|---|
+| Phase 1 — src/ scan + 每模組 last-5 commits | ✓ | 「這 repo 有哪些 module、每個 module 最近 decision 是什麼」 |
+| Phase 2 — 90d global git scan (15 page cap) | ✓ | 「最近的跨模組 / 大型變更是什麼」 |
+| Phase 3 — Era-grouped 完整歷史 backfill | 只在 `init full-history` | 「歷史上的重大決策」 |
+
+**關鍵不變**：init 仍然**不讀 src/ 任何檔案內容**（只讀 path metadata + git log）— 維持 Decision 1 (WHY first) + 跟 Greptile 區隔（Decision 14）。
+
+---
+
+## v1.0 原始設計脈絡
 
 決策 2 拍板：v1 用 3 skills 架構（init / ingest / query），init 採 Level 1 強度（git history seed，不掃 src/ 內容）。
 
 核心目標：**讓 user 第一次裝 plugin 跑完 init 就有可用的 .repo-wiki base**——不再面對空目錄、不再撞 "ingest 只抓最近一個 commit" 的死局。
+
+> [!warning] v1.0 設計後續被 v1.1 覆蓋
+> 以下 v1.0 SKILL.md 完整內容章節**已被 v1.1 重構取代**。實際 SKILL.md 以 `repo-wiki/skills/init/SKILL.md` 為準，這份 design notes 保留 v1.0 內容作為歷史脈絡參考。
 
 ---
 

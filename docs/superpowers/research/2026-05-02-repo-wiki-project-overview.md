@@ -99,15 +99,16 @@ monkey-skills/                          ← marketplace root
 │   ├── .claude-plugin/
 │   │   └── plugin.json
 │   ├── skills/
-│   │   ├── init/SKILL.md              ← /repo-wiki:init
+│   │   ├── init/
+│   │   │   ├── SKILL.md               ← /repo-wiki:init
+│   │   │   └── assets/                ← init 專屬 bundled resources（init 複製到 user repo）
+│   │   │       ├── SCHEMA.md
+│   │   │       ├── index.md
+│   │   │       ├── log.md
+│   │   │       ├── overview.md
+│   │   │       └── claude-md-snippet.md  ← CLAUDE.md drop-in 範本
 │   │   ├── ingest/SKILL.md            ← /repo-wiki:ingest
 │   │   └── query/SKILL.md             ← /repo-wiki:query
-│   ├── templates/                     ← init 複製到 user repo
-│   │   ├── SCHEMA.md
-│   │   ├── index.md
-│   │   ├── log.md
-│   │   ├── overview.md
-│   │   └── claude-md-snippet.md       ← CLAUDE.md drop-in 範本
 │   ├── README.md / README.ja.md / README.zh-TW.md
 │   └── CHANGELOG.md
 └── (其他 9 個 sibling plugins: dev-workflow, obsidian, ...)
@@ -162,7 +163,7 @@ your-repo/
 | init | [2026-05-02-repo-wiki-skill-init.md](2026-05-02-repo-wiki-skill-init.md) | `skills/init/SKILL.md` |
 | ingest | [2026-05-02-repo-wiki-skill-ingest.md](2026-05-02-repo-wiki-skill-ingest.md) | `skills/ingest/SKILL.md` |
 | query | [2026-05-02-repo-wiki-skill-query.md](2026-05-02-repo-wiki-skill-query.md) | `skills/query/SKILL.md` |
-| SCHEMA template | [2026-05-02-repo-wiki-schema-design.md](2026-05-02-repo-wiki-schema-design.md) | `templates/SCHEMA.md` |
+| SCHEMA template | [2026-05-02-repo-wiki-schema-design.md](2026-05-02-repo-wiki-schema-design.md) | `skills/init/assets/SCHEMA.md` |
 
 ### .repo-wiki/ 四種頁面類型
 
