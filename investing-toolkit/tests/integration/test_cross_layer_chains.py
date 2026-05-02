@@ -20,8 +20,27 @@ Pattern per test:
 4. Assert the Layer 2 output has non-degenerate values (real numbers,
    not all None, not all 0).
 
-Failing tests in this file are EXPECTED on `main` until cross-layer
-adapter work lands. The point is to make the breakage visible in CI.
+## xfail markers — current status of cross-layer chains
+
+Per ADR-0002 (Layer 1 staging-tier normalization), 4 of 5 chains are
+known-broken on main as of 2026-05-02. They carry pytest xfail markers
+referencing the planned fix PR. Each fix PR's success criterion is
+removing the corresponding xfail marker AND the test passing.
+
+| Chain | Status     | Fix PR                              |
+|-------|------------|-------------------------------------|
+|   1   | xfail      | PR #178 — Tier 1 (OHLCV alias)      |
+|   2   | xfail      | PR #180 — Tier 3 (XBRL → flat)      |
+|   3   | xfail      | PR #178 — Tier 1 (Multiples rename) |
+|   4   | passing    | n/a — Layer 1 emit already matches  |
+|   5   | xfail      | PR #179 — Tier 2 (groups flatten)   |
+
+If an xfail test unexpectedly passes (XPASS), pytest fails the run with
+strict=True — that signals an undocumented chain fix and the marker
+should be removed in the same PR that fixed it.
+
+See `docs/normalization-contract.md` and `docs/adr/0002-layer-1-staging-
+tier-normalization.md` for the contract these tests enforce.
 """
 
 from __future__ import annotations
@@ -56,6 +75,12 @@ def _run_layer2(script: Path, args: list[str]) -> tuple[int, dict, str]:
 # Chain 1: data-us snapshot → analysis-technical
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Chain 1 broken: snapshot emits price_history.data (nested), "
+           "ta_compute reads top-level history/data. Fix in PR #178 (Tier 1 "
+           "OHLCV canonical alias per docs/normalization-contract.md).",
+)
 def test_chain_snapshot_to_technical():
     """data-us snapshot pack feeds analysis-technical without adapter.
 
@@ -87,6 +112,14 @@ def test_chain_snapshot_to_technical():
 # Chain 2: data-us memo-fetch → analysis-dcf
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Chain 2 broken: memo-fetch emits sec_facts (raw XBRL), dcf_compute "
+           "reads top-level income_statement/cash_flow/balance_sheet (flat). "
+           "Fix in PR #180 (Tier 3 financial statement normalization with "
+           "country-specific XBRL/EDINET/MOPS concept mapping; requires its "
+           "own ADR per docs/normalization-contract.md).",
+)
 def test_chain_memofetch_to_dcf():
     """data-us memo-fetch pack feeds analysis-dcf without adapter.
 
@@ -125,6 +158,13 @@ def test_chain_memofetch_to_dcf():
 # Chain 3: data-us comps-multiples → analysis-comps
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Chain 3 broken (silent corruption): comps-multiples emits "
+           "pack.tickers[ticker], comps_compute reads pack.info[ticker]. "
+           "Layer 2 returns all-None multiples without crashing. Fix in PR #178 "
+           "(Tier 1 multiples canonical rename per docs/normalization-contract.md).",
+)
 def test_chain_comps_to_comps_compute(tmp_path):
     """data-us comps-multiples pack feeds analysis-comps without adapter.
 
@@ -225,6 +265,14 @@ def test_chain_screenerbatch_to_screener():
 # Chain 5: data-us regime-pack → analysis-macro-regime
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Chain 5 broken (silent corruption): regime-pack emits "
+           "pack.groups.{*}.series (nested), regime_compose reads pack.series "
+           "(flat top-level). Layer 2 returns all-flat defaults + real_rates: "
+           "null without crashing. Fix in PR #179 (Tier 2 macro time-series "
+           "flatten per docs/normalization-contract.md).",
+)
 def test_chain_regimepack_to_macroregime():
     """data-us regime-pack pack feeds analysis-macro-regime without adapter.
 
