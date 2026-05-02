@@ -1,6 +1,6 @@
 {
   "pack": "regime-pack",
-  "fetched_at": "2026-05-01T15:09:18+00:00",
+  "fetched_at": "2026-05-02T10:03:25+00:00",
   "groups": {
     "rates": {
       "call_rate_on": {
@@ -10,24 +10,24 @@
         "frequency": "DAILY",
         "observations": [
           {
-            "date": "20240501",
-            "value": 0.077
+            "date": "20260422",
+            "value": 0.727
           },
           {
-            "date": "20240502",
-            "value": 0.077
+            "date": "20260423",
+            "value": 0.727
           },
           {
-            "date": "20240507",
-            "value": 0.077
+            "date": "20260424",
+            "value": 0.728
           },
           {
-            "date": "20240508",
-            "value": 0.077
+            "date": "20260427",
+            "value": 0.727
           },
           {
-            "date": "20240509",
-            "value": 0.077
+            "date": "20260428",
+            "value": 0.727
           }
         ],
         "latest": {
@@ -36,8 +36,8 @@
         },
         "count": 487,
         "db": "FM01",
-        "fetched_at": "2026-05-01T15:09:09Z",
-        "_cache": "miss",
+        "fetched_at": "2026-05-02T08:45:06Z",
+        "_cache": "hit",
         "_source": "boj",
         "_provenance": {
           "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
@@ -45,45 +45,44 @@
           "data_type": "official_government_statistics",
           "update_cycle": "daily",
           "typical_lag": "0-1 business days",
-          "fetched_at": "2026-05-01T15:09:09Z",
+          "fetched_at": "2026-05-02T08:45:06Z",
           "reference_period": "20260428",
-          "staleness_days": 3
-        },
-        "_observations_truncated": "original 487 observations truncated to 5 for fixture"
+          "staleness_days": 4
+        }
       }
     },
     "inflation": {
       "estat": {
-        "fetched_at": "2026-05-01T15:09:10Z",
+        "fetched_at": "2026-05-02T10:03:25Z",
         "_source": "estat_dashboard",
         "indicators": {
           "cpi": {
             "indicator": "0703010501010030000",
             "preset": "cpi",
             "name": "CPI (All items) YoY%",
-            "fetched_at": "2026-05-01T15:09:12Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-01T10:56:03Z",
+            "_cache": "hit",
             "_source": "estat_dashboard",
             "observations": [
               {
-                "date": "197101",
-                "value": 6.5
+                "date": "202511",
+                "value": 2.9
               },
               {
-                "date": "197102",
-                "value": 6.0
+                "date": "202512",
+                "value": 2.1
               },
               {
-                "date": "197103",
-                "value": 5.3
+                "date": "202601",
+                "value": 1.5
               },
               {
-                "date": "197104",
-                "value": 5.8
+                "date": "202602",
+                "value": 1.3
               },
               {
-                "date": "197105",
-                "value": 6.4
+                "date": "202603",
+                "value": 1.5
               }
             ],
             "latest": {
@@ -97,39 +96,38 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:09:12Z",
+              "fetched_at": "2026-05-01T10:56:03Z",
               "reference_period": "202603",
               "staleness_days": 61
-            },
-            "_observations_truncated": "original 663 observations truncated to 5 for fixture"
+            }
           },
           "core-cpi": {
             "indicator": "0703010501010030010",
             "preset": "core-cpi",
             "name": "Core CPI (less fresh food) YoY%",
-            "fetched_at": "2026-05-01T15:09:13Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:09Z",
+            "_cache": "hit",
             "_source": "estat_dashboard",
             "observations": [
               {
-                "date": "197101",
-                "value": 6.1
+                "date": "202511",
+                "value": 3.0
               },
               {
-                "date": "197102",
-                "value": 6.1
+                "date": "202512",
+                "value": 2.4
               },
               {
-                "date": "197103",
-                "value": 6.3
+                "date": "202601",
+                "value": 2.0
               },
               {
-                "date": "197104",
-                "value": 6.6
+                "date": "202602",
+                "value": 1.6
               },
               {
-                "date": "197105",
-                "value": 7.3
+                "date": "202603",
+                "value": 1.8
               }
             ],
             "latest": {
@@ -143,39 +141,38 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:09:13Z",
+              "fetched_at": "2026-05-02T08:45:09Z",
               "reference_period": "202603",
-              "staleness_days": 61
-            },
-            "_observations_truncated": "original 663 observations truncated to 5 for fixture"
+              "staleness_days": 62
+            }
           },
           "ip": {
             "indicator": "0502070301000090010",
             "preset": "ip",
             "name": "Industrial Production Index 2020 base",
-            "fetched_at": "2026-05-01T15:09:14Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:09Z",
+            "_cache": "hit",
             "_source": "estat_dashboard",
             "observations": [
               {
-                "date": "197801",
-                "value": 63.1
+                "date": "202511",
+                "value": 99.1
               },
               {
-                "date": "197802",
-                "value": 66.4
+                "date": "202512",
+                "value": 105.0
               },
               {
-                "date": "197803",
-                "value": 74.6
+                "date": "202601",
+                "value": 95.0
               },
               {
-                "date": "197804",
-                "value": 72.0
+                "date": "202602",
+                "value": 97.9
               },
               {
-                "date": "197805",
-                "value": 70.2
+                "date": "202603",
+                "value": 112.5
               }
             ],
             "latest": {
@@ -189,39 +186,38 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:09:14Z",
+              "fetched_at": "2026-05-02T08:45:09Z",
               "reference_period": "202603",
-              "staleness_days": 61
-            },
-            "_observations_truncated": "original 579 observations truncated to 5 for fixture"
+              "staleness_days": 62
+            }
           },
           "unemployment": {
             "indicator": "0301010000020020010",
             "preset": "unemployment",
             "name": "Unemployment Rate",
-            "fetched_at": "2026-05-01T15:09:16Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:10Z",
+            "_cache": "hit",
             "_source": "estat_dashboard",
             "observations": [
               {
-                "date": "195301",
-                "value": 2.0
+                "date": "202511",
+                "value": 2.4
               },
               {
-                "date": "195302",
-                "value": 2.1
+                "date": "202512",
+                "value": 2.4
               },
               {
-                "date": "195303",
-                "value": 2.2
+                "date": "202601",
+                "value": 2.6
               },
               {
-                "date": "195304",
-                "value": 2.1
+                "date": "202602",
+                "value": 2.6
               },
               {
-                "date": "195305",
-                "value": 2.0
+                "date": "202603",
+                "value": 2.8
               }
             ],
             "latest": {
@@ -235,39 +231,38 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:09:16Z",
+              "fetched_at": "2026-05-02T08:45:10Z",
               "reference_period": "202603",
-              "staleness_days": 61
-            },
-            "_observations_truncated": "original 879 observations truncated to 5 for fixture"
+              "staleness_days": 62
+            }
           },
           "jgb10y": {
             "indicator": "0702020300000010020",
             "preset": "jgb10y",
             "name": "10Y JGB Yield (month-end)",
-            "fetched_at": "2026-05-01T15:09:17Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:10Z",
+            "_cache": "hit",
             "_source": "estat_dashboard",
             "observations": [
               {
-                "date": "201310",
-                "value": 0.59
+                "date": "202512",
+                "value": 2.06
               },
               {
-                "date": "201311",
-                "value": 0.6
+                "date": "202601",
+                "value": 2.24
               },
               {
-                "date": "201312",
-                "value": 0.735
+                "date": "202602",
+                "value": 2.11
               },
               {
-                "date": "201401",
-                "value": 0.62
+                "date": "202603",
+                "value": 2.345
               },
               {
-                "date": "201402",
-                "value": 0.58
+                "date": "202604",
+                "value": 2.515
               }
             ],
             "latest": {
@@ -281,13 +276,471 @@
               "data_type": "official_government_statistics",
               "update_cycle": "monthly",
               "typical_lag": "3-4 weeks after reference month",
-              "fetched_at": "2026-05-01T15:09:17Z",
+              "fetched_at": "2026-05-02T08:45:10Z",
               "reference_period": "202604",
-              "staleness_days": 30
+              "staleness_days": 31
+            }
+          },
+          "coincident-index": {
+            "indicator": "0706010500000090010",
+            "preset": "coincident-index",
+            "name": "Composite Coincident Index 2020 base",
+            "fetched_at": "2026-05-02T08:45:10Z",
+            "_cache": "hit",
+            "_source": "estat_dashboard",
+            "observations": [
+              {
+                "date": "202510",
+                "value": 115.8
+              },
+              {
+                "date": "202511",
+                "value": 114.9
+              },
+              {
+                "date": "202512",
+                "value": 114.6
+              },
+              {
+                "date": "202601",
+                "value": 118.1
+              },
+              {
+                "date": "202602",
+                "value": 116.3
+              }
+            ],
+            "latest": {
+              "date": "202602",
+              "value": 116.3
             },
-            "_observations_truncated": "original 151 observations truncated to 5 for fixture"
+            "count": 494,
+            "_provenance": {
+              "source": "Statistics Dashboard API (dashboard.e-stat.go.jp)",
+              "source_authority": "Ministry of Internal Affairs and Communications (総務省)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "monthly",
+              "typical_lag": "3-4 weeks after reference month",
+              "fetched_at": "2026-05-02T08:45:10Z",
+              "reference_period": "202602",
+              "staleness_days": 90
+            }
+          },
+          "leading-index": {
+            "indicator": "0706010500000090020",
+            "preset": "leading-index",
+            "name": "Composite Leading Index 2020 base",
+            "fetched_at": "2026-05-02T08:45:10Z",
+            "_cache": "hit",
+            "_source": "estat_dashboard",
+            "observations": [
+              {
+                "date": "202510",
+                "value": 109.2
+              },
+              {
+                "date": "202511",
+                "value": 109.5
+              },
+              {
+                "date": "202512",
+                "value": 110.4
+              },
+              {
+                "date": "202601",
+                "value": 112.0
+              },
+              {
+                "date": "202602",
+                "value": 113.3
+              }
+            ],
+            "latest": {
+              "date": "202602",
+              "value": 113.3
+            },
+            "count": 494,
+            "_provenance": {
+              "source": "Statistics Dashboard API (dashboard.e-stat.go.jp)",
+              "source_authority": "Ministry of Internal Affairs and Communications (総務省)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "monthly",
+              "typical_lag": "3-4 weeks after reference month",
+              "fetched_at": "2026-05-02T08:45:10Z",
+              "reference_period": "202602",
+              "staleness_days": 90
+            }
+          },
+          "machine-orders": {
+            "indicator": "0701030000000010010",
+            "preset": "machine-orders",
+            "name": "Machinery Orders (Private, exc. volatile)",
+            "fetched_at": "2026-05-02T08:45:10Z",
+            "_cache": "hit",
+            "_source": "estat_dashboard",
+            "observations": [
+              {
+                "date": "202510",
+                "value": 900389.0
+              },
+              {
+                "date": "202511",
+                "value": 762659.0
+              },
+              {
+                "date": "202512",
+                "value": 1115536.0
+              },
+              {
+                "date": "202601",
+                "value": 786470.0
+              },
+              {
+                "date": "202602",
+                "value": 970541.0
+              }
+            ],
+            "latest": {
+              "date": "202602",
+              "value": 970541.0
+            },
+            "count": 251,
+            "_provenance": {
+              "source": "Statistics Dashboard API (dashboard.e-stat.go.jp)",
+              "source_authority": "Ministry of Internal Affairs and Communications (総務省)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "monthly",
+              "typical_lag": "3-4 weeks after reference month",
+              "fetched_at": "2026-05-02T08:45:10Z",
+              "reference_period": "202602",
+              "staleness_days": 90
+            }
           }
         }
+      }
+    },
+    "cycle": {
+      "estat_cycle_alias": {
+        "_note": "see groups.inflation.estat — coincident/leading/machine-orders presets are flattened to series"
+      }
+    },
+    "business_sentiment": {
+      "tankan_business_di": {
+        "fetched_at": "2026-05-02T08:45:08Z",
+        "_cache": "hit",
+        "_source": "boj",
+        "db": "CO",
+        "series": {
+          "TK99F1000601GCQ01000": {
+            "series": "TK99F1000601GCQ01000",
+            "name": "D.I./Business Conditions/Large Enterprises/Manufacturing/Actual result",
+            "unit": "% points",
+            "frequency": "QUARTERLY",
+            "observations": [
+              {
+                "date": "202302",
+                "value": 5.0
+              },
+              {
+                "date": "202303",
+                "value": 9.0
+              },
+              {
+                "date": "202304",
+                "value": 12.0
+              },
+              {
+                "date": "202401",
+                "value": 11.0
+              },
+              {
+                "date": "202402",
+                "value": 13.0
+              },
+              {
+                "date": "202403",
+                "value": 13.0
+              },
+              {
+                "date": "202404",
+                "value": 14.0
+              },
+              {
+                "date": "202501",
+                "value": 12.0
+              },
+              {
+                "date": "202502",
+                "value": 13.0
+              },
+              {
+                "date": "202503",
+                "value": 14.0
+              },
+              {
+                "date": "202504",
+                "value": 15.0
+              },
+              {
+                "date": "202601",
+                "value": 17.0
+              }
+            ],
+            "latest": {
+              "date": "202601",
+              "value": 17.0
+            },
+            "count": 12,
+            "db": "CO",
+            "fetched_at": "2026-05-02T08:45:08Z",
+            "_cache": "hit",
+            "_source": "boj",
+            "_provenance": {
+              "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
+              "source_authority": "Bank of Japan (日本銀行)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "daily",
+              "typical_lag": "0-1 business days",
+              "fetched_at": "2026-05-02T08:45:08Z",
+              "reference_period": "202601",
+              "staleness_days": 121
+            },
+            "category": "large_mfg",
+            "indicator": "tankan_business_di"
+          },
+          "TK99F2000601GCQ01000": {
+            "series": "TK99F2000601GCQ01000",
+            "name": "D.I./Business Conditions/Large Enterprises/Nonmanufacturing/Actual result",
+            "unit": "% points",
+            "frequency": "QUARTERLY",
+            "observations": [
+              {
+                "date": "202302",
+                "value": 23.0
+              },
+              {
+                "date": "202303",
+                "value": 27.0
+              },
+              {
+                "date": "202304",
+                "value": 30.0
+              },
+              {
+                "date": "202401",
+                "value": 34.0
+              },
+              {
+                "date": "202402",
+                "value": 33.0
+              },
+              {
+                "date": "202403",
+                "value": 34.0
+              },
+              {
+                "date": "202404",
+                "value": 33.0
+              },
+              {
+                "date": "202501",
+                "value": 35.0
+              },
+              {
+                "date": "202502",
+                "value": 34.0
+              },
+              {
+                "date": "202503",
+                "value": 34.0
+              },
+              {
+                "date": "202504",
+                "value": 34.0
+              },
+              {
+                "date": "202601",
+                "value": 36.0
+              }
+            ],
+            "latest": {
+              "date": "202601",
+              "value": 36.0
+            },
+            "count": 12,
+            "db": "CO",
+            "fetched_at": "2026-05-02T08:45:08Z",
+            "_cache": "hit",
+            "_source": "boj",
+            "_provenance": {
+              "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
+              "source_authority": "Bank of Japan (日本銀行)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "daily",
+              "typical_lag": "0-1 business days",
+              "fetched_at": "2026-05-02T08:45:08Z",
+              "reference_period": "202601",
+              "staleness_days": 121
+            },
+            "category": "large_nonmfg",
+            "indicator": "tankan_business_di"
+          },
+          "TK99F1000601GCQ03000": {
+            "series": "TK99F1000601GCQ03000",
+            "name": "D.I./Business Conditions/Small Enterprises/Manufacturing/Actual result",
+            "unit": "% points",
+            "frequency": "QUARTERLY",
+            "observations": [
+              {
+                "date": "202302",
+                "value": -5.0
+              },
+              {
+                "date": "202303",
+                "value": -5.0
+              },
+              {
+                "date": "202304",
+                "value": 1.0
+              },
+              {
+                "date": "202401",
+                "value": -1.0
+              },
+              {
+                "date": "202402",
+                "value": -1.0
+              },
+              {
+                "date": "202403",
+                "value": 0.0
+              },
+              {
+                "date": "202404",
+                "value": 1.0
+              },
+              {
+                "date": "202501",
+                "value": 2.0
+              },
+              {
+                "date": "202502",
+                "value": 1.0
+              },
+              {
+                "date": "202503",
+                "value": 1.0
+              },
+              {
+                "date": "202504",
+                "value": 6.0
+              },
+              {
+                "date": "202601",
+                "value": 7.0
+              }
+            ],
+            "latest": {
+              "date": "202601",
+              "value": 7.0
+            },
+            "count": 12,
+            "db": "CO",
+            "fetched_at": "2026-05-02T08:45:08Z",
+            "_cache": "hit",
+            "_source": "boj",
+            "_provenance": {
+              "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
+              "source_authority": "Bank of Japan (日本銀行)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "daily",
+              "typical_lag": "0-1 business days",
+              "fetched_at": "2026-05-02T08:45:08Z",
+              "reference_period": "202601",
+              "staleness_days": 121
+            },
+            "category": "small_mfg",
+            "indicator": "tankan_business_di"
+          },
+          "TK99F2000601GCQ03000": {
+            "series": "TK99F2000601GCQ03000",
+            "name": "D.I./Business Conditions/Small Enterprises/Nonmanufacturing/Actual result",
+            "unit": "% points",
+            "frequency": "QUARTERLY",
+            "observations": [
+              {
+                "date": "202302",
+                "value": 11.0
+              },
+              {
+                "date": "202303",
+                "value": 12.0
+              },
+              {
+                "date": "202304",
+                "value": 14.0
+              },
+              {
+                "date": "202401",
+                "value": 13.0
+              },
+              {
+                "date": "202402",
+                "value": 12.0
+              },
+              {
+                "date": "202403",
+                "value": 14.0
+              },
+              {
+                "date": "202404",
+                "value": 16.0
+              },
+              {
+                "date": "202501",
+                "value": 16.0
+              },
+              {
+                "date": "202502",
+                "value": 15.0
+              },
+              {
+                "date": "202503",
+                "value": 14.0
+              },
+              {
+                "date": "202504",
+                "value": 15.0
+              },
+              {
+                "date": "202601",
+                "value": 16.0
+              }
+            ],
+            "latest": {
+              "date": "202601",
+              "value": 16.0
+            },
+            "count": 12,
+            "db": "CO",
+            "fetched_at": "2026-05-02T08:45:08Z",
+            "_cache": "hit",
+            "_source": "boj",
+            "_provenance": {
+              "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
+              "source_authority": "Bank of Japan (日本銀行)",
+              "data_type": "official_government_statistics",
+              "update_cycle": "daily",
+              "typical_lag": "0-1 business days",
+              "fetched_at": "2026-05-02T08:45:08Z",
+              "reference_period": "202601",
+              "staleness_days": 121
+            },
+            "category": "small_nonmfg",
+            "indicator": "tankan_business_di"
+          }
+        },
+        "_preset": "tankan-business-di"
       }
     },
     "real_rates": {
@@ -295,10 +748,52 @@
         "series": "M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA",
         "dataset": "FM",
         "periods_requested": 24,
-        "fetched_at": "2026-05-01T15:09:18Z",
-        "_cache": "miss",
+        "fetched_at": "2026-05-02T08:45:13Z",
+        "_cache": "hit",
         "_source": "ecb_data_portal",
         "observations": [
+          {
+            "date": "2024-10",
+            "value": -1.3021690858161588
+          },
+          {
+            "date": "2024-11",
+            "value": -1.8619064546304966
+          },
+          {
+            "date": "2024-12",
+            "value": -2.5849234884965364
+          },
+          {
+            "date": "2025-01",
+            "value": -2.8230824676283746
+          },
+          {
+            "date": "2025-02",
+            "value": -2.2954916328863844
+          }
+        ],
+        "latest": {
+          "date": "2025-02",
+          "value": -2.2954916328863844
+        },
+        "count": 24,
+        "metadata": {
+          "title": "Real Japan 10-year Government Benchmark bond yield - Yield, average of observations through period",
+          "unit": "PCPA",
+          "frequency": "M"
+        },
+        "_provenance": {
+          "source": "ECB Data Portal CSV (data-api.ecb.europa.eu, dataset FM)",
+          "source_authority": "European Central Bank (ECB)",
+          "data_type": "official_supranational_statistics",
+          "update_cycle": "monthly (varies by series)",
+          "typical_lag": "1-3 months for real-yield / CPI-derived series",
+          "fetched_at": "2026-05-02T08:45:13Z",
+          "reference_period": "2025-02",
+          "staleness_days": 455
+        },
+        "data": [
           {
             "date": "2023-03",
             "value": -2.8954585918532634
@@ -318,33 +813,88 @@
           {
             "date": "2023-07",
             "value": -2.8615581622678365
+          },
+          {
+            "date": "2023-08",
+            "value": -2.4791896521200383
+          },
+          {
+            "date": "2023-09",
+            "value": -2.300739524733278
+          },
+          {
+            "date": "2023-10",
+            "value": -2.4588313817330025
+          },
+          {
+            "date": "2023-11",
+            "value": -2.0829917228103842
+          },
+          {
+            "date": "2023-12",
+            "value": -1.9288027995059707
+          },
+          {
+            "date": "2024-01",
+            "value": -1.4499258533152468
+          },
+          {
+            "date": "2024-02",
+            "value": -2.073935222672077
+          },
+          {
+            "date": "2024-03",
+            "value": -1.9429423371647514
+          },
+          {
+            "date": "2024-04",
+            "value": -1.636405871958697
+          },
+          {
+            "date": "2024-05",
+            "value": -1.8859957863259436
+          },
+          {
+            "date": "2024-06",
+            "value": -1.8594110266159662
+          },
+          {
+            "date": "2024-07",
+            "value": -1.6827503655284999
+          },
+          {
+            "date": "2024-08",
+            "value": -2.1423852691217924
+          },
+          {
+            "date": "2024-09",
+            "value": -1.6853202497769781
+          },
+          {
+            "date": "2024-10",
+            "value": -1.3021690858161588
+          },
+          {
+            "date": "2024-11",
+            "value": -1.8619064546304966
+          },
+          {
+            "date": "2024-12",
+            "value": -2.5849234884965364
+          },
+          {
+            "date": "2025-01",
+            "value": -2.8230824676283746
+          },
+          {
+            "date": "2025-02",
+            "value": -2.2954916328863844
           }
-        ],
-        "latest": {
-          "date": "2025-02",
-          "value": -2.2954916328863844
-        },
-        "count": 24,
-        "metadata": {
-          "title": "Real Japan 10-year Government Benchmark bond yield - Yield, average of observations through period",
-          "unit": "PCPA",
-          "frequency": "M"
-        },
-        "_provenance": {
-          "source": "ECB Data Portal CSV (data-api.ecb.europa.eu, dataset FM)",
-          "source_authority": "European Central Bank (ECB)",
-          "data_type": "official_supranational_statistics",
-          "update_cycle": "monthly (varies by series)",
-          "typical_lag": "1-3 months for real-yield / CPI-derived series",
-          "fetched_at": "2026-05-01T15:09:18Z",
-          "reference_period": "2025-02",
-          "staleness_days": 454
-        },
-        "_observations_truncated": "original 24 observations truncated to 5 for fixture"
+        ]
       },
       "tankan_inflation_outlook": {
-        "fetched_at": "2026-05-01T15:09:10Z",
-        "_cache": "miss",
+        "fetched_at": "2026-05-02T08:45:07Z",
+        "_cache": "hit",
         "_source": "boj",
         "db": "CO",
         "series": {
@@ -373,6 +923,18 @@
               {
                 "date": "202502",
                 "value": 2.4
+              },
+              {
+                "date": "202503",
+                "value": 2.4
+              },
+              {
+                "date": "202504",
+                "value": 2.4
+              },
+              {
+                "date": "202601",
+                "value": 2.6
               }
             ],
             "latest": {
@@ -381,8 +943,8 @@
             },
             "count": 8,
             "db": "CO",
-            "fetched_at": "2026-05-01T15:09:10Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:07Z",
+            "_cache": "hit",
             "_source": "boj",
             "_provenance": {
               "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
@@ -390,13 +952,12 @@
               "data_type": "official_government_statistics",
               "update_cycle": "daily",
               "typical_lag": "0-1 business days",
-              "fetched_at": "2026-05-01T15:09:10Z",
+              "fetched_at": "2026-05-02T08:45:07Z",
               "reference_period": "202601",
-              "staleness_days": 120
+              "staleness_days": 121
             },
             "horizon_years": 1,
-            "indicator": "tankan_inflation_outlook",
-            "_observations_truncated": "original 8 observations truncated to 5 for fixture"
+            "indicator": "tankan_inflation_outlook"
           },
           "TK99F0000205HCQ00000": {
             "series": "TK99F0000205HCQ00000",
@@ -423,6 +984,18 @@
               {
                 "date": "202502",
                 "value": 2.4
+              },
+              {
+                "date": "202503",
+                "value": 2.4
+              },
+              {
+                "date": "202504",
+                "value": 2.4
+              },
+              {
+                "date": "202601",
+                "value": 2.5
               }
             ],
             "latest": {
@@ -431,8 +1004,8 @@
             },
             "count": 8,
             "db": "CO",
-            "fetched_at": "2026-05-01T15:09:10Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:07Z",
+            "_cache": "hit",
             "_source": "boj",
             "_provenance": {
               "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
@@ -440,13 +1013,12 @@
               "data_type": "official_government_statistics",
               "update_cycle": "daily",
               "typical_lag": "0-1 business days",
-              "fetched_at": "2026-05-01T15:09:10Z",
+              "fetched_at": "2026-05-02T08:45:07Z",
               "reference_period": "202601",
-              "staleness_days": 120
+              "staleness_days": 121
             },
             "horizon_years": 3,
-            "indicator": "tankan_inflation_outlook",
-            "_observations_truncated": "original 8 observations truncated to 5 for fixture"
+            "indicator": "tankan_inflation_outlook"
           },
           "TK99F0000206HCQ00000": {
             "series": "TK99F0000206HCQ00000",
@@ -473,6 +1045,18 @@
               {
                 "date": "202502",
                 "value": 2.3
+              },
+              {
+                "date": "202503",
+                "value": 2.4
+              },
+              {
+                "date": "202504",
+                "value": 2.4
+              },
+              {
+                "date": "202601",
+                "value": 2.5
               }
             ],
             "latest": {
@@ -481,8 +1065,8 @@
             },
             "count": 8,
             "db": "CO",
-            "fetched_at": "2026-05-01T15:09:10Z",
-            "_cache": "miss",
+            "fetched_at": "2026-05-02T08:45:07Z",
+            "_cache": "hit",
             "_source": "boj",
             "_provenance": {
               "source": "BOJ Time-Series Data Search (stat-search.boj.or.jp)",
@@ -490,168 +1074,265 @@
               "data_type": "official_government_statistics",
               "update_cycle": "daily",
               "typical_lag": "0-1 business days",
-              "fetched_at": "2026-05-01T15:09:10Z",
+              "fetched_at": "2026-05-02T08:45:07Z",
               "reference_period": "202601",
-              "staleness_days": 120
+              "staleness_days": 121
             },
             "horizon_years": 5,
-            "indicator": "tankan_inflation_outlook",
-            "_observations_truncated": "original 8 observations truncated to 5 for fixture"
+            "indicator": "tankan_inflation_outlook"
           }
         },
         "_preset": "tankan-price-outlook"
       }
     }
   },
+  "series": {
+    "STRDCLUCON": [
+      0.727,
+      0.727,
+      0.728,
+      0.727,
+      0.727
+    ],
+    "rates.STRDCLUCON": [
+      0.727,
+      0.727,
+      0.728,
+      0.727,
+      0.727
+    ],
+    "cpi": [
+      2.9,
+      2.1,
+      1.5,
+      1.3,
+      1.5
+    ],
+    "inflation.cpi": [
+      2.9,
+      2.1,
+      1.5,
+      1.3,
+      1.5
+    ],
+    "core-cpi": [
+      3.0,
+      2.4,
+      2.0,
+      1.6,
+      1.8
+    ],
+    "inflation.core-cpi": [
+      3.0,
+      2.4,
+      2.0,
+      1.6,
+      1.8
+    ],
+    "ip": [
+      99.1,
+      105.0,
+      95.0,
+      97.9,
+      112.5
+    ],
+    "inflation.ip": [
+      99.1,
+      105.0,
+      95.0,
+      97.9,
+      112.5
+    ],
+    "unemployment": [
+      2.4,
+      2.4,
+      2.6,
+      2.6,
+      2.8
+    ],
+    "inflation.unemployment": [
+      2.4,
+      2.4,
+      2.6,
+      2.6,
+      2.8
+    ],
+    "jgb10y": [
+      2.06,
+      2.24,
+      2.11,
+      2.345,
+      2.515
+    ],
+    "inflation.jgb10y": [
+      2.06,
+      2.24,
+      2.11,
+      2.345,
+      2.515
+    ],
+    "coincident-index": [
+      115.8,
+      114.9,
+      114.6,
+      118.1,
+      116.3
+    ],
+    "inflation.coincident-index": [
+      115.8,
+      114.9,
+      114.6,
+      118.1,
+      116.3
+    ],
+    "leading-index": [
+      109.2,
+      109.5,
+      110.4,
+      112.0,
+      113.3
+    ],
+    "inflation.leading-index": [
+      109.2,
+      109.5,
+      110.4,
+      112.0,
+      113.3
+    ],
+    "machine-orders": [
+      900389.0,
+      762659.0,
+      1115536.0,
+      786470.0,
+      970541.0
+    ],
+    "inflation.machine-orders": [
+      900389.0,
+      762659.0,
+      1115536.0,
+      786470.0,
+      970541.0
+    ],
+    "TK99F1000601GCQ01000": [
+      12.0,
+      13.0,
+      14.0,
+      15.0,
+      17.0
+    ],
+    "business_sentiment.TK99F1000601GCQ01000": [
+      12.0,
+      13.0,
+      14.0,
+      15.0,
+      17.0
+    ],
+    "TK99F2000601GCQ01000": [
+      35.0,
+      34.0,
+      34.0,
+      34.0,
+      36.0
+    ],
+    "business_sentiment.TK99F2000601GCQ01000": [
+      35.0,
+      34.0,
+      34.0,
+      34.0,
+      36.0
+    ],
+    "TK99F1000601GCQ03000": [
+      2.0,
+      1.0,
+      1.0,
+      6.0,
+      7.0
+    ],
+    "business_sentiment.TK99F1000601GCQ03000": [
+      2.0,
+      1.0,
+      1.0,
+      6.0,
+      7.0
+    ],
+    "TK99F2000601GCQ03000": [
+      16.0,
+      15.0,
+      14.0,
+      15.0,
+      16.0
+    ],
+    "business_sentiment.TK99F2000601GCQ03000": [
+      16.0,
+      15.0,
+      14.0,
+      15.0,
+      16.0
+    ],
+    "M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA": [
+      -1.3021690858161588,
+      -1.8619064546304966,
+      -2.5849234884965364,
+      -2.8230824676283746,
+      -2.2954916328863844
+    ],
+    "real_rates.M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA": [
+      -1.3021690858161588,
+      -1.8619064546304966,
+      -2.5849234884965364,
+      -2.8230824676283746,
+      -2.2954916328863844
+    ],
+    "TK99F0000204HCQ00000": [
+      2.5,
+      2.4,
+      2.4,
+      2.4,
+      2.6
+    ],
+    "real_rates.TK99F0000204HCQ00000": [
+      2.5,
+      2.4,
+      2.4,
+      2.4,
+      2.6
+    ],
+    "TK99F0000205HCQ00000": [
+      2.4,
+      2.4,
+      2.4,
+      2.4,
+      2.5
+    ],
+    "real_rates.TK99F0000205HCQ00000": [
+      2.4,
+      2.4,
+      2.4,
+      2.4,
+      2.5
+    ],
+    "TK99F0000206HCQ00000": [
+      2.3,
+      2.3,
+      2.4,
+      2.4,
+      2.5
+    ],
+    "real_rates.TK99F0000206HCQ00000": [
+      2.3,
+      2.3,
+      2.4,
+      2.4,
+      2.5
+    ]
+  },
   "_provenance": {
     "tier": "tier_a",
     "tier_label": "Tier A (BOJ + 統計DB + ECB primary-source)",
     "sources": [
-      "BOJ Time-Series API (日銀)",
-      "Statistics Dashboard / 統計DB (e-Stat)",
+      "BOJ Time-Series API (日銀, FM01 + CO Tankan)",
+      "Statistics Dashboard / 統計DB (e-Stat — CPI / Core-CPI / IP / Unemployment / JGB10y / ESRI 景気動向指数 CI / 機械受注)",
       "ECB Data Portal"
-    ]
-  },
-  "series": {
-    "STRDCLUCON": [
-      0.077,
-      0.077,
-      0.077,
-      0.077,
-      0.077
-    ],
-    "rates.STRDCLUCON": [
-      0.077,
-      0.077,
-      0.077,
-      0.077,
-      0.077
-    ],
-    "cpi": [
-      6.5,
-      6.0,
-      5.3,
-      5.8,
-      6.4
-    ],
-    "inflation.cpi": [
-      6.5,
-      6.0,
-      5.3,
-      5.8,
-      6.4
-    ],
-    "core-cpi": [
-      6.1,
-      6.1,
-      6.3,
-      6.6,
-      7.3
-    ],
-    "inflation.core-cpi": [
-      6.1,
-      6.1,
-      6.3,
-      6.6,
-      7.3
-    ],
-    "ip": [
-      63.1,
-      66.4,
-      74.6,
-      72.0,
-      70.2
-    ],
-    "inflation.ip": [
-      63.1,
-      66.4,
-      74.6,
-      72.0,
-      70.2
-    ],
-    "unemployment": [
-      2.0,
-      2.1,
-      2.2,
-      2.1,
-      2.0
-    ],
-    "inflation.unemployment": [
-      2.0,
-      2.1,
-      2.2,
-      2.1,
-      2.0
-    ],
-    "jgb10y": [
-      0.59,
-      0.6,
-      0.735,
-      0.62,
-      0.58
-    ],
-    "inflation.jgb10y": [
-      0.59,
-      0.6,
-      0.735,
-      0.62,
-      0.58
-    ],
-    "M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA": [
-      -2.8954585918532634,
-      -3.0829480295566416,
-      -2.833350294695475,
-      -2.935609394534742,
-      -2.8615581622678365
-    ],
-    "real_rates.M.JP.JPY.4F.BB.R_JP10YT_RR.YLDA": [
-      -2.8954585918532634,
-      -3.0829480295566416,
-      -2.833350294695475,
-      -2.935609394534742,
-      -2.8615581622678365
-    ],
-    "TK99F0000204HCQ00000": [
-      2.4,
-      2.4,
-      2.4,
-      2.5,
-      2.4
-    ],
-    "real_rates.TK99F0000204HCQ00000": [
-      2.4,
-      2.4,
-      2.4,
-      2.5,
-      2.4
-    ],
-    "TK99F0000205HCQ00000": [
-      2.3,
-      2.3,
-      2.3,
-      2.4,
-      2.4
-    ],
-    "real_rates.TK99F0000205HCQ00000": [
-      2.3,
-      2.3,
-      2.3,
-      2.4,
-      2.4
-    ],
-    "TK99F0000206HCQ00000": [
-      2.2,
-      2.2,
-      2.2,
-      2.3,
-      2.3
-    ],
-    "real_rates.TK99F0000206HCQ00000": [
-      2.2,
-      2.2,
-      2.2,
-      2.3,
-      2.3
     ]
   }
 }

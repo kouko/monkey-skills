@@ -54,9 +54,23 @@ RETRY_BASE_DELAY = 2.0
 
 PRESETS: dict[str, dict] = {
     "cpi": {
+        # cpispl.xls has two sheets: "CPI" = INDEX values (民國110=100,
+        # base 2021=100), "年增率" = year-on-year %. The `cpi` preset
+        # surfaces the INDEX series; for true YoY use the `cpi-yoy`
+        # preset (same .xls, sheet="年增率"). Pre-v2.1.x-c this preset
+        # was mislabelled "YoY%" while emitting INDEX numbers — fixed
+        # 2026-05-02 (ROADMAP §v2.1.x-c).
         "url": f"{DGBAS_PRICE_BASE}/cpispl.xls",
         "sheet": "CPI",
-        "name": "Consumer Price Index YoY% (消費者物價指數年增率)",
+        "name": "Consumer Price Index INDEX (消費者物價指數, 民國110=100)",
+    },
+    "cpi-yoy": {
+        # True YoY% from the 年增率 sheet of cpispl.xls. Downstream
+        # consumer: classify_tw resolves CPI_YOY_KEYS = ["cpi-yoy",
+        # "inflation.cpi-yoy", "dgbas.cpi-yoy"] for cpi_context.latest_yoy.
+        "url": f"{DGBAS_PRICE_BASE}/cpispl.xls",
+        "sheet": "年增率",
+        "name": "Consumer Price Index YoY% (消費者物價指數年增率, 年增率 sheet)",
     },
     "core-cpi": {
         "url": f"{DGBAS_PRICE_BASE}/cpisplexvfe.xls",

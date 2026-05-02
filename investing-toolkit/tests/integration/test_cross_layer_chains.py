@@ -643,7 +643,16 @@ def test_chain_tw_classifier_e2e():
     assert "NDC 五色" in tw["framework_used"], (
         f"TW framework_used does not lead with NDC 五色: {tw['framework_used']!r}"
     )
-    assert tw["confidence"] in ("low", "medium", "high")
+    # Per ROADMAP §v2.1.x-b/c (resolved 2026-05-02): with cpi-yoy fixed
+    # and 8 NDC components present, classify_tw thresholds yield "high".
+    # TIER (9th component) is structurally unavailable from NDC's bulk
+    # ZIP — its absence is expected and does not regress confidence.
+    # See ROADMAP §v2.2.0-g for the deferred TIER fetcher.
+    assert tw["confidence"] == "high", (
+        f"TW confidence regressed to {tw['confidence']!r} — likely "
+        f"cpi-yoy or NDC components broke. data_quality.missing: "
+        f"{tw.get('data_quality', {}).get('missing')}"
+    )
     assert tw["provenance"]["calibration_doc"] == "thresholds-taiwan.md"
 
     # Native verdict — TW-specific shape
@@ -703,6 +712,21 @@ def test_chain_tw_classifier_e2e():
     cpi_ctx = nv.get("cpi_context", {})
     assert cpi_ctx.get("cbc_framing") == "彈性定義", (
         f"TW cbc_framing must be '彈性定義', got: {cpi_ctx.get('cbc_framing')!r}"
+    )
+    # Per ROADMAP §v2.1.x-c: cpi_context.latest_yoy must be non-null —
+    # the fixture's `dgbas.cpi-yoy` series resolves to a true YoY%
+    # (年增率 sheet of cpispl.xls), not the INDEX values that the
+    # legacy `cpi` preset emitted.
+    assert cpi_ctx.get("latest_yoy") is not None, (
+        "cpi_context.latest_yoy is None — fixture missing cpi-yoy series? "
+        f"cpi_context: {cpi_ctx}"
+    )
+    # Sanity-check magnitude: TW CPI YoY runs in the -5%..+20% band.
+    # If the value lands outside this it usually means the parser is
+    # reading the INDEX sheet (~110) instead of the YoY% sheet.
+    assert -5.0 <= cpi_ctx["latest_yoy"] <= 20.0, (
+        f"cpi_context.latest_yoy {cpi_ctx['latest_yoy']} outside plausible "
+        f"YoY band [-5, 20] — parser may be reading INDEX not YoY"
     )
 
     # IC quadrant alias for backward compat (legacy schema readers)
@@ -945,14 +969,13 @@ def test_chain_us_classifier_e2e():
 
 def test_chain_jp_classifier_e2e():
     """data-jp regime-pack → classify_jp → CountryRegimeCard with valid
-    Phase 1 envelope. Per ADR-0004 PR-3.
+    Phase 1 envelope. Per ADR-0004 PR-3 + ROADMAP §v2.1.x-a (fixture
+    refreshed 2026-05-02 against live BOJ + ESRI APIs).
 
-    The bundled JP fixture is from a pre-PR-3 fetch and lacks Tankan
-    business DI + ESRI coincident-index in its `series` block, so this
-    test asserts on the envelope shape + classifier outputs that DO
-    derive from the present series (CPI, IP, JGB10y, STRDCLUCON, ECB
-    real yield, Tankan inflation outlook). Tankan business DI / ESRI CI
-    will populate after a fresh JP regime-pack fetch post-PR-3.
+    Post-refresh acceptance:
+      - cycle_proxy.source == "coincident-index" (not "ip" fallback)
+      - tankan_business_di.large_mfg populated from BOJ Tankan
+      - confidence == "high" (from medium pre-refresh)
     """
     fixture = FIXTURES / "data-jp-regime-pack-sample.json"
     script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
@@ -993,13 +1016,38 @@ def test_chain_jp_classifier_e2e():
     }
     assert nv.get("gip_regime_legacy") in {"quad1", "quad2", "quad3", "quad4"}
 
-    # Confidence: PR-3 acceptance criterion — JP must rise from low to
-    # medium or high after coincident-index + Tankan business DI fetches
-    # are wired. The bundled fixture predates the new fetches but still
-    # has CPI + STRDCLUCON + IP, which gives medium confidence.
-    assert jp["confidence"] in ("medium", "high"), (
-        f"JP confidence must be medium/high post-PR-3 (was low pre-PR-3); "
-        f"got {jp['confidence']}; data_quality={jp.get('data_quality')}"
+    # Confidence: post v2.1.x-a fixture refresh (Tankan + ESRI CI live),
+    # JP must hit "high" stable. Regression to medium would indicate the
+    # fixture went stale or BOJ/ESRI series codes drifted.
+    assert jp["confidence"] == "high", (
+        f"JP confidence must be high post v2.1.x-a refresh; got "
+        f"{jp['confidence']!r}. data_quality={jp.get('data_quality')}"
+    )
+
+    # cycle_proxy must lead with the ESRI coincident-index (not the IP
+    # fallback) — fixture refresh per v2.1.x-a brings the coincident
+    # series in via the e-Stat preset bundle.
+    cycle = nv.get("cycle_proxy", {})
+    assert cycle.get("source") == "coincident-index", (
+        f"cycle_proxy.source must be 'coincident-index' (not IP fallback); "
+        f"got {cycle.get('source')!r}. cycle_proxy={cycle}"
+    )
+    assert cycle.get("value") is not None, (
+        f"cycle_proxy.value None despite source=coincident-index; "
+        f"cycle_proxy={cycle}"
+    )
+
+    # Tankan business DI block must surface large_mfg from BOJ
+    # TK99F1000601GCQ01000 series. dispersion_pp must be a number
+    # (not None) once all 4 categories are populated.
+    tdi = nv.get("tankan_business_di", {})
+    assert tdi.get("large_mfg") is not None, (
+        f"tankan_business_di.large_mfg None — Tankan fetch chain broke. "
+        f"tankan_business_di={tdi}"
+    )
+    assert tdi.get("dispersion_pp") is not None, (
+        f"tankan_business_di.dispersion_pp None — only some of the 4 "
+        f"Tankan categories present. tankan_business_di={tdi}"
     )
 
     # Provenance points at JP threshold doc

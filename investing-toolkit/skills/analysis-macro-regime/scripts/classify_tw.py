@@ -64,7 +64,9 @@ COMPONENT_EXPECTED_9 = [
     "機械及電機設備進口值",
     "製造業銷售量指數",
     "批發、零售及餐飲業營業額",
-    "製造業營業氣候測驗點",  # TIER — may be absent in older fixtures
+    "製造業營業氣候測驗點",  # TIER — structurally absent from NDC bulk ZIP
+    # (NDC's CSV publishes only 8 of the 2024-revision 9 components;
+    # TIER is published by 台灣經濟研究院 as a PDF). See ROADMAP §v2.2.0-g.
 ]
 
 
