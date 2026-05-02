@@ -93,6 +93,63 @@
           ]
         }
       }
+    },
+    "cn_specific": {
+      "type": "object",
+      "description": "CN-specific computed helpers (Phase 1 ADR-0004). Currently exposes credit_impulse computed from akshare shrzgm + NBS m2-yoy via CICC convention. See analysis-macro-regime/references/credit-impulse-methodology.md.",
+      "additionalProperties": true,
+      "properties": {
+        "credit_impulse": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Credit impulse block per CICC convention (TSF stock yoy 12-month change). Null when neither TSF flow nor M2 yoy series are available.",
+          "additionalProperties": true,
+          "properties": {
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Impulse magnitude in pp (percentage points)."
+            },
+            "trend": {
+              "type": "string",
+              "enum": [
+                "expanding",
+                "contracting",
+                "neutral"
+              ]
+            },
+            "threshold_pp": {
+              "type": "number"
+            },
+            "methodology": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "tsf_stock_yoy_proxy_now": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "tsf_stock_yoy_proxy_12mo_prior": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "credit_impulse_methodology_doc": {
+          "type": "string",
+          "description": "Path to methodology reference doc."
+        }
+      }
     }
   },
   "$defs": {

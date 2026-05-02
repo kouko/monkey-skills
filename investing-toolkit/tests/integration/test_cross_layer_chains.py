@@ -821,6 +821,94 @@ def test_chain_kr_classifier_e2e():
     assert kr["provenance"]["calibration_vintage"] == "2026-Q1"
 
 
+def test_chain_cn_classifier_e2e():
+    """data-cn regime-pack → classify_cn → CountryRegimeCard with valid
+    Phase 1 envelope + CN-specific native_verdict shape per ADR-0004 PR-6."""
+    fixture = FIXTURES / "data-cn-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", f"cn={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+
+    cn = out.get("by_country", {}).get("cn")
+    assert cn is not None, (
+        f"by_country.cn missing — classify_cn not picked up by dispatcher. "
+        f"output keys: {list(out.keys())}; "
+        f"by_country keys: {list(out.get('by_country', {}).keys())}"
+    )
+    assert cn["country"] == "cn"
+    assert cn["framework_used"], "framework_used empty"
+    nv = cn["native_verdict"]
+
+    # Envelope basics
+    assert "framework_label" in nv
+    assert nv.get("ic_quadrant_legacy") in {
+        "1-recovery", "2-overheat", "3-stagflation", "4-reflation"
+    }
+    assert nv.get("gip_regime") in {"quad1", "quad2", "quad3", "quad4"}
+    assert cn["confidence"] in ("low", "medium", "high")
+    assert cn["provenance"]["calibration_doc"] == "thresholds-china.md"
+
+    # PBOC stance — populated from calibration current_stance
+    pboc_stance = nv.get("pboc_stance")
+    assert pboc_stance, f"pboc_stance empty: {pboc_stance!r}"
+    assert pboc_stance in {"稳健中性", "稳健", "稳健略偏宽松",
+                           "稳健偏松", "适度宽松", "宽松"}
+
+    # Policy rate primary — 7D 逆回购 1.40% from calibration
+    prp = nv.get("policy_rate_primary") or {}
+    assert prp.get("rate") == 1.40, f"7D RR rate not 1.40: {prp!r}"
+    assert prp.get("moved_2025_09") is True
+
+    # Quantitative tools (LPR / RRR — may pull live values from series)
+    prq = nv.get("policy_rate_quantitative_tools") or {}
+    assert prq.get("lpr_1y") is not None
+    assert prq.get("rrr_large_bank") is not None
+
+    # CPI framing — KEY CN-specific test: enum must be valid
+    cpi_framing = nv.get("cpi_framing") or {}
+    assert "policy_stance" in cpi_framing
+    assert cpi_framing["policy_stance"] in {
+        "supportive_recovery_below_target",
+        "near_target_balanced",
+        "below_target_persistent",
+        "deflation_risk",
+        "deflation_confirmed",
+        "above_target_concern",
+        "unknown",
+    }
+    if cpi_framing.get("current") is not None:
+        # Sanity: target = 2.0
+        assert cpi_framing["target"] == 2.0
+        assert cpi_framing.get("gap") is not None
+
+    # Credit impulse — populated or marked unavailable
+    credit_impulse = nv.get("credit_impulse")
+    if credit_impulse is not None:
+        assert credit_impulse.get("trend") in {
+            "expanding", "contracting", "neutral"
+        }
+        assert credit_impulse.get("methodology"), (
+            f"credit_impulse missing methodology: {credit_impulse!r}"
+        )
+
+    # 4-component dispersion — must have 4 entries
+    dispersion = nv.get("4_component_dispersion") or {}
+    for comp in ("industrial", "retail", "fai", "services"):
+        assert comp in dispersion, f"missing dispersion component {comp}"
+    assert "spread_pp" in dispersion
+    assert "alarm" in dispersion
+    assert isinstance(dispersion["alarm"], bool)
+
+    # Property overlay — structural
+    prop = nv.get("property_overlay") or {}
+    assert prop.get("gdp_share_direct") == 0.236
+    assert prop.get("gdp_share_incl_infra") == 0.31
+    assert prop.get("deleveraging_phase") is True
+
+
 def test_chain_us_classifier_e2e():
     """data-us regime-pack → classify_us → CountryRegimeCard with valid
     Phase 1 envelope. Per ADR-0004 PR-2."""
