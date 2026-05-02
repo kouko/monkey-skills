@@ -220,20 +220,28 @@ Don't write bad code.
 
 ---
 
-### D4: Specification Compliance — Especially Description (15 points)
+### D4: Specification Compliance — Description + Folder Structure (15 points)
 
-Does the Skill follow official format requirements? **Special focus on description quality.**
+Does the Skill follow official format requirements? **Special focus on description quality AND folder structure compliance.** Failures in either area cap the score.
 
 | Score | Criteria |
 |-------|----------|
-| 0-5 | Missing frontmatter or invalid format |
-| 6-10 | Has frontmatter but description is vague or incomplete |
-| 11-13 | Valid frontmatter, description has WHAT but weak on WHEN |
-| 14-15 | Perfect: comprehensive description with WHAT, WHEN, and trigger keywords |
+| 0-5 | Missing frontmatter, invalid format, OR nested subdirectories under skill root (auto-cap) |
+| 6-10 | Has frontmatter but description vague / incomplete, OR folder structure marginal |
+| 11-13 | Valid frontmatter, flat folder structure, description has WHAT but weak on WHEN |
+| 14-15 | Perfect: comprehensive description (WHAT/WHEN/KEYWORDS) AND flat folder structure |
 
 **Frontmatter requirements**:
 - `name`: lowercase, alphanumeric + hyphens only, ≤64 characters
 - `description`: **THE MOST CRITICAL FIELD** — determines if skill gets used at all
+
+**Folder structure requirements** (NEW — strict enforcement):
+- Skill root may contain `SKILL.md` plus single-level subdirectories (`scripts/`, `references/`, `assets/`, `agents/`, etc.)
+- **Subdirectories MUST be flat — no nested subdirectories**
+  - ✅ `skill-name/scripts/extract.py`
+  - ❌ `skill-name/assets/scripts/extract.py` (nested)
+- If grouping needs subdivision, create another top-level subdirectory at skill root (e.g., `scripts-redshift/` and `scripts-snowflake/`) instead of nesting (e.g., `scripts/redshift/` and `scripts/snowflake/`)
+- Auto-cap: any nested subdirectory under skill root caps D4 score at **5/15** regardless of description quality
 
 ---
 
@@ -536,6 +544,10 @@ Calculate rough ratio: E:A:R
 [ ] List all reference files and their sizes
 [ ] Identify which pattern the Skill follows
 [ ] Check for loading triggers (if references exist)
+[ ] **Verify folder structure flatness**: scan skill root for any nested
+    subdirectories. Run `find <skill-root> -mindepth 2 -type d` —
+    any output = D4 auto-cap at 5/15. (Anthropic skill convention:
+    subfolders cannot themselves contain subfolders.)
 ```
 
 ### Step 3: Score Each Dimension

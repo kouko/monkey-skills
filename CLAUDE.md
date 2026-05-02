@@ -13,11 +13,33 @@
 - TECH-SPEC.md（code-team 擁有）— 技術：模組設計 + 資料流 + 介面定義
 - TECH-SPEC.md 應 reference PRODUCT-SPEC.md 的內容
 
-### Skill Structure
-- 每個 team skill 是自包含目錄（SKILL.md + protocols/ + checklists/ + rubrics/ + standards/）
+### Skill Structure（CRITICAL — Anthropic 規範，違規會被 hook 擋）
+
+**MUST：skill 資料夾扁平 — subfolder 內不可再嵌 subfolder。**
+
+```
+✅ OK（subfolder 是單層）:
+skills/init/SKILL.md
+skills/init/assets/SCHEMA.md
+skills/init/assets/extract_lineage.py
+skills/init/scripts/build.py
+skills/init/agents/worker.md
+skills/init/references/spec.md
+skills/init/protocols/code-review.md
+skills/init/checklists/security.md
+
+❌ NOT OK（subfolder 內又開 subfolder）:
+skills/init/assets/scripts/foo.py     ← assets/ 下開 scripts/
+skills/init/agents/sub/worker.md      ← agents/ 下開 sub/
+skills/init/references/v1/spec.md     ← references/ 下開 v1/
+```
+
+- 每個 skill 是自包含目錄：SKILL.md + 任意數量的**單層** subfolder（assets/、protocols/、agents/、scripts/、references/、checklists/、rubrics/、standards/ 等）
+- 任一 subfolder 內**不可再開 subfolder**（這是 Anthropic 官方 skill convention）
 - SKILL.md body 控制在 ~6,000 tokens 以內（約 4,500 words）；Anthropic 官方建議 <500 lines，本 repo 改用 token 計量因為行數密度差異大
 - Domain knowledge 用目錄慣例 + 描述性檔名路由，不用靜態清單
-- Reference files 從 SKILL.md 直接引用（one level deep，不巢狀）
+- Reference files 從 SKILL.md 直接引用，路徑都是 `<subfolder>/<file>` 一層 deep
+- **違規會被 `.claude/hooks/validate-skill-folder-structure.sh` 擋下**（PostToolUse on Write|Edit）
 
 ### Quality Gates
 - 四級系統：SELF / MUST / SHOULD / MAY
