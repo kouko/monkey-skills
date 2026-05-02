@@ -23,6 +23,8 @@ Pack types
                                       marketCap, enterpriseValue)
   screener-batch    batch — lightweight yfinance batch (info + 1y price)
   regime-pack       no ticker — BOJ rates + estat CPI/IP/unemployment
+                                + ESRI 景気動向指数 CI 一致/先行 + 機械受注
+                                + Tankan 業況判断 DI (4 categories)
                                 + ECB JP real 10Y yield (always Tier A)
 
 Ticker convention
@@ -642,9 +644,26 @@ def pack_regime() -> dict[str, Any]:
             "8",
         ],
     )
+    boj_tankan_business_di = _run_client(
+        "boj_client.py",
+        [
+            "--tankan-business-di",
+            "--periods",
+            "12",
+        ],
+    )
+    # PR-3 (ADR-0004): coincident-index / leading-index / machine-orders added
+    # to the regime-pack preset list. The presets exist in estat_client.py;
+    # they were simply omitted from pack.py's call. classify_jp.py reads
+    # ESRI 景気動向指数 CI as its native cycle proxy (replaces the previous
+    # missing coincident-index resolve in _legacy_ic.py).
     estat_macro = _run_client(
         "estat_client.py",
-        ["--preset", "cpi,core-cpi,ip,unemployment,jgb10y"],
+        [
+            "--preset",
+            "cpi,core-cpi,ip,unemployment,jgb10y,"
+            "coincident-index,leading-index,machine-orders",
+        ],
     )
     ecb_real_yield = _run_client(
         "ecb_client.py",
@@ -659,6 +678,12 @@ def pack_regime() -> dict[str, Any]:
     groups_dict = {
         "rates": {"call_rate_on": boj_call},
         "inflation": {"estat": estat_macro},
+        # ESRI 景気動向指数 CI (一致 / 先行) lives under estat too — the
+        # T2 flatten helper extracts each indicator by its preset name, so
+        # `coincident-index` / `leading-index` / `machine-orders` will surface
+        # as top-level series keys regardless of which group they sit under.
+        "cycle": {"estat_cycle_alias": {"_note": "see groups.inflation.estat — coincident/leading/machine-orders presets are flattened to series"}},
+        "business_sentiment": {"tankan_business_di": boj_tankan_business_di},
         "real_rates": {
             "real_10y_monthly_ecb": ecb_real_yield,
             "tankan_inflation_outlook": boj_tankan_outlook,
@@ -673,8 +698,9 @@ def pack_regime() -> dict[str, Any]:
             "tier": "tier_a",
             "tier_label": "Tier A (BOJ + 統計DB + ECB primary-source)",
             "sources": [
-                "BOJ Time-Series API (日銀)",
-                "Statistics Dashboard / 統計DB (e-Stat)",
+                "BOJ Time-Series API (日銀, FM01 + CO Tankan)",
+                "Statistics Dashboard / 統計DB (e-Stat — CPI / Core-CPI / IP / "
+                "Unemployment / JGB10y / ESRI 景気動向指数 CI / 機械受注)",
                 "ECB Data Portal",
             ],
         },
