@@ -496,6 +496,77 @@ def test_chain_jp_comps_to_comps_compute(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# data-tw cross-layer chains (Tier 2 yfinance fallback; MOPS Tier A T3 deferred)
+# ---------------------------------------------------------------------------
+
+def test_chain_tw_snapshot_to_technical():
+    fixture = FIXTURES / "data-tw-snapshot-sample.json"
+    script = SKILLS / "analysis-technical" / "scripts" / "ta_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    assert "error" not in out, f"ta_compute error: {out.get('error')!r}"
+    indicators = out.get("indicators") or {}
+    assert any(v is not None for v in indicators.values()), (
+        f"all indicators None — chain wiring failed: {indicators}"
+    )
+
+
+def test_chain_tw_memofetch_to_dcf():
+    fixture = FIXTURES / "data-tw-memo-fetch-sample.json"
+    script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    intrinsic = out.get("intrinsic_value") or {}
+    intrinsic_mid = intrinsic.get("mid") if isinstance(intrinsic, dict) else None
+    base_revenue = (out.get("assumptions") or {}).get("base_revenue")
+    assert intrinsic_mid is not None, (
+        f"data-tw DCF intrinsic_mid is None — chain wiring broken"
+    )
+    # TSMC FY24 revenue ~3.8T TWD
+    assert base_revenue is not None and base_revenue > 1e11, (
+        f"data-tw base_revenue too small: {base_revenue!r}"
+    )
+
+
+def test_chain_tw_comps_to_comps_compute(tmp_path):
+    fixture = FIXTURES / "data-tw-comps-multiples-sample.json"
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    pack = json.loads(fixture.read_text())
+    info = pack.get("info") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"fixture needs >=2 tickers, has {len(tickers)}")
+    anchor_ticker, peer_ticker = tickers[0], tickers[1]
+    anchor_file = tmp_path / f"{anchor_ticker.replace('.', '_')}-anchor.json"
+    peer_file = tmp_path / f"{peer_ticker.replace('.', '_')}-peer.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "info": {anchor_ticker: info[anchor_ticker]},
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_ticker,
+        "info": {peer_ticker: info[peer_ticker]},
+    }))
+    rc, out, stderr = _run_layer2(script, [
+        "--anchor", str(anchor_file),
+        "--peers", str(peer_file),
+    ])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    assert any(v is not None for v in multiples.values()), (
+        f"data-tw comps all-None for {anchor_ticker}: {multiples}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).
 # ---------------------------------------------------------------------------
