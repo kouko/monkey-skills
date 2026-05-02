@@ -1,0 +1,164 @@
+# Japan calibration plumbed from references/thresholds-japan.md (per ADR-0004).
+# Vintage: 2026-Q2 (full grounding 2026-04-18 v1.9.0; v1.10.0 real-rate addendum
+# 2026-04-19; v1.11.0 full refresh 2026-04-19; this 2026-05-02 partial delta —
+# incorporates BOJ 2026-04-28 据え置き / 展望 上方修正 / 2026-03 短観 release).
+#
+# Authority: 日本銀行 (Bank of Japan, BOJ) | Currency: JPY
+country: jp
+authority: 日本銀行 (Bank of Japan)
+currency: JPY
+
+# --------------------------------------------------------------------------
+# Inflation target (2013-01-22 BOJ-政府 共同声明)
+# --------------------------------------------------------------------------
+inflation_target: 2.0
+inflation_target_type: central_tendency_qualitative   # BOJ 「概ね整合的な水準」
+inflation_target_framework: FIT
+inflation_target_authority_date: 2013-01-22
+
+# Outlook anchor (2026-04 展望レポート; informational only — not used as threshold)
+outlook_anchor:
+  fy2026_core_cpi_median_pct: 2.75   # "2% 台後半" → midpoint approximation
+  fy2027_core_cpi_median_pct: 2.25   # "2% 台前半"
+  fy2028_core_cpi_median_pct: 2.0
+  source: BOJ 経済・物価情勢の展望 2026-04 (gor2604a.pdf)
+
+# --------------------------------------------------------------------------
+# Policy rate — 3-tier corridor (post-2024-03 YCC end + 2025-12-19 hike)
+# --------------------------------------------------------------------------
+policy_target_pct: 0.75   # 誘導目標 (call rate O/N)
+policy_rate_3tier:
+  guidance_target: 0.75   # "0.75% 程度で推移するよう促す" — BOJ 2025-12-19, held 2026-04-28
+  ioer: 0.75              # 補完当座預金 適用利率
+  lombard_ceiling: 1.00   # 基準貸付利率 (公定歩合)
+  market_rate_floor_drift_bp: 3   # STRDCLUCON typically 2-3 bp below guidance
+
+# Latest decision metadata
+last_decision:
+  meeting_date: 2026-04-28
+  outcome: hold
+  vote: "6-3"
+  dissent_count: 3
+  dissent_proposal: "+25 bp to 1.00%"
+  dissenters: [中川順子, 高田創, 田村直樹]
+
+# --------------------------------------------------------------------------
+# Real r* (BOJ WP24-J-09 + 日銀レビュー rev26j05)
+# --------------------------------------------------------------------------
+r_star_real_range: [-1.0, 0.5]
+r_star_real_midpoint: -0.25   # range midpoint derivation; NOT 原典 mean
+
+policy_rate_neutrality:
+  nominal_neutral_estimate_band: [1.0, 1.75]
+  terminal_rate_market_consensus: 1.50   # 野村 森田 2026-01-26 メイン (60%)
+  terminal_rate_risk_scenario: 1.75      # 野村 リスク (40%, 円安継続)
+
+# --------------------------------------------------------------------------
+# Real rate 4-tier band (Block 4 of thresholds-japan.md)
+# Applied to ECB ex-post real-10y monthly series.
+# --------------------------------------------------------------------------
+real_rate_4tier:
+  accommodative: { upper: 0.0 }                           # < 0%: real yield below neutral
+  neutral: { lower: 0.0, upper: 1.0 }                     # 0% to 1%: near r* range
+  restrictive: { lower: 1.0 }                             # >= 1%: above r* upper +0.5pp
+
+# --------------------------------------------------------------------------
+# Tankan inflation outlook bands (corporate ex-ante CPI expectations)
+# --------------------------------------------------------------------------
+tankan_inflation_outlook_bands:
+  below_target: { upper: 1.5 }
+  at_target: { lower: 1.5, upper: 2.5 }
+  overshoot: { lower: 2.5 }
+
+# --------------------------------------------------------------------------
+# NAIRU proxy — JILPT 均衡失業率
+# --------------------------------------------------------------------------
+nairu_proxy:
+  point_estimate: 2.80
+  band: [2.50, 3.10]
+  authority: JILPT (UV分析)
+  vintage: 2026-02
+
+unemployment_bands:
+  tight: { upper: 2.5 }
+  balanced: { lower: 2.5, upper: 3.1 }
+  slack: { lower: 3.1 }
+
+# --------------------------------------------------------------------------
+# Tankan business DI (large-enterprise + small-enterprise × mfg + non-mfg)
+# Series codes verified via stat-search.boj.or.jp/info/tankan_code_en.html
+# --------------------------------------------------------------------------
+tankan_business_di:
+  series_codes:
+    large_mfg: TK99F1000601GCQ01000
+    large_nonmfg: TK99F2000601GCQ01000
+    small_mfg: TK99F1000601GCQ03000
+    small_nonmfg: TK99F2000601GCQ03000
+  # Heuristic bands for mean DI (simple-aggregate ordinary-figure)
+  mean_bands:
+    contraction: { upper: -5 }    # 業況悪化 dominant
+    flat: { lower: -5, upper: 5 } # neutral
+    expansion: { lower: 5 }       # 業況改善 dominant
+  # Dispersion: max−min across 4 categories. > 20 pp = uneven cycle.
+  dispersion_warning_pp: 20
+
+# --------------------------------------------------------------------------
+# Direction-classification calibration
+# --------------------------------------------------------------------------
+direction_band_stdev: 0.5
+normalised_indicators:
+  - coincident-index   # ESRI 景気動向指数 CI (around 100 trend)
+  - leading-index
+
+# --------------------------------------------------------------------------
+# Deflation regime classification (thresholds-japan.md "Structural Regime Notes")
+# --------------------------------------------------------------------------
+deflation_phase_signals:
+  in_deflation:
+    descriptor: "ZIRP/NIRP active OR core CPI < 0.5% sustained ≥ 4 quarters"
+  exit_deflation_phase_1:
+    descriptor: "First sustained 2% inflation post-2022 (achieved 2024)"
+    achieved_at: 2024
+  exit_deflation_phase_2:
+    descriptor: "Real wages positive sustained + above-target overshoot tolerated (achieved 2026-Q1)"
+    achieved_at: 2026-Q1
+  post_deflation:
+    descriptor: "Inflation anchored at target; BOJ FIT-style framework active"
+current_phase: exit_deflation_phase_2   # as of 2026-Q2 grounding
+
+# --------------------------------------------------------------------------
+# Structural overlays (registered for classify_jp.py)
+# --------------------------------------------------------------------------
+structural_overlays:
+  - boj_stance                 # Policy rate level + direction relative to neutral
+  - tankan_business_di         # Mean + dispersion across 4 categories
+  - esri_coincident_index      # Cycle direction + level vs 100 trend
+  - deflation_phase_detection  # Multi-signal deflation/inflation regime
+  - real_rate_4tier            # ECB ex-post real-yield 4-tier
+  - boj_qualitative_anchor     # Surfaced when restrictive
+
+# Surfaced when policy rate near/above lower neutral (currently 0.75 vs 1.0 lower bound)
+boj_qualitative_anchor: |
+  植田総裁 2026-04-30 記者会見「データ次第で次回以降の追加利上げを排除しない」+
+  2026-04-28 決定の 3-反対 (中川・高田・田村, 1.0% 提案) は植田体制初。
+  BOJ 2026-04 展望は FY2026 核 CPI 中央値を 1.9% → 2.7-2.8% へ大幅上方修正。
+  6/16-17 会合での +25 bp → 1.00% 確率は市場で大幅上昇。
+
+# --------------------------------------------------------------------------
+# Provenance
+# --------------------------------------------------------------------------
+provenance:
+  calibration_doc: thresholds-japan.md
+  calibration_vintage: 2026-Q2
+  last_full_grounding: 2026-04-18      # v1.9.0
+  partial_refresh: 2026-04-19           # v1.10.0 + v1.11.0
+  this_pr_partial_refresh: 2026-05-02   # PR-3 — incorporates 2026-04-28 BOJ + 2026-03 Tankan
+  authority_sources:
+    - BOJ 金融政策決定会合 議決 / 展望レポート / 総裁記者会見
+    - BOJ 短観 (Tankan, quarterly)
+    - BOJ Working Paper 24-J-09 + 日銀レビュー rev26j05 (r*)
+    - JILPT 均衡失業率 (UV分析)
+    - 内閣府 経済社会総合研究所 (ESRI 景気動向指数)
+    - 総務省 統計局 (e-Stat 労働力調査 / CPI)
+    - 厚生労働省 毎月勤労統計 (実質賃金)
+    - 連合 春闘集計 / JILPT BLT
