@@ -46,6 +46,36 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Blocker**: Confirm last 30 days had zero false-positives (review CI run history).
 - **Acceptance**: A test commit with deliberately desynced script copies fails CI.
 
+### v2.1.x-e — DGBAS `cpi-sa` (季調CPI) computed YoY companion
+
+- **What**: `cpisplsa.xls` is single-sheet (DGBAS does not publish a 季調CPI 年增率 sheet, unlike the headline `cpispl.xls` which does). Add a `cpi-sa-yoy` preset that **computes** YoY in code from the `cpi-sa` INDEX series — `(idx[t] / idx[t-12]) - 1` — and surfaces it via the same provenance shape as native YoY presets, with `_provenance.computed: true` to flag the derivation.
+- **Why**: Season-adjusted YoY is the cleaner read for inflation regime-classification (removes Lunar New Year base-effect noise that the headline 年增率 sheet keeps in). Without it, classify_tw can only consume non-SA YoY; SA INDEX is dead-weight.
+- **Files**: `data-tw/scripts/dgbas_client.py` (both copies; add `cpi-sa-yoy` preset + small _compute_yoy helper); pack.py optional wire-in; integration test optional.
+- **Blocker**: None (data already in INDEX preset; just compute).
+- **Acceptance**: `dgbas_client --preset cpi-sa-yoy` returns 12 fewer observations than `cpi-sa` with values in the -5..+20 % band; `_provenance.computed == true`.
+- **Reference**: PR #209 (cpi/cpi-yoy split cleanup port); §v2.1.x-c root-cause finding.
+
+### v2.1.x-f — DGBAS import-pi / export-pi USD-priced + 農工原料 sub-bundles
+
+- **What**: PR #209 surfaced only the headline 新臺幣計價 INDEX + YoY% pair for import-pi / export-pi. The underlying `ipispl.xls` / `epispl.xls` files publish more bases:
+  - `ipispl.xls` has 8 sheets — TWD-priced INDEX/YoY, USD-priced INDEX/YoY, **plus** 農工原料類 (raw materials sub-bundle) in both TWD and USD pricing
+  - `epispl.xls` has 4 sheets — TWD-priced INDEX/YoY, USD-priced INDEX/YoY
+  Add `import-pi-usd / import-pi-usd-yoy / import-pi-raw / import-pi-raw-yoy / import-pi-raw-usd / import-pi-raw-usd-yoy` and `export-pi-usd / export-pi-usd-yoy` presets.
+- **Why**: Trade-flow analyses (e.g. terms-of-trade, raw-materials cost-push) need USD-priced and 農工原料 cuts. Today only TWD headline is exposed.
+- **Files**: `data-tw/scripts/dgbas_client.py` (both copies; add 8 presets); pack.py wiring optional (TWD headline already covers regime-pack); integration test optional.
+- **Blocker**: None (sheets already verified to exist via 2026-05-02 probe; sheet-name hints in regex are unique within each file).
+- **Acceptance**: All 8 new presets fetch with sane magnitudes (USD INDEX ~110-130, raw-materials YoY can run hot, often 5-15 %); existing TWD presets unchanged.
+- **Reference**: PR #209 commit message §"Out-of-scope (kept simple)".
+
+### v2.1.x-g — Fix `test_kr_snapshot_samsung` yfinance history shape regression
+
+- **What**: `data-kr/tests/data/test_data_kr.py::test_kr_snapshot_samsung` asserts `isinstance(out["history"], dict)` but yfinance now returns a list of `{"close", "date", "high", "low", ...}` records. Either update yfinance_client KR-snapshot path to wrap into the dict shape the test expects, or update the test + downstream consumers to accept the list shape (verify which shape memo-fetch / DCF actually consume).
+- **Why**: Pre-existing failure that's been red on main since at least 2026-05-02. Hides real future regressions because the file is already red — easy to miss when adding new KR tests.
+- **Files**: `data-kr/scripts/yfinance_client.py` (potentially); `data-kr/tests/data/test_data_kr.py::test_kr_snapshot_samsung`; check downstream consumers in `analysis-*` to confirm shape contract.
+- **Blocker**: Decide canonical shape — `dict[date, OHLCV]` (legacy) vs `list[OHLCV-with-date]` (yfinance 0.2.x newer). Pick the one matching `data-us` / `data-tw` for cross-country symmetry.
+- **Acceptance**: `test_kr_snapshot_samsung` green; shape matches data-us / data-tw / data-jp / data-cn equivalent KR snapshot tests.
+- **Reference**: PR #203 commit body §"Pre-existing failure"; v2.1.x test-suite session 2026-05-02.
+
 ## Mid-term — v2.2.0 candidates
 
 Material features. ~1-3 weeks each. Do one at a time.
