@@ -1,0 +1,26 @@
+{
+  "name": "dbt-wiki",
+  "version": "1.0.0",
+  "description": "Local-only LLM-queryable knowledge base for dbt projects. No dbt Cloud required. Init reads target/manifest.json (model metadata, ref/source lineage, schema.yml columns, tests) plus target/compiled/**/*.sql parsed via sqlglot to extract column-level lineage. Generates one markdown entity per model/source/macro under .dbt-wiki/, plus DAG visualization and tier/materialization indices. Query answers natural-language questions about model structure, column-level data flow, materialization config, test coverage, and refactoring impact (rename/delete propagation). Coexists with repo-wiki: dbt-wiki for STRUCTURE, repo-wiki for WHY. Requires sqlglot (pip install).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/dbt-wiki",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "dbt",
+    "data-modeling",
+    "lineage",
+    "column-lineage",
+    "manifest-json",
+    "sqlglot",
+    "redshift",
+    "snowflake",
+    "bigquery",
+    "knowledge-base",
+    "llm-queryable",
+    "local-only"
+  ]
+}
