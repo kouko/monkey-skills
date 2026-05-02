@@ -1,5 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
 """Extract SQL + jinja comments from a dbt model's raw_code, preserving line numbers.
+
+This script has zero third-party dependencies (pure stdlib regex). PEP 723
+metadata is included for consistency with extract_column_lineage.py — both
+scripts can run via `uv run` (recommended) or `python3` directly.
 
 dbt-wiki ships this script as a plugin asset alongside extract_column_lineage.py.
 Whereas the lineage script reads `target/compiled/*.sql` (jinja already expanded),
@@ -13,6 +21,11 @@ Captured comment forms:
 
 Usage
 -----
+    # Preferred — uv handles Python version, no install needed
+    uv run extract_sql_comments.py <raw_sql_path>
+    uv run extract_sql_comments.py --batch <models_dir>
+
+    # Fallback — plain python3 (also works since no third-party deps)
     python3 extract_sql_comments.py <raw_sql_path>
     python3 extract_sql_comments.py --batch <models_dir>
 

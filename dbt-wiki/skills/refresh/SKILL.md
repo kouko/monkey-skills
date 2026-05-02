@@ -59,7 +59,19 @@ test -d "$DBT_DIR/target/compiled" || {
   exit 1
 }
 
-python3 -c "import sqlglot" || { echo "sqlglot not installed: pip install sqlglot"; exit 1; }
+# Detect Python execution mode (same as init Step 0 — uv preferred)
+PY_RUNNER=""
+if command -v uv >/dev/null 2>&1; then
+  PY_RUNNER="uv run"
+elif python3 -c "import sqlglot" 2>/dev/null; then
+  PY_RUNNER="python3"
+else
+  echo "Need either uv (recommended) or pip-installed sqlglot."
+  echo "  brew install uv     # or: curl -LsSf https://astral.sh/uv/install.sh | sh"
+  echo "  OR"
+  echo "  pip install 'sqlglot>=25.0'"
+  exit 1
+fi
 ```
 
 ## Step 1: Detect drift
@@ -138,7 +150,7 @@ For each model in `added`:
 
 1. Run column lineage extraction (same as init Step 4):
    ```bash
-   python3 .dbt-wiki/_internal/extract_column_lineage.py \
+   $PY_RUNNER .dbt-wiki/_internal/extract_column_lineage.py \
        "$DBT_DIR/target/compiled/$PROJECT/${original_file_path}" redshift > /tmp/cl.json
    ```
 2. Reconcile sqlglot output with schema.yml columns

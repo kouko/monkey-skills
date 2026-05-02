@@ -70,12 +70,36 @@ test -d "$DBT_DIR/target/compiled" || {
   exit 1
 }
 
-# Verify sqlglot installed
-python3 -c "import sqlglot; print('sqlglot', sqlglot.__version__)" || {
-  echo "sqlglot not installed. Run: pip install sqlglot"
+# Detect Python execution mode (uv preferred — auto-installs sqlglot via PEP 723)
+PY_RUNNER=""
+if command -v uv >/dev/null 2>&1; then
+  PY_RUNNER="uv run"
+  echo "Using uv ($(uv --version)) — sqlglot will be installed automatically via PEP 723"
+elif python3 -c "import sqlglot" 2>/dev/null; then
+  PY_RUNNER="python3"
+  echo "Using python3 with pre-installed sqlglot ($(python3 -c 'import sqlglot; print(sqlglot.__version__)'))"
+else
+  cat <<EOF
+Neither uv nor a Python env with sqlglot was found.
+
+Recommended: install uv (https://github.com/astral-sh/uv) — it auto-handles
+the sqlglot dependency without polluting your dbt env:
+  brew install uv          # macOS
+  curl -LsSf https://astral.sh/uv/install.sh | sh    # Linux/macOS
+
+Or, install sqlglot directly into your current Python env:
+  pip install 'sqlglot>=25.0'
+
+Then re-run /dbt-wiki:init.
+EOF
   exit 1
-}
+fi
 ```
+
+The detected `$PY_RUNNER` (`uv run` or `python3`) is used in Step 4
+to invoke the column-lineage and comment scripts. Either path produces
+identical output; uv is preferred because it auto-installs deps in an
+ephemeral env (zero pollution of the user's dbt env).
 
 If any check fails, print the error and exit. Do not proceed.
 
@@ -217,15 +241,19 @@ cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 
 (Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
 
-The script CLI:
+The script CLI (use `$PY_RUNNER` from Step 0 — `uv run` or `python3`):
 
 ```bash
 # Single file (used during refresh):
-python3 .dbt-wiki/_internal/extract_column_lineage.py <compiled_sql_path> [dialect]
+$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage.py <compiled_sql_path> [dialect]
 
 # Batch (used during init — much faster than per-file invocation):
-python3 .dbt-wiki/_internal/extract_column_lineage.py --batch <compiled_dir> [dialect]
+$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage.py --batch <compiled_dir> [dialect]
 ```
+
+The script declares its sqlglot dependency via PEP 723 inline metadata,
+so `uv run` auto-installs it in an ephemeral env (no pollution of user's
+dbt env). With plain `python3`, sqlglot must be pre-installed via pip.
 
 **Critical**: parse `target/compiled/*.sql`, NOT `raw_code` (jinja-laden by
 definition; sqlglot can't parse `{{ ref(...) }}`).
@@ -254,7 +282,7 @@ Export as `DIALECT=...` for use in batch invocation below.
 
 ```bash
 PROJECT_NAME=$(grep -E '^name:' "$DBT_DIR/dbt_project.yml" | head -1 | awk '{print $2}' | tr -d "'\"")
-python3 .dbt-wiki/_internal/extract_column_lineage.py \
+$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage.py \
     --batch "$DBT_DIR/target/compiled/$PROJECT_NAME/" \
     "$DIALECT" > /tmp/dbt-wiki-col-lineage.jsonl
 ```
@@ -275,11 +303,12 @@ with empty `sources:` per column.
 The script ships with a 7-case smoke test. Run once before processing:
 
 ```bash
-python3 .dbt-wiki/_internal/extract_column_lineage_test.py
+$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage_test.py
 ```
 
 Expects "7/7 passed". If failures appear, sqlglot version mismatch is
-likely — request `pip install --upgrade 'sqlglot>=25.0'`.
+likely — request a newer version: `uv tool upgrade sqlglot` (uv users) or
+`pip install --upgrade 'sqlglot>=25.0'` (plain python3 users).
 
 ### Step 4d: Extract SQL + jinja comments from raw model files
 
@@ -298,9 +327,12 @@ NOT `target/compiled/` — we want jinja `{# ... #}` comments which
 `dbt compile` strips):
 
 ```bash
-python3 .dbt-wiki/_internal/extract_sql_comments.py \
+$PY_RUNNER .dbt-wiki/_internal/extract_sql_comments.py \
     --batch "$DBT_DIR/models/" > /tmp/dbt-wiki-comments.jsonl
 ```
+
+(extract_sql_comments.py has zero third-party deps — runs identically
+under `uv run` or plain `python3`. We use `$PY_RUNNER` for consistency.)
 
 JSONL output, one line per `.sql`:
 

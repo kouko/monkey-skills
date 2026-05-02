@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["sqlglot>=25.0"]
+# ///
 """Extract column-level lineage from a compiled dbt SQL file using sqlglot.
 
 dbt-wiki ships this script as a plugin asset. /dbt-wiki:init copies it to
@@ -6,15 +10,28 @@ dbt-wiki ships this script as a plugin asset. /dbt-wiki:init copies it to
 The init/refresh skills invoke it once per model (or in batch mode) to
 populate the `columns[].sources` field of model entity pages.
 
+Dependency installation
+-----------------------
+Two execution modes — preferred is `uv run` (zero install required):
+
+    # Mode A (preferred): uv handles deps in an ephemeral env
+    uv run extract_column_lineage.py <compiled_sql_file> [dialect]
+
+    # Mode B (fallback): plain python3 — requires manual `pip install sqlglot>=25.0`
+    python3 extract_column_lineage.py <compiled_sql_file> [dialect]
+
+The PEP 723 inline metadata block above declares the sqlglot dependency
+so `uv run` auto-installs it without polluting the user's Python env.
+
 Usage
 -----
 Single file (preferred for incremental refresh):
 
-    python3 extract_column_lineage.py <compiled_sql_file> [dialect]
+    uv run extract_column_lineage.py <compiled_sql_file> [dialect]
 
 Batch over a directory (preferred for first-time init):
 
-    python3 extract_column_lineage.py --batch <compiled_dir> [dialect]
+    uv run extract_column_lineage.py --batch <compiled_dir> [dialect]
 
 Output (stdout)
 ---------------
