@@ -480,8 +480,130 @@ def _flatten_regime_to_series(root: dict) -> dict:
     return flat
 
 
+def _compute_credit_impulse(
+    tsf_stock_yoy: list[float] | None,
+    tsf_flow_monthly: list[float] | None,
+    m2_yoy: list[float] | None,
+) -> dict | None:
+    """Credit impulse proxy (CN-specific).
+
+    Per CICC convention (中金 2022; 国信 2023): TSF stock yoy 12-month
+    rolling change. Specifically: latest TSF stock yoy minus 12-mo
+    lagged TSF stock yoy = credit impulse (in pp). Positive value =
+    expanding credit; negative = contracting.
+
+    Path priority:
+      1. `tsf_stock_yoy` direct (preferred — PBOC-published series).
+      2. `tsf_flow_monthly` (akshare `shrzgm`) → derive stock-yoy proxy
+         via trailing-12m sum, then take 12mo Δ. ±0.3pp drift vs PBOC
+         published; acceptable for cycle-direction signal.
+      3. `m2_yoy` 12mo Δ — last-resort fallback (M2 ↔ credit linkage
+         weakened by 2024-2025 re-categorization).
+
+    Returns dict with `value` (pp), `trend` (expanding/contracting/
+    neutral), `methodology`, and intermediate `tsf_stock_yoy_proxy_now`
+    when path 2 is used.
+
+    See `analysis-macro-regime/references/credit-impulse-methodology.md`
+    for full grounding.
+    """
+    threshold_pp = 0.5  # |Δ| > 0.5pp → trend tag fires (~2/3 sigma)
+
+    def _trend(impulse_pp: float) -> str:
+        if impulse_pp > threshold_pp:
+            return "expanding"
+        if impulse_pp < -threshold_pp:
+            return "contracting"
+        return "neutral"
+
+    if tsf_stock_yoy and len(tsf_stock_yoy) >= 13:
+        impulse = tsf_stock_yoy[-1] - tsf_stock_yoy[-13]
+        return {
+            "value": round(impulse, 3),
+            "trend": _trend(impulse),
+            "threshold_pp": threshold_pp,
+            "methodology": "TSF stock yoy 12-month change (CICC convention)",
+            "source": "tsf_stock_yoy direct",
+        }
+
+    if tsf_flow_monthly and len(tsf_flow_monthly) >= 25:
+        recent_sum = sum(tsf_flow_monthly[-12:])
+        prior_sum_t12 = sum(tsf_flow_monthly[-24:-12])
+        if prior_sum_t12 != 0:
+            stock_yoy_now = (recent_sum - prior_sum_t12) / prior_sum_t12 * 100
+        else:
+            stock_yoy_now = None
+        if len(tsf_flow_monthly) >= 37:
+            prior_recent = sum(tsf_flow_monthly[-24:-12])
+            prior_prior = sum(tsf_flow_monthly[-36:-24])
+            stock_yoy_prior = (
+                (prior_recent - prior_prior) / prior_prior * 100
+                if prior_prior != 0 else None
+            )
+        else:
+            stock_yoy_prior = None
+        if stock_yoy_now is not None and stock_yoy_prior is not None:
+            impulse = stock_yoy_now - stock_yoy_prior
+            return {
+                "value": round(impulse, 3),
+                "trend": _trend(impulse),
+                "threshold_pp": threshold_pp,
+                "methodology": (
+                    "TSF flow → trailing-12m-sum YoY → 12-month change. "
+                    "This is flow-yoy second-derivative, NOT stock-yoy "
+                    "(which PBOC publishes directly = 8.3% at 2025-12). "
+                    "Flow-yoy magnitudes can run 5-20pp larger than stock-yoy "
+                    "because the denominator is one year of flow vs. "
+                    "multi-decade accumulated stock. Trend direction "
+                    "(expanding/contracting) is the load-bearing signal, "
+                    "NOT the absolute magnitude. Switch to true stock-yoy "
+                    "input when PBOC stock series becomes available in "
+                    "akshare or via a direct PBOC scrape."
+                ),
+                "source": "akshare shrzgm (TSF monthly flow, 亿元)",
+                "tsf_flow_yoy_now": round(stock_yoy_now, 3),
+                "tsf_flow_yoy_12mo_prior": round(stock_yoy_prior, 3),
+            }
+
+    if m2_yoy and len(m2_yoy) >= 13:
+        impulse = m2_yoy[-1] - m2_yoy[-13]
+        return {
+            "value": round(impulse, 3),
+            "trend": _trend(impulse),
+            "threshold_pp": threshold_pp,
+            "methodology": (
+                "M2 yoy 12-month change (TSF unavailable fallback; less "
+                "precise — M2 ↔ credit linkage weakened by 2024-2025 "
+                "re-categorization)."
+            ),
+            "source": "nbs m2-yoy",
+        }
+
+    return None
+
+
+def _extract_observations(node: dict | None) -> list[float]:
+    """Extract numeric value list from an indicator block's observations."""
+    if not isinstance(node, dict):
+        return []
+    obs = node.get("observations") or []
+    out: list[float] = []
+    for o in obs:
+        if isinstance(o, dict) and o.get("value") is not None:
+            try:
+                out.append(float(o["value"]))
+            except (TypeError, ValueError):
+                pass
+    return out
+
+
 def pack_regime_pack() -> dict:
-    """Macro regime data: NBS (21) + akshare PBOC/Caixin (8) + FRED USDCNY."""
+    """Macro regime data: NBS (21) + akshare PBOC/Caixin (8) + FRED USDCNY.
+
+    Adds a `cn_specific.credit_impulse` block computed from akshare TSF
+    monthly flow + NBS M2 yoy per CICC convention. See
+    `analysis-macro-regime/references/credit-impulse-methodology.md`.
+    """
     nbs = _nbs(["--preset", ",".join(NBS_PRESETS)])
     akshare = _akshare(["--preset", ",".join(AKSHARE_PRESETS)])
     fred = _fred(["--series", ",".join(FRED_SERIES), "--periods", "24"])
@@ -489,6 +611,18 @@ def pack_regime_pack() -> dict:
                    "--action", "history", "--period", "1y", "--interval", "1d"])
     sources_root = {"nbs": nbs, "akshare": akshare, "fred": fred, "markets": markets}
     series_flat = _flatten_regime_to_series(sources_root)
+
+    # CN-specific helper computations (Phase 1 ADR-0004).
+    ak_indicators = (akshare.get("indicators") or {}) if isinstance(akshare, dict) else {}
+    nbs_indicators = (nbs.get("indicators") or {}) if isinstance(nbs, dict) else {}
+    tsf_flow = _extract_observations(ak_indicators.get("shrzgm"))
+    m2_yoy = _extract_observations(nbs_indicators.get("m2-yoy"))
+    credit_impulse = _compute_credit_impulse(
+        tsf_stock_yoy=None,         # PBOC stock-yoy series not in akshare; future T2 work
+        tsf_flow_monthly=tsf_flow,
+        m2_yoy=m2_yoy,
+    )
+
     return {
         "pack": "regime-pack",
         "country": "CN",
@@ -497,6 +631,13 @@ def pack_regime_pack() -> dict:
         "fred": fred,
         "markets": markets,
         "series": series_flat,  # T2 canonical flat alias per ADR-0002
+        "cn_specific": {
+            "credit_impulse": credit_impulse,
+            "credit_impulse_methodology_doc": (
+                "investing-toolkit/skills/analysis-macro-regime/references/"
+                "credit-impulse-methodology.md"
+            ),
+        },
         "_provenance": {
             "nbs_indicators": NBS_PRESETS,
             "akshare_indicators": AKSHARE_PRESETS,

@@ -1,0 +1,168 @@
+# China / 中国 calibration plumbed from references/thresholds-china.md (per ADR-0004).
+# Vintage: 2026-Q2 (full grounding 2026-04-19 v1.11.0; this 2026-05-02
+# partial delta — no material policy events since 2026-04-19).
+#
+# Authority: 中国人民银行 (PBOC) + 国家统计局 (NBS) + 国务院 (State Council)
+# Currency: CNY
+country: cn
+authority: 中国人民银行 (PBOC)
+currency: CNY
+
+# 2025 起首次下调至 2% (2004 以来首次低于 3%). 由 ceiling 改为
+# central tendency / 物价回升中枢 (政策诉求是「推动物价由负转正」).
+inflation_target: 2.0
+inflation_target_type: central_tendency  # 关键: 不是 ceiling
+inflation_target_framework: multi_objective  # PBOC 多目标央行 (物价/增长/就业/汇率/金融稳定)
+inflation_target_authority_date: 2025-03-05  # 2025 政府工作报告首次下调
+inflation_target_continuity: |
+  2026 政府工作报告 (2026-03-05) 延续 2% 目标, 进一步明确
+  「推动价格总水平由负转正、消费价格合理温和回升」.
+
+# CPI framing (CN-specific, 非 G7 IT framework).
+# 关键洞察: rising inflation 在 disinflation regime 下 = supportive
+# recovery signal, 不是 overheat warning.
+cpi_framing:
+  near_target_band: [1.5, 2.5]            # 央行所期望的正常区间
+  below_target_persistent_band: [0.5, 1.5]  # 当前 2026-Q1 实际区
+  deflation_risk_band: [0.0, 0.5]         # 明确通缩风险
+  deflation_confirmed_below: 0.0
+  above_target_above: 2.5                 # 罕见 (2024 后未见)
+  core_vs_headline_note: |
+    2026-Q1 反转: 核心 CPI (1.1-1.3%) 高于总体 (0.9-1.0%), 食品/猪肉拖累.
+    Prior 2023-2024 pattern (核心 < 总体) 已不成立.
+
+# Policy rate hierarchy (PBOC 2024-07 框架).
+policy_rate:
+  primary:
+    name: 7-day reverse repo / 7天逆回购
+    rate: 1.40
+    source: PBOC 公开市场业务
+    last_change: 2025-09          # 2025-09 下调后未动
+    last_verified: 2026-04-28      # 1462亿 / 4823亿 操作均维持 1.40%
+    note: |
+      2024-07 起 PBOC 明确为主要政策利率 (取代 MLF). 2025-09 由
+      1.50 → 1.40 配合「适度宽松」语言转换. 2026-04 仍维持.
+  quantitative_tools:
+    mlf_1y: 2.0                  # 数量工具, 2024 后非政策利率锚
+    lpr_1y: 3.0                  # 2025-05 下调后连续 11 个月持平 (至 2026-04-20)
+    lpr_5y: 3.5                  # 房贷参考
+    rrr_large_bank: 9.0          # 2025-11 末调整后未动
+    rrr_weighted: 6.2
+    rrr_average: 6.3
+  structural_easing:
+    last_action: 2025-12          # 结构性政策工具利率定向下调 0.25pp
+    instruments: [支农支小再贷款, 碳减排工具, 科技创新再贷款]
+  fx_macroprudential:
+    forward_fx_risk_reserve_ratio: 0.0  # 2026-03-02 起由 20% 降为 0
+    note: |
+      非 RRR, 是 FX 宏观审慎工具, 便利企业远期购汇、减轻人民币贬值压力.
+
+# Real neutral rate r* — BIS WP No 949 (Rees & Sun 2021) Bayesian.
+policy_rate_neutrality:
+  bis_real_estimate: 2.5         # 2-3% real central tendency
+  bis_real_band: [1.5, 3.0]      # 95% CI from 2019Q4 vintage
+  nominal_implied: [3.5, 5.0]    # ≈ r* + 2% CPI 目标
+  source: BIS WP No 949 (Rees & Sun 2021)
+  note: |
+    Bayesian estimation 1995Q2-2019Q4. GFC 后持续下行,
+    潜在增速下降贡献 2/3. 2020 后房地产危机 + 通缩可能进一步下压.
+    PBOC 内部 r* 研究能见度自 Sun Guofeng (前货币政策司长 2023 因案被判刑)
+    后下降.
+
+# PBOC stance ladder (中文官方语言阶梯).
+pboc_stance_ladder:
+  - 稳健中性
+  - 稳健
+  - 稳健略偏宽松
+  - 稳健偏松
+  - 适度宽松     # 当前 2026-Q1 (2010 以来首次回归)
+  - 宽松
+current_stance: 适度宽松           # PBOC 2026-Q1 例会 (3/26) 延续
+stance_last_verified: 2026-03-26
+
+# 4-component growth panel (CN-specific, no consensus monthly GDP proxy).
+# Per v1.7.1 research: 工业增加值 = primary, 4-comp panel for divergence.
+growth_components:
+  primary: industrial-yoy
+  panel:
+    - industrial-yoy            # 工业增加值 YoY
+    - retail-yoy                # 社会消费品零售总额 YoY
+    - fai-yoy                   # 固定资产投资 YoY
+    - services-production-yoy   # 服务业生产指数 YoY
+  dispersion_alarm_pp: 2.0      # spread > 2pp → 4 components disagree
+
+# Credit impulse calibration (CICC convention).
+# Methodology documented in references/credit-impulse-methodology.md.
+credit_impulse:
+  primary_methodology: tsf_stock_yoy_12m_change
+  primary_pp_threshold: 0.5     # |Δ| > 0.5pp → expanding/contracting
+  fallback_methodology: m2_yoy_12m_change
+  flow_to_stock_proxy_note: |
+    fixture data uses akshare `shrzgm` (社融增量月度流量, 亿元). Stock yoy
+    derived via trailing-12m sum yoy. 与 PBOC 直接发布的「社融存量同比」
+    (2025-12 = 8.3%) 同口径但有月度噪音. CICC 认为 stock yoy 是 first-order
+    change of stock; "信贷脉冲" (Biggs 2008) 严格定义为 second-order change
+    (新增信贷/GDP 的变化), 领先 stock yoy 6-9 个月.
+
+# Property cycle overlay (CN structural).
+# 注意: 23.6% / 31% 是宽口径估计 (含上下游产业链). NBS 官方狭义口径
+# (房地产业增加值/GDP) 2024 = 6.3%, 较 2023 下降 0.5pp. 三种口径并存:
+#   - NBS 狭义 (业增加值): 6.3% (2024)
+#   - 完全贡献含产业链: ~17-23% (各机构估计不一)
+#   - 含基建上下游: ~31%
+# thresholds-china.md 选择「直接 + 间接」中性估计 23.6% / 含基建 31%.
+property_overlay:
+  gdp_share_direct: 0.236        # 含上下游 (建材/家电/家居等)
+  gdp_share_incl_infra: 0.31     # 进一步含基建
+  gdp_share_nbs_narrow: 0.063    # NBS 狭义 (业增加值, 2024 vintage)
+  deleveraging_phase: true        # 2021-ongoing 出清未结束
+  q1_2026_property_investment_yoy: -11.2  # 单边深度负增长 (2026-Q1 累计)
+  q1_2026_residential_sales_value_yoy: -16.7
+
+# Labor market.
+labor:
+  urban_surveyed_unemployment_target_2026: 5.5
+  urban_surveyed_unemployment_2025_actual: 5.2
+  urban_surveyed_unemployment_q1_2026: 5.3
+  bands:
+    tight_below: 5.0
+    balanced_band: [5.0, 5.5]
+    slack_band: [5.5, 6.0]
+    stressed_above: 6.0
+
+# GDP growth target (2026 首次区间值 + 首次低于 5%).
+gdp:
+  target_2026: [4.5, 5.0]        # 区间值, 改革开放以来首次低于 5%
+  actual_2025_full_year: 5.0
+  actual_q1_2026: 5.0
+  fiscal_deficit_ratio_2026: 0.04  # 4% 左右 (2025 为 3%)
+
+# Equity index (CSI300 2025 末权重).
+equity:
+  csi300_finance_weight: 0.2297    # 2016: 35.45%
+  csi300_it_weight: 0.2038         # 2016: 9.22%
+  pattern: "金融/消费/新能源/AI 四分天下"
+
+# Direction-classification calibration (mirrors US/JP).
+direction_band_stdev: 0.5
+
+# Structural overlays applied by classify_cn.py
+structural_overlays:
+  - cpi_framing                   # 软 ceiling + 物价回升诉求 双框架
+  - credit_impulse                # CICC TSF stock yoy 12m change
+  - 4_component_dispersion        # alarm if spread > 2pp
+  - property_cycle                # deleveraging phase, single-side drag
+  - pboc_stance                   # 适度宽松 (2010 以来首次)
+
+provenance:
+  calibration_doc: thresholds-china.md
+  calibration_vintage: 2026-Q2
+  last_full_grounding: 2026-04-19  # v1.11.0 cross-country refresh
+  this_pr_partial_refresh: 2026-05-02  # PR-6 delta — no material events
+  authority_sources:
+    - 中国人民银行 (PBOC) 货币政策委员会例会 (quarterly)
+    - 国家统计局 (NBS) 数据发布
+    - 国务院《政府工作报告》(全国人大, March)
+    - 中央经济工作会议 (CEWC, December)
+    - BIS WP No 949 (Rees & Sun 2021) — r* estimate
+    - 中金公司 / 中信证券 — credit impulse methodology
