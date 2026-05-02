@@ -1,0 +1,23 @@
+{
+  "name": "repo-wiki",
+  "version": "1.0.0",
+  "description": "LLM Wiki pattern for code repos. Seed a persistent knowledge base from git history (init), grow it incrementally from changes or conversational context (ingest), and query it with natural language (query). Knowledge lives in a hidden .repo-wiki/ directory committed alongside your code; src/ remains the source of truth and query verifies cached claims at key moments. Zero external dependencies — pure SKILL.md, no MCP servers or vector stores.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/repo-wiki",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "repo-knowledge",
+    "knowledge-base",
+    "llm-wiki",
+    "code-wiki",
+    "git-aware",
+    "documentation",
+    "tribal-knowledge",
+    "decision-archive",
+    "verification-fenced"
+  ]
+}
