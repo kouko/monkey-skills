@@ -100,9 +100,15 @@ When triggered, the answer is **segmented**:
 ## Discrepancies Found
 - entity says "throws AuthError" but src/auth/jwt.ts:42 throws JwtError
   → Suggest: /repo-wiki:ingest "AuthError was renamed to JwtError"
+
+## Verification Coverage
+- Triggers fired: T2
+- Files read: 3 of 80 candidate paths (3.8%)
+- Selection: claim-mentioned + entry points
+- Uncovered: src/auth/session.ts, src/auth/refresh.ts, ... (75 more)
 ```
 
-Pure decision questions ("why did we choose Postgres") don't trigger verification — past decisions are immune to staleness.
+Verification depth is bounded by `budget = max(1, min(10, ceil(0.05 × total_paths)))` — so a single query never opens more than 10 `src/` files, and the Coverage section makes the actual depth visible. Pure decision questions ("why did we choose Postgres") don't trigger verification — past decisions are immune to staleness.
 
 ## Daily workflow
 

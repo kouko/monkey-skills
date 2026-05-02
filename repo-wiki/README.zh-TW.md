@@ -100,9 +100,15 @@ Trigger 命中時，答案以 **分段格式** 呈現：
 ## Discrepancies Found
 - entity 寫 "throws AuthError" 但 src/auth/jwt.ts:42 throw 的是 JwtError
   → 建議：/repo-wiki:ingest "AuthError 已 rename 為 JwtError"
+
+## Verification Coverage
+- Triggers fired: T2
+- Files read: 3 of 80 candidate paths (3.8%)
+- Selection: claim-mentioned + entry points
+- Uncovered: src/auth/session.ts, src/auth/refresh.ts, ... (75 more)
 ```
 
-純決策問題（「為什麼當初選 Postgres」）不會 trigger verification — 過去決策不會回溯改變。
+驗證深度由 `budget = max(1, min(10, ceil(0.05 × total_paths)))` 設上限——單次 query 最多開 10 個 `src/` 檔案，Coverage section 讓實際驗證深度公開可見。純決策問題（「為什麼當初選 Postgres」）不會 trigger verification — 過去決策不會回溯改變。
 
 ## 日常工作流
 

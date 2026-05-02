@@ -244,6 +244,42 @@ If ANY of (2) or (3) is violated, T6 does NOT fire — verification proceeds.
 
 Any match → T7 positive → verify EVERY claim against `src/`, even pointers.
 
+### Verification Budget (applies when ANY trigger fires)
+
+Verification reads `src/` — the budget caps how many files get opened so a
+single query stays bounded and the user knows the verification depth.
+
+**Budget formula**:
+
+```
+total_paths = sum(len(entity.paths)) across all loaded entities
+            (expand globs to concrete file count; if `paths:` missing,
+             use grep candidate count)
+
+budget = max(1, min(10, ceil(0.05 × total_paths)))
+```
+
+Examples:
+- 1 entity, 12 paths → ceil(0.6) = 1 → budget = 1 file
+- 1 entity, 80 paths → ceil(4.0) = 4 → budget = 4 files
+- 2 entities, 220 total paths → ceil(11.0) = 11 → cap → budget = 10 files
+- T7 (explicit verify) → budget remains capped at 10; T7 verifies *every claim* but file reads still cap at 10. If 10 < claim count, prioritize current-behavior claims and report uncovered claims under Unverified.
+
+**File selection priority within budget** (deterministic, reportable):
+
+1. **Claim-mentioned files** — files explicitly named in the verifiable claim
+2. **Entry points** — files in the entity's `Common Entry Points` section
+3. **Most-recently-modified** — newest `git log` mtime among remaining `paths:`
+4. **Stop when budget exhausted**
+
+When a path resolves to a directory or glob, expand to files via `git ls-files`
+restricted to that prefix; count expanded files toward `total_paths`.
+
+**Reporting**: every triggered query MUST emit a `## Verification Coverage`
+section in the segmented output (Step 4). This makes the verification depth
+visible — "I checked 3 of 80 paths" is honest; silent partial-verification is
+the failure mode this guards against.
+
 ## Step 3.6: Stale Feedback Loop
 
 If verification reveals `.repo-wiki/` has stale or wrong claims, after
@@ -280,11 +316,17 @@ If ANY trigger fired, present in **segmented format**:
 
 ## Unverified Claims (from .repo-wiki/ cache)
 - <Claim> — sourced from [PageName](.repo-wiki/<path>); not verified this query
-  (reason: pure decision claim / outside trigger scope)
+  (reason: pure decision claim / outside trigger scope / over verification budget)
 
 ## Discrepancies Found
 - `.repo-wiki/<page>` says X but `src/<path>:<line>` shows Y
   → Suggest: `/repo-wiki:ingest "<correction context>"`
+
+## Verification Coverage
+- Triggers fired: <e.g. T2, T4>
+- Files read: <N> of <total_paths> candidate paths (<percent>%)
+- Selection: <claim-mentioned + entry-points + most-recent | grep-fallback>
+- Uncovered paths in scope: <up-to-3 examples>, … (<remainder> more)
 
 **Sources consulted**:
 - [PageName](.repo-wiki/<path>)
@@ -294,6 +336,8 @@ If no discrepancies, omit the Discrepancies section.
 If no unverified claims, omit the Unverified section.
 The Verified section always appears when triggers fire — even if
 empty, it tells the user "I checked but had nothing to verify".
+The Verification Coverage section is **mandatory** when triggers fire;
+omit "Uncovered paths" line only when files-read equals total_paths.
 
 (Use repo-root-relative paths in the answer so links are clickable from
 any IDE / GitHub view.)
@@ -312,7 +356,9 @@ type: synthesis
 date: YYYY-MM-DD
 sources: ["entities/X", "concepts/Y", "sources/Z"]
 verification_run: <yes if triggers fired, no if T6>
-verified_paths: [<src/ paths spot-checked>]   # only if verification_run: yes
+verified_paths: [<src/ paths spot-checked>]            # only if verification_run: yes
+verification_budget: <N>                                # files allowed by budget formula
+verification_coverage_pct: <0-100>                      # files-read / total-paths
 ---
 
 ## Question
@@ -334,6 +380,7 @@ Append to `.repo-wiki/log.md`:
 ## [YYYY-MM-DD] query | <question-slug>
 - Pages consulted: <list>
 - Triggers fired: <list of trigger IDs, or "none">
+- Verification: <files_read>/<total_paths> (<pct>%)   # omit if no triggers fired
 - Synthesis saved: .repo-wiki/syntheses/<slug>.md
   (or: not saved)
 ```
@@ -365,6 +412,10 @@ NEVER:
 - Present current-behavior claims as authoritative without running
   verification triggers
 - Skip verification when T1-T5 or T7 fires (Eager policy)
+- Open more `src/` files than the verification budget allows
+  (`max(1, min(10, ceil(0.05 × total_paths)))`)
+- Emit segmented output without the `## Verification Coverage` section
+  when any trigger fired
 - Auto-trigger `/repo-wiki:ingest` from query (only suggest)
 - Use `[[wikilinks]]` — only standard markdown links: `[Name](path)`
 - Cross-check git log per query in v1 (full git-aware staleness ships
@@ -373,8 +424,11 @@ NEVER:
 ALWAYS:
 - Cite every claim with a standard markdown link
 - Run Step 3.5 trigger evaluation on every query (it's cheap)
-- Use segmented output (Verified / Unverified / Discrepancies) when
-  any trigger fires
+- Use segmented output (Verified / Unverified / Discrepancies /
+  Verification Coverage) when any trigger fires
+- Compute and respect the verification budget before opening any `src/` file
+- Report files-read / total-paths in `## Verification Coverage` so users
+  see the actual depth, not just "verification ran"
 - Suggest `/repo-wiki:ingest` when verification finds a discrepancy
 - Be explicit when the knowledge base has a gap — gaps are feedback
   for the next `/repo-wiki:ingest` run
