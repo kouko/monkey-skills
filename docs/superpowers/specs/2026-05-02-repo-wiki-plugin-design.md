@@ -264,7 +264,17 @@ v1 uses descriptive heuristics instead:
 - Entity: create when the module is meaningfully load-bearing across multiple changes
 - Concept: create when a pattern is meaningfully cross-cutting
 
-This trades pseudo-precision for honest judgment. The init skill's bounded scan still uses a soft threshold (modules appearing in 3+ batches → entity stub) as an anchor for the seed pass.
+This trades pseudo-precision for honest judgment.
+
+**v1.1 update — entity threshold removed for init Phase 1**:
+
+Init's earlier soft threshold ("modules appearing in 3+ batches → entity stub") was dropped after dogfood feedback. Init Phase 1 now creates an entity stub for **every detected module** in src/, regardless of git-log activity. This addresses the v1.0 gap where old-but-stable modules had no entity at all.
+
+The descriptive "meaningfully load-bearing" threshold still applies to:
+- ingest creating new entities for emergent modules outside the init src/ scope
+- concept creation in any context
+
+Init's broad threshold is justified because completeness is the seed pass's main value; selectivity comes later via ingest as gotchas / decisions accumulate. See Decision 14 for why this doesn't violate Decision 1's WHY-not-WHAT principle.
 
 ### Decision 10: Stale-page check is `last_updated > 60d` (and triggers verification, see Decision 13)
 
@@ -330,7 +340,45 @@ Detection priority: **T7 > T6 > {T1, T2, T3, T4, T5}**. T7 (user explicit) overr
 
 #### Required schema support
 
-For verification to know where to read, entity frontmatter MUST include `paths: [...]` listing the directories or files that comprise the entity. init populates this from git stat (most-touched paths). ingest updates it when commits move files. If `paths:` is missing on an entity loaded for verification, query falls back to grep-based path discovery and warns the user that the entity is malformed.
+For verification to know where to read, entity frontmatter MUST include `paths: [...]` listing the directories or files that comprise the entity. init populates this from `git ls-files` (Phase 1, v1.1) — every detected module's directory tree. ingest updates it when commits move files. If `paths:` is missing on an entity loaded for verification, query falls back to grep-based path discovery and warns the user that the entity is malformed.
+
+### Decision 14: init reads path metadata, not file contents
+
+**Added in v1.1.** Distinguishing repo-wiki from Greptile/DeepWiki-style code summarizers requires a clear fence: init never opens src/ files to summarize their contents.
+
+Allowed inputs to init:
+- `git ls-files` output — paths only
+- Entry-point file paths (`index.*`, `__init__.py`, `main.go`, `mod.rs`, `package.json`, `README.md`) — paths recorded; **contents NOT read**
+- One exception: `package.json`'s `name` field — metadata, not implementation
+- `git log` output — commit messages, dates, SHAs, file paths
+
+Forbidden:
+- Opening any source file under src/ (or wherever the source root is detected) and reading its contents
+- Asking the LLM to summarize what code does based on AST or function signatures
+- Generating "Responsibility" / "Architecture Snapshot" content from path names alone — those sections remain `TODO` after init and fill via ingest
+
+Why this matters:
+- Preserves Decision 1 (WHY first; entity content fills via ingest with real WHY signal, not init guessing from paths)
+- Keeps repo-wiki distinct from Greptile/DeepWiki SaaS code summarizers (the comparison table below depends on this)
+- Bounds init's token cost to O(N paths) instead of O(N file contents); 5000-file repo costs ~50KB of context, not several MB
+
+The Phase 1 src/ scan (added in v1.1) is consistent with this rule because it consumes only path metadata. Each module's `Common Entry Points` section lists file paths, not file content summaries.
+
+### Decision 15: full-history backfill is opt-in via explicit `init full-history`
+
+**Added in v1.1.** Default `/repo-wiki:init` does Phase 1 (src/ scan + per-module last-5 commits) + Phase 2 (90d global scan, 15-source-page cap). It does NOT walk the entire git history into era-grouped source pages.
+
+Phase 3 era backfill triggers only when the user explicitly invokes:
+- `/repo-wiki:init full-history`
+- `/repo-wiki:init "full backfill"`
+- `/repo-wiki:init "完整歷史"` / `"全歷史"`
+
+When triggered, Phase 3 runs `git log --all` (no time bound), groups by 6-month era, identifies major commits per era (50+ files OR cross-module merge OR conventional-commit major change OR tagged release), and writes one source page per era. Era pages are exempt from the 15-page Phase 2 cap (which still applies to Phase 2 batches).
+
+Why opt-in:
+- Most repos don't need historical era backfill on first init — recent activity (Phase 2) plus per-module last-5 commits (Phase 1) cover the practical 80%
+- Phase 3 cost scales with history length; a 5-year repo could produce 10 era pages and significantly more LLM-write effort
+- Keeping Phase 3 explicit lets users decide whether the cost is justified for their repo
 
 ---
 

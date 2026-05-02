@@ -1,7 +1,7 @@
 {
   "name": "repo-wiki",
-  "version": "1.0.0",
-  "description": "LLM Wiki pattern for code repos. Seed a persistent knowledge base from git history (init), grow it incrementally from changes or conversational context (ingest), and query it with natural language (query). Knowledge lives in a hidden .repo-wiki/ directory committed alongside your code; src/ remains the source of truth and query verifies cached claims at key moments. Zero external dependencies — pure SKILL.md, no MCP servers or vector stores.",
+  "version": "1.1.0",
+  "description": "LLM Wiki pattern for code repos. Init scans the entire src/ tree for complete entity coverage and seeds each module with its recent commits, plus a bounded global git scan; full-history era backfill is opt-in (init full-history). Grow the knowledge base incrementally from changes or conversational context (ingest, polymorphic), and query it with natural language (query) — Eager src/ verification at key moments. Knowledge lives in a hidden .repo-wiki/ directory committed alongside your code; src/ remains the source of truth. Zero external dependencies — pure SKILL.md, no MCP servers or vector stores.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

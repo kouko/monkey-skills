@@ -45,17 +45,21 @@ details.
 File: `.repo-wiki/sources/<filename>.md`
 
 Filename convention varies by `origin`:
-- `origin: git` → `YYYY-MM-DD-<slug>.md`
+- `origin: git` (Phase 2 batch) → `YYYY-MM-DD-<slug>.md`
+- `origin: git` (Phase 3 era) → `era-YYYY-HX.md`
 - `origin: manual` → `YYYY-MM-DD-manual-<slug>.md`
 - `origin: doc-import` → `YYYY-MM-DD-doc-<slug>.md`
 
 Create when: a meaningful change lands (git mode), user supplies tribal
 knowledge (manual mode), or user imports an external design doc
-(doc-import mode).
+(doc-import mode). Phase 3 era pages are produced only when init runs
+in `full-history` mode.
 
 Frontmatter:
 - `title`, `type: source`, `origin: git | manual | doc-import`, `date`
-- Git mode: `commits: [...]`, `modules_affected: [...]`
+- Git Phase 2 mode: `commits: [...]`, `modules_affected: [...]`
+- Git Phase 3 mode (era): `era: YYYY-HX`, `commit_count: N`,
+  `major_commits: [...]`
 - Doc-import mode: `source_path`, `source_mtime`
 
 Contents: what changed/known + key decisions + connections to entities/concepts.
@@ -63,22 +67,78 @@ Contents: what changed/known + key decisions + connections to entities/concepts.
 ### entity
 File: `.repo-wiki/entities/<EntityName>.md` (PascalCase)
 
-Create when: the module is meaningfully load-bearing across multiple
-sources. Use judgment, not a numeric count — but err toward not creating
-skeletal pages from a single isolated change.
+Create when: **init creates one for every detected module** in src/
+(no threshold — see Decision 9 v1.1 update). ingest creates new ones
+for emergent modules outside the original src/ scope.
 
 Required frontmatter:
 - `title`, `type: entity`, `last_updated`
 - `paths: [...]` — list of directories or files comprising this entity.
   Used by `/repo-wiki:query` for verification (Decision 13). init
-  populates from git stat (most-touched paths). ingest updates when
-  commits move files.
+  populates from `git ls-files` (current src/ tree). ingest updates
+  when commits move files.
 
-Contents: responsibility boundary (what it does NOT do is as important
-as what it does), gotchas, common entry points, dependencies, recorded
-decisions. Implementation descriptions are *best-effort cache* — `src/`
-remains authoritative. Query verifies current-behavior claims at key
-moments (verification triggers T1–T7 in query SKILL.md).
+Required body sections:
+- `## Responsibility` — what this module does and what it does NOT do.
+  After init, this is `TODO — fill via /repo-wiki:ingest "<observation>"`
+  (init does NOT fabricate responsibility from path names alone).
+- `## Common Entry Points` — list of entry-point file paths
+  (`index.*`, `__init__.py`, `main.go`, etc.) detected by init.
+  Path-only; init does NOT read file contents.
+- `## Recorded Decisions` — chronological list of decisions affecting
+  this entity. Init seeds with last 5 commits touching the module's
+  paths. Subsequent ingest appends.
+- `## Architecture Snapshot` — entry points, key classes, relationships.
+  TODO after init; fills via ingest.
+- `## Gotchas & Non-Obvious Design` — historical constraints, easy
+  misuse patterns. TODO after init; fills via ingest.
+- `## Dependencies` — what this depends on, what depends on it. TODO
+  after init; fills via ingest.
+
+Implementation descriptions in any section are *best-effort cache* —
+`src/` remains authoritative. Query verifies current-behavior claims at
+key moments (verification triggers T1–T7 in query SKILL.md).
+
+### Entity stub format (init Phase 1 output)
+
+```markdown
+---
+title: "<EntityName>"
+type: entity
+last_updated: <today>
+paths:
+  - <path1>
+  - <path2>
+sources: []
+---
+
+## Responsibility
+TODO — fill via /repo-wiki:ingest "<observation>".
+
+(Source layer is `src/`; this entity is a knowledge cache, not authority.)
+
+## Common Entry Points
+- <entry-point-path-1>
+- <entry-point-path-2>
+
+## Recorded Decisions
+
+(Seed entries from per-module git log — most recent first; subsequent
+/repo-wiki:ingest calls append more.)
+
+- <YYYY-MM-DD> — <commit subject> (`<sha>`)
+- <YYYY-MM-DD> — <commit subject> (`<sha>`)
+- ... (up to 5 entries)
+
+## Architecture Snapshot
+TODO — fill via /repo-wiki:ingest after working with this module.
+
+## Gotchas & Non-Obvious Design
+TODO — these surface during real work.
+
+## Dependencies
+TODO
+```
 
 ### concept
 File: `.repo-wiki/concepts/<ConceptName>.md` (PascalCase)
@@ -99,14 +159,15 @@ status preserved from the original query.
 
 ## Naming Conventions
 
-| Page type        | Format                      | Example                                         |
-|------------------|-----------------------------|-------------------------------------------------|
-| entity           | PascalCase.md               | Auth.md, AuthMiddleware.md, PaymentService.md   |
-| concept          | PascalCase.md               | OptimisticLocking.md, EventSourcing.md          |
-| source (git)     | YYYY-MM-DD-kebab.md         | 2026-05-02-add-jwt-auth.md                      |
-| source (manual)  | YYYY-MM-DD-manual-kebab.md  | 2026-05-02-manual-auth-naming.md                |
-| source (doc)     | YYYY-MM-DD-doc-kebab.md     | 2026-05-02-doc-postgres-decision.md             |
-| synthesis        | kebab-slug.md               | how-does-auth-flow-work.md                      |
+| Page type           | Format                      | Example                                         |
+|---------------------|-----------------------------|-------------------------------------------------|
+| entity              | PascalCase.md               | Auth.md, AuthMiddleware.md, PaymentService.md   |
+| concept             | PascalCase.md               | OptimisticLocking.md, EventSourcing.md          |
+| source (git, Phase 2) | YYYY-MM-DD-kebab.md       | 2026-05-02-add-jwt-auth.md                      |
+| source (git, Phase 3 era) | era-YYYY-HX.md        | era-2024-H2.md                                  |
+| source (manual)     | YYYY-MM-DD-manual-kebab.md  | 2026-05-02-manual-auth-naming.md                |
+| source (doc)        | YYYY-MM-DD-doc-kebab.md     | 2026-05-02-doc-postgres-decision.md             |
+| synthesis           | kebab-slug.md               | how-does-auth-flow-work.md                      |
 
 ### Entity Name Normalization Rule (shared between init and ingest)
 
@@ -193,7 +254,9 @@ All links must point to pages listed in `.repo-wiki/index.md`.
 Each entry: `## [YYYY-MM-DD] <operation>:<mode> | <title>`
 
 Operations / modes:
-- `init` (no mode suffix)
+- `init` (default mode — Phase 1 + Phase 2)
+- `init:full-history` — Phase 3 era backfill (only when user runs
+  `/repo-wiki:init full-history`)
 - `ingest:git` — incremental from git diff
 - `ingest:manual` — context capture from user text
 - `ingest:doc-import` — external document import
