@@ -194,6 +194,8 @@ The contract is documented at [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-
 ## Cross-country reference docs
 
 - [`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md) — three-layer architecture decision record
+- [`docs/adr/0002-layer-1-staging-tier-normalization.md`](docs/adr/0002-layer-1-staging-tier-normalization.md) — Layer 1 staging-tier normalization decision (raw + canonical view; addresses 4 broken cross-layer chains found post-v2.0.1)
+- [`docs/normalization-contract.md`](docs/normalization-contract.md) — **developer-facing contract** for Layer 1 normalization (must follow when extending `data-*/scripts/pack.py`)
 - [`docs/migration-v2.0.0.md`](docs/migration-v2.0.0.md) — v1.x → v2.0.0 rename map and migration walkthrough
 - [`docs/design-principles.md`](docs/design-principles.md) — empirical-first design rule (lessons from v1.14.0 + v1.16.3 hypothesis-vs-reality misses)
 - [`docs/industry-indicator-cadence.md`](docs/industry-indicator-cadence.md) — sector coverage + release cadence comparison across 5 markets
