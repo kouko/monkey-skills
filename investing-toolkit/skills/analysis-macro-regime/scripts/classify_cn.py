@@ -155,13 +155,22 @@ def _compute_4_component_dispersion(series: dict, calib: dict) -> dict[str, Any]
     }
 
 
-def _classify_credit_impulse(series: dict, calib: dict) -> dict[str, Any] | None:
+def _classify_credit_impulse(
+    regime_pack: dict, series: dict, calib: dict,
+) -> dict[str, Any] | None:
     """Credit impulse — prefer pre-computed cn_specific block, then derive
     from TSF stock yoy or fall back to TSF flow → trailing-12m-sum-yoy
     proxy or M2 yoy.
 
     Convention per `references/credit-impulse-methodology.md`: TSF stock
     yoy 12-month change (CICC middle-flavor; 6-9mo lead vs growth).
+
+    Path 0 reads `regime_pack.cn_specific.credit_impulse` directly because
+    `pack._flatten_regime_to_series()` walks only top-level groups
+    (nbs/akshare/fred/markets), NOT `cn_specific`. The pre-computed block
+    therefore never reaches the flat `series` dict via Path 1; passing
+    the full regime_pack gives us first-class access to the upstream
+    computation.
     """
     ci_calib = calib.get("credit_impulse", {}) or {}
     threshold = float(ci_calib.get("primary_pp_threshold", 0.5))
@@ -173,8 +182,28 @@ def _classify_credit_impulse(series: dict, calib: dict) -> dict[str, Any] | None
             return "contracting"
         return "neutral"
 
-    # Path 1: pre-computed credit_impulse block (preferred — comes from
-    # data-cn/pack.py:_compute_credit_impulse() if upstream provided it).
+    # Path 0: pre-computed credit_impulse block lives at
+    # regime_pack.cn_specific.credit_impulse (data-cn/pack.py wrote it).
+    # Avoids re-running the same flow-yoy computation in classify_cn.
+    cn_specific = regime_pack.get("cn_specific") or {}
+    pre_block = cn_specific.get("credit_impulse")
+    if isinstance(pre_block, dict) and pre_block.get("value") is not None:
+        # Trust the pre-computed value but apply the calibration-driven
+        # threshold semantics for the trend label (calibration is SoT).
+        try:
+            impulse = float(pre_block["value"])
+        except (TypeError, ValueError):
+            impulse = None
+        if impulse is not None:
+            out = dict(pre_block)  # carry methodology / source / extras
+            out["value"] = round(impulse, 3)
+            out["trend"] = _trend(impulse)
+            out["threshold_pp"] = threshold  # override with classify-side SoT
+            out["read_from"] = "regime_pack.cn_specific.credit_impulse"
+            return out
+
+    # Path 1: pre-computed block via flat series alias (defensive — only
+    # fires if a future pack.py also flattens cn_specific into series).
     pre = resolve_series(series, CREDIT_IMPULSE_KEYS)
     if pre and len(pre) >= 1:
         impulse = pre[-1]
@@ -183,9 +212,10 @@ def _classify_credit_impulse(series: dict, calib: dict) -> dict[str, Any] | None
             "trend": _trend(impulse),
             "threshold_pp": threshold,
             "methodology": (
-                "pre-computed by data-cn/pack._compute_credit_impulse()"
+                "pre-computed by data-cn/pack._compute_credit_impulse() "
+                "(via flat series alias)"
             ),
-            "source": "regime_pack.cn_specific.credit_impulse",
+            "source": "regime_pack.series.credit_impulse",
         }
 
     # Path 2: TSF stock yoy (if data layer ever publishes it directly)
@@ -305,7 +335,7 @@ def classify_cn(regime_pack: dict[str, Any]) -> CountryRegimeCard:
     cpi_framing = _classify_cpi_framing(cpi_current, inflation_dir, calib)
 
     # Credit impulse (CICC convention)
-    credit_impulse = _classify_credit_impulse(series, calib)
+    credit_impulse = _classify_credit_impulse(regime_pack, series, calib)
 
     # 4-component growth dispersion
     dispersion = _compute_4_component_dispersion(series, calib)
