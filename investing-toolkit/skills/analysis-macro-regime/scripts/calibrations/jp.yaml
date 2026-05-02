@@ -14,7 +14,7 @@ currency: JPY
 inflation_target: 2.0
 inflation_target_type: central_tendency_qualitative   # BOJ 「概ね整合的な水準」
 inflation_target_framework: FIT
-inflation_target_authority_date: 2013-01-22
+inflation_target_authority_date: "2013-01-22"
 
 # Outlook anchor (2026-04 展望レポート; informational only — not used as threshold)
 outlook_anchor:
@@ -26,7 +26,7 @@ outlook_anchor:
 # --------------------------------------------------------------------------
 # Policy rate — 3-tier corridor (post-2024-03 YCC end + 2025-12-19 hike)
 # --------------------------------------------------------------------------
-policy_target_pct: 0.75   # 誘導目標 (call rate O/N)
+boj_call_rate_target_pct: 0.75   # 誘導目標 (call rate O/N)
 policy_rate_3tier:
   guidance_target: 0.75   # "0.75% 程度で推移するよう促す" — BOJ 2025-12-19, held 2026-04-28
   ioer: 0.75              # 補完当座預金 適用利率
@@ -35,7 +35,7 @@ policy_rate_3tier:
 
 # Latest decision metadata
 last_decision:
-  meeting_date: 2026-04-28
+  meeting_date: "2026-04-28"
   outcome: hold
   vote: "6-3"
   dissent_count: 3
@@ -118,7 +118,7 @@ deflation_phase_signals:
     descriptor: "ZIRP/NIRP active OR core CPI < 0.5% sustained ≥ 4 quarters"
   exit_deflation_phase_1:
     descriptor: "First sustained 2% inflation post-2022 (achieved 2024)"
-    achieved_at: 2024
+    achieved_at: "2024"
   exit_deflation_phase_2:
     descriptor: "Real wages positive sustained + above-target overshoot tolerated (achieved 2026-Q1)"
     achieved_at: 2026-Q1
@@ -150,9 +150,9 @@ boj_qualitative_anchor: |
 provenance:
   calibration_doc: thresholds-japan.md
   calibration_vintage: 2026-Q2
-  last_full_grounding: 2026-04-18      # v1.9.0
-  partial_refresh: 2026-04-19           # v1.10.0 + v1.11.0
-  this_pr_partial_refresh: 2026-05-02   # PR-3 — incorporates 2026-04-28 BOJ + 2026-03 Tankan
+  last_full_grounding: "2026-04-18"      # v1.9.0
+  partial_refresh: "2026-04-19"           # v1.10.0 + v1.11.0
+  this_pr_partial_refresh: "2026-05-02"   # PR-3 — incorporates 2026-04-28 BOJ + 2026-03 Tankan
   authority_sources:
     - BOJ 金融政策決定会合 議決 / 展望レポート / 総裁記者会見
     - BOJ 短観 (Tankan, quarterly)

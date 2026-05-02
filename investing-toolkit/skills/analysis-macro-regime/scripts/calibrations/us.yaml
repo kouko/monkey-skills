@@ -10,7 +10,7 @@ currency: USD
 inflation_target: 2.0
 inflation_target_type: central_tendency
 inflation_target_framework: FIT  # post-FAIT 2025; Powell Jackson Hole 2025-08-22 dropped FAIT "makeup" strategy
-inflation_target_authority_date: 2012-01-25  # FOMC statement adopting 2% target
+inflation_target_authority_date: "2012-01-25"  # FOMC statement adopting 2% target
 
 # Real rate r* estimates (2025-Q4 vintage)
 policy_rate_neutrality:
@@ -60,9 +60,9 @@ yield_curve_4tier:
 provenance:
   calibration_doc: thresholds-us.md
   calibration_vintage: 2026-Q1
-  last_full_grounding: 2026-04-18
-  partial_refresh: 2026-04-19  # v1.11.0 addendum
-  this_pr_partial_refresh: 2026-05-02  # PR-2 delta — no material events
+  last_full_grounding: "2026-04-18"
+  partial_refresh: "2026-04-19"  # v1.11.0 addendum
+  this_pr_partial_refresh: "2026-05-02"  # PR-2 delta — no material events
   authority_sources:
     - Federal Reserve / FOMC (SEP, statements, minutes)
     - NY Fed (HLW vintage, Liberty Street)

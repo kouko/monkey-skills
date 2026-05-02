@@ -1,8 +1,8 @@
 # ADR-0004: analysis-macro-regime — Phase 1 Per-Country Classifiers + Deferred Comparable Surface (Phase 2)
 
-- **Status**: Accepted
+- **Status**: Implemented (PR-1 ~ PR-7 all merged 2026-05-02; v2.1.0 shipped)
 - **Date**: 2026-05-02
-- **Version target**: investing-toolkit v2.1.0 (Phase 1 implementation, ~5-6 weeks)
+- **Version target**: investing-toolkit v2.1.0 (Phase 1 implementation, completed in 1 session via subagent-driven parallel implementer dispatch)
 - **Predecessor PRs**: #176-#183 (v2.0.2 staging-tier rollout — provides cross-country symmetry on Layer 1; this ADR addresses analysis-layer follow-up)
 - **Supersedes** (partially): v1.9.0 commit `13a76d1` — "Option B (hybrid): framework universal + calibration per-country" — preserved in spirit but completed differently
 
@@ -335,6 +335,18 @@ PR sequence: PR-1 → PR-2 → (PR-3 / 4 / 5 / 6 in parallel worktrees) → PR-7
 - **`thresholds-{country}.md` recalibration triggers may surface during Phase 1**: per `recalibration-protocol.md`, FOMC SEP, BOJ 展望, CBC quarterly statement, BOK semi-annual, 政府工作报告 may all release during the 5-6 week window. Each PR should do its country's partial recalibration as part of the work
 - **JP Tankan business DI fetch is non-trivial**: BOJ Time-Series API has Tankan series codes that aren't documented as cleanly as the inflation outlook. PR-3 may need to spike on Tankan series resolution before completing the classifier
 - **CN credit impulse computation has methodological choices** (TSF stock vs flow, which window, which lag). PR-6 should ground the choice against published Chinese-language sources (CICC / CITIC / 第一財経) with primary sourcing
+
+## Implementation Outcome (recorded post-merge)
+
+PR sequence executed in a single session via Phase A → B → C orchestration:
+
+- **Phase A** (controller-direct): PR-1 (#184) infra + PR-2 (#185) US baseline.
+- **Phase B** (4 parallel implementer subagents in worktrees): PR-3 JP (#188), PR-4 TW (#187), PR-5 KR (#186), PR-6 CN (#189). Each ran native-language grounding (日本語 / 繁中 / 한국어 / 简中) + classifier implementation + integration test + grounding research note. JP captured 4 material BOJ events 2026-04-19 → 2026-05-02 (FY2026 outlook 1.9% → 2.7-2.8% upward revision, 6-3 vote, Ueda 4/30 anchor, 2026-03 短観 +17). CN value-prop verified on fixture: `cpi_framing.policy_stance = supportive_recovery_below_target` (legacy IC says `2-overheat`).
+- **Phase B review**: 8 reviewer subagents (spec + code-quality × 4 countries) — all PASS/APPROVED, 0 MAJOR. 2 pre-merge MINOR fixes applied (PR-3 `cycle_proxy` rename, PR-6 Path 0 reading `cn_specific.credit_impulse` directly).
+- **Phase C**: cross-country fresh-eyes audit returned PASS_WITH_NOTES — 1 MAJOR (`policy_target_pct` semantic collision across US/CN inflation-target vs JP call-rate-target) + 4 MINOR (YAML date type leakage, cn.yaml missing `partial_refresh`, KR pack.py ESI wiring deferred). All folded into PR-7.
+- **PR-7 cleanup** (this PR): remove `_legacy_ic.py` (helpers migrated to `_helpers.py`); M1 rename `policy_target_pct` → `inflation_target_pct` (US/CN) / `boj_call_rate_target_pct` (JP); m1/m2 quote 28 unquoted YAML dates across 5 calibration YAMLs; m3 add `partial_refresh` to cn.yaml provenance; m4 KR ESI explicit ECOS API integration deferred to v2.2.0; bump plugin.json 2.0.1 → 2.1.0; CHANGELOG / ROADMAP / 3-language README / SKILL.md updated.
+
+Verification: 320 → 316 tests passing post-PR-7 (legacy fallback tests removed; per-country native_verdict tests retained). All 5 country classifiers ship native_verdict shapes that diverge from legacy IC where the framework breaks down (CN inflation framing inversion, JP exit-deflation phase, TW NDC 五色-led, KR BOK target alignment + 가계부채 overlay).
 
 ## Open Questions (deferred to PR-3-6 implementation)
 

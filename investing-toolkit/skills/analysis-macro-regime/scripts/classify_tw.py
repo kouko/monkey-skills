@@ -35,7 +35,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from _legacy_ic import (
+from _helpers import (
     GROWTH_KEYS, INFLATION_KEYS,
     classify_direction, map_ic_quadrant, map_gip_quad,
     resolve_series, normalised_country,

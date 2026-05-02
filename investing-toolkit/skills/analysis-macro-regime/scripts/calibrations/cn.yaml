@@ -13,7 +13,7 @@ currency: CNY
 inflation_target: 2.0
 inflation_target_type: central_tendency  # 关键: 不是 ceiling
 inflation_target_framework: multi_objective  # PBOC 多目标央行 (物价/增长/就业/汇率/金融稳定)
-inflation_target_authority_date: 2025-03-05  # 2025 政府工作报告首次下调
+inflation_target_authority_date: "2025-03-05"  # 2025 政府工作报告首次下调
 inflation_target_continuity: |
   2026 政府工作报告 (2026-03-05) 延续 2% 目标, 进一步明确
   「推动价格总水平由负转正、消费价格合理温和回升」.
@@ -38,7 +38,7 @@ policy_rate:
     rate: 1.40
     source: PBOC 公开市场业务
     last_change: 2025-09          # 2025-09 下调后未动
-    last_verified: 2026-04-28      # 1462亿 / 4823亿 操作均维持 1.40%
+    last_verified: "2026-04-28"      # 1462亿 / 4823亿 操作均维持 1.40%
     note: |
       2024-07 起 PBOC 明确为主要政策利率 (取代 MLF). 2025-09 由
       1.50 → 1.40 配合「适度宽松」语言转换. 2026-04 仍维持.
@@ -78,7 +78,7 @@ pboc_stance_ladder:
   - 适度宽松     # 当前 2026-Q1 (2010 以来首次回归)
   - 宽松
 current_stance: 适度宽松           # PBOC 2026-Q1 例会 (3/26) 延续
-stance_last_verified: 2026-03-26
+stance_last_verified: "2026-03-26"
 
 # 4-component growth panel (CN-specific, no consensus monthly GDP proxy).
 # Per v1.7.1 research: 工业增加值 = primary, 4-comp panel for divergence.
@@ -157,8 +157,9 @@ structural_overlays:
 provenance:
   calibration_doc: thresholds-china.md
   calibration_vintage: 2026-Q2
-  last_full_grounding: 2026-04-19  # v1.11.0 cross-country refresh
-  this_pr_partial_refresh: 2026-05-02  # PR-6 delta — no material events
+  last_full_grounding: "2026-04-19"  # v1.11.0 cross-country refresh
+  partial_refresh: "2026-04-19"  # cross-country audit-trail field; same date as full_grounding (no intermediate refresh)
+  this_pr_partial_refresh: "2026-05-02"  # PR-6 delta — no material events
   authority_sources:
     - 中国人民银行 (PBOC) 货币政策委员会例会 (quarterly)
     - 国家统计局 (NBS) 数据发布

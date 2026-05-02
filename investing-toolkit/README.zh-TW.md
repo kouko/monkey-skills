@@ -201,7 +201,7 @@ Contract 規範於 [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-Plugin Dele
 
 ## Version 歷史
 
-完整 version 歷史（v1.0.0 → v2.0.0）見 [`ROADMAP.md`](ROADMAP.md)。近期：v2.0.0（三層架構重構 + `analysis-comps`）、v1.16.5（Phase 3 retarget 至 investing-team）、v1.16.4（TWSE `/rwd/` 接線 + design-principles 文件）。
+完整 version 歷史（v1.0.0 → v2.1.0）見 [`ROADMAP.md`](ROADMAP.md)。近期：v2.1.0（`analysis-macro-regime` Phase 1 國別 classifier 化，見 [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md)）、v2.0.0（三層架構重構 + `analysis-comps`）、v1.16.5（Phase 3 retarget 至 investing-team）。
 
 ## Contributing
 

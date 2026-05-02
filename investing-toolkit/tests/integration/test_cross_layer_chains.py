@@ -589,29 +589,23 @@ def test_chain_country_regime_to_macroregime(country):
         pytest.skip("missing fixture or script")
     rc, out, stderr = _run_layer2(script, ["--input", f"{country}={fixture}"])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    # Schema lookup order:
-    # - v1.x: out["countries"][cc] holds ic_quadrant
-    # - Phase 1 (ADR-0004): classify_X output in out["by_country"][cc],
-    #   legacy IC fallback in out["_legacy"]["by_country"][cc]
-    countries = (
-        out.get("countries")
-        or out.get("by_country")
-        or out.get("_legacy", {}).get("by_country")
-        or {}
+    # Phase 1 schema (post-PR-7): classify_X output lives at
+    # out.by_country.{cc}.native_verdict; ic_quadrant under
+    # native_verdict.ic_quadrant or native_verdict.ic_quadrant_legacy
+    # (countries that demoted IC to legacy reference).
+    block = out.get("by_country", {}).get(country) or {}
+    assert block, (
+        f"data-{country} regime: no {country} block in by_country. "
+        f"output keys: {list(out.keys())}; by_country keys: "
+        f"{list(out.get('by_country', {}).keys())}"
     )
-    block = countries.get(country) if isinstance(countries, dict) else None
-    if block is None or "ic_quadrant" not in block:
-        # PR-1 state: by_country is empty; legacy fallback carries ic_quadrant
-        legacy = out.get("_legacy", {}).get("by_country", {}).get(country)
-        if legacy and "ic_quadrant" in legacy:
-            block = legacy
-    assert block is not None, (
-        f"data-{country} regime: no {country} block produced. output keys: "
-        f"{list(out.keys())}"
+    nv = block.get("native_verdict") or {}
+    ic = nv.get("ic_quadrant") or nv.get("ic_quadrant_legacy")
+    assert ic is not None, (
+        f"data-{country} regime: native_verdict has neither ic_quadrant "
+        f"nor ic_quadrant_legacy. native_verdict keys: {list(nv.keys())}"
     )
-    assert "ic_quadrant" in block, (
-        f"data-{country} regime: ic_quadrant missing — chain broken. block: {block}"
-    )
+    assert ic in {"1-recovery", "2-overheat", "3-stagflation", "4-reflation"}
 
 
 # ---------------------------------------------------------------------------
@@ -982,9 +976,9 @@ def test_chain_jp_classifier_e2e():
     # JP-specific shape assertions
     assert "boj_stance" in nv
     assert nv["boj_stance"] in {"ZIRP", "post_zirp", "exit_deflation", "unknown"}
-    assert "policy_target_pct" in nv
-    assert nv["policy_target_pct"] == 0.75, (
-        f"policy_target_pct should match calibration (0.75 post-2025-12), got {nv['policy_target_pct']}"
+    assert "boj_call_rate_target_pct" in nv
+    assert nv["boj_call_rate_target_pct"] == 0.75, (
+        f"boj_call_rate_target_pct should match calibration (0.75 post-2025-12), got {nv['boj_call_rate_target_pct']}"
     )
     assert "deflation_phase" in nv
     assert nv["deflation_phase"] in {
@@ -1081,35 +1075,22 @@ def test_chain_regimepack_to_macroregime():
     ])
 
     assert rc == 0, f"exit {rc}\nstderr: {stderr}\nstdout: {out}"
-    # Schema lookup order (see test_chain_country_regime_to_macroregime above)
-    countries = (
-        out.get("countries")
-        or out.get("by_country")
-        or out.get("_legacy", {}).get("by_country")
-        or {}
-    )
-    us = countries.get("us") if isinstance(countries, dict) else None
-    if us is None or "real_rates" not in us:
-        legacy = out.get("_legacy", {}).get("by_country", {}).get("us")
-        if legacy:
-            us = legacy
+    # Phase 1 schema: classify_us output at by_country.us.native_verdict
+    us = out.get("by_country", {}).get("us")
     assert us is not None, (
         f"regime_compose did not produce a US classification; "
         f"output keys: {list(out.keys())}"
     )
+    nv = us.get("native_verdict") or {}
 
     # Critical check: real-rate block must be derivable. The fixture
     # contains DGS10 (under groups.rates.series) and T10YIE (under
-    # groups.real_rates.series). If chain wiring works, real_rates
-    # block should be a dict with nominal_10y/breakeven_10y/real_10y.
-    # If chain is broken (current state), real_rates is None and notes
-    # explicitly say "missing DGS10 or T10YIE in regime-pack".
-    real_rates = us.get("real_rates")
-    notes = us.get("notes") or []
-    assert real_rates is not None and isinstance(real_rates, dict), (
-        f"real-rate block is None — regime_compose could not find "
-        f"DGS10/T10YIE in the regime-pack. Likely cause: regime_compose "
-        f"reads pack.series (flat) but data-us regime-pack emits "
-        f"pack.groups.{{rates,real_rates}}.series (two-level nested). "
-        f"notes: {notes}"
+    # groups.real_rates.series). classify_us emits this under
+    # native_verdict.real_rate_decomposition (renamed from legacy
+    # `real_rates` in PR-2 baseline).
+    rrd = nv.get("real_rate_decomposition")
+    assert rrd is not None and isinstance(rrd, dict), (
+        f"real_rate_decomposition block is None — classify_us could not "
+        f"find DGS10/T10YIE. data_quality.missing: "
+        f"{us.get('data_quality', {}).get('missing')}"
     )

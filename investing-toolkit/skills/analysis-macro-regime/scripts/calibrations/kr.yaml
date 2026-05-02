@@ -16,7 +16,7 @@ currency: KRW
 inflation_target: 2.0
 inflation_target_type: point  # not central_tendency, not band — single point
 inflation_target_framework: inflation_targeting  # FIT-style; "균형있게 고려" qualitative bias
-inflation_target_authority_date: 2018-12-26
+inflation_target_authority_date: "2018-12-26"
 inflation_target_horizon: medium-term
 inflation_target_band:
   at_target: { lower: 1.7, upper: 2.3 }  # 무기한 적용; band is BOK communication, not policy mechanic
@@ -26,7 +26,7 @@ inflation_target_band:
 # --- Policy rate (BOK 기준금리) ---
 # 7 회 연속 동결 since 2025-05-29 인하 (3.00 → 2.50). Last decision 2026-04-10.
 policy_rate_level: 2.50
-policy_rate_authority_date: 2026-04-10  # 가장 최근 동결 결정
+policy_rate_authority_date: "2026-04-10"  # 가장 최근 동결 결정
 policy_rate_path_note: "7 회 연속 동결 since 2025-05 (2025-05-29 인하 후 7 차례 동결: 2025-07/08/10/11, 2026-01/02/04)"
 policy_rate_neutrality:
   # BOK 연구원 Do/Ahn/Jung 2024 (SSRN 5009627) multi-model:
@@ -94,7 +94,7 @@ kospi_concentration_overlay:
   samsung_skhynix: 0.4096            # 2026-04-23 close
   samsung_skhynix_intraday_peak: 0.4111  # 2026-04-21
   samsung_sk_groups: 0.6129           # 2026-02 그룹 전체
-  date: 2026-04-23
+  date: "2026-04-23"
   one_year_ago_skhynix: 0.1453        # 2025-06 삼성전자 단독 9 년 저점 → 9 개월 급반등
   exceeds_sp500_mag7_flag: true       # > S&P500 Mag-7 33.41%
   semiconductor_cycle_dependency: |
@@ -150,9 +150,9 @@ structural_notes:
 provenance:
   calibration_doc: thresholds-korea.md
   calibration_vintage: 2026-Q1
-  last_full_grounding: 2026-04-18  # v1.9.0 KR section
-  partial_refresh: 2026-04-19      # v1.11.0 addendum (7 연속 동결 + 40.90%)
-  this_pr_partial_refresh: 2026-05-02  # PR-5 delta — cosmetic 40.90→40.96 refresh
+  last_full_grounding: "2026-04-18"  # v1.9.0 KR section
+  partial_refresh: "2026-04-19"      # v1.11.0 addendum (7 연속 동결 + 40.90%)
+  this_pr_partial_refresh: "2026-05-02"  # PR-5 delta — cosmetic 40.90→40.96 refresh
   authority_sources:
     - 한국은행 (BOK) — 기준금리, 물가안정목표, 통화정책방향, ECOS, ESI/CBSI
     - 통계청 (KOSTAT) — 경기종합지수, 동행지수순환변동치, 고용동향

@@ -6,33 +6,27 @@
 """
 regime_compose.py — analysis-macro-regime Phase 1 dispatcher (Layer 2, pure compute).
 
-Per ADR-0004, this script is now a **thin dispatcher**: for each country
-in --input, dispatch to a per-country `classify_{country}` module if it
-exists, else fall through to the v1.9.0 unified classifier preserved in
-`_legacy_ic.py`. Aggregate `by_country` (new) + `_legacy.by_country`
-(transition fallback). `cross_country` is hardcoded null in Phase 1 —
-Phase 2 (deferred) will design it bottom-up from observed native verdicts.
+Per ADR-0004, this script is a **thin dispatcher**: for each country in
+--input, dispatch to the per-country `classify_{country}` module. All 5
+classifiers (US/JP/TW/KR/CN) ship in v2.1.0; the v1.9.0 unified
+fallback is removed. `cross_country` is hardcoded null in Phase 1 —
+Phase 2 (deferred ADR-0005) will design it bottom-up from observed
+native_verdict shapes.
 
 Output schema:
   {
     "schema_version": "2.0-phase1",
     "by_country": {
-      "us": <CountryRegimeCard>,  # only if classify_us module present
+      "us": <CountryRegimeCard>,
       ...
     },
     "cross_country": null,
-    "_legacy": {
-      "by_country": {
-        "us": <legacy IC + GIP + real_rates + notes>,
-        ...
-      },
-      "note": "Phase 1 transition fallback ..."
-    },
+    "_legacy": null,
     "_provenance": {...}
   }
 
-Pure compute — no network I/O. Imports stdlib + _legacy_ic + _surface
-+ calibrations + (per-country) classify_X. PyYAML required for calibrations.
+Pure compute — no network I/O. Imports stdlib + _surface + calibrations
++ (per-country) classify_X. PyYAML required for calibrations.
 
 Usage:
   uv run regime_compose.py --input us=/tmp/us.json,jp=/tmp/jp.json
@@ -53,7 +47,6 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-import _legacy_ic  # noqa: E402
 from _surface import Phase1Output  # noqa: E402
 
 SUPPORTED_COUNTRIES = {"us", "jp", "tw", "kr", "cn"}
@@ -106,15 +99,10 @@ def main() -> int:
 
     inputs = parse_input_arg(args.input)
     output = Phase1Output()
-    output._legacy = {
-        "by_country": {},
-        "note": (
-            "Phase 1 transition fallback per ADR-0004. classify_country() "
-            "output preserved here so existing memo / portfolio consumers "
-            "continue to work. Will be removed at Phase 2 start or v2.2.0, "
-            "whichever earlier."
-        ),
-    }
+    # _legacy is kept as `null` (per ADR-0004 PR-7 cleanup) so the schema
+    # shape stays stable for downstream consumers. The v1.9.0 fallback
+    # path was removed once all 5 per-country classifiers shipped.
+    output._legacy = None
 
     for cc, path in inputs.items():
         try:
@@ -123,25 +111,26 @@ def main() -> int:
             print(f"ERROR loading {cc}={path}: {e}", file=sys.stderr)
             return 2
 
-        # New per-country classifier path (Phase 1 primary)
         classifier = _try_load_classifier(cc)
-        if classifier is not None:
-            try:
-                card = classifier(pack)
-                output.by_country[cc] = card.to_dict()
-            except Exception as e:
-                output.by_country[cc] = {
-                    "country": cc,
-                    "_error": f"{type(e).__name__}: {e}",
-                    "_note": f"classify_{cc} raised; using _legacy fallback only",
-                }
-
-        # Legacy IC fallback (always populated for backward compat)
+        if classifier is None:
+            # Phase 1 invariant: all 5 classifiers ship in v2.1.0
+            output.by_country[cc] = {
+                "country": cc,
+                "_error": f"classify_{cc} module not found",
+                "_note": (
+                    f"Phase 1 invariant violation: every supported country "
+                    f"must have a classify_{cc} module. Did you delete it?"
+                ),
+            }
+            continue
         try:
-            output._legacy["by_country"][cc] = _legacy_ic.classify_country(cc, pack)
+            card = classifier(pack)
+            output.by_country[cc] = card.to_dict()
         except Exception as e:
-            output._legacy["by_country"][cc] = {
-                "_error": f"{type(e).__name__}: {e}"
+            output.by_country[cc] = {
+                "country": cc,
+                "_error": f"{type(e).__name__}: {e}",
+                "_note": f"classify_{cc} raised at runtime",
             }
 
     # Provenance metadata (carried over from v1.x for downstream readers)

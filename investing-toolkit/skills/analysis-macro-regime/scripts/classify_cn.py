@@ -36,7 +36,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from _legacy_ic import (
+from _helpers import (
     GROWTH_KEYS, INFLATION_KEYS,
     classify_direction, map_ic_quadrant, map_gip_quad,
     resolve_series, normalised_country, cn_component_overlay,
@@ -460,7 +460,7 @@ def classify_cn(regime_pack: dict[str, Any]) -> CountryRegimeCard:
         "property_overlay": property_overlay,
         "policy_framework": calib.get(
             "inflation_target_framework", "multi_objective"),
-        "policy_target_pct": calib.get("inflation_target", 2.0),
+        "inflation_target_pct": calib.get("inflation_target", 2.0),
     }
 
     prov = calib.get("provenance", {}) or {}

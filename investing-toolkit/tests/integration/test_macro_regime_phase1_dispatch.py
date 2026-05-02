@@ -1,12 +1,13 @@
 """Phase 1 dispatch integration test (per ADR-0004).
 
-Verifies regime_compose.py post-PR-1:
+Verifies regime_compose.py:
 - Produces 2.0-phase1 schema
 - cross_country is null
-- _legacy.by_country populated for all available countries
-- by_country populated only for countries with classify_X module (none in PR-1)
-- TW _legacy block now resolves growth proxy (was 'flat / proxy missing'
-  before the GROWTH_KEYS patch in PR-1)
+- _legacy is null (PR-7 cleanup removed v1.9.0 fallback)
+- by_country populated for all 5 countries (US/JP/TW/KR/CN) via their
+  per-country classify_X modules
+- TW classifier resolves growth proxy (was 'flat / proxy missing' on
+  legacy unified classifier before _helpers.py GROWTH_KEYS patch)
 """
 
 from __future__ import annotations
@@ -46,55 +47,66 @@ def test_phase1_schema_shape():
     out = _run_dispatch(["us", "jp", "tw", "kr", "cn"])
     assert out["schema_version"] == "2.0-phase1"
     assert out["cross_country"] is None
-    assert "_legacy" in out
-    assert "by_country" in out["_legacy"]
+    assert out["_legacy"] is None, (
+        f"_legacy should be null after PR-7 cleanup; got: {out['_legacy']!r}"
+    )
     assert "by_country" in out
-    # PR-1: no classify_X modules yet, by_country is empty dict
-    # PR-2 onwards: countries appear here as their classifiers ship
     assert isinstance(out["by_country"], dict)
 
 
-def test_phase1_legacy_populated_for_all_countries():
+def test_phase1_by_country_populated_for_all_countries():
     out = _run_dispatch(["us", "jp", "tw", "kr", "cn"])
-    legacy_by_country = out["_legacy"]["by_country"]
-    assert len(legacy_by_country) >= 1, "no countries in _legacy.by_country"
-    for cc, body in legacy_by_country.items():
-        # Either a successful classification or an explicit error
-        assert "ic_quadrant" in body or "_error" in body, (
-            f"{cc} legacy block has neither ic_quadrant nor _error: {body}"
+    by_country = out["by_country"]
+    for cc in ["us", "jp", "tw", "kr", "cn"]:
+        assert cc in by_country, (
+            f"by_country missing country {cc} — classify_{cc} module not found "
+            f"or raised. by_country keys: {list(by_country.keys())}"
         )
+        block = by_country[cc]
+        # Either a successful CountryRegimeCard envelope or an explicit error
+        assert "_error" not in block, (
+            f"{cc} classify_X raised: {block.get('_error')!r}"
+        )
+        assert block["country"] == cc
+        assert "framework_used" in block
+        assert "native_verdict" in block
+        assert "framework_label" in block["native_verdict"]
+        assert block["confidence"] in ("low", "medium", "high")
 
 
-def test_phase1_tw_legacy_resolves_growth_proxy():
-    """After PR-1's GROWTH_KEYS patch, TW _legacy block must NOT report
-    'growth proxy missing for tw' — it should resolve to signal-score or
-    coincident-index."""
+def test_phase1_tw_classifier_resolves_growth_proxy():
+    """TW classifier reads NDC signal-score / coincident-index / leading-index
+    from regime-pack via _helpers.GROWTH_KEYS["tw"] (patched in PR-1). Must
+    NOT report 'growth proxy missing'. Confidence must be medium or high."""
     out = _run_dispatch(["tw"])
-    legacy_tw = out["_legacy"]["by_country"]["tw"]
-    notes = legacy_tw.get("notes", [])
-    assert not any("growth proxy missing for tw" in n for n in notes), (
-        f"TW _legacy still reports growth proxy missing — GROWTH_KEYS patch broke. "
-        f"notes: {notes}"
+    tw = out["by_country"]["tw"]
+    # New schema: native_verdict carries TW signal data, no notes-style
+    # "growth proxy missing" message — but data_quality might list missing
+    missing = tw.get("data_quality", {}).get("missing", []) or []
+    assert not any("growth_proxy" in m for m in missing), (
+        f"TW data_quality.missing reports growth proxy gap: {missing}"
     )
-    # Confidence should rise to medium or high (was 'low' pre-patch)
-    assert legacy_tw["confidence"] in ("medium", "high"), (
-        f"TW _legacy confidence still low post-patch: {legacy_tw['confidence']}"
+    assert tw["confidence"] in ("medium", "high"), (
+        f"TW confidence still degraded post-PR-1 patch: {tw['confidence']}"
     )
 
 
-def test_phase1_legacy_us_ic_quadrant_unchanged():
-    """US legacy block byte-for-byte regression: ic_quadrant must remain
-    what classify_country returned pre-PR-1 (US is not affected by the
-    TW GROWTH_KEYS patch)."""
+def test_phase1_us_native_verdict_shape():
+    """US classify_us produces ic_quadrant + real_rate_decomposition +
+    yield_curve in native_verdict. Acts as a smoke test that the classifier
+    chain (regime_compose → classify_us → calibrations/us.yaml) works."""
     out = _run_dispatch(["us"])
-    us_legacy = out["_legacy"]["by_country"]["us"]
-    assert us_legacy["ic_quadrant"] in {
+    us = out["by_country"]["us"]
+    nv = us["native_verdict"]
+    assert nv["ic_quadrant"] in {
         "1-recovery", "2-overheat", "3-stagflation", "4-reflation",
     }
-    # Real-rates block should be present for US (DGS10/T10YIE in fixture)
-    assert us_legacy["real_rates"] is not None or any(
-        "real-rate block" in n for n in us_legacy.get("notes", [])
-    )
+    # Real-rate block should be present (DGS10/T10YIE in US fixture)
+    rrd = nv.get("real_rate_decomposition")
+    assert rrd is None or rrd.get("band") in {
+        "accommodative", "neutral",
+        "moderately_restrictive", "clearly_restrictive",
+    }
 
 
 def test_phase1_unknown_country_rejected():

@@ -201,7 +201,7 @@ Contract は [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-Plugin Delegation
 
 ## Version 履歴
 
-完全な version 履歴（v1.0.0 → v2.0.0）は [`ROADMAP.md`](ROADMAP.md) を参照。直近: v2.0.0（three-layer 再構築 + `analysis-comps`）、v1.16.5（Phase 3 を investing-team に retarget）、v1.16.4（TWSE `/rwd/` 配線 + design-principles doc）。
+完全な version 履歴（v1.0.0 → v2.1.0）は [`ROADMAP.md`](ROADMAP.md) を参照。直近: v2.1.0（`analysis-macro-regime` Phase 1 国別 classifier 化、[ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) 参照）、v2.0.0（three-layer 再構築 + `analysis-comps`）、v1.16.5（Phase 3 を investing-team に retarget）。
 
 ## Contributing
 

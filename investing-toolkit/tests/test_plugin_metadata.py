@@ -52,8 +52,8 @@ def test_plugin_json_required_field(plugin_data, field):
 def test_plugin_json_version_v2(plugin_data):
     version = plugin_data["version"]
     assert isinstance(version, str), "version must be a string"
-    assert version.startswith("2.0"), (
-        f"plugin.json version must start with '2.0' for v2.0.0 release; got {version!r}"
+    assert version.startswith("2."), (
+        f"plugin.json version must start with '2.' for the v2.x line; got {version!r}"
     )
 
 

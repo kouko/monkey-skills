@@ -204,7 +204,7 @@ The contract is documented at [`monkey-skills/CLAUDE.md`](../CLAUDE.md) §Cross-
 
 ## Version history
 
-See [`ROADMAP.md`](ROADMAP.md) for full version history (v1.0.0 → v2.0.0). Recent: v2.0.0 (three-layer refactor + `analysis-comps`), v1.16.5 (Phase 3 retarget to investing-team), v1.16.4 (TWSE `/rwd/` wiring + design-principles doc).
+See [`ROADMAP.md`](ROADMAP.md) for full version history (v1.0.0 → v2.1.0). Recent: v2.1.0 (`analysis-macro-regime` Phase 1 per-country classifiers per [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md)), v2.0.0 (three-layer refactor + `analysis-comps`), v1.16.5 (Phase 3 retarget to investing-team).
 
 ## Contributing
 

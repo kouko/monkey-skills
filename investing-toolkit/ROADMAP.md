@@ -1,5 +1,35 @@
 # investing-toolkit Roadmap
 
+## v2.1.0 — analysis-macro-regime Phase 1 per-country classifiers (released 2026-05-02)
+
+**Scope**: Decompose v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). Defer cross-country comparable surface to Phase 2 (ADR-0005). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md).
+
+### Shipped (PR-1 ~ PR-7)
+
+- [x] PR-1: dispatcher infra (`_helpers.py` from former `_legacy_ic.py`, `_surface.py` `CountryRegimeCard`/`Phase1Output` dataclasses, `calibrations/` reader, TW `GROWTH_KEYS` patch, regression test)
+- [x] PR-2: `classify_us.py` baseline + `calibrations/us.yaml` + `grounding-us-2026-05.md` (US is reference pattern for PR-3-6)
+- [x] PR-3: `classify_jp.py` (BOJ + Tankan + ESRI CI + deflation regime) + `boj_client.py --tankan-business-di` flag (4 series codes verified vs BOJ docs) + e-Stat preset additions in `data-jp/pack.py`
+- [x] PR-4: `classify_tw.py` (NDC 五色 + 9 構成 + TIER + TSMC overlay)
+- [x] PR-5: `classify_kr.py` (BOK target + KOSTAT cycle + 가계부채 overlay + KOSPI concentration)
+- [x] PR-6: `classify_cn.py` (PBOC + credit impulse + 4-comp dispersion + 房地产 overlay + CPI framing) + `_compute_credit_impulse()` in `data-cn/pack.py` + methodology doc
+- [x] PR-7: cleanup (remove `_legacy_ic.py`, M1 rename `policy_target_pct` semantic collision, m1/m2 quote YAML dates, m3 cn.yaml `partial_refresh`, m4 KR ESI deferral note, bump v2.1.0)
+
+### Process
+
+- [x] 8 internal reviewer subagents (spec + code-quality × 4 countries) — all PASS/APPROVED, 0 MAJOR
+- [x] Cross-country fresh-eyes audit — PASS_WITH_NOTES (1 MAJOR + 4 MINOR, all addressed in PR-7)
+- [x] Native-language grounding (日本語 / 繁中 / 한국어 / 简中) — JP captured 4 material BOJ events (FY2026 outlook 1.9%→2.7-2.8%, 6-3 vote, Ueda 4/30 anchor)
+
+### Deferred to v2.1.x / v2.2.0 / Phase 2
+
+- [ ] **Phase 2 (ADR-0005)**: cross-country comparable surface design — bottom-up from observed `native_verdict` shapes. Re-trigger conditions: Phase 1 stable ≥4 weeks, ≥5 multi-country invocations, or buy-side memo workflow surfacing concrete need.
+- [ ] KR ESI explicit ECOS API integration (free key required at ecos.bok.or.kr)
+- [ ] TW TIER preset wiring at NDC client level + live TWSE monthly weight ingestion
+- [ ] CN true stock-yoy credit impulse when PBOC publishes via akshare or direct scrape
+- [ ] JP regime-pack fresh fixture refresh post-PR-3 (test currently uses pre-PR-3 fixture; classifier's IP-fallback path engaged)
+
+---
+
 ## v2.0.0 — Three-Layer Architecture + Comps (released 2026-05-01)
 
 **Scope**: Reorganize 15 v1.x skills into 5 data-{country} + 6 analysis-* + 4 report-* + 1 router (16 total). Add `analysis-comps` (peer multiples). Add runtime peer-discovery in `report-equity-memo`. Parallelize `fred_client` multi-series fetch (8 worker default).

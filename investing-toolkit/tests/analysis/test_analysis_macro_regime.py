@@ -1,4 +1,9 @@
-"""Tests for analysis-macro-regime/scripts/regime_compose.py."""
+"""Tests for analysis-macro-regime/scripts/regime_compose.py (Phase 1).
+
+Per ADR-0004 PR-7: regime_compose.py is now a thin dispatcher;
+classify_X output lives at out["by_country"][cc]. The legacy IC
+unified classifier was removed; out["_legacy"] is null.
+"""
 from __future__ import annotations
 
 import json
@@ -20,9 +25,9 @@ def test_smoke_us_only(runner, fixtures_dir):
     )
     assert res.returncode == 0, res.stderr
     payload = json.loads(res.stdout)
-    # Phase 1 schema (ADR-0004): legacy IC output under _legacy.by_country
-    assert "_legacy" in payload
-    assert "us" in payload["_legacy"]["by_country"]
+    assert "by_country" in payload
+    assert "us" in payload["by_country"]
+    assert payload["_legacy"] is None  # PR-7 cleanup
 
 
 def test_schema_us(runner, fixtures_dir):
@@ -31,26 +36,29 @@ def test_schema_us(runner, fixtures_dir):
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
-    us = payload["_legacy"]["by_country"]["us"]
-    for key in (
-        "growth_direction", "inflation_direction", "ic_quadrant",
-        "gip_regime", "real_rates", "confidence", "notes",
-    ):
-        assert key in us, f"missing key: {key}"
-    # IC quadrant in known set
-    assert us["ic_quadrant"] in {"1-recovery", "2-overheat", "3-stagflation", "4-reflation"}
-    assert us["gip_regime"] in {"quad1", "quad2", "quad3", "quad4"}
-    # Real rates block present + 4-tier signal
-    rr = us["real_rates"]
-    assert rr is not None
-    for key in ("nominal_10y", "breakeven_10y", "real_10y", "signal"):
-        assert key in rr
-    assert rr["signal"] in {
-        "accommodative", "neutral", "moderately-restrictive", "clearly-restrictive",
+    us = payload["by_country"]["us"]
+    # CountryRegimeCard envelope (per ADR-0004 §"Country regime card shape")
+    for key in ("country", "framework_used", "native_verdict",
+                "indicators_used", "data_quality", "confidence", "provenance"):
+        assert key in us, f"missing envelope key: {key}"
+    assert us["country"] == "us"
+    assert us["confidence"] in {"low", "medium", "high"}
+    nv = us["native_verdict"]
+    assert "framework_label" in nv
+    assert nv["ic_quadrant"] in {
+        "1-recovery", "2-overheat", "3-stagflation", "4-reflation"
     }
+    assert nv["gip_regime"] in {"quad1", "quad2", "quad3", "quad4"}
+    # Real-rate decomposition (US-specific overlay) — 4-tier band
+    rrd = nv.get("real_rate_decomposition")
+    if rrd is not None:
+        assert rrd["band"] in {
+            "accommodative", "neutral",
+            "moderately_restrictive", "clearly_restrictive",
+        }
     # Provenance
-    prov = payload["_provenance"]
-    assert prov["skill"] == "analysis-macro-regime"
+    prov = us["provenance"]
+    assert prov["calibration_doc"] == "thresholds-us.md"
 
 
 def test_missing_input_file(runner):
@@ -65,11 +73,13 @@ def test_malformed_input_arg(runner, fixtures_dir):
 
 
 # ---------------------------------------------------------------------------
-# Multi-country / consensus
+# Multi-country dispatch (cross_country deferred to Phase 2 per ADR-0004)
 # ---------------------------------------------------------------------------
 
 
-def test_5_country_emits_consensus(runner, fixtures_dir):
+def test_5_country_dispatch(runner, fixtures_dir):
+    """5-country dispatch produces 5 by_country entries; cross_country
+    is null in Phase 1 (deferred to Phase 2 ADR-0005)."""
     res = runner(
         REGIME_SCRIPT,
         "--input",
@@ -83,99 +93,40 @@ def test_5_country_emits_consensus(runner, fixtures_dir):
     )
     assert res.returncode == 0, res.stderr
     payload = json.loads(res.stdout)
-    # Phase 1 schema (ADR-0004): cross_country is null; consensus deferred
-    # to Phase 2. All 5 countries appear under _legacy.by_country instead.
     assert payload["cross_country"] is None
-    legacy_countries = payload["_legacy"]["by_country"]
+    assert payload["_legacy"] is None
+    by_country = payload["by_country"]
     for cc in ("us", "jp", "tw", "kr", "cn"):
-        assert cc in legacy_countries
+        assert cc in by_country
+        assert by_country[cc]["country"] == cc
 
 
-def test_single_country_no_consensus(runner, fixtures_dir):
-    """Phase 1 (ADR-0004): cross_country is hardcoded null regardless of
-    country count; consensus is deferred to Phase 2."""
+def test_single_country_phase1_shape(runner, fixtures_dir):
+    """Single-country dispatch: cross_country is null (no consensus block)."""
     res = runner(
         REGIME_SCRIPT,
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
     assert payload["cross_country"] is None
-    assert "cross_country_consensus" not in payload
+    assert "cross_country_consensus" not in payload  # legacy v1.x key removed
 
 
 # ---------------------------------------------------------------------------
-# Wave 4 fix: flat-flat → 1-recovery (NOT 4-reflation)
-# ---------------------------------------------------------------------------
-
-
-def test_flat_growth_flat_inflation_is_recovery(runner, fixtures_dir):
-    """flat growth + flat inflation → 1-recovery (Wave 4 fix; was 4-reflation)."""
-    res = runner(
-        REGIME_SCRIPT,
-        "--input", f"us={fixtures_dir / 'regime_us_flat.json'}",
-    )
-    assert res.returncode == 0, res.stderr
-    payload = json.loads(res.stdout)
-    us = payload["_legacy"]["by_country"]["us"]
-    assert us["growth_direction"] == "flat"
-    assert us["inflation_direction"] == "flat"
-    assert us["ic_quadrant"] == "1-recovery"
-
-
-def test_flat_growth_rising_inflation_is_overheat(runner, fixtures_dir):
-    """flat growth + rising inflation → 2-overheat."""
-    res = runner(
-        REGIME_SCRIPT,
-        "--input", f"us={fixtures_dir / 'regime_us_overheat.json'}",
-    )
-    payload = json.loads(res.stdout)
-    us = payload["_legacy"]["by_country"]["us"]
-    assert us["growth_direction"] == "flat"
-    assert us["inflation_direction"] == "rising"
-    assert us["ic_quadrant"] == "2-overheat"
-
-
-# ---------------------------------------------------------------------------
-# US Fisher real-rate decomposition (4-tier threshold)
+# US Fisher real-rate decomposition (4-tier threshold) — Phase 1 native
 # ---------------------------------------------------------------------------
 
 
 def test_us_fisher_real_rate_clearly_restrictive(runner, fixtures_dir):
-    """nominal=4.5, breakeven=2.5 → real ~2.0% → 'clearly-restrictive' (≥1.75)."""
+    """nominal=4.5, breakeven=2.5 → real ~2.0% → 'clearly_restrictive' (≥1.75)."""
     res = runner(
         REGIME_SCRIPT,
         "--input", f"us={fixtures_dir / 'regime_us_fixture.json'}",
     )
     payload = json.loads(res.stdout)
-    rr = payload["_legacy"]["by_country"]["us"]["real_rates"]
-    assert abs(rr["nominal_10y"] - 4.5) < 0.01
-    assert abs(rr["breakeven_10y"] - 2.5) < 0.01
-    assert abs(rr["real_10y"] - 2.0) < 0.01
-    assert rr["signal"] == "clearly-restrictive"
-
-
-# ---------------------------------------------------------------------------
-# JP / TW country-specific behaviour
-# ---------------------------------------------------------------------------
-
-
-def test_jp_real_rates_null(runner, fixtures_dir):
-    """JP fixture without DGS10/T10YIE → real_rates is null (US-only block)."""
-    res = runner(
-        REGIME_SCRIPT,
-        "--input", f"jp={fixtures_dir / 'regime_jp_no_rates.json'}",
-    )
-    payload = json.loads(res.stdout)
-    jp = payload["_legacy"]["by_country"]["jp"]
-    assert jp["real_rates"] is None
-
-
-def test_tw_9_45_composite_note(runner, fixtures_dir):
-    """TW score in 9-45 band → note text mentions '9-45'."""
-    res = runner(
-        REGIME_SCRIPT,
-        "--input", f"tw={fixtures_dir / 'regime_tw_fixture.json'}",
-    )
-    payload = json.loads(res.stdout)
-    notes = " ".join(payload["_legacy"]["by_country"]["tw"]["notes"])
-    assert "9-45" in notes
+    rrd = payload["by_country"]["us"]["native_verdict"]["real_rate_decomposition"]
+    assert rrd is not None, "real_rate_decomposition missing"
+    assert abs(rrd["nominal_10y"] - 4.5) < 0.01
+    assert abs(rrd["breakeven_10y"] - 2.5) < 0.01
+    assert abs(rrd["real_10y"] - 2.0) < 0.01
+    assert rrd["band"] == "clearly_restrictive"
