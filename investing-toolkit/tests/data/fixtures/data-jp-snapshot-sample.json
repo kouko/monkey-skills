@@ -2,11 +2,11 @@
   "pack": "snapshot",
   "ticker": "7203",
   "yf_ticker": "7203.T",
-  "fetched_at": "2026-05-01T15:08:50+00:00",
+  "fetched_at": "2026-05-02T01:51:12+00:00",
   "info": {
     "ticker": "7203.T",
-    "fetched_at": "2026-05-01T15:08:49Z",
-    "_cache": "miss",
+    "fetched_at": "2026-05-02T01:51:07Z",
+    "_cache": "hit",
     "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
     "symbol": "7203.T",
     "shortName": "TOYOTA MOTOR CORP",
@@ -19,13 +19,13 @@
     "regularMarketPrice": 3000.0,
     "regularMarketPreviousClose": 3023.0,
     "marketCap": 35523162800128,
-    "enterpriseValue": 65953370996736,
-    "trailingPE": 10.557432,
+    "enterpriseValue": 65653599895552,
+    "trailingPE": 10.559662,
     "forwardPE": 9.252976,
     "priceToBook": 1.0032194,
-    "trailingEps": 284.16,
+    "trailingEps": 284.1,
     "forwardEps": 324.22,
-    "dividendYield": 3.14,
+    "dividendYield": 3.17,
     "payoutRatio": 0.3343,
     "fiftyTwoWeekHigh": 4000.0,
     "fiftyTwoWeekLow": 2434.0,
@@ -47,7 +47,7 @@
       "data_type": "unofficial_scraper",
       "update_cycle": "near-real-time (15 min delay)",
       "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-      "fetched_at": "2026-05-01T15:08:49Z",
+      "fetched_at": "2026-05-02T01:51:07Z",
       "reference_period": null,
       "staleness_days": null
     }
@@ -56,39 +56,39 @@
     "ticker": "7203.T",
     "period": "2y",
     "interval": "1d",
-    "fetched_at": "2026-05-01T15:08:49Z",
-    "_cache": "miss",
+    "fetched_at": "2026-05-02T01:51:08Z",
+    "_cache": "hit",
     "data": [
       {
         "date": "2024-05-01",
-        "open": 3381.3291,
-        "high": 3436.7453,
-        "low": 3358.7869,
-        "close": 3386.0254,
+        "open": 3381.3289,
+        "high": 3436.7451,
+        "low": 3358.7867,
+        "close": 3386.0251,
         "volume": 27076000
       },
       {
         "date": "2024-05-02",
-        "open": 3363.4832,
-        "high": 3401.9927,
-        "low": 3342.8195,
-        "close": 3363.4832,
+        "open": 3363.4834,
+        "high": 3401.993,
+        "low": 3342.8197,
+        "close": 3363.4834,
         "volume": 20164900
       },
       {
         "date": "2024-05-07",
-        "open": 3428.2923,
-        "high": 3428.2923,
-        "low": 3345.6376,
-        "close": 3380.3901,
+        "open": 3428.2921,
+        "high": 3428.2921,
+        "low": 3345.6373,
+        "close": 3380.3899,
         "volume": 25496600
       },
       {
         "date": "2024-05-08",
-        "open": 3331.5485,
-        "high": 3450.8343,
-        "low": 3243.2582,
-        "close": 3361.6047,
+        "open": 3331.5487,
+        "high": 3450.8345,
+        "low": 3243.2585,
+        "close": 3361.605,
         "volume": 68295000
       },
       {
@@ -100,8 +100,8 @@
         "volume": 40742400
       }
     ],
-    "latest_close": 3023.0,
-    "latest_date": "2026-04-30",
+    "latest_close": 3000.0,
+    "latest_date": "2026-05-01",
     "rows": 5,
     "_provenance": {
       "source": "yfinance (unofficial Yahoo Finance scraper)",
@@ -109,12 +109,53 @@
       "data_type": "unofficial_scraper",
       "update_cycle": "near-real-time (15 min delay)",
       "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-      "fetched_at": "2026-05-01T15:08:49Z",
-      "reference_period": "2026-04-30",
+      "fetched_at": "2026-05-02T01:51:08Z",
+      "reference_period": "2026-05-01",
       "staleness_days": 1
-    },
-    "_truncated_for_fixture": "original 488 rows truncated to 5"
+    }
   },
+  "history": [
+    {
+      "date": "2024-05-01",
+      "open": 3381.3289,
+      "high": 3436.7451,
+      "low": 3358.7867,
+      "close": 3386.0251,
+      "volume": 27076000
+    },
+    {
+      "date": "2024-05-02",
+      "open": 3363.4834,
+      "high": 3401.993,
+      "low": 3342.8197,
+      "close": 3363.4834,
+      "volume": 20164900
+    },
+    {
+      "date": "2024-05-07",
+      "open": 3428.2921,
+      "high": 3428.2921,
+      "low": 3345.6373,
+      "close": 3380.3899,
+      "volume": 25496600
+    },
+    {
+      "date": "2024-05-08",
+      "open": 3331.5487,
+      "high": 3450.8345,
+      "low": 3243.2585,
+      "close": 3361.605,
+      "volume": 68295000
+    },
+    {
+      "date": "2024-05-09",
+      "open": 3376.6327,
+      "high": 3376.6327,
+      "low": 3262.0432,
+      "close": 3313.7024,
+      "volume": 40742400
+    }
+  ],
   "timely_disclosures": {
     "ticker": "7203",
     "normalized_ticker": "7203",
@@ -176,10 +217,316 @@
           "earnings_forecast": null,
           "expected_dividends": null
         }
+      },
+      {
+        "id": "1230342",
+        "pubdate": "2026-03-05 15:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "4月1日付 役員人事、幹部職人事および第122回定時株主総会後の取締役体制について",
+        "disclosure_type": "shareholder_meeting",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260305576641.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1228475",
+        "pubdate": "2026-02-25 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "株主優待の内容決定に関するお知らせ(2026年３月末日基準)",
+        "disclosure_type": "other",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260224567908.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1220650",
+        "pubdate": "2026-02-06 14:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期 第3四半期決算短信〔IFRS〕（連結)",
+        "disclosure_type": "kessan_tanshin",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260202545049.pdf",
+        "xbrl_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/081220260202545049.zip",
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1220651",
+        "pubdate": "2026-02-06 14:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期第３四半期決算報告プレゼンテーション資料",
+        "disclosure_type": "q_earnings",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260205548941.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1220652",
+        "pubdate": "2026-02-06 14:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "代表取締役の異動に関するお知らせ",
+        "disclosure_type": "other",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260206550107.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1216034",
+        "pubdate": "2026-01-14 17:04:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "自己株式の公開買付けの条件等変更及び自己株式取得に係る事項の変更等に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120260114534012.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1200434",
+        "pubdate": "2025-11-05 14:25:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期 第2四半期（中間期）決算短信〔IFRS〕（連結)",
+        "disclosure_type": "kessan_tanshin",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120251029581373.pdf",
+        "xbrl_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/081220251029581373.zip",
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1200435",
+        "pubdate": "2025-11-05 14:25:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期第２四半期決算報告プレゼンテーション資料",
+        "disclosure_type": "q_earnings",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120251105587596.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1194780",
+        "pubdate": "2025-10-06 16:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "（開示事項の経過）自己株式の公開買付け実施に向けた進捗状況のお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120251006569064.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1190841",
+        "pubdate": "2025-09-09 15:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "型式指定申請に関する再発防止進捗報告について",
+        "disclosure_type": "other",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250909555041.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1179911",
+        "pubdate": "2025-08-07 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "従業員に対する株式交付制度としての自己株式の処分に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250807533721.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1180167",
+        "pubdate": "2025-08-07 14:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期 第1四半期決算短信〔IFRS〕（連結)",
+        "disclosure_type": "kessan_tanshin",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250729522887.pdf",
+        "xbrl_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/081220250729522887.zip",
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1180168",
+        "pubdate": "2025-08-07 14:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "2026年3月期第１四半期決算報告プレゼンテーション資料",
+        "disclosure_type": "q_earnings",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250807534245.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1183969",
+        "pubdate": "2025-07-25 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "特定子会社の異動に関するお知らせ",
+        "disclosure_type": "other",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250725520526.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1161627",
+        "pubdate": "2025-06-12 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "役員人事に関するお知らせ",
+        "disclosure_type": "officer_change",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250612588218.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1160843",
+        "pubdate": "2025-06-10 16:00:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "連結子会社の異動に関するお知らせ",
+        "disclosure_type": "other",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250610585816.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
+      },
+      {
+        "id": "1159944",
+        "pubdate": "2025-06-03 15:30:00",
+        "company_code": "72030",
+        "company_name": "トヨタ自",
+        "title": "自己株式の公開買付けの予定及び自己株式取得に係る事項の決定並びに自己株式の消却に関するお知らせ",
+        "disclosure_type": "own_shares",
+        "document_url": "https://webapi.yanoshin.jp/rd.php?https://www.release.tdnet.info/inbs/140120250603579522.pdf",
+        "xbrl_url": null,
+        "market": "東名",
+        "report_urls": {
+          "summary": null,
+          "fs_consolidated": null,
+          "fs_non_consolidated": null,
+          "earnings_forecast": null,
+          "expected_dividends": null
+        }
       }
     ],
-    "fetched_at": "2026-05-01T15:08:50Z",
-    "_cache": "miss",
+    "fetched_at": "2026-05-02T01:51:09Z",
+    "_cache": "hit",
     "_provenance": {
       "source": "Yanoshin TDnet WEB-API (webapi.yanoshin.jp/tdnet)",
       "source_authority": "JPX TDnet via unofficial Yanoshin aggregator — index only; full documents served from release.tdnet.info (JPX-hosted)",
@@ -188,11 +535,10 @@
       "update_cycle": "event-driven, polled every few minutes by aggregator",
       "typical_lag": "~5 min from TDnet official publication",
       "license_note": "Yanoshin terms informal; do NOT re-host response payloads. Follow document_url for content (JPX-served PDFs under TDnet ToS).",
-      "fetched_at": "2026-05-01T15:08:50Z",
+      "fetched_at": "2026-05-02T01:51:09Z",
       "reference_period": "2026-04-28 15:30:00",
       "count": 20
-    },
-    "_truncated_for_fixture": "original 20 disclosures truncated to 3"
+    }
   },
   "_provenance": {
     "tier": "tier_1",

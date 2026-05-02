@@ -164,7 +164,16 @@
         }
       },
       "additionalProperties": true
+    },
+    "history": {
+      "type": "array",
+      "description": "T1 canonical OHLCV alias — flat list of OHLCV rows (same content as price_history.data). Top-level for analysis-technical. Cross-country symmetric per docs/normalization-contract.md.",
+      "items": {
+        "type": "object",
+        "required": ["date", "open", "high", "low", "close", "volume"],
+        "additionalProperties": true
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

@@ -169,6 +169,129 @@ def _run_client(script: str, args: list[str]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+_YF_LABEL_MAP_JP = {
+    "revenue": ["Total Revenue", "Operating Revenue"],
+    "operating_income": ["Operating Income", "Total Operating Income As Reported"],
+    "net_income": ["Net Income", "Net Income Common Stockholders"],
+    "operating_cash_flow": ["Operating Cash Flow"],
+    "capex": ["Capital Expenditure"],
+    "free_cash_flow": ["Free Cash Flow"],
+    "long_term_debt": ["Long Term Debt"],
+    "short_term_debt": ["Current Debt"],
+    "total_debt": ["Total Debt"],
+    "cash": ["Cash And Cash Equivalents"],
+}
+
+
+def _build_canonical_from_yf_financials_jp(financials: dict) -> dict:
+    """T3 (yfinance Tier 2 fallback for JP) — extract canonical statements
+    from yfinance --action financials annual output. Per ADR-0003.
+
+    Note: yfinance reports JP issuers' consolidated (連結) statements in
+    JPY (or sometimes USD for ADRs — caller responsible). Most-recent-first,
+    annual depth 5.
+    """
+    if not isinstance(financials, dict):
+        financials = {}
+    income = financials.get("income_statement") or {}
+    balance = financials.get("balance_sheet") or {}
+    cashflow = financials.get("cash_flow") or {}
+    periods = sorted(set(income) | set(balance) | set(cashflow), reverse=True)[:5]
+
+    def _extract(src: dict, canonical: str) -> tuple[list[float], str | None]:
+        labels = _YF_LABEL_MAP_JP.get(canonical, [])
+        used_label: str | None = None
+        out: list[float] = []
+        for p in periods:
+            row = src.get(p, {})
+            v = None
+            for label in labels:
+                if label in row and row[label] is not None:
+                    v = row[label]
+                    if used_label is None:
+                        used_label = label
+                    break
+            if v is not None:
+                try:
+                    out.append(float(v))
+                except (TypeError, ValueError):
+                    pass
+        return out, used_label
+
+    revenue, rev_label = _extract(income, "revenue")
+    operating_income, op_label = _extract(income, "operating_income")
+    net_income, ni_label = _extract(income, "net_income")
+    ocf, ocf_label = _extract(cashflow, "operating_cash_flow")
+    capex_raw, capex_label = _extract(cashflow, "capex")
+    fcf, fcf_label = _extract(cashflow, "free_cash_flow")
+    long_term_debt, ltd_label = _extract(balance, "long_term_debt")
+    short_term_debt, std_label = _extract(balance, "short_term_debt")
+    total_debt_raw, td_label = _extract(balance, "total_debt")
+    cash, cash_label = _extract(balance, "cash")
+
+    capex = [abs(v) for v in capex_raw]
+    total_debt = total_debt_raw if total_debt_raw else [
+        (long_term_debt[i] if i < len(long_term_debt) else 0.0)
+        + (short_term_debt[i] if i < len(short_term_debt) else 0.0)
+        for i in range(max(len(long_term_debt), len(short_term_debt)))
+    ]
+
+    def _meta(canonical: str, label: str | None, periods_used: list[str]) -> dict:
+        return {
+            "source_label": label,
+            "source_labels_tried": _YF_LABEL_MAP_JP.get(canonical, []),
+            "fiscal_year_ends": periods_used[: len(periods_used)],
+            "accounting_standard": "ifrs",  # yfinance default; some JP issuers use jp_gaap (caller checks jp_specific)
+            "unit": "JPY",
+            "tier": "Tier 2 (yfinance scraper — EDINET preferred)",
+        }
+
+    return {
+        "income_statement": {
+            "revenue": revenue,
+            "operating_income": operating_income,
+            "ebit": operating_income,
+            "net_income": net_income,
+            "_meta": {
+                "revenue": _meta("revenue", rev_label, periods[: len(revenue)]),
+                "operating_income": _meta("operating_income", op_label, periods[: len(operating_income)]),
+                "ebit": {**_meta("operating_income", op_label, periods[: len(operating_income)]), "note": "alias of operating_income"},
+                "net_income": _meta("net_income", ni_label, periods[: len(net_income)]),
+            },
+        },
+        "cash_flow": {
+            "operating_cash_flow": ocf,
+            "capex": capex,
+            "fcf": fcf,
+            "_meta": {
+                "operating_cash_flow": _meta("operating_cash_flow", ocf_label, periods[: len(ocf)]),
+                "capex": {**_meta("capex", capex_label, periods[: len(capex)]), "note": "absolute value"},
+                "fcf": _meta("free_cash_flow", fcf_label, periods[: len(fcf)]),
+            },
+        },
+        "balance_sheet": {
+            "long_term_debt": long_term_debt,
+            "short_term_debt": short_term_debt,
+            "total_debt": total_debt,
+            "cash": cash,
+            "_meta": {
+                "long_term_debt": _meta("long_term_debt", ltd_label, periods[: len(long_term_debt)]),
+                "short_term_debt": _meta("short_term_debt", std_label, periods[: len(short_term_debt)]),
+                "total_debt": (
+                    _meta("total_debt", td_label, periods[: len(total_debt)])
+                    if total_debt_raw
+                    else {
+                        "source_label": None,
+                        "derivation": "long_term_debt + short_term_debt",
+                        "components": {"long_term_debt": ltd_label, "short_term_debt": std_label},
+                    }
+                ),
+                "cash": _meta("cash_and_equivalents", cash_label, periods[: len(cash)]),
+            },
+        },
+    }
+
+
 def pack_snapshot(ticker_code: str, period: str = "2y") -> dict[str, Any]:
     """yfinance info + price history + recent TDnet timely-disclosure index."""
     yf = _to_yf_ticker(ticker_code)
@@ -183,6 +306,7 @@ def pack_snapshot(ticker_code: str, period: str = "2y") -> dict[str, Any]:
         "tdnet_client.py", ["--ticker", bare, "--limit", "20"]
     )
 
+    rows = history.get("data", []) if isinstance(history, dict) else []
     return {
         "pack": "snapshot",
         "ticker": bare,
@@ -190,6 +314,7 @@ def pack_snapshot(ticker_code: str, period: str = "2y") -> dict[str, Any]:
         "fetched_at": _now_iso(),
         "info": info,
         "price_history": history,
+        "history": rows,  # T1 canonical OHLCV alias (cross-country symmetric)
         "timely_disclosures": tdnet,
         "_provenance": {
             "tier": "tier_1",
@@ -294,6 +419,37 @@ def pack_memo_fetch(
                 f"filings. Register free at {EDINET_REGISTER_URL}"
             ),
         }
+        # T3 canonical staging — Tier 2 yfinance fallback path
+        canonical = _build_canonical_from_yf_financials_jp(annual)
+        base["income_statement"] = canonical["income_statement"]
+        base["cash_flow"] = canonical["cash_flow"]
+        base["balance_sheet"] = canonical["balance_sheet"]
+
+    # Common across both tiers — T1+T3 canonical surface
+    info_dict = base.get("info") if isinstance(base.get("info"), dict) else {}
+    base["shares_outstanding"] = info_dict.get("sharesOutstanding") if info_dict else None
+    base["current_price"] = info_dict.get("regularMarketPrice") if info_dict else None
+    if has_key:
+        # Tier A path — EDINET filing_summary contains key_metrics; multi-year
+        # extraction into canonical arrays is deferred to a future PR. Emit
+        # placeholder canonical blocks so downstream readers find expected keys.
+        base.setdefault("income_statement", {
+            "revenue": [], "operating_income": [], "ebit": [], "net_income": [],
+            "_meta": {"note": "Tier A EDINET multi-year canonical extraction deferred. See fundamentals.filing_summary for raw."},
+        })
+        base.setdefault("cash_flow", {
+            "operating_cash_flow": [], "capex": [], "fcf": [],
+            "_meta": {"note": "Tier A EDINET multi-year canonical extraction deferred."},
+        })
+        base.setdefault("balance_sheet", {
+            "long_term_debt": [], "short_term_debt": [], "total_debt": [], "cash": [],
+            "_meta": {"note": "Tier A EDINET multi-year canonical extraction deferred."},
+        })
+    base["jp_specific"] = {
+        "ordinary_income_note": "経常利益 (recurring profit / pre-tax) is JP-specific; not in canonical income_statement. EDINET key_metrics expose it directly when EDINET_API_KEY is set; yfinance Tier 2 does not surface it.",
+        "consolidated_basis_note": "yfinance reports JP issuers' consolidated (連結) statements. 単体 (parent-only) is exposed by EDINET 有報 type=5 CSV when key set.",
+        "accounting_standard_note": "JP issuers may use JP-GAAP, IFRS, or 米基準 — varies per issuer and may switch mid-history. yfinance Tier 2 does not disclose which; EDINET filing_summary identifies the standard via accountingStandardsDEI.",
+    }
     return base
 
 
@@ -347,6 +503,7 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
         batch.get("error") if isinstance(batch, dict) and "error" in batch else None
     )
 
+    info_by_ticker: dict[str, dict] = {}
     for yf, bare in zip(yf_tickers, bare_tickers):
         if isinstance(per_ticker_info, dict) and yf.upper() in per_ticker_info:
             info = per_ticker_info[yf.upper()]
@@ -354,13 +511,18 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
             info = {"error": batch_error}
         else:
             info = {"error": "ticker missing from batch response"}
+        multiples = _filter_multiples(info)
         out["tickers"].append(
             {
                 "ticker": bare,
                 "yf_ticker": yf,
-                "multiples": _filter_multiples(info),
+                "multiples": multiples,
             }
         )
+        if isinstance(multiples, dict) and "error" not in multiples:
+            info_by_ticker[bare] = multiples
+    # T1 canonical multiples alias — analysis-comps reads pack.info[ticker]
+    out["info"] = info_by_ticker
     return out
 
 

@@ -419,6 +419,83 @@ def test_chain_cn_comps_to_comps_compute(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# data-jp cross-layer chains (Tier 2 yfinance fallback / Tier A EDINET key)
+# ---------------------------------------------------------------------------
+
+def test_chain_jp_snapshot_to_technical():
+    fixture = FIXTURES / "data-jp-snapshot-sample.json"
+    script = SKILLS / "analysis-technical" / "scripts" / "ta_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    assert "error" not in out, f"ta_compute error: {out.get('error')!r}"
+    indicators = out.get("indicators") or {}
+    assert any(v is not None for v in indicators.values()), (
+        f"all indicators None — chain wiring failed: {indicators}"
+    )
+
+
+def test_chain_jp_memofetch_to_dcf():
+    fixture = FIXTURES / "data-jp-memo-fetch-sample.json"
+    script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    rc, out, stderr = _run_layer2(script, ["--input", str(fixture)])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    intrinsic = out.get("intrinsic_value") or {}
+    intrinsic_mid = intrinsic.get("mid") if isinstance(intrinsic, dict) else None
+    base_revenue = (out.get("assumptions") or {}).get("base_revenue")
+    # NOTE: chain-wiring assertion only — base_revenue must be populated.
+    # intrinsic_value.mid sign/magnitude can vary with the underlying issuer
+    # (e.g. Toyota's consolidated FCF is negative due to its financing arm,
+    # which is a real-data artifact, not a chain breakage). The test goal
+    # is "Layer 1 -> Layer 2 wiring works", not "DCF result is rational".
+    assert intrinsic_mid is not None, (
+        f"data-jp DCF intrinsic_mid is None — chain wiring broken; "
+        f"base_revenue={base_revenue!r}"
+    )
+    # Toyota FY25 revenue ~48T JPY
+    assert base_revenue is not None and base_revenue > 1e12, (
+        f"data-jp base_revenue too small: {base_revenue!r}"
+    )
+
+
+def test_chain_jp_comps_to_comps_compute(tmp_path):
+    fixture = FIXTURES / "data-jp-comps-multiples-sample.json"
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    pack = json.loads(fixture.read_text())
+    info = pack.get("info") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"fixture needs >=2 tickers, has {len(tickers)}")
+    anchor_ticker, peer_ticker = tickers[0], tickers[1]
+    anchor_file = tmp_path / f"{anchor_ticker}-anchor.json"
+    peer_file = tmp_path / f"{peer_ticker}-peer.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "info": {anchor_ticker: info[anchor_ticker]},
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_ticker,
+        "info": {peer_ticker: info[peer_ticker]},
+    }))
+    rc, out, stderr = _run_layer2(script, [
+        "--anchor", str(anchor_file),
+        "--peers", str(peer_file),
+    ])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    assert any(v is not None for v in multiples.values()), (
+        f"data-jp comps all-None for {anchor_ticker}: {multiples}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).
 # ---------------------------------------------------------------------------
