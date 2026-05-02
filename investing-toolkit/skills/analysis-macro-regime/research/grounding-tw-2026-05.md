@@ -70,13 +70,41 @@ These remain the qualitative anchors used in `classify_tw.py`'s `cpi_context.cbc
 
 ## Phase 1 PR-4 Implementation Notes
 
-### Fixture inspection — 8 of 9 components present
+### Fixture inspection — 8 of 9 components present (structural NDC bundle gap)
 
-The TW regime-pack fixture (`tests/data/fixtures/data-tw-regime-pack-sample.json`) contains 8 of the 9 NDC 2024-revision constituent indicators. The missing component is `製造業營業氣候測驗點 (TIER)` — the 2024-revision specifically renamed/replaced this from `製造業存貨率比率`. The fixture predates the TIER preset wiring at the data-tw layer in `ndc_client.py`.
+The TW regime-pack fixture (`tests/data/fixtures/data-tw-regime-pack-sample.json`) contains 8 of the 9 NDC 2024-revision constituent indicators. The missing component is `製造業營業氣候測驗點 (TIER)` — the 2024-revision specifically lists this as the 9th component, but **NDC's bulk-download ZIP CSV has not been updated to the 2024 schema**.
 
-**Implication**: `classify_tw.py` resolves available components by Chinese name (NDC's primary key) and degrades gracefully when TIER is missing — `tier_manufacturing_climate` is set to `None` and `data_quality.missing` lists `tier`. Confidence is `high` if 8+ components present (since 8/9 covers the bulk of dispersion signal); `medium` if < 8.
+Empirically verified 2026-05-02 (per ROADMAP §v2.1.x-b research):
 
-**Follow-up** (deferred to v2.1.x or later): once `data-tw/scripts/ndc_client.py` exposes a TIER preset (the CSV is published by NDC alongside other 9-component data), refresh the fixture and tighten `data_quality.missing` to expect 9.
+```
+$ unzip -l 景氣指標及燈號.zip | grep 構成
+  景氣對策信號構成項目.csv      # canonical 9-component file
+  schema-景氣對策信號構成項目.csv
+
+$ head -1 景氣對策信號構成項目.csv
+"Date","貨幣總計數M1B","股價指數","工業生產指數","工業及服務業加班工時",
+"海關出口值","機械及電機設備進口值","製造業銷售量指數","批發、零售及餐飲業營業額"
+# → 8 columns + Date. TIER absent.
+```
+
+The `schema-景氣對策信號構成項目.csv` companion file lists the same 8 columns. So even the published schema lags the 2024 revision narrative.
+
+**Why TIER is not a simple ndc_client preset addition**: TIER is published by 台灣經濟研究院 (Taiwan Institute of Economic Research) — a different institution from NDC — as a monthly press-release **PDF** (`tier.org.tw/forecast/forecast.aspx → 202605.pdf` etc). It is not in:
+- `data.gov.tw` (search returns no matching dataset for «製造業營業氣候測驗點» or «台灣經濟研究院»)
+- NDC's `ws.ndc.gov.tw/Download.ashx` ZIP (verified)
+- A free TIER API (Aremos 經統資料庫 is paid subscription)
+
+Routes that *could* surface TIER, ordered by maintainability:
+1. **TIER monthly-PDF scrape** — fragile (PDF layout shifts), one number per month
+2. **NDC `index.ndc.gov.tw/n/zh_tw/lightscore` web-app XHR** — Cloudflare-protected, no public API contract
+3. **Manual / curated fixture overlay** — opt-in calibration vintage, not live
+
+**Implication for classify_tw**: `tier_manufacturing_climate.value` is structurally `None` until a TIER fetcher lands. `data_quality.missing` lists `tier (製造業營業氣候測驗點 — 9th component)`. Confidence is **already high** with 8/9 components — the threshold is `≥ 6 components found + leading + coincident + cpi-yoy present`, which v2.1.x-c (CPI YoY 修正) made hit. Adding TIER would close the dispersion gap from 8/9 → 9/9 but would not change the confidence verdict.
+
+**Re-scoped** (per ROADMAP §v2.2.0-g, post-2026-05-02):
+- Original v2.1.x-b assumption (TIER lives in NDC's bundle) is empirically false.
+- TIER fetcher requires either PDF parser (fragile) or a paid Aremos contract.
+- Demoted to v2.2.0 candidate with explicit upstream-source research as blocker.
 
 ### Reading native verdict from structured pack
 
