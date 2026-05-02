@@ -197,6 +197,8 @@ from the plugin's assets to the project's `.dbt-wiki/_internal/`:
 mkdir -p .dbt-wiki/_internal
 cp <SKILL_DIR>/assets/scripts/extract_column_lineage.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/scripts/extract_column_lineage_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/scripts/extract_sql_comments.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/scripts/extract_sql_comments_test.py .dbt-wiki/_internal/
 ```
 
 (Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
@@ -265,7 +267,42 @@ python3 .dbt-wiki/_internal/extract_column_lineage_test.py
 Expects "7/7 passed". If failures appear, sqlglot version mismatch is
 likely — request `pip install --upgrade 'sqlglot>=25.0'`.
 
-### Step 4d: Reconcile sqlglot output with manifest columns
+### Step 4d: Extract SQL + jinja comments from raw model files
+
+Comments often carry WHY context that schema.yml descriptions and
+manifest.json miss. dbt-wiki ships `extract_sql_comments.py` (regex,
+no sqlglot dep — works on jinja-laden raw_code). It's already copied
+to `.dbt-wiki/_internal/` in Step 4 alongside the lineage script:
+
+```bash
+cp <SKILL_DIR>/assets/scripts/extract_sql_comments.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/scripts/extract_sql_comments_test.py .dbt-wiki/_internal/
+```
+
+Batch-extract all model file comments (uses `dbt/models/` raw paths,
+NOT `target/compiled/` — we want jinja `{# ... #}` comments which
+`dbt compile` strips):
+
+```bash
+python3 .dbt-wiki/_internal/extract_sql_comments.py \
+    --batch "$DBT_DIR/models/" > /tmp/dbt-wiki-comments.jsonl
+```
+
+JSONL output, one line per `.sql`:
+
+```json
+{"path": "marts/fct_orders.sql",
+ "comments": [
+   {"line": 1, "kind": "line", "text": "joins Shopify webhook with customer table"},
+   {"line": 14, "kind": "jinja", "text": "WARNING: incremental hash must include event_at"},
+   {"line": 28, "kind": "block", "text": "see ADR-2024-03 for materialization decision"}
+ ]}
+```
+
+Comments attach to the model page in Step 5 as `## Inline Comments`
+body section (rendered as code block with `[line N] <text>` per entry).
+
+### Step 4e: Reconcile sqlglot output with manifest columns
 
 For each model, merge schema.yml-declared columns with sqlglot-extracted
 sources. Iterate the JSONL output from Step 4b, keyed by `path`:

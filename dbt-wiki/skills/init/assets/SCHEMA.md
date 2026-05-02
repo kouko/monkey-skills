@@ -135,6 +135,16 @@ Body sections (all optional, init populates what's available):
 <first 30 lines of raw_code from manifest.json (with jinja); link to full file>
 ```
 
+## Inline Comments (from raw_code)
+```
+[line 1]  -- joins Shopify webhook with normalized customer table
+[line 8]  /* see ADR-2024-03 for materialization decision */
+[line 14] {# WARNING: incremental hash must include event_at — incident 2025-08 #}
+[line 35] -- status mapping per ticket FOO-1234
+```
+(Auto-extracted from `dbt/models/<path>.sql`. Empty section means no
+comments in source. Refresh re-extracts.)
+
 ## Column Sources (from sqlglot)
 - order_id ← stg_orders.order_id
 - customer_id ← stg_orders.customer_id, stg_customers.id (COALESCE)
@@ -144,11 +154,26 @@ Body sections (all optional, init populates what's available):
 - Model-level: <count>; see frontmatter `generic_tests`
 - Singular tests: <list of tests in tests/*.sql that reference this model>
 
+## User Notes
+(Populated by `/dbt-wiki:ingest`. Format: `### YYYY-MM-DD <slug>` per
+entry, free-form prose body. Refresh PRESERVES this section verbatim
+— it is user content, not derived. Examples:)
+
+### 2026-05-02 redshift-permission-gotcha
+prod_marts_readonly_group must be granted before each incremental run;
+hook in dbt_project.yml handles this. See incident #4521.
+
 ## Cross-references
 - WHY (decisions): [<linked source pages from .repo-wiki/, if any>]
 - Upstream models: [stg_orders](stg_orders.md), [stg_customers](stg_customers.md)
 - Downstream models: [dim_orders_summary](dim_orders_summary.md), ...
 ```
+
+**Standard sections** (init/refresh regenerate): Description, Materialization
+Notes, SQL Preview, Inline Comments, Column Sources, Tests, Cross-references.
+
+**User-owned sections** (init/refresh PRESERVE verbatim): User Notes,
+plus any `##`-level heading the user added that isn't in the standard list.
 
 ### source
 File: `.dbt-wiki/sources/<source_name>__<table_name>.md`

@@ -22,9 +22,10 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 
 | Skill | When | Primary input |
 |---|---|---|
-| [`/dbt-wiki:init`](skills/init/) | Once per project (idempotent re-run safe) | `target/manifest.json` + `target/compiled/**/*.sql` (after `dbt parse && dbt compile`) |
-| [`/dbt-wiki:refresh`](skills/refresh/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed | Diff against last `manifest_sha`; updates only changed pages |
-| [`/dbt-wiki:query`](skills/query/) | Whenever asking about dbt model structure / lineage / columns | `.dbt-wiki/index.md` + relevant model pages; with optional drift verification |
+| [`/dbt-wiki:init`](skills/init/) | Once per project (idempotent re-run safe) | `target/manifest.json` + `target/compiled/**/*.sql` (sqlglot column lineage) + `dbt/models/**/*.sql` (raw — for inline SQL/jinja comments) |
+| [`/dbt-wiki:refresh`](skills/refresh/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed | Diff against last `manifest_sha`; updates only changed pages; preserves user-owned `## User Notes` sections |
+| [`/dbt-wiki:ingest`](skills/ingest/) | Whenever you want to capture context that's NOT in manifest.json or schema.yml (gotchas, design rationale, ticket links) | Free-form text arg; auto-attaches to mentioned model / source / macro |
+| [`/dbt-wiki:query`](skills/query/) | Whenever asking about dbt model structure / lineage / columns / tribal knowledge | `.dbt-wiki/index.md` + relevant model pages; with optional drift verification |
 
 ## Quick start
 
@@ -47,11 +48,17 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
    ```
    /dbt-wiki:refresh
    ```
-6. Ask anything:
+6. (Optional) Capture tribal knowledge that's not in manifest.json or schema.yml:
+   ```
+   /dbt-wiki:ingest "fct_orders sort_key is (order_date, customer_id) because Tableau extract joins on these — see incident #4521"
+   /dbt-wiki:ingest "marts_msd needs prod_marts_readonly_group permission grant before incremental run"
+   ```
+7. Ask anything:
    ```
    /dbt-wiki:query "fct_orders 依賴什麼？"
    /dbt-wiki:query "rename stg_customers.email 會影響哪些 model？"
    /dbt-wiki:query "marts_msd 下哪些是 incremental？"
+   /dbt-wiki:query "fct_orders sort key 為什麼這樣設？"      # answers from ingested context
    ```
 
 ## What `init` produces
@@ -64,11 +71,13 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
   lineage.md             # full DAG (ASCII tree + adjacency list)
   models/<name>.md       # one per model: frontmatter (materialization, columns
                          #   with sqlglot-extracted sources, depends_on, feeds_into,
-                         #   tests) + body (description, SQL preview, column chains)
+                         #   tests) + body (description, SQL preview, inline SQL/jinja
+                         #   comments with line numbers, column chains, user notes)
   sources/<src>__<table>.md  # one per declared source
   macros/<name>.md       # one per macro used by ≥1 model
   seeds/, snapshots/, tests/, exposures/   # one per resource
-  _internal/extract_column_lineage.py      # sqlglot helper script (init writes once)
+  _internal/extract_column_lineage.py      # sqlglot helper (init copies from plugin)
+  _internal/extract_sql_comments.py        # regex helper for inline SQL/jinja comments
   _archive/<date>/       # orphaned models from refresh (never hard-deleted)
 ```
 
