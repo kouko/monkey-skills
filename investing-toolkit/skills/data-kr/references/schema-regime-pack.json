@@ -4,10 +4,22 @@
   "title": "data-kr regime-pack (BOK ECOS-KEYSTAT, 54 indicators / 13 groups)",
   "description": "Output of `pack.py --pack regime-pack`. Macro pull from BOK ECOS-KEYSTAT via FinanceDataReader (Tier A primary). 54 indicators across 13 groups: rates, inflation, growth, industry, labor, trade, money, sentiment, cycle (선행/동행 CI pair = monthly GDP proxy), markets (KOSPI/KOSDAQ), fx, realestate, demographics. KRW/USD (`fx.krw-usd`) is sourced via FRED DEXKOUS — ECOS-KEYSTAT does not expose a clean KRW/USD series. PMI (S&P Global) is **not fetched** — licensed commercial data; closest free proxies are the `sentiment` group (consumer-sentiment K252 + economic-sentiment K269).",
   "type": "object",
-  "required": ["pack", "country", "groups_requested", "data", "_provenance"],
+  "required": [
+    "pack",
+    "country",
+    "groups_requested",
+    "data",
+    "_provenance"
+  ],
   "properties": {
-    "pack": {"type": "string", "const": "regime-pack"},
-    "country": {"type": "string", "const": "kr"},
+    "pack": {
+      "type": "string",
+      "const": "regime-pack"
+    },
+    "country": {
+      "type": "string",
+      "const": "kr"
+    },
     "groups_requested": {
       "type": "array",
       "items": {
@@ -54,9 +66,16 @@
       "additionalProperties": {
         "type": "object",
         "description": "Group-level payload from fdr_client preset call.",
-        "required": ["fetched_at", "_source", "indicators"],
+        "required": [
+          "fetched_at",
+          "_source",
+          "indicators"
+        ],
         "properties": {
-          "fetched_at": {"type": "string", "format": "date-time"},
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "_source": {
             "type": "string",
             "const": "fdr_ecos",
@@ -67,56 +86,122 @@
             "description": "Per-preset indicator payload, keyed by preset slug (e.g. 'policy-rate', 'cpi', 'krw-usd').",
             "additionalProperties": {
               "type": "object",
-              "required": ["preset", "code", "observations"],
+              "required": [
+                "preset",
+                "code",
+                "observations"
+              ],
               "properties": {
-                "preset": {"type": "string", "description": "Slug used by --preset (e.g. 'policy-rate')."},
-                "name": {"type": "string", "description": "Human-readable indicator name (often bilingual, e.g. 'BOK Base Rate (한국은행 기준금리)')."},
-                "code": {"type": "string", "description": "ECOS-KEYSTAT code (e.g. 'K051') OR FRED series id ('DEXKOUS' for krw-usd fallback)."},
-                "fetched_at": {"type": "string", "format": "date-time"},
-                "_cache": {"type": "string", "enum": ["hit", "miss"]},
+                "preset": {
+                  "type": "string",
+                  "description": "Slug used by --preset (e.g. 'policy-rate')."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable indicator name (often bilingual, e.g. 'BOK Base Rate (한국은행 기준금리)')."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "ECOS-KEYSTAT code (e.g. 'K051') OR FRED series id ('DEXKOUS' for krw-usd fallback)."
+                },
+                "fetched_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "_cache": {
+                  "type": "string",
+                  "enum": [
+                    "hit",
+                    "miss"
+                  ]
+                },
                 "_source": {
                   "type": "string",
-                  "enum": ["fdr_ecos", "fred"],
+                  "enum": [
+                    "fdr_ecos",
+                    "fred"
+                  ],
                   "description": "Authoritative upstream-API label for THIS indicator. 'fdr_ecos' = BOK ECOS-KEYSTAT (Tier A primary). 'fred' = FRED CSV fallback (currently only krw-usd via DEXKOUS — ECOS does not expose a clean KRW/USD series). Use this field, NOT the wrapper-level `_source`, to route source-specific logic (e.g. citation strings, primary-source caveats)."
                 },
                 "observations": {
                   "type": "array",
                   "items": {
                     "type": "object",
-                    "required": ["date", "value"],
+                    "required": [
+                      "date",
+                      "value"
+                    ],
                     "properties": {
                       "date": {
                         "type": "string",
                         "description": "Compact YYYYMMDD or YYYYMM string per FDR convention (e.g. '20260429')."
                       },
-                      "value": {"type": ["number", "null"]}
+                      "value": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
                     },
                     "additionalProperties": true
                   }
                 },
                 "latest": {
-                  "type": ["object", "null"],
+                  "type": [
+                    "object",
+                    "null"
+                  ],
                   "properties": {
-                    "date": {"type": "string"},
-                    "value": {"type": ["number", "null"]}
+                    "date": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
                   },
                   "additionalProperties": true
                 },
                 "prior": {
-                  "type": ["object", "null"],
+                  "type": [
+                    "object",
+                    "null"
+                  ],
                   "properties": {
-                    "date": {"type": "string"},
-                    "value": {"type": ["number", "null"]}
+                    "date": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
                   },
                   "additionalProperties": true
                 },
                 "direction": {
-                  "type": ["string", "null"],
-                  "enum": ["Rising", "Falling", "Flat", null],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "Rising",
+                    "Falling",
+                    "Flat",
+                    null
+                  ],
                   "description": "Latest-vs-prior trend marker computed by fdr_client."
                 },
-                "count": {"type": "integer", "minimum": 0},
-                "_provenance": {"type": "object"}
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "_provenance": {
+                  "type": "object"
+                }
               },
               "additionalProperties": true
             }
@@ -127,9 +212,16 @@
     },
     "_provenance": {
       "type": "object",
-      "required": ["primary_source_status", "primary_source_note", "indicator_count_total"],
+      "required": [
+        "primary_source_status",
+        "primary_source_note",
+        "indicator_count_total"
+      ],
       "properties": {
-        "primary_source_status": {"type": "string", "const": "available"},
+        "primary_source_status": {
+          "type": "string",
+          "const": "available"
+        },
         "primary_source_note": {
           "type": "string",
           "description": "Mentions BOK ECOS-KEYSTAT via FinanceDataReader and the FRED DEXKOUS fallback for KRW/USD."
@@ -140,7 +232,20 @@
         }
       },
       "additionalProperties": true
+    },
+    "series": {
+      "type": "object",
+      "description": "T2 canonical flat alias per ADR-0002. Indicator-keyed dict of [floats] (chronological values). analysis-macro-regime / regime_compose.resolve_series reads this.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

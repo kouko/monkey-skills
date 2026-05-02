@@ -4,48 +4,102 @@
   "title": "data-tw regime-pack",
   "description": "Output of `pack.py --pack regime-pack`. Macro-only fetch — NO ticker dimension. 4 sources (CBC + DGBAS + NDC + statgov; UNLIKE data-us, NO FRED). Drives `analysis-macro-regime` for the TW Investment Clock mapping.\n\nIMPORTANT — NDC cycle signal score IS NOT 1–9. It is the **9-component composite score** (`景氣對策信號綜合分數`) summed from 9 sub-indicators, each scored 1–5 → composite range 9–45. The five-color light (signal-color: 紅 / 黃紅 / 綠 / 黃藍 / 藍) is derived bands on this composite, NOT the score itself. Do NOT compare this against a 1–9 scale used by some popular charts. Source: NDC `景氣指標與燈號.csv` direct parse.",
   "type": "object",
-  "required": ["_pack", "cbc", "dgbas", "ndc", "statgov", "_partial"],
+  "required": [
+    "_pack",
+    "cbc",
+    "dgbas",
+    "ndc",
+    "statgov",
+    "_partial"
+  ],
   "properties": {
-    "_pack": {"const": "regime-pack"},
+    "_pack": {
+      "const": "regime-pack"
+    },
     "_partial": {
       "type": "boolean",
       "description": "True iff any leaf carries _error. All 4 sources are Tier A here so any failure flips this flag."
     },
     "cbc": {
       "type": "object",
-      "required": ["macro"],
+      "required": [
+        "macro"
+      ],
       "properties": {
-        "macro": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='preset-bundle'. Bundle: rediscount-rate,twdusd,m2,reserve-money."}
+        "macro": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='preset-bundle'. Bundle: rediscount-rate,twdusd,m2,reserve-money."
+        }
       },
       "additionalProperties": false
     },
     "dgbas": {
       "type": "object",
-      "required": ["inflation"],
+      "required": [
+        "inflation"
+      ],
       "properties": {
-        "inflation": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='preset-bundle'. Bundle: cpi,core-cpi,ppi,import-pi,export-pi."}
+        "inflation": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='preset-bundle'. Bundle: cpi,core-cpi,ppi,import-pi,export-pi."
+        }
       },
       "additionalProperties": false
     },
     "ndc": {
       "type": "object",
-      "required": ["signal", "pmi"],
+      "required": [
+        "signal",
+        "pmi"
+      ],
       "properties": {
-        "signal": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='signal'. data contains both score (景氣對策信號綜合分數, 9–45 composite) and color (五色燈號 string), each as a {observations, latest, prior, direction, count, ...} time-series block."},
-        "pmi": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='pmi'. Bundle: pmi-mfg + pmi-nmi (CIER via data.gov.tw 6100; separate from the NDC business-cycle ZIP)."}
+        "signal": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='signal'. data contains both score (景氣對策信號綜合分數, 9–45 composite) and color (五色燈號 string), each as a {observations, latest, prior, direction, count, ...} time-series block."
+        },
+        "pmi": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='pmi'. Bundle: pmi-mfg + pmi-nmi (CIER via data.gov.tw 6100; separate from the NDC business-cycle ZIP)."
+        }
       },
       "additionalProperties": false
     },
     "statgov": {
       "type": "object",
-      "required": ["growth", "trade", "labor_cycle_other"],
+      "required": [
+        "growth",
+        "trade",
+        "labor_cycle_other"
+      ],
       "properties": {
-        "growth": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='preset-growth'. Bundle: gdp-yoy,ipi,manufacturing-yoy,retail-yoy."},
-        "trade": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='preset-trade'. Bundle: export-orders,exports,imports,exports-yoy,imports-yoy."},
-        "labor_cycle_other": {"$ref": "schema-error-envelope.json", "description": "Tier A. _action='preset-bundle'. Bundle: unemployment,unemployment-sa,leading-index,coincident-index,fx-reserves,taiex,m2-yoy."}
+        "growth": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='preset-growth'. Bundle: gdp-yoy,ipi,manufacturing-yoy,retail-yoy."
+        },
+        "trade": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='preset-trade'. Bundle: export-orders,exports,imports,exports-yoy,imports-yoy."
+        },
+        "labor_cycle_other": {
+          "$ref": "schema-error-envelope.json",
+          "description": "Tier A. _action='preset-bundle'. Bundle: unemployment,unemployment-sa,leading-index,coincident-index,fx-reserves,taiex,m2-yoy."
+        }
       },
       "additionalProperties": false
+    },
+    "series": {
+      "type": "object",
+      "description": "T2 canonical flat alias per ADR-0002. Indicator-keyed dict of [floats] (chronological values). analysis-macro-regime / regime_compose.resolve_series reads this.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

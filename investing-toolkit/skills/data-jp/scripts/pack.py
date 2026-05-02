@@ -571,6 +571,58 @@ def pack_screener_batch(
 # --------------------------------------------------------------------------- #
 
 
+def _flatten_regime_to_series(root: dict) -> dict:
+    """T2 canonical (per ADR-0002) — walk regime-pack root and emit flat
+    `series: {indicator_id: [floats]}` block for analysis-macro-regime.
+    Identical helper to data-kr / data-cn / data-tw.
+    """
+    flat: dict[str, list[float]] = {}
+
+    def visit(node, path):
+        if not isinstance(node, dict):
+            return
+        obs = node.get("observations")
+        if isinstance(obs, list):
+            values = []
+            for o in obs:
+                if isinstance(o, dict) and o.get("value") is not None:
+                    try:
+                        values.append(float(o["value"]))
+                    except (TypeError, ValueError):
+                        pass
+            if not values:
+                return
+            preset = node.get("preset")
+            series_field = node.get("series")
+            if isinstance(preset, str):
+                primary = preset
+            elif isinstance(series_field, str):
+                primary = series_field
+            elif path:
+                primary = path[-1]
+            else:
+                return
+            if primary not in flat:
+                flat[primary] = values
+            if len(path) >= 2 and isinstance(path[0], str):
+                key = f"{path[0]}.{primary}"
+                if key not in flat:
+                    flat[key] = values
+            return
+        for k, v in node.items():
+            if isinstance(k, str) and k.startswith("_"):
+                continue
+            if isinstance(v, dict):
+                visit(v, path + (k,))
+
+    for k, v in root.items():
+        if isinstance(k, str) and k.startswith("_"):
+            continue
+        if isinstance(v, dict):
+            visit(v, (k,))
+    return flat
+
+
 def pack_regime() -> dict[str, Any]:
     """BOJ + estat + ECB macro indicators (no per-ticker dimension)."""
     today = dt.date.today()
@@ -604,17 +656,19 @@ def pack_regime() -> dict[str, Any]:
         ],
     )
 
+    groups_dict = {
+        "rates": {"call_rate_on": boj_call},
+        "inflation": {"estat": estat_macro},
+        "real_rates": {
+            "real_10y_monthly_ecb": ecb_real_yield,
+            "tankan_inflation_outlook": boj_tankan_outlook,
+        },
+    }
     return {
         "pack": "regime-pack",
         "fetched_at": _now_iso(),
-        "groups": {
-            "rates": {"call_rate_on": boj_call},
-            "inflation": {"estat": estat_macro},
-            "real_rates": {
-                "real_10y_monthly_ecb": ecb_real_yield,
-                "tankan_inflation_outlook": boj_tankan_outlook,
-            },
-        },
+        "groups": groups_dict,
+        "series": _flatten_regime_to_series(groups_dict),  # T2 canonical
         "_provenance": {
             "tier": "tier_a",
             "tier_label": "Tier A (BOJ + 統計DB + ECB primary-source)",

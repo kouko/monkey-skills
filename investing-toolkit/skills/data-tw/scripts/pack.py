@@ -526,6 +526,64 @@ def pack_screener_batch(tickers: list[str], period: str = "1y") -> dict[str, Any
 
 # ----------------------------- pack: regime-pack -----------------------------
 
+def _flatten_regime_to_series(root: dict) -> dict:
+    """T2 canonical (per ADR-0002) — walk regime-pack root and emit flat
+    `series: {indicator_id: [floats]}` block for analysis-macro-regime.
+    Identical helper to data-kr / data-jp / data-cn.
+
+    For data-tw the root contains source-named blocks (cbc / dgbas / ndc /
+    statgov) where each leaf is wrapped via pack.wrap() into
+    `{_tier, _source, _action, data: {...}}` envelope. The walker recurses
+    into `data` automatically; `_tier`/`_source`/`_action` are strings so
+    skipped. Underscored keys are skipped.
+    """
+    flat: dict[str, list[float]] = {}
+
+    def visit(node, path):
+        if not isinstance(node, dict):
+            return
+        obs = node.get("observations")
+        if isinstance(obs, list):
+            values = []
+            for o in obs:
+                if isinstance(o, dict) and o.get("value") is not None:
+                    try:
+                        values.append(float(o["value"]))
+                    except (TypeError, ValueError):
+                        pass
+            if not values:
+                return
+            preset = node.get("preset")
+            series_field = node.get("series")
+            if isinstance(preset, str):
+                primary = preset
+            elif isinstance(series_field, str):
+                primary = series_field
+            elif path:
+                primary = path[-1]
+            else:
+                return
+            if primary not in flat:
+                flat[primary] = values
+            if len(path) >= 2 and isinstance(path[0], str):
+                key = f"{path[0]}.{primary}"
+                if key not in flat:
+                    flat[key] = values
+            return
+        for k, v in node.items():
+            if isinstance(k, str) and k.startswith("_"):
+                continue
+            if isinstance(v, dict):
+                visit(v, path + (k,))
+
+    for k, v in root.items():
+        if isinstance(k, str) and k.startswith("_"):
+            continue
+        if isinstance(v, dict):
+            visit(v, (k,))
+    return flat
+
+
 def pack_regime() -> dict[str, Any]:
     """Macro regime indicators: CBC + DGBAS + NDC 五色景氣燈號 + statgov + CIER PMI."""
     out: dict[str, Any] = {"_pack": "regime-pack", "cbc": {}, "dgbas": {},
@@ -561,6 +619,8 @@ def pack_regime() -> dict[str, Any]:
             if "_error" in entry:
                 out["_partial"] = True
                 break
+    # T2 canonical flat series alias per ADR-0002
+    out["series"] = _flatten_regime_to_series(out)
     return out
 
 

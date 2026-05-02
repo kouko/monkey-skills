@@ -3,21 +3,52 @@
   "country": "kr",
   "groups_requested": [
     "rates",
+    "inflation",
+    "growth",
+    "cycle",
     "fx"
   ],
   "data": {
     "rates": {
-      "fetched_at": "2026-05-01T15:10:05Z",
+      "fetched_at": "2026-05-02T02:16:12Z",
       "_source": "fdr_ecos",
       "indicators": {
         "policy-rate": {
           "preset": "policy-rate",
           "name": "BOK Base Rate (한국은행 기준금리)",
           "code": "K051",
-          "fetched_at": "2026-05-01T15:10:10Z",
+          "fetched_at": "2026-05-02T02:16:17Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260414",
+              "value": 2.5
+            },
+            {
+              "date": "20260415",
+              "value": 2.5
+            },
+            {
+              "date": "20260416",
+              "value": 2.5
+            },
+            {
+              "date": "20260417",
+              "value": 2.5
+            },
+            {
+              "date": "20260420",
+              "value": 2.5
+            },
+            {
+              "date": "20260421",
+              "value": 2.5
+            },
+            {
+              "date": "20260422",
+              "value": 2.5
+            },
             {
               "date": "20260423",
               "value": 2.5
@@ -48,24 +79,52 @@
             "value": 2.5
           },
           "direction": "Flat",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:10Z",
+            "fetched_at": "2026-05-02T02:16:17Z",
             "reference_period": "20260429",
-            "staleness_days": 2
+            "staleness_days": 3
           }
         },
         "call-rate": {
           "preset": "call-rate",
           "name": "Call Rate Overnight (콜금리 1일)",
           "code": "K052",
-          "fetched_at": "2026-05-01T15:10:13Z",
+          "fetched_at": "2026-05-02T02:16:21Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260414",
+              "value": 2.526
+            },
+            {
+              "date": "20260415",
+              "value": 2.516
+            },
+            {
+              "date": "20260416",
+              "value": 2.504
+            },
+            {
+              "date": "20260417",
+              "value": 2.515
+            },
+            {
+              "date": "20260420",
+              "value": 2.505
+            },
+            {
+              "date": "20260421",
+              "value": 2.51
+            },
+            {
+              "date": "20260422",
+              "value": 2.511
+            },
             {
               "date": "20260423",
               "value": 2.539
@@ -96,24 +155,52 @@
             "value": 2.518
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:13Z",
+            "fetched_at": "2026-05-02T02:16:21Z",
             "reference_period": "20260429",
-            "staleness_days": 2
+            "staleness_days": 3
           }
         },
         "cd-91d": {
           "preset": "cd-91d",
           "name": "CD 91-Day Rate (CD 91일)",
           "code": "K053",
-          "fetched_at": "2026-05-01T15:10:17Z",
+          "fetched_at": "2026-05-02T02:16:25Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 2.81
+            },
+            {
+              "date": "20260416",
+              "value": 2.82
+            },
+            {
+              "date": "20260417",
+              "value": 2.82
+            },
+            {
+              "date": "20260420",
+              "value": 2.81
+            },
+            {
+              "date": "20260421",
+              "value": 2.82
+            },
+            {
+              "date": "20260422",
+              "value": 2.83
+            },
+            {
+              "date": "20260423",
+              "value": 2.83
+            },
             {
               "date": "20260424",
               "value": 2.82
@@ -144,24 +231,52 @@
             "value": 2.82
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:17Z",
+            "fetched_at": "2026-05-02T02:16:25Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "koribor-3m": {
           "preset": "koribor-3m",
           "name": "KORIBOR 3M (3개월)",
           "code": "K063",
-          "fetched_at": "2026-05-01T15:10:21Z",
+          "fetched_at": "2026-05-02T02:16:28Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 2.78
+            },
+            {
+              "date": "20260416",
+              "value": 2.78
+            },
+            {
+              "date": "20260417",
+              "value": 2.79
+            },
+            {
+              "date": "20260420",
+              "value": 2.78
+            },
+            {
+              "date": "20260421",
+              "value": 2.78
+            },
+            {
+              "date": "20260422",
+              "value": 2.78
+            },
+            {
+              "date": "20260423",
+              "value": 2.78
+            },
             {
               "date": "20260424",
               "value": 2.78
@@ -192,24 +307,52 @@
             "value": 2.77
           },
           "direction": "Flat",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:21Z",
+            "fetched_at": "2026-05-02T02:16:28Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "treasury-3y": {
           "preset": "treasury-3y",
           "name": "Treasury Bond 3Y (국고채 3년)",
           "code": "K056",
-          "fetched_at": "2026-05-01T15:10:25Z",
+          "fetched_at": "2026-05-02T02:16:32Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 3.328
+            },
+            {
+              "date": "20260416",
+              "value": 3.34
+            },
+            {
+              "date": "20260417",
+              "value": 3.371
+            },
+            {
+              "date": "20260420",
+              "value": 3.348
+            },
+            {
+              "date": "20260421",
+              "value": 3.33
+            },
+            {
+              "date": "20260422",
+              "value": 3.365
+            },
+            {
+              "date": "20260423",
+              "value": 3.458
+            },
             {
               "date": "20260424",
               "value": 3.496
@@ -240,24 +383,52 @@
             "value": 3.525
           },
           "direction": "Rising",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:25Z",
+            "fetched_at": "2026-05-02T02:16:32Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "treasury-5y": {
           "preset": "treasury-5y",
           "name": "Treasury Bond 5Y (국고채 5년)",
           "code": "K062",
-          "fetched_at": "2026-05-01T15:10:29Z",
+          "fetched_at": "2026-05-02T02:16:36Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 3.516
+            },
+            {
+              "date": "20260416",
+              "value": 3.536
+            },
+            {
+              "date": "20260417",
+              "value": 3.58
+            },
+            {
+              "date": "20260420",
+              "value": 3.568
+            },
+            {
+              "date": "20260421",
+              "value": 3.541
+            },
+            {
+              "date": "20260422",
+              "value": 3.562
+            },
+            {
+              "date": "20260423",
+              "value": 3.652
+            },
             {
               "date": "20260424",
               "value": 3.683
@@ -288,24 +459,52 @@
             "value": 3.706
           },
           "direction": "Rising",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:29Z",
+            "fetched_at": "2026-05-02T02:16:36Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "corp-bond-3y": {
           "preset": "corp-bond-3y",
           "name": "Corporate Bond 3Y AA- (회사채 3년 AA-)",
           "code": "K057",
-          "fetched_at": "2026-05-01T15:10:32Z",
+          "fetched_at": "2026-05-02T02:16:39Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 3.995
+            },
+            {
+              "date": "20260416",
+              "value": 4.005
+            },
+            {
+              "date": "20260417",
+              "value": 4.037
+            },
+            {
+              "date": "20260420",
+              "value": 4.016
+            },
+            {
+              "date": "20260421",
+              "value": 3.994
+            },
+            {
+              "date": "20260422",
+              "value": 4.028
+            },
+            {
+              "date": "20260423",
+              "value": 4.107
+            },
             {
               "date": "20260424",
               "value": 4.145
@@ -336,30 +535,1140 @@
             "value": 4.185
           },
           "direction": "Rising",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:32Z",
+            "fetched_at": "2026-05-02T02:16:39Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
+          }
+        }
+      }
+    },
+    "inflation": {
+      "fetched_at": "2026-05-02T02:16:39Z",
+      "_source": "fdr_ecos",
+      "indicators": {
+        "cpi": {
+          "preset": "cpi",
+          "name": "CPI Total Index (소비자물가 총지수)",
+          "code": "K401",
+          "fetched_at": "2026-05-02T02:16:41Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 116.38
+            },
+            {
+              "date": "20250501",
+              "value": 116.27
+            },
+            {
+              "date": "20250601",
+              "value": 116.31
+            },
+            {
+              "date": "20250701",
+              "value": 116.52
+            },
+            {
+              "date": "20250801",
+              "value": 116.45
+            },
+            {
+              "date": "20250901",
+              "value": 117.06
+            },
+            {
+              "date": "20251001",
+              "value": 117.42
+            },
+            {
+              "date": "20251101",
+              "value": 117.2
+            },
+            {
+              "date": "20251201",
+              "value": 117.57
+            },
+            {
+              "date": "20260101",
+              "value": 118.03
+            },
+            {
+              "date": "20260201",
+              "value": 118.4
+            },
+            {
+              "date": "20260301",
+              "value": 118.8
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 118.8
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 118.4
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:41Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "core-cpi": {
+          "preset": "core-cpi",
+          "name": "Core CPI excl. food & energy (농산물및석유류제외)",
+          "code": "K405",
+          "fetched_at": "2026-05-02T02:16:42Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 114.86
+            },
+            {
+              "date": "20250501",
+              "value": 115.06
+            },
+            {
+              "date": "20250601",
+              "value": 115.25
+            },
+            {
+              "date": "20250701",
+              "value": 115.29
+            },
+            {
+              "date": "20250801",
+              "value": 114.84
+            },
+            {
+              "date": "20250901",
+              "value": 115.56
+            },
+            {
+              "date": "20251001",
+              "value": 116.0
+            },
+            {
+              "date": "20251101",
+              "value": 115.82
+            },
+            {
+              "date": "20251201",
+              "value": 116.02
+            },
+            {
+              "date": "20260101",
+              "value": 116.56
+            },
+            {
+              "date": "20260201",
+              "value": 116.93
+            },
+            {
+              "date": "20260301",
+              "value": 117.0
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 117.0
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 116.93
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:42Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "ppi": {
+          "preset": "ppi",
+          "name": "PPI Total Index (생산자물가 총지수)",
+          "code": "K402",
+          "fetched_at": "2026-05-02T02:16:43Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 120.14
+            },
+            {
+              "date": "20250501",
+              "value": 119.64
+            },
+            {
+              "date": "20250601",
+              "value": 119.77
+            },
+            {
+              "date": "20250701",
+              "value": 120.19
+            },
+            {
+              "date": "20250801",
+              "value": 120.11
+            },
+            {
+              "date": "20250901",
+              "value": 120.54
+            },
+            {
+              "date": "20251001",
+              "value": 120.94
+            },
+            {
+              "date": "20251101",
+              "value": 121.31
+            },
+            {
+              "date": "20251201",
+              "value": 121.76
+            },
+            {
+              "date": "20260101",
+              "value": 122.56
+            },
+            {
+              "date": "20260201",
+              "value": 123.28
+            },
+            {
+              "date": "20260301",
+              "value": 125.24
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 125.24
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 123.28
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:43Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "import-pi": {
+          "preset": "import-pi",
+          "name": "Import Price Index (수입물가 총지수)",
+          "code": "K403",
+          "fetched_at": "2026-05-02T02:16:45Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 133.05
+            },
+            {
+              "date": "20250501",
+              "value": 128.39
+            },
+            {
+              "date": "20250601",
+              "value": 126.88
+            },
+            {
+              "date": "20250701",
+              "value": 127.86
+            },
+            {
+              "date": "20250801",
+              "value": 128.69
+            },
+            {
+              "date": "20250901",
+              "value": 129.37
+            },
+            {
+              "date": "20251001",
+              "value": 134.7
+            },
+            {
+              "date": "20251101",
+              "value": 139.42
+            },
+            {
+              "date": "20251201",
+              "value": 140.28
+            },
+            {
+              "date": "20260101",
+              "value": 145.86
+            },
+            {
+              "date": "20260201",
+              "value": 149.5
+            },
+            {
+              "date": "20260301",
+              "value": 173.86
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 173.86
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 149.5
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:45Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "export-pi": {
+          "preset": "export-pi",
+          "name": "Export Price Index (수출물가 총지수)",
+          "code": "K404",
+          "fetched_at": "2026-05-02T02:16:46Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 139.82
+            },
+            {
+              "date": "20250501",
+              "value": 134.61
+            },
+            {
+              "date": "20250601",
+              "value": 133.73
+            },
+            {
+              "date": "20250701",
+              "value": 134.84
+            },
+            {
+              "date": "20250801",
+              "value": 135.21
+            },
+            {
+              "date": "20250901",
+              "value": 135.56
+            },
+            {
+              "date": "20251001",
+              "value": 138.19
+            },
+            {
+              "date": "20251101",
+              "value": 141.47
+            },
+            {
+              "date": "20251201",
+              "value": 142.68
+            },
+            {
+              "date": "20260101",
+              "value": 143.74
+            },
+            {
+              "date": "20260201",
+              "value": 145.88
+            },
+            {
+              "date": "20260301",
+              "value": 169.38
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 169.38
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 145.88
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:46Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        }
+      }
+    },
+    "growth": {
+      "fetched_at": "2026-05-02T02:16:46Z",
+      "_source": "fdr_ecos",
+      "indicators": {
+        "gdp-qoq": {
+          "preset": "gdp-qoq",
+          "name": "GDP Real QoQ SA% (국내총생산 실질 전기비)",
+          "code": "K258",
+          "fetched_at": "2026-05-02T02:16:48Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20230101",
+              "value": 0.4
+            },
+            {
+              "date": "20230401",
+              "value": 0.7
+            },
+            {
+              "date": "20230701",
+              "value": 0.8
+            },
+            {
+              "date": "20231001",
+              "value": 0.5
+            },
+            {
+              "date": "20240101",
+              "value": 1.2
+            },
+            {
+              "date": "20240401",
+              "value": -0.2
+            },
+            {
+              "date": "20240701",
+              "value": 0.1
+            },
+            {
+              "date": "20241001",
+              "value": 0.1
+            },
+            {
+              "date": "20250101",
+              "value": -0.2
+            },
+            {
+              "date": "20250401",
+              "value": 0.7
+            },
+            {
+              "date": "20250701",
+              "value": 1.3
+            },
+            {
+              "date": "20251001",
+              "value": -0.2
+            }
+          ],
+          "latest": {
+            "date": "20251001",
+            "value": -0.2
+          },
+          "prior": {
+            "date": "20250701",
+            "value": 1.3
+          },
+          "direction": "Falling",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:48Z",
+            "reference_period": "20251001",
+            "staleness_days": 213
+          }
+        },
+        "gdp-nominal": {
+          "preset": "gdp-nominal",
+          "name": "GDP Nominal (국내총생산 시장가격 명목)",
+          "code": "K257",
+          "fetched_at": "2026-05-02T02:16:48Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20230101",
+              "value": 589288.4
+            },
+            {
+              "date": "20230401",
+              "value": 596883.2
+            },
+            {
+              "date": "20230701",
+              "value": 605422.3
+            },
+            {
+              "date": "20231001",
+              "value": 617093.5
+            },
+            {
+              "date": "20240101",
+              "value": 633548.7
+            },
+            {
+              "date": "20240401",
+              "value": 638175.4
+            },
+            {
+              "date": "20240701",
+              "value": 635086.8
+            },
+            {
+              "date": "20241001",
+              "value": 650046.5
+            },
+            {
+              "date": "20250101",
+              "value": 647226.7
+            },
+            {
+              "date": "20250401",
+              "value": 660025.8
+            },
+            {
+              "date": "20250701",
+              "value": 664424.9
+            },
+            {
+              "date": "20251001",
+              "value": 690599.9
+            }
+          ],
+          "latest": {
+            "date": "20251001",
+            "value": 690599.9
+          },
+          "prior": {
+            "date": "20250701",
+            "value": 664424.9
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:48Z",
+            "reference_period": "20251001",
+            "staleness_days": 213
+          }
+        },
+        "ipi": {
+          "preset": "ipi",
+          "name": "All-Industry Production Index (전산업생산지수)",
+          "code": "K220",
+          "fetched_at": "2026-05-02T02:16:49Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 115.1
+            },
+            {
+              "date": "20250501",
+              "value": 114.0
+            },
+            {
+              "date": "20250601",
+              "value": 116.0
+            },
+            {
+              "date": "20250701",
+              "value": 115.6
+            },
+            {
+              "date": "20250801",
+              "value": 115.5
+            },
+            {
+              "date": "20250901",
+              "value": 116.9
+            },
+            {
+              "date": "20251001",
+              "value": 114.3
+            },
+            {
+              "date": "20251101",
+              "value": 115.1
+            },
+            {
+              "date": "20251201",
+              "value": 116.5
+            },
+            {
+              "date": "20260101",
+              "value": 115.6
+            },
+            {
+              "date": "20260201",
+              "value": 118.0
+            },
+            {
+              "date": "20260301",
+              "value": 118.3
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 118.3
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 118.0
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:49Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "manufacturing": {
+          "preset": "manufacturing",
+          "name": "Manufacturing Production Index (제조업 생산지수)",
+          "code": "K201",
+          "fetched_at": "2026-05-02T02:16:50Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 116.5
+            },
+            {
+              "date": "20250501",
+              "value": 113.8
+            },
+            {
+              "date": "20250601",
+              "value": 117.1
+            },
+            {
+              "date": "20250701",
+              "value": 115.9
+            },
+            {
+              "date": "20250801",
+              "value": 117.9
+            },
+            {
+              "date": "20250901",
+              "value": 118.5
+            },
+            {
+              "date": "20251001",
+              "value": 111.9
+            },
+            {
+              "date": "20251101",
+              "value": 113.2
+            },
+            {
+              "date": "20251201",
+              "value": 115.5
+            },
+            {
+              "date": "20260101",
+              "value": 112.3
+            },
+            {
+              "date": "20260201",
+              "value": 119.0
+            },
+            {
+              "date": "20260301",
+              "value": 119.3
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 119.3
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 119.0
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:50Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "private-consumption": {
+          "preset": "private-consumption",
+          "name": "Private Consumption (민간소비)",
+          "code": "K259",
+          "fetched_at": "2026-05-02T02:16:51Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20230101",
+              "value": 0.6
+            },
+            {
+              "date": "20230401",
+              "value": 0.0
+            },
+            {
+              "date": "20230701",
+              "value": 0.1
+            },
+            {
+              "date": "20231001",
+              "value": 0.3
+            },
+            {
+              "date": "20240101",
+              "value": 0.5
+            },
+            {
+              "date": "20240401",
+              "value": 0.0
+            },
+            {
+              "date": "20240701",
+              "value": 0.4
+            },
+            {
+              "date": "20241001",
+              "value": 0.2
+            },
+            {
+              "date": "20250101",
+              "value": -0.1
+            },
+            {
+              "date": "20250401",
+              "value": 0.5
+            },
+            {
+              "date": "20250701",
+              "value": 1.3
+            },
+            {
+              "date": "20251001",
+              "value": 0.3
+            }
+          ],
+          "latest": {
+            "date": "20251001",
+            "value": 0.3
+          },
+          "prior": {
+            "date": "20250701",
+            "value": 1.3
+          },
+          "direction": "Falling",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:51Z",
+            "reference_period": "20251001",
+            "staleness_days": 213
+          }
+        },
+        "equipment-investment": {
+          "preset": "equipment-investment",
+          "name": "Equipment Investment (설비투자)",
+          "code": "K260",
+          "fetched_at": "2026-05-02T02:16:52Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20230101",
+              "value": -1.7
+            },
+            {
+              "date": "20230401",
+              "value": 0.5
+            },
+            {
+              "date": "20230701",
+              "value": -3.6
+            },
+            {
+              "date": "20231001",
+              "value": 2.2
+            },
+            {
+              "date": "20240101",
+              "value": -1.0
+            },
+            {
+              "date": "20240401",
+              "value": 0.0
+            },
+            {
+              "date": "20240701",
+              "value": 5.4
+            },
+            {
+              "date": "20241001",
+              "value": 0.8
+            },
+            {
+              "date": "20250101",
+              "value": -0.4
+            },
+            {
+              "date": "20250401",
+              "value": -2.1
+            },
+            {
+              "date": "20250701",
+              "value": 2.6
+            },
+            {
+              "date": "20251001",
+              "value": -1.7
+            }
+          ],
+          "latest": {
+            "date": "20251001",
+            "value": -1.7
+          },
+          "prior": {
+            "date": "20250701",
+            "value": 2.6
+          },
+          "direction": "Falling",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:52Z",
+            "reference_period": "20251001",
+            "staleness_days": 213
+          }
+        },
+        "construction-investment": {
+          "preset": "construction-investment",
+          "name": "Construction Investment (건설투자)",
+          "code": "K261",
+          "fetched_at": "2026-05-02T02:16:53Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20230101",
+              "value": -0.2
+            },
+            {
+              "date": "20230401",
+              "value": -0.5
+            },
+            {
+              "date": "20230701",
+              "value": 1.5
+            },
+            {
+              "date": "20231001",
+              "value": -3.9
+            },
+            {
+              "date": "20240101",
+              "value": 4.5
+            },
+            {
+              "date": "20240401",
+              "value": -3.3
+            },
+            {
+              "date": "20240701",
+              "value": -3.6
+            },
+            {
+              "date": "20241001",
+              "value": -4.1
+            },
+            {
+              "date": "20250101",
+              "value": -3.1
+            },
+            {
+              "date": "20250401",
+              "value": -1.2
+            },
+            {
+              "date": "20250701",
+              "value": 0.6
+            },
+            {
+              "date": "20251001",
+              "value": -3.5
+            }
+          ],
+          "latest": {
+            "date": "20251001",
+            "value": -3.5
+          },
+          "prior": {
+            "date": "20250701",
+            "value": 0.6
+          },
+          "direction": "Falling",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:53Z",
+            "reference_period": "20251001",
+            "staleness_days": 213
+          }
+        }
+      }
+    },
+    "cycle": {
+      "fetched_at": "2026-05-02T02:16:53Z",
+      "_source": "fdr_ecos",
+      "indicators": {
+        "leading-cycle": {
+          "preset": "leading-cycle",
+          "name": "Leading CI Cyclical Component (선행지수순환변동치)",
+          "code": "K254",
+          "fetched_at": "2026-05-02T02:16:54Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 99.7
+            },
+            {
+              "date": "20250501",
+              "value": 99.8
+            },
+            {
+              "date": "20250601",
+              "value": 100.0
+            },
+            {
+              "date": "20250701",
+              "value": 100.5
+            },
+            {
+              "date": "20250801",
+              "value": 100.9
+            },
+            {
+              "date": "20250901",
+              "value": 100.9
+            },
+            {
+              "date": "20251001",
+              "value": 100.9
+            },
+            {
+              "date": "20251101",
+              "value": 101.1
+            },
+            {
+              "date": "20251201",
+              "value": 101.6
+            },
+            {
+              "date": "20260101",
+              "value": 102.2
+            },
+            {
+              "date": "20260201",
+              "value": 102.8
+            },
+            {
+              "date": "20260301",
+              "value": 103.5
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 103.5
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 102.8
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:54Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
+          }
+        },
+        "coincident-cycle": {
+          "preset": "coincident-cycle",
+          "name": "Coincident CI Cyclical Component (동행지수순환변동치)",
+          "code": "K253",
+          "fetched_at": "2026-05-02T02:16:55Z",
+          "_cache": "miss",
+          "_source": "fdr_ecos",
+          "observations": [
+            {
+              "date": "20250401",
+              "value": 99.7
+            },
+            {
+              "date": "20250501",
+              "value": 99.4
+            },
+            {
+              "date": "20250601",
+              "value": 99.6
+            },
+            {
+              "date": "20250701",
+              "value": 99.6
+            },
+            {
+              "date": "20250801",
+              "value": 99.8
+            },
+            {
+              "date": "20250901",
+              "value": 99.8
+            },
+            {
+              "date": "20251001",
+              "value": 99.4
+            },
+            {
+              "date": "20251101",
+              "value": 99.2
+            },
+            {
+              "date": "20251201",
+              "value": 99.0
+            },
+            {
+              "date": "20260101",
+              "value": 99.0
+            },
+            {
+              "date": "20260201",
+              "value": 99.6
+            },
+            {
+              "date": "20260301",
+              "value": 100.1
+            }
+          ],
+          "latest": {
+            "date": "20260301",
+            "value": 100.1
+          },
+          "prior": {
+            "date": "20260201",
+            "value": 99.6
+          },
+          "direction": "Rising",
+          "count": 12,
+          "_provenance": {
+            "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
+            "source_authority": "Bank of Korea (한국은행)",
+            "data_type": "official_government_statistics",
+            "fetched_at": "2026-05-02T02:16:55Z",
+            "reference_period": "20260301",
+            "staleness_days": 62
           }
         }
       }
     },
     "fx": {
-      "fetched_at": "2026-05-01T15:10:32Z",
+      "fetched_at": "2026-05-02T02:16:55Z",
       "_source": "fdr_ecos",
       "indicators": {
         "krw-usd": {
           "preset": "krw-usd",
           "name": "KRW/USD Exchange Rate (원달러 환율)",
           "code": "DEXKOUS",
-          "fetched_at": "2026-05-01T15:10:35Z",
+          "fetched_at": "2026-05-02T02:16:57Z",
           "_cache": "miss",
           "_source": "fred",
           "observations": [
+            {
+              "date": "20260409",
+              "value": 1472.92
+            },
+            {
+              "date": "20260410",
+              "value": 1483.9
+            },
+            {
+              "date": "20260413",
+              "value": 1486.94
+            },
+            {
+              "date": "20260414",
+              "value": 1471.51
+            },
+            {
+              "date": "20260415",
+              "value": 1474.41
+            },
+            {
+              "date": "20260416",
+              "value": 1478.19
+            },
+            {
+              "date": "20260417",
+              "value": 1461.66
+            },
             {
               "date": "20260420",
               "value": 1470.31
@@ -390,24 +1699,52 @@
             "value": 1479.19
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "FRED (Federal Reserve Bank of St. Louis)",
             "source_authority": "Federal Reserve Bank of St. Louis",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:35Z",
+            "fetched_at": "2026-05-02T02:16:57Z",
             "reference_period": "20260424",
-            "staleness_days": 7
+            "staleness_days": 8
           }
         },
         "krw-jpy": {
           "preset": "krw-jpy",
           "name": "KRW/JPY Exchange Rate per 100 yen (원/일본엔)",
           "code": "K153",
-          "fetched_at": "2026-05-01T15:10:38Z",
+          "fetched_at": "2026-05-02T02:17:02Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 932.55
+            },
+            {
+              "date": "20260416",
+              "value": 927.62
+            },
+            {
+              "date": "20260417",
+              "value": 925.35
+            },
+            {
+              "date": "20260420",
+              "value": 930.73
+            },
+            {
+              "date": "20260421",
+              "value": 929.31
+            },
+            {
+              "date": "20260422",
+              "value": 922.45
+            },
+            {
+              "date": "20260423",
+              "value": 926.51
+            },
             {
               "date": "20260424",
               "value": 927.0
@@ -438,24 +1775,52 @@
             "value": 923.26
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:38Z",
+            "fetched_at": "2026-05-02T02:17:02Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "krw-eur": {
           "preset": "krw-eur",
           "name": "KRW/EUR Exchange Rate (원/유로)",
           "code": "K154",
-          "fetched_at": "2026-05-01T15:10:42Z",
+          "fetched_at": "2026-05-02T02:17:05Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 1747.46
+            },
+            {
+              "date": "20260416",
+              "value": 1738.92
+            },
+            {
+              "date": "20260417",
+              "value": 1735.31
+            },
+            {
+              "date": "20260420",
+              "value": 1737.89
+            },
+            {
+              "date": "20260421",
+              "value": 1739.44
+            },
+            {
+              "date": "20260422",
+              "value": 1726.5
+            },
+            {
+              "date": "20260423",
+              "value": 1729.6
+            },
             {
               "date": "20260424",
               "value": 1729.86
@@ -486,24 +1851,52 @@
             "value": 1726.19
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:42Z",
+            "fetched_at": "2026-05-02T02:17:05Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "krw-cny": {
           "preset": "krw-cny",
           "name": "KRW/CNY Exchange Rate (원/위안 종가)",
           "code": "K156",
-          "fetched_at": "2026-05-01T15:10:45Z",
+          "fetched_at": "2026-05-02T02:17:08Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20260415",
+              "value": 216.26
+            },
+            {
+              "date": "20260416",
+              "value": 216.2
+            },
+            {
+              "date": "20260417",
+              "value": 217.21
+            },
+            {
+              "date": "20260420",
+              "value": 216.61
+            },
+            {
+              "date": "20260421",
+              "value": 215.54
+            },
+            {
+              "date": "20260422",
+              "value": 216.29
+            },
+            {
+              "date": "20260423",
+              "value": 216.81
+            },
             {
               "date": "20260424",
               "value": 216.99
@@ -534,24 +1927,52 @@
             "value": 216.24
           },
           "direction": "Rising",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:45Z",
+            "fetched_at": "2026-05-02T02:17:08Z",
             "reference_period": "20260430",
-            "staleness_days": 1
+            "staleness_days": 2
           }
         },
         "fx-reserves": {
           "preset": "fx-reserves",
           "name": "FX Reserves Total (외환보유액 합계)",
           "code": "K155",
-          "fetched_at": "2026-05-01T15:10:46Z",
+          "fetched_at": "2026-05-02T02:17:09Z",
           "_cache": "miss",
           "_source": "fdr_ecos",
           "observations": [
+            {
+              "date": "20250401",
+              "value": 404672319.0
+            },
+            {
+              "date": "20250501",
+              "value": 404595704.0
+            },
+            {
+              "date": "20250601",
+              "value": 410202961.0
+            },
+            {
+              "date": "20250701",
+              "value": 411334711.0
+            },
+            {
+              "date": "20250801",
+              "value": 416285737.0
+            },
+            {
+              "date": "20250901",
+              "value": 422015555.0
+            },
+            {
+              "date": "20251001",
+              "value": 428819095.0
+            },
             {
               "date": "20251101",
               "value": 430659280.0
@@ -582,22 +2003,752 @@
             "value": 427624953.0
           },
           "direction": "Falling",
-          "count": 5,
+          "count": 12,
           "_provenance": {
             "source": "BOK ECOS via FinanceDataReader (ECOS-KEYSTAT)",
             "source_authority": "Bank of Korea (한국은행)",
             "data_type": "official_government_statistics",
-            "fetched_at": "2026-05-01T15:10:46Z",
+            "fetched_at": "2026-05-02T02:17:09Z",
             "reference_period": "20260301",
-            "staleness_days": 61
+            "staleness_days": 62
           }
         }
       }
     }
   },
+  "series": {
+    "policy-rate": [
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5
+    ],
+    "rates.policy-rate": [
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5
+    ],
+    "call-rate": [
+      2.526,
+      2.516,
+      2.504,
+      2.515,
+      2.505,
+      2.51,
+      2.511,
+      2.539,
+      2.53,
+      2.531,
+      2.518,
+      2.513
+    ],
+    "rates.call-rate": [
+      2.526,
+      2.516,
+      2.504,
+      2.515,
+      2.505,
+      2.51,
+      2.511,
+      2.539,
+      2.53,
+      2.531,
+      2.518,
+      2.513
+    ],
+    "cd-91d": [
+      2.81,
+      2.82,
+      2.82,
+      2.81,
+      2.82,
+      2.83,
+      2.83,
+      2.82,
+      2.82,
+      2.82,
+      2.82,
+      2.81
+    ],
+    "rates.cd-91d": [
+      2.81,
+      2.82,
+      2.82,
+      2.81,
+      2.82,
+      2.83,
+      2.83,
+      2.82,
+      2.82,
+      2.82,
+      2.82,
+      2.81
+    ],
+    "koribor-3m": [
+      2.78,
+      2.78,
+      2.79,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.77,
+      2.77,
+      2.77
+    ],
+    "rates.koribor-3m": [
+      2.78,
+      2.78,
+      2.79,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.78,
+      2.77,
+      2.77,
+      2.77
+    ],
+    "treasury-3y": [
+      3.328,
+      3.34,
+      3.371,
+      3.348,
+      3.33,
+      3.365,
+      3.458,
+      3.496,
+      3.492,
+      3.529,
+      3.525,
+      3.595
+    ],
+    "rates.treasury-3y": [
+      3.328,
+      3.34,
+      3.371,
+      3.348,
+      3.33,
+      3.365,
+      3.458,
+      3.496,
+      3.492,
+      3.529,
+      3.525,
+      3.595
+    ],
+    "treasury-5y": [
+      3.516,
+      3.536,
+      3.58,
+      3.568,
+      3.541,
+      3.562,
+      3.652,
+      3.683,
+      3.676,
+      3.718,
+      3.706,
+      3.78
+    ],
+    "rates.treasury-5y": [
+      3.516,
+      3.536,
+      3.58,
+      3.568,
+      3.541,
+      3.562,
+      3.652,
+      3.683,
+      3.676,
+      3.718,
+      3.706,
+      3.78
+    ],
+    "corp-bond-3y": [
+      3.995,
+      4.005,
+      4.037,
+      4.016,
+      3.994,
+      4.028,
+      4.107,
+      4.145,
+      4.147,
+      4.182,
+      4.185,
+      4.248
+    ],
+    "rates.corp-bond-3y": [
+      3.995,
+      4.005,
+      4.037,
+      4.016,
+      3.994,
+      4.028,
+      4.107,
+      4.145,
+      4.147,
+      4.182,
+      4.185,
+      4.248
+    ],
+    "cpi": [
+      116.38,
+      116.27,
+      116.31,
+      116.52,
+      116.45,
+      117.06,
+      117.42,
+      117.2,
+      117.57,
+      118.03,
+      118.4,
+      118.8
+    ],
+    "inflation.cpi": [
+      116.38,
+      116.27,
+      116.31,
+      116.52,
+      116.45,
+      117.06,
+      117.42,
+      117.2,
+      117.57,
+      118.03,
+      118.4,
+      118.8
+    ],
+    "core-cpi": [
+      114.86,
+      115.06,
+      115.25,
+      115.29,
+      114.84,
+      115.56,
+      116.0,
+      115.82,
+      116.02,
+      116.56,
+      116.93,
+      117.0
+    ],
+    "inflation.core-cpi": [
+      114.86,
+      115.06,
+      115.25,
+      115.29,
+      114.84,
+      115.56,
+      116.0,
+      115.82,
+      116.02,
+      116.56,
+      116.93,
+      117.0
+    ],
+    "ppi": [
+      120.14,
+      119.64,
+      119.77,
+      120.19,
+      120.11,
+      120.54,
+      120.94,
+      121.31,
+      121.76,
+      122.56,
+      123.28,
+      125.24
+    ],
+    "inflation.ppi": [
+      120.14,
+      119.64,
+      119.77,
+      120.19,
+      120.11,
+      120.54,
+      120.94,
+      121.31,
+      121.76,
+      122.56,
+      123.28,
+      125.24
+    ],
+    "import-pi": [
+      133.05,
+      128.39,
+      126.88,
+      127.86,
+      128.69,
+      129.37,
+      134.7,
+      139.42,
+      140.28,
+      145.86,
+      149.5,
+      173.86
+    ],
+    "inflation.import-pi": [
+      133.05,
+      128.39,
+      126.88,
+      127.86,
+      128.69,
+      129.37,
+      134.7,
+      139.42,
+      140.28,
+      145.86,
+      149.5,
+      173.86
+    ],
+    "export-pi": [
+      139.82,
+      134.61,
+      133.73,
+      134.84,
+      135.21,
+      135.56,
+      138.19,
+      141.47,
+      142.68,
+      143.74,
+      145.88,
+      169.38
+    ],
+    "inflation.export-pi": [
+      139.82,
+      134.61,
+      133.73,
+      134.84,
+      135.21,
+      135.56,
+      138.19,
+      141.47,
+      142.68,
+      143.74,
+      145.88,
+      169.38
+    ],
+    "gdp-qoq": [
+      0.4,
+      0.7,
+      0.8,
+      0.5,
+      1.2,
+      -0.2,
+      0.1,
+      0.1,
+      -0.2,
+      0.7,
+      1.3,
+      -0.2
+    ],
+    "growth.gdp-qoq": [
+      0.4,
+      0.7,
+      0.8,
+      0.5,
+      1.2,
+      -0.2,
+      0.1,
+      0.1,
+      -0.2,
+      0.7,
+      1.3,
+      -0.2
+    ],
+    "gdp-nominal": [
+      589288.4,
+      596883.2,
+      605422.3,
+      617093.5,
+      633548.7,
+      638175.4,
+      635086.8,
+      650046.5,
+      647226.7,
+      660025.8,
+      664424.9,
+      690599.9
+    ],
+    "growth.gdp-nominal": [
+      589288.4,
+      596883.2,
+      605422.3,
+      617093.5,
+      633548.7,
+      638175.4,
+      635086.8,
+      650046.5,
+      647226.7,
+      660025.8,
+      664424.9,
+      690599.9
+    ],
+    "ipi": [
+      115.1,
+      114.0,
+      116.0,
+      115.6,
+      115.5,
+      116.9,
+      114.3,
+      115.1,
+      116.5,
+      115.6,
+      118.0,
+      118.3
+    ],
+    "growth.ipi": [
+      115.1,
+      114.0,
+      116.0,
+      115.6,
+      115.5,
+      116.9,
+      114.3,
+      115.1,
+      116.5,
+      115.6,
+      118.0,
+      118.3
+    ],
+    "manufacturing": [
+      116.5,
+      113.8,
+      117.1,
+      115.9,
+      117.9,
+      118.5,
+      111.9,
+      113.2,
+      115.5,
+      112.3,
+      119.0,
+      119.3
+    ],
+    "growth.manufacturing": [
+      116.5,
+      113.8,
+      117.1,
+      115.9,
+      117.9,
+      118.5,
+      111.9,
+      113.2,
+      115.5,
+      112.3,
+      119.0,
+      119.3
+    ],
+    "private-consumption": [
+      0.6,
+      0.0,
+      0.1,
+      0.3,
+      0.5,
+      0.0,
+      0.4,
+      0.2,
+      -0.1,
+      0.5,
+      1.3,
+      0.3
+    ],
+    "growth.private-consumption": [
+      0.6,
+      0.0,
+      0.1,
+      0.3,
+      0.5,
+      0.0,
+      0.4,
+      0.2,
+      -0.1,
+      0.5,
+      1.3,
+      0.3
+    ],
+    "equipment-investment": [
+      -1.7,
+      0.5,
+      -3.6,
+      2.2,
+      -1.0,
+      0.0,
+      5.4,
+      0.8,
+      -0.4,
+      -2.1,
+      2.6,
+      -1.7
+    ],
+    "growth.equipment-investment": [
+      -1.7,
+      0.5,
+      -3.6,
+      2.2,
+      -1.0,
+      0.0,
+      5.4,
+      0.8,
+      -0.4,
+      -2.1,
+      2.6,
+      -1.7
+    ],
+    "construction-investment": [
+      -0.2,
+      -0.5,
+      1.5,
+      -3.9,
+      4.5,
+      -3.3,
+      -3.6,
+      -4.1,
+      -3.1,
+      -1.2,
+      0.6,
+      -3.5
+    ],
+    "growth.construction-investment": [
+      -0.2,
+      -0.5,
+      1.5,
+      -3.9,
+      4.5,
+      -3.3,
+      -3.6,
+      -4.1,
+      -3.1,
+      -1.2,
+      0.6,
+      -3.5
+    ],
+    "leading-cycle": [
+      99.7,
+      99.8,
+      100.0,
+      100.5,
+      100.9,
+      100.9,
+      100.9,
+      101.1,
+      101.6,
+      102.2,
+      102.8,
+      103.5
+    ],
+    "cycle.leading-cycle": [
+      99.7,
+      99.8,
+      100.0,
+      100.5,
+      100.9,
+      100.9,
+      100.9,
+      101.1,
+      101.6,
+      102.2,
+      102.8,
+      103.5
+    ],
+    "coincident-cycle": [
+      99.7,
+      99.4,
+      99.6,
+      99.6,
+      99.8,
+      99.8,
+      99.4,
+      99.2,
+      99.0,
+      99.0,
+      99.6,
+      100.1
+    ],
+    "cycle.coincident-cycle": [
+      99.7,
+      99.4,
+      99.6,
+      99.6,
+      99.8,
+      99.8,
+      99.4,
+      99.2,
+      99.0,
+      99.0,
+      99.6,
+      100.1
+    ],
+    "krw-usd": [
+      1472.92,
+      1483.9,
+      1486.94,
+      1471.51,
+      1474.41,
+      1478.19,
+      1461.66,
+      1470.31,
+      1478.52,
+      1480.61,
+      1479.19,
+      1476.47
+    ],
+    "fx.krw-usd": [
+      1472.92,
+      1483.9,
+      1486.94,
+      1471.51,
+      1474.41,
+      1478.19,
+      1461.66,
+      1470.31,
+      1478.52,
+      1480.61,
+      1479.19,
+      1476.47
+    ],
+    "krw-jpy": [
+      932.55,
+      927.62,
+      925.35,
+      930.73,
+      929.31,
+      922.45,
+      926.51,
+      927.0,
+      929.63,
+      924.24,
+      923.26,
+      920.58
+    ],
+    "fx.krw-jpy": [
+      932.55,
+      927.62,
+      925.35,
+      930.73,
+      929.31,
+      922.45,
+      926.51,
+      927.0,
+      929.63,
+      924.24,
+      923.26,
+      920.58
+    ],
+    "krw-eur": [
+      1747.46,
+      1738.92,
+      1735.31,
+      1737.89,
+      1739.44,
+      1726.5,
+      1729.6,
+      1729.86,
+      1736.4,
+      1726.84,
+      1726.19,
+      1723.57
+    ],
+    "fx.krw-eur": [
+      1747.46,
+      1738.92,
+      1735.31,
+      1737.89,
+      1739.44,
+      1726.5,
+      1729.6,
+      1729.86,
+      1736.4,
+      1726.84,
+      1726.19,
+      1723.57
+    ],
+    "krw-cny": [
+      216.26,
+      216.2,
+      217.21,
+      216.61,
+      215.54,
+      216.29,
+      216.81,
+      216.99,
+      215.63,
+      215.64,
+      216.24,
+      216.84
+    ],
+    "fx.krw-cny": [
+      216.26,
+      216.2,
+      217.21,
+      216.61,
+      215.54,
+      216.29,
+      216.81,
+      216.99,
+      215.63,
+      215.64,
+      216.24,
+      216.84
+    ],
+    "fx-reserves": [
+      404672319.0,
+      404595704.0,
+      410202961.0,
+      411334711.0,
+      416285737.0,
+      422015555.0,
+      428819095.0,
+      430659280.0,
+      428054608.0,
+      425905754.0,
+      427624953.0,
+      423656488.0
+    ],
+    "fx.fx-reserves": [
+      404672319.0,
+      404595704.0,
+      410202961.0,
+      411334711.0,
+      416285737.0,
+      422015555.0,
+      428819095.0,
+      430659280.0,
+      428054608.0,
+      425905754.0,
+      427624953.0,
+      423656488.0
+    ]
+  },
   "_provenance": {
     "primary_source_status": "available",
     "primary_source_note": "BOK ECOS-KEYSTAT via FinanceDataReader (Tier A primary). Secondary fallback: FRED (krw-usd only — DEXKOUS).",
-    "indicator_count_total": 12
+    "indicator_count_total": 26
   }
 }

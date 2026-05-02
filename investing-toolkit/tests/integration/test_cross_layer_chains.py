@@ -567,6 +567,40 @@ def test_chain_tw_comps_to_comps_compute(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Cross-country T2 regime chains (analysis-macro-regime via flat series block)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("country", ["jp", "tw", "kr", "cn"])
+def test_chain_country_regime_to_macroregime(country):
+    """data-{country} regime-pack feeds analysis-macro-regime via T2 flat
+    `series` block. Per ADR-0002 cross-country symmetry — chain wiring works
+    for all 5 countries (data-us covered separately by
+    test_chain_regimepack_to_macroregime).
+
+    Asserts regime_compose produces a structured classification (chain wiring
+    works). Whether growth/inflation directions are non-flat depends on
+    whether the country's regime-pack fixture contains the proxy indicators
+    that regime_compose's per-country resolve_series chain looks for —
+    that's a data-coverage question, not a chain-wiring question.
+    """
+    fixture = FIXTURES / f"data-{country}-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+    rc, out, stderr = _run_layer2(script, ["--input", f"{country}={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+    countries = out.get("countries") or out.get("by_country") or {}
+    block = countries.get(country) if isinstance(countries, dict) else None
+    assert block is not None, (
+        f"data-{country} regime: no {country} block produced. output keys: "
+        f"{list(out.keys())}"
+    )
+    assert "ic_quadrant" in block, (
+        f"data-{country} regime: ic_quadrant missing — chain broken. block: {block}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # T3 lossless invariant — canonical income_statement traces back to raw
 # concept observations (per docs/normalization-contract.md Principle 5).
 # ---------------------------------------------------------------------------
