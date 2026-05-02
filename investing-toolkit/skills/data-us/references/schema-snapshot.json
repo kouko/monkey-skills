@@ -98,6 +98,15 @@
         "_provenance": {"$ref": "schema-error-envelope.json#/definitions/provenance"},
         "error": {"type": "string"}
       }
+    },
+    "history": {
+      "type": "array",
+      "description": "T1 canonical OHLCV alias — same list reference as price_history.data. Top-level for analysis-technical / ta_compute. See docs/normalization-contract.md.",
+      "items": {
+        "type": "object",
+        "required": ["date", "open", "high", "low", "close", "volume"],
+        "additionalProperties": true
+      }
     }
   }
 }

@@ -155,12 +155,14 @@ def pack_snapshot(ticker: str) -> dict:
     """yfinance info + 2y price for a single ticker."""
     info = run_client(YF, ["--ticker", ticker, "--action", "info"])
     history = run_client(YF, ["--ticker", ticker, "--period", "2y"])
+    rows = history.get("data", []) if isinstance(history, dict) else []
     return {
         "pack": "snapshot",
         "ticker": ticker.upper(),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "company_info": info,
         "price_history": history,
+        "history": rows,  # T1 canonical OHLCV alias — see docs/normalization-contract.md
     }
 
 
@@ -174,12 +176,14 @@ def pack_memo_fetch(ticker: str) -> dict:
          "--forms", "10-K,10-Q,8-K", "--limit", "8"],
     )
     facts = run_client(SEC, ["--ticker", ticker, "--action", "facts"])
+    rows = history.get("data", []) if isinstance(history, dict) else []
     return {
         "pack": "memo-fetch",
         "ticker": ticker.upper(),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "company_info": info,
         "price_history": history,
+        "history": rows,  # T1 canonical OHLCV alias — see docs/normalization-contract.md
         "sec_filings": filings,
         "sec_facts": facts,
     }
@@ -189,12 +193,14 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
     if len(tickers) == 1:
         info = run_client(YF, ["--ticker", tickers[0], "--action", "info"])
+        per_ticker = {
+            tickers[0].upper(): filter_fields(info, MULTIPLES_FIELDS),
+        }
         return {
             "pack": "comps-multiples",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
-            "tickers": {
-                tickers[0].upper(): filter_fields(info, MULTIPLES_FIELDS),
-            },
+            "tickers": per_ticker,
+            "info": per_ticker,  # T1 canonical multiples alias
         }
     # Batch: use yfinance batch action
     batch = run_client(
@@ -210,12 +216,14 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
             "pack": "comps-multiples",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
             "tickers": per_ticker,
+            "info": per_ticker,  # T1 canonical multiples alias
         }
     # Batch failure: surface error at top level, keep tickers map clean
     return {
         "pack": "comps-multiples",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "tickers": {},
+        "info": {},  # T1 canonical alias (empty on error)
         "error": batch,
     }
 
