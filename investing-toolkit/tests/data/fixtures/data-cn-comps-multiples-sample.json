@@ -12,7 +12,7 @@
       },
       "_yfinance_info": {
         "ticker": "600519.SS",
-        "fetched_at": "2026-05-01T15:09:26Z",
+        "fetched_at": "2026-05-02T01:46:18Z",
         "_cache": "hit",
         "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
         "symbol": "600519.SS",
@@ -54,11 +54,163 @@
           "data_type": "unofficial_scraper",
           "update_cycle": "near-real-time (15 min delay)",
           "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
-          "fetched_at": "2026-05-01T15:09:26Z",
+          "fetched_at": "2026-05-02T01:46:18Z",
           "reference_period": null,
           "staleness_days": null
         }
+      },
+      "info": {
+        "600519.SS": {
+          "trailingPE": 20.965784,
+          "forwardPE": 18.4381,
+          "priceToBook": 6.396584
+        }
+      }
+    },
+    {
+      "ticker": "000858.SZ",
+      "country": "CN",
+      "multiples": {
+        "trailingPE": 29.962963,
+        "forwardPE": 14.118777,
+        "priceToBook": 2.644223
+      },
+      "_yfinance_info": {
+        "ticker": "000858.SZ",
+        "fetched_at": "2026-05-02T01:46:23Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "000858.SZ",
+        "shortName": "WULIANGYE YIBIN CO. LTD.",
+        "longName": "Wuliangye Yibin Co.,Ltd.",
+        "sector": "Consumer Defensive",
+        "industry": "Beverages - Wineries & Distilleries",
+        "country": "China",
+        "currency": "CNY",
+        "exchange": "SHZ",
+        "regularMarketPrice": 97.08,
+        "regularMarketPreviousClose": 98.34,
+        "marketCap": 376826494976,
+        "enterpriseValue": 255485591552,
+        "trailingPE": 29.962963,
+        "forwardPE": 14.118777,
+        "priceToBook": 2.644223,
+        "trailingEps": 3.24,
+        "forwardEps": 6.87595,
+        "dividendYield": 5.92,
+        "payoutRatio": 1.7703999,
+        "fiftyTwoWeekHigh": 137.18,
+        "fiftyTwoWeekLow": 97.0,
+        "fiftyDayAverage": 102.6274,
+        "twoHundredDayAverage": 113.4069,
+        "sharesOutstanding": 3881608005,
+        "totalRevenue": 46280769536,
+        "grossMargins": 0.78898,
+        "operatingMargins": 0.44341,
+        "profitMargins": 0.27227,
+        "returnOnEquity": 0.092080005,
+        "returnOnAssets": 0.044549998,
+        "totalDebt": 441104896,
+        "totalCash": 124259000320,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-02T01:46:23Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "info": {
+        "000858.SZ": {
+          "trailingPE": 29.962963,
+          "forwardPE": 14.118777,
+          "priceToBook": 2.644223
+        }
+      }
+    },
+    {
+      "ticker": "300750.SZ",
+      "country": "CN",
+      "multiples": {
+        "trailingPE": 24.871647,
+        "forwardPE": 18.866512,
+        "priceToBook": 5.525772
+      },
+      "_yfinance_info": {
+        "ticker": "300750.SZ",
+        "fetched_at": "2026-05-02T01:46:24Z",
+        "_cache": "miss",
+        "_warning": "yfinance is an unofficial scraper. DO NOT use for financial statements (income statement, balance sheet, cash flow). Use SEC EDGAR for financials.",
+        "symbol": "300750.SZ",
+        "shortName": "CONTEMPORARY AMPEREX TECHNOLOGY",
+        "longName": "Contemporary Amperex Technology Co., Limited",
+        "sector": "Industrials",
+        "industry": "Electrical Equipment & Parts",
+        "country": "China",
+        "currency": "CNY",
+        "exchange": "SHZ",
+        "regularMarketPrice": 436.0,
+        "regularMarketPreviousClose": 445.0,
+        "marketCap": 2017150894080,
+        "enterpriseValue": 1725261676544,
+        "trailingPE": 24.871647,
+        "forwardPE": 18.866512,
+        "priceToBook": 5.525772,
+        "trailingEps": 17.53,
+        "forwardEps": 23.10973,
+        "dividendYield": 1.28,
+        "payoutRatio": 0.317,
+        "fiftyTwoWeekHigh": 460.0,
+        "fiftyTwoWeekLow": 231.2,
+        "fiftyDayAverage": 398.4936,
+        "twoHundredDayAverage": 364.65356,
+        "sharesOutstanding": 4408192521,
+        "totalRevenue": 468128301056,
+        "grossMargins": 0.25108,
+        "operatingMargins": 0.19454001,
+        "profitMargins": 0.16871001,
+        "returnOnEquity": 0.2536,
+        "totalDebt": 126484291584,
+        "totalCash": 412349825024,
+        "beta": 0.476,
+        "_provenance": {
+          "source": "yfinance (unofficial Yahoo Finance scraper)",
+          "source_authority": "Yahoo Finance (unofficial, not endorsed)",
+          "data_type": "unofficial_scraper",
+          "update_cycle": "near-real-time (15 min delay)",
+          "typical_lag": "15 minutes (price) / 1 day (fundamentals)",
+          "fetched_at": "2026-05-02T01:46:24Z",
+          "reference_period": null,
+          "staleness_days": null
+        }
+      },
+      "info": {
+        "300750.SZ": {
+          "trailingPE": 24.871647,
+          "forwardPE": 18.866512,
+          "priceToBook": 5.525772
+        }
       }
     }
-  ]
+  ],
+  "info": {
+    "600519.SS": {
+      "trailingPE": 20.965784,
+      "forwardPE": 18.4381,
+      "priceToBook": 6.396584
+    },
+    "000858.SZ": {
+      "trailingPE": 29.962963,
+      "forwardPE": 14.118777,
+      "priceToBook": 2.644223
+    },
+    "300750.SZ": {
+      "trailingPE": 24.871647,
+      "forwardPE": 18.866512,
+      "priceToBook": 5.525772
+    }
+  }
 }
