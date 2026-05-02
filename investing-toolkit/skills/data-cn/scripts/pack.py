@@ -424,6 +424,62 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     }
 
 
+def _flatten_regime_to_series(root: dict) -> dict:
+    """T2 canonical (per ADR-0002) — walk regime-pack root and emit flat
+    `series: {indicator_id: [floats]}` block for analysis-macro-regime
+    resolve_series. Identical helper to data-kr / data-jp / data-tw.
+
+    Walks nested dicts; treats nodes with `observations: [{date, value}]`
+    as leaves; keys by `preset` (preferred) / `series` string / deepest path.
+    Also emits group-prefixed keys. Skips keys starting with `_`.
+    """
+    flat: dict[str, list[float]] = {}
+
+    def visit(node, path):
+        if not isinstance(node, dict):
+            return
+        obs = node.get("observations")
+        if isinstance(obs, list):
+            values = []
+            for o in obs:
+                if isinstance(o, dict) and o.get("value") is not None:
+                    try:
+                        values.append(float(o["value"]))
+                    except (TypeError, ValueError):
+                        pass
+            if not values:
+                return
+            preset = node.get("preset")
+            series_field = node.get("series")
+            if isinstance(preset, str):
+                primary = preset
+            elif isinstance(series_field, str):
+                primary = series_field
+            elif path:
+                primary = path[-1]
+            else:
+                return
+            if primary not in flat:
+                flat[primary] = values
+            if len(path) >= 2 and isinstance(path[0], str):
+                key = f"{path[0]}.{primary}"
+                if key not in flat:
+                    flat[key] = values
+            return
+        for k, v in node.items():
+            if isinstance(k, str) and k.startswith("_"):
+                continue
+            if isinstance(v, dict):
+                visit(v, path + (k,))
+
+    for k, v in root.items():
+        if isinstance(k, str) and k.startswith("_"):
+            continue
+        if isinstance(v, dict):
+            visit(v, (k,))
+    return flat
+
+
 def pack_regime_pack() -> dict:
     """Macro regime data: NBS (21) + akshare PBOC/Caixin (8) + FRED USDCNY."""
     nbs = _nbs(["--preset", ",".join(NBS_PRESETS)])
@@ -431,6 +487,8 @@ def pack_regime_pack() -> dict:
     fred = _fred(["--series", ",".join(FRED_SERIES), "--periods", "24"])
     markets = _yf(["--tickers", ",".join(MARKET_TICKERS),
                    "--action", "history", "--period", "1y", "--interval", "1d"])
+    sources_root = {"nbs": nbs, "akshare": akshare, "fred": fred, "markets": markets}
+    series_flat = _flatten_regime_to_series(sources_root)
     return {
         "pack": "regime-pack",
         "country": "CN",
@@ -438,6 +496,7 @@ def pack_regime_pack() -> dict:
         "akshare": akshare,
         "fred": fred,
         "markets": markets,
+        "series": series_flat,  # T2 canonical flat alias per ADR-0002
         "_provenance": {
             "nbs_indicators": NBS_PRESETS,
             "akshare_indicators": AKSHARE_PRESETS,

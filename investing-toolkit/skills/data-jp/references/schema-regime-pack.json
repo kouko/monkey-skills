@@ -207,7 +207,20 @@
         }
       },
       "additionalProperties": true
+    },
+    "series": {
+      "type": "object",
+      "description": "T2 canonical flat alias per ADR-0002. Indicator-keyed dict of [floats] (chronological values). analysis-macro-regime / regime_compose.resolve_series reads this.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

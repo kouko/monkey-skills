@@ -471,6 +471,70 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     }
 
 
+def _flatten_regime_to_series(root: dict) -> dict:
+    """T2 canonical (per ADR-0002) — walk a regime-pack root and emit a flat
+    `series: {indicator_id: [floats]}` block for downstream
+    analysis-macro-regime / regime_compose.resolve_series().
+
+    Walks any nested dict structure, treats nodes with `observations: [{date, value}]`
+    as leaves. Keys observations by leaf's `preset` field (preferred), falling
+    back to `series` (when string) or deepest path component.
+
+    Also emits group-prefixed keys (e.g. `inflation.cpi-yoy` alongside `cpi-yoy`)
+    so that `resolve_series` chains like `["inflation.cpi-yoy", "cpi-yoy"]` find
+    a hit regardless of preferred form. Skips keys starting with `_`.
+    """
+    flat: dict[str, list[float]] = {}
+
+    def _values_from_observations(obs_list: list) -> list[float]:
+        out: list[float] = []
+        for o in obs_list:
+            if isinstance(o, dict) and o.get("value") is not None:
+                try:
+                    out.append(float(o["value"]))
+                except (TypeError, ValueError):
+                    pass
+        return out
+
+    def visit(node, path):
+        if not isinstance(node, dict):
+            return
+        obs = node.get("observations")
+        if isinstance(obs, list):
+            values = _values_from_observations(obs)
+            if not values:
+                return
+            preset = node.get("preset")
+            series_field = node.get("series")
+            if isinstance(preset, str):
+                primary = preset
+            elif isinstance(series_field, str):
+                primary = series_field
+            elif path:
+                primary = path[-1]
+            else:
+                return
+            if primary not in flat:
+                flat[primary] = values
+            if len(path) >= 2 and isinstance(path[0], str):
+                key = f"{path[0]}.{primary}"
+                if key not in flat:
+                    flat[key] = values
+            return
+        for k, v in node.items():
+            if isinstance(k, str) and k.startswith("_"):
+                continue
+            if isinstance(v, dict):
+                visit(v, path + (k,))
+
+    for k, v in root.items():
+        if isinstance(k, str) and k.startswith("_"):
+            continue
+        if isinstance(v, dict):
+            visit(v, (k,))
+    return flat
+
+
 def pack_regime_pack(indicators: str) -> dict:
     """Macro-regime pull via fdr_client → BOK ECOS-KEYSTAT (54 indicators)."""
     if indicators == "all":
@@ -491,11 +555,13 @@ def pack_regime_pack(indicators: str) -> dict:
         result = _run([str(FDR), "--preset", ",".join(presets)])
         by_group[grp] = result
 
+    series_flat = _flatten_regime_to_series(by_group)
     return {
         "pack": "regime-pack",
         "country": "kr",
         "groups_requested": groups,
         "data": by_group,
+        "series": series_flat,  # T2 canonical flat alias per ADR-0002
         "_provenance": {
             "primary_source_status": "available",
             "primary_source_note": (
