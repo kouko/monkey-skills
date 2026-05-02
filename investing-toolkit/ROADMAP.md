@@ -1,6 +1,150 @@
 # investing-toolkit Roadmap
 
-## v2.1.0 — analysis-macro-regime Phase 1 per-country classifiers (released 2026-05-02)
+---
+
+# Future Roadmap (planning — post-v2.1.0)
+
+This section tracks deferred work, organized by horizon. **Each item is independently shippable** — pick any one and a fresh Claude Code session has enough context to start. Items reference relevant ADRs and prior PRs for context.
+
+**Pickup convention for new sessions**: read this section + the linked ADR/PR for the chosen item; that's the whole brief. Worktree pattern (`git worktree add -b feat/...`) recommended for any multi-PR work.
+
+## Near-term — v2.1.x patches
+
+Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
+
+### v2.1.x-a — JP regime-pack fresh fixture refresh
+
+- **What**: Run `data-jp/scripts/pack.py --pack regime-pack` against live BOJ Time-Series API to capture Tankan business DI + ESRI coincident-index / leading-index / 機械受注 data that PR-3 (#188) wired but didn't refresh in fixture. Replace `tests/data/fixtures/data-jp-regime-pack-sample.json`.
+- **Why**: `classify_jp.py` currently engages IP fallback (`source: "ip"` instead of `coincident-index`) because pre-PR-3 fixture lacks Tankan + ESRI fields. Fresh fixture lets confidence rise from medium to high stable.
+- **Files**: `investing-toolkit/tests/data/fixtures/data-jp-regime-pack-sample.json` (regenerate); `investing-toolkit/tests/integration/test_cross_layer_chains.py::test_chain_jp_classifier_e2e` (tighten `confidence in ("medium", "high")` → `confidence == "high"`).
+- **Blocker**: BOJ Time-Series API reachability (occasionally rate-limited; should retry).
+- **Acceptance**: JP test asserts `confidence == "high"`, `cycle_proxy.source == "coincident-index"` (not `"ip"`), `tankan_business_di.large_mfg` populated.
+- **Reference**: PR-3 #188; ADR-0004 §"JP Tankan series code resolution".
+
+### v2.1.x-b — TW TIER as standalone NDC preset
+
+- **What**: Add `tier` preset to `data-tw/scripts/ndc_client.py` PRESETS dict (currently only available via `signal-components` 9 構成 bundle). Wire into `pack.py pack_regime()`. Update fixture so `signal-components.data` includes TIER as an explicit field.
+- **Why**: PR-4 #187 found TIER missing from existing TW fixture even though `signal-components` preset claims to include it. classify_tw degrades to medium confidence with `tier_manufacturing_climate.value: None`. Standalone preset + fixture refresh fixes both.
+- **Files**: `investing-toolkit/skills/data-tw/scripts/ndc_client.py` (add preset); `investing-toolkit/skills/data-tw/scripts/pack.py` (wire); `tests/data/fixtures/data-tw-regime-pack-sample.json` (regenerate); `tests/integration/test_cross_layer_chains.py::test_chain_tw_classifier_e2e`.
+- **Blocker**: NDC ws.ndc.gov.tw availability.
+- **Acceptance**: TW fixture has `tier_manufacturing_climate.value` populated; test asserts `confidence == "high"`.
+- **Reference**: PR-4 #187 grounding-tw-2026-05.md "fixture predates TIER preset" note.
+
+### v2.1.x-c — DGBAS CPI YoY label correction
+
+- **What**: PR-4 #187 review observed `data-tw/dgbas_client.py` `cpi` preset is labelled "CPI YoY%" but actually emits CPI INDEX values (110.16-110.93, base 2021=100). Add a separate `cpi-yoy` preset that returns true YoY (or fix existing preset's label/values).
+- **Why**: classify_tw `cpi_context.latest_yoy` resolves to None on existing fixture because the values aren't true YoY. Downstream `bok_target_alignment`-like analyses also miss-read.
+- **Files**: `investing-toolkit/skills/data-tw/scripts/dgbas_client.py`; pack.py; tests.
+- **Blocker**: None (DGBAS publishes both forms).
+- **Acceptance**: TW fixture surfaces true CPI YoY; classify_tw `cpi_context.latest_yoy` non-null.
+- **Reference**: PR-4 #187 grounding-tw-2026-05.md fixture-deficiency note.
+
+### v2.1.x-d — CI script-sync check promote to required
+
+- **What**: Flip GitHub Actions workflow flag for `check-script-sync` from advisory to required. Currently MD5-mismatch warnings can land without blocking merge.
+- **Why**: v2.0.0 added the sync mechanism but kept it advisory; drift risk grows with each PR.
+- **Files**: `.github/workflows/skill-structure.yml` or repo branch protection rules.
+- **Blocker**: Confirm last 30 days had zero false-positives (review CI run history).
+- **Acceptance**: A test commit with deliberately desynced script copies fails CI.
+
+## Mid-term — v2.2.0 candidates
+
+Material features. ~1-3 weeks each. Do one at a time.
+
+### v2.2.0-a — JP real-rate C+D+E framework restoration
+
+- **What**: Restore the v1.10.0-deferred C+D+E real-rate decomposition for JP. C = ECB ex-post real-yield (already in v2.1.0 classify_jp); D = Tankan ex-ante inflation outlook (already wired in v1.x `boj_tankan_inflation_outlook`); E = JGBi (Japanese inflation-linked bonds) compared with nominal JGB.
+- **Why**: 1-axis C-only is the weakest of the 5 countries. C+D+E is the framework `references/japan-real-rate-roadmap.md` describes; restoring it makes JP real-rate match US's 4-tier rigor.
+- **Files**: `investing-toolkit/skills/data-jp/scripts/` new `mof_jgbi_client.py` (MoF publishes JGBi via PDF/XLSX, no API); `data-jp/pack.py` regime-pack JGBi block; `classify_jp.py` _build_real_rate_block extension.
+- **Blocker**: MoF JGBi data is PDF-scraped or Excel-downloaded — fragile parser.
+- **Acceptance**: classify_jp `real_rate_block` has 3 sub-blocks (ex_post / ex_ante / jgbi) all populated; cross-method central tendency derived.
+- **Reference**: `analysis-macro-regime/references/japan-real-rate-roadmap.md`; v1.10.0 deferred list; v2.0.0 deferred list.
+
+### v2.2.0-b — analysis-comps `--mode compute` activation
+
+- **What**: v2.0.0 shipped `analysis-comps` skill with peer-discovery + multiples fetch but `--mode compute` is placeholder. Implement: percentile rank per multiple, composite score, anchor-vs-peer delta, sector tilt overlay.
+- **Why**: Without compute, comps output is a table of numbers — analyst still does the math by hand. Compute mode produces verdict-grade output.
+- **Files**: `investing-toolkit/skills/analysis-comps/scripts/comps_compute.py` (new compute path); SKILL.md update; integration tests.
+- **Blocker**: None (data already in place).
+- **Acceptance**: `comps_compute --mode compute` produces JSON with per-multiple percentile, composite score, anchor delta vs peer median.
+- **Reference**: v2.0.0 deferred list.
+
+### v2.2.0-c — Sector-adjusted multiples for Comps
+
+- **What**: Banks → P/B + ROE; REITs → P/AFFO; Tech → EV/Revenue + Rule-of-40. Per-sector schema swap for the 5-multiple default.
+- **Why**: P/E + EV/EBITDA on a bank or REIT is meaningless. Sector classifier + per-sector schema makes comps useful across sectors.
+- **Files**: `analysis-comps/scripts/sector_classifier.py` (new — likely yfinance `info.sector` + manual override table); per-sector multiple schemas in `references/`; comps_compute extension.
+- **Blocker**: Sector classification correctness (yfinance is sometimes wrong; need manual override).
+- **Acceptance**: Apple → tech multiples (EV/Revenue + Rule-of-40); JPM → bank multiples (P/B + ROE); Realty Income → REIT multiples.
+- **Reference**: v2.0.0 deferred list.
+
+### v2.2.0-d — KR ESI explicit ECOS API integration
+
+- **What**: Replace fdr_client KEYSTAT 'sentiment' fallback with native ECOS (한국은행 경제통계시스템) API call for 경제심리지수 K269.
+- **Why**: KR Phase 1 PR-5 #186 noted ESI deferred; current code degrades gracefully but full primary-source integration is preferred.
+- **Files**: `investing-toolkit/skills/data-kr/scripts/ecos_client.py` (new — needs ECOS API key); pack.py wiring; classify_kr.py read path.
+- **Blocker**: **Apply for free key at ecos.bok.or.kr/api/#/AuthKeyApply** (~1 week審 review).
+- **Acceptance**: classify_kr `esi_status: "fetched"` (not `"unavailable_via_fdr"`); ESI 91.7 (2026-04 latest) surfaces.
+- **Reference**: PR-5 #186 grounding-kr-2026-05.md; ADR-0004 §"KR ECOS vs fdr trade-off".
+
+### v2.2.0-e — KR DART primary-source equity integration ⭐
+
+- **What**: Build `data-kr/scripts/dart_client.py` for KR equity primary source (analogous to US `sec_edgar_client.py`). DART (전자공시시스템) provides corporate filings, financial statements (XBRL/iXBRL/CSV), shareholder data.
+- **Why**: **KR is the thinnest primary-source country** in v2.1.0 (fdr_client is secondary scrape). Building DART integration completes the 5-country symmetry on the equity side and unblocks KR memo-fetch / DCF Tier A path (parallel to US T3 in ADR-0003).
+- **Files**: `data-kr/scripts/dart_client.py` (new); `data-kr/scripts/pack.py` memo-fetch + comps-multiples wired to DART; `references/schema-memo-fetch.json` KR-specific. Likely an ADR-0006 to record per-country financial statement Tier A approach for KR (parallel to ADR-0003 for US).
+- **Blocker**: DART API key (already applied; check expiry); K-IFRS taxonomy mapping; iXBRL parser. ~2-3 weeks total.
+- **Acceptance**: Samsung 005930.KS memo-fetch returns `_provenance.tier == "A"` with `accession` field per FY; DCF integration test green.
+- **Reference**: ADR-0003 (US T3 mapping pattern); v2.0.0 deferred list.
+
+### v2.2.0-f — CN credit impulse upgrade to true stock-yoy
+
+- **What**: PR-6 #189 implemented credit impulse via TSF flow-yoy second-derivative (CICC convention) with honest methodology label. Upgrade to true stock-yoy (matches PBOC published 8.3% directly, no 5-20pp magnitude inflation).
+- **Why**: Magnitude semantics gap is fully documented in `references/credit-impulse-methodology.md`; closing it removes the caveat.
+- **Files**: `data-cn/scripts/akshare_client.py` add `tsf_stock_yoy` extraction (akshare may add it; or scrape pbc.gov.cn directly); `pack.py _compute_credit_impulse` Path 2 activates.
+- **Blocker**: Whether PBOC stock series is in akshare; otherwise need direct PBOC scrape.
+- **Acceptance**: classify_cn `credit_impulse.methodology` no longer mentions "flow-yoy second-derivative"; Path 2 fires.
+- **Reference**: PR-6 #189; `analysis-macro-regime/references/credit-impulse-methodology.md`.
+
+## Long-term — Phase 2 + beyond
+
+### Phase 2 — cross-country comparable surface (ADR-0005, deferred)
+
+- **What**: Bottom-up design of `cross_country` block in regime card (currently null in Phase 1). Inspect 5 actual `native_verdict` shapes after Phase 1 has run for ≥4 weeks; identify common axes; ship comparable surface.
+- **Re-trigger conditions** (any one):
+  - [ ] Phase 1 stable on main ≥ 4 weeks (currently 0 days)
+  - [ ] ≥ 5 multi-country `/invest-macro` or `/invest-portfolio` invocations producing real regime cards
+  - [ ] Buy-side memo workflow concretely needs cross-country alignment that Phase 1 doesn't deliver
+  - [ ] v2.2.0 release planning fits Phase 2 scope
+- **6-month review**: If none fire, evaluate whether comparable surface is needed at all. 5 countries may be too heterogeneous for unified surface to add value over per-country `native_verdict` reads.
+- **Reference**: [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) §"Phase 2 — Deferred"; ADR-0005 (placeholder, not yet written).
+
+### Earnings analysis workflow (blocked)
+
+- **What**: Earnings beat/miss + revision tracking + estimate dispersion.
+- **Blocker**: **Free consensus data source.** Refinitiv I/B/E/S, FactSet, Bloomberg = all paid. yfinance `analyst_estimates` is thin and stale. Visible Alpha / Estimize have free tiers but coverage is partial.
+- **Status**: Not actionable without data source decision. Re-evaluate when a free / cheap source surfaces.
+- **Reference**: v2.0.0 deferred list.
+
+## Dropped (philosophy mismatch)
+
+- ❌ **3-statement model** — sell-side artifact incompatible with buy-side primary-source pipeline philosophy. See ROADMAP §"v2.0.0 Dropped".
+- ❌ **Per-country IC quadrant force-fit** — superseded by ADR-0004 (v2.1.0). Native classifiers replace unified IC where the framework breaks down (CN inflation framing inversion, JP exit-deflation, TW NDC 五色-led).
+
+## How to pick the next item (for fresh-session pickup)
+
+1. **Default**: do near-term v2.1.x patches first (a/b/c/d) — closes Phase 1 loose ends, ~3-5 days total
+2. **If a v2.2.0 item is more compelling**: pick from a/b/c/d/e/f based on:
+   - **Blocker readiness**: ECOS key applied? DART key still valid?
+   - **Strategic value**: KR DART (v2.2.0-e) is the highest-leverage — covers KR's biggest gap and unblocks downstream KR memo-fetch / DCF
+   - **Cost**: comps `--mode compute` (v2.2.0-b) is the cheapest material upgrade
+3. **Phase 2**: don't proactively start; wait for re-trigger conditions
+4. **Earnings**: skip until free data source surfaces
+
+For each item, the brief above should be sufficient to start a fresh session with `/loop` or subagent-driven-development. Reference the linked ADR for design rationale; reference linked PRs for prior-art commits.
+
+---
+
+
 
 **Scope**: Decompose v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). Defer cross-country comparable surface to Phase 2 (ADR-0005). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md).
 
