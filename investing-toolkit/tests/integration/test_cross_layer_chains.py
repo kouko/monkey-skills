@@ -726,6 +726,101 @@ def test_chain_tw_classifier_e2e():
     assert "ndc.signal-score" in ind, f"ndc.signal-score missing from indicators_used: {ind}"
 
 
+def test_chain_kr_classifier_e2e():
+    """data-kr regime-pack → classify_kr → CountryRegimeCard with valid
+    Phase 1 envelope. Per ADR-0004 PR-5.
+
+    KR-specific assertions:
+      - bok_target_alignment populated (target / current / gap / status)
+      - household_debt_overlay populated (BIS + BOK ratios + macroprudential flag)
+      - kospi_concentration_overlay populated (Samsung+SK Hynix ~40.96%)
+      - cycle_phase ∈ {expansion, peak, contraction, trough, unknown}
+      - esi_status ∈ {"fetched", "unavailable_via_fdr"} — must NOT fail
+        when ESI unavailable (best-effort per ADR-0004 PR-5)
+    """
+    fixture = FIXTURES / "data-kr-regime-pack-sample.json"
+    script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    if not fixture.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    rc, out, stderr = _run_layer2(script, ["--input", f"kr={fixture}"])
+    assert rc == 0, f"exit {rc}\nstderr: {stderr}"
+
+    kr = out.get("by_country", {}).get("kr")
+    assert kr is not None, (
+        f"by_country.kr missing — classify_kr not picked up by dispatcher. "
+        f"output keys: {list(out.keys())}; "
+        f"by_country keys: {list(out.get('by_country', {}).keys())}"
+    )
+    assert kr["country"] == "kr"
+    assert kr["framework_used"], "framework_used empty"
+
+    nv = kr["native_verdict"]
+    assert "framework_label" in nv, "framework_label missing"
+    assert "BOK 2% target" in nv["framework_label"]
+
+    # --- bok_target_alignment populated ---
+    bta = nv.get("bok_target_alignment")
+    assert bta is not None, (
+        f"bok_target_alignment is None — CPI yoy not derivable. "
+        f"native_verdict keys: {list(nv.keys())}"
+    )
+    assert bta["target"] == 2.0, f"BOK 2% target mismatch: {bta['target']!r}"
+    assert "current" in bta and isinstance(bta["current"], (int, float))
+    assert "gap" in bta and isinstance(bta["gap"], (int, float))
+    assert bta["status"] in {"at_target", "above_target", "below_target"}
+
+    # --- household_debt_overlay populated ---
+    hh = nv.get("household_debt_overlay")
+    assert hh is not None, "household_debt_overlay missing"
+    assert hh.get("ratio_bis") == 0.894, (
+        f"BIS 2025-Q3 ratio mismatch: {hh.get('ratio_bis')!r}"
+    )
+    assert hh.get("macroprudential_concern") is True, (
+        f"macroprudential_concern flag should be True (89.4% > 80% threshold); "
+        f"got {hh.get('macroprudential_concern')!r}"
+    )
+
+    # --- kospi_concentration_overlay populated ---
+    kospi = nv.get("kospi_concentration_overlay")
+    assert kospi is not None, "kospi_concentration_overlay missing"
+    assert kospi.get("samsung_skhynix") is not None
+    # Samsung+SK Hynix should be in the 0.39-0.42 range (2026-04 vintage)
+    assert 0.39 <= kospi["samsung_skhynix"] <= 0.42, (
+        f"samsung_skhynix concentration out of expected band: "
+        f"{kospi['samsung_skhynix']!r}"
+    )
+
+    # --- cycle_phase classification ---
+    assert nv["cycle_phase"] in {
+        "expansion", "peak", "contraction", "trough", "unknown",
+    }
+
+    # --- ESI handling — must NOT fail when unavailable ---
+    assert nv["esi_status"] in {"fetched", "unavailable_via_fdr"}, (
+        f"esi_status invalid: {nv.get('esi_status')!r}"
+    )
+    if nv["esi_status"] == "fetched":
+        assert nv.get("esi_value") is not None
+    # unavailable case is acceptable — pack.py default fixture lacks
+    # 'sentiment' group; classifier degrades gracefully
+
+    # --- Confidence heuristic per ADR-0004 PR-5 ---
+    assert kr["confidence"] in {"low", "medium", "high"}
+    # If ESI is unavailable but cpi + cycle present, confidence MUST be
+    # at least "medium" per ADR-0004 PR-5 acceptance criterion
+    if nv["esi_status"] == "unavailable_via_fdr" and bta is not None and \
+            nv["cycle_phase"] != "unknown":
+        assert kr["confidence"] in {"medium", "high"}, (
+            f"ESI-unavailable + valid cpi/cycle should floor at medium; "
+            f"got {kr['confidence']!r}"
+        )
+
+    # --- Provenance ---
+    assert kr["provenance"]["calibration_doc"] == "thresholds-korea.md"
+    assert kr["provenance"]["calibration_vintage"] == "2026-Q1"
+
+
 def test_chain_us_classifier_e2e():
     """data-us regime-pack → classify_us → CountryRegimeCard with valid
     Phase 1 envelope. Per ADR-0004 PR-2."""
