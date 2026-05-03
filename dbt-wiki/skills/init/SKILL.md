@@ -41,6 +41,26 @@ modify any dbt project file.
 
 ## Pre-condition Check (Step 0)
 
+### Step 0pre: Resolve `.dbt-wiki/` write location, then `cd` there
+
+`.dbt-wiki/` co-locates with `.git/` (git repo root) so it's stable
+regardless of where the user invoked `/dbt-wiki:init` from. After this
+step, all subsequent `.dbt-wiki/...` paths in this SKILL resolve
+correctly via cwd. Matches the location of the CLAUDE.md drop-in
+written in Step 2 (also at git repo root).
+
+```bash
+# WIKI_DIR = git repo root (preferred); fallback to current $PWD if not in a git repo.
+WIKI_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || WIKI_DIR="$PWD"
+cd "$WIKI_DIR" || { echo "Cannot cd to $WIKI_DIR"; exit 1; }
+echo "✓ .dbt-wiki/ location: $WIKI_DIR/.dbt-wiki/"
+```
+
+If user is NOT in a git repo and ran from an unrelated cwd, `.dbt-wiki/`
+will land at `$PWD`. That's the same constraint as v1.1.0 — only git
+mode benefits from auto-relocation. Most dbt projects are git-tracked
+so this covers the typical case.
+
 ### Step 0a: Resolve dbt project root (5-tier detection)
 
 Try in priority order; first match wins.

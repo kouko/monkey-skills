@@ -4,6 +4,71 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] — 2026-05-03
+
+### Fixed — `.dbt-wiki/` now writes to git repo root, not cwd
+
+v1.0–v1.1.1 used relative paths like `mkdir -p .dbt-wiki/models`, which
+resolved to `$PWD` at invocation time. Combined with v1.1.1's smart
+dbt project detection (which lets the user run init from anywhere),
+this meant `.dbt-wiki/` would land wherever the user happened to be:
+
+- Run from `~/repo/`        → `~/repo/.dbt-wiki/`        ✓
+- Run from `~/repo/dbt/`    → `~/repo/dbt/.dbt-wiki/`    ✗
+- Run from `~/repo/dbt/models/staging/` → 4 levels deep ✗✗
+
+This was inconsistent with the CLAUDE.md drop-in (Step 2 of init),
+which already wrote to **git repo root**. Two output locations for the
+same plugin = bad UX. Also broke refresh / query when the user changed
+cwd between init and subsequent invocations.
+
+### Fix
+
+All three skills (init / refresh / query) now perform a single
+**Step 0pre**: detect git repo root via `git rev-parse --show-toplevel`,
+fall back to `$PWD` if not in a git repo, then `cd "$WIKI_DIR"`. After
+that, every existing `.dbt-wiki/...` path in the SKILL.md auto-resolves
+to the right place — no bulk path rewrites needed.
+
+Result:
+
+- `.dbt-wiki/` always lives at the git repo root
+- Co-located with `.git/`, `CLAUDE.md` drop-in, and (if installed) `.repo-wiki/`
+- init / refresh / query can be run from ANY cwd within the repo and
+  always read/write the same `.dbt-wiki/`
+
+### Files changed
+
+- **`skills/init/SKILL.md`** — new Step 0pre (4-line bash) inserted before
+  Step 0a; everything below works unchanged.
+- **`skills/refresh/SKILL.md`** — same Step 0pre prepended to existing
+  pre-condition check; error message now includes `$WIKI_DIR` for clarity.
+- **`skills/query/SKILL.md`** — same Step 0pre prepended.
+- **`skills/init/assets/SCHEMA.md`** — Architecture section clarifies
+  `.dbt-wiki/` location ("at git repo root, same level as .git/ and CLAUDE.md").
+- **`.claude-plugin/plugin.json`** — 1.1.1 → 1.1.2 (patch — bug fix, no
+  behavior change for users who already ran from git repo root).
+
+### Backward compatibility
+
+**Pre-existing `.dbt-wiki/` directories at non-root locations** (created
+by v1.0–v1.1.1 when user ran from a subfolder) are NOT auto-migrated.
+After upgrading to v1.1.2, the next `/dbt-wiki:init` will create a NEW
+`.dbt-wiki/` at the git repo root, leaving the old one orphaned.
+Migration: manually `mv <old-location>/.dbt-wiki <repo-root>/.dbt-wiki`,
+or delete the old one and re-run init from scratch.
+
+### Edge cases
+
+- **Not in a git repo**: `git rev-parse` fails silently; WIKI_DIR
+  falls back to `$PWD`. User must invoke from a sensible location
+  (typically the project root). Same constraint as v1.1.0.
+- **Submodules**: `git rev-parse --show-toplevel` returns the
+  submodule's root, not the parent repo. This is correct: each
+  submodule with its own dbt project gets its own `.dbt-wiki/`.
+
+---
+
 ## [1.1.1] — 2026-05-03
 
 ### Changed — 5-tier dbt project root detection

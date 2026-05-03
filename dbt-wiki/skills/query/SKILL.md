@@ -38,7 +38,13 @@ Read-only knowledge base query. `.dbt-wiki/` is a *derived snapshot* of
 ## Pre-condition Check (Step 0)
 
 ```bash
-test -d .dbt-wiki || { echo "Knowledge base not initialized. Run /dbt-wiki:init first."; exit 1; }
+# WIKI_DIR = git repo root (where .dbt-wiki/ lives); fallback to current $PWD.
+# Same logic as init Step 0pre — query must look at the SAME location
+# init wrote to, regardless of where the user invoked query from.
+WIKI_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || WIKI_DIR="$PWD"
+cd "$WIKI_DIR" || { echo "Cannot cd to $WIKI_DIR"; exit 1; }
+
+test -d .dbt-wiki || { echo "Knowledge base not initialized at $WIKI_DIR/.dbt-wiki/. Run /dbt-wiki:init first."; exit 1; }
 test -f .dbt-wiki/index.md || { echo "Missing .dbt-wiki/index.md — re-run /dbt-wiki:init."; exit 1; }
 ```
 

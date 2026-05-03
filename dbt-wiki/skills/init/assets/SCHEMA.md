@@ -19,8 +19,11 @@ This knowledge base has three layers:
   - `compiled/<project>/**/*.sql` — Required. Jinja-expanded SQL for sqlglot parsing.
   - `catalog.json` — Optional (Phase 2+). Real warehouse column types, row counts.
   - `run_results.json` — Optional (Phase 2+). Last test pass/fail.
-- **`.dbt-wiki/`** — Wiki layer. Owned entirely by dbt-wiki skills. Records
-  derived structure (per-model entity, lineage graph, column-level dependencies).
+- **`.dbt-wiki/`** — Wiki layer. Owned entirely by dbt-wiki skills. **Located
+  at the git repo root** (same level as `.git/` and `CLAUDE.md`), regardless
+  of where the dbt project subdir lives or where the user invoked the skill
+  from. Falls back to `$PWD` if not in a git repo. Records derived
+  structure (per-model entity, lineage graph, column-level dependencies).
   Acts as a *best-effort structural cache*. Humans read via `/dbt-wiki:query`.
   Do not edit directly. (Enforced by repo-root CLAUDE.md drop-in.)
 - **`.dbt-wiki/SCHEMA.md`** — Schema layer (this file).
