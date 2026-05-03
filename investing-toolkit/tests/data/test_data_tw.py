@@ -102,8 +102,9 @@ def _run_pack(args: list[str], timeout: int = 900) -> dict:
 @pytest.mark.network
 def test_tw_snapshot_tsmc():
     out = _run_pack(["--ticker", TICKER, "--pack", "snapshot"])
-    assert out["_pack"] == "snapshot"
-    assert out["_ticker"] == TICKER
+    assert out["pack"] == "snapshot"
+    assert out["country"] == "TW"
+    assert out["ticker"] == TICKER
     norm = out.get("_normalized", {})
     assert norm.get("ticker_code") == "2330"
     assert norm.get("market") == "sii"
@@ -115,7 +116,8 @@ def test_tw_snapshot_tsmc():
 @pytest.mark.network
 def test_tw_memo_fetch_tsmc():
     out = _run_pack(["--ticker", TICKER, "--pack", "memo-fetch"])
-    assert out["_pack"] == "memo-fetch"
+    assert out["pack"] == "memo-fetch"
+    assert out["country"] == "TW"
     # memo-fetch is snapshot + extra MOPS / TWSE entries
     mops = out.get("mops", {})
     for extra in ("cash_flow", "monthly_revenue", "dividends",
@@ -130,7 +132,8 @@ def test_tw_memo_fetch_tsmc():
 @pytest.mark.network
 def test_tw_comps_multiples_single():
     out = _run_pack(["--ticker", TICKER, "--pack", "comps-multiples"])
-    assert out["_pack"] == "comps-multiples"
+    assert out["pack"] == "comps-multiples"
+    assert out["country"] == "TW"
     assert TICKER in out.get("tickers", {})
     block = out["tickers"][TICKER]
     assert block.get("_source") == "yfinance"
@@ -140,7 +143,8 @@ def test_tw_comps_multiples_single():
 @pytest.mark.network
 def test_tw_screener_batch():
     out = _run_pack(["--tickers", SCREENER_TICKERS, "--pack", "screener-batch"])
-    assert out["_pack"] == "screener-batch"
+    assert out["pack"] == "screener-batch"
+    assert out["country"] == "TW"
     assert isinstance(out.get("yfinance"), dict)
     assert "info_batch" in out["yfinance"]
     assert "history_batch" in out["yfinance"]
@@ -153,6 +157,7 @@ def test_tw_screener_batch():
 @pytest.mark.network
 def test_tw_regime_pack():
     out = _run_pack(["--pack", "regime-pack"])
-    assert out["_pack"] == "regime-pack"
+    assert out["pack"] == "regime-pack"
+    assert out["country"] == "TW"
     for group in ("cbc", "dgbas", "ndc", "statgov"):
         assert group in out, f"regime-pack missing {group} group"

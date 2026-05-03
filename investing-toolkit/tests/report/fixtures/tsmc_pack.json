@@ -1,6 +1,7 @@
 {
-  "_pack": "snapshot",
-  "_ticker": "2330.TW",
+  "pack": "snapshot",
+  "country": "TW",
+  "ticker": "2330.TW",
   "_normalized": {"market": "sii", "code": "2330"},
   "yfinance": {
     "info": {

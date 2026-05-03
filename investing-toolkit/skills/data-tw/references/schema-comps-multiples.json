@@ -4,14 +4,10 @@
   "title": "data-tw comps-multiples pack",
   "description": "Output of `pack.py --ticker <t> --pack comps-multiples` or `pack.py --tickers <t1,t2,...> --pack comps-multiples`. yfinance multiples-only — designed for `analysis-comps`. Per-ticker envelope contains data.multiples extracted from yfinance.info: trailingPE, forwardPE, priceToSalesTrailing12Months, priceToBook, enterpriseToEbitda, enterpriseToRevenue, marketCap, enterpriseValue. No MOPS / TWSE / FinMind / macro fetches. No _partial flag (lightest pack).",
   "type": "object",
-  "required": ["_pack", "_tickers", "tickers"],
+  "required": ["pack", "country", "tickers"],
   "properties": {
-    "_pack": {"const": "comps-multiples"},
-    "_tickers": {
-      "type": "array",
-      "items": {"type": "string", "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"},
-      "description": "Ordered list of normalized yfinance-style tickers."
-    },
+    "pack": {"const": "comps-multiples"},
+    "country": {"const": "TW"},
     "tickers": {
       "type": "object",
       "description": "Map keyed by yfinance-style ticker (e.g. '2330.TW' → envelope).",

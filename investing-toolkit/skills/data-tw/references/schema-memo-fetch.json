@@ -4,10 +4,11 @@
   "title": "data-tw memo-fetch pack",
   "description": "Output of `pack.py --ticker <ticker> --pack memo-fetch`. Heavy single-ticker pull for the equity-memo path. Superset of snapshot — adds MOPS cash_flow + monthly_revenue + dividends 5y + director_holdings + insider_trades + announcements; TWSE three_investor + (sii only) stock_day_history; FinMind margin_history (90d, 2-gap) and price_history (.TWO only, Tier 2). _pack='memo-fetch'. _partial flips on any Tier A error across the full set.\n\nROC year notes: balance_sheet / income_statement / cash_flow use latest_roc_quarter() — for example fetched on 2026-05-01 the Q4 2025 (ROC year=114, season=4) is used because post-Apr 1 the Q4 filing deadline (Mar 31) has passed. monthly_revenue uses latest_revenue_month() — published by the 10th of the following month, with a 5-day buffer (day<15 falls back two months) so e.g. on 2026-05-01 the year=115 month=3 (Mar 2026) data is requested.",
   "type": "object",
-  "required": ["_pack", "_ticker", "_normalized", "yfinance", "mops", "twse", "finmind", "_partial"],
+  "required": ["pack", "country", "ticker", "_normalized", "yfinance", "mops", "twse", "finmind", "_partial"],
   "properties": {
-    "_pack": {"const": "memo-fetch"},
-    "_ticker": {"type": "string", "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"},
+    "pack": {"const": "memo-fetch"},
+    "country": {"const": "TW"},
+    "ticker": {"type": "string", "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"},
     "_normalized": {
       "type": "object",
       "required": ["ticker_yf", "ticker_code", "market"],

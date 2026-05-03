@@ -306,7 +306,7 @@ def _adapt_tw(pack: dict[str, Any]) -> Card:
     if not fetched_at and isinstance(info, dict):
         fetched_at = info.get("fetched_at", "") or ""
     card = Card(
-        ticker=pack.get("_ticker") or pack.get("ticker", "?"),
+        ticker=pack.get("ticker") or pack.get("_ticker") or "?",
         country="TW",
         fetched_at=fetched_at,
         currency="NT$",
@@ -475,7 +475,9 @@ def detect_country(pack: dict[str, Any]) -> str:
     LAST-RESORT fallback only — `resolve_country()` is the public entry point
     that prefers explicit pack["country"] + ticker-suffix routing first.
     """
-    # data-tw uses _pack/_ticker prefix
+    # data-tw (post v2.2.0-m): explicit country field; legacy _pack discriminator kept for backwards compat
+    if pack.get("country") in ("TW", "tw"):
+        return "TW"
     if pack.get("_pack") and "yfinance" in pack and "mops" in pack and "twse" in pack:
         return "TW"
     # data-cn uses yfinance_info / country: "CN"

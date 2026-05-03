@@ -4,10 +4,11 @@
   "title": "data-tw snapshot pack",
   "description": "Output of `pack.py --ticker <2330.TW|2330.TWO|2330> --pack snapshot`. Quick overview card data — yfinance info+history, MOPS company_basic + BS + IS for the latest filed quarter, TWSE daily price + PE/PB/yield + margin balance, FinMind T86 三大法人 trailing 90 days. Currency is TWD throughout. Routing: .TW → TWSE listed (sii); .TWO → TPEx listed (otc). pack.py auto-normalizes bare numerics to .TW.",
   "type": "object",
-  "required": ["_pack", "_ticker", "_normalized", "yfinance", "mops", "twse", "finmind", "_partial"],
+  "required": ["pack", "country", "ticker", "_normalized", "yfinance", "mops", "twse", "finmind", "_partial"],
   "properties": {
-    "_pack": {"const": "snapshot"},
-    "_ticker": {
+    "pack": {"const": "snapshot"},
+    "country": {"const": "TW"},
+    "ticker": {
       "type": "string",
       "description": "Original yfinance-style ticker after normalization (e.g. '2330.TW' or '2330.TWO').",
       "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"

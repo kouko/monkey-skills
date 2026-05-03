@@ -315,8 +315,9 @@ def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
     date_3mo = (_UTCNOW() - timedelta(days=90)).strftime("%Y-%m-%d")
 
     out: dict[str, Any] = {
-        "_pack": "snapshot",
-        "_ticker": yf_ticker,
+        "pack": "snapshot",
+        "country": "TW",
+        "ticker": yf_ticker,
         "_normalized": norm,
         "yfinance": {},
         "mops": {},
@@ -379,7 +380,7 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
     date_3mo = (_UTCNOW() - timedelta(days=90)).strftime("%Y-%m-%d")
 
     out = pack_snapshot(ticker, period=period)
-    out["_pack"] = "memo-fetch"
+    out["pack"] = "memo-fetch"
 
     # Cash flow + monthly revenue + dividends + announcements + insider/director — Tier A
     out["mops"]["cash_flow"] = wrap("A", "mops", "cash-flow",
@@ -472,12 +473,11 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
 
 def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
     """yfinance info (multiples-only) for one or many tickers."""
-    out: dict[str, Any] = {"_pack": "comps-multiples", "_tickers": [], "tickers": {}}
+    out: dict[str, Any] = {"pack": "comps-multiples", "country": "TW", "tickers": {}}
     info_alias: dict[str, dict] = {}  # T1 canonical: pack.info[ticker] → multiples
     for t in tickers:
         norm = normalize_ticker(t)
         yf_t = norm["ticker_yf"]
-        out["_tickers"].append(yf_t)
         info = run_client("yfinance_client.py", ["--ticker", yf_t, "--action", "info"])
         if isinstance(info, dict) and "_error" in info:
             # let wrap() surface the error envelope
@@ -500,12 +500,11 @@ def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
 
 def pack_screener_batch(tickers: list[str], period: str = "1y") -> dict[str, Any]:
     """yfinance batch info+history + minimal MOPS company_basic per ticker."""
-    out: dict[str, Any] = {"_pack": "screener-batch", "_tickers": [], "yfinance": {}, "mops": {}}
+    out: dict[str, Any] = {"pack": "screener-batch", "country": "TW", "yfinance": {}, "mops": {}}
     yf_list = []
     for t in tickers:
         norm = normalize_ticker(t)
         yf_list.append(norm["ticker_yf"])
-        out["_tickers"].append(norm["ticker_yf"])
 
     # yfinance batch — single subprocess
     batch_info = run_client("yfinance_client.py",
@@ -586,7 +585,7 @@ def _flatten_regime_to_series(root: dict) -> dict:
 
 def pack_regime() -> dict[str, Any]:
     """Macro regime indicators: CBC + DGBAS + NDC 五色景氣燈號 + statgov + CIER PMI."""
-    out: dict[str, Any] = {"_pack": "regime-pack", "cbc": {}, "dgbas": {},
+    out: dict[str, Any] = {"pack": "regime-pack", "country": "TW", "cbc": {}, "dgbas": {},
                            "ndc": {}, "statgov": {}, "_partial": False}
 
     # CBC — rates / forex / money

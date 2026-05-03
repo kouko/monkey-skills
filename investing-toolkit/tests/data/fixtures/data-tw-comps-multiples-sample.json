@@ -1,10 +1,6 @@
 {
-  "_pack": "comps-multiples",
-  "_tickers": [
-    "2330.TW",
-    "2454.TW",
-    "2317.TW"
-  ],
+  "pack": "comps-multiples",
+  "country": "TW",
   "tickers": {
     "2330.TW": {
       "_tier": "2",
