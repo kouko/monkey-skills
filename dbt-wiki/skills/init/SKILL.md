@@ -237,6 +237,8 @@ cp <SKILL_DIR>/assets/extract_column_lineage.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_column_lineage_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
 ```
 
 (Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
@@ -390,6 +392,71 @@ else:
 
 Set frontmatter `columns_extracted_via: <extraction_status>`. The model
 page is always created — failures just mean empty `sources:` per column.
+
+### Step 4f: Recursive column-lineage extraction (cross-model DAG walk)
+
+The per-SQL lineage from Step 4b only shows **one hop** within a single
+model's SQL (e.g. `fct_orders.customer_id ← stg_orders.customer_id`).
+For full chain answers ("where does fct_orders.customer_id come from
+all the way back to source?"), we need to walk the manifest's depends_on
+DAG and resolve each per-SQL source to its upstream manifest node.
+
+dbt-wiki ships `extract_recursive_column_lineage.py` for this. It's
+pure stdlib (no sqlglot needed — consumes the JSONL from Step 4b plus
+the manifest). Init copies it alongside the other scripts in Step 4:
+
+```bash
+cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
+```
+
+Run it after Step 4b's per-SQL lineage finishes:
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/extract_recursive_column_lineage.py \
+    --manifest "$DBT_DIR/target/manifest.json" \
+    --lineage /tmp/dbt-wiki-col-lineage.jsonl \
+    > /tmp/dbt-wiki-recursive-lineage.jsonl
+```
+
+Output is JSONL — one record per `(model_uid, column)`:
+
+```json
+{"model_uid": "model.proj.fct_orders",
+ "column": "customer_id",
+ "ancestors": {
+   "model.proj.stg_orders::customer_id": {
+     "source.proj.raw_data.orders_raw::customer_id": {}
+   },
+   "model.proj.stg_customers::id": {
+     "source.proj.raw_data.customers_raw::id": {}
+   }
+ },
+ "descendants": {
+   "model.proj.dim_orders_summary::customer_id": {
+     "model.proj.mart_finance::customer_id": {}
+   }
+ }}
+```
+
+Tree node keys:
+- `<unique_id>::<column>` — resolved manifest node + column
+- `_unresolved::<table>::<col>` — sqlglot reported a table we couldn't
+  map back to manifest (CTE name, SQL alias, dynamic macro output)
+- `_cycle` / `_max_depth` — protection markers
+
+In Step 5, attach the recursive lineage to each model page's body as
+the `## Column Lineage Chains` section per SCHEMA.md (renders the
+ancestor + descendant tree as nested bullet lists for human readability).
+
+### Step 4g: Verify recursive script (optional, recommended on first run)
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/extract_recursive_column_lineage_test.py
+```
+
+Expects "6/6 passed". The test uses synthetic manifest + lineage
+(no sqlglot, no real dbt project), so it runs offline.
 
 ## Step 5: Write Model / Source / Macro Pages
 
