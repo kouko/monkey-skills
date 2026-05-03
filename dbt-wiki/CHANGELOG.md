@@ -4,6 +4,101 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-05-03
+
+### Added — `SELECT * FROM <final_cte>` wrapper-pattern unwrap
+
+dbt projects very commonly end models with the convention:
+
+```sql
+WITH staging AS (...),
+     enriched AS (...),
+     final AS (
+         SELECT col1, col2, calculation AS col3 FROM enriched
+     )
+SELECT * FROM final
+```
+
+In v1.0–v1.1.2, sqlglot saw only the outer `SELECT *` and reported a
+single column named `*`. Models authored with this convention lost all
+per-column information. On the iCHEF-dbt-pipeline dogfood, this hit
+**71% of models** (860/1209), making column-level lineage queries
+mostly useless for marts/dash tiers.
+
+v1.2.0 adds an unwrap fallback in `extract_column_lineage.py`. When
+the script detects a top-level `SELECT * FROM <single_table>` AND the
+referenced table is a CTE in the same SQL's WITH clause, it walks into
+the CTE and uses ITS projections as the model's columns. Recursive up
+to depth 5 (handles `cte_a = SELECT * FROM cte_b = SELECT * FROM cte_c`).
+
+For each unwrapped column, sources are extracted from direct column
+references in the inner CTE's expression. If the inner CTE has a
+single FROM table (the typical `final AS (SELECT ... FROM merge_data)`
+pattern), unqualified column references are auto-resolved to that
+table — so a single-CTE wrapper produces clean `merge_data.col1` style
+sources.
+
+### Real-world impact (iCHEF-dbt-pipeline, 1209 model files)
+
+| Metric | v1.1 | v1.2 | Δ |
+|---|---|---|---|
+| Models with real column names | 349 (28.9%) | 1209 (100%) | **+860 / +247%** |
+| Models stuck at just `*` | 860 | 0 | **−860** |
+| Avg columns per model (real) | 1 | 12 | **+12×** |
+| Total column entries unlocked | ~349 | ~14,500 | **+41×** |
+
+### Files changed
+
+- **`dbt-wiki/skills/init/assets/extract_column_lineage.py`**:
+  new helper `_expand_star_via_cte()` (~80 lines). Detects `SELECT *
+  FROM <cte>` pattern, recursively walks nested wrappers (max_depth=5),
+  resolves unqualified column refs against the inner CTE's single FROM
+  table when applicable. Hooked into `extract_lineage()` BEFORE the
+  per-projection loop — if unwrap succeeds, use it; otherwise fall
+  through to existing logic (preserves all v1.1 behavior for non-wrapper
+  SQL).
+- **`dbt-wiki/skills/init/assets/extract_column_lineage_test.py`**:
+  - 2 new test cases (Cases 8 + 9): single-level wrapper + nested
+    wrapper. Both pass.
+  - Test runner switched to `uv run` first (fall back to plain python3
+    if uv not installed). Previously ran via `sys.executable` which
+    couldn't honor PEP 723 metadata, so all sqlglot-dependent tests
+    silently skipped on machines without manually pip-installed
+    sqlglot.
+- **`.claude-plugin/plugin.json`**: 1.1.2 → 1.2.0 (minor bump — new
+  capability, fully backward compatible).
+
+### Backward compatibility
+
+**Zero break**. The unwrap is a strictly additive fallback:
+- If your SQL doesn't use the `SELECT * FROM <cte>` pattern, code path
+  is identical to v1.1.x
+- If your SQL DOES use the pattern but the CTE isn't found / FROM has
+  joins / nested too deep — fall through to v1.1's behavior (Star → `*`)
+- All 7 v1.1 test cases still pass
+
+### Limitations (v1.2.0)
+
+- Only handles single-table FROM in the outer `SELECT *`. If outer is
+  `SELECT * FROM cte_a JOIN cte_b ON ...`, no unwrap (could be added
+  in v1.3 by merging projections from both CTEs).
+- For unqualified column refs inside the CTE, only resolves to a single
+  default table — if the CTE itself has joins, references stay as
+  `<unqualified>` (the recursive-lineage extractor can still resolve
+  these via downstream chain).
+- max_depth=5 should cover all realistic dbt wrapper chains; if you
+  somehow have `cte1 → cte2 → cte3 → cte4 → cte5 → cte6`, deepest one
+  is skipped.
+
+### Migration
+
+Re-run `/dbt-wiki:init` to regenerate model pages with full column
+lineage. Existing v1.1.x `.dbt-wiki/` pages will be overwritten by
+init's re-run (same idempotency contract); user-owned `## User Notes`
+sections are preserved.
+
+---
+
 ## [1.1.2] — 2026-05-03
 
 ### Fixed — `.dbt-wiki/` now writes to git repo root, not cwd

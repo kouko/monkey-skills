@@ -74,6 +74,31 @@ CASES = [
         "snowflake",
         {"a": {"t.a"}, "b": {"t.b"}},
     ),
+    # 8. dbt `SELECT * FROM final` wrapper pattern — must unwrap to real columns
+    # (very common in iCHEF-style dbt projects; v1.2.0 added this fallback).
+    (
+        """
+        WITH staging AS (SELECT raw_id, raw_name FROM raw_t),
+             final AS (
+                 SELECT raw_id AS id, UPPER(raw_name) AS name
+                 FROM staging
+             )
+        SELECT * FROM final
+        """,
+        "redshift",
+        {"id": {"staging.raw_id"}, "name": {"staging.raw_name"}},
+    ),
+    # 9. Nested wrapper — `SELECT * FROM cte_a` where cte_a is `SELECT * FROM cte_b`.
+    # Should drill down to cte_b's projections.
+    (
+        """
+        WITH cte_b AS (SELECT col1, col2 FROM base_table),
+             cte_a AS (SELECT * FROM cte_b)
+        SELECT * FROM cte_a
+        """,
+        "redshift",
+        {"col1": {"base_table.col1"}, "col2": {"base_table.col2"}},
+    ),
 ]
 
 
@@ -81,12 +106,20 @@ def run_script(sql: str, dialect: str) -> dict:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".sql", delete=False) as f:
         f.write(sql)
         path = f.name
+    # Prefer `uv run` so PEP 723 metadata auto-installs sqlglot in an
+    # ephemeral env. Fall back to plain python3 (requires manual sqlglot
+    # install) for environments without uv.
+    import shutil
+    if shutil.which("uv"):
+        cmd = ["uv", "run", "--quiet", str(SCRIPT), path, dialect]
+    else:
+        cmd = [sys.executable, str(SCRIPT), path, dialect]
     try:
         proc = subprocess.run(
-            [sys.executable, str(SCRIPT), path, dialect],
+            cmd,
             capture_output=True,
             text=True,
-            timeout=15,
+            timeout=60,  # uv may need longer on first run for ephemeral install
         )
         if proc.returncode > 1:
             return {"_test_error": f"script exit={proc.returncode}: {proc.stderr[:200]}"}
