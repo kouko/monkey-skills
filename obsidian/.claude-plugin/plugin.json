@@ -1,7 +1,7 @@
 {
   "name": "obsidian",
-  "version": "3.5.0",
-  "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. ⚠️ Most skills are Cowork-compatible; the `defuddle` skill needs Claude Code CLI (subprocess + external URL fetch).",
+  "version": "3.6.0",
+  "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. Plus an LLM wiki knowledge-distillation layer (6 wiki-* skills) on top of vault notes. ⚠️ Most skills are Cowork-compatible; the `defuddle` skill needs Claude Code CLI (subprocess + external URL fetch).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -19,6 +19,8 @@
     "mermaid",
     "excalidraw",
     "dashboard",
-    "file-intel"
+    "file-intel",
+    "wiki",
+    "knowledge-distillation"
   ]
 }
