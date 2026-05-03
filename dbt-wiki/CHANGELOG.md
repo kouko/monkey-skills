@@ -4,6 +4,67 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-05-03
+
+### Changed — PEP 723 inline metadata + uv-first execution
+
+Both bundled scripts (`extract_column_lineage.py`, `extract_sql_comments.py`)
+now declare their Python and dependency requirements via PEP 723 inline
+metadata. With [uv](https://github.com/astral-sh/uv) installed, `uv run`
+auto-creates an ephemeral env, installs sqlglot, runs the script, and
+cleans up — no manual `pip install sqlglot` required.
+
+**Why**: the original v1.0.0 design required users to manually
+`pip install sqlglot` into their dbt Python env. That step was easy to
+forget and polluted the dbt env with a tool not used by dbt itself.
+PEP 723 + uv removes the step entirely while preserving full
+backward-compatibility with plain `python3` (for users without uv).
+
+**Files changed**:
+- `dbt-wiki/skills/init/assets/extract_column_lineage.py` — added
+  PEP 723 block declaring `sqlglot>=25.0` and `requires-python = ">=3.10"`;
+  shebang updated to `#!/usr/bin/env -S uv run --script`; module docstring
+  documents both execution modes
+- `dbt-wiki/skills/init/assets/extract_sql_comments.py` — added PEP 723
+  block with empty `dependencies` list (pure stdlib); same shebang change.
+  PEP 723 included for consistency even though no third-party dep
+- `dbt-wiki/skills/init/SKILL.md`:
+  - Step 0 Pre-condition Check rewritten: detects `uv` first, falls back
+    to `python3` with sqlglot. Sets `$PY_RUNNER` for downstream steps.
+    Both detection paths produce a clear "next step" hint if neither
+    is available.
+  - Step 4 column-lineage script invocations changed from `python3 ...`
+    to `$PY_RUNNER ...`
+  - Step 4d comment-extraction script invocations same change
+- `dbt-wiki/skills/refresh/SKILL.md` — same Step 0 detection + invocation
+  changes as init
+- `dbt-wiki/README.md` / `README.zh-TW.md` / `README.ja.md` — Quick start
+  Step 2 + Pre-conditions section updated to present uv as primary,
+  pip as fallback (in all three languages)
+- `dbt-wiki/.claude-plugin/plugin.json` — version bumped 1.0.0 → 1.0.1;
+  description updated to mention PEP 723 + uv
+
+**Backward compatibility**: zero break. Users with sqlglot already
+installed via pip continue to work unchanged (init detects this path
+in Step 0).
+
+**Test verification** (local):
+- `uv run extract_column_lineage.py` on a 4-column SQL with COALESCE +
+  JOIN → correct column lineage output (auto-installed sqlglot 30.6
+  in 5ms ephemeral env)
+- `uv run extract_sql_comments.py` on a 3-comment SQL (line + jinja +
+  inline) → all 3 entries with correct line numbers + kind classification
+
+**Decision rationale**: uv is increasingly the Python tooling standard
+(used by dbt-coves, modal, duckdb, etc.). PEP 723 inline metadata is
+the official Python recommendation for self-contained scripts (PEP
+accepted late 2024). Adopting both removes the "manual install"
+friction without imposing dependency on a custom installer or vendored
+sqlglot copy. Backward fallback to plain `python3 + pip` ensures users
+who haven't adopted uv yet still get full functionality.
+
+---
+
 ## [1.0.0] — 2026-05-02
 
 ### Added — Initial release

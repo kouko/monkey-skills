@@ -30,7 +30,9 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 ## Quick start
 
 1. Install via the [monkey-skills marketplace](https://github.com/kouko/monkey-skills)
-2. Install sqlglot in your dbt env: `pip install sqlglot`
+2. Have **either** of the following — init auto-detects and uses whichever is present:
+   - **[uv](https://github.com/astral-sh/uv)** (recommended — auto-installs sqlglot in an ephemeral env per script run, zero pollution of your dbt env): `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh` (Linux/macOS)
+   - **OR** pip-installed sqlglot in your dbt env: `pip install 'sqlglot>=25.0'`
 3. In your dbt project root:
    ```bash
    dbt parse        # generates target/manifest.json
@@ -150,7 +152,9 @@ CLAUDE.md drop-ins use distinct markers (`<!-- dbt-wiki:start --> ... <!-- dbt-w
 
 - **dbt project**: any version supported by your dbt installation (`manifest.json` schema v9+ recommended)
 - **`dbt parse && dbt compile`** must run before `init` / `refresh`
-- **Python 3.x** + **sqlglot** (`pip install sqlglot`) — for column lineage extraction
+- **Python 3.10+** AND either:
+  - [uv](https://github.com/astral-sh/uv) (recommended — script self-declares sqlglot via PEP 723 inline metadata; uv auto-installs in ephemeral env), OR
+  - pip-installed sqlglot in your active Python env (`pip install 'sqlglot>=25.0'`)
 - **Dialect support**: sqlglot supports redshift / postgres / snowflake / bigquery / databricks / clickhouse / duckdb / mysql / oracle / spark / sqlite / tsql — auto-detected from `dbt_project.yml` profile or override
 
 ## Schema is frozen until v2.0
