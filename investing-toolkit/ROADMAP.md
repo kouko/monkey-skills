@@ -174,6 +174,27 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: classify_cn `credit_impulse.methodology` no longer mentions "flow-yoy second-derivative"; Path 2 fires.
 - **Reference**: PR-6 #189; `analysis-macro-regime/references/credit-impulse-methodology.md`.
 
+### v2.2.0-j — Cadence-aware adaptive cache TTL across all 14 clients
+
+- **Status**: **Phase 0 + Phase 1 in flight (this PR)** — ADR-0007 + cache-policy.md + dgbas PoC implemented. Phases 2-4 follow.
+- **What**: Replace per-client `CACHE_TTL_SECONDS` constants (1h/6h/24h, no rationale) with cadence-aware adaptive TTL. Each preset declares its publication cadence (`monthly`/`quarterly`/`daily`/`tick`/`event`/`immutable`/...); cache helper computes TTL from `cadence × staleness_days` per the [TTL bands](docs/cache-policy.md#ttl-bands) in cache-policy.md. Cache envelope upgraded to schema v2.0 with `_cache_meta.fetched_at` (replaces fragile `path.stat().st_mtime`). Block-level CI sync guard (Group 10 in `check-script-sync.yml`) enforces byte-equality of the helper across all 14 clients.
+- **Why**: (1) Monthly CPI cached for 24h means ~30 wasted cache misses per release cycle — cadence-aware caches it for 7 days when fresh and tightens to 4 hours during the release window. (2) `mtime`-based TTL is fragile — `cp` / `rsync` / Docker volume mount / `tar -xzf` (without `-p`) all reset mtime to "now" while data is old. JSON envelope `fetched_at` removes that hazard. (3) DRY policy without breaking PEP 723 self-contained scripts (see ADR-0007 for *why* we embed instead of import a central `_cache.py`).
+- **Architecture decision**: ADR-0007 explicitly rejects a central `_cache.py` shared module (would break PEP 723 self-containment + Anthropic skill convention). Each client embeds an identical `# === BEGIN cache helpers === … # === END cache helpers ===` block; CI block-level MD5 enforces equality.
+- **Phases**:
+  1. ✅ **Phase 0** — ADR-0007 + cache-policy.md + ROADMAP entry (this PR)
+  2. ✅ **Phase 1** — dgbas PoC: `data-tw/scripts/dgbas_client.py` + MCP copy refactored end-to-end. Validates block-delimiter pattern, schema v2.0 envelope, cadence-aware TTL. (this PR)
+  3. **Phase 2** — Extend `check-script-sync.yml` with Group 10 (block-level MD5 across all 14 clients). Initially the only client with the block is dgbas; check is trivially green. Group expands as Phase 3 migrates more clients.
+  4. **Phase 3** — Bulk migration of remaining 13 clients to the synced block + per-preset cadence. Likely staged across 3-4 PRs (TW + KR + CN clients first, then JP + global). Each migration: copy helper block byte-identically; remove old `CACHE_TTL_SECONDS` constant; add `cadence` field to every preset.
+  5. **Phase 4** — Close out: deprecate any leftover top-level `fetched_at` fields on data dicts (canonical now lives in `_cache_meta`); update `industry-indicator-cadence.md` cross-reference; update output-schema-overview.md docs across 5 data skills.
+- **Files (overall)**: 14 client files (× 2 for skill + MCP copies = 28 file edits), `check-script-sync.yml`, `sync-clients.sh`, `docs/adr/0007-*.md`, `docs/cache-policy.md`, `industry-indicator-cadence.md`, 5 `data-{country}/references/output-schema-overview.md`.
+- **Blocker**: None for Phases 2-3. Phase 4 docs touch is bookkeeping.
+- **Acceptance** (per phase):
+  - Phase 1: dgbas cache file shows `_cache_meta.version: "2.0"` + cadence-aware TTL; pytest 324/27/34 unchanged; live fetch shows `_cache: hit` + `_cache_age_seconds` + `_cache_ttl_seconds` on second invocation.
+  - Phase 2: check-script-sync.yml Group 10 runs green on dgbas alone; deliberate-drift smoke test (mutate one helper line) → CI fails.
+  - Phase 3 (per migration PR): `pytest -m "not network"` green; `bash sync-clients.sh --check` 0 drift; cache file inspection on each migrated client shows v2.0 envelope.
+  - Phase 4: `grep -r "CACHE_TTL_SECONDS" investing-toolkit/` returns 0 matches.
+- **Reference**: ADR-0007; cache-policy.md; 2026-05-03 design session (per-client copy-paste mode rejected for cache helper drift; central `_cache.py` rejected for PEP 723 / Anthropic violation).
+
 ## Long-term — Phase 2 + beyond
 
 ### Phase 2 — cross-country comparable surface (ADR-0005, deferred)
