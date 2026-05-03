@@ -12,14 +12,10 @@ This section tracks deferred work, organized by horizon. **Each item is independ
 
 Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 
-### v2.1.x-a — JP regime-pack fresh fixture refresh
+### ~~v2.1.x-a — JP regime-pack fresh fixture refresh~~ ✅ closed 2026-05-02 (PR #205, rolled into PR #206)
 
-- **What**: Run `data-jp/scripts/pack.py --pack regime-pack` against live BOJ Time-Series API to capture Tankan business DI + ESRI coincident-index / leading-index / 機械受注 data that PR-3 (#188) wired but didn't refresh in fixture. Replace `tests/data/fixtures/data-jp-regime-pack-sample.json`.
-- **Why**: `classify_jp.py` currently engages IP fallback (`source: "ip"` instead of `coincident-index`) because pre-PR-3 fixture lacks Tankan + ESRI fields. Fresh fixture lets confidence rise from medium to high stable.
-- **Files**: `investing-toolkit/tests/data/fixtures/data-jp-regime-pack-sample.json` (regenerate); `investing-toolkit/tests/integration/test_cross_layer_chains.py::test_chain_jp_classifier_e2e` (tighten `confidence in ("medium", "high")` → `confidence == "high"`).
-- **Blocker**: BOJ Time-Series API reachability (occasionally rate-limited; should retry).
-- **Acceptance**: JP test asserts `confidence == "high"`, `cycle_proxy.source == "coincident-index"` (not `"ip"`), `tankan_business_di.large_mfg` populated.
-- **Reference**: PR-3 #188; ADR-0004 §"JP Tankan series code resolution".
+- **Status**: Closed. JP regime-pack fixture refreshed against live BOJ Time-Series + ESRI; `test_chain_jp_classifier_e2e` tightened to assert `confidence == "high"`.
+- **Reference**: PR #205 (sub-PR of PR #206 batch close); PR-3 #188; ADR-0004 §"JP Tankan series code resolution".
 
 ### ~~v2.1.x-b — TW TIER as standalone NDC preset~~ → **demoted to v2.2.0-g**
 
@@ -29,22 +25,16 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Why confidence is already high without TIER**: classify_tw confidence threshold is `≥ 6 components found + leading + coincident + cpi-yoy present`. v2.1.x-c (CPI YoY 修正) unblocked the cpi-yoy condition; 8/9 ≥ 6 satisfies the dispersion check. Adding TIER would close the dispersion gap (8/9 → 9/9) but would not change the confidence verdict.
 - **Reference**: PR-4 #187 grounding-tw-2026-05.md; v2.1.x-b research session 2026-05-02.
 
-### v2.1.x-c — DGBAS CPI YoY label correction
+### ~~v2.1.x-c — DGBAS CPI YoY label correction~~ ✅ closed 2026-05-02 (PR #203, rolled into PR #206)
 
-- **What**: PR-4 #187 review observed `data-tw/dgbas_client.py` `cpi` preset is labelled "CPI YoY%" but actually emits CPI INDEX values (110.16-110.93, base 2021=100). Add a separate `cpi-yoy` preset that returns true YoY (or fix existing preset's label/values).
-- **Why**: classify_tw `cpi_context.latest_yoy` resolves to None on existing fixture because the values aren't true YoY. Downstream `bok_target_alignment`-like analyses also miss-read.
-- **Files**: `investing-toolkit/skills/data-tw/scripts/dgbas_client.py`; pack.py; tests.
-- **Blocker**: None (DGBAS publishes both forms).
-- **Acceptance**: TW fixture surfaces true CPI YoY; classify_tw `cpi_context.latest_yoy` non-null.
-- **Reference**: PR-4 #187 grounding-tw-2026-05.md fixture-deficiency note.
+- **Status**: Closed. Root cause: `cpispl.xls` has TWO sheets — `CPI` (INDEX, base 民國110=100) and `年增率` (true YoY%). Legacy `cpi` preset read INDEX sheet but was labelled "CPI YoY%". Fix: new `cpi-yoy` preset (sheet=`年增率`) emits true YoY%; existing `cpi` preset relabelled to INDEX. pack.py regime-pack fetches both. Live verification: classify_tw `cpi_context.latest_yoy = 1.2`, `cbc_framing = 彈性定義`, `band = below_watchline`.
+- **Follow-up**: §v2.1.x-c² PR #209 ported the same INDEX/年增率 split to `core-cpi`, `ppi`, `import-pi`, `export-pi` presets for consistency.
+- **Reference**: PR #203 (sub-PR of PR #206 batch close); PR #209 cleanup port.
 
-### v2.1.x-d — CI script-sync check promote to required
+### ~~v2.1.x-d — CI script-sync check promote to required~~ ✅ closed 2026-05-02 (PR #196, rolled into PR #206)
 
-- **What**: Flip GitHub Actions workflow flag for `check-script-sync` from advisory to required. Currently MD5-mismatch warnings can land without blocking merge.
-- **Why**: v2.0.0 added the sync mechanism but kept it advisory; drift risk grows with each PR.
-- **Files**: `.github/workflows/skill-structure.yml` or repo branch protection rules.
-- **Blocker**: Confirm last 30 days had zero false-positives (review CI run history).
-- **Acceptance**: A test commit with deliberately desynced script copies fails CI.
+- **Status**: Closed. `check-script-sync.yml` status flipped advisory → REQUIRED; branch-protection list updated to include `investing-toolkit script MD5 sync`. Promotion blocker (30-day false-positive scan) verified: 60/60 runs since 2026-05-01 succeeded; deliberate-drift smoke test (mutate `data-us/yfinance_client.py`) returned exit=1 with diff surfaced.
+- **Reference**: PR #196 (sub-PR of PR #206 batch close).
 
 ### ~~v2.1.x-e — DGBAS `cpi-sa` (季調CPI) computed YoY companion~~ ✅ closed 2026-05-03
 
@@ -134,7 +124,7 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **What**: Build `data-kr/scripts/dart_client.py` for KR equity primary source (analogous to US `sec_edgar_client.py`). DART (전자공시시스템) provides corporate filings, financial statements (XBRL/iXBRL/CSV), shareholder data.
 - **Why**: **KR is the thinnest primary-source country** in v2.1.0 (fdr_client is secondary scrape). Building DART integration completes the 5-country symmetry on the equity side and unblocks KR memo-fetch / DCF Tier A path (parallel to US T3 in ADR-0003).
 - **Files**: `data-kr/scripts/dart_client.py` (new); `data-kr/scripts/pack.py` memo-fetch + comps-multiples wired to DART; `references/schema-memo-fetch.json` KR-specific. Likely an ADR-0006 to record per-country financial statement Tier A approach for KR (parallel to ADR-0003 for US).
-- **Blocker**: DART API key (already applied; check expiry); K-IFRS taxonomy mapping; iXBRL parser. ~2-3 weeks total.
+- **Blocker**: DART API key — apply free at [opendart.fss.or.kr](https://opendart.fss.or.kr) (email verification, same-day issuance per docs); K-IFRS taxonomy mapping; iXBRL parser. ~2-3 weeks total. (Earlier ROADMAP versions claimed "already applied"; no env var / commit / .env evidence found in the repo as of 2026-05-03 — treat as un-applied.)
 - **Acceptance**: Samsung 005930.KS memo-fetch returns `_provenance.tier == "A"` with `accession` field per FY; DCF integration test green.
 - **Reference**: ADR-0003 (US T3 mapping pattern); v2.0.0 deferred list.
 
