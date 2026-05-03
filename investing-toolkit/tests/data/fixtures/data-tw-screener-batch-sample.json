@@ -1,9 +1,6 @@
 {
-  "_pack": "screener-batch",
-  "_tickers": [
-    "2330.TW",
-    "2454.TW"
-  ],
+  "pack": "screener-batch",
+  "country": "TW",
   "yfinance": {
     "info_batch": {
       "_tier": "2",

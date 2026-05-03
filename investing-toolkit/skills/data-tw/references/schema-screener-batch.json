@@ -4,13 +4,10 @@
   "title": "data-tw screener-batch pack",
   "description": "Output of `pack.py --tickers <t1,t2,...> --pack screener-batch`. yfinance batch info+history (single subprocess each) plus per-ticker MOPS company_basic (Tier A). Used by `analysis-screener` and `report-screener-list`. No _partial flag at the top level — consumers should walk per-leaf _error fields.",
   "type": "object",
-  "required": ["_pack", "_tickers", "yfinance", "mops"],
+  "required": ["pack", "country", "yfinance", "mops"],
   "properties": {
-    "_pack": {"const": "screener-batch"},
-    "_tickers": {
-      "type": "array",
-      "items": {"type": "string", "pattern": "^[0-9A-Z]+\\.(TW|TWO)$"}
-    },
+    "pack": {"const": "screener-batch"},
+    "country": {"const": "TW"},
     "yfinance": {
       "type": "object",
       "required": ["info_batch", "history_batch"],

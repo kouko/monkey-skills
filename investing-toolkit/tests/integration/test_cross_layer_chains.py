@@ -1477,7 +1477,7 @@ def test_slim_memo_fetch_fixture_is_production_subset():
 @pytest.mark.parametrize("country,expected_status", [
     ("us", "full_compute"),    # baseline — trailingPE computed=True + non-empty accession_basis
     ("jp", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
-    ("tw", "crash"),           # memo-fetch top-level key is _pack not pack → script exits non-zero
+    ("tw", "schema_mismatch"), # post v2.2.0-m: pack key normalized; trailingPE computed=True but accession_basis=[] (MOPS lacks filings_used; awaiting v2.2.0-l TW raw-field extension)
     ("kr", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
     ("cn", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
 ])
@@ -1504,7 +1504,7 @@ def test_cross_country_compute_smoke(country, expected_status, tmp_path):
     Current state (2026-05-03):
       US  → full_compute  (US memo-fetch has filings_used populated from SEC EDGAR)
       JP  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
-      TW  → crash         (top-level pack key is _pack, not pack; loader rejects)
+      TW  → schema_mismatch (post v2.2.0-m: pack key normalized; MOPS lacks filings_used; trailingPE still computed)
       KR  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
       CN  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
     """

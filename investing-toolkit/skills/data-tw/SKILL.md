@@ -144,8 +144,9 @@ Common args:
 
 ```jsonc
 {
-  "_pack": "memo-fetch",
-  "_ticker": "2330.TW",
+  "pack": "memo-fetch",
+  "country": "TW",
+  "ticker": "2330.TW",
   "_normalized": {"ticker_yf": "2330.TW", "ticker_code": "2330", "market": "sii"},
   "_partial": false,           // true if any Tier A fetch errored
   "yfinance": {
