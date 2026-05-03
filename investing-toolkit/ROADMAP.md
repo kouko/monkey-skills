@@ -76,6 +76,28 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Result**: Full suite now 383 passed, 2 skipped, 0 failed (was 1 failed pre-fix).
 - **Reference**: PR #203 commit body §"Pre-existing failure"; v2.1.x test-suite session 2026-05-02 / 2026-05-03 fix session.
 
+### v2.1.x-h — Scheduled weekly network-suite workflow
+
+- **What**: Add a new GitHub Actions workflow `.github/workflows/scheduled-network-suite.yml` that runs `pytest -m network` against `investing-toolkit/tests/` on a `cron: "0 2 * * 1"` (Mondays 02:00 UTC) schedule + manual `workflow_dispatch`. Result is **report-only** (annotated job summary + optional GitHub Issue creation on first failure of a given week); does NOT gate any merge.
+- **Why**: PR #216 added `pytest (offline)` as the per-PR gate but deliberately deferred the 34 `@pytest.mark.network` tests (live BOJ / NDC / DGBAS / FRED / yfinance / akshare / SEC EDGAR) because cloud IPs trigger flaky 5xx / Cloudflare bot blocks. Without a periodic run, live API shape drift sneaks in undetected (e.g. v2.1.x-g's yfinance `info.history` shape change went unnoticed for days). A weekly run + report catches drift early.
+- **Files**: new `.github/workflows/scheduled-network-suite.yml` (cron + workflow_dispatch + pytest -m network + report-summary writer + optional `gh issue create` on failure); ROADMAP entry update to `v2.1.x-h ✅` after first green cycle.
+- **Blocker**: Decide whether to mark certain known-flaky tests (NDC, MOPS MCP equivalence — see v2.1.x-i) as `@pytest.mark.flaky` to reduce noise, or accept the noise.
+- **Acceptance**: First scheduled run lands; workflow surfaces per-test pass/fail in job summary; if ≥1 fails, GitHub Issue created with title `[network suite] N tests failed (YYYY-MM-DD)` and stderr links.
+- **Reference**: PR #216 commit body §"Scope decision: offline only"; PR #220 retry session demonstrating that MCP stdio tests are CI-flaky and need periodic monitoring.
+
+### v2.1.x-i — MCP stdio test stability hardening
+
+- **What**: Investigate and fix the root cause of `test_mcp_equivalence_auto.py` flakiness on GitHub Actions runners (PR #220 saw `test_mops_fetch_rejects_missing_required_params` time out waiting for a JSON-RPC reply that the server log confirms it received). Likely fixes:
+  1. **stdout flush hardening**: ensure FastMCP server flushes stdout after every JSON-RPC reply (`sys.stdout.flush()` or `python -u`)
+  2. **Test reader retry-with-backoff**: `_call_mcp` helper currently has a fixed timeout; replace with retry loop that re-polls if reply arrives mid-buffer
+  3. **Server warmup probe**: test does an explicit `tools/list` ping after spawn and waits for reply before any tool/call request, eliminating the "server not yet ready" race
+  4. **Newline framing audit**: confirm every JSON-RPC envelope ends with a single `\n` and no partial writes possible (audit FastMCP version pin)
+- **Why**: Each PR currently risks 1-in-N CI flakes on offline pytest job (now required). PR #220 needed a manual close+reopen cycle to retry. Cumulative drag on dev velocity. Local tests pass 6/6 because macOS stdio is unbuffered + faster CPU; CI Azure runner exposes buffer/timing races.
+- **Files**: `investing-toolkit/servers/mcp_server.py` (flush hardening); `investing-toolkit/tests/test_mcp_equivalence_auto.py` `_call_mcp` helper (retry); possibly pin FastMCP version in `mcp_server.py` PEP 723 deps.
+- **Blocker**: Need to reproduce the flake reliably — could try `pytest -p no:randomly --count=20` + GitHub Actions large-runner / slow-CPU emulation. If non-reproducible, fall back to (a) `pytest-rerunfailures` plugin with `reruns=2` (masks but unblocks), or (b) move MCP equivalence tests to `@pytest.mark.network` (deferred to v2.1.x-h scheduled cron, doesn't gate PRs).
+- **Acceptance**: 50 consecutive CI runs pass `test_mcp_*` without close+reopen; OR explicit decision to demote to network-marked + documented in ADR.
+- **Reference**: PR #220 retry session 2026-05-03; v2.1.x test-suite session.
+
 ## Mid-term — v2.2.0 candidates
 
 Material features. ~1-3 weeks each. Do one at a time.
