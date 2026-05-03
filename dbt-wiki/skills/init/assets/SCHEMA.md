@@ -61,6 +61,8 @@ For column-level lineage authority, run `/dbt-wiki:refresh` after every `dbt par
   snapshots/         # One page per snapshot
   tests/             # One page per generic test (singular tests only — schema.yml tests inline in model page)
   exposures/         # One page per declared exposure (optional)
+  syntheses/         # Saved query answers (auto-saved by /dbt-wiki:query for lineage classes;
+                     # marked stale by /dbt-wiki:refresh when affected_models change)
 ```
 
 ## Page Types
@@ -251,6 +253,70 @@ last_updated: 2026-05-02
 
 Same pattern: one page per resource. Frontmatter mirrors manifest fields,
 plus `feeds_into` (for seed/snapshot) or `tests_resource` (for tests) etc.
+
+### synthesis
+File: `.dbt-wiki/syntheses/<question-slug>.md`
+
+Auto-saved by `/dbt-wiki:query` for lineage-class queries (C2/C3/C4/C9/C10).
+Captures the question, the answer (with inline citations), ASCII tree +
+Mermaid diagram, and the manifest_sha + affected_models needed for stale
+detection by `/dbt-wiki:refresh`.
+
+Frontmatter (full template in `assets/synthesis_template.md`):
+
+```yaml
+---
+type: synthesis
+question: "<exact question>"             # so re-query is verbatim
+slug: <kebab-case slug>
+date: <YYYY-MM-DD>
+manifest_sha: <sha at time of save>      # used by refresh for stale detection
+affected_models:                         # critical: enables PRECISE stale detection
+  - <model.proj.X>                       # if any of these change in a future
+  - <model.proj.Y>                       # refresh, this synthesis gets marked stale
+query_class: <C1-C11>
+diagram_included: <yes | no>
+sources_consulted:
+  - models/<name>.md
+verification_run: <yes | no>
+verified_paths: []
+stale: false                             # set true by refresh when affected_models change
+stale_at: null
+stale_reason: null                       # human-readable why
+---
+```
+
+Body sections:
+
+```markdown
+<!-- IF stale: refresh prepends a banner here so it's the FIRST thing user sees -->
+
+## Question
+<verbatim>
+
+## Answer
+<synthesized answer with inline citations>
+
+## Lineage Diagrams
+### ASCII Tree
+\```
+<format_lineage_diagram.py output>
+\```
+
+### Mermaid (renders in IDE preview / GitHub / Obsidian)
+\```mermaid
+<format_lineage_diagram.py output>
+\```
+
+## Sources Consulted
+- [<page>](.dbt-wiki/<type>/<page>.md)
+```
+
+**Stale lifecycle**: refresh's Step 6.5 checks each non-archived synthesis.
+If any `affected_models` overlap the refresh's added/modified/removed
+sets, mark `stale: true` + prepend banner. Original answer + diagrams
+preserved (non-destructive). User re-runs `/dbt-wiki:query` to regenerate
+with fresh content (overwrites synthesis, clears stale flag).
 
 ## Index, Lineage, Log
 

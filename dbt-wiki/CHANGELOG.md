@@ -4,6 +4,141 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-05-03
+
+### Added — Lineage diagrams (ASCII + Mermaid) + auto-saved syntheses with stale detection
+
+Two coupled features make `/dbt-wiki:query` answers richer AND
+trustable over time.
+
+#### 1. Lineage diagrams in query answers
+
+For C2 (upstream) / C3 (downstream) / C4 (column-level) / C10
+(refactoring impact) classes, query answers now include both:
+
+- **ASCII tree** — renders in Claude Code chat output, any terminal,
+  any markdown viewer. Always shown immediately.
+- **Mermaid graph LR** — renders in IDE Markdown preview (Dataspell,
+  VS Code, Cursor, JetBrains family), GitHub web view, Obsidian,
+  mermaid.live. Saved into the synthesis page so user can re-open
+  in their IDE for visual exploration.
+
+New asset `format_lineage_diagram.py` (~360 lines, pure stdlib + PEP
+723) generates both formats. Two modes:
+
+```
+column mode: consumes recursive_column_lineage.py JSONL
+              + (model_uid, column) → ASCII tree + Mermaid (column nodes)
+model mode:  consumes manifest.json directly
+              + model_uid + direction (ancestors / descendants / both)
+              → ASCII tree + Mermaid (model nodes)
+```
+
+Truncation policy: max 30 nodes per diagram (configurable via
+`--max-nodes`); above that, append `truncated["⚠..."]` node and refer
+user to full `lineage.md`. Node IDs use full-uid hash suffix to avoid
+collisions when names are long; self-loops + duplicate edges deduped.
+
+5/5 tests pass (column ancestors+descendants / ancestors-only / model
+both / missing record / mermaid node-id safety). Real-world verified
+on iCHEF mart_customer__dimension (38 upstream models, truncates
+cleanly).
+
+#### 2. Auto-saved syntheses with precise stale detection
+
+`/dbt-wiki:query` now auto-saves answers to `.dbt-wiki/syntheses/<slug>.md`
+for lineage / decision classes (C2/C3/C4/C9/C10). Information-only
+classes (C1/C5/C6/C7/C8/C11) ask user before saving (default no).
+
+Synthesis frontmatter records:
+- `manifest_sha` at save time
+- `affected_models` — the EXACT model uids the answer depends on
+  (target model + every model in the rendered diagram tree)
+- `query_class`, `sources_consulted`, `verification_run`, `verified_paths`
+
+`/dbt-wiki:refresh` Step 6.5 uses `affected_models` for **precise**
+stale detection: only mark stale when one of THOSE models actually
+changed in this refresh's added / modified / removed sets — not just
+"manifest_sha drifted" (which would mark everything stale on every
+refresh).
+
+When marked stale, refresh:
+- Sets `stale: true`, `stale_at: <today>`, `stale_reason: <which models changed>`
+- Prepends a banner to the synthesis body so the user sees it as the
+  FIRST thing when opening the .md file in their IDE
+- Does **NOT** regenerate the answer (preserves original; user controls
+  when to re-query — avoids LLM cost + answer-wording drift on every refresh)
+
+User re-runs `/dbt-wiki:query "<original question>"` → fresh answer
+overwrites the synthesis, clears the stale flag.
+
+### Files added
+
+- **`assets/format_lineage_diagram.py`** (~360 lines, pure stdlib, PEP 723)
+- **`assets/format_lineage_diagram_test.py`** (~190 lines, 5 cases pass)
+- **`assets/synthesis_template.md`** — markdown shape with full frontmatter
+
+### Files changed
+
+- **`skills/init/SKILL.md`** — Step 4 cp block extends with 3 new files
+  (diagram script + test + synthesis template) → `.dbt-wiki/_internal/`
+- **`skills/query/SKILL.md`**:
+  - New Step 4.5 — diagram generation (when + how to invoke
+    `format_lineage_diagram.py` for each query class; ASCII always in
+    chat, Mermaid always in synthesis)
+  - New Step 6.5 — auto-save synthesis with full frontmatter
+    (manifest_sha + affected_models for precise stale detection)
+  - Step 7 log entry gains `Synthesis saved: <path>` line
+- **`skills/refresh/SKILL.md`**:
+  - New Step 6.5 — synthesis stale-detection logic (~50 lines bash + Python
+    pseudocode). Non-destructive: marks `stale: true` + prepends banner
+    to body; original answer + diagrams preserved.
+  - Step 7 log entry gains `Syntheses marked stale: N` line
+- **`skills/init/assets/SCHEMA.md`**:
+  - Directory layout adds `syntheses/` with one-line description
+  - New `### synthesis` page-type definition with full frontmatter
+    template + body section spec + stale lifecycle explanation
+- **`.claude-plugin/plugin.json`** — 1.2.0 → 1.3.0 (minor — new capability,
+  fully backward compatible)
+
+### Backward compatibility
+
+**Zero break**:
+- Lineage diagrams are STRICTLY additive to query output (ASCII + Mermaid
+  appended after the text answer)
+- Auto-save synthesis only kicks in for new queries; existing
+  `.dbt-wiki/syntheses/` (none in v1.0–v1.2 since query never auto-saved)
+  are unaffected
+- Stale detection: synthesis WITHOUT `affected_models` field (none yet —
+  this is v1.3 introducing it) falls back to `manifest_sha` drift
+  comparison (less precise but always works)
+
+### Real-world impact preview (iCHEF-dbt-pipeline)
+
+After re-running `/dbt-wiki:init` (or just `/dbt-wiki:refresh`):
+- `format_lineage_diagram.py` becomes available in `.dbt-wiki/_internal/`
+- Next `/dbt-wiki:query "mart_customer__dimension 上游"` → answer includes
+  ASCII tree (15 nodes, terminal-readable) + Mermaid block (renders in
+  Dataspell preview)
+- Answer auto-saved to `.dbt-wiki/syntheses/mart-customer-dimension-upstream.md`
+- Future refresh after `int_ms_cd__store_name` changes → that synthesis
+  marked stale with banner: "affected_models changed: int_ms_cd__store_name"
+
+### Decision rationale
+
+- **Why both ASCII + Mermaid**: ASCII covers the lowest common denominator
+  (terminal output, any markdown viewer); Mermaid adds rich rendering
+  where supported. User pays nothing for having both.
+- **Why precise stale detection (vs full re-query)**: re-querying every
+  refresh costs LLM tokens + introduces answer-wording drift (breaks
+  git diff stability). Mark-stale-with-banner is honest about
+  uncertainty without forcing regeneration.
+- **Why script not LLM-generated diagrams**: deterministic, testable,
+  consistent output across queries; LLM doesn't need to remember
+  Mermaid syntax.
+
+---
+
 ## [1.2.0] — 2026-05-03
 
 ### Added — `SELECT * FROM <final_cte>` wrapper-pattern unwrap
