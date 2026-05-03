@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "investing-toolkit/skills/report-equity-memo/references/schema-phase4-input-bundle.json",
+  "title": "report-equity-memo Phase 4 input bundle",
+  "description": "Documents the 4 JSON files report-equity-memo Phase 4 hands to domain-teams:investing-team. Each JSON is produced by an upstream Layer 1 or Layer 2 step. Schema enforced by tests/integration/test_cross_layer_chains.py::test_phase4_bundle_validates_against_schema.",
+  "type": "object",
+  "required": ["fetch", "regime_card", "comps", "dcf"],
+  "properties": {
+    "fetch": {
+      "description": "Phase 1 — data-{country}/scripts/pack.py --pack memo-fetch output. Layer 1 raw arrays + provenance. File: ${TICKER_SAFE}-fetch.json",
+      "type": "object",
+      "required": ["pack", "ticker", "income_statement", "balance_sheet", "cash_flow"],
+      "properties": {
+        "pack": {"const": "memo-fetch"},
+        "ticker": {"type": "string"},
+        "income_statement": {
+          "type": "object",
+          "description": "Canonical flat arrays: revenue[], net_income[], ebit[]. May include _meta with per-concept fiscal_year_ends + filings_used for US EDGAR audit trail.",
+          "required": ["revenue"],
+          "properties": {
+            "revenue": {"type": "array", "items": {"type": ["number", "null"]}},
+            "net_income": {"type": "array", "items": {"type": ["number", "null"]}},
+            "ebit": {"type": "array", "items": {"type": ["number", "null"]}},
+            "_meta": {"type": "object", "description": "Per-concept metadata: fiscal_year_ends, filings_used, per_year_concept. US EDGAR only; absent for yfinance Tier-2 countries."}
+          }
+        },
+        "balance_sheet": {
+          "type": "object",
+          "description": "Canonical flat arrays: total_assets[], total_debt[], cash[]."
+        },
+        "cash_flow": {
+          "type": "object",
+          "description": "Canonical flat arrays: operating_cash_flow[], capex[], free_cash_flow[]."
+        },
+        "company_info": {
+          "type": "object",
+          "description": "Optional (present for US/JP/KR/CN via yfinance): regularMarketPrice, marketCap, sharesOutstanding, trailingPE, forwardPE, etc."
+        },
+        "current_price": {
+          "type": ["number", "null"],
+          "description": "Canonical current price. Used by dcf_compute and comps_compute."
+        },
+        "shares_outstanding": {
+          "type": ["number", "null"],
+          "description": "Canonical shares outstanding (aliases company_info.sharesOutstanding)."
+        }
+      }
+    },
+    "regime_card": {
+      "description": "Phase 2 — analysis-macro-regime/scripts/regime_compose.py --input {country}=... output. CountryRegimeCard dataclass for one country (home + optionally US). File: regime-card.json",
+      "type": "object",
+      "required": ["country", "framework_used", "native_verdict", "confidence", "data_quality", "provenance"],
+      "properties": {
+        "country": {
+          "type": "string",
+          "enum": ["us", "jp", "tw", "kr", "cn"],
+          "description": "ISO 2-letter country code matching the ticker's home country."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Classifier confidence derived from data_quality.missing count."
+        },
+        "framework_used": {
+          "type": "string",
+          "description": "Human-readable label for the macro framework (e.g. 'IC + Hedgeye GIP + Fed FIT + 4-tier real-rate + yield curve' for US; 'NDC 五色景氣燈號 + IC overlay' for TW)."
+        },
+        "native_verdict": {
+          "type": "object",
+          "description": "Country-specific verdict payload. All countries include framework_label as first key. US: ic_quadrant + gip_regime + real_rate_decomposition + yield_curve. TW: signal_color + signal_score + components_9 + ic_quadrant (alias). Others: ic_quadrant_legacy + gip_regime_legacy + country-specific overlays.",
+          "required": ["framework_label"],
+          "properties": {
+            "framework_label": {"type": "string"},
+            "ic_quadrant": {
+              "type": "string",
+              "enum": ["1-recovery", "2-overheat", "3-stagflation", "4-reflation"],
+              "description": "IC quadrant (present for US as primary; present as alias for TW; under ic_quadrant_legacy for JP/KR/CN)."
+            },
+            "ic_quadrant_legacy": {
+              "type": "string",
+              "enum": ["1-recovery", "2-overheat", "3-stagflation", "4-reflation"],
+              "description": "IC quadrant alias for backward compat (JP/KR/CN demote IC to legacy)."
+            },
+            "gip_regime": {
+              "type": "string",
+              "enum": ["quad1", "quad2", "quad3", "quad4"],
+              "description": "Hedgeye GIP quadrant (US primary; legacy alias for JP/KR/CN)."
+            }
+          }
+        },
+        "indicators_used": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Series codes actually resolved from the regime-pack fixture (e.g. 'ndc.signal-score', 'DGS10', 'T10YIE')."
+        },
+        "data_quality": {
+          "type": "object",
+          "description": "missing[] list + populated[] list. Drives confidence heuristic.",
+          "properties": {
+            "missing": {"type": "array", "items": {"type": "string"}},
+            "populated": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "description": "calibration_doc + calibration_vintage. Ties classifier output to its threshold document.",
+          "required": ["calibration_doc"],
+          "properties": {
+            "calibration_doc": {"type": "string", "description": "e.g. 'thresholds-us.md'"},
+            "calibration_vintage": {"type": "string", "description": "e.g. '2026-Q2'"}
+          }
+        }
+      }
+    },
+    "comps": {
+      "description": "Phase 2.5 — analysis-comps/scripts/comps_compute.py --mode compute output. v2.2.0-b+ has multiples_direct + multiples_compute + divergence + compute_provenance when mode=compute. File: ${TICKER_SAFE}-comps.json",
+      "type": "object",
+      "required": ["anchor", "peers", "statistics", "anchor_delta", "ranking", "_provenance"],
+      "properties": {
+        "anchor": {
+          "type": "object",
+          "required": ["ticker", "multiples_direct"],
+          "properties": {
+            "ticker": {"type": "string"},
+            "multiples_direct": {
+              "type": "object",
+              "description": "Multiples read directly from the comps-multiples pack (yfinance Tier 2 or primary source). Keys: trailingPE, forwardPE, priceToSales, priceToBook, evEbitda.",
+              "properties": {
+                "trailingPE": {"type": ["number", "null"]},
+                "forwardPE": {"type": ["number", "null"]},
+                "priceToSales": {"type": ["number", "null"]},
+                "priceToBook": {"type": ["number", "null"]},
+                "evEbitda": {"type": ["number", "null"]}
+              }
+            },
+            "multiples_compute": {
+              "type": "object",
+              "description": "Recomputed multiples from memo-fetch financials (trailingPE, priceToSales). Present only in --mode compute. Keys same as multiples_direct.",
+              "properties": {
+                "trailingPE": {"type": ["number", "null"]},
+                "forwardPE": {"type": ["number", "null"]},
+                "priceToSales": {"type": ["number", "null"]},
+                "priceToBook": {"type": ["number", "null"]},
+                "evEbitda": {"type": ["number", "null"]}
+              }
+            },
+            "divergence": {
+              "type": "object",
+              "description": "Per-multiple divergence between direct and compute. alert ∈ {low, medium, high, n/a}. investing-team must surface high alerts.",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "alert": {"type": "string", "enum": ["low", "medium", "high", "n/a"]},
+                  "direct": {"type": ["number", "null"]},
+                  "compute": {"type": ["number", "null"]},
+                  "delta_pct": {"type": ["number", "null"]}
+                }
+              }
+            },
+            "compute_provenance": {
+              "type": "object",
+              "description": "Per-multiple audit trail: computed (bool), fiscal_year_end, accession_basis[], source_concepts[]. US EDGAR populates accession_basis with 10-K references; non-US countries have empty accession_basis until v2.2.0-l."
+            }
+          }
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ticker", "multiples"],
+            "properties": {
+              "ticker": {"type": "string"},
+              "multiples": {"type": "object"},
+              "rationale": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "statistics": {
+          "type": "object",
+          "description": "Per-multiple descriptive stats across peers (mean, median, std, min, max, n_peers)."
+        },
+        "anchor_delta": {
+          "type": "object",
+          "description": "Per-multiple premium/discount of anchor vs peer group (pct_vs_mean, pct_vs_median)."
+        },
+        "ranking": {
+          "type": "array",
+          "description": "All tickers (anchor + peers) ranked by composite multiple score."
+        },
+        "_provenance": {
+          "type": "object",
+          "required": ["skill"],
+          "properties": {
+            "skill": {"const": "analysis-comps"},
+            "mode": {"type": "string", "enum": ["direct", "compute"]},
+            "anchor_data_source": {"type": "string"},
+            "anchor_base_source": {"type": "string", "description": "Only present in --mode compute."}
+          }
+        }
+      }
+    },
+    "dcf": {
+      "description": "Phase 3 — analysis-dcf/scripts/dcf_compute.py output. 3-stage Damodaran DCF with 3x3 sensitivity table. File: ${TICKER_SAFE}-dcf.json",
+      "type": "object",
+      "required": ["intrinsic_value", "assumptions"],
+      "properties": {
+        "intrinsic_value": {
+          "type": "object",
+          "required": ["low", "mid", "high"],
+          "description": "3-scenario DCF intrinsic value in the ticker's native currency. Note: the current implementation computes aggregate value (not per-share) for some non-US tickers — investing-team must normalise by shares_outstanding when needed.",
+          "properties": {
+            "low": {"type": "number"},
+            "mid": {"type": "number"},
+            "high": {"type": "number"}
+          }
+        },
+        "assumptions": {
+          "type": "object",
+          "description": "DCF input assumptions derived from fetch.json financials. base_revenue and historical_revenue_cagr are the key chain-wiring indicators.",
+          "properties": {
+            "base_revenue": {"type": ["number", "null"]},
+            "historical_revenue_cagr": {"type": ["number", "null"]},
+            "growth_1_5": {"type": ["number", "null"]},
+            "growth_6_10": {"type": ["number", "null"]},
+            "ebit_margin": {"type": ["number", "null"]}
+          }
+        },
+        "sensitivity_table": {
+          "type": "object",
+          "description": "3x3 grid of (growth_rate x discount_rate) scenarios producing per-scenario intrinsic values."
+        },
+        "verdict_thresholds": {
+          "type": "object",
+          "description": "Margin-of-safety thresholds: strong_buy (<0.7x), buy (0.7-0.9x), hold (0.9-1.1x), sell (>1.1x)."
+        },
+        "current_price": {"type": ["number", "null"]},
+        "margin_of_safety_base": {"type": ["number", "null"]},
+        "warnings": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Non-fatal warnings from dcf_compute (e.g. negative FCF, thin revenue history)."
+        },
+        "_provenance": {
+          "type": "object",
+          "description": "Provenance metadata. Contains 'layer' and 'framework' (not 'skill') in analysis-dcf output.",
+          "properties": {
+            "skill": {"type": "string", "description": "Present in some callers; not emitted by dcf_compute directly."},
+            "layer": {"type": "string"},
+            "framework": {"type": "string"},
+            "computed_at": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}
