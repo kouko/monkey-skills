@@ -1142,3 +1142,126 @@ def test_chain_regimepack_to_macroregime():
         f"find DGS10/T10YIE. data_quality.missing: "
         f"{us.get('data_quality', {}).get('missing')}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Chain US — comps_compute dual input (v2.2.0-b)
+# ---------------------------------------------------------------------------
+
+
+def test_chain_us_comps_compute_dual_input(tmp_path):
+    """Chain: data-us memo-fetch fixture + comps-multiples fixture →
+    analysis-comps --mode compute → JSON with divergence + compute_provenance.
+
+    Validates that real Layer-1 fixtures (not synthetic) flow through Layer-2
+    compute mode without shape adapters.
+    """
+    anchor_comps_fixture = FIXTURES / "data-us-comps-multiples-sample.json"
+    anchor_base_fixture  = FIXTURES / "data-us-memo-fetch-sample.json"
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+
+    if not anchor_comps_fixture.exists() or not anchor_base_fixture.exists():
+        pytest.skip("missing fixture(s)")
+    if not script.exists():
+        pytest.skip("missing comps_compute.py script")
+
+    # Slice the multi-ticker comps fixture to a single-ticker anchor file so
+    # _resolve_ticker can resolve unambiguously (same pattern as
+    # test_chain_comps_to_comps_compute above).
+    pack = json.loads(anchor_comps_fixture.read_text())
+    tickers = list((pack.get("tickers") or {}).keys())
+    if not tickers:
+        pytest.skip("comps fixture has no tickers")
+    anchor_ticker = tickers[0]
+    anchor_payload = {anchor_ticker: pack["tickers"][anchor_ticker]}
+    anchor_file = tmp_path / f"{anchor_ticker}-anchor-comps.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "tickers": anchor_payload,
+        "info": anchor_payload,  # T1 canonical alias
+    }))
+
+    # Use second ticker as peer if available; omit peers if only one ticker.
+    peer_arg = []
+    if len(tickers) >= 2:
+        peer_ticker = tickers[1]
+        peer_payload = {peer_ticker: pack["tickers"][peer_ticker]}
+        peer_file = tmp_path / f"{peer_ticker}-peer-comps.json"
+        peer_file.write_text(json.dumps({
+            "pack": "comps-multiples",
+            "ticker": peer_ticker,
+            "tickers": peer_payload,
+            "info": peer_payload,
+        }))
+        peer_arg = ["--peers", str(peer_file)]
+
+    rc, out, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_base_fixture),
+        *peer_arg,
+    ])
+
+    assert rc == 0, (
+        f"comps_compute exit {rc}\nstderr: {stderr}\nstdout: {out}"
+    )
+
+    # Compute-mode shape contract (spec §10)
+    anchor = out.get("anchor") or {}
+    assert "multiples_direct" in anchor, (
+        f"anchor.multiples_direct missing — compute mode failed to preserve direct multiples. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "multiples_compute" in anchor, (
+        f"anchor.multiples_compute missing — _compute_multiples_from_memo_fetch did not run. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "divergence" in anchor, (
+        f"anchor.divergence missing — _compute_divergence did not run. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "compute_provenance" in anchor, (
+        f"anchor.compute_provenance missing — provenance block not attached. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+
+    # All 5 multiples present in divergence with valid alert levels
+    divergence = anchor["divergence"]
+    for m in ("trailingPE", "forwardPE", "priceToSales", "priceToBook", "evEbitda"):
+        assert m in divergence, f"divergence missing multiple: {m}"
+        assert divergence[m]["alert"] in {"low", "medium", "high", "n/a"}, (
+            f"divergence[{m}].alert is invalid: {divergence[m]['alert']!r}"
+        )
+
+    # Compute provenance carries spec contract (deferred multiples carry v2.2.0-l note)
+    prov = anchor["compute_provenance"]
+    assert prov["forwardPE"]["computed"] is False, (
+        f"forwardPE.computed should be False (deferred); got {prov['forwardPE']['computed']!r}"
+    )
+    assert prov["priceToBook"]["computed"] is False, (
+        f"priceToBook.computed should be False (deferred); got {prov['priceToBook']['computed']!r}"
+    )
+    assert "v2.2.0-l" in (prov["priceToBook"].get("note") or ""), (
+        f"priceToBook provenance note missing 'v2.2.0-l'; note={prov['priceToBook'].get('note')!r}"
+    )
+    assert prov["evEbitda"]["computed"] is False, (
+        f"evEbitda.computed should be False (deferred); got {prov['evEbitda']['computed']!r}"
+    )
+    assert "v2.2.0-l" in (prov["evEbitda"].get("note") or ""), (
+        f"evEbitda provenance note missing 'v2.2.0-l'; note={prov['evEbitda'].get('note')!r}"
+    )
+
+    # Top-level provenance: compute mode adds anchor_base_source
+    top_prov = out.get("_provenance") or {}
+    assert top_prov.get("mode") == "compute", (
+        f"_provenance.mode != 'compute'; got {top_prov.get('mode')!r}"
+    )
+    assert "anchor_base_source" in top_prov, (
+        f"_provenance.anchor_base_source missing — compute-mode provenance incomplete. "
+        f"_provenance keys: {list(top_prov.keys())}"
+    )
+    assert "memo-fetch" in top_prov["anchor_base_source"], (
+        f"anchor_base_source does not reference memo-fetch; "
+        f"got: {top_prov['anchor_base_source']!r}"
+    )
