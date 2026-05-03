@@ -211,7 +211,7 @@ def test_chain_comps_to_comps_compute(tmp_path):
     # Critical check: anchor multiples must be NON-None for at least PE/PB
     # (the fixture has trailingPE=35.46, priceToBook=46.71 for AAPL).
     anchor_block = out.get("anchor") or {}
-    anchor_multiples = anchor_block.get("multiples") or {}
+    anchor_multiples = anchor_block.get("multiples_direct") or {}
     pe = anchor_multiples.get("trailingPE")
     pb = anchor_multiples.get("priceToBook")
 
@@ -339,7 +339,7 @@ def test_chain_kr_comps_to_comps_compute(tmp_path):
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
     anchor_block = out.get("anchor") or {}
-    multiples = anchor_block.get("multiples") or {}
+    multiples = anchor_block.get("multiples_direct") or {}
     non_none = {k: v for k, v in multiples.items() if v is not None}
     assert non_none, (
         f"data-kr comps extracted all-None for {anchor_ticker}: {multiples}"
@@ -412,7 +412,7 @@ def test_chain_cn_comps_to_comps_compute(tmp_path):
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
     anchor_block = out.get("anchor") or {}
-    multiples = anchor_block.get("multiples") or {}
+    multiples = anchor_block.get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-cn comps all-None for {anchor_ticker}: {multiples}"
     )
@@ -489,7 +489,7 @@ def test_chain_jp_comps_to_comps_compute(tmp_path):
         "--peers", str(peer_file),
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    multiples = (out.get("anchor") or {}).get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-jp comps all-None for {anchor_ticker}: {multiples}"
     )
@@ -560,7 +560,7 @@ def test_chain_tw_comps_to_comps_compute(tmp_path):
         "--peers", str(peer_file),
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    multiples = (out.get("anchor") or {}).get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-tw comps all-None for {anchor_ticker}: {multiples}"
     )

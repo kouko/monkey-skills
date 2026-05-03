@@ -356,7 +356,7 @@ def main() -> int:
     payload = {
         "anchor": {
             "ticker": anchor_ticker,
-            "multiples": anchor_multiples,
+            "multiples_direct": anchor_multiples,
         },
         "peers": peers_out,
         "statistics": stats,

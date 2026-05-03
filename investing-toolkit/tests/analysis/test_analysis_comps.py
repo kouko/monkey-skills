@@ -94,10 +94,10 @@ def test_schema_top_level_keys(baseline_payload):
 def test_schema_anchor_block(baseline_payload):
     anchor = baseline_payload["anchor"]
     assert anchor["ticker"] == "AAPL"
-    assert "multiples" in anchor
+    assert "multiples_direct" in anchor
     expected = {"trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"}
-    assert expected <= set(anchor["multiples"].keys()), (
-        f"anchor.multiples missing keys; got {set(anchor['multiples'].keys())}"
+    assert expected <= set(anchor["multiples_direct"].keys()), (
+        f"anchor.multiples_direct missing keys; got {set(anchor['multiples_direct'].keys())}"
     )
 
 

@@ -121,7 +121,7 @@ EV/Revenue + Rule-of-40) are deferred to v2.1+.
 {
   "anchor": {
     "ticker": "AAPL",
-    "multiples": {
+    "multiples_direct": {
       "trailingPE": 28.5, "forwardPE": 25.1, "evEbitda": 21.3,
       "priceToSales": 7.2, "priceToBook": 35.4
     }
