@@ -134,7 +134,7 @@ jobs:
           #   <type>(<scope>): <subject> (vX.Y.Z N/M)
           #   <type>(<scope>): <subject> (vX.Y.Z gate-feedback)
           #
-          # type   ∈ {refactor, feat, fix, chore, docs}
+          # type   ∈ {refactor, feat, fix, chore, docs, test}
           # scope  = kebab-case identifier (team name, domain-teams,
           #          or other tracked plugin/component name)
           # subject= human-readable summary, no trailing period
@@ -148,7 +148,7 @@ jobs:
           # load-bearing parts are: type, scope, colon, subject body,
           # no trailing period.
           pattern = re.compile(
-              r"^(refactor|feat|fix|chore|docs)"
+              r"^(refactor|feat|fix|chore|docs|test)"
               r"\(([a-z][a-z0-9-]*(?:/[a-z0-9-]+)?)\):\s+"
               r"(\S.+?)$"
           )
@@ -198,7 +198,7 @@ jobs:
                   "\nFormat (per skill-team standards/commit-convention.md):"
                   "\n  <type>(<scope>): <subject>"
                   "\n  <type>(<scope>): <subject> (vX.Y.Z N/M)"
-                  "\n  type  ∈ {refactor, feat, fix, chore, docs}"
+                  "\n  type  ∈ {refactor, feat, fix, chore, docs, test}"
                   "\n  scope = kebab-case team name (or 'domain-teams' for cross-team)"
                   "\n  subject = human-readable, no trailing period"
               )
