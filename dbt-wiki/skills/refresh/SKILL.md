@@ -33,7 +33,13 @@ If `.dbt-wiki/` doesn't exist, refresh refuses and points to `/dbt-wiki:init`.
 ## Step 0: Pre-condition Check
 
 ```bash
-test -d .dbt-wiki || { echo "Knowledge base not initialized. Run /dbt-wiki:init first."; exit 1; }
+# WIKI_DIR = git repo root (where .dbt-wiki/ lives); fallback to current $PWD.
+# Same logic as init Step 0pre — refresh must look at the SAME location
+# init wrote to, regardless of where the user invoked refresh from.
+WIKI_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || WIKI_DIR="$PWD"
+cd "$WIKI_DIR" || { echo "Cannot cd to $WIKI_DIR"; exit 1; }
+
+test -d .dbt-wiki || { echo "Knowledge base not initialized at $WIKI_DIR/.dbt-wiki/. Run /dbt-wiki:init first."; exit 1; }
 test -f .dbt-wiki/log.md || { echo ".dbt-wiki/log.md missing. Re-run /dbt-wiki:init."; exit 1; }
 test -f .dbt-wiki/_internal/extract_column_lineage.py || {
   echo "Column lineage script missing. Re-run /dbt-wiki:init to restore."
