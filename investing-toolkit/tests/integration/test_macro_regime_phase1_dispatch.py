@@ -36,7 +36,7 @@ def _run_dispatch(countries: list[str]) -> dict:
         for cc in available
     )
     result = subprocess.run(
-        ["uv", "run", "python", str(SCRIPT), "--input", args],
+        ["uv", "run", str(SCRIPT), "--input", args],
         capture_output=True, text=True, cwd=ROOT,
     )
     assert result.returncode == 0, f"dispatch failed: {result.stderr}\nstdout: {result.stdout[:500]}"
@@ -112,7 +112,7 @@ def test_phase1_us_native_verdict_shape():
 def test_phase1_unknown_country_rejected():
     """--input with unsupported country code must exit non-zero."""
     result = subprocess.run(
-        ["uv", "run", "python", str(SCRIPT), "--input", "xx=/tmp/nonexistent.json"],
+        ["uv", "run", str(SCRIPT), "--input", "xx=/tmp/nonexistent.json"],
         capture_output=True, text=True, cwd=ROOT,
     )
     assert result.returncode != 0
