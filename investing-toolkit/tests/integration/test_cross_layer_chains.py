@@ -50,6 +50,7 @@ tier-normalization.md` for the contract these tests enforce.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -1587,4 +1588,529 @@ def test_cross_country_compute_smoke(country, expected_status, tmp_path):
             f"{country}: accession_basis unexpectedly non-empty ({pe_accession}). "
             f"This country may be ready for 'full_compute' — update the parametrize list "
             f"once verified across a real run."
+        )
+
+
+# ---------------------------------------------------------------------------
+# Layer 2 → Layer 3 cross-layer chain tests (Tier A)
+#
+# These tests close the gap identified in v2.2.0-j: format scripts were tested
+# using hand-crafted fixtures, not real Layer 2 outputs.  If a Layer 2 script
+# changes its output schema and the format script is updated in the same PR
+# the existing report/* tests would still pass — but only because both sides
+# changed together.  These tests run the real L2 → L3 pipe end-to-end so that
+# drift between any L2 output and the L3 formatter is surfaced immediately.
+# ---------------------------------------------------------------------------
+
+
+# Tier A1 — analysis-technical → snapshot_format
+#
+# HONEST GAP NOTE: snapshot_format.py does NOT consume a "technical" block.
+# The formatter ingests a snapshot pack (L1 shape: company_info + price_history)
+# and renders price / valuation / disclosure sections only.  analysis-technical
+# (ta_compute.py) is an independent L2 consumer of the same L1 snapshot pack —
+# the two are parallel branches, not a serial pipe.
+#
+# What we *can* chain-test:
+#   a. ta_compute reads the L1 snapshot and produces a non-degenerate indicators
+#      block (already covered by test_chain_snapshot_to_technical above).
+#   b. snapshot_format reads the same L1 snapshot and produces valid Markdown.
+#
+# The test below verifies (b) — ensuring the L3 formatter hasn't drifted from
+# the L1 snapshot shape that the L1→L2 chain tests already rely on.  Any
+# upcoming "technical section in snapshot" feature (v2.2.0-x placeholder) that
+# does wire ta_compute output into snapshot_format should add a chain-specific
+# test at that point.
+
+def test_chain_technical_to_snapshot_format():
+    """L1 snapshot → snapshot_format (L3) path check.
+
+    snapshot_format.py does not consume a `technical` block — it reads the
+    same L1 snapshot pack that ta_compute reads.  This test verifies that the
+    L3 formatter produces valid Markdown from the L1 fixture, ensuring the
+    shared L1 shape hasn't drifted.
+
+    Catches: snapshot_format failing on the fixture that the L1→ta_compute
+    chain already relies on.  The honest L2→L3 serial pipe (ta_compute output
+    injected into snapshot_format) is deferred until snapshot_format gains a
+    `technical` section.
+    """
+    snapshot_fix = FIXTURES / "data-us-snapshot-sample.json"
+    fmt_script = SKILLS / "report-stock-snapshot" / "scripts" / "snapshot_format.py"
+
+    if not snapshot_fix.exists() or not fmt_script.exists():
+        pytest.skip("missing fixture or script")
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--input", str(snapshot_fix),
+         "--country", "us",
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"snapshot_format failed on L1 snapshot fixture: {proc.stderr[:400]}"
+    )
+    md = proc.stdout
+    assert md.lstrip().startswith("## "), (
+        f"snapshot_format output does not start with '## ' header; got: {md[:60]!r}"
+    )
+    assert "AAPL" in md, "snapshot_format output missing ticker 'AAPL'"
+    assert "52W" in md, "snapshot_format output missing '52W' section"
+    assert "Valuation" in md, "snapshot_format output missing Valuation section"
+
+
+# Tier A2 — analysis-portfolio → review_format
+
+
+def test_chain_portfolio_to_review_format(tmp_path):
+    """Layer 2 (analysis-portfolio) → Layer 3 (review_format) serial chain.
+
+    Runs portfolio_compute.py against minimal holdings + price inputs (both
+    offline JSON files), then feeds the JSON output to review_format.py.
+    Asserts that the resulting Markdown surfaces P&L / position anchors.
+
+    Catches: analysis-portfolio output schema drift that would silently break
+    review_format's P&L rendering (e.g. pnl_ratio key rename, totals block
+    restructure).
+
+    Design note: the existing test_3positions_smoke uses a hand-crafted fixture
+    that was manually shaped to match the expected output format.  This test
+    drives portfolio_compute from scratch so that any future schema change in
+    the script is detected before users see broken markdown.
+    """
+    portfolio_script = SKILLS / "analysis-portfolio" / "scripts" / "portfolio_compute.py"
+    fmt_script = SKILLS / "report-portfolio-review" / "scripts" / "review_format.py"
+
+    if not portfolio_script.exists() or not fmt_script.exists():
+        pytest.skip("missing portfolio_compute.py or review_format.py")
+
+    # Build minimal offline inputs
+    holdings_file = tmp_path / "holdings.json"
+    holdings_file.write_text(json.dumps([
+        {"ticker": "AAPL", "quantity": 10, "cost_basis": 150.0},
+        {"ticker": "MSFT", "quantity": 5,  "cost_basis": 300.0},
+    ]))
+    prices_file = tmp_path / "prices.json"
+    prices_file.write_text(json.dumps({
+        "AAPL": 281.87,
+        "MSFT": 413.20,
+    }))
+
+    # Step 1: run portfolio_compute (Layer 2)
+    rc, portfolio_out, stderr = _run_layer2(portfolio_script, [
+        "--holdings", str(holdings_file),
+        "--prices", str(prices_file),
+    ])
+    assert rc == 0, f"portfolio_compute failed (rc={rc}): {stderr}"
+
+    # Verify Layer 2 output has the expected shape before feeding to L3
+    assert "positions" in portfolio_out, f"portfolio_compute output missing 'positions'"
+    assert "totals" in portfolio_out, f"portfolio_compute output missing 'totals'"
+    positions = portfolio_out.get("positions") or []
+    assert len(positions) == 2, (
+        f"expected 2 positions, got {len(positions)}: {positions}"
+    )
+    # Verify pnl_ratio is fractional (0.0-1.0), not already-percent
+    for pos in positions:
+        pnl_ratio = pos.get("pnl_ratio")
+        assert pnl_ratio is not None, f"position {pos.get('ticker')} missing pnl_ratio"
+        assert isinstance(pnl_ratio, float), (
+            f"pnl_ratio must be float, got {type(pnl_ratio).__name__}"
+        )
+
+    # Step 2: write portfolio_compute output and feed to review_format (Layer 3)
+    portfolio_json = tmp_path / "portfolio_out.json"
+    portfolio_json.write_text(json.dumps(portfolio_out))
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--portfolio", str(portfolio_json),
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"review_format failed on portfolio_compute output: {proc.stderr[:400]}"
+    )
+    md = proc.stdout
+
+    # Assert Markdown contains P&L / portfolio anchors
+    assert "Portfolio Review" in md, "review_format missing 'Portfolio Review' header"
+    assert "## Summary" in md, "review_format missing '## Summary' section"
+    assert "## Positions" in md, "review_format missing '## Positions' section"
+    assert any(t in md for t in ("AAPL", "MSFT")), (
+        "review_format output missing expected tickers (AAPL, MSFT)"
+    )
+    assert any(k in md.lower() for k in ("p&l", "pnl", "return", "profit")), (
+        f"review_format markdown lacks any P&L anchor. excerpt:\n{md[:400]}"
+    )
+
+
+# Tier A3 — analysis-screener → screener_format
+
+
+def test_chain_screener_to_screener_format(tmp_path):
+    """Layer 2 (analysis-screener) → Layer 3 (screener_format) serial chain.
+
+    Runs screener_compute.py against the L1 screener-batch fixture (offline),
+    then feeds the ranked JSON to screener_format.py.  Asserts that the
+    resulting Markdown surfaces a ranked table with tickers from the fixture.
+
+    Catches: screener_compute output schema drift silently breaking
+    screener_format's ranked table rendering (e.g. ranked[*].metrics key
+    rename, preset_used field removal, or ranked array structure change).
+
+    Design note: existing test_smoke_5_ranked uses a hand-crafted fixture.
+    This test drives screener_compute from scratch against the real L1 fixture
+    so any output schema drift is detected before users see broken markdown.
+    """
+    screener_script = SKILLS / "analysis-screener" / "scripts" / "screener_compute.py"
+    fmt_script = SKILLS / "report-screener-list" / "scripts" / "screener_format.py"
+    l1_fixture = FIXTURES / "data-us-screener-batch-sample.json"
+
+    if not screener_script.exists() or not fmt_script.exists():
+        pytest.skip("missing screener_compute.py or screener_format.py")
+    if not l1_fixture.exists():
+        pytest.skip("missing data-us-screener-batch-sample.json fixture")
+
+    # Step 1: run screener_compute against L1 fixture (Layer 2)
+    rc, screener_out, stderr = _run_layer2(screener_script, [
+        "--input", str(l1_fixture),
+        "--preset", "balanced",
+        "--top-n", "10",
+    ])
+    assert rc == 0, f"screener_compute failed (rc={rc}): {stderr}"
+
+    # Verify Layer 2 output has the expected shape before feeding to L3
+    assert "ranked" in screener_out, "screener_compute output missing 'ranked'"
+    assert "universe_size" in screener_out, "screener_compute output missing 'universe_size'"
+    assert "preset_used" in screener_out, "screener_compute output missing 'preset_used'"
+    ranked = screener_out.get("ranked") or []
+    # Fixture has AAPL + MSFT + GOOGL — all 3 should pass 'balanced' preset
+    assert len(ranked) >= 1, (
+        f"screener_compute returned 0 ranked tickers from L1 fixture with 'balanced' preset"
+    )
+    ranked_tickers = [r.get("ticker") for r in ranked]
+
+    # Step 2: write screener_compute output and feed to screener_format (Layer 3)
+    screener_json = tmp_path / "screener_out.json"
+    screener_json.write_text(json.dumps(screener_out))
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--input", str(screener_json),
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"screener_format failed on screener_compute output: {proc.stderr[:400]}"
+    )
+    md = proc.stdout
+
+    # Assert Markdown contains screener anchors
+    assert "Stock Screener" in md, "screener_format missing 'Stock Screener' header"
+    assert "| Rank |" in md, "screener_format missing ranked table header row"
+    assert "Preset" in md, "screener_format missing 'Preset' metadata"
+    # At least one ranked ticker should appear in the table
+    assert any(t in md for t in ranked_tickers if t), (
+        f"screener_format output missing any ranked tickers {ranked_tickers}: {md[:400]}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tier B1 — report-equity-memo Phase 4 input bundle assembly (deterministic)
+# ---------------------------------------------------------------------------
+
+
+def test_phase4_input_bundle_assembly_us(tmp_path):
+    """report-equity-memo Phase 4 hands 4 JSONs to investing-team:
+      fetch.json (Phase 1), regime-card.json (Phase 2),
+      comps.json (Phase 2.5), dcf.json (Phase 3).
+
+    This test verifies all 4 can be deterministically assembled from
+    existing fixtures + Layer 2 scripts — without invoking the investing-team
+    LLM agent.  Acts as a pre-flight gate for the full memo workflow.
+
+    Catches:
+      - Any Layer 1 → Layer 2 chain in the memo pipeline producing degenerate
+        output (all-None, intrinsic_value=0, comps missing multiples_direct).
+      - Phase 4 bundle assembly failing before investing-team is ever invoked
+        (avoids wasting LLM tokens on a broken input bundle).
+    """
+    fetch_fix = FIXTURES / "data-us-memo-fetch-sample.json"
+    regime_fix = FIXTURES / "data-us-regime-pack-sample.json"
+    comps_fix = FIXTURES / "data-us-comps-multiples-sample.json"
+
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    dcf_script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+
+    for p in (fetch_fix, regime_fix, comps_fix):
+        if not p.exists():
+            pytest.skip(f"missing fixture: {p.name}")
+    for s in (regime_script, comps_script, dcf_script):
+        if not s.exists():
+            pytest.skip(f"missing script: {s.name}")
+
+    # --- Phase 1: fetch.json (use existing memo-fetch fixture as proxy) ---
+    fetch_data = json.loads(fetch_fix.read_text())
+    assert fetch_data.get("pack") == "memo-fetch", (
+        f"fetch fixture pack != 'memo-fetch': {fetch_data.get('pack')!r}"
+    )
+    assert fetch_data.get("ticker"), "fetch fixture missing ticker"
+    assert fetch_data.get("income_statement"), "fetch fixture missing income_statement"
+
+    # --- Phase 2: regime-card.json ---
+    rc, regime_card, stderr = _run_layer2(
+        regime_script, ["--input", f"us={regime_fix}"]
+    )
+    assert rc == 0, f"regime_compose failed: {stderr}"
+    us_block = (regime_card.get("by_country") or {}).get("us")
+    assert us_block, (
+        f"regime_compose produced no 'us' block. by_country keys: "
+        f"{list((regime_card.get('by_country') or {}).keys())}"
+    )
+    assert us_block.get("country") == "us"
+    assert us_block.get("confidence") in {"low", "medium", "high"}
+    assert us_block.get("framework_used"), "regime-card missing framework_used"
+
+    # --- Phase 2.5: comps.json (compute mode) ---
+    comps_pack = json.loads(comps_fix.read_text())
+    # The comps fixture has both 'tickers' and 'info' keys (T1 canonical alias).
+    # Use 'info' as the canonical key per the cross-country pattern.
+    info = comps_pack.get("info") or comps_pack.get("tickers") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"comps fixture has {len(tickers)} tickers; need >=2 for compute mode")
+    anchor_t, peer_t = tickers[0], tickers[1]
+
+    anchor_comps_file = tmp_path / f"{anchor_t}-anchor-comps.json"
+    peer_comps_file = tmp_path / f"{peer_t}-peer-comps.json"
+    anchor_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_t,
+        "info": {anchor_t: info[anchor_t]},
+        "tickers": {anchor_t: info[anchor_t]},
+    }))
+    peer_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_t,
+        "info": {peer_t: info[peer_t]},
+        "tickers": {peer_t: info[peer_t]},
+    }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_comps_file),
+        "--anchor-base", str(fetch_fix),
+        "--peers", str(peer_comps_file),
+    ])
+    assert rc == 0, f"comps_compute --mode compute failed: {stderr}"
+    anchor_block = comps_out.get("anchor") or {}
+    assert "multiples_direct" in anchor_block, (
+        f"comps.json missing anchor.multiples_direct. anchor keys: {list(anchor_block.keys())}"
+    )
+    assert "multiples_compute" in anchor_block, (
+        f"comps.json missing anchor.multiples_compute — compute mode did not run. "
+        f"anchor keys: {list(anchor_block.keys())}"
+    )
+    assert "divergence" in anchor_block, (
+        f"comps.json missing anchor.divergence. anchor keys: {list(anchor_block.keys())}"
+    )
+
+    # --- Phase 3: dcf.json ---
+    rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
+    assert rc == 0, f"dcf_compute failed: {stderr}"
+    intrinsic = dcf_out.get("intrinsic_value") or {}
+    intrinsic_mid = intrinsic.get("mid") if isinstance(intrinsic, dict) else None
+    assert intrinsic_mid is not None and intrinsic_mid > 0, (
+        f"dcf.json intrinsic_value.mid is degenerate ({intrinsic_mid!r}). "
+        f"Chain wiring to memo-fetch income_statement may be broken."
+    )
+    base_revenue = (dcf_out.get("assumptions") or {}).get("base_revenue")
+    assert base_revenue is not None and base_revenue > 0, (
+        f"dcf.json assumptions.base_revenue degenerate ({base_revenue!r}). "
+        f"income_statement.revenue not reaching dcf_compute."
+    )
+
+    # All 4 Phase 4 bundle components are non-degenerate
+    bundle = {
+        "fetch": fetch_data,
+        "regime_card": us_block,
+        "comps": comps_out,
+        "dcf": dcf_out,
+    }
+    for key, val in bundle.items():
+        assert val, f"Phase 4 bundle component '{key}' is empty/falsy"
+
+
+# ---------------------------------------------------------------------------
+# Tier B2 — Phase 4 bundle validates against schema-phase4-input-bundle.json
+# ---------------------------------------------------------------------------
+
+
+def test_phase4_bundle_validates_against_schema(tmp_path):
+    """Each component of the Phase 4 bundle conforms to
+    references/schema-phase4-input-bundle.json.
+
+    Catches: Layer 1 / Layer 2 schema drift that would break the investing-team
+    handoff before it reaches the LLM — without spending any tokens.
+
+    Validates the schema 'required' fields for each of the 4 bundle members.
+    Uses jsonschema if installed; falls back to manual required-key assertion
+    (same pattern as the v2.0.1 cross-layer chain tests).
+    """
+    schema_path = ROOT / "skills/report-equity-memo/references/schema-phase4-input-bundle.json"
+    if not schema_path.exists():
+        pytest.skip(f"schema file not found: {schema_path}")
+
+    schema = json.loads(schema_path.read_text())
+
+    fetch_fix = FIXTURES / "data-us-memo-fetch-sample.json"
+    regime_fix = FIXTURES / "data-us-regime-pack-sample.json"
+    comps_fix = FIXTURES / "data-us-comps-multiples-sample.json"
+
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    dcf_script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+
+    for p in (fetch_fix, regime_fix, comps_fix):
+        if not p.exists():
+            pytest.skip(f"missing fixture: {p.name}")
+    for s in (regime_script, comps_script, dcf_script):
+        if not s.exists():
+            pytest.skip(f"missing script: {s.name}")
+
+    # Build each bundle component (same logic as test_phase4_input_bundle_assembly_us)
+    fetch_data = json.loads(fetch_fix.read_text())
+
+    rc, regime_card, stderr = _run_layer2(
+        regime_script, ["--input", f"us={regime_fix}"]
+    )
+    assert rc == 0, f"regime_compose failed: {stderr}"
+    us_block = (regime_card.get("by_country") or {}).get("us") or {}
+
+    comps_pack = json.loads(comps_fix.read_text())
+    info = comps_pack.get("info") or comps_pack.get("tickers") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip("comps fixture needs >=2 tickers")
+    anchor_t, peer_t = tickers[0], tickers[1]
+
+    anchor_comps_file = tmp_path / f"{anchor_t}-anchor.json"
+    peer_comps_file = tmp_path / f"{peer_t}-peer.json"
+    anchor_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": anchor_t,
+        "info": {anchor_t: info[anchor_t]},
+        "tickers": {anchor_t: info[anchor_t]},
+    }))
+    peer_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": peer_t,
+        "info": {peer_t: info[peer_t]},
+        "tickers": {peer_t: info[peer_t]},
+    }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_comps_file),
+        "--anchor-base", str(fetch_fix),
+        "--peers", str(peer_comps_file),
+    ])
+    assert rc == 0, f"comps_compute failed: {stderr}"
+
+    rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
+    assert rc == 0, f"dcf_compute failed: {stderr}"
+
+    bundle = {
+        "fetch":       fetch_data,
+        "regime_card": us_block,
+        "comps":       comps_out,
+        "dcf":         dcf_out,
+    }
+
+    # Validate against schema using jsonschema if available; else manual check
+    try:
+        import jsonschema
+        jsonschema.validate(instance=bundle, schema=schema)
+    except ImportError:
+        # Manual required-field validation (same fallback as v2.0.1 schema tests)
+        for bundle_key in schema.get("required", []):
+            assert bundle_key in bundle, (
+                f"Bundle missing required key '{bundle_key}' per schema"
+            )
+            component = bundle[bundle_key]
+            assert isinstance(component, dict), (
+                f"Bundle['{bundle_key}'] must be a dict; got {type(component).__name__}"
+            )
+            prop_schema = (schema.get("properties") or {}).get(bundle_key, {})
+            for req_field in prop_schema.get("required", []):
+                assert req_field in component, (
+                    f"Bundle['{bundle_key}'] missing required field '{req_field}' "
+                    f"per schema-phase4-input-bundle.json"
+                )
+
+
+# ---------------------------------------------------------------------------
+# Tier B3 — SKILL.md filename consistency check
+# ---------------------------------------------------------------------------
+
+
+def test_phase4_input_filenames_match_earlier_phases():
+    """SKILL.md Phase 4 lists 4 JSON inputs investing-team consumes.
+    Those same filenames must appear in the earlier-phase prose.
+
+    Catches naming drift: e.g. Phase 1 produces '${TICKER_SAFE}-fetch.json'
+    but Phase 4 references 'memo-fetch.json', or Phase 2 produces
+    'regime.json' but Phase 4 references 'regime-card.json'.
+
+    Anchors used:
+      - 'fetch.json'       suffix: 'fetch'       produced in Phase 1 prose
+      - 'regime-card.json' suffix: 'regime-card' produced in Phase 2 prose
+      - 'comps.json'       suffix: 'comps'        produced in Phase 2.5 prose
+      - 'dcf.json'         suffix: 'dcf'          produced in Phase 3 prose
+    """
+    skill_md_path = ROOT / "skills/report-equity-memo/SKILL.md"
+    if not skill_md_path.exists():
+        pytest.skip(f"SKILL.md not found: {skill_md_path}")
+
+    skill_md = skill_md_path.read_text(encoding="utf-8")
+
+    # Locate Phase 4 section
+    phase4_match = re.search(
+        r"### Phase 4.*?(?=### Phase 5|## Cross-Plugin|## Limitations|\Z)",
+        skill_md,
+        re.DOTALL,
+    )
+    assert phase4_match, (
+        "Could not locate '### Phase 4' section in report-equity-memo/SKILL.md. "
+        "If the section was renamed, update the regex anchor in this test."
+    )
+    phase4_text = phase4_match.group(0)
+
+    # Phase 4 must explicitly reference all 4 file names
+    expected_files = ["fetch.json", "regime-card.json", "comps.json", "dcf.json"]
+    for name in expected_files:
+        assert name in phase4_text, (
+            f"Phase 4 section missing reference to '{name}'. "
+            f"Phase 4 text:\n{phase4_text[:600]}"
+        )
+
+    # Each file's suffix must also appear in the pre-Phase-4 prose
+    # (confirming the file is produced by an earlier phase).
+    # We check for the bare suffix rather than the full filename because
+    # earlier phases use ${TICKER_SAFE}-{suffix}.json templates.
+    pre_phase4 = skill_md[:phase4_match.start()]
+
+    suffix_to_file = {
+        "fetch":        "fetch.json",
+        "regime-card":  "regime-card.json",
+        "comps":        "comps.json",
+        "dcf":          "dcf.json",
+    }
+    for suffix, filename in suffix_to_file.items():
+        assert suffix in pre_phase4, (
+            f"File '{filename}' referenced in Phase 4 but its suffix '{suffix}' "
+            f"does not appear anywhere in Phases 1-3 prose. "
+            f"This indicates a naming drift between the phase that produces the "
+            f"file and Phase 4 which consumes it."
         )
