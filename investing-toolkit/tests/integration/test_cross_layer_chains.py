@@ -1252,6 +1252,30 @@ def test_chain_us_comps_compute_dual_input(tmp_path):
         f"evEbitda provenance note missing 'v2.2.0-l'; note={prov['evEbitda'].get('note')!r}"
     )
 
+    # Audit trail (the whole point of compute mode) — must be non-null/non-empty
+    trailing = prov["trailingPE"]
+    assert trailing["computed"] is True
+    assert trailing["fiscal_year_end"] is not None, (
+        "trailingPE fiscal_year_end must be populated from net_income._meta concept; "
+        "got None — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert trailing["accession_basis"], (
+        "trailingPE accession_basis must include the 10-K reference for net_income; "
+        "got empty — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert "10-K" in trailing["accession_basis"][0]
+
+    p2s = prov["priceToSales"]
+    assert p2s["computed"] is True
+    assert p2s["fiscal_year_end"] is not None, (
+        "priceToSales fiscal_year_end must be populated from revenue._meta concept; "
+        "got None — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert p2s["accession_basis"], (
+        "priceToSales accession_basis must include the 10-K reference for revenue; "
+        "got empty — production memo-fetch uses per-concept _meta nesting"
+    )
+
     # Top-level provenance: compute mode adds anchor_base_source
     top_prov = out.get("_provenance") or {}
     assert top_prov.get("mode") == "compute", (

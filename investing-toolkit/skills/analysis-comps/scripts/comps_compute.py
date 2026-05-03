@@ -133,6 +133,25 @@ def _safe_first(arr, default=None):
     return arr[0] if isinstance(arr, list) and arr else default
 
 
+def _concept_meta(inc: dict, concept: str) -> dict:
+    """Return the per-concept _meta block from income_statement.
+    Production memo-fetch nests _meta by concept name (revenue / net_income /
+    operating_income / ebit). Returns empty dict if absent.
+    """
+    return ((inc.get("_meta") or {}).get(concept) or {})
+
+
+def _concept_fy_end(inc: dict, concept: str) -> str | None:
+    """First fiscal_year_end from a concept-specific _meta block."""
+    return _safe_first(_concept_meta(inc, concept).get("fiscal_year_ends") or [])
+
+
+def _concept_filings(inc: dict, concept: str) -> list[str]:
+    """Most recent FY filing from a concept-specific _meta block (first entry only)."""
+    filings = _concept_meta(inc, concept).get("filings_used") or []
+    return [filings[0]] if filings else []
+
+
 def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict) -> tuple[dict, dict, list[str]]:
     """Recompute the 5 canonical multiples from a memo-fetch pack.
 
@@ -160,10 +179,10 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
     revenue_fy = _safe_first(inc.get("revenue"))
     net_income_fy = _safe_first(inc.get("net_income"))
 
-    fy_end = _safe_first(((inc.get("_meta") or {}).get("fiscal_year_ends") or []))
-    filings = ((inc.get("_meta") or {}).get("filings_used") or [])
+    # trailingPE (FY) — denominator basis: net_income
+    pe_fy_end = _concept_fy_end(inc, "net_income")
+    pe_filings = _concept_filings(inc, "net_income")
 
-    # trailingPE (FY)
     if price is None or net_income_fy is None or not shares:
         out_compute["trailingPE"] = None
         out_prov["trailingPE"] = {
@@ -182,13 +201,16 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
         out_prov["trailingPE"] = {
             "numerator_source":   "memo-fetch.current_price",
             "denominator_source": "memo-fetch.income_statement.net_income[0] / memo-fetch.shares_outstanding",
-            "accession_basis":    [filings[0]] if filings else [],
-            "fiscal_year_end":    fy_end,
+            "accession_basis":    pe_filings,
+            "fiscal_year_end":    pe_fy_end,
             "computed":           True,
             "note":               "FY-trailing, not TTM — see ROADMAP §v2.2.0-b §7.3",
         }
 
-    # priceToSales (FY)
+    # priceToSales (FY) — denominator basis: revenue
+    ps_fy_end = _concept_fy_end(inc, "revenue")
+    ps_filings = _concept_filings(inc, "revenue")
+
     if market_cap is None or revenue_fy is None:
         out_compute["priceToSales"] = None
         out_prov["priceToSales"] = {
@@ -204,8 +226,8 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
         out_prov["priceToSales"] = {
             "numerator_source":   "memo-fetch.company_info.marketCap",
             "denominator_source": "memo-fetch.income_statement.revenue[0]",
-            "accession_basis":    [filings[0]] if filings else [],
-            "fiscal_year_end":    fy_end,
+            "accession_basis":    ps_filings,
+            "fiscal_year_end":    ps_fy_end,
             "computed":           True,
         }
 

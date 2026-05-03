@@ -665,7 +665,7 @@ def test_divergence_alert_low_at_5_percent_boundary(tmp_path, runner):
         "pack": "memo-fetch", "ticker": "X",
         "company_info": {"regularMarketPrice": 110.25, "sharesOutstanding": 1, "marketCap": 110.25},
         "current_price": 110.25, "shares_outstanding": 1,
-        "income_statement": {"revenue": [105.0], "net_income": [10.5], "_meta": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}},
+        "income_statement": {"revenue": [105.0], "net_income": [10.5], "_meta": {"revenue": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}, "net_income": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}}},
         "balance_sheet": {}, "_provenance": {}
     }))
     peer = tmp_path / "peer.json"
@@ -694,7 +694,7 @@ def test_divergence_alert_medium_at_15_percent_boundary(tmp_path, runner):
         "pack": "memo-fetch", "ticker": "X",
         "company_info": {"regularMarketPrice": 11.5, "sharesOutstanding": 1, "marketCap": 11.5},
         "current_price": 11.5, "shares_outstanding": 1,
-        "income_statement": {"revenue": [1.0], "net_income": [1.0], "_meta": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}},
+        "income_statement": {"revenue": [1.0], "net_income": [1.0], "_meta": {"revenue": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}, "net_income": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}}},
         "balance_sheet": {}, "_provenance": {}
     }))
     peer = tmp_path / "peer.json"
@@ -725,7 +725,7 @@ def test_compute_mode_skips_trailingPE_when_net_income_empty(tmp_path, runner, f
         "income_statement": {
             "revenue": [416161000000.0],
             "net_income": [],
-            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}
+            "_meta": {"revenue": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}, "net_income": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}}
         },
         "balance_sheet": {}, "_provenance": {}
     }))
@@ -753,7 +753,7 @@ def test_compute_mode_skips_priceToSales_when_revenue_empty(tmp_path, runner, fi
         "income_statement": {
             "revenue": [],
             "net_income": [112010000000.0],
-            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}
+            "_meta": {"revenue": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}, "net_income": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}}
         },
         "balance_sheet": {}, "_provenance": {}
     }))
@@ -781,7 +781,7 @@ def test_compute_mode_handles_negative_net_income(tmp_path, runner, fixtures_dir
         "income_statement": {
             "revenue": [50000000000.0],
             "net_income": [-5000000000.0],
-            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K"]}
+            "_meta": {"revenue": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K"]}, "net_income": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K"]}}
         },
         "balance_sheet": {}, "_provenance": {}
     }))
