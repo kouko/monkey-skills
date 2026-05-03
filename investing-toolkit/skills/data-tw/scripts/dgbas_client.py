@@ -15,7 +15,8 @@ Usage:
   uv run dgbas_client.py --preset cpi --no-cache         # Force fresh fetch
 
 Auth: None required.
-Cache: $INVESTING_TOOLKIT_CACHE/dgbas/{filename}.json  TTL: 24h
+Cache: $INVESTING_TOOLKIT_CACHE/dgbas/{filename}.json  (envelope schema v2.0)
+       TTL is cadence-aware adaptive — see investing-toolkit/docs/cache-policy.md
        Falls back to ~/.cache/investing-toolkit/ if env var not set.
 Source: https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649/
 """
@@ -24,8 +25,9 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -44,7 +46,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DGBAS_PRICE_BASE = "https://ws.dgbas.gov.tw/001/Upload/463/relfile/10315/2649"
 _CACHE_BASE = os.environ.get("INVESTING_TOOLKIT_CACHE") or str(Path.home() / ".cache" / "investing-toolkit")
 CACHE_DIR = Path(_CACHE_BASE) / "dgbas"
-CACHE_TTL_SECONDS = 86400  # 24 hours
+CLIENT_NAME = "dgbas"  # used by cache envelope _cache_meta.client
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0
 
@@ -63,6 +65,7 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/cpispl.xls",
         "sheet": "CPI",
         "name": "Consumer Price Index INDEX (消費者物價指數, 民國110=100)",
+        "cadence": "monthly",
     },
     "cpi-yoy": {
         # True YoY% from the 年增率 sheet of cpispl.xls. Downstream
@@ -71,6 +74,7 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/cpispl.xls",
         "sheet": "年增率",
         "name": "Consumer Price Index YoY% (消費者物價指數年增率, 年增率 sheet)",
+        "cadence": "monthly",
     },
     # core-cpi / ppi / import-pi / export-pi each have an INDEX sheet
     # and a 年增率 sheet, mirroring cpispl.xls. Pre-v2.1.1 the legacy
@@ -82,11 +86,13 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/cpisplexvfe.xls",
         "sheet": "不含蔬果",
         "name": "Core CPI INDEX (核心CPI 不含蔬果及能源, 民國110=100)",
+        "cadence": "monthly",
     },
     "core-cpi-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/cpisplexvfe.xls",
         "sheet": "年增率",
         "name": "Core CPI YoY% (核心CPI 不含蔬果及能源年增率)",
+        "cadence": "monthly",
     },
     "cpi-sa": {
         # cpisplsa.xls — seasonally adjusted CPI series. Single-sheet
@@ -95,16 +101,19 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/cpisplsa.xls",
         "sheet": "CPI",
         "name": "CPI Seasonally Adjusted (季調CPI 指數)",
+        "cadence": "monthly",
     },
     "ppi": {
         "url": f"{DGBAS_PRICE_BASE}/ppispl.xls",
         "sheet": "生產者物價指數",
         "name": "Producer Price Index INDEX (生產者物價指數, 民國105=100)",
+        "cadence": "monthly",
     },
     "ppi-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/ppispl.xls",
         "sheet": "年增率",
         "name": "Producer Price Index YoY% (生產者物價指數年增率)",
+        "cadence": "monthly",
     },
     # import-pi / export-pi .xls files publish multiple price bases
     # (新臺幣計價 vs 美元計價, plus 進口物價 also has 農工原料 sub-bundle).
@@ -115,21 +124,25 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "總指數(新臺幣計價)",
         "name": "Import Price Index INDEX, TWD-priced (進口物價總指數, 新臺幣計價)",
+        "cadence": "monthly",
     },
     "import-pi-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "年增率(新臺幣計價)",
         "name": "Import Price Index YoY%, TWD-priced (進口物價年增率, 新臺幣計價)",
+        "cadence": "monthly",
     },
     "export-pi": {
         "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
         "sheet": "指數(新臺幣計價)",
         "name": "Export Price Index INDEX, TWD-priced (出口物價總指數, 新臺幣計價)",
+        "cadence": "monthly",
     },
     "export-pi-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
         "sheet": "年增率(新臺幣計價)",
         "name": "Export Price Index YoY%, TWD-priced (出口物價年增率, 新臺幣計價)",
+        "cadence": "monthly",
     },
     # v2.1.x-e — cpi-sa-yoy: DGBAS publishes only the seasonally-adjusted
     # INDEX in cpisplsa.xls (single sheet). YoY% companion is computed
@@ -142,6 +155,7 @@ PRESETS: dict[str, dict] = {
         "sheet": "CPI",
         "name": "CPI Seasonally Adjusted YoY% (季調CPI 年增率, computed from INDEX)",
         "compute": "yoy_from_index",
+        "cadence": "monthly",
     },
     # v2.1.x-f — USD-priced + 農工原料 sub-bundles for import-pi /
     # export-pi. The .xls files publish multiple price-base / commodity-
@@ -152,41 +166,49 @@ PRESETS: dict[str, dict] = {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "總指數(美元計價)",
         "name": "Import Price Index INDEX, USD-priced (進口物價總指數, 美元計價)",
+        "cadence": "monthly",
     },
     "import-pi-usd-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "年增率(美元計價)",
         "name": "Import Price Index YoY%, USD-priced (進口物價年增率, 美元計價)",
+        "cadence": "monthly",
     },
     "import-pi-raw": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "農工原料指數(新臺幣計價)",
         "name": "Import Price Index INDEX, raw materials TWD (進口物價農工原料指數, 新臺幣計價)",
+        "cadence": "monthly",
     },
     "import-pi-raw-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "農工原料年增率(新臺幣計價)",
         "name": "Import Price Index YoY%, raw materials TWD (進口物價農工原料年增率, 新臺幣計價)",
+        "cadence": "monthly",
     },
     "import-pi-raw-usd": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "農工原料指數(美元計價)",
         "name": "Import Price Index INDEX, raw materials USD (進口物價農工原料指數, 美元計價)",
+        "cadence": "monthly",
     },
     "import-pi-raw-usd-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
         "sheet": "農工原料年增率(美元計價)",
         "name": "Import Price Index YoY%, raw materials USD (進口物價農工原料年增率, 美元計價)",
+        "cadence": "monthly",
     },
     "export-pi-usd": {
         "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
         "sheet": "指數(美元計價)",
         "name": "Export Price Index INDEX, USD-priced (出口物價總指數, 美元計價)",
+        "cadence": "monthly",
     },
     "export-pi-usd-yoy": {
         "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
         "sheet": "年增率(美元計價)",
         "name": "Export Price Index YoY%, USD-priced (出口物價年增率, 美元計價)",
+        "cadence": "monthly",
     },
 }
 
@@ -232,31 +254,150 @@ def _compute_yoy_from_index(observations: list[dict], period: int = 12) -> list[
     return out
 
 
-# ---------------------------------------------------------------------------
-# Cache helpers
-# ---------------------------------------------------------------------------
-
 def get_cache_path(preset: str) -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     return CACHE_DIR / f"{preset}.json"
 
 
-def load_cache(path: Path) -> dict | None:
+# === BEGIN cache helpers (synced — DO NOT EDIT INDIVIDUALLY) ===
+# Cadence taxonomy + TTL bands + envelope schema documented in
+# investing-toolkit/docs/cache-policy.md (v1.0).
+# Why this block is duplicated across 14 client files instead of imported
+# from a shared module: ADR-0007 — preserves PEP 723 self-contained
+# scripts + Anthropic skill convention. Block-level byte-equality is
+# enforced by .github/workflows/check-script-sync.yml Group 10.
+# Run `bash investing-toolkit/scripts/sync-clients.sh` after editing
+# any line inside this block.
+
+CACHE_SCHEMA_VERSION = "2.0"
+
+
+def _compute_ttl(cadence: str, staleness_days: int | None) -> int:
+    """Return TTL seconds. See cache-policy.md §"TTL bands"."""
+    if cadence == "immutable":
+        return 100 * 365 * 24 * 3600
+    if cadence == "tick":
+        return 60
+    if cadence == "event":
+        return 3600
+    if cadence == "monthly":
+        if staleness_days is None or staleness_days > 45:
+            return 4 * 3600
+        if staleness_days > 30:
+            return 24 * 3600
+        return 7 * 24 * 3600
+    if cadence == "quarterly":
+        if staleness_days is None or staleness_days > 100:
+            return 4 * 3600
+        if staleness_days > 90:
+            return 24 * 3600
+        return 30 * 24 * 3600
+    if cadence == "weekly":
+        if staleness_days is None or staleness_days > 10:
+            return 2 * 3600
+        if staleness_days > 7:
+            return 12 * 3600
+        return 5 * 24 * 3600
+    if cadence == "daily":
+        if staleness_days is None or staleness_days > 2:
+            return 30 * 60
+        if staleness_days > 1:
+            return 3600
+        return 4 * 3600
+    if cadence == "annual":
+        if staleness_days is None or staleness_days > 380:
+            return 24 * 3600
+        if staleness_days > 365:
+            return 7 * 24 * 3600
+        return 90 * 24 * 3600
+    return 24 * 3600  # safe default
+
+
+def load_cache(path: Path, cadence: str) -> dict | None:
+    """Read envelope; return data dict if fresh per current policy.
+
+    Uses `_cache_meta.fetched_at` from the envelope (NOT filesystem
+    mtime) — robust against cp/rsync/tar that reset mtime.
+    Recomputes TTL on every load so policy changes apply to old cache.
+    """
     if not path.exists():
         return None
-    if time.time() - path.stat().st_mtime > CACHE_TTL_SECONDS:
-        return None
     try:
-        return json.loads(path.read_text())
-    except Exception:
+        envelope = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
         return None
 
+    meta = envelope.get("_cache_meta") or {}
+    if meta.get("version") != CACHE_SCHEMA_VERSION:
+        return None  # schema drift / old format → miss
 
-def save_cache(path: Path, data: dict) -> None:
+    fetched_at_str = meta.get("fetched_at")
+    if not fetched_at_str:
+        return None
     try:
-        path.write_text(json.dumps(data, default=str, indent=2, ensure_ascii=False))
-    except Exception:
-        pass
+        fetched_at = datetime.fromisoformat(fetched_at_str.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+    staleness = meta.get("staleness_days_at_fetch")
+    ttl = _compute_ttl(cadence, staleness)
+    age = (datetime.now(timezone.utc) - fetched_at).total_seconds()
+    if age > ttl:
+        return None
+
+    out = dict(envelope.get("data", {}))
+    out["_cache"] = "hit"
+    out["_cache_age_seconds"] = int(age)
+    out["_cache_ttl_seconds"] = ttl
+    out["_provenance"] = envelope.get("_provenance", {})
+    return out
+
+
+def save_cache(path: Path, key: str, data: dict, cadence: str,
+               reference_period: str | None,
+               provenance: dict | None = None) -> None:
+    """Write standardized envelope atomically (tmp + rename)."""
+    now = datetime.now(timezone.utc)
+    if reference_period:
+        try:
+            clean = reference_period.replace("-", "")
+            if len(clean) == 6:
+                clean += "01"
+            ref_dt = datetime.strptime(clean[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+            staleness_days = (now - ref_dt).days
+        except (ValueError, TypeError):
+            staleness_days = None
+    else:
+        staleness_days = None
+
+    ttl = _compute_ttl(cadence, staleness_days)
+
+    envelope = {
+        "_cache_meta": {
+            "version": CACHE_SCHEMA_VERSION,
+            "client": CLIENT_NAME,
+            "key": key,
+            "cadence": cadence,
+            "fetched_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "reference_period": reference_period,
+            "staleness_days_at_fetch": staleness_days,
+            "ttl_seconds_at_fetch": ttl,
+            "expires_at_hint": (now + timedelta(seconds=ttl)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        },
+        "_provenance": provenance or {},
+        "data": data,
+    }
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=str(path.parent),
+        prefix=f".{path.name}.", suffix=".tmp", delete=False,
+    ) as f:
+        json.dump(envelope, f, ensure_ascii=False, indent=2, default=str)
+        tmp = Path(f.name)
+    tmp.rename(path)
+
+# === END cache helpers ===
 
 
 # ---------------------------------------------------------------------------
@@ -435,20 +576,22 @@ def _find_header_row(sheet: xlrd.sheet.Sheet) -> int | None:
 # ---------------------------------------------------------------------------
 
 def fetch_preset(preset: str, use_cache: bool = True) -> dict:
-    """Fetch a DGBAS preset with caching."""
+    """Fetch a DGBAS preset with cadence-aware adaptive caching.
+
+    Cache TTL is computed at load time from the preset's `cadence`
+    field + observed `staleness_days`. See cache-policy.md §"TTL bands".
+    """
     config = PRESETS.get(preset)
     if not config:
         return {"error": f"Unknown preset: {preset}", "available_presets": list(PRESETS.keys())}
 
+    cadence = config.get("cadence", "monthly")
     cache_path = get_cache_path(preset)
 
     if use_cache:
-        cached = load_cache(cache_path)
+        cached = load_cache(cache_path, cadence)
         if cached is not None:
-            cached["_cache"] = "hit"
-            if "_provenance" not in cached:
-                cached["_provenance"] = _make_provenance(cached, config["url"])
-            return cached
+            return cached  # already has _cache="hit" + _provenance + _cache_age_seconds
 
     content = _download_xls(config["url"])
     if isinstance(content, dict):
@@ -500,7 +643,12 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
         )
 
     if "error" not in result and observations:
-        save_cache(cache_path, result)
+        ref_period = latest["date"] if latest else None
+        save_cache(
+            cache_path, preset, result, cadence,
+            reference_period=ref_period,
+            provenance=result["_provenance"],
+        )
 
     return result
 
