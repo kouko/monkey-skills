@@ -92,14 +92,13 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: classify_jp `real_rate_block` has 3 sub-blocks (ex_post / ex_ante / jgbi) all populated; cross-method central tendency derived.
 - **Reference**: `analysis-macro-regime/references/japan-real-rate-roadmap.md`; v1.10.0 deferred list; v2.0.0 deferred list.
 
-### v2.2.0-b — analysis-comps `--mode compute` activation
+### ~~v2.2.0-b — analysis-comps `--mode compute` activation~~ ✅ closed 2026-05-03 (PR #TBD)
 
-- **What**: v2.0.0 shipped `analysis-comps` skill with peer-discovery + multiples fetch but `--mode compute` is placeholder. Implement: percentile rank per multiple, composite score, anchor-vs-peer delta, sector tilt overlay.
-- **Why**: Without compute, comps output is a table of numbers — analyst still does the math by hand. Compute mode produces verdict-grade output.
-- **Files**: `investing-toolkit/skills/analysis-comps/scripts/comps_compute.py` (new compute path); SKILL.md update; integration tests.
-- **Blocker**: None (data already in place).
-- **Acceptance**: `comps_compute --mode compute` produces JSON with per-multiple percentile, composite score, anchor delta vs peer median.
-- **Reference**: v2.0.0 deferred list.
+- **Status**: Closed. Anchor-only dual-input shape (B'): `--anchor` + new `--anchor-base` (memo-fetch pack); peers remain single-input direct. 3 of 5 multiples computable in v2.2.0-b — `trailingPE` (FY-trailing), `priceToSales` (FY), `forwardPE` (pass-through). 2 of 5 deferred to v2.2.0-l: `priceToBook` (needs `total_stockholders_equity`), `evEbitda` (needs `depreciation_amortization`).
+- **Output**: anchor block now carries `multiples_direct` + `multiples_compute` + `divergence` (low/medium/high/n/a per `references/divergence-thresholds.md`) + `compute_provenance` per multiple with FY end + accession_basis.
+- **Direct-mode breaking change**: `anchor.multiples` → `anchor.multiples_direct`. Only in-tree caller (`report-equity-memo` Phase 2.5) migrated atomically in same PR.
+- **Spec / Plan**: [`docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md`](../docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md) / [`docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md`](../docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md)
+- **Reference**: PR #TBD; spawned v2.2.0-k (immutable cache tag) + v2.2.0-l (memo-fetch raw-field extension).
 
 ### v2.2.0-c — Sector-adjusted multiples for Comps
 
@@ -177,6 +176,24 @@ Material features. ~1-3 weeks each. Do one at a time.
   - Phase 3 (per migration PR): `pytest -m "not network"` green; `bash sync-clients.sh --check` 0 drift; cache file inspection on each migrated client shows v2.0 envelope.
   - Phase 4: `grep -r "CACHE_TTL_SECONDS" investing-toolkit/` returns 0 matches.
 - **Reference**: ADR-0007; ADR-0008 (halves Phase 3 cost); cache-policy.md; 2026-05-03 design session (per-client copy-paste rejected for cache helper drift; central `_cache.py` rejected for PEP 723 / Anthropic violation).
+
+### v2.2.0-k — Immutable cadence tag for historical filings
+
+- **What**: Add `cadence: "immutable"` to the cadence vocabulary. Cache helper recognizes this tag as TTL = ∞ (never refetch once cached). Historical fetch paths in each client tag their immutable products: SEC EDGAR per-accession 10-K/10-Q/8-K, EDINET past 報告書, MOPS past statements, NDC past CSV vintages, BOJ past series points, FRED past dated values.
+- **Why**: Per user principle 2026-05-03 — "Layer 1 = raw data + persistent storage". Cadence-aware TTL (v2.2.0-j) handles refresh smartly but does not distinguish "stale data" from "data that cannot become stale". Immutable filings are always fresh — refetching them is wasted bandwidth and a needless cache miss.
+- **Files**: `docs/cache-policy.md` (add `immutable` band); `data-us/scripts/sec_edgar_client.py`, `data-jp/scripts/edinet_client.py`, `data-tw/scripts/mops_client.py`, `data-tw/scripts/ndc_client.py`, `data-jp/scripts/boj_timeseries_client.py`, `data-us/scripts/fred_client.py` (per-dated-point queries). Block-level cache helper updated; CI sync guard catches drift.
+- **Blocker**: None. Builds on v2.2.0-j Phase 2-4 infrastructure (which lands the cache-block-equality CI check).
+- **Acceptance**: cache file inspection shows `_cache_meta.cadence: "immutable"` for past-accession fetches; `_cache_meta.expires_at: null`; deliberate-clock-forward smoke test confirms immutable entries do not refetch.
+- **Reference**: 2026-05-03 brainstorming session; design doc 2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md §15.1.
+
+### v2.2.0-l — memo-fetch raw-field extension for compute-mode multiples
+
+- **What**: Extend `data-us/scripts/sec_edgar_client.py` to extract additional XBRL concepts from the same 10-K filings already fetched (no new network requests). Surface in memo-fetch output: `balance_sheet.total_stockholders_equity` (XBRL `StockholdersEquity`), `cash_flow.depreciation_amortization` (XBRL `DepreciationDepletionAndAmortization`), `cash_flow.stock_based_compensation` (XBRL `ShareBasedCompensation`), `income_statement.gross_profit` (XBRL `GrossProfit`), `balance_sheet.intangible_assets` + `balance_sheet.goodwill`.
+- **Why**: Unblocks 2 of 5 compute multiples in v2.2.0-b that currently emit null (`priceToBook`, `evEbitda`). Sets foundation for v2.2.0-c sector-adjusted multiples (Tech Rule-of-40 needs SBC; REIT P/AFFO needs D&A; Bank P/B needs equity).
+- **Files**: `data-us/scripts/sec_edgar_client.py` (extend XBRL concept fallback chains); `data-us/scripts/pack.py` (assemble new fields into memo-fetch output); `tests/data/test_data_us.py` (assert presence of new fields); `tests/data/fixtures/data-us-memo-fetch-sample.json` (regenerate). Cross-country symmetry to `data-jp/edinet_client.py`, `data-tw/mops_client.py`, `data-kr/fdr_client.py`, `data-cn/akshare_client.py` follows country-by-country PR pattern.
+- **Blocker**: None. SEC EDGAR XBRL exposes these concepts directly; no new API or auth needed.
+- **Acceptance**: memo-fetch fixture shows new fields populated for AAPL FY2025; `analysis-comps/scripts/comps_compute.py --mode compute` (no code change in v2.2.0-l) auto-emits non-null `multiples_compute.priceToBook` + `multiples_compute.evEbitda`; existing v2.2.0-b deferred-multiple regression tests flip from `is None` to `pytest.approx(...)` in same PR.
+- **Reference**: 2026-05-03 design doc §7.3 + §15.2; v2.2.0-b PR closure.
 
 ## Long-term — Phase 2 + beyond
 

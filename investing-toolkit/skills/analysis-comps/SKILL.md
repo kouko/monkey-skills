@@ -96,11 +96,11 @@ uv run scripts/comps_compute.py \
 |---------------------|----------|------------------------------------------------------------------------------------|
 | `--anchor`          | yes      | Path to anchor ticker's `comps-multiples` pack JSON                                |
 | `--peers`           | yes      | One or more peer JSON paths, comma-separated                                       |
-| `--mode`            | no       | `direct` (use multiples in JSON) / `compute` (recompute from base financials, v2.1+ placeholder). Default `direct`. |
+| `--mode`            | no       | `direct` (use multiples from comps-multiples pack) / `compute` (recompute from memo-fetch raw fundamentals; v2.2.0-b+). Default `direct`. |
+| `--anchor-base`     | only when `--mode compute` | Path to anchor's memo-fetch pack JSON (Layer-1 raw fundamentals; required for compute mode). |
 | `--rationale-map`   | no       | Optional JSON map `{ticker: rationale}` to merge into output `peers[*].rationale`. |
 
-In v2.0.0 only `--mode direct` is wired; `--mode compute` is a placeholder
-for sector-adjusted recomputation deferred to v2.1+ per Spec §5.3.
+See §"Direct vs Compute — when to use which" below for choosing between modes.
 
 ## Multiples Set (v2.0.0)
 
@@ -115,7 +115,10 @@ Classic 5 (per Spec §5.3):
 Sector-adjusted multiples (banks: P/B+ROE; REITs: P/AFFO; tech:
 EV/Revenue + Rule-of-40) are deferred to v2.1+.
 
-## Output Contract (Spec §5.4)
+## Output Contract (Spec §5.4) — direct mode
+
+For compute mode, the anchor block additionally carries `multiples_compute`
++ `divergence` + `compute_provenance` (see §"Direct vs Compute" below).
 
 ```json
 {
@@ -196,10 +199,20 @@ For each of the 5 multiples:
 where `n =` peer count. Anchor at exact median yields `0.5` in symmetric
 distributions; ties bias upward (weak / inclusive ranking).
 
-**Mode fallback (v2.0.0)**: `--mode compute` is not yet implemented; if
-requested, the script emits a stderr warning, falls back to `direct`,
-stamps `_provenance.mode = "direct"` (actual computation mode) and
-`_provenance.requested_mode = "compute"` (audit trail).
+**Mode behaviour (v2.2.0-b+)**: `--mode compute` requires `--anchor-base
+<memo-fetch.json>`. When supplied, the anchor block additionally carries
+`multiples_compute` (3 of 5 multiples computed from raw fundamentals;
+`priceToBook` and `evEbitda` deferred to v2.2.0-l), `divergence`
+(per-multiple `abs_diff` / `pct_diff` / `alert ∈ {low, medium, high, n/a}`
+per `references/divergence-thresholds.md`), and `compute_provenance`
+(per-multiple numerator/denominator source + `accession_basis` Tier A
+trace). `peers` remain single-input direct only — divergence is
+anchor-only by design.
+
+**Validation**: `--mode compute` without `--anchor-base` exits 2 with a
+helpful stderr message. `--mode direct` with `--anchor-base` warns and
+ignores. `_provenance.mode` records the effective mode; `requested_mode`
+preserves the audit trail.
 
 ### Edge cases
 
@@ -215,6 +228,42 @@ stamps `_provenance.mode = "direct"` (actual computation mode) and
 - **Provenance source extraction** — anchor and peer source paths are
   read from each input JSON's `_provenance.skill` / `_provenance.source`
   if present; falls back to the input file path.
+
+## Direct vs Compute — when to use which
+
+| Mode | Trust source | Use case |
+|---|---|---|
+| `--mode direct` (default) | yfinance pre-cooked multiples (Yahoo's own EPS / EV definitions) | Industry comparability — aligns with Bloomberg / FactSet convention. Good for screen-style ranking; safe for sell-side memos. |
+| `--mode compute` (v2.2.0-b+) | Recomputed from SEC EDGAR raw fundamentals + yfinance market data | Primary-source audit — every multiple traces back to a 10-K accession. Required for buy-side memos / short theses where the analyst must defend each number. |
+
+### What compute mode actually computes (v2.2.0-b)
+
+| Multiple | Computed? | Definition |
+|---|---|---|
+| `trailingPE` | ✅ Yes | `current_price ÷ (FY net_income / shares_outstanding)` — FY-trailing, **not TTM**. Yfinance's TTM and our FY-trailing diverge ~5-10% during the fiscal year — this is a definitional gap, not a bug. |
+| `priceToSales` | ✅ Yes | `marketCap / FY revenue[0]` |
+| `forwardPE` | ✅ Pass-through | Forward EPS is sell-side consensus aggregate; no primary source. Compute mode passes the direct value through and stamps `compute_provenance.forwardPE.computed: false`. |
+| `priceToBook` | ❌ Deferred to v2.2.0-l | memo-fetch v2.1.x doesn't expose `total_stockholders_equity` |
+| `evEbitda` | ❌ Deferred to v2.2.0-l | memo-fetch v2.1.x doesn't expose `depreciation_amortization` |
+
+### Divergence interpretation
+
+`divergence[m].alert` takes 4 values:
+
+- `low` (≤5%): rounding/timing noise — ignore
+- `medium` (5-15%): mention briefly in narrative
+- `high` (>15%): trace to SEC accession in `compute_provenance[m].accession_basis` — the divergence is the story
+- `n/a`: compute null (deferred multiple) or pass-through (forwardPE)
+
+See [`references/divergence-thresholds.md`](references/divergence-thresholds.md) for band rationale.
+
+### Required for compute mode
+
+- `--anchor`: comps-multiples pack (existing direct-mode input)
+- `--anchor-base`: memo-fetch pack (NEW; required only for `--mode compute`)
+- `--peers`: comps-multiples pack(s) (peers stay direct-only — anchor-only compute reduces fetch overhead)
+
+If `--mode compute` is invoked without `--anchor-base`, exit code 2 with stderr message.
 
 ## Cross-Plugin Handoff
 
