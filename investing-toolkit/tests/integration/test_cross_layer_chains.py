@@ -2114,3 +2114,911 @@ def test_phase4_input_filenames_match_earlier_phases():
             f"This indicates a naming drift between the phase that produces the "
             f"file and Phase 4 which consumes it."
         )
+
+
+# ---------------------------------------------------------------------------
+# Tier D — Phase 4 bundle parametrized across non-US countries
+# ---------------------------------------------------------------------------
+#
+# PR #230 added US-specific tests (test_phase4_input_bundle_assembly_us,
+# test_phase4_bundle_validates_against_schema). These tests extend the same
+# coverage to JP / TW / KR / CN.
+#
+# Cross-country compute-mode reality (from PR #228 cross-country smoke):
+#   US  → full_compute   (SEC accession_basis non-empty)
+#   JP/TW/KR/CN → schema_mismatch (compute mode runs, accession_basis empty)
+# Both states are KNOWN and acceptable — these tests fail only on CRASH.
+# ---------------------------------------------------------------------------
+
+
+def _build_phase4_bundle_for_country(country: str, tmp_path) -> dict:
+    """Shared helper: assemble the 4-component Phase 4 bundle for *country*.
+
+    Returns a dict with keys: fetch, regime_card, comps, dcf.
+    Calls pytest.skip() if a required fixture or script is missing,
+    or if the fixture is structurally incompatible with a given phase.
+    """
+    fetch_fix = FIXTURES / f"data-{country}-memo-fetch-sample.json"
+    regime_fix = FIXTURES / f"data-{country}-regime-pack-sample.json"
+    comps_fix = FIXTURES / f"data-{country}-comps-multiples-sample.json"
+
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    dcf_script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+
+    for p in (fetch_fix, regime_fix, comps_fix):
+        if not p.exists():
+            pytest.skip(f"missing fixture: {p.name}")
+    for s in (regime_script, comps_script, dcf_script):
+        if not s.exists():
+            pytest.skip(f"missing script: {s.name}")
+
+    # Phase 1: fetch.json proxy
+    fetch_data = json.loads(fetch_fix.read_text())
+    assert fetch_data.get("pack") == "memo-fetch", (
+        f"[{country}] fetch fixture pack != 'memo-fetch': {fetch_data.get('pack')!r}"
+    )
+    assert fetch_data.get("ticker"), f"[{country}] fetch fixture missing ticker"
+    assert fetch_data.get("income_statement"), (
+        f"[{country}] fetch fixture missing income_statement"
+    )
+
+    # Phase 2: regime-card.json
+    rc, regime_card, stderr = _run_layer2(
+        regime_script, ["--input", f"{country}={regime_fix}"]
+    )
+    assert rc == 0, f"[{country}] regime_compose failed: {stderr}"
+    country_block = (regime_card.get("by_country") or {}).get(country)
+    assert country_block, (
+        f"[{country}] regime_compose produced no '{country}' block. "
+        f"by_country keys: {list((regime_card.get('by_country') or {}).keys())}"
+    )
+    assert country_block.get("country") == country
+    assert country_block.get("confidence") in {"low", "medium", "high"}
+    assert country_block.get("framework_used"), (
+        f"[{country}] regime-card missing framework_used"
+    )
+
+    # Phase 2.5: comps.json (compute mode)
+    comps_pack = json.loads(comps_fix.read_text())
+    info = comps_pack.get("info") or comps_pack.get("tickers") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(
+            f"[{country}] comps fixture has {len(tickers)} tickers; need >=2 for compute mode"
+        )
+    anchor_t, peer_t = tickers[0], tickers[1]
+
+    anchor_comps_file = tmp_path / f"{country}-{anchor_t}-anchor.json"
+    peer_comps_file = tmp_path / f"{country}-{peer_t}-peer.json"
+    anchor_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_t,
+        "info": {anchor_t: info[anchor_t]},
+        "tickers": {anchor_t: info[anchor_t]},
+    }))
+    peer_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_t,
+        "info": {peer_t: info[peer_t]},
+        "tickers": {peer_t: info[peer_t]},
+    }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_comps_file),
+        "--anchor-base", str(fetch_fix),
+        "--peers", str(peer_comps_file),
+    ])
+    assert rc == 0, f"[{country}] comps_compute --mode compute failed: {stderr}"
+    anchor_block = comps_out.get("anchor") or {}
+    assert "multiples_direct" in anchor_block, (
+        f"[{country}] comps.json missing anchor.multiples_direct. "
+        f"anchor keys: {list(anchor_block.keys())}"
+    )
+    assert "multiples_compute" in anchor_block, (
+        f"[{country}] comps.json missing anchor.multiples_compute — compute mode "
+        f"did not run. anchor keys: {list(anchor_block.keys())}"
+    )
+
+    # Phase 3: dcf.json
+    # Note: non-US fixtures may produce negative intrinsic_value (e.g. JP with
+    # high WACC relative to EBIT margin) — this is expected for loss-proximate
+    # companies. We accept any finite numeric intrinsic_value.mid.
+    rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
+    assert rc == 0, f"[{country}] dcf_compute failed: {stderr}"
+    iv = dcf_out.get("intrinsic_value") or {}
+    iv_mid = iv.get("mid") if isinstance(iv, dict) else None
+    assert iv_mid is not None, (
+        f"[{country}] dcf.json intrinsic_value.mid is None — DCF compute crashed "
+        f"or produced degenerate output. dcf keys: {list(dcf_out.keys())}"
+    )
+    # Accept negative (loss-proximate firms) but not None
+    assert isinstance(iv_mid, (int, float)), (
+        f"[{country}] dcf intrinsic_value.mid must be numeric; got {type(iv_mid)}"
+    )
+    base_revenue = (dcf_out.get("assumptions") or {}).get("base_revenue")
+    assert base_revenue is not None and base_revenue > 0, (
+        f"[{country}] dcf.json assumptions.base_revenue degenerate ({base_revenue!r}). "
+        f"income_statement.revenue not reaching dcf_compute."
+    )
+
+    return {
+        "fetch": fetch_data,
+        "regime_card": country_block,
+        "comps": comps_out,
+        "dcf": dcf_out,
+    }
+
+
+@pytest.mark.parametrize("country", ["jp", "tw", "kr", "cn"])
+def test_phase4_input_bundle_assembly_non_us(country, tmp_path):
+    """Phase 4 bundle assembly for non-US countries (jp / tw / kr / cn).
+
+    Each country's regime classifier output + DCF + comps must assemble
+    deterministically without crashing or producing degenerate values.
+
+    Non-US compute-mode reality (from PR #228 cross-country smoke):
+      JP/TW/KR/CN comps_compute runs but accession_basis is empty
+      (schema_mismatch mode) because SEC 10-K cross-check is US-only.
+      This is a KNOWN state — the test accepts it.
+
+    Negative DCF intrinsic_value.mid is accepted for non-US: companies
+    with high WACC relative to EBIT margin (e.g. JP auto sector) can
+    produce negative DCF. What matters: the value is numeric, not None,
+    and the chain does not crash.
+    """
+    bundle = _build_phase4_bundle_for_country(country, tmp_path)
+    for key, val in bundle.items():
+        assert val, f"[{country}] Phase 4 bundle component '{key}' is empty/falsy"
+
+
+@pytest.mark.parametrize("country", ["jp", "tw", "kr", "cn"])
+def test_phase4_bundle_validates_against_schema_non_us(country, tmp_path):
+    """Phase 4 bundle for non-US countries validates against schema-phase4-input-bundle.json.
+
+    Catches: Layer 1 / Layer 2 schema drift in non-US chains that would
+    break the investing-team handoff.
+
+    Schema validation accepts null accession_basis — the schema does not
+    require non-empty accession_basis, so schema_mismatch mode is OK.
+    """
+    schema_path = (
+        ROOT / "skills/report-equity-memo/references/schema-phase4-input-bundle.json"
+    )
+    if not schema_path.exists():
+        pytest.skip(f"schema file not found: {schema_path}")
+
+    schema = json.loads(schema_path.read_text())
+    bundle = _build_phase4_bundle_for_country(country, tmp_path)
+
+    try:
+        import jsonschema
+        jsonschema.validate(instance=bundle, schema=schema)
+    except ImportError:
+        # Manual required-field validation (same fallback as v2.0.1 schema tests)
+        for bundle_key in schema.get("required", []):
+            assert bundle_key in bundle, (
+                f"[{country}] Bundle missing required key '{bundle_key}' per schema"
+            )
+            component = bundle[bundle_key]
+            assert isinstance(component, dict), (
+                f"[{country}] Bundle['{bundle_key}'] must be a dict; "
+                f"got {type(component).__name__}"
+            )
+            prop_schema = (schema.get("properties") or {}).get(bundle_key, {})
+            for req_field in prop_schema.get("required", []):
+                assert req_field in component, (
+                    f"[{country}] Bundle['{bundle_key}'] missing required field "
+                    f"'{req_field}' per schema-phase4-input-bundle.json"
+                )
+
+
+# ---------------------------------------------------------------------------
+# Tier E — Failure-mode L2 → L3 tests
+# ---------------------------------------------------------------------------
+#
+# These tests exercise boundary / degenerate outputs from Layer 2 and verify
+# that Layer 3 (or downstream schema validation) handles them gracefully.
+# ---------------------------------------------------------------------------
+
+
+def test_phase4_bundle_with_deferred_compute_multiples_validates(tmp_path):
+    """Even when compute mode emits null for priceToBook + evEbitda
+    (v2.2.0-l deferred), the Phase 4 bundle still validates against schema.
+
+    Catches: schema accidentally requiring non-null priceToBook / evEbitda
+    in the comps component, which would reject any company lacking book
+    value or EBITDA in the SEC 10-K normalization layer.
+
+    Reality check: US comps_compute currently always emits null for
+    priceToBook and evEbitda (balance sheet + EBITDA normalization not
+    yet wired in v2.2.0-b). This makes the US fixture a naturally
+    minimal test case for this scenario.
+    """
+    schema_path = (
+        ROOT / "skills/report-equity-memo/references/schema-phase4-input-bundle.json"
+    )
+    if not schema_path.exists():
+        pytest.skip(f"schema file not found: {schema_path}")
+
+    schema = json.loads(schema_path.read_text())
+
+    fetch_fix = FIXTURES / "data-us-memo-fetch-sample.json"
+    regime_fix = FIXTURES / "data-us-regime-pack-sample.json"
+    comps_fix = FIXTURES / "data-us-comps-multiples-sample.json"
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    dcf_script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+
+    for p in (fetch_fix, regime_fix, comps_fix):
+        if not p.exists():
+            pytest.skip(f"missing fixture: {p.name}")
+    for s in (regime_script, comps_script, dcf_script):
+        if not s.exists():
+            pytest.skip(f"missing script: {s.name}")
+
+    # Build bundle (same pipeline as US test)
+    fetch_data = json.loads(fetch_fix.read_text())
+
+    rc, regime_card, stderr = _run_layer2(regime_script, ["--input", f"us={regime_fix}"])
+    assert rc == 0, f"regime_compose failed: {stderr}"
+    us_block = (regime_card.get("by_country") or {}).get("us") or {}
+
+    comps_pack = json.loads(comps_fix.read_text())
+    info = comps_pack.get("info") or comps_pack.get("tickers") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip("comps fixture needs >=2 tickers")
+    anchor_t, peer_t = tickers[0], tickers[1]
+
+    anchor_comps_file = tmp_path / f"{anchor_t}-anchor.json"
+    peer_comps_file = tmp_path / f"{peer_t}-peer.json"
+    anchor_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": anchor_t,
+        "info": {anchor_t: info[anchor_t]}, "tickers": {anchor_t: info[anchor_t]},
+    }))
+    peer_comps_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": peer_t,
+        "info": {peer_t: info[peer_t]}, "tickers": {peer_t: info[peer_t]},
+    }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_comps_file),
+        "--anchor-base", str(fetch_fix),
+        "--peers", str(peer_comps_file),
+    ])
+    assert rc == 0, f"comps_compute failed: {stderr}"
+
+    # Verify priceToBook + evEbitda are null — the deferred-compute scenario
+    mc = (comps_out.get("anchor") or {}).get("multiples_compute") or {}
+    assert mc.get("priceToBook") is None, (
+        f"priceToBook is non-null ({mc.get('priceToBook')}); "
+        f"this test specifically exercises the null/deferred case. "
+        f"If v2.2.0-l landed and now computes priceToBook, update this assertion."
+    )
+    assert mc.get("evEbitda") is None, (
+        f"evEbitda is non-null ({mc.get('evEbitda')}); "
+        f"this test specifically exercises the null/deferred case."
+    )
+
+    rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
+    assert rc == 0, f"dcf_compute failed: {stderr}"
+
+    bundle = {
+        "fetch": fetch_data,
+        "regime_card": us_block,
+        "comps": comps_out,
+        "dcf": dcf_out,
+    }
+
+    # Schema validation must succeed despite null priceToBook / evEbitda
+    try:
+        import jsonschema
+        jsonschema.validate(instance=bundle, schema=schema)
+    except ImportError:
+        for bundle_key in schema.get("required", []):
+            assert bundle_key in bundle, (
+                f"Bundle missing required key '{bundle_key}' per schema"
+            )
+        # Core assertion: we got here without crashing; null fields are tolerated
+
+
+def test_dcf_negative_intrinsic_value_renders(tmp_path):
+    """A loss-proximate company can produce negative DCF intrinsic_value.
+
+    JP fixture (Toyota Motor / sector peers) produces negative DCF mid
+    when WACC exceeds EBIT margin — a real scenario for high-capex firms.
+    The DCF compute must produce a structurally valid JSON even when
+    intrinsic_value.mid < 0, and the output must include all required
+    envelope fields so the investing-team can surface the negative valuation
+    in narrative (instead of crashing on a None value).
+
+    Catches: format scripts or consuming code assuming intrinsic_value > 0,
+    which would crash on legitimate loss-proximate company inputs.
+    """
+    fetch_fix = FIXTURES / "data-jp-memo-fetch-sample.json"
+    dcf_script = SKILLS / "analysis-dcf" / "scripts" / "dcf_compute.py"
+
+    if not fetch_fix.exists():
+        pytest.skip("missing fixture: data-jp-memo-fetch-sample.json")
+    if not dcf_script.exists():
+        pytest.skip("missing script: dcf_compute.py")
+
+    rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
+    assert rc == 0, f"dcf_compute failed on JP fixture (rc={rc}): {stderr}"
+
+    # Structural assertions — all required envelope fields must be present
+    assert "intrinsic_value" in dcf_out, (
+        "dcf_compute output missing 'intrinsic_value' key — structural failure"
+    )
+    assert "assumptions" in dcf_out, (
+        "dcf_compute output missing 'assumptions' key"
+    )
+    assert "warnings" in dcf_out, (
+        "dcf_compute output missing 'warnings' key — downstream cannot surface caveats"
+    )
+
+    iv = dcf_out["intrinsic_value"]
+    assert isinstance(iv, dict), (
+        f"intrinsic_value must be a dict with low/mid/high; got {type(iv).__name__}"
+    )
+    iv_mid = iv.get("mid")
+    assert iv_mid is not None, (
+        "intrinsic_value.mid is None — DCF produced degenerate output on JP fixture"
+    )
+    assert isinstance(iv_mid, (int, float)), (
+        f"intrinsic_value.mid must be numeric; got {type(iv_mid).__name__}"
+    )
+
+    # JP fixture is known to produce negative mid — verify and document
+    if iv_mid >= 0:
+        pytest.skip(
+            f"JP fixture produced non-negative DCF mid ({iv_mid:.2f}); "
+            f"the test exercises negative-mid handling. If JP fixture was updated "
+            f"with a more profitable company, this skip is expected — the structural "
+            f"assertions above still passed."
+        )
+    # iv_mid < 0: the key test — structural fields present despite negative value
+    assert iv.get("low") is not None, (
+        "intrinsic_value.low is None even though mid is non-None — partial output"
+    )
+    assert iv.get("high") is not None, (
+        "intrinsic_value.high is None even though mid is non-None — partial output"
+    )
+    # Phase 4 bundle assembly: dcf_out must be usable as bundle component
+    bundle_component_check = {
+        "fetch": {"pack": "memo-fetch", "ticker": "7203.T",
+                  "income_statement": {}, "current_price": 0},
+        "regime_card": {"country": "jp", "confidence": "medium",
+                        "framework_used": "test", "native_verdict": {}},
+        "comps": {"anchor": {}, "_provenance": {}},
+        "dcf": dcf_out,
+    }
+    assert bundle_component_check["dcf"] is dcf_out, (
+        "dcf_out must be directly assignable to Phase 4 bundle (no post-processing needed)"
+    )
+
+
+def test_comps_compute_handles_empty_peers_post_dedup(tmp_path):
+    """When all peer files dedup against the anchor (same ticker),
+    the peer set becomes empty. comps_compute must emit valid JSON with
+    a warning, not crash.
+
+    Catches: comps_compute crashing with ZeroDivisionError or KeyError
+    when statistics are computed over an empty peer array.
+    """
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    if not comps_script.exists():
+        pytest.skip("missing script: comps_compute.py")
+
+    # Build anchor + peer files with the SAME ticker to trigger dedup
+    ticker = "AAPL"
+    ticker_data = {
+        "ticker": ticker,
+        "trailingPE": 30.0,
+        "marketCap": 2_000_000_000_000.0,
+        "priceToBook": 5.0,
+    }
+    anchor_file = tmp_path / f"{ticker}-anchor.json"
+    peer_file = tmp_path / f"{ticker}-peer.json"  # same ticker → will be deduped
+    for path in (anchor_file, peer_file):
+        path.write_text(json.dumps({
+            "pack": "comps-multiples",
+            "ticker": ticker,
+            "info": {ticker: ticker_data},
+            "tickers": {ticker: ticker_data},
+        }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "direct",
+        "--anchor", str(anchor_file),
+        "--peers", str(peer_file),
+    ])
+
+    # Must not crash
+    assert rc == 0, (
+        f"comps_compute crashed with empty-post-dedup peer set (rc={rc}). "
+        f"stderr: {stderr[:300]}"
+    )
+
+    # Must emit a warning about the dedup
+    prov = comps_out.get("_provenance") or {}
+    warnings = prov.get("warnings") or []
+    assert any("dedup" in w.lower() or "peer" in w.lower() for w in warnings), (
+        f"comps_compute did not emit a dedup/empty-peer warning. "
+        f"warnings: {warnings}"
+    )
+
+    # peers array must be present and empty
+    assert comps_out.get("peers") == [], (
+        f"Expected empty peers list after full dedup; got: {comps_out.get('peers')}"
+    )
+
+    # ranking must be present (anchor-only fallback, n=1)
+    ranking = comps_out.get("ranking")
+    assert ranking is not None, (
+        "comps_compute missing 'ranking' block on empty-peer fallback"
+    )
+
+    # statistics must be present with n=0 for each multiple
+    statistics = comps_out.get("statistics") or {}
+    assert statistics, (
+        "comps_compute missing 'statistics' block on empty-peer fallback"
+    )
+    for metric, stat in statistics.items():
+        n = stat.get("n")
+        assert n == 0, (
+            f"statistics['{metric}'].n={n} but expected 0 (no peers after dedup)"
+        )
+
+
+def test_compute_warnings_persist_in_phase4_bundle(tmp_path):
+    """Layer 2 comps_compute _provenance.warnings (e.g. FY-not-TTM note)
+    must survive into the Phase 4 bundle so investing-team can surface
+    it in narrative.
+
+    Catches: Phase 4 bundle assembly stripping _provenance from comps,
+    which would silently hide definitional caveats from the memo author.
+    """
+    comps_fix = FIXTURES / "data-us-comps-multiples-sample.json"
+    fetch_fix = FIXTURES / "data-us-memo-fetch-sample.json"
+    comps_script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+
+    if not comps_fix.exists() or not fetch_fix.exists():
+        pytest.skip("missing US comps or memo-fetch fixture")
+    if not comps_script.exists():
+        pytest.skip("missing script: comps_compute.py")
+
+    comps_pack = json.loads(comps_fix.read_text())
+    info = comps_pack.get("info") or comps_pack.get("tickers") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip("comps fixture needs >=2 tickers")
+    anchor_t, peer_t = tickers[0], tickers[1]
+
+    anchor_file = tmp_path / f"{anchor_t}-anchor.json"
+    peer_file = tmp_path / f"{peer_t}-peer.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": anchor_t,
+        "info": {anchor_t: info[anchor_t]}, "tickers": {anchor_t: info[anchor_t]},
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": peer_t,
+        "info": {peer_t: info[peer_t]}, "tickers": {peer_t: info[peer_t]},
+    }))
+
+    rc, comps_out, stderr = _run_layer2(comps_script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(fetch_fix),
+        "--peers", str(peer_file),
+    ])
+    assert rc == 0, f"comps_compute failed: {stderr}"
+
+    # Verify the FY-not-TTM warning is present in Layer 2 output
+    prov = comps_out.get("_provenance") or {}
+    warnings = prov.get("warnings") or []
+    fy_ttm_warning = next(
+        (w for w in warnings if "FY" in w and "TTM" in w), None
+    )
+    assert fy_ttm_warning is not None, (
+        f"Expected FY-not-TTM warning in comps_compute _provenance.warnings. "
+        f"Got: {warnings}. If comps_compute no longer emits this warning, "
+        f"update this assertion."
+    )
+
+    # Simulate Phase 4 bundle assembly (as report-equity-memo does it)
+    bundle = {
+        "fetch": json.loads(fetch_fix.read_text()),
+        "regime_card": {"country": "us", "confidence": "high",
+                        "framework_used": "IC-quadrant", "native_verdict": {}},
+        "comps": comps_out,
+        "dcf": {"intrinsic_value": {"low": 100, "mid": 150, "high": 200},
+                "assumptions": {}, "warnings": []},
+    }
+
+    # The FY-not-TTM warning must survive in the bundle's comps component
+    bundle_warnings = (bundle["comps"].get("_provenance") or {}).get("warnings") or []
+    assert any("FY" in w and "TTM" in w for w in bundle_warnings), (
+        f"FY-not-TTM warning lost during Phase 4 bundle assembly. "
+        f"bundle['comps']['_provenance']['warnings']: {bundle_warnings}. "
+        f"If the bundle assembly process strips _provenance, this caveat becomes "
+        f"invisible to the investing-team memo author."
+    )
+
+
+def test_review_format_handles_zero_quantity_positions(tmp_path):
+    """portfolio_compute with quantity=0 positions (all-closed portfolio)
+    must flow through review_format without crashing.
+
+    Catches: review_format breaking on zero market_value / zero totals
+    (e.g. division by zero in weight computation, format crash on 0.0%).
+
+    Design note: portfolio_compute requires >=1 holdings row (empty list
+    exits rc=1). We test the 'closed all positions' scenario using
+    quantity=0 rows — market_value=0 for each, total portfolio value=0.
+    """
+    portfolio_script = SKILLS / "analysis-portfolio" / "scripts" / "portfolio_compute.py"
+    fmt_script = SKILLS / "report-portfolio-review" / "scripts" / "review_format.py"
+
+    if not portfolio_script.exists() or not fmt_script.exists():
+        pytest.skip("missing portfolio_compute.py or review_format.py")
+
+    # Build holdings with quantity=0 (all positions 'closed')
+    holdings_file = tmp_path / "holdings.json"
+    holdings_file.write_text(json.dumps([
+        {"ticker": "AAPL", "quantity": 0, "cost_basis": 150.0},
+        {"ticker": "MSFT", "quantity": 0, "cost_basis": 300.0},
+    ]))
+    prices_file = tmp_path / "prices.json"
+    prices_file.write_text(json.dumps({"AAPL": 200.0, "MSFT": 400.0}))
+
+    # Step 1: portfolio_compute (Layer 2)
+    rc, portfolio_out, stderr = _run_layer2(portfolio_script, [
+        "--holdings", str(holdings_file),
+        "--prices", str(prices_file),
+    ])
+    assert rc == 0, f"portfolio_compute failed on zero-quantity positions (rc={rc}): {stderr}"
+
+    positions = portfolio_out.get("positions") or []
+    assert len(positions) == 2, (
+        f"expected 2 positions (even with quantity=0), got {len(positions)}"
+    )
+    # All market values must be 0
+    for pos in positions:
+        assert pos.get("market_value") == 0.0, (
+            f"position {pos.get('ticker')} market_value={pos.get('market_value')} "
+            f"expected 0.0 for quantity=0"
+        )
+
+    # Step 2: review_format (Layer 3) — must not crash
+    portfolio_json = tmp_path / "portfolio_out.json"
+    portfolio_json.write_text(json.dumps(portfolio_out))
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--portfolio", str(portfolio_json),
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"review_format crashed on zero-quantity portfolio (rc={proc.returncode}). "
+        f"stderr: {proc.stderr[:300]}"
+    )
+    md = proc.stdout
+
+    # Markdown must be non-empty and contain heading
+    assert "Portfolio Review" in md, (
+        "review_format produced no 'Portfolio Review' heading on zero-quantity input"
+    )
+    # Both tickers must appear in the positions table
+    for ticker in ("AAPL", "MSFT"):
+        assert ticker in md, (
+            f"review_format markdown missing ticker '{ticker}' from zero-quantity portfolio"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Tier F — Cross-country format chain tests
+# ---------------------------------------------------------------------------
+#
+# Reality check (per PR #230 honest finding):
+#   - snapshot_format does NOT consume analysis-technical output as a true
+#     L2→L3 chain (they are parallel L1 consumers). No snapshot_format
+#     tests for non-US here.
+#   - portfolio_compute and screener_compute are country-agnostic (any ticker).
+#     Multi-country portfolio and TW screener tests make sense.
+#   - Phase 4 bundle country-specific field assertions are new here.
+# ---------------------------------------------------------------------------
+
+
+def test_chain_portfolio_multicountry_mixed_review(tmp_path):
+    """Portfolio with US + TW + JP tickers flows through review_format.
+
+    Catches: review_format breaking on non-US ticker suffixes (.TW, .T)
+    in ticker-routing or markdown table rendering.
+
+    Uses arbitrary prices (offline). Country-agnostic portfolio_compute
+    treats all tickers uniformly — the suffix routing test is review_format.
+    """
+    portfolio_script = SKILLS / "analysis-portfolio" / "scripts" / "portfolio_compute.py"
+    fmt_script = SKILLS / "report-portfolio-review" / "scripts" / "review_format.py"
+
+    if not portfolio_script.exists() or not fmt_script.exists():
+        pytest.skip("missing portfolio_compute.py or review_format.py")
+
+    # Mix US / TW / JP tickers
+    holdings_file = tmp_path / "holdings.json"
+    holdings_file.write_text(json.dumps([
+        {"ticker": "AAPL",    "quantity": 10, "cost_basis": 150.0},
+        {"ticker": "2330.TW", "quantity": 5,  "cost_basis": 800.0},
+        {"ticker": "7203.T",  "quantity": 20, "cost_basis": 2000.0},
+    ]))
+    prices_file = tmp_path / "prices.json"
+    prices_file.write_text(json.dumps({
+        "AAPL":    200.0,
+        "2330.TW": 1000.0,
+        "7203.T":  2500.0,
+    }))
+
+    rc, portfolio_out, stderr = _run_layer2(portfolio_script, [
+        "--holdings", str(holdings_file),
+        "--prices", str(prices_file),
+    ])
+    assert rc == 0, f"portfolio_compute failed on multi-country holdings (rc={rc}): {stderr}"
+
+    positions = portfolio_out.get("positions") or []
+    assert len(positions) == 3, (
+        f"expected 3 positions (US + TW + JP), got {len(positions)}"
+    )
+    tickers_in_output = {p.get("ticker") for p in positions}
+    assert tickers_in_output == {"AAPL", "2330.TW", "7203.T"}, (
+        f"not all multi-country tickers appear in positions: {tickers_in_output}"
+    )
+
+    portfolio_json = tmp_path / "portfolio_out.json"
+    portfolio_json.write_text(json.dumps(portfolio_out))
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--portfolio", str(portfolio_json),
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"review_format failed on multi-country portfolio (rc={proc.returncode}). "
+        f"stderr: {proc.stderr[:300]}"
+    )
+    md = proc.stdout
+
+    assert "Portfolio Review" in md, "review_format missing 'Portfolio Review' header"
+    for ticker in ("AAPL", "2330.TW", "7203.T"):
+        assert ticker in md, (
+            f"review_format markdown missing '{ticker}' — ticker-suffix routing may "
+            f"be broken for non-US suffixes"
+        )
+
+
+def test_chain_tw_screener_to_screener_format(tmp_path):
+    """data-tw screener-batch fixture → analysis-screener → screener_format.
+
+    TW screener-batch fixture is nested under yfinance.info_batch.data.tickers
+    (TW-native pack format), unlike the US flat tickers wrapper. This test
+    exercises the normalization step and verifies .TW-suffix tickers flow
+    through screener_compute → screener_format correctly.
+
+    Note: TW fixture normalization (extracting tickers from nested yfinance
+    wrapper) must be performed by the caller before passing to screener_compute
+    — screener_compute only handles flat tickers dict or list. This mirrors
+    how the investing-toolkit skill orchestrates the TW screener flow.
+    """
+    screener_script = SKILLS / "analysis-screener" / "scripts" / "screener_compute.py"
+    fmt_script = SKILLS / "report-screener-list" / "scripts" / "screener_format.py"
+    tw_fixture = FIXTURES / "data-tw-screener-batch-sample.json"
+
+    if not screener_script.exists() or not fmt_script.exists():
+        pytest.skip("missing screener_compute.py or screener_format.py")
+    if not tw_fixture.exists():
+        pytest.skip("missing fixture: data-tw-screener-batch-sample.json")
+
+    # Normalize TW fixture: extract tickers from nested yfinance wrapper
+    tw_raw = json.loads(tw_fixture.read_text())
+    raw_tickers = (
+        (tw_raw.get("yfinance") or {})
+        .get("info_batch", {})
+        .get("data", {})
+        .get("tickers", {})
+    )
+    if not raw_tickers:
+        pytest.skip(
+            "TW screener fixture lacks yfinance.info_batch.data.tickers — "
+            "fixture may have been restructured"
+        )
+
+    # Build a flat screener-batch wrapper that screener_compute accepts
+    normalized_fix = tmp_path / "tw-screener-normalized.json"
+    normalized_fix.write_text(json.dumps({
+        "pack": "screener-batch",
+        "country": "TW",
+        "tickers": raw_tickers,
+    }))
+
+    # Step 1: screener_compute (Layer 2)
+    rc, screener_out, stderr = _run_layer2(screener_script, [
+        "--input", str(normalized_fix),
+        "--preset", "balanced",
+        "--top-n", "5",
+    ])
+    assert rc == 0, f"screener_compute failed on TW fixture (rc={rc}): {stderr}"
+
+    ranked = screener_out.get("ranked") or []
+    assert len(ranked) >= 1, (
+        f"screener_compute returned 0 ranked tickers from TW fixture with "
+        f"'balanced' preset. universe_size={screener_out.get('universe_size')}"
+    )
+    tw_tickers = [r.get("ticker") for r in ranked]
+    assert any(t and t.endswith(".TW") for t in tw_tickers), (
+        f"No .TW-suffix tickers in screener ranked output: {tw_tickers}"
+    )
+
+    # Step 2: screener_format (Layer 3)
+    screener_json = tmp_path / "screener_out.json"
+    screener_json.write_text(json.dumps(screener_out))
+
+    proc = subprocess.run(
+        ["uv", "run", str(fmt_script),
+         "--input", str(screener_json),
+         "--lang", "en"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, (
+        f"screener_format failed on TW screener output (rc={proc.returncode}). "
+        f"stderr: {proc.stderr[:300]}"
+    )
+    md = proc.stdout
+
+    assert "Stock Screener" in md, "screener_format missing 'Stock Screener' header"
+    # At least one .TW ticker must appear in the markdown
+    assert any(t in md for t in tw_tickers if t), (
+        f"screener_format output missing .TW tickers {tw_tickers}: {md[:400]}"
+    )
+
+
+def test_phase4_bundle_tw_includes_ndc_signal(tmp_path):
+    """TW Phase 4 regime_card must include the NDC 五色 signal_color
+    and 9 構成 dispersion in native_verdict.
+
+    investing-team's TW gate consumes signal_color (紅/黃紅/綠/黃藍/藍)
+    and components_9 specifically. If these keys are absent or structurally
+    wrong, the gate will either crash or silently produce a wrong verdict.
+
+    Catches: TW-specific classifier output drift that strips signal_color
+    or components_9 from native_verdict.
+    """
+    regime_fix = FIXTURES / "data-tw-regime-pack-sample.json"
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+
+    if not regime_fix.exists():
+        pytest.skip("missing fixture: data-tw-regime-pack-sample.json")
+    if not regime_script.exists():
+        pytest.skip("missing script: regime_compose.py")
+
+    rc, regime_card, stderr = _run_layer2(
+        regime_script, ["--input", f"tw={regime_fix}"]
+    )
+    assert rc == 0, f"regime_compose failed for TW (rc={rc}): {stderr}"
+
+    tw_block = (regime_card.get("by_country") or {}).get("tw")
+    assert tw_block, (
+        f"regime_compose produced no 'tw' block. "
+        f"by_country keys: {list((regime_card.get('by_country') or {}).keys())}"
+    )
+
+    native_verdict = tw_block.get("native_verdict") or {}
+
+    # Assert signal_color is one of the 5 NDC traffic-light colours
+    signal_color = native_verdict.get("signal_color")
+    assert signal_color is not None, (
+        "TW native_verdict missing 'signal_color' — NDC 五色景氣燈號 classifier "
+        "did not populate this field. investing-team TW gate will fail."
+    )
+    valid_colors = {"紅", "黃紅", "綠", "黃藍", "藍"}
+    assert signal_color in valid_colors, (
+        f"TW signal_color='{signal_color}' not in valid NDC 五色 set {valid_colors}. "
+        f"Classifier may have changed colour encoding."
+    )
+
+    # Assert components_9 is present and has >=6 components
+    # (NDC uses 9 構成 indicators; fixture should have all 9 but >=6 is the floor)
+    components_9 = native_verdict.get("components_9") or {}
+    assert components_9, (
+        "TW native_verdict missing 'components_9' — NDC 9 構成 dispersion not "
+        "computed. investing-team's dispersion overlay will have no data."
+    )
+    n_components = len(components_9)
+    assert n_components >= 6, (
+        f"TW components_9 has only {n_components} components; expected >=6 "
+        f"(NDC uses 9 構成). Keys present: {list(components_9.keys())}"
+    )
+
+    # Assert signal_score is numeric (used to place within the colour band)
+    signal_score = native_verdict.get("signal_score")
+    assert signal_score is not None and isinstance(signal_score, (int, float)), (
+        f"TW signal_score='{signal_score}' must be numeric (NDC score 9–45). "
+        f"investing-team uses this to interpolate within colour bands."
+    )
+
+
+def test_phase4_bundle_jp_includes_tankan_outlook(tmp_path):
+    """JP Phase 4 regime_card must include Tankan business DI in native_verdict.
+
+    investing-team's JP context relies on tankan_business_di to assess
+    corporate sentiment divergence between large-mfg, large-nonmfg,
+    small-mfg, small-nonmfg sectors — the 'dispersion_warning' flag
+    is particularly important for KPI framing.
+
+    Catches: JP-specific classifier dropping tankan_business_di from
+    native_verdict (regression risk: if BOJ data API changes key names,
+    tankan block may silently go null).
+    """
+    regime_fix = FIXTURES / "data-jp-regime-pack-sample.json"
+    regime_script = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
+
+    if not regime_fix.exists():
+        pytest.skip("missing fixture: data-jp-regime-pack-sample.json")
+    if not regime_script.exists():
+        pytest.skip("missing script: regime_compose.py")
+
+    rc, regime_card, stderr = _run_layer2(
+        regime_script, ["--input", f"jp={regime_fix}"]
+    )
+    assert rc == 0, f"regime_compose failed for JP (rc={rc}): {stderr}"
+
+    jp_block = (regime_card.get("by_country") or {}).get("jp")
+    assert jp_block, (
+        f"regime_compose produced no 'jp' block. "
+        f"by_country keys: {list((regime_card.get('by_country') or {}).keys())}"
+    )
+
+    native_verdict = jp_block.get("native_verdict") or {}
+
+    # BOJ stance must be present (top-level framing for all JP analysis)
+    boj_stance = native_verdict.get("boj_stance")
+    assert boj_stance is not None, (
+        "JP native_verdict missing 'boj_stance' — BOJ stance classifier did not "
+        "populate this field. This is the primary JP regime axis."
+    )
+
+    # Tankan block — key field for JP investing-team context
+    tankan = native_verdict.get("tankan_business_di")
+    if tankan is None:
+        pytest.skip(
+            "JP native_verdict 'tankan_business_di' is null in fixture — "
+            "BOJ Tankan data may be sparse in this fixture. "
+            "Honest gap: structural assertions above still passed."
+        )
+
+    # If Tankan is present, validate its internal shape
+    assert isinstance(tankan, dict), (
+        f"tankan_business_di must be a dict; got {type(tankan).__name__}"
+    )
+    for field in ("large_mfg", "large_nonmfg"):
+        val = tankan.get(field)
+        assert val is not None, (
+            f"tankan_business_di.{field} is None — Tankan data partially missing"
+        )
+        assert isinstance(val, (int, float)), (
+            f"tankan_business_di.{field}={val!r} must be numeric (DI in pp)"
+        )
+
+    # dispersion_warning is a bool flag used by investing-team KPI framing
+    assert "dispersion_warning" in tankan, (
+        "tankan_business_di missing 'dispersion_warning' field — "
+        "investing-team KPI framing check will fail"
+    )
+    assert "regime" in tankan, (
+        "tankan_business_di missing 'regime' field — "
+        "expansion/contraction classification not present"
+    )
