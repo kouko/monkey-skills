@@ -1404,3 +1404,187 @@ def test_real_aapl_compute_multiples_in_plausible_bands(tmp_path):
     assert ps is not None, "priceToSales compute returned None — check memo-fetch revenue / marketCap fields"
     assert 5 < pe < 100, f"trailingPE {pe} outside plausible AAPL FY band (5, 100)"
     assert 1 < ps < 20, f"priceToSales {ps} outside plausible AAPL FY band (1, 20)"
+
+
+# ---------------------------------------------------------------------------
+# G — Slim fixture parity guard (v2.2.0-b Tier 2)
+# ---------------------------------------------------------------------------
+
+
+def test_slim_memo_fetch_fixture_is_production_subset():
+    """The slim memo-fetch fixture used by analysis-comps unit tests
+    (tests/analysis/fixtures/comps_anchor_aapl_memo_fetch.json) must be a
+    structural subset of the production memo-fetch fixture
+    (tests/data/fixtures/data-us-memo-fetch-sample.json) — same nesting,
+    same key paths. Catches the v2.2.0-b C1 bug class: slim fixture
+    diverging from production shape and masking real-data bugs.
+    """
+    slim = json.loads(
+        (ROOT / "tests/analysis/fixtures/comps_anchor_aapl_memo_fetch.json").read_text()
+    )
+    prod = json.loads(
+        (ROOT / "tests/data/fixtures/data-us-memo-fetch-sample.json").read_text()
+    )
+
+    def walk(obj, path=()):
+        """Yield (path, value) for every leaf, plus dict-key paths."""
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k == "_provenance":
+                    continue  # provenance details legitimately differ
+                yield from walk(v, path + (k,))
+        elif isinstance(obj, list):
+            # For lists, only walk the first element if it's a dict — array shape,
+            # not array contents.
+            if obj and isinstance(obj[0], dict):
+                yield from walk(obj[0], path + ("[0]",))
+            else:
+                yield (path, "list")
+        else:
+            yield (path, type(obj).__name__)
+
+    def has_path(d, path):
+        cur = d
+        for p in path:
+            if p == "[0]":
+                if not isinstance(cur, list) or not cur:
+                    return False
+                cur = cur[0]
+            elif isinstance(cur, dict) and p in cur:
+                cur = cur[p]
+            else:
+                return False
+        return True
+
+    missing = []
+    for path, _ in walk(slim):
+        if not has_path(prod, path):
+            missing.append(".".join(str(p) for p in path))
+
+    assert not missing, (
+        f"Slim fixture has paths absent from production fixture (drift detected): {missing}\n"
+        f"This is the C1-class bug. Either regenerate the slim fixture from a real "
+        f"data-us memo-fetch run, or update production fixture if it legitimately "
+        f"lost the field."
+    )
+
+
+# ---------------------------------------------------------------------------
+# E — Cross-country compute smoke (v2.2.0-b Tier 2, honest about gaps)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("country,expected_status", [
+    ("us", "full_compute"),    # baseline — trailingPE computed=True + non-empty accession_basis
+    ("jp", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+    ("tw", "crash"),           # memo-fetch top-level key is _pack not pack → script exits non-zero
+    ("kr", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+    ("cn", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+])
+def test_cross_country_compute_smoke(country, expected_status, tmp_path):
+    """Document each country's memo-fetch compatibility with --mode compute.
+
+    v2.2.0-b is US-only by design (per spec §13); this test makes cross-country
+    gaps visible so v2.2.0-l onwards has a baseline. NOT an assertion that
+    cross-country works — an assertion of CURRENT BEHAVIOR.
+
+    expected_status semantics:
+      - "full_compute":    trailingPE compute_provenance.computed==True AND
+                           accession_basis non-empty (primary-source audit trail
+                           present — the whole point of --mode compute).
+      - "schema_mismatch": script exits 0 but compute is incomplete or
+                           accession_basis is empty (memo-fetch shape partially
+                           compatible but lacks filings_used / pack key mismatch).
+      - "crash":           script exits non-zero (memo-fetch shape so different
+                           that the loader rejects it). Future per-country PRs
+                           (v2.2.0-l onwards) will fix the crash and flip to
+                           schema_mismatch, then full_compute once filings_used
+                           is populated for that country.
+
+    Current state (2026-05-03):
+      US  → full_compute  (US memo-fetch has filings_used populated from SEC EDGAR)
+      JP  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+      TW  → crash         (top-level pack key is _pack, not pack; loader rejects)
+      KR  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+      CN  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+    """
+    anchor_comps = FIXTURES / f"data-{country}-comps-multiples-sample.json"
+    anchor_memo  = FIXTURES / f"data-{country}-memo-fetch-sample.json"
+    script       = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+
+    if not anchor_comps.exists() or not anchor_memo.exists():
+        pytest.skip(f"country {country} fixtures not present")
+    if not script.exists():
+        pytest.skip("missing comps_compute.py script")
+
+    # Build a single-ticker anchor file and a minimal peer file from the
+    # comps-multiples fixture (same pattern as the existing chain tests above).
+    pack = json.loads(anchor_comps.read_text())
+    info = pack.get("info") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"country {country} comps fixture needs >=2 tickers")
+
+    anchor_ticker, peer_ticker = tickers[0], tickers[1]
+    anchor_file = tmp_path / f"{anchor_ticker.replace('.', '_')}-anchor.json"
+    peer_file   = tmp_path / f"{peer_ticker.replace('.', '_')}-peer.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "info": {anchor_ticker: info[anchor_ticker]},
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_ticker,
+        "info": {peer_ticker: info[peer_ticker]},
+    }))
+
+    rc, out, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_memo),
+        "--peers", str(peer_file),
+    ])
+
+    if expected_status == "crash":
+        assert rc != 0, (
+            f"Expected {country} compute mode to crash (exit non-zero) due to "
+            f"memo-fetch shape rejection (e.g. pack key mismatch), but exit was 0. "
+            f"If the country's loader was fixed, update expected_status to "
+            f"'schema_mismatch' or 'full_compute' as appropriate."
+        )
+        return
+
+    assert rc == 0, (
+        f"Compute mode crashed on {country} (expected {expected_status}). "
+        f"If this is a new regression, investigate the memo-fetch loader. "
+        f"stderr: {stderr[:500]}"
+    )
+
+    pe_prov      = out["anchor"]["compute_provenance"]["trailingPE"]
+    pe_computed  = pe_prov["computed"]
+    pe_accession = pe_prov.get("accession_basis", [])
+
+    if expected_status == "full_compute":
+        assert pe_computed is True, (
+            f"{country}: trailingPE compute_provenance.computed expected True, got {pe_computed}. "
+            f"prov={pe_prov}"
+        )
+        assert pe_accession, (
+            f"{country}: accession_basis is empty — full_compute requires a non-empty "
+            f"filings_used chain (10-K / EDGAR reference). "
+            f"If this country now has filings_used populated, this test should pass; "
+            f"otherwise re-classify as 'schema_mismatch' in the parametrize list."
+        )
+    elif expected_status == "schema_mismatch":
+        # trailingPE may compute (computed=True) but accession_basis is empty
+        # because the country's memo-fetch uses yfinance and does not populate
+        # filings_used. Document the state without asserting it's wrong.
+        assert pe_computed in (True, False), (
+            f"{country}: unexpected pe_computed value {pe_computed!r}"
+        )
+        assert not pe_accession, (
+            f"{country}: accession_basis unexpectedly non-empty ({pe_accession}). "
+            f"This country may be ready for 'full_compute' — update the parametrize list "
+            f"once verified across a real run."
+        )

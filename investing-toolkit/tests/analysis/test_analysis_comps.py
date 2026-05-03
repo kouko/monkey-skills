@@ -883,6 +883,51 @@ def test_direct_mode_byte_equal_golden_aapl(runner, fixtures_dir):
     )
 
 
+# ---------------------------------------------------------------------------
+# F — Compute output schema validator (v2.2.0-b Tier 2)
+# ---------------------------------------------------------------------------
+
+
+def test_compute_output_has_documented_shape(compute_payload):
+    """Verify the output has all the keys the schema-compute-output.json
+    documents. (Full JSON Schema validation requires the jsonschema package;
+    this is a manual structural subset check that runs without it.)
+
+    Locks the compute-mode output shape (spec §10) against drift:
+    missing fields, renamed keys, wrong enum values in divergence.alert,
+    or absent compute_provenance.computed flags.
+    """
+    anchor = compute_payload["anchor"]
+    for k in ("ticker", "multiples_direct", "multiples_compute", "divergence", "compute_provenance"):
+        assert k in anchor, f"anchor missing key: {k}"
+
+    for m in ("trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"):
+        assert m in anchor["multiples_direct"], f"multiples_direct missing {m}"
+        assert m in anchor["multiples_compute"], f"multiples_compute missing {m}"
+        assert m in anchor["divergence"], f"divergence missing {m}"
+        assert m in anchor["compute_provenance"], f"compute_provenance missing {m}"
+        assert anchor["divergence"][m]["alert"] in {"low", "medium", "high", "n/a"}, (
+            f"divergence[{m}].alert has invalid value: {anchor['divergence'][m]['alert']!r}"
+        )
+        assert "computed" in anchor["compute_provenance"][m], (
+            f"compute_provenance[{m}] missing 'computed' flag"
+        )
+
+    prov = compute_payload["_provenance"]
+    for k in ("skill", "anchor_data_source", "anchor_base_source", "peer_data_sources",
+              "computed_at", "io", "mode", "requested_mode", "warnings"):
+        assert k in prov, f"_provenance missing key: {k}"
+    assert prov["skill"] == "analysis-comps", (
+        f"_provenance.skill should be 'analysis-comps', got {prov['skill']!r}"
+    )
+    assert prov["mode"] == "compute", (
+        f"_provenance.mode should be 'compute', got {prov['mode']!r}"
+    )
+    assert prov["io"] == "none", (
+        f"_provenance.io should be 'none' (Layer 2 pure-compute), got {prov['io']!r}"
+    )
+
+
 def test_forwardPE_missing_in_anchor_emits_null_with_alert_n_a(tmp_path, runner, fixtures_dir):
     """When --anchor comps-multiples pack lacks forwardPE, compute mode emits
     null in multiples_compute.forwardPE and divergence.forwardPE.alert == n/a
