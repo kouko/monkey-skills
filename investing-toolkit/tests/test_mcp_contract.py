@@ -28,6 +28,14 @@ from pathlib import Path
 
 import pytest
 
+# v2.2.0-j Phase 1 / pre-MCP-removal: MCP stdio handshake is unstable on
+# GitHub Actions Azure runners (~80% flake rate during 2026-05-03 session).
+# Demoted to network-marked so it no longer gates per-PR CI; runs only
+# when explicitly requested via `pytest -m network` or in the upcoming
+# scheduled weekly suite (ROADMAP §v2.1.x-h). Will be deleted entirely
+# in the MCP-removal PR (ROADMAP §v2.2.0-? ADR-0008).
+pytestmark = pytest.mark.network
+
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "servers" / "mcp_server.py"
 FRED_CLI = ROOT / "scripts" / "fred_client.py"
