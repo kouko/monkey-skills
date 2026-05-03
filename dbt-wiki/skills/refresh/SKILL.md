@@ -40,15 +40,51 @@ test -f .dbt-wiki/_internal/extract_column_lineage.py || {
   exit 1
 }
 
-# Resolve dbt project root (same as init Step 0)
+# Resolve dbt project root using the 5-tier detection from init Step 0a:
+#   1. /dbt-wiki:refresh <path> arg
+#   2. $DBT_PROJECT_DIR env var (dbt-mcp / dbt CLI convention)
+#   3. ancestor walk from cwd (up to 5 levels)
+#   4. descendant scan from cwd (max-depth 3, excludes node_modules / .git /
+#      target / .venv / __pycache__ / dbt_packages / .repo-wiki / .dbt-wiki)
+#   5. legacy whitelist (./ or dbt/)
 DBT_DIR=""
-for candidate in "dbt" "."; do
-  if [ -f "$candidate/dbt_project.yml" ]; then
-    DBT_DIR="$candidate"
-    break
-  fi
-done
-test -n "$DBT_DIR" || { echo "Cannot find dbt_project.yml"; exit 1; }
+DBT_DIR_SOURCE=""
+if [ -n "$SKILL_ARG" ] && [ -f "$SKILL_ARG/dbt_project.yml" ]; then
+  DBT_DIR="$SKILL_ARG"; DBT_DIR_SOURCE="explicit arg"
+fi
+if [ -z "$DBT_DIR" ] && [ -n "$DBT_PROJECT_DIR" ] && [ -f "$DBT_PROJECT_DIR/dbt_project.yml" ]; then
+  DBT_DIR="$DBT_PROJECT_DIR"; DBT_DIR_SOURCE="\$DBT_PROJECT_DIR"
+fi
+if [ -z "$DBT_DIR" ]; then
+  candidate="$PWD"
+  for _ in 1 2 3 4 5 6; do
+    if [ -f "$candidate/dbt_project.yml" ]; then
+      DBT_DIR="$candidate"; DBT_DIR_SOURCE="ancestor walk"; break
+    fi
+    parent=$(dirname "$candidate"); [ "$parent" = "$candidate" ] && break
+    candidate="$parent"
+  done
+fi
+if [ -z "$DBT_DIR" ]; then
+  match=$(find . -maxdepth 3 -name dbt_project.yml -type f \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' \
+    -not -path '*/target/*' -not -path '*/.venv/*' \
+    -not -path '*/__pycache__/*' -not -path '*/dbt_packages/*' \
+    -not -path '*/.repo-wiki/*' -not -path '*/.dbt-wiki/*' \
+    2>/dev/null | head -1)
+  [ -n "$match" ] && { DBT_DIR=$(dirname "$match"); DBT_DIR_SOURCE="downward scan"; }
+fi
+if [ -z "$DBT_DIR" ]; then
+  for candidate in "dbt" "."; do
+    [ -f "$candidate/dbt_project.yml" ] && { DBT_DIR="$candidate"; DBT_DIR_SOURCE="legacy whitelist"; break; }
+  done
+fi
+test -n "$DBT_DIR" || {
+  echo "Cannot find dbt_project.yml. Pass path as arg, set \$DBT_PROJECT_DIR, or cd to project root."
+  exit 1
+}
+DBT_DIR=$(cd "$DBT_DIR" && pwd)
+echo "✓ dbt project root: $DBT_DIR  (via: $DBT_DIR_SOURCE)"
 
 test -f "$DBT_DIR/target/manifest.json" || {
   echo "Missing $DBT_DIR/target/manifest.json — run: cd $DBT_DIR && dbt parse"

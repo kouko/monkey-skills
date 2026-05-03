@@ -4,6 +4,58 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] — 2026-05-03
+
+### Changed — 5-tier dbt project root detection
+
+v1.0/v1.1 only checked two hardcoded locations relative to cwd:
+`./dbt/dbt_project.yml` and `./dbt_project.yml`. Anyone with a
+non-standard layout (e.g. dbt under `data/dbt-prod/`) or running init
+from inside a subdirectory (e.g. `models/staging/`) hit "Cannot find
+dbt_project.yml" and had to cd to the right place.
+
+v1.1.1 introduces a **5-tier resolver**, tried in priority order:
+
+1. **Explicit arg**: `/dbt-wiki:init <path>` — pass the directory
+2. **`$DBT_PROJECT_DIR` env var** — matches dbt CLI / dbt-mcp convention
+3. **Ancestor walk from cwd** — up to 5 levels up (handles `models/staging/...`)
+4. **Descendant scan from cwd** — `find -maxdepth 3` with exclusions
+   (`node_modules`, `.git`, `target`, `.venv`, `__pycache__`,
+   `dbt_packages`, `.repo-wiki`, `.dbt-wiki`)
+5. **Legacy whitelist** (`./` and `dbt/`) — kept for back-compat
+
+First match wins. Output reports which tier resolved (e.g. `detected
+via: ancestor walk from cwd`) so user can debug if it picked the wrong
+project (rare, but possible in monorepos with multiple dbt projects).
+
+**Files changed**:
+- `dbt-wiki/skills/init/SKILL.md` — Step 0 split into 0a (resolver,
+  ~70 lines bash) + 0b (artifact + Python runner verification). Failure
+  message lists every tier checked with actionable hints.
+- `dbt-wiki/skills/refresh/SKILL.md` — same resolver inlined (refresh
+  needs identical detection; can't rely on init having stored the path
+  since user might run refresh from a different cwd).
+- `dbt-wiki/skills/query/SKILL.md` — drift check uses the same resolver
+  minus the explicit-arg tier (query doesn't take a path arg).
+- `dbt-wiki/.claude-plugin/plugin.json` — 1.1.0 → 1.1.1.
+
+**Coverage matrix**:
+
+| User's cwd | dbt at | v1.1.0 | v1.1.1 |
+|---|---|---|---|
+| repo root | `./dbt/` (iCHEF style) | ✅ | ✅ |
+| repo root | `./` | ✅ | ✅ |
+| `models/staging/` | `../../dbt_project.yml` | ❌ | ✅ (ancestor walk) |
+| any cwd, `$DBT_PROJECT_DIR` set | (env-pointed) | ❌ | ✅ (env var) |
+| repo root with `data/dbt-prod/` | non-standard subdir | ❌ | ✅ (downward scan) |
+| explicit `/dbt-wiki:init ./other/` | wherever | ❌ | ✅ (arg) |
+| Multi-dbt monorepo | multiple matches | ❌ | ⚠️ first match wins (disambiguate via arg or env var) |
+
+**Backward compatibility**: zero break. Tier 5 is the exact v1.0/v1.1
+behavior. Existing users see no change.
+
+---
+
 ## [1.1.0] — 2026-05-03
 
 ### Added — recursive cross-model column lineage
