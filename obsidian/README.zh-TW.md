@@ -68,6 +68,19 @@ slash command `/obsidian` 會呼叫 `using-obsidian`。
 | `obsidian-file-intel` | 透過 Gemini 從 PDF / PPTX / XLSX / DOCX / CSV / JSON 萃取內容並產出 Obsidian-ready 摘要 |
 | `dashboard-design` | 依日本數位廳 dashboard 設計指引，從需求釐清引導到 layout |
 
+### Wiki 知識層（LLM 知識萃取，original）
+
+靈感來自 [Karpathy 的 LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 與 [`Ar9av/obsidian-wiki`](https://github.com/Ar9av/obsidian-wiki)，以 6 類「型態軸」（entities / concepts / synthesis / skills / journal / references）、tiered retrieval、SHA-256 delta tracking、bounded auto-research 重新設計。每個 skill 完全 self-contained —— 不使用跨 skill 引用、亦不使用 plugin-level 共用 reference。
+
+| Skill | 用途 |
+|---|---|
+| `wiki-setup` | 一次性建立 `wiki/` 結構、`.env`、manifest、hot cache |
+| `wiki-ingest` | 把 source notes（references/、research/ 等）以 SHA-256 delta tracking 萃取至 wiki/。為頁面格式 spec 的擁有者 |
+| `wiki-query` | 用 tiered retrieval（hot.md → frontmatter summary → 全頁）查詢 wiki/ |
+| `wiki-cross-linker` | 把純文字提及轉為 `[[wikilinks]]`，補強知識圖譜 |
+| `wiki-lint` | 11 項健康檢查 —— structural / semantic / provenance。Read-only |
+| `wiki-auto-research` | 手動 one-shot —— 掃描 Open Questions 與低信心聲明，web search 後輸出可審閱的研究筆記到 `research/` |
+
 ### 引入自 kepano（Steph Ango）
 
 Upstream：[`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
@@ -166,7 +179,13 @@ obsidian/
 │   ├── defuddle/                # 引入自 kepano
 │   ├── obsidian-canvas-creator/ # 引入自 axtonliu
 │   ├── obsidian-excalidraw-diagram/ # 引入自 axtonliu
-│   └── obsidian-mermaid-visualizer/ # 引入自 axtonliu
+│   ├── obsidian-mermaid-visualizer/ # 引入自 axtonliu
+│   ├── wiki-setup/                # wiki layer 初始化（original）
+│   ├── wiki-ingest/               # source → wiki 萃取（original）
+│   ├── wiki-query/                # tiered retrieval（original）
+│   ├── wiki-cross-linker/         # 知識圖譜補強（original）
+│   ├── wiki-lint/                 # health audit（original）
+│   └── wiki-auto-research/        # 用 web search 補完知識缺口（original）
 ├── README.md
 ├── README.ja.md
 └── README.zh-TW.md
