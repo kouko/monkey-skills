@@ -1,6 +1,6 @@
 ---
 name: wiki-query
-description: Query Obsidian wiki/ via tiered retrieval (hot.md → frontmatter summary → full page) to save context. Use when user asks a question wiki/ may answer. Do NOT use for repo-wiki:query (code) or dbt-wiki:query (dbt models). Wiki検索・段階的取得。Wiki 查詢・分層檢索。
+description: Query Obsidian wiki/ via tiered retrieval (hot.md → frontmatter summary → full page) to save context. Use when user asks a question wiki/ may answer. Do NOT use for repo-wiki:query or dbt-wiki:query. Obsidian wiki 検索・段階的取得・分層查詢。
 ---
 
 # Wiki Query — Tiered Retrieval over wiki/

@@ -1,6 +1,6 @@
 ---
 name: wiki-ingest
-description: Ingest Obsidian vault notes into wiki/ with SHA-256 delta tracking; owns page format spec. Use after new notes land in references/research/lab/. Do NOT use for repo-wiki:ingest or dbt-wiki:ingest. Wiki知識蒸留。Wiki 知識萃取・增量同步。
+description: Ingest Obsidian vault notes into wiki/ with SHA-256 delta tracking; owns page format spec. Use after new notes land in references/research/lab/. Do NOT use for repo-wiki:ingest or dbt-wiki:ingest. Obsidian wiki 知識蒸留・增量取込・知識萃取。
 ---
 
 # Wiki Ingest — Source Notes → Wiki Pages

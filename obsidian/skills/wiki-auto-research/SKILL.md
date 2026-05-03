@@ -1,6 +1,6 @@
 ---
 name: wiki-auto-research
-description: Scan wiki/ for Open Questions and ambiguous claims; web-search gaps; write reviewable notes to research/ with generated_by marker. Manual one-shot. Do NOT use for general web research (use WebSearch). Wiki知識穴埋め。Wiki 知識補完。
+description: Scan wiki/ for Open Questions and ambiguous claims; web-search gaps; write reviewable notes to research/ with generated_by marker. Manual one-shot. Do NOT use for general web research (use WebSearch). Obsidian wiki 知識穴埋め・知識補完・自動調査。
 ---
 
 # Wiki Auto-Research — Fill Knowledge Gaps via Web Search

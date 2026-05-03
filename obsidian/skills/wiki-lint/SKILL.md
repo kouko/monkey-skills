@@ -1,6 +1,6 @@
 ---
 name: wiki-lint
-description: Run 11 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Wiki健全性チェック・週次メンテ。
+description: Run 11 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Obsidian wiki 健全性チェック・健康檢查。
 ---
 
 # Wiki Lint — Health Check on the Wiki Layer

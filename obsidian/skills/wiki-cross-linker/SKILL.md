@@ -1,6 +1,6 @@
 ---
 name: wiki-cross-linker
-description: Scan wiki/ for unlinked mentions of existing pages and convert to [[wikilinks]]. Run after each wiki-ingest batch to catch newly-mintable links. Do NOT use to author new pages (use wiki-ingest). Wikiリンク補強・知識グラフ強化。Wiki 連結補強・圖譜增強。
+description: Scan wiki/ for unlinked mentions of existing pages and convert to [[wikilinks]]. Run after each wiki-ingest batch to catch newly-mintable links. Do NOT use to author new pages (use wiki-ingest). Obsidian wiki リンク補強・連結補強・圖譜增強。
 ---
 
 # Wiki Cross-Linker — Strengthen the Knowledge Graph
