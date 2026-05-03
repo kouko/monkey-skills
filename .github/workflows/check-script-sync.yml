@@ -6,6 +6,16 @@ name: check-script-sync
 #   - fred_client.py:     data-us, data-cn                            (2 copies)
 #   - nbs_client.py:      data-cn                                     (canonical = investing-toolkit/scripts/)
 #   - akshare_client.py:  data-cn                                     (canonical = investing-toolkit/scripts/)
+#   - dgbas_client.py:    data-tw  [added 2026-05-03]                 (canonical = investing-toolkit/scripts/)
+#   - ndc_client.py:      data-tw  [added 2026-05-03]                 (canonical = investing-toolkit/scripts/)
+#   - cbc_client.py:      data-tw  [added 2026-05-03]                 (canonical = investing-toolkit/scripts/)
+#   - statgov_client.py:  data-tw  [added 2026-05-03]                 (canonical = investing-toolkit/scripts/)
+#   - fdr_client.py:      data-kr  [added 2026-05-03]                 (canonical = investing-toolkit/scripts/)
+#
+# Groups 5-9 (added 2026-05-03) close the silent-drift gap that previously
+# relied on convention + PR review. The canonical-vs-skill-copy duality
+# exists because servers/mcp_server.py imports investing-toolkit/scripts/
+# while skill workflows invoke the skill copy via `uv run` (PEP 723).
 #
 # ta_client.py: v2.0.0 has only one consumer (analysis-technical, the canonical
 # owner). No second-consumer duplication exists yet, so the group is omitted.
@@ -152,10 +162,88 @@ jobs:
               canonical=canonical_akshare,
           )
 
+          # Groups 5-9 (added 2026-05-03) — TW + KR clients that share the same
+          # canonical-vs-skill-copy duality: investing-toolkit/scripts/<name>.py
+          # is imported by servers/mcp_server.py (sys.path); the skill copy is
+          # invoked as `uv run` script via PEP 723. Adding to required-checks
+          # closes the silent-drift gap that previously relied on convention +
+          # PR review. See investing-toolkit/scripts/sync-clients.sh header.
+
+          # Group 5: dgbas_client.py — canonical = investing-toolkit/scripts/
+          # Target: data-tw/scripts/
+          canonical_dgbas = TOOLKIT_SCRIPTS / "dgbas_client.py"
+          dgbas_paths = []
+          for skill in ["data-tw"]:
+              p = ROOT / skill / "scripts" / "dgbas_client.py"
+              if p.exists():
+                  dgbas_paths.append(p)
+          errors += check_group(
+              "dgbas_client.py (canonical: investing-toolkit/scripts/dgbas_client.py)",
+              sorted(dgbas_paths),
+              canonical=canonical_dgbas,
+          )
+
+          # Group 6: ndc_client.py — canonical = investing-toolkit/scripts/
+          # Target: data-tw/scripts/
+          canonical_ndc = TOOLKIT_SCRIPTS / "ndc_client.py"
+          ndc_paths = []
+          for skill in ["data-tw"]:
+              p = ROOT / skill / "scripts" / "ndc_client.py"
+              if p.exists():
+                  ndc_paths.append(p)
+          errors += check_group(
+              "ndc_client.py (canonical: investing-toolkit/scripts/ndc_client.py)",
+              sorted(ndc_paths),
+              canonical=canonical_ndc,
+          )
+
+          # Group 7: cbc_client.py — canonical = investing-toolkit/scripts/
+          # Target: data-tw/scripts/
+          canonical_cbc = TOOLKIT_SCRIPTS / "cbc_client.py"
+          cbc_paths = []
+          for skill in ["data-tw"]:
+              p = ROOT / skill / "scripts" / "cbc_client.py"
+              if p.exists():
+                  cbc_paths.append(p)
+          errors += check_group(
+              "cbc_client.py (canonical: investing-toolkit/scripts/cbc_client.py)",
+              sorted(cbc_paths),
+              canonical=canonical_cbc,
+          )
+
+          # Group 8: statgov_client.py — canonical = investing-toolkit/scripts/
+          # Target: data-tw/scripts/
+          canonical_statgov = TOOLKIT_SCRIPTS / "statgov_client.py"
+          statgov_paths = []
+          for skill in ["data-tw"]:
+              p = ROOT / skill / "scripts" / "statgov_client.py"
+              if p.exists():
+                  statgov_paths.append(p)
+          errors += check_group(
+              "statgov_client.py (canonical: investing-toolkit/scripts/statgov_client.py)",
+              sorted(statgov_paths),
+              canonical=canonical_statgov,
+          )
+
+          # Group 9: fdr_client.py — canonical = investing-toolkit/scripts/
+          # Target: data-kr/scripts/
+          canonical_fdr = TOOLKIT_SCRIPTS / "fdr_client.py"
+          fdr_paths = []
+          for skill in ["data-kr"]:
+              p = ROOT / skill / "scripts" / "fdr_client.py"
+              if p.exists():
+                  fdr_paths.append(p)
+          errors += check_group(
+              "fdr_client.py (canonical: investing-toolkit/scripts/fdr_client.py)",
+              sorted(fdr_paths),
+              canonical=canonical_fdr,
+          )
+
           # ta_client.py: intentionally NOT checked here. v2.0.0 has only one
           # consumer (analysis-technical, the canonical owner). When another
-          # analysis-* skill consumes TA primitives, add a Group 5 here mirroring
-          # the explicit-list pattern above and update sync-clients.sh in lockstep.
+          # analysis-* skill consumes TA primitives, add a Group 10 here
+          # mirroring the explicit-list pattern above and update
+          # sync-clients.sh in lockstep.
 
           if errors:
               print()

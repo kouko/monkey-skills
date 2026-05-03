@@ -21,6 +21,23 @@
 #       → data-cn (1 skill)
 #   - akshare_client.py:  investing-toolkit/scripts/akshare_client.py
 #       → data-cn (1 skill)
+#   - dgbas_client.py:    investing-toolkit/scripts/dgbas_client.py
+#       → data-tw (1 skill)  [added 2026-05-03]
+#   - ndc_client.py:      investing-toolkit/scripts/ndc_client.py
+#       → data-tw (1 skill)  [added 2026-05-03]
+#   - cbc_client.py:      investing-toolkit/scripts/cbc_client.py
+#       → data-tw (1 skill)  [added 2026-05-03]
+#   - statgov_client.py:  investing-toolkit/scripts/statgov_client.py
+#       → data-tw (1 skill)  [added 2026-05-03]
+#   - fdr_client.py:      investing-toolkit/scripts/fdr_client.py
+#       → data-kr (1 skill)  [added 2026-05-03]
+#
+# The 5 *-client groups added 2026-05-03 share the same canonical-vs-copy
+# duality: investing-toolkit/scripts/<name>.py is imported by servers/
+# mcp_server.py via sys.path; the skill copy is invoked as `uv run` script
+# via PEP 723 inline metadata. See "MCP vs CLI parallel mechanisms" in
+# investing-toolkit/docs/architecture.md (or grep `mcp_server.py` for
+# `_import_clients`).
 #
 # v2.0.0 has only one ta_client.py consumer (analysis-technical, the canonical
 # owner). When other analysis skills consume TA primitives, add their dirs to a
@@ -78,6 +95,33 @@ NBS_TARGETS=(
 AKSHARE_CANONICAL="$TOOLKIT_DIR/scripts/akshare_client.py"
 AKSHARE_TARGETS=(
   "data-cn"
+)
+
+# Added 2026-05-03 — TW/KR clients with canonical-vs-skill-copy duality
+# for MCP server (investing-toolkit/scripts/) vs CLI / pack.py (skill copy).
+DGBAS_CANONICAL="$TOOLKIT_DIR/scripts/dgbas_client.py"
+DGBAS_TARGETS=(
+  "data-tw"
+)
+
+NDC_CANONICAL="$TOOLKIT_DIR/scripts/ndc_client.py"
+NDC_TARGETS=(
+  "data-tw"
+)
+
+CBC_CANONICAL="$TOOLKIT_DIR/scripts/cbc_client.py"
+CBC_TARGETS=(
+  "data-tw"
+)
+
+STATGOV_CANONICAL="$TOOLKIT_DIR/scripts/statgov_client.py"
+STATGOV_TARGETS=(
+  "data-tw"
+)
+
+FDR_CANONICAL="$TOOLKIT_DIR/scripts/fdr_client.py"
+FDR_TARGETS=(
+  "data-kr"
 )
 
 # ta_client.py: no second consumer in v2.0.0 (only analysis-technical, which IS
@@ -176,6 +220,36 @@ echo
 echo "== akshare_client.py =="
 for skill in "${AKSHARE_TARGETS[@]}"; do
   process_one "$AKSHARE_CANONICAL" "$skill"
+done
+echo
+
+echo "== dgbas_client.py =="
+for skill in "${DGBAS_TARGETS[@]}"; do
+  process_one "$DGBAS_CANONICAL" "$skill"
+done
+echo
+
+echo "== ndc_client.py =="
+for skill in "${NDC_TARGETS[@]}"; do
+  process_one "$NDC_CANONICAL" "$skill"
+done
+echo
+
+echo "== cbc_client.py =="
+for skill in "${CBC_TARGETS[@]}"; do
+  process_one "$CBC_CANONICAL" "$skill"
+done
+echo
+
+echo "== statgov_client.py =="
+for skill in "${STATGOV_TARGETS[@]}"; do
+  process_one "$STATGOV_CANONICAL" "$skill"
+done
+echo
+
+echo "== fdr_client.py =="
+for skill in "${FDR_TARGETS[@]}"; do
+  process_one "$FDR_CANONICAL" "$skill"
 done
 echo
 
