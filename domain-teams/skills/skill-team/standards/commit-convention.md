@@ -184,7 +184,9 @@ Follows Conventional Commits subset:
 ```
 
 - **type**: `refactor` (most common), `feat` (brand-new team),
-  `fix` (bug fix), `chore` (version bump only), `docs` (prose only)
+  `fix` (bug fix), `chore` (version bump only), `docs` (prose only),
+  `test` (test-only changes — adding, refactoring, or strengthening
+  test coverage with no behavioral change)
 - **scope**: kebab-case team name (`qa-team`, `docs-team`) OR
   `domain-teams` for cross-team changes
 - **subject**: imperative mood, lowercase, no trailing period
