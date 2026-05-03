@@ -152,15 +152,49 @@ fct_orders.customer_id ← stg_orders.customer_id ← raw_data.orders_raw.custom
                        ← stg_customers.id (COALESCE — see fct_orders.md SQL Preview)
 ```
 
-For refactoring impact (C10), present as tree:
+For refactoring impact (C10), present as tree (or use Step 4.5 diagrams).
+
+## Step 4.5: Generate Lineage Diagrams (lineage-class queries only)
+
+For C2 (upstream model), C3 (downstream model), C4 (column lineage), and
+C10 (refactoring impact) classes, generate ASCII tree + Mermaid graph
+via the `format_lineage_diagram.py` helper. Other classes (C1 / C5–C9 /
+C11) skip this step — pure text answer is appropriate.
+
+Invocation depends on class:
+
+```bash
+# C4 / C10 (column-level): consumes recursive lineage JSONL produced at init
+$PY_RUNNER .dbt-wiki/_internal/format_lineage_diagram.py column \
+    --recursive-jsonl /tmp/dbt-wiki-recursive-lineage.jsonl \
+    --model <model_uid> --column <column_name> \
+    --direction <ancestors|descendants|both> \
+    --max-nodes 30
+
+# C2 / C3 (model-level): consumes manifest.json directly
+$PY_RUNNER .dbt-wiki/_internal/format_lineage_diagram.py model \
+    --manifest "$DBT_DIR/target/manifest.json" \
+    --model <model_uid> \
+    --direction <ancestors|descendants|both> \
+    --max-depth 3 --max-nodes 30
 ```
-Renaming stg_customers.email affects:
-├── int_customer_enriched (column: contact_email)
-│   ├── fct_orders (column: customer_email)
-│   │   └── mart_finance_daily
-│   └── dim_customers
-└── exposure: customer_dashboard
-```
+
+Output is JSON with `ascii`, `mermaid`, `node_count`, `truncated` keys.
+
+**Inclusion rules in the answer**:
+
+- ASCII tree → ALWAYS include in the chat answer (renders in any terminal)
+- Mermaid block → include in synthesis save (Step 5) and mention in chat
+  with note: "Mermaid diagram saved to `.dbt-wiki/syntheses/<slug>.md` —
+  open in your IDE (Dataspell / VS Code / Cursor / Obsidian) or on
+  GitHub for rendered preview"
+- If `truncated: true` (>30 nodes), prepend a note in the answer:
+  "Diagram truncated to 30 nodes; see [full lineage](.dbt-wiki/lineage.md)
+  for complete DAG"
+
+`/tmp/dbt-wiki-recursive-lineage.jsonl` is generated at init time and
+refreshed by `/dbt-wiki:refresh`. If missing, fall back to model-level
+diagram only (C2/C3 still work; C4/C10 emit the chain form from Step 4).
 
 ## Step 5: Verification (Optional, T-trigger style)
 
@@ -198,6 +232,54 @@ Standard format:
 
 For drift-warned answers, prepend the verification notes block from Step 5.
 
+## Step 6.5: Auto-save synthesis (lineage / decision queries)
+
+For C2/C3/C4/C9/C10 (queries about lineage, macro usage, or refactoring
+impact — answers that have lasting value), auto-save the answer to
+`.dbt-wiki/syntheses/<slug>.md` so it can be re-opened in the IDE for
+the rendered Mermaid diagram + serve as a future reference.
+
+For C1/C5/C6/C7/C8/C11 (model lookup, materialization filters, schema
+gaps — short-lived informational queries), do NOT auto-save unless user
+explicitly asks: ask `Save this answer to .dbt-wiki/syntheses/? (y/n)`.
+
+Slug = first 6-8 words of the question, kebab-case, lowercase. Collisions
+appended with `-2`, `-3`, …
+
+Use `assets/synthesis_template.md` (copied to `.dbt-wiki/_internal/` at
+init time) as the markdown shape. Frontmatter required fields:
+
+```yaml
+---
+type: synthesis
+question: "<exact question>"
+slug: <slug>
+date: <YYYY-MM-DD>
+manifest_sha: <current sha — used by refresh for stale detection>
+affected_models:                 # critical for stale detection
+  - <model.proj.X>
+  - <model.proj.Y>
+query_class: <C1-C11>
+diagram_included: <yes | no>
+sources_consulted:
+  - models/<name>.md
+verification_run: <yes | no>
+verified_paths: []
+stale: false                     # refresh sets to true when affected_models change
+stale_at: null
+---
+```
+
+`affected_models` is the union of:
+- All model `unique_id` listed in answer's source citations
+- For C4 column-lineage answers: target model + every model touched
+  in the recursive ancestor + descendant trees
+- For C2/C3 model-lineage answers: target model + every model in the
+  rendered ASCII / Mermaid
+
+This list lets `/dbt-wiki:refresh` (Step 7) precisely detect stale
+syntheses without false positives from unrelated manifest changes.
+
 ## Step 7: Append Query Log
 
 ```
@@ -206,6 +288,7 @@ For drift-warned answers, prepend the verification notes block from Step 5.
 - Pages loaded: <list, max 10 shown>
 - Verification triggered: <DT1/DT2/DT3/DT4 list, or "none">
 - Drift warning: <yes/no>
+- Synthesis saved: .dbt-wiki/syntheses/<slug>.md  (or "no")
 ```
 
 ## Cross-skill Integration

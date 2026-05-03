@@ -244,6 +244,82 @@ These two files are derived; regenerate from scratch every refresh:
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),
   produce ASCII tree + adjacency list
 
+## Step 6.5: Mark stale syntheses (do NOT regenerate, just flag)
+
+Syntheses (saved query answers from `/dbt-wiki:query` Step 6.5) capture
+point-in-time answers + diagrams. When the manifest changes, those
+answers may become inaccurate — but we don't auto-regenerate (LLM
+cost + answer wording would drift each refresh, breaking git diff
+stability). Instead: mark them stale, let the user decide whether to
+re-query.
+
+```python
+# Pseudocode for refresh's stale-detection logic:
+import yaml, glob
+from pathlib import Path
+
+# Build set of model uids that ACTUALLY changed in this refresh
+changed_uids = set()
+for uid in added | modified | removed:    # from Step 2's diff
+    changed_uids.add(uid)
+
+# For each non-archived synthesis, check overlap
+for path in glob.glob('.dbt-wiki/syntheses/*.md'):
+    content = Path(path).read_text()
+    # Parse frontmatter (YAML between first two `---`)
+    fm_text = content.split('---')[1] if content.startswith('---') else ''
+    fm = yaml.safe_load(fm_text) or {}
+
+    if fm.get('stale'):
+        continue   # already marked; skip
+
+    affected = set(fm.get('affected_models', []))
+    if not affected:
+        # No precise tracking — fall back to manifest_sha drift
+        if fm.get('manifest_sha') != new_sha:
+            mark_stale(path, fm, reason="manifest_sha drift (no affected_models tracking)")
+        continue
+
+    # Precise check: do any of THIS synthesis's affected models appear in this refresh's diff?
+    overlap = affected & changed_uids
+    if overlap:
+        mark_stale(path, fm, reason=f"affected_models changed: {sorted(overlap)}")
+
+
+def mark_stale(path, fm, reason):
+    """Update frontmatter (stale: true, stale_at: today, stale_reason: ...)
+    AND prepend a banner to the body so user sees it immediately when opening
+    the .md file in their IDE."""
+    fm['stale'] = True
+    fm['stale_at'] = today
+    fm['stale_reason'] = reason
+    new_fm = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True)
+
+    body = content.split('---', 2)[2]   # everything after frontmatter
+    banner = f"""
+> ⚠️ **STALE WARNING** ({today}): {reason}.
+> The answer below was correct at the time of saving (manifest_sha:
+> `{fm.get('manifest_sha', '?')}`), but underlying models have changed
+> since. Re-run to get fresh answer + diagram:
+>
+> ```
+> /dbt-wiki:query "{fm.get('question', '?')}"
+> ```
+
+"""
+    Path(path).write_text(f'---\n{new_fm}---\n{banner}{body}')
+```
+
+Stale detection is **non-destructive**: original answer + diagrams stay
+intact (user can still read them, just with full awareness they're
+stale). Re-running query overwrites the synthesis with fresh content
+and clears the stale flag.
+
+If `affected_models` is missing from a v1.2-or-earlier synthesis,
+fall back to `manifest_sha` drift (less precise but always works).
+
+Report stale count in summary (Step 8): "Synthesis stale: N marked".
+
 ## Step 7: Append refresh entry to log.md
 
 ```
@@ -256,6 +332,7 @@ These two files are derived; regenerate from scratch every refresh:
 - Macros added/modified/removed: <a>/<m>/<r>
 - sqlglot_failures: <count> (only counted for added/modified)
 - column_lineage_extracted: <count>/<total updated> (<percent>%)
+- Syntheses marked stale: <N> (out of <total> non-archived)
 ```
 
 ## Step 8: Summary Report

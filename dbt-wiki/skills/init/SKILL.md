@@ -337,6 +337,9 @@ cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
 (Resolve `<SKILL_DIR>` as the directory containing this SKILL.md.)
@@ -506,6 +509,9 @@ the manifest). Init copies it alongside the other scripts in Step 4:
 ```bash
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
 Run it after Step 4b's per-SQL lineage finishes:
