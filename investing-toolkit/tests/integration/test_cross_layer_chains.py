@@ -1289,3 +1289,118 @@ def test_chain_us_comps_compute_dual_input(tmp_path):
         f"anchor_base_source does not reference memo-fetch; "
         f"got: {top_prov['anchor_base_source']!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Tier 1 test-discipline additions (v2.2.0-b follow-up)
+# ---------------------------------------------------------------------------
+
+
+def test_production_memo_fetch_shape_compatible_with_compute_mode():
+    """Lock the contract surface between data-us memo-fetch (Layer 1) and
+    analysis-comps compute mode (Layer 2). Catches field renames / removals
+    in memo-fetch that would cause silent null emission in compute_provenance.
+
+    If this test fails, a recent data-us change removed or renamed a field
+    that compute mode reads. Fix: update pack.py to restore the field, or
+    update comps_compute.py to read the new field name AND update this test.
+    """
+    fixture = json.loads(
+        (ROOT / "tests/data/fixtures/data-us-memo-fetch-sample.json").read_text()
+    )
+
+    # Top-level: compute mode reads either current_price OR company_info.regularMarketPrice
+    assert (
+        fixture.get("current_price") is not None
+        or (fixture.get("company_info") or {}).get("regularMarketPrice") is not None
+    ), "memo-fetch must expose current_price (or company_info.regularMarketPrice)"
+
+    # Top-level: shares_outstanding (canonical alias)
+    assert (
+        fixture.get("shares_outstanding") is not None
+        or (fixture.get("company_info") or {}).get("sharesOutstanding") is not None
+    ), "memo-fetch must expose shares_outstanding (or company_info.sharesOutstanding)"
+
+    # company_info.marketCap drives priceToSales numerator
+    assert (fixture.get("company_info") or {}).get("marketCap") is not None, (
+        "memo-fetch must expose company_info.marketCap"
+    )
+
+    # income_statement FY arrays drive trailingPE / priceToSales denominators
+    inc = fixture["income_statement"]
+    assert inc.get("revenue") and inc["revenue"][0] is not None, "income_statement.revenue[0] required"
+    assert inc.get("net_income") and inc["net_income"][0] is not None, "income_statement.net_income[0] required"
+
+    # Concept-nested _meta drives compute_provenance accession_basis (per C1 fix)
+    meta = inc.get("_meta") or {}
+    for concept in ("revenue", "net_income"):
+        assert concept in meta, f"income_statement._meta.{concept} required for compute_provenance routing"
+        cmeta = meta[concept]
+        assert cmeta.get("fiscal_year_ends"), f"_meta.{concept}.fiscal_year_ends required"
+        assert cmeta.get("filings_used"), f"_meta.{concept}.filings_used required"
+
+
+def test_real_aapl_compute_multiples_in_plausible_bands(tmp_path):
+    """Run compute mode against the production memo-fetch fixture for AAPL;
+    assert the recomputed multiples are in historically plausible bands.
+    Catches unit / scale drift before users see nonsense numbers in memos.
+
+    AAPL FY-trailing PE has historically lived in roughly 10-50 (post-2010);
+    priceToSales 3-12. The outer bands chosen here only fire when the
+    magnitude is wildly off (e.g. wrong unit, missing decimal shift).
+    """
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    anchor_comps = FIXTURES / "data-us-comps-multiples-sample.json"
+    anchor_memo = FIXTURES / "data-us-memo-fetch-sample.json"
+
+    if not anchor_comps.exists() or not anchor_memo.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    # Build a single-ticker anchor file (same pattern as test_chain_us_comps_compute_dual_input)
+    pack = json.loads(anchor_comps.read_text())
+    tickers = list((pack.get("tickers") or {}).keys())
+    if not tickers:
+        pytest.skip("comps fixture has no tickers")
+    anchor_ticker = tickers[0]  # AAPL
+    anchor_payload = {anchor_ticker: pack["tickers"][anchor_ticker]}
+    anchor_file = tmp_path / f"{anchor_ticker}-anchor.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "tickers": anchor_payload,
+        "info": anchor_payload,
+    }))
+
+    # Use second ticker as peer; dedup will skip anchor if passed again
+    peer_comps = tmp_path / "peer.json"
+    if len(tickers) >= 2:
+        peer_ticker = tickers[1]
+        peer_payload = {peer_ticker: pack["tickers"][peer_ticker]}
+        peer_comps.write_text(json.dumps({
+            "pack": "comps-multiples",
+            "ticker": peer_ticker,
+            "tickers": peer_payload,
+            "info": peer_payload,
+        }))
+    else:
+        # fallback: pass anchor as peer (dedup will warn, but compute still runs)
+        peer_comps.write_text(anchor_file.read_text())
+
+    rc, payload, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_memo),
+        "--peers", str(peer_comps),
+    ])
+    assert rc == 0, f"stderr: {stderr}"
+
+    pe = payload["anchor"]["multiples_compute"]["trailingPE"]
+    ps = payload["anchor"]["multiples_compute"]["priceToSales"]
+
+    # AAPL FY-trailing PE has historically lived in roughly 10-50 (post-2010);
+    # priceToSales 3-12. Choose generous outer bands so this test only fires
+    # when the magnitude is wildly off (e.g. wrong unit, missing decimal shift).
+    assert pe is not None, "trailingPE compute returned None — check memo-fetch net_income / price fields"
+    assert ps is not None, "priceToSales compute returned None — check memo-fetch revenue / marketCap fields"
+    assert 5 < pe < 100, f"trailingPE {pe} outside plausible AAPL FY band (5, 100)"
+    assert 1 < ps < 20, f"priceToSales {ps} outside plausible AAPL FY band (1, 20)"

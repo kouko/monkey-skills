@@ -839,3 +839,83 @@ def test_direct_mode_output_shape_v2_0_0_locked(baseline_payload):
     # Direct-mode _provenance shape — no anchor_base_source key
     assert "anchor_base_source" not in baseline_payload["_provenance"]
     assert baseline_payload["_provenance"]["mode"] == "direct"
+
+
+# ---------------------------------------------------------------------------
+# Tier 1 test-discipline additions (v2.2.0-b follow-up)
+# ---------------------------------------------------------------------------
+
+
+def test_direct_mode_byte_equal_golden_aapl(runner, fixtures_dir):
+    """Direct-mode output for the canonical AAPL anchor + 4 peers must match
+    a checked-in golden file modulo the computed_at timestamp. Locks the
+    v2.0.0-byte-equal contract (post-Phase-1 multiples_direct rename) against
+    accidental schema drift in future PRs.
+
+    If this test fails, the change is either intentional (regenerate the golden
+    via the command in the assertion message) or an accidental regression.
+    """
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+
+    actual = json.loads(res.stdout)
+    actual["_provenance"].pop("computed_at", None)
+
+    golden_path = fixtures_dir / "comps_compute_direct_golden_aapl.json"
+    expected = json.loads(golden_path.read_text())
+    expected["_provenance"].pop("computed_at", None)
+
+    assert actual == expected, (
+        "Direct-mode output diverged from golden file. If this change is "
+        "intentional, regenerate the golden via:\n"
+        f"  uv run skills/analysis-comps/scripts/comps_compute.py --mode direct "
+        f"--anchor tests/analysis/fixtures/comps_anchor_aapl.json "
+        f"--peers tests/analysis/fixtures/comps_peer_msft.json,"
+        f"tests/analysis/fixtures/comps_peer_googl.json,"
+        f"tests/analysis/fixtures/comps_peer_meta.json,"
+        f"tests/analysis/fixtures/comps_peer_amzn.json"
+        f" > {golden_path}\n"
+        "and remove _provenance.computed_at from the new golden."
+    )
+
+
+def test_forwardPE_missing_in_anchor_emits_null_with_alert_n_a(tmp_path, runner, fixtures_dir):
+    """When --anchor comps-multiples pack lacks forwardPE, compute mode emits
+    null in multiples_compute.forwardPE and divergence.forwardPE.alert == n/a
+    via the early-null branch (not the pass-through special-case).
+
+    Closes reviewer M2 gap: the early-null branch in _compute_divergence
+    (where compute or direct is None) is correct but unexercised for
+    forwardPE specifically. Recently-IPO'd companies hit this path.
+    """
+    anchor_no_fwd = tmp_path / "anchor_no_fwd.json"
+    anchor_no_fwd.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": "AAPL",
+        "info": {
+            "AAPL": {
+                "trailingPE": 28.5,
+                # forwardPE intentionally omitted
+                "priceToSales": 7.2,
+                "priceToBook": 35.4,
+                "enterpriseToEbitda": 21.3,
+            }
+        },
+        "_provenance": {"skill": "data-us", "source": "test"},
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", str(anchor_no_fwd),
+        "--anchor-base", _anchor_base_arg(fixtures_dir),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["anchor"]["multiples_direct"].get("forwardPE") is None
+    assert payload["anchor"]["multiples_compute"]["forwardPE"] is None
+    assert payload["anchor"]["divergence"]["forwardPE"]["alert"] == "n/a"

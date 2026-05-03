@@ -1,0 +1,199 @@
+{
+  "anchor": {
+    "ticker": "AAPL",
+    "multiples_direct": {
+      "evEbitda": 21.3,
+      "trailingPE": 28.5,
+      "forwardPE": 25.1,
+      "priceToSales": 7.2,
+      "priceToBook": 35.4
+    }
+  },
+  "peers": [
+    {
+      "ticker": "MSFT",
+      "multiples": {
+        "evEbitda": 24.5,
+        "trailingPE": 33.1,
+        "forwardPE": 28.5,
+        "priceToSales": 11.0,
+        "priceToBook": 11.2
+      },
+      "rationale": null
+    },
+    {
+      "ticker": "GOOGL",
+      "multiples": {
+        "evEbitda": 18.0,
+        "trailingPE": 24.5,
+        "forwardPE": 22.0,
+        "priceToSales": 6.5,
+        "priceToBook": 6.8
+      },
+      "rationale": null
+    },
+    {
+      "ticker": "META",
+      "multiples": {
+        "evEbitda": 17.5,
+        "trailingPE": 26.0,
+        "forwardPE": 23.5,
+        "priceToSales": 8.2,
+        "priceToBook": 7.5
+      },
+      "rationale": null
+    },
+    {
+      "ticker": "AMZN",
+      "multiples": {
+        "evEbitda": 18.2,
+        "trailingPE": 42.0,
+        "forwardPE": 38.0,
+        "priceToSales": 3.1,
+        "priceToBook": 7.8
+      },
+      "rationale": null
+    }
+  ],
+  "statistics": {
+    "trailingPE": {
+      "median": 29.55,
+      "mean": 31.4,
+      "q1": 25.625,
+      "q3": 35.325,
+      "min": 24.5,
+      "max": 42.0,
+      "n": 4
+    },
+    "forwardPE": {
+      "median": 26.0,
+      "mean": 28.0,
+      "q1": 23.125,
+      "q3": 30.875,
+      "min": 22.0,
+      "max": 38.0,
+      "n": 4
+    },
+    "evEbitda": {
+      "median": 18.1,
+      "mean": 19.55,
+      "q1": 17.875,
+      "q3": 19.775,
+      "min": 17.5,
+      "max": 24.5,
+      "n": 4
+    },
+    "priceToSales": {
+      "median": 7.35,
+      "mean": 7.2,
+      "q1": 5.65,
+      "q3": 8.899999999999999,
+      "min": 3.1,
+      "max": 11.0,
+      "n": 4
+    },
+    "priceToBook": {
+      "median": 7.65,
+      "mean": 8.325,
+      "q1": 7.325,
+      "q3": 8.649999999999999,
+      "min": 6.8,
+      "max": 11.2,
+      "n": 4
+    }
+  },
+  "anchor_delta": {
+    "trailingPE": {
+      "value": 28.5,
+      "vs_median_pct": -3.553299492385789,
+      "percentile": 0.6
+    },
+    "forwardPE": {
+      "value": 25.1,
+      "vs_median_pct": -3.4615384615384563,
+      "percentile": 0.6
+    },
+    "evEbitda": {
+      "value": 21.3,
+      "vs_median_pct": 17.679558011049718,
+      "percentile": 0.8
+    },
+    "priceToSales": {
+      "value": 7.2,
+      "vs_median_pct": -2.040816326530605,
+      "percentile": 0.6
+    },
+    "priceToBook": {
+      "value": 35.4,
+      "vs_median_pct": 362.7450980392157,
+      "percentile": 1.0
+    }
+  },
+  "ranking": [
+    {
+      "ticker": "GOOGL",
+      "composite_rank": 1,
+      "composite_rank_avg": 1.4,
+      "trailingPE_rank": 1,
+      "forwardPE_rank": 1,
+      "evEbitda_rank": 2,
+      "priceToSales_rank": 2,
+      "priceToBook_rank": 1
+    },
+    {
+      "ticker": "META",
+      "composite_rank": 2,
+      "composite_rank_avg": 2.2,
+      "trailingPE_rank": 2,
+      "forwardPE_rank": 2,
+      "evEbitda_rank": 1,
+      "priceToSales_rank": 4,
+      "priceToBook_rank": 2
+    },
+    {
+      "ticker": "AMZN",
+      "composite_rank": 3,
+      "composite_rank_avg": 3.4,
+      "trailingPE_rank": 5,
+      "forwardPE_rank": 5,
+      "evEbitda_rank": 3,
+      "priceToSales_rank": 1,
+      "priceToBook_rank": 3
+    },
+    {
+      "ticker": "AAPL",
+      "composite_rank": 4,
+      "composite_rank_avg": 3.6,
+      "trailingPE_rank": 3,
+      "forwardPE_rank": 3,
+      "evEbitda_rank": 4,
+      "priceToSales_rank": 3,
+      "priceToBook_rank": 5
+    },
+    {
+      "ticker": "MSFT",
+      "composite_rank": 5,
+      "composite_rank_avg": 4.4,
+      "trailingPE_rank": 4,
+      "forwardPE_rank": 4,
+      "evEbitda_rank": 5,
+      "priceToSales_rank": 5,
+      "priceToBook_rank": 4
+    }
+  ],
+  "_provenance": {
+    "skill": "analysis-comps",
+    "anchor_data_source": "data-us/pack.py --pack comps-multiples",
+    "peer_data_sources": [
+      "data-us/pack.py --pack comps-multiples",
+      "data-us/pack.py --pack comps-multiples",
+      "data-us/pack.py --pack comps-multiples",
+      "data-us/pack.py --pack comps-multiples"
+    ],
+    "computed_at": "2026-05-03T13:25:37Z",
+    "io": "none",
+    "mode": "direct",
+    "requested_mode": "direct",
+    "warnings": []
+  }
+}
