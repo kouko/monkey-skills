@@ -128,8 +128,14 @@ PRESETS = {
 
 ### What CI enforces
 
-- **File-level MD5** (existing, PR #222): `data-{country}/scripts/<client>.py` must equal `investing-toolkit/scripts/<client>.py` byte-for-byte. (5 paired groups; 14 single-file clients.)
-- **Block-level MD5** (new, this ADR): the `# === BEGIN cache helpers === … # === END cache helpers ===` region must be byte-identical across all 14 clients. (1 new check group in `check-script-sync.yml`.)
+> **2026-05-03 amendment (per ADR-0008)**: MCP server removed; the
+> `investing-toolkit/scripts/` canonical-vs-skill-copy duality is gone.
+> File-level MD5 now enforces only the 2 true cross-skill groups
+> (yfinance × 5, fred × 2). Block-level MD5 spans 14 single-skill
+> client files instead of the original 28 (skill + MCP) — half the cost.
+
+- **File-level MD5** (existing, scoped down by ADR-0008): `data-jp/scripts/yfinance_client.py` etc. must equal `data-us/scripts/yfinance_client.py` byte-for-byte (yfinance × 4 cross-skill copies; fred × 1 cross-skill copy).
+- **Block-level MD5** (new, this ADR's Phase 2): the `# === BEGIN cache helpers === … # === END cache helpers ===` region must be byte-identical across all 14 clients. (1 new check group in `check-script-sync.yml`; 14 file scope post-ADR-0008.)
 
 The block-level check uses a regex-extract-then-MD5 approach inside the existing workflow Python; no new tooling.
 
@@ -156,7 +162,7 @@ Users can manually `rm -rf ~/.cache/investing-toolkit` before upgrading if they 
 
 ### Negative
 
-- **DRY is partial** — 14 byte-identical copies of `_compute_ttl + load_cache + save_cache` exist across the skill copies (and 14 more in `investing-toolkit/scripts/` for MCP). Roughly 50 lines × 28 = 1,400 lines of duplicated code, byte-pinned. Cumulative repository size grows accordingly.
+- **DRY is partial** — 14 byte-identical copies of `_compute_ttl + load_cache + save_cache` exist across the skill copies. Roughly 50 lines × 14 = 700 lines of duplicated code, byte-pinned. _(Post-ADR-0008 figure; previously 28 file copies including the MCP canonical.)_
 - **Editing the helper requires touching 14 files** — `sync-clients.sh` automates the propagation but the discipline is on the developer to remember to run it (CI catches failures post-hoc).
 - **Block delimiters become a load-bearing convention** — a careless edit that breaks the `# === BEGIN cache helpers ===` marker silently disables the CI sync check for that client. Mitigation: the helper functions inside the block are also imported / called by the rest of `<client>.py`, so a broken delimiter usually breaks the file too.
 - **TTL policy is "embed + sync" not "import + share"** — feels less elegant than the central-module instinct. ADR exists primarily to justify why we deliberately chose inelegance.
@@ -170,14 +176,14 @@ Users can manually `rm -rf ~/.cache/investing-toolkit` before upgrading if they 
 
 - **Option A — Central `_cache.py` mirrored across skill `scripts/` dirs.** Cleanest DRY, but breaks PEP 723 self-containment (each `*_client.py` would need `sys.path.insert + from _cache import Cache` boilerplate, and the file no longer "just works" when copied elsewhere). Rejected because investing-toolkit explicitly committed to single-file PEP 723 scripts in v2.0.0.
 - **Option B — Status quo (copy-paste, no policy doc, no sync guard).** Already broken: `ensure_ascii=False` drift between `dgbas_client.py` and `fred_client.py` discovered during this design session. Rejected.
-- **Option D — Publish `investing-toolkit-cache` to PyPI.** Solves DRY perfectly while keeping each script self-contained (just declare the package as a PEP 723 dep). Rejected as overkill for a solo-developer toolkit; PyPI publishing introduces semver discipline and CI publish workflows that don't currently exist. Reconsider if the toolkit ever serves multiple maintainers or external consumers beyond the MCP server.
+- **Option D — Publish `investing-toolkit-cache` to PyPI.** Solves DRY perfectly while keeping each script self-contained (just declare the package as a PEP 723 dep). Rejected as overkill for a solo-developer toolkit; PyPI publishing introduces semver discipline and CI publish workflows that don't currently exist. _Post-ADR-0008 update_: With MCP server removed, PyPI is now the most likely future path for cross-LLM exposure should it ever be needed.
 
 ## Implementation phases
 
-1. **Phase 0** (this ADR + `cache-policy.md` + ROADMAP §v2.2.0-j entry) — design lock-in
-2. **Phase 1** — PoC: `dgbas_client.py` + MCP copy refactored end-to-end. Validates the block-delimiter pattern, the schema, the CI guard. Single PR.
-3. **Phase 2** — extend `check-script-sync.yml` Group 10 (block-level MD5). Single PR atop Phase 1.
-4. **Phase 3** — bulk migration: remaining 13 clients adopt the synced block + per-preset cadence. Likely staged across 3-4 PRs (TW data clients, KR/CN data clients, JP data clients, US/global data clients).
+1. **Phase 0** (this ADR + `cache-policy.md` + ROADMAP §v2.2.0-j entry) — design lock-in. ✅ Landed in PR #224.
+2. **Phase 1** — PoC: `dgbas_client.py` refactored end-to-end. Validates the block-delimiter pattern, the schema, the CI guard. ✅ Landed in PR #224 (also included MCP copy at the time; per ADR-0008 the MCP copy was deleted in the next PR).
+3. **Phase 2** — extend `check-script-sync.yml` with block-level MD5 group (added 2026-05-03 Q4). Spans 14 single-skill client files post-ADR-0008 (was originally planned for 28 = 14 skill + 14 MCP copies; halved by MCP removal).
+4. **Phase 3** — bulk migration: remaining 13 clients adopt the synced block + per-preset cadence. Halved effort post-ADR-0008 (13 file edits instead of 26). Likely staged across 2-3 PRs by domain.
 5. **Phase 4** — close out: remove all `CACHE_TTL_SECONDS = ...` constants; update `industry-indicator-cadence.md` cross-reference; deprecate any leftover top-level `fetched_at` field on data dicts (canonical lives in `_cache_meta`).
 
 ## References

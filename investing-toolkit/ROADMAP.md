@@ -83,18 +83,11 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Acceptance**: First scheduled run lands; workflow surfaces per-test pass/fail in job summary; if ≥1 fails, GitHub Issue created with title `[network suite] N tests failed (YYYY-MM-DD)` and stderr links.
 - **Reference**: PR #216 commit body §"Scope decision: offline only"; PR #220 retry session demonstrating that MCP stdio tests are CI-flaky and need periodic monitoring.
 
-### v2.1.x-i — MCP stdio test stability hardening
+### ~~v2.1.x-i — MCP stdio test stability hardening~~ ✅ obsolete (per ADR-0008)
 
-- **What**: Investigate and fix the root cause of `test_mcp_equivalence_auto.py` flakiness on GitHub Actions runners (PR #220 saw `test_mops_fetch_rejects_missing_required_params` time out waiting for a JSON-RPC reply that the server log confirms it received). Likely fixes:
-  1. **stdout flush hardening**: ensure FastMCP server flushes stdout after every JSON-RPC reply (`sys.stdout.flush()` or `python -u`)
-  2. **Test reader retry-with-backoff**: `_call_mcp` helper currently has a fixed timeout; replace with retry loop that re-polls if reply arrives mid-buffer
-  3. **Server warmup probe**: test does an explicit `tools/list` ping after spawn and waits for reply before any tool/call request, eliminating the "server not yet ready" race
-  4. **Newline framing audit**: confirm every JSON-RPC envelope ends with a single `\n` and no partial writes possible (audit FastMCP version pin)
-- **Why**: Each PR currently risks 1-in-N CI flakes on offline pytest job (now required). PR #220 needed a manual close+reopen cycle to retry. Cumulative drag on dev velocity. Local tests pass 6/6 because macOS stdio is unbuffered + faster CPU; CI Azure runner exposes buffer/timing races.
-- **Files**: `investing-toolkit/servers/mcp_server.py` (flush hardening); `investing-toolkit/tests/test_mcp_equivalence_auto.py` `_call_mcp` helper (retry); possibly pin FastMCP version in `mcp_server.py` PEP 723 deps.
-- **Blocker**: Need to reproduce the flake reliably — could try `pytest -p no:randomly --count=20` + GitHub Actions large-runner / slow-CPU emulation. If non-reproducible, fall back to (a) `pytest-rerunfailures` plugin with `reruns=2` (masks but unblocks), or (b) move MCP equivalence tests to `@pytest.mark.network` (deferred to v2.1.x-h scheduled cron, doesn't gate PRs).
-- **Acceptance**: 50 consecutive CI runs pass `test_mcp_*` without close+reopen; OR explicit decision to demote to network-marked + documented in ADR.
-- **Reference**: PR #220 retry session 2026-05-03; v2.1.x test-suite session.
+- **Status**: Closed-as-obsolete 2026-05-03. MCP server entirely removed per ADR-0008; `test_mcp_*.py` files deleted. There is no MCP stdio for the test to flake on, no fix to write.
+- **Why removed**: Empirical 80% flake rate during 2026-05-03 session, combined with zero observed external-LLM users of the MCP server, made the dual-consumer model net-negative. Full removal (ADR-0008) chose over Option B (test demotion) and Option C (this v2.1.x-i investigation).
+- **Reference**: ADR-0008.
 
 ## Mid-term — v2.2.0 candidates
 
@@ -176,24 +169,24 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 ### v2.2.0-j — Cadence-aware adaptive cache TTL across all 14 clients
 
-- **Status**: **Phase 0 + Phase 1 in flight (this PR)** — ADR-0007 + cache-policy.md + dgbas PoC implemented. Phases 2-4 follow.
-- **What**: Replace per-client `CACHE_TTL_SECONDS` constants (1h/6h/24h, no rationale) with cadence-aware adaptive TTL. Each preset declares its publication cadence (`monthly`/`quarterly`/`daily`/`tick`/`event`/`immutable`/...); cache helper computes TTL from `cadence × staleness_days` per the [TTL bands](docs/cache-policy.md#ttl-bands) in cache-policy.md. Cache envelope upgraded to schema v2.0 with `_cache_meta.fetched_at` (replaces fragile `path.stat().st_mtime`). Block-level CI sync guard (Group 10 in `check-script-sync.yml`) enforces byte-equality of the helper across all 14 clients.
+- **Status**: Phase 0+1 ✅ landed (PR #224, 2026-05-03). Phase 3 effort halved by ADR-0008 (MCP server removed → 14 file edits instead of 28).
+- **What**: Replace per-client `CACHE_TTL_SECONDS` constants (1h/6h/24h, no rationale) with cadence-aware adaptive TTL. Each preset declares its publication cadence (`monthly`/`quarterly`/`daily`/`tick`/`event`/`immutable`/...); cache helper computes TTL from `cadence × staleness_days` per the [TTL bands](docs/cache-policy.md#ttl-bands) in cache-policy.md. Cache envelope upgraded to schema v2.0 with `_cache_meta.fetched_at` (replaces fragile `path.stat().st_mtime`). Block-level CI sync guard enforces byte-equality of the helper across all 14 single-skill clients (post-ADR-0008).
 - **Why**: (1) Monthly CPI cached for 24h means ~30 wasted cache misses per release cycle — cadence-aware caches it for 7 days when fresh and tightens to 4 hours during the release window. (2) `mtime`-based TTL is fragile — `cp` / `rsync` / Docker volume mount / `tar -xzf` (without `-p`) all reset mtime to "now" while data is old. JSON envelope `fetched_at` removes that hazard. (3) DRY policy without breaking PEP 723 self-contained scripts (see ADR-0007 for *why* we embed instead of import a central `_cache.py`).
 - **Architecture decision**: ADR-0007 explicitly rejects a central `_cache.py` shared module (would break PEP 723 self-containment + Anthropic skill convention). Each client embeds an identical `# === BEGIN cache helpers === … # === END cache helpers ===` block; CI block-level MD5 enforces equality.
 - **Phases**:
-  1. ✅ **Phase 0** — ADR-0007 + cache-policy.md + ROADMAP entry (this PR)
-  2. ✅ **Phase 1** — dgbas PoC: `data-tw/scripts/dgbas_client.py` + MCP copy refactored end-to-end. Validates block-delimiter pattern, schema v2.0 envelope, cadence-aware TTL. (this PR)
-  3. **Phase 2** — Extend `check-script-sync.yml` with Group 10 (block-level MD5 across all 14 clients). Initially the only client with the block is dgbas; check is trivially green. Group expands as Phase 3 migrates more clients.
-  4. **Phase 3** — Bulk migration of remaining 13 clients to the synced block + per-preset cadence. Likely staged across 3-4 PRs (TW + KR + CN clients first, then JP + global). Each migration: copy helper block byte-identically; remove old `CACHE_TTL_SECONDS` constant; add `cadence` field to every preset.
+  1. ✅ **Phase 0** — ADR-0007 + cache-policy.md + ROADMAP entry (PR #224)
+  2. ✅ **Phase 1** — dgbas PoC: `data-tw/scripts/dgbas_client.py` refactored end-to-end. Validates block-delimiter pattern, schema v2.0 envelope, cadence-aware TTL. (PR #224, original incl MCP copy; MCP copy deleted by ADR-0008.)
+  3. **Phase 2** — Extend `check-script-sync.yml` with block-level MD5 group (across 14 single-skill clients). Initially the only client with the block is dgbas; check is trivially green. Group expands as Phase 3 migrates more clients.
+  4. **Phase 3** — Bulk migration of remaining 13 clients to the synced block + per-preset cadence. **Effort halved by ADR-0008** (13 single-skill files instead of original 26 = 13 × 2 with MCP). Likely staged across 2-3 PRs by domain (TW data clients; KR/CN data clients; JP + US global clients).
   5. **Phase 4** — Close out: deprecate any leftover top-level `fetched_at` fields on data dicts (canonical now lives in `_cache_meta`); update `industry-indicator-cadence.md` cross-reference; update output-schema-overview.md docs across 5 data skills.
-- **Files (overall)**: 14 client files (× 2 for skill + MCP copies = 28 file edits), `check-script-sync.yml`, `sync-clients.sh`, `docs/adr/0007-*.md`, `docs/cache-policy.md`, `industry-indicator-cadence.md`, 5 `data-{country}/references/output-schema-overview.md`.
+- **Files (overall, post-ADR-0008)**: 14 single-skill client files (cross-skill yfinance × 5 + fred × 2 still need same block but propagate via existing `sync-clients.sh` data-us reference); `check-script-sync.yml`; `sync-clients.sh`; `docs/adr/0007-*.md`; `docs/cache-policy.md`; `industry-indicator-cadence.md`; 5 `data-{country}/references/output-schema-overview.md`.
 - **Blocker**: None for Phases 2-3. Phase 4 docs touch is bookkeeping.
 - **Acceptance** (per phase):
-  - Phase 1: dgbas cache file shows `_cache_meta.version: "2.0"` + cadence-aware TTL; pytest 324/27/34 unchanged; live fetch shows `_cache: hit` + `_cache_age_seconds` + `_cache_ttl_seconds` on second invocation.
-  - Phase 2: check-script-sync.yml Group 10 runs green on dgbas alone; deliberate-drift smoke test (mutate one helper line) → CI fails.
+  - Phase 1: dgbas cache file shows `_cache_meta.version: "2.0"` + cadence-aware TTL; pytest unchanged; live fetch shows `_cache: hit` + `_cache_age_seconds` + `_cache_ttl_seconds` on second invocation. ✅ verified in PR #224.
+  - Phase 2: check-script-sync.yml block-level group runs green on dgbas alone; deliberate-drift smoke test (mutate one helper line) → CI fails.
   - Phase 3 (per migration PR): `pytest -m "not network"` green; `bash sync-clients.sh --check` 0 drift; cache file inspection on each migrated client shows v2.0 envelope.
   - Phase 4: `grep -r "CACHE_TTL_SECONDS" investing-toolkit/` returns 0 matches.
-- **Reference**: ADR-0007; cache-policy.md; 2026-05-03 design session (per-client copy-paste mode rejected for cache helper drift; central `_cache.py` rejected for PEP 723 / Anthropic violation).
+- **Reference**: ADR-0007; ADR-0008 (halves Phase 3 cost); cache-policy.md; 2026-05-03 design session (per-client copy-paste rejected for cache helper drift; central `_cache.py` rejected for PEP 723 / Anthropic violation).
 
 ## Long-term — Phase 2 + beyond
 

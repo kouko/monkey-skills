@@ -230,27 +230,6 @@ def fetch_series(
 
     return result
 
-
-# ---------------------------------------------------------------------------
-# MCP tool registration (v1.16.0+)
-# ---------------------------------------------------------------------------
-
-def register_mcp_tools(mcp) -> None:
-    """Register ECB Statistical Data Warehouse tool with a FastMCP instance."""
-
-    @mcp.tool()
-    def ecb_series(
-        series: str, dataset: str = DEFAULT_DATASET, periods: int = 24,
-    ) -> dict:
-        """Fetch an ECB Statistical Data Warehouse time-series (CSV API,
-        no auth). Used by japan-macro for ex-post real-yield sub-blocks
-        (EUR inflation baseline, EUR government bond references).
-        dataset: ECB dataset code (default 'FM' = Financial Markets; other
-        common: 'BSI', 'IRS', 'ICP'). series: dot-delimited key.
-        """
-        return fetch_series(dataset, series, periods, use_cache=True)
-
-
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------

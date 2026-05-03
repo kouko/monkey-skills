@@ -269,30 +269,6 @@ def list_disclosures(
     _save_cache(cache_path, result)
     return result
 
-
-# ---------------------------------------------------------------------------
-# MCP tool registration
-# ---------------------------------------------------------------------------
-
-def register_mcp_tools(mcp) -> None:
-    """Register TDnet tools with a FastMCP instance."""
-
-    @mcp.tool()
-    def tdnet_list(
-        ticker: str, limit: int = 20, keyword: str | None = None,
-    ) -> dict:
-        """Fetch recent timely-disclosure (適時開示) index for a JP ticker
-        from TDnet via the Yanoshin aggregator. Returns pubdate + title +
-        classified disclosure_type + document_url (for follow-up PDF/XBRL
-        fetch from release.tdnet.info — JPX-hosted). Complements EDINET
-        for same-day events (決算短信, 業績予想, 自己株買付, 株主総会,
-        役員異動) that appear in EDINET 臨時報告書 only after ~45 days.
-        Set `keyword` to narrow by title substring (e.g. '決算短信').
-        Tier 2 index (no re-host, follow URLs for content).
-        """
-        return list_disclosures(ticker, limit=limit, keyword=keyword)
-
-
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------

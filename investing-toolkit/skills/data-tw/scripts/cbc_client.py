@@ -342,38 +342,6 @@ def fetch_item(item_code: str, use_cache: bool = True, preset: str | None = None
 
     return result
 
-
-# ---------------------------------------------------------------------------
-# MCP tool registration (v1.16.0+)
-# ---------------------------------------------------------------------------
-
-def register_mcp_tools(mcp) -> None:
-    """Register CBC (Central Bank of Taiwan) Open Data tool with a FastMCP instance."""
-
-    @mcp.tool()
-    def cbc_fetch(
-        preset: str | None = None, item: str | None = None,
-    ) -> dict:
-        """Fetch Central Bank of Taiwan Open Data. Use either `preset`
-        shorthand (e.g. 'policy-rate', 'm2-yoy', 'fx-reserves';
-        see PRESETS) OR `item` raw CBC item code. Used by taiwan-macro
-        for 政策利率 / M1/M2 貨幣供給 / 外匯存底 / 重貼現率.
-        """
-        if preset and item:
-            return {"error": "Pass preset OR item, not both"}
-        if preset:
-            code = PRESETS.get(preset)
-            if not code:
-                return {
-                    "error": f"Unknown preset: {preset}",
-                    "available_presets": sorted(PRESETS.keys()),
-                }
-            return fetch_item(code, use_cache=True, preset=preset)
-        if item:
-            return fetch_item(item, use_cache=True)
-        return {"error": "Provide either preset or item"}
-
-
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------

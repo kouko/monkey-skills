@@ -335,60 +335,6 @@ POSTPROCESSORS = {
 # Main
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# MCP tool registration (v1.14.0+)
-# ---------------------------------------------------------------------------
-
-
-def register_mcp_tools(mcp) -> None:
-    """Register FinMind Taiwan equity tool with a FastMCP instance."""
-
-    @mcp.tool()
-    def finmind_fetch(
-        ticker: str, datasets: list[str], date_start: str,
-        date_end: str | None = None,
-    ) -> dict:
-        """Fetch Taiwan equity data from FinMind API (Tier 2 fallback when
-        MOPS/TWSE OpenAPI don't cover needed data — daily 三大法人 per-stock
-        flow, historical price history, etc.). FINMIND_API_TOKEN env var
-        raises rate limit from 300 to 600 req/hr.
-
-        Supported datasets: TaiwanStockPrice (OHLCV history),
-        TaiwanStockInstitutionalInvestorsBuySell (daily 三大法人 flow),
-        TaiwanStockMonthRevenue, TaiwanStockHoldingSharesPer,
-        TaiwanStockMarginPurchaseShortSale, TaiwanStockFinancialStatements,
-        TaiwanStockProfitLossStatement.
-        Dates format: YYYY-MM-DD. date_end defaults to today.
-        """
-        ticker_n = normalize_ticker(ticker)
-        token = os.environ.get("FINMIND_API_TOKEN")
-        end = date_end or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-        output: dict = {
-            "_meta": {
-                "ticker": ticker_n, "original_ticker": ticker,
-                "date_start": date_start, "date_end": end,
-                "auth": "token" if token else "anonymous",
-            },
-            "_summary": {}, "_partial": False,
-        }
-        has_error = False
-        for dataset in datasets:
-            result = fetch_dataset(ticker_n, dataset, date_start, end, token, True)
-            if "error" in result:
-                output["_summary"][dataset] = f"error: {result['error']}"
-                output[dataset] = result
-                has_error = True
-                output["_partial"] = True
-            else:
-                output["_summary"][dataset] = (
-                    f"ok ({result['rows']} rows, cache: {result['_cache']})"
-                )
-                processor = POSTPROCESSORS.get(dataset)
-                if processor:
-                    result["_processed"] = processor(result.get("data", []))
-                output[dataset] = result
-        return output
 
 
 def main() -> None:

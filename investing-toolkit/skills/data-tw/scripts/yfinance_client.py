@@ -382,50 +382,6 @@ def get_batch(tickers: list[str], action: str, period: str, interval: str) -> di
     }
 
 
-# ---------------------------------------------------------------------------
-# MCP tool registration (v1.14.0+)
-# ---------------------------------------------------------------------------
-
-def register_mcp_tools(mcp) -> None:
-    """Register yfinance tools with a FastMCP instance. Called by mcp_server.py."""
-
-    @mcp.tool()
-    def yfinance_history(
-        ticker: str, period: str = "1y", interval: str = "1d"
-    ) -> dict:
-        """Fetch OHLCV price history via Yahoo Finance (unofficial).
-
-        period: 1d/5d/1mo/3mo/6mo/1y/2y/5y/10y/ytd/max
-        interval: 1m/5m/15m/30m/60m/1h/1d/1wk/1mo/3mo
-        """
-        return get_history(ticker, period, interval)
-
-    @mcp.tool()
-    def yfinance_info(ticker: str) -> dict:
-        """Fetch company fundamentals snapshot (market cap, P/E, sector, etc.).
-        DO NOT use for financial statements — use sec_edgar tools instead."""
-        return get_info(ticker)
-
-    @mcp.tool()
-    def yfinance_financials(ticker: str, period: str = "annual") -> dict:
-        """Fetch BS/PL/CF from Yahoo Finance (Tier 2 — unofficial scraper).
-        Use as fallback when a primary-source (SEC EDGAR for US, MOPS for TW,
-        EDINET for JP) is not available. Returns income_statement /
-        balance_sheet / cash_flow as {period: {row: value}} plus a canonical
-        key_metrics dict (revenue / operating_income / net_income / total_assets
-        / net_assets / OCF/ICF/FCF etc.) for the latest period.
-        period: 'annual' (default) or 'quarterly'.
-        """
-        return get_financials(ticker, period)
-
-    @mcp.tool()
-    def yfinance_batch(
-        tickers: list[str], action: str = "history",
-        period: str = "1y", interval: str = "1d",
-    ) -> dict:
-        """Batch price/info for multiple tickers (screener / portfolio)."""
-        return get_batch(tickers, action, period, interval)
-
 
 def main():
     parser = argparse.ArgumentParser(description="yfinance investing-toolkit adapter")

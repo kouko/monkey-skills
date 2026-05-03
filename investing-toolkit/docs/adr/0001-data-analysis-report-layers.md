@@ -53,22 +53,27 @@ This is the same pattern already used in v1.x for `${CLAUDE_SKILL_DIR}` resoluti
 
 Bundling the same client into multiple skill folders is a deliberate trade-off: it preserves "skill folder is self-contained" at the cost of file duplication. Drift is prevented by CI MD5 check.
 
-| File | Canonical source of truth | Copies | Skills |
-|---|---|---|---|
-| `yfinance_client.py` | `investing-toolkit/scripts/yfinance_client.py` | 5 | `data-us`, `data-jp`, `data-tw`, `data-kr`, `data-cn` |
-| `fred_client.py` | `investing-toolkit/scripts/fred_client.py` | 2 | `data-us`, `data-cn` (China uses FRED for cross-checks) |
-| `nbs_client.py` | `investing-toolkit/scripts/nbs_client.py` | 1 | `data-cn` |
-| `akshare_client.py` | `investing-toolkit/scripts/akshare_client.py` | 1 | `data-cn` |
-| `ta_client.py` | `investing-toolkit/skills/analysis-technical/scripts/ta_client.py` | 1 (canonical only in v2.0.0) | `analysis-technical` only — no second consumer yet; CI group will be added when an analysis skill consumes TA primitives |
+> **2026-05-03 amendment (per ADR-0008)**: MCP server removed; the
+> `investing-toolkit/scripts/` canonical-vs-skill-copy duality is gone.
+> Only true cross-skill duplications remain. `data-us` is the reference
+> skill for both groups (US is the architectural "first skill" by
+> convention). The 5 single-skill groups added in PR #222 (nbs / akshare /
+> dgbas / ndc / cbc / statgov / fdr) are deleted — those clients now live
+> in exactly one skill each, no sync needed.
 
-Other clients (boj, edinet, fdr, sec_edgar, mops, etc.) are single-country and live only in their owning `data-{country}/` skill.
+| File | Reference (data-us) | Cross-skill copies |
+|---|---|---|
+| `yfinance_client.py` | `investing-toolkit/skills/data-us/scripts/yfinance_client.py` | `data-jp`, `data-tw`, `data-kr`, `data-cn` (4 copies) |
+| `fred_client.py` | `investing-toolkit/skills/data-us/scripts/fred_client.py` | `data-cn` (1 copy; CN uses FRED for cross-checks) |
+
+All other clients (boj, ecb, estat, edinet, fdr, sec_edgar, mops, finmind, twse_openapi, tdnet, dgbas, ndc, cbc, statgov, nbs, akshare, ta) live in **exactly one skill** — no cross-skill duplication, no sync needed.
 
 **CI check** (`.github/workflows/check-script-sync.yml`):
-- For each duplicated file, compute MD5 across all known locations. Fail the build if MD5 differs.
+- For each cross-skill duplicated file, compute MD5 across all known locations. Fail the build if MD5 differs.
 - Scope is **explicit** (skill list per group), not glob-based — prevents silent widening if a non-listed skill ever drops in a copy.
-- On drift, the workflow prints the canonical/drift MD5 plus up to 50 lines of unified diff so reviewers see what changed, not just that something changed.
-- Status during this PR: **advisory**. Workflow runs and reports a red X on drift but is NOT in branch protection's required-checks list. PR 3 promotes it to required (branch-protection settings change; no YAML edit needed at that point).
-- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates canonical → all copies. The legacy `sync-check.sh` + `sync-scripts.sh` pair was deleted in PR 1 alongside the new mechanism (the v1.x scripts referenced soon-to-be-deleted skill paths and would have broken at Task 5); the CI required-flip remains a PR 3 step.
+- On drift, the workflow prints the reference/drift MD5 plus up to 50 lines of unified diff so reviewers see what changed, not just that something changed.
+- Status: **REQUIRED** on `main` branch protection (promoted in v2.1.x-d, 2026-05-02; scope tightened in ADR-0008, 2026-05-03).
+- Local helper: `bash investing-toolkit/scripts/sync-clients.sh --check` reports drift; `bash investing-toolkit/scripts/sync-clients.sh` (no flag) propagates `data-us` reference → cross-skill copies.
 
 ## Slash-Command Rename Map (16 entries)
 
