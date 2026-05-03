@@ -195,6 +195,26 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: memo-fetch fixture shows new fields populated for AAPL FY2025; `analysis-comps/scripts/comps_compute.py --mode compute` (no code change in v2.2.0-l) auto-emits non-null `multiples_compute.priceToBook` + `multiples_compute.evEbitda`; existing v2.2.0-b deferred-multiple regression tests flip from `is None` to `pytest.approx(...)` in same PR.
 - **Reference**: 2026-05-03 design doc §7.3 + §15.2; v2.2.0-b PR closure.
 
+### v2.2.0-m — TW pack-identifier wrapper normalization
+
+- **What**: Rename `_pack` → `pack`, `_ticker` → `ticker`, `_tickers` → `tickers` across `data-tw/scripts/pack.py` (6 emission sites) + `data-tw/references/schema-{snapshot,memo-fetch,comps-multiples,screener-batch,regime-pack}.json` (5 schema files) + `data-tw/SKILL.md` (2 doc sites). Add explicit `country: "TW"` field to all TW pack outputs to replace `_pack` as the country discriminator. Update `report-stock-snapshot/scripts/snapshot_format.py:479` TW detection from "presence of `_pack` + `mops`/`twse` keys" → `pack.get("country") == "TW"`. Regenerate 5 fixture files in `tests/data/fixtures/data-tw-*-sample.json`.
+- **Why**: TW alone among 5 countries uses underscore-prefixed identifier keys (`_pack` / `_ticker`), introduced by v2.0.0 PR #176-183 staging-tier rollout (commit `289772c`) and never normalized. The asymmetry blocks cross-country compute mode (v2.2.0-b `analysis-comps --mode compute` exits 1 on TW input — verified via `tests/integration/test_cross_layer_chains.py::test_cross_country_compute_smoke[tw-crash]`). v2.2.0-l (raw-field extension), future cross-country compute PRs, and any new analysis-* skill consuming TW packs will all hit the same wall until TW is normalized.
+- **Files**:
+  - `data-tw/scripts/pack.py` (6 sites: `_pack` for snapshot/memo-fetch/comps-multiples/screener-batch/regime-pack + `_ticker` + `_tickers`)
+  - `data-tw/references/schema-{snapshot,memo-fetch,comps-multiples,screener-batch,regime-pack}.json` (5 schemas — `required` arrays + property names)
+  - `data-tw/SKILL.md` (2 example blocks)
+  - `report-stock-snapshot/scripts/snapshot_format.py` (4 sites: TW discriminator + ticker fallback chain)
+  - `tests/data/fixtures/data-tw-*-sample.json` (5 fixtures regenerate)
+  - `tests/integration/test_cross_layer_chains.py::test_cross_country_compute_smoke[tw]` flip `expected_status` from `crash` to `schema_mismatch` (or `full_compute` if v2.2.0-l also landed)
+  - Possibly `tests/data/test_data_tw.py` if it asserts on `_pack` / `_ticker` literals
+- **Blocker**: None. Pure rename + new `country` field. ~2-3 hours including test audit.
+- **Acceptance**:
+  - All other 4 countries' tests still green (no collateral damage)
+  - All TW chain tests still green (cross-layer integration preserved)
+  - `analysis-comps --mode compute` against TW memo-fetch produces JSON without crashing (compute_provenance may still be empty until v2.2.0-l adds MOPS raw-field extension; that's a separate concern)
+  - `report-stock-snapshot` resolves country=TW correctly via new `country` field
+- **Reference**: 2026-05-03 v2.2.0-b post-merge follow-up; cross-country smoke test discovery in commit `e59c8f7` (test_cross_country_compute_smoke baseline); v2.0.0 PR #176-183 staging-tier rollout history (commit `289772c` introduced `_pack` convention).
+
 ## Long-term — Phase 2 + beyond
 
 ### Phase 2 — cross-country comparable surface (ADR-0005, deferred)
