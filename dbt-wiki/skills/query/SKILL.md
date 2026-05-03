@@ -47,11 +47,39 @@ test -f .dbt-wiki/index.md || { echo "Missing .dbt-wiki/index.md — re-run /dbt
 ```bash
 LAST_SHA=$(grep -m 1 'manifest_sha:' .dbt-wiki/log.md | sed 's/.*manifest_sha: //' | tr -d ' ')
 
-# Find current manifest if exists (silent if not)
+# Find current manifest using the same 5-tier detection as init/refresh
+# (silent if not — drift check is non-fatal):
+#   1. $DBT_PROJECT_DIR env var
+#   2. ancestor walk from cwd (up to 5 levels)
+#   3. descendant scan from cwd (max-depth 3, with exclusions)
+#   4. legacy whitelist (./ or dbt/)
+# Skip the explicit-arg tier — query is read-only and doesn't take a path arg.
 DBT_DIR=""
-for candidate in "dbt" "."; do
-  [ -f "$candidate/dbt_project.yml" ] && DBT_DIR="$candidate" && break
-done
+if [ -n "$DBT_PROJECT_DIR" ] && [ -f "$DBT_PROJECT_DIR/dbt_project.yml" ]; then
+  DBT_DIR="$DBT_PROJECT_DIR"
+fi
+if [ -z "$DBT_DIR" ]; then
+  candidate="$PWD"
+  for _ in 1 2 3 4 5 6; do
+    if [ -f "$candidate/dbt_project.yml" ]; then DBT_DIR="$candidate"; break; fi
+    parent=$(dirname "$candidate"); [ "$parent" = "$candidate" ] && break
+    candidate="$parent"
+  done
+fi
+if [ -z "$DBT_DIR" ]; then
+  match=$(find . -maxdepth 3 -name dbt_project.yml -type f \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' \
+    -not -path '*/target/*' -not -path '*/.venv/*' \
+    -not -path '*/__pycache__/*' -not -path '*/dbt_packages/*' \
+    -not -path '*/.repo-wiki/*' -not -path '*/.dbt-wiki/*' \
+    2>/dev/null | head -1)
+  [ -n "$match" ] && DBT_DIR=$(dirname "$match")
+fi
+if [ -z "$DBT_DIR" ]; then
+  for candidate in "dbt" "."; do
+    [ -f "$candidate/dbt_project.yml" ] && DBT_DIR="$candidate" && break
+  done
+fi
 
 if [ -n "$DBT_DIR" ] && [ -f "$DBT_DIR/target/manifest.json" ]; then
   CURRENT_SHA=$(md5 -q "$DBT_DIR/target/manifest.json" 2>/dev/null || md5sum "$DBT_DIR/target/manifest.json" | cut -d' ' -f1)

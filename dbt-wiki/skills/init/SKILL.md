@@ -41,23 +41,101 @@ modify any dbt project file.
 
 ## Pre-condition Check (Step 0)
 
+### Step 0a: Resolve dbt project root (5-tier detection)
+
+Try in priority order; first match wins.
+
 ```bash
-# Resolve dbt project root from common locations
 DBT_DIR=""
-for candidate in "dbt" "."; do
-  if [ -f "$candidate/dbt_project.yml" ]; then
-    DBT_DIR="$candidate"
-    break
+DBT_DIR_SOURCE=""  # for diagnostic output
+
+# Tier 1: explicit arg to /dbt-wiki:init <path>
+# (If user invoked the skill with an arg that resolves to a directory
+# containing dbt_project.yml, use it.)
+if [ -n "$SKILL_ARG" ] && [ -f "$SKILL_ARG/dbt_project.yml" ]; then
+  DBT_DIR="$SKILL_ARG"
+  DBT_DIR_SOURCE="explicit arg"
+fi
+
+# Tier 2: $DBT_PROJECT_DIR env var (dbt-mcp / dbt CLI convention)
+if [ -z "$DBT_DIR" ] && [ -n "$DBT_PROJECT_DIR" ] && [ -f "$DBT_PROJECT_DIR/dbt_project.yml" ]; then
+  DBT_DIR="$DBT_PROJECT_DIR"
+  DBT_DIR_SOURCE="\$DBT_PROJECT_DIR env var"
+fi
+
+# Tier 3: walk upward from cwd up to 5 ancestors
+# (handles "user is in dbt/models/staging/, project root is 3 levels up")
+if [ -z "$DBT_DIR" ]; then
+  candidate="$PWD"
+  for _ in 1 2 3 4 5 6; do
+    if [ -f "$candidate/dbt_project.yml" ]; then
+      DBT_DIR="$candidate"
+      DBT_DIR_SOURCE="ancestor walk from cwd"
+      break
+    fi
+    parent=$(dirname "$candidate")
+    [ "$parent" = "$candidate" ] && break  # hit filesystem root
+    candidate="$parent"
+  done
+fi
+
+# Tier 4: walk downward from cwd up to 3 levels deep
+# (handles "user is in repo root, dbt is at ./dbt/ or ./data/dbt-prod/")
+# Excludes heavy directories: node_modules, .git, target, .venv, __pycache__,
+# dbt_packages (dbt's own deps), .repo-wiki, .dbt-wiki
+if [ -z "$DBT_DIR" ]; then
+  match=$(find . -maxdepth 3 -name dbt_project.yml -type f \
+    -not -path '*/node_modules/*' \
+    -not -path '*/.git/*' \
+    -not -path '*/target/*' \
+    -not -path '*/.venv/*' \
+    -not -path '*/__pycache__/*' \
+    -not -path '*/dbt_packages/*' \
+    -not -path '*/.repo-wiki/*' \
+    -not -path '*/.dbt-wiki/*' \
+    2>/dev/null | head -1)
+  if [ -n "$match" ]; then
+    DBT_DIR=$(dirname "$match")
+    DBT_DIR_SOURCE="downward scan from cwd (max-depth 3)"
   fi
-done
+fi
+
+# Tier 5: legacy whitelist (kept for back-compat with v1.0/v1.1)
+if [ -z "$DBT_DIR" ]; then
+  for candidate in "dbt" "."; do
+    if [ -f "$candidate/dbt_project.yml" ]; then
+      DBT_DIR="$candidate"
+      DBT_DIR_SOURCE="legacy whitelist (./ or dbt/)"
+      break
+    fi
+  done
+fi
 
 if [ -z "$DBT_DIR" ]; then
-  echo "Cannot find dbt_project.yml. Looked in: dbt/, ./"
-  echo "If your dbt project is elsewhere, run init from inside the dbt project root."
+  cat <<EOF
+Cannot find dbt_project.yml. Looked in:
+  1. Skill argument (none provided)
+  2. \$DBT_PROJECT_DIR env var (\${DBT_PROJECT_DIR:-not set})
+  3. cwd ancestors (up to 5 levels): $PWD
+  4. cwd descendants (max-depth 3, excluding node_modules / .git / target / etc.)
+  5. Legacy whitelist: ./ and ./dbt/
+
+How to fix:
+  - Pass the path: /dbt-wiki:init /path/to/your/dbt-project
+  - Or set: export DBT_PROJECT_DIR=/path/to/your/dbt-project
+  - Or cd into the dbt project root and re-run
+EOF
   exit 1
 fi
 
-# Verify required artifacts
+# Normalize to absolute path and report what we found
+DBT_DIR=$(cd "$DBT_DIR" && pwd)
+echo "✓ dbt project root: $DBT_DIR  (detected via: $DBT_DIR_SOURCE)"
+```
+
+### Step 0b: Verify required dbt artifacts + Python runner
+
+```bash
 test -f "$DBT_DIR/target/manifest.json" || {
   echo "Missing $DBT_DIR/target/manifest.json"
   echo "Run: cd $DBT_DIR && dbt parse"
