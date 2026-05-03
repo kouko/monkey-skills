@@ -71,6 +71,19 @@ move か edit のみ。振り分け先が曖昧な場合は確認を取る。
 | `obsidian-file-intel` | PDF / PPTX / XLSX / DOCX / CSV / JSON を Gemini で抽出し、Obsidian-ready な要約を生成 |
 | `dashboard-design` | デジタル庁ダッシュボード設計ガイドラインに基づき、要件整理から layout までを引導 |
 
+### Wiki layer（LLM 知識蒸留、original）
+
+[Karpathy の LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) と [`Ar9av/obsidian-wiki`](https://github.com/Ar9av/obsidian-wiki) からの着想を、6 カテゴリの「型態軸」（entities / concepts / synthesis / skills / journal / references）、tiered retrieval、SHA-256 delta tracking、bounded auto-research に再設計。各 skill は完全に self-contained — cross-skill / plugin-level 共有 reference は使用しない。
+
+| Skill | 用途 |
+|---|---|
+| `wiki-setup` | `wiki/` 構造、`.env`、manifest、hot cache の初回 scaffold |
+| `wiki-ingest` | source notes（references/、research/ 等）を SHA-256 delta tracking で wiki/ に蒸留。page format spec の所有者 |
+| `wiki-query` | tiered retrieval（hot.md → frontmatter summary → full page）で wiki/ を検索 |
+| `wiki-cross-linker` | 平文の言及を `[[wikilinks]]` に変換し、知識グラフを補強 |
+| `wiki-lint` | 11 項目の health audit — structural / semantic / provenance。Read-only |
+| `wiki-auto-research` | 手動 one-shot — Open Questions と ambiguous claim を scan、web search、`research/` にレビュー可能なノート出力 |
+
 ### kepano（Steph Ango）からの import
 
 Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
@@ -168,7 +181,13 @@ obsidian/
 │   ├── defuddle/                # kepano から import
 │   ├── obsidian-canvas-creator/ # axtonliu から import
 │   ├── obsidian-excalidraw-diagram/ # axtonliu から import
-│   └── obsidian-mermaid-visualizer/ # axtonliu から import
+│   ├── obsidian-mermaid-visualizer/ # axtonliu から import
+│   ├── wiki-setup/                # wiki layer 初期化（original）
+│   ├── wiki-ingest/               # source → wiki 蒸留（original）
+│   ├── wiki-query/                # tiered retrieval（original）
+│   ├── wiki-cross-linker/         # 知識グラフ補強（original）
+│   ├── wiki-lint/                 # health audit（original）
+│   └── wiki-auto-research/        # web search で gap 補完（original）
 ├── README.md
 ├── README.ja.md
 └── README.zh-TW.md

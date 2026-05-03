@@ -73,6 +73,19 @@ edits — and asks before reorganizing when the destination is ambiguous.
 | `obsidian-file-intel` | Extract content from PDF / PPTX / XLSX / DOCX / CSV / JSON via Gemini and produce Obsidian-ready summaries. |
 | `dashboard-design` | Guide dashboard design from requirements to layout, grounded in Japan Digital Agency dashboard guidelines. |
 
+### Wiki layer (LLM knowledge distillation, original)
+
+Inspired by [Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and [`Ar9av/obsidian-wiki`](https://github.com/Ar9av/obsidian-wiki), reimagined with a 6-category type axis (entities / concepts / synthesis / skills / journal / references), tiered retrieval, content-hash delta tracking, and bounded auto-research. Each skill is fully self-contained — no cross-skill or plugin-level shared references.
+
+| Skill | Purpose |
+|---|---|
+| `wiki-setup` | One-time scaffold of `wiki/` structure, `.env`, manifest, hot cache. |
+| `wiki-ingest` | Ingest source notes (references/, research/, etc.) into wiki/ with SHA-256 delta tracking. Owns the page format spec. |
+| `wiki-query` | Query wiki/ via tiered retrieval (hot.md → frontmatter summary → full page). |
+| `wiki-cross-linker` | Strengthen the knowledge graph by converting plain-text mentions into `[[wikilinks]]`. |
+| `wiki-lint` | 11-check health audit — structural, semantic, provenance. Read-only. |
+| `wiki-auto-research` | Manual one-shot — scan Open Questions and ambiguous claims, web-search, write reviewable notes to `research/`. |
+
 ### Imported from kepano (Steph Ango)
 
 Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
@@ -173,7 +186,13 @@ obsidian/
 │   ├── defuddle/                # imported from kepano
 │   ├── obsidian-canvas-creator/ # imported from axtonliu
 │   ├── obsidian-excalidraw-diagram/ # imported from axtonliu
-│   └── obsidian-mermaid-visualizer/ # imported from axtonliu
+│   ├── obsidian-mermaid-visualizer/ # imported from axtonliu
+│   ├── wiki-setup/                # wiki layer init (original)
+│   ├── wiki-ingest/               # source → wiki distillation (original)
+│   ├── wiki-query/                # tiered retrieval (original)
+│   ├── wiki-cross-linker/         # knowledge graph strengthening (original)
+│   ├── wiki-lint/                 # health audit (original)
+│   └── wiki-auto-research/        # gap-filling via web search (original)
 ├── README.md
 ├── README.ja.md
 └── README.zh-TW.md
