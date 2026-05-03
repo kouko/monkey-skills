@@ -22,11 +22,22 @@
 #   Top-level only, case-sensitive. Nested directories with the same name
 #   (e.g. projects/old/daily/) are NOT excluded.
 #
+# Glob patterns (NEW in v3.7.0):
+#   Each entry in OBSIDIAN_EXCLUDE_DIRS is interpreted as a shell glob,
+#   matched against top-level directory names via `case ... in <pattern>)`.
+#   Examples:
+#     daily            literal exact match
+#     _*               any name starting with underscore (e.g. _raw, _archive)
+#     temp?            `temp1`, `temp2`, `tempX` (single wildcard char)
+#     [Aa]rchive       case-variant: matches `Archive` or `archive`
+#     *.bak            any name ending in .bak
+#
 # Filesystem caveat:
 #   On case-insensitive filesystems (macOS APFS default, Windows NTFS),
 #   `Daily/` and `daily/` are treated as the same physical directory, so
-#   listing one excludes the other. Case-sensitive matching only matters
-#   on case-sensitive FS (Linux ext4, macOS APFS-Case-Sensitive variant).
+#   listing one excludes the other. Case-sensitive matching (and `[Aa]`
+#   patterns) only matter on case-sensitive FS (Linux ext4, macOS
+#   APFS-Case-Sensitive variant).
 #
 # Portability:
 #   Pure POSIX sh. No bash arrays, no `set -e` on subshells, no associative
@@ -74,23 +85,36 @@ EXCLUDE_LIST=$(
   | sort -u
 )
 
-# For fast "is X in the exclude list?" lookups, build a comma-bracketed
-# string we can pattern-match against.
-EXCLUDE_BRACKETED=",$(echo "$EXCLUDE_LIST" | tr '\n' ',')"
+# Convert newline-separated patterns to space-separated for `for` iteration.
+# Relies on directory names not containing spaces (typical vault convention).
+# If your vault has spaces in top-level dir names, escape with `\ ` in
+# OBSIDIAN_EXCLUDE_DIRS, or rename the directory.
+EXCLUDE_PATTERNS=$(echo "$EXCLUDE_LIST" | tr '\n' ' ')
+
+# Helper: is the top-level name $1 matched by any exclude glob pattern?
+# Each pattern is interpreted as a shell case-statement glob, so:
+#   `_*`     matches any name starting with underscore
+#   `temp?`  matches `temp1`, `temp2`, ... (single-char wildcard)
+#   `[Aa]rchive` matches `Archive` or `archive`
+#   `daily`  matches the literal string `daily` (no wildcards = exact)
+is_excluded() {
+  name="$1"
+  for pattern in $EXCLUDE_PATTERNS; do
+    case "$name" in
+      $pattern) return 0 ;;
+    esac
+  done
+  return 1
+}
 
 # Step 1: scan top-level entries of the vault.
 # Use -mindepth 1 -maxdepth 1 to enumerate just the immediate children.
 find "$VAULT" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r topdir; do
-  # Extract the basename (top-level directory name) for blacklist comparison.
   topname=$(basename "$topdir")
 
-  # Case-sensitive lookup: does ",<name>," appear in the bracketed exclude list?
-  case "$EXCLUDE_BRACKETED" in
-    *",$topname,"*)
-      # Excluded — skip silently.
-      continue
-      ;;
-  esac
+  if is_excluded "$topname"; then
+    continue
+  fi
 
   # Recurse into this top-level dir and emit all .md files found.
   find "$topdir" -type f -name "*.md" 2>/dev/null

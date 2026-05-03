@@ -21,7 +21,7 @@ both paths get blocked equally on Cowork.
 
 ## Version
 
-3.6.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
+3.7.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
 
 ## Part of
 
@@ -167,7 +167,7 @@ sequence diagram type, applies Obsidian 11.4.1 quirks, and emits a
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata, version 3.6.0
+│   └── plugin.json              # plugin metadata, version 3.7.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault hygiene agent
 ├── commands/

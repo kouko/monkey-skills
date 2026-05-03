@@ -84,15 +84,22 @@ Options:
 Question: "Which folders should be EXCLUDED from wiki ingestion? (blacklist)"
 Options:
 1. "daily, inbox" — recommended default (skip flow notes, capture-only zones)
-2. "daily, inbox, projects" — also skip in-progress project notes
-3. "daily, inbox, personal" — also skip private personal notes
-4. "Custom" — user types comma-separated list
+2. "daily, inbox, _*" — also skip any `_`-prefixed dir (Obsidian convention for system / drafts / attachments)
+3. "daily, inbox, projects" — also skip in-progress project notes
+4. "daily, inbox, personal" — also skip private personal notes
+5. "Custom" — user types comma-separated patterns (shell globs supported)
 ```
 
 > [!important]
-> Values written to `.env` MUST be bare directory names (no leading/trailing slashes).
+> Values written to `.env` MUST be bare directory names or **shell globs** (no leading/trailing slashes).
+> Glob patterns supported (NEW in v3.7.0):
+> - `daily` — literal exact match
+> - `_*` — any name starting with underscore
+> - `temp?` — single-char wildcard
+> - `[Aa]rchive` — case-variant char class
+>
 > When normalizing user input, strip surrounding whitespace and trailing `/` before writing.
-> Example: user says "daily/, inbox/" → write `OBSIDIAN_EXCLUDE_DIRS=daily,inbox`.
+> Example: user says "daily/, inbox/, _*" → write `OBSIDIAN_EXCLUDE_DIRS=daily,inbox,_*`.
 
 > [!note] Always-excluded system paths
 > The following are excluded automatically (NOT user-configurable, hardcoded in `wiki-ingest`):
@@ -152,8 +159,12 @@ OBSIDIAN_VAULT_PATH=wiki
 
 # Folders to EXCLUDE from wiki ingestion (blacklist).
 # wiki-ingest scans the entire vault recursively for .md files,
-# pruning vault-root-level directories matching this list.
-# Values: bare directory names, comma-separated, no slashes (e.g. "daily,inbox").
+# pruning vault-root-level directories matching any pattern in this list.
+# Each entry is a SHELL GLOB pattern (not just a literal name):
+#   daily       literal exact match
+#   _*          any name starting with underscore (e.g. _raw, _archive)
+#   temp?       single-char wildcard
+#   [Aa]rchive  case-variant char class
 # Always-excluded (hardcoded, not configurable): wiki/, .obsidian/, .trash/, .git/, node_modules/, _raw/
 OBSIDIAN_EXCLUDE_DIRS=<comma-joined exclude list from Step 1, normalized: stripped slashes>
 

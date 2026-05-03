@@ -17,22 +17,31 @@ These are baked into [`scripts/scan-vault.sh`](../scripts/scan-vault.sh) and can
 
 ## Layer 2: User-configured exclusions
 
-From `.env` `OBSIDIAN_EXCLUDE_DIRS` (comma-separated, vault-relative bare directory names — no slashes, no whitespace).
+From `.env` `OBSIDIAN_EXCLUDE_DIRS` (comma-separated, vault-relative; entries are **shell-glob patterns**, not just literal names).
 
 Default after `/wiki-setup`: `daily,inbox` (skip flow notes and capture-only zones).
 
 Common additions:
 - `personal` — private notes
 - `projects` — in-progress work
-- `archive` — frozen old notes (depending on whether you want them in wiki)
+- `archive` — frozen old notes
+- `_*` — any top-level dir starting with `_` (Obsidian convention for system / draft / asset folders)
+- `temp?` — `temp1`, `temp2`, ...
+- `[Aa]rchive` — case-variant `Archive` or `archive` (only meaningful on case-sensitive filesystems)
 
-## Match rule (top-level only)
+## Match rule (top-level only, glob-aware)
 
-A file is excluded if its **vault-relative path begins with an excluded directory name at the top level**.
+A file is excluded if its **vault-relative path's first segment matches any excluded glob pattern**.
 
 - Only the **first path segment** is compared against the blacklist
 - Nested directories with the same name are **NOT** excluded
-- Match is **case-sensitive** (top-level `Daily/` is NOT excluded if user listed `daily`)
+- Match is **case-sensitive** in pattern interpretation (use `[Aa]` patterns or rely on FS case-insensitivity)
+- Each entry in `OBSIDIAN_EXCLUDE_DIRS` is a shell glob:
+  - `daily` — literal exact match (no wildcards = exact)
+  - `_*` — any name starting with `_`
+  - `*-archive` — any name ending in `-archive`
+  - `temp?` — single-char wildcard
+  - `[Aa]rchive` — char class
 
 ## Example scope resolution
 
@@ -53,7 +62,21 @@ vault/
 └── projects/billing-redesign.md       ← INCLUDED
 ```
 
-This is intentional: a sub-folder named `daily/` deep inside `projects/old/` is unrelated to the top-level `daily/` flow-notes folder. Top-level-only matching avoids accidental over-exclusion.
+Given `OBSIDIAN_EXCLUDE_DIRS=daily,inbox,_*` (glob — exclude all `_`-prefixed top-level dirs):
+
+```
+vault/
+├── daily/note.md                      ← EXCLUDED (literal `daily`)
+├── inbox/idea.md                      ← EXCLUDED (literal `inbox`)
+├── _archive/old.md                    ← EXCLUDED (glob `_*` matches)
+├── _drafts/wip.md                     ← EXCLUDED (glob `_*` matches)
+├── _attachments/img.md                ← EXCLUDED (glob `_*` matches)
+├── projects/old/_temp/note.md         ← INCLUDED (top-level is projects/, not _temp)
+├── references/paper.md                ← INCLUDED
+└── temp1/file.md                      ← INCLUDED (no `_` prefix)
+```
+
+This is intentional: a sub-folder named `daily/` or `_temp/` deep inside `projects/old/` is unrelated to the top-level folders. Top-level-only matching avoids accidental over-exclusion.
 
 ## Implementation: invoke the bundled scan script
 

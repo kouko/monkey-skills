@@ -1,6 +1,6 @@
 {
   "name": "obsidian",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. Plus an LLM wiki knowledge-distillation layer (6 wiki-* skills) on top of vault notes. ⚠️ Most skills are Cowork-compatible; the `defuddle` skill needs Claude Code CLI (subprocess + external URL fetch).",
   "author": {
     "name": "kouko",
