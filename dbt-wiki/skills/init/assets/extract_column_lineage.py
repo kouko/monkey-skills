@@ -107,6 +107,14 @@ def extract_lineage(sql: str, dialect: str = "redshift") -> dict[str, Any]:
     if select is None:
         return {"_error": "no top-level SELECT found (DDL? DML? CTE-only?)"}
 
+    # Try the `SELECT * FROM <final_cte>` wrapper-pattern unwrap before
+    # falling back to per-projection extraction. Common in dbt projects
+    # that use a `final` CTE convention; without this, all columns
+    # collapse to a single `*` entry.
+    unwrapped = _expand_star_via_cte(ast, select, dialect)
+    if unwrapped is not None:
+        return unwrapped
+
     result: dict[str, Any] = {}
     for proj in select.expressions:
         out_name = _projection_output_name(proj)
@@ -137,6 +145,106 @@ def extract_lineage(sql: str, dialect: str = "redshift") -> dict[str, Any]:
 
 
 # ----- helpers -----
+
+
+def _expand_star_via_cte(
+    ast: exp.Expression,
+    select: exp.Select,
+    dialect: str,
+    max_depth: int = 5,
+) -> dict[str, list[str]] | None:
+    """Unwrap the dbt `SELECT * FROM <final_cte>` wrapper pattern.
+
+    Many dbt projects (especially staging / mart layers in iCHEF-style
+    codebases) end with a CTE named `final` and a top-level
+    `SELECT * FROM final`. Without unwrapping, sqlglot reports just
+    one column named `*` per such model — losing all per-column
+    information.
+
+    This helper detects the pattern, finds the CTE in the AST, and
+    extracts the CTE's projections instead. If the CTE itself is also
+    a wrapper (`SELECT * FROM <inner_cte>`), recurses up to max_depth.
+
+    Returns:
+      - dict mapping column_name → list of "table.column" sources, OR
+      - None if the pattern doesn't apply (more than one projection,
+        non-Star projection, FROM clause has multiple tables, target
+        table isn't a CTE, or recursion depth exceeded).
+    """
+    visited: set[str] = set()
+
+    def walk(s: exp.Select, depth: int) -> dict[str, list[str]] | None:
+        if depth > max_depth or not isinstance(s, exp.Select):
+            return None
+        if len(s.expressions) != 1 or not isinstance(s.expressions[0], exp.Star):
+            return None
+        from_clause = s.args.get("from_") or s.args.get("from")
+        if from_clause is None:
+            return None
+        tables = list(from_clause.find_all(exp.Table))
+        if len(tables) != 1:
+            return None
+        target_name = (tables[0].alias_or_name or tables[0].name or "").lower()
+        if not target_name:
+            return None
+
+        target_cte: exp.CTE | None = None
+        for cte in ast.find_all(exp.CTE):
+            if (cte.alias or "").lower() == target_name:
+                target_cte = cte
+                break
+        if target_cte is None or target_cte.alias in visited:
+            return None
+        visited.add(target_cte.alias)
+
+        inner = target_cte.this
+        if not isinstance(inner, exp.Select):
+            return None
+
+        # Recurse if the inner CTE is also a SELECT * wrapper
+        deeper = walk(inner, depth + 1)
+        if deeper is not None:
+            return deeper
+
+        # Determine default table for unqualified column refs in this CTE
+        default_table: str | None = None
+        inner_from = inner.args.get("from_") or inner.args.get("from")
+        if inner_from is not None:
+            inner_tables = list(inner_from.find_all(exp.Table))
+            # Only set a default if FROM has exactly one table and no JOINs
+            joins = inner.args.get("joins") or []
+            if len(inner_tables) == 1 and not joins:
+                default_table = (
+                    inner_tables[0].alias_or_name or inner_tables[0].name
+                )
+
+        result: dict[str, list[str]] = {}
+        for proj in inner.expressions:
+            if isinstance(proj, exp.Alias):
+                name = proj.alias
+                expr = proj.this
+            elif isinstance(proj, exp.Column):
+                name = proj.alias_or_name
+                expr = proj
+            elif isinstance(proj, exp.Star):
+                # Inner is also unqualified `*` (e.g. `final AS (SELECT * FROM x)`).
+                # The recursive walk above should have handled this; if we hit
+                # this branch the chain wasn't a clean wrapper. Skip.
+                continue
+            else:
+                name = proj.alias_or_name or _projection_output_name(proj)
+                expr = proj
+
+            sources: set[str] = set()
+            for col in expr.find_all(exp.Column):
+                t = col.table or default_table or "<unqualified>"
+                sources.add(f"{t}.{col.name}")
+            result[name] = sorted(sources)
+
+        return result
+
+    _ = dialect  # kept in signature for forward compat; not used yet
+    return walk(select, 0)
 
 
 def _find_top_select(ast: exp.Expression) -> exp.Select | None:
