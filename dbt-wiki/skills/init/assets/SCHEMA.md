@@ -145,9 +145,30 @@ Body sections (all optional, init populates what's available):
 (Auto-extracted from `dbt/models/<path>.sql`. Empty section means no
 comments in source. Refresh re-extracts.)
 
-## Column Sources (from sqlglot)
+## Column Sources (from sqlglot — direct, single-hop)
 - order_id ← stg_orders.order_id
 - customer_id ← stg_orders.customer_id, stg_customers.id (COALESCE)
+
+## Column Lineage Chains (recursive, full DAG)
+> Auto-generated from `extract_recursive_column_lineage.py`. Each entry
+> shows the full ancestor chain (back to source) and descendant chain
+> (forward to leaf marts) for every column in this model.
+
+### customer_id
+**Ancestors** (where this column comes from, recursively):
+- ← stg_orders.customer_id
+  - ← raw_data.orders_raw.customer_id  *(source)*
+- ← stg_customers.id  *(via COALESCE)*
+  - ← raw_data.customers_raw.id  *(source)*
+
+**Descendants** (where this column flows to, recursively):
+- → dim_orders_summary.customer_id
+  - → mart_finance_daily.customer_id  *(leaf)*
+
+(Resolved nodes appear as `<model_name>.<column>`. Unresolved table
+references — CTEs, SQL aliases sqlglot couldn't back-resolve, dbt_utils
+macro outputs — appear as `_unresolved::<table>::<column>` and stop
+recursion at that point.)
 
 ## Tests
 - Column-level: <count>; see frontmatter `columns[].tests`
@@ -170,7 +191,8 @@ hook in dbt_project.yml handles this. See incident #4521.
 ```
 
 **Standard sections** (init/refresh regenerate): Description, Materialization
-Notes, SQL Preview, Inline Comments, Column Sources, Tests, Cross-references.
+Notes, SQL Preview, Inline Comments, Column Sources, Column Lineage Chains,
+Tests, Cross-references.
 
 **User-owned sections** (init/refresh PRESERVE verbatim): User Notes,
 plus any `##`-level heading the user added that isn't in the standard list.

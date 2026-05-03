@@ -81,7 +81,7 @@ load pattern:
 | **C1 — Model lookup** | "<model_name> 是什麼", "describe X", "X 的 description" | One model page |
 | **C2 — Upstream lineage** | "依賴什麼", "depends on", "上游", "feeds X", "X comes from" | Model page + walk `depends_on` (1-2 levels deep) |
 | **C3 — Downstream lineage** | "影響哪些", "feeds into", "下游", "depend on X", "downstream of X" | Model page + walk `feeds_into` (1-2 levels deep) |
-| **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源" | Multiple model pages (target + all upstream); read `columns[].sources` |
+| **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源", "trace column" | Single model page's `## Column Lineage Chains` body section (precomputed recursive ancestors + descendants — full chain to source / leaf). Single page load answers full DAG question. |
 | **C5 — Materialization filter** | "哪些是 table / view / incremental", "incremental in X tier" | index.md "Models by Materialization" section |
 | **C6 — Tag / Group filter** | "tag X", "group Y", "marts_msd 下" | index.md "Models by Tag/Group/Tier" |
 | **C7 — Test coverage** | "X 有什麼 test", "什麼 test 失敗" | Model page `tests` + (Phase 2) run_results.json |

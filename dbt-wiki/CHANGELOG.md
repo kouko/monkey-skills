@@ -4,6 +4,91 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-05-03
+
+### Added — recursive cross-model column lineage
+
+dbt-wiki v1.0.0's column lineage was **single-hop** (within one
+compiled SQL): `fct_orders.customer_id ← stg_orders.customer_id`. To
+trace back to source you'd manually walk the chain across model pages.
+
+v1.1.0 ships **precomputed recursive lineage** that walks the dbt DAG
+bidirectionally (ancestors back to source + descendants forward to
+leaf marts) and stores it in each model page's
+`## Column Lineage Chains` body section. Now `/dbt-wiki:query` can
+answer "fct_orders.customer_id 從哪一路來?" or "rename
+stg_customers.email 會影響哪些 model 的哪些 column?" by loading a
+single page.
+
+This is the recursive lineage capability comparable to [canva-public/dbt-column-lineage-extractor](https://github.com/canva-public/dbt-column-lineage-extractor),
+implemented inside dbt-wiki without an additional pip dependency.
+Same sqlglot under the hood (via existing `extract_column_lineage.py`);
+the new script `extract_recursive_column_lineage.py` is pure stdlib.
+
+**Files added**:
+- `dbt-wiki/skills/init/assets/extract_recursive_column_lineage.py`
+  (382 lines): consumes per-SQL JSONL from `extract_column_lineage.py
+  --batch` plus `target/manifest.json`. Builds an alias-map (model name
+  / alias / schema-qualified / fully-qualified all map to manifest
+  unique_id) and a feeds_into reverse-DAG. Recursively walks ancestors
+  (via the alias-map) and descendants (via feeds_into matched against
+  downstream models' per-SQL sources). Cycle + max-depth protection.
+  Output is JSONL — one record per `(model_uid, column)` with
+  `ancestors` and `descendants` as nested dict trees.
+- `dbt-wiki/skills/init/assets/extract_recursive_column_lineage_test.py`
+  (260 lines): synthetic 4-model dbt project with COALESCE multi-source.
+  6 cases: 1) full ancestor chain back to source through stg, 2) negative
+  descendant test (different column), 3) positive descendant chain
+  through fct to mart (2 hops), 4) single-hop ancestor, 5) 2-hop
+  descendant via intermediate, 6) whole-project mode produces 1 record
+  per (model, column). All 6 pass on pure stdlib (no sqlglot needed
+  for test).
+
+**Files changed**:
+- `dbt-wiki/skills/init/SKILL.md`:
+  - Step 4 cp block extended to copy the 2 new scripts to
+    `.dbt-wiki/_internal/`
+  - New Step 4f: invoke recursive script after Step 4b's per-SQL
+    extraction; output JSONL piped to `/tmp/dbt-wiki-recursive-lineage.jsonl`
+  - New Step 4g: optional verify of recursive script via its smoke test
+- `dbt-wiki/skills/init/assets/SCHEMA.md`:
+  - New body section `## Column Lineage Chains` with example showing
+    nested ancestors + descendants tree
+  - Standard sections list updated to include `Column Lineage Chains`
+    (so refresh regenerates it like other derived sections)
+- `dbt-wiki/skills/query/SKILL.md`:
+  - C4 (Column-level lineage) row updated: now loads single model page's
+    `## Column Lineage Chains` section (precomputed recursive chain)
+    instead of needing to walk multiple upstream pages
+- `dbt-wiki/.claude-plugin/plugin.json`: 1.0.0 → 1.1.0
+
+**Relationship to PR #213** (open at time of this PR):
+PR #213 adopts PEP 723 + uv for dependency management. This PR (v1.1.0)
+adds recursive lineage. The two are orthogonal — both modify
+`init/SKILL.md` script invocation but at different points (PR #213
+changes WHICH runner; this PR adds WHAT TO RUN). Whichever lands first,
+the second needs a small rebase on `plugin.json` version field.
+
+**Limitations** (documented in script docstring):
+- SQL-local aliases like `SELECT f.a FROM stg_orders AS f` require
+  sqlglot to back-resolve `f` → `stg_orders` in its lineage output.
+  If sqlglot emits `f.a` literally, recursive walker marks
+  `_unresolved::f::a` and stops at that branch.
+- CTEs inside compiled SQL — same story; sqlglot usually walks through
+  them but not always.
+- max_depth defaults to 10 (configurable via `--max-depth`); cycles
+  marked as `_cycle` (rare in dbt but possible with snapshot models).
+- For Redshift specifically: late-binding views work normally.
+
+**Why implement vs. depend on dbt-column-lineage-extractor**:
+- Avoid external pip dep (one less thing for users to install)
+- Same underlying sqlglot — no quality gap on dialect support
+- Output format we control (matches dbt-wiki SCHEMA conventions)
+- Reuses existing per-SQL lineage from v1.0.0 (composable, not duplicated)
+- 380-line implementation vs. external dependency — net code we own
+
+---
+
 ## [1.0.1] — 2026-05-03
 
 ### Changed — PEP 723 inline metadata + uv-first execution
