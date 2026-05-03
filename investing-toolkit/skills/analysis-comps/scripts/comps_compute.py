@@ -67,11 +67,35 @@ ALIASES = {
     "priceToBook": ["priceToBook"],
 }
 
+DIVERGENCE_BAND_LOW  = 0.05   # 5%   — boundary inclusive (≤ low)
+DIVERGENCE_BAND_HIGH = 0.15   # 15%  — boundary inclusive for medium (high band is strict >)
+
+# Multiples currently deferred to v2.2.0-l (memo-fetch lacks the raw fields):
+#   priceToBook  → needs total_stockholders_equity
+#   evEbitda     → needs depreciation_amortization
+DEFERRED_MULTIPLES = ("priceToBook", "evEbitda")
+
 
 def _load_pack(path: Path) -> dict:
     """Load a comps-multiples pack JSON. No network access."""
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _load_memo_fetch_pack(path: Path, expected_ticker: str) -> dict:
+    """Load and validate a memo-fetch pack. Layer-1 input contract — no I/O beyond this read."""
+    with path.open("r", encoding="utf-8") as f:
+        pack = json.load(f)
+    if pack.get("pack") != "memo-fetch":
+        raise ValueError(
+            f"--anchor-base must be a memo-fetch pack; got pack={pack.get('pack')!r}"
+        )
+    if pack.get("ticker") != expected_ticker:
+        raise ValueError(
+            f"--anchor-base ticker {pack.get('ticker')!r} does not match "
+            f"--anchor ticker {expected_ticker!r}"
+        )
+    return pack
 
 
 def _resolve_ticker(pack: dict, fallback: str) -> str:
@@ -101,6 +125,148 @@ def _extract_multiples(pack: dict, ticker: str) -> dict:
                     value = None
                 break
         out[canonical] = value
+    return out
+
+
+def _safe_first(arr, default=None):
+    """First element of a list, or default if empty/non-list."""
+    return arr[0] if isinstance(arr, list) and arr else default
+
+
+def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict) -> tuple[dict, dict, list[str]]:
+    """Recompute the 5 canonical multiples from a memo-fetch pack.
+
+    Returns (multiples_compute, compute_provenance, warnings).
+    Layer 2 derived metrics: trailingPE / priceToSales / forwardPE pass-through;
+    priceToBook + evEbitda deferred to v2.2.0-l with explicit null + note.
+    """
+    warnings: list[str] = [
+        "trailingPE compute uses latest FY (not TTM); systematic divergence vs yfinance TTM expected during fiscal year"
+    ]
+    out_compute: dict[str, float | None] = {}
+    out_prov: dict[str, dict] = {}
+
+    # Inputs
+    inc = memo_fetch.get("income_statement") or {}
+    ci = memo_fetch.get("company_info") or {}
+    price = memo_fetch.get("current_price")
+    if price is None:
+        price = ci.get("regularMarketPrice")
+    shares = memo_fetch.get("shares_outstanding")
+    if shares is None:
+        shares = ci.get("sharesOutstanding")
+    market_cap = ci.get("marketCap")
+
+    revenue_fy = _safe_first(inc.get("revenue"))
+    net_income_fy = _safe_first(inc.get("net_income"))
+
+    fy_end = _safe_first(((inc.get("_meta") or {}).get("fiscal_year_ends") or []))
+    filings = ((inc.get("_meta") or {}).get("filings_used") or [])
+
+    # trailingPE (FY)
+    if price is None or net_income_fy is None or not shares:
+        out_compute["trailingPE"] = None
+        out_prov["trailingPE"] = {
+            "computed": False,
+            "note": "compute skipped — current_price / net_income[0] / shares_outstanding required",
+        }
+        if price is None:
+            warnings.append("price-based compute skipped: current_price missing")
+        elif net_income_fy is None:
+            warnings.append("trailingPE compute skipped: net_income FY array empty")
+        elif not shares:
+            warnings.append("trailingPE compute skipped: shares_outstanding missing")
+    else:
+        eps_fy = net_income_fy / shares
+        out_compute["trailingPE"] = price / eps_fy if eps_fy != 0 else None
+        out_prov["trailingPE"] = {
+            "numerator_source":   "memo-fetch.current_price",
+            "denominator_source": "memo-fetch.income_statement.net_income[0] / memo-fetch.shares_outstanding",
+            "accession_basis":    [filings[0]] if filings else [],
+            "fiscal_year_end":    fy_end,
+            "computed":           True,
+            "note":               "FY-trailing, not TTM — see ROADMAP §v2.2.0-b §7.3",
+        }
+
+    # priceToSales (FY)
+    if market_cap is None or revenue_fy is None:
+        out_compute["priceToSales"] = None
+        out_prov["priceToSales"] = {
+            "computed": False,
+            "note": "compute skipped — marketCap / revenue[0] required",
+        }
+        if market_cap is None:
+            warnings.append("priceToSales compute skipped: marketCap missing")
+        elif revenue_fy is None:
+            warnings.append("priceToSales compute skipped: revenue FY array empty")
+    else:
+        out_compute["priceToSales"] = market_cap / revenue_fy
+        out_prov["priceToSales"] = {
+            "numerator_source":   "memo-fetch.company_info.marketCap",
+            "denominator_source": "memo-fetch.income_statement.revenue[0]",
+            "accession_basis":    [filings[0]] if filings else [],
+            "fiscal_year_end":    fy_end,
+            "computed":           True,
+        }
+
+    # forwardPE pass-through
+    out_compute["forwardPE"] = direct_multiples.get("forwardPE")
+    out_prov["forwardPE"] = {
+        "computed": False,
+        "note": "pass-through from comps-multiples pack (consensus EPS has no primary source)",
+    }
+
+    # Deferred multiples (v2.2.0-l)
+    for m in DEFERRED_MULTIPLES:
+        out_compute[m] = None
+        out_prov[m] = {
+            "computed": False,
+            "note": (
+                "deferred to v2.2.0-l (memo-fetch missing total_stockholders_equity)"
+                if m == "priceToBook" else
+                "deferred to v2.2.0-l (memo-fetch missing depreciation_amortization)"
+            ),
+        }
+
+    return out_compute, out_prov, warnings
+
+
+def _classify_divergence_alert(pct_diff: float) -> str:
+    """Map |pct_diff| (in %) onto low/medium/high band per divergence-thresholds.md."""
+    abs_pct = abs(pct_diff)
+    if abs_pct <= DIVERGENCE_BAND_LOW * 100:
+        return "low"
+    if abs_pct <= DIVERGENCE_BAND_HIGH * 100:
+        return "medium"
+    return "high"
+
+
+def _compute_divergence(direct: dict, compute: dict, prov: dict) -> dict[str, dict]:
+    """For each multiple, compute abs/pct diff between direct and compute, classify alert.
+    Null in either side → alert n/a with note from compute_provenance.
+    """
+    out: dict[str, dict] = {}
+    for m in MULTIPLES:
+        d_val = direct.get(m)
+        c_val = compute.get(m)
+        if d_val is None or c_val is None:
+            note = (prov.get(m) or {}).get("note") or "compute null; cannot diff"
+            out[m] = {"abs_diff": None, "pct_diff": None, "alert": "n/a", "note": note}
+            continue
+        abs_diff = c_val - d_val
+        if d_val == 0:
+            out[m] = {"abs_diff": abs_diff, "pct_diff": None, "alert": "n/a", "note": "direct value zero — pct_diff undefined"}
+            continue
+        pct_diff = (abs_diff / d_val) * 100.0
+        # forwardPE is pass-through → c_val == d_val → pct_diff == 0; surface as n/a
+        if m == "forwardPE":
+            out[m] = {"abs_diff": 0.0, "pct_diff": 0.0, "alert": "n/a", "note": "pass-through"}
+            continue
+        out[m] = {
+            "abs_diff": abs_diff,
+            "pct_diff": pct_diff,
+            "alert":    _classify_divergence_alert(pct_diff),
+        }
     return out
 
 
@@ -280,28 +446,39 @@ def main() -> int:
         "--rationale-map", type=Path, default=None,
         help="Optional JSON file mapping ticker -> rationale string",
     )
+    parser.add_argument(
+        "--anchor-base", type=Path, default=None,
+        help="Path to anchor's memo-fetch pack JSON (REQUIRED for --mode compute)",
+    )
     args = parser.parse_args()
+
+    # Validate compute-mode arg shape early.
+    if args.mode == "compute" and args.anchor_base is None:
+        parser.error("--mode compute requires --anchor-base")
+    if args.mode == "direct" and args.anchor_base is not None:
+        sys.stderr.write(
+            "[analysis-comps WARN] --anchor-base ignored in --mode direct\n"
+        )
 
     warnings: list[str] = []
 
-    # v2.0.0: only --mode direct is wired; --mode compute is a placeholder.
-    # If a caller explicitly requests compute, warn loudly on stderr, fall
-    # back to direct, and stamp both the actual mode and the requested mode
-    # in _provenance so the audit trail survives the fallback.
     requested_mode = args.mode
     effective_mode = args.mode
-    if requested_mode == "compute":
-        sys.stderr.write(
-            "[analysis-comps WARN] --mode compute not yet implemented in "
-            "v2.0.0; falling back to direct mode\n"
-        )
-        effective_mode = "direct"
 
     # Load anchor
     anchor_pack = _load_pack(args.anchor)
     anchor_ticker = _resolve_ticker(anchor_pack, fallback=args.anchor.stem.upper())
     anchor_multiples = _extract_multiples(anchor_pack, anchor_ticker)
     anchor_source = _provenance_label(anchor_pack, args.anchor)
+
+    # Compute mode: load + validate memo-fetch pack
+    anchor_base = None
+    if effective_mode == "compute":
+        try:
+            anchor_base = _load_memo_fetch_pack(args.anchor_base, anchor_ticker)
+        except (json.JSONDecodeError, ValueError) as exc:
+            sys.stderr.write(f"[analysis-comps ERROR] {exc}\n")
+            return 1
 
     # Load peers
     peer_paths = _parse_peer_paths(args.peers)
@@ -353,11 +530,22 @@ def main() -> int:
     # Ranking across anchor + peers
     ranking = _build_ranking(anchor_ticker, anchor_multiples, peers_out)
 
+    anchor_block: dict = {
+        "ticker": anchor_ticker,
+        "multiples_direct": anchor_multiples,
+    }
+    if effective_mode == "compute":
+        multiples_compute, compute_provenance, compute_warnings = (
+            _compute_multiples_from_memo_fetch(anchor_base, anchor_multiples)
+        )
+        warnings.extend(compute_warnings)
+        divergence = _compute_divergence(anchor_multiples, multiples_compute, compute_provenance)
+        anchor_block["multiples_compute"] = multiples_compute
+        anchor_block["divergence"] = divergence
+        anchor_block["compute_provenance"] = compute_provenance
+
     payload = {
-        "anchor": {
-            "ticker": anchor_ticker,
-            "multiples_direct": anchor_multiples,
-        },
+        "anchor": anchor_block,
         "peers": peers_out,
         "statistics": stats,
         "anchor_delta": anchor_delta,
@@ -365,6 +553,10 @@ def main() -> int:
         "_provenance": {
             "skill":              "analysis-comps",
             "anchor_data_source": anchor_source,
+            **(
+                {"anchor_base_source": _provenance_label(anchor_base, args.anchor_base)}
+                if effective_mode == "compute" else {}
+            ),
             "peer_data_sources":  [src for _t, _m, src in peer_packs],
             "computed_at":        datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "io":                 "none",

@@ -481,3 +481,361 @@ def test_pure_compute_imports():
     imports = _collect_all_imports(COMPS_SCRIPT)
     leaked = imports & FORBIDDEN_IMPORTS
     assert not leaked, f"comps_compute.py imports forbidden modules: {leaked}"
+
+
+# ---------------------------------------------------------------------------
+# Compute mode — argparse + memo-fetch loader
+# ---------------------------------------------------------------------------
+
+
+def _anchor_base_arg(fixtures_dir):
+    return str(fixtures_dir / "comps_anchor_aapl_memo_fetch.json")
+
+
+def test_compute_mode_requires_anchor_base(runner, fixtures_dir):
+    """--mode compute without --anchor-base must exit with helpful error."""
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 2, f"expected exit 2, got {res.returncode}"
+    assert "anchor-base" in res.stderr.lower()
+
+
+def test_direct_mode_warns_on_unused_anchor_base(runner, fixtures_dir):
+    """--mode direct --anchor-base x.json: warn, continue with direct."""
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "direct",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", _anchor_base_arg(fixtures_dir),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    assert "ignored" in res.stderr.lower() or "direct" in res.stderr.lower()
+    payload = json.loads(res.stdout)
+    assert "multiples_direct" in payload["anchor"]
+    assert "multiples_compute" not in payload["anchor"]
+
+
+def test_anchor_base_wrong_pack_errors(runner, tmp_path, fixtures_dir):
+    """--anchor-base file with pack != 'memo-fetch' → exit 1."""
+    bad = tmp_path / "wrong.json"
+    bad.write_text(json.dumps({"pack": "snapshot", "ticker": "AAPL"}))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", str(bad),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 1
+    assert "memo-fetch" in res.stderr.lower()
+
+
+def test_anchor_base_ticker_mismatch_errors(runner, tmp_path, fixtures_dir):
+    """--anchor ticker AAPL, --anchor-base ticker MSFT → exit 1."""
+    mismatch = tmp_path / "mismatch.json"
+    mismatch.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "MSFT",
+        "company_info": {}, "current_price": 0.0, "shares_outstanding": 1,
+        "income_statement": {"revenue": [1.0], "net_income": [1.0]},
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", str(mismatch),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 1
+    assert "ticker" in res.stderr.lower()
+
+
+# ---------------------------------------------------------------------------
+# Compute mode — multiples recompute
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def compute_payload(runner, fixtures_dir):
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", _anchor_base_arg(fixtures_dir),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    return json.loads(res.stdout)
+
+
+def test_compute_mode_recomputes_trailingPE_FY(compute_payload):
+    """trailingPE = current_price / (net_income[0] / shares_outstanding) — FY, not TTM."""
+    actual = compute_payload["anchor"]["multiples_compute"]["trailingPE"]
+    expected = 280.14 / (112010000000.0 / 14667688000)  # 36.6817
+    assert actual == pytest.approx(expected, rel=1e-4)
+
+
+def test_compute_mode_recomputes_priceToSales_FY(compute_payload):
+    """priceToSales = marketCap / revenue[0] — FY."""
+    actual = compute_payload["anchor"]["multiples_compute"]["priceToSales"]
+    expected = 4109006274560 / 416161000000.0  # 9.8736
+    assert actual == pytest.approx(expected, rel=1e-4)
+
+
+def test_compute_mode_forwardPE_passthrough(compute_payload):
+    """forwardPE pass-through from --anchor; computed:false in provenance."""
+    direct_fwd = compute_payload["anchor"]["multiples_direct"]["forwardPE"]
+    compute_fwd = compute_payload["anchor"]["multiples_compute"]["forwardPE"]
+    assert compute_fwd == direct_fwd
+    assert compute_payload["anchor"]["compute_provenance"]["forwardPE"]["computed"] is False
+
+
+def test_compute_mode_priceToBook_emits_null(compute_payload):
+    """priceToBook deferred until v2.2.0-l (memo-fetch lacks total_stockholders_equity)."""
+    assert compute_payload["anchor"]["multiples_compute"]["priceToBook"] is None
+    assert compute_payload["anchor"]["compute_provenance"]["priceToBook"]["computed"] is False
+    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["priceToBook"]["note"]
+
+
+def test_compute_mode_evEbitda_emits_null(compute_payload):
+    """evEbitda deferred until v2.2.0-l (memo-fetch lacks D&A)."""
+    assert compute_payload["anchor"]["multiples_compute"]["evEbitda"] is None
+    assert compute_payload["anchor"]["compute_provenance"]["evEbitda"]["computed"] is False
+    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["evEbitda"]["note"]
+
+
+def test_compute_provenance_includes_fiscal_year_end(compute_payload):
+    """Each computed multiple records FY end date + accession_basis."""
+    prov = compute_payload["anchor"]["compute_provenance"]
+    for m in ("trailingPE", "priceToSales"):
+        assert prov[m]["computed"] is True
+        assert prov[m]["fiscal_year_end"] == "2025-09-27"
+        assert "10-K filed 2025-10-31" in prov[m]["accession_basis"]
+
+
+# ---------------------------------------------------------------------------
+# Compute mode — divergence
+# ---------------------------------------------------------------------------
+
+
+def test_divergence_block_present(compute_payload):
+    div = compute_payload["anchor"]["divergence"]
+    for m in ("trailingPE", "forwardPE", "priceToSales", "priceToBook", "evEbitda"):
+        assert m in div
+
+
+def test_divergence_alert_high_for_trailing_pe_aapl(compute_payload):
+    """AAPL: direct=28.5 (fixture) vs compute=36.68 → pct_diff ≈ 28.7% → high."""
+    div = compute_payload["anchor"]["divergence"]["trailingPE"]
+    assert div["alert"] == "high"
+    assert div["pct_diff"] == pytest.approx(28.7, abs=0.5)
+
+
+def test_divergence_alert_n_a_for_forwardPE(compute_payload):
+    """forwardPE pass-through → divergence is exactly 0; alert n/a."""
+    div = compute_payload["anchor"]["divergence"]["forwardPE"]
+    assert div["alert"] == "n/a"
+    assert "pass-through" in div["note"]
+
+
+def test_divergence_alert_n_a_for_deferred(compute_payload):
+    """priceToBook + evEbitda compute=null → alert n/a + v2.2.0-l note."""
+    for m in ("priceToBook", "evEbitda"):
+        div = compute_payload["anchor"]["divergence"][m]
+        assert div["alert"] == "n/a"
+        assert "v2.2.0-l" in div["note"]
+
+
+def test_divergence_alert_low_at_5_percent_boundary(tmp_path, runner):
+    """Synthetic anchor: direct=10.0, compute=10.5 → pct_diff=5.0% → low (≤ inclusive)."""
+    anchor = tmp_path / "anchor.json"
+    anchor.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": "X",
+        "info": {"X": {"trailingPE": 10.0, "forwardPE": 10.0, "priceToSales": 1.0, "priceToBook": 1.0, "enterpriseToEbitda": 1.0}},
+        "_provenance": {"skill": "test"}
+    }))
+    base = tmp_path / "base.json"
+    # net_income / shares = 10.5 EPS; price 110.25 → trailingPE compute = 10.5
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "X",
+        "company_info": {"regularMarketPrice": 110.25, "sharesOutstanding": 1, "marketCap": 110.25},
+        "current_price": 110.25, "shares_outstanding": 1,
+        "income_statement": {"revenue": [105.0], "net_income": [10.5], "_meta": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}},
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    peer = tmp_path / "peer.json"
+    peer.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": "Y",
+        "info": {"Y": {"trailingPE": 12.0}}, "_provenance": {"skill": "test"}
+    }))
+    res = runner(COMPS_SCRIPT, "--mode", "compute",
+                 "--anchor", str(anchor), "--anchor-base", str(base), "--peers", str(peer))
+    payload = json.loads(res.stdout)
+    div = payload["anchor"]["divergence"]["trailingPE"]
+    assert div["pct_diff"] == pytest.approx(5.0, abs=0.01)
+    assert div["alert"] == "low"
+
+
+def test_divergence_alert_medium_at_15_percent_boundary(tmp_path, runner):
+    """direct=10.0, compute=11.5 → pct_diff=15.0% → medium (> 15% is high)."""
+    anchor = tmp_path / "anchor.json"
+    anchor.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": "X",
+        "info": {"X": {"trailingPE": 10.0, "forwardPE": 10.0, "priceToSales": 1.0, "priceToBook": 1.0, "enterpriseToEbitda": 1.0}},
+        "_provenance": {"skill": "test"}
+    }))
+    base = tmp_path / "base.json"
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "X",
+        "company_info": {"regularMarketPrice": 11.5, "sharesOutstanding": 1, "marketCap": 11.5},
+        "current_price": 11.5, "shares_outstanding": 1,
+        "income_statement": {"revenue": [1.0], "net_income": [1.0], "_meta": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}},
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    peer = tmp_path / "peer.json"
+    peer.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": "Y",
+        "info": {"Y": {"trailingPE": 12.0}}, "_provenance": {"skill": "test"}
+    }))
+    res = runner(COMPS_SCRIPT, "--mode", "compute",
+                 "--anchor", str(anchor), "--anchor-base", str(base), "--peers", str(peer))
+    payload = json.loads(res.stdout)
+    div = payload["anchor"]["divergence"]["trailingPE"]
+    assert div["pct_diff"] == pytest.approx(15.0, abs=0.01)
+    assert div["alert"] == "medium"
+
+
+# ---------------------------------------------------------------------------
+# Compute mode — missing-data guards (spec §8.2)
+# ---------------------------------------------------------------------------
+
+
+def test_compute_mode_skips_trailingPE_when_net_income_empty(tmp_path, runner, fixtures_dir):
+    """net_income[] empty → trailingPE compute null + warning."""
+    base = tmp_path / "base.json"
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "AAPL",
+        "company_info": {"regularMarketPrice": 280.14, "sharesOutstanding": 14667688000, "marketCap": 4109006274560},
+        "current_price": 280.14, "shares_outstanding": 14667688000,
+        "income_statement": {
+            "revenue": [416161000000.0],
+            "net_income": [],
+            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}
+        },
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", str(base),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["anchor"]["multiples_compute"]["trailingPE"] is None
+    assert payload["anchor"]["divergence"]["trailingPE"]["alert"] == "n/a"
+    assert any("net_income" in w for w in payload["_provenance"]["warnings"])
+
+
+def test_compute_mode_skips_priceToSales_when_revenue_empty(tmp_path, runner, fixtures_dir):
+    """revenue[] empty → priceToSales compute null + warning."""
+    base = tmp_path / "base.json"
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "AAPL",
+        "company_info": {"regularMarketPrice": 280.14, "sharesOutstanding": 14667688000, "marketCap": 4109006274560},
+        "current_price": 280.14, "shares_outstanding": 14667688000,
+        "income_statement": {
+            "revenue": [],
+            "net_income": [112010000000.0],
+            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K filed 2025-10-31"]}
+        },
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", str(base),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["anchor"]["multiples_compute"]["priceToSales"] is None
+    assert payload["anchor"]["divergence"]["priceToSales"]["alert"] == "n/a"
+    assert any("revenue" in w for w in payload["_provenance"]["warnings"])
+
+
+def test_compute_mode_handles_negative_net_income(tmp_path, runner, fixtures_dir):
+    """net_income[0] < 0 → trailingPE compute negative; divergence still computed."""
+    base = tmp_path / "base.json"
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "AAPL",
+        "company_info": {"regularMarketPrice": 100.0, "sharesOutstanding": 1000000000, "marketCap": 100000000000},
+        "current_price": 100.0, "shares_outstanding": 1000000000,
+        "income_statement": {
+            "revenue": [50000000000.0],
+            "net_income": [-5000000000.0],
+            "_meta": {"fiscal_year_ends": ["2025-09-27"], "filings_used": ["10-K"]}
+        },
+        "balance_sheet": {}, "_provenance": {}
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--anchor-base", str(base),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    pe = payload["anchor"]["multiples_compute"]["trailingPE"]
+    assert pe is not None
+    assert pe < 0  # 100 / (-5/1) = -20
+    # divergence is still computed (analyst interprets the negative value)
+    div = payload["anchor"]["divergence"]["trailingPE"]
+    assert div["alert"] in {"low", "medium", "high"}
+
+
+# ---------------------------------------------------------------------------
+# Compute mode — provenance + warnings
+# ---------------------------------------------------------------------------
+
+
+def test_provenance_anchor_base_source_present_only_in_compute(compute_payload, baseline_payload):
+    """_provenance.anchor_base_source is populated in compute mode, absent in direct mode."""
+    assert "anchor_base_source" in compute_payload["_provenance"]
+    assert "memo-fetch" in compute_payload["_provenance"]["anchor_base_source"]
+    assert "anchor_base_source" not in baseline_payload["_provenance"]
+
+
+def test_warnings_carry_FY_vs_TTM_definitional_note(compute_payload):
+    """Every compute-mode run must carry the FY-not-TTM systematic-divergence warning."""
+    warnings = compute_payload["_provenance"]["warnings"]
+    matched = [w for w in warnings if "TTM" in w and "FY" in w]
+    assert matched, f"FY-vs-TTM warning missing from warnings: {warnings}"
+
+
+# ---------------------------------------------------------------------------
+# Direct-mode byte-equal regression (spec §10.1)
+# ---------------------------------------------------------------------------
+
+
+def test_direct_mode_output_shape_v2_0_0_locked(baseline_payload):
+    """Direct mode output must have exactly these top-level + anchor keys.
+    Locks the v2.0.0 shape (post-Phase-1 rename) against future regression.
+    """
+    assert set(baseline_payload.keys()) == {"anchor", "peers", "statistics", "anchor_delta", "ranking", "_provenance"}
+    # Anchor in direct mode: ONLY ticker + multiples_direct (no compute keys leak)
+    assert set(baseline_payload["anchor"].keys()) == {"ticker", "multiples_direct"}
+    assert "multiples_compute" not in baseline_payload["anchor"]
+    assert "divergence" not in baseline_payload["anchor"]
+    assert "compute_provenance" not in baseline_payload["anchor"]
+    # Direct-mode _provenance shape — no anchor_base_source key
+    assert "anchor_base_source" not in baseline_payload["_provenance"]
+    assert baseline_payload["_provenance"]["mode"] == "direct"
