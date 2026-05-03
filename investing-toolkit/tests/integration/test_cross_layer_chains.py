@@ -211,7 +211,7 @@ def test_chain_comps_to_comps_compute(tmp_path):
     # Critical check: anchor multiples must be NON-None for at least PE/PB
     # (the fixture has trailingPE=35.46, priceToBook=46.71 for AAPL).
     anchor_block = out.get("anchor") or {}
-    anchor_multiples = anchor_block.get("multiples") or {}
+    anchor_multiples = anchor_block.get("multiples_direct") or {}
     pe = anchor_multiples.get("trailingPE")
     pb = anchor_multiples.get("priceToBook")
 
@@ -339,7 +339,7 @@ def test_chain_kr_comps_to_comps_compute(tmp_path):
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
     anchor_block = out.get("anchor") or {}
-    multiples = anchor_block.get("multiples") or {}
+    multiples = anchor_block.get("multiples_direct") or {}
     non_none = {k: v for k, v in multiples.items() if v is not None}
     assert non_none, (
         f"data-kr comps extracted all-None for {anchor_ticker}: {multiples}"
@@ -412,7 +412,7 @@ def test_chain_cn_comps_to_comps_compute(tmp_path):
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
     anchor_block = out.get("anchor") or {}
-    multiples = anchor_block.get("multiples") or {}
+    multiples = anchor_block.get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-cn comps all-None for {anchor_ticker}: {multiples}"
     )
@@ -489,7 +489,7 @@ def test_chain_jp_comps_to_comps_compute(tmp_path):
         "--peers", str(peer_file),
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    multiples = (out.get("anchor") or {}).get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-jp comps all-None for {anchor_ticker}: {multiples}"
     )
@@ -560,7 +560,7 @@ def test_chain_tw_comps_to_comps_compute(tmp_path):
         "--peers", str(peer_file),
     ])
     assert rc == 0, f"exit {rc}\nstderr: {stderr}"
-    multiples = (out.get("anchor") or {}).get("multiples") or {}
+    multiples = (out.get("anchor") or {}).get("multiples_direct") or {}
     assert any(v is not None for v in multiples.values()), (
         f"data-tw comps all-None for {anchor_ticker}: {multiples}"
     )
@@ -1142,3 +1142,449 @@ def test_chain_regimepack_to_macroregime():
         f"find DGS10/T10YIE. data_quality.missing: "
         f"{us.get('data_quality', {}).get('missing')}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Chain US — comps_compute dual input (v2.2.0-b)
+# ---------------------------------------------------------------------------
+
+
+def test_chain_us_comps_compute_dual_input(tmp_path):
+    """Chain: data-us memo-fetch fixture + comps-multiples fixture →
+    analysis-comps --mode compute → JSON with divergence + compute_provenance.
+
+    Validates that real Layer-1 fixtures (not synthetic) flow through Layer-2
+    compute mode without shape adapters.
+    """
+    anchor_comps_fixture = FIXTURES / "data-us-comps-multiples-sample.json"
+    anchor_base_fixture  = FIXTURES / "data-us-memo-fetch-sample.json"
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+
+    if not anchor_comps_fixture.exists() or not anchor_base_fixture.exists():
+        pytest.skip("missing fixture(s)")
+    if not script.exists():
+        pytest.skip("missing comps_compute.py script")
+
+    # Slice the multi-ticker comps fixture to a single-ticker anchor file so
+    # _resolve_ticker can resolve unambiguously (same pattern as
+    # test_chain_comps_to_comps_compute above).
+    pack = json.loads(anchor_comps_fixture.read_text())
+    tickers = list((pack.get("tickers") or {}).keys())
+    if not tickers:
+        pytest.skip("comps fixture has no tickers")
+    anchor_ticker = tickers[0]
+    anchor_payload = {anchor_ticker: pack["tickers"][anchor_ticker]}
+    anchor_file = tmp_path / f"{anchor_ticker}-anchor-comps.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "tickers": anchor_payload,
+        "info": anchor_payload,  # T1 canonical alias
+    }))
+
+    # Use second ticker as peer if available; omit peers if only one ticker.
+    peer_arg = []
+    if len(tickers) >= 2:
+        peer_ticker = tickers[1]
+        peer_payload = {peer_ticker: pack["tickers"][peer_ticker]}
+        peer_file = tmp_path / f"{peer_ticker}-peer-comps.json"
+        peer_file.write_text(json.dumps({
+            "pack": "comps-multiples",
+            "ticker": peer_ticker,
+            "tickers": peer_payload,
+            "info": peer_payload,
+        }))
+        peer_arg = ["--peers", str(peer_file)]
+
+    rc, out, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_base_fixture),
+        *peer_arg,
+    ])
+
+    assert rc == 0, (
+        f"comps_compute exit {rc}\nstderr: {stderr}\nstdout: {out}"
+    )
+
+    # Compute-mode shape contract (spec §10)
+    anchor = out.get("anchor") or {}
+    assert "multiples_direct" in anchor, (
+        f"anchor.multiples_direct missing — compute mode failed to preserve direct multiples. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "multiples_compute" in anchor, (
+        f"anchor.multiples_compute missing — _compute_multiples_from_memo_fetch did not run. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "divergence" in anchor, (
+        f"anchor.divergence missing — _compute_divergence did not run. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+    assert "compute_provenance" in anchor, (
+        f"anchor.compute_provenance missing — provenance block not attached. "
+        f"anchor keys: {list(anchor.keys())}"
+    )
+
+    # All 5 multiples present in divergence with valid alert levels
+    divergence = anchor["divergence"]
+    for m in ("trailingPE", "forwardPE", "priceToSales", "priceToBook", "evEbitda"):
+        assert m in divergence, f"divergence missing multiple: {m}"
+        assert divergence[m]["alert"] in {"low", "medium", "high", "n/a"}, (
+            f"divergence[{m}].alert is invalid: {divergence[m]['alert']!r}"
+        )
+
+    # Compute provenance carries spec contract (deferred multiples carry v2.2.0-l note)
+    prov = anchor["compute_provenance"]
+    assert prov["forwardPE"]["computed"] is False, (
+        f"forwardPE.computed should be False (deferred); got {prov['forwardPE']['computed']!r}"
+    )
+    assert prov["priceToBook"]["computed"] is False, (
+        f"priceToBook.computed should be False (deferred); got {prov['priceToBook']['computed']!r}"
+    )
+    assert "v2.2.0-l" in (prov["priceToBook"].get("note") or ""), (
+        f"priceToBook provenance note missing 'v2.2.0-l'; note={prov['priceToBook'].get('note')!r}"
+    )
+    assert prov["evEbitda"]["computed"] is False, (
+        f"evEbitda.computed should be False (deferred); got {prov['evEbitda']['computed']!r}"
+    )
+    assert "v2.2.0-l" in (prov["evEbitda"].get("note") or ""), (
+        f"evEbitda provenance note missing 'v2.2.0-l'; note={prov['evEbitda'].get('note')!r}"
+    )
+
+    # Audit trail (the whole point of compute mode) — must be non-null/non-empty
+    trailing = prov["trailingPE"]
+    assert trailing["computed"] is True
+    assert trailing["fiscal_year_end"] is not None, (
+        "trailingPE fiscal_year_end must be populated from net_income._meta concept; "
+        "got None — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert trailing["accession_basis"], (
+        "trailingPE accession_basis must include the 10-K reference for net_income; "
+        "got empty — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert "10-K" in trailing["accession_basis"][0]
+
+    p2s = prov["priceToSales"]
+    assert p2s["computed"] is True
+    assert p2s["fiscal_year_end"] is not None, (
+        "priceToSales fiscal_year_end must be populated from revenue._meta concept; "
+        "got None — production memo-fetch uses per-concept _meta nesting"
+    )
+    assert p2s["accession_basis"], (
+        "priceToSales accession_basis must include the 10-K reference for revenue; "
+        "got empty — production memo-fetch uses per-concept _meta nesting"
+    )
+
+    # Top-level provenance: compute mode adds anchor_base_source
+    top_prov = out.get("_provenance") or {}
+    assert top_prov.get("mode") == "compute", (
+        f"_provenance.mode != 'compute'; got {top_prov.get('mode')!r}"
+    )
+    assert "anchor_base_source" in top_prov, (
+        f"_provenance.anchor_base_source missing — compute-mode provenance incomplete. "
+        f"_provenance keys: {list(top_prov.keys())}"
+    )
+    assert "memo-fetch" in top_prov["anchor_base_source"], (
+        f"anchor_base_source does not reference memo-fetch; "
+        f"got: {top_prov['anchor_base_source']!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tier 1 test-discipline additions (v2.2.0-b follow-up)
+# ---------------------------------------------------------------------------
+
+
+def test_production_memo_fetch_shape_compatible_with_compute_mode():
+    """Lock the contract surface between data-us memo-fetch (Layer 1) and
+    analysis-comps compute mode (Layer 2). Catches field renames / removals
+    in memo-fetch that would cause silent null emission in compute_provenance.
+
+    If this test fails, a recent data-us change removed or renamed a field
+    that compute mode reads. Fix: update pack.py to restore the field, or
+    update comps_compute.py to read the new field name AND update this test.
+    """
+    fixture = json.loads(
+        (ROOT / "tests/data/fixtures/data-us-memo-fetch-sample.json").read_text()
+    )
+
+    # Top-level: compute mode reads either current_price OR company_info.regularMarketPrice
+    assert (
+        fixture.get("current_price") is not None
+        or (fixture.get("company_info") or {}).get("regularMarketPrice") is not None
+    ), "memo-fetch must expose current_price (or company_info.regularMarketPrice)"
+
+    # Top-level: shares_outstanding (canonical alias)
+    assert (
+        fixture.get("shares_outstanding") is not None
+        or (fixture.get("company_info") or {}).get("sharesOutstanding") is not None
+    ), "memo-fetch must expose shares_outstanding (or company_info.sharesOutstanding)"
+
+    # company_info.marketCap drives priceToSales numerator
+    assert (fixture.get("company_info") or {}).get("marketCap") is not None, (
+        "memo-fetch must expose company_info.marketCap"
+    )
+
+    # income_statement FY arrays drive trailingPE / priceToSales denominators
+    inc = fixture["income_statement"]
+    assert inc.get("revenue") and inc["revenue"][0] is not None, "income_statement.revenue[0] required"
+    assert inc.get("net_income") and inc["net_income"][0] is not None, "income_statement.net_income[0] required"
+
+    # Concept-nested _meta drives compute_provenance accession_basis (per C1 fix)
+    meta = inc.get("_meta") or {}
+    for concept in ("revenue", "net_income"):
+        assert concept in meta, f"income_statement._meta.{concept} required for compute_provenance routing"
+        cmeta = meta[concept]
+        assert cmeta.get("fiscal_year_ends"), f"_meta.{concept}.fiscal_year_ends required"
+        assert cmeta.get("filings_used"), f"_meta.{concept}.filings_used required"
+
+
+def test_real_aapl_compute_multiples_in_plausible_bands(tmp_path):
+    """Run compute mode against the production memo-fetch fixture for AAPL;
+    assert the recomputed multiples are in historically plausible bands.
+    Catches unit / scale drift before users see nonsense numbers in memos.
+
+    AAPL FY-trailing PE has historically lived in roughly 10-50 (post-2010);
+    priceToSales 3-12. The outer bands chosen here only fire when the
+    magnitude is wildly off (e.g. wrong unit, missing decimal shift).
+    """
+    script = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+    anchor_comps = FIXTURES / "data-us-comps-multiples-sample.json"
+    anchor_memo = FIXTURES / "data-us-memo-fetch-sample.json"
+
+    if not anchor_comps.exists() or not anchor_memo.exists() or not script.exists():
+        pytest.skip("missing fixture or script")
+
+    # Build a single-ticker anchor file (same pattern as test_chain_us_comps_compute_dual_input)
+    pack = json.loads(anchor_comps.read_text())
+    tickers = list((pack.get("tickers") or {}).keys())
+    if not tickers:
+        pytest.skip("comps fixture has no tickers")
+    anchor_ticker = tickers[0]  # AAPL
+    anchor_payload = {anchor_ticker: pack["tickers"][anchor_ticker]}
+    anchor_file = tmp_path / f"{anchor_ticker}-anchor.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "tickers": anchor_payload,
+        "info": anchor_payload,
+    }))
+
+    # Use second ticker as peer; dedup will skip anchor if passed again
+    peer_comps = tmp_path / "peer.json"
+    if len(tickers) >= 2:
+        peer_ticker = tickers[1]
+        peer_payload = {peer_ticker: pack["tickers"][peer_ticker]}
+        peer_comps.write_text(json.dumps({
+            "pack": "comps-multiples",
+            "ticker": peer_ticker,
+            "tickers": peer_payload,
+            "info": peer_payload,
+        }))
+    else:
+        # fallback: pass anchor as peer (dedup will warn, but compute still runs)
+        peer_comps.write_text(anchor_file.read_text())
+
+    rc, payload, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_memo),
+        "--peers", str(peer_comps),
+    ])
+    assert rc == 0, f"stderr: {stderr}"
+
+    pe = payload["anchor"]["multiples_compute"]["trailingPE"]
+    ps = payload["anchor"]["multiples_compute"]["priceToSales"]
+
+    # AAPL FY-trailing PE has historically lived in roughly 10-50 (post-2010);
+    # priceToSales 3-12. Choose generous outer bands so this test only fires
+    # when the magnitude is wildly off (e.g. wrong unit, missing decimal shift).
+    assert pe is not None, "trailingPE compute returned None — check memo-fetch net_income / price fields"
+    assert ps is not None, "priceToSales compute returned None — check memo-fetch revenue / marketCap fields"
+    assert 5 < pe < 100, f"trailingPE {pe} outside plausible AAPL FY band (5, 100)"
+    assert 1 < ps < 20, f"priceToSales {ps} outside plausible AAPL FY band (1, 20)"
+
+
+# ---------------------------------------------------------------------------
+# G — Slim fixture parity guard (v2.2.0-b Tier 2)
+# ---------------------------------------------------------------------------
+
+
+def test_slim_memo_fetch_fixture_is_production_subset():
+    """The slim memo-fetch fixture used by analysis-comps unit tests
+    (tests/analysis/fixtures/comps_anchor_aapl_memo_fetch.json) must be a
+    structural subset of the production memo-fetch fixture
+    (tests/data/fixtures/data-us-memo-fetch-sample.json) — same nesting,
+    same key paths. Catches the v2.2.0-b C1 bug class: slim fixture
+    diverging from production shape and masking real-data bugs.
+    """
+    slim = json.loads(
+        (ROOT / "tests/analysis/fixtures/comps_anchor_aapl_memo_fetch.json").read_text()
+    )
+    prod = json.loads(
+        (ROOT / "tests/data/fixtures/data-us-memo-fetch-sample.json").read_text()
+    )
+
+    def walk(obj, path=()):
+        """Yield (path, value) for every leaf, plus dict-key paths."""
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k == "_provenance":
+                    continue  # provenance details legitimately differ
+                yield from walk(v, path + (k,))
+        elif isinstance(obj, list):
+            # For lists, only walk the first element if it's a dict — array shape,
+            # not array contents.
+            if obj and isinstance(obj[0], dict):
+                yield from walk(obj[0], path + ("[0]",))
+            else:
+                yield (path, "list")
+        else:
+            yield (path, type(obj).__name__)
+
+    def has_path(d, path):
+        cur = d
+        for p in path:
+            if p == "[0]":
+                if not isinstance(cur, list) or not cur:
+                    return False
+                cur = cur[0]
+            elif isinstance(cur, dict) and p in cur:
+                cur = cur[p]
+            else:
+                return False
+        return True
+
+    missing = []
+    for path, _ in walk(slim):
+        if not has_path(prod, path):
+            missing.append(".".join(str(p) for p in path))
+
+    assert not missing, (
+        f"Slim fixture has paths absent from production fixture (drift detected): {missing}\n"
+        f"This is the C1-class bug. Either regenerate the slim fixture from a real "
+        f"data-us memo-fetch run, or update production fixture if it legitimately "
+        f"lost the field."
+    )
+
+
+# ---------------------------------------------------------------------------
+# E — Cross-country compute smoke (v2.2.0-b Tier 2, honest about gaps)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("country,expected_status", [
+    ("us", "full_compute"),    # baseline — trailingPE computed=True + non-empty accession_basis
+    ("jp", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+    ("tw", "crash"),           # memo-fetch top-level key is _pack not pack → script exits non-zero
+    ("kr", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+    ("cn", "schema_mismatch"), # trailingPE computed=True but filings_used=[] → accession_basis empty
+])
+def test_cross_country_compute_smoke(country, expected_status, tmp_path):
+    """Document each country's memo-fetch compatibility with --mode compute.
+
+    v2.2.0-b is US-only by design (per spec §13); this test makes cross-country
+    gaps visible so v2.2.0-l onwards has a baseline. NOT an assertion that
+    cross-country works — an assertion of CURRENT BEHAVIOR.
+
+    expected_status semantics:
+      - "full_compute":    trailingPE compute_provenance.computed==True AND
+                           accession_basis non-empty (primary-source audit trail
+                           present — the whole point of --mode compute).
+      - "schema_mismatch": script exits 0 but compute is incomplete or
+                           accession_basis is empty (memo-fetch shape partially
+                           compatible but lacks filings_used / pack key mismatch).
+      - "crash":           script exits non-zero (memo-fetch shape so different
+                           that the loader rejects it). Future per-country PRs
+                           (v2.2.0-l onwards) will fix the crash and flip to
+                           schema_mismatch, then full_compute once filings_used
+                           is populated for that country.
+
+    Current state (2026-05-03):
+      US  → full_compute  (US memo-fetch has filings_used populated from SEC EDGAR)
+      JP  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+      TW  → crash         (top-level pack key is _pack, not pack; loader rejects)
+      KR  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+      CN  → schema_mismatch (yfinance-based, filings_used=[]; trailingPE still computed)
+    """
+    anchor_comps = FIXTURES / f"data-{country}-comps-multiples-sample.json"
+    anchor_memo  = FIXTURES / f"data-{country}-memo-fetch-sample.json"
+    script       = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+
+    if not anchor_comps.exists() or not anchor_memo.exists():
+        pytest.skip(f"country {country} fixtures not present")
+    if not script.exists():
+        pytest.skip("missing comps_compute.py script")
+
+    # Build a single-ticker anchor file and a minimal peer file from the
+    # comps-multiples fixture (same pattern as the existing chain tests above).
+    pack = json.loads(anchor_comps.read_text())
+    info = pack.get("info") or {}
+    tickers = list(info.keys())
+    if len(tickers) < 2:
+        pytest.skip(f"country {country} comps fixture needs >=2 tickers")
+
+    anchor_ticker, peer_ticker = tickers[0], tickers[1]
+    anchor_file = tmp_path / f"{anchor_ticker.replace('.', '_')}-anchor.json"
+    peer_file   = tmp_path / f"{peer_ticker.replace('.', '_')}-peer.json"
+    anchor_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": anchor_ticker,
+        "info": {anchor_ticker: info[anchor_ticker]},
+    }))
+    peer_file.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "ticker": peer_ticker,
+        "info": {peer_ticker: info[peer_ticker]},
+    }))
+
+    rc, out, stderr = _run_layer2(script, [
+        "--mode", "compute",
+        "--anchor", str(anchor_file),
+        "--anchor-base", str(anchor_memo),
+        "--peers", str(peer_file),
+    ])
+
+    if expected_status == "crash":
+        assert rc != 0, (
+            f"Expected {country} compute mode to crash (exit non-zero) due to "
+            f"memo-fetch shape rejection (e.g. pack key mismatch), but exit was 0. "
+            f"If the country's loader was fixed, update expected_status to "
+            f"'schema_mismatch' or 'full_compute' as appropriate."
+        )
+        return
+
+    assert rc == 0, (
+        f"Compute mode crashed on {country} (expected {expected_status}). "
+        f"If this is a new regression, investigate the memo-fetch loader. "
+        f"stderr: {stderr[:500]}"
+    )
+
+    pe_prov      = out["anchor"]["compute_provenance"]["trailingPE"]
+    pe_computed  = pe_prov["computed"]
+    pe_accession = pe_prov.get("accession_basis", [])
+
+    if expected_status == "full_compute":
+        assert pe_computed is True, (
+            f"{country}: trailingPE compute_provenance.computed expected True, got {pe_computed}. "
+            f"prov={pe_prov}"
+        )
+        assert pe_accession, (
+            f"{country}: accession_basis is empty — full_compute requires a non-empty "
+            f"filings_used chain (10-K / EDGAR reference). "
+            f"If this country now has filings_used populated, this test should pass; "
+            f"otherwise re-classify as 'schema_mismatch' in the parametrize list."
+        )
+    elif expected_status == "schema_mismatch":
+        # trailingPE may compute (computed=True) but accession_basis is empty
+        # because the country's memo-fetch uses yfinance and does not populate
+        # filings_used. Document the state without asserting it's wrong.
+        assert pe_computed in (True, False), (
+            f"{country}: unexpected pe_computed value {pe_computed!r}"
+        )
+        assert not pe_accession, (
+            f"{country}: accession_basis unexpectedly non-empty ({pe_accession}). "
+            f"This country may be ready for 'full_compute' — update the parametrize list "
+            f"once verified across a real run."
+        )

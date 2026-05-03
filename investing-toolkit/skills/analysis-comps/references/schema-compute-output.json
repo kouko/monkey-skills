@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "investing-toolkit/skills/analysis-comps/references/schema-compute-output.json",
+  "title": "analysis-comps --mode compute output",
+  "description": "Output JSON shape of comps_compute.py --mode compute. See spec §10.",
+  "type": "object",
+  "required": ["anchor", "peers", "statistics", "anchor_delta", "ranking", "_provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "anchor": {
+      "type": "object",
+      "required": ["ticker", "multiples_direct", "multiples_compute", "divergence", "compute_provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "ticker": {"type": "string"},
+        "multiples_direct": {"$ref": "#/$defs/multiples_block"},
+        "multiples_compute": {"$ref": "#/$defs/multiples_block_nullable"},
+        "divergence": {"$ref": "#/$defs/divergence_block"},
+        "compute_provenance": {"$ref": "#/$defs/compute_provenance_block"}
+      }
+    },
+    "peers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ticker", "multiples", "rationale"],
+        "properties": {
+          "ticker": {"type": "string"},
+          "multiples": {"$ref": "#/$defs/multiples_block"},
+          "rationale": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "statistics": {"type": "object"},
+    "anchor_delta": {"type": "object"},
+    "ranking": {"type": "array"},
+    "_provenance": {
+      "type": "object",
+      "required": ["skill", "anchor_data_source", "anchor_base_source", "peer_data_sources", "computed_at", "io", "mode", "requested_mode", "warnings"],
+      "properties": {
+        "skill": {"const": "analysis-comps"},
+        "anchor_data_source": {"type": "string"},
+        "anchor_base_source": {"type": "string"},
+        "peer_data_sources": {"type": "array", "items": {"type": "string"}},
+        "computed_at": {"type": "string"},
+        "io": {"const": "none"},
+        "mode": {"const": "compute"},
+        "requested_mode": {"type": "string"},
+        "warnings": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "$defs": {
+    "multiples_block": {
+      "type": "object",
+      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
+      "properties": {
+        "trailingPE": {"type": ["number", "null"]},
+        "forwardPE": {"type": ["number", "null"]},
+        "evEbitda": {"type": ["number", "null"]},
+        "priceToSales": {"type": ["number", "null"]},
+        "priceToBook": {"type": ["number", "null"]}
+      }
+    },
+    "multiples_block_nullable": {
+      "type": "object",
+      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
+      "properties": {
+        "trailingPE": {"type": ["number", "null"]},
+        "forwardPE": {"type": ["number", "null"]},
+        "evEbitda": {"type": "null"},
+        "priceToSales": {"type": ["number", "null"]},
+        "priceToBook": {"type": "null"}
+      }
+    },
+    "divergence_block": {
+      "type": "object",
+      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook)$": {
+          "type": "object",
+          "required": ["abs_diff", "pct_diff", "alert"],
+          "properties": {
+            "abs_diff": {"type": ["number", "null"]},
+            "pct_diff": {"type": ["number", "null"]},
+            "alert": {"enum": ["low", "medium", "high", "n/a"]},
+            "note": {"type": "string"}
+          }
+        }
+      }
+    },
+    "compute_provenance_block": {
+      "type": "object",
+      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
+      "patternProperties": {
+        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook)$": {
+          "type": "object",
+          "required": ["computed"],
+          "properties": {
+            "numerator_source": {"type": "string"},
+            "denominator_source": {"type": "string"},
+            "accession_basis": {"type": "array", "items": {"type": "string"}},
+            "fiscal_year_end": {"type": ["string", "null"]},
+            "computed": {"type": "boolean"},
+            "note": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

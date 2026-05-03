@@ -172,10 +172,14 @@ INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
     > /tmp/${COUNTRY}-peers-comps.json
 # Repeat for each country present in the peer list.
 
-# 3. Run analysis-comps
+# 3. Run analysis-comps in compute mode (v2.2.0-b+)
+# anchor memo-fetch already pre-fetched in Phase 1: /tmp/${TICKER_SAFE}-fetch.json
+# Compute mode emits multiples_direct + multiples_compute + divergence in one JSON.
 uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
-  --anchor /tmp/${TICKER_SAFE}-anchor-comps.json \
-  --peers /tmp/<peer1>-comps.json,/tmp/<peer2>-comps.json,... \
+  --mode compute \
+  --anchor       /tmp/${TICKER_SAFE}-anchor-comps.json \
+  --anchor-base  /tmp/${TICKER_SAFE}-fetch.json \
+  --peers        /tmp/<peer1>-comps.json,/tmp/<peer2>-comps.json,... \
   --rationale-map /tmp/peer-rationales.json \
   > /tmp/${TICKER_SAFE}-comps.json
 ```
@@ -227,6 +231,10 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 | Market-Regime Consistency | SHOULD | `rubrics/market-regime-consistency-gate.md` |
 | Signal Quality (ISQ) | SHOULD | `rubrics/signal-quality-assessment-gate.md` |
 | Taiwan Local Rigor | MAY | `rubrics/taiwan-local-rigor-gate.md` (auto-triggered for `.TW` / `.TWO`) |
+
+**Comps divergence (v2.2.0-b+)**: when `comps.json` has `anchor.divergence[*].alert == "high"`, the Comps section MUST surface the divergence source — e.g. "yfinance trailingPE 28.5x vs SEC raw recompute 36.7x — Yahoo's adjusted EPS differs from FY GAAP". Cite the relevant SEC accession from `compute_provenance[*].accession_basis`. Medium alerts may be mentioned briefly; low alerts are upstream-rounding noise and stay silent.
+
+For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the appropriate `data-{country}/pack.py --pack memo-fetch` output for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
 
 The investing-team output is the memo body (Markdown).
 
