@@ -1,5 +1,5 @@
 ---
-description: "Scaffold an LLM wiki layer in an Obsidian vault — 6 type folders, index/log/hot/manifest/.env. One-time init. Do NOT use for repo-wiki:init or dbt-wiki:init."
+description: "Scaffold an LLM wiki layer in an existing Obsidian vault. One-time init. Do NOT use for repo-wiki:init, dbt-wiki:init, or vault setup from scratch (use obsidian-vault-setup)."
 ---
 
 Use the obsidian:wiki-setup skill to handle this request.
