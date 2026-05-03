@@ -131,7 +131,105 @@ PRESETS: dict[str, dict] = {
         "sheet": "年增率(新臺幣計價)",
         "name": "Export Price Index YoY%, TWD-priced (出口物價年增率, 新臺幣計價)",
     },
+    # v2.1.x-e — cpi-sa-yoy: DGBAS publishes only the seasonally-adjusted
+    # INDEX in cpisplsa.xls (single sheet). YoY% companion is computed
+    # in code via _compute_yoy_from_index. _provenance.computed=true
+    # flags the derivation. Removes Lunar New Year base-effect noise
+    # vs the headline `cpi-yoy` preset (which uses the published 年增率
+    # sheet of cpispl.xls).
+    "cpi-sa-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/cpisplsa.xls",
+        "sheet": "CPI",
+        "name": "CPI Seasonally Adjusted YoY% (季調CPI 年增率, computed from INDEX)",
+        "compute": "yoy_from_index",
+    },
+    # v2.1.x-f — USD-priced + 農工原料 sub-bundles for import-pi /
+    # export-pi. The .xls files publish multiple price-base / commodity-
+    # subset sheets; PR #209 only surfaced the 新臺幣計價 headlines.
+    # These additions complete the matrix for trade-flow analyses
+    # (terms-of-trade, raw-materials cost-push).
+    "import-pi-usd": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "總指數(美元計價)",
+        "name": "Import Price Index INDEX, USD-priced (進口物價總指數, 美元計價)",
+    },
+    "import-pi-usd-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "年增率(美元計價)",
+        "name": "Import Price Index YoY%, USD-priced (進口物價年增率, 美元計價)",
+    },
+    "import-pi-raw": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "農工原料指數(新臺幣計價)",
+        "name": "Import Price Index INDEX, raw materials TWD (進口物價農工原料指數, 新臺幣計價)",
+    },
+    "import-pi-raw-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "農工原料年增率(新臺幣計價)",
+        "name": "Import Price Index YoY%, raw materials TWD (進口物價農工原料年增率, 新臺幣計價)",
+    },
+    "import-pi-raw-usd": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "農工原料指數(美元計價)",
+        "name": "Import Price Index INDEX, raw materials USD (進口物價農工原料指數, 美元計價)",
+    },
+    "import-pi-raw-usd-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/ipispl.xls",
+        "sheet": "農工原料年增率(美元計價)",
+        "name": "Import Price Index YoY%, raw materials USD (進口物價農工原料年增率, 美元計價)",
+    },
+    "export-pi-usd": {
+        "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
+        "sheet": "指數(美元計價)",
+        "name": "Export Price Index INDEX, USD-priced (出口物價總指數, 美元計價)",
+    },
+    "export-pi-usd-yoy": {
+        "url": f"{DGBAS_PRICE_BASE}/epispl.xls",
+        "sheet": "年增率(美元計價)",
+        "name": "Export Price Index YoY%, USD-priced (出口物價年增率, 美元計價)",
+    },
 }
+
+
+# ---------------------------------------------------------------------------
+# Computed-series helpers (v2.1.x-e)
+# ---------------------------------------------------------------------------
+
+def _compute_yoy_from_index(observations: list[dict], period: int = 12) -> list[dict]:
+    """Compute YoY% from monthly INDEX observations.
+
+    Used when DGBAS publishes only an INDEX series and no companion 年增率
+    sheet (current case: cpisplsa.xls — seasonally-adjusted CPI). Returns
+    YoY observations in the same `[{date, value}, ...]` shape, where
+    value[t] = (index[t] / index[t-period] - 1) * 100. Drops the first
+    `period` entries (no t-period reference).
+
+    Defensive: validates that paired observations are exactly `period`
+    months apart (handles potential DGBAS publishing gaps); skips any
+    pair that fails the date arithmetic. Avoids divide-by-zero by
+    skipping entries where index[t-period] is 0.
+
+    Returns rounded to 2 decimal places (matches DGBAS-published 年增率
+    sheet precision elsewhere in this module).
+    """
+    if not observations or len(observations) <= period:
+        return []
+    out: list[dict] = []
+    for i in range(period, len(observations)):
+        cur = observations[i]
+        prior = observations[i - period]
+        try:
+            cy, cm = divmod(int(cur["date"]), 100)
+            py, pm = divmod(int(prior["date"]), 100)
+        except (KeyError, ValueError, TypeError):
+            continue
+        if (cy * 12 + cm) - (py * 12 + pm) != period:
+            continue  # gap or out-of-order; skip rather than emit garbage
+        if not prior["value"]:
+            continue  # avoid div-zero on missing/zero base
+        yoy = (cur["value"] / prior["value"] - 1.0) * 100.0
+        out.append({"date": cur["date"], "value": round(yoy, 2)})
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -358,6 +456,14 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
 
     observations = _parse_xls(content, config.get("sheet", ""))
 
+    # v2.1.x-e — apply compute step if preset declares one. Currently
+    # only `yoy_from_index` is supported (used by `cpi-sa-yoy` to derive
+    # YoY from the seasonally-adjusted INDEX since DGBAS publishes no
+    # companion 年增率 sheet for cpisplsa.xls).
+    compute = config.get("compute")
+    if compute == "yoy_from_index":
+        observations = _compute_yoy_from_index(observations)
+
     now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     latest = observations[-1] if observations else None
     prior = observations[-2] if len(observations) >= 2 else None
@@ -384,6 +490,14 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
         "count": len(observations),
     }
     result["_provenance"] = _make_provenance(result, config["url"])
+    if compute:
+        # Tag derived series so downstream consumers can distinguish
+        # DGBAS-published values from in-code derivations.
+        result["_provenance"]["computed"] = True
+        result["_provenance"]["computation"] = (
+            f"{compute} (period=12; (idx[t]/idx[t-12] - 1) * 100, "
+            f"drops first 12 obs)"
+        )
 
     if "error" not in result and observations:
         save_cache(cache_path, result)

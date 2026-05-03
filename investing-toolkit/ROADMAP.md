@@ -46,26 +46,24 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Blocker**: Confirm last 30 days had zero false-positives (review CI run history).
 - **Acceptance**: A test commit with deliberately desynced script copies fails CI.
 
-### v2.1.x-e — DGBAS `cpi-sa` (季調CPI) computed YoY companion
+### ~~v2.1.x-e — DGBAS `cpi-sa` (季調CPI) computed YoY companion~~ ✅ closed 2026-05-03
 
-- **What**: `cpisplsa.xls` is single-sheet (DGBAS does not publish a 季調CPI 年增率 sheet, unlike the headline `cpispl.xls` which does). Add a `cpi-sa-yoy` preset that **computes** YoY in code from the `cpi-sa` INDEX series — `(idx[t] / idx[t-12]) - 1` — and surfaces it via the same provenance shape as native YoY presets, with `_provenance.computed: true` to flag the derivation.
-- **Why**: Season-adjusted YoY is the cleaner read for inflation regime-classification (removes Lunar New Year base-effect noise that the headline 年增率 sheet keeps in). Without it, classify_tw can only consume non-SA YoY; SA INDEX is dead-weight.
-- **Files**: `data-tw/scripts/dgbas_client.py` (both copies; add `cpi-sa-yoy` preset + small _compute_yoy helper); pack.py optional wire-in; integration test optional.
-- **Blocker**: None (data already in INDEX preset; just compute).
-- **Acceptance**: `dgbas_client --preset cpi-sa-yoy` returns 12 fewer observations than `cpi-sa` with values in the -5..+20 % band; `_provenance.computed == true`.
-- **Reference**: PR #209 (cpi/cpi-yoy split cleanup port); §v2.1.x-c root-cause finding.
+- **Status**: Closed. New `cpi-sa-yoy` preset added; `_compute_yoy_from_index` helper introduced (period=12, defensive YYYYMM-arithmetic + skip-on-gap + skip-on-zero-base).
+- **Live verification**: 202603 = 1.47% (vs headline `cpi-yoy` 1.20% — SA bumps slightly higher per expected smoothing of Lunar New Year base effect). 795 observations after 12-obs trim. `_provenance.computed: true` + `_provenance.computation: "yoy_from_index (period=12; ...)"` set.
+- **Pack wiring**: Skipped (regime-pack already covers headline `cpi-yoy`; SA-YoY available via direct CLI / future analysis-* consumer).
+- **Reference**: ROADMAP cleanup follow-up PR (2026-05-03); v2.1.x-c root-cause + §v2.1.x-c² PR #209 cleanup port.
 
-### v2.1.x-f — DGBAS import-pi / export-pi USD-priced + 農工原料 sub-bundles
+### ~~v2.1.x-f — DGBAS import-pi / export-pi USD-priced + 農工原料 sub-bundles~~ ✅ closed 2026-05-03
 
-- **What**: PR #209 surfaced only the headline 新臺幣計價 INDEX + YoY% pair for import-pi / export-pi. The underlying `ipispl.xls` / `epispl.xls` files publish more bases:
-  - `ipispl.xls` has 8 sheets — TWD-priced INDEX/YoY, USD-priced INDEX/YoY, **plus** 農工原料類 (raw materials sub-bundle) in both TWD and USD pricing
-  - `epispl.xls` has 4 sheets — TWD-priced INDEX/YoY, USD-priced INDEX/YoY
-  Add `import-pi-usd / import-pi-usd-yoy / import-pi-raw / import-pi-raw-yoy / import-pi-raw-usd / import-pi-raw-usd-yoy` and `export-pi-usd / export-pi-usd-yoy` presets.
-- **Why**: Trade-flow analyses (e.g. terms-of-trade, raw-materials cost-push) need USD-priced and 農工原料 cuts. Today only TWD headline is exposed.
-- **Files**: `data-tw/scripts/dgbas_client.py` (both copies; add 8 presets); pack.py wiring optional (TWD headline already covers regime-pack); integration test optional.
-- **Blocker**: None (sheets already verified to exist via 2026-05-02 probe; sheet-name hints in regex are unique within each file).
-- **Acceptance**: All 8 new presets fetch with sane magnitudes (USD INDEX ~110-130, raw-materials YoY can run hot, often 5-15 %); existing TWD presets unchanged.
-- **Reference**: PR #209 commit message §"Out-of-scope (kept simple)".
+- **Status**: Closed. 8 new presets added covering all sheets PR #209 left out.
+- **Sheets surfaced**:
+  - `import-pi-usd` / `import-pi-usd-yoy` (`ipispl.xls` USD-priced)
+  - `import-pi-raw` / `import-pi-raw-yoy` (`ipispl.xls` 農工原料 TWD)
+  - `import-pi-raw-usd` / `import-pi-raw-usd-yoy` (`ipispl.xls` 農工原料 USD)
+  - `export-pi-usd` / `export-pi-usd-yoy` (`epispl.xls` USD-priced)
+- **Live magnitudes (202603)**: `import-pi-usd` 104.09 INDEX / 8.53% YoY; `import-pi-raw` 122.48 INDEX / 7.69% YoY; `import-pi-raw-usd-yoy` 11.51% (highest, raw-materials surge); `export-pi-usd-yoy` 12.70% (semiconductor-export driven).
+- **Pack wiring**: Skipped (TWD headline in regime-pack stays canonical; USD / 農工原料 cuts available via direct CLI for trade-flow / terms-of-trade / cost-push analyses when needed).
+- **Reference**: ROADMAP cleanup follow-up PR (2026-05-03); PR #209 §"Out-of-scope (kept simple)".
 
 ### ~~v2.1.x-g — Fix `test_kr_snapshot_samsung` yfinance history shape regression~~ ✅ closed 2026-05-03
 
