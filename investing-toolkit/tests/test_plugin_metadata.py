@@ -1,13 +1,14 @@
-"""test_plugin_metadata.py — validate plugin.json + .mcp.json (no network).
+"""test_plugin_metadata.py — validate plugin.json (no network).
 
 Asserts:
   1. .claude-plugin/plugin.json parses as JSON, has required keys, version
      starts with `2.0`, description references the three-layer architecture.
-  2. .mcp.json parses as JSON, references servers/mcp_bootstrap.sh which
-     exists on disk.
 
 These are stable structural invariants for v2.0.0 — bumping past 2.0.x will
 require updating the version-prefix assertion.
+
+MCP server (and its `.mcp.json` + bootstrap) was removed per ADR-0008
+(2026-05-03); related tests deleted in same PR.
 """
 from __future__ import annotations
 
@@ -18,8 +19,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_JSON = ROOT / ".claude-plugin" / "plugin.json"
-MCP_JSON = ROOT / ".mcp.json"
-SERVERS_DIR = ROOT / "servers"
 
 REQUIRED_PLUGIN_FIELDS = ["name", "version", "description"]
 
@@ -74,30 +73,9 @@ def test_plugin_json_description_mentions_three_layer(plugin_data):
 
 
 # --------------------------------------------------------------------------- #
-# .mcp.json
+# .mcp.json — DELETED (per ADR-0008, 2026-05-03)
+#
+# MCP server removed; `.mcp.json`, `servers/`, and the 3 tests previously
+# living here (`test_mcp_json_exists`, `test_mcp_json_parses`,
+# `test_mcp_json_references_bootstrap`) were deleted with it.
 # --------------------------------------------------------------------------- #
-
-
-def test_mcp_json_exists():
-    assert MCP_JSON.is_file(), f"missing {MCP_JSON}"
-
-
-def test_mcp_json_parses():
-    data = json.loads(MCP_JSON.read_text(encoding="utf-8"))
-    assert isinstance(data, dict), ".mcp.json must be a JSON object"
-
-
-def test_mcp_json_references_bootstrap():
-    """.mcp.json must reference servers/mcp_bootstrap.sh which exists."""
-    data = json.loads(MCP_JSON.read_text(encoding="utf-8"))
-    assert "mcpServers" in data, ".mcp.json missing 'mcpServers'"
-    servers = data["mcpServers"]
-    assert isinstance(servers, dict) and servers, "mcpServers must be a non-empty object"
-    # Concatenate all referenced paths to scan for mcp_bootstrap.sh
-    raw = json.dumps(data)
-    assert "mcp_bootstrap.sh" in raw, (
-        ".mcp.json must reference mcp_bootstrap.sh; current content: "
-        f"{raw[:200]}"
-    )
-    bootstrap = SERVERS_DIR / "mcp_bootstrap.sh"
-    assert bootstrap.is_file(), f"referenced bootstrap script missing on disk: {bootstrap}"

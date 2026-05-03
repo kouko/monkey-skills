@@ -1,18 +1,21 @@
 """test_sync_clients.py — verify sync-clients.sh + CI workflow (no network).
 
+Post-ADR-0008 (2026-05-03): MCP server removed; the
+`investing-toolkit/scripts/` canonical directory is gone. Only
+cross-skill duplications remain — `data-us` is the reference skill for
+both groups:
+
+  - yfinance_client.py: data-us → data-jp / data-tw / data-kr / data-cn
+                        (4 cross-skill copies must equal data-us)
+  - fred_client.py:     data-us → data-cn (1 copy must equal data-us)
+
+All other clients are single-skill (no cross-skill copies; no sync).
+
 Covers:
-  1. `bash scripts/sync-clients.sh --check` exits 0 (zero drift) on the
-     canonical-vs-skill-copy invariant.
-  2. The ADR-0001 client groups are at the expected fan-out:
-        yfinance_client.py × 5 (data-us/jp/tw/kr/cn)
-        fred_client.py     × 2 (data-us, data-cn)
-        nbs_client.py      × 1 (data-cn)
-        akshare_client.py  × 1 (data-cn)
-     Each canonical (under investing-toolkit/scripts/) is byte-identical to
-     every skill copy.
-  3. .github/workflows/check-script-sync.yml parses as YAML and explicitly
-     enumerates the same 4 groups (yfinance / fred / nbs / akshare). The
-     ta_client group must NOT appear in PR 1 (Wave 4 Removal).
+  1. `bash scripts/sync-clients.sh --check` exits 0 (zero drift).
+  2. The 2 cross-skill groups have the expected fan-out.
+  3. .github/workflows/check-script-sync.yml parses as YAML and
+     enumerates the same 2 groups.
 """
 from __future__ import annotations
 
@@ -30,12 +33,13 @@ SYNC_SH = SCRIPTS_DIR / "sync-clients.sh"
 REPO_ROOT = ROOT.parent
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "check-script-sync.yml"
 
+# Cross-skill duplication groups. `data-us` is the canonical reference;
+# every other skill in the list must hold a byte-identical copy.
 EXPECTED_GROUPS = {
-    "yfinance_client.py": ["data-us", "data-jp", "data-tw", "data-kr", "data-cn"],
-    "fred_client.py": ["data-us", "data-cn"],
-    "nbs_client.py": ["data-cn"],
-    "akshare_client.py": ["data-cn"],
+    "yfinance_client.py": ["data-jp", "data-tw", "data-kr", "data-cn"],
+    "fred_client.py": ["data-cn"],
 }
+REFERENCE_SKILL = "data-us"
 
 
 def _md5(path: Path) -> str:
@@ -68,7 +72,7 @@ def test_sync_clients_check_passes():
 
 
 # --------------------------------------------------------------------------- #
-# 2. Group fan-out + MD5 identity
+# 2. Group fan-out + MD5 identity (cross-skill)
 # --------------------------------------------------------------------------- #
 
 
@@ -77,10 +81,10 @@ def test_sync_clients_check_passes():
     sorted(EXPECTED_GROUPS.items()),
 )
 def test_client_group_fanout(client: str, targets: list[str]):
-    """Every expected target has the file AND md5 == canonical."""
-    canonical = SCRIPTS_DIR / client
-    assert canonical.is_file(), f"missing canonical: {canonical}"
-    canonical_hash = _md5(canonical)
+    """Every expected target has the file AND md5 == data-us reference."""
+    reference = SKILLS_DIR / REFERENCE_SKILL / "scripts" / client
+    assert reference.is_file(), f"missing reference: {reference}"
+    reference_hash = _md5(reference)
 
     for skill in targets:
         copy = SKILLS_DIR / skill / "scripts" / client
@@ -88,20 +92,18 @@ def test_client_group_fanout(client: str, targets: list[str]):
             f"missing expected copy of {client} in {skill}/scripts/"
         )
         h = _md5(copy)
-        assert h == canonical_hash, (
+        assert h == reference_hash, (
             f"MD5 drift for {skill}/scripts/{client}: "
-            f"{h} != canonical {canonical_hash}"
+            f"{h} != reference {reference_hash}"
         )
 
 
 def test_client_group_counts():
-    """Sanity-check the fan-out counts match the ADR-0001 spec."""
+    """Sanity-check the fan-out counts match ADR-0008's surface."""
     counts = {client: len(skills) for client, skills in EXPECTED_GROUPS.items()}
     assert counts == {
-        "yfinance_client.py": 5,
-        "fred_client.py": 2,
-        "nbs_client.py": 1,
-        "akshare_client.py": 1,
+        "yfinance_client.py": 4,  # jp + tw + kr + cn
+        "fred_client.py": 1,       # cn
     }, counts
 
 
@@ -127,27 +129,28 @@ def test_workflow_yaml_parses():
     assert (True in data) or ("on" in data), "workflow missing 'on' key"
 
 
-def test_workflow_has_4_explicit_groups():
-    """Workflow must explicitly enumerate the 4 ADR-0001 groups in order
-    (yfinance / fred / nbs / akshare). ta_client group MUST be absent in PR 1
-    (Wave 4 removed it: only one consumer = analysis-technical, the canonical
-    owner). When a second consumer is added later, this expectation will need
-    to grow."""
+def test_workflow_has_2_explicit_groups():
+    """Workflow must explicitly enumerate the 2 ADR-0008 cross-skill groups
+    (yfinance / fred). Other clients (nbs / akshare / dgbas / ndc / cbc /
+    statgov / fdr / etc.) are single-skill post-MCP-removal — they MUST NOT
+    appear as check_group(...) calls in the workflow."""
     text = WORKFLOW.read_text(encoding="utf-8")
-    for client in ("yfinance_client.py", "fred_client.py", "nbs_client.py", "akshare_client.py"):
+    for client in EXPECTED_GROUPS:
         assert client in text, f"workflow missing reference to group: {client}"
-    # ta_client group should NOT be enforced in PR 1.
-    # The header comment may mention `ta_client.py` explanatorily, but no
-    # `check_group(...ta_client.py...)` call should exist.
-    assert 'check_group(\n              "ta_client' not in text, (
-        "ta_client group was deliberately removed in PR 1 Wave 4 — "
-        "but workflow still references a check_group() for it"
-    )
-    assert "check_group('ta_client" not in text
+    # Single-skill clients must not appear as check_group calls.
+    for orphan in (
+        "nbs_client.py", "akshare_client.py",
+        "dgbas_client.py", "ndc_client.py", "cbc_client.py",
+        "statgov_client.py", "fdr_client.py",
+    ):
+        assert f'check_group("\n              "{orphan}' not in text, (
+            f"{orphan} is single-skill post-ADR-0008 — must not have a "
+            "check_group(...) call. Header comment may mention it as context."
+        )
 
 
 def test_workflow_groups_match_sync_sh():
-    """Both files must reference the same set of clients."""
+    """Both files must reference the same set of cross-skill clients."""
     sh_text = SYNC_SH.read_text(encoding="utf-8")
     yml_text = WORKFLOW.read_text(encoding="utf-8")
     for client in EXPECTED_GROUPS:

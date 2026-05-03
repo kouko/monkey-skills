@@ -631,48 +631,6 @@ def filing_summary(ticker: str, days: int = 365) -> dict:
 
     return summary
 
-
-# ---------------------------------------------------------------------------
-# MCP tool registration
-# ---------------------------------------------------------------------------
-
-def register_mcp_tools(mcp) -> None:
-    """Register EDINET tools with a FastMCP instance."""
-
-    @mcp.tool()
-    def edinet_resolve_code(ticker: str) -> dict:
-        """Resolve a 4-digit JP ticker (e.g. 7203 for Toyota, 6758 for Sony)
-        to its EDINET code (E####) + company metadata (name/industry/listed
-        status). PUBLIC mapping — no EDINET_API_KEY required."""
-        return resolve_edinet_code(ticker)
-
-    @mcp.tool()
-    def edinet_list_filings(
-        ticker: str, forms: list[str] | None = None,
-        days: int = 90, limit: int = 10,
-    ) -> dict:
-        """List recent EDINET filings for a JP ticker within the last `days`.
-        `forms` filters by docTypeCode: 120=有報 / 140=四半期 / 160=半期 /
-        180=臨時 / 220=自己株買付 / 350=大量保有. Requires EDINET_API_KEY."""
-        return list_filings(ticker, forms, days, limit)
-
-    @mcp.tool()
-    def edinet_fetch_statements(doc_id: str, include_raw: bool = False) -> dict:
-        """Fetch a specific EDINET filing's financial statements. Parses the
-        type=5 CSV from EDINET into a key_metrics dict (revenue, operating/
-        ordinary/net income, total/net assets, EPS/BPS, 3 cash flows, headcount).
-        Set include_raw=true to also return all raw rows. Requires EDINET_API_KEY."""
-        return fetch_statements(doc_id, include_raw)
-
-    @mcp.tool()
-    def edinet_filing_summary(ticker: str, days: int = 365) -> dict:
-        """One-shot JP fundamentals summary: resolves ticker → lists filings →
-        fetches latest annual (120) + latest quarterly (140) with key metrics.
-        This is the 'snapshot' action for investment-memo-writer JP Phase 1.
-        Requires EDINET_API_KEY."""
-        return filing_summary(ticker, days)
-
-
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------

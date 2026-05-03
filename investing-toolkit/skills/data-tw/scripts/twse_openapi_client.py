@@ -654,50 +654,6 @@ def _run_action(args) -> dict:
     raise SystemExit(f"Unknown action: {action}")
 
 
-# ---------------------------------------------------------------------------
-# MCP tool registration (v1.14.0+)
-# ---------------------------------------------------------------------------
-
-
-def register_mcp_tools(mcp) -> None:
-    """Register TWSE/TPEx OpenAPI dispatch tool with a FastMCP instance."""
-    import types
-
-    @mcp.tool()
-    def twse_openapi_fetch(
-        action: str, ticker: str | None = None, months: int | None = None,
-    ) -> dict:
-        """Fetch data from TWSE + TPEx OpenAPI (primary source, zero-auth).
-        Trading / market reference data only (not financial statements —
-        use mops_fetch for those).
-
-        Actions (11 endpoints; required params in [brackets]):
-          TWSE (上市):
-            - listed-companies (master list; ticker filters to one row)
-            - daily-price-all (latest-session OHLCV snapshot for all stocks)
-            - daily-price [ticker] (filters daily-price-all; snapshot only)
-            - stock-day-history [ticker, months=1..60] — **historical daily
-              OHLCV** via TWSE /rwd/ endpoint, Tier A. Defaults months=12.
-              Returns ta-ready {date, open, high, low, close, volume} rows
-              with Gregorian dates + parsed floats. Per-month cache; first
-              12-month fetch ~2-6s, cached replay <200ms.
-            - pe-pb-yield (valuation ratios; ticker optional)
-            - margin-balance (融資融券; ticker optional)
-            - three-investor (top-20 QFII snapshot; NOT daily flow)
-            - industry-eps (industry aggregates)
-            - ex-dividend-calendar (upcoming ex-dividend dates)
-          TPEx (上櫃):
-            - tpex-daily-close (snapshot)
-            - tpex-margin-balance
-        """
-        args = types.SimpleNamespace(
-            action=action, ticker=ticker, months=months,
-        )
-        try:
-            return _run_action(args)
-        except SystemExit as e:
-            return {"error": str(e), "action": action}
-
 
 def main():
     parser = argparse.ArgumentParser(
