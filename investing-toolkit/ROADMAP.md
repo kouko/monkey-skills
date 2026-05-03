@@ -67,14 +67,14 @@ Small loose-ends from v2.1.0 closure. Each ~½ to 1 day. No new architecture.
 - **Acceptance**: All 8 new presets fetch with sane magnitudes (USD INDEX ~110-130, raw-materials YoY can run hot, often 5-15 %); existing TWD presets unchanged.
 - **Reference**: PR #209 commit message §"Out-of-scope (kept simple)".
 
-### v2.1.x-g — Fix `test_kr_snapshot_samsung` yfinance history shape regression
+### ~~v2.1.x-g — Fix `test_kr_snapshot_samsung` yfinance history shape regression~~ ✅ closed 2026-05-03
 
-- **What**: `data-kr/tests/data/test_data_kr.py::test_kr_snapshot_samsung` asserts `isinstance(out["history"], dict)` but yfinance now returns a list of `{"close", "date", "high", "low", ...}` records. Either update yfinance_client KR-snapshot path to wrap into the dict shape the test expects, or update the test + downstream consumers to accept the list shape (verify which shape memo-fetch / DCF actually consume).
-- **Why**: Pre-existing failure that's been red on main since at least 2026-05-02. Hides real future regressions because the file is already red — easy to miss when adding new KR tests.
-- **Files**: `data-kr/scripts/yfinance_client.py` (potentially); `data-kr/tests/data/test_data_kr.py::test_kr_snapshot_samsung`; check downstream consumers in `analysis-*` to confirm shape contract.
-- **Blocker**: Decide canonical shape — `dict[date, OHLCV]` (legacy) vs `list[OHLCV-with-date]` (yfinance 0.2.x newer). Pick the one matching `data-us` / `data-tw` for cross-country symmetry.
-- **Acceptance**: `test_kr_snapshot_samsung` green; shape matches data-us / data-tw / data-jp / data-cn equivalent KR snapshot tests.
-- **Reference**: PR #203 commit body §"Pre-existing failure"; v2.1.x test-suite session 2026-05-02.
+- **Status**: Closed via test fix. data-kr/pack.py snapshot already returned the cross-country-symmetric T1 contract (`price_history` raw envelope as dict + `history` list-of-OHLCV records, matching data-us / data-jp); the assertion was the side that drifted.
+- **What was done**: Updated `test_kr_snapshot_samsung` to assert the canonical contract — `price_history` is `dict`, `history` is `list[{date, open, high, low, close, volume}]`. Added per-field check on `history[0]` so future shape regressions surface immediately.
+- **Why it predated v2.1.x**: KR pack adopted the canonical-OHLCV alias when data-us / data-jp introduced it (post-v1.x); the test was never updated to match. Failure stayed red because `@pytest.mark.network` runs are easy to skip locally; CI doesn't run network tests by default.
+- **Files**: `investing-toolkit/tests/data/test_data_kr.py::test_kr_snapshot_samsung`. No client / pack changes needed.
+- **Result**: Full suite now 383 passed, 2 skipped, 0 failed (was 1 failed pre-fix).
+- **Reference**: PR #203 commit body §"Pre-existing failure"; v2.1.x test-suite session 2026-05-02 / 2026-05-03 fix session.
 
 ## Mid-term — v2.2.0 candidates
 

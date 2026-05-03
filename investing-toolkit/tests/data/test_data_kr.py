@@ -87,12 +87,33 @@ def _run_pack(args: list[str], timeout: int = 600) -> dict:
 
 @pytest.mark.network
 def test_kr_snapshot_samsung():
+    """Snapshot returns the raw yfinance envelope under `price_history`
+    (dict) AND a T1-canonical OHLCV list under `history` (list of
+    `{date, open, high, low, close, volume}` records). The latter is the
+    cross-country symmetric alias used by analysis-* skills; it changed
+    from dict to list when data-kr/pack.py adopted the data-us / data-jp
+    canonical-OHLCV convention. Fixed per ROADMAP §v2.1.x-g.
+    """
     out = _run_pack(["--ticker", TICKER, "--pack", "snapshot"])
     assert out["pack"] == "snapshot"
     assert out["country"] == "kr"
     assert out["ticker"] == TICKER
     assert isinstance(out.get("info"), dict)
-    assert isinstance(out.get("history"), dict)
+    assert isinstance(out.get("price_history"), dict), (
+        f"snapshot missing price_history (raw yfinance envelope); "
+        f"top keys: {sorted(out.keys())}"
+    )
+    history = out.get("history")
+    assert isinstance(history, list), (
+        f"snapshot.history must be a list of OHLCV records "
+        f"(cross-country symmetric T1 alias), got {type(history).__name__}"
+    )
+    assert history, "snapshot.history is empty"
+    first = history[0]
+    for field in ("date", "open", "high", "low", "close", "volume"):
+        assert field in first, (
+            f"history[0] missing field {field!r}; got keys {sorted(first.keys())}"
+        )
     prov = out.get("_provenance", {})
     assert "Tier 2" in prov.get("tier", "")  # yfinance Tier 2 by design
 
