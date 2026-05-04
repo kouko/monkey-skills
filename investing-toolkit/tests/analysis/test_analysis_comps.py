@@ -595,11 +595,21 @@ def test_compute_mode_forwardPE_passthrough(compute_payload):
     assert compute_payload["anchor"]["compute_provenance"]["forwardPE"]["computed"] is False
 
 
-def test_compute_mode_priceToBook_emits_null(compute_payload):
-    """priceToBook deferred until v2.2.0-l (memo-fetch lacks total_stockholders_equity)."""
-    assert compute_payload["anchor"]["multiples_compute"]["priceToBook"] is None
-    assert compute_payload["anchor"]["compute_provenance"]["priceToBook"]["computed"] is False
-    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["priceToBook"]["note"]
+def test_compute_mode_recomputes_priceToBook_FY(compute_payload):
+    """priceToBook = market_cap / total_stockholders_equity[0] — FY (v2.2.0-l)."""
+    actual = compute_payload["anchor"]["multiples_compute"]["priceToBook"]
+    expected = 4109006274560 / 66790000000.0  # 61.5212
+    assert actual == pytest.approx(expected, rel=1e-4)
+
+
+def test_compute_priceToBook_provenance(compute_payload):
+    """priceToBook provenance records numerator/denominator + FY end + accession."""
+    prov = compute_payload["anchor"]["compute_provenance"]["priceToBook"]
+    assert prov["computed"] is True
+    assert prov["numerator_source"] == "memo-fetch.company_info.marketCap"
+    assert prov["denominator_source"] == "memo-fetch.balance_sheet.total_stockholders_equity[0]"
+    assert prov["fiscal_year_end"] == "2025-09-27"
+    assert "10-K filed 2025-10-31" in prov["accession_basis"]
 
 
 def test_compute_mode_evEbitda_emits_null(compute_payload):

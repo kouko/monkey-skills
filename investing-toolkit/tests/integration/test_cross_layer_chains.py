@@ -1235,16 +1235,14 @@ def test_chain_us_comps_compute_dual_input(tmp_path):
             f"divergence[{m}].alert is invalid: {divergence[m]['alert']!r}"
         )
 
-    # Compute provenance carries spec contract (deferred multiples carry v2.2.0-l note)
+    # Compute provenance carries spec contract
     prov = anchor["compute_provenance"]
     assert prov["forwardPE"]["computed"] is False, (
-        f"forwardPE.computed should be False (deferred); got {prov['forwardPE']['computed']!r}"
+        f"forwardPE.computed should be False (pass-through); got {prov['forwardPE']['computed']!r}"
     )
-    assert prov["priceToBook"]["computed"] is False, (
-        f"priceToBook.computed should be False (deferred); got {prov['priceToBook']['computed']!r}"
-    )
-    assert "v2.2.0-l" in (prov["priceToBook"].get("note") or ""), (
-        f"priceToBook provenance note missing 'v2.2.0-l'; note={prov['priceToBook'].get('note')!r}"
+    # priceToBook now computed (v2.2.0-l landed — balance_sheet wired)
+    assert prov["priceToBook"]["computed"] is True, (
+        f"priceToBook.computed should be True (v2.2.0-l activated); got {prov['priceToBook']['computed']!r}"
     )
     assert prov["evEbitda"]["computed"] is False, (
         f"evEbitda.computed should be False (deferred); got {prov['evEbitda']['computed']!r}"
@@ -2324,17 +2322,14 @@ def test_phase4_bundle_validates_against_schema_non_us(country, tmp_path):
 
 
 def test_phase4_bundle_with_deferred_compute_multiples_validates(tmp_path):
-    """Even when compute mode emits null for priceToBook + evEbitda
-    (v2.2.0-l deferred), the Phase 4 bundle still validates against schema.
+    """Phase 4 bundle validates against schema with evEbitda still deferred.
 
-    Catches: schema accidentally requiring non-null priceToBook / evEbitda
-    in the comps component, which would reject any company lacking book
-    value or EBITDA in the SEC 10-K normalization layer.
+    Catches: schema accidentally requiring non-null evEbitda in the comps
+    component, which would reject any company lacking EBITDA normalization.
 
-    Reality check: US comps_compute currently always emits null for
-    priceToBook and evEbitda (balance sheet + EBITDA normalization not
-    yet wired in v2.2.0-b). This makes the US fixture a naturally
-    minimal test case for this scenario.
+    As of v2.2.0-l: priceToBook is now computed (balance_sheet wired);
+    evEbitda remains deferred (depreciation_amortization not yet wired).
+    The US fixture exercises the evEbitda-null scenario.
     """
     schema_path = (
         ROOT / "skills/report-equity-memo/references/schema-phase4-input-bundle.json"
@@ -2391,16 +2386,15 @@ def test_phase4_bundle_with_deferred_compute_multiples_validates(tmp_path):
     ])
     assert rc == 0, f"comps_compute failed: {stderr}"
 
-    # Verify priceToBook + evEbitda are null — the deferred-compute scenario
+    # priceToBook now computed (v2.2.0-l); evEbitda still deferred
     mc = (comps_out.get("anchor") or {}).get("multiples_compute") or {}
-    assert mc.get("priceToBook") is None, (
-        f"priceToBook is non-null ({mc.get('priceToBook')}); "
-        f"this test specifically exercises the null/deferred case. "
-        f"If v2.2.0-l landed and now computes priceToBook, update this assertion."
+    assert mc.get("priceToBook") is not None, (
+        f"priceToBook should be computed (v2.2.0-l activated balance_sheet); "
+        f"got None — check balance_sheet fixture has total_stockholders_equity"
     )
     assert mc.get("evEbitda") is None, (
         f"evEbitda is non-null ({mc.get('evEbitda')}); "
-        f"this test specifically exercises the null/deferred case."
+        f"this test specifically exercises the deferred-evEbitda case."
     )
 
     rc, dcf_out, stderr = _run_layer2(dcf_script, ["--input", str(fetch_fix)])
@@ -2413,7 +2407,7 @@ def test_phase4_bundle_with_deferred_compute_multiples_validates(tmp_path):
         "dcf": dcf_out,
     }
 
-    # Schema validation must succeed despite null priceToBook / evEbitda
+    # Schema validation must succeed despite null evEbitda (priceToBook now computed)
     try:
         import jsonschema
         jsonschema.validate(instance=bundle, schema=schema)

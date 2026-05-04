@@ -70,10 +70,9 @@ ALIASES = {
 DIVERGENCE_BAND_LOW  = 0.05   # 5%   — boundary inclusive (≤ low)
 DIVERGENCE_BAND_HIGH = 0.15   # 15%  — boundary inclusive for medium (high band is strict >)
 
-# Multiples currently deferred to v2.2.0-l (memo-fetch lacks the raw fields):
-#   priceToBook  → needs total_stockholders_equity
-#   evEbitda     → needs depreciation_amortization
-DEFERRED_MULTIPLES = ("priceToBook", "evEbitda")
+# Multiples currently deferred to future commits (memo-fetch lacks the raw fields):
+#   evEbitda → needs depreciation_amortization (wired in v2.2.0-l Task 6 below)
+DEFERRED_MULTIPLES = ("evEbitda",)
 
 
 def _load_pack(path: Path) -> dict:
@@ -149,6 +148,24 @@ def _concept_fy_end(inc: dict, concept: str) -> str | None:
 def _concept_filings(inc: dict, concept: str) -> list[str]:
     """Most recent FY filing from a concept-specific _meta block (first entry only)."""
     filings = _concept_meta(inc, concept).get("filings_used") or []
+    return [filings[0]] if filings else []
+
+
+def _bs_concept_fy_end(bs: dict, concept: str) -> str | None:
+    return _safe_first(((bs.get("_meta") or {}).get(concept) or {}).get("fiscal_year_ends") or [])
+
+
+def _bs_concept_filings(bs: dict, concept: str) -> list[str]:
+    filings = ((bs.get("_meta") or {}).get(concept) or {}).get("filings_used") or []
+    return [filings[0]] if filings else []
+
+
+def _cf_concept_fy_end(cf: dict, concept: str) -> str | None:
+    return _safe_first(((cf.get("_meta") or {}).get(concept) or {}).get("fiscal_year_ends") or [])
+
+
+def _cf_concept_filings(cf: dict, concept: str) -> list[str]:
+    filings = ((cf.get("_meta") or {}).get(concept) or {}).get("filings_used") or []
     return [filings[0]] if filings else []
 
 
@@ -237,6 +254,35 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
         "computed": False,
         "note": "pass-through from comps-multiples pack (consensus EPS has no primary source)",
     }
+
+    # priceToBook (FY) — denominator basis: total_stockholders_equity (v2.2.0-l)
+    bs = memo_fetch.get("balance_sheet") or {}
+    equity_fy = _safe_first(bs.get("total_stockholders_equity"))
+    pb_fy_end = _bs_concept_fy_end(bs, "total_stockholders_equity")
+    pb_filings = _bs_concept_filings(bs, "total_stockholders_equity")
+
+    if market_cap is None or equity_fy is None or equity_fy == 0:
+        out_compute["priceToBook"] = None
+        out_prov["priceToBook"] = {
+            "computed": False,
+            "note": "compute skipped — marketCap / total_stockholders_equity[0] required (and non-zero)",
+        }
+        if market_cap is None:
+            warnings.append("priceToBook compute skipped: marketCap missing")
+        elif equity_fy is None:
+            warnings.append("priceToBook compute skipped: total_stockholders_equity FY array empty")
+        elif equity_fy == 0:
+            warnings.append("priceToBook compute skipped: total_stockholders_equity[0] is zero")
+    else:
+        out_compute["priceToBook"] = market_cap / equity_fy
+        out_prov["priceToBook"] = {
+            "numerator_source":   "memo-fetch.company_info.marketCap",
+            "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
+            "accession_basis":    pb_filings,
+            "fiscal_year_end":    pb_fy_end,
+            "computed":           True,
+            "note":               "FY-trailing book value, not most-recent-quarter — see ROADMAP §v2.2.0-l",
+        }
 
     # Deferred multiples (v2.2.0-l)
     for m in DEFERRED_MULTIPLES:
