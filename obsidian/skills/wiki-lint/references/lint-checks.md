@@ -24,6 +24,7 @@ Every wiki page must have `## Summary`, `## Key Facts`, `## Connections`. Missin
 - Wikilinks MUST NOT have `.md` extension
 - Wikilinks MUST NOT include subfolder path prefix (`[[entities/foo]]` is forbidden)
 - Wikilinks MUST NOT use absolute paths
+- Wikilinks MUST NOT be wrapped in backticks (`` `[[Page]]` `` or `` **`[[Page]]`** `` renders as inline code in Obsidian, NOT a clickable link). Detect via regex: `` `[^`]*\[\[[^\]]+\]\][^`]*` `` (any backtick-bounded span containing a wikilink)
 
 Violations → **error**.
 
@@ -98,7 +99,7 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L01 | Re-run `/wiki-ingest` on the source(s) that fed this page |
 | L02 | Hand-edit summary to ≤200 chars |
 | L03 | Add missing section (often `## Connections` is the one missed) |
-| L04 | Hand-edit or run a sed pass: `s/\[\[([^]]+)\.md\]\]/[[\1]]/g` |
+| L04 | Hand-edit. For backtick-wrapped wikilinks, sed unwrap: `s/\`(\*\*)?(\[\[[^\]]+\]\])(\*\*)?\`/\1\2\3/g` (preserves bold markers if present). For .md extension, sed: `s/\[\[([^]]+)\.md\]\]/[[\1]]/g` |
 | L05 | Move Mermaid to a synthesis page; replace with prose in entity/concept |
 | L06 | Either link from a related page, archive, or delete |
 | L07 | Fix link target or create the missing page via `/wiki-ingest` |

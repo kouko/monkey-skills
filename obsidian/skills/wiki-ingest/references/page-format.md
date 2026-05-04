@@ -119,6 +119,23 @@ All wikilinks use **bare filename without `.md`**:
 
 Rationale: Obsidian's "shortest path that is unambiguous" link style; pages may be reclassified across subfolders without breaking inbound links.
 
+### NEVER wrap wikilinks in backticks (critical)
+
+Markdown's code-span precedence eats the wikilink syntax. Backticked wikilinks render as gray inline code, NOT as clickable links:
+
+```markdown
+❌ `[[Thompson-Sampling]]`             — renders as inline code, NOT a link
+❌ **`[[Thompson-Sampling]]`**         — bold + inline code, still NOT a link
+❌ `**[[Thompson-Sampling]]**`         — same: code-span eats everything inside
+✅ [[Thompson-Sampling]]               — clickable wikilink
+✅ **[[Thompson-Sampling]]**           — bold + clickable wikilink
+✅ *[[Thompson-Sampling]]*             — italic + clickable wikilink
+```
+
+Why: in Obsidian's markdown parser (and CommonMark generally), code spans `` `...` `` are tokenized BEFORE wikilinks. The text inside backticks becomes a single inline-code node, never reaching the wikilink parser. Bold / italic do not have this problem because they don't tokenize their content as opaque text.
+
+This applies everywhere a wikilink appears — body, lists, tables, callouts. Common offender pattern: emphasizing a wikilink with backticks for "code-style" appearance. **Don't.** Use bold or italic instead, or leave it plain.
+
 ## Tiered retrieval contract (consumer-facing)
 
 `wiki-query` reads in order:

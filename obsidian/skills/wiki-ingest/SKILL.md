@@ -196,6 +196,7 @@ Recommended next steps:
 - [ ] `^[inferred]` / `^[ambiguous]` markers used correctly
 - [ ] No Mermaid in entity/concept pages
 - [ ] Wikilinks use **bare filename only** — no `<subfolder>/` path prefix, no `.md` extension
+- [ ] **No backtick-wrapped wikilinks** — `` `[[Page]]` `` and `` **`[[Page]]`** `` render as inline code in Obsidian (NOT clickable). Use plain `[[Page]]`, `**[[Page]]**`, or `*[[Page]]*` instead
 - [ ] `## User Notes` (if previously present) preserved verbatim
 - [ ] `## Sources` block added/updated with reference page link
 
