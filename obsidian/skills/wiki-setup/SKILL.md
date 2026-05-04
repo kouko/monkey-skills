@@ -1,6 +1,6 @@
 ---
 name: wiki-setup
-description: Scaffold an LLM wiki layer in an Obsidian vault — 6 type folders, index/log/hot/manifest/.env. Use to init wiki/ first time or rebuild. Do NOT use for repo-wiki:init, dbt-wiki:init, or vault setup (use obsidian-vault-setup). Obsidian wiki 初期化・初始化。
+description: Scaffold an LLM wiki layer in an Obsidian vault — 6 type folders, index/log/hot/manifest, .obsidian-wiki.config. Use to init wiki/ first time or rebuild. Do NOT use for repo-wiki:init, dbt-wiki:init, or vault setup (use obsidian-vault-setup). Obsidian wiki 初期化・初始化。
 ---
 
 # Wiki Setup — One-Time Wiki Layer Initialization
@@ -23,7 +23,7 @@ I'll set up an LLM wiki layer (knowledge distillation layer) inside an Obsidian 
 What this skill does:
   • Scaffolds wiki/ with 6 type folders: entities, concepts, synthesis, skills, journal, references
   • Creates index.md, log.md, hot.md (session cache), .manifest.json (delta tracking)
-  • Writes .env with OBSIDIAN_VAULT_PATH and OBSIDIAN_EXCLUDE_DIRS
+  • Writes .obsidian-wiki.config with OBSIDIAN_WIKI_VAULT_PATH and OBSIDIAN_WIKI_EXCLUDE_DIRS
 
 What this skill doesn't do:
   • It does NOT ingest your notes — that's /wiki-ingest (after setup)
@@ -34,7 +34,7 @@ How we'll proceed:
   1. I'll verify CWD is the vault root (look for .obsidian/, etc.)
   2. Ask 2 quick questions: where wiki/ lives, which folders to exclude
   3. Show a preview tree, wait for "build it" confirmation
-  4. Create files / dirs / .env
+  4. Create files / dirs / .obsidian-wiki.config
 
 Helpful before we start:
   • Run me from inside the vault root (cd to the vault first)
@@ -51,7 +51,39 @@ After orientation, wait for user response — don't proceed to Pre-flight Check 
 
 ## Pre-flight Check
 
-Before doing anything, verify:
+### Step 0 — Detect legacy `.env` config (migration path)
+
+If `<vault-root>/.env` exists AND contains `OBSIDIAN_VAULT_PATH=` line:
+
+This is a v3.7.0-or-earlier config. Offer migration:
+
+```
+Detected legacy wiki config in .env (v3.7.0 or earlier).
+
+In v3.8.0 the config moved to .obsidian-wiki.config to avoid:
+  - Claude permission rules that block .env reads
+  - Anti-secret tooling false positives
+  - .gitignore default patterns
+  - Naming collision with other tools' .env files
+
+I can migrate by:
+  1. Reading OBSIDIAN_VAULT_PATH, OBSIDIAN_EXCLUDE_DIRS, OBSIDIAN_RAW_DIR,
+     OBSIDIAN_MAX_PAGES_PER_INGEST, OBSIDIAN_CATEGORIES, LINT_SCHEDULE from .env
+  2. Renaming each key to OBSIDIAN_WIKI_*
+  3. Writing to .obsidian-wiki.config (multi-line values for arrays)
+  4. Adding a deprecation comment in .env (not deleting — you may have
+     other unrelated env vars there)
+
+Proceed with migration? [Y/n]
+```
+
+If user accepts → migrate then continue with normal flow (Step 1 may be skipped if the migrated config is complete).
+
+If user declines → continue with normal flow (will write fresh `.obsidian-wiki.config`; legacy `.env` stays untouched but ignored).
+
+### Step 1 — Identify the vault
+
+Then verify:
 
 1. **CWD is the vault root** (or user explicitly tells you otherwise). Look for hints in priority order:
    - `.obsidian/` directory (strongest signal — Obsidian-managed vault)
@@ -91,15 +123,20 @@ Options:
 ```
 
 > [!important]
-> Values written to `.env` MUST be bare directory names or **shell globs** (no leading/trailing slashes).
-> Glob patterns supported (NEW in v3.7.0):
+> Values written to `.obsidian-wiki.config` MUST be bare directory names or **shell globs** (no leading/trailing slashes).
+>
+> Glob patterns supported:
 > - `daily` — literal exact match
 > - `_*` — any name starting with underscore
 > - `temp?` — single-char wildcard
 > - `[Aa]rchive` — case-variant char class
 >
-> When normalizing user input, strip surrounding whitespace and trailing `/` before writing.
-> Example: user says "daily/, inbox/, _*" → write `OBSIDIAN_EXCLUDE_DIRS=daily,inbox,_*`.
+> Each pattern is on its own line within the multi-line value (see Step 3b).
+> Multi-line format means patterns may contain commas, spaces, and CJK characters
+> without escaping — only newlines are forbidden (which filesystems disallow anyway).
+>
+> When normalizing user input from CSV form, strip surrounding whitespace and trailing `/`.
+> Example: user types "daily/, inbox/, _*" → write each on its own line in the config file.
 
 > [!note] Always-excluded system paths
 > The following are excluded automatically (NOT user-configurable, hardcoded in `wiki-ingest`):
@@ -108,7 +145,7 @@ Options:
 > - `.trash/` (deleted notes)
 > - `.git/`, `node_modules/`, `_raw/` (system noise)
 >
-> User exclusions in `.env` are **additional** to these.
+> User exclusions in `.obsidian-wiki.config` are **additional** to these.
 
 Do not prompt for `MAX_PAGES_PER_INGEST`, `LINT_SCHEDULE`, etc. — defaults are sane.
 
@@ -118,7 +155,7 @@ Do not prompt for `MAX_PAGES_PER_INGEST`, `LINT_SCHEDULE`, etc. — defaults are
 I'll create:
 
 📁 [vault-root]
-├── .env                     ← wiki config (gitignore'd)
+├── .obsidian-wiki.config    ← wiki config (shell-sourceable, dot-hidden)
 ├── wiki/                    ← will be ingested INTO; auto-excluded from sources
 │   ├── index.md             ← global page index
 │   ├── log.md               ← append-only operation log
@@ -149,36 +186,56 @@ Wait for confirmation. Do not act before user agreement.
 mkdir -p wiki/{entities,concepts,synthesis,skills,journal,references}
 ```
 
-### 3b. Write `.env`
+### 3b. Write `.obsidian-wiki.config`
 
-Write to `<vault-root>/.env`:
+Write to `<vault-root>/.obsidian-wiki.config` (shell-sourceable; NOT `.env` — this avoids Claude permission rules and anti-secret tooling collisions). Multi-line values for arrays — patterns may contain commas, spaces, or CJK without escaping:
 
 ```bash
-# === Wiki layer config ===
-OBSIDIAN_VAULT_PATH=wiki
+# Obsidian Wiki layer config (managed by /wiki-setup; safe to hand-edit).
+# Sourced by all wiki-* skills via: set -a; . .obsidian-wiki.config; set +a
+#
+# === Required ===
 
-# Folders to EXCLUDE from wiki ingestion (blacklist).
-# wiki-ingest scans the entire vault recursively for .md files,
-# pruning vault-root-level directories matching any pattern in this list.
-# Each entry is a SHELL GLOB pattern (not just a literal name):
+# Path of the wiki output folder, relative to vault root.
+# Configurable: rename `wiki/` to `knowledge/`, `kb/`, `.wiki/`, etc.
+OBSIDIAN_WIKI_VAULT_PATH=wiki
+
+# Folders to EXCLUDE from wiki ingestion (multi-line, one shell glob per line).
+# Top-level matching only; nested dirs with same name are NOT excluded.
+# Always-excluded (hardcoded): wiki/, .obsidian/, .trash/, .git/, node_modules/, _raw/
+# Glob patterns:
 #   daily       literal exact match
 #   _*          any name starting with underscore (e.g. _raw, _archive)
 #   temp?       single-char wildcard
 #   [Aa]rchive  case-variant char class
-# Always-excluded (hardcoded, not configurable): wiki/, .obsidian/, .trash/, .git/, node_modules/, _raw/
-OBSIDIAN_EXCLUDE_DIRS=<comma-joined exclude list from Step 1, normalized: stripped slashes>
-
-OBSIDIAN_CATEGORIES=concepts,entities,skills,references,synthesis,journal
+OBSIDIAN_WIKI_EXCLUDE_DIRS="<one pattern per line, derived from Step 1>"
 
 # === Optional ===
-OBSIDIAN_MAX_PAGES_PER_INGEST=15
-OBSIDIAN_RAW_DIR=_raw
-LINT_SCHEDULE=weekly
+
+OBSIDIAN_WIKI_CATEGORIES="concepts
+entities
+skills
+references
+synthesis
+journal"
+OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST=15
+OBSIDIAN_WIKI_RAW_DIR=_raw
+OBSIDIAN_WIKI_LINT_SCHEDULE=weekly
 ```
+
+**Conversion rule** for the `OBSIDIAN_WIKI_EXCLUDE_DIRS` value:
+- User input from Step 1 is comma-separated (e.g. `daily, inbox, _*`)
+- Split on commas, trim whitespace and trailing `/`, write one pattern per line inside the multi-line quoted string
+- Example output for `daily, inbox, _*`:
+  ```
+  OBSIDIAN_WIKI_EXCLUDE_DIRS="daily
+  inbox
+  _*"
+  ```
 
 Paths are **vault-relative**, not absolute. Consumer skills resolve them against CWD.
 
-If `.env` already exists, do NOT overwrite. Show diff and ask user.
+If `.obsidian-wiki.config` already exists, do NOT overwrite. Show diff and ask user.
 
 ### 3c. Write `wiki/index.md`
 
@@ -244,11 +301,12 @@ This file maps source-file path → SHA-256 hash. `wiki-ingest` uses it to skip 
 
 Append (only if not already present):
 ```
-.env
 wiki/.manifest.json
 ```
 
-`hot.md` stays tracked — it's small and useful in cross-machine sync.
+`.obsidian-wiki.config` is **NOT** added to .gitignore — it's safe to version control (no secrets, just paths and patterns). User may opt to commit it for cross-machine sync.
+
+`hot.md` also stays tracked — it's small and useful in cross-machine sync.
 
 ## STEP 4 — Suggest next actions
 

@@ -5,13 +5,13 @@ description: Ingest Obsidian vault notes into wiki/ with SHA-256 delta tracking;
 
 # Wiki Ingest — Source Notes → Wiki Pages
 
-Reads source notes from configured folders (via `.env`), distills knowledge, writes structured wiki pages following [page-format.md](references/page-format.md), and tracks changes via [delta-tracking.md](references/delta-tracking.md).
+Reads source notes from configured folders (via `.obsidian-wiki.config`), distills knowledge, writes structured wiki pages following [page-format.md](references/page-format.md), and tracks changes via [delta-tracking.md](references/delta-tracking.md).
 
 ## Pre-flight (eager)
 
 Read these BEFORE STEP 1:
 
-1. **`.env`** at vault root — must contain `OBSIDIAN_VAULT_PATH`, `OBSIDIAN_EXCLUDE_DIRS`. If missing, instruct user to run `/wiki-setup` and exit.
+1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
 2. **`wiki/.manifest.json`** — for delta detection. If missing, treat as empty `{}` (likely first ingest after wiki-setup).
 
 ## References (lazy — read only when needed)
@@ -31,7 +31,7 @@ These are spec references; load them at the moment you need them, not at pre-fli
 `wiki-ingest` scans the **entire vault** for `.md` files, with two blacklist layers:
 
 - **System always-excluded**: `wiki/`, `.obsidian/`, `.trash/`, `.git/`, `node_modules/`, `_raw/`
-- **User-configured**: `OBSIDIAN_EXCLUDE_DIRS` from `.env` (default `daily,inbox`)
+- **User-configured**: `OBSIDIAN_WIKI_EXCLUDE_DIRS` from `.obsidian-wiki.config` (default `daily,inbox`; multi-line, one pattern per line)
 
 **Match rule**: top-level only — only the first path segment is compared, case-sensitive. Nested directories with the same name (`projects/old/daily/`) are NOT excluded.
 
@@ -49,16 +49,15 @@ Options:
 3. "Research notes only" — limit to research/ (typical after wiki-auto-research)
 ```
 
-Respect `OBSIDIAN_MAX_PAGES_PER_INGEST` (default 15). If scope exceeds it, ask user to confirm or batch.
+Respect `OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST` (default 15). If scope exceeds it, ask user to confirm or batch.
 
-For option 1, invoke the bundled scan script (POSIX-portable, reads `OBSIDIAN_EXCLUDE_DIRS` from env, emits one absolute path per line):
+For option 1, invoke the bundled scan script (POSIX-portable; auto-sources `.obsidian-wiki.config` from the vault root, emits one absolute path per line):
 
 ```sh
-set -a; . .env; set +a              # export .env vars
 bash <skill-root>/scripts/scan-vault.sh "$VAULT_ROOT" > /tmp/wiki-ingest-candidates.txt
 ```
 
-See [scripts/scan-vault.sh](scripts/scan-vault.sh) for implementation. Don't hand-roll a `find` command — the script handles top-level pruning, system exclusions, and edge cases (loose root .md files, normalization). For options 2 and 3, scan the user-specified path directly via `Read` / `Bash find`.
+The script auto-sources `<vault-root>/.obsidian-wiki.config` to read `OBSIDIAN_WIKI_EXCLUDE_DIRS` — no need to source it manually. See [scripts/scan-vault.sh](scripts/scan-vault.sh) for implementation. Don't hand-roll a `find` command — the script handles top-level pruning, system exclusions, multi-line value parsing, and edge cases (loose root .md files, special chars in dir names). For options 2 and 3, scan the user-specified path directly via `Read` / `Bash find`.
 
 ## STEP 2 — Scan and hash
 
@@ -76,7 +75,7 @@ Found 47 source files:
   MODIFIED:    3  ← will re-ingest, preserve User Notes
   UNCHANGED:  32  ← skipped via manifest
 
-Cap: 15 pages per run (configurable in .env)
+Cap: 15 pages per run (configurable in .obsidian-wiki.config)
 Proceed?
 ```
 

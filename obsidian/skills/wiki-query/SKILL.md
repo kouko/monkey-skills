@@ -11,7 +11,7 @@ See [retrieval-tiers.md](references/retrieval-tiers.md) for the full contract.
 
 ## Pre-flight
 
-1. Read `.env` at vault root to find `OBSIDIAN_VAULT_PATH` (defaults to `wiki/`).
+1. Read `<vault-root>/.obsidian-wiki.config` to find `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
 2. If `wiki/` does not exist, instruct user to run `/wiki-setup`.
 3. If `wiki/index.md` is empty, instruct user to run `/wiki-ingest` first.
 
