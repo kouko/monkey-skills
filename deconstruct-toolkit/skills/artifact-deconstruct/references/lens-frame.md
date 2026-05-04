@@ -1,164 +1,47 @@
-# Lens: Frame Analysis (Goffman + Lakoff)
+# Lens: Frame (universal core / language-variant router)
 
-> **Sources**:
-> - Erving Goffman, *Frame Analysis: An Essay on the Organization of Experience* (Harper & Row, 1974). Primary frameworks Ch 2; keying Ch 3 (definition with quote on p 44 — "an activity already meaningful in terms of some primary framework... transformed into something patterned on this activity but seen... to be quite something else"); fabrications Ch 4; the manufacture of negative experience Ch 11; vulnerabilities of experience and frame traps Ch 12.
-> - George Lakoff & Mark Johnson, *Metaphors We Live By* (University of Chicago Press, 1980; 2003 afterword edition). Book is 30 chapters total. Three-type taxonomy (Structural / Orientational / Ontological) introduced in Ch 1; orientational metaphors Ch 4; ontological metaphors Ch 6.
+> **Sources**: this file is a router; primary sources live in the variants below.
+> - English / Western (`lens-frame-anglo.md`): Goffman (1974) + Lakoff (1980)
+> - Japanese (`lens-frame-ja.md`): Goffman + Lakoff + 建前-本音 + 空気 (kūki) + 間 (ma) + JP-specific conceptual metaphors
+> - Chinese (`lens-frame-zh.md`): Goffman + Lakoff + Hwang K-K. (1987) face-and-favor + 關係 (guanxi) + 陰陽 complementary structure
 
-> **Synthesis note**: This file combines Goffman's frame analysis (1974) and Lakoff & Johnson's conceptual metaphor theory (1980). The two were not co-published. Combining them is a methodological choice by `deconstruct-toolkit` — Goffman names the *social frame* (what kind of situation the text presumes), Lakoff names the *cognitive frame* (what mental structures shape the language). They operate at different levels of the same phenomenon. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md).
+> **Cultural-sensitivity flag** 🟠 **medium**: This lens is culturally sensitive. Goffman's frame analysis was developed on Western daily-life samples; Lakoff's conceptual metaphor structure is claimed universal but specific metaphors differ by language. East Asian cultures have distinct frame phenomena (建前/本音 / 給面子) absent from Goffman, and binary-opposition assumptions (Lakoff) are challenged by complementary structures (陰陽). **Do not apply analytical questions from this file directly** — select a language variant first.
 
-Two complementary framings: Goffman's **frame analysis** for the social
-context-setting work the artifact performs, Lakoff's **conceptual
-metaphor** for the cognitive structures embedded in the language.
+## Why this is a router, not a content file
 
-## When to apply this lens
+Frame analysis (social and cognitive) intersects culture in two ways:
 
-- Political / ideological texts
-- Texts with strong recurring metaphors
-- Texts where you suspect hidden assumptions or worldview enforcement
-- Branding / corporate identity materials (heavy framing work)
-- Manifestos / mission statements
+1. **Specific frames are culture-bound** — 建前/本音 (tatemae/honne dual frame), 給面子 (mianzi face-work), 関係 / 關係 (guanxi relational frame) are absent or weak in Western samples
+2. **Binary opposition assumption** — Lakoff's structural-metaphor analysis presumes binary opposition (us/them, more/less, up/down). Daoist 陰陽 is **complementary**, not oppositional, requiring different operationalization
 
-## When NOT to apply
+Variants:
 
-- Texts with no metaphorical structure (technical reference)
-- Texts where the frame is openly disclosed (peer-reviewed papers usually)
-- Pure descriptive content (raw data, news reports without editorial)
+- **Anglo (Goffman + Lakoff)**: Western frame analysis + Western metaphor source domains (war / journey / family / construction)
+- **Japanese (+ 建前/本音 + 空気を読む + 間 ma)**: dual-frame layer absent from Goffman; reading-the-air as frame-detection skill; ma (negative space / pause) as frame element; JP-specific metaphors (心 heart-mind, 道 way)
+- **Chinese (+ 面子 mianzi + 關係 guanxi + 陰陽 complementary)**: face-work as identity-frame; relational frame as primary social grammar; 陰陽 challenges Lakoff binary assumption
 
----
+Per [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md), each register is given its own variant file.
 
-## Part 1: Goffman's Frame Analysis
+## Variant selection
 
-A "frame" is the implicit world-view that makes a text meaningful.
-Same words inside different frames carry different weight.
+Choose ONE variant before applying:
 
-| Concept | Question |
-|---|---|
-| **Primary framework** | What world-view does the text presume? What is the "real" thing this text refers to? |
-| **Keying** | What tone / register is in play? (Serious / ironic / instructional / playful / urgent) |
-| **Fabrication** | Is the surface frame ≠ real intent? (Does the text say one thing while doing another?) |
-| **Frame vulnerability / break** | Where does the text deliberately violate its own expectations or expose a frame trap? (Ch 12, "Vulnerabilities of Experience") |
-
-### Worked move 1: Primary framework detection
-
-Ask: "If a reader from outside this context picked up this text, what
-would they need to know to even begin understanding it?"
-
-That is the primary framework. Make it explicit.
-
-Example: A SaaS startup pitch deck assumes a primary framework of
-**venture-funded growth tech**. Inside that frame: "burn rate" is
-acceptable; "cash flow positive" is suspect (signals slow growth).
-**Outside** that frame, those valences flip.
-
-### Worked move 2: Keying
-
-The same content can be keyed differently:
-
-- "We hit our Q3 numbers" — *celebratory* keying (party / champagne emoji)
-- "We hit our Q3 numbers" — *military* keying (mission accomplished, salute)
-- "We hit our Q3 numbers" — *deadpan* keying (next slide, please)
-
-Identify which keying the artifact uses, and what would change if it
-were re-keyed differently.
-
-### Worked move 3: Fabrication detection
-
-A fabrication is when the surface frame differs from the actual frame.
-
-| Surface frame | Actual frame |
-|---|---|
-| "Open discussion" | The decision is made; this is consultation theater |
-| "Customer obsession" | Internal-metrics obsession dressed as customer focus |
-| "Empowering individuals" | Standardization through individual-flavored UI |
-
-Spotting fabrication is core to deconstruction. Look for places where
-the *invitation* of the text contradicts its *structure*.
-
----
-
-## Part 2: Lakoff's Conceptual Metaphor
-
-Every strong metaphor maps a **source domain** onto a **target domain**.
-The mapping carries consequences — and the consequences are usually
-invisible until named.
-
-### Analytical procedure
-
-For each strong metaphor in the text:
-
-1. **Identify the source domain** — what is being borrowed? (war / journey / family / horse harness / building / disease / sports / theater)
-2. **Identify the target domain** — what is being described? (AI governance / business / life / education / politics)
-3. **Map the features that carry over** — which attributes of source are projected onto target?
-4. **Examine power relations** — who's the rider / general / parent / coach in the implicit hierarchy?
-5. **Reframe** — what other metaphors could replace this? What changes when they do?
-
-### Worked example: "Harness Engineering" for AI governance
-
-- **Source domain**: Horse harness (reins, bridle, bit, halter)
-- **Target domain**: AI agent governance
-- **Mapping**: Human=rider, AI=horse, rules=reins, oversight=bit-and-bridle
-- **Power relations**: Human dominant, AI as powerful-but-controlled animal
-- **Reframe options**:
-  - "AI as colleague" — implies negotiation, no harness
-  - "AI as toolbox" — implies inanimate, no agency
-  - "AI as apprentice" — implies growing capability, gradual autonomy
-  - "AI as tide" — implies cannot be controlled, must be channeled
-
-Each reframe carries different ethics: the harness frame justifies
-strict constraint; the colleague frame demands respectful collaboration;
-the tide frame admits limits to control.
-
-### Common metaphor source domains in business writing
-
-| Source | Target often is | Embedded values |
+| Artifact register | Variant | Cultural anchor |
 |---|---|---|
-| **War** | Competition, marketing, sales | Adversarial, zero-sum, conquest |
-| **Journey** | Career, project, learning | Linear, destination-oriented, milestones |
-| **Family** | Team, company | Loyalty, hierarchy, obligation |
-| **Construction** | Strategy, system | Foundation, layers, blueprints |
-| **Sports** | Team, project | Coach-player hierarchy, season metaphor |
-| **Disease** | Problem, threat | Spread, infection, immune response |
-| **Garden** | Growth, ecosystem | Cultivation, weeds, organic |
+| Primarily English / Western | [`lens-frame-anglo.md`](lens-frame-anglo.md) | Goffman (1974) + Lakoff (1980) |
+| Primarily Japanese | `lens-frame-ja.md` (shipping later in v0.2.0) | Goffman + Lakoff + 建前/本音 + 空気 + 間 + JP conceptual metaphors |
+| Primarily Chinese (TC or SC) | `lens-frame-zh.md` (shipping later in v0.2.0) | Goffman + Lakoff + Hwang K-K. mianzi + 關係 + 陰陽 complementary structure |
+| Mixed / ambiguous | Ask user OR apply 2 variants in parallel | — |
+| Korean / Vietnamese / Thai / other | Fall back to `-anglo` with caveat | (see ADR-0004 §"Out of scope") |
 
-### Pitfalls
+See [`protocols/lens-variant-selection.md`](../protocols/lens-variant-selection.md) for the language-detection algorithm.
 
-- **Treating metaphor as decoration**: Lakoff's claim is that conceptual metaphors *structure thought*, not just decorate it. The metaphor is doing work, not just adding flavor.
-- **Reframing without commitment**: listing alternative metaphors is preparation, not analysis. Pick one alternative and articulate what specifically changes.
-- **Mistaking dead metaphors for live ones**: "leverage," "synergy," "deep dive" are mostly dead. Focus analytic attention on metaphors that still carry live cognitive structure.
+## Plugin scope
 
----
+`deconstruct-toolkit` ships frame variants for **EN / JA / ZH only**. This is a permanent scope decision per [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md).
 
-## Combining Goffman + Lakoff
+## See also
 
-Use Goffman to surface the *social frame* (what kind of situation does
-this text assume), and Lakoff to surface the *cognitive frame* (what
-mental structures shape the language).
-
-A strong frame analysis names both:
-
-> "The text operates inside a **venture-funded growth tech** social
-> frame (Goffman) and uses a **war metaphor** (Lakoff) to structure
-> competitive language. Together: the reader is positioned as a
-> wartime founder, where adversarial action is keyed as virtuous and
-> the horse-harness metaphor would be unthinkable."
-
-## Output format
-
-```markdown
-### Goffman frame analysis
-- Primary framework: ...
-- Keying: ...
-- Fabrication detected? <yes / no — describe>
-- Frame break(s): ...
-
-### Lakoff conceptual metaphor
-- Source domain: ...
-- Target domain: ...
-- Mapping: <bullet list of carried-over features>
-- Power relations: ...
-- Reframe alternative: ... (describe what changes)
-```
-
-End with 1-line synthesis: "The text positions the reader as **X**,
-using **Y** metaphor to make **Z** feel natural. The unstated
-alternative is **W**."
+- [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md) — cultural-lens-variant pattern
+- [`protocols/lens-variant-selection.md`](../protocols/lens-variant-selection.md) — full routing algorithm
+- Sister lenses also routed by language: `lens-rhetoric.md` / `lens-persuasion.md` / `lens-genre.md`

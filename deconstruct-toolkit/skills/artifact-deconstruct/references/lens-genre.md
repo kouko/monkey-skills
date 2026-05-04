@@ -1,214 +1,46 @@
-# Lens: Genre Analysis (Swales + Bhatia)
+# Lens: Genre (universal core / language-variant router)
 
-> **Sources**:
-> - John M. Swales, *Genre Analysis: English in Academic and Research Settings* (Cambridge University Press, 1990). 260 pages total. The CARS (Create A Research Space) model — three moves: Establishing a Territory, Establishing a Niche, Occupying the Niche — is presented in the chapter on research-article introductions. Specific page range for the model itself is approximately mid-volume; consult the printed edition for exact pages.
-> - Vijay K. Bhatia, *Analysing Genre: Language Use in Professional Settings* (Longman, 1993). 246 pages total. Move-step analysis developed across early chapters; **Ch 3 covers sales promotion letters and job applications, including the 7-move sales-letter genre (with the 7 moves of letter of application stated on p 61)**.
+> **Sources**: this file is a router; primary sources live in the variants below.
+> - English / Western (`lens-genre-anglo.md`): Swales (1990) + Bhatia (1993)
+> - Japanese (`lens-genre-ja.md`): 甲田直美『大学で学ぶアカデミック・ライティングの教科書』+ Hinds (1983) + JP business letter handbooks
+> - Chinese (`lens-genre-zh.md`): ZH academic-writing handbook + 公文 genre handbook (specific sources TBD in Phase E grounding research)
 
-> **Synthesis note**: This file combines Swales's CARS model (1990) and Bhatia's move-step analysis (1993). Unlike most synthesis lenses in this toolkit, **this combination is organic** — Bhatia's work is a direct lineage of Swales (Bhatia studied under Swales's influence; *Analysing Genre* extends Swales's academic-genre framework to professional genres). The combination here is closer to a unified school of thought than a synthetic composite. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md) for the broader synthesis-disclosure policy.
+> **Cultural-sensitivity flag** 🔴 **high**: This lens is culturally sensitive. Genre conventions — what canonical move structures recognizable document types follow — are language-and-culture specific. Swales/Bhatia's CARS and 7-move sales letter are derived from English-academic and Western-DM artifacts; Japanese and Chinese have distinct genre canons. **Do not apply analytical questions from this file directly** — select a language variant first.
 
-Genre analysis recovers the **conventional move structure** of any
-recognizable document type — and identifies when moves are **missing**
-or **weak**.
+## Why this is a router, not a content file
 
-## When to apply this lens
+Document genres developed within their language's literary, academic, and business cultures:
 
-- Document packs (recognizable kits)
-- SOPs / playbooks / procedures
-- Academic papers (especially abstracts and introductions)
-- Business proposals / RFPs / sales letters
-- Anything where you can name the document genre
+- **Anglo (Swales + Bhatia)**: CARS 3-move research-paper introduction; 7-move sales letter; Western proposal genre
+- **Japanese**: dual mode — modern academic uses 序論-本論-結論 (Western-influenced); literary / op-ed / business uses 起承転結; 拝啓 / 時候の挨拶 / 主文 / 末文 / 敬具 formula for business letters
+- **Chinese**: 緒論-本論-結論 modern academic; ZH business 公文 genres (函 / 通知 / 報告 / 請示) with prescribed move structures; 八股 historical influence on modern argument
 
-## When NOT to apply
+Anglo move analyses do not capture JP business letter formula or ZH 公文 register. Per [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md), each tradition is given its own variant file.
 
-- Unrecognizable / experimental forms
-- Personal expression where no genre conventions apply
-- Multimedia where text is secondary
+## Variant selection
 
-## Step 1: Identify the genre
+Choose ONE variant before applying:
 
-The first job of this lens is to **name the genre** and look up its
-expected moves.
-
-Common business / professional genres and their canonical move sets:
-
-### Sales / marketing genres
-
-#### Sales letter / DM (Bhatia)
-
-1. Establishing credentials
-2. Introducing the offer
-3. Offering incentives
-4. Enclosing documents
-5. Soliciting response
-6. Using pressure tactics (optional)
-7. Ending politely
-
-#### Landing page / DTC product page
-
-1. Pain articulation (or aspiration evocation)
-2. Solution introduction
-3. Mechanism / feature display
-4. Proof (testimonial / data / case)
-5. Risk reversal (refund / trial)
-6. Call to action
-
-### Academic genres
-
-#### Research paper introduction (Swales CARS)
-
-- Move 1: **Establishing a territory**
-  - Step 1A: Claiming centrality
-  - Step 1B: Making topic generalization
-  - Step 1C: Reviewing previous research
-- Move 2: **Establishing a niche**
-  - Step 2A: Counter-claiming
-  - Step 2B: Indicating a gap
-  - Step 2C: Question-raising
-  - Step 2D: Continuing tradition
-- Move 3: **Occupying the niche**
-  - Step 3A: Outlining purposes
-  - Step 3B: Announcing principal findings
-  - Step 3C: Indicating structure of paper
-
-### Business genres
-
-#### Strategy proposal
-
-1. Context establishment
-2. Problem definition
-3. Options consideration
-4. Recommended option
-5. Implementation roadmap
-6. Risk register
-7. Decision request
-
-#### Internal rollout document
-
-1. Pain articulation ("here's why we need to change")
-2. Solution introduction ("here's what we're rolling out")
-3. Proof / case study ("here's where it worked")
-4. Risk acknowledgment ("here's where it might not")
-5. Implementation plan ("here's how we'll do it")
-6. Call to action ("here's what we need from you")
-
-#### Sales pitch deck
-
-1. Hook / problem statement
-2. Market opportunity
-3. Solution / product
-4. Traction / proof
-5. Business model
-6. Team
-7. Ask
-
-## Step 2: Map the artifact's moves
-
-For each section / paragraph of the artifact, label which canonical
-move it performs. Use a table:
-
-| Artifact section | Move performed | Notes |
+| Artifact register | Variant | Primary sources |
 |---|---|---|
-| §1 "Why now" | Pain articulation | Strong |
-| §2 "What we propose" | Solution introduction | Adequate |
-| §3 (none) | Proof / case study | **Missing** |
-| §4 "Risks" | Risk acknowledgment | Strong — explicit failure modes |
+| Primarily English / Western | [`lens-genre-anglo.md`](lens-genre-anglo.md) | Swales (1990) + Bhatia (1993) |
+| Primarily Japanese | `lens-genre-ja.md` (shipping later in v0.2.0) | 甲田直美『大学で学ぶアカデミック・ライティングの教科書』+ Hinds (1983) + JP business letter handbooks |
+| Primarily Chinese (TC or SC) | `lens-genre-zh.md` (shipping later in v0.2.0) | ZH academic writing handbook + 公文 genre handbook (TBD specific sources) |
+| Mixed / ambiguous | Ask user OR apply 2 variants in parallel | — |
+| Korean / Vietnamese / Thai / other | Fall back to `-anglo` with caveat | (see ADR-0004 §"Out of scope") |
 
-## Step 3: Identify missing or weak moves
+See [`protocols/lens-variant-selection.md`](../protocols/lens-variant-selection.md) for the language-detection algorithm.
 
-The most common findings:
+## Dual-mode warning (Japanese)
 
-| Pattern | What it means |
-|---|---|
-| Move 2 missing in proposals | "No compelling reason now" — proposal will struggle |
-| Risk move missing in rollout doc | "No credibility" — readers will distrust |
-| Action move missing in marketing | "No conversion" — readers feel ambivalent |
-| Implementation move missing in strategy | "No traction" — feels like wishful thinking |
-| Counter-claim move missing in academic intro | "No engagement with literature" — feels insular |
+Modern Japanese **academic writing has explicitly rejected 起承転結** in favor of Western-style 序論-本論-結論 (per `shouronbun.com` consensus + 甲田直美 textbook). However, **literary / op-ed / business / journalistic Japanese** still uses kishōtenketsu. The `-ja` variant ships with explicit register detection — academic vs non-academic determines which move structure to apply.
 
-Each missing move is data. Report each one.
+## Plugin scope
 
-## Step 4: Detect over-strong vs under-strong moves
+`deconstruct-toolkit` ships genre variants for **EN / JA / ZH only**. This is a permanent scope decision per [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md).
 
-Even when a move is present, it may be unbalanced:
+## See also
 
-- **Over-strong pain articulation** → reader feels manipulated
-- **Under-strong proof** → reader doesn't trust the claim
-- **Over-strong CTA** → feels pushy, lowers conversion
-- **Under-strong risk register** → feels naive, lowers credibility
-
-Note any unbalanced moves.
-
-## Step 5: Genre transgressions
-
-Sometimes the artifact deliberately violates its genre conventions.
-This can be:
-
-- **Successful subversion**: a CTA-less landing page that signals "we're not selling, just sharing" (high-trust play)
-- **Failed transgression**: a strategy proposal without options consideration (looks predetermined / political)
-
-Distinguish the two by asking: **does the violation serve the artifact's
-purpose, or undermine it?**
-
-## Worked example: Internal AI rollout document
-
-Artifact: 5-page playbook from "Str-Team" introducing AI tools to a
-strategy team.
-
-### Move map
-
-| Section | Canonical move | Strength |
-|---|---|---|
-| §1 "Why this, why now" | Pain articulation | Strong (concrete frustration) |
-| §2 "Harness Engineering" | Solution introduction | Strong (named framework) |
-| §3 Cases A/B/C | Proof | Strong (specific, recent) |
-| §4 "Honest concerns" | Risk acknowledgment | **Unusually strong** (explicit failure modes) |
-| §5 "What we ask of you" | Call to action | Strong (segmented by role) |
-| § (none) | Implementation roadmap | **Missing** (or implicit only) |
-
-### Findings
-
-- **All moves present except implementation roadmap** — the gap is real
-  but probably intentional (the document is awareness-stage, not
-  rollout-stage)
-- **Risk move is unusually strong** — distinguishes this from typical
-  rollout docs which under-acknowledge risk
-- **Action move is segmented (individual / manager)** — sophisticated
-  audience routing inside a single move
-
-### Verdict
-
-Genre-faithful with one deliberate omission. The strong risk move is
-the document's most distinctive feature.
-
-## Pitfalls
-
-- **Forcing the artifact into the wrong genre**: if a document does not
-  match any canonical genre, name that fact — do not pick the
-  closest-fit and pretend it works
-- **Ignoring genre hybrids**: many real artifacts blend genres (rollout
-  + sales pitch). Name the hybrid; don't force one genre's lens
-- **Missing moves as success metric**: missing a move is **information**,
-  not a failure to detect — sometimes the omission is the design
-
-## Output format
-
-```markdown
-### Genre identified
-<name>, with optional <hybrid notes>
-
-### Move map
-| Section | Canonical move | Strength | Notes |
-|---|---|---|---|
-| ... | ... | strong/adequate/weak/missing | ... |
-
-### Findings
-- Missing moves: ...
-- Unbalanced moves: ...
-- Genre transgressions: ...
-
-### Verdict
-<one paragraph>
-```
-
-End with 1-line synthesis: "The artifact is **genre-X**, with **N**
-canonical moves; **M** are missing; the strongest deviation is **Y**."
+- [ADR-0004](../../../docs/adr/0004-cultural-lens-variants.md) — cultural-lens-variant pattern
+- [`protocols/lens-variant-selection.md`](../protocols/lens-variant-selection.md) — full routing algorithm
+- Sister lenses also routed by language: `lens-rhetoric.md` / `lens-persuasion.md` / `lens-frame.md`
