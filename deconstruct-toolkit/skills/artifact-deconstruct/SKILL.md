@@ -108,7 +108,16 @@ prompts that operationalize each dimension.
 
 ### Step 4: Apply selected lenses
 
-Read each selected `references/lens-*.md` file and apply its
+Before reading lens references, **resolve the language variant** for
+any of the 4 culturally-sensitive lenses (`lens-rhetoric` /
+`lens-persuasion` / `lens-genre` / `lens-frame`) per
+[`protocols/lens-variant-selection.md`](protocols/lens-variant-selection.md).
+The universal-core `lens-{rhetoric,persuasion,genre,frame}.md` files
+contain meta-only routing content; the analytical questions live in
+the per-language variant (`-anglo` / `-ja` / `-zh`). `lens-semiotic`
+and `lens-ux` do not have language variants in v0.2.0.
+
+Read each selected lens reference (variant-resolved) and apply its
 analytical questions to the artifact. Each lens reference contains:
 
 - Primary-source citation (locked)
@@ -116,14 +125,16 @@ analytical questions to the artifact. Each lens reference contains:
 - Worked example
 - "Do not over-apply" pitfalls
 
-Available lenses:
+Available lenses (* = language-variant routing required):
 
 - [`references/lens-semiotic.md`](references/lens-semiotic.md) — Barthes 5 codes (HER / PRO / SEM / SYM / REF)
-- [`references/lens-rhetoric.md`](references/lens-rhetoric.md) — Burke pentad + Toulmin model
-- [`references/lens-frame.md`](references/lens-frame.md) — Goffman frame analysis + Lakoff conceptual metaphor
-- [`references/lens-genre.md`](references/lens-genre.md) — Swales CARS + Bhatia move analysis
+- [`references/lens-rhetoric.md`](references/lens-rhetoric.md) ✱ — universal core; routes to `-anglo` (Burke + Toulmin) / `-ja` (Hinds + kishōtenketsu) / `-zh` (文心雕龍 六觀)
+- [`references/lens-frame.md`](references/lens-frame.md) ✱ — universal core; routes to `-anglo` (Goffman + Lakoff) / `-ja` (建前/本音 + ma) / `-zh` (面子/關係 + 陰陽)
+- [`references/lens-genre.md`](references/lens-genre.md) ✱ — universal core; routes to `-anglo` (Swales + Bhatia) / `-ja` (序論-本論-結論 + 拝啓 letter) / `-zh` (緒論-本論-結論 + 公文)
 - [`references/lens-ux.md`](references/lens-ux.md) — Nielsen-Norman 10 heuristics + Norman affordance
-- [`references/lens-persuasion.md`](references/lens-persuasion.md) — Cialdini 7 principles + Brignull 12 dark patterns
+- [`references/lens-persuasion.md`](references/lens-persuasion.md) ✱ — universal core; routes to `-anglo` (Cialdini + Brignull) / `-ja` (Cialdini + JP cultural) / `-zh` (Cialdini + 面子/關係)
+
+**Always state which variant was applied in the report** (e.g., "Applied lens-rhetoric-ja") — see `protocols/lens-variant-selection.md` §"Step 5".
 
 ### Step 5: Generate deconstruction report
 
@@ -152,16 +163,17 @@ self-check. Most common failures:
 
 ## Lens Library Quick Reference
 
-All lens files are in `references/`, one level deep:
+All lens files are in `references/`, one level deep. Lenses marked ✱
+are language-variant-routed — see `protocols/lens-variant-selection.md`.
 
-| Lens | Authors | When to apply |
-|---|---|---|
-| `lens-semiotic` | Roland Barthes (S/Z, 1970) | Literature, film, advertising imagery, texts with strong subtext |
-| `lens-rhetoric` | Kenneth Burke (1945) + Stephen Toulmin (1958) | Speeches, proposals, political texts, arguments needing structural validation |
-| `lens-frame` | Erving Goffman (1974) + George Lakoff (1980) | Texts with strong metaphors, suspected hidden assumptions, ideological texts |
-| `lens-genre` | John Swales (1990) + Vijay Bhatia (1993) | Document packs, SOPs, academic papers, business proposals — anything genre-recognizable |
-| `lens-ux` | Jakob Nielsen + Don Norman (1988, 2013) | UI screens, app flows, websites, onboarding experiences (yes, docs are UX too) |
-| `lens-persuasion` | Robert Cialdini (2021 ed.) + Harry Brignull (deceptive.design, 2024) | Marketing copy, sales pages, landing pages, onboarding, political/policy texts |
+| Lens | Variants | Authors (per variant) | When to apply |
+|---|---|---|---|
+| `lens-semiotic` | (no variants) | Roland Barthes (S/Z, 1970) | Literature, film, advertising imagery, texts with strong subtext |
+| `lens-rhetoric` ✱ | -anglo / -ja / -zh | Burke 1945 + Toulmin 1958 / Hinds 1983 + 1987 + Oh 2025 (kishōtenketsu) / 劉勰《文心雕龍》六觀 | Speeches, proposals, political texts, arguments needing structural validation |
+| `lens-frame` ✱ | -anglo / -ja / -zh | Goffman 1974 + Lakoff 1980 / + Doi 1971 + Yamamoto 1977 (建前/本音, ma) / + Hu 1944 + Hwang 1987 + Peng & Nisbett 1999 (面子, 陰陽) | Texts with strong metaphors, suspected hidden assumptions, ideological texts |
+| `lens-genre` ✱ | -anglo / -ja / -zh | Swales 1990 + Bhatia 1993 / + 木下 1981 + Hinds 1987 (序論-本論-結論, 拝啓 letter) / + 行政院公文程式條例 (緒論-本論-結論, 公文) | Document packs, SOPs, academic papers, business proposals — anything genre-recognizable |
+| `lens-ux` | (no variants) | Jakob Nielsen + Don Norman (1988, 2013) | UI screens, app flows, websites, onboarding experiences (yes, docs are UX too) |
+| `lens-persuasion` ✱ | -anglo / -ja / -zh | Cialdini 2021 + Brignull 2024 / + Doi 1971 + cross-cultural empirical work / + Hwang 1987 (面子/關係/人情) | Marketing copy, sales pages, landing pages, onboarding, political/policy texts |
 
 ## Output template
 
