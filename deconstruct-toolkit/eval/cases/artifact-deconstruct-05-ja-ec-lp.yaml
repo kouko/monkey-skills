@@ -1,0 +1,29 @@
+name: artifact-deconstruct-05-ja-ec-lp
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-ja-ec-lp.md
+input_query: "このDTCランディングページを脱構築してほしい"
+expected_lenses:
+  - lens-persuasion-ja
+must_find:
+  - id: cialdini-coverage-jp-weighting
+    description: "≥4 of Cialdini-7 identified with JP weighting (返報性 / 一貫性 / 社会的証明 / 権威 / 好意 / 希少性 / 一体性) and concrete textual citations"
+    threshold: 4
+  - id: jp-specific-mechanisms
+    description: "≥3 of M1-M4 identified (M1 建前/本音, M2 婉曲表現, M3 空気を読む, M4 老舗/暖簾) — these must NOT be collapsed into Cialdini buckets"
+    threshold: 3
+  - id: shinise-noren-authority
+    description: "M4 老舗/暖簾 (創業1887年 + 京都 + 四代目当主) identified as institutional-longevity authority distinct from Cialdini #4 — flagged as 🟢 by default in JP register"
+    threshold: 1
+  - id: dark-pattern-flag
+    description: "≥1 ⚫ dark-pattern flagged: forced-continuity 定期コース 自動移行 OR 婉曲表現 burying material disclosure (6,800円/月 in 米印) OR 申し訳なさそうな圧"
+    threshold: 1
+  - id: ethical-position-assigned
+    description: "Each detected mechanism assigned 🟢/🟡/🔴/⚫ ethical position — neutral description without verdict NOT allowed"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-persuasion-ja' or equivalent variant attribution; NOT lens-persuasion-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR M4 老舗/暖簾 collapsed into Cialdini #4"

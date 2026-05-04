@@ -1,0 +1,26 @@
+name: artifact-deconstruct-04-ja-op-ed
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-ja-op-ed.md
+input_query: "この社説を脱構築してほしい"
+expected_lenses:
+  - lens-rhetoric-ja
+must_find:
+  - id: kishotenketsu-structure
+    description: "起承転結 4-part structure surfaced with paragraph-range mapping (起=¶1, 承=¶2, 転=¶3, 結=¶4)"
+    threshold: 4
+  - id: ten-as-juxtaposition
+    description: "転 (¶3 山間部の木造校舎 scene) identified as inductive juxtaposition / image-as-mood, NOT mapped to Toulmin warrant"
+    threshold: 1
+  - id: reader-responsibility-signals
+    description: "≥2 reader-responsibility signals identified (no explicit topic sentence / 婉曲表現 hedges 「のではないか」「と言えるだろう」 / paragraph-level 転 move / claim-left-to-reader)"
+    threshold: 2
+  - id: implicit-claim-as-relationship
+    description: "Implicit claim stated as the relationship 結 proposes (speed-vs-richness tension), NOT as extracted thesis sentence"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-rhetoric-ja' or equivalent variant attribution; NOT lens-rhetoric-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen (e.g. lens-rhetoric-anglo applied)"
