@@ -4,6 +4,44 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] — 2026-05-04
+
+### Added — hardened AskUserQuestion pattern in skill-creator-advance
+
+New reference: `skill-creator-advance/references/asking-user-questions.md`
+documenting the empirically-validated 4-hardening pattern for skills that
+need structured user input via Anthropic's `AskUserQuestion` tool.
+
+The pattern closes three documented failure modes:
+1. **Inline fallback** — model treats question as text instead of tool call
+2. **Silent default** — model assumes "(recommended default)" and skips asking
+3. **Tool unavailable** — subagent / web client / sandbox contexts have no
+   AskUserQuestion; without explicit fallback, model silently defaults
+
+The 4 hardenings (all validated via subagent A/B test on 2026-05-04):
+
+1. **MUST verb** — `MUST call AskUserQuestion` instead of `Use AskUserQuestion`
+2. **Args-schema example** — fenced ` ```json ` block showing tool-call args,
+   not prose Q&A template
+3. **Fallback contract** — explicit clause for tool-unavailable environments
+4. **(Recommended) marker** — first option's `label` includes `(Recommended)`
+
+Updates to `skill-creator-advance/SKILL.md`:
+- New "Asking the User Structured Questions" subsection in §Skill Writing Guide
+- New Pre-Creation Gate 3 ("User-input check") to prompt skill authors to
+  apply the hardened pattern when drafting STEPs with user-input branching
+
+Reference file includes:
+- The Thariq canonical phrase (load-bearing tokens: `AskUserQuestion`,
+  `interview`, `not obvious`)
+- Anti-patterns table (7 documented failure modes)
+- Copy-paste mandatory-gate template
+- Industry references (Anthropic blog, Thariq gist, neonwatty walk-through,
+  ClaudeLog, claude-code#9846 plan-mode bug)
+
+Companion to domain-teams v5.6.0's CHK-SKL-014 gate that enforces the
+same pattern for domain-team skills.
+
 ## [2.1.1] — 2026-05-04
 
 ### Fixed — duplicate hooks file load error on Claude Code v2.1.119+

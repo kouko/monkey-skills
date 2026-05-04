@@ -90,6 +90,14 @@ the verdict to the user and ask how to proceed (drop the skill
 proposal, defer, or reshape into a smaller scope) before
 continuing to intake.
 
+**Gate 3 — User-input check (after intake, before drafting)** —
+Does this skill have any user-input branching? If yes, plan to apply
+the hardened `AskUserQuestion` pattern from
+[`references/asking-user-questions.md`](references/asking-user-questions.md)
+when drafting the relevant STEP. Without it, the skill is highly likely
+to inline-fallback or silently default in production. If no user input
+is needed, this gate is N/A.
+
 ### Capture Intent
 
 Start by understanding the user's intent. The current conversation might already contain a workflow the user wants to capture (e.g., "turn this into a skill"). If so, **extract answers from the conversation history first** — the tools used, the sequence of steps, corrections the user made, input/output formats observed. The user may need to fill gaps, and should confirm before proceeding.
@@ -259,6 +267,23 @@ When a user invokes a skill with no prompt or a very sparse prompt, consider inc
 **Common pitfall**: triggering orientation on "empty current prompt" alone creates friction for returning users — Claude's context often already carries the brief. Always check the full context, not just the current prompt's length.
 
 For domain-team skills (which follow a stricter `skill-team` convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — see `domain-teams/skills/skill-team/standards/skill-md-structure.md` §Empty Invocation Fallback Rules for the rigorous version with a §Surface Orientation Format markdown skeleton and a hard-gate exception for skills with mandatory intake.
+
+#### Asking the User Structured Questions (when to use AskUserQuestion)
+
+When a skill needs user input mid-execution that's a discrete choice between 2-4 options (e.g., "which folders to exclude?", "which approach should I take?"), use the `AskUserQuestion` tool — but apply the **hardened pattern** documented in [`references/asking-user-questions.md`](references/asking-user-questions.md).
+
+The naive approach (`Use AskUserQuestion to confirm...` with a fenced Q&A template) fails three documented modes:
+1. **Inline fallback** — model treats it as text instead of invoking the tool
+2. **Silent default** — model assumes a "(recommended default)" prose label and skips asking
+3. **Tool unavailable** — subagent / web client / sandbox contexts have no AskUserQuestion; without explicit fallback, model silently defaults
+
+The reference file contains:
+- The **Thariq canonical phrase** (load-bearing tokens)
+- The **4 hardenings** (MUST verb, args-schema example, fallback contract, `(Recommended)` marker)
+- A **mandatory-gate template** (copy-paste stanza)
+- An **anti-patterns table** (what not to do)
+
+Always-included for skills with user-input steps. Skills with no user-input steps are exempt — don't add AskUserQuestion just because it exists.
 
 #### Writing Patterns
 

@@ -353,6 +353,35 @@ Document this exemption in the skill's frontmatter description or in
 a brief comment at the top of the Context Discovery section if
 present.
 
+## AskUserQuestion Pattern (CHK-SKL-014)
+
+When a SKILL.md has any user-input branching step (mid-execution choice
+between 2-4 options), it MUST use Anthropic's `AskUserQuestion` tool with
+the **hardened pattern** documented in
+[`asking-user-questions.md`](asking-user-questions.md).
+
+The four hardenings (all required):
+
+1. **MUST verb** — `MUST call AskUserQuestion`, not `Use AskUserQuestion`
+2. **Args-schema example** — fenced ```json``` block showing tool-call args, not prose Q&A template
+3. **Fallback contract** — explicit clause for tool-unavailable environments (subagent / web / sandbox)
+4. **(Recommended) marker** — first option's `label` includes `(Recommended)`
+
+A copy-paste mandatory-gate template is provided in
+[`asking-user-questions.md`](asking-user-questions.md) §Mandatory-gate template.
+
+**Exemption**: skills with no user-input branching steps. Examples: pure
+deterministic skills, single-shot generators, skills where input is
+gathered upstream by another skill.
+
+**Why this matters**: industry research and an empirical A/B test confirmed
+that the soft-verb pattern fails in three modes (inline fallback, silent
+default, tool-unavailable). The 4 hardenings close all three. See
+[`asking-user-questions.md`](asking-user-questions.md) for full rationale.
+
+CHK-SKL-014 in [`../checklists/skill-completeness-checklist.md`](../checklists/skill-completeness-checklist.md)
+enforces compliance.
+
 ## Token Budget
 
 - **Hard cap**: ~6,000 tokens / ~4,500 words (triggers Skill Coherence rubric 🔴)
