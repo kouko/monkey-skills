@@ -119,6 +119,131 @@ All wikilinks use **bare filename without `.md`**:
 
 Rationale: Obsidian's "shortest path that is unambiguous" link style; pages may be reclassified across subfolders without breaking inbound links.
 
+### NEVER wrap wikilinks in backticks (critical)
+
+Markdown's code-span precedence eats the wikilink syntax. Backticked wikilinks render as gray inline code, NOT as clickable links:
+
+```markdown
+❌ `[[Thompson-Sampling]]`             — renders as inline code, NOT a link
+❌ **`[[Thompson-Sampling]]`**         — bold + inline code, still NOT a link
+❌ `**[[Thompson-Sampling]]**`         — same: code-span eats everything inside
+✅ [[Thompson-Sampling]]               — clickable wikilink
+✅ **[[Thompson-Sampling]]**           — bold + clickable wikilink
+✅ *[[Thompson-Sampling]]*             — italic + clickable wikilink
+```
+
+Why: in Obsidian's markdown parser (and CommonMark generally), code spans `` `...` `` are tokenized BEFORE wikilinks. The text inside backticks becomes a single inline-code node, never reaching the wikilink parser. Bold / italic do not have this problem because they don't tokenize their content as opaque text.
+
+### Common contexts — list / table / callout
+
+Wikilinks inside structural elements still resolve correctly **as long as no backticks wrap them**:
+
+```markdown
+✅ List item with bold wikilink:
+- **[[Thompson-Sampling]]** — Bayesian MAB algorithm
+
+❌ Same list item with backticks (the original production bug):
+- **`[[Thompson-Sampling]]`** — renders as gray inline code, no link
+
+✅ Table cell:
+| Algorithm | Implementation |
+|---|---|
+| MAB | [[Thompson-Sampling]] |
+
+❌ Table cell with backticks:
+| Algorithm | Implementation |
+|---|---|
+| MAB | `[[Thompson-Sampling]]` |
+
+✅ Callout body:
+> [!note] Related entity
+> See [[Thompson-Sampling]] for the algorithm baseline.
+
+❌ Callout body with backticks:
+> [!note] Related entity
+> See `[[Thompson-Sampling]]` for the algorithm baseline.
+```
+
+### Adjacent backticks are fine — only wrapping breaks
+
+Backticks placed **next to** a wikilink (not around it) are valid. This is common when citing a code symbol alongside its concept page:
+
+```markdown
+✅ Adjacent code reference (allowed):
+- [[qlib]] — the `qlib.workflow.cli` entry point handles config loading
+- See [[Thompson-Sampling]] (`scipy.stats.beta.rvs` under the hood)
+
+❌ Wikilink wrapped in backticks (not allowed):
+- `[[qlib]]` — broken, renders as inline code
+```
+
+The rule: backticks must NOT contain `[[ ... ]]` syntax. Backticks before, after, or in adjacent words are fine.
+
+### Adjacent symbols and multiple wikilinks
+
+```markdown
+✅ Emoji / arrow prefixes work:
+- 🔗 [[Thompson-Sampling]]
+- → [[exploration-exploitation]]
+- ⚠️ [[Magnificent-Seven]] (concentration risk)
+
+✅ Multiple consecutive wikilinks (space- or comma-separated):
+See [[Thompson-Sampling]] [[UCB]] [[epsilon-greedy]] for MAB algorithm baselines.
+See [[Thompson-Sampling]], [[UCB]], and [[epsilon-greedy]].
+
+✅ Wikilinks in inline prose:
+The [[Thompson-Sampling]] approach outperforms [[UCB]] in non-stationary environments.
+```
+
+### Obsidian-specific syntax — alias, anchor, embed
+
+Obsidian extends `[[...]]` with three optional features. Use them when needed:
+
+```markdown
+✅ Alias (display text overrides filename):
+[[Thompson-Sampling|the Bayesian MAB approach]]
+[[2026-04-20-台積電財報|TSMC Q1 earnings]]
+   ↑ Useful for inline prose where the filename slug reads awkwardly
+
+✅ Anchor (link to a specific heading within the page):
+[[Thompson-Sampling#Algorithm details]]
+[[Magnificent-Seven#Concentration risk]]
+   ↑ Useful for cross-referencing a specific section
+
+✅ Combined alias + anchor:
+[[Thompson-Sampling#Algorithm details|see the algorithm section]]
+
+✅ Embed (transclusion — renders the linked page inline; rare in wiki/):
+![[Thompson-Sampling]]
+![[Thompson-Sampling#Algorithm details]]
+   ↑ Note the leading `!` — embeds the content rather than linking
+   ↑ Use sparingly; pages should self-contain rather than transclude
+
+❌ All the above with backticks still fail:
+`[[Thompson-Sampling|alias]]`              — inline code, not a link
+`[[Thompson-Sampling#Section]]`            — same
+`![[Thompson-Sampling]]`                   — same; backticks beat embed too
+```
+
+### Coverage summary
+
+The rule "no backticks **around** a wikilink" applies in **every** context:
+
+| Context | Wrap rule | Examples covered above |
+|---|---|---|
+| Body prose | ❌ no backticks around `[[...]]` | `[[Page]]`, `**[[Page]]**`, `*[[Page]]*` |
+| List items | ❌ same | `- [[Page]] — ...`, `- **[[Page]]** — ...` |
+| Table cells | ❌ same | `\| [[Page]] \|` |
+| Callout body | ❌ same | `> See [[Page]] for ...` |
+| Adjacent code | ✅ backticks NOT around link OK | `` [[Page]] (`field-name`) `` |
+| Emoji / symbol prefix | ✅ OK | `🔗 [[Page]]`, `→ [[Page]]` |
+| Multiple links | ✅ OK | `[[A]] [[B]]`, `[[A]], [[B]]` |
+| Alias | ✅ OK (without backticks) | `[[Page\|display text]]` |
+| Anchor | ✅ OK (without backticks) | `[[Page#Section]]` |
+| Embed | ✅ OK (without backticks) | `![[Page]]` |
+
+Common offender pattern: emphasizing a wikilink with backticks for "code-style" appearance. **Don't.** Use bold or italic instead, or leave it plain.
+
 ## Tiered retrieval contract (consumer-facing)
 
 `wiki-query` reads in order:

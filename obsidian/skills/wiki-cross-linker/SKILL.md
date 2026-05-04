@@ -85,6 +85,8 @@ Use `Edit` with `replace_all: false` — apply one edit at a time, validating co
 For each accepted change:
 - Append page to a touched-list
 
+**NEVER produce backticked wikilinks**: `` `[[Page]]` `` and `` **`[[Page]]`** `` render as inline code in Obsidian, NOT as clickable links (markdown's code-span precedence eats the wikilink syntax). When converting plain-text mention `qlib` → wikilink, the output MUST be `[[qlib]]` or `**[[qlib]]**`, never `` `[[qlib]]` ``. If the plain-text mention was already inside backticks (e.g., the source had `` `qlib` `` for code-style emphasis), skip it — it's in code-span territory and was correctly excluded by STEP 2 anyway.
+
 ## STEP 5 — Update connections section
 
 After linking is done, optionally update the `## Connections` section of pages where new outgoing links were added. Only add if the link is structurally meaningful (i.e., the linked page is closely related, not just incidentally mentioned).
