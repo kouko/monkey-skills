@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "default",
+  "version": 1,
+  "label": "Default — generic 5-multiple set",
+  "applies_to_industries_example": [
+    "Consumer Cyclical (Specialty Retail / Auto Manufacturers / ...)",
+    "Consumer Defensive (Packaged Foods / Tobacco / ...)",
+    "Healthcare (Drug Manufacturers / Medical Devices / ...)",
+    "Industrials (Aerospace / Building Products / ...)",
+    "Basic Materials (Specialty Chemicals / Steel / ...)",
+    "Communication Services (Telecom / Media / Entertainment)",
+    "Real Estate Services / Property Developers",
+    "Technology (Hardware / Electronics not Software/Semis)"
+  ],
+  "multiples": [
+    {"id": "trailingPE",   "kind": "compute",     "formula_id": "trailingPE_FY"},
+    {"id": "forwardPE",    "kind": "passthrough"},
+    {"id": "evEbitda",     "kind": "compute",     "formula_id": "evEbitda_FY"},
+    {"id": "priceToSales", "kind": "compute",     "formula_id": "priceToSales_FY"},
+    {"id": "priceToBook",  "kind": "compute",     "formula_id": "priceToBook_FY"}
+  ],
+  "indicators": [
+    {"id": "gross_margin",     "formula_id": "gross_margin_FY"},
+    {"id": "operating_margin", "formula_id": "operating_margin_FY"},
+    {"id": "FCF_yield",        "formula_id": "FCF_yield_FY"}
+  ],
+  "deferred_concepts": [],
+  "notes": "Universal 5-multiple set carried over from v2.2.0-b/l. Indicators lean on margin profile and free-cash-flow yield — works for any cash-generating business."
+}

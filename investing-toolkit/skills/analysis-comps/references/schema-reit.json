@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "reit",
+  "version": 1,
+  "label": "REITs (P/FFO + EV/EBITDAre approximations)",
+  "applies_to_industries_example": [
+    "REIT - Retail",
+    "REIT - Office",
+    "REIT - Industrial",
+    "REIT - Residential",
+    "REIT - Healthcare Facilities",
+    "REIT - Specialty",
+    "REIT - Mortgage",
+    "REIT - Diversified",
+    "REIT - Hotel & Motel"
+  ],
+  "multiples": [
+    {"id": "priceToFFO",          "kind": "compute", "formula_id": "priceToFFO_FY"},
+    {"id": "evEbitdare",          "kind": "compute", "formula_id": "evEbitdare_FY"},
+    {"id": "priceToBook",         "kind": "compute", "formula_id": "priceToBook_FY"},
+    {"id": "priceToTangibleBook", "kind": "compute", "formula_id": "priceToTangibleBook_FY"}
+  ],
+  "indicators": [],
+  "deferred_concepts": [
+    {"id": "AFFO",            "reason": "Adjusted FFO requires recurring_capex + straight-line-rent adjustments — REIT supplemental disclosure, not standard XBRL"},
+    {"id": "dividend_yield",  "reason": "Requires PaymentsOfDividends concept fetch — deferred to v2.2.0-c-followup-divs"},
+    {"id": "NOI",             "reason": "Net Operating Income — REIT supplemental segment disclosure"},
+    {"id": "occupancy_rate",  "reason": "Property-level operational metric — supplemental"},
+    {"id": "implied_cap_rate","reason": "Requires NOI estimate plus EV — derived from deferred NOI"}
+  ],
+  "notes": "P/FFO uses approximation FFO ≈ net_income + D&A. Strict NAREIT FFO subtracts gains_on_sale_of_property; that concept is not in standard US-GAAP XBRL → omitted. EV/EBITDAre uses approximation EBITDAre ≈ EBITDA (no impairment / gains_on_sale add-back). Both approximations are documented in per-multiple compute_provenance.note. trailingPE intentionally absent — REIT GAAP earnings are heavily dragged by D&A on real estate (which doesn't economically depreciate the same way machinery does), making P/E systematically low and hard to compare; FFO is the canonical REIT analogue. forwardPE consensus also unreliable for the same reason. Dividend yield (deferred) is critical for REIT valuation but requires a memo-fetch dividend-disclosure pass."
+}

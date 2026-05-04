@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "utilities",
+  "version": 1,
+  "label": "Utilities (Regulated-return + leverage focus)",
+  "applies_to_industries_example": [
+    "Utilities - Regulated Electric",
+    "Utilities - Regulated Gas",
+    "Utilities - Regulated Water",
+    "Utilities - Diversified",
+    "Utilities - Independent Power Producers",
+    "Utilities - Renewable"
+  ],
+  "multiples": [
+    {"id": "trailingPE",  "kind": "compute", "formula_id": "trailingPE_FY"},
+    {"id": "evEbitda",    "kind": "compute", "formula_id": "evEbitda_FY"},
+    {"id": "priceToBook", "kind": "compute", "formula_id": "priceToBook_FY"}
+  ],
+  "indicators": [
+    {"id": "debt_to_equity", "formula_id": "debt_to_equity_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "dividend_payout",   "reason": "Requires PaymentsOfDividends concept fetch — deferred to v2.2.0-c-followup-divs"},
+    {"id": "rate_base",         "reason": "Regulated rate base — disclosed in regulatory filings (FERC / state PUC), not standard XBRL"},
+    {"id": "allowed_ROE",       "reason": "Regulator-allowed return on equity — supplemental rate-case disclosure"},
+    {"id": "rate_base_growth",  "reason": "Derived from deferred rate_base"}
+  ],
+  "notes": "Regulated-utility valuation centers on rate-base-allowed-ROE compounding (regulator sets allowed return on capital deployed). priceToBook is meaningful because the rate base is anchored to GAAP book-value capital. High debt_to_equity (>100%) is structurally normal for utilities (cheap regulated debt funds long-life infrastructure) — this indicator is for level-not-quality screening. priceToSales absent because revenue is heavily regulator-passed-through (low value-add). forwardPE absent because consensus EPS for utilities is rate-case-dependent and noisy. Dividend payout (deferred) is critical — utility ETFs are dividend-driven, but PaymentsOfDividends concept hasn't yet been added to memo-fetch."
+}

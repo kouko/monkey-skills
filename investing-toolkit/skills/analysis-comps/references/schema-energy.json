@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "energy",
+  "version": 1,
+  "label": "Energy (EBITDA + cash-flow focus, depleting-asset accounting)",
+  "applies_to_industries_example": [
+    "Oil & Gas Integrated",
+    "Oil & Gas E&P",
+    "Oil & Gas Refining & Marketing",
+    "Oil & Gas Midstream",
+    "Oil & Gas Equipment & Services",
+    "Thermal Coal",
+    "Uranium"
+  ],
+  "multiples": [
+    {"id": "evEbitda",    "kind": "compute", "formula_id": "evEbitda_FY"},
+    {"id": "priceToBook", "kind": "compute", "formula_id": "priceToBook_FY"},
+    {"id": "priceToCFO",  "kind": "compute", "formula_id": "priceToCFO_FY"}
+  ],
+  "indicators": [
+    {"id": "FCF_yield",     "formula_id": "FCF_yield_FY"},
+    {"id": "debt_to_equity","formula_id": "debt_to_equity_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "proven_reserves",   "reason": "PV-10 / SEC-defined proven reserves — disclosed in 10-K narrative + supplemental schedules, not standard XBRL concept"},
+    {"id": "production_growth", "reason": "Daily / annual production volumes — supplemental disclosure"},
+    {"id": "finding_costs",     "reason": "Finding & development costs per BOE — E&P supplemental"},
+    {"id": "reserve_life_index","reason": "Reserves / production — derived from deferred reserves"}
+  ],
+  "notes": "Energy issuer book values reflect depleting reserves at historical cost (often understating economic value when oil > $60/bbl, overstating below); P/B is interpreted with that distortion in mind. priceToCFO is added because cash flow is less distorted by impairment / DD&A swings than GAAP earnings — energy E&P writes down assets aggressively at cycle troughs, making P/E unstable. trailingPE absent for the same reason. priceToSales absent because energy 'sales' = commodity price × volume → dominated by external pricing, not value-add. forwardPE absent because consensus EPS forecasts are commodity-price-elastic (and therefore unreliable at cycle inflections)."
+}

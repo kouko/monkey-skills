@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "asset-manager",
+  "version": 1,
+  "label": "Asset Managers (ROE-on-equity-float focus)",
+  "applies_to_industries_example": [
+    "Asset Management",
+    "Capital Markets (exchanges, brokerages)"
+  ],
+  "multiples": [
+    {"id": "trailingPE",   "kind": "compute", "formula_id": "trailingPE_FY"},
+    {"id": "priceToBook",  "kind": "compute", "formula_id": "priceToBook_FY"},
+    {"id": "evEbitda",     "kind": "compute", "formula_id": "evEbitda_FY"}
+  ],
+  "indicators": [
+    {"id": "ROE", "formula_id": "ROE_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "AUM_growth",         "reason": "Assets-under-management growth — supplemental disclosure, not standard XBRL"},
+    {"id": "fee_margin",         "reason": "Fee revenue / average AUM — supplemental disclosure"},
+    {"id": "performance_fee_share", "reason": "Performance vs management fee mix — supplemental disclosure"}
+  ],
+  "notes": "Asset managers are equity-light, fee-revenue businesses; EBITDA is a reasonable cash-earnings proxy unlike banks. ROE captures the operating leverage on regulatory capital float. AUM-growth (deferred) is the leading indicator that drives forward fee revenue but isn't in standard XBRL. priceToSales absent because 'sales' is not the dominant value driver — fee margins on AUM matter more, and AUM isn't disclosed at concept level."
+}

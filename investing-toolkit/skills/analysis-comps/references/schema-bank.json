@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "bank",
+  "version": 1,
+  "label": "Banks (P/B + ROE focus)",
+  "applies_to_industries_example": [
+    "Banks - Diversified",
+    "Banks - Regional"
+  ],
+  "multiples": [
+    {"id": "trailingPE",          "kind": "compute",     "formula_id": "trailingPE_FY"},
+    {"id": "forwardPE",           "kind": "passthrough"},
+    {"id": "priceToBook",         "kind": "compute",     "formula_id": "priceToBook_FY"},
+    {"id": "priceToTangibleBook", "kind": "compute",     "formula_id": "priceToTangibleBook_FY"}
+  ],
+  "indicators": [
+    {"id": "ROE", "formula_id": "ROE_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "NIM",              "reason": "Net interest margin requires interest_income / interest_earning_assets — not standard US-GAAP XBRL tags"},
+    {"id": "efficiency_ratio", "reason": "Non-interest_expense / (NII + non-interest_income) — bank supplemental disclosure"},
+    {"id": "NPL_ratio",        "reason": "Non-performing-loan disclosure is bank supplemental, not in standard XBRL"},
+    {"id": "tier1_capital_ratio", "reason": "Regulatory capital ratios disclosed in 10-K narrative + Federal Reserve filings, not standard XBRL"}
+  ],
+  "notes": "Bank EBITDA is undefined (no operating-cash-flow concept of cash earnings); evEbitda intentionally absent. priceToSales also absent — banks don't have 'sales' in the same sense. forwardPE is a sell-side consensus pass-through (no primary source). ROE is the primary profitability lens for banks; tier1 capital and credit quality (deferred) drive equity multiples in conjunction."
+}
