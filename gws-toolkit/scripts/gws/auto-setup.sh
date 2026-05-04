@@ -10,17 +10,20 @@ set -euo pipefail
 #   2. gcloud auth login (skipped if already signed in).
 #   3. Create the GCP project and enable the 4 Workspace APIs (Slides +
 #      Drive + Docs + Sheets) — must match the OAuth scope set requested
-#      in step 6 below.
+#      in step 8 below.
 #   4. Print Console URLs for the manual steps (OAuth consent / Audience /
 #      Clients) and `open` them in the browser; wait for the user to
 #      download client_secret_*.json into ~/Downloads.
 #   5. Move the JSON to ~/.config/gws/client_secret.json (chmod 600) and
 #      write env.sh.
-#   6. `gws auth login --scopes=presentations,drive,documents,spreadsheets`
+#   6. (handled jointly with 5 — install credentials + env.sh).
+#   7. Bootstrap the gws + jq binaries via bootstrap.sh
+#      (`~/.cache/slides-toolkit/bin/`).
+#   8. `gws auth login --scopes=presentations,drive,documents,spreadsheets`
 #      (4 scopes covering Slides + Drive + Docs + Sheets API operations
 #      surfaced by the 5 vendored upstream skills; correct scope syntax —
-#      `--scopes=` with full URLs, not `-s`).
-#   7. Verify `gws auth status` reports oauth2.
+#      `--scopes=` with full URLs, not `-s`). Verify `gws auth status`
+#      reports oauth2.
 #
 # Idempotent: each function probes the current state and skips with an
 # "already done" stderr line when the step is complete. --force-reinstall
@@ -169,11 +172,11 @@ detect_platform() {
 # 安裝完印 `gcloud --version` 驗證。
 ensure_gcloud() {
   if command -v gcloud >/dev/null 2>&1; then
-    step 1 7 "gcloud already installed, skip"
+    step 1 8 "gcloud already installed, skip"
     return
   fi
 
-  step 1 7 "gcloud not found; install via brew or official installer"
+  step 1 8 "gcloud not found; install via brew or official installer"
 
   if (( DRY_RUN == 1 )); then
     dry_echo 'brew install --cask google-cloud-sdk  # if brew exists'
@@ -212,11 +215,11 @@ ensure_gcloud_auth() {
 
   if [[ -n "${active}" ]]; then
     ACCOUNT="${active}"
-    step 2 7 "gcloud already authed as ${ACCOUNT}, skip"
+    step 2 8 "gcloud already authed as ${ACCOUNT}, skip"
     return
   fi
 
-  step 2 7 "gcloud auth login (will open browser)"
+  step 2 8 "gcloud auth login (will open browser)"
 
   if (( DRY_RUN == 1 )); then
     dry_echo 'gcloud auth login --quiet'
@@ -249,7 +252,7 @@ resolve_project_id() {
 # `gcloud projects describe` 成功 → 存在；否則 `projects create`。
 # 最後 `gcloud config set project`。
 ensure_project() {
-  step 3 7 "ensure project ${PROJECT_ID}"
+  step 3 8 "ensure project ${PROJECT_ID}"
 
   if (( DRY_RUN == 1 )); then
     dry_echo "gcloud projects describe ${PROJECT_ID} || gcloud projects create ${PROJECT_ID} --name=slides-toolkit"
@@ -276,7 +279,7 @@ ensure_project() {
 # enablement is independent of OAuth scope grant — both gates must pass for
 # any API call to succeed (see PRODUCT-SPEC v1.0 §6.3).
 ensure_apis() {
-  step 4 7 "enable slides + drive + docs + sheets APIs on ${PROJECT_ID}"
+  step 4 8 "enable slides + drive + docs + sheets APIs on ${PROJECT_ID}"
 
   if (( DRY_RUN == 1 )); then
     dry_echo "gcloud services enable slides.googleapis.com drive.googleapis.com docs.googleapis.com sheets.googleapis.com --project=${PROJECT_ID}"
@@ -311,7 +314,7 @@ ensure_apis() {
 # UI 操作（OAuth consent / Audience test user / Clients create）不可靠自動化；
 # script 僅提供最短 navigation path：依序開 3 個 URL。
 open_console_urls() {
-  step 5 7 "open Console URLs for manual OAuth consent + test user + OAuth client"
+  step 5 8 "open Console URLs for manual OAuth consent + test user + OAuth client"
 
   local consent_url audience_url clients_url
   consent_url="https://console.cloud.google.com/auth/overview?project=${PROJECT_ID}"
@@ -385,7 +388,7 @@ wait_for_client_secret() {
 # ASVS V14：secrets-at-rest 一律 0600，parent dir 0700。
 # 讀 client_id / client_secret 用 jq（優先 .installed.*；fallback .web.*）。
 install_credentials() {
-  step 6 7 "install client_secret.json + write env.sh"
+  step 6 8 "install client_secret.json + write env.sh"
 
   if [[ -f "${CLIENT_SECRET_DEST}" ]] \
      && [[ -f "${ENV_FILE}" ]] \
@@ -444,21 +447,48 @@ install_credentials() {
   printf '[auto-setup] wrote %s (chmod 600)\n' "${ENV_FILE}" >&2
 }
 
-# --- step 7a：gws auth login（正確 --scopes=URL,URL 語法） -----------------
+# --- step 7：bootstrap gws + jq binaries -----------------------------------
+# Idempotent — bootstrap.sh detects cached binary + TTL itself; this wrapper
+# only handles dry-run and absolute-path resolution.
+ensure_binaries() {
+  step 7 8 "bootstrap gws + jq binaries"
+
+  local bootstrap="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}/bootstrap.sh"
+  [[ -x "${bootstrap}" ]] \
+    || die_json 1 "bootstrap.sh not executable at ${bootstrap}"
+
+  if (( DRY_RUN == 1 )); then
+    dry_echo "bash ${bootstrap}"
+    return
+  fi
+
+  if ! bash "${bootstrap}" >/dev/null; then
+    die_json 1 "bootstrap.sh failed"
+  fi
+  printf '[auto-setup] gws + jq binaries installed under ~/.cache/slides-toolkit/bin/\n' >&2
+}
+
+# --- step 8a：gws auth login（正確 --scopes=URL,URL 語法） -----------------
 # 實測：gws 的 `-s` 是 service filter，不是 scope；要用 `--scopes=<URL>,<URL>`
 # --force-reinstall 時強制重跑，否則 gws auth status 已 oauth2 → skip。
 ensure_gws_auth() {
-  step 7 7 "gws auth login with presentations + drive + documents + spreadsheets scopes"
+  step 8 8 "gws auth login with presentations + drive + documents + spreadsheets scopes"
 
   local gws_bin
   gws_bin="$(command -v gws || printf '%s/gws' "${CACHE_BIN_DIR}")"
   [[ -x "${gws_bin}" ]] \
     || die_json 1 "gws binary not found (expected system gws or ${CACHE_BIN_DIR}/gws); run bootstrap.sh first"
 
-  # 已 authed 偵測：status 含 oauth2 → skip（除非 --force-reinstall）
+  # 已 authed 偵測：status 的 JSON 中 .auth_method == "oauth2" → skip
+  # （除非 --force-reinstall）
+  # gws v0.22.5 起 `auth status` 輸出為 JSON（含 1-2 行 stderr-style header
+  # 在 stdout），用 sed 截 JSON 部分後 jq parse。
   if (( FORCE_REINSTALL == 0 )); then
-    if "${gws_bin}" auth status 2>/dev/null \
-        | grep -qE 'auth_method:[[:space:]]*oauth2'; then
+    local jq_bin
+    jq_bin="$(command -v jq || printf '%s/jq' "${CACHE_BIN_DIR}")"
+    if [[ -x "${jq_bin}" ]] && "${gws_bin}" auth status 2>/dev/null \
+        | sed -n '/^{/,$p' \
+        | "${jq_bin}" -er '.auth_method == "oauth2"' >/dev/null 2>&1; then
       printf '[auto-setup] gws already authed (oauth2), skip\n' >&2
       return
     fi
@@ -481,19 +511,24 @@ ensure_gws_auth() {
   fi
 }
 
-# --- step 7b：驗證 gws auth status -----------------------------------------
+# --- step 8b：驗證 gws auth status -----------------------------------------
 # 失敗 exit 10（auth）— 不是 generic 1，讓 caller 能區分 retry 策略。
+# gws v0.22.5 `auth status` 輸出 JSON（前面可能有 1-2 行 "Using keyring..."
+# header 跑到 stdout），用 sed 截 JSON 部分後 jq parse `.auth_method`。
 verify() {
   if (( DRY_RUN == 1 )); then
-    dry_echo "gws auth status | grep 'auth_method: oauth2'"
+    dry_echo 'gws auth status | sed -n "/^{/,$p" | jq -e ".auth_method == \"oauth2\""'
     return
   fi
 
-  local gws_bin
+  local gws_bin jq_bin
   gws_bin="$(command -v gws || printf '%s/gws' "${CACHE_BIN_DIR}")"
+  jq_bin="$(command -v jq || printf '%s/jq' "${CACHE_BIN_DIR}")"
+  [[ -x "${jq_bin}" ]] || die_json 1 "jq not found (expected system jq or ${CACHE_BIN_DIR}/jq)"
 
   if ! "${gws_bin}" auth status 2>/dev/null \
-      | grep -qE 'auth_method:[[:space:]]*oauth2'; then
+      | sed -n '/^{/,$p' \
+      | "${jq_bin}" -er '.auth_method == "oauth2"' >/dev/null 2>&1; then
     die_json 10 "gws auth status did not report oauth2"
   fi
   printf '[auto-setup] verify OK: gws auth_method=oauth2\n' >&2
@@ -549,8 +584,9 @@ main() {
   open_console_urls              # step 5a
   wait_for_client_secret         # step 5b
   install_credentials            # step 6
-  ensure_gws_auth                # step 7a
-  verify                         # step 7b
+  ensure_binaries                # step 7
+  ensure_gws_auth                # step 8a
+  verify                         # step 8b
 
   emit_result
 }
