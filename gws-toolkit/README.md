@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> 🚧 **Work in progress — not yet stable.** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded by direct copy on 2026-05-04. Internal architecture is being generalized from "Slides-only" to "generic Google Workspace": vendored upstream `gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets` skills, broader Drive operations with three-tier delete safety, OAuth scope expansion, and toolkit-original setup automation + Slides design knowledge layer. Until this banner is removed, **use `slides-toolkit/` for daily work.** This toolkit is not affiliated with Google.
+> 🚧 **Validation period — Phase 1 complete, awaiting daily-use confirmation.** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded 2026-05-04 via strangler-fig fork. Phase 1 (vendor + α-trim + rename + scope upgrade + Drive safety wrappers) shipped 2026-05-04 (see CHANGELOG `0.4.0-strangler-fig-seed`). Currently running ≥ 2 weeks of validation: ≥ 1 deck via slides-builder, ≥ 1 ad-hoc Drive op through vendored `gws-drive`, ≥ 1 destructive op through `safe-delete.sh`, no KR1 regression. Until validation passes and slides-toolkit enters formal Phase 3 deprecation, both plugins are installable side-by-side. This toolkit is not affiliated with Google.
 
 > Brief → Google Workspace artifacts (Slides / Docs / Sheets / Drive) via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 
@@ -17,8 +17,10 @@
 
 Producing Google Slides decks regularly involves a large mechanical
 share — text replacement, image upload, placeholder alignment.
-`slides-toolkit` skills the repetitive layer so time and attention
-land on content and design judgement, not deck plumbing.
+`gws-toolkit` skills the repetitive layer (deck plumbing) so time and
+attention land on content and design judgement. Beyond Slides, the
+toolkit covers ad-hoc Drive / Docs / Sheets operations through 5
+vendored upstream `gws-*` skills (Apache-2.0).
 
 The toolkit follows the **Platform Pivot architecture** (PRODUCT-SPEC
 v0.2): a backend-agnostic design knowledge layer (`slides-design`) is
@@ -44,7 +46,7 @@ Code so it discovers the skills.
 
 ```bash
 # from inside Claude Code
-/plugin install slides-toolkit@monkey-skills
+/plugin install gws-toolkit@monkey-skills
 ```
 
 ## Quick start
@@ -88,20 +90,39 @@ commands). Type the skill name and Claude Code dispatches.
 
 ## Skills
 
-The plugin ships five skills across three layers.
+The plugin ships **9 skills** in two provenance tiers — 4
+toolkit-original + 5 vendored from upstream
+[`googleworkspace/cli`](https://github.com/googleworkspace/cli) at
+`v0.22.5` (Apache-2.0; provenance recorded in each vendored
+SKILL.md's `metadata.vendored_from`).
+
+**Toolkit-original (4)**
 
 | Skill | Layer | Purpose |
 |---|---|---|
-| `using-gws-toolkit` | Router (backend-agnostic) | Inspect user intent, read `slide-plan.target`, route to the right skill |
-| `slides-design` | Knowledge (backend-agnostic) | Minto Pyramid + SCQA narrative, chart-type selection — applies to any backend |
-| `gws-setup` | google-slides backend | First-time GCP Console / OAuth / `gws` bootstrap; state detection on subsequent runs |
-| `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`, `batchUpdate createSlide`, `insertText`, `createImage` |
-| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL |
+| `using-gws-toolkit` | Router | Inspect intent, read `slide-plan.target`, route to the right skill |
+| `gws-setup` | Setup (generic) | First-time GCP Console / OAuth (4 scopes: presentations + drive + documents + spreadsheets) / `gws` + `jq` bootstrap; state detection; 7-day re-auth |
+| `slides-design` | Knowledge (Slides-specific) | Minto Pyramid + SCQA narrative, chart-type selection |
+| `slides-builder` | Execution (Slides-specific) | `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL; placeholder-map composition pattern lives here |
 
-`using-gws-toolkit` and `slides-design` are deliberately
-backend-agnostic so future `html-builder` / `pptx-builder` /
-`marp-builder` skills can reuse the same routing entrypoint and design
-references without changes.
+**Vendored upstream (5, Apache-2.0)**
+
+| Skill | API surface | Helper |
+|---|---|---|
+| `gws-shared` | auth + global flags + security rules (other 4 reference this) | — |
+| `gws-drive` | Drive API v3 (about / files / permissions / changes / etc.) | toolkit's `safe-delete.sh` + `tag-create.sh` complement Drive ops |
+| `gws-docs` | Docs API v1 (`documents.{batchUpdate, create, get}`) | — |
+| `gws-slides` | Slides API v1 (`presentations.{batchUpdate, create, get}` + pages) | — (slides-builder is a higher-layer orchestrator, not a helper) |
+| `gws-sheets` | Sheets API v4 (`spreadsheets.*` + values + sheets + developerMetadata) | — |
+
+`using-gws-toolkit` is deliberately backend-agnostic so future
+`html-builder` / `pptx-builder` / `marp-builder` skills can reuse the
+same routing entrypoint without changes.
+
+For raw Drive / Docs / Sheets / Slides API method discovery, the
+vendored per-API skills are first-line. For higher-level toolkit
+opinions (slide-plan pipeline, three-tier delete safety, provenance
+tagging), the toolkit-original layer is first-line.
 
 ## Prerequisites
 
@@ -134,23 +155,32 @@ format.
         ▼                    ▼                        ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────────┐
 │  Layer 2 —      │  │  Layer 3 —      │  │  Layer 3 —           │
-│  Design         │  │  Backend exec   │  │  Backend exec        │
-│  knowledge      │  │  (onboarding)   │  │  (build pipeline)    │
-│  (agnostic)     │  │                 │  │                      │
-│  slides-design  │  │  google-slides- │  │  google-slides-      │
-│                 │  │  setup          │  │  builder             │
-│  Minto · SCQA · │  │                 │  │      ↓ uses          │
-│  chart pick     │  │  GCP / OAuth /  │  │  google-slides-api   │
-│                 │  │  gws bootstrap  │  │  (per-op recipes)    │
+│  Knowledge      │  │  Setup          │  │  Slides exec         │
+│  (Slides)       │  │  (generic gws)  │  │  (build pipeline)    │
+│                 │  │                 │  │                      │
+│  slides-design  │  │  gws-setup      │  │  slides-builder      │
+│                 │  │                 │  │  (placeholder-map +  │
+│  Minto · SCQA · │  │  GCP / OAuth /  │  │   4 inline recipes)  │
+│  chart pick     │  │  gws bootstrap  │  │                      │
 └─────────────────┘  └────────┬────────┘  └──────────┬───────────┘
                               │                      │
                               └──────────┬───────────┘
                                          ▼
-                              scripts/gws/*.sh
-                              gws CLI · ~/.cache binaries
-                                         ▼
-                              Google Slides + Drive API
-                                         ▼
+              scripts/gws/*.sh  ──┐
+              (bootstrap, gws-wrap, env-guard,
+               credential-check, refresh-auth,
+               safe-delete, tag-create)
+                                  ▼
+              gws CLI · ~/.cache binaries
+                                  ▼
+                  Google Workspace APIs
+              (Slides v1 / Drive v3 / Docs v1 / Sheets v4)
+                                  ▼
+                  Vendored upstream skills as
+                  per-API method reference:
+                  gws-shared / gws-drive / gws-docs /
+                  gws-slides / gws-sheets
+                                  ▼
                                    Deck URL
 ```
 

@@ -1,16 +1,134 @@
 # Changelog
 
-All notable changes to `slides-toolkit` are documented in this file.
+All notable changes to `gws-toolkit` are documented in this file.
+This plugin originated from `slides-toolkit` v0.6.0 via strangler fig
+fork (2026-05-04); entries below v0.4.0 describe the upstream
+slides-toolkit lineage and remain accurate for that fork point.
 
 本檔案採 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 格式，
 版本編號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.7.0 release 前，kouko 需完成）
+### Validation period
 
-- 跑 10 份真實 deck 驗 KR1（brief → URL ≤ 3 分鐘）+ `[ASSUMPTION-2]`
-  Google predefined layouts 覆蓋率 ≥ 80%
+- ≥ 2 weeks of validated daily use of gws-toolkit before slides-toolkit
+  enters formal Phase 3 deprecation (banner update + marketplace
+  archive). Validation criteria:
+  1. ≥ 1 successful Slides deck via slides-builder pipeline
+  2. ≥ 1 ad-hoc Drive operation through vendored gws-drive skill
+  3. ≥ 1 destructive op routed through safe-delete.sh (any tier)
+  4. No regression vs slides-toolkit in deck-generation time (KR1)
+
+## [0.4.0-strangler-fig-seed] - 2026-05-04
+
+**Strangler fig fork from slides-toolkit v0.6.0.** Generic Google
+Workspace direction: 4 vendored upstream gws-* skills (gws-shared /
+gws-drive / gws-docs / gws-slides / gws-sheets) layered with
+toolkit-original setup automation, three-tier Drive delete safety,
+Slides design knowledge, and slide-plan.json v1.2 builder. Plugin
+renamed from slides-toolkit; old plugin frozen for ≥ 2-week
+validation period before deprecation.
+
+### Added
+
+- **Vendored upstream skills** (Apache-2.0, attributed in
+  frontmatter `metadata.vendored_from`): `skills/gws-shared/`,
+  `skills/gws-drive/`, `skills/gws-docs/`, `skills/gws-slides/`,
+  `skills/gws-sheets/` — all auto-generated from Google API Discovery
+  documents; pinned to `googleworkspace/cli@v0.22.5`
+  (`705fb0ecac6f4249679958f6325b809b63fdde17`)
+- `LICENSE-APACHE-2.0.txt` at toolkit root (Apache-2.0 §4(a)
+  compliance)
+- `UPSTREAM_GWS_VERSION` — single source of truth for the upstream
+  pin; both `bootstrap.sh` (binary) and `sync-upstream-skills.sh`
+  (skills) reference this file
+- `scripts/sync-upstream-skills.sh` — re-runnable sync script that
+  fetches upstream SKILL.md files via `gh api` and injects
+  provenance metadata (`vendored_from / vendored_release /
+  vendored_at / upstream_license`) into the frontmatter
+- `scripts/gws/safe-delete.sh` — three-tier Drive delete safety
+  wrapper (L1 trash-default / L2 --permanent + --confirm / L3
+  --permanent + non-provenance + --i-confirm-name=<exact-name>);
+  default mode is dry-run (returns JSON preview without calling
+  destructive API)
+- `scripts/gws/tag-create.sh` — `files.create` wrapper that injects
+  `appProperties.created_by = "gws-toolkit"`,
+  `appProperties.created_by_version = <plugin.json version>`,
+  `appProperties.created_at = <UTC ISO 8601>` into every file the
+  toolkit creates; provenance tag drives safe-delete tier decision
+
+### Changed
+
+- **Plugin renamed** from `slides-toolkit` to `gws-toolkit`. Reflects
+  the post-vendor scope — only `slides-design` and `slides-builder`
+  remain Slides-specific; the rest covers generic Google Workspace
+  through vendored skills + setup + safety wrappers
+- **Skills renamed**: `google-slides-setup` → `gws-setup`;
+  `google-slides-builder` → `slides-builder`; `using-slides-toolkit`
+  → `using-gws-toolkit` (`slides-design` unchanged — content is
+  genuinely Slides-specific)
+- **Scripts directory renamed**: `scripts/google-slides/` →
+  `scripts/gws/`
+- **OAuth scope upgraded** from `presentations + drive.file` (2 scopes)
+  to `presentations + drive + documents + spreadsheets` (4 scopes).
+  Application-layer safety (safe-delete.sh) replaces the implicit
+  guarantee that `drive.file` provided. ASVS V1 least-privilege now
+  enforced at app layer, not scope boundary
+- **`scripts/gws/refresh-auth.sh`** — `GWS_TOOLKIT_SCOPES` env var as
+  primary override; `SLIDES_TOOLKIT_SCOPES` kept as deprecated alias
+- **`scripts/gws/auto-setup.sh`** — `DRIVE_SCOPE` flipped to full
+  `drive`; new `DOCS_SCOPE` / `SHEETS_SCOPE` constants
+
+### Removed
+
+- **`google-slides-api` skill (α-trim)** — its 4 per-op recipes
+  + `api-error-codes.md` reference moved to
+  `slides-builder/protocols/` and `slides-builder/references/`. The
+  skill's primary value (per-op API method discovery) is now covered
+  by upstream `gws-slides` + `gws schema slides.<r>.<m>`
+  introspection. Toolkit-specific composition pattern
+  (placeholder-map threading + 13a/13b non-fatal warnings) lives
+  inline in slides-builder
+
+### Architecture (post-strangler-fig snapshot)
+
+```
+gws-toolkit/
+├── .claude-plugin/plugin.json     # name = gws-toolkit, version 0.4.0
+├── PRODUCT-SPEC.md / TECH-SPEC.md  # v1.0 holistic rewrite
+├── UPSTREAM_GWS_VERSION            # upstream pin (v0.22.5 / 705fb0ec)
+├── LICENSE-APACHE-2.0.txt          # for vendored skills
+├── skills/
+│   ├── using-gws-toolkit/          # router (toolkit-original)
+│   ├── gws-setup/                  # OAuth+bootstrap+state (toolkit-original)
+│   ├── slides-design/              # Minto/SCQA/chart (toolkit-original)
+│   ├── slides-builder/             # slide-plan v1.2 → deck (toolkit-original)
+│   ├── gws-shared/                 # auth + global flags (vendored)
+│   ├── gws-drive/                  # Drive API v3 (vendored)
+│   ├── gws-docs/                   # Docs API v1 (vendored)
+│   ├── gws-slides/                 # Slides API v1 (vendored)
+│   └── gws-sheets/                 # Sheets API v4 (vendored)
+└── scripts/
+    ├── gws/
+    │   ├── bootstrap.sh            # gws + jq binary fetch
+    │   ├── credential-check.sh     # token state probe
+    │   ├── env-guard.sh            # issue #119 workaround
+    │   ├── gws-wrap.sh             # 429 retry + exit-code map
+    │   ├── auto-setup.sh           # first-time setup flow
+    │   ├── refresh-auth.sh         # 7-day re-auth helper
+    │   ├── safe-delete.sh          # 3-tier Drive delete
+    │   └── tag-create.sh           # appProperties provenance
+    └── sync-upstream-skills.sh     # vendored-skill sync
+```
+
+### Validation gate (before next release)
+
+- ≥ 2 weeks of validated daily use; if validation passes, slides-toolkit
+  enters Phase 3 sunset (banner upgrade + marketplace archive flag).
+  If validation fails, gws-toolkit may be reverted by removing
+  `gws-toolkit/` and `marketplace.json` entry without affecting
+  slides-toolkit (still at v0.6.0)
 
 ## [0.6.0-i18n] - 2026-04-24
 

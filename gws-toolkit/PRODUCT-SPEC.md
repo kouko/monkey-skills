@@ -1,16 +1,19 @@
-# PRODUCT-SPEC — slides-toolkit
+# PRODUCT-SPEC — gws-toolkit
 
-Cross-domain product spec for the `slides-toolkit` plugin in the
+Cross-domain product spec for the `gws-toolkit` plugin in the
 `monkey-skills` repository. Scope: business + design + engineering
 direction at the product level. Technical module design, interface
 contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 
 - Spec type: PRODUCT-SPEC (planning-team ownership)
-- Target plugin: `slides-toolkit`
-- Status: MVP direction, frozen after 4-round deep research;
-  **Revised 2026-04-23 (v0.2): Platform Pivot for multi-backend architecture**
-  (Ries 2011 Part Two pivot type #5);
-  **Revised 2026-04-23 (v0.3): Scope Refinement — remove template workflow + SHA-256 verification**
+- Target plugin: `gws-toolkit` (originated as `slides-toolkit`,
+  strangler-fig forked 2026-05-04)
+- Status: post-strangler-fig direction (v1.0); the prior MVP narrative
+  (validated-learning loop, kouko's deck-generation workflow) remains
+  the load-bearing assumption; v1.0 reframes the toolkit as a generic
+  Google Workspace setup-and-orchestration toolkit layered on the
+  upstream googleworkspace/cli, with Slides design + builder retained
+  as the primary day-1 use case
 - Primary user: kouko (個人)
 - Written against `planning-team` protocol `product-spec-writing.md`
   (standards: `planning-frameworks.md`, `discovery-frameworks.md`,
@@ -25,6 +28,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 | 2026-04-?? | v0.1 — MVP direction (4-round deep research frozen) | — | Single-backend (Google Slides only) |
 | 2026-04-23 | v0.2 — **Platform Pivot** | Ries 2011 Part Two #5 (Platform Pivot) | Multi-backend architecture. 設計知識層與執行層解耦；Google Slides 降為可插拔 backend 之一（renamed to `gws-setup` / `slides-builder`）；未來可加 `html-builder` / `pptx-builder` / `marp-builder`. **未動搖**：Job Story、4 Big Risks、MVP validated-learning 假設、3 core recipe 均不變。**Why Platform Pivot**：Ries 2011 Part Two 列出 10 種 pivot type，其中 Platform Pivot 指「從 single application 轉為 platform，或反之」。本次變更的本質是：架構從「為單一輸出格式服務的 application」轉為「以設計知識層為核心、可插拔多 backend 的 platform」，使用者需求（Job Story）與核心風險（4 Big Risks）未變，因此不屬於 Customer Segment Pivot / Problem Pivot / Zoom-in Pivot 等其他類型。 |
 | 2026-04-23 | v0.3 — **Scope Refinement**（非 pivot） | — | **刪除兩項 MVP feature 以大幅簡化**：(1) 移除 template-based workflow — 不再用使用者自備 template deck + `registry.md` lookup；改為 `presentations.create` 直接建空 deck，使用 Google 內建 predefined layouts（`TITLE` / `TITLE_AND_BODY` / `SECTION_HEADER` 等），Claude 在 `slide-plan.json` 明示指定 `layout_hint` enum。(2) 移除 SHA-256 binary verification — `bootstrap.sh` 只做 HTTPS + curl 失敗檢查，不做 SHA-256 pin 比對。**Rationale**：個人使用情境下（kouko 單人閉環、無外部發布），template 帶來的視覺品質微升 vs. template 管理 overhead、SHA supply-chain 邊際安全效益 vs. pin 維護負擔——兩者 trade-off 皆判定為**當下刪除、未來 trigger-gated 恢復**（見 §3.5）。**為何是 Scope Refinement 而非 Major Pivot**：依 Ries 2011 Part Two pivot 分類準則，pivot 要動搖**核心假設**或**使用者認知**。本次變更：Job Story 不變、4 Big Risks 風險結構不變、MVP validated-learning 核心假設（≤ 3 分鐘 / 份、≤ 20 分鐘首次設定）不變、OKR + KR + NSM 不變。變動只在 scope 範圍（刪兩個 feature）+ Design Principle 2 需重寫（template-based → layout-based）+ Future Phases trigger 需更新。屬 Ubl 2020 非否決式的 scope 調整，並依其規則把被刪功能登記為 Non-Goal + Phase 2+ trigger。 |
+| 2026-05-04 | v1.0 — **Strangler-fig fork: slides-toolkit → gws-toolkit** | — (scope expansion + vendor; not a Ries pivot type because Job Story / 4 Big Risks / OKR / NSM all unchanged) | **5 substantive changes packaged in one Phase 1**: (1) Vendor 5 upstream `googleworkspace/cli` SKILL.md files (`gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets`) under Apache-2.0; toolkit no longer maintains per-op API method reference. (2) α-trim — fold `google-slides-api` skill into `slides-builder` (placeholder-map composition pattern was the only differentiator vs upstream `gws-slides`). (3) Plugin rename `slides-toolkit` → `gws-toolkit` — reflects post-vendor scope (only `slides-design` + `slides-builder` are Slides-specific; the rest is generic Workspace). (4) OAuth scope upgrade `presentations + drive.file` → `presentations + drive + documents + spreadsheets`; full `drive` scope's expanded danger surface contained at application layer via `safe-delete.sh` three-tier wrapper (L1 trash-default / L2 `--permanent` + `--confirm` / L3 typed-name match for non-provenance files). (5) `tag-create.sh` injects `appProperties.created_by = "gws-toolkit"` provenance tag into every file the toolkit creates; tag drives safe-delete tier decision. **Why not a pivot**: Ries 2011 pivots shift core assumptions or user identity. v1.0 keeps kouko's Job Story (Slides decks ≤ 3 min / piece), 4 Big Risks structure, OKR / KRs, NSM, and the validated-learning loop intact. The change is architectural / scope expansion. **Strangler fig**: slides-toolkit `v0.6.0` is feature-frozen and remains installable during a ≥ 2-week validation period; gws-toolkit must demonstrate (a) ≥ 1 successful Slides deck via slides-builder, (b) ≥ 1 ad-hoc Drive op through vendored gws-drive, (c) ≥ 1 destructive op through safe-delete.sh, (d) no regression vs slides-toolkit on KR1 deck-generation time, before slides-toolkit enters Phase 3 deprecation. |
 
 ---
 

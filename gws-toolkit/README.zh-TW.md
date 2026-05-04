@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 🚧 **開發中 — 尚未穩定。** [`slides-toolkit/`](../slides-toolkit/) 的後繼者，2026-05-04 直接 copy seed 而來。內部架構正從「Slides 專屬」泛化為「generic Google Workspace」：vendor upstream `gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets` skill、加入三層刪除安全機制的 Drive 操作擴張、OAuth scope 擴張、toolkit 自有 setup 自動化與 Slides design knowledge layer。本 banner 移除前，**日常工作請繼續使用 `slides-toolkit/`。** 與 Google 無關。
+> 🚧 **驗證期間 — Phase 1 完成，等待日常使用驗證。** [`slides-toolkit/`](../slides-toolkit/) 的後繼者，2026-05-04 用 strangler-fig 模式 fork。Phase 1（vendor 5 個 upstream skill + α-trim + 重命名 + OAuth scope 升級 + Drive 安全 wrapper）已於 2026-05-04 完成（見 CHANGELOG `0.4.0-strangler-fig-seed`）。目前進入 ≥ 2 週驗證期：≥ 1 份 Slides deck 透過 slides-builder、≥ 1 個 ad-hoc Drive 操作透過 vendored `gws-drive`、≥ 1 個破壞性操作透過 `safe-delete.sh`、KR1 deck 生成時間無 regression。驗證通過、slides-toolkit 進入 Phase 3 deprecation 之前，兩個 plugin 並列可用。與 Google 無關。
 
 > 透過 Claude Code skill 從 brief 一鍵生成 Google Workspace 製品（Slides / Docs / Sheets / Drive）。純 shell + `gws` CLI，免 Python / gcloud。
 
@@ -43,7 +43,7 @@ Code 讓它讀取 skill。
 
 ```bash
 # 在 Claude Code 內執行
-/plugin install slides-toolkit@monkey-skills
+/plugin install gws-toolkit@monkey-skills
 ```
 
 ## Quick start
@@ -84,19 +84,38 @@ auto-route（plugin 沒有 `commands/` shim，未提供 slash command）。
 
 ## Skills
 
-plugin 提供 5 個 skill，分為 3 層。
+Plugin 提供 **9 個 skill**，分兩層 provenance — 4 個 toolkit-original
++ 5 個從 upstream
+[`googleworkspace/cli`](https://github.com/googleworkspace/cli) `v0.22.5`
+vendor 進來（Apache-2.0；每份 vendored SKILL.md 的 frontmatter
+`metadata.vendored_from` 記錄 provenance）。
+
+**Toolkit-original（4 個）**
 
 | Skill | Layer | 角色 |
 |---|---|---|
-| `using-gws-toolkit` | Router（backend-agnostic） | 判讀意圖、讀 `slide-plan.target`、route 到對應 skill |
-| `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選型；對所有 backend 通用 |
-| `gws-setup` | google-slides backend | 第一次 GCP Console / OAuth / `gws` bootstrap，後續做 state detection |
-| `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
-| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
+| `using-gws-toolkit` | Router | 判讀意圖、讀 `slide-plan.target`、route 到對應 skill |
+| `gws-setup` | Setup（generic） | 第一次 GCP Console / OAuth（4 scope：presentations + drive + documents + spreadsheets）/ `gws` + `jq` bootstrap、state detection、7 天 re-auth |
+| `slides-design` | Knowledge（Slides 專屬） | Minto Pyramid + SCQA narrative、chart 選型 |
+| `slides-builder` | Execution（Slides 專屬） | `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL；placeholder-map composition pattern 內建 |
 
-`using-gws-toolkit` 與 `slides-design` 刻意設計為 backend-agnostic，
-未來 `html-builder` / `pptx-builder` / `marp-builder` skill 可重用同
-一個 routing 入口與設計 reference，不需修改。
+**Vendored upstream（5 個，Apache-2.0）**
+
+| Skill | API surface |
+|---|---|
+| `gws-shared` | auth + global flags + 安全規則（其他 4 個 skill 在 PREREQUISITE 引用） |
+| `gws-drive` | Drive API v3（about / files / permissions / changes 等） |
+| `gws-docs` | Docs API v1（`documents.{batchUpdate, create, get}`） |
+| `gws-slides` | Slides API v1（`presentations.{batchUpdate, create, get}` + pages） |
+| `gws-sheets` | Sheets API v4（`spreadsheets.*` + values + sheets + developerMetadata） |
+
+`using-gws-toolkit` 刻意設計為 backend-agnostic，未來
+`html-builder` / `pptx-builder` / `marp-builder` skill 可重用同一個
+routing 入口，不需修改。
+
+Drive / Docs / Sheets / Slides 的 raw API method 探索由 vendored 各 skill
+擔任一線；slide-plan pipeline、三層刪除安全機制、provenance tag 等
+toolkit-opinion 由 toolkit-original 層擔任一線。
 
 ## 前置條件
 
