@@ -321,13 +321,25 @@ ensure_apis() {
 #
 # 互動模式：always 從 /dev/tty 讀按鍵，所以 Claude Bash 背景跑也能 prompt。
 # 真 headless（無 /dev/tty）→ fallback 一次性開 3 URL + 純 poll。
+# /dev/tty existence-check via [[ -r ]] is unreliable on macOS — the file
+# exists but the device isn't "configured" when no controlling terminal
+# is attached. Detect by actually attempting to open it.
+have_working_tty() {
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    if (printf '' >/dev/tty) 2>/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
 prompt_continue() {
   local message="$1"
-  if [[ -r /dev/tty && -w /dev/tty ]]; then
-    printf '\n%s\n→ Press ENTER when done (or Ctrl-C to abort): ' "${message}" >/dev/tty
-    read -r _ </dev/tty || true
+  if have_working_tty; then
+    printf '\n%s\n→ Press ENTER when done (or Ctrl-C to abort): ' "${message}" >/dev/tty 2>/dev/null
+    read -r _ </dev/tty 2>/dev/null || true
   else
-    printf '[auto-setup] (no TTY; cannot prompt — proceeding) %s\n' "${message}" >&2
+    printf '[auto-setup] (no /dev/tty; proceeding without prompt) %s\n' "${message}" >&2
   fi
 }
 
