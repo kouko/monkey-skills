@@ -335,12 +335,14 @@ have_working_tty() {
 
 prompt_continue() {
   local message="$1"
-  if have_working_tty; then
-    printf '\n%s\n→ Press ENTER when done (or Ctrl-C to abort): ' "${message}" >/dev/tty 2>/dev/null
-    read -r _ </dev/tty 2>/dev/null || true
-  else
-    printf '[auto-setup] (no /dev/tty; proceeding without prompt) %s\n' "${message}" >&2
-  fi
+  # 強制要求 TTY — 不阻塞地連開多個瀏覽器 tab 比 fail loud 更糟（使用者
+  # 體驗變成「為什麼開了一堆 tab，我還沒做完第一步」）。所以這裡直接
+  # die_json 而不是 fall through。pre-flight check 會在 main 開始前先
+  # 攔下這個情境，這裡是 belt-and-suspenders。
+  have_working_tty \
+    || die_json 1 "auto-setup.sh requires a controlling terminal for the guided 5a/5b/5c sub-steps; run it from a real terminal app (Terminal.app, iTerm2, or a VSCode integrated terminal — not piped stdin or a background bash invocation)"
+  printf '\n%s\n→ Press ENTER when done (or Ctrl-C to abort): ' "${message}" >/dev/tty
+  read -r _ </dev/tty
 }
 
 step_5a_branding() {
@@ -349,16 +351,44 @@ step_5a_branding() {
 
   cat >&2 <<EOF
 
-  📋 5a — Branding
+  📋 5a — Google Auth Platform initial setup (4-stage wizard)
      URL: ${url}
 
-     In the browser:
-       1. Open the "Branding" tab (default landing)
-       2. Fill:
-          • App name (e.g. "gws-toolkit")
-          • User support email = your Gmail
-          • Developer contact = your Gmail
-       3. Click Save → wait for "saved" confirmation
+     For a brand-new project, the Overview page shows
+     "Google Auth Platform not configured yet" with a single
+     [Get started] button. Branding / Audience / Contact are all
+     filled inside this one wizard.
+
+     If you see [Get started]:
+       1. Click [Get started] — opens the "Project configuration" wizard
+
+       Stage 1/4 — App Information
+         • App name: gws-toolkit (or your choice)
+         • User support email: ${ACCOUNT:-your@gmail.com}
+         → Click [Next]
+
+       Stage 2/4 — Audience
+         • Select [External]   ⚠ NOT Internal (Internal requires a
+           Workspace org; External is the right choice for personal
+           Gmail accounts)
+         → Click [Next]
+
+       Stage 3/4 — Contact Information
+         • Email addresses: ${ACCOUNT:-your@gmail.com} (usually pre-filled)
+         → Click [Next]
+
+       Stage 4/4 — Finish
+         • Tick: "I agree to the Google API Services: User Data Policy"
+         → Click [Continue]
+         → Click [Create]
+         → Wait for "OAuth configuration created!" toast
+
+     If the Auth Platform is already configured (no [Get started]
+     button — you see Metrics / Project Checkup directly): no action
+     needed; press ENTER to continue.
+
+     Note: this wizard sets Audience type to External but does NOT
+     add Test Users. 5b adds the Test User next.
 EOF
   if (( DRY_RUN == 1 )); then
     dry_echo "open ${url}"
@@ -377,14 +407,23 @@ step_5b_test_user() {
   📋 5b — Audience / Test User
      URL: ${url}
 
-     In the browser:
-       1. Scroll to "Test users" section
-       2. Click "+ ADD USERS"
-       3. Enter your Gmail (${ACCOUNT:-your@gmail.com})
-       4. Click Save
-       5. Confirm the email appears in the Test users list
+     The Audience page has 4 sections (Publishing status / User type
+     / OAuth user cap / Test users). 5a's wizard already set
+     Publishing status = Testing and User type = External, so the
+     only thing left here is to add yourself as a Test user.
 
-     ⚠ Skipping this = step 8 fails with 403 access_denied.
+     In the browser:
+       1. Scroll to the "Test users" section (bottom of the page)
+       2. Click [+ Add users] — a side panel slides in from the right
+       3. In the email field, enter: ${ACCOUNT:-your@gmail.com}
+       4. Click [Save]
+       5. The panel closes; confirm the email now appears in the
+          Test users table at the bottom (with a trash icon next to
+          it). The OAuth user cap counter should now read
+          "1 user (1 test, 0 other) / 100 user cap".
+
+     ⚠ Skipping this = step 8 fails with 403 access_denied 6 minutes
+        into the OAuth flow.
 EOF
   if (( DRY_RUN == 1 )); then
     dry_echo "open ${url}"
@@ -400,19 +439,31 @@ step_5c_oauth_client() {
 
   cat >&2 <<EOF
 
-  📋 5c — OAuth Client
+  📋 5c — OAuth Client (Desktop app) + Download
      URL: ${url}
 
-     In the browser:
-       1. Click "+ CREATE CLIENT"
-       2. Application type = "Desktop app"
-          ⚠ NOT "Web application" — Desktop is required for the
+     Shortcut: from the Overview page right after 5a, the Metrics
+     section shows a [Create OAuth client] button — clicking it
+     lands on the same form. Otherwise navigate to the Clients tab
+     and click [+ Create client].
+
+     In the "Create OAuth client ID" form:
+       1. Application type (dropdown) → select [Desktop app]
+          ⚠ NOT [Web application] — Desktop is required for the
           localhost callback gws uses. Picking Web silently breaks
-          step 8.
-       3. Name (e.g. "gws-toolkit-cli")
-       4. Click Create
-       5. Click DOWNLOAD JSON
-       6. Save to ${DOWNLOADS_DIR}/  (keep default filename)
+          step 8 with redirect_uri_mismatch.
+       2. Name: gws-toolkit (or your choice — only used in console)
+       3. Click [Create]
+
+     A modal appears: "OAuth client created"
+       4. Click [Download JSON] inside the modal
+       5. Save to ${DOWNLOADS_DIR}/  (keep default
+          client_secret_*.json filename)
+       6. Click [OK] to dismiss the modal
+
+     (If you accidentally close the modal without downloading: open
+     the Clients tab → click your client row → [Download JSON]
+     button on its detail page.)
 
      Polling ${DOWNLOADS_DIR}/ for fresh client_secret_*.json
      (timeout ${WAIT_CLIENT_SECRET_TIMEOUT_SEC}s)...
@@ -664,6 +715,13 @@ main() {
 
   printf '[auto-setup] dry_run=%d force_reinstall=%d\n' \
     "${DRY_RUN}" "${FORCE_REINSTALL}" >&2
+
+  # Pre-flight TTY check — step 5a/5b/5c are interactive guided sub-steps.
+  # 早攔比晚攔好：與其讓使用者跑到 step 5 才看到「3 個瀏覽器 tab 同時開」，
+  # 不如在腳本啟動就直接退出。dry-run 不需要 TTY（不會 prompt）。
+  if (( DRY_RUN == 0 )) && ! have_working_tty; then
+    die_json 1 "auto-setup.sh requires a controlling terminal for the guided 5a/5b/5c sub-steps; run it from a real terminal app (Terminal.app, iTerm2, or a VSCode integrated terminal — not piped stdin or a background bash invocation)"
+  fi
 
   ensure_gcloud                  # step 1
   ensure_gcloud_auth             # step 2
