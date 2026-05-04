@@ -1215,7 +1215,7 @@ def test_chain_us_comps_compute_dual_input(tmp_path):
         f"anchor keys: {list(anchor.keys())}"
     )
     assert "multiples_compute" in anchor, (
-        f"anchor.multiples_compute missing — _compute_multiples_from_memo_fetch did not run. "
+        f"anchor.multiples_compute missing — compute_multiples_from_memo_fetch did not run. "
         f"anchor keys: {list(anchor.keys())}"
     )
     assert "divergence" in anchor, (

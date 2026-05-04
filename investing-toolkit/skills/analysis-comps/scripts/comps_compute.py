@@ -835,7 +835,7 @@ INDICATOR_FORMULAS: dict[str, callable] = {
 }
 
 
-def _compute_indicators_from_memo_fetch(
+def compute_indicators_from_memo_fetch(
     memo_fetch: dict,
     schema: dict,
 ) -> tuple[dict, dict, list[str]]:
@@ -868,7 +868,7 @@ def _compute_indicators_from_memo_fetch(
     return out_indicators, out_prov, warnings
 
 
-def _compute_multiples_from_memo_fetch(
+def compute_multiples_from_memo_fetch(
     memo_fetch: dict,
     direct_multiples: dict,
     schema: dict,
@@ -1268,7 +1268,7 @@ def main() -> int:
 
     if effective_mode == "compute":
         multiples_compute, compute_provenance, compute_warnings = (
-            _compute_multiples_from_memo_fetch(anchor_base, anchor_multiples, anchor_schema)
+            compute_multiples_from_memo_fetch(anchor_base, anchor_multiples, anchor_schema)
         )
         warnings.extend(compute_warnings)
         kinds = _schema_multiple_kinds(anchor_schema)
@@ -1285,7 +1285,7 @@ def main() -> int:
         # indicator_id (no key collisions because indicator ids are distinct
         # from multiple ids per schema design).
         indicators, indicator_prov, indicator_warnings = (
-            _compute_indicators_from_memo_fetch(anchor_base, anchor_schema)
+            compute_indicators_from_memo_fetch(anchor_base, anchor_schema)
         )
         warnings.extend(indicator_warnings)
         anchor_block["indicators"] = indicators
