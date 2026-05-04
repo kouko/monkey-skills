@@ -1,0 +1,26 @@
+name: artifact-deconstruct-08-zh-op-ed
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-zh-op-ed.md
+input_query: "請拆解這篇社論"
+expected_lenses:
+  - lens-rhetoric-zh
+must_find:
+  - id: liuguan-six-perspectives
+    description: "All 6 of 六觀 identified (位體 / 置辭 / 通變 / 奇正 / 事義 / 宮商) with concrete textual citations from the 社論"
+    threshold: 6
+  - id: zh-specific-moves
+    description: "≥3 ZH-specific moves identified (對偶 / 排比 / 比興 / 用典) with text citations — e.g. 對偶 「不在於我們發明了什麼，而在於我們守住了什麼」, 排比 「從計畫提案到社區共識...」, 用典 《荀子·勸學》"
+    threshold: 3
+  - id: yongdian-as-backing
+    description: "用典 《荀子·勸學》「不積跬步，無以至千里」 identified as authority-borrowing (Toulmin 'backing' equivalent), NOT mis-flagged as 'undefended warrant'"
+    threshold: 1
+  - id: register-variant-zh-tw
+    description: "Register variant identified as zh-TW (繁體, 聯合報/中時 conventions) — NOT zh-CN or zh-HK"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-rhetoric-zh' or equivalent variant attribution; NOT lens-rhetoric-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR 用典 mis-flagged as 'undefended warrant'"

@@ -1,0 +1,32 @@
+name: artifact-deconstruct-11-zh-political-speech
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-zh-political-speech.md
+input_query: "請拆解這段施政答詢"
+expected_lenses:
+  - lens-frame-zh
+must_find:
+  - id: goffman-primary-frame
+    description: "Goffman primary framework identified as 議會答詢 / 施政演說 (TW representative-democratic register) — assumes 行政—立法 監督關係 + 公務員倫理 + 為民服務 triad"
+    threshold: 1
+  - id: mianzi-lian-distinction
+    description: "面子 (status) vs 臉 (moral integrity) distinguished per Hu 1944 — both invocations identified with whose-face mapping (e.g. 給張議員面子 / 「民為邦本」 staking own 臉)"
+    threshold: 2
+  - id: ziziren-circle-tier
+    description: "自己人/熟人/外人 3-tier 圈子 boundary identified (Hwang 1987) — 「自己人的事，沒有外人」 / 縣團隊 / 鄉親 / 中央主管機關 / implicit 外人"
+    threshold: 1
+  - id: yinyang-dialectical-synthesis
+    description: "陰陽 dialectical metaphor identified — 「兼顧發展與環境」「既要A也要B」「如陰陽相生」「根/枝葉」 — NOT mis-flagged as Anglo equivocation / fence-sitting"
+    threshold: 1
+  - id: zh-conceptual-metaphor
+    description: "≥2 ZH conceptual metaphors identified from 道 / 氣 / 緣 / 心 / 圈子 / 根 with surface-signal citations (NOT forced into Lakoff Anglo binary corpus)"
+    threshold: 2
+  - id: register-variant-zh-tw
+    description: "Register variant identified as zh-TW; flag that 「我們」 may silently exclude PRC-readers / 外籍人士"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-frame-zh' or equivalent variant attribution; NOT lens-frame-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR 兼顧 mis-flagged as Anglo equivocation OR 面子/臉 conflated"

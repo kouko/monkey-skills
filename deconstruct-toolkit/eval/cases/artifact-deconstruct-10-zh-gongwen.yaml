@@ -1,0 +1,29 @@
+name: artifact-deconstruct-10-zh-gongwen
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-zh-gongwen.md
+input_query: "請拆解這份公文"
+expected_lenses:
+  - lens-genre-zh
+must_find:
+  - id: subgenre-han
+    description: "Sub-genre identified as 函 (NOT 通知 / 報告 / 請示 / 公告); 三段式 (主旨/說明/辦法) format named"
+    threshold: 1
+  - id: sanduanshi-placement
+    description: "三段式 slot allocation verified: 主旨 (single-sentence contractual request with embedded 結尾語) + 說明 (依據/原因/經過/配套) + 辦法 (response-required action items)"
+    threshold: 3
+  - id: zhuzhi-as-contract
+    description: "主旨 identified as commitment device / contractual request, NOT as 'introduction' (Anglo CARS mis-tag)"
+    threshold: 1
+  - id: jieweiyu-identified
+    description: "結尾語 「請查照惠予協助」 identified as canonical 平行 行文 marker (vs 「敬請鑒核」 對上行 / 「希照辦」 對下行)"
+    threshold: 1
+  - id: tw-register-variant
+    description: "Register variant identified as TW (行政院《文書處理手冊》) — NOT PRC GB/T 9704-2012 (which uses different sub-genre set)"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-genre-zh' or equivalent variant attribution; NOT lens-genre-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR 主旨 mis-tagged as 'introduction' OR PRC conventions projected onto TW 公文"
