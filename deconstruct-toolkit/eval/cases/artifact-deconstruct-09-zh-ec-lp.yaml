@@ -1,0 +1,29 @@
+name: artifact-deconstruct-09-zh-ec-lp
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-zh-ec-lp.md
+input_query: "請拆解這個電商落地頁"
+expected_lenses:
+  - lens-persuasion-zh
+must_find:
+  - id: cialdini-coverage-zh-weighting
+    description: "≥4 of Cialdini-7 identified with ZH weighting (Reciprocity→人情 / Commitment-face-amplified / Social-proof-collectivist / Authority-老字號-stack / Liking→關係 / Scarcity-face-loss / Unity→自己人)"
+    threshold: 4
+  - id: zh-specific-mechanisms
+    description: "≥3 ZH-specific mechanisms identified (面子 / 關係 / 人情 / 自己人-vs-外人 / 道德綁架) — must NOT be collapsed into Cialdini buckets"
+    threshold: 3
+  - id: moral-kidnapping-flagged
+    description: "道德綁架 「不買就是對不起阿嬤的好意」 identified as ZH-specific dark pattern (#13), NOT as Brignull confirmshaming — flagged 🔴"
+    threshold: 1
+  - id: face-stakes-manufactured
+    description: "面子 weaponization 「給阿嬤一個面子吧」 identified as engineered face-stakes for trivial purchase, flagged 🔴 manipulation"
+    threshold: 1
+  - id: register-variant-zh-tw
+    description: "Register variant identified as zh-TW (PD≈58, post-democratization weighting) — NOT projected onto PRC weights"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-persuasion-zh' or equivalent variant attribution; NOT lens-persuasion-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR 道德綁架 collapsed into Brignull confirmshaming OR 關係 collapsed into Cialdini Liking"
