@@ -1121,6 +1121,16 @@ def main() -> int:
         "--show-routing", action="store_true",
         help="Stderr: print resolved schema_id + source + matched_rule for the anchor.",
     )
+    parser.add_argument(
+        "--sector-benchmark", action="store_true",
+        help=(
+            "Add an etf_benchmark block under anchor showing divergence vs the "
+            "SPDR sector ETF aggregate matched by anchor.schema_id. Reads "
+            "references/sector-etf-aggregate-<ETF>.json (built weekly by "
+            "etf_aggregator.py via GHA). Non-US tickers emit "
+            "etf_benchmark.status='skipped'. Default: off (output unchanged from v2.2.0-c)."
+        ),
+    )
     args = parser.parse_args()
 
     if args.mode == "compute" and args.anchor_base is None:
