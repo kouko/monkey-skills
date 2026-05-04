@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 🚧 **開発中 — まだ stable ではありません。** [`slides-toolkit/`](../slides-toolkit/) の後継として 2026-05-04 に直接 copy で seed。内部アーキテクチャを「Slides 専用」から「generic Google Workspace」へ汎化中：upstream `gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets` skill の vendor 取り込み、三段階削除安全機構付きの Drive 操作拡張、OAuth scope 拡張、toolkit 独自の setup 自動化と Slides design knowledge layer。本 banner が消えるまで、**日常運用は `slides-toolkit/` を使用してください。** Google とは無関係。
+> 🚧 **検証期間中 — Phase 1 完了、日常運用検証待ち。** [`slides-toolkit/`](../slides-toolkit/) の後継として 2026-05-04 に strangler-fig fork で seed。Phase 1（upstream 5 skill vendor + α-trim + リネーム + OAuth scope 拡張 + Drive 安全 wrapper）は 2026-05-04 に完了（CHANGELOG `0.4.0-strangler-fig-seed` 参照）。≥ 2 週間の検証期間に入り、(1) slides-builder で Slides deck 生成 ≥ 1 件、(2) vendored `gws-drive` 経由の ad-hoc Drive 操作 ≥ 1 件、(3) `safe-delete.sh` 経由の破壊的操作 ≥ 1 件、(4) KR1 deck 生成時間に regression なし — を確認。検証通過後 slides-toolkit が Phase 3 deprecation に入るまで、両 plugin が併存します。Google とは無関係。
 
 > Brief から Google Workspace artifacts（Slides / Docs / Sheets / Drive）を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
 
@@ -45,7 +45,7 @@ plug 可能な execution layer を切り離しています。MVP では
 
 ```bash
 # Claude Code 内から
-/plugin install slides-toolkit@monkey-skills
+/plugin install gws-toolkit@monkey-skills
 ```
 
 ## Quick start
@@ -90,20 +90,38 @@ dispatch します。
 
 ## Skills
 
-5 つの skill が 3 layer に分かれています。
+plugin は **9 skill** を 2 層の provenance で提供します — 4 toolkit-original
++ 5 vendored from upstream
+[`googleworkspace/cli`](https://github.com/googleworkspace/cli) at
+`v0.22.5` (Apache-2.0；各 vendored SKILL.md frontmatter
+`metadata.vendored_from` に provenance を記録)。
+
+**Toolkit-original (4)**
 
 | Skill | Layer | 役割 |
 |---|---|---|
-| `using-gws-toolkit` | Router（backend-agnostic） | 意図を判定し `slide-plan.target` を読み、適切な skill に route |
-| `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選択。すべての backend に適用可 |
-| `gws-setup` | google-slides backend | 初回 GCP Console / OAuth / `gws` bootstrap、以降の state detection |
-| `google-slides-api` | google-slides backend | Low-level な per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
-| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
+| `using-gws-toolkit` | Router | 意図判定、`slide-plan.target` 読み込み、適切な skill へ route |
+| `gws-setup` | Setup（generic） | 初回 GCP Console / OAuth (4 scopes: presentations + drive + documents + spreadsheets) / `gws` + `jq` bootstrap、state detection、7 日サイクル re-auth |
+| `slides-design` | Knowledge（Slides 専用） | Minto Pyramid + SCQA narrative、chart 選択 |
+| `slides-builder` | Execution（Slides 専用） | `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL；placeholder-map composition pattern を内蔵 |
 
-`using-gws-toolkit` と `slides-design` は意図的に
-backend-agnostic にしてあるため、将来の `html-builder` /
-`pptx-builder` / `marp-builder` skill が同じ routing entry と設計
-reference を変更なしで再利用できます。
+**Vendored upstream (5, Apache-2.0)**
+
+| Skill | API surface |
+|---|---|
+| `gws-shared` | auth + global flags + security rules（他 4 skill が PREREQUISITE で参照） |
+| `gws-drive` | Drive API v3（about / files / permissions / changes など） |
+| `gws-docs` | Docs API v1（`documents.{batchUpdate, create, get}`） |
+| `gws-slides` | Slides API v1（`presentations.{batchUpdate, create, get}` + pages） |
+| `gws-sheets` | Sheets API v4（`spreadsheets.*` + values + sheets + developerMetadata） |
+
+`using-gws-toolkit` は backend-agnostic に設計してあるため、将来の
+`html-builder` / `pptx-builder` / `marp-builder` skill が同じ
+routing entry を変更なしで再利用できます。
+
+Drive / Docs / Sheets / Slides の raw API method 探索は vendored 各
+skill が一次線。slide-plan pipeline・三段階削除安全機構・provenance
+tag 等の toolkit-opinion は toolkit-original 層が一次線。
 
 ## 前提条件
 
