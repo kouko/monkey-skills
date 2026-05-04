@@ -92,20 +92,20 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: classify_jp `real_rate_block` has 3 sub-blocks (ex_post / ex_ante / jgbi) all populated; cross-method central tendency derived.
 - **Reference**: `analysis-macro-regime/references/japan-real-rate-roadmap.md`; v1.10.0 deferred list; v2.0.0 deferred list.
 
-### ~~v2.2.0-b — analysis-comps `--mode compute` activation~~ ✅ closed 2026-05-03 (PR #TBD)
+### ~~v2.2.0-b — analysis-comps `--mode compute` activation~~ ✅ closed 2026-05-03 (PR #TBD <!-- TODO Task 10: backfill actual PR# after gh pr create -->)
 
 - **Status**: Closed. Anchor-only dual-input shape (B'): `--anchor` + new `--anchor-base` (memo-fetch pack); peers remain single-input direct. 3 of 5 multiples computable in v2.2.0-b — `trailingPE` (FY-trailing), `priceToSales` (FY), `forwardPE` (pass-through). 2 of 5 deferred to v2.2.0-l: `priceToBook` (needs `total_stockholders_equity`), `evEbitda` (needs `depreciation_amortization`).
 - **Output**: anchor block now carries `multiples_direct` + `multiples_compute` + `divergence` (low/medium/high/n/a per `references/divergence-thresholds.md`) + `compute_provenance` per multiple with FY end + accession_basis.
 - **Direct-mode breaking change**: `anchor.multiples` → `anchor.multiples_direct`. Only in-tree caller (`report-equity-memo` Phase 2.5) migrated atomically in same PR.
 - **Spec / Plan**: [`docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md`](../docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md) / [`docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md`](../docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md)
-- **Reference**: PR #TBD; spawned v2.2.0-k (immutable cache tag) + v2.2.0-l (memo-fetch raw-field extension).
+- **Reference**: PR #TBD <!-- TODO Task 10: backfill actual PR# after gh pr create -->; spawned v2.2.0-k (immutable cache tag) + v2.2.0-l (closed 2026-05-04 — see entry below).
 
 ### v2.2.0-c — Sector-adjusted multiples for Comps
 
 - **What**: Banks → P/B + ROE; REITs → P/AFFO; Tech → EV/Revenue + Rule-of-40. Per-sector schema swap for the 5-multiple default.
 - **Why**: P/E + EV/EBITDA on a bank or REIT is meaningless. Sector classifier + per-sector schema makes comps useful across sectors.
 - **Files**: `analysis-comps/scripts/sector_classifier.py` (new — likely yfinance `info.sector` + manual override table); per-sector multiple schemas in `references/`; comps_compute extension.
-- **Blocker**: Sector classification correctness (yfinance is sometimes wrong; need manual override).
+- **Blocker**: data-side: none (v2.2.0-l closed 2026-05-04 provides the required raw fields: `total_stockholders_equity`, `depreciation_amortization`, `stock_based_compensation`). **Soft blocker**: yfinance sector classification can misroute issuers (e.g. holdco / multi-sector) — silent wrong-multiple output is a real risk; recommend issuer-level override mechanism in scope.
 - **Acceptance**: Apple → tech multiples (EV/Revenue + Rule-of-40); JPM → bank multiples (P/B + ROE); Realty Income → REIT multiples.
 - **Reference**: v2.0.0 deferred list.
 
@@ -186,15 +186,6 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: cache file inspection shows `_cache_meta.cadence: "immutable"` for past-accession fetches; `_cache_meta.expires_at: null`; deliberate-clock-forward smoke test confirms immutable entries do not refetch.
 - **Reference**: 2026-05-03 brainstorming session; design doc 2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md §15.1.
 
-### v2.2.0-l — memo-fetch raw-field extension for compute-mode multiples
-
-- **What**: Extend `data-us/scripts/sec_edgar_client.py` to extract additional XBRL concepts from the same 10-K filings already fetched (no new network requests). Surface in memo-fetch output: `balance_sheet.total_stockholders_equity` (XBRL `StockholdersEquity`), `cash_flow.depreciation_amortization` (XBRL `DepreciationDepletionAndAmortization`), `cash_flow.stock_based_compensation` (XBRL `ShareBasedCompensation`), `income_statement.gross_profit` (XBRL `GrossProfit`), `balance_sheet.intangible_assets` + `balance_sheet.goodwill`.
-- **Why**: Unblocks 2 of 5 compute multiples in v2.2.0-b that currently emit null (`priceToBook`, `evEbitda`). Sets foundation for v2.2.0-c sector-adjusted multiples (Tech Rule-of-40 needs SBC; REIT P/AFFO needs D&A; Bank P/B needs equity).
-- **Files**: `data-us/scripts/sec_edgar_client.py` (extend XBRL concept fallback chains); `data-us/scripts/pack.py` (assemble new fields into memo-fetch output); `tests/data/test_data_us.py` (assert presence of new fields); `tests/data/fixtures/data-us-memo-fetch-sample.json` (regenerate). Cross-country symmetry to `data-jp/edinet_client.py`, `data-tw/mops_client.py`, `data-kr/fdr_client.py`, `data-cn/akshare_client.py` follows country-by-country PR pattern.
-- **Blocker**: None. SEC EDGAR XBRL exposes these concepts directly; no new API or auth needed.
-- **Acceptance**: memo-fetch fixture shows new fields populated for AAPL FY2025; `analysis-comps/scripts/comps_compute.py --mode compute` (no code change in v2.2.0-l) auto-emits non-null `multiples_compute.priceToBook` + `multiples_compute.evEbitda`; existing v2.2.0-b deferred-multiple regression tests flip from `is None` to `pytest.approx(...)` in same PR.
-- **Reference**: 2026-05-03 design doc §7.3 + §15.2; v2.2.0-b PR closure.
-
 ### v2.2.0-m — TW pack-identifier wrapper normalization
 
 - **What**: Rename `_pack` → `pack`, `_ticker` → `ticker`, `_tickers` → `tickers` across `data-tw/scripts/pack.py` (6 emission sites) + `data-tw/references/schema-{snapshot,memo-fetch,comps-multiples,screener-batch,regime-pack}.json` (5 schema files) + `data-tw/SKILL.md` (2 doc sites). Add explicit `country: "TW"` field to all TW pack outputs to replace `_pack` as the country discriminator. Update `report-stock-snapshot/scripts/snapshot_format.py:479` TW detection from "presence of `_pack` + `mops`/`twse` keys" → `pack.get("country") == "TW"`. Regenerate 5 fixture files in `tests/data/fixtures/data-tw-*-sample.json`.
@@ -214,6 +205,10 @@ Material features. ~1-3 weeks each. Do one at a time.
   - `analysis-comps --mode compute` against TW memo-fetch produces JSON without crashing (compute_provenance may still be empty until v2.2.0-l adds MOPS raw-field extension; that's a separate concern)
   - `report-stock-snapshot` resolves country=TW correctly via new `country` field
 - **Reference**: 2026-05-03 v2.2.0-b post-merge follow-up; cross-country smoke test discovery in commit `e59c8f7` (test_cross_country_compute_smoke baseline); v2.0.0 PR #176-183 staging-tier rollout history (commit `289772c` introduced `_pack` convention).
+
+### ~~v2.2.0-l — memo-fetch raw-field extension for compute-mode multiples~~ ✅ closed 2026-05-04 (PR #TBD <!-- TODO Task 10: backfill actual PR# after gh pr create -->)
+
+- ✅ **v2.2.0-l** memo-fetch raw-field extension (PR #TBD <!-- TODO Task 10: backfill actual PR# after gh pr create -->) — Extended `data-us/scripts/pack.py` `DCF_CONCEPT_MAPPING` with 6 new XBRL chains: `gross_profit` (income_statement), `depreciation_amortization` + `stock_based_compensation` (cash_flow), `total_stockholders_equity` + `intangible_assets` + `goodwill` (balance_sheet). No new network calls — concepts ride existing companyfacts fan-out. **Auto-flipped** `analysis-comps --mode compute` `priceToBook` (= marketCap / equity[0]) + `evEbitda` (= (mcap + debt - cash) / (EBIT + D&A)) from null → computed; previous v2.2.0-b deferred-emit-null tests rewritten to `pytest.approx(...)` recompute assertions in same PR. AAPL fixture extended with FY2025 10-K values (equity $66.79B, D&A $11.45B, SBC $11.69B, gross_profit $184.10B; goodwill + intangibles tagged as immaterial empty arrays per upstream disclosure). Divergence vs direct registers as **high alert** for both new multiples (priceToBook ≈ +74%, evEbitda ≈ +35%) — expected and informative for FY-trailing-vs-LTM convention + buyback-heavy capitalization. EBITDA==0 edge case (negative EBIT offsetting D&A) handled with explicit guard + dedicated unit test. Network test (`test_us_memo_fetch_aapl_has_extended_canonical_fields`) added against live SEC EDGAR for CI weekly-cron coverage. Cross-country symmetry to JP/TW/KR/CN deferred to follow-up per-country PRs.
 
 ## Long-term — Phase 2 + beyond
 
@@ -240,15 +235,15 @@ Material features. ~1-3 weeks each. Do one at a time.
 - ❌ **3-statement model** — sell-side artifact incompatible with buy-side primary-source pipeline philosophy. See ROADMAP §"v2.0.0 Dropped".
 - ❌ **Per-country IC quadrant force-fit** — superseded by ADR-0004 (v2.1.0). Native classifiers replace unified IC where the framework breaks down (CN inflation framing inversion, JP exit-deflation, TW NDC 五色-led).
 
-## How to pick the next item (for fresh-session pickup)
+## Recommended next-pickup priority
 
-1. **Default**: do near-term v2.1.x patches first (a/b/c/d) — closes Phase 1 loose ends, ~3-5 days total
-2. **If a v2.2.0 item is more compelling**: pick from a/b/c/d/e/f based on:
-   - **Blocker readiness**: ECOS key applied? DART key still valid?
-   - **Strategic value**: KR DART (v2.2.0-e) is the highest-leverage — covers KR's biggest gap and unblocks downstream KR memo-fetch / DCF
-   - **Cost**: comps `--mode compute` (v2.2.0-b) is the cheapest material upgrade
-3. **Phase 2**: don't proactively start; wait for re-trigger conditions
-4. **Earnings**: skip until free data source surfaces
+1. **v2.2.0-c** Sector-adjusted multiples for Comps — now unblocked by v2.2.0-l (banks P/B+ROE / REITs P/AFFO / tech EV/Revenue+Rule-of-40). Foundation already in place — adds sector-aware classification + alternative formulas.
+2. **v2.2.0-e KR DART** — closes KR primary-source gap. **Blocker**: apply DART key at opendart.fss.or.kr first.
+3. **v2.2.0-l-{jp,tw,kr,cn}** Cross-country symmetry — extend new raw fields to JP EDINET, TW MOPS, KR fdr/DART, CN akshare per existing per-country pack patterns.
+4. **v2.2.0-a JP real-rate C+D+E** — makes JP match US 4-tier rigor.
+5. **v2.2.0-j Phase 2-4** — cadence-aware adaptive cache TTL across 14 clients.
+
+**Don't proactively start**: Phase 2 (await re-trigger) / Earnings (await free data source) / v2.2.0-g TIER fetcher (medium-low importance) / v2.2.0-k (blocked on v2.2.0-j Phase 2-4).
 
 For each item, the brief above should be sufficient to start a fresh session with `/loop` or subagent-driven-development. Reference the linked ADR for design rationale; reference linked PRs for prior-art commits.
 
