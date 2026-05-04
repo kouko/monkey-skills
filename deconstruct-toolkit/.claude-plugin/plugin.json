@@ -1,7 +1,7 @@
 {
   "name": "deconstruct-toolkit",
-  "version": "0.1.0",
-  "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Grounded in Derrida, Barthes, Burke, Toulmin, Goffman, Lakoff, Cialdini, Brignull, Bhatia/Swales, Nielsen-Norman. 制作物・論証・製品の脱構築。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。文物・論證・產品的逆向解構工具組。",
+  "version": "0.2.0",
+  "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Cultural-variant lenses for EN / JA / ZH (rhetoric / persuasion / genre / frame). Grounded in Burke, Toulmin, Hinds, 劉勰《文心雕龍》, Goffman, Lakoff, Doi, Hu/Hwang, Cialdini, Brignull, Swales/Bhatia, Nielsen-Norman, 山口周『武器になる哲学』. 制作物・論証・製品の脱構築 (英日中文化バリアント対応)。文物・論證・產品的逆向解構工具組（英日中文化變體）。",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -25,6 +25,13 @@
     "lakoff",
     "barthes",
     "derrida",
-    "bcg-deconstruction"
+    "bcg-deconstruction",
+    "cultural-variants",
+    "kishotenketsu",
+    "wenxin-diaolong",
+    "tatemae-honne",
+    "guanxi-mianzi",
+    "japanese-rhetoric",
+    "chinese-rhetoric"
   ]
 }

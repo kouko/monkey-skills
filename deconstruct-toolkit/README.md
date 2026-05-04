@@ -4,9 +4,10 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 **License**: MIT
+**Cultural-variant scope**: EN / JA / ZH (per [ADR-0004](docs/adr/0004-cultural-lens-variants.md))
 
 ## Background
 
@@ -19,6 +20,18 @@ The toolkit blends three intellectual traditions:
 - **Behavioral persuasion science** — Cialdini (7 principles of influence), Brignull (12 dark patterns / deceptive design). Methods of detecting persuasion mechanisms and assigning ethical position.
 
 For Japanese-speaking readers, the toolkit also engages with BCG's value-chain deconstruction (*Blown to Bits*, Evans & Wurster, 2000) and 山口周『武器になる哲学』(2018), where 脱構築 is established as a business-strategy term — not just a philosophical loanword.
+
+### Cultural-variant scope (v0.2.0+)
+
+The 4 culturally-sensitive lenses (rhetoric / persuasion / genre / frame) ship per-language variants for **EN / JA / ZH**. This is a permanent scope decision per [ADR-0004](docs/adr/0004-cultural-lens-variants.md).
+
+| Variant | Anchor sources |
+|---|---|
+| `-anglo` | Burke / Toulmin / Goffman / Lakoff / Swales/Bhatia / Cialdini / Brignull |
+| `-ja` | Hinds / kishōtenketsu / Doi / Yamamoto / 木下是雄 / Markus & Kitayama |
+| `-zh` | 劉勰《文心雕龍》六觀 / Hu / Hwang / 行政院公文程式條例 / Peng & Nisbett |
+
+Korean / Vietnamese / Thai / etc. artifacts are **outside this plugin's grounded scope**: they receive an `-anglo` fallback **with explicit caveat** rather than implied coverage. See `protocols/lens-variant-selection.md` for the routing algorithm.
 
 ## Boundary
 
@@ -70,7 +83,7 @@ Or let the router pick for you:
 
 The router asks one question — "what kind of artifact, what do you want to surface?" — and routes you to the right skill with the right lens preselected.
 
-## Skills (v0.1.0)
+## Skills (v0.2.0)
 
 ### Flagship
 
@@ -143,10 +156,12 @@ See [docs/design-proposal.md](docs/design-proposal.md) §8 for v0.1 → v1.0 pat
 
 | Version | Adds |
 |---|---|
-| **v0.1.0** (this release) | router + artifact-deconstruct + argument-deconstruct + assumption-surface |
-| v0.2.0 | `product-deconstruct`, `pricing-decode` (business-domain expansion) |
-| v0.3.0 | `frame-reveal`, `bias-audit`, `decision-archaeology` (atomic deepenings) |
-| v1.0.0 | 20+ real-world eval cases, fixture corpus, JP-region case study, open-source release |
+| v0.1.0 | router + artifact-deconstruct + argument-deconstruct + assumption-surface |
+| **v0.2.0** (this release) | Cultural variants (EN/JA/ZH) for rhetoric / persuasion / genre / frame lenses + variant-selection protocol + 8 JP/ZH fixtures + ADR-0004 |
+| v0.3.0 | `product-deconstruct`, `pricing-decode` (business-domain expansion, cultural-variant-aware) |
+| v0.4.0 | `frame-reveal`, `bias-audit`, `decision-archaeology` (atomic deepenings) |
+| v0.5.0 | `lens-semiotic` + `lens-ux` cultural variants (medium-sensitivity, deferred from v0.2) |
+| v1.0.0 | 20+ real-world eval cases, fixture corpus, open-source release |
 
 ## Contributing
 

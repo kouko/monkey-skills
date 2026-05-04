@@ -4,9 +4,10 @@
 
 Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 **License**: MIT
+**文化バリアント対応**: EN / JA / ZH（[ADR-0004](docs/adr/0004-cultural-lens-variants.md) 参照）
 
 ## 背景
 
@@ -19,6 +20,18 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 - **行動説得科学** — Cialdini（影響力の 7 原則）、Brignull（12 ダークパターン / 欺瞞的デザイン）。説得メカニズムを検出し倫理的位置づけを行う手法。
 
 日本語圏の読者に対しては、**BCG「バリュー・チェーンの脱構築」**（Evans & Wurster『Blown to Bits』2000）と **山口周『武器になる哲学』**（2018）の系譜にも紐付ける — 日本では「脱構築」は哲学の借用語ではなく、ビジネス戦略用語として定着している。本 plugin はその実務的射程を agent skill として実装する。
+
+### 文化バリアント射程（v0.2.0+）
+
+文化感受性が高い 4 つの lens（rhetoric / persuasion / genre / frame）には **EN / JA / ZH** の言語別 variant が用意されている。これは [ADR-0004](docs/adr/0004-cultural-lens-variants.md) における恒久的な scope 決定。
+
+| Variant | 一次情報源 |
+|---|---|
+| `-anglo` | Burke / Toulmin / Goffman / Lakoff / Swales/Bhatia / Cialdini / Brignull |
+| `-ja` | Hinds / 起承転結 / 土居健郎 / 山本七平 / 木下是雄 / Markus & Kitayama |
+| `-zh` | 劉勰《文心雕龍》六觀 / Hu / Hwang / 行政院公文程式條例 / Peng & Nisbett |
+
+韓国語 / ベトナム語 / タイ語等の制作物は **本 plugin の grounded scope 外**：明示的な caveat 付きで `-anglo` fallback を当てる扱いとし、暗黙のカバレッジ僭称はしない。詳細は `protocols/lens-variant-selection.md` を参照。
 
 ## 境界
 
