@@ -1,22 +1,27 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "investing-toolkit/skills/analysis-comps/references/schema-compute-output.json",
-  "title": "analysis-comps --mode compute output",
-  "description": "Output JSON shape of comps_compute.py --mode compute. See spec §10.",
+  "title": "analysis-comps output (direct + compute modes)",
+  "description": "Output JSON shape of comps_compute.py. See spec §8/§10. Validates both --mode direct and --mode compute (compute adds sector / schema_id / multiples_compute / divergence / indicators / compute_provenance fields per spec §8 v2.2.0-c).",
   "type": "object",
   "required": ["anchor", "peers", "statistics", "anchor_delta", "ranking", "_provenance"],
   "additionalProperties": false,
   "properties": {
     "anchor": {
       "type": "object",
-      "required": ["ticker", "multiples_direct", "multiples_compute", "divergence", "compute_provenance"],
+      "required": ["ticker", "multiples_direct"],
       "additionalProperties": false,
       "properties": {
         "ticker": {"type": "string"},
-        "multiples_direct": {"$ref": "#/$defs/multiples_block"},
-        "multiples_compute": {"$ref": "#/$defs/multiples_block_nullable"},
-        "divergence": {"$ref": "#/$defs/divergence_block"},
-        "compute_provenance": {"$ref": "#/$defs/compute_provenance_block"}
+        "sector": {"type": ["string", "null"]},
+        "industry": {"type": ["string", "null"]},
+        "schema_id": {"$ref": "#/$defs/schemaId"},
+        "schema_routing_source": {"$ref": "#/$defs/schemaRoutingSource"},
+        "multiples_direct": {"$ref": "#/$defs/multiplesBlock"},
+        "multiples_compute": {"$ref": "#/$defs/multiplesBlock"},
+        "divergence": {"$ref": "#/$defs/divergenceBlock"},
+        "indicators": {"$ref": "#/$defs/indicatorsBlock"},
+        "compute_provenance": {"$ref": "#/$defs/computeProvenanceBlock"}
       }
     },
     "peers": {
@@ -24,19 +29,51 @@
       "items": {
         "type": "object",
         "required": ["ticker", "multiples", "rationale"],
+        "additionalProperties": false,
         "properties": {
           "ticker": {"type": "string"},
-          "multiples": {"$ref": "#/$defs/multiples_block"},
-          "rationale": {"type": ["string", "null"]}
+          "multiples": {"$ref": "#/$defs/multiplesBlock"},
+          "rationale": {"type": ["string", "null"]},
+          "schema_id": {
+            "anyOf": [
+              {"$ref": "#/$defs/schemaId"},
+              {"type": "null"}
+            ]
+          }
         }
       }
     },
-    "statistics": {"type": "object"},
-    "anchor_delta": {"type": "object"},
-    "ranking": {"type": "array"},
+    "statistics": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/multipleId"},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["median", "mean", "q1", "q3", "min", "max", "n"],
+        "properties": {
+          "median": {"type": ["number", "null"]},
+          "mean": {"type": ["number", "null"]},
+          "q1": {"type": ["number", "null"]},
+          "q3": {"type": ["number", "null"]},
+          "min": {"type": ["number", "null"]},
+          "max": {"type": ["number", "null"]},
+          "n": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "anchor_delta": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["object", "null"]
+      }
+    },
+    "ranking": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
     "_provenance": {
       "type": "object",
-      "required": ["skill", "anchor_data_source", "anchor_base_source", "peer_data_sources", "computed_at", "io", "mode", "requested_mode", "warnings"],
+      "required": ["skill", "anchor_data_source", "peer_data_sources", "computed_at", "io", "mode", "requested_mode", "warnings"],
+      "additionalProperties": false,
       "properties": {
         "skill": {"const": "analysis-comps"},
         "anchor_data_source": {"type": "string"},
@@ -44,41 +81,83 @@
         "peer_data_sources": {"type": "array", "items": {"type": "string"}},
         "computed_at": {"type": "string"},
         "io": {"const": "none"},
-        "mode": {"const": "compute"},
+        "mode": {"enum": ["direct", "compute"]},
         "requested_mode": {"type": "string"},
+        "schema_id": {"$ref": "#/$defs/schemaId"},
+        "schema_version": {"type": ["string", "number", "null"]},
+        "schema_routing_source": {"$ref": "#/$defs/schemaRoutingSource"},
         "warnings": {"type": "array", "items": {"type": "string"}}
       }
     }
   },
+  "allOf": [
+    {
+      "comment": "compute-mode requirement: anchor must carry sector-routing fields and compute artefacts",
+      "if": {
+        "properties": {
+          "_provenance": {"properties": {"mode": {"const": "compute"}}}
+        }
+      },
+      "then": {
+        "properties": {
+          "anchor": {
+            "required": [
+              "sector", "industry", "schema_id", "schema_routing_source",
+              "multiples_direct", "multiples_compute", "divergence",
+              "indicators", "compute_provenance"
+            ]
+          },
+          "_provenance": {
+            "required": [
+              "skill", "anchor_data_source", "anchor_base_source",
+              "peer_data_sources", "computed_at", "io", "mode",
+              "requested_mode", "schema_id", "schema_version",
+              "schema_routing_source", "warnings"
+            ]
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
-    "multiples_block": {
-      "type": "object",
-      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
-      "properties": {
-        "trailingPE": {"type": ["number", "null"]},
-        "forwardPE": {"type": ["number", "null"]},
-        "evEbitda": {"type": ["number", "null"]},
-        "priceToSales": {"type": ["number", "null"]},
-        "priceToBook": {"type": ["number", "null"]}
-      }
+    "schemaId": {
+      "type": "string",
+      "enum": [
+        "default", "bank", "insurance", "asset-manager", "reit",
+        "tech-saas", "tech-semis", "energy", "utilities"
+      ]
     },
-    "multiples_block_nullable": {
-      "type": "object",
-      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
-      "properties": {
-        "trailingPE": {"type": ["number", "null"]},
-        "forwardPE": {"type": ["number", "null"]},
-        "evEbitda": {"type": "null"},
-        "priceToSales": {"type": ["number", "null"]},
-        "priceToBook": {"type": "null"}
-      }
+    "schemaRoutingSource": {
+      "type": "string",
+      "enum": [
+        "override", "industry_match", "sector_default",
+        "unknown_sector", "cli_override"
+      ]
     },
-    "divergence_block": {
+    "multipleId": {
+      "type": "string",
+      "enum": [
+        "trailingPE", "forwardPE", "evEbitda", "priceToSales",
+        "priceToBook", "priceToTangibleBook", "priceToFFO",
+        "evEbitdare", "priceToCFO", "evRevenue"
+      ]
+    },
+    "multiplesBlock": {
+      "comment": "Subset of canonical multiple ids permitted by the active schema; values may be null when the source pack lacks the field.",
       "type": "object",
-      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
+      "minProperties": 0,
       "additionalProperties": false,
       "patternProperties": {
-        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook)$": {
+        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook|priceToTangibleBook|priceToFFO|evEbitdare|priceToCFO|evRevenue)$": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "divergenceBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook|priceToTangibleBook|priceToFFO|evEbitdare|priceToCFO|evRevenue)$": {
           "type": "object",
           "required": ["abs_diff", "pct_diff", "alert"],
           "properties": {
@@ -90,21 +169,32 @@
         }
       }
     },
-    "compute_provenance_block": {
+    "indicatorsBlock": {
+      "comment": "Schema-defined indicator values; empty object when the schema declares no indicators (e.g. REIT). Keys are indicator_ids defined per schema; values are {value, unit}.",
       "type": "object",
-      "required": ["trailingPE", "forwardPE", "evEbitda", "priceToSales", "priceToBook"],
-      "patternProperties": {
-        "^(trailingPE|forwardPE|evEbitda|priceToSales|priceToBook)$": {
-          "type": "object",
-          "required": ["computed"],
-          "properties": {
-            "numerator_source": {"type": "string"},
-            "denominator_source": {"type": "string"},
-            "accession_basis": {"type": "array", "items": {"type": "string"}},
-            "fiscal_year_end": {"type": ["string", "null"]},
-            "computed": {"type": "boolean"},
-            "note": {"type": "string"}
-          }
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value", "unit"],
+        "properties": {
+          "value": {"type": ["number", "null"]},
+          "unit": {"type": "string"}
+        }
+      }
+    },
+    "computeProvenanceBlock": {
+      "comment": "Keyed by multiple_id (canonical multiple set) AND by indicator_id (schema-defined). Both share entry shape with `computed:bool` flag — for indicators, formula execution success.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["computed"],
+        "properties": {
+          "numerator_source": {"type": "string"},
+          "denominator_source": {"type": "string"},
+          "accession_basis": {"type": "array", "items": {"type": "string"}},
+          "fiscal_year_end": {"type": ["string", "null"]},
+          "computed": {"type": "boolean"},
+          "formula_id": {"type": "string"},
+          "note": {"type": "string"}
         }
       }
     }
