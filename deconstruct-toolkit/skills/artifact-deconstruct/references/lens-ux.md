@@ -1,8 +1,10 @@
 # Lens: UX Critique (Nielsen-Norman)
 
 > **Sources**:
-> - Donald Norman, *The Design of Everyday Things* (Basic Books, 1988; revised expanded edition 2013). Affordance discussion Ch 1 (pp 10–13); signifiers Ch 1 (pp 13–18); mapping Ch 1 (p 22); feedback Ch 1 (pp 26–27); constraints Ch 4.
-> - Jakob Nielsen, "10 Usability Heuristics for User Interface Design" (Nielsen Norman Group, 1994; revised 2020). [https://www.nngroup.com/articles/ten-usability-heuristics/](https://www.nngroup.com/articles/ten-usability-heuristics/)
+> - Donald Norman, *The Design of Everyday Things* (Basic Books, 1988; **revised and expanded edition 2013** — significant addition: the *signifier* concept is introduced in the 2013 edition to clarify the original 1988 *affordance* concept). Affordance, signifier, mapping, feedback, and constraints are introduced in Ch 1 ("The Psychopathology of Everyday Things"); constraints get fuller treatment in Ch 4. Specific page locations vary between 1988 and 2013 editions; the 2013 expanded edition is canonical.
+> - Jakob Nielsen, "10 Usability Heuristics for User Interface Design" (Nielsen Norman Group, originally 1994 based on Nielsen & Molich 1990 paper; **revised 2020** to update language and examples). The list is canonical at [https://www.nngroup.com/articles/ten-usability-heuristics/](https://www.nngroup.com/articles/ten-usability-heuristics/).
+
+> **Synthesis note**: This file combines Norman's *Design of Everyday Things* (1988/2013) and Nielsen's 10 Heuristics (1994/2020). **This combination is organic** — Nielsen and Norman co-founded Nielsen Norman Group (NN/g) in 1998, and the two methods are routinely taught together as "NN/g UX critique." The combination in this lens reflects industry consensus more than synthetic composition. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md) for the broader synthesis-disclosure policy.
 
 Two complementary tools: Norman's **affordance / signifier / mapping /
 feedback / constraints** for analyzing what an interface *invites and

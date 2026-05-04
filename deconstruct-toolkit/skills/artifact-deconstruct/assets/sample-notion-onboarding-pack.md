@@ -1,8 +1,10 @@
-# Fixture: Notion onboarding pack (text extract, 2024)
+# Fixture: Notion onboarding pack (synthetic representative, 2024)
 
-**Source**: https://www.notion.so/templates/getting-started-personal (template gallery + onboarding tour)
-**Accessed**: 2026-05-04
-**License**: Quoted as fair-use educational analysis of publicly accessible onboarding artifacts. No reproduction of imagery; text content from public template descriptions and onboarding-flow copy.
+**Source**: Synthetic representative based on common patterns observed in the Notion personal-productivity template family (https://www.notion.com/templates).
+**Status**: ⚠️ **Not directly fetched.** WebFetch attempts on 2026-05-05 returned 404 on specific template URLs; Notion template detail pages are JavaScript-rendered and not directly extractable via static HTTP. The `kouko-obsidian-vault` research note that informed this fixture predates the Notion 2025 template-gallery rebuild.
+**Honesty flag**: This fixture is a **representative composite**, not a fetch-verified real artifact. The structure (README + Today + 3 databases + tour overlay) is faithful to documented Notion patterns but specific wording is reconstructed not fetched.
+**Accessed (composite reference)**: 2026-05-04
+**License**: Quoted as fair-use educational analysis of recognizable patterns; no claim of verbatim Notion content.
 **Eval target**: artifact-deconstruct must identify ≥6 components, infer probable writing order, identify audience layering, list ≥3 negative-space observations, name ≥1 inherited framework.
 
 ---

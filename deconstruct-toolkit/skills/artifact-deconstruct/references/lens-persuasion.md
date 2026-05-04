@@ -1,8 +1,10 @@
 # Lens: Persuasion Analysis (Cialdini + Brignull)
 
 > **Sources**:
-> - Robert Cialdini, *Influence: The Psychology of Persuasion*, expanded edition (Harper Business, 2021). Original 6 principles introduced 1984; "Unity" (7th principle) added in *Pre-Suasion* (2016) and absorbed into the 2021 expanded *Influence*.
-> - Harry Brignull, "Deceptive Design Patterns" (formerly Dark Patterns), Brignull et al., [https://www.deceptive.design/](https://www.deceptive.design/). 12-pattern taxonomy with academic backing in Mathur et al., "Dark Patterns at Scale" (CSCW 2019, ACM Digital Library).
+> - Robert Cialdini, *Influence: The Psychology of Persuasion*, New and Expanded edition (Harper Business, 2021). Original 6 principles introduced in 1984 first edition (Reciprocity / Commitment & Consistency / Social Proof / Authority / Liking / Scarcity); each principle gets its own chapter in the original numbering. **Unity is the seventh principle, added as Ch 8 of the 2021 expanded edition** (originally surfaced in *Pre-Suasion*, 2016). Cialdini frames Unity as distinct from Liking — about belonging and shared identity, not interpersonal preference.
+> - Harry Brignull (with collaborators), *deceptive.design* (originally darkpatterns.org, registered 28 July 2010; renamed to deceptive.design and "deceptive patterns" framing 2023). Online taxonomy at [https://www.deceptive.design/](https://www.deceptive.design/) — note the taxonomy is continuously updated; the 12 patterns enumerated below are the canonical "second wave" set. Academic backing: Mathur et al., "Dark Patterns at Scale" (Proceedings of the ACM on Human-Computer Interaction, CSCW 2019).
+
+> **Synthesis note**: This file combines Cialdini's 7 principles (1984/2021) and Brignull's 12 deceptive patterns (2010/2024). They were not co-published — Brignull cites Cialdini as upstream influence but did not co-author. Combining them is a methodological choice by `deconstruct-toolkit`: Cialdini catalogs *what* mechanisms persuade, Brignull catalogs *when* persuasion crosses into manipulation. Most dark patterns weaponize a Cialdini trigger — e.g., scarcity (#6) → fake countdowns (manipulation); commitment (#2) → roach motel (dark pattern). The combination lets us assign the **🟢/🟡/🔴/⚫ ethical-position verdict** that pure-Cialdini cannot produce. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md).
 
 Two sides of the same field: Cialdini's **7 principles of influence**
 catalog *what* mechanisms persuade, and Brignull's **12 deceptive

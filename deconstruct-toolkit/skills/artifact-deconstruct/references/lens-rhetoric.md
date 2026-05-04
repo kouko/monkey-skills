@@ -1,8 +1,10 @@
 # Lens: Rhetorical Analysis (Burke + Toulmin)
 
 > **Sources**:
-> - Kenneth Burke, *A Grammar of Motives* (Prentice-Hall, 1945). The dramatistic pentad is introduced in the Introduction (pp xv–xxiii) and developed throughout Part One.
-> - Stephen Toulmin, *The Uses of Argument* (Cambridge University Press, 1958; updated edition 2003). The 6-component argument model is in Ch 3 "The Layout of Arguments," pp 89–134.
+> - Kenneth Burke, *A Grammar of Motives* (Prentice-Hall, 1945; expanded by University of California Press, 1969). The dramatistic pentad (act / scene / agent / agency / purpose) is introduced in the Introduction and developed throughout Part One. Burke's framing question per Introduction: "What is involved, when we say what people are doing and why they are doing it?"
+> - Stephen Toulmin, *The Uses of Argument* (Cambridge University Press, 1958; updated edition with new preface 2003). 264 pages total. The 6-component argument model is in Ch 3 "The Layout of Arguments." The model itself is concentrated in roughly the first 14 pages of Ch 3 (the "heart" of the chapter per academic reception).
+
+> **Synthesis note**: This file combines Burke's dramatistic pentad (1945) and Toulmin's argument model (1958). The two were not co-published. Combining them is a methodological choice by `deconstruct-toolkit` — Burke surfaces *motive structure* (why the argument is being made), Toulmin surfaces *logical structure* (whether the argument coheres). They complement rather than contradict. For deeper argument-only analysis, see also `argument-deconstruct/references/lens-toulmin.md` and `argument-deconstruct/references/lens-burke-pentad.md`, which deliberately split the two for fuller treatment. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md).
 
 Two complementary frameworks: Burke's **dramatistic pentad** for narrative
 and motive analysis, Toulmin's **argument layout** for argument structure
