@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": 1,
+  "comment": "ETF ticker → v2.2.0-c schema_id mapping. SoT for etf_aggregator (which schema's multiples + indicators define the ETF aggregate output) and for runtime --sector-benchmark (anchor.schema_id → ETF lookup is reverse-derived; this file is forward-only).",
+  "etf_to_schema": {
+    "XLE":  "energy",
+    "XLB":  "default",
+    "XLI":  "default",
+    "XLY":  "default",
+    "XLP":  "default",
+    "XLV":  "default",
+    "XLF":  "bank",
+    "XLK":  "tech-saas",
+    "XLC":  "default",
+    "XLU":  "utilities",
+    "XLRE": "reit"
+  }
+}
