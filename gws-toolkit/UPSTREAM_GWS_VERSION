@@ -1,0 +1,19 @@
+# gws-toolkit upstream pin
+#
+# Single source of truth for which googleworkspace/cli release the
+# vendored upstream skills (skills/gws-shared, gws-drive, gws-docs,
+# gws-slides, gws-sheets) and the bootstrapped gws binary correspond
+# to. scripts/sync-upstream-skills.sh reads this file; bootstrap.sh
+# binary version pin must align with it.
+
+gws_cli_release: v0.22.5
+gws_cli_commit: 705fb0ecac6f4249679958f6325b809b63fdde17
+upstream_repo: googleworkspace/cli
+upstream_license: Apache-2.0
+synced_at: 2026-05-04
+synced_skills:
+  - gws-shared
+  - gws-drive
+  - gws-docs
+  - gws-slides
+  - gws-sheets
