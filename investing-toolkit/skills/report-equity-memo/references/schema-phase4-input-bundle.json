@@ -113,7 +113,7 @@
       }
     },
     "comps": {
-      "description": "Phase 2.5 — analysis-comps/scripts/comps_compute.py --mode compute output. v2.2.0-b+ has multiples_direct + multiples_compute + divergence + compute_provenance when mode=compute. File: ${TICKER_SAFE}-comps.json",
+      "description": "Phase 2.5 — analysis-comps/scripts/comps_compute.py --mode compute output. v2.2.0-b+ has multiples_direct + multiples_compute + divergence + compute_provenance. v2.2.0-c+ adds anchor.{sector, industry, schema_id, schema_routing_source} + anchor.indicators (sector-aware operating-context metrics). File: ${TICKER_SAFE}-comps.json",
       "type": "object",
       "required": ["anchor", "peers", "statistics", "anchor_delta", "ranking", "_provenance"],
       "properties": {
@@ -122,27 +122,38 @@
           "required": ["ticker", "multiples_direct"],
           "properties": {
             "ticker": {"type": "string"},
+            "sector":   {"type": ["string", "null"], "description": "v2.2.0-c+: yfinance.info.sector forwarded by data-{country}/pack.py --pack comps-multiples"},
+            "industry": {"type": ["string", "null"], "description": "v2.2.0-c+: yfinance.info.industry forwarded similarly"},
+            "schema_id": {
+              "type": "string",
+              "enum": ["default", "bank", "insurance", "asset-manager", "reit", "tech-saas", "tech-semis", "energy", "utilities"],
+              "description": "v2.2.0-c+: sector schema dispatched by analysis-comps/scripts/sector_classifier.py based on (sector, industry) + sector-overrides.yaml"
+            },
+            "schema_routing_source": {
+              "type": "string",
+              "enum": ["override", "industry_match", "sector_default", "unknown_sector", "cli_override"],
+              "description": "v2.2.0-c+: how schema_id was resolved. cli_override = --sector-override flag (debug); override = sector-overrides.yaml (durable)"
+            },
+            "indicators": {
+              "type": "object",
+              "description": "v2.2.0-c+: sector-specific operating-context metrics (e.g. ROE for banks, Rule-of-40 for SaaS, FCF_yield for energy). Each value carries unit:'pct'. Empty {} for schemas with no indicators (e.g. reit). Keys vary by schema.",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "value": {"type": ["number", "null"]},
+                  "unit":  {"type": "string"}
+                }
+              }
+            },
             "multiples_direct": {
               "type": "object",
-              "description": "Multiples read directly from the comps-multiples pack (yfinance Tier 2 or primary source). Keys: trailingPE, forwardPE, priceToSales, priceToBook, evEbitda.",
-              "properties": {
-                "trailingPE": {"type": ["number", "null"]},
-                "forwardPE": {"type": ["number", "null"]},
-                "priceToSales": {"type": ["number", "null"]},
-                "priceToBook": {"type": ["number", "null"]},
-                "evEbitda": {"type": ["number", "null"]}
-              }
+              "description": "Multiples read directly from the comps-multiples pack (yfinance Tier 2 or primary source). v2.2.0-c+ canonical key set: trailingPE, forwardPE, priceToSales, priceToBook, evEbitda, priceToTangibleBook, priceToFFO, evEbitdare, priceToCFO, evRevenue. Schema-driven subset; keys absent for multiples not in the dispatched schema.",
+              "additionalProperties": {"type": ["number", "null"]}
             },
             "multiples_compute": {
               "type": "object",
-              "description": "Recomputed multiples from memo-fetch financials (trailingPE, priceToSales). Present only in --mode compute. Keys same as multiples_direct.",
-              "properties": {
-                "trailingPE": {"type": ["number", "null"]},
-                "forwardPE": {"type": ["number", "null"]},
-                "priceToSales": {"type": ["number", "null"]},
-                "priceToBook": {"type": ["number", "null"]},
-                "evEbitda": {"type": ["number", "null"]}
-              }
+              "description": "Recomputed multiples from memo-fetch financials. Present only in --mode compute. Schema-driven key subset matches multiples_direct (varies per anchor.schema_id).",
+              "additionalProperties": {"type": ["number", "null"]}
             },
             "divergence": {
               "type": "object",

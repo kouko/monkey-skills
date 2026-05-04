@@ -715,26 +715,20 @@ def _i_FCF_margin(memo: dict) -> tuple[float | None, dict, list[str]]:
 
 
 def _i_debt_to_equity(memo: dict) -> tuple[float | None, dict, list[str]]:
-    """debt_to_equity = (long_term_debt[0] + short_term_debt[0]) / equity[0] × 100.
+    """debt_to_equity = total_debt[0] / equity[0] × 100.
 
-    Per spec §6.2: total_debt = long_term_debt[0] + short_term_debt[0]; treat
-    None as 0 only if at least one component present, else null.
+    Per spec §6.2. Resolution order for `total_debt`:
+      1. memo-fetch.balance_sheet.total_debt[0] (preferred — flat field shipped
+         by data-us pack.py since v2.2.0-l).
+      2. long_term_debt[0] + short_term_debt[0] (component recomposition fallback;
+         treat None as 0 only if at least one component present).
+      3. else null + note.
     """
     bs = memo.get("balance_sheet") or {}
-    lt_arr = bs.get("long_term_debt")
-    st_arr = bs.get("short_term_debt")
     equity_fy = _safe_first(bs.get("total_stockholders_equity"))
     fy_end = _concept_fy_end(bs, "total_stockholders_equity")
     filings = _concept_filings(bs, "total_stockholders_equity")
-    lt_fy = _safe_first(lt_arr) if isinstance(lt_arr, list) else None
-    st_fy = _safe_first(st_arr) if isinstance(st_arr, list) else None
-    has_lt = isinstance(lt_arr, list) and len(lt_arr) > 0 and lt_fy is not None
-    has_st = isinstance(st_arr, list) and len(st_arr) > 0 and st_fy is not None
-    if not has_lt and not has_st:
-        return None, {
-            "computed": False,
-            "note": "compute skipped — neither long_term_debt[0] nor short_term_debt[0] disclosed",
-        }, ["debt_to_equity compute skipped: neither long_term_debt nor short_term_debt disclosed"]
+
     if equity_fy is None or equity_fy <= 0:
         warns = []
         if equity_fy is None:
@@ -745,22 +739,44 @@ def _i_debt_to_equity(memo: dict) -> tuple[float | None, dict, list[str]]:
             "computed": False,
             "note": "compute skipped — equity[0] (>0) required",
         }, warns
+
+    # Path 1: prefer flat total_debt[0]
+    total_debt_fy = _safe_first(bs.get("total_debt"))
+    if total_debt_fy is not None:
+        return (total_debt_fy / equity_fy) * 100.0, {
+            "numerator_source":   "memo-fetch.balance_sheet.total_debt[0]",
+            "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
+            "accession_basis":    filings,
+            "fiscal_year_end":    fy_end,
+            "computed":           True,
+        }, []
+
+    # Path 2: component recomposition fallback
+    lt_arr = bs.get("long_term_debt")
+    st_arr = bs.get("short_term_debt")
+    lt_fy = _safe_first(lt_arr) if isinstance(lt_arr, list) else None
+    st_fy = _safe_first(st_arr) if isinstance(st_arr, list) else None
+    has_lt = isinstance(lt_arr, list) and len(lt_arr) > 0 and lt_fy is not None
+    has_st = isinstance(st_arr, list) and len(st_arr) > 0 and st_fy is not None
+    if not has_lt and not has_st:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — total_debt[0] missing AND neither long_term_debt[0] nor short_term_debt[0] disclosed",
+        }, ["debt_to_equity compute skipped: no debt fields disclosed"]
     total_debt = (lt_fy if has_lt else 0.0) + (st_fy if has_st else 0.0)
-    note_parts: list[str] = []
+    note_parts = ["total_debt[0] missing → recomposed from components"]
     if not has_lt:
         note_parts.append("long_term_debt absent → treated as 0")
     if not has_st:
         note_parts.append("short_term_debt absent → treated as 0")
-    prov = {
+    return (total_debt / equity_fy) * 100.0, {
         "numerator_source":   "memo-fetch.balance_sheet.long_term_debt[0] + short_term_debt[0]",
         "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
         "accession_basis":    filings,
         "fiscal_year_end":    fy_end,
         "computed":           True,
-    }
-    if note_parts:
-        prov["note"] = "; ".join(note_parts)
-    return (total_debt / equity_fy) * 100.0, prov, []
+        "note":               "; ".join(note_parts),
+    }, []
 
 
 def _i_rule_of_40(memo: dict) -> tuple[float | None, dict, list[str]]:
