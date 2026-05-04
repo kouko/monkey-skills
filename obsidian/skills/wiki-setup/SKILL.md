@@ -138,14 +138,19 @@ Options:
 > When normalizing user input from CSV form, strip surrounding whitespace and trailing `/`.
 > Example: user types "daily/, inbox/, _*" → write each on its own line in the config file.
 
-> [!note] Always-excluded system paths
-> The following are excluded automatically (NOT user-configurable, hardcoded in `wiki-ingest`):
-> - `wiki/` itself (the output — would otherwise loop)
-> - `.obsidian/` (Obsidian config)
-> - `.trash/` (deleted notes)
-> - `.git/`, `node_modules/`, `_raw/` (system noise)
+> [!note] Always-excluded system paths (NOT user-configurable, hardcoded in `wiki-ingest`)
 >
-> User exclusions in `.obsidian-wiki.config` are **additional** to these.
+> **DIR blacklist** (top-level match):
+> - `wiki/` itself (the output — would otherwise loop)
+> - `.*` (any top-level dir starting with `.`) — catches `.obsidian`, `.trash`, `.git`, `.github`, `.vscode`, `.idea`, `.claude`, `.cursor`, `.codex`, `.windsurf`, `.devcontainer`, `.husky`, `.changeset`, etc. by Unix convention
+> - `node_modules/`, `_raw/` (system noise)
+>
+> **FILE blacklist** (any-depth match) — NEW in v3.9.0:
+> - `CLAUDE.md`, `AGENT.md`, `AGENTS.md`, `MEMORY.md` — universal agent-config filenames
+>
+> **Root-level hidden files** like `.notes.md` are also auto-excluded (mirrors the `.*` dir rule).
+>
+> User exclusions in `.obsidian-wiki.config` (`OBSIDIAN_WIKI_EXCLUDE_DIRS` and `OBSIDIAN_WIKI_EXCLUDE_FILES`) are **additional** to these.
 
 Do not prompt for `MAX_PAGES_PER_INGEST`, `LINT_SCHEDULE`, etc. — defaults are sane.
 
@@ -200,15 +205,22 @@ Write to `<vault-root>/.obsidian-wiki.config` (shell-sourceable; NOT `.env` — 
 # Configurable: rename `wiki/` to `knowledge/`, `kb/`, `.wiki/`, etc.
 OBSIDIAN_WIKI_VAULT_PATH=wiki
 
-# Folders to EXCLUDE from wiki ingestion (multi-line, one shell glob per line).
-# Top-level matching only; nested dirs with same name are NOT excluded.
-# Always-excluded (hardcoded): wiki/, .obsidian/, .trash/, .git/, node_modules/, _raw/
+# Folders to EXCLUDE from wiki ingestion (DIR blacklist, top-level match).
+# Multi-line, one shell glob per line. Nested dirs with same name are NOT excluded.
+# Always-excluded (hardcoded): wiki/, .* (all dot-dirs), node_modules/, _raw/
 # Glob patterns:
 #   daily       literal exact match
 #   _*          any name starting with underscore (e.g. _raw, _archive)
 #   temp?       single-char wildcard
 #   [Aa]rchive  case-variant char class
 OBSIDIAN_WIKI_EXCLUDE_DIRS="<one pattern per line, derived from Step 1>"
+
+# Files to EXCLUDE from wiki ingestion (FILE blacklist, any-depth match).
+# Multi-line, one basename glob per line. Applies to .md files at any depth.
+# Common additions: README.md, TODO.md, CHANGELOG.md, LICENSE.md
+# Always-excluded (hardcoded): CLAUDE.md, AGENT.md, AGENTS.md, MEMORY.md
+# Root-level hidden files (.notes.md style) also always excluded.
+OBSIDIAN_WIKI_EXCLUDE_FILES=""
 
 # === Optional ===
 
