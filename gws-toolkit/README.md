@@ -88,6 +88,55 @@ Both `/using-gws-toolkit` and `/gws-setup` are skill
 auto-routes (no `commands/` shims; the plugin ships zero slash
 commands). Type the skill name and Claude Code dispatches.
 
+## Account management
+
+Day-to-day account operations after `/gws-setup` is done. The toolkit
+stores one refresh token at a time; the OAuth client config
+(`client_secret.json`, `env.sh`) is preserved across logins, so
+re-auth and account switch never require redoing the GCP Console
+steps.
+
+### Re-auth on 7-day expiry (same account)
+
+External + Testing-mode OAuth refresh tokens expire after 7 days.
+When that hits:
+
+```
+bash scripts/gws/refresh-auth.sh
+```
+
+Re-runs `gws auth login` with the same scopes; the browser prompt is
+brief (already-authorised app) and the new refresh token is good for
+another ~7 days.
+
+### Switch to a different Google account
+
+```
+bash scripts/gws/gws-login.sh --switch
+```
+
+Clears local credentials via `gws-logout.sh`, then re-runs OAuth.
+Google's account picker appears in the browser (when multiple Google
+accounts are signed in to the browser session); pick the new account
+and the new refresh token is stored. Without `--switch`,
+`gws-login.sh` is idempotent — exits 0 if already authed.
+
+### Logout
+
+```
+bash scripts/gws/gws-logout.sh
+```
+
+Clears local credentials only (`credentials.enc` + `token_cache.json`
++ Keychain entry). Server-side, the refresh token remains valid until
+its natural ~7-day Testing-mode expiry. For immediate server-side
+revocation visit
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+The toolkit deliberately does not auto-revoke server-side because
+that would require decrypting `credentials.enc` to extract the
+refresh token, breaking the metadata-only access pattern in
+`credential-check.sh` (ASVS V14 secrets-at-rest).
+
 ## Skills
 
 The plugin ships **9 skills** in two provenance tiers — 4
