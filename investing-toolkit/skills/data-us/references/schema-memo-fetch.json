@@ -106,17 +106,17 @@
     },
     "income_statement": {
       "type": "object",
-      "description": "T3 canonical income statement (annual, most-recent-first, depth 5). Per ADR-0003. Contains revenue / operating_income / ebit / net_income arrays plus _meta provenance.",
+      "description": "T3 canonical income statement (annual, most-recent-first, depth 5). Per ADR-0003. Contains revenue / operating_income / ebit / net_income / gross_profit arrays plus _meta provenance.",
       "additionalProperties": true
     },
     "cash_flow": {
       "type": "object",
-      "description": "T3 canonical cash flow statement. Contains operating_cash_flow / capex / fcf (derived = OCF - capex) plus _meta. Per ADR-0003.",
+      "description": "T3 canonical cash flow statement. Contains operating_cash_flow / capex / fcf (derived = OCF - capex) / depreciation_amortization / stock_based_compensation plus _meta. Per ADR-0003.",
       "additionalProperties": true
     },
     "balance_sheet": {
       "type": "object",
-      "description": "T3 canonical balance sheet. Contains long_term_debt / short_term_debt / total_debt (derived = LTD + STD) / cash plus _meta. Per ADR-0003.",
+      "description": "T3 canonical balance sheet. Contains long_term_debt / short_term_debt / total_debt (derived = LTD + STD) / cash / total_stockholders_equity / intangible_assets / goodwill plus _meta. Per ADR-0003.",
       "additionalProperties": true
     },
     "shares_outstanding": {
