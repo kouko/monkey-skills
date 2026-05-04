@@ -1,0 +1,25 @@
+# Local credential & OAuth client stores (never commit)
+.config/gws/
+**/client_secret*.json
+**/credentials.enc
+**/.encryption_key
+
+# Cache directory (binaries, tokens cache)
+.cache/
+
+# Test fixtures (user-scoped Drive IDs)
+tests/fixtures/*.drive_id.txt
+tests/fixtures/*.local
+
+# .env (if 使用者未來用 direnv)
+.env
+.env.*
+!.env.example
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Note: home-dir credential files (~/.config/gws/**) cannot be protected
+# by .gitignore (git uses repo-relative paths only). Home-dir credential
+# READ access is blocked by the .claude/settings.json deny rule.
