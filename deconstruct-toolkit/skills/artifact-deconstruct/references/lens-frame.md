@@ -1,9 +1,9 @@
 # Lens: Frame (universal core / language-variant router)
 
 > **Sources**: this file is a router; primary sources live in the variants below.
-> - English / Western (`lens-frame-anglo.md`): Goffman (1974) + Lakoff (1980)
-> - Japanese (`lens-frame-ja.md`): Goffman + Lakoff + 建前-本音 + 空気 (kūki) + 間 (ma) + JP-specific conceptual metaphors
-> - Chinese (`lens-frame-zh.md`): Goffman + Lakoff + Hwang K-K. (1987) face-and-favor + 關係 (guanxi) + 陰陽 complementary structure
+> - English / Western (`lens-frame-anglo.md`): Goffman 1974 + Lakoff 1980
+> - Japanese (`lens-frame-ja.md`): Goffman 1974 + Lakoff 1980 + Doi 1971 (建前/本音) + Yamamoto 1977 (空気) + Markus & Kitayama 1991 *Psychological Review* (interdependent self) + 間 (ma) + JP conceptual metaphors (心 / 道 / 縁 / 場)
+> - Chinese (`lens-frame-zh.md`): Goffman 1974 + Lakoff 1980 + Hu 1944 *American Anthropologist* (面子/臉) + Hwang 1987 *AJS* (關係/圈子) + Peng & Nisbett 1999 *American Psychologist* (陰陽 dialectical) + ZH conceptual metaphors (道 / 氣 / 緣 / 心 / 圈子)
 
 > **Cultural-sensitivity flag** 🟠 **medium**: This lens is culturally sensitive. Goffman's frame analysis was developed on Western daily-life samples; Lakoff's conceptual metaphor structure is claimed universal but specific metaphors differ by language. East Asian cultures have distinct frame phenomena (建前/本音 / 給面子) absent from Goffman, and binary-opposition assumptions (Lakoff) are challenged by complementary structures (陰陽). **Do not apply analytical questions from this file directly** — select a language variant first.
 
@@ -29,8 +29,8 @@ Choose ONE variant before applying:
 | Artifact register | Variant | Cultural anchor |
 |---|---|---|
 | Primarily English / Western | [`lens-frame-anglo.md`](lens-frame-anglo.md) | Goffman (1974) + Lakoff (1980) |
-| Primarily Japanese | `lens-frame-ja.md` (shipping later in v0.2.0) | Goffman + Lakoff + 建前/本音 + 空気 + 間 + JP conceptual metaphors |
-| Primarily Chinese (TC or SC) | `lens-frame-zh.md` (shipping later in v0.2.0) | Goffman + Lakoff + Hwang K-K. mianzi + 關係 + 陰陽 complementary structure |
+| Primarily Japanese | [`lens-frame-ja.md`](lens-frame-ja.md) | Goffman + Lakoff + Doi 1971 + Yamamoto 1977 + Markus & Kitayama 1991 + 間 + JP metaphors |
+| Primarily Chinese (TC or SC) | [`lens-frame-zh.md`](lens-frame-zh.md) | Goffman + Lakoff + Hu 1944 + Hwang 1987 + Peng & Nisbett 1999 + ZH metaphors |
 | Mixed / ambiguous | Ask user OR apply 2 variants in parallel | — |
 | Korean / Vietnamese / Thai / other | Fall back to `-anglo` with caveat | (see ADR-0004 §"Out of scope") |
 

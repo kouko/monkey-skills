@@ -1,9 +1,9 @@
 # Lens: Rhetoric (universal core / language-variant router)
 
 > **Sources**: this file is a router; primary sources live in the variants below.
-> - English / Western (`lens-rhetoric-anglo.md`): Toulmin (1958) + Burke (1945)
-> - Japanese (`lens-rhetoric-ja.md`): Hinds (1983, 1987) + Oh (2025)
-> - Chinese (`lens-rhetoric-zh.md`): 劉勰《文心雕龍》六觀
+> - English / Western (`lens-rhetoric-anglo.md`): Toulmin 1958 + Burke 1945
+> - Japanese (`lens-rhetoric-ja.md`): Hinds 1983 (*Text* 3:2) + Hinds 1987 (Connor & Kaplan eds.) + Oh 2025 (*TEXT* 29:2) — kishōtenketsu + reader-responsibility + 序論-本論-結論 mode
+> - Chinese (`lens-rhetoric-zh.md`): 劉勰《文心雕龍·知音》六觀 (c. 5th-6th century CE; 周振甫 / 王運熙·周鋒 critical editions)
 
 > **Cultural-sensitivity flag** 🔴 **high**: This lens is culturally sensitive. The methods and primary sources that ground it differ meaningfully across English, Japanese, and Chinese contexts. **Do not apply analytical questions from this file directly** — select a language variant first.
 
@@ -24,8 +24,8 @@ Choose ONE variant before applying:
 | Artifact register | Variant | Primary sources |
 |---|---|---|
 | Primarily English / Western | [`lens-rhetoric-anglo.md`](lens-rhetoric-anglo.md) | Toulmin (1958) + Burke (1945) |
-| Primarily Japanese | `lens-rhetoric-ja.md` (shipping later in v0.2.0) | Hinds (1983, 1987) + Oh (2025) |
-| Primarily Chinese (TC or SC) | `lens-rhetoric-zh.md` (shipping later in v0.2.0) | 劉勰《文心雕龍》六觀 |
+| Primarily Japanese | [`lens-rhetoric-ja.md`](lens-rhetoric-ja.md) | Hinds (1983, 1987) + Oh (2025); kishōtenketsu + reader-responsibility + 序論-本論-結論 |
+| Primarily Chinese (TC or SC) | [`lens-rhetoric-zh.md`](lens-rhetoric-zh.md) | 劉勰《文心雕龍·知音》六觀 (位體 / 置辭 / 通變 / 奇正 / 事義 / 宮商) |
 | Mixed / ambiguous | Ask user OR apply 2 variants in parallel and report divergence | — |
 | Korean / Vietnamese / Thai / other | Fall back to `-anglo` with explicit caveat: "this lens is not grounded in your artifact's cultural register; treat findings as suggestive, not definitive." | (see ADR-0004 §"Out of scope") |
 
