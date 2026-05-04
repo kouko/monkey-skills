@@ -290,8 +290,8 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
     da_fy = _safe_first(cf.get("depreciation_amortization"))
     total_debt_fy = _safe_first(bs.get("total_debt"))
     cash_fy = _safe_first(bs.get("cash"))
-    ev_fy_end = _cf_concept_fy_end(cf, "depreciation_amortization")
-    ev_filings = _cf_concept_filings(cf, "depreciation_amortization")
+    ebitda_fy_end = _cf_concept_fy_end(cf, "depreciation_amortization")
+    ebitda_filings = _cf_concept_filings(cf, "depreciation_amortization")
 
     missing_inputs = []
     if market_cap is None: missing_inputs.append("marketCap")
@@ -310,6 +310,7 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
     else:
         ev = market_cap + total_debt_fy - cash_fy
         ebitda = operating_income_fy + da_fy
+        # EBITDA==0 occurs when negative EBIT offsets D&A — common in loss-making capital-intensive issuers
         if ebitda == 0:
             out_compute["evEbitda"] = None
             out_prov["evEbitda"] = {
@@ -320,10 +321,10 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
         else:
             out_compute["evEbitda"] = ev / ebitda
             out_prov["evEbitda"] = {
-                "numerator_source":   "memo-fetch: marketCap + total_debt[0] - cash[0]",
-                "denominator_source": "memo-fetch: operating_income[0] + depreciation_amortization[0]",
-                "accession_basis":    ev_filings,
-                "fiscal_year_end":    ev_fy_end,
+                "numerator_source":   "memo-fetch.company_info.marketCap + balance_sheet.total_debt[0] - balance_sheet.cash[0]",
+                "denominator_source": "memo-fetch.income_statement.operating_income[0] + cash_flow.depreciation_amortization[0]",
+                "accession_basis":    ebitda_filings,
+                "fiscal_year_end":    ebitda_fy_end,
                 "computed":           True,
                 "note":               "EV/EBITDA FY-trailing (EBIT + D&A); not LTM-EBITDA — see ROADMAP §v2.2.0-l",
             }
