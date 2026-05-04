@@ -115,7 +115,7 @@ bash scripts/gws/env-guard.sh apply
 
 ```bash
 unset GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
-gws auth login -s presentations,drive.file
+gws auth login --scopes=presentations,drive,documents,spreadsheets
 # Expected: error message containing invalid_scope or invalid_client
 ```
 
@@ -123,7 +123,7 @@ gws auth login -s presentations,drive.file
 
 ```bash
 source ~/.config/gws/env.sh   # or reopen the terminal if persisted to profile
-gws auth login -s presentations,drive.file
+gws auth login --scopes=presentations,drive,documents,spreadsheets
 # Expected: browser opens consent screen; afterwards `gws auth whoami` returns your email
 ```
 

@@ -24,9 +24,12 @@ set -euo pipefail
 # Args: none (flags via env).
 #
 # Env:
-#   SLIDES_TOOLKIT_SCOPES  Override the scope clamp.
-#                          Default: presentations,drive.file (as full URLs,
-#                          comma-separated).
+#   GWS_TOOLKIT_SCOPES     Override the scope clamp.
+#                          Default: presentations,drive,documents,spreadsheets
+#                          (as full URLs, comma-separated).
+#   SLIDES_TOOLKIT_SCOPES  Deprecated alias of GWS_TOOLKIT_SCOPES (precedence
+#                          rule below); kept for backward compat with
+#                          slides-toolkit users transitioning to gws-toolkit.
 #
 # Stdin: none
 # Stdout: gws auth login stdout (consent URL + success message).
@@ -46,9 +49,15 @@ readonly CLIENT_SECRET="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
 readonly GWS_BIN="${HOME}/.cache/slides-toolkit/bin/gws"
 
-# Default scope set for slides-toolkit MVP (least-privilege per ASVS V1)
-readonly DEFAULT_SCOPES="https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive.file"
-SCOPES="${SLIDES_TOOLKIT_SCOPES:-${DEFAULT_SCOPES}}"
+# Default scope set for gws-toolkit (4 APIs covered: Slides, Drive,
+# Docs, Sheets). drive (full) replaces drive.file because the toolkit
+# now exposes general Drive operations through vendored gws-drive skill;
+# the three-tier delete safety wrapper (scripts/gws/safe-delete.sh)
+# enforces the trash-default + typed-confirmation policy that drive.file's
+# limited scope previously provided implicitly. ASVS V1 least-privilege
+# is preserved via the application-layer safety wrapper, not via scope.
+readonly DEFAULT_SCOPES="https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets"
+SCOPES="${GWS_TOOLKIT_SCOPES:-${SLIDES_TOOLKIT_SCOPES:-${DEFAULT_SCOPES}}}"
 
 die() {
   printf '[refresh-auth] ERROR: %s\n' "$1" >&2

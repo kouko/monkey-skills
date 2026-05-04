@@ -109,7 +109,7 @@ Console, then 4 local steps.
 | 6 | Browser | Enable APIs: Google Slides API + Google Drive API | walkthrough §6 |
 | 7 | Terminal | `bash scripts/gws/bootstrap.sh` (installs gws + jq) | walkthrough §7 |
 | 8 | Terminal | Export the issue #119 env vars (see below) | `protocols/issue-119-workaround.md` |
-| 9 | Terminal | `gws auth login -s presentations,drive.file` (**never use the `recommended` preset**) | walkthrough §9 |
+| 9 | Terminal | `gws auth login --scopes=presentations,drive,documents,spreadsheets` (**never use the `recommended` preset**) | walkthrough §9 |
 | 10 | Browser | Consent screen → Advanced → Go to app (unsafe) → Allow | walkthrough §10 |
 
 **Done when**:
@@ -194,7 +194,7 @@ production verification, there's no way around it.
 Every 7 days (or whenever you see exit 10 `token expired`):
 
 ```bash
-gws auth login -s presentations,drive.file
+gws auth login --scopes=presentations,drive,documents,spreadsheets
 # Browser opens → consent → callback returns
 # Takes about 10 seconds
 ```

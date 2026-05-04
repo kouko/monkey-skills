@@ -430,13 +430,21 @@ client ID and client secret.
 ## §B6. Enable APIs: Google Slides API + Google Drive API
 
 **Why this step matters**: GCP enables no APIs by default — you must
-explicitly enable each one you want to call. This MVP needs exactly
-two (least-privilege, ASVS V1):
+explicitly enable each one you want to call. gws-toolkit needs four
+APIs (covering the scope set granted in §L3):
 
-- **Google Slides API** — for `replaceAllText`, `createImage`, and
-  other `batchUpdate` operations.
-- **Google Drive API** — for `files.copy` and `files.upload` (scope
-  limited to `drive.file`).
+- **Google Slides API** — for `presentations.create` / `batchUpdate`
+  (`createSlide` / `insertText` / `createImage`).
+- **Google Drive API** — for `files.create` (image upload), `files.list`
+  (search via `q`), `files.update` (trash), `permissions.create`
+  (sharing). Scope = `drive` (full); the toolkit's three-tier
+  `safe-delete.sh` wrapper enforces trash-default + typed confirmation
+  for destructive ops, taking on the safety guarantees that the narrower
+  `drive.file` scope previously provided implicitly.
+- **Google Docs API** — for `documents.{create, batchUpdate, get}` via
+  vendored `gws-docs` skill.
+- **Google Sheets API** — for `spreadsheets.{create, batchUpdate, get,
+  values.append, values.get}` via vendored `gws-sheets` skill.
 
 **Do this**:
 
@@ -570,7 +578,7 @@ the Keychain (or file backend as fallback).
 
 ```bash
 source ~/.config/gws/env.sh   # if §L2 was not in the same shell
-gws auth login --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive.file
+gws auth login --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets
 ```
 
 **Important**: **do not** use `--preset recommended` or anything
@@ -590,11 +598,16 @@ The browser flow:
 4. Click **Advanced** in the bottom left.
 5. Click **Go to slides-toolkit (unsafe)** (the text matches the App
    name you set in §A2 / §B2).
-6. Review the scope list:
-   - `See, edit, create, and delete only the specific Google Drive
-     files you use with this app` (drive.file)
+6. Review the scope list (4 entries, since v0.4 OAuth scope upgrade):
+   - `See, edit, create, and delete all your Google Drive files`
+     (drive — full; the toolkit's safe-delete wrapper enforces
+     trash-default + typed confirmation policy)
    - `See, edit, create, and delete all your Google Slides
      presentations` (presentations)
+   - `See, edit, create, and delete all your Google Docs documents`
+     (documents)
+   - `See, edit, create, and delete all your Google Sheets
+     spreadsheets` (spreadsheets)
 7. Click **Continue** → **Allow**.
 8. The browser shows "Authentication successful, you can close this
    tab".
