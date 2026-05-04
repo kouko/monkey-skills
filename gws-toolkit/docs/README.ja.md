@@ -31,7 +31,7 @@ spec と実装の間に drift が生じた際、`docs/` は当時「なぜこう
 
 - spec レベルの設計判断 → `PRODUCT-SPEC.md` / `TECH-SPEC.md`
 - バージョン履歴 → `CHANGELOG.md`
-- ユーザー向け操作ガイド → `skills/google-slides-setup/protocols/gcp-console-walkthrough.md`
+- ユーザー向け操作ガイド → `skills/gws-setup/protocols/gcp-console-walkthrough.md`
 - recipe の具体的な呼び出し方法 → `skills/google-slides-api/protocols/recipe-*.md`
 
 `docs/` は歴史 + 外部境界のデータベースであり、how-to ではありません。

@@ -55,10 +55,10 @@ goes through the second phase.
 ### 1. First-time setup (target: ≤ 20 minutes — KR2)
 
 ```
-> /google-slides-setup
+> /gws-setup
 ```
 
-Routes to the `google-slides-setup` skill. It detects current state,
+Routes to the `gws-setup` skill. It detects current state,
 fetches `gws` + `jq` to `~/.cache/slides-toolkit/bin/`, walks you
 through the manual GCP Console steps (OAuth Client + Test User), and
 writes `~/.config/gws/env.sh` with the issue #119 workaround if your
@@ -71,18 +71,18 @@ for what can and cannot be automated.
 ### 2. Generate a deck (target: ≤ 3 minutes — KR1)
 
 ```
-> /using-slides-toolkit
+> /using-gws-toolkit
 > "Turn this outline into a 6-slide product proposal"
 ```
 
-The router (`using-slides-toolkit`) inspects intent, optionally
+The router (`using-gws-toolkit`) inspects intent, optionally
 delegates to `slides-design` for narrative structure (Minto / SCQA /
 chart selection), and hands a `slide-plan.json` v1.2 to
-`google-slides-builder`. The builder runs the four-step pipeline —
+`slides-builder`. The builder runs the four-step pipeline —
 create blank deck → create slides with predefined layouts → insert
 text → insert local images — and returns the Drive URL.
 
-Both `/using-slides-toolkit` and `/google-slides-setup` are skill
+Both `/using-gws-toolkit` and `/gws-setup` are skill
 auto-routes (no `commands/` shims; the plugin ships zero slash
 commands). Type the skill name and Claude Code dispatches.
 
@@ -92,13 +92,13 @@ The plugin ships five skills across three layers.
 
 | Skill | Layer | Purpose |
 |---|---|---|
-| `using-slides-toolkit` | Router (backend-agnostic) | Inspect user intent, read `slide-plan.target`, route to the right skill |
+| `using-gws-toolkit` | Router (backend-agnostic) | Inspect user intent, read `slide-plan.target`, route to the right skill |
 | `slides-design` | Knowledge (backend-agnostic) | Minto Pyramid + SCQA narrative, chart-type selection — applies to any backend |
-| `google-slides-setup` | google-slides backend | First-time GCP Console / OAuth / `gws` bootstrap; state detection on subsequent runs |
+| `gws-setup` | google-slides backend | First-time GCP Console / OAuth / `gws` bootstrap; state detection on subsequent runs |
 | `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`, `batchUpdate createSlide`, `insertText`, `createImage` |
-| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL |
+| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL |
 
-`using-slides-toolkit` and `slides-design` are deliberately
+`using-gws-toolkit` and `slides-design` are deliberately
 backend-agnostic so future `html-builder` / `pptx-builder` /
 `marp-builder` skills can reuse the same routing entrypoint and design
 references without changes.
@@ -115,7 +115,7 @@ references without changes.
 
 **Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
 binaries are fetched into `~/.cache/slides-toolkit/bin/` by
-`scripts/google-slides/bootstrap.sh` over HTTPS with `curl -f`.
+`scripts/gws/bootstrap.sh` over HTTPS with `curl -f`.
 
 ## Architecture
 
@@ -126,7 +126,7 @@ format.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 1 — Router (backend-agnostic)                        │
-│  using-slides-toolkit                                       │
+│  using-gws-toolkit                                       │
 │  inspect intent · read slide-plan.target · dispatch         │
 └────────────────────────────┬────────────────────────────────┘
                              │
@@ -146,7 +146,7 @@ format.
                               │                      │
                               └──────────┬───────────┘
                                          ▼
-                              scripts/google-slides/*.sh
+                              scripts/gws/*.sh
                               gws CLI · ~/.cache binaries
                                          ▼
                               Google Slides + Drive API
@@ -155,7 +155,7 @@ format.
 ```
 
 Phase 2+ backends (`html-builder` / `pptx-builder` / `marp-builder`)
-slot into Layer 3 alongside `google-slides-builder` without changing
+slot into Layer 3 alongside `slides-builder` without changing
 Layer 1 or Layer 2. See PRODUCT-SPEC §2.1, §2.2 and TECH-SPEC §2.1,
 §2.2.
 

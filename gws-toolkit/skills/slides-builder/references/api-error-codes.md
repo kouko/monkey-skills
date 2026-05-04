@@ -25,7 +25,7 @@ Every recipe in `protocols/` references this file for exit-code semantics.
 
 **Recommended — use the helper script** (shared entry point for Claude orchestration and the user alias):
 ```bash
-bash ~/GitHub/monkey-skills/slides-toolkit/scripts/google-slides/refresh-auth.sh
+bash ~/GitHub/monkey-skills/slides-toolkit/scripts/gws/refresh-auth.sh
 ```
 
 The script sources `env.sh` (issue #119 env vars) and calls
@@ -46,7 +46,7 @@ fresh for another ~7 days (Testing mode).
 **Claude orchestration pattern**: when exit 10 is detected, **do not**
 just tell the user the command; invoke `refresh-auth.sh` directly
 (browser opens automatically) → user clicks Allow → retry the original
-operation. See `google-slides-builder/SKILL.md §Token expiry` for the
+operation. See `slides-builder/SKILL.md §Token expiry` for the
 full recovery protocol.
 
 ---
@@ -105,7 +105,7 @@ full recovery protocol.
 
 **Recovery**:
 - Fix the caller's slide plan / arguments to use one of the 7 values
-- The pre-flight checklist in `google-slides-builder` catches this before the recipe runs
+- The pre-flight checklist in `slides-builder` catches this before the recipe runs
 
 ---
 
@@ -120,8 +120,8 @@ full recovery protocol.
 - Workaround: export `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET` from the user's own GCP OAuth client
 
 **Recovery**:
-- Run `google-slides-setup` → `protocols/issue-119-workaround.md`
-- Or directly: `eval "$(scripts/google-slides/env-guard.sh apply)"`
+- Run `gws-setup` → `protocols/issue-119-workaround.md`
+- Or directly: `eval "$(scripts/gws/env-guard.sh apply)"`
 
 ---
 

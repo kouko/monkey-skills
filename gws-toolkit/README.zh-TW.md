@@ -53,10 +53,10 @@ Code 讓它讀取 skill。
 ### 1. 第一次 setup（目標：≤ 20 分鐘 — KR2）
 
 ```
-> /google-slides-setup
+> /gws-setup
 ```
 
-route 到 `google-slides-setup` skill。它會偵測目前狀態，把 `gws` +
+route 到 `gws-setup` skill。它會偵測目前狀態，把 `gws` +
 `jq` 抓到 `~/.cache/slides-toolkit/bin/`，引導你完成 GCP Console
 的手動步驟（OAuth Client + Test User），如帳號需要的話會把 issue
 #119 workaround 寫入 `~/.config/gws/env.sh`。
@@ -68,17 +68,17 @@ route 到 `google-slides-setup` skill。它會偵測目前狀態，把 `gws` +
 ### 2. 生成 deck（目標：≤ 3 分鐘 — KR1）
 
 ```
-> /using-slides-toolkit
+> /using-gws-toolkit
 > 「把這份 outline 做成 6 頁的 product proposal」
 ```
 
-router（`using-slides-toolkit`）判讀意圖，必要時委派
+router（`using-gws-toolkit`）判讀意圖，必要時委派
 `slides-design` 給出 narrative 結構建議（Minto / SCQA / chart 選
-型），然後把 `slide-plan.json` v1.2 交給 `google-slides-builder`。
+型），然後把 `slide-plan.json` v1.2 交給 `slides-builder`。
 builder 跑 4 步 pipeline（建空 deck → 用 predefined layout 建
 slide → 插入文字 → 插入本機圖片），回傳 Drive URL。
 
-`/using-slides-toolkit` 與 `/google-slides-setup` 都是 skill 的
+`/using-gws-toolkit` 與 `/gws-setup` 都是 skill 的
 auto-route（plugin 沒有 `commands/` shim，未提供 slash command）。
 直接打 skill 名稱，Claude Code 就會 dispatch。
 
@@ -88,13 +88,13 @@ plugin 提供 5 個 skill，分為 3 層。
 
 | Skill | Layer | 角色 |
 |---|---|---|
-| `using-slides-toolkit` | Router（backend-agnostic） | 判讀意圖、讀 `slide-plan.target`、route 到對應 skill |
+| `using-gws-toolkit` | Router（backend-agnostic） | 判讀意圖、讀 `slide-plan.target`、route 到對應 skill |
 | `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選型；對所有 backend 通用 |
-| `google-slides-setup` | google-slides backend | 第一次 GCP Console / OAuth / `gws` bootstrap，後續做 state detection |
+| `gws-setup` | google-slides backend | 第一次 GCP Console / OAuth / `gws` bootstrap，後續做 state detection |
 | `google-slides-api` | google-slides backend | Low-level per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
-| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
+| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
 
-`using-slides-toolkit` 與 `slides-design` 刻意設計為 backend-agnostic，
+`using-gws-toolkit` 與 `slides-design` 刻意設計為 backend-agnostic，
 未來 `html-builder` / `pptx-builder` / `marp-builder` skill 可重用同
 一個 routing 入口與設計 reference，不需修改。
 
@@ -109,7 +109,7 @@ plugin 提供 5 個 skill，分為 3 層。
 | Google 帳號 | 個人 `@gmail.com`；Workspace 帳號屬 Phase 2+ |
 
 **不需要**：Python、uv、gcloud、brew、npm。`gws` 與 `jq` binary 由
-`scripts/google-slides/bootstrap.sh` 透過 HTTPS + `curl -f` 抓到
+`scripts/gws/bootstrap.sh` 透過 HTTPS + `curl -f` 抓到
 `~/.cache/slides-toolkit/bin/`。
 
 ## Architecture
@@ -120,7 +120,7 @@ format 的是 execution 層。
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 1 — Router（backend-agnostic）                       │
-│  using-slides-toolkit                                       │
+│  using-gws-toolkit                                       │
 │  判讀意圖 · 讀 slide-plan.target · dispatch                 │
 └────────────────────────────┬────────────────────────────────┘
                              │
@@ -140,7 +140,7 @@ format 的是 execution 層。
                               │                      │
                               └──────────┬───────────┘
                                          ▼
-                              scripts/google-slides/*.sh
+                              scripts/gws/*.sh
                               gws CLI · ~/.cache binaries
                                          ▼
                               Google Slides + Drive API
@@ -149,7 +149,7 @@ format 的是 execution 層。
 ```
 
 Phase 2+ backend（`html-builder` / `pptx-builder` /
-`marp-builder`）可作為 Layer 3 與 `google-slides-builder` 並列加
+`marp-builder`）可作為 Layer 3 與 `slides-builder` 並列加
 入，Layer 1 / Layer 2 不需更動。詳見 PRODUCT-SPEC §2.1 / §2.2 與
 TECH-SPEC §2.1 / §2.2。
 

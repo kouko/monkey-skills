@@ -7,7 +7,7 @@ description: Backend-agnostic design knowledge layer for slides-toolkit. Minto P
 
 Backend-agnostic design knowledge layer for slides-toolkit. This skill supplies narrative-structure and chart-selection references so that Claude can anchor its reasoning to named design principles when generating or reviewing a slide plan. The principles apply to **any output format** — Google Slides, HTML, PPTX, and Marp all share the same reference.
 
-> Design knowledge and execution are decoupled (PRODUCT-SPEC §4.4 principle 3). This skill **does not** generate charts, write boilerplate, or call backend APIs. Execution belongs to `google-slides-builder` (or a Phase 2+ backend builder).
+> Design knowledge and execution are decoupled (PRODUCT-SPEC §4.4 principle 3). This skill **does not** generate charts, write boilerplate, or call backend APIs. Execution belongs to `slides-builder` (or a Phase 2+ backend builder).
 
 ## When to use
 
@@ -29,8 +29,8 @@ Route to this skill when the user is asking about design, not execution:
 
 ## When NOT to use
 
-- The user wants to **execute** the pipeline (build the deck, export it) → `google-slides-builder`
-- First-time setup or auth problems → `google-slides-setup`
+- The user wants to **execute** the pipeline (build the deck, export it) → `slides-builder`
+- First-time setup or auth problems → `gws-setup`
 - The user wants to **generate** a chart (CSV → PNG) → out of MVP scope (PRODUCT-SPEC §3.2 Non-Goal); produce the PNG in matplotlib / Excel, then pass it to the builder
 - The user wants deep references (Tufte / Duarte / Takahashi method) → see Phase 2+ extensions below
 
@@ -78,7 +78,7 @@ This skill **does not** contain any of the following (they belong to the executi
 - Google Slides API calls or the actual enum values for `layout_hint`
 - gws CLI commands or OAuth scopes
 - HTML / reveal.js / PPTX / Marp syntax
-- Placeholder-object-ID mapping logic (that lives in `google-slides-builder`)
+- Placeholder-object-ID mapping logic (that lives in `slides-builder`)
 
 **Because** design principles stay stable across output formats (Minto 1987 applies equally to Google Slides and Marp), decoupling them from execution lets future backends be added without touching the knowledge layer.
 

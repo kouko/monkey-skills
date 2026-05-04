@@ -112,7 +112,7 @@ of the Console and usually looks like `slides-toolkit-123456`).
 > **Use this if**: you have gcloud, or you're willing to let the
 > script install it. Total time: ~6–8 minutes.
 >
-> **Script contract**: `scripts/google-slides/auto-setup.sh` handles
+> **Script contract**: `scripts/gws/auto-setup.sh` handles
 > (1) detect / install gcloud → (2) `gcloud auth login` → (3) create
 > project (if not already present) → (4) enable Slides + Drive API →
 > (5) print the Console URLs and open the browser so you can finish
@@ -130,7 +130,7 @@ API exists for either).
 
 ```bash
 cd /path/to/monkey-skills/slides-toolkit
-bash scripts/google-slides/auto-setup.sh
+bash scripts/gws/auto-setup.sh
 ```
 
 **What the script does** (hands-off):
@@ -515,10 +515,10 @@ OAuth client instead. Full details:
 cd /path/to/monkey-skills/slides-toolkit
 
 # 1) Fetch binaries
-bash scripts/google-slides/bootstrap.sh
+bash scripts/gws/bootstrap.sh
 
 # 2) Write env vars to ~/.config/gws/env.sh (chmod 600)
-bash scripts/google-slides/env-guard.sh apply
+bash scripts/gws/env-guard.sh apply
 ```
 
 What `env-guard.sh apply` does internally is equivalent to:
@@ -531,7 +531,7 @@ EOF
 chmod 600 ~/.config/gws/env.sh
 ```
 
-From then on, `scripts/google-slides/gws-wrap.sh` sources this file
+From then on, `scripts/gws/gws-wrap.sh` sources this file
 on every call.
 
 **✅ Verify**:
@@ -658,7 +658,7 @@ gws auth whoami
 # Returns your Gmail = ✅ setup complete
 ```
 
-Now you can switch to `google-slides-builder` and build your first
+Now you can switch to `slides-builder` and build your first
 deck. If `whoami` doesn't return anything or errors out, walk through
 `checklists/setup-state.md` to diagnose.
 

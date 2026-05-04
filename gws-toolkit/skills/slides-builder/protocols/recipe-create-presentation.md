@@ -37,7 +37,7 @@ title=$(jq -r '.output_title' slide-plan.json)
 ```bash
 body=$(jq -n --arg t "$title" '{title: $t}')
 
-resp=$(echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations create \
+resp=$(echo "$body" | scripts/gws/gws-wrap.sh slides presentations create \
   --json-stdin)
 ```
 
@@ -115,7 +115,7 @@ gws slides presentations get \
 | Other 5xx | determined by `gws-wrap.sh` (retry); exhausted → 11 | — |
 | Response missing `presentationId` | 12 | `create failed: no presentationId in response` |
 
-**Note**: in the v0.3 exit-code table (TECH-SPEC §4.2), exit 10 covers both unauthenticated and scope-missing cases; 403 is mapped to 10 so Claude can route uniformly to `google-slides-setup` for re-auth.
+**Note**: in the v0.3 exit-code table (TECH-SPEC §4.2), exit 10 covers both unauthenticated and scope-missing cases; 403 is mapped to 10 so Claude can route uniformly to `gws-setup` for re-auth.
 
 ## Notes
 

@@ -1,15 +1,15 @@
 ---
-name: google-slides-builder
+name: slides-builder
 description: Execute slide-plan.json v1.2 against Google Slides backend — create blank deck, build slides with Google predefined layouts, insert text to placeholders, insert local images, emit deck URL. Use when user has a structured slide-plan (or equivalent) and asks to generate / 生成 / 匯出 / 做簡報 / create deck / google slides / プレゼン作成. MVP 僅支援 target=google-slides；html / pptx / marp 未實作。
 ---
 
-# google-slides-builder
+# slides-builder
 
-**Single-skill end-to-end pipeline for the Google Slides backend.** Read `slide-plan.json` v1.2, validate via pre-flight, then chain four bundled recipes (create-presentation → create-slides → insert-text → insert-image) and return the Drive URL. This skill **does not make design decisions** (go to `slides-design`), **does not handle first-time setup** (auth / gws install → `google-slides-setup`), and **does not manage templates** (removed in v0.3; see PRODUCT-SPEC §3.2 Non-Goals and §3.5 Phase 2+ triggers).
+**Single-skill end-to-end pipeline for the Google Slides backend.** Read `slide-plan.json` v1.2, validate via pre-flight, then chain four bundled recipes (create-presentation → create-slides → insert-text → insert-image) and return the Drive URL. This skill **does not make design decisions** (go to `slides-design`), **does not handle first-time setup** (auth / gws install → `gws-setup`), and **does not manage templates** (removed in v0.3; see PRODUCT-SPEC §3.2 Non-Goals and §3.5 Phase 2+ triggers).
 
 The 4 per-op recipes (formerly the separate `google-slides-api` skill, absorbed in v0.4 α-trim) now live under `protocols/` of this skill. For raw API method discovery (resource × method tables, parameter shapes), use upstream `gws-slides` skill or run `gws schema slides.<resource>.<method>`.
 
-This skill invokes the `gws` CLI through `scripts/google-slides/gws-wrap.sh` (under the plugin root); all shell-script contracts and exit-code mappings are defined in TECH-SPEC §4.2.
+This skill invokes the `gws` CLI through `scripts/gws/gws-wrap.sh` (under the plugin root); all shell-script contracts and exit-code mappings are defined in TECH-SPEC §4.2.
 
 ## Composition pattern — threading the placeholder map
 
@@ -33,13 +33,13 @@ Example shape:
 ## When NOT to use
 
 - **Design consultation** (Minto / SCQA / chart type / layout choice) → `slides-design`
-- **First-time setup** (gws not installed, OAuth not configured, Keychain / env issues) → `google-slides-setup`
+- **First-time setup** (gws not installed, OAuth not configured, Keychain / env issues) → `gws-setup`
 - `target != "google-slides"` (html / pptx / marp are all Phase 2+ trigger-gated; see PRODUCT-SPEC §3.5)
 - Task is outside the slides-toolkit scope (copywriting → `copywriting-toolkit`; investment analysis → `investing-toolkit`)
 
 ## Prerequisites
 
-- `google-slides-setup` has been run once:
+- `gws-setup` has been run once:
   - `~/.cache/slides-toolkit/bin/gws` and `jq` are downloaded (HTTPS + `curl -f`; v0.3 does not pin SHA-256)
   - Google OAuth is granted (scopes: `presentations` + `drive.file`; see TECH-SPEC §4.4)
   - `~/.config/gws/env.sh` includes the issue #119 workaround (if detected)
@@ -91,7 +91,7 @@ Execute the following four steps. If any step fails, report according to the exi
 Run `checklists/pre-flight.md` (10 items; each shell-runnable). All must pass before Step 2. Key validations:
 - jq: `.version == "1.2"`, `.target == "google-slides"`, every slide's `.layout_hint` is in the 7-enum
 - `gws auth status` token not expired (`credential-check.sh`)
-- `scripts/google-slides/env-guard.sh check` does not return exit 16 (issue #119 workaround in place)
+- `scripts/gws/env-guard.sh check` does not return exit 16 (issue #119 workaround in place)
 - Every `slides[].images[].local_path` exists and is within size limits
 
 ### Step 2 — Recipe 1: create-presentation
@@ -150,14 +150,14 @@ Full table in TECH-SPEC §4.2; common cases for this skill:
 
 | Exit | Meaning | Action |
 |---|---|---|
-| 10 | Token expired / unauthenticated / scope missing | Return to `google-slides-setup` for re-auth; user runs `gws auth login` |
+| 10 | Token expired / unauthenticated / scope missing | Return to `gws-setup` for re-auth; user runs `gws auth login` |
 | 11 | 429 rate limit after 5 retries | Retry later |
 | 12 | Google resource not found / `target` unsupported / upload failed | Check `target` field / Drive quota |
 | 13a | insert-text placeholder role not found | **Warning**; check whether the layout provides this role |
 | 13b | insert-image `placeholder_id` not found | **Warning**; check `placeholder_map[slide_X]` |
 | 14 | Local image missing / too large / unsupported format | Check `local_path` |
 | 15 | Schema validation failed (including `layout_hint` not in enum) | Fix the slide plan |
-| 16 | Issue #119 / invalid_scope | Return to `google-slides-setup`; run `env-guard.sh apply` |
+| 16 | Issue #119 / invalid_scope | Return to `gws-setup`; run `env-guard.sh apply` |
 | 18 | Keychain + file backend both fail | Check `KEYRING_BACKEND` |
 
 **Removed in v0.3**:
@@ -184,7 +184,7 @@ click "Allow" once — no copy-pasting long commands.
    > 7-day lifetime). Launching re-auth now — browser will open, please
    > click "Allow".`
 3. **Auto-trigger re-auth**: invoke
-   `bash slides-toolkit/scripts/google-slides/refresh-auth.sh`
+   `bash slides-toolkit/scripts/gws/refresh-auth.sh`
    - The script sources `env.sh`, exports env vars, and calls
      `gws auth login --scopes=<presentations,drive.file>`
    - Browser opens automatically; user clicks Allow; localhost callback; exit 0
@@ -194,7 +194,7 @@ click "Allow" once — no copy-pasting long commands.
 5. **If re-auth fails** (script exit 10; user clicks Cancel, wrong
    scopes, etc.):
    - Do not retry; surface the error to the user
-   - Point them at `google-slides-setup` for a full diagnosis
+   - Point them at `gws-setup` for a full diagnosis
 
 ### Alias suggestion (non-Claude context)
 
@@ -202,7 +202,7 @@ For manual runs in a terminal (e.g. proactively refreshing a token you
 suspect is about to expire):
 ```bash
 # ~/.zshrc
-alias gws-relogin='bash ~/GitHub/monkey-skills/slides-toolkit/scripts/google-slides/refresh-auth.sh'
+alias gws-relogin='bash ~/GitHub/monkey-skills/slides-toolkit/scripts/gws/refresh-auth.sh'
 ```
 
 **Because** at a cadence of 3–5 decks per week the user has a rhythm,

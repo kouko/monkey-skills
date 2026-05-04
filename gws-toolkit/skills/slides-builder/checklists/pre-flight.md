@@ -1,4 +1,4 @@
-# Pre-flight checklist — google-slides-builder
+# Pre-flight checklist — slides-builder
 
 10 項檢查；任一 fail 則依指定 exit code 中止 pipeline，**不**進 recipe 階段。每項提供 shell-runnable check 或明確判定準則。
 
@@ -70,7 +70,7 @@ done
 ## 5. [ ] `gws auth whoami` 正常（token 未過期）
 
 ```bash
-scripts/google-slides/credential-check.sh
+scripts/gws/credential-check.sh
 ```
 
 回傳 `{"backend":"...","token_valid":true,"expires_in_sec":N}` 且 `N > 0`。
@@ -85,7 +85,7 @@ gws auth scopes 2>/dev/null | grep -q 'presentations' && \
   gws auth scopes 2>/dev/null | grep -q 'drive.file'
 ```
 
-未 grant → **exit 10** + hint：`missing required scopes. Run google-slides-setup and re-authorize`
+未 grant → **exit 10** + hint：`missing required scopes. Run gws-setup and re-authorize`
 
 （TECH-SPEC §4.4：只需 `presentations` + `drive.file`；其他 scope 被 least-privilege 原則拒絕。v0.3 起 `drive.file` 僅用於圖片上傳與新建 deck 本身，不再用於 template copy）
 
@@ -104,22 +104,22 @@ curl -sSf --max-time 5 -o /dev/null https://www.googleapis.com/discovery/v1/apis
 [[ -x "$HOME/.cache/slides-toolkit/bin/jq" ]]
 ```
 
-- Fail → **exit 1** + hint：`gws/jq binary missing — run google-slides-setup (scripts/google-slides/bootstrap.sh)`
+- Fail → **exit 1** + hint：`gws/jq binary missing — run gws-setup (scripts/gws/bootstrap.sh)`
 
-（TECH-SPEC §2.3 + §4.2：由 `google-slides-setup` 的 `bootstrap.sh` 自動下載（HTTPS + `curl -f`；v0.3 不做 SHA-256 pin）；builder 不自己抓）
+（TECH-SPEC §2.3 + §4.2：由 `gws-setup` 的 `bootstrap.sh` 自動下載（HTTPS + `curl -f`；v0.3 不做 SHA-256 pin）；builder 不自己抓）
 
 ## 9. [ ] issue #119 env vars 已 export（若 workaround 仍需要）
 
 ```bash
-scripts/google-slides/env-guard.sh check
+scripts/gws/env-guard.sh check
 ```
 
 回傳 `{"workaround_needed": true/false}`。
 
-- `workaround_needed == true` 且 env var 未設 → **exit 16** + hint：`issue #119 workaround not active; run google-slides-setup to apply (env-guard.sh apply)`
+- `workaround_needed == true` 且 env var 未設 → **exit 16** + hint：`issue #119 workaround not active; run gws-setup to apply (env-guard.sh apply)`
 - `workaround_needed == false` → pass（gws 版本已修）
 
-（TECH-SPEC §6.1：builder 只 `check`、不 `apply`；mutation 路徑歸 `google-slides-setup`）
+（TECH-SPEC §6.1：builder 只 `check`、不 `apply`；mutation 路徑歸 `gws-setup`）
 
 ## 10. [ ] Dry-run 模式確認
 
@@ -160,5 +160,5 @@ dry=$(jq -r '.dry_run // false' slide-plan.json)
 ## See also
 
 - TECH-SPEC §4.1（schema v1.2）、§4.2（完整 exit code 表）、§4.6（E2E data flow v0.3）、§9 OPEN-8（path 解析）
-- `scripts/google-slides/credential-check.sh`、`env-guard.sh`、`bootstrap.sh`
+- `scripts/gws/credential-check.sh`、`env-guard.sh`、`bootstrap.sh`
 - 下游 recipe（v0.4 α-trim 後內附於本 skill）：`../protocols/recipe-create-presentation.md` → `recipe-create-slides.md` → `recipe-insert-text.md` → `recipe-insert-image.md`
