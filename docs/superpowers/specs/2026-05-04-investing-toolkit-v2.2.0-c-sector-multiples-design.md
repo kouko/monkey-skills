@@ -82,7 +82,7 @@ Replace the fixed 5-multiple set with **sector-aware schema selection**:
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  analysis-comps/references/schemas/<schema_id>.json         │
+│  analysis-comps/references/schema-<schema_id>.json          │
 │   {multiples: [...], indicators: [...], notes: {...}}        │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -188,7 +188,7 @@ routes:
     - _default: default
 
 # Fallback when info.sector is missing or not in `routes`
-_unknown_sector: default
+unknown_sector_fallback: default
 ```
 
 ### 4.3 `sector-overrides.yaml` SoT
@@ -225,7 +225,10 @@ accrete as dogfooding surfaces misroutes.
 ```python
 def classify(ticker: str, sector: str | None, industry: str | None) -> tuple[str, str]:
     """Returns (schema_id, source).
-    source ∈ {"override", "industry_match", "sector_default", "unknown_sector"}
+    source ∈ {"override", "industry_match", "sector_default", "unknown_sector", "cli_override"}
+    # cli_override fires when --sector-override <id> is set (debug hatch);
+    # operationally distinct from yaml `override` so analysts can spot
+    # ad-hoc CLI overrides vs durable yaml overrides in the audit trail.
     """
     if ticker in OVERRIDES:
         return OVERRIDES[ticker], "override"
@@ -540,7 +543,7 @@ Subagent-driven (per `feedback_subagent_driven_development_validated.md`).
 | # | Task | Files touched | Reviewer focus |
 |---|---|---|---|
 | 1 | sector-routing.yaml + sector-overrides.yaml + sector_classifier.py | references/, scripts/sector_classifier.py | YAML completeness; routing.py edge cases |
-| 2 | 9 schema JSONs in references/schemas/ | references/schemas/*.json | Schema correctness vs spec §5 table |
+| 2 | 9 schema JSONs in references/ | references/schema-*.json | Schema correctness vs spec §5 table |
 | 3 | comps_compute.py — schema loading + per-multiple dispatch | scripts/comps_compute.py | Per-formula correctness |
 | 4 | comps_compute.py — indicators block + provenance | scripts/comps_compute.py | Provenance shape parity with multiples |
 | 5 | output schema-compute-output.json extension | references/schema-compute-output.json | JSON Schema validity |
