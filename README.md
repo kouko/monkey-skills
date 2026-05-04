@@ -17,8 +17,9 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides generation toolkit — template-based deck pipeline via `gws`, backend-agnostic design knowledge, Platform-Pivot architecture. |
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | LLM Wiki Pattern for code repos — seed `.repo-wiki/` from git history (init), grow from changes / context / external docs (ingest, polymorphic), query with verification against `src/` (Eager triggers + segmented output). |
+| [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.1.0 | 4 | 1 | Reverse-engineer polished artifacts (copy / docs / UI / arguments / products) — surface design blueprints, hidden frameworks, rhetorical mechanisms, intentional omissions. Grounded in Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman. BCG「バリュー・チェーンの脱構築」系譜. |
 
-**Totals:** 84 skills and 40 slash commands across 9 plugins.
+**Totals:** 88 skills and 41 slash commands across 10 plugins.
 
 > Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
 
@@ -65,6 +66,7 @@ monkey-skills/
 ├── slides-toolkit/               # plugin
 ├── tsundoku/                     # plugin
 ├── repo-wiki/                    # plugin
+├── deconstruct-toolkit/          # plugin
 ├── docs/                         # cross-cutting docs (i18n glossary, etc.)
 ├── scripts/                      # repo-level tooling
 ├── CLAUDE.md                     # project conventions for Claude Code
