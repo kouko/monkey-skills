@@ -56,6 +56,12 @@ MULTIPLES_FIELDS = [
     "enterpriseToRevenue",
     "marketCap",
     "enterpriseValue",
+    # v2.2.0-c: sector/industry needed by analysis-comps sector_classifier
+    # to dispatch the per-sector multiples schema. Falling back to
+    # unknown_sector (default schema) when these are absent defeats
+    # sector-aware compute mode for production users.
+    "sector",
+    "industry",
 ]
 
 SCREENER_FIELDS = [
