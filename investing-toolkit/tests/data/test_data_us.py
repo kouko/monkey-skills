@@ -96,6 +96,71 @@ def test_us_memo_fetch_aapl_has_sec_provenance():
 
 
 @pytest.mark.network
+def test_us_memo_fetch_aapl_has_extended_canonical_fields():
+    """v2.2.0-l: memo-fetch should surface 6 new canonical fields from XBRL.
+
+    AAPL coverage:
+      - income_statement.gross_profit            (GrossProfit)
+      - cash_flow.depreciation_amortization      (DepreciationDepletionAndAmortization)
+      - cash_flow.stock_based_compensation       (ShareBasedCompensation)
+      - balance_sheet.total_stockholders_equity  (StockholdersEquity)
+      - balance_sheet.intangible_assets          (immaterial — empty array OK)
+      - balance_sheet.goodwill                   (zero — empty array OK)
+    """
+    out = _run_pack(["--ticker", TICKER, "--pack", "memo-fetch"])
+
+    inc = out["income_statement"]
+    cf = out["cash_flow"]
+    bs = out["balance_sheet"]
+
+    # Income statement: gross_profit must populate (AAPL discloses ~$184B FY2025)
+    assert "gross_profit" in inc, "income_statement missing gross_profit (v2.2.0-l)"
+    assert isinstance(inc["gross_profit"], list) and inc["gross_profit"], (
+        "AAPL gross_profit array empty — XBRL GrossProfit chain failed"
+    )
+    assert inc["gross_profit"][0] > 100_000_000_000, (
+        f"AAPL FY[0] gross_profit suspiciously small: {inc['gross_profit'][0]}"
+    )
+
+    # Cash flow: D&A + SBC must populate (AAPL FY2025 ~$11.4B + ~$11.7B)
+    for field, threshold in (
+        ("depreciation_amortization", 5_000_000_000),
+        ("stock_based_compensation",  5_000_000_000),
+    ):
+        assert field in cf, f"cash_flow missing {field} (v2.2.0-l)"
+        assert isinstance(cf[field], list) and cf[field], (
+            f"AAPL {field} array empty — XBRL chain failed"
+        )
+        assert cf[field][0] > threshold, (
+            f"AAPL FY[0] {field} suspiciously small: {cf[field][0]}"
+        )
+
+    # Balance sheet: equity must populate (AAPL FY2025 ~$66.8B)
+    assert "total_stockholders_equity" in bs, "balance_sheet missing total_stockholders_equity (v2.2.0-l)"
+    assert isinstance(bs["total_stockholders_equity"], list) and bs["total_stockholders_equity"], (
+        "AAPL total_stockholders_equity array empty — XBRL StockholdersEquity chain failed"
+    )
+    assert bs["total_stockholders_equity"][0] > 30_000_000_000, (
+        f"AAPL FY[0] equity suspiciously small: {bs['total_stockholders_equity'][0]}"
+    )
+
+    # Intangibles + goodwill: presence required, empty list OK (AAPL has neither)
+    assert "intangible_assets" in bs, "balance_sheet missing intangible_assets (v2.2.0-l)"
+    assert "goodwill" in bs, "balance_sheet missing goodwill (v2.2.0-l)"
+    assert isinstance(bs["intangible_assets"], list)
+    assert isinstance(bs["goodwill"], list)
+
+    # _meta presence for newly-added populated fields
+    inc_meta = inc.get("_meta", {})
+    cf_meta = cf.get("_meta", {})
+    bs_meta = bs.get("_meta", {})
+    assert "gross_profit" in inc_meta
+    assert "depreciation_amortization" in cf_meta
+    assert "stock_based_compensation" in cf_meta
+    assert "total_stockholders_equity" in bs_meta
+
+
+@pytest.mark.network
 def test_us_comps_multiples_single_aapl():
     """comps-multiples (single) returns multiples block under tickers map."""
     out = _run_pack(["--ticker", TICKER, "--pack", "comps-multiples"])
