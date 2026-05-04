@@ -1,0 +1,24 @@
+name: argument-deconstruct-02-vc-pitch
+skill: argument-deconstruct
+fixture: skills/argument-deconstruct/assets/sample-vc-pitch-memo.md
+input_query: "拆解這份創投備忘錄的論證"
+must_find:
+  - id: genre-move-map
+    description: "VC pitch genre moves identified (problem / opportunity / solution / traction / team / use-of-funds / ask)"
+    threshold: 6
+  - id: burke-ratio
+    description: "At least 1 Burke pentad ratio identified (typically Agent-Act for early-stage)"
+    threshold: 1
+  - id: argument-map
+    description: "Mermaid argument map renders showing claim-grounds-warrant chain"
+    threshold: 1
+  - id: weakest-move
+    description: "Weakest move identified (e.g., 'Why now' trend convergence section)"
+    threshold: 1
+  - id: missing-rebuttal-or-genre-context
+    description: "Missing rebuttal noted (e.g., single-engine substitutes) OR genre-context explanation that VC memos delegate rebuttal to DD"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70%"

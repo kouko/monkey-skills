@@ -1,0 +1,30 @@
+name: artifact-deconstruct-02-notion-onboarding
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-notion-onboarding-pack.md
+input_query: "拆解 Notion 的 onboarding 文件包"
+expected_lenses:
+  - lens-genre
+expected_dimensions: ALL_6
+must_find:
+  - id: component-count
+    description: "At least 6 distinct components identified in the pack"
+    threshold: 6
+  - id: writing-order-inference
+    description: "Probable writing order inferred with cited evidence (≥2 reverse-inferences)"
+    threshold: 2
+  - id: audience-layering
+    description: "Audience layering identified (first-time / returning / power user)"
+    threshold: 3
+  - id: negative-space
+    description: "At least 3 negative-space observations"
+    threshold: 3
+  - id: inherited-framework
+    description: "At least 1 inherited framework named (PARA / GTD / second-brain etc.)"
+    threshold: 1
+  - id: distinctive-feature
+    description: "Most distinctive design choice named (e.g., anti-perfectionism tone)"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong lens chosen"

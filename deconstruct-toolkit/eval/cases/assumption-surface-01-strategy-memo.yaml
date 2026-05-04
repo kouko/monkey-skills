@@ -1,0 +1,28 @@
+name: assumption-surface-01-strategy-memo
+skill: assumption-surface
+fixture: skills/assumption-surface/assets/sample-company-strategy-memo.md
+input_query: "揭露這份策略備忘錄的隱性假設"
+must_find:
+  - id: assumption-table-size
+    description: "Assumption table contains 10–15 rows"
+    threshold_min: 10
+    threshold_max: 15
+  - id: foundational-classification
+    description: "At least 4 assumptions classified as foundational"
+    threshold: 4
+  - id: load-bearing-classification
+    description: "At least 3 assumptions classified as load-bearing"
+    threshold: 3
+  - id: falsifiability-tests
+    description: "At least 1 falsifiability test per foundational assumption"
+    threshold_per_foundational: 1
+  - id: counter-questions
+    description: "Counter-questions proposed for at least 3 foundational assumptions"
+    threshold: 3
+  - id: pattern-types
+    description: "At least 3 symptomatic-reading pattern types identified (definitional / methodological / comparative / temporal / boundary / counterfactual / stakeholder / self-protective / field-blindness)"
+    threshold: 3
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70%"

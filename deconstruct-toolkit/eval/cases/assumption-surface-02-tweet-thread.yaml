@@ -1,0 +1,21 @@
+name: assumption-surface-02-tweet-thread
+skill: assumption-surface
+fixture: skills/assumption-surface/assets/sample-tweet-thread-productivity.md
+input_query: "這串推文背後的假設是什麼"
+must_find:
+  - id: implicit-world-model
+    description: "Implicit world model named (e.g., knowledge-worker / individual-output / schedule-autonomous frame)"
+    threshold: 1
+  - id: counterfactual-probes
+    description: "At least 3 counterfactual probes (e.g., 9-month-old caregiver, shift worker, collaborative-output role)"
+    threshold: 3
+  - id: foundational-count
+    description: "At least 3 foundational assumptions identified"
+    threshold: 3
+  - id: universality-overreach-flag
+    description: "Universal claim flagged as scope-limited (e.g., 'real productivity' framing applies to autonomous minority)"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70%"
