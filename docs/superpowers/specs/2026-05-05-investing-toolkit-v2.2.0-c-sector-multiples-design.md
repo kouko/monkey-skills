@@ -176,7 +176,7 @@ def aggregate_etf(etf_ticker: str) -> dict:
         },
         "weighted_multiples": {
           "trailingPE": 24.1, "priceToBook": 5.8, "priceToSales": 6.2,
-          "evEbitda": 18.4, "ruleOf40": 0.42
+          "evEbitda": 18.4, "rule_of_40": 0.42
         }
       }
     """
@@ -256,10 +256,10 @@ Example rows:
 | Multiple | Output key | Formula | Source fields (all v2.2.0-l) | FY convention |
 |---|---|---|---|---|
 | ROE (XLF banks) | `roe` | `net_income[0] / total_stockholders_equity[0]` | `net_income`, `total_stockholders_equity` | FY-trailing (most recent FY) |
-| Rule-of-40 (XLK) | `ruleOf40` | `(total_revenue[0] / total_revenue[1] - 1) + (operating_income[0] / total_revenue[0])` | `total_revenue`, `operating_income` | FY-trailing growth + FY-trailing margin |
-| P/FFO (XLRE REITs) | `priceToFfo` | `marketCap / (net_income[0] + depreciation_amortization[0])` | `marketCap`, `net_income`, `depreciation_amortization` | FY-trailing |
+| Rule-of-40 (XLK) | `rule_of_40` | `(total_revenue[0] / total_revenue[1] - 1) + (operating_income[0] / total_revenue[0])` | `total_revenue`, `operating_income` | FY-trailing growth + FY-trailing margin |
+| P/FFO (XLRE REITs) | `price_to_ffo` | `marketCap / (net_income[0] + depreciation_amortization[0])` | `marketCap`, `net_income`, `depreciation_amortization` | FY-trailing |
 
-**Naming convention**: camelCase to match existing v2.2.0-b schema (`trailingPE` / `priceToBook` / etc.). `roe` is lowercase per industry-standard acronym usage.
+**Naming convention**: new sector-specific multiple keys use **snake_case** (`roe` / `rule_of_40` / `price_to_ffo`). Existing default 5 keys (`trailingPE` / `priceToBook` / `priceToSales` / `evEbitda` / `forwardPE`) stay camelCase because they are yfinance native field names — the mixed style within `sector.etf_aggregate` honestly reflects upstream provenance.
 
 All FY-trailing (no LTM / quarterly logic introduced — matches v2.2.0-b convention). `_meta` per multiple records the fiscal_year_ends used (mirrors v2.2.0-b concept-nested provenance).
 
@@ -282,7 +282,7 @@ Existing default 5 multiples (trailingPE / forwardPE / priceToBook / priceToSale
       "provenance": "yfinance_info"
     },
     "specific_multiples": {
-      "ruleOf40": {
+      "rule_of_40": {
         "value": 0.58,
         "_meta": {
           "total_revenue": {"fiscal_year_ends": ["2024-09-28", "2023-09-30"]},
@@ -296,7 +296,7 @@ Existing default 5 multiples (trailingPE / forwardPE / priceToBook / priceToSale
       "priceToBook": 5.8,
       "priceToSales": 6.2,
       "evEbitda": 18.4,
-      "ruleOf40": 0.42,
+      "rule_of_40": 0.42,
       "_meta": {"holdings_count": 75, "freshness_days": 1, "weight_coverage_pct": 94.2}
     },
     "divergence": {
@@ -304,7 +304,7 @@ Existing default 5 multiples (trailingPE / forwardPE / priceToBook / priceToSale
       "priceToBook": {"individual": 7.2,   "etf": 5.8,  "delta_pct": 24.1,  "band": "notable"},
       "priceToSales":{"individual": 8.1,   "etf": 6.2,  "delta_pct": 30.6,  "band": "notable"},
       "evEbitda":    {"individual": 21.0,  "etf": 18.4, "delta_pct": 14.1,  "band": "in_line"},
-      "ruleOf40":    {"individual": 0.58,  "etf": 0.42, "delta_pct": 38.1,  "band": "notable"}
+      "rule_of_40":  {"individual": 0.58,  "etf": 0.42, "delta_pct": 38.1,  "band": "notable"}
     },
     "warnings": []
   }
@@ -413,9 +413,9 @@ When v2.2.0-c ships, ROADMAP.md updates:
 
 ## 12. Acceptance criteria
 
-- [ ] `uv run skills/analysis-comps/scripts/comps_compute.py --mode compute --sector-benchmark <input.json>` for AAPL produces `sector.classification.etf == "XLK"`, `sector.specific_multiples.ruleOf40` non-null, `sector.divergence.trailingPE.band` ∈ {in_line, notable, extreme}
+- [ ] `uv run skills/analysis-comps/scripts/comps_compute.py --mode compute --sector-benchmark <input.json>` for AAPL produces `sector.classification.etf == "XLK"`, `sector.specific_multiples.rule_of_40` non-null, `sector.divergence.trailingPE.band` ∈ {in_line, notable, extreme}
 - [ ] Same invocation for JPM produces `etf == "XLF"`, `specific_multiples.roe` non-null
-- [ ] Same invocation for Realty Income (O) produces `etf == "XLRE"`, `specific_multiples.priceToFfo` non-null
+- [ ] Same invocation for Realty Income (O) produces `etf == "XLRE"`, `specific_multiples.price_to_ffo` non-null
 - [ ] Same invocation for BRK.B produces `provenance: "override_file"`, `specific_multiples` empty (exclude_specific_multiples honored)
 - [ ] Same invocation for non-US 7203.T produces `sector.status: "skipped"`
 - [ ] Without `--sector-benchmark`, output identical to v2.2.0-b shape (no `sector` key)
