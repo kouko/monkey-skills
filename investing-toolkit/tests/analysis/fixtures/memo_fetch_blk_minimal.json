@@ -1,0 +1,50 @@
+{
+  "pack": "memo-fetch",
+  "ticker": "BLK",
+  "current_price": 850.0,
+  "shares_outstanding": 150000000,
+  "company_info": {
+    "marketCap": 130000000000,
+    "regularMarketPrice": 850.0,
+    "sharesOutstanding": 150000000,
+    "sector": "Financial Services",
+    "industry": "Asset Management"
+  },
+  "income_statement": {
+    "revenue":          [20000000000, 18000000000],
+    "net_income":       [6000000000, 5500000000],
+    "operating_income": [7500000000, 7000000000],
+    "gross_profit":     [10000000000, 9000000000],
+    "_meta": {
+      "revenue":          {"fiscal_year_ends": ["2024-12-31", "2023-12-31"], "filings_used": ["blk-10k-2024"]},
+      "net_income":       {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "operating_income": {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "gross_profit":     {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]}
+    }
+  },
+  "balance_sheet": {
+    "total_stockholders_equity": [50000000000, 48000000000],
+    "total_debt":                [10000000000],
+    "cash":                      [12000000000],
+    "goodwill":                  [],
+    "intangible_assets":         [],
+    "_meta": {
+      "total_stockholders_equity": {"fiscal_year_ends": ["2024-12-31", "2023-12-31"], "filings_used": ["blk-10k-2024"]},
+      "total_debt":                {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "cash":                      {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "goodwill":                  {"fiscal_year_ends": [], "filings_used": []},
+      "intangible_assets":         {"fiscal_year_ends": [], "filings_used": []}
+    }
+  },
+  "cash_flow": {
+    "depreciation_amortization": [400000000],
+    "operating_cash_flow":        [5000000000],
+    "capex":                      [-200000000],
+    "_meta": {
+      "depreciation_amortization": {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "operating_cash_flow":        {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]},
+      "capex":                      {"fiscal_year_ends": ["2024-12-31"], "filings_used": ["blk-10k-2024"]}
+    }
+  },
+  "_provenance": {"skill": "data-us", "source": "pack.py --pack memo-fetch"}
+}

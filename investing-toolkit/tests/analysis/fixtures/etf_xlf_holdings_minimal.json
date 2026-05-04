@@ -1,0 +1,8 @@
+{
+  "ticker": "XLF",
+  "holdings": [
+    {"ticker": "JPM", "weight": 0.5},
+    {"ticker": "MET", "weight": 0.3},
+    {"ticker": "BLK", "weight": 0.2}
+  ]
+}
