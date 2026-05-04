@@ -102,9 +102,11 @@ uv run scripts/comps_compute.py \
 
 See §"Direct vs Compute — when to use which" below for choosing between modes.
 
-## Multiples Set (v2.0.0)
+## Multiples Set
 
-Classic 5 (per Spec §5.3):
+### Direct mode (v2.0.0+) — fixed 5
+
+Classic 5 multiples (per Spec §5.3) are emitted in `--mode direct` regardless of sector:
 
 1. `trailingPE`
 2. `forwardPE`
@@ -112,8 +114,39 @@ Classic 5 (per Spec §5.3):
 4. `priceToSales`
 5. `priceToBook`
 
-Sector-adjusted multiples (banks: P/B+ROE; REITs: P/AFFO; tech:
-EV/Revenue + Rule-of-40) are deferred to v2.1+.
+### Compute mode (v2.2.0-c+) — sector-aware schema dispatch
+
+In `--mode compute`, the multiples emitted depend on the anchor's sector. The
+`sector_classifier.py` module routes the anchor via
+`(yfinance.info.sector, info.industry)` against
+`references/sector-routing.yaml` plus per-issuer overrides in
+`references/sector-overrides.yaml`, dispatching to one of 9 sector schemas:
+
+| schema_id | Multiples | Indicators |
+|---|---|---|
+| `default` | trailingPE / forwardPE / evEbitda / priceToSales / priceToBook | gross_margin / operating_margin / FCF_yield |
+| `bank` | trailingPE / forwardPE / priceToBook / priceToTangibleBook | ROE |
+| `insurance` | trailingPE / priceToBook / priceToTangibleBook | ROE / book_value_growth |
+| `asset-manager` | trailingPE / priceToBook / evEbitda | ROE |
+| `reit` | priceToFFO / evEbitdare / priceToBook / priceToTangibleBook | (none) |
+| `tech-saas` | forwardPE / priceToSales / evRevenue | rule_of_40 / gross_margin / FCF_margin |
+| `tech-semis` | trailingPE / forwardPE / priceToSales / evEbitda | gross_margin / FCF_margin |
+| `energy` | evEbitda / priceToBook / priceToCFO | FCF_yield / debt_to_equity |
+| `utilities` | trailingPE / evEbitda / priceToBook | debt_to_equity |
+
+Per-schema definitions live in `references/schema-<id>.json` (the SoT for what
+each schema emits + a `deferred_concepts` field listing industry-specific
+concepts not in standard US-GAAP XBRL — e.g. NIM for banks, AFFO for REITs,
+combined ratio for insurers, AUM for asset managers, oil reserves for energy —
+which are documented but NOT emitted as null fields).
+
+REIT `priceToFFO` and `evEbitdare` are NAREIT approximations: strict NAREIT
+FFO subtracts `gains_on_sale_of_property`, which is not a standard XBRL concept
+→ omitted, with disclosure in per-multiple `compute_provenance.note`.
+
+`--sector-override <id>` debug flag forces a schema (bypasses both yaml routing
+and override table); `--show-routing` prints the resolved schema_id + source on
+stderr for diagnostics.
 
 ## Output Contract (Spec §5.4) — direct mode
 
@@ -236,15 +269,39 @@ preserves the audit trail.
 | `--mode direct` (default) | yfinance pre-cooked multiples (Yahoo's own EPS / EV definitions) | Industry comparability — aligns with Bloomberg / FactSet convention. Good for screen-style ranking; safe for sell-side memos. |
 | `--mode compute` (v2.2.0-b+) | Recomputed from SEC EDGAR raw fundamentals + yfinance market data | Primary-source audit — every multiple traces back to a 10-K accession. Required for buy-side memos / short theses where the analyst must defend each number. |
 
-### What compute mode actually computes (v2.2.0-b)
+### What compute mode actually computes (v2.2.0-c)
 
-| Multiple | Computed? | Definition |
+The full set of computable multiples + indicators (subset emitted per anchor schema_id):
+
+#### Multiples
+
+| Multiple | Definition | Notes |
 |---|---|---|
-| `trailingPE` | ✅ Yes | `current_price ÷ (FY net_income / shares_outstanding)` — FY-trailing, **not TTM**. Yfinance's TTM and our FY-trailing diverge ~5-10% during the fiscal year — this is a definitional gap, not a bug. |
-| `priceToSales` | ✅ Yes | `marketCap / FY revenue[0]` |
-| `forwardPE` | ✅ Pass-through | Forward EPS is sell-side consensus aggregate; no primary source. Compute mode passes the direct value through and stamps `compute_provenance.forwardPE.computed: false`. |
-| `priceToBook` | ❌ Deferred to v2.2.0-l | memo-fetch v2.1.x doesn't expose `total_stockholders_equity` |
-| `evEbitda` | ❌ Deferred to v2.2.0-l | memo-fetch v2.1.x doesn't expose `depreciation_amortization` |
+| `trailingPE` | `current_price ÷ (FY net_income / shares_outstanding)` | FY-trailing, **not TTM** — diverges ~5-10% from yfinance TTM during the fiscal year (definitional gap, not a bug). |
+| `forwardPE` | (pass-through) | Forward EPS is sell-side consensus aggregate; no primary source. Stamped `computed: false`. |
+| `priceToSales` | `marketCap / FY revenue[0]` | |
+| `priceToBook` | `marketCap / equity[0]` | (v2.2.0-l) |
+| `evEbitda` | `(marketCap + total_debt − cash) / (operating_income[0] + D&A[0])` | (v2.2.0-l) |
+| `priceToTangibleBook` | `marketCap / (equity[0] − goodwill[0] − intangibles[0])` | (v2.2.0-c) Empty goodwill/intangibles arrays substitute 0 (immaterial-empty signal); negative tangible book → null + note. |
+| `priceToFFO` | `marketCap / (net_income[0] + D&A[0])` | (v2.2.0-c) **Approximation**: gains_on_sale not subtracted (XBRL gap). REIT-specific. |
+| `evEbitdare` | `(marketCap + total_debt − cash) / (operating_income[0] + D&A[0])` | (v2.2.0-c) **Approximation**: impairment + gains_on_sale not added back (XBRL gap). REIT-specific. |
+| `priceToCFO` | `marketCap / operating_cash_flow[0]` | (v2.2.0-c) Energy / midstream lean. |
+| `evRevenue` | `(marketCap + total_debt − cash) / revenue[0]` | (v2.2.0-c) Tech-SaaS lean (often loss-making). |
+
+#### Indicators (v2.2.0-c)
+
+Operating-context metrics emitted as percentages (`{value: float, unit: "pct"}`); subset varies per schema.
+
+| Indicator | Definition |
+|---|---|
+| `ROE` | `net_income[0] / equity[0] × 100` |
+| `book_value_growth` | `(equity[0] − equity[1]) / equity[1] × 100` |
+| `gross_margin` | `gross_profit[0] / revenue[0] × 100` |
+| `operating_margin` | `operating_income[0] / revenue[0] × 100` |
+| `FCF_yield` | `(operating_cash_flow[0] − capex[0]) / marketCap × 100` |
+| `FCF_margin` | `(operating_cash_flow[0] − capex[0]) / revenue[0] × 100` |
+| `debt_to_equity` | `total_debt[0] / equity[0] × 100` (resolution: prefer flat `total_debt[0]`; fallback to `long_term_debt[0] + short_term_debt[0]` recomposition) |
+| `rule_of_40` | `revenue_growth_yoy + operating_margin` (sum of two pcts; revenue_growth_yoy = `(revenue[0] − revenue[1]) / revenue[1] × 100`) |
 
 ### Divergence interpretation
 
