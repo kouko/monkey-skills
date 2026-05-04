@@ -71,6 +71,30 @@ After tentative routing, run these filters:
 2. **Information-only filter** — if the artifact is purely reference (Wikipedia, dictionary entry, raw data table), there is no *design* to recover. Tell the user, do not dispatch.
 3. **Multi-modal filter** — if the artifact is image-heavy (UI screenshots, ad imagery) and you cannot inspect images directly, ask the user to either (a) describe the visual elements in text, or (b) pre-extract text via OCR / defuddle.
 
+## Detect language and cultural register (v0.2.0+)
+
+Before dispatching, determine three signals so the downstream skill can
+select the right cultural-lens variant:
+
+1. **Primary language** — English / Japanese / Chinese (TC vs SC) /
+   mixed / other (Korean / Vietnamese / Thai / etc.)
+2. **Cultural register** — academic / business / literary / political
+   / consumer-marketing
+3. **Translation provenance** — is this a translation (e.g.,
+   JP-original translated to English)?
+
+Pass these signals to the dispatched skill in the dispatch sentence.
+The receiving skill (`artifact-deconstruct`) routes to the appropriate
+language variant of `lens-rhetoric` / `lens-persuasion` / `lens-genre`
+/ `lens-frame` per
+`artifact-deconstruct/protocols/lens-variant-selection.md`.
+
+Plugin scope is permanently EN / JA / ZH per
+[ADR-0004](../../docs/adr/0004-cultural-lens-variants.md). For
+artifacts in other languages, dispatch with `-anglo` fallback **and a
+caveat** ("not grounded in your artifact's cultural register") rather
+than pretending coverage.
+
 ## Disambiguation prompts
 
 If the user's request is ambiguous, ask ONE narrowing question. Examples:
@@ -93,7 +117,7 @@ Once you've identified the right skill:
 3. Invoke the skill — do NOT perform the deconstruction yourself
 
 Example:
-> Dispatching to `artifact-deconstruct` with `lens-persuasion + lens-rhetoric` preselected, since this is marketing copy. Running now.
+> Dispatching to `artifact-deconstruct` with `lens-persuasion + lens-rhetoric` preselected, language=Japanese, register=consumer-marketing → variants `-ja`. Running now.
 
 ## Rules
 
