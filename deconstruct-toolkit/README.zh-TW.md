@@ -4,9 +4,10 @@
 
 Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills)
 **License**: MIT
+**文化變體範疇**: EN / JA / ZH（見 [ADR-0004](docs/adr/0004-cultural-lens-variants.md)）
 
 ## 背景
 
@@ -19,6 +20,18 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 - **行為說服科學** — Cialdini（影響力 7 原則）、Brignull（12 黑暗模式 / 欺騙性設計）。檢測說服機制並進行倫理位置判斷的方法。
 
 對華語區讀者，本工具組亦承襲 BCG「**價值鏈解構**」（Evans & Wurster《Blown to Bits》2000，日譯「バリュー・チェーンの脱構築」）與山口周《武器になる哲学》(2018) 的脈絡 — 在日本，「脱構築」已是商業策略用語，不只是哲學借用詞。本 plugin 將這條實務脈絡落地為 agent skill。
+
+### 文化變體範疇（v0.2.0+）
+
+4 個文化敏感度高的 lens（rhetoric / persuasion / genre / frame）皆配置 **EN / JA / ZH** 三語變體。此為恒久範疇決定，依據 [ADR-0004](docs/adr/0004-cultural-lens-variants.md)。
+
+| 變體 | 一手來源 |
+|---|---|
+| `-anglo` | Burke / Toulmin / Goffman / Lakoff / Swales/Bhatia / Cialdini / Brignull |
+| `-ja` | Hinds / 起承転結 / 土居健郎 / 山本七平 / 木下是雄 / Markus & Kitayama |
+| `-zh` | 劉勰《文心雕龍》六觀 / Hu Hsien-chin / 黃光國 / 行政院公文程式條例 / Peng & Nisbett |
+
+韓文 / 越南文 / 泰文等其他語言文物**不在 plugin grounded scope 內**：以明示 caveat 的方式套用 `-anglo` fallback，不假裝有覆蓋。詳見 `protocols/lens-variant-selection.md`。
 
 ## 邊界
 

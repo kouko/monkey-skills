@@ -4,6 +4,120 @@ All notable changes to deconstruct-toolkit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-05-05
+
+Cultural-variant release. Closes the v0.1.0 grounding gap acknowledged
+in `docs/grounding-v0.1.0.md`: the 4 culturally-sensitive lenses
+(rhetoric / persuasion / genre / frame) now ship per-language variants
+for **EN / JA / ZH** instead of pretending universality from an
+Anglo-only primary-source base. Plugin scope is permanently locked at
+the EN/JA/ZH triaxis per [ADR-0004](docs/adr/0004-cultural-lens-variants.md);
+artifacts in other languages get an `-anglo` fallback **with explicit
+caveat** rather than silent miscoverage.
+
+### Added
+
+#### Cultural lens variants (8 new files)
+
+- `lens-rhetoric-ja.md` — Hinds (1983 *Text* 3:2 / 1987 Connor & Kaplan
+  eds., *Writing Across Languages*) + Oh (2025 *TEXT* 29:2)
+  kishōtenketsu (起承転結) + JP academic 序論-本論-結論 dual-mode +
+  reader-responsibility surface signals.
+- `lens-rhetoric-zh.md` — 劉勰《文心雕龍·知音》六觀 (位體 / 置辭 /
+  通變 / 奇正 / 事義 / 宮商), 周振甫 / 王運熙 critical editions; ZH-specific
+  moves (對偶 / 排比 / 比興 / 用典); TW vs HK vs PRC register notes.
+- `lens-persuasion-ja.md` — Cialdini (2021) re-weighted on Hofstede JP
+  profile (PD~54, IDV~46, UAI~92) + 4 JP-specific mechanisms (建前/本音
+  per Doi 1971, 婉曲表現, 空気を読む per Yamamoto 1977, 老舗/暖簾
+  longevity authority); JP-register dark-pattern translation table.
+- `lens-persuasion-zh.md` — Cialdini (2021) re-weighted on Hofstede CN
+  profile (PD~80, IDV~20) + 5 ZH-specific mechanisms (面子/臉 per Hu
+  1944, 關係/人情 per Hwang 1987 *AJS*, 自己人/外人, 禮); ZH-specific
+  dark patterns (道德綁架 / 話術 / 假關係); TW/HK/PRC register fork.
+- `lens-genre-ja.md` — Swales (1990) + Bhatia (1993) + 木下是雄
+  『理科系の作文技術』(中公新書, 1981) + Hinds (1987); JP academic
+  序論-本論-結論 + IMRaD overlay + 7-move 拝啓-formula JP business
+  letter + abbreviated メール genre.
+- `lens-genre-zh.md` — Swales + Bhatia + TW 行政院《文書處理手冊》公文
+  sub-genres (函 / 通知 / 報告 / 請示 / 公告 with 主旨-說明-辦法-擬辦
+  slots) + 緒論-本論-結論 academic + 八股 起承轉合 legacy in op-ed;
+  TW vs PRC GB/T 9704-2012 vs HK British colonial-administrative fork.
+- `lens-frame-ja.md` — Goffman (1974) + Lakoff (1980) + Doi (1971) +
+  Yamamoto (1977) + Markus & Kitayama (1991 *Psychological Review*
+  98:2); 建前/本音 dual-frame, 空気 collective frame-reading, 間 (ma)
+  silence-as-frame, JP conceptual metaphors (心 / 道 / 縁 / 場).
+- `lens-frame-zh.md` — Goffman + Lakoff + Hu (1944 *American
+  Anthropologist* 46:1) + Hwang (1987 *AJS*) + Peng & Nisbett (1999
+  *American Psychologist* 54:9 — yin-yang dialectical thinking);
+  面子/臉 dual-face, 關係/圈子 in-group framing, 陰陽 dialectical
+  metaphor as challenge to Lakoff binary, ZH conceptual metaphors
+  (道 / 氣 / 緣 / 心 / 圈子).
+
+#### Variant routing infrastructure
+
+- `protocols/lens-variant-selection.md` (NEW) — language detection
+  algorithm + variant selection + complications (mixed-language,
+  translation artifacts, Korean/etc. fallback with caveat,
+  TC-vs-SC disambiguation, register dual-mode).
+- `using-deconstruct-toolkit/SKILL.md` (UPDATE) — new "Detect language
+  and cultural register" step; signals passed to receiving skill.
+- `artifact-deconstruct/SKILL.md` (UPDATE) — Step 4 resolves variant
+  via `protocols/lens-variant-selection.md` before reading lens
+  references; report MUST state which variant was applied.
+
+#### Documentation
+
+- `docs/adr/0004-cultural-lens-variants.md` (NEW) — codifies the
+  variant pattern + permanent EN/JA/ZH scope decision.
+- `docs/v0.2.0-cultural-variants-design-proposal.md` (NEW) — full
+  design rationale + commit plan + resolved open questions.
+- `docs/grounding-v0.2.0.md` (NEW) — primary-source verification log,
+  parallel to `grounding-v0.1.0.md`.
+
+#### Eval fixtures (8 new synthetic-representative artifacts)
+
+- `sample-ja-op-ed.md` — JP newspaper op-ed (kishōtenketsu)
+- `sample-zh-op-ed.md` — TW op-ed (通變 + 用典 + 對偶/排比)
+- `sample-ja-ec-lp.md` — JP DTC LP (老舗 + 限定 + 婉曲)
+- `sample-zh-ec-lp.md` — TW e-commerce LP (老字號 + 關係 + 面子)
+- `sample-ja-business-letter.md` — JP 7-move 拝啓-formula letter
+- `sample-zh-gongwen.md` — TW 公文 函 (主旨/說明/辦法 三段式)
+- `sample-ja-political-speech.md` — JP press conference (建前/本音 + 空気)
+- `sample-zh-political-speech.md` — TW speech (面子/關係 + 陰陽 + 圈子)
+
+All 8 carry explicit honesty flags (synthetic-representative, not
+real-fetched) in their metadata blocks.
+
+#### Eval cases (8 new YAML cases)
+
+- `artifact-deconstruct-04-ja-op-ed.yaml` through `-11-zh-political-speech.yaml`.
+  Each `must_find` includes a `variant-named-in-output` item testing
+  that the analysis attributes which language variant was applied.
+
+### Changed
+
+- `lens-rhetoric.md` / `lens-persuasion.md` / `lens-genre.md` /
+  `lens-frame.md` — content moved to `-anglo.md` siblings; originals
+  now serve as universal-core routers (1-page meta) per Q5.
+- README files (en / zh-TW / ja) — clarified plugin scope is
+  permanently EN / JA / ZH per Q4.
+
+### Roadmap shifts
+
+| Version | Original scope | New plan |
+|---|---|---|
+| v0.2.0 | product-deconstruct + pricing-decode | **Cultural variants** (this release) |
+| v0.3.0 | frame-reveal / bias-audit / decision-archaeology | product-deconstruct + pricing-decode (pushed) |
+| v0.4.0 | (unplanned) | frame-reveal / bias-audit / decision-archaeology (pushed) |
+| v0.5.0 | — | lens-semiotic + lens-ux variants (deferred medium-sensitivity) |
+
+### Hard exclusions
+
+- ❌ AI-generated translations of Anglo lens content (cosplay rigor)
+- ❌ Per-language fixtures that are translations of v0.1.0 fixtures
+- ❌ Korean / Vietnamese / Thai variants (permanent out-of-scope per ADR-0004)
+- ❌ `lens-semiotic` / `lens-ux` variants (deferred to v0.5)
+
 ## [0.1.0] — 2026-05-04
 
 Initial release. Plugin established as a reverse-engineering toolkit for
