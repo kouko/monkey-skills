@@ -1,0 +1,32 @@
+name: artifact-deconstruct-07-ja-political-speech
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-ja-political-speech.md
+input_query: "この大臣記者会見の発言を脱構築してほしい"
+expected_lenses:
+  - lens-frame-ja
+must_find:
+  - id: goffman-primary-frame
+    description: "Goffman primary framework identified as 大臣記者会見 / political-accountability frame (not generic 'speech')"
+    threshold: 1
+  - id: tatemae-honne-dual-frame
+    description: "建前/本音 dual-frame analyzed: 建前 layer (formal apology register) named AND ≥2 本音 leakage points identified (modal hedges まあ/その, 「私個人といたしましては」 honorific drop, 言葉を切る strategic omission, 〜なんですけれども trail-off)"
+    threshold: 2
+  - id: kuuki-anchor-phrases
+    description: "≥1 空気-anchor phrase identified ('丁寧な説明' / '誠意ある対応' / '真摯に受け止め') as repeated-without-elaboration collective-frame work"
+    threshold: 1
+  - id: ma-silence-element
+    description: "≥1 間 (silence) element identified as frame-load-bearing (5-second closing bow / 約三秒の間 / 言葉を切る)"
+    threshold: 1
+  - id: jp-conceptual-metaphor
+    description: "≥2 JP conceptual metaphors identified from 心 / 道 / 縁 / 場 (NOT forced into Lakoff Anglo corpus)"
+    threshold: 2
+  - id: tatemae-not-deception
+    description: "Report acknowledges 建前 is NOT Goffman fabrication / deception per Doi 1971 — social-functional layering, not lying"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-frame-ja' or equivalent variant attribution; NOT lens-frame-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR 建前 mis-flagged as Goffman fabrication"

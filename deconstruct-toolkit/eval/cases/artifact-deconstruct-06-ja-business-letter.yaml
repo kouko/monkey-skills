@@ -1,0 +1,26 @@
+name: artifact-deconstruct-06-ja-business-letter
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-ja-business-letter.md
+input_query: "このビジネスレターを脱構築してほしい"
+expected_lenses:
+  - lens-genre-ja
+must_find:
+  - id: haikei-formula-7-moves
+    description: "All 7 canonical 拝啓-formula moves identified (頭語 / 時候の挨拶 / 安否の挨拶 / 主文 / 末文 / 結語 / 後付) with surface-text citations"
+    threshold: 7
+  - id: tougo-ketsugo-pairing
+    description: "頭語/結語 pairing verified as 拝啓→敬具 (canonical pair); confirms NOT mismatched (e.g. NOT 拝啓→草々)"
+    threshold: 1
+  - id: jikou-season-match
+    description: "時候の挨拶 「新緑の候」 verified as season-matched to fixture date (令和八年五月 = May)"
+    threshold: 1
+  - id: subgenre-identified
+    description: "Sub-genre identified as 取引開始のご挨拶 (business-relationship-opening) — NOT generic 'business letter'"
+    threshold: 1
+  - id: variant-named-in-output
+    description: "Report explicitly states 'Applied lens-genre-ja' or equivalent variant attribution; NOT lens-genre-anglo"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong variant chosen OR Anglo CARS / Bhatia 7-move applied instead"
