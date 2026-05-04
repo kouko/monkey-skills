@@ -1,0 +1,30 @@
+{
+  "name": "deconstruct-toolkit",
+  "version": "0.1.0",
+  "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Grounded in Derrida, Barthes, Burke, Toulmin, Goffman, Lakoff, Cialdini, Brignull, Bhatia/Swales, Nielsen-Norman. 制作物・論証・製品の脱構築。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。文物・論證・產品的逆向解構工具組。",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/deconstruct-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "deconstruct",
+    "reverse-engineering",
+    "artifact-analysis",
+    "design-archaeology",
+    "rhetorical-analysis",
+    "frame-analysis",
+    "semiotic-analysis",
+    "genre-analysis",
+    "ux-critique",
+    "persuasion-analysis",
+    "toulmin",
+    "cialdini",
+    "lakoff",
+    "barthes",
+    "derrida",
+    "bcg-deconstruction"
+  ]
+}

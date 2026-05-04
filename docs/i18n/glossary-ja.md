@@ -151,6 +151,37 @@
 | brainstorming | ブレインストーミング | ブレスト | カタカナ標準。「ブレスト」省略形も日常的 |
 | awareness level (Schwartz) | 認知段階 | 顧客認知レベル / Awareness Level | Eugene Schwartz の "Five States of Awareness" 訳語。日本マーケ業界で「認知段階」漢字訳が広告コピー本で定着 |
 
+## 文物脱構築領域
+
+deconstruct-toolkit 専用用語。本 plugin は外部の「精緻な制作物」（コピー / UI / ドキュメントパック / 論証 / 製品 / 組織）を逆向きに分解し、Derrida（哲学）/ Barthes（記号学）/ Toulmin（論証）/ Lakoff（フレーム）/ Goffman（社会フレーム）/ Cialdini（説得）/ Bhatia（ジャンル）/ Nielsen-Norman（UX）の primary source に紐付けて分析する。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』を実務 anchor として README で参照。
+
+| EN term | 主訳 | 副訳 | 決定根拠 / 出典 |
+|---|---|---|---|
+| deconstruct (verb) | 脱構築する | 解体する（口語）/ deconstruct（英語保持）| 日本哲学界・思想界・BCG 戦略コンサル業界で一致して「脱構築」。BCG『Blown to Bits』（Evans & Wurster, 2000）の「バリュー・チェーンの脱構築」が日本ビジネス界で定着。山口周『武器になる哲学』(2018) でも採用。「デコンストラクション」（カタカナ）も使われるが冗長。 |
+| deconstruction (noun) | 脱構築 | デコンストラクション（タイトル等）| 同上。本文では漢字「脱構築」、タイトルでカタカナ「デコンストラクション」併用可。 |
+| artifact | 制作物 | アーティファクト（カタカナ） | 本 plugin は「制作物」を採用（具体性・読みやすさ）。「アーティファクト」は IT エンジニアリング文脈（build artifact）と混同されやすいため副訳。 |
+| lens (analytical) | lens（英語保持） | レンズ（不推奨：光学的歧義）| 批評理論コミュニティで `lens` が方法論用語として定着。日本語「レンズ」は光学用語が支配的。本 plugin は body 内全て英語保持。 |
+| frame (analytical) | フレーム | 枠組み | Goffman / Lakoff のフレーム分析は日本社会学・認知言語学界で「フレーム」カタカナ標準。「枠組み」も併用可。 |
+| reframe | リフレーミング / 再フレーム化 | reframe（英語保持）| 認知科学・NLP（神経言語プログラミング）日本コミュニティで「リフレーミング」が定着。 |
+| warrant (Toulmin) | warrant（英語保持） | 論拠 / 根拠 | Toulmin 議論モデルの日本語訳に統一なし（「論拠」「根拠」「保証」三派並立）。本 repo は英語保持路線；補足説明で「論拠」。 |
+| claim (Toulmin) | 主張 / クレーム | 論点 | 哲学・論理学界で「主張」、ビジネス文脈で「クレーム」。本 plugin は「主張」（Toulmin 原意に近い）。 |
+| grounds (Toulmin) | 根拠 / データ | grounds（英語保持）| Toulmin 日本語訳で「根拠」「データ」並立。 |
+| rebuttal (Toulmin) | 反駁 / 反論 | rebuttal（英語保持）| 法律・哲学日本語で「反駁」「反論」併用。本 plugin は「反駁」（Toulmin 原意に近い）。 |
+| qualifier (Toulmin) | 限定詞 | qualifier（英語保持）| 論理学日本語標準訳「限定詞」。 |
+| dark pattern | ダークパターン | dark pattern（英語保持）/ 欺瞞的パターン | UX 日本コミュニティでカタカナ「ダークパターン」が標準。Brignull 2024 改称 "deceptive pattern" は副訳「欺瞞的パターン」。 |
+| binary opposition | 二項対立 | バイナリ・オポジション（カタカナ、稀）| Derrida / 構造主義日本語標準訳「二項対立」。 |
+| affordance | アフォーダンス | affordance（英語保持）| Gibson / Norman 「アフォーダンス」カタカナが日本 HCI / UX 業界で完全定着。「行為可能性」訳もあるが業界では使われない。 |
+| signifier | シニフィアン / 指示子 | signifier（英語保持）| Saussure 記号学日本語訳「シニフィアン」（カタカナ）；Norman 設計論文脈で「指示子」。 |
+| genre move | ジャンル move / move | move（英語保持）| Swales/Bhatia genre analysis の日本語訳語なし；学術ライティング日本指導書で英語保持が一般。 |
+| pentad (Burke) | 五要素 / ペンタッド | pentad（英語保持）| Burke 修辞学日本語訳「五要素」（act / scene / agent / agency / purpose）。 |
+| dramatism (Burke) | ドラマティズム | 劇的主義（稀） | Burke 修辞学カタカナ訳が学術界で定着。 |
+| heuristic (Nielsen) | ヒューリスティック | 経験則 / 発見的手法 | Nielsen 10 heuristics 日本 UX 業界カタカナ「ヒューリスティック」標準。 |
+| teardown | teardown（英語保持）| 分解（混同回避のため非推奨）| 業界用語、deconstruct と区別（teardown = 戦略分解；deconstruct = 隠れた構造を露出）。本 plugin は teardown を採用しない。 |
+| reverse engineering | リバースエンジニアリング | reverse engineering（英語保持）| ソフトウェア / ハードウェア工学日本業界カタカナ標準。本 plugin はこの意味では使わない（§2.2 fence 除外）。 |
+| primary source | primary source（英語保持） | 一次資料 / 原典 | 学術日本語「一次資料」「原典」併用。本 repo は英語保持路線。 |
+| symptomatic reading | 症候的読解 / シンプトマティック・リーディング | symptomatic reading（英語保持）| Althusser 訳介日本文献で「症候的読解」（不在を読む）。 |
+| バリュー・チェーンの脱構築 | バリュー・チェーンの脱構築（保持） | value chain deconstruction | BCG『Blown to Bits』(Evans & Wurster, 2000) の日本語定着訳。本 plugin の JP README で実務 anchor として参照。 |
+
 ## 一般
 
 | EN term | 主訳 | 副訳 | 決定根拠 / 出典 |

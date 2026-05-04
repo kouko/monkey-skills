@@ -160,6 +160,38 @@
 
 ---
 
+## 文物解構域
+
+deconstruct-toolkit 專用術語。本 plugin 對外部「精緻文物」（文案 / UI / 文件包 / 論證 / 產品 / 組織）做逆向分析，理論底座結合 Derrida（哲學）、Barthes（符號學）、Toulmin（論證）、Lakoff（框架）、Goffman（社會框架）、Cialdini（說服）、Bhatia（體裁）、Nielsen-Norman（UX）。
+
+| EN term | zh-TW（主譯） | 副譯 / 備用 | 決策依據 / 來源 |
+|---|---|---|---|
+| deconstruct (verb) | 解構 / 逆向解構 | 拆解（口語）/ deconstruct（保留英文） | 中文哲學界與設計批評界一致譯「解構」（Derrida 系譜）。維基百科「解構主義」獨立詞條。BCG 商業語境引日文「脱構築」進中文亦譯「解構」。 |
+| deconstruction (noun) | 解構 | 解構主義（哲學語境）| 同上。 |
+| artifact | 文物 | 制作物 / artifact（保留英文）| 本 plugin 採「文物」承襲中文「文化文物」「設計文物」用法。**避免**「人工製品」（過於工程化）/「製作物」（日文式）/「成品」（過於通俗）。 |
+| lens (analytical) | lens（保留英文） | 透鏡（不推薦：光學歧義）| 批評理論社群（critical theory / theoretical lens / framework analysis）已將 `lens` 確立為方法論術語。中文「透鏡」99% 用於光學（凸透鏡 / 凹透鏡 / 廣角透鏡），無「分析框架」引申義。本 plugin 全 body 保留英文。 |
+| frame (analytical) | 框架 | フレーム（日文混用）| Goffman / Lakoff frame analysis 中文標準譯「框架」。同 cognitive frame / discourse frame。注意與「邊框」「畫面」區分。 |
+| reframe | 重塑框架 / 換框 | reframing（保留英文）| Lakoff 政治語言學圈譯「換框」；認知治療圈譯「重塑框架」。本 plugin 偏前者語境。 |
+| warrant (Toulmin) | warrant（保留英文）| 論證根據 / 論據 | Toulmin 中文譯界三派並立（論據 / 根據 / 保證），無一統。本 repo 取保留英文路線；中文補充說明用「論證根據」。 |
+| claim (Toulmin) | 主張 / claim | 論點 | 哲學論證界譯「主張」；商業論證界用「論點」。本 plugin 取「主張」（更接近 Toulmin 原意）。 |
+| grounds (Toulmin) | 證據 / 依據 | grounds（保留英文）| 中文邏輯學界譯「證據」「依據」。 |
+| rebuttal (Toulmin) | 反駁 / rebuttal | 反證 | 法學中文譯「反駁」（更貼近 Toulmin 原意）。 |
+| qualifier (Toulmin) | 限定詞 / qualifier | 條件限定 | 邏輯學中文譯「限定詞」。 |
+| dark pattern | 黑暗模式 / dark pattern | 暗黑模式（中國大陸用法，**避免**）/ 欺騙性設計 | UX 中文圈普及譯「黑暗模式」（Brignull 原文 dark pattern）；Brignull 2024 改稱 deceptive pattern，副譯「欺騙性設計」。 |
+| binary opposition | 二元對立 | 二項對立（日文式，避免）| Derrida / 結構主義中文標準譯「二元對立」。 |
+| affordance | affordance（保留英文）| 行動可能性 / 可供性 / 示能性 | 中文無確立譯名（三派並立）；HCI / UX 業界保留英文。Norman 中譯本《設計的心理學》亦保留英文。 |
+| signifier | 指示物 / signifier | 能指（中國大陸用法，**避免**）| Norman 設計論譯「指示物」；Saussure 符號學中國大陸譯「能指」（台灣使用率低）。 |
+| genre move | 體裁 move / 體裁步驟 | move（保留英文）| Swales/Bhatia genre analysis 中文無統一譯名；學術寫作圈混用「移動」「步驟」「move」。本 plugin 保留英文。 |
+| pentad (Burke) | 五元 / pentad | 五大要素 | Burke dramatistic pentad 中文譯界用「五元」（act / scene / agent / agency / purpose）。 |
+| dramatism (Burke) | 戲劇主義 | — | Burke 修辭學中文標準譯。 |
+| heuristic (Nielsen) | 啟發法 / heuristic | 經驗法則 | Nielsen 10 heuristics 中文 UX 圈譯「啟發法」/「經驗法則」混用。 |
+| teardown | teardown（保留英文）| 拆解（不推薦：與 deconstruct 同字混淆）| 業界用語，與 deconstruct 區分（teardown = 拆解策略；deconstruct = 揭露隱性結構）。本 plugin **不**用 teardown。 |
+| reverse engineering | 逆向工程 | reverse engineering | 工程語境用「逆向工程」（軟體 / 硬體拆解複製）；本 plugin 不屬此語意（已在 §2.2 邊界 fence 排除）。 |
+| primary source | 原始文獻 / primary source | 一手資料 | 學術中文譯「原始文獻」；研究方法圈混用「一手資料」。本 repo 取保留英文路線。 |
+| symptomatic reading | 症狀式閱讀 / symptomatic reading | — | Althusser 譯介文獻譯「症狀式閱讀」（讀文本中「不在場」之物）。 |
+
+---
+
 ## 通用
 
 | EN term | zh-TW（主譯） | 副譯 / 備用 | 決策依據 / 來源 |
