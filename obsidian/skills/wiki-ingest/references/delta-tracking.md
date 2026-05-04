@@ -17,7 +17,7 @@
 
 ## Algorithm
 
-For each candidate source file under the vault (whole-vault scan minus exclusions per `OBSIDIAN_EXCLUDE_DIRS` and the hardcoded blacklist; see SKILL.md "Source-scope contract"):
+For each candidate source file under the vault (whole-vault scan minus exclusions per `OBSIDIAN_WIKI_EXCLUDE_DIRS` in `.obsidian-wiki.config` and the hardcoded blacklist; see [source-scope.md](source-scope.md)):
 
 1. **Hash** — compute SHA-256 of the file content (not metadata)
 2. **Lookup** — read `.manifest.json` for prior entry

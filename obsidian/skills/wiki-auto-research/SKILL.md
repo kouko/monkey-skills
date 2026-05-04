@@ -16,7 +16,7 @@ See [research-note-format.md](references/research-note-format.md) for the output
 
 ## Pre-flight
 
-1. Read `.env` for `OBSIDIAN_VAULT_PATH` (defaults `wiki/`).
+1. Read `.obsidian-wiki.config` for `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
 2. **Check `WebSearch` tool availability** — this skill is useless without it. Verify by:
    - Inspecting the tool list in this session (look for `WebSearch` in the available tools)
    - If absent, exit with this message:

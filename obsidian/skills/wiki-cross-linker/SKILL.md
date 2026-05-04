@@ -9,7 +9,7 @@ After `wiki-ingest`, recently-created pages may be mentioned as plain text in ol
 
 ## Pre-flight
 
-1. Read `.env` for `OBSIDIAN_VAULT_PATH` (defaults `wiki/`).
+1. Read `.obsidian-wiki.config` for `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
 2. If wiki/ doesn't exist or `wiki/index.md` is empty, exit and tell user to run `/wiki-setup` then `/wiki-ingest`.
 
 ## STEP 1 — Build the link inventory

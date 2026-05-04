@@ -11,7 +11,7 @@ See [lint-checks.md](references/lint-checks.md) for full check definitions.
 
 ## Pre-flight
 
-1. Read `.env` for `OBSIDIAN_VAULT_PATH` (defaults `wiki/`).
+1. Read `.obsidian-wiki.config` for `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
 2. If wiki/ doesn't exist or is empty, exit with "nothing to lint, run `/wiki-setup` and `/wiki-ingest` first".
 
 ## STEP 1 — Inventory the wiki
