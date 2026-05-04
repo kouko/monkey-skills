@@ -108,12 +108,24 @@ DCF_CONCEPT_MAPPING: dict[str, list[str]] = {
         "NetIncomeLoss",
         "ProfitLoss",
     ],
+    "gross_profit": [
+        "GrossProfit",
+    ],
     "operating_cash_flow": [
         "NetCashProvidedByUsedInOperatingActivities",
     ],
     "capex": [
         "PaymentsToAcquirePropertyPlantAndEquipment",
         "PaymentsToAcquireProductiveAssets",
+    ],
+    "depreciation_amortization": [
+        "DepreciationDepletionAndAmortization",
+        "DepreciationAndAmortization",
+        "Depreciation",
+    ],
+    "stock_based_compensation": [
+        "ShareBasedCompensation",
+        "AllocatedShareBasedCompensationExpense",
     ],
     "long_term_debt": [
         "LongTermDebt",
@@ -126,6 +138,18 @@ DCF_CONCEPT_MAPPING: dict[str, list[str]] = {
     "cash_and_equivalents": [
         "CashAndCashEquivalentsAtCarryingValue",
         "Cash",
+    ],
+    "total_stockholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
+    "intangible_assets": [
+        "IntangibleAssetsNetExcludingGoodwill",
+        "FiniteLivedIntangibleAssetsNet",
+        "IntangibleAssetsNet",
+    ],
+    "goodwill": [
+        "Goodwill",
     ],
 }
 
