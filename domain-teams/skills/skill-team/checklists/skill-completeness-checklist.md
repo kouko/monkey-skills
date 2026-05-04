@@ -57,6 +57,17 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
     **Router-skill exemption**: skills whose sole purpose is routing (`using-domain-teams`, `using-philosophers-toolkit`) are exempt and do NOT need this section. Record "router skill — exempt" in the evidence field when this exemption applies.
 
+- [ ] **CHK-SKL-014 (AskUserQuestion Pattern)** [FIXABLE]: When SKILL.md or any bundled file contains a reference to `AskUserQuestion` (tool invocation, mandatory step, user-input prompt), the section using it MUST follow the hardened pattern documented in `standards/asking-user-questions.md`. Specifically, all four hardenings MUST be present:
+
+    1. **MUST verb** — wording uses `MUST call AskUserQuestion`, `must call`, or an explicit mandatory-gate clause (`This step is mandatory. Do not proceed to STEP X+1 without...`). Soft phrasings (`Use AskUserQuestion`, `Consider using`) FAIL.
+    2. **Args-schema example** — a fenced ` ```json` block shows the actual tool-call argument shape (`{ "questions": [...] }`). Prose Q&A templates (`Question: ... Options:`) FAIL.
+    3. **Fallback contract** — explicit clause for tool-unavailable environments (subagent / web client / sandbox) that mandates inlining the question rather than silently defaulting. Absence FAILS.
+    4. **(Recommended) marker** — when default option exists, first option's `label` field includes `(Recommended)` suffix. Prose-level "(recommended default)" labels in flat option lists FAIL.
+
+    **Exemption**: skills with NO user-input branching steps are exempt. Record "no user-input steps" in the evidence field. Examples: pure deterministic skills (formatters, lint), single-shot generators, skills where input is gathered upstream by another skill.
+
+    **Why this matters**: industry research and an empirical A/B test (subagent context, 2026-05-04) confirmed that the soft-verb pattern fails in three modes (inline fallback, silent default, tool-unavailable). The 4 hardenings close all three. See `standards/asking-user-questions.md` for full rationale, references, and copy-paste mandatory-gate template.
+
 ## Verdict Rules
 
 - Any **1 item** is `FAIL_FATAL` → final verdict is `NEEDS_REVISION` (escalate to user)

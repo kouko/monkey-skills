@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.0] — 2026-05-04
+
+### Added — CHK-SKL-014 (AskUserQuestion Pattern) gate in skill-team
+
+New checklist item enforces the **hardened AskUserQuestion pattern** for any
+domain-team skill that has user-input branching steps. Closes three documented
+failure modes for Anthropic's `AskUserQuestion` tool:
+
+1. **Inline fallback** — model treats question as text instead of tool call
+2. **Silent default** — model assumes "(recommended default)" and skips asking
+3. **Tool unavailable** — subagent / web client / sandbox contexts have no
+   AskUserQuestion; without explicit fallback, model silently defaults
+
+The gate verifies all four hardenings are present:
+
+1. **MUST verb** — `MUST call AskUserQuestion` (not `Use AskUserQuestion`)
+2. **Args-schema example** — fenced ` ```json ` block, not prose Q&A template
+3. **Fallback contract** — explicit clause for tool-unavailable environments
+4. **(Recommended) marker** — first option's `label` includes `(Recommended)`
+
+**Exemption**: skills with NO user-input branching steps are exempt
+(deterministic skills, single-shot generators, skills where input is
+gathered upstream).
+
+#### Files
+
+- `skill-team/standards/asking-user-questions.md` (NEW) — full standard
+  with rationale, the Thariq canonical phrase, copy-paste mandatory-gate
+  template, anti-patterns table, and industry references
+- `skill-team/standards/skill-md-structure.md` — new §AskUserQuestion
+  Pattern (CHK-SKL-014) section pointing to the standard
+- `skill-team/checklists/skill-completeness-checklist.md` — added
+  CHK-SKL-014 (FIXABLE) between CHK-SKL-013 and §Verdict Rules
+
+#### Why now
+
+Empirical A/B test on 2026-05-04 confirmed the soft-verb pattern
+(current `Use AskUserQuestion` wording across the obsidian wiki-* skill
+family) fails in subagent context — subagent assumed the "(recommended
+default)" silently. The hardened version (Variant B-v2 in /tmp/wiki-trigger-test)
+"held the line", surfaced trade-offs, and explicitly marked default.
+
+Companion to dev-workflow v2.2.0's `skill-creator-advance` reference
+that codifies the same pattern for non-domain-team skill authoring.
+
 ## [5.5.1] — 2026-04-29
 
 ### Context
