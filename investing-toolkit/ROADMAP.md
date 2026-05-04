@@ -100,14 +100,24 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Spec / Plan**: [`docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md`](../docs/superpowers/specs/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md) / [`docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md`](../docs/superpowers/plans/2026-05-03-investing-toolkit-v2.2.0-b-comps-compute.md)
 - **Reference**: PR #227; spawned v2.2.0-k (immutable cache tag) + v2.2.0-l (closed 2026-05-04 — see entry below).
 
-### v2.2.0-c — Sector-adjusted multiples for Comps
+### ~~v2.2.0-c — Sector-adjusted multiples for Comps~~ ✅ closed 2026-05-05 (PR TBD)
 
-- **What**: Banks → P/B + ROE; REITs → P/AFFO; Tech → EV/Revenue + Rule-of-40. Per-sector schema swap for the 5-multiple default.
-- **Why**: P/E + EV/EBITDA on a bank or REIT is meaningless. Sector classifier + per-sector schema makes comps useful across sectors.
-- **Files**: `analysis-comps/scripts/sector_classifier.py` (new — likely yfinance `info.sector` + manual override table); per-sector multiple schemas in `references/`; comps_compute extension.
-- **Blocker**: data-side: none (v2.2.0-l closed 2026-05-04 provides the required raw fields: `total_stockholders_equity`, `depreciation_amortization`, `stock_based_compensation`). **Soft blocker**: yfinance sector classification can misroute issuers (e.g. holdco / multi-sector) — silent wrong-multiple output is a real risk; recommend issuer-level override mechanism in scope.
-- **Acceptance**: Apple → tech multiples (EV/Revenue + Rule-of-40); JPM → bank multiples (P/B + ROE); Realty Income → REIT multiples.
-- **Reference**: v2.0.0 deferred list.
+- **Status**: Closed. Schema-driven sector dispatch shipped — 9 sector schemas (default / bank / insurance / asset-manager / reit / tech-saas / tech-semis / energy / utilities) routed via `(yfinance.info.sector, info.industry)` against `sector-routing.yaml` + per-issuer `sector-overrides.yaml`. 5 new multiples (priceToTangibleBook / priceToFFO / evEbitdare / priceToCFO / evRevenue) + 8 indicators (ROE / book_value_growth / gross_margin / operating_margin / FCF_yield / FCF_margin / debt_to_equity / rule_of_40), all FY-trailing, computed from v2.2.0-l memo-fetch raw fields.
+- **Output**: `--mode compute` output gains `anchor.{sector, industry, schema_id, schema_routing_source, indicators}` + per-multiple/per-indicator `compute_provenance`. Statistics + ranking computed across the schema's multiples (not the universal 5). Industry-specific concepts not in standard US-GAAP XBRL (NIM / strict AFFO / combined ratio / AUM / oil reserves) listed in each schema's `deferred_concepts` field but NOT emitted as null.
+- **CLI**: `--sector-override <id>` debug flag; `--show-routing` stderr diagnostic.
+- **Backward compat**: `--mode direct` unchanged (fixed-5 multiples). Only consumer `report-equity-memo` Phase 2.5 was migrated atomically in same PR.
+- **Spec**: [`docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md`](../docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md)
+- **Reference**: PR TBD; spawned v2.2.0-c-bench (SPDR ETF aggregate benchmark layer — see Future Roadmap below) + v2.2.0-c² (industry-specific concepts beyond standard XBRL — deferred indefinitely pending memo-fetch extension).
+
+### v2.2.0-c-bench — SPDR sector ETF aggregate benchmark layer (follow-up)
+
+- **What**: Layer SPDR sector ETF aggregate benchmark on top of v2.2.0-c output. Per-multiple `etf_benchmark` block with holdings-weighted aggregate (computed weekly via GHA from each ETF's top holdings + v2.2.0-c memo-fetch raw fields), per-multiple divergence (`in_line` ≤20% / `notable` 20–50% / `extreme` >50%), and 11-GICS warning matrix loaded from `references/sector-warnings.md`.
+- **Why**: Single-ticker compute output already gives "is this expensive?" via `multiples_compute` + `divergence` (vs direct mode). Adding "vs my SPDR sector ETF benchmark" answers "is this expensive **for its sector**?" — the question buy-side memos actually need.
+- **Files**: `analysis-comps/scripts/etf_aggregator.py` (new); `references/sector-etf-aggregate-{XLE,XLB,XLI,XLY,XLP,XLV,XLF,XLK,XLC,XLU,XLRE}.json` (11 flat files); `references/sector-warnings.md`; `comps_compute.py --sector-benchmark` opt-in flag; `.github/workflows/sector-etf-aggregates.yml` weekly cron.
+- **Blocker**: None (foundation in place — v2.2.0-c sector classification + memo-fetch raw fields). Soft blocker: holdings-weighted aggregate over mega-cap-dominated ETFs (e.g. XLK top 10 ≈ 60% weight) reflects mega-cap valuation more than median sector valuation; mitigated via `_meta.weight_coverage_pct` disclosure + matrix warnings.
+- **Acceptance**: AAPL `etf_benchmark.priceToBook.delta_pct` non-null with band classification; JPM same vs XLF aggregate ROE; Realty Income vs XLRE aggregate priceToFFO; non-US ticker → `etf_benchmark: {status: "skipped"}`; `--sector-benchmark` absent → output unchanged from v2.2.0-c shape.
+- **Spec**: [`docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md`](../docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md)
+- **Reference**: spec above; spawned 2026-05-05 from v2.2.0-c brainstorming session (originally drafted as competing v2.2.0-c design; reframed after branch comparison).
 
 ### v2.2.0-d — KR ESI explicit ECOS API integration
 
@@ -237,7 +247,7 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 ## Recommended next-pickup priority
 
-1. **v2.2.0-c** Sector-adjusted multiples for Comps — now unblocked by v2.2.0-l (banks P/B+ROE / REITs P/AFFO / tech EV/Revenue+Rule-of-40). Foundation already in place — adds sector-aware classification + alternative formulas.
+1. **v2.2.0-c-bench** SPDR sector ETF aggregate benchmark layer — newly spawned 2026-05-05 from v2.2.0-c brainstorming. Layers on shipped v2.2.0-c output; foundation in place; orthogonal to all other items.
 2. **v2.2.0-e KR DART** — closes KR primary-source gap. **Blocker**: apply DART key at opendart.fss.or.kr first.
 3. **v2.2.0-l-{jp,tw,kr,cn}** Cross-country symmetry — extend new raw fields to JP EDINET, TW MOPS, KR fdr/DART, CN akshare per existing per-country pack patterns.
 4. **v2.2.0-a JP real-rate C+D+E** — makes JP match US 4-tier rigor.
