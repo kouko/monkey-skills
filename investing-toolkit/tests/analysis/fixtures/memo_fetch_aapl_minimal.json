@@ -1,0 +1,50 @@
+{
+  "pack": "memo-fetch",
+  "ticker": "AAPL",
+  "current_price": 200.0,
+  "shares_outstanding": 15000000000,
+  "company_info": {
+    "marketCap": 3000000000000,
+    "regularMarketPrice": 200.0,
+    "sharesOutstanding": 15000000000,
+    "sector": "Technology",
+    "industry": "Consumer Electronics"
+  },
+  "income_statement": {
+    "revenue":          [400000000000, 380000000000],
+    "net_income":       [100000000000, 95000000000],
+    "operating_income": [115000000000, 110000000000],
+    "gross_profit":     [180000000000, 170000000000],
+    "_meta": {
+      "revenue":          {"fiscal_year_ends": ["2024-09-28", "2023-09-30"], "filings_used": ["aapl-10k-2024"]},
+      "net_income":       {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "operating_income": {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "gross_profit":     {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]}
+    }
+  },
+  "balance_sheet": {
+    "total_stockholders_equity": [70000000000, 60000000000],
+    "total_debt":                [110000000000],
+    "cash":                      [60000000000],
+    "goodwill":                  [],
+    "intangible_assets":         [],
+    "_meta": {
+      "total_stockholders_equity": {"fiscal_year_ends": ["2024-09-28", "2023-09-30"], "filings_used": ["aapl-10k-2024"]},
+      "total_debt":                {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "cash":                      {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "goodwill":                  {"fiscal_year_ends": [], "filings_used": []},
+      "intangible_assets":         {"fiscal_year_ends": [], "filings_used": []}
+    }
+  },
+  "cash_flow": {
+    "depreciation_amortization": [11000000000],
+    "operating_cash_flow":        [120000000000],
+    "capex":                      [-10000000000],
+    "_meta": {
+      "depreciation_amortization": {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "operating_cash_flow":        {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]},
+      "capex":                      {"fiscal_year_ends": ["2024-09-28"], "filings_used": ["aapl-10k-2024"]}
+    }
+  },
+  "_provenance": {"skill": "data-us", "source": "pack.py --pack memo-fetch"}
+}
