@@ -5,13 +5,24 @@ description: Execute slide-plan.json v1.2 against Google Slides backend — crea
 
 # google-slides-builder
 
-**High-level orchestration for the Google Slides backend.** Read `slide-plan.json` v1.2 and chain together the four recipes from the **`google-slides-api` skill** (create-presentation → create-slides → insert-text → insert-image) plus pre-flight validation, then return the Drive URL. This skill **does not make design decisions** (go to `slides-design`), **does not handle first-time setup** (auth / gws install → `google-slides-setup`), **does not manage templates** (removed in v0.3; see PRODUCT-SPEC §3.2 Non-Goals and §3.5 Phase 2+ triggers), and **does not document individual API ops** (per-op call docs live in sibling skill `google-slides-api`).
+**Single-skill end-to-end pipeline for the Google Slides backend.** Read `slide-plan.json` v1.2, validate via pre-flight, then chain four bundled recipes (create-presentation → create-slides → insert-text → insert-image) and return the Drive URL. This skill **does not make design decisions** (go to `slides-design`), **does not handle first-time setup** (auth / gws install → `google-slides-setup`), and **does not manage templates** (removed in v0.3; see PRODUCT-SPEC §3.2 Non-Goals and §3.5 Phase 2+ triggers).
 
-**Architectural layer split (v0.3.2)**:
-- `google-slides-api` — low-level recipes (per-op calls + placeholder-map assembly + error mapping)
-- `google-slides-builder` (this skill) — high-level pipeline (slide-plan consumer + pre-flight + 4-recipe chain + result reporting)
+The 4 per-op recipes (formerly the separate `google-slides-api` skill, absorbed in v0.4 α-trim) now live under `protocols/` of this skill. For raw API method discovery (resource × method tables, parameter shapes), use upstream `gws-slides` skill or run `gws schema slides.<resource>.<method>`.
 
 This skill invokes the `gws` CLI through `scripts/google-slides/gws-wrap.sh` (under the plugin root); all shell-script contracts and exit-code mappings are defined in TECH-SPEC §4.2.
+
+## Composition pattern — threading the placeholder map
+
+Recipes compose via a small data artifact called the **placeholder map** — a mapping from `(slide_index, placeholder_role)` to a Slides API `objectId`. It is **produced** by `protocols/recipe-create-slides.md` (from the `createSlide` reply plus a follow-up `presentations.get`) and **consumed** by `recipe-insert-text.md` and `recipe-insert-image.md` to target shapes directly, without relying on fragile `{{TEXT_ANCHOR}}` substitution.
+
+Example shape:
+
+```json
+{
+  "1": { "TITLE": "p1_title_obj_id", "BODY_1": "p1_body_obj_id" },
+  "2": { "TITLE": "p2_title_obj_id", "IMG_MAIN": "p2_img_obj_id" }
+}
+```
 
 ## When to use
 
@@ -85,7 +96,7 @@ Run `checklists/pre-flight.md` (10 items; each shell-runnable). All must pass be
 
 ### Step 2 — Recipe 1: create-presentation
 
-`../google-slides-api/protocols/recipe-create-presentation.md`
+`protocols/recipe-create-presentation.md`
 
 - gws command: `gws slides presentations create --json '{"title":"<output_title>"}'`
 - Input: `output_title`
@@ -94,7 +105,7 @@ Run `checklists/pre-flight.md` (10 items; each shell-runnable). All must pass be
 
 ### Step 3 — Recipe 2: create-slides
 
-`../google-slides-api/protocols/recipe-create-slides.md`
+`protocols/recipe-create-slides.md`
 
 - gws command: `gws slides presentations batchUpdate` with `createSlide` requests (one per page, specifying `slideLayoutReference.predefinedLayout: <layout_hint>`)
 - Input: the previous step's `presentation_id` + `slides[].slide_index` + `slides[].layout_hint`
@@ -105,13 +116,13 @@ Run `checklists/pre-flight.md` (10 items; each shell-runnable). All must pass be
 
 Execute as each slide requires; within one slide, insert-text runs before insert-image:
 
-**Recipe 3 — insert-text** (`../google-slides-api/protocols/recipe-insert-text.md`):
+**Recipe 3 — insert-text** (`protocols/recipe-insert-text.md`):
 - gws command: `gws slides presentations batchUpdate` with `insertText` requests
 - Input: placeholder map + `slides[].replacements`
 - Key strip + upper-case → role → `placeholder_map[slide_X][role]` → `objectId`
 - Errors: role not found → **13a warning** (non-fatal)
 
-**Recipe 4 — insert-image** (`../google-slides-api/protocols/recipe-insert-image.md`):
+**Recipe 4 — insert-image** (`protocols/recipe-insert-image.md`):
 - gws flow: `drive.files.create` upload → `drive.permissions.create` (anyoneWithLink) → obtain `webContentLink` → `slides.presentations.batchUpdate` with `createImage` + `pageElementProperties` (explicit pageObjectId + transform)
 - Input: placeholder map + `slides[].images[]`
 - Errors: `placeholder_id` not found on current slide → **13b warning** (non-fatal); upload failed → exit 12; local file missing → exit 14
@@ -223,13 +234,11 @@ re-auth path).
 - PRODUCT-SPEC §4.2 (three core scenarios), §4.4 Principle 2 (Layout-based), §3.5 (Phase 2+ template-return trigger)
 - This skill's bundled files:
   - `checklists/pre-flight.md`
-- Sibling skill (v0.3.2 split; recipes moved there):
-  - `../google-slides-api/SKILL.md`
-  - `../google-slides-api/protocols/recipe-create-presentation.md`
-  - `../google-slides-api/protocols/recipe-create-slides.md`
-  - `../google-slides-api/protocols/recipe-insert-text.md`
-  - `../google-slides-api/protocols/recipe-insert-image.md`
-  - `../google-slides-api/references/api-error-codes.md`
+  - `protocols/recipe-create-presentation.md`
+  - `protocols/recipe-create-slides.md`
+  - `protocols/recipe-insert-text.md`
+  - `protocols/recipe-insert-image.md`
+  - `references/api-error-codes.md`
 
 ---
 

@@ -148,7 +148,7 @@ dry=$(jq -r '.dry_run // false' slide-plan.json)
 | 9 | 16（issue #119 workaround 未 apply） |
 | 10 | — (dry_run 為設定，不 fail；成功後 short-circuit) |
 
-**全通過** → 進 Step 2：`../../google-slides-api/protocols/recipe-create-presentation.md`（recipes 自 v0.3.2 移至 sibling skill `google-slides-api`）。
+**全通過** → 進 Step 2：`../protocols/recipe-create-presentation.md`。
 
 ## v0.3 removed checks
 
@@ -161,4 +161,4 @@ dry=$(jq -r '.dry_run // false' slide-plan.json)
 
 - TECH-SPEC §4.1（schema v1.2）、§4.2（完整 exit code 表）、§4.6（E2E data flow v0.3）、§9 OPEN-8（path 解析）
 - `scripts/google-slides/credential-check.sh`、`env-guard.sh`、`bootstrap.sh`
-- 下游 recipe（v0.3.2 起於 sibling skill）：`../../google-slides-api/protocols/recipe-create-presentation.md` → `recipe-create-slides.md` → `recipe-insert-text.md` → `recipe-insert-image.md`
+- 下游 recipe（v0.4 α-trim 後內附於本 skill）：`../protocols/recipe-create-presentation.md` → `recipe-create-slides.md` → `recipe-insert-text.md` → `recipe-insert-image.md`
