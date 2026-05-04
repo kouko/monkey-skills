@@ -1,10 +1,10 @@
-# slides-toolkit
+# gws-toolkit
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> 🔒 **Feature-frozen.** Active development moved to [`gws-toolkit/`](../gws-toolkit/) — a generic Google Workspace toolkit that supersedes this plugin. `slides-toolkit` will receive bug-fix-only updates until the migration completes; new architecture (vendored upstream gws skills, broader Drive/Docs/Sheets coverage, three-tier delete safety) lives in `gws-toolkit`. Once `gws-toolkit` stabilizes (≥ 2 weeks of validated daily use), this plugin will be deprecated and eventually removed.
+> 🚧 **Work in progress — not yet stable.** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded by direct copy on 2026-05-04. Internal architecture is being generalized from "Slides-only" to "generic Google Workspace": vendored upstream `gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets` skills, broader Drive operations with three-tier delete safety, OAuth scope expansion, and toolkit-original setup automation + Slides design knowledge layer. Until this banner is removed, **use `slides-toolkit/` for daily work.** This toolkit is not affiliated with Google.
 
-> Brief → Google Slides deck via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
+> Brief → Google Workspace artifacts (Slides / Docs / Sheets / Drive) via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 
 > ⚠️ **Cowork compatibility — Claude Code CLI / Code tab only.** Google
 > Slides and Drive API calls are blocked by the Claude Desktop Cowork

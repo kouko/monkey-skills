@@ -1,10 +1,10 @@
-# slides-toolkit
+# gws-toolkit
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 🔒 **機能凍結中。** アクティブな開発は [`gws-toolkit/`](../gws-toolkit/) — 本 plugin の後継となる generic Google Workspace toolkit — に移行しました。`slides-toolkit` は migration 完了までバグ修正のみ受け付けます。新アーキテクチャ（vendored upstream gws skills、Drive / Docs / Sheets 全面 coverage、三段階削除安全機構）は `gws-toolkit` 側に実装されます。`gws-toolkit` の安定後（実日常運用 ≥ 2 週間 検証済）、本 plugin は deprecated → 最終的に削除されます。
+> 🚧 **開発中 — まだ stable ではありません。** [`slides-toolkit/`](../slides-toolkit/) の後継として 2026-05-04 に直接 copy で seed。内部アーキテクチャを「Slides 専用」から「generic Google Workspace」へ汎化中：upstream `gws-shared` / `gws-drive` / `gws-docs` / `gws-slides` / `gws-sheets` skill の vendor 取り込み、三段階削除安全機構付きの Drive 操作拡張、OAuth scope 拡張、toolkit 独自の setup 自動化と Slides design knowledge layer。本 banner が消えるまで、**日常運用は `slides-toolkit/` を使用してください。** Google とは無関係。
 
-> Brief から Google Slides deck を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
+> Brief から Google Workspace artifacts（Slides / Docs / Sheets / Drive）を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
 
 > ⚠️ **Cowork 互換性 — Claude Code CLI / Code tab のみ対応。** Google
 > Slides / Drive API 呼び出しは Claude Desktop Cowork sandbox の URL
