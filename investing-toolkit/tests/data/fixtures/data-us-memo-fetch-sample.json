@@ -6475,6 +6475,13 @@
       99803000000.0,
       94680000000.0
     ],
+    "gross_profit": [
+      184103000000.0,
+      180683000000.0,
+      169148000000.0,
+      170782000000.0,
+      152836000000.0
+    ],
     "_meta": {
       "revenue": {
         "source_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -6616,6 +6623,40 @@
           "10-K filed 2024-11-01",
           "10-K filed 2023-11-03"
         ]
+      },
+      "gross_profit": {
+        "source_concept": "GrossProfit",
+        "concepts_used": [
+          "GrossProfit"
+        ],
+        "per_year_concept": [
+          "GrossProfit",
+          "GrossProfit",
+          "GrossProfit",
+          "GrossProfit",
+          "GrossProfit"
+        ],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "GrossProfit"
+        ],
+        "fiscal_year_ends": [
+          "2025-09-27",
+          "2024-09-28",
+          "2023-09-30",
+          "2022-09-24",
+          "2021-09-25"
+        ],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2024-11-01",
+          "10-K filed 2023-11-03"
+        ]
       }
     }
   },
@@ -6640,6 +6681,20 @@
       99584000000.0,
       111443000000.0,
       92953000000.0
+    ],
+    "depreciation_amortization": [
+      11445000000.0,
+      11445000000.0,
+      11519000000.0,
+      11104000000.0,
+      11284000000.0
+    ],
+    "stock_based_compensation": [
+      11690000000.0,
+      11688000000.0,
+      10833000000.0,
+      9038000000.0,
+      7906000000.0
     ],
     "_meta": {
       "operating_cash_flow": {
@@ -6719,6 +6774,76 @@
           "operating_cash_flow": "NetCashProvidedByUsedInOperatingActivities",
           "capex": "PaymentsToAcquirePropertyPlantAndEquipment"
         }
+      },
+      "depreciation_amortization": {
+        "source_concept": "DepreciationDepletionAndAmortization",
+        "concepts_used": [
+          "DepreciationDepletionAndAmortization"
+        ],
+        "per_year_concept": [
+          "DepreciationDepletionAndAmortization",
+          "DepreciationDepletionAndAmortization",
+          "DepreciationDepletionAndAmortization",
+          "DepreciationDepletionAndAmortization",
+          "DepreciationDepletionAndAmortization"
+        ],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "DepreciationDepletionAndAmortization",
+          "Depreciation"
+        ],
+        "fiscal_year_ends": [
+          "2025-09-27",
+          "2024-09-28",
+          "2023-09-30",
+          "2022-09-24",
+          "2021-09-25"
+        ],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2024-11-01",
+          "10-K filed 2023-11-03"
+        ]
+      },
+      "stock_based_compensation": {
+        "source_concept": "ShareBasedCompensation",
+        "concepts_used": [
+          "ShareBasedCompensation"
+        ],
+        "per_year_concept": [
+          "ShareBasedCompensation",
+          "ShareBasedCompensation",
+          "ShareBasedCompensation",
+          "ShareBasedCompensation",
+          "ShareBasedCompensation"
+        ],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "ShareBasedCompensation",
+          "AllocatedShareBasedCompensationExpense"
+        ],
+        "fiscal_year_ends": [
+          "2025-09-27",
+          "2024-09-28",
+          "2023-09-30",
+          "2022-09-24",
+          "2021-09-25"
+        ],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2024-11-01",
+          "10-K filed 2023-11-03"
+        ]
       }
     }
   },
@@ -6745,6 +6870,15 @@
       23646000000.0,
       34940000000.0
     ],
+    "total_stockholders_equity": [
+      66790000000.0,
+      56950000000.0,
+      62146000000.0,
+      50672000000.0,
+      63090000000.0
+    ],
+    "intangible_assets": [],
+    "goodwill": [],
     "_meta": {
       "long_term_debt": {
         "source_concept": "mixed",
@@ -6840,6 +6974,73 @@
           "10-K filed 2023-11-03",
           "10-K filed 2022-10-28"
         ]
+      },
+      "total_stockholders_equity": {
+        "source_concept": "StockholdersEquity",
+        "concepts_used": [
+          "StockholdersEquity"
+        ],
+        "per_year_concept": [
+          "StockholdersEquity",
+          "StockholdersEquity",
+          "StockholdersEquity",
+          "StockholdersEquity",
+          "StockholdersEquity"
+        ],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "StockholdersEquity",
+          "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+        ],
+        "fiscal_year_ends": [
+          "2025-09-27",
+          "2024-09-28",
+          "2023-09-30",
+          "2022-09-24",
+          "2021-09-25"
+        ],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2025-10-31",
+          "10-K filed 2024-11-01",
+          "10-K filed 2023-11-03"
+        ]
+      },
+      "intangible_assets": {
+        "source_concept": null,
+        "concepts_used": [],
+        "per_year_concept": [],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "IntangibleAssetsNetExcludingGoodwill",
+          "FiniteLivedIntangibleAssetsNet",
+          "IntangibleAssetsNet"
+        ],
+        "fiscal_year_ends": [],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [],
+        "note": "AAPL discloses intangible_assets as immaterial; XBRL chain (IntangibleAssetsNetExcludingGoodwill / FiniteLivedIntangibleAssetsNet / IntangibleAssetsNet) returns no observations."
+      },
+      "goodwill": {
+        "source_concept": null,
+        "concepts_used": [],
+        "per_year_concept": [],
+        "fallback_used": false,
+        "fallback_chain_tried": [
+          "Goodwill"
+        ],
+        "fiscal_year_ends": [],
+        "amendments_seen": [],
+        "accounting_standard": "us_gaap",
+        "unit": "USD",
+        "filings_used": [],
+        "note": "AAPL discloses goodwill = $0; XBRL Goodwill concept not tagged."
       }
     }
   },

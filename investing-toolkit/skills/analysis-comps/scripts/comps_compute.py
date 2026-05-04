@@ -70,10 +70,9 @@ ALIASES = {
 DIVERGENCE_BAND_LOW  = 0.05   # 5%   — boundary inclusive (≤ low)
 DIVERGENCE_BAND_HIGH = 0.15   # 15%  — boundary inclusive for medium (high band is strict >)
 
-# Multiples currently deferred to v2.2.0-l (memo-fetch lacks the raw fields):
-#   priceToBook  → needs total_stockholders_equity
-#   evEbitda     → needs depreciation_amortization
-DEFERRED_MULTIPLES = ("priceToBook", "evEbitda")
+# Multiples deferred to future PRs (memo-fetch lacks the raw fields):
+#   (none — all 5 wired as of v2.2.0-l)
+DEFERRED_MULTIPLES: tuple[str, ...] = ()
 
 
 def _load_pack(path: Path) -> dict:
@@ -149,6 +148,24 @@ def _concept_fy_end(inc: dict, concept: str) -> str | None:
 def _concept_filings(inc: dict, concept: str) -> list[str]:
     """Most recent FY filing from a concept-specific _meta block (first entry only)."""
     filings = _concept_meta(inc, concept).get("filings_used") or []
+    return [filings[0]] if filings else []
+
+
+def _bs_concept_fy_end(bs: dict, concept: str) -> str | None:
+    return _safe_first(((bs.get("_meta") or {}).get(concept) or {}).get("fiscal_year_ends") or [])
+
+
+def _bs_concept_filings(bs: dict, concept: str) -> list[str]:
+    filings = ((bs.get("_meta") or {}).get(concept) or {}).get("filings_used") or []
+    return [filings[0]] if filings else []
+
+
+def _cf_concept_fy_end(cf: dict, concept: str) -> str | None:
+    return _safe_first(((cf.get("_meta") or {}).get(concept) or {}).get("fiscal_year_ends") or [])
+
+
+def _cf_concept_filings(cf: dict, concept: str) -> list[str]:
+    filings = ((cf.get("_meta") or {}).get(concept) or {}).get("filings_used") or []
     return [filings[0]] if filings else []
 
 
@@ -238,17 +255,79 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
         "note": "pass-through from comps-multiples pack (consensus EPS has no primary source)",
     }
 
-    # Deferred multiples (v2.2.0-l)
-    for m in DEFERRED_MULTIPLES:
-        out_compute[m] = None
-        out_prov[m] = {
+    # priceToBook (FY) — denominator basis: total_stockholders_equity (v2.2.0-l)
+    bs = memo_fetch.get("balance_sheet") or {}
+    equity_fy = _safe_first(bs.get("total_stockholders_equity"))
+    pb_fy_end = _bs_concept_fy_end(bs, "total_stockholders_equity")
+    pb_filings = _bs_concept_filings(bs, "total_stockholders_equity")
+
+    if market_cap is None or equity_fy is None or equity_fy == 0:
+        out_compute["priceToBook"] = None
+        out_prov["priceToBook"] = {
             "computed": False,
-            "note": (
-                "deferred to v2.2.0-l (memo-fetch missing total_stockholders_equity)"
-                if m == "priceToBook" else
-                "deferred to v2.2.0-l (memo-fetch missing depreciation_amortization)"
-            ),
+            "note": "compute skipped — marketCap / total_stockholders_equity[0] required (and non-zero)",
         }
+        if market_cap is None:
+            warnings.append("priceToBook compute skipped: marketCap missing")
+        elif equity_fy is None:
+            warnings.append("priceToBook compute skipped: total_stockholders_equity FY array empty")
+        elif equity_fy == 0:
+            warnings.append("priceToBook compute skipped: total_stockholders_equity[0] is zero")
+    else:
+        out_compute["priceToBook"] = market_cap / equity_fy
+        out_prov["priceToBook"] = {
+            "numerator_source":   "memo-fetch.company_info.marketCap",
+            "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
+            "accession_basis":    pb_filings,
+            "fiscal_year_end":    pb_fy_end,
+            "computed":           True,
+            "note":               "FY-trailing book value, not most-recent-quarter — see ROADMAP §v2.2.0-l",
+        }
+
+    # evEbitda (FY) — EV / EBITDA = (mcap + total_debt[0] - cash[0]) / (EBIT[0] + D&A[0]) (v2.2.0-l)
+    cf = memo_fetch.get("cash_flow") or {}
+    operating_income_fy = _safe_first(inc.get("operating_income"))
+    da_fy = _safe_first(cf.get("depreciation_amortization"))
+    total_debt_fy = _safe_first(bs.get("total_debt"))
+    cash_fy = _safe_first(bs.get("cash"))
+    ebitda_fy_end = _cf_concept_fy_end(cf, "depreciation_amortization")
+    ebitda_filings = _cf_concept_filings(cf, "depreciation_amortization")
+
+    missing_inputs = []
+    if market_cap is None: missing_inputs.append("marketCap")
+    if total_debt_fy is None: missing_inputs.append("total_debt[0]")
+    if cash_fy is None: missing_inputs.append("cash[0]")
+    if operating_income_fy is None: missing_inputs.append("operating_income[0]")
+    if da_fy is None: missing_inputs.append("depreciation_amortization[0]")
+
+    if missing_inputs:
+        out_compute["evEbitda"] = None
+        out_prov["evEbitda"] = {
+            "computed": False,
+            "note": f"compute skipped — missing: {', '.join(missing_inputs)}",
+        }
+        warnings.append(f"evEbitda compute skipped: {', '.join(missing_inputs)} missing")
+    else:
+        ev = market_cap + total_debt_fy - cash_fy
+        ebitda = operating_income_fy + da_fy
+        # EBITDA==0 occurs when negative EBIT offsets D&A — common in loss-making capital-intensive issuers
+        if ebitda == 0:
+            out_compute["evEbitda"] = None
+            out_prov["evEbitda"] = {
+                "computed": False,
+                "note": "compute skipped — EBITDA (EBIT[0] + D&A[0]) is zero",
+            }
+            warnings.append("evEbitda compute skipped: EBITDA is zero")
+        else:
+            out_compute["evEbitda"] = ev / ebitda
+            out_prov["evEbitda"] = {
+                "numerator_source":   "memo-fetch.company_info.marketCap + balance_sheet.total_debt[0] - balance_sheet.cash[0]",
+                "denominator_source": "memo-fetch.income_statement.operating_income[0] + cash_flow.depreciation_amortization[0]",
+                "accession_basis":    ebitda_filings,
+                "fiscal_year_end":    ebitda_fy_end,
+                "computed":           True,
+                "note":               "EV/EBITDA FY-trailing (EBIT + D&A); not LTM-EBITDA — see ROADMAP §v2.2.0-l",
+            }
 
     return out_compute, out_prov, warnings
 

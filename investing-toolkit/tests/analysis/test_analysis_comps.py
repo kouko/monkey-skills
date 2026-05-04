@@ -595,27 +595,49 @@ def test_compute_mode_forwardPE_passthrough(compute_payload):
     assert compute_payload["anchor"]["compute_provenance"]["forwardPE"]["computed"] is False
 
 
-def test_compute_mode_priceToBook_emits_null(compute_payload):
-    """priceToBook deferred until v2.2.0-l (memo-fetch lacks total_stockholders_equity)."""
-    assert compute_payload["anchor"]["multiples_compute"]["priceToBook"] is None
-    assert compute_payload["anchor"]["compute_provenance"]["priceToBook"]["computed"] is False
-    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["priceToBook"]["note"]
+def test_compute_mode_recomputes_priceToBook_FY(compute_payload):
+    """priceToBook = market_cap / total_stockholders_equity[0] — FY (v2.2.0-l)."""
+    actual = compute_payload["anchor"]["multiples_compute"]["priceToBook"]
+    expected = 4109006274560 / 66790000000.0  # 61.5212
+    assert actual == pytest.approx(expected, rel=1e-4)
 
 
-def test_compute_mode_evEbitda_emits_null(compute_payload):
-    """evEbitda deferred until v2.2.0-l (memo-fetch lacks D&A)."""
-    assert compute_payload["anchor"]["multiples_compute"]["evEbitda"] is None
-    assert compute_payload["anchor"]["compute_provenance"]["evEbitda"]["computed"] is False
-    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["evEbitda"]["note"]
+def test_compute_priceToBook_provenance(compute_payload):
+    """priceToBook provenance records numerator/denominator + FY end + accession."""
+    prov = compute_payload["anchor"]["compute_provenance"]["priceToBook"]
+    assert prov["computed"] is True
+    assert prov["numerator_source"] == "memo-fetch.company_info.marketCap"
+    assert prov["denominator_source"] == "memo-fetch.balance_sheet.total_stockholders_equity[0]"
+    assert prov["fiscal_year_end"] == "2025-09-27"
+    assert "10-K filed 2025-10-31" in prov["accession_basis"]
+
+
+def test_compute_mode_recomputes_evEbitda_FY(compute_payload):
+    """evEbitda = (mcap + total_debt[0] - cash[0]) / (operating_income[0] + D&A[0]) — FY (v2.2.0-l)."""
+    actual = compute_payload["anchor"]["multiples_compute"]["evEbitda"]
+    enterprise_value = 4109006274560 + 90678000000 - 35934000000  # 4,163,750,274,560
+    ebitda = 133050000000.0 + 11445000000.0  # 144,495,000,000
+    expected = enterprise_value / ebitda  # 28.8160
+    assert actual == pytest.approx(expected, rel=1e-4)
+
+
+def test_compute_evEbitda_provenance(compute_payload):
+    """evEbitda provenance records EV + EBITDA derivation + FY end."""
+    prov = compute_payload["anchor"]["compute_provenance"]["evEbitda"]
+    assert prov["computed"] is True
+    assert prov["numerator_source"] == "memo-fetch.company_info.marketCap + balance_sheet.total_debt[0] - balance_sheet.cash[0]"
+    assert prov["denominator_source"] == "memo-fetch.income_statement.operating_income[0] + cash_flow.depreciation_amortization[0]"
+    assert prov["fiscal_year_end"] == "2025-09-27"
+    assert "10-K filed 2025-10-31" in prov["accession_basis"]
 
 
 def test_compute_provenance_includes_fiscal_year_end(compute_payload):
     """Each computed multiple records FY end date + accession_basis."""
     prov = compute_payload["anchor"]["compute_provenance"]
-    for m in ("trailingPE", "priceToSales"):
-        assert prov[m]["computed"] is True
-        assert prov[m]["fiscal_year_end"] == "2025-09-27"
-        assert "10-K filed 2025-10-31" in prov[m]["accession_basis"]
+    for m in ("trailingPE", "priceToSales", "priceToBook", "evEbitda"):
+        assert prov[m]["computed"] is True, f"{m} should be computed (v2.2.0-l)"
+        assert prov[m]["fiscal_year_end"] == "2025-09-27", f"{m} FY end mismatch"
+        assert "10-K filed 2025-10-31" in prov[m]["accession_basis"], f"{m} accession_basis missing"
 
 
 # ---------------------------------------------------------------------------
@@ -643,12 +665,23 @@ def test_divergence_alert_n_a_for_forwardPE(compute_payload):
     assert "pass-through" in div["note"]
 
 
-def test_divergence_alert_n_a_for_deferred(compute_payload):
-    """priceToBook + evEbitda compute=null → alert n/a + v2.2.0-l note."""
-    for m in ("priceToBook", "evEbitda"):
-        div = compute_payload["anchor"]["divergence"][m]
-        assert div["alert"] == "n/a"
-        assert "v2.2.0-l" in div["note"]
+def test_divergence_alert_high_for_priceToBook_aapl(compute_payload):
+    """AAPL: direct=35.4 (fixture) vs compute≈61.52 → pct_diff ≈ +73.7% → high.
+    Wide divergence is expected & informative — large buybacks shrink book equity
+    relative to TTM-LTM convention used by yfinance.
+    """
+    div = compute_payload["anchor"]["divergence"]["priceToBook"]
+    assert div["alert"] == "high"
+    assert div["pct_diff"] == pytest.approx(73.7, abs=1.0)
+
+
+def test_divergence_alert_high_for_evEbitda_aapl(compute_payload):
+    """AAPL: direct=21.3 (fixture) vs compute≈28.82 → pct_diff ≈ +35.3% → high.
+    EBIT+D&A FY-trailing vs LTM-EBITDA convention — gap expected.
+    """
+    div = compute_payload["anchor"]["divergence"]["evEbitda"]
+    assert div["alert"] == "high"
+    assert div["pct_diff"] == pytest.approx(35.3, abs=1.0)
 
 
 def test_divergence_alert_low_at_5_percent_boundary(tmp_path, runner):
@@ -800,6 +833,43 @@ def test_compute_mode_handles_negative_net_income(tmp_path, runner, fixtures_dir
     # divergence is still computed (analyst interprets the negative value)
     div = payload["anchor"]["divergence"]["trailingPE"]
     assert div["alert"] in {"low", "medium", "high"}
+
+
+def test_compute_evEbitda_handles_zero_ebitda(tmp_path, runner, fixtures_dir):
+    """Synthetic anchor where EBIT[0] + D&A[0] == 0 → evEbitda compute null + warning."""
+    anchor = tmp_path / "anchor.json"
+    anchor.write_text(json.dumps({
+        "pack": "comps-multiples", "ticker": "X",
+        "info": {"X": {"trailingPE": 10.0, "forwardPE": 10.0, "priceToSales": 1.0, "priceToBook": 1.0, "enterpriseToEbitda": 5.0}},
+        "_provenance": {"skill": "test"}
+    }))
+    base = tmp_path / "base.json"
+    # negative EBIT exactly offsets positive D&A → ebitda == 0
+    base.write_text(json.dumps({
+        "pack": "memo-fetch", "ticker": "X",
+        "company_info": {"regularMarketPrice": 100.0, "sharesOutstanding": 1000, "marketCap": 100000.0},
+        "current_price": 100.0, "shares_outstanding": 1000,
+        "income_statement": {"revenue": [1000.0], "net_income": [10.0], "operating_income": [-50.0],
+                             "_meta": {"revenue": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]},
+                                       "net_income": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}}},
+        "cash_flow": {"depreciation_amortization": [50.0],
+                      "_meta": {"depreciation_amortization": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}}},
+        "balance_sheet": {"total_debt": [10000.0], "cash": [5000.0], "total_stockholders_equity": [50000.0],
+                          "_meta": {"total_stockholders_equity": {"fiscal_year_ends": ["2025-12-31"], "filings_used": ["10-K"]}}},
+        "_provenance": {}
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--mode", "compute",
+        "--anchor", str(anchor),
+        "--anchor-base", str(base),
+        "--peers", _full_peer_set(fixtures_dir),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["anchor"]["multiples_compute"]["evEbitda"] is None
+    assert payload["anchor"]["compute_provenance"]["evEbitda"]["computed"] is False
+    assert "EBITDA" in payload["anchor"]["compute_provenance"]["evEbitda"]["note"]
 
 
 # ---------------------------------------------------------------------------

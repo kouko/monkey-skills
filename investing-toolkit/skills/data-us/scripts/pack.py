@@ -108,12 +108,24 @@ DCF_CONCEPT_MAPPING: dict[str, list[str]] = {
         "NetIncomeLoss",
         "ProfitLoss",
     ],
+    "gross_profit": [
+        "GrossProfit",
+    ],
     "operating_cash_flow": [
         "NetCashProvidedByUsedInOperatingActivities",
     ],
     "capex": [
         "PaymentsToAcquirePropertyPlantAndEquipment",
         "PaymentsToAcquireProductiveAssets",
+    ],
+    "depreciation_amortization": [
+        "DepreciationDepletionAndAmortization",
+        "DepreciationAndAmortization",
+        "Depreciation",
+    ],
+    "stock_based_compensation": [
+        "ShareBasedCompensation",
+        "AllocatedShareBasedCompensationExpense",
     ],
     "long_term_debt": [
         "LongTermDebt",
@@ -126,6 +138,18 @@ DCF_CONCEPT_MAPPING: dict[str, list[str]] = {
     "cash_and_equivalents": [
         "CashAndCashEquivalentsAtCarryingValue",
         "Cash",
+    ],
+    "total_stockholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
+    "intangible_assets": [
+        "IntangibleAssetsNetExcludingGoodwill",
+        "FiniteLivedIntangibleAssetsNet",
+        "IntangibleAssetsNet",
+    ],
+    "goodwill": [
+        "Goodwill",
     ],
 }
 
@@ -422,6 +446,12 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
         std = short_term_debt[i] if i < len(short_term_debt) else 0.0
         total_debt.append(ltd + std)
     cash = _values("cash_and_equivalents")
+    gross_profit = _values("gross_profit")
+    depreciation_amortization = _values("depreciation_amortization")
+    stock_based_compensation = _values("stock_based_compensation")
+    total_stockholders_equity = _values("total_stockholders_equity")
+    intangible_assets = _values("intangible_assets")
+    goodwill = _values("goodwill")
 
     return {
         "income_statement": {
@@ -429,17 +459,21 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
             "operating_income": operating_income,
             "ebit": operating_income,  # EBIT alias to operating_income for analysis-dcf
             "net_income": net_income,
+            "gross_profit": gross_profit,
             "_meta": {
                 "revenue": _meta("revenue"),
                 "operating_income": _meta("operating_income"),
                 "ebit": {**_meta("operating_income"), "note": "alias of operating_income"},
                 "net_income": _meta("net_income"),
+                "gross_profit": _meta("gross_profit"),
             },
         },
         "cash_flow": {
             "operating_cash_flow": ocf,
             "capex": capex,
             "fcf": fcf,
+            "depreciation_amortization": depreciation_amortization,
+            "stock_based_compensation": stock_based_compensation,
             "_meta": {
                 "operating_cash_flow": _meta("operating_cash_flow"),
                 "capex": _meta("capex"),
@@ -452,6 +486,8 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
                         "capex": canonical_source["capex"],
                     },
                 },
+                "depreciation_amortization": _meta("depreciation_amortization"),
+                "stock_based_compensation": _meta("stock_based_compensation"),
             },
         },
         "balance_sheet": {
@@ -459,6 +495,9 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
             "short_term_debt": short_term_debt,
             "total_debt": total_debt,
             "cash": cash,
+            "total_stockholders_equity": total_stockholders_equity,
+            "intangible_assets": intangible_assets,
+            "goodwill": goodwill,
             "_meta": {
                 "long_term_debt": _meta("long_term_debt"),
                 "short_term_debt": _meta("short_term_debt"),
@@ -472,6 +511,9 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
                     },
                 },
                 "cash": _meta("cash_and_equivalents"),
+                "total_stockholders_equity": _meta("total_stockholders_equity"),
+                "intangible_assets": _meta("intangible_assets"),
+                "goodwill": _meta("goodwill"),
             },
         },
     }
