@@ -1,6 +1,6 @@
 # Lens: Burke's Dramatistic Pentad
 
-> **Source**: Kenneth Burke, *A Grammar of Motives* (Prentice-Hall, 1945; University of California Press, 1969 ed). The dramatistic pentad is introduced in the Introduction (pp xv–xxiii). Burke argues that any human motive can be analyzed through five interlocking terms drawn from drama: **act**, **scene**, **agent**, **agency**, **purpose** (a sixth term, **attitude**, was added later in *A Grammar of Motives*, 1969 expanded edition).
+> **Source**: Kenneth Burke, *A Grammar of Motives* (Prentice-Hall, 1945; University of California Press expanded edition 1969). The dramatistic pentad is introduced in the Introduction. Burke's framing question per Introduction: "What is involved, when we say what people are doing and why they are doing it?" He argues that any human motive can be analyzed through five interlocking terms drawn from drama: **act**, **scene**, **agent**, **agency**, **purpose** (a sixth term, **attitude**, was added later in the 1969 expanded edition). The pentad is the first volume of Burke's planned trilogy with *A Rhetoric of Motives* and *A Symbolic of Motives*. (Single-source lens — no synthesis disclosure applies.)
 
 ## The five elements
 

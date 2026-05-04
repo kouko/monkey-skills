@@ -1,8 +1,10 @@
 # Lens: Frame Analysis (Goffman + Lakoff)
 
 > **Sources**:
-> - Erving Goffman, *Frame Analysis: An Essay on the Organization of Experience* (Harper & Row, 1974). Primary frameworks Ch 2; keying Ch 3; fabrications Ch 4; frame breaks Ch 11.
-> - George Lakoff & Mark Johnson, *Metaphors We Live By* (University of Chicago Press, 1980; 2003 ed). Conceptual metaphor theory introduced in Ch 1 (pp 3–6); structural metaphors Ch 2; orientational Ch 4; ontological Ch 6.
+> - Erving Goffman, *Frame Analysis: An Essay on the Organization of Experience* (Harper & Row, 1974). Primary frameworks Ch 2; keying Ch 3 (definition with quote on p 44 — "an activity already meaningful in terms of some primary framework... transformed into something patterned on this activity but seen... to be quite something else"); fabrications Ch 4; the manufacture of negative experience Ch 11; vulnerabilities of experience and frame traps Ch 12.
+> - George Lakoff & Mark Johnson, *Metaphors We Live By* (University of Chicago Press, 1980; 2003 afterword edition). Book is 30 chapters total. Three-type taxonomy (Structural / Orientational / Ontological) introduced in Ch 1; orientational metaphors Ch 4; ontological metaphors Ch 6.
+
+> **Synthesis note**: This file combines Goffman's frame analysis (1974) and Lakoff & Johnson's conceptual metaphor theory (1980). The two were not co-published. Combining them is a methodological choice by `deconstruct-toolkit` — Goffman names the *social frame* (what kind of situation the text presumes), Lakoff names the *cognitive frame* (what mental structures shape the language). They operate at different levels of the same phenomenon. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md).
 
 Two complementary framings: Goffman's **frame analysis** for the social
 context-setting work the artifact performs, Lakoff's **conceptual
@@ -34,7 +36,7 @@ Same words inside different frames carry different weight.
 | **Primary framework** | What world-view does the text presume? What is the "real" thing this text refers to? |
 | **Keying** | What tone / register is in play? (Serious / ironic / instructional / playful / urgent) |
 | **Fabrication** | Is the surface frame ≠ real intent? (Does the text say one thing while doing another?) |
-| **Frame break** | Where does the text deliberately violate its own expectations? |
+| **Frame vulnerability / break** | Where does the text deliberately violate its own expectations or expose a frame trap? (Ch 12, "Vulnerabilities of Experience") |
 
 ### Worked move 1: Primary framework detection
 

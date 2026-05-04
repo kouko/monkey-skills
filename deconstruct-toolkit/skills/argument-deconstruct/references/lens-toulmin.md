@@ -1,6 +1,6 @@
 # Lens: Toulmin Argument Model
 
-> **Source**: Stephen Toulmin, *The Uses of Argument* (Cambridge University Press, 1958; updated edition 2003). The 6-component argument model is presented in Ch 3, "The Layout of Arguments," pp 89–134. Toulmin developed this in opposition to deductive (Aristotelian syllogistic) logic, which he found inadequate for *practical* arguments in everyday and professional contexts.
+> **Source**: Stephen Toulmin, *The Uses of Argument* (Cambridge University Press, 1958; updated edition with new preface 2003). 264 pages total. The 6-component argument model is presented in **Ch 3, "The Layout of Arguments"**. Per academic reception, the model itself is concentrated in roughly the first 14 pages of Ch 3 (the "heart" of the chapter); the remainder of Ch 3 develops applications and edge cases. Toulmin developed this in opposition to deductive (Aristotelian syllogistic) logic, which he found inadequate for *practical* arguments in everyday and professional contexts. (Single-source lens — no synthesis disclosure applies.)
 
 ## Six components
 

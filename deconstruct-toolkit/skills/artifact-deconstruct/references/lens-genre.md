@@ -1,8 +1,10 @@
 # Lens: Genre Analysis (Swales + Bhatia)
 
 > **Sources**:
-> - John M. Swales, *Genre Analysis: English in Academic and Research Settings* (Cambridge University Press, 1990). The CARS (Create A Research Space) model is presented in Ch 7, "Research-process genres," pp 141–146.
-> - Vijay K. Bhatia, *Analysing Genre: Language Use in Professional Settings* (Longman, 1993). Move-step analysis is developed Ch 2; sales-letter genre Ch 3 (pp 45–64); legislative genre Ch 4.
+> - John M. Swales, *Genre Analysis: English in Academic and Research Settings* (Cambridge University Press, 1990). 260 pages total. The CARS (Create A Research Space) model — three moves: Establishing a Territory, Establishing a Niche, Occupying the Niche — is presented in the chapter on research-article introductions. Specific page range for the model itself is approximately mid-volume; consult the printed edition for exact pages.
+> - Vijay K. Bhatia, *Analysing Genre: Language Use in Professional Settings* (Longman, 1993). 246 pages total. Move-step analysis developed across early chapters; **Ch 3 covers sales promotion letters and job applications, including the 7-move sales-letter genre (with the 7 moves of letter of application stated on p 61)**.
+
+> **Synthesis note**: This file combines Swales's CARS model (1990) and Bhatia's move-step analysis (1993). Unlike most synthesis lenses in this toolkit, **this combination is organic** — Bhatia's work is a direct lineage of Swales (Bhatia studied under Swales's influence; *Analysing Genre* extends Swales's academic-genre framework to professional genres). The combination here is closer to a unified school of thought than a synthetic composite. See [ADR-0003](../../../docs/adr/0003-lens-synthesis-disclosure.md) for the broader synthesis-disclosure policy.
 
 Genre analysis recovers the **conventional move structure** of any
 recognizable document type — and identifies when moves are **missing**

@@ -1,84 +1,100 @@
-# Fixture: Dropbox landing page (2024)
+# Fixture: Dropbox landing page
 
 **Source**: https://www.dropbox.com/ (homepage, public access)
-**Accessed**: 2026-05-04
-**License**: Quoted as fair-use educational analysis of publicly accessible marketing copy. No reproduction of imagery; text content extracted from public DOM.
-**Eval target**: artifact-deconstruct must surface ≥4 of Cialdini 7, identify a hero-section structure (PASONA / AIDA), name social proof elements, assign ≥1 ethical position.
+**Accessed**: 2026-05-05 via WebFetch
+**Capture method**: Above-the-fold text content extracted from rendered HTML; no images reproduced; navigation menus and footer links omitted
+**License**: Quoted as fair-use educational analysis of publicly accessible marketing copy
+**Eval target**: artifact-deconstruct must surface ≥4 of Cialdini 7, identify a hero-section structure (PASONA / AIDA / variant), name social proof elements, assign ≥1 ethical position.
 
 ---
 
 ## Hero section
 
-**Headline**: Less work. More flow.
+**Headline**: Get to work, with a lot less work
 
-**Subhead**: Dropbox is the AI-powered organization platform that helps the world's most innovative teams move ideas forward—from anywhere.
+**Subheadline**: Dropbox delivers tools that help you collaborate with ease, move work forward faster, and keep it all safe.
 
-**Primary CTA**: Find your plan
-**Secondary CTA**: Or try Dropbox free
+**Primary CTA**: Try Dropbox free
+**Secondary CTA**: Get started
 
-## Section 1: "Move ideas to action—without the chaos"
+## Social proof
 
-The way teams work has changed. So why are you still stuck switching between disconnected tools, hunting for files, and missing critical updates?
+**Trust badge** (banner across top): Join the over 700 million registered users who trust Dropbox
 
-Dropbox brings everything together—files, content, collaboration, AI—in one secure, intelligent platform. So you can focus on what matters: turning your best ideas into real outcomes.
+**Featured customer logos**: McLaren, Crunch, Cirque du Soleil, Hydro Flask, Katz Media Group, Zoom, Lincoln Center
 
-[CTA] **See how it works**
+## Section 1 — Find
 
-## Section 2: Why teams choose Dropbox
+**Header**: Find it fast, every time
+**Description**: Get to the right file, fact, or message when you need it, so you spend less time searching...
 
-> "Dropbox lets us spend less time on logistics and more time creating."
-> — Sarah K., Creative Director at <agency redacted in fixture>
+## Section 2 — Organize
 
-> "We saved 30% of our weekly admin time after switching."
-> — Tom L., Operations Lead at <SMB redacted in fixture>
+**Header**: Everything in order, everyone aligned
+**Description**: Keep every version current and easy to manage. With synced team folders and previews for 175+...
 
-**Trust badges (logo wall)**:
-- 700M+ registered users
-- 4 of 5 Fortune 500 companies
-- ISO 27001 certified
-- GDPR / HIPAA / SOC 2 compliant
+## Section 3 — Share
 
-## Section 3: Three core capabilities
+**Header**: Send it safely, share it fast
+**Description**: Share work instantly and securely with real-time syncing and large file transfers, so teams...
 
-### 1. Smart file storage
-Find anything, anywhere, instantly. AI-powered search learns from how you work.
+## Section 4 — Security
 
-### 2. Real-time collaboration
-Edit, comment, and share—without version chaos. Built for distributed teams.
-
-### 3. Secure by default
-Encryption at rest and in transit. Granular permissions. Compliance-ready.
-
-## Section 4: Pricing teaser
-
-**Plus** — $11.99/mo per user — for individuals and freelancers
-**Standard** — $15/mo per user — for teams (most popular)
-**Advanced** — $24/mo per user — for growing organizations
-
-Each tier shows a side-by-side comparison with checkmarks. "Most popular" badge on Standard tier with green outline.
-
-[CTA] **Compare plans**
-
-## Section 5: Footer ribbon
-
-**Try Dropbox Plus free for 30 days**. No credit card required. Cancel anytime.
-
-[CTA — full-width purple] **Start your free trial**
-
-Below the CTA in 9pt grey text: "After your trial, your plan will be $11.99/month unless cancelled. You can cancel anytime in account settings."
+**Header**: Security never comes second
+**Description**: From industry-leading encryption and tamper-proof documents to version history and recovery...
 
 ---
 
 ## Annotations for evaluator
 
-The fixture is constructed to contain (so eval can verify):
+The fixture (real content as of 2026-05-05) contains the following design patterns evaluator should detect:
 
-- **Cialdini #1 (reciprocity)**: 30-day free trial
-- **Cialdini #3 (social proof)**: testimonial pair + "700M+ users" + Fortune 500 + logo wall
-- **Cialdini #4 (authority)**: ISO / GDPR / HIPAA / SOC 2 compliance signals
-- **Cialdini #5 (liking)**: relatable role-attributed testimonials (Creative Director / Ops Lead)
-- **Cialdini #6 (scarcity)**: weak — "30 days" is more reciprocity than scarcity
-- **Cialdini #7 (unity)**: weak — "world's most innovative teams" implies in-group
-- **Hero structure**: AIDA-leaning (Attention via headline → Interest via subhead pain → Desire via CTAs / social proof in next section). Could also be read as compressed PASONA (Problem in §1 → Affinity in testimonials → Solution in §3 → Offer in §4 → Narrowing in trust badges → Action in §5).
-- **Ethical position**: Mostly 🟢 transparent. The §5 trial-rollover disclosure is in 9pt grey text — borderline 🟡 gray-zone (forced continuity-adjacent: legal but visually de-emphasized).
-- **Negative space**: missing competitor comparison, no risk section, no "for whom this is wrong" framing.
+### Cialdini 7 principles
+
+| Principle | Triggered? | How | Position |
+|---|---|---|---|
+| Reciprocity | ✓ | "Try Dropbox free" — gift before commitment | 🟢 Transparent |
+| Commitment | (✗) | No multi-step micro-commitment trigger above the fold | — |
+| Social proof | ✓ | "700 million registered users" + named customer logos (McLaren, Cirque du Soleil, Zoom, Lincoln Center) | 🟢 Transparent |
+| Authority | ✓ (mild) | Implicit via brand-recognized customer roster | 🟢 Transparent |
+| Liking | ✓ | Conversational headline rhythm ("get to work, with a lot less work") creates relatability | 🟢 Transparent |
+| Scarcity | ✗ | None visible | — |
+| Unity | ✗ | None visible above fold | — |
+
+≥4 principles triggered (✓ on Reciprocity, Social proof, Authority, Liking). Eval threshold met.
+
+### Hero structure
+
+The above-the-fold structure is **AIDA-leaning**:
+- **Attention**: pun-driven headline ("get to work, with a lot less work")
+- **Interest**: subhead names three benefit categories (collaborate / move forward / keep safe)
+- **Desire**: dual CTAs immediately offer next-action paths
+- **Action**: primary CTA "Try Dropbox free" minimizes commitment
+
+Could also be read as compressed PASONA: Problem (work friction implied) → Affinity (relatable headline) → Solution (Dropbox) → Offer (free trial) → Narrowing (trust badges) → Action (CTA).
+
+### Social proof elements
+
+3 distinct types stacked:
+1. **Aggregate count** — "700 million registered users"
+2. **Logo wall** — 7 named brand customers
+3. **Trust verb** — "trust Dropbox" framing positions usage as endorsement
+
+### Ethical position
+
+🟢 **Transparent persuasion** for above-the-fold content. The 700M user count is verifiable (publicly stated by Dropbox). Logo wall customers are named (allowing the reader to verify or reject). No urgency / countdown / fake scarcity / dark patterns visible above the fold.
+
+⚠️ Note: this fixture only captures **above-the-fold** content. Subscription-flow / pricing / cancellation pages may contain different patterns (e.g., trial-rollover language, plan-comparison friction) that this fixture does not capture. A complete deconstruction would require fetching pricing + signup pages additionally.
+
+### Negative space
+
+| What's missing above fold | Significance |
+|---|---|
+| Pricing tiers / cost language | Pricing deferred — reduces friction for free-trial CTA |
+| Risk acknowledgment / "for whom this is wrong" | Common in modern marketing — over-promises by omitting non-fit segments |
+| Competitor comparison | Not used — confidence move (Dropbox is the category, not a challenger) |
+| Founder / origin story | Mature-brand convention — origin story belongs to early-stage marketing |
+
+### Distinctive feature
+
+The headline "**Get to work, with a lot less work**" is built on a **pun pivoting on the word "work"** — the first "work" denotes productivity output, the second denotes friction/effort. This compression is unusual for B2B SaaS landing pages (which usually use plain-statement headlines like "Collaborate effortlessly") and signals the brand's confidence to use playful copy at the highest-attention slot.

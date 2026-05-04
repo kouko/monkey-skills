@@ -1,8 +1,10 @@
-# Fixture: Stripe signup flow (text-extract, 2024)
+# Fixture: Stripe signup flow (synthetic representative, 2024)
 
-**Source**: https://dashboard.stripe.com/register (signup flow, public access)
-**Accessed**: 2026-05-04
-**License**: Quoted as fair-use educational analysis of publicly accessible signup UX. Text-only extraction; no screenshots. UI element descriptions in plain English.
+**Source**: Synthetic representative based on documented patterns of the Stripe signup flow at dashboard.stripe.com/register.
+**Status**: ⚠️ **Not directly fetched.** WebFetch attempt on 2026-05-05 returned only a server-side browser-compatibility gate ("You need a modern browser to use the Stripe Dashboard"); the actual signup form is JavaScript-rendered and not extractable via static HTTP. Capturing it would require browser automation (Playwright / Puppeteer) or screenshot OCR — both outside this v0.1.0 scope.
+**Honesty flag**: This fixture is a **representative composite** based on the author's prior knowledge of Stripe's signup pattern (multi-step / progress bar / inline validation / dual-CTA at activation step), not a fetch-verified real artifact. UI element descriptions are plausible representations, not verbatim captures.
+**Accessed (composite reference)**: 2026-05-04
+**License**: Quoted as fair-use educational analysis of recognizable UX patterns; no claim of verbatim Stripe content.
 **Eval target**: artifact-deconstruct must apply NN/g 10 heuristics, identify ≥3 affordances, check Brignull 12 dark patterns, assign ethical position per persuasion principle.
 
 ---

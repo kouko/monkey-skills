@@ -1,6 +1,6 @@
 # Lens: Semiotic Analysis (Barthes 5 Codes)
 
-> **Source**: Roland Barthes, *S/Z*, trans. Richard Miller (Hill and Wang, 1974; original French *S/Z*, Éditions du Seuil, 1970). The "five codes" framework appears throughout the volume; the most concise statement is in §I, "Évaluation," and §VI, "Les cinq codes."
+> **Source**: Roland Barthes, *S/Z*, trans. Richard Miller (Hill and Wang, 1974; original French *S/Z*, Éditions du Seuil, 1970). The "five codes" framework — Hermeneutic (HER), Proairetic (PRO), Semantic (SEM), Symbolic (SYM), Cultural / Referential (REF) — appears throughout the volume as Barthes deploys it to read Balzac's "Sarrasine." Two codes are *sequential* (HER and PRO structure the text irreversibly); three are *reversible* (SEM, SYM, REF). The codes are introduced in early sections and applied passage-by-passage thereafter; consult the printed edition for exact section numbering. (Single-source lens — no synthesis disclosure applies.)
 
 ## When to apply this lens
 
