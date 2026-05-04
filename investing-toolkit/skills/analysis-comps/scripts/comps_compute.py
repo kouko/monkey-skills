@@ -524,6 +524,334 @@ MULTIPLE_FORMULAS: dict[str, callable] = {
 }
 
 
+# --- Indicator formulas (v2.2.0-c) -----------------------------------------
+#
+# Each indicator returns (value: float|None, provenance: dict, warnings: list[str]).
+# Values are PERCENTAGES (e.g. 16.2, not 0.162); unit is added by the caller.
+# Provenance shape mirrors multiple-provenance: numerator_source /
+# denominator_source / accession_basis / fiscal_year_end / computed / [note].
+
+def _i_ROE(memo: dict) -> tuple[float | None, dict, list[str]]:
+    inc = memo.get("income_statement") or {}
+    bs = memo.get("balance_sheet") or {}
+    net_income_fy = _safe_first(inc.get("net_income"))
+    equity_fy = _safe_first(bs.get("total_stockholders_equity"))
+    fy_end = _concept_fy_end(bs, "total_stockholders_equity")
+    filings = _concept_filings(bs, "total_stockholders_equity")
+    if net_income_fy is None or equity_fy is None or equity_fy <= 0:
+        warns: list[str] = []
+        if net_income_fy is None:
+            warns.append("ROE compute skipped: net_income FY array empty")
+        elif equity_fy is None:
+            warns.append("ROE compute skipped: total_stockholders_equity FY array empty")
+        elif equity_fy <= 0:
+            warns.append("ROE compute skipped: total_stockholders_equity[0] non-positive")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — net_income[0] and equity[0] (>0) required",
+        }, warns
+    return (net_income_fy / equity_fy) * 100.0, {
+        "numerator_source":   "memo-fetch.income_statement.net_income[0]",
+        "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_book_value_growth(memo: dict) -> tuple[float | None, dict, list[str]]:
+    bs = memo.get("balance_sheet") or {}
+    equity_arr = bs.get("total_stockholders_equity") or []
+    fy_end = _concept_fy_end(bs, "total_stockholders_equity")
+    filings = _concept_filings(bs, "total_stockholders_equity")
+    if not isinstance(equity_arr, list) or len(equity_arr) < 2:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — equity FY-1 array entry missing",
+        }, ["book_value_growth compute skipped: equity FY-1 missing"]
+    e0, e1 = equity_arr[0], equity_arr[1]
+    if e0 is None or e1 is None or e1 == 0:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — equity[1] missing or zero",
+        }, ["book_value_growth compute skipped: equity[1] missing or zero"]
+    return ((e0 - e1) / e1) * 100.0, {
+        "numerator_source":   "memo-fetch.balance_sheet.total_stockholders_equity[0] - [1]",
+        "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[1]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_gross_margin(memo: dict) -> tuple[float | None, dict, list[str]]:
+    inc = memo.get("income_statement") or {}
+    revenue_fy = _safe_first(inc.get("revenue"))
+    gross_arr = inc.get("gross_profit")
+    fy_end = _concept_fy_end(inc, "gross_profit") or _concept_fy_end(inc, "revenue")
+    filings = _concept_filings(inc, "gross_profit") or _concept_filings(inc, "revenue")
+    # Per spec §6.3: gross_profit empty array → null + note (different from
+    # goodwill/intangibles which substitute 0; gross_profit absent means
+    # undisclosed, not 0).
+    if not isinstance(gross_arr, list) or not gross_arr:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — gross_profit not disclosed (empty array; treat as undisclosed not zero)",
+        }, ["gross_margin compute skipped: gross_profit FY array empty (undisclosed)"]
+    gross_fy = gross_arr[0]
+    if revenue_fy is None or revenue_fy == 0 or gross_fy is None:
+        warns = []
+        if revenue_fy is None:
+            warns.append("gross_margin compute skipped: revenue FY array empty")
+        elif revenue_fy == 0:
+            warns.append("gross_margin compute skipped: revenue[0] is zero")
+        elif gross_fy is None:
+            warns.append("gross_margin compute skipped: gross_profit[0] is null")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — revenue[0] (non-zero) and gross_profit[0] required",
+        }, warns
+    return (gross_fy / revenue_fy) * 100.0, {
+        "numerator_source":   "memo-fetch.income_statement.gross_profit[0]",
+        "denominator_source": "memo-fetch.income_statement.revenue[0]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_operating_margin(memo: dict) -> tuple[float | None, dict, list[str]]:
+    inc = memo.get("income_statement") or {}
+    revenue_fy = _safe_first(inc.get("revenue"))
+    op_fy = _safe_first(inc.get("operating_income"))
+    fy_end = _concept_fy_end(inc, "operating_income") or _concept_fy_end(inc, "revenue")
+    filings = _concept_filings(inc, "operating_income") or _concept_filings(inc, "revenue")
+    if revenue_fy is None or revenue_fy == 0 or op_fy is None:
+        warns = []
+        if revenue_fy is None:
+            warns.append("operating_margin compute skipped: revenue FY array empty")
+        elif revenue_fy == 0:
+            warns.append("operating_margin compute skipped: revenue[0] is zero")
+        elif op_fy is None:
+            warns.append("operating_margin compute skipped: operating_income FY array empty")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — revenue[0] (non-zero) and operating_income[0] required",
+        }, warns
+    return (op_fy / revenue_fy) * 100.0, {
+        "numerator_source":   "memo-fetch.income_statement.operating_income[0]",
+        "denominator_source": "memo-fetch.income_statement.revenue[0]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_FCF_yield(memo: dict) -> tuple[float | None, dict, list[str]]:
+    cf = memo.get("cash_flow") or {}
+    ci = memo.get("company_info") or {}
+    market_cap = ci.get("marketCap")
+    ocf_fy = _safe_first(cf.get("operating_cash_flow"))
+    capex_fy = _safe_first(cf.get("capex"))
+    fy_end = _concept_fy_end(cf, "operating_cash_flow") or _concept_fy_end(cf, "capex")
+    filings = _concept_filings(cf, "operating_cash_flow") or _concept_filings(cf, "capex")
+    if market_cap is None or ocf_fy is None or capex_fy is None:
+        warns = []
+        if market_cap is None:
+            warns.append("FCF_yield compute skipped: marketCap missing")
+        elif ocf_fy is None:
+            warns.append("FCF_yield compute skipped: operating_cash_flow FY array empty")
+        elif capex_fy is None:
+            warns.append("FCF_yield compute skipped: capex FY array empty")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — marketCap / operating_cash_flow[0] / capex[0] required",
+        }, warns
+    if market_cap == 0:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — marketCap is zero",
+        }, ["FCF_yield compute skipped: marketCap is zero"]
+    fcf = ocf_fy - capex_fy
+    return (fcf / market_cap) * 100.0, {
+        "numerator_source":   "memo-fetch.cash_flow.operating_cash_flow[0] - capex[0]",
+        "denominator_source": "memo-fetch.company_info.marketCap",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_FCF_margin(memo: dict) -> tuple[float | None, dict, list[str]]:
+    cf = memo.get("cash_flow") or {}
+    inc = memo.get("income_statement") or {}
+    revenue_fy = _safe_first(inc.get("revenue"))
+    ocf_fy = _safe_first(cf.get("operating_cash_flow"))
+    capex_fy = _safe_first(cf.get("capex"))
+    fy_end = _concept_fy_end(cf, "operating_cash_flow") or _concept_fy_end(cf, "capex")
+    filings = _concept_filings(cf, "operating_cash_flow") or _concept_filings(cf, "capex")
+    if revenue_fy is None or revenue_fy == 0 or ocf_fy is None or capex_fy is None:
+        warns = []
+        if revenue_fy is None:
+            warns.append("FCF_margin compute skipped: revenue FY array empty")
+        elif revenue_fy == 0:
+            warns.append("FCF_margin compute skipped: revenue[0] is zero")
+        elif ocf_fy is None:
+            warns.append("FCF_margin compute skipped: operating_cash_flow FY array empty")
+        elif capex_fy is None:
+            warns.append("FCF_margin compute skipped: capex FY array empty")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — revenue[0] (non-zero) / operating_cash_flow[0] / capex[0] required",
+        }, warns
+    fcf = ocf_fy - capex_fy
+    return (fcf / revenue_fy) * 100.0, {
+        "numerator_source":   "memo-fetch.cash_flow.operating_cash_flow[0] - capex[0]",
+        "denominator_source": "memo-fetch.income_statement.revenue[0]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }, []
+
+
+def _i_debt_to_equity(memo: dict) -> tuple[float | None, dict, list[str]]:
+    """debt_to_equity = (long_term_debt[0] + short_term_debt[0]) / equity[0] × 100.
+
+    Per spec §6.2: total_debt = long_term_debt[0] + short_term_debt[0]; treat
+    None as 0 only if at least one component present, else null.
+    """
+    bs = memo.get("balance_sheet") or {}
+    lt_arr = bs.get("long_term_debt")
+    st_arr = bs.get("short_term_debt")
+    equity_fy = _safe_first(bs.get("total_stockholders_equity"))
+    fy_end = _concept_fy_end(bs, "total_stockholders_equity")
+    filings = _concept_filings(bs, "total_stockholders_equity")
+    lt_fy = _safe_first(lt_arr) if isinstance(lt_arr, list) else None
+    st_fy = _safe_first(st_arr) if isinstance(st_arr, list) else None
+    has_lt = isinstance(lt_arr, list) and len(lt_arr) > 0 and lt_fy is not None
+    has_st = isinstance(st_arr, list) and len(st_arr) > 0 and st_fy is not None
+    if not has_lt and not has_st:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — neither long_term_debt[0] nor short_term_debt[0] disclosed",
+        }, ["debt_to_equity compute skipped: neither long_term_debt nor short_term_debt disclosed"]
+    if equity_fy is None or equity_fy <= 0:
+        warns = []
+        if equity_fy is None:
+            warns.append("debt_to_equity compute skipped: total_stockholders_equity FY array empty")
+        else:
+            warns.append("debt_to_equity compute skipped: total_stockholders_equity[0] non-positive")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — equity[0] (>0) required",
+        }, warns
+    total_debt = (lt_fy if has_lt else 0.0) + (st_fy if has_st else 0.0)
+    note_parts: list[str] = []
+    if not has_lt:
+        note_parts.append("long_term_debt absent → treated as 0")
+    if not has_st:
+        note_parts.append("short_term_debt absent → treated as 0")
+    prov = {
+        "numerator_source":   "memo-fetch.balance_sheet.long_term_debt[0] + short_term_debt[0]",
+        "denominator_source": "memo-fetch.balance_sheet.total_stockholders_equity[0]",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+    }
+    if note_parts:
+        prov["note"] = "; ".join(note_parts)
+    return (total_debt / equity_fy) * 100.0, prov, []
+
+
+def _i_rule_of_40(memo: dict) -> tuple[float | None, dict, list[str]]:
+    """rule_of_40 = revenue_growth_yoy + operating_margin (sum of two pcts).
+
+    revenue_growth_yoy = (revenue[0] - revenue[1]) / revenue[1] × 100.
+    """
+    inc = memo.get("income_statement") or {}
+    rev_arr = inc.get("revenue") or []
+    op_fy = _safe_first(inc.get("operating_income"))
+    fy_end = _concept_fy_end(inc, "revenue")
+    filings = _concept_filings(inc, "revenue")
+    if not isinstance(rev_arr, list) or len(rev_arr) < 2:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — revenue FY-1 array entry missing",
+        }, ["rule_of_40 compute skipped: revenue FY-1 missing"]
+    r0, r1 = rev_arr[0], rev_arr[1]
+    if r0 is None or r1 is None or r1 == 0:
+        return None, {
+            "computed": False,
+            "note": "compute skipped — revenue[1] missing or zero",
+        }, ["rule_of_40 compute skipped: revenue[1] missing or zero"]
+    if op_fy is None or r0 == 0:
+        warns = []
+        if op_fy is None:
+            warns.append("rule_of_40 compute skipped: operating_income FY array empty")
+        elif r0 == 0:
+            warns.append("rule_of_40 compute skipped: revenue[0] is zero")
+        return None, {
+            "computed": False,
+            "note": "compute skipped — operating_income[0] and revenue[0] (non-zero) required",
+        }, warns
+    revenue_growth_yoy = ((r0 - r1) / r1) * 100.0
+    operating_margin = (op_fy / r0) * 100.0
+    return revenue_growth_yoy + operating_margin, {
+        "numerator_source":   "(memo-fetch.income_statement.revenue[0] - revenue[1]) / revenue[1] + operating_income[0] / revenue[0]",
+        "denominator_source": "n/a (sum of two ratios, both expressed as pct)",
+        "accession_basis":    filings,
+        "fiscal_year_end":    fy_end,
+        "computed":           True,
+        "note":               "rule_of_40 = revenue_growth_yoy + operating_margin (both pct)",
+    }, []
+
+
+# Dispatch table for indicators: formula_id → callable.
+INDICATOR_FORMULAS: dict[str, callable] = {
+    "ROE_FY":               _i_ROE,
+    "book_value_growth_FY": _i_book_value_growth,
+    "gross_margin_FY":      _i_gross_margin,
+    "operating_margin_FY":  _i_operating_margin,
+    "FCF_yield_FY":         _i_FCF_yield,
+    "FCF_margin_FY":        _i_FCF_margin,
+    "debt_to_equity_FY":    _i_debt_to_equity,
+    "rule_of_40_FY":        _i_rule_of_40,
+}
+
+
+def _compute_indicators_from_memo_fetch(
+    memo_fetch: dict,
+    schema: dict,
+) -> tuple[dict, dict, list[str]]:
+    """Compute the schema's indicators from a memo-fetch pack.
+
+    Returns (indicators_dict, indicator_provenance_dict, warnings_list) where:
+      indicators_dict[indicator_id] = {"value": float|None, "unit": "pct"}
+      indicator_provenance_dict[indicator_id] = {numerator_source, ...}
+        — same shape as multiple compute_provenance.
+    """
+    out_indicators: dict[str, dict] = {}
+    out_prov: dict[str, dict] = {}
+    warnings: list[str] = []
+    for entry in schema.get("indicators") or []:
+        iid = entry["id"]
+        formula_id = entry.get("formula_id")
+        formula = INDICATOR_FORMULAS.get(formula_id)
+        if formula is None:
+            out_indicators[iid] = {"value": None, "unit": "pct"}
+            out_prov[iid] = {
+                "computed": False,
+                "note": f"compute skipped — unknown indicator formula_id={formula_id!r}",
+            }
+            warnings.append(f"{iid} compute skipped: unknown formula_id={formula_id!r}")
+            continue
+        value, prov, warns = formula(memo_fetch)
+        out_indicators[iid] = {"value": value, "unit": "pct"}
+        out_prov[iid] = prov
+        warnings.extend(warns)
+    return out_indicators, out_prov, warnings
+
+
 def _compute_multiples_from_memo_fetch(
     memo_fetch: dict,
     direct_multiples: dict,
@@ -935,6 +1263,17 @@ def main() -> int:
         )
         anchor_block["multiples_compute"] = multiples_compute
         anchor_block["divergence"] = divergence
+        # Indicators (v2.2.0-c) — schema-driven; emit `{}` when schema has no
+        # indicators (e.g. REIT). Provenance entries co-exist with multiples
+        # provenance under the same compute_provenance dict, keyed by
+        # indicator_id (no key collisions because indicator ids are distinct
+        # from multiple ids per schema design).
+        indicators, indicator_prov, indicator_warnings = (
+            _compute_indicators_from_memo_fetch(anchor_base, anchor_schema)
+        )
+        warnings.extend(indicator_warnings)
+        anchor_block["indicators"] = indicators
+        compute_provenance.update(indicator_prov)
         anchor_block["compute_provenance"] = compute_provenance
 
     # ---- Provenance ----------------------------------------------------
