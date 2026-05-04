@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "insurance",
+  "version": 1,
+  "label": "Insurance (P/B + ROE + book-value-growth focus)",
+  "applies_to_industries_example": [
+    "Insurance - Diversified",
+    "Insurance - Life",
+    "Insurance - Property & Casualty",
+    "Insurance - Reinsurance",
+    "Insurance - Specialty",
+    "Insurance Brokers"
+  ],
+  "multiples": [
+    {"id": "trailingPE",          "kind": "compute", "formula_id": "trailingPE_FY"},
+    {"id": "priceToBook",         "kind": "compute", "formula_id": "priceToBook_FY"},
+    {"id": "priceToTangibleBook", "kind": "compute", "formula_id": "priceToTangibleBook_FY"}
+  ],
+  "indicators": [
+    {"id": "ROE",               "formula_id": "ROE_FY"},
+    {"id": "book_value_growth", "formula_id": "book_value_growth_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "combined_ratio",  "reason": "(claims + expenses) / earned_premiums — insurance supplemental disclosure, not standard XBRL"},
+    {"id": "premium_growth",  "reason": "Earned premium growth — supplemental disclosure"},
+    {"id": "embedded_value",  "reason": "Life-insurance EV is an actuarial estimate, not a GAAP/IFRS concept"}
+  ],
+  "notes": "Insurance valuation is anchored on book-value compounding (Berkshire-style framing). ROE captures current profitability; book_value_growth captures whether equity per share is compounding or eroding (the latter is a red flag in P&C cycles). Combined ratio (deferred) determines underwriting profitability. Insurers don't have 'sales' or EBITDA — those multiples are absent. forwardPE intentionally absent: insurance EPS forward consensus is unreliable due to catastrophe loss volatility."
+}

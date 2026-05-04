@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "tech-semis",
+  "version": 1,
+  "label": "Tech / Semiconductors (Margin + Cycle focus)",
+  "applies_to_industries_example": [
+    "Semiconductors",
+    "Semiconductor Equipment & Materials"
+  ],
+  "multiples": [
+    {"id": "trailingPE",   "kind": "compute",     "formula_id": "trailingPE_FY"},
+    {"id": "forwardPE",    "kind": "passthrough"},
+    {"id": "priceToSales", "kind": "compute",     "formula_id": "priceToSales_FY"},
+    {"id": "evEbitda",     "kind": "compute",     "formula_id": "evEbitda_FY"}
+  ],
+  "indicators": [
+    {"id": "gross_margin", "formula_id": "gross_margin_FY"},
+    {"id": "FCF_margin",   "formula_id": "FCF_margin_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "inventory_turnover",  "reason": "Inventory concept not yet in memo-fetch (XBRL InventoryNet exists; deferred to v2.2.0-c-followup-inventory)"},
+    {"id": "capex_intensity",     "reason": "capex / revenue is computable today; reserved for next schema iteration to keep launch lean"},
+    {"id": "book_to_bill",        "reason": "Bookings vs billings — supplemental disclosure (semi-equipment specific)"}
+  ],
+  "notes": "Semiconductor cycles drive valuation — gross margin (capacity utilization proxy) + FCF margin (capex-cycle survival) are the dominant indicators. trailingPE retained because semi issuers (unlike SaaS) generally have positive GAAP earnings even at cycle troughs. evEbitda retained because semi capital intensity makes EBITDA a meaningful normalized-cycle metric (depreciation reflects real cash deployment). priceToBook absent because book is heavily distorted by goodwill from M&A (e.g. AVGO/VMware) and capacity expansions."
+}

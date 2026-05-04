@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schema_id": "tech-saas",
+  "version": 1,
+  "label": "Tech / SaaS / Internet (Revenue-growth + Rule-of-40 focus)",
+  "applies_to_industries_example": [
+    "Software - Application",
+    "Software - Infrastructure",
+    "Information Technology Services",
+    "Internet Content & Information",
+    "Internet Retail (subset where business model is platform-revenue)"
+  ],
+  "multiples": [
+    {"id": "forwardPE",     "kind": "passthrough"},
+    {"id": "priceToSales",  "kind": "compute", "formula_id": "priceToSales_FY"},
+    {"id": "evRevenue",     "kind": "compute", "formula_id": "evRevenue_FY"}
+  ],
+  "indicators": [
+    {"id": "rule_of_40",   "formula_id": "rule_of_40_FY"},
+    {"id": "gross_margin", "formula_id": "gross_margin_FY"},
+    {"id": "FCF_margin",   "formula_id": "FCF_margin_FY"}
+  ],
+  "deferred_concepts": [
+    {"id": "ARR",                "reason": "Annual recurring revenue — SaaS supplemental disclosure"},
+    {"id": "net_revenue_retention", "reason": "NRR % — SaaS supplemental"},
+    {"id": "customer_count",     "reason": "Customer / paying-user counts — supplemental"},
+    {"id": "magic_number",       "reason": "Sales efficiency = (ΔARR × 4) / sales_and_marketing_spend — supplemental"}
+  ],
+  "notes": "Tech/SaaS valuation is driven by revenue growth on margin trajectory — Rule of 40 (revenue_growth + operating_margin ≥ 40%) is the canonical screen. trailingPE absent because SaaS issuers are commonly loss-making in growth phase; forwardPE pass-through retained because consensus EPS is the analyst convention even when current GAAP earnings are negative. evEbitda absent because SBC-heavy cost base often makes EBITDA look better than economic reality — investors prefer FCF-margin instead. priceToBook absent because asset-light SaaS books are dominated by goodwill from M&A and don't reflect economic value."
+}
