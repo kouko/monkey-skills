@@ -110,7 +110,7 @@ gws slides presentations get \
 |---|---|---|
 | `output_title` missing / not a string / empty | 15 | `schema validation failed: output_title` |
 | Token expired | 10 | `401 / invalid_grant; run gws auth login` |
-| 403 forbidden (missing scope / Drive quota / policy) | **10** | `insufficient permissions — check presentations + drive.file scope` |
+| 403 forbidden (missing scope / Drive quota / policy) | **10** | `insufficient permissions — check presentations + drive + documents + spreadsheets scopes` |
 | 429 still failing after 5 retries | **11** | `rate limit exhausted` |
 | Other 5xx | determined by `gws-wrap.sh` (retry); exhausted → 11 | — |
 | Response missing `presentationId` | 12 | `create failed: no presentationId in response` |

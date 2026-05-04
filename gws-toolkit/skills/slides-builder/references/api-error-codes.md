@@ -18,7 +18,7 @@ Every recipe in `protocols/` references this file for exit-code semantics.
 **Root causes**:
 - Refresh token hit the 7-day expiration window (External + Testing mode; Google OAuth policy)
 - `gws auth login` was never completed
-- Required scope missing (e.g. the call needs `presentations.batchUpdate` but login only granted `drive.file`)
+- Required scope missing (e.g. the call needs `presentations.batchUpdate` but login only granted `drive` / `documents` / `spreadsheets`)
 - User revoked OAuth consent via myaccount.google.com
 
 **Recovery** (smooth re-auth since v0.5.1):
@@ -29,7 +29,7 @@ bash ~/GitHub/monkey-skills/slides-toolkit/scripts/gws/refresh-auth.sh
 ```
 
 The script sources `env.sh` (issue #119 env vars) and calls
-`gws auth login --scopes=<presentations,drive.file>` with full URLs,
+`gws auth login --scopes=<presentations,drive,documents,spreadsheets>` with full URLs,
 avoiding the `-s` service-filter pitfall — see `docs/gws-cli-quirks.md` §3.
 
 **Manual expansion** (if you prefer not to use the helper):
@@ -37,7 +37,7 @@ avoiding the `-s` service-filter pitfall — see `docs/gws-cli-quirks.md` §3.
 source ~/.config/gws/env.sh
 export GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
 gws auth login \
-  --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive.file
+  --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets
 ```
 
 Browser opens → click "Allow" → exit 0 → rerun the recipe. Token stays
@@ -137,7 +137,7 @@ full recovery protocol.
 - File backend not enabled via `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`
 
 **Recovery**:
-- Run `gws auth login -s presentations,drive.file`
+- Run `gws auth login --scopes=presentations,drive,documents,spreadsheets`
 - On a headless host where Keychain fails: `export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`
 
 ---

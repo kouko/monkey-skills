@@ -231,7 +231,7 @@ rebase or re-clone.
 Check the Google Cloud audit log (Console → Logging) for any
 suspicious access against Google resources during the 7-day token
 TTL window. Even though the MVP scope is minimal (only
-`presentations` + `drive.file`), you should still check.
+`presentations` + `drive` + `documents` + `spreadsheets`), you should still check.
 
 ### Step 7 — Write an incident log
 
@@ -258,7 +258,7 @@ The ASVS L1 verification items this standard touches (aligned with
 
 | ASVS chapter | How this standard maps |
 |---|---|
-| **V1** Encoding & Sanitization | Minimal OAuth scopes (least-privilege: `presentations` + `drive.file`, never `drive` full or `userinfo.email`); UTF-8-only pipeline to avoid mojibake creating an injection surface |
+| **V1** Encoding & Sanitization | Minimal OAuth scopes (least-privilege: `presentations` + `drive` + `documents` + `spreadsheets`, never `drive` full or `userinfo.email`); UTF-8-only pipeline to avoid mojibake creating an injection surface |
 | **V13** Configuration | Rule 5 (Keychain preferred, file-backend fallback decision); binary SHA-256 pin as secure-default + dependency-integrity control |
 | **V14** Data Protection | Rule 1 (no secret in repo) + Rule 2 (centralized `~/.config/gws/`, chmod 600) + Rule 4 (.gitignore) + Rule 3 (settings.json deny rule blocking Claude reads) — a multi-layer secrets-at-rest defense |
 | **V16** Security Logging & Error Handling | Incident response writes `incidents/` without secrets; the exit-code table (TECH-SPEC §4.2) never prints token values to stderr |

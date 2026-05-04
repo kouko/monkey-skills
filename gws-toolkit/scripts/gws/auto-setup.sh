@@ -14,8 +14,10 @@ set -euo pipefail
 #      download client_secret_*.json into ~/Downloads.
 #   5. Move the JSON to ~/.config/gws/client_secret.json (chmod 600) and
 #      write env.sh.
-#   6. `gws auth login --scopes=presentations,drive.file` (correct scope
-#      syntax).
+#   6. `gws auth login --scopes=presentations,drive,documents,spreadsheets`
+#      (4 scopes covering Slides + Drive + Docs + Sheets API operations
+#      surfaced by the 5 vendored upstream skills; correct scope syntax —
+#      `--scopes=` with full URLs, not `-s`).
 #   7. Verify `gws auth status` reports oauth2.
 #
 # Idempotent: each function probes the current state and skips with an
@@ -50,7 +52,8 @@ set -euo pipefail
 # Stdin: none
 # Stdout: JSON
 #   {"status":"success","project_id":"...","account":"...",
-#    "scopes":["presentations","drive.file"],"elapsed_sec":N}
+#    "scopes":["presentations","drive","documents","spreadsheets"],
+#    "elapsed_sec":N}
 # Stderr: human-readable `[auto-setup] step N/7: ...` progress +
 #         structured error JSON on failure.
 #
@@ -72,7 +75,9 @@ readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
 readonly DOWNLOADS_DIR="${HOME}/Downloads"
 readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
 readonly SLIDES_SCOPE="https://www.googleapis.com/auth/presentations"
-readonly DRIVE_SCOPE="https://www.googleapis.com/auth/drive.file"
+readonly DRIVE_SCOPE="https://www.googleapis.com/auth/drive"
+readonly DOCS_SCOPE="https://www.googleapis.com/auth/documents"
+readonly SHEETS_SCOPE="https://www.googleapis.com/auth/spreadsheets"
 
 # 等待 client_secret JSON 出現的 timeout（秒）與輪詢週期
 readonly WAIT_CLIENT_SECRET_TIMEOUT_SEC=600
@@ -435,7 +440,7 @@ install_credentials() {
 # 實測：gws 的 `-s` 是 service filter，不是 scope；要用 `--scopes=<URL>,<URL>`
 # --force-reinstall 時強制重跑，否則 gws auth status 已 oauth2 → skip。
 ensure_gws_auth() {
-  step 7 7 "gws auth login with slides + drive.file scopes"
+  step 7 7 "gws auth login with presentations + drive + documents + spreadsheets scopes"
 
   local gws_bin
   gws_bin="$(command -v gws || printf '%s/gws' "${CACHE_BIN_DIR}")"
@@ -453,7 +458,7 @@ ensure_gws_auth() {
 
   if (( DRY_RUN == 1 )); then
     dry_echo "source ${ENV_FILE}"
-    dry_echo "${gws_bin} auth login --scopes=${SLIDES_SCOPE},${DRIVE_SCOPE}"
+    dry_echo "${gws_bin} auth login --scopes=${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE}"
     return
   fi
 
@@ -463,7 +468,7 @@ ensure_gws_auth() {
   export GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
 
   if ! "${gws_bin}" auth login \
-      --scopes="${SLIDES_SCOPE},${DRIVE_SCOPE}"; then
+      --scopes="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE}"; then
     die_json 10 "gws auth login failed"
   fi
 }
@@ -505,7 +510,7 @@ emit_result() {
        status: $status,
        project_id: $project_id,
        account: $account,
-       scopes: ["presentations", "drive.file"],
+       scopes: ["presentations", "drive", "documents", "spreadsheets"],
        elapsed_sec: $elapsed,
        dry_run: $dry_run
      }'

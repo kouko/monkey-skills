@@ -41,7 +41,7 @@ Example shape:
 
 - `gws-setup` has been run once:
   - `~/.cache/slides-toolkit/bin/gws` and `jq` are downloaded (HTTPS + `curl -f`; v0.3 does not pin SHA-256)
-  - Google OAuth is granted (scopes: `presentations` + `drive.file`; see TECH-SPEC §4.4)
+  - Google OAuth is granted (scopes: `presentations` + `drive` + `documents` + `spreadsheets`; see TECH-SPEC §4.4)
   - `~/.config/gws/env.sh` includes the issue #119 workaround (if detected)
 - Runs on macOS + Claude Code; all input files are **UTF-8 only**
 
@@ -186,7 +186,7 @@ click "Allow" once — no copy-pasting long commands.
 3. **Auto-trigger re-auth**: invoke
    `bash slides-toolkit/scripts/gws/refresh-auth.sh`
    - The script sources `env.sh`, exports env vars, and calls
-     `gws auth login --scopes=<presentations,drive.file>`
+     `gws auth login --scopes=<presentations,drive,documents,spreadsheets>`
    - Browser opens automatically; user clicks Allow; localhost callback; exit 0
 4. **Retry the original operation**: once re-auth succeeds (script exit 0),
    **rerun** the interrupted pipeline step (create-presentation /

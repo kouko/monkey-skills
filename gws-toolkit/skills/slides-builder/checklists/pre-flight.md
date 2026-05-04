@@ -78,16 +78,16 @@ scripts/gws/credential-check.sh
 - `token_valid == false` 或 `expires_in_sec <= 0` → **exit 10** + hint：`Your gws refresh token has expired (Google External + Testing policy: 7-day lifetime). Run: gws auth login`
 - Keychain + file backend 都失敗 → **exit 18**
 
-## 6. [ ] 所需 scope 已 grant（`presentations` + `drive.file`）
+## 6. [ ] 所需 scope 已 grant（`presentations` + `drive` + `documents` + `spreadsheets`）
 
 ```bash
 gws auth scopes 2>/dev/null | grep -q 'presentations' && \
-  gws auth scopes 2>/dev/null | grep -q 'drive.file'
+  gws auth scopes 2>/dev/null | grep -qE 'auth/drive(\b|[^.])'
 ```
 
-未 grant → **exit 10** + hint：`missing required scopes. Run gws-setup and re-authorize`
+未 grant → **exit 10** + hint：`missing required scopes (need presentations + drive + documents + spreadsheets). Run gws-setup and re-authorize`
 
-（TECH-SPEC §4.4：只需 `presentations` + `drive.file`；其他 scope 被 least-privilege 原則拒絕。v0.3 起 `drive.file` 僅用於圖片上傳與新建 deck 本身，不再用於 template copy）
+（TECH-SPEC §4.4：v0.4 起需 `presentations` + `drive` + `documents` + `spreadsheets` 4 個 scope；`drive` 取代原本的 `drive.file`，least-privilege 由 toolkit 的 `safe-delete.sh` 三層防護 wrapper 在應用層 enforce，而非由 OAuth scope 邊界 enforce）
 
 ## 7. [ ] 網路可通 `googleapis.com`
 
