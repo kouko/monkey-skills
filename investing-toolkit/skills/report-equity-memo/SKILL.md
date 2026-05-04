@@ -172,9 +172,14 @@ INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
     > /tmp/${COUNTRY}-peers-comps.json
 # Repeat for each country present in the peer list.
 
-# 3. Run analysis-comps in compute mode (v2.2.0-b+)
+# 3. Run analysis-comps in compute mode (v2.2.0-b+; sector-aware since v2.2.0-c)
 # anchor memo-fetch already pre-fetched in Phase 1: /tmp/${TICKER_SAFE}-fetch.json
-# Compute mode emits multiples_direct + multiples_compute + divergence in one JSON.
+# Compute mode emits multiples_direct + multiples_compute + divergence + indicators
+# (v2.2.0-c) in one JSON. Sector classification is automatic from
+# info.sector + info.industry on the anchor pack — no flag needed.
+# Override available via --sector-override <id> (debug only) when yfinance
+# misroutes a holdco / multi-segment issuer not yet captured in
+# analysis-comps/references/sector-overrides.yaml.
 uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
   --mode compute \
   --anchor       /tmp/${TICKER_SAFE}-anchor-comps.json \
@@ -185,6 +190,18 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
 ```
 
 Pass `/tmp/${TICKER_SAFE}-comps.json` to investing-team in Phase 4 alongside `dcf.json` / `regime.json`.
+
+**Sector-aware shape (v2.2.0-c+)**: the comps JSON now carries
+`anchor.schema_id` (one of `default / bank / insurance / asset-manager
+/ reit / tech-saas / tech-semis / energy / utilities`) and
+`anchor.indicators` (operating-context metrics like ROE / Rule-of-40
+/ FCF-yield, sector-dependent). `multiples_compute` keys are
+schema-driven — non-default schemas omit irrelevant multiples (e.g. a
+bank anchor has no `evEbitda` because it's undefined for banks; a REIT
+anchor uses `priceToFFO + evEbitdare` instead of `trailingPE +
+evEbitda`). Phase 4 investing-team consumes this shape transparently —
+relative-valuation gates iterate the schema's multiple set rather than
+assuming a fixed-5 schema.
 
 ### Phase 3 — Analysis
 
@@ -233,6 +250,8 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 | Taiwan Local Rigor | MAY | `rubrics/taiwan-local-rigor-gate.md` (auto-triggered for `.TW` / `.TWO`) |
 
 **Comps divergence (v2.2.0-b+)**: when `comps.json` has `anchor.divergence[*].alert == "high"`, the Comps section MUST surface the divergence source — e.g. "yfinance trailingPE 28.5x vs SEC raw recompute 36.7x — Yahoo's adjusted EPS differs from FY GAAP". Cite the relevant SEC accession from `compute_provenance[*].accession_basis`. Medium alerts may be mentioned briefly; low alerts are upstream-rounding noise and stay silent.
+
+**Sector-aware Comps narrative (v2.2.0-c+)**: lead the Comps section with `anchor.schema_id` context — e.g. "JPM (bank schema): P/B 1.81x, ROE 16.2%; sector peers ..." — because the multiples Phase 4 sees depend on schema. For non-default schemas, REIT P/FFO and EV/EBITDAre are NAREIT approximations (gains_on_sale / impairment not available in standard XBRL); the per-multiple `compute_provenance.note` discloses this — surface it in the memo when the multiple is load-bearing for the verdict. Indicators (`anchor.indicators`) are sector-specific operating-context metrics rendered as `pct` units (e.g. `{"ROE": {"value": 16.2, "unit": "pct"}}`); cite them alongside multiples to give the reader a profitability anchor that the multiple alone doesn't convey.
 
 For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the appropriate `data-{country}/pack.py --pack memo-fetch` output for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
 
