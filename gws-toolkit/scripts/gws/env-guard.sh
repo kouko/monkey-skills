@@ -19,7 +19,7 @@ set -euo pipefail
 # caller only runs check — different subcommands, different responsibilities.
 #
 # Upstream refs:
-#   - TECH-SPEC §4.2 `scripts/google-slides/env-guard.sh` contract
+#   - TECH-SPEC §4.2 `scripts/gws/env-guard.sh` contract
 #   - TECH-SPEC §6.1 gws issue #119 workaround
 #   - TECH-SPEC §8.1 settings.json deny rule (credential-at-rest guard)
 #

@@ -93,10 +93,10 @@ Open a new terminal or run `source ~/.zshrc` to activate.
 
 Let the skill write the env vars into a standalone
 `~/.config/gws/env.sh` (chmod 600) which
-`scripts/google-slides/gws-wrap.sh` sources on every call:
+`scripts/gws/gws-wrap.sh` sources on every call:
 
 ```bash
-bash scripts/google-slides/env-guard.sh apply
+bash scripts/gws/env-guard.sh apply
 ```
 
 **Advantages**:
@@ -130,7 +130,7 @@ gws auth login -s presentations,drive.file
 Or use `env-guard.sh check`:
 
 ```bash
-bash scripts/google-slides/env-guard.sh check
+bash scripts/gws/env-guard.sh check
 # Expected: {"workaround_needed":false}  ← already active
 # If it returns {"workaround_needed":true} then env vars are not
 # exported — rerun env-guard.sh apply.
@@ -146,7 +146,7 @@ are true:
    an official `--use-external-oauth-client` flag).
 2. `~/.cache/slides-toolkit/bin/gws` has been upgraded to the fixed
    version.
-3. `scripts/google-slides/env-guard.sh`'s feature flag detects a
+3. `scripts/gws/env-guard.sh`'s feature flag detects a
    version >= known-fixed (see TECH-SPEC §6.1 final paragraph).
 
 Until then **keep the workaround**. Every time `bootstrap.sh`
@@ -163,9 +163,9 @@ version.
 - `protocols/gcp-console-walkthrough.md` §8 — setup flow step 8
 - `standards/credential-hygiene.md` — the hard rule that credentials
   live in `~/.config/gws/`
-- `../../scripts/google-slides/env-guard.sh` — check / apply
+- `../../scripts/gws/env-guard.sh` — check / apply
   implementation
-- `../../scripts/google-slides/gws-wrap.sh` — sources `env.sh`
+- `../../scripts/gws/gws-wrap.sh` — sources `env.sh`
   before every call
 - TECH-SPEC §4.2 — `env-guard.sh` contract, exit 16
 - TECH-SPEC §6.1 — full workaround implementation notes

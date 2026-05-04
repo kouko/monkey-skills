@@ -11,8 +11,8 @@ set -euo pipefail
 # exit-code table.
 #
 # Upstream refs:
-#   - TECH-SPEC §3.4 google-slides-builder
-#   - TECH-SPEC §4.2 `scripts/google-slides/gws-wrap.sh` contract
+#   - TECH-SPEC §3.4 slides-builder
+#   - TECH-SPEC §4.2 `scripts/gws/gws-wrap.sh` contract
 #   - TECH-SPEC §4.3 gws CLI recipe mapping
 #   - TECH-SPEC §6.4 Rate-limit (429) exponential-backoff implementation
 #
@@ -149,7 +149,7 @@ preflight() {
     guard_exit=0
     "${ENV_GUARD}" check >/dev/null 2>&1 || guard_exit=$?
     if (( guard_exit == 16 )); then
-      die_json 16 "issue #119 workaround required; run google-slides-setup to apply"
+      die_json 16 "issue #119 workaround required; run gws-setup to apply"
     fi
     # 其他非 0 不致命（check 本身問題不阻斷；但 log to stderr）
     if (( guard_exit != 0 )); then

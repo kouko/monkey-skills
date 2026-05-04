@@ -98,7 +98,7 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 ### 2. Invoke batchUpdate
 
 ```bash
-echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
+echo "$body" | scripts/gws/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
   --json-stdin
 ```

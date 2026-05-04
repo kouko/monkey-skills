@@ -27,7 +27,7 @@ set -euo pipefail
 #
 # Upstream refs:
 #   - TECH-SPEC v0.3 §2.3 Binary distribution strategy
-#   - TECH-SPEC v0.3 §4.2 `scripts/google-slides/bootstrap.sh` contract
+#   - TECH-SPEC v0.3 §4.2 `scripts/gws/bootstrap.sh` contract
 #   - TECH-SPEC §7.3 Dry-run mode
 #
 # Args:

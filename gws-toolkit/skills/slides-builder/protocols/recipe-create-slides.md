@@ -79,7 +79,7 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 ### 3. Invoke batchUpdate
 
 ```bash
-echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
+echo "$body" | scripts/gws/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
   --json-stdin
 ```
@@ -116,7 +116,7 @@ Response shape (simplified):
 **Recommended flow** (minimum API calls): after `createSlide`, call `presentations.get` once with a `fields` mask that returns `placeholder.type` and `placeholder.index` in a single response:
 
 ```bash
-scripts/google-slides/gws-wrap.sh slides presentations get \
+scripts/gws/gws-wrap.sh slides presentations get \
   --params "{\"presentationId\":\"$presentation_id\",\"fields\":\"slides(objectId,pageElements(objectId,shape(placeholder(type,index))))\"}"
 ```
 

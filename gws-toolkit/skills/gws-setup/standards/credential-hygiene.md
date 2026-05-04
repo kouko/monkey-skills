@@ -1,4 +1,4 @@
-# Credential Hygiene — google-slides-setup
+# Credential Hygiene — gws-setup
 
 > Applies to: the `slides-toolkit` plugin, specifically the OAuth
 > Client Secret, refresh tokens, and env-var workaround that the
@@ -142,7 +142,7 @@ more secure than a plaintext file.
 - **Personal macOS machine**: **do not** set `KEYRING_BACKEND=file`
   on your own. Keep Keychain as the default.
 - **Keychain silent fail**: when
-  `scripts/google-slides/credential-check.sh` detects that Keychain
+  `scripts/gws/credential-check.sh` detects that Keychain
   writes succeed but reads can't find the item, it **automatically**
   falls back to the file backend and writes
   `export KEYRING_BACKEND=file` into `~/.config/gws/env.sh`. This is

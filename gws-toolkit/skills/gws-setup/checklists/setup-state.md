@@ -1,4 +1,4 @@
-# Setup State Checklist — google-slides-setup
+# Setup State Checklist — gws-setup
 
 > After running setup — or when coming back to diagnose a problem —
 > work through the 6 state checks below in order. **If any check
@@ -15,7 +15,7 @@ Run checks 1 through 6 in order. Each check gives you:
   `protocols/gcp-console-walkthrough.md` or elsewhere)
 
 If you want to automate, fold the checks into an extended version
-of `scripts/google-slides/credential-check.sh`. This checklist is
+of `scripts/gws/credential-check.sh`. This checklist is
 the manual version — useful during first-time setup and debugging.
 
 ---
@@ -50,7 +50,7 @@ And it should run:
   `bootstrap.sh`).
 - Present but not executable (`Permission denied`) →
   `chmod +x ~/.cache/slides-toolkit/bin/gws`, or rerun
-  `bash scripts/google-slides/bootstrap.sh --force`.
+  `bash scripts/gws/bootstrap.sh --force`.
 - `--version` reports a SHA mismatch-style error → rerun bootstrap.
   If exit 17 persists, see SKILL.md
   [Error messages guide](../SKILL.md#error-messages-guide).
@@ -77,7 +77,7 @@ ls ~/.cache/slides-toolkit/bin/jq
   (`bootstrap.sh` fetches gws and jq together — they usually
   succeed or fail as a pair).
 - Present but version < 1.7.1 →
-  `bash scripts/google-slides/bootstrap.sh --force`.
+  `bash scripts/gws/bootstrap.sh --force`.
 - Correct version but `command not found` at runtime → PATH doesn't
   include `~/.cache/slides-toolkit/bin`. Pick one:
   1. Temporary: `export PATH="$HOME/.cache/slides-toolkit/bin:$PATH"`
@@ -197,7 +197,7 @@ echo "SECRET length: ${#GOOGLE_WORKSPACE_CLI_CLIENT_SECRET}"
 Or use `env-guard.sh check`:
 
 ```bash
-bash scripts/google-slides/env-guard.sh check
+bash scripts/gws/env-guard.sh check
 # Expected: {"workaround_needed":false}
 ```
 
@@ -253,7 +253,7 @@ user in `gcp-console-walkthrough.md` §3.
 | `invalid_scope` / `invalid_client` | Issue #119 env vars aren't active | Check 5 failed + `protocols/issue-119-workaround.md` |
 | `Keychain item not found` / `KeyError` | Keychain silent fail | SKILL.md [Workarounds](../SKILL.md#workarounds), Keychain section (automatic fallback to file backend) |
 | `No such file or directory` `gws` | gws not on PATH | Check 1 failed |
-| Command exits 0 with no output | Unusual state / outdated gws | `bash scripts/google-slides/bootstrap.sh --force` to refetch |
+| Command exits 0 with no output | Unusual state / outdated gws | `bash scripts/gws/bootstrap.sh --force` to refetch |
 
 ---
 
@@ -266,7 +266,7 @@ echo "--- 1. gws binary ---"        && ls ~/.cache/slides-toolkit/bin/gws && ~/.
 echo "--- 2. jq binary ---"         && ls ~/.cache/slides-toolkit/bin/jq && ~/.cache/slides-toolkit/bin/jq --version
 echo "--- 3. gcloud (optional) ---" && (which gcloud && gcloud --version 2>/dev/null) || echo "gcloud not installed (OK, MVP doesn't need it)"
 echo "--- 4. client_secret.json ---" && ls -l ~/.config/gws/client_secret.json
-echo "--- 5. env vars ---"          && bash scripts/google-slides/env-guard.sh check
+echo "--- 5. env vars ---"          && bash scripts/gws/env-guard.sh check
 echo "--- 6. gws auth whoami ---"   && gws auth whoami
 ```
 
@@ -281,10 +281,10 @@ branch" column above to fix it, then rerun from that point.
   detail)
 - `../standards/credential-hygiene.md` (`client_secret.json` /
   `env.sh` chmod rules)
-- `../../scripts/google-slides/credential-check.sh` (automated
+- `../../scripts/gws/credential-check.sh` (automated
   state detection)
-- `../../scripts/google-slides/env-guard.sh` (check / apply for
+- `../../scripts/gws/env-guard.sh` (check / apply for
   the issue #119 workaround)
-- TECH-SPEC §3.2 (google-slides-setup state-detection contract)
+- TECH-SPEC §3.2 (gws-setup state-detection contract)
 - TECH-SPEC §4.2 (`credential-check.sh` / `env-guard.sh` script
   contract)

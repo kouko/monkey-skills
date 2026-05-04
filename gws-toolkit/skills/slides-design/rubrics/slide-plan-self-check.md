@@ -1,6 +1,6 @@
 # Slide-plan self-check rubric
 
-**Purpose**: after drafting `slide-plan.json` and before handing it to `google-slides-builder` (or a Phase 2+ backend builder), run this binary checklist as an advisory self-check.
+**Purpose**: after drafting `slide-plan.json` and before handing it to `slides-builder` (or a Phase 2+ backend builder), run this binary checklist as an advisory self-check.
 
 **Nature**: **Advisory only** — MVP does not hard-gate (does not block the pipeline). The goal is to catch common narrative / layout / asset problems before the deck is built, so you spend less time hand-fixing afterwards.
 
@@ -27,7 +27,7 @@
 ### Assets and placeholder alignment
 
 - [ ] **Image paths exist** — every `slides[].images[].local_path` points to a file that actually exists (verify with `ls`); no broken paths.
-- [ ] **Placeholder names match the template** — the `replacements` keys (e.g. `{{title}}`, `{{headline}}`, `{{date}}`) match the placeholders in the template deck; cross-reference `google-slides-builder/templates/registry.md`.
+- [ ] **Placeholder names match the template** — the `replacements` keys (e.g. `{{title}}`, `{{headline}}`, `{{date}}`) match the placeholders in the template deck; cross-reference `slides-builder/templates/registry.md`.
 
 ### Backend setup
 

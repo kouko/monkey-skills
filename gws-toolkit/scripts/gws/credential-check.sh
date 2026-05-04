@@ -22,7 +22,7 @@ set -euo pipefail
 #     may include paths).
 #
 # Upstream refs:
-#   - TECH-SPEC §4.2 `scripts/google-slides/credential-check.sh` contract
+#   - TECH-SPEC §4.2 `scripts/gws/credential-check.sh` contract
 #   - TECH-SPEC §4.8 Credential flow (ASVS V14)
 #   - TECH-SPEC §6.2 Keychain silent-fail fallback
 #   - TECH-SPEC §6.3 7-day token expiry UX

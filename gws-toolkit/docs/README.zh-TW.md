@@ -31,7 +31,7 @@
 
 - Spec 級別的設計決策 → `PRODUCT-SPEC.md` / `TECH-SPEC.md`
 - 版本歷程 → `CHANGELOG.md`
-- 使用者操作指引 → `skills/google-slides-setup/protocols/gcp-console-walkthrough.md`
+- 使用者操作指引 → `skills/gws-setup/protocols/gcp-console-walkthrough.md`
 - Recipe 具體呼叫方式 → `skills/google-slides-api/protocols/recipe-*.md`
 
 `docs/` 是歷史 + 外部邊界的資料庫，不是 how-to。

@@ -11,12 +11,12 @@ set -euo pipefail
 #
 # Usage scenarios:
 #   1. Run proactively every 7 days (alias: `gws-relogin`).
-#   2. Auto-invoked by gws-wrap.sh or google-slides-builder when exit 10
+#   2. Auto-invoked by gws-wrap.sh or slides-builder when exit 10
 #      is detected.
 #   3. Manual `bash refresh-auth.sh` for debugging.
 #
 # Preconditions:
-#   - `google-slides-setup` has completed the first-time setup.
+#   - `gws-setup` has completed the first-time setup.
 #   - `~/.config/gws/client_secret.json` exists.
 #   - `~/.config/gws/env.sh` exists (issue #119 workaround env vars).
 #   - `~/.cache/slides-toolkit/bin/gws` exists.
@@ -56,8 +56,8 @@ die() {
 }
 
 # Pre-flight：確認所有必要檔案在位
-[[ -f "${CLIENT_SECRET}" ]] || die "client_secret.json not found at ${CLIENT_SECRET}. Run google-slides-setup first."
-[[ -f "${ENV_FILE}" ]]      || die "env.sh not found at ${ENV_FILE}. Run google-slides-setup first."
+[[ -f "${CLIENT_SECRET}" ]] || die "client_secret.json not found at ${CLIENT_SECRET}. Run gws-setup first."
+[[ -f "${ENV_FILE}" ]]      || die "env.sh not found at ${ENV_FILE}. Run gws-setup first."
 [[ -x "${GWS_BIN}" ]]       || die "gws binary not found at ${GWS_BIN}. Run bootstrap.sh first."
 
 # 載 issue #119 env vars

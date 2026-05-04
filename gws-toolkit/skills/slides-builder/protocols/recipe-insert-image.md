@@ -96,7 +96,7 @@ resolve_path() {
 cd "$(dirname "$resolved")"
 FILENAME=$(basename "$resolved")
 
-upload=$(scripts/google-slides/gws-wrap.sh drive files create \
+upload=$(scripts/gws/gws-wrap.sh drive files create \
   --json "{\"name\":\"$FILENAME\",\"mimeType\":\"image/png\"}" \
   --upload "$FILENAME" \
   --params '{"fields":"id,name"}')
@@ -114,7 +114,7 @@ upload_file_id=$(echo "$upload" | jq -r '.id')
 ### 4. Grant public reader permission
 
 ```bash
-scripts/google-slides/gws-wrap.sh drive permissions create \
+scripts/gws/gws-wrap.sh drive permissions create \
   --params "{\"fileId\":\"$upload_file_id\"}" \
   --json '{"role":"reader","type":"anyone"}'
 ```
@@ -177,7 +177,7 @@ If `target_object_id == "null"` → **13b warning** (the `placeholder_id` does n
 Invoke:
 
 ```bash
-echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
+echo "$body" | scripts/gws/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
   --json-stdin
 ```
@@ -201,7 +201,7 @@ On success, the reply includes the `objectId` of the new image element.
 After all images are inserted, you can delete the temporary Drive uploads:
 
 ```bash
-scripts/google-slides/gws-wrap.sh drive files delete \
+scripts/gws/gws-wrap.sh drive files delete \
   --params "{\"fileId\":\"$upload_file_id\"}"
 ```
 

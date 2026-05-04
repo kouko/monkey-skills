@@ -56,10 +56,10 @@ plug 可能な execution layer を切り離しています。MVP では
 ### 1. 初回 setup（目標：≤ 20 分 — KR2）
 
 ```
-> /google-slides-setup
+> /gws-setup
 ```
 
-`google-slides-setup` skill に route。現在の状態を検出し、`gws` +
+`gws-setup` skill に route。現在の状態を検出し、`gws` +
 `jq` を `~/.cache/slides-toolkit/bin/` に取得、GCP Console での
 手動設定（OAuth Client + Test User）を案内し、必要なら issue #119
 の workaround を `~/.config/gws/env.sh` に書き込みます。
@@ -72,18 +72,18 @@ Google の OAuth policy（External + Testing mode）による境界が
 ### 2. Deck 生成（目標：≤ 3 分 — KR1）
 
 ```
-> /using-slides-toolkit
+> /using-gws-toolkit
 > 「この outline を 6 枚の product proposal に」
 ```
 
-router の `using-slides-toolkit` が意図を判定し、必要に応じて
+router の `using-gws-toolkit` が意図を判定し、必要に応じて
 `slides-design` に narrative 構造（Minto / SCQA / chart 選択）を
-委譲し、最終的に `slide-plan.json` v1.2 を `google-slides-builder`
+委譲し、最終的に `slide-plan.json` v1.2 を `slides-builder`
 に渡します。builder は 4 step pipeline（空 deck 作成 → predefined
 layout で slide 作成 → text 挿入 → ローカル画像挿入）を実行し、
 Drive URL を返します。
 
-`/using-slides-toolkit` と `/google-slides-setup` はどちらも skill
+`/using-gws-toolkit` と `/gws-setup` はどちらも skill
 の auto-route です（`commands/` shim はなく、plugin に slash
 command は含まれません）。skill 名を入力すれば Claude Code が
 dispatch します。
@@ -94,13 +94,13 @@ dispatch します。
 
 | Skill | Layer | 役割 |
 |---|---|---|
-| `using-slides-toolkit` | Router（backend-agnostic） | 意図を判定し `slide-plan.target` を読み、適切な skill に route |
+| `using-gws-toolkit` | Router（backend-agnostic） | 意図を判定し `slide-plan.target` を読み、適切な skill に route |
 | `slides-design` | Knowledge（backend-agnostic） | Minto Pyramid + SCQA narrative、chart 選択。すべての backend に適用可 |
-| `google-slides-setup` | google-slides backend | 初回 GCP Console / OAuth / `gws` bootstrap、以降の state detection |
+| `gws-setup` | google-slides backend | 初回 GCP Console / OAuth / `gws` bootstrap、以降の state detection |
 | `google-slides-api` | google-slides backend | Low-level な per-op recipe reference — `presentations.create`、`batchUpdate createSlide`、`insertText`、`createImage` |
-| `google-slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
+| `slides-builder` | google-slides backend | High-level orchestration — `slide-plan.json` v1.2 → pre-flight → 4 recipe chain → deck URL |
 
-`using-slides-toolkit` と `slides-design` は意図的に
+`using-gws-toolkit` と `slides-design` は意図的に
 backend-agnostic にしてあるため、将来の `html-builder` /
 `pptx-builder` / `marp-builder` skill が同じ routing entry と設計
 reference を変更なしで再利用できます。
@@ -116,7 +116,7 @@ reference を変更なしで再利用できます。
 | Google アカウント | 個人 `@gmail.com`。Workspace アカウントは Phase 2+ |
 
 **不要**：Python、uv、gcloud、brew、npm。`gws` と `jq` の binary
-は `scripts/google-slides/bootstrap.sh` が HTTPS + `curl -f` で
+は `scripts/gws/bootstrap.sh` が HTTPS + `curl -f` で
 `~/.cache/slides-toolkit/bin/` に取得します。
 
 ## Architecture
@@ -127,7 +127,7 @@ reference を変更なしで再利用できます。
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 1 — Router（backend-agnostic）                       │
-│  using-slides-toolkit                                       │
+│  using-gws-toolkit                                       │
 │  意図判定 · slide-plan.target 読み込み · dispatch            │
 └────────────────────────────┬────────────────────────────────┘
                              │
@@ -147,7 +147,7 @@ reference を変更なしで再利用できます。
                               │                      │
                               └──────────┬───────────┘
                                          ▼
-                              scripts/google-slides/*.sh
+                              scripts/gws/*.sh
                               gws CLI · ~/.cache binaries
                                          ▼
                               Google Slides + Drive API
@@ -156,7 +156,7 @@ reference を変更なしで再利用できます。
 ```
 
 Phase 2+ backend（`html-builder` / `pptx-builder` /
-`marp-builder`）は `google-slides-builder` の隣に Layer 3 として
+`marp-builder`）は `slides-builder` の隣に Layer 3 として
 追加でき、Layer 1 / Layer 2 には変更が不要です。詳細は PRODUCT-SPEC
 §2.1 / §2.2 と TECH-SPEC §2.1 / §2.2 を参照してください。
 

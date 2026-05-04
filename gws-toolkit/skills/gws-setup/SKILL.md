@@ -1,11 +1,11 @@
 ---
-name: google-slides-setup
-description: First-time Google Slides backend onboarding for slides-toolkit — GCP Console OAuth setup, gws CLI bootstrap, issue #119 workaround, and credential hygiene. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步。MVP 只處理個人 @gmail.com（macOS）；Google Workspace 企業帳號 Phase 2+。
+name: gws-setup
+description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets API), gws CLI bootstrap, issue #119 workaround, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。MVP 只處理個人 @gmail.com（macOS）；Google Workspace 企業帳號 Phase 2+。
 ---
 
-# google-slides-setup
+# gws-setup
 
-One-time machine setup so that `google-slides-builder` can call the gws
+One-time machine setup so that `slides-builder` can call the gws
 CLI against Google Slides. MVP scope is personal `@gmail.com` accounts
 on macOS. Workspace accounts, Linux, and CI are Phase 2+.
 
@@ -18,12 +18,12 @@ Invoke this skill in any of these four situations:
 2. **Expired credentials** — more than 7 days since the last
    `gws auth` (Google's hard limit for External + Testing; see
    [Every 7 days maintenance](#every-7-days-maintenance)).
-3. **Auth error** — `google-slides-builder` returns exit code 10 / 16 /
+3. **Auth error** — `slides-builder` returns exit code 10 / 16 /
    18, or stderr shows `401` / `403` / `invalid_scope` /
    `invalid_client`.
 4. **State detection** — you're unsure where things stand (is the
    binary installed? is the token still valid?). Run
-   `scripts/google-slides/credential-check.sh` first and branch on the
+   `scripts/gws/credential-check.sh` first and branch on the
    JSON it returns.
 
 ## Prerequisites
@@ -38,7 +38,7 @@ Invoke this skill in any of these four situations:
 | Credential store | macOS Keychain available (default) | If Keychain silently fails, the tooling falls back to a file backend. See [Workarounds](#workarounds). |
 
 **Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
-binaries are fetched by `scripts/google-slides/bootstrap.sh` into
+binaries are fetched by `scripts/gws/bootstrap.sh` into
 `~/.cache/slides-toolkit/bin/` and verified by SHA-256 (TECH-SPEC §2.3).
 
 ## Workflow overview
@@ -70,7 +70,7 @@ Full branch table: `checklists/setup-state.md`.
 flow.**
 
 ```bash
-bash scripts/google-slides/credential-check.sh
+bash scripts/gws/credential-check.sh
 ```
 
 Expected JSON output:
@@ -84,7 +84,7 @@ Branch on the result:
 | Result | Branch | Entry point |
 |---|---|---|
 | `credential-check.sh` not found, or `~/.cache/slides-toolkit/bin/` empty | Fresh machine | Setup flow step 1 |
-| `backend=keychain`, `token_valid=true`, `expires_in_sec > 0` | All green | Run `google-slides-builder` directly |
+| `backend=keychain`, `token_valid=true`, `expires_in_sec > 0` | All green | Run `slides-builder` directly |
 | `backend=keychain`, `token_valid=false` or `expires_in_sec <= 0` | Expired | [Every 7 days maintenance](#every-7-days-maintenance) |
 | `backend=file` | Keychain silently failed, fell back to file | Continue, but read the Keychain note in [Workarounds](#workarounds) |
 | exit 18 | Keychain unreadable and file backend also failed | Rerun setup step 3 (download the Client Secret) and steps 8–9 |
@@ -107,7 +107,7 @@ Console, then 4 local steps.
 | 4 | Browser | Clients → Create client → **Desktop app** (not Web) | walkthrough §4 |
 | 5 | Browser | Download `client_secret.json` → `~/.config/gws/` | walkthrough §5 |
 | 6 | Browser | Enable APIs: Google Slides API + Google Drive API | walkthrough §6 |
-| 7 | Terminal | `bash scripts/google-slides/bootstrap.sh` (installs gws + jq) | walkthrough §7 |
+| 7 | Terminal | `bash scripts/gws/bootstrap.sh` (installs gws + jq) | walkthrough §7 |
 | 8 | Terminal | Export the issue #119 env vars (see below) | `protocols/issue-119-workaround.md` |
 | 9 | Terminal | `gws auth login -s presentations,drive.file` (**never use the `recommended` preset**) | walkthrough §9 |
 | 10 | Browser | Consent screen → Advanced → Go to app (unsafe) → Allow | walkthrough §10 |
@@ -136,11 +136,11 @@ export GOOGLE_WORKSPACE_CLI_CLIENT_ID=$(jq -r .installed.client_id ~/.config/gws
 export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET=$(jq -r .installed.client_secret ~/.config/gws/client_secret.json)
 ```
 
-Or delegate to `scripts/google-slides/env-guard.sh`:
+Or delegate to `scripts/gws/env-guard.sh`:
 
 ```bash
-bash scripts/google-slides/env-guard.sh check   # detect whether the workaround is needed
-bash scripts/google-slides/env-guard.sh apply   # write ~/.config/gws/env.sh (chmod 600)
+bash scripts/gws/env-guard.sh check   # detect whether the workaround is needed
+bash scripts/gws/env-guard.sh apply   # write ~/.config/gws/env.sh (chmod 600)
 ```
 
 Upstream fix tracking: `googleworkspace/cli` issue #119 (TODO:
@@ -203,7 +203,7 @@ gws auth login -s presentations,drive.file
 client are still valid, only the refresh token expired.
 
 **Passive notification strategy (TECH-SPEC §6.3)**: when
-`google-slides-builder`'s pre-flight sees an expired token it exits
+`slides-builder`'s pre-flight sees an expired token it exits
 with code 10. Claude sees that exit code and prompts you to re-auth
 on demand, rather than nagging you on every run.
 
