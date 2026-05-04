@@ -201,6 +201,79 @@ def get_info(ticker: str) -> dict:
     save_cache(cache_path, result)
     return result
 
+def get_holdings(ticker: str) -> dict:
+    """Fetch top-holdings from yfinance funds_data.
+
+    Returns:
+      {
+        "ticker": "XLK",
+        "holdings": [{"ticker": "AAPL", "weight": 0.0712}, ...],
+        "warnings": ["..."],   # only present when issues encountered
+        "_provenance": {...},
+      }
+
+    For non-fund tickers (no funds_data), returns empty holdings list with a
+    `non_fund` warning. For fund tickers, returns top-holdings as exposed
+    by yfinance — typically top 10–90 weights summing to 0.5–1.0 (NOT all
+    holdings); aggregator records actual weight_coverage_pct.
+    """
+    import yfinance as yf  # local import — module-level may be lazy-stubbed in tests
+
+    cache_path = get_cache_path(ticker, "holdings")
+    cached = load_cache(cache_path)
+    if cached is not None:
+        return cached
+
+    t = yf.Ticker(ticker)
+    funds_data = getattr(t, "funds_data", None)
+    fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if funds_data is None:
+        out = {
+            "ticker":   ticker,
+            "holdings": [],
+            "warnings": [f"non_fund: {ticker} has no yfinance funds_data block"],
+            "_provenance": {
+                "skill":      "data-us",
+                "source":     "yfinance.Ticker.funds_data",
+                "fetched_at": fetched_at,
+            },
+        }
+        save_cache(cache_path, out)
+        return out
+
+    df = getattr(funds_data, "top_holdings", None)
+    holdings: list[dict] = []
+    warnings: list[str] = []
+    if df is None:
+        warnings.append("yfinance funds_data.top_holdings returned None")
+    else:
+        try:
+            data = df.to_dict()
+        except Exception as exc:  # noqa: BLE001 — yfinance shape varies across versions
+            warnings.append(f"top_holdings.to_dict() failed: {exc}")
+            data = {}
+        weights_dict = data.get("Holding Percent") or data.get("holdingPercent") or {}
+        for sym, weight in weights_dict.items():
+            try:
+                holdings.append({"ticker": sym, "weight": float(weight)})
+            except (TypeError, ValueError):
+                continue
+
+    out = {
+        "ticker":   ticker,
+        "holdings": holdings,
+        "_provenance": {
+            "skill":      "data-us",
+            "source":     "yfinance.Ticker.funds_data.top_holdings",
+            "fetched_at": fetched_at,
+        },
+    }
+    if warnings:
+        out["warnings"] = warnings
+    save_cache(cache_path, out)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Financials (Tier 2 fallback for JP / when primary-source unavailable)
 # ---------------------------------------------------------------------------
@@ -389,9 +462,10 @@ def main():
     ticker_group.add_argument("--ticker", help="Single ticker (e.g. AAPL, 2330.TW)")
     ticker_group.add_argument("--tickers", help="Comma-separated tickers for batch mode (e.g. AAPL,MSFT,NVDA)")
     parser.add_argument("--action", default="history",
-                        choices=["history", "info", "financials"],
+                        choices=["history", "info", "financials", "holdings"],
                         help="Data type: history (OHLCV) / info (snapshot) / "
-                             "financials (BS+PL+CF, Tier 2 only)")
+                             "financials (BS+PL+CF, Tier 2 only) / "
+                             "holdings (ETF top-holdings via funds_data)")
     parser.add_argument("--period", default="1y",
                         help="Period for history: 1d 5d 1mo 3mo 6mo 1y 2y 5y 10y ytd max. "
                              "For --action financials: 'annual' or 'quarterly'.")
@@ -428,6 +502,11 @@ def main():
             # For financials, --period doubles as annual/quarterly selector.
             fin_period = args.period if args.period in ("annual", "quarterly") else "annual"
             result = get_financials(args.ticker, fin_period)
+        elif args.action == "holdings":
+            if not args.ticker:
+                print("error: --action holdings requires --ticker", file=sys.stderr)
+                return 2
+            result = get_holdings(args.ticker)
         else:
             result = get_info(args.ticker)
     except Exception as e:
