@@ -242,7 +242,7 @@ def classify(ticker: str, sector: str | None, industry: str | None) -> tuple[str
 
 ## 5. Schema definitions
 
-Each schema lives at `references/schemas/<id>.json`. Format:
+Each schema lives at `references/schema-<id>.json` (flat naming — repo convention forbids nested subfolders under `references/`; see CLAUDE.md "Skill Structure"). Format:
 
 ```json
 {
@@ -462,16 +462,15 @@ analysis-comps/
     ├── schema-compute-output.json        (extended: anchor.{sector,industry,schema_id,indicators})
     ├── sector-routing.yaml               (NEW — SoT)
     ├── sector-overrides.yaml             (NEW — SoT)
-    └── schemas/                          (NEW)
-        ├── default.json
-        ├── bank.json
-        ├── insurance.json
-        ├── asset-manager.json
-        ├── reit.json
-        ├── tech-saas.json
-        ├── tech-semis.json
-        ├── energy.json
-        └── utilities.json
+    ├── schema-default.json               (NEW)
+    ├── schema-bank.json                  (NEW)
+    ├── schema-insurance.json             (NEW)
+    ├── schema-asset-manager.json         (NEW)
+    ├── schema-reit.json                  (NEW)
+    ├── schema-tech-saas.json             (NEW)
+    ├── schema-tech-semis.json            (NEW)
+    ├── schema-energy.json                (NEW)
+    └── schema-utilities.json             (NEW)
 ```
 
 ### Drift rules
