@@ -4,6 +4,25 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.1.1] — 2026-05-04
+
+### Fixed — duplicate hooks file load error on Claude Code v2.1.119+
+
+Removed the redundant `"hooks": "./hooks/hooks.json"` field from
+`plugin.json`. Claude Code automatically loads the standard
+`hooks/hooks.json` location, so declaring the same path in
+`manifest.hooks` triggered a duplicate-load error:
+
+```
+Failed to load hooks from .../hooks/hooks.json: Duplicate hooks file detected:
+./hooks/hooks.json resolves to already-loaded file. The standard
+hooks/hooks.json is loaded automatically, so manifest.hooks should
+only reference additional hook files.
+```
+
+The PostToolUse skill-folder-structure validator added in 2.1.0 still
+ships and still fires — only the redundant manifest entry was removed.
+
 ## [2.1.0] — 2026-05-03
 
 ### Added — plugin-shipped Stop hook for skill folder structure validation
