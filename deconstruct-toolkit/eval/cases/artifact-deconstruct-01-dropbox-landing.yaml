@@ -1,0 +1,30 @@
+name: artifact-deconstruct-01-dropbox-landing
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-dropbox-landing-2024.md
+input_query: "拆解這個 Dropbox 落地頁的設計"
+expected_lenses:
+  - lens-persuasion
+  - lens-rhetoric
+must_find:
+  - id: cialdini-coverage
+    description: "At least 4 of Cialdini's 7 principles identified with specific citations"
+    threshold: 4
+  - id: hero-structure
+    description: "Hero section structure named (PASONA / AIDA / variant)"
+    threshold: 1
+  - id: social-proof-elements
+    description: "Social proof elements enumerated (logo wall / count / testimonials)"
+    threshold: 3
+  - id: ethical-position
+    description: "At least 1 ethical position assigned (🟢/🟡/🔴/⚫) with reasoning"
+    threshold: 1
+  - id: negative-space
+    description: "At least 3 negative-space observations (per six-dimensions §6 mandatory minimum)"
+    threshold: 3
+  - id: replicable-lessons
+    description: "At least 5 replicable lessons listed, each transferable to new artifact"
+    threshold: 5
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong lens chosen"

@@ -1,0 +1,30 @@
+name: artifact-deconstruct-03-stripe-signup
+skill: artifact-deconstruct
+fixture: skills/artifact-deconstruct/assets/sample-stripe-signup-flow.md
+input_query: "拆解 Stripe 註冊流程的設計"
+expected_lenses:
+  - lens-ux
+  - lens-persuasion
+must_find:
+  - id: nielsen-heuristics
+    description: "All 10 Nielsen heuristics applied with status (✓/⚠️/✗) and evidence citation"
+    threshold: 10
+  - id: affordance-analysis
+    description: "At least 3 affordances analyzed with full 5-aspect breakdown (affordance/signifier/mapping/constraint/feedback)"
+    threshold: 3
+  - id: dark-pattern-check
+    description: "All 12 Brignull dark patterns checked with status"
+    threshold: 12
+  - id: ethical-position-overall
+    description: "Overall ethical position assigned (🟢/🟡/🔴/⚫) with reasoning"
+    threshold: 1
+  - id: distinctive-feature
+    description: "Distinctive design choice named (e.g., equal-weight dual CTA in step 4)"
+    threshold: 1
+  - id: negative-space
+    description: "At least 3 negative-space observations"
+    threshold: 3
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70% OR wrong lens chosen"

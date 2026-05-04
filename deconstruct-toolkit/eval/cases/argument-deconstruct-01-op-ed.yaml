@@ -1,0 +1,27 @@
+name: argument-deconstruct-01-op-ed
+skill: argument-deconstruct
+fixture: skills/argument-deconstruct/assets/sample-op-ed-AI-regulation.md
+input_query: "拆解這篇社論的論證結構"
+must_find:
+  - id: claim-grounds-warrant-explicit
+    description: "Central claim, grounds, and at least one hidden warrant explicitly stated"
+    threshold: 3
+  - id: hidden-warrants-surfaced
+    description: "At least 2 hidden warrants surfaced with 'Because…' formulation"
+    threshold: 2
+  - id: missing-rebuttal-named
+    description: "At least 1 specific missing rebuttal named (e.g., experienced regulators successfully regulating novel tech)"
+    threshold: 1
+  - id: qualifier-flagged
+    description: "Qualifier absence or presence called out (e.g., 'all members' as universal overreach)"
+    threshold: 1
+  - id: burke-pentad
+    description: "Burke pentad layout (5 elements) + claimed-vs-actual ratio analysis"
+    threshold: 1
+  - id: argument-map
+    description: "Mermaid argument map renders with hidden warrants on dotted edges"
+    threshold: 1
+score:
+  pass: "100% must_find satisfied"
+  partial: "70%+ must_find satisfied"
+  fail: "<70%"
