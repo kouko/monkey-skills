@@ -1,0 +1,8 @@
+{
+  "ticker": "XLK",
+  "holdings": [
+    {"ticker": "AAPL", "weight": 0.6},
+    {"ticker": "MSFT", "weight": 0.4}
+  ],
+  "_provenance": {"skill": "data-us", "source": "yfinance.Ticker.funds_data.top_holdings"}
+}

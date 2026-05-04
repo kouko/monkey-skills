@@ -1,0 +1,50 @@
+{
+  "pack": "memo-fetch",
+  "ticker": "MSFT",
+  "current_price": 300.0,
+  "shares_outstanding": 7400000000,
+  "company_info": {
+    "marketCap": 2500000000000,
+    "regularMarketPrice": 300.0,
+    "sharesOutstanding": 7400000000,
+    "sector": "Technology",
+    "industry": "Software—Infrastructure"
+  },
+  "income_statement": {
+    "revenue":          [230000000000, 200000000000],
+    "net_income":       [80000000000, 70000000000],
+    "operating_income": [100000000000, 85000000000],
+    "gross_profit":     [160000000000, 140000000000],
+    "_meta": {
+      "revenue":          {"fiscal_year_ends": ["2024-06-30", "2023-06-30"], "filings_used": ["msft-10k-2024"]},
+      "net_income":       {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "operating_income": {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "gross_profit":     {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]}
+    }
+  },
+  "balance_sheet": {
+    "total_stockholders_equity": [200000000000, 180000000000],
+    "total_debt":                [80000000000],
+    "cash":                      [100000000000],
+    "goodwill":                  [],
+    "intangible_assets":         [],
+    "_meta": {
+      "total_stockholders_equity": {"fiscal_year_ends": ["2024-06-30", "2023-06-30"], "filings_used": ["msft-10k-2024"]},
+      "total_debt":                {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "cash":                      {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "goodwill":                  {"fiscal_year_ends": [], "filings_used": []},
+      "intangible_assets":         {"fiscal_year_ends": [], "filings_used": []}
+    }
+  },
+  "cash_flow": {
+    "depreciation_amortization": [15000000000],
+    "operating_cash_flow":        [90000000000],
+    "capex":                      [-20000000000],
+    "_meta": {
+      "depreciation_amortization": {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "operating_cash_flow":        {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]},
+      "capex":                      {"fiscal_year_ends": ["2024-06-30"], "filings_used": ["msft-10k-2024"]}
+    }
+  },
+  "_provenance": {"skill": "data-us", "source": "pack.py --pack memo-fetch"}
+}
