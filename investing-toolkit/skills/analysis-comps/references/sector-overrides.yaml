@@ -1,0 +1,51 @@
+# Issuer-level override for known yfinance misroutes (holdcos, multi-business).
+#
+# Format: ticker → {schema: <id>, note: "<rationale>"}
+# schema_id ∈ {default, bank, insurance, asset-manager,
+#              reit, tech-saas, tech-semis, energy, utilities}
+#
+# Audit rule: every override must carry a note explaining WHY yfinance's
+# auto-routing is wrong for this ticker. Bare overrides without note will
+# be rejected by sector_classifier.py (loud failure, not silent drift).
+#
+# Reference: docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md §4.3
+
+version: 1
+
+overrides:
+  # Berkshire — yfinance routes as Financial Services / Insurance, but it's
+  # a diversified holdco (insurance + railroad BNSF + utilities BHE +
+  # consumer brands + equity portfolio). No single sector schema fits.
+  BRK-B:
+    schema: default
+    note: "Diversified holdco — insurance is one segment among many; bank/insurance schemas misleading"
+  BRK-A:
+    schema: default
+    note: "Diversified holdco — insurance is one segment among many; bank/insurance schemas misleading"
+
+  # Brookfield — alternative-asset manager but parent BN is conglomerate.
+  # Keep BAM as asset-manager (its actual business); BN as default.
+  BN:
+    schema: default
+    note: "Conglomerate parent of BAM — operates across infrastructure / renewables / private equity / insurance"
+
+  # Post-spin GE is industrial conglomerate (aerospace) but yfinance still
+  # tags Industrials → Specialty Industrial Machinery → routes to default.
+  # No override needed; placeholder kept for documentation hygiene if
+  # yfinance reclassifies in the future.
+  # GE:
+  #   schema: default
+  #   note: "(reserved — current yfinance routing already correct)"
+
+  # Sony — sector=Technology but actual mix is electronics + entertainment
+  # (Pictures / Music) + financial services. Multi-segment; default is safer
+  # than tech-saas / tech-semis.
+  6758.T:
+    schema: default
+    note: "Multi-segment — electronics + entertainment + financial services; tech schemas would misweight"
+
+  # SoftBank Group — sector=Communication Services in some yfinance versions
+  # but actually a VC / holdco wrapping Vision Fund + Arm + telecom.
+  9984.T:
+    schema: default
+    note: "VC / holdco — Vision Fund equity portfolio dominates; communication services schema misleading"

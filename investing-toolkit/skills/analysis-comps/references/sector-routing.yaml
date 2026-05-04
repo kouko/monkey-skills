@@ -1,0 +1,74 @@
+# Source-of-truth for (yfinance.info.sector, yfinance.info.industry) → schema_id.
+#
+# Per-sector ordered list of routing rules. First match wins.
+#   - {industry_contains: "<substr>", schema: <id>}  matches if industry contains <substr> (case-insensitive)
+#   - {_default: <id>}                               unconditional fallback (must be last entry per sector)
+#
+# Drift rule: when adding a new schema_id here, also add references/schema-<id>.json.
+# Reviewers verify yaml ↔ schema-*.json parity.
+#
+# Reference: docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md §4
+
+version: 1
+
+routes:
+  # Heterogeneous sectors — industry-level routing required
+  Financial Services:
+    - industry_contains: "Bank"
+      schema: bank
+    - industry_contains: "Insurance"
+      schema: insurance
+    - industry_contains: "Asset Management"
+      schema: asset-manager
+    - industry_contains: "Capital Markets"
+      schema: asset-manager
+    - industry_contains: "Credit Services"
+      schema: default
+    - _default: asset-manager
+
+  Real Estate:
+    - industry_contains: "REIT"
+      schema: reit
+    - industry_contains: "Real Estate Services"
+      schema: default
+    - _default: default
+
+  Technology:
+    - industry_contains: "Software"
+      schema: tech-saas
+    - industry_contains: "Information Technology Services"
+      schema: tech-saas
+    - industry_contains: "Internet"
+      schema: tech-saas
+    - industry_contains: "Semiconductor"
+      schema: tech-semis
+    - _default: default
+
+  Communication Services:
+    - industry_contains: "Internet Content"
+      schema: tech-saas
+    - industry_contains: "Software"
+      schema: tech-saas
+    - _default: default
+
+  # Homogeneous sectors — single schema
+  Energy:
+    - _default: energy
+
+  Utilities:
+    - _default: utilities
+
+  # Default-bucket sectors
+  Healthcare:
+    - _default: default
+  Consumer Cyclical:
+    - _default: default
+  Consumer Defensive:
+    - _default: default
+  Industrials:
+    - _default: default
+  Basic Materials:
+    - _default: default
+
+# Fallback when info.sector is missing or absent from `routes`
+unknown_sector_fallback: default
