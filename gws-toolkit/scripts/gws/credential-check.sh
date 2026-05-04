@@ -50,12 +50,10 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly FILE_BACKEND="${GWS_CONFIG_DIR}/keyring-file.json"
 readonly CREDENTIALS_FILE="${GWS_CONFIG_DIR}/credentials.enc"
+readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
 
 # Google OAuth External + Testing：refresh_token 7 天 lifetime（TECH-SPEC §6.3）
 readonly TOKEN_LIFETIME_DAYS=7
-
-# Keychain service 名稱（gws 預設）；TODO：確認 gws 實際 service name
-readonly KEYCHAIN_SERVICE="gws"
 
 # --- helper -----------------------------------------------------------------
 die_json() {
@@ -71,30 +69,26 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die_json 1 "required command not found: $1"
 }
 
-# --- Keychain 可用性偵測（§6.2） --------------------------------------------
-# 回傳：
-#   0 = Keychain 中找到 gws 條目（可用）
-#   1 = Keychain silent-fail 或條目不存在
-check_keychain() {
-  # macOS only；其他平台（未來 portability）視為無 keychain
-  if [[ "$(uname -s)" != "Darwin" ]]; then
-    return 1
-  fi
-  if ! command -v security >/dev/null 2>&1; then
-    return 1
-  fi
-  # 合併 stderr→stdout，不讓 stderr 直接漏（可能含 path）
-  local out
-  out="$(security find-generic-password -s "${KEYCHAIN_SERVICE}" -a "${USER}" 2>&1 || true)"
-  if printf '%s' "${out}" | grep -qiE 'could not be found|errSec'; then
-    return 1
-  fi
-  # 若 exit 0 且輸出含 "keychain:"（security 標準輸出頭）→ OK
-  if printf '%s' "${out}" | grep -q 'keychain:'; then
-    return 0
-  fi
-  return 1
+# --- gws auth status JSON probe（v0.22.5+）---------------------------------
+# gws v0.22.5 起把 refresh token 存在 ~/.config/gws/credentials.enc（AES-
+# 256-GCM 加密），加密 key 存於 OS keyring（service name 由 gws 內部管理，
+# 不再固定為 "gws"）。直接用 `gws auth status` 自報 backend + token_valid，
+# 比外部偵測 keychain entry 可靠：gws 自己最清楚自己的 storage layout。
+#
+# Echoes the captured JSON to stdout (single-line); empty on failure.
+gws_auth_status_json() {
+  local gws_bin
+  gws_bin="$(command -v gws || printf '%s/gws' "${CACHE_BIN_DIR}")"
+  [[ -x "${gws_bin}" ]] || { printf ''; return 1; }
+  "${gws_bin}" auth status 2>/dev/null \
+    | sed -n '/^{/,$p' \
+    | jq -c '.' 2>/dev/null \
+    || { printf ''; return 1; }
 }
+
+# --- file backend fallback（macOS Keychain 不可用時）------------------------
+# gws auth status 的 .keyring_backend == "file" 時走此路徑（gws 自己已經 fallback
+# 過）。我們不再自己嘗試 fallback；信任 gws 的 backend 判斷。
 
 # --- file backend 可用性 ---------------------------------------------------
 check_file_backend() {
@@ -141,28 +135,37 @@ main() {
   require_cmd stat
   require_cmd date
 
-  local backend=""
-  local backend_usable=1
-  if check_keychain; then
-    backend="keychain"
-  elif check_file_backend; then
-    backend="file"
-    printf '[credential-check] keychain silent-fail or absent; using file backend\n' >&2
-  else
-    # 兩邊都不可用：stdout 仍回結構化狀態（backend=none），exit 18 表嚴重度
+  local status_json backend token_valid backend_usable
+  status_json="$(gws_auth_status_json)"
+
+  if [[ -z "${status_json}" ]]; then
+    # gws 不存在或 auth status 解析失敗 → 沒有可用 backend
     backend="none"
+    token_valid="false"
     backend_usable=0
-    printf '[credential-check] no backend usable; run: gws auth\n' >&2
+    printf '[credential-check] gws auth status unavailable; run: gws auth\n' >&2
+  else
+    local raw_backend
+    raw_backend="$(printf '%s' "${status_json}" | jq -r '.keyring_backend // "none"')"
+    case "${raw_backend}" in
+      keyring) backend="keychain" ;;
+      file)    backend="file" ;;
+      *)       backend="none" ;;
+    esac
+    token_valid="$(printf '%s' "${status_json}" | jq -r '.token_valid // false')"
+    if [[ "${backend}" == "none" || "${token_valid}" != "true" ]]; then
+      backend_usable=0
+    else
+      backend_usable=1
+    fi
+    if (( backend_usable == 0 )); then
+      printf '[credential-check] gws reports backend=%s token_valid=%s; run: gws auth\n' \
+        "${backend}" "${token_valid}" >&2
+    fi
   fi
 
   local remaining
   remaining="$(compute_expires_in_days)"
-
-  # token_valid 的語意：有可用 backend **且** credentials file 在 7 天內
-  local token_valid="false"
-  if (( backend_usable == 1 )) && (( remaining > 0 )); then
-    token_valid="true"
-  fi
 
   emit_result "${backend}" "${token_valid}" "${remaining}"
 
