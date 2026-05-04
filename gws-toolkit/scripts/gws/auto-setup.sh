@@ -11,9 +11,13 @@ set -euo pipefail
 #   3. Create the GCP project and enable the 4 Workspace APIs (Slides +
 #      Drive + Docs + Sheets) — must match the OAuth scope set requested
 #      in step 8 below.
-#   4. Print Console URLs for the manual steps (OAuth consent / Audience /
-#      Clients) and `open` them in the browser; wait for the user to
-#      download client_secret_*.json into ~/Downloads.
+#   4. Guide through 3 sub-steps (5a Branding → 5b Test User → 5c OAuth
+#      Client). Each opens a single Console URL, prints inline
+#      instructions, waits for the user's ENTER (read from /dev/tty so
+#      Claude background invocations still prompt the human directly).
+#      5c additionally polls ~/Downloads/ for the client_secret_*.json
+#      and validates it is a Desktop app (rejects Web app early — the
+#      most common silent footgun).
 #   5. Move the JSON to ~/.config/gws/client_secret.json (chmod 600) and
 #      write env.sh.
 #   6. (handled jointly with 5 — install credentials + env.sh).
@@ -310,53 +314,115 @@ ensure_apis() {
   fi
 }
 
-# --- step 5a：印 Console 手動步驟 URL 並 `open` -----------------------------
-# UI 操作（OAuth consent / Audience test user / Clients create）不可靠自動化；
-# script 僅提供最短 navigation path：依序開 3 個 URL。
-open_console_urls() {
-  step 5 8 "open Console URLs for manual OAuth consent + test user + OAuth client"
-
-  local consent_url audience_url clients_url
-  consent_url="https://console.cloud.google.com/auth/overview?project=${PROJECT_ID}"
-  audience_url="https://console.cloud.google.com/auth/audience?project=${PROJECT_ID}"
-  clients_url="https://console.cloud.google.com/auth/clients?project=${PROJECT_ID}"
-
-  printf '[auto-setup]   1) Consent screen: %s\n'   "${consent_url}" >&2
-  printf '[auto-setup]   2) Add test users: %s\n'   "${audience_url}" >&2
-  printf '[auto-setup]   3) Create OAuth client: %s\n' "${clients_url}" >&2
-  printf '[auto-setup]   → After creating Desktop OAuth client, download JSON to %s\n' \
-    "${DOWNLOADS_DIR}" >&2
-
-  if (( DRY_RUN == 1 )); then
-    dry_echo "open ${consent_url}"
-    dry_echo "open ${audience_url}"
-    dry_echo "open ${clients_url}"
-    return
+# --- step 5：guided 3 sub-steps（5a Branding / 5b Test User / 5c OAuth Client）
+# UI 操作（OAuth consent / Audience test user / Clients create）不可自動化；
+# 改成 sub-step 引導 + 每步 wait-for-confirm + 5c 對下載 JSON 做 Desktop-app
+# shape 驗證攔早期錯誤（避免使用者誤建 Web client 在 step 8 才 401）。
+#
+# 互動模式：always 從 /dev/tty 讀按鍵，所以 Claude Bash 背景跑也能 prompt。
+# 真 headless（無 /dev/tty）→ fallback 一次性開 3 URL + 純 poll。
+prompt_continue() {
+  local message="$1"
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    printf '\n%s\n→ Press ENTER when done (or Ctrl-C to abort): ' "${message}" >/dev/tty
+    read -r _ </dev/tty || true
+  else
+    printf '[auto-setup] (no TTY; cannot prompt — proceeding) %s\n' "${message}" >&2
   fi
-
-  # `open` 失敗不致命（SSH / headless 環境使用者可複製 URL）
-  open "${consent_url}"  >/dev/null 2>&1 || true
-  open "${audience_url}" >/dev/null 2>&1 || true
-  open "${clients_url}"  >/dev/null 2>&1 || true
 }
 
-# --- step 5b：輪詢 ~/Downloads/client_secret_*.json -------------------------
-# 條件：檔案存在 **且** mtime 在 CLIENT_SECRET_FRESHNESS_SEC 秒內 → 視為
-# 剛下載的新檔（避免挑到舊檔）。Timeout 10 min → exit 10。
-wait_for_client_secret() {
-  if [[ -f "${CLIENT_SECRET_DEST}" ]] && (( FORCE_REINSTALL == 0 )); then
-    printf '[auto-setup] %s already installed, skip wait\n' \
-      "${CLIENT_SECRET_DEST}" >&2
-    return
-  fi
+step_5a_branding() {
+  step 5 8 "5a — OAuth Consent Screen / Branding"
+  local url="https://console.cloud.google.com/auth/overview?project=${PROJECT_ID}"
 
-  printf '[auto-setup] waiting for client_secret_*.json in %s (timeout %ds)...\n' \
-    "${DOWNLOADS_DIR}" "${WAIT_CLIENT_SECRET_TIMEOUT_SEC}" >&2
+  cat >&2 <<EOF
 
+  📋 5a — Branding
+     URL: ${url}
+
+     In the browser:
+       1. Open the "Branding" tab (default landing)
+       2. Fill:
+          • App name (e.g. "gws-toolkit")
+          • User support email = your Gmail
+          • Developer contact = your Gmail
+       3. Click Save → wait for "saved" confirmation
+EOF
   if (( DRY_RUN == 1 )); then
-    dry_echo "poll ${DOWNLOADS_DIR}/client_secret_*.json (mtime < ${CLIENT_SECRET_FRESHNESS_SEC}s old)"
+    dry_echo "open ${url}"
     return
   fi
+  open "${url}" >/dev/null 2>&1 || true
+  prompt_continue "Done with 5a (Branding saved)?"
+}
+
+step_5b_test_user() {
+  step 5 8 "5b — Test User"
+  local url="https://console.cloud.google.com/auth/audience?project=${PROJECT_ID}"
+
+  cat >&2 <<EOF
+
+  📋 5b — Audience / Test User
+     URL: ${url}
+
+     In the browser:
+       1. Scroll to "Test users" section
+       2. Click "+ ADD USERS"
+       3. Enter your Gmail (${ACCOUNT:-your@gmail.com})
+       4. Click Save
+       5. Confirm the email appears in the Test users list
+
+     ⚠ Skipping this = step 8 fails with 403 access_denied.
+EOF
+  if (( DRY_RUN == 1 )); then
+    dry_echo "open ${url}"
+    return
+  fi
+  open "${url}" >/dev/null 2>&1 || true
+  prompt_continue "Done with 5b (Test User added & saved)?"
+}
+
+step_5c_oauth_client() {
+  step 5 8 "5c — OAuth Client (Desktop app) + Download"
+  local url="https://console.cloud.google.com/auth/clients?project=${PROJECT_ID}"
+
+  cat >&2 <<EOF
+
+  📋 5c — OAuth Client
+     URL: ${url}
+
+     In the browser:
+       1. Click "+ CREATE CLIENT"
+       2. Application type = "Desktop app"
+          ⚠ NOT "Web application" — Desktop is required for the
+          localhost callback gws uses. Picking Web silently breaks
+          step 8.
+       3. Name (e.g. "gws-toolkit-cli")
+       4. Click Create
+       5. Click DOWNLOAD JSON
+       6. Save to ${DOWNLOADS_DIR}/  (keep default filename)
+
+     Polling ${DOWNLOADS_DIR}/ for fresh client_secret_*.json
+     (timeout ${WAIT_CLIENT_SECRET_TIMEOUT_SEC}s)...
+EOF
+  if (( DRY_RUN == 1 )); then
+    dry_echo "open ${url}"
+    dry_echo "poll ${DOWNLOADS_DIR}/client_secret_*.json"
+    return
+  fi
+  open "${url}" >/dev/null 2>&1 || true
+
+  # 既有 install 已就位 → skip
+  if [[ -f "${CLIENT_SECRET_DEST}" ]] && (( FORCE_REINSTALL == 0 )); then
+    printf '[auto-setup] %s already installed, skip wait\n' "${CLIENT_SECRET_DEST}" >&2
+    return
+  fi
+
+  # Poll + Desktop-app shape validation
+  local jq_bin
+  jq_bin="$(command -v jq || printf '%s/jq' "${CACHE_BIN_DIR}")"
+  [[ -x "${jq_bin}" ]] \
+    || die_json 1 "jq not found (expected system jq or ${CACHE_BIN_DIR}/jq); cannot validate downloaded client_secret"
 
   local deadline now candidate mtime age_sec
   deadline=$(( $(date +%s) + WAIT_CLIENT_SECRET_TIMEOUT_SEC ))
@@ -367,16 +433,27 @@ wait_for_client_secret() {
       die_json 10 "timeout waiting for client_secret_*.json in ${DOWNLOADS_DIR}"
     fi
 
-    # ls -t 依 mtime 新→舊；挑最新一個候選
     candidate="$(ls -t "${DOWNLOADS_DIR}"/client_secret_*.json 2>/dev/null \
       | head -1 || printf '')"
     if [[ -n "${candidate}" && -f "${candidate}" ]]; then
       mtime="$(stat -f '%m' "${candidate}" 2>/dev/null || printf '0')"
       age_sec=$(( now - mtime ))
       if (( age_sec <= CLIENT_SECRET_FRESHNESS_SEC )); then
-        printf '[auto-setup] found fresh %s (age %ds)\n' \
-          "${candidate}" "${age_sec}" >&2
-        return
+        # Validate Desktop app shape (.installed.client_id present)
+        if "${jq_bin}" -e '.installed.client_id // empty | length > 0' "${candidate}" >/dev/null 2>&1; then
+          printf '[auto-setup] found fresh Desktop OAuth client: %s (age %ds)\n' \
+            "${candidate}" "${age_sec}" >&2
+          return
+        fi
+        # Web app instead — actionable error
+        if "${jq_bin}" -e '.web.client_id // empty | length > 0' "${candidate}" >/dev/null 2>&1; then
+          printf '\n[auto-setup] ⚠ %s is a Web OAuth client, not Desktop.\n' "${candidate}" >&2
+          printf '[auto-setup]   gws requires Desktop app type for the localhost callback.\n' >&2
+          printf '[auto-setup]   Re-run 5c: delete this Web client + create a Desktop one.\n' >&2
+          die_json 1 "downloaded client_secret has .web.* (Web app) — must be Desktop app"
+        fi
+        printf '[auto-setup] ⚠ %s has neither .installed nor .web sections; format unknown\n' "${candidate}" >&2
+        die_json 1 "client_secret JSON shape unrecognised"
       fi
     fi
 
@@ -581,8 +658,9 @@ main() {
   resolve_project_id
   ensure_project                 # step 3
   ensure_apis                    # step 4
-  open_console_urls              # step 5a
-  wait_for_client_secret         # step 5b
+  step_5a_branding               # step 5a
+  step_5b_test_user              # step 5b
+  step_5c_oauth_client           # step 5c
   install_credentials            # step 6
   ensure_binaries                # step 7
   ensure_gws_auth                # step 8a
