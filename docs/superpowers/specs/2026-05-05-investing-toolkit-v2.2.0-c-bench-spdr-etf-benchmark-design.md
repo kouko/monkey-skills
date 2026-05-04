@@ -1,19 +1,38 @@
-# investing-toolkit v2.2.0-c — Sector-adjusted multiples + SPDR ETF benchmark
+# investing-toolkit v2.2.0-c-bench — SPDR sector ETF aggregate benchmark layer (follow-up)
 
-**Status**: Design
+**Status**: Design (follow-up PR; not yet scheduled)
 **Date**: 2026-05-05
 **Authors**: kouko + Claude (brainstorming session)
-**Predecessor**: v2.2.0-b (`analysis-comps --mode compute` activation, PR #227) + v2.2.0-l (memo-fetch raw-field extension, PR #239)
+**Predecessor**: v2.2.0-c (sector classification + 9-schema dispatch + sector-specific multiples — `2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md`)
 **Skill**: `investing-toolkit/skills/analysis-comps`
 
 ---
 
-## 1. Goal
+> **Reframe note (2026-05-05)** — this spec was originally drafted as a competing v2.2.0-c design before the in-progress `feat/v2.2.0-c-sector-multiples` branch was rediscovered. After branch comparison, the user chose the OLD design (schema-driven, 9 sector schemas, 5 new multiples + 8 indicators) for v2.2.0-c. The durable contribution of this spec is the **SPDR sector ETF aggregate benchmark layer** — orthogonal to v2.2.0-c's sector classification + multiples; layers on top. Sections covering classification / multiple-routing / override-mechanism are SUPERSEDED by v2.2.0-c's `sector_classifier.py` + `sector-routing.yaml` + `sector-overrides.yaml`. Only the ETF-aggregate + divergence-band + 11-GICS-warning-matrix concepts remain net-new for v2.2.0-c-bench.
+
+---
+
+## 1. Goal (v2.2.0-c-bench scope, post-reframe)
+
+Layer a **SPDR sector ETF aggregate benchmark** on top of v2.2.0-c's sector-aware compute output:
+
+1. **Holdings-weighted ETF aggregate** — weekly GitHub Actions job computes aggregate multiples + indicators (per the v2.2.0-c schema each ETF maps to) for each of the 11 SPDR Select Sector ETFs (XLE / XLB / XLI / XLY / XLP / XLV / XLF / XLK / XLC / XLU / XLRE) and commits the 11 JSON files to `references/`.
+2. **Per-multiple ETF divergence** — `individual` (anchor's compute output) vs `etf_aggregate` divergence per multiple, classified into `in_line` (≤20%) / `notable` (20–50%) / `extreme` (>50%) bands.
+3. **11-GICS warning matrix** — sector-specific interpretive caveats (e.g. "P/E for energy issuers is commodity-cycle distorted") loaded from `references/sector-warnings.md`, plucked by anchor's classified GICS L1.
+4. **Opt-in CLI flag** — `--sector-benchmark` adds an `etf_benchmark` block to compute output; absent flag → output unchanged from v2.2.0-c shape (backward compatible).
+
+**Architecture note**: v2.2.0-c sector classification + sector-specific multiples are the FOUNDATION. v2.2.0-c-bench reads `anchor.schema_id` from v2.2.0-c output and reads `references/sector-etf-aggregate-<ETF>.json` (one of 11) for the matching SPDR ETF aggregate. Per-ETF schema_id mapping is fixed (XLF → bank; XLK → tech-saas; XLRE → reit; XLE → energy; XLU → utilities; XLB/XLI/XLY/XLP/XLV/XLC → default).
+
+## 1b. Original Goal sections (SUPERSEDED — kept for context)
+
+The sections below were drafted before the v2.2.0-c branch was rediscovered. **Sector classification, override mechanism, and sector-specific multiples (ROE / Rule-of-40 / P/FFO)** are already shipped in v2.2.0-c. They are kept here for historical reference but should NOT be re-implemented in v2.2.0-c-bench. The original Goal #1 (classification) and Goal #2 (sector-specific multiples) overlap with v2.2.0-c's far more comprehensive 9-schema design and are obsolete.
+
+## 1c. Original Goal text (FROM PRE-REFRAME DRAFT — SUPERSEDED)
 
 Extend `analysis-comps --mode compute` so that US-listed equity comps output:
 
-1. **Sector classification** — every US ticker is mapped to one of the 11 SPDR Select Sector ETFs (XLE / XLB / XLI / XLY / XLP / XLV / XLF / XLK / XLC / XLU / XLRE) using `yfinance info.sector + info.industry`, with a per-ticker override mechanism for known misroutes.
-2. **Sector-specific multiples** — for sectors where the default 5 (trailingPE / forwardPE / priceToBook / priceToSales / evEbitda) are misleading, additionally compute one or two sector-specific multiples (ROE for banks; Rule-of-40 for IT; P/FFO for REITs).
+1. **Sector classification** — every US ticker is mapped to one of the 11 SPDR Select Sector ETFs (XLE / XLB / XLI / XLY / XLP / XLV / XLF / XLK / XLC / XLU / XLRE) using `yfinance info.sector + info.industry`, with a per-ticker override mechanism for known misroutes. **[SUPERSEDED by v2.2.0-c sector_classifier.py]**
+2. **Sector-specific multiples** — for sectors where the default 5 (trailingPE / forwardPE / priceToBook / priceToSales / evEbitda) are misleading, additionally compute one or two sector-specific multiples (ROE for banks; Rule-of-40 for IT; P/FFO for REITs). **[SUPERSEDED by v2.2.0-c 9-schema dispatch with 5 new multiples + 8 indicators]**
 3. **SPDR ETF aggregate benchmark** — every week, a scheduled GitHub Actions job computes holdings-weighted aggregate multiples for each of the 11 ETFs and commits the JSON results to `references/`. Runtime reads these files as the comparison benchmark.
 4. **Per-multiple divergence** — emit `individual` vs `etf_aggregate` divergence per multiple, classified into `in_line` / `notable` / `extreme` bands at 20% / 50% boundaries.
 
