@@ -612,11 +612,23 @@ def test_compute_priceToBook_provenance(compute_payload):
     assert "10-K filed 2025-10-31" in prov["accession_basis"]
 
 
-def test_compute_mode_evEbitda_emits_null(compute_payload):
-    """evEbitda deferred until v2.2.0-l (memo-fetch lacks D&A)."""
-    assert compute_payload["anchor"]["multiples_compute"]["evEbitda"] is None
-    assert compute_payload["anchor"]["compute_provenance"]["evEbitda"]["computed"] is False
-    assert "v2.2.0-l" in compute_payload["anchor"]["compute_provenance"]["evEbitda"]["note"]
+def test_compute_mode_recomputes_evEbitda_FY(compute_payload):
+    """evEbitda = (mcap + total_debt[0] - cash[0]) / (operating_income[0] + D&A[0]) — FY (v2.2.0-l)."""
+    actual = compute_payload["anchor"]["multiples_compute"]["evEbitda"]
+    enterprise_value = 4109006274560 + 90678000000 - 35934000000  # 4,163,750,274,560
+    ebitda = 133050000000.0 + 11445000000.0  # 144,495,000,000
+    expected = enterprise_value / ebitda  # 28.8160
+    assert actual == pytest.approx(expected, rel=1e-4)
+
+
+def test_compute_evEbitda_provenance(compute_payload):
+    """evEbitda provenance records EV + EBITDA derivation + FY end."""
+    prov = compute_payload["anchor"]["compute_provenance"]["evEbitda"]
+    assert prov["computed"] is True
+    assert "marketCap + total_debt[0] - cash[0]" in prov["numerator_source"]
+    assert "operating_income[0] + depreciation_amortization[0]" in prov["denominator_source"]
+    assert prov["fiscal_year_end"] == "2025-09-27"
+    assert "10-K filed 2025-10-31" in prov["accession_basis"]
 
 
 def test_compute_provenance_includes_fiscal_year_end(compute_payload):

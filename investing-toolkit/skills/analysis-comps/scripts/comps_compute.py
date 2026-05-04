@@ -70,9 +70,9 @@ ALIASES = {
 DIVERGENCE_BAND_LOW  = 0.05   # 5%   — boundary inclusive (≤ low)
 DIVERGENCE_BAND_HIGH = 0.15   # 15%  — boundary inclusive for medium (high band is strict >)
 
-# Multiples currently deferred to future commits (memo-fetch lacks the raw fields):
-#   evEbitda → needs depreciation_amortization (wired in v2.2.0-l Task 6 below)
-DEFERRED_MULTIPLES = ("evEbitda",)
+# Multiples deferred to future PRs (memo-fetch lacks the raw fields):
+#   (none — all 5 wired as of v2.2.0-l)
+DEFERRED_MULTIPLES: tuple[str, ...] = ()
 
 
 def _load_pack(path: Path) -> dict:
@@ -284,17 +284,49 @@ def _compute_multiples_from_memo_fetch(memo_fetch: dict, direct_multiples: dict)
             "note":               "FY-trailing book value, not most-recent-quarter — see ROADMAP §v2.2.0-l",
         }
 
-    # Deferred multiples (v2.2.0-l)
-    for m in DEFERRED_MULTIPLES:
-        out_compute[m] = None
-        out_prov[m] = {
+    # evEbitda (FY) — EV / EBITDA = (mcap + total_debt[0] - cash[0]) / (EBIT[0] + D&A[0]) (v2.2.0-l)
+    cf = memo_fetch.get("cash_flow") or {}
+    operating_income_fy = _safe_first(inc.get("operating_income"))
+    da_fy = _safe_first(cf.get("depreciation_amortization"))
+    total_debt_fy = _safe_first(bs.get("total_debt"))
+    cash_fy = _safe_first(bs.get("cash"))
+    ev_fy_end = _cf_concept_fy_end(cf, "depreciation_amortization")
+    ev_filings = _cf_concept_filings(cf, "depreciation_amortization")
+
+    missing_inputs = []
+    if market_cap is None: missing_inputs.append("marketCap")
+    if total_debt_fy is None: missing_inputs.append("total_debt[0]")
+    if cash_fy is None: missing_inputs.append("cash[0]")
+    if operating_income_fy is None: missing_inputs.append("operating_income[0]")
+    if da_fy is None: missing_inputs.append("depreciation_amortization[0]")
+
+    if missing_inputs:
+        out_compute["evEbitda"] = None
+        out_prov["evEbitda"] = {
             "computed": False,
-            "note": (
-                "deferred to v2.2.0-l (memo-fetch missing total_stockholders_equity)"
-                if m == "priceToBook" else
-                "deferred to v2.2.0-l (memo-fetch missing depreciation_amortization)"
-            ),
+            "note": f"compute skipped — missing: {', '.join(missing_inputs)}",
         }
+        warnings.append(f"evEbitda compute skipped: {', '.join(missing_inputs)} missing")
+    else:
+        ev = market_cap + total_debt_fy - cash_fy
+        ebitda = operating_income_fy + da_fy
+        if ebitda == 0:
+            out_compute["evEbitda"] = None
+            out_prov["evEbitda"] = {
+                "computed": False,
+                "note": "compute skipped — EBITDA (EBIT[0] + D&A[0]) is zero",
+            }
+            warnings.append("evEbitda compute skipped: EBITDA is zero")
+        else:
+            out_compute["evEbitda"] = ev / ebitda
+            out_prov["evEbitda"] = {
+                "numerator_source":   "memo-fetch: marketCap + total_debt[0] - cash[0]",
+                "denominator_source": "memo-fetch: operating_income[0] + depreciation_amortization[0]",
+                "accession_basis":    ev_filings,
+                "fiscal_year_end":    ev_fy_end,
+                "computed":           True,
+                "note":               "EV/EBITDA FY-trailing (EBIT + D&A); not LTM-EBITDA — see ROADMAP §v2.2.0-l",
+            }
 
     return out_compute, out_prov, warnings
 
