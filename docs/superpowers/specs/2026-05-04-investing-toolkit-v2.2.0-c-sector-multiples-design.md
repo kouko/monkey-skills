@@ -1,11 +1,12 @@
 # investing-toolkit v2.2.0-c — Sector-Adjusted Multiples for Comps
 
-**Status**: DRAFT (2026-05-04)
+**Status**: SHIPPED 2026-05-05 (PR TBD)
 **Owner**: kouko
 **Branch**: `feat/v2.2.0-c-sector-multiples`
 **Worktree**: `/Users/kouko/GitHub/monkey-skills-v2.2.0-c`
 **Predecessor specs**: `2026-05-03-investing-toolkit-v2.2.0-b-comps-compute-design.md`
-**Roadmap entry**: `investing-toolkit/ROADMAP.md §v2.2.0-c`
+**Successor spec**: [`2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md`](./2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md) (SPDR ETF aggregate benchmark layer follow-up)
+**Roadmap entry**: `investing-toolkit/ROADMAP.md §v2.2.0-c` (closed) / §v2.2.0-c-bench (follow-up)
 
 ---
 
