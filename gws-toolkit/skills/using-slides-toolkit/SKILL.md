@@ -25,7 +25,7 @@ Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read th
 | Design consultation (デザイン相談 / 設計諮詢) — EN: "narrative structure", "which chart type", "information hierarchy", "Minto / SCQA". JP: 「敘事構成」「どの図表」「情報階層」「Minto / SCQA」. ZH: 「敘事結構」「哪種圖表」「資訊層級」「Minto / SCQA」 | `slides-design` |
 | Setup / auth (初期設定 / 初次設定) — EN: "first time", "401 / 403 / invalid_scope", "auth failed", "gws not installed", "token expired". JP: 「初めて使う」「認証エラー」「gws まだ入れてない」「token 切れ」. ZH: 「第一次用」「auth 失敗」「gws 還沒裝」「token 過期」 | `google-slides-setup` |
 | Deck generation (デッキ生成 / 生成 deck) — EN: "generate the deck", "turn slide-plan into Google Slides", "export", "run pipeline". JP: 「deck を作る」「slide-plan を Google Slides に」「エクスポート」「パイプライン実行」. ZH: 「生成 deck」「把 slide-plan 變 Google Slides」「匯出」「執行 pipeline」 | `google-slides-builder` |
-| Low-level API learning / debugging (API 学習・デバッグ / API 學習・除錯) — EN: "how do I call this op", "debug a Slides error", "learn batchUpdate", "tweak a recipe". JP: 「この API の使い方」「Slides のエラーをデバッグ」「batchUpdate を学ぶ」「recipe を改造」. ZH: 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」 | `google-slides-api` |
+| Low-level API learning / debugging (API 学習・デバッグ / API 學習・除錯) — EN: "how do I call this op", "debug a Slides error", "learn batchUpdate", "tweak a recipe". JP: 「この API の使い方」「Slides のエラーをデバッグ」「batchUpdate を学ぶ」「recipe を改造」. ZH: 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」 | upstream `gws-slides` skill (raw API method discovery) or `google-slides-builder` (the 4 bundled recipes — composition patterns, error mapping) |
 | Vague or "make a simple deck" with no explicit target | Default `target: "google-slides"` (MVP's only backend); continue through setup → builder. |
 
 **Example A** (design consultation):
@@ -36,9 +36,10 @@ Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read th
 > User: "Run this `slide-plan.json` for me."
 > Check `slide-plan.target == "google-slides"` → confirm setup is complete → route to `google-slides-builder`.
 
-**Example C** (low-level API learning / debugging, added in v0.3.2):
+**Example C** (low-level API learning / debugging):
 > User: "How exactly do I pass `predefinedLayout` to gws `createSlide`?"
-> Route → `google-slides-api` (reads `protocols/recipe-create-slides.md` + `references/api-error-codes.md`). Does not run the pipeline or generate a deck.
+> First-line: upstream `gws-slides` skill (raw method/parameter reference) or `gws schema slides.<resource>.<method>` introspection.
+> For composition patterns (e.g. how the placeholder map threads across calls): `google-slides-builder`'s `protocols/recipe-create-slides.md` + `references/api-error-codes.md`. Does not run the pipeline.
 
 ## Target backend detection
 
