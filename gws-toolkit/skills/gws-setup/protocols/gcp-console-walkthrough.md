@@ -439,8 +439,8 @@ APIs (covering the scope set granted in §L3):
   (search via `q`), `files.update` (trash), `permissions.create`
   (sharing). Scope = `drive` (full); the toolkit's three-tier
   `safe-delete.sh` wrapper enforces trash-default + typed confirmation
-  for destructive ops, taking on the safety guarantees that the narrower
-  `drive.file` scope previously provided implicitly.
+  for destructive ops, providing application-layer safety equivalent
+  to a narrower scope.
 - **Google Docs API** — for `documents.{create, batchUpdate, get}` via
   vendored `gws-docs` skill.
 - **Google Sheets API** — for `spreadsheets.{create, batchUpdate, get,
@@ -598,7 +598,7 @@ The browser flow:
 4. Click **Advanced** in the bottom left.
 5. Click **Go to slides-toolkit (unsafe)** (the text matches the App
    name you set in §A2 / §B2).
-6. Review the scope list (4 entries, since v0.4 OAuth scope upgrade):
+6. Review the scope list (4 entries):
    - `See, edit, create, and delete all your Google Drive files`
      (drive — full; the toolkit's safe-delete wrapper enforces
      trash-default + typed confirmation policy)

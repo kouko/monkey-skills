@@ -87,7 +87,7 @@ gws auth scopes 2>/dev/null | grep -q 'presentations' && \
 
 未 grant → **exit 10** + hint：`missing required scopes (need presentations + drive + documents + spreadsheets). Run gws-setup and re-authorize`
 
-（TECH-SPEC §4.4：v0.4 起需 `presentations` + `drive` + `documents` + `spreadsheets` 4 個 scope；`drive` 取代原本的 `drive.file`，least-privilege 由 toolkit 的 `safe-delete.sh` 三層防護 wrapper 在應用層 enforce，而非由 OAuth scope 邊界 enforce）
+（TECH-SPEC §4.4：所需 4 個 scope `presentations` + `drive` + `documents` + `spreadsheets`；least-privilege 由 toolkit 的 `safe-delete.sh` 三層防護 wrapper 在應用層 enforce，而非由 OAuth scope 邊界 enforce）
 
 ## 7. [ ] 網路可通 `googleapis.com`
 

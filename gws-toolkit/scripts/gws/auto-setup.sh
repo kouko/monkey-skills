@@ -8,7 +8,9 @@ set -euo pipefail
 # idempotent script. Steps:
 #   1. Detect / install gcloud CLI (brew cask or the official installer).
 #   2. gcloud auth login (skipped if already signed in).
-#   3. Create the GCP project and enable the Slides + Drive APIs.
+#   3. Create the GCP project and enable the 4 Workspace APIs (Slides +
+#      Drive + Docs + Sheets) — must match the OAuth scope set requested
+#      in step 6 below.
 #   4. Print Console URLs for the manual steps (OAuth consent / Audience /
 #      Clients) and `open` them in the browser; wait for the user to
 #      download client_secret_*.json into ~/Downloads.
@@ -269,13 +271,15 @@ ensure_project() {
   fi
 }
 
-# --- step 4：enable Slides + Drive APIs -------------------------------------
-# `gcloud services list --enabled` 比對；兩者已在 → skip。
+# --- step 4：enable Slides + Drive + Docs + Sheets APIs ---------------------
+# `gcloud services list --enabled` 比對；4 個全在 → skip。Workspace API
+# enablement is independent of OAuth scope grant — both gates must pass for
+# any API call to succeed (see PRODUCT-SPEC v1.0 §6.3).
 ensure_apis() {
-  step 4 7 "enable slides + drive APIs on ${PROJECT_ID}"
+  step 4 7 "enable slides + drive + docs + sheets APIs on ${PROJECT_ID}"
 
   if (( DRY_RUN == 1 )); then
-    dry_echo "gcloud services enable slides.googleapis.com drive.googleapis.com --project=${PROJECT_ID}"
+    dry_echo "gcloud services enable slides.googleapis.com drive.googleapis.com docs.googleapis.com sheets.googleapis.com --project=${PROJECT_ID}"
     return
   fi
 
@@ -286,7 +290,9 @@ ensure_apis() {
     --format='value(config.name)' 2>/dev/null || printf '')"
 
   if printf '%s\n' "${enabled}" | grep -q '^slides\.googleapis\.com$' \
-     && printf '%s\n' "${enabled}" | grep -q '^drive\.googleapis\.com$'; then
+     && printf '%s\n' "${enabled}" | grep -q '^drive\.googleapis\.com$' \
+     && printf '%s\n' "${enabled}" | grep -q '^docs\.googleapis\.com$' \
+     && printf '%s\n' "${enabled}" | grep -q '^sheets\.googleapis\.com$'; then
     printf '[auto-setup] APIs already enabled, skip\n' >&2
     return
   fi
@@ -294,6 +300,8 @@ ensure_apis() {
   if ! gcloud services enable \
       slides.googleapis.com \
       drive.googleapis.com \
+      docs.googleapis.com \
+      sheets.googleapis.com \
       --project="${PROJECT_ID}"; then
     die_json 12 "gcloud services enable failed"
   fi
