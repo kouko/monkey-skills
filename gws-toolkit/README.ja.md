@@ -88,6 +88,53 @@ Drive URL を返します。
 command は含まれません）。skill 名を入力すれば Claude Code が
 dispatch します。
 
+## アカウント管理
+
+`/gws-setup` 完了後の日常運用。toolkit は同時に refresh token を 1 つ
+だけ保存する。OAuth クライアント設定（`client_secret.json`, `env.sh`）は
+ログイン間で保持されるので、再認証やアカウント切り替えで GCP Console の
+手順を再実行する必要はない。
+
+### 7 日期限の再認証（同一アカウント）
+
+External + Testing モードの OAuth refresh token は 7 日で失効する。
+切れたら：
+
+```
+bash scripts/gws/refresh-auth.sh
+```
+
+同じスコープで `gws auth login` を再実行する；ブラウザ側のプロンプト
+は短く（authorise 済みアプリ）、新しい refresh token がまた約 7 日有効。
+
+### Google アカウントの切り替え
+
+```
+bash scripts/gws/gws-login.sh --switch
+```
+
+`gws-logout.sh` 経由でローカル credentials を消してから OAuth を
+再実行する。ブラウザに Google のアカウント選択が出るので（複数の
+Google アカウントがブラウザに sign-in されている場合）、新しい
+アカウントを選ぶと新しい refresh token が保存される。`--switch`
+を付けない場合 `gws-login.sh` は idempotent — 既に authed なら
+exit 0。
+
+### Logout
+
+```
+bash scripts/gws/gws-logout.sh
+```
+
+ローカル credentials のみ消去（`credentials.enc` + `token_cache.json`
++ Keychain entry）。Server-side では refresh token は ~7 日 Testing
+モード期限まで有効なまま。即座に server-side revoke したい場合は
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+を訪問する。toolkit は server-side revoke を自動化しない — それを
+やると `credentials.enc` を復号して refresh token を取り出す必要が
+あり、`credential-check.sh` の metadata-only アクセスパターン
+（ASVS V14 secrets-at-rest）を破ることになる。
+
 ## Skills
 
 plugin は **9 skill** を 2 層の provenance で提供します — 4 toolkit-original

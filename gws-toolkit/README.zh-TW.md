@@ -82,6 +82,48 @@ slide → 插入文字 → 插入本機圖片），回傳 Drive URL。
 auto-route（plugin 沒有 `commands/` shim，未提供 slash command）。
 直接打 skill 名稱，Claude Code 就會 dispatch。
 
+## 帳號管理
+
+`/gws-setup` 完成後的日常操作。toolkit 同時只保存一份 refresh token；
+OAuth client 設定（`client_secret.json`, `env.sh`）跨次登入保留，
+所以重新認證或切換帳號都不需要再跑一次 GCP Console 設定流程。
+
+### 7 天到期重新認證（同帳號）
+
+External + Testing 模式的 OAuth refresh token 7 天後失效。到期時：
+
+```
+bash scripts/gws/refresh-auth.sh
+```
+
+用同一組 scope 重跑 `gws auth login`；瀏覽器這邊只會短暫提示
+（已授權過的 app），新的 refresh token 又有約 7 天壽命。
+
+### 切換 Google 帳號
+
+```
+bash scripts/gws/gws-login.sh --switch
+```
+
+先透過 `gws-logout.sh` 清掉本地 credentials，再重跑 OAuth。瀏覽器
+會顯示 Google 帳號選擇器（前提是瀏覽器 session 內有多個 Google 帳號），
+選新帳號後新的 refresh token 就會被存下。沒有 `--switch` 時
+`gws-login.sh` 是 idempotent — 已 authed 就 exit 0。
+
+### 登出
+
+```
+bash scripts/gws/gws-logout.sh
+```
+
+只清本地 credentials（`credentials.enc` + `token_cache.json`
++ Keychain entry）。Server-side 的 refresh token 還是有效，
+直到約 7 天 Testing 模式期限自然到期。要立即 server-side revoke，
+到 [myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+手動撤銷。toolkit 刻意不自動 server-side revoke — 那需要解密
+`credentials.enc` 取出 refresh token，會破壞 `credential-check.sh`
+的 metadata-only 存取慣例（ASVS V14 secrets-at-rest）。
+
 ## Skills
 
 Plugin 提供 **9 個 skill**，分兩層 provenance — 4 個 toolkit-original
