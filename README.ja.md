@@ -2,7 +2,7 @@
 
 言語: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 個人用 Claude Code plugin marketplace — domain-team workflow、skill 開発、哲学的思考、Obsidian、投資、copywriting、slides、書籍 distillation、コードリポジトリナレッジを網羅した 9 つの plugin。
+> 個人用 Claude Code plugin marketplace — domain-team workflow、skill 開発、哲学的思考、Obsidian、投資、copywriting、slides、書籍 distillation、コードリポジトリナレッジ、文物脱構築を網羅した 10 個の plugin。
 
 ## Plugin 一覧
 
@@ -17,8 +17,9 @@
 | [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides 生成 toolkit — `gws` 経由の template ベース deck pipeline、backend 非依存の design 知識、Platform-Pivot 構成。 |
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — Kobo の積読 e-book を RIA-TV++ distillation pipeline で実行可能な agent skill 群に変換。 |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | コードリポジトリ向け LLM Wiki Pattern — git 履歴から `.repo-wiki/` を seed (init)、変更/コンテキスト/外部ドキュメントから成長 (ingest, polymorphic)、`src/` への verification 付きで query (Eager triggers + segmented output)。 |
+| [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.1.0 | 4 | 1 | 制作物（コピー / ドキュメント / UI / 論証 / 製品 / 組織）を逆向きに分解し、設計判断・借用フレームワーク・修辞メカニズム・意図的な省略を可視化。Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman に紐付け。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。 |
 
-**合計**：84 skill、40 slash command（9 plugin 横断）。
+**合計**：88 skill、41 slash command（10 plugin 横断）。
 
 > 各 plugin の description で ⚠️ が付いているもの（`investing-toolkit`、`slides-toolkit`、`tsundoku`、および `obsidian` 内の `defuddle` skill）は Claude Code CLI 環境を要求します — Cowork sandbox は外部 network 通信や subprocess 実行を遮断します。
 
@@ -65,6 +66,7 @@ monkey-skills/
 ├── slides-toolkit/               # plugin
 ├── tsundoku/                     # plugin
 ├── repo-wiki/                    # plugin
+├── deconstruct-toolkit/          # plugin
 ├── docs/                         # 横断 docs（i18n glossary など）
 ├── scripts/                      # repo レベル tooling
 ├── CLAUDE.md                     # Claude Code 向けプロジェクト規約
