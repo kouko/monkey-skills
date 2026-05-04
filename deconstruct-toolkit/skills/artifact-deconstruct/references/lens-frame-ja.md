@@ -193,3 +193,11 @@ The same phenomenon — frame layering — is operationalized differently across
 - `lens-frame-zh.md` treats it through 給面子 / 面子 (face-work as identity-frame in a relational matrix), which overlaps but is not identical to 建前/本音.
 
 When analyzing a multi-language artifact, apply the variant matching the artifact's primary register, and note in the synthesis where the cross-variant readings would differ.
+
+### Adjacent JP lenses
+
+Many JP artifacts that warrant frame analysis also warrant rhetoric / persuasion / genre analysis. Cross-references when applying multiple lenses:
+
+- For 政治演説 / 党首討論 / 記者会見 with kishōtenketsu structure → also apply [`lens-rhetoric-ja.md`](lens-rhetoric-ja.md). 起承転結's 転 (turn) is itself a frame-shifting move; reading both lenses on the same artifact surfaces how the turn re-keys the frame.
+- For business letter / メール register where 建前/本音 layering is realized through 拝啓-formula formality → also apply [`lens-genre-ja.md`](lens-genre-ja.md).
+- For consumer / political persuasion where 建前/本音 enables 老舗 + 婉曲 mechanisms → also apply [`lens-persuasion-ja.md`](lens-persuasion-ja.md).

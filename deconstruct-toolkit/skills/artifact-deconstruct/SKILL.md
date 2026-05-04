@@ -170,7 +170,7 @@ are language-variant-routed — see `protocols/lens-variant-selection.md`.
 |---|---|---|---|
 | `lens-semiotic` | (no variants) | Roland Barthes (S/Z, 1970) | Literature, film, advertising imagery, texts with strong subtext |
 | `lens-rhetoric` ✱ | -anglo / -ja / -zh | Burke 1945 + Toulmin 1958 / Hinds 1983 + 1987 + Oh 2025 (kishōtenketsu) / 劉勰《文心雕龍》六觀 | Speeches, proposals, political texts, arguments needing structural validation |
-| `lens-frame` ✱ | -anglo / -ja / -zh | Goffman 1974 + Lakoff 1980 / + Doi 1971 + Yamamoto 1977 (建前/本音, ma) / + Hu 1944 + Hwang 1987 + Peng & Nisbett 1999 (面子, 陰陽) | Texts with strong metaphors, suspected hidden assumptions, ideological texts |
+| `lens-frame` ✱ | -anglo / -ja / -zh | Goffman 1974 + Lakoff 1980 / + Doi 1971 + Yamamoto 1977 + Markus & Kitayama 1991 (建前/本音, 空気, ma) / + Hu 1944 + Hwang 1987 + Peng & Nisbett 1999 (面子/臉, 陰陽) | Texts with strong metaphors, suspected hidden assumptions, ideological texts |
 | `lens-genre` ✱ | -anglo / -ja / -zh | Swales 1990 + Bhatia 1993 / + 木下 1981 + Hinds 1987 (序論-本論-結論, 拝啓 letter) / + 行政院公文程式條例 (緒論-本論-結論, 公文) | Document packs, SOPs, academic papers, business proposals — anything genre-recognizable |
 | `lens-ux` | (no variants) | Jakob Nielsen + Don Norman (1988, 2013) | UI screens, app flows, websites, onboarding experiences (yes, docs are UX too) |
 | `lens-persuasion` ✱ | -anglo / -ja / -zh | Cialdini 2021 + Brignull 2024 / + Doi 1971 + cross-cultural empirical work / + Hwang 1987 (面子/關係/人情) | Marketing copy, sales pages, landing pages, onboarding, political/policy texts |

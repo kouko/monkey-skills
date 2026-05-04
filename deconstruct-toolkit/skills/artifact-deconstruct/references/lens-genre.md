@@ -1,9 +1,9 @@
 # Lens: Genre (universal core / language-variant router)
 
 > **Sources**: this file is a router; primary sources live in the variants below.
-> - English / Western (`lens-genre-anglo.md`): Swales (1990) + Bhatia (1993)
-> - Japanese (`lens-genre-ja.md`): 甲田直美『大学で学ぶアカデミック・ライティングの教科書』+ Hinds (1983) + JP business letter handbooks
-> - Chinese (`lens-genre-zh.md`): ZH academic-writing handbook + 公文 genre handbook (specific sources TBD in Phase E grounding research)
+> - English / Western (`lens-genre-anglo.md`): Swales 1990 + Bhatia 1993
+> - Japanese (`lens-genre-ja.md`): Swales/Bhatia (scaffolding) + 甲田直美 + 木下是雄『理科系の作文技術』(中公新書, 1981) + Hinds 1987 reader-responsibility + JP 拝啓-formula handbooks
+> - Chinese (`lens-genre-zh.md`): Swales/Bhatia (scaffolding) + 行政院《文書處理手冊》(112年6月修正本) + 公文程式條例 + Loi & Evans 2010 + Kirkpatrick & Xu 2012 (八股 legacy) + 台大寫作教學中心 (緒論 sub-moves)
 
 > **Cultural-sensitivity flag** 🔴 **high**: This lens is culturally sensitive. Genre conventions — what canonical move structures recognizable document types follow — are language-and-culture specific. Swales/Bhatia's CARS and 7-move sales letter are derived from English-academic and Western-DM artifacts; Japanese and Chinese have distinct genre canons. **Do not apply analytical questions from this file directly** — select a language variant first.
 
@@ -24,8 +24,8 @@ Choose ONE variant before applying:
 | Artifact register | Variant | Primary sources |
 |---|---|---|
 | Primarily English / Western | [`lens-genre-anglo.md`](lens-genre-anglo.md) | Swales (1990) + Bhatia (1993) |
-| Primarily Japanese | `lens-genre-ja.md` (shipping later in v0.2.0) | 甲田直美『大学で学ぶアカデミック・ライティングの教科書』+ Hinds (1983) + JP business letter handbooks |
-| Primarily Chinese (TC or SC) | `lens-genre-zh.md` (shipping later in v0.2.0) | ZH academic writing handbook + 公文 genre handbook (TBD specific sources) |
+| Primarily Japanese | [`lens-genre-ja.md`](lens-genre-ja.md) | Swales/Bhatia + 甲田直美 + 木下是雄 1981 + Hinds 1987 + 拝啓-formula handbooks; 序論-本論-結論 + 起承転結 dual-mode |
+| Primarily Chinese (TC or SC) | [`lens-genre-zh.md`](lens-genre-zh.md) | Swales/Bhatia + 行政院《文書處理手冊》112年版 + 公文程式條例 + Loi & Evans 2010 + Kirkpatrick & Xu 2012 + 台大寫作教學中心 |
 | Mixed / ambiguous | Ask user OR apply 2 variants in parallel | — |
 | Korean / Vietnamese / Thai / other | Fall back to `-anglo` with caveat | (see ADR-0004 §"Out of scope") |
 
