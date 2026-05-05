@@ -957,6 +957,179 @@ def _compute_divergence(
     return out
 
 
+# ---- v2.2.0-c-bench: ETF benchmark layer ----------------------------------
+
+ETF_BENCH_BAND_LOW = 20.0   # ≤20% delta → in_line
+ETF_BENCH_BAND_HIGH = 50.0  # >50% delta → extreme; in between → notable
+ETF_BENCH_STALE_DAYS = 14   # surface stale-aggregate warning when as_of older than N days
+
+
+def _classify_etf_benchmark_band(delta_pct: float | None) -> str:
+    if delta_pct is None:
+        return "n/a"
+    abs_pct = abs(delta_pct)
+    if abs_pct <= ETF_BENCH_BAND_LOW:
+        return "in_line"
+    if abs_pct <= ETF_BENCH_BAND_HIGH:
+        return "notable"
+    return "extreme"
+
+
+def _load_etf_to_schema_inv() -> dict[str, str]:
+    """schema_id → ETF (inverse of etf-schema-map.json's etf_to_schema). When
+    multiple ETFs map to the same schema_id, the alphabetically first ETF wins
+    (deterministic; only `default` schema has multiple ETFs — XLB/XLI/XLY/XLP/XLV/XLC)."""
+    path = _REFERENCES_DIR / "etf-schema-map.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    inv: dict[str, str] = {}
+    for etf, schema in sorted(data["etf_to_schema"].items()):
+        inv.setdefault(schema, etf)
+    return inv
+
+
+def _load_aggregate(etf: str) -> dict | None:
+    """Read references/sector-etf-aggregate-<ETF>.json. Honors
+    INVESTING_TOOLKIT_AGGREGATES_DIR env var for test override.
+    Returns None if file missing (test fallback / first-run before GHA)."""
+    import os
+    aggregates_dir = Path(os.environ.get("INVESTING_TOOLKIT_AGGREGATES_DIR") or _REFERENCES_DIR)
+    path = aggregates_dir / f"sector-etf-aggregate-{etf}.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_sector_warnings() -> dict[str, str]:
+    """Parse sector-warnings.md → {schema_id: warning_text}.
+    Reads the markdown table (skip header + separator rows)."""
+    path = _REFERENCES_DIR / "sector-warnings.md"
+    if not path.exists():
+        return {}
+    out: dict[str, str] = {}
+    in_table = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("| `") and "|" in line[2:]:
+            in_table = True
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) >= 2 and cells[0].startswith("`") and cells[0].endswith("`"):
+                schema_id = cells[0].strip("`")
+                out[schema_id] = cells[1]
+        elif in_table and not line.strip():
+            in_table = False
+    return out
+
+
+def _aggregate_freshness_days(as_of: str | None) -> int | None:
+    if not as_of:
+        return None
+    try:
+        as_of_dt = datetime.strptime(as_of, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - as_of_dt).days
+
+
+def _build_etf_benchmark_block(
+    anchor_schema_id: str,
+    anchor_multiples_compute: dict,
+    anchor_indicators: dict,
+    is_us_ticker: bool,
+) -> dict:
+    """Build the etf_benchmark block (or skipped status) for the anchor."""
+    if not is_us_ticker:
+        return {
+            "status": "skipped",
+            "reason": "non-US ticker; SPDR sector ETFs are US-only. Cross-country sector benchmark deferred to v2.2.0-c-{jp,tw,kr,cn}.",
+        }
+    inv = _load_etf_to_schema_inv()
+    etf = inv.get(anchor_schema_id)
+    if etf is None:
+        return {
+            "status": "skipped",
+            "reason": f"no SPDR sector ETF mapped to schema_id={anchor_schema_id!r}",
+        }
+    aggregate = _load_aggregate(etf)
+    if aggregate is None:
+        return {
+            "status": "skipped",
+            "reason": f"references/sector-etf-aggregate-{etf}.json missing — weekly cron may not have run yet",
+        }
+
+    warnings: list[str] = []
+    freshness = _aggregate_freshness_days(aggregate.get("as_of"))
+    if freshness is not None and freshness > ETF_BENCH_STALE_DAYS:
+        warnings.append(
+            f"aggregate stale: as_of={aggregate.get('as_of')}, freshness_days={freshness} "
+            "— weekly cron may have skipped a Saturday"
+        )
+    sector_warnings = _load_sector_warnings()
+    if anchor_schema_id in sector_warnings:
+        warnings.append(sector_warnings[anchor_schema_id])
+
+    # Per-multiple divergence (intersection of anchor multiples_compute and aggregate multiples)
+    agg_multiples = aggregate.get("multiples") or {}
+    multiples_out: dict[str, dict] = {}
+    for mid, anchor_v in (anchor_multiples_compute or {}).items():
+        if mid not in agg_multiples:
+            continue
+        etf_v = agg_multiples.get(mid)
+        if anchor_v is None or etf_v is None:
+            multiples_out[mid] = {"individual": anchor_v, "etf_aggregate": etf_v,
+                                  "delta_pct": None, "band": "n/a"}
+            continue
+        if etf_v == 0:
+            multiples_out[mid] = {"individual": anchor_v, "etf_aggregate": etf_v,
+                                  "delta_pct": None, "band": "n/a",
+                                  "note": "etf_aggregate is zero — pct_diff undefined"}
+            continue
+        delta_pct = ((anchor_v - etf_v) / etf_v) * 100.0
+        multiples_out[mid] = {
+            "individual":     anchor_v,
+            "etf_aggregate":  etf_v,
+            "delta_pct":      delta_pct,
+            "band":           _classify_etf_benchmark_band(delta_pct),
+        }
+
+    # Per-indicator divergence (intersection of anchor indicators and aggregate indicators)
+    agg_indicators = aggregate.get("indicators") or {}
+    indicators_out: dict[str, dict] = {}
+    for iid, anchor_entry in (anchor_indicators or {}).items():
+        if iid not in agg_indicators:
+            continue
+        anchor_v = anchor_entry.get("value") if isinstance(anchor_entry, dict) else None
+        etf_v = agg_indicators.get(iid)
+        if anchor_v is None or etf_v is None:
+            indicators_out[iid] = {"individual": anchor_v, "etf_aggregate": etf_v,
+                                   "delta_pct": None, "band": "n/a"}
+            continue
+        if etf_v == 0:
+            indicators_out[iid] = {"individual": anchor_v, "etf_aggregate": etf_v,
+                                   "delta_pct": None, "band": "n/a",
+                                   "note": "etf_aggregate is zero — pct_diff undefined"}
+            continue
+        delta_pct = ((anchor_v - etf_v) / etf_v) * 100.0
+        indicators_out[iid] = {
+            "individual":     anchor_v,
+            "etf_aggregate":  etf_v,
+            "delta_pct":      delta_pct,
+            "band":           _classify_etf_benchmark_band(delta_pct),
+        }
+
+    return {
+        "etf":         etf,
+        "schema_id":   aggregate.get("schema_id"),
+        "as_of":       aggregate.get("as_of"),
+        "_meta":       {
+            "holdings_count":      (aggregate.get("_meta") or {}).get("holdings_count"),
+            "weight_coverage_pct": (aggregate.get("_meta") or {}).get("weight_coverage_pct"),
+            "freshness_days":      freshness,
+        },
+        "multiples":   multiples_out,
+        "indicators":  indicators_out,
+        "warnings":    warnings,
+    }
+
+
 def _provenance_label(pack: dict, fallback_path: Path) -> str:
     prov = pack.get("_provenance") or {}
     skill = prov.get("skill")
@@ -1301,6 +1474,20 @@ def main() -> int:
         anchor_block["indicators"] = indicators
         compute_provenance.update(indicator_prov)
         anchor_block["compute_provenance"] = compute_provenance
+
+        if args.sector_benchmark:
+            anchor_info = (anchor_pack.get("info") or {}).get(anchor_ticker) or {}
+            # US-ticker heuristic: yfinance market === "us" OR ticker has no exchange suffix.
+            is_us = (
+                anchor_info.get("market") in ("us_market", "us", None)
+                and "." not in anchor_ticker
+            )
+            anchor_block["etf_benchmark"] = _build_etf_benchmark_block(
+                anchor_classification.schema_id,
+                anchor_block.get("multiples_compute") or {},
+                anchor_block.get("indicators") or {},
+                is_us_ticker=is_us,
+            )
 
     # ---- Provenance ----------------------------------------------------
     provenance: dict = {
