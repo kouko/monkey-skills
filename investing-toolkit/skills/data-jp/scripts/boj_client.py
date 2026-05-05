@@ -63,6 +63,24 @@ RETRY_BASE_DELAY = 2.0
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "boj-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers (same pattern as fred_client.py)
 # ---------------------------------------------------------------------------
 
@@ -262,6 +280,8 @@ def fetch_series(
     db: str, code: str, start_date: str, end_date: str, use_cache: bool = True,
 ) -> dict:
     """Fetch BOJ series with caching."""
+    _log("series fetch", f"db={db} code={code} start={start_date}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(db, code, start_date, end_date)
 
     if use_cache:
@@ -278,6 +298,7 @@ def fetch_series(
             else:
                 if "_provenance" not in cached:
                     cached["_provenance"] = _make_provenance(cached)
+            _log("series done", f"db={db} code={code} cache hit")
             return cached
 
     body = fetch_all_pages(db, code, start_date, end_date)
@@ -351,6 +372,7 @@ def fetch_series(
     if "error" not in result:
         save_cache(cache_path, result)
 
+    _log("series done", f"db={db} code={code} in {time.monotonic() - t0:.1f}s")
     return result
 
 
@@ -459,8 +481,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # ---- Tankan business DI preset path -------------------------------------
     if args.tankan_business_di:

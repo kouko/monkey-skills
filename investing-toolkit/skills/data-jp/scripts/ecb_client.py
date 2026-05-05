@@ -48,6 +48,24 @@ RETRY_BASE_DELAY = 2.0
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "ecb-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
 
@@ -196,6 +214,8 @@ def fetch_series(
     dataset: str, series: str, periods: int, use_cache: bool = True
 ) -> dict:
     """Fetch a single ECB series with caching + provenance."""
+    _log("series fetch", f"{dataset}/{series} periods={periods}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(dataset, series, periods)
     if use_cache:
         cached = load_cache(cache_path)
@@ -203,10 +223,12 @@ def fetch_series(
             cached["_cache"] = "hit"
             if "_provenance" not in cached:
                 cached["_provenance"] = _make_provenance(cached, dataset)
+            _log("series done", f"{dataset}/{series} cache hit")
             return cached
 
     raw, err = fetch_series_raw(dataset, series, periods)
     if err is not None:
+        _log("series done", f"{dataset}/{series} error in {time.monotonic() - t0:.1f}s")
         return {"error": err, "series": series, "dataset": dataset}
 
     observations, metadata = _parse_csv(raw)
@@ -228,6 +250,7 @@ def fetch_series(
     if observations:
         save_cache(cache_path, result)
 
+    _log("series done", f"{dataset}/{series} {len(observations)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -255,8 +278,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
     dataset = args.dataset.strip().upper()
     series_list = [s.strip() for s in args.series.split(",") if s.strip()]
 
@@ -277,10 +304,14 @@ def main() -> None:
             "dataset": dataset,
             "series": {},
         }
-        for s in series_list:
+        _log("batch start", f"{len(series_list)} series in dataset {dataset}")
+        t_batch = time.monotonic()
+        for i, s in enumerate(series_list, 1):
+            _log(f"batch [{i}/{len(series_list)}]", s)
             result["series"][s] = fetch_series(
                 dataset, s, args.periods, use_cache=not args.no_cache
             )
+        _log("batch done", f"{len(series_list)} series in {time.monotonic() - t_batch:.1f}s")
 
     # Mirror fred_client: emit 'data' alias for observations for smoke-test pipes.
     if isinstance(result, dict) and "observations" in result:

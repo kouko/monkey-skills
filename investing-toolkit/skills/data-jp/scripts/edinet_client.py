@@ -159,6 +159,24 @@ KEY_CONCEPTS: dict[str, list[str]] = {
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "edinet-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
 
@@ -321,6 +339,7 @@ def _load_code_list(refresh: bool = False) -> dict[str, dict]:
 
 def resolve_edinet_code(ticker: str) -> dict:
     """Resolve a 4-digit JP ticker to its EDINET code + metadata."""
+    _log("resolve-code", ticker)
     t = ticker.strip().replace(".T", "").replace(".TO", "")[:4]
     mapping = _load_code_list()
     if t not in mapping:
@@ -369,6 +388,8 @@ def list_filings(
     ticker: str, forms: list[str] | None, days: int, limit: int,
 ) -> dict:
     """Scan the last `days` of /documents.json, filter to `ticker`'s EDINET code."""
+    _log("list-filings start", f"{ticker} forms={forms or 'ALL'} days={days} limit={limit}")
+    t0 = time.monotonic()
     resolved = resolve_edinet_code(ticker)
     if "error" in resolved:
         return resolved
@@ -380,6 +401,8 @@ def list_filings(
 
     for offset in range(days):
         target = today - timedelta(days=offset)
+        if offset > 0 and offset % 30 == 0:
+            _log(f"list-filings [day {offset}/{days}]", f"{len(results)} hit(s) so far")
         try:
             listing = _fetch_documents_list(target)
         except SystemExit:
@@ -418,6 +441,7 @@ def list_filings(
             break
 
     results.sort(key=lambda r: r.get("submit_datetime") or "", reverse=True)
+    _log("list-filings done", f"{ticker} {len(results)} filings in {time.monotonic() - t0:.1f}s")
     return {
         "ticker": ticker,
         "edinet_code": edinet_code,
@@ -540,9 +564,12 @@ def _extract_key_metrics(rows: list[dict]) -> dict:
 
 def fetch_statements(doc_id: str, include_raw: bool = False) -> dict:
     """Fetch a filing's type=5 CSV and return structured BS/PL/CF extract."""
+    _log("fetch-statements", doc_id)
+    t0 = time.monotonic()
     zip_bytes = _fetch_document_csv_zip(doc_id)
     main_csv, rows = _extract_main_csv(zip_bytes)
     key_metrics = _extract_key_metrics(rows)
+    _log("fetch-statements done", f"{doc_id} {len(rows)} rows in {time.monotonic() - t0:.1f}s")
 
     result: dict = {
         "doc_id": doc_id,
@@ -564,6 +591,8 @@ def fetch_statements(doc_id: str, include_raw: bool = False) -> dict:
 def filing_summary(ticker: str, days: int = 365) -> dict:
     """One-shot convenience: resolve ticker → list filings → fetch latest
     annual (120) + latest quarterly (140) statements."""
+    _log("filing-summary start", f"{ticker} days={days}")
+    t0 = time.monotonic()
     resolved = resolve_edinet_code(ticker)
     if "error" in resolved:
         return resolved
@@ -629,6 +658,7 @@ def filing_summary(ticker: str, days: int = 365) -> dict:
             "note": "CSV not available for this filing.",
         }
 
+    _log("filing-summary done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     return summary
 
 # ---------------------------------------------------------------------------
@@ -657,8 +687,12 @@ def main() -> None:
     )
     parser.add_argument("--refresh-code-list", action="store_true",
                         help="Force-refresh the EDINET code list cache")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.refresh_code_list:
         _load_code_list(refresh=True)
