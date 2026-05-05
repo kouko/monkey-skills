@@ -4,6 +4,47 @@ All notable changes to deconstruct-toolkit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] — 2026-05-05
+
+Per-skill READMEs added. Each of the 4 skills (`using-deconstruct-toolkit`
+/ `artifact-deconstruct` / `argument-deconstruct` / `assumption-surface`)
+gets a thick GitHub-browser-facing README authored directly per
+`feedback_skill_internal_readme_exempt_from_docs_team.md` convention
+(skill-internal READMEs follow lighter rules than docs-team-managed
+docs: language switcher / English-noun / link to SKILL.md / no
+contradiction with SKILL.md).
+
+### Added
+
+- `skills/artifact-deconstruct/README.md` (140 lines) — flagship skill
+  README. 6-step workflow summary + lens library table with full
+  per-variant author attributions + 6-dimension backbone + ethical-
+  position legend (🟢/🟡/🔴/⚫) + cultural-variant routing rule + verified
+  pointers to all 11 worked-example fixtures (3 Anglo + 8 JP/ZH).
+- `skills/argument-deconstruct/README.md` (113 lines) — argument-focused
+  deep-dive README. Toulmin 6-component table with warrant emphasis +
+  8 hidden-warrant patterns (count verified against
+  `references/lens-toulmin.md`) + Burke pentad 6-ratio table +
+  argument-map mermaid output description.
+- `skills/assumption-surface/README.md` (113 lines) — atomic-skill
+  README. 4-move method (reverse-Toulmin / Althusser symptomatic
+  reading / counterfactual probe / frame audit) + 3-tier strength
+  classification + Popper falsifiability test + Althusser & Balibar
+  (1965/1968, Brewster 1970 trans.) citation matched to lens reference.
+- `skills/using-deconstruct-toolkit/README.md` (114 lines) — router
+  README. Boundary checks (sourceatlas / philosophers-toolkit /
+  forward-production) + two-axis routing (artifact type × user intent)
+  + three pre-dispatch filters (length / info-only / multi-modal) +
+  cultural-variant detection step (EN/JA/ZH per ADR-0004).
+
+All four READMEs:
+- Are English-only (matching plugin-level convention)
+- Link to their respective `SKILL.md` as full canon (NOT duplicating
+  large blocks)
+- Cross-reference sister skills with relative links
+- Verify all cited fixture / case file paths exist
+- Pass `scripts/check-eval-cases.py` validator
+
 ## [0.2.1] — 2026-05-05
 
 Translation reversal: zh-TW `artifact` and JP `文物脱構築` corrected;
