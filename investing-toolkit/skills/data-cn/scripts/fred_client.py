@@ -43,6 +43,24 @@ MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0
 
 
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "fred-cn"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
 def get_cache_path(series: str, periods: int) -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     return CACHE_DIR / f"{series.upper()}_{periods}.json"
@@ -238,12 +256,15 @@ def fetch_series_api(series: str, periods: int, api_key: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def fetch_series(series: str, periods: int, api_key: str | None, use_api: bool) -> dict:
+    _log("series fetch", f"{series} periods={periods}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(series, periods)
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
         if "_provenance" not in cached:
             cached["_provenance"] = _make_provenance(cached)
+        _log("series done", f"{series} cache hit")
         return cached
 
     if use_api and api_key:
@@ -257,6 +278,10 @@ def fetch_series(series: str, periods: int, api_key: str | None, use_api: bool) 
     if "error" not in result:
         save_cache(cache_path, result)
 
+    if "error" in result:
+        _log("series done", f"{series} error in {time.monotonic() - t0:.1f}s")
+    else:
+        _log("series done", f"{series} {result.get('count', 0)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 
@@ -270,8 +295,12 @@ def main():
     parser.add_argument("--use-api", action="store_true",
                         help="Use JSON API instead of CSV (requires FRED_API_KEY)")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
     api_key = os.environ.get("FRED_API_KEY")
 
     series_list = [s.strip().upper() for s in args.series.split(",") if s.strip()]
@@ -291,6 +320,8 @@ def main():
         # of an IP. Default 8 workers stays comfortably under (max ~60 req/min).
         # Override via FRED_MAX_WORKERS env var (set to 1 to force serial).
         max_workers = max(1, int(os.environ.get("FRED_MAX_WORKERS", "8")))
+        _log("batch start", f"{len(series_list)} series workers={max_workers}")
+        t_batch = time.monotonic()
         result = {
             "fetched_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "series": {},
@@ -306,6 +337,7 @@ def main():
                     result["series"][sid] = fut.result()
                 except Exception as e:
                     result["series"][sid] = {"error": f"fetch_failed: {e}", "series": sid}
+        _log("batch done", f"{len(series_list)} series in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2))
 

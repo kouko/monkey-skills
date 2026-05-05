@@ -40,9 +40,28 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "pack-cn"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 
 # NBS preset list (21 indicators across 9 groups — see SKILL.md)
 NBS_PRESETS = [
@@ -307,15 +326,21 @@ def _build_canonical_from_yf_financials(financials: dict) -> dict:
 
 def pack_snapshot(ticker: str) -> dict:
     """Quick overview: yfinance info + 6mo price history."""
+    _log("snapshot start", ticker)
+    t0 = time.monotonic()
     t = _normalise_ticker(ticker)
+    _log("pack [yf history 6mo]", t)
     yfinance_history = _yf(["--ticker", t, "--action", "history",
                             "--period", "6mo", "--interval", "1d"])
     rows = yfinance_history.get("data", []) if isinstance(yfinance_history, dict) else []
+    _log("pack [yf info]", t)
+    info = _yf(["--ticker", t, "--action", "info"])
+    _log("snapshot done", f"{t} in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "snapshot",
         "ticker": t,
         "country": "CN",
-        "yfinance_info": _yf(["--ticker", t, "--action", "info"]),
+        "yfinance_info": info,
         "yfinance_history": yfinance_history,  # raw envelope per Principle 1
         "history": rows,  # T1 canonical OHLCV alias (cross-country symmetric)
     }
@@ -325,15 +350,22 @@ def pack_memo_fetch(ticker: str) -> dict:
     """Memo data. Tier 2 only — CN primary-source individual-stock
     disclosure (e.g. CSRC-mandated annual reports via cninfo) is not
     yet integrated; yfinance financials is the current floor."""
+    _log("memo-fetch start", ticker)
+    t0 = time.monotonic()
     t = _normalise_ticker(ticker)
+    _log("pack [yf info]", t)
     info = _yf(["--ticker", t, "--action", "info"])
+    _log("pack [yf history 2y]", t)
     yfinance_history = _yf(["--ticker", t, "--action", "history",
                             "--period", "2y", "--interval", "1d"])
+    _log("pack [yf financials annual]", t)
     fin_annual = _yf(["--ticker", t, "--action", "financials", "--period", "annual"])
+    _log("pack [yf financials quarterly]", t)
     fin_quarterly = _yf(["--ticker", t, "--action", "financials", "--period", "quarterly"])
     rows = yfinance_history.get("data", []) if isinstance(yfinance_history, dict) else []
     canonical = _build_canonical_from_yf_financials(fin_annual)
     info_dict = info if isinstance(info, dict) else {}
+    _log("memo-fetch done", f"{t} in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "memo-fetch",
         "ticker": t,
@@ -391,13 +423,17 @@ def pack_comps_multiples_single(ticker: str) -> dict:
 
 def pack_comps_multiples_batch(tickers: list[str]) -> dict:
     """Multiples for a list. analysis-comps consumes anchor + peers."""
+    _log("comps-multiples start", f"{len(tickers)} tickers")
+    t0 = time.monotonic()
     out = []
     info_dict: dict = {}
-    for t in tickers:
+    for i, t in enumerate(tickers, 1):
+        _log(f"pack [info {i}/{len(tickers)}]", t)
         single = pack_comps_multiples_single(t)
         out.append(single)
         if single.get("multiples"):
             info_dict[single["ticker"]] = single["multiples"]
+    _log("comps-multiples done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "comps-multiples",
         "country": "CN",
@@ -413,14 +449,21 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     (mirrors comps-multiples pattern); this function is a no-op on
     already-normalised input.
     """
+    _log("screener-batch start", f"{len(tickers)} tickers")
+    t0 = time.monotonic()
     csv = ",".join(tickers)
+    _log("pack [batch info]", f"{len(tickers)} tickers")
+    info_batch = _yf(["--tickers", csv, "--action", "info"])
+    _log("pack [batch history 6mo]", f"{len(tickers)} tickers")
+    history_batch = _yf(["--tickers", csv, "--action", "history",
+                         "--period", "6mo", "--interval", "1d"])
+    _log("screener-batch done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "screener-batch",
         "country": "CN",
         "tickers": tickers,
-        "yfinance_info_batch": _yf(["--tickers", csv, "--action", "info"]),
-        "yfinance_history_batch": _yf(["--tickers", csv, "--action", "history",
-                                       "--period", "6mo", "--interval", "1d"]),
+        "yfinance_info_batch": info_batch,
+        "yfinance_history_batch": history_batch,
     }
 
 
@@ -604,9 +647,15 @@ def pack_regime_pack() -> dict:
     monthly flow + NBS M2 yoy per CICC convention. See
     `analysis-macro-regime/references/credit-impulse-methodology.md`.
     """
+    _log("regime-pack start", "CN macro bundle")
+    t0 = time.monotonic()
+    _log("pack [nbs]", f"{len(NBS_PRESETS)} presets")
     nbs = _nbs(["--preset", ",".join(NBS_PRESETS)])
+    _log("pack [akshare]", f"{len(AKSHARE_PRESETS)} presets")
     akshare = _akshare(["--preset", ",".join(AKSHARE_PRESETS)])
+    _log("pack [fred]", f"{len(FRED_SERIES)} series")
     fred = _fred(["--series", ",".join(FRED_SERIES), "--periods", "24"])
+    _log("pack [yf markets]", f"{len(MARKET_TICKERS)} indices")
     markets = _yf(["--tickers", ",".join(MARKET_TICKERS),
                    "--action", "history", "--period", "1y", "--interval", "1d"])
     sources_root = {"nbs": nbs, "akshare": akshare, "fred": fred, "markets": markets}
@@ -623,6 +672,7 @@ def pack_regime_pack() -> dict:
         m2_yoy=m2_yoy,
     )
 
+    _log("regime-pack done", f"in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "regime-pack",
         "country": "CN",
@@ -663,8 +713,12 @@ def main() -> None:
     grp.add_argument("--ticker", help="Single ticker (e.g. 600519.SS, 000858.SZ, 0700.HK; "
                                      "bare 6-digit / 4-digit codes auto-suffix)")
     grp.add_argument("--tickers", help="Comma-separated tickers for batch mode")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.pack == "regime-pack":
         out = pack_regime_pack()
