@@ -160,15 +160,16 @@
 
 ---
 
-## 文物解構域
+## 作品解構域
 
-deconstruct-toolkit 專用術語。本 plugin 對外部「精緻文物」（文案 / UI / 文件包 / 論證 / 產品 / 組織）做逆向分析，理論底座結合 Derrida（哲學）、Barthes（符號學）、Toulmin（論證）、Lakoff（框架）、Goffman（社會框架）、Cialdini（說服）、Bhatia（體裁）、Nielsen-Norman（UX）。
+deconstruct-toolkit 專用術語。本 plugin 對外部**作品**（文案 / UI / 文件包 / 論證 / 產品 / 組織）做逆向分析，理論底座結合 Derrida（哲學）、Barthes（符號學）、Toulmin（論證）、Lakoff（框架）、Goffman（社會框架）、Cialdini（說服）、Bhatia（體裁）、Nielsen-Norman（UX）。
 
 | EN term | zh-TW（主譯） | 副譯 / 備用 | 決策依據 / 來源 |
 |---|---|---|---|
 | deconstruct (verb) | 解構 / 逆向解構 | 拆解（口語）/ deconstruct（保留英文） | 中文哲學界與設計批評界一致譯「解構」（Derrida 系譜）。維基百科「解構主義」獨立詞條。BCG 商業語境引日文「脱構築」進中文亦譯「解構」。 |
 | deconstruction (noun) | 解構 | 解構主義（哲學語境）| 同上。 |
-| artifact | 文物 | 制作物 / artifact（保留英文）| 本 plugin 採「文物」承襲中文「文化文物」「設計文物」用法。**避免**「人工製品」（過於工程化）/「製作物」（日文式）/「成品」（過於通俗）。 |
+| artifact | **作品** | 對象（清單含產品 / 組織時）| **2026-05-05 反轉決策**：v0.2.0 原採「文物」承襲「設計文物」用法，但 zh-TW 中「文物」核心語義為**博物館 / 考古 / 文化遺物**（與 plugin 處理現代 LP / UI / SOP 場景 category error）。改譯「作品」（設計圈通用）。**避免**：「文物」（古董語感）/「製作物」（日文式）/「人工製品」（過於工程化）/「成品」（量產語感）。當清單包含「產品」「組織」等非典型作品時，改寫為「對象」。 |
+| polished (modifier) | (不譯) | — | EN "polished" 在設計論述指「已完成 / 可發布 / 非草稿」狀態，**不是**「美觀精美」。zh-TW「精緻」帶美學品質判斷（精緻料理 / 精緻包裝），會把 plugin 射程窄化成「只拆好看的東西」。一個普通企業 LP 也是 polished artifact 並值得拆解。**整段拿掉**修飾語，與 JP「制作物」省略 polished 對齊。Length filter（< 200 字）已負責濾掉草稿。 |
 | lens (analytical) | lens（保留英文） | 透鏡（不推薦：光學歧義）| 批評理論社群（critical theory / theoretical lens / framework analysis）已將 `lens` 確立為方法論術語。中文「透鏡」99% 用於光學（凸透鏡 / 凹透鏡 / 廣角透鏡），無「分析框架」引申義。本 plugin 全 body 保留英文。 |
 | frame (analytical) | 框架 | フレーム（日文混用）| Goffman / Lakoff frame analysis 中文標準譯「框架」。同 cognitive frame / discourse frame。注意與「邊框」「畫面」區分。 |
 | reframe | 重塑框架 / 換框 | reframing（保留英文）| Lakoff 政治語言學圈譯「換框」；認知治療圈譯「重塑框架」。本 plugin 偏前者語境。 |

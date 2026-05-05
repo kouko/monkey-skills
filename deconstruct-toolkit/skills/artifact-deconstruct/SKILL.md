@@ -11,7 +11,7 @@ description: >-
   well" / "what's the design behind this" / "teardown this". Do NOT use
   for code (use sourceatlas), self-thinking (use philosophers-toolkit),
   or summarization (use plain reading).
-  制作物の脱構築。文物逆向解構。
+  制作物の脱構築。作品逆向解構。
 ---
 
 # Artifact Deconstruct

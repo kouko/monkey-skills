@@ -1,6 +1,6 @@
 # deconstruct-toolkit
 
-> 將精緻文物（文案、文件包、UI、論證、產品、組織）進行逆向解構，揭露設計決策、借用框架、修辭機制、與刻意省略。
+> 將外部作品（文案、文件包、UI、論證、產品、組織）進行逆向解構，揭露設計決策、借用框架、修辭機制、與刻意省略。
 
 Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
@@ -11,7 +11,7 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 
 ## 背景
 
-如果說 `sourceatlas` 對程式碼做逆向、`philosophers-toolkit` 釐清自己的思考，那 **`deconstruct-toolkit` 是對外部精緻、非程式碼文物做逆向解構** — 行銷文案、文件包、UI 流程、長文論證、產品策略、組織文物。目的不是摘要，是 **design archaeology（設計考古學）** — 挖出創作者**決定了什麼**、**借用了哪些框架**、**刻意省略了什麼**。
+如果說 `sourceatlas` 對程式碼做逆向、`philosophers-toolkit` 釐清自己的思考，那 **`deconstruct-toolkit` 是對外部、非程式碼作品做逆向解構** — 行銷文案、文件包、UI 流程、長文論證、產品策略、組織形態。目的不是摘要，是 **design archaeology（設計考古學）** — 挖出創作者**決定了什麼**、**借用了哪些框架**、**刻意省略了什麼**。
 
 工具組整合 3 個學術傳統：
 
@@ -31,17 +31,17 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 | `-ja` | Hinds / 起承転結 / 土居健郎 / 山本七平 / 木下是雄 / Markus & Kitayama |
 | `-zh` | 劉勰《文心雕龍》六觀 / Hu Hsien-chin / 黃光國 / 行政院公文程式條例 / Peng & Nisbett |
 
-韓文 / 越南文 / 泰文等其他語言文物**不在 plugin grounded scope 內**：以明示 caveat 的方式套用 `-anglo` fallback，不假裝有覆蓋。詳見 `protocols/lens-variant-selection.md`。
+韓文 / 越南文 / 泰文等其他語言作品**不在 plugin grounded scope 內**：以明示 caveat 的方式套用 `-anglo` fallback，不假裝有覆蓋。詳見 `protocols/lens-variant-selection.md`。
 
 ## 邊界
 
-本 plugin **僅處理非程式碼文物**。其他情境用其他工具：
+本 plugin **僅處理非程式碼作品**。其他情境用其他工具：
 
 | 用途 | 應使用 |
 |---|---|
 | 程式碼逆向工程 | [`sourceatlas`](https://github.com/kouko/monkey-skills/tree/main/sourceatlas)（impact / flow / overview / pattern / deps）|
 | 自我思考 / 問題釐清 | [`philosophers-toolkit`](https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit) — 處理「你 vs 你的問題」 |
-| Dev 文物 critique（提案 / commit / skill）| [`dev-workflow`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow)（proposal-critique / complexity-critique / skill-judge）|
+| Dev 產出物 critique（提案 / commit / skill）| [`dev-workflow`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow)（proposal-critique / complexity-critique / skill-judge）|
 | 正向**生產**文案 / 文件 / 設計 | [`copywriting-toolkit`](https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit), [`docs-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/docs-team), [`design-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/design-team) |
 | 投資 / 個股逆向 | [`investing-toolkit`](https://github.com/kouko/monkey-skills/tree/main/investing-toolkit) |
 
@@ -81,9 +81,9 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 /deconstruct-toolkit:using-deconstruct-toolkit
 ```
 
-Router 只問一個問題 — 「什麼類型的文物，想揭露什麼」 — 然後派你到正確的 skill 並預選好 lens。
+Router 只問一個問題 — 「什麼類型的作品，想揭露什麼」 — 然後派你到正確的 skill 並預選好 lens。
 
-## Skills（v0.1.0）
+## Skills（v0.2.0）
 
 ### 旗艦
 
@@ -91,7 +91,7 @@ Router 只問一個問題 — 「什麼類型的文物，想揭露什麼」 — 
 
 | 欄位 | 內容 |
 |-------|-------|
-| 對象 | 任何精緻文物（文案 / 文件包 / UI / playbook / SOP / 廣告 / 文學）|
+| 對象 | 任何作品（文案 / 文件包 / UI / playbook / SOP / 廣告 / 文學）|
 | 方法 | 6-lens 庫 × 6 維分析 × 倫理位置判斷 |
 | Lens | semiotic (Barthes) · rhetoric (Burke + Toulmin) · frame (Goffman + Lakoff) · genre (Swales/Bhatia) · ux (Nielsen-Norman) · persuasion (Cialdini + Brignull) |
 | 輸出 | 6 段解構報告：表層觀察 → 設計決策 → 借用框架 → 修辭機制（含倫理位置）→ 可借鏡 → 弱點 |
@@ -130,7 +130,7 @@ Router 只問一個問題 — 「什麼類型的文物，想揭露什麼」 — 
 | 欄位 | 內容 |
 |-------|-------|
 | skill | 將使用者意圖路由到正確的 sibling skill |
-| 方法 | 1 個問題 → 文物類型偵測 → lens 預選 → 派發 |
+| 方法 | 1 個問題 → 作品類型偵測 → lens 預選 → 派發 |
 | 用時機 | 想解構某個東西但不確定要哪個 skill / 哪個 lens |
 | 指令 | `/deconstruct-toolkit:using-deconstruct-toolkit` |
 
@@ -140,7 +140,7 @@ Router 只問一個問題 — 「什麼類型的文物，想揭露什麼」 — 
 
 **Design archaeology，不是 summary。** 每個 skill 揭露的是「**決定了什麼**」，不是「**寫了什麼**」。寫作順序與閱讀順序的差，就是設計，那才是要回收的東西。
 
-**Lens 是組合，不是 pipeline。** 每個文物配一組**為其類型挑選的 lens 組合**。6-lens 庫是可選擇的，不是順序執行。LP 用 persuasion + rhetoric；playbook 用 genre + 6 維；UI 用 ux + persuasion。
+**Lens 是組合，不是 pipeline。** 每個作品配一組**為其類型挑選的 lens 組合**。6-lens 庫是可選擇的，不是順序執行。LP 用 persuasion + rhetoric；playbook 用 genre + 6 維；UI 用 ux + persuasion。
 
 **Negative space 重要。** *刻意省略* 的東西（缺失的反駁、不存在的 move、未說的假設）是資料，不是缺口。每個 skill 都含 negative space 階段。
 
@@ -156,17 +156,19 @@ Router 只問一個問題 — 「什麼類型的文物，想揭露什麼」 — 
 
 | 版本 | 增加內容 |
 |---|---|
-| **v0.1.0**（本次釋出）| router + artifact-deconstruct + argument-deconstruct + assumption-surface |
-| v0.2.0 | `product-deconstruct`, `pricing-decode`（商業域擴展）|
-| v0.3.0 | `frame-reveal`, `bias-audit`, `decision-archaeology`（原子深化）|
-| v1.0.0 | 20+ 真實 eval case、fixture corpus、日本實例研究、開源釋出 |
+| v0.1.0 | router + artifact-deconstruct + argument-deconstruct + assumption-surface |
+| **v0.2.0**（本次釋出）| 文化變體（EN/JA/ZH）：rhetoric / persuasion / genre / frame 4 lens × 3 變體 + 變體選擇 protocol + 8 個 JP/ZH fixture + ADR-0004 |
+| v0.3.0 | `product-deconstruct`, `pricing-decode`（商業域擴展，文化變體 aware 起跳）|
+| v0.4.0 | `frame-reveal`, `bias-audit`, `decision-archaeology`（原子深化）|
+| v0.5.0 | `lens-semiotic` + `lens-ux` 文化變體（中度文化敏感，從 v0.2 延後）|
+| v1.0.0 | 20+ 真實 eval case、fixture corpus、開源釋出 |
 
 ## 貢獻
 
 歡迎。提案新 skill 前請先開 Issue。本 plugin 每個新 skill **必須**通過兩個 membership gate（見 [ADR-0001](docs/adr/0001-convention-b-mixed-naming.md)）：
 
 1. **動詞 gate** — skill 動詞屬解構家族（`deconstruct / surface / reveal / audit / decode / expose / archaeology`）
-2. **對象 gate** — skill 對象是外部、精緻、非程式碼文物
+2. **對象 gate** — skill 對象是外部、非程式碼作品
 
 PR 遵循 [Conventional Commits](https://www.conventionalcommits.org/)。
 
