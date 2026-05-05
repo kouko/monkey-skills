@@ -34,11 +34,6 @@ EOF
     fi
 }
 
-ensure_config_dir() {
-    mkdir -p "$TSUNDOKU_ROOT"
-    chmod 700 "$TSUNDOKU_ROOT"
-}
-
 secure_config_file() {
     if [[ -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
         chmod 600 "$TSUNDOKU_KOBO_CONFIG"
@@ -61,7 +56,7 @@ cmd_status() {
 
 cmd_add() {
     ensure_binary
-    ensure_config_dir
+    tsundoku_ensure_dirs
     cat >&2 <<EOF
 [login] starting activation flow.
         kobodl will print a 6-digit code. When you see it:
@@ -109,7 +104,7 @@ cmd_import_from() {
         chmod 600 "$backup"
         echo "[import] existing config backed up to $backup" >&2
     fi
-    ensure_config_dir
+    tsundoku_ensure_dirs
     cp "$src" "$TSUNDOKU_KOBO_CONFIG"
     secure_config_file
     echo "[import] copied $src → $TSUNDOKU_KOBO_CONFIG (mode 600)" >&2
