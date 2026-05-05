@@ -140,6 +140,24 @@ PRESETS: dict[str, dict] = {
 }
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "akshare-cn"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
 
@@ -258,6 +276,8 @@ def _make_provenance(result: dict, config: dict) -> dict:
 
 
 def fetch_preset(preset: str, use_cache: bool = True) -> dict:
+    _log("preset fetch", preset)
+    t0 = time.monotonic()
     config = PRESETS.get(preset)
     if not config:
         return {
@@ -270,6 +290,7 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
         cached = load_cache(cache_path)
         if cached is not None:
             cached["_cache"] = "hit"
+            _log("preset done", f"{preset} cache hit")
             return cached
 
     import akshare as ak
@@ -359,6 +380,7 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
     result["_provenance"] = _make_provenance(result, config)
 
     save_cache(cache_path, result)
+    _log("preset done", f"{preset} {len(observations)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -378,8 +400,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.preset.strip().lower() == "all":
         presets = list(PRESETS.keys())
@@ -404,9 +430,13 @@ def main() -> None:
             "_source": "akshare",
             "indicators": {},
         }
-        for preset in presets:
+        _log("batch start", f"{len(presets)} presets")
+        t_batch = time.monotonic()
+        for i, preset in enumerate(presets, 1):
+            _log(f"batch [{i}/{len(presets)}]", preset)
             data = fetch_preset(preset, use_cache=not args.no_cache)
             result["indicators"][preset] = data
+        _log("batch done", f"{len(presets)} presets in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 

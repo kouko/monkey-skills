@@ -243,6 +243,24 @@ PRESETS["exports-yoy"]["indicator_id"] = "788f44b0f310403fbd308b77d6f83890"
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "nbs-cn"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache
 # ---------------------------------------------------------------------------
 
@@ -461,6 +479,8 @@ def _make_provenance(result: dict, config: dict) -> dict:
 
 
 def run_preset(session: requests.Session, preset: str, periods: int, use_cache: bool) -> dict:
+    _log("preset fetch", f"{preset} periods={periods}")
+    t0 = time.monotonic()
     config = PRESETS.get(preset)
     if not config:
         return {"error": f"Unknown preset: {preset}", "available_presets": list(PRESETS.keys())}
@@ -470,10 +490,12 @@ def run_preset(session: requests.Session, preset: str, periods: int, use_cache: 
         cached = load_cache(cache_path)
         if cached is not None:
             cached["_cache"] = "hit"
+            _log("preset done", f"{preset} cache hit")
             return cached
 
     raw = fetch_preset(session, preset, periods)
     if "error" in raw:
+        _log("preset done", f"{preset} error in {time.monotonic() - t0:.1f}s")
         return {"preset": preset, "name": config["name"], **raw}
 
     obs = raw["observations"]
@@ -509,6 +531,7 @@ def run_preset(session: requests.Session, preset: str, periods: int, use_cache: 
     result["_provenance"] = _make_provenance(result, config)
 
     save_cache(cache_path, result)
+    _log("preset done", f"{preset} {len(obs)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -522,7 +545,11 @@ def main() -> None:
     parser.add_argument("--periods", type=int, default=DEFAULT_PERIODS,
                         help=f"Number of periods to fetch (default {DEFAULT_PERIODS})")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.preset.strip().lower() == "all":
         presets = list(PRESETS.keys())
@@ -548,11 +575,15 @@ def main() -> None:
             "_source": "nbs_spa",
             "indicators": {},
         }
-        for p in presets:
+        _log("batch start", f"{len(presets)} presets")
+        t_batch = time.monotonic()
+        for i, p in enumerate(presets, 1):
+            _log(f"batch [{i}/{len(presets)}]", p)
             data = run_preset(session, p, args.periods, use_cache=not args.no_cache)
             result["indicators"][p] = data
             # Light throttle between back-to-back NBS POSTs to stay under WAF threshold
             time.sleep(0.5)
+        _log("batch done", f"{len(presets)} presets in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 
