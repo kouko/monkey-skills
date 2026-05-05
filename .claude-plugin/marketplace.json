@@ -4,18 +4,70 @@
     "name": "kouko"
   },
   "plugins": [
-    { "name": "domain-teams", "source": "./domain-teams/" },
-    { "name": "obsidian", "source": "./obsidian/" },
-    { "name": "philosophers-toolkit", "source": "./philosophers-toolkit/" },
-    { "name": "dev-workflow", "source": "./dev-workflow/" },
-    { "name": "investing-toolkit", "source": "./investing-toolkit/" },
-    { "name": "copywriting-toolkit", "source": "./copywriting-toolkit/" },
-    { "name": "slides-toolkit", "source": "./slides-toolkit/" },
-    { "name": "gws-toolkit", "source": "./gws-toolkit/" },
-    { "name": "tsundoku", "source": "./tsundoku/" },
-    { "name": "four-dx-coach", "source": "./four-dx-coach/" },
-    { "name": "repo-wiki", "source": "./repo-wiki/" },
-    { "name": "dbt-wiki", "source": "./dbt-wiki/" },
-    { "name": "deconstruct-toolkit", "source": "./deconstruct-toolkit/" }
+    {
+      "name": "domain-teams",
+      "description": "Domain team skills — planning (企画), code, design, research, copywriting with checkpoint-based quality gates",
+      "source": "./domain-teams/"
+    },
+    {
+      "name": "obsidian",
+      "description": "Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. Plus an LLM wiki knowledge-distillation layer (6 wiki-* skills) on top of vault notes. ⚠️ Most skills are Cowork-compatible; the `defuddle` skill needs Claude Code CLI (subprocess + external URL fetch).",
+      "source": "./obsidian/"
+    },
+    {
+      "name": "philosophers-toolkit",
+      "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning. 哲學思考框架・問題釐清。哲学的思考フレームワーク。",
+      "source": "./philosophers-toolkit/"
+    },
+    {
+      "name": "dev-workflow",
+      "description": "Developer workflow skills — skill creation (skill-creator-advance), skill quality scoring (skill-judge, 8-dimension rubric), portable git-backed project memory (git-memory), multi-item proposal triage (proposal-critique), deletion-first change critique (complexity-critique), token / structure refactor for existing skills with output equivalence (skill-refactor, multi-judge ensemble + git ratchet), and human-judged output quality A/B for existing skills (skill-tuning, blind variants + constitutional pre-filter + preference log → RLHF-lite). Git コミット・メモリ・スキル品質評価・複雑度クリティーク・skill リファクタ・スキル チューニング。可攜式專案記憶・技能品質評估・提案審查・複雜度評析・skill 重構・skill 調整。",
+      "source": "./dev-workflow/"
+    },
+    {
+      "name": "investing-toolkit",
+      "description": "Investing research toolkit v2.1.0 — three-layer architecture (Data / Analysis / Report). 5 country-bundled data skills (US/JP/TW/KR/CN), 6 pure-compute analysis skills (DCF, comps, screener, technical, portfolio, macro-regime — Phase 1 per-country classifiers per ADR-0004), 4 report orchestrators (memo, snapshot, portfolio review, screener list) with runtime peer-discovery. 投資調査・美股・台股・日股・韓股・中國股。投資研究工具組。 ⚠️ Claude Code CLI only — Cowork sandbox blocks external data fetches.",
+      "source": "./investing-toolkit/"
+    },
+    {
+      "name": "copywriting-toolkit",
+      "description": "Pipeline-structured copywriting toolkit — 14 specialized skills (intake, ideation, neta injection, 5 form-specific drafters, voice positioning, voice tone, ethics gate, form gate, audit). Grounded in 神田昌典 PASONA, 谷山雅計 discipline, Cialdini, Schwartz, FTC Endorsement / 景品表示法 ethics. 文案寫作工具組。コピーライティング・パイプライン。",
+      "source": "./copywriting-toolkit/"
+    },
+    {
+      "name": "slides-toolkit",
+      "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。 ⚠️ Claude Code CLI only — Cowork sandbox blocks Google Slides API calls.",
+      "source": "./slides-toolkit/"
+    },
+    {
+      "name": "gws-toolkit",
+      "description": "⚠️ WORK IN PROGRESS — successor to slides-toolkit. Generic Google Workspace toolkit layered on the official googleworkspace/cli (gws). Vendors upstream gws-shared / gws-drive / gws-docs / gws-slides / gws-sheets API reference skills, plus toolkit-original setup automation, design knowledge (Minto / SCQA / chart-selection for Slides), and safety wrappers (trash-default delete, appProperties provenance tagging). Not affiliated with Google. ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
+      "source": "./gws-toolkit/"
+    },
+    {
+      "name": "tsundoku",
+      "description": "Tsundoku 積読 — your owned-but-unread e-book pile, turned into actionable knowledge. Search a Kobo library by title / author / series / publication date / category / description text / reading status / language, download chosen books as DRM-free EPUBs via subdavis/kobo-book-downloader, convert downloaded EPUBs into chunked-by-chapter Markdown, then distill the book into a coherent set of executable agent skills via the RIA-TV++ pipeline (Adler → 5 parallel extractors → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test, adapted from kangarooking/cangjie-skill). Optional Calibre PDF conversion. macOS / Linux. Language-adaptive output (EN / 日本語 / 繁體中文). ⚠️ Claude Code CLI only — Cowork sandbox blocks external data fetches (kobo.com auth + EPUB downloads).",
+      "source": "./tsundoku/"
+    },
+    {
+      "name": "four-dx-coach",
+      "description": "Multi-scope coach for The 4 Disciplines of Execution — personal solo (agent = peer-witness), team-leader (agent = consultant), team-member (agent = personal coach to inherited-WIG situation). 12 skills with v0.8.0 dual-mode architecture: every topic skill supports both **coach-mode** (Socratic dialogue, fit-check inclusive, walks you step-by-step from zero via `protocols/coach-mode.md`) AND **audit-mode** (single-layer synthesis from one existing artifact at that topic's layer via `protocols/audit-mode.md`). Skill inventory: 1 plugin router (`using-four-dx-coach`) + 10 dual-mode topic skills (5 multi-file scope-flex — meta-strategy-triage, d1-wig-formulation, d2-lead-measures, d3-scoreboard, d4-cadence; 5 single-file scope-specific — meta-whirlwind-triage, d1-wig-cascade, meta-team-leader-onboarding, meta-xps-evaluation, sustain-momentum-rescue) + 1 cross-layer aggregator (`4dx-audit`) reserved for multi-artifact spanning ≥2 D-layers OR layer-unknown failures. How to choose mode: artifact at single layer → that topic skill's audit-mode; artifacts across layers OR layer unknown → `4dx-audit` cross-layer aggregator; vague intent / cold-start → `using-four-dx-coach` router. Multi-file skills self-detect scope (personal / team-leader / team-member) via internal Socratic disambiguation; single-file skills are scope-locked because the source book has no cross-scope variant. All skills industry-grounded — Boundary sections cite primary academic + regulatory + credentialed-author sources beyond the source book (Goodhart 1975 / Kotter 1996 / Tufte 1983 / Reinertsen 2009 / Doerr 2018 / Akao 1991 / Edmondson 2018 / Pfeffer 2010 / Drucker HBR 1999 / Senge 1990 / Lencioni 2002 / Pfeffer-Sutton 2006 / CFPB / VA OIG / etc.) — addresses book's selection-bias and member-POV gaps. Personal scope walks one user through full 4DX adoption. Team-leader scope covers Primary WIG selection, Targets-not-Plans cascade, leader-onboarding, lead-measure facilitation, scoreboard design, facilitator-mode WIG Session, and XPS audit. Team-member scope helps you comprehend an inherited team WIG, identify sphere of influence on inherited leads, read team scoreboard, prep weekly commitment, and self-account honestly. Distilled from McChesney/Covey/Huling/Thele/Walker, *The 4 Disciplines of Execution* (2nd ed., 2021) via tsundoku:book-distill RIA-TV++ pipeline; Plan U merge 2026-04-30 collapsed 26 skills → 11; v0.7.0 added consultant-mode entry point; v0.8.0 introduced dual-mode topic skills + repositioned `4dx-audit` as cross-layer aggregator. Multilingual triggers (EN / 日本語 / 繁體中文); skill bodies in English. NOT for enterprise multi-team rollout (read book Part 2 directly), habit formation (atomic habits), or portfolio betting (OKR / lean experiments).",
+      "source": "./four-dx-coach/"
+    },
+    {
+      "name": "repo-wiki",
+      "description": "LLM Wiki pattern for code repos. Init scans the entire src/ tree for complete entity coverage and seeds each module with its recent commits, plus a bounded global git scan; full-history era backfill is opt-in (init full-history). Grow the knowledge base incrementally from changes or conversational context (ingest, polymorphic), and query it with natural language (query) — Eager src/ verification at key moments. Knowledge lives in a hidden .repo-wiki/ directory committed alongside your code; src/ remains the source of truth. Zero external dependencies — pure SKILL.md, no MCP servers or vector stores.",
+      "source": "./repo-wiki/"
+    },
+    {
+      "name": "dbt-wiki",
+      "description": "Local-only LLM-queryable knowledge base for dbt projects. No dbt Cloud required. Init reads target/manifest.json (model metadata, ref/source lineage, schema.yml columns, tests) plus target/compiled/**/*.sql parsed via sqlglot to extract column-level lineage, plus dbt/models/**/*.sql raw files for SQL/jinja inline comments. Generates one markdown entity per model/source/macro under .dbt-wiki/, plus DAG visualization and tier/materialization indices. Refresh updates from new manifest snapshots; Ingest adds user-supplied context notes (preserved across refresh); Query answers natural-language questions about model structure, column-level data flow, materialization config, test coverage, refactoring impact (rename/delete propagation), and tribal knowledge from inline comments and user notes. Coexists with repo-wiki: dbt-wiki for STRUCTURE + dbt-internal context, repo-wiki for cross-cutting WHY. Scripts use PEP 723 inline metadata; sqlglot is auto-installed via `uv run` (recommended) or via `pip install sqlglot` if using plain python3.",
+      "source": "./dbt-wiki/"
+    },
+    {
+      "name": "deconstruct-toolkit",
+      "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Cultural-variant lenses for EN / JA / ZH (rhetoric / persuasion / genre / frame). Grounded in Burke, Toulmin, Hinds, 劉勰《文心雕龍》, Goffman, Lakoff, Doi, Hu/Hwang, Cialdini, Brignull, Swales/Bhatia, Nielsen-Norman, 山口周『武器になる哲学』. 制作物・論証・製品の脱構築 (英日中文化バリアント対応)。作品・論證・產品的逆向解構工具組（英日中文化變體）。",
+      "source": "./deconstruct-toolkit/"
+    }
   ]
 }
