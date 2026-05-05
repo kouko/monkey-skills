@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-mkdir -p "$(dirname "$TSUNDOKU_KOBO_BINARY")" "$TSUNDOKU_TMPDIR"
+tsundoku_ensure_dirs
 
 if [[ -x "$TSUNDOKU_KOBO_BINARY" && "$FORCE" != true ]]; then
     echo "[install] kobodl binary already present: $TSUNDOKU_KOBO_BINARY" >&2
