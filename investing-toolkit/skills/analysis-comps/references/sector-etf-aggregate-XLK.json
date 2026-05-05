@@ -1,0 +1,27 @@
+{
+  "etf": "XLK",
+  "schema_id": "tech-saas",
+  "as_of": "2026-05-05",
+  "_meta": {
+    "holdings_count": 10,
+    "weight_coverage_pct": 61.33,
+    "outliers_dropped": {},
+    "skipped_holdings": [],
+    "schema_dispatch": {
+      "tech-semis": 6,
+      "default": 2,
+      "tech-saas": 2
+    },
+    "source": "yfinance funds_data + data-us memo-fetch"
+  },
+  "multiples": {
+    "forwardPE": null,
+    "priceToSales": 19.21694192745285,
+    "evRevenue": 26.245869878680278
+  },
+  "indicators": {
+    "rule_of_40": 66.77339316249034,
+    "gross_margin": 60.81313553348422,
+    "FCF_margin": 33.44710184816005
+  }
+}
