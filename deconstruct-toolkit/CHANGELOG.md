@@ -4,6 +4,69 @@ All notable changes to deconstruct-toolkit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-05-05
+
+Translation reversal: zh-TW `artifact` and JP `文物脱構築` corrected;
+`精緻` modifier dropped across zh-TW. **Reverses the v0.1.0 glossary
+lock that rendered "artifact" as 文物 承襲「設計文物」用法.**
+
+### Why this is a reversal, not a typo fix
+
+v0.1.0 `docs/i18n/glossary-zh-TW.md:171` deliberately chose 文物 with
+the rationale: 「承襲『文化文物』『設計文物』用法。**避免**『製作物』
+（日文式）/『成品』（過於通俗）」. In review, the choice was wrong:
+
+- **文物** in zh-TW core semantics = museum / archaeology / cultural
+  relic (古董). Applied to landing pages / UI flows / SOPs (modern,
+  produced, often quotidian artifacts) it is a category error. The
+  same word in copywriting-toolkit's 故宮 anchor files is **correct**
+  (literal museum objects), but the deconstruct-toolkit context is
+  not antiquity.
+- **精緻** modifier carries aesthetic-quality judgment (精緻料理 /
+  精緻包裝 = exquisite / fine). It narrows plugin scope to "only
+  beautiful artifacts" — but a boring corporate landing page is also
+  a "polished artifact" worth deconstructing. The EN "polished"
+  modifier means "finished / non-draft," NOT "exquisite." JP README
+  validates this: 「制作物」省略 polished 修飾語 entirely.
+
+### Changed
+
+- `docs/i18n/glossary-zh-TW.md` § renamed 「文物解構域」→「作品解構域」;
+  artifact entry rewritten with reversal rationale; new `polished`
+  entry locks the "drop modifier" rule.
+- `docs/i18n/glossary-ja.md` § renamed 「文物脱構築領域」→「制作物
+  脱構築領域」; artifact entry annotated with the no-aesthetic-modifier
+  rule.
+- `deconstruct-toolkit/README.zh-TW.md` (10 places) 文物 → 作品;
+  「精緻」removed from 4 places. Roadmap section updated to v0.2.0
+  (was stuck at v0.1.0 in this file — drift from v0.2.0 PR which
+  updated en/ja but missed zh-TW).
+- `deconstruct-toolkit/skills/artifact-deconstruct/SKILL.md`
+  description bilingual line: 「文物逆向解構」→「作品逆向解構」.
+- `deconstruct-toolkit/.claude-plugin/plugin.json` description ZH
+  fragment: 「文物」→「作品」; version bumped 0.2.0 → 0.2.1.
+- `README.md` / `README.ja.md` / `README.zh-TW.md` (repo top-level)
+  plugin table entries: version 0.1.0 → 0.2.1 (catches up + this
+  bump); zh-TW description rewritten 文物 → 作品 + 精緻 dropped;
+  ja description fragment 「文物脱構築」→「制作物脱構築」; all 3
+  description cells now mention EN/JA/ZH cultural variants.
+
+### Unchanged (intentional historical record)
+
+- `deconstruct-toolkit/docs/design-proposal.md` (2026-05-04) — v0.1.0
+  approved-design-proposal record; its term-decision table at line 374
+  documents the **original** (now-reversed) choice. Glossary is the
+  current SoT; design-proposal is preserved as historical record per
+  ADR-style convention.
+- `copywriting-toolkit/docs/anchor-references/*` references to 文物
+  are CORRECT — those refer to literal 故宮 museum objects (NPM
+  meme account anchor), not the design-discourse artifact sense.
+
+### Hard exclusions (still in force)
+
+- ❌ AI-generated translations of Anglo lens content (per v0.2.0 §2.3)
+- ❌ Korean / Vietnamese / Thai variants (per ADR-0004)
+
 ## [0.2.0] — 2026-05-05
 
 Cultural-variant release. Closes the v0.1.0 grounding gap acknowledged

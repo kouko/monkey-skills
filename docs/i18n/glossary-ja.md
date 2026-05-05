@@ -151,15 +151,15 @@
 | brainstorming | ブレインストーミング | ブレスト | カタカナ標準。「ブレスト」省略形も日常的 |
 | awareness level (Schwartz) | 認知段階 | 顧客認知レベル / Awareness Level | Eugene Schwartz の "Five States of Awareness" 訳語。日本マーケ業界で「認知段階」漢字訳が広告コピー本で定着 |
 
-## 文物脱構築領域
+## 制作物脱構築領域
 
-deconstruct-toolkit 専用用語。本 plugin は外部の「精緻な制作物」（コピー / UI / ドキュメントパック / 論証 / 製品 / 組織）を逆向きに分解し、Derrida（哲学）/ Barthes（記号学）/ Toulmin（論証）/ Lakoff（フレーム）/ Goffman（社会フレーム）/ Cialdini（説得）/ Bhatia（ジャンル）/ Nielsen-Norman（UX）の primary source に紐付けて分析する。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』を実務 anchor として README で参照。
+deconstruct-toolkit 専用用語。本 plugin は外部の**制作物**（コピー / UI / ドキュメントパック / 論証 / 製品 / 組織）を逆向きに分解し、Derrida（哲学）/ Barthes（記号学）/ Toulmin（論証）/ Lakoff（フレーム）/ Goffman（社会フレーム）/ Cialdini（説得）/ Bhatia（ジャンル）/ Nielsen-Norman（UX）の primary source に紐付けて分析する。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』を実務 anchor として README で参照。
 
 | EN term | 主訳 | 副訳 | 決定根拠 / 出典 |
 |---|---|---|---|
 | deconstruct (verb) | 脱構築する | 解体する（口語）/ deconstruct（英語保持）| 日本哲学界・思想界・BCG 戦略コンサル業界で一致して「脱構築」。BCG『Blown to Bits』（Evans & Wurster, 2000）の「バリュー・チェーンの脱構築」が日本ビジネス界で定着。山口周『武器になる哲学』(2018) でも採用。「デコンストラクション」（カタカナ）も使われるが冗長。 |
 | deconstruction (noun) | 脱構築 | デコンストラクション（タイトル等）| 同上。本文では漢字「脱構築」、タイトルでカタカナ「デコンストラクション」併用可。 |
-| artifact | 制作物 | アーティファクト（カタカナ） | 本 plugin は「制作物」を採用（具体性・読みやすさ）。「アーティファクト」は IT エンジニアリング文脈（build artifact）と混同されやすいため副訳。 |
+| artifact | 制作物 | アーティファクト（カタカナ） | 本 plugin は「制作物」を採用（具体性・読みやすさ）。「アーティファクト」は IT エンジニアリング文脈（build artifact）と混同されやすいため副訳。**精緻 / polished のような美的修飾語は付けない**：design discourse の "polished" は「完成済み・公開可能」の意であり、「美しい」ではない。Length filter（200 語未満）が下書きを除外する役割を果たす。 |
 | lens (analytical) | lens（英語保持） | レンズ（不推奨：光学的歧義）| 批評理論コミュニティで `lens` が方法論用語として定着。日本語「レンズ」は光学用語が支配的。本 plugin は body 内全て英語保持。 |
 | frame (analytical) | フレーム | 枠組み | Goffman / Lakoff のフレーム分析は日本社会学・認知言語学界で「フレーム」カタカナ標準。「枠組み」も併用可。 |
 | reframe | リフレーミング / 再フレーム化 | reframe（英語保持）| 認知科学・NLP（神経言語プログラミング）日本コミュニティで「リフレーミング」が定着。 |
