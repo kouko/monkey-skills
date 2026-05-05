@@ -37,8 +37,7 @@ title=$(jq -r '.output_title' slide-plan.json)
 ```bash
 body=$(jq -n --arg t "$title" '{title: $t}')
 
-resp=$(echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations create \
-  --json-stdin)
+resp=$(scripts/google-slides/gws-wrap.sh slides presentations create --json "$body")
 ```
 
 **Live-tested gws CLI invocation**:
@@ -48,7 +47,7 @@ gws slides presentations create --json '{"title":"<output_title>"}'
 ```
 
 - No path parameter (`presentations.create` has no `presentationId` input)
-- Entire body goes into `--json` (or `--json-stdin`)
+- Entire body goes into `--json '<JSON>'` (a flag value; `gws` v0.22.5 has no stdin variant — pass the whole JSON string after `--json`)
 - stderr always prints `Using keyring backend: keyring` (informational, not an error; stdout remains clean JSON)
 
 ### 3. Parse the response

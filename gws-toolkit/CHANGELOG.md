@@ -20,6 +20,35 @@ slides-toolkit lineage and remain accurate for that fork point.
   3. ≥ 1 destructive op routed through safe-delete.sh (any tier)
   4. No regression vs slides-toolkit in deck-generation time (KR1)
 
+### Backlog — test infrastructure (post-Phase-1 milestone)
+
+Today the only automated test is
+[`scripts/dev/smoke-test-api-coverage.sh`](scripts/dev/smoke-test-api-coverage.sh)
+(integration; hits real Google APIs across 4 services). No unit tests
+for individual scripts; no `--dry-run` shape assertions; no CI workflow.
+The 2026-05-04 strangler-fig fork moved fast on `auto-setup.sh` (5
+revisions) so unit tests would have churned alongside; with Phase 1
+closed and surfaces stable, it is now the right time to add them.
+
+Trigger: after slides-toolkit Phase 3 deprecation closes (gws-toolkit
+≥ v0.5.0 stable on daily use).
+
+Tooling: [bats-core](https://github.com/bats-core/bats-core) — brew-
+installable; mock external commands via PATH-injected stubs (no Google
+API calls), so tests can run on CI without OAuth secrets.
+
+Phased ROI:
+
+1. **High ROI (~4-6 h)** — `safe-delete.sh` arg parsing + L1/L2/L3
+   tier decision; `gws-wrap.sh` `map_gws_error` exit-code mapping +
+   `is_retryable` regex; `credential-check.sh`
+   `compute_expires_in_days` arithmetic.
+2. **Medium ROI (~4 h)** — `auto-setup.sh` `parse_args` + dry-run
+   plan output; `gws-login.sh` / `gws-logout.sh` arg parsing +
+   `--switch` / idempotent paths.
+3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
+   unit-test surface worth the lines).
+
 ## [0.4.0-strangler-fig-seed] - 2026-05-04
 
 **Strangler fig fork from slides-toolkit v0.6.0.** Generic Google
