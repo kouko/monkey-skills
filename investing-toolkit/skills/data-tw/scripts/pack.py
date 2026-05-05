@@ -42,6 +42,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
 _UTCNOW = lambda: datetime.now(timezone.utc).replace(tzinfo=None)
@@ -50,6 +51,24 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PACK_TYPES = {"snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack"}
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "pack-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 
 
 # ----------------------------- ticker helpers -----------------------------
@@ -306,6 +325,8 @@ def _extract_ohlcv_rows_from_tw_yf(yf_history_wrapped: dict) -> list[dict]:
 
 
 def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
+    _log("snapshot start", ticker)
+    t0 = time.monotonic()
     norm = normalize_ticker(ticker)
     yf_ticker = norm["ticker_yf"]
     code = norm["ticker_code"]
@@ -327,30 +348,39 @@ def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
     }
 
     # yfinance — Tier 2 (price snapshot)
+    _log("pack [yf info]", yf_ticker)
     out["yfinance"]["info"] = wrap("2", "yfinance", "info",
         run_client("yfinance_client.py", ["--ticker", yf_ticker, "--action", "info"]))
+    _log("pack [yf history]", f"{yf_ticker} period={period}")
     out["yfinance"]["history"] = wrap("2", "yfinance", "history",
         run_client("yfinance_client.py", ["--ticker", yf_ticker, "--action", "history", "--period", period]))
 
     # MOPS — Tier A primary
+    _log("pack [mops company-basic]", code)
     out["mops"]["company_basic"] = wrap("A", "mops", "company-basic",
         run_client("mops_client.py", ["--ticker", code, "--action", "company-basic"]))
+    _log("pack [mops balance-sheet]", f"{code} {roc_year}Q{season}")
     out["mops"]["balance_sheet"] = wrap("A", "mops", "balance-sheet",
         run_client("mops_client.py", ["--ticker", code, "--action", "balance-sheet",
                                        "--year", str(roc_year), "--season", str(season)]))
+    _log("pack [mops income-statement]", f"{code} {roc_year}Q{season}")
     out["mops"]["income_statement"] = wrap("A", "mops", "income-statement",
         run_client("mops_client.py", ["--ticker", code, "--action", "income-statement",
                                        "--year", str(roc_year), "--season", str(season)]))
 
     # TWSE OpenAPI — Tier A primary
+    _log("pack [twse daily-price]", code)
     out["twse"]["daily_price"] = wrap("A", "twse_openapi", "daily-price",
         run_client("twse_openapi_client.py", ["--ticker", code, "--action", "daily-price"]))
+    _log("pack [twse pe-pb-yield]", code)
     out["twse"]["pe_pb_yield"] = wrap("A", "twse_openapi", "pe-pb-yield",
         run_client("twse_openapi_client.py", ["--ticker", code, "--action", "pe-pb-yield"]))
+    _log("pack [twse margin-balance]", code)
     out["twse"]["margin_balance"] = wrap("A", "twse_openapi", "margin-balance",
         run_client("twse_openapi_client.py", ["--ticker", code, "--action", "margin-balance"]))
 
     # FinMind — Tier 2 by-design (T86 daily 三大法人 flow is a Tier A gap)
+    _log("pack [finmind T86]", code)
     out["finmind"]["three_investor_flow"] = wrap("2-gap", "finmind", "T86",
         run_client("finmind_client.py",
                    ["--ticker", code, "--dataset", "TaiwanStockInstitutionalInvestorsBuySell",
@@ -364,6 +394,7 @@ def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
                 break
     # T1 canonical OHLCV alias — flatten yfinance.history wrapper to top-level
     out["history"] = _extract_ohlcv_rows_from_tw_yf(out["yfinance"]["history"])
+    _log("snapshot done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -371,6 +402,8 @@ def pack_snapshot(ticker: str, period: str = "1y") -> dict[str, Any]:
 
 def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
     """Snapshot + financial statements + 月營收 12m + 重大訊息. Heavy, single ticker."""
+    _log("memo-fetch start", ticker)
+    t0 = time.monotonic()
     norm = normalize_ticker(ticker)
     code = norm["ticker_code"]
     market = norm["market"]
@@ -383,6 +416,7 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
     out["pack"] = "memo-fetch"
 
     # Cash flow + monthly revenue + dividends + announcements + insider/director — Tier A
+    _log("pack [mops cash-flow]", code)
     out["mops"]["cash_flow"] = wrap("A", "mops", "cash-flow",
         run_client("mops_client.py", ["--ticker", code, "--action", "cash-flow",
                                        "--year", str(roc_year), "--season", str(season)]))
@@ -466,6 +500,7 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
         "three_investor_flow_note": "TW-unique: out.finmind.three_investor_flow / out.twse.three_investor.",
         "margin_trading_note": "TW-unique: out.twse.margin_balance / out.finmind.margin_history.",
     }
+    _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -473,11 +508,14 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
 
 def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
     """yfinance info (multiples-only) for one or many tickers."""
+    _log("comps-multiples start", f"{len(tickers)} ticker(s)")
+    t0 = time.monotonic()
     out: dict[str, Any] = {"pack": "comps-multiples", "country": "TW", "tickers": {}}
     info_alias: dict[str, dict] = {}  # T1 canonical: pack.info[ticker] → multiples
-    for t in tickers:
+    for i, t in enumerate(tickers, 1):
         norm = normalize_ticker(t)
         yf_t = norm["ticker_yf"]
+        _log(f"pack [info {i}/{len(tickers)}]", yf_t)
         info = run_client("yfinance_client.py", ["--ticker", yf_t, "--action", "info"])
         if isinstance(info, dict) and "_error" in info:
             # let wrap() surface the error envelope
@@ -493,6 +531,7 @@ def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
             info_alias[yf_t] = multiples
     # T1 canonical multiples alias — analysis-comps reads pack.info[ticker]
     out["info"] = info_alias
+    _log("comps-multiples done", f"{len(tickers)} ticker(s) in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -500,6 +539,8 @@ def pack_comps_multiples(tickers: list[str]) -> dict[str, Any]:
 
 def pack_screener_batch(tickers: list[str], period: str = "1y") -> dict[str, Any]:
     """yfinance batch info+history + minimal MOPS company_basic per ticker."""
+    _log("screener-batch start", f"{len(tickers)} tickers period={period}")
+    t0 = time.monotonic()
     out: dict[str, Any] = {"pack": "screener-batch", "country": "TW", "yfinance": {}, "mops": {}}
     yf_list = []
     for t in tickers:
@@ -507,19 +548,23 @@ def pack_screener_batch(tickers: list[str], period: str = "1y") -> dict[str, Any
         yf_list.append(norm["ticker_yf"])
 
     # yfinance batch — single subprocess
+    _log("pack [yf batch info]", f"{len(yf_list)} tickers")
     batch_info = run_client("yfinance_client.py",
                              ["--tickers", ",".join(yf_list), "--action", "info"])
+    _log("pack [yf batch history]", f"{len(yf_list)} tickers")
     batch_hist = run_client("yfinance_client.py",
                              ["--tickers", ",".join(yf_list), "--action", "history", "--period", period])
     out["yfinance"]["info_batch"] = wrap("2", "yfinance", "info-batch", batch_info)
     out["yfinance"]["history_batch"] = wrap("2", "yfinance", "history-batch", batch_hist)
 
     # minimal MOPS — company_basic for each ticker (Tier A)
-    for t in tickers:
+    for i, t in enumerate(tickers, 1):
         norm = normalize_ticker(t)
         code = norm["ticker_code"]
+        _log(f"pack [mops company-basic {i}/{len(tickers)}]", code)
         out["mops"][norm["ticker_yf"]] = wrap("A", "mops", "company-basic",
             run_client("mops_client.py", ["--ticker", code, "--action", "company-basic"]))
+    _log("screener-batch done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -585,30 +630,39 @@ def _flatten_regime_to_series(root: dict) -> dict:
 
 def pack_regime() -> dict[str, Any]:
     """Macro regime indicators: CBC + DGBAS + NDC 五色景氣燈號 + statgov + CIER PMI."""
+    _log("regime-pack start", "TW macro bundle")
+    t0 = time.monotonic()
     out: dict[str, Any] = {"pack": "regime-pack", "country": "TW", "cbc": {}, "dgbas": {},
                            "ndc": {}, "statgov": {}, "_partial": False}
 
     # CBC — rates / forex / money
+    _log("pack [cbc macro]", "rediscount-rate/twdusd/m2/reserve-money")
     out["cbc"]["macro"] = wrap("A", "cbc", "preset-bundle",
         run_client("cbc_client.py", ["--preset", "rediscount-rate,twdusd,m2,reserve-money"]))
     # DGBAS — inflation
+    _log("pack [dgbas inflation]", "10 presets")
     out["dgbas"]["inflation"] = wrap("A", "dgbas", "preset-bundle",
         run_client("dgbas_client.py", ["--preset",
             "cpi,cpi-yoy,core-cpi,core-cpi-yoy,"
             "ppi,ppi-yoy,import-pi,import-pi-yoy,export-pi,export-pi-yoy"]))
     # NDC — 五色景氣燈號 + components
+    _log("pack [ndc signal]", "signal + components")
     out["ndc"]["signal"] = wrap("A", "ndc", "signal",
         run_client("ndc_client.py", ["--preset", "signal,signal-components"]))
     # NDC PMI / NMI (CIER via data.gov.tw 6100)
+    _log("pack [ndc pmi]", "pmi-mfg + pmi-nmi")
     out["ndc"]["pmi"] = wrap("A", "ndc", "pmi",
         run_client("ndc_client.py", ["--preset", "pmi-mfg,pmi-nmi"]))
     # statgov — growth / labor / trade / leading-coincident CI
+    _log("pack [statgov growth]", "4 presets")
     out["statgov"]["growth"] = wrap("A", "statgov", "preset-growth",
         run_client("statgov_client.py",
                    ["--preset", "gdp-yoy,ipi,manufacturing-yoy,retail-yoy"]))
+    _log("pack [statgov trade]", "5 presets")
     out["statgov"]["trade"] = wrap("A", "statgov", "preset-trade",
         run_client("statgov_client.py",
                    ["--preset", "export-orders,exports,imports,exports-yoy,imports-yoy"]))
+    _log("pack [statgov labor/cycle]", "7 presets")
     out["statgov"]["labor_cycle_other"] = wrap("A", "statgov", "preset-bundle",
         run_client("statgov_client.py",
                    ["--preset",
@@ -622,6 +676,7 @@ def pack_regime() -> dict[str, Any]:
                 break
     # T2 canonical flat series alias per ADR-0002
     out["series"] = _flatten_regime_to_series(out)
+    _log("regime-pack done", f"in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -637,7 +692,11 @@ def main() -> int:
     parser.add_argument("--pack", required=True, choices=sorted(PACK_TYPES))
     parser.add_argument("--period", default="1y",
                         help="History lookback for snapshot/memo-fetch/screener-batch")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.pack == "snapshot":
         if not args.ticker:

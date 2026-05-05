@@ -93,6 +93,24 @@ class MopsEndpointError(MopsError):
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "mops-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # ROC calendar
 # ---------------------------------------------------------------------------
 
@@ -632,6 +650,8 @@ def _validate_action_params(args) -> None:
 
 def _run_action(args) -> dict:
     _validate_action_params(args)
+    ticker_label = getattr(args, "ticker", None) or ""
+    _log(f"{args.action} fetch", ticker_label or "(no ticker)")
     client = MopsClient()
     action = args.action
 
@@ -807,8 +827,12 @@ def main():
                         help="search-announcements scope (1=company, 2=market)")
     parser.add_argument("--no-cache", action="store_true",
                         help="Bypass cache for this run")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Cheap validation for common cases
     needs_ticker = {
@@ -834,6 +858,7 @@ def main():
         except Exception:
             pass
 
+    t_main = time.monotonic()
     try:
         result = _run_action(args)
     except MopsEndpointError as e:
@@ -843,6 +868,9 @@ def main():
     except MopsError as e:
         result = {"action": args.action, "error": str(e)}
 
+    cache_status = result.get("_cache") if isinstance(result, dict) else None
+    cache_label = "cache hit" if cache_status == "hit" else f"in {time.monotonic() - t_main:.1f}s"
+    _log(f"{args.action} done", f"{args.ticker or ''} {cache_label}".strip())
     print(json.dumps(result, default=str, ensure_ascii=False, indent=2))
     sys.exit(1 if "error" in result else 0)
 

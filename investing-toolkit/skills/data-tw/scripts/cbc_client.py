@@ -73,6 +73,24 @@ INDICATOR_NAMES: dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "cbc-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers (same pattern as fred_client.py / boj_client.py)
 # ---------------------------------------------------------------------------
 
@@ -291,6 +309,9 @@ def _normalize_period(raw: str) -> str | None:
 
 def fetch_item(item_code: str, use_cache: bool = True, preset: str | None = None) -> dict:
     """Fetch a single CBC item with caching."""
+    label = preset or item_code
+    _log("item fetch", label)
+    t0 = time.monotonic()
     cache_path = get_cache_path(item_code)
 
     if use_cache:
@@ -299,10 +320,12 @@ def fetch_item(item_code: str, use_cache: bool = True, preset: str | None = None
             cached["_cache"] = "hit"
             if "_provenance" not in cached:
                 cached["_provenance"] = _make_provenance(cached)
+            _log("item done", f"{label} cache hit")
             return cached
 
     body = _fetch_item(item_code)
     if "error" in body:
+        _log("item done", f"{label} error in {time.monotonic() - t0:.1f}s")
         return body
 
     observations = _parse_observations(body, item_code)
@@ -340,6 +363,7 @@ def fetch_item(item_code: str, use_cache: bool = True, preset: str | None = None
     if "error" not in result:
         save_cache(cache_path, result)
 
+    _log("item done", f"{label} {len(observations)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -365,8 +389,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Resolve targets: list of (item_code, preset_alias_or_None)
     targets: list[tuple[str, str | None]] = []
@@ -418,10 +446,14 @@ def main() -> None:
             "_source": "cbc",
             "items": {},
         }
-        for item_code, preset in targets:
+        _log("batch start", f"{len(targets)} items")
+        t_batch = time.monotonic()
+        for i, (item_code, preset) in enumerate(targets, 1):
             key = preset if preset else item_code
+            _log(f"batch [{i}/{len(targets)}]", key)
             data = fetch_item(item_code, use_cache=not args.no_cache, preset=preset)
             result["items"][key] = data
+        _log("batch done", f"{len(targets)} items in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 

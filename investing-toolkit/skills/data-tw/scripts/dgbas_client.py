@@ -254,6 +254,24 @@ def _compute_yoy_from_index(observations: list[dict], period: int = 12) -> list[
     return out
 
 
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "dgbas-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
 def get_cache_path(preset: str) -> Path:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     return CACHE_DIR / f"{preset}.json"
@@ -581,6 +599,8 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
     Cache TTL is computed at load time from the preset's `cadence`
     field + observed `staleness_days`. See cache-policy.md §"TTL bands".
     """
+    _log("preset fetch", preset)
+    t0 = time.monotonic()
     config = PRESETS.get(preset)
     if not config:
         return {"error": f"Unknown preset: {preset}", "available_presets": list(PRESETS.keys())}
@@ -591,10 +611,12 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
     if use_cache:
         cached = load_cache(cache_path, cadence)
         if cached is not None:
+            _log("preset done", f"{preset} cache hit")
             return cached  # already has _cache="hit" + _provenance + _cache_age_seconds
 
     content = _download_xls(config["url"])
     if isinstance(content, dict):
+        _log("preset done", f"{preset} download error in {time.monotonic() - t0:.1f}s")
         return content  # error dict
 
     observations = _parse_xls(content, config.get("sheet", ""))
@@ -650,6 +672,7 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
             provenance=result["_provenance"],
         )
 
+    _log("preset done", f"{preset} {len(observations)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -668,8 +691,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Resolve presets
     if args.preset.strip().lower() == "all":
@@ -697,9 +724,13 @@ def main() -> None:
             "_source": "dgbas",
             "indicators": {},
         }
-        for preset in presets:
+        _log("batch start", f"{len(presets)} presets")
+        t_batch = time.monotonic()
+        for i, preset in enumerate(presets, 1):
+            _log(f"batch [{i}/{len(presets)}]", preset)
             data = fetch_preset(preset, use_cache=not args.no_cache)
             result["indicators"][preset] = data
+        _log("batch done", f"{len(presets)} presets in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 

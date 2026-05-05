@@ -106,6 +106,24 @@ def _make_provenance(latest_date: str | None, fetched_at: str | None) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "finmind-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -147,6 +165,8 @@ def fetch_dataset(
     use_cache: bool,
 ) -> dict:
     """Fetch a single FinMind dataset with retry + cache."""
+    _log("dataset fetch", f"{ticker} {dataset} {date_start}..{date_end}")
+    t0 = time.monotonic()
     key = cache_key(ticker, dataset, date_start, date_end)
 
     if use_cache:
@@ -161,6 +181,7 @@ def fetch_dataset(
                     if dates:
                         latest_date = max(dates)
                 cached["_provenance"] = _make_provenance(latest_date, cached.get("fetched_at"))
+            _log("dataset done", f"{ticker} {dataset} cache hit")
             return cached
 
     params: dict = {
@@ -219,6 +240,7 @@ def fetch_dataset(
             if use_cache:
                 save_cache(key, result)
 
+            _log("dataset done", f"{ticker} {dataset} {len(data_rows)} rows in {time.monotonic() - t0:.1f}s")
             return result
 
         except requests.exceptions.ConnectionError as e:
@@ -233,6 +255,7 @@ def fetch_dataset(
             last_error = f"Unexpected error: {e}"
             break
 
+    _log("dataset done", f"{ticker} {dataset} error in {time.monotonic() - t0:.1f}s")
     return {
         "dataset": dataset,
         "ticker": ticker,
@@ -361,7 +384,11 @@ def main() -> None:
         action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     ticker = normalize_ticker(args.ticker)
     token = os.environ.get("FINMIND_API_TOKEN")
