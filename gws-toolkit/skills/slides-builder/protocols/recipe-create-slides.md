@@ -79,15 +79,15 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 ### 3. Invoke batchUpdate
 
 ```bash
-echo "$body" | scripts/gws/gws-wrap.sh slides presentations batchUpdate \
+scripts/gws/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
-  --json-stdin
+  --json "$body"
 ```
 
 **Live-tested gws CLI rules**:
 
 - `presentationId` is a path parameter → must go inside the `--params '{"presentationId":"..."}'` JSON, **not** as a standalone `--presentationId=` flag
-- The `requests` body goes into `--json` or `--json-stdin`
+- The `requests` body goes into `--json '<JSON>'` (a flag value; `gws` v0.22.5 has no stdin variant)
 - stderr always prints `Using keyring backend: keyring` (informational)
 
 **Complete gws command example**:

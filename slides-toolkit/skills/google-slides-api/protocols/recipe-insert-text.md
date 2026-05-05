@@ -98,12 +98,12 @@ body=$(jq -n --argjson r "$requests" '{requests: $r}')
 ### 2. Invoke batchUpdate
 
 ```bash
-echo "$body" | scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
+scripts/google-slides/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
-  --json-stdin
+  --json "$body"
 ```
 
-**Live-tested gws CLI rules**: `presentationId` goes inside `--params` (not as `--presentationId=`); the `requests` body goes into `--json` / `--json-stdin`.
+**Live-tested gws CLI rules**: `presentationId` goes inside `--params` (not as `--presentationId=`); the `requests` body goes into `--json '<JSON>'` (`gws` v0.22.5 has no stdin variant).
 
 **gws command**:
 

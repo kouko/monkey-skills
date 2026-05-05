@@ -177,12 +177,12 @@ If `target_object_id == "null"` → **13b warning** (the `placeholder_id` does n
 Invoke:
 
 ```bash
-echo "$body" | scripts/gws/gws-wrap.sh slides presentations batchUpdate \
+scripts/gws/gws-wrap.sh slides presentations batchUpdate \
   --params "{\"presentationId\":\"$presentation_id\"}" \
-  --json-stdin
+  --json "$body"
 ```
 
-**Live-tested gws CLI rules**: `presentationId` goes inside `--params` (not `--presentationId=` as a standalone flag); the `requests` body goes into `--json` / `--json-stdin`.
+**Live-tested gws CLI rules**: `presentationId` goes inside `--params` (not `--presentationId=` as a standalone flag); the `requests` body goes into `--json '<JSON>'` (`gws` v0.22.5 has no stdin variant).
 
 **URL note**: use `https://drive.google.com/uc?id=<FILE_ID>` without `&export=download` — see step 5.
 
