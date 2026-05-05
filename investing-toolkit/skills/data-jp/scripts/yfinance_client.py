@@ -35,6 +35,26 @@ CACHE_TTL_SECONDS = 3600  # 1 hour
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script so readers can disambiguate when multiple scripts log to one stream
+# (e.g., pack.py orchestrating yfinance + sec_edgar). Inline (not shared
+# module) to preserve PEP 723 zero-runtime-dependency design.
+
+_QUIET = False
+_LOG_TAG = "yfinance-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Provenance helpers
 # ---------------------------------------------------------------------------
 
@@ -101,12 +121,15 @@ def fetch_with_retry(fn, retries: int = 3, backoff: float = 2.0):
     raise last_err
 
 def get_history(ticker: str, period: str, interval: str) -> dict:
+    _log("history fetch", f"{ticker} period={period} interval={interval}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(ticker, "history", period, interval)
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
         if "_provenance" not in cached:
             cached["_provenance"] = _make_provenance(cached)
+        _log("history done", f"{ticker} cache hit ({len(cached.get('data', []))} rows)")
         return cached
 
     import yfinance as yf
@@ -147,15 +170,19 @@ def get_history(ticker: str, period: str, interval: str) -> dict:
     }
     result["_provenance"] = _make_provenance(result)
     save_cache(cache_path, result)
+    _log("history done", f"{ticker} {result['rows']} rows in {time.monotonic() - t0:.1f}s")
     return result
 
 def get_info(ticker: str) -> dict:
+    _log("info fetch", ticker)
+    t0 = time.monotonic()
     cache_path = get_cache_path(ticker, "info")
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
         if "_provenance" not in cached:
             cached["_provenance"] = _make_provenance(cached)
+        _log("info done", f"{ticker} cache hit")
         return cached
 
     import yfinance as yf
@@ -199,6 +226,7 @@ def get_info(ticker: str) -> dict:
 
     result["_provenance"] = _make_provenance(result)
     save_cache(cache_path, result)
+    _log("info done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     return result
 
 def get_holdings(ticker: str) -> dict:
@@ -219,9 +247,12 @@ def get_holdings(ticker: str) -> dict:
     """
     import yfinance as yf  # local import — module-level may be lazy-stubbed in tests
 
+    _log("holdings fetch", ticker)
+    t0 = time.monotonic()
     cache_path = get_cache_path(ticker, "holdings")
     cached = load_cache(cache_path)
     if cached is not None:
+        _log("holdings done", f"{ticker} cache hit ({len(cached.get('holdings', []))} holdings)")
         return cached
 
     t = yf.Ticker(ticker)
@@ -239,6 +270,7 @@ def get_holdings(ticker: str) -> dict:
             },
         }
         save_cache(cache_path, out)
+        _log("holdings done", f"{ticker} non-fund (no funds_data)")
         return out
 
     df = getattr(funds_data, "top_holdings", None)
@@ -271,6 +303,7 @@ def get_holdings(ticker: str) -> dict:
     if warnings:
         out["warnings"] = warnings
     save_cache(cache_path, out)
+    _log("holdings done", f"{ticker} {len(holdings)} holdings in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -367,22 +400,31 @@ def get_financials(ticker: str, period: str = "annual") -> dict:
     import yfinance as yf
     import pandas as pd
 
+    _log("financials fetch", f"{ticker} {period}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(ticker, f"financials_{period}")
     cached = load_cache(cache_path)
     if cached:
         cached["_cache"] = "hit"
+        _log("financials done", f"{ticker} cache hit")
         return cached
 
     t = yf.Ticker(ticker)
     try:
         if period == "annual":
             income_df = fetch_with_retry(lambda: t.financials)
+            _log("financials", "income statement done")
             balance_df = fetch_with_retry(lambda: t.balance_sheet)
+            _log("financials", "balance sheet done")
             cashflow_df = fetch_with_retry(lambda: t.cashflow)
+            _log("financials", "cash flow done")
         elif period == "quarterly":
             income_df = fetch_with_retry(lambda: t.quarterly_financials)
+            _log("financials", "quarterly income statement done")
             balance_df = fetch_with_retry(lambda: t.quarterly_balance_sheet)
+            _log("financials", "quarterly balance sheet done")
             cashflow_df = fetch_with_retry(lambda: t.quarterly_cashflow)
+            _log("financials", "quarterly cash flow done")
         else:
             return {"error": f"Invalid period '{period}' (use 'annual' or 'quarterly')"}
     except Exception as e:
@@ -424,14 +466,18 @@ def get_financials(ticker: str, period: str = "annual") -> dict:
         "note": "Unofficial Yahoo scraper; not regulator-filed.",
     }
     save_cache(cache_path, result)
+    _log("financials done", f"{ticker} {period} in {time.monotonic() - t0:.1f}s")
     return result
 
 
 def get_batch(tickers: list[str], action: str, period: str, interval: str) -> dict:
     """Fetch data for multiple tickers. Returns {tickers: {AAPL: {...}, MSFT: {...}}}."""
+    _log("batch start", f"{len(tickers)} tickers action={action}")
+    t0 = time.monotonic()
     results = {}
     has_error = False
-    for ticker in tickers:
+    for i, ticker in enumerate(tickers, 1):
+        _log(f"batch [{i}/{len(tickers)}]", ticker)
         try:
             if action == "history":
                 results[ticker.upper()] = get_history(ticker, period, interval)
@@ -443,6 +489,7 @@ def get_batch(tickers: list[str], action: str, period: str, interval: str) -> di
             results[ticker.upper()] = {"error": str(e), "ticker": ticker.upper()}
             has_error = True
 
+    _log("batch done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s ({'errors' if has_error else 'ok'})")
     return {
         "mode": "batch",
         "action": action,
@@ -472,8 +519,12 @@ def main():
     parser.add_argument("--interval", default="1d",
                         help="Interval for history: 1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Batch mode
     if args.tickers:

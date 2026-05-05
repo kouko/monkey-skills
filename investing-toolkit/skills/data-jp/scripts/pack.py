@@ -57,10 +57,29 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "pack-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 
 # Multiples-only field whitelist for comps-multiples pack.
 COMPS_FIELDS = (
@@ -298,15 +317,21 @@ def pack_snapshot(ticker_code: str, period: str = "2y") -> dict[str, Any]:
     """yfinance info + price history + recent TDnet timely-disclosure index."""
     yf = _to_yf_ticker(ticker_code)
     bare = _bare_ticker(ticker_code)
+    _log("snapshot start", bare)
+    t0 = time.monotonic()
 
+    _log("pack [info]", yf)
     info = _run_client("yfinance_client.py", ["--ticker", yf, "--action", "info"])
+    _log("pack [history]", f"{yf} period={period}")
     history = _run_client(
         "yfinance_client.py",
         ["--ticker", yf, "--action", "history", "--period", period],
     )
+    _log("pack [tdnet]", bare)
     tdnet = _run_client(
         "tdnet_client.py", ["--ticker", bare, "--limit", "20"]
     )
+    _log("snapshot done", f"{bare} in {time.monotonic() - t0:.1f}s")
 
     rows = history.get("data", []) if isinstance(history, dict) else []
     return {
@@ -338,6 +363,8 @@ def pack_memo_fetch(
     ticker_code: str, period: str = "2y", days: int = 365
 ) -> dict[str, Any]:
     """Snapshot + (Tier A EDINET filings | Tier 2 yfinance financials fallback)."""
+    _log("memo-fetch start", ticker_code)
+    t0 = time.monotonic()
     base = pack_snapshot(ticker_code, period=period)
     base["pack"] = "memo-fetch"
 
@@ -345,9 +372,11 @@ def pack_memo_fetch(
     bare = base["ticker"]
 
     has_key = bool(os.environ.get("EDINET_API_KEY"))
+    _log("memo-fetch tier", "A (EDINET)" if has_key else "2 (yfinance fallback)")
 
     if has_key:
         # Tier A: EDINET filing summary + material events
+        _log("pack [edinet filing-summary]", bare)
         filing_summary = _run_client(
             "edinet_client.py",
             [
@@ -359,6 +388,7 @@ def pack_memo_fetch(
                 str(days),
             ],
         )
+        _log("pack [edinet material-events]", bare)
         material_events = _run_client(
             "edinet_client.py",
             [
@@ -392,10 +422,12 @@ def pack_memo_fetch(
         }
     else:
         # Tier 2 fallback: yfinance financials
+        _log("pack [yf financials annual]", yf)
         annual = _run_client(
             "yfinance_client.py",
             ["--ticker", yf, "--action", "financials", "--period", "annual"],
         )
+        _log("pack [yf financials quarterly]", yf)
         quarterly = _run_client(
             "yfinance_client.py",
             ["--ticker", yf, "--action", "financials", "--period", "quarterly"],
@@ -452,6 +484,7 @@ def pack_memo_fetch(
         "consolidated_basis_note": "yfinance reports JP issuers' consolidated (連結) statements. 単体 (parent-only) is exposed by EDINET 有報 type=5 CSV when key set.",
         "accounting_standard_note": "JP issuers may use JP-GAAP, IFRS, or 米基準 — varies per issuer and may switch mid-history. yfinance Tier 2 does not disclose which; EDINET filing_summary identifies the standard via accountingStandardsDEI.",
     }
+    _log("memo-fetch done", f"{ticker_code} in {time.monotonic() - t0:.1f}s")
     return base
 
 
@@ -476,6 +509,8 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
     invocation (one Python interpreter spin-up + one uv resolution) and splits
     the result per ticker, instead of N serial subprocesses.
     """
+    _log("comps-multiples start", f"{len(ticker_codes)} ticker(s)")
+    t0 = time.monotonic()
     yf_tickers = [_to_yf_ticker(c) for c in ticker_codes]
     bare_tickers = [_bare_ticker(c) for c in ticker_codes]
 
@@ -491,6 +526,7 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
         },
     }
 
+    _log("pack [batch info]", f"{len(yf_tickers)} tickers")
     batch = _run_client(
         "yfinance_client.py",
         ["--tickers", ",".join(yf_tickers), "--action", "info"],
@@ -525,6 +561,7 @@ def pack_comps_multiples(ticker_codes: list[str]) -> dict[str, Any]:
             info_by_ticker[bare] = multiples
     # T1 canonical multiples alias — analysis-comps reads pack.info[ticker]
     out["info"] = info_by_ticker
+    _log("comps-multiples done", f"{len(ticker_codes)} ticker(s) in {time.monotonic() - t0:.1f}s")
     return out
 
 
@@ -537,11 +574,15 @@ def pack_screener_batch(
     ticker_codes: list[str], period: str = "1y"
 ) -> dict[str, Any]:
     """Lightweight yfinance batch — info + price history for many tickers."""
+    _log("screener-batch start", f"{len(ticker_codes)} tickers period={period}")
+    t0 = time.monotonic()
     yf_tickers = [_to_yf_ticker(c) for c in ticker_codes]
+    _log("pack [batch info]", f"{len(yf_tickers)} tickers")
     info_batch = _run_client(
         "yfinance_client.py",
         ["--tickers", ",".join(yf_tickers), "--action", "info"],
     )
+    _log("pack [batch history]", f"{len(yf_tickers)} tickers period={period}")
     history_batch = _run_client(
         "yfinance_client.py",
         [
@@ -553,6 +594,7 @@ def pack_screener_batch(
             period,
         ],
     )
+    _log("screener-batch done", f"{len(ticker_codes)} tickers in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "screener-batch",
         "fetched_at": _now_iso(),
@@ -627,13 +669,17 @@ def _flatten_regime_to_series(root: dict) -> dict:
 
 def pack_regime() -> dict[str, Any]:
     """BOJ + estat + ECB macro indicators (no per-ticker dimension)."""
+    _log("regime-pack start", "JP macro bundle")
+    t0 = time.monotonic()
     today = dt.date.today()
     start_yyyymm = (today - dt.timedelta(days=730)).strftime("%Y%m")
 
+    _log("pack [boj call-rate]", f"FM01/STRDCLUCON from {start_yyyymm}")
     boj_call = _run_client(
         "boj_client.py",
         ["--db", "FM01", "--code", "STRDCLUCON", "--start-date", start_yyyymm],
     )
+    _log("pack [boj tankan-price-outlook]", "1/3/5Y")
     boj_tankan_outlook = _run_client(
         "boj_client.py",
         [
@@ -644,6 +690,7 @@ def pack_regime() -> dict[str, Any]:
             "8",
         ],
     )
+    _log("pack [boj tankan-business-di]", "4 categories")
     boj_tankan_business_di = _run_client(
         "boj_client.py",
         [
@@ -657,6 +704,7 @@ def pack_regime() -> dict[str, Any]:
     # they were simply omitted from pack.py's call. classify_jp.py reads
     # ESRI 景気動向指数 CI as its native cycle proxy (replaces the previous
     # missing coincident-index resolve in _legacy_ic.py).
+    _log("pack [estat macro]", "8 presets")
     estat_macro = _run_client(
         "estat_client.py",
         [
@@ -665,6 +713,7 @@ def pack_regime() -> dict[str, Any]:
             "coincident-index,leading-index,machine-orders",
         ],
     )
+    _log("pack [ecb real-yield]", "JP 10Y")
     ecb_real_yield = _run_client(
         "ecb_client.py",
         [
@@ -689,6 +738,7 @@ def pack_regime() -> dict[str, Any]:
             "tankan_inflation_outlook": boj_tankan_outlook,
         },
     }
+    _log("regime-pack done", f"in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "regime-pack",
         "fetched_at": _now_iso(),
@@ -749,8 +799,12 @@ def main() -> None:
         "--days", type=int, default=365,
         help="EDINET filing-summary scan window (Tier A memo-fetch only).",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
     pack = args.pack
 
     def _ticker_list() -> list[str]:

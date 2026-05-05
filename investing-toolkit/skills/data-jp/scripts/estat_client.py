@@ -43,6 +43,25 @@ CACHE_TTL_SECONDS = 86400  # 24 hours
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0
 
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "estat-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
 # ---------------------------------------------------------------------------
 # Preset aliases
 # ---------------------------------------------------------------------------
@@ -362,6 +381,9 @@ def _indicator_name(code: str, preset: str | None) -> str:
 
 def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: str | None = None) -> dict:
     """Fetch a single indicator with caching."""
+    label = preset or indicator
+    _log("indicator fetch", f"{label} cycle={cycle}")
+    t0 = time.monotonic()
     cache_path = get_cache_path(indicator, cycle)
 
     if use_cache:
@@ -370,10 +392,12 @@ def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: 
             cached["_cache"] = "hit"
             if "_provenance" not in cached:
                 cached["_provenance"] = _make_provenance(cached)
+            _log("indicator done", f"{label} cache hit")
             return cached
 
     body = _fetch_data(indicator, cycle)
     if "error" in body:
+        _log("indicator done", f"{label} error in {time.monotonic() - t0:.1f}s")
         return body
 
     observations = _parse_observations(body)
@@ -400,11 +424,13 @@ def fetch_indicator(indicator: str, cycle: str, use_cache: bool = True, preset: 
     if "error" not in result:
         save_cache(cache_path, result)
 
+    _log("indicator done", f"{label} {len(observations)} obs in {time.monotonic() - t0:.1f}s")
     return result
 
 
 def search_indicators(query: str) -> dict:
     """Search for indicators by keyword (client-side filter on full catalog)."""
+    _log("search", query)
     catalog_data = _fetch_all_indicators()
     if "error" in catalog_data:
         return catalog_data
@@ -461,8 +487,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # --search mode: search and exit
     if args.search:
@@ -527,10 +557,14 @@ def main() -> None:
             "_source": "estat_dashboard",
             "indicators": {},
         }
-        for indicator, preset in targets:
+        _log("batch start", f"{len(targets)} indicators cycle={args.cycle}")
+        t_batch = time.monotonic()
+        for i, (indicator, preset) in enumerate(targets, 1):
             key = preset if preset else indicator
+            _log(f"batch [{i}/{len(targets)}]", key)
             data = fetch_indicator(indicator, cycle, use_cache=not args.no_cache, preset=preset)
             result["indicators"][key] = data
+        _log("batch done", f"{len(targets)} indicators in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 

@@ -53,6 +53,25 @@ CACHE_DIR = Path(_CACHE_BASE) / "tdnet"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_TTL_SECONDS = 3600  # 1h — index is event-driven, low-frequency update
 
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "tdnet-jp"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
 BASE = "https://webapi.yanoshin.jp/webapi/tdnet"
 DEFAULT_USER_AGENT = (
     "kouko investing-toolkit (github.com/kouko/monkey-skills) "
@@ -218,12 +237,15 @@ def list_disclosures(
     `keyword` filters in-memory on normalized title after fetch (API itself
     doesn't support title keyword filtering for the /list/{ticker} endpoint).
     """
+    _log("list fetch", f"{ticker} limit={limit}{(' keyword=' + keyword) if keyword else ''}")
+    t0 = time.monotonic()
     tnorm = _normalize_ticker_for_tdnet(ticker)
     cache_key = f"list:{tnorm}:{limit}:{keyword or ''}"
     cache_path = _cache_path(cache_key)
     cached = _load_cache(cache_path)
     if cached is not None:
         cached["_cache"] = "hit"
+        _log("list done", f"{ticker} cache hit")
         return cached
 
     # Over-fetch if keyword filter applied (so we still have `limit` hits
@@ -267,6 +289,7 @@ def list_disclosures(
         ),
     }
     _save_cache(cache_path, result)
+    _log("list done", f"{ticker} {len(normalized)} disclosures in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -289,8 +312,12 @@ def main() -> None:
                         help="Filter title substring (e.g. '決算短信')")
     parser.add_argument("--no-cache", action="store_true",
                         help="Bypass cache")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.no_cache:
         tnorm = _normalize_ticker_for_tdnet(args.ticker)
