@@ -50,7 +50,7 @@ RETRY_BASE_DELAY = 2.0
 # script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
 
 _QUIET = False
-_LOG_TAG = "fred-us"
+_LOG_TAG = "fred"
 
 
 def _log(stage: str, msg: str = "") -> None:

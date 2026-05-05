@@ -43,7 +43,7 @@ CACHE_TTL_SECONDS = 3600  # 1 hour
 # module) to preserve PEP 723 zero-runtime-dependency design.
 
 _QUIET = False
-_LOG_TAG = "yfinance-cn"
+_LOG_TAG = "yfinance"
 
 
 def _log(stage: str, msg: str = "") -> None:
