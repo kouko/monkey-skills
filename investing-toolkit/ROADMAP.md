@@ -109,15 +109,19 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Spec**: [`docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md`](../docs/superpowers/specs/2026-05-04-investing-toolkit-v2.2.0-c-sector-multiples-design.md)
 - **Reference**: PR TBD; spawned v2.2.0-c-bench (SPDR ETF aggregate benchmark layer — see Future Roadmap below) + v2.2.0-c² (industry-specific concepts beyond standard XBRL — deferred indefinitely pending memo-fetch extension).
 
-### v2.2.0-c-bench — SPDR sector ETF aggregate benchmark layer (follow-up)
+### ~~v2.2.0-c-bench — SPDR sector ETF aggregate benchmark layer~~ ✅ closed 2026-05-05 (PR TBD)
 
-- **What**: Layer SPDR sector ETF aggregate benchmark on top of v2.2.0-c output. Per-multiple `etf_benchmark` block with holdings-weighted aggregate (computed weekly via GHA from each ETF's top holdings + v2.2.0-c memo-fetch raw fields), per-multiple divergence (`in_line` ≤20% / `notable` 20–50% / `extreme` >50%), and 11-GICS warning matrix loaded from `references/sector-warnings.md`.
-- **Why**: Single-ticker compute output already gives "is this expensive?" via `multiples_compute` + `divergence` (vs direct mode). Adding "vs my SPDR sector ETF benchmark" answers "is this expensive **for its sector**?" — the question buy-side memos actually need.
-- **Files**: `analysis-comps/scripts/etf_aggregator.py` (new); `references/sector-etf-aggregate-{XLE,XLB,XLI,XLY,XLP,XLV,XLF,XLK,XLC,XLU,XLRE}.json` (11 flat files); `references/sector-warnings.md`; `comps_compute.py --sector-benchmark` opt-in flag; `.github/workflows/sector-etf-aggregates.yml` weekly cron.
-- **Blocker**: None (foundation in place — v2.2.0-c sector classification + memo-fetch raw fields). Soft blocker: holdings-weighted aggregate over mega-cap-dominated ETFs (e.g. XLK top 10 ≈ 60% weight) reflects mega-cap valuation more than median sector valuation; mitigated via `_meta.weight_coverage_pct` disclosure + matrix warnings.
-- **Acceptance**: AAPL `etf_benchmark.priceToBook.delta_pct` non-null with band classification; JPM same vs XLF aggregate ROE; Realty Income vs XLRE aggregate priceToFFO; non-US ticker → `etf_benchmark: {status: "skipped"}`; `--sector-benchmark` absent → output unchanged from v2.2.0-c shape.
-- **Spec**: [`docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md`](../docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md)
-- **Reference**: spec above; spawned 2026-05-05 from v2.2.0-c brainstorming session (originally drafted as competing v2.2.0-c design; reframed after branch comparison).
+- **Status**: Closed. SPDR sector ETF aggregate benchmark layer shipped — `analysis-comps/scripts/etf_aggregator.py` computes single-ETF holdings-weighted aggregate (median across top holdings × weight, with `weight_coverage_pct` disclosure); 11-ETF schema map at `references/etf-schema-map.json` (XLE/XLB/XLI/XLY/XLP/XLV/XLF/XLK/XLC/XLU/XLRE) routes ETFs to v2.2.0-c sector schemas; 11-GICS warning matrix at `references/sector-warnings.md` surfaces sector-specific caveats. Opt-in via `comps_compute.py --sector-benchmark` flag; absent → output identical to v2.2.0-c. Per-multiple `etf_benchmark` block emits `delta_pct` + band classification (`in_line` ≤20% / `notable` 20–50% / `extreme` >50%) + `weight_coverage_pct` + `warnings`. Non-US tickers gracefully `{status: "skipped"}`; stale aggregate (>14d) guarded via skip with reason. Schema extended at `references/schema-compute-output.json`. New `data-us/pack.py --action holdings` for ETF top-holdings fetch via yfinance. Weekly GHA cron at `.github/workflows/sector-etf-aggregates.yml` populates 11 `references/sector-etf-aggregate-*.json` files. Renamed internal `_compute_*_from_memo_fetch` → public names for cross-skill reuse.
+- **Deferred**: Initial 11-aggregate JSON commit (T11 of plan) deferred — first GHA `workflow_dispatch` post-merge populates them. Runtime gracefully falls into `{status: "skipped", reason: "aggregate missing"}` until then. Reviewer-facing flag: expect 11 sector-etf-aggregate-*.json files to land via cron, not in this PR.
+- **Spec**: [`docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md`](../docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md) / [`docs/superpowers/plans/2026-05-05-investing-toolkit-v2.2.0-c-bench-etf-aggregate.md`](../docs/superpowers/plans/2026-05-05-investing-toolkit-v2.2.0-c-bench-etf-aggregate.md)
+- **Reference**: PR TBD; spawned v2.2.0-c-{jp,tw,kr,cn} per-region follow-ups (see Future Roadmap below).
+
+### v2.2.0-c-{jp,tw,kr,cn} — Per-region sector ETF benchmark (follow-up to v2.2.0-c-bench)
+
+- **What**: Repeat the v2.2.0-c-bench pattern for non-US tickers using regional sector ETFs (JP: iShares MSCI Japan sector / NEXT FUNDS TOPIX-17; TW: FTSE TWSE Taiwan 50 sector slices; KR: KODEX 200 sector ETFs; CN: CSI 300 sector indexes).
+- **Why**: v2.2.0-c-bench currently emits `etf_benchmark.status: "skipped"` for non-US tickers; per-region rollout closes the gap.
+- **Blocker**: per-region holdings data availability + per-region sector ETF coverage research.
+- **Reference**: spawned 2026-05-05 from v2.2.0-c-bench closeout.
 
 ### v2.2.0-d — KR ESI explicit ECOS API integration
 
@@ -247,7 +251,7 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 ## Recommended next-pickup priority
 
-1. **v2.2.0-c-bench** SPDR sector ETF aggregate benchmark layer — newly spawned 2026-05-05 from v2.2.0-c brainstorming. Layers on shipped v2.2.0-c output; foundation in place; orthogonal to all other items.
+1. **v2.2.0-c-{jp,tw,kr,cn}** Per-region sector ETF benchmark — newly spawned 2026-05-05 from v2.2.0-c-bench closeout. Pattern locked by US v2.2.0-c-bench; each region needs holdings-data research + sector ETF coverage matrix.
 2. **v2.2.0-e KR DART** — closes KR primary-source gap. **Blocker**: apply DART key at opendart.fss.or.kr first.
 3. **v2.2.0-l-{jp,tw,kr,cn}** Cross-country symmetry — extend new raw fields to JP EDINET, TW MOPS, KR fdr/DART, CN akshare per existing per-country pack patterns.
 4. **v2.2.0-a JP real-rate C+D+E** — makes JP match US 4-tier rigor.
