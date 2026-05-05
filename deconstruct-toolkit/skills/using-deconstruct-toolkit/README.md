@@ -1,5 +1,7 @@
 # using-deconstruct-toolkit
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Pick the right deconstruction skill and lens combination for the artifact in front of you.
 
 The router. Picks the right deconstruction skill (`artifact-deconstruct`

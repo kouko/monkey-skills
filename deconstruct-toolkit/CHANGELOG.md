@@ -4,6 +4,49 @@ All notable changes to deconstruct-toolkit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] — 2026-05-05
+
+i18n completion. v0.2.2 shipped per-skill READMEs in EN-only, missing
+the tri-language convention established by PR #150 (`project_i18n_multilingual_readme.md`).
+This release adds JP + zh-TW variants for all 4 skill READMEs and adds
+language-switcher lines to the EN versions.
+
+### Added
+
+- `skills/artifact-deconstruct/README.ja.md` (130 lines) + `README.zh-TW.md` (130 lines)
+- `skills/argument-deconstruct/README.ja.md` (94 lines) + `README.zh-TW.md` (94 lines)
+- `skills/assumption-surface/README.ja.md` (114 lines) + `README.zh-TW.md` (106 lines)
+- `skills/using-deconstruct-toolkit/README.ja.md` (117 lines) + `README.zh-TW.md` (117 lines)
+
+8 new files; ~902 lines of translation. All translations follow:
+
+- Glossary `docs/i18n/glossary-ja.md` § 制作物脱構築領域 + `glossary-zh-TW.md` § 作品解構域 (the just-merged v0.2.1 reversal rule)
+- English-noun preservation: `skill` / `plugin` / `slash command` /
+  `protocol` / `fixture` / `framework` / `pipeline` / `router` /
+  `dispatch` / `lens combination` / `warrant` (with first-mention gloss
+  `論証根拠` / `論證根據`) all kept English
+- Proper nouns kept English: Toulmin / Burke / Cialdini / Goffman /
+  Lakoff / Brignull / Swales / Bhatia / Nielsen-Norman / Althusser /
+  Balibar / Popper / Hinds / Doi / Yamamoto / Hwang / Hu / Markus &
+  Kitayama / Peng & Nisbett / 木下是雄 / 甲田直美 / 山口周 / 劉勰
+- Skill names + lens file names + `-anglo` / `-ja` / `-zh` variant
+  suffixes kept English
+- ZH `artifact` → **作品** (not 文物 — applying just-merged v0.2.1 reversal)
+- `polished` modifier dropped (per just-merged v0.2.1 rule)
+- `dimension` (rubric sense) → `観点` (JA) / `維度` (ZH) per
+  `feedback_dimension_translation.md`
+- All cross-reference paths preserved unchanged
+
+### Changed
+
+- `skills/{4-skills}/README.md` — added language switcher line after H1:
+  `**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)`
+  (matches `domain-teams/skills/docs-team/README.md` canonical pattern)
+
+### Validator
+
+15 eval cases, 21 lens references, 4 skills all valid.
+
 ## [0.2.2] — 2026-05-05
 
 Per-skill READMEs added. Each of the 4 skills (`using-deconstruct-toolkit`

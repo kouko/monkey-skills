@@ -1,5 +1,7 @@
 # artifact-deconstruct
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Recover the design blueprint behind any polished, non-code artifact — what was decided, what was borrowed, what was deliberately left unsaid.
 
 The flagship skill of `deconstruct-toolkit`. Reverse-engineers the design
