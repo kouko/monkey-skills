@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 🔒 **功能凍結中。** 主要開發已遷移至 [`gws-toolkit/`](../gws-toolkit/) — 本 plugin 的後繼者，定位為 generic Google Workspace toolkit。`slides-toolkit` 在 migration 完成前僅接受 bug fix。新架構（vendored upstream gws skills、Drive / Docs / Sheets 完整 coverage、三層刪除安全機制）皆在 `gws-toolkit` 內實作。待 `gws-toolkit` 穩定後（實際日常使用 ≥ 2 週驗證通過），本 plugin 將標 deprecated 並最終移除。
+> 🚫 **Deprecated（2026-05-06）。** 已進入 Phase 3 deprecation。本 plugin 的後繼者 [`gws-toolkit/`](../gws-toolkit/) — generic Google Workspace toolkit — 於 2026-05-06 完成 Phase 1 驗證收尾（見 CHANGELOG `0.5.0`），新使用者請改裝 `gws-toolkit`。`slides-toolkit` 已從 plugin marketplace 下架；既有安裝照常運作，但日後僅接受關鍵 bug fix。本目錄會在 repo 內保留至少一個 release 之後才考慮硬刪除。遷移路徑：`gws-toolkit` 完全覆蓋本 plugin 原有功能（Slides + Drive + Docs + Sheets 透過 5 個 vendored upstream `gws-*` skill、三層刪除安全機制、`gws-login --switch` 帳號切換、GCP 設定自動化）。
 
 > 透過 Claude Code skill 從 brief 一鍵生成 Google Slides deck。純 shell + `gws` CLI，免 Python / gcloud。
 

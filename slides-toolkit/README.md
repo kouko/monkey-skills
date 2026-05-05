@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> 🔒 **Feature-frozen.** Active development moved to [`gws-toolkit/`](../gws-toolkit/) — a generic Google Workspace toolkit that supersedes this plugin. `slides-toolkit` will receive bug-fix-only updates until the migration completes; new architecture (vendored upstream gws skills, broader Drive/Docs/Sheets coverage, three-tier delete safety) lives in `gws-toolkit`. Once `gws-toolkit` stabilizes (≥ 2 weeks of validated daily use), this plugin will be deprecated and eventually removed.
+> 🚫 **Deprecated (2026-05-06).** Phase 3 deprecation has begun. [`gws-toolkit/`](../gws-toolkit/) — a generic Google Workspace toolkit that supersedes this plugin — closed Phase 1 validation on 2026-05-06 (CHANGELOG `0.5.0`); new users should install `gws-toolkit` instead. `slides-toolkit` is no longer listed in the plugin marketplace. Existing installations keep working but receive only critical bug-fix updates; the directory is retained in the repo for at least one more release before any consideration of hard deletion. Migration: `gws-toolkit` covers everything `slides-toolkit` covered (Slides + Drive + Docs + Sheets through 5 vendored upstream `gws-*` skills, plus three-tier delete safety, account switching via `gws-login --switch`, automated GCP setup).
 
 > Brief → Google Slides deck via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 

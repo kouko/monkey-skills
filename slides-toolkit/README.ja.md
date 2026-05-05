@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 🔒 **機能凍結中。** アクティブな開発は [`gws-toolkit/`](../gws-toolkit/) — 本 plugin の後継となる generic Google Workspace toolkit — に移行しました。`slides-toolkit` は migration 完了までバグ修正のみ受け付けます。新アーキテクチャ（vendored upstream gws skills、Drive / Docs / Sheets 全面 coverage、三段階削除安全機構）は `gws-toolkit` 側に実装されます。`gws-toolkit` の安定後（実日常運用 ≥ 2 週間 検証済）、本 plugin は deprecated → 最終的に削除されます。
+> 🚫 **Deprecated（2026-05-06）。** Phase 3 deprecation を開始しました。本 plugin の後継 [`gws-toolkit/`](../gws-toolkit/) — generic Google Workspace toolkit — が 2026-05-06 に Phase 1 検証クローズ（CHANGELOG `0.5.0` 参照）。新規ユーザーは `gws-toolkit` を導入してください。`slides-toolkit` は plugin marketplace から下架済み。既存導入はそのまま動作しますが、今後はクリティカルなバグ修正のみ。リポジトリ内の本ディレクトリは少なくとも 1 リリースは保持してから、ハード削除の検討に入ります。移行先：`gws-toolkit` は本 plugin が提供していた機能をすべてカバー（Slides + Drive + Docs + Sheets を 5 つの vendored upstream `gws-*` skill で、三段階削除安全機構、`gws-login --switch` によるアカウント切替、GCP セットアップ自動化）。
 
 > Brief から Google Slides deck を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
 

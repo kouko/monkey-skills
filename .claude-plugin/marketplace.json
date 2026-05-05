@@ -10,7 +10,6 @@
     { "name": "dev-workflow", "source": "./dev-workflow/" },
     { "name": "investing-toolkit", "source": "./investing-toolkit/" },
     { "name": "copywriting-toolkit", "source": "./copywriting-toolkit/" },
-    { "name": "slides-toolkit", "source": "./slides-toolkit/" },
     { "name": "gws-toolkit", "source": "./gws-toolkit/" },
     { "name": "tsundoku", "source": "./tsundoku/" },
     { "name": "four-dx-coach", "source": "./four-dx-coach/" },

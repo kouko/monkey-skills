@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 🚧 **驗證期間 — Phase 1 完成，等待日常使用驗證。** [`slides-toolkit/`](../slides-toolkit/) 的後繼者，2026-05-04 用 strangler-fig 模式 fork。Phase 1（vendor 5 個 upstream skill + α-trim + 重命名 + OAuth scope 升級 + Drive 安全 wrapper）已於 2026-05-04 完成（見 CHANGELOG `0.4.0-strangler-fig-seed`）。目前進入 ≥ 2 週驗證期：≥ 1 份 Slides deck 透過 slides-builder、≥ 1 個 ad-hoc Drive 操作透過 vendored `gws-drive`、≥ 1 個破壞性操作透過 `safe-delete.sh`、KR1 deck 生成時間無 regression。驗證通過、slides-toolkit 進入 Phase 3 deprecation 之前，兩個 plugin 並列可用。與 Google 無關。
+> ✅ **Phase 1 穩定（2026-05-06）。** [`slides-toolkit/`](../slides-toolkit/) 的後繼者，2026-05-04 用 strangler-fig 模式 fork。Phase 1（vendor 5 個 upstream skill + α-trim + 重命名 + OAuth scope 升級 + Drive 安全 wrapper + 帳號切換）以 4 條驗證基準全綠收尾：≥ 1 份 deck 端到端產出（108 秒，KR1 ≤ 180 秒）、≥ 1 個 ad-hoc Drive 操作透過 vendored `gws-drive`、≥ 1 個破壞性操作透過三層 `safe-delete.sh`、KR1 無 regression。`slides-toolkit` 進入 Phase 3 deprecated 並從 plugin marketplace 下架；既有安裝照常運作，新使用者請改裝本 plugin。與 Google 無關。
 
 > 透過 Claude Code skill 從 brief 一鍵生成 Google Workspace 製品（Slides / Docs / Sheets / Drive）。純 shell + `gws` CLI，免 Python / gcloud。
 
@@ -29,7 +29,7 @@ execution layer 解耦。MVP 僅實作 `google-slides` backend；
 
 | 項目 | 值 |
 |---|---|
-| Release | `0.1.0-mvp`（見 [`CHANGELOG.md`](CHANGELOG.md)） |
+| Release | `0.5.0`（見 [`CHANGELOG.md`](CHANGELOG.md)） |
 | Backends | `google-slides`（MVP）· `html` / `pptx` / `marp` 為 Phase 2+ trigger-gated |
 | Platform | macOS（darwin-arm64 / darwin-x86_64） |
 | Account scope | 個人 Google 帳號（`@gmail.com`）；Workspace 帳號屬 Phase 2+ |
