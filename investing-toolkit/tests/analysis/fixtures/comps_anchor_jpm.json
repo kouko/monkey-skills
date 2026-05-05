@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "JPM",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "JPM": {
+      "sector": "Financial Services",
+      "industry": "Banks - Diversified",
+      "trailingPE": 12.0,
+      "forwardPE": 11.5,
+      "priceToBook": 2.0
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples (test fixture: synthetic sector=Financial Services + industry=Banks - Diversified for bank routing)" }
+}

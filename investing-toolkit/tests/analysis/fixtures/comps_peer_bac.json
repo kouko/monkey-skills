@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "BAC",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "BAC": {
+      "sector": "Financial Services",
+      "industry": "Banks - Diversified",
+      "trailingPE": 14.2,
+      "forwardPE": 12.8,
+      "priceToBook": 1.4
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples (test fixture)" }
+}

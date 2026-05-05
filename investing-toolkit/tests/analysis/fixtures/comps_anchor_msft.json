@@ -1,0 +1,15 @@
+{
+  "pack": "comps-multiples",
+  "ticker": "MSFT",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "info": {
+    "MSFT": {
+      "sector": "Technology",
+      "industry": "Software - Infrastructure",
+      "trailingPE": 35.4,
+      "forwardPE": 32.1,
+      "priceToSales": 12.7
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples (test fixture: synthetic sector=Technology + industry=Software for tech-saas routing)" }
+}
