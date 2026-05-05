@@ -76,6 +76,24 @@ THROTTLE_SECONDS = 0.1        # ≤10 req/sec
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "sec-edgar-us"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
 
@@ -531,14 +549,19 @@ def fetch_narrative(accession: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def action_cik(ticker: str) -> dict:
+    _log("cik fetch", ticker)
+    t0 = time.monotonic()
     result = resolve_cik(ticker)
     if "error" in result:
         return result
     result["action"] = "cik"
+    _log("cik done", f"{ticker} -> {result.get('cik')} in {time.monotonic() - t0:.1f}s")
     return result
 
 
 def action_facts(ticker: str, concept: str | None) -> dict:
+    _log("facts fetch", f"{ticker}{(' concept=' + concept) if concept else ''}")
+    t0 = time.monotonic()
     cik_info = resolve_cik(ticker)
     if "error" in cik_info:
         return cik_info
@@ -579,10 +602,14 @@ def action_facts(ticker: str, concept: str | None) -> dict:
         out["entityName"] = facts.get("data", {}).get("entityName")
         out["_provenance"] = _make_provenance()
 
+    cache_label = "cache hit" if facts.get("_cache") == "hit" else f"in {time.monotonic() - t0:.1f}s"
+    _log("facts done", f"{ticker}{(' concept=' + concept) if concept else ''} {cache_label}")
     return out
 
 
 def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
+    _log("filings fetch", f"{ticker} forms={forms or 'ALL'} limit={limit}")
+    t0 = time.monotonic()
     cik_info = resolve_cik(ticker)
     if "error" in cik_info:
         return cik_info
@@ -590,6 +617,7 @@ def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
 
     rows = list_filings(cik, forms, limit)
     latest_date = rows[0]["filingDate"] if rows else None
+    _log("filings done", f"{ticker} {len(rows)} rows in {time.monotonic() - t0:.1f}s")
     return {
         "ticker": ticker,
         "cik": cik,
@@ -605,8 +633,12 @@ def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
 
 
 def action_narrative(accession: str) -> dict:
+    _log("narrative fetch", accession)
+    t0 = time.monotonic()
     res = fetch_narrative(accession)
     res["action"] = "narrative"
+    cache_label = "cache hit" if res.get("_cache") == "hit" else f"{res.get('section_count', 0)} sections in {time.monotonic() - t0:.1f}s"
+    _log("narrative done", f"{accession} {cache_label}")
     return res
 
 # ---------------------------------------------------------------------------
@@ -635,8 +667,12 @@ def main():
         help="Max filings to return for --action filings (default 20)",
     )
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache for this run")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Optional cache bust
     if args.no_cache:

@@ -34,6 +34,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,6 +42,24 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 YF = SCRIPT_DIR / "yfinance_client.py"
 SEC = SCRIPT_DIR / "sec_edgar_client.py"
 FRED = SCRIPT_DIR / "fred_client.py"
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "pack-us"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -227,8 +246,13 @@ def filter_fields(info_obj: dict, fields: list[str]) -> dict:
 
 def pack_snapshot(ticker: str) -> dict:
     """yfinance info + 2y price for a single ticker."""
+    _log("snapshot start", ticker)
+    t0 = time.monotonic()
+    _log("pack [info]", ticker)
     info = run_client(YF, ["--ticker", ticker, "--action", "info"])
+    _log("pack [history 2y]", ticker)
     history = run_client(YF, ["--ticker", ticker, "--period", "2y"])
+    _log("snapshot done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     rows = history.get("data", []) if isinstance(history, dict) else []
     return {
         "pack": "snapshot",
@@ -253,11 +277,15 @@ def _fetch_dcf_concepts(ticker: str) -> dict[str, dict]:
     """
     raw: dict[str, dict] = {}
     seen: set[str] = set()
+    all_concepts = [c for chain in DCF_CONCEPT_MAPPING.values() for c in chain]
+    unique_concepts = list(dict.fromkeys(all_concepts))
+    total = len(unique_concepts)
     for chain in DCF_CONCEPT_MAPPING.values():
         for concept in chain:
             if concept in seen:
                 continue
             seen.add(concept)
+            _log(f"pack [dcf-concept {len(seen)}/{total}]", f"{ticker} {concept}")
             result = run_client(
                 SEC,
                 ["--ticker", ticker, "--action", "facts", "--concept", concept],
@@ -527,16 +555,25 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
 
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
+    _log("memo-fetch start", ticker)
+    t0 = time.monotonic()
+    _log("pack [info]", ticker)
     info = run_client(YF, ["--ticker", ticker, "--action", "info"])
+    _log("pack [history 2y]", ticker)
     history = run_client(YF, ["--ticker", ticker, "--period", "2y"])
+    _log("pack [filings]", f"{ticker} 10-K/10-Q/8-K limit=8")
     filings = run_client(
         SEC,
         ["--ticker", ticker, "--action", "filings",
          "--forms", "10-K,10-Q,8-K", "--limit", "8"],
     )
+    _log("pack [facts]", ticker)
     facts = run_client(SEC, ["--ticker", ticker, "--action", "facts"])
+    _log("pack [dcf-concepts]", f"fetching {len(set(c for chain in DCF_CONCEPT_MAPPING.values() for c in chain))} XBRL concepts")
     raw_concepts = _fetch_dcf_concepts(ticker)
+    _log("pack [normalize]", "DCF concept merge")
     canonical = _normalize_dcf(raw_concepts)
+    _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     rows = history.get("data", []) if isinstance(history, dict) else []
     info_dict = info if isinstance(info, dict) else {}
     return {
@@ -566,11 +603,15 @@ def pack_memo_fetch(ticker: str) -> dict:
 
 def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
+    _log("comps-multiples start", f"{len(tickers)} ticker(s)")
+    t0 = time.monotonic()
     if len(tickers) == 1:
+        _log("pack [info]", tickers[0])
         info = run_client(YF, ["--ticker", tickers[0], "--action", "info"])
         per_ticker = {
             tickers[0].upper(): filter_fields(info, MULTIPLES_FIELDS),
         }
+        _log("comps-multiples done", f"1 ticker in {time.monotonic() - t0:.1f}s")
         return {
             "pack": "comps-multiples",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -578,6 +619,7 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
             "info": per_ticker,  # T1 canonical multiples alias
         }
     # Batch: use yfinance batch action
+    _log("pack [batch info]", f"{len(tickers)} tickers")
     batch = run_client(
         YF,
         ["--tickers", ",".join(tickers), "--action", "info"],
@@ -587,6 +629,7 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
             t: filter_fields(d, MULTIPLES_FIELDS)
             for t, d in batch["tickers"].items()
         }
+        _log("comps-multiples done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
         return {
             "pack": "comps-multiples",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -594,6 +637,7 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
             "info": per_ticker,  # T1 canonical multiples alias
         }
     # Batch failure: surface error at top level, keep tickers map clean
+    _log("comps-multiples done", f"batch failed in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "comps-multiples",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -605,6 +649,8 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
 
 def pack_screener_batch(tickers: list[str]) -> dict:
     """Batch lightweight fields for screener input."""
+    _log("screener-batch start", f"{len(tickers)} tickers")
+    t0 = time.monotonic()
     batch = run_client(
         YF,
         ["--tickers", ",".join(tickers), "--action", "info"],
@@ -614,12 +660,14 @@ def pack_screener_batch(tickers: list[str]) -> dict:
             t: filter_fields(d, SCREENER_FIELDS)
             for t, d in batch["tickers"].items()
         }
+        _log("screener-batch done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
         return {
             "pack": "screener-batch",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
             "tickers": per_ticker,
         }
     # Batch failure: surface error at top level, keep tickers map clean
+    _log("screener-batch done", f"batch failed in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "screener-batch",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -681,12 +729,16 @@ def _flatten_regime_series(groups: dict) -> dict:
 
 def pack_regime() -> dict:
     """FRED macro series only — no ticker dimension."""
+    _log("regime-pack start", f"{len(REGIME_SERIES_GROUPS)} FRED groups")
+    t0 = time.monotonic()
     groups: dict[str, dict] = {}
-    for group_name, (series_csv, periods) in REGIME_SERIES_GROUPS.items():
+    for i, (group_name, (series_csv, periods)) in enumerate(REGIME_SERIES_GROUPS.items(), 1):
+        _log(f"pack [fred {i}/{len(REGIME_SERIES_GROUPS)}]", f"{group_name} ({series_csv})")
         groups[group_name] = run_client(
             FRED,
             ["--series", series_csv, "--periods", str(periods)],
         )
+    _log("regime-pack done", f"in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "regime-pack",
         "country": "US",
@@ -712,7 +764,11 @@ def main() -> int:
     group.add_argument("--ticker", help="Single US ticker (e.g. AAPL)")
     group.add_argument("--tickers",
                        help="Comma-separated US tickers (e.g. AAPL,MSFT,GOOGL)")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     pack = args.pack
     ticker_list: list[str] = []
