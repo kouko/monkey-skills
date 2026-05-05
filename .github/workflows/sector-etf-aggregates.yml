@@ -1,0 +1,87 @@
+name: sector-etf-aggregates
+
+# Weekly cron + manual dispatch: refresh the 11 SPDR sector-etf-aggregate-*.json
+# files via investing-toolkit/skills/analysis-comps/scripts/etf_aggregator.py --all,
+# then commit changes back to main.
+#
+# v2.2.0-c-bench T12 (plan: docs/superpowers/plans/2026-05-05-investing-toolkit-
+# v2.2.0-c-bench-etf-aggregate.md). Saturday 06:00 UTC = Asia/Taipei Sat 14:00 —
+# off-peak for both yfinance and SEC EDGAR. Caches both upstreams so warm runs
+# stay under ~10 minutes; cold-start (cache miss) budget is 6h.
+#
+# On any failure, opens a tracking issue labelled `sector-aggregate-stale` and
+# `ci-failure` so the staleness alarm in analysis-comps tests has a sibling
+# signal at the CI layer.
+
+on:
+  schedule:
+    - cron: '0 6 * * 6'   # Saturday 06:00 UTC = Asia/Taipei Sat 14:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  refresh-aggregates:
+    name: Refresh SPDR sector ETF aggregates
+    runs-on: ubuntu-latest
+    timeout-minutes: 360   # 6h hard budget; warm-cache run ~5 min, cold ~2.5h
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        # Match repo convention from skill-structure.yml investing-toolkit-pytest-offline:
+        # astral-sh/setup-uv@v4 with cache disabled (no uv.lock; PEP 723 inline metadata).
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: false
+
+      - name: Cache SEC EDGAR companyfacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/investing-toolkit/sec_edgar/companyfacts
+          key: companyfacts-${{ github.run_id }}
+          restore-keys: |
+            companyfacts-
+
+      - name: Cache yfinance responses
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/investing-toolkit/yfinance
+          key: yfinance-${{ github.run_id }}
+          restore-keys: |
+            yfinance-
+
+      - name: Aggregate all 11 SPDR sector ETFs
+        id: aggregate
+        run: |
+          uv run investing-toolkit/skills/analysis-comps/scripts/etf_aggregator.py --all
+
+      - name: Commit refreshed aggregates
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Use pathspec form so an empty match does not fail the step on the
+          # first workflow_dispatch run (the aggregator creates the files
+          # in-place; if --all succeeded, every JSON exists at this point).
+          git add -- 'investing-toolkit/skills/analysis-comps/references/sector-etf-aggregate-*.json'
+          if git diff --cached --quiet; then
+            echo "no changes — aggregates unchanged this week"
+            exit 0
+          fi
+          git commit -m "chore(sector-aggregates): weekly refresh $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Open issue on failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "sector-etf-aggregates weekly refresh failed (${{ github.run_id }})" \
+            --body  "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --label "sector-aggregate-stale,ci-failure"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
