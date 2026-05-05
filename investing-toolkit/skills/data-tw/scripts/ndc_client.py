@@ -96,6 +96,24 @@ LAGGING_FILE_PATTERN = "落後指標構成項目"
 
 
 # ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "ndc-tw"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
+
+
+# ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
 
@@ -477,12 +495,15 @@ def _build_result(name: str, preset: str, observations: list[dict]) -> dict:
 
 def fetch_preset(preset: str, use_cache: bool = True) -> dict:
     """Fetch an NDC preset with caching."""
+    _log("preset fetch", preset)
+    t0 = time.monotonic()
     cache_path = get_cache_path(preset)
 
     if use_cache:
         cached = load_cache(cache_path)
         if cached is not None:
             cached["_cache"] = "hit"
+            _log("preset done", f"{preset} cache hit")
             return cached
 
     # Taiwan PMI / NMI presets use a separate CSV (data.gov.tw dataset 6100),
@@ -628,6 +649,7 @@ def fetch_preset(preset: str, use_cache: bool = True) -> dict:
     if "error" not in result:
         save_cache(cache_path, result)
 
+    _log("preset done", f"{preset} in {time.monotonic() - t0:.1f}s")
     return result
 
 # ---------------------------------------------------------------------------
@@ -646,8 +668,12 @@ def main() -> None:
         "--no-cache", action="store_true",
         help="Bypass cache and force fresh fetch",
     )
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.preset.strip().lower() == "all":
         presets = ["signal", "signal-components", "leading", "coincident", "lagging", "unemployment", "pmi-mfg", "pmi-nmi"]
@@ -674,9 +700,13 @@ def main() -> None:
             "_source": "ndc",
             "presets": {},
         }
-        for preset in presets:
+        _log("batch start", f"{len(presets)} presets")
+        t_batch = time.monotonic()
+        for i, preset in enumerate(presets, 1):
+            _log(f"batch [{i}/{len(presets)}]", preset)
             data = fetch_preset(preset, use_cache=not args.no_cache)
             result["presets"][preset] = data
+        _log("batch done", f"{len(presets)} presets in {time.monotonic() - t_batch:.1f}s")
 
     print(json.dumps(result, default=str, indent=2, ensure_ascii=False))
 
