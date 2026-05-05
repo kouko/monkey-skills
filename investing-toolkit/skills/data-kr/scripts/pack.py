@@ -44,10 +44,29 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 YFINANCE = SCRIPT_DIR / "yfinance_client.py"
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "pack-kr"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 FDR = SCRIPT_DIR / "fdr_client.py"
 
 # Macro indicator groups (regime-pack) — mirrors korea-macro SKILL.md.
@@ -179,9 +198,14 @@ def _run(cmd: list[str]) -> dict:
 
 def pack_snapshot(ticker: str) -> dict:
     """yfinance info + 1y price history — quick overview card."""
+    _log("snapshot start", ticker)
+    t0 = time.monotonic()
+    _log("pack [info]", ticker)
     info = _run([str(YFINANCE), "--ticker", ticker, "--action", "info"])
+    _log("pack [history 1y]", ticker)
     history = _run([str(YFINANCE), "--ticker", ticker, "--action", "history",
                     "--period", "1y"])
+    _log("snapshot done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     provenance: dict = {
         "tier": "Tier 2 (yfinance unofficial)",
         "primary_source_status": "deferred",
@@ -345,11 +369,17 @@ def _build_canonical_from_yf_financials(financials: dict) -> dict:
 
 def pack_memo_fetch(ticker: str) -> dict:
     """yfinance financials only. Korean primary-source (DART) deferred."""
+    _log("memo-fetch start", ticker)
+    t0 = time.monotonic()
+    _log("pack [info]", ticker)
     info = _run([str(YFINANCE), "--ticker", ticker, "--action", "info"])
+    _log("pack [financials annual]", ticker)
     financials_annual = _run([str(YFINANCE), "--ticker", ticker,
                               "--action", "financials", "--period", "annual"])
+    _log("pack [financials quarterly]", ticker)
     financials_quarterly = _run([str(YFINANCE), "--ticker", ticker,
                                  "--action", "financials", "--period", "quarterly"])
+    _log("pack [history 5y]", ticker)
     history = _run([str(YFINANCE), "--ticker", ticker, "--action", "history",
                     "--period", "5y"])
     provenance: dict = {
@@ -368,6 +398,7 @@ def pack_memo_fetch(ticker: str) -> dict:
     canonical = _build_canonical_from_yf_financials(financials_annual)
     info_dict = info if isinstance(info, dict) else {}
     rows = history.get("data", []) if isinstance(history, dict) else []
+    _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "memo-fetch",
         "country": "kr",
@@ -399,10 +430,14 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
     exposes `info` keyed by ticker so analysis-comps consumes one shape:
         {"info": {"005930.KS": {...}, "000660.KS": {...}}}
     """
+    _log("comps-multiples start", f"{len(tickers)} ticker(s)")
+    t0 = time.monotonic()
     if len(tickers) == 1:
+        _log("pack [info]", tickers[0])
         single = _run([str(YFINANCE), "--ticker", tickers[0], "--action", "info"])
         info_by_ticker: dict = {tickers[0]: single}
     else:
+        _log("pack [batch info]", f"{len(tickers)} tickers")
         batch = _run([str(YFINANCE), "--tickers", ",".join(tickers),
                       "--action", "info"])
         # yfinance_client batch shape (canonical):
@@ -443,11 +478,15 @@ def pack_comps_multiples(tickers: list[str]) -> dict:
     if warnings:
         provenance["ticker_normalization_warnings"] = warnings
     result["_provenance"] = provenance
+    _log("comps-multiples done", f"{len(tickers)} ticker(s) in {time.monotonic() - t0:.1f}s")
     return result
 
 
 def pack_screener_batch(tickers: list[str]) -> dict:
     """Batch info pull for screener (lightweight fields)."""
+    _log("screener-batch start", f"{len(tickers)} tickers")
+    t0 = time.monotonic()
+    _log("pack [batch info]", f"{len(tickers)} tickers")
     batch = _run([str(YFINANCE), "--tickers", ",".join(tickers),
                   "--action", "info"])
     provenance: dict = {
@@ -462,6 +501,7 @@ def pack_screener_batch(tickers: list[str]) -> dict:
     warnings = _consume_ticker_warnings()
     if warnings:
         provenance["ticker_normalization_warnings"] = warnings
+    _log("screener-batch done", f"{len(tickers)} tickers in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "screener-batch",
         "country": "kr",
@@ -537,6 +577,8 @@ def _flatten_regime_to_series(root: dict) -> dict:
 
 def pack_regime_pack(indicators: str) -> dict:
     """Macro-regime pull via fdr_client → BOK ECOS-KEYSTAT (54 indicators)."""
+    _log("regime-pack start", f"indicators={indicators}")
+    t0 = time.monotonic()
     if indicators == "all":
         groups = list(REGIME_GROUPS.keys())
     else:
@@ -550,12 +592,14 @@ def pack_regime_pack(indicators: str) -> dict:
             }
 
     by_group: dict[str, dict] = {}
-    for grp in groups:
+    for i, grp in enumerate(groups, 1):
         presets = REGIME_GROUPS[grp]
+        _log(f"pack [fdr group {i}/{len(groups)}]", f"{grp} ({len(presets)} presets)")
         result = _run([str(FDR), "--preset", ",".join(presets)])
         by_group[grp] = result
 
     series_flat = _flatten_regime_to_series(by_group)
+    _log("regime-pack done", f"{len(groups)} groups in {time.monotonic() - t0:.1f}s")
     return {
         "pack": "regime-pack",
         "country": "kr",
@@ -594,8 +638,12 @@ def main() -> None:
                         help="(regime-pack only) Comma-separated groups or 'all'")
     parser.add_argument("--kosdaq", action="store_true",
                         help="Treat bare numeric tickers as KOSDAQ (.KQ) instead of KOSPI (.KS)")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
 
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     # Validate ticker presence per pack type
     if args.pack in {"snapshot", "memo-fetch"}:
