@@ -74,14 +74,33 @@ jobs:
             exit 0
           fi
           git commit -m "chore(sector-aggregates): weekly refresh $(date -u +%Y-%m-%d)"
-          git push
+          # Push with retry: another commit may have landed on main during the
+          # ~30 min aggregator run (long workflow window). Pull --rebase + push
+          # again handles the common race; hard failure after 3 attempts falls
+          # through to the on-failure issue step.
+          for attempt in 1 2 3; do
+            if git push; then
+              echo "pushed on attempt ${attempt}"
+              exit 0
+            fi
+            echo "push rejected on attempt ${attempt} — pulling --rebase and retrying"
+            git pull --rebase origin main
+          done
+          echo "push failed after 3 attempts"
+          exit 1
 
       - name: Open issue on failure
         if: failure()
         run: |
+          # Labels are best-effort — `gh issue create --label` errors hard if a
+          # label doesn't exist in the repo, which would cascade-fail this step.
+          # Create labels lazily so a missing label cannot silence the alert.
+          gh label create sector-aggregate-stale --description "sector ETF aggregator weekly refresh failed" --color "B60205" --force || true
+          gh label create ci-failure --description "scheduled CI run failed" --color "D93F0B" --force || true
           gh issue create \
             --title "sector-etf-aggregates weekly refresh failed (${{ github.run_id }})" \
             --body  "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            --label "sector-aggregate-stale,ci-failure"
+            --label "sector-aggregate-stale" \
+            --label "ci-failure"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
