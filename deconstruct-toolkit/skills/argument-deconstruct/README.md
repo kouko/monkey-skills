@@ -1,5 +1,7 @@
 # argument-deconstruct
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Deep dive on long-form arguments — surface the hidden warrant, name the missing rebuttal, expose the motive ratio.
 
 Argument-focused deep dive. Where `artifact-deconstruct` runs the full

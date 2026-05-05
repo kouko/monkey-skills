@@ -1,5 +1,7 @@
 # assumption-surface
 
+**English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+
 > Pull the hidden assumptions out of any text and rate which ones the argument actually rests on.
 
 Atomic skill. Where `artifact-deconstruct` runs full 6-lens × 6-dim and
