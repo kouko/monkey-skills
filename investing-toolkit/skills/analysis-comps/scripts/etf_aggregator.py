@@ -27,6 +27,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,24 @@ from typing import Any
 _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
+
+
+# ---------------------------------------------------------------------------
+# Progress logging (v2.2.0-p)
+# ---------------------------------------------------------------------------
+# Default-verbose stderr; --quiet opts out. Tag identifies the originating
+# script. Inline (not shared module) to preserve PEP 723 zero-runtime-dependency.
+
+_QUIET = False
+_LOG_TAG = "etf-aggregator"
+
+
+def _log(stage: str, msg: str = "") -> None:
+    if _QUIET:
+        return
+    suffix = f": {msg}" if msg else ""
+    sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
+    sys.stderr.flush()
 
 # Import compute helpers (renamed in Task 1 to drop _ prefix).
 from comps_compute import (  # noqa: E402
@@ -131,6 +150,8 @@ def _weighted_average(
 
 
 def aggregate_etf(etf: str) -> dict:
+    _log("etf start", etf)
+    t_etf = time.monotonic()
     etf_to_schema = _load_etf_to_schema()
     if etf not in etf_to_schema:
         raise ValueError(f"unknown ETF {etf!r}; known: {sorted(etf_to_schema)}")
@@ -139,8 +160,10 @@ def aggregate_etf(etf: str) -> dict:
     etf_multiple_ids = [m["id"] for m in etf_schema.get("multiples") or []]
     etf_indicator_ids = [i["id"] for i in etf_schema.get("indicators") or []]
 
+    _log("etf [holdings]", f"{etf} (schema={etf_schema_id})")
     holdings_payload = fetch_holdings(etf)
     holdings = holdings_payload.get("holdings") or []
+    _log("etf holdings", f"{etf} {len(holdings)} holdings")
 
     # Per-holding compute (gather contributions per multiple_id / indicator_id)
     multiple_contribs: dict[str, list[tuple[float, float]]] = {m: [] for m in etf_multiple_ids}
@@ -149,12 +172,15 @@ def aggregate_etf(etf: str) -> dict:
     weight_consumed = 0.0
     schema_dispatch: dict[str, list[str]] = {}
 
-    for h in holdings:
+    total_holdings = len(holdings)
+    for i, h in enumerate(holdings, 1):
         ticker = h["ticker"]
         weight = float(h.get("weight") or 0)
+        _log(f"holding [{i}/{total_holdings}]", f"{ticker} weight={weight:.4f}")
         try:
             memo = fetch_memo_fetch(ticker)
         except RuntimeError as exc:
+            _log(f"holding [{i}/{total_holdings}] skipped", f"{ticker}: {str(exc)[:80]}")
             skipped.append({"ticker": ticker, "weight": weight, "reason": str(exc)[:120]})
             continue
         cls = _classify_holding(memo, ticker)
@@ -188,6 +214,7 @@ def aggregate_etf(etf: str) -> dict:
         if outliers:
             outliers_dropped[iid] = outliers
 
+    _log("etf done", f"{etf} {len(holdings) - len(skipped)}/{len(holdings)} holdings priced in {time.monotonic() - t_etf:.1f}s")
     return {
         "etf":       etf,
         "schema_id": etf_schema_id,
@@ -215,7 +242,11 @@ def _main() -> int:
                         help="Aggregate all 11 SPDR ETFs from etf-schema-map.json")
     parser.add_argument("--output", type=str, default=None,
                         help="Output path; '-' = stdout; default writes to references/sector-etf-aggregate-<ETF>.json")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress progress logging on stderr (default: verbose)")
     args = parser.parse_args()
+    global _QUIET
+    _QUIET = args.quiet
 
     if args.all and args.etf:
         parser.error("--etf and --all are mutually exclusive")
@@ -225,7 +256,12 @@ def _main() -> int:
     etf_to_schema = _load_etf_to_schema()
     targets = sorted(etf_to_schema) if args.all else [args.etf.upper()]
 
-    for etf in targets:
+    if args.all:
+        _log("all-mode start", f"{len(targets)} ETFs")
+        t_all = time.monotonic()
+    for etf_idx, etf in enumerate(targets, 1):
+        if args.all:
+            _log(f"etf [{etf_idx}/{len(targets)}]", etf)
         result = aggregate_etf(etf)
         if args.output == "-":
             json.dump(result, sys.stdout, indent=2, ensure_ascii=False)
@@ -237,6 +273,8 @@ def _main() -> int:
             )
             target_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             sys.stderr.write(f"[etf_aggregator] wrote {target_path}\n")
+    if args.all:
+        _log("all-mode done", f"{len(targets)} ETFs in {time.monotonic() - t_all:.1f}s")
     return 0
 
 
