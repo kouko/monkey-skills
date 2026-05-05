@@ -233,7 +233,7 @@ jobs:
 
       - name: Run pytest (offline only)
         run: |
-          uv run --quiet --with pytest \
+          uv run --quiet --with pytest --with 'pyyaml>=6.0' \
             pytest investing-toolkit/tests/ \
               -m "not network" \
               -q --tb=short
