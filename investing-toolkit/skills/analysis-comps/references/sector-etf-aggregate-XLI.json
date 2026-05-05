@@ -1,0 +1,28 @@
+{
+  "etf": "XLI",
+  "schema_id": "default",
+  "as_of": "2026-05-05",
+  "_meta": {
+    "holdings_count": 10,
+    "weight_coverage_pct": 39.43,
+    "outliers_dropped": {},
+    "skipped_holdings": [],
+    "schema_dispatch": {
+      "default": 9,
+      "tech-saas": 1
+    },
+    "source": "yfinance funds_data + data-us memo-fetch"
+  },
+  "multiples": {
+    "trailingPE": 41.809920883289834,
+    "forwardPE": null,
+    "evEbitda": 22.5455586320437,
+    "priceToSales": 4.9202685990674935,
+    "priceToBook": 14.904251248618555
+  },
+  "indicators": {
+    "gross_margin": 17.60141119212014,
+    "operating_margin": 20.683310719288322,
+    "FCF_yield": 2.4006891342415653
+  }
+}

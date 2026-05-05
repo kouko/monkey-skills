@@ -1,0 +1,26 @@
+{
+  "etf": "XLF",
+  "schema_id": "bank",
+  "as_of": "2026-05-05",
+  "_meta": {
+    "holdings_count": 10,
+    "weight_coverage_pct": 56.21,
+    "outliers_dropped": {},
+    "skipped_holdings": [],
+    "schema_dispatch": {
+      "default": 4,
+      "bank": 4,
+      "asset-manager": 2
+    },
+    "source": "yfinance funds_data + data-us memo-fetch"
+  },
+  "multiples": {
+    "trailingPE": 16.6831813881375,
+    "forwardPE": null,
+    "priceToBook": 9.546265571974558,
+    "priceToTangibleBook": 2.082843504589032
+  },
+  "indicators": {
+    "ROE": 13.14253311261201
+  }
+}

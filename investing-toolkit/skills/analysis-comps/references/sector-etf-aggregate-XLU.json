@@ -1,0 +1,25 @@
+{
+  "etf": "XLU",
+  "schema_id": "utilities",
+  "as_of": "2026-05-05",
+  "_meta": {
+    "holdings_count": 10,
+    "weight_coverage_pct": 57.84,
+    "outliers_dropped": {
+      "debt_to_equity": 1
+    },
+    "skipped_holdings": [],
+    "schema_dispatch": {
+      "utilities": 10
+    },
+    "source": "yfinance funds_data + data-us memo-fetch"
+  },
+  "multiples": {
+    "trailingPE": 29.525873003957734,
+    "evEbitda": 17.760286417093155,
+    "priceToBook": 3.714214953564632
+  },
+  "indicators": {
+    "debt_to_equity": 123.10360758174225
+  }
+}
