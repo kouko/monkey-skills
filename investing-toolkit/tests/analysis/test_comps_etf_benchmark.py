@@ -170,3 +170,26 @@ def test_stale_aggregate_emits_warning(tmp_path):
     payload = json.loads(proc.stdout)
     bench = payload["anchor"]["etf_benchmark"]
     assert any("aggregate stale" in w for w in bench.get("warnings", [])), bench.get("warnings")
+
+
+def test_etf_benchmark_output_validates_against_schema(stub_xlk_aggregate):
+    """jsonschema validation of compute output with etf_benchmark block present."""
+    try:
+        import jsonschema
+    except ImportError:
+        pytest.skip("jsonschema not installed in test env")
+
+    schema = json.loads((REFERENCES / "schema-compute-output.json").read_text())
+    anchor = FIXTURES / "comps_anchor_aapl.json"
+    base = FIXTURES / "comps_anchor_aapl_memo_fetch.json"
+    peer = FIXTURES / "comps_peer_msft.json"
+    env = {**ENV, "INVESTING_TOOLKIT_AGGREGATES_DIR": str(stub_xlk_aggregate)}
+    proc = subprocess.run(
+        ["uv", "run", str(COMPS_SCRIPT),
+         "--mode", "compute", "--anchor", str(anchor), "--anchor-base", str(base),
+         "--peers", str(peer), "--sector-benchmark"],
+        capture_output=True, text=True, timeout=60, env=env, cwd=str(ROOT),
+    )
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    jsonschema.validate(payload, schema)

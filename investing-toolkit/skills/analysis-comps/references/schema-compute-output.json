@@ -21,7 +21,8 @@
         "multiples_compute": {"$ref": "#/$defs/multiplesBlock"},
         "divergence": {"$ref": "#/$defs/divergenceBlock"},
         "indicators": {"$ref": "#/$defs/indicatorsBlock"},
-        "compute_provenance": {"$ref": "#/$defs/computeProvenanceBlock"}
+        "compute_provenance": {"$ref": "#/$defs/computeProvenanceBlock"},
+        "etf_benchmark": {"$ref": "#/$defs/etfBenchmarkBlock"}
       }
     },
     "peers": {
@@ -196,6 +197,51 @@
           "formula_id": {"type": "string"},
           "note": {"type": "string"}
         }
+      }
+    },
+    "etfBenchmarkBlock": {
+      "comment": "v2.2.0-c-bench: SPDR sector ETF aggregate benchmark layer. Emitted only when --sector-benchmark flag passed. Either {status, reason} (non-US / unmapped / aggregate-missing) OR {etf, schema_id, as_of, _meta, multiples, indicators, warnings} (US ticker with healthy aggregate).",
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["status", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {"const": "skipped"},
+            "reason": {"type": "string"}
+          }
+        },
+        {
+          "required": ["etf", "schema_id", "as_of", "_meta", "multiples", "indicators", "warnings"],
+          "additionalProperties": false,
+          "properties": {
+            "etf":       {"type": "string"},
+            "schema_id": {"$ref": "#/$defs/schemaId"},
+            "as_of":     {"type": "string"},
+            "_meta":     {"type": "object"},
+            "multiples": {
+              "type": "object",
+              "additionalProperties": {"$ref": "#/$defs/etfBenchEntry"}
+            },
+            "indicators": {
+              "type": "object",
+              "additionalProperties": {"$ref": "#/$defs/etfBenchEntry"}
+            },
+            "warnings":  {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      ]
+    },
+    "etfBenchEntry": {
+      "type": "object",
+      "required": ["individual", "etf_aggregate", "delta_pct", "band"],
+      "additionalProperties": true,
+      "properties": {
+        "individual":    {"type": ["number", "null"]},
+        "etf_aggregate": {"type": ["number", "null"]},
+        "delta_pct":     {"type": ["number", "null"]},
+        "band":          {"enum": ["in_line", "notable", "extreme", "n/a"]},
+        "note":          {"type": "string"}
       }
     }
   }
