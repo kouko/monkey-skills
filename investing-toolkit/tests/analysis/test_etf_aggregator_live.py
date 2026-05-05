@@ -32,7 +32,11 @@ def test_aggregate_xlk_live(tmp_path):
     assert payload["etf"] == "XLK"
     assert payload["schema_id"] == "tech-saas"
     assert payload["_meta"]["holdings_count"] >= 10
-    assert payload["multiples"].get("trailingPE") is not None
+    # tech-saas schema: forwardPE / priceToSales / evRevenue (no trailingPE).
+    # Validated 2026-05-05 live: forwardPE often null pre-quarter; evRevenue
+    # + priceToSales are reliable signals for SPDR Tech holdings.
+    assert payload["multiples"].get("priceToSales") is not None
+    assert payload["multiples"].get("evRevenue") is not None
 
 
 @pytest.mark.network
