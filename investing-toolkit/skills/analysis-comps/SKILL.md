@@ -148,6 +148,30 @@ FFO subtracts `gains_on_sale_of_property`, which is not a standard XBRL concept
 and override table); `--show-routing` prints the resolved schema_id + source on
 stderr for diagnostics.
 
+### `--sector-benchmark` — SPDR sector ETF aggregate benchmark (v2.2.0-c-bench, opt-in)
+
+Adds an `etf_benchmark` block under `anchor` showing per-multiple and
+per-indicator divergence vs the anchor's mapped SPDR sector ETF aggregate.
+
+```bash
+uv run scripts/comps_compute.py --mode compute \
+  --anchor anchor.json --anchor-base anchor-memo-fetch.json --peers peer.json \
+  --sector-benchmark
+```
+
+- Mapping: `anchor.schema_id` (from sector classifier) → SPDR ETF (`bank → XLF`,
+  `tech-saas → XLK`, `reit → XLRE`, `energy → XLE`, `utilities → XLU`,
+  `default → XLY`). See [`references/etf-schema-map.json`](references/etf-schema-map.json).
+- Aggregates refreshed weekly by GitHub Actions
+  (`.github/workflows/sector-etf-aggregates.yml`); runtime reads
+  `references/sector-etf-aggregate-<ETF>.json`.
+- Bands: `in_line` (≤20% delta) / `notable` (20–50%) / `extreme` (>50%).
+- Non-US ticker → `etf_benchmark: {status: "skipped"}`.
+- Stale aggregate (`>14 days`) → `etf_benchmark.warnings` includes `"aggregate stale"`.
+- Flag absent → `etf_benchmark` key absent (v2.2.0-c shape preserved).
+
+Spec: [`docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md`](../../../docs/superpowers/specs/2026-05-05-investing-toolkit-v2.2.0-c-bench-spdr-etf-benchmark-design.md).
+
 ## Output Contract (Spec §5.4) — direct mode
 
 For compute mode, the anchor block additionally carries `multiples_compute`
