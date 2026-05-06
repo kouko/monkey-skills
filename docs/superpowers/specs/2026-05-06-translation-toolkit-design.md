@@ -108,7 +108,7 @@ translation-toolkit/
 │   └── references/orthogonal-axes.md             # functional copy
 │
 ├── translation-i18n/                              # PO/JSON/XLIFF/Android/iOS — fully self-contained
-│   ├── SKILL.md                                    # supports `--audit-only` flag for review-without-rewrite
+│   ├── SKILL.md
 │   ├── glossary/                                   # functional copies of all glossary files
 │   │   ├── glossary-en-US--ja-JP.md               # uniform pair-file schema
 │   │   ├── glossary-en-US--zh-CN.md
@@ -134,6 +134,11 @@ translation-toolkit/
 │
 ├── translation-creative/                          # ad copy / transcreation — fully self-contained
 │   └── (same self-contained pattern; references/ also includes 5d-effectiveness.md)
+│
+├── translation-audit/                             # audit existing translations — fully self-contained
+│   └── (same self-contained pattern; takes (source, existing-target) input;
+│        skips L3; runs full L4 verification with stricter gate semantics;
+│        outputs diff report + improvement suggestions; no format-write back)
 │
 └── scripts/                                        # plugin-level build pipeline (NOT a skill)
     ├── README.md                                  # SSOT-and-functional-copy explanation
@@ -348,7 +353,7 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 - `translation-i18n`: PO / JSON / XLIFF / Android `strings.xml` / iOS `.strings`
 - `translation-doc`: markdown → AST, separate prose from code/URL/HTML
 - `translation-creative`: plain text + optional brand brief
-- `--audit-only` flag (any of above 3 skills): source + existing target translation pair (instead of source-only)
+- `translation-audit`: source + existing target translation pair (auto-detects format from each)
 
 **b. Protect-pass** (HARD pre-filter — three reference projects all skip this):
 - Regex extracts and masks:
@@ -397,7 +402,7 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 - **S1. Back-translation diff**: v2 → translate back to source language in an isolated subagent context (blind to original — see Execution Context per Layer for dispatch). Compare with original via embedding cosine similarity. Threshold: `< 0.85` warns. Transcreation mode: threshold relaxed to `< 0.70` (surface deviation expected). If runtime provides no subagent capability, S1 is skipped (audit-trail: `S1: SKIPPED (no isolation)`).
 - **S2. Register preservation**: LLM judge — does target register match intake-specified register? formal/neutral/warm/playful comparison.
 
-**MAY gates** (info only, audit-trail flagged, NOT interactive — audit-only flag callers must continue without prompts):
+**MAY gates** (info only, audit-trail flagged, NOT interactive — non-interactive callers including `translation-audit` must continue without user prompts):
 
 - **I1. Untranslatability flagging**: source-analysis-flagged untranslatable phrases — record decision (borrow / explain / approximate) in audit trail. Does NOT block or prompt user; surfaces info for review.
 
@@ -408,7 +413,7 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
   - i18n: original PO/JSON/XLIFF format preserved, keys intact
   - doc: markdown reassembled, code blocks pristine
   - creative: text (default 1 output); `--variants=N` flag opt-in for N alternative variants
-  - `--audit-only` mode: diff report only, no rewrite
+  - audit: diff report + improvement suggestions only, no rewrite
 - **c. Audit trail JSON** (canonical schema in `audit-trail-spec.md`):
   - Intake: mode/register/strategy/locale/domain/intent
   - Glossary resolution per term (which tier hit, which source)
@@ -430,12 +435,11 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 | `translation-i18n` | reads intake | PO/JSON/XLIFF/strings + strict placeholder | shared 4D | M1+M2 strict | format roundtrip | ON | SHOULD |
 | `translation-doc` | reads intake | markdown AST + code/URL/HTML protect | shared 4D + windowing | M1+M2+S1+S2 | markdown roundtrip | ON | SHOULD |
 | `translation-creative` | reads intake | brand brief intake | 5D (+effectiveness in transcreation mode) | M1+M2+S1 (MUST in transcreation, SHOULD in faithful)+S2 | text (+ optional `--variants=N`) | ON | MUST in transcreation mode, SHOULD in faithful mode |
-
-**Audit-only mode**: each of the 3 active translation skills (`translation-i18n` / `-doc` / `-creative`) supports a `--audit-only` flag. With this flag, the skill takes `(source, existing-target)` instead of `(source)` and produces a 5-gate verification diff report instead of a translation. Replaces the earlier `translation-audit` skill from the draft (collapsed per fresh-eyes audit — no incremental capability over a flag, but full skill scaffolding cost).
+| `translation-audit` | reads intake | parse (source, existing-target) pair; analyze both for issues | (skipped) | full M1+M2+S1+S2+I1, gate semantics typically stricter | diff report + improvement suggestions, no rewrite | ON | runs as comparison gate |
 
 (Glossary and typography rules used to be wrapped in a `translation-glossary` skill in an even earlier draft. Removed in favor of plugin-level `docs/glossary-format-spec.md` + `vendor/` LICENSE files + `scripts/canonical/` SoT, with each active skill holding its own functional copies — see Skill Self-Containment Guarantee above.)
 
-Web search default = ON across all 3 active skills (per Q4.2 — "user invoked the tool because they want max quality"). Skills can be overridden to OFF via `--web-search=off` for cost/latency control. The router SKILL.md documents this trade-off in one paragraph (no per-skill duplicate file needed).
+Web search default = ON across all 4 active skills (per Q4.2 — "user invoked the tool because they want max quality"). Skills can be overridden to OFF via `--web-search=off` for cost/latency control. The router SKILL.md documents this trade-off in one paragraph (no per-skill duplicate file needed).
 
 ---
 
@@ -472,7 +476,7 @@ S1 dispatch behavior:
 - If the runtime provides subagent / task-isolation capability (CC's Agent tool, Gemini's sub-task, etc.) — S1 dispatches a subagent to translate v2 → source language with no prior context, then computes embedding cosine similarity vs original source.
 - If the runtime does NOT provide such capability — S1 gracefully skips with audit-trail flag `S1: SKIPPED (no isolation capability)`. M1/M2/S2/I1 continue normally.
 
-**`--audit-only` mode** inherits the same execution-context rules: L4 verification runs unchanged (including S1 isolation requirement). L3 is skipped (existing target supplied instead of generated).
+**`translation-audit` skill** inherits the same execution-context rules: L4 verification runs unchanged (including S1 isolation requirement). L3 is skipped (existing target supplied instead of generated).
 
 **Other roles (CRITIC fresh-eyes optimization)** — running CRITIC in a separate subagent for fresh-eyes effect on REFLECT — is deferred to v0.2 per fresh-eyes triage. Re-trigger: measurements show single-thread REFLECT consistently misses errors that subagent REFLECT catches. Until then, REFLECT runs in main context.
 
@@ -480,7 +484,7 @@ S1 dispatch behavior:
 
 ## Service Interface (Cross-skill)
 
-Other skills (docs-team / copywriting-toolkit per user request / investing-team / arbitrary i18n tools) can invoke any of the 3 active translation skills via:
+Other skills (docs-team / copywriting-toolkit per user request / investing-team / arbitrary i18n tools) can invoke any of the 4 active translation skills via:
 
 **Input contract** (4 fields):
 ```yaml
@@ -553,7 +557,7 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | # | Decision | Source |
 |---|---|---|
 | 1 | A_revised: standalone plugin, peer to copywriting-toolkit, NOT in domain-teams | User Q1 |
-| 2 | 3 active translation skills (`translation-i18n` / `-doc` / `-creative`) + 1 router + 1 intake = 5 skills total. Format-routed pattern. Audit-only is a `--audit-only` flag on the 3 active skills, not a separate skill. (Earlier drafts had `translation-glossary` and `translation-audit` skills; both removed — glossary became plugin-level SoT + functional copies, audit became a flag.) | User Q2 + self-containment audit + fresh-eyes triage |
+| 2 | 4 active translation skills (`translation-i18n` / `-doc` / `-creative` / `-audit`) + 1 router + 1 intake = 6 skills total. Format-routed pattern. (Earlier draft had `translation-glossary` skill; removed in favor of plugin-level SoT + functional copies. Fresh-eyes triage initially collapsed `translation-audit` into a `--audit-only` flag, but reversed per Decision #17 — audit's input/output/intent/L3-skip differences justify a separate skill.) | User Q2 + self-containment audit + audit-skill reinstatement |
 | 3 | 5 orthogonal axes (mode/register/strategy/locale/domain), exposed as auto/explicit binary | User Q3.1 |
 | 4 | back-translation = SHOULD gate (MUST for transcreation only) | User Q3.2 |
 | 5 | Roles, not models — no model names in skill body | User Q3.3 |
@@ -566,8 +570,9 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | 12 | All pair files use identical structure (frontmatter + `## meta` + `## domain: <name>` sections + 4-column tables). The `source` column distinguishes upstream-sourced / manual-curated / derived entries within the same file. | User unification audit |
 | 13 | Wikidata runtime fallback deferred to v0.2 (was originally scoped to L4 web search; deferred per fresh-eyes triage — currently no implementation surface). | User scope-clarity push-back + fresh-eyes triage |
 | 14 | Strict skill self-containment: `translation-glossary` skill removed; glossary / typography / shared references live as plugin-level `scripts/canonical/` SoT distributed as functional copies into each active skill. No skill reads another skill's files at runtime. No skill invokes another skill via Skill tool. | User self-containment audit |
-| 15 | Fresh-eyes triage applied (2026-05-06). Cuts: `translation-audit` → `--audit-only` flag, L2 TM deferred, Wikidata deferred, **CRITIC fresh-eyes** subagent auto-detect deferred (NOT all subagent — see #16), service-interface fields trimmed (8→4), creative `--variants` opt-in (was always-3), per-skill `web-search-tradeoffs.md` collapsed, NICT moved from glossary to corpus reference (sentences ≠ term pairs). NOT cut (per user override): bundled glossary scope (kept S2-S3 = ~10K+ entries), 13 domains, S1/S2/I1 gate semantics, ja-JP↔zh-TW manual seed (~80-100), fetch-microsoft / fetch-jpo opt-in scripts. | dev-workflow:proposal-critique fresh-eyes audit + user "做滿不省略 glossary" override |
+| 15 | Fresh-eyes triage applied (2026-05-06). Cuts: L2 TM deferred, Wikidata deferred, **CRITIC fresh-eyes** subagent auto-detect deferred (NOT all subagent — see #16), service-interface fields trimmed (8→4), creative `--variants` opt-in (was always-3), per-skill `web-search-tradeoffs.md` collapsed, NICT moved from glossary to corpus reference (sentences ≠ term pairs). NOT cut (per user override): bundled glossary scope (kept S2-S3 = ~10K+ entries), 13 domains, S1/S2/I1 gate semantics, ja-JP↔zh-TW manual seed (~80-100), fetch-microsoft / fetch-jpo opt-in scripts. (Auditor's Dr1 — collapse `translation-audit` to flag — was reversed; see Decision #17.) | dev-workflow:proposal-critique fresh-eyes audit + user "做滿不省略 glossary" override |
 | 16 | **S1 back-translation gate uses subagent dispatch** in v0.1 — required for blindness (correctness, not optimization). Runtimes without subagent capability gracefully skip S1 (audit-trail flagged). All other layers run in main context. CRITIC fresh-eyes (REFLECT in subagent) remains deferred per #15. | User clarifying question on subagent architecture |
+| 17 | **`translation-audit` reinstated as separate skill** (reversal of fresh-eyes triage Dr1). Audit has different input shape (`source + existing-target`), different output shape (`diff report + suggestions`, no translation), different L2 behavior (analyzes both source AND target for issues), skips L3 entirely, has typically stricter gate semantics, and serves a distinct user intent (review vs generate). Collapsing to a flag would force one SKILL.md to bilingual-mode between generate and evaluate cognitive tasks. Skill count returns to 6. | User reconsideration of audit-skill separation |
 
 ---
 
