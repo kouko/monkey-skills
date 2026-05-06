@@ -48,6 +48,7 @@ REFERENCE_FILES = {
     "verification-gates.md",
     "audit-trail-spec.md",
     "protect-pass-spec.md",
+    "glossary-resolution-spec.md",
 }
 
 TYPOGRAPHY_FILES = {
