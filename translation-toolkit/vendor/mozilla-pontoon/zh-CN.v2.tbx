@@ -1,0 +1,2045 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE martif SYSTEM "TBXcoreStructV02.dtd">
+<martif type="TBX" xml:lang="en-US">
+    <martifHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Mozilla Terminology</title>
+            </titleStmt>
+            <sourceDesc>
+                <p>Terms used for Mozilla localization</p>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <p type="XCSURI">TBXXCSV02.xcs</p>
+        </encodingDesc>
+    </martifHeader>
+    <text>
+        <body>
+            <termEntry id="c524">
+                <descrip type="context">A Geolocation request can only be fulfilled in a secure context.This scratchpad executes in the Browser context.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>context</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The setting or circumstance in which a thing occurs, often associated with the context menu. This term can assume specific connotations when referring to programming languages, for example in JavaScript a context is a reference to the object running the currently executing code.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>上下文</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c528">
+                <descrip type="context">This option sends one invitation email per attendee</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>attendee</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">a person who is invited to attend an event, specifically via a calendar invitation</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>参与者</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c530">
+                <descrip type="context">Resumes the main thread and continues execution following a breakpoint until the next breakpoint or the termination of the script</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>breakpoint</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Intentional stop point in the code of a computer program</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>断点</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c535">
+                <descrip type="context">This policy is only available on the Extended Support Release (ESR) version</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>version</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Technically refers to the number of a particular Firefox release. Can also be used interchangeably with "release." "Release" does not have a good equivalent in languages other English and so "version" must be used in some cases. Use "version" (sentence case, not title case) as a generic, stand-alone term: "You are using the latest version of Firefox." Avoid referring to the numerical marker of that version ("Firefox Nightly 66.0a1") as this is too technical and unnecessarily detailed for users. Nghtly builds have the same version number for 6 weeks at a time so the version number itself is not specific.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>版本</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c534">
+                <descrip type="context">Open Web Authentication panel</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Web Authentication</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A credential management tool that allows users to verify identity using an authenticator—such as a phone, hardware security keys, or TPM (Trusted Platform Model) devices—in place of traditional passwords. Web Authentication (or “WebAuthn”) is built directly into a web browser.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>Web 身份验证</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c536">
+                <descrip type="context">Validate cache manifest</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>validate</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To check or prove the validity or accuracy of (something).</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>确认有效</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c537">
+                <descrip type="context">Query OCSP responder servers to confirm the current validity of certificates</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>validity</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The state of being valid, authentic or genuine.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>有效性</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c538">
+                <descrip type="context">Disabling the Safe Browsing feature is not recommended as it may result in you going to unsafe sites</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>unsafe</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Lacking in security or safety; potentially causing harm or damage</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>不安全</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c539">
+                <descrip type="context">A script from the extension is running on this page, and making it unresponsive.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>unresponsive</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Not reacting or responding</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>无响应</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c540">
+                <descrip type="context">Your email and authentication are sent unencrypted so your password and your message could easily be read by other people</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>unencrypted</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Not encrypted, and thus more vulnerable to unauthorized access. Note that "encoded" and "encrypted" are not synonyms (see definition for "encoded").</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>未加密</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c546">
+                <descrip type="context">Unable to digitally sign data required to verify your certificate.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>sign</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To issue a digital certificate as verification of a website's identity; or, to enter user credentials to access a system.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>登录</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c547">
+                <descrip type="context">The signer's certificate could not be found</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>signer</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The entity that signs a digital certificate verifying the identity of a website, organization, or individual.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>签署者</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c548">
+                <descrip type="context">Load this bookmark in the sidebar</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>sidebar</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A pane that is displayed on either side of the Firefox browser window, next to the web page. Includes the the user's bookmarks, history, and synced tabs.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>侧栏</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c549">
+                <descrip type="context">We are running a series of studies in Nightly. All Nightly users will receive a notification about these studies.  When a study is active, Nightly Firefox will automatically use Cloudflare’s 1.1.1.1 secure DNS over HTTPS.  The first study will use the Cloudflare resolver in addition to the DNS selected by a user or their ISP to compare approaches.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>studies</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Internal mechanism for an add-on enabled study. Instead, localize the term “study” so folks understand their data is being studied (they don’t need to understand the mechanism behind it). Learn more: https://wiki.mozilla.org/Firefox/Shield/Shield_StudiesBlacklist “shield study” and instead suggest localizers use “study.” Avoid using shield externally. Don’t add “study” to the actual terms list. In English, use the word “studies” (see about:studies to see if enrolled in a study cohort. URL not translated. )</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>研究</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c550">
+                <descrip type="context">As a security precaution, the browser does not automatically re-request sensitive documents</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>sensitive</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Requiring caution or additional care, especially referring to data that must be protected to safeguard the privacy or security of an individual or organization.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>敏感</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c551">
+                <descrip type="context">%S wants to register an account with one of your security keys. You can connect and authorize one now, or cancel.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>security keys</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">In Firefox the term security key refers specifically to a physical device that allows a user to authenticate, like a Yubikey. This is a standard definition that our security engineering team has arrived at with teams from Chrome and Safari.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>安全密钥</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c552">
+                <descrip type="context">Search suggestions will not be shown in location bar results</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>search suggestion</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A related search term suggested by a search engine</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>搜索建议</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c553">
+                <descrip type="context">Revert Bookmarks; Do you want to revert the changes you made to this scratchpad?</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>revert</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Return to previous stage</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>恢复</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c554">
+                <descrip type="context">Report errors like this to help Mozilla identify and block malicious sites</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>report</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Tell or alert, most often in the case of a site crash or issue</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>报告</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c555">
+                <descrip type="context">Send a crash report for the tab you are viewing</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>report</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A detailed record or account, most often in the case of a site crash or issue</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>报告</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c556">
+                <descrip type="context">The security certificate in use on this website will no longer be trusted in a future release</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>release</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Made available for use or distribution; Also refers to the final, stable build of Firefox.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>版本</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c558">
+                <descrip type="context">Override the colors specified by the page with your selections</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>override</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Replace or overrule</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>覆盖</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c559">
+                <descrip type="context">These terms are not intended to limit any rights granted under open source licenses</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>open source</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Refers to any program whose source code is made available for use or modification.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>开源</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c560">
+                <descrip type="context">This is a legacy extension, be aware that these are no longer fully supported.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Legacy extension</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A Firefox extension built using legacy APIs or the Add-on SDK. These kinds of extensions were disabled as of Firefox 57.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>旧式扩展</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c557">
+                <descrip type="context">You have blocked pop-ups for this website.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>pop-up</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">An overlapping window used for dialog boxes, message boxes, and other temporary windows that appear outside of an application's primary window. Typically, users will think of a "pop-up" as a window that opens automatically and without being asked.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>弹出式窗口</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c563">
+                <descrip type="context">A restart of your computer may be required to complete the installation. -or- This setting will apply to all Windows accounts and Firefox profiles using this installation of Firefox.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>installation</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To set something up for use (most often referring to software installation). When talking about an installation of Firefox, we refer to where software is installed on a device, regardless of what version of software is installed. The software’s location in the file system defines that installation. A user may have multiple installations of Firefox—each a different version of Firefox— or even multiple installations that are all the same version of Firefox.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>安装</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c564">
+                <descrip type="context">Firefox has detected an insecure site. Form Autofill is temporarily disabled.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>insecure</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Potentially unsafe or not protected</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>不安全</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c565">
+                <descrip type="context">Select which items to import</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>import</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Copy or move data from one program to another, including importing data from an external source (for example, bookmarks)</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>导入</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c567">
+                <descrip type="context">Do you want this document to be your new home page?</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>home page</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The default page that loads when you visit a website. In Firefox, the "home page" is also the default page displayed when you open the browser or open a new tab.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>主页</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c572">
+                <descrip type="context">Request on the main thread is deprecated because of its detrimental effects to the end user</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>end user</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The person who ultimately uses or is intended to use a product</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>终端用户</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c573">
+                <descrip type="context">Widevine Content Decryption Module provided by Google Inc.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>decryption</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The process of converting information or data back to its original form or text so that it can be read and understood; the process of reversing encryption</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>解密</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c574">
+                <descrip type="context">Your connection to this website uses weak encryption and is not private.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>encryption</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The process of encoding information or data so that only the sender and the intended recipient can read it.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>加密</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c575">
+                <descrip type="context">Encrypt This Message</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>encrypt</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Convert information or data into a code, especially to prevent unauthorized access. This is different from "encoding" in which the goal is to ensure that information can be properly consumed.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>加密</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c576">
+                <descrip type="context">Media resource could not be decoded</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>decode</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Translating date or information that has been encoded back into its original, comprehensible format.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>解码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c578">
+                <descrip type="context">Check that the file, including symbols and accented letters, is encoded using the UTF-8 character encoding.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>encode</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Transforming data using a standard format or particular code so that it can be properly (and safely) consumed by a different type of system. The goal with encoding is to ensure that information can be properly consumed—this is different from "encyption," for which the goal is to keep information secret and safe from unauthorized access.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>编码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c579">
+                <descrip type="context">You cannot enable this filter</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>enable</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Activate a feature</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>启用</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c580">
+                <descrip type="context">If you delete or distrust a certificate authority (CA) certificate, this application will no longer trust any certificates issued by that CA</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>distrust</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Regard something as untrustworthy or doubt its authenticity.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>不信任</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c581">
+                <descrip type="context">This web page has been reported as a deceptive site and has been blocked</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>deceptive site</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A malicious website that impersonates a legitimate one in order to trick users into providing sensitive information such as passwords, account details, or credit card numbers</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>诈骗网站</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c582">
+                <descrip type="context">Turning this on will allow you to debug add-ons</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>debug</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Identify and remove errors from computer sofware</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>调试</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c586">
+                <descrip type="context">Invalid or corrupted PDF file</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>corrupted</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Changed from its original, correct form.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>已损坏</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c587">
+                <descrip type="context">The response from the OCSP server was corrupted or improperly formed</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>corrupt</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Change something from its original, correct form.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>损坏</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c588">
+                <descrip type="context">This add-on could not be installed because it appears to be corrupt.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>corrupt</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Containing errors or alterations from its original, correct form</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>损坏</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c593">
+                <descrip type="context">Copy text to clipboard</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>clipboard</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A special location in the computer's operating system that is accessible to all programs and temporarily stores data that the user has copied from somewhere else</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>剪贴板</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c594">
+                <descrip type="context">The certificate used to sign the message was issued by an unknown certificate authority.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>certificate authority</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A trusted organization that issues signed digital certificates that verify the identity and legitimacy of a company or individual.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>证书授权机构</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c595">
+                <descrip type="context">Bookmark this page</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>bookmark</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Create a shortcut that directs the browser to a specific webpage. Shortcuts may be added to the bookmark toolbar. Similar in functionality to "favorites" in Chrome and Internet Explorer, and "bookmarks" in Safari.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>添加书签</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c596">
+                <descrip type="context">Bookmarks you add will still be saved on your device.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>bookmark</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A shortcut created by the user to direct the browser to a specific webpage</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>书签</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c610">
+                <descrip type="context">This page is loaded from an extension</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>extension</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Pieces of code that extend the capabilities of a browser. In Firefox, extensions are a type of add-on.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>扩展</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c611">
+                <descrip type="context">The cipher used for encryption is deprecated and insecure.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>cipher</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">An algorithm that encrypts or decrypts information.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>密码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c599">
+                <descrip type="context">These pages try to install programs that steal private information, use your computer to attack others, or damage your system.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>attack</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To take malicious action against, specifically via hacking and malware.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>攻击</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c617">
+                <descrip type="context">An attacker could easily reveal information which you thought to be safe</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>attacker</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">An individual or entity that seeks to gain unauthorized access to user data</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>攻击者</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c621">
+                <descrip type="context">Your add-ons and customizations have been removed and your browser settings have been restored to their defaults.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>add-on</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A Firefox-specific umbrella term that describes tools (including extensions and themes) that users can install to modify, customize, and extend the functionality of Firefox. Avoid using "add-ons" and "extensions" interchangeably (see https://wiki.mozilla.org/Add-ons/Terminology#Usage_Guidelines).</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>附加组件</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c622">
+                <descrip type="context">Do you want to abort this download</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>abort</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Cancel a process</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>中止</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c597">
+                <descrip type="context">You have blocked autoplay media with sound for this website.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>autoplay</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A functionality that allows media, like video or audio, to play automatically with sound, without action from a user.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>自动播放</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c521">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Bug report</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The detailed description accompanying a bug or the act of reporting the bug itself. (Sometimes just called bug)</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>缺陷报告</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c584">
+                <descrip type="context">Cryptominers use your system’s computing power to mine digital money. Cryptomining scripts drain your battery, slow down your computer, and can increase your energy bill.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>cryptominer</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Scripts on websites that can use a computer’s resources to mine cryptocurrency without a user’s knowledge.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>加密货币挖矿程序</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c583">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>cryptomining</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A method of running scripts on websites that can use a computer’s resources to mine cryptocurrency without a user’s knowledge.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>加密货币挖矿</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c577">
+                <descrip type="context">Enhanced Tracking Protection is ON for this site</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Enhanced Tracking Protection</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Enhanced Tracking Protection is a collection of Firefox privacy and security settings. These settings block invisible or visible parts of webpages that can track users online. Enhanced Tracking Protection keeps an individual’s browsing history more private to reduce how much of their data is tracked, stored, and shared between websites and advertisers.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>增强型跟踪保护</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c519">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>MDN</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Mozilla Developer Network - online resource for Web developers; lives at. developer.mozilla.org</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>MDN</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c441">
+                <descrip type="context">You can manage your profile and preferences</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>preference</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Custom settings within a software application</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>首选项</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c544">
+                <descrip type="context">Block third-party content that tracks you around the web. Control how much of your online activity gets stored and shared between websites.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>track</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To identify and collect information about website users. Can be conducted by websites themselves or third parties, such as advertisers. May also refer to the practice of tracking a user’s browsing behavior and gathering information about their devices to build a unique profile about that individual.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>跟踪</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c545">
+                <descrip type="context">Blocking trackers and cookies can cause some websites to break.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>trackers</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Trackers are cookies, widgets, or invisible snippets of code used to monitor someone’s browsing history. Websites use trackers to gather analytics and statistics. Third-party trackers collect and send data about visited websites to other companies, often for advertising purposes. Advertisers use third-party trackers to show users personalized content and targeted ads.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>跟踪器</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c543">
+                <descrip type="context">Websites may load external ads, videos, and other content that contain tracking code. Blocking tracking content can help sites load faster, but some buttons, forms, and login fields might not work.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Tracking Content</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Tracking code hidden in ads, videos, and other in-page content. Blocking them can cause some websites to break.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>跟踪性内容</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c453">
+                <descrip type="context">We're campaigning to get big tech platforms like Google, Facebook and Twitter to become more transparent about how political messages are spread so that we can detect and stop misinformation.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>misinformation</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">False or misleading information (also known as disinformation) presented as truth that’s shared mistakenly by people who are unaware that it’s false.See also the definition of disinformation.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>虚假信息</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c452">
+                <descrip type="context">They can’t access the device’s underlying capabilities the way that native apps can</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>native</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Local software and applications</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>原生</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c484">
+                <descrip type="context">Political actors use disinformation campaigns that prey on our emotions and values to manipulate our behaviour.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>disinformation</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">False, inaccurate, or misleading information designed, presented, and promoted to intentionally cause public harm or for profit. When it’s shared mistakenly by people, it becomes misinformation. See also the definition of misinformation.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>虚假信息</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c569">
+                <descrip type="context">Fingerprinters collect settings from your browser and computer to create a profile of you. Using this digital fingerprint, they can track you across different websites.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>fingerprinter</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A fingerprinter is an entity that gathers information about browser users from configuration and settings information that is visible to websites they browse, rather than traditional tracking methods such as IP addresses and unique cookies.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>数字指纹跟踪程序</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c467">
+                <descrip type="context">Use market-leading research to deliver powerful grassroots-led campaigns.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>grassroots</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A campaign or movement that’s led directly by the people in a community</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>草根</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c463">
+                <descrip type="context">Explore some of our latest innovations</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>innovations</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Unique features developed for Firefox</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>创新</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c600">
+                <descrip type="context">Reported Attack Site!</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Attack Site</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A site designed to attack a user's client browser using malware or hacking.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>有害网站</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c561">
+                <descrip type="context">The certificate used to sign the message was issued by a certificate authority whose own certificate has expired.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Issue</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To put forth officially. The verb form of "issue" is most commonly used in reference to security certifcates. Use "issued," rather than alternate verbs like "created," when referring to security certificates.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>颁发</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c568">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>fingerprinting</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Fingerprinting is a method of tracking browser users by the configuration and settings information that is visible to websites they browse, rather than traditional tracking methods such as IP addresses and unique cookies.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>数字指纹跟踪</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c627">
+                <descrip type="context">Firefox automatically tries to reject cookie requests on cookie banners.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>cookie banner</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A cookie banner is a dialog, typically displayed as a notification bar or overlay dialog, that web sites use to inform users about cookies and, if necessary, obtain consent before storing cookies on their devices.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>Cookie 横幅</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c499">
+                <descrip type="context">Install Nightly and help us improve Firefox quality hunt crashes and regressions</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>crash</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Occurs when software stops functioning properly and exits or closes unexpectedly.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>发生崩溃</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c542">
+                <descrip type="context">These cookies follow you from site to site to gather data about what you do online. They are set by third parties such as advertisers and analytics companies. Blocking cross-site tracking cookies reduces the number of ads that follow you around.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>cross-site tracking cookie</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Cookies are invisible pieces of data that a website can ask your browser to store on your device. Trackers use cross-site tracking cookies to collect information about the websites you visit and send them to other companies, often for advertising purposes. When you feel like an advertisement is following you around while you browse, this is a result of cross-site tracking. If the same tracker is present on multiple sites, it can build a more complete profile about you over time.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>跨站跟踪性 Cookie</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c464">
+                <descrip type="context">Choose the independent browser</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>independent browser</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Firefox is the only major independent multi-platform browser not associated with a large tech company such as Google or Apple, or built on the same Chromium code base, such as Google Chrome, Microsoft Edge, or other browsers.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>独立浏览器</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c605">
+                <descrip type="context">Download Mozilla Firefox, a free Web browser. Firefox is created by a global non-profit dedicated to putting individuals in control online.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>non-profit</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Short for non-profit organization, a legal entity organized and operated for a collective, public or social benefit, in contrast with an entity that operates as a business aiming to generate a profit for its owners.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>非营利组织</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c628">
+                <descrip type="context">Sign in to sync tabs, bookmarks, passwords, and more.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>sign in</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To access an account or software through the usage of account information such as user id and password.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>登录</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c629">
+                <descrip type="context">With Firefox on all your devices, you can access bookmarks, tabs and passwords with one easy sign-in.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>sign-in</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">The access of an account or software through the usage of account information such as user id and password.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>登录</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c450">
+                <descrip type="context">Mozilla is proudly nonprofit and answers to no one but you</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>nonprofit</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Short for non-profit organization, a legal entity organized and operated for a collective, public or social benefit, in contrast with an entity that operates as a business aiming to generate a profit for its owners.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>非营利组织</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c451">
+                <descrip type="context">A decentralized internet owned by all of us is where net neutrality interoperability competition and local contribution thrive</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>net neutrality</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Principle that all communication over the Internet must be treated equally by Internet service providers, preventing the filtering of Internet content.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>网络中立</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c665">
+                <descrip type="context">Extension Not Allowed on Restricted Sites</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>restricted site</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A website, identified by Mozilla, where the execution of unverified add-ons is blocked by default for security reasons.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>受限网站</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c630">
+                <descrip type="context">In this Privacy Notice, we explain what data Firefox shares and point you to settings to share even less. We also adhere to the practices outlined in the Mozilla privacy policy for how we receive, handle and share information we collect from Firefox.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Privacy Notice</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Notice that explains what data s Mozilla product collected, shared and why. It may also include additional information such as settings that can change how much is shared. One example is Firefox browser's privacy notice which can be found here: https://www.mozilla.org/en-US/privacy/firefox/</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>隐私声明</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c631">
+                <descrip type="context">We also adhere to the practices outlined in the Mozilla privacy policy for how we receive, handle and share information we collect from Firefox.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Privacy Policy</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">A statement that discloses the set of practices related to the handling of personal information by Mozilla or its products. For example, Mozilla's privacy policy can be found here: https://www.mozilla.org/en-US/privacy/</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>隐私政策</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c632">
+                <descrip type="context">By proceeding, you agree to the Terms of Service and Privacy Notice.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Terms of Service</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Terms of service, also known as terms of use/ terms of conditions are agreements between a service provider and the person who wants to use the service, such as for Firefox cloud services. https://www.mozilla.org/en-US/about/legal/terms/services/</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>服务条款</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c663">
+                <descrip type="context">Open your authentication app and enter the authentication code it provides.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>authentication code</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Authentication codes are codes generated during two-factor authentication (2FA). Typically, a user is asked to provide an authentication code after logging in with their username and password. These codes may take the form of a time-based one-time password, and could be generated by a two-factor authentication app or sent through methods such as SMS or email.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>验证码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c664">
+                <descrip type="context">Enter confirmation code for your Firefox account</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>confirmation code</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Confirmation codes are codes sent to a user's email address to confirm their email address. This takes the form of a 6 digit code sent by email. This confirmation code may be sent when registering a new account, registering a new email to an existing account, or part of the sign-in process.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>确认码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c624">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Firefox View</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Firefox View is a new surface within the product that is accessed via a pinned toolbar icon. Its purpose is to help users find or return to things they have found before, presented in a way that’s more visual and accessible than current pathways within the product. 
+
+See this page for more information: https://bit.ly/l10n-guidance-firefoxview</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>Firefox View</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c626">
+                <descrip type="context">Create new backup authentication codes to help you get back into your account if you’re locked out.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>backup authentication code</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Authentication codes generated as backup for when a user does not have access to their two factor authentication method, allowing them to use these codes instead. Typically these are generated when two factor authentication is first set up and saved somewhere apart from their mobile device.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>备用验证码</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c625">
+                <descrip type="context">Your account password was reset with an account recovery key</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>account recovery key</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Account recovery key for Firefox Accounts. (Formerly called "recovery key".)
+
+A code used to recover a user's encrypted account information (such as bookmarks and passwords) when their Firefox Account password is reset.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>账户恢复密钥</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c623">
+                <descrip type="context">Use this colorway.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>colorway</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Colorways change the look of the browser interface. Colorways are different from traditional themes — they color different parts of the user interface (the main chrome, menus/search dropdown, homepage background, and sidebar).
+
+See this page for more information: https://bit.ly/l10n-guidance-colorways</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>配色</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c667">
+                <descrip type="context">Protect your inbox with unlimited email masks, and get a unique Relay email domain to make creating masks on the go easy and secure.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>email mask</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Firefox Relay feature. Email masks are masked, or private, email addresses that forward messages to your true email address. These masks allow you to share an address with third parties which will mask your true email address and forward messages to it.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>马甲邮箱</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c668">
+                <descrip type="context">With phone number masking, you can now create a phone number mask that helps you get texts and calls without revealing your true number.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>phone number mask</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Feature of Relay Premium. Similar to an email mask, a phone number mask is a phone number that can forward texts and calls to your true phone number without revealing what your true number is to the person calling or texting you.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>虚拟手机号</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c666">
+                <descrip type="context"></descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>Review checker</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Review checker is a built-in Firefox tool that allows users to check the quality of product reviews on shopping sites like Amazon, Walmart, and Best Buy. The tool itself is powered by Fakespot, a Mozilla company.
+
+Note that this is distinct from "review analyzer", which is the name of the tool analyzing reviews on Fakespot, and providing data to the Review checker. Ideally, these tools should have different translations.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>核查评价</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c620">
+                <descrip type="context">If the image is relevant to the content of the document, you must supply alternate text that will appear in text-only browsers</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>alternate text</term>
+                            <termNote type="partOfSpeech">noun</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">Text added to an HTML element (typically an image) to describe that element when it cannot be rendered. Also used by accessibility tools, like screen readers, to make non-textual elements accessible.</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>替换文字</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c598">
+                <descrip type="context">Warning: Contains unauthenticated content</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>authenticated</term>
+                            <termNote type="partOfSpeech">adjective</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">User identity has been proven for access to a system or service</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>已通过身份验证</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+            <termEntry id="c613">
+                <descrip type="context">The endpoint you are connecting to needs more information to authenticate this connection.</descrip>
+                <langSet xml:lang="en-US">
+                    <ntig>
+                        <termGrp>
+                            <term>authenticate</term>
+                            <termNote type="partOfSpeech">verb</termNote>
+                        </termGrp>
+                    </ntig>
+                    <descripGrp>
+                        <descrip type="definition">To prove user identity, typically to gain access to a system or service</descrip>
+                    </descripGrp>
+                </langSet>
+                <langSet xml:lang="zh-CN">
+                    <ntig>
+                        <termGrp>
+                            <term>进行身份验证</term>
+                        </termGrp>
+                    </ntig>
+                </langSet>
+            </termEntry>
+        </body>
+    </text>
+</martif>
