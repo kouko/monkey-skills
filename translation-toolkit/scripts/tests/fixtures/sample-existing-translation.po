@@ -1,0 +1,26 @@
+# Sample EXISTING translation for audit smoke tests
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+
+#: src/ui/dialog.rs:42
+msgid "Cancel"
+msgstr "取り消す"
+
+#: src/ui/settings.rs:101
+msgid "Settings"
+msgstr "設定"
+
+#: src/ui/welcome.rs:15
+msgid "Hello {name}, welcome to {app_name}!"
+msgstr "ようこそ、{name}さん"
+
+#: src/ui/notify.rs:33
+msgctxt "plural form"
+msgid "{count, plural, one {1 unread message} other {{count} unread messages}}"
+msgstr "{count, plural, one {未読メッセージ1件} other {未読メッセージ{count}件}}"
+
+#: src/api/error.rs:7
+msgid "API endpoint %s returned %d"
+msgstr "APIエンドポイント %s は %d を返しました"
