@@ -1,4 +1,4 @@
-# NOTICES — translation-toolkit v0.1.0
+# NOTICES — translation-toolkit v0.2.0
 
 This plugin bundles translation glossaries and reference materials from
 upstream sources. Each entry below lists the source, license, and required
@@ -61,6 +61,13 @@ attribution per its license terms. Full license texts ship at
 - **Attribution**: 国立研究開発法人 情報通信研究機構 (National Institute of Information and Communications Technology). https://alaginrc.nict.go.jp/jecbs/
 - **License file**: `vendor/nict/LICENSE`
 - **Note**: v0.1.0 ships a small fixture (~30 sentence triples). Full 5,304-triple corpus deferred to v0.2.
+
+### 青空文庫 — 太宰治『走れメロス』 (smoke-test fixture)
+
+- **License**: Public domain. 太宰治 (1909-1948); copyright expired 1999 in Japan (life+50, pre-TPP) and 2019 internationally (life+70).
+- **Attribution**: 青空文庫 — https://www.aozora.gr.jp/cards/000035/card1567.html
+- **Excerpt scope**: ~2700-char opening. Plain prose only — ruby annotations (《》) and editor notes (〔〕) removed. Used by `scripts/tests/test_e2e_novel_smoke.py` for translation-novel chunking + cost-reduction verification (no LLM calls).
+- **Fixture path**: `scripts/tests/fixtures/sample-novel-chapter-ja.md`
 
 ---
 

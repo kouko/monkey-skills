@@ -1,7 +1,7 @@
 {
   "name": "translation-toolkit",
-  "version": "0.1.0",
-  "description": "High-quality translation across i18n / technical docs / ad copy for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary (~10K+ entries) and 5-gate verification (placeholder integrity / glossary compliance / back-translation / register / untranslatability)",
+  "version": "0.2.0",
+  "description": "High-quality translation across i18n / technical docs / ad copy / novel chapters for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary (~10K+ entries) and 5-gate verification (placeholder integrity / glossary compliance / back-translation / register / untranslatability). v0.2.0 adds translation-novel — scene-aware chunking + scene-window prompts (~17× cost reduction vs whole-doc windowing).",
   "author": {
     "name": "kouko",
     "email": "kouko.d@gmail.com"
