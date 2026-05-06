@@ -1,0 +1,11 @@
+{
+  "name": "translation-toolkit",
+  "version": "0.1.0",
+  "description": "High-quality translation across i18n / technical docs / ad copy for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary (~10K+ entries) and 5-gate verification (placeholder integrity / glossary compliance / back-translation / register / untranslatability)",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
+  "license": "MIT"
+}
