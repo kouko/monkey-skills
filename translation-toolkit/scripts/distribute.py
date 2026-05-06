@@ -38,6 +38,7 @@ ACTIVE_SKILLS = [
     "translation-doc",
     "translation-creative",
     "translation-audit",
+    "translation-novel",
 ]
 
 REFERENCE_FILES = {
