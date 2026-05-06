@@ -1,11 +1,11 @@
 ---
 name: wiki-lint
-description: Run 11 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Obsidian wiki 健全性チェック・健康檢查。
+description: Run 12 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Obsidian wiki 健全性チェック・健康檢查。
 ---
 
 # Wiki Lint — Health Check on the Wiki Layer
 
-Runs 11 health checks across the wiki and reports issues without modifying pages. User decides which fixes to apply.
+Runs 12 health checks across the wiki and reports issues without modifying pages. User decides which fixes to apply.
 
 See [lint-checks.md](references/lint-checks.md) for full check definitions.
 
@@ -23,9 +23,9 @@ Build:
 - Frontmatter dump per page (for L01/L02 checks)
 - Parsed `wiki/.manifest.json` (for L10 check)
 
-## STEP 2 — Run the 11 checks
+## STEP 2 — Run the 12 checks
 
-Execute all 11 checks defined in [lint-checks.md](references/lint-checks.md):
+Execute all 12 checks defined in [lint-checks.md](references/lint-checks.md):
 
 **Structural (must-fix):**
 - L01: Frontmatter completeness
@@ -42,9 +42,10 @@ Execute all 11 checks defined in [lint-checks.md](references/lint-checks.md):
 **Provenance (advisory):**
 - L09: Provenance drift
 - L10: Manifest divergence
-- L11: Contradictions surfaced
+- L11: Contradictions surfaced (intra-page self-declared)
+- L12: Cross-page numeric / claim disagreement (advisory; user judgment required)
 
-Severity: L01–L04, L07 → **error**. L05, L06, L08, L09, L10 → **warning**. L11 → **info**.
+Severity: L01–L04, L07 → **error**. L05, L06, L08, L09, L10, L12 → **warning**. L11 → **info**.
 
 ## STEP 3 — Report
 
