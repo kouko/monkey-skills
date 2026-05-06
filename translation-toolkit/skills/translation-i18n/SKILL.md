@@ -137,4 +137,4 @@ Roles are behavioral. Any LLM model can fill any role; this skill specifies beha
 - `glossary/glossary-{source}--{target}.md` — bundled L2 glossary (5 pair files)
 - `../using-translation-toolkit/SKILL.md` — router (when to land here)
 - `../translation-intake/SKILL.md` — Layer 1 owner
-- `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions)
+- `../../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions)

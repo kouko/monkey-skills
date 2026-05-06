@@ -39,7 +39,7 @@ def main() -> int:
             continue
         subfolder, dst_name = target  # type: ignore[misc]
         for skill in ACTIVE_SKILLS:
-            dst = ROOT / skill / subfolder / dst_name
+            dst = ROOT / "skills" / skill / subfolder / dst_name
             if not dst.exists():
                 drifts.append(f"MISSING  {dst.relative_to(ROOT)}")
                 continue

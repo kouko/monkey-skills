@@ -52,5 +52,5 @@ jobs:
         # Hook script enforces no nested-subfolder violations per skill.
         run: |
           for skill in using-translation-toolkit translation-intake translation-i18n translation-doc translation-creative translation-audit; do
-            bash .claude/hooks/validate-skill-folder-structure.sh "translation-toolkit/$skill/SKILL.md"
+            bash .claude/hooks/validate-skill-folder-structure.sh "translation-toolkit/skills/$skill/SKILL.md"
           done

@@ -133,4 +133,4 @@ Roles are behavioral. Any LLM model can fill any role; this skill specifies beha
 - `typography/clreq-summary.md` — CLReq typography rules for `target_locale=zh-CN` / `zh-TW`
 - `../using-translation-toolkit/SKILL.md` — router (when to land here)
 - `../translation-intake/SKILL.md` — Layer 1 owner
-- `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decision #17 on audit-as-separate-skill)
+- `../../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decision #17 on audit-as-separate-skill)
