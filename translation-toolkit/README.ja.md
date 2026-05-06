@@ -123,14 +123,15 @@ monkey-skills 自体は repo PR #150 でこれら path に glossary を ship 済
 
 ## Status
 
-- **Version**: 0.1.0（initial scaffold、2026-05-06）
-- **License**: MIT（plugin code）+ bundled glossary は per-entry license（CC-BY-3.0 / CC-BY-4.0 / CC-BY-SA-4.0 / public-domain — `NOTICES.md` 参照）
-- **Stability**: Pre-release。Skill skeletons は v0.1.0 plan の subsequent task（A2-A5）で land 予定。
+- **Version**: 0.1.0（2026-05-06）
+- **License**: MIT（plugin code）+ bundled glossary は per-entry license（CC-BY-3.0 / CC-BY-4.0 / CC-BY-SA-4.0 / public-domain — [`NOTICES.md`](NOTICES.md) 参照）
+- **Stability**: First release。6 つの skill すべて ship 済み、bundled glossary は EN-pivot 約 10K+ entries に加え、curated JA↔ZH-TW manual seed（約 80+ entries）を含む。
 
 ## Reference
 
 - Design spec: [`docs/superpowers/specs/2026-05-06-translation-toolkit-design.md`](../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md)
-- Glossary licensing ledger: `NOTICES.md`（task A2 で land）
+- Implementation plan: [`docs/superpowers/plans/2026-05-06-translation-toolkit-v0.1.0.md`](../docs/superpowers/plans/2026-05-06-translation-toolkit-v0.1.0.md)
+- Glossary licensing ledger: [`NOTICES.md`](NOTICES.md)
 
 ## Contributing
 
