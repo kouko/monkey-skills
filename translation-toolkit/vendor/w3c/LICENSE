@@ -1,8 +1,11 @@
-# License placeholder for W3C jlreq/clreq
+W3C Document License — 3 February 2023
 
-The actual license text will be fetched and inserted during Task B-series build
-pipeline implementation. This placeholder ensures vendor/ folder structure
-exists for build scripts.
+The source content in this directory (jlreq-source.md, clreq-source.md) is
+extracted from W3C Editor's Drafts of:
+  - jlreq: https://www.w3.org/TR/jlreq/
+  - clreq: https://www.w3.org/TR/clreq/
 
-Reference: see translation-toolkit/NOTICES.md for the license category each
-source falls under.
+Licensed under the W3C Document License (3 February 2023):
+  https://www.w3.org/copyright/document-license-2023/
+
+Copyright © W3C® (MIT, ERCIM, Keio, Beihang). Required attribution per license.
