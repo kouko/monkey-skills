@@ -46,7 +46,7 @@
     },
     {
       "name": "translation-toolkit",
-      "description": "High-quality translation across i18n / technical docs / ad copy for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary and 5-gate verification (placeholder integrity / glossary compliance / back-translation / register / untranslatability).",
+      "description": "High-quality translation across i18n / technical docs / ad copy for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary (~10K+ entries) and 5-gate verification (placeholder integrity / glossary compliance / back-translation / register / untranslatability).",
       "source": "./translation-toolkit/"
     },
     {

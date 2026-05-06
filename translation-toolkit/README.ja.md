@@ -79,6 +79,8 @@ flowchart TD
     A --> OUT([Drift report])
     G -- PASS --> OUT2([Delivered])
     G -- NEEDS_REVISION --> S
+    G -- NEEDS_REVISION --> D
+    G -- NEEDS_REVISION --> C
 ```
 
 ## Install
