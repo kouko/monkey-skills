@@ -29,13 +29,13 @@ Goals:
     "strategy": "domestication | foreignization",
     "source_locale": "BCP-47",
     "target_locale": "BCP-47",
-    "domains": ["..."],
+    "domain": "<single value from 13-domain taxonomy>",
     "intent": "free-form short string (skopos hint)",
     "inferred": {
       "mode": true,
       "register": false,
       "strategy": true,
-      "domains": true
+      "domain": true
     },
     "inferred_values": {
       "mode": "faithful"
@@ -60,11 +60,11 @@ Goals:
     }
   ],
   "gate_verdicts": {
-    "M1": { "verdict": "PASS | FAIL", "diff": null, "metadata": {} },
-    "M2": { "verdict": "PASS | FAIL | PASS_ADVISORY", "diff": null, "metadata": {} },
-    "S1": { "verdict": "PASS | WARN | FAIL | SKIPPED", "diff": null, "metadata": {} },
-    "S2": { "verdict": "PASS | WARN", "diff": null, "metadata": {} },
-    "I1": { "verdict": "INFO", "diff": null, "metadata": {} }
+    "M1": { "verdict": "PASS | FAIL", "diff": null, "details": {} },
+    "M2": { "verdict": "PASS | FAIL | PASS_ADVISORY", "diff": null, "details": {} },
+    "S1": { "verdict": "PASS | WARN | FAIL | SKIPPED", "diff": null, "details": {} },
+    "S2": { "verdict": "PASS | WARN", "diff": null, "details": {} },
+    "I1": { "verdict": "INFO", "diff": null, "details": {} }
   },
   "untranslatables": [
     {
@@ -75,13 +75,9 @@ Goals:
     }
   ],
   "sources_used": {
-    "project_glossary_version": "...",
-    "bundled_glossary_versions": {
-      "glossary-en-US--ja-JP.md": "0.1.0"
-    },
-    "web_search_citations": [
-      { "term": "...", "url": "...", "snippet": "..." }
-    ]
+    "glossary": ["pontoon", "gnome", "<repo>/docs/i18n/glossary-ja-JP.md"],
+    "web_search": ["https://wikipedia.org/wiki/Foo"],
+    "corpus": ["nict-aspec"]
   },
   "warnings": ["..."]
 }
@@ -99,15 +95,16 @@ ISO 8601 timestamp of the run start (UTC recommended).
 
 ### `intake`
 
-The 5 axes plus `intent`. `inferred` is a per-axis boolean indicating whether the value came from auto-inference (`true`) or user override (`false`). `inferred_values` records what auto-inference would have chosen even when the user overrode it — useful for retrospective analysis of where heuristics misfire.
+The 5 axes plus `intent`. `inferred` is a per-axis boolean indicating whether the value came from auto-inference (`true`) or user override (`false`). `inferred_values` records what auto-inference would have chosen even when the user overrode it — useful for retrospective analysis of where heuristics misfire. Populated via `AuditTrailBuilder.add_inferred_value(axis, value)`.
 
 - `mode`: see [`orthogonal-axes.md`](orthogonal-axes.md) §Axis 1
 - `register`: see §Axis 2
 - `strategy`: see §Axis 3
 - `source_locale` / `target_locale`: BCP-47, both required
-- `domains`: array of one or more values from the v0.1.0 frozen taxonomy
+- `domain`: a single value from the v0.1.0 frozen 13-domain taxonomy. Callers needing to express multiple domains in v0.1 may comma-join (e.g., `"ui,tech.software"`); a structured array form is deferred to a later schema version.
 - `intent`: free-form skopos hint ("user-facing onboarding doc", "marketing email subject line variants", etc.)
 - `inferred.{axis}`: `true` if value came from auto-inference; `false` if user-supplied
+- `inferred_values.{axis}`: the value auto-inference *would* have chosen for that axis. Recorded only when the caller wants to capture the heuristic's choice (typically when the user overrode it in explicit mode). Empty `{}` when not in use.
 
 ### `glossary_resolution`
 
@@ -132,7 +129,7 @@ One entry per **distinct source-side term** that was looked up (not per occurren
 One entry per chunk. Index aligns with chunk order. Each entry records the **full intermediate state** for that chunk:
 
 - `index`: integer, 0-based
-- `source`: original source chunk text (for traceability; pre-protect-pass placeholders unmasked, post-protect-pass placeholders masked depending on what the implementer records — see implementation note)
+- `source` (optional): original source chunk text (for traceability; pre-protect-pass placeholders unmasked, post-protect-pass placeholders masked depending on what the implementer records — see implementation note). Pass via `AuditTrailBuilder.add_chunk(..., source=...)`; omit when not needed (the key is then absent from the entry).
 - `draft`: writer's v1 output
 - `reflect`: critic's structured JSON (4D or 5D depending on mode)
 - `improve`: reviser's v2 output
@@ -146,27 +143,33 @@ One entry per gate (M1 / M2 / S1 / S2 / I1). Each entry has the **uniform shape*
 ```yaml
 verdict: PASS | FAIL | WARN | PASS_ADVISORY | SKIPPED | INFO
 diff: <gate-specific structured diff; null when PASS or INFO>
-metadata: <gate-specific>
+details: <gate-specific structured detail dict; null when not provided>
 ```
 
-See [`verification-gates.md`](verification-gates.md) for per-gate schemas (`M1.diff`, `M2.diff`, `S1.diff`, `S2.diff`, `I1.metadata.untranslatables`).
+See [`verification-gates.md`](verification-gates.md) for per-gate schemas (`M1.diff`, `M2.diff`, `S1.diff`, `S2.diff`, `I1.details.untranslatables`).
 
 ### `untranslatables`
 
-Top-level mirror of `gate_verdicts.I1.metadata.untranslatables` for caller convenience — same data, same shape. Callers that only consume the audit trail (not the gate verdicts) can read this field directly.
+Top-level mirror of `gate_verdicts.I1.details.untranslatables` for caller convenience — same data, same shape. Callers that only consume the audit trail (not the gate verdicts) can read this field directly.
 
 - `source_phrase`: the flagged phrase
 - `decision`: the handling chosen (`borrow | explain | approximate`)
-- `target_rendering`: how it was rendered in v2
+- `target_rendering` (optional): how it was rendered in v2 (e.g., borrowed verbatim, paraphrased, footnote). Pass via `AuditTrailBuilder.add_untranslatable(..., target_rendering=...)`; omit when not needed (the key is then absent).
 - `alternatives`: other reasonable handlings the LLM considered
 
 ### `sources_used`
 
-Tracks data-provenance for reproducibility:
+Tracks data-provenance for reproducibility as a flat `{category: [source_id, ...]}` map. Within each category, source IDs are **deduplicated in insertion order** (first occurrence wins; subsequent duplicates are no-ops). Populated via `AuditTrailBuilder.add_source_used(category, source_id)`.
 
-- `project_glossary_version`: from `<repo>/docs/i18n/glossary-{tgt}.md` frontmatter `version` field, if present; null if no project glossary was used
-- `bundled_glossary_versions`: object mapping pair-glossary filename to its frontmatter `version`. Records which bundled glossary version was active during this run.
-- `web_search_citations`: array of L3-tier hits (term + URL + snippet). Empty if `--web-search=off` or no L3 hits.
+Standard v0.1 categories:
+
+- `glossary`: glossary sources consumed (e.g., `"pontoon"`, `"gnome"`, `"jlt"`, or a path string like `"<repo>/docs/i18n/glossary-ja-JP.md"` for the project glossary)
+- `web_search`: L3 web-search citations as URLs (e.g., `"https://wikipedia.org/wiki/Foo"`). Empty if `--web-search=off` or no L3 hits.
+- `corpus`: parallel-corpus / bilingual-text sources consumed (e.g., `"nict-aspec"`)
+
+For v0.1 `web_search` stores citation URLs only (`add_source_used("web_search", "<url>")`). Rich citation objects (`{term, url, snippet}`) are deferred to v0.2.
+
+Glossary version pinning (formerly recorded under `project_glossary_version` / `bundled_glossary_versions`) is deferred to v0.2; for v0.1 record the path or short identifier in `sources_used.glossary` and surface version mismatches in `warnings`.
 
 ### `warnings`
 
@@ -175,7 +178,7 @@ Free-form array of human-readable strings surfacing notable events:
 - `"L4 LLM-fallback used for term '<term>' (no reference material found)"`
 - `"glossary version mismatch: project glossary v0.4.0 expected v0.3.0"`
 
-Warnings are duplicated from gate-specific `metadata` and `diff` fields where applicable, so callers reading only `warnings` get a usable summary.
+Warnings are duplicated from gate-specific `details` and `diff` fields where applicable, so callers reading only `warnings` get a usable summary.
 
 ---
 
@@ -198,13 +201,13 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "strategy": "domestication",
     "source_locale": "en-US",
     "target_locale": "ja-JP",
-    "domains": ["ui", "tech.software"],
+    "domain": "ui,tech.software",
     "intent": "in-app help text for a SaaS settings page",
     "inferred": {
       "mode": true,
       "register": true,
       "strategy": true,
-      "domains": true
+      "domain": true
     },
     "inferred_values": {}
   },
@@ -259,7 +262,7 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "M1": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": {
+      "details": {
         "source_count": 1,
         "target_count": 1,
         "ids": ["P:01"]
@@ -268,7 +271,7 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "M2": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": {
+      "details": {
         "checked_terms": ["discard", "changes"],
         "project_glossary_path": "/repo/docs/i18n/glossary-ja-JP.md",
         "project_glossary_version": "0.3.2"
@@ -277,7 +280,7 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "S1": {
       "verdict": "SKIPPED",
       "diff": null,
-      "metadata": {
+      "details": {
         "subagent_dispatch": null,
         "isolation_capability": false,
         "reason": "translation-i18n does not run S1 by design (UI-string scope)"
@@ -286,7 +289,7 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "S2": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": {
+      "details": {
         "expected_register": "neutral",
         "judged_register": "neutral",
         "judge_role": "JUDGE"
@@ -295,7 +298,7 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
     "I1": {
       "verdict": "INFO",
       "diff": null,
-      "metadata": {
+      "details": {
         "untranslatables": []
       }
     }
@@ -304,11 +307,11 @@ A complete audit trail for a small en-US → ja-JP translation in faithful mode 
   "untranslatables": [],
 
   "sources_used": {
-    "project_glossary_version": "0.3.2",
-    "bundled_glossary_versions": {
-      "glossary-en-US--ja-JP.md": "0.1.0"
-    },
-    "web_search_citations": []
+    "glossary": [
+      "gnome",
+      "pontoon",
+      "/repo/docs/i18n/glossary-ja-JP.md"
+    ]
   },
 
   "warnings": []
@@ -337,13 +340,13 @@ Same shape, but for a transcreation run where S1 fired:
     "strategy": "domestication",
     "source_locale": "en-US",
     "target_locale": "ja-JP",
-    "domains": ["marketing"],
+    "domain": "marketing",
     "intent": "landing-page hero CTA for productivity SaaS",
     "inferred": {
       "mode": true,
       "register": true,
       "strategy": true,
-      "domains": true
+      "domain": true
     },
     "inferred_values": {}
   },
@@ -388,12 +391,12 @@ Same shape, but for a transcreation run where S1 fired:
     "M1": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": { "source_count": 0, "target_count": 0, "ids": [] }
+      "details": { "source_count": 0, "target_count": 0, "ids": [] }
     },
     "M2": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": { "checked_terms": [], "project_glossary_path": null }
+      "details": { "checked_terms": [], "project_glossary_path": null }
     },
     "S1": {
       "verdict": "PASS",
@@ -403,7 +406,7 @@ Same shape, but for a transcreation run where S1 fired:
         "back_translation": "Put an end to 'I have no time'. With Notion, your work gets organized in 5 minutes. Get started free now.",
         "original_source": "Stop wasting time. Get organized in 5 minutes. Try Notion free."
       },
-      "metadata": {
+      "details": {
         "embedding_model": "(runtime-supplied)",
         "subagent_dispatch": "Agent tool",
         "isolation_capability": true,
@@ -414,7 +417,7 @@ Same shape, but for a transcreation run where S1 fired:
     "S2": {
       "verdict": "PASS",
       "diff": null,
-      "metadata": {
+      "details": {
         "expected_register": "warm",
         "judged_register": "warm",
         "judge_role": "JUDGE"
@@ -423,7 +426,7 @@ Same shape, but for a transcreation run where S1 fired:
     "I1": {
       "verdict": "INFO",
       "diff": null,
-      "metadata": {
+      "details": {
         "untranslatables": []
       }
     }
@@ -432,11 +435,7 @@ Same shape, but for a transcreation run where S1 fired:
   "untranslatables": [],
 
   "sources_used": {
-    "project_glossary_version": null,
-    "bundled_glossary_versions": {
-      "glossary-en-US--ja-JP.md": "0.1.0"
-    },
-    "web_search_citations": []
+    "glossary": ["pontoon"]
   },
 
   "warnings": [
