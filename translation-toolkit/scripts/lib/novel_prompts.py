@@ -20,9 +20,9 @@ The prompt builder is a pure renderer:
 - builder formats Decision 4's six-section markdown layout, no I/O.
 
 Three functions mirror the v0.1.0 reflect/improve loop:
-- :func:`build_scene_draft_prompt`   — initial v1 draft.
-- :func:`build_scene_reflect_prompt` — 4D critique JSON.
-- :func:`build_scene_improve_prompt` — apply critique -> v2.
+- :func:`build_scene_draft_prompt`   -- initial v1 draft.
+- :func:`build_scene_reflect_prompt` -- 4D critique JSON.
+- :func:`build_scene_improve_prompt` -- apply critique -> v2.
 """
 from __future__ import annotations
 
@@ -62,18 +62,27 @@ def _format_glossary_hits(glossary_hits: list[dict]) -> str:
 
     Caller is responsible for filtering hits to those appearing in
     current + prev + next windows; this renderer keeps every entry passed.
+
+    Malformed entries (missing or empty ``source_term`` or ``target_term``)
+    are silently dropped: callers may legitimately have partial data, and a
+    missing entry is preferable to a malformed prompt line like
+    ``- -> target`` that the model could mis-parse.
     """
     if not glossary_hits:
-        return "(none — no in-scope glossary terms)"
+        return "(none -- no in-scope glossary terms)"
     lines: list[str] = []
     for hit in glossary_hits:
         source_term = hit.get("source_term", "")
         target_term = hit.get("target_term", "")
+        if not source_term or not target_term:
+            continue
         notes = hit.get("notes", "") or ""
         if notes:
             lines.append(f"- {source_term} -> {target_term} ({notes})")
         else:
             lines.append(f"- {source_term} -> {target_term}")
+    if not lines:
+        return "(none -- no in-scope glossary terms)"
     return "\n".join(lines)
 
 
@@ -132,7 +141,7 @@ def build_scene_draft_prompt(
         "# Translation parameters\n"
         f"{_format_intake_spec(intake_spec)}\n"
         "\n"
-        "# Glossary terms (only those that hit in current scene + prev/next windows)\n"
+        "# Glossary terms -- USE THESE, do not invent alternatives (only those that hit in current scene + prev/next windows)\n"
         f"{_format_glossary_hits(glossary_hits)}\n"
         "\n"
         "# Previous scene (last ~500 tokens) -- for continuity\n"
@@ -156,6 +165,7 @@ def build_scene_draft_prompt(
 
 
 def build_scene_reflect_prompt(
+    *,
     scene: Scene,
     draft_v1: str,
     intake_spec: dict,
@@ -213,7 +223,7 @@ def build_scene_improve_prompt(
 ) -> str:
     """Build the REVISER prompt: apply critique to v1 -> produce v2.
 
-    Mirrors v0.1.0 ``improve.md`` — the critique JSON is rendered inline
+    Mirrors v0.1.0 ``improve.md`` -- the critique JSON is rendered inline
     so the model has both the original draft and the structured fixes in
     a single payload.
     """
