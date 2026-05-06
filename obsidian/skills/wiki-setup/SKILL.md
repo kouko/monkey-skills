@@ -176,7 +176,9 @@ I'll create:
 Source scope (what wiki-ingest will read):
   Whole vault, EXCLUDING:
     - <user-listed exclude dirs from Step 1>
-    - wiki/, .obsidian/, .trash/, .git/, node_modules/, _raw/ (always excluded)
+    - DIR (system, top-level): wiki/, .* (all dot-dirs — .obsidian, .git, .claude, etc.), node_modules/, _raw/
+    - FILE (system, any depth): CLAUDE.md, AGENT.md, AGENTS.md, MEMORY.md
+    - Root-level hidden .md files (.notes.md style) auto-excluded
 
 Type "build it" to create, or tell me what to change.
 ```
@@ -224,14 +226,24 @@ OBSIDIAN_WIKI_EXCLUDE_FILES=""
 
 # === Optional ===
 
+# Hard cap per /wiki-ingest run. Consumed by wiki-ingest STEP 1.
+OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST=15
+
+# --- Advisory-only keys below (documentation, not consumed by skills) ---
+# These reflect current convention; changing them does NOT alter behavior.
+# Wiki page categories are fixed at the 6 type folders below; renaming here
+# won't make wiki-ingest write to a different folder set.
 OBSIDIAN_WIKI_CATEGORIES="concepts
 entities
 skills
 references
 synthesis
 journal"
-OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST=15
+
+# Convention name for raw-dump exclusion. Hardcoded as `_raw` in scan-vault.sh.
 OBSIDIAN_WIKI_RAW_DIR=_raw
+
+# Convention only — no scheduler reads this; rerun /wiki-lint manually.
 OBSIDIAN_WIKI_LINT_SCHEDULE=weekly
 ```
 
