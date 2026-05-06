@@ -1,0 +1,56 @@
+name: translation-toolkit CI
+
+# Runs the translation-toolkit pytest suite, the SSOT-vs-functional-copy
+# drift verifier, and the per-skill folder-structure validator on every
+# PR that touches the plugin (or the workflow itself), and on every push
+# to main that changes the plugin.
+
+on:
+  pull_request:
+    paths:
+      - 'translation-toolkit/**'
+      - '.github/workflows/translation-toolkit-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'translation-toolkit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + drift + skill-folder-structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pytest
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run translation-toolkit pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        working-directory: translation-toolkit
+        run: python3 -m pytest scripts/tests/ -v
+
+      - name: Verify SSOT-vs-functional-copy drift
+        # canonical/ is the single source of truth; each skill carries
+        # functional copies under glossary/ corpus/ typography/ references/.
+        # Any byte-level divergence fails the build.
+        working-directory: translation-toolkit
+        run: python3 scripts/verify-drift.py
+
+      - name: Validate skill folder structure
+        # Anthropic skill convention: SKILL.md + flat single-level subfolders.
+        # Hook script enforces no nested-subfolder violations per skill.
+        run: |
+          for skill in using-translation-toolkit translation-intake translation-i18n translation-doc translation-creative translation-audit; do
+            bash .claude/hooks/validate-skill-folder-structure.sh "translation-toolkit/$skill/SKILL.md"
+          done
