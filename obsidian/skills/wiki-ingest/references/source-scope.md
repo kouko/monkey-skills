@@ -13,7 +13,7 @@ Each blacklist has two layers: hardcoded system defaults + user-configurable fro
 | `wiki/` | The output itself; ingesting it would loop forever |
 | `.*` | Any top-level dir starting with `.` — by Unix / Obsidian convention these are hidden / system. Catches `.obsidian`, `.trash`, `.git`, `.github`, `.vscode`, `.idea`, `.claude`, `.cursor`, `.codex`, `.windsurf`, `.devcontainer`, `.husky`, `.changeset`, etc. — current and future tool config dirs |
 | `node_modules/` | JS dependency directory (vault may include scripts) |
-| `_raw/` | Convention for raw / unprocessed dumps (per `OBSIDIAN_WIKI_RAW_DIR`) |
+| `_raw/` | Convention for raw / unprocessed dumps (literal name; the `OBSIDIAN_WIKI_RAW_DIR` config key is advisory-only, not currently consumed) |
 
 These are baked into [`scripts/scan-vault.sh`](../scripts/scan-vault.sh). Adding more system-level exclusions requires editing this file and the script.
 
