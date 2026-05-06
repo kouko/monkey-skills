@@ -1,33 +1,100 @@
 ---
 name: using-translation-toolkit
-description: Router for translation-toolkit. Routes user translation request to the correct active skill based on input shape and intent. Use when user wants to translate something but hasn't specified which sub-skill.
+description: Router skill for translation-toolkit. Routes to one of 4 active translation skills based on user intent and input shape. Use when the user asks for any translation between en-US / ja-JP / zh-TW / zh-CN. 翻訳・翻譯・トランスレーション・本地化・i18n・transcreation。
 version: 0.1.0
 ---
 
 # using-translation-toolkit
 
-The router for translation-toolkit. Pick the right active skill based on user intent and input shape.
+Entry router for the `translation-toolkit` plugin. Inspect the user's request — intent + the shape of the input they handed in — and route to one of the 4 active specialist skills (`translation-i18n`, `translation-doc`, `translation-creative`, `translation-audit`), preceded by `translation-intake` if the brief is ambiguous. **This router does not translate, audit, or rewrite anything itself — it only decides which downstream skill should run.**
+
+## When to use
+
+- User asks for a translation between en-US / ja-JP / zh-TW / zh-CN and has not named a specific specialist skill.
+- User provides translatable content (i18n file / markdown doc / ad copy / existing translation pair) but no explicit pipeline.
+- Triggers (any locale): "translate / 翻訳して / 翻譯一下 / 翻译", "i18n / localize / 本地化 / ローカライズ", "audit translation / 翻訳レビュー / 翻譯審核", "transcreation / トランスクリエーション".
+
+## When NOT to use
+
+- User explicitly names a downstream skill ("run `translation-i18n` on this PO file") — call it directly.
+- Task is outside translation scope: copywriting → `copywriting-toolkit`, original-language drafting → `domain-teams:copywriting-team`, technical-doc authoring (not translating) → `domain-teams:docs-team`.
+- Locale pair is outside the v0.1.0 supported set (en-US ↔ ja-JP ↔ zh-TW ↔ zh-CN). For other languages, tell the user the toolkit cannot guarantee glossary coverage and ask if they want to proceed with degraded quality.
 
 ## Routing rules
 
-- User provides existing translation + asks to review/audit → invoke `translation-audit`
-- User provides PO / JSON / XLIFF / Android `strings.xml` / iOS `.strings` file → invoke `translation-i18n`
-- User provides Markdown / `.md` / technical doc → invoke `translation-doc`
-- User provides ad copy / marketing brief / headline / tagline → invoke `translation-creative`
-- Ambiguous (or short raw text) → invoke `translation-intake` first to clarify the 5 axes (mode / register / strategy / locale / domain), then route per output
+Pick exactly one downstream specialist. If multiple signals fire, the **input-shape rule wins** over the **intent rule** (an explicit PO file always routes to i18n even if the user says "creative").
+
+| Signal | Route to | Why |
+|---|---|---|
+| User provides existing translation + asks to review / audit / 改善提案 / 找問題 | `translation-audit` | Audit-only mode; no rewrite. Runs full M1+M2+S1+S2+I1 verification. |
+| User provides PO / JSON / XLIFF / Android `strings.xml` / iOS `.strings` file | `translation-i18n` | Strict placeholder + key preservation; project glossary compliance. |
+| User provides Markdown / `.md` / technical doc / API reference / runbook | `translation-doc` | AST-aware protection of code blocks, URLs, HTML tags, frontmatter. |
+| User provides ad copy / marketing brief / headline / tagline / catchphrase / キャッチコピー | `translation-creative` | Transcreation mode + 5D reflection (adds Effectiveness axis). |
+| Ambiguous (or short raw text with no format / domain hint) | `translation-intake` first | Intake clarifies the 5 axes (mode / register / strategy / locale / domain) + skopos, then re-routes per its output. |
+
+### What each downstream skill expects as input
+
+- `translation-intake` — raw text or an under-specified brief. Outputs an `intake-spec.json` consumed by the next skill.
+- `translation-i18n` — path to a PO / JSON / XLIFF / Android / iOS file (or inline strings keyed by ID). Reads intake-spec if present.
+- `translation-doc` — path to a `.md` / technical doc, optionally with frontmatter and code fences. Reads intake-spec if present.
+- `translation-creative` — short text + brand brief (voice / tone / forbidden phrases / target persona). Optionally `--variants=N` for alternative outputs. Reads intake-spec if present.
+- `translation-audit` — `(source, existing-target)` pair. Optionally a project glossary path. Outputs a diff report + improvement suggestions, **never a rewritten target**.
+
+### Disambiguation examples
+
+- *"Translate this README to Japanese"* + attaches `.md` → `translation-doc`.
+- *"翻訳して"* + pastes a 3-line catchphrase + brand voice description → `translation-creative`.
+- *"Help me with the Chinese translation"* + no file, no domain → `translation-intake` first.
+- *"Look at this `ja.po` and tell me what's wrong"* → `translation-audit` (review intent dominates over the i18n format).
+- *"Translate this `ja.po`"* (no review intent) → `translation-i18n`.
 
 ## Web search trade-off note
 
-Web search is ON by default across all 4 active translation skills (per spec Decision #7) for max quality. Caveats:
+Web search is **ON by default** across all 4 active translation skills (per spec Decision #7) for max quality — terminology lookup, parallel-corpus reference, brand-voice anchoring. Two cases warrant overriding to OFF via `--web-search=off`:
 
-- **Batch i18n runs (1000s of strings)**: per-miss searches multiply cost dramatically. Pass `--web-search=off` to disable for batch.
-- **Ad copy creative work**: web search may pull competitor copy that contaminates voice. Consider `--web-search=off` if working with established brand voice.
+1. **Batch i18n runs (1000s of strings)** — per-miss searches multiply cost and latency dramatically. For mass i18n updates, pass `--web-search=off` and rely on the bundled glossary + project glossary; spot-check a sample with web search on a second pass.
+2. **Ad copy / creative work with established brand voice** — web search may surface competitor copy that contaminates the assistant's voice register. If the brand voice is locked (e.g. via brand book or `voice_anchor` in intake-spec), `--web-search=off` keeps the output uncontaminated.
+
+(This single paragraph absorbs the per-skill `web-search-tradeoffs.md` files that were collapsed during fresh-eyes triage — see spec Decision #15.)
 
 ## Cross-plugin composition
 
-`copywriting-toolkit` will NOT auto-invoke this plugin. If user wants post-translation copy polish (voice / form / ethics), they must explicitly compose: translation-toolkit produces target-language draft → copywriting-toolkit applies its own framework gates.
+`copywriting-toolkit` will **NOT** auto-invoke `translation-toolkit`, and vice versa. The two represent orthogonal quality dimensions (translation fidelity ≠ copywriting persuasion / form / ethics). If the user wants post-translation copy polish, they must explicitly chain the two:
+
+```
+translation-toolkit → produces target-language draft (with gate verdicts)
+   ↓ (user explicitly requests)
+copywriting-toolkit → applies its own framework / voice / ethics gates
+```
+
+Per spec line 516 + Decision #15 — composition is opt-in only; neither plugin silently invokes the other.
+
+Other adjacent plugins:
+- `domain-teams:copywriting-team` — original-language copywriting (not translation). Use when the user is writing fresh copy in the target language, not translating from a source.
+- `domain-teams:docs-team` — original-language doc authoring + assessment. Use when the user is writing fresh docs, not translating existing ones.
+
+## What this skill does NOT do
+
+- Does **not** translate any content itself. If the user pastes source text directly into a router conversation and expects an answer, advise them which downstream skill to load and let the harness invoke it.
+- Does **not** audit translations itself — that is `translation-audit`'s job.
+- Does **not** invoke downstream skills via the Skill tool from within this router. The router only **describes** which specialist applies; the runtime / harness performs the actual invocation based on the user's next message.
+- Does **not** decide locale pairs or translation strategy (literal vs. transcreation) — that is `translation-intake`'s job.
+
+## Roles vocabulary (shared across the 4 active skills)
+
+For consistency when the user asks "what does each role do":
+
+- **WRITER** — produces the draft, preserves placeholders and protected spans.
+- **CRITIC** — structured critique only, no rewrites.
+- **REVISER** — consumes the critique, outputs v2.
+- **BACK-TRANSLATOR** — blind retranslation v2 → source, used by gate S1.
+- **JUDGE** — register / similarity verdicts, used by gates S2 / I1.
+
+(Roles are behavioral. Any LLM model can fill any role; the toolkit specifies behavior, not models. See spec § "Roles, not models".)
 
 ## Reference
 
-See `../docs/architecture.md` for high-level plugin architecture.
-See `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` for full spec.
+- `../docs/architecture.md` — high-level plugin topology, 5-layer pipeline, 4-tier glossary fallthrough.
+- `../docs/glossary-format-spec.md` — bundled glossary file format.
+- `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions #1-#17).
+- Sibling skill SKILL.md files — one per specialist (`../translation-{intake,i18n,doc,creative,audit}/SKILL.md`).
