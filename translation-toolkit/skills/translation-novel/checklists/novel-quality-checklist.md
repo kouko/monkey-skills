@@ -23,7 +23,11 @@
       (≥2 consecutive blank lines) that the chunker consumed on input
       MUST be re-emitted between target scenes by the reassembler — not
       orphaned inside any scene's translated body, and not silently
-      dropped. The chunker's round-trip contract (per
+      dropped. Fallback sub-scenes (`boundary_type ==
+      "fallback_token_fill"`) carry their preceding paragraph separator
+      inside `source_text` — no boundary text is re-emitted between
+      consecutive `fallback_token_fill` sub-scenes (would duplicate the
+      separator). The chunker's round-trip contract (per
       `protocols/scene-chunking.md` §"Round-trip contract") guarantees
       that source `chapter_text` decomposes into `scenes + consumed
       boundaries`; the reassembler must mirror this on the target side.
