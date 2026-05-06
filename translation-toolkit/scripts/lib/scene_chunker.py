@@ -160,8 +160,10 @@ def _greedy_token_fill(text: str, max_scene_tokens: int) -> list[str]:
     # Split into paragraphs while preserving the inter-paragraph blank lines
     # so chunks reassemble byte-for-byte.
     parts = re.split(r"(\n\s*\n)", text)
-    # parts alternates: paragraph, sep, paragraph, sep, ... (sep may be
-    # empty if text starts/ends with content).
+    # re.split with a capturing group produces [content, sep, content, sep, ...].
+    # Empty strings appear only when the separator is at the very start or end of
+    # text; the loop's `if not part: continue` skips them because they contribute
+    # nothing to token count or output.
     chunks: list[str] = []
     buf = ""
     for part in parts:

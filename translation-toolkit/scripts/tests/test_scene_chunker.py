@@ -207,6 +207,22 @@ def test_fallback_token_fill_when_no_markers() -> None:
     assert rejoined == chapter
 
 
+def test_fallback_token_fill_with_whitespace_blank_lines() -> None:
+    """Regex `\\n\\s*\\n` also matches whitespace-only blank lines (e.g.
+    `\\n   \\n`); fallback packing must still conserve bytes. 青空文庫
+    fixtures may contain such separators.
+    """
+    paragraph = "This is a long paragraph that contains enough words to add up. " * 3
+    paragraphs = [f"Paragraph {i}: {paragraph}" for i in range(30)]
+    chapter = "\n   \n".join(paragraphs)
+
+    scenes = chunk_chapter_into_scenes(chapter, max_scene_tokens=200)
+
+    assert len(scenes) >= 2, "small ceiling should force multiple sub-scenes"
+    rejoined = "".join(s.source_text for s in scenes)
+    assert rejoined == chapter, "whitespace-only separators must be preserved"
+
+
 def test_fallback_within_marker_run() -> None:
     """An oversize marker-bounded run sub-splits via fallback; the first
     sub-chunk keeps the marker tag, later ones get fallback_token_fill.
