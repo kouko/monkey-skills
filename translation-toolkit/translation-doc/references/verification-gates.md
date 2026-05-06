@@ -121,6 +121,11 @@ metadata:
 ### Why HARD (with advisory escape)
 Project glossary is the user's repo-specific authority — the consistency mechanism within a repo. Bypassing it breaks the user's QA/style invariants.
 
+### Known limitations (v0.1)
+
+- **Negation/composition false negatives.** M2 uses substring matching, so an expected translation like `確認` would falsely PASS if the target contains `未確認` ("not confirmed") — the literal characters appear, but the meaning is reversed by the negation prefix. Negation detection (`未`, `非`, `不`, `無` ...) requires NLP beyond simple string matching and is deferred to v0.2. For legal / medical translation work, an additional human-review pass is recommended.
+- **Source-side scope detection.** ASCII glossary terms (e.g. `cancel`) use word-boundary regex matching against the source, so `cancel` does NOT trigger the rule when the source says `cancellation`. CJK glossary terms (e.g. `取消`) use plain substring matching because CJK scripts have no whitespace word boundaries — `取消` IS considered in scope when the source contains `取消按鈕`. Deliberate trade-off: word-boundary semantics for the script that has them, substring fallback for the script that doesn't.
+
 ---
 
 ## S1 — Back-translation Diff (SHOULD; MUST in transcreation)
