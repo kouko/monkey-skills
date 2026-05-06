@@ -20,6 +20,7 @@ from distribute import (  # type: ignore  # noqa: E402
     ACTIVE_SKILLS,
     CANONICAL,
     ROOT,
+    iter_canonical_files,
     route,
 )
 
@@ -32,19 +33,20 @@ def main() -> int:
     drifts: list[str] = []
     checked = 0
 
-    for src in sorted(CANONICAL.iterdir()):
-        if not src.is_file():
-            continue
-        target = route(src.name)
+    for rel, src in iter_canonical_files():
+        target = route(rel)
         if target is None or target == "__UNROUTED__":
             continue
+        subfolder, dst_name = target  # type: ignore[misc]
         for skill in ACTIVE_SKILLS:
-            dst = ROOT / skill / target / src.name
+            dst = ROOT / skill / subfolder / dst_name
             if not dst.exists():
                 drifts.append(f"MISSING  {dst.relative_to(ROOT)}")
                 continue
             if not filecmp.cmp(src, dst, shallow=False):
-                drifts.append(f"DRIFT    {dst.relative_to(ROOT)} differs from canonical/{src.name}")
+                drifts.append(
+                    f"DRIFT    {dst.relative_to(ROOT)} differs from canonical/{rel}"
+                )
             checked += 1
 
     if drifts:

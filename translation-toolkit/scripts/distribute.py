@@ -7,12 +7,15 @@ SSOT-and-functional-copy pattern (spec Decision #14):
 
 Routing:
   - core-loop / 4d-reflection / 5d-effectiveness / orthogonal-axes /
-    verification-gates / audit-trail-spec  -> references/
+    verification-gates / audit-trail-spec / protect-pass-spec  -> references/
   - jlreq-summary / clreq-summary / requirements-for-japanese-text-layout-summary
     -> typography/
   - nict-en-ja-zh / opus-en-zh-tw / wmt-* -> corpus/
   - glossary-*--*.md (bidirectional pair files) -> glossary/
   - manual-entries-*--*.md -> NOT distributed (per-skill authored, not SSOT)
+  - prompts/<name>.md -> references/prompt-<name>.md (FLATTENED — Anthropic
+    flat-folder rule: skill subfolders cannot nest, so prompts/ is collapsed
+    into a `prompt-` filename prefix at the skill side)
 
 Workflow:
   1. Edit a file under scripts/canonical/.
@@ -62,26 +65,85 @@ CORPUS_FILES = {
 
 GLOSSARY_PREFIX = "glossary-"
 
+# Prompts live under canonical/prompts/<name>.md and get FLATTENED to
+# <skill>/references/prompt-<name>.md (Anthropic flat-folder rule —
+# skill subfolders cannot nest, so the prompts/ layer is collapsed
+# into a `prompt-` filename prefix on distribution).
+PROMPT_FILES = {
+    "prompts/draft.md",
+    "prompts/reflect-4d.md",
+    "prompts/reflect-5d.md",
+    "prompts/improve.md",
+}
+
 # Canonical files that are NOT distributed (per-skill authored, not SSOT).
 NON_DISTRIBUTED = {
     # manual-entries-*--*.md handled via prefix below
 }
 NON_DISTRIBUTED_PREFIX = "manual-entries-"
 
+# Filesystem noise to skip when scanning canonical/ — these are never authored
+# files, so we silently drop them rather than emitting WARN lines on every run.
+IGNORED_NAMES = {".DS_Store", ".gitkeep"}
 
-def route(filename: str) -> str | None:
-    """Return target subfolder name, or None if file is not distributed."""
-    if filename.startswith(NON_DISTRIBUTED_PREFIX):
+
+def route(rel_path: str) -> tuple[str, str] | str | None:
+    """Map a canonical-relative path to its skill-side destination.
+
+    Returns:
+      - None                       -> file is not distributed (per-skill SoT)
+      - "__UNROUTED__"             -> no rule matched; caller logs a warning
+      - (subfolder, dst_filename)  -> copy canonical/<rel_path> to
+                                       <skill>/<subfolder>/<dst_filename>
+                                       (dst_filename can rename for flattening)
+    """
+    if rel_path in PROMPT_FILES:
+        # Flatten: prompts/foo.md -> references/prompt-foo.md
+        return ("references", f"prompt-{Path(rel_path).name}")
+
+    name = Path(rel_path).name
+    # Top-level only: anything still inside a subdirectory we don't know about
+    # falls through to __UNROUTED__ (we only support flat top-level routes
+    # plus the explicit prompts/ flattening above; PROMPT_FILES already
+    # returned at line above, so any remaining "/" is unknown).
+    if "/" in rel_path:
+        return "__UNROUTED__"
+
+    if name.startswith(NON_DISTRIBUTED_PREFIX):
         return None
-    if filename in REFERENCE_FILES:
-        return "references"
-    if filename in TYPOGRAPHY_FILES:
-        return "typography"
-    if filename in CORPUS_FILES:
-        return "corpus"
-    if filename.startswith(GLOSSARY_PREFIX):
-        return "glossary"
+    if name in REFERENCE_FILES:
+        return ("references", name)
+    if name in TYPOGRAPHY_FILES:
+        return ("typography", name)
+    if name in CORPUS_FILES:
+        return ("corpus", name)
+    if name.startswith(GLOSSARY_PREFIX):
+        return ("glossary", name)
     return "__UNROUTED__"
+
+
+def iter_canonical_files() -> list[tuple[str, Path]]:
+    """Yield (relative_posix_path, absolute_path) for every file under canonical/.
+
+    Top-level files come back as "<name>"; nested files (e.g. prompts/) come
+    back as "<subdir>/<name>". Sorted for deterministic output.
+
+    Filesystem noise is filtered:
+      - macOS Finder droppings (.DS_Store, ._*-prefixed AppleDouble files)
+      - empty-dir markers (.gitkeep)
+      - Python bytecode caches (__pycache__/ trees)
+    """
+    out: list[tuple[str, Path]] = []
+    for p in sorted(CANONICAL.rglob("*")):
+        if not p.is_file():
+            continue
+        if p.name in IGNORED_NAMES or p.name.startswith("._"):
+            continue
+        if "__pycache__" in p.parts:
+            continue
+        rel = p.relative_to(CANONICAL).as_posix()
+        out.append((rel, p))
+    return out
 
 
 def main() -> int:
@@ -93,25 +155,30 @@ def main() -> int:
     skipped = 0
     unrouted: list[str] = []
 
-    for src in sorted(CANONICAL.iterdir()):
-        if not src.is_file():
-            continue
-        target = route(src.name)
+    for rel, src in iter_canonical_files():
+        target = route(rel)
         if target is None:
-            print(f"SKIP  (per-skill, not SSOT): {src.name}")
+            print(f"SKIP  (per-skill, not SSOT): {rel}")
             skipped += 1
             continue
         if target == "__UNROUTED__":
-            unrouted.append(src.name)
+            unrouted.append(rel)
             continue
+        subfolder, dst_name = target  # type: ignore[misc]
         for skill in ACTIVE_SKILLS:
-            dst_dir = ROOT / skill / target
+            dst_dir = ROOT / skill / subfolder
             dst_dir.mkdir(parents=True, exist_ok=True)
-            dst = dst_dir / src.name
+            dst = dst_dir / dst_name
             shutil.copyfile(src, dst)
         distributed += 1
-        print(f"OK    {src.name} -> {target}/ x {len(ACTIVE_SKILLS)} skills")
+        if dst_name == Path(rel).name:
+            print(f"OK    {rel} -> {subfolder}/ x {len(ACTIVE_SKILLS)} skills")
+        else:
+            print(f"OK    {rel} -> {subfolder}/{dst_name} x {len(ACTIVE_SKILLS)} skills (flattened)")
 
+    # Unrouted files warn-only — do NOT exit non-zero (lets repo evolve
+    # canonical/ without distribute changes blocking CI; verify-drift.py is
+    # the strict gate for byte identity, not distribute.py).
     for name in unrouted:
         print(f"WARN  unrouted (no matching subfolder rule): {name}")
 
