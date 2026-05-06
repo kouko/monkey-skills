@@ -110,12 +110,11 @@ translation-toolkit/
 ├── translation-i18n/                              # PO/JSON/XLIFF/Android/iOS — fully self-contained
 │   ├── SKILL.md
 │   ├── glossary/                                   # functional copies of all glossary files
-│   │   ├── glossary-ja-JP.md
-│   │   ├── glossary-zh-TW.md
-│   │   ├── glossary-zh-CN.md
-│   │   ├── glossary-en-US.md
-│   │   ├── glossary-zh-cross-strait.md
-│   │   └── glossary-direct-ja-zh-TW.md
+│   │   ├── glossary-en-US--ja-JP.md               # uniform pair-file schema
+│   │   ├── glossary-en-US--zh-CN.md
+│   │   ├── glossary-en-US--zh-TW.md
+│   │   ├── glossary-ja-JP--zh-TW.md
+│   │   └── glossary-zh-CN--zh-TW.md
 │   ├── typography/                                 # functional copies
 │   │   ├── jlreq-summary.md
 │   │   └── clreq-summary.md
@@ -140,12 +139,12 @@ translation-toolkit/
 └── scripts/                                        # plugin-level build pipeline (NOT a skill)
     ├── README.md                                  # SSOT-and-functional-copy explanation
     ├── canonical/                                 # Single Source of Truth
-    │   ├── glossary-ja-JP.md
-    │   ├── glossary-zh-TW.md
-    │   ├── glossary-zh-CN.md
-    │   ├── glossary-en-US.md
-    │   ├── glossary-zh-cross-strait.md
-    │   ├── manual-entries-ja-zh-TW.md             # hand-curated direct ja ↔ zh-TW
+    │   ├── glossary-en-US--ja-JP.md               # uniform pair-file schema (5 pair files)
+    │   ├── glossary-en-US--zh-CN.md
+    │   ├── glossary-en-US--zh-TW.md
+    │   ├── glossary-ja-JP--zh-TW.md
+    │   ├── glossary-zh-CN--zh-TW.md
+    │   ├── manual-entries-ja-JP--zh-TW.md         # hand-curated entries → glossary-ja-JP--zh-TW.md
     │   ├── jlreq-summary.md
     │   ├── clreq-summary.md
     │   ├── core-loop.md                           # 3-step shared reference
@@ -154,8 +153,9 @@ translation-toolkit/
     │   ├── orthogonal-axes.md
     │   ├── verification-gates.md
     │   └── audit-trail-spec.md
-    ├── build-glossary.py                          # Pontoon TBX + GNOME PO + JLT/NAER/etc CSV → canonical/
-    ├── build-direct-pairs.py                      # canonical glossary-ja + glossary-zh-TW + manual → canonical/glossary-direct-ja-zh-TW.md
+    ├── build-pairs-from-en.py                     # build glossary-en-US--{X}.md from upstream EN-X sources (Pontoon/GNOME/JLT/NAER/...)
+    ├── build-pair-zh-CN--zh-TW.py                 # build from NAER 兩岸對照
+    ├── build-pair-ja-JP--zh-TW.py                 # merge manual + derive from EN-pivot intersection
     ├── distribute.py                              # canonical/* → 各 skill subfolder
     ├── verify-drift.py                            # CI: byte-identical check across all functional copies
     ├── fetch-microsoft-terms.py                   # opt-in download script
@@ -217,39 +217,71 @@ L5: LLM fallback      (no reference material)
 
 Every hit at every tier is recorded in audit trail with source attribution.
 
-**Per-locale glossary file structure** (mirroring existing `docs/i18n/glossary-*.md` pattern in this repo):
+**Uniform pair-file schema** — every glossary file is a bi-directional language pair table. Filename: `glossary-{lang-A}--{lang-B}.md` (BCP-47, alphabetical, double-hyphen separator). Total 5 pair files in v0.1.0:
+
+```
+glossary-en-US--ja-JP.md     glossary-en-US--zh-TW.md     glossary-ja-JP--zh-TW.md
+glossary-en-US--zh-CN.md     glossary-zh-CN--zh-TW.md
+```
+
+Example (`glossary-en-US--ja-JP.md`):
 
 ```yaml
 ---
-locale: ja-JP
-pivot_lang: en-US
+pair: [en-US, ja-JP]                          # BCP-47, alphabetical
 version: 0.1.0
-sources: [mozilla-pontoon-2026-05-01, gnome-i18n-2024-02-15, jlt-v18.0, ...]
+sources: [mozilla-pontoon-2026-05-01, gnome-i18n-2024-02-15, jlt-v18.0, e-stat-2025-q4, tokyo-2024-12, nict-jecbs-v1.2, cabinet-2023-04]
 domains_supported: [general, ui, tech.software, tech.web, tech.data, tech.crypto, gov, legal, statistics, marketing, typography]
 ---
 
 ## meta
-(typography rules: 句末「。」、列舉「、」、半角英数字 spacing 規則、etc.)
+(typography rules — 句末「。」、列舉「、」、半角英数字 spacing 規則、etc.)
 
 ## domain: general
-| en | ja-JP | source | notes |
+| en-US | ja-JP | source | notes |
 | translate | 翻訳する | nict | — |
 
 ## domain: ui
-| en | ja-JP | source | notes |
+| en-US | ja-JP | source | notes |
 | Cancel | キャンセル | gnome | — |
 
 ## domain: tech.software
-| en | ja-JP | source | notes |
+| en-US | ja-JP | source | notes |
 | key | 鍵 | pontoon | crypto 文脈は tech.crypto を見よ |
 
 ## domain: tech.crypto
-| en | ja-JP | source | notes |
+| en-US | ja-JP | source | notes |
 | key | 暗号鍵 | — | tech.software の "key" を上書き |
-
-## domain: legal
-...
 ```
+
+Example (`glossary-ja-JP--zh-TW.md` — same schema, different pair):
+
+```yaml
+---
+pair: [ja-JP, zh-TW]
+version: 0.1.0
+sources: [manual-curated, derived-en-pivot]
+domains_supported: [general, ui, tech.software, ...]
+---
+
+## meta
+(ja 新字体 ↔ zh-TW 正體互換規則)
+
+## domain: general
+| ja-JP | zh-TW | source | notes |
+| 手紙 | 信 | manual | ⚠️ NOT「衛生紙」(false friend) |
+| 勉強 | 學習 / 努力 | manual | ⚠️ NOT「強迫」(false friend) |
+| 愛人 | 情婦 | manual | ⚠️ false friend, zh-TW「配偶」誤譯風險 |
+| 図書館 | 圖書館 | manual | 漢字共通詞・新字体↔正體 |
+| 御朱印 | 御朱印 | manual | 借用 |
+| 翻訳する | 翻譯 | derived (en: translate; nict × naer) | — |
+
+## domain: ui
+| ja-JP | zh-TW | source | notes |
+| キャンセル | 取消 | derived (en: Cancel; pontoon × naer) | — |
+```
+
+Both files use **identical schema** — same frontmatter shape, same `## meta` + `## domain: <name>` sections, same 4-column table (`<lang-A>` | `<lang-B>` | `source` | `notes`). The `pair` frontmatter field declares which languages this file covers; the table column headers match `pair` element order.
 
 **Domain taxonomy** (frozen at v0.1.0):
 
@@ -269,58 +301,31 @@ statistics       # 統計
 typography       # 排版規則 (meta-section)
 ```
 
-**Cross-language pivot** — EN as canonical pivot:
+**Lookup algorithm** — given source language `S`, target language `T`, and a term:
 
 ```
-              ja-JP
-                ↑
-                │
-       zh-TW ← EN → en-US
-                │
-                ↓
-              zh-CN
+Step 1: Try direct pair file glossary-{S}--{T}.md (or {T}--{S}.md, alphabetical)
+        Find term in S column → return T column value, audit_trail.path = "direct"
+
+Step 2 (if Step 1 misses and neither S nor T is en-US): pivot via en-US
+        Step 2a: glossary-{en-US}--{S}.md — find term in S column → get en-US pivot
+        Step 2b: glossary-{en-US}--{T}.md — find pivot in en-US column → get T target
+        audit_trail.path = "pivot.en-US"
+
+Step 3 (if pivot misses): fall through to L4 web search → L5 LLM
 ```
 
-Runtime lookup for `zh-TW → ja-JP` translates a zh-TW term:
-1. Look up term in `glossary-zh-TW.md` (within target domain) → get EN pivot
-2. Look up EN pivot in `glossary-ja-JP.md` (within same domain) → get JA target
-3. Audit trail: `via_pivot=en, src_pivot="<term>", src_source=naer, tgt_source=pontoon`
+The pair-file format is uniform; all 5 pair files use the same schema. EN serves as runtime pivot fallback only when a direct pair file is unavailable for some pair (e.g., `ja-JP ↔ zh-CN` — not bundled in v0.1.0; runtime pivots via EN automatically).
 
-**Special cases**:
-- `glossary-zh-cross-strait.md` — direct zh-TW ↔ zh-CN pairs (NAER 兩岸對照名詞), used preferentially for that pair
-- `glossary-direct-ja-zh-TW.md` — direct ja ↔ zh-TW pairs, used preferentially for that pair
+**Manual / derived entries** (visible via `source` column, not separate file structure):
+- `source: manual` — hand-curated (false-friend warnings, 漢字共通詞, 文化借用). Priority over derived if same source-term appears in both.
+- `source: derived (en: <pivot>; <upstream-pair-A> × <upstream-pair-B>)` — auto-built by build script intersecting two upstream EN-pivoted pair files.
+- `source: <upstream-name>` — directly sourced from a single upstream (e.g., `pontoon`, `nict`, `naer`).
 
-**Direct ja ↔ zh-TW glossary structure** (same domain-section pattern as other glossaries):
-
-```yaml
----
-pair: ja-JP ↔ zh-TW
-sources: [manual-curated, derived-en-pivot]
----
-
-## meta
-(ja 新字体 ↔ zh-TW 正體互換規則)
-
-## domain: general
-| ja-JP | zh-TW | source | notes |
-| 手紙 | 信 | manual | ⚠️ NOT「衛生紙」(false friend) |
-| 勉強 | 學習 / 努力 | manual | ⚠️ NOT「強迫」(false friend) |
-| 愛人 | 情婦 | manual | ⚠️ false friend, zh-TW「配偶」誤譯風險 |
-| 図書館 | 圖書館 | manual | 漢字共通詞・新字体↔正體 |
-| 御朱印 | 御朱印 | manual | 借用 |
-| 翻訳する | 翻譯 | derived (en: translate) | — |
-
-## domain: ui
-| キャンセル | 取消 | derived (en: Cancel; pontoon × naer) | — |
-...
-```
-
-`manual` entries are hand-curated (false-friend warnings, 漢字 共通詞, 文化 borrow) and take priority. `derived` entries are auto-generated by `build-direct-pairs.py` from EN-pivot intersections.
-
-Seed manual list (~80-100 entries) covers:
+For `glossary-ja-JP--zh-TW.md` specifically, seed manual list (~80-100 entries) covers:
 - 漢字 false friends (~25)
-- 漢字 共通詞 + 字形差異規則 (~20)
-- 文化 借用 (御朱印 / 居酒屋 / 寿司 etc.) (~15)
+- 漢字共通詞 + 字形差異規則 (~20)
+- 文化借用 (御朱印 / 居酒屋 / 寿司 etc.) (~15)
 - 高頻法律 / 金融 / gov 共通字 (~15)
 - 其他 high-frequency false-friend candidates (~15)
 
@@ -547,9 +552,9 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | 7 | Web search global ON by default for advanced quality | User Q4.2 |
 | 8 | Bundle scope = S2-S3 via Q5.2-B + opt-in Microsoft + opt-in JPO UTX | User Q4.1 / Q5.2 |
 | 9 | SSOT-and-functional-copy pattern (canonical/ + per-skill copies + CI drift check) | User Q5.1 (skill self-containment objection) |
-| 10 | EN-pivot canonical for cross-language; direct pair files for ja↔zh-TW and zh-TW↔zh-CN | User Q6.1-A |
+| 10 | Uniform pair-file schema: every glossary file is `glossary-{lang-A}--{lang-B}.md` (BCP-47, alphabetical, double-hyphen). 5 pair files in v0.1.0. EN serves as runtime pivot fallback when a direct pair is unavailable, NOT as a schema concept. | User Q6.1-A + unification audit |
 | 11 | 13 generic domain taxonomy (general/ui/tech.{software,web,data,crypto}/gov/legal/medical/finance/marketing/statistics/typography) | User Q6.2-A |
-| 12 | Direct ja↔zh-TW glossary uses domain sections (mirroring others), `source` column distinguishes manual vs derived | User push-back |
+| 12 | All pair files use identical structure (frontmatter + `## meta` + `## domain: <name>` sections + 4-column tables). The `source` column distinguishes upstream-sourced / manual-curated / derived entries within the same file. | User unification audit |
 | 13 | Wikidata runtime opt-in placed in L4 web search layer, NOT in glossary architecture | User scope-clarity push-back |
 | 14 | Strict skill self-containment: `translation-glossary` skill removed; glossary / typography / shared references live as plugin-level `scripts/canonical/` SoT distributed as functional copies into each active skill. No skill reads another skill's files at runtime. No skill invokes another skill via Skill tool. | User self-containment audit |
 
