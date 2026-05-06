@@ -55,7 +55,7 @@ def test_draft_prompt_contains_decision_4_sections() -> None:
     )
     headers = [
         "# Translation parameters",
-        "# Glossary terms (only those that hit in current scene + prev/next windows)",
+        "# Glossary terms -- USE THESE, do not invent alternatives (only those that hit in current scene + prev/next windows)",
         "# Previous scene (last ~500 tokens) -- for continuity",
         "# CURRENT SCENE -- translate ALL of this",
         "# Next scene opening (first ~200 tokens) -- for narrative flow context",
@@ -186,6 +186,51 @@ def test_draft_prompt_renders_glossary_hits() -> None:
         assert hit["target_term"] in glossary_section
 
 
+def test_draft_prompt_drops_malformed_glossary_hits() -> None:
+    """Entries with empty source_term or target_term are silently dropped."""
+    hits = [
+        {
+            "source_term": "桜",
+            "target_term": "cherry blossom",
+            "notes": "",
+            "audit_path": "direct",
+        },
+        {
+            # Missing source_term -- should be dropped.
+            "source_term": "",
+            "target_term": "samurai",
+            "notes": "",
+            "audit_path": "direct",
+        },
+        {
+            # Missing target_term -- should be dropped.
+            "source_term": "刀",
+            "target_term": "",
+            "notes": "",
+            "audit_path": "direct",
+        },
+    ]
+    prompt = build_scene_draft_prompt(
+        scene=_scene(),
+        prev_scene_v2=None,
+        next_scene_source=None,
+        intake_spec=_intake(),
+        glossary_hits=hits,
+    )
+    glossary_section = prompt.split("# Glossary terms")[1].split(
+        "# Previous scene"
+    )[0]
+    # Well-formed entry present.
+    assert "桜" in glossary_section
+    assert "cherry blossom" in glossary_section
+    # Malformed entries dropped: their unique target / source terms must be absent.
+    assert "samurai" not in glossary_section
+    assert "刀" not in glossary_section
+    # No malformed line shape leaks through.
+    assert "- ->" not in glossary_section
+    assert "->  " not in glossary_section
+
+
 def test_draft_prompt_empty_glossary() -> None:
     """glossary_hits=[] → section says (none) rather than dangling header."""
     prompt = build_scene_draft_prompt(
@@ -239,7 +284,7 @@ def test_reflect_prompt_4d_axes() -> None:
         draft_v1="She opened the window. Wind filled the room.",
         intake_spec=_intake(),
         glossary_hits=[],
-    )
+    )  # kwargs-only per build_scene_reflect_prompt signature
     for axis in ("Accuracy", "Fluency", "Style", "Terminology"):
         assert axis in prompt
     # JSON output schema is described.
