@@ -82,18 +82,24 @@ SOURCE   :
     Three days later, in another city.
 
 SCENES   : 2 scenes
-           [0] boundary_type="heading" or whatever started the run
+           [0] boundary_type="explicit_marker"  (scene 0 inherits the tag
+               of the next real boundary — its trailing edge is the marker)
                source_text="Tom turned the page.\n"
            [1] boundary_type="explicit_marker"
                source_text="Three days later, in another city.\n"
            consumed: "\n* * *\n\n" between scenes 0 and 1
 ```
 
+The first run is a chapter-leading prelude with no preceding marker, so
+the chunker tags scene 0 with the type of the first downstream boundary
+(the trailing edge that split it off). If the chapter has no boundary
+markers at all, scene 0 falls back to `"fallback_token_fill"`.
+
 ### 3. `blank_gap` — ≥2 consecutive blank lines
 
-A run of two or more blank lines (`stripped == ""`) — i.e. ≥3 newlines in
-the raw text. **A single blank line is just a paragraph separator and does
-NOT split scenes.** Blank-gap whitespace is also consumed by the chunker.
+A run of two or more consecutive blank lines (`stripped == ""`). A single
+blank line is treated as a paragraph separator within a scene, NOT a scene
+boundary. Blank-gap whitespace is consumed by the chunker.
 
 ```
 SOURCE   :
@@ -147,7 +153,7 @@ one run that gets tagged `fallback_token_fill` and sub-split as needed.
 | `heading` | KEPT — the `# ...` line is part of the scene's `source_text` |
 | `explicit_marker` | CONSUMED — the marker line is dropped from `source_text` |
 | `blank_gap` | CONSUMED — the ≥2 blank lines are dropped from `source_text` |
-| `fallback_token_fill` | KEPT (paragraph separator) — the splitter pivots on `\n\s*\n` and keeps the separator with one of the two sides via `re.split` capturing group |
+| `fallback_token_fill` | KEPT (paragraph separator) — the splitter pivots on `\n\s*\n` and keeps the separator with the **preceding** chunk (left side); see `_greedy_token_fill` in `scene_chunker.py` for the candidate-then-flush logic |
 
 The Layer 5 reassembler is responsible for **re-emitting** consumed
 boundary text between target scenes so the chapter target round-trips
