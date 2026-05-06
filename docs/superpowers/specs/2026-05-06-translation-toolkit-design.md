@@ -394,7 +394,7 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 
 **SHOULD gates** (fail → warn but allow output, audit-trail flagged):
 
-- **S1. Back-translation diff**: v2 → translate back to source language using a fresh LLM context (blind to original). Compare with original via embedding cosine similarity. Threshold: `< 0.85` warns. Transcreation mode: threshold relaxed to `< 0.70` (surface deviation expected).
+- **S1. Back-translation diff**: v2 → translate back to source language in an isolated subagent context (blind to original — see Execution Context per Layer for dispatch). Compare with original via embedding cosine similarity. Threshold: `< 0.85` warns. Transcreation mode: threshold relaxed to `< 0.70` (surface deviation expected). If runtime provides no subagent capability, S1 is skipped (audit-trail: `S1: SKIPPED (no isolation)`).
 - **S2. Register preservation**: LLM judge — does target register match intake-specified register? formal/neutral/warm/playful comparison.
 
 **MAY gates** (info only, audit-trail flagged, NOT interactive — audit-only flag callers must continue without prompts):
@@ -462,11 +462,19 @@ External capabilities described by behavior, not tool name:
 | Subagent dispatch | "if subagent / task isolation is available, …" | CC: Agent tool / Gemini: sub-task / fallback: same-thread |
 | File I/O | (Read tool — universal) | direct |
 
-### Execution mode
+### Execution context per layer
 
-**v0.1.0 ships single-thread only**: all roles run sequentially in the same context. This is the most portable mode (works on CC / Gemini / Codex identically) and avoids untested capability-detection branching.
+**Default — main context**: L1 intake, L2 preparation (parse / protect / source-analysis / glossary-resolve), L3 core loop (DRAFT / REFLECT / IMPROVE), L4 M1+M2+S2+I1 gates, L5 output. All run sequentially in the same LLM context.
 
-Subagent / fresh-eyes parallel mode (CRITIC and BACK-TRANSLATOR running in independent contexts to amplify the "fresh-eyes effect") is deferred to v0.2 with re-trigger condition: when measurements show single-thread reflection consistently misses errors that subagent reflection catches. Until then, runtime branching is not implemented.
+**S1 back-translation gate REQUIRES independent context**: the gate's correctness depends on translating `v2 → source language` blind to the original source. The main context has already seen both source and v2; it cannot un-see them. This is an architectural requirement, not an optimization.
+
+S1 dispatch behavior:
+- If the runtime provides subagent / task-isolation capability (CC's Agent tool, Gemini's sub-task, etc.) — S1 dispatches a subagent to translate v2 → source language with no prior context, then computes embedding cosine similarity vs original source.
+- If the runtime does NOT provide such capability — S1 gracefully skips with audit-trail flag `S1: SKIPPED (no isolation capability)`. M1/M2/S2/I1 continue normally.
+
+**`--audit-only` mode** inherits the same execution-context rules: L4 verification runs unchanged (including S1 isolation requirement). L3 is skipped (existing target supplied instead of generated).
+
+**Other roles (CRITIC fresh-eyes optimization)** — running CRITIC in a separate subagent for fresh-eyes effect on REFLECT — is deferred to v0.2 per fresh-eyes triage. Re-trigger: measurements show single-thread REFLECT consistently misses errors that subagent REFLECT catches. Until then, REFLECT runs in main context.
 
 ---
 
@@ -558,7 +566,8 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | 12 | All pair files use identical structure (frontmatter + `## meta` + `## domain: <name>` sections + 4-column tables). The `source` column distinguishes upstream-sourced / manual-curated / derived entries within the same file. | User unification audit |
 | 13 | Wikidata runtime fallback deferred to v0.2 (was originally scoped to L4 web search; deferred per fresh-eyes triage — currently no implementation surface). | User scope-clarity push-back + fresh-eyes triage |
 | 14 | Strict skill self-containment: `translation-glossary` skill removed; glossary / typography / shared references live as plugin-level `scripts/canonical/` SoT distributed as functional copies into each active skill. No skill reads another skill's files at runtime. No skill invokes another skill via Skill tool. | User self-containment audit |
-| 15 | Fresh-eyes triage applied (2026-05-06). Cuts: `translation-audit` → `--audit-only` flag, L2 TM deferred, Wikidata deferred, subagent auto-detect deferred, service-interface fields trimmed (8→4), creative `--variants` opt-in (was always-3), per-skill `web-search-tradeoffs.md` collapsed, NICT moved from glossary to corpus reference (sentences ≠ term pairs). NOT cut (per user override): bundled glossary scope (kept S2-S3 = ~10K+ entries), 13 domains, S1/S2/I1 gate semantics, ja-JP↔zh-TW manual seed (~80-100), fetch-microsoft / fetch-jpo opt-in scripts. | dev-workflow:proposal-critique fresh-eyes audit + user "做滿不省略 glossary" override |
+| 15 | Fresh-eyes triage applied (2026-05-06). Cuts: `translation-audit` → `--audit-only` flag, L2 TM deferred, Wikidata deferred, **CRITIC fresh-eyes** subagent auto-detect deferred (NOT all subagent — see #16), service-interface fields trimmed (8→4), creative `--variants` opt-in (was always-3), per-skill `web-search-tradeoffs.md` collapsed, NICT moved from glossary to corpus reference (sentences ≠ term pairs). NOT cut (per user override): bundled glossary scope (kept S2-S3 = ~10K+ entries), 13 domains, S1/S2/I1 gate semantics, ja-JP↔zh-TW manual seed (~80-100), fetch-microsoft / fetch-jpo opt-in scripts. | dev-workflow:proposal-critique fresh-eyes audit + user "做滿不省略 glossary" override |
+| 16 | **S1 back-translation gate uses subagent dispatch** in v0.1 — required for blindness (correctness, not optimization). Runtimes without subagent capability gracefully skip S1 (audit-trail flagged). All other layers run in main context. CRITIC fresh-eyes (REFLECT in subagent) remains deferred per #15. | User clarifying question on subagent architecture |
 
 ---
 
