@@ -254,6 +254,7 @@ metadata:
 |---|---|
 | `translation-i18n` | M1 + M2 (strict) |
 | `translation-doc` | M1 + M2 + S1 + S2 |
+| `translation-novel` | M1 + M2 + S1 (MUST in transcreation, SHOULD in faithful) + S2 + I1 |
 | `translation-creative` | M1 + M2 + S1 (MUST in transcreation, SHOULD in faithful) + S2 |
 | `translation-audit` | full M1 + M2 + S1 + S2 + I1, gate semantics typically stricter |
 

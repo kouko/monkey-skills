@@ -154,7 +154,7 @@ fiction では OFF が概ね正しいデフォルト。
   [`protocols/scene-window-context.md`](protocols/scene-window-context.md)
 - [`checklists/novel-quality-checklist.md`](checklists/novel-quality-checklist.md)
 - [`references/verification-gates.md`](references/verification-gates.md) ·
-  [`references/core-loop.md`](references/core-loop.md)（scene-window builder）
+  [`references/core-loop.md`](references/core-loop.md)（DRAFT / REFLECT / IMPROVE のロール契約）
 - [`references/4d-reflection.md`](references/4d-reflection.md)（Accuracy / Fluency / Style / Terminology）
 - Typography: [`typography/jlreq-summary.md`](typography/jlreq-summary.md)（ja-JP）·
   [`typography/clreq-summary.md`](typography/clreq-summary.md)（zh-CN / zh-TW）
