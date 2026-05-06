@@ -53,7 +53,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-__all__ = ["Scene", "chunk_chapter_into_scenes"]
+__all__ = ["Scene", "approx_tokens", "chunk_chapter_into_scenes"]
 
 
 # Whole-line allow-list for explicit scene-break markers. Match after strip().
@@ -73,8 +73,14 @@ class Scene:
     token_count: int  # approx, via char/3 heuristic
 
 
-def _approx_tokens(text: str) -> int:
-    """Approximate token count via len(text) / 3 (rounded up if non-empty)."""
+def approx_tokens(text: str) -> int:
+    """Approximate token count via len(text) / 3 (rounded up if non-empty).
+
+    Public helper shared with novel_prompts.py so both modules use the same
+    char-heuristic when sizing scene-window slices. Latin text is over-counted,
+    CJK is under-counted; ~3 chars/token is a workable middle ground for mixed
+    JP/ZH/EN novels and is only ever used to size budget windows, never to bill.
+    """
     if not text:
         return 0
     return max(1, len(text) // 3)
@@ -170,7 +176,7 @@ def _greedy_token_fill(text: str, max_scene_tokens: int) -> list[str]:
         if not part:
             continue
         candidate = buf + part
-        if _approx_tokens(candidate) <= max_scene_tokens or not buf:
+        if approx_tokens(candidate) <= max_scene_tokens or not buf:
             buf = candidate
         else:
             chunks.append(buf)
@@ -234,13 +240,13 @@ def chunk_chapter_into_scenes(
             effective_type = run_type
 
         # If the run fits within budget, emit it as a single scene.
-        if _approx_tokens(run_text) <= max_scene_tokens:
+        if approx_tokens(run_text) <= max_scene_tokens:
             scenes.append(
                 Scene(
                     index=idx,
                     source_text=run_text,
                     boundary_type=effective_type,
-                    token_count=_approx_tokens(run_text),
+                    token_count=approx_tokens(run_text),
                 )
             )
             idx += 1
@@ -258,7 +264,7 @@ def chunk_chapter_into_scenes(
                     index=idx,
                     source_text=sub_text,
                     boundary_type=tag,
-                    token_count=_approx_tokens(sub_text),
+                    token_count=approx_tokens(sub_text),
                 )
             )
             idx += 1
