@@ -84,54 +84,60 @@ translation-toolkit/
 ├── README.md / README.ja.md / README.zh-TW.md   # tri-language per repo PR #150
 ├── NOTICES.md                                    # bundled-source attributions
 │
-├── using-translation-toolkit/SKILL.md            # router skill
+├── docs/                                          # plugin-level documentation (NOT a skill)
+│   ├── glossary-format-spec.md                    # how users extend their project glossary
+│   └── architecture.md                            # plugin architecture overview
 │
-├── translation-intake/                           # Layer 1 owner
-│   └── SKILL.md (+ protocols/, references/)
+├── vendor/                                        # bundled-source LICENSE files (plugin-level, NOT a skill)
+│   ├── mozilla-pontoon/LICENSE
+│   ├── gnome-i18n/LICENSE
+│   ├── naer/LICENSE
+│   ├── jlt/LICENSE
+│   ├── e-stat/LICENSE
+│   ├── tokyo/LICENSE
+│   ├── nict/LICENSE
+│   ├── cabinet/LICENSE
+│   └── w3c/LICENSE
 │
-├── translation-glossary/                         # data-provider skill (lookup API for other skills + user-facing override docs)
-│   ├── SKILL.md                                   # describes glossary file format and lookup API contract
-│   ├── glossary/
+├── using-translation-toolkit/SKILL.md             # Router skill (entry point)
+│
+├── translation-intake/                            # Layer 1 owner — fully self-contained
+│   ├── SKILL.md
+│   ├── protocols/intake-auto.md
+│   ├── protocols/intake-explicit.md
+│   └── references/orthogonal-axes.md             # functional copy
+│
+├── translation-i18n/                              # PO/JSON/XLIFF/Android/iOS — fully self-contained
+│   ├── SKILL.md
+│   ├── glossary/                                   # functional copies of all glossary files
 │   │   ├── glossary-ja-JP.md
 │   │   ├── glossary-zh-TW.md
 │   │   ├── glossary-zh-CN.md
 │   │   ├── glossary-en-US.md
-│   │   ├── glossary-zh-cross-strait.md           # zh-TW ↔ zh-CN direct (NAER 兩岸對照)
-│   │   └── glossary-direct-ja-zh-TW.md           # ja ↔ zh-TW direct (manual + derived)
-│   ├── typography/
-│   │   ├── jlreq-summary.md                      # W3C jlreq summary
-│   │   └── clreq-summary.md                      # W3C clreq summary
-│   ├── vendor/                                    # source LICENSE files
-│   │   ├── mozilla-pontoon/LICENSE
-│   │   ├── gnome-i18n/LICENSE
-│   │   ├── naer/LICENSE
-│   │   ├── jlt/LICENSE
-│   │   ├── e-stat/LICENSE
-│   │   ├── tokyo/LICENSE
-│   │   ├── nict/LICENSE
-│   │   ├── cabinet/LICENSE
-│   │   └── w3c/LICENSE
-│   └── references/
-│       └── format-spec.md                        # glossary md format spec for user override
-│
-├── translation-i18n/                             # PO/JSON/XLIFF/Android/iOS
-│   ├── SKILL.md
-│   ├── glossary/                                  # functional copies (build-script distributed)
-│   ├── typography/                                # functional copies
-│   ├── references/                                # functional copies of shared core docs
-│   ├── checklists/i18n-format-checklist.md       # skill-specific
+│   │   ├── glossary-zh-cross-strait.md
+│   │   └── glossary-direct-ja-zh-TW.md
+│   ├── typography/                                 # functional copies
+│   │   ├── jlreq-summary.md
+│   │   └── clreq-summary.md
+│   ├── references/                                 # functional copies of shared core docs
+│   │   ├── core-loop.md
+│   │   ├── 4d-reflection.md
+│   │   ├── orthogonal-axes.md
+│   │   ├── verification-gates.md
+│   │   └── audit-trail-spec.md
+│   ├── checklists/i18n-format-checklist.md       # skill-specific (NOT distributed elsewhere)
 │   └── protocols/placeholder-protect.md          # skill-specific
 │
-├── translation-doc/                              # markdown / 技術文件
-│   └── (same pattern; checklists/protocols differ)
+├── translation-doc/                               # markdown / technical docs — fully self-contained
+│   └── (same self-contained pattern as translation-i18n; skill-specific checklists/protocols differ)
 │
-├── translation-creative/                         # 廣告文案 / transcreation
-│   └── (same pattern; +5th reflect axis)
+├── translation-creative/                          # ad copy / transcreation — fully self-contained
+│   └── (same self-contained pattern; references/ also includes 5d-effectiveness.md)
 │
-├── translation-audit/                            # 審核既有翻譯
-│   └── (same pattern; no actual translation)
+├── translation-audit/                             # audit existing translations — fully self-contained
+│   └── (same self-contained pattern; no format-write logic)
 │
-└── scripts/                                       # SSOT + build pipeline
+└── scripts/                                        # plugin-level build pipeline (NOT a skill)
     ├── README.md                                  # SSOT-and-functional-copy explanation
     ├── canonical/                                 # Single Source of Truth
     │   ├── glossary-ja-JP.md
@@ -156,6 +162,19 @@ translation-toolkit/
     └── fetch-jpo-utx.py                           # opt-in download script
 ```
 
+### Skill Self-Containment Guarantee
+
+**Every skill in this plugin is fully self-contained at runtime.** A skill never reads files belonging to another skill, never invokes another skill via the Skill tool, and can be physically extracted to a different plugin without modification.
+
+Concrete guarantees:
+
+| Rule | Mechanism |
+|---|---|
+| Each skill reads only its own subfolder files | All shared content (glossary, typography rules, reference docs) is distributed as functional copies to each skill's `glossary/` / `typography/` / `references/` subfolders |
+| Skills do NOT invoke each other | Coordination between router → intake → 4 active skills happens via runtime data passing (intake spec, audit trail JSON) only, not via Skill tool dispatch |
+| Plugin-level `docs/` `vendor/` `scripts/` are NOT read at runtime | These are user-facing or build-time resources only. Active skills' SKILL.md never references paths outside their own skill folder |
+| Any skill can be physically extracted | Copy `translation-i18n/` to another plugin and it still works (it has its own complete glossary + references) |
+
 ### SSOT-and-Functional-Copy Pattern
 
 Pattern source: PR #159 in this repo (codified as memory `feedback_ssot_functional_copy_pattern`). Applied here because:
@@ -166,8 +185,8 @@ Pattern source: PR #159 in this repo (codified as memory `feedback_ssot_function
 
 Resolution:
 
-- **Canonical source of truth**: `scripts/canonical/*.md` — the only place to edit
-- **Functional copies**: each skill has its own `glossary/` / `typography/` / `references/` folder containing byte-identical copies of relevant canonical files
+- **Canonical source of truth**: `scripts/canonical/*.md` — the only place to edit shared content. Lives at plugin level, NOT inside any skill.
+- **Functional copies**: each skill has its own `glossary/` / `typography/` / `references/` folder containing byte-identical copies of relevant canonical files (distributed by `distribute.py`)
 - **Drift rule**: edits to canonical require running `distribute.py` in same commit; `verify-drift.py` runs in CI to enforce byte-identical
 - **At runtime**: each skill reads only its local copies; truly self-contained per Anthropic convention
 
@@ -405,11 +424,12 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 |---|---|---|---|---|---|---|---|
 | `using-translation-toolkit` | route only | — | — | — | — | n/a | n/a |
 | `translation-intake` | OWNS | — | — | — | — | n/a | n/a |
-| `translation-glossary` | provides lookup API to other skills + manages bundled data + `format-spec.md` for user override | — | — | — | — | n/a | n/a |
 | `translation-i18n` | reads intake | PO/JSON/XLIFF/strings + strict placeholder | shared 4D | M1+M2 strict | format roundtrip | ON | SHOULD |
 | `translation-doc` | reads intake | markdown AST + code/URL/HTML protect | shared 4D + windowing | M1+M2+S1+S2 | markdown roundtrip | ON | SHOULD |
 | `translation-creative` | reads intake | brand brief intake | 5D (+effectiveness in transcreation mode) | M1+M2+S1 (MUST in transcreation, SHOULD in faithful)+S2 | text + 3 variants | ON | MUST in transcreation mode, SHOULD in faithful mode |
 | `translation-audit` | reads intake | parse source + target pair | comparative analysis | full 5-gate audit | diff report | ON | runs as comparison |
+
+(Glossary and typography rules used to be wrapped in a `translation-glossary` skill in earlier draft. Removed in favor of plugin-level `docs/glossary-format-spec.md` + `vendor/` LICENSE files + `scripts/canonical/` SoT, with each active skill holding its own functional copies — see Skill Self-Containment Guarantee above.)
 
 Web search default = ON across all 4 active skills (per Q4.2 — "user invoked the tool because they want max quality"). Skills can be overridden to OFF via `--web-search=off` for cost/latency control. The earlier per-format heuristic (i18n=OFF / creative=OFF) is documented as a tuning note in each skill's `references/web-search-tradeoffs.md` for users who want to opt out.
 
@@ -519,7 +539,7 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | # | Decision | Source |
 |---|---|---|
 | 1 | A_revised: standalone plugin, peer to copywriting-toolkit, NOT in domain-teams | User Q1 |
-| 2 | 4 active translation skills + 1 router + 1 intake + 1 data-provider (translation-glossary). Format-routed pattern, not minimal/matrix/3-layer. | User Q2 |
+| 2 | 4 active translation skills + 1 router + 1 intake = 6 skills total. Format-routed pattern, not minimal/matrix/3-layer. Earlier draft had a 7th `translation-glossary` skill; removed in favor of plugin-level resources to enforce strict skill self-containment. | User Q2 + self-containment audit |
 | 3 | 5 orthogonal axes (mode/register/strategy/locale/domain), exposed as auto/explicit binary | User Q3.1 |
 | 4 | back-translation = SHOULD gate (MUST for transcreation only) | User Q3.2 |
 | 5 | Roles, not models — no model names in skill body | User Q3.3 |
@@ -531,6 +551,7 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | 11 | 13 generic domain taxonomy (general/ui/tech.{software,web,data,crypto}/gov/legal/medical/finance/marketing/statistics/typography) | User Q6.2-A |
 | 12 | Direct ja↔zh-TW glossary uses domain sections (mirroring others), `source` column distinguishes manual vs derived | User push-back |
 | 13 | Wikidata runtime opt-in placed in L4 web search layer, NOT in glossary architecture | User scope-clarity push-back |
+| 14 | Strict skill self-containment: `translation-glossary` skill removed; glossary / typography / shared references live as plugin-level `scripts/canonical/` SoT distributed as functional copies into each active skill. No skill reads another skill's files at runtime. No skill invokes another skill via Skill tool. | User self-containment audit |
 
 ---
 
