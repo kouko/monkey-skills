@@ -44,6 +44,7 @@ REFERENCE_FILES = {
     "orthogonal-axes.md",
     "verification-gates.md",
     "audit-trail-spec.md",
+    "protect-pass-spec.md",
 }
 
 TYPOGRAPHY_FILES = {
