@@ -1,10 +1,12 @@
-"""Test Pontoon / GNOME / JLT / NAER / e-Stat / Tokyo / Cabinet ingest -> glossary-en-US--{tgt}.md emit."""
+"""Test Pontoon / GNOME / JLT / NAER / e-Stat / Tokyo / Cabinet ingest -> glossary-en-US--{tgt}.md emit
+plus zh-CN <-> zh-TW pair build from NAER cross-strait CSV."""
 import subprocess
 import textwrap
 from pathlib import Path
 
 REPO_ROOT = Path("/Users/kouko/GitHub/monkey-skills")
 SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pairs-from-en.py"
+ZH_PAIR_SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pair-zh-CN--zh-TW.py"
 
 
 def test_pontoon_ja_tbx_to_pair_file(tmp_path):
@@ -469,3 +471,87 @@ def test_gnome_po_real_file_ja(tmp_path):
                   if l.startswith("| ") and "| en-US " not in l and not l.startswith("|--")]
     # GNOME ja.po has ~850 non-empty entries
     assert len(table_rows) >= 500, f"expected >=500 entries, got {len(table_rows)}"
+
+
+def test_zh_cn_zh_tw_csv_to_pair_file(tmp_path):
+    """Cross-strait CSV produces glossary-zh-CN--zh-TW.md with mapped domains."""
+    csv_fixture = tmp_path / "cross-strait.csv"
+    csv_fixture.write_text(textwrap.dedent('''\
+        zh-CN,zh-TW,category
+        软件,軟體,資訊名詞
+        统计量,統計量,統計學名詞
+        土豆,馬鈴薯,飲食
+    '''))
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(ZH_PAIR_SCRIPT),
+         "--cross-strait-csv", str(csv_fixture),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-zh-CN--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    # Frontmatter
+    assert "pair: [zh-CN, zh-TW]" in content
+    assert "sources: [naer-cross-strait]" in content
+    # Domain-mapped entries
+    assert "## domain: tech.software" in content
+    assert "| 软件 | 軟體 | naer-cross-strait" in content
+    assert "## domain: statistics" in content
+    assert "| 统计量 | 統計量 | naer-cross-strait" in content
+    # Unmapped category -> general
+    assert "## domain: general" in content
+    assert "| 土豆 | 馬鈴薯 | naer-cross-strait" in content
+    # Table header reflects the pair
+    assert "| zh-CN | zh-TW | source | notes |" in content
+
+
+def test_zh_cn_zh_tw_real_sample(tmp_path):
+    """Real bundled cross-strait sample produces non-empty tech.software section."""
+    real_csv = REPO_ROOT / "translation-toolkit/vendor/naer/cross-strait.csv"
+    if not real_csv.exists():
+        import pytest
+        pytest.skip("Real cross-strait sample CSV not yet present")
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(ZH_PAIR_SCRIPT),
+         "--cross-strait-csv", str(real_csv),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-zh-CN--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    assert "pair: [zh-CN, zh-TW]" in content
+    assert "## domain: tech.software" in content
+    assert "naer-cross-strait" in content
+    table_rows = [l for l in content.splitlines()
+                  if l.startswith("| ") and "| zh-CN " not in l and not l.startswith("|--")]
+    assert len(table_rows) >= 50, f"expected >=50 entries, got {len(table_rows)}"
+
+
+def test_zh_cn_zh_tw_empty_csv_emits_frontmatter_only(tmp_path):
+    """Empty CSV (header only) produces frontmatter without crashing."""
+    csv_fixture = tmp_path / "empty.csv"
+    csv_fixture.write_text("zh-CN,zh-TW,category\n")
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(ZH_PAIR_SCRIPT),
+         "--cross-strait-csv", str(csv_fixture),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-zh-CN--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    assert "pair: [zh-CN, zh-TW]" in content
+    assert "domains_supported: []" in content
+    # No domain section emitted
+    assert "## domain:" not in content
