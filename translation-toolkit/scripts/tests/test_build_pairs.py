@@ -4,10 +4,12 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-REPO_ROOT = Path("/Users/kouko/GitHub/monkey-skills")
-SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pairs-from-en.py"
-ZH_PAIR_SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pair-zh-CN--zh-TW.py"
-JA_ZH_PAIR_SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pair-ja-JP--zh-TW.py"
+# tests/ -> scripts/ -> translation-toolkit/
+SCRIPTS_DIR = Path(__file__).resolve().parent.parent
+PLUGIN_ROOT = SCRIPTS_DIR.parent
+SCRIPT = SCRIPTS_DIR / "build-pairs-from-en.py"
+ZH_PAIR_SCRIPT = SCRIPTS_DIR / "build-pair-zh-CN--zh-TW.py"
+JA_ZH_PAIR_SCRIPT = SCRIPTS_DIR / "build-pair-ja-JP--zh-TW.py"
 
 
 def test_pontoon_ja_tbx_to_pair_file(tmp_path):
@@ -51,7 +53,7 @@ def test_pontoon_ja_tbx_to_pair_file(tmp_path):
 
 def test_pontoon_real_tbx_zh_tw(tmp_path):
     """Real Pontoon zh-TW TBX produces ~95 entries with frontmatter intact."""
-    real_tbx = REPO_ROOT / "translation-toolkit/vendor/mozilla-pontoon/zh-TW.v2.tbx"
+    real_tbx = PLUGIN_ROOT / "vendor/mozilla-pontoon/zh-TW.v2.tbx"
     if not real_tbx.exists():
         # Skip if vendor file not present (CI bootstrap)
         import pytest
@@ -144,7 +146,7 @@ def test_jlt_csv_dispatches_to_legal_or_gov_domain(tmp_path):
 
 def test_jlt_csv_real_sample_ingest(tmp_path):
     """Real bundled JLT sample produces both gov and legal sections."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/jlt/standard-bilingual-dictionary.csv"
+    real_csv = PLUGIN_ROOT / "vendor/jlt/standard-bilingual-dictionary.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real JLT sample CSV not yet present")
@@ -356,7 +358,7 @@ def test_cabinet_csv_handles_utf8_bom(tmp_path):
 
 def test_naer_real_sample_zh_tw(tmp_path):
     """Real bundled NAER sample produces multiple domain sections."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/naer/academic-terms-zh-TW.csv"
+    real_csv = PLUGIN_ROOT / "vendor/naer/academic-terms-zh-TW.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real NAER sample CSV not yet present")
@@ -382,7 +384,7 @@ def test_naer_real_sample_zh_tw(tmp_path):
 
 def test_estat_real_sample_ja_jp(tmp_path):
     """Real bundled e-Stat sample produces statistics section."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/e-stat/stat-terms-en-ja.csv"
+    real_csv = PLUGIN_ROOT / "vendor/e-stat/stat-terms-en-ja.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real e-Stat sample CSV not yet present")
@@ -403,7 +405,7 @@ def test_estat_real_sample_ja_jp(tmp_path):
 
 def test_tokyo_real_sample_ja_jp(tmp_path):
     """Real bundled Tokyo sample produces gov + general sections."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/tokyo/en-ja-translation.csv"
+    real_csv = PLUGIN_ROOT / "vendor/tokyo/en-ja-translation.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real Tokyo sample CSV not yet present")
@@ -425,7 +427,7 @@ def test_tokyo_real_sample_ja_jp(tmp_path):
 
 def test_cabinet_real_sample_ja_jp(tmp_path):
     """Real bundled Cabinet CSV produces a large gov section."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/cabinet/gov-orgs-en-ja.csv"
+    real_csv = PLUGIN_ROOT / "vendor/cabinet/gov-orgs-en-ja.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real Cabinet CSV not yet present")
@@ -450,7 +452,7 @@ def test_cabinet_real_sample_ja_jp(tmp_path):
 
 def test_gnome_po_real_file_ja(tmp_path):
     """Real GNOME ja.po produces a large `ui` domain section."""
-    real_po = REPO_ROOT / "translation-toolkit/vendor/gnome-i18n/ja.po"
+    real_po = PLUGIN_ROOT / "vendor/gnome-i18n/ja.po"
     if not real_po.exists():
         import pytest
         pytest.skip("Real GNOME ja.po not yet downloaded")
@@ -512,7 +514,7 @@ def test_zh_cn_zh_tw_csv_to_pair_file(tmp_path):
 
 def test_zh_cn_zh_tw_real_sample(tmp_path):
     """Real bundled cross-strait sample produces non-empty tech.software section."""
-    real_csv = REPO_ROOT / "translation-toolkit/vendor/naer/cross-strait.csv"
+    real_csv = PLUGIN_ROOT / "vendor/naer/cross-strait.csv"
     if not real_csv.exists():
         import pytest
         pytest.skip("Real cross-strait sample CSV not yet present")
@@ -745,9 +747,9 @@ def test_ja_jp_zh_tw_manual_overrides_derived_on_conflict(tmp_path):
 
 def test_ja_jp_zh_tw_real_run_produces_output(tmp_path):
     """Running against real canonical files produces output containing manual entries."""
-    real_manual = REPO_ROOT / "translation-toolkit/scripts/canonical/manual-entries-ja-JP--zh-TW.md"
-    real_en_ja = REPO_ROOT / "translation-toolkit/scripts/canonical/glossary-en-US--ja-JP.md"
-    real_en_zh = REPO_ROOT / "translation-toolkit/scripts/canonical/glossary-en-US--zh-TW.md"
+    real_manual = PLUGIN_ROOT / "scripts/canonical/manual-entries-ja-JP--zh-TW.md"
+    real_en_ja = PLUGIN_ROOT / "scripts/canonical/glossary-en-US--ja-JP.md"
+    real_en_zh = PLUGIN_ROOT / "scripts/canonical/glossary-en-US--zh-TW.md"
     if not (real_manual.exists() and real_en_ja.exists() and real_en_zh.exists()):
         import pytest
         pytest.skip("Real canonical files not present (run B1-B4a first)")
