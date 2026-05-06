@@ -217,6 +217,7 @@ def build_scene_reflect_prompt(
 
 
 def build_scene_improve_prompt(
+    *,
     scene: Scene,
     draft_v1: str,
     critique_json: dict,

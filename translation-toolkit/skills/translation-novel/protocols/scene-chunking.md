@@ -69,9 +69,14 @@ are NOT recognised in v0.2.0; add to `_EXPLICIT_MARKERS` in
 
 **The marker line is consumed by the chunker** — it does not appear in
 either the preceding or following scene's `source_text`. The Layer 5
-reassembler must re-emit the marker between target scenes (chunker exposes
-the consumed marker via internal state; concrete public API for the
-reassembler lands with Phase D).
+reassembler must re-emit the marker between target scenes. The chunker
+does NOT currently expose consumed boundary text via a first-class API;
+reassembler implementations should derive consumed text by diffing the
+input chapter against the concatenated `source_text` of all scenes (see
+the byte-conservation property tested in
+`test_scene_chunker.py::test_explicit_marker_split`). A first-class
+`consumed_boundaries` API is deferred to a future release if/when a
+concrete Layer 5 implementation lands.
 
 ```
 SOURCE   :
