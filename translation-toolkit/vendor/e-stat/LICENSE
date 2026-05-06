@@ -1,8 +1,35 @@
-# License placeholder for e-Stat
+e-Stat 統計用語集 — License
+============================
 
-The actual license text will be fetched and inserted during Task B-series build
-pipeline implementation. This placeholder ensures vendor/ folder structure
-exists for build scripts.
+Source: e-Stat (政府統計の総合窓口) — Statistics of Japan
+        Operated by 総務省 統計局 / 独立行政法人 統計センター
+URL:    https://www.e-stat.go.jp/
+        Terms page: https://www.e-stat.go.jp/classifications/terms/90
 
-Reference: see translation-toolkit/NOTICES.md for the license category each
-source falls under.
+License: 政府標準利用規約 第 2.0 版
+         (Japanese Government Standard Terms of Use, Version 2.0)
+         https://www.e-stat.go.jp/help/copyright
+
+The 政府標準利用規約 第 2.0 版 is explicitly declared compatible with
+Creative Commons Attribution 4.0 International (CC-BY 4.0). e-Stat data
+— including the 統計用語集 (Statistics Glossary) accessible via the
+"分類" / "用語" portal — may be redistributed, modified, and used
+commercially provided attribution is given.
+
+Attribution
+-----------
+
+When redistributing the data (including derived works such as glossary
+files that incorporate e-Stat entries), credit the source as follows:
+
+  Source: e-Stat 政府統計の総合窓口 (Statistics of Japan, e-Stat),
+  operated by 総務省 統計局 / 統計センター. Licensed under 政府標準利用
+  規約 第 2.0 版 (CC-BY 4.0 compatible). https://www.e-stat.go.jp/
+
+Notes
+-----
+
+This LICENSE accompanies the bundled curated sample CSV in this directory
+(`stat-terms-en-ja.csv`, ~30 entries) shipped with translation-toolkit
+v0.1.0. It also applies to any full-dataset replacement the operator
+manually downloads per `README.md`.

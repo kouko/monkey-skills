@@ -11,9 +11,10 @@ Wired sources:
   - Pontoon TBX (Task B1)        — Mozilla Pontoon community glossary
   - GNOME PO    (Task B2)        — GNOME Translation Project glossary
   - JLT CSV     (Task B2, ja-JP) — Japanese Law Translation 標準対訳辞書
-
-Tasks B3/B4 will add NAER / e-Stat / Tokyo / Cabinet parsers under the same
-dispatcher (see `collect_entries`).
+  - NAER CSV    (Task B3, zh-TW) — 樂詞網 學術名詞 academic terminology
+  - e-Stat CSV  (Task B3, ja-JP) — 政府統計 統計用語集
+  - Tokyo CSV/XLSX (Task B3, ja-JP) — 東京都 日英対訳辞書
+  - Cabinet CSV (Task B3, ja-JP) — 内閣官房 部局課名・官職名英訳名称一覧
 
 Output: scripts/canonical/glossary-en-US--<target>.md with frontmatter +
 domain sections + 4-column tables (en-US | <target> | source | notes).
@@ -24,6 +25,12 @@ Domain inference:
   - GNOME:   always "ui" (GNOME desktop UI strings).
   - JLT:     "gov" if ja_term contains 省/庁/局/府 (gov-org name);
              else "legal".
+  - NAER:    NAER_CATEGORY_TO_DOMAIN map (CS/info → tech.software;
+             統計學 → statistics; 法律 → legal; 醫學 → medical;
+             經濟學 → finance; default → general).
+  - e-Stat:  always "statistics".
+  - Tokyo:   TOKYO_CATEGORY_TO_DOMAIN map (行政/福祉 → gov; default → general).
+  - Cabinet: always "gov".
 
 Pontoon TBX <xml:lang> mapping (Pontoon's own locale code, NOT BCP-47):
   ja-JP  -> ja
@@ -36,7 +43,9 @@ GNOME glossary filename mapping (vendor/gnome-i18n/<locale>.po):
   zh-CN  -> zh-CN.po
 
 Dependencies:
-  - polib  (for parse_gnome_po; install via `python3 -m pip install polib`)
+  - polib    (for parse_gnome_po;  python3 -m pip install polib)
+  - openpyxl (for parse_tokyo_xlsx when xlsx is supplied; CSV path
+              works without it. python3 -m pip install openpyxl)
 """
 from __future__ import annotations
 
@@ -66,6 +75,33 @@ GNOME_PO_MAP = {
     "ja-JP": "ja.po",
     "zh-TW": "zh-TW.po",
     "zh-CN": "zh-CN.po",
+}
+
+# NAER 樂詞網 — map 學術領域 (academic field) -> domain.
+NAER_CATEGORY_TO_DOMAIN = {
+    "電子計算機名詞": "tech.software",
+    "資訊名詞": "tech.software",
+    "計算機名詞": "tech.software",
+    "電機工程名詞": "tech.software",
+    "統計學名詞": "statistics",
+    "法律名詞": "legal",
+    "醫學名詞": "medical",
+    "牙醫學名詞": "medical",
+    "藥學名詞": "medical",
+    "經濟學名詞": "finance",
+    "管理學名詞": "finance",
+    "會計學名詞": "finance",
+    # default → "general"
+}
+
+# 東京都 日英対訳 — map カテゴリ (category) -> domain.
+TOKYO_CATEGORY_TO_DOMAIN = {
+    "行政": "gov",
+    "福祉": "gov",
+    "観光": "general",
+    "防災": "general",
+    "生活": "general",
+    # default → "general"
 }
 
 
@@ -216,6 +252,190 @@ def parse_jlt_csv(csv_path: Path) -> list[dict]:
     return entries
 
 
+def parse_naer_csv(csv_path: Path) -> list[dict]:
+    """Parse a NAER 學術名詞 / 樂詞網 CSV file -> list of entry dicts.
+
+    Header autodetection: tries common Chinese / English column names.
+    Domain inferred from `學術領域` (academic field) via NAER_CATEGORY_TO_DOMAIN;
+    unknown categories default to "general".
+
+    Returns: list of {en, target, source: 'naer', domain, notes (= category)}.
+    """
+    import csv
+
+    entries: list[dict] = []
+    # NAER CSVs sometimes carry UTF-8 BOM; utf-8-sig handles both.
+    with csv_path.open(encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            return entries
+        for row in reader:
+            en = (row.get("英文名稱") or row.get("英文")
+                  or row.get("en_term") or row.get("English") or "").strip()
+            zh_tw = (row.get("中文名稱") or row.get("中文")
+                     or row.get("zh_TW_term")
+                     or row.get("Traditional Chinese") or "").strip()
+            category = (row.get("學術領域") or row.get("category")
+                        or row.get("分類") or "").strip()
+            if not en or not zh_tw:
+                continue
+            domain = NAER_CATEGORY_TO_DOMAIN.get(category, "general")
+            entries.append({
+                "en": en,
+                "target": zh_tw,
+                "source": "naer",
+                "domain": domain,
+                "notes": category or "—",
+            })
+    return entries
+
+
+def parse_estat_csv(csv_path: Path) -> list[dict]:
+    """Parse an e-Stat 統計用語集 CSV file -> list of entry dicts.
+
+    Handles UTF-8 BOM via utf-8-sig. All entries land in domain=statistics.
+
+    Returns: list of {en, target, source: 'e-stat', domain: 'statistics', notes}.
+    """
+    import csv
+
+    entries: list[dict] = []
+    with csv_path.open(encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            return entries
+        for row in reader:
+            en = (row.get("English") or row.get("en_term")
+                  or row.get("英文") or "").strip()
+            ja = (row.get("Japanese") or row.get("ja_term")
+                  or row.get("日本語") or row.get("用語") or "").strip()
+            if not en or not ja:
+                continue
+            entries.append({
+                "en": en,
+                "target": ja,
+                "source": "e-stat",
+                "domain": "statistics",
+                "notes": "—",
+            })
+    return entries
+
+
+def parse_tokyo_csv(csv_path: Path) -> list[dict]:
+    """Parse a Tokyo 日英対訳 CSV file -> list of entry dicts.
+
+    Domain inferred from カテゴリ via TOKYO_CATEGORY_TO_DOMAIN; default = general.
+
+    Returns: list of {en, target, source: 'tokyo', domain, notes (= category)}.
+    """
+    import csv
+
+    entries: list[dict] = []
+    with csv_path.open(encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            return entries
+        for row in reader:
+            en = (row.get("English") or row.get("英語")
+                  or row.get("en_term") or "").strip()
+            ja = (row.get("Japanese") or row.get("日本語")
+                  or row.get("ja_term") or row.get("用語") or "").strip()
+            cat = (row.get("カテゴリ") or row.get("category")
+                   or row.get("分類") or "").strip()
+            if not en or not ja:
+                continue
+            domain = TOKYO_CATEGORY_TO_DOMAIN.get(cat, "general")
+            entries.append({
+                "en": en,
+                "target": ja,
+                "source": "tokyo",
+                "domain": domain,
+                "notes": cat or "—",
+            })
+    return entries
+
+
+def parse_tokyo_xlsx(xlsx_path: Path) -> list[dict]:
+    """Parse a Tokyo 日英対訳 .xlsx file -> list of entry dicts.
+
+    Requires `openpyxl`. Raises RuntimeError if not installed — callers
+    should catch and fall through gracefully (the dispatcher logs a WARN
+    and continues), mirroring the polib pattern in parse_gnome_po.
+    """
+    try:
+        import openpyxl  # noqa: WPS433 — runtime dep guarded
+    except ImportError as exc:  # pragma: no cover - dep guard
+        raise RuntimeError(
+            "openpyxl not installed; run: python3 -m pip install openpyxl"
+        ) from exc
+
+    wb = openpyxl.load_workbook(str(xlsx_path), read_only=True, data_only=True)
+    sheet = wb.active
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        return []
+    headers = [str(c).strip() if c is not None else "" for c in rows[0]]
+
+    en_keys = ("English", "英語", "en_term")
+    ja_keys = ("Japanese", "日本語", "ja_term", "用語")
+    cat_keys = ("カテゴリ", "category", "分類")
+
+    en_col = next((i for i, h in enumerate(headers) if h in en_keys), None)
+    ja_col = next((i for i, h in enumerate(headers) if h in ja_keys), None)
+    cat_col = next((i for i, h in enumerate(headers) if h in cat_keys), None)
+
+    if en_col is None or ja_col is None:
+        return []
+
+    entries: list[dict] = []
+    for row in rows[1:]:
+        en = str(row[en_col]).strip() if row[en_col] is not None else ""
+        ja = str(row[ja_col]).strip() if row[ja_col] is not None else ""
+        if not en or not ja:
+            continue
+        cat = ""
+        if cat_col is not None and row[cat_col] is not None:
+            cat = str(row[cat_col]).strip()
+        domain = TOKYO_CATEGORY_TO_DOMAIN.get(cat, "general")
+        entries.append({
+            "en": en,
+            "target": ja,
+            "source": "tokyo",
+            "domain": domain,
+            "notes": cat or "—",
+        })
+    return entries
+
+
+def parse_cabinet_csv(csv_path: Path) -> list[dict]:
+    """Parse a Cabinet 部局課名・官職名 CSV file -> list of entry dicts.
+
+    Handles UTF-8 BOM via utf-8-sig. All entries land in domain=gov.
+
+    Returns: list of {en, target, source: 'cabinet', domain: 'gov', notes}.
+    """
+    import csv
+
+    entries: list[dict] = []
+    with csv_path.open(encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            return entries
+        for row in reader:
+            en = (row.get("English") or row.get("en_term") or "").strip()
+            ja = (row.get("Japanese") or row.get("ja_term") or "").strip()
+            if not en or not ja:
+                continue
+            entries.append({
+                "en": en,
+                "target": ja,
+                "source": "cabinet",
+                "domain": "gov",
+                "notes": "—",
+            })
+    return entries
+
+
 # --- Emitter --------------------------------------------------------------
 
 def emit_pair_file(target_locale: str,
@@ -278,17 +498,28 @@ def emit_pair_file(target_locale: str,
 def collect_entries(target: str, args: argparse.Namespace) -> dict[str, list[dict]]:
     """Run all wired parsers for `target` and return entries grouped by domain.
 
-    Wired: Pontoon (all targets), GNOME PO (all targets), JLT CSV (ja-JP only).
-    B3/B4 will append NAER / e-Stat / Tokyo / Cabinet.
+    Wired:
+      - Pontoon (all targets)
+      - GNOME PO (all targets)
+      - JLT CSV (ja-JP only)
+      - NAER CSV (zh-TW only)
+      - e-Stat CSV (ja-JP only)
+      - Tokyo CSV/XLSX (ja-JP only)
+      - Cabinet CSV (ja-JP only)
 
-    Override semantics: if any of --pontoon-tbx / --gnome-po / --jlt-csv is
-    set (test-fixture mode), only the explicitly-set source(s) are read; the
+    Override semantics: if any --*-tbx / --*-po / --*-csv / --*-xlsx is set
+    (test-fixture mode), only the explicitly-set source(s) are read; the
     others are skipped to keep test output deterministic. In normal mode
     (no overrides), all wired sources are read from defaults under vendor/.
     """
     entries_by_domain: dict[str, list[dict]] = defaultdict(list)
 
-    isolated = bool(args.pontoon_tbx or args.gnome_po or args.jlt_csv)
+    isolated = bool(
+        args.pontoon_tbx or args.gnome_po or args.jlt_csv
+        or args.naer_csv or args.estat_csv
+        or args.tokyo_csv or args.tokyo_xlsx
+        or args.cabinet_csv
+    )
 
     # Pontoon
     if args.pontoon_tbx:
@@ -342,6 +573,88 @@ def collect_entries(target: str, args: argparse.Namespace) -> dict[str, list[dic
                 print(f"WARN: JLT CSV not found at {jlt_csv}; skipping JLT for {target}",
                       file=sys.stderr)
 
+    # NAER CSV (zh-TW only — NAER is EN<->ZH-TW academic terms)
+    if target == "zh-TW":
+        if args.naer_csv:
+            naer_csv = Path(args.naer_csv)
+        elif not isolated:
+            naer_csv = DEFAULT_VENDOR / "naer" / "academic-terms-zh-TW.csv"
+        else:
+            naer_csv = None
+        if naer_csv is not None:
+            if naer_csv.exists():
+                for e in parse_naer_csv(naer_csv):
+                    entries_by_domain[e["domain"]].append(e)
+            else:
+                print(f"WARN: NAER CSV not found at {naer_csv}; skipping NAER for {target}",
+                      file=sys.stderr)
+
+    # e-Stat / Tokyo / Cabinet — all ja-JP only.
+    if target == "ja-JP":
+        # e-Stat
+        if args.estat_csv:
+            estat_csv = Path(args.estat_csv)
+        elif not isolated:
+            estat_csv = DEFAULT_VENDOR / "e-stat" / "stat-terms-en-ja.csv"
+        else:
+            estat_csv = None
+        if estat_csv is not None:
+            if estat_csv.exists():
+                for e in parse_estat_csv(estat_csv):
+                    entries_by_domain[e["domain"]].append(e)
+            else:
+                print(f"WARN: e-Stat CSV not found at {estat_csv}; "
+                      f"skipping e-Stat for {target}", file=sys.stderr)
+
+        # Tokyo (CSV preferred; XLSX fallback if explicitly supplied or
+        # only XLSX exists in vendor/)
+        tokyo_csv: Path | None = None
+        tokyo_xlsx: Path | None = None
+        if args.tokyo_csv:
+            tokyo_csv = Path(args.tokyo_csv)
+        elif args.tokyo_xlsx:
+            tokyo_xlsx = Path(args.tokyo_xlsx)
+        elif not isolated:
+            default_csv = DEFAULT_VENDOR / "tokyo" / "en-ja-translation.csv"
+            default_xlsx = DEFAULT_VENDOR / "tokyo" / "en-ja-translation.xlsx"
+            if default_csv.exists():
+                tokyo_csv = default_csv
+            elif default_xlsx.exists():
+                tokyo_xlsx = default_xlsx
+        if tokyo_csv is not None:
+            if tokyo_csv.exists():
+                for e in parse_tokyo_csv(tokyo_csv):
+                    entries_by_domain[e["domain"]].append(e)
+            else:
+                print(f"WARN: Tokyo CSV not found at {tokyo_csv}; "
+                      f"skipping Tokyo for {target}", file=sys.stderr)
+        elif tokyo_xlsx is not None:
+            if tokyo_xlsx.exists():
+                try:
+                    for e in parse_tokyo_xlsx(tokyo_xlsx):
+                        entries_by_domain[e["domain"]].append(e)
+                except RuntimeError as exc:
+                    print(f"WARN: Tokyo XLSX parser failed ({exc}); "
+                          f"skipping Tokyo for {target}", file=sys.stderr)
+            else:
+                print(f"WARN: Tokyo XLSX not found at {tokyo_xlsx}; "
+                      f"skipping Tokyo for {target}", file=sys.stderr)
+
+        # Cabinet
+        if args.cabinet_csv:
+            cabinet_csv = Path(args.cabinet_csv)
+        elif not isolated:
+            cabinet_csv = DEFAULT_VENDOR / "cabinet" / "gov-orgs-en-ja.csv"
+        else:
+            cabinet_csv = None
+        if cabinet_csv is not None:
+            if cabinet_csv.exists():
+                for e in parse_cabinet_csv(cabinet_csv):
+                    entries_by_domain[e["domain"]].append(e)
+            else:
+                print(f"WARN: Cabinet CSV not found at {cabinet_csv}; "
+                      f"skipping Cabinet for {target}", file=sys.stderr)
+
     return entries_by_domain
 
 
@@ -362,17 +675,39 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--jlt-csv", default=None,
                         help="Override JLT CSV path (test fixture; ja-JP only). "
                              "When set, applies to whichever single --target is built.")
+    parser.add_argument("--naer-csv", default=None,
+                        help="Override NAER CSV path (test fixture; zh-TW only). "
+                             "When set, applies to whichever single --target is built.")
+    parser.add_argument("--estat-csv", default=None,
+                        help="Override e-Stat CSV path (test fixture; ja-JP only). "
+                             "When set, applies to whichever single --target is built.")
+    parser.add_argument("--tokyo-csv", default=None,
+                        help="Override Tokyo CSV path (test fixture; ja-JP only). "
+                             "When set, applies to whichever single --target is built.")
+    parser.add_argument("--tokyo-xlsx", default=None,
+                        help="Override Tokyo XLSX path (test fixture; ja-JP only; "
+                             "requires openpyxl). When set, applies to whichever "
+                             "single --target is built.")
+    parser.add_argument("--cabinet-csv", default=None,
+                        help="Override Cabinet CSV path (test fixture; ja-JP only). "
+                             "When set, applies to whichever single --target is built.")
     parser.add_argument("--out-dir", default=None,
                         help="Override output directory "
                              f"(default: {DEFAULT_OUT}).")
     args = parser.parse_args(argv)
 
+    overrides = (
+        args.pontoon_tbx, args.gnome_po, args.jlt_csv,
+        args.naer_csv, args.estat_csv,
+        args.tokyo_csv, args.tokyo_xlsx, args.cabinet_csv,
+    )
     if not args.all and not args.target:
         parser.error("must pass either --target <locale> or --all")
-    if args.all and (args.pontoon_tbx or args.gnome_po or args.jlt_csv):
+    if args.all and any(overrides):
         parser.error(
-            "--pontoon-tbx / --gnome-po / --jlt-csv may only be combined with "
-            "a single --target"
+            "--pontoon-tbx / --gnome-po / --jlt-csv / --naer-csv / "
+            "--estat-csv / --tokyo-csv / --tokyo-xlsx / --cabinet-csv "
+            "may only be combined with a single --target"
         )
 
     return args

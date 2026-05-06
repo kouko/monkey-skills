@@ -1,8 +1,43 @@
-# License placeholder for 內閣官房
+内閣官房 部局課名・官職名英訳名称一覧 — License
+=================================================
 
-The actual license text will be fetched and inserted during Task B-series build
-pipeline implementation. This placeholder ensures vendor/ folder structure
-exists for build scripts.
+Source: 内閣官房 (Cabinet Secretariat, Government of Japan)
+        部局課名・官職名英訳名称一覧
+        Names of Government Organizations and Positions
+URL:    https://www.cas.go.jp/jp/seisaku/hourei/name.html
+PDF:    https://www.cas.go.jp/jp/seisaku/hourei/name.pdf
 
-Reference: see translation-toolkit/NOTICES.md for the license category each
-source falls under.
+License: 政府標準利用規約 第 2.0 版
+         (Japanese Government Standard Terms of Use, Version 2.0)
+         https://www.kantei.go.jp/jp/notice/copyright.html
+
+The 政府標準利用規約 第 2.0 版 is explicitly declared compatible with
+Creative Commons Attribution 4.0 International (CC-BY 4.0). The 部局課名
+・官職名英訳名称一覧 is published as government open data and may be
+redistributed, modified, and used commercially provided attribution is
+given.
+
+Note that the original PDF carries the disclaimer that the translations
+"have not been collectively authorized by the Government of Japan" and may
+no longer be accurate (last canonical update: 2008-06-09). Users are
+advised to consult each ministry or agency for the current status.
+
+Attribution
+-----------
+
+When redistributing the data (including derived works such as glossary
+files that incorporate Cabinet entries), credit the source as follows:
+
+  Source: 内閣官房 部局課名・官職名英訳名称一覧 (Cabinet Secretariat,
+  Government of Japan, Names of Government Organizations and Positions).
+  Licensed under 政府標準利用規約 第 2.0 版 (CC-BY 4.0 compatible).
+  https://www.cas.go.jp/jp/seisaku/hourei/name.html
+
+Notes
+-----
+
+This LICENSE accompanies the bundled CSV in this directory
+(`gov-orgs-en-ja.csv`) shipped with translation-toolkit v0.1.0, which was
+extracted from the upstream PDF using `pdftotext -layout` plus heuristic
+column splitting. The bundled CSV is approximately 3,000 entries —
+representative coverage of ministries, agencies, bureaus, and positions.
