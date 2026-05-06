@@ -7,6 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path("/Users/kouko/GitHub/monkey-skills")
 SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pairs-from-en.py"
 ZH_PAIR_SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pair-zh-CN--zh-TW.py"
+JA_ZH_PAIR_SCRIPT = REPO_ROOT / "translation-toolkit/scripts/build-pair-ja-JP--zh-TW.py"
 
 
 def test_pontoon_ja_tbx_to_pair_file(tmp_path):
@@ -555,3 +556,223 @@ def test_zh_cn_zh_tw_empty_csv_emits_frontmatter_only(tmp_path):
     assert "domains_supported: []" in content
     # No domain section emitted
     assert "## domain:" not in content
+
+
+# --- ja-JP <-> zh-TW pair build tests -------------------------------------
+
+def _empty_pivot(path: Path, lang_a: str, lang_b: str) -> None:
+    """Write a frontmatter-only EN-pivot file with no domain sections."""
+    path.write_text(textwrap.dedent(f'''\
+        ---
+        pair: [{lang_a}, {lang_b}]
+        version: 0.1.0
+        sources: []
+        domains_supported: []
+        ---
+
+        # Glossary {lang_a} ↔ {lang_b}
+    '''))
+
+
+def _pivot_with_rows(path: Path,
+                     lang_a: str,
+                     lang_b: str,
+                     domain_to_rows: dict[str, list[tuple[str, str]]]) -> None:
+    """Write a small EN-pivot fixture with one or more domain sections."""
+    lines = [
+        "---",
+        f"pair: [{lang_a}, {lang_b}]",
+        "version: 0.1.0",
+        "sources: [test]",
+        f"domains_supported: [{', '.join(sorted(domain_to_rows))}]",
+        "---",
+        "",
+        f"# Glossary {lang_a} ↔ {lang_b}",
+        "",
+    ]
+    for domain in sorted(domain_to_rows):
+        lines.append(f"## domain: {domain}")
+        lines.append("")
+        lines.append(f"| {lang_a} | {lang_b} | source | notes |")
+        lines.append("|---|---|---|---|")
+        for a, b in domain_to_rows[domain]:
+            lines.append(f"| {a} | {b} | test | — |")
+        lines.append("")
+    path.write_text("\n".join(lines))
+
+
+def test_ja_jp_zh_tw_manual_only_when_no_en_pivot(tmp_path):
+    """Manual entries pass through verbatim when both EN-pivot files are empty."""
+    manual = tmp_path / "manual-entries-ja-JP--zh-TW.md"
+    manual.write_text(textwrap.dedent('''\
+        ---
+        pair: [ja-JP, zh-TW]
+        type: manual-seed
+        sources: [manual-curated]
+        ---
+
+        # Manual entries
+
+        ## domain: general
+
+        | ja-JP | zh-TW | source | notes |
+        |---|---|---|---|
+        | 手紙 | 信 | manual | ⚠️ NOT「衛生紙」 |
+        | 図書館 | 圖書館 | manual | 共通詞 |
+    '''))
+    en_ja = tmp_path / "glossary-en-US--ja-JP.md"
+    en_zh = tmp_path / "glossary-en-US--zh-TW.md"
+    _empty_pivot(en_ja, "en-US", "ja-JP")
+    _empty_pivot(en_zh, "en-US", "zh-TW")
+
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(JA_ZH_PAIR_SCRIPT),
+         "--manual-md", str(manual),
+         "--en-ja-md", str(en_ja),
+         "--en-zh-md", str(en_zh),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-ja-JP--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    assert "pair: [ja-JP, zh-TW]" in content
+    assert "## domain: general" in content
+    assert "| 手紙 | 信 | manual" in content
+    assert "| 図書館 | 圖書館 | manual" in content
+    # No derived rows when EN-pivot is empty.
+    assert "| derived |" not in content
+
+
+def test_ja_jp_zh_tw_derives_from_en_pivot_intersection(tmp_path):
+    """Empty manual + 2 shared (en, domain) entries yields 2 derived rows."""
+    manual = tmp_path / "manual-entries-ja-JP--zh-TW.md"
+    manual.write_text(textwrap.dedent('''\
+        ---
+        pair: [ja-JP, zh-TW]
+        type: manual-seed
+        sources: [manual-curated]
+        ---
+
+        # Manual entries
+
+        (no domain sections)
+    '''))
+    en_ja = tmp_path / "glossary-en-US--ja-JP.md"
+    en_zh = tmp_path / "glossary-en-US--zh-TW.md"
+    _pivot_with_rows(en_ja, "en-US", "ja-JP", {
+        "ui": [("Cancel", "キャンセル"), ("File", "ファイル")],
+    })
+    _pivot_with_rows(en_zh, "en-US", "zh-TW", {
+        "ui": [("Cancel", "取消"), ("File", "檔案")],
+    })
+
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(JA_ZH_PAIR_SCRIPT),
+         "--manual-md", str(manual),
+         "--en-ja-md", str(en_ja),
+         "--en-zh-md", str(en_zh),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-ja-JP--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    assert "pair: [ja-JP, zh-TW]" in content
+    assert "## domain: ui" in content
+    # Both intersected rows present, source contains "derived"
+    assert "| キャンセル | 取消 | derived" in content
+    assert "| ファイル | 檔案 | derived" in content
+    # No manual rows when manual seed has no entries.
+    assert "| manual |" not in content
+
+
+def test_ja_jp_zh_tw_manual_overrides_derived_on_conflict(tmp_path):
+    """Manual entry wins on (ja, zh) tuple conflict; derived duplicate is suppressed."""
+    manual = tmp_path / "manual-entries-ja-JP--zh-TW.md"
+    manual.write_text(textwrap.dedent('''\
+        ---
+        pair: [ja-JP, zh-TW]
+        type: manual-seed
+        sources: [manual-curated]
+        ---
+
+        # Manual entries
+
+        ## domain: general
+
+        | ja-JP | zh-TW | source | notes |
+        |---|---|---|---|
+        | 図書館 | 圖書館 | manual | 共通詞・新字体↔正體 |
+    '''))
+    en_ja = tmp_path / "glossary-en-US--ja-JP.md"
+    en_zh = tmp_path / "glossary-en-US--zh-TW.md"
+    # Derived would also produce 図書館 -> 圖書館 for "library" in domain general.
+    _pivot_with_rows(en_ja, "en-US", "ja-JP", {
+        "general": [("library", "図書館")],
+    })
+    _pivot_with_rows(en_zh, "en-US", "zh-TW", {
+        "general": [("library", "圖書館")],
+    })
+
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(JA_ZH_PAIR_SCRIPT),
+         "--manual-md", str(manual),
+         "--en-ja-md", str(en_ja),
+         "--en-zh-md", str(en_zh),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-ja-JP--zh-TW.md"
+    content = out_file.read_text()
+    # Manual entry is present
+    assert "| 図書館 | 圖書館 | manual | 共通詞・新字体↔正體 |" in content
+    # Derived duplicate of (図書館, 圖書館) is suppressed: only ONE row
+    rows = [l for l in content.splitlines() if l.startswith("| 図書館 | 圖書館 |")]
+    assert len(rows) == 1, f"expected single 図書館 row, got {rows}"
+    # And it must be the manual one (not derived)
+    assert "| derived |" not in rows[0]
+
+
+def test_ja_jp_zh_tw_real_run_produces_output(tmp_path):
+    """Running against real canonical files produces output containing manual entries."""
+    real_manual = REPO_ROOT / "translation-toolkit/scripts/canonical/manual-entries-ja-JP--zh-TW.md"
+    real_en_ja = REPO_ROOT / "translation-toolkit/scripts/canonical/glossary-en-US--ja-JP.md"
+    real_en_zh = REPO_ROOT / "translation-toolkit/scripts/canonical/glossary-en-US--zh-TW.md"
+    if not (real_manual.exists() and real_en_ja.exists() and real_en_zh.exists()):
+        import pytest
+        pytest.skip("Real canonical files not present (run B1-B4a first)")
+
+    out_dir = tmp_path / "canonical"
+    out_dir.mkdir()
+    result = subprocess.run(
+        ["python3", str(JA_ZH_PAIR_SCRIPT),
+         "--manual-md", str(real_manual),
+         "--en-ja-md", str(real_en_ja),
+         "--en-zh-md", str(real_en_zh),
+         "--out-dir", str(out_dir)],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"stderr={result.stderr}"
+    out_file = out_dir / "glossary-ja-JP--zh-TW.md"
+    assert out_file.exists()
+    content = out_file.read_text()
+    # Frontmatter intact
+    assert "pair: [ja-JP, zh-TW]" in content
+    assert "sources:" in content
+    # A few representative manual entries always present
+    assert "| 手紙 | 信 | manual" in content
+    assert "| 株式会社 | 股份有限公司 | manual" in content
+    assert "| ライブラリ | 函式庫 | manual" in content
+    # At minimum, all manual entries land in output.
+    manual_rows = content.count("| manual |")
+    assert manual_rows >= 80, f"expected >=80 manual rows, got {manual_rows}"
