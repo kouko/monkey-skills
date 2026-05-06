@@ -130,6 +130,14 @@ Algorithm:
 - `frontmatter.summary` — refresh if material changes (≤200 chars)
 - `## User Notes` — **preserve verbatim** if present
 
+**Post-write hard check** (run after every page write, BEFORE moving on):
+
+```bash
+grep -nE '`[^`]*\[\[[^]]+\]\][^`]*`' <wiki-root>/<category>/<slug>.md
+```
+
+If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]]` `` or `` **`[[Page]]`** ``) — Obsidian renders it as inline code, NOT a clickable link. **Do not advance**: edit the file to remove the wrapping backticks, then re-run the check until empty. The Quality bar self-check (below) is advisory; this grep is the enforced gate. Spec rationale in [page-format.md](references/page-format.md#never-wrap-wikilinks-in-backticks-critical).
+
 ### 3d. Create/update reference page
 
 Always write `wiki/references/<slug>.md` (one page per source) with:
