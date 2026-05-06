@@ -42,7 +42,7 @@ This skill executes **Layers 2, 4, 5** of the toolkit's 5-layer pipeline. (Layer
 
 ### Layer 2: Preparation
 
-1. **Parse BOTH source and target.** Auto-detect each format independently from extension + content sniffing. Source and target are NOT assumed to share a format — migration-audit and vendor-delivery-review scenarios commonly mix formats. Per-format read algorithms are shared with `translation-i18n` (`protocols/format-roundtrip.md` in that skill's tree) and `translation-doc` (`protocols/markdown-ast-protect.md`).
+1. **Parse BOTH source and target.** Auto-detect each format independently from extension + content sniffing. Source and target are NOT assumed to share a format — migration-audit and vendor-delivery-review scenarios commonly mix formats. Per-format read rules are the same as those used by the format-specialist skills (i18n PO/JSON/XLIFF/strings; doc markdown AST + code/URL/HTML protect); audit implements them locally as part of its own Layer 2 — see `protocols/diff-report.md` for the audit-specific output expectations.
 
 2. **Protect-pass on BOTH sides.** Mask every placeholder span on the source AND the target with `⟦P:NN⟧` sentinels per `references/protect-pass-spec.md` (8 base classes — ICU plural, curly braces, printf, fenced code, inline code, HTML, URL, email), then layer format-specific extensions (markdown AST patterns / i18n placeholder patterns / creative URL+brand-token patterns) as appropriate. The dual protect-pass is what makes M1's count parity check meaningful — both sides must be tokenized under the same rules before counts are compared.
 
