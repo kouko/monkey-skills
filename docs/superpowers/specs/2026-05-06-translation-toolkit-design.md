@@ -19,7 +19,7 @@ Existing LLM translation projects fall into two categories, neither of which fit
 | Web app + persona dropdown | [Max-Lee-explore/agentic-ai-translation-company](https://github.com/Max-Lee-explore/agentic-ai-translation-company) | Conflates domain/mode/register into one persona dropdown; chunk-isolation regression; multi-provider HTTP duplicated; no placeholder protection |
 | Pluggable workflow framework | [DavidLMS/aphra](https://github.com/DavidLMS/aphra) | Only one workflow shipped; per-role model assignment hard-coded (anti-portable); no format awareness |
 
-The gap: no existing project provides **format-typed pipelines + 5-axis user control + 5-tier glossary fallthrough + 5-gate verification** in a single skill, and none address translation-theory know-how (skopos / Vinay-Darbelnet / domestication-foreignization / back-translation QA / translation memory) explicitly.
+The gap: no existing project provides **format-typed pipelines + 5-axis user control + 4-tier glossary fallthrough + 5-gate verification** in a single skill, and none address translation-theory know-how (skopos / Vinay-Darbelnet / domestication-foreignization / back-translation QA / translation memory) explicitly.
 
 ### Research Findings (2026-05-06)
 
@@ -108,13 +108,15 @@ translation-toolkit/
 │   └── references/orthogonal-axes.md             # functional copy
 │
 ├── translation-i18n/                              # PO/JSON/XLIFF/Android/iOS — fully self-contained
-│   ├── SKILL.md
+│   ├── SKILL.md                                    # supports `--audit-only` flag for review-without-rewrite
 │   ├── glossary/                                   # functional copies of all glossary files
 │   │   ├── glossary-en-US--ja-JP.md               # uniform pair-file schema
 │   │   ├── glossary-en-US--zh-CN.md
 │   │   ├── glossary-en-US--zh-TW.md
 │   │   ├── glossary-ja-JP--zh-TW.md
 │   │   └── glossary-zh-CN--zh-TW.md
+│   ├── corpus/                                     # functional copies of parallel-sentence corpora (NOT glossary)
+│   │   └── nict-en-ja-zh.md                       # NICT 5,304 sentence triples — exemplar reference for LLM
 │   ├── typography/                                 # functional copies
 │   │   ├── jlreq-summary.md
 │   │   └── clreq-summary.md
@@ -132,9 +134,6 @@ translation-toolkit/
 │
 ├── translation-creative/                          # ad copy / transcreation — fully self-contained
 │   └── (same self-contained pattern; references/ also includes 5d-effectiveness.md)
-│
-├── translation-audit/                             # audit existing translations — fully self-contained
-│   └── (same self-contained pattern; no format-write logic)
 │
 └── scripts/                                        # plugin-level build pipeline (NOT a skill)
     ├── README.md                                  # SSOT-and-functional-copy explanation
@@ -192,28 +191,26 @@ Resolution:
 
 ### Glossary Architecture
 
-**Resolution chain** (5-tier fallthrough, executed in Layer 2 preparation):
+**Resolution chain** (4-tier fallthrough, executed in Layer 2 preparation):
 
 ```
 L1: Project glossary  (<repo>/docs/i18n/glossary-{tgt}.md)
     User's repo-specific overrides — highest authority
         │ miss
         ▼
-L2: Translation memory  (<repo>/.translations/memory-{src}-{tgt}.json)
-    Cross-document consistency for this repo
-        │ miss
-        ▼
-L3: Bundled glossary  (skill-internal functional copy)
+L2: Bundled glossary  (skill-internal functional copy)
     Cross-repo standard terminology
         │ miss
         ▼
-L4: Web search        (per-skill default; user-overridable)
+L3: Web search        (default ON; --web-search=off to disable)
     Live lookup for difficult terms
         │ miss / disabled
         ▼
-L5: LLM fallback      (no reference material)
+L4: LLM fallback      (no reference material)
     Audit-trail flagged
 ```
+
+(Earlier draft included a 3rd tier "Translation memory" between L1 and bundled glossary, backed by `<repo>/.translations/memory-*.json`. Deferred to v0.2 — see Out of Scope. v0.1 ships 4-tier; L1 project glossary is the consistency mechanism within a repo.)
 
 Every hit at every tier is recorded in audit trail with source attribution.
 
@@ -230,7 +227,7 @@ Example (`glossary-en-US--ja-JP.md`):
 ---
 pair: [en-US, ja-JP]                          # BCP-47, alphabetical
 version: 0.1.0
-sources: [mozilla-pontoon-2026-05-01, gnome-i18n-2024-02-15, jlt-v18.0, e-stat-2025-q4, tokyo-2024-12, nict-jecbs-v1.2, cabinet-2023-04]
+sources: [mozilla-pontoon-2026-05-01, gnome-i18n-2024-02-15, jlt-v18.0, e-stat-2025-q4, tokyo-2024-12, cabinet-2023-04]
 domains_supported: [general, ui, tech.software, tech.web, tech.data, tech.crypto, gov, legal, statistics, marketing, typography]
 ---
 
@@ -239,7 +236,7 @@ domains_supported: [general, ui, tech.software, tech.web, tech.data, tech.crypto
 
 ## domain: general
 | en-US | ja-JP | source | notes |
-| translate | 翻訳する | nict | — |
+| translate | 翻訳する | jlt | — |
 
 ## domain: ui
 | en-US | ja-JP | source | notes |
@@ -274,7 +271,7 @@ domains_supported: [general, ui, tech.software, ...]
 | 愛人 | 情婦 | manual | ⚠️ false friend, zh-TW「配偶」誤譯風險 |
 | 図書館 | 圖書館 | manual | 漢字共通詞・新字体↔正體 |
 | 御朱印 | 御朱印 | manual | 借用 |
-| 翻訳する | 翻譯 | derived (en: translate; nict × naer) | — |
+| 翻訳する | 翻譯 | derived (en: translate; jlt × naer) | — |
 
 ## domain: ui
 | ja-JP | zh-TW | source | notes |
@@ -320,7 +317,7 @@ The pair-file format is uniform; all 5 pair files use the same schema. EN serves
 **Manual / derived entries** (visible via `source` column, not separate file structure):
 - `source: manual` — hand-curated (false-friend warnings, 漢字共通詞, 文化借用). Priority over derived if same source-term appears in both.
 - `source: derived (en: <pivot>; <upstream-pair-A> × <upstream-pair-B>)` — auto-built by build script intersecting two upstream EN-pivoted pair files.
-- `source: <upstream-name>` — directly sourced from a single upstream (e.g., `pontoon`, `nict`, `naer`).
+- `source: <upstream-name>` — directly sourced from a single upstream (e.g., `pontoon`, `jlt`, `naer`, `gnome`, `e-stat`, `tokyo`, `cabinet`).
 
 For `glossary-ja-JP--zh-TW.md` specifically, seed manual list (~80-100 entries) covers:
 - 漢字 false friends (~25)
@@ -351,7 +348,7 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 - `translation-i18n`: PO / JSON / XLIFF / Android `strings.xml` / iOS `.strings`
 - `translation-doc`: markdown → AST, separate prose from code/URL/HTML
 - `translation-creative`: plain text + optional brand brief
-- `translation-audit`: source + existing target translation pair
+- `--audit-only` flag (any of above 3 skills): source + existing target translation pair (instead of source-only)
 
 **b. Protect-pass** (HARD pre-filter — three reference projects all skip this):
 - Regex extracts and masks:
@@ -400,9 +397,9 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 - **S1. Back-translation diff**: v2 → translate back to source language using a fresh LLM context (blind to original). Compare with original via embedding cosine similarity. Threshold: `< 0.85` warns. Transcreation mode: threshold relaxed to `< 0.70` (surface deviation expected).
 - **S2. Register preservation**: LLM judge — does target register match intake-specified register? formal/neutral/warm/playful comparison.
 
-**MAY gates** (info only, audit-trail flagged):
+**MAY gates** (info only, audit-trail flagged, NOT interactive — audit-only flag callers must continue without prompts):
 
-- **I1. Untranslatability flagging**: source-analysis-flagged untranslatable phrases — record decision (borrow / explain / approximate) + ask user to confirm.
+- **I1. Untranslatability flagging**: source-analysis-flagged untranslatable phrases — record decision (borrow / explain / approximate) in audit trail. Does NOT block or prompt user; surfaces info for review.
 
 ### Layer 5: Output
 
@@ -410,16 +407,17 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 - **b. Format-write back** (per-skill):
   - i18n: original PO/JSON/XLIFF format preserved, keys intact
   - doc: markdown reassembled, code blocks pristine
-  - creative: text + optional 3 alternative variants for selection
-  - audit: diff report only, no rewrite
+  - creative: text (default 1 output); `--variants=N` flag opt-in for N alternative variants
+  - `--audit-only` mode: diff report only, no rewrite
 - **c. Audit trail JSON** (canonical schema in `audit-trail-spec.md`):
   - Intake: mode/register/strategy/locale/domain/intent
-  - Glossary resolution per term (which L tier hit, which source)
+  - Glossary resolution per term (which tier hit, which source)
   - Chunk-level draft/reflect/improve outputs
   - Gate verdicts + warnings
   - Untranslatability decisions
-  - Sources used (project glossary version, TM keys touched)
-- **d. Translation memory update**: write new phrases to `<repo>/.translations/memory-{src}-{tgt}.json`. Idempotent: same source phrase → skip; different translation → append history version.
+  - Sources used (project glossary version, web search citations if any)
+
+(Layer 5d translation memory update from earlier draft is deferred to v0.2 with re-trigger condition: when ≥3 users report cross-document drift in same repo.)
 
 ---
 
@@ -431,12 +429,13 @@ Shared across all 4 active translation skills (i18n / doc / creative / audit). L
 | `translation-intake` | OWNS | — | — | — | — | n/a | n/a |
 | `translation-i18n` | reads intake | PO/JSON/XLIFF/strings + strict placeholder | shared 4D | M1+M2 strict | format roundtrip | ON | SHOULD |
 | `translation-doc` | reads intake | markdown AST + code/URL/HTML protect | shared 4D + windowing | M1+M2+S1+S2 | markdown roundtrip | ON | SHOULD |
-| `translation-creative` | reads intake | brand brief intake | 5D (+effectiveness in transcreation mode) | M1+M2+S1 (MUST in transcreation, SHOULD in faithful)+S2 | text + 3 variants | ON | MUST in transcreation mode, SHOULD in faithful mode |
-| `translation-audit` | reads intake | parse source + target pair | comparative analysis | full 5-gate audit | diff report | ON | runs as comparison |
+| `translation-creative` | reads intake | brand brief intake | 5D (+effectiveness in transcreation mode) | M1+M2+S1 (MUST in transcreation, SHOULD in faithful)+S2 | text (+ optional `--variants=N`) | ON | MUST in transcreation mode, SHOULD in faithful mode |
 
-(Glossary and typography rules used to be wrapped in a `translation-glossary` skill in earlier draft. Removed in favor of plugin-level `docs/glossary-format-spec.md` + `vendor/` LICENSE files + `scripts/canonical/` SoT, with each active skill holding its own functional copies — see Skill Self-Containment Guarantee above.)
+**Audit-only mode**: each of the 3 active translation skills (`translation-i18n` / `-doc` / `-creative`) supports a `--audit-only` flag. With this flag, the skill takes `(source, existing-target)` instead of `(source)` and produces a 5-gate verification diff report instead of a translation. Replaces the earlier `translation-audit` skill from the draft (collapsed per fresh-eyes audit — no incremental capability over a flag, but full skill scaffolding cost).
 
-Web search default = ON across all 4 active skills (per Q4.2 — "user invoked the tool because they want max quality"). Skills can be overridden to OFF via `--web-search=off` for cost/latency control. The earlier per-format heuristic (i18n=OFF / creative=OFF) is documented as a tuning note in each skill's `references/web-search-tradeoffs.md` for users who want to opt out.
+(Glossary and typography rules used to be wrapped in a `translation-glossary` skill in an even earlier draft. Removed in favor of plugin-level `docs/glossary-format-spec.md` + `vendor/` LICENSE files + `scripts/canonical/` SoT, with each active skill holding its own functional copies — see Skill Self-Containment Guarantee above.)
+
+Web search default = ON across all 3 active skills (per Q4.2 — "user invoked the tool because they want max quality"). Skills can be overridden to OFF via `--web-search=off` for cost/latency control. The router SKILL.md documents this trade-off in one paragraph (no per-skill duplicate file needed).
 
 ---
 
@@ -463,31 +462,28 @@ External capabilities described by behavior, not tool name:
 | Subagent dispatch | "if subagent / task isolation is available, …" | CC: Agent tool / Gemini: sub-task / fallback: same-thread |
 | File I/O | (Read tool — universal) | direct |
 
-### Two execution modes (auto-detected)
+### Execution mode
 
-- **Single-thread mode** (default, fully portable): all roles run sequentially in same context
-- **Subagent mode** (opt-in, when runtime supports): CRITIC / BACK-TRANSLATOR / JUDGE run in independent contexts → fresh-eyes effect without specifying different models
+**v0.1.0 ships single-thread only**: all roles run sequentially in the same context. This is the most portable mode (works on CC / Gemini / Codex identically) and avoids untested capability-detection branching.
 
-User does not configure this. Skill detects runtime capability and falls through.
+Subagent / fresh-eyes parallel mode (CRITIC and BACK-TRANSLATOR running in independent contexts to amplify the "fresh-eyes effect") is deferred to v0.2 with re-trigger condition: when measurements show single-thread reflection consistently misses errors that subagent reflection catches. Until then, runtime branching is not implemented.
 
 ---
 
 ## Service Interface (Cross-skill)
 
-Other skills (docs-team / copywriting-toolkit per user request / investing-team / arbitrary i18n tools) can invoke any of the 4 active translation skills via:
+Other skills (docs-team / copywriting-toolkit per user request / investing-team / arbitrary i18n tools) can invoke any of the 3 active translation skills via:
 
-**Input contract**:
+**Input contract** (4 fields):
 ```yaml
 source_text:       string OR file path
-source_locale:     BCP-47 (or "auto")
+source_locale:     BCP-47 (required, no auto)
 target_locale:     BCP-47 (required)
-format_hint:       i18n_po | i18n_json | i18n_xliff | markdown | plain_text | adcopy | mixed (default: auto-detect)
-intake_mode:       auto (default) | explicit
-glossary_path:     string (default: <caller_repo>/docs/i18n/glossary-{tgt}.md)
-tm_path:           string (default: <caller_repo>/.translations/memory-*.json)
-web_search:        on | off | auto (default: per-skill)
-bypass_gates:      [] (default empty; e.g. ["S1"] to skip back-translation)
+glossary_path:     string (optional, default: <caller_repo>/docs/i18n/glossary-{tgt}.md)
+web_search:        on (default) | off
 ```
+
+(Earlier draft had `format_hint`, `intake_mode`, `tm_path`, `bypass_gates`, `source_locale: auto`. All cut per fresh-eyes audit: format is determined by skill choice; auto/explicit intake is interactive concern not service contract; TM is deferred; gate bypass is anti-pattern (per-gate flags if needed); locale auto-detect on short strings is unreliable.)
 
 **Output contract**:
 ```yaml
@@ -502,7 +498,7 @@ untranslatables:   [{source_phrase, decision, alternatives}]
 - Caller passes paths, not content (except short inline strings)
 - translation-toolkit reads its own files, decides chunking
 - Gate verdicts flow back, never swallowed
-- Caller cannot silent-override on gate failure — must use explicit `bypass_gates`
+- Caller cannot silent-override on gate failure — gate failure surfaces in `gate_verdicts` and caller must explicitly handle it
 - translation-toolkit does not run caller's domain gates (e.g., copywriting-toolkit's ethics-check is not translation-toolkit's responsibility)
 
 **Note on copywriting-toolkit**: Per user override, `copywriting-toolkit` will NOT auto-invoke `translation-toolkit`. Composition only when user explicitly requests, as the two represent orthogonal quality dimensions (translation quality ≠ copywriting quality).
@@ -513,9 +509,10 @@ untranslatables:   [{source_phrase, decision, alternatives}]
 
 **Plugin license**: MIT (consistent with other monkey-skills sub-plugins).
 
-**Bundled glossary attributions** (NOTICES.md):
+**Bundled attributions** (NOTICES.md) — split between glossary and parallel-corpus:
 
 ```
+[Glossary entries — feeds glossary-{a}--{b}.md tables]
 Source                  | License            | Attribution
 ------------------------|--------------------|--------------
 Mozilla Pontoon TBX     | MPL-2.0/CC-BY-SA   | required
@@ -524,12 +521,16 @@ NAER 樂詞網             | OGDL v1 ≈ CC-BY 4.0| required
 JLT 標準対訳辞書        | CC-BY 4.0 互換     | required
 e-Stat 統計用語集       | 政府標準利用規約   | required
 東京都 日英対訳         | CC-BY 4.0          | required
-NICT 日英中基本文       | CC-BY 3.0          | required
 內閣官房 政府機關名     | 政府標準利用規約   | required
+
+[Parallel-corpus reference — feeds corpus/nict-en-ja-zh.md as exemplars]
+NICT 日英中基本文       | CC-BY 3.0          | required (5,304 sentence triples; not glossary entries)
+
+[Typography rules — feeds typography/{jlreq,clreq}-summary.md meta-section]
 W3C jlreq / clreq       | W3C Document Lic   | required
 ```
 
-Each source's LICENSE file is bundled at `translation-glossary/vendor/<source>/LICENSE`.
+Each source's LICENSE file is bundled at plugin-level `vendor/<source>/LICENSE`.
 
 **Optional fetch (NOT bundled)**:
 - Microsoft Terminology Collection (~33k × 100+ langs) — `fetch-microsoft-terms.py`
@@ -544,24 +545,26 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 | # | Decision | Source |
 |---|---|---|
 | 1 | A_revised: standalone plugin, peer to copywriting-toolkit, NOT in domain-teams | User Q1 |
-| 2 | 4 active translation skills + 1 router + 1 intake = 6 skills total. Format-routed pattern, not minimal/matrix/3-layer. Earlier draft had a 7th `translation-glossary` skill; removed in favor of plugin-level resources to enforce strict skill self-containment. | User Q2 + self-containment audit |
+| 2 | 3 active translation skills (`translation-i18n` / `-doc` / `-creative`) + 1 router + 1 intake = 5 skills total. Format-routed pattern. Audit-only is a `--audit-only` flag on the 3 active skills, not a separate skill. (Earlier drafts had `translation-glossary` and `translation-audit` skills; both removed — glossary became plugin-level SoT + functional copies, audit became a flag.) | User Q2 + self-containment audit + fresh-eyes triage |
 | 3 | 5 orthogonal axes (mode/register/strategy/locale/domain), exposed as auto/explicit binary | User Q3.1 |
 | 4 | back-translation = SHOULD gate (MUST for transcreation only) | User Q3.2 |
 | 5 | Roles, not models — no model names in skill body | User Q3.3 |
-| 6 | Auto-discover + override glossary path; TM lives in `<repo>/.translations/` | (implied from Q3 setup) |
+| 6 | Auto-discover + override glossary path. (Translation memory L2 deferred to v0.2 — see Out of Scope.) | (implied from Q3 setup) + fresh-eyes triage |
 | 7 | Web search global ON by default for advanced quality | User Q4.2 |
 | 8 | Bundle scope = S2-S3 via Q5.2-B + opt-in Microsoft + opt-in JPO UTX | User Q4.1 / Q5.2 |
 | 9 | SSOT-and-functional-copy pattern (canonical/ + per-skill copies + CI drift check) | User Q5.1 (skill self-containment objection) |
 | 10 | Uniform pair-file schema: every glossary file is `glossary-{lang-A}--{lang-B}.md` (BCP-47, alphabetical, double-hyphen). 5 pair files in v0.1.0. EN serves as runtime pivot fallback when a direct pair is unavailable, NOT as a schema concept. | User Q6.1-A + unification audit |
 | 11 | 13 generic domain taxonomy (general/ui/tech.{software,web,data,crypto}/gov/legal/medical/finance/marketing/statistics/typography) | User Q6.2-A |
 | 12 | All pair files use identical structure (frontmatter + `## meta` + `## domain: <name>` sections + 4-column tables). The `source` column distinguishes upstream-sourced / manual-curated / derived entries within the same file. | User unification audit |
-| 13 | Wikidata runtime opt-in placed in L4 web search layer, NOT in glossary architecture | User scope-clarity push-back |
+| 13 | Wikidata runtime fallback deferred to v0.2 (was originally scoped to L4 web search; deferred per fresh-eyes triage — currently no implementation surface). | User scope-clarity push-back + fresh-eyes triage |
 | 14 | Strict skill self-containment: `translation-glossary` skill removed; glossary / typography / shared references live as plugin-level `scripts/canonical/` SoT distributed as functional copies into each active skill. No skill reads another skill's files at runtime. No skill invokes another skill via Skill tool. | User self-containment audit |
+| 15 | Fresh-eyes triage applied (2026-05-06). Cuts: `translation-audit` → `--audit-only` flag, L2 TM deferred, Wikidata deferred, subagent auto-detect deferred, service-interface fields trimmed (8→4), creative `--variants` opt-in (was always-3), per-skill `web-search-tradeoffs.md` collapsed, NICT moved from glossary to corpus reference (sentences ≠ term pairs). NOT cut (per user override): bundled glossary scope (kept S2-S3 = ~10K+ entries), 13 domains, S1/S2/I1 gate semantics, ja-JP↔zh-TW manual seed (~80-100), fetch-microsoft / fetch-jpo opt-in scripts. | dev-workflow:proposal-critique fresh-eyes audit + user "做滿不省略 glossary" override |
 
 ---
 
 ## Out of Scope (v0.1.0)
 
+**Permanently out**:
 - Streaming output (response is single shot per chunk)
 - Real-time collaborative translation
 - Voice / audio translation
@@ -569,7 +572,17 @@ Both download to `~/.cache/translation-toolkit/` on first user-invoked run.
 - Sub-segment alignment for legal-tier verification (e.g., MQM scoring)
 - TBX / TMX import-export at runtime (only build-time)
 - Style-guide PDFs (Microsoft / Apple) — license too gray
-- Languages beyond `ja-JP / zh-TW / zh-CN / en-US` in v0.1.0 (extensible later via additional `glossary-{locale}.md`)
+
+**Deferred to v0.2 with explicit re-trigger conditions** (per fresh-eyes triage 2026-05-06):
+- **L2 translation memory tier** (`<repo>/.translations/memory-{src}-{tgt}.json` + Layer 5d update). Re-trigger: ≥3 users report cross-document translation drift in same repo.
+- **Subagent auto-detect runtime branching** (CRITIC / BACK-TRANSLATOR in independent contexts). Re-trigger: measurements show single-thread reflection consistently misses errors that subagent reflection catches.
+- **Wikidata runtime fallback** for entity/concept names. Re-trigger: users hit named-entity translation gaps that L1-L3 don't cover.
+- **Creative variants always-on output** (currently `--variants=N` opt-in, default 1). Re-trigger: users consistently request variants by default.
+- **Per-major-domain glossary file split** (e.g., `glossary-en-US--ja-JP-legal.md`). Re-trigger: any single pair file exceeds 1MB or 50K entries.
+
+**Extensible — not in v0.1 scope but easy to add**:
+- Additional locales beyond `ja-JP / zh-TW / zh-CN / en-US` (add via new `glossary-{lang-A}--{lang-B}.md` pair file)
+- Additional domains beyond the 13 frozen at v0.1 (add to `domains_supported` frontmatter + new `## domain: <name>` section)
 
 ---
 
