@@ -31,8 +31,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install pytest
-        run: python3 -m pip install --quiet pytest
+      - name: Install test + build deps
+        # pytest = test runner. polib = required by parse_gnome_po (PO format)
+        # which the build-pairs tests invoke via subprocess.
+        run: python3 -m pip install --quiet pytest polib
 
       - name: Run translation-toolkit pytest suite
         env:
