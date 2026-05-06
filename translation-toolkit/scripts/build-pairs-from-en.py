@@ -7,21 +7,36 @@ Usage:
   python3 build-pairs-from-en.py --target zh-CN   # build glossary-en-US--zh-CN.md
   python3 build-pairs-from-en.py --all            # build all three
 
-Pontoon is the only ingest source wired in this revision (Task B1). Tasks
-B2/B3/B4 will add GNOME / JLT / NAER / e-Stat / Tokyo / Cabinet parsers under
-the same dispatcher (see `collect_entries`).
+Wired sources:
+  - Pontoon TBX (Task B1)        — Mozilla Pontoon community glossary
+  - GNOME PO    (Task B2)        — GNOME Translation Project glossary
+  - JLT CSV     (Task B2, ja-JP) — Japanese Law Translation 標準対訳辞書
+
+Tasks B3/B4 will add NAER / e-Stat / Tokyo / Cabinet parsers under the same
+dispatcher (see `collect_entries`).
 
 Output: scripts/canonical/glossary-en-US--<target>.md with frontmatter +
 domain sections + 4-column tables (en-US | <target> | source | notes).
 
-Domain inference for Pontoon entries:
-  - "tech.web" if EN term contains url / browser / web / http
-  - "ui" otherwise
+Domain inference:
+  - Pontoon: "tech.web" if EN term contains url / browser / web / http;
+             else "ui".
+  - GNOME:   always "ui" (GNOME desktop UI strings).
+  - JLT:     "gov" if ja_term contains 省/庁/局/府 (gov-org name);
+             else "legal".
 
 Pontoon TBX <xml:lang> mapping (Pontoon's own locale code, NOT BCP-47):
   ja-JP  -> ja
   zh-TW  -> zh-TW
   zh-CN  -> zh-CN
+
+GNOME glossary filename mapping (vendor/gnome-i18n/<locale>.po):
+  ja-JP  -> ja.po
+  zh-TW  -> zh-TW.po
+  zh-CN  -> zh-CN.po
+
+Dependencies:
+  - polib  (for parse_gnome_po; install via `python3 -m pip install polib`)
 """
 from __future__ import annotations
 
@@ -44,6 +59,13 @@ PONTOON_LANG_MAP = {
     "ja-JP": "ja",
     "zh-TW": "zh-TW",
     "zh-CN": "zh-CN",
+}
+
+# GNOME glossary filenames in vendor/gnome-i18n/.
+GNOME_PO_MAP = {
+    "ja-JP": "ja.po",
+    "zh-TW": "zh-TW.po",
+    "zh-CN": "zh-CN.po",
 }
 
 
@@ -97,6 +119,101 @@ def _infer_pontoon_domain(en_term: str) -> str:
     needles = ("url", "browser", "web", "http")
     lo = en_term.lower()
     return "tech.web" if any(n in lo for n in needles) else "ui"
+
+
+def parse_gnome_po(po_path: Path) -> list[dict]:
+    """Parse a GNOME glossary PO file -> list of entry dicts.
+
+    All entries are tagged domain=ui (GNOME desktop UI terminology).
+    Skips obsolete entries, empty translations, and the PO header
+    (msgid="").
+
+    Returns: list of {en, target, source: 'gnome', domain: 'ui', notes}.
+
+    Raises RuntimeError if `polib` is not available — callers should catch
+    and fall through gracefully (the dispatcher logs a WARN and continues).
+    """
+    try:
+        import polib  # noqa: WPS433 — runtime dep guarded
+    except ImportError as exc:  # pragma: no cover - dep guard
+        raise RuntimeError(
+            "polib not installed; run: python3 -m pip install polib"
+        ) from exc
+
+    po = polib.pofile(str(po_path))
+    entries: list[dict] = []
+    for entry in po:
+        if entry.obsolete:
+            continue
+        msgid = (entry.msgid or "").strip()
+        msgstr = (entry.msgstr or "").strip()
+        if not msgid or not msgstr:
+            continue
+        entries.append({
+            "en": msgid,
+            "target": msgstr,
+            "source": "gnome",
+            "domain": "ui",
+            "notes": "—",
+        })
+    return entries
+
+
+def parse_jlt_csv(csv_path: Path) -> list[dict]:
+    """Parse a JLT CSV file -> list of entry dicts.
+
+    Header autodetection: prefers `en_term`/`ja_term`; falls back to common
+    variants (`English`/`Japanese`, `Original`/`Translation`); else first 2
+    columns.
+
+    Domain inference:
+      - 'gov'   if ja_term contains 省/庁/局/府 (suggests gov-org name)
+      - 'legal' otherwise
+
+    Returns: list of {en, target, source: 'jlt', domain, notes}.
+    """
+    import csv
+
+    en_keys_pref = (
+        ("en_term", "ja_term"),
+        ("English", "Japanese"),
+        ("Original", "Translation"),
+    )
+
+    entries: list[dict] = []
+    with csv_path.open(encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            return entries
+
+        en_key: str | None = None
+        ja_key: str | None = None
+        for ek, jk in en_keys_pref:
+            if ek in reader.fieldnames and jk in reader.fieldnames:
+                en_key, ja_key = ek, jk
+                break
+        if en_key is None:
+            # Fall back to first two columns.
+            en_key = reader.fieldnames[0]
+            ja_key = reader.fieldnames[1] if len(reader.fieldnames) > 1 else None
+            if ja_key is None:
+                return entries
+
+        for row in reader:
+            en = (row.get(en_key) or "").strip()
+            ja = (row.get(ja_key) or "").strip()
+            if not en or not ja:
+                continue
+            domain = "gov" if any(k in ja for k in ("省", "庁", "局", "府")) else "legal"
+            note = (row.get("source_law") or row.get("notes") or "—").strip() or "—"
+            entries.append({
+                "en": en,
+                "target": ja,
+                "source": "jlt",
+                "domain": domain,
+                "notes": note,
+            })
+    return entries
 
 
 # --- Emitter --------------------------------------------------------------
@@ -161,22 +278,69 @@ def emit_pair_file(target_locale: str,
 def collect_entries(target: str, args: argparse.Namespace) -> dict[str, list[dict]]:
     """Run all wired parsers for `target` and return entries grouped by domain.
 
-    Currently wired: Pontoon. B2/B3/B4 will append GNOME / JLT / etc.
+    Wired: Pontoon (all targets), GNOME PO (all targets), JLT CSV (ja-JP only).
+    B3/B4 will append NAER / e-Stat / Tokyo / Cabinet.
+
+    Override semantics: if any of --pontoon-tbx / --gnome-po / --jlt-csv is
+    set (test-fixture mode), only the explicitly-set source(s) are read; the
+    others are skipped to keep test output deterministic. In normal mode
+    (no overrides), all wired sources are read from defaults under vendor/.
     """
     entries_by_domain: dict[str, list[dict]] = defaultdict(list)
+
+    isolated = bool(args.pontoon_tbx or args.gnome_po or args.jlt_csv)
 
     # Pontoon
     if args.pontoon_tbx:
         tbx = Path(args.pontoon_tbx)
-    else:
+    elif not isolated:
         pontoon_lang = PONTOON_LANG_MAP.get(target, target)
         tbx = DEFAULT_VENDOR / "mozilla-pontoon" / f"{pontoon_lang}.v2.tbx"
-    if tbx.exists():
-        for e in parse_pontoon_tbx(tbx, target):
-            entries_by_domain[e["domain"]].append(e)
     else:
-        print(f"WARN: Pontoon TBX not found at {tbx}; skipping Pontoon for {target}",
-              file=sys.stderr)
+        tbx = None
+    if tbx is not None:
+        if tbx.exists():
+            for e in parse_pontoon_tbx(tbx, target):
+                entries_by_domain[e["domain"]].append(e)
+        else:
+            print(f"WARN: Pontoon TBX not found at {tbx}; skipping Pontoon for {target}",
+                  file=sys.stderr)
+
+    # GNOME PO (all 3 targets)
+    if args.gnome_po:
+        gnome_po = Path(args.gnome_po)
+    elif not isolated:
+        gnome_filename = GNOME_PO_MAP.get(target)
+        gnome_po = (DEFAULT_VENDOR / "gnome-i18n" / gnome_filename) if gnome_filename else None
+    else:
+        gnome_po = None
+    if gnome_po is not None:
+        if gnome_po.exists():
+            try:
+                for e in parse_gnome_po(gnome_po):
+                    entries_by_domain[e["domain"]].append(e)
+            except RuntimeError as exc:
+                print(f"WARN: GNOME PO parser failed ({exc}); skipping GNOME for {target}",
+                      file=sys.stderr)
+        else:
+            print(f"WARN: GNOME PO not found at {gnome_po}; skipping GNOME for {target}",
+                  file=sys.stderr)
+
+    # JLT CSV (ja-JP only — JLT is EN<->JA)
+    if target == "ja-JP":
+        if args.jlt_csv:
+            jlt_csv = Path(args.jlt_csv)
+        elif not isolated:
+            jlt_csv = DEFAULT_VENDOR / "jlt" / "standard-bilingual-dictionary.csv"
+        else:
+            jlt_csv = None
+        if jlt_csv is not None:
+            if jlt_csv.exists():
+                for e in parse_jlt_csv(jlt_csv):
+                    entries_by_domain[e["domain"]].append(e)
+            else:
+                print(f"WARN: JLT CSV not found at {jlt_csv}; skipping JLT for {target}",
+                      file=sys.stderr)
 
     return entries_by_domain
 
@@ -192,6 +356,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--pontoon-tbx", default=None,
                         help="Override Pontoon TBX path (test fixture). "
                              "When set, applies to whichever single --target is built.")
+    parser.add_argument("--gnome-po", default=None,
+                        help="Override GNOME glossary PO path (test fixture). "
+                             "When set, applies to whichever single --target is built.")
+    parser.add_argument("--jlt-csv", default=None,
+                        help="Override JLT CSV path (test fixture; ja-JP only). "
+                             "When set, applies to whichever single --target is built.")
     parser.add_argument("--out-dir", default=None,
                         help="Override output directory "
                              f"(default: {DEFAULT_OUT}).")
@@ -199,8 +369,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     if not args.all and not args.target:
         parser.error("must pass either --target <locale> or --all")
-    if args.all and args.pontoon_tbx:
-        parser.error("--pontoon-tbx may only be combined with a single --target")
+    if args.all and (args.pontoon_tbx or args.gnome_po or args.jlt_csv):
+        parser.error(
+            "--pontoon-tbx / --gnome-po / --jlt-csv may only be combined with "
+            "a single --target"
+        )
 
     return args
 
