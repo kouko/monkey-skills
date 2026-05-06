@@ -45,6 +45,15 @@ _DECISION_4_SECTIONS = (
     "# Output requirements",
 )
 
+# Approximate per-scene scaffold cost for the v0.1.0 baseline prompt:
+# v0.1.0 wraps the whole document inside <DOCUMENT>...</DOCUMENT>, marks the
+# active chunk with <TRANSLATE_THIS>, and re-emits Translation parameters +
+# Glossary terms + Output requirements alongside it. This is roughly the same
+# scaffold the v0.2.0 scene-window prompt carries minus the prev/next windows.
+# Treated as a flat ~150-token overhead so the cost comparison measures
+# prompt-vs-prompt instead of prompt-vs-raw-source.
+_V01_PROMPT_OVERHEAD_PER_SCENE = 150
+
 
 def _load_fixture() -> str:
     return NOVEL_FIXTURE.read_text(encoding="utf-8")
@@ -70,9 +79,13 @@ def test_novel_smoke_chunks_into_multiple_scenes() -> None:
 
     boundary_types = {s.boundary_type for s in scenes}
     # Fixture has both an H1 (`# Chapter 1 ...`) and a `* * *` marker line --
-    # at least one of these structural classes must appear.
-    assert boundary_types & {"explicit_marker", "heading"}, (
-        f"expected explicit_marker or heading boundary, got {boundary_types}"
+    # both structural classes must appear; assert each individually so a
+    # regression on one class can't be masked by the other.
+    assert "explicit_marker" in boundary_types, (
+        f"missing explicit_marker boundary, got {boundary_types}"
+    )
+    assert "heading" in boundary_types, (
+        f"missing heading boundary, got {boundary_types}"
     )
 
 
@@ -114,7 +127,7 @@ def test_novel_smoke_draft_prompt_contains_decision_4_sections() -> None:
         assert section in prompt, f"missing Decision 4 section: {section!r}"
 
 
-def test_novel_smoke_glossary_lookup_finds_known_term() -> None:
+def test_novel_smoke_glossary_lookup_machinery_no_crash() -> None:
     """Glossary lookup machinery runs cleanly on terms drawn from the chapter.
 
     Verifies machinery, not coverage. Most narrative-prose JP terms are not in
@@ -176,10 +189,14 @@ def test_novel_smoke_cost_reduction_under_50k_tokens() -> None:
         )
         total_v02_tokens += approx_tokens(prompt)
 
-    # v0.1.0 baseline: whole-doc windowing re-emits the full chapter for
-    # each scene chunk. We approximate that as N * approx_tokens(full_doc).
+    # v0.1.0 baseline: every chunk's prompt re-emits the whole document inside
+    # <DOCUMENT>...</DOCUMENT> and carries the same per-call scaffold the
+    # v0.2.0 prompt does (Translation parameters + Glossary + Output
+    # requirements), minus the prev/next windows. Cost ~ len(scenes) *
+    # (full_doc + scaffold). Without the scaffold term the comparison would
+    # measure prompt-vs-raw-source rather than prompt-vs-prompt.
     full_doc_tokens = approx_tokens(text)
-    total_v01_tokens = len(scenes) * full_doc_tokens
+    total_v01_tokens = len(scenes) * (full_doc_tokens + _V01_PROMPT_OVERHEAD_PER_SCENE)
 
     # Surface for -s capture.
     ratio = (total_v02_tokens / total_v01_tokens) if total_v01_tokens else 0.0
