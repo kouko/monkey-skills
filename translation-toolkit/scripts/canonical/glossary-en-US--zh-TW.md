@@ -1,8 +1,8 @@
 ---
 pair: [en-US, zh-TW]
 version: 0.1.0
-sources: [gnome, pontoon]
-domains_supported: [tech.web, ui]
+sources: [gnome, naer, pontoon]
+domains_supported: [finance, general, legal, medical, statistics, tech.software, tech.web, ui]
 ---
 
 # Glossary en-US ↔ zh-TW
@@ -13,6 +13,89 @@ domains_supported: [tech.web, ui]
 ## meta
 
 (typography rules — see typography/jlreq-summary.md for ja-JP, clreq-summary.md for zh-*)
+
+## domain: finance
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| deflation | 通貨緊縮 | naer | 經濟學名詞 |
+| elasticity | 彈性 | naer | 經濟學名詞 |
+| exchange rate | 匯率 | naer | 經濟學名詞 |
+| fiscal policy | 財政政策 | naer | 經濟學名詞 |
+| gross domestic product | 國內生產毛額 | naer | 經濟學名詞 |
+| inflation | 通貨膨脹 | naer | 經濟學名詞 |
+| monetary policy | 貨幣政策 | naer | 經濟學名詞 |
+| supply and demand | 供給與需求 | naer | 經濟學名詞 |
+
+## domain: general
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| A Coruna | 科魯涅 | naer | 外國地名譯名 |
+| Aachen | 亞琛 | naer | 外國地名譯名 |
+| Aalborg | 奧爾堡 | naer | 外國地名譯名 |
+
+## domain: legal
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| appeal | 上訴 | naer | 法律名詞 |
+| arbitration | 仲裁 | naer | 法律名詞 |
+| contract | 契約 | naer | 法律名詞 |
+| defendant | 被告 | naer | 法律名詞 |
+| jurisdiction | 管轄權 | naer | 法律名詞 |
+| mortgage | 抵押權 | naer | 法律名詞 |
+| plaintiff | 原告 | naer | 法律名詞 |
+| testimony | 證詞 | naer | 法律名詞 |
+
+## domain: medical
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| anesthesia | 麻醉 | naer | 醫學名詞 |
+| biopsy | 切片檢查 | naer | 醫學名詞 |
+| diabetes | 糖尿病 | naer | 醫學名詞 |
+| hypertension | 高血壓 | naer | 醫學名詞 |
+| oncology | 腫瘤學 | naer | 醫學名詞 |
+| pathology | 病理學 | naer | 醫學名詞 |
+| prognosis | 預後 | naer | 醫學名詞 |
+
+## domain: statistics
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| confidence interval | 信賴區間 | naer | 統計學名詞 |
+| correlation coefficient | 相關係數 | naer | 統計學名詞 |
+| hypothesis testing | 假設檢定 | naer | 統計學名詞 |
+| population | 母體 | naer | 統計學名詞 |
+| probability distribution | 機率分布 | naer | 統計學名詞 |
+| regression analysis | 迴歸分析 | naer | 統計學名詞 |
+| sample | 樣本 | naer | 統計學名詞 |
+| standard deviation | 標準差 | naer | 統計學名詞 |
+| variance | 變異數 | naer | 統計學名詞 |
+
+## domain: tech.software
+
+| en-US | zh-TW | source | notes |
+|---|---|---|---|
+| algorithm | 演算法 | naer | 電子計算機名詞 |
+| authentication | 身分驗證 | naer | 資訊名詞 |
+| authorization | 授權 | naer | 資訊名詞 |
+| binary tree | 二元樹 | naer | 電子計算機名詞 |
+| buffer | 緩衝區 | naer | 電子計算機名詞 |
+| cache | 快取 | naer | 電子計算機名詞 |
+| compiler | 編譯器 | naer | 電子計算機名詞 |
+| data structure | 資料結構 | naer | 電子計算機名詞 |
+| database | 資料庫 | naer | 資訊名詞 |
+| encryption | 加密 | naer | 資訊名詞 |
+| firewall | 防火牆 | naer | 資訊名詞 |
+| hash table | 雜湊表 | naer | 電子計算機名詞 |
+| index | 索引 | naer | 資訊名詞 |
+| operating system | 作業系統 | naer | 電子計算機名詞 |
+| query | 查詢 | naer | 資訊名詞 |
+| recursion | 遞迴 | naer | 電子計算機名詞 |
+| schema | 綱要 | naer | 資訊名詞 |
+| thread | 執行緒 | naer | 電子計算機名詞 |
 
 ## domain: tech.web
 

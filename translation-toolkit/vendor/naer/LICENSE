@@ -1,8 +1,37 @@
-# License placeholder for NAER 樂詞網
+NAER 樂詞網 / 學術名詞 — License
+================================
 
-The actual license text will be fetched and inserted during Task B-series build
-pipeline implementation. This placeholder ensures vendor/ folder structure
-exists for build scripts.
+Source: 國家教育研究院 樂詞網 (National Academy for Educational Research,
+        Academic Terms Database)
+URL:    https://terms.naer.edu.tw/
+Open Data Portal: https://data.gov.tw/dataset/15211 (and dataset family)
 
-Reference: see translation-toolkit/NOTICES.md for the license category each
-source falls under.
+License: 政府資料開放授權條款 第 1 版
+         (Open Government Data License, Version 1)
+         https://data.gov.tw/license
+
+The 政府資料開放授權條款 第 1 版 is compatible with Creative Commons
+Attribution 4.0 International (CC-BY 4.0). The dataset 「國家教育研究院
+－外國地名譯名」 (NAER Foreign Place Name Translations, dataset id 15211)
+and the wider NAER 學術名詞 catalogue are published under this license, and
+may be redistributed and modified — including for commercial purposes — so
+long as attribution is given.
+
+Attribution
+-----------
+
+When redistributing the data (including derived works such as glossary
+files that incorporate NAER entries), credit the source as follows:
+
+  資料來源：國家教育研究院 樂詞網 / 學術名詞資料集 (National Academy for
+  Educational Research, Academic Terms Database). 採用「政府資料開放授權
+  條款第 1 版」(Open Government Data License v1) 釋出。
+  https://terms.naer.edu.tw/  •  https://data.gov.tw/license
+
+Notes
+-----
+
+This LICENSE accompanies the bundled curated sample CSV in this directory
+(`academic-terms-zh-TW.csv`, ~50 entries) shipped with translation-toolkit
+v0.1.0. It also applies to any full-dataset replacement the operator
+manually downloads per `README.md`.
