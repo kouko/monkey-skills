@@ -120,8 +120,8 @@ When intake authors need to consult the full canonical orthogonal-axes / audit-t
 
 - [`protocols/intake-auto.md`](protocols/intake-auto.md) — auto-mode pipeline + worked example
 - [`protocols/intake-explicit.md`](protocols/intake-explicit.md) — explicit-mode interaction + sample transcript
-- `../scripts/canonical/orthogonal-axes.md` — canonical 5-axis definitions + auto-inference heuristics
-- `../scripts/canonical/audit-trail-spec.md` — full audit-trail JSON schema (intake block is the subset this skill writes)
-- `../scripts/lib/audit_trail.py` — `AuditTrailBuilder` Python helper
+- `../../scripts/canonical/orthogonal-axes.md` — canonical 5-axis definitions + auto-inference heuristics
+- `../../scripts/canonical/audit-trail-spec.md` — full audit-trail JSON schema (intake block is the subset this skill writes)
+- `../../scripts/lib/audit_trail.py` — `AuditTrailBuilder` Python helper
 - `../using-translation-toolkit/SKILL.md` — router that invokes intake when input is ambiguous
-- `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Layer 1 Intake section + 13-domain taxonomy)
+- `../../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Layer 1 Intake section + 13-domain taxonomy)

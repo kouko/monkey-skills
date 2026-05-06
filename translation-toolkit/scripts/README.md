@@ -30,14 +30,15 @@ translation-toolkit/
 │   ├── verify-drift.py                # CI drift detector
 │   ├── README.md                      (this file)
 │   └── tests/                         # pytest unit tests for both scripts
-├── translation-i18n/
-│   ├── references/<file>              # ← byte-identical functional copy (DO NOT EDIT)
-│   ├── glossary/<file>
-│   ├── typography/<file>
-│   └── corpus/<file>
-├── translation-doc/        (same shape)
-├── translation-creative/   (same shape)
-└── translation-audit/      (same shape)
+└── skills/
+    ├── translation-i18n/
+    │   ├── references/<file>          # ← byte-identical functional copy (DO NOT EDIT)
+    │   ├── glossary/<file>
+    │   ├── typography/<file>
+    │   └── corpus/<file>
+    ├── translation-doc/        (same shape)
+    ├── translation-creative/   (same shape)
+    └── translation-audit/      (same shape)
 ```
 
 ## Routing rules
@@ -61,11 +62,11 @@ If you add a new canonical file with a name not yet routed, edit `REFERENCE_FILE
 1. Edit scripts/canonical/<file>.md
 2. python3 scripts/distribute.py        # rewrites all functional copies
 3. python3 scripts/verify-drift.py      # sanity-check (must print OK)
-4. git add scripts/canonical/<file>.md translation-*/
+4. git add scripts/canonical/<file>.md skills/translation-*/
 5. git commit                           # canonical + 4 functional copies in one commit
 ```
 
-**Commit rule**: never commit the canonical edit without the functional-copy refresh — CI will fail. Never edit a functional copy directly under `translation-*/<sub>/<file>.md` — your edit will be wiped on the next `distribute.py` run.
+**Commit rule**: never commit the canonical edit without the functional-copy refresh — CI will fail. Never edit a functional copy directly under `skills/translation-*/<sub>/<file>.md` — your edit will be wiped on the next `distribute.py` run.
 
 ## CI gate
 

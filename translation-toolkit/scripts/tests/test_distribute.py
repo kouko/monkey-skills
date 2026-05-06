@@ -17,7 +17,7 @@ def test_distribute_routes_files_to_correct_subfolders(tmp_path):
     (canonical / "manual-entries-ja-JP--zh-TW.md").write_text("# manual")  # NOT distributed
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        (plugin_root / skill).mkdir(parents=True)
+        (plugin_root / "skills" / skill).mkdir(parents=True)
 
     shutil.copy(REPO_SCRIPT, plugin_root / "scripts" / "distribute.py")
 
@@ -27,13 +27,13 @@ def test_distribute_routes_files_to_correct_subfolders(tmp_path):
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        assert (plugin_root / skill / "references" / "core-loop.md").read_text() == "# core loop"
-        assert (plugin_root / skill / "glossary" / "glossary-en-US--ja-JP.md").read_text() == "# glossary"
-        assert (plugin_root / skill / "typography" / "jlreq-summary.md").read_text() == "# jlreq"
-        assert (plugin_root / skill / "corpus" / "nict-en-ja-zh.md").read_text() == "# nict"
+        assert (plugin_root / "skills" / skill / "references" / "core-loop.md").read_text() == "# core loop"
+        assert (plugin_root / "skills" / skill / "glossary" / "glossary-en-US--ja-JP.md").read_text() == "# glossary"
+        assert (plugin_root / "skills" / skill / "typography" / "jlreq-summary.md").read_text() == "# jlreq"
+        assert (plugin_root / "skills" / skill / "corpus" / "nict-en-ja-zh.md").read_text() == "# nict"
         # manual-entries should NOT be distributed
         for sub in ["references", "glossary", "typography", "corpus"]:
-            assert not (plugin_root / skill / sub / "manual-entries-ja-JP--zh-TW.md").exists()
+            assert not (plugin_root / "skills" / skill / sub / "manual-entries-ja-JP--zh-TW.md").exists()
 
 
 def test_distribute_unrouted_warns(tmp_path, capsys):
@@ -42,7 +42,7 @@ def test_distribute_unrouted_warns(tmp_path, capsys):
     canonical.mkdir(parents=True)
     (canonical / "unknown.md").write_text("# unknown")
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        (plugin_root / skill).mkdir(parents=True)
+        (plugin_root / "skills" / skill).mkdir(parents=True)
     shutil.copy(REPO_SCRIPT, plugin_root / "scripts" / "distribute.py")
     result = subprocess.run(
         ["python3", "scripts/distribute.py"], cwd=plugin_root, capture_output=True, text=True
@@ -66,7 +66,7 @@ def test_distribute_flattens_prompts_to_references(tmp_path):
     (prompts_dir / "improve.md").write_text("REVISER body")
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        (plugin_root / skill).mkdir(parents=True)
+        (plugin_root / "skills" / skill).mkdir(parents=True)
 
     shutil.copy(REPO_SCRIPT, plugin_root / "scripts" / "distribute.py")
 
@@ -76,7 +76,7 @@ def test_distribute_flattens_prompts_to_references(tmp_path):
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        refs = plugin_root / skill / "references"
+        refs = plugin_root / "skills" / skill / "references"
         # Flattened: prompt-<name>.md, NOT prompts/<name>.md
         assert (refs / "prompt-draft.md").read_text() == "WRITER prompt body"
         assert (refs / "prompt-reflect-4d.md").read_text() == "CRITIC 4D body"
@@ -84,7 +84,7 @@ def test_distribute_flattens_prompts_to_references(tmp_path):
         assert (refs / "prompt-improve.md").read_text() == "REVISER body"
         # No nested prompts/ subfolder may appear under any skill subfolder.
         assert not (refs / "prompts").exists()
-        assert not (plugin_root / skill / "prompts").exists()
+        assert not (plugin_root / "skills" / skill / "prompts").exists()
 
 
 def test_distribute_excludes_prompts_from_other_routings(tmp_path):
@@ -96,21 +96,21 @@ def test_distribute_excludes_prompts_from_other_routings(tmp_path):
     (prompts_dir / "draft.md").write_text("WRITER")
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        (plugin_root / skill).mkdir(parents=True)
+        (plugin_root / "skills" / skill).mkdir(parents=True)
 
     shutil.copy(REPO_SCRIPT, plugin_root / "scripts" / "distribute.py")
     subprocess.run(["python3", "scripts/distribute.py"], cwd=plugin_root, check=True)
 
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
         # The flattened file lives only under references/.
-        assert (plugin_root / skill / "references" / "prompt-draft.md").exists()
+        assert (plugin_root / "skills" / skill / "references" / "prompt-draft.md").exists()
         # Must not leak into other top-level subfolders.
         for sub in ["typography", "corpus", "glossary"]:
-            assert not (plugin_root / skill / sub / "prompt-draft.md").exists()
-            assert not (plugin_root / skill / sub / "draft.md").exists()
+            assert not (plugin_root / "skills" / skill / sub / "prompt-draft.md").exists()
+            assert not (plugin_root / "skills" / skill / sub / "draft.md").exists()
         # Must not preserve the nested prompts/ layout under any subfolder.
         for sub in ["references", "typography", "corpus", "glossary"]:
-            assert not (plugin_root / skill / sub / "prompts").exists()
+            assert not (plugin_root / "skills" / skill / sub / "prompts").exists()
 
 
 def test_distribute_unknown_nested_subdir_is_unrouted(tmp_path):
@@ -120,7 +120,7 @@ def test_distribute_unknown_nested_subdir_is_unrouted(tmp_path):
     (canonical / "scratch").mkdir(parents=True)
     (canonical / "scratch" / "foo.md").write_text("# scratch")
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
-        (plugin_root / skill).mkdir(parents=True)
+        (plugin_root / "skills" / skill).mkdir(parents=True)
     shutil.copy(REPO_SCRIPT, plugin_root / "scripts" / "distribute.py")
     result = subprocess.run(
         ["python3", "scripts/distribute.py"], cwd=plugin_root, capture_output=True, text=True
@@ -129,4 +129,4 @@ def test_distribute_unknown_nested_subdir_is_unrouted(tmp_path):
     assert "scratch/foo.md" in result.stdout
     for skill in ["translation-i18n", "translation-doc", "translation-creative", "translation-audit"]:
         for sub in ["references", "typography", "corpus", "glossary"]:
-            assert not (plugin_root / skill / sub / "foo.md").exists()
+            assert not (plugin_root / "skills" / skill / sub / "foo.md").exists()

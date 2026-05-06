@@ -393,12 +393,12 @@ git commit -m "feat(translation-toolkit): SSOT distribute + verify-drift scripts
 ### Task A5: 6 skill folders + SKILL.md skeletons
 
 **Files:**
-- Create: `translation-toolkit/using-translation-toolkit/SKILL.md`
-- Create: `translation-toolkit/translation-intake/SKILL.md`
-- Create: `translation-toolkit/translation-i18n/SKILL.md`
-- Create: `translation-toolkit/translation-doc/SKILL.md`
-- Create: `translation-toolkit/translation-creative/SKILL.md`
-- Create: `translation-toolkit/translation-audit/SKILL.md`
+- Create: `translation-toolkit/skills/using-translation-toolkit/SKILL.md`
+- Create: `translation-toolkit/skills/translation-intake/SKILL.md`
+- Create: `translation-toolkit/skills/translation-i18n/SKILL.md`
+- Create: `translation-toolkit/skills/translation-doc/SKILL.md`
+- Create: `translation-toolkit/skills/translation-creative/SKILL.md`
+- Create: `translation-toolkit/skills/translation-audit/SKILL.md`
 
 For each SKILL.md: frontmatter (`name`, `description`, `version: 0.1.0`) + skeleton sections (Purpose, When to use, Inputs/Outputs). Detailed prompt content gets filled in later phase tasks (D, E).
 
@@ -419,7 +419,7 @@ version: 0.1.0
 - [ ] **Step 7: Verify hook compliance** — repo has `.claude/hooks/validate-skill-folder-structure.sh`. Run lint before commit:
 
 ```bash
-bash .claude/hooks/validate-skill-folder-structure.sh translation-toolkit/translation-i18n/SKILL.md
+bash .claude/hooks/validate-skill-folder-structure.sh translation-toolkit/skills/translation-i18n/SKILL.md
 ```
 
 Each skill's subfolders must be flat (one level only). Verify by `find translation-toolkit -type d | wc -l` matches expected count.
@@ -427,7 +427,7 @@ Each skill's subfolders must be flat (one level only). Verify by `find translati
 - [ ] **Step 8: Commit**
 
 ```bash
-git add translation-toolkit/using-translation-toolkit translation-toolkit/translation-intake translation-toolkit/translation-i18n translation-toolkit/translation-doc translation-toolkit/translation-creative translation-toolkit/translation-audit
+git add translation-toolkit/skills/using-translation-toolkit translation-toolkit/skills/translation-intake translation-toolkit/skills/translation-i18n translation-toolkit/skills/translation-doc translation-toolkit/skills/translation-creative translation-toolkit/skills/translation-audit
 git commit -m "feat(translation-toolkit): scaffold 6 skills with frontmatter + skeleton"
 ```
 
@@ -1007,7 +1007,7 @@ Each skill should have 5 glossary files, 2 typography files, 1 corpus file, 6 re
 - [ ] **Step 8: Commit**
 
 ```bash
-git add translation-toolkit/scripts/canonical/{jlreq,clreq}-summary.md translation-toolkit/scripts/canonical/nict-en-ja-zh.md translation-toolkit/scripts/build-typography-summaries.py translation-toolkit/scripts/build-nict-corpus.py translation-toolkit/vendor/{w3c,nict} translation-toolkit/translation-i18n translation-toolkit/translation-doc translation-toolkit/translation-creative translation-toolkit/translation-audit
+git add translation-toolkit/scripts/canonical/{jlreq,clreq}-summary.md translation-toolkit/scripts/canonical/nict-en-ja-zh.md translation-toolkit/scripts/build-typography-summaries.py translation-toolkit/scripts/build-nict-corpus.py translation-toolkit/vendor/{w3c,nict} translation-toolkit/skills/translation-i18n translation-toolkit/skills/translation-doc translation-toolkit/skills/translation-creative translation-toolkit/skills/translation-audit
 git commit -m "feat(translation-toolkit): typography summaries + NICT corpus + first canonical distribution"
 ```
 
@@ -1520,7 +1520,7 @@ git commit -m "feat(translation-toolkit): audit-trail JSON builder + schema spec
 ### Task D1: using-translation-toolkit (router) full body
 
 **Files:**
-- Modify: `translation-toolkit/using-translation-toolkit/SKILL.md` (expand from skeleton)
+- Modify: `translation-toolkit/skills/using-translation-toolkit/SKILL.md` (expand from skeleton)
 
 - [ ] **Step 1: Write full SKILL.md** describing routing logic + web-search trade-offs (per Decision #15 — single paragraph absorbed from removed per-skill `web-search-tradeoffs.md`).
 
@@ -1541,13 +1541,13 @@ Body sections:
 - [ ] **Step 2: Verify hook validation**
 
 ```bash
-bash .claude/hooks/validate-skill-folder-structure.sh translation-toolkit/using-translation-toolkit/SKILL.md
+bash .claude/hooks/validate-skill-folder-structure.sh translation-toolkit/skills/using-translation-toolkit/SKILL.md
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add translation-toolkit/using-translation-toolkit/SKILL.md
+git add translation-toolkit/skills/using-translation-toolkit/SKILL.md
 git commit -m "feat(translation-toolkit): using-translation-toolkit router skill body"
 ```
 
@@ -1556,9 +1556,9 @@ git commit -m "feat(translation-toolkit): using-translation-toolkit router skill
 ### Task D2: translation-intake (Layer 1) full body + protocols
 
 **Files:**
-- Modify: `translation-toolkit/translation-intake/SKILL.md`
-- Create: `translation-toolkit/translation-intake/protocols/intake-auto.md`
-- Create: `translation-toolkit/translation-intake/protocols/intake-explicit.md`
+- Modify: `translation-toolkit/skills/translation-intake/SKILL.md`
+- Create: `translation-toolkit/skills/translation-intake/protocols/intake-auto.md`
+- Create: `translation-toolkit/skills/translation-intake/protocols/intake-explicit.md`
 
 - [ ] **Step 1: Write `protocols/intake-auto.md`** — describes auto mode pipeline:
   - LLM source-analysis call extracting: domain (top-3 keyword match against 13-domain taxonomy), formality register, mode hint, strategy bias, intent (skopos)
@@ -1613,7 +1613,7 @@ Writes intake-spec.json passed to next skill in pipeline. Schema:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add translation-toolkit/translation-intake/
+git add translation-toolkit/skills/translation-intake/
 git commit -m "feat(translation-toolkit): translation-intake skill body + auto/explicit protocols"
 ```
 
@@ -1622,10 +1622,10 @@ git commit -m "feat(translation-toolkit): translation-intake skill body + auto/e
 ### Task D3: translation-i18n (PO/JSON/XLIFF + Android + iOS) full body
 
 **Files:**
-- Modify: `translation-toolkit/translation-i18n/SKILL.md`
-- Create: `translation-toolkit/translation-i18n/protocols/placeholder-protect.md`
-- Create: `translation-toolkit/translation-i18n/protocols/format-roundtrip.md`
-- Create: `translation-toolkit/translation-i18n/checklists/i18n-format-checklist.md`
+- Modify: `translation-toolkit/skills/translation-i18n/SKILL.md`
+- Create: `translation-toolkit/skills/translation-i18n/protocols/placeholder-protect.md`
+- Create: `translation-toolkit/skills/translation-i18n/protocols/format-roundtrip.md`
+- Create: `translation-toolkit/skills/translation-i18n/checklists/i18n-format-checklist.md`
 
 - [ ] **Step 1: Write full `translation-i18n/SKILL.md`** describing the full 5-layer pipeline for i18n format:
 
@@ -1696,7 +1696,7 @@ version: 0.1.0
 - [ ] **Step 6: Commit**
 
 ```bash
-git add translation-toolkit/translation-i18n/
+git add translation-toolkit/skills/translation-i18n/
 git commit -m "feat(translation-toolkit): translation-i18n full body + protocols + checklist"
 ```
 
@@ -1705,9 +1705,9 @@ git commit -m "feat(translation-toolkit): translation-i18n full body + protocols
 ### Task D4: translation-doc (markdown / technical docs) full body
 
 **Files:**
-- Modify: `translation-toolkit/translation-doc/SKILL.md`
-- Create: `translation-toolkit/translation-doc/protocols/markdown-ast-protect.md`
-- Create: `translation-toolkit/translation-doc/checklists/doc-quality-checklist.md`
+- Modify: `translation-toolkit/skills/translation-doc/SKILL.md`
+- Create: `translation-toolkit/skills/translation-doc/protocols/markdown-ast-protect.md`
+- Create: `translation-toolkit/skills/translation-doc/checklists/doc-quality-checklist.md`
 
 - [ ] **Step 1: Write full `translation-doc/SKILL.md`** — same 5-layer template as i18n, but Layer 2/5 use markdown AST handling, code blocks/URLs/HTML/inline-code masked, cross-section context preserved via TA's `<TRANSLATE_THIS>` windowing per chunk.
 
@@ -1718,7 +1718,7 @@ git commit -m "feat(translation-toolkit): translation-i18n full body + protocols
 - [ ] **Step 4: Hook validation + commit**
 
 ```bash
-git add translation-toolkit/translation-doc/
+git add translation-toolkit/skills/translation-doc/
 git commit -m "feat(translation-toolkit): translation-doc full body + AST protect + checklist"
 ```
 
@@ -1727,10 +1727,10 @@ git commit -m "feat(translation-toolkit): translation-doc full body + AST protec
 ### Task D5: translation-creative (transcreation + variants) full body
 
 **Files:**
-- Modify: `translation-toolkit/translation-creative/SKILL.md`
-- Create: `translation-toolkit/translation-creative/protocols/brand-brief-intake.md`
-- Create: `translation-toolkit/translation-creative/protocols/transcreation-mode.md`
-- Create: `translation-toolkit/translation-creative/checklists/creative-checklist.md`
+- Modify: `translation-toolkit/skills/translation-creative/SKILL.md`
+- Create: `translation-toolkit/skills/translation-creative/protocols/brand-brief-intake.md`
+- Create: `translation-toolkit/skills/translation-creative/protocols/transcreation-mode.md`
+- Create: `translation-toolkit/skills/translation-creative/checklists/creative-checklist.md`
 
 - [ ] **Step 1: Write full `translation-creative/SKILL.md`** — 5-layer pipeline with:
   - Layer 1 intake additionally captures brand voice notes (via `protocols/brand-brief-intake.md`)
@@ -1747,7 +1747,7 @@ git commit -m "feat(translation-toolkit): translation-doc full body + AST protec
 - [ ] **Step 5: Hook validation + commit**
 
 ```bash
-git add translation-toolkit/translation-creative/
+git add translation-toolkit/skills/translation-creative/
 git commit -m "feat(translation-toolkit): translation-creative full body + brand brief + transcreation protocols"
 ```
 
@@ -1760,9 +1760,9 @@ git commit -m "feat(translation-toolkit): translation-creative full body + brand
 ### Task E1: translation-audit skill body
 
 **Files:**
-- Modify: `translation-toolkit/translation-audit/SKILL.md`
-- Create: `translation-toolkit/translation-audit/protocols/diff-report.md`
-- Create: `translation-toolkit/translation-audit/checklists/audit-completeness-checklist.md`
+- Modify: `translation-toolkit/skills/translation-audit/SKILL.md`
+- Create: `translation-toolkit/skills/translation-audit/protocols/diff-report.md`
+- Create: `translation-toolkit/skills/translation-audit/checklists/audit-completeness-checklist.md`
 
 - [ ] **Step 1: Write full `translation-audit/SKILL.md`**:
 
@@ -1818,7 +1818,7 @@ version: 0.1.0
 - [ ] **Step 4: Hook validation + commit**
 
 ```bash
-git add translation-toolkit/translation-audit/
+git add translation-toolkit/skills/translation-audit/
 git commit -m "feat(translation-toolkit): translation-audit skill body + diff-report protocol"
 ```
 

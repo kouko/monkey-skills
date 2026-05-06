@@ -94,7 +94,7 @@ For consistency when the user asks "what does each role do":
 
 ## Reference
 
-- `../docs/architecture.md` — high-level plugin topology, 5-layer pipeline, 4-tier glossary fallthrough.
-- `../docs/glossary-format-spec.md` — bundled glossary file format.
-- `../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions #1-#17).
+- `../../docs/architecture.md` — high-level plugin topology, 5-layer pipeline, 4-tier glossary fallthrough.
+- `../../docs/glossary-format-spec.md` — bundled glossary file format.
+- `../../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions #1-#17).
 - Sibling skill SKILL.md files — one per specialist (`../translation-{intake,i18n,doc,creative,audit}/SKILL.md`).

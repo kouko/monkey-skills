@@ -167,7 +167,7 @@ def main() -> int:
             continue
         subfolder, dst_name = target  # type: ignore[misc]
         for skill in ACTIVE_SKILLS:
-            dst_dir = ROOT / skill / subfolder
+            dst_dir = ROOT / "skills" / skill / subfolder
             dst_dir.mkdir(parents=True, exist_ok=True)
             dst = dst_dir / dst_name
             shutil.copyfile(src, dst)
