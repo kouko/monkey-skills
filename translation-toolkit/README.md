@@ -123,14 +123,15 @@ monkey-skills itself ships glossaries at these paths (per repo PR #150). Other r
 
 ## Status
 
-- **Version**: 0.1.0 (initial scaffold, 2026-05-06)
-- **License**: MIT (plugin code) + per-entry licenses for bundled glossary (CC-BY-3.0 / CC-BY-4.0 / CC-BY-SA-4.0 / public-domain — see `NOTICES.md`)
-- **Stability**: Pre-release. Skill skeletons land in subsequent tasks (A2-A5 of the v0.1.0 plan).
+- **Version**: 0.1.0 (2026-05-06)
+- **License**: MIT (plugin code) + per-entry licenses for bundled glossary (CC-BY-3.0 / CC-BY-4.0 / CC-BY-SA-4.0 / public-domain — see [`NOTICES.md`](NOTICES.md))
+- **Stability**: First release. All 6 skills shipped; bundled glossary covers ~10K+ EN-pivot entries plus a curated JA↔ZH-TW manual seed (~80+ entries).
 
 ## Reference
 
 - Design spec: [`docs/superpowers/specs/2026-05-06-translation-toolkit-design.md`](../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md)
-- Glossary licensing ledger: `NOTICES.md` (lands in task A2)
+- Implementation plan: [`docs/superpowers/plans/2026-05-06-translation-toolkit-v0.1.0.md`](../docs/superpowers/plans/2026-05-06-translation-toolkit-v0.1.0.md)
+- Glossary licensing ledger: [`NOTICES.md`](NOTICES.md)
 
 ## Contributing
 
