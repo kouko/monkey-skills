@@ -1,0 +1,8 @@
+# License placeholder for NICT 日英中基本文
+
+The actual license text will be fetched and inserted during Task B-series build
+pipeline implementation. This placeholder ensures vendor/ folder structure
+exists for build scripts.
+
+Reference: see translation-toolkit/NOTICES.md for the license category each
+source falls under.
