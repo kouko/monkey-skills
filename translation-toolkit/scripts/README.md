@@ -81,9 +81,13 @@ Exit code:
 
 ## Required tools
 
-- Python 3.9+ (stdlib only — `shutil`, `filecmp`, `pathlib`)
+- Python 3.9+
+- Stdlib only for `distribute.py` / `verify-drift.py` (`shutil`, `filecmp`, `pathlib`).
+- `build-pairs-from-en.py` adds: `polib` (for GNOME PO ingest, Task B2). Install
+  via `python3 -m pip install --user polib`. The dependency is import-guarded;
+  if `polib` is missing the GNOME source is skipped with a `WARN` and the
+  build still emits a glossary from the remaining sources.
 - `pytest` (for `scripts/tests/`)
-- No third-party deps
 
 Tests: `cd translation-toolkit && PYTHONDONTWRITEBYTECODE=1 python3 -m pytest scripts/tests/ -v`
 

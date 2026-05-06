@@ -1,8 +1,8 @@
 ---
 pair: [en-US, ja-JP]
 version: 0.1.0
-sources: [pontoon]
-domains_supported: [tech.web, ui]
+sources: [gnome, jlt, pontoon]
+domains_supported: [gov, legal, tech.web, ui]
 ---
 
 # Glossary en-US ↔ ja-JP
@@ -13,6 +13,54 @@ domains_supported: [tech.web, ui]
 ## meta
 
 (typography rules — see typography/jlreq-summary.md for ja-JP, clreq-summary.md for zh-*)
+
+## domain: gov
+
+| en-US | ja-JP | source | notes |
+|---|---|---|---|
+| Cabinet Office | 内閣府 | jlt | Cabinet Office Establishment Act |
+| Financial Services Agency | 金融庁 | jlt | Establishment Act |
+| Ministerial Ordinance | 省令 | jlt | Cabinet Act |
+| Ministry of Finance | 財務省 | jlt | Establishment Act |
+| Ministry of Foreign Affairs | 外務省 | jlt | Establishment Act |
+| Ministry of Justice | 法務省 | jlt | Establishment Act |
+| National Police Agency | 警察庁 | jlt | Police Act |
+| prefecture | 都道府県 | jlt | Local Autonomy Act |
+
+## domain: legal
+
+| en-US | ja-JP | source | notes |
+|---|---|---|---|
+| Act | 法律 | jlt | Constitution Article 41 |
+| agreement | 契約 | jlt | Civil Code Article 522 |
+| appeal | 上訴 | jlt | Code of Civil Procedure |
+| articles of incorporation | 定款 | jlt | Companies Act Article 26 |
+| board of directors | 取締役会 | jlt | Companies Act Article 362 |
+| Cabinet | 内閣 | jlt | Constitution Article 65 |
+| Cabinet Order | 政令 | jlt | Constitution Article 73 |
+| Civil Code | 民法 | jlt | Civil Code |
+| Commercial Code | 商法 | jlt | Commercial Code |
+| Companies Act | 会社法 | jlt | Companies Act |
+| consent | 同意 | jlt | Civil Code |
+| court | 裁判所 | jlt | Court Act |
+| defendant | 被告 | jlt | Code of Civil Procedure |
+| Diet | 国会 | jlt | Constitution Article 41 |
+| House of Councillors | 参議院 | jlt | Constitution Article 42 |
+| House of Representatives | 衆議院 | jlt | Constitution Article 42 |
+| judgment | 判決 | jlt | Code of Civil Procedure Article 250 |
+| juridical person | 法人 | jlt | Civil Code Article 33 |
+| Minister of State | 国務大臣 | jlt | Constitution Article 66 |
+| municipality | 市町村 | jlt | Local Autonomy Act |
+| natural person | 自然人 | jlt | Civil Code |
+| obligation | 義務 | jlt | Civil Code |
+| Ordinance | 条例 | jlt | Local Autonomy Act Article 14 |
+| Penal Code | 刑法 | jlt | Penal Code |
+| plaintiff | 原告 | jlt | Code of Civil Procedure |
+| Prime Minister | 内閣総理大臣 | jlt | Constitution Article 66 |
+| representative director | 代表取締役 | jlt | Companies Act Article 349 |
+| right | 権利 | jlt | Civil Code |
+| shareholder | 株主 | jlt | Companies Act Article 105 |
+| Tokyo Metropolitan Government | 東京都 | jlt | Local Autonomy Act |
 
 ## domain: tech.web
 
@@ -25,96 +73,951 @@ domains_supported: [tech.web, ui]
 | en-US | ja-JP | source | notes |
 |---|---|---|---|
 | abort | 中止する | pontoon | — |
+| abort | 中止 | gnome | — |
+| Abstract | 概要 | gnome | — |
+| Accelerator | アクセラレータ | gnome | — |
+| Accept | 受諾 | gnome | — |
+| access | アクセス | gnome | — |
+| Account | アカウント | gnome | — |
 | account recovery key | アカウント回復用キー | pontoon | — |
+| Active | アクティブ | gnome | — |
+| Actor | 俳優 | gnome | — |
+| Actuator | 作動装置 | gnome | — |
+| Add | 追加 | gnome | — |
 | add-on | アドオン | pontoon | — |
+| Address | アドレス | gnome | — |
+| Adjust | 調整 | gnome | — |
+| Administration | 管理 | gnome | — |
+| Aggregate | 総計 | gnome | — |
+| Alarm | アラーム | gnome | — |
+| Align | 整列 | gnome | — |
+| Allow | 許可 | gnome | — |
+| Alpha | アルファ | gnome | — |
+| alpha channel | アルファチャンネル | gnome | — |
+| Also used as a synonym to active. | 動作中の類義語としても使用されています． | gnome | — |
 | alternate text | 代替テキスト | pontoon | — |
+| Analog | アナログ | gnome | — |
+| Analysis | 解析 | gnome | — |
+| Anchor | アンカー | gnome | — |
+| AND | 論理和 | gnome | — |
+| Animation | アニメーション | gnome | — |
+| Anonymous | 匿名 | gnome | — |
+| Antialiasing | アンチエイリアシング | gnome | — |
+| Append | 追加 | gnome | — |
+| Applet | アプレット | gnome | — |
+| Application | アプリケーション | gnome | — |
+| Application Launcher | アプリケーションランチャー | gnome | — |
+| Applix | 付録 | gnome | — |
+| Arc | 弧 | gnome | — |
+| archive | アーカイブ | gnome | — |
+| archive file | アーカイブファイル | gnome | — |
+| area grid | マス目 | gnome | — |
+| Argument | 引数 | gnome | — |
+| Array | 配列 | gnome | — |
+| Arrow key | 十字キー | gnome | — |
+| Article | 雑誌 | gnome | — |
+| Ascending order | 昇順 | gnome | — |
+| Ascii | Ascii | gnome | — |
+| aspect ratio | 縦横比 | gnome | — |
+| Asynchronous | 非同期 | gnome | — |
+| Attachment | 添付 | gnome | — |
 | attack | 攻撃する | pontoon | — |
 | Attack Site | 攻撃サイト | pontoon | — |
 | attacker | 攻撃者 | pontoon | — |
 | attendee | 参加者 | pontoon | — |
+| Attribute | 属性 | gnome | — |
+| Audio | オーディオ | gnome | — |
 | authenticate | 認証する | pontoon | — |
 | authenticated | 認証 | pontoon | — |
+| Authentication | 証明 | gnome | — |
 | authentication code | 認証コード | pontoon | — |
+| Author | 作者 | gnome | — |
+| Autofill | オートフィル | gnome | — |
 | autoplay | 自動再生 | pontoon | — |
+| Availability | 有効性 | gnome | — |
+| Average | 平均 | gnome | — |
+| Axis | 軸 | gnome | — |
+| Background | 背景 | gnome | — |
+| Backup | バックアップ | gnome | — |
 | backup authentication code | バックアップ認証コード | pontoon | — |
+| Balance | バランス | gnome | — |
+| Base | 底 | gnome | — |
+| Binary | バイナリ | gnome | — |
+| Binding | 結合 | gnome | — |
+| Binomial distribution | 二項分布 | gnome | — |
+| Bit | ビット | gnome | — |
+| Bitmap | ビットマップ | gnome | — |
+| Blank | 空白 | gnome | — |
+| Blinking cursor | 点滅中のカーソル | gnome | — |
+| block buffer | ブロックバッファ | gnome | — |
+| Blocked | ブロックする | gnome | — |
+| Blur image | ぼかした画像 | gnome | — |
+| body | 本文 | gnome | — |
+| Bold | 強調 | gnome | — |
+| book mark | ブックマーク | gnome | — |
 | bookmark | ブックマークを追加する | pontoon | — |
 | bookmark | ブックマーク | pontoon | — |
+| Boolean | 論理知 | gnome | — |
+| Box | ボックス | gnome | — |
+| Branch | ブランチ | gnome | — |
 | breakpoint | ブレークポイント | pontoon | — |
+| Bricks | 固定資産 | gnome | — |
+| Browse | 閲覧 | gnome | — |
+| Browser | ブラウザ | gnome | — |
+| Buffer | バッファ | gnome | — |
+| bug | バグ | gnome | — |
 | Bug report | バグ報告 | pontoon | — |
+| Build | 構築 | gnome | — |
+| Bullet | 丸 | gnome | — |
+| Bulletin Board | 掲示版 | gnome | — |
+| Bus | バス | gnome | — |
+| Busy | ビジー | gnome | — |
+| Button | ボタン | gnome | — |
+| Byte | バイト | gnome | — |
+| C | C | gnome | — |
+| Cache | キャッシュ | gnome | — |
+| Calculator | 演算装置 | gnome | — |
+| Calendar | カレンダー | gnome | — |
+| Call | 呼出し | gnome | — |
+| Cancel | 取消し | gnome | — |
+| canvas | 調査 | gnome | — |
+| Caption | 見出し | gnome | — |
+| Case Sensitive | 大文字・小文字を区別 | gnome | — |
+| Categories | 部類 | gnome | — |
+| CD | CD | gnome | — |
+| CDE panel | CDEパネル | gnome | — |
+| Cell | セル | gnome | — |
+| Cellular | セルの | gnome | — |
+| Center | 中央 | gnome | — |
 | certificate authority | 認証局 | pontoon | — |
+| Channel | チャンネル | gnome | — |
+| char cell | 文字セル | gnome | — |
+| Character set | 文字集合 | gnome | — |
+| Chat | チャット | gnome | — |
+| Check bit | チェックビット | gnome | — |
+| Checkbox | チェックボックス | gnome | — |
+| child | 子 | gnome | — |
+| child process | 子プロセス | gnome | — |
 | cipher | 暗号 | pontoon | — |
+| Class | クラス | gnome | — |
+| Classification | 分類 | gnome | — |
+| Clear | 消去 | gnome | — |
 | clipboard | クリップボード | pontoon | — |
+| Clipboard | クリップボード | gnome | — |
+| Close | 閉じる | gnome | — |
+| code | コード | gnome | — |
+| code segment | コードセグメント | gnome | — |
+| Coefficient | 係数 | gnome | — |
+| Collaboration | 協力 | gnome | — |
+| Collate | 照合 | gnome | — |
+| Collision | 衝突 | gnome | — |
 | colorway | カラーテーマ | pontoon | — |
+| Command | 命令 | gnome | — |
+| Command Line | コマンドライン | gnome | — |
+| Command line options | コマンドラインオプション | gnome | — |
+| Common properties | 共通プロパティ | gnome | — |
+| Compare | 比較 | gnome | — |
+| Concatenate | 連結 | gnome | — |
+| Condition | 状態 | gnome | — |
+| Conduit | 溝 | gnome | — |
+| Confidential | 機密 | gnome | — |
+| Configuration | 設定 | gnome | — |
+| Confirm | 確認 | gnome | — |
+| Confirmation | 承認 | gnome | — |
 | confirmation code | 確認コード | pontoon | — |
+| Connection | 接続 | gnome | — |
+| Constraint | 制約 | gnome | — |
+| Content | 内容 | gnome | — |
 | context | コンテキスト | pontoon | — |
+| Continue | 続行 | gnome | — |
+| Control | 制御 | gnome | — |
+| Conversion | 変換 | gnome | — |
+| cookie | クッキー | gnome | — |
 | cookie banner | Cookie バナー | pontoon | — |
+| Copy | 複写 | gnome | — |
+| Copyright | 著作権表示 | gnome | — |
+| CORBA | CORBA分散系 | gnome | — |
+| Core file | coreファイル | gnome | — |
+| Correlation | 相互関係 | gnome | — |
 | corrupt | 破損する | pontoon | — |
 | corrupt | 壊れている | pontoon | — |
 | corrupted | 破損した | pontoon | — |
+| cos | cos | gnome | — |
+| Cost | 費用 | gnome | — |
+| Count | 回数 | gnome | — |
+| CPU | 中央演算装置 | gnome | — |
 | crash | クラッシュ | pontoon | — |
+| crash | クラッシュ | gnome | — |
+| Create | 作成 | gnome | — |
+| Criteria range | 標準範囲 | gnome | — |
+| Critical error | 致命的なエラー | gnome | — |
+| Crop | 切り抜き | gnome | — |
+| Cross-reference | 相互参照 | gnome | — |
 | cross-site tracking cookie | クロスサイトトラッキング Cookie | pontoon | — |
 | cryptominer | 暗号通貨採掘 | pontoon | — |
 | cryptomining | 暗号通貨マイニング | pontoon | — |
+| Ctrl | Ctrl | gnome | — |
+| Cumulative | 累積 | gnome | — |
+| Current | 現在の | gnome | — |
+| cursor | カーソル | gnome | — |
+| Curve | 曲線 | gnome | — |
+| custom window | カスタムウィンドウ | gnome | — |
+| Customize | カスタマイズ | gnome | — |
+| Cut | 切り取り | gnome | — |
+| Daemon | デーモン | gnome | — |
+| Data | データ | gnome | — |
+| database | データベース | gnome | — |
 | debug | デバッグ | pontoon | — |
+| Debug | デバッグ | gnome | — |
 | deceptive site | 詐欺サイト | pontoon | — |
+| decimal | 十進数 | gnome | — |
 | decode | デコードする | pontoon | — |
+| Decrease | 減少 | gnome | — |
 | decryption | 復号 | pontoon | — |
+| Default | 初期値 | gnome | — |
+| Delete | 削除 | gnome | — |
+| Dependence | 依存関係 | gnome | — |
+| Derived | 派生的 | gnome | — |
+| Descending sort | 降順並び変え | gnome | — |
+| Descriptor | ディスクリプタ | gnome | — |
+| Desktop | デスクトップ | gnome | — |
+| Desktop Environment | デスクトップ環境 | gnome | — |
+| Destination | 移動先 | gnome | — |
+| Destroy | 破棄 | gnome | — |
+| Detection | 検出 | gnome | — |
+| Device | 装置 | gnome | — |
+| Diagonal | 対角線 | gnome | — |
+| Diagram | ダイアグラム | gnome | — |
+| Dial | ダイアル | gnome | — |
+| Dialog Box | ダイアログボックス | gnome | — |
+| Dialout Device | 発信デバイス | gnome | — |
+| Digits | 数字 | gnome | — |
+| Dimension | 方向 | gnome | — |
+| Direction | 方向 | gnome | — |
+| Directory | ディレクトリ | gnome | — |
+| Disable | 無効 | gnome | — |
+| Discard | 破棄 | gnome | — |
+| Disconnect | 未接続 | gnome | — |
+| Discrete | 離散 | gnome | — |
 | disinformation | 偽情報 | pontoon | — |
+| disk | ディスク | gnome | — |
+| Dismiss | 棄却 | gnome | — |
+| Display | ディスプレイ | gnome | — |
+| Dissipation | 損失 | gnome | — |
+| Distribute | 分散 | gnome | — |
+| Distribution list | 配布物 | gnome | — |
 | distrust | 信頼しない | pontoon | — |
+| Dithering | ディザリング | gnome | — |
+| Division by zero | 零による除算 | gnome | — |
+| DMA | DMA | gnome | — |
+| DNS | DNS | gnome | — |
+| Document | 文書 | gnome | — |
+| Domain | ドメイン | gnome | — |
+| Dot | ドット | gnome | — |
+| Download | ダウンロード | gnome | — |
+| Drawing Area | 描写領域 | gnome | — |
+| Drop | ドロップ | gnome | — |
+| Druid | ドルイド | gnome | — |
+| dumb Terminal | ダンプ端末 | gnome | — |
+| Duplicate... | 複製 | gnome | — |
+| Dynamic | 動的 | gnome | — |
+| E-mail | E-mail | gnome | — |
+| Echo | エコー | gnome | — |
+| Edge | 縁 | gnome | — |
+| Edit | 編集 | gnome | — |
+| Effects | 影響 | gnome | — |
+| Eject | 取り出し | gnome | — |
+| Electronic Mail | 電子メール | gnome | — |
 | email mask | メールマスク | pontoon | — |
+| emulation | 疑似環境 | gnome | — |
 | enable | 有効にする | pontoon | — |
+| Enable | 有効 | gnome | — |
+| Encapsulated Postscript | Encapsulated Postscript | gnome | — |
 | encode | エンコードする | pontoon | — |
+| Encoding | 符号化方式 | gnome | — |
 | encrypt | 暗号化する | pontoon | — |
 | encryption | 暗号化 | pontoon | — |
 | end user | エンドユーザー | pontoon | — |
+| Engineering | エンジニアリング | gnome | — |
 | Enhanced Tracking Protection | 強化型トラッキング防止 | pontoon | — |
+| Entity | 実体 | gnome | — |
+| environment variable | 環境変数 | gnome | — |
+| Equation | 等式 | gnome | — |
+| Error | エラー | gnome | — |
+| Ethernet | インサーネット | gnome | — |
+| Event | イベント | gnome | — |
+| Exception | 例外 | gnome | — |
+| Exclusive OR | 排他的論理和 | gnome | — |
+| executable file | 実行可能ファイル | gnome | — |
+| Execute | 実行 | gnome | — |
+| Exit | 終了 | gnome | — |
+| Expanded memory | 拡張メモリ | gnome | — |
+| Explicit state | 明確な状態 | gnome | — |
+| Exponential notation | 指数指定 | gnome | — |
+| Export | エクスポート | gnome | — |
+| expression | 式 | gnome | — |
 | extension | 拡張機能 | pontoon | — |
+| Extension | 拡張子 | gnome | — |
+| Extract | 抽出 | gnome | — |
+| Favorite | お気に入り | gnome | — |
+| Fax | ファックス | gnome | — |
+| Field | 欄 | gnome | — |
+| File | ファイル | gnome | — |
+| Filename | ファイル名 | gnome | — |
+| Filesystem | ファイルシステム | gnome | — |
+| Fill | 塗りつぶし | gnome | — |
+| Filter | フィルター | gnome | — |
+| Find | 検索 | gnome | — |
 | fingerprinter | フィンガープリント採取 | pontoon | — |
 | fingerprinting | フィンガープリント採取 | pontoon | — |
 | Firefox View | Firefox View | pontoon | — |
+| Firmware | ファームウェア | gnome | — |
+| Fixed Font | 固定幅フォント | gnome | — |
+| Float | 浮動小数点定数 | gnome | — |
+| Floppy | フロッピー | gnome | — |
+| Flow analysis | フロー解析 | gnome | — |
+| Flowchart | 流れ図 | gnome | — |
+| Folder | フォルダ | gnome | — |
+| Font | 書体 | gnome | — |
+| Footer | フッター | gnome | — |
+| Forecast | 予測 | gnome | — |
+| Foreground | フォアグラウンド | gnome | — |
+| fork | フォーク | gnome | — |
+| Form | 差出人 | gnome | — |
+| Format | 形式 | gnome | — |
+| Formula | 式 | gnome | — |
+| Fourier Analysis | フーリエ解析 | gnome | — |
+| Fraction | 分数 | gnome | — |
+| Frame | フレーム | gnome | — |
+| Free Software | フリーソフトウェア | gnome | — |
+| Frequency | よくある | gnome | — |
+| FTP | FTP | gnome | — |
+| full pathname | フルパス名 | gnome | — |
+| Function | 関数 | gnome | — |
+| Gamma | ガンマ | gnome | — |
+| Geometry | 幾何学 | gnome | — |
+| get | get | gnome | — |
+| Global | 大域 | gnome | — |
+| GNOME | GNOME | gnome | — |
+| GNU | GNU(フリーソフトウェア財団) | gnome | — |
+| GPL | GPL(GNU一般公有使用許諾契約書) | gnome | — |
+| Grab | 取得 | gnome | — |
+| Gradient | 勾配 | gnome | — |
+| Graph | グラフ | gnome | — |
+| Graphical user interface | グラフィカルユーザインターフェイス | gnome | — |
 | grassroots | 草の根 | pontoon | — |
+| Grid | マス目 | gnome | — |
+| Group | 郡 | gnome | — |
+| Gtk | GTK | gnome | — |
+| GUI | GUI | gnome | — |
+| Gutter | のり白 | gnome | — |
+| Hacker | ハッカー | gnome | — |
+| Handle | ハンドル | gnome | — |
+| Handshake | 握手 | gnome | — |
+| Hard Disk | ハードティスク | gnome | — |
+| Header | ヘッダー | gnome | — |
+| Headword | 見出し語 | gnome | — |
+| Hello World | こんにちは、世界 | gnome | — |
+| Help | ヘルプ | gnome | — |
+| Hex | 16進数 | gnome | — |
+| Hidden file | 隠しファイル | gnome | — |
+| Hide | 隠し | gnome | — |
+| hierachy | 階層 | gnome | — |
+| Highlight... | ハイライト... | gnome | — |
+| Histogram | ヒストグラム | gnome | — |
+| History | 履歴 | gnome | — |
+| Home | ホーム | gnome | — |
+| Home directory | ホームディレクトリ | gnome | — |
 | home page | ホームページ | pontoon | — |
+| Home Page | ホームページ | gnome | — |
+| Homogeneous environment | 同じ環境 | gnome | — |
+| Host | ホスト | gnome | — |
+| Host name | ホスト名 | gnome | — |
+| Hot Key | ホットキー | gnome | — |
+| Housekeeping | 保守 | gnome | — |
+| HTML | HTML | gnome | — |
+| HTTP | HTTP | gnome | — |
+| Hue | 色相 | gnome | — |
+| I/O subsystem | I/Oサブシステム | gnome | — |
+| Icon | アイコン | gnome | — |
+| ID | ID | gnome | — |
+| IDE | IDE | gnome | — |
+| Identifier | 識別子 | gnome | — |
+| Idle | 待機 | gnome | — |
+| Illegal | 不正な | gnome | — |
+| Image | 画像 | gnome | — |
+| Implementation | 実装 | gnome | — |
 | import | インポートする | pontoon | — |
+| Import | インポート | gnome | — |
+| Inactive window | 対話的ウィンドウ | gnome | — |
+| Increase | 増加 | gnome | — |
+| Incremental update | 増分更新 | gnome | — |
+| Indent | インデント | gnome | — |
+| Index | 索引 | gnome | — |
+| Indicator | インジケータ | gnome | — |
+| Information | 情報 | gnome | — |
+| initialization | 初期化 | gnome | — |
 | innovations | イノベーション | pontoon | — |
+| Inode | Iノード | gnome | — |
+| Input | 入力 | gnome | — |
+| Input/output | 入出力 | gnome | — |
 | insecure | 安全でない | pontoon | — |
+| insensitive version | 不良版 | gnome | — |
+| Insertion point | 挿入ポイント | gnome | — |
+| Install | インストール | gnome | — |
 | installation | インストール | pontoon | — |
+| instruction pointer | 命令ポインタ | gnome | — |
+| Interaction | 対話 | gnome | — |
+| Intercept | 傍受 | gnome | — |
+| Interchange File Format | 交換ファイルフォーマット | gnome | — |
+| Interface | インターフェイス | gnome | — |
+| Internal bug | 内部バグ | gnome | — |
+| Internal error | 内部エラー | gnome | — |
+| International | 国際的 | gnome | — |
+| Internet | インターネット | gnome | — |
+| Interrupt | 割り込み | gnome | — |
+| Interval | 間隔 | gnome | — |
+| Intuitive | 直感的 | gnome | — |
+| Invalid | 無効な | gnome | — |
+| Invert | 反転 | gnome | — |
+| Invert Selection | 反転選択 | gnome | — |
+| Invisible | 不可視 | gnome | — |
+| IP Address | IPアドレス | gnome | — |
+| IRC | IRC | gnome | — |
 | Issue | 発行 | pontoon | — |
+| Jaz Drive | ジャズドライブ | gnome | — |
+| Job | ジョブ | gnome | — |
+| JPEG | JPEG | gnome | — |
+| Justify | 揃え | gnome | — |
+| KDE | KDE | gnome | — |
+| Kernel | カーネル | gnome | — |
+| Key | キー | gnome | — |
+| Keyboard | キーボード | gnome | — |
+| Keymap control | キーマップ制御 | gnome | — |
+| Keyword | キーワード | gnome | — |
+| Kill | 殺す | gnome | — |
+| Kill app | 強制終了 | gnome | — |
+| Kilobyte | キロバイト | gnome | — |
+| Label | ラベル | gnome | — |
+| Lambda | ラムダ | gnome | — |
+| Landscape | 景色 | gnome | — |
+| Language | 言語 | gnome | — |
+| LaTeX | LaTeX | gnome | — |
+| launch icon | 起動アイコン | gnome | — |
+| Launcher | ランチャー | gnome | — |
+| Layer | 層 | gnome | — |
+| Layout | レイアウト | gnome | — |
 | Legacy extension | 旧式の拡張機能 | pontoon | — |
+| Legal | 手紙 | gnome | — |
+| Length | 幅 | gnome | — |
+| Letter | 手紙サイズ | gnome | — |
+| Library | ライブラリ | gnome | — |
+| License agreement | 許諾契約 | gnome | — |
+| Light precipitation | 小雨 | gnome | — |
+| Limits | 制限 | gnome | — |
+| Line | 行 | gnome | — |
+| line arguments | 行引数 | gnome | — |
+| linear transfer | リニア転送 | gnome | — |
+| Link | リンク | gnome | — |
+| Linux | リナックス | gnome | — |
+| load | リンク | gnome | — |
+| Local | 内部 | gnome | — |
+| Location | 位置 | gnome | — |
+| Lock | ロック | gnome | — |
+| Log | 記録 | gnome | — |
+| Logical | 論理 | gnome | — |
+| Login | ログイン | gnome | — |
+| Logout | ログアウト | gnome | — |
+| Look | 眺める | gnome | — |
+| Lookup | 検索 | gnome | — |
+| Loop | ループ | gnome | — |
+| Macro | マクロ | gnome | — |
+| Mail | メール | gnome | — |
+| Mail Client | メールクライアント | gnome | — |
+| Mail server | メールサーバ | gnome | — |
+| Mail to | 宛先 | gnome | — |
+| Mailbox | メールボックス | gnome | — |
+| Main body | 本体 | gnome | — |
+| Man Pages | man ページ | gnome | — |
+| Manager | マネージャー | gnome | — |
+| Manual | マニュアル | gnome | — |
+| Manual page | マニュアルページ | gnome | — |
+| Margins | 余白 | gnome | — |
+| Mark | 印 | gnome | — |
+| matching | 一致 | gnome | — |
+| MDI | MDI | gnome | — |
 | MDN | MDN | pontoon | — |
+| media type | メディアタイプ | gnome | — |
+| Median | 中央値 | gnome | — |
+| Meeting | 会議 | gnome | — |
+| Memory | メモリ | gnome | — |
+| Menu | メニュー | gnome | — |
+| Merge | 結合 | gnome | — |
+| Message | メッセージ | gnome | — |
+| Metadata | メタデータ | gnome | — |
+| Metafile | メタファイル | gnome | — |
+| Mime Type | MIME型 | gnome | — |
+| mini icons | 小さいアイコン | gnome | — |
+| Minimize | 最小化 | gnome | — |
+| minix | Minix | gnome | — |
+| minor faults | マイナーフォールト | gnome | — |
+| mirror | ミラー | gnome | — |
 | misinformation | 誤報 | pontoon | — |
+| mixer device | ミキサーデバイス | gnome | — |
+| Mode | モード | gnome | — |
+| Model | モデル | gnome | — |
+| Modem | モデム | gnome | — |
+| Modifier | 修飾子 | gnome | — |
+| Modify | 更新 | gnome | — |
+| Module | モジュール | gnome | — |
+| Monitor | モニタ | gnome | — |
+| monochrome | 白黒 | gnome | — |
+| Mount | マウント | gnome | — |
+| Mouse Cursor | マウスカーソル | gnome | — |
+| Move | 移動 | gnome | — |
+| MS | MS | gnome | — |
+| MSDOS | MS-DOS | gnome | — |
+| MTU | MTU | gnome | — |
 | native | ネイティブ | pontoon | — |
+| Nautilus | Nautilus | gnome | — |
 | net neutrality | ネット中立性 | pontoon | — |
+| Netmask | ネットマスク | gnome | — |
+| Netscape | ネットスケープ | gnome | — |
+| Network | ネットワーク | gnome | — |
+| News Site | ニュースサイト | gnome | — |
+| NO-DAEMON | ノーデーモン | gnome | — |
+| node | ノード | gnome | — |
 | non-profit | 非営利団体 | pontoon | — |
 | nonprofit | 非営利団体 | pontoon | — |
+| Normal distribution | 通常配布 | gnome | — |
+| Notebook | ノートブック | gnome | — |
+| Notice | 注意 | gnome | — |
+| Notification | 通知 | gnome | — |
+| Number | 番号 | gnome | — |
+| Number Converter | 番号変換 | gnome | — |
+| Number Theory | 番号理論 | gnome | — |
+| Numbered List | ~/ | gnome | — |
+| Numeric | 数値 | gnome | — |
+| Object code | オブジェクトコード | gnome | — |
+| oblique | 斜めの | gnome | — |
+| Observations | 監視 | gnome | — |
+| Obsolete | 使われていない | gnome | — |
+| Offline | オフライン | gnome | — |
+| Online | オンライン | gnome | — |
+| Open | 開く | gnome | — |
 | open source | オープンソース | pontoon | — |
+| Open Source | オープンソース | gnome | — |
+| Operating System | オペレーティング・システム | gnome | — |
+| Operation | 操作 | gnome | — |
+| optional | オプション | gnome | — |
+| Options | オプション | gnome | — |
+| OR | 論理和 | gnome | — |
+| Order | 順番 | gnome | — |
+| Orientation | 向き | gnome | — |
+| Origin | 始点 | gnome | — |
+| Outline | 輪郭 | gnome | — |
+| Output | 出力 | gnome | — |
 | override | 上書き | pontoon | — |
+| Overwrite | 上書き | gnome | — |
+| Owner | 所有者 | gnome | — |
+| Pack | パック | gnome | — |
+| Package | パッケージ | gnome | — |
+| Packet | パケット | gnome | — |
+| Padding | パディング | gnome | — |
+| Page | ページ | gnome | — |
+| Pager | パレット | gnome | — |
+| Palette | パレット | gnome | — |
+| Panel | パネル | gnome | — |
+| Panelize | パネル化 | gnome | — |
+| Parameter | パラメータ | gnome | — |
+| Parcel | 小包 | gnome | — |
+| Parse | 解析 | gnome | — |
+| Partition | パーティション | gnome | — |
+| Password | パスワード | gnome | — |
+| Paste | 貼り付け | gnome | — |
+| Path | パス | gnome | — |
+| Pattern | パターン | gnome | — |
+| Peak indicator | ピークインジケータ | gnome | — |
+| pending signals | 保留状態のシグナル | gnome | — |
+| Period | 期間 | gnome | — |
+| Periodic | 定期的 | gnome | — |
+| Perl | Perl | gnome | — |
+| Perl Script | Perlスクリプト | gnome | — |
+| Permission | パーミッション | gnome | — |
 | phone number mask | 電話番号マスク | pontoon | — |
+| physical memory | 物理メモリ | gnome | — |
+| picker button | ピッカーボタン | gnome | — |
+| Picker Settings | ピッカーの設定 | gnome | — |
+| PID | PID | gnome | — |
+| Pilot device | 予備デバイス | gnome | — |
+| Pipe | パイプ | gnome | — |
+| Pixel | ピクセル | gnome | — |
+| Pixmap | ピックスマップ | gnome | — |
+| Place | 場所 | gnome | — |
+| Play | 再生 | gnome | — |
+| Plug-in | プラグイン | gnome | — |
+| Point | ポイント | gnome | — |
+| Policy | 方針 | gnome | — |
+| Polygon | ポリゴン | gnome | — |
+| Polyline | 折れ線 | gnome | — |
 | pop-up | ポップアップ | pontoon | — |
+| popup menu | ポップアップメニュー | gnome | — |
+| port | ポート | gnome | — |
+| Portrait | 縦長 | gnome | — |
+| Post Office | 郵便局 | gnome | — |
+| Post Processor | ポストプロセッサ | gnome | — |
+| Postal Box | 郵便箱 | gnome | — |
+| postscript | PostScript | gnome | — |
+| power management | 電源管理 | gnome | — |
+| PPP | PPP | gnome | — |
 | preference | 設定 | pontoon | — |
+| Preferences | 環境設定 | gnome | — |
+| Prefix | 接頭句 | gnome | — |
+| Preview | プレビュー | gnome | — |
+| Primary Colors | 原色 | gnome | — |
+| Print | 印刷 | gnome | — |
+| Print area | 出力領域 | gnome | — |
+| Printer | プリンター | gnome | — |
+| Priority | 優先順位 | gnome | — |
+| Privacy | プライバシー | gnome | — |
 | Privacy Notice | プライバシー通知 | pontoon | — |
 | Privacy Policy | 個人情報保護方針 | pontoon | — |
+| Private key | 秘密鍵 | gnome | — |
+| Private Messages | 非公開メッセージ | gnome | — |
+| Problem | 問題 | gnome | — |
+| Process | プロセス | gnome | — |
+| Process ID | プロセスID | gnome | — |
+| Processor | 演算器 | gnome | — |
+| Program | プログラム | gnome | — |
+| Progress | 進展 | gnome | — |
+| Progress Bar | プログレスバー | gnome | — |
+| project | 事業 | gnome | — |
+| Propagation | 伝播 | gnome | — |
+| Properties | プロパティ | gnome | — |
+| Proportional font | プロポーショナルフォント | gnome | — |
+| Protected | 保護された | gnome | — |
+| Protection | 保護 | gnome | — |
+| Protocol | 通信規約 | gnome | — |
+| Provision | 準備 | gnome | — |
+| Proxy | プロクシ | gnome | — |
+| proxy server | プロクシサーバ | gnome | — |
+| Public | 公開 | gnome | — |
+| Public Key | 公開鍵 | gnome | — |
+| Query | 問合せ | gnome | — |
+| Queue | 待ち行列 | gnome | — |
+| Quit | 終了 | gnome | — |
+| Quoting | 引用 | gnome | — |
+| Radar map | レーダーマップ | gnome | — |
+| Radio | ラジオ | gnome | — |
+| Radio Button | ラジオボタン | gnome | — |
+| Random | 無作為 | gnome | — |
+| Range | 範囲 | gnome | — |
+| Rank | ランク | gnome | — |
+| Rating | 定格電流 | gnome | — |
+| Ratio | 割合 | gnome | — |
+| Raw data | Raw データ | gnome | — |
+| Raw memory | Raw メモリー | gnome | — |
+| Readout | 読み出し | gnome | — |
+| ready... | よーい | gnome | — |
+| Real Memory | 物理メモリ | gnome | — |
+| real path | リアルパス | gnome | — |
+| Real time | リアルタイム | gnome | — |
+| Reboot | 再起動 | gnome | — |
+| Receive | 受信 | gnome | — |
+| Record | レコード | gnome | — |
+| Rectangle | 多角形 | gnome | — |
+| Recurrence | 反復 | gnome | — |
+| Recursion | 回帰 | gnome | — |
+| Redisplay | 再表示 | gnome | — |
+| Redo | やり直し | gnome | — |
+| Refresh | リフレッシュ | gnome | — |
+| Region | 範囲 | gnome | — |
+| regular | 正規 | gnome | — |
+| Regular expression | 正規表現 | gnome | — |
+| Regulate | レギュレート | gnome | — |
+| Relationship | 関連 | gnome | — |
 | release | リリース | pontoon | — |
+| Release | リリース | gnome | — |
+| Remote | 遠隔 | gnome | — |
+| Remove | 削除 | gnome | — |
+| Rename | 名称変更 | gnome | — |
+| Repeat | 繰り返し | gnome | — |
+| Replace | 置換 | gnome | — |
 | report | 報告する | pontoon | — |
 | report | レポート | pontoon | — |
+| Reports | レポート | gnome | — |
+| reserved blocks | 予約ブロック | gnome | — |
+| Reset | リセット | gnome | — |
+| Resident | 常駐 | gnome | — |
+| Resident memory | 常駐メモリ | gnome | — |
+| Resize | サイズ変更 | gnome | — |
+| Resolution | 解像度 | gnome | — |
+| Resource element | リソース要素 | gnome | — |
+| Restart | 再起動 | gnome | — |
 | restricted site | 制限されたサイト | pontoon | — |
+| Resume | 復元再開 | gnome | — |
+| Retrieve | 取り出す | gnome | — |
+| Retry | 再試行 | gnome | — |
+| Return | 改行 | gnome | — |
+| Reverse video | 反転表示 | gnome | — |
 | revert | 破棄する | pontoon | — |
+| Revert | 元に戻す | gnome | — |
 | Review checker | レビューチェッカー | pontoon | — |
+| Root | ルート | gnome | — |
+| Root Directory | ルートディレクトリ | gnome | — |
+| Root Window | ルートウィンドウ | gnome | — |
+| Rotate | 回転 | gnome | — |
+| Row | 列 | gnome | — |
+| RPM package | RPMパッケージ | gnome | — |
+| Run | 実行 | gnome | — |
+| Sample | サンプル | gnome | — |
+| Sampling | 抽出 | gnome | — |
+| Saturation | 彩度 | gnome | — |
+| Save | 保存 | gnome | — |
+| Scalable | スケラーブル | gnome | — |
+| Scalar | スカラー | gnome | — |
+| Scale | スケール | gnome | — |
+| Scaling Factor | スケール係数 | gnome | — |
+| Scan | 走査 | gnome | — |
+| schedule manager | スケジュールマネージャ | gnome | — |
+| schema | スキーマ | gnome | — |
+| Scientific notation | 科学的表記(法) | gnome | — |
+| Screen | 画面 | gnome | — |
+| Screen Saver | スクリーンサーバ | gnome | — |
+| Script | スクリプト | gnome | — |
+| Scroll | スクロール | gnome | — |
+| Scrollbars | スクロールバー | gnome | — |
+| SCSI | SCSI | gnome | — |
+| Search | 検索 | gnome | — |
+| Search Domains | ドメイン検索 | gnome | — |
+| search string | 検索語 | gnome | — |
 | search suggestion | 検索候補 | pontoon | — |
+| Secure channel | セキュリティー保護されたチャネル | gnome | — |
+| Secure keyboard | 安全キーボード | gnome | — |
+| Security | 安全性 | gnome | — |
 | security keys | セキュリティキー | pontoon | — |
+| Segment | セグメント | gnome | — |
+| Segmentation Fault | セグメント例外 | gnome | — |
+| Select | 選択 | gnome | — |
+| Selection | 選択 | gnome | — |
+| Send | 送信 | gnome | — |
+| Sense | 感覚 | gnome | — |
 | sensitive | 注意を要する | pontoon | — |
+| Separator | 分離符 | gnome | — |
+| Server | サーバ | gnome | — |
+| Session | セッション | gnome | — |
+| Set | 設定 | gnome | — |
+| Settings | 設定 | gnome | — |
+| Setup | セットアップ | gnome | — |
+| Severity | 重大性 | gnome | — |
+| shaped text | シェイプテキスト | gnome | — |
+| Share | 共有 | gnome | — |
+| Shared Memory | 共有メモリ | gnome | — |
+| Shell | シェル | gnome | — |
+| Shift key | シフトキー | gnome | — |
+| Show | 表示 | gnome | — |
+| Shut Down | 停止 | gnome | — |
 | sidebar | サイドバー | pontoon | — |
 | sign | 署名する | pontoon | — |
 | sign in | ログイン | pontoon | — |
 | sign-in | ログイン | pontoon | — |
+| Signal | 信号 | gnome | — |
+| signature | 署名 | gnome | — |
+| signature block | 署名ブロック | gnome | — |
 | signer | 署名者 | pontoon | — |
+| Size box | サイズボックス | gnome | — |
+| Skewness | ゆがめる | gnome | — |
+| Skip | スキップ | gnome | — |
+| Slant | 傾き | gnome | — |
+| slave | スレーブ | gnome | — |
+| Sleeping | スリープ状態 | gnome | — |
+| slider | スライダ | gnome | — |
+| SLIP | SLIP | gnome | — |
+| slow terminals | 低速端末 | gnome | — |
+| Smart | スマート | gnome | — |
+| Smart terminal | スマート端末 | gnome | — |
+| smooth | 滑らか | gnome | — |
+| SMTP | SMTP | gnome | — |
+| Snap | スナップ | gnome | — |
+| Snooze | スヌーズ | gnome | — |
+| Socket | ソケット | gnome | — |
+| SOCKS Server | ソケットサーバ | gnome | — |
+| soft keys | ソフトキー | gnome | — |
+| software bug | ソフトウェアバグ | gnome | — |
+| Software Foundation | ソフトウェア財団 | gnome | — |
+| Solid lines | ソリッドライン | gnome | — |
+| Solid model | ソリッドモデル | gnome | — |
+| Sort | 並び変え | gnome | — |
+| sound card | サウンドカード | gnome | — |
+| Source | ソース | gnome | — |
+| Source code | ソースコード | gnome | — |
+| Space character | 空白文字 | gnome | — |
+| Spam | スパム | gnome | — |
+| Special character | 特殊文字 | gnome | — |
+| Spell | つづり | gnome | — |
+| Spell Checker | スペルチェッカー | gnome | — |
+| spool | スプール | gnome | — |
+| Stack | スタック | gnome | — |
+| Standard | 標準化 | gnome | — |
+| Standard deviation | 標準偏差 | gnome | — |
+| Standby | 予備 | gnome | — |
+| Start | 開始 | gnome | — |
+| Startup | スタートアップ | gnome | — |
+| startup files | スタートアップファイル | gnome | — |
+| Startup Program | スタートアッププログラム | gnome | — |
+| State | 状態 | gnome | — |
+| Statistics | 統計 | gnome | — |
+| Status | 状態 | gnome | — |
+| Stereotype | 固定観念 | gnome | — |
+| Stock Ticker | ストックティッカー | gnome | — |
+| Storage | ストレージ | gnome | — |
+| String | 文字列 | gnome | — |
+| stripchart program | ストリップチャート | gnome | — |
+| structure diagram | 構造ダイアグラム | gnome | — |
 | studies | 調査 | pontoon | — |
+| Style | スタイル | gnome | — |
+| Subdirectory | サブディレクトリ | gnome | — |
+| Subject | 件名 | gnome | — |
+| Submenu | サブメニュー | gnome | — |
+| Submit | 提出 | gnome | — |
+| Subnet | サブネット | gnome | — |
+| Subscript | 添字 | gnome | — |
+| subshell support | サブシェルのサポート | gnome | — |
+| substring | 文字列部分 | gnome | — |
+| Suffix | 接尾句 | gnome | — |
+| Superscript | 添字 | gnome | — |
+| Support | サポート | gnome | — |
+| Suspend | サスペンド | gnome | — |
+| Swap | スワップ | gnome | — |
+| Symbol | シンボル | gnome | — |
+| Symbolic Link | シンボリックリンク | gnome | — |
+| Symmetric control | 対称制御 | gnome | — |
+| Synchronize | 同期 | gnome | — |
+| Syntax error | 構文エラー | gnome | — |
+| System | システム | gnome | — |
+| System Administrator | システム管理者 | gnome | — |
+| System Configuration | システム構成 | gnome | — |
+| system settings | システム設定 | gnome | — |
+| Tab | タブ | gnome | — |
+| Table | 表 | gnome | — |
+| tag | タグ | gnome | — |
+| Talk | Talk | gnome | — |
+| tar archive | tar書庫 | gnome | — |
+| target file | 目的のファイル | gnome | — |
+| task | タスク | gnome | — |
+| TCLASS | TCLASS | gnome | — |
+| TCP/IP | TCP/IP | gnome | — |
+| Telnet | telnet | gnome | — |
+| temp file | 一時ファイル | gnome | — |
+| Template | テンプレート | gnome | — |
+| temporary buffer | 一時バッファ | gnome | — |
+| Term | 用語 | gnome | — |
+| TERM variable | TERM 変数 | gnome | — |
+| Terminal | 端末 | gnome | — |
+| Terminate | 終了する | gnome | — |
 | Terms of Service | サービス利用規約 | pontoon | — |
+| Test | 検証 | gnome | — |
+| Test Module | テスト モジュール | gnome | — |
+| Text | テキスト | gnome | — |
+| text area | テキストエリア | gnome | — |
+| textual name | 文字表記の名前 | gnome | — |
+| Theme | テーマ | gnome | — |
+| Threshold | しきい値 | gnome | — |
+| Thumb Nails | サムネイル | gnome | — |
+| Ticker Properties | ティッカープロパティ | gnome | — |
+| Tile | タイル | gnome | — |
+| Time format | 時刻形式 | gnome | — |
+| time stamp | タイムスタンプ | gnome | — |
+| Timeout | タイムアウト | gnome | — |
+| Timer | タイマー | gnome | — |
+| Timezone | タイムゾーン | gnome | — |
+| Timing | タイミング | gnome | — |
+| Title | タイトル | gnome | — |
+| TODO List | やること一覧 | gnome | — |
+| toggle | トグル | gnome | — |
+| Tolerance | 誤差 | gnome | — |
+| Tool | ツール | gnome | — |
+| tool menu | ツールメニュー | gnome | — |
+| Toolbar | ツールバー | gnome | — |
+| topic | 題目 | gnome | — |
 | track | 追跡 | pontoon | — |
 | trackers | トラッカー | pontoon | — |
 | Tracking Content | トラッキングコンテンツ | pontoon | — |
+| Transfer | 転送 | gnome | — |
+| Transfer statement | 転送状態 | gnome | — |
+| Translate | 移植 | gnome | — |
+| transmission channel | 伝送チャネル | gnome | — |
+| Transparent | 透明な | gnome | — |
+| Transpose | 入れ換え | gnome | — |
+| Trash | ごみ箱 | gnome | — |
+| Tree | ツリー | gnome | — |
+| Tty | TTY | gnome | — |
+| Turing Machine | チューリングマシン | gnome | — |
+| Type | 型 | gnome | — |
+| Undelete | 削除のやり直し | gnome | — |
+| Underline | 下線 | gnome | — |
+| Undo | 元に戻す | gnome | — |
 | unencrypted | 暗号化されていない | pontoon | — |
+| Unexpected end | 予期しない終了 | gnome | — |
+| unexpected error | 予期しないエラー | gnome | — |
+| Unicode | Unicode | gnome | — |
+| Uninstall | アンインストール | gnome | — |
+| UNIX | UNIX | gnome | — |
+| Unknown host | 不明なホスト | gnome | — |
+| Unload | 読み込み解除 | gnome | — |
 | unresponsive | 応答のない | pontoon | — |
 | unsafe | 安全でない | pontoon | — |
+| Untitled | タイトルなし | gnome | — |
+| Update | 更新 | gnome | — |
+| Upgrade | アップグレード | gnome | — |
+| Uptime | 稼働時間 | gnome | — |
+| Urgent condition | 緊急状態 | gnome | — |
+| URL | URL | gnome | — |
+| USB | USB | gnome | — |
+| User | 利用者 | gnome | — |
+| User defined | 利用者定義 | gnome | — |
+| user directory | ユーザ・ディレクトリ | gnome | — |
+| User Interface | ユーザ・インターフェイス | gnome | — |
+| Username | ユーザ名 | gnome | — |
+| Valid chars | 有効文字列 | gnome | — |
 | validate | 検証 | pontoon | — |
 | validity | 正当性 | pontoon | — |
+| Value | 値 | gnome | — |
+| Variable | 変数 | gnome | — |
+| Variance | 不一致 | gnome | — |
+| Vector Graphics | ベクターグラフィック | gnome | — |
+| Vendor | 製造元 | gnome | — |
+| VERBOSE | 冗長 | gnome | — |
+| Verify | 確認 | gnome | — |
 | version | バージョン | pontoon | — |
+| Version | 版 | gnome | — |
+| Vertical | 垂直 | gnome | — |
+| Vertical Alignment | 垂直方向のアライメント | gnome | — |
+| VFS | 仮想ファイルシステム | gnome | — |
+| Video | ビデオ | gnome | — |
+| View | 表示 | gnome | — |
+| Viewport | ビューポート | gnome | — |
+| Virtual | 仮想 | gnome | — |
+| Virtual Desktop | 仮想デスクトップ | gnome | — |
+| Visualization | 表示 | gnome | — |
+| Volume | 音量 | gnome | — |
+| Wallpaper | 壁紙 | gnome | — |
+| Warning | 警告 | gnome | — |
+| Web Page | ウェブページ | gnome | — |
+| Weight | 幅 | gnome | — |
+| Widget | ウィジェット | gnome | — |
+| Width | 幅 | gnome | — |
+| Window | ウィンドウ | gnome | — |
+| Window Manager | ウィンドウ・マネージャ | gnome | — |
+| Word | 言葉 | gnome | — |
+| Work | 仕事 | gnome | — |
+| working directory | 作業ディレクトリ | gnome | — |
+| Workspaces | ワークスペース | gnome | — |
+| Wrap | 折り返し | gnome | — |
+| Write | 書き込み | gnome | — |
+| XDMCP socket | XDMCP ソケット | gnome | — |
+| XML | XML | gnome | — |
+| zero | 零 | gnome | — |
+| Zigzagline | ジグザグ線 | gnome | — |
+| Zip Drive | ZIPドライブ | gnome | — |
+| Zoom | 拡大 | gnome | — |

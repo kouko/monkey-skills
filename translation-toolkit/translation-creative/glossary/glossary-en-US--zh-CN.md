@@ -1,7 +1,7 @@
 ---
 pair: [en-US, zh-CN]
 version: 0.1.0
-sources: [pontoon]
+sources: [gnome, pontoon]
 domains_supported: [tech.web, ui]
 ---
 
@@ -26,94 +26,896 @@ domains_supported: [tech.web, ui]
 | en-US | zh-CN | source | notes |
 |---|---|---|---|
 | abort | 中止 | pontoon | — |
+| abort | 中止 | gnome | — |
+| Abstract | 抽象 | gnome | — |
+| Accelerator | 加速键,加速器 | gnome | — |
+| Accept | 接受 | gnome | — |
+| access | 访问,存取 | gnome | — |
+| Account | 帐号 | gnome | — |
 | account recovery key | 账户恢复密钥 | pontoon | — |
+| Active | 活动的,激活的 | gnome | — |
+| Actor | 演员 | gnome | — |
+| Add | 添加 | gnome | — |
 | add-on | 附加组件 | pontoon | — |
+| Address | 地址 | gnome | — |
+| Adjust | 调整 | gnome | — |
+| Administration | 管理 | gnome | — |
+| Aggregate | 聚合,合计 | gnome | — |
+| Alarm | 警报 | gnome | — |
+| Align | 对齐 | gnome | — |
+| Allow | 允许 | gnome | — |
+| Alpha | Alpha | gnome | — |
+| alpha channel | Alpha 通道 | gnome | — |
 | alternate text | 替换文字 | pontoon | — |
+| Analog | 模拟,模拟量 | gnome | — |
+| Analysis | 分析 | gnome | — |
+| Anchor | 锚点 | gnome | — |
+| AND | 与,AND | gnome | — |
+| Animation | 动画 | gnome | — |
+| Anonymous | 匿名 | gnome | — |
+| Answer mode | 应答模式 | gnome | — |
+| Antialiasing | 反混淆 | gnome | — |
+| Append | 追加 | gnome | — |
+| Applet | 小程序 | gnome | — |
+| Application | 应用程序,程序,应用 | gnome | — |
+| Application Launcher | 程序启动 | gnome | — |
+| Applix | Applix | gnome | — |
+| Arc | 圆弧 | gnome | — |
+| archive | 归档 | gnome | — |
+| area grid | 区域栅格 | gnome | — |
+| Argument | 参数 | gnome | — |
+| Array | 数组,阵列 | gnome | — |
+| Arrow key | 方向键 | gnome | — |
+| Article | 文章 | gnome | — |
+| Ascending order | 升序 | gnome | — |
+| Ascii | Ascii | gnome | — |
+| aspect ratio | 纵横比,长宽比 | gnome | — |
+| Asynchronous | 异步 | gnome | — |
+| Attachment | 附件 | gnome | — |
 | attack | 攻击 | pontoon | — |
 | Attack Site | 有害网站 | pontoon | — |
 | attacker | 攻击者 | pontoon | — |
 | attendee | 参与者 | pontoon | — |
+| Attribute | 属性 | gnome | — |
+| Audio | 音频 | gnome | — |
 | authenticate | 进行身份验证 | pontoon | — |
 | authenticated | 已通过身份验证 | pontoon | — |
+| Authentication | 验证 | gnome | — |
 | authentication code | 验证码 | pontoon | — |
+| Author | 作者 | gnome | — |
+| Autofill | 自动填充 | gnome | — |
 | autoplay | 自动播放 | pontoon | — |
+| Availability | 可用性 | gnome | — |
+| Average | 平均 | gnome | — |
+| Axis | 轴 | gnome | — |
+| Background | 后台 | gnome | — |
+| Backup | 备份 | gnome | — |
 | backup authentication code | 备用验证码 | pontoon | — |
+| Balance | 平衡 | gnome | — |
+| Base | 基数 | gnome | — |
+| Binary | 执行码 | gnome | — |
+| Binomial distribution | 二项式分布 | gnome | — |
+| Bit | 位 | gnome | — |
+| Bitmap | 位图 | gnome | — |
+| Blank | 空白,空 | gnome | — |
+| Blinking cursor | 闪烁光标 | gnome | — |
+| block buffer | 块缓冲 | gnome | — |
+| Blocked | 阻塞 | gnome | — |
+| Blur image | 模糊图像 | gnome | — |
+| body | 内容 | gnome | — |
+| Bold | 粗体 | gnome | — |
+| book mark | 书签 | gnome | — |
 | bookmark | 添加书签 | pontoon | — |
 | bookmark | 书签 | pontoon | — |
+| Boolean | 布尔值 | gnome | — |
+| Box | 边框 | gnome | — |
+| Branch | 分支 | gnome | — |
 | breakpoint | 断点 | pontoon | — |
+| Bricks | 砖 | gnome | — |
+| Browse | 浏览 | gnome | — |
+| Browser | 浏览器 | gnome | — |
+| Buffer | 缓冲,缓冲区 | gnome | — |
+| bug | 问题,缺陷 | gnome | — |
 | Bug report | 缺陷报告 | pontoon | — |
+| Build | 联编 | gnome | — |
+| Bullet | 项目符号 | gnome | — |
+| Bulletin Board | 公告牌 | gnome | — |
+| Bus | 总线 | gnome | — |
+| Busy | 忙 | gnome | — |
+| Button | 按钮 | gnome | — |
+| Byte | 字节 | gnome | — |
+| C | C | gnome | — |
+| Cache | 缓存,高速缓存 | gnome | — |
+| Calculator | 计算器 | gnome | — |
+| Calendar | 日历,日程表 | gnome | — |
+| Call | 呼叫 | gnome | — |
+| Cancel | 取消 | gnome | — |
+| canvas | 画布 | gnome | — |
+| Caption | 标题 | gnome | — |
+| Case Sensitive | 区分大小写 | gnome | — |
+| Categories | 类别,种类 | gnome | — |
+| CD | CD | gnome | — |
+| CDE panel | CDE 面板 | gnome | — |
+| Cell | 单元格,单元 | gnome | — |
+| Cellular | 网状(的),蜂窝状(的) | gnome | — |
+| Center | 居中 | gnome | — |
 | certificate authority | 证书授权机构 | pontoon | — |
+| Channel | 通道 | gnome | — |
+| char cell | 字符单元 | gnome | — |
+| Character set | 字符集 | gnome | — |
+| Chat | 交谈,聊天 | gnome | — |
+| Check bit | 校验位 | gnome | — |
+| Checkbox | 选择项 | gnome | — |
+| child process | 子进程 | gnome | — |
 | cipher | 密码 | pontoon | — |
+| Class | 类 | gnome | — |
+| Classification | 分类 | gnome | — |
+| Clear | 清除 | gnome | — |
 | clipboard | 剪贴板 | pontoon | — |
+| Clipboard | 剪贴板 | gnome | — |
+| Close | 关闭 | gnome | — |
+| code | 代码 | gnome | — |
+| code segment | 代码短 | gnome | — |
+| Coefficient | 系数 | gnome | — |
+| Collaboration | 协作 | gnome | — |
+| Collate | 排序 | gnome | — |
+| Collision | 冲突 | gnome | — |
 | colorway | 配色 | pontoon | — |
+| Command | 命令 | gnome | — |
+| Command Line | 命令行 | gnome | — |
+| Command line options | 命令行选项 | gnome | — |
+| Common properties | 通用属性 | gnome | — |
+| Compare | 比较 | gnome | — |
+| Concatenate | 连接 | gnome | — |
+| Condition | 条件 | gnome | — |
+| Conduit | 导管 | gnome | — |
+| Confidential | 机密的 | gnome | — |
+| Configuration | 配置 | gnome | — |
+| Confirm | 确认 | gnome | — |
+| Confirmation | 确认 | gnome | — |
 | confirmation code | 确认码 | pontoon | — |
+| Connection | 连接 | gnome | — |
+| Constraint | 约束 | gnome | — |
+| Content | 内容 | gnome | — |
 | context | 上下文 | pontoon | — |
+| Continue | 继续 | gnome | — |
+| Control | 控制 | gnome | — |
+| Conversion | 转换 | gnome | — |
+| cookie | cookie | gnome | — |
 | cookie banner | Cookie 横幅 | pontoon | — |
+| Copy | 复制 | gnome | — |
+| Copyright | 版权 | gnome | — |
+| CORBA | CORBA | gnome | — |
+| Core file | 核心转储文件 | gnome | — |
+| Correlation | 相关 | gnome | — |
 | corrupt | 损坏 | pontoon | — |
 | corrupted | 已损坏 | pontoon | — |
+| Cost | 开销 | gnome | — |
+| Count | 计数 | gnome | — |
+| Covariance | 协方差 | gnome | — |
+| CPU | CPU | gnome | — |
 | crash | 发生崩溃 | pontoon | — |
+| crash | 崩溃 | gnome | — |
+| Create | 创建 | gnome | — |
+| Criteria range | 标准范围 | gnome | — |
+| Critical error | 危险错误 | gnome | — |
+| Crop | 剪取 | gnome | — |
+| Cross-reference | 交叉引用 | gnome | — |
 | cross-site tracking cookie | 跨站跟踪性 Cookie | pontoon | — |
 | cryptominer | 加密货币挖矿程序 | pontoon | — |
 | cryptomining | 加密货币挖矿 | pontoon | — |
+| Ctrl | Ctrl | gnome | — |
+| Cumulative | 累积的 | gnome | — |
+| Current | 电流 | gnome | — |
+| cursor | 光标 | gnome | — |
+| Curve | 曲线 | gnome | — |
+| custom window | 定制窗口 | gnome | — |
+| Customize | 定制,自定义 | gnome | — |
+| Cut | 剪切 | gnome | — |
+| Daemon | 服务进程,守护进程 | gnome | — |
+| Data | 数据 | gnome | — |
+| database | 数据库 | gnome | — |
 | debug | 调试 | pontoon | — |
+| Debug | 调试 | gnome | — |
 | deceptive site | 诈骗网站 | pontoon | — |
+| decimal | 十进制 | gnome | — |
 | decode | 解码 | pontoon | — |
+| Decrease | 减小,降低 | gnome | — |
 | decryption | 解密 | pontoon | — |
+| Default | 缺省,默认 | gnome | — |
+| Delete | 删除 | gnome | — |
+| Dependence | 依赖性,相关性 | gnome | — |
+| Derived | 衍生的,派生的 | gnome | — |
+| Descending sort | 降序排列 | gnome | — |
+| Descriptor | 描述符 | gnome | — |
+| Desktop | 桌面 | gnome | — |
+| Desktop Environment | 桌面环境 | gnome | — |
+| Destination | 目的,目标 | gnome | — |
+| Destroy | 摧毁,消灭 | gnome | — |
+| Detection | 检测,探测 | gnome | — |
+| Device | 设备 | gnome | — |
+| Diagonal | 对角的,斜的 | gnome | — |
+| Diagram | 图表 | gnome | — |
+| Dial | 拨号 | gnome | — |
+| Dialog Box | 对话框 | gnome | — |
+| Dialout Device | 拨号设备 | gnome | — |
+| Digits | 数字 | gnome | — |
+| Dimension | 维 | gnome | — |
+| Direction | 方向 | gnome | — |
+| Directory | 目录 | gnome | — |
+| Disable | 禁用,停用 | gnome | — |
+| Discard | 丢弃 | gnome | — |
+| Disconnect | 断开 | gnome | — |
+| Discrete | 离散的 | gnome | — |
 | disinformation | 虚假信息 | pontoon | — |
+| disk | 磁盘 | gnome | — |
+| Dismiss | 解除,离开 | gnome | — |
+| Display | 显示,显示器 | gnome | — |
+| Dissipation | 损耗,耗散 | gnome | — |
+| Distribute | 分配,分布 | gnome | — |
+| Distribution list | 分发列表 | gnome | — |
 | distrust | 不信任 | pontoon | — |
+| Dithering | 抖动 | gnome | — |
+| Division by zero | 被零除 | gnome | — |
+| DMA | DMA | gnome | — |
+| DNS | DNS | gnome | — |
+| Document | 文档 | gnome | — |
+| Domain | 域 | gnome | — |
+| Dot | 点 | gnome | — |
+| Download | 下载 | gnome | — |
+| Drawing Area | 绘制区 | gnome | — |
+| Drop | 放;结束 | gnome | — |
+| dumb Terminal | 哑终端 | gnome | — |
+| Duplicate... | 复制 | gnome | — |
+| Dynamic | 动态的 | gnome | — |
+| E-mail | 电子邮件 | gnome | — |
+| Echo | 回应 | gnome | — |
+| Edge | 边缘,边界 | gnome | — |
+| Edit | 编辑 | gnome | — |
+| Effects | 效果 | gnome | — |
+| Eject | 弹出 | gnome | — |
+| Electronic Mail | 电子邮件 | gnome | — |
 | email mask | 马甲邮箱 | pontoon | — |
+| emulation | 仿真 | gnome | — |
 | enable | 启用 | pontoon | — |
+| Enable | 启用 | gnome | — |
+| Encapsulated Postscript | 封装的Postscript | gnome | — |
 | encode | 编码 | pontoon | — |
+| Encoding | 编码 | gnome | — |
 | encrypt | 加密 | pontoon | — |
 | encryption | 加密 | pontoon | — |
 | end user | 终端用户 | pontoon | — |
+| Engineering | 工程 | gnome | — |
 | Enhanced Tracking Protection | 增强型跟踪保护 | pontoon | — |
+| Entity | 实体 | gnome | — |
+| environment variable | 环境变量 | gnome | — |
+| Equation | 方程 | gnome | — |
+| Error | 错误 | gnome | — |
+| Ethernet | 以太网 | gnome | — |
+| Event | 事件 | gnome | — |
+| Exception | 异常 | gnome | — |
+| Exclusive OR | 异或 | gnome | — |
+| executable file | 可执行文件 | gnome | — |
+| Execute | 执行 | gnome | — |
+| Exit | 退出 | gnome | — |
+| Expanded memory | 扩充内存 | gnome | — |
+| expected location | 预期位置 | gnome | — |
+| Explicit state | 显式状态 | gnome | — |
+| Exponential notation | 幂计数法 | gnome | — |
+| Export | 导出,输出 | gnome | — |
+| expression | 表达式 | gnome | — |
 | extension | 扩展 | pontoon | — |
+| Extension | 扩展 | gnome | — |
+| Extract | 提取,抽取 | gnome | — |
+| Favorite | 收藏夹 | gnome | — |
+| Fax | 传真 | gnome | — |
+| Field | 字段,区域 | gnome | — |
+| File | 文件 | gnome | — |
+| Filename | 文件名 | gnome | — |
+| Filesystem | 文件系统 | gnome | — |
+| Fill | 填充 | gnome | — |
+| Filter | 过滤器,滤波器 | gnome | — |
+| Find | 查找,搜索 | gnome | — |
 | fingerprinter | 数字指纹跟踪程序 | pontoon | — |
 | fingerprinting | 数字指纹跟踪 | pontoon | — |
 | Firefox View | Firefox View | pontoon | — |
+| Firmware | 固件 | gnome | — |
+| Fixed Font | 等宽字体 | gnome | — |
+| Float | 浮点数 | gnome | — |
+| Floppy | 软盘 | gnome | — |
+| Flow analysis | 流分析 | gnome | — |
+| Flowchart | 流程图 | gnome | — |
+| Folder | 文件夹 | gnome | — |
+| Font | 字体 | gnome | — |
+| Footer | 页脚 | gnome | — |
+| Forecast | 预报 | gnome | — |
+| Foreground | 前景 | gnome | — |
+| fork | fork | gnome | — |
+| Form | 表格 | gnome | — |
+| Format | 格式 | gnome | — |
+| Formula | 公式 | gnome | — |
+| Fourier Analysis | 傅立叶分析 | gnome | — |
+| Fraction | 分数 | gnome | — |
+| Frame | 帧 | gnome | — |
+| Free Software | 自由软件 | gnome | — |
+| Frequency | 频率 | gnome | — |
+| FTP | FTP | gnome | — |
+| full pathname | 全路径 | gnome | — |
+| Function | 函数 | gnome | — |
+| Gamma | 伽马;亮度 | gnome | — |
+| Geometry | 几何学 | gnome | — |
+| get | 获取 | gnome | — |
+| Global | 全局的 | gnome | — |
+| GNOME | GNOME | gnome | — |
+| GNU | GNU | gnome | — |
+| GPL | GPL | gnome | — |
+| Grab | 抓取 | gnome | — |
+| Gradient | 梯度 | gnome | — |
+| Graph | 图表 | gnome | — |
+| Graphical user interface | 图形用户界面 | gnome | — |
 | grassroots | 草根 | pontoon | — |
+| Grid | 网格;表格 | gnome | — |
+| Group | 组合,组 | gnome | — |
+| Gtk | Gtk | gnome | — |
+| GUI | GUI | gnome | — |
+| Gutter | 装订线 | gnome | — |
+| Hacker | 黑客 | gnome | — |
+| Handle | 句柄 | gnome | — |
+| Handshake | 握手 | gnome | — |
+| Hard Disk | 硬盘 | gnome | — |
+| Header | 页眉;头 | gnome | — |
+| Headword | 标题,中心词 | gnome | — |
+| Hello World | Hello World | gnome | — |
+| Help | 帮助 | gnome | — |
+| Hex | 十六进制 | gnome | — |
+| Hidden file | 隐藏文件 | gnome | — |
+| Hide | 隐藏 | gnome | — |
+| hierachy | 层次结构 | gnome | — |
+| Highlight... | 加亮,突出 | gnome | — |
+| Histogram | 柱状图 | gnome | — |
+| History | 历史 | gnome | — |
+| Home | 起始 | gnome | — |
+| Home directory | 起始目录,主目录 | gnome | — |
 | home page | 主页 | pontoon | — |
+| Home Page | 主页 | gnome | — |
+| Homogeneous environment | 单一环境 | gnome | — |
+| Host | 主机 | gnome | — |
+| Host name | 主机名 | gnome | — |
+| Hot Key | 热键 | gnome | — |
+| Housekeeping | 内务处理 | gnome | — |
+| HTML | HTML | gnome | — |
+| HTTP | HTTP | gnome | — |
+| Hue | 色调 | gnome | — |
+| I/O subsystem | I/O 子系统 | gnome | — |
+| Icon | 图标 | gnome | — |
+| ID | ID | gnome | — |
+| IDE | IDE | gnome | — |
+| Identifier | 标识符 | gnome | — |
+| Idle | 空闲;空转 | gnome | — |
+| Illegal | 非法 | gnome | — |
+| Image | 图像 | gnome | — |
+| Implementation | 实现 | gnome | — |
 | import | 导入 | pontoon | — |
+| Import | 导入 | gnome | — |
+| Inactive window | 非活动窗口 | gnome | — |
+| Increase | 增加,提高 | gnome | — |
+| Incremental update | 渐进更新 | gnome | — |
+| Indent | 缩进 | gnome | — |
+| Index | 索引 | gnome | — |
+| Indicator | 指示器(灯) | gnome | — |
+| Information | 信息 | gnome | — |
+| initialization | 初始化 | gnome | — |
 | innovations | 创新 | pontoon | — |
+| Inode | 索引节点 | gnome | — |
+| Input | 输入 | gnome | — |
+| Input/output | 输入输出 | gnome | — |
 | insecure | 不安全 | pontoon | — |
+| Insertion point | 插入点 | gnome | — |
+| Install | 安装 | gnome | — |
 | installation | 安装 | pontoon | — |
+| instruction pointer | 指令指针 | gnome | — |
+| Interaction | 交互 | gnome | — |
+| Intercept | 截取,窃听 | gnome | — |
+| Interchange File Format | 交换文件格式 | gnome | — |
+| Interface | 接口;界面 | gnome | — |
+| Internal bug | 内部缺陷,内部错误 | gnome | — |
+| Internal error | 内部错误 | gnome | — |
+| International | 国际的 | gnome | — |
+| Internet | 互联网 | gnome | — |
+| Interrupt | 中断 | gnome | — |
+| Intersect | 交集 | gnome | — |
+| Interval | 间隔 | gnome | — |
+| Intuitive | 直觉的,直观的 | gnome | — |
+| Invalid | 无效的 | gnome | — |
+| Invisible | 不可见的 | gnome | — |
+| IP Address | IP 地址 | gnome | — |
+| IRC | IRC | gnome | — |
 | Issue | 颁发 | pontoon | — |
+| Jaz Drive | Jaz 驱动器 | gnome | — |
+| Job | 任务 | gnome | — |
+| JPEG | JPEG | gnome | — |
+| Justify | 调整 | gnome | — |
+| KDE | KDE | gnome | — |
+| Kernel | 内核 | gnome | — |
+| Key | 键 | gnome | — |
+| Keyboard | 键盘 | gnome | — |
+| Keyword | 关键字 | gnome | — |
+| Kill | 杀死 | gnome | — |
+| Kill app | 畅销应用程序 | gnome | — |
+| Kilobyte | 千字节 | gnome | — |
+| Label | 标签 | gnome | — |
+| Landscape | 横向 | gnome | — |
+| Language | 语言 | gnome | — |
+| LaTeX | LaTeX | gnome | — |
+| launch icon | 启动图标 | gnome | — |
+| Launcher | 启动程序 | gnome | — |
+| Layer | 层 | gnome | — |
+| Layout | 布局 | gnome | — |
 | Legacy extension | 旧式扩展 | pontoon | — |
+| Length | 长度 | gnome | — |
+| Library | 函数库 | gnome | — |
+| License agreement | 授权协议 | gnome | — |
+| Limits | 限制 | gnome | — |
+| Line | 线 | gnome | — |
+| linear transfer | 线性变换 | gnome | — |
+| Link | 连接,链接 | gnome | — |
+| Linux | Linux | gnome | — |
+| load | 载入 | gnome | — |
+| Local | 本地 | gnome | — |
+| Location | 位置 | gnome | — |
+| Lock | 锁 | gnome | — |
+| Log | 日志,记录 | gnome | — |
+| Logical | 逻辑的 | gnome | — |
+| Login | 登录 | gnome | — |
+| Logout | 注销 | gnome | — |
+| Lookup | 查找 | gnome | — |
+| Loop | 循环 | gnome | — |
+| Macro | 宏 | gnome | — |
+| Mail | 邮件 | gnome | — |
+| Mail Client | 邮件客户 | gnome | — |
+| Mail server | 邮件服务器 | gnome | — |
+| Mail to | 邮寄至 | gnome | — |
+| Mailbox | 邮箱 | gnome | — |
+| Main body | 主体 | gnome | — |
+| Man Pages | 手册页 | gnome | — |
+| Manager | 管理器(程序) | gnome | — |
+| Manual | 手册 | gnome | — |
+| Manual page | 手册页 | gnome | — |
+| Margins | 页边距 | gnome | — |
+| Mark | 标记 | gnome | — |
+| matching | 匹配 | gnome | — |
+| MDI | MDI | gnome | — |
 | MDN | MDN | pontoon | — |
+| media type | 媒质类型 | gnome | — |
+| Median | 中值 | gnome | — |
+| Meeting | 会议,会合 | gnome | — |
+| Memory | 存储器,内存 | gnome | — |
+| Menu | 菜单 | gnome | — |
+| Merge | 合并 | gnome | — |
+| Message | 信息,消息 | gnome | — |
+| Metadata | 元数据 | gnome | — |
+| Metafile | 元文件 | gnome | — |
+| Mime Type | MIME 类型 | gnome | — |
+| mini icons | 小图标 | gnome | — |
+| Minimize | 最小化 | gnome | — |
+| minix | minix | gnome | — |
+| minor faults | 次要错误 | gnome | — |
+| mirror | 镜像 | gnome | — |
 | misinformation | 虚假信息 | pontoon | — |
+| mixer device | 混音设备 | gnome | — |
+| Modal (value) | 模态(值) | gnome | — |
+| Mode | 模式 | gnome | — |
+| Model | 模型 | gnome | — |
+| Modem | 调制解调器 | gnome | — |
+| Modifier | 修饰符 | gnome | — |
+| Modify | 修改 | gnome | — |
+| Module | 模块 | gnome | — |
+| Monitor | 监视器 | gnome | — |
+| monochrome | 单色的 | gnome | — |
+| Mount | 安装 | gnome | — |
+| Mouse Cursor | 鼠标光标 | gnome | — |
+| Move | 移动 | gnome | — |
+| MS | MS | gnome | — |
+| MSDOS | MSDOS | gnome | — |
+| MTU | MTU | gnome | — |
 | native | 原生 | pontoon | — |
+| Nautilus | Nautilus | gnome | — |
+| Negative Binomial | 负二项式 | gnome | — |
 | net neutrality | 网络中立 | pontoon | — |
+| Netmask | 网络掩码 | gnome | — |
+| Netscape | Netscape | gnome | — |
+| Network | 网络 | gnome | — |
+| News Site | 新闻站点 | gnome | — |
+| node | 节点 | gnome | — |
 | non-profit | 非营利组织 | pontoon | — |
 | nonprofit | 非营利组织 | pontoon | — |
+| Normal distribution | 正态分布 | gnome | — |
+| Notebook | 笔记本 | gnome | — |
+| Notification | 通告 | gnome | — |
+| Number | 数字 | gnome | — |
+| Number Converter | 数字转换器 | gnome | — |
+| Number Theory | 数论 | gnome | — |
+| Numbered List | 编号列表 | gnome | — |
+| Numeric | 数字的 | gnome | — |
+| Object code | 目标代码 | gnome | — |
+| Observations | 观察,观测 | gnome | — |
 | open source | 开源 | pontoon | — |
 | override | 覆盖 | pontoon | — |
 | phone number mask | 虚拟手机号 | pontoon | — |
+| Place | 位置,放置 | gnome | — |
+| Play | 播放 | gnome | — |
+| Plug-in | 插件 | gnome | — |
+| Point | 点 | gnome | — |
+| Poisson distribution | 泊松分布 | gnome | — |
+| Policy | 策略 | gnome | — |
+| Polygon | 多边形 | gnome | — |
 | pop-up | 弹出式窗口 | pontoon | — |
+| popup menu | 弹出菜单 | gnome | — |
+| port | 端口 | gnome | — |
+| Portrait | 纵向 | gnome | — |
+| Post Office | 邮局,邮件服务器 | gnome | — |
+| Post Processor | 后处理器 | gnome | — |
+| Postal Box | 邮政信箱 | gnome | — |
+| postscript | postscript | gnome | — |
+| power management | 电源管理 | gnome | — |
+| PPP | PPP | gnome | — |
 | preference | 首选项 | pontoon | — |
+| Preferences | 首选项 | gnome | — |
+| Prefix | 前缀 | gnome | — |
+| Preview | 预览 | gnome | — |
+| Primary Colors | 主色 | gnome | — |
+| Print | 打印 | gnome | — |
+| Print area | 打印区域 | gnome | — |
+| Printer | 打印机 | gnome | — |
+| Priority | 优先级 | gnome | — |
+| Privacy | 隐私 | gnome | — |
 | Privacy Notice | 隐私声明 | pontoon | — |
 | Privacy Policy | 隐私政策 | pontoon | — |
+| Private key | 私钥 | gnome | — |
+| Private Messages | 秘密消息 | gnome | — |
+| Problem | 问题 | gnome | — |
+| Process | 进程 | gnome | — |
+| Process ID | 进程ID | gnome | — |
+| Processor | 处理器 | gnome | — |
+| Prodigy | Prodigy | gnome | — |
+| Program | 程序 | gnome | — |
+| Progress | 进度 | gnome | — |
+| Progress Bar | 进度栏 | gnome | — |
+| project | 项目 | gnome | — |
+| Propagation | 传播 | gnome | — |
+| Properties | 属性 | gnome | — |
+| Proportional font | 比例字体 | gnome | — |
+| Protected | 被保护的 | gnome | — |
+| Protection | 保护 | gnome | — |
+| Protocol | 协议 | gnome | — |
+| Provision | 预备,供给 | gnome | — |
+| Proxy | 代理 | gnome | — |
+| proxy server | 代理服务器 | gnome | — |
+| Public | 公共的 | gnome | — |
+| Public Key | 公钥 | gnome | — |
+| Query | 查询 | gnome | — |
+| Queue | 队列 | gnome | — |
+| Quit | 退出 | gnome | — |
+| Radio Button | 单选按钮 | gnome | — |
+| Random | 随机的 | gnome | — |
+| Range | 范围 | gnome | — |
+| Rank | 等级,分类 | gnome | — |
+| Ratio | 比例 | gnome | — |
+| Raw data | 原始数据 | gnome | — |
+| ready... | 就绪... | gnome | — |
+| Real Memory | 物理内存 | gnome | — |
+| real path | 真实路径 | gnome | — |
+| Real time | 实时 | gnome | — |
+| Reboot | 重启动 | gnome | — |
+| Receive | 接收 | gnome | — |
+| Receptivity | 接受力 | gnome | — |
+| Record | 记录 | gnome | — |
+| Rectangle | 矩形 | gnome | — |
+| Recurrence | 循环 | gnome | — |
+| Recursion | 递归 | gnome | — |
+| Redisplay | 重新显示 | gnome | — |
+| Redo | 重复 | gnome | — |
+| Refresh | 刷新 | gnome | — |
+| Region | 区域,范围 | gnome | — |
+| Regression analysis | 回归分析 | gnome | — |
+| regular | 常规的 | gnome | — |
+| Regular expression | 正则表达式 | gnome | — |
+| Regulate | 管制,控制 | gnome | — |
+| Relationship | 关系 | gnome | — |
 | release | 版本 | pontoon | — |
+| Release | 发行,发行版本 | gnome | — |
+| Remote | 远程 | gnome | — |
+| Remove | 删除 | gnome | — |
+| Rename | 重命名 | gnome | — |
+| Repeat | 重复 | gnome | — |
+| Replace | 取代,替代,替换 | gnome | — |
 | report | 报告 | pontoon | — |
+| Reports | 报告 | gnome | — |
+| reserved blocks | 保留块 | gnome | — |
+| Reset | 复位 | gnome | — |
+| Resident | 驻留 | gnome | — |
+| Resident memory | 驻留内存 | gnome | — |
+| Residual | 余量 | gnome | — |
+| Resize | 改变大小 | gnome | — |
+| Resolution | 分辨率 | gnome | — |
+| Resource element | 资源元素 | gnome | — |
+| Restart | 重启动 | gnome | — |
 | restricted site | 受限网站 | pontoon | — |
+| Resume | 继续,重新开始 | gnome | — |
+| Retrieve | 取得,获取 | gnome | — |
+| Retry | 重试 | gnome | — |
+| Return | 回车 | gnome | — |
+| Reverse video | 反显 | gnome | — |
 | revert | 恢复 | pontoon | — |
+| Revert | 还原,恢复 | gnome | — |
 | Review checker | 核查评价 | pontoon | — |
+| Root | 超级用户,根 | gnome | — |
+| Root Directory | 根目录 | gnome | — |
+| Root Window | 根窗口 | gnome | — |
+| Rotate | 旋转 | gnome | — |
+| Row | 行 | gnome | — |
+| RPM package | RPM 包 | gnome | — |
+| Run | 运行 | gnome | — |
+| Sample | 样例,取样,采样 | gnome | — |
+| Sampling | 取样,采样 | gnome | — |
+| Saturation | 饱和度 | gnome | — |
+| Save | 保存 | gnome | — |
+| Scalable | 可扩展的,可缩放的 | gnome | — |
+| Scalar | 标量 | gnome | — |
+| Scale | 比例尺 | gnome | — |
+| Scaling Factor | 缩放因子 | gnome | — |
+| Scan | 扫描 | gnome | — |
+| schedule manager | 调度管理器 | gnome | — |
+| schema | 模式,规划 | gnome | — |
+| Scientific notation | 科学记数法 | gnome | — |
+| Screen | 屏幕 | gnome | — |
+| Screen Saver | 屏幕保护程序 | gnome | — |
+| Script | 脚本 | gnome | — |
+| Scroll | 卷动 | gnome | — |
+| Scrollbars | 滚动条 | gnome | — |
+| SCSI | SCSI | gnome | — |
+| Search | 查找 | gnome | — |
+| search string | 查找字符串 | gnome | — |
 | search suggestion | 搜索建议 | pontoon | — |
+| Secondary Colors | 辅色 | gnome | — |
+| Secure channel | 安全通道 | gnome | — |
+| Secure keyboard | 安全键盘 | gnome | — |
+| Security | 安全 | gnome | — |
 | security keys | 安全密钥 | pontoon | — |
+| Segment | 段,分段 | gnome | — |
+| Segmentation Fault | 段错误 | gnome | — |
+| Select | 选择 | gnome | — |
+| Selection | 选择区 | gnome | — |
+| Send | 发送 | gnome | — |
+| Sense | 感觉,感知 | gnome | — |
 | sensitive | 敏感 | pontoon | — |
+| Sensitive | 敏感的 | gnome | — |
+| Separator | 分隔符 | gnome | — |
+| Server | 服务器 | gnome | — |
+| Session | 会话 | gnome | — |
+| Set | 设置 | gnome | — |
+| Settings | 设置 | gnome | — |
+| Setup | 设置 | gnome | — |
+| Severity | 严重性 | gnome | — |
+| Share | 共享 | gnome | — |
+| Shared Memory | 共享内存 | gnome | — |
+| Shell | Shell | gnome | — |
+| Shift key | Shift 键 | gnome | — |
+| Show | 显示 | gnome | — |
+| Shut Down | 停机 | gnome | — |
 | sidebar | 侧栏 | pontoon | — |
 | sign | 登录 | pontoon | — |
 | sign in | 登录 | pontoon | — |
 | sign-in | 登录 | pontoon | — |
+| Signal | 信号 | gnome | — |
+| signature | 签名 | gnome | — |
+| signature block | 签名区 | gnome | — |
 | signer | 签署者 | pontoon | — |
+| Size box | 大小框 | gnome | — |
+| Skewness | 失真 | gnome | — |
+| Skip | 跳过 | gnome | — |
+| Slant | 倾斜,斜体 | gnome | — |
+| slave | 从 | gnome | — |
+| Sleeping | 休眠 | gnome | — |
+| slider | 滑块 | gnome | — |
+| SLIP | SLIP | gnome | — |
+| slow terminals | 慢终端 | gnome | — |
+| Smart | 智能 | gnome | — |
+| Smart terminal | 智能终端 | gnome | — |
+| smooth | 平滑 | gnome | — |
+| SMTP | SMTP | gnome | — |
+| Snap | 快照 | gnome | — |
+| Snooze | 打盹 | gnome | — |
+| Socket | 套接字 | gnome | — |
+| SOCKS Server | SOCKS 服务器 | gnome | — |
+| soft keys | 软键 | gnome | — |
+| software bug | 软件缺陷 | gnome | — |
+| Software Foundation | 软件基金 | gnome | — |
+| Solid lines | 实线 | gnome | — |
+| Solid model | 实型体 | gnome | — |
+| Sort | 排序 | gnome | — |
+| sound card | 声卡 | gnome | — |
+| Source | 源 | gnome | — |
+| Source code | 源代码 | gnome | — |
+| Space character | 空格字符 | gnome | — |
+| Spam | 垃圾邮件 | gnome | — |
+| Special character | 特殊字符 | gnome | — |
+| Spell | 拼写 | gnome | — |
+| Spell Checker | 拼写检查器 | gnome | — |
+| spool | 缓冲池 | gnome | — |
+| Stabilize | 稳定 | gnome | — |
+| Stack | 堆栈 | gnome | — |
+| Standard | 标准 | gnome | — |
+| Standard deviation | 标准偏差 | gnome | — |
+| Standby | 待用 | gnome | — |
+| Start | 起动 | gnome | — |
+| Startup | 启动 | gnome | — |
+| startup files | 启动文件 | gnome | — |
+| Startup Program | 启动程序 | gnome | — |
+| State | 状态 | gnome | — |
+| Statistics | 统计学,统计值 | gnome | — |
+| Status | 状态 | gnome | — |
+| step increment | 步进增量 | gnome | — |
+| Stereotype | 典型 | gnome | — |
+| sticky notes | 粘贴提示 | gnome | — |
+| Storage | 存储 | gnome | — |
+| Strikethrough | 删除线 | gnome | — |
+| String | 字符串 | gnome | — |
+| structure diagram | 结构图 | gnome | — |
 | studies | 研究 | pontoon | — |
+| Style | 风格 | gnome | — |
+| Subdirectory | 子目录 | gnome | — |
+| Subject | 主题,标题 | gnome | — |
+| Submenu | 子菜单 | gnome | — |
+| Submit | 提交 | gnome | — |
+| Subnet | 子网 | gnome | — |
+| Subscript | 下标,注脚 | gnome | — |
+| subshell support | 子shell支持 | gnome | — |
+| substring | 子串 | gnome | — |
+| Suffix | 后缀 | gnome | — |
+| Superscript | 上标 | gnome | — |
+| Support | 支持 | gnome | — |
+| Suspend | 挂起 | gnome | — |
+| Swap | 调换,交换 | gnome | — |
+| Switch level | 交换级别 | gnome | — |
+| SYLK file | 符合链接文件 | gnome | — |
+| Symbol | 符号 | gnome | — |
+| Symbolic Link | 符号链接 | gnome | — |
+| Symmetric control | 对称控制 | gnome | — |
+| Synchronize | 同步 | gnome | — |
+| Syntax error | 语法错误 | gnome | — |
+| System | 系统 | gnome | — |
+| System Administrator | 系统管理员 | gnome | — |
+| System Configuration | 系统配置 | gnome | — |
+| system settings | 系统设置 | gnome | — |
+| Tab | 缩进键 | gnome | — |
+| Table | 表 | gnome | — |
+| tag | 标记 | gnome | — |
+| Talk | Talk | gnome | — |
+| tar archive | tar 归档 | gnome | — |
+| target file | 目标文件 | gnome | — |
+| task | 任务 | gnome | — |
+| TCLASS | TCLASS | gnome | — |
+| TCP/IP | TCP/IP | gnome | — |
+| Telnet | Telnet | gnome | — |
+| temp file | 临时文件 | gnome | — |
+| Template | 模板 | gnome | — |
+| temporary buffer | 临时缓冲区 | gnome | — |
+| Term | 术语 | gnome | — |
+| TERM variable | TERM 变量 | gnome | — |
+| Terminal | 终端 | gnome | — |
+| Terminate | 终止 | gnome | — |
 | Terms of Service | 服务条款 | pontoon | — |
+| Test | 测试 | gnome | — |
+| Test Module | 测试模块 | gnome | — |
+| Text | 文字 | gnome | — |
+| text area | 文字区域 | gnome | — |
+| Text only | 仅有文字 | gnome | — |
+| textual name | 文字名 | gnome | — |
+| Theme | 主题 | gnome | — |
+| Threshold | 阈值 | gnome | — |
+| Thumb Nails | 缩略图 | gnome | — |
+| Tile | 平铺 | gnome | — |
+| Time format | 时间格式 | gnome | — |
+| time stamp | 时戳 | gnome | — |
+| Timeout | 超时 | gnome | — |
+| Timer | 定时器 | gnome | — |
+| Timezone | 时区 | gnome | — |
+| Timing | 定时 | gnome | — |
+| Title | 标题,头衔 | gnome | — |
+| TODO List | TODO 列表 | gnome | — |
+| toggle | 切换 | gnome | — |
+| Tolerance | 公差 | gnome | — |
+| Tool | 工具 | gnome | — |
+| tool menu | 工具菜单 | gnome | — |
+| Toolbar | 工具栏 | gnome | — |
+| topic | 话题 | gnome | — |
 | track | 跟踪 | pontoon | — |
 | trackers | 跟踪器 | pontoon | — |
 | Tracking Content | 跟踪性内容 | pontoon | — |
+| Transfer | 传输 | gnome | — |
+| Transfer statement | 转移语句 | gnome | — |
+| Transitive | 传递 | gnome | — |
+| Translate | 翻译 | gnome | — |
+| transmission channel | 传输通道 | gnome | — |
+| Transparent | 透明的 | gnome | — |
+| Transpose | 转置 | gnome | — |
+| Trash | 废纸篓 | gnome | — |
+| Tree | 树 | gnome | — |
+| Trim | 修整,整理 | gnome | — |
+| Tty | Tty | gnome | — |
+| Turing Machine | 图灵机 | gnome | — |
+| Type | 类型 | gnome | — |
+| type bindings | 类型约束 | gnome | — |
+| Type mismatch | 类型不匹配 | gnome | — |
+| Undelete | 取消删除 | gnome | — |
+| Underline | 加下划线 | gnome | — |
+| Undo | 取消 | gnome | — |
 | unencrypted | 未加密 | pontoon | — |
+| Unexpected end | 意外结束 | gnome | — |
+| unexpected error | 意外错误 | gnome | — |
+| Unicode | Unicode | gnome | — |
+| Uninstall | 反安装 | gnome | — |
+| UNIX | UNIX | gnome | — |
+| Unknown host | 未知主机 | gnome | — |
+| Unload | 卸载 | gnome | — |
 | unresponsive | 无响应 | pontoon | — |
 | unsafe | 不安全 | pontoon | — |
+| Untitled | 未命名 | gnome | — |
+| Update | 更新 | gnome | — |
+| Upgrade | 升级 | gnome | — |
+| Uptime | 持续运行时间,开机时间 | gnome | — |
+| Urgent condition | 紧急情况 | gnome | — |
+| URL | URL | gnome | — |
+| USB | USB | gnome | — |
+| User | 用户 | gnome | — |
+| User defined | 用户定义 | gnome | — |
+| user directory | 用户目录 | gnome | — |
+| User Interface | 用户界面 | gnome | — |
+| Username | 用户名 | gnome | — |
+| Valid chars | 有效字符 | gnome | — |
 | validate | 确认有效 | pontoon | — |
 | validity | 有效性 | pontoon | — |
+| Value | 值 | gnome | — |
+| Variable | 变量 | gnome | — |
+| Variance | 分歧 | gnome | — |
+| Vector Graphics | 矢量图 | gnome | — |
+| Vendor | 厂商,供货商 | gnome | — |
+| VERBOSE | 冗余,详细 | gnome | — |
+| Verify | 校验,核实 | gnome | — |
 | version | 版本 | pontoon | — |
+| Version | 版本 | gnome | — |
+| Vertical | 垂直的 | gnome | — |
+| Vertical Alignment | 垂直对齐 | gnome | — |
+| VFS | VFS | gnome | — |
+| Video | 视频 | gnome | — |
+| View | 视图 | gnome | — |
+| Viewport | 视口,视见区 | gnome | — |
+| Virtual | 虚拟 | gnome | — |
+| Virtual Desktop | 虚拟桌面 | gnome | — |
+| Visualization | 视觉化表示,视觉呈现 | gnome | — |
+| Volume | 容量,音量 | gnome | — |
+| Wallpaper | 墙纸 | gnome | — |
+| Warning | 警告 | gnome | — |
+| Watch file | 监视文件 | gnome | — |
+| Web Page | 网页 | gnome | — |
+| Weight | 重,重量 | gnome | — |
+| Widget | 构件 | gnome | — |
+| Width | 宽,宽度 | gnome | — |
+| Window | 窗口 | gnome | — |
+| Window Manager | 窗口管理器 | gnome | — |
+| Word | 字 | gnome | — |
+| Work | 工作 | gnome | — |
+| Workbook | 工作簿 | gnome | — |
+| working directory | 工作目录 | gnome | — |
+| Workspaces | 工作空间 | gnome | — |
+| Wrap | 回绕 | gnome | — |
+| Write | 写入 | gnome | — |
+| WVLAN | WVLAN | gnome | — |
+| X Align | X 对齐 | gnome | — |
+| XDMCP socket | XDMCP套接字 | gnome | — |
+| XML | XML | gnome | — |
+| zero | 零 | gnome | — |
+| Zigzagline | 折线 | gnome | — |
+| Zip Drive | Zip驱动器 | gnome | — |
+| Zoom | 缩放 | gnome | — |
