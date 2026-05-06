@@ -1,4 +1,4 @@
-# Wiki Lint — 11 Health Checks
+# Wiki Lint — 12 Health Checks
 
 Categorized into **structural** (format violations), **semantic** (content health), and **provenance** (source/citation integrity).
 
@@ -63,8 +63,22 @@ For each page, walk `wiki/.manifest.json` to find which sources contribute. If a
 
 If `sources_count` in frontmatter disagrees with actual count from manifest → **warning**.
 
-### L11 — Contradiction surfaced
-Pages that have `## Contradictions` section → list them as **info** so the user can review unresolved conflicts in batch.
+### L11 — Contradiction surfaced (intra-page)
+Pages that have `## Contradictions` section → list them as **info** so the user can review unresolved conflicts in batch. This check is intra-page only — it surfaces what pages have already self-declared as contradictory, not new contradictions found across pages.
+
+### L12 — Cross-page numeric / claim disagreement
+Detect contradictions that span pages: when two pages cite a numeric value or categorical claim about the same canonical entity but disagree.
+
+Heuristic (best-effort, not exhaustive):
+1. Group pages by shared wikilink target — pages that all link to `[[Entity-X]]` are co-citers.
+2. Within each group, scan `## Key Facts` bullets for numeric patterns (P/E ratios, percentages, currency, version strings) and named-fact patterns (CEO, founding year, headquarters) about the entity.
+3. Flag pairs where the same fact key has materially different values across pages (e.g. P/E=39 on page A, P/E=19 on page B; difference >5% on numerics, exact mismatch on categorical).
+
+Output → **warning** with both page citations and the conflicting bullet text. Recommend either:
+- Updating the stale page via `/wiki-ingest` on the newer source, or
+- Adding a `## Contradictions` section on the canonical entity page documenting the disagreement.
+
+**Limits**: this check is *advisory* — it WILL miss semantic mismatches expressed in prose, and WILL false-positive on facts that are genuinely time-sensitive (e.g. "Q1 P/E was 39, Q3 P/E is 19" both correct as-of-date). User judgment required on every L12 hit.
 
 ## Lint output format
 
@@ -107,3 +121,4 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L09 | Re-ingest to rebuild Sources block from manifest |
 | L10 | Re-ingest the affected source |
 | L11 | Resolve contradictions (research, query author, or move to Open Questions) |
+| L12 | Re-ingest stale page from current source, OR add `## Contradictions` block on canonical entity page documenting the disagreement (with as-of-date if time-sensitive) |
