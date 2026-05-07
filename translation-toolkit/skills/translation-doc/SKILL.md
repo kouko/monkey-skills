@@ -1,7 +1,7 @@
 ---
 name: translation-doc
-description: Translate markdown / technical documentation preserving code blocks, URLs, HTML, math blocks, frontmatter, mermaid + ASCII diagrams. Web search ON, S1+S2 SHOULD, M1+M2 strict.
-version: 0.1.0
+description: Translate markdown / technical documentation preserving code blocks, URLs, HTML, math blocks, frontmatter, mermaid + ASCII diagrams. Web search ON, S1+S2 SHOULD, M1+M2+M3 strict.
+version: 0.3.0
 ---
 
 # translation-doc
@@ -66,17 +66,18 @@ WRITER and REVISER outputs MUST preserve every `⟦P:NN⟧` token exactly (same 
 
 ### Layer 4: Verification
 
-Per `references/verification-gates.md` §"Per-skill gate application". `translation-doc` runs the **full meaningful gate set** — chunks are long enough that S1 / S2 produce reliable signal, unlike `translation-i18n` where short UI strings make those gates noisy.
+Per `references/verification-gates.md` §"Per-skill gate application". `translation-doc` runs the **full meaningful gate set** — chunks are long enough that S1 / S2 produce reliable signal, unlike `translation-i18n` where short UI strings make those gates noisy. Pipeline order: **M1 → M2 → M3 → S1 → S2** (M3 added in v0.3.0 per Tier 2 Decision H).
 
 | Gate | Tier | Action |
 |---|---|---|
 | **M1** | HARD | Placeholder integrity — count + ID set parity for code blocks / URLs / HTML / math / frontmatter / diagram tokens between source and target. Deterministic regex check. |
 | **M2** | HARD | Project glossary compliance — every L1-mandated source term renders as its mapped target form (PASS_ADVISORY for `notes: context-dependent`). Deterministic lookup. |
-| **S1** | SHOULD | Back-translation — subagent dispatches a blind v2 → source retranslation; embedding-cosine similarity vs original source. Reliable for prose-length doc chunks. Requires runtime subagent / task-isolation capability; gracefully skips with audit-trail flag `S1: SKIPPED (no isolation capability)` otherwise. |
+| **M3** *(v0.3.0)* | HARD (composite) | Deterministic post-translation linter — runs **between M2 and S1** on the assembled v2. Three subrules: **m3a** residual source-language characters (HARD, < 1% of non-whitespace target chars; FAIL → block + short-circuit S1), **m3b** length-ratio sanity (SHOULD, `[0.5, 2.5]` default), **m3c** punctuation convention (SHOULD, fullwidth ratio ≥ 0.8 for CJK targets per JLReq / CLReq). No LLM call — `evaluate_m3()` in `scripts/lib/gate_m3_problem_analyze.py`. |
+| **S1** | SHOULD | Back-translation — subagent dispatches a blind v2 → source retranslation; embedding-cosine similarity vs original source. Reliable for prose-length doc chunks. Requires runtime subagent / task-isolation capability; gracefully skips with audit-trail flag `S1: SKIPPED (no isolation capability)` otherwise. **Short-circuited when M3a FAILs** — back-translation on partial output is meaningless. |
 | **S2** | SHOULD | Register preservation — JUDGE classifies source vs target register on a discourse / formality axis. Reliable for prose chunks; UI-string register-pinning concerns from i18n do not apply. |
 | **I1** | INFO | Untranslatability flagging — runs only when Layer 2 source-analysis flags a phrase. Non-interactive: records borrow / explain / approximate decisions in the audit-trail; never blocks, never prompts. |
 
-S1 / S2 are **SHOULD**, not HARD: a single-chunk failure with a clear cause (e.g. terminology mismatch on a domain term outside the project glossary) records to the audit-trail and surfaces to the caller, but does not block emit. M1 / M2 still HARD-block the run on failure.
+S1 / S2 / M3b / M3c are **SHOULD**, not HARD: a single-chunk failure with a clear cause (e.g. terminology mismatch on a domain term outside the project glossary) records to the audit-trail and surfaces to the caller, but does not block emit. M1 / M2 / M3a still HARD-block the run on failure.
 
 ### Layer 5: Output
 
@@ -120,7 +121,7 @@ Roles are behavioral. Any LLM model can fill any role; this skill specifies beha
 - `references/protect-pass-spec.md` — canonical protect-pass algorithm and `⟦P:NN⟧` token format
 - `references/core-loop.md` — DRAFT / REFLECT / IMPROVE role contracts and `<TRANSLATE_THIS>` windowing
 - `references/4d-reflection.md` — critique axes for doc mode
-- `references/verification-gates.md` — gate semantics + audit-trail entry shapes
+- `references/verification-gates.md` — M1 / M2 / M3 / S1 / S2 / I1 semantics + audit-trail entry shapes
 - `references/audit-trail-spec.md` — full audit-trail JSON schema
 - `references/orthogonal-axes.md` — 5 intake axes + 4-tier glossary resolver definition
 - `glossary/glossary-{source}--{target}.md` — bundled L2 glossary (5 pair files)
@@ -129,3 +130,5 @@ Roles are behavioral. Any LLM model can fill any role; this skill specifies beha
 - `../using-translation-toolkit/SKILL.md` — router (when to land here)
 - `../translation-intake/SKILL.md` — Layer 1 owner
 - `../../../docs/superpowers/specs/2026-05-06-translation-toolkit-design.md` — full design spec (Sub-skill Responsibility Matrix + Decisions)
+- `../../../docs/superpowers/plans/2026-05-07-translation-toolkit-v0.3.0-tier2.md` — v0.3.0 Tier 2 plan (Decision H adds M3 to translation-doc)
+- `../../scripts/lib/gate_m3_problem_analyze.py` — M3 deterministic linter implementation

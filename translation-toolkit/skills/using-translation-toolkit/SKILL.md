@@ -1,7 +1,7 @@
 ---
 name: using-translation-toolkit
 description: Router skill for translation-toolkit. Routes to one of 5 active translation skills based on user intent and input shape. Use when the user asks for any translation between en-US / ja-JP / zh-TW / zh-CN. 翻訳・翻譯・トランスレーション・本地化・i18n・transcreation。
-version: 0.2.0
+version: 0.3.0
 ---
 
 # using-translation-toolkit
@@ -25,6 +25,8 @@ Entry router for the `translation-toolkit` plugin. Inspect the user's request �
 Pick exactly one downstream specialist. If multiple signals fire, the **input-shape rule wins** over the **intent rule** (an explicit PO file always routes to i18n even if the user says "creative").
 
 When a `.md` payload is **explicitly a novel chapter** (long-form fiction, scene markers, dialogue heavy), prefer `translation-novel` over `translation-doc`. Heuristic: if input has scene-break markers (`* * *`, `***`, `―――`, `◇◇◇`) or chapter markup typical of novels, route to novel. Otherwise stay with `translation-doc`.
+
+**v0.3.0 routing tip — novel pre-pass.** When the user is translating a multi-chapter novel (a directory of chapter `.md` files from `tsundoku:book-extract` or similar), `translation-novel` runs a **whole-book pre-pass** (Layer 1.5) before per-chapter translation. The pre-pass produces `<repo>/.translations/characters.json` + `<repo>/.translations/world-glossary.json` and amortizes across all chapters. Suggest passing `book_manifest` (a chapter directory or ordered path list) on the first invocation; subsequent per-chapter runs reuse the artifacts. For a one-shot single-chapter run the pre-pass still works but the cost-amortization argument shrinks.
 
 | Signal | Route to | Why |
 |---|---|---|
@@ -62,6 +64,10 @@ Web search is **ON by default** across all 5 active translation skills (per spec
 
 (This single paragraph absorbs the per-skill `web-search-tradeoffs.md` files that were collapsed during fresh-eyes triage — see spec Decision #15.)
 
+## v0.3.0 verification note — M3 deterministic linter
+
+`translation-doc` and `translation-novel` adopt a third HARD gate, **M3** (deterministic post-translation linter), in v0.3.0. M3 runs between M2 and S1 with three subrules: residual source-language characters (m3a, HARD — partial-translation detector), length-ratio sanity (m3b, SHOULD), and CJK punctuation convention (m3c, SHOULD per JLReq / CLReq). No LLM call; cheap to run. `translation-i18n` and `translation-creative` skip M3 (UI strings are too short / transcreation produces wide length-ratio swings); `translation-audit` does not re-run M3 on a downstream artifact (M3 already executed upstream). See `references/verification-gates.md` §M3 in the doc + novel skills, or the v0.3.0 plan §Decision H.
+
 ## Cross-plugin composition
 
 `copywriting-toolkit` will **NOT** auto-invoke `translation-toolkit`, and vice versa. The two represent orthogonal quality dimensions (translation fidelity ≠ copywriting persuasion / form / ethics). If the user wants post-translation copy polish, they must explicitly chain the two:
@@ -90,10 +96,11 @@ Other adjacent plugins:
 For consistency when the user asks "what does each role do":
 
 - **WRITER** — produces the draft, preserves placeholders and protected spans.
-- **CRITIC** — structured critique only, no rewrites.
+- **CRITIC** — structured critique only, no rewrites. 4D / 5D-literary (novel) / 5D-effectiveness (creative) variants depending on skill.
 - **REVISER** — consumes the critique, outputs v2.
 - **BACK-TRANSLATOR** — blind retranslation v2 → source, used by gate S1.
 - **JUDGE** — register / similarity verdicts, used by gates S2 / I1.
+- **EXTRACTOR** *(v0.3.0)* — produces character / world-glossary JSON during the `translation-novel` whole-book pre-pass (Layer 1.5); never modifies source or translation. Cheap-model split is the typical use — pin `extractor` to a haiku-class model via the dict-form `model:` parameter.
 
 (Roles are behavioral. Any LLM model can fill any role; the toolkit specifies behavior, not models. See spec § "Roles, not models".)
 

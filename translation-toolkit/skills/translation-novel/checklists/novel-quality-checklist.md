@@ -1,14 +1,19 @@
-# Novel quality checklist — 6-item roundtrip
+# Novel quality checklist — 8-item roundtrip + pre-pass freshness + M3 surface
 
 > Run after Layer 5 reassemble (per-scene v2 concatenation), before emit.
 > Any unchecked item halts the run with a clear actionable message; do not
 > silently degrade.
 >
-> All six items run in one pass over the assembled chapter target plus the
-> recorded scene-boundary metadata. None require an additional LLM call —
-> they're cheap byte-equality / count / lookup checks.
+> All eight items run in one pass over the assembled chapter target plus
+> the recorded scene-boundary metadata + the Layer 4 audit-trail. None
+> require an additional LLM call — they're cheap byte-equality / count /
+> lookup / verdict-presence checks.
+>
+> Items 7 + 8 were added in v0.3.0 (Tier 2). Item 7 verifies that Layer
+> 1.5 pre-pass artifacts are present and not stale; item 8 verifies that
+> Layer 4 surfaced an M3 verdict with all three subrule subverdicts.
 
-## The 6 items
+## The 8 items
 
 - [ ] **1. Scene order preserved.** The concatenated v2 sequence matches
       the source `Scene[i].index` ordering (`0, 1, 2, …, N-1`). No
@@ -83,13 +88,39 @@
       verbatim would surface here. Halt with the offending scene index
       and the leaked substring.
 
+- [ ] **7. Pre-pass artifacts present and not stale (v0.3.0).** When
+      `book_manifest` was supplied (i.e. Layer 1.5 ran), assert that
+      both `<repo>/.translations/characters.json` and
+      `<repo>/.translations/world-glossary.json` exist on disk and that
+      each artifact's `book_manifest_hash` byte-matches the
+      orchestrator's freshly-computed manifest hash for the current
+      run. A mismatch means the book changed (chapter file modified,
+      added, or removed) since the artifacts were produced — Layer 1.5
+      already emitted a `WARN: pre-pass artifacts stale` and overwrote;
+      this checklist item is the **post-Layer-5** safety net catching
+      the case where the user passed `book_manifest` only on a later
+      chapter and the pre-pass never re-ran. Halt with both stamped
+      hashes + the freshly-computed hash. Skipped (PASS) when
+      `book_manifest` was not supplied (single-chapter mode).
+
+- [ ] **8. M3 verdict surfaced in audit-trail with all 3 subrules
+      (v0.3.0).** The Layer 4 audit-trail entry for M3 MUST be present
+      and MUST carry a `subrules` list of length 3 with one entry each
+      for `m3a` / `m3b` / `m3c`. Every subrule entry MUST have a
+      verdict (`PASS` / `WARN` / `FAIL`). This is a structural check on
+      the audit-trail, not a re-evaluation of M3 — Layer 4 already ran
+      M3 and either blocked emit (m3a FAIL) or recorded WARN / PASS.
+      The check exists to catch implementations that silently skip M3
+      dispatch on the assembled chapter. Halt with the missing subrule
+      ids when subrules are short.
+
 ## When to run
 
 | Step | Items |
 |---|---|
-| Immediately after Layer 5 scene-v2 concatenation, before emit | 1, 2, 3, 4, 5, 6 |
+| Immediately after Layer 5 scene-v2 concatenation, before emit | 1, 2, 3, 4, 5, 6, 7, 8 |
 
-All six items run in one pass after assembled-chapter target is built —
+All eight items run in one pass after assembled-chapter target is built —
 none require a separate LLM call.
 
 ## What this checklist does NOT cover
@@ -101,22 +132,39 @@ none require a separate LLM call.
   no-op — there are no `⟦P:NN⟧` tokens to count.)
 - **Per-scene glossary compliance** — that's M2 (HARD). Item 5 in this
   checklist is the **chapter-level** double-check across scenes.
-- **Translation quality** — that's the 4D reflection axes
-  (`references/4d-reflection.md`) and the S1 / S2 SHOULD gates per
-  scene.
+- **Translation quality** — that's the 5D-literary reflection axes
+  (`references/prompt-reflect-5d-literary.md`, default in v0.3.0; or 4D
+  via `intake_spec.reflect_axes='4d'` per `references/4d-reflection.md`)
+  and the S1 / S2 SHOULD gates per scene.
+- **Re-evaluation of M3 subrule metrics.** Item 8 verifies the
+  audit-trail entry's *structure* (presence + 3 subrules); it does not
+  re-run `evaluate_m3()` on the assembled output. M3 already executed
+  in Layer 4 and either blocked emit (m3a FAIL) or recorded its
+  verdict.
+- **Pre-pass content quality.** Item 7 verifies *artifact freshness*
+  (file presence + manifest-hash match). It does not assess whether
+  the EXTRACTOR's character/world-glossary extractions are accurate.
+  Quality of pre-pass content surfaces through M2 (HARD per-scene),
+  item 5 (chapter-level glossary consistency), and downstream
+  translator review of `<repo>/.translations/*.json`.
 - **Markdown AST structure** — novel mode does not parse the chapter
   as markdown AST (per `SKILL.md` Layer 2). Code blocks / math / mermaid
   / frontmatter checks live in `translation-doc/checklists/doc-quality-
   checklist.md`.
-- **Cross-chapter character-arc consistency** — Tier 2 deferred from
-  v0.2.0. Within a chapter, item 5 catches name drift; across chapters
-  the project glossary + caller workflow is the safety net.
+- **Cross-chapter character-arc consistency** beyond pre-pass artifact
+  freshness. Layer 1.5's whole-book pre-pass (v0.3.0) addresses
+  cross-chapter coreference at the glossary tier (L1.5 — characters /
+  places / world terms unified across the book). Within a chapter,
+  item 5 catches name drift; across chapters, the L1.5 artifacts +
+  project glossary + caller workflow are the safety net.
 
 ## See also
 
 - `protocols/scene-chunking.md` — round-trip contract (items 1, 2, 4)
 - `protocols/scene-window-context.md` — prev/next window truncation rules (item 6)
-- `references/verification-gates.md` §M1 / §M2 — placeholder + glossary
-  gates that run before this checklist
+- `protocols/character-extraction.md` / `protocols/world-glossary-extraction.md` — pre-pass contract (item 7)
+- `checklists/prepass-cost-ceiling.md` — Decision E #2 cost-ceiling acceptance bar
+- `references/verification-gates.md` §M1 / §M2 / §M3 — placeholder + glossary
+  + deterministic linter gates that run before this checklist (item 8 verifies §M3 surfacing)
 - `references/audit-trail-spec.md` — where checklist results are
   recorded on a halt
