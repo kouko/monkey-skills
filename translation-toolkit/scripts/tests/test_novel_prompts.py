@@ -1,13 +1,17 @@
 """Tests for scripts/lib/novel_prompts.py — scene-window prompt builders.
 
-Covers Phase B of translation-toolkit v0.2.0 novel-mode plan. Verifies the
-six-section Decision 4 layout, prev/next-window edge cases (None and
-truncation), glossary rendering, and the reflect/improve prompts.
+Covers Phase B of translation-toolkit v0.2.0 novel-mode plan + the v0.3.0
+Phase C 5D-literary reflect variant + dispatch. Verifies the six-section
+Decision 4 layout, prev/next-window edge cases (None and truncation),
+glossary rendering, the reflect/improve prompts, and the 5D-literary
+critic with its four sub-concerns.
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+import pytest
 
 # tests/ -> scripts/
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent
@@ -17,6 +21,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 from lib.novel_prompts import (  # noqa: E402
     build_scene_draft_prompt,
     build_scene_improve_prompt,
+    build_scene_reflect_5d_literary_prompt,
     build_scene_reflect_prompt,
 )
 from lib.scene_chunker import Scene  # noqa: E402
@@ -278,11 +283,18 @@ def test_draft_prompt_includes_intake_spec() -> None:
 
 
 def test_reflect_prompt_4d_axes() -> None:
-    """All 4 axes named: Accuracy / Fluency / Style / Terminology."""
+    """All 4 axes named: Accuracy / Fluency / Style / Terminology.
+
+    v0.3.0 Decision B flipped novel-mode default to 5d-literary, so 4D is
+    now an explicit opt-in via ``intake_spec.reflect_axes='4d'``. We pin
+    the test to 4D so the assertion ('"terminology"' as the last JSON
+    key with no trailing 'literariness') keeps documenting 4D behaviour.
+    """
+    intake = {**_intake(), "reflect_axes": "4d"}
     prompt = build_scene_reflect_prompt(
         scene=_scene(),
         draft_v1="She opened the window. Wind filled the room.",
-        intake_spec=_intake(),
+        intake_spec=intake,
         glossary_hits=[],
     )  # kwargs-only per build_scene_reflect_prompt signature
     for axis in ("Accuracy", "Fluency", "Style", "Terminology"):
@@ -290,6 +302,158 @@ def test_reflect_prompt_4d_axes() -> None:
     # JSON output schema is described.
     assert '"accuracy"' in prompt
     assert '"terminology"' in prompt
+    # 4D critic has NO literariness axis — that's 5D-literary's job.
+    assert "literariness" not in prompt.lower()
+
+
+# -------------------- 5D LITERARY REFLECT (v0.3.0 Phase C) --------------------
+
+
+def _draft_v1() -> str:
+    return "She opened the window. Wind filled the room."
+
+
+def test_5d_literary_prompt_loads_canonical() -> None:
+    """Builder loads canonical ``prompts/reflect-5d-literary.md`` body, not a
+    hard-coded inline string.
+
+    The SoT lives at ``scripts/canonical/prompts/reflect-5d-literary.md``;
+    each skill's ``references/prompt-reflect-5d-literary.md`` is a
+    byte-identical functional copy. We assert distinctive lines from the
+    canonical body appear verbatim in the rendered output (so a stale
+    hard-coded copy in ``novel_prompts.py`` would fail).
+    """
+    canonical = (
+        SCRIPTS_DIR / "canonical" / "prompts" / "reflect-5d-literary.md"
+    ).read_text(encoding="utf-8")
+    # Pick a distinctive sentence from the canonical body that the builder
+    # cannot synthesize on its own.
+    distinctive = (
+        "5. Literariness — assess the literary craft of the target:"
+    )
+    assert distinctive in canonical, "fixture invariant: canonical changed shape"
+
+    # And byte-identical to the distributed copies.
+    plugin_root = SCRIPTS_DIR.parent
+    for skill in (
+        "translation-i18n",
+        "translation-doc",
+        "translation-creative",
+        "translation-audit",
+        "translation-novel",
+    ):
+        copy = plugin_root / "skills" / skill / "references" / "prompt-reflect-5d-literary.md"
+        assert copy.exists(), f"missing distributed copy: {copy}"
+        assert copy.read_text(encoding="utf-8") == canonical, (
+            f"drift between canonical and {skill}/references/"
+        )
+
+    prompt = build_scene_reflect_5d_literary_prompt(
+        scene=_scene(),
+        draft_v1=_draft_v1(),
+        intake_spec=_intake(),
+        glossary_hits=[],
+        prev_scene_v2=None,
+        next_scene_source=None,
+    )
+    assert distinctive in prompt
+
+
+def test_5d_literary_prompt_includes_5_axes() -> None:
+    """All 5 axes named in the rendered prompt body."""
+    prompt = build_scene_reflect_5d_literary_prompt(
+        scene=_scene(),
+        draft_v1=_draft_v1(),
+        intake_spec=_intake(),
+        glossary_hits=[],
+        prev_scene_v2=None,
+        next_scene_source=None,
+    )
+    for axis in ("Accuracy", "Fluency", "Style", "Terminology", "Literariness"):
+        assert axis in prompt
+    # JSON output schema enumerates all 5 keys.
+    for json_key in ('"accuracy"', '"fluency"', '"style"', '"terminology"', '"literariness"'):
+        assert json_key in prompt
+
+
+def test_5d_literary_prompt_lists_subconcerns() -> None:
+    """The Literariness axis enumerates 4 sub-concerns: rhythm / euphony /
+    archaism / register-shift fidelity."""
+    prompt = build_scene_reflect_5d_literary_prompt(
+        scene=_scene(),
+        draft_v1=_draft_v1(),
+        intake_spec=_intake(),
+        glossary_hits=[],
+        prev_scene_v2=None,
+        next_scene_source=None,
+    )
+    for sub in ("Rhythm", "Euphony", "Archaism", "Register-shift fidelity"):
+        assert sub in prompt, f"missing sub-concern: {sub}"
+
+
+def test_5d_literary_prompt_includes_scene_window() -> None:
+    """prev_v2 + current source + next_source all present in scene-window
+    layout (Decision B)."""
+    prev_marker = "PREV_SCENE_V2_MARKER"
+    next_marker = "NEXT_SCENE_SOURCE_MARKER"
+    current = "現在のシーン本文。"
+    prompt = build_scene_reflect_5d_literary_prompt(
+        scene=_scene(current),
+        draft_v1=_draft_v1(),
+        intake_spec=_intake(),
+        glossary_hits=[],
+        prev_scene_v2=prev_marker,
+        next_scene_source=next_marker,
+    )
+    assert prev_marker in prompt
+    assert current in prompt
+    assert next_marker in prompt
+    # And the 3 windows appear in order: prev → current → next.
+    assert prompt.find(prev_marker) < prompt.find(current) < prompt.find(next_marker)
+
+
+def test_dispatch_default_is_5d_literary() -> None:
+    """intake_spec without ``reflect_axes`` → 5d-literary builder chosen
+    (v0.3.0 Decision B default)."""
+    intake = _intake()
+    assert "reflect_axes" not in intake  # fixture invariant
+    prompt = build_scene_reflect_prompt(
+        scene=_scene(),
+        draft_v1=_draft_v1(),
+        intake_spec=intake,
+        glossary_hits=[],
+    )
+    # 5D-literary fingerprint: Literariness axis + sub-concerns.
+    assert "Literariness" in prompt
+    assert "Rhythm" in prompt
+    assert '"literariness"' in prompt
+
+
+def test_dispatch_4d_when_opted() -> None:
+    """intake_spec.reflect_axes='4d' → legacy 4D builder; no Literariness."""
+    intake = {**_intake(), "reflect_axes": "4d"}
+    prompt = build_scene_reflect_prompt(
+        scene=_scene(),
+        draft_v1=_draft_v1(),
+        intake_spec=intake,
+        glossary_hits=[],
+    )
+    # 4D fingerprint: 4 axes only.
+    for axis in ("Accuracy", "Fluency", "Style", "Terminology"):
+        assert axis in prompt
+    assert "literariness" not in prompt.lower()
+
+
+def test_dispatch_unknown_raises() -> None:
+    """intake_spec.reflect_axes='6d' (or any unsupported value) → ValueError."""
+    intake = {**_intake(), "reflect_axes": "6d"}
+    with pytest.raises(ValueError, match="reflect_axes"):
+        build_scene_reflect_prompt(
+            scene=_scene(),
+            draft_v1=_draft_v1(),
+            intake_spec=intake,
+            glossary_hits=[],
+        )
 
 
 # -------------------- IMPROVE --------------------
