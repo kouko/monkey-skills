@@ -282,6 +282,133 @@ def test_lookup_returns_none_when_pair_file_missing(tmp_path):
     assert lookup(tmp_path, "en-US", "ja-JP", "Cancel") is None
 
 
+# -------------------- L1.5 pre-pass tier (v0.3.0 Phase D) --------------------
+
+
+def _prepass_artifacts():
+    """Sample pre-pass artifact dict for L1.5 tests."""
+    return {
+        "characters": [
+            {
+                "canonical_name": "メロス",
+                "canonical_target": "Melos",
+                "aliases": [
+                    {"source": "メロス", "target": "Melos"},
+                    {"source": "彼", "target": "he"},
+                    {"source": "妹の婿", "target": None},
+                ],
+                "voice_notes": "earnest, impulsive",
+                "first_seen_chapter": 0,
+                "last_seen_chapter": 1,
+            }
+        ],
+        "world_glossary": {
+            "places": [
+                {"canonical_source": "シラクサ",
+                 "canonical_target": "Syracuse",
+                 "first_seen_chapter": 0}
+            ],
+            "organizations": [],
+            "world_terms": [
+                {"canonical_source": "暴君",
+                 "canonical_target": "tyrant",
+                 "notes": "context-dependent",
+                 "first_seen_chapter": 0}
+            ],
+            "cultural_references": [],
+        },
+    }
+
+
+def test_lookup_l1_5_character_canonical_name(tmp_path):
+    """Character canonical_name hits L1.5 ahead of L2."""
+    # Write a contradictory L2 entry to prove L1.5 wins.
+    _write_pair_file(
+        tmp_path / "glossary-en-US--ja-JP.md",
+        "en-US", "ja-JP",
+        {"general": [("Melos", "メロス_OLD")]},
+    )
+    result = lookup(
+        tmp_path, "ja-JP", "en-US", "メロス",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is not None
+    assert result["target_term"] == "Melos"
+    assert result["audit_path"] == "L1.5.character"
+
+
+def test_lookup_l1_5_character_alias_paired_structure(tmp_path):
+    """Aliases use paired-structure {source, target}; alias source hit
+    returns the alias-specific target."""
+    result = lookup(
+        tmp_path, "ja-JP", "en-US", "彼",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is not None
+    assert result["target_term"] == "he"
+    assert result["audit_path"] == "L1.5.character"
+
+
+def test_lookup_l1_5_character_alias_with_null_target_misses(tmp_path):
+    """Alias with target=null (translator hasn't decided) does NOT hit L1.5."""
+    # No L2 file exists either → expect a miss.
+    result = lookup(
+        tmp_path, "ja-JP", "en-US", "妹の婿",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is None
+
+
+def test_lookup_l1_5_world_glossary_place(tmp_path):
+    """world_glossary place canonical_source hit returns L1.5 with class
+    suffix in audit_path."""
+    result = lookup(
+        tmp_path, "ja-JP", "en-US", "シラクサ",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is not None
+    assert result["target_term"] == "Syracuse"
+    assert result["audit_path"] == "L1.5.world_glossary.places"
+
+
+def test_lookup_l1_5_world_glossary_world_term(tmp_path):
+    result = lookup(
+        tmp_path, "ja-JP", "en-US", "暴君",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is not None
+    assert result["target_term"] == "tyrant"
+    assert result["audit_path"] == "L1.5.world_glossary.world_terms"
+
+
+def test_lookup_l1_5_miss_falls_through_to_l2(tmp_path):
+    """When L1.5 misses, the L2 direct lookup still fires."""
+    _write_pair_file(
+        tmp_path / "glossary-en-US--ja-JP.md",
+        "en-US", "ja-JP",
+        {"ui": [("Cancel", "キャンセル")]},
+    )
+    result = lookup(
+        tmp_path, "en-US", "ja-JP", "Cancel",
+        prepass_artifacts=_prepass_artifacts(),
+    )
+    assert result is not None
+    assert result["target_term"] == "キャンセル"
+    assert result["audit_path"] == "direct"
+
+
+def test_lookup_l1_5_disabled_when_artifacts_none(tmp_path):
+    """No prepass_artifacts kwarg → behaves exactly like v0.2.0."""
+    _write_pair_file(
+        tmp_path / "glossary-en-US--ja-JP.md",
+        "en-US", "ja-JP",
+        {"ui": [("Cancel", "キャンセル")]},
+    )
+    result = lookup(tmp_path, "en-US", "ja-JP", "Cancel")
+    assert result is not None
+    assert result["audit_path"] == "direct"
+
+
 # -------------------- malformed frontmatter --------------------
 
 def test_parse_pair_file_raises_on_malformed_frontmatter(tmp_path):

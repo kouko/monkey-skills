@@ -284,23 +284,97 @@ def _target_term_from_entry(entry, target_lang):
     return None
 
 
+def _lookup_l1_5_prepass(prepass_artifacts, term):
+    """L1.5 lookup against pre-pass artifacts (v0.3.0 Tier 2).
+
+    Search order within ``prepass_artifacts``:
+
+    1. ``characters[*]`` — match on ``canonical_name`` (exact) or any
+       ``aliases[*].source`` (exact, paired-structure). On match return the
+       corresponding target rendering (``canonical_target`` for canonical
+       hits, ``alias.target`` for alias hits) when non-None; otherwise miss.
+    2. ``world_glossary["places"|"organizations"|"world_terms"]`` — match on
+       ``canonical_source``. On match return ``canonical_target`` when
+       non-None; otherwise miss.
+    3. ``cultural_references`` — NOT searched here; cultural references are
+       phrase-level decisions (handled by the I1 untranslatability gate),
+       not term-level lookups.
+
+    Returns ``(result_dict, None)`` on hit (mirroring the
+    ``(entry, matched_domain)`` shape used elsewhere) or ``None`` on miss.
+    The returned dict has keys ``target_term``, ``source``, ``notes``,
+    ``audit_path``.
+    """
+    if not prepass_artifacts:
+        return None
+
+    # 1. characters
+    for entry in prepass_artifacts.get("characters", []) or []:
+        canonical_target = entry.get("canonical_target")
+        if entry.get("canonical_name") == term:
+            if canonical_target:
+                return {
+                    "target_term": canonical_target,
+                    "source": "pre-pass.characters",
+                    "notes": entry.get("voice_notes", "") or "—",
+                    "audit_path": "L1.5.character",
+                }
+            # Canonical name hit but target unresolved — fall through.
+            break
+        for alias in entry.get("aliases", []) or []:
+            if alias.get("source") == term:
+                target = alias.get("target")
+                if target:
+                    return {
+                        "target_term": target,
+                        "source": "pre-pass.characters",
+                        "notes": entry.get("voice_notes", "") or "—",
+                        "audit_path": "L1.5.character",
+                    }
+
+    # 2. world_glossary places / organizations / world_terms
+    world = prepass_artifacts.get("world_glossary") or {}
+    for class_name in ("places", "organizations", "world_terms"):
+        for entry in world.get(class_name, []) or []:
+            if entry.get("canonical_source") == term:
+                target = entry.get("canonical_target")
+                if target:
+                    return {
+                        "target_term": target,
+                        "source": f"pre-pass.world_glossary.{class_name}",
+                        "notes": entry.get("notes", "") or "—",
+                        "audit_path": f"L1.5.world_glossary.{class_name}",
+                    }
+
+    return None
+
+
 def lookup(
     glossary_dir,
     source_lang,
     target_lang,
     term,
     domain=None,
+    *,
+    prepass_artifacts=None,
 ):
     """Look up a term in the glossary directory.
 
     Algorithm:
-        1. Try direct pair file ``glossary-{S}--{T}.md`` (sorted alphabetical).
-           Hit → return with ``audit_path = "direct"``.
-        2. If miss AND neither S nor T is en-US, try EN-pivot:
-              a. ``glossary-en-US--{S}.md`` → find term in S column → en-US pivot.
-              b. ``glossary-en-US--{T}.md`` → find pivot in en-US column → T term.
-              Hit → return with ``audit_path = "pivot.en-US (via '<en_term>')"``.
-        3. Miss → return None.
+        1. **L1.5** (v0.3.0+) — if ``prepass_artifacts`` is provided, search
+           ``characters[*].canonical_name`` / ``aliases[*].source`` and
+           ``world_glossary["places"|"organizations"|"world_terms"][*].canonical_source``.
+           Hit → return with ``audit_path = "L1.5.character"`` or
+           ``"L1.5.world_glossary.<class>"``.
+        2. **L2 direct** — try direct pair file ``glossary-{S}--{T}.md``
+           (sorted alphabetical). Hit → return with ``audit_path = "direct"``.
+        3. **L2 EN-pivot** — if miss AND neither S nor T is en-US, hop
+           through ``glossary-en-US--{S}.md`` then ``glossary-en-US--{T}.md``.
+           Hit → return with ``audit_path = "pivot.en-US (via '<en_term>')"``.
+        4. Miss → return None.
+
+    L1 (project glossary) and L3 / L4 (web search / LLM fallback) are caller
+    concerns — this function covers L1.5 + L2 only.
 
     Args:
         glossary_dir: directory containing ``glossary-*--*.md`` files.
@@ -309,19 +383,33 @@ def lookup(
         term: source-language term (exact match).
         domain: optional domain filter (e.g. ``"ui"``). Exact match only —
             ``"tech.crypto"`` does NOT fall back to ``"tech.software"``.
+        prepass_artifacts: optional merged pre-pass artifact dict with shape
+            ``{"characters": [...], "world_glossary": {"places": [...],
+            "organizations": [...], "world_terms": [...],
+            "cultural_references": [...]}}``. When supplied, searched FIRST
+            (L1.5) before falling through to L2.
 
     Returns:
         On hit, a dict::
 
             {
                 "target_term": "...",
-                "source": "pontoon",   # or "manual" / "derived" / etc.
+                "source": "pontoon",        # L2 — or "pre-pass.characters" /
+                                            # "pre-pass.world_glossary.<class>" for L1.5
                 "notes": "...",
-                "audit_path": "direct" | "pivot.en-US (via '<en_term>')",
+                "audit_path": "L1.5.character" |
+                              "L1.5.world_glossary.<class>" |
+                              "direct" |
+                              "pivot.en-US (via '<en_term>')",
             }
 
         On miss, ``None``. File-not-found is treated as a miss, not an error.
     """
+    # ---- Step 0: L1.5 pre-pass ----
+    l1_5_hit = _lookup_l1_5_prepass(prepass_artifacts, term)
+    if l1_5_hit is not None:
+        return l1_5_hit
+
     glossary_dir = Path(glossary_dir)
 
     # ---- Step 1: direct pair file ----
