@@ -75,6 +75,7 @@ PROMPT_FILES = {
     "prompts/draft.md",
     "prompts/reflect-4d.md",
     "prompts/reflect-5d.md",
+    "prompts/reflect-5d-literary.md",
     "prompts/improve.md",
 }
 

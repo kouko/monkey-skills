@@ -150,3 +150,20 @@ See [`5d-effectiveness.md`](5d-effectiveness.md) for the Effectiveness axis spec
 - **Be silent when correct**. If a draft is clean on an axis, emit `[]`. Do not invent issues to fill space.
 - **Cite location** when possible — chunk index, sentence number, or quoted source span — so IMPROVE can target precisely.
 - **Single critique per issue**. If the same issue manifests in 5 places, raise it once with all locations rather than 5 nearly identical entries.
+
+---
+
+## Novel-mode 5D literary variant (v0.3.0+)
+
+`translation-novel` defaults to a 5-axis literary critic that adds **Literariness** as a fifth axis distinct from the 4-axis reflect documented here. The literary axis covers:
+
+- **Rhythm** — sentence-cadence / breath-grouping fidelity
+- **Euphony** — sound-pattern preservation (alliteration / mora pattern / tonal pacing) where the target language admits a comparable effect
+- **Archaism** — appropriate level of period-specific vocabulary / honorific register for the source's period and tone
+- **Register-shift fidelity** — narrator-vs-dialogue / formal-vs-casual shifts within the same character
+
+Distinct from creative-mode 5D `Effectiveness` ([`5d-effectiveness.md`](5d-effectiveness.md)), which targets persuasion / CTA landing. Novel-mode 5D targets literary craft.
+
+The 4D reflect (this document) remains available via `intake_spec.reflect_axes='4d'` when the chapter is colloquial-only or when the caller has reason to skip literary judgment.
+
+See [`prompts/reflect-5d-literary.md`](prompts/reflect-5d-literary.md) for the canonical prompt body. See plan v0.3.0 §Decision B for the rationale.
