@@ -247,22 +247,15 @@ bash .claude/hooks/validate-skill-folder-structure.sh translation-toolkit/skills
 
 ## Out of Scope (deferred to Tier 2 / Tier 3)
 
-> **Prior-art reference**: Survey at [`docs/superpowers/research/2026-05-07-novel-translation-prior-art.md`](../research/2026-05-07-novel-translation-prior-art.md) — 7 projects × 6 dimensions. Each Tier 2 / Tier 3 item below tags the prior-art source(s) it should borrow from. Re-run the survey before authoring the Tier 2 plan if the landscape has shifted.
-
 ### Tier 2 — Pre-pass character/glossary extraction (~3-5 days)
 
 Re-trigger condition: Tier 1 ships and quality is judged "needs glossary maintenance friction reduction" (qualitative — translator user feedback).
 
 Adds:
-- **`protocols/character-extraction.md`** — pre-pass dispatched as subagent, reads whole book, extracts character profiles + voice notes + relationships → `<repo>/.translations/characters.json`
-  - **Borrow from**: darkautism `ai-novel-translation` (Pass 1 = analysis, Pass 2 = translate; cumulative glossary). qw02 `llm-novel-translator` (auto-extract proper nouns; **separate cheap model for extraction vs translation model** — cost lever).
-- **`protocols/world-glossary-extraction.md`** — same shape for place names, organizations, world-building terms → enriches project glossary
-  - **Borrow from**: TransAgents prep phase (build glossary + tone + chapter summaries up-front before any translation call).
+- `protocols/character-extraction.md` — pre-pass dispatched as subagent, reads whole book, extracts character profiles + voice notes + relationships → `<repo>/.translations/characters.json`
+- `protocols/world-glossary-extraction.md` — same shape for place names, organizations, world-building terms → enriches project glossary
 - Pre-pass also identifies recurring cultural references → seeds decision log
-- **5D reflect** (adds literary axis: rhythm / euphony / archaism / register-shift fidelity)
-  - **Borrow from**: TransAgents role-split concept — separate "accuracy / fluency" critic from "literary / style" critic. Stay single-agent (don't replicate their 6-named-agents infra) but split the critic axes.
-- **New deterministic pre-S1 gate** (cheap, no LLM): residual source-language characters in target / punctuation conventions / length-ratio sanity / glossary compliance scan
-  - **Borrow from**: GalTransl `problemAnalyze`. Runs before S1 to catch obvious failures without burning back-translation tokens.
+- 5D reflect (adds literary axis: rhythm / euphony / archaism / register-shift fidelity)
 - Skill body grows by ~50 lines
 
 ### Tier 3 — Cross-chapter voice audit + multi-pass polish (~1-2 weeks)
@@ -270,13 +263,11 @@ Adds:
 Re-trigger condition: Tier 2 ships and translator-user reports voice drift across chapters or wants editorial passes.
 
 Adds:
-- New gate **S3 voice consistency** — sample N=5 utterances per character per chapter, LLM-judge whether register / 口癖 match the character's voice profile from pre-pass. WARN by default; FAIL if any character profile bins drift > threshold.
-  - **Prior-art status**: **architecturally novel** — survey found no comparable feature in any of the 7 projects. Frame as research positioning if Tier 3 ships.
+- New gate **S3 voice consistency** — sample N=5 utterances per character per chapter, LLM-judge whether register/口癖 match the character's voice profile from pre-pass. WARN by default; FAIL if any character profile bins drift > threshold.
 - **Multi-pass orchestration**:
   - Pass 1: literal pass (current Tier 1 output)
   - Pass 2: literary polish (new prompt) — rhythm / register / naturalness
   - Pass 3: voice consistency repair (driven by S3 gate findings)
-  - **Borrow from**: hydropix `TranslateBooksWithLLMs` `--refine` flag, KazKozDev "stage-two refinement" — universal 2-pass refine pattern. Universally aligned; not novel.
 - Chapter-level human review checkpoint (skill emits "review needed" markers for translator)
 - Audit-trail per-character voice-bin tracking
 
