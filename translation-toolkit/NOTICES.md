@@ -68,7 +68,7 @@ attribution per its license terms. Full license texts ship at
 - **Attribution**: 青空文庫 — https://www.aozora.gr.jp/cards/000035/card1567.html
 - **Excerpt scope**: ~2700-char opening. Plain prose only — ruby annotations (《》) and editor notes (〔〕) removed. Used by `scripts/tests/test_e2e_novel_smoke.py` for translation-novel chunking + cost-reduction verification (no LLM calls).
 - **Fixture path**: `scripts/tests/fixtures/sample-novel-chapter-ja.md`
-- **Mirror**: `scripts/tests/fixtures/sample-book-ja/chapter-01.md` (byte-identical copy used by `test_e2e_v0.3.0_tier2_smoke.py` as the first chapter of the two-chapter book fixture).
+- **Mirror**: `scripts/tests/fixtures/sample-book-ja/chapter-01.md` (byte-identical copy used by `test_e2e_v030_tier2_smoke.py` as the first chapter of the two-chapter book fixture).
 
 ### Two-chapter book fixture (synthetic continuation)
 
@@ -76,7 +76,7 @@ attribution per its license terms. Full license texts ship at
 - **Author**: translation-toolkit maintainers (Phase F).
 - **Scope**: `chapter-02.md` is a ~1,580-char synthetic continuation in matching archaic-narrative register, designed to exercise pre-pass cross-chapter merging (same character set as chapter 1 — メロス / ディオニス / セリヌンティウス) and world-glossary growth (one new place — アクロポリス; one new cultural reference — a fabricated literary maxim attributed to "an old poet"). The maxim is original synthetic prose, not a quotation from any published source.
 - **Fixture path**: `scripts/tests/fixtures/sample-book-ja/chapter-02.md`
-- **Used by**: `scripts/tests/test_e2e_v0.3.0_tier2_smoke.py` (no LLM calls — mocked subagent dispatch).
+- **Used by**: `scripts/tests/test_e2e_v030_tier2_smoke.py` (no LLM calls — mocked subagent dispatch).
 
 ---
 
