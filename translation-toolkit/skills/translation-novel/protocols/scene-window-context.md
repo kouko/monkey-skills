@@ -170,21 +170,44 @@ No full-glossary dump (per `references/core-loop.md` §8) — irrelevant
 terms are noise that pulls the WRITER's attention away from in-scope
 vocabulary.
 
-## REFLECT prompt — 4D axes (Decision 7)
+## REFLECT prompt — 5D-literary axes (Decision 7 + v0.3.0 Decision B)
 
-`build_scene_reflect_prompt()` renders the same 4D shape as
-`references/prompt-reflect-4d.md` (canonical), tied to a scene-window
-source rather than a doc chunk:
+`build_scene_reflect_5d_literary_prompt()` is the **default** novel-mode
+REFLECT renderer in v0.3.0+. It loads the canonical
+`references/prompt-reflect-5d-literary.md` body and ties it to a
+scene-window source rather than a doc chunk:
 
 1. **Accuracy** — semantic faithfulness. Additions, omissions, distortions?
 2. **Fluency** — does target read naturally? Awkward phrasings?
 3. **Style** — does register / rhythm / rhetoric match source and intended mode/register?
 4. **Terminology** — does it match the glossary? Domain conventions?
+5. **Literariness** *(v0.3.0)* — assess literary craft of the target
+   across four sub-concerns: **Rhythm** (sentence cadence / breath
+   grouping), **Euphony** (sound-pattern preservation where the target
+   admits comparable effect), **Archaism** (period-appropriate
+   vocabulary / honorific register), **Register-shift fidelity**
+   (mid-scene narrator vs dialogue, formal vs casual within a
+   character).
 
 Output is structured JSON; CRITIC never rewrites the translation, only
-critiques. 5D effectiveness is `translation-creative`'s axis in
-transcreation mode; novel-mode stays 4D in v0.2.0 (5D-for-fiction
-effectiveness deferred to Tier 2).
+critiques.
+
+**4D opt-in.** v0.2.0's 4D REFLECT remains available via
+`intake_spec.reflect_axes='4d'` — `build_scene_reflect_prompt()` (the
+4D renderer) loads `references/prompt-reflect-4d.md`. Use 4D when the
+chapter is colloquial-only or when literary-craft judgement is out of
+scope (e.g. translating a dialogue-heavy scene from a YA novel where
+period-archaism analysis would over-fire). The dispatcher logic lives
+in `scripts/lib/novel_prompts.py` — see Phase C's test
+`test_4d_opt_in_via_reflect_axes` for the exact toggle.
+
+**Different from `translation-creative`'s 5D Effectiveness.** That
+skill's 5th axis (Effectiveness, in `references/prompt-reflect-5d.md`)
+is conversion-oriented — it asks whether ad copy lands the call to
+action. Novel-mode's 5th axis (Literariness, in
+`references/prompt-reflect-5d-literary.md`) is craft-oriented — it
+asks whether the target preserves the source's literary voice. The
+two are not interchangeable; do not swap the prompt files.
 
 ## IMPROVE prompt — apply critique → v2
 
@@ -200,14 +223,19 @@ preserved when present.
 - **Verification gates** — see `references/verification-gates.md` and the
   Layer 4 table in `SKILL.md`.
 - **Whole-novel context** — character-arc-aware translation across an
-  entire novel is deferred to Tier 2 (character pre-pass).
+  entire novel runs in Layer 1.5 (whole-book pre-pass, v0.3.0). See
+  `protocols/character-extraction.md` and
+  `protocols/world-glossary-extraction.md`. The pre-pass artifacts feed
+  the per-scene glossary at the L1.5 tier; the scene-window prompt
+  itself stays scene-local.
 
 ## See also
 
 - `scripts/lib/novel_prompts.py` — implementation source-of-truth
 - `scripts/lib/scene_chunker.py` — produces the `Scene` objects this protocol consumes
 - `references/prompt-draft.md` — canonical DRAFT prompt template
-- `references/prompt-reflect-4d.md` — canonical 4D REFLECT prompt template
+- `references/prompt-reflect-5d-literary.md` — canonical 5D-literary REFLECT prompt (default in v0.3.0+)
+- `references/prompt-reflect-4d.md` — canonical 4D REFLECT prompt template (opt-in via `intake_spec.reflect_axes='4d'`)
 - `references/prompt-improve.md` — canonical IMPROVE prompt template
 - `references/core-loop.md` — DRAFT / REFLECT / IMPROVE role contracts
 - `references/4d-reflection.md` — 4D axis definitions
