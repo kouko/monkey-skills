@@ -24,6 +24,23 @@ Aggregation rules:
   - any SHOULD subrule WARN (with no HARD FAIL) -> M3 WARN
   - all PASS              -> M3 PASS
 
+Empty-input handling:
+
+  - empty source + empty target -> all subrules PASS-degenerate; aggregate
+    PASS. Treats "nothing to translate, nothing translated" as a no-op.
+  - non-empty source + non-empty target -> three subrules run normally.
+  - non-empty source + empty (or whitespace-only) target -> a structural
+    break: ``evaluate_m3`` short-circuits with a synthetic m3a FAIL
+    (``"empty target — no translation produced"``) and runs m3b + m3c for
+    completeness in the verdict body. M3a's bare residual-source check on
+    an empty target is technically PASS (zero residual chars, by the rule
+    as written), but "no translation at all" should not coast through on
+    that technicality, so the aggregate-level guard escalates it.
+  - empty source + non-empty target -> all three subrules PASS-degenerate
+    (no source to compare against); aggregate PASS. Considered out of
+    scope — translator inserting prose for an empty source is not what
+    this gate guards against.
+
 Verdict shape divergence from M1/M2: this module returns a
 :class:`M3Verdict` dataclass (frozen) instead of the dict shape used in
 :mod:`scripts.lib.gates`. The caller is expected to convert to the
@@ -48,7 +65,7 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass
-from typing import Literal
+from typing import Callable, Literal
 
 from lib.scene_chunker import approx_tokens
 
@@ -143,7 +160,7 @@ class M3Verdict:
     """
 
     verdict: Literal["PASS", "WARN", "FAIL"]
-    subrules: list[M3SubruleVerdict]  # always 3 entries: m3a, m3b, m3c
+    subrules: tuple[M3SubruleVerdict, ...]  # always 3 entries: m3a, m3b, m3c
 
 
 # --------------------------------------------------------------------------- #
@@ -186,7 +203,7 @@ def _is_zh_script_char(c: str) -> bool:
     )
 
 
-def _source_script_predicate(source_locale: str):
+def _source_script_predicate(source_locale: str) -> Callable[[str], bool]:
     """Return a ``c -> bool`` predicate identifying source-script chars.
 
     Locale dispatch is by BCP-47 prefix: ``ja-*`` uses the JP predicate,
@@ -290,6 +307,19 @@ def _check_m3b_length_ratio(
 
     src_tokens = approx_tokens(source_text)
     tgt_tokens = approx_tokens(target_text)
+
+    if tgt_tokens == 0 and src_tokens > 0:
+        return M3SubruleVerdict(
+            subrule="m3b",
+            verdict="WARN",
+            tier="SHOULD",
+            metric=0.0,
+            threshold=low,
+            detail=(
+                f"empty target — length ratio is 0.0 (no translation "
+                f"content); src_tokens={src_tokens}"
+            ),
+        )
 
     if src_tokens == 0:
         return M3SubruleVerdict(
@@ -449,13 +479,31 @@ def evaluate_m3(
 
     Returns:
         :class:`M3Verdict` with three populated subrule entries in order
-        ``[m3a, m3b, m3c]``.
+        ``(m3a, m3b, m3c)``.
     """
-    m3a = _check_m3a_residual_source(
-        target_text=target_text,
-        source_locale=source_locale,
-        target_locale=target_locale,
-    )
+    # Aggregate-level guard: non-empty source + empty (or whitespace-only)
+    # target is a structural break ("no translation produced"). M3a's bare
+    # residual-source rule would PASS here on a technicality (zero residual
+    # chars) — escalate to a synthetic m3a FAIL so the aggregate verdict
+    # reflects the break. M3b + M3c still run for completeness in the
+    # verdict body.
+    if source_text.strip() and not target_text.strip():
+        m3a = M3SubruleVerdict(
+            subrule="m3a",
+            verdict="FAIL",
+            tier="HARD",
+            metric=0.0,
+            threshold=_LOCALE_PAIR_THRESHOLDS.get(
+                (source_locale, target_locale), _DEFAULT_RESIDUAL_THRESHOLD
+            ),
+            detail="empty target — no translation produced",
+        )
+    else:
+        m3a = _check_m3a_residual_source(
+            target_text=target_text,
+            source_locale=source_locale,
+            target_locale=target_locale,
+        )
     m3b = _check_m3b_length_ratio(
         source_text=source_text,
         target_text=target_text,
@@ -466,7 +514,7 @@ def evaluate_m3(
         target_text=target_text,
         target_locale=target_locale,
     )
-    subrules = [m3a, m3b, m3c]
+    subrules = (m3a, m3b, m3c)
 
     # Aggregate: HARD FAIL dominates; otherwise WARN if any SHOULD WARN;
     # otherwise PASS.
