@@ -1,4 +1,4 @@
-# Verification Gates — M1 / M2 / S1 / S2 / I1
+# Verification Gates — M1 / M2 / M3 / S1 / S2 / I1
 
 **Status**: canonical reference (Single Source of Truth in `scripts/canonical/`; functional copies in active skills' `references/`)
 **Cross-refs**: [`core-loop.md`](core-loop.md), [`4d-reflection.md`](4d-reflection.md), [`orthogonal-axes.md`](orthogonal-axes.md), [`audit-trail-spec.md`](audit-trail-spec.md)
@@ -12,6 +12,7 @@
 |---|---|---|---|---|
 | M1 | Placeholder integrity | MUST (HARD) | BLOCK output | — |
 | M2 | Project glossary compliance | MUST (HARD) | BLOCK output (FAIL) or PASS_ADVISORY for `notes: context-dependent` entries | — |
+| M3 | Deterministic post-translation linter (residual source / length-ratio / punctuation) | MUST (HARD) — composite of one HARD subrule (M3a) + two SHOULD subrules (M3b, M3c) | BLOCK output on M3a FAIL; WARN on M3b / M3c WARN | — |
 | S1 | Back-translation diff | SHOULD (MUST in transcreation mode) | WARN (allow output) → BLOCK in transcreation | threshold + tier flip on `mode == transcreation` |
 | S2 | Register preservation | SHOULD | WARN (allow output) | — |
 | I1 | Untranslatability flagging | INFO (MAY) | INFO only — never blocks, never prompts | — |
@@ -246,19 +247,85 @@ metadata:
 
 ---
 
+## M3 — Deterministic Post-Translation Linter (HARD GATE — composite)
+
+### Trigger
+Runs on the assembled v2 output after Layer 5 placeholder restore, **between M2 and S1**. M3 is deterministic (no LLM judge) and short-circuits S1 when the output is structurally broken — saving the cost of a blind back-translation that would be meaningless on broken output.
+
+M3 is a **composite** gate: one HARD subrule (M3a) plus two SHOULD subrules (M3b, M3c). The aggregate verdict follows the standard pipeline rule — any HARD subrule FAIL → M3 FAIL; otherwise any SHOULD WARN → M3 WARN; otherwise PASS.
+
+### Subrules
+
+| Subrule | Tier | Pass criterion |
+|---|---|---|
+| **M3a** Residual source-language characters | HARD | Target contains < 1% source-language script chars. Computed as `count(source_script_chars in target) / count(non_whitespace_chars in target)`. Source-script class derived from BCP-47 source-locale prefix (`ja-*` → Hiragana / Katakana / CJK Ideographs / CJK Symbols & Punctuation; `zh-*` → CJK Ideographs / CJK Symbols & Punctuation). Threshold tunable per `(source_locale, target_locale)` pair via `_LOCALE_PAIR_THRESHOLDS` in `scripts/lib/gate_m3_problem_analyze.py` (default 0.01). |
+| **M3b** Length-ratio sanity | SHOULD | `approx_tokens(target) / approx_tokens(source)` ∈ `[low, high]` where `(low, high)` defaults to `(0.5, 2.5)` and is tunable per locale pair via `_LOCALE_PAIR_LENGTH_RATIO`. Uses `scripts.lib.scene_chunker.approx_tokens` (char/3 heuristic). |
+| **M3c** Punctuation convention | SHOULD | For CJK targets (`zh-*` / `ja-*`): fullwidth ratio across `{,/，, ./。, ?/？, !/！}` ≥ 0.8, per JLReq / CLReq fullwidth-as-default convention. ASCII / other targets: skipped (returns PASS). `ko-*` is treated as non-CJK for M3c — Korean prose does not require fullwidth ASCII punctuation. |
+
+### Pass / fail / warn behavior
+- **PASS** — all three subrules pass.
+- **WARN** — at least one SHOULD subrule (M3b or M3c) reported WARN AND no HARD subrule failed. Output proceeds; warnings recorded.
+- **FAIL** — M3a reported FAIL (HARD). Output blocked. The aggregate is FAIL even if M3b / M3c also reported WARN — HARD dominates SHOULD.
+
+### Diff format on failure
+```yaml
+gate_id: M3
+verdict: FAIL  # or WARN / PASS
+subrules:
+  - subrule: m3a
+    verdict: FAIL
+    tier: HARD
+    metric: 0.04           # residual ratio
+    threshold: 0.01
+    detail: "residual source-script ratio 0.04 >= threshold 0.01 (ja-JP -> en-US); 8 of 200 non-whitespace target chars belong to the source-language script — likely partial translation"
+  - subrule: m3b
+    verdict: WARN
+    tier: SHOULD
+    metric: 0.30
+    threshold: 0.50
+    detail: "length ratio 0.30 outside [0.50, 2.50] — too short (en-US -> de-DE); src_tokens=100, tgt_tokens=30"
+  - subrule: m3c
+    verdict: PASS
+    tier: SHOULD
+    metric: 1.00
+    threshold: 0.80
+    detail: "target locale 'en-US' is not CJK; fullwidth punctuation check skipped (PASS by default per JLReq/CLReq scope)"
+metadata:
+  source_locale: ja-JP
+  target_locale: en-US
+  chunk_index: 2
+```
+
+### Why HARD (with WARN escape on length / punctuation)
+
+- **M3a is HARD** because residual source-language chars in the target indicate a *partial translation* — the model gave up and pasted source text through. This is a structural failure indistinguishable from a missing placeholder: surface looks plausible but the target is broken. No advisory escape.
+- **M3b is SHOULD** because length-ratio anomalies are real signals but admit legitimate exceptions (intentional summary; fixed-length UI; transcreation reframing). WARN lets a translator inspect rather than force a re-run.
+- **M3c is SHOULD** because punctuation convention is style, not correctness. JLReq / CLReq are typographic conventions; some venues legitimately use halfwidth punctuation in CJK technical contexts (e.g. inline code-fenced terminals). WARN flags the deviation; output proceeds.
+
+### Implementation note
+M3 is fully deterministic — no LLM judge call, no embedding similarity. Cheap to run on every chunk. The lib lives at `scripts/lib/gate_m3_problem_analyze.py`; the public entry point is `evaluate_m3(*, source_text, target_text, source_locale, target_locale) -> M3Verdict`. The verdict shape is a frozen dataclass (`M3Verdict` with `subrules: list[M3SubruleVerdict]`) rather than the dict shape used by M1 / M2 / S1 / S2 / I1 — callers convert to the uniform `{verdict, diff, details}` shape at the per-skill audit-trail integration boundary.
+
+Inspired by GalTransl's `problemAnalyze` pattern. M3 short-circuits S1: if M3a FAILs, the back-translation will be meaningless on partial output, so the runtime should record M3 FAIL and skip S1 dispatch to save cost (per Tier 2 plan §Phase A pipeline order).
+
+---
+
 ## Per-skill gate application
 
-(From design spec §Sub-skill Responsibility Matrix)
+(From design spec §Sub-skill Responsibility Matrix; updated for v0.3.0 Tier 2 Decision H — translation-doc + translation-novel adopt M3.)
 
 | Skill | Gates run |
 |---|---|
 | `translation-i18n` | M1 + M2 (strict) |
-| `translation-doc` | M1 + M2 + S1 + S2 |
-| `translation-novel` | M1 + M2 + S1 (MUST in transcreation, SHOULD in faithful) + S2 + I1 |
+| `translation-doc` | M1 + M2 + **M3** + S1 + S2 |
+| `translation-novel` | M1 + M2 + **M3** + S1 (MUST in transcreation, SHOULD in faithful) + S2 + I1 |
 | `translation-creative` | M1 + M2 + S1 (MUST in transcreation, SHOULD in faithful) + S2 |
 | `translation-audit` | full M1 + M2 + S1 + S2 + I1, gate semantics typically stricter |
 
-`translation-i18n` skips S1/S2 because UI strings are too short for back-translation similarity to be meaningful and are register-pinned by format conventions.
+`translation-i18n` skips S1/S2 because UI strings are too short for back-translation similarity to be meaningful and are register-pinned by format conventions. It also skips M3 because length-ratio is uninformative on UI strings (a 3-character button label has wide legitimate ratios) and most UI strings carry no punctuation.
+
+`translation-creative` skips M3 because transcreation legitimately produces wide length-ratio swings (ad copy is rewritten, not translated literally) — a future v0.4 may add M3 with mode-conditional skip of M3b when `mode == transcreation`.
+
+`translation-audit` does not re-run M3 on a downstream artifact: when audit reads a translation produced by `translation-doc` / `translation-novel`, M3 has already executed upstream and its verdict is in the audit trail. Re-running would be redundant.
 
 ---
 
@@ -267,11 +334,13 @@ metadata:
 Every gate emits an entry into `audit_trail.gate_verdicts.<id>` with this shape:
 
 ```yaml
-gate_id: M1 | M2 | S1 | S2 | I1
+gate_id: M1 | M2 | M3 | S1 | S2 | I1
 verdict: PASS | FAIL | WARN | PASS_ADVISORY | SKIPPED | INFO
 diff: <gate-specific structured diff, null when PASS or INFO>
 metadata: <gate-specific>
 ```
+
+M3 is the only composite gate — its audit entry additionally carries a `subrules` list with per-subrule (m3a / m3b / m3c) verdicts. The aggregate `verdict` follows the HARD-dominates-SHOULD rule documented in §M3.
 
 See [`audit-trail-spec.md`](audit-trail-spec.md) §`gate_verdicts` for how these are nested in the full audit trail and §Appendix for an end-to-end example.
 
