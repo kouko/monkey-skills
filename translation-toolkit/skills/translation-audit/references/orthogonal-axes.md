@@ -123,6 +123,46 @@ typography           # 排版規則 (meta-section in glossary files)
 
 ---
 
+## `model` — single string OR per-role overrides (v0.3.0+)
+
+Not one of the 5 orthogonal axes — a *cost / latency knob* attached to the
+intake spec alongside them. Roles are behavioral: the same skill body runs
+regardless of which model executes it; only token cost and latency change.
+
+The `model` field accepts two forms:
+
+**Single-string form (v0.2.0 baseline)** — every role uses the same model:
+
+```yaml
+model: claude-opus-4-7
+```
+
+**Per-role override form (v0.3.0+)** — `default` is mandatory; per-role keys
+override `default` for their role:
+
+```yaml
+model:
+  default: claude-opus-4-7
+  extractor: claude-haiku-4-5         # cheap model for whole-book pre-pass
+  back_translator: claude-haiku-4-5   # S1 back-translation can be cheap
+```
+
+Recognized role keys: `writer`, `critic`, `reviser`, `back_translator`,
+`judge`, `extractor`. Unknown keys emit a warning (forward-compat for
+future role splits) but are not rejected.
+
+Routing rationale: per-role overrides let cheap models cover I/O-bound or
+low-judgement-required roles (`extractor` / `back_translator`) while
+reserving the standard model for high-judgement roles (`writer` / `critic` /
+`reviser` / `judge`). See plan Decision D for the qw02-borrowed motivation:
+`docs/superpowers/plans/2026-05-07-translation-toolkit-v0.3.0-tier2.md`.
+
+Validation + resolution lives in `scripts/lib/model_routing.py`
+(`validate_model_field` / `resolve_model_for_role`); intake invokes
+`validate_model_field` as part of intake-spec validation.
+
+---
+
 ## Auto-mode inference rules
 
 In auto mode, the LLM analysis pass at Layer 1 sets all 5 axes from the source. Heuristics applied (in priority order — first match wins):

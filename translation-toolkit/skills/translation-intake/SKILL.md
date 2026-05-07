@@ -49,6 +49,39 @@ Plus **skopos / intent** — free-form one-liner answering "who reads this and w
 
 The full canonical definitions, mode-strategy interactions, and auto-inference heuristic table live in the plugin-level reference at `scripts/canonical/orthogonal-axes.md` (functional copies of which are distributed into each of the 4 active skills' `references/` directories — see "Reference distribution" below).
 
+## Per-role model overrides (v0.3.0+)
+
+Alongside the 5 axes, the intake spec may carry a `model` field selecting
+which Claude model executes each behavioral role. **Roles are behavioral.
+The same skill body runs regardless of model; only token cost / latency
+change.** Two forms accepted:
+
+**String (v0.2.0 baseline — every role uses the same model):**
+
+```yaml
+model: claude-opus-4-7
+```
+
+**Dict (v0.3.0+ — required `default` + optional per-role overrides):**
+
+```yaml
+model:
+  default: claude-opus-4-7
+  extractor: claude-haiku-4-5         # cheap whole-book pre-pass
+  back_translator: claude-haiku-4-5   # S1 round-trip can be cheap
+```
+
+Recognized role keys: `writer`, `critic`, `reviser`, `back_translator`,
+`judge`, `extractor`. Unknown keys emit a `UserWarning` (forward-compat) and
+are otherwise accepted. Validation is performed by
+`scripts/lib/model_routing.validate_model_field`, invoked here as part of
+intake-spec validation; downstream skills resolve the per-role model via
+`scripts/lib/model_routing.resolve_model_for_role(model, role)`.
+
+Rationale + the qw02 cheap-model-split motivation: see plan
+`docs/superpowers/plans/2026-05-07-translation-toolkit-v0.3.0-tier2.md`
+§"Decision D — Cheap-model split via `model: str | dict`".
+
 ## Output
 
 Writes an intake spec consumed by the next skill in the pipeline. Schema (subset of the audit-trail `intake` block — see canonical `audit-trail-spec.md` §`intake`):
