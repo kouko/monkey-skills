@@ -14,6 +14,7 @@ Covers Phase B of translation-toolkit v0.3.0 Tier 2 plan:
 from __future__ import annotations
 
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -57,8 +58,12 @@ def test_validate_dict_missing_default_raises() -> None:
 
 
 def test_validate_dict_unknown_role_warns() -> None:
-    """Unknown role keys emit a UserWarning but do not raise (forward-compat)."""
-    with pytest.warns(UserWarning):
+    """Unknown role keys emit a UserWarning but do not raise (forward-compat).
+
+    The warning message must mention the unknown role name so callers can
+    diagnose typos quickly.
+    """
+    with pytest.warns(UserWarning, match="future_role"):
         validate_model_field(
             {"default": "claude-opus-4-7", "future_role": "claude-haiku-4-5"}
         )
@@ -76,10 +81,8 @@ def test_validate_dict_known_roles_all_accepted() -> None:
     for role in KNOWN_ROLES:
         full[role] = "haiku"
     # Guard: should not warn for any known role.
-    import warnings as _warnings
-
-    with _warnings.catch_warnings():
-        _warnings.simplefilter("error")  # turn warnings into errors
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # turn warnings into errors
         validate_model_field(full)
 
 

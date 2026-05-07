@@ -64,15 +64,20 @@ KNOWN_ROLES: tuple[str, ...] = (
 )
 
 
-class ModelDict(TypedDict, total=False):
-    """Static-typing shape for the per-role-override form of ``model``.
-
-    Documentation-only: :func:`validate_model_field` accepts plain
-    ``dict[str, str]`` at runtime. ``default`` is required; the per-role keys
-    are optional overrides.
-    """
+class _ModelDictRequired(TypedDict):
+    """Required-fields base for :class:`ModelDict`. Internal."""
 
     default: str
+
+
+class ModelDict(_ModelDictRequired, total=False):
+    """TypedDict mirroring the dict form. ``default`` is required (inherited
+    from :class:`_ModelDictRequired`); per-role keys are optional.
+
+    Documentation-only: :func:`validate_model_field` accepts plain
+    ``dict[str, str]`` at runtime.
+    """
+
     writer: str
     critic: str
     reviser: str
@@ -116,8 +121,9 @@ def validate_model_field(model: str | dict[str, str]) -> None:
                 )
             if key != "default" and key not in KNOWN_ROLES:
                 warnings.warn(
-                    f"unknown role key {key!r} in model dict; "
-                    f"recognized roles: {KNOWN_ROLES}",
+                    f"unknown role key {key!r} in model dict (recognized "
+                    f"roles: {KNOWN_ROLES}); forward-compat warning, value "
+                    f"retained.",
                     UserWarning,
                     stacklevel=2,
                 )
