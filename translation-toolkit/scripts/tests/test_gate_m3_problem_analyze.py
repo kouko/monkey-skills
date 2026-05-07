@@ -280,3 +280,28 @@ def test_aggregate_all_pass():
     assert _subrule(verdict, "m3a").verdict == "PASS"
     assert _subrule(verdict, "m3b").verdict == "PASS"
     assert _subrule(verdict, "m3c").verdict == "PASS"
+
+
+def test_aggregate_empty_target_fails():
+    """Non-empty source with empty target is M3 aggregate FAIL via synthetic m3a."""
+    verdict = evaluate_m3(
+        source_text="メロスは激怒した。",
+        target_text="",
+        source_locale="ja-JP",
+        target_locale="en-US",
+    )
+    assert verdict.verdict == "FAIL"
+    m3a = next(s for s in verdict.subrules if s.subrule == "m3a")
+    assert m3a.verdict == "FAIL"
+    assert "empty target" in m3a.detail
+
+
+def test_aggregate_empty_source_passes():
+    """Empty source is degenerate; all subrules PASS by convention."""
+    verdict = evaluate_m3(
+        source_text="",
+        target_text="",
+        source_locale="ja-JP",
+        target_locale="en-US",
+    )
+    assert verdict.verdict == "PASS"
