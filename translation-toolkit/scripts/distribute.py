@@ -77,6 +77,8 @@ PROMPT_FILES = {
     "prompts/reflect-5d.md",
     "prompts/reflect-5d-literary.md",
     "prompts/improve.md",
+    "prompts/extract-characters.md",
+    "prompts/extract-world-glossary.md",
 }
 
 # Canonical files that are NOT distributed (per-skill authored, not SSOT).
