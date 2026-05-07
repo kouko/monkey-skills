@@ -311,16 +311,20 @@ def _lookup_l1_5_prepass(prepass_artifacts, term):
     # 1. characters
     for entry in prepass_artifacts.get("characters", []) or []:
         canonical_target = entry.get("canonical_target")
-        if entry.get("canonical_name") == term:
-            if canonical_target:
-                return {
-                    "target_term": canonical_target,
-                    "source": "pre-pass.characters",
-                    "notes": entry.get("voice_notes", "") or "—",
-                    "audit_path": "L1.5.character",
-                }
-            # Canonical name hit but target unresolved — fall through.
-            break
+        if (
+            entry.get("canonical_name") == term
+            and canonical_target
+        ):
+            return {
+                "target_term": canonical_target,
+                "source": "pre-pass.characters",
+                "notes": entry.get("voice_notes", "") or "—",
+                "audit_path": "L1.5.character",
+            }
+        # Whether canonical matched (with None target) or not, try aliases on
+        # this entry — paired-structure aliases may resolve even when the
+        # canonical target is still unresolved. Then fall through to the next
+        # character entry; never `break` (an alias might match a later entry).
         for alias in entry.get("aliases", []) or []:
             if alias.get("source") == term:
                 target = alias.get("target")
