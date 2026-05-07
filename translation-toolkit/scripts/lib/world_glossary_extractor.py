@@ -45,16 +45,17 @@ is independent of any skill folder.
 from __future__ import annotations
 
 import json
-import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from lib.character_extractor import (
-    BookManifest,
+from lib._pre_pass_helpers import (
     _check_stale_cache,
     _extract_json_object,
     _format_intake_spec_compact,
+)
+from lib.character_extractor import (
+    BookManifest,
     load_book_manifest,
 )
 from lib.model_routing import resolve_model_for_role
@@ -328,7 +329,7 @@ def run_pre_pass_world_glossary(
     book_manifest: BookManifest,
     intake_spec: dict,
     output_path: Path,
-    dispatch_subagent: Callable[..., str],
+    dispatch_subagent: Callable[[str, str], str],
 ) -> dict:
     """Orchestrate whole-book world-glossary extraction.
 

@@ -409,6 +409,35 @@ def test_lookup_l1_5_disabled_when_artifacts_none(tmp_path):
     assert result["audit_path"] == "direct"
 
 
+def test_lookup_l1_5_canonical_null_target_falls_through_to_alias(tmp_path):
+    """Canonical match with null target should still try aliases on same entry.
+
+    Regression test for Phase D review fix: previously the canonical-name
+    branch did `break` when canonical_target was None, exiting the entire
+    character loop and skipping both the same entry's aliases and all
+    subsequent character entries. Now the loop only `return`s on positive
+    match and falls through otherwise.
+    """
+    prepass = {"characters": [{
+        "canonical_name": "メロス",
+        "canonical_target": None,            # extraction was uncertain
+        "aliases": [{"source": "メロス", "target": "Melos"}],  # alias resolves
+        "voice_notes": "",
+        "first_seen_chapter": 1,
+        "last_seen_chapter": 1,
+    }]}
+    result = lookup(
+        glossary_dir=tmp_path,            # empty dir; no L2 hit
+        source_lang="ja-JP",
+        target_lang="en-US",
+        term="メロス",
+        prepass_artifacts=prepass,
+    )
+    assert result is not None
+    assert result["target_term"] == "Melos"
+    assert result["audit_path"] == "L1.5.character"
+
+
 # -------------------- malformed frontmatter --------------------
 
 def test_parse_pair_file_raises_on_malformed_frontmatter(tmp_path):
