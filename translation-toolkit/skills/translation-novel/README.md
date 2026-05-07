@@ -4,9 +4,93 @@
 
 > Translate novel chapters / long-form fiction.
 > Scene-aware chunking + scene-window prompts (~17× cost reduction vs whole-doc windowing).
+> v0.3.0 adds whole-book pre-pass, 5D literary critic, and M3 deterministic linter.
 
 Part of the [translation-toolkit](../..) plugin. Operational spec
 Claude loads is [`SKILL.md`](SKILL.md); this README is for humans.
+
+## What's new in v0.3.0
+
+Four Tier 2 features layer on top of the v0.2.0 scene-window foundation:
+
+- **Whole-book pre-pass** — before per-chapter translation, the skill walks
+  every chapter once with two extractors:
+  - `character_extractor` — surfaces every named character + paired-structure
+    aliases + voice notes + first/last chapter index → `characters.json`.
+  - `world_glossary_extractor` — surfaces places / organizations / world
+    terms / cultural references → `world-glossary.json`. Cultural references
+    carry a closed-enum `category` (literary_quotation / idiom / religious /
+    food / place_culture / historical / other) and a `handling_hint`
+    (borrow / explain / approximate).
+  Both artifacts feed the per-scene glossary lookup as a new **L1.5** tier
+  (between project glossary L1 and bundled glossary L2), giving every scene
+  consistent character renderings and world-term anchoring without
+  whole-novel context bloat.
+- **5D literary critic** — the per-scene REFLECT step (default for novel
+  mode) gains a Literariness axis on top of the v0.2.0 4D (Accuracy /
+  Fluency / Style / Terminology). Sub-concerns: rhythm (sentence cadence),
+  euphony (sound pattern), archaism (period vocabulary / honorific), and
+  register-shift fidelity (narrator vs dialogue, formal vs casual within
+  the same character). Distinct from `translation-creative`'s 5D, which
+  uses Effectiveness as the fifth axis.
+- **M3 deterministic linter** — a no-LLM structural sanity check that
+  runs *before* S1 back-translation: M3a (residual source-script chars,
+  HARD), M3b (length-ratio band, SHOULD), M3c (CJK fullwidth punctuation,
+  SHOULD). Adopted by `translation-doc` in v0.3.0 alongside novel mode
+  (Decision H — both novel + doc surface M3 in their Layer 4 audit-trail).
+- **Cheap-model split** — the intake-spec `model` field accepts a dict
+  form `{default: ..., extractor: ..., back_translator: ...}`. The
+  whole-book pre-pass routes to the `extractor` model when set, so the
+  fixed-cost pre-pass amortizes against the per-scene translation cost.
+  See "Setting up a book for translation" below for the recommended split.
+
+## Setting up a book for translation
+
+Recommended workflow when translating a multi-chapter book:
+
+1. **Extract chapters to Markdown.** Use
+   [`tsundoku:book-extract`](../../../tsundoku/skills/book-extract) to
+   convert an EPUB into chapter-split `.md` files. Place them in a
+   directory `book-ja/` with names that sort lexicographically in reading
+   order (`chapter-01.md`, `chapter-02.md`, ...).
+2. **Run the whole-book pre-pass once.** Before translating any chapter,
+   point the skill at `book-ja/` to produce `characters.json` and
+   `world-glossary.json`. The pre-pass is the only place where each
+   chapter is read in full — translation thereafter operates per scene.
+3. **Translate chapter-by-chapter.** Each chapter run loads the two
+   pre-pass artifacts and consults them at L1.5 in the glossary lookup
+   chain, before falling through to L2 / L3 / L4. Cross-scene voice
+   continuity is still anchored on `prev_scene_v2`; pre-pass adds
+   *cross-chapter* canonical-rendering anchoring.
+4. **Re-run the pre-pass on book changes.** Each artifact is stamped
+   with a `book_manifest_hash` covering filenames + per-file SHA-256.
+   When the manifest hash drifts (chapter added / edited / reordered),
+   the next pre-pass run emits a `UserWarning` and overwrites the
+   artifact. The skill never silently uses a stale artifact.
+
+### Cost note
+
+The pre-pass uses the cheap **extractor** model by default once the
+`model: dict` form is supplied — pre-pass total cost scales with raw
+chapter text only, not per-scene prompt overhead, and amortizes across
+the entire book (you pay once, every chapter benefits). For a typical
+20-30 chapter novel the pre-pass cost is well under 10% of one
+chapter's translation cost; for very small books (≤2 chapters) the
+ratio is higher and the cheap-model split is the load-bearing design
+choice. The smoke fixture (`scripts/tests/fixtures/sample-book-ja/`)
+ships a 2-chapter case so the cost ceiling can be exercised in CI; see
+`test_prepass_cost_ceiling_assertion` in
+`scripts/tests/test_e2e_v030_tier2_smoke.py` for the calibrated
+worst-case bound.
+
+Example dict-form `model` field (intake spec):
+
+```yaml
+model:
+  default: claude-opus-4-7
+  extractor: claude-haiku-4-5         # whole-book pre-pass
+  back_translator: claude-haiku-4-5   # S1 round-trip
+```
 
 ## Why a dedicated novel skill
 
@@ -93,7 +177,8 @@ Calibrated for scene-length prose (typically 500-2000 tokens):
 | Gate | Tier | What it checks |
 |---|---|---|
 | **M1** | HARD | Placeholder integrity — `⟦P:NN⟧` count + ID set parity. No-op when protect-pass is off (the default for prose-only novels). |
-| **M2** | HARD | Project glossary compliance — every L1-mandated source term renders as its mapped target form. **Critical for novel mode** because character + place names recur across scenes; per-scene M2 PASS does not guarantee chapter-level consistency (checklist item 5 catches this). |
+| **M2** | HARD | Project glossary compliance — every L1-mandated source term renders as its mapped target form. **Critical for novel mode** because character + place names recur across scenes; per-scene M2 PASS does not guarantee chapter-level consistency (checklist item 5 catches this). v0.3.0+ resolves at **L1.5** first against `characters.json` / `world-glossary.json` from the pre-pass, before falling through to project glossary L1 and bundled glossary L2. |
+| **M3** | HARD (m3a) / SHOULD (m3b, m3c) | Deterministic post-translation linter — three subrules: m3a residual source-script chars (HARD; e.g. JP→EN target should not contain hiragana / katakana / CJK ideographs above the 1% locale-pair threshold), m3b length-ratio band (target/source token ratio inside locale-pair-tuned band), m3c CJK fullwidth punctuation (per JLReq / CLReq). Runs *before* S1 — short-circuits S1 when the target is structurally broken so we don't pay for a meaningless back-translation. v0.3.0+; adopted by `translation-doc` in the same release. |
 | **S1** | SHOULD (faithful) / MUST (transcreation) | Back-translation — BACK-TRANSLATOR produces a blind v2 → source retranslation per scene; embedding-cosine similarity vs the original source. Reliable for scene-length prose. Skips with audit-trail flag if runtime provides no isolation. |
 | **S2** | SHOULD | Register preservation — JUDGE classifies source vs target on a discourse / formality axis. Fiction register is high-signal at scene length. |
 | **I1** | INFO | Untranslatability flagging — cultural references, wordplay, idioms, untranslatable honorifics. Records borrow / explain / approximate decisions; never blocks, never prompts the user. |
@@ -161,7 +246,10 @@ anyway, so OFF is usually the correct default for fiction.
 - [`checklists/novel-quality-checklist.md`](checklists/novel-quality-checklist.md)
 - [`references/verification-gates.md`](references/verification-gates.md) ·
   [`references/core-loop.md`](references/core-loop.md) (DRAFT / REFLECT / IMPROVE role contracts)
-- [`references/4d-reflection.md`](references/4d-reflection.md) (Accuracy / Fluency / Style / Terminology)
+- [`references/4d-reflection.md`](references/4d-reflection.md) (Accuracy / Fluency / Style / Terminology) ·
+  [`references/prompt-reflect-5d-literary.md`](references/prompt-reflect-5d-literary.md) (5D literary critic — v0.3.0 default)
+- [`references/prompt-extract-characters.md`](references/prompt-extract-characters.md) ·
+  [`references/prompt-extract-world-glossary.md`](references/prompt-extract-world-glossary.md) (whole-book pre-pass extractors — v0.3.0)
 - Typography: [`typography/jlreq-summary.md`](typography/jlreq-summary.md) (ja-JP) ·
   [`typography/clreq-summary.md`](typography/clreq-summary.md) (zh-CN / zh-TW)
 - Plugin: [`../../README.md`](../../README.md) ·

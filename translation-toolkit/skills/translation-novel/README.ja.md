@@ -4,9 +4,92 @@
 
 > 小説の章 / long-form fiction を翻訳する。
 > Scene-aware chunking + scene-window prompt（whole-doc windowing 比 ~17× cost 削減）。
+> v0.3.0 で whole-book pre-pass、5D literary critic、M3 deterministic linter を追加。
 
 [translation-toolkit](../..) plugin の一部。Claude が読み込む operational
 spec は [`SKILL.md`](SKILL.md)。本 README は人間向け。
+
+## v0.3.0 で追加されたもの
+
+v0.2.0 の scene-window 基盤の上に、Tier 2 の 4 機能が積まれる：
+
+- **Whole-book pre-pass** — chapter ごとの翻訳に入る前に、skill が全章を
+  一度だけ歩いて 2 つの extractor を走らせる：
+  - `character_extractor` — 全 named character + paired-structure aliases
+    + voice notes + first/last chapter index を `characters.json` に出力。
+  - `world_glossary_extractor` — places / organizations / world terms /
+    cultural references を `world-glossary.json` に出力。cultural reference
+    は closed-enum の `category`（literary_quotation / idiom / religious /
+    food / place_culture / historical / other）と `handling_hint`
+    （borrow / explain / approximate）を持つ。
+  両 artifact は per-scene glossary lookup の **L1.5** tier として feed
+  される（project glossary L1 と bundled glossary L2 の間）— 全章を
+  跨いだキャラクター呼称 + world term の anchoring を、whole-novel
+  context を膨らませずに得られる。
+- **5D literary critic** — per-scene REFLECT step（novel mode の
+  デフォルト）が、v0.2.0 の 4D（Accuracy / Fluency / Style / Terminology）に
+  Literariness 軸を追加する。Sub-concerns：rhythm（文の cadence）、
+  euphony（sound pattern）、archaism（period vocabulary / honorific）、
+  register-shift fidelity（narrator vs dialogue、同一キャラクター内の
+  formal vs casual）。`translation-creative` の 5D（5 番目の軸が
+  Effectiveness）とは別物。
+- **M3 deterministic linter** — S1 back-translation の *前に* 走る
+  no-LLM な構造健全性チェック：M3a（residual source-script chars、
+  HARD）、M3b（length-ratio band、SHOULD）、M3c（CJK fullwidth
+  punctuation、SHOULD）。v0.3.0 で `translation-doc` も同時採用
+  （Decision H — novel + doc の両方が Layer 4 audit-trail で M3 を surface）。
+- **Cheap-model split** — intake-spec の `model` フィールドが dict 形式
+  `{default: ..., extractor: ..., back_translator: ...}` を受ける。
+  whole-book pre-pass は `extractor` model に route されるので、
+  pre-pass の固定コストが per-scene translation コストに amortize される。
+  推奨設定は下の「book を翻訳に向けて準備する」を参照。
+
+## book を翻訳に向けて準備する
+
+複数 chapter book を翻訳するときの推奨ワークフロー：
+
+1. **章を Markdown に展開する。**
+   [`tsundoku:book-extract`](../../../tsundoku/skills/book-extract) で
+   EPUB を chapter-split `.md` ファイルに変換し、`book-ja/` ディレクトリに
+   置く。ファイル名は読書順で lexicographic に sort される名前にする
+   （`chapter-01.md`、`chapter-02.md`、…）。
+2. **whole-book pre-pass を一度走らせる。** いずれの章を翻訳する前にも
+   skill を `book-ja/` に向けて、`characters.json` と
+   `world-glossary.json` を生成する。pre-pass は各章を full で読む唯一の
+   段階 — その後の翻訳は per-scene で動く。
+3. **章ごとに翻訳する。** 各章 run は 2 つの pre-pass artifact を load し、
+   glossary lookup chain で L1.5 として参照する（L2 / L3 / L4 にフォール
+   バックする前）。Cross-scene voice continuity は依然 `prev_scene_v2` に
+   anchor され、pre-pass は *cross-chapter* な canonical-rendering anchoring
+   を加える。
+4. **book に変更があれば pre-pass を再実行する。** 各 artifact は
+   filenames + per-file SHA-256 を覆う `book_manifest_hash` で stamp
+   される。manifest hash が drift したら（章の追加 / 編集 / 並べ替え）、
+   次の pre-pass run は `UserWarning` を発し artifact を上書きする。
+   skill は stale な artifact を黙って使わない。
+
+### コストノート
+
+`model: dict` 形式が指定された時点で、pre-pass はデフォルトで cheap な
+**extractor** model を使う — pre-pass 総コストは per-scene prompt
+overhead ではなく raw chapter text にだけスケールし、book 全体に
+amortize される（一度払えば、全章が恩恵を受ける）。典型的な 20-30 章
+小説では pre-pass コストは 1 章分の翻訳コストの 10% 以下に収まる；
+非常に小さな book（≤2 章）では比率が高くなり、cheap-model split が
+load-bearing な設計選択になる。smoke fixture
+（`scripts/tests/fixtures/sample-book-ja/`）は 2-章ケースを ship して
+CI で cost ceiling を行使できるようにしている；calibrated な worst-case
+bound は `scripts/tests/test_e2e_v030_tier2_smoke.py` の
+`test_prepass_cost_ceiling_assertion` を参照。
+
+dict 形式の `model` フィールド例（intake spec）：
+
+```yaml
+model:
+  default: claude-opus-4-7
+  extractor: claude-haiku-4-5         # whole-book pre-pass
+  back_translator: claude-haiku-4-5   # S1 round-trip
+```
 
 ## なぜ専用の novel skill か
 
@@ -90,7 +173,8 @@ scene 長 prose（典型 500-2000 token）向けに調整：
 | Gate | Tier | チェック内容 |
 |---|---|---|
 | **M1** | HARD | Placeholder integrity — `⟦P:NN⟧` count + ID set parity。protect-pass OFF（prose-only novel のデフォルト）では no-op。 |
-| **M2** | HARD | Project glossary 準拠 — L1-mandated 全 source term が mapped target form として現れる。**novel-mode で critical** — キャラクター名・地名は scene を跨いで再出現し、per-scene M2 PASS は章レベルの一貫性を保証しない（checklist 項目 5 がそれを catch）。 |
+| **M2** | HARD | Project glossary 準拠 — L1-mandated 全 source term が mapped target form として現れる。**novel-mode で critical** — キャラクター名・地名は scene を跨いで再出現し、per-scene M2 PASS は章レベルの一貫性を保証しない（checklist 項目 5 がそれを catch）。v0.3.0+ は pre-pass の `characters.json` / `world-glossary.json` に対し **L1.5** で先に解決し、その後 project glossary L1 と bundled glossary L2 にフォールバックする。 |
+| **M3** | HARD（m3a）/ SHOULD（m3b、m3c） | Deterministic post-translation linter — 3 つの subrule：m3a residual source-script chars（HARD；例えば JP→EN target は hiragana / katakana / CJK ideograph を locale-pair の 1% threshold 以上含むべきでない）、m3b length-ratio band（target/source token 比が locale-pair に応じた band 内）、m3c CJK fullwidth punctuation（JLReq / CLReq 準拠）。S1 の *前に* 走り、target が構造的に壊れているとき S1 を short-circuit する — 意味のない back-translation のコストを払わない。v0.3.0+；同 release で `translation-doc` も採用。 |
 | **S1** | SHOULD（faithful）/ MUST（transcreation） | Back-translation — BACK-TRANSLATOR が scene ごとに blind に v2 → source を retranslation；source に対する embedding-cosine 類似度。scene 長 prose で reliable。runtime が isolation を提供しない場合は audit-trail フラグ付きでスキップ。 |
 | **S2** | SHOULD | Register preservation — JUDGE が source vs target を discourse / formality 軸で分類。fiction register は scene 長で high-signal。 |
 | **I1** | INFO | Untranslatability flagging — 文化参照、wordplay、慣用句、訳出不可能な敬称。borrow / explain / approximate の判断を記録するのみ；block せず、user に問わず。 |
@@ -155,7 +239,10 @@ fiction では OFF が概ね正しいデフォルト。
 - [`checklists/novel-quality-checklist.md`](checklists/novel-quality-checklist.md)
 - [`references/verification-gates.md`](references/verification-gates.md) ·
   [`references/core-loop.md`](references/core-loop.md)（DRAFT / REFLECT / IMPROVE のロール契約）
-- [`references/4d-reflection.md`](references/4d-reflection.md)（Accuracy / Fluency / Style / Terminology）
+- [`references/4d-reflection.md`](references/4d-reflection.md)（Accuracy / Fluency / Style / Terminology）·
+  [`references/prompt-reflect-5d-literary.md`](references/prompt-reflect-5d-literary.md)（5D literary critic — v0.3.0 デフォルト）
+- [`references/prompt-extract-characters.md`](references/prompt-extract-characters.md) ·
+  [`references/prompt-extract-world-glossary.md`](references/prompt-extract-world-glossary.md)（whole-book pre-pass extractor — v0.3.0）
 - Typography: [`typography/jlreq-summary.md`](typography/jlreq-summary.md)（ja-JP）·
   [`typography/clreq-summary.md`](typography/clreq-summary.md)（zh-CN / zh-TW）
 - Plugin: [`../../README.md`](../../README.md) ·
