@@ -387,7 +387,7 @@ def build_scene_improve_prompt(
     """
     critique_str = json.dumps(critique_json, ensure_ascii=False, indent=2)
     return (
-        "You are a translation reviser. Given the scene draft v1 and the 4D critique\n"
+        "You are a translation reviser. Given the scene draft v1 and the structured critique\n"
         "below, produce v2 incorporating the suggestions. Do NOT add new reasoning\n"
         "beyond the critique -- just apply the fixes.\n"
         "\n"
