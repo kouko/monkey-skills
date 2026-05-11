@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-issues.json",
+  "title": "issues.md output schema (legal-contract-review)",
+  "description": "Findings emitted by L7 evaluate as a structured array, suitable for serialising into Markdown for the issues.md output file.",
+  "type": "object",
+  "required": ["contract_metadata", "findings", "summary"],
+  "properties": {
+    "contract_metadata": {
+      "type": "object",
+      "required": ["contract_name", "contract_type", "jurisdiction", "review_timestamp", "pipeline_path"],
+      "properties": {
+        "contract_name": {"type": "string"},
+        "contract_type": {"type": "string", "description": "e.g. SaaS, MSA, NDA, 採購, 勞動, DPA"},
+        "jurisdiction": {"type": "string", "examples": ["TW", "US", "CN"]},
+        "stance": {"type": "string", "enum": ["ours", "theirs", "neutral"]},
+        "deal_context": {
+          "type": "object",
+          "properties": {
+            "deal_size": {"type": "number"},
+            "currency": {"type": "string", "enum": ["USD", "TWD"]},
+            "counterparty_type": {"type": "string"},
+            "data_subjects_jurisdiction": {"type": "string"}
+          }
+        },
+        "review_timestamp": {"type": "string", "format": "date-time"},
+        "pipeline_path": {"type": "string", "description": "e.g. 'L0a → L0b → L1 → ... → L7'"}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "source_type", "severity", "business_issues", "playbook_trace"],
+        "properties": {
+          "clause_id": {"type": "string", "description": "kebab-case (e.g. confidentiality, limitation-of-liability)"},
+          "variant_id": {"type": "string", "description": "present when matched entry is from variant-folder"},
+          "source_type": {"type": "string", "enum": ["user_playbook", "bundled_fallback", "advisory"]},
+          "severity": {"type": "string", "enum": ["green", "yellow", "red"]},
+          "walk_away_triggered": {"type": "boolean"},
+          "business_issues": {
+            "type": "array",
+            "items": {"type": "string", "enum": ["money", "risk", "control", "standards", "endgame"]}
+          },
+          "playbook_trace": {
+            "type": "object",
+            "properties": {
+              "matched_entry_path": {"type": "string"},
+              "matched_walk_away": {"type": "array", "items": {"type": "string"}},
+              "matched_fallback_level": {"type": "string", "description": "preferred / fallback-1 / fallback-2 / worse"},
+              "external_share_strip_id": {"type": "boolean", "description": "true when --external-share has stripped the entry path"}
+            }
+          },
+          "banner": {"type": "string", "description": "e.g. '⚠️ 使用 bundled fallback baseline — 建議跑 legal-playbook-author 客製化你公司的紅線'"},
+          "contract_text": {"type": "string", "description": "verbatim clause text from contract for traceability"},
+          "summary_zh_tw": {"type": "string"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["counts_by_severity", "counts_by_source"],
+      "properties": {
+        "counts_by_severity": {
+          "type": "object",
+          "properties": {
+            "green": {"type": "integer", "minimum": 0},
+            "yellow": {"type": "integer", "minimum": 0},
+            "red": {"type": "integer", "minimum": 0}
+          }
+        },
+        "counts_by_source": {
+          "type": "object",
+          "properties": {
+            "user_playbook": {"type": "integer", "minimum": 0},
+            "bundled_fallback": {"type": "integer", "minimum": 0},
+            "advisory": {"type": "integer", "minimum": 0}
+          }
+        },
+        "high_risk_count": {"type": "integer", "minimum": 0, "description": "findings that trigger Escalation Override"}
+      }
+    }
+  }
+}

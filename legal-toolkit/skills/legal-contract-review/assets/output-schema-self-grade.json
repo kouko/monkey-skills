@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-self-grade.json",
+  "title": "self-grade.md output schema (legal-contract-review)",
+  "description": "Harvey dual-score: answer + source, never collapsed, all-pass binary. Failed criteria listed explicitly so the user sees gaps without rounding or averaging.",
+  "type": "object",
+  "required": ["contract_metadata", "answer_score", "source_score", "failed_criteria"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "answer_score": {
+      "type": "object",
+      "required": ["passed", "total"],
+      "properties": {
+        "passed": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 1, "description": "from checklists/answer-criteria.md"},
+        "criteria_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["criterion_id", "result"],
+            "properties": {
+              "criterion_id": {"type": "string", "description": "e.g. 'ANS-01'"},
+              "criterion_zh_tw": {"type": "string"},
+              "result": {"type": "string", "enum": ["pass", "fail"]},
+              "evidence": {"type": "string", "description": "what in the output supports/refutes this criterion"}
+            }
+          }
+        }
+      }
+    },
+    "source_score": {
+      "type": "object",
+      "required": ["passed", "total"],
+      "properties": {
+        "passed": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 0, "description": "0 if no citations were emitted (e.g. mode=nda)"},
+        "criteria_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["citation", "result"],
+            "properties": {
+              "citation": {"type": "string"},
+              "result": {"type": "string", "enum": ["valid", "invalid", "unverifiable"]},
+              "reason": {"type": "string", "description": "why invalid/unverifiable when not 'valid'"}
+            }
+          }
+        }
+      }
+    },
+    "failed_criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["domain", "criterion_id", "explanation_zh_tw"],
+        "properties": {
+          "domain": {"type": "string", "enum": ["answer", "source"]},
+          "criterion_id": {"type": "string"},
+          "explanation_zh_tw": {"type": "string"}
+        }
+      }
+    },
+    "calibration_note": {"type": "string", "description": "free-form note for Phase 1.6 hand-grading comparison — empty in Phase 1"}
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-memo-business.json",
+  "title": "memo-business.md output schema (legal-contract-review)",
+  "description": "Business-stakeholder version of the memo — 3-sentence Why/What/What-if translation. Designed for the BD/sales/CEO reader who has 30 seconds. Always in zh-TW.",
+  "type": "object",
+  "required": ["contract_metadata", "summary"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["why", "what", "what_if"],
+      "properties": {
+        "why": {"type": "string", "description": "1 sentence — why this contract matters to the business right now"},
+        "what": {"type": "string", "description": "1 sentence — what we're agreeing to (the substance)"},
+        "what_if": {"type": "string", "description": "1 sentence — what could go wrong and how badly"}
+      }
+    },
+    "top_3_business_impacts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["impact_zh_tw", "severity"],
+        "properties": {
+          "impact_zh_tw": {"type": "string", "description": "business-translated impact statement"},
+          "severity": {"type": "string", "enum": ["green", "yellow", "red"]},
+          "related_clauses": {"type": "array", "items": {"type": "string", "description": "clause_id refs"}}
+        }
+      }
+    }
+  }
+}
