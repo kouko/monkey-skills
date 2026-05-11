@@ -1,66 +1,88 @@
 # source-criteria — binary all-pass rubric for self-grade.md (source_score)
 
-> **Phase 1 status**: stub — Phase 1.6 will add automated citation verification via `scripts/self_grade.py` (URL fetch / structural check). Phase 1 ships protocol-level instructions for the LLM to self-evaluate citations.
+> **v0.3.0 (Phase 1.6) status**: full 10-criterion rubric. Consumed by
+> `scripts/self_grade.py` (Python structural checks) AND by the LLM at
+> session-grade time (substantive verification).
 
-> **Convention** (Harvey BigLaw Bench): document-level citation is the floor; passage-level is not required. Every citation is either `valid` (exists, supports conclusion) / `invalid` (doesn't exist or doesn't support) / `unverifiable` (cannot determine; e.g. private function letter that the LLM cannot access).
+> **Convention** (Harvey BigLaw Bench): document-level citation is the
+> floor; passage-level is bonus. Every citation is `valid` (exists,
+> supports conclusion) / `invalid` (doesn't exist or doesn't support) /
+> `unverifiable` (cannot determine; e.g. private function letter the LLM
+> cannot access). Hallucinated citations are catastrophic — SRC-09 fail.
+
+> **Two tiers** (same as answer-criteria): `tier: deterministic` vs
+> `tier: semantic`. `self_grade.py` runs the deterministic tier; the
+> protocol-driven session runs the semantic tier.
 
 ---
 
-## Criteria (Phase 1 baseline, N = 6)
+## Criteria (N = 10)
+
+### Tier: deterministic (Python-verifiable)
 
 | ID | Criterion (zh-TW) | Verification |
 |---|---|---|
-| **SRC-01** | 引用的法條真實存在 | for each citation of type `statute`, the §number exists in 全國法規資料庫 (LLM can verify on common statutes; flag rare/draft statutes as `unverifiable`) |
-| **SRC-02** | 引用的判例編號真實存在 | for each citation of type `case`, the case number (e.g. "最高法院 100 年度台上字第 1166 號") is structurally valid AND the LLM can describe its general holding without inventing it |
-| **SRC-03** | 引用支持結論 | for each citation, the citation's actual content (statute text / case holding) supports the CRAC point it's attached to — not just relevant-sounding |
-| **SRC-04** | 沒有 hallucinated citation（憑空捏造）| every citation is one the LLM can confirm exists; "unverifiable" is acceptable, "invented" is not. Hallucinated citations are SRC-04 fail |
-| **SRC-05** | Citation URL（若有）為主管機關官方來源 | `url` field, when present, points to 全國法規資料庫 / 司法院判決系統 / 主管機關官網 / 公開資訊觀測站 — not third-party blog / aggregator |
-| **SRC-06** | Source carve-outs noted | If any citation has a known carve-out / superseded status, the CRAC analysis acknowledges it (e.g. "民法 §X 已於 YYYY 修正，本條於 ZZZ 之後適用") |
+| **SRC-01** | citation 結構符合 schema | each citation has `{citation, type, supports}` non-empty; `type ∈ {statute, case, regulation, authority_letter, scholarly}` |
+| **SRC-02** | citation 沒有重複 (noise reduction) | no two citations have identical `citation` + `supports` pair |
+| **SRC-03** | URL（若有）指向已知主管機關 / 司法院 / 全國法規 domain | `url` if set must match an allowlist (`law.moj.gov.tw` / `judgment.judicial.gov.tw` / `*.gov.tw` / `mops.twse.com.tw`) |
+| **SRC-04** | citation 沒有 obvious 結構失敗 | `case` matches case-number pattern; `statute` matches `§X-Y` pattern |
+| **SRC-05** | 每個 verified=true citation 有 supports 欄位非空 | citations with `verified: true` MUST have `supports` describing the CRAC claim it backs |
 
----
+### Tier: semantic (LLM-judged)
 
-## Phase 1.6 expansion targets
-
-- SRC-07: passage-level citation verification (LLM extracts the specific statutory paragraph being cited)
-- SRC-08: cross-reference 主管機關函釋 numbers (PDPC / 勞動部 / 金管會) against the corresponding function letter database
-- SRC-09: 學說 citation — author + year + work + page (e.g. "王澤鑑《債法原理》(2014) p.512")
-- SRC-10: Foreign-law citations when jurisdiction != TW — basic structural validity check
+| ID | Criterion (zh-TW) | LLM judgment prompt |
+|---|---|---|
+| **SRC-06** | 引用的法條真實存在 (非 hallucinated) | "For each `statute` citation, does the §number match the actual statute? Mark unverifiable for rare/draft statutes; mark invalid for fabricated §numbers." |
+| **SRC-07** | 引用的判例真實存在 | "For each `case` citation, is the case number structurally valid AND can you describe its general holding without invention? If not, mark unverifiable or invalid." |
+| **SRC-08** | citation 支持結論 (非 relevant-sounding-but-off) | "For each citation, does the statute text / case holding actually support the CRAC point it's attached to, not just sound similar?" |
+| **SRC-09** | 沒有 hallucinated（憑空捏造）citation | "Across all citations, is every one verifiable, OR explicitly marked unverifiable? Hallucinated = fabricated case number that sounds plausible. This is a hard FAIL." |
+| **SRC-10** | 引用 carve-outs / supersession 已標註 | "If any citation has a known carve-out, modification, or has been superseded (e.g. 民法 §X 已於 YYYY 修正), does the CRAC analysis acknowledge it?" |
 
 ---
 
 ## How citations are sourced
 
-The LLM's citation pool in Phase 1:
+The LLM's citation pool:
 
 | Source type | Acceptable origin |
 |---|---|
-| **statute** | 全國法規資料庫 (https://law.moj.gov.tw) is the SoT for TW law; LLM should ground citations to this database's §numbers |
-| **case** | 司法院判決系統 (https://judgment.judicial.gov.tw); case-number format is standardised |
+| **statute** | 全國法規資料庫 (https://law.moj.gov.tw) |
+| **case** | 司法院判決系統 (https://judgment.judicial.gov.tw) |
 | **regulation** | 主管機關官網 (PDPC / 勞動部 / 金管會 / 證交所 / 公平會 / NCC) |
-| **authority_letter** | 函釋字號 + 主管機關 (e.g. "個資保護處 109 年 7 月 28 日 法律字第 10903XXX 號") |
-| **scholarly** | author + work + year + page; preferred sources: 王澤鑑 / 吳從周 / 王文宇 / 詹森林 |
+| **authority_letter** | 函釋字號 + 主管機關 |
+| **scholarly** | author + work + year + page (e.g. 王澤鑑 / 吳從周 / 王文宇 / 詹森林) |
 
-⚠️ The LLM is not allowed to invent case numbers or function letter numbers. When uncertain, the LLM should:
+⚠️ The LLM is NEVER allowed to invent case numbers / function letter numbers.
+When uncertain, the LLM MUST:
 1. Cite the **general principle** without a specific case (acceptable)
 2. OR cite the statute and acknowledge "judicial interpretations have applied this to..." (acceptable)
 3. OR mark the citation as `unverifiable` with a note (acceptable)
-4. NEVER fabricate a "最高法院 XXX 年度 XXX" pattern just because it sounds plausible (UNACCEPTABLE — SRC-04 fail)
+4. NEVER fabricate a "最高法院 XXX 年度 XXX" pattern just because it sounds plausible (UNACCEPTABLE — SRC-09 hard FAIL)
 
 ---
 
-## Calibration (Phase 1.6)
+## Calibration (v0.3.0)
 
 Pearson correlation target:
-- source_score Pearson ≥ 0.7 across 5-10 dogfood contracts (higher than answer_score because binary citation valid/invalid is more objective)
+- **source_score Pearson ≥ 0.7** across 5-10 dogfood contracts (higher
+  bar than answer_score because binary citation valid/invalid is more
+  objective)
+- If Pearson < 0.7: examine the citation type with the worst LLM-vs-hand
+  disagreement — typically `scholarly` or `authority_letter` where
+  semantic judgment varies more than `statute` / `case`
+
+See `docs/dogfood-procedure.md` for the calibration workflow.
 
 ---
 
 ## Anti-patterns the rubric is designed to detect
 
-- **Hallucinated citations** (the catastrophic case): SRC-04 specifically guards this
-- **Citation that doesn't support the conclusion** (relevant-sounding but actually about a different issue): SRC-03
-- **Outdated statute reference** (民法 §XXX was renumbered in YYYY): SRC-06
-- **Citation chains pointing to private function letters** the LLM cannot actually access: should be marked `unverifiable`, not inflated to `valid`
+- **Hallucinated citations** (catastrophic) → SRC-04 / SRC-09
+- **Citation that doesn't support conclusion** (relevant-sounding but off topic) → SRC-08
+- **Outdated statute reference** (民法 §X renumbered in YYYY) → SRC-10
+- **Citation chains pointing to private function letters** → should be marked `unverifiable`, not inflated to `valid` → SRC-06 / SRC-07
+- **Duplicate citations padding source_score** → SRC-02
+- **Random external URL** (not from allowlisted gov domains) → SRC-03
 
 ---
 
@@ -75,4 +97,16 @@ result: valid / invalid / unverifiable
 reason: "<empty if valid>; if invalid: '§247 has no clause 1, this is fabricated'; if unverifiable: 'private function letter, cannot access'"
 ```
 
-If `source_score.total == 0` (no citations emitted, e.g. mode == nda), record `source_score: 0/0` BUT still emit a note in self-grade.md explaining why (so the user doesn't read "0/0" as a failure mode).
+Aggregated:
+```yaml
+source_score:
+  passed: 5
+  total: 8
+  criteria_results: [...]
+failed_criteria:
+  - { domain: source, criterion_id: SRC-04, explanation_zh_tw: "案號格式異常" }
+```
+
+If `source_score.total == 0` (no citations, e.g. `mode == nda`), record `0/0`
+BUT add a note in self-grade.md explaining why — so the user doesn't read
+"0/0" as failure.
