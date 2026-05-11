@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 import re
 import sys
@@ -34,12 +35,32 @@ SCHEMA_PATH = Path(__file__).resolve().parent.parent / "assets" / "schema.json"
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?\n)---\s*\n", re.DOTALL)
 
 
+def _normalise(value):
+    """Recursively coerce YAML-parsed date/datetime values to ISO strings.
+
+    PyYAML's safe_load auto-converts `YYYY-MM-DD` scalars to `datetime.date`
+    objects, which the JSON-Schema pattern (a string regex) would otherwise
+    reject. Re-stringify before validation so frontmatter authored in
+    natural YAML date syntax still validates.
+    """
+    if isinstance(value, _dt.datetime):
+        return value.isoformat()
+    if isinstance(value, _dt.date):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: _normalise(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_normalise(v) for v in value]
+    return value
+
+
 def extract_frontmatter(text: str) -> dict | None:
     """Return parsed YAML dict from leading frontmatter, or None when absent."""
     m = FRONTMATTER_RE.match(text)
     if not m:
         return None
-    return yaml.safe_load(m.group(1)) or {}
+    parsed = yaml.safe_load(m.group(1)) or {}
+    return _normalise(parsed)
 
 
 def _gather_files(paths: list[Path]) -> list[Path]:

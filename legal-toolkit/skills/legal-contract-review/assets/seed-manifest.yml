@@ -1,0 +1,51 @@
+version: '1.0'
+seeded_at_target: legal-playbook/
+tarball_sha256: 104b276073ec38f46ed40d18c796c1fc60d4bcc22cf37023ec1f01cbd4fc22f6
+total_clauses: 8
+total_files: 17
+entries:
+- clause_id: auto-renewal
+  layout: flat
+  files:
+  - auto-renewal.md
+- clause_id: confidentiality
+  layout: flat
+  files:
+  - confidentiality.md
+- clause_id: data-protection-dpa
+  layout: variant-folder
+  files:
+  - data-protection-dpa/_clause.md
+  - data-protection-dpa/cross-border.md
+  - data-protection-dpa/gdpr-overlay.md
+  - data-protection-dpa/tw-only.md
+- clause_id: governing-law-jurisdiction
+  layout: flat
+  files:
+  - governing-law-jurisdiction.md
+- clause_id: indemnification
+  layout: variant-folder
+  files:
+  - indemnification/_clause.md
+  - indemnification/large-deal.md
+  - indemnification/mid-deal.md
+  - indemnification/small-deal.md
+- clause_id: ip-assignment-and-license
+  layout: flat
+  files:
+  - ip-assignment-and-license.md
+- clause_id: limitation-of-liability
+  layout: variant-folder
+  files:
+  - limitation-of-liability/_clause.md
+  - limitation-of-liability/large-deal.md
+  - limitation-of-liability/mid-deal.md
+  - limitation-of-liability/small-deal.md
+- clause_id: termination-and-survival
+  layout: flat
+  files:
+  - termination-and-survival.md
+build_notes: 'Built by scripts/build_baseline.py. Source: <plugin>/baseline-source/.
+  Tarball entries: deterministic mtime + sorted walk; bytes are stable across builds.
+  If you edit a baseline clause, re-run scripts/build_baseline.py to refresh the artifact,
+  then verify tests/test_seed_baseline.py still passes.'
