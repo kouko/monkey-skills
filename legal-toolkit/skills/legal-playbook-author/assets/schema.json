@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/playbook-schema.json",
+  "title": "legal-toolkit playbook frontmatter schema",
+  "description": "JSON Schema 2020-12 for playbook entry frontmatter — covers flat / variant-file / _clause-container layouts via oneOf. Used by validate_schema.py at author-time + (Phase 1.6) self-grade rubric.",
+  "oneOf": [
+    {"$ref": "#/$defs/flat_clause"},
+    {"$ref": "#/$defs/variant_file"},
+    {"$ref": "#/$defs/clause_container"}
+  ],
+  "$defs": {
+    "clause_id_pattern": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "kebab-case, lowercase, must start with a letter"
+    },
+    "variant_id_pattern": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["green", "yellow", "red"]
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USD", "TWD"]
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["user_playbook", "bundled_fallback", "advisory"]
+    },
+    "iso_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "gate_value": {
+      "description": "ABAC gate value — numeric range, enum, or wildcard",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "eq": {"type": ["number", "string", "boolean"]},
+            "lt": {"type": "number"},
+            "lte": {"type": "number"},
+            "gt": {"type": "number"},
+            "gte": {"type": "number"},
+            "any_of": {"type": "array", "items": {"type": ["string", "number"]}}
+          },
+          "additionalProperties": false,
+          "minProperties": 1
+        },
+        {"type": "string", "enum": ["any"]}
+      ]
+    },
+    "gates": {
+      "type": "object",
+      "description": "ABAC rule: each key is a deal_context attribute, each value is a gate_value. ALL keys must match for the variant to apply (AND semantics).",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/gate_value"}
+    },
+    "flat_clause": {
+      "type": "object",
+      "title": "flat clause frontmatter",
+      "description": "Simple single-file clause — no variants. Used for clauses with stable structure.",
+      "required": [
+        "clause_id",
+        "walk_away_triggers",
+        "escalate_to",
+        "risk_default",
+        "source_type"
+      ],
+      "properties": {
+        "clause_id": {"$ref": "#/$defs/clause_id_pattern"},
+        "contract_types_applicable": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "walk_away_triggers": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1
+        },
+        "escalate_to": {"type": "string", "minLength": 1},
+        "escalate_to_hint": {"type": "string"},
+        "risk_default": {"$ref": "#/$defs/risk_level"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "last_updated": {"$ref": "#/$defs/iso_date"},
+        "owner": {"type": "string"},
+        "source_type": {"$ref": "#/$defs/source_type"},
+        "source_attribution": {"type": "string"},
+        "variant_upgrade_offered": {"type": "boolean"},
+        "status": {"type": "string", "enum": ["complete", "incomplete"]}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["variant_id"]},
+          {"required": ["gates"]},
+          {"required": ["has_variants"]}
+        ]
+      }
+    },
+    "variant_file": {
+      "type": "object",
+      "title": "variant file frontmatter",
+      "description": "One variant inside a variant-folder. Carries gates + walk_away + escalate.",
+      "required": [
+        "clause_id",
+        "variant_id",
+        "gates",
+        "walk_away_triggers",
+        "escalate_to",
+        "risk_default",
+        "source_type"
+      ],
+      "properties": {
+        "clause_id": {"$ref": "#/$defs/clause_id_pattern"},
+        "variant_id": {"$ref": "#/$defs/variant_id_pattern"},
+        "gates": {"$ref": "#/$defs/gates"},
+        "walk_away_triggers": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1
+        },
+        "escalate_to": {"type": "string", "minLength": 1},
+        "escalate_to_hint": {"type": "string"},
+        "risk_default": {"$ref": "#/$defs/risk_level"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "last_updated": {"$ref": "#/$defs/iso_date"},
+        "source_type": {"$ref": "#/$defs/source_type"},
+        "source_attribution": {"type": "string"},
+        "status": {"type": "string", "enum": ["complete", "incomplete"]}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["has_variants"]},
+          {"required": ["contract_types_applicable"]}
+        ]
+      }
+    },
+    "clause_container": {
+      "type": "object",
+      "title": "_clause.md container frontmatter",
+      "description": "The _clause.md at the top of a variant-folder. Carries shared metadata; walk_away / escalate live in individual variant files.",
+      "required": [
+        "clause_id",
+        "contract_types_applicable",
+        "has_variants"
+      ],
+      "properties": {
+        "clause_id": {"$ref": "#/$defs/clause_id_pattern"},
+        "contract_types_applicable": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "has_variants": {"const": true},
+        "market_data": {"type": "string"},
+        "last_updated": {"$ref": "#/$defs/iso_date"},
+        "owner": {"type": "string"},
+        "source_attribution": {"type": "string"}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["walk_away_triggers"]},
+          {"required": ["escalate_to"]},
+          {"required": ["risk_default"]},
+          {"required": ["gates"]},
+          {"required": ["variant_id"]}
+        ]
+      }
+    }
+  }
+}
