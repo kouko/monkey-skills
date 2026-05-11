@@ -223,6 +223,115 @@ def test_collision_renames_with_hash_suffix(tmp_path):
     assert len(paths) == 2
 
 
+def test_svg_wrapped_image_unwrapped_to_inline_md(tmp_path):
+    """EPUBs commonly wrap images in <svg><image xlink:href="..."/></svg>.
+    These must survive the SVG-kill and end up as ![alt](images/<file>)."""
+    epub = tmp_path / "svg_wrapped.epub"
+    files = {
+        "META-INF/container.xml": _container_xml().encode(),
+        "OEBPS/content.opf": _opf(
+            manifest_items=[
+                ("ch1", "Text/ch01.xhtml", "application/xhtml+xml"),
+                ("img1", "Images/fig.png", "image/png"),
+            ],
+            spine_idrefs=["ch1"],
+        ).encode(),
+        "OEBPS/toc.ncx": _ncx([("Chapter One", "Text/ch01.xhtml")]).encode(),
+        "OEBPS/Text/ch01.xhtml": _xhtml(
+            "Chapter One",
+            '<p>Figure below:</p>\n'
+            '<svg xmlns="http://www.w3.org/2000/svg" '
+            'xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'version="1.1" width="100%" height="100%" viewBox="0 0 1417 2000">\n'
+            '  <image width="1417" height="2000" xlink:href="../Images/fig.png"/>\n'
+            '</svg>',
+        ).encode(),
+        "OEBPS/Images/fig.png": PNG_1x1,
+    }
+    build_epub(epub, files)
+
+    out_dir = tmp_path / "out"
+    run_extract(epub, out_dir)
+
+    # Image extracted
+    assert (out_dir / "images" / "fig.png").read_bytes() == PNG_1x1
+
+    # Markdown has inline image syntax (NOT broken / NOT raw <svg> surviving)
+    md = next(f for f in out_dir.glob("*.md") if f.name != "index.md").read_text(encoding="utf-8")
+    assert re.search(r"!\[[^\]]*\]\(images/fig\.png\)", md), \
+        f"expected ![](images/fig.png), got:\n{md}"
+    assert "<svg" not in md.lower()
+    assert "xlink:href" not in md
+
+
+def test_img_with_extra_attrs_normalized(tmp_path):
+    """<img src="X" class="fit" role="presentation"/> must produce ![](images/X)
+    in markdown — pandoc otherwise preserves class/role as raw HTML <img>."""
+    epub = tmp_path / "attrs.epub"
+    files = {
+        "META-INF/container.xml": _container_xml().encode(),
+        "OEBPS/content.opf": _opf(
+            manifest_items=[
+                ("ch1", "Text/ch01.xhtml", "application/xhtml+xml"),
+                ("img1", "Images/fig.png", "image/png"),
+            ],
+            spine_idrefs=["ch1"],
+        ).encode(),
+        "OEBPS/toc.ncx": _ncx([("Chapter One", "Text/ch01.xhtml")]).encode(),
+        "OEBPS/Text/ch01.xhtml": _xhtml(
+            "Chapter One",
+            '<p><img src="../Images/fig.png" class="fit" role="presentation" alt="diagram"/></p>',
+        ).encode(),
+        "OEBPS/Images/fig.png": PNG_1x1,
+    }
+    build_epub(epub, files)
+
+    out_dir = tmp_path / "out"
+    run_extract(epub, out_dir)
+
+    md = next(f for f in out_dir.glob("*.md") if f.name != "index.md").read_text(encoding="utf-8")
+    assert "![diagram](images/fig.png)" in md, \
+        f"expected ![diagram](images/fig.png), got:\n{md}"
+    # No raw <img> survivors carrying class/role attributes
+    assert "<img" not in md.lower()
+
+
+def test_anchor_wrapped_image_unwraps_to_nested_md(tmp_path):
+    """<a class="ref" id="..."><img src="..."/></a> footnote-glyph pattern.
+    Pandoc preserves <a> with class as raw HTML, dragging <img> with it.
+    Must normalize <a> to bare href so pandoc emits [![alt](src)](href)."""
+    epub = tmp_path / "anchor.epub"
+    files = {
+        "META-INF/container.xml": _container_xml().encode(),
+        "OEBPS/content.opf": _opf(
+            manifest_items=[
+                ("ch1", "Text/ch01.xhtml", "application/xhtml+xml"),
+                ("img1", "Images/note.jpg", "image/jpeg"),
+            ],
+            spine_idrefs=["ch1"],
+        ).encode(),
+        "OEBPS/toc.ncx": _ncx([("Chapter One", "Text/ch01.xhtml")]).encode(),
+        "OEBPS/Text/ch01.xhtml": _xhtml(
+            "Chapter One",
+            '<p>See footnote <a href="A-32.xhtml#foot-21" id="back-21" class="ref">'
+            '<img src="../Images/note.jpg" class="pw" role="presentation"/></a>.</p>',
+        ).encode(),
+        "OEBPS/Images/note.jpg": PNG_1x1,
+    }
+    build_epub(epub, files)
+
+    out_dir = tmp_path / "out"
+    run_extract(epub, out_dir)
+
+    md = next(f for f in out_dir.glob("*.md") if f.name != "index.md").read_text(encoding="utf-8")
+    # Image reference appears in nested-link markdown form
+    assert "[![](images/note.jpg)](A-32.xhtml#foot-21)" in md, \
+        f"expected nested markdown image-link, got:\n{md}"
+    # No raw <img> or <a class= survivors
+    assert "<img" not in md.lower()
+    assert 'class="ref"' not in md
+
+
 def test_external_url_and_data_uri_passthrough(tmp_path):
     """http(s):// and data: URIs must not be rewritten or extracted."""
     epub = tmp_path / "external.epub"
