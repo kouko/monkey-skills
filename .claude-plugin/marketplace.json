@@ -73,6 +73,11 @@
       "name": "deconstruct-toolkit",
       "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Cultural-variant lenses for EN / JA / ZH (rhetoric / persuasion / genre / frame). Grounded in Burke, Toulmin, Hinds, 劉勰《文心雕龍》, Goffman, Lakoff, Doi, Hu/Hwang, Cialdini, Brignull, Swales/Bhatia, Nielsen-Norman, 山口周『武器になる哲学』. 制作物・論証・製品の脱構築 (英日中文化バリアント対応)。作品・論證・產品的逆向解構工具組（英日中文化變體）。",
       "source": "./deconstruct-toolkit/"
+    },
+    {
+      "name": "legal-toolkit",
+      "description": "In-house legal toolkit for 台灣 SME → 上市櫃 法務 — 7-layer schema-driven contract review (Stark / Adams / Burnham + Taiwan overlay: 強行/任意 規定二分 / 定型化契約 §247-1 / 六準則解釋), playbook-driven negotiation (visible per-clause Markdown + variant-folder schema, ABAC pre-filter, walk-away / fallback / preferred 三層 escalation), and disclaimer-driven outputs (Mandatory Disclaimer + Escalation Override on high-risk findings). MVP ships 3 skills: using-legal-toolkit (router) + legal-playbook-author (bootstrap/extend/revise) + legal-contract-review (review/redline/nda mode) with 4 bundled cold-start fallback clauses (confidentiality / governing-law / auto-renewal / termination-and-survival) so the toolkit operates without user-customised playbook. English skill instructions + zh-TW domain content + bilingual triggers. Phase 2-5 adds document-draft / incident-response / issue-spot / research / contract-tracker / regulation-watch / corporate-governance / dd-quickscan — see ROADMAP.md.",
+      "source": "./legal-toolkit/"
     }
   ]
 }
