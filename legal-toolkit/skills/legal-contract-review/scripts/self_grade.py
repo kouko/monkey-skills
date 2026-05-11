@@ -57,6 +57,30 @@ STATUTE_RE = re.compile(r"^[一-鿿]+\s*§[0-9-]+(\s*[款項目])?$")
 URL_ALLOWLIST_RE = re.compile(
     r"^https?://(law\.moj\.gov\.tw|judgment\.judicial\.gov\.tw|[a-z0-9.-]+\.gov\.tw|mops\.twse\.com\.tw)/"
 )
+
+# v0.3.1 — statute blacklist loaded once at module import (assets/statute-articles.json)
+_STATUTE_ARTICLES_PATH = (
+    Path(__file__).resolve().parent.parent / "assets" / "statute-articles.json"
+)
+try:
+    _STATUTE_BLACKLIST: dict[str, dict] = json.loads(
+        _STATUTE_ARTICLES_PATH.read_text(encoding="utf-8")
+    ).get("blacklist", {})
+except (FileNotFoundError, json.JSONDecodeError):
+    _STATUTE_BLACKLIST = {}
+
+
+def _blacklisted_statute(citation_text: str) -> dict | None:
+    """Return blacklist entry if citation matches a known fabrication / deprecated article.
+
+    Matching is whitespace-tolerant: '民法 §11-1' and '民法§11-1' both match
+    the key '民法 §11-1' in the blacklist JSON.
+    """
+    normalised = "".join(citation_text.split())
+    for key, entry in _STATUTE_BLACKLIST.items():
+        if "".join(key.split()) == normalised:
+            return entry
+    return None
 PIPELINE_LAYERS_TW = {"L0a", "L0b", "L1", "L2", "L3", "L4", "L5", "L6", "L6.5", "L7"}
 PIPELINE_LAYERS_NON_TW = {"L1", "L2", "L3", "L4", "L5", "L6", "L7"}
 PIPELINE_LAYERS_NDA = {"L1", "L4", "L5", "L6", "L7"}
@@ -448,6 +472,12 @@ def _check_src_03(findings_data: dict) -> dict:
 
 
 def _check_src_04(findings_data: dict) -> dict:
+    """Format check + v0.3.1 statute blacklist (known fabricated / deprecated articles).
+
+    Statutes not in blacklist pass through to format check only — v0.3.1 ships
+    a minimum viable blacklist (assets/statute-articles.json); comprehensive
+    whitelist deferred to Phase 1.7+.
+    """
     citations = findings_data.get("citations", []) or []
     bad = []
     for i, c in enumerate(citations):
@@ -455,14 +485,23 @@ def _check_src_04(findings_data: dict) -> dict:
         text = (c.get("citation") or "").strip()
         if t == "case" and not CASE_NUMBER_RE.search(text):
             bad.append(f"#{i}:case_format({text!r})")
-        elif t == "statute" and not STATUTE_RE.match(text):
-            bad.append(f"#{i}:statute_format({text!r})")
+        elif t == "statute":
+            if not STATUTE_RE.match(text):
+                bad.append(f"#{i}:statute_format({text!r})")
+                continue
+            blacklisted = _blacklisted_statute(text)
+            if blacklisted is not None:
+                reason = blacklisted.get("reason", "blacklisted")
+                alt = blacklisted.get("correct_alternative", "")
+                bad.append(
+                    f"#{i}:statute_blacklist({text!r}: {reason}; correct: {alt})"
+                )
     return _emit(
         "SRC-04",
-        "citation 沒有 obvious 結構失敗",
+        "citation 沒有 obvious 結構失敗 + 沒踩 blacklist (fabricated / deprecated)",
         "deterministic",
         not bad,
-        ", ".join(bad) if bad else "case + statute formats all OK",
+        ", ".join(bad) if bad else "case + statute formats all OK; no blacklist hits",
     )
 
 

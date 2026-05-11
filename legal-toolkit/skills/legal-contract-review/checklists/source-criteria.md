@@ -25,7 +25,7 @@
 | **SRC-01** | citation 結構符合 schema | each citation has `{citation, type, supports}` non-empty; `type ∈ {statute, case, regulation, authority_letter, scholarly}` |
 | **SRC-02** | citation 沒有重複 (noise reduction) | no two citations have identical `citation` + `supports` pair |
 | **SRC-03** | URL（若有）指向已知主管機關 / 司法院 / 全國法規 domain | `url` if set must match an allowlist (`law.moj.gov.tw` / `judgment.judicial.gov.tw` / `*.gov.tw` / `mops.twse.com.tw`) |
-| **SRC-04** | citation 沒有 obvious 結構失敗 | `case` matches case-number pattern; `statute` matches `§X-Y` pattern |
+| **SRC-04** | citation 沒有 obvious 結構失敗 + 沒踩 blacklist | `case` matches case-number pattern; `statute` matches `§X-Y` pattern AND not in `assets/statute-articles.json` blacklist (v0.3.1+: known fabricated sub-articles + deprecated articles such as 民法 §11-1, 營業秘密法 §11-1, 個資法 §27 deleted 2025-11-11) |
 | **SRC-05** | 每個 verified=true citation 有 supports 欄位非空 | citations with `verified: true` MUST have `supports` describing the CRAC claim it backs |
 
 ### Tier: semantic (LLM-judged)

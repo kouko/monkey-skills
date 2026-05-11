@@ -362,6 +362,71 @@ def test_src_04_bad_case_number(self_grade, tmp_path):
     assert "SRC-04" in {f["criterion_id"] for f in report["failed_criteria"]}
 
 
+def test_src_04_blacklist_fabricated_sub_article(self_grade, tmp_path):
+    """v0.3.1: fabricated sub-article (民法 §11-1) caught by SRC-04 blacklist."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "民法 §11-1"  # does not exist
+    report = self_grade.grade(data, out)
+    assert "SRC-04" in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
+def test_src_04_blacklist_yingyemimi_11_1(self_grade, tmp_path):
+    """v0.3.1: fabricated 營業秘密法 §11-1 (the actual v0.3.0 dogfood trap)."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "營業秘密法 §11-1"
+    report = self_grade.grade(data, out)
+    failed = {f["criterion_id"] for f in report["failed_criteria"]}
+    assert "SRC-04" in failed
+
+
+def test_src_04_blacklist_deprecated_pdpa_27(self_grade, tmp_path):
+    """v0.3.1: deprecated 個資法 §27 (deleted 2025-11-11) caught by blacklist."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "個資法 §27"
+    report = self_grade.grade(data, out)
+    assert "SRC-04" in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
+def test_src_04_blacklist_long_name_pdpa_27(self_grade, tmp_path):
+    """v0.3.1: long name '個人資料保護法 §27' also caught."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "個人資料保護法 §27"
+    report = self_grade.grade(data, out)
+    assert "SRC-04" in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
+def test_src_04_whitespace_tolerant_blacklist_match(self_grade, tmp_path):
+    """v0.3.1: blacklist matching strips whitespace ('民法§11-1' also blocked)."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "民法§11-1"  # no space — should still hit
+    report = self_grade.grade(data, out)
+    assert "SRC-04" in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
+def test_src_04_valid_statute_passes_through(self_grade, tmp_path):
+    """v0.3.1: regression — valid 民法 §247-1 (in blacklist applicability_notes
+    but not in blacklist proper) still passes SRC-04."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    # Golden already uses 民法 §247-1 — verify it passes
+    report = self_grade.grade(data, out)
+    assert "SRC-04" not in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
+def test_src_04_unknown_statute_passes_through(self_grade, tmp_path):
+    """v0.3.1: statute not in blacklist (e.g. 海商法 §123) passes format-only check."""
+    out = tmp_path / "out"; _write_outputs(out)
+    data = _golden_findings()
+    data["citations"][0]["citation"] = "海商法 §123"
+    report = self_grade.grade(data, out)
+    assert "SRC-04" not in {f["criterion_id"] for f in report["failed_criteria"]}
+
+
 def test_src_05_verified_no_supports(self_grade, tmp_path):
     out = tmp_path / "out"; _write_outputs(out)
     data = _golden_findings()

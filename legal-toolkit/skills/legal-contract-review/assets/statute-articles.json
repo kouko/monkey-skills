@@ -1,0 +1,36 @@
+{
+  "$schema_version": "v0.3.1",
+  "verified_at": "2026-05-12",
+  "verified_by": "manual cross-check against https://law.moj.gov.tw",
+  "scope": "v0.3.1 minimum viable — known fabricated sub-articles + deprecated articles. Statutes / articles NOT listed here pass through self_grade.py SRC-04 format check only (avoiding false positives for less common statutes). Comprehensive whitelist deferred to Phase 1.7+ when verified article-number enumeration per statute is feasible.",
+  "blacklist": {
+    "民法 §11-1": {
+      "reason": "fabricated — no such sub-article exists",
+      "correct_alternative": "民法 §11 (人之權利能力始於出生終於死亡); no sub-article §11-1 in 民法.",
+      "trap_source": "v0.3.0 dogfood NDA audit 2026-05-12"
+    },
+    "營業秘密法 §11-1": {
+      "reason": "fabricated — no such sub-article exists",
+      "correct_alternative": "營業秘密法 §11 (排除及防止侵害請求權); the article that grants injunctive-relief / 禁制令 functionality is §11 itself, not §11-1.",
+      "trap_source": "v0.3.0 dogfood NDA audit 2026-05-12 (toolkit cited '§11 之 1 禁制令')"
+    },
+    "個人資料保護法 §27": {
+      "reason": "deleted by 2025-11-11 amendment",
+      "correct_alternative": "個人資料保護法 §20-1 (非公務機關安全維護義務 — substantive duty preserved at renumbered article).",
+      "trap_source": "v0.3.0 dogfood NDA audit 2026-05-12; verified at https://law.moj.gov.tw"
+    },
+    "個資法 §27": {
+      "reason": "deleted by 2025-11-11 amendment (短名稱同上)",
+      "correct_alternative": "個資法 §20-1",
+      "trap_source": "same as 個人資料保護法 §27"
+    }
+  },
+  "applicability_notes": {
+    "民法 §247-1": "Applies ONLY to 定型化契約 (standard-form / adhesion contracts used repeatedly with the same wording). Citing §247-1 against a 1-on-1 negotiated B2B contract is doctrinally weak — record applicability_caveat in citation.",
+    "公平交易法 §25": "Requires market-impact element (顯失公平 must affect 交易秩序). Single bilateral clause without market-impact framing has weak §25 traction.",
+    "民法 §110": "Protects bona-fide THIRD PARTY against unauthorised agent. NOT a basis for the principal seeking reimbursement from its agent — cite §107 + 不當得利 §179 for that chain.",
+    "營業秘密法 §13-1": "CRIMINAL liability article (1-5 years' imprisonment + fine for intentional misappropriation for unlawful gain). For CIVIL survival-after-termination, cite §§2, 10, 11 — not §13-1.",
+    "個人資料保護法 §27": "Deleted 2025-11-11 — use §20-1 (see blacklist).",
+    "民事訴訟法 §6": "Special-jurisdiction rule for legal entities (法人住所地). Default applicable but does not auto-override agreed-jurisdiction clauses."
+  }
+}
