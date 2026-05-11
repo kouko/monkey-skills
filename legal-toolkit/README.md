@@ -4,7 +4,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-![version](https://img.shields.io/badge/version-0.2.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-1.5_DSL-orange)
+![version](https://img.shields.io/badge/version-0.3.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-1.6_Eval-orange)
 
 > ⚠️ **Not legal advice.** This is a free open-source tool, not a law firm and not a licensed practitioner. Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override (「請諮詢執業律師」). See [§Disclaimer policy](#disclaimer-policy).
 
@@ -164,10 +164,10 @@ Direct skill invocation is supported when intent is unambiguous (e.g. `/legal-co
 
 ## Status
 
-- **Version**: 0.2.0 (2026-05-12)
-- **Stability**: MVP shell + Phase 1.5 DSL infra complete; not yet end-to-end dogfood-validated
-- **Phase**: 1.5 (DSL + scripts + 8-clause baseline) — see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
-- **Test suite**: 80+ tests across schema / discover / validate / detect_conflicts / abac_filter / build_baseline / seed_baseline — all green via `uv run --with jsonschema --with pyyaml --with pytest`
+- **Version**: 0.3.0 (2026-05-12)
+- **Stability**: MVP + Phase 1.5 DSL + Phase 1.6 Eval infra complete; dogfood calibration is owner-run, not ship-blocking
+- **Phase**: 1.6 (Eval rubric + self_grade.py + dogfood procedure) — see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
+- **Test suite**: 110+ tests across schema / discover / validate / detect_conflicts / abac_filter / build_baseline / seed_baseline / self_grade — all green via `uv run --with jsonschema --with pyyaml --with pytest`
 - **License**: MIT (plugin code)
 
 ## Reference
