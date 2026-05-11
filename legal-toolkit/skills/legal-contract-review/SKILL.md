@@ -112,7 +112,13 @@ Each finding generated from a bundled clause:
 - Stamped with a banner: `⚠️ 使用 bundled fallback baseline — 建議跑 legal-playbook-author 客製化你公司的紅線`
 - If `escalate_to` starts with `[請編輯` (the placeholder), L7 prepends a warning callout to `escalation.md` urging customisation
 
-Clauses outside the 4 bundled fallback (e.g. LoL / Indemnification / DPA — those are Phase 1.5 baseline additions) fall through to **advisory mode** in L7: finding marked `source_type: advisory`, with a suggestion `建議呼叫 /legal-playbook-author extend <clause-id>` to codify a custom position.
+**v0.2.0 (Phase 1.5)** expands the bundled fallback to **8 clauses**:
+the original 4 flat + variant-folder LoL / Indemnification / DPA
+(deal_size or jurisdiction-keyed) + flat IP-Assignment. Clauses
+outside the 8 still fall through to **advisory mode** in L7:
+finding marked `source_type: advisory`, with a suggestion
+`建議呼叫 /legal-playbook-author extend <clause-id>` to codify a
+custom position.
 
 See [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) for the full fallback decision tree.
 
@@ -137,8 +143,9 @@ VTYPE check — flat or variant-folder?
    └── variant-folder → ABAC pre-filter (gates vs deal_context) → matched variant
        ├── 0 matched → ADVISORY (deal context doesn't fit any variant)
        ├── 1 matched → use it
-       └── >1 matched → log warning, use first (v1 — Phase 1.5 detect_conflicts.py
-                        catches the over-broad gate at validate time)
+       └── >1 matched → log warning, use first (detect_conflicts.py
+                        catches the over-broad gate at author-time —
+                        v0.2.0+)
    ↓
 escalate_to placeholder detect:
   if entry.escalate_to.startswith("[請編輯"):
@@ -191,9 +198,11 @@ When `--external-share` flag is passed:
 
 ## Schemas
 
-JSON Schema validation of each output file (Phase 1: schema files
-exist + protocols reference them; Phase 1.5 adds programmatic
-validation in `scripts/`):
+JSON Schema validation of each output file (Phase 1 ships the schema
+files; v0.2.0+ adds the supporting playbook-author scripts —
+validate_schema.py / detect_conflicts.py / abac_filter.py /
+build_baseline.py / seed_baseline.py — that produce + validate
+artifacts conforming to these schemas):
 
 - [`assets/output-schema-issues.json`](assets/output-schema-issues.json)
 - [`assets/output-schema-redline.json`](assets/output-schema-redline.json)

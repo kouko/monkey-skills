@@ -88,17 +88,33 @@ If the user chose flat layout in Step 2 but their Q1 / Q5 answers reveal variant
 - no → set `variant_upgrade_offered: true` in frontmatter; do not ask again.
 - remind me later → do nothing this run; the upgrade will be offered again next time the user revises this clause.
 
-### Step 6 — Schema validate (best-effort, Phase 1)
+### Step 6 — Schema validate (v0.2.0+ Phase 1.5)
 
-Phase 1 implementation: read the just-written file, validate basic shape:
-- frontmatter parseable as YAML
-- all required fields present
-- `risk_default` ∈ {green, yellow, red}
-- no duplicate `clause_id` in the same folder
+Run the validator script:
 
-Report any validation warnings to the user. Do **not** abort write; this is best-effort. (Phase 1.5 introduces `scripts/validate_schema.py` for stricter validation.)
+```bash
+uv run <plugin>/skills/legal-playbook-author/scripts/validate_schema.py \
+    <cwd>/legal-playbook/<just-written-file>
+```
 
-### Step 7 — Conflict scan
+The script validates against `assets/schema.json` (JSON Schema 2020-12,
+oneOf flat / variant / _clause). Report any errors to user; for
+warnings, do not abort. For hard errors (cross-shape contamination,
+missing required), prompt user to fix before proceeding to Step 7.
+
+### Step 7 — Conflict scan (v0.2.0+ Phase 1.5)
+
+Run the conflict detector across the entire playbook:
+
+```bash
+uv run <plugin>/skills/legal-playbook-author/scripts/detect_conflicts.py \
+    <cwd>/legal-playbook/
+```
+
+Catches:
+- Duplicate `clause_id` (flat-vs-flat, flat-vs-folder)
+- Overlapping `gates` between variants of the same clause
+- Missing `clause_id`
 
 Quick scan of the rest of `legal-playbook/`:
 - Any other entry with overlapping `gates` for this `clause_id`? (Shouldn't happen if Step 1 validation worked, but check anyway.)

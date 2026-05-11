@@ -74,7 +74,20 @@ else (flat layout):
 
 ### Step 3 — ABAC pre-filter (variant-folder only)
 
-For each `<variant-id>.md` file under `<clause-id>/`:
+**v0.2.0+ (Phase 1.5)**: invoke the dedicated Python implementation:
+
+```bash
+uv run <plugin>/skills/legal-contract-review/scripts/abac_filter.py \
+    --deal-context '<json>' \
+    --variants '@<path-to-variants-json>'
+```
+
+The script returns `{ outcome, chosen_variant_id, matched_count, matched_variant_ids }`
+where `outcome ∈ {single, advisory, multi}`. Use `chosen_variant_id`
+as the matched variant for Step 4.
+
+Equivalent in-LLM logic (used as a fallback if scripts aren't
+available in the host runtime):
 
 ```
 match = True
@@ -269,4 +282,4 @@ If `mode ∈ {review, redline}` and `severity ∈ {yellow, red}`:
 - **mode == "redline"**: Step 9 emphasis on substitute text generation; other outputs simplified.
 - **mode == "nda"**: L2-L3 skipped → L7 reads clauses directly from contract text + bundled NDA template. Same evaluation logic, simpler input shape.
 - **--external-share flag passed**: after L7 emits findings, a post-processing pass strips `playbook_trace.matched_entry_path` from issues.md / memo-legal.md / escalation.md (replaces with "依本公司紅線政策"). Override red banner is **never** stripped.
-- **Phase 1.5 hook**: when `scripts/abac_filter.py` exists, Step 3 runs the Python implementation; until then, the LLM applies the gate-matching rules inline per the contract above.
+- **Phase 1.5 status**: `scripts/abac_filter.py` is the canonical implementation as of v0.2.0. The inline-LLM rules above are the fallback for hosts without script execution. Importable as `from abac_filter import match_variant`.

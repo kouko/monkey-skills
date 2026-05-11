@@ -132,15 +132,17 @@ Confirm? (yes / no / re-edit)
 - no → discard changes; exit
 - re-edit → go back to Step 4
 
-### Step 6 — Write and validate
+### Step 6 — Write and validate (v0.2.0+ Phase 1.5)
 
-Write the new file content. Re-run the same validation as extend-mode Step 6.
+Write the new file content. Then invoke `validate_schema.py` against
+the just-written file (see extend-mode Step 6 for command). On hard
+errors, prompt user to fix before continuing.
 
 If the change introduced a variant-upgrade trigger (e.g. user added "對 enterprise 客戶我們會放鬆" to a walk_away), prompt the upgrade offer (see SKILL.md §"Variant-upgrade detection").
 
-### Step 7 — Conflict re-check
+### Step 7 — Conflict re-check (v0.2.0+ Phase 1.5)
 
-Any change to `gates` or `clause_id` can introduce conflicts with other entries. Re-scan and report.
+Any change to `gates` or `clause_id` can introduce conflicts with other entries. Run `detect_conflicts.py` over the whole `legal-playbook/` (see extend-mode Step 7 for command) and report.
 
 ### Step 8 — Report
 

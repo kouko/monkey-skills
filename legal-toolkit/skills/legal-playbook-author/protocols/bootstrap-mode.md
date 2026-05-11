@@ -38,11 +38,14 @@ Present three choices. Default is Path A.
 ```
 你想怎麼起手？
 
-(a) Seed from bundled fallback (推薦給第一次裝的人)
-    從 plugin 內建的 4 條 baseline (confidentiality / governing-law /
-    auto-renewal / termination-and-survival) 複製一份到你的 legal-playbook/，
+(a) Seed from bundled baseline (推薦給第一次裝的人)
+    從 plugin 內建的 8 條 baseline (confidentiality / governing-law /
+    auto-renewal / termination-and-survival / limitation-of-liability /
+    indemnification / data-protection-dpa / ip-assignment-and-license)
+    seed 到你的 legal-playbook/。LoL / Indemnification / DPA 帶 variant-folder
+    結構（依 deal_size / data_subjects_jurisdiction 切）。
     然後我會逐條提醒你把 escalate_to 跟 owner 改成你公司的版本。
-    完成時間：~5 分鐘。
+    完成時間：~5-10 分鐘。
 
 (b) 5-question interview (從零建第一條)
     我問你 5 個問題，產出 1 條 entry。你之後可以再呼叫 extend mode 加更多條。
@@ -54,21 +57,41 @@ Present three choices. Default is Path A.
     完成時間：0 分鐘。
 ```
 
-### Step 3a — Path A (seed from bundled fallback)
+### Step 3a — Path A (seed from bundled baseline, Phase 1.5)
 
-1. Copy these 4 files from the plugin bundle to `<cwd>/legal-playbook/`:
-   - `<plugin>/legal-contract-review/assets/baseline-fallback-confidentiality.md` → `<cwd>/legal-playbook/confidentiality.md`
-   - `<plugin>/legal-contract-review/assets/baseline-fallback-governing-law-jurisdiction.md` → `<cwd>/legal-playbook/governing-law-jurisdiction.md`
-   - `<plugin>/legal-contract-review/assets/baseline-fallback-auto-renewal.md` → `<cwd>/legal-playbook/auto-renewal.md`
-   - `<plugin>/legal-contract-review/assets/baseline-fallback-termination-and-survival.md` → `<cwd>/legal-playbook/termination-and-survival.md`
+1. Invoke the seed script (extracts the bundled 8-clause tarball
+   into `<cwd>/legal-playbook/`):
 
-2. For each copied file, **mutate** these frontmatter fields:
-   - `source_type: bundled_fallback` → `source_type: user_playbook`
-   - `last_updated: <today's ISO date>`
-   - `owner: <ask user>`  (interactive prompt: "Who maintains this playbook? Use your name or your team's name.")
-   - `escalate_to:` — leave the placeholder `[請編輯為你公司的角色：法務主管 / GC / 部門主管]` for now; remind user to customise in Step 5.
+   ```bash
+   uv run <plugin>/skills/legal-contract-review/scripts/seed_baseline.py \
+       --target <cwd>
+   ```
 
-3. Write `<cwd>/legal-playbook/README.md` using the template at the end of this protocol.
+   The script:
+   - Verifies the tarball sha256 against `assets/seed-manifest.yml`
+   - Extracts 17 files (8 clauses, 4 flat + 4 variant-folder) into
+     `<cwd>/legal-playbook/`
+   - Mutates each entry's `source_type: bundled_fallback` → `user_playbook`
+   - Mutates `last_updated:` → today's ISO date
+   - **Preserves** the `[請編輯為你公司的角色：...]` placeholder in `escalate_to`
+     and `[請編輯為你的姓名]` in `owner` — user will customise in Step 5
+   - Writes `<cwd>/.legal-toolkit/seed-history.yml` recording manifest hash
+     + seed timestamp (for reproducibility)
+   - Refuses if `legal-playbook/` already has content (use `--force` to
+     overwrite or `--merge` to seed only missing entries)
+
+2. After successful seed, prompt user for the `owner` field across all
+   17 files. Since `escalate_to` placeholders remain (intentionally —
+   they require company-specific knowledge), tell the user explicitly:
+
+   > Owner: who maintains this playbook? (a name or team identifier)
+
+   Apply the answer to every entry's `owner:` line via find-replace
+   on `[請編輯為你的姓名]` → `<user's answer>`.
+
+3. Write `<cwd>/legal-playbook/README.md` using the template at the end
+   of this protocol (NOT included in the tarball — it's generated here
+   so the path stays in sync with the seeded clauses).
 
 4. Proceed to Step 5 (post-seed customisation prompts).
 
@@ -125,7 +148,7 @@ Present three choices. Default is Path A.
 
 1. Write a tiny note at `<cwd>/legal-playbook/.skipped` (just a timestamp, so bootstrap can offer Path A/B next time without re-prompting noise).
 
-2. Confirm to user: "OK, no playbook authored. You can run `/legal-contract-review` and it will use the 4 bundled fallback baselines automatically. Whenever you want to customise, just re-invoke this skill."
+2. Confirm to user: "OK, no playbook authored. You can run `/legal-contract-review` and it will use the bundled fallback baselines automatically (8 clauses ship in v0.2.0+). Whenever you want to customise, just re-invoke this skill."
 
 3. Exit.
 
@@ -136,12 +159,20 @@ Present three choices. Default is Path A.
 After files are written, the skill displays a **summary** + **next-step prompts**:
 
 ```
-✅ Wrote N files to <cwd>/legal-playbook/:
-   - confidentiality.md          [seeded, customisation needed]
-   - governing-law-jurisdiction.md [seeded, customisation needed]
-   - auto-renewal.md             [seeded, customisation needed]
-   - termination-and-survival.md [seeded, customisation needed]
-   - README.md                   [auto-written guide]
+✅ Wrote 17 files (8 clauses) to <cwd>/legal-playbook/:
+   Flat clauses:
+   - confidentiality.md
+   - governing-law-jurisdiction.md
+   - auto-renewal.md
+   - termination-and-survival.md
+   - ip-assignment-and-license.md
+   Variant-folders:
+   - limitation-of-liability/{_clause,small-deal,mid-deal,large-deal}.md
+   - indemnification/{_clause,small-deal,mid-deal,large-deal}.md
+   - data-protection-dpa/{_clause,tw-only,gdpr-overlay,cross-border}.md
+   Auto-generated:
+   - README.md                   [user-facing guide]
+   - <cwd>/.legal-toolkit/seed-history.yml  [reproducibility ledger]
 
 ⚠️ The seeded entries use placeholder escalate_to values. Run a contract
    review and they'll work, but you should customise them within the first

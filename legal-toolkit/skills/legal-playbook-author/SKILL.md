@@ -103,7 +103,7 @@ detect variant-upgrade trigger (user mentioned deal_size / counterparty_type)
    ↓ if triggered
 offer to migrate flat → variant-folder layout
    ↓
-schema validate (best-effort warn; Phase 1.5 makes this stricter)
+schema validate (scripts/validate_schema.py — v0.2.0+; falls back to in-LLM check if scripts unavailable)
    ↓
 report PASS / WARN / what triggered changed
    ↓
@@ -199,8 +199,8 @@ the same offer is not repeated on every revise.
 - **Drift**: `last_updated` is tracked; `legal-contract-review` warns
   on entries older than 180 days at session start.
 - **Conflict**: duplicate `clause_id` and overlapping `gates` are
-  caught at validate time (Phase 1: best-effort warning; Phase 1.5:
-  `scripts/detect_conflicts.py` runs the full check).
+  caught by `scripts/detect_conflicts.py` (v0.2.0+; numeric range
+  half-open overlap + enum any_of intersection detection).
 - **Static / no-enforcement**: every entry has a `## 為什麼這條重要`
   business-translation section so the rule cannot become a fossil.
 - **Over-rigid**: `escalate_to` is the escape valve; no entry rejects
