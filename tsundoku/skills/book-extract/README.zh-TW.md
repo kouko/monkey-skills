@@ -50,10 +50,12 @@ EPUB=~/Books/kobo/"<author> - <title> b9152ffe.epub"
 
 # 轉檔（預設使用 $TSUNDOKU_MARKDOWN_DIR — 不需要 --out-dir）
 python3 scripts/epub_to_markdown.py --epub "$EPUB" \
-    --strip-images --strip-frontmatter
+    --strip-frontmatter
 
 # → 寫入 ~/.tsundoku/cache/markdown/<title-slug>-<id8>/
-#       index.md + metadata.json + NN-chapter.md 檔案
+#       index.md + metadata.json + NN-chapter.md + images/
+#
+# 若只要純文字（LLM 蒸餾用），追加 --strip-images
 ```
 
 ## 轉換選項
@@ -62,7 +64,7 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 |---|---|
 | `--out-dir DIR` | 輸出 ROOT（內部會自動建每書子目錄；預設 `$TSUNDOKU_MARKDOWN_DIR`） |
 | `--no-subdir` | 停用每書子目錄；直接寫入 `--out-dir` |
-| `--strip-images` | 丟棄圖片 reference — 文字為主的書建議使用 |
+| `--strip-images` | 跳過圖片萃取並丟棄所有 reference — 純文字輸出用 |
 | `--strip-frontmatter` | 跳過書封 / 目錄 / 版權 / cover / contents 等 |
 | `--strip-backmatter` | 跳過索引 / 致謝 / index / acknowledg（附錄 / 譯後記保留） |
 | `--merge-small N` | 把 token 數 < N 的章節合併進前一章 |
@@ -75,16 +77,19 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 ~/.tsundoku/cache/markdown/<title-slug>-<id8>/
 ├── index.md                      ← TOC + 各章 token 估算
 ├── metadata.json                 ← title / authors / publisher / ISBN / chapters[]
+├── images/                       ← 預設會萃取；加 --strip-images 可停用
+│   └── cover.jpg, ch03-fig1.png, ...
 ├── 01-cover.md                   ←（若 --strip-frontmatter 則跳過）
 ├── 02-序.md
-├── 03-chapter-01.md              ← H1 = NCX 的章節標籤
+├── 03-chapter-01.md              ← H1 = NCX 的章節標籤，引用 `![](images/...)`
 ├── 04-chapter-02.md
 ...
 ```
 
 章節檔名：`NN-<slugified-label>.md`（CJK 保留）。子目錄名：
 `<slug-of-title>` 或 `<slug-of-title>-<id8>`，後者用於輸入檔名符合
-kobodl 命名 pattern 時。
+kobodl 命名 pattern 時。章節 Markdown 內的圖片以 inline GFM 語法
+`![alt](images/<file>)` 引用。
 
 ## Token 預算參考
 

@@ -82,12 +82,38 @@ projects. See `scripts/cache_clear.sh`.
 | Option | Effect |
 |---|---|
 | `--no-subdir` | disable per-book subdir; write straight into `--out-dir` |
-| `--strip-images` | drop image references (Markdown + raw `<img>`) — recommended for text-heavy books |
+| `--strip-images` | skip image extraction + drop all `![]()` and raw `<img>` references — for pure-text shipping (LLM distillation, plain-text vault) |
 | `--strip-frontmatter` | skip 書封 / 目錄 / 版權 / cover / contents / colophon / etc. |
 | `--strip-backmatter` | skip 索引 / 致謝 / index / acknowledg / about-the-author. **Note**: 附錄 / 譯後記 are kept by default — they're often essential to non-fiction |
 | `--merge-small N` | merge chapters with fewer than N tokens into the previous (default 0 = off) |
 | `--pandoc PATH` | override pandoc binary (default: `$PANDOC` env or `pandoc` on PATH) |
 | `--quiet` | suppress per-chapter progress to stderr |
+
+### Images
+
+By default, image files referenced by the EPUB are extracted alongside the
+chapter Markdown:
+
+```
+out-dir/<book>/
+├── images/
+│   ├── cover.jpg
+│   ├── ch03-fig1.png        ← basename preserved when unique
+│   └── cover-9f1c2a3b.svg   ← SHA-1 suffix on basename collision
+├── 01-cover.md              ← contains `![](images/cover.jpg)`
+├── 03-chapter-01.md         ← contains `![Fig 1](images/ch03-fig1.png)`
+...
+```
+
+All image references in chapter Markdown use inline GFM syntax
+`![alt](images/<file>)`, relative to each chapter file. External URLs
+(`http(s)://`) and `data:` URIs are passed through untouched (not extracted,
+not rewritten). Inline `<svg>` blocks are stripped (covers and decorative
+SVG); SVG referenced via `<img src="cover.svg">` is extracted normally.
+
+**Disk cost**: typically +5 MB per book; image-heavy design / business
+books may reach 50 MB. To opt out for LLM-only distillation use
+`--strip-images`.
 
 ### Output layout
 
@@ -137,9 +163,12 @@ EPUB="$TSUNDOKU_DOWNLOADS/<author> - <title> <id8>.epub"
 
 bash ${CLAUDE_SKILL_DIR}/scripts/install_pandoc.sh >/dev/null
 python3 ${CLAUDE_SKILL_DIR}/scripts/epub_to_markdown.py \
-    --epub "$EPUB" --strip-images --strip-frontmatter --quiet
+    --epub "$EPUB" --strip-frontmatter --quiet
 # → creates $TSUNDOKU_MARKDOWN_DIR/<title-slug>-<id8>/index.md + chapter files
+# + images/ subdirectory (image references rewritten inline)
 # (= ~/.cache/tsundoku/markdown/<title-slug>-<id8>/...)
+#
+# Pure-text shipping (LLM distillation only): add --strip-images
 ```
 
 For a permanent home (e.g. checking into a vault), pass `--out-dir`:
@@ -226,8 +255,9 @@ Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
   labels are lost. Workaround: edit `index.md` post-hoc or split by H2/H3
   manually after conversion.
 - **Image-only chapters**: some EPUBs have a "chapter" that's just a cover
-  illustration. With `--strip-images` these become empty (5-20 tokens) and
-  may merge with `--merge-small`.
+  illustration. By default the image is extracted to `images/` and a short
+  `![](images/cover.jpg)` line remains. With `--strip-images` these
+  chapters become empty (5-20 tokens) and may merge with `--merge-small`.
 - **Description ≤ 500 chars**: comes from `kobo-library`, not this skill —
   not relevant here, but a reminder that book metadata from Kobo is summary,
   not synopsis.
