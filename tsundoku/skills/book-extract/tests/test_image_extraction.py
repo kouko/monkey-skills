@@ -5,6 +5,8 @@ epub_to_markdown.py against them, asserting on the resulting output dir.
 """
 from __future__ import annotations
 
+import filecmp
+import hashlib
 import os
 import re
 import subprocess
@@ -330,6 +332,100 @@ def test_anchor_wrapped_image_unwraps_to_nested_md(tmp_path):
     # No raw <img> or <a class= survivors
     assert "<img" not in md.lower()
     assert 'class="ref"' not in md
+
+
+def test_extracted_image_bytes_match_source(tmp_path):
+    """Extracted image file must be byte-for-byte identical to the EPUB
+    manifest entry — no transcoding, no truncation."""
+    epub = tmp_path / "bytes.epub"
+    # Use a non-trivial blob (PNG_1x1 + appended bytes) so any truncation
+    # or encoding artifact would be detectable.
+    blob = PNG_1x1 + b"trailing-marker-bytes-\x00\x01\x02\xff"
+    files = {
+        "META-INF/container.xml": _container_xml().encode(),
+        "OEBPS/content.opf": _opf(
+            manifest_items=[
+                ("ch1", "Text/ch01.xhtml", "application/xhtml+xml"),
+                ("img1", "Images/blob.png", "image/png"),
+            ],
+            spine_idrefs=["ch1"],
+        ).encode(),
+        "OEBPS/toc.ncx": _ncx([("Chapter One", "Text/ch01.xhtml")]).encode(),
+        "OEBPS/Text/ch01.xhtml": _xhtml(
+            "Chapter One",
+            '<p><img src="../Images/blob.png" alt="blob"/></p>',
+        ).encode(),
+        "OEBPS/Images/blob.png": blob,
+    }
+    build_epub(epub, files)
+
+    out_dir = tmp_path / "out"
+    run_extract(epub, out_dir)
+
+    extracted = (out_dir / "images" / "blob.png").read_bytes()
+    assert extracted == blob
+    assert hashlib.sha256(extracted).hexdigest() == hashlib.sha256(blob).hexdigest()
+
+
+def test_idempotent_rerun_same_epub(tmp_path):
+    """Running twice on the same EPUB into separate out_dirs must produce
+    byte-identical output (chapter md, images, metadata.json, index.md)."""
+    epub = make_basic_epub(tmp_path)
+    out_a = tmp_path / "out_a"
+    out_b = tmp_path / "out_b"
+    run_extract(epub, out_a)
+    run_extract(epub, out_b)
+
+    # Compare directory trees recursively
+    cmp = filecmp.dircmp(out_a, out_b)
+    assert cmp.left_only == [], f"only in run A: {cmp.left_only}"
+    assert cmp.right_only == [], f"only in run B: {cmp.right_only}"
+    assert cmp.diff_files == [], f"differing files: {cmp.diff_files}"
+    # Confirm sub-dirs (images/) match too
+    sub_cmp = filecmp.dircmp(out_a / "images", out_b / "images")
+    assert sub_cmp.diff_files == [], f"differing image files: {sub_cmp.diff_files}"
+
+
+def test_same_image_referenced_from_multiple_chapters(tmp_path):
+    """One image referenced from N chapters — extracted once, all chapter
+    md files reference the same images/<file> path."""
+    epub = tmp_path / "shared.epub"
+    files = {
+        "META-INF/container.xml": _container_xml().encode(),
+        "OEBPS/content.opf": _opf(
+            manifest_items=[
+                ("ch1", "Text/ch01.xhtml", "application/xhtml+xml"),
+                ("ch2", "Text/ch02.xhtml", "application/xhtml+xml"),
+                ("ch3", "Text/ch03.xhtml", "application/xhtml+xml"),
+                ("img1", "Images/shared.png", "image/png"),
+            ],
+            spine_idrefs=["ch1", "ch2", "ch3"],
+        ).encode(),
+        "OEBPS/toc.ncx": _ncx([
+            ("Chapter One", "Text/ch01.xhtml"),
+            ("Chapter Two", "Text/ch02.xhtml"),
+            ("Chapter Three", "Text/ch03.xhtml"),
+        ]).encode(),
+        "OEBPS/Text/ch01.xhtml": _xhtml("Chapter One", '<p><img src="../Images/shared.png" alt="s"/></p>').encode(),
+        "OEBPS/Text/ch02.xhtml": _xhtml("Chapter Two", '<p><img src="../Images/shared.png" alt="s"/></p>').encode(),
+        "OEBPS/Text/ch03.xhtml": _xhtml("Chapter Three", '<p><img src="../Images/shared.png" alt="s"/></p>').encode(),
+        "OEBPS/Images/shared.png": PNG_1x1,
+    }
+    build_epub(epub, files)
+
+    out_dir = tmp_path / "out"
+    run_extract(epub, out_dir)
+
+    # Image extracted exactly once
+    images = list((out_dir / "images").iterdir())
+    assert len(images) == 1
+    assert images[0].name == "shared.png"
+
+    # All 3 chapter mds reference it
+    chapter_files = sorted(f for f in out_dir.glob("*.md") if f.name != "index.md")
+    assert len(chapter_files) == 3
+    for f in chapter_files:
+        assert "![s](images/shared.png)" in f.read_text(encoding="utf-8")
 
 
 def test_external_url_and_data_uri_passthrough(tmp_path):
