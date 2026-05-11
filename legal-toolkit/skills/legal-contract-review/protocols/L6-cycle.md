@@ -8,11 +8,12 @@
 
 ## Purpose
 
-L6 is the **consistency** layer. It iterates over the categorised + tiered contract structure and asks: do all the parts cohere? Three sub-checks run in each cycle, bounded by a "no new gaps + at least 2 cycles" termination condition.
+L6 is the **consistency** layer. It iterates over the categorised + tiered contract structure and asks: do all the parts cohere? **Four sub-checks** run in each cycle, bounded by a "no new gaps + at least 2 cycles" termination condition.
 
 1. **If-breach branch check** — for every Obligation (Stark concept) the contract defines, is there a corresponding consequence-on-breach? (If not: gap.)
 2. **Definitions cross-read** — every term used elsewhere in the contract must trace back to either the Definitions section or an inline definition. (If not: gap.)
 3. **Missing-items vs L1 expectations** — for every expected clause from L1, is it present somewhere in the contract? (If not: high-weight finding.)
+4. **Vagueness scan** (v0.3.1+) — for every clause that IS present, are the implementation sub-mechanisms specified? (e.g. an audit clause is present but with no cadence / cost / scope; a deletion clause is present but with no proof-of-deletion mechanism.) Sub-check 3 catches "whole clause missing"; sub-check 4 catches "clause exists but is vague at sub-mechanism level".
 
 The cycle re-runs to catch second-order issues that emerge after first-pass fixes (e.g. fixing a missing-definition reveals another). Bound: minimum 2 cycles, terminate when `gaps == 0` (no new gaps found in the last cycle).
 
@@ -62,12 +63,57 @@ do:
         suggested_remediation: "Add clause; check playbook for canonical text"
       })
 
+  # Sub-check 4 (v0.3.1+): vagueness scan
+  for each present_clause in contract anatomy:
+    dimensions = vagueness_dimensions_for(present_clause.id, contract_type)
+    for each dimension in dimensions:
+      if dimension.required AND clause_text does NOT specify dimension:
+        new_gaps_this_cycle.append({
+          type: vague_sub_mechanism,
+          clause_id: present_clause.id,
+          dimension: dimension.name,
+          severity: dimension.severity_when_missing,
+          suggested_remediation: dimension.remediation_hint
+        })
+
   gaps.extend(new_gaps_this_cycle)
   no_new_gaps = len(new_gaps_this_cycle) == 0
 
   exit condition: cycle >= 2 AND no_new_gaps
 while not exit_condition
 ```
+
+### Step 2.1 — Vagueness dimension table (v0.3.1+)
+
+`vagueness_dimensions_for(clause_id, contract_type)` returns a list of `{name, required, severity_when_missing, remediation_hint}` per (clause, contract_type) pair. v0.3.1 ships the canonical set for the most common clause families:
+
+| clause_id | dimension | required for | severity if missing | remediation hint |
+|---|---|---|---|---|
+| `confidentiality` | `marking_requirement` (written-marking vs identified-by-context) | all | yellow | 「視為機密之識別方式（書面標示 / 口頭限期書面追認）」 |
+| `confidentiality` | `survival_period` (specific years or perpetual) | all | yellow | 「保密期限 N 年 vs 永久」 |
+| `confidentiality` | `residual_knowledge_carveout` | NDA / MSA | yellow | 「殘餘知識（員工腦中記憶概念）排除條款」 |
+| `data-protection-dpa` | `sub_processor_consent` (list / opt-in / categories) | DPA / SaaS / 服務 | yellow | 「子處理者 list + 異議權」 |
+| `data-protection-dpa` | `breach_notification_window` (24/48/72 hr) | all DPA | red | 「個資外洩通報 X 小時」 |
+| `data-protection-dpa` | `proof_of_deletion` (certificate / log) | DPA / SaaS / 委任 | yellow | 「銷毀證明文件 / 銷毀 log」 |
+| `data-protection-dpa` | `audit_rights` (cadence / cost / scope) | DPA | yellow | 「1×/年 + 30 日 notice + 重大不一致時 cost-shift」 |
+| `limitation-of-liability` | `cap_amount` (fixed / multiplier / hybrid) | SaaS / MSA / 服務 | red | 「Cap = X TWD or N× annual fee」 |
+| `limitation-of-liability` | `carve_outs` (gross negligence / IP / 個資 / 機密) | SaaS / MSA / 服務 | red | 「Carve-out 列舉」 |
+| `indemnification` | `procedural_mechanics` (notice / control / settlement consent) | all | yellow | 「7-day notice + control rights + settlement consent」 |
+| `indemnification` | `scope` (claims covered + carve-outs) | all | yellow | 「列舉受 indemnify 之 claim type」 |
+| `termination-and-survival` | `cure_period_days` (specific number) | all | yellow | 「Material breach cure period N 日」 |
+| `termination-and-survival` | `wind_down_mechanics` (transition assistance / data return / refund) | SaaS / MSA / 服務 / 委任 | yellow | 「Wind-down: data return + pro-rata refund + transition period」 |
+| `termination-and-survival` | `survival_clauses_listed` (which clauses survive) | all | yellow | 「條列終止後仍存續之條款編號」 |
+| `auto-renewal` | `notice_window_days` (specific number) | all with renewal | red | 「Notice window N 日（建議 60-90）」 |
+| `auto-renewal` | `price_change_formula` (cap / index / ceiling) | all with renewal | yellow | 「續約調價公式 / 上限」 |
+| `ip-ownership-assignment` | `work_product_definition` | SaaS / 服務委任 / 開發 | yellow | 「Work product 定義 + IP 歸屬條款」 |
+| `ip-ownership-assignment` | `infringement_warranty` | SaaS / MSA | red | 「乙方保證所提供 IP 不侵害第三方權利」 |
+| `assignment-change-of-control` | `consent_required` | all | yellow | 「轉讓 / 換手控制權需 prior written consent」 |
+| `notices` | `delivery_method` (email / 掛號 / 雙軌) | all | green | 「Notice 送達方式（email + 掛號雙軌）」 |
+| `payment` | `late_payment_remedy` (interest / suspend service) | all paid | yellow | 「逾期付款利率 / 停止服務權」 |
+
+**Source dispatch**: a Python helper `vagueness_scan` could codify this table (Phase 1.6+); v0.3.1 ships the table as protocol reference for LLM-driven scan.
+
+**Stance-asymmetry interaction**: vagueness gaps go through `L7 Step 1.5 (stance-asymmetry pass)` like any other finding. If the missing sub-mechanism *protects* our stance (e.g. counterparty has no audit right against us when stance=ours), the L6 vagueness gap downgrades to green / strategic-note at L7.
 
 ### Step 3 — Emit findings
 
@@ -103,11 +149,14 @@ cycle_check:
     if_breach_branch_missing: <count>
     undefined_term: <count>
     missing_expected_clause: <count>
+    vague_sub_mechanism: <count>     # v0.3.1+
   termination_condition: gaps_zero_at_cycle_<N>
   missing_clauses_by_priority:
     tier_1: <count>
     tier_2: <count>
     tier_3: <count>
+  vague_sub_mechanisms_by_dimension:  # v0.3.1+
+    <dimension_name>: <count>
 ```
 
 Pass to L6.5 (if jurisdiction == TW) or directly to L7.

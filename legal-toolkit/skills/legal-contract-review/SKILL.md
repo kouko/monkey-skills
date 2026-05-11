@@ -57,8 +57,8 @@ Six files under `<cwd>/legal-outputs/<YYYY-MM-DD>-<contract-name-slugified>/`:
 | `self-grade.md` | Harvey dual-score (answer_score / source_score) + failed_criteria |
 
 Each output is validated against its JSON schema in [`assets/`](assets/).
-Each output's footer carries the Mandatory Disclaimer (see [§Disclaimer](#disclaimer)).
-High-risk outputs prepend the Escalation Override banner.
+Each output's footer carries the Mandatory Disclaimer (see [§Disclaimer + Escalation Override](#disclaimer--escalation-override)).
+High-risk findings cause the Escalation Override banner to be prepended **only to `memo-legal.md` + `escalation.md`** (v0.3.1+ banner placement scope; not to `issues.md` / `redline.md` / `memo-business.md`).
 
 ## Pipeline (7 layers + TW overlay)
 
@@ -79,11 +79,15 @@ Layer-by-layer protocols under [`protocols/`](protocols/):
 
 ### Mode dispatch
 
-| Mode | Layers run | Output emphasis |
+| Mode | Layers run (non-TW) | Output emphasis |
 |---|---|---|
-| `review` (default) | L0a → L0b → L1 → L2 → L3 → L4 → L5 → L6 → L6.5 → L7 | full 6-output |
-| `redline` | L1 → L2 → L3 → L4 → L5 → L6 → L6.5 → L7 | strong substitute-clause generation from playbook body |
-| `nda` | bundled NDA template → L4 → L5 → L6 → L7 | issues + redline + memo-legal only (3 outputs) |
+| `review` (default) | L1 → L2 → L3 → L4 → L5 → L6 → L7 | full 6-output (issues / redline / memo-legal / memo-business / escalation\* / self-grade) |
+| `redline` | L1 → L2 → L3 → L4 → L5 → L6 → L7 | strong substitute-clause generation from playbook body |
+| `nda` | bundled NDA template + L1 → L4 → L5 → L6 → L7 | full 6-output. NDA mode skips L2 (anatomy) + L3 (categorisation) for simpler structure, but keeps L1 (expectations needed for L6 missing-item detection) |
+
+\* `escalation.md` is emitted only if any high-risk finding fires (red / `walk_away_triggered` / low_confidence). `self-grade.md` is always emitted regardless of mode.
+
+**Layer dispatch rule**: the **union** of mode-required + jurisdiction-required layers. When `jurisdiction == TW`, TW overlays (`L0a` / `L0b` / `L6.5`) layer **ON TOP** of all modes — they are not displaced by mode. NDA mode + TW = `L0a → L0b → bundled NDA template + L1 → L4 → L5 → L6 → L6.5 → L7`. `self_grade.py`'s `ANS-01` (mode layers) + `ANS-16` (TW overlays) both enforce the union — failing either marks the pipeline incomplete.
 
 ## When to use
 
@@ -192,8 +196,12 @@ placeholders.
 
 High-risk findings (any of: `risk_default: red` matched / `walk_away_triggered: true` / LLM confidence < 0.7 / criminal-liability mention / `deal_size > escalation_threshold` / cross-border + 個資事故) cause [`assets/escalation-override.md`](assets/escalation-override.md) to be prepended to the affected output's header.
 
+**Banner placement scope** (v0.3.1+): the Override banner is prepended **only to `memo-legal.md` + `escalation.md`** — NOT to `issues.md` / `redline.md` / `memo-business.md`. Rationale: banner on the business memo (read by non-lawyers) trains users to skip the warning; banner on redline operative-text body undermines its use as send-to-counterparty material. `self_grade.py`'s `ANS-05` continues to enforce `[!danger]` in `escalation.md` head only.
+
+**Stance-asymmetry guard** (v0.3.1+): when `stance` is `ours` and a finding's underlying logic is "best-practice default clause is missing", the finding defaults to **green / strategic-note**, NOT red / yellow, unless the missing clause causes a *concrete quantifiable downside* (dollar / month / customer / regulatory exposure). Toolkit playbooks are written from a neutral two-sided perspective; in a stance-favorable contract, "neutral best-practice" clauses *erode* our position when proposed as redlines. Find the rule in [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) §Step 1.5.
+
 When `--external-share` flag is passed:
-- Playbook IDs in `issues.md` / `memo-legal.md` / `escalation.md` are stripped (replaced with generic "依本公司紅線政策")
+- Playbook IDs in `memo-legal.md` / `escalation.md` are stripped (replaced with generic "依本公司紅線政策")
 - Override red banner is **never stripped** — counterparties need to see it even more than internal readers do
 
 ## Schemas

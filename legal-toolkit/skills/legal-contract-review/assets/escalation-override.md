@@ -15,6 +15,14 @@
        - deal_size > profile.escalation_threshold
        - cross-border + 個資事故 (mandatory)
 
+     Banner PLACEMENT SCOPE (v0.3.1+):
+       - PREPENDED TO: memo-legal.md, escalation.md
+       - NOT prepended to: issues.md, redline.md, memo-business.md
+       Rationale: banner on the business memo (read by non-lawyers)
+       trains users to skip the warning; banner on redline operative
+       text undermines send-to-counterparty usability. self_grade.py
+       ANS-05 enforces [!danger] in escalation.md head only.
+
      The [trigger 1] / [trigger 2] placeholders are filled by the emitting
      skill at runtime with concrete trigger descriptions.
 
