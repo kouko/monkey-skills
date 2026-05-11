@@ -116,25 +116,39 @@ Phase  v0.x.0  天數    Skill 累計   Critical
 
 ---
 
-## Phase 1.6 — Eval 基建（v0.3.0，3-5 天）
+## Phase 1.6 — Eval 基建（v0.3.0） ✅ **DONE 2026-05-12** (scaffolding); dogfood calibration pending
 
 **Scope**：定量驗證機制，**不新增 skill**。
+
+**完成狀態**（commits 74cb60b → final on `feat/legal-toolkit-v0.1.0`）：
+- ✅ answer-criteria.md 擴充：12 → 20 條（17 deterministic + 3 semantic）
+- ✅ source-criteria.md 擴充：6 → 10 條（5 deterministic + 5 semantic）
+- ✅ playbook-quality.md 新增：12 條（10 deterministic + 2 semantic）給 author 用
+- ✅ self_grade.py：22 deterministic checks（17 ANS + 5 SRC）+ ANS-11 self-consistency
+- ✅ 27 unit tests cover golden path + per-criterion mutation + TW vs non-TW branches
+- ✅ docs/dogfood-procedure.md：5-10 contract calibration workflow + privacy guidance
+- ✅ .gitignore：docs/dogfood-corpus/ never committed (sensitive)
 
 ### 交付物
 
 | 模組 | 檔案 |
 |---|---|
-| Rubric | `legal-contract-review/checklists/answer-criteria.md`（10-15 條 binary） |
-| Rubric | `legal-contract-review/checklists/source-criteria.md`（4-6 條 binary） |
-| Rubric | `legal-playbook-author/checklists/playbook-quality.md`（給 author 產出評估） |
-| Eval harness | `legal-contract-review/scripts/self_grade.py` — LLM 自評 + 結果寫進 `self-grade.md` |
-| Dogfood corpus | `docs/dogfood-corpus/`（5-10 份合約 + 對應 hand-graded reference） |
+| Rubric | `legal-contract-review/checklists/answer-criteria.md`（20 條 binary，含 tier）|
+| Rubric | `legal-contract-review/checklists/source-criteria.md`（10 條 binary，含 tier）|
+| Rubric | `legal-playbook-author/checklists/playbook-quality.md`（12 條 author 用）|
+| Eval harness | `legal-contract-review/scripts/self_grade.py` + 27 tests |
+| Dogfood procedure | `docs/dogfood-procedure.md` — local-only calibration workflow + cohort table template |
 
 ### Quality gate
 
 LLM self-grade 跟 hand-graded reference 在同份 dogfood 上：
-- **answer_score** Pearson corr ≥ 0.6
+- **answer_score** Pearson corr ≥ 0.6 （由 owner 跑 5-10 份合約計算）
 - **source_score** Pearson corr ≥ 0.7（source_score 較好驗，binary citation valid/invalid）
+- **Hallucinated citation rate = 0**（一條假案號即 hard fail，獨立於 Pearson）
+
+Pearson calibration 跟 corpus 從不 commit 進 repo（sensitive contracts）；
+owner 跑 `docs/dogfood-procedure.md` 流程，hand-grading 結果本機保存，
+cohort summary table 可分享（aggregates only）。
 
 ---
 
