@@ -20,15 +20,29 @@
     },
     "top_3_business_impacts": {
       "type": "array",
+      "description": "v0.3.1+: per L7 Step 9.4 headline rule — entries MUST be severity ∈ {yellow, red} with concrete quantifiable downside AND actionable in 30/60/90 days. NEVER ordered by playbook structure.",
       "minItems": 1,
-      "maxItems": 5,
+      "maxItems": 3,
       "items": {
         "type": "object",
         "required": ["impact_zh_tw", "severity"],
         "properties": {
           "impact_zh_tw": {"type": "string", "description": "business-translated impact statement"},
-          "severity": {"type": "string", "enum": ["green", "yellow", "red"]},
-          "related_clauses": {"type": "array", "items": {"type": "string", "description": "clause_id refs"}}
+          "severity": {"type": "string", "enum": ["yellow", "red"], "description": "v0.3.1+: green findings go to favorable_position_notes, not Top-3"},
+          "related_clauses": {"type": "array", "items": {"type": "string", "description": "clause_id refs"}},
+          "quantifiable_downside_evidence": {"type": "string", "description": "v0.3.1+: dollar / month / customer / regulatory figure justifying Top-3 inclusion"}
+        }
+      }
+    },
+    "favorable_position_notes": {
+      "type": "array",
+      "description": "v0.3.1+: per L7 Step 1.5 stance-asymmetry pass — findings whose underlying logic is 'missing best-practice default' but which PROTECT our stance (stance=ours). Surfaces as '✓ 對我方有利' box in memo-business.md.",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "note_zh_tw"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "note_zh_tw": {"type": "string"}
         }
       }
     }

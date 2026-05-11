@@ -11,6 +11,7 @@ escalate_to_hint: "通常是 法務主管；涉及刑責或重大違約則 GC"
 risk_default: yellow
 currency: USD
 last_updated: 2026-05-11
+statute_verified_at: 2026-05-12  # v0.3.1+: bundled statute references cross-checked at https://law.moj.gov.tw; refresh annually or after major legislative amendment
 owner: "[請編輯為你的姓名]"
 source_type: bundled_fallback
 source_attribution: |

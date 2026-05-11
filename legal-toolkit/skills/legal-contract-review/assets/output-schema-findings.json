@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-findings.json",
+  "title": "findings.json intermediate schema (legal-contract-review)",
+  "description": "Cross-cutting machine-readable intermediate that the contract-review pipeline emits alongside the 6 .md outputs. It is the canonical structured snapshot of pipeline state, consumed by scripts/self_grade.py for deterministic-tier rubric checks (ANS-01 ~ ANS-17, SRC-01 ~ SRC-05). This is NOT a user-facing file — it's the LLM ↔ Python contract. v0.3.1+ adds stance_asymmetry_check, cycle_check.vague_sub_mechanism, and top_3_business_impacts shape.",
+  "type": "object",
+  "required": [
+    "contract_metadata",
+    "findings",
+    "redlines",
+    "crac",
+    "summary_business",
+    "escalations"
+  ],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "findings": {
+      "type": "array",
+      "description": "L7 evaluate findings (issues / matched playbook entries / advisory) — mirrors issues.md findings",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "source_type", "severity", "summary_zh_tw", "playbook_trace"],
+        "properties": {
+          "clause_id": {"type": "string", "description": "kebab-case e.g. confidentiality, limitation-of-liability"},
+          "variant_id": {"type": ["string", "null"]},
+          "source_type": {"type": "string", "enum": ["user_playbook", "bundled_fallback", "advisory"]},
+          "severity": {"type": "string", "enum": ["green", "yellow", "red"]},
+          "walk_away_triggered": {"type": "boolean"},
+          "summary_zh_tw": {"type": "string", "description": "substantive (NOT 'TBD' / '[REPLACE_ME]' / empty)"},
+          "playbook_trace": {
+            "type": "object",
+            "properties": {
+              "matched_entry_path": {"type": ["string", "null"], "description": "null when source_type=advisory"},
+              "matched_walk_away": {"type": "array", "items": {"type": "string"}},
+              "matched_fallback_level": {"type": "string", "enum": ["preferred", "fallback-1", "fallback-2", "worse"]},
+              "matched_variant_outcome": {"type": "string", "enum": ["single", "advisory", "multi"], "description": "required when variant_id is set (ABAC pre-filter result)"},
+              "external_share_strip_id": {"type": "boolean"}
+            }
+          },
+          "flags": {
+            "type": "object",
+            "properties": {
+              "escalate_to_is_placeholder": {"type": "boolean"},
+              "low_confidence": {"type": "boolean"},
+              "stance_asymmetry_downgrade": {"type": "boolean", "description": "v0.3.1+: L7 Step 1.5 downgraded this from risk to strategic-note because stance=ours and absence PROTECTS us"}
+            }
+          },
+          "stance_asymmetry_check": {
+            "type": "object",
+            "description": "v0.3.1+: trace of L7 Step 1.5 evaluation",
+            "properties": {
+              "ran": {"type": "boolean"},
+              "q1_neutral_best_practice_missing": {"type": "boolean"},
+              "q2_decision": {"type": "string", "enum": ["expose", "protect", "not_applicable"]},
+              "downgrade_applied": {"type": "boolean"},
+              "quantifiable_downside": {"type": "boolean"}
+            }
+          },
+          "business_issues": {
+            "type": "array",
+            "items": {"type": "string", "enum": ["money", "risk", "control", "standards", "endgame"]}
+          },
+          "banner": {"type": "string"},
+          "contract_text": {"type": "string"}
+        }
+      }
+    },
+    "redlines": {
+      "type": "array",
+      "description": "Substitute clause proposals — mirrors redline.md",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "proposed_text_source"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "proposed_text_source": {"type": "string", "enum": ["playbook_body", "llm_generated"]},
+          "proposed_text_send_now": {"type": "string", "description": "v0.3.1+: the text to actually send to counterparty. Empty when stance_asymmetry_downgrade=true."},
+          "proposed_text_internal_fallback": {"type": "string", "description": "v0.3.1+: internal-only fallback position; surfaces only if 對方 raises X at renewal."},
+          "proposed_text": {"type": "string", "description": "DEPRECATED v0.3.1+ — kept for backwards-compatibility; new code should use proposed_text_send_now + proposed_text_internal_fallback"},
+          "rationale_zh_tw": {"type": "string"}
+        }
+      }
+    },
+    "crac": {
+      "$ref": "output-schema-memo-legal.json#/properties/crac"
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["citation", "type", "supports"],
+        "properties": {
+          "citation": {"type": "string", "description": "e.g. '民法 §247-1'"},
+          "type": {"type": "string", "enum": ["statute", "case", "regulation", "authority_letter", "scholarly"]},
+          "supports": {"type": "string", "description": "which CRAC step (rule / analysis / conclusion) this citation backs"},
+          "verified": {"type": "boolean"},
+          "url": {"type": "string", "format": "uri", "description": "if set, must match SRC-03 URL allowlist (law.moj.gov.tw / judgment.judicial.gov.tw / *.gov.tw / mops.twse.com.tw)"},
+          "applicability_caveat": {"type": "string", "description": "v0.3.1+: per L7 Step 9.3, borderline-applicable citations record their scope limitation here (e.g. '本條主要規範定型化契約；本合約為 1-on-1 negotiated B2B')"}
+        }
+      }
+    },
+    "summary_business": {
+      "type": "object",
+      "required": ["why", "what", "what_if"],
+      "properties": {
+        "why": {"type": "string", "maxLength": 80},
+        "what": {"type": "string", "maxLength": 80},
+        "what_if": {"type": "string", "maxLength": 80}
+      }
+    },
+    "top_3_business_impacts": {
+      "type": "array",
+      "description": "v0.3.1+: per L7 Step 9.4 headline rule — entries MUST have severity∈{yellow,red} + concrete quantifiable downside + actionable in 30/60/90 days. NEVER ordered by playbook structure.",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["impact_zh_tw", "severity"],
+        "properties": {
+          "impact_zh_tw": {"type": "string"},
+          "severity": {"type": "string", "enum": ["yellow", "red"]},
+          "related_clauses": {"type": "array", "items": {"type": "string"}},
+          "quantifiable_downside_evidence": {"type": "string", "description": "the dollar / month / customer / regulatory figure justifying Top-3 inclusion"}
+        }
+      }
+    },
+    "favorable_position_notes": {
+      "type": "array",
+      "description": "v0.3.1+: findings that L7 Step 1.5 downgraded to green/strategic-note (stance-favorable absences). Renders under '✓ 對我方有利' in issues.md + memo-business.md.",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "note_zh_tw"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "note_zh_tw": {"type": "string"}
+        }
+      }
+    },
+    "escalations": {
+      "$ref": "output-schema-escalation.json#/properties/escalations"
+    },
+    "override_triggered": {"type": "boolean", "description": "v0.3.1+: banner placement scope = memo-legal.md + escalation.md only (NOT issues / redline / memo-business)"},
+    "placeholder_warnings": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "informative warnings the user sees when escalate_to is still '[請編輯…]'; enforced by ANS-07"
+    },
+    "cycle_check": {
+      "type": "object",
+      "required": ["termination_condition"],
+      "properties": {
+        "total_cycles": {"type": "integer", "minimum": 2},
+        "total_gaps_found": {"type": "integer", "minimum": 0},
+        "gaps_by_type": {
+          "type": "object",
+          "properties": {
+            "if_breach_branch_missing": {"type": "integer", "minimum": 0},
+            "undefined_term": {"type": "integer", "minimum": 0},
+            "missing_expected_clause": {"type": "integer", "minimum": 0},
+            "vague_sub_mechanism": {"type": "integer", "minimum": 0, "description": "v0.3.1+: L6 sub-check 4 vagueness scan"}
+          }
+        },
+        "termination_condition": {
+          "type": "string",
+          "description": "ANS-12 enforces this starts with 'gaps_zero_at_cycle_' (max_cycles_hit = fail)"
+        },
+        "vague_sub_mechanisms_by_dimension": {
+          "type": "object",
+          "description": "v0.3.1+: per-dimension counts (marking_requirement / sub_processor_consent / breach_notification_window / etc.)",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "anatomy": {
+      "type": "object",
+      "properties": {
+        "party_consistency": {
+          "type": "object",
+          "description": "ANS-13 enforces existence",
+          "properties": {
+            "inconsistencies": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
