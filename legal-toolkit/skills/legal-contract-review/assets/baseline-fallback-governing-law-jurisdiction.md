@@ -10,8 +10,9 @@ escalate_to: "[請編輯為你公司的角色：法務主管 / GC]"
 escalate_to_hint: "通常是 GC 或 法務主管；跨境議題建議 GC 簽核"
 risk_default: yellow
 currency: USD
-last_updated: 2026-05-11
+last_updated: 2026-05-12
 statute_verified_at: 2026-05-12  # v0.3.1+: bundled statute references cross-checked at https://law.moj.gov.tw; refresh annually or after major legislative amendment
+case_citations_verified_at: 2026-05-12  # v0.3.2+: all previously-shipped judicial case citations verified-or-removed at https://judgment.judicial.gov.tw
 owner: "[請編輯為你的姓名]"
 source_type: bundled_fallback
 source_attribution: |
@@ -56,6 +57,16 @@ away。所以管轄是 portfolio-level 的「議價成本」議題。
 > Taipei, by three arbitrators, conducted in Mandarin Chinese,
 > with the seat of arbitration in Taipei, Taiwan."
 
-## 相關判例
-- 最高法院 96 年度台上字第 2032 號（準據法當事人意思自治）
-- 智慧財產法院 99 年度民營訴字第 7 號（境外服務合約管轄判斷）
+## 相關規範與學說參考
+<!-- v0.3.2 update: previously cited 最高法院 96 年度台上字第 2032 號 +
+     智慧財產法院 99 年度民營訴字第 7 號. 2026-05-12 verification:
+     both case-numbers returned zero hits. The 智財法院 case also had
+     case-type mismatch (民營訴 = 民事營業秘密訴訟, doesn't fit 管轄
+     judgments). Replaced with statute + commentary doctrine. -->
+
+- **涉外民事法律適用法 §20** 當事人意思自治原則 — 雙方合意之準據法選擇一般優先適用，除非牴觸 ROC 公序良俗
+- **民事訴訟法 §6** 法人住所地特別管轄（default fallback；雙方合意管轄優先適用 §24）
+- **民事訴訟法 §24** 合意管轄之效力 — 書面合意 + 適合本案之法院；台北地院為實務上最常見之 ROC 內合意管轄法院
+- **仲裁法 §32** 仲裁判斷之承認與執行（跨境仲裁需考量《紐約公約》及兩岸司法互助協議）
+- 王文宇《商事法論》/ 賴來焜《國際私法概論》commentary on 跨境合約管轄與準據法之分離 / strategic forum selection
+- ⚠️ 引用具體判決前，請於 https://judgment.judicial.gov.tw 檢索查證

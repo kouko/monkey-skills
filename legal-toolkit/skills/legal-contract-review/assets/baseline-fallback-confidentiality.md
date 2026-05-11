@@ -10,8 +10,9 @@ escalate_to: "[請編輯為你公司的角色：法務主管 / GC / 部門主管
 escalate_to_hint: "通常是 法務主管 / GC / 部門主管 / 老闆兼法務"
 risk_default: yellow
 currency: USD
-last_updated: 2026-05-11
+last_updated: 2026-05-12
 statute_verified_at: 2026-05-12  # v0.3.1+: bundled statute references cross-checked at https://law.moj.gov.tw; refresh annually or after major legislative amendment
+case_citations_verified_at: 2026-05-12  # v0.3.2+: all previously-shipped judicial case citations verified-or-removed at https://judgment.judicial.gov.tw
 owner: "[請編輯為你的姓名]"
 source_type: bundled_fallback
 source_attribution: |
@@ -60,6 +61,15 @@ permanent injunctive remedy 風險時可勉強接受。
 > care. The Receiving Party's obligations under this Section
 > survive for [3 / 5] years after termination."
 
-## 相關判例
-- 智慧財產法院 102 年度民營訴字第 6 號（殘餘知識條款 / 員工 know-how）
-- 最高法院 105 年度台上字第 1501 號（保密期間 vs 競業禁止之區辨）
+## 相關規範與學說參考
+<!-- v0.3.2 update: previously cited 智慧財產法院 102 年度民營訴字第 6 號 +
+     最高法院 105 年度台上字第 1501 號. 2026-05-12 verification at
+     https://judgment.judicial.gov.tw + ipc.judicial.gov.tw + 6law +
+     TIPO 重要判決 returned zero hits for both. Replaced with statute +
+     commentary doctrine per soft-citation rule (L7 Step 9.3.0). -->
+
+- **營業秘密法 §2** 三要件（秘密性 / 經濟價值 / 合理保密措施）— 機密資料之 baseline definition；契約保密義務終止後是否仍受營業秘密法保護，視是否仍滿足三要件
+- **營業秘密法 §11** 排除及防止侵害請求權 — civil injunctive relief 的法源（非 §11-1，§11-1 不存在）
+- **勞動基準法 §9-1** 競業禁止四要件（2015/12 增訂）— 與保密義務不同，競業禁止有合理性審查、補償金、地域期間限制；NDA 內若混用兩種義務需區辨
+- 王澤鑑《侵權行為法》commentary 對「殘餘知識」之分析（員工腦中概念性記憶不受營業秘密法限制；屬學說通說而非具體判例 anchor）
+- ⚠️ 引用具體判決前，請於 https://judgment.judicial.gov.tw 檢索查證

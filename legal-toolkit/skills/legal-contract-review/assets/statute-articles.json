@@ -1,8 +1,8 @@
 {
-  "$schema_version": "v0.3.1",
+  "$schema_version": "v0.3.2",
   "verified_at": "2026-05-12",
-  "verified_by": "manual cross-check against https://law.moj.gov.tw",
-  "scope": "v0.3.1 minimum viable — known fabricated sub-articles + deprecated articles. Statutes / articles NOT listed here pass through self_grade.py SRC-04 format check only (avoiding false positives for less common statutes). Comprehensive whitelist deferred to Phase 1.7+ when verified article-number enumeration per statute is feasible.",
+  "verified_by": "manual cross-check against https://law.moj.gov.tw + https://judgment.judicial.gov.tw",
+  "scope": "v0.3.2 — known fabricated sub-articles + deprecated articles (statute blacklist) + verified case citations whitelist (empty in v0.3.2 — see below). Statutes / articles NOT listed in blacklist pass through self_grade.py SRC-04 format check only. Cases not listed in cases_verified[] but emitted as case-type citations MUST be WebFetch-verified in session per L7 Step 9.3.0 soft-citation rule.",
   "blacklist": {
     "民法 §11-1": {
       "reason": "fabricated — no such sub-article exists",
@@ -25,6 +25,9 @@
       "trap_source": "same as 個人資料保護法 §27"
     }
   },
+  "cases_verified": [],
+  "cases_verified_notes": "v0.3.2: empty by design. The 8 case citations previously shipped in baseline-fallback-*.md were verified-or-removed on 2026-05-12 (7 fabricated removed, 1 unverifiable noted, see baseline file 相關規範與學說參考 sections). Future patches may add VERIFIED case citations here with shape: {citation: '<text>', verified_at: 'YYYY-MM-DD', url: '<judgment.judicial.gov.tw direct URL>', supports: '<doctrine area>'}. L7 Step 9.3.0 soft-citation rule allows emitting a case citation only when listed here OR WebFetch-verified in the same session.",
+
   "applicability_notes": {
     "民法 §247-1": "Applies ONLY to 定型化契約 (standard-form / adhesion contracts used repeatedly with the same wording). Citing §247-1 against a 1-on-1 negotiated B2B contract is doctrinally weak — record applicability_caveat in citation.",
     "公平交易法 §25": "Requires market-impact element (顯失公平 must affect 交易秩序). Single bilateral clause without market-impact framing has weak §25 traction.",

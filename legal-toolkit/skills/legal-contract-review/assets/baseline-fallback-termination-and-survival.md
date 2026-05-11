@@ -10,8 +10,9 @@ escalate_to: "[請編輯為你公司的角色：法務主管 / GC]"
 escalate_to_hint: "通常是 法務主管；涉及刑責或重大違約則 GC"
 risk_default: yellow
 currency: USD
-last_updated: 2026-05-11
+last_updated: 2026-05-12
 statute_verified_at: 2026-05-12  # v0.3.1+: bundled statute references cross-checked at https://law.moj.gov.tw; refresh annually or after major legislative amendment
+case_citations_verified_at: 2026-05-12  # v0.3.2+: all previously-shipped judicial case citations verified-or-removed at https://judgment.judicial.gov.tw
 owner: "[請編輯為你的姓名]"
 source_type: bundled_fallback
 source_attribution: |
@@ -68,6 +69,19 @@ compete / non-solicit）變成永久包袱。
 > Law (Section [N]), and any payment obligations accrued prior
 > to the effective date of termination."
 
-## 相關判例
-- 最高法院 100 年度台上字第 1166 號（重大違約之認定）
-- 最高法院 95 年度台上字第 2755 號（任意終止權之限制）
+## 相關規範與學說參考
+<!-- v0.3.2 update: previously cited 最高法院 100 年度台上字第 1166 號 +
+     最高法院 95 年度台上字第 2755 號. 2026-05-12 verification:
+     both case-numbers returned zero hits across judicial.gov.tw +
+     6law + firm commentary. Replaced with statute + commentary
+     doctrine per soft-citation rule (L7 Step 9.3.0). -->
+
+- **民法 §254** 給付遲延之解除 — 給付期間屆滿後須先催告（民法 §254 末段）+ 相當期限未為給付始得解除
+- **民法 §255** 即時解除（非定期行為 + 性質上不能達契約目的時）
+- **民法 §256** 給付不能之解除 — 全部給付不能與部分給付不能之區辨
+- **民法 §263** 解除權之行使（單方意思表示 + 須準用§258關於通知）
+- **民法 §259** 解除契約之回復原狀義務（雙方互負義務）
+- **民法 §549** 委任契約之任意終止權 — 委任性質契約雙方原則可隨時終止（受任人對委任人負損害賠償）
+- **民法 §227** 不完全給付之 baseline — 與材料瑕疵 §354 + 工作瑕疵 §493 之區辨
+- 王澤鑑《債法原理》「契約解除之要件與效力」commentary — 重大違約之實務認定標準（commentary 通說，非具體判決 anchor）
+- ⚠️ 引用具體判決前，請於 https://judgment.judicial.gov.tw 檢索查證；註：「重大違約」與「任意終止權限制」doctrine 之 anchor case 為動態演進，建議用 statute + commentary baseline 而非固定 case anchor
