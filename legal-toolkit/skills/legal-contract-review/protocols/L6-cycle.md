@@ -115,9 +115,64 @@ while not exit_condition
 
 **Stance-asymmetry interaction**: vagueness gaps go through `L7 Step 1.5 (stance-asymmetry pass)` like any other finding. If the missing sub-mechanism *protects* our stance (e.g. counterparty has no audit right against us when stance=ours), the L6 vagueness gap downgrades to green / strategic-note at L7.
 
+### Step 2.5 — Dedup overlap pass (v0.3.2+)
+
+L6 can surface the same underlying concern through two sub-checks:
+- Sub-check 3 (missing-items) flags `missing_expected_clause: residual-knowledge`
+- Sub-check 4 (vagueness) flags `vague_sub_mechanism` for `confidentiality.residual_knowledge_carveout`
+- L7 main loop also generates a `confidentiality` finding whose discussion already covers the same gap
+
+v0.3.0 dogfood NDA run emitted both finding #1 (confidentiality scope including residual-knowledge analysis) AND finding #6 (residual-knowledge gap as separate item). User read 2 findings as 2 problems when it's really 1.
+
+#### Dedup rule
+
+Before passing gaps to Step 3 (emit findings), apply:
+
+```
+For each gap of type missing_expected_clause OR vague_sub_mechanism:
+  let topic = gap.clause_id (e.g. "residual-knowledge")
+  let parent = find playbook fallback / user entry whose body substantively covers topic
+
+  if parent and parent will generate a finding in L7 main loop:
+    gap.subsumed_by = parent.clause_id
+    gap.severity = (gap.severity, parent.severity).max()
+    DO NOT emit a separate finding for this gap
+    instead, ensure parent finding's discussion_zh_tw mentions this gap topic
+       with cross-reference: "本條 finding 已包含 <topic> gap，
+                              詳見 redline §X.Y / playbook entry"
+
+  else:
+    emit gap as a standalone finding (current behavior)
+```
+
+#### Overlap detection heuristics
+
+Two findings overlap if ALL of:
+- Same `clause_id` (e.g. both belong to `confidentiality`)
+- OR `gap.clause_id ∈ parent.body.discussion_topics[]` (the parent baseline explicitly discusses the gap topic in its body / preferred / fallback sections)
+- AND the gap's `suggested_remediation` is a subset of the parent finding's recommended redline
+
+This avoids over-merging (a true secondary gap that just happens to live near a flagged clause should still emit separately).
+
+#### Examples
+
+```
+NDA contract:
+  L6 sub-check 3 surfaces: missing_expected_clause: residual-knowledge
+  L7 main loop generates: confidentiality finding (red, walk-away, includes "Residual knowledge clause 完全排除" trigger)
+  → Dedup: residual-knowledge gap SUBSUMED by confidentiality finding
+  → Output: 1 finding (confidentiality), not 2
+
+SaaS contract:
+  L6 sub-check 4 surfaces: vague_sub_mechanism: data-protection-dpa.proof_of_deletion
+  L7 main loop generates: data-protection-dpa finding (red, multiple sub-mechanism gaps including proof_of_deletion)
+  → Dedup: proof_of_deletion gap SUBSUMED into DPA finding
+  → Output: 1 DPA finding listing all sub-mechanism gaps in one discussion
+```
+
 ### Step 3 — Emit findings
 
-For each gap accumulated:
+For each gap accumulated (after Step 2.5 dedup):
 
 ```yaml
 clause_id: <inferred or "structural">

@@ -200,6 +200,12 @@ High-risk findings (any of: `risk_default: red` matched / `walk_away_triggered: 
 
 **Stance-asymmetry guard** (v0.3.1+): when `stance` is `ours` and a finding's underlying logic is "best-practice default clause is missing", the finding defaults to **green / strategic-note**, NOT red / yellow, unless the missing clause causes a *concrete quantifiable downside* (dollar / month / customer / regulatory exposure). Toolkit playbooks are written from a neutral two-sided perspective; in a stance-favorable contract, "neutral best-practice" clauses *erode* our position when proposed as redlines. Find the rule in [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) §Step 1.5.
 
+**Asset identification pass** (v0.3.2+): the inverse of Step 1.5 — when `stance` is `ours` and a contract clause's substance ADVANTAGES us (short timing windows, unilateral decision rights, counterparty-borne obligations, post-termination service from 對方), L7 Step 0 surfaces them as `favorable_position_notes` BEFORE the per-clause finding loop runs. v0.3.0 dogfood SaaS run missed §2.3 silence-consent / §1.6 unilateral pricing / §4.3 unilateral refund / §3.3 末段 wind-down — Step 0 is the corrective. See [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) §Step 0.
+
+**Soft case-citation rule** (v0.3.2+): the LLM may NOT emit a `case`-type citation (e.g. `"最高法院 X 年度 Y 字第 N 號"`) unless verified IN-SESSION (WebFetch to judgment.judicial.gov.tw) OR listed in `assets/statute-articles.json#cases_verified[]`. Closes the SRC-09 escape via unverified case numbers that v0.3.1's SRC-04 format check would otherwise pass. See [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) §Step 9.3.0.
+
+**L6 dedup pass** (v0.3.2+): L6 sub-checks 3 (missing-items) + 4 (vagueness) can overlap with L7 main-loop findings on the same underlying clause. v0.3.2 Step 2.5 merges these instead of emitting duplicates — e.g. NDA's residual-knowledge gap subsumes into the parent confidentiality finding rather than appearing as a separate #6. See [`protocols/L6-cycle.md`](protocols/L6-cycle.md) §Step 2.5.
+
 When `--external-share` flag is passed:
 - Playbook IDs in `memo-legal.md` / `escalation.md` are stripped (replaced with generic "依本公司紅線政策")
 - Override red banner is **never stripped** — counterparties need to see it even more than internal readers do

@@ -23,9 +23,66 @@ The output of L7 is the bulk of `issues.md` findings and the source for `redline
 
 ## Pipeline
 
-For each clause (iterating in **L5 priority order**, Tier 1 first):
+### Step 0 — Asset Identification Pass (v0.3.2+, runs BEFORE per-clause iteration)
+
+Toolkit playbooks are designed to detect **risks** (missing or weak clauses). When `stance: ours` and the contract contains clauses that **advantage** the stance-holder, the playbook-based pipeline doesn't natively surface them — they generate no finding and become invisible. v0.3.0 dogfood SaaS run missed `§2.3 5-day silence-consent` / `§1.6 甲方單方訂價` / `§4.3 甲方單方退款決定` / `§3.3 末段 乙方 post-termination service obligation` exactly this way.
+
+#### When to run
+
+`stance == "ours"` only. Skip for `neutral` (no asymmetric advantage to identify) or `theirs` (asset-identification belongs to the other party).
+
+#### Decision
+
+Iterate over the L2-anatomy clause list (full contract clause inventory). For each clause that is NOT going to generate a yellow/red finding in the main loop, ask:
+
+```
+Q: Given stance=ours, does this clause's SUBSTANCE advantage us?
+
+Common asset patterns:
+- Short / asymmetric timing windows favoring us
+  (silence-consent, fast objection deadlines, short notice WE require from 對方)
+- Unilateral decision rights granted to us
+  (pricing / refund / scope / SLA acceptance / acceptance criteria)
+- Counterparty-borne liability / indemnity / regulatory obligation
+  (個資, breach 連環責任, third-party indemnity, IP infringement warranty when given to us)
+- Counterparty's post-termination service / transition obligation to us
+  (wind-down maintenance, data return, transition assistance)
+- Walk-away rights we hold unilaterally (termination for convenience for us only)
+- Restrictive covenants binding 對方 not us (non-compete, non-solicit, exclusivity)
+- Audit / inspection / information rights we hold over 對方
+- Pricing protection (cap on 對方's price increase, floor on revenue share to us)
+
+If yes:
+  → add entry to `favorable_position_notes[]`:
+    clause_id: <inferred from L3 or L5 categorisation>
+    note_zh_tw: brief explanation framed as "我方有利 — <substance>";
+                include "renewal-time floor" hint when applicable
+                (e.g. "若對方續約挑戰，內部 floor: 10 日（vs 現 5 日）")
+  → DO NOT emit a finding for this clause in the main loop
+  → IF the clause also has a gap that warrants a finding, emit both:
+    the gap finding (with severity per usual rules) AND the asset note;
+    finding.discussion_zh_tw cross-references the favorable_position_note
+```
+
+#### Dual-nature clauses
+
+A single clause section can carry BOTH a gap AND an asset (the SaaS run's `§3.3` ended with a 乙方 obligation to maintain paid-customer service post-termination — an asset — while the rest of §3 had wind-down vagueness — a gap). Treat them separately:
+
+```
+If clause has both gap (sub-mechanism vague / missing carve-out) AND asset (favorable substance):
+  - Emit gap finding at yellow severity per L6 sub-check 4 / playbook
+  - Also emit favorable_position_note with same clause_id
+  - finding.discussion_zh_tw includes: "本條同時具有 favorable 元素，見 favorable_position_notes.<clause_id>，
+     提案 redline 時不可一併重寫該條 — 改用 §X.Y 子項目補強"
+```
+
+#### Output contract
+
+`findings.json.favorable_position_notes[]` populated per output-schema-findings.json + output-schema-memo-business.json.
 
 ### Step 1 — IDX_LOOKUP (user playbook)
+
+Iterating in **L5 priority order**, Tier 1 first. For each clause:
 
 ```
 playbook_index = scan(legal-playbook/ in working folder OR bundled fallback)
@@ -366,6 +423,36 @@ If `stance_asymmetry_check.downgrade_applied == true`, the redline emit changes:
 - `proposed_text_internal_fallback`: the substitute text, with rationale framed as "if 對方 raises X at renewal, our floor is Y"
 - `redline.md` rendering: this finding appears in a separate **"## 內部 fallback 預案（不主動提案）"** section, BELOW the main `## 主動 redline 提案` section
 - `redline.md.send_now_table` lists only main-section redlines (these are what you copy-paste into the counter-proposal email)
+
+#### Step 9.3.0 — Soft case-citation rule (v0.3.2+)
+
+Before emitting any `case` type citation (e.g. `"最高法院 X 年度 Y 字第 N 號"`):
+
+```
+Q: Have you independently verified this case number in THIS session?
+
+  Verification = ONE of:
+    - WebFetch-confirmed via https://judgment.judicial.gov.tw in this session
+    - Listed in assets/statute-articles.json#cases_verified[] with verified_at within 365 days
+    - Pulled from a user-supplied playbook entry tagged `case_verified_at: <date>`
+
+  ├── yes → emit the case citation with citations[].verified=true and url field set
+  └── no  → DO NOT emit "X 年度 Y 字第 N 號" pattern
+
+Replace with one of the acceptable softer formulations:
+  - "近年實務趨勢 / 法院見解" (no specific case number)
+  - "司法院判決系統有多則相關案件" (general pointer)
+  - "依 <statute> + 學者通說" (cite statute + academic commentary instead)
+  - "[案號待查] — 引用前請以 https://judgment.judicial.gov.tw 檢索" (acceptable in DRAFT memos only; STRIP before sending)
+```
+
+#### Rationale
+
+v0.3.0 dogfood:
+- NDA run: bundled fallback `baseline-fallback-confidentiality.md` contained 「智慧財產法院 102 年度民營訴字第 6 號」which propagated into memo-legal as hedged citation "如該案號有效".
+- SaaS run: memo-business.md emitted「最高法院 113 年度台上字第 1244 號等趨勢」which auditor flagged needing verification.
+
+Both are SRC-09 escape routes. The deterministic SRC-04 + blacklist (v0.3.1) catches fabricated sub-articles BUT does NOT catch unverified case numbers. The soft-citation rule above adds a protocol-level gate before SRC-04 ever sees the citation.
 
 ### Step 9.3 — Citation applicability gate (v0.3.1+)
 

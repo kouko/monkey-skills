@@ -59,6 +59,16 @@ When uncertain, the LLM MUST:
 3. OR mark the citation as `unverifiable` with a note (acceptable)
 4. NEVER fabricate a "最高法院 XXX 年度 XXX" pattern just because it sounds plausible (UNACCEPTABLE — SRC-09 hard FAIL)
 
+**v0.3.2+ soft-citation rule** (L7 Step 9.3.0): the LLM may NOT emit
+a `case`-type citation unless verification = ONE of (a) WebFetch-confirmed
+this session via judgment.judicial.gov.tw, OR (b) listed in
+`assets/statute-articles.json#cases_verified[]` with verified_at within
+365 days, OR (c) pulled from a user playbook tagged `case_verified_at`.
+Otherwise the LLM must use a softer formulation (近年實務趨勢 /
+判決系統有多則相關案件 / 學者通說) instead of a specific case number.
+This closes the SRC-09 escape via unverified case citations that
+SRC-04's format check would otherwise pass.
+
 ---
 
 ## Calibration (v0.3.0)
