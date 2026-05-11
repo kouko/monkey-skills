@@ -4,7 +4,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-MVP-orange)
+![version](https://img.shields.io/badge/version-0.2.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-1.5_DSL-orange)
 
 > ⚠️ **Not legal advice.** This is a free open-source tool, not a law firm and not a licensed practitioner. Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override (「請諮詢執業律師」). See [§Disclaimer policy](#disclaimer-policy).
 
@@ -18,7 +18,7 @@ Three design commitments distinguish it from BigLaw-port tools:
 2. **Playbook lives where you can see and edit it** — `legal-playbook/<clause>.md` in your working folder, visible, Markdown, git-trackable. Not buried in a SQLite blob; not in a hidden dotfolder; not in a vendor's cloud. Three-layer ownership: visible `legal-playbook/` (you own) + visible `legal-outputs/` (you own) + hidden `.legal-toolkit/` (tool internals).
 3. **Disclaimer-driven, not feature-stripped** — Taiwan's 律師法 §48 governs **people**, not tools, and a free open-source utility ≠ a service. Hard-excluding legal-opinion output would gut half the planned sub-skills (issue-spot / research). Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override red banner.
 
-## MVP (v0.1.0) — 3 skills
+## 3 skills (MVP + Phase 1.5 DSL infra, v0.2.0)
 
 | Skill | Role |
 |---|---|
@@ -41,7 +41,7 @@ First-time install: there is **no `legal-playbook/`** in your working folder. Th
 
 Each finding generated from a bundled clause carries a banner: `⚠️ Using bundled fallback baseline — run legal-playbook-author to customise for your company`. The `escalate_to` field ships as a placeholder string (`[請編輯為你公司的角色：法務主管 / GC / 部門主管]`); review-time detection emits a warning so users notice the placeholder before treating output as final.
 
-Run `legal-playbook-author bootstrap` to migrate from bundled fallback to your own customised playbook. Phase 1.5 (v0.2.0) expands the bundled baseline to 8 clauses (adds LoL / Indemnification / DPA / IP-Assignment with variant-folder layout).
+Run `legal-playbook-author bootstrap` to migrate from bundled fallback to your own customised playbook. **v0.2.0 (Phase 1.5)** expands the bundled baseline to 8 clauses — adds variant-folder `limitation-of-liability` (small/mid/large-deal), `indemnification` (small/mid/large-deal), `data-protection-dpa` (tw-only/gdpr-overlay/cross-border), plus flat `ip-assignment-and-license`. Run `seed_baseline.py` to extract the full 8-clause tarball into your working folder.
 
 ## Playbook layout (the source of negotiation truth)
 
@@ -164,9 +164,10 @@ Direct skill invocation is supported when intent is unambiguous (e.g. `/legal-co
 
 ## Status
 
-- **Version**: 0.1.0 (2026-05-11)
-- **Stability**: pre-MVP scaffold; not yet dogfood-validated
-- **Phase**: 1 (MVP shell) — see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
+- **Version**: 0.2.0 (2026-05-12)
+- **Stability**: MVP shell + Phase 1.5 DSL infra complete; not yet end-to-end dogfood-validated
+- **Phase**: 1.5 (DSL + scripts + 8-clause baseline) — see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
+- **Test suite**: 80+ tests across schema / discover / validate / detect_conflicts / abac_filter / build_baseline / seed_baseline — all green via `uv run --with jsonschema --with pyyaml --with pytest`
 - **License**: MIT (plugin code)
 
 ## Reference

@@ -83,9 +83,19 @@ Phase  v0.x.0  天數    Skill 累計   Critical
 
 ---
 
-## Phase 1.5 — DSL 基建（v0.2.0，5 天）
+## Phase 1.5 — DSL 基建（v0.2.0） ✅ **DONE 2026-05-12**
 
 **Scope**：補基礎設施，**不新增 skill**。
+
+**完成狀態**（commits 6748333 → 9892690 on `feat/legal-toolkit-v0.1.0`）：
+- ✅ JSON Schema 2020-12 for flat / variant-file / _clause shapes
+- ✅ discover_playbook.py + validate_schema.py + detect_conflicts.py
+- ✅ abac_filter.py + build_baseline.py + seed_baseline.py
+- ✅ 8-clause baseline tarball (4 flat + 4 with variant-folders) +
+  deterministic build + sha256-pinned manifest
+- ✅ bootstrap-mode / extend-mode / revise-mode / L7-evaluate wired
+  to invoke the scripts
+- ✅ 80+ tests across all components
 
 ### 交付物
 
@@ -99,9 +109,10 @@ Phase  v0.x.0  天數    Skill 累計   Critical
 
 ### Quality gate
 
-- Validator 跑 24 個 hand-crafted broken playbook 抓出 ≥ 22 個
-- ABAC filter 對 12 個 deal_context 變項配對正確 ≥ 11 個
-- baseline seed 後立即跑 contract-review 0 error
+- ✅ Validator 跑 24 個 hand-crafted broken playbook 抓出 **24/24**（要求 ≥ 22）
+- ✅ ABAC filter 對 12 個 deal_context 變項配對 **12/12 正確**（要求 ≥ 11）
+- ✅ baseline seed 後立即跑 contract-review 0 error（seed_baseline.py 後所有
+  17 檔 schema 驗證 PASS / detect_conflicts.py 0 conflict）
 
 ---
 
