@@ -16,18 +16,21 @@
 ## Timeline 總覽
 
 ```
-Phase  v0.x.0  天數    Skill 累計   Critical
-─────  ──────  ──────  ─────────   ────────
-1      0.1.0   8-12d   3           MVP shell
-1.5    0.2.0   5d      3 (補基建)  DSL + ABAC + 8 條 baseline + seed
-1.6    0.3.0   3-5d    3 (補 eval) Binary rubric + dogfood baseline
-2      0.4.0   10d     5           Template + Runbook cluster
-─────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
-3      0.5.0   8-12d   7           IRAC cluster (諮詢 + 研究)
-4      0.6.0   10d     9           Tracker cluster
-4.5    ─       10-15d  9 (no skill) ⚠️ Compliance prerequisite research
-5      0.9.0   10-15d  11          Compliance cluster
-6      1.0.0   ongoing 11 (治理)   Governance mechanics + GA polish
+Phase    v0.x.0  天數    Skill 累計   Critical
+─────    ──────  ──────  ─────────   ────────
+1        0.1.0   8-12d   3            MVP shell                                      ✅ DONE
+1.5      0.2.0   5d      3 (補基建)   DSL + ABAC + 8 條 baseline + seed              ✅ DONE
+1.6      0.3.0   3-5d    3 (補 eval)  Binary rubric + dogfood baseline               ✅ DONE
+1.6.1    0.3.1   1d      3 (patch)    Dogfood-driven: stance-asymmetry + L6 vague    ✅ DONE
+1.6.2    0.3.2   1d      3 (patch)    2nd-pass dogfood: asset id + 案號 cleanup      ✅ DONE
+1.7      0.3.3   5-7d    3 (架構)     bundled-vs-runtime architecture refactor       📋 PLANNED
+2        0.4.0   10d     5            Template + Runbook cluster
+─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
+3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
+4        0.6.0   10d     9            Tracker cluster
+4.5      ─       10-15d  9 (no skill) ⚠️ Compliance prerequisite research
+5        0.9.0   10-15d  11           Compliance cluster
+6        1.0.0   ongoing 11 (治理)    Governance mechanics + GA polish
 ```
 
 ---
@@ -245,6 +248,80 @@ cohort summary table 可分享（aggregates only）。
 
 ---
 
+## Phase 1.7 — bundled-vs-runtime architecture refactor（v0.3.3，5-7 天）
+
+**Status**：📋 planned, not started. Pre-Phase-2 architecture cleanup; **不新增 skill**。
+
+**Trigger**：2026-05-12 conversation surfaced an architectural question after Phase 1.6.2 case-citation cleanup. v0.3.2 verification subagent found 7 / 8 bundled judicial case citations likely fabricated. Even if every remaining bundled citation is verifiable today, the architecture relies on **bundle-time correctness** that drifts with:
+
+- Legislative amendments (個資法 §27 → §20-1 example, caught manually 2025-11-11)
+- Judicial supersession / 解釋 / 變更見解
+- Administrative function letter revocation
+- Commentary evolution（學者見解 shift）
+
+The bundled approach makes the toolkit **frozen at ship date**. v0.3.1 added `statute_verified_at` + v0.3.2 added `case_citations_verified_at` frontmatter, but those are passive markers — they don't refresh themselves. ROADMAP §Phase 6 plans Q1 drift-check; Phase 1.7 brings the runtime layer forward so Phase 2-5 skills inherit the cleaner architecture from day one.
+
+### Two-tier separation (proposed)
+
+| Content type | Current location | Phase 1.7 target | Why |
+|---|---|---|---|
+| **Walk-away triggers** | bundled fallback frontmatter | **stay bundled** | Pure policy — no government source can adjudicate red-line opinions |
+| **Preferred / Fallback positions** | bundled fallback body | **stay bundled** | Same — company-specific negotiation stance |
+| **替代條款文字 (sample substitute clause)** | bundled fallback body | **stay bundled, slim** | Template policy; could be parameterised but offline-runnable today |
+| **Statute § number (e.g. 民法 §247-1)** | bundled (+blacklist v0.3.1) | **stay bundled** as reference, **runtime verify** at emit time | § identifier is stable enough; freshness verification at emit-time |
+| **Statute internal text** | LLM training-data recall | **runtime fetch** law.moj.gov.tw | Closes wording drift + amendment hidden bugs |
+| **Statute applicability** | bundled (applicability_notes v0.3.1) | **stay bundled, expand** | Doctrinal — community-curated; not refetchable per query |
+| **Judicial case citations** | bundled (v0.3.0-1 had 7 fabricated; v0.3.2 removed) | **runtime fetch** judgment.judicial.gov.tw at emit + `cases_verified[]` whitelist | Already enforced by v0.3.2 L7 Step 9.3.0 soft-citation rule; Phase 1.7 adds the fetcher |
+| **Administrative function letter (函釋)** | bundled (1 unverifiable) | **runtime fetch** if a primary URL exists, else mark `unverifiable` | Similar to case — verify at emit, don't ship plausible-but-stale |
+| **「## 為什麼這條重要」 narrative explanation** | bundled fallback body | **move to references/ OR runtime-generate** | Explanatory text changes when commentary evolves; ~20-25% of bundled content |
+| **「## 相關規範與學說參考」 references** | bundled fallback body (v0.3.2 cleaned) | **slim further** — keep statute references; commentary author list moves to references/<topic>.md | Loosely coupled — author list / book editions update independently |
+
+### Open decisions (NOT yet locked)
+
+- **Q-A**：runtime fetch cache strategy? `.legal-toolkit/cache/statutes/<statute>-<article>.json` with TTL? Per-session ephemeral?
+- **Q-B**：offline degradation? Fall back to LLM training-data recall + flag finding with `runtime_verified: false`? Or hard-fail the citation?
+- **Q-C**：runtime fetch in subagent vs main session? Subagent (background, doesn't pollute main context) vs main (latency hit but simpler control flow)?
+- **Q-D**：法源優先順序? law.moj.gov.tw (全國法規) > judgment.judicial.gov.tw (司法院判決) > 主管機關函釋 — when conflict, which wins?
+- **Q-E**：fetch budget? cap N WebFetches per /legal-contract-review run to bound cost / latency?
+- **Q-F**：v0.3.3 scope — just statute text fetch, or also case verification + applicability_caveat enrichment?
+
+### Tentative deliverables
+
+| 模組 | 檔案 |
+|---|---|
+| Runtime fetcher | `legal-contract-review/scripts/fetch_statute.py` (WebFetch + cache + freshness + offline fallback) |
+| Runtime fetcher | `legal-contract-review/scripts/verify_case.py` (judgment.judicial.gov.tw search + structural check) |
+| Cache | `.legal-toolkit/cache/{statutes,cases,function_letters}/<id>.json` (gitignored at user level; CI ephemeral) |
+| Schema | `assets/output-schema-citation-verification.json` — runtime-verified citation shape |
+| Protocol update | L7 Step 9.3.0 already references `cases_verified[]`; expand to active runtime-verify; mention `statute_verified_at` carry-through to citation metadata |
+| Baseline trim | Move 「## 為什麼這條重要」+「## 相關規範與學說參考」 narrative out of bundled fallback bodies into `references/clause-<id>-context.md`; bundled keeps walk-away + preferred + fallback + substitute text only |
+| Skill update | `legal-playbook-author` learns the same fetch protocol (so user-authored playbook entries also benefit) |
+| Tests | runtime fetch unit tests + offline fallback + cache behaviour + structural integration test with mocked WebFetch |
+
+### Quality gate
+
+- Pre vs post Phase 1.7 dogfood A/B on same 2 contracts (NDA + SaaS reseller)：
+  - **Citation hygiene** (SRC-09 escape rate) — Phase 1.7 should reduce to **0** unverified case / 函釋 citations
+  - **Latency** — bounded WebFetch budget; document delta（estimate ≤ +30s per run）
+  - **Offline behaviour** — degrade gracefully; emit `runtime_verified: false` markers; do NOT silently substitute training-data recall
+- Bundled fallback slimming target：each baseline-fallback-*.md ≤ 60 lines（v0.3.2 average 80-90 lines after case removal）
+
+### Deferred from Phase 1.7 (explicit non-scope)
+
+- **Comprehensive statute whitelist** in `statute-articles.json` — Phase 1.7 closes the bundled-vs-runtime split; the whitelist's article-range enumeration is independent value, deferred to Phase 1.8+
+- **NDA-native fallback baselines** — orthogonal scope; carries over from Phase 1.6.2 Deferred
+- **ANS-21 stance_asymmetry_check semantic rubric** — orthogonal
+- **Multi-jurisdiction runtime fetch** (HK / CN / JP / US) — TW-only in Phase 1.7
+
+### Risk
+
+- **WebFetch rate-limiting on law.moj.gov.tw / judgment.judicial.gov.tw** — fetch budget Q-E mitigates; cache TTL strategy (Q-A) decisive
+- **Privacy / data-leak** — runtime fetch only sends statute / case identifiers (no contract text) to external servers; document this clearly in README "Data flow"
+- **Network failure mode regression** — Q-B offline behaviour critical; should NOT make the toolkit useless when offline (it's a tool, not a service)
+- **Cost** — each /legal-contract-review run becomes more expensive (N × WebFetch latency + token cost for fetched content); document baseline cost delta in dogfood A/B
+
+---
+
 ## Phase 2 — Template + Runbook（v0.4.0，10 天）
 
 **Scope**：+2 skill → 累計 **5**。
@@ -400,6 +477,7 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.3.0 | Phase 1.6 ship | 「我可以自評跟你 hand-grade 對齊」 |
 | v0.3.1 | Phase 1.6.1 dogfood patch | 「不會在 stance-favorable 合約把優勢拱手讓人；citation hygiene 更嚴」 |
 | v0.3.2 | Phase 1.6.2 second-pass dogfood | 「主動識別合約內 favorable 條款轉成 asset；7 個 fabricated 案號從 bundled fallback 清除；L6/L7 dedup」 |
+| v0.3.3 | Phase 1.7 architecture refactor | 「條文 / 案號 runtime fetch + verify；bundled fallback 瘦身留 policy；citation drift 不再靠手動 verified_at」 |
 | v0.4.0 | Phase 2 ship | 「合約 + 起草 + 應變」 |
 | v0.5.0 | Phase 3 ship | 「+ 諮詢 + 研究」 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
