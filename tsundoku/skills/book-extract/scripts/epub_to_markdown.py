@@ -285,10 +285,21 @@ def extract_images(
     return result
 
 
-_IMG_SRC_RE = re.compile(
-    r'(<img\b[^>]*?\bsrc\s*=\s*)(["\'])([^"\']*)(\2)',
-    re.IGNORECASE,
-)
+_IMG_TAG_RE = re.compile(r"<img\b([^>]*?)/?>", re.IGNORECASE)
+_ATTR_RE = re.compile(r'\b([\w:-]+)\s*=\s*(["\'])(.*?)\2', re.DOTALL)
+
+
+def _extract_attr(attrs: str, name: str) -> str:
+    """Return the value of `name` attribute (case-insensitive), or empty."""
+    name_lower = name.lower()
+    for m in _ATTR_RE.finditer(attrs):
+        if m.group(1).lower() == name_lower:
+            return m.group(3)
+    return ""
+
+
+def _html_attr_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
 
 
 def rewrite_image_srcs(
@@ -296,37 +307,71 @@ def rewrite_image_srcs(
     chapter_zip_dir: str,
     image_map: dict[str, str],
 ) -> str:
-    """Rewrite <img src="..."> in XHTML to point at extracted images/ folder.
+    """Rewrite + normalize <img> tags so pandoc emits clean ![alt](src) syntax.
 
-    Skips external (http/https) and data: URIs. Unknown paths (manifest miss)
-    are left untouched. Resolution: relative srcs are joined against the
-    chapter's ZIP directory before lookup.
+    - Resolves relative src against chapter's ZIP dir, then looks up image_map.
+    - Skips external (http/https) and data: URIs (no rewrite, no extraction).
+    - Strips all attributes except src + alt — pandoc preserves <img> as raw
+      HTML when extra attrs (class, role, style, width, ...) are present,
+      which would defeat the inline ![alt](src) requirement.
+    - Unknown src (not in image_map, not external) is preserved untouched but
+      attributes are still stripped so the tag converts cleanly.
     """
-    if not image_map:
-        return xhtml
-
     def replace(m: re.Match) -> str:
-        prefix, quote, src, close = m.group(1), m.group(2), m.group(3), m.group(4)
-        if not src or src.startswith(("http://", "https://", "data:")):
+        attrs = m.group(1)
+        src = _extract_attr(attrs, "src")
+        if not src:
             return m.group(0)
-        abs_src = (
-            os.path.normpath(os.path.join(chapter_zip_dir, src))
-            if chapter_zip_dir
-            else os.path.normpath(src)
-        )
-        if abs_src in image_map:
-            return f"{prefix}{quote}{image_map[abs_src]}{close}"
-        return m.group(0)
+        alt = _extract_attr(attrs, "alt")
+        # Decide final src
+        if src.startswith(("http://", "https://", "data:")):
+            final_src = src
+        else:
+            abs_src = (
+                os.path.normpath(os.path.join(chapter_zip_dir, src))
+                if chapter_zip_dir
+                else os.path.normpath(src)
+            )
+            final_src = image_map.get(abs_src, src)
+        return f'<img src="{_html_attr_escape(final_src)}" alt="{_html_attr_escape(alt)}"/>'
 
-    return _IMG_SRC_RE.sub(replace, xhtml)
+    return _IMG_TAG_RE.sub(replace, xhtml)
 
 
 # ---------- HTML pre-cleaning ----------
 
 
+_SVG_WITH_IMAGE_RE = re.compile(
+    r'<svg\b[^>]*>\s*<image\b[^>]*?(?:xlink:)?href\s*=\s*["\']([^"\']+)["\'][^>]*/?>\s*</svg>',
+    re.DOTALL | re.IGNORECASE,
+)
+_ANCHOR_WRAPPING_IMG_RE = re.compile(
+    r'<a\b([^>]*?)>(\s*<img\b[^>]*?/?>\s*)</a>',
+    re.DOTALL | re.IGNORECASE,
+)
+_HREF_ATTR_RE = re.compile(r'\bhref\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+
+
 def preclean_xhtml(xhtml: str) -> str:
     """Strip kobo-specific markup, SVG blocks, scripts, empty wrappers."""
-    # kill SVG blocks (image-heavy front matter)
+    # 1. Unwrap <svg><image xlink:href="X"/></svg> → <img src="X"/> so the
+    #    SVG-kill below doesn't destroy image references. EPUBs commonly
+    #    embed images this way to control aspect ratio; without this hoist,
+    #    the image file gets extracted but no Markdown reference survives.
+    xhtml = _SVG_WITH_IMAGE_RE.sub(
+        lambda m: f'<img src="{m.group(1)}" alt=""/>', xhtml
+    )
+    # 2. Strip non-href attrs from <a> tags wrapping a single <img>. EPUBs
+    #    use <a class="ref" id="back-N"><img/></a> for footnote-glyph links;
+    #    pandoc preserves <a> with class as raw HTML, dragging <img> with
+    #    it. With only href left, pandoc emits clean [![alt](src)](href).
+    def _strip_anchor_attrs(m: re.Match) -> str:
+        href_m = _HREF_ATTR_RE.search(m.group(1))
+        if not href_m:
+            return m.group(0)
+        return f'<a href="{href_m.group(2)}">{m.group(2)}</a>'
+    xhtml = _ANCHOR_WRAPPING_IMG_RE.sub(_strip_anchor_attrs, xhtml)
+    # kill remaining (decorative) SVG blocks
     xhtml = re.sub(r"<svg\b[^>]*>.*?</svg>", "", xhtml, flags=re.DOTALL | re.IGNORECASE)
     xhtml = re.sub(r"<image\b[^/>]*/?>", "", xhtml, flags=re.IGNORECASE)
     # kill scripts and styles
