@@ -105,8 +105,9 @@ from confidence — they are orthogonal.
 
 ## Fact / Analysis / Speculation
 
-Every claim MUST be categorized (operational expression of Kovach &
-Rosenstiel 2021 Ch.4 "Journalism of Verification"):
+Every **load-bearing** claim MUST be categorized (operational
+expression of Kovach & Rosenstiel 2021 Ch.4 "Journalism of
+Verification"):
 
 - **事實 (Fact)** — Cited, verifiable, attributed to a source.
 - **分析 (Analysis)** — Reasoned inference from facts; logic chain
@@ -117,6 +118,71 @@ Rosenstiel 2021 Ch.4 "Journalism of Verification"):
 
 Full taxonomy and examples in `confidence-and-claim-language.md`
 §Fact / Analysis / Speculation Taxonomy.
+
+### Load-Bearing Definition
+
+A claim is **load-bearing** if any of the following apply:
+
+1. **Specific in time / quantity / entity** — contains a specific
+   date, version number, percentage, monetary figure, named person,
+   company, or product code.
+2. **Contested or uncertain** — sources disagree on the same point,
+   or the claim is a prediction / forecast / probability statement.
+3. **Direct support for a conclusion** — appears as evidence inside
+   the TL;DR, a recommendation, a verdict, or an Open Question.
+
+A sentence that satisfies none of the three is **routine
+descriptive** and does NOT need a Fact / Analysis / Speculation
+tag. Examples of routine descriptive (do NOT tag):
+
+- "Library X has three modes." (categorical, no specifics)
+- "Hooks intercept lifecycle events." (concept description)
+- "Skill and Tool are different abstraction layers." (classification)
+
+Examples of load-bearing (DO tag):
+
+- "Hooks reached GA on 2025-06-12 [src: anthropic.com/news/...]" — specific date + cite
+- "Adoption is likely to exceed 60% by 2027." — forecast
+- "We recommend X over Y because Z." — recommendation support
+
+#### Self-Critique pass for missed load-bearing claims
+
+In deep mode, the worker's Self-Critique block (per
+`protocols/hook-self-critique.md`) includes a sweep: scan
+downstream-referenced sentences and verify each carries a tag.
+Sentences that the synthesis cites but that lack a tag are
+**load-bearing-by-use** and must be tagged retroactively. This
+catches the "wrote it without realizing the recommendation would
+cite it" failure mode without requiring first-pass omniscience.
+
+### Onboarding-Layer Exemption
+
+**Onboarding sections** (the per-protocol introduction that
+establishes reader vocabulary, research scope, or market context
+— see each protocol's Step 0) are pedagogical scaffold, not
+cite-able claims. They are **exempt from Fact / Analysis /
+Speculation tagging** regardless of how specific the wording
+appears, because their job is to seed mental model — not to assert
+verifiable propositions.
+
+The exemption applies to:
+
+- "Core concept" definitions in `stack-evaluation` / `competitive-analysis`
+- "Scope and inclusion criteria" in `academic-research`
+- "Market boundary and context" in `market-analysis`
+- Mental-model diagrams, is-vs-isn't tables, glossary entries
+  appearing inside an onboarding section
+
+When the exemption applies, the deep-mode Self-Critique block
+records the line `Onboarding tagging exemption applied per
+citation-standards §Onboarding-Layer Exemption.` so reviewers
+do not flag the absence as a violation.
+
+If a sentence in the rest of the document re-states or extends an
+onboarding claim with specifics (e.g., "Hooks intercept lifecycle
+events" in onboarding → "Hooks reached GA on 2025-06-12" in the
+timeline), the **specific re-statement is load-bearing and must
+be tagged** even though the original onboarding line was exempt.
 
 ## Citation Format Examples
 
@@ -216,5 +282,16 @@ edition's DOI-as-URL presentation is the most readable.
 - Omitting the confidence tag on a key recommendation (the tag is
   load-bearing; without it the reader cannot calibrate).
 - Treating "fact / analysis / speculation" as a stylistic suggestion.
-  It is a tagging requirement — every sentence in a deliverable
-  belongs to exactly one of the three.
+  It is a tagging requirement — every **load-bearing** sentence
+  (per §Load-Bearing Definition) belongs to exactly one of the
+  three. Routine descriptive sentences and onboarding-section
+  content are exempt.
+- Tagging onboarding-section sentences (concept definitions, scope
+  statements, market-boundary framing). Onboarding is pedagogical
+  scaffold and is exempt per §Onboarding-Layer Exemption — tagging
+  it misleads the reader into treating mental-model seeding as
+  cite-able claims.
+- Stripping all tags as a reaction to v5.5.1's noise. Selective
+  tagging is the discipline; *no* tagging is a regression — the
+  Open Question / recommendation / specific-date sentences still
+  need them.

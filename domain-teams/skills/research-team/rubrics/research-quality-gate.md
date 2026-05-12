@@ -24,10 +24,11 @@ re-running the protocol from scratch.
 
 When deep mode runs the gate, all flag dimensions (Source Quality
 & Cross-Verification, Reasoning & Logic, Completeness,
-Actionability) apply unchanged with the existing verdict rules.
-Per-mode threshold tuning (for example relaxing completeness
-warnings for quick mode) is deferred to v4.9.2 if real usage shows
-the binary skip is too coarse.
+Actionability, **Reader Onboarding**) apply unchanged with the
+existing verdict rules. The Self-Critique Honesty dimension is
+deep-mode-only by construction. Per-mode threshold tuning (for
+example relaxing completeness warnings for quick mode) is deferred
+to v4.9.2 if real usage shows the binary skip is too coarse.
 
 See `standards/confidence-and-claim-language.md` §Cost-Aware
 Early-Exit Rule for the mode-specific per-claim source thresholds
@@ -87,6 +88,28 @@ not the author's performance of knowledge.
 - 🟡 **Warning**: Recommendations are vague ("consider improving X" without specifics)
 - 🟡 **Warning**: No clear next steps or actionable items at the end
 - 🟢 **Clear**: Recommendations are specific, prioritized, and actionable
+
+### Reader Onboarding
+
+Grounded in Kovach & Rosenstiel 2021's reader-serving principle:
+research output must seed the reader's mental model before
+asserting facts about that model. The onboarding form is bound to
+the protocol — `stack-evaluation` and `competitive-analysis`
+require **concept-first** (define each load-bearing term);
+`academic-research` requires **scope-first** (research question,
+inclusion / exclusion criteria, search method); `market-analysis`
+requires **context-first** (market boundary, time range, primary
+drivers). `research-summary` and `quick-lookup` are exempt
+because the source material or single-question framing supplies
+its own onboarding.
+
+- 🔴 **Fatal**: Onboarding section absent on a worker-dispatched artifact (stack-evaluation / competitive-analysis / academic-research / market-analysis)
+- 🔴 **Fatal**: Onboarding form does not match the protocol (e.g., academic-research artifact opens with concept definitions instead of scope statement)
+- 🟡 **Warning**: Onboarding section is present but skeletal (one-line stubs, no real definition / scope / context content)
+- 🟡 **Warning**: Onboarding section is tagged with Fact / Analysis / Speculation (violates the exemption — see `standards/citation-standards.md` §Onboarding-Layer Exemption)
+- 🟢 **Clear**: Onboarding section is present, form-correct, substantive, and untagged
+
+User explicit override ("skip the concept layer, I know this domain") is honored — the worker records the override in Self-Critique and the evaluator treats the override as satisfying this dimension.
 
 ### Self-Critique Honesty (deep mode only)
 
