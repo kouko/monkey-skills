@@ -25,6 +25,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.6.2    0.3.2   1d      3 (patch)    2nd-pass dogfood: asset id + 案號 cleanup      ✅ DONE
 1.7      0.3.3   5-7d    3 (架構)     bundled-vs-runtime architecture refactor       ✅ DONE
 1.8      0.3.4   1d      3 (clean)    output consolidation 7→3 (legal.md + business.md + findings.json)  ✅ DONE
+1.9      0.3.5   1d      3 (patch)    audit-driven polish (P0a/b/c) + 3 NDA-native fallbacks (C)  ✅ DONE
 2        0.4.0   10d     5            Template + Runbook cluster
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
@@ -416,6 +417,60 @@ The bundled approach makes the toolkit **frozen at ship date**. v0.3.1 added `st
 
 ---
 
+## Phase 1.9 — Audit-driven polish + NDA-native fallback（v0.3.5，1 天）✅ **DONE 2026-05-12**
+
+**Scope**：v0.3.4 dogfood 2 份合約 + 2 fresh-eyes audit 後修補；3 個 P0 protocol patches + 3 NDA-native bundled fallback baselines；**不新增 skill，不改 pipeline 邏輯**。
+
+**Trigger**：v0.3.4 dogfood NDA + SaaS 兩個 audit 都給 verdict (b) Sign off with minor edits，找到 4 類問題：
+
+1. **legal.md §QA stale-render bug** — findings.json#self_grade 與 legal.md §QA prose drift（NDA placeholder text；SaaS stale 15/17 vs JSON truth 17/17）
+2. **business.md redline section overload** — v0.3.1 actionable timing + Quantifiable column 不見了；v0.3.4 5-15 行 dense legalese 對 non-lawyer 過載
+3. **Override banner signal dilution** — placeholder warning 混進 [!danger] 稀釋 high-risk 警示力
+4. **NDA-native gap 第 3 次連審驗證** — §2.2/§2.3 deemed-breach + §5.1 揭露方 unlimited indemnity + §11 全部一部 assignment ban，現有 SaaS-shaped fallback 不涵蓋
+
+### 完成狀態（commits 7dc4223 → 8770ea8 → f826d3c → \<commit-4\> → \<commit-5\>）
+
+**Commit 1 P0a — legal.md §QA back-fill**：
+- L7 Step 10 重組：findings.json → legal.md (with markers) → business.md → self_grade.py（back-fills BOTH findings.json AND legal.md）
+- self_grade.py 新增 `_backfill_legal_md_qa()` + `_format_legal_md_qa_block()` helpers — 找 `<!-- self_grade:start -->...<!-- self_grade:end -->` markers in-place replace
+- 4 new tests (test_backfill_*): markers present / absent / failed_criteria render / missing markers raises
+- 38 → 42 self_grade tests / 167 → 171 全 suite
+
+**Commit 2 P0b — business.md §主要 Redline 重點 light-touch**：
+- L7 Step 10.3 spec rewrite：per-redline 4 fields (Why + 修正方向 + Timing + cross-ref to legal.md)，NOT full clause body
+- Each redline 8 lines instead of 15+; business.md ~50% shrink
+- Single SoT 保留：findings.json#redlines；legal.md 渲染送對方版；business.md 渲染決策摘要
+
+**Commit 3 P0c — [!danger] vs [!warning] signal split**：
+- escalation-override.md template：[!danger] 只列 real legal high-risk；[!warning] separate block 列 placeholder warnings
+- L7 Step 10.2 legal.md head：兩個 callout blocks，明顯區分
+- self_grade.py ANS-05 不變（仍檢 [!danger] in legal.md head）；[!warning] informational
+
+**Commit 4 C — 3 NDA-native bundled fallback baselines**：
+- `baseline-fallback-deemed-breach-cascade.md`：§2.2 員工 + §2.3 第三人 cascade pattern；3 個 walk-away；preferred = due care + sub-cap NT$50 萬
+- `baseline-fallback-disclosing-party-indemnity.md`：§5.1 揭露方 unlimited indemnity；preferred = 範圍限縮 + 時效 3 年 + cap
+- `baseline-fallback-assignment-prohibition.md`：§11 全部一部 ban M&A blocker；preferred = permitted affiliate / successor / lender carve-outs
+- Runtime cold-start baselines 4 → 7（tarball regen + seed-manifest update deferred to v0.3.6）
+- 全 3 baselines 遵循 v0.3.2 conventions: `case_citations_verified_at` frontmatter + 相關規範與學說參考 section + statute + 王澤鑑 / 王文宇 commentary doctrine anchor
+
+**Commit 5 — version bump**：plugin.json + marketplace.json + 3 READMEs + ROADMAP（本 section）
+
+### Quality gate
+
+- ✅ **171/171 tests pass**（167 → 171，+4 new back-fill tests）
+- ✅ legal.md §QA back-fill 4-way test coverage（happy path / no markers / failed_criteria / explicit ValueError）
+- ✅ 3 new fallback baselines schema-conform（frontmatter + body shape）
+- 🟡 **dogfood v0.3.5 validation 待跑** — 4th round on NDA + SaaS 驗 (a) §2.2/§2.3 are NOW caught; (b) business.md redline section feels light enough; (c) banner split readable; (d) legal.md §QA back-fill 真的 in-sync
+
+### 仍 deferred（v0.3.6+ / Phase 1.10）
+
+- baseline-source/ 同步 + tarball 重生（規模較大，須 update seed-manifest + test_baseline_pipeline.py total_clauses 8→11 + 全 17 → 20 file count）
+- v0.3.4 audit 提到的 P1 items: legal.md section order（CRAC 移到 action layer 後）/ empty section suppression / legal.md hard-cap 300 行 / 民法 §247-1 caveat-then-drop / 營業秘密法 §11 NDA vs trade-secret conflation
+- v0.3.4 audit 提到的 P2 items: override banner phrasing 「雙方均承擔該不對稱負擔」oxymoron / redline rationale URL formatting / legal.md §QA collapse 1-line / cache --prune-unused
+- Multi-jurisdiction（HK / CN / JP / US runtime fetch）— Phase 1.7 Deferred carry-over
+
+---
+
 ## Phase 2 — Template + Runbook（v0.4.0，10 天）
 
 **Scope**：+2 skill → 累計 **5**。
@@ -573,6 +628,7 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.3.2 | Phase 1.6.2 second-pass dogfood | 「主動識別合約內 favorable 條款轉成 asset；7 個 fabricated 案號從 bundled fallback 清除；L6/L7 dedup」 |
 | v0.3.3 | Phase 1.7 architecture refactor | 「條文 / 案號 / 函釋 runtime fetch + verify；TTL-based cache；offline-graceful；citation drift 不再靠手動 verified_at；163/163 tests」 |
 | v0.3.4 | Phase 1.8 output consolidation | 「7 output files → 3：legal.md（法務）+ business.md（非法務）+ findings.json（machine + self_grade）；167/167 tests；banner 縮到 legal.md only」 |
+| v0.3.5 | Phase 1.9 audit polish + NDA fallback | 「legal.md §QA marker back-fill / business.md redline light-touch / [!danger] vs [!warning] split / 3 NDA-native fallback baselines (4→7 runtime cold-start)；171/171 tests」 |
 | v0.4.0 | Phase 2 ship | 「合約 + 起草 + 應變」 |
 | v0.5.0 | Phase 3 ship | 「+ 諮詢 + 研究」 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
