@@ -31,8 +31,13 @@ A `dev-workflow:skill-judge` evaluation across all 14 skills produced:
 | C (84-95) | 1 | sk13 (innovaction-martian-test) — V1-weak per Stage 1.5 |
 | D (72-83) | 1 | sk14 (manager-personality-quadrant) — V1-weak per Stage 1.5 |
 
-Mean 105/B, median 108.5/A. Across 14 evaluations, common
-sub-A patterns were:
+Mean 105/B, median 108.5/A. **Note**: this score table reflects the
+pre-merge 14-skill set as evaluated on 2026-05-12. Per D7 below, v0.1.0
+ships a 9-skill plugin via the Profile B merge mapping in §3.5 — five
+merge pairs + four standalone skills. Post-merge skill-judge scores will
+be re-baselined as part of Phase 0 pilot self-judge (§6).
+
+Across 14 evaluations, common sub-A patterns were:
 
 - **D5 progressive disclosure** ceiling at 12.5/15 — all 14 skills are
   single-file, no `references/` extraction.
@@ -61,6 +66,34 @@ improvement (refactor-equivalence floor).
 | D4 | Audit trail: `INDEX.md` + `BOOK_OVERVIEW.md` + `verified.md` all enter `references/` | User Q4 |
 | D5 | Implementation strategy: Approach B (subagent-driven parallel) | User Q5 |
 | D6 | Plugin name: `systems-thinking-toolkit` | User Q (plugin-name) |
+| D7 | Profile B merge: 5 INDEX-declared `compose-with` / `depends-on` pairs merged into 5 new skills; 4 skills stay standalone (see §3.5) | User Q (merge profile) |
+
+## 3.5 Profile B merge mapping
+
+The 5 merges are restricted to pairs that INDEX.md already declares as
+`compose-with` or that form a tight `depends-on` chain. Pairs that
+contrast at the cognitive-frame level (sk05 R+B coupling vs sk06 single
+B template; sk13 vs sk14 V1-weak) stay standalone.
+
+| New skill (kebab) | Sources | INDEX relation | Rationale |
+|---|---|---|---|
+| `loop-and-link-primitives` | sk01 + sk02 | sk03 `depends-on` both | Always co-used: link-signing precedes loop-classification; presenting them as one primitives layer reduces router hops |
+| `cld-craft` | sk03 + sk04 | `compose-with` | Stage-3 declares the pair; sk03 Rule 7 directly triggers sk04 |
+| `strategy-lever-and-cascade` | sk07 + sk08 | sk08 `depends-on` sk07 | sk07 is the reframe, sk08 is its three-timescale expansion — workflow-trunk |
+| `stakeholder-and-team-thinking` | sk09 + sk10 | `compose-with` | Both stakeholder-aware; INDEX explicitly pairs them |
+| `simulation-modeling` | sk11 + sk12 | sk12 `depends-on` sk11 | sk11 without sk12 is half-finished translation; sk12 without sk11 is rhetoric without artifact |
+
+| Standalone | Why kept separate |
+|---|---|
+| `limits-to-growth-take-the-brakes-off` (sk05) | Contrasts with sk06 (R+B coupling archetype vs single B template); merge would dilute the trigger surface |
+| `variance-target-action-template` (sk06) | Same as above |
+| `innovaction-martian-test` (sk13) | V1-weak per Stage 1.5; D2 defers merger/pruning to v0.2+ |
+| `manager-personality-quadrant` (sk14) | Same as above |
+
+**Total skill count**: 5 merged + 4 standalone + 1 entry/router
+(`using-systems-thinking-toolkit`) = **10 skill directories**.
+
+**Total slash commands**: 9 per-skill + 1 router = **10 commands**.
 
 ## 4. Plugin architecture (Section 1)
 
@@ -71,47 +104,41 @@ systems-thinking-toolkit/                            ← repo root, sibling to p
 ├── ROADMAP.md                                        ← v0.1 → v0.2+ (incl. sk13/sk14 merger discussion)
 ├── INDEX.md                                          ← plugin-level skill map (Stage-3 mermaid linkified)
 │
-├── commands/                                         ← 14 slash commands + 1 router
+├── commands/                                         ← 9 per-skill + 1 router = 10 slash commands
 │   ├── stt.md                                        ← /systems-thinking-toolkit:stt = router
-│   ├── r-loop.md
-│   ├── so-link.md
-│   ├── cld-rules.md
-│   ├── fuzzy-var.md
-│   ├── limits-to-growth.md
-│   ├── variance-action.md
-│   ├── lever-outcome.md
-│   ├── strategic-cascade.md
-│   ├── multi-cld.md
-│   ├── mental-models.md
-│   ├── stock-flow.md
-│   ├── models-learning.md
-│   ├── martian-test.md
-│   └── manager-quadrant.md
+│   ├── link-primitives.md                            ← sk01+sk02
+│   ├── cld-craft.md                                  ← sk03+sk04
+│   ├── limits-to-growth.md                           ← sk05
+│   ├── variance-action.md                            ← sk06
+│   ├── strategy.md                                   ← sk07+sk08
+│   ├── stakeholder.md                                ← sk09+sk10
+│   ├── simulation.md                                 ← sk11+sk12
+│   ├── martian-test.md                               ← sk13 (V1-weak)
+│   └── quadrant.md                                   ← sk14 (V1-weak)
 │
-├── skills/
+├── skills/                                           ← 9 + 1 entry = 10 skill dirs (see §3.5)
 │   ├── using-systems-thinking-toolkit/
 │   │   ├── SKILL.md                                  ← entry / router skill
 │   │   └── README.md / .ja.md / .zh-TW.md
 │   │
-│   ├── reinforcing-balancing-loop-diagnosis/
-│   │   ├── SKILL.md                                  ← post 9-item polish
+│   ├── loop-and-link-primitives/                     ← MERGE: sk01 + sk02
+│   │   ├── SKILL.md
 │   │   ├── README.md / .ja.md / .zh-TW.md
-│   │   └── references/cases.md                       ← if body > 180 lines after polish
+│   │   └── references/cases.md                       ← likely triggered (merged body > 180 lines)
 │   │
-│   ├── s-o-link-assignment/
-│   ├── cld-drawing-craft-12-rules/
-│   ├── fuzzy-variable-elevation/
-│   ├── limits-to-growth-take-the-brakes-off/
-│   ├── variance-target-action-template/
-│   ├── lever-vs-outcome-reframing/
-│   ├── strategic-cascade-scenario-planning/
-│   ├── multi-perspective-cld-wise-policy/
-│   ├── mental-models-harmony-leadership-energy/
-│   ├── stock-flow-translation/
-│   ├── models-for-learning-not-answers/
-│   ├── innovaction-martian-test/                     ← V1-weak, retained per D2
-│   └── manager-personality-quadrant/                 ← V1-weak, retained per D2
-│       (all same structure as reinforcing-balancing-loop-diagnosis above)
+│   ├── cld-craft/                                    ← MERGE: sk03 + sk04
+│   │   ├── SKILL.md
+│   │   ├── README.md / .ja.md / .zh-TW.md
+│   │   └── references/cases.md                       ← likely triggered
+│   │
+│   ├── strategy-lever-and-cascade/                   ← MERGE: sk07 + sk08; largest merged body, cases.md required
+│   ├── stakeholder-and-team-thinking/                ← MERGE: sk09 + sk10
+│   ├── simulation-modeling/                          ← MERGE: sk11 + sk12; cases.md likely
+│   ├── limits-to-growth-take-the-brakes-off/         ← STANDALONE: sk05
+│   ├── variance-target-action-template/              ← STANDALONE: sk06
+│   ├── innovaction-martian-test/                     ← STANDALONE: sk13 (V1-weak, per D2)
+│   └── manager-personality-quadrant/                 ← STANDALONE: sk14 (V1-weak, per D2)
+│       (all same structure: SKILL.md + tri-lang README + optional references/cases.md)
 │
 └── references/                                       ← per D4
     ├── BOOK_OVERVIEW.md                              ← Stage-0 thesis
@@ -131,14 +158,26 @@ systems-thinking-toolkit/                            ← repo root, sibling to p
 
 ## 5. Nine improvements per skill (Section 2)
 
-Each improvement is applied per skill; some are conditional, some affect
-all 14, two are skill-specific overrides.
+These nine improvements are applied **after** the Profile B merges (§3.5
+D7) are mechanically combined. The 5 merge implementers each perform a
+two-step task: (a) **combine** two source SKILL.md files into one merged
+SKILL.md (deduplicate R/I/A1/A2/E/B sections, unify frontmatter,
+preserve all distinct evidence), then (b) apply the nine improvements
+below. The 4 standalone-skill implementers skip step (a).
 
-### Tier 1 — applies to all 14
+Each improvement is applied per (post-merge or standalone) skill; some
+are conditional, some affect all 9, two are skill-specific overrides.
+
+### Tier 1 — applies to all 9 (post-merge)
 
 **1. Frontmatter `related_skills` backfill.**
-Cross-reference `references/INDEX.md` (the Stage-3 17-relation list) and
-populate each skill's frontmatter `related_skills`:
+Cross-reference `references/INDEX.md` (the Stage-3 17-relation list,
+re-mapped to the merged 9-skill graph per §3.5) and populate each
+skill's frontmatter `related_skills`. The re-mapping rule: a relation
+sk0X → sk0Y in the original 17-list maps to merged-skill → merged-skill
+where each side is the skill or merged target that contains the source
+skill. Self-loops created by intra-merge edges (e.g. sk03 ↔ sk04 both
+inside `cld-craft`) are dropped.
 
 ```yaml
 related_skills:
@@ -220,11 +259,14 @@ rendering in any text-only context.
 
 ### Tier 3 — skill-specific overrides
 
-**6. sk01 reverse-link backfill.**
-sk01 is the foundational skill on which 4+ downstream skills depend, but
-its current frontmatter `related_skills: []` is empty. Implementer for
-sk01 explicitly populates `related_skills` with reverse links to the
-skills that `depends-on` it (per INDEX.md).
+**6. `loop-and-link-primitives` reverse-link backfill.**
+sk01 (now merged into `loop-and-link-primitives`) is the foundational
+skill on which 4+ downstream skills depend, but its pre-merge frontmatter
+`related_skills: []` is empty. The merged skill's frontmatter must
+populate `related_skills` with reverse links to the skills that
+`depends-on` sk01 — re-mapped via §3.5 (e.g. sk05 standalone, sk06
+standalone, sk10 inside `stakeholder-and-team-thinking`, and the
+`cld-craft` merge).
 
 **7. sk13 description framing-prefix.**
 sk13's Boundary section already discloses TRIZ / morphological-analysis
@@ -252,13 +294,18 @@ taxonomy stays in I (Interpretation) as supporting vocabulary.
 
 ### Tier 4 — plugin-level (controller-only, not subagent)
 
-**9. INDEX.md plugin-ization.**
-Cache version of `INDEX.md` is copied to plugin root with two changes:
+**9. INDEX.md plugin-ization and re-mapping.**
+Cache version of `INDEX.md` is copied to plugin root with three changes:
 
-- Mermaid node labels become markdown links pointing to `skills/<slug>/SKILL.md`.
-- The "Recommended learning order" numbered list gets per-item markdown links.
+- Mermaid graph re-drawn from 14 → 9 nodes, with intra-merge edges
+  (e.g. sk01↔sk02, sk03↔sk04) dropped and inter-merge edges re-targeted
+  to the new merged-skill names.
+- Node labels become markdown links pointing to `skills/<slug>/SKILL.md`.
+- "Recommended learning order" numbered list re-derived from the 9-node
+  topological sort, with per-item markdown links.
 
-No other content change to the INDEX itself.
+The original 14-node graph is preserved in `references/INDEX.md` (i.e.
+the verbatim cache copy) for provenance.
 
 ### Out of scope (deferred to v0.2+)
 
@@ -273,21 +320,39 @@ No other content change to the INDEX itself.
 
 ### Phase 0 — Pilot (controller direct, no subagent)
 
-Controller applies improvements 1-3 + 6 (and 4-5 if triggered) to sk01
-**reinforcing-balancing-loop-diagnosis** end-to-end. Outputs:
+Controller produces ONE merged skill end-to-end as the pattern reference.
+Pilot target: **`cld-craft`** (sk03 + sk04 merge). Rationale: it's the
+cleanest natural merge case (Stage-3 compose-with declared; Rule 7 trigger
+relationship explicit), with moderate combined body size (~300 lines
+pre-improvement) — exercises both merge mechanic AND the 9 improvements
+at representative scale.
+
+Outputs:
 
 - One atomic commit on the worktree branch.
-- Reference pattern document (the sk01 commit hash + its `references/cases.md`
-  if triggered) for Phase A subagents to consume.
+- Reference pattern document (the `cld-craft` commit hash + its
+  `references/cases.md` if triggered) for Phase A subagents.
 
-Self-judge with `dev-workflow:skill-judge` rubric: sk01 must score ≥ 110
-(current 110/A) with no dimension regression. **Halt condition: any
-dimension drops → re-pilot before Phase A.**
+Self-judge with `dev-workflow:skill-judge` rubric: pilot must score ≥
+107 (the unmerged sk03 baseline = 107/B; pilot target ≥ that with no
+dimension regression). **Halt condition: any dimension drops → re-pilot
+before Phase A.** Also re-score the pre-merge sk04 baseline (110/A)
+against the merged output — merged skill scoring lower than the BETTER
+of its two sources triggers re-pilot.
 
-### Phase A + A' — 13 implementers + 13 spec-reviewers (parallel)
+### Phase A + A' — 8 implementers + 8 spec-reviewers (parallel)
 
-Dispatched together in one batch (26 subagent invocations). Each
-implementer receives:
+Dispatched together in one batch (16 subagent invocations). The 8
+implementers split into two task types:
+
+- **4 merge-implementers** (one each for: `loop-and-link-primitives`,
+  `strategy-lever-and-cascade`, `stakeholder-and-team-thinking`,
+  `simulation-modeling`): perform mechanical merge of two source SKILL.md
+  files + apply 9 improvements.
+- **4 polish-implementers** (one each for: sk05, sk06, sk13, sk14
+  standalone): skip the merge step; apply 9 improvements directly.
+
+Each implementer receives:
 
 - Cache path to the original SKILL.md.
 - Worktree destination path.
@@ -304,12 +369,12 @@ implementer via SendMessage → implementer fixes → spec-reviewer re-runs.
 Maximum 3 rounds per skill; on round 4 failure, controller takes over
 that skill directly.
 
-Token-budget mitigation: if 26-subagent batch fails on rate limits,
-split into two waves (sk02-08 then sk09-14).
+Token-budget mitigation: 16-subagent batch is well within rate-limit
+headroom; no wave-split anticipated.
 
 ### Phase B — Fresh-eyes cross-skill audit (1 subagent)
 
-After all 13 implementers PASS, dispatch one fresh-eyes auditor. It
+After all 8 implementers PASS, dispatch one fresh-eyes auditor. It
 checks X1-X5 (Section 7 Verification) — cross-skill drift only. Controller
 fixes drift directly (not delegated back to implementers, because
 drift is by definition cross-skill).
@@ -328,18 +393,23 @@ Controller produces, in sequence:
 - `references/BOOK_OVERVIEW.md` (copy from cache)
 - `references/VERIFIED.md` (copy from cache `verified.md`, case-renamed)
 - `commands/stt.md` (router slash command)
-- `commands/r-loop.md`, `commands/so-link.md`, ... (14 per-skill slash commands)
+- 9 per-skill commands per §4 directory listing (`link-primitives.md`,
+  `cld-craft.md`, `limits-to-growth.md`, `variance-action.md`,
+  `strategy.md`, `stakeholder.md`, `simulation.md`, `martian-test.md`,
+  `quadrant.md`)
 - `README.md` (plugin-level English)
 
-### Phase D — Per-skill READMEs (14 parallel subagents)
+### Phase D — Per-skill READMEs (9 parallel subagents)
 
-Each of 14 subagents owns one skill's three READMEs (en / ja / zh-TW). A
-glossary of systems-thinking terminology is fixed before dispatch (e.g.
-"reinforcing loop" → 「強化迴路」/「強化ループ」; "causal loop diagram"
-→ 「因果迴路圖」/「因果ループ図」).
+Each of 9 subagents owns one (post-merge or standalone) skill's three
+READMEs (en / ja / zh-TW). A glossary of systems-thinking terminology is
+fixed before dispatch (e.g. "reinforcing loop" → 「強化迴路」/「強化ループ」;
+"causal loop diagram" → 「因果迴路圖」/「因果ループ図」).
 
-The pilot subagent finishes sk01 first; its READMEs become the reference
-for the other 13 subagents. Total 42 README files.
+The `cld-craft` README subagent (call it the **Phase-D anchor** — distinct
+from the Phase-0 controller-pilot) is dispatched first and finishes ahead
+of the others; its 3-language README triplet becomes the reference for
+the other 8 README subagents. Total 27 per-skill README files.
 
 `README.ja.md` and `README.zh-TW.md` at plugin root are produced by the
 controller during Phase C as part of the plugin shell.
@@ -362,13 +432,13 @@ ROI).
 
 | Phase | Subagents | Approx wall-clock |
 |---|---|---|
-| 0 (pilot) | 0 | 1-2h |
-| A + A' | 26 parallel | ~30-45 min |
+| 0 (pilot — `cld-craft` merge end-to-end) | 0 | 2-3h (heavier than original — merge mechanic + 9 improvements) |
+| A + A' | 16 parallel (8 impl + 8 review) | ~45 min (4 merge-impl heavier than 4 polish-impl) |
 | B (fresh-eyes) | 1 | ~10 min |
 | C (plugin shell) | 0 | 2-3h |
-| D (READMEs) | 14 parallel | ~30-45 min |
+| D (READMEs) | 9 parallel | ~30-45 min |
 | E (CI / PR) | 0 | ~30 min |
-| **Total** | **41** | **5-7h** (excluding fresh-eyes loops) |
+| **Total** | **26** | **6-8h** (excluding fresh-eyes loops; pilot heavier per-phase but fewer subagents) |
 
 ## 7. Verification (Section 4)
 
@@ -380,10 +450,12 @@ ROI).
 | C2 | Hook does not block | `bash .claude/hooks/validate-skill-folder-structure.sh` |
 | C3 | Body token ≤ 6,000 | `wc -w < SKILL.md` < ~4,500 words |
 | C4 | Frontmatter YAML valid | `python3 -c "import yaml; yaml.safe_load(...)"` |
-| C5 | `related_skills` ⊆ INDEX.md 17 relations | grep cross-check |
+| C5 | `related_skills` ⊆ INDEX.md 17 relations, re-mapped per §3.5 to merged 9-skill graph; intra-merge edges dropped | grep cross-check |
 | C6 | Shorthand sk-code first occurrence has gloss | regex |
 | C7 | If body > 180 lines after improvements 1, 2, 3, 5, and applicable Tier-3 → `references/cases.md` exists + A1 MANDATORY | file + grep |
-| C8 | Description first sentence preserved (except sk13/sk14) | diff vs cache version |
+| C8 | Description first sentence preserved (except sk13/sk14, and except 5 merged skills which by definition rewrite descriptions to cover both source trigger surfaces) | diff vs cache version |
+| C9 (merge-only) | Merged SKILL.md preserves ALL distinct source-unit code citations from both source skills (no provenance loss) | grep audit metadata diff |
+| C10 (merge-only) | Combined body ≤ ~6000 tokens (~4500 words); if exceeded, `references/cases.md` extraction MUST trigger | `wc -w` + file existence |
 
 ### X-checks (cross-skill, Phase B)
 
@@ -422,7 +494,8 @@ ROI).
 | R6 | sk13/sk14 description rewrite breaks router triggering | Tier-3 #7 keeps all original keywords intact; only prepends a framing prefix |
 | R7 | Cache vs plugin version drift over time | D1 accepted: cache becomes archived snapshot; re-distill flows into a new plugin version (manual merge), documented in ROADMAP.md |
 | R8 | 5-7h Phase B drift-fix loop blows out wall-clock | Loop cap 3 rounds; round-4 issues recorded in ROADMAP.md as known limitations |
-| R9 | Per-skill README translation quality uneven across 14 subagents | Fixed terminology glossary issued pre-dispatch; sk01 README triplet becomes reference for the other 13 |
+| R9 | Per-skill README translation quality uneven across 9 subagents | Fixed terminology glossary issued pre-dispatch; `cld-craft` pilot README triplet becomes reference for the other 8 |
+| R10 | Merge mechanic loses nuance from one of the two source skills (e.g. sk02's Sterman ultimate-test detail flattened into sk01's even-O/odd-O dominant frame) | C9 (Phase A') checks source-unit citation preservation; pilot self-judge re-scores merged skill vs the BETTER of two source baselines; halt on dimension regression |
 
 ### Accepted residuals
 
