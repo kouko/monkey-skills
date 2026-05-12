@@ -1,7 +1,8 @@
 """Tests for legal-toolkit/scripts/distribute.py.
 
-distribute.py exposes ROUTE / ROOT / CANONICAL_DIR / iter_canonical_files /
-distribute(); these are the surface that verify-drift.py imports.
+distribute.py exposes ROUTE / ROOT / CANONICAL_DIR (constants) and
+iter_canonical_files (this task); distribute() + main() are added in
+Tasks 3-4. verify-drift.py imports ROUTE / CANONICAL_DIR / ROOT only.
 """
 from __future__ import annotations
 
@@ -37,3 +38,29 @@ def test_route_table_well_formed():
             assert dst.startswith("skills/"), (
                 f"ROUTE destination must be skills-relative: {dst!r}"
             )
+
+
+# ---------------------------------------------------------- T-D-2: scanner
+def test_iter_canonical_files_yields_relative_names(fake_plugin):
+    import distribute
+
+    (fake_plugin / "scripts" / "canonical" / "a.json").write_text("a")
+    (fake_plugin / "scripts" / "canonical" / "b.json").write_text("b")
+
+    result = distribute.iter_canonical_files(fake_plugin / "scripts" / "canonical")
+
+    names = sorted(rel for rel, _ in result)
+    assert names == ["a.json", "b.json"]
+
+
+def test_iter_canonical_files_skips_filesystem_noise(fake_plugin):
+    import distribute
+
+    canonical = fake_plugin / "scripts" / "canonical"
+    (canonical / "real.json").write_text("real")
+    (canonical / ".DS_Store").write_text("mac droppings")
+    (canonical / ".gitkeep").write_text("")
+    (canonical / "._real.json").write_text("appledouble")
+
+    names = sorted(rel for rel, _ in distribute.iter_canonical_files(canonical))
+    assert names == ["real.json"]

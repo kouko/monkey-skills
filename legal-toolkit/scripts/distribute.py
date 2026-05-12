@@ -29,3 +29,26 @@ ROUTE: dict[str, list[str]] = {
         "skills/legal-contract-review/assets/legal-sources.json",
     ],
 }
+
+# Filesystem noise to skip — never authored files.
+IGNORED_NAMES = {".DS_Store", ".gitkeep"}
+
+
+def iter_canonical_files(canonical_dir: Path = CANONICAL_DIR) -> list[tuple[str, Path]]:
+    """Yield (relative_posix_name, absolute_path) for every file under
+    canonical_dir, sorted for deterministic output.
+
+    Filters out macOS Finder droppings, empty-dir markers, AppleDouble files,
+    and Python bytecode caches.
+    """
+    out: list[tuple[str, Path]] = []
+    for p in sorted(canonical_dir.rglob("*")):
+        if not p.is_file():
+            continue
+        if p.name in IGNORED_NAMES or p.name.startswith("._"):
+            continue
+        if "__pycache__" in p.parts:
+            continue
+        rel = p.relative_to(canonical_dir).as_posix()
+        out.append((rel, p))
+    return out
