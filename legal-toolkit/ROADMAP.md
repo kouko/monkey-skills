@@ -471,6 +471,43 @@ The bundled approach makes the toolkit **frozen at ship date**. v0.3.1 added `st
 
 ---
 
+## Phase 1.10 — `legal-sources.json` SSOT-and-functional-copy refactor（v0.3.6，半天） ✅ **DONE 2026-05-12**
+
+**Scope**：純 plumbing PR；零 runtime 行為改變。Phase 2 sibling skills 需要存取相同 statute / case / 函釋 URL registry，但 monkey-skills CLAUDE.md `Skill Structure` 規範要求每個 skill 自包含、SKILL.md 不可跨 skill reach。
+
+### 完成狀態
+
+- `legal-toolkit/scripts/canonical/legal-sources.json` — plugin-level SoT（唯一可手動編輯位置）
+- `legal-toolkit/scripts/distribute.py` — byte-identical deploy 到 `ROUTE` 內每個 consumer skill
+- `legal-toolkit/scripts/verify-drift.py` — CI gate；任何漂移 / missing 都 exit 1
+- `legal-toolkit/scripts/tests/` — 13 tests（T-D-1..5 + T-V-1..5）
+- `.github/workflows/legal-toolkit-ci.yml` — CI workflow（pytest + verify-drift + skill-folder-structure）
+- `legal-contract-review/assets/legal-sources.json` 透過 `git mv` → canonical/，再由 distribute.py 重新生成回原位（byte-identical），`build_citation_url.py` 無需修改
+
+### Quality gate
+
+- 既有 171 tests 全綠（zero runtime behavior change）
+- 新增 13 tests 全綠
+- verify-drift.py 在 HEAD state 為 exit 0；mutation smoke 確認 exit 1
+- CI workflow 第一次跑綠
+
+### 為什麼
+
+Phase 2 增加兩個 sibling skill（`legal-document-draft` + `legal-incident-response`），都要存取相同的 URL registry。三種選項：
+- ❌ Skills reach into `legal-contract-review/assets/`（違反 self-contained 規範）
+- ❌ Per-skill 獨立 narrow registry（三處漂移）
+- ✅ Plugin-level SoT + byte-identical functional copies + CI drift gate（translation-toolkit 已驗證模式）
+
+完整 design：`docs/superpowers/specs/2026-05-12-legal-toolkit-sp1-sources-canonical-refactor-design.md`
+完整 plan：`docs/superpowers/plans/2026-05-12-legal-toolkit-sp1-sources-canonical-refactor.md`
+
+### Deferred 到 SP2+
+
+- `legal-sources.json` 內容更新（PDPA 2025/11 條文 verify）→ SP2 verify run
+- `build_citation_url.py` / `cache_check.py` 是否也走 canonical/ pattern → Phase 2 設計階段決定（取決於 Phase 2 skills 是否做 runtime fetch；很可能不需要）
+
+---
+
 ## Phase 2 — Template + Runbook（v0.4.0，10 天）
 
 **Scope**：+2 skill → 累計 **5**。
