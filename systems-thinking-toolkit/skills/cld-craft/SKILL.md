@@ -125,7 +125,12 @@ E flow:
         │
         v
   Rule-10 stakeholder recognition test + final boundary audit
+        │
+        v
+  emit Mermaid CLD artifact (Step 11 — required deliverable for downstream `loop-and-link-primitives` and any visual handoff)
 ```
+
+**MANDATORY — READ ENTIRE FILE before executing Step 11 (Mermaid emission)**: [`references/cld-mermaid-emit.md`](references/cld-mermaid-emit.md) (~280 lines) defines the CLD-specific Mermaid emission convention — S/O edge labels, R/B `%%` annotation, dangle node shapes, R/B color theme. Every Mermaid block this skill produces must conform.
 
 When this skill activates, follow these steps:
 
@@ -165,6 +170,15 @@ When this skill activates, follow these steps:
 9. **Final boundary audit.** Walk every node; if its only causal partner is outside the diagram, it should be a dangle, not an internal node. Promote / demote as needed.
 
 10. **Document response-curve shapes as part of the model.** When this CLD is later translated to a stock-and-flow simulation (`stock-flow-translation`), each curve becomes the input function — accept hand-drawn fuzzy inputs and use the model to *learn*, not to forecast (`models-for-learning-not-answers`).
+
+11. **Emit the CLD as a Mermaid artifact.** This is the required deliverable — every successful invocation of this skill ends with a Mermaid block. Apply the conventions from [`references/cld-mermaid-emit.md`](references/cld-mermaid-emit.md):
+    - `flowchart LR` (preferred) or `flowchart TD` (only when 3+ stacked loops crowd horizontally)
+    - **Every edge labelled `|S|` or `|O|`** — capital, single-letter, no variants (`|+|`, `|same|`, etc. are non-conformant)
+    - **Every closed loop annotated with a `%%` comment**: loop type (R or B), traversal path, O-count
+    - **Dangles get distinct node shapes**: input `([...])`, target `{{...}}`, rate `[/...\]`, output `((...))`, cloud `>...]`; internal nodes stay `[...]`
+    - **R-loop nodes get the warm palette** (`fill:#fff4e6,stroke:#e67700`); **B-loop nodes get the cool palette** (`fill:#e3fafc,stroke:#0c8599`); dangles stay neutral gray
+    - **Below the Mermaid block, add a Markdown caption** repeating the R/B classification + O-count (renderers occasionally strip `%%` comments; this guarantees downstream `loop-and-link-primitives` and human readers see it)
+    - Completion criterion: a single self-contained Mermaid block + caption exists and follows every convention listed in `cld-mermaid-emit.md`. The downstream skill `loop-and-link-primitives` can parse it without re-asking what loops exist.
 
 ## B — Boundary ★
 
