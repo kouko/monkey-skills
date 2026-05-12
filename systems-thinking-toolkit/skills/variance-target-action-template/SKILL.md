@@ -9,7 +9,8 @@ description: |
   I act now or wait?", "I don't know if my last move worked yet,"
   "the numbers go up and down." NOT for systems that are genuinely
   diverging (run loop-and-link-primitives diagnosis instead), one-off
-  non-recurring decisions, or real-time control with zero detection lag.
+  non-recurring decisions, real-time control with zero detection lag,
+  or random within-control noise (run SPC / control-chart tooling instead).
   KEYWORDS: balancing loop, B-loop, target, variance, action, actual,
   oscillation, ping-pong, over-correction, do nothing, feedback delay,
   detection lag, small moves long intervals, moving target, endogenous
