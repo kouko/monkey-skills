@@ -64,3 +64,61 @@ def test_iter_canonical_files_skips_filesystem_noise(fake_plugin):
 
     names = sorted(rel for rel, _ in distribute.iter_canonical_files(canonical))
     assert names == ["real.json"]
+
+
+# ---------------------------------------------------------- T-D-3: distribute()
+def test_distribute_creates_byte_identical_copies(fake_plugin):
+    import distribute
+
+    payload = b'{"key": "value", "n": 42}\n'
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(payload)
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    distribute.distribute(route=route, root=fake_plugin)
+
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    assert dst.exists()
+    assert dst.read_bytes() == payload
+
+
+def test_distribute_creates_parent_dirs(fake_plugin):
+    import distribute
+
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(b"x")
+
+    # skills/legal-contract-review/assets/ does NOT exist beforehand.
+    assert not (fake_plugin / "skills" / "legal-contract-review").exists()
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    distribute.distribute(route=route, root=fake_plugin)
+
+    assert (fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json").exists()
+
+
+def test_distribute_is_idempotent(fake_plugin):
+    import distribute
+
+    payload = b'{"version": 1}'
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(payload)
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    distribute.distribute(route=route, root=fake_plugin)
+    distribute.distribute(route=route, root=fake_plugin)  # second call
+
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    assert dst.read_bytes() == payload
