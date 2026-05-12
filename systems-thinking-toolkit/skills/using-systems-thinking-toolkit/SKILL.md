@@ -27,7 +27,7 @@ Then match their intent to the right skill:
 
 | Situation | Skill | Command |
 |---|---|---|
-| Translate prose mess into a Mermaid CLD with R/B-classified loops and signed edges; "this keeps getting worse", "we're stuck in a vicious cycle", "death spiral", "boom and bust", "why is X accelerating", "the diagram is too cluttered" | cld-craft | `/systems-thinking-toolkit:cld-craft` |
+| Translate prose mess into a Mermaid CLD with R/B-classified loops and signed edges. EN: "this keeps getting worse", "stuck in a vicious cycle", "death spiral", "boom and bust", "why is X accelerating", "the diagram is too cluttered". zh-TW: 「做得越多越糟」/「停不下來」/「卡住了」/「下行螺旋」/「越…越…」/「心不在焉」. JA: 「やればやるほど悪化」/「行き詰まり」/「悪循環」/「燃え尽き」/「負のループ」 | cld-craft | `/systems-thinking-toolkit:cld-craft` |
 
 `cld-craft` is the v0.4 **carry-1** skill — it absorbs the old `loop-and-link-primitives` discipline into Step 11 so a single invocation produces a fully-annotated Mermaid CLD ready for downstream skills.
 
@@ -41,7 +41,7 @@ Then match their intent to the right skill:
 
 | Situation | Skill | Command |
 |---|---|---|
-| Recognize archetype (limits-to-growth OR V/T/A oscillation) on an already-classified CLD + apply intervention playbook | cld-archetypes | `/systems-thinking-toolkit:archetypes` |
+| Recognize archetype (limits-to-growth OR V/T/A oscillation) on an already-classified CLD + apply intervention playbook. EN: "growth decelerating", "diminishing returns", "doubling spend won't move it", "metric keeps swinging". zh-TW: 「撞到天花板」/「增長停滯」/「投得越多越沒效」/「指標一直在擺動」. JA: 「成長の頭打ち」/「打てば打つほど効かない」 | cld-archetypes | `/systems-thinking-toolkit:archetypes` |
 | Overlay multiple stakeholder perspectives (each their own classified CLD) on a shared canvas + find a straddle policy | cld-overlay | `/systems-thinking-toolkit:overlay` |
 | Translate a classified CLD into stock-and-flow + use simulation for learning (not point forecast) | simulation-modeling | `/systems-thinking-toolkit:simulation` |
 
