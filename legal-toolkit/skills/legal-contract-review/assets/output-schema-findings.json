@@ -97,7 +97,12 @@
           "supports": {"type": "string", "description": "which CRAC step (rule / analysis / conclusion) this citation backs"},
           "verified": {"type": "boolean"},
           "url": {"type": "string", "format": "uri", "description": "if set, must match SRC-03 URL allowlist (law.moj.gov.tw / judgment.judicial.gov.tw / *.gov.tw / mops.twse.com.tw)"},
-          "applicability_caveat": {"type": "string", "description": "v0.3.1+: per L7 Step 9.3, borderline-applicable citations record their scope limitation here (e.g. '本條主要規範定型化契約；本合約為 1-on-1 negotiated B2B')"}
+          "applicability_caveat": {"type": "string", "description": "v0.3.1+: per L7 Step 9.3, borderline-applicable citations record their scope limitation here (e.g. '本條主要規範定型化契約；本合約為 1-on-1 negotiated B2B')"},
+          "runtime_verified": {"type": "boolean", "description": "v0.3.3+: true when the LLM ran a fresh WebFetch or used a non-expired cache entry; false when fell back to LLM training-data recall (offline or fetch failed or budget exhausted)"},
+          "runtime_verified_method": {"type": "string", "enum": ["cache_hit", "fresh_fetch", "cache_stale_with_fetch_fail", "llm_recall_fallback", "search_only", "not_in_registry"], "description": "v0.3.3+: how runtime_verified was established"},
+          "cache_path": {"type": "string", "description": "v0.3.3+: relative path to the cache file (e.g. .legal-toolkit/cache/statutes/民法-247-1.json) when runtime_verified_method ∈ {cache_hit, fresh_fetch, cache_stale_with_fetch_fail}"},
+          "runtime_fetch_skipped": {"type": "boolean", "description": "v0.3.3+: true when emit was blocked by fetch_budget cap; implies runtime_verified=false"},
+          "amendment_note": {"type": "string", "description": "v0.3.3+: present when cache verification.is_current=false or deprecated=true; e.g. '個資法 §27 已於 2025-11-11 修正後條次變更為 §20-1'"}
         }
       }
     },
@@ -142,6 +147,22 @@
       "$ref": "output-schema-escalation.json#/properties/escalations"
     },
     "override_triggered": {"type": "boolean", "description": "v0.3.1+: banner placement scope = memo-legal.md + escalation.md only (NOT issues / redline / memo-business)"},
+    "runtime_fetch_summary": {
+      "type": "object",
+      "description": "v0.3.3+: Phase 1.7 telemetry — citation verification breakdown for the run. Drives dogfood A/B pre/post Phase 1.7.",
+      "properties": {
+        "total_citations_emitted": {"type": "integer", "minimum": 0},
+        "runtime_verified_count": {"type": "integer", "minimum": 0, "description": "citations with runtime_verified=true"},
+        "runtime_verified_rate": {"type": "number", "minimum": 0, "maximum": 1, "description": "runtime_verified_count / total_citations_emitted"},
+        "fetch_budget_max": {"type": "integer", "minimum": 0, "description": "from legal-sources.json#fetch_budget_defaults or config.yml override"},
+        "fetch_budget_used": {"type": "integer", "minimum": 0},
+        "by_method": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0},
+          "description": "histogram of citations[].runtime_verified_method values (cache_hit / fresh_fetch / cache_stale_with_fetch_fail / llm_recall_fallback / search_only / not_in_registry)"
+        }
+      }
+    },
     "placeholder_warnings": {
       "type": "array",
       "items": {"type": "string"},
