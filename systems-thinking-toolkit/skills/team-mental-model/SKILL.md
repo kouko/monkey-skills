@@ -142,6 +142,12 @@ If a leader cannot point to data on at least the first three proxies after 4-6 w
    - **Exit criterion**: ≥ 1 fundamental-value node with divergent S/O label identified per team member, documented in writing on a single overlay artifact.
 
 4. **Negotiate convergence on fundamental values.** Focus on the value-level causality, not tactical disagreements. Sherwood is explicit: harmony "especially as regards fundamental values." Tactical divergence is healthy; value-causality divergence is the binding constraint. Run as a facilitated session (not a memo broadcast) — convergence is a co-authored artifact, not a declaration.
+   - **Facilitation script cues** (apply in sequence):
+     - **Open**: "Each of you drew a CLD in Step 2. Today's task is not to pick the 'right' one — it's to identify the *fundamental-value* nodes where we still disagree and the *tactical* nodes where we already agree."
+     - **Surface divergence**: "On node X, A's CLD has S; B's has O. Tell us what value belief is behind your sign — not what you'd do about it." Force-name the value, defer the action.
+     - **Distinguish layer**: After each divergence is named, ask: "Is this a disagreement about *how the world works* (causal belief = converge here) or *what we should do* (tactical = leave heterogeneous)?" Mark each on the overlay.
+     - **Co-author, don't decree**: Write the convergence sentence on the same canvas everyone can edit — not on the leader's notepad. Use language drawn from participants' own phrasings, not management vocabulary.
+     - **Close**: Read the value-causality statement aloud; each participant says yes / no / "with this clarification". Iterate until everyone's "yes" is unforced.
    - **Exit criterion**: a written values-causality statement that every participant recognizes as their own (Rule 10), covering at least the divergent value-nodes surfaced in Step 3.
 
 5. **Install continuous energy practices.** Schedule sustained shared-discussion time, not one-shot offsites. Active listening discipline (Sherwood p32 — passive listening fails). Repeated revisitation as new members join or context changes. Cite Nelson (Case 4 in `references/cases.md`): *years* of shared dinners, not an annual all-hands.

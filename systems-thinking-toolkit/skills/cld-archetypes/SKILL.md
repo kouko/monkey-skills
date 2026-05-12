@@ -234,6 +234,31 @@ E flow:
    brakes don't disappear, they queue. Pre-positioning relief for the
    next one prevents the same conversation in 6 months.
 
+#### Branch L worked Mermaid skeleton (copy-paste, fill in names)
+
+```mermaid
+flowchart LR
+    Growth[Growth Rate] -->|S| Customers[Customer Base]
+    Customers -->|S| Revenue[Revenue]
+    Revenue -->|S| Reinvest[Reinvestment Capacity]
+    Reinvest -->|S| Growth
+    Brake1[/Capacity Limit\] -->|O| Reinvest
+    Brake2{{Market Saturation}} -->|O| Growth
+    Relief((Constraint Relief Intervention)) -->|O| Brake1
+    %% R-loop (currently decelerating): Growth → Customers → Revenue → Reinvest → Growth — O-count = 0 → reinforcing
+    %% Binding brake: Capacity Limit (rate dangle) — relief target identified
+    %% Next brake to queue: Market Saturation (target dangle) — pre-position relief
+    style Growth fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Customers fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Revenue fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Reinvest fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Brake1 fill:#f1f3f5,stroke:#868e96,stroke-width:1px
+    style Brake2 fill:#f1f3f5,stroke:#868e96,stroke-width:1px
+    style Relief fill:#f1f3f5,stroke:#868e96,stroke-width:1px
+```
+
+Caption: name the binding-brake candidate explicitly, the constraint-relief intervention, and the predicted post-relief R-loop spin rate. Identify the next brake to queue.
+
 ### Branch V — Variance/Target/Action (when oscillation signature confirmed)
 
 0. **Pre-check: signal vs noise.** Before V/T/A diagnosis, verify the
@@ -292,6 +317,26 @@ E flow:
    as *informed restraint* not absence. If the org structurally
    cannot tolerate this, the diagnosis still holds; the constraint
    is political, not analytic.
+
+#### Branch V worked Mermaid skeleton (copy-paste, fill in names + delay tag)
+
+```mermaid
+flowchart LR
+    Variance[Variance gap] -->|S| Action[Corrective Action]
+    Action -->|S, T=delay| Actual[Actual State]
+    Actual -->|O| Variance
+    Target{{Target Setpoint}} -->|S| Variance
+    %% B-loop (currently oscillating): Variance → Action → Actual → Variance — O-count = 1 → balancing
+    %% Delay tag: T=delay on Action→Actual edge — replace with concrete value (e.g. T=6weeks, T=2quarters)
+    %% Diagnosis class: pick (a) converging-just-impatient / (b) sustained-oscillation / (c) growing-amplitude / (d) moving-target
+    %% Intervention: new interval ≥ 1.5 × T; or "do nothing for 2 cycles" if (c); or stop moving target if (d)
+    style Variance fill:#e3fafc,stroke:#0c8599,stroke-width:2px
+    style Action fill:#e3fafc,stroke:#0c8599,stroke-width:2px
+    style Actual fill:#e3fafc,stroke:#0c8599,stroke-width:2px
+    style Target fill:#f1f3f5,stroke:#868e96,stroke-width:1px
+```
+
+Caption: name the concrete delay magnitude (T=...), the dysfunction class (a/b/c/d), the smallest-move action (or scheduled non-intervention), and the falsifiable abort trigger.
 
 ### Post-branch — annotate the CLD
 

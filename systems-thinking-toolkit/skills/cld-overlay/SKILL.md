@@ -127,9 +127,10 @@ When this skill activates, follow these steps:
    - **(c) Loops spinning the same direction across diagrams** — synchronized R-loops are the "force" pattern (buyer squeezes ↔ contractor cuts corners). Both sides reinforcing the same vicious dynamic without knowing it.
    - Completion criterion: a single overlay artifact (paper, whiteboard, or Mermaid block) exists with all stakeholder CLDs visible simultaneously, and the three signatures above have been annotated where they appear.
 
-5. **Search for the straddle.** Identify a candidate policy, lever, or new variable that, if added to the overlay, would improve at least two of the CLDs beneficially. Test it against each CLD in turn — trace the candidate's effect through each diagram's loops.
-   - A straddle is **not** the compromise midpoint; it is usually a third option no individual CLD contained. Generate at least 3 candidates before evaluating.
-   - Completion criterion: at least one candidate straddle has been traced through all stakeholder CLDs and predicted to leave each diagram beneficially altered; the candidate is documented as a new node (or new policy variable) added to the overlay.
+5. **Search for the straddle (per evaluation round).** Identify candidate policies, levers, or new variables that, if added to the overlay, would improve at least two of the CLDs beneficially. Test each candidate against each CLD in turn — trace its effect through each diagram's loops.
+   - A straddle is **not** the compromise midpoint; it is usually a third option no individual CLD contained.
+   - **Per-round generation discipline**: in each evaluation round, **generate ≥3 distinct candidates** before picking any to advance. Forcing 3 candidates prevents premature commitment to the first "feels right" option.
+   - Completion criterion: ≥1 candidate per round has been traced through all stakeholder CLDs and predicted to leave each diagram beneficially altered; the surviving candidate is documented as a new node (or new policy variable) added to the overlay.
 
 6. **Validate with all groups jointly.** Only now bring the groups together to evaluate the candidate straddle against their own diagrams. Acceptance criterion: each group recognizes the policy as beneficial within their CLD (`cld-craft` Rule 10 — diagram must be recognized as real by its author). If any group rejects the candidate, return to Step 5 with the rejection feedback as new input.
    - Completion criterion: every participating stakeholder group has signed off on the straddle as beneficial within their own CLD (or surfaced a specific objection that becomes a new node).
@@ -139,7 +140,7 @@ When this skill activates, follow these steps:
    - **Hand off to `team-mental-model`**: when the conflict was a precursor to a longer-term team-formation problem (post-merger / cross-functional initiative becoming a permanent team), this skill's output is the input to the inward protocol. The straddle is the values-causality starting point.
    - Completion criterion: a written operational plan exists, OR a documented hand-off to `team-mental-model` with the overlay artifact as starting input.
 
-8. **Halt condition — no straddle exists.** If after at least 3 candidate generations no policy improves any 2 CLDs jointly, the dispute may be **genuinely zero-sum**. Do not manufacture a fake straddle to look successful. Possible diagnoses:
+8. **Halt condition — no straddle exists.** If **≥3 full evaluation rounds** (each per Step 5 producing its own ≥3 candidates) yield no policy that improves any 2 CLDs jointly, the dispute may be **genuinely zero-sum**. Do not manufacture a fake straddle to look successful. Possible diagnoses:
    - Fixed-resource zero-sum (budget split, headcount allocation) — see Boundary.
    - Absent stakeholders — return to Step 1.
    - Power asymmetry sanitized as "wise policy" — see Boundary.
@@ -147,7 +148,14 @@ When this skill activates, follow these steps:
 
 ### Mermaid emission note (v0.3+)
 
-This skill produces a multi-CLD overlay artifact. Each individual CLD MUST follow the conventions in [`../cld-craft/references/cld-mermaid-emit.md`](../cld-craft/references/cld-mermaid-emit.md): every edge labelled `|S|` or `|O|`, every closed loop annotated with a `%%` comment, dangles get distinct node shapes, R-loop nodes get the warm palette (`fill:#fff4e6,stroke:#e67700`), B-loop nodes get the cool palette (`fill:#e3fafc,stroke:#0c8599`).
+This skill produces a multi-CLD overlay artifact. Each individual CLD MUST follow the canonical CLD Mermaid conventions:
+
+- **Every edge labelled `|S|` (same direction) or `|O|` (opposite)** — no `|+|`, `|-|`, `|same|`, `|opposite|` variants
+- **Every closed loop annotated with a `%%` comment**: `%% <R|B>-loop (<spin if R>): <traversal> — O-count = <N> → <reinforcing|balancing>`
+- **Dangle node shapes**: input `([...])`, target `{{...}}`, rate `[/...\]`, output `((...))`, cloud `>...]`; internal rectangles `[...]`
+- **R-loop nodes warm palette** (`fill:#fff4e6,stroke:#e67700`); **B-loop nodes cool palette** (`fill:#e3fafc,stroke:#0c8599`); dangles neutral gray
+
+(Full convention with worked examples + axes / threshold tagging for delay-edges: see [`../cld-craft/references/cld-mermaid-emit.md`](../cld-craft/references/cld-mermaid-emit.md). The 4 bullets above capture the load-bearing rules; the reference adds depth for split-fuzzy + delay-tagged edges.)
 
 For the **overlay** emission, use Mermaid `subgraph` blocks — one subgraph per stakeholder, each subgraph containing that stakeholder's full CLD. Cross-subgraph annotations on the three overlay signatures (shared-node-conflicting-S/O, one-side-only nodes, synchronized R-loops) use comment lines outside the subgraphs.
 
@@ -171,7 +179,11 @@ flowchart LR
     Straddle{{Develop Young Talent}} -->|O| E_Stars
     Straddle -->|O| SP_Lev
     Straddle -->|O| J_Ceil
-    %% straddle node: breaks executive cost-spiral AND trumps star bargaining AND relieves junior ceiling
+    %% Straddle node (target dangle, hexagon): introducing it injects an external O-link into each subgraph.
+    %% On Executive B-loop (S1): |O| on E_Stars relaxes Cost Pressure path → B-loop continues balancing at a lower setpoint (intervention OK)
+    %% On Star R-loop (S2): |O| on SP_Lev breaks the |S|→|S| chain — the R-loop's even-O count flips to 1 → becomes balancing (vicious R neutered)
+    %% On Junior B-loop (S3): |O| on J_Ceil relieves Morale's brake → B-loop continues with looser ceiling (intervention OK)
+    %% Net effect: 3 subgraphs all improved; no |O|-on-dangle paradox because Straddle injects into existing internal nodes, not into other dangles
 ```
 
 Below the Mermaid block, add a Markdown caption that names: (a) each stakeholder subgraph and the loop type they show, (b) the three overlay signatures observed, (c) the straddle node and which CLDs it improves.
