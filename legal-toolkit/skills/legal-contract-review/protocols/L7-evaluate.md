@@ -550,6 +550,102 @@ Deprecated (個資法 §27 cited after 2025-11-11 amendment):
 - WebFetch sends **only** the statute identifier (e.g. `pcode=B0000001&flno=247-1`) in the URL — **NO contract text** to external servers
 - README "Data flow" section documents this clearly
 
+### Step 9.3.2 — Case runtime fetch + verify (v0.3.3+, Phase 1.7)
+
+Same shape as Step 9.3.1 but targets judicial decisions. v0.3.2 Step 9.3.0 soft-citation rule **forbids** emitting "X 年度 Y 字第 N 號" unless verification = cache hit OR in-session WebFetch. Step 9.3.2 is the cache-then-fetch wire-up.
+
+#### Workflow
+
+```
+For each case citation candidate <court> <year> <case_type> <number>:
+
+1. uv run scripts/cache_check.py case --court <X> --year <Y> --type <Z> --number <N>
+   ├── exit 0 (hit)     → use cache.content + verification
+   ├── exit 2 (expired) → preview cache; proceed to fetch
+   └── exit 1/3 (miss/invalid) → proceed to fetch
+
+2. uv run scripts/build_citation_url.py case --court <X> --year <Y> --type <Z> --number <N>
+   → returns {url, source_host, source_metadata, verified}
+   - verified="templated": direct-data URL constructed (judgment.judicial.gov.tw/FJUD/data.aspx?ty=JD&id=<court_code>,<year>,<type>,<number>)
+   - verified="search-only": court not in court_codes registry; fall back to search page
+
+3. WebFetch the URL (main session):
+   - If verified="templated" + WebFetch returns case content → exists=true,
+     parse holding_summary + decision_date
+   - If verified="templated" + WebFetch returns empty page → exists=false
+     (fabrication signature — strongly correlates with v0.3.2 verification
+     subagent finding of 7/8 bundled case fabrications)
+   - If verified="search-only" → LLM does keyword search at the search URL;
+     if zero hits, exists=false
+
+4. Write cache file at .legal-toolkit/cache/cases/<court>-<year>-<type>-<number>.json
+   with ttl_days=7 (cases evolve faster than statutes — supersession,
+   variance, later commentary correction)
+
+5. Emit decision:
+   - exists=true → emit citation; verified=true; runtime_verified=true;
+     holding_summary in citations[].supports field
+   - exists=false → DO NOT EMIT this citation; fall back to:
+     · "近年實務趨勢" / "依司法院判決系統檢索" (soft formulation)
+     · OR drop the case anchor entirely; cite statute + commentary instead
+   - WebFetch failed + no cache → emit with runtime_verified=false +
+     memo-legal warning callout; do NOT silently substitute LLM recall
+```
+
+#### Fabrication detection
+
+A direct-data URL that resolves to an empty / 404-equivalent page is a strong fabrication signal. v0.3.2 verification subagent found 7/8 bundled case-numbers had this signature. Step 9.3.2 catches the same signal at runtime if any LLM-emitted case citation slips past the protocol-level soft-citation gate.
+
+#### Privacy + budget
+
+- WebFetch sends only `court_code + year + case_type + number` in the URL — NO contract text leaves
+- Counts toward `fetch_budget_defaults.max_unique_citations_per_run` (default 10)
+- Cache TTL 7 days: cases get cited less frequently than statutes; 7d is conservative against supersession / commentary revision
+
+### Step 9.3.3 — Function letter runtime verify (v0.3.3+, Phase 1.7)
+
+Function letters (主管機關 函釋) are the trickiest source — many lack direct permalinks and require keyword search at the agency's site.
+
+#### Workflow
+
+```
+For each function letter citation candidate <agency> <letter_id?> + <topic>:
+
+1. uv run scripts/cache_check.py function-letter --agency <X> --letter-id <Y>
+   (if letter_id is known)
+   ├── exit 0 (hit)     → use cache
+   └── miss/expired/invalid → proceed to fetch
+
+2. uv run scripts/build_citation_url.py function-letter --agency <X>
+   → search-page URL hint (always "verified=search-only" — function letters
+     have no direct permalink standard)
+
+3. WebFetch the search URL + LLM does keyword search:
+   - Search by letter_id (if known) → ideal case, direct match
+   - Search by 主旨 / 法條 + topic — fuzzy match; LLM judges
+   - If LLM finds a matching letter with confidence ≥ 0.7:
+     · Extract summary + decision_date + letter_id (if not already known)
+     · exists=true
+   - If LLM finds nothing OR confidence < 0.7:
+     · exists=false (unverifiable, not necessarily fabricated)
+     · Soft formulation: "依 <agency> 主管實務" without specific letter_id
+4. Write cache file at .legal-toolkit/cache/function_letters/<agency>-<letter_id>.json
+   with ttl_days=30 (function letters change slower than cases)
+
+5. Emit decision: same pattern as Step 9.3.2 — verified citation OR
+   soft formulation OR runtime_verified=false marker
+```
+
+#### Note: 函釋 不容易 verify
+
+Function letters often:
+- Live across multiple agency sites that don't share search indices
+- Get revoked / superseded without clear notice
+- Are referenced informally without 字號 in industry commentary
+- May be marked "內部 reference only" without public URL
+
+The protocol accepts higher unverifiable rate for function letters than for statutes / cases. When `exists=false`, prefer soft formulations over fabricating; emit `runtime_verified: false` honestly.
+
 ### Step 9.3 — Citation applicability gate (v0.3.1+)
 
 Before emitting any statute citation to `memo-legal.md` `citations[]`, the LLM MUST internally verify **applicability** (not just article-number existence):
