@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-redline.json",
+  "title": "redline.md output schema (legal-contract-review)",
+  "description": "Redline suggestions: for each problematic clause, the proposed substitute text. May be paste-ready (from playbook body 替代條款文字) or LLM-generated when no playbook text exists.",
+  "type": "object",
+  "required": ["contract_metadata", "redlines"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "redlines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "source_type", "rationale_zh_tw"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "variant_id": {"type": "string"},
+          "source_type": {"type": "string", "enum": ["user_playbook", "bundled_fallback", "advisory"]},
+          "original_text": {"type": "string", "description": "verbatim from contract"},
+          "proposed_text": {"type": "string", "description": "substitute clause text — preferred from playbook body, else LLM-generated"},
+          "proposed_text_source": {"type": "string", "enum": ["playbook_body", "llm_generated"]},
+          "rationale_zh_tw": {"type": "string", "description": "why the change — short business-translation form"},
+          "fallback_level_used": {"type": "string", "description": "preferred / fallback-1 / fallback-2"}
+        }
+      }
+    },
+    "external_share_stripped": {"type": "boolean", "default": false, "description": "true when --external-share was passed; affects citing of playbook IDs"}
+  }
+}

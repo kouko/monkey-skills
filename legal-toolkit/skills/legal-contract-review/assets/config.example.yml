@@ -1,0 +1,63 @@
+# legal-toolkit user config — copy to .legal-toolkit/config.yml in your
+# working directory and override any defaults below.
+#
+# .legal-toolkit/ is gitignored at the user side, so this file is safe
+# for per-project tuning without leaking into your repo. The toolkit
+# reads this file lazily; absence is fine (defaults apply).
+#
+# v0.3.3 (Phase 1.7) — first user-config file the toolkit consumes.
+
+# ---------------------------------------------------------------------------
+# Runtime fetch budget — caps WebFetch calls per /legal-contract-review run.
+# Per Q-E lock: soft cap. When exceeded, remaining citations emit with
+# runtime_fetch_skipped: true + runtime_verified: false.
+# ---------------------------------------------------------------------------
+runtime_fetch:
+  # Override assets/legal-sources.json#fetch_budget_defaults.max_unique_citations_per_run
+  max_unique_citations: 10
+  # WebFetch retry per citation attempt (e.g. transient network failure)
+  max_fetches_per_citation_attempt: 2
+  # Timeout per WebFetch (seconds)
+  fetch_timeout_seconds: 30
+  # Force-refetch even if cache hit (testing / verification)
+  no_cache: false
+
+# ---------------------------------------------------------------------------
+# Cache TTL overrides — per legal-sources.json#ttl_defaults. Longer = fewer
+# fetches but staler data; shorter = fresher but more network cost.
+# ---------------------------------------------------------------------------
+cache:
+  statute_days: 30
+  case_days: 7
+  function_letter_days: 30
+  applicability_notes_days: 365
+
+# ---------------------------------------------------------------------------
+# Profile — passed to legal-document-draft (Phase 2+) and incident-response;
+# the contract-review skill reads it for ABAC pre-filter when deal_context
+# fields aren't supplied explicitly.
+# ---------------------------------------------------------------------------
+profile:
+  company_name: ""        # e.g. "資廚管理顧問股份有限公司"
+  company_id: ""          # 統一編號
+  default_jurisdiction: "TW"
+  escalation_threshold_twd: 5000000  # alerts when deal_size > this
+  legal_role: "GC"        # 法務主管 / GC / 部門主管 / 老闆兼法務
+
+# ---------------------------------------------------------------------------
+# Global rules — apply across all skills in this toolkit.
+# ---------------------------------------------------------------------------
+global_rules:
+  # When --external-share flag passed, run a redaction pass before shipping.
+  redaction_before_cloud: true
+  # Output language — forces zh-TW even if Claude defaults differ
+  output_language: zh-TW
+
+# ---------------------------------------------------------------------------
+# Phase 1.7 deferred override slots — when v0.3.4+ ships, these become live.
+# ---------------------------------------------------------------------------
+# verify_case:
+#   default_court: "最高法院"    # fall-through when LLM omits explicit court
+#
+# verify_function_letter:
+#   agency_priority: ["個人資料保護委員會", "法務部"]  # for legacy PDP letters

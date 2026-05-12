@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-escalation.json",
+  "title": "escalation.md output schema (legal-contract-review)",
+  "description": "Who-signs-what for each clause that needs escalation. Drives the human approval flow. High-risk items prepend the Escalation Override red banner.",
+  "type": "object",
+  "required": ["contract_metadata", "escalations"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "override_triggered": {"type": "boolean", "description": "true when any escalation row triggers the Escalation Override red banner"},
+    "override_triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trigger", "detail"],
+        "properties": {
+          "trigger": {"type": "string", "enum": ["risk_default_red", "walk_away_triggered", "low_confidence", "criminal_liability", "deal_size_threshold", "cross_border_pii"]},
+          "detail": {"type": "string", "description": "concrete description filled into the Override block"}
+        }
+      }
+    },
+    "placeholder_warnings": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "lines warning that escalate_to is still '[請編輯…]' for one or more findings — surfaces uncustomised bundled fallback"
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "escalate_to", "trigger_reason"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "variant_id": {"type": "string"},
+          "escalate_to": {"type": "string", "description": "from frontmatter — NEVER rewritten by LLM"},
+          "escalate_to_is_placeholder": {"type": "boolean", "description": "true if escalate_to.startswith('[請編輯')"},
+          "trigger_reason": {"type": "string", "description": "what fired: walk_away matched / risk_default red / etc."},
+          "trigger_text": {"type": "string", "description": "verbatim trigger from walk_away_triggers list, when applicable"},
+          "deadline": {"type": "string", "format": "date", "description": "if there's a deal deadline"},
+          "suggested_action_zh_tw": {"type": "string"}
+        }
+      }
+    }
+  }
+}

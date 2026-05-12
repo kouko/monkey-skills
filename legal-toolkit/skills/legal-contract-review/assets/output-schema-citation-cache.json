@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-citation-cache.json",
+  "title": "citation-cache file schema (Phase 1.7 runtime fetch)",
+  "description": "Schema for files written to .legal-toolkit/cache/{statutes,cases,function_letters}/<id>.json. Each cache entry is the LLM's WebFetch result + metadata for TTL-based expiry. cache_check.py reads these to decide hit / miss / expired. Cache files are gitignored at user level + ephemeral in CI; only the schema lives in source control.",
+  "type": "object",
+  "required": ["type", "key", "fetched_at", "ttl_days", "expires_at", "source_url", "content", "verification"],
+  "properties": {
+    "$schema_version": {"type": "string", "const": "v0.3.3"},
+    "type": {"type": "string", "enum": ["statute", "case", "function_letter"]},
+    "key": {
+      "type": "string",
+      "description": "canonical cache key: <statute>-<article> | <court>-<year>-<type>-<number> | <agency>-<letter_id>"
+    },
+    "fetched_at": {"type": "string", "format": "date-time", "description": "when this cache entry was created (ISO 8601)"},
+    "ttl_days": {"type": "integer", "minimum": 1, "description": "TTL window from fetched_at; assets/legal-sources.json#ttl_defaults"},
+    "expires_at": {"type": "string", "format": "date-time", "description": "fetched_at + ttl_days"},
+    "source_url": {"type": "string", "format": "uri", "description": "the WebFetch URL the LLM hit; must be in SRC-03 allowlist"},
+    "fetch_method": {"type": "string", "enum": ["llm_webfetch", "manual"], "description": "how the cache was populated"},
+    "fetch_attempt_count": {"type": "integer", "minimum": 1, "description": "number of WebFetch retries to populate this entry"},
+    "content": {
+      "type": "object",
+      "description": "type-specific payload",
+      "oneOf": [
+        {
+          "$comment": "type=statute",
+          "type": "object",
+          "required": ["statute", "article", "title"],
+          "properties": {
+            "statute": {"type": "string", "examples": ["民法", "個人資料保護法"]},
+            "article": {"type": "string", "examples": ["247-1", "20-1"]},
+            "title": {"type": "string", "description": "article title from law.moj.gov.tw"},
+            "text": {"type": "string", "description": "verbatim article body"},
+            "amendments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["date", "type"],
+                "properties": {
+                  "date": {"type": "string", "format": "date"},
+                  "type": {"type": "string", "enum": ["增訂", "修正", "刪除"]},
+                  "note": {"type": "string"}
+                }
+              }
+            },
+            "last_amended_at": {"type": "string", "format": "date", "description": "date of most recent amendment"}
+          }
+        },
+        {
+          "$comment": "type=case",
+          "type": "object",
+          "required": ["court", "year", "case_type", "number"],
+          "properties": {
+            "court": {"type": "string", "examples": ["最高法院", "智慧財產法院"]},
+            "year": {"type": "integer", "minimum": 1, "description": "民國 year"},
+            "case_type": {"type": "string", "examples": ["台上", "民營訴", "判"]},
+            "number": {"type": "integer", "minimum": 1, "description": "case sequence number"},
+            "holding_summary": {"type": "string", "description": "1-3 sentence summary of the court's holding"},
+            "decision_date": {"type": "string", "format": "date"}
+          }
+        },
+        {
+          "$comment": "type=function_letter",
+          "type": "object",
+          "required": ["agency", "letter_id"],
+          "properties": {
+            "agency": {"type": "string", "examples": ["個人資料保護委員會", "公平交易委員會"]},
+            "letter_id": {"type": "string", "description": "the formal 函釋字號"},
+            "summary": {"type": "string"},
+            "decision_date": {"type": "string", "format": "date"}
+          }
+        }
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "required": ["exists"],
+      "properties": {
+        "exists": {"type": "boolean", "description": "true if the LLM successfully fetched non-empty content; false if 404 / structurally invalid"},
+        "is_current": {"type": "boolean", "description": "true if no amendments / supersession noted"},
+        "deprecated": {"type": "boolean", "description": "true if statute article deleted or case overruled"},
+        "successor": {"type": ["string", "null"], "description": "if deprecated, the successor citation (e.g. '個人資料保護法 §20-1' for deleted §27)"},
+        "deprecation_note": {"type": "string"}
+      }
+    },
+    "applicability_caveat": {
+      "type": "string",
+      "description": "carried over from assets/statute-articles.json#applicability_notes if relevant; e.g. 民法 §247-1 caveat about 定型化契約 scope"
+    }
+  }
+}

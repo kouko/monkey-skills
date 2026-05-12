@@ -1,0 +1,26 @@
+{
+  "name": "legal-toolkit",
+  "version": "0.3.5",
+  "description": "In-house legal toolkit for 台灣 SME → 上市櫃 法務 — 7-layer schema-driven contract review (Stark / Adams / Burnham + Taiwan overlay: 強行/任意 規定二分 / 定型化契約 §247-1 / 六準則解釋), playbook-driven negotiation (visible per-clause Markdown + variant-folder schema, ABAC pre-filter, walk-away / fallback / preferred 三層 escalation), and disclaimer-driven outputs (Mandatory Disclaimer + Escalation Override on high-risk findings). 3 skills: using-legal-toolkit (router) + legal-playbook-author (bootstrap/extend/revise) + legal-contract-review (review/redline/nda mode). v0.2.0 (Phase 1.5) expanded bundled fallback from 4 to 8 clauses (variant-folder limitation-of-liability / indemnification / data-protection-dpa keyed by deal_size or jurisdiction + flat ip-assignment-and-license) and added Python scripts (discover_playbook / validate_schema / detect_conflicts / abac_filter / build_baseline / seed_baseline) plus JSON Schema 2020-12 frontmatter validation. v0.3.0 (Phase 1.6) adds the eval-tier rubric (20-criterion answer + 10-criterion source + 12-criterion playbook-quality, each tagged deterministic vs semantic) and self_grade.py that runs the 22 deterministic checks against contract-review output (writes self-grade.md), plus a calibration procedure for hand-grading 5-10 contracts against Pearson targets ≥ 0.6 / ≥ 0.7. v0.3.1 dogfood-driven patches: L7 Step 1.5 stance-asymmetry pass; L6 sub-check 4 vagueness scan; L7 Step 9.3 citation applicability gate; SRC-04 + statute-articles.json blacklist closes SRC-09 escape via fabricated sub-articles + deprecated §27; banner placement narrowed; NDA mode dispatch aligned; findings.json schema documented. v0.3.2 second-pass dogfood patches: L7 Step 0 asset identification pass (favorable existing clauses surface as favorable_position_notes instead of being invisible); L6 Step 2.5 dedup pass (missing-items + vagueness gaps merge into parent L7 finding when overlapping); L7 Step 9.3.0 soft case-citation rule (forbids case-number patterns unless WebFetch-verified in session OR listed in assets/statute-articles.json#cases_verified); 7 fabricated judicial case citations REMOVED from bundled fallback baselines (replaced with statute + 王澤鑑 / 王文宇 commentary doctrine pointers). v0.3.3 Phase 1.7 bundled-vs-runtime architecture refactor: cache-then-fetch-then-LLM workflow for all statute / case / function-letter citations; assets/legal-sources.json (12 statutes + judgment.judicial.gov.tw direct-data + 7 主管機關 search URLs); scripts/cache_check.py + scripts/build_citation_url.py with 43 new tests; L7 Step 9.3.1/9.3.2/9.3.3 protocol additions; .legal-toolkit/cache/ TTL-based cache (30d statute / 7d case / 30d function letter); offline-graceful with runtime_verified=false marker (NO silent LLM training-data substitution); fetch budget cap (default 10 unique citations / run, configurable via config.example.yml); citations[].runtime_verified + cache_path + amendment_note fields; top-level runtime_fetch_summary telemetry. v0.3.4 Phase 1.8 output consolidation: 7 output files reduced to 3 — legal.md (lawyer/GC/ops audience, absorbs former issues + escalation + memo-legal + redline + favorable + self-grade-summary), business.md (non-lawyer audience), findings.json (canonical SoT + new self_grade block absorbing former self-grade.md); banner placement narrowed to legal.md only (business.md never carries banner). v0.3.5 Phase 1.9 audit-driven polish + NDA fallback: (P0a) legal.md §QA back-fill via <!-- self_grade:start/end --> markers closes v0.3.4 stale-render bug; (P0b) business.md §主要 Redline 重點 light-touch reformat (Why + 修正方向 + Timing + cross-ref to legal.md, NOT full clause body — non-lawyer overload caught by audit); (P0c) [!danger] vs [!warning] signal split (placeholder warnings no longer dilute high-risk callout); (C) 3 NDA-native fallback baselines added (deemed-breach-cascade / disclosing-party-indemnity / assignment-prohibition) closing §2.2/§2.3/§5.1/§11 gaps caught across 3 audit rounds; 4 → 7 runtime cold-start baselines (tarball regen deferred to v0.3.6); 171 tests pass. English skill instructions + zh-TW domain content + bilingual triggers. Phase 2-5 adds document-draft / incident-response / issue-spot / research / contract-tracker / regulation-watch / corporate-governance / dd-quickscan — see ROADMAP.md.",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/legal-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "legal",
+    "contract-review",
+    "playbook",
+    "compliance",
+    "taiwan",
+    "stark-drafting-contracts",
+    "adams-mscd",
+    "民法",
+    "個資法",
+    "公司法",
+    "in-house-legal",
+    "disclaimer-driven",
+    "harvey-dual-score"
+  ]
+}
