@@ -1,7 +1,7 @@
 ---
 name: legal-contract-review
 description: |
-  Taiwan in-house legal contract review skill. Runs a 7-layer schema-driven pipeline (Stark 7 contract concepts / Adams 10 language categories / Burnham 6 functional tiers) with Taiwan-jurisdiction overlay (L0a 強行/任意 規定二分 / L0b 定型化契約 §247-1 / L6.5 六準則契約解釋) and a playbook-driven L7 evaluate step (ABAC pre-filter + Harvey dual-score self-grade). Outputs 6 structured Markdown files (issues / redline / memo-legal / memo-business / escalation / self-grade) under legal-outputs/<timestamp>-<contract-name>/. Three modes: review (default, full 6-output) / redline (focus on substitute clause text) / nda (skip L2-L3 for simpler structure). Cold-start fallback: if user has no legal-playbook/, reads 4 bundled fallback baselines (confidentiality / governing-law / auto-renewal / termination-and-survival) so the toolkit produces useful output on first install.
+  Taiwan in-house legal contract review skill. Runs a 7-layer schema-driven pipeline (Stark 7 contract concepts / Adams 10 language categories / Burnham 6 functional tiers) with Taiwan-jurisdiction overlay (L0a 強行/任意 規定二分 / L0b 定型化契約 §247-1 / L6.5 六準則契約解釋) and a playbook-driven L7 evaluate step (ABAC pre-filter + Harvey dual-score self-grade). Outputs 6 structured Markdown files (issues / redline / memo-legal / memo-business / escalation / self-grade) under legal-outputs/<timestamp>-<contract-name>/. Three modes: review (default, full 6-output) / redline (focus on substitute clause text) / nda (skip L2-L3 for simpler structure). Cold-start fallback: if user has no legal-playbook/, reads 7 bundled fallback baselines (confidentiality / governing-law / auto-renewal / termination-and-survival + v0.3.5+ NDA-native: deemed-breach-cascade / disclosing-party-indemnity / assignment-prohibition) so the toolkit produces useful output on first install.
 
   台灣 in-house 法務合約審查 skill。台湾 in-house 法務向け契約レビュー skill。
 
@@ -21,7 +21,7 @@ The main event. Runs a 7-layer pipeline against a contract and emits
 6 structured output files. The pipeline is **deterministic** (LLM
 runs each layer once, no looping outside L6's bounded cycle-check),
 **playbook-driven** (L7 evaluates each clause against the user's
-playbook or the 4 bundled fallback baselines), and **disclaimer-
+playbook or the 7 bundled fallback baselines), and **disclaimer-
 driven** (every output ships with the Mandatory Disclaimer footer;
 high-risk findings ship with the Escalation Override red banner).
 
@@ -110,19 +110,22 @@ Layer-by-layer protocols under [`protocols/`](protocols/):
 
 ## Cold-start fallback (works without user playbook)
 
-If `discover_playbook()` returns empty (no `legal-playbook/` in working folder or ancestors), the skill DOES NOT abort. Instead, L7 evaluates against 4 bundled fallback baseline clauses in [`assets/baseline-fallback-*.md`](assets/):
+If `discover_playbook()` returns empty (no `legal-playbook/` in working folder or ancestors), the skill DOES NOT abort. Instead, L7 evaluates against 7 bundled fallback baseline clauses in [`assets/baseline-fallback-*.md`](assets/) (4 original + 3 NDA-native added in v0.3.5 Phase 1.9 per dogfood audit):
 
 - `baseline-fallback-confidentiality.md`
 - `baseline-fallback-governing-law-jurisdiction.md`
 - `baseline-fallback-auto-renewal.md`
 - `baseline-fallback-termination-and-survival.md`
+- `baseline-fallback-deemed-breach-cascade.md` *(v0.3.5+ NDA-native: §2.2 員工 + §2.3 第三人違約 cascade)*
+- `baseline-fallback-disclosing-party-indemnity.md` *(v0.3.5+ NDA-native: §5.1 揭露方 unlimited indemnity 風險)*
+- `baseline-fallback-assignment-prohibition.md` *(v0.3.5+ NDA-native: §11 全部或一部 assignment M&A blocker)*
 
 Each finding generated from a bundled clause:
 - Tagged `source_type: bundled_fallback` in `findings.json#findings[]` (rendered as 議題清單 row tag in `legal.md`)
 - Stamped with a banner: `⚠️ 使用 bundled fallback baseline — 建議跑 legal-playbook-author 客製化你公司的紅線`
 - If `escalate_to` starts with `[請編輯` (the placeholder), L7 prepends a warning callout to `legal.md §升級簽核` urging customisation
 
-**v0.2.0 (Phase 1.5)** expands the bundled fallback to **8 clauses**:
+**v0.2.0 (Phase 1.5)** expands the *tarball-seedable* bundled set to **8 clauses** (different scope from the cold-start fallback above):
 the original 4 flat + variant-folder LoL / Indemnification / DPA
 (deal_size or jurisdiction-keyed) + flat IP-Assignment. Clauses
 outside the 8 still fall through to **advisory mode** in L7:
