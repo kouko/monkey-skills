@@ -48,7 +48,10 @@ def load_profile(profile_path: Path) -> LoadResult:
     except yaml.YAMLError as e:
         return LoadResult(valid=False, errors=[f"YAML parse error: {e}"])
 
-    schema = _load_schema()
+    try:
+        schema = _load_schema()
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        return LoadResult(valid=False, errors=[f"internal: schema file missing or corrupted: {e}"])
     validator = jsonschema.Draft202012Validator(schema)
     errors = []
     for err in validator.iter_errors(data):

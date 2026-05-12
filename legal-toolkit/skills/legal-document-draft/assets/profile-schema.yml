@@ -38,22 +38,22 @@ properties:
   general_contact:
     type: object
     required: [email]
+    additionalProperties: false
     properties:
       email:
         type: string
-        format: email
       phone:
         type: string
   dpo:
     type: object
     required: [name, email]
     description: Data Protection Officer (個資法 §22 推定承辦人)
+    additionalProperties: false
     properties:
       name:
         type: string
       email:
         type: string
-        format: email
   business_scope:
     type: array
     items: { type: string }
@@ -62,6 +62,7 @@ properties:
     items:
       type: object
       required: [country, purpose]
+      additionalProperties: false
       properties:
         country: { type: string }
         purpose: { type: string }
@@ -70,6 +71,7 @@ properties:
     items: { type: string }
   governing_law:
     type: object
+    additionalProperties: false
     properties:
       default_jurisdiction: { type: string }
       preferred_court: { type: string }
