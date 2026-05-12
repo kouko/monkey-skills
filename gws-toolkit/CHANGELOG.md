@@ -10,16 +10,6 @@ slides-toolkit lineage and remain accurate for that fork point.
 
 ## [Unreleased]
 
-### Validation period
-
-- ≥ 2 weeks of validated daily use of gws-toolkit before slides-toolkit
-  enters formal Phase 3 deprecation (banner update + marketplace
-  archive). Validation criteria:
-  1. ≥ 1 successful Slides deck via slides-builder pipeline
-  2. ≥ 1 ad-hoc Drive operation through vendored gws-drive skill
-  3. ≥ 1 destructive op routed through safe-delete.sh (any tier)
-  4. No regression vs slides-toolkit in deck-generation time (KR1)
-
 ### Backlog — test infrastructure (post-Phase-1 milestone)
 
 Today the only automated test is
@@ -48,6 +38,52 @@ Phased ROI:
    `--switch` / idempotent paths.
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
+
+## [0.5.0] - 2026-05-06
+
+**Phase 1 validation closed; slides-toolkit enters Phase 3 deprecation.**
+
+### Validation results (2026-05-05)
+
+All 4 acceptance criteria from the prior `[Unreleased]` validation
+period satisfied in a single live-test session:
+
+1. ✅ ≥ 1 deck via `slides-builder` — 4-page deck with text + image
+   (https://docs.google.com/presentation/d/1wxIRPN0WDVzCq9WvVum2Plug-swKqWD__5xTb2Gie9E)
+2. ✅ ≥ 1 ad-hoc Drive op via `gws-drive` — `files.create` upload +
+   `permissions.create` (anyoneWithLink reader)
+3. ✅ ≥ 1 destructive op via `safe-delete.sh` — L1 trash executed
+   (verified `trashed=true`); L2 → L3 typed-name escalation gate
+   verified via dry-run
+4. ✅ KR1 ≤ 3 min — 108 sec end-to-end across 4 API calls (text-only
+   3-page path)
+
+### Changed
+
+- **`slides-toolkit` plugin enters Phase 3 deprecation.** Per its
+  README banner the plugin is now deprecated; new users should install
+  `gws-toolkit` instead. Existing installations continue to work; the
+  `slides-toolkit/` directory remains in the repo for at least one more
+  release before any consideration of hard deletion.
+- **`.claude-plugin/marketplace.json` — `slides-toolkit` entry
+  removed.** New marketplace discovery now points users at
+  `gws-toolkit` only. Already-enabled installations are unaffected
+  (Claude Code does not auto-uninstall on registry removal).
+- **README banner — `gws-toolkit` graduates from 🚧 validation to
+  ✅ stable.** Status row Release column bumped `0.1.0-mvp` → `0.5.0`
+  (drift fix: `plugin.json` had stayed at `0.0.1-seed` since the
+  strangler-fig seed; both are now aligned at `0.5.0`).
+
+### Fixed
+
+- **All 8 builder recipes** (`gws-toolkit/skills/slides-builder/protocols/`
+  × 4 + `slides-toolkit/skills/google-slides-api/protocols/` × 4 fallback)
+  rewritten from `echo "$body" | gws ... --json-stdin` to
+  `gws ... --json "$body"`. `gws v0.22.5` does not support
+  `--json-stdin`; only `--json '<JSON>'` as a flag value is accepted.
+  Discovered during validation when the very first recipe step exited 12
+  with `error[validation]: unexpected argument '--json-stdin'`. (PR #256,
+  commit `f56b7bc`)
 
 ## [0.4.0-strangler-fig-seed] - 2026-05-04
 

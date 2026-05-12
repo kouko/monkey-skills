@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> 🚧 **Validation period — Phase 1 complete, awaiting daily-use confirmation.** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded 2026-05-04 via strangler-fig fork. Phase 1 (vendor + α-trim + rename + scope upgrade + Drive safety wrappers) shipped 2026-05-04 (see CHANGELOG `0.4.0-strangler-fig-seed`). Currently running ≥ 2 weeks of validation: ≥ 1 deck via slides-builder, ≥ 1 ad-hoc Drive op through vendored `gws-drive`, ≥ 1 destructive op through `safe-delete.sh`, no KR1 regression. Until validation passes and slides-toolkit enters formal Phase 3 deprecation, both plugins are installable side-by-side. This toolkit is not affiliated with Google.
+> ✅ **Phase 1 stable (2026-05-06).** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded 2026-05-04 via strangler-fig fork. Phase 1 (vendor + α-trim + rename + scope upgrade + Drive safety wrappers + account switching) closed with all 4 validation criteria green: ≥ 1 deck generated end-to-end (108 sec; KR1 ≤ 180 sec), ≥ 1 ad-hoc Drive op via vendored `gws-drive`, ≥ 1 destructive op through three-tier `safe-delete.sh`, no KR1 regression. `slides-toolkit` is now Phase 3 deprecated and removed from the plugin marketplace; existing installations keep working but new users should land here. Not affiliated with Google.
 
 > Brief → Google Workspace artifacts (Slides / Docs / Sheets / Drive) via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 
@@ -32,7 +32,7 @@ Phase 2+, trigger-gated.
 
 | Aspect | Value |
 |---|---|
-| Release | `0.1.0-mvp` (see [`CHANGELOG.md`](CHANGELOG.md)) |
+| Release | `0.5.0` (see [`CHANGELOG.md`](CHANGELOG.md)) |
 | Backends | `google-slides` (MVP) · `html` / `pptx` / `marp` Phase 2+ trigger-gated |
 | Platform | macOS (darwin-arm64 / darwin-x86_64) |
 | Account scope | Personal Google account (`@gmail.com`); Workspace accounts Phase 2+ |

@@ -7,10 +7,50 @@ All notable changes to `slides-toolkit` are documented in this file.
 
 ## [Unreleased]
 
-### 即將 unblock（在 0.7.0 release 前，kouko 需完成）
+(No active development. Plugin entered Phase 3 deprecation 2026-05-06;
+see `[0.6.1]` below. The "10 real decks" KR1 validation goal originally
+tracked here is superseded by [`gws-toolkit/`](../gws-toolkit/) Phase 1
+validation, closed 2026-05-06 with a 108-sec deck pass — see
+`gws-toolkit/CHANGELOG.md` `[0.5.0]`.)
+
+## [0.6.1] - 2026-05-06
+
+**Phase 3 deprecation begins.** `slides-toolkit` is now deprecated;
+[`gws-toolkit/`](../gws-toolkit/) (CHANGELOG `0.5.0`) supersedes this
+plugin with broader Workspace API coverage (Slides + Drive + Docs +
+Sheets), three-tier delete safety, account switching, and automated
+GCP setup. Existing installations keep working; new users should
+install `gws-toolkit` instead.
+
+### Changed
+
+- README banner (en / ja / zh-TW): `🔒 Feature-frozen` → `🚫 Deprecated
+  (2026-05-06)`. Migration pointer to `gws-toolkit` added.
+- Removed from `.claude-plugin/marketplace.json` so new marketplace
+  discovery surfaces only `gws-toolkit`. Already-enabled installations
+  are unaffected (Claude Code does not auto-uninstall on registry
+  removal).
+
+### Fixed
+
+- 4 builder recipes (`skills/google-slides-api/protocols/recipe-*.md`)
+  rewritten from `echo "$body" | gws ... --json-stdin` to
+  `gws ... --json "$body"`. `gws v0.22.5` does not support
+  `--json-stdin`; only `--json '<JSON>'` as a flag value. Same fix as
+  `gws-toolkit`'s parallel recipes (PR #256, commit `f56b7bc`); shipped
+  here so users falling back to `slides-toolkit` during the migration
+  window do not hit the same bug.
+
+### Pre-fork 0.7.0 plan (superseded by gws-toolkit Phase 1)
+
+The original pre-fork plan was:
 
 - 跑 10 份真實 deck 驗 KR1（brief → URL ≤ 3 分鐘）+ `[ASSUMPTION-2]`
   Google predefined layouts 覆蓋率 ≥ 80%
+
+This goal is no longer tracked under `slides-toolkit`; the equivalent
+KR1 validation was satisfied by `gws-toolkit` `[0.5.0]` end-to-end at
+108 sec.
 
 ## [0.6.0-i18n] - 2026-04-24
 

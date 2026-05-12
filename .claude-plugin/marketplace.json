@@ -35,13 +35,8 @@
       "source": "./copywriting-toolkit/"
     },
     {
-      "name": "slides-toolkit",
-      "description": "Google Slides generation toolkit — template-based deck pipeline via googleworkspace/cli (gws), backend-agnostic design knowledge (Minto / SCQA / chart-selection), and Platform-Pivot multi-backend architecture. MVP ships google-slides backend only; html / pptx / marp backends are Phase 2+ trigger-gated. Google Slides 自動生成ツールキット。簡報自動化工具組。 ⚠️ Claude Code CLI only — Cowork sandbox blocks Google Slides API calls.",
-      "source": "./slides-toolkit/"
-    },
-    {
       "name": "gws-toolkit",
-      "description": "⚠️ WORK IN PROGRESS — successor to slides-toolkit. Generic Google Workspace toolkit layered on the official googleworkspace/cli (gws). Vendors upstream gws-shared / gws-drive / gws-docs / gws-slides / gws-sheets API reference skills, plus toolkit-original setup automation, design knowledge (Minto / SCQA / chart-selection for Slides), and safety wrappers (trash-default delete, appProperties provenance tagging). Not affiliated with Google. ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
+      "description": "Generic Google Workspace toolkit layered on the official googleworkspace/cli (gws). Vendors upstream gws-shared / gws-drive / gws-docs / gws-slides / gws-sheets API reference skills, plus toolkit-original setup automation, design knowledge (Minto / SCQA / chart-selection for Slides), and safety wrappers (trash-default delete, appProperties provenance tagging). Successor to slides-toolkit (Phase 3 deprecated 2026-05-06). Not affiliated with Google. ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
       "source": "./gws-toolkit/"
     },
     {
