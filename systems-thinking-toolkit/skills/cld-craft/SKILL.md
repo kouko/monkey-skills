@@ -132,9 +132,9 @@ When this skill activates, follow these steps:
 1. **Declare the purpose of the diagram in one sentence.** What decision will this diagram inform? Without a stated purpose, Rule 4 (suppress detail) has no criterion.
    - Completion criterion: a single-sentence purpose written at the top of the page.
 
-2. **List the dangles before drawing any internal node.** Name input dangles (external drivers), target dangles (set-points for B-loops), and output dangles (results you care about). 3–6 dangles total.
+2. **List the dangles before drawing any internal node.** Name input dangles (external drivers), target dangles (set-points for B-loops), and output dangles (results you care about). 3–6 dangles total for a narrow scope; more is expected for a wide one.
    - Completion criterion: a dangle list exists, with each classified as input / target / rate / output / cloud.
-   - Halt condition: if the dangle list exceeds 8, the scope is too wide — return to step 1 and narrow the purpose.
+   - Halt condition: the dangle list exceeds 8 **AND** the stated purpose is narrow (single decision / single team / single quarter / single product line). In that case the scope is too wide for the diagram's purpose — return to step 1 and narrow the purpose, or accept a wider purpose. For genuinely wide scopes (cross-functional, multi-year, institutional-level, regulatory-system-level), 8+ dangles is expected and is *not* a halt signal — proceed, and let Rule 4 (aggressive aggregation of internal nodes) carry the simplification load instead.
 
 3. **Draft internal nodes as state-nouns only.** Rule 5: nouns, not verbs. Rule 6: no "increase in" or "decrease in" prefixes. Aggregate ruthlessly per Rule 4 — fuzzy variables are allowed and encouraged.
    - Completion criterion: every internal node is a noun describing a state (e.g. ERROR RATE, MORALE, MARKET SHARE).
