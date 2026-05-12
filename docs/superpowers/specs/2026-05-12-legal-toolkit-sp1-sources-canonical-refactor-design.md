@@ -90,9 +90,9 @@ ROUTE = {
 }
 ```
 
-When SP3 (Phase 2 `v0.4.0`) ships `legal-document-draft` and `legal-incident-response`, that PR appends two entries to `ROUTE`. The routing table is the authoritative declaration of which destinations must exist and be byte-identical at HEAD; verify-drift compares this declaration against the working tree.
+When SP3 (Phase 2 `v0.4.0`) ships `legal-document-draft` and `legal-incident-response`, that PR appends two entries to `ROUTE` in the same commit that creates the skill subfolders. The routing table is the authoritative declaration of which destinations MUST exist and be byte-identical at HEAD; verify-drift compares this declaration against the working tree with no skip rule — every declared route must be present.
 
-**Skip rule (mirrors translation-toolkit)**: if a routed destination's parent skill subfolder (e.g., `skills/legal-document-draft/assets/`) does not exist on disk, the route is silently skipped — this only matters if someone declares a route ahead of the skill landing, which we explicitly do not. If the parent dir exists but the file is missing, verify-drift FAILs.
+This mirrors translation-toolkit's actual implementation: it tracks an `ACTIVE_SKILLS` roster (updated when a skill goes live) rather than auto-skipping based on parent-dir presence. Simpler model, fewer test branches.
 
 ### 4.3 Mermaid — data flow
 
@@ -144,13 +144,13 @@ python3 scripts/distribute.py
 **CLI**:
 ```
 python3 scripts/verify-drift.py
-  → exit 0 if all copies match SoT (or the route's parent skill subfolder is absent)
-  → exit 1 on any byte-level divergence OR if route's parent skill subfolder exists but file is missing
+  → exit 0 if every routed destination exists AND is byte-identical to canonical
+  → exit 1 on any byte-level divergence OR any missing routed destination
   → on FAIL: print unified diff (truncated to 50 lines) + md5 of both files
   → on missing canonical for routed destination: also FAIL (canonical must exist if route is declared)
 ```
 
-**Behavior when a routed destination is absent**: skip iff the destination's parent skill subfolder does not exist (skill not yet created); FAIL iff the parent subfolder exists but the file is missing. Matches translation-toolkit `[skip] no copies found yet` precedent. See §4.2 skip rule.
+**Behavior**: every entry in `ROUTE` is mandatory. If you add a route, you must also commit the functional copy. There is no auto-skip — the ROUTE table is updated by humans (or in a single commit alongside the skill subfolder it points at) per §4.2.
 
 **Reuse**: `from distribute import ROUTE, CANONICAL_DIR, ROOT, iter_canonical_files`.
 
@@ -167,10 +167,9 @@ Minimum coverage:
 
 Minimum coverage:
 - T-V-1: after fresh distribute, verify_drift returns 0.
-- T-V-2: mutating a functional copy by one byte makes verify_drift return 1.
-- T-V-3: deleting a routed functional copy while its parent skill subfolder still exists returns 1 (the file is required if the skill exists).
-- T-V-4: deleting the parent skill subfolder entirely returns 0 (skill not present → route skipped).
-- T-V-5: deleting the canonical file but keeping copies returns 1 (broken pipe is a bug).
+- T-V-2: mutating a functional copy by one byte makes verify_drift return 1 (with unified-diff stdout).
+- T-V-3: deleting a routed functional copy returns 1 (every routed destination is mandatory).
+- T-V-4: deleting the canonical file but keeping copies returns 1 (broken pipe is a bug).
 
 ## 6. Migration steps (concrete)
 
@@ -206,7 +205,7 @@ Add `legal-toolkit CI` to `main` branch protection's required checks list **afte
 - ✅ `legal-toolkit/scripts/canonical/legal-sources.json` is the only hand-edited copy (no other writeable location).
 - ✅ `legal-toolkit/skills/legal-contract-review/assets/legal-sources.json` is byte-identical to canonical after migration.
 - ✅ Existing 171-test legal-toolkit pytest suite remains green (zero runtime behavior change).
-- ✅ New `scripts/tests/` suite green (≥ 9 tests across T-D-* and T-V-*).
+- ✅ New `scripts/tests/` suite green (≥ 9 tests across T-D-1..5 and T-V-1..4).
 - ✅ `verify-drift.py` exit 0 in the v0.3.6 commit state.
 - ✅ `verify-drift.py` exit 1 when a functional copy is manually mutated (manual smoke test before push).
 - ✅ `.github/workflows/legal-toolkit-ci.yml` green on PR.
