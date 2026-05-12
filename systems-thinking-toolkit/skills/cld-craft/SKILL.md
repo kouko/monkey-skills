@@ -7,18 +7,19 @@ source_chapter: Chapter 4 + Chapter 5 + Chapter 6 + Chapter 7 + Chapter 10 + Cha
 source_language: en
 tags: [systems-thinking, causal-loop-diagram, workshop, craft, fuzzy-variable, modeling, non-monotonic, link-sign, sterman, diagnosis, feedback]
 # Tier-3 #6 reverse-link backfill: in v0.4, this skill absorbs the
-# foundational `loop-and-link-primitives` (sk01+sk02) into Step 11. The
-# three skills below previously depended on loop-and-link-primitives and
-# now depend on this skill directly (relation `depended-on-by` = "this
-# is the foundational layer those skills build on").
+# foundational `loop-and-link-primitives` (sk01+sk02) into Step 11.
+# Per R3-1 / R3-2 restructure, limits-to-growth + variance-target-action
+# merged into `cld-archetypes`; stakeholder-and-team-thinking split into
+# `cld-overlay` (outward) + `team-mental-model` (inward). All 4 of those
+# new skills now depend on this carry-1 foundational skill.
 related_skills:
-  - slug: limits-to-growth-take-the-brakes-off
+  - slug: cld-archetypes
     relation: composes-with
-  - slug: limits-to-growth-take-the-brakes-off
+  - slug: cld-archetypes
     relation: depended-on-by
-  - slug: variance-target-action-template
+  - slug: cld-overlay
     relation: depended-on-by
-  - slug: stakeholder-and-team-thinking
+  - slug: team-mental-model
     relation: depended-on-by
 ---
 

@@ -23,39 +23,35 @@ Ask the user ONE question: **"What are you trying to do?"**
 
 Then match their intent to the right skill:
 
-### "I see a feedback loop or pattern"
+### "I have a tangled situation — I want a logic diagram"
 
 | Situation | Skill | Command |
 |---|---|---|
-| Diagnose R vs B loop (vicious cycle, spiraling, boom/bust) | loop-and-link-primitives | `/systems-thinking-toolkit:link-primitives` |
-| Draw a CLD with discipline (12 rules + fuzzy variables) | cld-craft | `/systems-thinking-toolkit:cld-craft` |
-| R-loop is decelerating — find the brake | limits-to-growth-take-the-brakes-off | `/systems-thinking-toolkit:limits-to-growth` |
-| Oscillation around a target — diagnose the cycle | variance-target-action-template | `/systems-thinking-toolkit:variance-action` |
+| Translate prose mess into a Mermaid CLD with R/B-classified loops and signed edges | cld-craft | `/systems-thinking-toolkit:cld-craft` |
 
-### "I'm doing strategy"
+`cld-craft` is the v0.4 **carry-1** skill — it absorbs the old `loop-and-link-primitives` discipline into Step 11 so a single invocation produces a fully-annotated Mermaid CLD ready for downstream skills.
 
-| Situation | Skill | Command |
-|---|---|---|
-| Reframe strategy as lever-vs-outcome + multi-timescale cascade + 3×N scenario planning | strategy-lever-and-cascade | `/systems-thinking-toolkit:strategy` |
-
-### "I'm dealing with multiple stakeholders or team dynamics"
+### "I have a CLD — now what?"
 
 | Situation | Skill | Command |
 |---|---|---|
-| Overlay multiple stakeholder CLDs + mental-model harmony | stakeholder-and-team-thinking | `/systems-thinking-toolkit:stakeholder` |
+| Recognize archetype (limits-to-growth OR V/T/A oscillation) + apply intervention playbook | cld-archetypes | `/systems-thinking-toolkit:archetypes` |
+| Overlay multiple stakeholder perspectives on one CLD canvas + find a straddle policy | cld-overlay | `/systems-thinking-toolkit:overlay` |
+| Translate CLD into stock-and-flow + use simulation for learning (not point forecast) | simulation-modeling | `/systems-thinking-toolkit:simulation` |
 
-### "I need to quantify or simulate"
+### "I'm doing strategy or team work"
 
 | Situation | Skill | Command |
 |---|---|---|
-| Translate a CLD into stock-and-flow + learn from simulation (not point-forecast) | simulation-modeling | `/systems-thinking-toolkit:simulation` |
+| Reframe ambition into lever target settings + 3-timescale cascade + 3×N scenario planning | strategy-lever-and-cascade | `/systems-thinking-toolkit:strategy` |
+| Surface team mental models + sustain via measurable leadership-energy proxies | team-mental-model | `/systems-thinking-toolkit:team` |
 
-### "I need facilitation / scenario tools" (auxiliary)
+### "I need scenario / personality tools" (auxiliary)
 
 | Situation | Skill | Command |
 |---|---|---|
 | Generate alternative futures for strategic-cascade scenario planning | innovaction-martian-test | `/systems-thinking-toolkit:martian-test` |
-| Adapt strategy artifacts to executive personality | manager-personality-quadrant | `/systems-thinking-toolkit:quadrant` |
+| Adapt strategy artifacts to executive personality (framing-vs-analysis split) | manager-personality-quadrant | `/systems-thinking-toolkit:quadrant` |
 
 > Both auxiliary skills are V1-weak per Stage 1.5 verification. See
 > each SKILL.md Boundary section for prior-art credit (TRIZ /
@@ -71,8 +67,8 @@ one at a time:
 1. "Are you trying to *understand* a pattern, *decide* an intervention,
    *plan* strategy, or *quantify* something?"
 2. Based on the answer, use the tables above to narrow further.
-3. If still unclear, default to **`loop-and-link-primitives`** — it's
-   the foundational ontology that most other skills depend on.
+3. If still unclear, default to **`cld-craft`** — it's the carry-1
+   prose→CLD translation skill that most downstream skills consume.
 
 ## After Routing
 
@@ -93,16 +89,16 @@ Once you've identified the right skill:
 
 ## Recommended learning order (for users new to systems thinking)
 
-1. **`loop-and-link-primitives`** — foundational; no prerequisites
-2. **`cld-craft`** — depends on (1); workshop drawing craft
-3. **`limits-to-growth-take-the-brakes-off`** — depends on (1); composes with (2)
-4. **`variance-target-action-template`** — depends on (1)+(2); contrasts with (3)
-5. **`strategy-lever-and-cascade`** — depends on (4); composes with (8) + (9)
-6. **`stakeholder-and-team-thinking`** — depends on (1)+(2); stakeholder-aware
-7. **`simulation-modeling`** — depends on (2); precision step
+1. **`cld-craft`** — foundational; prose → fully-annotated Mermaid CLD; absorbs old `loop-and-link-primitives` classification discipline
+2. **`cld-archetypes`** — depends on (1); recognizes limits-to-growth or V/T/A on a classified CLD + matching intervention
+3. **`cld-overlay`** — depends on (1); multi-perspective overlay for stakeholder mediation
+4. **`team-mental-model`** — depends on (1); inward team-mental-model + leadership-energy proxies (composes with cld-overlay post-merger)
+5. **`strategy-lever-and-cascade`** — depends on (2); 3-timescale cascade + 3×N scenario table + lever reframing
+6. **`simulation-modeling`** — depends on (1); precision quantification step (text-only in v0.4; Python companion v0.5+ candidate)
 
 Auxiliary skills (reach for inside `strategy-lever-and-cascade` workflow):
-8. **`innovaction-martian-test`** — generates alternative futures
-9. **`manager-personality-quadrant`** — adapts presentation to executive style
+
+7. **`innovaction-martian-test`** — generates alternative futures
+8. **`manager-personality-quadrant`** — adapts presentation to executive style
 
 See `INDEX.md` for the full reference graph (mermaid + topological sort).

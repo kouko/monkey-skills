@@ -1,116 +1,104 @@
 ---
 title: Systems Thinking Toolkit — Skill Index
 plugin: systems-thinking-toolkit
-version: 0.1.0
+version: 0.4.0
 distilled_from: Seeing the Forest for the Trees, Dennis Sherwood (2002, Nicholas Brealey)
 skill_count: 9
-merge_profile: B (5 merges + 4 standalone from original 14-skill Stage-3 distill)
+merge_profile: v0.4 R3 — 8 functional skills + 1 entry/router (cld-centric reorganization from v0.2.0 9-skill Profile-B)
 distilled_at: 2026-05-11
 plugin_built_at: 2026-05-12
 ---
 
 # Systems Thinking Toolkit — Skill Index
 
-Nine v0.1.0 skills derived from Dennis Sherwood's *Seeing the Forest for
-the Trees* (2002) via Profile-B merge of the original 14-skill Stage-3
-distill. Five compose-with pairs collapsed into single skills; four
-standalone (sk05/sk06 contrast at cognitive-frame level; sk13/sk14
-V1-weak retained per user override).
+Eight functional v0.4 skills + 1 entry/router, organized around the
+prose → CLD translation as the carry-1 alpha. Derived from Dennis
+Sherwood's *Seeing the Forest for the Trees* (2002).
 
-## Skills (grouped by topic)
+## v0.4 R3 restructure summary
 
-### Foundational
-- [`loop-and-link-primitives`](./skills/loop-and-link-primitives/SKILL.md) — R/B classification + S/O link signing (sk01+sk02 merge)
+- **Absorb**: `loop-and-link-primitives` (sk01+sk02) → into `cld-craft` Step 11
+- **Merge**: `limits-to-growth` + `variance-target-action` → `cld-archetypes`
+- **Split**: `stakeholder-and-team-thinking` → `cld-overlay` (outward) + `team-mental-model` (inward)
+- Net: 9 → 8 functional skills; carry-1 (cld-craft) does prose → fully-annotated Mermaid CLD in one invocation
 
-### CLD craft
-- [`cld-craft`](./skills/cld-craft/SKILL.md) — 12 hygiene rules + fuzzy variable elevation (sk03+sk04 merge)
+## Skills (grouped by role)
 
-### Loop dynamics & intervention
-- [`limits-to-growth-take-the-brakes-off`](./skills/limits-to-growth-take-the-brakes-off/SKILL.md) — R braked by B archetype; constraint-relief (sk05)
-- [`variance-target-action-template`](./skills/variance-target-action-template/SKILL.md) — generic B-loop control + do-nothing-under-oscillation (sk06)
+### Carry-1 (prose → Mermaid CLD)
+- [`cld-craft`](./skills/cld-craft/SKILL.md) — 12 hygiene rules + fuzzy variable elevation + S/O signing + R/B classification (absorbed `loop-and-link-primitives` into Step 11; emits fully-annotated Mermaid)
 
-### Strategy
-- [`strategy-lever-and-cascade`](./skills/strategy-lever-and-cascade/SKILL.md) — lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario planning (sk07+sk08 merge)
+### CLD consumers (read Mermaid CLD, do something with it)
+- [`cld-archetypes`](./skills/cld-archetypes/SKILL.md) — recognize limits-to-growth (R+B coupling) or V/T/A (B-loop with delay) archetype + apply intervention playbook (merge of v0.2 limits + variance)
+- [`cld-overlay`](./skills/cld-overlay/SKILL.md) — multi-stakeholder CLD overlay + straddle-policy finding (split from stakeholder, outward)
 
-### Stakeholder & team
-- [`stakeholder-and-team-thinking`](./skills/stakeholder-and-team-thinking/SKILL.md) — multi-perspective CLD overlay + mental-model harmony (sk09+sk10 merge)
-
-### Quantification
-- [`simulation-modeling`](./skills/simulation-modeling/SKILL.md) — stock-flow translation + models-for-learning-not-answers (sk11+sk12 merge)
+### Other tools (CLD-related but distinct output)
+- [`simulation-modeling`](./skills/simulation-modeling/SKILL.md) — CLD → stock-flow translation + learning-not-forecast discipline (text-only; v0.5+ Python companion)
+- [`strategy-lever-and-cascade`](./skills/strategy-lever-and-cascade/SKILL.md) — lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario table
+- [`team-mental-model`](./skills/team-mental-model/SKILL.md) — mental-model harmony + leadership-energy proxies (split from stakeholder, inward; not a CLD producer)
 
 ### Auxiliary (V1-weak per Stage 1.5; retained per user override)
-- [`innovaction-martian-test`](./skills/innovaction-martian-test/SKILL.md) — Martian-test feature perturbation (sk13)
-- [`manager-personality-quadrant`](./skills/manager-personality-quadrant/SKILL.md) — Gods/Gamblers/Grinders/Guides 2×2 (sk14)
+- [`innovaction-martian-test`](./skills/innovaction-martian-test/SKILL.md) — Martian-test feature perturbation (sk13; composes with `strategy-lever-and-cascade`)
+- [`manager-personality-quadrant`](./skills/manager-personality-quadrant/SKILL.md) — Gods/Gamblers/Grinders/Guides 2×2 + framing-vs-analysis split (sk14)
 
 ### Entry / router
-- [`using-systems-thinking-toolkit`](./skills/using-systems-thinking-toolkit/SKILL.md) — intent-table routing for users who don't know which method to pick
+- [`using-systems-thinking-toolkit`](./skills/using-systems-thinking-toolkit/SKILL.md) — intent-uncertainty routing
 
-## Reference graph (re-derived from 14-node original)
+## Reference graph (v0.4 R3 8-node)
 
 - `-->` depends-on (A presupposes B)
-- `-.->` contrasts-with (A and B are alternative options; choice depends on context)
+- `-.->` contrasts-with (A and B alternatives; choose by context)
 - `===>` composes-with (A and B typically used together; symmetric)
 
 ```mermaid
 flowchart LR
-    p[loop-and-link-primitives]
     c[cld-craft]
-    l[limits-to-growth-take-the-brakes-off]
-    v[variance-target-action-template]
-    s[strategy-lever-and-cascade]
-    t[stakeholder-and-team-thinking]
+    a[cld-archetypes]
+    o[cld-overlay]
     m[simulation-modeling]
+    s[strategy-lever-and-cascade]
+    t[team-mental-model]
     i[innovaction-martian-test]
     q[manager-personality-quadrant]
 
-    c --> p
-    l --> p
-    l ===> c
-    v --> p
-    v --> c
-    v -.-> l
-    s --> v
+    a --> c
+    a ===> c
+    o --> c
+    o ===> t
+    t --> c
+    m --> c
+    s --> a
     s ===> i
     s ===> q
-    t --> c
-    t --> p
-    m --> c
 ```
 
-The 14-node original graph (which includes intra-merge edges between
-sk01/sk02, sk03/sk04, sk07/sk08, sk09/sk10, sk11/sk12 that are now
-internal to merged skills) is preserved at
-[`references/INDEX-original.md`](./references/INDEX-original.md).
+The 14-node original Stage-3 graph (pre-v0.1.0) is preserved at
+[`references/INDEX-original.md`](./references/INDEX-original.md). The
+9-node v0.2.0 graph (pre-R3) is preserved in `docs/superpowers/audits/`
+audit history.
 
 ## Recommended learning order
 
-Topological sort of the 9-node depends-on subgraph. Auxiliary skills
-sit at the end because they `composes-with` `strategy-lever-and-cascade`
-but are not depended on by anything; they can be picked up after the
-core curriculum is in hand.
+1. [`cld-craft`](./skills/cld-craft/SKILL.md) — foundational; produces the fully-annotated Mermaid CLD that downstream skills consume
+2. [`cld-archetypes`](./skills/cld-archetypes/SKILL.md) — depends on (1); recognizes Sherwood archetypes on classified CLD
+3. [`cld-overlay`](./skills/cld-overlay/SKILL.md) — depends on (1); multi-perspective extension for stakeholder mediation
+4. [`team-mental-model`](./skills/team-mental-model/SKILL.md) — depends on (1); inward team protocol (composes with cld-overlay post-merger)
+5. [`strategy-lever-and-cascade`](./skills/strategy-lever-and-cascade/SKILL.md) — depends on (2); scenario planning with archetype-aware lever resetting
+6. [`simulation-modeling`](./skills/simulation-modeling/SKILL.md) — depends on (1); precision quantification step
 
-1. [`loop-and-link-primitives`](./skills/loop-and-link-primitives/SKILL.md) — foundational; no prerequisites
-2. [`cld-craft`](./skills/cld-craft/SKILL.md) — depends on (1); workshop drawing craft
-3. [`limits-to-growth-take-the-brakes-off`](./skills/limits-to-growth-take-the-brakes-off/SKILL.md) — depends on (1); composes with (2)
-4. [`variance-target-action-template`](./skills/variance-target-action-template/SKILL.md) — depends on (1) + (2); contrasts with (3) at intervention-philosophy level
-5. [`strategy-lever-and-cascade`](./skills/strategy-lever-and-cascade/SKILL.md) — depends on (4); composes with auxiliary (8) + (9)
-6. [`stakeholder-and-team-thinking`](./skills/stakeholder-and-team-thinking/SKILL.md) — depends on (1) + (2); stakeholder-aware
-7. [`simulation-modeling`](./skills/simulation-modeling/SKILL.md) — depends on (2); precision step
+Auxiliary skills (compose with (5)):
 
-Auxiliary skills (reach for inside (5) workflow):
-
-8. [`innovaction-martian-test`](./skills/innovaction-martian-test/SKILL.md) — composes with (5)
-9. [`manager-personality-quadrant`](./skills/manager-personality-quadrant/SKILL.md) — composes with (5)
+7. [`innovaction-martian-test`](./skills/innovaction-martian-test/SKILL.md) ⚠ V1-weak
+8. [`manager-personality-quadrant`](./skills/manager-personality-quadrant/SKILL.md) ⚠ V1-weak
 
 ## Audit trail
 
-- **Total skills**: 9 (post-Profile-B-merge) + 1 entry/router
-- **Total relations** (post-symmetric-dedupe): 16 declared, 16 expected from §3.5 re-mapping — perfect match (Phase B X4 audit)
-- **Source units**: union from all 14 original skills, preserved in each merged skill's Audit metadata block per spec C9
+- **Total skills**: 8 functional + 1 entry/router (v0.4 R3 reduces from 9+1 v0.2.0; absorbed loop-and-link, merged limits+variance, split stakeholder)
+- **Source units**: union from all 14 original Stage-3 skills preserved across merged/split bodies per spec C9
+- **Re-baseline schedule**: v0.4 R3-5 re-runs skill-judge on changed skills (cld-craft, cld-archetypes, cld-overlay, team-mental-model)
 
 ## Provenance
 
-- See [`references/INDEX-original.md`](./references/INDEX-original.md) for the verbatim 14-node Stage-3 graph
-- See [`references/VERIFIED.md`](./references/VERIFIED.md) for Stage-1.5 V1/V2/V3 evidence
-- See [`references/BOOK_OVERVIEW.md`](./references/BOOK_OVERVIEW.md) for Stage-0 thesis
-- See [`ROADMAP.md`](./ROADMAP.md) for v0.2+ candidates (sk13/sk14 merger discussion, TRIZ skill, etc.)
+- [`references/INDEX-original.md`](./references/INDEX-original.md) — verbatim 14-node Stage-3 graph (pre-v0.1.0)
+- [`references/VERIFIED.md`](./references/VERIFIED.md) — Stage-1.5 V1/V2/V3 evidence
+- [`references/BOOK_OVERVIEW.md`](./references/BOOK_OVERVIEW.md) — Stage-0 thesis (1-sentence: every system reduces to R+B feedback loops; diagram + find binding constraint + relieve it)
+- [`ROADMAP.md`](./ROADMAP.md) — v0.5+ candidates (Python simulator companion / sk13-sk14 V1-weak future / response-curve renderer / behavior-over-time graph integration)

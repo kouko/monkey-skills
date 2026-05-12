@@ -7,7 +7,33 @@
 - Stage 0/1.5/3 audit trail under `references/`
 - 10 slash commands (router + 9 per-skill)
 
-## v0.2+ candidates (not committed)
+## v0.2.0 (body-level fixes + JA/zh-TW normalization, 2026-05-12)
+
+- A1-A5 body fixes (cld-craft halt OR-clause; stakeholder energy-pump operationalization; variance Step 0 SPC + 1.5× delay heuristic; manager-quadrant observable-cue table + Guides circularity; simulation Stage-2 sensitivity sweep)
+- A8 JA/zh-TW description hint normalization (2 of 10 descriptions)
+- A9 skill-judge re-baseline (5 body-fixed skills, plugin mean 108.4 → 109.3/109.7)
+
+## v0.3.0 (prose→Mermaid diagram emission, 2026-05-12)
+
+- `cld-craft` Step 11 emits Mermaid CLD as required deliverable
+- `loop-and-link-primitives` Step 11 emits annotated Mermaid CLD (R/B classification)
+- NEW `cld-craft/references/cld-mermaid-emit.md` — canonical CLD Mermaid convention (S/O edge labels, R/B `%%` annotation, 5 dangle shapes, R/B color palette). Adapted from `obsidian/skills/obsidian-mermaid-visualizer/flow/circular-flow.md`
+- Spot-test 3 prose cases (SaaS retention / engineering team / inventory oscillation) — all clean Mermaid CLDs
+
+## v0.4.0 (R3 most-complete CLD-centric restructure, 2026-05-12)
+
+CLD-centric reorganization based on practical-utility analysis (memory `project_systems_thinking_toolkit_v0.3_anchor`):
+
+- **R3-1 merge** — `limits-to-growth` + `variance-target-action` → **`cld-archetypes`** (recognize Sherwood archetype on classified CLD + intervention playbook)
+- **R3-2 split** — `stakeholder-and-team-thinking` → **`cld-overlay`** (Protocol O multi-CLD overlay) + **`team-mental-model`** (Protocol I leadership-energy proxies)
+- **R3-3 absorb** — `loop-and-link-primitives` → into `cld-craft` Step 11 (carry-1 mega-skill); classification protocol extracted to `cld-craft/references/loop-classification-protocol.md`
+- **R3-4 cross-cutting** — INDEX.md re-derive (10 → 9 nodes); using-* router table; commands (delete 4, create 3); plugin README skill list
+- **R3-5 re-baseline** — skill-judge on changed skills; target ≥ A grade, no dimension regression vs v0.3.0
+- Net: 9 functional + router → 8 functional + router (-1 dir overall)
+
+## v0.5+ candidates (deferred)
+
+## v0.2+ historical candidate list (resolved across v0.2-v0.4)
 
 ### sk13 / sk14 V1-weak future
 
