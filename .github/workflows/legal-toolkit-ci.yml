@@ -1,0 +1,62 @@
+name: legal-toolkit CI
+
+# Runs the legal-toolkit pytest suite (171 tests under tests/ + 13 tests
+# under scripts/tests/) and the SSOT-vs-functional-copy drift verifier
+# on every PR that touches the plugin (or the workflow itself), and on
+# every push to main that changes the plugin.
+
+on:
+  pull_request:
+    paths:
+      - 'legal-toolkit/**'
+      - '.github/workflows/legal-toolkit-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'legal-toolkit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + drift + skill-folder-structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner. pyyaml = required by build_baseline.py / seed_baseline.py
+        # (YAML frontmatter parsing in clause baselines). jsonschema = required by
+        # test_schema.py + validate_schema.py (Draft 2020-12 JSON Schema validation).
+        run: python3 -m pip install --quiet pytest pyyaml jsonschema
+
+      - name: Run legal-toolkit scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest legal-toolkit/scripts/tests/ -v
+
+      - name: Run legal-toolkit existing pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest legal-toolkit/tests/ -v
+
+      - name: Verify SSOT-vs-functional-copy drift
+        # canonical/ is the single source of truth; each skill carries
+        # functional copies under assets/. Any byte-level divergence fails
+        # the build.
+        run: python3 legal-toolkit/scripts/verify-drift.py
+
+      - name: Validate skill folder structure
+        # Anthropic skill convention: SKILL.md + flat single-level subfolders.
+        # Hook script enforces no nested-subfolder violations per skill.
+        run: |
+          for skill in using-legal-toolkit legal-playbook-author legal-contract-review; do
+            bash .claude/hooks/validate-skill-folder-structure.sh "legal-toolkit/skills/$skill/SKILL.md"
+          done
