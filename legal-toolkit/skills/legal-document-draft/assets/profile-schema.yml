@@ -1,0 +1,82 @@
+# JSON Schema 2020-12 for legal-playbook/profile.yml
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "legal-document-draft://profile-schema.yml"
+title: Legal Toolkit Company Profile
+description: |
+  Company identity profile shared across legal-toolkit skills (draft, IR,
+  future corp-governance, dd-quickscan). Lives at legal-playbook/profile.yml
+  (user-visible, git-tracked).
+
+type: object
+required:
+  - schema_version
+  - company_name
+  - company_id
+  - registered_address
+  - general_contact
+  - dpo
+
+properties:
+  schema_version:
+    type: integer
+    const: 1
+    description: Schema version; bump on breaking changes
+  company_name:
+    type: string
+    minLength: 2
+    description: Official 公司名稱 (Chinese)
+  company_name_en:
+    type: string
+    description: English company name (optional)
+  company_id:
+    type: string
+    pattern: "^[0-9]{8}$"
+    description: 統一編號 (8 digits)
+  registered_address:
+    type: string
+    minLength: 5
+  general_contact:
+    type: object
+    required: [email]
+    properties:
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+  dpo:
+    type: object
+    required: [name, email]
+    description: Data Protection Officer (個資法 §22 推定承辦人)
+    properties:
+      name:
+        type: string
+      email:
+        type: string
+        format: email
+  business_scope:
+    type: array
+    items: { type: string }
+  cross_border_destinations:
+    type: array
+    items:
+      type: object
+      required: [country, purpose]
+      properties:
+        country: { type: string }
+        purpose: { type: string }
+  security_measures:
+    type: array
+    items: { type: string }
+  governing_law:
+    type: object
+    properties:
+      default_jurisdiction: { type: string }
+      preferred_court: { type: string }
+  last_updated:
+    type: string
+    format: date
+  maintained_by:
+    type: string
+
+additionalProperties: false
