@@ -61,7 +61,3 @@ def verify_drift(
         return 1
     print(f"OK: all {checked} functional copies byte-identical to canonical.")
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(verify_drift())
