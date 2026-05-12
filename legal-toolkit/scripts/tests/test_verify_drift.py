@@ -97,3 +97,25 @@ def test_verify_drift_returns_one_when_copy_missing(fake_plugin, capsys):
     assert rc == 1
     assert "MISSING" in out
     assert "legal-sources.json" in out
+
+
+# ---------------------------------------------------------- T-V-4: missing canonical
+def test_verify_drift_returns_one_when_canonical_missing(fake_plugin, capsys):
+    verify_drift = _load_verify_drift()
+
+    # Build a functional copy without a matching canonical source.
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(b"orphan")
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+
+    rc = verify_drift.verify_drift(route=route, root=fake_plugin)
+    out = capsys.readouterr().out
+
+    assert rc == 1
+    assert "MISSING-CANONICAL" in out
