@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-document-draft://output-schema.json",
+  "title": "legal-document-draft output directory contract",
+  "description": "Each draft session writes exactly 2 files: <doc-type>.md (publish-ready) + compliance.md (法務 review). Directory: legal-outputs/<timestamp>-<mode>/",
+  "type": "object",
+  "required": ["files", "mode"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["privacy", "tos", "dpa", "nda"]
+    }
+  },
+  "additionalProperties": false
+}
