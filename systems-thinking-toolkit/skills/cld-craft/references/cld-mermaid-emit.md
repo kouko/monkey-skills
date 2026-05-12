@@ -173,6 +173,51 @@ Note this example demonstrates:
 - Comment names BOTH loops plus identifies the **limits-to-growth archetype** (which `cld-craft` should also flag when both R and B couple on a shared node)
 - Quality node is colored blue (B-loop) but it also touches the R-loop — when a node is shared, the convention is **color by the loop that contains its outgoing edge of greater leverage**; here Quality → Trust is the B-loop's brake on the R-loop
 
+## Worked example: zh-TW input (English nodes + zh-TW caption)
+
+Per `cld-craft` SKILL.md "Language handling policy": when user input is
+Traditional Chinese, Mermaid node names stay **English state-nouns**
+(downstream pattern-match) and the caption stays in the user's
+language. R / B / S / O notation stays English.
+
+**Prose input (Traditional Chinese)**:
+> "我是個 YouTube 創作者，過去半年觀看數一直在掉。我把產量從每週 2 支
+> 提到 3 支，希望演算法多推一點，但每支的觀看數反而下降。我發現自己
+> 越來越無感，剪片時心不在焉，但又不敢慢下來 — 演算法會懲罰不規律的頻道。"
+
+**CLD emit**:
+
+```mermaid
+flowchart LR
+    Cadence[Publishing Cadence /wk] -->|O| Prep[Topic Preparation Quality]
+    Prep -->|S| Quality[Video Quality]
+    Quality -->|S| Views[Views per Video]
+    Views -->|O| Anxiety[Channel-Decline Anxiety]
+    Anxiety -->|S| Cadence
+    Belief{{Belief: 3 videos/wk required}} -->|S| Cadence
+    %% R-loop (vicious spin): Cadence → Prep (O) → Quality → Views → Anxiety (O) → Cadence — O-count = 2 → reinforcing
+    %% Belief is a pseudo-target DANGLE — no inbound edge from Views; classifies as Case B5 (algorithm-belief pseudo-target) per cld-archetypes/references/cases.md
+
+    style Cadence fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Prep fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Quality fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Views fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Anxiety fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    style Belief fill:#f1f3f5,stroke:#868e96,stroke-width:1px
+```
+
+**Caption (zh-TW, matching user input)**:
+
+- **行為訊號 (Behavioral signature)**: `monotone divergence` — 觀看數無煞車的下行（每週複利下降，無收斂跡象）。
+- **R-loop（強化迴路，目前惡性轉向）**: Publishing Cadence → Topic Preparation Quality (O) → Video Quality → Views per Video → Channel-Decline Anxiety (O) → Publishing Cadence — O-count = 2 → **reinforcing**。這正是用戶說的「做得越多越糟」。
+- **偽目標 dangle**: `Belief: 3 videos/wk required` 看起來像 B-loop 的 target，但沒有從 Views 回流的更新邊 — 屬於 **Case B5 pseudo-target dangle**。對應的介入是 **質疑信念**，不是「無為而治」也不是「解除約束」。
+- **翻轉觸發候選**: (a) 直接減產到 2 支/週（打斷 Cadence → Prep 的 O-link）；(b) 質疑「演算法獎勵規律」這個 belief（這是 dangle 不是事實）；(c) 加入觀察 cadence — 把信念降格為「待驗證假設」並設置回流邊。
+
+**Why English node names + zh-TW caption**:
+- Node IDs are ASCII for Mermaid compatibility (no spaces in IDs)
+- Downstream `cld-archetypes` Step-0 router reads English behavioral-signature templates (`monotone divergence` triggers the "NOT this skill — return to cld-craft for R-loop intervention" path)
+- The user's deliverable (caption) is zh-TW because the user is the audience; English caption would force them to mentally retranslate
+
 ## Error prevention (CLD-specific)
 
 | ❌ Wrong | ✅ Right | Reason |

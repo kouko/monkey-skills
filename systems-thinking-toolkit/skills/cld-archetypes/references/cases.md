@@ -169,3 +169,52 @@ customer-success analogue.
   mechanic is the same; only the time-scale and the vocabulary
   changed. This is the case to cite when stakeholders argue "but
   that's old-economy stuff, our metric is different."
+
+### Case B5 — Algorithm-Belief Pseudo-Target (v0.5 modern platform variant)
+
+- **Problem**: A YouTube creator (or SEO marketer, or ad-spend manager)
+  anchors behavior to a *belief* about a platform algorithm: "post 3
+  videos a week or be punished," "keyword density 1-2% or you tank,"
+  "always-on ads above CAC threshold." The belief functions like a
+  B-loop target — drives action, takes precedence over direct outcome
+  feedback — but the belief itself never updates from results.
+- **Methodology applied**: The "target" is a **dangle**, not a node —
+  it has no inbound causal arrow from the actual output metric. The
+  creator's `Publishing Cadence` increases because of the belief, but
+  `Views per Video` does not feed back into `Belief: 3 videos/wk
+  required`. So what looks like target-seeking control (B-loop) is
+  actually open-loop behavior (a chain into a dangle masquerading as a
+  target). The literal O-count test may misfire: agents who assume
+  "this is a B-loop because there's a target" will misclassify a
+  non-feedback structure as feedback.
+- **Diagnostic test**: Trace the alleged target backward. Is there ANY
+  edge that updates the target value from observed system output? If
+  no — it is a *pseudo-target dangle*, not a true B-loop set-point.
+  The "loop" does not close.
+- **Conclusion**: Pseudo-target dangles produce **monotone over-action**
+  until something else breaks (the actor, the team, the cash). They
+  look like B-loops but spin like R-loops because they have no
+  corrective feedback. The intervention is NOT "do nothing" (V/T/A) or
+  "relieve the brake" (limits-to-growth) — it is **question the
+  belief**. Replace the dangle with a real target derived from
+  observed output; OR explicitly downgrade the belief to "hypothesis
+  under test" and add a learning loop that updates it.
+- **Outcome**: Adds a third archetype-adjacent pattern to the Branch L
+  / Branch V split. Common in: platform-algorithm folklore (YouTube
+  cadence, TikTok hooks, Instagram reels-vs-photo), SEO best-practice
+  myths (keyword density, backlink count), conversion-rate
+  over-spending (LTV:CAC pseudo-targets that never recalibrate against
+  actual cohort behavior). The pattern is **NOT in Sherwood 2002** —
+  it is a 2010s+ platform-economy variant. Worth naming because the
+  algorithm-folklore version is now extremely common.
+- **Hand-off**: After identifying as pseudo-target dangle, the
+  appropriate downstream is NOT cld-archetypes intervention but a
+  question: "Is the belief verifiable? What evidence would falsify
+  it?" If verifiable but never tested, add an observation cadence. If
+  unverifiable, treat as a constraint on the actor's psychology
+  (sociological problem, not systems problem).
+- **Provenance**: surfaced from v0.4 Chinese-input dogfood (PR #274,
+  2026-05-13) when subagent diagnosed a YouTube creator's `BeliefTarget
+  (3 videos/wk)` as a non-updating dangle masquerading as a B-loop
+  set-point. See `docs/superpowers/audits/2026-05-13-systems-thinking-toolkit-dogfood.md`
+  appendix.

@@ -36,6 +36,20 @@ If both answers point the same way → **S**. If both point opposite →
 **O**. Record the label in pen as you draw — Rule 8 forbids labeling as
 a cleanup pass.
 
+**zh-TW phrasing** (when user input is Traditional Chinese):
+
+1. 「若起因增加，結果也增加嗎？」
+2. 「若起因減少，結果也減少嗎？」
+
+兩問都同方向 → **S**；兩問都相反 → **O**；答案不對稱 → 升 Tier 2。
+
+**JA phrasing** (when user input is Japanese):
+
+1. 「原因が増えれば、結果も増えるか？」
+2. 「原因が減れば、結果も減るか？」
+
+両方同方向 → **S**；両方逆方向 → **O**；答えが非対称 → Tier 2 へ。
+
 The shortcut **fails** when answers are asymmetric (cause up moves
 effect, cause down does not, or vice versa). Common failure cases:
 

@@ -1,10 +1,11 @@
 # cld-archetypes Cases — Index
 
-One-page anchor index for `cases.md` (171 lines, 7 cases across two
-archetypes). **Read this file first**, then load the specific case
-section from `cases.md` on demand. The full file is mandatory before
-finalizing an intervention recommendation; this index lets you locate
-the relevant precedent before committing the full read.
+One-page anchor index for `cases.md` (~230 lines, 8 cases across two
+archetypes + 1 modern-platform variant). **Read this file first**, then
+load the specific case section from `cases.md` on demand. The full
+file is mandatory before finalizing an intervention recommendation;
+this index lets you locate the relevant precedent before committing
+the full read.
 
 ## Branch L — Limits-to-Growth (R-loop + B-loop, deceleration signature)
 
@@ -23,6 +24,12 @@ the relevant precedent before committing the full read.
 | Central-bank-style committee decision under regime change; "do nothing" sometimes correct | [Case B3 — Bank of England Monetary Policy (c10)](cases.md#case-b3--bank-of-england-monetary-policy-committee-c10) |
 | Modern NPS / retention loop ping-pong from playbook over-correction (V2 novel transfer) | [Case B4 — NPS Playbook Ping-Pong](cases.md#case-b4--nps-playbook-ping-pong-v2-novel-domain-transfer) |
 
+## Modern-platform variant — Pseudo-Target Dangle (R-spinning despite looking like B)
+
+| Symptom you're seeing | Load this case |
+|---|---|
+| Algorithm-belief drives over-action; "post 3/wk or be punished" / SEO keyword-density myth / LTV:CAC always-on ads; target never updates from observed output | [Case B5 — Algorithm-Belief Pseudo-Target (v0.5)](cases.md#case-b5--algorithm-belief-pseudo-target-v0-5-modern-platform-variant) |
+
 ## Step-0 router quick reference
 
 - **Per-cycle delta shrinking toward asymptote** → Branch L
@@ -31,6 +38,9 @@ the relevant precedent before committing the full read.
   deceleration ≫ oscillation × 3, run L primarily and treat V as note.
 - **Monotone divergence** (delta growing) → NOT this skill; return to
   cld-craft for R-loop intervention.
+- **Looks like B-loop but target never updates from output** → Case B5
+  pseudo-target dangle; intervention = question the belief, not relieve
+  brake / do nothing.
 
 ## Loading rule
 
