@@ -166,3 +166,52 @@ The following from the original audit's v0.2 recommendations stayed deferred:
 - sk13 / sk14 V1-weak future decision (absorb / replace with TRIZ + DiSC dedicated / keep standalone with stronger disclaimers)
 - Stricter cross-skill compose-with operationalization (e.g. explicit hand-off API between cld-craft fuzzy elevation and simulation-modeling sensitivity sweep)
 - D8 cap interpretation policy for skill-judge (when raw score exceeds 15, should it ceiling at 15 or accept the signal?)
+
+---
+
+## v0.3.0 update — prose→diagram emission (the killer feature)
+
+Released: 2026-05-12 (same-day as v0.1.0 / v0.1.1 / v0.2.0).
+
+Strategic anchor: per memory `project_systems_thinking_toolkit_v0.3_anchor`,
+plugin's real alpha is **prose-mess → structured CLD translation**
+(LLM-strong upstream step), NOT downstream apps (workshops / simulation
+/ decisions — LLM weak spots). v0.3 makes Mermaid emission the
+**required deliverable** of cld-craft + loop-and-link-primitives.
+
+### Changes
+
+| File | Change |
+|---|---|
+| `skills/cld-craft/references/cld-mermaid-emit.md` | NEW — canonical CLD Mermaid emission convention (S/O edge labels, R/B `%%` annotation, 5 dangle shapes, R/B color palette). Adapted from `obsidian/skills/obsidian-mermaid-visualizer/flow/circular-flow.md` (provenance noted) plus CLD-specific Sherwood conventions. |
+| `skills/cld-craft/SKILL.md` | E section gains Step 11 "Emit Mermaid CLD artifact" as required deliverable; MANDATORY load directive at top of E section pointing to `cld-mermaid-emit.md`. Body grew ~3395w → 3630w (+235w). |
+| `skills/loop-and-link-primitives/SKILL.md` | E section gains Step 11 "Emit annotated Mermaid CLD" + input contract ("typical input in v0.3+ is Mermaid CLD from cld-craft; parse edges directly"). Body grew ~2924w → 3205w (+281w). |
+| `.claude-plugin/plugin.json` | Version 0.2.0 → 0.3.0 |
+
+### Spot-test results (3 parallel opus subagents on prose cases)
+
+| Case | Prose theme | Mermaid output conformance |
+|---|---|---|
+| SaaS retention drift | Limits-to-growth with 2 brakes (CS capacity B-loop + complexity-overwhelm vicious R-loop) on Trust/Mastery R-engine | ✅ All 5 dangle shapes used, R/B palette applied, 3 loops correctly annotated with `%%` + traversal + O-counts; sub-agent self-corrected one initial misclassification on recount |
+| Engineering team junior-senior tradeoff | Vicious R1 (firefighting) + R2 (morale) + overwhelmed B1 (review-quality control); split-fuzzy applied on junior-headcount→throughput | ✅ All conventions followed; correctly identified limits-to-growth archetype |
+| Inventory oscillation around 1000-unit target | Classic V/T/A balancing loop with 6-week pipeline delay | ✅ Delay tag `\|S, T=6weeks\|` syntax used correctly; B-loop O-count = 1 verified; pointed downstream to variance-target-action-template |
+
+All 3 cases produced clean, conformant Mermaid CLDs from prose without
+prior CLD existing. The prose → diagram translation pipeline works.
+
+### Why this is the v0.3 anchor (not Python simulator)
+
+Per the post-v0.2.0 strategic reorientation: this plugin's killer
+feature is **translating mess to structure** (LLM-strong) not
+**executing simulations** (program-strong). v0.3 ships the diagram
+translation as the primary use case. Python simulator companion stays
+deferred to v0.4+ when use feedback confirms it's the next bottleneck.
+
+### Still-deferred to v0.4+
+
+- `simulation-modeling` Python companion (executable simulator)
+- sk13 / sk14 V1-weak future decision
+- Router boost so "I have a tangle" → `cld-craft` directly (without router intent table)
+- Full diagram-extraction quality test suite (this v0.3 ran N=3 spot-checks; v0.4 candidate to add N=10+ regression cases)
+- Mermaid → Excalidraw / draw.io bridge for editable diagram output
+- README headline rewrite ("prose→CLD translator" instead of "9-skill toolkit")
