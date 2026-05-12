@@ -50,10 +50,12 @@ EPUB=~/Books/kobo/"<author> - <title> b9152ffe.epub"
 
 # Convert (uses $TSUNDOKU_MARKDOWN_DIR by default — no --out-dir needed)
 python3 scripts/epub_to_markdown.py --epub "$EPUB" \
-    --strip-images --strip-frontmatter
+    --strip-frontmatter
 
 # → writes to ~/.tsundoku/cache/markdown/<title-slug>-<id8>/
-#       index.md + metadata.json + NN-chapter.md files
+#       index.md + metadata.json + NN-chapter.md files + images/
+#
+# For pure-text output (LLM distillation only): add --strip-images
 ```
 
 ## Conversion options
@@ -62,7 +64,7 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 |---|---|
 | `--out-dir DIR` | output ROOT (auto per-book subdir inside; default `$TSUNDOKU_MARKDOWN_DIR`) |
 | `--no-subdir` | disable per-book subdir; write straight into `--out-dir` |
-| `--strip-images` | drop image references — recommended for text-heavy books |
+| `--strip-images` | skip image extraction + drop all references — for pure-text shipping |
 | `--strip-frontmatter` | skip 書封 / 目錄 / 版權 / cover / contents etc. |
 | `--strip-backmatter` | skip 索引 / 致謝 / index / acknowledg (附錄 / 譯後記 retained) |
 | `--merge-small N` | merge sub-N-token chapters into previous |
@@ -75,16 +77,19 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 ~/.tsundoku/cache/markdown/<title-slug>-<id8>/
 ├── index.md                      ← TOC + per-chapter token estimate
 ├── metadata.json                 ← title / authors / publisher / ISBN / chapters[]
+├── images/                       ← extracted by default; opt out with --strip-images
+│   └── cover.jpg, ch03-fig1.png, ...
 ├── 01-cover.md                   ← (skipped if --strip-frontmatter)
 ├── 02-序.md
-├── 03-chapter-01.md              ← H1 = chapter label from NCX
+├── 03-chapter-01.md              ← H1 = chapter label from NCX, refs `![](images/...)`
 ├── 04-chapter-02.md
 ...
 ```
 
 Chapter filenames: `NN-<slugified-label>.md` (CJK preserved). Subdir name:
 `<slug-of-title>` or `<slug-of-title>-<id8>` if input filename matches the
-kobodl pattern.
+kobodl pattern. Image references in chapter Markdown use inline GFM syntax
+`![alt](images/<file>)`.
 
 ## Token budget reference
 
