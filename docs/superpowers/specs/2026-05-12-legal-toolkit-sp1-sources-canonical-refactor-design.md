@@ -152,7 +152,7 @@ python3 scripts/verify-drift.py
 
 **Behavior**: every entry in `ROUTE` is mandatory. If you add a route, you must also commit the functional copy. There is no auto-skip — the ROUTE table is updated by humans (or in a single commit alongside the skill subfolder it points at) per §4.2.
 
-**Reuse**: `from distribute import ROUTE, CANONICAL_DIR, ROOT, iter_canonical_files`.
+**Reuse**: `from distribute import ROUTE, CANONICAL_DIR, ROOT`. Verify-drift iterates `ROUTE.items()` directly; it does not need `iter_canonical_files` (which scans the canonical/ dir on disk — relevant for distribute's deploy walk, not for drift checking).
 
 ### 5.3 `scripts/tests/test_distribute.py`
 
