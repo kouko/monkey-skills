@@ -30,8 +30,18 @@
      to 2 .md merges those into one — banner placement reduces from
      2 files to 1 file.
 
-     The [trigger 1] / [trigger 2] placeholders are filled by the emitting
-     skill at runtime with concrete trigger descriptions.
+     v0.3.5+ Phase 1.9 SIGNAL SPLIT: the [!danger] block lists ONLY
+     real legal high-risk findings (walk-away / risk_default red /
+     low_confidence / criminal liability / threshold deals /
+     cross-border 個資). PLACEHOLDER warnings (escalate_to is still
+     '[請編輯…]' bundled-fallback default) go into a SEPARATE [!warning]
+     block BELOW the danger block. Audit caught that v0.3.4 mixed
+     ops-level placeholder noise into the high-risk signal, diluting
+     the [!danger] warning's credibility.
+
+     The [trigger 1] / [trigger 2] placeholders in the template body
+     are filled by the emitting skill at runtime with concrete trigger
+     descriptions.
 
      Strip rule: even when --external-share strips playbook IDs, this
      Override is NEVER stripped — the counterparty/third party needs to
@@ -42,7 +52,7 @@
 
 > [!danger] ⚠️ 高風險議題——本工具強烈建議諮詢執業律師
 >
-> 本次 review 偵測到以下高風險訊號：
+> 本次 review 偵測到以下實質法律高風險訊號：
 > - [觸發條件 1]：[簡述]
 > - [觸發條件 2]：[簡述]
 >
@@ -50,6 +60,18 @@
 > 1. **不要**直接採用本工具輸出做最終決定
 > 2. **必須**諮詢執業律師（建議：理律 / 寰瀛 / 眾達 / 協合 / 漢威 / 或公司現有外部律師）
 > 3. 將本工具輸出作為**律師討論的初稿材料**，加速但不取代律師判斷
+
+<!-- v0.3.5+ Phase 1.9: if any finding has escalate_to_is_placeholder=true,
+     append a SEPARATE [!warning] block below — keeps ops-level
+     bundled-fallback drift visible WITHOUT diluting the [!danger] signal. -->
+
+> [!warning] ⚙️ 工具設定提醒（非法律 high-risk）
+>
+> 本次 review 中以下 finding 之 escalate_to 仍為 bundled fallback 預設值「[請編輯為你公司的角色]」：
+> - [clause_id 1]
+> - [clause_id 2]
+>
+> 建議跑 `legal-playbook-author revise <clause-id>` 把 `escalate_to` 改成你公司的實際角色（法務主管 / GC / 部門主管 / 老闆兼法務）。此為 ops cleanup 不是法律 risk。
 
 ---
 

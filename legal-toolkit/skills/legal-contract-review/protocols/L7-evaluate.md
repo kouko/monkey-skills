@@ -725,7 +725,12 @@ Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/legal.md` with sections in this o
 ```
 # 法務審查報告 — <contract name>
 
-> [!danger] [Override banner if override_triggered]   ← prepended ONLY when triggered
+> [!danger] [Override banner if override_triggered]   ← real legal high-risk ONLY
+                                                       (walk-away / red / low-confidence / etc.)
+
+> [!warning] [Placeholder warning if any escalate_to_is_placeholder=true]  ← ops-level, NOT mixed
+                                                                            with [!danger]
+                                                                            (v0.3.5+ Phase 1.9 split)
 
 ## 議題清單（Issues）
 | # | clause_id | severity | business_issues | summary_zh_tw |
