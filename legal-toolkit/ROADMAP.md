@@ -23,7 +23,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.6      0.3.0   3-5d    3 (補 eval)  Binary rubric + dogfood baseline               ✅ DONE
 1.6.1    0.3.1   1d      3 (patch)    Dogfood-driven: stance-asymmetry + L6 vague    ✅ DONE
 1.6.2    0.3.2   1d      3 (patch)    2nd-pass dogfood: asset id + 案號 cleanup      ✅ DONE
-1.7      0.3.3   5-7d    3 (架構)     bundled-vs-runtime architecture refactor       📋 PLANNED
+1.7      0.3.3   5-7d    3 (架構)     bundled-vs-runtime architecture refactor       ✅ DONE
 2        0.4.0   10d     5            Template + Runbook cluster
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
@@ -248,9 +248,44 @@ cohort summary table 可分享（aggregates only）。
 
 ---
 
-## Phase 1.7 — bundled-vs-runtime architecture refactor（v0.3.3，5-7 天）
+## Phase 1.7 — bundled-vs-runtime architecture refactor（v0.3.3，5-7 天） ✅ **DONE 2026-05-12**
 
-**Status**：📋 planned, not started. Pre-Phase-2 architecture cleanup; **不新增 skill**。
+**Status**：✅ DONE 2026-05-12. Pre-Phase-2 architecture cleanup; **不新增 skill**。
+
+### 完成狀態（commits 1c8a6ca → b5df284 → \<commit-5\> on `feat/legal-toolkit-v0.1.0`）
+
+**Q-locks 全 lock**：
+- Q-A：TTL with sensible defaults（30d statute / 7d case / 30d 函釋 / 365d applicability_notes）+ per-type override in config.yml
+- Q-B：cache-then-fetch-then-LLM-with-warning + `runtime_verified: false` marker；不 silently substitute LLM training-data
+- Q-C：main session WebFetch via LLM；Python only managing cache + URL construction
+- Q-D：no cross-source conflict resolution；每種 citation 對應自己 source
+- Q-E：soft cap 10 unique citations/run；configurable via `.legal-toolkit/config.yml`
+- Q-F：scope = statute + case + 函釋 verify only；NO applicability enrichment / NO baseline trim → defer 到 v0.3.4+
+
+**commit 1** — foundation: `assets/legal-sources.json` (12 statutes + 司法院判決 + 7 主管機關) + `assets/output-schema-citation-cache.json` + `scripts/cache_check.py` + 22 tests
+**commit 2** — protocol: L7 Step 9.3.1 statute runtime fetch + applicability_caveat carry-through
+**commit 3** — protocol: L7 Step 9.3.2 case + Step 9.3.3 function letter verify + `scripts/build_citation_url.py` + 21 tests
+**commit 4** — schema: citations[].runtime_verified + cache_path + amendment_note + top-level runtime_fetch_summary + `assets/config.example.yml`
+**commit 5** — cleanup: version bump 0.3.2 → 0.3.3 + this ROADMAP section + Timeline update
+
+### Quality gate
+
+- ✅ **163/163 tests pass** (120 從 v0.3.2 + 22 cache_check + 21 build_citation_url)
+- ✅ **Zero 新 user-facing breakage** — schema additions all optional / additive
+- ✅ **Privacy verified** — WebFetch sends only statute identifier / case number / agency name；NO contract text exfiltrated
+- 🟡 **dogfood A/B 待跑** — pre/post Phase 1.7 on same 2 contracts；measure SRC-09 escape rate + latency delta + cache hit rate over multiple runs
+
+### 仍 deferred（v0.3.4+ / Phase 1.8）
+
+- Comprehensive statute whitelist（main range + sub-articles per statute）
+- NDA-native fallback baselines（§2.2/§2.3 cascade liability pattern）
+- ANS-21 stance_asymmetry_check semantic-tier rubric
+- SRC-12 cases_verified[] whitelist deterministic check
+- Bundled baseline trim（移走「為什麼這條重要」narrative 到 references/）
+- Multi-jurisdiction runtime fetch（HK / CN / JP / US）
+- Subagent-mode WebFetch（main-session fine for v0.3.3 scope；reserve for high-volume runs）
+
+---
 
 **Trigger**：2026-05-12 conversation surfaced an architectural question after Phase 1.6.2 case-citation cleanup. v0.3.2 verification subagent found 7 / 8 bundled judicial case citations likely fabricated. Even if every remaining bundled citation is verifiable today, the architecture relies on **bundle-time correctness** that drifts with:
 
@@ -276,14 +311,14 @@ The bundled approach makes the toolkit **frozen at ship date**. v0.3.1 added `st
 | **「## 為什麼這條重要」 narrative explanation** | bundled fallback body | **move to references/ OR runtime-generate** | Explanatory text changes when commentary evolves; ~20-25% of bundled content |
 | **「## 相關規範與學說參考」 references** | bundled fallback body (v0.3.2 cleaned) | **slim further** — keep statute references; commentary author list moves to references/<topic>.md | Loosely coupled — author list / book editions update independently |
 
-### Open decisions (NOT yet locked)
+### Q-locks (all locked, see Phase 1.7 commits)
 
-- **Q-A**：runtime fetch cache strategy? `.legal-toolkit/cache/statutes/<statute>-<article>.json` with TTL? Per-session ephemeral?
-- **Q-B**：offline degradation? Fall back to LLM training-data recall + flag finding with `runtime_verified: false`? Or hard-fail the citation?
-- **Q-C**：runtime fetch in subagent vs main session? Subagent (background, doesn't pollute main context) vs main (latency hit but simpler control flow)?
-- **Q-D**：法源優先順序? law.moj.gov.tw (全國法規) > judgment.judicial.gov.tw (司法院判決) > 主管機關函釋 — when conflict, which wins?
-- **Q-E**：fetch budget? cap N WebFetches per /legal-contract-review run to bound cost / latency?
-- **Q-F**：v0.3.3 scope — just statute text fetch, or also case verification + applicability_caveat enrichment?
+- **Q-A** ✅：TTL with sensible defaults — 30d statute / 7d case / 30d 函釋 / 365d applicability_notes；per-type override in config.yml
+- **Q-B** ✅：cache-then-fetch-then-LLM-with-warning + `runtime_verified: false` marker；never silently substitute LLM training-data recall as if verified
+- **Q-C** ✅：main session WebFetch via LLM；Python only managing cache + URL construction (subagent-mode deferred to v0.3.4+)
+- **Q-D** ✅：no cross-source conflict resolution needed — each citation type verifies its own source
+- **Q-E** ✅：soft cap 10 unique citations/run；configurable via `.legal-toolkit/config.yml`；overflow → `runtime_fetch_skipped: true`
+- **Q-F** ✅：scope = statute + case + 函釋 verify only；NO applicability enrichment / NO baseline trim → defer 到 v0.3.4+
 
 ### Tentative deliverables
 
@@ -306,12 +341,15 @@ The bundled approach makes the toolkit **frozen at ship date**. v0.3.1 added `st
   - **Offline behaviour** — degrade gracefully; emit `runtime_verified: false` markers; do NOT silently substitute training-data recall
 - Bundled fallback slimming target：each baseline-fallback-*.md ≤ 60 lines（v0.3.2 average 80-90 lines after case removal）
 
-### Deferred from Phase 1.7 (explicit non-scope)
+### Deferred from Phase 1.7 (explicit non-scope, → v0.3.4+ / Phase 1.8)
 
-- **Comprehensive statute whitelist** in `statute-articles.json` — Phase 1.7 closes the bundled-vs-runtime split; the whitelist's article-range enumeration is independent value, deferred to Phase 1.8+
-- **NDA-native fallback baselines** — orthogonal scope; carries over from Phase 1.6.2 Deferred
+- **Comprehensive statute whitelist** in `statute-articles.json` — Phase 1.7 closed the bundled-vs-runtime split; the whitelist's article-range enumeration is independent value
+- **NDA-native fallback baselines** — orthogonal scope；carries over from Phase 1.6.2 Deferred
 - **ANS-21 stance_asymmetry_check semantic rubric** — orthogonal
+- **SRC-12 cases_verified[] whitelist** deterministic check (currently soft-citation rule at protocol level)
+- **Bundled baseline trim**（移走「為什麼這條重要」narrative 到 references/clause-<id>-context.md）
 - **Multi-jurisdiction runtime fetch** (HK / CN / JP / US) — TW-only in Phase 1.7
+- **Subagent-mode WebFetch** — main session sufficient for v0.3.3 scope；reserve for high-volume runs
 
 ### Risk
 
@@ -477,7 +515,7 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.3.0 | Phase 1.6 ship | 「我可以自評跟你 hand-grade 對齊」 |
 | v0.3.1 | Phase 1.6.1 dogfood patch | 「不會在 stance-favorable 合約把優勢拱手讓人；citation hygiene 更嚴」 |
 | v0.3.2 | Phase 1.6.2 second-pass dogfood | 「主動識別合約內 favorable 條款轉成 asset；7 個 fabricated 案號從 bundled fallback 清除；L6/L7 dedup」 |
-| v0.3.3 | Phase 1.7 architecture refactor | 「條文 / 案號 runtime fetch + verify；bundled fallback 瘦身留 policy；citation drift 不再靠手動 verified_at」 |
+| v0.3.3 | Phase 1.7 architecture refactor | 「條文 / 案號 / 函釋 runtime fetch + verify；TTL-based cache；offline-graceful；citation drift 不再靠手動 verified_at；163/163 tests」 |
 | v0.4.0 | Phase 2 ship | 「合約 + 起草 + 應變」 |
 | v0.5.0 | Phase 3 ship | 「+ 諮詢 + 研究」 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
