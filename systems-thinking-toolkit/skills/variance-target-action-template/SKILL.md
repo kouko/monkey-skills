@@ -126,6 +126,10 @@ the modern customer-success analogue.
 
 ```
 E flow:
+  Step 0: signal-vs-noise pre-check (SPC ±2σ + autocorrelation)
+        │ noise → not a V/T/A case (use noise-filtering)
+        │ signal
+        v
   metric oscillating? ── no → not a V/T/A case
         │ yes              (if decelerating, try limits-to-growth)
         v
@@ -153,6 +157,17 @@ E flow:
 
 When this skill activates, follow these steps:
 
+0. **Pre-check: signal vs noise.** Before V/T/A diagnosis, verify the
+   variance is *from a system*, not from random noise. Apply SPC
+   (Statistical Process Control) one-pass: if variance falls within
+   ±2σ of historic mean and shows no autocorrelation, it is NOISE —
+   V/T/A template does not apply (use noise-filtering / control-chart
+   tooling instead). If variance shows trend, autocorrelation, or
+   clusters > 2σ, proceed with Step 1. Halt condition: cannot compute
+   σ on the metric → at least eyeball the recent series for cluster /
+   trend / cyclicality before continuing; otherwise you risk
+   prescribing "do nothing" against actual signal, or "small moves"
+   against actual noise.
 1. **Sketch the candidate B-loop in 4 nodes** — completion criterion:
    target, actual, variance, action all named with noun labels;
    variance direction explicitly written (target minus actual or
@@ -173,7 +188,11 @@ When this skill activates, follow these steps:
 4. **Diagnose the dysfunction class** — completion criterion: one of:
    (a) loop is converging fine, manager is impatient → action: wait;
    (b) sustained oscillation → action: lengthen interval between
-   moves to ≥1 feedback cycle, reduce move magnitude; (c) growing
+   moves to ≥1 feedback cycle, reduce move magnitude. **Heuristic:
+   new interval ≥ 1.5 × estimated delay between action and observable
+   effect.** Below 1.5× = still ping-ponging on stale state; at or
+   above 1.5× = at least one full delay-cycle absorbed before the
+   next move; (c) growing
    amplitude → action: do absolutely nothing for two cycles, then
    re-baseline; (d) target keeps moving → action: stop moving the
    target. Halt condition: if it's "genuinely diverging" (not
@@ -187,7 +206,17 @@ When this skill activates, follow these steps:
    criterion: the rationale is documented (this loop is converging /
    the prior action hasn't had time to land yet) so that the
    organization doesn't interpret restraint as inaction. Sherwood:
-   "wise boss as well as wise manager."
+   "wise boss as well as wise manager." **Organizational-politics
+   escalation note:** in quarterly-OKR / weekly-review orgs, "do
+   nothing" may be rejected as a legitimate action regardless of
+   correctness. Counter-moves: (i) reframe as "scheduled non-
+   intervention through cycle N+1" with an explicit review date,
+   (ii) attach a falsifiable abort trigger ("if amplitude grows by
+   >X% before T, we re-intervene"), (iii) escalate the diagnosis,
+   not the inaction — name the loop, the delay, and the prior
+   over-correction so the decision is read as *informed restraint*
+   not absence. If the org structurally cannot tolerate this, the
+   diagnosis still holds; the constraint is political, not analytic.
 
 ## B — Boundary ★
 
