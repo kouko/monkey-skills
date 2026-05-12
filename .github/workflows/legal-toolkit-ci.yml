@@ -32,7 +32,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install test deps
-        run: python3 -m pip install --quiet pytest
+        # pytest = test runner. pyyaml = required by build_baseline.py / seed_baseline.py
+        # (YAML frontmatter parsing in clause baselines). jsonschema = required by
+        # test_schema.py + validate_schema.py (Draft 2020-12 JSON Schema validation).
+        run: python3 -m pip install --quiet pytest pyyaml jsonschema
 
       - name: Run legal-toolkit scripts/ pytest suite
         env:
