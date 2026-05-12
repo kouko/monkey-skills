@@ -6,6 +6,7 @@ Tasks 3-4. verify-drift.py imports ROUTE / CANONICAL_DIR / ROOT only.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -122,3 +123,44 @@ def test_distribute_is_idempotent(fake_plugin):
 
     dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
     assert dst.read_bytes() == payload
+
+
+# ---------------------------------------------------------- T-D-4: CLI
+import subprocess
+
+
+def test_distribute_cli_writes_copy_and_summary(fake_plugin, monkeypatch):
+    """Invoke distribute.py as a script, with ROOT pointing at the fake plugin
+    via a tiny wrapper script.
+    """
+    import distribute
+
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(b'{"a": 1}')
+
+    wrapper = fake_plugin / "run.py"
+    wrapper.write_text(
+        f"""
+import sys
+sys.path.insert(0, {str(SCRIPTS)!r})
+import distribute
+distribute.ROOT = __import__('pathlib').Path({str(fake_plugin)!r})
+distribute.CANONICAL_DIR = distribute.ROOT / 'scripts' / 'canonical'
+distribute.ROUTE = {{
+    'legal-sources.json': ['skills/legal-contract-review/assets/legal-sources.json'],
+}}
+sys.exit(distribute.main())
+"""
+    )
+    result = subprocess.run(
+        [sys.executable, str(wrapper)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "[deploy]" in result.stdout
+    assert "1 copies" in result.stdout or "1 file" in result.stdout
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    assert dst.read_bytes() == b'{"a": 1}'

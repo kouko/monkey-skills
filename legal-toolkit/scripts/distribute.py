@@ -18,6 +18,7 @@ CI runs verify-drift.py to enforce byte-identical copies.
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -89,3 +90,20 @@ def distribute(
             written += 1
             print(f"[deploy] canonical/{canonical_name} -> {rel_dst}")
     return written
+
+
+def main() -> int:
+    if not CANONICAL_DIR.is_dir():
+        print(f"ERROR: canonical directory not found: {CANONICAL_DIR}", file=sys.stderr)
+        return 2
+    try:
+        n = distribute()
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+    print(f"\nOK: deployed {n} copies from canonical/ to skill assets/.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
