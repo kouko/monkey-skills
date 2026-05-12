@@ -447,6 +447,38 @@ If a worker outputs `BLOCKED` (e.g., no sources found, contradictory requirement
 - Present BLOCKED reason to user
 - Wait for user input
 
+## Output Frontmatter Discipline
+
+When a research artifact carries YAML frontmatter (typical for
+artifacts saved to an Obsidian vault, Notion page, or repo
+`docs/` folder), record only fields that are **meaningful to the
+reader of the artifact**. Do not record internal skill state —
+those fields rot quickly and lure the LLM into hallucinating
+version numbers it has no way to verify.
+
+| Field | Include | Rationale |
+|---|---|---|
+| `generated_by: domain-teams:research-team` | ✅ | reader can trace which skill produced this |
+| `date: YYYY-MM-DD` | ✅ | snapshot point in time |
+| `protocol: stack-evaluation` | ✅ | tells the reader which methodology was applied |
+| `mode: quick` / `mode: deep` | ✅ | tells the reader the rigor tier |
+| `tags: [...]` | ✅ | reader-side organization |
+| `skill_version`, `pipeline_version`, `refactor_version` | ❌ | internal state, drifts, invites hallucination |
+| `output_mode: ...` | ❌ | mode dimension removed in v5.6.0; do not reintroduce |
+| `confidence_overall: 高/中/低` | ✅ when present in body | mirrors the body, useful for filtering |
+| Any field naming an unreleased version (`v5.6.0` before it ships) | ❌ | hallucination risk |
+
+Self-critique check: in deep mode, the Self-Critique block (per
+`protocols/hook-self-critique.md`) verifies the artifact's
+frontmatter does not contain skill internal state. If a forbidden
+field slipped in, remove it before finalizing the artifact.
+
+**Carve-out**: design-doc / spec / meta files that discuss the
+skill itself (CHANGELOG entries, refactor planning notes,
+grounding docs) are exempt — version numbers there are
+first-class content, not internal-state leakage. This rule applies
+only to **workflow-produced research artifacts**.
+
 ---
 
 ## Compliance: Visibility Convention (skill-team v5.2.0+)
