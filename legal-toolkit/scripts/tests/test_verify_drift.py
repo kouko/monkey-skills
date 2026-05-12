@@ -119,3 +119,51 @@ def test_verify_drift_returns_one_when_canonical_missing(fake_plugin, capsys):
 
     assert rc == 1
     assert "MISSING-CANONICAL" in out
+
+
+# ---------------------------------------------------------- T-V-5: CLI + diff
+def test_verify_drift_cli_emits_unified_diff_on_drift(fake_plugin):
+    import distribute
+
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(b'{"original": true}\n')
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    distribute.distribute(route=route, root=fake_plugin)
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    dst.write_bytes(b'{"mutated": true}\n')
+
+    wrapper = fake_plugin / "run-verify.py"
+    wrapper.write_text(
+        f"""
+import sys, importlib.util
+sys.path.insert(0, {str(SCRIPTS)!r})
+import distribute
+distribute.ROOT = __import__('pathlib').Path({str(fake_plugin)!r})
+distribute.CANONICAL_DIR = distribute.ROOT / 'scripts' / 'canonical'
+distribute.ROUTE = {{
+    'legal-sources.json': ['skills/legal-contract-review/assets/legal-sources.json'],
+}}
+spec = importlib.util.spec_from_file_location('verify_drift', {str(SCRIPTS / 'verify-drift.py')!r})
+vd = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(vd)
+sys.exit(vd.main())
+"""
+    )
+    result = subprocess.run(
+        [sys.executable, str(wrapper)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+    assert result.returncode == 1
+    assert "DRIFT" in result.stdout
+    # Unified-diff lines from `diff -u` start with --- / +++ / @@
+    assert "---" in result.stdout
+    assert "+++" in result.stdout
+    assert "@@" in result.stdout

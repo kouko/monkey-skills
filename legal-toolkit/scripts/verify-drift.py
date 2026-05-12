@@ -12,6 +12,8 @@ CI gate: runs after every PR / push that touches legal-toolkit/.
 from __future__ import annotations
 
 import filecmp
+import hashlib
+import subprocess
 import sys
 from pathlib import Path
 
@@ -61,3 +63,76 @@ def verify_drift(
         return 1
     print(f"OK: all {checked} functional copies byte-identical to canonical.")
     return 0
+
+
+def _md5(path: Path) -> str:
+    return hashlib.md5(path.read_bytes()).hexdigest()
+
+
+def _print_unified_diff(reference: Path, drift_path: Path, max_lines: int = 50) -> None:
+    """Print up to max_lines of `diff -u` output so reviewers see WHAT differs,
+    not just THAT it differs. Also print md5 for both files.
+    """
+    print(f"    md5(canonical) = {_md5(reference)}")
+    print(f"    md5(copy)      = {_md5(drift_path)}")
+    try:
+        out = subprocess.run(
+            ["diff", "-u", str(reference), str(drift_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        text = out.stdout or out.stderr or ""
+        lines = text.splitlines()
+        for line in lines[:max_lines]:
+            print(f"    {line}")
+        if len(lines) > max_lines:
+            print(f"    ... ({len(lines) - max_lines} more lines truncated)")
+    except FileNotFoundError:
+        print("    (diff binary unavailable)")
+
+
+def main() -> int:
+    if not CANONICAL_DIR.is_dir():
+        print(f"ERROR: canonical directory not found: {CANONICAL_DIR}", file=sys.stderr)
+        return 2
+
+    drifts: list[tuple[str, Path | None, Path | None]] = []
+    checked = 0
+    for canonical_name, destinations in ROUTE.items():
+        src = CANONICAL_DIR / canonical_name
+        if not src.is_file():
+            drifts.append(
+                (f"MISSING-CANONICAL  scripts/canonical/{canonical_name}", None, None)
+            )
+            continue
+        for rel_dst in destinations:
+            dst = ROOT / rel_dst
+            if not dst.is_file():
+                drifts.append((f"MISSING  {rel_dst}", None, None))
+                continue
+            if not filecmp.cmp(src, dst, shallow=False):
+                drifts.append(
+                    (
+                        f"DRIFT    {rel_dst} differs from scripts/canonical/{canonical_name}",
+                        src,
+                        dst,
+                    )
+                )
+            checked += 1
+
+    if drifts:
+        for label, ref, drift_path in drifts:
+            print(label)
+            if ref is not None and drift_path is not None:
+                _print_unified_diff(ref, drift_path)
+        print(f"\nFAIL: {len(drifts)} drift(s) detected (checked {checked} pairs).")
+        print("\nFix locally: python3 legal-toolkit/scripts/distribute.py")
+        return 1
+
+    print(f"OK: all {checked} functional copies byte-identical to canonical.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
