@@ -1,6 +1,6 @@
 {
   "name": "systems-thinking-toolkit",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Systems thinking toolkit grounded in Dennis Sherwood, Seeing the Forest for the Trees (2002). 9 skills covering loop-and-link primitives, CLD craft, intervention archetypes (limits-to-growth, variance-target-action), strategy (lever-and-cascade), stakeholder + team thinking, stock-flow simulation, plus two auxiliary V1-weak skills (innovaction-martian-test, manager-personality-quadrant) retained per Stage 1.5 user override. Distilled via tsundoku:book-distill RIA-TV++ pipeline; 5 Profile-B compose-with pair merges from the original 14-skill distill. システム思考ツールキット — Sherwood 2002 ベース。系統思考工具組 — Sherwood 2002 為本。",
   "author": {
     "name": "kouko",

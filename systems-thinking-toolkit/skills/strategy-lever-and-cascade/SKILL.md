@@ -7,7 +7,7 @@ source_chapter: "Chapter 10 (lever-vs-outcome business engine + three-timescale 
 source_language: en
 tags: [strategy, levers-outcomes, okr-critique, scenario-planning, long-term-planning, systems-thinking]
 related_skills:
-  - slug: variance-target-action-template
+  - slug: cld-archetypes
     relation: depends-on
   - slug: innovaction-martian-test
     relation: composes-with

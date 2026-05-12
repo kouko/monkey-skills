@@ -2,22 +2,21 @@
 
 [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-Nine systems-thinking skills distilled from Dennis Sherwood, *Seeing the Forest for the Trees: A Manager's Guide to Applying Systems Thinking* (Nicholas Brealey, 2002), packaged as the `systems-thinking-toolkit` plugin for monkey-skills.
+Eight systems-thinking skills + 1 entry/router, distilled from Dennis Sherwood, *Seeing the Forest for the Trees: A Manager's Guide to Applying Systems Thinking* (Nicholas Brealey, 2002), packaged as the `systems-thinking-toolkit` plugin for monkey-skills. **v0.4 R3 restructure** organizes around `cld-craft` as the carry-1 prose→Mermaid CLD translator; everything else either consumes that CLD or extends to non-CLD outputs.
 
 ## What's included
 
-| Skill | Purpose |
-|---|---|
-| `using-systems-thinking-toolkit` | Route to the right method based on situation |
-| `loop-and-link-primitives` | Foundational: R/B loop diagnosis + S/O link signing (sk01+sk02) |
-| `cld-craft` | Draw causal loop diagrams with workshop discipline — 12 rules + fuzzy variable elevation (sk03+sk04) |
-| `limits-to-growth-take-the-brakes-off` | R-loop braked by B-loop archetype; constraint-relief over engine-pushing (sk05) |
-| `variance-target-action-template` | Generic B-loop control template + do-nothing-under-oscillation diagnostic (sk06) |
-| `strategy-lever-and-cascade` | Lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario planning (sk07+sk08) |
-| `stakeholder-and-team-thinking` | Multi-perspective CLD overlay + mental-model harmony for teams (sk09+sk10) |
-| `simulation-modeling` | Stock-flow translation + learning-not-answers discipline (sk11+sk12) |
-| `innovaction-martian-test` ⚠ V1-weak | Feature-perturbation scenario generation; TRIZ / morphological-analysis stronger alternatives exist |
-| `manager-personality-quadrant` ⚠ V1-weak | Executive-personality 2×2; DiSC / MBTI / Hogan stronger alternatives exist |
+| Skill | Role | Purpose |
+|---|---|---|
+| `cld-craft` | Carry-1 producer | Prose → fully-annotated Mermaid CLD (12 rules + fuzzy elevation + S/O signing + R/B classification absorbed in Step 11) |
+| `cld-archetypes` | CLD consumer | Recognize limits-to-growth (R+B coupling) or V/T/A (B-loop with delay) archetype + matching intervention playbook |
+| `cld-overlay` | CLD consumer | Multi-stakeholder CLD overlay + straddle-policy finding |
+| `team-mental-model` | Practice | Mental-model harmony + 4 observable leadership-energy proxies (cadence / active-listening / value-revisitation / symbol-narrative) |
+| `simulation-modeling` | CLD extension | Text-only CLD → stock-and-flow translation + learning-not-forecast discipline |
+| `strategy-lever-and-cascade` | Non-CLD | Lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario table |
+| `innovaction-martian-test` ⚠ V1-weak | Auxiliary | Feature-perturbation scenario generation; TRIZ / morphological-analysis stronger alternatives exist |
+| `manager-personality-quadrant` ⚠ V1-weak | Auxiliary | Framing-vs-analysis split + Gods/Gamblers/Grinders/Guides 2×2; DiSC / MBTI / Hogan stronger alternatives exist |
+| `using-systems-thinking-toolkit` | Entry / router | Intent-uncertainty routing to the right skill |
 
 ## Why this plugin
 

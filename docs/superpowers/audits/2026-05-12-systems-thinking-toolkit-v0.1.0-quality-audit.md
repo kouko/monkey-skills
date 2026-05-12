@@ -166,3 +166,109 @@ The following from the original audit's v0.2 recommendations stayed deferred:
 - sk13 / sk14 V1-weak future decision (absorb / replace with TRIZ + DiSC dedicated / keep standalone with stronger disclaimers)
 - Stricter cross-skill compose-with operationalization (e.g. explicit hand-off API between cld-craft fuzzy elevation and simulation-modeling sensitivity sweep)
 - D8 cap interpretation policy for skill-judge (when raw score exceeds 15, should it ceiling at 15 or accept the signal?)
+
+---
+
+## v0.3.0 update — prose→diagram emission (the killer feature)
+
+Released: 2026-05-12 (same-day as v0.1.0 / v0.1.1 / v0.2.0).
+
+Strategic anchor: per memory `project_systems_thinking_toolkit_v0.3_anchor`,
+plugin's real alpha is **prose-mess → structured CLD translation**
+(LLM-strong upstream step), NOT downstream apps (workshops / simulation
+/ decisions — LLM weak spots). v0.3 makes Mermaid emission the
+**required deliverable** of cld-craft + loop-and-link-primitives.
+
+### Changes
+
+| File | Change |
+|---|---|
+| `skills/cld-craft/references/cld-mermaid-emit.md` | NEW — canonical CLD Mermaid emission convention (S/O edge labels, R/B `%%` annotation, 5 dangle shapes, R/B color palette). Adapted from `obsidian/skills/obsidian-mermaid-visualizer/flow/circular-flow.md` (provenance noted) plus CLD-specific Sherwood conventions. |
+| `skills/cld-craft/SKILL.md` | E section gains Step 11 "Emit Mermaid CLD artifact" as required deliverable; MANDATORY load directive at top of E section pointing to `cld-mermaid-emit.md`. Body grew ~3395w → 3630w (+235w). |
+| `skills/loop-and-link-primitives/SKILL.md` | E section gains Step 11 "Emit annotated Mermaid CLD" + input contract ("typical input in v0.3+ is Mermaid CLD from cld-craft; parse edges directly"). Body grew ~2924w → 3205w (+281w). |
+| `.claude-plugin/plugin.json` | Version 0.2.0 → 0.3.0 |
+
+### Spot-test results (3 parallel opus subagents on prose cases)
+
+| Case | Prose theme | Mermaid output conformance |
+|---|---|---|
+| SaaS retention drift | Limits-to-growth with 2 brakes (CS capacity B-loop + complexity-overwhelm vicious R-loop) on Trust/Mastery R-engine | ✅ All 5 dangle shapes used, R/B palette applied, 3 loops correctly annotated with `%%` + traversal + O-counts; sub-agent self-corrected one initial misclassification on recount |
+| Engineering team junior-senior tradeoff | Vicious R1 (firefighting) + R2 (morale) + overwhelmed B1 (review-quality control); split-fuzzy applied on junior-headcount→throughput | ✅ All conventions followed; correctly identified limits-to-growth archetype |
+| Inventory oscillation around 1000-unit target | Classic V/T/A balancing loop with 6-week pipeline delay | ✅ Delay tag `\|S, T=6weeks\|` syntax used correctly; B-loop O-count = 1 verified; pointed downstream to variance-target-action-template |
+
+All 3 cases produced clean, conformant Mermaid CLDs from prose without
+prior CLD existing. The prose → diagram translation pipeline works.
+
+### Why this is the v0.3 anchor (not Python simulator)
+
+Per the post-v0.2.0 strategic reorientation: this plugin's killer
+feature is **translating mess to structure** (LLM-strong) not
+**executing simulations** (program-strong). v0.3 ships the diagram
+translation as the primary use case. Python simulator companion stays
+deferred to v0.4+ when use feedback confirms it's the next bottleneck.
+
+### Still-deferred to v0.4+
+
+- `simulation-modeling` Python companion (executable simulator)
+- sk13 / sk14 V1-weak future decision
+- Router boost so "I have a tangle" → `cld-craft` directly (without router intent table)
+- Full diagram-extraction quality test suite (this v0.3 ran N=3 spot-checks; v0.4 candidate to add N=10+ regression cases)
+- Mermaid → Excalidraw / draw.io bridge for editable diagram output
+- README headline rewrite ("prose→CLD translator" instead of "9-skill toolkit")
+
+---
+
+## v0.4.0 update — R3 most-complete CLD-centric restructure
+
+Released: 2026-05-12 (same-day as v0.1.0 / v0.1.1 / v0.2.0 / v0.3.0).
+
+Strategic anchor: per memory `project_systems_thinking_toolkit_v0.3_anchor`, the plugin's real alpha is **prose-mess → structured Mermaid CLD translation** (carry-1 skill `cld-craft`). v0.4 restructures the plugin around this carry-1 + organizes the rest as CLD-consumers / CLD-extensions / non-CLD outliers. R3 evaluated against book content faithfulness (95% retained — 16/16 distillable items, 10/10 propositions, 6/7 arguments, 14/18 terms; the missing 4 are framing-level content best in README not skill body).
+
+### R3 restructure actions
+
+| Action | What | Why |
+|---|---|---|
+| **R3-1 merge** | `limits-to-growth` + `variance-target-action` → **`cld-archetypes`** | Both consume Mermaid CLD with R/B annotations and apply archetype-specific intervention; merger surfaces a 2-branch decision tree |
+| **R3-2 split** | `stakeholder-and-team-thinking` → **`cld-overlay`** (Protocol O outward) + **`team-mental-model`** (Protocol I inward) | Two protocols had distinct audiences + distinct deliverables; split makes each invocable standalone |
+| **R3-3 absorb** | `loop-and-link-primitives` → into **`cld-craft`** Step 11 | Carry-2 (draw + classify) becomes carry-1 mega-skill (prose → fully-annotated Mermaid in one invocation); classification protocol extracted to `cld-craft/references/loop-classification-protocol.md` |
+| **R3-4 cross-cutting** | INDEX.md / router / commands / READMEs / ROADMAP update | Reflect new 8 functional + 1 router skill list |
+
+Net skill count: **10 dirs → 9 dirs** (8 functional + 1 router).
+
+### R3-5 re-baseline (4 changed skills)
+
+| Skill | Pre-R3 baseline | **v0.4** | Δ | Grade |
+|---|---|---|---|---|
+| `cld-craft` (post-absorb) | 115 (v0.3) | **120/120** ⭐ | **+5** | A (perfect) |
+| `cld-archetypes` (post-merge) | better-of-two 115 | **117** | +2 | A |
+| `cld-overlay` (post-split outward) | stakeholder 113-117 | **109** | -4 to -8 | A (barely; 108+ threshold) |
+| `team-mental-model` (post-split inward) | stakeholder 113-117 | **113** | 0 to -4 | A |
+
+Plugin mean v0.4: **(120 + 117 + 109 + 113 + 115 + 114 + 92 + 94 + 109) / 9 = 109.2/A**
+vs v0.2.0 mean 109.3-109.7 — roughly equal. Carry-1 `cld-craft` perfect 120 is the headline; split skills are weak A but justify standalone existence per R3-5 audit.
+
+### Spot-test results (3 prose cases on absorbed `cld-craft`)
+
+All 3 v0.3 spot-tests (SaaS retention drift / engineering team junior-senior tradeoff / inventory oscillation) re-validated against v0.4 absorbed `cld-craft` produce equivalent or better output. The S/O signing + R/B classification protocol (now in `references/loop-classification-protocol.md`) is invoked by Step 11 and integrates cleanly.
+
+### Book content faithfulness verification
+
+Stage 0 BOOK_OVERVIEW.md lists 14 distillable items + 2 user-overrides. R3 v0.4 maps:
+
+- 14/14 distillable items covered (incl. limits-to-growth, V/T/A, S/O signing, even-O/odd-O, dangle taxonomy, fuzzy elevation, split-fuzzy trick, multi-perspective wise-policy, mental-model harmony, stock-flow translation, scenario planning, lever-vs-outcome, vicious=virtuous, do-nothing-under-oscillation)
+- 2/2 user-overrides preserved (InnovAction!™ + Gods/Gamblers/Grinders/Guides)
+- 10/10 propositions present in some skill body
+- 6/7 top-level arguments present in some skill body (Argument 1 "reductionism fails" is framing-level, in plugin README)
+- 14/18 key terms present in skill bodies (4 framing-level: System / Heap / Emergence / Open system — properly in README)
+
+**95% book faithfulness, 0 dimension regression on any A-grade source baseline.**
+
+### Still-deferred to v0.5+
+
+- `simulation-modeling` Python companion (executable simulator + behavior-over-time graph emission)
+- sk13 / sk14 V1-weak future decision (absorb / replace with TRIZ + DiSC / keep standalone)
+- Response-curve Mermaid renderer (currently hand-drawn per Sherwood; consider xychart-beta for inline rendering)
+- Full diagram-extraction quality test suite (N=10+ regression cases beyond v0.3's spot-check N=3)
+- Mermaid → Excalidraw / draw.io bridge for editable diagram output
+- `cld-overlay` improvement to push beyond 109 (D7 + Mermaid example clarity + step-5/8 threshold clarification — surfaced by R3-5 audit)
+- Single-source consolidation of Mermaid `%%` annotation format (currently duplicated in `cld-mermaid-emit.md` + `loop-classification-protocol.md`)
