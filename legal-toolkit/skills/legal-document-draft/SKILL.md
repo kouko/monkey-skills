@@ -9,7 +9,7 @@ In-house legal toolkit drafting skill for Taiwan SME → 上市櫃 法務. Gener
 
 ## Modes
 
-- **privacy** — 隱私權政策 / 個資告知事項 (個資法 §8 + §9 + §21 + 施行細則 §22)
+- **privacy** — 隱私權政策 / 個資告知事項 (個資法 §8 + §9 + §21 + §27 + 施行細則 §22)
 - **tos** — Terms of Service / 服務條款 (民法 + 消保法 §11-1 / §17 + 公平交易法)
 - **dpa** — Data Processing Agreement / 委託處理協議 (個資法 §4 + §8 + 施行細則 §12)
 - **nda** — Non-Disclosure Agreement / 保密協議 (民法 + 商業慣例)
@@ -39,7 +39,7 @@ Per session, writes 2 files to `legal-outputs/<timestamp>-<mode>/`:
 ## Limitations (current scope per spec §13)
 
 - Path A: tracks current in-force Taiwan law only; GDPR-style features (controller/processor split, 72hr breach window) are NOT included
-- 2025/11 PDPA amendments are tracked as TBD in compliance.md migration sections; templates use current施行細則 §22 "即時" language until PDPC 子法 publishes specific timeframes
+- 2025/11 PDPA amendments are tracked as TBD in compliance.md migration sections; templates use current 施行細則 §22 "即時" language until PDPC 子法 publishes specific timeframes
 - Minor protection: cites 民法 §12-13 (not invented PDPA-specific age threshold)
 - 5th mode (員工合約 / 服務契約 / 採購合約 / SLA): YAGNI per spec §13; add when user demand emerges
 

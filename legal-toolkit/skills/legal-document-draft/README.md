@@ -23,7 +23,7 @@ Drafts new Taiwan-law legal documents (privacy / ToS / DPA / NDA) from a company
 
 ## TBD migration
 
-Items deferred to PDPC 子法 (e.g., specific breach notification timeframe, reporting threshold) appear as TBD entries in `compliance.md`. The `references/tbd-migration-template.md` documents the patch path when PDPC sub-regulations land — typically a `<10-line edit to `assets/template-*.md` + `checklists/compliance-*.md`.
+Items deferred to PDPC 子法 (e.g., specific breach notification timeframe, reporting threshold) appear as TBD entries in `compliance.md`. The `references/tbd-migration-template.md` documents the patch path when PDPC sub-regulations land — typically a <10-line edit to `assets/template-*.md` + `checklists/compliance-*.md`.
 
 ## Not in scope
 
