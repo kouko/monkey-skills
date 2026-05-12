@@ -75,3 +75,25 @@ def test_verify_drift_returns_one_when_copy_mutated(fake_plugin, capsys):
     assert rc == 1
     assert "DRIFT" in out
     assert "legal-sources.json" in out
+
+
+# ---------------------------------------------------------- T-V-3: missing copy
+def test_verify_drift_returns_one_when_copy_missing(fake_plugin, capsys):
+    verify_drift = _load_verify_drift()
+
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(b"x")
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    # distribute() NOT called — destination is intentionally missing.
+
+    rc = verify_drift.verify_drift(route=route, root=fake_plugin)
+    out = capsys.readouterr().out
+
+    assert rc == 1
+    assert "MISSING" in out
+    assert "legal-sources.json" in out
