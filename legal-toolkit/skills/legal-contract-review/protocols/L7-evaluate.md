@@ -775,19 +775,26 @@ Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/business.md`. **NO override banne
 **What if**: (≤80 chars)
 
 ## Top 3 風險（量化）
-- (per findings.json#top_3_business_impacts[]; severity yellow/red ONLY; with quantifiable_downside_evidence)
+- (per findings.json#top_3_business_impacts[]; severity yellow/red ONLY; with quantifiable_downside_evidence; timing 30/60/90 day)
 
 ## ✓ 對我方有利
 - (per findings.json#favorable_position_notes[])
 
-## 主要 Redline 重點（含條文 + why）
+## 主要 Redline 重點（簡述，非完整條文）
 - (per findings.json#redlines[] where proposed_text_send_now is non-empty)
-- Same redlines as legal.md §主動 Redline 提案; intentional duplication for self-contained business.md
-- Format: clause_id + proposed_text body + plain-language rationale
+- Format per redline (v0.3.5+ Phase 1.9 — light-touch for non-lawyer):
+  · **Why**: 1-2 sentence rationale in plain language (NO「carve-out」/「indemnity」/ other law-school jargon)
+  · **修正方向**: 1 line action — e.g. 「延長 cure period 到 30 天」 / 「補入 24 小時通報窗口 + 銷毀證明」
+  · **Timing**: 30 day / 60 day / 90 day / renewal — pulled from top_3_business_impacts actionable timing if linked
+  · **完整提議條文**: 詳見 legal.md §主動 Redline 提案 #N (cross-reference; NOT included inline)
 
 ---
 Mandatory Disclaimer footer
 ```
+
+**v0.3.5+ Phase 1.9 redline section reformat**: v0.3.4 had business.md §主要 Redline 重點 carrying full clause text (5-15 lines of dense legalese per redline). Audit caught this as overload for non-lawyer audience («business owner 30 秒走神», auditor evidence). v0.3.5 strips to Why + 修正方向 + Timing + cross-ref. Full operative text stays in `legal.md §主動 Redline 提案` (the lawyer's send-to-counterparty location); business.md's job is decision-context, not exhaustive specification.
+
+When user asks "what are we changing?" business owner reads business.md (8 lines/redline × N redlines = scannable); when lawyer needs full text to send 對方, opens legal.md §主動 Redline 提案 and copy-paste from there. Same source (findings.json#redlines), different rendering per audience.
 
 #### 10.4 — Run self_grade.py (final pass — in-place updates to BOTH findings.json AND legal.md)
 

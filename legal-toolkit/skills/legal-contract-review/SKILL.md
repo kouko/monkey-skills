@@ -52,7 +52,7 @@ Under `<cwd>/legal-outputs/<YYYY-MM-DD>-<contract-name-slugified>/`:
 | File | Audience | Content |
 |---|---|---|
 | `legal.md` | 法務 / GC / ops 簽核 | Issue 矩陣 + Escalation + CRAC + Redline 提案 (主動 + 內部 fallback) + ✓ Favorable Positions + Self-grade summary |
-| `business.md` | 非法務 (CEO / BD / 業務 / 老闆) | 30 秒 Why/What/What-if + Top-3 量化風險 + ✓ Favorable + 主要 Redline 重點（含條文 + why） |
+| `business.md` | 非法務 (CEO / BD / 業務 / 老闆) | 30 秒 Why/What/What-if + Top-3 量化風險 + ✓ Favorable + 主要 Redline 重點（**簡述**：Why + 修正方向 + Timing + cross-ref to legal.md；v0.3.5+ NO full clause body — overload for non-lawyer per audit） |
 | `findings.json` | Machine + `self_grade.py` | Canonical SoT — all findings, redlines, citations, CRAC, escalations, summary, top_3, favorable_position_notes, cycle_check, anatomy, runtime_fetch_summary, **self_grade** block (v0.3.4 absorbs former self-grade.md) |
 
 Each .md output ends with the Mandatory Disclaimer footer (see [§Disclaimer + Escalation Override](#disclaimer--escalation-override)).
