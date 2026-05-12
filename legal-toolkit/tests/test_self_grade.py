@@ -55,10 +55,16 @@ OVERRIDE_BLOCK = """# Override headed file
 
 
 def _write_outputs(out_dir: Path, *, include_override: bool = True):
+    """v0.3.4+ (Phase 1.8): outputs consolidated 5 .md → 2 .md.
+
+    legal.md absorbs former issues + redline + memo-legal + escalation +
+    self-grade summary; business.md is the non-lawyer audience file.
+    Override banner now lives in legal.md head, not escalation.md.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
-    for name in ("issues.md", "redline.md", "memo-legal.md", "memo-business.md", "escalation.md"):
+    for name in ("legal.md", "business.md"):
         content = ""
-        if name == "escalation.md" and include_override:
+        if name == "legal.md" and include_override:
             content = OVERRIDE_BLOCK + "\n"
         content += f"# {name}\n\nbody\n" + DISCLAIMER_BLOCK
         (out_dir / name).write_text(content, encoding="utf-8")
@@ -213,9 +219,10 @@ def test_ans_05_override_missing_banner(self_grade, tmp_path):
 
 
 def test_ans_06_disclaimer_missing(self_grade, tmp_path):
+    """v0.3.4+ (Phase 1.8): ANS-06 now checks 2 files (legal.md + business.md)."""
     out = tmp_path / "out"
     out.mkdir()
-    for name in ("issues.md", "redline.md", "memo-legal.md", "memo-business.md", "escalation.md"):
+    for name in ("legal.md", "business.md"):
         (out / name).write_text("# stub\n\nNo footer.\n", encoding="utf-8")
     data = _golden_findings()
     report = self_grade.grade(data, out)
@@ -474,3 +481,113 @@ def test_render_markdown_includes_scores(self_grade, tmp_path):
     assert "source_score" in md
     assert "acme-saas-msa" in md
     assert "all deterministic checks pass" in md
+
+
+# ----------------------------------------------------------- v0.3.4 self_grade JSON update
+
+
+def test_main_default_writes_self_grade_into_findings_json(self_grade, tmp_path, capsys):
+    """v0.3.4+ (Phase 1.8): default behavior updates findings.json#self_grade
+    block in-place; does NOT create self-grade.md."""
+    import json as _json
+
+    out = tmp_path / "out"
+    _write_outputs(out)
+
+    findings_path = tmp_path / "findings.json"
+    findings_path.write_text(
+        _json.dumps(_golden_findings(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    rc = self_grade.main(
+        [
+            "--input",
+            str(findings_path),
+            "--outputs-dir",
+            str(out),
+        ]
+    )
+    assert rc == 0
+
+    # findings.json should now have self_grade block
+    updated = _json.loads(findings_path.read_text(encoding="utf-8"))
+    assert "self_grade" in updated
+    assert updated["self_grade"]["answer_score"]["passed"] == updated["self_grade"]["answer_score"]["total"]
+    assert updated["self_grade"]["source_score"]["passed"] == updated["self_grade"]["source_score"]["total"]
+    assert updated["self_grade"]["failed_criteria"] == []
+
+    # legacy self-grade.md file should NOT be written
+    assert not (out / "self-grade.md").exists()
+
+
+def test_main_format_markdown_prints_no_file(self_grade, tmp_path, capsys):
+    """v0.3.4+: --format markdown prints to stdout, does NOT write self-grade.md."""
+    import json as _json
+
+    out = tmp_path / "out"
+    _write_outputs(out)
+
+    findings_path = tmp_path / "findings.json"
+    findings_path.write_text(
+        _json.dumps(_golden_findings(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    # main() invoked from importable interface uses sys.argv parsing
+    rc = self_grade.main(
+        [
+            "--input",
+            str(findings_path),
+            "--outputs-dir",
+            str(out),
+            "--format",
+            "markdown",
+        ]
+    )
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    assert "answer_score" in captured.out
+    assert "source_score" in captured.out
+
+    # findings.json should NOT be mutated (only --format text does that)
+    untouched = _json.loads(findings_path.read_text(encoding="utf-8"))
+    assert "self_grade" not in untouched
+
+    # And no self-grade.md file written
+    assert not (out / "self-grade.md").exists()
+
+
+def test_ans_05_override_uses_legal_md(self_grade, tmp_path):
+    """v0.3.4+: ANS-05 now checks legal.md head for [!danger] (was escalation.md)."""
+    out = tmp_path / "out"
+    out.mkdir()
+    # Write legal.md WITH override banner, business.md without
+    (out / "legal.md").write_text(
+        "# legal.md\n\n" + OVERRIDE_BLOCK + "\n\nbody\n" + DISCLAIMER_BLOCK,
+        encoding="utf-8",
+    )
+    (out / "business.md").write_text(
+        "# business.md\n\nbody\n" + DISCLAIMER_BLOCK, encoding="utf-8"
+    )
+    data = _golden_findings()  # override_triggered=True
+    report = self_grade.grade(data, out)
+    failed = {f["criterion_id"] for f in report["failed_criteria"]}
+    assert "ANS-05" not in failed  # banner correctly in legal.md head
+
+
+def test_ans_05_override_missing_in_legal_md_fails(self_grade, tmp_path):
+    """v0.3.4+: when override triggered but legal.md lacks the banner."""
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "legal.md").write_text(
+        "# legal.md\n\nbody (no banner)\n" + DISCLAIMER_BLOCK, encoding="utf-8"
+    )
+    (out / "business.md").write_text(
+        "# business.md\n\nbody\n" + DISCLAIMER_BLOCK, encoding="utf-8"
+    )
+    data = _golden_findings()
+    report = self_grade.grade(data, out)
+    failed = {f["criterion_id"] for f in report["failed_criteria"]}
+    assert "ANS-05" in failed

@@ -17,7 +17,7 @@ L7 is where the contract meets the playbook. For each clause identified in L3 / 
 5. LLM-compare contract clause to `preferred` / `fallback` body prose
 6. Emit colored finding (🟢 / 🟡 / 🔴) with full traceability
 
-The output of L7 is the bulk of `issues.md` findings and the source for `redline.md` / `escalation.md` / `memo-legal.md`.
+The output of L7 is the bulk of `findings.json#findings[]` and the source for `legal.md` sections (§議題清單 / §升級簽核 / §法律分析 / §主動 Redline 提案 / §內部 Fallback 預案 / §對我方有利) + `business.md §主要 Redline 重點`. v0.3.4+ (Phase 1.8) consolidates the former 5 .md (issues/redline/memo-legal/memo-business/escalation) into 2 audience-shaped .md (legal/business).
 
 ---
 
@@ -152,15 +152,15 @@ Q2: With stance = ours, does the absence of this clause EXPOSE us
          - severity: green
          - subtype: strategic_note  (NOT a risk finding)
          - presentation:
-             • issues.md: list under "✓ 對我方有利 / strategic note"
-               section (NOT main findings table)
-             • redline.md: split the proposed text:
-               · `proposed_text_send_now`: empty (don't offer)
-               · `proposed_text_internal_fallback`: the original
-                 substitute text, marked "INTERNAL — if 對方 raises this"
-             • memo-business.md: include in "✓ favorable position"
-               box, not Top-3 business impacts
-             • escalation.md: NOT included (this is not a risk)
+             • legal.md §對我方有利 (Favorable Positions) section
+               (NOT under §議題清單 main findings table)
+             • legal.md §內部 Fallback 預案 section: the substitute text,
+               marked "INTERNAL — if 對方 raises this"
+             • redline split (in findings.json#redlines[]):
+               · proposed_text_send_now: empty (don't offer)
+               · proposed_text_internal_fallback: the substitute text
+             • business.md §對我方有利 section (NOT in Top-3)
+             • legal.md §升級簽核 section: NOT included (this is not a risk)
          - flag: stance_asymmetry_downgrade = true
          - playbook_trace.matched_entry_path still recorded
 ```
@@ -275,7 +275,7 @@ if len(matched_variants) > 1:
 ```
 if working_entry.escalate_to.startswith("[請編輯"):
   emit warning to runtime console
-  add callout to escalation.md (prepended for this clause's escalation row):
+  add callout to legal.md §升級簽核 (prepended for this clause's escalation row):
     "⚠️ 此 finding 使用未客製化的 bundled fallback。
      建議：跑 `legal-playbook-author revise <clause-id>` 把 escalate_to 改成
      你公司的實際角色（法務主管 / GC / 部門主管 / 老闆）"
@@ -316,7 +316,7 @@ if matched_trigger != "none":
     finding.severity = red
     finding.escalate_to = working_entry.escalate_to     # USE FRONTMATTER VERBATIM; do NOT let LLM rewrite
     finding.matched_walk_away = [matched_trigger]
-    add escalation entry to escalation.md
+    add escalation entry to findings.json#escalations[] (rendered in legal.md §升級簽核)
     (skip Step 6 LLM body comparison; the answer is already "walk")
   → advance to next clause
 ```
@@ -392,7 +392,7 @@ flags:
   low_confidence: <bool>
 ```
 
-Append to `issues.md.findings` array. If `severity == red` OR `walk_away_triggered` OR `low_confidence`, also add to `escalation.md.escalations` and trigger Escalation Override prepend on issues.md / memo-legal.md / escalation.md.
+Append to `findings.json#findings[]` (rendered in `legal.md §議題清單`). If `severity == red` OR `walk_away_triggered` OR `low_confidence`, also add to `findings.json#escalations[]` (rendered in `legal.md §升級簽核`) and trigger Escalation Override prepend on `legal.md` head **only** (v0.3.4 Phase 1.8 banner scope; business.md never carries the banner).
 
 ### Step 9 — Emit redline (if mode allows)
 
@@ -400,20 +400,20 @@ If `mode ∈ {review, redline}` and `severity ∈ {yellow, red}` and `stance_asy
 
 - Pull `## 替代條款文字` from playbook body (if present) → use as `proposed_text`, `proposed_text_source: playbook_body`
 - Otherwise, LLM-generate substitute text grounded in the `preferred` position → `proposed_text_source: llm_generated`
-- Append to `redline.md.redlines`
+- Append to `findings.json#redlines[]` (rendered in `legal.md §主動 Redline 提案` + `business.md §主要 Redline 重點`)
 
 #### Step 9.1 — Editorial-parenthetical filter (v0.3.1+)
 
-Before emitting any `proposed_text` substitute clause, scrub the body for editorial / amendment-history parentheticals that DO NOT belong inside operative contract text. Examples to STRIP or relocate to memo-legal.md only:
+Before emitting any `proposed_text` substitute clause, scrub the body for editorial / amendment-history parentheticals that DO NOT belong inside operative contract text. Examples to STRIP or relocate to `legal.md §法律分析` only:
 
-| ❌ DON'T put in `proposed_text` | ✅ DO put in `memo-legal.md` analysis |
+| ❌ DON'T put in `proposed_text` | ✅ DO put in `legal.md §法律分析` |
 |---|---|
 | `(含 §20-1 安全維護義務，原 §27 已於 2025-11-11 修正後條次變更)` | "本條引用個資法 §20-1（原 §27 於 2025-11 修正後條次變更）" |
 | `(本條較原條款增加 cure period 5 天)` | "本提案較原條款增加 cure period 5 天" |
 | `(WorldCC 2024 benchmark)` | "依 WorldCC 2024 benchmark..." |
 | `(暫定金額，後續協商)` | "提案金額 NT$X（協商空間 NT$Y-Z）" |
 
-Commercial agreements do not carry amendment-history annotations in operative text. If the proposed substitute clause body contains parentheticals matching pattern `(含|原|較|依|暫定|備註|參|note|amended|previously|previous)\s*§|.*\s+(已於|修正後|benchmark|fallback)` → STRIP from `proposed_text`, optionally move equivalent prose to `redline.md.rationale_zh_tw` OR `memo-legal.md` analysis section.
+Commercial agreements do not carry amendment-history annotations in operative text. If the proposed substitute clause body contains parentheticals matching pattern `(含|原|較|依|暫定|備註|參|note|amended|previously|previous)\s*§|.*\s+(已於|修正後|benchmark|fallback)` → STRIP from `proposed_text`, optionally move equivalent prose to `findings.json#redlines[].rationale_zh_tw` OR `legal.md §法律分析` section.
 
 #### Step 9.2 — Stance-asymmetry redline split (v0.3.1+)
 
@@ -421,8 +421,9 @@ If `stance_asymmetry_check.downgrade_applied == true`, the redline emit changes:
 
 - `proposed_text_send_now`: empty string (or omit field)
 - `proposed_text_internal_fallback`: the substitute text, with rationale framed as "if 對方 raises X at renewal, our floor is Y"
-- `redline.md` rendering: this finding appears in a separate **"## 內部 fallback 預案（不主動提案）"** section, BELOW the main `## 主動 redline 提案` section
-- `redline.md.send_now_table` lists only main-section redlines (these are what you copy-paste into the counter-proposal email)
+- `legal.md` rendering: this finding appears in **§內部 Fallback 預案（不主動提案）** section, BELOW **§主動 Redline 提案**.
+- The `§主動 Redline 提案` section lists only `proposed_text_send_now` redlines (these are what you copy-paste into the counter-proposal email; clearly grep-able section header for extraction).
+- `business.md §主要 Redline 重點` also only shows `proposed_text_send_now` redlines (with 條文 + why); internal_fallback never surfaces to business audience.
 
 #### Step 9.3.0 — Soft case-citation rule (v0.3.2+)
 
@@ -450,7 +451,7 @@ Replace with one of the acceptable softer formulations:
 
 v0.3.0 dogfood:
 - NDA run: bundled fallback `baseline-fallback-confidentiality.md` contained 「智慧財產法院 102 年度民營訴字第 6 號」which propagated into memo-legal as hedged citation "如該案號有效".
-- SaaS run: memo-business.md emitted「最高法院 113 年度台上字第 1244 號等趨勢」which auditor flagged needing verification.
+- SaaS run: `business.md` (v0.3.3 was memo-business.md) emitted「最高法院 113 年度台上字第 1244 號等趨勢」which auditor flagged needing verification.
 
 Both are SRC-09 escape routes. The deterministic SRC-04 + blacklist (v0.3.1) catches fabricated sub-articles BUT does NOT catch unverified case numbers. The soft-citation rule above adds a protocol-level gate before SRC-04 ever sees the citation.
 
@@ -648,7 +649,7 @@ The protocol accepts higher unverifiable rate for function letters than for stat
 
 ### Step 9.3 — Citation applicability gate (v0.3.1+)
 
-Before emitting any statute citation to `memo-legal.md` `citations[]`, the LLM MUST internally verify **applicability** (not just article-number existence):
+Before emitting any statute citation to `findings.json#citations[]` (rendered in `legal.md §法律分析` citations table), the LLM MUST internally verify **applicability** (not just article-number existence):
 
 ```
 For each citation candidate, answer:
@@ -677,12 +678,12 @@ For each citation candidate, answer:
   If the citation passes applicability but is borderline:
   → record `applicability_caveat` field on the citation:
     "本條主要規範 X 場景；本合約屬 Y 場景，類推適用空間有限"
-  → still emit citation, but memo-legal.md analysis must include the caveat
+  → still emit citation, but `legal.md §法律分析` must include the caveat
 ```
 
 #### Step 9.4 — Headline rule for memo-business (v0.3.1+)
 
-When emitting `memo-business.md.top_3_business_impacts`:
+When emitting `findings.json#top_3_business_impacts` (rendered in `business.md §Top 3 風險`):
 
 ```
 Pick the 3 findings that have ALL THREE properties:
@@ -700,6 +701,92 @@ DO NOT order by playbook structure (confidentiality / governing-law / ...)
 
 ---
 
+### Step 10 — Render outputs (v0.3.4+ Phase 1.8 consolidation)
+
+After all per-clause evaluation completes and `findings.json` is finalised, render the **3 outputs**:
+
+#### 10.1 — Update findings.json (canonical SoT)
+
+Write `findings.json` to `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/findings.json`. This is the machine-readable source; conforms to `assets/output-schema-findings.json`. All structured data lives here including the new `self_grade` block (populated by `scripts/self_grade.py` after rendering).
+
+#### 10.2 — Render legal.md (lawyer-facing)
+
+Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/legal.md` with sections in this order:
+
+```
+# 法務審查報告 — <contract name>
+
+> [!danger] [Override banner if override_triggered]   ← prepended ONLY when triggered
+
+## 議題清單（Issues）
+| # | clause_id | severity | business_issues | summary_zh_tw |
+| ... | ... | 🔴 / 🟡 / 🟢 | money / risk / control / standards / endgame | ... |
+
+## 升級簽核（Escalation）
+- (per findings.json#escalations[]) ← only emitted if non-empty
+- Placeholder warnings if any escalate_to_is_placeholder=true
+
+## 法律分析（CRAC）
+### Conclusion / Rule / Analysis / Conclusion-again (from findings.json#crac)
+### Citations table (from findings.json#citations[]) — incl. applicability_caveat
+### Carve-outs (analysis limits)
+
+## 主動 Redline 提案（可單獨抽出送對方）
+- (per findings.json#redlines[] where proposed_text_send_now is non-empty)
+- Format: clause_id + proposed_text body + rationale_zh_tw
+
+## 內部 Fallback 預案（不對外）
+- (per findings.json#redlines[] where stance_asymmetry_downgrade=true)
+- proposed_text_internal_fallback content; framing: "if 對方 raises X at renewal"
+
+## ✓ 對我方有利（Favorable Positions）
+- (per findings.json#favorable_position_notes[])
+
+## QA — self-grade
+- answer N/M + source N/M (populated by self_grade.py findings.json#self_grade block)
+- Failed criteria (if any)
+
+---
+Mandatory Disclaimer footer
+```
+
+#### 10.3 — Render business.md (non-lawyer-facing)
+
+Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/business.md`. **NO override banner — even when triggered.** Sections:
+
+```
+# 商業概要 — <contract name>
+
+## 30 秒理解
+**Why**: (from findings.json#summary_business.why; ≤80 chars)
+**What**: (≤80 chars)
+**What if**: (≤80 chars)
+
+## Top 3 風險（量化）
+- (per findings.json#top_3_business_impacts[]; severity yellow/red ONLY; with quantifiable_downside_evidence)
+
+## ✓ 對我方有利
+- (per findings.json#favorable_position_notes[])
+
+## 主要 Redline 重點（含條文 + why）
+- (per findings.json#redlines[] where proposed_text_send_now is non-empty)
+- Same redlines as legal.md §主動 Redline 提案; intentional duplication for self-contained business.md
+- Format: clause_id + proposed_text body + plain-language rationale
+
+---
+Mandatory Disclaimer footer
+```
+
+#### 10.4 — Run self_grade.py (in-place update)
+
+```bash
+uv run skills/legal-contract-review/scripts/self_grade.py \
+  --input <outputs-dir>/findings.json \
+  --outputs-dir <outputs-dir>
+```
+
+Default behavior (v0.3.4+): the script updates `findings.json#self_grade` block in-place and prints summary to stdout. NO separate `self-grade.md` file is created. Legal.md §QA section pulls from `findings.json#self_grade` at render time.
+
 ## Output contract
 
 ```
@@ -710,7 +797,7 @@ DO NOT order by playbook structure (confidentiality / governing-law / ...)
    Walk-aways triggered: <count>
    Low-confidence fallbacks: <count>
    Placeholder warnings: <count>
-   Pass to: self-grade
+   Pass to: Step 10 render (legal.md + business.md + findings.json) → self_grade.py
 ```
 
 ---
@@ -720,8 +807,8 @@ DO NOT order by playbook structure (confidentiality / governing-law / ...)
 - **Multiple matching variants** (ABAC gates overlap): take first; log warning. Phase 1.5 `detect_conflicts.py` enforces gate non-overlap at playbook-author validate time.
 - **LLM returns invalid JSON**: re-prompt once with stricter format hint; if still invalid, treat as low-confidence (use risk_default).
 - **Contract clause is missing entirely** (the expected clause is not in contract): not L7's job — L6 detected this as `missing_expected_clause`. L7 doesn't iterate clauses that don't exist.
-- **Walk-away triggered + LLM body comparison both run** (shouldn't happen — walk path skips body): treat as bug; emit `pipeline_warning` to self-grade.
-- **mode == "redline"**: Step 9 emphasis on substitute text generation; other outputs simplified.
-- **mode == "nda"**: L2-L3 skipped → L7 reads clauses directly from contract text + bundled NDA template. Same evaluation logic, simpler input shape.
-- **--external-share flag passed**: after L7 emits findings, a post-processing pass strips `playbook_trace.matched_entry_path` from issues.md / memo-legal.md / escalation.md (replaces with "依本公司紅線政策"). Override red banner is **never** stripped.
+- **Walk-away triggered + LLM body comparison both run** (shouldn't happen — walk path skips body): treat as bug; emit `pipeline_warning` to findings.json#self_grade.
+- **mode == "redline"**: Step 9 emphasis on substitute text generation; legal.md §主動 Redline 提案 gets richer detail.
+- **mode == "nda"**: L2-L3 skipped → L7 reads clauses directly from contract text + bundled NDA template. Same evaluation logic + same 2-output rendering.
+- **--external-share flag passed**: after L7 emits findings, a post-processing pass strips `playbook_trace.matched_entry_path` from `legal.md §法律分析` + `§升級簽核` (replaces with "依本公司紅線政策"). Override red banner is **never** stripped.
 - **Phase 1.5 status**: `scripts/abac_filter.py` is the canonical implementation as of v0.2.0. The inline-LLM rules above are the fallback for hosts without script execution. Importable as `from abac_filter import match_variant`.

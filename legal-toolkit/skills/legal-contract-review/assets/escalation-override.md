@@ -15,13 +15,20 @@
        - deal_size > profile.escalation_threshold
        - cross-border + 個資事故 (mandatory)
 
-     Banner PLACEMENT SCOPE (v0.3.1+):
-       - PREPENDED TO: memo-legal.md, escalation.md
-       - NOT prepended to: issues.md, redline.md, memo-business.md
-       Rationale: banner on the business memo (read by non-lawyers)
-       trains users to skip the warning; banner on redline operative
-       text undermines send-to-counterparty usability. self_grade.py
-       ANS-05 enforces [!danger] in escalation.md head only.
+     Banner PLACEMENT SCOPE (v0.3.4+ Phase 1.8):
+       - PREPENDED TO: legal.md (lawyer-facing, absorbs former
+         memo-legal + escalation + issues + redline sections)
+       - NOT prepended to: business.md (non-lawyer audience never
+         carries the banner)
+       Rationale: banner on the non-lawyer business doc trains users
+       to skip the warning. Lawyer-facing audience needs the warning
+       prominent at top. self_grade.py ANS-05 enforces [!danger] in
+       legal.md head only when override_triggered=true.
+
+     v0.3.3 (pre-consolidation) rule was: banner on memo-legal.md +
+     escalation.md only (2 files of the 5-file set). Consolidation
+     to 2 .md merges those into one — banner placement reduces from
+     2 files to 1 file.
 
      The [trigger 1] / [trigger 2] placeholders are filled by the emitting
      skill at runtime with concrete trigger descriptions.

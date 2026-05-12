@@ -6,33 +6,42 @@
 """self_grade — run the deterministic tier of answer-criteria +
 source-criteria rubrics against a legal-contract-review output set.
 
+v0.3.4+ (Phase 1.8): outputs consolidated from 5 .md → 2 .md (legal.md
++ business.md) + findings.json. self_grade now writes its result into
+findings.json#self_grade block (in-place update) instead of producing
+a separate self-grade.md file. ANS-05 enforces [!danger] banner in
+legal.md head (was escalation.md); ANS-06 enforces Disclaimer footer
+on 2 files (was 5).
+
 Input:
-  --input <findings.json>           the structured intermediate the
-                                    contract-review pipeline emits
-                                    alongside the 6 .md outputs.
+  --input <findings.json>           canonical SoT — the structured
+                                    intermediate the contract-review
+                                    pipeline emits alongside the 2 .md.
                                     Shape: { contract_metadata,
                                              findings[], summary,
                                              redlines[], crac, citations[],
                                              summary_business, escalations[],
-                                             override_triggered }
-  --outputs-dir <dir>               directory containing issues.md /
-                                    redline.md / memo-legal.md /
-                                    memo-business.md / escalation.md
-                                    (used for file-level checks like
-                                    Disclaimer footer presence)
+                                             override_triggered, self_grade? }
+  --outputs-dir <dir>               directory containing legal.md +
+                                    business.md (used for file-level
+                                    checks like Disclaimer footer presence
+                                    and [!danger] banner placement)
 
 Output:
   - prints summary to stdout
-  - writes <outputs-dir>/self-grade.md with full per-criterion result
+  - by default updates findings.json#self_grade block in-place
+  - --format json: full report to stdout (no file write)
+  - --format markdown: legacy markdown render to stdout (no file write)
   - exits 0 if all criteria pass, 1 otherwise
 
 The semantic-tier criteria (ANS-18~20, SRC-06~10) are NOT evaluated here
 — the protocol-driven session evaluates those and merges results into
-self-grade.md before emit.
+findings.json#self_grade before final emit.
 
 Usage:
-    self_grade.py --input <path> --outputs-dir <path>
-    self_grade.py --input <path> --outputs-dir <path> --format json
+    self_grade.py --input <path> --outputs-dir <path>          # update JSON
+    self_grade.py --input <path> --outputs-dir <path> --format json     # print JSON
+    self_grade.py --input <path> --outputs-dir <path> --format markdown # print MD
 """
 
 from __future__ import annotations
@@ -197,24 +206,31 @@ def _check_ans_04(findings_data: dict) -> dict:
 
 
 def _check_ans_05(outputs_dir: Path, findings_data: dict) -> dict:
+    """v0.3.4+ (Phase 1.8): banner placement narrowed to legal.md only.
+
+    Was escalation.md in v0.3.1-v0.3.3; consolidation to 2 .md moves
+    the banner scope to legal.md (which absorbs escalation + memo-legal).
+    business.md never carries the banner (non-lawyer audience).
+    """
     triggered = findings_data.get("override_triggered", False) is True
-    f = outputs_dir / "escalation.md"
+    f = outputs_dir / "legal.md"
     if not triggered:
         return _emit("ANS-05", "Escalation Override 紅字 banner 出現", "deterministic", True, "override not required")
     if not f.exists():
-        return _emit("ANS-05", "Escalation Override 紅字 banner 出現", "deterministic", False, "escalation.md missing")
+        return _emit("ANS-05", "Escalation Override 紅字 banner 出現", "deterministic", False, "legal.md missing")
     head = "\n".join(_read_text(f).splitlines()[:30])
     ok = OVERRIDE_MARKER in head
     return _emit(
         "ANS-05",
-        "Escalation Override 紅字 banner 出現在高風險輸出檔頭",
+        "Escalation Override 紅字 banner 出現在 legal.md 檔頭",
         "deterministic",
         ok,
-        "[!danger] callout found in header" if ok else "[!danger] missing from header",
+        "[!danger] callout found in legal.md header" if ok else "[!danger] missing from legal.md header",
     )
 
 
-OUTPUT_FILES = ["issues.md", "redline.md", "memo-legal.md", "memo-business.md", "escalation.md"]
+# v0.3.4+ (Phase 1.8): consolidated 5 .md → 2 .md.
+OUTPUT_FILES = ["legal.md", "business.md"]
 
 
 def _check_ans_06(outputs_dir: Path) -> dict:
@@ -232,7 +248,7 @@ def _check_ans_06(outputs_dir: Path) -> dict:
         "每份輸出檔尾含 Mandatory Disclaimer",
         "deterministic",
         not missing,
-        ", ".join(missing) if missing else "all 5 outputs have Disclaimer footer",
+        ", ".join(missing) if missing else "all 2 outputs (legal.md + business.md) have Disclaimer footer",
     )
 
 
@@ -656,7 +672,7 @@ def render_markdown(report: dict, metadata: dict | None = None) -> str:
     return "\n".join(md_lines)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--input", required=True, type=Path, help="path to findings.json")
     parser.add_argument("--outputs-dir", required=True, type=Path, help="directory with .md outputs")
@@ -669,9 +685,13 @@ def main() -> int:
         "--format",
         choices=("text", "json", "markdown"),
         default="text",
-        help="text (summary), json (full report), markdown (writes self-grade.md)",
+        help=(
+            "text (default — print summary, update findings.json#self_grade in-place); "
+            "json (print full report to stdout, no file write); "
+            "markdown (print MD report to stdout, no file write)"
+        ),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.input.is_file():
         print(f"self_grade: input missing: {args.input}", file=sys.stderr)
@@ -688,10 +708,16 @@ def main() -> int:
         sys.stdout.write("\n")
     elif args.format == "markdown":
         md = render_markdown(report, metadata=findings_data.get("contract_metadata"))
-        out_file = args.outputs_dir / "self-grade.md"
-        out_file.write_text(md, encoding="utf-8")
-        print(f"wrote {out_file}")
+        sys.stdout.write(md)
     else:
+        # v0.3.4+ (Phase 1.8): write report into findings.json#self_grade block (in-place update)
+        # instead of producing a separate self-grade.md file. Preserves single-SoT canon
+        # while letting downstream readers grep findings.json for grade results.
+        findings_data["self_grade"] = report
+        args.input.write_text(
+            json.dumps(findings_data, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         print(
             f"answer_score: {report['answer_score']['passed']}/{report['answer_score']['total']}"
         )
@@ -704,6 +730,7 @@ def main() -> int:
                 print(f"  {fc['criterion_id']} ({fc['domain']}): {fc['explanation_zh_tw']}")
         else:
             print("\nAll deterministic checks PASS.")
+        print(f"\nUpdated {args.input}#self_grade block.")
     return 0 if not report["failed_criteria"] else 1
 
 

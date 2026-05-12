@@ -1,4 +1,4 @@
-# source-criteria — binary all-pass rubric for self-grade.md (source_score)
+# source-criteria — binary all-pass rubric for findings.json#self_grade (source_score)
 
 > **v0.3.0 (Phase 1.6) status**: full 10-criterion rubric. Consumed by
 > `scripts/self_grade.py` (Python structural checks) AND by the LLM at
@@ -96,7 +96,7 @@ See `docs/dogfood-procedure.md` for the calibration workflow.
 
 ---
 
-## Output (consumed by self-grade.md generator)
+## Output (consumed by findings.json#self_grade generator)
 
 For each citation:
 
@@ -118,5 +118,5 @@ failed_criteria:
 ```
 
 If `source_score.total == 0` (no citations, e.g. `mode == nda`), record `0/0`
-BUT add a note in self-grade.md explaining why — so the user doesn't read
+BUT add a note in findings.json#self_grade explaining why — so the user doesn't read
 "0/0" as failure.
