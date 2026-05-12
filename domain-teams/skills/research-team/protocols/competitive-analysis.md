@@ -66,6 +66,34 @@ of Phase 4 / Synthesis). Quick mode skips.
 
 ## Protocol
 
+### Phase 0.5: Concept-first onboarding (MANDATORY)
+
+Before competitor identification, draft the artifact's opening
+**Core Concepts** section. This is the reader onboarding
+required by `rubrics/research-quality-gate.md` §Reader Onboarding
+for the competitive-analysis protocol.
+
+For each load-bearing term the analysis will use to compare
+competitors (the category itself, the comparison dimensions, any
+business-model concept that recurs), write one entry containing:
+
+1. **One-sentence definition** — what this thing is, in the
+   simplest accurate phrasing.
+2. **Why it exists** — what user need or market dynamic it serves.
+3. **Distinction from neighboring concepts** — if competitors
+   span overlapping but distinct categories (e.g., "vertical SaaS"
+   vs "horizontal SaaS", "freemium" vs "free-trial", "marketplace"
+   vs "aggregator"), make the boundary explicit.
+
+The Core Concepts section is **exempt from Fact / Analysis /
+Speculation tagging** per `standards/citation-standards.md`
+§Onboarding-Layer Exemption.
+
+User override: if the user states they are familiar with the
+market category and want to skip concept definitions, omit and
+record the override in the deep-mode Self-Critique block as
+`Concept-first onboarding skipped per user override.`
+
 ### Phase 1: Scope
 
 1. **Define competitors**: Identify direct competitors (same
@@ -132,9 +160,10 @@ budget; in deep mode, follow existing collection workflow.
 
 ## Output Format
 
-1. **Competitor Set**: Who was analyzed and why
-2. **Comparison Matrix**: Feature/pricing/positioning table
-3. **Differentiation Map**: Visual positioning with axes defined
-4. **Per-Competitor Profiles**: Strengths, weaknesses, strategy
-5. **Uncontested Space**: Opportunities identified via Blue Ocean
-6. **Recommended Strategy**: Specific, actionable differentiation plan
+1. **Core Concepts** (concept-first onboarding per Phase 0.5): Per-term definition + why it exists + distinction from neighboring concepts. Untagged per §Onboarding-Layer Exemption.
+2. **Competitor Set**: Who was analyzed and why
+3. **Comparison Matrix**: Feature/pricing/positioning table
+4. **Differentiation Map**: Visual positioning with axes defined
+5. **Per-Competitor Profiles**: Strengths, weaknesses, strategy
+6. **Uncontested Space**: Opportunities identified via Blue Ocean
+7. **Recommended Strategy**: Specific, actionable differentiation plan
