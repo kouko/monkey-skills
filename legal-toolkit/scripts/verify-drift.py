@@ -66,7 +66,9 @@ def verify_drift(
 
 
 def _md5(path: Path) -> str:
-    return hashlib.md5(path.read_bytes()).hexdigest()
+    # usedforsecurity=False keeps this working on FIPS-140 systems (md5 is
+    # used here as a fingerprint for the drift report, not a security primitive).
+    return hashlib.md5(path.read_bytes(), usedforsecurity=False).hexdigest()
 
 
 def _print_unified_diff(reference: Path, drift_path: Path, max_lines: int = 50) -> None:
