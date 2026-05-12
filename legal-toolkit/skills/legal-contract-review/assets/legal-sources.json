@@ -38,7 +38,13 @@
       "host": "law.moj.gov.tw",
       "alias_short_name": "個資法",
       "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
-      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}",
+      "last_amendment_verified": "2025-11-11",
+      "amendment_note": "民國114年11月11日修正公布；部分條文尚未生效，施行日期由行政院定之。新增Art.1-2/20-1/21-1~5/51-1/53-1；修正Art.12(通報義務)/18/21/22-26/47-49/52-53/55-56；廢止Art.27。PDPC籌備處運作中，正式成立日期待定。",
+      "pdpc_url": "https://www.pdpc.gov.tw",
+      "pdpc_status": "籌備處 (preparatory office, as of 2026-05-12)",
+      "implementing_regs_pcode": "I0050022",
+      "implementing_regs_note": "施行細則 last amended 2016-03-02; 未配合2025修正更新，Art.12 Para 4 sub-regs (通報辦法) not yet published"
     },
     "營業秘密法": {
       "pcode": "J0080028",
