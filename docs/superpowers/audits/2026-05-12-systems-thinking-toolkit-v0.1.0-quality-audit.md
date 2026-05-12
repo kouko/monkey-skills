@@ -117,3 +117,52 @@ In priority order:
 2. **`simulation-modeling` Python companion** — convert the TEXT-ONLY claim into "TEXT-ONLY in core skill, optional executable simulator in `simulation-modeling/scripts/`".
 3. **sk13 / sk14 V1-weak decision** — observe v0.1.x use-feedback, then pick from ROADMAP options: (a) absorb sk13 into `strategy-lever-and-cascade` as facilitation extras, (b) replace with TRIZ + DiSC dedicated skills, or (c) keep standalone with stronger Boundary disclaimers.
 4. **Per-skill skill-judge re-baseline** after each body-level change.
+
+---
+
+## v0.2.0 update — body-level fixes landed (A1-A5 + A8 + A9)
+
+Released: 2026-05-12 (same-day as v0.1.0 + v0.1.1).
+Scope: 5 body-level fixes from the deferred list above + JA/zh-TW description hint normalization + skill-judge re-baseline on 5 body-fixed skills.
+
+### A1-A5 body fixes applied
+
+| Tag | Skill | Change | Body Δ |
+|---|---|---|---|
+| A1 | cld-craft | Step 2 dangle halt gets narrow-vs-wide-scope AND clause; Rule 4 aggregation carries simplification when 8+ dangles is legitimate | +74w |
+| A2 | stakeholder-and-team-thinking | Protocol I energy-pump operationalized via 4 observable proxies (cadence / active-listening / value-revisitation / symbol-narrative) + measurable exit criteria I1-I7 | +364w |
+| A3 | variance-target-action-template | Step 0 SPC signal-vs-noise pre-check + Step 4(b) 1.5×-delay heuristic + Step 6 org-politics escalation | +253w |
+| A4 | manager-personality-quadrant | E Step 2 observable-cue table + Guides circularity resolved (structural-not-outcome) + Step 4 framing-vs-analysis 4-question checklist | +265w |
+| A5 | simulation-modeling | Stage-1 Step 7 fuzzy hand-off tightened + Stage-2 Step 10 worked numeric example + Step 11.5 NEW sensitivity-sweep / falsification check | +528w |
+
+### A8 description hint normalization
+
+v0.1.1 left 2/10 skill descriptions without JA/zh-TW hints. A8 adds them:
+- `limits-to-growth-take-the-brakes-off`: 成長エンジンの減速・成長限界・制約解除 / 成長引擎減速・成長極限・解除約束
+- `innovaction-martian-test`: 火星人テスト・特徴摂動・シナリオ生成 / 火星人測試・特徵擾動・情境生成
+
+### A9 skill-judge re-baseline (5 body-fixed skills)
+
+| Skill | v0.1.1 | **v0.2.0** | Δ |
+|---|---|---|---|
+| cld-craft | 114 | **115** | +1 |
+| stakeholder-and-team-thinking | 113 | **113 (strict-cap) / 117 (observed)** | 0 / +4 |
+| variance-target-action-template | 115 | **115** | =0 (already near 4-dim ceiling) |
+| manager-personality-quadrant | 89 | **94** | +5 |
+| simulation-modeling | 112 | **115** | +3 |
+
+Plugin-wide mean: 108.4 → 109.3 (strict) / 109.7 (observed). No regressions detected.
+
+### Notes
+
+- D8 stakeholder-and-team-thinking subagent scored raw 19 (over the 15 cap); strict-clamp recompute keeps total at 113 (= v0.1.1). Observed-signal interpretation = 117. We accept either reading — both confirm "no regression" and the body fix adds real value internally even when capped.
+- variance-target-action-template hit a real D2/D4/D7/D8 ceiling at v0.1.1. The A3 fixes raise floor (procedure more rigorous) without changing the total, which is the expected behavior near ceiling.
+- manager-personality-quadrant (sk14 V1-weak) gained +5 from A4 (89→94) but D1 still capped at 13/20 by prior-art overlap (DiSC/MBTI/Hogan/Situational Leadership). Structural limit, not fixable without scope change.
+
+### Still-deferred v0.3+ candidates
+
+The following from the original audit's v0.2 recommendations stayed deferred:
+- `simulation-modeling` Python companion (executable simulator) — significant scope; ROADMAP v0.3 candidate
+- sk13 / sk14 V1-weak future decision (absorb / replace with TRIZ + DiSC dedicated / keep standalone with stronger disclaimers)
+- Stricter cross-skill compose-with operationalization (e.g. explicit hand-off API between cld-craft fuzzy elevation and simulation-modeling sensitivity sweep)
+- D8 cap interpretation policy for skill-judge (when raw score exceeds 15, should it ceiling at 15 or accept the signal?)
