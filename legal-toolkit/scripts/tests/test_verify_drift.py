@@ -48,3 +48,30 @@ def test_verify_drift_returns_zero_after_distribute(fake_plugin):
 
     rc = verify_drift.verify_drift(route=route, root=fake_plugin)
     assert rc == 0
+
+
+# ---------------------------------------------------------- T-V-2: mutation
+def test_verify_drift_returns_one_when_copy_mutated(fake_plugin, capsys):
+    import distribute
+
+    verify_drift = _load_verify_drift()
+
+    src = fake_plugin / "scripts" / "canonical" / "legal-sources.json"
+    src.write_bytes(b'{"original": true}')
+
+    route = {
+        "legal-sources.json": [
+            "skills/legal-contract-review/assets/legal-sources.json",
+        ],
+    }
+    distribute.distribute(route=route, root=fake_plugin)
+
+    dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
+    dst.write_bytes(b'{"mutated": true}')  # tamper with the functional copy
+
+    rc = verify_drift.verify_drift(route=route, root=fake_plugin)
+    out = capsys.readouterr().out
+
+    assert rc == 1
+    assert "DRIFT" in out
+    assert "legal-sources.json" in out
