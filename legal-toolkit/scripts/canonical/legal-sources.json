@@ -1,0 +1,147 @@
+{
+  "$schema_version": "v0.3.3",
+  "verified_at": "2026-05-12",
+  "purpose": "Per-source URL templates + identifiers for runtime fetch (Phase 1.7). Statute Pcode values are taken from law.moj.gov.tw 法規類別 system. Case + function-letter sources are pointer-only — exact URL pattern depends on the case number + court; LLM constructs the URL at fetch time per the source's documented search interface.",
+  "statute_sources": {
+    "民法": {
+      "pcode": "B0000001",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "民事訴訟法": {
+      "pcode": "B0010001",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "公司法": {
+      "pcode": "J0080001",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "證券交易法": {
+      "pcode": "G0400001",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "公平交易法": {
+      "pcode": "J0150002",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "個人資料保護法": {
+      "pcode": "I0050021",
+      "host": "law.moj.gov.tw",
+      "alias_short_name": "個資法",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "營業秘密法": {
+      "pcode": "J0080028",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "著作權法": {
+      "pcode": "J0070017",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "勞動基準法": {
+      "pcode": "N0030001",
+      "host": "law.moj.gov.tw",
+      "alias_short_name": "勞基法",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "消費者保護法": {
+      "pcode": "J0170001",
+      "host": "law.moj.gov.tw",
+      "alias_short_name": "消保法",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "涉外民事法律適用法": {
+      "pcode": "B0000007",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "仲裁法": {
+      "pcode": "B0030009",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    }
+  },
+  "case_sources": {
+    "default": {
+      "host": "judgment.judicial.gov.tw",
+      "search_url": "https://judgment.judicial.gov.tw/FJUD/default.aspx",
+      "direct_data_url_template": "https://judgment.judicial.gov.tw/FJUD/data.aspx?ty=JD&id={court_code},{year},{type},{number}",
+      "court_codes": {
+        "最高法院": "TPSV",
+        "最高行政法院": "TPAV",
+        "智慧財產及商業法院": "IPCV",
+        "智慧財產法院": "IPCV",
+        "臺灣高等法院": "TPHV",
+        "臺灣臺北地方法院": "TPDV"
+      },
+      "common_case_types": {
+        "台上": "civil supreme court appeal (最高法院民事)",
+        "判": "judgment (最高行政法院)",
+        "上字": "appeal (最高行政法院, post-2020 case-type convention)",
+        "民營訴": "civil trade-secret trial (IP court)",
+        "民訴": "civil trial (general)",
+        "重訴": "important civil trial (general)"
+      }
+    }
+  },
+  "function_letter_sources": {
+    "個人資料保護委員會": {
+      "host": "pdpc.gov.tw",
+      "search_url_hint": "https://www.pdpc.gov.tw/Article.aspx?n=2918",
+      "fetch_note": "PDPC moved 個資法 jurisdiction from 法務部 to 個資保護委員會 effective 2025-08; older 法務部 letters at https://mojlaw.moj.gov.tw"
+    },
+    "公平交易委員會": {
+      "host": "ftc.gov.tw",
+      "search_url_hint": "https://www.ftc.gov.tw/internet/main/decision/decision_search.aspx"
+    },
+    "勞動部": {
+      "host": "mol.gov.tw",
+      "search_url_hint": "https://laws.mol.gov.tw/FLAW/FLAWQRY01.aspx"
+    },
+    "金融監督管理委員會": {
+      "host": "fsc.gov.tw",
+      "search_url_hint": "https://www.fsc.gov.tw/ch/home.jsp?id=200&parentpath=0"
+    },
+    "經濟部智慧財產局": {
+      "host": "tipo.gov.tw",
+      "search_url_hint": "https://www.tipo.gov.tw"
+    },
+    "證券交易所": {
+      "host": "twse.com.tw",
+      "search_url_hint": "https://twse.com.tw/zh/regulation"
+    },
+    "行政院消費者保護處": {
+      "host": "cpc.ey.gov.tw",
+      "search_url_hint": "https://cpc.ey.gov.tw"
+    }
+  },
+  "ttl_defaults": {
+    "statute_days": 30,
+    "case_days": 7,
+    "function_letter_days": 30,
+    "applicability_notes_days": 365
+  },
+  "fetch_budget_defaults": {
+    "max_unique_citations_per_run": 10,
+    "max_fetches_per_citation_attempt": 2,
+    "fetch_timeout_seconds": 30
+  }
+}
