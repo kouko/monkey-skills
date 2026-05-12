@@ -1,12 +1,7 @@
 ---
 name: limits-to-growth-take-the-brakes-off
 description: |
-  Use when a growth engine that used to compound is slowing, and the
-  default response is "spend more / push harder." Diagnose limits-to-growth
-  archetype and apply Sherwood's constraint-relief rule. Triggers:
-  "growth is decelerating," "we're doubling spend but revenue won't move,"
-  "the engine feels stuck." NOT for cold-start (no growth yet) or
-  genuinely diverging systems with no binding brake.
+  Use when a growth engine that used to compound is slowing, and the default response is "spend more / push harder." Entry signature: growth rate (not absolute level) decelerating across 3+ periods despite unchanged-or-increased inputs. Diagnose limits-to-growth archetype and apply Sherwood's constraint-relief rule. Triggers: "growth is decelerating," "we're doubling spend but revenue won't move," "the engine feels stuck," "diminishing returns on [channel]," "we're saturating." NOT for cold-start (no growth yet), quality-regression churn (use variance-target-action sk06), or diverging / vicious-circle systems (use loop-and-link-primitives sk01).
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: "Chapter 8 (limits-to-growth + take-the-brakes-off); Chapter 13 (car-dealership quantitative confirmation)"
 source_language: en
