@@ -7,6 +7,7 @@ Tasks 3-4. verify-drift.py imports ROUTE / CANONICAL_DIR / ROOT only.
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -126,10 +127,7 @@ def test_distribute_is_idempotent(fake_plugin):
 
 
 # ---------------------------------------------------------- T-D-4: CLI
-import subprocess
-
-
-def test_distribute_cli_writes_copy_and_summary(fake_plugin, monkeypatch):
+def test_distribute_cli_writes_copy_and_summary(fake_plugin):
     """Invoke distribute.py as a script, with ROOT pointing at the fake plugin
     via a tiny wrapper script.
     """
