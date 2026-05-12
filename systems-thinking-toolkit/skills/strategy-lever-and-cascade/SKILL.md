@@ -1,26 +1,7 @@
 ---
 name: strategy-lever-and-cascade
 description: |
-  Turn ambition statements ("achieve 25% margin", "double ARR by 2030",
-  "5-year plan refresh") into a mechanically actionable strategy
-  artifact: a list of lever target changes (controllable inputs) that
-  reverse-engineer across plausible-not-probable futures. Forces three
-  disciplines stacked into one workflow — (1) separate levers from
-  outcomes (managers move levers, outcomes emerge), (2) diagnose the
-  three-timescale cascade (in-year fix / annual budget / multi-year
-  ambition) and identify which loop is dead, (3) build the 3×N
-  scenario × lever table and classify each lever as robust /
-  scenario-contingent / bet. NOT for tactical or operational decisions
-  (use variance-target-action-template at single-loop V/T/A level), NOT
-  for vision/mission statements (ambition is genre-appropriate there),
-  NOT during crisis-mode firefighting. Triggers: "we will achieve X%",
-  "our goal is [outcome]", "set the KPIs", "drive [outcome]", "5-year
-  plan", "strategic refresh", "scenario planning", "what if [future]?",
-  "long-term vision", "robust strategy", "ambition vs plan". KEYWORDS:
-  strategy, OKR critique, levers, outcomes, KPI design, scenario
-  planning, 3×N table, plausible-not-probable, target dangle, strategic
-  cascade, dead 5-year plan, reverse-engineer levers, robust /
-  contingent / bet. JA: 戦略=レバー目標値の再設定・シナリオプランニング・三段カスケード・打ち手vs結果。zh-TW: 策略＝重設槓桿目標值・情境規劃・三層串接・操控變數vs結果指標。
+  Turn ambition statements ("achieve 25% margin", "double ARR by 2030", "5-year plan refresh", OKR sets that mix levers with outcomes) into a mechanically actionable strategy artifact: a list of lever target changes (controllable inputs) that, when scenario uncertainty matters, reverse-engineer across plausible-not-probable futures. Forces three disciplines stacked into one workflow — (1) separate levers from outcomes (managers move levers, outcomes emerge), (2) diagnose the three-timescale cascade (in-year fix / annual budget / multi-year ambition) and identify which loop is dead, (3) build the 3×N scenario × lever table and classify each lever as robust / scenario-contingent / bet. Two valid entry depths: Steps 2-3 (reframe levers vs outcomes) is a legitimate stopping point when scenario uncertainty is low and you only need an OKR / KPI critique; Steps 4-8 (cascade + 3×N table) is for genuine long-horizon planning under uncertainty. NOT for tactical or operational decisions (use variance-target-action-template at single-loop V/T/A level), NOT for vision/mission statements (ambition is genre-appropriate there), NOT during crisis-mode firefighting. Triggers: "we will achieve X%", "our goal is [outcome]", "set the KPIs", "drive [outcome]", "5-year plan", "strategic refresh", "scenario planning", "what if [future]?", "long-term vision", "robust strategy", "ambition vs plan", "critique these OKRs". KEYWORDS: strategy, OKR critique, levers, outcomes, KPI design, scenario planning, 3×N table, plausible-not-probable, target dangle, strategic cascade, dead 5-year plan, reverse-engineer levers, robust / contingent / bet. JA: 戦略=レバー目標値の再設定・シナリオプランニング・三段カスケード・打ち手vs結果。zh-TW: 策略＝重設槓桿目標值・情境規劃・三層串接・操控變數vs結果指標.
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: "Chapter 10 (lever-vs-outcome business engine + three-timescale cascade + 3×N scenario table); Chapter 12 (stocks-as-objectives reformulation); Chapter 13 (car-dealership lever simulation + ambition-as-target-dangle vs forecast)"
 source_language: en

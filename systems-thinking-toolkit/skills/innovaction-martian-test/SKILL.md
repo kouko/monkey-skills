@@ -1,14 +1,7 @@
 ---
 name: innovaction-martian-test
 description: |
-  Auxiliary skill — typically reached from inside strategy-lever-and-cascade
-  workflow when generating alternative futures. Activate when a team is
-  stuck generating ideas from a blank page, producing trivial variants in
-  scenario planning, or needs a structured perturbation method for
-  product/service innovation. Do NOT use when a TRIZ or morphological-analysis
-  practice is already established — this skill duplicates them. Triggers:
-  "brainstorm 2030 worlds", "blank page", "innovation workshop",
-  "trivial variants", "perturb features".
+  Composes with strategy-lever-and-cascade for alternative-futures generation, and directly invokable when a team is stuck on a blank page, producing trivial variants in scenario planning, or needs a Martian-test-density feature list to perturb one feature at a time. Pick InnovAction! when sk08-composed or feature-perturbation is the bottleneck; pick TRIZ when contradiction-resolution is the bottleneck; pick SCAMPER when ideation is time-boxed <60min. Do NOT use when TRIZ or morphological-analysis practice is already established — this skill duplicates them with weaker tooling. Triggers: "brainstorm 2030 worlds", "blank page", "trivial variants", "martian test", "feature perturbation", "innovation workshop", "perturb features".
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: Chapter 10 — Levers, outcomes, and strategy
 source_language: en
