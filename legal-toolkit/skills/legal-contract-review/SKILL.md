@@ -206,6 +206,8 @@ High-risk findings (any of: `risk_default: red` matched / `walk_away_triggered: 
 
 **L6 dedup pass** (v0.3.2+): L6 sub-checks 3 (missing-items) + 4 (vagueness) can overlap with L7 main-loop findings on the same underlying clause. v0.3.2 Step 2.5 merges these instead of emitting duplicates — e.g. NDA's residual-knowledge gap subsumes into the parent confidentiality finding rather than appearing as a separate #6. See [`protocols/L6-cycle.md`](protocols/L6-cycle.md) §Step 2.5.
 
+**Runtime statute fetch** (v0.3.3+, Phase 1.7): every `statute`-type citation goes through a cache-then-fetch-then-LLM workflow before emit. The LLM runs `scripts/cache_check.py` to check `.legal-toolkit/cache/statutes/<statute>-<article>.json`; on cache miss/expired, WebFetches `law.moj.gov.tw` (URL from [`assets/legal-sources.json`](assets/legal-sources.json)) and writes a fresh cache entry. Default TTL 30 days for statutes. Cache hits carry-through `applicability_caveat` from `assets/statute-articles.json`. Offline-graceful: if WebFetch fails AND no cache exists, citation emits with `runtime_verified: false` + warning callout — toolkit never silently substitutes LLM training-data recall as if verified. Privacy: WebFetch sends only `pcode + flno` identifiers; NO contract text leaves the local machine. See [`protocols/L7-evaluate.md`](protocols/L7-evaluate.md) §Step 9.3.1.
+
 When `--external-share` flag is passed:
 - Playbook IDs in `memo-legal.md` / `escalation.md` are stripped (replaced with generic "依本公司紅線政策")
 - Override red banner is **never stripped** — counterparties need to see it even more than internal readers do

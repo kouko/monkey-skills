@@ -454,6 +454,102 @@ v0.3.0 dogfood:
 
 Both are SRC-09 escape routes. The deterministic SRC-04 + blacklist (v0.3.1) catches fabricated sub-articles BUT does NOT catch unverified case numbers. The soft-citation rule above adds a protocol-level gate before SRC-04 ever sees the citation.
 
+### Step 9.3.1 — Statute runtime fetch + verify (v0.3.3+, Phase 1.7)
+
+Before emitting any `statute`-type citation, the LLM runs **cache-then-fetch-then-LLM** workflow:
+
+#### Workflow
+
+```
+For each statute citation candidate <statute> <§article>:
+
+1. cache_check (uv run scripts/cache_check.py statute --statute <X> --article <Y>):
+   ├── exit 0 (hit)     → load cache entry; carry-through `content` + `verification` + `applicability_caveat`
+   ├── exit 2 (expired) → load cache entry as preview, but proceed to fetch (refresh)
+   ├── exit 1 (miss)    → proceed to fetch
+   └── exit 3 (invalid) → discard cache file; proceed to fetch
+
+2. If fetch needed:
+   a. Look up URL from assets/legal-sources.json#statute_sources.<statute>.single_article_url_template
+      Construct: https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=<pcode>&flno=<article>
+      If <statute> not in legal-sources.json → mark `runtime_verified: false` with reason "statute not in toolkit's source registry" + proceed with caveat
+   b. WebFetch the URL (main session; subagent dispatch reserved for v0.3.4+)
+   c. Parse the response:
+      - title (e.g. "民法第二百四十七條之一")
+      - article text (verbatim body)
+      - amendments list (date + type + note)
+      - last_amended_at (most recent amendment date)
+      - exists: True if non-empty result; False if 404 / structurally invalid
+      - is_current: True if no recent amendments invalidating; False otherwise
+      - deprecated: True if article 已刪除; False otherwise
+      - successor: if deprecated, the successor article number (e.g. 個資法 §27 → §20-1)
+   d. Write cache file at .legal-toolkit/cache/statutes/<statute>-<article>.json
+      conforming to output-schema-citation-cache.json with ttl_days=30
+   e. Carry-through `applicability_caveat` from assets/statute-articles.json#applicability_notes[<statute> <§article>] if listed
+
+3. Emit citation in findings.json#citations[] with:
+   - citation, type="statute", supports, url (from cache entry)
+   - verified: true (cache hit fresh OR fetch ok with verification.exists=true AND verification.deprecated=false)
+   - runtime_verified: true OR false (false ⇒ fell back to LLM training-data recall; emit warning callout in memo-legal head)
+   - applicability_caveat: from cache or applicability_notes
+   - amendment_note: if cache verification.is_current=false OR deprecated=true
+```
+
+#### Offline degradation (Q-B locked)
+
+```
+If WebFetch fails (timeout / network error / blocked) AND no cache entry exists:
+  - Emit citation with runtime_verified: false
+  - Add memo-legal "⚠️ Citation not runtime-verified — please cross-check at https://law.moj.gov.tw before relying" callout
+  - DO NOT silently substitute LLM training-data recall as if it were verified
+
+If WebFetch fails but cache exists (even expired):
+  - Use cache content with runtime_verified: false + cached_at_stale: true
+  - Note in memo-legal: "Citation from cache fetched at <date>; refresh failed (<reason>)"
+```
+
+#### Fetch budget (Q-E locked)
+
+```
+Per /legal-contract-review run:
+  - Read assets/legal-sources.json#fetch_budget_defaults.max_unique_citations_per_run (default 10)
+  - Override from .legal-toolkit/config.yml#runtime_fetch.max_unique_citations if set
+  - Track unique (statute, article) tuples; cap fetches at the limit
+  - When budget exhausted, emit remaining citations with runtime_fetch_skipped: true + runtime_verified: false
+  - Use cache for already-fetched, soft-degrade for budget-exhausted
+```
+
+#### Examples (cache hit / miss / deprecated)
+
+```
+Cache hit (民法 §247-1 fetched 5 days ago, TTL 30d):
+  → exit 0 hit
+  → citation.runtime_verified=true
+  → applicability_caveat carried from statute-articles.json: "本條主要規範定型化契約..."
+
+Cache miss (新版條文 first time cited):
+  → exit 1 miss
+  → WebFetch https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=I0050021&flno=20-1
+  → Parse response → write cache file
+  → citation.runtime_verified=true
+  → cache file ready for future hits within 30d
+
+Cache expired (民法 §247-1 fetched 35 days ago, TTL 30d):
+  → exit 2 expired
+  → WebFetch refresh → write cache; check verification.is_current
+  → If amendment_date > cached fetched_at, emit "本條 v0.3.x cached 為過去版本，已於 <date> 修正" in memo-legal Carve-outs
+
+Deprecated (個資法 §27 cited after 2025-11-11 amendment):
+  → cache check → verification.deprecated=true, successor="個人資料保護法 §20-1"
+  → DO NOT EMIT this citation; instead emit successor with note
+  → Already caught at SRC-04 blacklist (v0.3.1); this layer is the runtime backstop
+```
+
+#### Privacy
+
+- WebFetch sends **only** the statute identifier (e.g. `pcode=B0000001&flno=247-1`) in the URL — **NO contract text** to external servers
+- README "Data flow" section documents this clearly
+
 ### Step 9.3 — Citation applicability gate (v0.3.1+)
 
 Before emitting any statute citation to `memo-legal.md` `citations[]`, the LLM MUST internally verify **applicability** (not just article-number existence):
