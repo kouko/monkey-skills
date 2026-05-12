@@ -73,6 +73,11 @@
       "name": "deconstruct-toolkit",
       "description": "Reverse-engineer polished artifacts (copy, document packs, UI, arguments, products, organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, and intentional omissions. Cultural-variant lenses for EN / JA / ZH (rhetoric / persuasion / genre / frame). Grounded in Burke, Toulmin, Hinds, 劉勰《文心雕龍》, Goffman, Lakoff, Doi, Hu/Hwang, Cialdini, Brignull, Swales/Bhatia, Nielsen-Norman, 山口周『武器になる哲学』. 制作物・論証・製品の脱構築 (英日中文化バリアント対応)。作品・論證・產品的逆向解構工具組（英日中文化變體）。",
       "source": "./deconstruct-toolkit/"
+    },
+    {
+      "name": "systems-thinking-toolkit",
+      "description": "Systems thinking toolkit grounded in Dennis Sherwood, Seeing the Forest for the Trees (2002). 9 skills (5 Profile-B merged compose-with pairs + 4 standalone) covering loop-and-link primitives, CLD craft, intervention archetypes, strategy, stakeholder + team thinking, stock-flow simulation, plus auxiliary V1-weak (sk13/sk14). システム思考。系統思考。",
+      "source": "./systems-thinking-toolkit/"
     }
   ]
 }
