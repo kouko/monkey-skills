@@ -11,6 +11,19 @@ skill_count: 14
 relation_count: 17
 ---
 
+# Seeing the Forest for the Trees — Skill Index (original 14-node, pre-merge)
+
+> **Provenance archive.** This is the verbatim Stage-3 distill output from
+> the `tsundoku:book-distill` cache (`~/.tsundoku/cache/distilled/Seeing-the-Forest.../INDEX.md`).
+> The 14 skill slugs referenced below are the **pre-merge** names; this
+> plugin packages them as 9 merged skills via Profile B (see `../INDEX.md`).
+> **Markdown links in this file do NOT resolve in plugin layout** — they
+> point to the original cache directory structure. For working plugin
+> links, see [`../INDEX.md`](../INDEX.md). For the merge mapping, see
+> [`../../docs/superpowers/specs/2026-05-12-systems-thinking-toolkit-v0.1.0-design.md`](../../docs/superpowers/specs/2026-05-12-systems-thinking-toolkit-v0.1.0-design.md) §3.5.
+
+---
+
 # Seeing the Forest for the Trees — Skill Index
 
 > Stage 3 output of the book-distill pipeline. Indexes 14 verified
