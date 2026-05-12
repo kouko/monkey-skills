@@ -26,6 +26,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.7      0.3.3   5-7d    3 (架構)     bundled-vs-runtime architecture refactor       ✅ DONE
 1.8      0.3.4   1d      3 (clean)    output consolidation 7→3 (legal.md + business.md + findings.json)  ✅ DONE
 1.9      0.3.5   1d      3 (patch)    audit-driven polish (P0a/b/c) + 3 NDA-native fallbacks (C)  ✅ DONE
+1.10     0.3.6   0.5d    3 (plumbing) legal-sources.json SSOT-and-functional-copy + CI drift gate  ✅ DONE
 2        0.4.0   10d     5            Template + Runbook cluster
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
