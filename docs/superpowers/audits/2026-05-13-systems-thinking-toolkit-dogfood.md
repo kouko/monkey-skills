@@ -116,3 +116,96 @@ Friction points are concentrated in cross-skill hand-off discoverability
 and case-loading cognitive load — both addressable as small patches.
 This PR ships fixes for the 3 highest-ROI friction items; the remaining
 6 ship in v0.5.
+
+## Appendix — Chinese-input router test (post-merge follow-up)
+
+**Date**: 2026-05-13 (after PR #271 merge)
+**Test type**: Test C variant — Chinese-language router & description trigger coverage
+**Prose**: Traditional Chinese YouTube creator burnout case (~200 chars; "做得越多越糟，但停不下來")
+
+### Routing decision (v0.4 confirmed)
+
+- Recommended skill: **`cld-craft`** ✅
+- Routing reason: matched the cld-craft row's relocated trigger phrases
+  ("vicious cycle / death spiral / boom and bust" — moved here in this
+  PR's 3-fix patch). Confirmed via subagent quote.
+- Routing decision was **semantic, not literal** — Claude inferred
+  `做得越多越糟 ≈ this keeps getting worse`. A literal keyword-match
+  router would have failed.
+
+### Chinese trigger coverage — structural gap confirmed
+
+Mapping prose phrases to zh-TW keywords in skill descriptions:
+
+| Prose phrase | Matching zh-TW keyword | Hit? |
+|---|---|---|
+| `做得越多越糟` (canonical vicious-cycle phrasing) | (none) | ❌ |
+| `停不下來` / `卡住了` | (none) | ❌ |
+| `心不在焉` / `無感` (burnout / disengagement) | (closest: `軟性變數`) | ❌ semantic only |
+| `團隊也累` | (none) | ❌ |
+| `演算法` | (none) | ❌ acceptable, too domain-specific |
+| `惡性循環` | `惡性循環` | ✅ but only if user names concept abstractly |
+
+zh-TW keywords are **method nouns** (因果迴路圖 / 強化迴路 / Sterman
+終極檢定), not **user-prose symptom phrases**. Coverage estimated
+~30% for a beginner describing problems in everyday Chinese.
+
+### Two new v0.5 findings from Chinese test
+
+**Finding 1 — Mermaid language policy gap (BLOCKER for consistency)**:
+The v0.1.x test (against old plugin state) chose **Chinese node names +
+Chinese caption**; the v0.4 test (against current main) chose
+**English node names + Chinese caption**. Both subagents justified
+their choice. Neither was wrong by any SKILL.md rule because **there is
+no language-handling policy**. Different agents will produce different
+artifacts. This is structurally unsafe for UX consistency.
+
+**Finding 2 — "Broken B-loop with pseudo-target dangle" pattern**:
+v0.4 subagent diagnosed the YouTuber's `BeliefTarget (3 videos/wk)` as
+a *target dangle that doesn't update from feedback* — pretends to be a
+B-loop set-point but has no closure. Not a named pattern in cases.md.
+Worth promoting to a case (especially common in algorithm-driven
+domains: SEO, content, ads).
+
+### v0.5 backlog additions (Chinese-trigger workstream)
+
+1. **zh-TW symptom keywords for cld-craft + cld-archetypes description**:
+   `做得越多越糟` / `事倍功半` / `卡住了` / `停不下來` / `下行螺旋` /
+   `心不在焉` / `燒光` / `演算法獎勵`. JA equivalents:
+   `燃え尽き` / `負のループ` / `モチベーション低下` / `チーム疲弊`.
+2. **Router table cells: zh-TW / JA parenthetical examples** —
+   e.g., `Translate prose mess (做得越多越糟 / 悪循環 / vicious cycle)`.
+3. **Language handling subsection** in cld-craft SKILL.md: node names
+   ASCII state-noun (downstream-compatible); caption matches user input
+   language; R/B loop labels stay English (method-canonical); Mermaid
+   IDs no spaces. Resolves the v0.1.x-vs-v0.4 inconsistency.
+4. **Tier-1 reversibility test zh-TW phrasing** in
+   loop-classification-protocol.md: 「若起因增加，結果也增加嗎？若起因減少，結果也減少嗎？」
+5. **New case candidate**: "broken B-loop with pseudo-target dangle"
+   (信念 dangle 不會校正) — YouTube creator algorithm-belief, SEO
+   keyword-density myth, conversion-rate ad-spend pseudo-target.
+6. **zh-TW / JA mini-worked-example** in `cld-mermaid-emit.md` showing
+   how Chinese prose maps to English node names + Chinese caption.
+
+### Meta-finding — version-mismatch trap
+
+Initial Chinese dogfood run accidentally tested **v0.1.x** (local
+working tree was on a different feature branch, pre-v0.4-merge).
+Subagent honestly read disk state and recommended a skill that no
+longer exists in v0.4 (`loop-and-link-primitives`). Caught by post-run
+verification (`grep` of recommended slug against current skill folder).
+Lesson: dogfood subagents that read from `git worktree` paths inherit
+the worktree's branch state; if testing post-merge changes, use a
+fresh worktree on `origin/main` (or `git show origin/main:<path>`)
+rather than the user's primary worktree.
+
+### Chinese router verdict
+
+**Works at semantic layer; opaque at literal layer.** A Chinese-speaking
+user **will reach the right skill** through Claude (LLM-mediated routing
+does the translation). But:
+- The router carries zero Chinese routing signal in body
+- zh-TW keywords are method nouns, not symptom phrases
+- A retrieval / embedding / grep-based router pipeline would miss
+- v0.5 Chinese-trigger workstream is now well-scoped as a single PR
+  (6 small edits, no architecture changes)
