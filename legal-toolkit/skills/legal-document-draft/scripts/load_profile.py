@@ -19,10 +19,8 @@ Usage from a skill protocol:
     company = r.data["company_name"]
     ...
 """
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import jsonschema
 import yaml
