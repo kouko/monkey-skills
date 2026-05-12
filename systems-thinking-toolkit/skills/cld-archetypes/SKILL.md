@@ -84,11 +84,16 @@ Caulerpa algae c04 (limits-to-growth); hotel shower c08, inventory
 control manager c09, Bank of England MPC c10, NPS playbook ping-pong
 V2-derived (V/T/A).
 
-**MANDATORY — READ ENTIRE FILE**: Before classifying which archetype
+**MANDATORY — READ INDEX FIRST**: Before classifying which archetype
 is present, naming a binding constraint, or recommending "do nothing,"
-you MUST read [`references/cases.md`](references/cases.md) (~140 lines)
-for both the qualitative-vs-quantitative confirmation pattern (Part A,
-limits-to-growth) and the delay-vs-target distinction (Part B, V/T/A).
+you MUST read [`references/cases-index.md`](references/cases-index.md)
+(~40 lines) which maps user-prose symptoms to the matching case in
+`cases.md`. Load the specific case section(s) from
+[`references/cases.md`](references/cases.md) on demand by symptom.
+**Read `cases.md` end-to-end when** both archetypes are simultaneously
+active, the diagnosed brake is itself dynamic, or recommending "do
+nothing" as the intervention — case interactions become load-bearing
+in those scenarios.
 
 ## A2 — Future Trigger ★
 

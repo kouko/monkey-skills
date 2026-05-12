@@ -335,6 +335,7 @@ caption directly below the Mermaid block**:
 
 ```
 **Loop diagnosis:**
+- Behavioral signature: deceleration toward asymptote (per-cycle delta: +3.4 → +1.0 → -0.5 → +0.5 over 4 quarters).
 - R-loop (virtuous spin): Trust → Referrals → Revenue → Support → Quality → Trust (O-count = 0, reinforcing). Flip-trigger candidates: support team overload, single PR crisis.
 - B-loop: Trust → Volume → Quality → Trust (O-count = 1, balancing). Target = quality threshold; delay = weeks.
 - Dynamic prediction: limits-to-growth archetype — virtuous R-loop will plateau as B-loop bites.
@@ -343,6 +344,26 @@ caption directly below the Mermaid block**:
 This caption MUST repeat the per-loop dynamic prediction sentences from
 the Layer-2 protocol, so even renderers that strip comments preserve
 the diagnosis.
+
+**Behavioral signature line — mandatory first line of the caption.** Pick
+one of four templates so downstream `cld-archetypes` Step-0 router can
+fire without re-deriving the signature from loop structure:
+
+- `deceleration toward asymptote` — per-cycle delta sequence shows monotone
+  shrinkage toward a value. Routes Branch L (limits-to-growth) primarily.
+- `oscillation around target` — alternating signs of per-cycle delta with
+  amplitude + period. Routes Branch V (variance/target/action) primarily.
+- `monotone divergence` — per-cycle delta is non-zero and growing without
+  apparent ceiling. **NOT** an archetypes case — vicious R-loop standalone,
+  return to cld-craft for R-loop intervention.
+- `stable` — per-cycle delta inside noise band of measurement series; no
+  archetypal intervention indicated; check measurement system before
+  pulling archetype levers.
+
+When both deceleration AND oscillation are visible, report both with
+magnitude (e.g. `deceleration_delta ≈ 3.4 per cycle; oscillation_amplitude ≈ 0.5`)
+so the router's "both at once" rule can compare magnitudes and pick the
+dominant signal.
 
 ## Halt conditions for Layer 1 + Layer 2
 
@@ -370,6 +391,11 @@ Stop the protocol and either escalate, redraw, or reject the diagram if:
 
 When emitting Step 11 output, record in the post-block caption:
 
+- **Behavioral signature line** (first line; mandatory) — one of
+  `deceleration toward asymptote` / `oscillation around target` /
+  `monotone divergence` / `stable`. Include per-cycle delta sequence
+  where data exists. Routes downstream cld-archetypes Step-0 router
+  without re-derivation.
 - Loop ID (R1, R2, B1, ...) — useful when multiple loops share nodes
 - Type (R / B)
 - O-count (integer)

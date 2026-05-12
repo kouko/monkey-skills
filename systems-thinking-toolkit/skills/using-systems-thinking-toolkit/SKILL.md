@@ -27,17 +27,23 @@ Then match their intent to the right skill:
 
 | Situation | Skill | Command |
 |---|---|---|
-| Translate prose mess into a Mermaid CLD with R/B-classified loops and signed edges | cld-craft | `/systems-thinking-toolkit:cld-craft` |
+| Translate prose mess into a Mermaid CLD with R/B-classified loops and signed edges; "this keeps getting worse", "we're stuck in a vicious cycle", "death spiral", "boom and bust", "why is X accelerating", "the diagram is too cluttered" | cld-craft | `/systems-thinking-toolkit:cld-craft` |
 
 `cld-craft` is the v0.4 **carry-1** skill — it absorbs the old `loop-and-link-primitives` discipline into Step 11 so a single invocation produces a fully-annotated Mermaid CLD ready for downstream skills.
 
 ### "I have a CLD — now what?"
 
+> **Prerequisite for this whole section**: an R/B-classified Mermaid CLD
+> already exists (typically from `cld-craft` Step 11). If you have only
+> prose / "vicious cycle" intuition / a hand sketch, route to `cld-craft`
+> FIRST — these skills consume a classified CLD, not prose. Skipping
+> classification breaks the downstream contract.
+
 | Situation | Skill | Command |
 |---|---|---|
-| Recognize archetype (limits-to-growth OR V/T/A oscillation) + apply intervention playbook | cld-archetypes | `/systems-thinking-toolkit:archetypes` |
-| Overlay multiple stakeholder perspectives on one CLD canvas + find a straddle policy | cld-overlay | `/systems-thinking-toolkit:overlay` |
-| Translate CLD into stock-and-flow + use simulation for learning (not point forecast) | simulation-modeling | `/systems-thinking-toolkit:simulation` |
+| Recognize archetype (limits-to-growth OR V/T/A oscillation) on an already-classified CLD + apply intervention playbook | cld-archetypes | `/systems-thinking-toolkit:archetypes` |
+| Overlay multiple stakeholder perspectives (each their own classified CLD) on a shared canvas + find a straddle policy | cld-overlay | `/systems-thinking-toolkit:overlay` |
+| Translate a classified CLD into stock-and-flow + use simulation for learning (not point forecast) | simulation-modeling | `/systems-thinking-toolkit:simulation` |
 
 ### "I'm doing strategy or team work"
 

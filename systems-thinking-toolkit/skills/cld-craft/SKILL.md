@@ -85,7 +85,7 @@ The ten cases that calibrate the full draw-classify-emit workflow are detailed i
 - **R-loop trigger naming** — Hatfield Rail c05 (external shock), Ratner Jewelry c06 (single utterance).
 - **S/O signing edge cases** — BIRTHS → POPULATION uniflow (Tier 1 → Tier 2 escalation), ce27 variance convention flip, Lake Chad c25 (inflow/outflow uniflow).
 
-**MANDATORY — READ ENTIRE FILE**: Before drawing a CLD, elevating a fuzzy variable, or classifying any loop, you MUST read [`references/cases.md`](references/cases.md) for the boundary-discipline-via-dangles pattern, the split-fuzzy-variable trick worked example, the "fuzzy stock can be operationalized" precedent, the vicious=virtuous structural-identity proof, and the uniflow Sterman discipline.
+**MANDATORY — READ INDEX FIRST**: Before drawing a CLD, elevating a fuzzy variable, or classifying any loop, you MUST read [`references/cases-index.md`](references/cases-index.md) (~40 lines) which maps user-prose symptoms to the matching case in `cases.md`. Load the specific case section(s) from [`references/cases.md`](references/cases.md) on demand by symptom. **For high-stakes diagrams** (legal / financial / public-policy / regulatory) **or first-time use of the split-trick or variance audit**, read `cases.md` end-to-end — the interactions between cases (split-trick × variance audit, Hatfield-style trigger × Skandia-style fuzzy elevation) are themselves load-bearing.
 
 ## A2 — Future Trigger ★
 
