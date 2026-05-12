@@ -1,0 +1,53 @@
+name: tsundoku CI
+
+# Runs the tsundoku pytest suite (currently only book-extract has scripts +
+# tests) and the per-skill folder-structure validator on every PR that
+# touches the plugin (or the workflow itself), and on every push to main
+# that changes the plugin.
+
+on:
+  pull_request:
+    paths:
+      - 'tsundoku/**'
+      - '.github/workflows/tsundoku-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tsundoku/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + skill-folder-structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pandoc
+        # book-extract drives pandoc as a subprocess; tests run the real
+        # script end-to-end, so pandoc must be on PATH.
+        run: sudo apt-get install -y --no-install-recommends pandoc
+
+      - name: Install pytest
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run tsundoku pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest tsundoku/skills/book-extract/tests/ -v
+
+      - name: Validate skill folder structure
+        # Anthropic skill convention: SKILL.md + flat single-level subfolders.
+        # Hook script enforces no nested-subfolder violations per skill.
+        run: |
+          for skill in book-distill book-extract kobo-auth kobo-library; do
+            bash .claude/hooks/validate-skill-folder-structure.sh "tsundoku/skills/$skill/SKILL.md"
+          done

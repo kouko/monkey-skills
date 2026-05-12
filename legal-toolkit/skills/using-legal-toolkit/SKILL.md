@@ -1,0 +1,243 @@
+---
+name: using-legal-toolkit
+description: |
+  Router skill for legal-toolkit — the entry point that recognises user intent across 6 clusters (📋 Playbook / 📝 Template / 🚨 Runbook / 🔍 IRAC / 📅 Tracker / 🏛️ Compliance) and dispatches to the right specialist sub-skill. Phase 1 ships 3 active sub-skills (legal-contract-review / legal-playbook-author / this router); 8 more sub-skills (legal-document-draft / legal-incident-response / legal-issue-spot / legal-research / legal-contract-tracker / legal-regulation-watch / legal-corporate-governance / legal-dd-quickscan) are listed as not-yet-available with their planned phase. Returns a 6-cluster menu when intent is ambiguous — never guesses.
+
+  台灣 in-house 法務工具組 router。法務工具のルーター。
+
+  TRIGGER (中英雙語):
+  - legal / contract / NDA / playbook / 合約 / 法律 / 法務
+  - "I have a contract to review" / "需要審合約" / "建紅線"
+  - "legal-toolkit" / "什麼 legal 的 skill 可以用"
+  - first install / 剛裝好
+
+  USE WHEN: user mentions anything legal-toolkit-related and the
+  specific sub-skill is not clear from the request.
+version: 0.1.0
+---
+
+# using-legal-toolkit
+
+The entry point. Listens to the user's natural-language request,
+identifies which of the 6 functional clusters the task belongs to,
+and dispatches to the appropriate sub-skill — or lists a menu when
+the intent is ambiguous.
+
+The router itself does **no domain work**: it never reads contracts,
+never writes playbook entries, never produces legal findings. It is
+a pure dispatch primitive (Harvey "Model System" layer).
+
+## Language Policy
+
+- Skill instructions (this file): English
+- User-facing prompts (menu / clarification questions): zh-TW
+- Mixed-language is by design — do NOT translate dispatch keywords.
+
+## 6-cluster identification
+
+```mermaid
+flowchart TD
+    INPUT[使用者請求<br/>自然語言 + 檔案/路徑]
+    PARSE[意圖識別<br/>抽 keywords / 檔案類型 / 動詞]
+    INPUT --> PARSE
+
+    PARSE --> Q1{合約 review /<br/>redline / NDA?}
+    Q1 -->|是| CR[→ legal-contract-review<br/>📋 Playbook cluster]
+
+    PARSE --> Q7{建/改 playbook?}
+    Q7 -->|是| PA[→ legal-playbook-author<br/>cross-cluster utility]
+
+    PARSE --> Q2{起草 privacy /<br/>tos / dpa /<br/>標準 NDA?}
+    Q2 -->|是| DD[→ legal-document-draft<br/>📝 Template — Phase 2 NOT YET]
+
+    PARSE --> Q3{個資外洩 /<br/>違約 / 主管<br/>機關來文?}
+    Q3 -->|是| IR[→ legal-incident-response<br/>🚨 Runbook — Phase 2 NOT YET]
+
+    PARSE --> Q4{法律問題 /<br/>諮詢 / 能不能做?}
+    Q4 -->|fact-driven| IS[→ legal-issue-spot<br/>🔍 IRAC — Phase 3 NOT YET]
+    Q4 -->|查法源| RS[→ legal-research<br/>🔍 IRAC — Phase 3 NOT YET]
+
+    PARSE --> Q5{合約期限 /<br/>obligations /<br/>法規 RSS?}
+    Q5 -->|合約 lifecycle| CT[→ legal-contract-tracker<br/>📅 Tracker — Phase 4 NOT YET]
+    Q5 -->|法規 push| RW[→ legal-regulation-watch<br/>📅 Tracker — Phase 4 NOT YET]
+
+    PARSE --> Q6{股東會 /<br/>重大訊息 /<br/>DD?}
+    Q6 -->|governance| CG[→ legal-corporate-governance<br/>🏛️ Compliance — Phase 5 BLOCKED]
+    Q6 -->|DD scan| DDS[→ legal-dd-quickscan<br/>🏛️ Compliance — Phase 5 BLOCKED]
+
+    PARSE --> NOMATCH[無 match]
+    NOMATCH --> CLARIFY[列 6-cluster 選單<br/>請使用者選]
+    CLARIFY --> INPUT
+```
+
+## Decision logic
+
+When invoked, the router reads the user's request and applies the
+following sequence of checks. **First match wins** — the router
+does not run multiple branches; it picks one.
+
+### Step 1 — Extract intent signals
+
+From the user's request, extract:
+
+- **Keywords** (in both English and zh-TW): contract, review, redline, NDA, 合約, 審查, 紅線, 建 playbook, 起草, privacy, 個資外洩, 法規, 股東會, DD, etc.
+- **File types** (if user attached / pointed at files): `.md` / `.docx` / `.pdf` of a contract → strong signal for Q1
+- **Verbs**: "審" / "改" / "建" / "查" / "監看" / "起草" — each maps to a different cluster
+- **Subjects**: contract / playbook / privacy policy / 個資事故 / 法規 / 股東會 / DD report
+
+### Step 2 — Apply Q1-Q7 in order
+
+| Q | If matched, dispatch to | Cluster | Status |
+|---|---|---|---|
+| Q1 — review a contract | `legal-contract-review` | 📋 Playbook | **MVP** |
+| Q7 — author/extend/revise playbook | `legal-playbook-author` | utility | **MVP** |
+| Q2 — draft privacy/tos/dpa/nda | `legal-document-draft` | 📝 Template | Phase 2 (not yet) |
+| Q3 — incident response (PII breach / 主管機關 / 違約) | `legal-incident-response` | 🚨 Runbook | Phase 2 (not yet) |
+| Q4 (fact pattern) — issue spot | `legal-issue-spot` | 🔍 IRAC | Phase 3 (not yet) |
+| Q4 (law lookup) — research | `legal-research` | 🔍 IRAC | Phase 3 (not yet) |
+| Q5 (contract lifecycle) — tracker | `legal-contract-tracker` | 📅 Tracker | Phase 4 (not yet) |
+| Q5 (regulation feed) — watch | `legal-regulation-watch` | 📅 Tracker | Phase 4 (not yet) |
+| Q6 (shareholders/board/disclosure) — governance | `legal-corporate-governance` | 🏛️ Compliance | **Phase 5 BLOCKED** on prerequisite research |
+| Q6 (DD scan) — dd quickscan | `legal-dd-quickscan` | 🏛️ Compliance | **Phase 5 BLOCKED** on prerequisite research |
+
+**Q1 / Q7 are MVP — actually dispatch.** All other Q's are **not yet available** in Phase 1 — see Step 4.
+
+### Step 3 — Multi-intent handling
+
+When the request matches multiple Q's (common: "review this contract AND update the playbook for it"):
+
+**Priority order**:
+1. Run the main task first
+2. Then offer to follow up with the secondary
+
+Example: user says "review this MSA, and the LoL fallback was wrong last time, let's fix it":
+- First: dispatch to `legal-contract-review` for the actual review
+- After review completes: prompt "Would you like to now revise the `limitation-of-liability` entry? `/legal-playbook-author revise limitation-of-liability`"
+
+Why: running both in parallel costs context and may produce inconsistent state. Sequential with clear hand-off is cleaner.
+
+### Step 4 — Phase 2-5 "not yet available" path
+
+For Q2-Q6 matches in Phase 1, the router:
+
+1. **Acknowledge** the intent — tell the user "I see you want to <X>"
+2. **Inform** that the relevant skill is on the roadmap but not built yet:
+   ```
+   The skill for that task (legal-document-draft for Q2 / etc.) is
+   planned for Phase <N> per the roadmap at legal-toolkit/ROADMAP.md.
+   It is not yet available in this version (v0.1.0).
+   ```
+3. **Offer alternatives** when possible:
+   - For Q2 (draft) — "If you have a template you want to adapt, I can route to `legal-contract-review` in `redline` mode to check it against your playbook"
+   - For Q3 (incident) — "For an immediate-need response, no skill substitute exists; **consult a practising lawyer** is the right path"
+   - For Q4 (issue-spot / research) — "For a basic fact-pattern question, you can describe the scenario to a Claude conversation directly; the structured `legal-issue-spot` skill is on the roadmap"
+   - For Q5 (lifecycle / regulation) — "No substitute yet; manual tracking + periodic re-review is the current path"
+   - For Q6 (governance / DD) — "BLOCKED on the upstream prerequisite research note for 上市櫃 in-house Compliance. Estimated availability per ROADMAP §Phase 5"
+4. **Do not dispatch** — the not-yet-built skill doesn't exist as an installable resource; pretending to dispatch would fail loudly
+
+### Step 5 — Ambiguous intent (no Q matches)
+
+If none of Q1-Q7 match clearly, **do not guess**. Present the 6-cluster menu:
+
+```
+我不確定你要做什麼。可能屬於以下哪個 cluster？
+
+📋 合約議價 (Playbook)
+   → 我想 review / redline / 比對一份合約
+
+📝 文件起草 (Template)
+   → 我想起草 privacy policy / ToS / DPA / NDA  [Phase 2 — 還沒上]
+
+🚨 事件應變 (Runbook)
+   → 個資外洩 / 主管機關來文 / 客戶違約我要回應  [Phase 2 — 還沒上]
+
+🔍 法律諮詢 (IRAC)
+   → 我有 fact pattern 想知道法律分析 / 想查特定法條 / 判例  [Phase 3 — 還沒上]
+
+📅 生命週期追蹤 (Tracker)
+   → 合約到期 alert / 主管機關 RSS 訂閱  [Phase 4 — 還沒上]
+
+🏛️ 公司治理 (Compliance)
+   → 股東會 / 董事會 / 重大訊息 / 配合 DD  [Phase 5 — BLOCKED on research]
+
+🔧 建 / 改 playbook
+   → 我想建立或修改自家公司的合約議價規則
+
+請告訴我屬於哪一類，或重述一下你的需求。
+```
+
+After the user picks, route to the corresponding sub-skill (or to the not-yet-available message).
+
+## When to use
+
+- User says anything legal-toolkit related without specifying which skill
+- First-time install: user types `/using-legal-toolkit` to see what's available
+- User wants to know whether a particular task is supported
+
+## When NOT to use
+
+- User already typed a specific sub-skill (`/legal-contract-review`, `/legal-playbook-author`) — they know what they want
+- The task is non-legal (translation / coding / design) — route back to the correct plugin's `using-*` router
+
+## Inputs
+
+- `user_request`: string (natural language; may include file paths)
+
+## Outputs
+
+One of:
+
+- **Dispatch decision**: `{ target: "legal-<sub-skill>", brief: <summary>, paths: [<extracted paths>] }`
+- **Menu prompt**: 6-cluster menu (when intent is ambiguous)
+- **Not-yet-available notice**: explanation + alternative routing where possible
+
+The router does NOT execute the sub-skill; it produces the dispatch + brief and lets the host runtime invoke the chosen sub-skill.
+
+## Output contract
+
+```
+✅ using-legal-toolkit complete.
+   Dispatched to: <sub-skill name> / "no dispatch (Phase 2-5 not yet)" / "asked clarification"
+   Intent recognised: <Q1-Q7 or unmatched>
+   Brief: <1-sentence summary of what the sub-skill should do>
+```
+
+## Cold-start onboarding
+
+First-time install path:
+
+```
+使用者: /using-legal-toolkit
+(沒附其他資訊)
+
+使用者: 我剛裝好這個 plugin，下一步幹嘛？
+
+Router 回:
+   歡迎！legal-toolkit v0.1.0 ships 3 個 active skill：
+   - using-legal-toolkit (router，你正在用)
+   - legal-playbook-author (建立你公司的議價 playbook)
+   - legal-contract-review (跑 7 層合約審查 pipeline)
+
+   常見起手路徑：
+
+   👉 如果你已經有想要 review 的合約：
+      /legal-contract-review <path>
+      （沒有自訂 playbook 也能跑 — 內建 4 條 baseline fallback）
+
+   👉 如果你想先建立自家公司的 playbook：
+      /legal-playbook-author
+      （三選一：seed from bundled fallback / 5-題 interview / read-only）
+
+   👉 如果你想看完整的 plugin 全景：
+      閱讀 README.md / ROADMAP.md
+
+   你想怎麼開始？
+```
+
+## Reference
+
+- Plugin spec: [`PRODUCT-SPEC.md`](../../PRODUCT-SPEC.md) / [`TECH-SPEC.md`](../../TECH-SPEC.md)
+- Roadmap: [`ROADMAP.md`](../../ROADMAP.md) — full v0.1.0 → v1.0.0 plan, Phase 2-5 sub-skill ETA
+- Active sub-skills:
+  - [`legal-playbook-author`](../legal-playbook-author/SKILL.md)
+  - [`legal-contract-review`](../legal-contract-review/SKILL.md)

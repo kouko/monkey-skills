@@ -45,6 +45,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -133,8 +134,11 @@ def find_opf(zf: zipfile.ZipFile) -> str:
     return rootfile.get("full-path") or ""
 
 
-def parse_opf(zf: zipfile.ZipFile, opf_path: str) -> tuple[EpubMeta, list[SpineItem], str]:
-    """Returns (metadata, spine, ncx_path_or_empty)."""
+def parse_opf(zf: zipfile.ZipFile, opf_path: str) -> tuple[EpubMeta, list[SpineItem], str, dict[str, str]]:
+    """Returns (metadata, spine, ncx_path_or_empty, image_manifest).
+
+    image_manifest: {zip_abs_path: media_type} for items with media-type^=image/.
+    """
     with zf.open(opf_path) as f:
         tree = ET.parse(f)
     root = tree.getroot()
@@ -162,8 +166,9 @@ def parse_opf(zf: zipfile.ZipFile, opf_path: str) -> tuple[EpubMeta, list[SpineI
             elif tag == "date":
                 meta.date = meta.date or text
 
-    # Manifest: id → (href, mediatype)
+    # Manifest: id → (href, mediatype); also collect image entries for extraction
     manifest: dict[str, tuple[str, str]] = {}
+    image_manifest: dict[str, str] = {}
     ncx_id = ""
     for item in root.findall("opf:manifest/opf:item", NS):
         item_id = item.get("id") or ""
@@ -174,6 +179,9 @@ def parse_opf(zf: zipfile.ZipFile, opf_path: str) -> tuple[EpubMeta, list[SpineI
             ncx_id = item_id
         if item.get("properties", "") == "nav":
             ncx_id = ncx_id or item_id  # EPUB3 nav fallback
+        if media_type.startswith("image/"):
+            abs_path = os.path.normpath(os.path.join(opf_dir, href)) if opf_dir else href
+            image_manifest[abs_path] = media_type
 
     # Spine: ordered list of idrefs
     spine_items: list[SpineItem] = []
@@ -194,7 +202,7 @@ def parse_opf(zf: zipfile.ZipFile, opf_path: str) -> tuple[EpubMeta, list[SpineI
         ncx_href, _ = manifest[spine_ncx_id]
         ncx_path = os.path.normpath(os.path.join(opf_dir, ncx_href)) if opf_dir else ncx_href
 
-    return meta, spine_items, ncx_path
+    return meta, spine_items, ncx_path, image_manifest
 
 
 def parse_ncx(zf: zipfile.ZipFile, ncx_path: str) -> dict[str, str]:
@@ -234,12 +242,136 @@ def parse_ncx(zf: zipfile.ZipFile, ncx_path: str) -> dict[str, str]:
     return result
 
 
+# ---------- image extraction ----------
+
+
+def extract_images(
+    zf: zipfile.ZipFile,
+    image_manifest: dict[str, str],
+    out_dir: Path,
+    log,
+) -> dict[str, str]:
+    """Extract image files from EPUB ZIP to <out_dir>/images/.
+
+    image_manifest: {zip_abs_path: media_type} for items with media-type^=image/.
+    Returns: {zip_abs_path: relative_path_from_out_dir} (e.g. "images/cat.png").
+
+    Collisions on basename are resolved by appending an 8-char SHA-1 prefix of
+    the full ZIP path (deterministic, stable across re-runs).
+    """
+    if not image_manifest:
+        return {}
+    images_dir = out_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    result: dict[str, str] = {}
+    used_names: set[str] = set()
+    for zip_path in sorted(image_manifest):  # sorted: deterministic naming
+        try:
+            data = zf.read(zip_path)
+        except KeyError:
+            log(f"[extract] [skip-image-missing] {zip_path}")
+            continue
+        basename = Path(zip_path).name
+        safe = basename
+        if safe in used_names:
+            h = hashlib.sha1(zip_path.encode("utf-8")).hexdigest()[:8]
+            stem = Path(basename).stem
+            ext = Path(basename).suffix
+            safe = f"{stem}-{h}{ext}"
+        used_names.add(safe)
+        (images_dir / safe).write_bytes(data)
+        result[zip_path] = f"images/{safe}"
+    log(f"[extract] {len(result)} image(s) extracted to {images_dir}")
+    return result
+
+
+_IMG_TAG_RE = re.compile(r"<img\b([^>]*?)/?>", re.IGNORECASE)
+_ATTR_RE = re.compile(r'\b([\w:-]+)\s*=\s*(["\'])(.*?)\2', re.DOTALL)
+
+
+def _extract_attr(attrs: str, name: str) -> str:
+    """Return the value of `name` attribute (case-insensitive), or empty."""
+    name_lower = name.lower()
+    for m in _ATTR_RE.finditer(attrs):
+        if m.group(1).lower() == name_lower:
+            return m.group(3)
+    return ""
+
+
+def _html_attr_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
+
+
+def rewrite_image_srcs(
+    xhtml: str,
+    chapter_zip_dir: str,
+    image_map: dict[str, str],
+) -> str:
+    """Rewrite + normalize <img> tags so pandoc emits clean ![alt](src) syntax.
+
+    - Resolves relative src against chapter's ZIP dir, then looks up image_map.
+    - Skips external (http/https) and data: URIs (no rewrite, no extraction).
+    - Strips all attributes except src + alt — pandoc preserves <img> as raw
+      HTML when extra attrs (class, role, style, width, ...) are present,
+      which would defeat the inline ![alt](src) requirement.
+    - Unknown src (not in image_map, not external) is preserved untouched but
+      attributes are still stripped so the tag converts cleanly.
+    """
+    def replace(m: re.Match) -> str:
+        attrs = m.group(1)
+        src = _extract_attr(attrs, "src")
+        if not src:
+            return m.group(0)
+        alt = _extract_attr(attrs, "alt")
+        # Decide final src
+        if src.startswith(("http://", "https://", "data:")):
+            final_src = src
+        else:
+            abs_src = (
+                os.path.normpath(os.path.join(chapter_zip_dir, src))
+                if chapter_zip_dir
+                else os.path.normpath(src)
+            )
+            final_src = image_map.get(abs_src, src)
+        return f'<img src="{_html_attr_escape(final_src)}" alt="{_html_attr_escape(alt)}"/>'
+
+    return _IMG_TAG_RE.sub(replace, xhtml)
+
+
 # ---------- HTML pre-cleaning ----------
+
+
+_SVG_WITH_IMAGE_RE = re.compile(
+    r'<svg\b[^>]*>\s*<image\b[^>]*?(?:xlink:)?href\s*=\s*["\']([^"\']+)["\'][^>]*/?>\s*</svg>',
+    re.DOTALL | re.IGNORECASE,
+)
+_ANCHOR_WRAPPING_IMG_RE = re.compile(
+    r'<a\b([^>]*?)>(\s*<img\b[^>]*?/?>\s*)</a>',
+    re.DOTALL | re.IGNORECASE,
+)
+_HREF_ATTR_RE = re.compile(r'\bhref\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 
 
 def preclean_xhtml(xhtml: str) -> str:
     """Strip kobo-specific markup, SVG blocks, scripts, empty wrappers."""
-    # kill SVG blocks (image-heavy front matter)
+    # 1. Unwrap <svg><image xlink:href="X"/></svg> → <img src="X"/> so the
+    #    SVG-kill below doesn't destroy image references. EPUBs commonly
+    #    embed images this way to control aspect ratio; without this hoist,
+    #    the image file gets extracted but no Markdown reference survives.
+    xhtml = _SVG_WITH_IMAGE_RE.sub(
+        lambda m: f'<img src="{m.group(1)}" alt=""/>', xhtml
+    )
+    # 2. Strip non-href attrs from <a> tags wrapping a single <img>. EPUBs
+    #    use <a class="ref" id="back-N"><img/></a> for footnote-glyph links;
+    #    pandoc preserves <a> with class as raw HTML, dragging <img> with
+    #    it. With only href left, pandoc emits clean [![alt](src)](href).
+    def _strip_anchor_attrs(m: re.Match) -> str:
+        href_m = _HREF_ATTR_RE.search(m.group(1))
+        if not href_m:
+            return m.group(0)
+        return f'<a href="{href_m.group(2)}">{m.group(2)}</a>'
+    xhtml = _ANCHOR_WRAPPING_IMG_RE.sub(_strip_anchor_attrs, xhtml)
+    # kill remaining (decorative) SVG blocks
     xhtml = re.sub(r"<svg\b[^>]*>.*?</svg>", "", xhtml, flags=re.DOTALL | re.IGNORECASE)
     xhtml = re.sub(r"<image\b[^/>]*/?>", "", xhtml, flags=re.IGNORECASE)
     # kill scripts and styles
@@ -440,7 +572,7 @@ def main() -> int:
     with zipfile.ZipFile(epub_path) as zf:
         opf_path = find_opf(zf)
         log(f"[extract] OPF: {opf_path}")
-        meta, spine, ncx_path = parse_opf(zf, opf_path)
+        meta, spine, ncx_path, image_manifest = parse_opf(zf, opf_path)
         log(f"[extract] {len(spine)} spine items, NCX: {ncx_path or '(none)'}")
         ncx_labels = parse_ncx(zf, ncx_path) if ncx_path else {}
         log(f"[extract] NCX labels: {len(ncx_labels)}")
@@ -462,6 +594,11 @@ def main() -> int:
             out_dir = out_root / slug_base
         out_dir.mkdir(parents=True, exist_ok=True)
         log(f"[extract] output dir: {out_dir}")
+
+        # Extract images unless explicitly stripped
+        image_map: dict[str, str] = {}
+        if not args.strip_images:
+            image_map = extract_images(zf, image_manifest, out_dir, log)
 
         chapters: list[ChapterOut] = []
         idx = 0
@@ -492,6 +629,10 @@ def main() -> int:
                 log(f"[extract] [skip-missing] {item.abs_path}")
                 continue
             cleaned = preclean_xhtml(raw)
+            if image_map:
+                cleaned = rewrite_image_srcs(
+                    cleaned, os.path.dirname(item.abs_path), image_map
+                )
             try:
                 md = run_pandoc(args.pandoc, cleaned)
             except subprocess.CalledProcessError as e:

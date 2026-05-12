@@ -1,0 +1,36 @@
+JLT (日本法令外国語訳データベース) Standard Bilingual Dictionary — License
+=====================================================================
+
+Source: Japan Ministry of Justice (法務省 大臣官房司法法制部)
+        日本法令外国語訳データベースシステム
+        Japanese Law Translation Database System
+URL:    https://www.japaneselawtranslation.go.jp/
+
+License: Government Open Data License v2.0 / CC-BY 4.0 互換
+         (Compatible with Creative Commons Attribution 4.0 International)
+
+Per the 標準利用規約 (Standard Terms of Use) governing data published on the
+JLT site, the 標準対訳辞書 (Standard Bilingual Dictionary) and the law
+translations themselves may be redistributed and used commercially provided
+attribution is given.
+
+The official terms of use are published here:
+  https://www.japaneselawtranslation.go.jp/ja/about_dicts
+
+Attribution
+-----------
+
+When redistributing the data (including derived works such as glossary files
+that incorporate JLT entries), credit the source as follows:
+
+  Source: 法務省 日本法令外国語訳データベース (Japanese Law Translation,
+  Ministry of Justice, Japan), licensed under Government Open Data License v2.0
+  / CC-BY 4.0 compatible terms. https://www.japaneselawtranslation.go.jp/
+
+Notes
+-----
+
+This LICENSE accompanies the bundled sample CSV in this directory
+(`standard-bilingual-dictionary.csv`, ~38 entries) shipped with
+translation-toolkit v0.1.0. It also applies to any full-dataset replacement
+the operator manually downloads per `README.md`.

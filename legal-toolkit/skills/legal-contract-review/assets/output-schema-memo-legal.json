@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-memo-legal.json",
+  "title": "memo-legal.md output schema (legal-contract-review)",
+  "description": "Full CRAC memo (Conclusion - Rule - Analysis - Conclusion) for the contract under review, with document-level citations per Harvey BigLaw Bench convention.",
+  "type": "object",
+  "required": ["contract_metadata", "crac", "citations"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "crac": {
+      "type": "object",
+      "required": ["conclusion", "rule", "analysis", "conclusion_again"],
+      "properties": {
+        "conclusion": {"type": "string", "description": "1-3 sentences — the bottom-line legal position on the contract"},
+        "rule": {"type": "string", "description": "applicable rules (statutory / case law / regulatory) with §refs"},
+        "analysis": {"type": "string", "description": "issue-by-issue application of rule to facts; carve-outs noted"},
+        "conclusion_again": {"type": "string", "description": "restated bottom-line with action items"}
+      }
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["citation", "type", "supports"],
+        "properties": {
+          "citation": {"type": "string", "description": "e.g. '民法 §247-1', '智慧財產法院 102 年度民營訴字第 6 號'"},
+          "type": {"type": "string", "enum": ["statute", "case", "regulation", "authority_letter", "scholarly"]},
+          "supports": {"type": "string", "description": "which CRAC point this citation backs"},
+          "verified": {"type": "boolean", "description": "true if the citation has been verified against primary source"},
+          "url": {"type": "string", "format": "uri", "description": "link to 全國法規資料庫 / 司法院判決系統 / 主管機關"}
+        }
+      }
+    },
+    "carve_outs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "exceptions / boundary conditions the LLM identified — keeps the memo from over-stating coverage"
+    }
+  }
+}

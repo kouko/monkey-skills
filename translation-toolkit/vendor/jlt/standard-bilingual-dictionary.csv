@@ -1,0 +1,39 @@
+en_term,ja_term,source_law,notes
+Cabinet Order,政令,Constitution Article 73,
+Ministerial Ordinance,省令,Cabinet Act,
+Ordinance,条例,Local Autonomy Act Article 14,
+Act,法律,Constitution Article 41,
+Diet,国会,Constitution Article 41,
+House of Representatives,衆議院,Constitution Article 42,
+House of Councillors,参議院,Constitution Article 42,
+Cabinet,内閣,Constitution Article 65,
+Prime Minister,内閣総理大臣,Constitution Article 66,
+Minister of State,国務大臣,Constitution Article 66,
+Ministry of Justice,法務省,Establishment Act,gov-org
+Ministry of Finance,財務省,Establishment Act,gov-org
+Ministry of Foreign Affairs,外務省,Establishment Act,gov-org
+Cabinet Office,内閣府,Cabinet Office Establishment Act,gov-org
+National Police Agency,警察庁,Police Act,gov-org
+Financial Services Agency,金融庁,Establishment Act,gov-org
+Tokyo Metropolitan Government,東京都,Local Autonomy Act,gov-org
+prefecture,都道府県,Local Autonomy Act,
+municipality,市町村,Local Autonomy Act,
+Civil Code,民法,Civil Code,
+Penal Code,刑法,Penal Code,
+Commercial Code,商法,Commercial Code,
+Companies Act,会社法,Companies Act,
+agreement,契約,Civil Code Article 522,
+consent,同意,Civil Code,
+juridical person,法人,Civil Code Article 33,
+natural person,自然人,Civil Code,
+right,権利,Civil Code,
+obligation,義務,Civil Code,
+plaintiff,原告,Code of Civil Procedure,
+defendant,被告,Code of Civil Procedure,
+court,裁判所,Court Act,
+judgment,判決,Code of Civil Procedure Article 250,
+appeal,上訴,Code of Civil Procedure,
+shareholder,株主,Companies Act Article 105,
+board of directors,取締役会,Companies Act Article 362,
+representative director,代表取締役,Companies Act Article 349,
+articles of incorporation,定款,Companies Act Article 26,

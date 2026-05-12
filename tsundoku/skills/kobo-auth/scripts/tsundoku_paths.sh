@@ -49,6 +49,23 @@ TSUNDOKU_KOBO_CONFIG="$TSUNDOKU_ROOT/kobo/auth/kobodl.json"
 TSUNDOKU_KOBO_BINARY="$TSUNDOKU_ROOT/kobo/bin/kobodl-macos"
 TSUNDOKU_KOBO_LIBRARY_JSON="$TSUNDOKU_ROOT/cache/kobo/library.json"
 
+# Idempotently create the canonical tsundoku directory tree. Safe to call
+# multiple times. auth/ is chmod 700 (credentials); other dirs default to
+# umask 755. File-level chmod 600 on kobodl.json is the authoritative auth
+# boundary; the directory mode is defence-in-depth.
+tsundoku_ensure_dirs() {
+    local auth_dir
+    auth_dir="$(dirname "$TSUNDOKU_KOBO_CONFIG")"
+    mkdir -p \
+        "$(dirname "$TSUNDOKU_KOBO_BINARY")" \
+        "$TSUNDOKU_TMPDIR" \
+        "$auth_dir" \
+        "$(dirname "$TSUNDOKU_KOBO_LIBRARY_JSON")" \
+        "$TSUNDOKU_MARKDOWN_DIR" \
+        "$TSUNDOKU_DOWNLOADS"
+    chmod 700 "$auth_dir"
+}
+
 # Detect: was this script sourced or executed?
 _tsundoku_paths_sourced=false
 if [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" != "${0}" ]]; then

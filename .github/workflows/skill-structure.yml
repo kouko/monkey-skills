@@ -61,6 +61,26 @@ jobs:
         # Same-PR drift rule from dev-workflow PR-2/PR-3 NOTICE.
         run: python3 scripts/check-shared-conventions-drift.py
 
+  marketplace-description-sync:
+    name: marketplace description sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check-marketplace-description-sync.py
+        # Claude Desktop reads ONLY from marketplace.json for the plugin
+        # discovery UI; Claude Code CLI follows source and also reads each
+        # plugin.json. Both must carry identical descriptions. Same-PR
+        # drift rule: when you change a description in plugin.json, mirror
+        # the change to marketplace.json in the same commit.
+        run: python3 scripts/check-marketplace-description-sync.py
+
   copywriting-anchor-lint:
     name: copywriting-toolkit anchor library lint
     runs-on: ubuntu-latest

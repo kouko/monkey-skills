@@ -11,7 +11,7 @@ Reads source notes from configured folders (via `.obsidian-wiki.config`), distil
 
 Read these BEFORE STEP 1:
 
-1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
+1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
 2. **`wiki/.manifest.json`** — for delta detection. If missing, treat as empty `{}` (likely first ingest after wiki-setup).
 
 ## References (lazy — read only when needed)
@@ -28,12 +28,17 @@ These are spec references; load them at the moment you need them, not at pre-fli
 
 ## Source scope
 
-`wiki-ingest` scans the **entire vault** for `.md` files, with two blacklist layers:
+`wiki-ingest` scans the **entire vault** for `.md` files, with two parallel blacklists — a **DIR blacklist** (top-level match) and a **FILE blacklist** (any-depth basename match) — each with system + user-configurable layers.
 
-- **System always-excluded**: `wiki/`, `.obsidian/`, `.trash/`, `.git/`, `node_modules/`, `_raw/`
-- **User-configured**: `OBSIDIAN_WIKI_EXCLUDE_DIRS` from `.obsidian-wiki.config` (default `daily,inbox`; multi-line, one pattern per line)
+**DIR blacklist (top-level match):**
+- *System*: `wiki/`, `.*` (any top-level dot-prefix dir — covers `.obsidian`, `.trash`, `.git`, `.github`, `.vscode`, `.idea`, `.claude`, `.cursor`, `.codex`, `.windsurf`, `.devcontainer`, `.husky`, `.changeset`, etc. by Unix convention), `node_modules/`, `_raw/`
+- *User-configured*: `OBSIDIAN_WIKI_EXCLUDE_DIRS` from `.obsidian-wiki.config` (default `daily,inbox`; multi-line, one shell-glob pattern per line)
 
-**Match rule**: top-level only — only the first path segment is compared, case-sensitive. Nested directories with the same name (`projects/old/daily/`) are NOT excluded.
+**FILE blacklist (any-depth basename match):**
+- *System*: `CLAUDE.md`, `AGENT.md`, `AGENTS.md`, `MEMORY.md` (universal agent-config filenames; excluded wherever they sit). Root-level hidden `.md` files (`.notes.md` style) are also auto-excluded.
+- *User-configured*: `OBSIDIAN_WIKI_EXCLUDE_FILES` (multi-line basename globs, defaults empty; common additions: `README.md`, `TODO.md`, `CHANGELOG.md`, `LICENSE.md`, `*.draft.md`)
+
+**Match rule asymmetry**: DIR rules only fire on the top-level segment (`projects/old/daily/` is NOT excluded by `daily/`) because directory semantics are location-sensitive; FILE rules fire at any depth because filename conventions are location-independent.
 
 For the full contract, edge cases, and rationale, see [references/source-scope.md](references/source-scope.md).
 
@@ -124,6 +129,14 @@ Algorithm:
 - `frontmatter.updated` — today's date
 - `frontmatter.summary` — refresh if material changes (≤200 chars)
 - `## User Notes` — **preserve verbatim** if present
+
+**Post-write hard check** (run after every page write, BEFORE moving on):
+
+```bash
+grep -nE '`[^`]*\[\[[^]]+\]\][^`]*`' <wiki-root>/<category>/<slug>.md
+```
+
+If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]]` `` or `` **`[[Page]]`** ``) — Obsidian renders it as inline code, NOT a clickable link. **Do not advance**: edit the file to remove the wrapping backticks, then re-run the check until empty. The Quality bar self-check (below) is advisory; this grep is the enforced gate. Spec rationale in [page-format.md](references/page-format.md#never-wrap-wikilinks-in-backticks-critical).
 
 ### 3d. Create/update reference page
 

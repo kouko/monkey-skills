@@ -1,0 +1,35 @@
+東京都 日英対訳辞書 (Tokyo Metropolitan Government EN-JA Glossary) — License
+=====================================================================
+
+Source: 東京都 (Tokyo Metropolitan Government)
+        Tokyo Open Data Catalog
+URL:    https://catalog.data.metro.tokyo.lg.jp/
+Dataset: https://catalog.data.metro.tokyo.lg.jp/dataset/t000001d1800000014
+
+License: Creative Commons Attribution 4.0 International (CC-BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+The Tokyo Metropolitan Government publishes its open data — including the
+日英対訳辞書 (English-Japanese Translation Glossary) — under the Creative
+Commons Attribution 4.0 International License. The dataset may be
+redistributed, modified, and used commercially provided attribution is
+given.
+
+Attribution
+-----------
+
+When redistributing the data (including derived works such as glossary
+files that incorporate Tokyo entries), credit the source as follows:
+
+  Source: 東京都 日英対訳辞書 (Tokyo Metropolitan Government,
+  English-Japanese Translation Glossary). Licensed under CC-BY 4.0.
+  https://catalog.data.metro.tokyo.lg.jp/
+
+Notes
+-----
+
+This LICENSE accompanies the bundled curated sample CSV in this directory
+(`en-ja-translation.csv`, ~30 entries) shipped with translation-toolkit
+v0.1.0. It also applies to any full-dataset replacement the operator
+manually downloads per `README.md`. The original Tokyo distribution is an
+.xlsx file; the parser also accepts .xlsx if `openpyxl` is installed.

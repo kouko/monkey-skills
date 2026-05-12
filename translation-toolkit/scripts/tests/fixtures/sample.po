@@ -1,0 +1,25 @@
+# Sample PO file for translation-toolkit smoke tests
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: src/ui/dialog.rs:42
+msgid "Cancel"
+msgstr ""
+
+#: src/ui/settings.rs:101
+msgid "Settings"
+msgstr ""
+
+#: src/ui/welcome.rs:15
+msgid "Hello {name}, welcome to {app_name}!"
+msgstr ""
+
+#: src/ui/notify.rs:33
+msgctxt "plural form"
+msgid "{count, plural, one {1 unread message} other {{count} unread messages}}"
+msgstr ""
+
+#: src/api/error.rs:7
+msgid "API endpoint %s returned %d"
+msgstr ""

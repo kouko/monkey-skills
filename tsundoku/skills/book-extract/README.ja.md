@@ -50,10 +50,12 @@ EPUB=~/Books/kobo/"<author> - <title> b9152ffe.epub"
 
 # 変換（既定で $TSUNDOKU_MARKDOWN_DIR を使う — --out-dir 不要）
 python3 scripts/epub_to_markdown.py --epub "$EPUB" \
-    --strip-images --strip-frontmatter
+    --strip-frontmatter
 
 # → ~/.tsundoku/cache/markdown/<title-slug>-<id8>/ に書き込み
-#       index.md + metadata.json + NN-chapter.md
+#       index.md + metadata.json + NN-chapter.md + images/
+#
+# 純テキストのみ（LLM 蒸留用途）にしたい場合は --strip-images を追加
 ```
 
 ## 変換オプション
@@ -62,7 +64,7 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 |---|---|
 | `--out-dir DIR` | 出力 ROOT（内部で本ごとのサブディレクトリを自動作成。既定 `$TSUNDOKU_MARKDOWN_DIR`） |
 | `--no-subdir` | 本ごとのサブディレクトリを無効化、`--out-dir` 直下に書く |
-| `--strip-images` | 画像参照を破棄 — 文章中心の本に推奨 |
+| `--strip-images` | 画像の抽出をスキップし参照もすべて削除 — 純テキスト出力用 |
 | `--strip-frontmatter` | 書封 / 目次 / 版権 / cover / contents 等をスキップ |
 | `--strip-backmatter` | 索引 / 謝辞 / index / acknowledg をスキップ（附録 / 訳者あとがきは残す） |
 | `--merge-small N` | N トークン未満の章を直前の章に併合 |
@@ -75,16 +77,19 @@ python3 scripts/epub_to_markdown.py --epub "$EPUB" \
 ~/.tsundoku/cache/markdown/<title-slug>-<id8>/
 ├── index.md                      ← TOC + 章ごとの token 概算
 ├── metadata.json                 ← title / authors / publisher / ISBN / chapters[]
+├── images/                       ← デフォルトで抽出。`--strip-images` で無効化
+│   └── cover.jpg, ch03-fig1.png, ...
 ├── 01-cover.md                   ← --strip-frontmatter 指定時はスキップ
 ├── 02-序.md
-├── 03-chapter-01.md              ← H1 = NCX の章ラベル
+├── 03-chapter-01.md              ← H1 = NCX の章ラベル、`![](images/...)` 参照
 ├── 04-chapter-02.md
 ...
 ```
 
 章ファイル名：`NN-<slugified-label>.md`（CJK は保持）。サブディレクトリ名は
 `<slug-of-title>`、入力ファイル名が kobodl 命名 pattern にマッチすれば
-`<slug-of-title>-<id8>`。
+`<slug-of-title>-<id8>`。章 Markdown 内の画像は inline GFM 構文
+`![alt](images/<file>)` で参照されます。
 
 ## Token 予算の目安
 

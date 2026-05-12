@@ -73,9 +73,9 @@ if [[ ! -f "$TSUNDOKU_KOBO_CONFIG" ]]; then
     exit 3
 fi
 
-mkdir -p "$OUTPUT_DIR"
+tsundoku_ensure_dirs
+mkdir -p "$OUTPUT_DIR"          # may differ from TSUNDOKU_DOWNLOADS via --output-dir override
 export TMPDIR="$TSUNDOKU_TMPDIR"
-mkdir -p "$TSUNDOKU_TMPDIR"
 
 # Collect IDs: positional first, then stdin (only if stdin is a pipe/file)
 IDS=("${POSITIONAL[@]}")

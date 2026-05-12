@@ -1,0 +1,15 @@
+# Dogfood corpus — never commit real contracts.
+# See docs/dogfood-procedure.md for the hand-grading workflow.
+docs/dogfood-corpus/
+
+# Per-user runtime artefacts produced by legal-contract-review.
+legal-outputs/
+
+# Tool internals produced by legal-toolkit at runtime.
+.legal-toolkit/
+
+# Python bytecode (validated-skill-folder-structure hook also blocks
+# nested __pycache__/ inside skill subfolders; PYTHONDONTWRITEBYTECODE=1
+# is recommended for test invocations).
+__pycache__/
+*.pyc

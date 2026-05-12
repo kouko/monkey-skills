@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kouko/monkey-skills/legal-toolkit/output-schema-memo-business.json",
+  "title": "memo-business.md output schema (legal-contract-review)",
+  "description": "Business-stakeholder version of the memo — 3-sentence Why/What/What-if translation. Designed for the BD/sales/CEO reader who has 30 seconds. Always in zh-TW.",
+  "type": "object",
+  "required": ["contract_metadata", "summary"],
+  "properties": {
+    "contract_metadata": {
+      "$ref": "output-schema-issues.json#/properties/contract_metadata"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["why", "what", "what_if"],
+      "properties": {
+        "why": {"type": "string", "description": "1 sentence — why this contract matters to the business right now"},
+        "what": {"type": "string", "description": "1 sentence — what we're agreeing to (the substance)"},
+        "what_if": {"type": "string", "description": "1 sentence — what could go wrong and how badly"}
+      }
+    },
+    "top_3_business_impacts": {
+      "type": "array",
+      "description": "v0.3.1+: per L7 Step 9.4 headline rule — entries MUST be severity ∈ {yellow, red} with concrete quantifiable downside AND actionable in 30/60/90 days. NEVER ordered by playbook structure.",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["impact_zh_tw", "severity"],
+        "properties": {
+          "impact_zh_tw": {"type": "string", "description": "business-translated impact statement"},
+          "severity": {"type": "string", "enum": ["yellow", "red"], "description": "v0.3.1+: green findings go to favorable_position_notes, not Top-3"},
+          "related_clauses": {"type": "array", "items": {"type": "string", "description": "clause_id refs"}},
+          "quantifiable_downside_evidence": {"type": "string", "description": "v0.3.1+: dollar / month / customer / regulatory figure justifying Top-3 inclusion"}
+        }
+      }
+    },
+    "favorable_position_notes": {
+      "type": "array",
+      "description": "v0.3.1+: per L7 Step 1.5 stance-asymmetry pass — findings whose underlying logic is 'missing best-practice default' but which PROTECT our stance (stance=ours). Surfaces as '✓ 對我方有利' box in memo-business.md.",
+      "items": {
+        "type": "object",
+        "required": ["clause_id", "note_zh_tw"],
+        "properties": {
+          "clause_id": {"type": "string"},
+          "note_zh_tw": {"type": "string"}
+        }
+      }
+    }
+  }
+}
