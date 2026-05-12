@@ -132,7 +132,14 @@ E flow:
         │
         ├── R: name current spin + plausible flip-trigger
         └── B: name target dangle + delay magnitude
+        │
+        v
+  emit annotated Mermaid CLD (R/B `%%` per loop + dynamic prediction caption — Step 11)
 ```
+
+**Input contract**: in v0.3+, the typical input is a **Mermaid CLD block** produced by `cld-craft` Step 11. Parse edges directly from the `-->|S|` / `-->|O|` literals; do NOT re-derive the labels (`cld-craft` already enforced Rule 8 — labels are committed at draw-time, not as a cleanup pass). When input is a paper / whiteboard sketch instead, run the Tier-1 / Tier-2 / regime tests below before reaching Step 6.
+
+**MANDATORY — READ before emitting Step 11 Mermaid output**: [`../cld-craft/references/cld-mermaid-emit.md`](../cld-craft/references/cld-mermaid-emit.md) (~280 lines) — the canonical CLD Mermaid convention. This skill consumes Mermaid CLDs from `cld-craft` and emits annotated Mermaid back; staying conformant matters.
 
 When this skill activates, follow these steps:
 
@@ -167,6 +174,13 @@ When this skill activates, follow these steps:
    - Completion criterion: target named, delay roughly quantified.
 
 10. **State the dynamic prediction in one sentence.** "This is an R-loop currently spinning virtuous; barring trigger X it will continue to compound at roughly Y% per period." OR "This is a B-loop seeking target T with delay D; expect oscillation of amplitude A."
+
+11. **Emit the annotated Mermaid CLD.** This is the deliverable. Take the input Mermaid block (if any) and add / refresh the per-loop `%%` annotation lines per [`../cld-craft/references/cld-mermaid-emit.md`](../cld-craft/references/cld-mermaid-emit.md):
+    - One `%%` line per closed loop: `%% <R|B>-loop (<spin if R>): <node1> → <node2> → ... → <node1> — O-count = <N> → <reinforcing|balancing>`
+    - Apply the R/B color palette (warm for R, cool for B, gray for dangles) if not already applied
+    - Below the Mermaid block, append a Markdown caption with: (a) Step-10 dynamic prediction in one sentence per loop, (b) flip-trigger candidates for R-loops, (c) target dangle + delay magnitude for B-loops
+    - Completion criterion: a single self-contained Mermaid block with all loop annotations + a Markdown caption capturing Step-10 predictions. Downstream `limits-to-growth-take-the-brakes-off`, `variance-target-action-template`, or `cld-craft` Rule-7 fuzzy intervention can consume this directly.
+    - When no Mermaid input existed (paper / whiteboard case): produce a fresh Mermaid block following `cld-craft/references/cld-mermaid-emit.md` exactly, with R/B annotations already in place from Steps 7-10.
 
 ## B — Boundary ★
 
