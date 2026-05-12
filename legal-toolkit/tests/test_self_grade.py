@@ -591,3 +591,125 @@ def test_ans_05_override_missing_in_legal_md_fails(self_grade, tmp_path):
     report = self_grade.grade(data, out)
     failed = {f["criterion_id"] for f in report["failed_criteria"]}
     assert "ANS-05" in failed
+
+
+# ----------------------------------------------------------- v0.3.5 legal.md back-fill
+
+
+def test_backfill_legal_md_qa_marker_block(self_grade, tmp_path):
+    """v0.3.5+ Phase 1.9: self_grade.py back-fills legal.md §QA marker block in-place."""
+    import json as _json
+
+    out = tmp_path / "out"
+    out.mkdir()
+    legal_md = out / "legal.md"
+    legal_md.write_text(
+        "# legal.md\n\n"
+        + OVERRIDE_BLOCK
+        + "\n\n"
+        + "## QA — self-grade\n"
+        + "<!-- self_grade:start -->\n"
+        + "(stub text — will be replaced)\n"
+        + "<!-- self_grade:end -->\n\n"
+        + DISCLAIMER_BLOCK,
+        encoding="utf-8",
+    )
+    (out / "business.md").write_text(
+        "# business.md\n\nbody\n" + DISCLAIMER_BLOCK, encoding="utf-8"
+    )
+
+    findings_path = tmp_path / "findings.json"
+    findings_path.write_text(
+        _json.dumps(_golden_findings(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    rc = self_grade.main(
+        ["--input", str(findings_path), "--outputs-dir", str(out)]
+    )
+    assert rc == 0
+
+    # legal.md §QA marker block now back-filled with live scores
+    new_md = legal_md.read_text(encoding="utf-8")
+    assert "<!-- self_grade:start -->" in new_md
+    assert "<!-- self_grade:end -->" in new_md
+    assert "(stub text — will be replaced)" not in new_md
+    assert "**answer_score**" in new_md
+    assert "**source_score**" in new_md
+    assert "deterministic checks PASS" in new_md or "Failed criteria" in new_md
+
+
+def test_backfill_skipped_when_markers_absent(self_grade, tmp_path, capsys):
+    """v0.3.5+: if legal.md has no self_grade markers, back-fill is gracefully skipped."""
+    import json as _json
+
+    out = tmp_path / "out"
+    _write_outputs(out)  # legal.md from helper has NO markers
+    findings_path = tmp_path / "findings.json"
+    findings_path.write_text(
+        _json.dumps(_golden_findings(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    legal_before = (out / "legal.md").read_text(encoding="utf-8")
+    rc = self_grade.main(
+        ["--input", str(findings_path), "--outputs-dir", str(out)]
+    )
+    assert rc == 0
+    legal_after = (out / "legal.md").read_text(encoding="utf-8")
+    # legal.md unchanged because no markers to back-fill
+    assert legal_before == legal_after
+
+    # warning emitted to stderr
+    captured = capsys.readouterr()
+    assert "back-fill skipped" in captured.err
+
+
+def test_backfill_with_failed_criteria_renders_list(self_grade, tmp_path):
+    """v0.3.5+: when failed_criteria non-empty, back-fill block includes the list."""
+    import json as _json
+
+    out = tmp_path / "out"
+    out.mkdir()
+    legal_md = out / "legal.md"
+    legal_md.write_text(
+        "# legal.md\n\n"
+        + OVERRIDE_BLOCK
+        + "\n\n## QA — self-grade\n"
+        + "<!-- self_grade:start -->\nstub\n<!-- self_grade:end -->\n\n"
+        + DISCLAIMER_BLOCK,
+        encoding="utf-8",
+    )
+    (out / "business.md").write_text(
+        "# business.md\n\nbody\n" + DISCLAIMER_BLOCK, encoding="utf-8"
+    )
+
+    findings_path = tmp_path / "findings.json"
+    data = _golden_findings()
+    data["findings"][0]["source_type"] = "external"  # induce ANS-02 fail
+    findings_path.write_text(
+        _json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    rc = self_grade.main(
+        ["--input", str(findings_path), "--outputs-dir", str(out)]
+    )
+    assert rc == 1  # had failure
+    new_md = legal_md.read_text(encoding="utf-8")
+    assert "**Failed criteria**" in new_md
+    assert "ANS-02" in new_md
+
+
+def test_backfill_helper_raises_on_missing_markers(self_grade):
+    """v0.3.5+: _backfill_legal_md_qa raises ValueError when markers absent."""
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as fp:
+        fp.write("# legal.md\n\nNo markers here.\n")
+        path = Path(fp.name)
+
+    try:
+        with pytest.raises(ValueError, match="missing self_grade markers"):
+            self_grade._backfill_legal_md_qa(path, {"answer_score": {"passed": 1, "total": 1}, "source_score": {"passed": 1, "total": 1}, "failed_criteria": []})
+    finally:
+        path.unlink()

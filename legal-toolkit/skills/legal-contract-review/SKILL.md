@@ -244,6 +244,8 @@ never collapsed (Harvey BigLaw Bench convention):
 
 Failed criteria are listed explicitly in `findings.json#self_grade.failed_criteria` and rendered in `legal.md §QA — self-grade` summary section — no rounding, no averaging, no hiding. v0.3.4+ (Phase 1.8): the standalone `self-grade.md` file is gone; results live in findings.json + legal.md QA summary.
 
+**v0.3.5+ Phase 1.9 marker rule**: `legal.md §QA — self-grade` section MUST contain `<!-- self_grade:start -->` and `<!-- self_grade:end -->` HTML comment markers. The LLM emits the section with stub text between the markers; `self_grade.py` Step 10.4 back-fills the marker block in-place with live scores. This closes the v0.3.4 stale-render bug: single source of truth (findings.json#self_grade) drives both the JSON block AND the legal.md prose; impossible for them to drift.
+
 Phase 1 ships the rubric as protocol stubs at
 [`checklists/answer-criteria.md`](checklists/answer-criteria.md) and
 [`checklists/source-criteria.md`](checklists/source-criteria.md);

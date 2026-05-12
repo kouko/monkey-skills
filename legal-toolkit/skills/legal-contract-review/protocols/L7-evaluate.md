@@ -701,13 +701,22 @@ DO NOT order by playbook structure (confidentiality / governing-law / ...)
 
 ---
 
-### Step 10 — Render outputs (v0.3.4+ Phase 1.8 consolidation)
+### Step 10 — Render outputs (v0.3.5+ Phase 1.9 back-fill approach)
 
 After all per-clause evaluation completes and `findings.json` is finalised, render the **3 outputs**:
 
-#### 10.1 — Update findings.json (canonical SoT)
+```
+10.1 Update findings.json (without self_grade block)
+10.2 Render legal.md (with self_grade marker comments — back-filled by 10.4)
+10.3 Render business.md
+10.4 Run self_grade.py → updates findings.json#self_grade AND back-fills legal.md §QA marker block in-place
+```
 
-Write `findings.json` to `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/findings.json`. This is the machine-readable source; conforms to `assets/output-schema-findings.json`. All structured data lives here including the new `self_grade` block (populated by `scripts/self_grade.py` after rendering).
+**v0.3.5 Phase 1.9 fix**: v0.3.4 had self_grade.py running AFTER legal.md render, but only updating findings.json — leaving legal.md §QA section with stale placeholder text or out-of-sync scores. The audit caught this on both NDA + SaaS v0.3.4 runs. v0.3.5 ships the **back-fill approach**: legal.md emits a stub QA section with `<!-- self_grade:start -->` ... `<!-- self_grade:end -->` markers, and self_grade.py mutates legal.md in-place during Step 10.4 to replace the marker block with live scores. Single source of truth (findings.json#self_grade) drives both the JSON block AND the legal.md prose; impossible for them to drift.
+
+#### 10.1 — Update findings.json (canonical SoT, no self_grade yet)
+
+Write `findings.json` to `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/findings.json`. This is the machine-readable source; conforms to `assets/output-schema-findings.json`. All structured data lives here. **`self_grade` block is added in Step 10.4.**
 
 #### 10.2 — Render legal.md (lawyer-facing)
 
@@ -743,12 +752,15 @@ Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/legal.md` with sections in this o
 - (per findings.json#favorable_position_notes[])
 
 ## QA — self-grade
-- answer N/M + source N/M (populated by self_grade.py findings.json#self_grade block)
-- Failed criteria (if any)
+<!-- self_grade:start -->
+(待 self_grade.py 於 Step 10.4 back-fill — 此區塊由 self_grade.py 自動更新)
+<!-- self_grade:end -->
 
 ---
 Mandatory Disclaimer footer
 ```
+
+**v0.3.5 marker rule**: legal.md §QA section MUST contain the literal `<!-- self_grade:start -->` and `<!-- self_grade:end -->` HTML comment markers. Stub text between them is ignored — self_grade.py replaces ALL content between the markers (exclusive of the markers themselves) with live data during Step 10.4.
 
 #### 10.3 — Render business.md (non-lawyer-facing)
 
@@ -777,7 +789,7 @@ Write `<cwd>/legal-outputs/<YYYY-MM-DD>-<slug>/business.md`. **NO override banne
 Mandatory Disclaimer footer
 ```
 
-#### 10.4 — Run self_grade.py (in-place update)
+#### 10.4 — Run self_grade.py (final pass — in-place updates to BOTH findings.json AND legal.md)
 
 ```bash
 uv run skills/legal-contract-review/scripts/self_grade.py \
@@ -785,7 +797,13 @@ uv run skills/legal-contract-review/scripts/self_grade.py \
   --outputs-dir <outputs-dir>
 ```
 
-Default behavior (v0.3.4+): the script updates `findings.json#self_grade` block in-place and prints summary to stdout. NO separate `self-grade.md` file is created. Legal.md §QA section pulls from `findings.json#self_grade` at render time.
+v0.3.5+ default behavior:
+1. Grade against findings.json + .md files (ANS-05 banner + ANS-06 Disclaimer now checkable since legal.md + business.md exist)
+2. **Update `findings.json#self_grade` block** with grade results (in-place)
+3. **Back-fill `legal.md` §QA section** between `<!-- self_grade:start -->` and `<!-- self_grade:end -->` markers with formatted live scores (in-place mutation)
+4. Print summary to stdout
+
+NO separate `self-grade.md` file is created. After this step, the single SoT is findings.json#self_grade; legal.md §QA is a derived rendering, guaranteed in sync because self_grade.py owns both writes.
 
 ## Output contract
 

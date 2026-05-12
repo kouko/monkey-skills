@@ -613,6 +613,55 @@ def grade(findings_data: dict, outputs_dir: Path, external_share: bool = False) 
     return report
 
 
+_LEGAL_MD_QA_MARKER_START = "<!-- self_grade:start -->"
+_LEGAL_MD_QA_MARKER_END = "<!-- self_grade:end -->"
+
+
+def _format_legal_md_qa_block(report: dict) -> str:
+    """v0.3.5+: format the body that goes between the legal.md §QA marker comments."""
+    ans = report["answer_score"]
+    src = report["source_score"]
+    lines = [
+        f"- **answer_score**: {ans['passed']} / {ans['total']} (deterministic tier)",
+        f"- **source_score**: {src['passed']} / {src['total']} (deterministic tier)",
+    ]
+    if report.get("failed_criteria"):
+        lines.append("")
+        lines.append("**Failed criteria**:")
+        for fc in report["failed_criteria"]:
+            lines.append(f"- `{fc['criterion_id']}` ({fc['domain']}): {fc['explanation_zh_tw']}")
+    else:
+        lines.append("- All deterministic checks PASS.")
+    lines.append("")
+    lines.append("> 完整 per-criterion results 見 `findings.json#self_grade`；本區塊由 `self_grade.py` 自動 back-fill。")
+    return "\n".join(lines)
+
+
+def _backfill_legal_md_qa(legal_md_path: Path, report: dict) -> bool:
+    """v0.3.5+: replace content between self_grade:start/end markers in legal.md in-place.
+
+    Returns True iff a substitution was made. Raises ValueError when markers
+    are missing or appear in wrong order.
+    """
+    content = legal_md_path.read_text(encoding="utf-8")
+    if _LEGAL_MD_QA_MARKER_START not in content or _LEGAL_MD_QA_MARKER_END not in content:
+        raise ValueError(
+            f"legal.md missing self_grade markers (start: {_LEGAL_MD_QA_MARKER_START!r}, end: {_LEGAL_MD_QA_MARKER_END!r})"
+        )
+    start_idx = content.index(_LEGAL_MD_QA_MARKER_START) + len(_LEGAL_MD_QA_MARKER_START)
+    end_idx = content.index(_LEGAL_MD_QA_MARKER_END)
+    if end_idx < start_idx:
+        raise ValueError(
+            f"legal.md marker order inverted (end {end_idx} before start {start_idx})"
+        )
+    body = "\n" + _format_legal_md_qa_block(report) + "\n"
+    new_content = content[:start_idx] + body + content[end_idx:]
+    if new_content == content:
+        return False
+    legal_md_path.write_text(new_content, encoding="utf-8")
+    return True
+
+
 def render_markdown(report: dict, metadata: dict | None = None) -> str:
     """Render the report as a self-grade.md document."""
     md_lines = ["# self-grade.md", ""]
@@ -710,14 +759,23 @@ def main(argv: list[str] | None = None) -> int:
         md = render_markdown(report, metadata=findings_data.get("contract_metadata"))
         sys.stdout.write(md)
     else:
-        # v0.3.4+ (Phase 1.8): write report into findings.json#self_grade block (in-place update)
-        # instead of producing a separate self-grade.md file. Preserves single-SoT canon
-        # while letting downstream readers grep findings.json for grade results.
+        # v0.3.4+ (Phase 1.8): write report into findings.json#self_grade block (in-place update).
+        # v0.3.5+ (Phase 1.9): ALSO back-fill legal.md §QA marker block in-place. The dual write
+        # closes the v0.3.4 stale-render bug — both data + prose now derive from a single grade pass.
         findings_data["self_grade"] = report
         args.input.write_text(
             json.dumps(findings_data, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
+
+        legal_md_path = args.outputs_dir / "legal.md"
+        legal_md_backfilled = False
+        if legal_md_path.exists():
+            try:
+                legal_md_backfilled = _backfill_legal_md_qa(legal_md_path, report)
+            except (OSError, ValueError) as e:
+                print(f"\n⚠️  legal.md back-fill skipped: {e}", file=sys.stderr)
+
         print(
             f"answer_score: {report['answer_score']['passed']}/{report['answer_score']['total']}"
         )
@@ -731,6 +789,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print("\nAll deterministic checks PASS.")
         print(f"\nUpdated {args.input}#self_grade block.")
+        if legal_md_backfilled:
+            print(f"Back-filled {legal_md_path} §QA between <!-- self_grade:start --> markers.")
     return 0 if not report["failed_criteria"] else 1
 
 
