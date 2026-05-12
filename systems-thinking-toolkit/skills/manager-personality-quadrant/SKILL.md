@@ -86,17 +86,36 @@ When this skill activates, follow these steps. **The ordering is deliberate: the
 
 1. **Fix the analysis layer before touching the framing layer.** Write down (or freeze) the underlying analysis — the scenarios, the levers, the cascade — in a form independent of any executive's style. This is the *constant* that all subsequent framing variants will share. Completion: a single artefact (e.g., the raw scenario set + lever map) declared the canonical analysis; any later question of the form "should we change X to please [exec]?" must be answered against this anchor (analysis change requires evidence, not preference).
 
-2. **Identify the leader's quadrant from observable behavior.** Use
-   the two axes:
-   - *Predict vs explore axis:* does the leader behave as if the future
-     is knowable (commits to a single 5-year number, uses "we will"
-     language, dismisses uncertainty) or as if it is unknowable (uses
-     "if/when X" framing, asks for sensitivity ranges, comfortable
-     with "we don't know")?
-   - *Control vs empower axis:* does the leader make decisions
-     centrally or push them to teams with autonomy?
-   Cross the two for the quadrant. Completion: an observable-behavior-
-   anchored quadrant assignment, with at least 2 cited behaviors per axis.
+2. **Identify the leader's quadrant from observable behavior.** Read
+   the two axes off the following signal table — do NOT decide by
+   gut. At least 2 cues per axis must be cited before assigning a
+   quadrant.
+
+   | Axis | Reading | Observable cues / verbatim quote patterns |
+   |---|---|---|
+   | Predict | high (treats future as knowable) | "When will X happen?", "Show me the gantt", "Let's commit to the number", uses "we will" language, dismisses uncertainty ranges |
+   | Predict | low (comfortable with ambiguity) | "Let's explore", "It depends", "We'll see", uses "if/when X" framing, asks for sensitivity ranges, says "we don't know" out loud |
+   | Control | high (top-down, prescriptive) | "I'll decide", "Follow the playbook", "Centralize this", makes decisions in the room without delegation, prescribes process |
+   | Control | low (delegating, empowering) | "What do YOU think?", "You own this", "Distribute the decision", pushes decisions to teams with autonomy, asks for team recommendation before deciding |
+
+   Quadrant = combination of the two axis readings:
+   - (predict-high, control-high) = **Gods**
+   - (predict-low, control-high) = **Gamblers**
+   - (predict-high, control-low) = **Grinders**
+   - (predict-low, control-low) = **Guides**
+
+   **Guides is a structural assignment, not an outcome judgment.**
+   The book's "Guides get it right" framing is circular (Boundary
+   surfaces this). For the purpose of this skill, Guides =
+   (predict-low, control-low) — comfortable with ambiguity AND
+   delegates decisions. Whether a Guides-quadrant leader "gets it
+   right" is observed AFTER the fact; the quadrant assignment is
+   determined BEFORE by the two axis cues above. Do not retro-fit
+   the quadrant from outcomes.
+
+   Completion: an observable-behavior-anchored quadrant assignment
+   with at least 2 cited cues per axis, derived from the table above
+   before any outcome is known.
 
 3. **Predict the artefact-reception failure mode.**
    - Gods: will reject plural futures as "in the way"; will read the
@@ -119,10 +138,34 @@ When this skill activates, follow these steps. **The ordering is deliberate: the
    - **Gamblers:** an expected-value calculation across weighted scenarios.
    - **Grinders:** a "5-step framework" wrapper around the same content.
    - **Guides:** the native plural-futures exploration.
+
+   **Framing-vs-analysis self-check (run BEFORE shipping the adapted
+   artefact).** Ask each question; any "yes" on an analysis-change
+   question means HALT — you are not framing, you are re-analysing,
+   which violates the Step-1 anchor.
+
+   - Did I change a NUMBER in my analysis (revenue projection, scenario
+     probability, lever weight, cost estimate)? → That's an **analysis
+     change**, not a framing change. **HALT** — restore the number or
+     justify the change against new evidence, not against executive
+     preference.
+   - Did I change the WORDS I use to describe the same number (e.g.,
+     "30% downside" → "70% confidence in upside")? → That's a
+     **framing change**. **Proceed.**
+   - Did I change WHICH numbers I show first (re-ordering the same
+     content for the quadrant's reading preference)? → **Framing
+     change. Proceed.**
+   - Did I change WHAT I conclude from the numbers (the recommendation
+     itself differs from what the analysis supports)? → That's an
+     **analysis change**. **HALT** — either the analysis was wrong
+     (fix it transparently, not via framing) or the framing is being
+     used to smuggle in a different conclusion.
+
    The underlying analysis (Step 1's anchor) is unchanged. Completion:
    the artefact has two visible layers — the constant analysis and the
    quadrant-adapted framing, presented separately so the audit trail
-   back to the canonical analysis stays intact.
+   back to the canonical analysis stays intact, AND the four-question
+   self-check above answered explicitly before delivery.
 
 ## B — Boundary ★
 
