@@ -33,7 +33,7 @@ privacy policy referenced) or are addressed in the breach notification:
 本 checklist 採用 §22 安全基準）。
 
 - [ ] §12 通報對象 — 已寄送個人資料保護委員會籌備處 (PDPC 籌備處，法務部)？ — **{{verdict}}**
-- [ ] §12 通報主體 — 通報文以資料控管主體（個資法 §4 委託者）名義發出？ — **{{verdict}}**
+- [ ] §12 通報主體 — 通報文以委託者（個資法 §4）名義發出？ — **{{verdict}}**
 - [ ] 施行細則 §22 — 通報用語採「即時」基準 (incident_datetime → notification_datetime 延遲已說明)？ — **{{verdict}}**
 - [ ] §12 通報文齊備 — 含事故時間 / 影響範圍 / 採取措施 / DPO 聯絡 4 大要素？ — **{{verdict}}**
 

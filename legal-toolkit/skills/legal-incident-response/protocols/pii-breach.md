@@ -103,7 +103,6 @@ groups:
 
 **Communication**:
 - `{{customer_service_contact}}` / `{{customer_service_hours}}` / `{{customer_account_url}}` — for 當事人通知 footer
-- `{{document_reference_number}}` — 公文字號 (manual or generated; see Step 4d)
 
 **Responsibilities (incident record §責任分工 table)**:
 - `{{incident_commander}}` — 事件指揮官 (typically CEO 或指定代理人)
@@ -188,6 +187,11 @@ Consolidate the 3 rendered templates + timeline into a single `legal.md`:
 ## §7 TBD migration tracker
 （from compliance checklist TBD entries this session）
 ```
+
+**Note**: Leave §6 (Compliance Checklist) and §7 (TBD migration tracker) as
+placeholder headings during Step 6. They are filled by Step 8 (COMPLY_CHECK)
+and Step 8's TBD summarization sub-step. Step 6 produces the legal.md
+skeleton; Step 8 fills the verdict + migration content.
 
 The §時間軸 heading text must match exactly: `## §時間軸` (the grader greps
 for this byte sequence).
