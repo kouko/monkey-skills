@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "from_skill": "legal-incident-response",
+  "to_skill": "legal-contract-review",
+  "contract_path": "{{contract_path}}",
+  "breach_type": "{{breach_type}}",
+  "alleged_breach_clauses": "{{alleged_breach_clauses}}",
+  "breach_date": "{{breach_date}}",
+  "discovery_date": "{{discovery_date}}",
+  "counterparty": {
+    "name": "{{counterparty_name}}",
+    "company_id": "{{counterparty_company_id}}",
+    "contact_email": "{{counterparty_contact_email}}"
+  },
+  "damages_estimate_twd": "{{damages_estimate_twd}}",
+  "urgency_level": "{{urgency_level}}",
+  "session_ref": "{{session_ref}}",
+  "notes": "{{notes}}"
+}
