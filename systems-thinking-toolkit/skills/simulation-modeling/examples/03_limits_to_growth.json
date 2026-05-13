@@ -1,0 +1,20 @@
+{
+  "name": "limits-to-growth",
+  "_comment": "Coupled R+B: logistic equation dP/dt = r*P*(1 - P/K). Sherwood's classic S-curve. Analytical inflection at P = K/2. With K=1000, P0=10, r=0.2, inflection time t* = ln((K-P0)/P0) / r = ln(99)/0.2 ≈ 22.97.",
+  "duration": 60,
+  "dt": 0.1,
+  "stocks": {
+    "Population": 10
+  },
+  "parameters": {
+    "intrinsic_rate": 0.2,
+    "CarryingCapacity": 1000
+  },
+  "flows": {
+    "NetGrowth": {
+      "to": "Population",
+      "equation": "intrinsic_rate * Population * (1 - Population / CarryingCapacity)"
+    }
+  },
+  "outputs": ["Population"]
+}

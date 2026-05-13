@@ -1,0 +1,35 @@
+{
+  "name": "predator-prey",
+  "_comment": "Lotka-Volterra. dRabbits/dt = a*R - b*R*F; dFoxes/dt = c*R*F - d*F. Classic oscillation around equilibrium (R*=d/c, F*=a/b). Parameters chosen for clean ~6-unit period oscillation visible within duration=40.",
+  "duration": 40,
+  "dt": 0.05,
+  "stocks": {
+    "Rabbits": 40,
+    "Foxes": 9
+  },
+  "parameters": {
+    "rabbit_growth": 1.0,
+    "predation_rate": 0.1,
+    "fox_efficiency": 0.075,
+    "fox_death": 1.5
+  },
+  "flows": {
+    "RabbitGrowth": {
+      "to": "Rabbits",
+      "equation": "rabbit_growth * Rabbits"
+    },
+    "Predation": {
+      "from": "Rabbits",
+      "equation": "predation_rate * Rabbits * Foxes"
+    },
+    "FoxGrowth": {
+      "to": "Foxes",
+      "equation": "fox_efficiency * Rabbits * Foxes"
+    },
+    "FoxDeath": {
+      "from": "Foxes",
+      "equation": "fox_death * Foxes"
+    }
+  },
+  "outputs": ["Rabbits", "Foxes"]
+}
