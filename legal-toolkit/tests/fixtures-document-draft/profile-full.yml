@@ -1,0 +1,28 @@
+schema_version: 1
+company_name: 範例股份有限公司
+company_name_en: Example Inc.
+company_id: "12345678"
+registered_address: 台北市信義區信義路五段7號
+general_contact:
+  email: contact@example.com
+  phone: +886-2-1234-5678
+dpo:
+  name: 王小明
+  email: dpo@example.com
+business_scope:
+  - SaaS 雲端服務
+  - 訂閱式軟體
+cross_border_destinations:
+  - country: US
+    purpose: AWS 雲端託管
+  - country: JP
+    purpose: 客服外包
+security_measures:
+  - TLS 1.3 in transit
+  - AES-256 at rest
+  - Annual ISO 27001 audit
+governing_law:
+  default_jurisdiction: 中華民國
+  preferred_court: 臺灣臺北地方法院
+last_updated: "2026-05-13"
+maintained_by: 法務部

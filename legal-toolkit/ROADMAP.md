@@ -27,7 +27,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.8      0.3.4   1d      3 (clean)    output consolidation 7→3 (legal.md + business.md + findings.json)  ✅ DONE
 1.9      0.3.5   1d      3 (patch)    audit-driven polish (P0a/b/c) + 3 NDA-native fallbacks (C)  ✅ DONE
 1.10     0.3.6   0.5d    3 (plumbing) legal-sources.json SSOT-and-functional-copy + CI drift gate  ✅ DONE
-2        0.4.0   10d     5            Template + Runbook cluster
+2        0.4.0   10d     5            Template + Runbook cluster                    ✅ PARTIAL (SP3a done; SP3b → v0.4.1)
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
 4        0.6.0   10d     9            Tracker cluster
@@ -45,7 +45,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 | 0a | `using-legal-toolkit` | router | Model System | 1 | MVP |
 | 0b | `legal-playbook-author` | utility (cross-cluster) | Workflow | 1 | MVP |
 | 1 | `legal-contract-review` | 📋 Playbook | playbook (七層 + TW overlay) | 1 | MVP |
-| 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | planned |
+| 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | ✅ active (v0.4.0) |
 | 3 | `legal-incident-response` | 🚨 Runbook | NIST IR | 2 | planned |
 | 4 | `legal-issue-spot` | 🔍 IRAC | issue 矩陣 + 構成要件涵攝 | 3 | planned |
 | 5 | `legal-research` | 🔍 IRAC | IRAC + 請求權基礎 + Agent | 3 | planned |
@@ -509,23 +509,32 @@ Phase 2 增加兩個 sibling skill（`legal-document-draft` + `legal-incident-re
 
 ---
 
-## Phase 2 — Template + Runbook（v0.4.0，10 天）
+## Phase 2 — Template + Runbook（v0.4.0 部分 ship 2026-05-13；v0.4.1 IR pending）
 
-**Scope**：+2 skill → 累計 **5**。
+**Scope**: 累計 4 skills (router + playbook-author + contract-review + document-draft); legal-incident-response delayed to v0.4.1 per SP3 sequenced ship decision (B path) after SP2 PDPA verify reframed IR's 72hr-timer-centric design.
 
-### 交付物
+### v0.4.0 (SP3a) ✅ **DONE 2026-05-13**
 
-| Skill | 主要模組 |
-|---|---|
-| `legal-document-draft` | SKILL.md / 4 mode protocols（privacy / tos / dpa / nda）/ `assets/template-{privacy,tos,dpa,nda}.md`（含 GDPR + 個資法 2025/11 hardcode）/ `checklists/compliance-{pdpc,gdpr}.md` / 跟 `.legal-toolkit/config.yml` profile 整合（公司資訊不重問）|
-| `legal-incident-response` | SKILL.md / protocols/{detect,analyze,contain,recover}.md（NIST SP 800-61 r3）/ `assets/template-{pdpc-notification,authority-reply,breach-remedy}.md` / 72hr timer 機制（Claude Code mode 顯示倒數；Cowork mode 用 deadline marker）|
-| Router 更新 | `using-legal-toolkit` 識別表 active 標記 + Q2/Q3 dispatch path |
+`legal-document-draft` — 4 modes (privacy / tos / dpa / nda), skeleton + LLM fill, 2-file audience-shaped output, hand-curated per-mode checklists with statute citations, deterministic structural grader, Path A (current Taiwan law).
+
+Decisions locked in spec brainstorm Q2-Q9: 4 modes / skeleton+LLM / 2-file output / playbook variable defaults / profile at legal-playbook/profile.yml / hardcode URLs / safe defaults + TBD tracking / heavy hand-curated checklists / deterministic structural self-grade.
+
+Cross-skill: shares `legal-playbook/confidentiality.md` stance with `legal-contract-review nda`; uses `legal-playbook/profile.yml` as company identity SoT (future SP3b / corp-governance / dd-quickscan all read this).
+
+Full design + plan:
+- spec: `docs/superpowers/specs/2026-05-13-legal-toolkit-sp3a-document-draft-design.md`
+- plan: `docs/superpowers/plans/2026-05-13-legal-toolkit-sp3a-document-draft.md`
+
+### v0.4.1 (SP3b) 🔜 pending — `legal-incident-response`
+
+IR skill reframed from obsidian SoT §3.5's 72hr-timer-centric design after SP2 found 72hr was GDPR contamination. New scope: 事件分流 + 法源引用器 + 通報文起草 (3-path classifier: 個資外洩 / 主管機關函覆 / 違約; emits 內部記錄 + 通報文 with safe-default placeholders). To brainstorm + spec + ship after v0.4.0 dogfood feedback.
 
 ### Quality gate
 
-- draft privacy policy 跑 PDPC 2025/11 checklist ≥ 90% pass
-- IR 個資外洩演練從 trigger 到輸出 PDPC 通報文 < 30 秒
-- 兩個 skill 都正確讀 `.legal-toolkit/config.yml` profile 不重問
+- draft privacy / ToS / DPA / NDA modes all produce passing compliance.md
+- `grade_draft.py` exits 0 across modes with synthetic fixtures
+- `load_profile.py` validates profile.yml against schema
+- 184 + 10 (4 T-P + 6 T-G) = ~194 tests green
 
 ---
 
@@ -668,7 +677,8 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.3.4 | Phase 1.8 output consolidation | 「7 output files → 3：legal.md（法務）+ business.md（非法務）+ findings.json（machine + self_grade）；167/167 tests；banner 縮到 legal.md only」 |
 | v0.3.5 | Phase 1.9 audit polish + NDA fallback | 「legal.md §QA marker back-fill / business.md redline light-touch / [!danger] vs [!warning] split / 3 NDA-native fallback baselines (4→7 runtime cold-start)；171/171 tests」 |
 | v0.3.6 | Phase 1.10 plumbing refactor | 「legal-sources.json SSOT-and-functional-copy（plugin-level scripts/canonical/ + distribute.py + verify-drift.py CI gate）；零 runtime 行為改變；unblocks Phase 2 sibling skills；184/184 tests」 |
-| v0.4.0 | Phase 2 ship | 「合約 + 起草 + 應變」 |
+| v0.4.0 | Phase 2 (partial) — legal-document-draft ship | 「4 mode 起草：隱私權政策 / 服務條款 / DPA / NDA。Path A 對現行台灣法務實。Skeleton + LLM fill；hand-curated 合規 checklist；deterministic 結構性 grading；profile.yml 共用公司身份。IR 延後到 v0.4.1。」 |
+| v0.4.1 | Phase 2 (complete) — legal-incident-response ship | 「事件分流 + 法源引用器 + 通報文起草 (3-path: 個資外洩 / 主管機關函覆 / 違約)。SP2 reframe 後不再有 72hr GDPR timer。」 |
 | v0.5.0 | Phase 3 ship | 「+ 諮詢 + 研究」 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
 | v0.9.0 | Phase 5 ship | 「+ 公司治理 + DD」(complete features) |
