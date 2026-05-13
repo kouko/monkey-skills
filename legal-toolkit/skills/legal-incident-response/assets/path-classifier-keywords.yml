@@ -1,0 +1,67 @@
+# Deterministic keyword bank for path classification.
+# scripts/classify_path.py reads this; LLM (in protocols/classify-path.md)
+# judges confidence from matched signals + full description context.
+#
+# To extend a path's signal: add to high_confidence_keywords below.
+# Pure substring match (case-insensitive); no regex.
+
+pii-breach:
+  high_confidence_keywords:
+    - 外洩
+    - leak
+    - breach
+    - hack
+    - 駭客
+    - 異常存取
+    - unauthorized access
+    - 用戶資料
+    - 客戶資料
+    - 個資
+    - 個人資料
+    - 資料庫
+    - database
+  required_context_notes: |
+    PII-breach 場景：具體事件描述 + 涉及個人資料的洩漏 / 異常存取 / 駭客攻擊。
+    若描述只是「考慮個資處理流程」(政策性) 不適用此 path → 應走 legal-document-draft privacy mode。
+
+authority-letter:
+  high_confidence_keywords:
+    - 金管會
+    - 證交所
+    - 個資組
+    - 公平會
+    - 勞動部
+    - 環保署
+    - 衛福部
+    - 主管機關
+    - 函
+    - 來文
+    - 公文
+    - 行政處分
+    - 行政檢查
+    - 命令
+    - deadline
+    - 限期
+    - 期限
+    - 日內
+  required_context_notes: |
+    Authority-letter 場景：具體主管機關發函 + 有 deadline 或 specific 要求。
+    若只是一般法令諮詢（無具體函） → 應走 legal-research (Phase 3 future skill)。
+
+contract-breach:
+  high_confidence_keywords:
+    - 違約
+    - breach
+    - default
+    - 對方未付
+    - 對方未交付
+    - 對方延遲
+    - 解除合約
+    - 終止合約
+    - 催告
+    - 賠償
+    - 救濟
+    - 違反條款
+  required_context_notes: |
+    Contract-breach 場景：具體合約 + 已生效 + 對方明確違反某條款。
+    若還在合約 review 階段（尚未簽署） → 應走 legal-contract-review。
