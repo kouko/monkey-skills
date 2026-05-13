@@ -1,0 +1,50 @@
+name: check-plugin-description-skill-coherence
+
+# Verifies that each plugin.json's `description` field does not reference
+# skill slugs that no longer exist as folders under that plugin's skills/.
+#
+# Background: the sibling `marketplace-description-sync` check in
+# skill-structure.yml only verifies plugin.json == marketplace.json
+# verbatim — it does NOT catch the case where the (synced) description
+# mentions a skill that was deleted or absorbed (v0.4 systems-thinking-
+# toolkit absorbed `loop-and-link-primitives` into `cld-craft`; v0.6
+# absorbed `innovaction-martian-test` into `strategy-lever-and-cascade`).
+# This workflow fills that gap.
+#
+# Trigger: PRs to main that touch any plugin.json or any skills/ tree.
+# Push to main is also checked, so absorbed-skill renames caught at PR
+# time stay caught after merge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/.claude-plugin/plugin.json"
+      - "**/skills/**"
+      - "scripts/check-plugin-description-skill-coherence.py"
+      - ".github/workflows/check-plugin-description-skill-coherence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  coherence:
+    name: plugin description ↔ skills/ folder coherence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check-plugin-description-skill-coherence.py
+        # Same-PR drift rule: when a skill folder is renamed/absorbed/
+        # deleted, the plugin.json description (and marketplace.json
+        # mirror) must be updated in the same commit. Stdlib-only check
+        # — no extra installs needed.
+        run: python3 scripts/check-plugin-description-skill-coherence.py

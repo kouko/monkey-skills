@@ -383,6 +383,7 @@ dominant signal.
 
 Stop the protocol and either escalate, redraw, or reject the diagram if:
 
+- **Candidate "loop" is actually a one-way modifier chain, not a loop.** When tracing a candidate closed loop, if the path from start node back to itself goes only through a node that has no causal back-influence on the chain — e.g., an output dangle (((Mean Score))) that decreases a future input rate without itself being moved by the chain — classify as a **one-way modifier**, not a loop. Do NOT count Os around the path; do NOT include it in the R/B classification arithmetic. **Diagnostic**: trace the path; for each node on the path, ask "does this node have any inbound edge from elsewhere on the path?" If the answer is "no" for any node, the closure is an illusion; the path is a chain into a dangle that happens to look like it returns. Common false-positive trigger: output dangles that modify input dangles in a way that visually closes but lacks the structural back-edge (Case B5 pseudo-target dangle is the canonical example — see `cld-archetypes/references/cases.md`).
 - **Tier 2 also returns asymmetric / nonsense answers.** The "link" may
   not be causal — re-examine whether you've drawn a definitional
   identity (revenue − costs = profit) rather than a behavioral causal

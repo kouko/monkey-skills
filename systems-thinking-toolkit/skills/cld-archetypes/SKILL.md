@@ -148,17 +148,20 @@ their behavioral signature:
 - **Oscillation around** a value (over-shoot, under-shoot, repeat) →
   V/T/A branch (single B-loop with delay).
 - **Both at once** (growth decelerating *and* policy responses making
-  it worse) → run V/T/A first (stop over-correcting), then
-  limits-to-growth on the underlying R+B coupling.
+  it worse) — apply the **magnitude-comparison rule**:
+  - If `deceleration_delta > oscillation_amplitude × 3` → run Branch L primarily; treat V/T/A as note. The deceleration dominates; the oscillation is noise on top.
+  - If `oscillation_amplitude > deceleration_delta × 3` → run Branch V first (stop over-correcting); Branch L may not apply at all.
+  - If amplitudes comparable (within 3× of each other) → run Branch V first per Sherwood (stop over-correcting before relieving brake). The cld-craft caption's behavioral-signature line should report both magnitudes when both signals are present (per `loop-classification-protocol.md` caption spec), so this comparison is mechanical from upstream output.
 
 ### Distinction from neighboring skills
 
-- vs. `loop-and-link-primitives`: that skill *classifies* whether the
-  CLD has R-loops, B-loops, or both; this skill takes the classified
-  CLD and recognizes a *named archetype* with a specific intervention
-  philosophy. Diverging / vicious-circle systems (R-loop spinning the
-  wrong way, numbers running off to infinity) belong to
-  `loop-and-link-primitives` R-loop diagnosis, NOT this skill.
+- vs. `cld-craft` Step 11 (which absorbed former `loop-and-link-primitives` in v0.4): that step *classifies* whether the CLD has R-loops, B-loops, or both and emits the annotated Mermaid; this skill takes the classified CLD and recognizes a *named archetype* with a specific intervention philosophy.
+
+  **Important disambiguation — vicious R-loop has TWO distinct meanings**:
+  1. **Vicious R-loop as the brake mechanism inside a limits-to-growth coupling** — this IS Branch L territory. The growth engine (one R-loop) is being decelerated by a coupled B-loop OR by a second R-loop spinning the wrong way (the "depleting" pathway in split-fuzzy-variable applications). The diagnostic clue: the *system* is decelerating despite the R-loop accelerating; the brake is just spelled as another R-loop instead of a B-loop. Intervention is constraint-relief on the brake.
+  2. **Standalone runaway vicious R-loop** — numbers monotonically running off to infinity (or to floor) with no opposing loop in the diagram. This is NOT Branch L; "relieve the brake" is malpractice because no brake exists. The R-loop is destroying itself. Return to `cld-craft` for R-loop intervention (flip-trigger naming, Hatfield-style external-shock candidates, or single-utterance trigger candidates per Case 6 / Case 7).
+
+  **Diagnostic test**: when you see a vicious R-loop, look for the *system-level* trajectory (not the loop-internal trajectory). If the system is **decelerating toward an asymptote**, you have a coupled R+B (Branch L). If the system is **monotone-divergent without ceiling**, you have a standalone runaway (NOT this skill). Pseudo-target dangles (Case B5) can also masquerade as B-loops in this position — use the loop-classification halt rule (one-way modifier chain) to detect.
 - vs. `strategy-lever-and-cascade` (sk07/sk08): lever-vs-outcome
   diagnoses *misclassification* (treating an outcome as a directly-
   pullable lever); this skill diagnoses *which structural archetype*

@@ -1,7 +1,7 @@
 ---
 name: strategy-lever-and-cascade
 description: |
-  Turn ambition statements ("achieve 25% margin", "double ARR by 2030", "5-year plan refresh", OKR sets that mix levers with outcomes) into a mechanically actionable strategy artifact: a list of lever target changes (controllable inputs) that, when scenario uncertainty matters, reverse-engineer across plausible-not-probable futures. Forces three disciplines stacked into one workflow — (1) separate levers from outcomes (managers move levers, outcomes emerge), (2) diagnose the three-timescale cascade (in-year fix / annual budget / multi-year ambition) and identify which loop is dead, (3) build the 3×N scenario × lever table and classify each lever as robust / scenario-contingent / bet. Two valid entry depths: Steps 2-3 (reframe levers vs outcomes) is a legitimate stopping point when scenario uncertainty is low and you only need an OKR / KPI critique; Steps 4-8 (cascade + 3×N table) is for genuine long-horizon planning under uncertainty. NOT for tactical or operational decisions (use variance-target-action-template at single-loop V/T/A level), NOT for vision/mission statements (ambition is genre-appropriate there), NOT during crisis-mode firefighting. Triggers: "we will achieve X%", "our goal is [outcome]", "set the KPIs", "drive [outcome]", "5-year plan", "strategic refresh", "scenario planning", "what if [future]?", "long-term vision", "robust strategy", "ambition vs plan", "critique these OKRs". KEYWORDS: strategy, OKR critique, levers, outcomes, KPI design, scenario planning, 3×N table, plausible-not-probable, target dangle, strategic cascade, dead 5-year plan, reverse-engineer levers, robust / contingent / bet. JA: 戦略=レバー目標値の再設定・シナリオプランニング・三段カスケード・打ち手vs結果。zh-TW: 策略＝重設槓桿目標值・情境規劃・三層串接・操控變數vs結果指標.
+  Turn ambition statements ("achieve 25% margin", "double ARR by 2030", "5-year plan refresh", OKR sets that mix levers with outcomes) into a mechanically actionable strategy artifact: a list of lever target changes (controllable inputs) that, when scenario uncertainty matters, reverse-engineer across plausible-not-probable futures. Forces three disciplines stacked into one workflow — (1) separate levers from outcomes (managers move levers, outcomes emerge), (2) diagnose the three-timescale cascade (in-year fix / annual budget / multi-year ambition) and identify which loop is dead, (3) build the 3×N scenario × lever table and classify each lever as robust / scenario-contingent / bet. Two valid entry depths: Steps 2-3 (reframe levers vs outcomes) is a legitimate stopping point when scenario uncertainty is low and you only need an OKR / KPI critique; Steps 4-8 (cascade + 3×N table) is for genuine long-horizon planning under uncertainty. NOT for tactical or operational decisions (use variance-target-action-template at single-loop V/T/A level), NOT for vision/mission statements (ambition is genre-appropriate there), NOT during crisis-mode firefighting. v0.6 absorbed `innovaction-martian-test` (sk13) into Step 5 as 4-step Martian-test perturbation procedure. v0.7 adds (a) explicit STOP-after-Step-4 rule when scenario uncertainty is low (in-year ops / annual budget tuning with stable environment); (b) named **HOLD-lever pattern** for explicit "don't pull harder" strategic moves (e.g., "doubled CS team and it didn't help" → HOLD CS headcount; "marketing spend up 40% with declining CAC payback" → HOLD spend, fix funnel). Triggers: "we will achieve X%", "our goal is [outcome]", "set the KPIs", "drive [outcome]", "5-year plan", "strategic refresh", "scenario planning", "what if [future]?", "long-term vision", "robust strategy", "ambition vs plan", "critique these OKRs", "doubled X and it didn't help", "we keep adding [X] but [outcome] isn't moving", "should we stop pulling this lever?", "Martian test", "feature perturbation". KEYWORDS: strategy, OKR critique, levers, outcomes, KPI design, scenario planning, 3×N table, plausible-not-probable, target dangle, strategic cascade, dead 5-year plan, reverse-engineer levers, robust / contingent / bet, HOLD lever, pedal-harder anti-pattern, current-drifted-target, Martian-test perturbation, feature-density bar, one-feature dramatic perturbation, TRIZ alternative. JA: 戦略=レバー目標値の再設定・シナリオプランニング・三段カスケード・打ち手vs結果・HOLDレバー・もっと押すな反射型反パターン・火星人テスト・特徴摂動。zh-TW: 策略＝重設槓桿目標值・情境規劃・三層串接・操控變數vs結果指標・HOLD 槓桿・做更多反而更糟・拉得越用力越糟・火星人測試・特徵擾動.
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: "Chapter 10 (lever-vs-outcome business engine + three-timescale cascade + 3×N scenario table); Chapter 12 (stocks-as-objectives reformulation); Chapter 13 (car-dealership lever simulation + ambition-as-target-dangle vs forecast)"
 source_language: en
@@ -239,10 +239,28 @@ When this skill activates, follow these steps:
 2. **For each lever, name three attributes.** (a) current actual
    setting, (b) current target setting, (c) proposed new target
    setting. If the proposed new target equals the current target, this
-   lever is not part of the strategy — strike it.
+   lever is not part of the strategy — strike it (with one exception below).
    - Completion criterion: every lever has all three settings written
      down; levers with no proposed change are removed from the
      strategy artifact (they may still appear in operations).
+   - **HOLD-lever exception (v0.7 named pattern)**: when a lever's
+     *current actual* setting has drifted away from a (formerly explicit)
+     *current target* and the reflex is "pull harder in the same
+     direction," an explicit **HOLD** is itself a strategic lever
+     change. Pattern: `current actual = drifted` / `current target =
+     unclear or eroded` / `proposed new target = explicit HOLD against
+     the reflex to keep moving`. Examples: "doubled CS team and it
+     didn't help" (the lever to NOT move is CS headcount; reflex says
+     "hire more"); "marketing spend up 40% YoY with declining CAC
+     payback" (HOLD spend, fix funnel); "added 6 PMs, throughput
+     fell" (HOLD hiring). The HOLD-lever is the inverse of pedal-harder
+     reflex (Sherwood ce19); it's NOT a no-op because it explicitly
+     refuses the default action. Mark such levers `**HOLD**` in the
+     strategy artifact; do NOT strike them as "no proposed change."
+     The strike rule (line above) applies to levers where the *current
+     target* is correct and the strategy doesn't touch it; HOLD applies
+     when the *current trajectory* is wrong and the strategic move is
+     to stop.
 
 3. **For each outcome, write the mechanism in one sentence.** State
    which lever-target changes plus which fuzzy growth-driver link
@@ -263,6 +281,21 @@ When this skill activates, follow these steps:
      two-of-three running). If strategic loop is alive and stable,
      skip to step 9; if dead or facing meaningful environmental shift,
      proceed to step 5.
+   - **STOP-after-Step-4 rule (v0.7)**: this is the **legitimate Steps-2-3
+     stopping boundary** for users whose scenario uncertainty is low.
+     STOP here when ALL three hold: (a) the task is in-year operational
+     or annual-budget tuning (NOT multi-year ambition refresh); (b) the
+     external environment is stable on the time horizon of the
+     decision (no pending regime change, policy shift, technology
+     discontinuity); (c) the user explicitly came for OKR / KPI
+     critique or lever-vs-outcome reframe (NOT for long-horizon
+     planning under uncertainty). When STOP fires, Steps 2-3
+     (levers vs outcomes reframe + lever-target reset) + Step 4
+     (cascade-state declaration) is the complete deliverable. Do NOT
+     run the full Steps 5-8 scenario table — it adds friction without
+     adding value at low scenario uncertainty. If unsure whether STOP
+     applies, prefer running Steps 5-8 (false negative on STOP costs
+     ~30 min; false positive costs the whole strategy artifact).
 
 5. **Generate 3-4 plausible (NOT probable) scenarios via Martian-test perturbation.** Each scenario is a one-paragraph description of a feature-perturbed future. Span the *plausible* range. **Probability assignment is forbidden — if you feel the urge, you've collapsed back to forecasting.**
 
