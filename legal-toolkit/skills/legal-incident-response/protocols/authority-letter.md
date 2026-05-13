@@ -116,7 +116,7 @@ proceeding to DRAFT.
 ### Step 4: DRAFT
 
 LLM writes 函覆 body in 公文格式 (Taiwan administrative letter format,
-五段齊備):
+公文結構齊備):
 
 ```
 受文者：{{incoming_authority}}
@@ -187,7 +187,7 @@ deadline + 是否提及處罰風險）
 each with law.moj.gov.tw LawSingle URL sourced from canonical/legal-sources.json）
 
 ## §3 函覆草稿
-（full 公文 from Step 4，五段齊備：受文者 / 發文字號 / 主旨 / 說明 / 附件清單 / 落款）
+（full 公文 from Step 4，公文結構齊備：受文者 / 發文字號 / 主旨 / 說明 / 附件清單 / 落款）
 
 ## §4 compliance
 （filled by Step 7 COMPLY_CHECK — placeholder heading during Step 5）
@@ -225,8 +225,8 @@ Audience: non-法務 stakeholders (CEO / CFO / 業務窗口). Format:
 
 ## §3 deadline 警示
 （color-coded by remaining days as of {{reply_date}}）：
-  🔴 < 3 天：緊急；外部律師立即啟動
-  🟡 3-7 天：加速；內部 fast-track
+  🔴 < 3 天 (0-2 天)：緊急；外部律師立即啟動
+  🟡 3-7 天 (含)：加速；內部 fast-track
   🟢 > 7 天：標準 SOP
 
 ## §4 風險摘要
@@ -326,7 +326,7 @@ Next steps:
   `statute_sources` (currently: 民法 / 民事訴訟法 / 公司法 / 證券交易法 /
   公平交易法 / 個人資料保護法 / 營業秘密法 / 著作權法 / 勞動基準法 /
   消費者保護法 / 涉外民事法律適用法 / 仲裁法). Never invent.
-- 公文格式 五段齊備：受文者 / 發文字號 / 主旨 / 說明（含一/二/三/四項細分）
+- 公文結構齊備（header + body + sign-off）：受文者 / 發文字號 / 主旨 / 說明（含一/二/三/四項細分）
   / 附件清單 / 落款。
 - Anti-pattern discipline lives in `scripts/grade_response.py`
   `PATH_A_ANTIPATTERNS` (full bank); do NOT inline forbidden phrasings into
@@ -336,4 +336,4 @@ Next steps:
   authority letters (e.g., 證交所 重訊查詢 / 金管會 監理函詢) TBD section
   typically does not apply.
 - The `mode` ∈ {函覆 / 補件 / 不服救濟} affects tone in DRAFT step but not
-  the structural skeleton (五段齊備 always required).
+  the structural skeleton (公文結構齊備 always required).

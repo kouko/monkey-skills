@@ -26,7 +26,7 @@
 
 - [ ] §時間軸 含 deadline ISO 8601 date (`YYYY-MM-DD` 格式)？ — **{{verdict}}**
 - [ ] 我方擬定回函日 (`reply_date`) leave buffer ≥ 2 天 before deadline？ — **{{verdict}}**
-- [ ] business.md §3 deadline 警示 顏色正確 (🔴 < 3 天 / 🟡 3-7 天 / 🟢 > 7 天)？ — **{{verdict}}**
+- [ ] business.md §3 deadline 警示 顏色正確 (🔴 < 3 天 (0-2 天) / 🟡 3-7 天 (含) / 🟢 > 7 天)？ — **{{verdict}}**
 
 ## §3 法源引用 valid（無 invented §s）
 
@@ -49,7 +49,7 @@
 
 ## §5 公文格式（Taiwan administrative letter format）
 
-- [ ] §3 函覆草稿 五段齊備：受文者 / 發文字號 / 主旨 / 說明 / 附件清單 / 落款？ — **{{verdict}}**
+- [ ] §3 函覆草稿 公文結構齊備：受文者 / 發文字號 / 主旨 / 說明 / 附件清單 / 落款？ — **{{verdict}}**
 - [ ] 主旨 為 1 句具體 summarize 函要求重點 + 本公司回應方向？ — **{{verdict}}**
 - [ ] 「說明」 段含 一/二/三 (或 一/二/三/四) 項細分 (來文要求 / 本公司回應 / 法源依據 / 後續行動)？ — **{{verdict}}**
 - [ ] 落款 含 company / company_id (統一編號) / DPO 姓名 / DPO email / DPO phone /
