@@ -47,6 +47,7 @@ from pathlib import Path
 
 REFS = Path(__file__).resolve().parent.parent / "references"
 MIN_LEGAL_MD_BYTES = 500
+MIN_BUSINESS_MD_BYTES = 200
 
 PATH_TYPES = ("pii-breach", "authority-letter", "contract-breach")
 
@@ -119,12 +120,13 @@ def _check_two_files_present(output_dir: Path) -> list[str]:
     return errors
 
 
-def _check_byte_counts(output_dir: Path) -> list[str]:
-    legal = output_dir / "legal.md"
-    size = len(legal.read_text(encoding="utf-8").encode("utf-8"))
-    if size < MIN_LEGAL_MD_BYTES:
-        return [f"possible truncation: legal.md is {size} bytes (< {MIN_LEGAL_MD_BYTES})"]
-    return []
+def _check_byte_counts(legal_text: str, business_text: str) -> list[str]:
+    errors = []
+    if len(legal_text.encode("utf-8")) < MIN_LEGAL_MD_BYTES:
+        errors.append(f"legal.md possibly truncated: {len(legal_text.encode('utf-8'))} bytes (< {MIN_LEGAL_MD_BYTES})")
+    if len(business_text.encode("utf-8")) < MIN_BUSINESS_MD_BYTES:
+        errors.append(f"business.md possibly truncated: {len(business_text.encode('utf-8'))} bytes (< {MIN_BUSINESS_MD_BYTES})")
+    return errors
 
 
 def _check_timeline_section(legal_text: str) -> list[str]:
@@ -133,26 +135,30 @@ def _check_timeline_section(legal_text: str) -> list[str]:
     return []
 
 
-def _check_tbd_ids_canonical(legal_text: str) -> list[str]:
+def _check_tbd_ids_canonical(*texts: str) -> list[str]:
     canonical = _canonical_tbd_ids()
-    used = set(re.findall(r"TBD_[A-Za-z0-9_]+", legal_text))
+    used = set()
+    for t in texts:
+        used.update(re.findall(r"TBD_[A-Za-z0-9_]+", t))
     fabricated = used - canonical
     if fabricated:
         return [f"fabricated TBD id(s) not in canonical OPEN list: {sorted(fabricated)}"]
     return []
 
 
-def _check_path_a_antipatterns(legal_text: str) -> list[str]:
+def _check_path_a_antipatterns(*texts: str) -> list[str]:
     """Grep for GDPR/legacy phrases that violate Path A discipline.
 
-    Only applied to legal.md (the legal artifact). business.md is summary-only
-    and allowed to cite anti-patterns in explanatory "NOT X" form.
+    Applied to all published output texts (legal.md + business.md). SP3b has
+    no separate compliance.md carve-out like SP3a, so anti-patterns must not
+    appear anywhere in the published output.
     """
     errors = []
-    for pattern, why in PATH_A_ANTIPATTERNS:
-        match = pattern.search(legal_text)
-        if match:
-            errors.append(f"Path A violation: matched {match.group(0)!r} — {why}")
+    for text in texts:
+        for pattern, why in PATH_A_ANTIPATTERNS:
+            match = pattern.search(text)
+            if match:
+                errors.append(f"Path A violation: matched {match.group(0)!r} — {why}")
     return errors
 
 
@@ -192,7 +198,9 @@ def _check_contract_breach_handoff(output_dir: Path, legal_text: str) -> list[st
         return errors
 
     # required schema fields
-    required = ["schema_version", "from_skill", "to_skill", "breach_type", "alleged_breach_clauses"]
+    required = ["schema_version", "from_skill", "to_skill", "contract_path",
+                "breach_type", "alleged_breach_clauses", "breach_date",
+                "discovery_date", "counterparty", "urgency_level"]
     for field_name in required:
         if field_name not in handoff:
             errors.append(f"contract-breach: handoff-context.json missing required field: {field_name!r}")
@@ -226,11 +234,12 @@ def grade_response(output_dir: Path, path_type: str) -> GradeResult:
         return GradeResult(passed=False, reasons=file_errors)
 
     legal_text = (output_dir / "legal.md").read_text(encoding="utf-8")
+    business_text = (output_dir / "business.md").read_text(encoding="utf-8")
 
-    reasons.extend(_check_byte_counts(output_dir))
+    reasons.extend(_check_byte_counts(legal_text, business_text))
     reasons.extend(_check_timeline_section(legal_text))
-    reasons.extend(_check_tbd_ids_canonical(legal_text))
-    reasons.extend(_check_path_a_antipatterns(legal_text))
+    reasons.extend(_check_tbd_ids_canonical(legal_text, business_text))
+    reasons.extend(_check_path_a_antipatterns(legal_text, business_text))
 
     # per-path branches
     if path_type == "pii-breach":
