@@ -43,6 +43,16 @@ end in itself. Three coordinated changes:
    (`skill_version`, `pipeline_version`, `output_mode`) is
    forbidden in artifact frontmatter to prevent LLM hallucination
    of unreleased version numbers.
+4. **Parallel fan-out graceful degradation** — `hook-parallel-fanout.md`
+   gains a §Graceful Degradation clause for runtimes where the
+   worker cannot spawn nested subagents. The hook degrades to
+   single-agent parallel tool-call batches (wall-clock speedup
+   preserved; context isolation approximated). Mandatory
+   Self-Critique disclosure marks the degraded mode explicitly so
+   readers can distinguish artifacts produced by N truly-independent
+   sub-workers from artifacts produced by one agent parallelising
+   calls. Degradation is rejected (BLOCKED) for adversarial-
+   independence tasks (red-team / blue-team).
 
 The `Reader Onboarding` dimension is added to
 `rubrics/research-quality-gate.md` (fatal on missing or
@@ -70,6 +80,8 @@ Onboarding tagging exemption applied) prepended to the existing
   context-first onboarding.
 - `research-team/protocols/hook-self-critique.md` — 3-line
   metadata record; load-bearing-by-use sweep formalised.
+- `research-team/protocols/hook-parallel-fanout.md` — §Graceful
+  Degradation clause for runtimes lacking nested subagent dispatch.
 - `research-team/SKILL.md` — new §Output Frontmatter Discipline
   section.
 
