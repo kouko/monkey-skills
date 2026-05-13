@@ -56,6 +56,55 @@ binding constraint (Easter Island c11 + Caulerpa algae c04).
   limits-to-growth branch**: when a stakeholder doubts the qualitative
   diagnosis, the ithink simulation result is the receipt.
 
+### Case A4 — Plugin Self-Analysis (v0.8 modern agent-orchestration case)
+
+- **Problem**: systems-thinking-toolkit's own development trajectory.
+  Solo developer (kouko) shipped 7 PRs in one day (v0.1.0 → v0.6.0);
+  plugin mean evolved 105 → 109.67/A with per-PR delta sequence
+  +3.4 → +1.0 → -0.5 → +0.5 → monotone-decreasing. Friction signals
+  accumulated: parallel-subagent git index race; Sonnet 1M-context
+  billing gate; Opus daily quota; audit subagent catching drift after
+  each restructure with diminishing returns.
+- **Methodology applied (Branch L)**:
+  - L1 signature: deceleration toward asymptote confirmed (4 data
+    points; per-cycle delta shrinking from +3.4 to +0.5)
+  - L2 central R-loop (compressed from cld-craft Case 11 Mermaid):
+    `Iteration Drive → PR Throughput → Iteration Cycle → Audit Catch
+    → Plugin Coherence → Plugin Mean Score → Iteration Drive` (O-count
+    = 2 → reinforcing; currently spinning virtuous but decelerating)
+  - L3 candidate brakes: (a) Anthropic Quota; (b) Developer Cognitive
+    Load; (c) Audit Diminishing Returns; (d) Coherence Saturation;
+    (e) Score Ceiling at 120
+  - L4 binding brake test ("if we doubled [input], would brake absorb
+    the gain?"): binding = **Developer Cognitive Load** (kouko at
+    attention ceiling within one day; cycle-boundary reset relieves it).
+    Queued next: **Audit Diminishing Returns** (will bind once
+    cognitive load is reset and PR count grows further).
+  - L5 intervention: cycle-boundary cognitive reset + scope
+    quantization per PR (≤ 1 archetype restructure per PR). Cost zero;
+    timeline overnight; prediction: R-loop spins at +1.0 to +2.0 per
+    cycle again post-reset, audit catch rate drops from 5+5 residual
+    to ≤ 3 residual. Falsifiable: if next-session v0.5 PR mean delta
+    < 0.5 AND audit residue ≥ 5, the binding brake was misidentified.
+- **Conclusion**: limits-to-growth in agent-orchestration domain.
+  Sherwood's Ch 8 master archetype transfers cleanly to multi-agent
+  / human-in-the-loop systems despite the book pre-dating LLM
+  agents by 22 years. The fuzzy variables (Cognitive Load, Internal
+  Coherence) are agent-orchestration-specific elevations per Rule 7,
+  but the limits-to-growth coupling structure is identical to
+  industrial-revolution pattern (Case A1).
+- **Outcome**: First documented self-application of cld-archetypes
+  to plugin's own development. Cross-ref: dogfood audit at
+  `docs/superpowers/audits/2026-05-13-systems-thinking-toolkit-dogfood.md`
+  Test A. Companion: Case 11 in cld-craft/cases.md carries the
+  CLD-construction layer; this case carries the archetype-application
+  layer.
+- **Calibration value**: fills Sherwood's pre-platform-economy /
+  pre-2010 agent-orchestration blind spot. Pattern is recognizable
+  in any sustained-iteration-with-human-attention setting (consulting
+  engagements, research programs, open-source maintenance, indie-hacker
+  product development).
+
 ### Case A3 — Easter Island (c11) and Caulerpa algae (c04) — failure to recognize constraint
 
 - **Problem**: Easter Islanders' R-loop of population × statue-building
