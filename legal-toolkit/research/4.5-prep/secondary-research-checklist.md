@@ -17,6 +17,9 @@
 | 3 | 對有價證券上市公司重大訊息之查證暨公開處理程序（TWSE） | TWSE 法規檢索系統 | 2-3 h | 「即時 / 重大 / 一般」3 層分類完整 mapping + 例外清單 |
 | 4 | 上市上櫃公司治理實務守則 | TWSE / TPEx | 2-3 h | 公司治理 best practice 摘要 |
 | 5 | 公開發行公司建立內部控制制度處理準則 | 金管會 | 1-2 h | 三道防線 framework + 法務 vs 法遵分工的法定依據 |
+| 6 | TWSE 公司治理評鑑指標 CG 6.0（2024 起適用，2026/2027 評鑑用） | <https://cgc.twse.com.tw/> | 1-2 h | 評鑑五大構面（董事會 / 股東權益及股東會 / ESG / 揭露 / 永續）+ 加分項 mapping；`legal-corporate-governance` skill 必須對齊此 framework |
+
+**閱讀順序建議**：先 #1 證交法（揭露 / 內線交易最核心法源）→ #3 TWSE 重大訊息查證程序（#1 的實務 mapping）→ #2 公司法（基礎組織法）→ #6 CG 6.0（評鑑框架，governance skill 直接對應）→ #4 公司治理實務守則 → #5 內控處理準則。如時間不夠，**#1 + #3 + #6 三者必讀**；#2 + #4 + #5 可粗讀（mind-map level 即可）。
 
 **儲存位置**：`legal-toolkit/research/4.5-prep/secondary/01-statute-reading-notes.md`（一份檔，分節）
 
