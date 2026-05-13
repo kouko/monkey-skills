@@ -17,8 +17,8 @@ Entry / router skill — finds the right systems-thinking method for your situat
 
 ## What you get
 
-- A one-question intent table that routes to one of 9 v0.1.0 skills (loop-and-link-primitives, cld-craft, limits-to-growth, variance-action, strategy, stakeholder, simulation, martian-test, quadrant).
-- Honest "don't combine multiple methods" rule + explicit "default to loop-and-link-primitives" fallback for unclear cases.
+- A one-question intent table that routes to one of the current 7 functional skills (cld-craft, cld-archetypes, cld-overlay, team-mental-model, simulation-modeling, strategy-lever-and-cascade, manager-personality-quadrant). v0.6 absorbed `innovaction-martian-test` into strategy Step 5; v0.4 absorbed loop-and-link-primitives into cld-craft Step 11.
+- Honest "don't combine multiple methods" rule + explicit "default to cld-craft" fallback for unclear cases (cld-craft is the carry-1 prose→CLD producer that most downstream skills consume).
 
 ## Boundaries
 

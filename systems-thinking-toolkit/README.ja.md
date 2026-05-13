@@ -16,8 +16,10 @@ Dennis Sherwood『Seeing the Forest for the Trees: A Manager's Guide to Applying
 | `strategy-lever-and-cascade` | レバー対アウトカム再構成 + 3 時間軸カスケード + 3×N シナリオプランニング (sk07+sk08) |
 | `stakeholder-and-team-thinking` | 複数視点 CLD オーバーレイ + メンタルモデル調和 (sk09+sk10) |
 | `simulation-modeling` | ストック・フロー変換 + 「学習のためのモデル、答えのためのモデルではない」規律 (sk11+sk12) |
-| `innovaction-martian-test` ⚠ V1-weak | 特徴摂動シナリオ生成；TRIZ / 形態学的分析がより強い代替案 |
-| `manager-personality-quadrant` ⚠ V1-weak | 経営者人格 2×2；DiSC / MBTI / Hogan がより強い代替案 |
+| `manager-personality-quadrant` ⚠ V1-weak | 経営者人格 2×2；**v0.6 で「ファシリテーション語彙のみ」境界強化**；DiSC / Big Five / Hogan がより強い代替案（人事用途には絶対不可） |
+
+> v0.6 で `innovaction-martian-test` を `strategy-lever-and-cascade` の Step 5 (Martian-test 特徴摂動) に吸収。スキルとしては廃止済み。
+> 注: 本 README の上記表は v0.4 以前のスキル名を残しています。v0.7 で完全な v0.6 同期 rewrite を予定。
 
 ## このプラグインの位置づけ
 
@@ -35,9 +37,9 @@ Dennis Sherwood『Seeing the Forest for the Trees: A Manager's Guide to Applying
 
 - `tsundoku:book-distill` RIA-TV++ パイプラインで蒸留（Adler → 5 並列抽出 → 三重検証 → RIA++ レンダリング → Zettelkasten リンク → 敵対的圧力テスト）
 - オリジナル 14 Stage-3 スキルから Profile-B で 9 へ統合（compose-with ペア 5 + スタンドアロン 4）
-- 2 つのスキル（`innovaction-martian-test`, `manager-personality-quadrant`）は Stage 1.5 で V1-weak — TRIZ、形態学的分析、DiSC、MBTI、Hogan、Situational Leadership などより強い先行技術が存在します。各スキルの Boundary セクションを参照。
+- V1-weak スキルは 1 つ残存（`manager-personality-quadrant`）。v0.6 で「ファシリテーション語彙のみ」境界強化。`innovaction-martian-test` は v0.6 で `strategy-lever-and-cascade` Step 5 に吸収済み。人格関連のより強い先行技術: DiSC, Big Five (NEO-PI-R), Hogan, Situational Leadership.
 - Stage-0 (`BOOK_OVERVIEW.md`) / Stage-1.5 (`VERIFIED.md`) / Stage-3 オリジナル (`INDEX-original.md`) の監査証跡は [`references/`](references/) を参照
-- v0.2+ 候補（sk13/sk14 統合オプション；TRIZ コンパニオン skill；stock-flow シミュレーション Python コンパニオン；Edmondson teaming-safety hand-off）は [`ROADMAP.md`](ROADMAP.md) を参照
+- v0.7+ 候補（PR #271 audit の 6 件 body fix；CI desc ↔ skill folder drift check；stock-flow シミュレーション Python コンパニオン；Edmondson teaming-safety hand-off）は [`ROADMAP.md`](ROADMAP.md) を参照
 
 ## ライセンス
 

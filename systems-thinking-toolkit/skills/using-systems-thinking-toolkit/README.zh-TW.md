@@ -17,8 +17,8 @@
 
 ## 你會得到
 
-- 一個一問一答意圖表，把問題路由到 v0.1.0 9 個 skill（loop-and-link-primitives / cld-craft / limits-to-growth / variance-action / strategy / stakeholder / simulation / martian-test / quadrant）。
-- 誠實的「不要拼湊多種方法」規則 + 不確定時預設給 `loop-and-link-primitives` 的兜底。
+- 一個一問一答意圖表，把問題路由到當前 7 個功能 skill（cld-craft / cld-archetypes / cld-overlay / team-mental-model / simulation-modeling / strategy-lever-and-cascade / manager-personality-quadrant）。v0.6 將 `innovaction-martian-test` 吸收進 strategy Step 5；v0.4 將 loop-and-link-primitives 吸收進 cld-craft Step 11。
+- 誠實的「不要拼湊多種方法」規則 + 不確定時預設給 **`cld-craft`**（carry-1 prose→CLD 製造者）的兜底。
 
 ## 邊界條件
 

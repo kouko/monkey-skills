@@ -17,8 +17,8 @@
 
 ## 得られるもの
 
-- 1 質問の意図テーブルで v0.1.0 の 9 スキル（loop-and-link-primitives / cld-craft / limits-to-growth / variance-action / strategy / stakeholder / simulation / martian-test / quadrant）の 1 つへルーティング。
-- 「複数のメソッドを組み合わせない」という正直なルール + 不明確なケースは `loop-and-link-primitives` へ既定で振るフォールバック。
+- 1 質問の意図テーブルで現在の 7 機能スキル（cld-craft / cld-archetypes / cld-overlay / team-mental-model / simulation-modeling / strategy-lever-and-cascade / manager-personality-quadrant）の 1 つへルーティング。v0.6 で `innovaction-martian-test` を strategy Step 5 に吸収；v0.4 で loop-and-link-primitives を cld-craft Step 11 に吸収。
+- 「複数のメソッドを組み合わせない」という正直なルール + 不明確なケースは **`cld-craft`**（carry-1 prose→CLD プロデューサー）へ既定で振るフォールバック。
 
 ## 適用しない場面
 

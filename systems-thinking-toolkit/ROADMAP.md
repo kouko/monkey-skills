@@ -31,41 +31,44 @@ CLD-centric reorganization based on practical-utility analysis (memory `project_
 - **R3-5 re-baseline** — skill-judge on changed skills; target ≥ A grade, no dimension regression vs v0.3.0
 - Net: 9 functional + router → 8 functional + router (-1 dir overall)
 
-## v0.5+ candidates (deferred)
+## v0.5.0 (i18n trigger coverage + language policy + Case B5, 2026-05-13)
 
-## v0.2+ historical candidate list (resolved across v0.2-v0.4)
+- 6 v0.5 items scoped from PR #274 Chinese-input dogfood audit
+- zh-TW + JA symptom keywords added to cld-craft + cld-archetypes (+20 zh-TW + +12 JA)
+- Router table cells gain EN + zh-TW + JA parenthetical examples
+- Tier-1 reversibility test zh-TW + JA phrasings in loop-classification-protocol.md
+- Language handling policy subsection in cld-craft SKILL.md
+- zh-TW worked example in cld-mermaid-emit.md
+- New Case B5 — Algorithm-Belief Pseudo-Target (modern platform variant; NOT in Sherwood 2002)
+- Side-fix: plugin.json + marketplace.json descriptions had been stale at v0.4 (still described v0.1.x 9-skill structure)
 
-### sk13 / sk14 V1-weak future
+## v0.6.0 (sk13 absorption + sk14 strengthened Boundary, 2026-05-13)
 
-Both `innovaction-martian-test` and `manager-personality-quadrant` are
-V1-weak per Stage 1.5. Three options for v0.2:
+V1-weak resolution per Bundle C "split decision":
 
-- **Option 1: absorb sk13 into `strategy-lever-and-cascade`** as a
-  "facilitation extras" subsection. sk08 already lists sk13 as
-  composes-with; the only reason sk13 stands alone in v0.1.0 is the
-  user override to retain Stage 1.5 V1-weak candidates as discrete
-  skills. Pro: solves V1-weak by demotion. Con: bloats `strategy-lever-
-  and-cascade` past the 6K-token soft cap.
-- **Option 2: replace sk13 with a dedicated TRIZ skill**
-  (Altshuller 1946) — TRIZ has empirically-grounded 40 inventive
-  principles + contradiction matrix tooling that subsume the
-  Martian-test perturbation logic. Same for sk14: replace with a
-  dedicated DiSC / Hogan / Situational Leadership skill (or just
-  reference an external authority and remove sk14 entirely).
-- **Option 3: keep both standalone with stronger Boundary disclaimers**
-  + cross-link from auxiliary skills' triggers to the v0.2 prior-art
-  replacement skills (when those exist). This is the lowest-risk
-  option but the least value-add.
+- **sk13 (`innovaction-martian-test`) ABSORBED** into `strategy-lever-and-cascade` Step 5 (Martian-test perturbation now inline 4-step procedure: 5a feature-list density bar / 5b one-feature dramatic perturbation / 5c consequence chain / 5d stop at 3-4 plausible futures). Skill folder + `/martian-test` command deleted. TRIZ + morphological analysis + SCAMPER cross-refs preserved as prior-art Boundary note. Net: 8 → 7 functional + 1 router
+- **sk14 (`manager-personality-quadrant`) KEPT** with strengthened Boundary:
+  - New PRIMARY USE CALLOUT at top of Boundary: "FACILITATION VOCABULARY ONLY — NOT a personality measurement instrument, NOT a leadership-development framework, NOT a hiring tool"
+  - New "Graduate beyond this skill when" subsection with 6-row table mapping task → better-evidenced alternative (Big Five NEO-PI-R / Hogan PI / Heifetz adaptive leadership / Klein Sources of Power / Hofstede cultural dimensions / Tuckman + Lencioni)
 
-Defer decision until v0.1.0 use-feedback accumulates.
+## v0.7+ candidates (deferred)
+
+### High ROI — already scoped
+
+1. **6 items from PR #271 audit** (carried from v0.5): one-way-modifier halt rule in loop-classification-protocol; cld-archetypes Step-0 magnitude rule for "Both at once"; Branch L disambiguation vicious-R-as-brake vs standalone runaway; strategy STOP rule for low scenario uncertainty; HOLD lever named pattern; plugin self-analysis case (Case 11 + Case A4)
+2. **CI check: plugin.json description ↔ actual skill folder contents** — catches the stale-description drift class (v0.4 + v0.5 + v0.6 all had stale-desc moments that CI's verbatim plugin↔marketplace match couldn't catch)
+3. **Plugin-level README full rewrite to v0.6 state** (3 languages × 2 levels = 6 files) — v0.4 PR #271 missed README sync; v0.5 + v0.6 patched sk13 references but the broader skill tables still list v0.1.x skill names (`limits-to-growth-take-the-brakes-off` / `variance-target-action-template` / `stakeholder-and-team-thinking` — all merged/split in v0.4)
+4. **sk14 graduate-paths formalization** — v0.6 added textual "Graduate beyond" subsection; v0.7 could add an actual measurement-instrument router pointing at external skills
 
 ### Companion skills
 
 - **TRIZ skill** — independent skill for Altshuller's systematic
   innovation principles (40 inventive principles + contradiction
-  matrix), replacing or complementing sk13
+  matrix). v0.6 absorption preserves Martian-test logic inline; TRIZ
+  remains a separate prior-art alternative worth its own skill if
+  engineering-domain use-cases surface
 - **Edmondson teaming-safety hand-off** — when
-  `stakeholder-and-team-thinking` detects psych-safety regime,
+  `team-mental-model` detects psych-safety regime,
   hand off to a separate skill (sk10 author's blind-spot already
   flags this need)
 - **Stock-flow simulation companion script** — Python or D3-based

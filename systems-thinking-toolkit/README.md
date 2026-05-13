@@ -13,9 +13,8 @@ Eight systems-thinking skills + 1 entry/router, distilled from Dennis Sherwood, 
 | `cld-overlay` | CLD consumer | Multi-stakeholder CLD overlay + straddle-policy finding |
 | `team-mental-model` | Practice | Mental-model harmony + 4 observable leadership-energy proxies (cadence / active-listening / value-revisitation / symbol-narrative) |
 | `simulation-modeling` | CLD extension | Text-only CLD → stock-and-flow translation + learning-not-forecast discipline |
-| `strategy-lever-and-cascade` | Non-CLD | Lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario table |
-| `innovaction-martian-test` ⚠ V1-weak | Auxiliary | Feature-perturbation scenario generation; TRIZ / morphological-analysis stronger alternatives exist |
-| `manager-personality-quadrant` ⚠ V1-weak | Auxiliary | Framing-vs-analysis split + Gods/Gamblers/Grinders/Guides 2×2; DiSC / MBTI / Hogan stronger alternatives exist |
+| `strategy-lever-and-cascade` | Non-CLD | Lever-vs-outcome reframe + 3-timescale cascade + 3×N scenario table (Martian-test perturbation absorbed inline in v0.6 Step 5) |
+| `manager-personality-quadrant` ⚠ V1-weak | Auxiliary | Framing-vs-analysis split + Gods/Gamblers/Grinders/Guides 2×2; **facilitation vocabulary only** (v0.6 Boundary strengthening); DiSC / Big Five / Hogan stronger alternatives exist for any personnel-touching work |
 | `using-systems-thinking-toolkit` | Entry / router | Intent-uncertainty routing to the right skill |
 
 ## Why this plugin
@@ -34,9 +33,9 @@ Profile-B merged from the original 14-skill Stage-3 distill. Five compose-with p
 
 - Distilled via `tsundoku:book-distill` RIA-TV++ pipeline (Adler → 5 parallel extractors → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test)
 - Profile-B merge of 14 original Stage-3 skills into 9 (5 compose-with pairs + 4 standalone)
-- Two skills (`innovaction-martian-test`, `manager-personality-quadrant`) are V1-weak per Stage 1.5 — they have stronger prior-art alternatives (TRIZ, morphological analysis, DiSC, MBTI, Hogan, Situational Leadership). See each skill's Boundary section.
+- One V1-weak skill remains (`manager-personality-quadrant`) per Stage 1.5 — kept with strengthened "facilitation vocabulary only" Boundary in v0.6. `innovaction-martian-test` was absorbed into `strategy-lever-and-cascade` Step 5 in v0.6 (Martian-test perturbation now inline). Stronger prior-art alternatives for personality work: DiSC, Big Five (NEO-PI-R), Hogan, Situational Leadership.
 - See [`references/`](references/) for Stage-0 (`BOOK_OVERVIEW.md`) / Stage-1.5 (`VERIFIED.md`) / Stage-3-original (`INDEX-original.md`) audit trail
-- See [`ROADMAP.md`](ROADMAP.md) for v0.2+ candidates (sk13/sk14 merger options; TRIZ companion skill; stock-flow simulation Python companion; Edmondson teaming-safety hand-off)
+- See [`ROADMAP.md`](ROADMAP.md) for v0.7+ candidates (6 PR #271 audit body fixes; CI desc ↔ skill folder drift check; stock-flow simulation Python companion; Edmondson teaming-safety hand-off)
 
 ## License
 

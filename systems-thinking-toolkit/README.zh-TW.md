@@ -16,8 +16,10 @@
 | `strategy-lever-and-cascade` | 槓桿對結果重塑 + 三時程瀑布 + 3×N 情境規劃 (sk07+sk08) |
 | `stakeholder-and-team-thinking` | 多視角 CLD 疊加 + 心智模型和諧 (sk09+sk10) |
 | `simulation-modeling` | 存量流量轉換 + 「為學習而非預測而建模」紀律 (sk11+sk12) |
-| `innovaction-martian-test` ⚠ V1-weak | 特徵擾動情境生成；TRIZ / 形態學分析為更強的替代品 |
-| `manager-personality-quadrant` ⚠ V1-weak | 主管人格 2×2；DiSC / MBTI / Hogan 為更強的替代品 |
+| `manager-personality-quadrant` ⚠ V1-weak | 主管人格 2×2；**v0.6 強化「僅作 facilitation vocabulary」邊界**；DiSC / Big Five / Hogan 為更強的替代品（人事相關用途絕對不要用本 skill） |
+
+> v0.6 把 `innovaction-martian-test` 吸收進 `strategy-lever-and-cascade` Step 5（Martian-test 特徵擾動），單獨 skill 已廢止。
+> 注：本 README 上方表格仍含 v0.4 之前的舊 skill 名。v0.7 規劃完整 v0.6 同步 rewrite。
 
 ## 為什麼有這個 plugin
 
@@ -35,9 +37,9 @@
 
 - 用 `tsundoku:book-distill` RIA-TV++ pipeline 蒸餾（Adler → 5 並行抽取 → 三重驗證 → RIA++ 渲染 → Zettelkasten 連結 → 對抗性壓力測試）
 - 原 14 Stage-3 skill 用 Profile-B 合併為 9 個（5 個 compose-with 配對 + 4 個獨立）
-- 兩個 skill（`innovaction-martian-test`、`manager-personality-quadrant`）在 Stage 1.5 為 V1-weak — TRIZ、形態學分析、DiSC、MBTI、Hogan、Situational Leadership 等更強的先驗技術存在。各 skill 的 Boundary 段落有說明。
+- V1-weak skill 剩 1 個（`manager-personality-quadrant`）。v0.6 強化「僅作 facilitation vocabulary」邊界。`innovaction-martian-test` 已於 v0.6 吸收進 `strategy-lever-and-cascade` Step 5。人格相關更強的先驗技術：DiSC, Big Five (NEO-PI-R), Hogan, Situational Leadership。
 - Stage-0 (`BOOK_OVERVIEW.md`) / Stage-1.5 (`VERIFIED.md`) / Stage-3 原版 (`INDEX-original.md`) 稽核軌跡見 [`references/`](references/)
-- v0.2+ 候選（sk13/sk14 合併選項；TRIZ 配套 skill；stock-flow 模擬 Python 配套；Edmondson teaming-safety hand-off）見 [`ROADMAP.md`](ROADMAP.md)
+- v0.7+ 候選（PR #271 audit 的 6 件 body fix；CI 檢查 desc ↔ skill folder 漂移；stock-flow 模擬 Python 配套；Edmondson teaming-safety hand-off）見 [`ROADMAP.md`](ROADMAP.md)
 
 ## 授權
 
