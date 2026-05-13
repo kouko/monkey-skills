@@ -1,6 +1,6 @@
 # JSON Schema 2020-12 for legal-playbook/profile.yml
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "legal-document-draft://profile-schema.yml"
+$id: "legal-toolkit://profile-schema.yml"
 title: Legal Toolkit Company Profile
 description: |
   Company identity profile shared across legal-toolkit skills (draft, IR,

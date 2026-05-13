@@ -189,7 +189,7 @@ def test_verify_drift_catches_sp3b_destination_modification():
     original = sp3b_copy.read_bytes()
     try:
         sp3b_copy.write_text(
-            original.decode() + "\n# drift marker\n", encoding="utf-8"
+            original.decode("utf-8") + "\n# drift marker\n", encoding="utf-8"
         )
         result = subprocess.run(
             ["python3", "legal-toolkit/scripts/verify-drift.py"],
