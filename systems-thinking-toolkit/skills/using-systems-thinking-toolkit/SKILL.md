@@ -8,7 +8,7 @@ description: >-
   overcompensating', 'this keeps getting worse and I don't know why',
   'we need to plan strategy across multiple timescales'. Do NOT use
   when the user already named a specific method (cld-craft, archetypes,
-  overlay, simulation, strategy, team, martian-test, quadrant).
+  overlay, simulation, strategy, team, quadrant).
   システム思考の案内。系統思考導引。
 ---
 
@@ -52,18 +52,21 @@ Then match their intent to the right skill:
 | Reframe ambition into lever target settings + 3-timescale cascade + 3×N scenario planning | strategy-lever-and-cascade | `/systems-thinking-toolkit:strategy` |
 | Surface team mental models + sustain via measurable leadership-energy proxies | team-mental-model | `/systems-thinking-toolkit:team` |
 
-### "I need scenario / personality tools" (auxiliary)
+### "I need personality / framing tools" (auxiliary)
 
 | Situation | Skill | Command |
 |---|---|---|
-| Generate alternative futures for strategic-cascade scenario planning | innovaction-martian-test | `/systems-thinking-toolkit:martian-test` |
-| Adapt strategy artifacts to executive personality (framing-vs-analysis split) | manager-personality-quadrant | `/systems-thinking-toolkit:quadrant` |
+| Adapt strategy artifacts to executive personality (framing-vs-analysis split) — facilitation vocabulary only, NOT a personality measurement instrument | manager-personality-quadrant | `/systems-thinking-toolkit:quadrant` |
 
-> Both auxiliary skills are V1-weak per Stage 1.5 verification. See
-> each SKILL.md Boundary section for prior-art credit (TRIZ /
-> morphological analysis for `innovaction-martian-test`;
-> DiSC / MBTI / Hogan / Situational Leadership for
-> `manager-personality-quadrant`) before reaching for them.
+> Auxiliary skill is V1-weak per Stage 1.5 verification. See SKILL.md
+> Boundary section for prior-art credit (DiSC / Big Five / Hogan /
+> Situational Leadership) and "Graduate beyond this skill" cross-refs
+> before reaching for it.
+>
+> **v0.6 note**: scenario-perturbation (formerly `innovaction-martian-test`)
+> has been absorbed into `strategy-lever-and-cascade` Step 5. Reach for
+> `/strategy` directly when you need Martian-test feature perturbation
+> for scenario generation.
 
 ### "I'm not sure"
 
@@ -102,9 +105,13 @@ Once you've identified the right skill:
 5. **`strategy-lever-and-cascade`** — depends on (2); 3-timescale cascade + 3×N scenario table + lever reframing
 6. **`simulation-modeling`** — depends on (1); precision quantification step (text-only in v0.4; Python companion v0.5+ candidate)
 
-Auxiliary skills (reach for inside `strategy-lever-and-cascade` workflow):
+Auxiliary skill (reach for inside `strategy-lever-and-cascade` workflow):
 
-7. **`innovaction-martian-test`** — generates alternative futures
-8. **`manager-personality-quadrant`** — adapts presentation to executive style
+7. **`manager-personality-quadrant`** — adapts presentation to executive style (V1-weak; facilitation vocabulary only)
+
+> v0.6 absorbed `innovaction-martian-test` (Martian-test feature
+> perturbation) into `strategy-lever-and-cascade` Step 5. There is no
+> separate skill to reach for; the perturbation procedure runs inline
+> in the strategy workflow.
 
 See `INDEX.md` for the full reference graph (mermaid + topological sort).

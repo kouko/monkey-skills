@@ -9,10 +9,13 @@ tags: [strategy, levers-outcomes, okr-critique, scenario-planning, long-term-pla
 related_skills:
   - slug: cld-archetypes
     relation: depends-on
-  - slug: innovaction-martian-test
-    relation: composes-with
   - slug: manager-personality-quadrant
     relation: composes-with
+# v0.6.0 (2026-05-13): absorbed `innovaction-martian-test` (former
+# sk13, V1-weak) into Step 5 of this skill. Martian-test feature
+# perturbation is now an inline procedure here rather than a standalone
+# skill. See "Easily-confused neighboring methodologies" for prior-art
+# credit (TRIZ / morphological analysis / SCAMPER).
 ---
 
 # Strategy = Lever Target Changes, Reverse-Engineered Across the Three-Timescale Cascade
@@ -177,11 +180,13 @@ engineering worked example, and the dead-strategic-loop diagnostic.
   explicit structural framing (strategy = B-loop nested above annual
   budget = B-loop nested above in-year fix) and the 3×N reverse-
   engineering operationalization.
-- vs. `innovaction-martian-test` (sk13): the perturbation method is
-  Sherwood's recommended generator for the "N plausible alternative
-  futures" axis. This skill composes with it — sk13 produces the
-  scenario column headers, this skill fills the cells with required
-  lever settings.
+- vs. TRIZ / morphological analysis / SCAMPER: these are prior-art
+  alternatives for the Martian-test feature-perturbation move that
+  now lives inline in Step 5 (absorbed from former sk13
+  `innovaction-martian-test` in v0.6.0). If your team already uses
+  TRIZ or morphological analysis, prefer the established practice
+  over Step 5's perturbation procedure; SCAMPER is a quicker
+  alternative for <60min ideation passes.
 - vs. `manager-personality-quadrant` (sk14): Sherwood pairs the
   cascade with a 2×2 of executive personality to predict audience
   reception. Compose for presentation, not analysis.
@@ -259,17 +264,18 @@ When this skill activates, follow these steps:
      skip to step 9; if dead or facing meaningful environmental shift,
      proceed to step 5.
 
-5. **Generate 3-4 plausible (NOT probable) scenarios.** Each scenario
-   is a one-paragraph description of a feature-perturbed future,
-   passing the Martian test (`innovaction-martian-test` (sk13)) for
-   completeness. Span the *plausible* range. **Probability assignment
-   is forbidden — if you feel the urge, you've collapsed back to
-   forecasting.**
-   - Completion criterion: 3-4 scenario paragraphs exist; no
-     probability weights anywhere on the page.
-   - Halt condition: if you cannot generate distinct futures (all
-     scenarios look like today + ε), you are inheriting the existing
-     plan — perturb harder via sk13.
+5. **Generate 3-4 plausible (NOT probable) scenarios via Martian-test perturbation.** Each scenario is a one-paragraph description of a feature-perturbed future. Span the *plausible* range. **Probability assignment is forbidden — if you feel the urge, you've collapsed back to forecasting.**
+
+   The Martian-test perturbation procedure (Sherwood Ch 10; absorbed into this step from the former `innovaction-martian-test` sk13 in v0.6.0):
+
+   - **5a. Compile a Martian-test-density feature list** (20-40 bullets) of today's context: regulatory regime, customer demographics, tech stack, distribution channel, capital structure, supply chain, business-model slice (who-pays-whom-for-what), competitive landscape, switching cost, network density. **Density bar**: a context-free outsider could distinguish your situation from neighbors using this list alone. Sherwood's chess example calibrates the bar — "8×8 board, 6 piece types with distinct movement rules, capture by displacement, win by checkmate" is dense enough; "a game with pieces" is not.
+   - **5b. Per scenario: perturb ONE feature dramatically, not multiple.** Multi-feature perturbation collapses back to blank-page brainstorming. "Customer is a regulator paying for prevention, not an end-user paying for cure" is dramatic; "GDP +5%" is not.
+   - **5c. Elaborate the consequence chain** — which OTHER features must change in the perturbed world? Which lever settings does the new world require? 3-5 downstream consequences per scenario; this feeds Step 6 (the 3×N table).
+   - **5d. Stop at 3-4 plausible futures.** "Plausible" is the evaluation bar — NOT "probable", NOT "desirable". Different ≠ better.
+
+   - Completion criterion: 3-4 scenario paragraphs exist with an explicit one-feature perturbation locus per scenario; no probability weights anywhere on the page.
+   - Halt condition: if scenarios all look like today + ε, the feature list at 5a was too shallow — go back to 5a and deepen before retrying 5b.
+   - **Prior-art Boundary**: this perturbation method is structurally close to TRIZ (Altshuller 1946 — 40 inventive principles + contradiction matrix, V1-strong in engineering) and morphological analysis (Zwicky ~1947 — matrix-based parameter perturbation). The Sherwood version is craft, not science. If your team already uses TRIZ or morphological analysis, prefer the established practice; for short <60min ideation, SCAMPER (Substitute / Combine / Adapt / Modify / Put to other use / Eliminate / Reverse) is a quicker alternative.
 
 6. **Build the 3×N table.** Rows are levers from step 2 (or candidate
    lever changes); columns are scenarios from step 5. Each cell is
@@ -448,10 +454,14 @@ When this skill activates, follow these steps:
   a B-loop. The three-timescale cascade is three nested V/T/A loops
   at different cadences. Without sk06, "lever" degenerates into
   "thing we want to be true."
-- **composes-with `innovaction-martian-test`** — sk13's perturbation
-  method is Sherwood's recommended generator for the "N plausible
-  alternative futures" axis of the 3×N table; reach for it whenever
-  the team is producing trivial variants of today's world.
+- **Martian-test perturbation INLINE (Step 5)** — v0.6.0 absorbed
+  former sk13 `innovaction-martian-test` into Step 5 of this skill.
+  The 4-step procedure (5a feature-list density bar / 5b one-feature
+  dramatic perturbation / 5c consequence chain / 5d stop at 3-4
+  plausible futures) generates the "N plausible alternative futures"
+  axis of the 3×N table directly. Prior-art alternatives: TRIZ
+  (Altshuller 1946; V1-strong in engineering), morphological analysis
+  (Zwicky ~1947), SCAMPER (quicker for <60min passes).
 - **composes-with `manager-personality-quadrant`** — Sherwood claims
   Guides-quadrant audiences find the cascade most natural while Gods-
   quadrant audiences reject it as uncertainty-foregrounding. Use sk14

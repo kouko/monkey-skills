@@ -169,6 +169,18 @@ When this skill activates, follow these steps. **The ordering is deliberate: the
 
 ## B — Boundary ★
 
+> **PRIMARY USE CALLOUT — read this first**: This skill provides
+> **FACILITATION VOCABULARY ONLY**. It is NOT a personality measurement
+> instrument, NOT a leadership-development framework, NOT a hiring or
+> promotion tool. Use the 2×2 as conversational shorthand for adapting
+> presentation framing across audiences with different tolerances for
+> uncertainty. For any decision touching personnel evaluation,
+> development, or selection, use a peer-reviewed instrument (Hogan PI /
+> Big Five NEO-PI-R / DiSC) or escalate to an industrial-organizational
+> psychologist. The 2×2 below is a conversation aid; treat it the way a
+> chef treats a flavor wheel — useful for naming what you taste, not a
+> substitute for tasting.
+
 ### Do NOT use when:
 
 - The task is hiring, promotion, performance management, or any
@@ -224,6 +236,25 @@ visible to anyone activating this skill:
   founders (Steve Jobs, Bezos in some periods) have produced
   excellent outcomes; the quadrant does not predict success
   on its own.
+
+### Graduate beyond this skill when (v0.6)
+
+The 2×2 is conversational shorthand. Graduate to better-evidenced
+tools when the task requires more than facilitation vocabulary:
+
+| If your task is... | Use this instead |
+|---|---|
+| Personality measurement / structured profiling | **Big Five NEO-PI-R** (Costa & McCrae) or **Hogan Personality Inventory** — peer-reviewed industrial-organizational instruments |
+| Hiring, promotion, or performance decision | Validated assessment + structured interview methodology + interview-rater reliability training. **NOT this skill** |
+| Leadership-development planning | **Heifetz adaptive leadership** (technical vs adaptive work distinction) + **Edmondson teaming** (psychological safety baseline) |
+| Decision-style work (intuitive vs analytical thinkers) | **Klein 1998** *Sources of Power* (recognition-primed decision) + Kahneman *Thinking Fast and Slow* (System 1 / 2) |
+| Cultural / national reception variance | **Hofstede cultural dimensions** (uncertainty-avoidance dimension is most predictive of scenario-planning reception) |
+| Group dynamics / team-stage diagnosis | **Tuckman** (forming-storming-norming) + **Lencioni** 5 dysfunctions |
+
+The recommendations above are starting points; this skill is **never**
+the right tool for serious personnel work. Its scope is strictly:
+"Given a known audience, adapt the framing of an already-correct
+analysis without changing the analysis itself."
 
 ### Author's broader blind spots (BOOK_OVERVIEW Section 3)
 

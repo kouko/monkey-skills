@@ -96,7 +96,7 @@ ambition-as-spreadsheet-output).
   loop and annual budget loop were running; the *strategic loop was
   dead* — ambition was not being perturbed by any external input. Run
   scenario perturbation: generate 3-4 plausible 2030 worlds (via
-  `innovaction-martian-test` (sk13) feature-perturbation), ask "if
+  Step 5 Martian-test feature-perturbation, absorbed in v0.6.0), ask "if
   current lever settings stay where they are, are outcomes acceptable
   in each?" For scenarios where the answer is no, reverse-engineer the
   lever target changes required.
