@@ -1,6 +1,6 @@
 {
   "$schema_version": "v0.3.3",
-  "verified_at": "2026-05-12",
+  "verified_at": "2026-05-14",
   "purpose": "Per-source URL templates + identifiers for runtime fetch (Phase 1.7). Statute Pcode values are taken from law.moj.gov.tw 法規類別 system. Case + function-letter sources are pointer-only — exact URL pattern depends on the case number + court; LLM constructs the URL at fetch time per the source's documented search interface.",
   "statute_sources": {
     "民法": {
@@ -80,6 +80,12 @@
     },
     "仲裁法": {
       "pcode": "B0030009",
+      "host": "law.moj.gov.tw",
+      "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
+      "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
+    },
+    "行政程序法": {
+      "pcode": "A0030055",
       "host": "law.moj.gov.tw",
       "single_article_url_template": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode={pcode}&flno={article}",
       "all_articles_url_template": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode={pcode}"
