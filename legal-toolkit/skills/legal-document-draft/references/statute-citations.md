@@ -30,8 +30,8 @@ Full text (last amended 2016-03-02; not yet updated for 2025/11): https://law.mo
 
 ## 民法 (pcode B0000001)
 
-- §12 (成年年齡): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=12
-- §13 (未滿七歲無行為能力 / 七歲以上未成年限制行為能力): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=13
+- §12 (成年年齡，2023-01-01 起為 18 歲): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=12
+- §13 (未滿七歲無行為能力 / 七歲以上未成年〔即未滿十八歲〕限制行為能力): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=13
 - §227 (不完全給付): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=227
 - §247-1 (定型化契約檢視): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=247-1
 - §250 (違約金約定): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=250
