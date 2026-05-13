@@ -19,8 +19,8 @@ required:
 properties:
   schema_version:
     type: integer
-    const: 1
-    description: Schema version; bump on breaking changes
+    const: 2
+    description: Schema version; bump on breaking changes. v2 (2026-05-14) adds dpo.phone.
   company_name:
     type: string
     minLength: 2
@@ -54,6 +54,9 @@ properties:
         type: string
       email:
         type: string
+      phone:
+        type: string
+        description: DPO 個人聯絡電話 (incident response 個資外洩通報 / 函覆落款用；可與 general_contact.phone 不同)
   business_scope:
     type: array
     items: { type: string }
