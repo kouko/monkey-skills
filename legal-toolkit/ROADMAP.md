@@ -27,7 +27,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.8      0.3.4   1d      3 (clean)    output consolidation 7→3 (legal.md + business.md + findings.json)  ✅ DONE
 1.9      0.3.5   1d      3 (patch)    audit-driven polish (P0a/b/c) + 3 NDA-native fallbacks (C)  ✅ DONE
 1.10     0.3.6   0.5d    3 (plumbing) legal-sources.json SSOT-and-functional-copy + CI drift gate  ✅ DONE
-2        0.4.0   10d     5            Template + Runbook cluster
+2        0.4.0   10d     5            Template + Runbook cluster                    ✅ PARTIAL (SP3a done; SP3b → v0.4.1)
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
 4        0.6.0   10d     9            Tracker cluster
@@ -45,7 +45,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 | 0a | `using-legal-toolkit` | router | Model System | 1 | MVP |
 | 0b | `legal-playbook-author` | utility (cross-cluster) | Workflow | 1 | MVP |
 | 1 | `legal-contract-review` | 📋 Playbook | playbook (七層 + TW overlay) | 1 | MVP |
-| 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | planned |
+| 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | ✅ active (v0.4.0) |
 | 3 | `legal-incident-response` | 🚨 Runbook | NIST IR | 2 | planned |
 | 4 | `legal-issue-spot` | 🔍 IRAC | issue 矩陣 + 構成要件涵攝 | 3 | planned |
 | 5 | `legal-research` | 🔍 IRAC | IRAC + 請求權基礎 + Agent | 3 | planned |

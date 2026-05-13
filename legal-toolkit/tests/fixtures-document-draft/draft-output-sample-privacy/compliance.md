@@ -12,8 +12,8 @@
 - [x] §21 — 跨境傳輸揭露 — **PASS**
 - [x] 施行細則 §22 — 個資外洩通報使用「即時」語句 — **PASS**
 - [x] §27 — 安全維護措施 — **PASS**
-- [ ] §20-1 — Audit framework 段落 — **TBD_PDPC_pending** (Art. 20-1 promulgated 2025-11-11; 施行日期未定)
+- [ ] §20-1 — Audit framework 段落 — **TBD_PDPA_audit_framework** (Art. 20-1 promulgated 2025-11-11; 施行日期未定)
 
 ## TBD migration
 
-- **TBD_PDPC_pending — Art. 20-1 audit framework**: monitor PDPC announcements; when 施行日期 set + sub-regs published, add audit-framework section to §9 安全維護. See `references/tbd-migration-template.md`.
+- **TBD_PDPA_audit_framework — Art. 20-1 audit framework**: monitor PDPC announcements; when 施行日期 set + sub-regs published, add audit-framework section to §9 安全維護. See `references/tbd-migration-template.md`.

@@ -79,7 +79,7 @@ def test_fabricated_tbd_fails(tmp_path):
     text = compliance.read_text(encoding="utf-8")
     # Insert a TBD that doesn't match the canonical OPEN list
     text = text.replace(
-        "- [ ] §20-1 — Audit framework 段落 — **TBD_PDPC_pending**",
+        "- [ ] §20-1 — Audit framework 段落 — **TBD_PDPA_audit_framework**",
         "- [ ] §99 — 某虛構條文 — **TBD_FABRICATED_ITEM**",
     )
     compliance.write_text(text, encoding="utf-8")

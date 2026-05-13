@@ -33,4 +33,4 @@
 
 (none expected — ToS mode uses fully in-force 民法/消保法/公平交易法; no PDPC dependencies)
 
-- [ ] (TBD_GOV_CLOUD_restrictions only if user explicitly mentions 政府客戶) — **{{verdict}}**
+If the user explicitly mentions 政府客戶 scope, add `TBD_GOV_CLOUD_restrictions` per `references/tbd-migration-template.md` (政府採購法 / 資通安全管理法 still need Tier-A verification — see SP2 research note).
