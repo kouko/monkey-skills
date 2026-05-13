@@ -11,6 +11,15 @@
 <!-- TBD_PDPC_pending: PDPC 仍為籌備處階段；正式通報機制待掛牌後驗證 -->
 <!-- TBD_PDPC_timeframe: 個資法 §12 §4 授權子法尚未發布；本文以施行細則 §22「即時」為安全基準 -->
 
+<!--
+  Variable semantics — date vs datetime:
+  - {{notification_date}}: send date for header/footer; format YYYY-MM-DD
+  - {{notification_datetime}}: same event at ISO 8601 timestamp precision;
+    format YYYY-MM-DDTHH:MM±TZ; used in 說明 body where exact time matters
+  Both should refer to the SAME instant; LLM should derive
+  notification_date = notification_datetime.split("T")[0].
+-->
+
 # 個人資料外洩事故通報函
 
 **發文機關**：{{company_name}}

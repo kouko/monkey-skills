@@ -24,7 +24,7 @@ Full text (last amended 2016-03-02; not yet updated for 2025/11 母法 amendment
 
 - §12 (成年年齡，2023-01-01 起為 18 歲): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=12
 - §13 (七歲以上未成年〔即未滿十八歲〕限制行為能力): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=13
-- §125 (一般時效 15 年): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=125
+- §125 (一般時效 15 年；侵權行為另見 §197 = 2 年/10 年): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=125
 - §197 (侵權行為時效 2 年／10 年): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=197
 - §227 (不完全給付): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=227
 - §229 (給付遲延): https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=B0000001&flno=229

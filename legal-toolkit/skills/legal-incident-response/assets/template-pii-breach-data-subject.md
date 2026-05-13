@@ -65,6 +65,13 @@
 
 ---
 
+<!--
+  Variable semantics for date fields:
+  - {{incident_date}}: when the incident OCCURRED (used in 事件摘要 body)
+  - {{notification_date}}: when THIS LETTER is sent (used in落款 sign-off)
+  Both YYYY-MM-DD format; almost always notification_date > incident_date.
+-->
+
 {{company_name}} 敬上
 
-{{incident_date}}
+{{notification_date}}
