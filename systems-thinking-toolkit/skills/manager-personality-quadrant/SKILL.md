@@ -1,7 +1,7 @@
 ---
 name: manager-personality-quadrant
 description: |
-  Adapt the *framing* of a strategy artefact to an executive's planning style without changing the underlying analysis. The 2×2 vocabulary (Gods / Gamblers / Grinders / Guides) is supporting language for that conversation — the load-bearing move is the framing-vs-analysis split. Activate when diagnosing why a planning method fits or fails a specific leader, or when adapting strategy artefacts to an executive's style. Do NOT use as a hiring, promotion, or psychometric assessment instrument — evidence base is anecdotal; see Boundary for prior-art overlap (DiSC / MBTI / Hogan / Situational Leadership) and the circular Guides-quadrant definition. Triggers: "CEO discarded the plan", "COO loved it but CEO hated it", "why is this leader rejecting scenario planning", "adapt the deck for the executive", "she loves data but hates uncertainty", "he just wants the answer", "asymmetric reception". KEYWORDS: planning style, executive framing, scenario-planning reception, adapt the deck, plural futures, decisive recommendation, expected-value framing, framework wrapper, Gods Gamblers Grinders Guides, V1-weak. JA: 経営者の計画スタイル・提示フレーム適応 / zh-TW: 高階主管計畫風格・呈現框架調整。
+  Adapt the *framing* of a strategy artefact to an executive's planning style without changing the underlying analysis. The 2×2 vocabulary (Gods / Gamblers / Grinders / Guides) is supporting language for that conversation — the load-bearing move is the framing-vs-analysis split. Activate when diagnosing why a planning method fits or fails a specific leader, or when adapting strategy artefacts to an executive's style. Do NOT use as a hiring, promotion, or psychometric assessment instrument — evidence base is anecdotal; see Boundary for prior-art overlap (DiSC / MBTI / Hogan / Situational Leadership) and the circular Guides-quadrant definition. v0.9 promotes the v0.6 Graduate-beyond table to a first-class **Graduate Routing decision tree** (5 questions Q1-Q5) that runs BEFORE the quadrant facilitation: personnel decisions → Hogan/Big Five/structured-interview; leadership development → Heifetz/Edmondson/Kegan; decision-style → Klein/Kahneman; cultural reception → Hofstede/Meyer; team-stage dynamics → Tuckman/Lencioni + plugin-internal team-mental-model / cld-overlay. When any Q1-Q5 fires, the sk14 vocabulary is misapplied; route to the indicated alternative. Triggers: "CEO discarded the plan", "COO loved it but CEO hated it", "why is this leader rejecting scenario planning", "adapt the deck for the executive", "she loves data but hates uncertainty", "he just wants the answer", "asymmetric reception". KEYWORDS: planning style, executive framing, scenario-planning reception, adapt the deck, plural futures, decisive recommendation, expected-value framing, framework wrapper, Gods Gamblers Grinders Guides, V1-weak, Graduate Routing decision tree, Hogan PI, Big Five NEO-PI-R, Heifetz adaptive leadership, Edmondson teaming, Klein Sources of Power, Hofstede uncertainty avoidance, Erin Meyer Culture Map, Tuckman, Lencioni 5 dysfunctions, personality measurement instrument, peer-reviewed alternatives. JA: 経営者の計画スタイル・提示フレーム適応・グラデュエイトルーティング・人格測定計器・Hogan PI・Big Five・Heifetz・Edmondson・査読された代替案 / zh-TW: 高階主管計畫風格・呈現框架調整・Graduate Routing 決策樹・人格測量工具・Hogan PI・Big Five NEO-PI-R・同儕審查的替代方案・量化人格儀器。
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: Chapter 10 — Levers, outcomes, and strategy
 source_language: en
@@ -166,6 +166,116 @@ When this skill activates, follow these steps. **The ordering is deliberate: the
    quadrant-adapted framing, presented separately so the audit trail
    back to the canonical analysis stays intact, AND the four-question
    self-check above answered explicitly before delivery.
+
+## Graduate Routing ★
+
+> **Decision tree for when this skill is the wrong tool**. Use this
+> section BEFORE running the 2×2 quadrant facilitation — if your
+> task hits any branch below, the sk14 facilitation vocabulary is
+> insufficient or misapplied, and you should route to the indicated
+> external resource.
+
+### Decision tree
+
+Ask the user (or the situation):
+
+1. **Is the output going to influence a personnel decision** (hiring,
+   promotion, termination, comp, lateral move)?
+   → YES: do NOT use this skill. Route to:
+   - Hogan Personality Inventory (HPI/HDS/MVPI) for executive
+     assessment with peer-reviewed evidence on workplace prediction
+   - Big Five NEO-PI-R for general personality measurement (highest
+     evidence base in personality science)
+   - Validated structured-interview methodology + interview-rater
+     reliability training for selection decisions
+   - DO NOT recommend MBTI (low test-retest reliability; widely
+     critiqued in I-O psych); DO NOT use astrology / Enneagram /
+     CliftonStrengths Top 5 as decision input
+   → NO: continue to Q2
+
+2. **Is the output going to inform leadership-development planning**
+   (coaching, training prioritization, role-fit assessment)?
+   → YES: do NOT use this skill alone. Route to:
+   - Heifetz adaptive-leadership framework for technical-vs-adaptive
+     work distinction
+   - Edmondson teaming research for psychological-safety baseline
+     measurement (e.g. team-survey instruments validated in I-O
+     psych)
+   - Kegan adult-development theory for individual-developmental
+     readiness assessment
+   - Coaching certification body methodologies (ICF, EMCC) for
+     structured 1:1 coaching plans
+   → NO: continue to Q3
+
+3. **Is the output going to be used to predict / explain
+   decision-style differences** (intuitive vs analytical thinkers;
+   risk-tolerance variance; speed-vs-deliberation tradeoffs)?
+   → YES: do NOT use this skill. Route to:
+   - Klein 1998 *Sources of Power* — recognition-primed decision
+     making; the seminal study on how experts actually decide
+   - Kahneman 2011 *Thinking, Fast and Slow* — dual-process theory
+     (System 1 / 2)
+   - Behavioral-economics literature (Thaler / Sunstein / Camerer)
+     for biases-as-decision-drivers
+   - Klein-Kahneman 2009 *Conditions for Intuitive Expertise: A
+     Failure to Disagree* — when intuition is reliable vs not
+   → NO: continue to Q4
+
+4. **Is the output going to address cultural / national reception
+   variance** (multi-country team; international M&A; cross-border
+   product reception)?
+   → YES: do NOT use this skill alone. Route to:
+   - Hofstede cultural-dimensions framework — uncertainty-avoidance
+     dimension is the most predictive for systems-thinking /
+     scenario-planning reception
+   - GLOBE study (House et al 2004) — broader cross-cultural
+     leadership evidence
+   - Erin Meyer 2014 *The Culture Map* — practitioner-grade
+     translation of Hofstede + Meyer's own 8-dimension framework
+   → NO: continue to Q5
+
+5. **Is the output going to address team-stage dynamics or group
+   dysfunction** (forming-storming-norming patterns; team
+   coordination failures; recurring inter-team conflict)?
+   → YES: do NOT use this skill alone. Consider COMPOSING with:
+   - `team-mental-model` (plugin-internal — inward convergence +
+     leadership-energy proxies)
+   - `cld-overlay` (plugin-internal — outward conflict resolution
+     between groups)
+   - Tuckman forming-storming-norming-performing model
+   - Lencioni *Five Dysfunctions of a Team* (2002)
+   - Edmondson teaming research
+   → NO: this skill applies. Continue to Step 1 of the Execution
+   section below.
+
+### Routing scope
+
+This skill is FOR: adapting the framing of an already-correct
+strategy analysis when presenting to executives with different
+tolerance for uncertainty / preference for prediction-vs-exploration.
+Specifically the **decisive recommendation framing for Gods-quadrant
+audiences vs plural-futures framing for Guides-quadrant audiences**
+inside a `strategy-lever-and-cascade` workflow.
+
+This skill is NOT FOR: anything in Q1-Q5 above. Q1-Q5 are routing
+exits — when they fire, the sk14 vocabulary is misapplied (typically
+overconfident about a 2×2 evidence base it doesn't have).
+
+### Why this routing matters
+
+Sherwood's 2×2 typology is **craft, not science**. It carries less
+peer-reviewed evidence than the alternatives listed in Q1-Q5 above.
+Using sk14 INSIDE its actual scope (presentation framing for known
+audiences) is fine because Sherwood's observation about uncertainty-
+tolerance correlating with presentation reception is plausible-but-
+weak — sufficient for in-room facilitation, insufficient for
+decisions about humans (Q1-Q5).
+
+This Graduate Routing section is the v0.9 formalization of the
+v0.6 "Graduate beyond this skill when" Boundary table. v0.6 buried
+it inside Boundary; v0.9 promotes it to a first-class section that
+runs BEFORE the quadrant facilitation so the wrong-tool cases are
+caught at routing time, not at output time.
 
 ## B — Boundary ★
 

@@ -105,6 +105,108 @@ binding constraint (Easter Island c11 + Caulerpa algae c04).
   engagements, research programs, open-source maintenance, indie-hacker
   product development).
 
+### Case A5 — Platform Saturation Limits-to-Growth (v0.9 modern variant of A2)
+
+- **Problem**: A two-sided platform's growth engine eventually hits a
+  market-saturation B-loop — but the brake is *endogenous to the
+  winner-take-most dynamic itself*, in a way the 2002 car-dealership
+  case (A2) does not capture. Visible in: Facebook user-growth
+  deceleration in developed markets post-2017 (DAU growth dropping
+  from healthy double-digit %YoY to low single-digit %YoY over a
+  ~3-year window); Uber rider-side saturation in mature cities
+  post-2020. Single-product saturation is not the whole story:
+  modern platforms run a portfolio-expansion playbook (Facebook →
+  Instagram → WhatsApp; Uber → Uber Eats → Uber Freight) to *replace
+  the saturating B-loop with the next un-saturated R-loop*.
+- **Methodology applied (Branch L)**:
+  - **L1 signature**: deceleration toward asymptote confirmed —
+    e.g. mature-market DAU growth rate drops from ~+20% YoY to ~+2%
+    YoY over a 3-year window. Asymptote = TAM-bounded ceiling at
+    single-product scope. (Illustrative growth-rate ranges, not
+    company-specific financials.)
+  - **L2 central R-loop**:
+    `[Network Density] → User Acquisition → DAU → Engagement Hours
+    → Ad Inventory → R&D Spend → Product Quality → [Network Density]`
+    — six-node R-loop spanning user-side + firm-side; O-count = 0,
+    classification = reinforcing; currently spinning virtuous but
+    decelerating. This is the same loop structure as cld-craft
+    Case 13 (Metcalfe pattern), with the addition of the
+    monetization arrow (DAU → Ad Inventory → R&D) closing the firm-
+    side.
+  - **L3 candidate brakes** — five plausible:
+    (a) **addressable-market saturation** (TAM ceiling — every
+        potential user in the market has signed up);
+    (b) **network-effects-decay-at-scale** (utility-per-user
+        plateaus then declines once N is "large enough" — the
+        marginal user adds no new connection value);
+    (c) **attention-share competition** with alternative apps
+        (TikTok vs Meta competition for user session-time);
+    (d) **regulatory cap** (EU DMA gatekeeper limits / forced
+        interoperability requirements);
+    (e) **advertiser concentration risk** (revenue side hits its
+        own saturation when ad inventory grows faster than
+        advertiser demand).
+  - **L4 binding brake test**: "if we doubled user-acquisition
+    spend, would brake absorb the gain?" For mature ad-monetized
+    platforms in developed markets, (a) addressable-market is
+    usually the binding brake first; (b) network-effects-decay
+    binds first when the platform's value-per-user plateaus before
+    TAM does (Facebook's elderly-user demographics expanded TAM
+    without growing engagement-per-user). Diagnostic test: track
+    the *engagement-per-user* curve; if engagement-per-user
+    plateaus while DAU still grows, (b) binds; if both plateau
+    together, (a) binds.
+  - **L5 intervention — adjacent-market expansion**: replace the
+    saturating B-loop with the next un-saturated R-loop by
+    acquiring or building in an adjacent market. Facebook →
+    Instagram (2012, photo-sharing R-loop) → WhatsApp (2014,
+    messaging R-loop). Uber → Uber Eats (food-delivery R-loop) →
+    Uber Freight (logistics R-loop). The intervention philosophy
+    is *constraint-relief* in the same sense as Case A1 industrial-
+    revolution: relieve the binding brake by jumping to a new
+    R-loop that has its own un-saturated B-loop further out.
+    Falsifiable: if the adjacent market's R-loop never reaches
+    primary-market scale (or the adjacent market itself saturates
+    before recouping acquisition cost), the portfolio-expansion
+    strategy has misidentified the next-queued brake.
+  - **L6 next-queued brake**: usually (c) **attention-share
+    competition**. Once a platform's portfolio covers most
+    adjacent markets, the binding brake becomes total-human-
+    attention-budget — TikTok vs Meta competition is the *limits-
+    to-growth-on-limits-to-growth recursion*. Adjacent-market
+    expansion has a finite limit too: there are only so many
+    distinct user-activities to monetize.
+- **Conclusion**: Modern platform limits-to-growth runs the same
+  archetypal structure as Sherwood's car-dealership (A2) but with
+  three differences: (1) the R-loop spans the user base + firm,
+  not the firm alone; (2) the brake catalog includes network-
+  effects-decay and attention-share-competition that don't exist
+  for single-product car dealerships; (3) the intervention
+  vocabulary includes *portfolio expansion* (adjacent-market
+  acquisition / build) as a distinct strategy from
+  *constraint-relief on the current brake*. Adjacent-market
+  expansion is constraint-relief-via-loop-substitution rather than
+  brake-relief-within-the-current-loop.
+- **Outcome**: Calibrates archetype-application for platform-economy
+  / multi-product-portfolio diagrams. Pattern recognizable in any
+  mature platform with portfolio expansion: Meta (Facebook /
+  Instagram / WhatsApp / Threads / Reality Labs); Alphabet (Search
+  / YouTube / Android / Cloud); Amazon (retail / Prime / AWS /
+  Ads); Microsoft (Office / Azure / Teams / GitHub). Cross-ref to
+  cld-craft Case 13 (single-side network-effects R-loop spine),
+  Case 14 (two-sided market R-loop spine), Case 15 (winner-take-
+  most algorithm concentration — the data-side R-loop A5 omits for
+  clarity but should be added when the platform's monetization is
+  algorithm-driven).
+- **Provenance**: This case is **explicitly plugin-contributed (v0.9)**
+  — NOT Sherwood 2002. Sherwood's case base has no platform
+  examples; A2's provincial car dealership is single-product and
+  pre-dates the portfolio-expansion playbook modern platforms use
+  to escape single-product saturation. The strategic literature on
+  platform portfolio expansion (Eisenmann *Platform-Mediated
+  Networks*; Cusumano / Gawer / Yoffie *The Business of Platforms*
+  2019) postdates the book by 17+ years.
+
 ### Case A3 — Easter Island (c11) and Caulerpa algae (c04) — failure to recognize constraint
 
 - **Problem**: Easter Islanders' R-loop of population × statue-building
