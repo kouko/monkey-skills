@@ -51,62 +51,106 @@ V1-weak resolution per Bundle C "split decision":
   - New PRIMARY USE CALLOUT at top of Boundary: "FACILITATION VOCABULARY ONLY — NOT a personality measurement instrument, NOT a leadership-development framework, NOT a hiring tool"
   - New "Graduate beyond this skill when" subsection with 6-row table mapping task → better-evidenced alternative (Big Five NEO-PI-R / Hogan PI / Heifetz adaptive leadership / Klein Sources of Power / Hofstede cultural dimensions / Tuckman + Lencioni)
 
-## v0.7+ candidates (deferred)
+## v0.7.0 (body refinements + CI desc-drift check + READMEs v0.6 sync, 2026-05-13)
 
-### High ROI — already scoped
+- 5 body fixes from PR #271 audit:
+  - loop-classification-protocol halt rule for "candidate loop = one-way modifier chain"
+  - cld-archetypes Step-0 magnitude-comparison rule (3× threshold) for "Both at once" case
+  - cld-archetypes Branch L disambiguation (vicious-R-as-brake vs standalone runaway)
+  - strategy-lever-and-cascade STOP-after-Step-4 rule for low scenario uncertainty
+  - strategy-lever-and-cascade HOLD-lever named pattern (pedal-harder anti-pattern)
+- NEW `scripts/check-plugin-description-skill-coherence.py` + CI workflow — closes the stale-description drift class (v0.4 + v0.5 + v0.6 had drift moments)
+- 6 plugin/router READMEs (EN/JA/zh-TW × plugin-level + router-level) rewritten to v0.6 7-skill state (deferred since v0.4 PR #271)
 
-1. **6 items from PR #271 audit** (carried from v0.5): one-way-modifier halt rule in loop-classification-protocol; cld-archetypes Step-0 magnitude rule for "Both at once"; Branch L disambiguation vicious-R-as-brake vs standalone runaway; strategy STOP rule for low scenario uncertainty; HOLD lever named pattern; plugin self-analysis case (Case 11 + Case A4)
-2. **CI check: plugin.json description ↔ actual skill folder contents** — catches the stale-description drift class (v0.4 + v0.5 + v0.6 all had stale-desc moments that CI's verbatim plugin↔marketplace match couldn't catch)
-3. **Plugin-level README full rewrite to v0.6 state** (3 languages × 2 levels = 6 files) — v0.4 PR #271 missed README sync; v0.5 + v0.6 patched sk13 references but the broader skill tables still list v0.1.x skill names (`limits-to-growth-take-the-brakes-off` / `variance-target-action-template` / `stakeholder-and-team-thinking` — all merged/split in v0.4)
-4. **sk14 graduate-paths formalization** — v0.6 added textual "Graduate beyond" subsection; v0.7 could add an actual measurement-instrument router pointing at external skills
+## v0.8.0 (CLD falsifiability protocol + 3 new cases, 2026-05-13)
 
-### Companion skills
+- NEW `cld-craft/references/cld-falsifiability-protocol.md` — 6 falsification tests (sign / loop closure / magnitude / behavioral signature / fuzzy proxy / regime split); MANDATORY for regulatory / compliance / financial-decision-grade / litigation / safety-critical; **plugin's FIRST methodological improvement OVER Sherwood Rule 10 social-validation** (super-Sherwood affordance)
+- Case 11 (cld-craft) + Case A4 (cld-archetypes Branch L) — Plugin self-analysis (modern agent-orchestration domain filling Sherwood's pre-2010 blind spot)
+- Case 12 (cld-craft) — Reductionism Failure meta-case (Sherwood Ch 1-3 pattern operationalized)
 
-- **TRIZ skill** — independent skill for Altshuller's systematic
-  innovation principles (40 inventive principles + contradiction
-  matrix). v0.6 absorption preserves Martian-test logic inline; TRIZ
-  remains a separate prior-art alternative worth its own skill if
-  engineering-domain use-cases surface
-- **Edmondson teaming-safety hand-off** — when
-  `team-mental-model` detects psych-safety regime,
-  hand off to a separate skill (sk10 author's blind-spot already
-  flags this need)
-- **Stock-flow simulation companion script** — Python or D3-based
-  numerical simulator for `simulation-modeling` skill (cases.md
-  references several historical simulations that could be reproduced)
+## v0.9.0 (platform-economy R-loop bundle + sk14 Graduate Routing decision tree, 2026-05-13)
 
-### Domain expansion
+- 4 new cases filling Sherwood's pre-2010 platform-economy blind spot (Parker/Van Alstyne 2005, Eisenmann 2006):
+  - Case 13 — Network Effects R-loop (Metcalfe pattern)
+  - Case 14 — Two-Sided Market Chicken-and-Egg (Uber / Airbnb / OpenTable)
+  - Case 15 — Winner-Take-Most via Algorithm Concentration (TikTok / Google triple-R-loop)
+  - Case A5 — Platform Saturation Limits-to-Growth (Facebook 2017+ deceleration)
+- sk14 Graduate Routing 5-question decision tree (`## Graduate Routing ★` section before Boundary):
+  - Q1 personnel decisions → Hogan PI / Big Five NEO-PI-R / structured-interview
+  - Q2 leadership development → Heifetz / Edmondson / Kegan / ICF/EMCC
+  - Q3 decision-style → Klein 1998 / Kahneman 2011 / Thaler/Sunstein/Camerer
+  - Q4 cultural reception → Hofstede / GLOBE / Erin Meyer
+  - Q5 team-stage dynamics → Tuckman / Lencioni / plugin-internal team-mental-model + cld-overlay
 
-- Senge archetypes (Fixes That Fail, Shifting the Burden, Tragedy
-  of the Commons, etc.) as a separate sub-toolkit
-- Sterman methods (Business Dynamics 2000) — formal stock-flow
-  diagrams, simulation pipelines, group model-building protocols
-- Meadows leverage points (1999 essay) — 12-level hierarchy of
-  intervention points
+## v0.10.0 (executable Python stock-flow simulator companion, 2026-05-13)
 
-### Operational
+Closes Sherwood Ch 12-13 ithink/Stella quantitative-simulation gap (largest single scope reduction since v0.1):
 
-- Cross-skill router refinement based on actual usage telemetry
-  from v0.1.0
-- Per-skill `checklists/` extraction for common workshop runs
-- Stock-flow Python companion for `simulation-modeling` (currently
-  text-only — no executable simulator bundled)
+- NEW `simulation-modeling/scripts/cld_simulator.py` (412 lines, PEP-723 single-file, stdlib only) — Euler integration, JSON CLD spec input, CSV + ASCII-chart output
+- NEW `simulation-modeling/examples/` — 4 example specs (exponential / goal-seeking / logistic / Lotka-Volterra)
+- NEW `simulation-modeling/tests/test_cld_simulator.py` (321 lines pytest) — 30 tests covering analytical tolerance (4) + eval safety (5) + error handling (5) + CLI + format (5) + Euler discipline (2) + multi-flow + circular-ref (2) + conservation (1) + v0.10 hardening (6)
+- AST-walk eval whitelist (6 guard rails) safe against `__import__()` / dunder / attribute / method-chain / etc.
+- Honest caveats: Euler not RK4; single-file not PySD; pedagogical not research-grade
 
-## Known trade-offs (v0.1.0)
+## Resolved / merged v0.7+ candidates (historical record)
 
-- **Cache vs plugin SoT divergence**: Plugin is canonical; re-distill
-  flows to v0.x bumps with manual merge. See spec D1 decision and
-  R7 risk acceptance.
-- **V1-weak skills retained**: Per D2 user override, both `innovaction-
-  martian-test` and `manager-personality-quadrant` ship despite weak
-  V1 evidence. Each carries explicit prior-art disclosure in its
-  Boundary section. Can be re-evaluated each minor release.
-- **Single-file simulation**: `simulation-modeling` is text-only.
-  Stock-flow numerical simulation requires manual translation to
-  Vensim / iThink / spreadsheet / Python. Companion script deferred.
-- **Description JA/zh-TW hints uneven**: Some skill descriptions
-  include `システム思考 / 系統思考` hints, others don't. Aim for
-  uniform coverage in v0.2.
+The following v0.7+ candidate items shipped through PRs #280/#282/#283/#284:
+
+| v0.7+ candidate | Shipped in | PR |
+|---|---|---|
+| 6 PR #271 body-fix items (halt rule / magnitude rule / Branch L disambiguation / STOP rule / HOLD pattern / plugin self-analysis case) | v0.7 + v0.8 | #280 + #282 |
+| CI check for plugin desc ↔ skill folder coherence | v0.7 | #280 |
+| Plugin-level README rewrite to v0.6+ state | v0.7 | #280 |
+| sk14 graduate-paths formalization (Graduate Routing decision tree) | v0.9 | #283 |
+| Stock-flow simulation companion (Python, executable) | v0.10 | #284 |
+
+## v0.11+ candidates (still deferred)
+
+### Companion skills (independent skill folders; reach for when domain demand surfaces)
+
+- **TRIZ skill** — Altshuller's systematic-innovation framework (40 inventive principles + contradiction matrix). v0.6 absorbed Martian-test inline already covers part of this; TRIZ separate skill worth its own folder if engineering-domain use-cases surface.
+- **Edmondson teaming-safety hand-off** — when `team-mental-model` detects psych-safety regime, hand off to a separate skill. `team-mental-model` author's-blind-spot section already flags the need.
+
+### Domain expansion (separate sub-toolkits)
+
+- **Senge archetypes sub-toolkit** — Fixes That Fail / Shifting the Burden / Tragedy of the Commons / Drifting Goals / etc. as 8-10 named archetypes beyond Sherwood's Branch L + Branch V.
+- **Sterman methods** (Business Dynamics 2000) — formal stock-flow diagrams, simulation pipelines, group model-building protocols.
+- **Meadows leverage points** (1999 essay) — 12-level hierarchy of intervention points (paradigm > goals > rules > information > feedback > etc.).
+
+### Simulator extensions (v0.10 follow-ups)
+
+- **RK4 integration mode** — optional 4th-order Runge-Kutta replacing Euler for users needing tighter long-run fidelity (v0.10 already documents Euler drift caveat).
+- **matplotlib image-chart output** — optional `--output png` replacing ASCII chart for non-terminal contexts; would lift the stdlib-only constraint (acceptable trade-off for v0.11).
+- **Stiff-equation comparison framework** — test harness for verifying simulator behavior on stiff systems with known fixed-points.
+- **PySD / BPTK-Py integration mode** — optional "import existing Vensim model" path for users coming from research-grade tooling.
+
+### Operational (telemetry-dep / low-priority)
+
+- Cross-skill router refinement based on actual usage telemetry (post-v0.x adoption period).
+- Per-skill `checklists/` extraction for common workshop runs (post-usage-pattern-stability).
+
+### 2002-vintage inherited gaps (book itself has them; plugin only partial)
+
+Per `docs/superpowers/audits/2026-05-13-systems-thinking-toolkit-vs-original-book.md`:
+
+- **2008-style cross-firm systemic contagion** — book pre-dates; plugin has nothing on it.
+- **Behavioral economics biases internalized** — Klein / Kahneman / Thaler currently only as **external** Graduate-beyond pointers in sk14; could be internalized as `behavioral-bias-overlay` skill.
+- **Modern facilitation tools** (Miro / FigJam / async-distributed workshop adaptation) — team-mental-model Boundary flags this as known blind spot; not implemented.
+- **ABM (Agent-Based Modeling) comparison** — cld-craft Boundary mentions but doesn't deep-compare.
+- **Pearl-style causal-inference DAG comparison** — cld-craft Boundary mentions but doesn't deep-compare.
+
+## Resolved trade-offs (historical record)
+
+These items from earlier "Known trade-offs (v0.1.0)" sections have been resolved:
+
+- ✅ **Single-file simulation** → resolved in v0.10 (executable Python companion shipped; `simulation-modeling` no longer text-only).
+- ✅ **V1-weak skills retained** → resolved in v0.6 (sk13 absorbed into strategy; sk14 strengthened to "facilitation vocabulary only") + v0.9 (Graduate Routing decision tree).
+- ✅ **Description JA/zh-TW hints uneven** → resolved in v0.2 (A8 normalization) + v0.5 (symptom-phrase coverage +20 zh-TW + 12 JA).
+
+## Still-active trade-offs
+
+- **Cache vs plugin SoT divergence**: plugin is canonical; re-distill flows to v0.x bumps with manual merge. See spec D1 decision and R7 risk acceptance.
+- **vs-original-book ~92% methodology coverage**: 5 inherited 2002-vintage gaps remain (see v0.11+ candidates section above). Closing these would require new V2 evidence per Stage-1.5 verification standards.
 
 ## Source
 
