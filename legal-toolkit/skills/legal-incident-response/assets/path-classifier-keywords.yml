@@ -51,8 +51,6 @@ authority-letter:
 contract-breach:
   high_confidence_keywords:
     - 違約
-    - breach
-    - default
     - 對方未付
     - 對方未交付
     - 對方延遲

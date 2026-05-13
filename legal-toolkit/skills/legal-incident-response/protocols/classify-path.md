@@ -71,7 +71,7 @@ JSON snippet returned to main pipeline:
 {
   "inferred_type": "authority-letter",
   "confidence": "MEDIUM",
-  "signals_matched": ["金管會", "函", "日內", "客戶資料"],
+  "signals": ["金管會", "函", "日內", "客戶資料"],
   "rationale": "...",
   "secondary_path_hint": "pii-breach"
 }
