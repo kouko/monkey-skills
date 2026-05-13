@@ -1,0 +1,20 @@
+{
+  "name": "goal-seeking",
+  "_comment": "Single B-loop: Inventory chases Target. ReplenishmentRate = adjustment_speed * (Target - Inventory). Analytical: I(t) = Target + (I0 - Target) * exp(-k*t). At t=50 with k=0.2, exp(-10)≈4.5e-5 → I≈Target.",
+  "duration": 50,
+  "dt": 0.1,
+  "stocks": {
+    "Inventory": 20
+  },
+  "parameters": {
+    "Target": 100,
+    "adjustment_speed": 0.2
+  },
+  "flows": {
+    "Replenishment": {
+      "to": "Inventory",
+      "equation": "adjustment_speed * (Target - Inventory)"
+    }
+  },
+  "outputs": ["Inventory"]
+}

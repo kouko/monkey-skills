@@ -1,0 +1,19 @@
+{
+  "name": "exponential-growth",
+  "_comment": "Single R-loop: Population grows by 5% per time-unit. Analytical: P(t) = P0 * exp(r*t). At t=50 with r=0.05, P0=100, P=100*exp(2.5)=1218.25",
+  "duration": 50,
+  "dt": 0.1,
+  "stocks": {
+    "Population": 100
+  },
+  "parameters": {
+    "growth_rate": 0.05
+  },
+  "flows": {
+    "Births": {
+      "to": "Population",
+      "equation": "growth_rate * Population"
+    }
+  },
+  "outputs": ["Population"]
+}

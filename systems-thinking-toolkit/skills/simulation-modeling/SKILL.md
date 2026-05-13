@@ -1,7 +1,7 @@
 ---
 name: simulation-modeling
 description: |
-  Translate a cld-craft-produced CLD into a quantitative stock-and-flow plumbing diagram AND use the resulting model for learning rather than point-forecast. TEXT-ONLY discipline — produces a labeled plumbing diagram + doubling-time-vs-response-delay arithmetic + graphs-not-numbers framing + fuzzy-input sensitivity-sweep narrative in prose; no executable simulator or numeric solver bundled (v0.3 candidate). Pipeline: time-freeze classification → stock/flow split → uniflow/biflow detection → lever-to-flow / outcome-to-stock mapping; then doubling-time-vs-response-delay diagnostic on any reinforcing loop, graphs-not-numbers output framing, fuzzy-input sensitivity sweep as minimum falsifiability floor, refusal to extrapolate fuzzy-input simulations as forecasts. NOT for deterministic single-number problems (tax, accounting, regulatory submission, pricing engines), stochastic-shock-dominant systems, or homogeneous-aggregation when customer heterogeneity is load-bearing. Triggers: "model this", "stock and flow", "convert CLD to simulation", "is morale measurable", "what's the right answer", "extrapolate to 2030", "two more decimal places", "the model says", "growing slowly, plenty of time", "how do I know if this model is wrong", "stress-test the fuzzy inputs". KEYWORDS: stocks and flows, plumbing diagram, simulation, system dynamics, time-freeze test, uniflow, biflow, learning vs forecasting, doubling time, response delay, exponential growth, false precision, detail vs dynamic complexity, sensitivity sweep, falsifiability floor. JA: ストック・フロー変換・学習用シミュレーション / zh-TW: 存量流量轉換・學習用模擬.
+  Translate a cld-craft-produced CLD into a quantitative stock-and-flow plumbing diagram AND use the resulting model for learning rather than point-forecast. Text discipline PLUS an optional v0.10 Python companion (scripts/cld_simulator.py) — Euler-integration JSON-spec simulator with CSV / ASCII-chart output for pedagogical S-curve / oscillation / goal-seeking experimentation; NOT a research-grade tool (use PySD / BPTK-Py for that). Pipeline: time-freeze classification → stock/flow split → uniflow/biflow detection → lever-to-flow / outcome-to-stock mapping; then doubling-time-vs-response-delay diagnostic on any reinforcing loop, graphs-not-numbers output framing, fuzzy-input sensitivity sweep as minimum falsifiability floor, refusal to extrapolate fuzzy-input simulations as forecasts. Optional `uv run scripts/cld_simulator.py spec.json` for hands-on stock-flow simulation when the team needs to *see* the behavior the diagnostic predicts. NOT for deterministic single-number problems (tax, accounting, regulatory submission, pricing engines), stochastic-shock-dominant systems, or homogeneous-aggregation when customer heterogeneity is load-bearing. Triggers: "model this", "stock and flow", "convert CLD to simulation", "is morale measurable", "what's the right answer", "extrapolate to 2030", "two more decimal places", "the model says", "growing slowly, plenty of time", "how do I know if this model is wrong", "stress-test the fuzzy inputs", "run the simulator", "simulate the S-curve", "show me the logistic curve". KEYWORDS: stocks and flows, plumbing diagram, simulation, system dynamics, time-freeze test, uniflow, biflow, learning vs forecasting, doubling time, response delay, exponential growth, false precision, detail vs dynamic complexity, sensitivity sweep, falsifiability floor, Euler integration, logistic, S-curve, Lotka-Volterra. JA: ストック・フロー変換・学習用シミュレーション / zh-TW: 存量流量轉換・學習用模擬.
 source_book: Seeing the Forest for the Trees — Dennis Sherwood
 source_chapter: Chapter 12 — Turbo-charging your systems thinking; Chapter 13 — Modeling business growth (with Ch 5 support)
 source_language: en
@@ -165,6 +165,86 @@ When this skill activates, follow these steps:
 
 12. **Simulate to learn, not to forecast** — run multiple scenarios with deliberately uncertain inputs. The output is graphs to learn from, not a single number to plan with.
     - Halt condition: if anyone is asking for "2 more decimal places of precision," you have lost the plot — return to step 8 and re-classify the purpose.
+
+## Executable Companion (v0.10) — `scripts/cld_simulator.py`
+
+Sherwood's Chapters 12–13 walk through ithink/Stella simulations to make S-curves and predator-prey oscillations *visible*. The v0.10 companion is a stdlib-only Python script that gives the same hands-on affordance without paid desktop software. It is **pedagogical**, not research-grade.
+
+### Invoke
+
+```bash
+# ASCII chart to stdout (default)
+uv run scripts/cld_simulator.py examples/03_limits_to_growth.json
+
+# CSV to stdout
+uv run scripts/cld_simulator.py examples/01_exponential_growth.json --output csv
+
+# CSV to file + ASCII chart to stdout
+uv run scripts/cld_simulator.py examples/04_predator_prey.json --output both --out run.csv
+
+# Override duration / dt at runtime
+uv run scripts/cld_simulator.py examples/03_limits_to_growth.json --duration 100 --dt 0.05
+```
+
+The PEP-723 header makes it `uv run`-able with no `pip install` required.
+
+### JSON spec quick reference
+
+```json
+{
+  "name": "exponential-growth",
+  "duration": 50,
+  "dt": 0.1,
+  "stocks":     { "Population": 100 },
+  "parameters": { "growth_rate": 0.05 },
+  "flows": {
+    "Births": { "to": "Population", "equation": "growth_rate * Population" }
+  },
+  "outputs": ["Population"]
+}
+```
+
+- A flow with `"to": "X"` adds to X; `"from": "Y"` subtracts from Y; both = transfer.
+- Equations may reference any stock name, any parameter name, and the whitelisted math functions (`abs`, `min`, `max`, `round`, `exp`, `log`, `sqrt`, `sin`, `cos`, `tan`, `pi`, `e`). No imports, no attribute access, no dunder names — the parser rejects unsafe input before evaluation.
+
+### Bundled examples (in `examples/`)
+
+| File                            | Pattern             | What you learn                                                                 |
+| ------------------------------- | ------------------- | ------------------------------------------------------------------------------ |
+| `01_exponential_growth.json`    | Single R-loop       | Doubling time. `P(t) = P0 · exp(r·t)`.                                          |
+| `02_goal_seeking.json`          | Single B-loop       | Exponential approach to target. Asymptotic convergence, not arrival.            |
+| `03_limits_to_growth.json`      | Coupled R + B       | Logistic S-curve. Inflection at K/2; classic Sherwood Ch 13 archetype.          |
+| `04_predator_prey.json`         | Two coupled R-loops | Lotka–Volterra oscillation. Reveals Euler's amplitude drift (a teaching moment).|
+
+### Output formats
+
+- `csv` — `time,Stock1,Stock2,...` header + one row per step. Pipe to your spreadsheet for further analysis.
+- `ascii-chart` — terminal-renderable line plot per output stock; height 20, width capped at 80 columns. Good for "did I get an S-curve?" sanity checks.
+- `both` — write CSV to `--out FILE`, render chart to stdout.
+
+### Test command
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 pytest skills/simulation-modeling/tests/ -v
+```
+
+21 tests cover analytical-comparison (exponential within 5%, goal-seeking within 1%, logistic inflection within 5%, predator-prey ≥2 maxima), safety (rejects `__import__`, dunder, attribute access, unknown functions), spec validation (malformed JSON, unknown stocks, missing fields), output format (CSV row count, ASCII rendering), and conservation (transfer flows).
+
+### Honest caveats
+
+- **Euler integration only** — no RK4, no adaptive step. Sufficient for manager-grade learning ("S-curve looks right", "oscillates around equilibrium"), insufficient for stiff systems or long simulations where Euler error compounds. Predator-prey amplitude *will* drift — that drift is itself instructive about why production tools use higher-order integrators.
+- **Single-file** — no PySD module loader, no Vensim XMILE import, no graphical model editor. JSON-only spec. If you outgrow JSON, you have outgrown this tool.
+- **No stochastic shocks** — fully deterministic. Per Stage 1's "fuzzy response curves" and Stage 2's `Step 11.5` sensitivity sweep, run the simulator multiple times with perturbed parameters to approximate scenario variance manually.
+- **No cohort / segment heterogeneity** — single homogeneous stock per name. If your problem is "free vs paid retention curves," this tool will mislead.
+
+### When to *not* reach for the script
+
+If the discipline (Stages 1–2 above) already produced enough understanding from text + diagram + doubling-time arithmetic, **do not run the simulator**. Generating a curve has a cost: managers anchor on the numerical output (the very `ce15` failure mode this skill exists to prevent). The simulator earns its keep only when the team genuinely needs to *see* the behavior the diagnostic predicts — typically when a stakeholder is dismissing exponential or S-curve dynamics as "linear" / "plenty of time."
+
+### Cross-ref
+
+- **Sherwood Ch 12–13** — closes the quantitative gap the original text-only v0.1–v0.9 skill named but did not fill.
+- **2026 production stack** — when this tool's limits bite, graduate to PySD (Python, free, file-driven) or BPTK-Py (Python, free, in-memory) per the Author's-blind-spots note above. The plumbing diagram you built in Stage 1 transports unchanged.
 
 ## B — Boundary ★
 
