@@ -1,6 +1,6 @@
 # cld-archetypes Cases — Index
 
-One-page anchor index for `cases.md` (~230 lines, 8 cases across two
+One-page anchor index for `cases.md` (~280 lines, 9 cases across two
 archetypes + 1 modern-platform variant). **Read this file first**, then
 load the specific case section from `cases.md` on demand. The full
 file is mandatory before finalizing an intervention recommendation;
@@ -14,6 +14,7 @@ the full read.
 | Resource constraint relaxed unexpectedly (sanitation / supply chain / regulatory) → R-loop accelerates | [Case A1 — Tea, disease, industrial revolution (c12)](cases.md#case-a1--tea-disease-and-the-industrial-revolution-c12) |
 | Sales channel saturating; doubling spend stops moving the curve; "diminishing returns on X" | [Case A2 — Provincial car dealership (c24)](cases.md#case-a2--provincial-car-dealership-growth-simulation-c24-chapter-13) |
 | Growth engine ignored a known binding constraint until catastrophic failure | [Case A3 — Easter Island + Caulerpa algae (c11, c04)](cases.md#case-a3--easter-island-c11-and-caulerpa-algae-c04--failure-to-recognize-constraint) |
+| Multi-agent / human-in-the-loop / sustained-iteration cadence hitting cognitive ceiling; the plugin's own development meta-case (modern agent-orchestration) | [Case A4 — Plugin Self-Analysis (v0.8)](cases.md#case-a4--plugin-self-analysis-v0-8-modern-agent-orchestration-case) |
 
 ## Branch V — Variance/Target/Action (single B-loop with delay, oscillation signature)
 

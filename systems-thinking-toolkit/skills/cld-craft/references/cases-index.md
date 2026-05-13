@@ -1,6 +1,7 @@
 # cld-craft Cases — Index
 
-One-page anchor index for `cases.md` (218 lines, 10 cases). **Read this
+One-page anchor index for `cases.md` (~330 lines, 12 cases — 10 from
+Sherwood 2002 + 2 v0.8 plugin-contributed modern cases). **Read this
 file first**, then load the specific case section from `cases.md` on
 demand by section header. The full file is still mandatory before
 emitting Step 11 output for high-stakes diagrams; this index lets you
@@ -20,6 +21,8 @@ locate the relevant precedent before committing the full read.
 | Tier-1 reversibility returns nonsense ("can't have negative births"); uniflow / one-way physical process | [Case 8 — BIRTHS → POPULATION Uniflow](cases.md#case-8--births--population-uniflow-sterman-fallback-chapter-4--chapter-12) |
 | Variance KPI definition changed (TARGET − ACTUAL ↔ ACTUAL − TARGET); 3 of 4 labels flip | [Case 9 — Variance Sign Convention Flip (ce27)](cases.md#case-9--variance-sign-convention-flip-chapter-6-ce27) |
 | Stock with parallel inflow + outflow uniflows; Lake Chad / inventory / population | [Case 10 — Lake Chad (c25)](cases.md#case-10--lake-chad-stock-and-flow-c25-chapter-12) |
+| Multi-agent / human-in-the-loop / sustained-iteration with diminishing returns; the plugin's own development meta-case | [Case 11 — Plugin Self-Analysis (v0.8)](cases.md#case-11--plugin-self-analysis-v0-8-modern-agent-orchestration-case) |
+| "We keep fixing parts but the whole doesn't improve" / reductionist instinct that the team needs to abandon; the canonical "when should I use a CLD at all?" calibration | [Case 12 — Reductionism Failure (Sherwood Ch 1-3 pattern; v0.8)](cases.md#case-12--reductionism-failure-sherwood-ch-1-3-pattern-v0-8-plugin-contribution) |
 
 ## Pattern coverage
 
@@ -27,6 +30,8 @@ locate the relevant precedent before committing the full read.
 - **Fuzzy elevation + split-trick**: Cases 4, 5
 - **R-loop external trigger naming**: Cases 6, 7
 - **S/O signing edge cases**: Cases 8, 9, 10
+- **Modern agent-orchestration + meta-application**: Case 11 (v0.8 plugin self-analysis)
+- **Reductionism-failure pattern recognition (gateway to using CLDs at all)**: Case 12 (v0.8 Sherwood Ch 1-3 meta-case)
 
 ## Loading rule
 

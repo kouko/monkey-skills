@@ -216,3 +216,111 @@ vicious-spin trigger identification.
   from outflows (O to stock); arithmetic balance reveals the shrinkage
   as inevitable given the measured rates. Calibrates the "uniflow"
   audit flag in `loop-classification-protocol.md`.
+
+## Case 11 — Plugin Self-Analysis (v0.8 modern agent-orchestration case)
+
+- **Problem**: A solo developer (kouko) shipped 7 PRs of the same
+  plugin (systems-thinking-toolkit v0.1.0 → v0.6.0) in a single day,
+  with plugin mean evolving 105 → 109.67/A. Per-PR delta: +3.4 → +1.0
+  → -0.5 → +0.5 → effectively monotone-decreasing. Multiple friction
+  points encountered: parallel-subagent git index race; Sonnet 1M-context
+  billing gate; Opus daily quota; audit subagent catching drift after
+  each restructure with diminishing returns. The question: was
+  continued rapid iteration paying off, or had it hit a wall?
+- **Methodology applied**: cld-craft Step 1-11 on the developer's own
+  prose summary of the 7-PR evolution.
+  - Step 2 dangles: `([Developer Iteration Drive])` input, `([Anthropic
+    Quota])` input, `{{Plugin Quality Target = 120}}` target, `((Plugin
+    Mean Score))` output, `>Anthropic Rate-Limit Regime]` cloud.
+  - Step 4 Rule 7 fuzzy elevation: `[Developer Cognitive Load]`
+    (inverted-U / threshold response curve) + `[Plugin Internal
+    Coherence]` (saturating curve).
+  - Step 5 split-fuzzy-variable on `Drive → PR Throughput` (regime-
+    dependent inverted-U): split into `Effect of Drive in Increasing
+    Throughput` (S, saturating) + `Effect of Drive in Depleting
+    Quality` (O, threshold-triggered).
+  - Step 11 emission found one R-loop (virtuous spin, currently
+    active) + two B-loops (Cognitive-Load brake + Limits-to-Growth
+    brake on Internal Coherence). Behavioral signature line:
+    `deceleration toward asymptote (per-cycle delta: +3.4 → +1.0 →
+    -0.5 → +0.5 over 4 PRs)`.
+- **Conclusion**: Classic limits-to-growth — the rapid-iteration engine
+  (R-loop) is being braked by developer cognitive-load (binding B-loop)
+  with audit-diminishing-returns queued as next brake. Per Step 11
+  hand-off, the appropriate downstream is `cld-archetypes` Branch L,
+  yielding "constraint-relief = cycle-boundary cognitive reset + scope
+  quantization per PR" intervention. Case A4 in cld-archetypes/cases.md
+  carries the archetype-level analysis.
+- **Outcome**: First documented self-application of the plugin to its
+  own development process. Demonstrates carry-1 cld-craft works on
+  meta-context (LLM agent + human developer workflow), filling
+  Sherwood's pre-platform-economy / pre-2010 agent-orchestration
+  blind spot. Cross-ref: dogfood audit at
+  `docs/superpowers/audits/2026-05-13-systems-thinking-toolkit-dogfood.md`
+  Test A captures the full Mermaid block + dynamic predictions.
+- **Calibration value**: this case is the canonical example of
+  applying CLD discipline to **multi-agent / human-in-the-loop
+  systems** — a domain category not in Sherwood 2002. The fuzzy
+  variables (`Cognitive Load`, `Internal Coherence`) are
+  agent-orchestration-specific and pair naturally with split-fuzzy-
+  variable trick to handle the inverted-U response curve of
+  iteration cadence on quality.
+
+## Case 12 — Reductionism Failure (Sherwood Ch 1-3 pattern, v0.8 plugin contribution)
+
+- **Problem**: A team confronts a recurring operational problem
+  (declining customer satisfaction / engineering quality / sales
+  productivity / team morale — the specific domain varies). The
+  reductionist instinct: decompose the problem into independent
+  parts, fix each part, expect aggregate improvement. The systems-
+  thinking diagnosis: the decomposition itself destroys the
+  connectedness that produced the emergent failure.
+- **Methodology applied (NOT applied — this is the
+  what-happens-without-CLDs case)**: the team attacks each part in
+  isolation. Customer satisfaction drops → blame customer success
+  team → add CS headcount. Engineering quality drops → blame
+  juniors → add senior reviews. Sales productivity drops → blame
+  pipeline → change CRM. Each fix locally rational; aggregate
+  unchanged or worse.
+- **Why the reductionist approach fails (Sherwood Ch 1 thesis
+  operationalized)**:
+  1. The named "parts" are NOT independent — they're nodes in a
+     feedback loop. Fixing one part loads another (CS team grew →
+     onboarding bandwidth dropped → new customer time-to-value rose
+     → cohort retention dropped → CS load rose again).
+  2. The emergent property (satisfaction / quality / productivity)
+     belongs to the WHOLE system; it cannot be assigned to any
+     single part. Decomposition silently denies the loop structure.
+  3. The reductionist diagnostic — "which part is broken?" — yields
+     false answers because every part is functioning to spec; the
+     dysfunction is in the COUPLING between parts.
+- **Conclusion**: This is the canonical "cost of NOT using a CLD"
+  case. The intervention is NOT to fix harder; it's to STOP
+  applying reductionist decomposition and run cld-craft. The team's
+  first CLD invariably reveals a vicious R-loop (Case 1 back office
+  pattern, Case 6 Hatfield trigger pattern) or a limits-to-growth
+  with sliding brake (Case A1 industrial-revolution pattern in
+  cld-archetypes/cases.md).
+- **Outcome**: Calibrates the "when should I use cld-craft at all?"
+  decision. Trigger phrases: "we keep fixing parts but the whole
+  doesn't improve" / "every part is doing its job but the team is
+  failing" / "we hired specialists and quality dropped" / "we fixed
+  CS but retention didn't recover" / "each department is making its
+  numbers but the company is sliding".
+- **Sherwood provenance**: Ch 1-3 demonstrate this pattern via
+  multiple unnamed-in-summary case studies; the plugin's BOOK_OVERVIEW
+  (Stage 0) marks these as "demonstrate the cost of *not* using CLDs"
+  (skeleton argument 1). This Case 12 is a META-CASE: it captures
+  the reductionism-failure PATTERN rather than citing any specific
+  Sherwood Ch 1-3 vignette verbatim. Treat it as a calibration
+  exemplar for recognizing when a team needs cld-craft in the first
+  place.
+- **Anti-pattern to avoid (when applying this case)**: do not use
+  Case 12 to dismiss every reductionist analysis as wrong. Many
+  problems ARE locally reducible (a specific bug in one module;
+  a specific underperforming sales rep; a specific equipment
+  failure). Case 12 applies when the problem RECURS DESPITE
+  successful local fixes — that recurrence is the loop signature.
+  Sherwood's Rule 10 / stakeholder-recognition test is the
+  pragmatic check: if stakeholders agree "we've been fixing parts
+  but it keeps coming back", the case is in scope.
