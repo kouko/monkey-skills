@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "from_skill": "legal-incident-response",
+  "to_skill": "legal-contract-review",
+  "contract_path": "/path/to/contract.md",
+  "breach_type": "不完全給付",
+  "alleged_breach_clauses": ["§3.2", "§4.4"],
+  "breach_date": "2026-05-08",
+  "discovery_date": "2026-05-13",
+  "counterparty": {"name": "對方公司"},
+  "urgency_level": "moderate",
+  "session_ref": "legal-outputs/2026-05-13T1430-incident-contract-breach/"
+}
