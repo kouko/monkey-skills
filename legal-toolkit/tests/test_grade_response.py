@@ -177,3 +177,16 @@ def test_contract_breach_handoff_missing_urgency_fails(tmp_path):
     result = grade.grade_response(target, path_type="contract-breach")
     assert result.passed is False
     assert any("urgency_level" in r for r in result.reasons)
+
+
+# ---------------------------------------------------------- T-IR-GR-17: Path A anti-pattern in business.md FAIL
+def test_path_a_antipattern_in_business_md_fails(tmp_path):
+    """Anti-patterns in business.md must also fail (SP3b checks both files,
+    no compliance.md carve-out unlike SP3a)."""
+    grade = _load()
+    output_dir = _copy_sample(tmp_path, "draft-output-sample-pii-breach")
+    business = output_dir / "business.md"
+    business.write_text(business.read_text(encoding="utf-8") + "\n\n## 違規測試\n72 小時內通報\n", encoding="utf-8")
+    result = grade.grade_response(output_dir, path_type="pii-breach")
+    assert result.passed is False
+    assert any("path a violation" in r.lower() for r in result.reasons)

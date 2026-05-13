@@ -52,9 +52,9 @@ MIN_BUSINESS_MD_BYTES = 200
 PATH_TYPES = ("pii-breach", "authority-letter", "contract-breach")
 
 # Path A anti-patterns: GDPR / legacy phrases this skill is explicitly built to
-# avoid. Each entry is (compiled_regex, why_it_fails). Checked against
-# legal.md only — business.md is summary-only and allowed to cite anti-patterns
-# in explanatory "NOT X" form (e.g., "不適用 GDPR 72hr 通報").
+# avoid. Each entry is (compiled_regex, why_it_fails). Checked against BOTH
+# legal.md AND business.md — SP3b has no compliance.md carve-out (unlike SP3a).
+# Anti-patterns must not appear anywhere in published output, even in "NOT X" form.
 #
 # Byte-identical to SP3a v0.4.1 legal-document-draft/scripts/grade_draft.py
 # PATH_A_ANTIPATTERNS bank per spec §7 functional duplication directive.
