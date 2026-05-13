@@ -324,3 +324,197 @@ vicious-spin trigger identification.
   Sherwood's Rule 10 / stakeholder-recognition test is the
   pragmatic check: if stakeholders agree "we've been fixing parts
   but it keeps coming back", the case is in scope.
+
+## Case 13 — Network Effects R-loop (Metcalfe pattern, v0.9 plugin contribution)
+
+- **Problem**: A platform's utility-per-user scales with N (Metcalfe-
+  weak) or N² (Metcalfe-strong) — every additional user makes the
+  platform more valuable to every existing user. Drives users-attract-
+  users virtuous R-loop on platforms like LinkedIn (professional
+  graph), WhatsApp (contact-list ubiquity), Slack (team adoption →
+  cross-team adoption). The diagnostic question for a CLD modeler:
+  the loop is *not* within the firm (Sherwood's typical scope) — it
+  spans the user base AND the firm. Sherwood 2002 R-loops are all
+  within-firm (reputation → contracts → revenue → maintenance →
+  reputation); network-effects R-loops cross the firm-user boundary.
+- **Methodology applied**: Rule 1 boundary discipline must explicitly
+  *include* the user base as nodes, not as a dangle. Rule 4 fuzzy
+  aggregation suppresses individual users into a fuzzy stock
+  `[Network Density per User]` — utility-per-user as a function of N
+  (saturating curve, often Metcalfe-weak in practice; pure N² applies
+  only when every-pair-can-interact, e.g. WhatsApp early days). The
+  load-bearing R-loop is:
+  `Active Users → [Network Density per User] → Per-User Utility →
+  Acquisition Rate → Active Users`. Step 11 emits R-loop; spin
+  direction depends on the trigger (cf. Case 6 Hatfield).
+- **Flip-trigger candidates for vicious spin**:
+  1. **Regulatory ban** (e.g. TikTok India 2020) — instantaneous N
+     collapse; same R-loop runs in reverse at the same compounding
+     speed.
+  2. **Critical-mass loss in a strategic subset** (e.g. Friendster
+     2006 — engineering performance collapse caused core influencers
+     to leave; once they left, the network had no reason to exist for
+     followers). The fuzzy variable `[Network Density per User]` is
+     non-uniform: losing high-density nodes (hubs) has outsized
+     effect.
+  3. **Single-feature competitor that fragments the network**
+     (e.g. Slack → Microsoft Teams in enterprise post-2017 — Teams
+     bundled with existing Office license; enterprise teams migrated
+     subset-by-subset; once a critical subset left, remaining users
+     lost intra-org utility).
+- **Conclusion**: Same R-loop structural-identity proof as Case 6
+  Hatfield — the network-effects loop is wired to spin either
+  direction; the trigger, not the structure, determines spin sign.
+  The fuzzy variable elevation (Rule 7) is `[Network Density per
+  User]` rather than `[Reputation]`; the loop's compounding speed is
+  the same in either spin direction.
+- **Outcome**: Calibrates CLD discipline for platform-economy
+  diagrams. The R-loop is recognizable in any 2-or-more-user platform
+  (social, professional, communication, marketplace). Cross-ref to
+  Case 6 (Hatfield) for the flip-trigger naming protocol; to Case 14
+  (two-sided market) for the more complex 2-coupled-R-loop variant
+  where supply and demand have separate density measures.
+- **Provenance**: This case is **explicitly plugin-contributed (v0.9)**
+  — NOT Sherwood 2002. Sherwood's book pre-dates mainstream network-
+  effects monetization (Metcalfe stated 1980; mainstream business
+  application post-2004 with Facebook era). Platform-economy
+  formalization in Parker / Van Alstyne / Choudary (*Platform
+  Revolution*, 2016) is the modern reference; this case operationalizes
+  Sherwood's CLD discipline for the pattern.
+
+## Case 14 — Two-Sided Market Chicken-and-Egg R-loops (Uber pattern, v0.9 plugin contribution)
+
+- **Problem**: A platform connects two distinct user populations
+  (supply side + demand side) where each side's value depends on the
+  other side's density. Drives TWO coupled R-loops: supply-side
+  density × demand-side liquidity. Cold start is the chicken-and-egg
+  trap — no supply means no demand, no demand means no supply,
+  neither side can bootstrap alone. Visible in: Uber / Lyft city-by-
+  city launch (riders × drivers); OpenTable rollout (diners ×
+  restaurants); Airbnb (guests × hosts); Doordash (eaters ×
+  restaurants × dashers — triple-sided).
+- **Methodology applied**: Rule 4 aggregation produces TWO fuzzy
+  variables (rather than Case 13's one):
+  `[Supply-Side Density]` (drivers-per-square-mile in a city) +
+  `[Demand-Side Liquidity]` (rider-requests-per-hour in a city).
+  Both R-loops are explicit:
+  - **Supply R-loop**: `Demand-Side Liquidity → Driver Earnings →
+    Driver Sign-Up → Supply-Side Density → Wait Time (O) → Demand-
+    Side Liquidity` (note O-link on wait-time: lower wait increases
+    liquidity).
+  - **Demand R-loop**: `Supply-Side Density → Wait Time (O) → Rider
+    Satisfaction → Rider Acquisition → Demand-Side Liquidity →
+    Driver Earnings → Supply-Side Density`.
+  - The two loops share two arrows (Wait Time + Driver Earnings) and
+    are *mutually reinforcing when warm*; *mutually starving when
+    cold*. This is structurally distinct from Case 13's single-loop
+    Metcalfe pattern.
+- **Diagnostic — cold-start dangle**: in cold start, both fuzzy
+  variables are near zero; `Wait Time` is effectively infinite;
+  `Rider Satisfaction` is below threshold; neither R-loop can self-
+  start. The CLD reads as `[]` no-liquidity-no-supply trap — the
+  loops exist structurally but cannot spin without external energy.
+  Subsidy-pump (Uber's early-driver bonuses; OpenTable's free
+  reservation widgets for restaurants) OR geographical concentration
+  (Uber's per-city sequential launch — focus all subsidy on a single
+  city until liquidity threshold; then move) breaks one side first
+  and the other side follows. This is constraint-relief in the same
+  sense as Case A1 (industrial revolution): the subsidy doesn't
+  *create* the R-loop; it relieves the cold-start constraint long
+  enough for the existing loops to take over.
+- **Conclusion**: Two-sided markets require two coupled R-loops on
+  one diagram. The split-fuzzy-variable trick (Case 4) doesn't
+  apply; the two fuzzy variables are independently load-bearing,
+  not two sides of an inverted-U. The intervention vocabulary is
+  *constraint-relief on the cold side* (subsidy / market
+  concentration), not *flip the trigger* (Case 6) or *question the
+  belief* (Case B5).
+- **Outcome**: Calibrates CLD discipline for marketplace / platform-
+  with-two-distinct-user-populations diagrams. Pattern recognizable
+  in: ride-share, food-delivery, short-stay rental, freelance
+  marketplaces (Upwork / Fiverr — workers × clients), reservation
+  platforms (OpenTable / Resy), payment networks (Visa / Mastercard
+  — merchants × cardholders), even attention markets (Twitch —
+  streamers × viewers). Cross-ref to Case A1 (constraint-relief as
+  intervention philosophy); to Case 13 (single-side network-effects);
+  to Case 15 (algorithm-concentration when the platform itself
+  optimizes the matching).
+- **Provenance**: This case is **explicitly plugin-contributed (v0.9)**
+  — NOT Sherwood 2002. Sherwood's book pre-dates the formal academic
+  treatment of two-sided markets (Rochet / Tirole 2003 formalization;
+  Parker / Van Alstyne 2005 strategic framing; Eisenmann / Parker /
+  Van Alstyne 2006 *HBR* "Strategies for Two-Sided Markets"). The
+  chicken-and-egg cold-start problem is a defining property of the
+  platform economy and is absent from Sherwood's case base.
+
+## Case 15 — Winner-Take-Most via Algorithm Concentration (TikTok / search-engine pattern, v0.9 plugin contribution)
+
+- **Problem**: A platform whose value proposition is *algorithmic
+  matching* (ranking / recommendation / discovery) enters a triple-R-
+  loop where ranking quality × user engagement × training data
+  mutually reinforce, producing winner-take-most dynamics that
+  two-firm competition models miss. Visible in: Google Search (web
+  ranking → user clicks → click-through-rate signal → ranking
+  improvement); TikTok For You Page (recommendation → watch time →
+  signal density → recommendation improvement); YouTube
+  recommendation; Amazon product-search ranking; Spotify discovery.
+- **Methodology applied**: Three coupled R-loops, NOT one. Fuzzy
+  variable elevation (Rule 7): `[Ranking-Algorithm Quality]` —
+  saturating curve at the top end, BUT with exponential downside
+  on the bottom end (small training-data gaps cause disproportionate
+  ranking-quality drops, because the algorithm's worst predictions
+  are where it lacks data, not where it has data). The three loops:
+  - **Algorithm-quality R-loop**: `Training Data → Ranking-Algorithm
+    Quality → Match Relevance → User Engagement → Training Data`.
+  - **User-retention R-loop**: `Match Relevance → Session Time →
+    Return Frequency → Cumulative Engagement → User Affinity →
+    Match Relevance` (the algorithm gets better *per-user* over time
+    as it learns the user's specific taste).
+  - **Data-scale R-loop**: `Active Users → Aggregate Training Data
+    → Cohort-Wide Ranking-Algorithm Quality → New-User First-Session
+    Quality → Active Users` (the algorithm gets better *across users*
+    as the population grows — new users get good recommendations
+    immediately because the cohort taught the model already).
+  - The three-way coupling is the source of winner-take-most: a
+    platform that gets ~6 months head-start on data accumulation
+    builds an algorithm-quality moat that competitors with smaller
+    user bases cannot close even with comparable engineering.
+- **Brake candidates**: (a) **regulatory antitrust** (FTC vs Google
+  search-bias cases; EU DMA gatekeeper designations) — externally
+  imposed cap on engagement leverage; (b) **privacy regulation**
+  (GDPR + emerging algorithm-transparency requirements) — limits
+  the training-data input; (c) **fundamental data-poisoning
+  attacks** (coordinated bot engagement to corrupt the ranking
+  signal) — endogenous noise; (d) **engagement-fatigue** (TikTok-
+  scroll burnout; attention-share competition from alternative apps)
+  — the user-retention R-loop hits a personal-time-budget ceiling.
+- **Conclusion**: The triple-R-loop structure is qualitatively
+  different from Case 13 (single R-loop) and Case 14 (two coupled
+  R-loops). The winner-take-most dynamic is *not* explainable by
+  any single one of the three loops — it emerges from the coupling.
+  Step 11 emission must show all three loops; suppressing any one
+  loses the winner-take-most prediction.
+- **Pairing with Case B5 (pseudo-target dangle)**: creators chasing
+  algorithm beliefs ("post 3/wk or be punished," "front-load the
+  hook in 3 seconds") reinforce the platform's algorithm-improvement
+  R-loop *whether or not the belief is correct* — the platform
+  benefits from creator behavior change either way. The pseudo-
+  target dangle on the creator side is a feature, not a bug, from
+  the platform's perspective. This is why algorithm folklore is
+  uniquely sticky on triple-R-loop platforms: the creator's
+  pseudo-feedback (no real belief-update) is the platform's real
+  feedback (training-data signal).
+- **Outcome**: Calibrates CLD discipline for algorithm-driven content
+  / matching platforms. Pattern recognizable in: search engines,
+  short-form video, e-commerce ranking, music / video discovery,
+  ad-bid optimization (Meta / Google ads), social-feed ranking.
+  Cross-ref to Case B5 (creator-side pseudo-target dangle); to
+  Case A5 in cld-archetypes (winner-take-most platform saturation
+  limits-to-growth); to Case 14 (when matching is between two
+  distinct user populations rather than user-and-content).
+- **Provenance**: This case is **explicitly plugin-contributed (v0.9)**
+  — NOT Sherwood 2002. Sherwood's book pre-dates algorithmic ranking
+  as a strategic primitive (TikTok 2016 / ByteDance recommendation
+  emergence; Google search PageRank predates the book but its
+  R-loop dynamics were not formalized for non-search domains until
+  the 2010s recommendation-systems literature).

@@ -1,11 +1,12 @@
 # cld-craft Cases — Index
 
-One-page anchor index for `cases.md` (~330 lines, 12 cases — 10 from
-Sherwood 2002 + 2 v0.8 plugin-contributed modern cases). **Read this
-file first**, then load the specific case section from `cases.md` on
-demand by section header. The full file is still mandatory before
-emitting Step 11 output for high-stakes diagrams; this index lets you
-locate the relevant precedent before committing the full read.
+One-page anchor index for `cases.md` (~530 lines, 15 cases — 10 from
+Sherwood 2002 + 2 v0.8 plugin-contributed modern cases + 3 v0.9
+platform-economy R-loop cases). **Read this file first**, then load
+the specific case section from `cases.md` on demand by section header.
+The full file is still mandatory before emitting Step 11 output for
+high-stakes diagrams; this index lets you locate the relevant
+precedent before committing the full read.
 
 ## When to consult each case
 
@@ -23,6 +24,9 @@ locate the relevant precedent before committing the full read.
 | Stock with parallel inflow + outflow uniflows; Lake Chad / inventory / population | [Case 10 — Lake Chad (c25)](cases.md#case-10--lake-chad-stock-and-flow-c25-chapter-12) |
 | Multi-agent / human-in-the-loop / sustained-iteration with diminishing returns; the plugin's own development meta-case | [Case 11 — Plugin Self-Analysis (v0.8)](cases.md#case-11--plugin-self-analysis-v0-8-modern-agent-orchestration-case) |
 | "We keep fixing parts but the whole doesn't improve" / reductionist instinct that the team needs to abandon; the canonical "when should I use a CLD at all?" calibration | [Case 12 — Reductionism Failure (Sherwood Ch 1-3 pattern; v0.8)](cases.md#case-12--reductionism-failure-sherwood-ch-1-3-pattern-v0-8-plugin-contribution) |
+| Single-side platform where utility-per-user scales with N or N² (social / professional / messaging); user base spans firm boundary | [Case 13 — Network Effects R-loop (Metcalfe pattern; v0.9)](cases.md#case-13--network-effects-r-loop-metcalfe-pattern-v0-9-plugin-contribution) |
+| Two-sided marketplace with chicken-and-egg cold start; supply density × demand liquidity; city-by-city or segment-by-segment rollout | [Case 14 — Two-Sided Market Chicken-and-Egg (Uber pattern; v0.9)](cases.md#case-14--two-sided-market-chicken-and-egg-r-loops-uber-pattern-v0-9-plugin-contribution) |
+| Algorithm-driven ranking / recommendation platform with winner-take-most dynamics; three coupled R-loops on quality × engagement × training data | [Case 15 — Winner-Take-Most Algorithm Concentration (TikTok / search pattern; v0.9)](cases.md#case-15--winner-take-most-via-algorithm-concentration-tiktok--search-engine-pattern-v0-9-plugin-contribution) |
 
 ## Pattern coverage
 
@@ -32,6 +36,7 @@ locate the relevant precedent before committing the full read.
 - **S/O signing edge cases**: Cases 8, 9, 10
 - **Modern agent-orchestration + meta-application**: Case 11 (v0.8 plugin self-analysis)
 - **Reductionism-failure pattern recognition (gateway to using CLDs at all)**: Case 12 (v0.8 Sherwood Ch 1-3 meta-case)
+- **Platform-economy R-loops (network effects, two-sided markets, algorithm concentration)**: Cases 13, 14, 15 (v0.9 — fills Sherwood's pre-platform-economy / pre-2010 blind spot; cross-ref Case B5 in cld-archetypes for creator-side pseudo-target on algorithm platforms)
 
 ## Loading rule
 
