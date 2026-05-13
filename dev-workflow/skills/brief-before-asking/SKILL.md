@@ -10,9 +10,9 @@ description: >-
   user about non-trivial engineering decisions (race conditions, performance
   bottlenecks, service boundary changes, refactor direction, tech selection,
   bug root cause). Use **reactively** when user signals they don't follow
-  either the question OR the explanation — phrases like 「看不懂」「什麼意思」
-  「我跟不上」「太多術語」「能不能簡單講」「ELI5」「I'm lost」「back up」
-  「in plain English」「more context」「where in the system are we」. Do NOT
+  either the question OR the explanation — phrases like 「看不懂」「跟不上」
+  「太多術語」「more context」「ELI5」「in plain English」 (full trigger
+  lists in body §Mode B and §Mode C). Do NOT
   use for trivial fork questions (naming, log levels, formatting — decide
   autonomously), pure factual queries (X is什麼), or when user has said
   "just decide, don't ask". Differentiated from `scqa-decision` (heavy
@@ -37,6 +37,15 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 **Triggered by**: Agent self-detects "I'm about to ask user about a non-trivial decision."
 
 **Output**: Full 6-block briefing → ends with specific request.
+
+**Mini-example** — index decision briefing (compressed):
+
+> **Mental Model**: Our orders-list page is slow because the database scans every row instead of jumping to recent pending ones.
+> **Situation**: `OrderRepository.findRecentPending` (orders.ts:142) p95 = 12s in prod; orders table 4.2M rows; only PK index; EXPLAIN shows Seq Scan.
+> **Why-this-fork**: Deploy window tomorrow; index choice constrains 2 mirror tables we'll add Q2.
+> **Options**: **A.** composite `(status, created_at DESC)` — 320 MB storage / read p95 → <100 ms / two-way door. **B.** cursor pagination on `created_at` — query rewrite ~40 lines / 0 storage / one-way door (API contract change).
+> **My take**: Lean **A**. (1) Deploy pressure favors low-blast-radius; (2) read-heavy access pattern stable 6+ months per usage logs; (3) 320 MB storage cost is negligible vs API contract churn. **But if** the orders-list endpoint is being deprecated Q3 anyway, B's one-way-door cost vanishes — switch to B.
+> **Open ends**: Q3 deprecation timeline confirmed? Dev DB storage ceiling? Your call on contract-stability vs storage trade-off.
 
 ### Mode B — Reactive on Question
 **Triggered by user phrases** indicating they didn't understand the *question*:
@@ -65,6 +74,8 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 4. After user picks, continue with that block only
 
 > **Why Mode C pauses**: The user already drowned in jargon once. Dumping 6 more blocks just drowns them again, even reordered. The fix is to land Mental Model first, then let the user pick the drill direction.
+
+> **First Mode C of session — optional load**: `references/EXAMPLES.md` §Saga/Outbox demo shows a worked Mode C output (Mental Model + glossary + drill menu). Skip if you've already produced one this session.
 
 ## The 6-Block Briefing Structure
 
@@ -202,12 +213,22 @@ When deciding between Mode B and Mode C:
 
 ## See Also
 
-- **`references/DESIGN.md`** — design rationale, 4-iteration history, why this design beats alternatives
-- **`references/EXAMPLES.md`** — concrete bad-vs-good examples for race conditions, query/index decisions, saga/outbox (Mode C demo)
-- **`references/IMPLEMENTATION-CHECKLIST.md`** — next steps to validate and refine this skill
-- **`dev-workflow:complexity-critique`** — for one-shot deletion-first gate (orthogonal: critique-line, not briefing)
-- **`dev-workflow:skill-creator-advance`** — to iterate this skill via test prompts
-- **`superpowers:brainstorming`** — for task-start ideation (brief-before-asking is for task-progress decisions)
+### Runtime references (conditional load)
+
+- **`references/EXAMPLES.md`** — concrete bad-vs-good examples for race conditions, query/index decisions, saga/outbox.
+  - **CONDITIONAL load** on first Mode C invocation per session (worked Mode C output format).
+  - **CONDITIONAL load** when debugging anti-pattern catches (jargon-in-MM / fake-neutrality / unbalanced-options).
+
+### Author-only — do NOT load at runtime
+
+- **`references/DESIGN.md`** — design rationale + 4-iteration history. Load only when redesigning this skill.
+- **`references/IMPLEMENTATION-CHECKLIST.md`** — author phase checklist. Load only when working on this skill itself.
+
+### Sibling skills
+
+- **`dev-workflow:complexity-critique`** — one-shot deletion-first gate (orthogonal — critique not briefing)
+- **`dev-workflow:skill-creator-advance`** — iterate this skill via test prompts
+- **`superpowers:brainstorming`** — task-start ideation (brief-before-asking is for task-progress decisions)
 
 ## Core Mindset
 
