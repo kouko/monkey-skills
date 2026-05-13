@@ -79,6 +79,22 @@ dpo:
     )
 
 
+# ---------------------------------------------------------- T-P-5: v2 schema additions
+def test_v2_profile_fields_validate():
+    """v0.4.2 schema v2 additions: external_counsel + regulatory_authorities
+    must validate when present in profile.yml (backward-compat with v1
+    schema_version: 1)."""
+    load_profile = _load_module("load_profile.py")
+
+    profile_path = FIXTURES / "profile-v2.yml"
+    result = load_profile.load_profile(profile_path)
+
+    assert result.valid is True, f"expected valid profile, got errors: {result.errors}"
+    assert result.data["external_counsel"]["firm_name"] == "測試律師事務所"
+    assert len(result.data["regulatory_authorities"]) == 2
+    assert result.errors == []
+
+
 # ---------------------------------------------------------- T-P-4: schema version mismatch
 def test_schema_version_mismatch_fails(tmp_path):
     load_profile = _load_module("load_profile.py")

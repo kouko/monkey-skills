@@ -1,6 +1,6 @@
 # legal-toolkit Roadmap (v0.1.0 → v1.0.0)
 
-> **Status**: design phase complete, scaffold in progress
+> **Status**: Phase 2 closeout (v0.4.2) — 5 skills active (router + playbook-author + contract-review + document-draft + incident-response). Phase 3 IRAC cluster (legal-issue-spot + legal-research) is next.
 > **Source of design**: `<obsidian-vault>/research/2026-05-09 法務 Agent Skill (legal-toolkit) 整體架構與執行流程設計.md`（1344 行；38+ 鎖定決定見 §11 ledger）
 > **Target**: 台灣 SME → 上市櫃 in-house 法務 in-house toolkit（不是 BigLaw 移植 / 不是 general legal assistant）
 > **Distribution**: 免費 open-source 工具，非服務（律師法 §48 對工具不適用）
@@ -29,7 +29,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 1.10     0.3.6   0.5d    3 (plumbing) legal-sources.json SSOT-and-functional-copy + CI drift gate  ✅ DONE
 2 SP3a  0.4.0   5d      4            Template ship (legal-document-draft 4 modes)   ✅ DONE
 2 dogf  0.4.1   1d      4 (patches)  Self-dogfood P0+3xP1 (民法 §12 / Path A grader) ✅ DONE
-2 SP3b  0.4.2   5d      5            Template + Runbook complete (incident-response) 🔜 next
+2 SP3b  0.4.2   5d      5            Template + Runbook complete (incident-response) ✅ DONE
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3        0.5.0   8-12d   7            IRAC cluster (諮詢 + 研究)
 4        0.6.0   10d     9            Tracker cluster
@@ -48,7 +48,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 | 0b | `legal-playbook-author` | utility (cross-cluster) | Workflow | 1 | MVP |
 | 1 | `legal-contract-review` | 📋 Playbook | playbook (七層 + TW overlay) | 1 | MVP |
 | 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | ✅ active (v0.4.0) |
-| 3 | `legal-incident-response` | 🚨 Runbook | NIST IR | 2 | planned |
+| 3 | `legal-incident-response` | 🚨 Runbook | NIST IR | 2 | ✅ active (v0.4.2) |
 | 4 | `legal-issue-spot` | 🔍 IRAC | issue 矩陣 + 構成要件涵攝 | 3 | planned |
 | 5 | `legal-research` | 🔍 IRAC | IRAC + 請求權基礎 + Agent | 3 | planned |
 | 6 | `legal-contract-tracker` | 📅 Tracker | 時序 + threshold alert | 4 | planned |
@@ -511,9 +511,9 @@ Phase 2 增加兩個 sibling skill（`legal-document-draft` + `legal-incident-re
 
 ---
 
-## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR pending）
+## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR ship 2026-05-13 — ✅ **PHASE 2 CLOSEOUT COMPLETE**）
 
-**Scope**: 累計 4 skills (router + playbook-author + contract-review + document-draft); legal-incident-response delayed to v0.4.2 per SP3 sequenced ship decision (B path) after SP2 PDPA verify reframed IR's 72hr-timer-centric design. v0.4.1 is a dogfood-driven patch release between SP3a and SP3b.
+**Scope**: 累計 5 skills active (router + playbook-author + contract-review + document-draft + incident-response). v0.4.0 ships SP3a `legal-document-draft`; v0.4.1 ships dogfood-driven patches between SP3a and SP3b; v0.4.2 ships SP3b `legal-incident-response` and closes Phase 2.
 
 ### v0.4.0 (SP3a) ✅ **DONE 2026-05-13**
 
@@ -548,16 +548,56 @@ Deferred to v0.4.x backlog (P2): compliance.md checkbox flip convention `- [ ]` 
 - verify-drift.py exit 0; marketplace description sync exit 0
 - Full audit: `docs/superpowers/audits/2026-05-13-legal-document-draft-sp3a-dogfood.md`
 
-### v0.4.2 (SP3b) 🔜 pending — `legal-incident-response`
+### v0.4.2 (SP3b) ✅ **DONE 2026-05-13** — `legal-incident-response`
 
-IR skill reframed from obsidian SoT §3.5's 72hr-timer-centric design after SP2 found 72hr was GDPR contamination. New scope: 事件分流 + 法源引用器 + 通報文起草 (3-path classifier: 個資外洩 / 主管機關函覆 / 違約; emits 內部記錄 + 通報文 with safe-default placeholders). To brainstorm + spec + ship after v0.4.1 ships.
+IR skill reframed from obsidian SoT §3.5's GDPR-contaminated design after SP2 verify run. New scope shipped: 事件分流 + 法源引用器 + 通報文起草. Phase 2 program closes here (累計 5 skills active: router + playbook-author + contract-review + document-draft + incident-response).
+
+**Feature summary**:
+- 3-path classifier (個資外洩 / 主管機關函覆 / 合約違約) — auto-classify free-text incident → user confirms path → dispatch sub-protocol
+- 2-file audience-shaped output (`legal.md` for 法務; `business.md` for 非法務) with ISO 8601 timeline + TBD migration tracker
+- Mixed per-path authoring: PII-breach uses skeleton+LLM-fill templates (3 docs: PDPC 通報文 + 當事人通知文 + 內部記錄); authority-letter uses pure-LLM protocol with canonical-§-gated citations + ISO deadline; contract-breach is thin classifier + `handoff-context.json` for soft delegation to `legal-contract-review`
+- Single `grade_response.py` per-path branch; Path A anti-pattern bank byte-identical to SP3a v0.4.1
+- profile.yml schema v1 → v2 (+2 optional fields `external_counsel` + `regulatory_authorities`; backward-compat v1 profiles auto-upgrade)
+- Router Q3 dispatch activated (intent: 個資外洩 / 違約 / 主管機關來文)
+- `legal-toolkit/scripts/canonical/` SSOT extends to cover `pdpa-current-state.md` + `tbd-migration-template.md` + `profile-schema.yml` + `load_profile.py` — distributed byte-identical to both `legal-document-draft` and `legal-incident-response` via `distribute.py` (drift-gated by `verify-drift.py` CI)
+
+**Implementation commits** (10 tasks across Phases A-F on `feat/legal-toolkit-sp3b-incident-response-spec`):
+
+| Task | Phase | Commit(s) | Scope |
+|---|---|---|---|
+| 1 | A | `dffc069` + `48bb54a` | canonical SSOT extension + skill bootstrap |
+| 2 | B/1 | `3407321` + `6de31f3` | path classifier (helper + protocol) |
+| 3 | B/2 | `7405eb3` + `da88787` + `79fadcf` | `grade_response.py` + fixtures + Path A scope test |
+| 4 | C/1 | `7dc7b5f` + `7f6255b` | PII-breach 3 templates + IR statute citations |
+| 5 | C/2 | `0b8095d` + `b3f4973` | PII-breach protocol + compliance checklist + flow doc |
+| 6 | D | `f57a927` + `f67ba2d` | authority-letter path (protocol + checklist + grader branch) |
+| 7 | E | `8263b3f` | contract-breach delegate path + handoff JSON schema |
+| 8 | F/1 | `276e6e9` + `2c8d289` | SKILL.md body + router + plugin/marketplace version bump v0.4.2 |
+| 9 | F/2 | (this commit) | Tri-lang READMEs + ROADMAP closeout |
+
+**Quality gates**:
+- 225/225 tests pass (was 201 in v0.4.1; +24 SP3b tests across path classifier + grader Path A bank + handoff schema + load_profile schema v2)
+- `verify-drift.py` exit 0 (canonical SSOT byte-identical across consumers)
+- `check-marketplace-description-sync.py` exit 0
+- Path A discipline grep clean across all SP3b deliverables (PII-breach templates / authority-letter protocol / contract-breach handoff / 3 compliance checklists / 3 skill-level READMEs / plugin-level READMEs / this ROADMAP entry)
+
+**Path A discipline carry-forward from SP2**: Taiwan 個資法 uses 「即時」 reporting language + 委託/受託 model; the canonical list of phrases the grader rejects in published `<doc-type>.md` output is defined in `scripts/grade_response.py PATH_A_ANTIPATTERNS` (regex bank shared byte-identical with SP3a v0.4.1; compliance.md still allowed to cite anti-patterns in `「NOT X」` explanatory form).
+
+**Deferred to v0.4.3+** (dogfood-driven design backlog):
+- `legal-playbook/` IR-specific clauses (incident-response playbook entries with per-clause stance defaults)
+- `--seed` flag consumption — auto-invoke `legal-contract-review` from contract-breach path (currently soft delegation only; user manually 接力 via `handoff-context.json`)
+- Multi-language outputs (zh-TW only in v0.4.2; multi-lang via `translation-toolkit` plugin separate concern)
+- Dogfood validation on real PII-breach / authority-letter / contract-breach scenarios; calibrate per-path checklist completeness + 函覆 §-anchor coverage + handoff JSON ergonomics
 
 ### Phase 2 cumulative quality gate
 
-- draft privacy / ToS / DPA / NDA modes all produce passing compliance.md
-- `grade_draft.py` exits 0 across modes with synthetic fixtures
-- `load_profile.py` validates profile.yml against schema
-- 201 tests green (was 194 in v0.4.0; +7 anti-pattern tests in v0.4.1)
+- ✅ `legal-document-draft` privacy / ToS / DPA / NDA modes all produce passing `compliance.md`
+- ✅ `grade_draft.py` exits 0 across modes with synthetic fixtures
+- ✅ `load_profile.py` validates `profile.yml` against schema v2 (backward-compat v1 profiles auto-upgrade)
+- ✅ `legal-incident-response` 3 paths (pii-breach / authority-letter / contract-breach) all dispatch + emit 2-file audience-shaped output
+- ✅ `grade_response.py` exits 0 across all paths; Path A anti-pattern bank byte-identical with SP3a v0.4.1
+- ✅ Router Q3 dispatch active; 5 skills total in plugin
+- ✅ 225 tests green (was 201 in v0.4.1; +24 SP3b tests)
 
 ---
 
@@ -702,7 +742,7 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.3.6 | Phase 1.10 plumbing refactor | 「legal-sources.json SSOT-and-functional-copy（plugin-level scripts/canonical/ + distribute.py + verify-drift.py CI gate）；零 runtime 行為改變；unblocks Phase 2 sibling skills；184/184 tests」 |
 | v0.4.0 | Phase 2 (SP3a) — legal-document-draft ship | 「4 mode 起草：隱私權政策 / 服務條款 / DPA / NDA。Path A 對現行台灣法務實。Skeleton + LLM fill；hand-curated 合規 checklist；deterministic 結構性 grading；profile.yml 共用公司身份。IR 延後到 v0.4.2。」 |
 | v0.4.1 | Phase 2 dogfood patches | 「P0 修 template-privacy 民法 §12 成年年齡 (20 → 18，與 SP2 research note 對齊)；P1 grade_draft 新增 Path A anti-pattern 語義檢查 (4 regex，鎖住未來研究-template author drift)；P1 nda authoring note 移到 HTML 註解 (不再外洩給對造)；P1 隱私 §3 特種個資括號改 heading + paragraph (避免自我矛盾渲染)。201 tests pass。」 |
-| v0.4.2 | Phase 2 (SP3b complete) — legal-incident-response ship | 「事件分流 + 法源引用器 + 通報文起草 (3-path: 個資外洩 / 主管機關函覆 / 違約)。SP2 reframe 後不再有 72hr GDPR timer。」 |
+| v0.4.2 | Phase 2 (SP3b complete) — legal-incident-response ship | 「事件分流 + 法源引用器 + 通報文起草 (3-path: 個資外洩 / 主管機關函覆 / 違約)。Auto-classify + per-path sub-protocol + 2-file audience-shaped output；PII skeleton+LLM-fill / authority pure-LLM / contract-breach soft-delegate to legal-contract-review via handoff-context.json；profile.yml schema v1→v2；canonical/ SSOT 擴展涵蓋 pdpa-current-state + tbd-migration + profile-schema + load_profile；router Q3 dispatch active；累計 5 skills active；Path A 紀律延續 SP3a v0.4.1 anti-pattern bank；225 tests pass。Phase 2 closeout。」 |
 | v0.5.0 | Phase 3 ship | 「+ 諮詢 + 研究」 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
 | v0.9.0 | Phase 5 ship | 「+ 公司治理 + DD」(complete features) |

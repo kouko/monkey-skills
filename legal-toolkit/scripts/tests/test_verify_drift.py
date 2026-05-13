@@ -15,6 +15,8 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
+REPO = SCRIPTS.parent.parent
+
 
 def _load_verify_drift():
     """Importlib helper — script filename has a hyphen, so we can't `import
@@ -167,3 +169,40 @@ sys.exit(vd.main())
     assert "---" in result.stdout
     assert "+++" in result.stdout
     assert "@@" in result.stdout
+
+
+# ---------------------------------------------------------- T-V-6: real SP3b destination drift
+def test_verify_drift_catches_sp3b_destination_modification():
+    """Modifying SP3b's functional copy should be caught by verify-drift.py
+    (exit 1) against the REAL repository ROUTE table."""
+    sp3b_copy = (
+        REPO
+        / "legal-toolkit"
+        / "skills"
+        / "legal-incident-response"
+        / "scripts"
+        / "load_profile.py"
+    )
+    assert sp3b_copy.is_file(), (
+        f"SP3b functional copy missing — run distribute.py first: {sp3b_copy}"
+    )
+    original = sp3b_copy.read_bytes()
+    try:
+        sp3b_copy.write_text(
+            original.decode("utf-8") + "\n# drift marker\n", encoding="utf-8"
+        )
+        result = subprocess.run(
+            ["python3", "legal-toolkit/scripts/verify-drift.py"],
+            cwd=str(REPO),
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        assert result.returncode == 1, (
+            f"verify-drift should fail on drift; got rc={result.returncode}\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+        assert "DRIFT" in result.stdout
+        assert "legal-incident-response" in result.stdout
+    finally:
+        sp3b_copy.write_bytes(original)

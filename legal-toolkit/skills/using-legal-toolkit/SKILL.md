@@ -1,7 +1,7 @@
 ---
 name: using-legal-toolkit
 description: |
-  Router skill for legal-toolkit — the entry point that recognises user intent across 6 clusters (📋 Playbook / 📝 Template / 🚨 Runbook / 🔍 IRAC / 📅 Tracker / 🏛️ Compliance) and dispatches to the right specialist sub-skill. 4 active sub-skills (legal-contract-review / legal-playbook-author / legal-document-draft / this router); 7 more sub-skills (legal-incident-response / legal-issue-spot / legal-research / legal-contract-tracker / legal-regulation-watch / legal-corporate-governance / legal-dd-quickscan) are listed as not-yet-available with their planned phase. Returns a 6-cluster menu when intent is ambiguous — never guesses.
+  Router skill for legal-toolkit — the entry point that recognises user intent across 6 clusters (📋 Playbook / 📝 Template / 🚨 Runbook / 🔍 IRAC / 📅 Tracker / 🏛️ Compliance) and dispatches to the right specialist sub-skill. 5 active sub-skills (legal-contract-review / legal-playbook-author / legal-document-draft / legal-incident-response / this router); 6 more sub-skills (legal-issue-spot / legal-research / legal-contract-tracker / legal-regulation-watch / legal-corporate-governance / legal-dd-quickscan) are listed as not-yet-available with their planned phase. Returns a 6-cluster menu when intent is ambiguous — never guesses.
 
   台灣 in-house 法務工具組 router。法務工具のルーター。
 
@@ -51,7 +51,7 @@ flowchart TD
     Q2 -->|是| DD[→ legal-document-draft<br/>📝 Template — active]
 
     PARSE --> Q3{個資外洩 /<br/>違約 / 主管<br/>機關來文?}
-    Q3 -->|是| IR[→ legal-incident-response<br/>🚨 Runbook — Phase 2 NOT YET]
+    Q3 -->|是| IR[→ legal-incident-response<br/>🚨 Runbook — active]
 
     PARSE --> Q4{法律問題 /<br/>諮詢 / 能不能做?}
     Q4 -->|fact-driven| IS[→ legal-issue-spot<br/>🔍 IRAC — Phase 3 NOT YET]
@@ -92,7 +92,7 @@ From the user's request, extract:
 | Q1 — review a contract | `legal-contract-review` | 📋 Playbook | **MVP** |
 | Q7 — author/extend/revise playbook | `legal-playbook-author` | utility | **MVP** |
 | Q2 — draft privacy/tos/dpa/nda | `legal-document-draft` | 📝 Template | **active (v0.4.0+)** |
-| Q3 — incident response (PII breach / 主管機關 / 違約) | `legal-incident-response` | 🚨 Runbook | Phase 2 (not yet) |
+| Q3 — incident response (PII breach / 主管機關 / 違約) | `legal-incident-response` | 🚨 Runbook | **active (v0.4.2+)** |
 | Q4 (fact pattern) — issue spot | `legal-issue-spot` | 🔍 IRAC | Phase 3 (not yet) |
 | Q4 (law lookup) — research | `legal-research` | 🔍 IRAC | Phase 3 (not yet) |
 | Q5 (contract lifecycle) — tracker | `legal-contract-tracker` | 📅 Tracker | Phase 4 (not yet) |
@@ -100,7 +100,7 @@ From the user's request, extract:
 | Q6 (shareholders/board/disclosure) — governance | `legal-corporate-governance` | 🏛️ Compliance | **Phase 5 BLOCKED** on prerequisite research |
 | Q6 (DD scan) — dd quickscan | `legal-dd-quickscan` | 🏛️ Compliance | **Phase 5 BLOCKED** on prerequisite research |
 
-**Q1 / Q7 are MVP — actually dispatch. Q2 is active in v0.4.0+ — actually dispatch.** Q3-Q6 are **not yet available** — see Step 4.
+**Q1 / Q7 are MVP — actually dispatch. Q2 is active in v0.4.0+ — actually dispatch. Q3 is active in v0.4.2+ — actually dispatch.** Q4-Q6 are **not yet available** — see Step 4.
 
 ### Q2 — Document drafting (active in v0.4.0+)
 
@@ -121,6 +121,20 @@ Once mode is determined → hand off to `legal-document-draft` skill with the mo
 
 Boilerplate keywords that should NOT route to draft (route to review instead): 看一下 / 審 / review / redline / 修改 (followed by) 我們收到 / 對方 / counterparty.
 
+### Q3 — Incident response (active in v0.4.2+)
+
+**Keyword triggers**: 個資外洩 / 資料外洩 / data breach / breach incident / 主管機關 / 函覆 / 來文 / 收到公文 / 應變 / 事件 / 違約 / 對方違約 / 客戶違約 / breach of contract / 賠償.
+
+**Auto-classification**: `legal-incident-response` runs `protocols/classify-path.md` to dispatch among 3 paths:
+
+- **個資外洩 (pii-breach)** — skeleton + LLM-fill 3-document bundle (PDPC 通報文 / 當事人通知文 / 內部記錄)
+- **主管機關函覆 (authority-letter)** — pure-LLM 函覆 drafting with canonical-§-gated citations
+- **合約違約 (contract-breach)** — thin classifier + handoff JSON to `legal-contract-review` (soft delegation; user manually 接力)
+
+User confirms the auto-classified path before sub-protocol dispatch. → hand off to `legal-incident-response` skill.
+
+**Prerequisite check before handoff**: same as Q2 — confirm `legal-playbook/profile.yml` exists (schema v2 — adds optional `external_counsel` + `regulatory_authorities`; backward-compat v1).
+
 ### Step 3 — Multi-intent handling
 
 When the request matches multiple Q's (common: "review this contract AND update the playbook for it"):
@@ -137,7 +151,7 @@ Why: running both in parallel costs context and may produce inconsistent state. 
 
 ### Step 4 — Phase 3-5 "not yet available" path
 
-For Q3-Q6 matches, the router:
+For Q4-Q6 matches, the router:
 
 1. **Acknowledge** the intent — tell the user "I see you want to <X>"
 2. **Inform** that the relevant skill is on the roadmap but not built yet:
@@ -146,7 +160,6 @@ For Q3-Q6 matches, the router:
    at legal-toolkit/ROADMAP.md. It is not yet available in this version.
    ```
 3. **Offer alternatives** when possible:
-   - For Q3 (incident) — "For an immediate-need response, no skill substitute exists; **consult a practising lawyer** is the right path"
    - For Q4 (issue-spot / research) — "For a basic fact-pattern question, you can describe the scenario to a Claude conversation directly; the structured `legal-issue-spot` skill is on the roadmap"
    - For Q5 (lifecycle / regulation) — "No substitute yet; manual tracking + periodic re-review is the current path"
    - For Q6 (governance / DD) — "BLOCKED on the upstream prerequisite research note for 上市櫃 in-house Compliance. Estimated availability per ROADMAP §Phase 5"
@@ -166,7 +179,7 @@ If none of Q1-Q7 match clearly, **do not guess**. Present the 6-cluster menu:
    → 我想起草 privacy policy / ToS / DPA / NDA  ✅ active (v0.4.0+)
 
 🚨 事件應變 (Runbook)
-   → 個資外洩 / 主管機關來文 / 客戶違約我要回應  [Phase 2 — 還沒上]
+   → 個資外洩 / 主管機關來文 / 客戶違約我要回應  ✅ active (v0.4.2+)
 
 🔍 法律諮詢 (IRAC)
    → 我有 fact pattern 想知道法律分析 / 想查特定法條 / 判例  [Phase 3 — 還沒上]
@@ -230,11 +243,12 @@ First-time install path:
 使用者: 我剛裝好這個 plugin，下一步幹嘛？
 
 Router 回:
-   歡迎！legal-toolkit v0.4.0 ships 4 個 active skill：
+   歡迎！legal-toolkit v0.4.2 ships 5 個 active skill：
    - using-legal-toolkit (router，你正在用)
    - legal-playbook-author (建立你公司的議價 playbook)
    - legal-contract-review (跑 7 層合約審查 pipeline)
    - legal-document-draft (起草 privacy policy / ToS / DPA / NDA)
+   - legal-incident-response (個資外洩 / 主管機關函覆 / 合約違約 三路應變)
 
    常見起手路徑：
 
@@ -250,6 +264,10 @@ Router 回:
       /legal-document-draft --mode privacy|tos|dpa|nda
       （需要 legal-playbook/profile.yml；沒有的話 router 會引導你建立）
 
+   👉 如果你遇到事件 (個資外洩 / 收到主管機關函 / 對方違約)：
+      /legal-incident-response
+      （3-path 自動分類 + 確認；需要 legal-playbook/profile.yml schema v2）
+
    👉 如果你想看完整的 plugin 全景：
       閱讀 README.md / ROADMAP.md
 
@@ -264,3 +282,4 @@ Router 回:
   - [`legal-playbook-author`](../legal-playbook-author/SKILL.md)
   - [`legal-contract-review`](../legal-contract-review/SKILL.md)
   - [`legal-document-draft`](../legal-document-draft/SKILL.md)
+  - [`legal-incident-response`](../legal-incident-response/SKILL.md)

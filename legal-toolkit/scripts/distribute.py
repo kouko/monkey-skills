@@ -30,6 +30,22 @@ ROUTE: dict[str, list[str]] = {
     "legal-sources.json": [
         "skills/legal-contract-review/assets/legal-sources.json",
     ],
+    "pdpa-current-state.md": [
+        "skills/legal-document-draft/references/pdpa-current-state.md",
+        "skills/legal-incident-response/references/pdpa-current-state.md",
+    ],
+    "tbd-migration-template.md": [
+        "skills/legal-document-draft/references/tbd-migration-template.md",
+        "skills/legal-incident-response/references/tbd-migration-template.md",
+    ],
+    "profile-schema.yml": [
+        "skills/legal-document-draft/assets/profile-schema.yml",
+        "skills/legal-incident-response/assets/profile-schema.yml",
+    ],
+    "load_profile.py": [
+        "skills/legal-document-draft/scripts/load_profile.py",
+        "skills/legal-incident-response/scripts/load_profile.py",
+    ],
 }
 
 # Filesystem noise to skip — never authored files.

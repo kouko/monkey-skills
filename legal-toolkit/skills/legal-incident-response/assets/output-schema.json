@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-toolkit://legal-incident-response/output-schema.json",
+  "title": "legal-incident-response output directory schema",
+  "description": "Specifies the structure of legal-outputs/<timestamp>-incident-<path-type>/ — produced by SP3b legal-incident-response. Audience-shaped 2-file output (legal.md + business.md) with optional handoff-context.json for contract-breach delegation.",
+  "type": "object",
+  "required": ["legal.md", "business.md"],
+  "properties": {
+    "legal.md": {
+      "type": "string",
+      "description": "法務 audience: event record + ISO 8601 §時間軸 + path-specific content (PDPC 通報文 / 函覆 / handoff pointer) + compliance checklist + TBD migration tracker. Min 500 bytes. Must contain '## §時間軸' heading. Must NOT contain Path A anti-patterns (see scripts/grade_response.py PATH_A_ANTIPATTERNS)."
+    },
+    "business.md": {
+      "type": "string",
+      "description": "非法務 audience: 1-句 summary + Top 3 即時動作 + deadline 警示 + 對外溝通要點. Min 200 bytes. Must NOT contain Path A anti-patterns."
+    },
+    "handoff-context.json": {
+      "type": "object",
+      "description": "Only present for contract-breach path. Soft delegation seed for legal-contract-review. Schema_version locked to 1; 10 required keys.",
+      "required": [
+        "schema_version",
+        "from_skill",
+        "to_skill",
+        "contract_path",
+        "breach_type",
+        "alleged_breach_clauses",
+        "breach_date",
+        "discovery_date",
+        "counterparty",
+        "urgency_level"
+      ],
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "from_skill": { "type": "string", "const": "legal-incident-response" },
+        "to_skill": { "type": "string", "const": "legal-contract-review" },
+        "contract_path": {
+          "type": "string",
+          "description": "Absolute or repo-relative path to the contract under review"
+        },
+        "breach_type": {
+          "type": "string",
+          "description": "Canonical 民法 § label (§227 不完全給付 / §225 給付不能 / §234 受領遲延 / §229 給付遲延 / §259 解除契約效力)"
+        },
+        "alleged_breach_clauses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "breach_date": { "type": "string", "format": "date" },
+        "discovery_date": { "type": "string", "format": "date" },
+        "counterparty": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "company_id": { "type": "string", "pattern": "^[0-9]{8}$" },
+            "contact_email": { "type": "string", "format": "email" }
+          }
+        },
+        "damages_estimate_twd": { "type": "integer", "minimum": 0 },
+        "urgency_level": { "type": "string", "enum": ["high", "moderate", "low"] },
+        "session_ref": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

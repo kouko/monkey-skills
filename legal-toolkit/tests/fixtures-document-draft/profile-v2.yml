@@ -1,0 +1,21 @@
+schema_version: 1
+company_name: v2 測試公司
+company_id: "12345678"
+registered_address: 臺北市 v2 路 1 號
+general_contact:
+  email: contact@v2-test.example
+dpo:
+  name: v2 DPO
+  email: dpo@v2-test.example
+external_counsel:
+  firm_name: 測試律師事務所
+  contact_name: 測試律師
+  email: counsel@example
+  phone: "02-1234-5678"
+  retainer_status: active
+regulatory_authorities:
+  - name: 金融監督管理委員會
+    url: "https://www.fsc.gov.tw/"
+    scope_note: 證券業務
+  - name: 個人資料保護委員會（籌備處）
+    scope_note: PDPA 監理

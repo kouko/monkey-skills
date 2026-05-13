@@ -162,3 +162,27 @@ sys.exit(distribute.main())
     assert "1 copies" in result.stdout or "1 file" in result.stdout
     dst = fake_plugin / "skills" / "legal-contract-review" / "assets" / "legal-sources.json"
     assert dst.read_bytes() == b'{"a": 1}'
+
+
+# ---------------------------------------------------------- T-D-5: SP3b SSOT extension
+def test_distribute_includes_sp3b_canonical_files():
+    """ROUTE must include pdpa-current-state.md / tbd-migration-template.md
+    / profile-schema.yml / load_profile.py mapped to SP3a + SP3b destinations."""
+    import distribute
+
+    for canonical_name in (
+        "pdpa-current-state.md",
+        "tbd-migration-template.md",
+        "profile-schema.yml",
+        "load_profile.py",
+    ):
+        assert canonical_name in distribute.ROUTE, (
+            f"ROUTE missing canonical entry: {canonical_name}"
+        )
+        destinations = distribute.ROUTE[canonical_name]
+        assert any("legal-document-draft" in d for d in destinations), (
+            f"{canonical_name} missing SP3a (legal-document-draft) destination"
+        )
+        assert any("legal-incident-response" in d for d in destinations), (
+            f"{canonical_name} missing SP3b (legal-incident-response) destination"
+        )
