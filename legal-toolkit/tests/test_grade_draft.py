@@ -113,3 +113,46 @@ def test_missing_output_file_fails(tmp_path):
 
     assert result.passed is False
     assert any("compliance" in r.lower() and ("missing" in r.lower() or "not found" in r.lower()) for r in result.reasons)
+
+
+# ---------------------------------------------------------- T-G-7: Path A anti-pattern (民法 §12 age 20 legacy)
+@pytest.mark.parametrize(
+    "leak,fragment",
+    [
+        ("age_20_full_width", "未滿二十歲限制行為能力人"),
+        ("age_20_arabic", "未滿 20 歲限制行為能力人"),
+        ("breach_72hr_chinese", "本公司於 72 小時內通報"),
+        ("breach_72hr_english", "notify within 72 hours"),
+        ("gdpr_controller_processor", "controller-processor model"),
+        ("gdpr_data_controller_zh", "依資料控管者規定"),
+    ],
+)
+def test_path_a_antipattern_fails(tmp_path, leak, fragment):
+    grade = _load()
+    output_dir = _copy_sample(tmp_path)
+    doc = output_dir / "privacy.md"
+    doc.write_text(doc.read_text(encoding="utf-8") + f"\n\n## 違規測試 ({leak})\n{fragment}\n", encoding="utf-8")
+
+    result = grade.grade_draft(output_dir, mode="privacy")
+
+    assert result.passed is False, f"expected FAIL for leak={leak}"
+    assert any("path a violation" in r.lower() for r in result.reasons), (
+        f"expected 'Path A violation' message for leak={leak}, got: {result.reasons}"
+    )
+
+
+# ---------------------------------------------------------- T-G-8: anti-pattern only fails on doc, not compliance
+def test_antipattern_in_compliance_only_does_not_fail(tmp_path):
+    """compliance.md is the internal review — it MAY cite anti-patterns
+    in explanatory 'NOT X' form (e.g., 'use 即時 (NOT 72hr GDPR)')."""
+    grade = _load()
+    output_dir = _copy_sample(tmp_path)
+    compliance = output_dir / "compliance.md"
+    compliance.write_text(
+        compliance.read_text(encoding="utf-8") + "\n\nNOTE: confirmed 即時 used; NOT 72 小時 GDPR.\n",
+        encoding="utf-8",
+    )
+
+    result = grade.grade_draft(output_dir, mode="privacy")
+
+    assert result.passed is True, f"compliance-only anti-pattern citation should pass; got reasons: {result.reasons}"

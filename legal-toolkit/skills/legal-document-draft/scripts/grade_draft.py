@@ -10,6 +10,9 @@ verifies:
     4. Every TBD_* id used in compliance.md is in the canonical OPEN list
        (sourced from references/pdpa-current-state.md)
     5. <doc-type>.md byte-count > MIN_DOC_BYTES (catches truncated LLM runs)
+    6. <doc-type>.md does not contain Path A anti-patterns
+       (GDPR/legacy phrases this skill is explicitly built to avoid;
+       sourced from references/pdpa-current-state.md "Out of scope" + 民法 §12 2023 amend)
 
 Public API:
     grade_draft(output_dir: Path, mode: str) -> GradeResult
@@ -32,6 +35,33 @@ from pathlib import Path
 REFS = Path(__file__).resolve().parent.parent / "references"
 MIN_DOC_BYTES = 500
 DOC_FILENAME = {"privacy": "privacy.md", "tos": "tos.md", "dpa": "dpa.md", "nda": "nda.md"}
+
+# Path A anti-patterns: GDPR / legacy phrases this skill is explicitly built to
+# avoid. Each entry is (compiled_regex, why_it_fails). Checked against
+# <doc-type>.md only — compliance.md is allowed to cite the anti-patterns in
+# explanatory "NOT X" form (e.g., "用「即時」(NOT 72hr GDPR)").
+#
+# Sourced from references/pdpa-current-state.md "Out of scope" section + 民法 §12
+# 2023-01-01 amendment. To extend: add to references/pdpa-current-state.md
+# "Out of scope" first, then add the regex here.
+PATH_A_ANTIPATTERNS = [
+    (
+        re.compile(r"未滿\s*二十\s*歲|未滿\s*20\s*歲"),
+        "民法 §12 修正 2023-01-01 起成年年齡為 18。Use 「未滿十八歲」 instead of 「未滿二十歲」.",
+    ),
+    (
+        re.compile(r"72\s*小時|72\s*hour", re.IGNORECASE),
+        "72hr notification window is GDPR Art. 33. Taiwan PDPA 施行細則 §22 = 「即時」.",
+    ),
+    (
+        re.compile(r"controller[\s\-/]+processor", re.IGNORECASE),
+        "Taiwan uses 委託者/受託者 model (個資法 §4 + §8), not GDPR controller/processor.",
+    ),
+    (
+        re.compile(r"資料控管者"),
+        "「資料控管者」 is GDPR controller direct translation. Taiwan uses 委託者 (個資法 §4).",
+    ),
+]
 
 
 @dataclass
@@ -92,6 +122,20 @@ def _check_tbd_ids_match_canonical(compliance_text: str) -> list[str]:
     return []
 
 
+def _check_path_a_antipatterns(doc_text: str) -> list[str]:
+    """Grep for GDPR/legacy phrases that violate Path A discipline.
+
+    Only applied to <doc-type>.md (the published artifact). compliance.md is
+    allowed to cite anti-patterns in explanatory "NOT X" form.
+    """
+    errors = []
+    for pattern, why in PATH_A_ANTIPATTERNS:
+        match = pattern.search(doc_text)
+        if match:
+            errors.append(f"Path A violation: matched {match.group(0)!r} — {why}")
+    return errors
+
+
 def grade_draft(output_dir: Path, mode: str) -> GradeResult:
     reasons: list[str] = []
 
@@ -118,6 +162,7 @@ def grade_draft(output_dir: Path, mode: str) -> GradeResult:
     reasons.extend(_check_no_orphans(doc_text))
     reasons.extend(_check_checklist_verdicts(compliance_text))
     reasons.extend(_check_tbd_ids_match_canonical(compliance_text))
+    reasons.extend(_check_path_a_antipatterns(doc_text))
 
     return GradeResult(passed=not reasons, reasons=reasons)
 

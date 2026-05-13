@@ -4,7 +4,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-![version](https://img.shields.io/badge/version-0.3.5-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-1.9_Polish-orange)
+![version](https://img.shields.io/badge/version-0.4.1-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Template_dogfooded-orange)
 
 > ⚠️ **Not legal advice.** This is a free open-source tool, not a law firm and not a licensed practitioner. Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override (「請諮詢執業律師」). See [§Disclaimer policy](#disclaimer-policy).
 

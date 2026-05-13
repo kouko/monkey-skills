@@ -46,9 +46,14 @@
 
 ## 第四條 保密期間
 
-本協議之保密義務自簽訂日起生效，**繼續有效 {{survival_years}} 年** ({{survival_years_explanation}})，**除非機密資訊已符合第一條 carve-outs 例外之一**。
+本協議之保密義務自簽訂日起生效，**繼續有效 {{survival_years}} 年**，**除非機密資訊已符合第一條 carve-outs 例外之一**。
 
-(預設 survival period 來自 legal-playbook/confidentiality.md；典型範圍 3-7 年；技術機密可延至 10 年或永久)
+<!--
+  Authoring note (not for counterparty): 預設 survival period 來自
+  legal-playbook/confidentiality.md；典型範圍 3-7 年；技術機密可延至
+  10 年或永久。Override via session input if the deal warrants.
+-->
+
 
 ## 第五條 違約救濟
 
