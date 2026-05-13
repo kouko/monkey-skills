@@ -49,7 +49,17 @@ def _canonical_tbd_ids() -> set[str]:
     """
     ref = REFS / "pdpa-current-state.md"
     if not ref.is_file():
-        return {"TBD_PDPC_pending", "TBD_PDPC_threshold", "TBD_PDPC_notification_url"}
+        # Fallback baseline used until Task 4 writes references/pdpa-current-state.md.
+        # All 7 canonical OPEN IDs per SP2 research note (PR #273).
+        return {
+            "TBD_PDPC_pending",
+            "TBD_PDPC_threshold",
+            "TBD_PDPC_timeframe",
+            "TBD_PDPC_notification_url",
+            "TBD_PDPA_effective_date",
+            "TBD_PDPA_audit_framework",
+            "TBD_GOV_CLOUD_restrictions",
+        }
     text = ref.read_text(encoding="utf-8")
     return set(re.findall(r"TBD_[A-Za-z0-9_]+", text))
 
