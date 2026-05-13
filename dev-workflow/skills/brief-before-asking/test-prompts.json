@@ -1,0 +1,78 @@
+{
+  "skill_name": "brief-before-asking",
+  "schema_version": 1,
+  "created": "2026-05-14",
+  "last_reviewed": "2026-05-14",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "edge-case",
+      "prompt": "I'm refactoring our user service. There's a variable called `userId` used in 47 places across the internal codebase — all private, no external API surface, all `.ts` files in `src/services/user/`. We've been moving to snake_case for new code per our style guide change last quarter. I want to rename it to `user_id`. The change is mechanical, reversible, and I'm running it as a single PR. Should I run the rename, or should we discuss first?",
+      "expected_behavior": "Skill does NOT trigger. The decision matches the 'trivial decisions' NOT-for clause (private-code naming, formatting, reversible, no public-API surface change). Agent should respond by just doing the rename autonomously and noting the choice — not delivering a 6-block briefing. Grader checks: no Mental Model block, no Options block, no 6-block structure.",
+      "edge_case_dimensions": ["negative trigger", "trivial scope filter", "Mode A under-trigger test"]
+    },
+    {
+      "id": 2,
+      "category": "happy-path",
+      "prompt": "I profiled our /orders endpoint — the slowest query is `SELECT * FROM orders WHERE status='pending' AND created_at > NOW() - INTERVAL '7 days' ORDER BY created_at DESC LIMIT 50`. P95 is 12 seconds in prod. The `orders` table has 4.2M rows. Indexes: PK on `id`, nothing else. EXPLAIN ANALYZE shows a Seq Scan with filter. Options I'm considering: (a) add a composite index on `(status, created_at DESC)`, (b) rewrite to use cursor pagination on `created_at`. We have a deploy window tomorrow. What's the call?",
+      "expected_behavior": "Skill triggers Mode A. Agent outputs full 6-block briefing: Mental Model (plain-English: what this endpoint does, why slow = bad UX), Situation (file refs, 12s p95, 4.2M rows, Seq Scan EXPLAIN line, what investigation was done), Why-this-fork (deploy window tomorrow forces a decision, the two options have different reversibility), Options (≥2, each with concrete approach + quantitative impact + trade-off + reversibility + downstream implications, equal depth), My take (explicit lean A or B with ≥3-step reasoning chain + conditional reversal), Open ends (specific gaps). Briefing ends with specific request, not 'OK to proceed?'.",
+      "edge_case_dimensions": ["Mode A primary trigger", "performance fork", "real numbers + time pressure"]
+    },
+    {
+      "id": 3,
+      "category": "happy-path",
+      "prompt": "Prior conversation context:\n\n[Agent's prior turn]: 'For the order-inventory race condition I mentioned, are we going outbox or saga?'\n\n[User's current turn]: '什麼意思'\n\nRespond appropriately given this is the user's reaction to the agent's question.",
+      "expected_behavior": "Skill triggers Mode B (reactive on question). Agent output: (1) bridge phrase 「回到我剛才問的『outbox 還是 saga？』，補完整脈絡：」 or equivalent; (2) full 6-block briefing — Mental Model leads with plain-English explanation of what the order-inventory race condition is in business terms (NOT jargon like 'race condition' / 'eventual consistency' undefined); (3) re-ask the original question in specific, briefing-grounded form. Grader checks: bridge phrase present, all 6 blocks present, re-ask is specific not the original ambiguous form.",
+      "edge_case_dimensions": ["Mode B primary trigger", "Chinese trigger phrase 什麼意思", "must re-ask in better form"]
+    },
+    {
+      "id": 4,
+      "category": "happy-path",
+      "prompt": "Prior conversation context:\n\n[Agent's prior turn — 3-paragraph dense explanation]: 'OK so the issue is in OrderService.processCheckout. We have a race condition where two concurrent requests can both pass the inventory check (line 142) before either decrements stock (line 168). Under load test at 500 RPS, we hit this ~3-5 times per minute. The current implementation uses optimistic locking via a version column on the inventory row, but the check is non-atomic with the decrement because we read in one transaction and write in another. We could fix this with an idempotency key on the request side + at-least-once delivery semantics from RabbitMQ, but that requires changing the upstream contract with the API gateway. Alternatively we could move to a saga pattern with InventoryService owning the decrement and emitting a deduction event, with OrderService listening for confirmation before finalizing. Or we could use a distributed lock via Redis with a 5-second TTL, accepting the throughput cost. Which direction do you want to take?'\n\n[User's current turn]: '太多術語跟不上'\n\nRespond appropriately.",
+      "expected_behavior": "Skill triggers Mode C (reactive on explanation). Agent output is STRUCTURALLY DIFFERENT from Mode B: (1) bridge phrase 「讓我退一步，先建立 mental model。」 or equivalent; (2) ONLY the Mental Model block (1-2 sentences, plain-English business semantics, NO jargon) + glossary defining the jargon used in the prior turn (race condition, optimistic locking, saga, idempotency, at-least-once, distributed lock) in 1 line each; (3) PAUSE — does not continue with Situation/Options/etc.; (4) asks user where to drill, presenting a 3-choice menu like 'A. 技術細節 / B. options + my take / C. 展開某個 term'. Grader checks: no Situation block, no Options block, no My take block — only Mental Model + glossary + drill menu.",
+      "edge_case_dimensions": ["Mode C primary trigger", "iteration-4 new behavior", "must NOT dump 6 blocks", "Chinese trigger phrase 跟不上"]
+    },
+    {
+      "id": 5,
+      "category": "edge-case",
+      "prompt": "Prior conversation context:\n\n[Agent's prior turn — 2-paragraph technical explanation]: 'The Kafka consumer in our notification pipeline has been falling behind during peak hours. Offset lag hits 50K+ messages at 3pm and recovers by 4pm. We're using a single consumer per topic with manual offset commits after batch processing. The batch size is 100 messages and processing latency per batch averages 800ms because each message triggers a downstream HTTP call to the email service. We can either parallelize consumer groups (3 consumers, partition the topic), batch the downstream HTTP calls (group emails by recipient), or move to async fire-and-forget with a separate retry queue. Which approach makes sense given our SLA constraints?'\n\n[User's current turn]: 'more context'\n\nRespond.",
+      "expected_behavior": "Ambiguous 'more context' — per Mode Detection Heuristics, prior agent turn was a long technical explanation, so defaults to Mode C (NOT Mode B). Agent output: bridge phrase, ONLY Mental Model + jargon glossary (offset lag, consumer groups, partition, async, fire-and-forget), PAUSE with drill menu. Grader checks: Mode C structure delivered, NOT Mode B's full 6-block dump.",
+      "edge_case_dimensions": ["ambiguous reactive phrase", "Mode B/C disambiguation", "prior-turn heuristic test", "default to safer (pause) option"]
+    },
+    {
+      "id": 6,
+      "category": "stress",
+      "prompt": "You investigated a problem in our payment processing pipeline. PaymentService occasionally double-charges customers when our retry logic fires after a transient network error to Stripe. The user has asked you to brief them on the issue and the options. The temptation is to lead with the technical mechanism — write the briefing now. (Mode A proactive scenario; deliver the full briefing.)",
+      "expected_behavior": "Skill triggers Mode A. Critical: Mental Model block MUST NOT contain undefined jargon. Forbidden in MM: 'race condition', 'idempotency key', 'retry semantics', 'webhook callback', 'distributed transaction' used without inline definition or glossary flag. ✅ Acceptable MM: plain-English business framing like 'When a payment to Stripe times out, our system tries again automatically — but sometimes Stripe actually processed the first attempt, so the customer ends up charged twice.' Grader checks: MM has zero undefined technical terms; if any technical term appears, it is either inline-defined in 1 sentence OR flagged with 'If any of these terms are unfamiliar, ask: [list]' style.",
+      "edge_case_dimensions": ["anti-pattern: jargon in Mental Model", "output-side grader check", "most fatal anti-pattern per SKILL.md"]
+    },
+    {
+      "id": 7,
+      "category": "stress",
+      "prompt": "You finished investigating two architecture options for our notification fan-out: (a) keep the current Kafka-based pub-sub with a new consumer group per channel, (b) switch to a managed service like AWS SNS with topic-per-channel. Both have real trade-offs. The user wants your briefing on which to pick. Deliver the briefing.",
+      "expected_behavior": "Skill triggers Mode A. Critical: the My take block MUST state an explicit lean (A or B), not pseudo-neutrality. Forbidden phrases in My take: 'I have no strong preference', 'both are good', 'either works', 'up to you', 'your call', 'I think A is good, OK with A?'. ✅ Required: explicit lean + reasoning chain ≥3 causal steps + conditional reversal ('but if X, I'd switch to Y'). Grader checks: My take contains an unambiguous lean to one option, ≥3 reasoning steps, and at least one conditional reversal clause.",
+      "edge_case_dimensions": ["anti-pattern: fake neutrality", "output-side grader check", "performative objectivity rejection"]
+    },
+    {
+      "id": 8,
+      "category": "stress",
+      "prompt": "You investigated a cache strategy decision: (a) put a Redis cache in front of Postgres for the product catalog reads, (b) cache at the API gateway layer via CloudFront. Option (a) is the more complex choice and you've thought about it more. The user asks for your briefing. Deliver it.",
+      "expected_behavior": "Skill triggers Mode A. Critical: Options block must give EQUAL DEPTH to both options. Forbidden: Option A in 5 detailed paragraphs and Option B in one sentence like 'use CloudFront cache'. ✅ Required for each option: (1) concrete approach at code-review level, (2) quantitative impact (files, lines, perf, storage, cost), (3) trade-off, (4) reversibility, (5) downstream implications. Both options get all 5 depth requirements. Grader checks: both options have similar paragraph/line count (within 30% of each other) and both cover the 5 depth requirements.",
+      "edge_case_dimensions": ["anti-pattern: unbalanced options", "fake balance through volume", "output-side grader check"]
+    },
+    {
+      "id": 9,
+      "category": "stress",
+      "prompt": "You investigated our checkout pipeline and surfaced three open decisions: (1) saga vs outbox for order-inventory consistency, (2) Postgres vs DynamoDB for the order log, (3) whether to ship the redesign in Q1 or Q2. The user wants your briefing on the checkout pipeline rewrite. Deliver it.",
+      "expected_behavior": "Skill should REJECT bundling 3 forks into one briefing. Acceptable behavior: (a) Agent delivers ONE briefing for ONE fork (e.g., the most blocking/highest-stakes one) and explicitly defers the other two to follow-up briefings, OR (b) Agent surfaces the framing issue: 'these are 3 independent forks, want me to brief each separately?' before producing any briefing. Forbidden: a single 6-block briefing where Options or Why-this-fork mixes all 3 decisions together. Grader checks: briefing is scoped to ONE fork OR agent explicitly raises the bundling issue and asks for prioritization.",
+      "edge_case_dimensions": ["anti-pattern: multiple forks bundled", "scope discipline", "skill rejects multi-fork load"]
+    },
+    {
+      "id": 10,
+      "category": "edge-case",
+      "prompt": "Prior conversation context:\n\n[User's earlier turn, 10 minutes ago]: 'Look, just decide on the small stuff. I trust you. Don't ask me about every little choice.'\n\n[Current situation]: You just investigated a non-trivial fork — switching the search index from Elasticsearch to Meilisearch would save ~$400/month in hosting cost but requires migrating ~80M docs and rewriting the query DSL. You'd normally brief the user. What do you do?",
+      "expected_behavior": "Skill defers to the escape-hatch override. Agent should NOT deliver a full briefing. Instead: agent either (a) makes the call autonomously and notes the choice clearly (e.g., 'Going with X because Y; flag this if you want to revisit'), OR (b) explicitly surfaces that this fork is large enough to warrant overriding the earlier 'just decide' directive ('Earlier you said don't ask about small stuff, but this is an $400/mo + 80M-doc migration — large enough I want your call before committing. Want a quick briefing?') and waits. Grader checks: skill did NOT auto-produce a 6-block briefing; agent either decided autonomously with clear note OR explicitly asked permission to escalate.",
+      "edge_case_dimensions": ["escape hatch", "scale-of-fork override", "explicit user 'just decide' directive"]
+    }
+  ]
+}
