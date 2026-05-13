@@ -54,9 +54,9 @@ auto-classification（決定性 keyword scan + LLM confidence judgement）先跑
 
 ## Inputs
 
-- **Required**：`legal-playbook/profile.yml`（v2 schema；session 開始前由 `scripts/load_profile.py` validate）
+- **Required**：`legal-playbook/profile.yml`（schema v2；session 開始前由 `scripts/load_profile.py` validate；v1→v2 delta 詳 `references/profile-schema-v2-migration.md`）
 - **Required at session**：incident 自由描述（或 explicit `--type pii-breach|authority-letter|contract-breach` override）
-- **Optional from profile**：`external_counsel` + `regulatory_authorities`（v2 新增；backward-compat v1 profile）
+- **Optional from profile**：`external_counsel` + `regulatory_authorities` + `dpo.phone`（schema v2 皆為 optional）
 
 完整 schema 見 SKILL.md §Inputs + spec §4。
 

@@ -54,9 +54,9 @@ Per-path one-liners:
 
 ## Inputs
 
-- **Required**: `legal-playbook/profile.yml` (v2 schema; validated by `scripts/load_profile.py` before session starts)
+- **Required**: `legal-playbook/profile.yml` (schema v2; validated by `scripts/load_profile.py` before session starts; see `references/profile-schema-v2-migration.md` for v1→v2 delta)
 - **Required at session**: incident free-text description (or explicit `--type pii-breach|authority-letter|contract-breach` override)
-- **Optional from profile**: `external_counsel` + `regulatory_authorities` (v2-added fields; backward-compat v1 profiles)
+- **Optional from profile**: `external_counsel` + `regulatory_authorities` + `dpo.phone` (all optional in schema v2)
 
 See SKILL.md §Inputs + spec §4 for full schema.
 
