@@ -30,8 +30,9 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`proposal-critique`](skills/proposal-critique/) | 複数項目の proposal（list / plan / 散文の推奨）を evidence grounding と YAGNI で KEEP / DEFER / DROP に triage。 |
 | [`complexity-critique`](skills/complexity-critique/) | 1 つの具体的な提案変更を 3 つの deletion-first 質問で gate：最小到達状態、before/after の LOC、何が obsolete になるか。PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
 | [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
+| [`brief-before-asking`](skills/brief-before-asking/) | 複雑な engineering 決定の質問を user に投げる前（あるいは反応として）の構造化 briefing。3 モード：Mode A（agent が複雑な fork に気づいて自発 trigger）、Mode B（user が質問に「看不懂」と返す）、Mode C（user が解釈に「跟不上」と返す — Mental Model + drill menu に退く）。Mental Model First を最高優先とする 6-block 形式。 |
 
-7 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+8 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
@@ -91,7 +92,7 @@ size →    small                medium                large                new
 
 ## Upstream chain
 
-7 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
+8 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
 
 | Skill | Upstream chain |
 |---|---|
@@ -151,7 +152,7 @@ dev-workflow/
 /complexity-critique        # 具体的変更に対する deletion-first gate
 ```
 
-残り 3 つの skill（`skill-judge`・`proposal-critique`・`git-memory`）は自然言語から auto-trigger します — 例：
+残り 4 つの skill（`skill-judge`・`proposal-critique`・`git-memory`・`brief-before-asking`）は自然言語から auto-trigger します — 例：
 
 ```
 「この skill を 8 次元 rubric で採点して」               → skill-judge

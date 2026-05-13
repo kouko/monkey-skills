@@ -30,8 +30,9 @@ plugin 還附帶 `skill-creator-advance`（建立 + 大幅重設計）、`skill-
 | [`proposal-critique`](skills/proposal-critique/) | 把多項目 proposal（list / plan / 散文建議）以 evidence grounding 與 YAGNI triage 為 KEEP / DEFER / DROP。 |
 | [`complexity-critique`](skills/complexity-critique/) | 用三個 deletion-first 問題對單一具體提案做 gate：最小可達狀態、before/after LOC、什麼會 obsolete。判定 PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
 | [`git-memory`](skills/git-memory/) | 把決策的 context（不是 diff，而是 **why**）寫進 commit trailer 與 PR 內文，讓未來任何 session — Claude Code、Cursor、Codex、aider 或人類 — 只用 `git log` 就能重建 project knowledge。 |
+| [`brief-before-asking`](skills/brief-before-asking/) | 在 user 面臨複雜 engineering 決策問題前（或反應後）的結構化簡報。3 種模式：Mode A（agent 自覺有複雜 fork 即將要問）、Mode B（user 對問題說「看不懂」）、Mode C（user 對解釋說「跟不上」 — 退回 Mental Model + drill menu）。以 Mental Model First 為最高優先的 6-block 格式。 |
 
-七個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
+八個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique 線
 
@@ -91,7 +92,7 @@ size →    small                medium                large                new
 
 ## Upstream chain
 
-七個 skill 中有三個源自 MIT-licensed 的 upstream。完整 attribution 在各 skill 的 `NOTICE` 檔案。
+八個 skill 中有三個源自 MIT-licensed 的 upstream。完整 attribution 在各 skill 的 `NOTICE` 檔案。
 
 | Skill | Upstream chain |
 |---|---|
@@ -151,7 +152,7 @@ plugin 內附四個 slash command：
 /complexity-critique        # 對具體變更執行 deletion-first gate
 ```
 
-其餘三個 skill（`skill-judge`、`proposal-critique`、`git-memory`）會由自然語言 auto-trigger — 例如：
+其餘四個 skill（`skill-judge`、`proposal-critique`、`git-memory`、`brief-before-asking`）會由自然語言 auto-trigger — 例如：
 
 ```
 「用八維 rubric 幫這個 skill 評分」               → skill-judge
