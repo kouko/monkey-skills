@@ -64,3 +64,75 @@ If sub-workers' outputs contradict and main agent cannot reconcile
 without additional research, return `BLOCKED: sub-worker
 contradiction unresolved` with both positions surfaced. Do NOT
 silently average or pick the more confident one.
+
+## Graceful Degradation — Runtime Without Nested Subagent Dispatch
+
+In some runtime environments the worker itself runs as a subagent
+and cannot spawn further subagents (no `Agent` tool / no `Task`
+tool in the worker's tool set). True fan-out — N independent
+agent processes each with isolated context — is impossible in
+this configuration. The hook degrades rather than aborts:
+
+| Property | True fan-out | Degraded (single-agent parallel I/O) |
+|---|---|---|
+| Wall-clock parallelism | N agent processes run concurrently | Single agent issues N tool calls in one round |
+| Context isolation | Each sub-worker sees only its sub-question | All sub-question results land in one context |
+| Standards subsetting | Each sub-worker loads only relevant standards | All standards loaded once, used selectively |
+| Speedup | ~N× on tool I/O **and** on integration synthesis | ~N× on tool I/O only |
+| Token cost per integration | Sum of N small mini-artifacts | One agent draft from one larger context |
+
+### Degraded execution rules
+
+When the worker detects no nested-dispatch capability (no `Agent`
+tool available, or the harness explicitly disallows recursive
+spawning), apply:
+
+1. **Decision rule still runs** — evaluate the three independence
+   conditions in §Decision Rule as if true fan-out were available.
+   If the conditions don't pass, run sequentially (same as the
+   non-degraded path).
+2. **Execute as parallel tool-call batches** — instead of N
+   sub-workers, the worker issues N concurrent web searches /
+   fetches / tool calls per Phase 2 collection round, one batch
+   per sub-question.
+3. **Standards are still effectively subsetted** — the worker
+   consults only the standards relevant to the sub-question
+   currently being collected, even though all standards files
+   are in context. The token savings vs true fan-out is reduced
+   but not zero.
+4. **Mandatory Self-Critique disclosure** — the `## Self-Critique`
+   block (per `hook-self-critique.md`) MUST explicitly mark
+   context isolation as approximated:
+
+   ```
+   - Fan-out mode: degraded (single-agent parallel I/O) — context
+     isolation approximated, not enforced. Cross-sub-question
+     contamination cannot be ruled out.
+   ```
+
+   Without this disclosure, a reader cannot tell whether the
+   artifact came from N truly-independent investigations or from
+   one agent that happened to issue parallel calls. The disclosure
+   IS the contract.
+
+### When degradation is acceptable
+
+Acceptable when the task is descriptive (each sub-question stands
+alone, no comparison) and contamination risk is low. Examples:
+the three-SDK vendor profile from this hook's validation test;
+a per-platform feature inventory; a multi-region market sizing
+where each region's data is fetched separately.
+
+### When degradation is NOT acceptable
+
+Reject the degraded mode and return `BLOCKED: nested subagent
+dispatch required` when the task explicitly requires
+**adversarial independence** — for example, a red-team / blue-team
+analysis where each sub-worker must form its conclusion without
+seeing the other's evidence. Approximating isolation here would
+launder the cross-contamination as if it were independent
+verification, which is exactly what the contract forbids.
+
+The worker decides degradation acceptability based on the task's
+shape, and records the decision in Self-Critique alongside the
+fan-out mode line.

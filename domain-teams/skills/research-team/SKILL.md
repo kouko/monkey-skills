@@ -447,6 +447,84 @@ If a worker outputs `BLOCKED` (e.g., no sources found, contradictory requirement
 - Present BLOCKED reason to user
 - Wait for user input
 
+## Output Frontmatter Discipline
+
+When a research artifact carries YAML frontmatter (typical for
+artifacts saved to an Obsidian vault, Notion page, or repo
+`docs/` folder), record only fields that are **meaningful to the
+reader of the artifact**. Do not record internal skill state —
+those fields rot quickly and lure the LLM into hallucinating
+version numbers it has no way to verify.
+
+| Field | Include | Rationale |
+|---|---|---|
+| `generated_by: domain-teams:research-team` | ✅ | reader can trace which skill produced this |
+| `date: YYYY-MM-DD` | ✅ | snapshot point in time |
+| `protocol: stack-evaluation` | ✅ | tells the reader which methodology was applied |
+| `mode: quick` / `mode: deep` | ✅ | tells the reader the rigor tier |
+| `tags: [...]` | ✅ | reader-side organization |
+| `skill_version`, `pipeline_version`, `refactor_version` | ❌ | internal state, drifts, invites hallucination |
+| `output_mode: ...` | ❌ | mode dimension removed in v5.6.0; do not reintroduce |
+| `confidence_overall: 高/中/低` | ✅ when present in body | mirrors the body, useful for filtering |
+| Any field naming an unreleased version (`v5.6.0` before it ships) | ❌ | hallucination risk |
+
+Self-critique check: in deep mode, the Self-Critique block (per
+`protocols/hook-self-critique.md`) verifies the artifact's
+frontmatter does not contain skill internal state. If a forbidden
+field slipped in, remove it before finalizing the artifact.
+
+**Carve-out**: design-doc / spec / meta files that discuss the
+skill itself (CHANGELOG entries, refactor planning notes,
+grounding docs) are exempt — version numbers there are
+first-class content, not internal-state leakage. This rule applies
+only to **workflow-produced research artifacts**.
+
+#### Example
+
+```yaml
+# ✅ OK — only reader-meaningful fields
+---
+title: Coding Agent Platform Terminology Comparison
+generated_by: domain-teams:research-team
+protocol: stack-evaluation
+mode: deep
+date: 2026-05-13
+tags: [coding-agent, terminology, comparison]
+confidence_overall: 中
+---
+```
+
+```yaml
+# ❌ NOT OK — skill internal state leaking into artifact
+---
+title: Coding Agent Platform Terminology Comparison
+skill_version: v5.6.0          # forbidden: drifts, invites hallucination
+pipeline_version: 2026-05      # forbidden: internal state
+output_mode: explainer         # forbidden: dimension removed in v5.6.0
+refactor_version: v5.6.0       # forbidden: doubly so — unreleased version
+---
+```
+
+## Ship Checklist
+
+Before finalizing any worker-dispatched research artifact, verify
+all four discipline points are met. The checklist exists so the
+four files governing v5.6.0 output do not have to be assembled
+from memory:
+
+| # | Check | Source |
+|---|---|---|
+| 1 | Protocol's Step 0 / Phase 0.5 onboarding section is present and form-correct (concept-first / scope-first / context-first per protocol) | `protocols/{protocol}.md` |
+| 2 | Onboarding section is **un-tagged** (no Fact / Analysis / Speculation) | `standards/citation-standards.md` §Onboarding-Layer Exemption |
+| 3 | Outside the onboarding section, every load-bearing claim carries a tag; routine descriptive sentences are un-tagged | `standards/citation-standards.md` §Load-Bearing Definition |
+| 4 | Frontmatter contains only reader-meaningful fields — no `skill_version` / `pipeline_version` / `output_mode` | §Output Frontmatter Discipline above |
+| 5 | (Deep mode only) `## Self-Critique` block includes the 3-line metadata record (Protocol applied / Onboarding form / Onboarding tagging exemption) + the 3-point disclosure | `protocols/hook-self-critique.md` |
+
+If any check fails, fix before delivery. The evaluator's SHOULD
+gate (`rubrics/research-quality-gate.md`) re-verifies the same
+points in deep mode; failing them at worker level just incurs an
+extra round-trip.
+
 ---
 
 ## Compliance: Visibility Convention (skill-team v5.2.0+)

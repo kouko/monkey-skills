@@ -7,6 +7,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — research-team universal onboarding + selective tagging
+
+`research-team` undergoes a structural refactor (planned v5.6.0)
+to align skill behavior with its stated purpose — helping the
+reader understand content, not performing fact-verification as an
+end in itself. Three coordinated changes:
+
+1. **Universal onboarding section, form bound to protocol** — every
+   worker-dispatched protocol gains a MANDATORY Step / Phase 0.5
+   that produces the artifact's opening section before
+   investigation begins. Form is bound to the protocol, not
+   user-selectable:
+   - `stack-evaluation`, `competitive-analysis` → concept-first
+     (Core Concepts: per-term definition + why it exists +
+     distinction from neighbors)
+   - `academic-research` → scope-first (research question +
+     inclusion / exclusion criteria + search method; doubles as
+     PRISMA 2020 protocol-registration disclosure)
+   - `market-analysis` → context-first (market boundary + time
+     range + primary drivers)
+   - `research-summary` and `quick-lookup` exempt (source or
+     single-question framing supplies its own onboarding)
+2. **Selective tagging is now universal** — `citation-standards.md`
+   replaces "every claim" with "every load-bearing claim".
+   Load-bearing defined by three first-pass rules (specific
+   entity / contested / direct conclusion support); a fourth
+   "downstream-referenced" check is performed in the Self-Critique
+   sweep instead of first-pass to avoid defensive over-tagging.
+   Onboarding sections are explicitly exempt from F/A/S tagging
+   per a new §Onboarding-Layer Exemption.
+3. **Output frontmatter discipline** — workflow-produced artifacts
+   record only reader-meaningful fields (`generated_by`, `date`,
+   `protocol`, `mode`, `tags`). Skill internal state
+   (`skill_version`, `pipeline_version`, `output_mode`) is
+   forbidden in artifact frontmatter to prevent LLM hallucination
+   of unreleased version numbers.
+4. **Parallel fan-out graceful degradation** — `hook-parallel-fanout.md`
+   gains a §Graceful Degradation clause for runtimes where the
+   worker cannot spawn nested subagents. The hook degrades to
+   single-agent parallel tool-call batches (wall-clock speedup
+   preserved; context isolation approximated). Mandatory
+   Self-Critique disclosure marks the degraded mode explicitly so
+   readers can distinguish artifacts produced by N truly-independent
+   sub-workers from artifacts produced by one agent parallelising
+   calls. Degradation is rejected (BLOCKED) for adversarial-
+   independence tasks (red-team / blue-team).
+
+The `Reader Onboarding` dimension is added to
+`rubrics/research-quality-gate.md` (fatal on missing or
+form-mismatched onboarding; warning on skeletal or wrongly-tagged
+onboarding). The `protocols/hook-self-critique.md` block gains a
+3-line metadata record (Protocol applied / Onboarding form /
+Onboarding tagging exemption applied) prepended to the existing
+3-point disclosure.
+
+#### Files
+
+- `research-team/standards/citation-standards.md` — "every claim"
+  → "every load-bearing claim"; new §Load-Bearing Definition; new
+  §Onboarding-Layer Exemption; anti-patterns updated.
+- `research-team/rubrics/research-quality-gate.md` — added 5th
+  dimension §Reader Onboarding; updated mode-aware triggering
+  list.
+- `research-team/protocols/stack-evaluation.md` — added Step 0
+  concept-first onboarding; Output Format updated.
+- `research-team/protocols/competitive-analysis.md` — added
+  Phase 0.5 concept-first onboarding.
+- `research-team/protocols/academic-research.md` — added Phase 0.5
+  scope-first onboarding (PRISMA Phase-1 protocol disclosure).
+- `research-team/protocols/market-analysis.md` — added Phase 0.5
+  context-first onboarding.
+- `research-team/protocols/hook-self-critique.md` — 3-line
+  metadata record; load-bearing-by-use sweep formalised.
+- `research-team/protocols/hook-parallel-fanout.md` — §Graceful
+  Degradation clause for runtimes lacking nested subagent dispatch.
+- `research-team/SKILL.md` — new §Output Frontmatter Discipline
+  section.
+
+#### Why now
+
+The 2026-05-12 produced artifact comparing Coding Agent platform
+terminology (Agent / Subagent / Skill / Hooks) exhibited two
+failure modes attributable to v5.5.1's design, not to LLM
+laziness: (a) saturation tagging — every sentence carried
+【事實】 / 【分析】 / 【推測】 + confidence label, drowning
+load-bearing claims in routine descriptive noise; (b) absent
+concept layer — the artifact jumped directly into per-platform
+implementation without first defining what Agent / Subagent /
+Skill / Hooks actually mean. The v5.5.1 root causes were
+`citation-standards.md`'s literal-reading "every sentence in a
+deliverable" requirement (an over-execution of Kovach 2021
+Ch.4, which actually requires verification of load-bearing
+facts) and the absence of any rubric dimension enforcing
+reader-facing onboarding.
+
+#### Migration note
+
+Breaking change in artifact shape for users of
+`stack-evaluation` / `competitive-analysis` /
+`academic-research` / `market-analysis` workflows: the first
+output section is now the protocol's onboarding section.
+Existing artifacts under user vaults are not retroactively
+invalid — they were produced under the v5.5.1 contract.
+
 ## [5.6.0] — 2026-05-04
 
 ### Added — CHK-SKL-014 (AskUserQuestion Pattern) gate in skill-team

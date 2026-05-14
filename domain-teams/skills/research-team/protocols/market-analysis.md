@@ -67,6 +67,36 @@ of Phase 4 / Synthesis). Quick mode skips.
 
 ## Protocol
 
+### Phase 0.5: Context-first onboarding (MANDATORY)
+
+Before market sizing or competitive mapping, draft the artifact's
+opening **Market Context** section. This is the reader onboarding
+required by `rubrics/research-quality-gate.md` §Reader Onboarding
+for the market-analysis protocol.
+
+The section must contain:
+
+1. **Market boundary** — geography, segment, value-chain
+   position. Be specific. "AI market" is not a boundary; "enterprise
+   AI code-assistant tools, global, software-vendor segment" is.
+2. **Time range** — the period the analysis covers and the date
+   horizon for projections. State both. "Historical 2020-2024;
+   projections to 2027" is well-framed.
+3. **Primary drivers and constraints** — the two or three forces
+   the analysis treats as load-bearing for the market dynamics
+   (regulatory shift, technology platform change, demographic
+   inflection, etc.). Not the conclusion — the framing.
+
+The Market Context section is **exempt from Fact / Analysis /
+Speculation tagging** per `standards/citation-standards.md`
+§Onboarding-Layer Exemption — it sets scope, not findings. TAM /
+SAM / SOM numbers and projection figures carry tags in Phase 2.
+
+User override: if the user states they already operate in the
+market and want the analysis to skip context-setting, omit and
+record in deep-mode Self-Critique as `Context-first onboarding
+skipped per user override.`
+
 ### Phase 1: Market Definition
 
 1. **Define market boundary**: Geography, segment, value chain
@@ -129,9 +159,12 @@ budget; in deep mode, follow existing collection workflow.
 
 ## Output Format
 
-1. **Market Definition**: Boundary, segments, scope
-2. **Market Size & Growth**: TAM/SAM/SOM with sources and methodology
-3. **Competitive Landscape**: Key players, positioning, market share
-4. **Trends & Dynamics**: Drivers, headwinds, regulatory environment
-5. **Opportunity/Threat Matrix**: Structured assessment
-6. **Strategic Implications**: Actionable recommendations
+1. **Market Context** (context-first onboarding per Phase 0.5):
+   Market boundary + time range + primary drivers. Untagged per
+   §Onboarding-Layer Exemption.
+2. **Market Definition**: Detailed boundary, segments, scope
+3. **Market Size & Growth**: TAM/SAM/SOM with sources and methodology
+4. **Competitive Landscape**: Key players, positioning, market share
+5. **Trends & Dynamics**: Drivers, headwinds, regulatory environment
+6. **Opportunity/Threat Matrix**: Structured assessment
+7. **Strategic Implications**: Actionable recommendations

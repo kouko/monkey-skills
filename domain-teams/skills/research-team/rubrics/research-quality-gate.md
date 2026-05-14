@@ -24,10 +24,11 @@ re-running the protocol from scratch.
 
 When deep mode runs the gate, all flag dimensions (Source Quality
 & Cross-Verification, Reasoning & Logic, Completeness,
-Actionability) apply unchanged with the existing verdict rules.
-Per-mode threshold tuning (for example relaxing completeness
-warnings for quick mode) is deferred to v4.9.2 if real usage shows
-the binary skip is too coarse.
+Actionability, **Reader Onboarding**) apply unchanged with the
+existing verdict rules. The Self-Critique Honesty dimension is
+deep-mode-only by construction. Per-mode threshold tuning (for
+example relaxing completeness warnings for quick mode) is deferred
+to v4.9.2 if real usage shows the binary skip is too coarse.
 
 See `standards/confidence-and-claim-language.md` §Cost-Aware
 Early-Exit Rule for the mode-specific per-claim source thresholds
@@ -87,6 +88,37 @@ not the author's performance of knowledge.
 - 🟡 **Warning**: Recommendations are vague ("consider improving X" without specifics)
 - 🟡 **Warning**: No clear next steps or actionable items at the end
 - 🟢 **Clear**: Recommendations are specific, prioritized, and actionable
+
+### Reader Onboarding
+
+Grounded in Kovach & Rosenstiel 2021's reader-serving principle:
+research output must seed the reader's mental model before
+asserting facts about that model. The onboarding form is bound to
+the protocol — `stack-evaluation` and `competitive-analysis`
+require **concept-first** (define each load-bearing term);
+`academic-research` requires **scope-first** (research question,
+inclusion / exclusion criteria, search method); `market-analysis`
+requires **context-first** (market boundary, time range, primary
+drivers). `research-summary` and `quick-lookup` are exempt
+because the source material or single-question framing supplies
+its own onboarding.
+
+- 🔴 **Fatal**: Onboarding section absent on a worker-dispatched artifact (stack-evaluation / competitive-analysis / academic-research / market-analysis)
+- 🔴 **Fatal**: Onboarding form does not match the protocol (e.g., academic-research artifact opens with concept definitions instead of scope statement)
+- 🟡 **Warning**: Onboarding section is present but skeletal (one-line stubs, no real definition / scope / context content)
+- 🟡 **Warning**: Onboarding section is tagged with Fact / Analysis / Speculation (violates the exemption — see `standards/citation-standards.md` §Onboarding-Layer Exemption)
+- 🟢 **Clear**: Onboarding section is present, form-correct, substantive, and untagged
+
+#### Form-correctness — is vs isn't
+
+| Protocol | This IS the right form (✅) | This is NOT the right form (❌) |
+|---|---|---|
+| `stack-evaluation` | "**Agent** — a process that perceives an environment, decides, and acts. Exists because long-running tool sequences need a planner. Distinct from a *Subagent* (delegated sub-process) and a *Workflow* (predetermined script)." | "**Agent** market is growing 35% YoY [src: gartner.com/...]" — that is a market claim, not a concept definition |
+| `competitive-analysis` | "**Vertical SaaS** — an SaaS product narrowly targeted at one industry. Exists to amortize industry-specific compliance / data-model cost across customers. Distinct from a *horizontal SaaS* (industry-agnostic) and a *marketplace* (multi-side)." | "**Competitor A** has 40% market share" — that is a profile fact, not a vocabulary primer |
+| `academic-research` | "Research question: How has the Cochrane risk-of-bias tool evolved 1995-2024? Inclusion: peer-reviewed; published 1995-01 to 2024-12; EN or JP. Exclusion: pre-prints; opinion pieces. Search: PubMed, CiNii Research, J-Stage; terms 'Cochrane risk of bias' (EN), 「Cochrane バイアスリスク」 (JP)." | "**Cochrane** is a methodology for systematic reviews" — that is a concept definition (belongs in stack/competitive forms), not a scope statement |
+| `market-analysis` | "Market: enterprise AI code-assistant tools, global, 2020-01 to 2024-12 actuals + 2027 projection horizon. Primary drivers: (1) LLM capability inflection 2022-11; (2) enterprise license compliance ratchet 2024-EU AI Act; (3) developer-tool incumbent disruption." | "**Enterprise AI** is an emerging category" — that is concept framing (belongs in stack/competitive forms), not a market boundary |
+
+User explicit override ("skip the concept layer, I know this domain") is honored — the worker records the override in Self-Critique and the evaluator treats the override as satisfying this dimension.
 
 ### Self-Critique Honesty (deep mode only)
 

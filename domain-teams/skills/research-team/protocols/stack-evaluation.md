@@ -66,6 +66,39 @@ at end of Step 7 / Synthesize recommendation). Quick mode skips.
 
 ## Protocol
 
+### Step 0. Concept-first onboarding (MANDATORY)
+
+Before any candidate search or signal collection, draft the
+artifact's opening **Core Concepts** section. This is the reader
+onboarding required by `rubrics/research-quality-gate.md` §Reader
+Onboarding for the stack-evaluation protocol.
+
+For each load-bearing term that the artifact will compare across
+candidates, write one entry containing:
+
+1. **One-sentence definition** — what this thing is, in the
+   simplest accurate phrasing.
+2. **Why it exists** — what problem it solves or constraint it
+   addresses. Not the marketing pitch; the underlying need.
+3. **Distinction from neighboring concepts** — if there is a
+   commonly conflated term (e.g., "agent" vs "subagent",
+   "framework" vs "library", "ORM" vs "query builder"), state
+   the boundary explicitly. Use an is-vs-isn't table when three
+   or more neighbors compete.
+
+The Core Concepts section is **exempt from Fact / Analysis /
+Speculation tagging** per `standards/citation-standards.md`
+§Onboarding-Layer Exemption — it is pedagogical scaffold, not
+cite-able claim. If a specific version number, release date, or
+quantitative threshold belongs to the discussion, place it in a
+later section (Step 4 signals or Step 7 synthesis) where the
+load-bearing rule applies and tags belong.
+
+User override: if the user explicitly states they are familiar
+with the domain and want to skip concept definitions, omit Step 0
+and record the override in the deep-mode Self-Critique block as
+`Concept-first onboarding skipped per user override.`
+
 ### Step 1. Define evaluation scope
 
 Clarify the decision context before any research:
@@ -190,9 +223,10 @@ Additionally assess:
 
 ## Output Format
 
-1. **Decision context**: Problem statement + constraints + evaluation type (2-3 sentences)
-2. **Current baseline**: Detected versions, usage point count, affected file count
-3. **Comparison table**: Candidates × signals matrix
-4. **Integration cost summary**: Per candidate, effort level with evidence
-5. **Recommendation**: Top pick with confidence level (高/中/低) and reasoning
-6. **Risk register**: What could go wrong, how to mitigate
+1. **Core Concepts** (concept-first onboarding per Step 0): Per-term definition + why it exists + distinction from neighboring concepts. Untagged per §Onboarding-Layer Exemption.
+2. **Decision context**: Problem statement + constraints + evaluation type (2-3 sentences)
+3. **Current baseline**: Detected versions, usage point count, affected file count
+4. **Comparison table**: Candidates × signals matrix
+5. **Integration cost summary**: Per candidate, effort level with evidence
+6. **Recommendation**: Top pick with confidence level (高/中/低) and reasoning
+7. **Risk register**: What could go wrong, how to mitigate

@@ -35,6 +35,38 @@ disclosure is the deliverable. Evaluator uses the Self-Critique
 section as a primary input to the SHOULD gate's
 `Reasoning & Logic` and `Source Quality` dimensions.
 
+### Protocol metadata record (3 lines)
+
+Prepend the three points above with a **3-line metadata record**
+that captures the production-side choices for downstream
+reviewers. Each line is a single bullet; the format is structured
+but lightweight (no JSON schema, no LLM-judge rationale prose):
+
+```
+- Protocol applied: <protocol-name>
+- Onboarding form: <concept-first | scope-first | context-first | exempt> (per <protocol default | user override>)
+- Onboarding tagging exemption applied per citation-standards §Onboarding-Layer Exemption.
+```
+
+The third line is fixed boilerplate when the artifact contains an
+onboarding section; omit only when the workflow is exempt
+(`research-summary` / `quick-lookup`). The line exists so a future
+reviewer scanning the artifact does not flag the absence of tags
+in the onboarding section as a violation — the exemption is
+self-disclosed.
+
+### Load-bearing claim sweep
+
+Before finalizing the Self-Critique points above, perform the
+load-bearing-by-use sweep defined in
+`standards/citation-standards.md` §Load-Bearing Definition: scan
+sentences that the synthesis / recommendation / TL;DR references
+back to, and verify each carries a Fact / Analysis / Speculation
+tag. Tag any that were missed. This catches the
+"first-pass-could-not-predict-downstream-use" failure mode
+without forcing the worker to over-tag defensively during initial
+drafting.
+
 ## Failure Mode
 
 A vacuous Self-Critique ("no major weaknesses identified",
@@ -47,6 +79,10 @@ flag.
 
 ```
 ## Self-Critique
+
+- Protocol applied: stack-evaluation
+- Onboarding form: concept-first (per protocol default)
+- Onboarding tagging exemption applied per citation-standards §Onboarding-Layer Exemption.
 
 1. **Weakest link**: The 35% growth claim rests on a single 2023
    industry report (Gartner) — not cross-verified against IDC or

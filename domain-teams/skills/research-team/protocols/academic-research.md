@@ -69,6 +69,40 @@ of Phase 3 / Synthesis). Quick mode skips.
 
 ## Protocol
 
+### Phase 0.5: Scope-first onboarding (MANDATORY)
+
+Before any database search, draft the artifact's opening
+**Scope and Method** section. This is the reader onboarding
+required by `rubrics/research-quality-gate.md` §Reader Onboarding
+for the academic-research protocol. It also doubles as the
+PRISMA 2020 Phase-1 protocol-registration disclosure.
+
+The section must contain:
+
+1. **Research question** — the precise theoretical question
+   investigated. PICO / PICOC framed when the question suits
+   intervention / comparison structure per
+   `standards/systematic-review-methodology.md` §PICO and PICOC
+   Question Framing.
+2. **Inclusion and exclusion criteria** — time range, language,
+   publication type, methodology constraints. Frame as a formal
+   Cochrane Step 2 decision per
+   `standards/systematic-review-methodology.md` §The Cochrane
+   8-Step Workflow.
+3. **Search method** — which databases, which terms, in which
+   languages. JP database selection per
+   `standards/information-infrastructure.md` §NDL リサーチ・ナビ
+   and §CiNii Research 系譜 when JP scholarship is in scope.
+
+The Scope and Method section is **exempt from Fact / Analysis /
+Speculation tagging** per `standards/citation-standards.md`
+§Onboarding-Layer Exemption — it states the protocol, not
+findings. Findings carry tags in Phase 4.
+
+User override: rare for academic research; if invoked, record in
+deep-mode Self-Critique as `Scope-first onboarding skipped per
+user override.`
+
 ### Phase 1: Research Design
 
 1. **Define research question & scope**: State the theoretical
@@ -158,7 +192,10 @@ budget; in deep mode, follow existing collection workflow.
 
 ## Output Format
 
-1. **Research Question**: Precise theoretical question investigated
+1. **Scope and Method** (scope-first onboarding per Phase 0.5):
+   Research question + inclusion/exclusion criteria + search method
+   (databases, terms, languages). Untagged per §Onboarding-Layer
+   Exemption.
 2. **Literature Map**: Key works organized by school of thought
    or chronological evolution
 3. **Theoretical Framework**: Synthesized model showing how
