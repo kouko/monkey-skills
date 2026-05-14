@@ -123,7 +123,7 @@ groups:
 - `{{incident_plain_summary}}` — 1-2 段當事人通知用白話摘要（no 法條 jargon）
 - `{{recommended_user_actions}}` — 給當事人的具體保護動作（更改密碼／監控帳單／等等）
 - `{{data_subject_notification_plan}}` — 對當事人通知計畫（管道／時程／涵蓋率）
-- `{{tbd_data_subject_notify_label}}` — `TBD_PDPC_*` migration label for 通報範圍 / timeframe / threshold uncertainty
+- `{{tbd_data_subject_notify_label}}` — default `TBD_PDPC_threshold` (通報範圍授權子法 §12 §2 most common case); override per session to `TBD_PDPC_timeframe` (時限授權子法 §12 §4) or `TBD_PDPC_pending` (PDPC 籌備處掛牌前) when those are the actual uncertainty axis
 - `{{tbd_root_cause_label}}` — `TBD_PDPC_*` label OR `已確認` when root-cause analysis is complete
 
 #### 4d. Generated (deterministic; no ask)

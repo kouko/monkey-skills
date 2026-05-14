@@ -25,7 +25,7 @@ privacy policy referenced) or are addressed in the breach notification:
 - [ ] §8 第一項第三款 — 受影響個資類別已具體揭露？ — **{{verdict}}**
 - [ ] §8 第一項第四款 — 利用期間 / 地區 / 對象 / 方式已揭露 (含異常存取後狀態)？ — **{{verdict}}**
 - [ ] §8 第一項第五款 — 當事人權利 (§3 查詢／更正／刪除／停止處理／異議) 已揭露 + 行使方式說明？ — **{{verdict}}**
-- [ ] §8 第一項第六款 — 不提供個資之影響已揭露 (incident 後續救濟脈絡)？ — **{{verdict}}**
+- [ ] §8 第一項第六款 — 既有 privacy policy 第六款 disclosure 完整 (incident 不重複揭露)；當事人通知 footer 含救濟管道 (客服 + DPO email)？ — **{{verdict}}**
 
 ## 個資法 §12 通報義務 + 施行細則 §22 用語基準
 
