@@ -1,0 +1,11 @@
+# Negative-test fixture: profile that declares schema_version 1 must be rejected
+# under v2 schema (const: 2). Use this fixture to lock the version bump.
+schema_version: 1
+company_name: v1 已棄用版本
+company_id: "12345678"
+registered_address: 台北市中山區範例路 1 號
+general_contact:
+  email: contact@example.com
+dpo:
+  name: 王小明
+  email: dpo@example.com

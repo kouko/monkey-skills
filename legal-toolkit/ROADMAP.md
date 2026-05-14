@@ -511,7 +511,7 @@ Phase 2 增加兩個 sibling skill（`legal-document-draft` + `legal-incident-re
 
 ---
 
-## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR ship 2026-05-13 — ✅ **PHASE 2 CLOSEOUT COMPLETE**）
+## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR ship 2026-05-13；v0.4.3 SP3b dogfood patches ship 2026-05-14 — ✅ **PHASE 2 CLOSEOUT COMPLETE**）
 
 **Scope**: 累計 5 skills active (router + playbook-author + contract-review + document-draft + incident-response). v0.4.0 ships SP3a `legal-document-draft`; v0.4.1 ships dogfood-driven patches between SP3a and SP3b; v0.4.2 ships SP3b `legal-incident-response` and closes Phase 2.
 
@@ -589,6 +589,26 @@ IR skill reframed from obsidian SoT §3.5's GDPR-contaminated design after SP2 v
 - Multi-language outputs (zh-TW only in v0.4.2; multi-lang via `translation-toolkit` plugin separate concern)
 - Dogfood validation on real PII-breach / authority-letter / contract-breach scenarios; calibrate per-path checklist completeness + 函覆 §-anchor coverage + handoff JSON ergonomics
 
+### v0.4.3 (Dogfood patches) ✅ **DONE 2026-05-14**
+
+SP3b dogfood replay (PII-breach + authority-letter scenarios) with v0.4.2 profile schema v2 + dpo.phone field discovered 2 P0 bugs + 3 P1 items requiring release patch:
+
+- P0-1 fix: profile-schema v1 → v2 — add optional `dpo.phone` to `dpo.properties` so 6 SP3b doc sites (PDPC 通報文 / 函覆 落款 / 2 binding tables / 2 checklists) referencing `{{dpo_phone}}` no longer break under `additionalProperties: false`
+- P0-2 fix: authority-letter Step 2b nested-path bug (top-level paths matching schema)
+- P1-1 fix: SP3b "schema v2" claim aligned across 4 doc sites (SKILL.md + 3 READMEs; was "v2-added fields backward-compat v1 profiles")
+- P1-2 fix: canonical legal-sources + 行政程序法 (pcode A0030055) — authority-letter Step 3 EXTRACT no longer halts on this legitimate citation
+- P1-3 fix: profile-v2.yml fixture promoted to actual v2 (schema_version: 2 + dpo.phone example); new profile-v1-rejected.yml fixture for negative test
+- Migration doc: canonical `profile-schema-v2-migration.md` distributed to both SP3a + SP3b references/ (additive-bump guarantee + dpo.phone usage guidance)
+- SP3a parity: schema v2 auto-distributed via distribute.py (purely additive; zero functional change)
+
+### Quality gate
+
+- 230/230 tests pass (was 225 in v0.4.2; +5 v0.4.3 tests: T-P-6 v1-rejected, T-P-7 v1-forward-compat, T-P-5 dpo.phone extension, plus test_canonical_legal_sources_includes_administrative_procedure_act, test_distribute_routes_profile_schema_v2_migration_to_both_skills)
+- verify-drift.py exit 0
+- check-marketplace-description-sync.py exit 0
+- Dogfood replay (PII-breach + authority-letter) with v2 profile + dpo.phone populated: grade_response.py PASS both paths; orphan-grep returns 0 matches
+- Full audit at `/tmp/legal-toolkit-sp3b-dogfood/AUDIT-v0.4.2.md` (the dogfood findings driving this patch release)
+
 ### Phase 2 cumulative quality gate
 
 - ✅ `legal-document-draft` privacy / ToS / DPA / NDA modes all produce passing `compliance.md`
@@ -597,7 +617,7 @@ IR skill reframed from obsidian SoT §3.5's GDPR-contaminated design after SP2 v
 - ✅ `legal-incident-response` 3 paths (pii-breach / authority-letter / contract-breach) all dispatch + emit 2-file audience-shaped output
 - ✅ `grade_response.py` exits 0 across all paths; Path A anti-pattern bank byte-identical with SP3a v0.4.1
 - ✅ Router Q3 dispatch active; 5 skills total in plugin
-- ✅ 225 tests green (was 201 in v0.4.1; +24 SP3b tests)
+- ✅ 230 tests green (was 225 in v0.4.2; +5 v0.4.3 dogfood-patches tests)
 
 ---
 

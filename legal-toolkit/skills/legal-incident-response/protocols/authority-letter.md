@@ -67,9 +67,9 @@ hints for date fields.
 
 #### 2b. Profile-derived (auto-populate; no separate ask)
 
-- `{{company_name}}` ← `profile.company.name`
-- `{{company_id}}` ← `profile.company.tax_id` 或 `profile.company.id` (統一編號)
-- `{{registered_address}}` ← `profile.company.registered_address` (公司登記地址)
+- `{{company_name}}` ← `profile.company_name` (top-level)
+- `{{company_id}}` ← `profile.company_id` (top-level; 統一編號 8 digits per schema pattern `^[0-9]{8}$`)
+- `{{registered_address}}` ← `profile.registered_address` (top-level; 公司登記地址)
 - `{{dpo_name}}` / `{{dpo_email}}` / `{{dpo_phone}}` ← `profile.dpo.*`
 - `{{external_counsel_block}}` ← `profile.external_counsel` (render only if
   `expected_external_counsel_review = true`)

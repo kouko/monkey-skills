@@ -186,3 +186,18 @@ def test_distribute_includes_sp3b_canonical_files():
         assert any("legal-incident-response" in d for d in destinations), (
             f"{canonical_name} missing SP3b (legal-incident-response) destination"
         )
+
+
+def test_distribute_routes_profile_schema_v2_migration_to_both_skills():
+    """profile-schema-v2-migration.md (canonical/) must distribute to both
+    SP3a + SP3b references/ as byte-identical functional copies."""
+    import distribute
+
+    assert "profile-schema-v2-migration.md" in distribute.ROUTE
+    dests = distribute.ROUTE["profile-schema-v2-migration.md"]
+    assert any("legal-document-draft/references" in d for d in dests), (
+        "migration doc missing SP3a destination"
+    )
+    assert any("legal-incident-response/references" in d for d in dests), (
+        "migration doc missing SP3b destination"
+    )

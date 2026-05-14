@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 company_name: v2 測試公司
 company_id: "12345678"
 registered_address: 臺北市 v2 路 1 號
@@ -7,6 +7,7 @@ general_contact:
 dpo:
   name: v2 DPO
   email: dpo@v2-test.example
+  phone: "02-1234-5678"
 external_counsel:
   firm_name: 測試律師事務所
   contact_name: 測試律師

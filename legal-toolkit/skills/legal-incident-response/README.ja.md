@@ -56,9 +56,9 @@ auto-classification（決定論的 keyword scan + LLM confidence judgement）が
 
 ## Inputs
 
-- **Required**：`legal-playbook/profile.yml`（v2 schema；session 開始前に `scripts/load_profile.py` が validate）
+- **Required**：`legal-playbook/profile.yml`（schema v2；session 開始前に `scripts/load_profile.py` が validate；v1→v2 delta は `references/profile-schema-v2-migration.md` を参照）
 - **Required at session**：incident 自由記述（または explicit `--type pii-breach|authority-letter|contract-breach` override）
-- **Optional from profile**：`external_counsel` + `regulatory_authorities`（v2 追加項目；backward-compat v1 profile）
+- **Optional from profile**：`external_counsel` + `regulatory_authorities` + `dpo.phone`（schema v2 で全て optional）
 
 完全 schema は SKILL.md §Inputs + spec §4 参照。
 
