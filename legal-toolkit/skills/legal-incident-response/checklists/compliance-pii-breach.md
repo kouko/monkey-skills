@@ -25,7 +25,7 @@ privacy policy referenced) or are addressed in the breach notification:
 - [ ] §8 第一項第三款 — 受影響個資類別已具體揭露？ — **{{verdict}}**
 - [ ] §8 第一項第四款 — 利用期間 / 地區 / 對象 / 方式已揭露 (含異常存取後狀態)？ — **{{verdict}}**
 - [ ] §8 第一項第五款 — 當事人權利 (§3 查詢／更正／刪除／停止處理／異議) 已揭露 + 行使方式說明？ — **{{verdict}}**
-- [ ] §8 第一項第六款 — 不提供個資之影響已揭露 (incident 後續救濟脈絡)？ — **{{verdict}}**
+- [ ] §8 第一項第六款 — 既有 privacy policy 已揭露「當事人得自由選擇提供個資時，不提供之權益影響」(§8 第六款 蒐集時告知義務；incident 不重複揭露)？ — **{{verdict}}**
 
 ## 個資法 §12 通報義務 + 施行細則 §22 用語基準
 
@@ -89,6 +89,7 @@ privacy policy referenced) or are addressed in the breach notification:
 
 - [ ] 時間軸完整 — 至少包含發生 / 發現 / 初步應變 / 圍堵 / PDPC 通報 5 個 ISO 8601 anchors (未發者以 `⏳ 待 X` 標記)？ — **{{verdict}}**
 - [ ] DPO 聯絡完整 — name / email / phone 三項皆填？ — **{{verdict}}**
+- [ ] 當事人通知 footer 含救濟管道 (客服窗口 + DPO email)？ — **{{verdict}}**
 - [ ] 採取措施分技術 / 行政兩段明列？ — **{{verdict}}**
 - [ ] 對外溝通 Top 3 已列於 business.md？ — **{{verdict}}**
 - [ ] 文件字號 (document_reference_number) 已填？ — **{{verdict}}**

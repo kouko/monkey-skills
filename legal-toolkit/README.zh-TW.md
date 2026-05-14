@@ -4,7 +4,7 @@
 
 Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-![version](https://img.shields.io/badge/version-0.4.3-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Closeout-orange)
+![version](https://img.shields.io/badge/version-0.4.4-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Closeout-orange)
 
 > ⚠️ **本工具不是律師意見。** 本工具為免費 open-source utility，非律師事務所、亦非執業律師。每份輸出皆含 Mandatory Disclaimer；高風險 findings 額外觸發 Escalation Override（「請諮詢執業律師」）。詳見 [§Disclaimer policy](#disclaimer-policy)。
 

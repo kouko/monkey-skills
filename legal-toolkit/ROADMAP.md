@@ -511,7 +511,7 @@ Phase 2 增加兩個 sibling skill（`legal-document-draft` + `legal-incident-re
 
 ---
 
-## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR ship 2026-05-13；v0.4.3 SP3b dogfood patches ship 2026-05-14 — ✅ **PHASE 2 CLOSEOUT COMPLETE**）
+## Phase 2 — Template + Runbook（v0.4.0 SP3a ship 2026-05-13；v0.4.1 dogfood patches ship 2026-05-13；v0.4.2 SP3b IR ship 2026-05-13；v0.4.3 SP3b dogfood patches ship 2026-05-14；v0.4.4 P2 polish + v0.4.x pause ship 2026-05-14 — ✅ **PHASE 2 + v0.4.x LINE COMPLETE — PAUSED HERE**）
 
 **Scope**: 累計 5 skills active (router + playbook-author + contract-review + document-draft + incident-response). v0.4.0 ships SP3a `legal-document-draft`; v0.4.1 ships dogfood-driven patches between SP3a and SP3b; v0.4.2 ships SP3b `legal-incident-response` and closes Phase 2.
 
@@ -609,6 +609,44 @@ SP3b dogfood replay (PII-breach + authority-letter scenarios) with v0.4.2 profil
 - Dogfood replay (PII-breach + authority-letter) with v2 profile + dpo.phone populated: grade_response.py PASS both paths; orphan-grep returns 0 matches
 - Full audit at `/tmp/legal-toolkit-sp3b-dogfood/AUDIT-v0.4.2.md` (the dogfood findings driving this patch release)
 
+### v0.4.4 (P2 polish + v0.4.x pause) ✅ **DONE 2026-05-14**
+
+Deferred P2 items from v0.4.3 dogfood audit; closes the v0.4.x line cleanly before v0.4.x pause.
+
+- P2-1 fix: `compliance-pii-breach.md` §8 第一項第六款 reframed — pre-incident posture (privacy policy completeness) split from incident-time 救濟管道 disclosure (客服 + DPO email)
+- P2-2 fix: `pii-breach.md` Step 4c `tbd_data_subject_notify_label` default = `TBD_PDPC_threshold` + per-session override to `TBD_PDPC_timeframe` / `TBD_PDPC_pending` when actual uncertainty differs
+- P2-3 fix: `grade_response.py` new `_check_no_template_orphans()` helper — greps published `legal.md` + `business.md` for un-substituted `{{snake_case_token}}` literals; closes silent-shipping path identified in v0.4.3 audit (schema-vs-template mismatch like `dpo.phone` under v1 would have leaked an orphan past the structural grader)
+- P2-4 fix: `classify-path.md` Step 0.4 adds non-finance examples (公平會 廣告不實 / 勞動部 勞動檢查 / 環保署 排放申報 / 個資組 §12 sub-reg) before the existing finance-only multi-path detection case
+
+**Quality gate**:
+- 231/231 tests pass (was 230 in v0.4.3; +1 v0.4.4 test: `test_grade_response_detects_template_orphan_in_legal_md`)
+- verify-drift.py exit 0
+- check-marketplace-description-sync.py exit 0
+- check-skill-structure.py — 11 pre-existing CHK-SKL-012 issues, none introduced by this PR (carry-forward from v0.4.3 baseline)
+
+### v0.4.x pause memo
+
+The legal-toolkit v0.4.x line PAUSES here pending Phase 4.5 上市櫃 Compliance outreach completion. Next resumption point: **Phase 3 IRAC cluster v0.5.0** (`legal-issue-spot` + `legal-research`; ~8-12 天 subagent-driven).
+
+**Resume-from snapshot** (state at v0.4.4 ship 2026-05-14):
+- 5 active skills: `using-legal-toolkit` / `legal-playbook-author` / `legal-contract-review` / `legal-document-draft` / `legal-incident-response`
+- Schema: profile-schema v2 (`dpo.phone` optional; additive bump from v1 in v0.4.3)
+- Canonical SoT (`scripts/canonical/`): `legal-sources.json` (13 statutes incl. 行政程序法) / `profile-schema.yml` v2 / `pdpa-current-state.md` / `tbd-migration-template.md` / `load_profile.py` / `profile-schema-v2-migration.md`
+- Path A discipline locked across all skills (current Taiwan in-force law; 即時 not 72hr; 委託/受託 not controller/processor; 民法 §12-13 not PDPA minor age)
+- Grader hardening: structural + Path A anti-pattern bank + template-orphan check (v0.4.4)
+- 231 tests baseline
+- No open contract bugs from dogfood as of v0.4.4
+
+**Open work when resuming** (priority order):
+1. ★ Phase 4.5 GC outreach (in flight; user-driven; 2-4 週 lead time — kouko 親自寄 outreach per `legal-toolkit/research/4.5-prep/`)
+2. Phase 3 IRAC cluster v0.5.0 — 2 new skills (`legal-issue-spot` + `legal-research`); 8-12 天 SDD
+3. Phase 4 Tracker cluster v0.6.0 — 法務專案 / deadline tracking; 10 天
+4. Phase 5 Compliance cluster v0.9.0 — gated by 4.5 outputs
+5. Pearson calibration carry-forward — was Phase 1.6 欠單; deferred for Phase 3 ride-along
+6. Phase 6 GA v1.0.0 — terminal milestone
+
+**No technical debt blocking resumption**. The v0.4.4 grader template-orphan check (P2-3) closes the structural safety net that v0.4.3 dogfood identified.
+
 ### Phase 2 cumulative quality gate
 
 - ✅ `legal-document-draft` privacy / ToS / DPA / NDA modes all produce passing `compliance.md`
@@ -617,7 +655,7 @@ SP3b dogfood replay (PII-breach + authority-letter scenarios) with v0.4.2 profil
 - ✅ `legal-incident-response` 3 paths (pii-breach / authority-letter / contract-breach) all dispatch + emit 2-file audience-shaped output
 - ✅ `grade_response.py` exits 0 across all paths; Path A anti-pattern bank byte-identical with SP3a v0.4.1
 - ✅ Router Q3 dispatch active; 5 skills total in plugin
-- ✅ 230 tests green (was 225 in v0.4.2; +5 v0.4.3 dogfood-patches tests)
+- ✅ 231 tests green (was 230 in v0.4.3; +1 v0.4.4 grader template-orphan check test)
 
 ---
 

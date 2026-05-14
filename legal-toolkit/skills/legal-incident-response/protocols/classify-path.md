@@ -57,6 +57,13 @@ If user confirms: proceed to Step 1 LOAD_PROFILE (in main pipeline). If user ove
 
 ### Step 0.4: Edge case — multi-path detection
 
+Non-finance examples worth understanding:
+
+- 公平會: 廣告不實 / 比較廣告 substantiation / 不公平競爭函詢 — typically 函覆 path; deadline often 14 日內
+- 勞動部 / 勞動局: 勞動檢查通知 / 罰鍰處分書 — 函覆 (補件 mode常見); deadline 7-14 日
+- 環保署 / 環保局: 排放申報函詢 / 改善通知 — 函覆 path
+- 個資組 (PDPC 籌備處): 個資 §12 sub-reg 函詢 — overlaps with PII-breach path; cross-reference TBD_PDPC_* migration tracker
+
 If `matched_paths` ≥ 2 (e.g., "金管會來函說有客戶資料外洩，7 日內說明" matches both authority-letter + pii-breach):
 
 - inferred_type = primary path (typically the OUTER trigger — here authority-letter, because 函 來文 deadline is the URGENT axis; pii-breach analysis runs INSIDE the 函覆 prep)
