@@ -190,3 +190,22 @@ def test_path_a_antipattern_in_business_md_fails(tmp_path):
     result = grade.grade_response(output_dir, path_type="pii-breach")
     assert result.passed is False
     assert any("path a violation" in r.lower() for r in result.reasons)
+
+
+# ---------------------------------------------------------- T-GR-ORPHAN-1: orphan token detected
+def test_grade_response_detects_template_orphan_in_legal_md():
+    """If legal.md or business.md contains an un-substituted {{token}}, grader
+    must FAIL with reason mentioning 'orphan' or 'template'. Closes the silent-
+    shipping path that v0.4.3 dogfood audit found (dpo_phone workaround would
+    have produced this state under v0.4.2 schema)."""
+    grade = _load()
+    fixture_dir = FIXTURES / "orphan-token"
+
+    result = grade.grade_response(fixture_dir, "pii-breach")
+
+    assert result.passed is False
+    assert any(
+        ("orphan" in reason.lower() or "template" in reason.lower())
+        and "{{" in reason
+        for reason in result.reasons
+    ), f"expected orphan-token failure, got: {result.reasons}"

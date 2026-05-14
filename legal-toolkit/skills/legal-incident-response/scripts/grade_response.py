@@ -162,6 +162,27 @@ def _check_path_a_antipatterns(*texts: str) -> list[str]:
     return errors
 
 
+def _check_no_template_orphans(*texts: str) -> list[str]:
+    """Grep for un-substituted template orphan tokens like `{{dpo_phone}}` in
+    published output (legal.md + business.md). v0.4.3 dogfood audit showed
+    that a schema-vs-template mismatch can leak orphans past the structural
+    grader; this check closes that silent-shipping path.
+
+    Pattern matches `{{snake_case_token}}` — alphanumeric + underscore only,
+    surrounded by double curly braces. False positives on legitimate `{` usage
+    are avoided by requiring at least one char between the double braces.
+    """
+    errors = []
+    pattern = re.compile(r"\{\{[a-z_][a-z0-9_]*\}\}")
+    for text in texts:
+        for match in pattern.finditer(text):
+            errors.append(
+                f"Template orphan token leaked into published output: {match.group(0)!r} "
+                f"(un-substituted {{{{...}}}} literal — schema-vs-template mismatch suspected)"
+            )
+    return errors
+
+
 # ---------------------------------------------------------- per-path branches
 def _check_pii_breach_specific(legal_text: str) -> list[str]:
     """PII-breach legal.md must include PDPC 通報文 / 當事人通知文 / 影響範圍 / 採取措施."""
@@ -240,6 +261,7 @@ def grade_response(output_dir: Path, path_type: str) -> GradeResult:
     reasons.extend(_check_timeline_section(legal_text))
     reasons.extend(_check_tbd_ids_canonical(legal_text, business_text))
     reasons.extend(_check_path_a_antipatterns(legal_text, business_text))
+    reasons.extend(_check_no_template_orphans(legal_text, business_text))
 
     # per-path branches
     if path_type == "pii-breach":
