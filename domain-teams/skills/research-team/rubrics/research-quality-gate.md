@@ -109,6 +109,15 @@ its own onboarding.
 - 🟡 **Warning**: Onboarding section is tagged with Fact / Analysis / Speculation (violates the exemption — see `standards/citation-standards.md` §Onboarding-Layer Exemption)
 - 🟢 **Clear**: Onboarding section is present, form-correct, substantive, and untagged
 
+#### Form-correctness — is vs isn't
+
+| Protocol | This IS the right form (✅) | This is NOT the right form (❌) |
+|---|---|---|
+| `stack-evaluation` | "**Agent** — a process that perceives an environment, decides, and acts. Exists because long-running tool sequences need a planner. Distinct from a *Subagent* (delegated sub-process) and a *Workflow* (predetermined script)." | "**Agent** market is growing 35% YoY [src: gartner.com/...]" — that is a market claim, not a concept definition |
+| `competitive-analysis` | "**Vertical SaaS** — an SaaS product narrowly targeted at one industry. Exists to amortize industry-specific compliance / data-model cost across customers. Distinct from a *horizontal SaaS* (industry-agnostic) and a *marketplace* (multi-side)." | "**Competitor A** has 40% market share" — that is a profile fact, not a vocabulary primer |
+| `academic-research` | "Research question: How has the Cochrane risk-of-bias tool evolved 1995-2024? Inclusion: peer-reviewed; published 1995-01 to 2024-12; EN or JP. Exclusion: pre-prints; opinion pieces. Search: PubMed, CiNii Research, J-Stage; terms 'Cochrane risk of bias' (EN), 「Cochrane バイアスリスク」 (JP)." | "**Cochrane** is a methodology for systematic reviews" — that is a concept definition (belongs in stack/competitive forms), not a scope statement |
+| `market-analysis` | "Market: enterprise AI code-assistant tools, global, 2020-01 to 2024-12 actuals + 2027 projection horizon. Primary drivers: (1) LLM capability inflection 2022-11; (2) enterprise license compliance ratchet 2024-EU AI Act; (3) developer-tool incumbent disruption." | "**Enterprise AI** is an emerging category" — that is concept framing (belongs in stack/competitive forms), not a market boundary |
+
 User explicit override ("skip the concept layer, I know this domain") is honored — the worker records the override in Self-Critique and the evaluator treats the override as satisfying this dimension.
 
 ### Self-Critique Honesty (deep mode only)
