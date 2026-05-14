@@ -4,6 +4,71 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] — 2026-05-14
+
+### Added — `brief-before-asking` skill (8th in dev-workflow)
+
+New skill that enforces a structured briefing before (or in response to)
+any complex engineering decision question — a 6-block format with
+**Mental Model First** as the load-bearing rule.
+
+The skill addresses a recurring failure mode: when an agent needs the
+user to make an engineering call, the agent typically starts at
+implementation-level detail with embedded jargon. The user can't land
+on the technical content without a system-level mental model first.
+`brief-before-asking` enforces the abstraction bridge before the
+technical detail.
+
+**Three trigger modes**:
+
+1. **Mode A — Proactive**: agent self-detects an upcoming non-trivial
+   decision and delivers the full 6-block briefing before asking
+2. **Mode B — Reactive on question**: user says 「看不懂」 / 「什麼意思」
+   to a short agent question → agent re-briefs with full 6 blocks +
+   re-asks in specific form
+3. **Mode C — Reactive on explanation**: user says 「跟不上」 / 「太多術語」
+   after a dense agent explanation → agent **retreats** to Mental Model
+   + jargon glossary + drill menu, **pauses** (does NOT dump 6 blocks
+   again, which would re-drown the user — iteration-4 design insight)
+
+**6-block structure**:
+
+```
+Mental Model     1-2 sentences plain English, NO jargon, NO code refs
+Situation        Technical state: code refs, metrics, investigation
+Why-this-fork    Trigger condition + constraint + cost of not asking
+Options          2-4 real options with equal depth (concrete diffs)
+My take          Explicit lean + ≥3-step reasoning + conditional reversal
+Open ends        What I don't know / would flip my answer / value calls
+```
+
+**Resources shipped (v1.0 draft)**:
+- `SKILL.md` — the skill spec (235 lines, ~2,530 tokens)
+- `test-prompts.json` — 20 test cases (10 from Phase 2 + 10 Mode C /
+  ambiguous-"more context" disambiguation cases from Phase 4)
+- `trigger-eval.json` — 20-query trigger eval set for description
+  optimization (10 should-trigger + 10 should-not-trigger near-miss)
+- `references/DESIGN.md` — design rationale + 4-iteration history
+- `references/EXAMPLES.md` — bad-vs-good worked examples (Mode C demo)
+- `references/IMPLEMENTATION-CHECKLIST.md` — author phase checklist
+
+**Differentiation**:
+- Heavier than `proposal-critique` / `complexity-critique` (which gate
+  proposals at decision-time without rebuilding context)
+- Lighter than full Minto SCQA / formal RFC (which assume cross-team
+  audience and post-deliberation cementing)
+- Daily-use middleweight for individual complex engineering decisions
+
+**Phase 6 skill-judge advisory grade**: ~105 / 120 (high B, projected
+after Top 3 D5/D8/D1 improvements). Pattern: Process. Knowledge ratio
+E:A:R ~ 65:30:5.
+
+**Pre-shipped status**: v1.0 draft. Phase 1 (sanity check + 4 friction
+patches + rename) / Phase 2 (10-TC test prompts) / Phase 4 (10 more TCs)
+/ Phase 6 (skill-judge advisory) complete. Phase 3 (description
+auto-optimization) in progress. Phase 7 (skill-tuning A/B variants)
+deferred to post-ship feedback.
+
 ## [2.2.0] — 2026-05-04
 
 ### Added — hardened AskUserQuestion pattern in skill-creator-advance

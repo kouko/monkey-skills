@@ -1,0 +1,22 @@
+[
+  {"query": "我在看 OrderService 的 checkout flow，發現高併發下會 oversell。我已經 trace 過 inventory deduction 那段大概是 message 重複被消費。我想跟你討論一下要走 idempotency key 還是 outbox pattern，這兩個方向蠻不一樣的，要不要先幫我整理一下脈絡？", "should_trigger": true},
+  {"query": "ok so the orders table is 4.2M rows now, p95 on findRecentPending is 12s and we have a deploy window tomorrow. should i add a composite index (status, created_at desc) or rewrite to cursor pagination? need your read before i commit either direction", "should_trigger": true},
+  {"query": "等等我看不懂你剛剛問什麼，你說的那個 saga 跟 offset commit 是什麼意思？可以再講一次嗎", "should_trigger": true},
+  {"query": "I'm lost — too much jargon. can you back up and tell me in plain English where in the system this is happening before we talk about kafka rebalances", "should_trigger": true},
+  {"query": "team's debating splitting payments out of the monolith into its own service this quarter. dependencies are nasty (shared user table, async webhooks to billing) and the deploy story is unclear. before i pick a side i'd like you to lay out the actual fork for me", "should_trigger": true},
+  {"query": "跟不上你剛剛講的，那個 CDC + debezium + 雙寫的 race 我完全沒概念，先給我一個 mental model 就好", "should_trigger": true},
+  {"query": "我們現在 caching layer 要選 redis cluster 還是 dynamodb dax，兩個 team 各有偏好。可以幫我用結構化的方式攤開來看嗎？包含 reversibility 跟 downstream 影響", "should_trigger": true},
+  {"query": "RCA 寫到一半卡住了 — 我覺得 root cause 可能是 connection pool 用完，但也可能是 downstream timeout 太短導致 retry storm，要不要先幫我建一下 mental model 再決定接下來 fork 怎麼走", "should_trigger": true},
+  {"query": "what?? 你剛剛那個 quorum-based reconciliation 是什麼？沒頭沒尾的，給我完整脈絡再問我", "should_trigger": true},
+  {"query": "before you ask me to pick between event sourcing and CRUD for the new audit-trail service, can you actually frame the decision for me — i don't even know what's at stake here", "should_trigger": true},
+  {"query": "what is the saga pattern? i've heard it mentioned in a few design docs at work and want to understand the concept", "should_trigger": false},
+  {"query": "rename the variable `cnt` to `pendingOrderCount` across OrderRepository.ts and its test file", "should_trigger": false},
+  {"query": "just decide which log level to use for the retry-exhausted branch, don't ask me, you've seen the codebase", "should_trigger": false},
+  {"query": "我要寫 incident postmortem，timeline 已經整理好了，幫我用 5-whys 把 root cause 段落補完，事故是 2026-05-12 的 payment service outage", "should_trigger": false},
+  {"query": "let's brainstorm a new feature — i want users to be able to share their playlists with a custom thumbnail. we haven't started any code yet, just exploring what this could look like", "should_trigger": false},
+  {"query": "review this PR for me: https://github.com/acme/orders-api/pull/4821 — focus on the new BatchProcessor class and tell me if there are bugs", "should_trigger": false},
+  {"query": "the integration test test_checkout_concurrent is flaky, fails maybe 1 in 8 runs with `AssertionError: expected 1 row, got 2`. help me figure out why", "should_trigger": false},
+  {"query": "refactor UserService to extract the email-validation logic into its own module. straightforward split, just do it and show me the diff when done", "should_trigger": false},
+  {"query": "write the README section explaining how our outbox-publisher worker handles message ordering — audience is new backend hires, casual tone ok", "should_trigger": false},
+  {"query": "從這個 logs.json 抽出所有 status >= 500 的 request，group by endpoint，輸出 markdown table 給我，欄位順序 endpoint / count / p95_ms", "should_trigger": false}
+]

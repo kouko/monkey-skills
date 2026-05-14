@@ -25,3 +25,7 @@ Thumbs.db
 **/__pycache__/
 *.py[cod]
 *$py.class
+
+# Skill eval-loop ephemeral output (run_loop / skill-judge history JSONL)
+**/.run_loop-results/
+**/.skill-judge-history.jsonl

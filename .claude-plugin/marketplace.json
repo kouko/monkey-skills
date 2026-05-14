@@ -21,7 +21,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer workflow skills — skill creation (skill-creator-advance), skill quality scoring (skill-judge, 8-dimension rubric), portable git-backed project memory (git-memory), multi-item proposal triage (proposal-critique), deletion-first change critique (complexity-critique), token / structure refactor for existing skills with output equivalence (skill-refactor, multi-judge ensemble + git ratchet), and human-judged output quality A/B for existing skills (skill-tuning, blind variants + constitutional pre-filter + preference log → RLHF-lite). Git コミット・メモリ・スキル品質評価・複雑度クリティーク・skill リファクタ・スキル チューニング。可攜式專案記憶・技能品質評估・提案審查・複雜度評析・skill 重構・skill 調整。",
+      "description": "Developer workflow skills — skill creation (skill-creator-advance), skill quality scoring (skill-judge, 8-dimension rubric), portable git-backed project memory (git-memory), structured briefings before complex engineering decisions (brief-before-asking, 6-block Mental Model First with 3 modes), multi-item proposal triage (proposal-critique), deletion-first change critique (complexity-critique), token / structure refactor for existing skills with output equivalence (skill-refactor, multi-judge ensemble + git ratchet), and human-judged output quality A/B for existing skills (skill-tuning, blind variants + constitutional pre-filter + preference log → RLHF-lite). Git コミット・メモリ・スキル品質評価・複雑度クリティーク・skill リファクタ・スキル チューニング・複雑決定ブリーフィング。可攜式專案記憶・技能品質評估・提案審查・複雜度評析・skill 重構・skill 調整・複雜決策結構化簡報。",
       "source": "./dev-workflow/"
     },
     {

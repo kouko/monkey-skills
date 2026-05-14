@@ -30,8 +30,9 @@ Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolu
 | [`proposal-critique`](skills/proposal-critique/) | Triage a multi-item proposal — list, plan, prose recommendation — into KEEP / DEFER / DROP using evidence grounding and YAGNI. |
 | [`complexity-critique`](skills/complexity-critique/) | Gate one specific proposed change through three deletion-first questions: smallest possible end state, before/after LOC, what becomes obsolete. PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT. |
 | [`git-memory`](skills/git-memory/) | Capture decision context (the **why**, not the diff) into commit trailers and PR bodies so any future session — Claude Code, Cursor, Codex, aider, or a human — can reconstruct project knowledge from `git log` alone. |
+| [`brief-before-asking`](skills/brief-before-asking/) | Structured briefing before (or in response to) a complex engineering decision question. 3 modes: Mode A (agent self-detects an upcoming fork), Mode B (user says 「看不懂」 to a question), Mode C (user says 「跟不上」 to an explanation — retreat to Mental Model + drill menu). 6-block format with Mental Model First as the load-bearing rule. |
 
-All seven skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
+All eight skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
 ## The critique line
 
@@ -91,7 +92,7 @@ The split is forced by the cost of evaluation: mechanical changes (refactor) tol
 
 ## Upstream chain
 
-Three of the seven skills derive from MIT-licensed upstreams. Full attribution lives in each skill's `NOTICE` file.
+Three of the eight skills derive from MIT-licensed upstreams. Full attribution lives in each skill's `NOTICE` file.
 
 | Skill | Upstream chain |
 |---|---|
@@ -151,12 +152,13 @@ Four slash commands ship with the plugin:
 /complexity-critique        # deletion-first gate on a specific change
 ```
 
-The remaining three skills (`skill-judge`, `proposal-critique`, `git-memory`) auto-trigger from natural language — for example:
+The remaining four skills (`skill-judge`, `proposal-critique`, `git-memory`, `brief-before-asking`) auto-trigger from natural language — for example:
 
 ```
-"Score this skill against the 8-dimension rubric"     → skill-judge
-"Critique this 12-item plan"                          → proposal-critique
-"I'm about to commit — help me write the trailer"     → git-memory
+"Score this skill against the 8-dimension rubric"        → skill-judge
+"Critique this 12-item plan"                             → proposal-critique
+"I'm about to commit — help me write the trailer"        → git-memory
+"看不懂" / "跟不上" / agent-about-to-ask-complex-fork    → brief-before-asking
 ```
 
 For a worked walk-through of the Two-Hats split (refactor vs tuning), see [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) §2.
