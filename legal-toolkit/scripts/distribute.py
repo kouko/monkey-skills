@@ -46,6 +46,10 @@ ROUTE: dict[str, list[str]] = {
         "skills/legal-document-draft/scripts/load_profile.py",
         "skills/legal-incident-response/scripts/load_profile.py",
     ],
+    "profile-schema-v2-migration.md": [
+        "skills/legal-document-draft/references/profile-schema-v2-migration.md",
+        "skills/legal-incident-response/references/profile-schema-v2-migration.md",
+    ],
 }
 
 # Filesystem noise to skip — never authored files.
