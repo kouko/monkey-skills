@@ -4,7 +4,7 @@
 
 Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-![version](https://img.shields.io/badge/version-0.4.2-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Closeout-orange)
+![version](https://img.shields.io/badge/version-0.4.3-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Closeout-orange)
 
 > ⚠️ **法的助言ではありません。** 本ツールは無料の open-source utility であり、法律事務所でも執業弁護士でもない。全ての出力に Mandatory Disclaimer が付き、高 risk findings には Escalation Override（「執業弁護士に相談してください」）が表示される。詳細は [§Disclaimer policy](#disclaimer-policy)。
 
