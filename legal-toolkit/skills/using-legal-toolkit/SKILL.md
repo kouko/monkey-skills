@@ -1,7 +1,7 @@
 ---
 name: using-legal-toolkit
 description: |
-  Router skill for legal-toolkit — the entry point that recognises user intent across 6 clusters (📋 Playbook / 📝 Template / 🚨 Runbook / 🔍 IRAC / 📅 Tracker / 🏛️ Compliance) and dispatches to the right specialist sub-skill. 5 active sub-skills (legal-contract-review / legal-playbook-author / legal-document-draft / legal-incident-response / this router); 6 more sub-skills (legal-issue-spot / legal-research / legal-contract-tracker / legal-regulation-watch / legal-corporate-governance / legal-dd-quickscan) are listed as not-yet-available with their planned phase. Returns a 6-cluster menu when intent is ambiguous — never guesses.
+  Router skill for legal-toolkit — the entry point that recognises user intent across 6 clusters (📋 Playbook / 📝 Template / 🚨 Runbook / 🔍 IRAC / 📅 Tracker / 🏛️ Compliance) and dispatches to the right specialist sub-skill. 6 active sub-skills (legal-contract-review / legal-playbook-author / legal-document-draft / legal-incident-response / legal-issue-spot / this router); 5 more sub-skills (legal-research / legal-contract-tracker / legal-regulation-watch / legal-corporate-governance / legal-dd-quickscan) are listed as not-yet-available with their planned phase. Returns a 6-cluster menu when intent is ambiguous — never guesses.
 
   台灣 in-house 法務工具組 router。法務工具のルーター。
 
