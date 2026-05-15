@@ -31,7 +31,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 ## Output format
 
-セッション毎に `<cwd>/legal-outputs/<YYYY-MM-DD-HHmm>-issue-spot/` へ出力：
+session 毎に `<cwd>/legal-outputs/<YYYY-MM-DD-HHmm>-issue-spot/` へ出力：
 
 | File | Audience | Sections |
 |---|---|---|
