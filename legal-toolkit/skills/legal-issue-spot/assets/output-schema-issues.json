@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-issue-spot/assets/output-schema-issues.json",
+  "title": "issues.md structural schema",
+  "type": "object",
+  "description": "Structural contract for legal-issue-spot issues.md output. Markdown is post-parsed; this schema validates which sections + content patterns must appear.",
+  "required": [
+    "required_sections",
+    "subsumption_table_columns",
+    "subsumption_conclusion_values",
+    "risk_grade_required",
+    "min_byte_size",
+    "no_template_orphans"
+  ],
+  "properties": {
+    "required_sections": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": [
+        "§事實摘要",
+        "§時間軸",
+        "§Issue 矩陣",
+        "§構成要件涵攝",
+        "§反事實",
+        "§風險分級",
+        "§Disclaimer"
+      ]
+    },
+    "subsumption_table_columns": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["構成要件", "事實對應", "涵攝結論", "信心"]
+    },
+    "subsumption_conclusion_values": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["該當", "不該當", "⚠️"]
+    },
+    "risk_grade_required": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["🔴", "🟡", "🟢"]
+    },
+    "min_byte_size": {"type": "integer", "const": 800},
+    "no_template_orphans": {"type": "boolean", "const": true}
+  }
+}
