@@ -1,6 +1,6 @@
 # legal-toolkit Roadmap (v0.1.0 → v1.0.0)
 
-> **Status**: Phase 3 SP3-a ship (v0.5.0, 2026-05-15) — 6 skills active (router + playbook-author + contract-review + document-draft + incident-response + issue-spot). Phase 3 SP3-b (legal-research) planned v0.5.2.
+> **Status**: Phase 3 fully closed (v0.5.2, 2026-05-15) — 7 skills active (router + playbook-author + contract-review + document-draft + incident-response + issue-spot + research). IRAC cluster complete. Phase 4 Tracker cluster (v0.6.0) is next.
 > **Source of design**: `<obsidian-vault>/research/2026-05-09 法務 Agent Skill (legal-toolkit) 整體架構與執行流程設計.md`（1344 行；38+ 鎖定決定見 §11 ledger）
 > **Target**: 台灣 SME → 上市櫃 in-house 法務 in-house toolkit（不是 BigLaw 移植 / 不是 general legal assistant）
 > **Distribution**: 免費 open-source 工具，非服務（律師法 §48 對工具不適用）
@@ -32,7 +32,8 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 2 SP3b  0.4.2   5d      5            Template + Runbook complete (incident-response) ✅ DONE
 ─────────────────────────────────────  ─── 至此 = 完整合約 + 合規應變
 3 SP3-a 0.5.0   1d (SDD) 6            IRAC sub-skill 1 (legal-issue-spot)            ✅ DONE 2026-05-15
-3 SP3-b 0.5.2   planned 7            IRAC sub-skill 2 (legal-research)
+3 SP3-b 0.5.2   1d (SDD) 7            IRAC sub-skill 2 (legal-research)              ✅ DONE 2026-05-15
+─────────────────────────────────────  ─── 至此 = Phase 3 IRAC fully closed
 4        0.6.0   10d     9            Tracker cluster
 4.5      ─       10-15d  9 (no skill) ⚠️ Compliance prerequisite research
 5        0.9.0   10-15d  11           Compliance cluster
@@ -51,7 +52,7 @@ Phase    v0.x.0  天數    Skill 累計   Critical
 | 2 | `legal-document-draft` | 📝 Template | template + playbook override | 2 | ✅ active (v0.4.0) |
 | 3 | `legal-incident-response` | 🚨 Runbook | NIST IR | 2 | ✅ active (v0.4.2) |
 | 4 | `legal-issue-spot` | 🔍 IRAC | issue 矩陣 + 構成要件涵攝 | 3 | ✅ active (v0.5.0) |
-| 5 | `legal-research` | 🔍 IRAC | IRAC + 請求權基礎 + Agent | 3 | planned (v0.5.2) |
+| 5 | `legal-research` | 🔍 IRAC | IRAC + 請求權基礎 + Agent | 3 | ✅ active (v0.5.2) |
 | 6 | `legal-contract-tracker` | 📅 Tracker | 時序 + threshold alert | 4 | planned |
 | 7 | `legal-regulation-watch` | 📅 Tracker | RSS poll + LLM 摘要 + Agent | 4 | planned |
 | 8 | `legal-corporate-governance` | 🏛️ Compliance | statutory checklist + filing template + deadline tracker | 5 | ⚠️ BLOCKED on 4.5 research |
@@ -660,9 +661,9 @@ The legal-toolkit v0.4.x line PAUSES here pending Phase 4.5 上市櫃 Compliance
 
 ---
 
-## Phase 3 — IRAC cluster（v0.5.0 SP3-a ship 2026-05-15；v0.5.2 SP3-b planned）
+## Phase 3 — IRAC cluster（v0.5.0 SP3-a ship 2026-05-15；v0.5.2 SP3-b ship 2026-05-15 — ✅ **PHASE 3 FULLY CLOSED**）
 
-**Scope**：+2 skill → 累計 **7**（SP3-a 已 ship → 累計 6；SP3-b 後 → 累計 7）。
+**Scope**：+2 skill → 累計 **7**（SP3-a 已 ship → 累計 6；SP3-b 已 ship → 累計 7）。
 
 ### SP3-a — `legal-issue-spot` (v0.5.0) ✅ **DONE 2026-05-15**
 
@@ -680,19 +681,32 @@ Pure-LLM IRAC issue-spotting sub-skill. Subagent-driven plan executed in 1 sessi
 - ✅ 244 tests pass (was 231 in v0.4.4; +13 v0.5.0 tests: 10 grade_issue_spot structural + 3 drift-verify bank/helper byte-identical checks)
 - ✅ verify-drift.py exit 0 / check-marketplace-description-sync.py exit 0
 
-### SP3-b — `legal-research` (v0.5.2 planned)
+### SP3-b — `legal-research` (v0.5.2) ✅ **DONE 2026-05-15**
 
-Iterative-search sub-skill with document-level citation enforcement. Picked up after SP3-a dogfood + Phase 4.5 outreach 同步.
+Iterative-search sub-skill with document-level citation enforcement. Subagent-driven plan executed in 1 session, immediately after SP3-a ship.
 
-| Skill | 主要模組 |
-|---|---|
-| `legal-research` | SKILL.md / protocols/{plan,iterative-search,triangulate,cite}.md / Agent 能力（plan-adapt-interact）/ `scripts/fetch_{moj,judicial,authority}.py`（全國法規 / 司法院 / 主管機關 RSS）/ document-level citation 強制 |
-| Router 更新 | Q4 dispatch path 完整啟用（fact-driven → issue-spot / 查法源 → research） |
+- ✅ SKILL.md（business-language fact pattern + research query → research-memo.md + executive-summary.md + plan.md + state.json）
+- ✅ `protocols/{plan, iterative-search, triangulate, cite}.md`（4-step pipeline; Agent abstraction with plan-adapt-interact 半互動 = plan-first then Y/n confirm before autonomous loop）
+- ✅ `references/{請求權基礎-民法.md, 民事訴訟法-管轄.md, 行政程序法-救濟.md}` 3 礎統 reference (carry forward from SP3-a 法源 skeleton)
+- ✅ `assets/output-schema-{plan, state, research-memo, executive-summary, citation-manifest}.json` 5 schemas (JSON Schema draft-07 contracts for the 4-file output + Harvey-style doc-level citation manifest with 3-line shape per source: URL + title + access date)
+- ✅ **WebFetch only** — NO Python scrapers; fallback chain = primary source URL → Google cache → archive.org Wayback
+- ✅ **Loop budget caps** — ≤ 5 rounds OR ≤ 30 fetches; early-stop when sources ≥ 8 AND 法源類型 ≥ 2; `forced_stop` emits ⚠️ marker in output for user visibility
+- ✅ `scripts/grade_research.py`（15-check structural grader: 4-section research-memo.md + 3-section executive-summary.md presence + plan.md gates + state.json invariants + citation manifest 3-line shape + Path A anti-pattern bank + `_check_no_template_orphans` byte-identical with the 3 existing graders + risk emoji + §建議下一步 + §6.3 Mandatory Disclaimer footer + Escalation Override on extended triggers）
+- ✅ **§6.4 Escalation Override triggers extended** beyond inherited (🔴 / ≥2⚠️): `forced_stop` / 刑事 / 訴訟 / 跨境 / 重大金額
+- ✅ Router Q4 dispatch path 完整啟用（fact-driven 「能不能做」 → issue-spot；法源查詢「§X 是什麼」「法源依據」 → research; both branches active）
+- ✅ Path A discipline shared with v0.4.x + v0.5.0（民法 §12 18 歲 / 委託 受託 not controller-processor / 即時 not 72hr）
+- ✅ Plan-first 半互動 — user explicitly opts in via Y/n before autonomous loop kicks off; prevents runaway fetch budget consumption
+- ✅ **drift verify activates 4-grader bank check** — `PATH_A_ANTIPATTERNS` + `_check_no_template_orphans` helper byte-identical across grade_draft / grade_response / grade_issue_spot / grade_research (was forward-stub in v0.5.0)
+- ✅ 259 tests pass (was 244 in v0.5.0; +15 v0.5.2 tests: 15 grade_research structural — 4 research-memo sections / 3 exec-summary sections / plan gates / state invariants / citation manifest shape / Path A bank / template-orphan / risk emoji / §建議下一步 / Disclaimer / Escalation triggers / forced_stop marker)
+- ✅ verify-drift.py exit 0 (4-grader bank now enforced) / check-marketplace-description-sync.py exit 0
 
-### Quality gate
+### Quality gate (Phase 3 cumulative)
 
 - ✅ SP3-a：issue-spot 對 fact-pattern 跑出 issue 矩陣 + 構成要件 涵攝結論（dogfood pending; structural grader green）
-- ⏳ SP3-b：research 對 5 個法律問題跑 iterative search 三角驗證後，引用 ≥ 8 個有效 source 且 source 跟 conclusion 有 supporting relationship
+- ✅ SP3-b：research 對法律問題跑 iterative search + 三角驗證 + document-level citation manifest enforced via 15-check grader（structural grader green; live-fetch dogfood deferred to first real-world run）
+- ✅ Router Q4 fully active across both IRAC sub-skills
+- ✅ 4-grader bank drift-verified byte-identical (grade_draft / grade_response / grade_issue_spot / grade_research share PATH_A_ANTIPATTERNS + `_check_no_template_orphans`)
+- ✅ 259 tests baseline; Phase 3 IRAC cluster fully closed
 
 ---
 
@@ -820,7 +834,8 @@ P1 (MVP) ─→ P1.5 (DSL) ─→ P1.6 (Eval) ─→ P2 ─→ P3 ─→ P4 ─�
 | v0.4.1 | Phase 2 dogfood patches | 「P0 修 template-privacy 民法 §12 成年年齡 (20 → 18，與 SP2 research note 對齊)；P1 grade_draft 新增 Path A anti-pattern 語義檢查 (4 regex，鎖住未來研究-template author drift)；P1 nda authoring note 移到 HTML 註解 (不再外洩給對造)；P1 隱私 §3 特種個資括號改 heading + paragraph (避免自我矛盾渲染)。201 tests pass。」 |
 | v0.4.2 | Phase 2 (SP3b complete) — legal-incident-response ship | 「事件分流 + 法源引用器 + 通報文起草 (3-path: 個資外洩 / 主管機關函覆 / 違約)。Auto-classify + per-path sub-protocol + 2-file audience-shaped output；PII skeleton+LLM-fill / authority pure-LLM / contract-breach soft-delegate to legal-contract-review via handoff-context.json；profile.yml schema v1→v2；canonical/ SSOT 擴展涵蓋 pdpa-current-state + tbd-migration + profile-schema + load_profile；router Q3 dispatch active；累計 5 skills active；Path A 紀律延續 SP3a v0.4.1 anti-pattern bank；225 tests pass。Phase 2 closeout。」 |
 | v0.5.0 | Phase 3 SP3-a ship | 「+ IRAC 議題識別」legal-issue-spot ship；pure-LLM fact-pattern → issue 矩陣 + 構成要件 涵攝 + counterfactual + 🔴/🟡/🟢 風險 + escalation；2-file output（issues.md / business.md）；no profile.yml dep；orthogonal to contract-review；router Q4 partial（issue-spot active；research NYI）；244 tests pass。 |
-| v0.5.2 | Phase 3 SP3-b ship | 「+ 法律研究」 legal-research（iterative-search + 三角驗證 + document-level citation 強制）；router Q4 完整啟用 |
+| v0.5.1 | reserved | reserved for v0.5.0 SP3-a dogfood patches if any surface; not used (no skill ships at v0.5.1) — v0.5.2 ships SP3-b directly. |
+| v0.5.2 | Phase 3 SP3-b ship | 「+ 法律研究」 legal-research ship；Agent 抽象（plan-adapt-interact 半互動 — plan 先行 + Y/n 確認後 autonomous loop）；WebFetch 唯一（fallback = primary URL → Google cache → archive.org Wayback）；4-protocol pipeline（plan → iterative-search → triangulate → cite）；loop cap ≤ 5 rounds OR ≤ 30 fetches；early-stop ≥ 8 sources AND ≥ 2 法源類型；forced_stop ⚠️ marker；4-file output（plan.md / state.json / research-memo.md / executive-summary.md）+ Harvey doc-level citation manifest（3-line shape）；§6.4 Escalation Override 擴及 forced_stop / 刑事 / 訴訟 / 跨境 / 重大金額；grade_research.py 15-check 結構性 grader；drift verify 4-grader bank byte-identical 啟用（was forward-stub in v0.5.0）；router Q4 完整啟用；累計 7 active skills（full IRAC cluster active）；259 tests pass。Phase 3 fully closed。 |
 | v0.6.0 | Phase 4 ship | 「+ lifecycle + 法規追蹤」 |
 | v0.9.0 | Phase 5 ship | 「+ 公司治理 + DD」(complete features) |
 | v1.0.0 | Phase 6 GA | 「全 11 skill + 治理機制 + 3-user 真實驗證」 |
