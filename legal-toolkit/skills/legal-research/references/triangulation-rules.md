@@ -119,7 +119,7 @@ each newly captured source. Match by URL host + path prefix.
 | `law.moj.gov.tw/LawClass/LawAll.aspx` | `條文` | 全國法規資料庫 |
 | `judicial.gov.tw/FJUD/...` | `判決` | 司法院 法學資料 |
 | `mojlaw.moj.gov.tw` | `函釋` | 法務部 主管法規 |
-| `pdpc.moj.gov.tw` | `函釋` | 個資 (PDPC 籌備處 官方 函釋) |
+| `pdpc.gov.tw` | `函釋` | 個資 (PDPC 籌備處 官方 函釋) |
 | `ftc.gov.tw/law-search` | `函釋` | 公平會 處分書 / 解釋令 |
 | `mol.gov.tw/...` | `函釋` | 勞動部 |
 | `sfb.gov.tw` / `fsc.gov.tw` | `函釋` | 金管會 / 證期局 |
@@ -214,5 +214,8 @@ decides one of three exit dispositions for `cite.md` to act on:
   purposes; memo gets the same ⚠️ block.
 
 The disposition is written back to `state.json` as
-`state.disposition` (one of `early_stop` / `forced_stop` / `partial`)
-for the grader (`scripts/grade_research.py`).
+`state.triangulation_assessment` (one of `"early_stop met"` /
+`"forced_stop"` / `"coverage degraded"`) for the grader
+(`scripts/grade_research.py`). Field name + value strings are
+authoritative here — protocols MUST use this exact form (mirrored in
+`protocols/triangulate.md` Procedure Step 5).

@@ -4,7 +4,7 @@ description: |
   IRAC legal-research skill for Taiwan in-house 法務. Takes a 法律問題 / 條文 / 判例 query, runs plan-first 半互動 Agent loop (LLM plans search → user Y/n confirms → autonomous WebFetch + triangulation + Harvey doc-level citation), and produces 2-file output (research-memo.md + executive-summary.md). Loop cap: ≤ 5 rounds OR ≤ 30 fetches; early-stop on ≥ 8 sources + ≥ 2 法源類型; forced_stop emits ⚠️ marker. No profile.yml dependency. §6.3 disclaimer footer + §6.4 escalation override inherited from v0.4.x.
 
   TRIGGER (中英雙語):
-  - 「查 §」/「§227 是」/「判例」/「法條」/「找判決」/「research」/「lookup」
+  - 「查 §」/「§227 是」/「判例」/「法條」/「找判決」/「research」/「lookup」/「條文」/「函釋」
   - "law-text lookup" / "find precedent" / "research the case" / "what does §X say"
   - 條文號 + 法典名 patterns (e.g.「民法 §184」/「個資法 §27」)
 
@@ -94,7 +94,7 @@ Phase 4.5 GC outreach validation]` header per
 
 | File | Scope |
 |---|---|
-| [`references/webfetch-targets.md`](references/webfetch-targets.md) | Target sites (`law.moj.gov.tw` 全國法規 / `judicial.gov.tw` 判決系統 / `mojlaw.moj.gov.tw` 主管法規 / `pdpc.moj.gov.tw` 個資) + URL patterns + crawl etiquette + Google cache + archive.org Wayback fallback chain. Consumed by `protocols/plan.md` (site selection) + `protocols/iterative-search.md` (fetch URL construction + fallback dispatch). |
+| [`references/webfetch-targets.md`](references/webfetch-targets.md) | Target sites (`law.moj.gov.tw` 全國法規 / `judicial.gov.tw` 判決系統 / `mojlaw.moj.gov.tw` 主管法規 / `pdpc.gov.tw` 個資) + URL patterns + crawl etiquette + Google cache + archive.org Wayback fallback chain. Consumed by `protocols/plan.md` (site selection) + `protocols/iterative-search.md` (fetch URL construction + fallback dispatch). |
 | [`references/citation-format.md`](references/citation-format.md) | Harvey doc-level citation format worked examples for the 4 法源類型 (條文 / 判決 / 函釋 / 學說). Each example shows full reference (官方來源 + 識別字號 + 引用日期) plus 1-line relevance pinpoint. Consumed by `protocols/cite.md` (manifest synthesis). |
 | [`references/triangulation-rules.md`](references/triangulation-rules.md) | 法源類型 classification heuristics + ∩ rules (early_stop ≥ 2 types floor; type promotion when 判決 cites 函釋; type demotion when 判決 outdated + 學說 反對). Consumed by `protocols/triangulate.md`. |
 

@@ -124,7 +124,7 @@ LLM fills these for each citation in `protocols/cite.md` Step 2.
 - `<主管機關>` — full 中文 機關名 (e.g. 法務部 / 公平交易委員會 / 勞動部 / 金融監督管理委員會 / 國家通訊傳播委員會)
 - `<字號 prefix>` — 機關-specific 字 (see table below)
 - `<發文日期>` — 函釋 issuance date in ISO 8601; convert 民國年 → 西元年 ONLY for this field (e.g. 民國 113 年 4 月 15 日 → `2024-04-15`)
-- `<來源>` — host of canonical source (e.g. `mojlaw.moj.gov.tw` for 法務部 / `ftc.gov.tw` for 公平會 / `pdpc.moj.gov.tw` for 個資籌備處)
+- `<來源>` — host of canonical source (e.g. `mojlaw.moj.gov.tw` for 法務部 / `ftc.gov.tw` for 公平會 / `pdpc.gov.tw` for 個資籌備處)
 - `<ISO 日期>` — date the WebFetch was run
 
 **Common 主管機關 / 字號 prefix** (TW practice as of 2026-05):

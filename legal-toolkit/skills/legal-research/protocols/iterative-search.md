@@ -76,7 +76,7 @@ commit.
    - `law.moj.gov.tw/LawClass/LawAll.aspx?pcode=<法典code>` (條文 lookup)
    - `judicial.gov.tw/FJUD/default.aspx` + keyword query (判決 search)
    - `mojlaw.moj.gov.tw/LawSearch.aspx?Type=L` + keyword (函釋)
-   - `pdpc.moj.gov.tw` (個資 函釋 / 公告)
+   - `pdpc.gov.tw` (個資 函釋 / 公告)
 5. **Call WebFetch** (Claude Code tool) on the constructed URL.
    Declare User-Agent `legal-toolkit/0.5.2 (Claude Code; in-house TW
    legal research)` per SKILL.md §WebFetch crawl etiquette.
@@ -139,7 +139,7 @@ snapshot of an unknown source).
 |---|---|
 | **條文** | URL host = `law.moj.gov.tw` AND path contains `LawClass` (全國法規 statute pages); fallback: content contains `第 <N> 條` header pattern AND is the canonical statute body |
 | **判決** | URL host = `judicial.gov.tw` AND path contains `FJUD`; OR content matches 判決字號 regex (e.g. `[北中南高最]院 \d+ 年度 [^\s]+ 字第 \d+ 號 判決`) |
-| **函釋** | URL host ∈ {`mojlaw.moj.gov.tw`, `pdpc.moj.gov.tw`, `moea.gov.tw` subdomains for 主管機關 函釋}; OR content title contains `函釋` / `解釋令` / `<機關> 函`; OR explicit 函釋 字號 format (`<機關> <日期> <文號>`) |
+| **函釋** | URL host ∈ {`mojlaw.moj.gov.tw`, `pdpc.gov.tw`, `moea.gov.tw` subdomains for 主管機關 函釋}; OR content title contains `函釋` / `解釋令` / `<機關> 函`; OR explicit 函釋 字號 format (`<機關> <日期> <文號>`) |
 | **學說** | Journal-article landing pages (e.g. `airitilibrary.com` / `ndltd.ncl.edu.tw` / university press domains) OR textbook / 月旦法學 / 政大法學評論 citation pattern in content. **Rare via WebFetch** — most 學說 sources are paywalled or PDF-only; if no machine-classifiable signal, set `type: "學說"` only with explicit author + 期刊 + 卷期 cite in the snippet, otherwise omit |
 | (fallback) | If no rule fires confidently, set `type: "其他"` and add the source to sources but do **not** count it in `types_covered`. Triangulate step ignores `其他`. |
 

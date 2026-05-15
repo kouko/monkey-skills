@@ -58,7 +58,7 @@ user to supply additional keywords (see Halt + ask).
 |---|---|---|
 | 條文 | `law.moj.gov.tw` (全國法規) | canonical SoT `scripts/canonical/legal-sources.json` |
 | 判決 | `judicial.gov.tw` (司法院判決系統) | Google cache → archive.org |
-| 函釋 | `mojlaw.moj.gov.tw` (主管法規) / `pdpc.moj.gov.tw` (個資) / 主管機關 site | Google cache |
+| 函釋 | `mojlaw.moj.gov.tw` (主管法規) / `pdpc.gov.tw` (個資) / 主管機關 site | Google cache |
 | 學說 | (cross-site; no single SoT) | skip if not findable; flag as `學說 coverage best-effort` |
 
 Pick ≥ 2 target sites covering at least 2 of the planned 法源類型.
