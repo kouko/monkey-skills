@@ -1,7 +1,7 @@
 ---
 name: legal-research
 description: |
-  IRAC legal-research skill for Taiwan in-house 法務. Takes a 法律問題 / 條文 / 判例 query, runs plan-first 半互動 Agent loop (LLM plans search → user Y/n confirms → autonomous WebFetch + triangulation + Harvey doc-level citation), and produces 2-file output (research-memo.md + executive-summary.md). Loop cap: ≤ 5 rounds OR ≤ 30 fetches; early-stop on ≥ 8 sources + ≥ 2 法源類型; forced_stop emits ⚠️ marker. No profile.yml dependency. §6.3 disclaimer footer + §6.4 escalation override inherited from v0.4.x.
+  IRAC legal-research skill for Taiwan in-house 法務. Takes a 法律問題 / 條文 / 判例 query, runs plan-first 半互動 Agent loop (LLM plans search → user Y/n confirms → autonomous WebFetch + triangulation + Harvey doc-level citation), and produces 4-file output (plan.md + state.json + research-memo.md + executive-summary.md). Loop cap: ≤ 5 rounds OR ≤ 30 fetches; early-stop on ≥ 8 sources + ≥ 2 法源類型; forced_stop emits ⚠️ marker. No profile.yml dependency. §6.3 disclaimer footer + §6.4 escalation override inherited from v0.4.x.
 
   TRIGGER (中英雙語):
   - 「查 §」/「§227 是」/「判例」/「法條」/「找判決」/「research」/「lookup」/「條文」/「函釋」
