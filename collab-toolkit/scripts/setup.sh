@@ -14,6 +14,9 @@ xdg_data_home()   { echo "${XDG_DATA_HOME:-$HOME/.local/share}"; }
 xdg_bin_home()    { echo "$HOME/.local/bin"; }
 
 # Globals (computed at top of main)
+# NOTE: PROFILES_ROOT, CONFIG_DIR, BIN_DIR, CONFIG are set by main() before
+# any function uses them. Functions called outside main() (e.g., from bats)
+# use lazy-fallback computation: ${VAR:-$(helper)/...}.
 CONFIG_DIR=""; DATA_DIR=""; BIN_DIR=""; CONFIG=""; PROFILES_ROOT=""
 DEDICATED=false; REAUTH=""; SWITCH=false; VERIFY_ONLY=false; MODE=""
 
@@ -87,13 +90,9 @@ write_config_shared() {
   config_dir="${CONFIG_DIR:-$(xdg_config_home)/collab-toolkit}"
   config="${CONFIG:-$config_dir/config.json}"
   mkdir -p "$config_dir"
-  cat > "$config" <<EOF
-{
-  "mode": "shared",
-  "chrome_profile": "$name",
-  "profiles_root": "~/.local/share/collab-toolkit/profiles"
-}
-EOF
+  jq -n --arg name "$name" \
+    '{mode:"shared", chrome_profile:$name, profiles_root:"~/.local/share/collab-toolkit/profiles"}' \
+    > "$config"
 }
 
 setup_shared() {
@@ -117,13 +116,9 @@ write_config_dedicated() {
   config="${CONFIG:-$config_dir/config.json}"
   profiles_root="${PROFILES_ROOT:-$(xdg_data_home)/collab-toolkit/profiles}"
   mkdir -p "$config_dir"
-  cat > "$config" <<EOF
-{
-  "mode": "dedicated",
-  "chrome_profile": "Default",
-  "profiles_root": "$profiles_root"
-}
-EOF
+  jq -n --arg pr "$profiles_root" \
+    '{mode:"dedicated", chrome_profile:"Default", profiles_root:$pr}' \
+    > "$config"
 }
 
 setup_dedicated() {
