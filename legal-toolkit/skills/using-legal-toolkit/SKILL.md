@@ -13,7 +13,7 @@ description: |
 
   USE WHEN: user mentions anything legal-toolkit-related and the
   specific sub-skill is not clear from the request.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # using-legal-toolkit
@@ -54,7 +54,7 @@ flowchart TD
     Q3 -->|是| IR[→ legal-incident-response<br/>🚨 Runbook — active]
 
     PARSE --> Q4{法律問題 /<br/>諮詢 / 能不能做?}
-    Q4 -->|fact-driven| IS[→ legal-issue-spot<br/>🔍 IRAC — Phase 3 NOT YET]
+    Q4 -->|fact-driven| IS[→ legal-issue-spot<br/>🔍 IRAC — active v0.5.0+]
     Q4 -->|查法源| RS[→ legal-research<br/>🔍 IRAC — Phase 3 NOT YET]
 
     PARSE --> Q5{合約期限 /<br/>obligations /<br/>法規 RSS?}
@@ -93,7 +93,7 @@ From the user's request, extract:
 | Q7 — author/extend/revise playbook | `legal-playbook-author` | utility | **MVP** |
 | Q2 — draft privacy/tos/dpa/nda | `legal-document-draft` | 📝 Template | **active (v0.4.0+)** |
 | Q3 — incident response (PII breach / 主管機關 / 違約) | `legal-incident-response` | 🚨 Runbook | **active (v0.4.2+)** |
-| Q4 (fact pattern) — issue spot | `legal-issue-spot` | 🔍 IRAC | Phase 3 (not yet) |
+| Q4 (fact pattern) — issue spot | `legal-issue-spot` | 🔍 IRAC | **active (v0.5.0+)** |
 | Q4 (law lookup) — research | `legal-research` | 🔍 IRAC | Phase 3 (not yet) |
 | Q5 (contract lifecycle) — tracker | `legal-contract-tracker` | 📅 Tracker | Phase 4 (not yet) |
 | Q5 (regulation feed) — watch | `legal-regulation-watch` | 📅 Tracker | Phase 4 (not yet) |
@@ -135,6 +135,18 @@ User confirms the auto-classified path before sub-protocol dispatch. → hand of
 
 **Prerequisite check before handoff**: same as Q2 — confirm `legal-playbook/profile.yml` exists (schema v2 — adds optional `external_counsel` + `regulatory_authorities`; backward-compat v1).
 
+### Q4 (fact pattern) — Issue spotting (active in v0.5.0+)
+
+**Keyword triggers**: 「能不能做」/「是否合法」/「我們想做」/「分析一下」/「這樣可以嗎」/「合不合法」/「is it legal」/「can we」/「fact pattern」/「issue spot」.
+
+**Disambiguation**: if the user's request is a literal law-text lookup (查 §227 / 找 110 年判決 / 法條), route to Q4-law-lookup instead (NOT YET available; ships v0.5.2).
+
+→ hand off to `legal-issue-spot` skill with the fact pattern as input.
+
+**Prerequisite check**: NONE. legal-issue-spot is profile.yml-independent (input is fact pattern, no company identity needed).
+
+**Output expectation**: 2-file in `legal-outputs/<timestamp>-issue-spot/` (`issues.md` for 法務 + `business.md` for 業務). When ⚠️ low-confidence subsumption is detected, business.md trailer includes a `/legal-research --query="..."` handoff query string.
+
 ### Step 3 — Multi-intent handling
 
 When the request matches multiple Q's (common: "review this contract AND update the playbook for it"):
@@ -160,7 +172,7 @@ For Q4-Q6 matches, the router:
    at legal-toolkit/ROADMAP.md. It is not yet available in this version.
    ```
 3. **Offer alternatives** when possible:
-   - For Q4 (issue-spot / research) — "For a basic fact-pattern question, you can describe the scenario to a Claude conversation directly; the structured `legal-issue-spot` skill is on the roadmap"
+   - For Q4 (research) — "For a fact-pattern question, use `legal-issue-spot` (active v0.5.0+). For literal law-text lookup / 判例 search, the structured `legal-research` skill is planned for Phase 3 SP3-b (v0.5.2)"
    - For Q5 (lifecycle / regulation) — "No substitute yet; manual tracking + periodic re-review is the current path"
    - For Q6 (governance / DD) — "BLOCKED on the upstream prerequisite research note for 上市櫃 in-house Compliance. Estimated availability per ROADMAP §Phase 5"
 4. **Do not dispatch** — the not-yet-built skill doesn't exist as an installable resource; pretending to dispatch would fail loudly
@@ -243,12 +255,13 @@ First-time install path:
 使用者: 我剛裝好這個 plugin，下一步幹嘛？
 
 Router 回:
-   歡迎！legal-toolkit v0.4.2 ships 5 個 active skill：
+   歡迎！legal-toolkit v0.5.0 ships 6 個 active skill：
    - using-legal-toolkit (router，你正在用)
    - legal-playbook-author (建立你公司的議價 playbook)
    - legal-contract-review (跑 7 層合約審查 pipeline)
    - legal-document-draft (起草 privacy policy / ToS / DPA / NDA)
    - legal-incident-response (個資外洩 / 主管機關函覆 / 合約違約 三路應變)
+   - legal-issue-spot (fact pattern → issue 矩陣 + 構成要件涵攝 + 風險分級)
 
    常見起手路徑：
 
@@ -268,6 +281,10 @@ Router 回:
       /legal-incident-response
       （3-path 自動分類 + 確認；需要 legal-playbook/profile.yml schema v2）
 
+   👉 如果你有 fact pattern 想做 issue 分析（能不能做這個業務）：
+      /legal-issue-spot
+      （不需要 profile.yml；輸入 fact pattern free-text；輸出 issue 矩陣 + 構成要件涵攝 + 風險分級）
+
    👉 如果你想看完整的 plugin 全景：
       閱讀 README.md / ROADMAP.md
 
@@ -283,3 +300,4 @@ Router 回:
   - [`legal-contract-review`](../legal-contract-review/SKILL.md)
   - [`legal-document-draft`](../legal-document-draft/SKILL.md)
   - [`legal-incident-response`](../legal-incident-response/SKILL.md)
+  - [`legal-issue-spot`](../legal-issue-spot/SKILL.md)
