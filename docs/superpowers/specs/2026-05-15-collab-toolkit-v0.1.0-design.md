@@ -1,8 +1,8 @@
-# automation-toolkit v0.1.0 — Design Spec
+# collab-toolkit v0.1.0 — Design Spec
 
 **Date**: 2026-05-15
-**Branch**: `feat/automation-toolkit-v0.1.0`
-**Source**: New plugin wrapping [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) for personal-productivity browser automation across 5 services with no functional MCP coverage (Asana, Slack, Notion, Google Calendar, Gmail) in the user's current and future environments.
+**Branch**: `feat/collab-toolkit-v0.1.0`
+**Source**: New plugin wrapping [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) for office-collaboration browser automation across 5 services with no functional MCP coverage (Asana, Slack, Notion, Google Calendar, Gmail) in the user's current and future environments.
 
 ## Status
 
@@ -37,11 +37,11 @@ User's stated requirement: **future execution in MCP-less environments (CI / cro
 
 ### 1.3 Why this is a new plugin, not extension of an existing one
 
-monkey-skills convention: per-domain plugin. None of the existing plugins (`obsidian`, `investing-toolkit`, `dev-workflow`, `gws-toolkit`, etc.) own personal-productivity browser automation. `gws-toolkit` is the nearest neighbor but is API-based (official Google Workspace CLI) and explicitly scoped to Google Workspace, not cross-vendor.
+monkey-skills convention: per-domain plugin. None of the existing plugins (`obsidian`, `investing-toolkit`, `dev-workflow`, `gws-toolkit`, etc.) own office-collaboration browser automation. `gws-toolkit` is the nearest neighbor but is API-based (official Google Workspace CLI) and explicitly scoped to Google Workspace, not cross-vendor.
 
 ## 2. Goal
 
-Ship `automation-toolkit` v0.1.0 as a Claude Code plugin packaging **5 read-only skills** for personal-productivity browser automation:
+Ship `collab-toolkit` v0.1.0 as a Claude Code plugin packaging **5 read-only skills** for office-collaboration browser automation:
 
 | Skill | Service | Hero protocols |
 |---|---|---|
@@ -51,23 +51,23 @@ Ship `automation-toolkit` v0.1.0 as a Claude Code plugin packaging **5 read-only
 | `gcal-automate` | Google Calendar | agenda-view, event-search, find-free-slots, shared-calendar-read |
 | `gmail-automate` | Gmail | mail-search, thread-read, inbox-summary, label-read |
 
-Plus a `/automation-setup` slash command that bootstraps agent-browser, Chrome for Testing, and a profile configuration (shared with the user's Chrome by default; opt-in dedicated per-service profile).
+Plus a `/collab-setup` slash command that bootstraps agent-browser, Chrome for Testing, and a profile configuration (shared with the user's Chrome by default; opt-in dedicated per-service profile).
 
-Read-only scope: **service-side** read operations only (search, list, fetch). The skills make no mutating calls against Asana / Slack / Notion / Google Calendar / Gmail. Local filesystem writes (`/tmp` snapshots, `~/.automation-toolkit/config.json`, profile dirs) are normal. Service-side writes (send message, create task, update event) deferred to v0.2.0+.
+Read-only scope: **service-side** read operations only (search, list, fetch). The skills make no mutating calls against Asana / Slack / Notion / Google Calendar / Gmail. Local filesystem writes (`/tmp` snapshots, `~/.collab-toolkit/config.json`, profile dirs) are normal. Service-side writes (send message, create task, update event) deferred to v0.2.0+.
 
 ## 3. Locked decisions
 
 | # | Decision | Source |
 |---|---|---|
-| D1 | Plugin name: `automation-toolkit`, new independent plugin | brainstorm Q (plugin-name) |
+| D1 | Plugin name: `collab-toolkit`, new independent plugin | brainstorm Q (plugin-name) |
 | D2 | 5 skills, all read-only, 4 hero protocols per skill (20 total) | brainstorm Q3 |
 | D3 | Browser mode: Web headless background (not Electron desktop) | brainstorm Q1 |
 | D4 | Profile mode: Hybrid — default `shared` (Chrome profile by name) + opt-in `dedicated` (per-service path), switchable via config | brainstorm Q (profile-mode-final) |
 | D5 | Single workspace per service (no `--workspace` flag in v0.1.0) | brainstorm Q4 |
 | D6 | UI brittleness: Semantic-first selectors (role+name via jq filter on JSON snapshot), no hardcoded `@eN` refs in protocols | brainstorm Q5 |
 | D7 | Routing description: sole-path wording, no conditional "PREFER MCP" language; tool-call specificity handles natural routing | user follow-up after Section 2 |
-| D8 | Bootstrap: `/automation-setup` slash command; `scripts/setup.sh` does Homebrew first → npm fallback → `agent-browser install` → verify | brainstorm Q (setup-flow) |
-| D9 | `abx` wrapper at `~/.automation-toolkit/bin/abx` centralizes profile-arg resolution; all protocols call `abx`, never `agent-browser` directly | brainstorm Q (profile-mode-final, abx wrapper) |
+| D8 | Bootstrap: `/collab-setup` slash command; `scripts/setup.sh` does Homebrew first → npm fallback → `agent-browser install` → verify | brainstorm Q (setup-flow) |
+| D9 | `abx` wrapper at `~/.collab-toolkit/bin/abx` centralizes profile-arg resolution; all protocols call `abx`, never `agent-browser` directly | brainstorm Q (profile-mode-final, abx wrapper) |
 | D10 | Cowork incompatibility marked with ⚠️ in plugin description (per PR #154 convention) | brainstorm Q (cowork) |
 | D11 | i18n READMEs: `README.md` / `README.ja.md` / `README.zh-TW.md` (per PR #150 rule) | brainstorm Q (i18n) |
 | D12 | Testing: L0 (CI structure check via existing `scripts/check-*.py`) + L1 (bats unit tests for `setup.sh` and jq filters); L2 live smoke deferred to v0.2.0+ | brainstorm Q6 |
@@ -77,15 +77,15 @@ Read-only scope: **service-side** read operations only (search, list, fetch). Th
 ## 4. Plugin architecture
 
 ```
-automation-toolkit/
+collab-toolkit/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── README.md / README.ja.md / README.zh-TW.md
 ├── commands/
-│   └── automation-setup.md
+│   └── collab-setup.md
 ├── scripts/
-│   ├── setup.sh                    # /automation-setup back-end
-│   ├── abx                         # wrapper, copied to ~/.automation-toolkit/bin/ at setup time
+│   ├── setup.sh                    # /collab-setup back-end
+│   ├── abx                         # wrapper, copied to ~/.collab-toolkit/bin/ at setup time
 │   └── tests/
 │       ├── test-setup.bats
 │       ├── test-jq-filters.bats
@@ -152,15 +152,15 @@ Folder structure complies with monkey-skills CLAUDE.md "subfolder is single leve
 
 ```json
 {
-  "name": "automation-toolkit",
+  "name": "collab-toolkit",
   "version": "0.1.0",
-  "description": "Browser automation toolkit wrapping vercel-labs/agent-browser. 5 read-only personal-productivity skills (Asana / Slack / Notion / Google Calendar / Gmail) — search, list, fetch via semantic-first selectors over Chrome (shared profile by default, dedicated profile opt-in). Headless background after one-time /automation-setup. ⚠️ Claude Code CLI only — Cowork sandbox blocks browser launch.",
+  "description": "Browser automation toolkit wrapping vercel-labs/agent-browser. 5 read-only office-collaboration skills (Asana / Slack / Notion / Google Calendar / Gmail) — search, list, fetch via semantic-first selectors over Chrome (shared profile by default, dedicated profile opt-in). Headless background after one-time /collab-setup. ⚠️ Claude Code CLI only — Cowork sandbox blocks browser launch.",
   "author": { "name": "kouko", "url": "https://github.com/kouko" },
-  "homepage": "https://github.com/kouko/monkey-skills/tree/main/automation-toolkit",
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/collab-toolkit",
   "repository": "https://github.com/kouko/monkey-skills",
   "license": "MIT",
   "keywords": [
-    "agent-browser", "browser-automation", "personal-productivity",
+    "agent-browser", "browser-automation", "office-collaboration",
     "asana", "slack", "notion", "google-calendar", "gmail",
     "headless", "read-only", "semantic-selector"
   ]
@@ -173,27 +173,27 @@ Append to top-level `monkey-skills/.claude-plugin/marketplace.json`:
 
 ```json
 {
-  "name": "automation-toolkit",
+  "name": "collab-toolkit",
   "description": "<verbatim match of plugin.json description above — CI scripts/check-marketplace-description-sync.py enforces>",
-  "source": "./automation-toolkit/"
+  "source": "./collab-toolkit/"
 }
 ```
 
-### 5.3 Runtime config — `~/.automation-toolkit/config.json`
+### 5.3 Runtime config — `~/.collab-toolkit/config.json`
 
-Written by `/automation-setup`. Schema:
+Written by `/collab-setup`. Schema:
 
 ```json
 {
   "mode": "shared",                                  // "shared" | "dedicated"
   "chrome_profile": "Default",                       // used when mode=shared
-  "profiles_root": "~/.automation-toolkit/profiles"  // used when mode=dedicated
+  "profiles_root": "~/.collab-toolkit/profiles"  // used when mode=dedicated
 }
 ```
 
 Default: `mode=shared`, `chrome_profile=Default` (user pickable from `agent-browser profiles` enumeration).
 
-### 5.4 `abx` wrapper — `~/.automation-toolkit/bin/abx`
+### 5.4 `abx` wrapper — `~/.collab-toolkit/bin/abx`
 
 Installed by `setup.sh`. Resolves profile arg from config, then `exec agent-browser` with `--profile` prepended:
 
@@ -201,11 +201,11 @@ Installed by `setup.sh`. Resolves profile arg from config, then `exec agent-brow
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG="${HOME}/.automation-toolkit/config.json"
+CONFIG="${HOME}/.collab-toolkit/config.json"
 SERVICE="${ABX_SERVICE:-}"
 
 if [ ! -f "$CONFIG" ]; then
-  echo "ERR: ~/.automation-toolkit/config.json not found. Run /automation-setup first." >&2
+  echo "ERR: ~/.collab-toolkit/config.json not found. Run /collab-setup first." >&2
   exit 1
 fi
 
@@ -223,17 +223,17 @@ fi
 
 Protocols set `ABX_SERVICE=<service>` before each `abx` call to hint dedicated-mode routing.
 
-### 5.5 `/automation-setup` slash command
+### 5.5 `/collab-setup` slash command
 
-`commands/automation-setup.md`:
+`commands/collab-setup.md`:
 
 ```markdown
 ---
-name: automation-setup
-description: One-time bootstrap for automation-toolkit. Installs agent-browser, downloads Chrome for Testing, installs abx wrapper, writes ~/.automation-toolkit/config.json. Default mode: shared (reuses your Chrome profile login state). Opt-in: --dedicated mode (5 per-service profile dirs, manual login). Sub-commands: --reauth <service>, --switch-mode, --verify.
+name: collab-setup
+description: One-time bootstrap for collab-toolkit. Installs agent-browser, downloads Chrome for Testing, installs abx wrapper, writes ~/.collab-toolkit/config.json. Default mode: shared (reuses your Chrome profile login state). Opt-in: --dedicated mode (5 per-service profile dirs, manual login). Sub-commands: --reauth <service>, --switch-mode, --verify.
 ---
 
-# /automation-setup
+# /collab-setup
 
 Runs scripts/setup.sh with the chosen mode. See SKILL body for sub-command details.
 ```
@@ -246,7 +246,7 @@ Pseudocode (full implementation in `scripts/setup.sh`):
 #!/usr/bin/env bash
 set -euo pipefail
 
-TOOLKIT_ROOT="${HOME}/.automation-toolkit"
+TOOLKIT_ROOT="${HOME}/.collab-toolkit"
 CONFIG="${TOOLKIT_ROOT}/config.json"
 BIN="${TOOLKIT_ROOT}/bin"
 DEDICATED=false; REAUTH=""; SWITCH=false; VERIFY_ONLY=false
@@ -308,8 +308,8 @@ verify_one() {
   case "$title" in
     *"Sign in"*|*"Log in"*|*"Login"*)
       echo "⚠️ $service: NOT logged in (title: $title)"
-      [ "$MODE" = "shared" ] && echo "   → Log into $service in your daily Chrome, then re-run /automation-setup --verify"
-      [ "$MODE" = "dedicated" ] && echo "   → Run: /automation-setup --reauth $service"
+      [ "$MODE" = "shared" ] && echo "   → Log into $service in your daily Chrome, then re-run /collab-setup --verify"
+      [ "$MODE" = "dedicated" ] && echo "   → Run: /collab-setup --reauth $service"
       ;;
     *) echo "✓ $service ready" ;;
   esac
@@ -342,7 +342,7 @@ main
 ---
 name: <service>-automate
 description: <service capitalized> automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: <comma-separated list of 4 hero protocols with one-line each>. Read-only v0.1.0 — search and fetch only, no writes. <ja tail>。<zh-TW tail>。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(~/.automation-toolkit/bin/abx:*), Bash(jq:*), Bash(mkdir:*)
+allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(~/.collab-toolkit/bin/abx:*), Bash(jq:*), Bash(mkdir:*)
 ---
 
 # <service> automate
@@ -351,13 +351,13 @@ Read-only browser automation for <service>. Uses semantic-first selectors over t
 
 ## Prerequisites
 
-Run `/automation-setup` once. After that:
-- `~/.automation-toolkit/bin/abx` is installed
-- `~/.automation-toolkit/config.json` exists with mode + profile config
+Run `/collab-setup` once. After that:
+- `~/.collab-toolkit/bin/abx` is installed
+- `~/.collab-toolkit/config.json` exists with mode + profile config
 - This service is verified logged-in
 
-If any protocol fails with "config not found": run `/automation-setup`.
-If any protocol fails with "login wall detected" in title: per setup mode, either log into <service> in your daily Chrome (shared mode) or run `/automation-setup --reauth <service>` (dedicated mode).
+If any protocol fails with "config not found": run `/collab-setup`.
+If any protocol fails with "login wall detected" in title: per setup mode, either log into <service> in your daily Chrome (shared mode) or run `/collab-setup --reauth <service>` (dedicated mode).
 
 ## Hero protocols
 
@@ -403,7 +403,7 @@ purpose: one-sentence use case
 
 ## Procedure (semantic-first, no hardcoded refs)
 
-ABX="${HOME}/.automation-toolkit/bin/abx"
+ABX="${HOME}/.collab-toolkit/bin/abx"
 
 # 1. Open + wait
 ABX_SERVICE=<service> "$ABX" open "<url>"
@@ -452,13 +452,13 @@ Cross-reference target for protocol error branches. Sections:
 ### 6.1 First-run setup (default = shared mode)
 
 ```
-User: /automation-setup
+User: /collab-setup
   ▼
 Phase 1: install agent-browser (brew → npm fallback)
   ▼
 Phase 2: agent-browser install (downloads Chrome for Testing, ~200MB)
   ▼
-Phase 3: install_abx writes ~/.automation-toolkit/bin/abx
+Phase 3: install_abx writes ~/.collab-toolkit/bin/abx
   ▼
 Phase 4 (shared): enumerate Chrome profiles, user picks → write config.json → verify each of 5 services
   ▼
@@ -470,7 +470,7 @@ Total time on warm Mac: ~1 minute (download dominates).
 ### 6.2 First-run setup (opt-in dedicated mode)
 
 ```
-User: /automation-setup --dedicated
+User: /collab-setup --dedicated
   ▼
 Phases 1-3 same as 6.1
   ▼
@@ -524,7 +524,7 @@ abx get title
 Title matches "*Sign in*" | "*Log in*" | "*Login*"
   ↓
 shared mode: surface message "Log into <service> in your daily Chrome, then retry"
-dedicated mode: surface message "Run /automation-setup --reauth <service>"
+dedicated mode: surface message "Run /collab-setup --reauth <service>"
   ↓
 Protocol fails fast — does NOT attempt to scrape login state from logged-out session
 ```
@@ -533,12 +533,12 @@ Protocol fails fast — does NOT attempt to scrape login state from logged-out s
 
 | Error class | Detection | Surface |
 |---|---|---|
-| agent-browser binary missing | `command -v agent-browser` in abx first line | `ERR: Run /automation-setup first.` |
-| `~/.automation-toolkit/config.json` missing | abx file check | Same as above |
-| `~/.automation-toolkit/bin/abx` missing or not executable | protocol uses `${HOME}/.automation-toolkit/bin/abx` directly, fails on exec | `ERR: abx wrapper not found. Run /automation-setup first.` |
+| agent-browser binary missing | `command -v agent-browser` in abx first line | `ERR: Run /collab-setup first.` |
+| `~/.collab-toolkit/config.json` missing | abx file check | Same as above |
+| `~/.collab-toolkit/bin/abx` missing or not executable | protocol uses `${HOME}/.collab-toolkit/bin/abx` directly, fails on exec | `ERR: abx wrapper not found. Run /collab-setup first.` |
 | UI changed (semantic selector empty) | jq filter empty AND role does not exist in snapshot at all | `ERR: UI changed: <role>+<name> not found. Update <skill>/references/ui-patterns.md and re-snapshot.` |
 | Login wall (auth expired) | Title contains Sign in/Log in/Login, or URL redirects to /login | Mode-specific remediation message (see 6.4) |
-| Chrome profile lock conflict (shared mode + Chrome busy) | agent-browser launch returns lock error | Retry after 2s sleep once; on second failure: `Close heavy Chrome tabs, or switch to dedicated mode: /automation-setup --switch-mode` |
+| Chrome profile lock conflict (shared mode + Chrome busy) | agent-browser launch returns lock error | Retry after 2s sleep once; on second failure: `Close heavy Chrome tabs, or switch to dedicated mode: /collab-setup --switch-mode` |
 | Network timeout / page load failure | agent-browser internal timeout (default 25s; configurable via AGENT_BROWSER_TIMEOUT_MS) | Pass-through to protocol output, suggest retry |
 | Empty result vs. UI changed | Disambiguate: if expected role exists in snapshot but name search returns 0 → may be valid empty result; if role itself is absent → UI changed | Protocol-specific messaging per case |
 | jq missing | Pre-flight check in abx (if used in shared decode path) | `ERR: jq required. brew install jq.` |
@@ -553,7 +553,7 @@ The repo-level CI already runs:
 - `scripts/check-plugin-description-skill-coherence.py` — plugin description references actual skills
 - `scripts/check-shared-conventions-drift.py` — cross-plugin drift detection
 
-automation-toolkit gets L0 for free once plugin.json and SKILL.md frontmatters are correct.
+collab-toolkit gets L0 for free once plugin.json and SKILL.md frontmatters are correct.
 
 ### 8.2 L1 — shell unit tests (bats, scripts/tests/)
 
@@ -571,7 +571,7 @@ automation-toolkit gets L0 for free once plugin.json and SKILL.md frontmatters a
 - Same for slack / notion / gcal / gmail
 - For each hero protocol, verify the jq filter returns non-empty ref of expected format
 
-bats invocation: `cd automation-toolkit && bats scripts/tests/`. Documented in README "Development" section. Not in CI for v0.1.0 (bats is an extra dependency); revisit in v0.2.0.
+bats invocation: `cd collab-toolkit && bats scripts/tests/`. Documented in README "Development" section. Not in CI for v0.1.0 (bats is an extra dependency); revisit in v0.2.0.
 
 ### 8.3 L2 — live smoke (deferred)
 
@@ -585,9 +585,9 @@ Real agent-browser launches against real services, validates snapshot structure.
 4. **Gmail UI density** — Gmail has multiple list-density modes and Categories tabs; protocols must handle both Default and Comfortable view, and explicit Category navigation. `gmail-automate/references/ui-patterns.md` captures the conventions.
 5. **Notion dynamic loading** — Notion lazy-loads database rows on scroll; `notion-automate/protocols/database-query.md` may need `abx wait` between scrolls. Pagination handling deferred to implementation.
 6. **GCal find-free-slots algorithm correctness** — depends on parsing event blocks across multiple days; brittle if Google changes calendar grid markup. Worth a unit test on a fixture.
-7. **First-run idempotency** — running `/automation-setup` twice should be safe (re-detect, re-write config, re-verify). Implementation must guard against double-install of brew/npm.
+7. **First-run idempotency** — running `/collab-setup` twice should be safe (re-detect, re-write config, re-verify). Implementation must guard against double-install of brew/npm.
 8. **No CI for live smoke** — v0.1.0 ships without L2 coverage. User dogfood is the validation gate.
-9. **`allowed-tools` allowlist for `abx`** — Claude Code's `allowed-tools` uses literal command-prefix matching; `Bash(~/.automation-toolkit/bin/abx:*)` will NOT tilde-expand. Implementation options to resolve at code time: (a) install symlink at `/usr/local/bin/abx` (requires sudo prompt on first setup), (b) install at `~/.local/bin/abx` if that path is already on `PATH` (probable on macOS with Homebrew), (c) keep abx at `~/.automation-toolkit/bin/abx` and whitelist `Bash(*/abx:*)` if Claude Code supports glob in allowed-tools, (d) drop the abx wrapper and inline the profile-resolution logic in every protocol (DRY violation but explicit). Option (b) with fallback to (d) is the most robust. To be finalized in TECH-SPEC.
+9. **`allowed-tools` allowlist for `abx`** — Claude Code's `allowed-tools` uses literal command-prefix matching; `Bash(~/.collab-toolkit/bin/abx:*)` will NOT tilde-expand. Implementation options to resolve at code time: (a) install symlink at `/usr/local/bin/abx` (requires sudo prompt on first setup), (b) install at `~/.local/bin/abx` if that path is already on `PATH` (probable on macOS with Homebrew), (c) keep abx at `~/.collab-toolkit/bin/abx` and whitelist `Bash(*/abx:*)` if Claude Code supports glob in allowed-tools, (d) drop the abx wrapper and inline the profile-resolution logic in every protocol (DRY violation but explicit). Option (b) with fallback to (d) is the most robust. To be finalized in TECH-SPEC.
 
 ## 10. Out of scope (v0.2.0+)
 
