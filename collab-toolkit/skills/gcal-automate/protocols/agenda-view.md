@@ -10,17 +10,22 @@ purpose: Open Google Calendar, switch to the requested view, snapshot the event 
 
 ## Output
 
-Default Markdown:
+Default Markdown (v0.1.0 — per-date grouping not yet implemented):
 ```
 ## Calendar: 2026-05-15 (Week view)
 
 ### Friday May 15
-- 09:00 Stand-up (30 min)
-- 11:00 Design review (1 hr)
-
 ### Saturday May 16
-(no events)
+### Sunday May 17
+
+- 9:00 AM, Stand-up, 30 minutes, Personal
+- 11:00 AM, Design review, 1 hour, Work
+- 2:00 PM, 1:1 with Alice, 30 minutes, Work
 ```
+
+**v0.2.0 deferred**: per-date grouping (events listed under their date header) requires
+parent-child relationship inference from the AT grid — not available in v0.1.0 flat snapshot.
+v0.1.0 emits all date headers first, then a flat event list below them.
 
 `--json`: `{ range, view, dates: [{ date, events: [{ time, title, duration_minutes }] }] }`.
 

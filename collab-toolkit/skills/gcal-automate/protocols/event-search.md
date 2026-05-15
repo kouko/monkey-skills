@@ -10,18 +10,20 @@ purpose: Search Google Calendar for events by title, attendee, or location; retu
 
 ## Output
 
-Default Markdown:
+Default Markdown (v0.1.0 — raw name field only):
 ```
 ## GCal search: "OKR" — 5 matches
 
-- **Q2 OKR Review** — Mon May 12, 2026 · 10:00–11:00 · Conference Room A
-- **OKR Planning** — Wed May 14, 2026 · 14:00–15:30
+- Q2 OKR Review, Mon May 12 2026, 10:00 AM – 11:00 AM, Conference Room A
+- OKR Planning, Wed May 14 2026, 2:00 PM – 3:30 PM
 - ...
 ```
 
 `--json`: `{ query, events: [{ title, date, time_range, location }] }`.
 
-> **Output spec note**: `date`, `time_range`, `location` are extracted from the search result role+name strings. These fields are speculative (v0.1.0 unverified) — AT snapshot may expose them differently. See `references/ui-patterns.md` AT-schema notes. All use `// ""` fallbacks.
+> **v0.2.0 deferred**: per-field extraction (date / time_range / location) requires live AT-snapshot verification to confirm how GCal encodes these on search-result elements. v0.1.0 emits only the raw `.name` string (which typically contains title + date + time concatenated by GCal). `--json` fields other than `title` will be empty strings until v0.2.0.
+
+> **Output spec note**: v0.1.0 outputs only the raw `.name` string from each search-result AT element. GCal typically encodes title + date + time into a single `.name` field; `.date`, `.time_range`, and `.location` do NOT exist as separate AT fields on standard article/listitem nodes. Per-field parsing is deferred to v0.2.0 after live AT-snapshot verification. See `references/ui-patterns.md` AT-schema notes.
 
 ## Procedure
 
@@ -75,10 +77,13 @@ SNAP=$(ABX_SERVICE=gcal abx snapshot -i --json)
 # Each result may be role=article or role=listitem
 # NOTE: .parent.* filter dropped (Pattern F) — accept all article/listitem within snapshot.
 # NOTE: name format (title + date + time) is speculative (v0.1.0 unverified).
+# v0.1.0: emit only .name (raw string). .date / .time_range / .location do NOT exist on
+# standard AT nodes — accessing them always yields empty strings. Per-field extraction
+# deferred to v0.2.0 after live-snapshot verification.
 RESULT=$(echo "$SNAP" | jq -r '
   .elements[]
   | select(.role=="article" or .role=="listitem")
-  | "- **\(.name // "(unknown)")** — \(.date // "") \(.time_range // "") \(if (.location // "") != "" then "· \(.location // "")" else "" end)"
+  | "- \(.name // "(unknown)")"
 ')
 
 if [ -z "$RESULT" ]; then

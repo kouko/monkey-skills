@@ -126,13 +126,18 @@ while IFS= read -r raw; do
   fi
 
   # Determine AM/PM if present
-  IS_PM=0
+  # IS_AM/IS_PM are set only when the marker is explicit in the event name.
+  # When neither is present (24h locale), raw EV_H is used as-is — no correction applied.
+  IS_PM=0; IS_AM=0
   echo "$raw" | grep -qi ' pm' && IS_PM=1
+  echo "$raw" | grep -qi ' am' && IS_AM=1
   IFS=: read -r EV_H EV_M <<< "$START_T"
   EV_H=$(( 10#$EV_H ))
   EV_M=$(( 10#$EV_M ))
   [ "$IS_PM" = "1" ] && [ "$EV_H" -lt 12 ] && EV_H=$(( EV_H + 12 ))
-  [ "$IS_PM" = "0" ] && [ "$EV_H" = "12" ] && EV_H=0
+  # Midnight correction only when AM is explicit (12:00 AM = midnight).
+  # Without explicit AM marker (24h locale), 12:xx stays as noon — no correction.
+  [ "$IS_AM" = "1" ] && [ "$EV_H" = "12" ] && EV_H=0
   EV_START_MIN=$(( EV_H * 60 + EV_M ))
   EV_END_MIN=$(( EV_START_MIN + DUR_M ))
 
@@ -189,5 +194,7 @@ fi
 - Week view button absent → UI evolution → exits 1 with `ERR: UI changed`
 - No columnheader elements → calendar grid changed → UI evolution → exits 1 with `ERR: UI changed`
 - No event buttons but columnheaders present → valid empty week → full business hours reported as free
-- Event name parsing fails (locale, 24h format) → events skipped conservatively (slot may be wider than actual)
+- Event name parsing fails (locale, non-standard format) → events skipped conservatively (slot may be wider than actual)
+- 12h locale (AM/PM explicit): `12:xx PM` → noon ✓, `12:xx AM` → midnight ✓ (explicit IS_AM guard applied)
+- 24h locale (no AM/PM marker): `12:xx` → noon ✓ (no midnight correction — IS_AM remains 0); `0:xx` → midnight ✓
 - Multi-week date range (> 7 days) → v0.1.0 only snapshots the first week; remaining days not covered (deferred to v0.2.0)
