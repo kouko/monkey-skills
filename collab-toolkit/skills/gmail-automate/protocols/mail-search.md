@@ -70,6 +70,8 @@ if [ -z "$FOCUSED_REF" ]; then
 fi
 
 # Type query and submit
+# NOTE: abx fill may not preserve Google search operators (e.g., from:, @) through Gmail's autocomplete widget
+# If operators don't surface expected results, switch to abx type for character-by-character simulation
 ABX_SERVICE=gmail abx fill "$FOCUSED_REF" "$QUERY"
 ABX_SERVICE=gmail abx wait 300
 ABX_SERVICE=gmail abx press Enter
@@ -122,3 +124,7 @@ fi
 - Grid present but empty → valid empty → outputs `(no messages matched)`
 - Many results → AT snapshot covers the first visible page only (v0.1.0 limitation); pagination not implemented
 - Google operators misspelled → Gmail returns no results; not distinguishable from valid empty at v0.1.0
+
+## Notes
+
+**Operator preservation caveat (v0.1.0)**: `abx fill` may not preserve Google search operators (`:`, `@`) through Gmail's autocomplete widget — programmatic value-setting can be intercepted and re-encoded. If `from:foo@example.com` queries don't surface expected results during first dogfood, switch this protocol to use `abx type <ref> "$QUERY"` (simulates real keypresses character-by-character) instead of `abx fill`. Document outcome in `references/ui-patterns.md` AT-schema notes.

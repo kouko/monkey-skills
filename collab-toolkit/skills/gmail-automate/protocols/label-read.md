@@ -9,6 +9,8 @@ purpose: Given a label name (including nested labels via "/" path), click the la
 - `top_n`: optional. Max messages to return. Default: `20`.
 - `--json`: optional.
 
+**v0.1.0 nesting limit**: Only single-level nesting supported (`parent/child` like `Work/Projects`). Multi-level nesting (`parent/child/grandchild` like `Finance/Q1/Invoices`) requires iterative parent expansion — the current protocol expands only one level. For grandchild labels in v0.1.0: manually expand the parent label in your Chrome's Gmail sidebar before running the protocol, OR use the leaf label name directly without the path prefix (Gmail's sidebar shows leaf names when parent is expanded).
+
 ## Output
 
 Default Markdown (v0.1.0 — row names as raw strings):
@@ -158,6 +160,7 @@ fi
 - Gmail stores labels as `LABEL_<id>` internally; display names in the sidebar are what users see and what this protocol matches against.
 - Label names are case-sensitive for `contains()` matching. If the label is named `Finance` but you pass `finance`, the match will fail.
 - The sidebar may scroll to show all labels only if the user has many labels. Labels below the visible fold may not appear in the AT snapshot. If a label is not found, try clicking "More labels" or "Show all labels" in the sidebar first. This is not automated in v0.1.0.
+- **v0.1.0 nesting limit**: Only single-level nesting supported (`parent/child` like `Work/Projects`). Multi-level nesting (`parent/child/grandchild` like `Finance/Q1/Invoices`) requires iterative parent expansion — the current protocol expands only one level. For grandchild labels in v0.1.0: manually expand the parent label in your Chrome's Gmail sidebar before running the protocol, OR use the leaf label name directly without the path prefix (Gmail's sidebar shows leaf names when parent is expanded).
 
 ## Failure modes
 
