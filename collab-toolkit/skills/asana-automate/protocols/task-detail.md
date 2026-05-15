@@ -72,7 +72,7 @@ ATTACHMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name
 cat <<EOF
 # $TITLE
 **Assignee**: $(echo "${ASSIGNEE}" | sed -E 's/^Assignee[:, ]+//')
-**Due**: $(echo "${DUE}" | sed -E 's/^Due date[:, ]+'//)
+**Due**: $(echo "${DUE}" | sed -E 's/^Due date[:, ]+//')
 
 ## Description
 $DESC
