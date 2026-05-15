@@ -42,7 +42,7 @@ When a protocol fails with "UI changed: ...":
 | Assignee | `button` | starts with `Assignee,` | aria-label includes current value |
 | Description region | `region` | `Description` | Contains rich text |
 | Subtasks list | `list` | `Subtasks` | Children are listitems |
-| Activity comments | `article` | (none — has `.author` and `.text` props) | Each comment is an article |
+| Activity comments | `article` | (none — has `.author` and `.text` props **— unverified, see "AT-schema notes"**) | Each comment is an article |
 | Attachments list | `list` | `Attachments` | Children are listitems |
 
 ## Search results
@@ -51,3 +51,16 @@ When a protocol fails with "UI changed: ...":
 |---|---|---|---|
 | Result row | `row` | (result title) | Within result groups |
 | Result group header | `heading` level=2 | one of `Tasks` / `Projects` / `Portfolios` | Section dividers |
+
+## AT-schema notes (v0.1.0 unverified)
+
+Some field paths used in the protocols above are educated guesses about agent-browser's AT-snapshot output. They have NOT been verified against a live snapshot yet (v0.1.0 ships with defensive `// "(unknown)"` fallbacks for these). Validate during first dogfood run:
+
+| Field path | Used by | Status |
+|---|---|---|
+| `.elements[] \| select(.role=="article") \| .author` | task-detail comments | ❓ unverified — may be nested in child element |
+| `.elements[] \| select(.role=="article") \| .timestamp` | task-detail comments | ❓ unverified — may be a child `time` element |
+| `.elements[] \| select(.role=="listitem") \| .checked` | task-detail subtasks | ❓ unverified — may live under `.attributes."aria-checked"` |
+| `.elements[] \| select(.role=="row") \| .children[]?` | task-list tasks | ❓ assumes snapshot is nested tree; if flat list w/ ref-cross-references, fix to use `.elements[]` with parent filter |
+
+Refresh playbook for these: run `ABX_SERVICE=asana abx snapshot -i --json > /tmp/asana-snap.json`, inspect the actual schema, update the jq filter, and remove the corresponding row from this table.

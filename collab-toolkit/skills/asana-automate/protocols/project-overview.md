@@ -10,20 +10,19 @@ purpose: List all projects user has access to, with sections and task counts.
 
 ## Output
 
-Default Markdown:
+Default Markdown (v0.1.0 — project names only):
 ```
 ## Projects (12)
 
-### Backend (kouko, public)
-- Engineering (8 tasks, 3 incomplete)
-- Reviews (5 tasks, 5 incomplete)
-- Operations (2 tasks, 0 incomplete)
-
-### Frontend (kouko, public)
+- Backend
+- Frontend
+- Eng Ops
 - ...
 ```
 
-`--json`: array of `{name, owner, visibility, sections: [{name, total, incomplete}]}`.
+`--json`: array of `{name}`.
+
+**v0.2.0 deferred**: per-project section / task-count fetching requires navigating into each project (3 levels deep). Will add in v0.2.0 with batched parallel tab fetches. v0.1.0 returns top-level project list only.
 
 ## Procedure
 
@@ -38,11 +37,8 @@ echo "$SNAP" | jq -r '
   | select(.role=="row")
   | ([.children[]? | select(.role=="link") | .name] | first // "(unnamed)")
 ' | while read -r project; do
-  echo "### $project"
+  echo "- $project"
 done
-
-# For each project, navigate and snapshot sections
-# (loop is illustrative; production implementation may batch via agent-browser tabs)
 ```
 
 ## Failure modes

@@ -45,25 +45,25 @@ TASK_URL="$1"
 
 ABX_SERVICE=asana abx open "$TASK_URL"
 ABX_SERVICE=asana abx wait --load networkidle
-SNAP=$(ABX_SERVICE=asana abx snapshot --json)
+SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
 
 # Title — role="heading" level=1
 TITLE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="heading" and .level==1) | .name' | head -1)
 
 # Assignee — element with aria label containing "Assignee"
-ASSIGNEE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Assignee"))) | .name' | head -1)
+ASSIGNEE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Assignee"))) | .name // ""' | head -1)
 
 # Due date — element with aria label containing "Due date"
-DUE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Due"))) | .name' | head -1)
+DUE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Due"))) | .name // ""' | head -1)
 
 # Description — role="textbox" or role="region" with aria-label="Description"
 DESC=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Description") | .text' | head -1)
 
 # Subtasks — role="list" with aria-label="Subtasks" → children are role="listitem"
-SUBTASKS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name=="Subtasks") | .children[]? | select(.role=="listitem") | "- [\(if .checked then "x" else " " end)] \(.name)"')
+SUBTASKS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name=="Subtasks") | .children[]? | select(.role=="listitem") | "- [\(if (.checked // false) then "x" else " " end)] \(.name)"')
 
 # Comments — role="article" elements within "Activity" section
-COMMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="article") | "**\(.author) (\(.timestamp))**: \(.text)"')
+COMMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="article") | "**\(.author // "(unknown author)") (\(.timestamp // "(unknown time)"))**: \(.text // "")"')
 
 # Attachments — role="list" with aria-label="Attachments"
 ATTACHMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name=="Attachments") | .children[]? | .name' | sed 's/^/- /')
@@ -71,8 +71,8 @@ ATTACHMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name
 # Emit markdown
 cat <<EOF
 # $TITLE
-**Assignee**: ${ASSIGNEE#Assignee, }
-**Due**: ${DUE#Due date, }
+**Assignee**: $(echo "${ASSIGNEE}" | sed -E 's/^Assignee[:, ]+//')
+**Due**: $(echo "${DUE}" | sed -E 's/^Due date[:, ]+'//)
 
 ## Description
 $DESC
