@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-research/assets/state-schema.json",
+  "title": "state.json structural schema",
+  "type": "object",
+  "required": ["rounds", "fetches", "sources", "types_covered", "early_stop", "forced_stop", "started_at", "updated_at"],
+  "properties": {
+    "rounds": {"type": "integer", "minimum": 0, "maximum": 5},
+    "fetches": {"type": "integer", "minimum": 0, "maximum": 30},
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url_or_cite", "type", "captured_at", "relevance_snippet"],
+        "properties": {
+          "url_or_cite": {"type": "string"},
+          "type": {"type": "string", "enum": ["條文", "判決", "函釋", "學說"]},
+          "captured_at": {"type": "string", "format": "date-time"},
+          "relevance_snippet": {"type": "string"}
+        }
+      }
+    },
+    "types_covered": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "early_stop": {"type": "boolean"},
+    "forced_stop": {"type": "boolean"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

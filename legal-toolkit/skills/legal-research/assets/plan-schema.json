@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-research/assets/plan-schema.json",
+  "title": "plan.md structural schema",
+  "type": "object",
+  "required": ["required_sections", "min_keywords", "min_target_sites", "expected_source_types", "budget_fields"],
+  "properties": {
+    "required_sections": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["§問題", "§關鍵字", "§目標 site", "§法源類型 plan", "§Budget"]
+    },
+    "min_keywords": {"type": "integer", "const": 3},
+    "min_target_sites": {"type": "integer", "const": 2},
+    "expected_source_types": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["條文", "判決", "函釋", "學說"]}
+    },
+    "budget_fields": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["max_rounds", "max_fetches", "early_stop_min_sources", "early_stop_min_types"]
+    }
+  }
+}

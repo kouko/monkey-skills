@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-research/assets/output-schema-summary.json",
+  "title": "executive-summary.md structural schema",
+  "type": "object",
+  "required": ["required_sections", "conditional_sections", "conclusion_marker_required", "min_byte_size", "no_template_orphans"],
+  "properties": {
+    "required_sections": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["§問題", "§結論", "§依據", "§風險提示", "§Disclaimer"]
+    },
+    "conditional_sections": {
+      "type": "object",
+      "properties": {
+        "§Escalation": {
+          "type": "string",
+          "const": "REQUIRED if state.json.forced_stop == true OR query involves 刑事 / 訴訟 / 跨境 / 重大金額"
+        }
+      }
+    },
+    "conclusion_marker_required": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["✅", "⚠️", "❌"]
+    },
+    "min_byte_size": {"type": "integer", "const": 400},
+    "no_template_orphans": {"type": "boolean", "const": true}
+  }
+}
