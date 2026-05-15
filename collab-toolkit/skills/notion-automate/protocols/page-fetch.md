@@ -34,7 +34,7 @@ echo
 
 # Iterate blocks under main content region
 # .children[]? and .text / .name on children are speculative (see ui-patterns.md AT-schema notes)
-echo "$SNAP" | jq -r '
+CONTENT=$(echo "$SNAP" | jq -r '
   .elements[]
   | select(.role=="region" and .name=="Page content")
   | .children[]?
@@ -47,11 +47,23 @@ echo "$SNAP" | jq -r '
     else (.name // .text // "")
     end
   )
-'
+')
+
+if [ -z "$CONTENT" ]; then
+  REGION_CHECK=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Page content") | .ref' | head -1)
+  if [ -z "$REGION_CHECK" ]; then
+    echo "ERR: UI changed: 'Page content' region not found" >&2
+    exit 1
+  fi
+  echo "(page has no visible content blocks)"
+else
+  echo "$CONTENT"
+fi
 ```
 
 ## Failure modes
 
 - Page not found (404 title) → invalid URL
 - Page private / no access → message about permissions
-- `Page content` region absent → UI evolution (run snapshot refresh playbook in `references/ui-patterns.md`)
+- `Page content` region present but empty → valid empty page → outputs `(page has no visible content blocks)`
+- `Page content` region absent → UI evolution → exits 1 with `ERR: UI changed` (run snapshot refresh playbook in `references/ui-patterns.md`)

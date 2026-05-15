@@ -42,6 +42,9 @@ if [ -z "$BACKLINKS_REF" ]; then
   ABX_SERVICE=notion abx click "$SHOW_BL"
   ABX_SERVICE=notion abx wait 500
   SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
+  # Re-derive ref after click — guard against silent click failure
+  BACKLINKS_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Backlinks") | .ref' | head -1)
+  [ -z "$BACKLINKS_REF" ] && { echo "ERR: Backlinks panel did not open after 'Show backlinks' click" >&2; exit 1; }
 fi
 
 # Each backlink is role="link" within Backlinks region
@@ -66,3 +69,4 @@ fi
 - Page has no backlinks → valid empty (outputs `No pages link to this page.`)
 - Menu not found → UI evolution
 - `Show backlinks` item absent → Notion version does not support backlinks via this menu path
+- Backlinks panel absent after click → silent click failure → exits 1 with `ERR: Backlinks panel did not open`
