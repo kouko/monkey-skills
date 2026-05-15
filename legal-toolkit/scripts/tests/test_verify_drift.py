@@ -206,3 +206,104 @@ def test_verify_drift_catches_sp3b_destination_modification():
         assert "legal-incident-response" in result.stdout
     finally:
         sp3b_copy.write_bytes(original)
+
+
+# ---------------------------------------------------------- T-V-7: grader bank zero drift on current main
+def test_grader_bank_drift_zero_after_v0_5_0():
+    """v0.5.0 introduces grade_issue_spot.py; PATH_A_ANTIPATTERNS bank +
+    _check_no_template_orphans helper must stay byte-identical across the
+    3 graders (grade_draft / grade_response / grade_issue_spot). Passes
+    end-to-end via the verify-drift.py CLI on the REAL repo state."""
+    result = subprocess.run(
+        ["python3", "legal-toolkit/scripts/verify-drift.py"],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert result.returncode == 0, (
+        f"verify-drift should pass on current state; got rc={result.returncode}\n"
+        f"stdout={result.stdout}\nstderr={result.stderr}"
+    )
+    assert "PATH_A bank + template-orphan helper byte-identical" in result.stdout
+
+
+# ---------------------------------------------------------- T-V-8: grader bank drift caught
+def test_verify_drift_catches_grader_bank_mutation():
+    """Mutating PATH_A_ANTIPATTERNS in one of the 3 graders should be
+    caught by verify-drift.py (exit 1) against the REAL repository state."""
+    issue_spot_grader = (
+        REPO
+        / "legal-toolkit"
+        / "skills"
+        / "legal-issue-spot"
+        / "scripts"
+        / "grade_issue_spot.py"
+    )
+    assert issue_spot_grader.is_file()
+    original = issue_spot_grader.read_bytes()
+    try:
+        # Inject a sentinel anti-pattern entry that breaks byte-identicality.
+        mutated = original.decode("utf-8").replace(
+            "PATH_A_ANTIPATTERNS = [",
+            'PATH_A_ANTIPATTERNS = [\n    (re.compile(r"sentinel"), "drift marker"),',
+            1,
+        )
+        issue_spot_grader.write_text(mutated, encoding="utf-8")
+        result = subprocess.run(
+            ["python3", "legal-toolkit/scripts/verify-drift.py"],
+            cwd=str(REPO),
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        assert result.returncode == 1, (
+            f"verify-drift should fail on grader-bank drift; got rc={result.returncode}\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+        assert "GRADER-DRIFT" in result.stdout
+        assert "PATH_A_ANTIPATTERNS drift" in result.stdout
+    finally:
+        issue_spot_grader.write_bytes(original)
+
+
+# ---------------------------------------------------------- T-V-9: orphan helper drift caught
+def test_verify_drift_catches_orphan_helper_mutation():
+    """Mutating _check_no_template_orphans body in one grader should be
+    caught (exit 1). Asserts the helper-drift branch fires independently
+    of the bank check."""
+    issue_spot_grader = (
+        REPO
+        / "legal-toolkit"
+        / "skills"
+        / "legal-issue-spot"
+        / "scripts"
+        / "grade_issue_spot.py"
+    )
+    assert issue_spot_grader.is_file()
+    original = issue_spot_grader.read_bytes()
+    try:
+        mutated = original.decode("utf-8").replace(
+            "Template orphan token leaked into published output",
+            "Template orphan token leaked into output [drift marker]",
+            1,
+        )
+        assert mutated != original.decode("utf-8"), (
+            "fixture string not found; update test marker"
+        )
+        issue_spot_grader.write_text(mutated, encoding="utf-8")
+        result = subprocess.run(
+            ["python3", "legal-toolkit/scripts/verify-drift.py"],
+            cwd=str(REPO),
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        assert result.returncode == 1, (
+            f"verify-drift should fail on orphan-helper drift; got rc={result.returncode}\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+        assert "GRADER-DRIFT" in result.stdout
+        assert "_check_no_template_orphans drift" in result.stdout
+    finally:
+        issue_spot_grader.write_bytes(original)

@@ -146,19 +146,22 @@ def _check_path_a_antipatterns(*texts_with_labels: tuple) -> list[str]:
     return errors
 
 
-def _check_no_template_orphans(*texts_with_labels: tuple) -> list[str]:
-    """Grep both files for un-substituted `{{snake_case}}` orphan tokens.
+def _check_no_template_orphans(*texts: str) -> list[str]:
+    """Grep for un-substituted template orphan tokens like `{{dpo_phone}}` in
+    published output (legal.md + business.md). v0.4.3 dogfood audit showed
+    that a schema-vs-template mismatch can leak orphans past the structural
+    grader; this check closes that silent-shipping path.
 
-    Helper byte-identical to grade_response.py per spec §7 functional
-    duplication directive. Pattern matches `{{snake_case_token}}` —
-    alphanumeric + underscore only, surrounded by double curly braces.
+    Pattern matches `{{snake_case_token}}` — alphanumeric + underscore only,
+    surrounded by double curly braces. False positives on legitimate `{` usage
+    are avoided by requiring at least one char between the double braces.
     """
     errors = []
     pattern = re.compile(r"\{\{[a-z_][a-z0-9_]*\}\}")
-    for text, label in texts_with_labels:
+    for text in texts:
         for match in pattern.finditer(text):
             errors.append(
-                f"Template orphan token leaked into {label}: {match.group(0)!r} "
+                f"Template orphan token leaked into published output: {match.group(0)!r} "
                 f"(un-substituted {{{{...}}}} literal — schema-vs-template mismatch suspected)"
             )
     return errors
@@ -339,10 +342,7 @@ def grade_issue_spot(issues_path: Path, business_path: Path) -> GradeResult:
     ))
 
     # Check #4 — template orphan tokens (BOTH files).
-    reasons.extend(_check_no_template_orphans(
-        (issues_text, "issues.md"),
-        (business_text, "business.md"),
-    ))
+    reasons.extend(_check_no_template_orphans(issues_text, business_text))
 
     # Check #5 — §Issue 矩陣 present in issues.md (already covered by #1 required
     # sections; redundant but explicit per spec §5.4 grader-clarity name).
