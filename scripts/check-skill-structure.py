@@ -372,7 +372,7 @@ def check_chk_skl_011(skill_dir: Path) -> list[CheckError]:
 # ---------------------------------------------------------------------------
 
 REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
-OPTIONAL_SUBDIRS = {"research"}
+OPTIONAL_SUBDIRS = {"research", "references"}
 RESEARCH_FILENAME = re.compile(r"^grounding-v\d+\.\d+\.\d+\.md$")
 
 
