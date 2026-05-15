@@ -26,22 +26,19 @@ Read from disk:
 
 - `state.json` — the deterministic checkpoint produced by the loop
   (rounds / fetches / sources[] / types_covered{} / early_stop /
-  forced_stop / timestamps); MUST be present and well-formed
-- `triangulate-prep.md` (or equivalent named artifact from
-  `protocols/triangulate.md`) — contains:
-  - the cluster summary (sources grouped by 法源類型)
-  - the ⚠️ `覆蓋未達 triangulation` warning block (REQUIRED when
-    `state.forced_stop == true`); to be PREPENDED above `§問題` in
-    `research-memo.md`
-- The original `--query=...` string (carried through `state.json` or
-  re-read from `plan.md` §問題)
+  forced_stop / timestamps + triangulate.md additions:
+  `triangulation_assessment` + `final_types_covered_count`); MUST be
+  present and well-formed. **state.json is the single SoT** — there is
+  no separate `triangulate-prep.md` file; the ⚠️ block is reconstructed
+  here at prepend-time from state.json fields.
+- The original `--query=...` string (re-read from `plan.md` §問題)
 
 **Halt + ask fallback** — if any required input is missing or
 corrupt, halt and report:
 
 ```
 ⚠️ cite halt — 缺少必要前置輸入：
-  - missing: <list — e.g. state.json / triangulate-prep.md / plan.md §問題>
+  - missing: <list — e.g. state.json / plan.md §問題>
   - 必須先重跑：<該檔對應的 protocol — plan.md / triangulate.md / re-run from --query>
 請補齊後再執行 cite.md。
 ```
@@ -49,11 +46,9 @@ corrupt, halt and report:
 Do NOT fabricate missing inputs. Specifically:
 
 - `state.json` missing → halt + ask user to re-run plan-first
+- `state.json.triangulation_assessment` missing → halt + ask user to re-run from triangulate.md
 - `state.sources` empty → halt (defensive; this should have been caught
   by triangulate emitting a coverage failure earlier)
-- `state.forced_stop == true` but triangulate ⚠️ block prep file is
-  missing → halt + report (logic bug in the pipeline — do NOT silently
-  proceed without the warning)
 
 ## Outputs
 
@@ -72,11 +67,22 @@ Both files end with the canonical §Disclaimer block (verbatim — see
 
 Step-by-step. Do NOT skip steps; do NOT re-order.
 
-1. **Read `state.json`** — validate schema (rounds / fetches / sources / types_covered / early_stop / forced_stop / timestamps); halt on missing or corrupt.
-2. **Read `triangulate-prep.md`** — capture the cluster summary + (if `forced_stop`) the ⚠️ block. Halt if `forced_stop == true` but the ⚠️ block is missing.
+1. **Read `state.json`** — validate schema (rounds / fetches / sources / types_covered / early_stop / forced_stop / timestamps + triangulate additions `triangulation_assessment` + `final_types_covered_count`); halt on missing or corrupt.
+2. **Reconstruct ⚠️ block** (only when `state.triangulation_assessment ∈ {"forced_stop", "coverage degraded"}`) — build the block from state.json fields directly:
+   - `rounds` / `fetches` / `len(sources)` / `final_types_covered_count` (all from state.json)
+   - Template (zh-TW; PREPEND above §問題 in research-memo.md):
+     ```
+     > ⚠️ **覆蓋未達 triangulation** (forced_stop)
+     >
+     > 本研究於 cap 達到時退出 (rounds=<rounds>/5 或 fetches=<fetches>/30)，未達 early_stop 條件 (≥ 8 sources + ≥ 2 法源類型)。
+     >
+     > 實際覆蓋：<len(sources)> sources / <final_types_covered_count> 法源類型。
+     >
+     > 建議：擴大關鍵字 + 重跑 `/legal-research --query="..."`，或諮詢執業律師補充覆蓋。
+     ```
 3. **Re-read `plan.md` §問題** — to lift the original user query string verbatim for both files' §問題 sections.
 4. **Assemble `research-memo.md` body** in this order:
-   1. If `state.forced_stop == true`: PREPEND the ⚠️ block above §問題 (copy verbatim from `triangulate-prep.md`).
+   1. If `state.triangulation_assessment ∈ {"forced_stop", "coverage degraded"}`: PREPEND the reconstructed ⚠️ block (from Step 2) above §問題.
    2. `§問題` — restate the user query in 1-2 sentences (lift from `plan.md`).
    3. `§搜尋摘要` — brief recap: keywords used / sites visited / 法源類型 plan vs actual coverage (1 short paragraph + optional bullet list).
    4. `§法源分析` — the analytical body. Inline citations use `[<bracketed cite>]` form (e.g. `[§Citations #2]` or `[最高法院 109 台上 1234]`), each tied to an entry in the `§Citations` manifest below. zh-TW user-facing prose; preserve 條文/判決/函釋 字號 verbatim.
@@ -232,8 +238,9 @@ forced_stop trigger is MUST-level grader-enforced.
 - `state.json` missing or corrupt → halt + ask plan-first re-run
 - `state.sources` empty (should have been caught earlier) → halt
   defensively; report likely pipeline bug
-- `state.forced_stop == true` but `triangulate-prep.md` ⚠️ block
-  missing → halt + report (logic bug — do NOT proceed without warning)
+- `state.triangulation_assessment` field missing → halt + ask user to
+  re-run from triangulate.md (logic bug — that field is REQUIRED for
+  the ⚠️ block reconstruction decision)
 - `plan.md` §問題 missing or unreadable → halt + ask for re-run from
   `--query=...`
 
@@ -249,7 +256,7 @@ Query (benign, low-stakes; §Escalation NOT triggered):
 types_covered={條文:2, 判決:3, 函釋:1, 學說:2}, early_stop=true,
 forced_stop=false.
 
-`triangulate-prep.md`: NO ⚠️ block (early_stop reached).
+`state.json.triangulation_assessment`: `"early_stop met"` (no ⚠️ block reconstruction; early_stop reached).
 
 Synthesis output skeleton:
 

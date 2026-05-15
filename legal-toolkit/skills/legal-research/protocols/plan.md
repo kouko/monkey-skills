@@ -113,8 +113,21 @@ in plan.md; read from the file so v0.5.3 tuning patches propagate.
 ---
 
 ## §Disclaimer
-<§6.3 boilerplate — see protocols/cite.md §6.3 Disclaimer text section>
+
+本研究由 AI 工具（legal-toolkit / legal-research）產出，**不構成正式法律意見**。本工具：
+
+- 僅就現行有效之中華民國法律進行法源檢索與分析；
+- 不能取代具有律師資格之專業諮詢；
+- WebFetch 取得之 判決 / 函釋 / 條文 內容可能因主管機關更新或網頁改版而失準；
+- 對特定案件之適用性、最新主管機關函釋、未公開判決未必涵蓋；
+- 不保證內容無誤、完整或最新。
+
+具體案件如涉及訴訟、契約簽訂、刑事責任、跨境議題、或重大金額決策，請諮詢專業律師。
 ```
+
+<!-- CANONICAL SoT for §Disclaimer body = protocols/cite.md §6.3 Disclaimer text.
+     The text inlined above MUST be byte-identical to that canonical block.
+     If you edit, update both files in same commit. -->
 
 **g. Initialize `state.json`.** Write the following structure to disk
 (both timestamps identical at init):
@@ -232,7 +245,16 @@ In all 3 cases: do NOT create `legal-outputs/` directory yet.
 ---
 
 ## §Disclaimer
-<§6.3 boilerplate>
+
+本研究由 AI 工具（legal-toolkit / legal-research）產出，**不構成正式法律意見**。本工具：
+
+- 僅就現行有效之中華民國法律進行法源檢索與分析；
+- 不能取代具有律師資格之專業諮詢；
+- WebFetch 取得之 判決 / 函釋 / 條文 內容可能因主管機關更新或網頁改版而失準；
+- 對特定案件之適用性、最新主管機關函釋、未公開判決未必涵蓋；
+- 不保證內容無誤、完整或最新。
+
+具體案件如涉及訴訟、契約簽訂、刑事責任、跨境議題、或重大金額決策，請諮詢專業律師。
 ```
 
 **state.json** (initialized):

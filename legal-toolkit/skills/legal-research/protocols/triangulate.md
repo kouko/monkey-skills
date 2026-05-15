@@ -28,13 +28,15 @@ This protocol does NOT modify `research-memo.md` or
 
 ## Outputs
 
-- **`state.json` updates** (in-place write):
+- **`state.json` updates** (in-place write; SoT for downstream):
   - `final_types_covered_count` (integer ≥ 0) — adjusted count after
     promotion / demotion
   - `triangulation_assessment` (string) — one of `"early_stop met"` /
     `"forced_stop"` / `"coverage degraded"`
-- **⚠️ block markdown** — only when assessment ∈ {`forced_stop`,
-  `coverage degraded`}; handed to `cite.md` for prepending.
+- **NO separate file written**. `cite.md` reconstructs the ⚠️ block at
+  prepend-time from `state.json` fields directly (`triangulation_assessment`,
+  `final_types_covered_count`, `rounds`, `fetches`, `len(sources)`).
+  state.json is the single SoT; no `triangulate-prep.md` artifact.
 
 ## Procedure
 
@@ -57,11 +59,10 @@ This protocol does NOT modify `research-memo.md` or
      `"coverage degraded"`
    - Otherwise → logic bug; halt (see §Halt + ask).
 6. **Write** `state.json` with the two new fields.
-7. **If** assessment ∈ {`forced_stop`, `coverage degraded`} → render
-   the ⚠️ block template with concrete numbers; `cite.md` reads
-   `triangulation_assessment` + `final_types_covered_count` from
-   `state.json` and reconstructs the same block before prepending.
-8. **EXIT** to `cite.md`.
+7. **EXIT** to `cite.md`. cite.md will read `triangulation_assessment`
+   + `final_types_covered_count` + `rounds` + `fetches` + `len(sources)`
+   from `state.json` and reconstruct the ⚠️ block at prepend-time when
+   assessment ∈ {`forced_stop`, `coverage degraded`}.
 
 ## Type promotion / demotion rules (summary)
 
