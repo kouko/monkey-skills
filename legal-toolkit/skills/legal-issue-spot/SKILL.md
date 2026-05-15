@@ -135,17 +135,22 @@ consumed by `scripts/grade_issue_spot.py` (Task 5).
 
 Every output file MUST end with the §6.3 Disclaimer footer.
 **This skill produces 法律意見 (legal opinion) — disclaimer is
-mandatory, not optional.** The footer is composed by
-`protocols/risk-grade.md` Step 4 (boilerplate template lives in
-that protocol; do NOT inline duplicate the text here, to avoid
-drift). Footer covers: (a) "本分析為 AI-generated 初步意見";
-(b) "不構成正式法律意見 / 不得作為訴訟依據"; (c) "請諮詢執業
-律師 before 任何重大商業決定"; (d) "資料來源 / 適用法律 /
-分析時間" stamp.
+mandatory, not optional.**
 
-Grader rule (`grade_issue_spot.py` `disclaimer_footer` check):
-both `issues.md` and `business.md` must contain the disclaimer
-sentinel string. Missing footer → exit 1 (FAIL).
+The verbatim canonical disclaimer text lives in
+[`protocols/risk-grade.md`](protocols/risk-grade.md) §6.3 Disclaimer text section
+(do NOT duplicate the text here to avoid drift). risk-grade.md is
+the SoT; this section only describes the contract:
+
+- Both `issues.md` and `business.md` MUST end with the boilerplate
+  block (leading `---` separator + `## §Disclaimer` heading + body)
+- Body covers: AI-tool attribution / not formal legal opinion /
+  current TW in-force law scope / recommendation to consult 律師 for
+  litigation, contract signing, criminal liability, cross-border, or
+  high-stakes decisions
+- The grader (`scripts/grade_issue_spot.py` `disclaimer_footer`
+  check) greps for the canonical sentinel substring; missing
+  footer → exit 1 (FAIL)
 
 ## §6.4 Escalation Override
 

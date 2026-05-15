@@ -179,6 +179,13 @@ Parsed §事實摘要 highlights:
 ```markdown
 ### Issue 1: 民法 §184 侵權行為 損害賠償 — A 公司 vs B 客戶
 
+<!-- [draft — for 法務 review; Phase 4.5 GC outreach validation]
+     The 學說 framing below (人格權說 vs 隱私權說 for §184 「權利」)
+     is controller-drafted from training knowledge. 法務 SME should
+     validate the framing + alignment with current TW 學說 通說 +
+     最高法院 leading 判決 trend. The element list itself comes from
+     references/請求權基礎-民法.md (Task 3); review there too. -->
+
 | 構成要件 | 事實對應 | 涵攝結論 | 信心 (理由) |
 |---|---|---|---|
 | 故意或過失 | A 公司未驗證 API 欄位過濾 | 該當 | 高 — 「未驗證」屬具體過失行為 |

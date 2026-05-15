@@ -49,12 +49,17 @@ This protocol writes to **multiple destinations** (two files, several sections e
 | `business.md` | `## §注意點` | bullets derived from ⚠️ rows + counterfactual flippable carve-outs |
 | `business.md` | `## §風險分級` | 同 issues.md, 1-line reasoning |
 | `business.md` | `## §建議下一步` | **conditional** — when ≥ 1 ⚠️ in `§構成要件涵攝` |
-| `business.md` | `## §Escalation` | **conditional** — when 🔴 OR ≥ 2 ⚠️ OR criminal element |
-| `business.md` | `## Disclaimer` | §6.3 boilerplate (verbatim, same as issues.md) |
+| `business.md` | `## §Escalation` | **conditional** — when 🔴 OR ≥ 2 ⚠️ (criminal always grades 🔴) |
+| `business.md` | `## §Disclaimer` | §6.3 boilerplate (verbatim, same as issues.md) |
 
 ## Risk-grade rules
 
 Read `§構成要件涵攝` table + `§Issue 矩陣` + `§反事實`. Apply this table top-down (first match wins):
+
+<!-- [draft — for 法務 review; Phase 4.5 GC outreach validation]
+     The criminal-law 條文 list below is controller-drafted from training
+     knowledge of common TW 刑罰 / 證交法 / 個資法 thresholds. 法務 SME
+     should validate the list (additions / removals / threshold updates). -->
 
 | Condition | Grade |
 |---|---|
@@ -80,11 +85,14 @@ The emoji MUST be exactly one of 🔴 / 🟡 / 🟢 (single character; grader re
 ## §6.4 Escalation Override
 
 **Hard-wired logic — NOT LLM judgement.** The LLM does not get to "soften"
-or skip this. Trigger conditions (any of):
+or skip this. Trigger conditions (any of, matching SKILL.md §6.4):
 
 - 風險分級 = 🔴
 - `§構成要件涵攝` contains ≥ 2 ⚠️
-- 任一 issue 涉及刑事法 territory
+
+(Note: 刑事法 issues always grade 🔴 per Risk-grade rules above, so they
+trigger escalation via the first condition — no separate criminal trigger
+needed. Single source of truth = the Risk-grade rules table.)
 
 When triggered, `business.md` MUST contain `## §Escalation` section with:
 
@@ -100,7 +108,7 @@ Template:
 ⚠️ 本案達成 §6.4 升級門檻，**強烈建議於採取任何行動前諮詢執業律師**。
 
 升級觸發原因：
-- <list which trigger fired: ≥ 2 ⚠️ / 🔴 grade / 刑事法 issue>
+- <list which trigger fired: ≥ 2 ⚠️ / 🔴 grade>
 - <1-line elaborate, e.g. "§227 + 個資法 §27 兩個構成要件信心不足，疊加風險">
 
 律師可協助：
@@ -123,7 +131,7 @@ passes:
 ```markdown
 ---
 
-## Disclaimer
+## §Disclaimer
 
 本分析由 AI 工具（legal-toolkit / legal-issue-spot）產出，**不構成正式法律意見**。本工具：
 
@@ -220,7 +228,7 @@ trigger fires (see Outputs table above):
 律師可協助：
 - <list>
 
-## Disclaimer
+## §Disclaimer
 
 <§6.3 boilerplate verbatim>
 ```
@@ -264,7 +272,7 @@ Snippet of business.md output:
 - 公司治理 利益衝突的「公務員贈與門檻」適用範圍
   → `/legal-research --query="公職人員利益衝突迴避法 §15 五百元門檻 民間企業贈與適用範圍"`
 
-## Disclaimer
+## §Disclaimer
 
 <§6.3 boilerplate>
 ```
