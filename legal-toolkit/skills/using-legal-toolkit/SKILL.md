@@ -194,7 +194,7 @@ If none of Q1-Q7 match clearly, **do not guess**. Present the 6-cluster menu:
    → 個資外洩 / 主管機關來文 / 客戶違約我要回應  ✅ active (v0.4.2+)
 
 🔍 法律諮詢 (IRAC)
-   → 我有 fact pattern 想知道法律分析 / 想查特定法條 / 判例  [Phase 3 — 還沒上]
+   → fact pattern 法律分析 (✅ active v0.5.0+) / 查特定法條 / 判例 [Phase 3 SP3-b — v0.5.2 還沒上]
 
 📅 生命週期追蹤 (Tracker)
    → 合約到期 alert / 主管機關 RSS 訂閱  [Phase 4 — 還沒上]

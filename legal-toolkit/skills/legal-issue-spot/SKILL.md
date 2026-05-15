@@ -75,7 +75,7 @@ Each protocol uses the `halt + ask user` fallback when input is
 ambiguous (e.g. `parse-facts.md` halts if pattern < 30 chars or
 contains internal contradictions).
 
-## References
+## Reference files
 
 Consumed by `subsumption.md` and `counterfactual.md`. Each file
 ships with a `<!-- [draft — for 法務 review; Phase 4.5 GC outreach
@@ -171,12 +171,12 @@ keyword. Missing → exit 1 (FAIL).
 ## Cross-skill handoff
 
 When the subsumption table contains **≥ 1 ⚠️** (any low-confidence
-element), `business.md` ends with a `## 建議下一步` block listing
+element), `business.md` ends with a `## §建議下一步` block listing
 concrete query strings for `/legal-research` (Phase 3 SP3-b
 v0.5.2). Format:
 
 ```markdown
-## 建議下一步
+## §建議下一步
 
 ⚠️ 以下構成要件信心不足，建議跑 research 釐清：
 

@@ -671,13 +671,13 @@ Pure-LLM IRAC issue-spotting sub-skill. Subagent-driven plan executed in 1 sessi
 - ✅ SKILL.md（business-language fact pattern → issue 矩陣 + 構成要件 涵攝 + counterfactual + 🔴/🟡/🟢 risk + escalation 建議）
 - ✅ `protocols/{parse-facts, timeline, spot-issues, subsumption, counterfactual, risk-grade}.md`（6-step pipeline）
 - ✅ `references/{請求權基礎-民法.md, 構成要件-勞動.md, 構成要件-個資.md}` 3 礎統 reference
-- ✅ `assets/output-schema-issue-matrix.json`（issues.md + business.md schema）
-- ✅ `scripts/grade_issues.py`（5-section structural grader + risk-grade legend + Mandatory Disclaimer footer + 🔴/低信心 Escalation Override）
+- ✅ `assets/output-schema-issues.json` + `output-schema-business.json`（issues.md + business.md JSON Schema draft-07 contracts）
+- ✅ `scripts/grade_issue_spot.py`（10-check structural grader: 7-section issues.md + 6-section business.md presence + subsumption table validity + Path A anti-pattern bank + template-orphan check + risk-grade emoji + §建議下一步 handoff-when-⚠️ + §6.3 Mandatory Disclaimer footer + 🔴/≥2⚠️ Escalation Override）
 - ✅ Router Q4 dispatch path active（fact-driven 「能不能做」/「是否合法」/「我們想做」→ issue-spot；法源查詢 → research, NYI）
 - ✅ Path A discipline shared with v0.4.x（民法 §12 18 歲 / 委託 受託 not controller-processor / 即時 not 72hr）
 - ✅ Soft handoff to `/legal-research` on ⚠️ low-confidence subsumption（concrete query string emitted; SP3-b 還沒 ship 時 router 提示 not-yet-available）
 - ✅ No external fetches / no `profile.yml` dependency / no playbook coupling — orthogonal to `legal-contract-review`
-- ✅ 244 tests pass (was 231 in v0.4.4; +13 v0.5.0 tests: grade_issues structural + Path A + escalation override + canonical legal-sources cross-reference)
+- ✅ 244 tests pass (was 231 in v0.4.4; +13 v0.5.0 tests: 10 grade_issue_spot structural + 3 drift-verify bank/helper byte-identical checks)
 - ✅ verify-drift.py exit 0 / check-marketplace-description-sync.py exit 0
 
 ### SP3-b — `legal-research` (v0.5.2 planned)

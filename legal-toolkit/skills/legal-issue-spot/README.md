@@ -43,7 +43,7 @@ Schema validation: both files have JSON Schema contracts in `assets/output-schem
 When the subsumption table contains **≥ 1 ⚠️** (any low-confidence element), `business.md` ends with a `§建議下一步` block listing concrete `/legal-research` queries:
 
 ```markdown
-## 建議下一步
+## §建議下一步
 
 ⚠️ 以下構成要件信心不足，建議跑 research 釐清：
 

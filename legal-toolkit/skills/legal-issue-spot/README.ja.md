@@ -45,7 +45,7 @@ Schema validation：両 file とも JSON Schema contract が `assets/output-sche
 subsumption 表に **≥ 1 ⚠️**（信頼度が低い要素）が現れた場合、`business.md` の末尾に `§建議下一步` block を出し、`/legal-research` 用の query string を具体的に列挙する：
 
 ```markdown
-## 建議下一步
+## §建議下一步
 
 ⚠️ 以下構成要件信心不足，建議跑 research 釐清：
 

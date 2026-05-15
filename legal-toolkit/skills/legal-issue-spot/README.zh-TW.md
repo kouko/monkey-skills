@@ -43,7 +43,7 @@ Schema validation：兩個檔都有 JSON Schema contract（`assets/output-schema
 當 subsumption 表中出現 **≥ 1 ⚠️**（任一信心不足的要件），`business.md` 末尾會加上 `§建議下一步` block，列出 `/legal-research` 用的具體 query string：
 
 ```markdown
-## 建議下一步
+## §建議下一步
 
 ⚠️ 以下構成要件信心不足，建議跑 research 釐清：
 
