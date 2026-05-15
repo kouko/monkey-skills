@@ -37,6 +37,13 @@ ABX_SERVICE=slack abx wait --load networkidle
 
 # Open search — role="button" name="Search"
 SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
+TITLE_CHECK=$(echo "$SNAP" | jq -r '.title // ""')
+if echo "$TITLE_CHECK" | grep -qiE "sign in|log in|login"; then
+  echo "ERR: Slack login wall detected (title: $TITLE_CHECK)" >&2
+  echo "  → Shared mode: log into Slack in your daily Chrome" >&2
+  echo "  → Dedicated mode: /collab-setup --reauth slack" >&2
+  exit 1
+fi
 SEARCH_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and .name=="Search") | .ref' | head -1)
 [ -z "$SEARCH_REF" ] && { echo "ERR: UI changed: 'Search' button not found"; exit 1; }
 ABX_SERVICE=slack abx click "$SEARCH_REF"

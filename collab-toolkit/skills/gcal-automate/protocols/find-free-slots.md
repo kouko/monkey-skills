@@ -112,7 +112,8 @@ fi
 # For each event button name, attempt to extract start_min and end_min:
 #   "9:00 AM, Stand-up, 30 minutes, ..." → start=9:00 duration=30
 # Fallback: treat unparseable events as full-day busy (conservative).
-declare -A BUSY  # BUSY[YYYY-MM-DD]="start_min:end_min start_min:end_min ..."
+# Note: bash 3.2 compatible — plain string accumulator (per-day grouping deferred to v0.2.0)
+BUSY_INTERVALS=""   # "start_min:end_min start_min:end_min ..."
 
 while IFS= read -r raw; do
   # Extract start time (first token matching HH:MM or H:MM with optional AM/PM)
@@ -144,8 +145,8 @@ while IFS= read -r raw; do
   # Associate with start_date (week view: all events on the same snapshot are in this week range)
   # Date-to-event mapping requires columnheader date labels — use START_DATE as approximation for
   # multi-day computation; full per-day grouping deferred to v0.2.0 (needs parent-child grid structure).
-  # For now: collect all busy intervals under start_date as a per-week aggregate.
-  BUSY["$START_DATE"]+="$EV_START_MIN:$EV_END_MIN "
+  # For now: collect all busy intervals as a per-week aggregate.
+  BUSY_INTERVALS+="$EV_START_MIN:$EV_END_MIN "
 done <<< "$EVENTS_RAW"
 
 echo "## Free slots >= $DURATION min ($START_DATE – $END_DATE, $BIZ_START–$BIZ_END)"
@@ -157,7 +158,7 @@ CURRENT_MIN=$BIZ_START_MIN
 SLOTS_FOUND=0
 
 # Sort busy intervals
-SORTED_BUSY=$(echo "${BUSY[$START_DATE]:-}" | tr ' ' '\n' | grep -v '^$' | sort -t: -k1 -n)
+SORTED_BUSY=$(echo "$BUSY_INTERVALS" | tr ' ' '\n' | grep -v '^$' | sort -t: -k1 -n)
 
 while IFS= read -r interval; do
   [ -z "$interval" ] && continue
@@ -198,3 +199,4 @@ fi
 - 12h locale (AM/PM explicit): `12:xx PM` → noon ✓, `12:xx AM` → midnight ✓ (explicit IS_AM guard applied)
 - 24h locale (no AM/PM marker): `12:xx` → noon ✓ (no midnight correction — IS_AM remains 0); `0:xx` → midnight ✓
 - Multi-week date range (> 7 days) → v0.1.0 only snapshots the first week; remaining days not covered (deferred to v0.2.0)
+- macOS bash 3.2 compatible — no associative arrays used (per-day grouping deferred to v0.2.0)
