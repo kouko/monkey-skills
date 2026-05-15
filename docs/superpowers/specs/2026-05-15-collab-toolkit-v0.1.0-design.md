@@ -53,7 +53,7 @@ Ship `collab-toolkit` v0.1.0 as a Claude Code plugin packaging **5 read-only ski
 
 Plus a `/collab-setup` slash command that bootstraps agent-browser, Chrome for Testing, and a profile configuration (shared with the user's Chrome by default; opt-in dedicated per-service profile).
 
-Read-only scope: **service-side** read operations only (search, list, fetch). The skills make no mutating calls against Asana / Slack / Notion / Google Calendar / Gmail. Local filesystem writes (`/tmp` snapshots, `~/.collab-toolkit/config.json`, profile dirs) are normal. Service-side writes (send message, create task, update event) deferred to v0.2.0+.
+Read-only scope: **service-side** read operations only (search, list, fetch). The skills make no mutating calls against Asana / Slack / Notion / Google Calendar / Gmail. Local filesystem writes (`/tmp` snapshots, `~/.config/collab-toolkit/config.json`, profile dirs) are normal. Service-side writes (send message, create task, update event) deferred to v0.2.0+.
 
 ## 3. Locked decisions
 
@@ -67,7 +67,7 @@ Read-only scope: **service-side** read operations only (search, list, fetch). Th
 | D6 | UI brittleness: Semantic-first selectors (role+name via jq filter on JSON snapshot), no hardcoded `@eN` refs in protocols | brainstorm Q5 |
 | D7 | Routing description: sole-path wording, no conditional "PREFER MCP" language; tool-call specificity handles natural routing | user follow-up after Section 2 |
 | D8 | Bootstrap: `/collab-setup` slash command; `scripts/setup.sh` does Homebrew first → npm fallback → `agent-browser install` → verify | brainstorm Q (setup-flow) |
-| D9 | `abx` wrapper at `~/.collab-toolkit/bin/abx` centralizes profile-arg resolution; all protocols call `abx`, never `agent-browser` directly | brainstorm Q (profile-mode-final, abx wrapper) |
+| D9 | `abx` wrapper at `~/.local/bin/abx` centralizes profile-arg resolution; all protocols call `abx`, never `agent-browser` directly | brainstorm Q (profile-mode-final, abx wrapper) |
 | D10 | Cowork incompatibility marked with ⚠️ in plugin description (per PR #154 convention) | brainstorm Q (cowork) |
 | D11 | i18n READMEs: `README.md` / `README.ja.md` / `README.zh-TW.md` (per PR #150 rule) | brainstorm Q (i18n) |
 | D12 | Testing: L0 (CI structure check via existing `scripts/check-*.py`) + L1 (bats unit tests for `setup.sh` and jq filters); L2 live smoke deferred to v0.2.0+ | brainstorm Q6 |
@@ -85,7 +85,7 @@ collab-toolkit/
 │   └── collab-setup.md
 ├── scripts/
 │   ├── setup.sh                    # /collab-setup back-end
-│   ├── abx                         # wrapper, copied to ~/.collab-toolkit/bin/ at setup time
+│   ├── abx                         # wrapper, copied to ~/.local/bin/ at setup time
 │   └── tests/
 │       ├── test-setup.bats
 │       ├── test-jq-filters.bats
@@ -179,33 +179,43 @@ Append to top-level `monkey-skills/.claude-plugin/marketplace.json`:
 }
 ```
 
-### 5.3 Runtime config — `~/.collab-toolkit/config.json`
+### 5.3 Runtime config — XDG-compliant paths
 
-Written by `/collab-setup`. Schema:
+Follows [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) for cross-environment consistency with modern CLIs (gh, rclone, mise, starship, direnv):
+
+| Resource | Path | Override env |
+|---|---|---|
+| Config (settings) | `$XDG_CONFIG_HOME/collab-toolkit/config.json` → default `~/.config/collab-toolkit/config.json` | `XDG_CONFIG_HOME` |
+| Data (auth profiles) | `$XDG_DATA_HOME/collab-toolkit/profiles/` → default `~/.local/share/collab-toolkit/profiles/` | `XDG_DATA_HOME` |
+| Wrapper binary | `$HOME/.local/bin/abx` (de-facto standard, no XDG counterpart) | — |
+
+`config.json` schema written by `/collab-setup`:
 
 ```json
 {
-  "mode": "shared",                                  // "shared" | "dedicated"
-  "chrome_profile": "Default",                       // used when mode=shared
-  "profiles_root": "~/.collab-toolkit/profiles"  // used when mode=dedicated
+  "mode": "shared",                                                // "shared" | "dedicated"
+  "chrome_profile": "Default",                                     // used when mode=shared
+  "profiles_root": "~/.local/share/collab-toolkit/profiles"        // used when mode=dedicated; tilde-expanded at read time
 }
 ```
 
 Default: `mode=shared`, `chrome_profile=Default` (user pickable from `agent-browser profiles` enumeration).
 
-### 5.4 `abx` wrapper — `~/.collab-toolkit/bin/abx`
+### 5.4 `abx` wrapper — `$HOME/.local/bin/abx`
 
-Installed by `setup.sh`. Resolves profile arg from config, then `exec agent-browser` with `--profile` prepended:
+Installed by `setup.sh` to a directory that is on `PATH` by default for most modern setups (macOS Homebrew shellenv, most Linux distros, manjaro/arch defaults). This solves the `allowed-tools` allowlist problem — SKILL.md can whitelist `Bash(abx:*)` directly. If `$HOME/.local/bin` is not yet on PATH, `setup.sh` prints the export line for the user's shell rc.
+
+Resolves profile arg from config, then `exec agent-browser` with `--profile` prepended:
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG="${HOME}/.collab-toolkit/config.json"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/collab-toolkit/config.json"
 SERVICE="${ABX_SERVICE:-}"
 
 if [ ! -f "$CONFIG" ]; then
-  echo "ERR: ~/.collab-toolkit/config.json not found. Run /collab-setup first." >&2
+  echo "ERR: ~/.config/collab-toolkit/config.json not found. Run /collab-setup first." >&2
   exit 1
 fi
 
@@ -230,7 +240,7 @@ Protocols set `ABX_SERVICE=<service>` before each `abx` call to hint dedicated-m
 ```markdown
 ---
 name: collab-setup
-description: One-time bootstrap for collab-toolkit. Installs agent-browser, downloads Chrome for Testing, installs abx wrapper, writes ~/.collab-toolkit/config.json. Default mode: shared (reuses your Chrome profile login state). Opt-in: --dedicated mode (5 per-service profile dirs, manual login). Sub-commands: --reauth <service>, --switch-mode, --verify.
+description: One-time bootstrap for collab-toolkit. Installs agent-browser, downloads Chrome for Testing, installs abx wrapper, writes ~/.config/collab-toolkit/config.json. Default mode: shared (reuses your Chrome profile login state). Opt-in: --dedicated mode (5 per-service profile dirs, manual login). Sub-commands: --reauth <service>, --switch-mode, --verify.
 ---
 
 # /collab-setup
@@ -246,11 +256,19 @@ Pseudocode (full implementation in `scripts/setup.sh`):
 #!/usr/bin/env bash
 set -euo pipefail
 
-TOOLKIT_ROOT="${HOME}/.collab-toolkit"
-CONFIG="${TOOLKIT_ROOT}/config.json"
-BIN="${TOOLKIT_ROOT}/bin"
+xdg_config_home() { echo "${XDG_CONFIG_HOME:-$HOME/.config}"; }
+xdg_data_home()   { echo "${XDG_DATA_HOME:-$HOME/.local/share}"; }
+xdg_bin_home()    { echo "$HOME/.local/bin"; }     # no XDG counterpart; de-facto standard
+
+CONFIG_DIR="$(xdg_config_home)/collab-toolkit"
+DATA_DIR="$(xdg_data_home)/collab-toolkit"
+BIN_DIR="$(xdg_bin_home)"
+CONFIG="$CONFIG_DIR/config.json"
+PROFILES_ROOT="$DATA_DIR/profiles"
 DEDICATED=false; REAUTH=""; SWITCH=false; VERIFY_ONLY=false
 parse_args "$@"  # populates flags above
+
+mkdir -p "$CONFIG_DIR" "$DATA_DIR" "$BIN_DIR"
 
 install_agent_browser() {
   command -v agent-browser >/dev/null && return 0
@@ -265,9 +283,14 @@ install_agent_browser() {
 install_chrome() { agent-browser install && agent-browser --version; }
 
 install_abx() {
-  mkdir -p "$BIN"
-  cp "$(dirname "$0")/abx" "$BIN/abx"
-  chmod +x "$BIN/abx"
+  cp "$(dirname "$0")/abx" "$BIN_DIR/abx"
+  chmod +x "$BIN_DIR/abx"
+  # PATH check — warn if $HOME/.local/bin not on PATH
+  case ":$PATH:" in
+    *":$BIN_DIR:"*) ;;
+    *) echo "⚠️ $BIN_DIR not on PATH. Add to your shell rc:"
+       echo '   export PATH="$HOME/.local/bin:$PATH"' ;;
+  esac
 }
 
 setup_shared() {
@@ -280,7 +303,7 @@ setup_shared() {
 }
 
 setup_dedicated() {
-  mkdir -p "${TOOLKIT_ROOT}/profiles"/{asana,slack,notion,gcal,gmail}
+  mkdir -p "$PROFILES_ROOT"/{asana,slack,notion,gcal,gmail}
   write_config_dedicated
   for service in asana slack notion gcal gmail; do
     setup_one_dedicated "$service"
@@ -291,7 +314,7 @@ setup_one_dedicated() {
   local service="$1"
   local url=$(service_url "$service")
   echo "→ Opening ${service} (--headed). Log in, then press Enter."
-  agent-browser --headed --profile "${TOOLKIT_ROOT}/profiles/${service}" open "$url"
+  agent-browser --headed --profile "$PROFILES_ROOT/$service" open "$url"
   read -rp "Press Enter when logged in: "
   verify_one "$service"
 }
@@ -303,8 +326,8 @@ verify_all_services() {
 verify_one() {
   local service="$1"
   local url=$(service_url "$service")
-  ABX_SERVICE="$service" "${BIN}/abx" open "$url" >/dev/null
-  local title=$(ABX_SERVICE="$service" "${BIN}/abx" get title)
+  ABX_SERVICE="$service" "$BIN_DIR/abx" open "$url" >/dev/null
+  local title=$(ABX_SERVICE="$service" "$BIN_DIR/abx" get title)
   case "$title" in
     *"Sign in"*|*"Log in"*|*"Login"*)
       echo "⚠️ $service: NOT logged in (title: $title)"
@@ -342,7 +365,7 @@ main
 ---
 name: <service>-automate
 description: <service capitalized> automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: <comma-separated list of 4 hero protocols with one-line each>. Read-only v0.1.0 — search and fetch only, no writes. <ja tail>。<zh-TW tail>。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(~/.collab-toolkit/bin/abx:*), Bash(jq:*), Bash(mkdir:*)
+allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*), Bash(jq:*), Bash(mkdir:*)
 ---
 
 # <service> automate
@@ -352,8 +375,8 @@ Read-only browser automation for <service>. Uses semantic-first selectors over t
 ## Prerequisites
 
 Run `/collab-setup` once. After that:
-- `~/.collab-toolkit/bin/abx` is installed
-- `~/.collab-toolkit/config.json` exists with mode + profile config
+- `~/.local/bin/abx` is installed
+- `~/.config/collab-toolkit/config.json` exists with mode + profile config
 - This service is verified logged-in
 
 If any protocol fails with "config not found": run `/collab-setup`.
@@ -403,21 +426,22 @@ purpose: one-sentence use case
 
 ## Procedure (semantic-first, no hardcoded refs)
 
-ABX="${HOME}/.collab-toolkit/bin/abx"
+# Prerequisite: $HOME/.local/bin must be on PATH; /collab-setup ensures this.
+# If `abx` is not found, run /collab-setup or check PATH per setup output.
 
 # 1. Open + wait
-ABX_SERVICE=<service> "$ABX" open "<url>"
-ABX_SERVICE=<service> "$ABX" wait --load networkidle
+ABX_SERVICE=<service> abx open "<url>"
+ABX_SERVICE=<service> abx wait --load networkidle
 
 # 2. Snapshot JSON
-SNAP=$(ABX_SERVICE=<service> "$ABX" snapshot -i --json)
+SNAP=$(ABX_SERVICE=<service> abx snapshot -i --json)
 
 # 3. Locate elements by role+name (NEVER @eN literal)
 TARGET_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="<R>" and .name=="<N>") | .ref' | head -1)
 [ -z "$TARGET_REF" ] && { echo "ERR: UI changed: '<N>' (role=<R>) not found"; exit 1; }
 
 # 4. Act
-ABX_SERVICE=<service> "$ABX" click "$TARGET_REF"
+ABX_SERVICE=<service> abx click "$TARGET_REF"
 # ... continues
 
 ## Failure modes (cross-reference)
@@ -458,7 +482,7 @@ Phase 1: install agent-browser (brew → npm fallback)
   ▼
 Phase 2: agent-browser install (downloads Chrome for Testing, ~200MB)
   ▼
-Phase 3: install_abx writes ~/.collab-toolkit/bin/abx
+Phase 3: install_abx writes ~/.local/bin/abx
   ▼
 Phase 4 (shared): enumerate Chrome profiles, user picks → write config.json → verify each of 5 services
   ▼
@@ -534,8 +558,8 @@ Protocol fails fast — does NOT attempt to scrape login state from logged-out s
 | Error class | Detection | Surface |
 |---|---|---|
 | agent-browser binary missing | `command -v agent-browser` in abx first line | `ERR: Run /collab-setup first.` |
-| `~/.collab-toolkit/config.json` missing | abx file check | Same as above |
-| `~/.collab-toolkit/bin/abx` missing or not executable | protocol uses `${HOME}/.collab-toolkit/bin/abx` directly, fails on exec | `ERR: abx wrapper not found. Run /collab-setup first.` |
+| `~/.config/collab-toolkit/config.json` missing | abx file check | Same as above |
+| `~/.local/bin/abx` missing or not executable | protocol uses `${HOME}/.local/bin/abx` directly, fails on exec | `ERR: abx wrapper not found. Run /collab-setup first.` |
 | UI changed (semantic selector empty) | jq filter empty AND role does not exist in snapshot at all | `ERR: UI changed: <role>+<name> not found. Update <skill>/references/ui-patterns.md and re-snapshot.` |
 | Login wall (auth expired) | Title contains Sign in/Log in/Login, or URL redirects to /login | Mode-specific remediation message (see 6.4) |
 | Chrome profile lock conflict (shared mode + Chrome busy) | agent-browser launch returns lock error | Retry after 2s sleep once; on second failure: `Close heavy Chrome tabs, or switch to dedicated mode: /collab-setup --switch-mode` |
@@ -587,7 +611,7 @@ Real agent-browser launches against real services, validates snapshot structure.
 6. **GCal find-free-slots algorithm correctness** — depends on parsing event blocks across multiple days; brittle if Google changes calendar grid markup. Worth a unit test on a fixture.
 7. **First-run idempotency** — running `/collab-setup` twice should be safe (re-detect, re-write config, re-verify). Implementation must guard against double-install of brew/npm.
 8. **No CI for live smoke** — v0.1.0 ships without L2 coverage. User dogfood is the validation gate.
-9. **`allowed-tools` allowlist for `abx`** — Claude Code's `allowed-tools` uses literal command-prefix matching; `Bash(~/.collab-toolkit/bin/abx:*)` will NOT tilde-expand. Implementation options to resolve at code time: (a) install symlink at `/usr/local/bin/abx` (requires sudo prompt on first setup), (b) install at `~/.local/bin/abx` if that path is already on `PATH` (probable on macOS with Homebrew), (c) keep abx at `~/.collab-toolkit/bin/abx` and whitelist `Bash(*/abx:*)` if Claude Code supports glob in allowed-tools, (d) drop the abx wrapper and inline the profile-resolution logic in every protocol (DRY violation but explicit). Option (b) with fallback to (d) is the most robust. To be finalized in TECH-SPEC.
+9. **`allowed-tools` allowlist for `abx`** — Resolved by XDG path choice: abx installs at `$HOME/.local/bin/abx`, which is on PATH by default for most modern macOS / Linux setups (Homebrew shellenv, most Linux distros). SKILL.md whitelists `Bash(abx:*)` and Claude Code resolves it via PATH. Remaining edge case: users whose PATH does not include `$HOME/.local/bin` get a printed warning from `setup.sh` with the export-line they need to add to their shell rc; the verify step fails until PATH is fixed.
 
 ## 10. Out of scope (v0.2.0+)
 
