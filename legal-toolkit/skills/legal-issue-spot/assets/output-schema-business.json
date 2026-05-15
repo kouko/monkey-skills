@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-issue-spot/assets/output-schema-business.json",
+  "title": "business.md structural schema",
+  "type": "object",
+  "required": [
+    "required_sections",
+    "conditional_sections",
+    "risk_emoji_required",
+    "handoff_query_format",
+    "min_byte_size",
+    "no_template_orphans"
+  ],
+  "properties": {
+    "required_sections": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": [
+        "§TL;DR",
+        "§可以做的部分",
+        "§不能做的部分",
+        "§注意點",
+        "§風險分級",
+        "§Disclaimer"
+      ]
+    },
+    "conditional_sections": {
+      "type": "object",
+      "properties": {
+        "§建議下一步": {
+          "type": "string",
+          "const": "REQUIRED if issues.md §構成要件涵攝 contains any ⚠️ in 涵攝結論 column"
+        },
+        "§Escalation": {
+          "type": "string",
+          "const": "REQUIRED if risk_grade is 🔴 OR ≥ 2 ⚠️ in §構成要件涵攝"
+        }
+      }
+    },
+    "risk_emoji_required": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["🔴", "🟡", "🟢"]
+    },
+    "handoff_query_format": {
+      "type": "string",
+      "const": "`/legal-research --query=\"<NL query>\"`"
+    },
+    "min_byte_size": {"type": "integer", "const": 400},
+    "no_template_orphans": {"type": "boolean", "const": true}
+  }
+}
