@@ -51,7 +51,7 @@ ABX_SERVICE=slack abx wait --load networkidle
 SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
 echo "$SNAP" | jq -r '
   .elements[]
-  | select(.role=="listitem" and (.parent.name // "" | startswith("Search results")))
+  | select(.role=="listitem")
   | "**\(.channel // "(unknown)")** · \(.user // "(unknown)") · \(.timestamp // "")\n> \(.text // "")\n"
 '
 ```

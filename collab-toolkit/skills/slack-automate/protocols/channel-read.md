@@ -49,7 +49,7 @@ case "$CHANNEL" in
     ABX_SERVICE=slack abx wait --load networkidle
     SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
     CHANNEL_REF=$(echo "$SNAP" | jq -r --arg c "$CHANNEL" '
-      .elements[] | select(.role=="treeitem" and (.name | startswith($c))) | .ref
+      .elements[] | select(.role=="treeitem" and ((.name // "") | startswith($c))) | .ref
     ' | head -1)
     [ -z "$CHANNEL_REF" ] && { echo "ERR: Channel '$CHANNEL' not found in sidebar"; exit 1; }
     ABX_SERVICE=slack abx click "$CHANNEL_REF"

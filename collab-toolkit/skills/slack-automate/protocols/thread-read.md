@@ -26,16 +26,12 @@ ABX_SERVICE=slack abx open "$URL"
 ABX_SERVICE=slack abx wait --load networkidle
 SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
 
-# Thread is shown in a side panel — role="complementary" name="Thread"
-# Parent message + replies are role="article" within
-# Note: .parent.role and .parent.name are speculative parent-reference fields (see AT-schema notes)
+# Thread is shown in a side panel — parent+replies are role="article"
+# .parent.role/.parent.name guards dropped: agent-browser flat snapshot has no .parent field.
+# Permissive: accept all articles on this page (which is the thread URL — no other articles expected).
 echo "$SNAP" | jq -r '
   [.elements[]
-    | select(
-        .role=="article"
-        and ((.parent.role // "") == "complementary")
-        and ((.parent.name // "") == "Thread")
-      )
+    | select(.role=="article")
     | {
         user: (.author // "(unknown)"),
         timestamp: (.timestamp // ""),

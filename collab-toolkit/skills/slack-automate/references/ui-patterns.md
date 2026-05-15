@@ -78,6 +78,6 @@ Some field paths used in the protocols above are educated guesses about agent-br
 | `.elements[] \| select(.role=="article") \| .attachments` | thread-read | ❓ unverified |
 | `.elements[] \| select(.role=="listitem") \| .channel / .user / .text` | search-messages | ❓ unverified — fields may be nested child elements rather than direct props |
 | `.elements[] \| select(.role=="row") \| .handle / .email / .status` | find-user | ❓ unverified — user row props may be child cells not direct props |
-| `.parent.name` / `.parent.role` filters | search-messages, thread-read | ❓ unverified — nested parent reference may not be in flat snapshot |
+| `.parent.name` / `.parent.role` filters | search-messages, thread-read | ❌ DROPPED from v0.1.0 protocols — agent-browser flat snapshot does not expose `.parent`. Filters loosened to accept all matching role elements. Precision trade-off accepted until live-snapshot verification reveals a workable container hint. |
 
 Refresh playbook for these: run `ABX_SERVICE=slack abx snapshot -i --json > /tmp/slack-snap.json`, inspect the actual schema, update the jq filter, and remove the corresponding row from this table.
