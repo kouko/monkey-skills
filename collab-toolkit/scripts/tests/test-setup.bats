@@ -1,0 +1,198 @@
+#!/usr/bin/env bats
+
+setup() {
+  export TEST_TMPDIR="$(mktemp -d)"
+  export HOME="$TEST_TMPDIR"
+  export XDG_CONFIG_HOME="$TEST_TMPDIR/.config"
+  export XDG_DATA_HOME="$TEST_TMPDIR/.local/share"
+  export ORIG_PATH="$PATH"
+  export PATH="$TEST_TMPDIR/bin:$PATH"
+  mkdir -p "$TEST_TMPDIR/bin"
+
+  # Source setup.sh helpers — we test functions in isolation
+  source "${BATS_TEST_DIRNAME}/../setup.sh" --source-only 2>/dev/null || true
+}
+
+teardown() {
+  rm -rf "$TEST_TMPDIR"
+}
+
+# Helper to stub a command on PATH
+stub_command() {
+  local name="$1"
+  local script="$2"
+  cat > "$TEST_TMPDIR/bin/$name" <<EOF
+#!/usr/bin/env bash
+$script
+EOF
+  chmod +x "$TEST_TMPDIR/bin/$name"
+}
+
+@test "xdg_config_home defaults to \$HOME/.config" {
+  run xdg_config_home
+  [ "$output" = "$HOME/.config" ]
+}
+
+@test "xdg_config_home respects XDG_CONFIG_HOME env" {
+  XDG_CONFIG_HOME="/custom/path" run xdg_config_home
+  [ "$output" = "/custom/path" ]
+}
+
+@test "xdg_data_home defaults to \$HOME/.local/share" {
+  run xdg_data_home
+  [ "$output" = "$HOME/.local/share" ]
+}
+
+@test "xdg_bin_home is \$HOME/.local/bin" {
+  run xdg_bin_home
+  [ "$output" = "$HOME/.local/bin" ]
+}
+
+@test "install_agent_browser is no-op when already installed" {
+  stub_command agent-browser 'exit 0'
+  run install_agent_browser
+  [ "$status" -eq 0 ]
+}
+
+@test "install_agent_browser on macOS with brew uses brew" {
+  OSTYPE="darwin23"
+  stub_command brew 'echo "brew $*"; exit 0'
+  PATH="$TEST_TMPDIR/bin:$ORIG_PATH"   # don't yet have agent-browser
+  rm -f "$TEST_TMPDIR/bin/agent-browser"
+
+  run install_agent_browser
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"brew install agent-browser"* ]]
+}
+
+@test "install_agent_browser on Linux uses npm" {
+  OSTYPE="linux-gnu"
+  stub_command npm 'echo "npm $*"; exit 0'
+  rm -f "$TEST_TMPDIR/bin/agent-browser"
+
+  run install_agent_browser
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"npm i -g agent-browser"* ]]
+}
+
+@test "install_agent_browser brew failure falls back to npm" {
+  OSTYPE="darwin23"
+  stub_command brew 'echo "brew failure" >&2; exit 1'
+  stub_command npm 'echo "npm $*"; exit 0'
+  rm -f "$TEST_TMPDIR/bin/agent-browser"
+
+  run install_agent_browser
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"npm i -g agent-browser"* ]]
+}
+
+@test "install_abx copies wrapper to \$HOME/.local/bin" {
+  mkdir -p "$TEST_TMPDIR/scripts"
+  cat > "$TEST_TMPDIR/scripts/abx" <<'EOF'
+#!/usr/bin/env bash
+echo "abx-stub"
+EOF
+
+  # Simulate scripts/setup.sh dirname resolution
+  cd "$TEST_TMPDIR/scripts"
+
+  run install_abx
+  [ "$status" -eq 0 ]
+  [ -x "$HOME/.local/bin/abx" ]
+}
+
+@test "install_abx warns if \$HOME/.local/bin not on PATH" {
+  mkdir -p "$TEST_TMPDIR/scripts"
+  echo "#!/bin/sh" > "$TEST_TMPDIR/scripts/abx"
+  cd "$TEST_TMPDIR/scripts"
+
+  PATH="/usr/bin:/bin" run install_abx
+  [[ "$output" == *"not on PATH"* ]]
+  [[ "$output" == *'export PATH="$HOME/.local/bin:$PATH"'* ]]
+}
+
+@test "write_config_shared creates valid JSON" {
+  run write_config_shared "Default"
+  [ "$status" -eq 0 ]
+  [ -f "$XDG_CONFIG_HOME/collab-toolkit/config.json" ]
+
+  mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$mode" = "shared" ]
+  profile=$(jq -r .chrome_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$profile" = "Default" ]
+}
+
+@test "write_config_shared accepts custom profile name" {
+  run write_config_shared "Work"
+  [ "$status" -eq 0 ]
+  profile=$(jq -r .chrome_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$profile" = "Work" ]
+}
+
+@test "write_config_dedicated creates valid JSON with dedicated mode" {
+  run write_config_dedicated
+  [ "$status" -eq 0 ]
+  mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$mode" = "dedicated" ]
+}
+
+@test "setup_dedicated creates 5 profile dirs" {
+  # Stub agent-browser + abx so login phase is no-op
+  stub_command agent-browser 'echo "Asana - Inbox"'
+  echo '#!/bin/sh' > "$TEST_TMPDIR/bin/abx"; chmod +x "$TEST_TMPDIR/bin/abx"
+
+  # Skip interactive login by overriding setup_one_dedicated
+  setup_one_dedicated() { :; }
+
+  run setup_dedicated
+  for service in asana slack notion gcal gmail; do
+    [ -d "$XDG_DATA_HOME/collab-toolkit/profiles/$service" ]
+  done
+}
+
+@test "verify_one detects login wall via title" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "Sign in - Asana"; else echo ok; fi'
+  # abx must exist on PATH so verify_one can call it
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser --profile Default "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one asana
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"Sign in - Asana"* ]]
+}
+
+@test "verify_one reports ok when title is not a login page" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "My Tasks - Asana"; else echo ok; fi'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser --profile Default "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one asana
+  [[ "$output" == *"✓ asana ready"* ]]
+}
+
+@test "service_url returns expected URL per service" {
+  run service_url asana
+  [ "$output" = "https://app.asana.com/0/inbox" ]
+  run service_url slack
+  [ "$output" = "https://app.slack.com" ]
+  run service_url notion
+  [ "$output" = "https://www.notion.so" ]
+  run service_url gcal
+  [ "$output" = "https://calendar.google.com" ]
+  run service_url gmail
+  [ "$output" = "https://mail.google.com" ]
+}

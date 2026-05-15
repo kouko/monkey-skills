@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# abx — agent-browser eXtended wrapper.
+# Resolves profile arg from ~/.config/collab-toolkit/config.json,
+# then `exec agent-browser` with --profile prepended.
+
+set -euo pipefail
+
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/collab-toolkit/config.json"
+SERVICE="${ABX_SERVICE:-}"
+
+if [ ! -f "$CONFIG" ]; then
+  echo "ERR: $CONFIG not found. Run /collab-setup first." >&2
+  exit 1
+fi
+
+MODE=$(jq -r .mode "$CONFIG")
+
+if [ "$MODE" = "dedicated" ] && [ -n "$SERVICE" ]; then
+  PROFILES_ROOT=$(jq -r .profiles_root "$CONFIG")
+  # Tilde expansion
+  PROFILES_ROOT="${PROFILES_ROOT/#\~/$HOME}"
+  exec agent-browser --profile "${PROFILES_ROOT}/${SERVICE}" "$@"
+else
+  PROFILE_NAME=$(jq -r .chrome_profile "$CONFIG")
+  exec agent-browser --profile "$PROFILE_NAME" "$@"
+fi
