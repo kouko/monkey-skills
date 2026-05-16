@@ -253,6 +253,35 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | Marketplace description sync | Edit to plugin.json / marketplace.json | `scripts/check-marketplace-description-sync.py` |
 | SSOT drift | Edit to skills/*/standards/ etc. | `code-toolkit/scripts/verify-drift.py` |
 | Skill structure | New skill or subfolder | `scripts/check-skill-structure.py` |
+| Plugin manifest validity | Any change to a skill's frontmatter / plugin.json | `claude plugin validate code-toolkit` |
+
+### Per-Phase release ritual (hybrid testing cadence)
+
+決策（2026-05-16, kouko）：行為層完整測試 defer 到 Phase 3.5 / 4，但每個
+Phase 結束**必跑** 3 分鐘最小儀式，避免在錯的 floor 上疊高樓。理由：
+toolkit 的價值 = 規律措辭能不能讓 agent 真的照做；靜態 gate 看不到
+行為層，越晚發現措辭問題雪球越貴。
+
+每個 Phase 結束時跑：
+
+```bash
+# 1. 靜態 validator (30 秒) — 必跑
+claude plugin validate code-toolkit
+
+# 2. 重裝到 local (30 秒) — 必跑
+claude plugin uninstall code-toolkit
+claude plugin install code-toolkit@monkey-skills --scope local
+
+# 3. 1 個壓測 prompt (~90 秒) — 必跑；新 skill 的核心措辭至少壓一次
+#    從 code-toolkit/tests/{skill-triggering,tdd-iron-law-pressure}/prompts/
+#    挑一個對應新 skill 的最具殺傷力的 prompt，在 fresh session 跑
+```
+
+任一步失敗 = 該 Phase 不算完，修到 3 步都過再進下個 Phase。
+
+完整系統性測試（50+ prompt eval suite / 跨 skill 端到端 / Codex 整合 /
+≥10 dogfood session / 與 obra/superpowers 並存）集中到 Phase 3.5
+（polish）+ Phase 4（GA hardening）。
 
 ### Documentation cadence
 
@@ -283,6 +312,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | Q6 | 2026-05-15 | skill naming Superpowers 風格 | 0 | Medium（rename 要改所有引用） |
 | Q7 | 2026-05-15 | TDD 措辭 = Superpowers measure + Beck 2002 grounding | 0 | Low |
 | Q8 | 2026-05-15 | subagent = 3 角色（implementer / spec-reviewer / code-quality-reviewer） | 0 | Medium（schema 變動要改 prompts） |
+| TC-1 | 2026-05-16 | Hybrid testing cadence — 每 Phase 3 分鐘儀式（validate + reinstall + 1 壓測 prompt）；完整系統測 defer 到 Phase 3.5 / 4 | 1 | Low（policy 決定；可隨時 escalate 到每 Phase 都跑完整 eval suite） |
 | P1-A | tbd | using-code-toolkit ≤2000 tokens | 1 | Low |
 | P1-B | tbd | TDD Beck 2002 Preface 直接引文 + ISBN | 1 | Low |
 | P1-C | tbd | subagent prompt = `.md` | 1 | Low |
