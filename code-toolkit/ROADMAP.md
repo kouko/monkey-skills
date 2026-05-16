@@ -179,18 +179,23 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 ### 交付物
 
-| 模組 | 檔案 |
-|---|---|
-| Codex plugin | `.codex-plugin/plugin.json` v0.2.5（含 `interface` block，mirror Superpowers） |
-| Tool mapping | `skills/using-code-toolkit/references/codex-tools.md`（完整） |
-| Hook adapt | `hooks/session-start` JSON 輸出加 Codex CLI 期望的 `additional_context` top-level key |
-| Tests | `tests/codex-cli/test-skill-loading.sh` + `tests/codex-cli/test-hook-injection.sh` |
+**Note 2026-05-16**: Phase 2.5 重新編號至 **v0.4.0**（原規劃 v0.2.5，但 Phase 3 先 ship 為 v0.3.0；Phase 2.5 內容自然落在 v0.4.0 minor bump — 新 harness 是 minor feature）。
+
+| 模組 | 檔案 | v0.4.0 status |
+|---|---|---|
+| Codex plugin | `.codex-plugin/plugin.json` v0.4.0-draft（含 `interface` block，mirror Superpowers） | ✅ build done |
+| Tool mapping | `skills/using-code-toolkit/references/codex-tools.md`（完整 + ⚠️ TBD verify markers） | ✅ build done |
+| Hook adapt | `hooks/session-start` 已從 v0.1.0 emit `additional_context` top-level key（已驗證 offline，6717 chars） | ✅ done since v0.1.0 |
+| Tests | `tests/codex-cli/test-skill-loading.sh` + `test-hook-injection.sh` + `README.md` | ✅ build done |
 
 ### Acceptance test
 
-- Codex CLI `plugin install` 跑得通
-- Codex session 啟動 → using-code-toolkit 自動載入
-- 在 Codex 跑同樣的 TDD 鐵律壓測 × 5 → 5/5 拒絕
+- ✅ build 完成（v0.4.0-draft 落地）
+- ⏳ Codex CLI `plugin install` 跑得通（待使用者跑 verification ritual）
+- ⏳ Codex session 啟動 → using-code-toolkit 自動載入（待 ritual）
+- ⏳ 在 Codex 跑同樣的 TDD 鐵律壓測 × 5 → 5/5 拒絕（待 ritual）
+
+**Phase 2.5 BUILD vs VERIFICATION 分割**：build artifacts 落地（manifest / docs / scripts）= v0.4.0-draft；verification ritual 跑 PASS = drop -draft → v0.4.0。同 Phase 1 / 2 / 3 的 -draft 慣例。
 
 ---
 

@@ -5,6 +5,84 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Phase 2.5 BUILD — Codex CLI variant manifest + docs + integration
+scripts ship. Verification ritual deferred to user-side Codex CLI
+session (Codex CLI installed at `/opt/homebrew/bin/codex` per smoke
+test, but plugin not yet installed in Codex CLI scope).
+
+Per ROADMAP §Phase 2.5 reframe (2026-05-16): Phase 2.5 originally
+planned as v0.2.5 between Phase 2 and Phase 3. Phase 3 shipped first
+(v0.3.0); Phase 2.5 contents naturally land at **v0.4.0** (minor bump
+because adding a whole new harness is a minor feature, backward-
+compatible — Claude Code users unaffected by Codex additions).
+
+### Added — Codex CLI build
+
+- `.codex-plugin/plugin.json` v0.4.0-draft — description updated to
+  reflect v0.3.0 skill set (10 skills total; full Superpowers parity).
+  Removed "Phase 1 only ships Claude Code; this Codex manifest is a
+  v0.2.5 ship target placeholder" placeholder text. `interface` block
+  fields (displayName / shortDescription / longDescription / develop-
+  erName / category / capabilities / defaultPrompt / websiteURL /
+  brandColor) preserved from v0.1.0-draft skeleton (mirror Superpowers
+  v5.1.0 schema).
+- `skills/using-code-toolkit/references/codex-tools.md` — replaced
+  skeleton with documented best-effort Codex CLI tool surface
+  reference. Skill invocation `/skill-name`; plugin-scoped form
+  `/code-toolkit:skill-name` when name collides. Hook output's
+  already-emitted `additional_context` top-level JSON key (the
+  existing portable 3-key shape covers Claude Code + Codex CLI +
+  legacy). Subagent dispatch, file ops, shell, CLAUDE.md ≡ AGENTS.md
+  mapping documented as best-effort with **⚠️ TBD verify** markers on
+  items pending Codex CLI live verification.
+- `tests/codex-cli/test-skill-loading.sh` — bash script verifying
+  Codex CLI install + all 10 expected skills discoverable via
+  `codex plugin details code-toolkit`. Gracefully skips with install
+  instructions when Codex CLI absent.
+- `tests/codex-cli/test-hook-injection.sh` — bash script: offline
+  check (`additional_context` key in hook JSON output, ≥100 chars,
+  starts with `<EXTREMELY_IMPORTANT>` banner) + live check (fresh
+  Codex CLI session surfaces router rule content).
+- `tests/codex-cli/README.md` — Phase 2.5 verification ritual
+  procedure: install path + marketplace + plugin install + script
+  invocations + TDD-iron-law pressure prompt + acceptance criteria.
+
+### Updated — manifests bumped to v0.4.0-draft (both)
+
+- `.claude-plugin/plugin.json`: 0.3.0 → 0.4.0-draft (lockstep with
+  Codex; no new Claude Code features, just version sync).
+- `.codex-plugin/plugin.json`: 0.3.0 → 0.4.0-draft.
+- Marketplace.json description sync gate unaffected (description
+  string unchanged; only version field bump).
+
+### Codex CLI presence detected on this machine
+
+Phase 2.5 build smoke test (`bash tests/codex-cli/test-skill-loading
+.sh`) discovered Codex CLI is installed at `/opt/homebrew/bin/codex`
+— so the verification ritual can run as soon as the plugin is
+installed in Codex CLI scope (`codex plugin marketplace add . --
+scope local` then `codex plugin install code-toolkit@monkey-skills
+--scope local`). See `tests/codex-cli/README.md` §"Verification
+ritual".
+
+### Phase 2.5 BUILD vs VERIFICATION split
+
+Mirrors Phase 1 / 2 / 3 -draft convention:
+- ✅ **Build** complete in this commit → v0.4.0-draft tag
+- ⏳ **Verification** ritual = user runs `test-skill-loading.sh` +
+  `test-hook-injection.sh` + 1 TDD-iron-law pressure prompt in fresh
+  Codex CLI session
+- After verification PASS → chore commit drops -draft → v0.4.0
+  official ship
+
+### Phase 1.5 backlog impact
+
+P15-5 (≥5 dogfood notes) is still pending — Phase 2.5 doesn't
+unblock it. But once Codex verification PASSes, dogfood can happen
+on EITHER harness (broader test surface), which speeds P15-5.
+
 ## [0.3.0] — 2026-05-16
 
 Phase 3 ship — code-review cluster (4 new skills) closes the loop from
