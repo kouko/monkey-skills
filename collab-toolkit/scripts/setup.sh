@@ -95,9 +95,39 @@ write_config_shared() {
     > "$config"
 }
 
+list_profiles_with_email() {
+  # Reads Chrome's Local State JSON and emits one line per profile:
+  #   "  <dir_name>: <user_name|(no Google account)> — <display_name|dir_name>"
+  # Tries macOS / Linux Chrome / Linux Chromium paths. Returns non-zero if none found.
+  local local_state=""
+  for candidate in \
+    "$HOME/Library/Application Support/Google/Chrome/Local State" \
+    "$HOME/.config/google-chrome/Local State" \
+    "$HOME/.config/chromium/Local State"
+  do
+    if [ -f "$candidate" ]; then
+      local_state="$candidate"
+      break
+    fi
+  done
+  [ -z "$local_state" ] && return 1
+  jq -r '
+    .profile.info_cache
+    | to_entries[]
+    | "  \(.key): \(.value.user_name // "(no Google account)") — \(.value.name // .key)"
+  ' "$local_state" 2>/dev/null
+}
+
 setup_shared() {
   echo "Available Chrome profiles:"
   agent-browser profiles || true
+  if list_profiles_with_email > /tmp/collab-profile-emails.$$ 2>/dev/null \
+     && [ -s /tmp/collab-profile-emails.$$ ]; then
+    echo ""
+    echo "Google account info per profile:"
+    cat /tmp/collab-profile-emails.$$
+  fi
+  rm -f /tmp/collab-profile-emails.$$
   local name
   read -rp "Profile name to use [Default]: " name
   name="${name:-Default}"
