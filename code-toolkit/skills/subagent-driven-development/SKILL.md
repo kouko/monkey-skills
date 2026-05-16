@@ -47,7 +47,7 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 
 For each atomic task in the plan:
 
-1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/agents/_baseline.md`](../../agents/_baseline.md)). Wait for return.
+1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)). Wait for return.
 2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → surface the question to the user, do not dispatch reviewers. If `status: BLOCKED` → apply the unblock step or surface to user.
 3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls). Wait for both.
 4. **Resolve verdicts** per the rule below.
@@ -91,7 +91,7 @@ The orchestrator never silently dismisses a `BLOCKED` — even if the unblock st
 
 Three role-defined subagents; the orchestrator substitutes `{…}` placeholders when dispatching:
 
-- **implementer** — worker; produces code + tests + status. Promoted to plugin-level at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md) (v0.5.2 / P15-12). Dispatch via `Agent({subagent_type: "code-toolkit:implementer"})`. Carries the 12-rule engineering baseline ([`code-toolkit/agents/_baseline.md`](../../agents/_baseline.md)) baked into its system prompt.
+- **implementer** — worker; produces code + tests + status. Promoted to plugin-level at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md) (v0.5.2 / P15-12). Dispatch via `Agent({subagent_type: "code-toolkit:implementer"})`. Carries the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into its system prompt.
 - [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list. (Promotion to plugin-level scheduled for v0.6.0 / Phase 2 of P15-12.)
 - [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — evaluator; produces three-valued verdict + six-dimension scores + flags. (Promotion to plugin-level scheduled for v0.6.0.)
 
@@ -125,7 +125,7 @@ See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for
 ## See also
 
 - [`code-toolkit/agents/implementer.md`](../../agents/implementer.md) — plugin-level implementer (v0.5.2+).
-- [`code-toolkit/agents/_baseline.md`](../../agents/_baseline.md) — SSOT for the 12-rule engineering baseline embedded in every plugin-level agent.
+- [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md) — SSOT for the 12-rule engineering baseline embedded in every plugin-level agent.
 - [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) — Phase 2 promote target.
 - [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — Phase 2 promote target.
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md)

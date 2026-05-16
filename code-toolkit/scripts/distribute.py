@@ -148,16 +148,16 @@ def distribute(route: dict[str, list[str]] | None = None) -> int:
 #
 # Plugin-level agent files in ``code-toolkit/agents/`` carry the 12-rule
 # engineering baseline as an embedded block between BEGIN/END markers. The
-# canonical text lives once in ``code-toolkit/agents/_baseline.md``;
+# canonical text lives once in ``code-toolkit/scripts/_baseline.md``;
 # ``distribute_baselines`` rewrites the block in every routed agent to match.
 # This is the SSOT-and-functional-copy variant for in-file SECTIONS rather
 # than whole files.
 
-AGENT_BASELINE_SSOT_REL = "agents/_baseline.md"
+AGENT_BASELINE_SSOT_REL = "scripts/_baseline.md"
 AGENT_BASELINE_BEGIN = (
     "<!-- BEGIN baseline-v1 — managed by "
     "code-toolkit/scripts/distribute.py from "
-    "code-toolkit/agents/_baseline.md — do not edit in place -->"
+    "code-toolkit/scripts/_baseline.md — do not edit in place -->"
 )
 AGENT_BASELINE_END = "<!-- END baseline-v1 -->"
 

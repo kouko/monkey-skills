@@ -89,5 +89,5 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 - `references/claude-code-tools.md` — Claude Code canonical tool names.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target).
-- `references/engineering-baselines.md` — 12-rule engineering baseline carried by every code-toolkit plugin-level agent (SSOT in `../../agents/_baseline.md`; v0.5.2 / P15-12).
+- `references/engineering-baselines.md` — 12-rule engineering baseline carried by every code-toolkit plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.

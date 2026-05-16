@@ -98,7 +98,7 @@ def main() -> int:
 
     # ─── Agent baseline drift check (P15-12) ─────────────────────────
     # Each routed agent file must contain a BEGIN/END baseline block whose
-    # body matches code-toolkit/agents/_baseline.md verbatim. Role-contract
+    # body matches code-toolkit/scripts/_baseline.md verbatim. Role-contract
     # content outside the block is unique per agent and not compared.
     baseline_checked = 0
     for agent_rel in AGENT_BASELINE_TARGETS:
@@ -119,7 +119,7 @@ def main() -> int:
         failures.append(
             f"BASELINE-DRIFT     code-toolkit/{agent_rel}\n"
             f"    expected: role-contract + SSOT baseline block from "
-            f"code-toolkit/agents/_baseline.md\n"
+            f"code-toolkit/scripts/_baseline.md\n"
             f"    md5(expected) = {_md5(expected_bytes)}\n"
             f"    md5(on-disk)  = {_md5(actual_bytes)}"
         )
@@ -140,7 +140,7 @@ def main() -> int:
         f"OK: all {checked} functional copies match expected "
         f"(canonical + SSOT header) "
         f"and all {baseline_checked} agent baseline block(s) "
-        f"match SSOT (code-toolkit/agents/_baseline.md)."
+        f"match SSOT (code-toolkit/scripts/_baseline.md)."
     )
     return 0
 

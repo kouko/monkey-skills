@@ -3,7 +3,7 @@
 This document is the human-readable catalog of the 12-rule engineering
 baseline that code-toolkit's plugin-level agents carry in their system
 prompts. It is **NOT the SSOT for agent injection** — that is
-`code-toolkit/agents/_baseline.md`, kept in sync by
+`code-toolkit/scripts/_baseline.md`, kept in sync by
 `code-toolkit/scripts/distribute.py`.
 
 Read this file when:
@@ -18,7 +18,7 @@ Read this file when:
 
 ## The 12 rules
 
-The full text lives in [`code-toolkit/agents/_baseline.md`](../../../agents/_baseline.md).
+The full text lives in [`code-toolkit/scripts/_baseline.md`](../../../scripts/_baseline.md).
 Below: one-line summary + cross-reference table.
 
 | # | Rule | Where it lives in the workflow |
@@ -104,7 +104,7 @@ the toolkit owns.
 
 ## See also
 
-- [`code-toolkit/agents/_baseline.md`](../../../agents/_baseline.md)
+- [`code-toolkit/scripts/_baseline.md`](../../../scripts/_baseline.md)
   — the SSOT.
 - [`code-toolkit/agents/implementer.md`](../../../agents/implementer.md)
   — the v0.5.2 first plugin-level agent carrying the baseline.

@@ -96,5 +96,12 @@ plugin-level agent file embeds it verbatim between BEGIN/END baseline
 HTML-comment markers. Drift is enforced by
 `code-toolkit/scripts/verify-drift.py`; regenerate the injected blocks
 via `python3 code-toolkit/scripts/distribute.py`. Do not edit the
-injected block in any agent file — edit `agents/_baseline.md` and
-re-run distribute instead.
+injected block in any agent file — edit
+`code-toolkit/scripts/_baseline.md` (this file) and re-run distribute.
+
+This file lives in `scripts/` rather than `agents/` because Claude
+Code's plugin validator treats every `.md` under `agents/` as a
+dispatchable agent definition (requiring YAML frontmatter). This
+file is data the distribute script reads, not a dispatchable agent.
+Co-locating with the script that owns it makes the relationship
+explicit and avoids the validator warning.

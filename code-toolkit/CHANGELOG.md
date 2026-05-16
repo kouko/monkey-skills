@@ -121,7 +121,7 @@ introduction, not 3 months later in production.
 ### Files changed
 
 **Created**:
-- `code-toolkit/agents/_baseline.md` — 12-rule SSOT (canonical text)
+- `code-toolkit/scripts/_baseline.md` — 12-rule SSOT (canonical text)
 - `code-toolkit/agents/implementer.md` — plugin-level agent with
   role contract + injected baseline block
 - `code-toolkit/skills/using-code-toolkit/references/engineering-baselines.md`
@@ -140,7 +140,7 @@ introduction, not 3 months later in production.
 - `code-toolkit/skills/subagent-driven-development/SKILL.md` —
   §Process Step 1 dispatches via plugin-level agent;
   §Prompt templates documents the v0.5.2 implementer promotion;
-  §See also points at `agents/implementer.md` + `agents/_baseline.md`
+  §See also points at `agents/implementer.md` + `scripts/_baseline.md`
 - `code-toolkit/skills/using-code-toolkit/SKILL.md` — §Reference
   gains pointer to `engineering-baselines.md`
 - `ROADMAP.md` — P15-12 Phase 1 row + Phase 2 deferred row;

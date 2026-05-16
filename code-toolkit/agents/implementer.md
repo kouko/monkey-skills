@@ -37,7 +37,7 @@ description: 'Plugin-level implementer agent for code-toolkit''s SDD workflow. D
 7. Be terse. The orchestrator forwards your output to two reviewers in
    the next round; long preamble wastes their context budget.
 
-<!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/agents/_baseline.md — do not edit in place -->
+<!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
 
 These rules apply to every dispatch of any `code-toolkit` plugin-level
@@ -136,8 +136,15 @@ plugin-level agent file embeds it verbatim between BEGIN/END baseline
 HTML-comment markers. Drift is enforced by
 `code-toolkit/scripts/verify-drift.py`; regenerate the injected blocks
 via `python3 code-toolkit/scripts/distribute.py`. Do not edit the
-injected block in any agent file — edit `agents/_baseline.md` and
-re-run distribute instead.
+injected block in any agent file — edit
+`code-toolkit/scripts/_baseline.md` (this file) and re-run distribute.
+
+This file lives in `scripts/` rather than `agents/` because Claude
+Code's plugin validator treats every `.md` under `agents/` as a
+dispatchable agent definition (requiring YAML frontmatter). This
+file is data the distribute script reads, not a dispatchable agent.
+Co-locating with the script that owns it makes the relationship
+explicit and avoids the validator warning.
 <!-- END baseline-v1 -->
 
 ## Input contract — what the orchestrator hands you
@@ -229,6 +236,6 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
 - `code-toolkit/skills/subagent-driven-development/agents/code-quality-reviewer-prompt.md`
   — what code-quality-reviewer will check after you return (Phase 2
   promote target).
-- `code-toolkit/agents/_baseline.md` — SSOT for the engineering
+- `code-toolkit/scripts/_baseline.md` — SSOT for the engineering
   baselines (do not edit the BEGIN/END block above directly;
   regenerate via `scripts/distribute.py`).
