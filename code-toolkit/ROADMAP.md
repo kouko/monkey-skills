@@ -120,18 +120,28 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 ---
 
-## Phase 1.5 — Soft-mode + dogfood（v0.1.5，2 工作天）
+## Phase 1.5 — Soft-mode + dogfood（v0.2.x patches，rolling）
 
-**Scope**：dogfood 修補。
+**Scope**：dogfood-driven 微調。Phase 0 規劃時 Phase 1.5 排在 Phase 1 與 Phase 2
+之間，假設 v0.1.5 是「Phase 1 寫完後、Phase 2 開工前」的小修。實際開發 cadence
+跳過 v0.1.5 直接做 Phase 2 → v0.2.0；Phase 1.5 backlog 改成「v0.2.x patch」rolling
+模式 — 每次 ritual 觸發的 dogfood 訊號就累積進來，以 v0.2.1 / 0.2.2 / ... 滾動 ship。
 
-**交付物**：
-- `hooks/session-start` 加 `CODE_TOOLKIT_MODE=off` 退場條件
-- `research/dogfood-2026-05-XX.md` × 5（5 個真實使用 session 紀錄）
-- 依 dogfood 結果調整 `tdd-iron-law` Red Flags 表
+**累積 backlog（更新時間 2026-05-16）**：
 
-**Acceptance**：
-- 5 個 dogfood session 中至少 4 個無 stall
-- `CODE_TOOLKIT_MODE=off` 真的關掉 hook（手動驗證）
+| # | Item | 來源 | 狀態 |
+|---|---|---|---|
+| P15-1 | `hooks/session-start` 加 `CODE_TOOLKIT_MODE=off` 退場條件 | Phase 0 規劃 | ✅ 已 ship（commit 9cba15c，Phase 1 一併做了） |
+| P15-2 | `tdd-iron-law` SKILL.md — Feathers (2004) ISBN 978-0131177055 distinction | Phase 1 ritual feedback（`i-already-wrote-it.txt` 沒區分 legacy 與 violation） | ✅ 已 ship（v0.2.1） |
+| P15-3 | `systematic-debugging` SKILL.md — description tuning for production-bug auto-fire | Phase 2 ritual feedback（`silence-with-try-except.txt` 沒 auto-load specialist） | ✅ 已 ship（v0.2.1） |
+| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | ⏳ 待真實 dogfood — 不知道哪個 skill 太強 / 何種放鬆規則之前無法設計 |
+| P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | ⏳ 待真實使用 session（ritual 不算 — ritual 是 synthetic prompt，dogfood 是 natural flow） |
+
+**Acceptance（rolling）**：
+- ✅ P15-1（CODE_TOOLKIT_MODE=off 退場機制可運作）
+- ✅ P15-2（Feathers distinction 在 SKILL.md §Legitimate legacy-code backfill）
+- ✅ P15-3（systematic-debugging description 含 production-bug 詞彙 11/15 keyword hits）
+- ⏳ P15-4 / P15-5（等真實 dogfood data）
 
 ---
 
@@ -313,6 +323,7 @@ claude plugin install code-toolkit@monkey-skills --scope local
 | Q7 | 2026-05-15 | TDD 措辭 = Superpowers measure + Beck 2002 grounding | 0 | Low |
 | Q8 | 2026-05-15 | subagent = 3 角色（implementer / spec-reviewer / code-quality-reviewer） | 0 | Medium（schema 變動要改 prompts） |
 | TC-1 | 2026-05-16 | Hybrid testing cadence — 每 Phase 3 分鐘儀式（validate + reinstall + 1 壓測 prompt）；完整系統測 defer 到 Phase 3.5 / 4 | 1 | Low（policy 決定；可隨時 escalate 到每 Phase 都跑完整 eval suite） |
+| P15-Mode | 2026-05-16 | Phase 1.5 從 v0.1.5 單版改為 v0.2.x rolling patches — Phase 1 / Phase 2 完成後才開始累積 backlog；每次 ritual 觸發的 dogfood 訊號 ship 為 v0.2.1 / 0.2.2 / ... | 1.5 | Low（純語義 — 釐清 Phase 1.5 不是固定版本而是 rolling 概念） |
 | P1-A | tbd | using-code-toolkit ≤2000 tokens | 1 | Low |
 | P1-B | tbd | TDD Beck 2002 Preface 直接引文 + ISBN | 1 | Low |
 | P1-C | tbd | subagent prompt = `.md` | 1 | Low |

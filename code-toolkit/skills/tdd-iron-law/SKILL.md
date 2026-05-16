@@ -1,6 +1,6 @@
 ---
 name: tdd-iron-law
-description: 'Use when implementing any feature, bug fix, refactor, or migration — before writing implementation code. Enforces "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" as a non-negotiable iron law, grounded in Kent Beck (2002) Test-Driven Development: By Example (Addison-Wesley, ISBN 978-0321146533) Preface + Ch.1 + Part II and Robert C. Martin (2008) Clean Code Ch.9 Three Laws of TDD. Exception path (throwaway / generated / pure config) is enumerated in §When NOT to Use. TDD・テスト駆動開発・鉄則。TDD 鐵律・先寫測試。'
+description: 'Use when implementing any feature, bug fix, refactor, or migration — before writing implementation code. Enforces "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" as a non-negotiable iron law, grounded in Kent Beck (2002) Test-Driven Development: By Example (Addison-Wesley, ISBN 978-0321146533) Preface + Ch.1 + Part II and Robert C. Martin (2008) Clean Code Ch.9 Three Laws of TDD. Exception path (throwaway / generated / pure config) is enumerated in §When NOT to Use. Distinguishes Iron Law violation (code you just wrote without tests) from legitimate legacy-code backfill (Feathers 2004 Working Effectively with Legacy Code, ISBN 978-0131177055, Characterization Tests Ch.13) — see §Legitimate legacy-code backfill. TDD・テスト駆動開発・鉄則・レガシーコード区別。TDD 鐵律・先寫測試・區分 legacy code。'
 version: 0.1.0-draft
 ---
 
@@ -86,11 +86,34 @@ When uncertain, ask: *"Would I be comfortable if this code shipped to production
 | "I'll write the code first, tests second." | Tests-after rationalization. The feedback loop is lost. | Refuse. Cite Beck (2002) Preface: *"Write the test you wish you had."* |
 | "Just this once — it's a small change." | Iron Law violation. Small changes accumulate. | Refuse. Write the failing test. |
 | "Tests are slow / flaky / annoying." | The pain is the message. (Beck 2002 Preface: *"If it's hard to test, it's probably hard to use."*) | Refactor production code until tests are fast. Do not skip. |
-| "I already wrote the code. Now what?" | Code without a preceding failing test = Iron Law violation. | **Delete the code. Write the test. Start over.** |
+| "I already wrote the code. Now what?" | Code without a preceding failing test = Iron Law violation. **Distinct** from legitimate legacy-code backfill (Feathers 2004) — see §Legitimate legacy-code backfill below; time elapsed alone does not convert violation into legacy. | **Delete the code. Write the test. Start over.** |
 | "The test passed on first run — done!" | False green. The test was not actually testing the change. | Force RED first: comment out the production code, confirm the test fails, restore the code, confirm it passes. |
 | "Subagents add too much overhead." | Context-window argument, not quality argument. | If the task warrants SDD (see `subagent-driven-development`), it warrants TDD inside each subagent. |
 | 「ちょっと試すだけ / 我先快速試一下」 | Same rationalization, localized. | Same refusal. テストを先に書く。先寫測試。 |
 | "User said skip TDD." | Valid only if user is explicit AND the work matches §When NOT to Use. | Quote §When NOT to Use back. Ask for explicit confirmation. |
+
+## Legitimate legacy-code backfill (Feathers 2004) — NOT the same as Iron Law violation
+
+Inherited code without tests — written by a previous developer / team / contractor — is **legacy code** in the technical sense of:
+
+> **Michael Feathers (2004) *Working Effectively with Legacy Code*, Prentice Hall (Robert C. Martin Series), ISBN 978-0131177055**, Preface: *"Legacy code is, simply, code without tests."*
+
+This is a real practice with its own discipline: **Characterization Tests** (Feathers 2004 Ch.13). You write tests that pin down what the code *currently does* — including its bugs — giving you the safety net to refactor toward what it *should do*. New behavior added on top of legacy code still falls under the Iron Law.
+
+### The line — what qualifies as Feathers legacy vs Iron Law violation
+
+| Case | Category |
+|---|---|
+| You inherit 50,000 lines of untested COBOL from a previous team and need to add a new feature. | ✅ Feathers legacy. Characterization tests around the touched modules, then TDD for the new behavior. |
+| Last quarter you wrote a `payment_processor.py` without tests, before this skill was installed; now you need to extend it. | ✅ Feathers legacy. The test-first opportunity was not available to you under the current discipline; backfill characterization tests, then TDD for new behavior. |
+| You wrote `payment_processor.py` **in the last session** without tests, and now you want me to add tests to it. | ❌ **Iron Law violation.** Time elapsed alone (one hour, one day) does not convert violation into legacy. The disqualifier is *"did you have the test-first opportunity AND skip it?"* — if yes, it's a violation regardless of age. Apply remediation: delete + start over. |
+| The bug fix you're working on touches a function that was always tested but had a gap; you discover the gap. | ✅ Bug fix under TDD. Write the failing test that exposes the gap, then fix. Not "legacy backfill" — the rest of the function is tested; just this case wasn't. |
+
+The decisive test: **was the test-first opportunity available to you when this code was written?** Inherited code = no, test-first was someone else's opportunity. Code you just wrote = yes, you had the opportunity and skipped it. Different responses for different cases.
+
+### Don't conflate "old" with "legacy"
+
+Code that is 5 years old AND was test-first-developed when written = not legacy in Feathers's sense. Code that is 5 minutes old AND was written without test-first = Iron Law violation in the Iron Law's sense. The age of the file is a misleading proxy — the discipline of *how it was written* is the actual axis.
 
 ## False-green diagnostic
 

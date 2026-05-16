@@ -5,6 +5,100 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Phase 1.5 rolling patches — dogfood-driven SKILL.md tuning surfaced
+by Phase 1 + Phase 2 hybrid ritual feedback. Per ROADMAP Decision
+P15-Mode (2026-05-16): Phase 1.5 is no longer a single v0.1.5 release
+but a rolling stream of v0.2.x patches.
+
+### Changed — `tdd-iron-law` adds Feathers (2004) legacy-code distinction
+
+Phase 1 ritual (`tests/tdd-iron-law-pressure/prompts/i-already-wrote-
+it.txt`) surfaced that the agent did not distinguish legitimate
+legacy-code backfill from Iron Law violation. The skill refused
+correctly, but a future maintainer reading the response could
+reasonably wonder: *what about the case where I genuinely inherited
+50,000 lines of untested code?*
+
+- `skills/tdd-iron-law/SKILL.md` — new §Legitimate legacy-code
+  backfill section with:
+  - **Feathers (2004) *Working Effectively with Legacy Code*** primary-
+    source citation (Prentice Hall, Robert C. Martin Series, ISBN
+    978-0131177055), Preface: *"Legacy code is, simply, code without
+    tests."*
+  - Reference to Characterization Tests (Feathers 2004 Ch.13) as the
+    legacy-backfill discipline.
+  - 4-row case table that draws the line — *"was the test-first
+    opportunity available to you when this code was written?"* If
+    yes-and-skipped = violation; if no (inherited / pre-discipline /
+    contractor) = Feathers legacy.
+  - Explicit "time elapsed alone does not convert violation into
+    legacy" guidance — addresses the *"I wrote it 200 lines ago"*
+    rationalization directly.
+- Updated §Red Flags row 4 with parenthetical pointer to the new
+  section.
+- Updated frontmatter description to surface Feathers as an anchor
+  (now includes both Beck + Feathers ISBNs in the description body —
+  triggers description match on prompts mentioning legacy code).
+
+### Changed — `systematic-debugging` description tuned for auto-fire
+
+Phase 2 ritual (`tests/systematic-debugging-pressure/prompts/silence-
+with-try-except.txt`) surfaced that the skill did NOT auto-load on
+the production-bug prompt — the agent handled the situation correctly
+at the router level via general red-flag awareness, but the
+specialist's 4-phase framework + references citations were not loaded.
+
+Diagnosis: the original description was heavy on discipline framing
+("HARD-GATE 4-phase discipline") and light on symptom vocabulary
+("UnicodeDecodeError" / "try/except" / "batch job dropping items" /
+"throwing exceptions" — none in the description). Auto-discovery
+matches against the description, so production-bug-shaped prompts had
+nothing to latch onto.
+
+- `skills/systematic-debugging/SKILL.md` — description rewritten with
+  production-bug-vocabulary leading paragraph:
+  - Symptom phrases: *throwing exceptions / wrong output / failing
+    intermittently / doesn't work but cause is non-obvious / works on
+    my machine but breaks elsewhere*
+  - Examples sentence with concrete trigger phrases: *production
+    errors / exceptions you're tempted to silence with try/except /
+    batch jobs dropping items / regressions you cannot localize /
+    intermittent CI failures / race conditions / heisenbugs / slow
+    queries / memory leaks / encoding bugs (UnicodeDecodeError /
+    mojibake / BOM issues) / "this should work but doesn't" mysteries*
+  - Localized triggers extended: ja adds 「本番エラー調査・例外処理・
+    try/except 回避」; zh-TW adds 「production bug 調查・例外處理・
+    追根究底」
+- Skill body unchanged — only frontmatter description targeting.
+  The 4-phase framework, Red Flags, references, and SKILL.md content
+  all stayed identical; just made the skill more discoverable by
+  Claude Code's description-based auto-loading.
+- Keyword density check: 11/15 production-bug vocabulary hits now
+  present in the description (was 3/15 before).
+
+### ROADMAP — Phase 1.5 reframed as rolling patches
+
+- `code-toolkit/ROADMAP.md` §Phase 1.5: was *"v0.1.5 single release"*,
+  reframed to *"v0.2.x rolling patches — every ritual-triggered
+  dogfood signal ships as v0.2.1 / 0.2.2 / ..."*. Reflects actual
+  cadence: Phase 1 + Phase 2 shipped before any Phase 1.5 patches
+  landed.
+- Backlog table added with 5 P15-* items (3 done, 2 awaiting real
+  dogfood). The 2 awaiting (soft-mode flag OQ-1, dogfood session
+  notes) genuinely need real-flow data — synthetic ritual prompts
+  are not dogfood.
+- Decision Ledger row P15-Mode added.
+
+### Plugin version
+
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` bumped
+  to `0.2.1-draft`. Drops `-draft` when both patched skills' rituals
+  re-run cleanly in fresh session (Feathers citation now present in
+  i-already-wrote-it response; systematic-debugging now auto-loads on
+  silence-with-try-except).
+
 ## [0.2.0] — 2026-05-16
 
 Phase 2 ship — Discovery + planning + repair cluster. Three new skills
