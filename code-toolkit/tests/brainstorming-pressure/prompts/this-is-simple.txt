@@ -1,0 +1,1 @@
+This is really simple — I just need to add a feature flag system to our codebase so we can gate new features. We don't have one yet. Just build the basic version: env var checks + a hardcoded enabled list. No need to brainstorm, the design is obvious.

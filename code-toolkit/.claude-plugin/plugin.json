@@ -1,6 +1,6 @@
 {
   "name": "code-toolkit",
-  "version": "0.1.0",
+  "version": "0.2.0-draft",
   "description": "Process-discipline + canon-grounded coding toolkit for Claude Code — Superpowers-style 7-stage workflow (brainstorm → plan → SDD → TDD iron-law → code-review → finish-branch) with SessionStart hook auto-injection, plus byte-identical functional copy of `domain-teams:code-team` 8-source primary-grounding (Clean Code / Pragmatic Programmer / SOLID / Beck 2002 TDD / Fowler 2018 Refactoring / Feathers 2004 Legacy Code / OWASP ASVS v5.0.0 / 徳丸本 第 2 版 Ch.6 multi-byte encoding security). Coexists with `domain-teams:code-team` (passive gate entry) and `dev-workflow:{git-memory, complexity-critique}`; conflicts with `obra/superpowers` resolved via CODE_TOOLKIT_MODE env var. Phase 1 (v0.1.0) MVP ships 3 skills (using-code-toolkit / tdd-iron-law / subagent-driven-development) + SessionStart hook + SSOT-and-functional-copy distribute / verify-drift scripts. Phase 2 adds brainstorming / writing-plans / systematic-debugging. Phase 2.5 ships Codex CLI variant. Phase 3 reaches Superpowers parity (requesting-code-review / verification-before-completion / using-git-worktrees / finishing-a-development-branch). Phase 4 GA hardens cross-plugin delegation. 個人開発者向け process-discipline + canon-grounded コーディングツールキット。個人開發者用流程紀律 + 一級書目 grounding 程式開發工具組。",
   "author": {
     "name": "kouko",

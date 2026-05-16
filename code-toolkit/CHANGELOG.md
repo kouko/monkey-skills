@@ -5,6 +5,84 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Phase 2 underway — Discovery + planning + repair cluster. Skills accumulate
+under [Unreleased] until all 3 ship, then bump to [0.2.0].
+
+### Added — `brainstorming` skill (1 of 3 Phase 2 skills)
+
+Discovery skill with HARD-GATE measure preserved from Superpowers per P2-A.
+Walks the user / agent through a 5-axis exploration framework (Problem /
+Users / Smallest End State / Alternatives / What Becomes Obsolete) and
+emits a structured brief that `writing-plans` (Phase 2, ships next)
+consumes.
+
+- `skills/brainstorming/SKILL.md` — HARD-GATE measure ("DO NOT START
+  IMPLEMENTING UNTIL YOU HAVE EXPLORED INTENT"); §When NOT to Use with
+  4 enumerated exemptions; 5-axis framework with primary-source citations
+  (Christensen 1997 JTBD ISBN 978-0875845852; Klement 2018 job-story
+  format ISBN 978-1718626751); Red Flags table with en + ja + zh-TW
+  triggers; Output Contract pointing at handoff-brief-format.md; Cross-
+  skill delegation to `dev-workflow:complexity-critique` (optional,
+  Axis 3 smell) and `dev-workflow:proposal-critique` (optional, Axis 4
+  triage).
+- `skills/brainstorming/references/visual-companion.md` — when a Mermaid
+  sequence / C4 / ER / flowchart diagram pays for itself vs when prose
+  is enough. Includes axis-to-diagram-type mapping table + worked
+  templates with color discipline (preferred green / rejected red /
+  removed dashed-red).
+- `skills/brainstorming/references/handoff-brief-format.md` — output
+  schema for `writing-plans` consumption. Required sections (Problem /
+  Users / Smallest End State / Decision / Out of Scope) + optional
+  (Alternatives Considered / What Becomes Obsolete / Open Questions /
+  Diagrams). Conventional file path: `docs/superpowers/specs/YYYY-MM-DD-
+  <topic>.md`.
+- `skills/brainstorming/README.{md,ja.md,zh-TW.md}` — 3-lang.
+
+### Updated — `using-code-toolkit` router for brainstorming
+
+- Skill Priority table row 1: Discovery `brainstorming` flipped from
+  "Phase 2 — until then, ask 2-3 clarifying Qs" → "✅ shipped".
+- `<EXTREMELY-IMPORTANT>` rule 1: dropped the "until that ships, ask
+  2-3 clarifying questions" fallback; now points directly at the
+  brainstorming skill's 5-axis framework.
+- Skill version bumped to 0.2.0-draft.
+- Router stays under the 2000-token P1-A budget: ~1848 tokens (was
+  ~1853).
+- 3-lang README tables updated in lockstep.
+
+### Added — brainstorming pressure tests
+
+`tests/brainstorming-pressure/prompts/`:
+- `this-is-simple.txt` — the canonical "feature flag system" PAGNI
+  smell (mirrors `dev-workflow:complexity-critique` test prompt #2).
+- `i-know-what-to-build.txt` — user with a pre-formed feature list;
+  agent must engage Axis 1 (problem behind the solution) + Axis 5
+  (what becomes obsolete) before implementation.
+- `lets-just-start.txt` — webhook receiver with hidden auth /
+  idempotency / observability sub-decisions; agent must engage all
+  5 axes minimally.
+- `index.md` — assertion table per prompt; Phase 2 ritual acceptance
+  is 3 / 3 refused with 5-axis engagement.
+
+### Plugin version
+
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` bumped
+  to `0.2.0-draft`. Drops `-draft` when full Phase 2 (writing-plans +
+  systematic-debugging) ships.
+
+### Phase 1 → Phase 2 carryover
+
+Items deferred from Phase 1 into Phase 1.5 / Phase 2 backlog:
+
+- **Feathers (2004) distinction in tdd-iron-law**: Phase 1 live test
+  surfaced that the agent did not cite *Working Effectively with
+  Legacy Code* (ISBN 978-0131177055) when distinguishing legitimate
+  legacy-backfill from "I just wrote 200 lines without tests". Iron
+  Law itself worked; the Feathers distinction is a SKILL.md
+  sharpening — to be addressed alongside Phase 1.5 dogfood findings.
+
 ## [0.1.0] — 2026-05-16
 
 First ship — Phase 1 MVP shell. Three skills + SessionStart hook + cross-plugin SSOT pipeline.

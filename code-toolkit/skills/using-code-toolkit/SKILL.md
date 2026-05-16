@@ -1,7 +1,7 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.1.0-draft
+version: 0.2.0-draft
 ---
 
 <SUBAGENT-STOP>
@@ -13,7 +13,7 @@ If you are a subagent already dispatched with an explicit role prompt (implement
 
 Three load-bearing rules:
 
-1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` (Phase 2) or, until that ships, ask 2-3 clarifying questions framed as *what problem*, *smallest end state*, *what becomes obsolete*.
+1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — walks the 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief.
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law` when starting implementation. Kent Beck (2002, *Test-Driven Development: By Example*, Addison-Wesley, ISBN 978-0321146533), Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* That is the floor, not an aspiration.
 3. **Split + dispatch (SDD).** For any task >1 hour or touching >1 module, call `subagent-driven-development` — split into atomic ≤5-min units and dispatch three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
 
@@ -43,7 +43,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 | # | Stage | Skill (target) | v0.1.0 status |
 |---|---|---|---|
-| 1 | Discovery | `brainstorming` | Phase 2 — until then, ask 2-3 clarifying Qs |
+| 1 | Discovery | `brainstorming` | ✅ shipped |
 | 2 | Planning | `writing-plans` | Phase 2 — until then, sketch a ≤5-task plan inline |
 | 3 | Execution | `subagent-driven-development` | ✅ shipped |
 | 4 | Discipline (during execution) | `tdd-iron-law` | ✅ shipped |
