@@ -1,0 +1,40 @@
+{
+  "name": "code-toolkit",
+  "version": "0.1.0-draft",
+  "description": "Process-discipline + canon-grounded coding toolkit for Codex CLI — Superpowers-style workflow + 8-source primary-grounding from `domain-teams:code-team`. Phase 1 only ships Claude Code; this Codex manifest is a v0.2.5 ship target placeholder (see ROADMAP.md Phase 2.5).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/code-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "code-toolkit",
+    "tdd",
+    "subagent-driven-development",
+    "code-review",
+    "process-discipline",
+    "primary-source-grounding"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "code-toolkit",
+    "shortDescription": "Process-discipline + canon-grounded coding workflow for Codex CLI",
+    "longDescription": "Use code-toolkit to drive agent work through brainstorming, plan-writing, subagent-driven development, TDD iron-law, systematic debugging, code review, and branch finishing. Each rule grounded in primary sources (Clean Code / Beck 2002 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). Coexists with `domain-teams:code-team` (passive gate) and `dev-workflow:{git-memory, complexity-critique}`.",
+    "developerName": "kouko",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Let's add a feature to this project.",
+      "I want to refactor this module.",
+      "Fix this bug."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/code-toolkit",
+    "brandColor": "#2563EB"
+  }
+}
