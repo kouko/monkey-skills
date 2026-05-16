@@ -1,7 +1,7 @@
 ---
 name: systematic-debugging
 description: 'Use when a bug or production failure needs investigation — any time code is throwing exceptions, returning wrong output, failing intermittently, "doesn''t work" but the cause is non-obvious, or "works on my machine" but breaks elsewhere. Examples: production errors, exceptions you''re tempted to silence with try/except, batch jobs dropping items, regressions you cannot localize, intermittent CI failures, race conditions, heisenbugs, slow queries, memory leaks, encoding bugs (UnicodeDecodeError / mojibake / BOM issues), "this should work but doesn''t" mysteries. Enforces a HARD-GATE 4-phase discipline — REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY — analogous to tdd-iron-law''s "no implementing without a failing test." No fixing without reproducing. Grounded in Kernighan & Pike (1999) The Practice of Programming Ch.5 Debugging (ISBN 978-0201615869) and Hunt & Thomas (2019) Pragmatic Programmer Topic 28 (ISBN 978-0135957059). Refuses random-patching, fishing-without-hypothesis logging, try/except masking, and "works on my machine" dismissals. デバッグ・系統的・再現先行・本番エラー調査・例外処理・try/except 回避。除錯・系統化・先再現・production bug 調查・例外處理・追根究底。'
-version: 0.5.2
+version: 0.6.0-draft
 ---
 
 <SUBAGENT-STOP>

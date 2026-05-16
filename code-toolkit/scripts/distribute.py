@@ -162,10 +162,19 @@ AGENT_BASELINE_BEGIN = (
 AGENT_BASELINE_END = "<!-- END baseline-v1 -->"
 
 # Routing: agent files that embed the baseline block. Add new agent files
-# here when promoting them to plugin-level. Phase 2 will add the other four
-# (spec-reviewer / code-quality-reviewer / reviewer / debugger).
+# here when promoting them to plugin-level.
+#
+# v0.5.2 (P15-12 Phase 1): implementer.md (proof-of-mechanism)
+# v0.6.0 (P15-12 Phase 2): spec-reviewer.md + code-quality-reviewer.md +
+#                           code-reviewer.md (SDD reviewer pair + whole-branch
+#                           reviewer from requesting-code-review). systematic-
+#                           debugging has no agent directory; no debugger.md
+#                           in this batch.
 AGENT_BASELINE_TARGETS: list[str] = [
     "agents/implementer.md",
+    "agents/spec-reviewer.md",
+    "agents/code-quality-reviewer.md",
+    "agents/code-reviewer.md",
 ]
 
 

@@ -1,7 +1,7 @@
 ---
 name: requesting-code-review
 description: 'Use BEFORE any push / merge / PR-open action on a non-trivial branch — whole-branch / whole-PR review of the cumulative diff. Examples (positive triggers): "review my branch", "look at my changes", "code review please", "audit the diff", "is this ready to merge", "I''ve finished feature X". Examples (stress / skip-rationalization triggers — this skill MUST also fire here): "just push", "let me push", "skip the review", "SDD already reviewed each task", "small change, no review needed", "it''s fine, just merge", "tests pass so we''re done", any `git push` / `gh pr create` / `gh pr merge` invocation without prior review-PASS in this session. Different from `subagent-driven-development`''s per-task code-quality-reviewer (per atomic task during execution) — this skill is whole-PR review at end-of-work and catches cross-task interactions that per-task review can''t see. Dispatches code-reviewer subagent that loads code-toolkit''s rubrics (quality-gate / arch-gate / security-checklist) directly per P3-A (not via SDD wrapper). Output is severity-tagged structured review (🔴 fatal / 🟡 should-fix / 🟢 nit) with verdict aggregation. コードレビュー・PR 全体審査・push 前必須・skip 拒否。程式碼審查・PR 全面審查・push 前強制・拒絕跳過。'
-version: 0.5.2
+version: 0.6.0-draft
 ---
 
 <SUBAGENT-STOP>
@@ -84,7 +84,7 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 ## Process
 
 1. **Determine diff scope**. Default: `git diff main...HEAD` (everything on this branch not on main). Override with explicit commit range if user specifies (`git diff <SHA1>..<SHA2>`).
-2. **Dispatch code-reviewer subagent** with [`agents/code-reviewer-prompt.md`](agents/code-reviewer-prompt.md). The orchestrator passes: diff range, paths to rubrics + checklists, branch context (recent commits, related issues if known).
+2. **Dispatch code-reviewer subagent** via `Agent({subagent_type: "code-toolkit:code-reviewer", prompt: <branch + diff body>})` — plugin-level agent (v0.6.0 / P15-12 Phase 2) at [`code-toolkit/agents/code-reviewer.md`](../../agents/code-reviewer.md). The orchestrator passes: diff range, paths to rubrics + checklists, branch context (recent commits, related issues if known). The agent carries the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into its system prompt.
 3. **Wait for verdict**. Reviewer returns structured review with per-dimension scores, severity-tagged findings, and overall verdict.
 4. **Surface to user**. Print the verdict + findings; let user decide remediation. Do NOT auto-fix — that's user agency.
 5. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
@@ -152,7 +152,8 @@ summary:
 
 ## See also
 
-- [`agents/code-reviewer-prompt.md`](agents/code-reviewer-prompt.md) — the dispatched subagent's role prompt + input/output contracts.
+- [`code-toolkit/agents/code-reviewer.md`](../../agents/code-reviewer.md) — the dispatched plugin-level subagent's role contract + input/output contracts (v0.6.0+ / P15-12 Phase 2).
+- [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md) — SSOT for the 12-rule engineering baseline carried by the code-reviewer agent.
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — per-task reviewer (different scope, same rubrics).
 - [`../subagent-driven-development/rubrics/quality-gate.md`](../subagent-driven-development/rubrics/quality-gate.md) — functional copy of code-team's quality rubric.
 - [`../subagent-driven-development/rubrics/arch-gate.md`](../subagent-driven-development/rubrics/arch-gate.md) — functional copy of code-team's architecture rubric.

@@ -24,6 +24,132 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.6.0-draft] — 2026-05-16
+
+Phase 1.5 patch **P15-12 (Phase 2)** — promote remaining 3 agents to
+plugin-level (`spec-reviewer` / `code-quality-reviewer` /
+`code-reviewer`), each carrying the 12-rule engineering baseline via
+SSOT injection. Per-skill `agents/` directories emptied → CHK-SKL-012
+false-positive naturally resolved.
+
+This completes the P15-12 architectural shift started in v0.5.2 Phase
+1. All 4 plugin-level agents now live at `code-toolkit/agents/`; SDD
+orchestrator + requesting-code-review skill dispatch via
+`Agent({subagent_type: "code-toolkit:<role>"})` exclusively.
+
+### Why minor-version bump (0.5.2 → 0.6.0)
+
+v0.5.2 was a single-agent proof-of-mechanism (1 of 4 promoted). v0.6.0
+completes the architectural shift: the SDD orchestrator's per-task
+triad (implementer + spec-reviewer + code-quality-reviewer) is now
+fully plugin-level, plus the whole-branch reviewer from
+`requesting-code-review`. Cross-plugin reusability is no longer
+hypothetical — other plugins (e.g. `domain-teams:code-team`) can now
+dispatch any of the 4 reviewers via marketplace identifier.
+
+### What shipped
+
+**Created (3 new plugin-level agent files at `code-toolkit/agents/`)**:
+- `spec-reviewer.md` — binary PASS/NEEDS_REVISION verdict on spec
+  consistency (was: `skills/subagent-driven-development/agents/spec-reviewer-prompt.md`)
+- `code-quality-reviewer.md` — 3-valued verdict + 6-dimension scores
+  + severity-tagged flags on per-task code quality (was:
+  `skills/subagent-driven-development/agents/code-quality-reviewer-prompt.md`)
+- `code-reviewer.md` — whole-branch reviewer with unique
+  cross-task-coherence dimension (was:
+  `skills/requesting-code-review/agents/code-reviewer-prompt.md`)
+
+Each carries the 12-rule baseline via `<!-- BEGIN baseline-v1 -->` /
+`<!-- END baseline-v1 -->` markers; injected by `distribute.py` from
+SSOT at `scripts/_baseline.md`; drift-gated by `verify-drift.py`.
+
+**Deleted (3 in-skill prompt templates, replaced by plugin-level)**:
+- `skills/subagent-driven-development/agents/spec-reviewer-prompt.md`
+- `skills/subagent-driven-development/agents/code-quality-reviewer-prompt.md`
+- `skills/requesting-code-review/agents/code-reviewer-prompt.md`
+
+**Removed (empty `agents/` directories)**:
+- `skills/subagent-driven-development/agents/`
+- `skills/requesting-code-review/agents/`
+
+**Updated (3 SKILL.md dispatch refs)**:
+- `skills/subagent-driven-development/SKILL.md` — §Process Step 3
+  now dispatches via `Agent({subagent_type:"code-toolkit:spec-reviewer"})`
+  + `Agent({subagent_type:"code-toolkit:code-quality-reviewer"})`;
+  §Prompt templates rewritten; §See also updated
+- `skills/requesting-code-review/SKILL.md` — §Process Step 2 now
+  dispatches via `Agent({subagent_type:"code-toolkit:code-reviewer"})`;
+  §See also updated
+
+**Extended (`scripts/distribute.py` route table)**:
+```python
+AGENT_BASELINE_TARGETS: list[str] = [
+    "agents/implementer.md",          # v0.5.2 / Phase 1
+    "agents/spec-reviewer.md",        # v0.6.0 / Phase 2
+    "agents/code-quality-reviewer.md",# v0.6.0 / Phase 2
+    "agents/code-reviewer.md",        # v0.6.0 / Phase 2
+]
+```
+
+**Bumped (12 manifests)**:
+- 10 skill SKILL.md `version:` 0.5.2 → 0.6.0-draft
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` version
+  0.5.2 → 0.6.0-draft
+
+### What was NOT promoted
+
+**systematic-debugging has no agent directory** — the skill's
+4-phase REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY protocol runs
+inline; no separate dispatched agent. No `debugger.md` in this batch.
+The original P15-12 Phase 2 plan listed 4 agents; actual scope was 3.
+
+### CHK-SKL-012 false-positive — naturally resolved
+
+The script `scripts/check-skill-structure.py`'s `OPTIONAL_SUBDIRS`
+allowlist (`{"research", "references"}`) was narrower than
+`CLAUDE.md`'s §Skill Structure spec which permits `agents/`. Before
+v0.6.0, 2 skills had per-skill `agents/` subdirs which the lint
+script flagged. v0.6.0 empties both directories (and removes them);
+`check-skill-structure.py` now PASSes all 10 skills clean.
+
+The underlying allowlist gap in the script remains — if any other
+plugin starts using per-skill `agents/`, the false-positive will
+re-surface. Tracked as P15-13 (low priority; v1.0.0 cleanup).
+
+### Pending — Phase 2 ritual verification
+
+Phase 2 ships as `-draft`. Recommended verification: same MFA
+pressure prompt as Phase 1's ritual (`"refactor UserService.authenticate
+to add MFA"`), but this time push past brainstorming into SDD task
+dispatch with explicit ritual-mode authorization for fictional paths.
+Expected: orchestrator dispatches 3 parallel `Agent` calls
+(implementer + spec-reviewer + code-quality-reviewer) per task; each
+plugin-level agent resolves cleanly and shows baseline content in
+system prompt.
+
+Alternative validation: trigger `requesting-code-review` on the
+current `feat/code-toolkit-design` branch and verify the
+`code-toolkit:code-reviewer` plugin-level agent dispatches correctly
+with cross-task-coherence dimension scoring active.
+
+PASS → drop `-draft`, v0.6.0 ships.
+
+### Files changed (drop-`-draft` ship will follow)
+
+- 3 new agent files: `code-toolkit/agents/{spec-reviewer,code-quality-reviewer,code-reviewer}.md`
+- 3 deleted prompt templates + 2 removed empty `agents/` directories
+  in skill folders
+- 2 modified SKILL.md files (dispatch refs)
+- `scripts/distribute.py` — `AGENT_BASELINE_TARGETS` extended from
+  1 → 4 entries
+- 10 skill SKILL.md version: 0.5.2 → 0.6.0-draft
+- 2 plugin manifests version: 0.5.2 → 0.6.0-draft
+- `ROADMAP.md` — P15-12 Phase 2 row marked shipped; acceptance line
+  updated to 11 of 12 closed
+- `CHANGELOG.md` — this entry
+
+---
+
 ## [0.5.2] — 2026-05-16
 
 **Ship status**: ritual PASS (see §SDD ritual verification at the end
