@@ -1,11 +1,11 @@
 ---
 name: writing-plans
 description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If brief produces >5 atomic tasks, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
-version: 0.6.0-draft
+version: 0.6.0
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / debugger / plan-document-reviewer), the parent orchestrator already finished planning. **Do not** re-route through this skill. Follow your dispatched prompt directly.
+If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer / plan-document-reviewer), the parent orchestrator already finished planning. **Do not** re-route through this skill. Follow your dispatched prompt directly.
 </SUBAGENT-STOP>
 
 ## What this skill does

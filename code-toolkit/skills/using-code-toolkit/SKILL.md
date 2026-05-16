@@ -1,11 +1,11 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.6.0-draft
+version: 0.6.0
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent already dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / debugger / reviewer), **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
+If you are a subagent already dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer), **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
@@ -43,7 +43,7 @@ If the user types `/skill-name`, that is an explicit invocation — load it via 
 
 Walk through these stages in order. Skip a stage only when its precondition is already met (e.g. user already handed in a plan → skip planning).
 
-| # | Stage | Skill (target) | v0.1.0 status |
+| # | Stage | Skill (target) | Status |
 |---|---|---|---|
 | 1 | Discovery | `brainstorming` | ✅ shipped |
 | 2 | Planning | `writing-plans` | ✅ shipped |

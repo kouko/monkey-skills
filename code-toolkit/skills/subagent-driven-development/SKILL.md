@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when a task takes >1 hour OR touches >1 module — splits the work into atomic ≤5-minute units and dispatches three subagents per unit (implementer / spec-reviewer / code-quality-reviewer). The implementer works under the TDD iron law; the two reviewers produce verdicts (PASS / PASS_WITH_NOTES / NEEDS_REVISION) grounded in the 7 standards + 2 rubrics + 2 checklists functional-copied from `domain-teams:code-team`. SDD・サブエージェント駆動開発・並列レビュー。SDD・子代理驅動開發・三角審查。
-version: 0.6.0-draft
+version: 0.6.0
 ---
 
 ## Continuous execution
@@ -100,8 +100,8 @@ Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluat
 ## Cross-skill contract
 
 - **[`tdd-iron-law`](../tdd-iron-law/SKILL.md)** — implementer prompts must load this skill before writing code. The reviewer's `tests` dimension scores against `standards/tdd-standard.md` (functional copy of code-team SSOT).
-- **`writing-plans`** (Phase 2) — produces the task list SDD consumes. Until Phase 2 ships, the orchestrator may draft a ≤5-task plan inline and ask the user to approve it.
-- **`finishing-a-development-branch`** (Phase 3) — runs after the last task is DONE; delegates to `dev-workflow:git-memory` for commit-message memory.
+- **`writing-plans`** — produces the task list SDD consumes.
+- **`finishing-a-development-branch`** — runs after the last task is DONE; delegates to `dev-workflow:git-memory` for commit-message memory.
 - **`domain-teams:code-team`** — passive gate; not invoked by SDD directly. The knowledge layer here is a functional copy of code-team's standards / rubrics / checklists, kept byte-identical by `scripts/distribute.py` + `scripts/verify-drift.py`.
 
 ## Knowledge layer

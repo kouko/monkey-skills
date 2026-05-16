@@ -41,13 +41,18 @@ Below: one-line summary + cross-reference table.
 ```
 code-toolkit/
   agents/
-    _baseline.md           ← SSOT — the canonical 12-rule text
-    implementer.md         ← plugin-level agent — role contract + injected baseline block
-    (Phase 2 will add: spec-reviewer.md / code-quality-reviewer.md / reviewer.md / debugger.md)
+    implementer.md             ← plugin-level agent (v0.5.2 / P15-12 Phase 1)
+    spec-reviewer.md           ← plugin-level agent (v0.6.0 / P15-12 Phase 2)
+    code-quality-reviewer.md   ← plugin-level agent (v0.6.0 / P15-12 Phase 2)
+    code-reviewer.md           ← plugin-level agent (v0.6.0 / P15-12 Phase 2)
   scripts/
-    distribute.py          ← injects _baseline.md content between BEGIN/END markers in each agent
-    verify-drift.py        ← CI gate: rejects any agent file whose baseline block diverges from SSOT
+    _baseline.md               ← SSOT — the canonical 12-rule text
+    distribute.py              ← injects _baseline.md content between BEGIN/END markers in each agent
+    verify-drift.py            ← CI gate: rejects any agent file whose baseline block diverges from SSOT
 ```
+
+(systematic-debugging has no plugin-level agent — its 4-phase
+REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY protocol runs inline.)
 
 Each plugin-level agent embeds the baseline verbatim between
 `<!-- BEGIN baseline-v1 ... -->` and `<!-- END baseline-v1 -->`

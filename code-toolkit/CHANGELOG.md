@@ -24,7 +24,12 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
-## [0.6.0-draft] — 2026-05-16
+## [0.6.0] — 2026-05-16
+
+**Ship status**: ritual PASS (see §Phase 2 ritual verification at end
+of this entry). 5 doc-drift findings caught by the v0.6.0 code-reviewer
+ritual were fixed before drop-`-draft`. Dropped `-draft` from version
+field after fixes.
 
 Phase 1.5 patch **P15-12 (Phase 2)** — promote remaining 3 agents to
 plugin-level (`spec-reviewer` / `code-quality-reviewer` /
@@ -116,23 +121,90 @@ The underlying allowlist gap in the script remains — if any other
 plugin starts using per-skill `agents/`, the false-positive will
 re-surface. Tracked as P15-13 (low priority; v1.0.0 cleanup).
 
-### Pending — Phase 2 ritual verification
+### Phase 2 ritual verification — PASS (two complementary rituals)
 
-Phase 2 ships as `-draft`. Recommended verification: same MFA
-pressure prompt as Phase 1's ritual (`"refactor UserService.authenticate
-to add MFA"`), but this time push past brainstorming into SDD task
-dispatch with explicit ritual-mode authorization for fictional paths.
-Expected: orchestrator dispatches 3 parallel `Agent` calls
-(implementer + spec-reviewer + code-quality-reviewer) per task; each
-plugin-level agent resolves cleanly and shows baseline content in
-system prompt.
+#### Ritual A — SDD triad parallel dispatch (fictional artifact)
 
-Alternative validation: trigger `requesting-code-review` on the
-current `feat/code-toolkit-design` branch and verify the
-`code-toolkit:code-reviewer` plugin-level agent dispatches correctly
-with cross-task-coherence dimension scoring active.
+Pressure prompt: `"refactor UserService.authenticate to add MFA"` →
+push past brainstorming into SDD task dispatch → at Step 3 dispatch
+spec-reviewer + code-quality-reviewer in parallel against the
+fictional artifact paths the Phase 1 plan declares (`src/services/UserService.ts`).
 
-PASS → drop `-draft`, v0.6.0 ships.
+**Both reviewer agents PASS the discipline**:
+
+| Signal | spec-reviewer | code-quality-reviewer |
+|---|---|---|
+| Plugin-level dispatch | ✅ `Agent({subagent_type:"code-toolkit:spec-reviewer"})` resolved cleanly | ✅ `Agent({subagent_type:"code-toolkit:code-quality-reviewer"})` resolved cleanly |
+| Verdict | NEEDS_REVISION (3 gaps; root cause: brief Open Q #1 setup unresolved) | NEEDS_REVISION (2× 🔴 fatal + 1× 🟡; refused to load standards on absent artifact citing Rule 6 token budget + Rule 12 fail loud) |
+| Scope boundary | Cited spec coverage only | Cited rubrics + standards only; forwarded process-fit observation to `notes` (didn't blend) |
+| Baseline rule fingerprint | Rule 12 (fail loud) — no PASS on absent artifact | Rule 6 + Rule 12 quoted to justify refusing standard-load |
+
+**Meta-signal**: agent self-reported breaking the parallel-dispatch
+rule (sent serially across 2 messages instead of 1 message with 2
+tool calls). Rule 12 (fail loud) fired even at the meta-level — agent
+surfaced its own protocol deviation rather than hiding it. Strong
+discipline signal.
+
+#### Ritual B — whole-branch code-reviewer (real diff)
+
+Pressure prompt: `"Run requesting-code-review on this branch
+(feat/code-toolkit-design). I want to see the whole-branch review
+with cross-task-coherence dimension scored."`
+
+**The code-reviewer plugin-level agent worked AS DESIGNED**:
+
+- ✅ `Agent({subagent_type:"code-toolkit:code-reviewer"})` resolved
+  cleanly; 63 tool uses / 142.8K tokens / 4m 17s of real work
+- ✅ All 7 dimensions scored (including unique cross-task-coherence)
+- ✅ Verdict: PASS_WITH_NOTES (5 findings — 3 🟡 + 2 🟢, no 🔴)
+- ✅ Cited primary sources where relevant
+- ✅ **Found 5 real doc-drift bugs** that earlier phases of this
+  branch introduced — exactly what the cross-task-coherence dimension
+  is designed to catch (items individually correct at time of writing
+  but contradicted by cumulative branch state)
+
+The 5 findings (all valid):
+
+| # | Severity | Where | What |
+|---|---|---|---|
+| 1 | 🟡 cross-task-coherence | `using-code-toolkit/references/engineering-baselines.md:41-50` | ASCII layout claimed `agents/_baseline.md` (moved to `scripts/` per 172fc01) + listed "Phase 2 will add reviewer.md / debugger.md" (actual promoted set is spec-reviewer / code-quality-reviewer / code-reviewer; no debugger) |
+| 2 | 🟡 cross-task-coherence | `using-code-toolkit/references/claude-code-tools.md:24` | Referenced deleted `skills/subagent-driven-development/agents/*-prompt.md` directory |
+| 3 | 🟡 correctness | `subagent-driven-development/SKILL.md:103-104` | Cross-skill contract still described `writing-plans` as "(Phase 2)" with "until Phase 2 ships" fallback, and `finishing-a-development-branch` as "(Phase 3)". Both shipped in v0.2.0 / v0.3.0. |
+| 4 | 🟢 naming | 5 SKILL.md `<SUBAGENT-STOP>` blocks | Listed `debugger` (no such agent in code-toolkit); router additionally listed `reviewer` (current dispatchable name is `code-reviewer`) |
+| 5 | 🟢 cross-task-coherence | `using-code-toolkit/SKILL.md:46` (and parallel drift in README.md / README.ja.md / README.zh-TW.md) | Column header said `v0.1.0 status` but data is current v0.6.0. |
+
+#### Drift fixes applied before v0.6.0 ship
+
+All 5 findings fixed (Rule 12 — don't ship known drift):
+
+- `engineering-baselines.md` — ASCII layout rewritten to reflect
+  v0.6.0 state (4 plugin-level agents at `agents/`; `_baseline.md`
+  at `scripts/`; systematic-debugging clarified as no-agent)
+- `claude-code-tools.md` — dangling link replaced with current
+  dispatch table (4 `code-toolkit:<role>` subagent_types)
+- `subagent-driven-development/SKILL.md` — Phase 2/3 annotations
+  + fallback prose removed
+- 5 SKILL.md `<SUBAGENT-STOP>` blocks — `debugger` removed;
+  router's `reviewer` corrected to `code-reviewer`
+- `using-code-toolkit/SKILL.md` + 3 README files — column header
+  generalized to `Status` (no version hardcoded)
+
+#### What this means
+
+The v0.6.0 architectural shift (4-agent plugin-level system + SSOT
+baseline injection) is end-to-end validated. The code-reviewer plugin-
+level agent's cross-task-coherence dimension caught real drift that
+would otherwise have shipped silently — the strongest possible
+demonstration of why this dimension exists in the first place.
+
+### Files changed (drop-`-draft` ship)
+
+- 10 skill SKILL.md `version:` 0.6.0-draft → 0.6.0
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` version
+  0.6.0-draft → 0.6.0
+- 5 doc-drift fixes documented above
+- `ROADMAP.md` — P15-12 Phase 2 row updated with ritual PASS details
+- `CHANGELOG.md` — this section
 
 ### Files changed (drop-`-draft` ship will follow)
 
