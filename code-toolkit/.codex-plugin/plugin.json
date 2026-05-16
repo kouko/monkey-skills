@@ -1,6 +1,6 @@
 {
   "name": "code-toolkit",
-  "version": "0.5.2-draft",
+  "version": "0.5.2",
   "description": "Process-discipline + canon-grounded coding toolkit for Codex CLI — Superpowers-style 8-stage workflow (brainstorm → plan → SDD → TDD iron-law → systematic-debugging → code-review → verification → finish-branch + using-git-worktrees auxiliary) with SessionStart hook auto-injection, plus byte-identical functional copy of `domain-teams:code-team` 8-source primary-grounding (Clean Code / Pragmatic Programmer / SOLID / Beck 2002 TDD / Fowler 2018 Refactoring / Feathers 2004 Legacy Code / OWASP ASVS v5.0.0 / 徳丸本 第 2 版 Ch.6 multi-byte encoding security). 10 skills total (9 of 9 planned + router); full Superpowers parity reached at v0.3.0. v0.4.0 adds the Codex CLI variant (this manifest) on top of the Claude Code release shipped at v0.3.0 (see `.claude-plugin/plugin.json`). Hook emits portable `additional_context` JSON key for Codex CLI consumption. Coexists with `domain-teams:code-team` (passive gate entry) and `dev-workflow:{git-memory, complexity-critique}`; conflicts with `obra/superpowers` resolved via CODE_TOOLKIT_MODE env var.",
   "author": {
     "name": "kouko",

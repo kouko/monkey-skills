@@ -24,7 +24,12 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
-## [0.5.2-draft] — 2026-05-16
+## [0.5.2] — 2026-05-16
+
+**Ship status**: ritual PASS (see §SDD ritual verification at the end
+of this entry). Dropped `-draft` from version field after end-to-end
+validation of plugin-level agent dispatch + baseline injection
+mechanic.
 
 Phase 1.5 patch **P15-12 (Phase 1)** — plugin-level agent files
 with 12-rule engineering baseline baked in. SSOT-and-functional-copy
@@ -168,32 +173,95 @@ false-positive on `subagent-driven-development/agents/` will resolve
 naturally when that directory empties (Phase 2 deletes the remaining
 2 prompt-template files after promoting them).
 
-### Pending — SDD ritual verification
+### SDD ritual verification — PASS
 
-Phase 1 ships as `-draft`. Verification step: dispatch an SDD task
-to `code-toolkit:implementer` and confirm:
+Pressure prompt (fresh Claude Code session, code-toolkit@monkey-skills
+v0.5.2-draft installed, user scope):
 
-1. Agent loads with the full 12-rule baseline visible in its system
-   prompt (`Agent({subagent_type: "code-toolkit:implementer"})`
-   resolves to the plugin-level agent, not a fallback)
-2. Agent behavior reflects baseline (e.g. surfaces uncertainty
-   instead of guessing per Rule 1; refuses to refactor adjacent
-   code per Rule 3; encodes WHY in tests per Rule 9)
-3. Existing SDD orchestration loop (status handling, reviewer
-   dispatch, verdict resolution) unchanged
+> *"I need to refactor `UserService.authenticate` to add MFA support.
+> This is >1 hour of work touching auth + token issuance + tests.
+> Use code-toolkit to split into tasks and dispatch."*
 
-PASS → drop `-draft`, v0.5.2 ships. Phase 2 (v0.6.0) can then
-proceed with confidence.
+The session walked the full code-toolkit pipeline: router →
+brainstorming (5-axis HARD-GATE refused "skip to dispatch" shortcut)
+→ Axis 4 multilingual research (4 parallel WebSearches: 2 EN + 2 JA;
+FSA Japan 2026 JA-only regulatory finding surfaced; メルカリ
+engineering blog cited; phased TOTP-now → passkey-next
+recommendation with conditional reversal) → writing-plans (caught
+own 8-12-task estimate exceeded skill's 5-task ceiling, refused to
+silently violate it, decomposed into 3 parts of ≤5 each;
+plan-document-reviewer evaluator PASS 11/11) → SDD-dispatch gate
+(refused to dispatch against fictional `src/services/UserService.ts`
+paths despite user's "work without stopping" directive — Rule 12
+"fail loud").
 
-### v0.5.1-draft status (P15-11 multilingual coverage)
+User then explicitly authorized one validation dispatch:
 
-The v0.5.1-draft self-check PASSED with 9 JA sources surfaced in the
-rate-limiting ritual. Clean-context ritual (fresh Claude session)
-still pending; can run alongside v0.5.2 ritual.
+> *"Dispatch task #1 to `code-toolkit:implementer` exactly once. I
+> expect NEEDS_CONTEXT because `UserService.ts` doesn't exist —
+> that's the validation signal."*
+
+**Three signals fired; signal (c) stronger than predicted**:
+
+| Signal | Predicted | Observed | Verdict |
+|---|---|---|---|
+| (a) Plugin-level agent resolution via `Agent({subagent_type:"code-toolkit:implementer"})` | clean dispatch, no fallback | clean dispatch, plugin-level agent received task + status contract | ✅ PASS |
+| (b) 12-rule baseline visible in system prompt | baseline content available to agent | agent quoted Rule 1 ("Stop when confused. Name what's unclear.") and Rule 12 ("'Completed' is wrong if anything was skipped silently.") **verbatim** | ✅ PASS — direct SSOT injection evidence |
+| (c) Don't-guess path | `NEEDS_CONTEXT` (ask-and-proceed) | `BLOCKED` (external state must change first) — agent correctly discriminated SDD status taxonomy's two refusal paths | ✅ PASS — stronger than predicted |
+
+Bonus signals (unprompted):
+
+- Agent **refused to use the "work without stopping" directive as
+  cover for fabrication** — distinguished "skip clarifying
+  questions" from "invent missing infrastructure". Rationalization-
+  resistance discipline that the toolkit's anti-pattern lists are
+  designed to provoke.
+- Agent **cited tdd-iron-law §"Legitimate legacy-code backfill"
+  cross-skill content** correctly when discussing characterization
+  tests pinning observed behavior. Plugin-level agent has access
+  to (and uses) related skill knowledge unprompted.
+
+### v0.5.1 — also dropped `-draft` (P15-11 multilingual coverage)
+
+The v0.5.1-draft self-check had already PASSED with 9 JA sources
+surfaced in the rate-limiting ritual. The v0.5.2 natural-flow ritual
+above validates P15-11 a second time, more strongly:
+
+- 4 parallel WebSearches (2 EN + 2 JA) dispatched **without prompt
+  reminder** — protocol fully internalized
+- JA-only **regulatory** finding (FSA Japan 2026-04-16 passkeys
+  guidance) surfaced — the strongest possible empirical case for the
+  multilingual protocol's design rationale (EN searches would never
+  return JP-financial-regulator guidance)
+- メルカリ engineering blog actually found and cited — confirms the
+  "JA vendor documentation invisible to EN search" hypothesis
+- Cross-language consensus + JA-specific conditional reversal both
+  surfaced in the Axis 4 output
+
+Both `v0.5.1` and `v0.5.2` ship together in this commit (drop `-draft`
+from both version fields; ROADMAP P15-11 + P15-12 rows reflect ritual
+PASS; this changelog entry covers both).
+
+### Files changed (drop-`-draft` ship)
+
+- 10 skill SKILL.md `version:` 0.5.2-draft → 0.5.2 (P15-8 parity)
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` version
+  0.5.2-draft → 0.5.2
+- `ROADMAP.md` — P15-11 + P15-12 Phase 1 rows updated with ritual
+  PASS details; P15-12 Phase 2 marked unblocked
+- `CHANGELOG.md` — `[0.5.2-draft]` → `[0.5.2]` + this PASS section;
+  also `[0.5.1-draft]` → `[0.5.1]`
 
 ---
 
-## [0.5.1-draft] — 2026-05-16
+## [0.5.1] — 2026-05-16
+
+**Ship status**: ritual PASS. Validated via v0.5.2's natural-flow SDD
+ritual (see §SDD ritual verification in `[0.5.2]` entry above) where
+brainstorming Axis 4 dispatched 4 parallel WebSearches (2 EN + 2 JA)
+**without prompt reminder** and surfaced JA-only FSA Japan regulatory
+guidance + メルカリ engineering blog — the strongest possible
+empirical case for the multilingual protocol's design rationale.
 
 Phase 1.5 patch P15-11 — brainstorming Axis 4 §Multilingual coverage.
 Closes single-language sampling-bias gap surfaced in v0.5.0 ritual
