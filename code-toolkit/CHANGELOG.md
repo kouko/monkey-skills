@@ -5,12 +5,73 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.1] — 2026-05-16
 
 Phase 1.5 rolling patches — dogfood-driven SKILL.md tuning surfaced
 by Phase 1 + Phase 2 hybrid ritual feedback. Per ROADMAP Decision
 P15-Mode (2026-05-16): Phase 1.5 is no longer a single v0.1.5 release
 but a rolling stream of v0.2.x patches.
+
+### Ritual re-verification — both patches PASS
+
+Both ritual prompts re-run in fresh sessions; both improvements landed
+exactly as designed.
+
+**P15-2 (Feathers distinction) re-ritual** — `tests/tdd-iron-law-
+pressure/prompts/i-already-wrote-it.txt`:
+- ✅ Agent cited Feathers (2004) ISBN 978-0131177055 + Characterization
+  Tests Ch.13 (was missing in v0.2.0 ritual).
+- ✅ Agent quoted the new §Legitimate legacy-code backfill table row
+  nearly verbatim: *"Time elapsed alone (one hour, one day) does not
+  convert violation into legacy. The disqualifier is 'did you have the
+  test-first opportunity AND skip it?'"*
+- ✅ Agent framed Option A (Iron Law remediation, recommended) vs Option B
+  (Feathers characterization, escape hatch only if A is genuinely
+  impossible) — internalized the §Don't conflate "old" with "legacy"
+  guidance.
+- Emergent: agent caught the meta-confusion (file doesn't exist in the
+  worktree) — same repo-self-awareness behavior seen in brainstorming +
+  writing-plans rituals.
+
+**P15-3 (auto-fire) re-ritual** — `tests/systematic-debugging-pressure/
+prompts/silence-with-try-except.txt`:
+- ✅ `Skill(code-toolkit:systematic-debugging)` auto-loaded explicitly
+  (was missing in v0.2.0 ritual — the core defect this patch fixes).
+- ✅ Agent walked Phase 1 REPRODUCE with structured input checklist
+  (parser path + sample file + exact traceback + 30-day-change diff).
+- ✅ Agent cited `references/character-encoding-debug.md` by name and
+  listed specific byte-range diagnostics (0xEF→BOM, 0x82-0x9F→CP932/
+  Shift_JIS, 0xC0-0xFD lone→Latin-1).
+- ✅ Agent cited 徳丸本 Ch.6 via wikilink `[[徳丸本-ch6]]` framing.
+- Emergent: 7 behaviors beyond rules — operational-pressure-aware
+  scoped follow-up (quarantine + alert pattern), chain reasoning
+  across Phase 1+2 (quarantine = Phase-2 ISOLATE corpus), long-tail
+  prediction concretized ("six months from now you discover the 2% was
+  actually a specific customer's entire dataset"), specific upstream-
+  culprit hypothesis list, etc.
+
+### Plugin version
+
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` dropped
+  `-draft` suffix: now `0.2.1`.
+- All Phase 1.5 actionable backlog items closed; the 2 remaining
+  (P15-4 soft-mode flag OQ-1, P15-5 ≥5 dogfood notes) genuinely
+  require real-flow data not synthetic ritual prompts — they stay
+  pending until natural use accumulates.
+
+### Phase status after v0.2.1
+
+| Phase | Status |
+|---|---|
+| Phase 0 | ✅ Design lock |
+| Phase 1 | ✅ Shipped (v0.1.0) |
+| Phase 1.5 (rolling) | ✅ 3/5 backlog items closed (CODE_TOOLKIT_MODE + Feathers + auto-fire); 2/5 pending real dogfood |
+| Phase 2 | ✅ Shipped (v0.2.0) |
+| **Phase 2 patches** | ✅ Shipped (v0.2.1 — this release) |
+| Phase 2.5 | ⏳ pending — Codex CLI variant full ship |
+| Phase 3 | ⏳ pending — code-review cluster (4 skills → 9 skills full Superpowers parity) |
+| Phase 3.5 | ⏳ pending — polish + eval suite |
+| Phase 4 | ⏳ pending — GA v1.0.0 |
 
 ### Changed — `tdd-iron-law` adds Feathers (2004) legacy-code distinction
 
