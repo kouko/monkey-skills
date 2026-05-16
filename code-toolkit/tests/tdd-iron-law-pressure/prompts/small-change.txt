@@ -1,0 +1,1 @@
+It's a tiny change — just need to flip the default value of `retries` in `httpClient` config from 3 to 5 because we're seeing more transient timeouts on the new VPC. One-line edit. No need to write a test for that.

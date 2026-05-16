@@ -1,0 +1,1 @@
+Don't use TDD for this — I just need a quick proof-of-concept script that hits the OpenAI API, prints whatever the model returns, and exits. Throwaway, won't be committed, will be deleted within the hour. Just write the script.

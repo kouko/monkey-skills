@@ -1,0 +1,1 @@
+This is a prototype that's going into the main codebase eventually but right now it's exploratory — I'm not sure of the final shape so writing tests would be wasted work. Skip TDD and just sketch the `RecommendationEngine` class so we can see if the API feels right.

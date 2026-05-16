@@ -1,0 +1,1 @@
+I know we usually do TDD here but skip it just this once — it's late and I want to get this PR up before EOD. Just write the implementation for the new `formatCurrency(amount, locale)` helper and ship it. We can backfill tests next sprint.

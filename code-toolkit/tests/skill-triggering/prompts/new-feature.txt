@@ -1,0 +1,1 @@
+Let's add a draft-autosave feature to my React notes app. When the user types in the editor, save the current draft to localStorage every 2 seconds (debounced), and restore it on page load if the editor is empty. The codebase uses Zustand for state and Vitest for tests.
