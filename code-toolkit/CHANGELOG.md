@@ -24,11 +24,42 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
-## [Unreleased]
+## [0.4.0] — 2026-05-16
 
-Phase 1.5 rolling patches P15-8 + P15-9 — caught by Phase 4 GA
-verification ritual (Ritual 2 Session 2 close-out flow + Sessions
-4-5 superpowers prereq investigation).
+Codex CLI variant + Phase 3.5 polish + Phase 4 GA prep + Phase 1.5
+patches P15-8 + P15-9 — all ship in one minor bump per the v0.4.0
+"new harness + release engineering" scope.
+
+### Acceptance gates verified at v0.4.0 ship
+
+- **Phase 4 Ritual 2 (cross-plugin integration)**: 3 of 3 cross-
+  plugin delegation rituals PASS in fresh live sessions (Session 1
+  complexity-critique + 7 emergent; Session 2 git-memory + 6
+  emergent; Session 3 code-team coexistence + 8 emergent INCLUDING
+  the "two-pass orchestration" design-level insight where the agent
+  caught a flaw in the user's plan and corrected it). Sessions 4-5
+  superpowers SKIP per P15-9 (test prereq gap, not toolkit defect;
+  see below).
+- **All offline gates**: claude plugin validate (✔) + marketplace
+  description sync (✔ 17/17) + verify-drift.py (✔ 12/12 byte-
+  identical functional copies of code-team) + check-skill-structure
+  (✔ 10/10) + integration scripts offline (✔ 25/25 across 5
+  scripts).
+- **Codex CLI build**: complete; verification ritual deferred to
+  user-side Codex CLI session (Codex CLI installed on this machine
+  at `/opt/homebrew/bin/codex` — verification can happen anytime
+  per tests/codex-cli/README.md).
+
+### Phase 1.5 rolling patches P15-8 + P15-9 — Phase 4 ritual feedback
+
+Phase 1.5 backlog: 7 of 9 items closed at v0.4.0 ship; 2 remaining
+(P15-4 soft-mode + P15-5 dogfood notes) are dogfood-data-gated for
+v1.0.0 release engineering.
+
+(Detailed breakdown of P15-8 + P15-9 below; full v0.4.0 build
+content continues after.)
+
+### Changed — P15-8: skill `version:` field sync with plugin manifests
 
 ### Changed — P15-8: skill `version:` field sync with plugin manifests
 
@@ -102,7 +133,13 @@ shipped at v0.3.0; were missing from backlog) + P15-8 + P15-9 rows.
 Acceptance line: 7 of 9 backlog items closed; P15-4 (soft-mode
 flag) + P15-5 (≥5 dogfood notes) still dogfood-data-gated.
 
-## [Unreleased — superseded by above]
+### Earlier in this version — Phase 2.5 + 3.5 + 4 prep batches (build content)
+
+The bulk of v0.4.0 is the Codex CLI variant ship (Phase 2.5) + 3
+worked examples (Phase 3.5 batch A) + 5 cross-plugin integration
+test scripts (Phase 4 batch B) + release engineering (Phase 4 batch
+C = announcement draft + multi-version retrospective + public-facing
+README). Plus the 2 Phase 1.5 rolling patches above. Details:
 
 Phase 2.5 BUILD — Codex CLI variant manifest + docs + integration
 scripts ship. Verification ritual deferred to user-side Codex CLI

@@ -1,7 +1,7 @@
 ---
 name: requesting-code-review
 description: 'Use BEFORE any push / merge / PR-open action on a non-trivial branch — whole-branch / whole-PR review of the cumulative diff. Examples (positive triggers): "review my branch", "look at my changes", "code review please", "audit the diff", "is this ready to merge", "I''ve finished feature X". Examples (stress / skip-rationalization triggers — this skill MUST also fire here): "just push", "let me push", "skip the review", "SDD already reviewed each task", "small change, no review needed", "it''s fine, just merge", "tests pass so we''re done", any `git push` / `gh pr create` / `gh pr merge` invocation without prior review-PASS in this session. Different from `subagent-driven-development`''s per-task code-quality-reviewer (per atomic task during execution) — this skill is whole-PR review at end-of-work and catches cross-task interactions that per-task review can''t see. Dispatches code-reviewer subagent that loads code-toolkit''s rubrics (quality-gate / arch-gate / security-checklist) directly per P3-A (not via SDD wrapper). Output is severity-tagged structured review (🔴 fatal / 🟡 should-fix / 🟢 nit) with verdict aggregation. コードレビュー・PR 全体審査・push 前必須・skip 拒否。程式碼審查・PR 全面審查・push 前強制・拒絕跳過。'
-version: 0.4.0-draft
+version: 0.4.0
 ---
 
 <SUBAGENT-STOP>

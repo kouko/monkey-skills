@@ -1,7 +1,7 @@
 ---
 name: verification-before-completion
 description: 'Use BEFORE declaring "done" — claiming a task / branch / feature complete without running the package-level test suite is the failure mode this skill exists to prevent. Examples: "I''m done with feature X", "this is ready to ship", "branch is finished", "tests pass" (without showing the invocation), "merge this", any "complete" / "ready" / "finished" framing. HARD-GATE: tests MUST run at package level (npm test / pytest / go test / cargo test / bundle exec rspec / mvn test / etc.), not single-file lint or one-test-spotcheck. Per P3-B. Catches: tests passing in isolation but breaking together (test interaction bugs); orphan tests not in default suite; lint missing runtime regressions; "it works on my machine" before actual suite invocation. Refuses "tests pass" claims without invocation evidence. 完了前検証・パッケージレベルテスト強制・ "tests pass" 主張検証。完成前驗證・套件層級測試強制・"測試過了" 主張驗證。'
-version: 0.4.0-draft
+version: 0.4.0
 ---
 
 <SUBAGENT-STOP>
