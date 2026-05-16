@@ -1,6 +1,6 @@
 {
   "name": "code-toolkit",
-  "version": "0.2.0-draft",
+  "version": "0.2.0",
   "description": "Process-discipline + canon-grounded coding toolkit for Codex CLI — Superpowers-style workflow + 8-source primary-grounding from `domain-teams:code-team`. Phase 1 only ships Claude Code; this Codex manifest is a v0.2.5 ship target placeholder (see ROADMAP.md Phase 2.5).",
   "author": {
     "name": "kouko",

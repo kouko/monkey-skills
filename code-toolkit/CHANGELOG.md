@@ -5,10 +5,35 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] — 2026-05-16
 
-Phase 2 underway — Discovery + planning + repair cluster. Skills accumulate
-under [Unreleased] until all 3 ship, then bump to [0.2.0].
+Phase 2 ship — Discovery + planning + repair cluster. Three new skills
+shipped on top of the v0.1.0 process+discipline+workflow core, completing
+6 of 9 planned skills (Phase 3 ships the remaining review+verification+
+git-worktree+finish-branch cluster).
+
+### Phase 2 ritual (TC-1 hybrid cadence) results
+
+All three Phase 2 skills passed the per-Phase ritual:
+
+- **brainstorming** (a98f3a9): 5/5 MUST + 8 emergent behaviors beyond
+  rules. Agent caught a meta-confusion in the test prompt (no application
+  code to gate in a skills repo); self-referenced this branch's own
+  commits; honored Open Questions blocking; used JTBD framing precisely.
+- **writing-plans** (38f5486): 5/5 MUST + dispatched plan-document-
+  reviewer subagent via cross-plugin delegation (domain-teams:evaluator
+  with the prompt as rubric); reviewer returned PASS 12/12; agent applied
+  observational notes; pre-emptively named Beck Child Test child-split
+  for the at-risk task. Test evidence preserved at
+  `code-toolkit/docs/example-runs/2026-05-16-writing-plans-stress-test-
+  plan.md` (commit 8cda0f3).
+- **systematic-debugging** (9cdd6ad): 7/8 MUST PASS at router level —
+  agent refused try/except masking, named data-integrity consequence,
+  proposed fallback chain with quarantine + loud-not-silent logging,
+  surfaced systematic-debugging as the right-answer path. Observed gap:
+  skill did not auto-fire (description match miss on production-bug
+  vocabulary). See "Known gaps" below; Phase 1.5 description tuning
+  scheduled.
 
 ### Added — `systematic-debugging` skill (3 of 3 Phase 2 skills) — closes Phase 2
 
@@ -78,7 +103,7 @@ ISOLATE → HYPOTHESIZE → VERIFY) with explicit gates between phases.
 
 ### Phase 2 closeout
 
-This commit completes the Phase 2 skill triplet:
+Phase 2 skill triplet complete:
 1. ✅ `brainstorming` — Discovery (Stage 1)
 2. ✅ `writing-plans` — Planning (Stage 2)
 3. ✅ `systematic-debugging` — Repair (Stage 5)
@@ -86,14 +111,31 @@ This commit completes the Phase 2 skill triplet:
 Stages 3-4 (Execution / Discipline) shipped in Phase 1
 (`subagent-driven-development` / `tdd-iron-law`).
 
-The plugin version stays `0.2.0-draft` until the user runs the
-Phase 2 ritual for systematic-debugging in a fresh session and
-confirms PASS. The 4-step path to `0.2.0`:
-1. `claude plugin validate code-toolkit` ✔ (already passing)
-2. `claude plugin uninstall + install code-toolkit@monkey-skills --scope local`
-3. Run one systematic-debugging-pressure prompt in fresh session
-4. If PASS, drop -draft from both manifest version fields; convert
-   this [Unreleased] section to `## [0.2.0] — YYYY-MM-DD`; commit.
+### Known gaps (Phase 1.5 backlog)
+
+The hybrid testing cadence surfaced two skill-description tuning
+opportunities — both gated to Phase 1.5 dogfood-driven patches per
+TC-1 (test cadence does not block ship; tune in next minor):
+
+1. **`tdd-iron-law` SKILL.md — Feathers 2004 distinction**. Phase 1
+   live test surfaced that the agent did not cite *Working Effectively
+   with Legacy Code* (ISBN 978-0131177055) when distinguishing
+   legitimate legacy-backfill from "I just wrote 200 lines without
+   tests." Iron Law itself worked; the Feathers distinction is a
+   SKILL.md sharpening.
+2. **`systematic-debugging` SKILL.md description — auto-fire keywords**.
+   Phase 2 live test (`silence-with-try-except.txt`) surfaced that the
+   skill did not auto-load via description match on a production-bug
+   prompt — the agent handled it correctly at the router level but
+   without loading the specialist's 4-phase framework. Description
+   tuning candidate: add production-bug vocabulary ("error in
+   production", "throwing exception", "intermittent", "investigate",
+   "broken", "won't work") to the description so auto-discovery catches
+   production-bug prompts. The skill body itself is correct; only
+   description triggering needs tightening.
+
+Both fixes scheduled for Phase 1.5 alongside the OQ-1 soft-mode flag,
+OQ-5 CODE_TOOLKIT_MODE escape hatch, and ≥5 dogfood session notes.
 
 ### Added — `writing-plans` skill (2 of 3 Phase 2 skills)
 
