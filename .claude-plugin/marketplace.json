@@ -81,7 +81,7 @@
     },
     {
       "name": "collab-toolkit",
-      "description": "Browser automation toolkit wrapping vercel-labs/agent-browser. 5 read-only office-collaboration skills (Asana / Slack / Notion / Google Calendar / Gmail) — search, list, fetch via semantic-first selectors over Chrome (shared profile by default, dedicated profile opt-in). Headless background after one-time /collab-setup. ⚠️ Claude Code CLI only — Cowork sandbox blocks browser launch.",
+      "description": "Browser automation toolkit wrapping vercel-labs/agent-browser. 5 read-only office-collaboration skills (Asana / Slack / Notion / Google Calendar / Gmail) — search, list, fetch via semantic-first selectors over Chrome (dedicated profile by default, shared profile opt-in via --shared). URL-based login verification. Headless background after one-time /collab-setup. ⚠️ Claude Code CLI only — Cowork sandbox blocks browser launch.",
       "source": "./collab-toolkit/"
     },
     {

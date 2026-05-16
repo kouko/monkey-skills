@@ -42,8 +42,8 @@
 
 | 模式 | 內容 | 使用時機 |
 |---|---|---|
-| **Shared**（預設） | 透過 `--profile <name>` 重複使用日常 Chrome 的登入狀態 | 單一使用者、單一機器 — 最快速的設定 |
-| **Dedicated**（`--dedicated`） | 位於 `~/.local/share/collab-toolkit/profiles/dedicated/` 的單一統合設定檔。Google SSO 在服務間自動串接 → 5 個服務通常只需 2-3 次登入。設定流程由 Claude 編排（不需在終端機操作）。 | Shared 模式 cookies 無法成功轉移時、多帳號情境、與日常 Chrome cookies 隔離、跨機器移植 |
+| **Dedicated**（預設、v0.1.2+） | 位於 `~/.local/share/collab-toolkit/profiles/dedicated/` 的單一統合設定檔。Google SSO 在服務間自動串接 → 5 個服務通常只需 2-3 次登入。設定流程由 Claude 編排（透過 AskUserQuestion，不需在終端機操作）。 | **預設 — 辦公協作用途推薦。** 多 profile、多帳號、SSO refresh 等情境都能穩定運作。與日常 Chrome 狀態完全脫鉤。 |
+| **Shared**（`--shared`、選擇性啟用） | 透過 `--profile <name>` 重複使用日常 Chrome 的登入狀態 | ⚠️ Shared 模式有已知失敗情境：Chrome 執行中時 cookies 無法轉移（profile lock）、macOS Keychain 可能需要手動授權、多個 Chrome profile 時要挑「對」的、有 SSO refresh 的服務在 headless 下可能失效、verify 對行銷頁面 redirect 容易誤判。**僅在以下條件成立時推薦：只有 1 個 Chrome profile、5 個服務全用同一個 Google 帳號、沒有 SSO refresh。** |
 
 隨時切換：`/collab-setup --switch-mode`（v0.1.2 後支援雙向 toggle）。
 

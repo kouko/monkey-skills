@@ -28,7 +28,7 @@ xdg_bin_home()    { echo "$HOME/.local/bin"; }
 # by main() before any function uses them. Functions called outside main()
 # (e.g., from bats) use lazy-fallback computation: ${VAR:-$(helper)/...}.
 CONFIG_DIR=""; DATA_DIR=""; BIN_DIR=""; CONFIG=""; DEDICATED_PROFILE=""
-DEDICATED=false; REAUTH=""; SWITCH=false; VERIFY_ONLY=false; MODE=""
+DEDICATED=false; SHARED=false; REAUTH=""; SWITCH=false; VERIFY_ONLY=false; MODE=""
 ACTION=""; SHARED_PROFILE_ARG=""; OPEN_SERVICE=""
 
 # ============================================================================
@@ -40,6 +40,7 @@ parse_args() {
     case "$1" in
       # User-facing flags (backward compat with v0.1.0+)
       --dedicated)    DEDICATED=true ;;
+      --shared)       SHARED=true ;;
       --reauth)       REAUTH="$2"; shift ;;
       --switch-mode)  SWITCH=true ;;
       --verify)       VERIFY_ONLY=true ;;
@@ -275,19 +276,60 @@ verify_all_services() {
 }
 
 verify_one() {
+  # v0.1.2: URL-based check (primary) + title-based check (fallback).
+  # Title alone was unreliable — services often redirect not-logged-in users
+  # to marketing landing pages whose titles don't contain "Sign in" / "Log in"
+  # (observed: Slack "AI Work Platform...", Notion "The AI workspace...",
+  # Gmail just "Gmail"). URL-based hostname mismatch catches these.
   local service="$1"
-  local url title
+  local url current_url title expected_host current_host
   url=$(service_url "$service")
   abx open "$url" >/dev/null
-  title=$(abx get title)
-  case "$title" in
-    *"Sign in"*|*"Log in"*|*"Login"*)
-      echo "⚠️ $service: NOT logged in (title: $title)"
-      [ "$MODE" = "shared" ]    && echo "   → Log into $service in your daily Chrome, then re-run /collab-setup --verify"
-      [ "$MODE" = "dedicated" ] && echo "   → Run: /collab-setup --reauth $service"
-      ;;
-    *) echo "✓ $service ready (title: $title)" ;;
-  esac
+  current_url=$(abx get url 2>/dev/null || echo "")
+  title=$(abx get title 2>/dev/null || echo "")
+
+  # Extract hostnames for comparison
+  expected_host=$(echo "$url"         | sed -E 's#^https?://([^/]+).*#\1#')
+  current_host=$(echo "$current_url"  | sed -E 's#^https?://([^/]+).*#\1#')
+
+  local not_logged_in=false reason=""
+
+  # Check 1: hostname mismatch → service redirected away from its app host
+  # (e.g., app.slack.com → slack.com marketing, mail.google.com → google.com/gmail/about,
+  #  www.notion.so → notion.so/product, anything → accounts.google.com)
+  if [ -n "$current_host" ] && [ "$current_host" != "$expected_host" ]; then
+    not_logged_in=true
+    reason="hostname redirected: $expected_host → $current_host"
+  fi
+
+  # Check 2: same host but URL path indicates login page
+  # (e.g., app.asana.com/-/login)
+  if ! $not_logged_in; then
+    case "$current_url" in
+      *"/login"*|*"/signin"*|*"/sign-in"*|*"/sign_in"*|*accounts.google.com*)
+        not_logged_in=true
+        reason="URL is login page: $current_url"
+        ;;
+    esac
+  fi
+
+  # Check 3: title fallback (catches edge cases the URL checks miss)
+  if ! $not_logged_in; then
+    case "$title" in
+      *"Sign in"*|*"Log in"*|*"Login"*|*"sign in"*|*"log in"*)
+        not_logged_in=true
+        reason="title indicates login page: $title"
+        ;;
+    esac
+  fi
+
+  if $not_logged_in; then
+    echo "⚠️ $service: NOT logged in ($reason)"
+    [ "$MODE" = "shared" ]    && echo "   → Log into $service in your daily Chrome under the configured profile, then re-run /collab-setup --verify"
+    [ "$MODE" = "dedicated" ] && echo "   → Run: /collab-setup --reauth $service"
+  else
+    echo "✓ $service ready (URL: $current_url, title: $title)"
+  fi
 }
 
 service_url() {
@@ -355,19 +397,26 @@ main() {
   install_chrome
   install_abx
 
-  # --switch-mode is bidirectional (v0.1.2 fix): toggle between shared and
-  # dedicated based on current config. --dedicated forces dedicated regardless
-  # of current state.
+  # v0.1.2 default = dedicated (more reliable than shared for office-
+  # collaboration use cases; see Profile modes section in README). Shared
+  # remains opt-in via --shared.
+  #
+  # --switch-mode is bidirectional: toggle between shared and dedicated
+  # based on current config. --dedicated forces dedicated, --shared forces
+  # shared, regardless of current state.
   if $SWITCH; then
     case "$(current_mode)" in
       shared)    setup_dedicated_direct ;;
       dedicated) setup_shared ;;
-      *)         setup_shared ;;   # no prior config → default to shared
+      *)         setup_dedicated_direct ;;   # no prior config → default to dedicated
     esac
+  elif $SHARED; then
+    setup_shared
   elif $DEDICATED; then
     setup_dedicated_direct
   else
-    setup_shared
+    # No mode flag → v0.1.2 default = dedicated
+    setup_dedicated_direct
   fi
 }
 
