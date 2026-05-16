@@ -141,9 +141,10 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-8 | 10 個 skill frontmatter `version:` 與 plugin manifest 對齊（皆 bump 至 v0.4.0-draft） | v0.4.0-draft Phase 2 ritual feedback（version-stamp drift caught by requesting-code-review cross-task-coherence dimension） | ✅ 已 ship（v0.4.0） |
 | P15-9 | `tests/integration/test-superpowers-mode-{on,off}.sh` — 區分 installed vs enabled；installed-but-not-enabled SKIP 而非 PASS | v0.4.0-draft Phase 4 ritual Session 4-5（superpowers 在 user 機器 installed 但 `enabledPlugins` 沒包含；coexistence live verification deferred） | ✅ 已 ship（v0.4.0） |
 | P15-10 | Router rule #5 "Research before asking" + brainstorming Axis 4 research protocol (WebSearch-grounded alternatives, not imagined) | User pain pattern: 重複手動要求 "先 search 業界實踐"。Option D — minimum-invasive: 1 router rule + 1 Axis 4 inline protocol；無新 skill | ✅ 已 ship（v0.5.0 — ritual PASS + ~12 emergent behaviors） |
+| P15-11 | brainstorming Axis 4 §Multilingual coverage — EN + JA minimum；bilingual query patterns table；single-language anti-pattern | User extension request post-P15-10: 9-source rate-limiting bibliography 100% 英文 → 顯示出單語言 sampling bias；Mercari / Cookpad / Qiita / Zenn / 徳丸本 等日文 sources 系統性遺漏 | ✅ 已 ship（v0.5.1-draft，pending ritual） |
 
 **Acceptance（rolling）**：
-- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10（8 of 10 closed）
+- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11（9 of 11 closed）
 - ⏳ P15-4 / P15-5（等真實 dogfood data — v1.0.0 release engineering 階段 unblock）
 
 ---

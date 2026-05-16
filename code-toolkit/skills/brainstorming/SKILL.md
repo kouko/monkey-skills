@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: 'Use BEFORE implementing — for any task that touches new behavior, new module boundaries, or non-obvious design space. Enforces a HARD-GATE: explore intent and alternatives FIRST through a 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete), then emit a structured brief that writing-plans consumes. Refuses "this is simple", "I know what to build", "let''s just start coding" rationalizations. Grounded in Jobs-To-Be-Done (Christensen 1997, ISBN 978-0875845852) and Klement (2018) job-story format. ブレインストーミング・要件発掘・先に探索。腦力激盪・需求探索・先想清楚再寫。'
-version: 0.5.0
+version: 0.5.1-draft
 ---
 
 <SUBAGENT-STOP>
@@ -92,6 +92,31 @@ Run **WebSearch** to find what the industry currently does for this problem clas
 | `<topic> HackerNews` / `<topic> reddit` | "rate limiting algorithm hackernews discussion" |
 | `<vendor> <topic>` | "Cloudflare rate limiting algorithm" / "AWS API Gateway rate limiting" |
 
+#### Multilingual coverage — at minimum English + Japanese
+
+For every Axis 4 research round, run **at least one English search AND at least one Japanese search**. Single-language search is sampling bias.
+
+**Why both languages**:
+
+- Japanese engineering blogs (Qiita / Zenn / はてなブログ / 個人 Tech Blog) often cover details + 失敗事例 / post-mortems the English web misses
+- Japanese-developed tech (Mercari / Cookpad / LINE / Sansan / SmartHR / freee / DeNA) frequently documented only in Japanese
+- Cross-language consensus is a stronger signal than single-language consensus — when EN + JA agree, the recommendation is robust; when they disagree, the disagreement itself is a finding
+- Domain-specific gap example: for encoding security, English search underrepresents 文字コード attack vectors that 徳丸本 第 2 版 Ch.6 catches
+
+**Bilingual query patterns** (mix EN + JA in the same search round):
+
+| Lang | Pattern | Example for "rate limiting algorithm" |
+|---|---|---|
+| EN | `<topic> industry best practice 2025` | "rate limiting algorithm industry best practice 2025" |
+| JA | `<topic 日本語> 設計 ベストプラクティス 2025` | "レート制限 アルゴリズム 設計 ベストプラクティス 2025" |
+| JA | `<topic 日本語> 実装事例 / 採用事例` | "レート制限 Stripe 実装事例" |
+| JA | `<vendor 日本語名> <topic 日本語>` | "メルカリ レート制限" / "クックパッド rate limiting" |
+| JA | `<topic 日本語> Qiita` / `<topic 日本語> Zenn` | "レート制限 アルゴリズム Qiita" |
+
+Cite sources in **both languages** in the output format. Label each citation with its source language (EN / JA) so the user can audit coverage at a glance.
+
+**If a Japanese-language search returns 0 relevant hits**, surface that as a finding — *"Searched in 日本語 with patterns X, Y; 0 relevant Japanese-language results — this topic appears to have English-only industry coverage."* Don't silently skip the language axis; the empty result IS the signal.
+
 **Output format** — when surfacing alternatives to the user, structure as:
 
 ```
@@ -130,6 +155,7 @@ If WebSearch returns "the industry has only ever had 2 approaches to this," that
 
 - ❌ **"Alternatives I can think of"** — agent's training data is frozen; alternatives I-can-think-of are dated. Use WebSearch.
 - ❌ **Single-source research** — if all 3 alternatives come from one blog post, the research is shallow. Cross-source.
+- ❌ **Single-language coverage** — research limited to one language is sampling bias. Per §Multilingual coverage, at minimum EN + JA required; cite sources in both, label each by source language.
 - ❌ **Surface options without trade-offs** — listing 3 algorithm names with no pros/cons is decoration, not decision-support.
 - ❌ **No "my take"** — research that doesn't end in agent's recommendation pushes the synthesis cost back to the user. Agent's job is to compress research INTO a recommendation, surface the recommendation, and document the reasoning so user can override.
 

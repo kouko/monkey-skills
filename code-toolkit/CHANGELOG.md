@@ -24,6 +24,96 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.5.1-draft] — 2026-05-16
+
+Phase 1.5 patch P15-11 — brainstorming Axis 4 §Multilingual coverage.
+Closes single-language sampling-bias gap surfaced in v0.5.0 ritual
+(9-source rate-limiting bibliography was 100% English; Mercari /
+Cookpad / Qiita / Zenn / 徳丸本-class JA sources systematically missed).
+
+### What changed
+
+**`skills/brainstorming/SKILL.md`** Axis 4 §Research protocol — new
+subsection between §Search query patterns and §Output format:
+
+> #### Multilingual coverage — at minimum English + Japanese
+>
+> For every Axis 4 research round, run **at least one English search
+> AND at least one Japanese search**. Single-language search is
+> sampling bias.
+
+Includes:
+
+- **5-row bilingual query patterns table** — 1 EN canonical + 4 JA
+  (`設計 ベストプラクティス 2025` / `実装事例` / `<vendor 日本語名>` /
+  `<topic> Qiita / Zenn`)
+- **"Why both languages" 4-bullet rationale** — Qiita/Zenn coverage
+  gaps; JA-only vendor docs (Mercari/Cookpad/LINE/Sansan/SmartHR/
+  freee/DeNA); cross-language consensus as robustness signal;
+  encoding-security 文字コード example
+- **Empty-result protocol** — *"Searched in 日本語 with patterns X, Y;
+  0 relevant Japanese-language results — this topic appears to have
+  English-only industry coverage"* (empty result IS a signal, not
+  permission to skip)
+- **Source-language citation requirement** — each citation labeled
+  EN / JA so user can audit coverage at a glance
+
+§Anti-patterns — new row:
+
+> - ❌ **Single-language coverage** — research limited to one language
+>   is sampling bias. Per §Multilingual coverage, at minimum EN + JA
+>   required; cite sources in both, label each by source language.
+
+### What did NOT change
+
+- Router rule #5 unchanged — still says "WebSearch findings (2-4
+  industry approaches w/ sources)". The multi-language constraint
+  sits inside the Axis 4 protocol that rule #5 references; updating
+  Axis 4 automatically propagates to all rule-#5 invocations
+  (brainstorming + ad-hoc design questions mid-SDD).
+- Token budget unchanged on router (still 1991/2000, 9-token margin).
+- No new skill, no new rule slot — minimum-invasive extension.
+
+### ROADMAP — P15-11 closed
+
+ROADMAP §Phase 1.5 rolling backlog table — P15-11 row added; closed
+count 9 of 11 (up from 8 of 10). P15-4 soft-mode + P15-5 ≥5 dogfood
+notes remain dogfood-gated for v1.0.0 release engineering.
+
+### Source of patch
+
+User extension request post-v0.5.0 ritual:
+
+> "我可以加上 搜尋時至少要同時用英文與日文搜尋兩種語言的資料來源
+> 的功能嗎？"
+
+User profile: Japanese-speaker; works across EN + JA + ZH-TW. The
+v0.5.0 ritual bibliography being 100% EN was the empirical surface
+that made the gap concrete — single-language coverage is a real
+sampling bias, not a hypothetical concern.
+
+### Pending — ritual verification
+
+This patch ships as `-draft`. Verification step: re-run the same
+rate-limiting pressure prompt in a fresh Claude session; expect at
+minimum 1 JA-language source (Qiita / Zenn / メルカリ engineering
+blog / クックパッド engineering / a Japanese RFC commentary / etc.)
+cited alongside EN sources. PASS → drop `-draft`, v0.5.1 ships.
+
+### Files changed
+
+- `skills/brainstorming/SKILL.md` — Axis 4 §Multilingual coverage
+  subsection added; §Anti-patterns gains single-language row;
+  `version:` 0.5.0 → 0.5.1-draft
+- 9 other skill SKILL.md `version:` 0.5.0 → 0.5.1-draft (parity per
+  P15-8 convention)
+- `.claude-plugin/plugin.json` / `.codex-plugin/plugin.json` — version
+  0.5.0 → 0.5.1-draft
+- `ROADMAP.md` — P15-11 row + acceptance line update
+- `CHANGELOG.md` — this entry
+
+---
+
 ## [0.5.0] — 2026-05-16
 
 Phase 1.5 patch P15-10 — Router rule #5 "Research before asking" +
