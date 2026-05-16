@@ -57,7 +57,7 @@ EOF
 @test "install_agent_browser on macOS with brew uses brew" {
   OSTYPE="darwin23"
   stub_command brew 'echo "brew $*"; exit 0'
-  PATH="$TEST_TMPDIR/bin:$ORIG_PATH"   # don't yet have agent-browser
+  PATH="$TEST_TMPDIR/bin:/usr/bin:/bin"   # isolate from real agent-browser on host PATH
   rm -f "$TEST_TMPDIR/bin/agent-browser"
 
   run install_agent_browser
@@ -79,6 +79,7 @@ EOF
   OSTYPE="darwin23"
   stub_command brew 'echo "brew failure" >&2; exit 1'
   stub_command npm 'echo "npm $*"; exit 0'
+  PATH="$TEST_TMPDIR/bin:/usr/bin:/bin"   # isolate from real agent-browser on host PATH
   rm -f "$TEST_TMPDIR/bin/agent-browser"
 
   run install_agent_browser
@@ -129,25 +130,50 @@ EOF
   [ "$profile" = "Work" ]
 }
 
-@test "write_config_dedicated creates valid JSON with dedicated mode" {
-  run write_config_dedicated
+@test "write_config_dedicated_unified writes mode=dedicated with dedicated_profile path" {
+  run write_config_dedicated_unified "/some/path/dedicated"
   [ "$status" -eq 0 ]
   mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
   [ "$mode" = "dedicated" ]
+  dp=$(jq -r .dedicated_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$dp" = "/some/path/dedicated" ]
 }
 
-@test "setup_dedicated creates 5 profile dirs" {
-  # Stub agent-browser + abx so login phase is no-op
-  stub_command agent-browser 'echo "Asana - Inbox"'
-  echo '#!/bin/sh' > "$TEST_TMPDIR/bin/abx"; chmod +x "$TEST_TMPDIR/bin/abx"
+@test "setup_dedicated_config_only creates unified profile dir + writes config" {
+  run setup_dedicated_config_only
+  [ "$status" -eq 0 ]
+  # Profile dir created
+  [ -d "$XDG_DATA_HOME/collab-toolkit/profiles/dedicated" ]
+  # Config has mode=dedicated and dedicated_profile pointing to that dir
+  mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$mode" = "dedicated" ]
+  dp=$(jq -r .dedicated_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$dp" = "$XDG_DATA_HOME/collab-toolkit/profiles/dedicated" ]
+}
 
-  # Skip interactive login by overriding setup_one_dedicated
-  setup_one_dedicated() { :; }
-
-  run setup_dedicated
+@test "setup_dedicated_config_only does NOT create per-service dirs (v0.1.0/v0.1.1 schema removed)" {
+  run setup_dedicated_config_only
+  [ "$status" -eq 0 ]
   for service in asana slack notion gcal gmail; do
-    [ -d "$XDG_DATA_HOME/collab-toolkit/profiles/$service" ]
+    [ ! -d "$XDG_DATA_HOME/collab-toolkit/profiles/$service" ]
   done
+}
+
+@test "open_headed_service errors when config missing" {
+  rm -f "$XDG_CONFIG_HOME/collab-toolkit/config.json"
+  OPEN_SERVICE=asana run open_headed_service
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"dedicated_profile not set"* ]]
+}
+
+@test "open_headed_service launches agent-browser headed with dedicated profile" {
+  setup_dedicated_config_only >/dev/null
+  stub_command agent-browser 'echo "agent-browser $*"'
+  OPEN_SERVICE=slack run open_headed_service
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--headed"* ]]
+  [[ "$output" == *"--profile $XDG_DATA_HOME/collab-toolkit/profiles/dedicated"* ]]
+  [[ "$output" == *"open https://app.slack.com"* ]]
 }
 
 @test "verify_one detects login wall via title" {

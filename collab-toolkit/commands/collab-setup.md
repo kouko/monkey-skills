@@ -1,41 +1,192 @@
 ---
 name: collab-setup
-description: One-time bootstrap for collab-toolkit. Installs agent-browser, downloads Chrome for Testing, installs abx wrapper, writes ~/.config/collab-toolkit/config.json. Default mode: shared (reuses your Chrome profile login state). Opt-in: --dedicated mode (5 per-service profile dirs, manual login). Sub-commands: --reauth <service>, --switch-mode, --verify.
+description: Bootstrap collab-toolkit. Installs agent-browser, Chrome for Testing, abx wrapper, writes ~/.config/collab-toolkit/config.json. Two modes — shared (reuses your daily Chrome profile login state, default) and dedicated (unified per-toolkit profile, opt-in via --dedicated). v0.1.2 orchestrates dedicated-mode login flow via AskUserQuestion (no terminal interaction needed). Sub-commands: --reauth <service>, --switch-mode (bidirectional toggle), --verify.
 ---
 
 # /collab-setup
 
-Bootstrap collab-toolkit. Runs `scripts/setup.sh` from the plugin directory.
+Bootstrap and configure collab-toolkit. This command is **Claude-orchestrated** — Claude reads the instructions below and drives the flow with `Bash` + `AskUserQuestion` tools. No `!` prefix needed.
 
-## Usage
+`$ARGUMENTS` may contain: `--dedicated`, `--switch-mode`, `--reauth <service>`, `--verify`, or nothing.
 
-```bash
-/collab-setup                       # default: shared mode (read user's Chrome profile)
-/collab-setup --dedicated           # opt-in: dedicated per-service profile dirs (5x manual login)
-/collab-setup --reauth <service>    # re-login a single service (dedicated mode)
-/collab-setup --switch-mode         # toggle between shared and dedicated
-/collab-setup --verify              # re-verify all 5 services are logged in
-```
+The plugin directory containing this command file is `${CLAUDE_PLUGIN_ROOT}` (or, in older runtimes, resolve via `$(dirname this-file)/..`). The setup script lives at `<plugin-root>/scripts/setup.sh`.
 
-## What it does
+---
 
-1. **Install agent-browser**: macOS prefers `brew install agent-browser`; falls back to `npm i -g agent-browser`. Linux/Windows use npm directly.
-2. **Install Chrome for Testing**: runs `agent-browser install` (downloads ~200MB Chromium).
-3. **Install abx wrapper**: copies `scripts/abx` to `$HOME/.local/bin/abx`. Warns if `$HOME/.local/bin` is not on PATH.
-4. **Write config**: `$XDG_CONFIG_HOME/collab-toolkit/config.json` (defaults to `~/.config/collab-toolkit/config.json`).
-5. **Verify services**: opens each of {Asana, Slack, Notion, Google Calendar, Gmail} and checks the page title is not a sign-in page.
+## Step 1: Parse `$ARGUMENTS`
 
-## Implementation
+Determine the requested action:
 
-Executes:
+| `$ARGUMENTS` | Action |
+|---|---|
+| empty | Setup (or re-setup) **shared** mode |
+| `--dedicated` | Setup (or re-setup) **dedicated** mode (unified profile) |
+| `--switch-mode` | Read current `mode` from config, toggle: shared↔dedicated. If no config yet, treat as default (shared). |
+| `--reauth <service>` | Re-open Chrome at one service URL for re-login (dedicated mode only) |
+| `--verify` | Verify all 5 services are logged in (headless) |
+
+Read current mode if config exists:
 
 ```bash
-bash "$(dirname "$(readlink -f "$0")")/../scripts/setup.sh" "$@"
+bash -c 'jq -r .mode ~/.config/collab-toolkit/config.json 2>/dev/null || echo "(none)"'
 ```
 
-Where `$(dirname ...)` resolves to the plugin's `commands/` directory at runtime; we step up one and into `scripts/setup.sh`.
+For `--switch-mode`: if current mode is `shared` → target = dedicated. If `dedicated` → target = shared. If empty → target = shared.
+
+## Step 2: Install (idempotent — runs fast if already installed)
+
+For all actions except `--verify` and `--reauth`, run install phases first:
+
+```bash
+bash "<plugin-root>/scripts/setup.sh" --install-only
+```
+
+This installs agent-browser (Homebrew preferred on macOS, npm fallback), downloads Chrome for Testing if missing, installs `~/.local/bin/abx` wrapper. Already-installed steps are no-ops.
+
+## Step 3: Dispatch by action
+
+### 3a. Setup shared mode
+
+Goal: pick a Chrome profile + write shared-mode config + verify.
+
+1. List Chrome profiles + Google account emails:
+   ```bash
+   bash "<plugin-root>/scripts/setup.sh" --list-profiles-meta 2>/dev/null || true
+   # OR equivalently:
+   bash -c '
+     agent-browser profiles || true
+     source "<plugin-root>/scripts/setup.sh" --source-only
+     list_profiles_with_email 2>/dev/null || true
+   '
+   ```
+
+2. Parse the output. Profile names appear as either directory names (e.g., `Default`, `Profile 1`, `Profile 2`) from `agent-browser profiles` OR as `<dir>: <email> — <display>` lines from `list_profiles_with_email`.
+
+3. Show the user a summary of profile→email mapping and use **AskUserQuestion** to let them pick:
+   - Header: `Chrome profile`
+   - Question: `Which Chrome profile to use for collab-toolkit?`
+   - Options: each profile directory name (e.g., `Default`, `Profile 1`, `Profile 2`). For each option, include the Google account email in the description if known. If you can't determine the list, default options should at minimum include `Default` and `Profile 1`.
+
+4. Write config:
+   ```bash
+   bash "<plugin-root>/scripts/setup.sh" --setup-shared "<chosen_profile_name>"
+   ```
+
+5. Verify all 5 services:
+   ```bash
+   bash -c 'agent-browser close 2>/dev/null; bash "<plugin-root>/scripts/setup.sh" --verify'
+   ```
+   (Daemon close ensures fresh profile snapshot.)
+
+6. Report results to user. For each `⚠️ NOT logged in` service, instruct user to log in via their daily Chrome under the chosen profile, then re-run `/collab-setup --verify`.
+
+### 3b. Setup dedicated mode (orchestrated login flow)
+
+Goal: write dedicated-mode config + open headed Chrome + walk user through 5 service logins via AskUserQuestion + verify.
+
+1. Write config + create dedicated profile dir (does NOT open Chrome yet):
+   ```bash
+   bash "<plugin-root>/scripts/setup.sh" --setup-dedicated-config
+   ```
+
+2. Clear daemon so the new profile takes effect:
+   ```bash
+   agent-browser close 2>/dev/null || true
+   ```
+
+3. Walk user through 5 service logins **sequentially**. For each service in this order: `asana, slack, notion, gcal, gmail`:
+
+   a. Open the service in headed Chrome (first call launches Chrome; subsequent calls navigate the existing window):
+      ```bash
+      bash "<plugin-root>/scripts/setup.sh" --open-headed <service>
+      ```
+
+   b. Use **AskUserQuestion** to confirm login:
+      - Header: e.g., `Asana login`
+      - Question: e.g., `Logged into Asana in the popup Chrome window?`
+      - Options:
+        - `Done — logged in` (proceed to next service)
+        - `Skip this service` (skip and continue; service will show ⚠️ in verify)
+        - `I had to retry login` (re-run --open-headed for this service, then ask again)
+
+   c. Based on answer, advance to next service or retry/skip.
+
+   **Important: Google SSO cascade.** After the user logs into the first Google-account-related service (e.g., GCal or Gmail), subsequent Google-SSO services may auto-complete with no visible login form. User should still click "Done — logged in" once they see the service UI loaded.
+
+4. Close daemon to ensure verify uses fresh cookies:
+   ```bash
+   agent-browser close 2>/dev/null || true
+   ```
+
+5. Verify all 5 services (headless):
+   ```bash
+   bash "<plugin-root>/scripts/setup.sh" --verify
+   ```
+
+6. Report results. For any `⚠️ NOT logged in`, use **AskUserQuestion** to offer:
+   - `Retry this service` (re-runs `--reauth <service>` flow)
+   - `Skip — fix manually later`
+
+### 3c. `--switch-mode`
+
+1. Read current mode (Step 1).
+2. If current = `shared` → run 3b (Setup dedicated mode).
+3. If current = `dedicated` → run 3a (Setup shared mode).
+4. If empty → run 3a.
+
+After completion, mention to the user that the mode has been toggled.
+
+### 3d. `--reauth <service>`
+
+1. Confirm current mode is dedicated:
+   ```bash
+   bash -c 'jq -r .mode ~/.config/collab-toolkit/config.json'
+   ```
+   If `shared`: tell user `--reauth` only applies in dedicated mode; suggest they log into the service via their daily Chrome under the configured profile instead.
+
+2. Open Chrome at the service URL:
+   ```bash
+   bash "<plugin-root>/scripts/setup.sh" --open-headed <service>
+   ```
+
+3. **AskUserQuestion**:
+   - Question: `<Service> re-login complete?`
+   - Options: `Done`, `Retry`, `Cancel`
+
+4. On Done: close daemon + run verify for confirmation:
+   ```bash
+   agent-browser close 2>/dev/null
+   bash "<plugin-root>/scripts/setup.sh" --verify
+   ```
+
+5. Show results.
+
+### 3e. `--verify`
+
+```bash
+agent-browser close 2>/dev/null
+bash "<plugin-root>/scripts/setup.sh" --verify
+```
+
+Show the 5 ✓/⚠️ lines verbatim to the user.
+
+---
+
+## Concrete defaults (use these when in doubt)
+
+- Plugin root: the directory containing this file's parent (`commands/..`).
+- Setup script: `<plugin-root>/scripts/setup.sh`.
+- Config: `${XDG_CONFIG_HOME:-$HOME/.config}/collab-toolkit/config.json`.
+- Dedicated profile (v0.1.2 unified): `${XDG_DATA_HOME:-$HOME/.local/share}/collab-toolkit/profiles/dedicated`.
+
+## Error handling
+
+- If any `bash setup.sh ...` invocation exits non-zero, capture stderr and surface it to the user. Suggest re-running with a fresh state by clearing `~/.config/collab-toolkit/` + `~/.local/share/collab-toolkit/` (and optionally `~/.local/bin/abx`).
+- If `agent-browser` is not on PATH after `--install-only`, instruct the user to ensure Homebrew is installed (macOS) or npm globally accessible.
+- If `~/.local/bin` is not on `PATH`, `--install-only` prints a warning with the `export` line — relay this to the user verbatim.
 
 ## See also
 
-- Spec: `docs/superpowers/specs/2026-05-15-collab-toolkit-v0.1.0-design.md`
-- Skills that depend on this: asana-automate, slack-automate, notion-automate, gcal-automate, gmail-automate
+- Plugin README: `<plugin-root>/README.md`
+- v0.1.0 design spec: `docs/superpowers/specs/2026-05-15-collab-toolkit-v0.1.0-design.md`
+- Skills consuming this setup: asana-automate, slack-automate, notion-automate, gcal-automate, gmail-automate
