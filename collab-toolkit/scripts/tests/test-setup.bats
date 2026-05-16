@@ -176,38 +176,112 @@ EOF
   [[ "$output" == *"open https://app.slack.com"* ]]
 }
 
-@test "verify_one detects login wall via title" {
+@test "verify_one detects login wall via URL path (same-host /login redirect, e.g. Asana)" {
   mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
   cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
 { "mode": "shared", "chrome_profile": "Default" }
 JSON
-  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "Sign in - Asana"; else echo ok; fi'
-  # abx must exist on PATH so verify_one can call it
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/-/login?u=app" ;;
+    *"get title"*) echo "Log in - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
   cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
 #!/usr/bin/env bash
-exec agent-browser --profile Default "$@"
+exec agent-browser "$@"
 EOF
   chmod +x "$TEST_TMPDIR/bin/abx"
 
   MODE=shared run verify_one asana
   [[ "$output" == *"NOT logged in"* ]]
-  [[ "$output" == *"Sign in - Asana"* ]]
+  [[ "$output" == *"login page"* || "$output" == *"/-/login"* ]]
 }
 
-@test "verify_one reports ok when title is not a login page" {
+@test "verify_one detects hostname redirect (marketing landing page, e.g. Slack)" {
   mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
   cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
 { "mode": "shared", "chrome_profile": "Default" }
 JSON
-  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "My Tasks - Asana"; else echo ok; fi'
+  # Slack redirects unauthenticated users to marketing page on slack.com
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://slack.com/get-started" ;;
+    *"get title"*) echo "Slack | AI Work Platform & Productivity Tools" ;;
+    *)             echo "ok" ;;
+  esac'
   cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
 #!/usr/bin/env bash
-exec agent-browser --profile Default "$@"
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one slack
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"hostname redirected"* ]]
+  [[ "$output" == *"app.slack.com"* ]]
+}
+
+@test "verify_one detects Google SSO redirect (accounts.google.com) for GCal/Gmail" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://accounts.google.com/ServiceLogin?service=cl" ;;
+    *"get title"*) echo "Google Calendar - Sign in to Access..." ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one gcal
+  [[ "$output" == *"NOT logged in"* ]]
+  # Could be caught by hostname mismatch OR URL pattern — either is correct
+  [[ "$output" == *"accounts.google.com"* ]]
+}
+
+@test "verify_one reports ready when URL stays at expected host AND title not login" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/0/inbox" ;;
+    *"get title"*) echo "My Tasks - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
 EOF
   chmod +x "$TEST_TMPDIR/bin/abx"
 
   MODE=shared run verify_one asana
   [[ "$output" == *"✓ asana ready"* ]]
+  [[ "$output" == *"My Tasks - Asana"* ]]
+}
+
+@test "verify_one falls back to title check when URL fetch is empty (abx daemon error)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "" ;;
+    *"get title"*) echo "Sign in - Notion" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one notion
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"Sign in - Notion"* ]]
 }
 
 @test "service_url returns expected URL per service" {
