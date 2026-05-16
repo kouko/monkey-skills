@@ -1,7 +1,7 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.4.0
+version: 0.5.0-draft
 ---
 
 <SUBAGENT-STOP>
@@ -11,14 +11,15 @@ If you are a subagent already dispatched with an explicit role prompt (implement
 <EXTREMELY-IMPORTANT>
 **You have code-toolkit.** If the user is starting any coding work — feature / bug fix / refactor / review / migration — you **must** route through this skill before writing implementation code.
 
-Four load-bearing rules:
+Five load-bearing rules:
 
-1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — walks the 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief.
+1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
-3. **Split + dispatch (SDD).** For any task >1 hour or touching >1 module, call `subagent-driven-development` — split into atomic ≤5-min units; dispatch three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
-4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. *"Just push"* / *"skip review"* are rationalizations; push commands trigger review, not bypass.
+3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic ≤5-min units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
+4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. Push commands trigger review, not bypass.
+5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research.
 
-**Skipping any of these = violation.** "I'll just quickly…" / "just push" / 「ちょっと試すだけ」 / 「我先快速試一下」 / 「先 push 再說」 are rationalizations — refuse them.
+**Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
 
 ## Instruction priority

@@ -24,6 +24,88 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [Unreleased]
+
+Phase 1.5 patch P15-10 — Router rule #5 "Research before asking" +
+brainstorming Axis 4 research protocol. **v0.5.0-draft**. Verification
+ritual pending (1 pressure prompt in fresh Claude session).
+
+### Why this patch
+
+User pain pattern: repeatedly asking agent "first search industry
+practice" before answering design / strategy decisions. Manual
+injection of research-first discipline; toolkit didn't mandate it.
+Fix per Option D (router rule + Axis 4 deepening, minimum-invasive).
+
+### Added — router rule #5 "Research before asking"
+
+`skills/using-code-toolkit/SKILL.md` `<EXTREMELY-IMPORTANT>` block
+expanded from 4 to 5 load-bearing rules:
+
+> 5. **Research before asking.** Non-trivial design / strategy /
+> tech-stack question to user MUST cite WebSearch findings (2-4
+> industry approaches w/ sources). *"X or Y?"* without industry
+> context = violation. Use `brainstorming` Axis 4 protocol for the
+> research.
+
+Footer rationalization list extended with `"just ask"` + `「先問再說」`
+localized variants. Rules 1 + 3 trimmed slightly to keep router under
+the P1-A 2000-token budget (now 1991 tokens, 9-token margin).
+
+### Added — brainstorming Axis 4 research protocol
+
+`skills/brainstorming/SKILL.md` §Axis 4 title appended with
+`(research-grounded, not imagined)`. New subsection §"Research
+protocol — the SHIPPED industry options, not imagined ones":
+
+- **Search query patterns table** — 6 patterns to mix-and-match per
+  axis (industry-best-practice / trade-offs / open-source-library /
+  RFC-or-spec / HackerNews-or-Reddit / vendor-specific) with worked
+  example for "rate limiting algorithm".
+- **Output format** — structured "Industry approaches found (N, via
+  WebSearch)" block with per-approach name + source citation +
+  pros / cons / used-by + final "My take" with conditional-reversal
+  trigger.
+- **§"If WebSearch is unavailable"** — explicit user-facing surfacing
+  with 3 paths (proceed with from-memory flagged 'unverified
+  vintage' / defer until WebSearch session / user-researches-and-
+  pastes).
+- **§"When ≤3 alternatives genuinely exist"** — guardrail against
+  padding the alternatives list to hit a number.
+- **§"Anti-patterns"** — 4 anti-patterns enumerated.
+- Closing pointer to router rule #5 — same protocol applies to
+  decisions arising OUTSIDE brainstorming-Axis-4 context (e.g. SDD
+  implementer mid-execution decisions).
+
+### Manifest + skill version bumps
+
+- `.claude-plugin/plugin.json`: 0.4.0 → 0.5.0-draft
+- `.codex-plugin/plugin.json`: 0.4.0 → 0.5.0-draft
+- All 10 skill SKILL.md frontmatter `version:`: 0.4.0 → 0.5.0-draft
+  (per P15-8 lockstep convention)
+
+### ROADMAP
+
+`§Phase 1.5` backlog table: added P15-10 row. Acceptance line:
+8 of 10 closed; P15-4 + P15-5 still dogfood-data-gated.
+
+### Verification ritual owed
+
+User runs 1 pressure prompt in fresh Claude session:
+
+```
+I need to add rate limiting to my API. Pick an algorithm and
+implement it.
+```
+
+Expected agent behavior:
+- Refuses to pick directly OR ask user without prior research
+- Runs WebSearch with industry-practice query patterns
+- Surfaces 3-4 industry approaches with citations + pros/cons
+- Recommends one with reasoning + conditional-reversal trigger
+
+After ritual PASS → chore commit drops -draft → v0.5.0 official ship.
+
 ## [0.4.0] — 2026-05-16
 
 Codex CLI variant + Phase 3.5 polish + Phase 4 GA prep + Phase 1.5

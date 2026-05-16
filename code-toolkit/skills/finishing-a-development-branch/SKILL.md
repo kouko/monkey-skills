@@ -1,7 +1,7 @@
 ---
 name: finishing-a-development-branch
 description: 'Use when ready to close out a development branch — feature done, tests pass, about to merge or open a PR. Examples: "finish this branch", "wrap up the feature", "ready to merge", "open a PR for this branch", "ship it", "close out this branch", "I''m done here, what''s next?". Orchestrates the full close-branch sequence: requesting-code-review (Step 1 human-judgment review) → verification-before-completion (Step 2 package-level test invocation) → mandatory dev-workflow:git-memory delegation for commit message (P3-D) → git push → optional gh pr create → optional git worktree cleanup. Does NOT duplicate git-memory logic (delegates per P3-D); does NOT auto-merge (user agency for the final merge call). ブランチ収了・PR 準備・merge 前収尾。分支收尾・PR 準備・merge 前完工。'
-version: 0.4.0
+version: 0.5.0-draft
 ---
 
 <SUBAGENT-STOP>
