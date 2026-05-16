@@ -1,7 +1,7 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.5.1-draft
+version: 0.5.2-draft
 ---
 
 <SUBAGENT-STOP>
@@ -89,4 +89,5 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 - `references/claude-code-tools.md` — Claude Code canonical tool names.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target).
+- `references/engineering-baselines.md` — 12-rule engineering baseline carried by every code-toolkit plugin-level agent (SSOT in `../../agents/_baseline.md`; v0.5.2 / P15-12).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.

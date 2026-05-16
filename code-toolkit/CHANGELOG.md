@@ -24,6 +24,175 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.5.2-draft] — 2026-05-16
+
+Phase 1.5 patch **P15-12 (Phase 1)** — plugin-level agent files
+with 12-rule engineering baseline baked in. SSOT-and-functional-copy
+pattern extended from whole-file (existing v0.1.0 mechanism) to
+in-file section (new). Phase 1 scope: 1 agent (`implementer.md`) as
+proof-of-mechanism; Phase 2 (v0.6.0) promotes the other 4.
+
+### Why
+
+User adopted a 12-rule CLAUDE.md template (the popular cross-cutting
+discipline rules: think-before-coding / simplicity-first / surgical
+changes / goal-driven / read-before-write / surface-conflicts /
+tests-encode-intent / checkpoint / match-conventions / fail-loud +
+two meta rules on LLM judgment + token budgets).
+
+Direct integration question: where do these rules go?
+
+Three weak options considered (reference doc only / cherry-pick into
+skills / CLAUDE.md template bundle) all lost to a fourth: **bake the
+baseline into plugin-level agent system prompts**, making it
+load-on-dispatch rather than passive. Agent system prompts are the
+natural home for "how the agent should behave" rules — exactly what
+the 12 rules describe.
+
+Initial design attempted role-curated subsets (different rule sets
+per agent role). User correctly challenged this — *"為何不全部塞
+agent file?"* Walked through each rule: every one has an
+agent-relevant interpretation (even Rules 5 + 6 about LLM judgment +
+token budgets have agent-application notes for code-emitting tasks +
+agent output length). Curated subsets were over-engineering;
+universal baseline is the right call.
+
+### Architecture
+
+```
+code-toolkit/
+  agents/                         ← NEW: plugin-level agent directory
+    _baseline.md                  ← NEW: SSOT for 12-rule baseline (canonical text)
+    implementer.md                ← NEW: plugin-level agent (role contract + injected baseline)
+  scripts/
+    distribute.py                 ← EXTENDED: AGENT_BASELINE_TARGETS + distribute_baselines()
+    verify-drift.py               ← EXTENDED: agent baseline-block drift check
+  skills/
+    using-code-toolkit/
+      references/
+        engineering-baselines.md  ← NEW: human-readable 12-rule catalog + workflow cross-ref
+      SKILL.md                    ← §Reference gains pointer to engineering-baselines.md
+    subagent-driven-development/
+      SKILL.md                    ← §Process Step 1 dispatch path updated:
+                                    `Agent({subagent_type:"code-toolkit:implementer"})`
+      agents/
+        implementer-prompt.md     ← DELETED (replaced by plugin-level agent)
+        spec-reviewer-prompt.md   ← UNCHANGED (Phase 2 promote target)
+        code-quality-reviewer-prompt.md  ← UNCHANGED (Phase 2 promote target)
+```
+
+### Why SSOT-and-functional-copy for in-file sections
+
+The same drift problem the v0.1.0 SSOT mechanism solved for
+knowledge-layer files (12 byte-identical copies from code-team)
+applies to baseline injection: 5 agents copy-pasting the same 12
+rules → guaranteed drift over time. The pattern generalizes:
+
+| Variant | Scope | Existing example | New example |
+|---|---|---|---|
+| Whole-file SSOT | Entire file content | knowledge-layer functional copies (v0.1.0) | — |
+| In-file section SSOT | BEGIN/END marker region within larger file | — | agent baseline block (v0.5.2) |
+
+Both share the same machinery: a canonical source (`distribute.py`
+copies / injects from), a drift gate (`verify-drift.py` rejects
+mismatches), and a routing table (manually maintained — no
+auto-discovery). `verify-drift.py`'s output now distinguishes
+functional-copy drift from baseline-block drift in error messages.
+
+### Bug caught + fixed during development
+
+The first version of `_baseline.md` contained the literal marker
+strings (`<!-- BEGIN baseline-v1 ... -->` / `<!-- END baseline-v1 -->`)
+in its SSOT footer paragraph. When `distribute.py` injected the
+SSOT into `implementer.md`, the parser's `str.find()` matched the
+FIRST occurrence of the END marker — which was now inside the
+injected text (the literal in the footer prose), not the real END
+marker. Result: corrupted agent file with duplicated content.
+
+Caught by `verify-drift.py` on the first integration run. Fix:
+rewrote `_baseline.md` footer to describe the markers in prose
+without including the literal strings. Re-ran distribute + verify
+→ clean.
+
+This is a real case of the v0.1.0 SSOT pattern's value paying
+forward: the drift gate catches incoherent state at the point of
+introduction, not 3 months later in production.
+
+### Files changed
+
+**Created**:
+- `code-toolkit/agents/_baseline.md` — 12-rule SSOT (canonical text)
+- `code-toolkit/agents/implementer.md` — plugin-level agent with
+  role contract + injected baseline block
+- `code-toolkit/skills/using-code-toolkit/references/engineering-baselines.md`
+  — human-readable 12-rule catalog + workflow cross-ref table
+
+**Extended**:
+- `code-toolkit/scripts/distribute.py` —
+  `AGENT_BASELINE_TARGETS` route + `distribute_baselines()` function
+  + `expected_agent_text()` injector + `expected_baseline_text()`
+  SSOT loader
+- `code-toolkit/scripts/verify-drift.py` — agent baseline-block
+  drift check using imported `AGENT_BASELINE_TARGETS` +
+  `expected_agent_text()`; error labels distinguish
+  `BASELINE-DRIFT` / `BASELINE-MARKERS` / `MISSING-AGENT` from
+  whole-file `DRIFT` / `MISSING` / `MISSING-CANONICAL`
+- `code-toolkit/skills/subagent-driven-development/SKILL.md` —
+  §Process Step 1 dispatches via plugin-level agent;
+  §Prompt templates documents the v0.5.2 implementer promotion;
+  §See also points at `agents/implementer.md` + `agents/_baseline.md`
+- `code-toolkit/skills/using-code-toolkit/SKILL.md` — §Reference
+  gains pointer to `engineering-baselines.md`
+- `ROADMAP.md` — P15-12 Phase 1 row + Phase 2 deferred row;
+  acceptance line updated 10 of 12 closed
+
+**Deleted**:
+- `code-toolkit/skills/subagent-driven-development/agents/implementer-prompt.md`
+  — replaced by `code-toolkit/agents/implementer.md`
+
+**Bumped**:
+- 10 skill SKILL.md `version:` 0.5.1-draft → 0.5.2-draft
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` version
+  0.5.1-draft → 0.5.2-draft
+
+### Why Phase 1 is just 1 agent
+
+De-risks the SSOT-for-sections mechanism. If the injection / drift
+machinery has design flaws (as the marker-string collision bug
+showed), catching them on 1 agent costs ~10 minutes to fix. Same
+flaw on 5 agents = 5 corrupted files + 5 manual rewrites.
+
+Phase 2 (v0.6.0) promotes the other 4 agents after Phase 1's SDD
+ritual validates the dispatch path works end-to-end. The CHK-SKL-012
+false-positive on `subagent-driven-development/agents/` will resolve
+naturally when that directory empties (Phase 2 deletes the remaining
+2 prompt-template files after promoting them).
+
+### Pending — SDD ritual verification
+
+Phase 1 ships as `-draft`. Verification step: dispatch an SDD task
+to `code-toolkit:implementer` and confirm:
+
+1. Agent loads with the full 12-rule baseline visible in its system
+   prompt (`Agent({subagent_type: "code-toolkit:implementer"})`
+   resolves to the plugin-level agent, not a fallback)
+2. Agent behavior reflects baseline (e.g. surfaces uncertainty
+   instead of guessing per Rule 1; refuses to refactor adjacent
+   code per Rule 3; encodes WHY in tests per Rule 9)
+3. Existing SDD orchestration loop (status handling, reviewer
+   dispatch, verdict resolution) unchanged
+
+PASS → drop `-draft`, v0.5.2 ships. Phase 2 (v0.6.0) can then
+proceed with confidence.
+
+### v0.5.1-draft status (P15-11 multilingual coverage)
+
+The v0.5.1-draft self-check PASSED with 9 JA sources surfaced in the
+rate-limiting ritual. Clean-context ritual (fresh Claude session)
+still pending; can run alongside v0.5.2 ritual.
+
+---
+
 ## [0.5.1-draft] — 2026-05-16
 
 Phase 1.5 patch P15-11 — brainstorming Axis 4 §Multilingual coverage.

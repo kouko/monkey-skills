@@ -23,10 +23,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from distribute import (  # type: ignore  # noqa: E402
+    AGENT_BASELINE_TARGETS,
     CODE_TEAM_ROOT,
     REPO_ROOT,
     ROOT,
     ROUTE,
+    expected_agent_text,
     expected_payload,
 )
 
@@ -94,17 +96,51 @@ def main() -> int:
             for line in _unified_diff(expected, actual, rel_dst):
                 failures.append(f"    {line}")
 
+    # ─── Agent baseline drift check (P15-12) ─────────────────────────
+    # Each routed agent file must contain a BEGIN/END baseline block whose
+    # body matches code-toolkit/agents/_baseline.md verbatim. Role-contract
+    # content outside the block is unique per agent and not compared.
+    baseline_checked = 0
+    for agent_rel in AGENT_BASELINE_TARGETS:
+        dst = ROOT / agent_rel
+        if not dst.is_file():
+            failures.append(f"MISSING-AGENT      code-toolkit/{agent_rel}")
+            continue
+        try:
+            expected_text = expected_agent_text(agent_rel)
+        except ValueError as e:
+            failures.append(f"BASELINE-MARKERS   code-toolkit/{agent_rel}: {e}")
+            continue
+        expected_bytes = expected_text.encode("utf-8")
+        actual_bytes = dst.read_bytes()
+        baseline_checked += 1
+        if actual_bytes == expected_bytes:
+            continue
+        failures.append(
+            f"BASELINE-DRIFT     code-toolkit/{agent_rel}\n"
+            f"    expected: role-contract + SSOT baseline block from "
+            f"code-toolkit/agents/_baseline.md\n"
+            f"    md5(expected) = {_md5(expected_bytes)}\n"
+            f"    md5(on-disk)  = {_md5(actual_bytes)}"
+        )
+        for line in _unified_diff(expected_bytes, actual_bytes, agent_rel):
+            failures.append(f"    {line}")
+
     if failures:
         for line in failures:
             print(line)
         print(
-            f"\nFAIL: drift detected (checked {checked} pairs)."
+            f"\nFAIL: drift detected "
+            f"(checked {checked} functional-copy pairs "
+            f"+ {baseline_checked} agent baseline blocks)."
             f"\nFix: python3 code-toolkit/scripts/distribute.py"
         )
         return 1
     print(
         f"OK: all {checked} functional copies match expected "
-        f"(canonical + SSOT header)."
+        f"(canonical + SSOT header) "
+        f"and all {baseline_checked} agent baseline block(s) "
+        f"match SSOT (code-toolkit/agents/_baseline.md)."
     )
     return 0
 
