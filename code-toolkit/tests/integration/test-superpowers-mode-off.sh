@@ -124,6 +124,28 @@ else
 fi
 
 # -------------------------------------------------------------------------
+# Check 6 — P15-9: superpowers enablement prereq for live verification
+
+if command -v claude >/dev/null 2>&1; then
+  if claude plugin list 2>&1 | grep -q "superpowers"; then
+    if claude plugin list 2>&1 | grep -A 3 "[❯>] superpowers" | grep -q "Status: ✔ enabled"; then
+      pass "obra/superpowers plugin enabled (live OFF-mode verification possible)"
+    else
+      skip "obra/superpowers installed but NOT enabled in user settings"
+      skip "  → OFF-mode escape-hatch behavior verified OFFLINE (above) — "
+      skip "    code-toolkit hook correctly emits empty context when var set."
+      skip "  → Live verification (superpowers ALONE fires after CODE_TOOLKIT_MODE=off)"
+      skip "    deferred until user runs: claude plugin enable superpowers"
+      skip "  → Not a code-toolkit defect — test prerequisite gap (P15-9)."
+    fi
+  else
+    skip "obra/superpowers not installed — live OFF-mode verification N/A"
+  fi
+else
+  skip "claude CLI not found"
+fi
+
+# -------------------------------------------------------------------------
 # Summary + manual verification handoff
 
 echo ""

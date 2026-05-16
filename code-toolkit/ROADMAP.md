@@ -136,12 +136,14 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-3 | `systematic-debugging` SKILL.md — description tuning for production-bug auto-fire | Phase 2 ritual feedback（`silence-with-try-except.txt` 沒 auto-load specialist） | ✅ 已 ship（v0.2.1） |
 | P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | ⏳ 待真實 dogfood — 不知道哪個 skill 太強 / 何種放鬆規則之前無法設計 |
 | P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | ⏳ 待真實使用 session（ritual 不算 — ritual 是 synthetic prompt，dogfood 是 natural flow） |
+| P15-6 | `scripts/check-skill-structure.py` allowlist — `agents/` + `scripts/` + `assets/` | Phase 3 verification-before-completion ritual（v0.3.0 close-out） | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
+| P15-7 | SKILL.md plugin-rooted-path reframes (SDD + tdd-iron-law) | Phase 3 verification ritual + CHK-SKL-011 | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
+| P15-8 | 10 個 skill frontmatter `version:` 與 plugin manifest 對齊（皆 bump 至 v0.4.0-draft） | v0.4.0-draft Phase 2 ritual feedback（version-stamp drift caught by requesting-code-review cross-task-coherence dimension） | ✅ 已 ship（v0.4.0） |
+| P15-9 | `tests/integration/test-superpowers-mode-{on,off}.sh` — 區分 installed vs enabled；installed-but-not-enabled SKIP 而非 PASS | v0.4.0-draft Phase 4 ritual Session 4-5（superpowers 在 user 機器 installed 但 `enabledPlugins` 沒包含；coexistence live verification deferred） | ✅ 已 ship（v0.4.0） |
 
 **Acceptance（rolling）**：
-- ✅ P15-1（CODE_TOOLKIT_MODE=off 退場機制可運作）
-- ✅ P15-2（Feathers distinction 在 SKILL.md §Legitimate legacy-code backfill）
-- ✅ P15-3（systematic-debugging description 含 production-bug 詞彙 11/15 keyword hits）
-- ⏳ P15-4 / P15-5（等真實 dogfood data）
+- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9（7 of 9 closed）
+- ⏳ P15-4 / P15-5（等真實 dogfood data — v1.0.0 release engineering 階段 unblock）
 
 ---
 

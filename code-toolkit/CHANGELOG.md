@@ -26,6 +26,84 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ## [Unreleased]
 
+Phase 1.5 rolling patches P15-8 + P15-9 — caught by Phase 4 GA
+verification ritual (Ritual 2 Session 2 close-out flow + Sessions
+4-5 superpowers prereq investigation).
+
+### Changed — P15-8: skill `version:` field sync with plugin manifests
+
+`requesting-code-review` cross-task-coherence dimension caught
+version-stamp drift during the Phase 4 Ritual 2 Session 2 close-out
+flow: plugin manifests at `0.4.0-draft` but 10 individual skill
+`version:` fields were a mix of `0.1.0-draft` / `0.2.0-draft` /
+`0.3.0-draft` (frozen at whichever Phase the skill last got a body
+edit).
+
+This is exactly the failure mode branch-scope review exists to
+catch — per-task SDD reviewer can't see cross-skill version
+inconsistency. Convention per `translation-toolkit` precedent: skill
+`version:` tracks plugin manifest version, bumped in lockstep.
+
+Fix: batch-bumped all 10 skill `version:` fields to `0.4.0-draft`
+via single `sed -E 's/^version: 0\.[0-9]+\.[0-9]+-draft$/version:
+0.4.0-draft/'` invocation. Affected skills:
+- `using-code-toolkit` (was 0.3.0-draft)
+- `brainstorming` (was 0.2.0-draft)
+- `writing-plans` (was 0.2.0-draft)
+- `subagent-driven-development` (was 0.1.0-draft — Phase 1 ship; never bumped)
+- `tdd-iron-law` (was 0.1.0-draft — Phase 1 ship; never bumped)
+- `systematic-debugging` (was 0.2.0-draft)
+- `requesting-code-review` (was 0.3.0-draft)
+- `verification-before-completion` (was 0.3.0-draft)
+- `using-git-worktrees` (was 0.3.0-draft)
+- `finishing-a-development-branch` (was 0.3.0-draft)
+
+Future version bumps must touch all 10 skill `version:` fields in
+lockstep with manifest bumps; consider adding a CI check.
+
+### Changed — P15-9: integration test scripts distinguish installed vs enabled
+
+Phase 4 Ritual 2 Session 4 (superpowers ON) surfaced: agent listed
+all installed-and-enabled plugins but obra/superpowers wasn't there.
+Investigation revealed the user's `~/.claude/settings.json`
+`enabledPlugins` doesn't include superpowers (installed at
+marketplace level, NOT enabled in session scope).
+
+Original `test-superpowers-mode-on.sh` only checked `claude plugin
+list | grep superpowers` — which matches both enabled and disabled
+plugins. False positive: script said "obra/superpowers plugin
+installed" PASS, then user couldn't actually validate live
+coexistence because superpowers wasn't loading in fresh sessions.
+
+Fix in both `test-superpowers-mode-on.sh` and `test-superpowers-
+mode-off.sh`:
+- Added a check after the install-detection: `grep -A 3 "[❯>]
+  superpowers" | grep -q "Status: ✔ enabled"`
+- If installed-but-not-enabled: SKIP with explicit guidance
+  ("Live coexistence verification deferred until user runs
+  `claude plugin enable superpowers`")
+- SKIP framing explicit: "Not a code-toolkit defect — test
+  prerequisite gap (P15-9)"
+
+Phase 4 acceptance status post-P15-9:
+- 3 of 3 cross-plugin delegation rituals: ✅ PASS (complexity-
+  critique + git-memory + code-team coexistence)
+- 2 superpowers rituals: ⚠️ SKIP (P15-9 prereq gap; offline checks
+  verify structural contract; live verification deferred)
+
+This unblocks the v0.4.0 ship — superpowers SKIP is honest reporting
+of test prereq gap, not toolkit defect. Future: when user enables
+superpowers, scripts auto-flip from SKIP to PASS without code change.
+
+### Roadmap
+
+`ROADMAP.md` §Phase 1.5 backlog table: added P15-6, P15-7 (already
+shipped at v0.3.0; were missing from backlog) + P15-8 + P15-9 rows.
+Acceptance line: 7 of 9 backlog items closed; P15-4 (soft-mode
+flag) + P15-5 (≥5 dogfood notes) still dogfood-data-gated.
+
+## [Unreleased — superseded by above]
+
 Phase 2.5 BUILD — Codex CLI variant manifest + docs + integration
 scripts ship. Verification ritual deferred to user-side Codex CLI
 session (Codex CLI installed at `/opt/homebrew/bin/codex` per smoke

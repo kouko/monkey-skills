@@ -76,6 +76,19 @@ fi
 if command -v claude >/dev/null 2>&1; then
   if claude plugin list 2>&1 | grep -q "superpowers"; then
     pass "obra/superpowers plugin installed"
+    # P15-9 — distinguish installed vs enabled. Live coexistence test needs
+    # superpowers ENABLED in the user's session scope, not just installed
+    # at the marketplace level.
+    if claude plugin list 2>&1 | grep -A 3 "[❯>] superpowers" | grep -q "Status: ✔ enabled"; then
+      pass "obra/superpowers plugin enabled (live coexistence verification possible)"
+    else
+      skip "obra/superpowers installed but NOT enabled in user settings"
+      skip "  → Live coexistence verification deferred until user runs:"
+      skip "    claude plugin enable superpowers"
+      skip "  → Until then, offline checks (above) establish the structural"
+      skip "    coexistence contract but the active-session behavior remains"
+      skip "    unverified. Not a code-toolkit defect — test prerequisite gap."
+    fi
   else
     skip "obra/superpowers not installed — coexistence test mostly offline-only"
     skip "  Install: claude plugin install superpowers (via obra marketplace)"
