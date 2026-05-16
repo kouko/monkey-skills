@@ -214,8 +214,9 @@ is the SoT; this section only describes the contract:
 - Both `research-memo.md` and `executive-summary.md` MUST end with
   the boilerplate block (leading `---` separator + `## §Disclaimer`
   heading + body)
-- `plan.md` MUST also carry the footer (it is user-readable too;
-  reproducibility audits may surface it)
+- `plan.md` SHOULD also carry the footer (it is user-readable too;
+  reproducibility audits may surface it; grader does not enforce on
+  plan.md in v0.5.2 — defer to v0.5.3 if needed)
 - Body covers: AI-tool attribution / not formal legal opinion /
   current TW in-force law scope / recommendation to consult 律師
   for litigation, contract signing, criminal liability, cross-border,

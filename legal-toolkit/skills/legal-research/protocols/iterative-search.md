@@ -141,7 +141,7 @@ snapshot of an unknown source).
 | **判決** | URL host = `judicial.gov.tw` AND path contains `FJUD`; OR content matches 判決字號 regex (e.g. `[北中南高最]院 \d+ 年度 [^\s]+ 字第 \d+ 號 判決`) |
 | **函釋** | URL host ∈ {`mojlaw.moj.gov.tw`, `pdpc.gov.tw`, `moea.gov.tw` subdomains for 主管機關 函釋}; OR content title contains `函釋` / `解釋令` / `<機關> 函`; OR explicit 函釋 字號 format (`<機關> <日期> <文號>`) |
 | **學說** | Journal-article landing pages (e.g. `airitilibrary.com` / `ndltd.ncl.edu.tw` / university press domains) OR textbook / 月旦法學 / 政大法學評論 citation pattern in content. **Rare via WebFetch** — most 學說 sources are paywalled or PDF-only; if no machine-classifiable signal, set `type: "學說"` only with explicit author + 期刊 + 卷期 cite in the snippet, otherwise omit |
-| (fallback) | If no rule fires confidently, set `type: "其他"` and add the source to sources but do **not** count it in `types_covered`. Triangulate step ignores `其他`. |
+| (fallback) | If no rule fires confidently, set `type: "未分類"` and add the source to sources but do **not** count it in `types_covered`. Triangulate step ignores `未分類`. |
 
 Classification is **best-effort** at fetch time — the triangulation
 step (`protocols/triangulate.md`) may re-cluster based on richer
