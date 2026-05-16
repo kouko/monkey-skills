@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-research/assets/triangulation-config.json",
+  "title": "triangulation parameters",
+  "type": "object",
+  "description": "Centralized loop cap params. v0.5.3 patch room reserved for tuning.",
+  "required": ["max_rounds", "max_fetches", "early_stop_min_sources", "early_stop_min_types", "valid_source_types"],
+  "properties": {
+    "max_rounds": {"type": "integer", "const": 5},
+    "max_fetches": {"type": "integer", "const": 30},
+    "early_stop_min_sources": {"type": "integer", "const": 8},
+    "early_stop_min_types": {"type": "integer", "const": 2},
+    "valid_source_types": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["條文", "判決", "函釋", "學說"]
+    }
+  }
+}

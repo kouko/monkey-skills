@@ -4,13 +4,13 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-![version](https://img.shields.io/badge/version-0.4.4-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-2_Closeout-orange)
+![version](https://img.shields.io/badge/version-0.5.2-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![phase](https://img.shields.io/badge/phase-3_IRAC_(closed)-orange)
 
 > ⚠️ **Not legal advice.** This is a free open-source tool, not a law firm and not a licensed practitioner. Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override (「請諮詢執業律師」). See [§Disclaimer policy](#disclaimer-policy).
 
 ## What it does
 
-legal-toolkit gives in-house legal counsel — solo / SME / listed-mid — a **markdown-first, runtime-portable** workflow for the high-frequency 80% of in-house work: **contract review** (the 主戰場), **playbook authoring** (your company's negotiation rules), and (planned Phase 2-5) document drafting / incident response / issue spotting / research / contract lifecycle tracking / regulation watch / corporate governance / due-diligence quick-scan.
+legal-toolkit gives in-house legal counsel — solo / SME / listed-mid — a **markdown-first, runtime-portable** workflow for the high-frequency 80% of in-house work: **contract review** (the 主戰場), **playbook authoring** (your company's negotiation rules), **document drafting** (privacy / ToS / DPA / NDA; v0.4.0+), **incident response** (個資外洩 / 主管機關函覆 / 合約違約; v0.4.2+), **issue spotting** (IRAC fact-pattern analysis; v0.5.0+), **legal research** (iterative-search + 三角驗證 + document-level citation; v0.5.2+), and (planned Phase 4-5) contract lifecycle tracking / regulation watch / corporate governance / due-diligence quick-scan.
 
 Three design commitments distinguish it from BigLaw-port tools:
 
@@ -18,15 +18,19 @@ Three design commitments distinguish it from BigLaw-port tools:
 2. **Playbook lives where you can see and edit it** — `legal-playbook/<clause>.md` in your working folder, visible, Markdown, git-trackable. Not buried in a SQLite blob; not in a hidden dotfolder; not in a vendor's cloud. Three-layer ownership: visible `legal-playbook/` (you own) + visible `legal-outputs/` (you own) + hidden `.legal-toolkit/` (tool internals).
 3. **Disclaimer-driven, not feature-stripped** — Taiwan's 律師法 §48 governs **people**, not tools, and a free open-source utility ≠ a service. Hard-excluding legal-opinion output would gut half the planned sub-skills (issue-spot / research). Every output ships with a Mandatory Disclaimer; high-risk findings ship with an Escalation Override red banner.
 
-## 3 skills (MVP + Phase 1.5 DSL infra, v0.2.0)
+## 7 active skills (Phase 1 MVP + Phase 2 Template/Runbook + Phase 3 IRAC full, v0.5.2)
 
 | Skill | Role |
 |---|---|
-| `using-legal-toolkit` | **Router** — recognises intent across 6 clusters (Playbook / Template / Runbook / IRAC / Tracker / Compliance) and dispatches; lists Phase 2-5 sub-skills as not-yet-available with a clear cluster menu. |
+| `using-legal-toolkit` | **Router** — recognises intent across 6 clusters (Playbook / Template / Runbook / IRAC / Tracker / Compliance) and dispatches; remaining Phase 4-5 sub-skills listed as not-yet-available with a clear cluster menu. |
 | `legal-playbook-author` | **Cross-cluster utility** — bootstrap / extend / revise modes; produces per-clause Markdown entries with deterministic frontmatter (`gates` / `walk_away_triggers` / `escalate_to` / `risk_default`) and LLM-comparison body (`preferred` / `fallback N` / `為什麼這條重要`). Detects when a flat clause should upgrade to a variant-folder (gate-keyed by deal_size / counterparty_type / jurisdiction). |
-| `legal-contract-review` | **The main event** — 7-layer pipeline with TW overlay; ABAC pre-filter selects matched variants before LLM evaluation (so the LLM only sees one variant, never picks among them). Three modes: `review` (full 6-output), `redline` (focus on substitute clause text), `nda` (skip L2-L3 for simpler structure). Six output files: `issues.md` / `redline.md` / `memo-legal.md` / `memo-business.md` / `escalation.md` / `self-grade.md`. |
+| `legal-contract-review` | **📋 Playbook cluster — the main event** — 7-layer pipeline with TW overlay; ABAC pre-filter selects matched variants before LLM evaluation (so the LLM only sees one variant, never picks among them). Three modes: `review` (full output), `redline` (focus on substitute clause text), `nda` (skip L2-L3 for simpler structure). Output: `legal.md` + `business.md` + `findings.json` (consolidated v0.3.4+). |
+| `legal-document-draft` | **📝 Template cluster (v0.4.0+)** — 4 modes: privacy / ToS / DPA / NDA. Skeleton-and-LLM-fill templates pinned to current in-force Taiwan law (Path A discipline). 2-file output (`<doc-type>.md` publish-ready + `compliance.md` 法務 review). Hand-curated per-mode compliance checklists with statute citations (個資法 / 民法 / 消保法 / 公平交易法). |
+| `legal-incident-response` | **🚨 Runbook cluster (v0.4.2+)** — 3-path classifier (個資外洩 / 主管機關函覆 / 合約違約) with auto-classify + confirm path routing. Audience-shaped 2-file output (`legal.md` + `business.md`) plus optional `handoff-context.json` for contract-breach delegation back to `legal-contract-review`. ISO 8601 timeline section with ⏳ markers for unanchored events. |
+| `legal-issue-spot` | **🔍 IRAC cluster, sub-skill 1 of 2 (v0.5.0+)** — pure-LLM IRAC issue-spotting from business-language fact patterns (「我們想做 X，能不能做？」). Produces issue 矩陣 + per-element 構成要件 涵攝 + reverse-side counterfactual + 🔴/🟡/🟢 risk grade + escalation 建議. 2-file output (`issues.md` for 法務 / `business.md` for 業務 + escalation 建議). No external fetches, no profile.yml dependency, no playbook coupling — orthogonal to `legal-contract-review`. Soft handoff to `/legal-research` on ⚠️ low-confidence subsumption with concrete query string. |
+| `legal-research` | **🔍 IRAC cluster, sub-skill 2 of 2 (v0.5.2+)** — legal-citation research with **Agent abstraction** (plan-adapt-interact 半互動 — plan-first, then Y/n confirm before autonomous loop). **WebFetch-only** (no Python scrapers; fallback chain = primary source URL → Google cache → archive.org Wayback). 4-protocol pipeline (plan → iterative-search → triangulate → cite). Loop cap ≤ 5 rounds OR ≤ 30 fetches; early-stop when ≥ 8 sources AND ≥ 2 法源類型 reached; `forced_stop` emits ⚠️ marker. 4-file output (`plan.md` / `state.json` / `research-memo.md` for 法務 / `executive-summary.md` for 業務) with Harvey-style document-level citation manifest (3-line shape: URL + title + access date). §6.4 Escalation Override triggers extend to `forced_stop` / 刑事 / 訴訟 / 跨境 / 重大金額. |
 
-Phase 2-5 ships 8 more skills — see **[ROADMAP.md](ROADMAP.md)** for the v0.1.0 → v1.0.0 plan, version strategy, critical path, and risk callouts.
+Phase 4-5 ship 4 more skills — see **[ROADMAP.md](ROADMAP.md)** for the v0.1.0 → v1.0.0 plan, version strategy, critical path, and risk callouts.
 
 ## Cold-start fallback (works without your own playbook)
 
@@ -164,10 +168,10 @@ Direct skill invocation is supported when intent is unambiguous (e.g. `/legal-co
 
 ## Status
 
-- **Version**: 0.3.0 (2026-05-12)
-- **Stability**: MVP + Phase 1.5 DSL + Phase 1.6 Eval infra complete; dogfood calibration is owner-run, not ship-blocking
-- **Phase**: 1.6 (Eval rubric + self_grade.py + dogfood procedure) — see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
-- **Test suite**: 110+ tests across schema / discover / validate / detect_conflicts / abac_filter / build_baseline / seed_baseline / self_grade — all green via `uv run --with jsonschema --with pyyaml --with pytest`
+- **Version**: 0.5.2 (2026-05-15)
+- **Stability**: 7 active skills (Phase 1 MVP + Phase 2 Template/Runbook + Phase 3 IRAC fully closed)
+- **Phase**: 3 SP3-b (legal-research ship) — IRAC cluster fully active (issue-spot v0.5.0 + research v0.5.2); Phase 4 Tracker (v0.6.0) is next; see [ROADMAP.md](ROADMAP.md) for v0.1.0 → v1.0.0 plan
+- **Test suite**: 259+ tests across schema / discover / validate / detect_conflicts / abac_filter / build_baseline / seed_baseline / self_grade / grade_draft / grade_response / grade_issue_spot / grade_research / canonical drift (4-grader bank) — all green via `uv run --with jsonschema --with pyyaml --with pytest`
 - **License**: MIT (plugin code)
 
 ## Reference
