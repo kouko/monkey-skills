@@ -17,7 +17,7 @@
 | 階段 | Skill | v0.1.0 狀態 |
 |---|---|---|
 | 探索 | [`brainstorming`](../brainstorming) | ✅ 已 ship |
-| 計畫 | [`writing-plans`](../writing-plans) | Phase 2 |
+| 計畫 | [`writing-plans`](../writing-plans) | ✅ 已 ship |
 | 執行 | [`subagent-driven-development`](../subagent-driven-development) | ✅ 已 ship |
 | 紀律 | [`tdd-iron-law`](../tdd-iron-law) | ✅ 已 ship |
 | 修復 | [`systematic-debugging`](../systematic-debugging) | Phase 2 |

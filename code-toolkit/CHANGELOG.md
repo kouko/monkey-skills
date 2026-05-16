@@ -10,6 +10,61 @@ Versioning: [Semantic Versioning](https://semver.org/).
 Phase 2 underway — Discovery + planning + repair cluster. Skills accumulate
 under [Unreleased] until all 3 ship, then bump to [0.2.0].
 
+### Added — `writing-plans` skill (2 of 3 Phase 2 skills)
+
+Bridge between `brainstorming` (produces the brief) and `subagent-driven-
+development` (dispatches subagents). Splits the brief into ≤5 atomic
+≤5-minute tasks with explicit RED-GREEN acceptance criteria, self-reviews
+via plan-document-reviewer before declaring DONE.
+
+- `skills/writing-plans/SKILL.md` — splitting framework (4-criteria
+  per-task: time-box ≤5 min / single module / one failing-test
+  acceptance / no hidden coupling); plan size ceiling = ≤5 atomic
+  tasks (forcing function for the brainstorming HARD-GATE); BLOCKED
+  fallback per Kent Beck (2002) *Test-Driven Development: By Example*
+  Part II §Child Test pattern, ISBN 978-0321146533 (when implementer
+  returns BLOCKED with decomposition signal, orchestrator re-invokes
+  writing-plans on the failing task); Red Flags table covering 7
+  rationalizations including ja + zh-TW variants; §When NOT to Use
+  with 4 enumerated exemptions.
+- `skills/writing-plans/references/plan-format.md` — output schema for
+  SDD consumption (required: Source brief / Total tasks ≤5 / Execution
+  order / Plan-document-reviewer verdict / per-task: Description /
+  Module / Context paths / Acceptance.RED + .GREEN / Dependencies /
+  Brief item covered). Worked example: CSV export query param plan with
+  3 tasks. Anti-patterns enumerated.
+- `skills/writing-plans/references/plan-document-reviewer-prompt.md` —
+  evaluator subagent prompt. 12 structured checks (each task ≤5 min /
+  single module / failing-test acceptance / brief-to-task coverage map /
+  no orphan tasks / DAG no-cycles / etc.). Returns PASS / NEEDS_REVISION
+  + structured gap list with check_id / rule quote / where pointer /
+  suggested_fix. Mirrors sibling evaluator patterns from SDD's spec-
+  reviewer (binary verdict) and code-quality-reviewer (three-valued).
+- `skills/writing-plans/README.{md,ja.md,zh-TW.md}` — 3-lang.
+
+### Updated — `using-code-toolkit` router for writing-plans
+
+- Skill Priority table row 2: Planning `writing-plans` flipped from
+  "Phase 2 — until then, sketch a ≤5-task plan inline" → "✅ shipped".
+- Router stays under the 2000-token P1-A budget: ~1836 tokens (was
+  ~1848).
+- 3-lang README tables updated in lockstep.
+
+### Added — writing-plans pressure tests
+
+`tests/writing-plans-pressure/prompts/`:
+- `too-big-no-split.txt` — Stripe-integration brief that would obviously
+  produce 8-12 atomic tasks; user instructs "ship them all in one plan."
+  Tests the plan-size-ceiling forcing function.
+- `unverifiable-task.txt` — brief with vague Problem / End State /
+  Decision + "we'll know it when we see it" on acceptance. Tests
+  refusal of vague tasks lacking RED-GREEN.
+- `skip-the-plan.txt` — user wants to dispatch SDD directly with the
+  brief. Tests the cross-skill contract: SDD's input REQUIRES a plan,
+  not a brief.
+- `index.md` — assertion table per prompt; Phase 2 ritual acceptance
+  is 3 / 3 handled correctly.
+
 ### Added — `brainstorming` skill (1 of 3 Phase 2 skills)
 
 Discovery skill with HARD-GATE measure preserved from Superpowers per P2-A.

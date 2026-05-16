@@ -44,7 +44,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | # | Stage | Skill (target) | v0.1.0 status |
 |---|---|---|---|
 | 1 | Discovery | `brainstorming` | ✅ shipped |
-| 2 | Planning | `writing-plans` | Phase 2 — until then, sketch a ≤5-task plan inline |
+| 2 | Planning | `writing-plans` | ✅ shipped |
 | 3 | Execution | `subagent-driven-development` | ✅ shipped |
 | 4 | Discipline (during execution) | `tdd-iron-law` | ✅ shipped |
 | 5 | Repair (when stuck) | `systematic-debugging` | Phase 2 |

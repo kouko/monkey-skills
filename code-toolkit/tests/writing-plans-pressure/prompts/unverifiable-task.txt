@@ -1,0 +1,14 @@
+Here's the brief. Plan it.
+
+# Brief: refactor authentication
+
+## Problem
+Auth code is messy. Make it cleaner.
+
+## Smallest End State
+Cleaner auth code.
+
+## Decision
+Refactor src/auth/ to be better.
+
+Just plan one big "refactor auth" task. We'll figure out the acceptance criteria as we go — no need to write specific tests upfront, we'll know it when we see it.

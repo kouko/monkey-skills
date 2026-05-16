@@ -17,7 +17,7 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 | Stage | Skill | v0.1.0 status |
 |---|---|---|
 | Discovery | [`brainstorming`](../brainstorming) | ✅ shipped |
-| Planning | [`writing-plans`](../writing-plans) | Phase 2 |
+| Planning | [`writing-plans`](../writing-plans) | ✅ shipped |
 | Execution | [`subagent-driven-development`](../subagent-driven-development) | ✅ shipped |
 | Discipline | [`tdd-iron-law`](../tdd-iron-law) | ✅ shipped |
 | Repair | [`systematic-debugging`](../systematic-debugging) | Phase 2 |
