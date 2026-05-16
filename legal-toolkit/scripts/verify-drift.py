@@ -95,11 +95,11 @@ def _print_unified_diff(reference: Path, drift_path: Path, max_lines: int = 50) 
         print("    (diff binary unavailable)")
 
 
-# --------------------------------------------------------- 3-grader bank drift
+# --------------------------------------------------------- 4-grader bank drift
 # Per spec §7.3 (docs/superpowers/specs/2026-05-15-legal-toolkit-phase3-irac-cluster-design.md),
 # PATH_A_ANTIPATTERNS bank + _check_no_template_orphans helper must stay
-# byte-identical across SP3a/SP3b/v0.5.0 graders so future legal updates land
-# in one place per skill but never silently drift.
+# byte-identical across SP3a/SP3b/v0.5.0/v0.5.2 graders so future legal updates
+# land in one place per skill but never silently drift.
 #
 # Scope notes:
 # - PATH_A_ANTIPATTERNS bank check: required across ALL listed graders.
@@ -107,15 +107,14 @@ def _print_unified_diff(reference: Path, drift_path: Path, max_lines: int = 50) 
 #   define it. grade_draft.py predates the helper (uses its own
 #   `_check_no_orphans` with a different scope — single doc, broader pattern)
 #   and is exempt; spec §7.3's all-4-graders directive is implemented for the
-#   2 graders that have the helper today (response + issue-spot) and will
-#   absorb grade_research.py in v0.5.2.
+#   3 graders that have the helper today (response + issue-spot + research).
 
 GRADERS_FOR_BANK_DRIFT_CHECK: list[Path] = [
     ROOT / "skills" / "legal-document-draft" / "scripts" / "grade_draft.py",
     ROOT / "skills" / "legal-incident-response" / "scripts" / "grade_response.py",
     ROOT / "skills" / "legal-issue-spot" / "scripts" / "grade_issue_spot.py",
-    # NOTE: legal-research grader added in v0.5.2; uncomment then.
-    # ROOT / "skills" / "legal-research" / "scripts" / "grade_research.py",
+    # legal-research grader (v0.5.2 SP3-b)
+    ROOT / "skills" / "legal-research" / "scripts" / "grade_research.py",
 ]
 
 # Bank: literal `[...]` body of `PATH_A_ANTIPATTERNS = [...]`.

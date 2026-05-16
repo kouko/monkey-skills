@@ -1,0 +1,19 @@
+{
+  "rounds": 6,
+  "fetches": 15,
+  "sources": [
+    {
+      "url_or_cite": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=Z0030013&flno=15",
+      "type": "條文",
+      "captured_at": "2026-05-15T09:12:33+08:00",
+      "relevance_snippet": "公職人員利益衝突迴避法 §15 第一項：公職人員不得收受市價超過正常社交禮俗標準之財物。"
+    }
+  ],
+  "types_covered": {
+    "條文": 1
+  },
+  "early_stop": false,
+  "forced_stop": true,
+  "started_at": "2026-05-15T09:10:00+08:00",
+  "updated_at": "2026-05-15T09:47:33+08:00"
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-toolkit/skills/legal-research/assets/output-schema-memo.json",
+  "title": "research-memo.md structural schema",
+  "type": "object",
+  "required": ["required_sections", "conditional_sections", "citation_section", "min_citations_or_warn", "min_source_types_or_warn", "min_byte_size", "no_template_orphans"],
+  "properties": {
+    "required_sections": {
+      "type": "array",
+      "items": {"type": "string"},
+      "const": ["§問題", "§搜尋摘要", "§法源分析", "§結論", "§Citations", "§Disclaimer"]
+    },
+    "conditional_sections": {
+      "type": "object",
+      "properties": {
+        "⚠️ 覆蓋未達 triangulation 警告 block": {
+          "type": "string",
+          "const": "REQUIRED if state.json.forced_stop == true; PREPENDED above §問題"
+        }
+      }
+    },
+    "citation_section": {"type": "string", "const": "§Citations"},
+    "min_citations_or_warn": {"type": "integer", "const": 8},
+    "min_source_types_or_warn": {"type": "integer", "const": 2},
+    "min_byte_size": {"type": "integer", "const": 1200},
+    "no_template_orphans": {"type": "boolean", "const": true}
+  }
+}
