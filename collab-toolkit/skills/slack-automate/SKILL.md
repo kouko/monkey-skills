@@ -1,38 +1,43 @@
 ---
 name: slack-automate
-description: Slack automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: full-text search-messages with from/in/before/after operators, channel-read with thread expansion and reactions, thread-read with all replies/reactions/attachments, find-user by name/email/handle. Read-only v0.1.0 — search and fetch only, no writes. Slack 自動化、メッセージ読取、ヘッドレス。Slack 自動化・訊息讀取・無頭背景。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*), Bash(jq:*), Bash(mkdir:*)
+description: Slack automation via agent-browser browser-driving. Use for: search-messages with from/in/before/after operators, channel-read with thread expansion, thread-read with replies, find-user by name/email/handle. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Slack 自動化、メッセージ読取、ヘッドレス、多言語UI対応。Slack 自動化・訊息讀取・無頭背景・多語言介面支援。
+allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
 ---
 
 # slack-automate
 
-Read-only browser automation for Slack. Uses semantic-first selectors over the accessibility tree — never hardcode `@eN` refs.
+Inherits patterns from agent-browser's [official slack skill](https://github.com/vercel-labs/agent-browser/blob/main/skill-data/slack/SKILL.md). v0.1.6 extends with zh-TW / ja UI label support.
 
 ## Prerequisites
 
-Run `/collab-setup` once. After that:
-- `~/.local/bin/abx` is installed and on PATH
-- `~/.config/collab-toolkit/config.json` exists with mode + profile config
-- Slack is verified logged-in
-
-If protocol fails with "config not found" → run `/collab-setup`.
-If protocol fails with "login wall detected" → shared: log into Slack in daily Chrome; dedicated: `/collab-setup --reauth slack`.
+`/collab-setup` once. Login wall → reauth.
 
 ## Hero protocols
 
-- `protocols/search-messages.md` — full-text search with from:/in:/before:/after: operators
-- `protocols/channel-read.md` — recent N messages in a channel with thread expansion
-- `protocols/thread-read.md` — entire thread including all replies, reactions, attachments
-- `protocols/find-user.md` — user search by name / email / handle, returns profile + activity
+- `protocols/search-messages.md`
+- `protocols/channel-read.md`
+- `protocols/thread-read.md`
+- `protocols/find-user.md`
 
-## Selector convention
+## Workflow pattern
 
-See `references/ui-patterns.md`. Inherits patterns from agent-browser's own slack skill (verified 2026-05 against Slack web). All protocols use `ABX_SERVICE=slack abx snapshot -i --json` then jq filter by role+name.
+```bash
+abx open https://app.slack.com
+abx wait --load networkidle
+abx snapshot -i
+abx click @eN
+abx snapshot -i
+```
+
+## Key elements (locale-dependent — see per-protocol Localized labels)
+
+- Sidebar tabs (Home / DMs / Activity)
+- Search button + input
+- Channel treeitem
+- "More unreads" button
+- Conversation region + article messages
+- Thread complementary panel
 
 ## Failure modes
 
 See `references/failure-modes.md`.
-
-## Output mode
-
-Default Markdown. `--json` for structured output.

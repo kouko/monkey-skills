@@ -1,100 +1,82 @@
 ---
 name: task-detail
-purpose: Fetch full detail of a single task — title, description, subtasks, comments, attachments, custom field values.
+purpose: Fetch full task detail — title, description, subtasks, comments, attachments, custom fields.
 ---
 
 ## Inputs
-
-- `task_url`: required. Full Asana task URL (e.g., `https://app.asana.com/0/<workspace>/<task_id>`).
+- `task_url`: required.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown:
 ```
-# Refactor auth middleware
-**Project**: Backend / Engineering
-**Assignee**: kouko
-**Due**: 2026-05-15
-**Status**: incomplete
+# <title>
+**Assignee**: <name>
+**Due**: <date>
+**Status**: <incomplete | complete>
 
 ## Description
-Replace the legacy session middleware with the new compliance-aligned implementation...
+<body>
 
-## Subtasks (3)
-- [x] Write design doc
-- [ ] Implement new middleware
-- [ ] Migrate existing routes
+## Subtasks (N)
+- [ ] <title>
 
-## Comments (5)
-**Alice (2026-05-14)**: Looks good, but check the rate-limiter integration.
-...
+## Comments (N)
+**<author> (<date>)**: <text>
 
-## Attachments (2)
-- design-doc.pdf
-- arch-diagram.png
+## Attachments (N)
+- <filename>
 ```
 
-`--json` shape: full task object with all fields above as JSON.
+## Localized labels
+
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Assignee button prefix | `Assignee, ` | `受指派者, ` | `担当者, ` |
+| Due-date button prefix | `Due date, ` | `到期日, ` | `期日, ` |
+| Description region | `[region] "Description"` | `[region] "說明"` | `[region] "説明"` |
+| Subtasks list | `[list] "Subtasks"` | `[list] "子任務"` | `[list] "サブタスク"` |
+| Attachments list | `[list] "Attachments"` | `[list] "附件"` | `[list] "添付ファイル"` |
+| Show-all-subtasks button | `[button] "Show all subtasks"` | `[button] "顯示所有子任務"` | `[button] "すべてのサブタスクを表示"` |
 
 ## Procedure
 
-```bash
-TASK_URL="$1"
-[ -z "$TASK_URL" ] && { echo "ERR: task_url required"; exit 1; }
+1. Open task URL:
+   ```bash
+   abx open <task_url>
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=asana abx open "$TASK_URL"
-ABX_SERVICE=asana abx wait --load networkidle
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
+2. **Read snapshot**. Identify (per Localized labels):
+   - Title: `[heading]` level=1 (locale-agnostic)
+   - Assignee: `[button]` with locale-specific prefix
+   - Due date: `[button]` with locale-specific prefix
+   - Description: `[region]` with locale-specific name
+   - Subtasks: `[list]` with locale-specific name + `[listitem]` children
+   - Comments: `[article]` elements (role locale-agnostic)
+   - Attachments: `[list]` with locale-specific name
 
-# Title — role="heading" level=1
-TITLE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="heading" and .level==1) | .name' | head -1)
+3. Fetch rich content:
+   ```bash
+   abx get text @eN
+   ```
 
-# Assignee — element with aria label containing "Assignee"
-ASSIGNEE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Assignee"))) | .name // ""' | head -1)
+4. For each subtask listitem: title + child-checkbox state.
 
-# Due date — element with aria label containing "Due date"
-DUE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name|startswith("Due"))) | .name // ""' | head -1)
-
-# Description — role="textbox" or role="region" with aria-label="Description"
-DESC=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Description") | .text' | head -1)
-
-# Subtasks — role="list" with aria-label="Subtasks" → children are role="listitem"
-SUBTASKS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name=="Subtasks") | .children[]? | select(.role=="listitem") | "- [\(if (.checked // false) then "x" else " " end)] \(.name)"')
-
-# Comments — role="article" elements within "Activity" section
-COMMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="article") | "**\(.author // "(unknown author)") (\(.timestamp // "(unknown time)"))**: \(.text // "")"')
-
-# Attachments — role="list" with aria-label="Attachments"
-ATTACHMENTS=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="list" and .name=="Attachments") | .children[]? | .name' | sed 's/^/- /')
-
-# Emit markdown
-cat <<EOF
-# $TITLE
-**Assignee**: $(echo "${ASSIGNEE}" | sed -E 's/^Assignee[:, ]+//')
-**Due**: $(echo "${DUE}" | sed -E 's/^Due date[:, ]+//')
-
-## Description
-$DESC
-
-## Subtasks
-$SUBTASKS
-
-## Comments
-$COMMENTS
-
-## Attachments
-$ATTACHMENTS
-EOF
-```
+5. Format Markdown. Omit empty sections.
 
 ## Failure modes
 
-- Title missing → likely on login page → "Auth expiry"
-- Task not found (404 title) → invalid URL → tell user to verify URL
+- **No level=1 heading** → login page → reauth.
+- **Task URL 404** → invalid/deleted.
+- **Missing Description** → valid empty → `(no description)`.
+
+## Notes
+
+- Lazy comment rendering — scroll + re-snapshot.
+- Custom fields: `[button]` with `<field name>, <value>` (field names user-defined).
+- Subtasks may be collapsed — click locale-specific Show-all-subtasks button before re-snapshotting.
 
 ## Examples
 
-Input: `task_url=https://app.asana.com/0/1234/5678`
-
-Expected: full task detail rendered as Markdown.
+Input: `task_url = https://app.asana.com/0/1234/5678` → full Markdown.

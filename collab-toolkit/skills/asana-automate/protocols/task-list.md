@@ -1,94 +1,72 @@
 ---
 name: task-list
-purpose: List My Tasks across all projects with optional filters (due-date / status / custom field).
+purpose: List My Tasks across all projects with optional filters.
 ---
 
 ## Inputs
-
-- `filter_due`: optional. One of `today` / `this-week` / `overdue` / `all`. Default: `all`.
-- `filter_status`: optional. One of `incomplete` / `complete` / `all`. Default: `incomplete`.
-- `--json`: optional. Output structured JSON.
+- `filter_due`: optional. `today` / `this-week` / `overdue` / `all`. Default: `all`.
+- `filter_status`: optional. `incomplete` / `complete` / `all`. Default: `incomplete`.
+- `filter_project`: optional. Substring match.
 
 ## Output
-
-Default Markdown:
 ```
-## My Tasks (15)
-
-### Today (3)
-- [ ] Refactor auth middleware — Project: Backend / Section: Engineering — Due: today
-- [ ] Code review PR #234 — Project: Backend / Section: Reviews — Due: today
-- [x] Standup notes — Project: Eng Ops / Section: Daily — Due: today (completed)
-
-### This week (12)
-- [ ] ... (truncated for plan; full output shows all tasks)
+## My Tasks (N)
+- [ ] <title> — Project: <project> — Due: <date>
+- [x] <title> — Project: <project> — Due: <date>
 ```
 
-`--json` shape:
-```json
-{
-  "total": 15,
-  "tasks": [
-    {
-      "id": "extracted from data-task-id attribute",
-      "title": "Refactor auth middleware",
-      "project": "Backend",
-      "section": "Engineering",
-      "due_date": "2026-05-15",
-      "status": "incomplete",
-      "url": "https://app.asana.com/0/<workspace>/<task_id>"
-    }
-  ]
-}
-```
+## Localized labels
 
-## Procedure (semantic-first, no hardcoded refs)
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Sidebar link → My Tasks | `[link] "My tasks"` | `[link] "我的任務"` | `[link] "マイタスク"` |
+| Due-date button prefix | `Due date, ` | `到期日, ` | `期日, ` |
+| Complete checkbox | `[checkbox] "Mark complete"` | `[checkbox] "標示為完成"` | `[checkbox] "完了としてマーク"` |
+| Sort button (default) | `[button] "Recently assigned"` | `[button] "最近指派"` | `[button] "最近割り当て"` |
+| Show-more pagination | `[button] "Show more"` | `[button] "顯示更多"` | `[button] "もっと表示"` |
 
-```bash
-# Prerequisite: $HOME/.local/bin must be on PATH; /collab-setup ensures this.
+## Procedure
 
-# 1. Open My Tasks
-ABX_SERVICE=asana abx open https://app.asana.com/0/inbox
-ABX_SERVICE=asana abx wait --load networkidle
+1. Open inbox:
+   ```bash
+   abx open https://app.asana.com/0/inbox
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# 2. Navigate to My Tasks (via sidebar)
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
-MYTASKS_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="link" and .name=="My tasks") | .ref' | head -1)
-[ -z "$MYTASKS_REF" ] && { echo "ERR: UI changed: 'My tasks' link not found in sidebar"; exit 1; }
-ABX_SERVICE=asana abx click "$MYTASKS_REF"
-ABX_SERVICE=asana abx wait --load networkidle
+2. **Read snapshot**. Find My-Tasks sidebar link (label per Localized labels). Note `@eN`.
 
-# 3. Snapshot task list
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
+3. Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# 4. Extract task rows
-# Each task is role="row" within a role="grid" parent. Task title is in role="link" child.
-echo "$SNAP" | jq -r '
-  [.elements[]
-    | select(.role=="row")
-    | {
-        title: ([.children[]? | select(.role=="link" and .name != "") | .name] | first // "(untitled)"),
-        ref: .ref
-      }
-  ] | .[]
-  | "- \(.title)"
-'
+4. **Read new snapshot**. Task rows under `[grid]` or `[list]`:
+   ```
+   @eX [row]
+     @eX+1 [link] "<task title>"
+     @eX+2 [button] "<Due-date prefix><value>"
+     @eX+3 [checkbox] "<complete label>"
+   ```
 
-# 5. (Optional --json mode) Emit JSON
-# Replace the markdown step above with:
-# echo "$SNAP" | jq '[.elements[] | select(.role=="row") | {title, ref, ...}]'
-```
+5. Extract per row: title (link child), due date (button name, strip locale prefix), completion (checkbox).
+
+6. Apply filters. Format as Markdown.
 
 ## Failure modes
 
-- "UI changed: 'My tasks' link not found in sidebar" → references/failure-modes.md → "UI evolution"
-- Login wall (title contains "Sign in") → references/failure-modes.md → "Auth expiry"
-- Empty grid (no tasks) → valid empty result, output "No tasks matching filter"
+- **My-Tasks link not found** in any of 3 locales → sidebar restructured → re-snapshot.
+- **Login wall** (title contains `Log in` / `登入` / `ログイン` / URL → `/-/login`) → `/collab-setup --reauth asana`.
+- **Empty grid** → valid → `No tasks matching filter.`
+
+## Notes (Asana quirks, locale-independent)
+
+- **Filter dropdown uses React portal** → NOT in tree → filter post-extraction.
+- **Default sort = "Recently assigned"** (or localized) — switch via Sort button if needed.
+- **Lazy loading** — scroll grid + re-snapshot.
 
 ## Examples
 
-User invocation: "show my Asana tasks due this week"
-
-Expected output (Markdown mode): list of tasks grouped by due-date with title / project / section / status.
-
-`--json` mode returns structured JSON for downstream piping (e.g., to gmail-automate to email summary, or to notion-automate to log).
+"show my Asana tasks this week" / 「列我這週的 Asana 任務」 / 「今週のAsanaタスク」 — Markdown list.

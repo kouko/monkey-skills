@@ -1,67 +1,75 @@
 ---
 name: search-global
-purpose: Full-text search across tasks, projects, and portfolios with optional filters.
+purpose: Full-text search across tasks / projects / portfolios.
 ---
 
 ## Inputs
-
-- `query`: required. Search string.
-- `filter_type`: optional. One of `tasks` / `projects` / `portfolios` / `all`. Default: `all`.
+- `query`: required.
+- `filter_type`: optional. `tasks` / `projects` / `portfolios` / `all`.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown groups results by type with relevance order:
 ```
-## Search results for "OKR" (24 matches)
+## Search results for "<query>" (N)
 
-### Tasks (15)
-- Q2 OKR planning — Project: Engineering — kouko
-- ...
+### Tasks (M)
+- <task title> — Project: <project>
 
-### Projects (3)
-- OKR Tracker — Owner: alice
-- ...
+### Projects (K)
+- <project name>
 
-### Portfolios (1)
-- Company OKRs Q2 2026 — Owner: ceo
+### Portfolios (L)
+- <portfolio name>
 ```
 
-`--json`: `{ query, total, tasks: [...], projects: [...], portfolios: [...] }`.
+## Localized labels
+
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Top-bar Search button | `[button] "Search"` or `"Search Asana"` | `[button] "搜尋"` or `"搜尋 Asana"` | `[button] "検索"` or `"Asana を検索"` |
+| Search input | `[textbox] "Search"` or `[combobox]` | `[textbox] "搜尋"` or `[combobox]` | `[textbox] "検索"` or `[combobox]` |
+| Tasks group heading | `[heading] "Tasks"` | `[heading] "任務"` | `[heading] "タスク"` |
+| Projects group heading | `[heading] "Projects"` | `[heading] "專案"` | `[heading] "プロジェクト"` |
+| Portfolios group heading | `[heading] "Portfolios"` | `[heading] "投資組合"` | `[heading] "ポートフォリオ"` |
 
 ## Procedure
 
-```bash
-QUERY="$1"
-[ -z "$QUERY" ] && { echo "ERR: query required"; exit 1; }
+1. Open Asana:
+   ```bash
+   abx open https://app.asana.com/0/inbox
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=asana abx open https://app.asana.com/0/inbox
-ABX_SERVICE=asana abx wait --load networkidle
+2. **Read snapshot**. Find Search button (per Localized labels). Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait 500
+   abx snapshot -i
+   ```
 
-# Find Search button — role="button" name="Search"
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
-SEARCH_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and .name=="Search") | .ref' | head -1)
-[ -z "$SEARCH_REF" ] && { echo "ERR: UI changed: 'Search' button not found"; exit 1; }
-ABX_SERVICE=asana abx click "$SEARCH_REF"
-ABX_SERVICE=asana abx wait 500
+3. **Find active search input** (textbox/combobox). Fill + submit:
+   ```bash
+   abx fill @eM "<query>"
+   abx press Enter
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Type query into the active search input
-ABX_SERVICE=asana abx fill --active "$QUERY"
-ABX_SERVICE=asana abx press Enter
-ABX_SERVICE=asana abx wait --load networkidle
+4. **Read results**. Headings (locale-dependent) then row/listitem children below each.
 
-# Snapshot results page
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
-
-# Results have role="row" within result groups
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="row")
-  | "- \(.name // "(untitled)")"
-'
-```
+5. Extract names + secondary info. Apply `filter_type`. Format Markdown.
 
 ## Failure modes
 
-- "Search" button not found → UI evolution
-- No results → valid empty result
+- **Search button missing** → re-snapshot, top bar restructured.
+- **No textbox after click** → `abx wait 1000` + re-snapshot.
+- **No results** → valid empty.
+
+## Notes
+
+- **Asana search operators** (`assignee:`, `project:`, `due:today`) are locale-stable — include in query.
+
+## Examples
+
+Input: `query = "OKR"` → Markdown grouped by type.

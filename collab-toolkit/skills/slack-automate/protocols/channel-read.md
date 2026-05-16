@@ -1,88 +1,59 @@
 ---
 name: channel-read
-purpose: Read recent N messages in a channel, with optional thread expansion.
+purpose: Read recent N messages in a channel.
 ---
 
 ## Inputs
-
-- `channel`: required. Channel name (e.g., `engineering`) or full URL.
-- `limit`: optional, default 20. Number of recent messages.
-- `expand_threads`: optional bool, default false.
+- `channel`: required (name or URL).
+- `limit`: optional, default 20.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown:
 ```
-## #engineering (last 20 messages, 3 threads expanded)
+## #<channel> (last N messages)
 
-**alice** · 2026-05-15 09:00
-Standup starting in 5 minutes.
-└─ 3 replies (expanded below)
-    **bob**: On my way
-    ...
-
-**carol** · 2026-05-15 08:45
-PR #234 ready for review.
+**<user>** · <timestamp>
+<text>
+└─ <thread reply count>
 ```
 
-`--json`: `[ { user, timestamp, text, thread_count, thread_messages?: [...] } ]`.
+## Localized labels
 
-> **Output spec note**: `user`, `timestamp`, `text`, `thread_count` are extracted from AT snapshot `article` elements. These fields are speculative (v0.1.0 unverified) — see `references/ui-patterns.md` AT-schema notes. All are guarded with `// "(unknown)"` / `// 0` fallbacks.
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Conversation region | `[region] "Conversation"` | `[region] "對話"` | `[region] "会話"` |
+| Thread reply link | `[link] "<N> reply"` or `"<N> replies"` | `[link] "<N> 則回覆"` or `"<N> 個回覆"` | `[link] "<N> 件の返信"` |
 
 ## Procedure
 
-```bash
-CHANNEL="$1"
-LIMIT="${2:-20}"
-EXPAND="${3:-false}"
+1. If `channel` is URL: `abx open <url>`. Else: open Slack + find `[treeitem]` with channel name in sidebar (channel names are user-defined).
+   ```bash
+   abx open https://app.slack.com
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Resolve channel — name or URL
-case "$CHANNEL" in
-  http*)
-    ABX_SERVICE=slack abx open "$CHANNEL"
-    ABX_SERVICE=slack abx wait --load networkidle
-    ;;
-  *)
-    # Navigate to workspace, find channel in sidebar
-    ABX_SERVICE=slack abx open https://app.slack.com
-    ABX_SERVICE=slack abx wait --load networkidle
-    SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-    CHANNEL_REF=$(echo "$SNAP" | jq -r --arg c "$CHANNEL" '
-      .elements[] | select(.role=="treeitem" and ((.name // "") | startswith($c))) | .ref
-    ' | head -1)
-    [ -z "$CHANNEL_REF" ] && { echo "ERR: Channel '$CHANNEL' not found in sidebar"; exit 1; }
-    ABX_SERVICE=slack abx click "$CHANNEL_REF"
-    ABX_SERVICE=slack abx wait --load networkidle
-    ;;
-esac
+2. **Read snapshot**, find channel `[treeitem]`. Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Snapshot channel — interactive elements only for speed
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
+3. **Read channel snapshot**. Messages are `[article]` within Conversation region (locale-dependent name). Per article: author, timestamp, body, optional thread-reply link.
 
-# Each message is role="article" within role="region" name="Conversation"
-echo "$SNAP" | jq -r --argjson limit "$LIMIT" '
-  [.elements[]
-    | select(.role=="article")
-    | {
-        user: (.author // "(unknown)"),
-        timestamp: (.timestamp // ""),
-        text: (.text // ""),
-        thread_count: (.thread_count // 0)
-      }
-  ]
-  | .[-$limit:]
-  | .[]
-  | "**\(.user)** · \(.timestamp)\n\(.text)\n"
-'
-
-# Thread expansion (if requested) — iterate messages with thread_count > 0, click "N replies" button
-# Click: role="link" name starts with "N reply" or "N replies" (see references/ui-patterns.md)
-# Then snapshot the Thread complementary panel for replies
-# (Full expand implementation: delegate to protocols/thread-read.md per-thread)
-```
+4. Extract last N messages. Format Markdown.
 
 ## Failure modes
 
-- Channel not found in sidebar → user lacks access or channel is hidden under "More"
-- Auth expiry → "Auth expiry"
+- **Channel `[treeitem]` not in sidebar** → user left or hidden — try direct URL `https://app.slack.com/client/<workspace>/<channel-id>`.
+- **No `[article]` elements** → empty channel.
+
+## Notes
+
+- Scroll up + re-snapshot for older messages.
+- For thread replies → use `protocols/thread-read.md`.
+
+## Examples
+
+`channel = engineering, limit = 10` → last 10 messages.

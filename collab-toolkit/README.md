@@ -38,6 +38,12 @@ After that, ask Claude things like:
 - "What's on my Google Calendar today"
 - "Find free 30-minute slots between 10am-4pm next Tuesday"
 
+## Supported UI languages
+
+v0.1.6+ supports **English / 繁體中文 / 日本語** UI labels. Each protocol has a `Localized labels` table mapping role+name patterns across the 3 languages. Other locales (zh-CN / ko / European) may partially work — refine via PR with verified labels.
+
+If your account language is English, no setup needed. If 繁中 or 日文, the protocols will match the localized labels automatically.
+
 ## Profile modes
 
 | Mode | What | When |

@@ -1,51 +1,50 @@
 ---
 name: thread-read
-purpose: Read entire thread including all replies, reactions, attachments.
+purpose: Read entire thread (parent + all replies).
 ---
 
 ## Inputs
-
-- `thread_url`: required. Slack thread permalink (`https://<workspace>.slack.com/archives/<channel>/p<ts>?thread_ts=...`).
+- `thread_url`: required.
 - `--json`: optional.
 
 ## Output
+```
+## Thread in #<channel>
 
-Default Markdown: parent message + all replies with reactions and attachment names.
+**<user>** · <timestamp>  (parent)
+<text>
 
-`--json`: `{ parent: { user, timestamp, text }, replies: [...], total_replies, reactions: [...] }`.
+  **<user>** · <timestamp>
+  <text>
+```
 
-> **Output spec note**: `reactions` and `attachments` are extracted from AT snapshot `article` elements. These fields are speculative (v0.1.0 unverified). The JSON output shape guarantees top-level keys but individual field availability depends on AT snapshot schema — see `references/ui-patterns.md` AT-schema notes. All speculative fields use `// []` / `// "(unknown)"` fallbacks.
+## Localized labels
+
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Thread complementary | `[complementary] "Thread"` | `[complementary] "討論串"` | `[complementary] "スレッド"` |
+| Show-more-replies button | `[button] "Show more replies"` | `[button] "顯示更多回覆"` | `[button] "返信をさらに表示"` |
 
 ## Procedure
 
-```bash
-URL="$1"
-[ -z "$URL" ] && { echo "ERR: thread_url required"; exit 1; }
+1. Open thread URL:
+   ```bash
+   abx open <thread_url>
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=slack abx open "$URL"
-ABX_SERVICE=slack abx wait --load networkidle
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
+2. **Read snapshot**. Find Thread `[complementary]` (locale-dependent). Articles inside are parent + replies.
 
-# Thread is shown in a side panel — parent+replies are role="article"
-# .parent.role/.parent.name guards dropped: agent-browser flat snapshot has no .parent field.
-# Permissive: accept all articles on this page (which is the thread URL — no other articles expected).
-echo "$SNAP" | jq -r '
-  [.elements[]
-    | select(.role=="article")
-    | {
-        user: (.author // "(unknown)"),
-        timestamp: (.timestamp // ""),
-        text: (.text // ""),
-        reactions: (.reactions // []),
-        attachments: (.attachments // [])
-      }
-  ]
-  | .[]
-  | "**\(.user)** · \(.timestamp)\n\(.text)\n"
-'
-```
+3. Extract each `[article]`: user, timestamp, body. Reactions are child `[button]` with emoji name. Attachments are child `[link]`.
+
+4. Format Markdown.
 
 ## Failure modes
 
-- Thread URL invalid (404) → message about URL validation
-- "Thread" complementary region missing → UI evolution or thread opened inline (not side panel)
+- **Thread `[complementary]` missing** → URL malformed / message deleted / no access.
+- **Truncated replies** → click Show-more-replies button (locale-dependent) + re-snapshot.
+
+## Examples
+
+`thread_url = https://kouko.slack.com/archives/C123/p1234567890?thread_ts=1234.5678` → full thread.
