@@ -1,42 +1,177 @@
 # code-toolkit
 
-> **Status**: Design-only (Phase 0 — PRODUCT/TECH/ROADMAP locked, no skill shipped yet)
-> Languages: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 9-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-Process-discipline + canon-grounded coding toolkit. Two-layer architecture:
+**Status**: v0.4.0-draft (9 of 9 skills shipped; Codex CLI build complete; verification rituals pending → v1.0.0 target)
+**Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+**Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
-- **Process layer** (Superpowers-style): 7-stage workflow with SessionStart hook auto-injection — brainstorm → plan → SDD (subagent-driven development) → TDD iron-law → systematic debugging → code-review → finish-branch.
-- **Knowledge layer** (code-team grounding): byte-identical functional copy of `domain-teams:code-team` standards / rubrics / checklists. Each rule traceable to a primary source (Clean Code / Pragmatic Programmer / SOLID / Beck 2002 TDD / Fowler 2018 Refactoring / Feathers 2004 Legacy Code / OWASP ASVS v5.0.0 / 徳丸本 Ch.6).
+---
 
-## Status
+## The 30-second example
 
-| Phase | Version | Skills | Status |
+Paste this into a fresh Claude Code session (after install — see below):
+
+```
+I want to add a feature flag system to our codebase so we can gate
+new features. We don't have one yet. Just build the basic version:
+env var checks + a hardcoded enabled list. No need to brainstorm,
+the design is obvious.
+```
+
+**What happens** (with code-toolkit installed):
+
+The router auto-injected at SessionStart fires Rule #1 (*"Brainstorm before implementing"*). The `brainstorming` skill activates with the 5-axis HARD-GATE measure. It refuses to skip discovery, articulates the JTBD framing, surfaces the alternatives (do nothing / single env var only / full flag system), and ends with `dev-workflow:complexity-critique` as the recommended next-step delegation — because feature-flag systems are the canonical PAGNI smell.
+
+**What you didn't get**: 200 lines of premature feature-flag infrastructure for a problem that hasn't surfaced yet.
+
+See [`docs/examples/`](docs/examples/) for 3 fully-worked end-to-end flows (Python / TypeScript / Swift).
+
+---
+
+## Install
+
+### Claude Code
+
+```bash
+# One-time: add the marketplace
+claude plugin marketplace add https://github.com/kouko/monkey-skills.git
+
+# Install
+claude plugin install code-toolkit@monkey-skills
+
+# Verify
+claude plugin list | grep code-toolkit       # expect: enabled
+claude plugin details code-toolkit           # expect: 10 skills + 1 SessionStart hook
+```
+
+### Codex CLI (Phase 2.5 — verification pending)
+
+⚠️ Codex CLI manifest is built (v0.4.0-draft) but verification ritual not yet completed. See [`tests/codex-cli/README.md`](tests/codex-cli/README.md) for the install + verify procedure.
+
+### Local development (for contributors)
+
+```bash
+# Clone monkey-skills + register as local marketplace
+git clone https://github.com/kouko/monkey-skills.git
+cd monkey-skills
+
+# Add as local-scope marketplace (for testing code-toolkit changes)
+claude plugin marketplace add . --scope local
+claude plugin install code-toolkit@monkey-skills --scope local
+```
+
+---
+
+## The 10 skills
+
+| # | Skill | Stage | What it does |
 |---|---|---|---|
-| 0 | 0.1.0-draft | — | ⏳ Design lock (this PR) |
-| 1 | 0.1.0 | 3 (using / tdd-iron-law / SDD) | pending |
-| 1.5 | 0.1.5 | 3 (+soft-mode) | pending |
-| 2 | 0.2.0 | 6 (+brainstorming / writing-plans / sys-debugging) | pending |
-| 2.5 | 0.2.5 | 6 (+Codex CLI ship) | pending |
-| 3 | 0.3.0 | 9 (Superpowers parity) | pending |
-| 4 | 1.0.0 | 9 (GA) | pending |
+| Router | [`using-code-toolkit`](skills/using-code-toolkit/) | Always-on | Auto-injected at SessionStart; 4 load-bearing rules + Skill Priority table |
+| 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis exploration (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete); refuses skip-discovery rationalizations |
+| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan with per-task RED-GREEN acceptance; BLOCKED → child-test fallback (Beck Part II §Child Test) |
+| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | Per-task triad dispatch (implementer + spec-reviewer + code-quality-reviewer) |
+| 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" (Beck 2002 Preface, ISBN 978-0321146533); §Feathers (2004) legitimate legacy-code backfill distinction |
+| 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4-phase REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY; HARD-GATE "NO FIXING WITHOUT REPRODUCING" |
+| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | Whole-branch review with 7-dimension scoring (cross-task-coherence as branch-only dimension); push-as-trigger |
+| 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "NO DONE WITHOUT PACKAGE-LEVEL TEST INVOCATION"; 20+ stack canonical commands |
+| 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7-step orchestrator (review → verify → git-memory mandatory → commit → push → optional PR + worktree cleanup) |
+| Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | Native `git worktree` workflow; `.worktrees/<slug>/` convention |
 
-See [ROADMAP.md](ROADMAP.md) for full plan.
+---
 
-## Design Documents
+## Quickstart — the linear flow
 
-- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — business / target user / goals / Q-lock
-- [TECH-SPEC.md](TECH-SPEC.md) — architecture / SSOT / hooks / interface contracts
-- [ROADMAP.md](ROADMAP.md) — phase plan / decision ledger
+The intended user flow on a non-trivial task:
 
-## Coexists with
+```
+You: "I want to add feature X"
+  ↓ (SessionStart hook router auto-fires)
+brainstorming → 5-axis brief → docs/superpowers/specs/<topic>.md
+  ↓
+writing-plans → ≤5-task plan → docs/superpowers/plans/<topic>.md
+  ↓
+subagent-driven-development → per-task triad dispatch
+  ↓ (per implementer subagent)
+  tdd-iron-law → RED-GREEN-REFACTOR
+  ↓ (if implementer returns BLOCKED with decomposition signal)
+  writing-plans (re-invoked) → Child Test child decomposition
+  ↓ (per task DONE)
+SDD orchestrator continues
+  ↓ (when all tasks DONE)
+finishing-a-development-branch
+  ↓ Step 1: requesting-code-review (cross-task-coherence dimension)
+  ↓ Step 2: verification-before-completion (npm test / pytest / etc.)
+  ↓ Step 3: dev-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
+  ↓ Step 4: git commit (after user approval)
+  ↓ Step 5: git push (after user re-authorization)
+  ↓ Step 6: gh pr create (optional, opt-in)
+  ↓ Step 7: git worktree remove (optional, confirm)
+```
 
-- **`domain-teams:code-team`** — passive gate entry (审查既有產出). code-toolkit is the active-construction entry.
-- **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — code-toolkit delegates to these at the right moments.
+Plus on-demand:
+- **`systematic-debugging`** fires when you hit a bug that's not "obvious one-line fix" — intermittent, "works on my machine", race conditions, etc.
+- **`using-git-worktrees`** fires when you need parallel branches (this very plugin is developed on a worktree).
 
-## Conflicts with
+---
 
-- **`obra/superpowers`** — both ship SessionStart hooks and overlapping skill names. Resolve by setting `export CODE_TOOLKIT_MODE=off` to disable this plugin's hook injection.
+## Compatibility
+
+| Harness | Status |
+|---|---|
+| **Claude Code** | ✅ Verified end-to-end through Phase 3 orchestrator ritual; v0.3.0 ship + Phase 4 build complete |
+| **Codex CLI** | ⚠️ v0.4.0-draft build complete; live verification ritual pending (see `tests/codex-cli/README.md`) |
+
+The SessionStart hook emits a portable JSON shape covering Claude Code's `hookSpecificOutput.additionalContext`, Codex CLI's `additional_context`, and legacy `additionalContext` keys — same hook serves both harnesses.
+
+---
+
+## Coexistence
+
+This plugin is designed to coexist with related plugins, not compete:
+
+| Plugin | Relationship |
+|---|---|
+| **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | Passive-gate compliance reviewer. code-toolkit is the active-build orchestrator that uses code-team's standards as its knowledge layer (byte-identical functional-copied via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`). Same primary sources, different invocation mode. |
+| **[`dev-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/git-memory)** | Mandatory delegation target in `finishing-a-development-branch` Step 3 per P3-D. Decides commit-trailer decisions (Decision: / Learning: / Gotcha:); code-toolkit does NOT duplicate. |
+| **[`dev-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/complexity-critique)** | Optional delegation from `brainstorming` Axis 3 when complexity smell surfaces. Same SSOT-and-functional-copy mindset framing. |
+| **[`obra/superpowers`](https://github.com/obra/superpowers)** | Design inspiration; coexists via `CODE_TOOLKIT_MODE=off` escape hatch (set env var to disable code-toolkit hook; only superpowers fires). Both plugins can be installed; switch via env var. |
+
+Cross-plugin behavior is verified by 5 integration test scripts in [`tests/integration/`](tests/integration/).
+
+---
+
+## Why this plugin exists
+
+`monkey-skills` already had two related plugins:
+
+- **`domain-teams:code-team`** — primary-source-grounded standards / rubrics / checklists (8 books from Beck to 徳丸本). Strong knowledge layer. Weak invocation: agent must remember to call it.
+- **`obra/superpowers` (separate repo)** — SessionStart hook + measure rhetoric ("Delete it. Start over."). Strong invocation. Weak grounding: rules cite themselves, not canon.
+
+`code-toolkit` is the synthesis: Superpowers-style auto-injection + code-team-style canon-grounded measures. Each rule is BOTH structurally enforced (via SKILL.md HARD-GATE + Red Flags refusal patterns) AND substantively justified (via primary-source citation with ISBN / URL / chapter reference).
+
+---
+
+## Documentation
+
+- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — design intent, target users, Q-lock decisions
+- [TECH-SPEC.md](TECH-SPEC.md) — architecture, SSOT mechanism, hook contracts
+- [ROADMAP.md](ROADMAP.md) — phase plan, decision ledger, Phase 1.5 rolling backlog
+- [CHANGELOG.md](CHANGELOG.md) — Journey overview + per-version detail
+- [docs/examples/](docs/examples/) — 3 worked end-to-end examples (Python / TypeScript / Swift)
+- [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — public announcement draft (publishes at v1.0.0)
+- [research/grounding-v0.1.0.md](research/grounding-v0.1.0.md) — per-version grounding audit
+
+---
+
+## Contributing
+
+Issues + PRs welcome at https://github.com/kouko/monkey-skills/issues with `code-toolkit:` prefix.
+
+For real-use dogfood notes (the v1.0.0-blocking P15-5 backlog item), drop them at `research/dogfood-YYYY-MM-DD-<topic>.md` — even short notes help calibrate the toolkit's measure strength.
+
+---
 
 ## License
 
-MIT
+MIT — see [LICENSE](../LICENSE) at repo root.

@@ -5,6 +5,25 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## Journey overview (v0.1.0 → v1.0.0)
+
+The toolkit emerged from a single design question — *"is there a way to combine Superpowers' process discipline with code-team's canon-grounding into one plugin?"* — and shipped 6 versions in ~3 weeks of solo dogfood + hybrid testing cadence:
+
+| Version | Date | Theme | Net effect |
+|---|---|---|---|
+| **v0.1.0** | 2026-05-16 | MVP shell + 3 core skills | Router + tdd-iron-law + subagent-driven-development + SessionStart hook + SSOT-and-functional-copy pipeline (12 functional copies from code-team). 4 phases of build, 2 phases of ritual feedback, 2 bugs caught (YAML colon-space + hookEventName missing) + fixed before ship. |
+| **v0.2.0** | 2026-05-16 | Phase 2 — discovery + planning + repair | + brainstorming + writing-plans + systematic-debugging. Discovery's 5-axis framework + writing-plans BLOCKED fallback (Beck Child Test) + systematic-debugging 4-phase REPRODUCE→ISOLATE→HYPOTHESIZE→VERIFY shipped as the workflow's mental-model layer. |
+| **v0.2.1** | 2026-05-16 | Phase 1.5 rolling patches | tdd-iron-law gains Feathers (2004) Ch.13 §Legitimate legacy-code backfill distinction (closes "I just wrote 200 lines" rationalization gap surfaced in ritual); systematic-debugging description tuned for production-bug auto-fire (closes the auto-discovery miss surfaced in v0.2.0 ritual). |
+| **v0.3.0** | 2026-05-16 | Phase 3 — close-branch cluster + full Superpowers parity | + requesting-code-review + verification-before-completion + finishing-a-development-branch + using-git-worktrees = 9 of 9 planned skills shipped. Push-without-review gap caught + fixed (Fix 1+2+3 + Path A patches). End-to-end orchestrator ritual validated 3-of-4 Phase 3 skills in one cascading session. |
+| **v0.4.0** | (current draft) | Phase 2.5 + Phase 3.5 + Phase 4 prep | Codex CLI variant manifest + integration tests + 3 worked examples (Python / TypeScript / Swift) + 5 cross-plugin integration test scripts + announcement draft + multi-version retrospective. Build complete; verification rituals deferred to user-side Codex / superpowers sessions. |
+| **v1.0.0** | (target) | GA | After v0.4.0 verification rituals PASS: announcement publish + public release + merge to main per user 2026-05-16 "完全做好之前不合 main" policy. Phase 4 GA criteria from ROADMAP met. |
+
+**Cumulative artifact count at v0.4.0-draft**: 10 skills + 1 SessionStart hook + 12 byte-identical knowledge-layer functional copies + 3 SSOT pipeline scripts + 24 pressure-prompt test files across 9 test clusters + 5 integration test scripts + 2 Codex CLI verification scripts + 3 worked examples. ~28 commits on the long-lived `feat/code-toolkit-design` branch (per Q4 worktree convention).
+
+**Hybrid testing cadence (TC-1 decision, 2026-05-16)**: each Phase ship gates on a 3-minute ritual (`claude plugin validate` + reinstall + 1 pressure prompt). Catches measure-level / behavior-level bugs early; defers full systematic test suite to v1.0.0 release engineering. Found 7 substantive bugs across rituals (YAML / hookEventName / Feathers gap / systematic-debugging auto-fire / push-without-review / check-skill-structure allowlist / plugin-rooted-path) — all caught before Phase ship, none after.
+
+---
+
 ## [Unreleased]
 
 Phase 2.5 BUILD — Codex CLI variant manifest + docs + integration
