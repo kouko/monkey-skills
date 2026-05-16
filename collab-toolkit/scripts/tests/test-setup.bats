@@ -196,3 +196,41 @@ EOF
   run service_url gmail
   [ "$output" = "https://mail.google.com" ]
 }
+
+@test "list_profiles_with_email reads macOS Chrome Local State and emits profile:email lines" {
+  mkdir -p "$HOME/Library/Application Support/Google/Chrome"
+  cat > "$HOME/Library/Application Support/Google/Chrome/Local State" <<'JSON'
+{
+  "profile": {
+    "info_cache": {
+      "Default":   { "user_name": "alice@example.com",      "name": "Personal" },
+      "Profile 1": { "user_name": "alice.work@example.com", "name": "Work" },
+      "Profile 2": { "name": "No signin" }
+    }
+  }
+}
+JSON
+  run list_profiles_with_email
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Default: alice@example.com"* ]]
+  [[ "$output" == *"Profile 1: alice.work@example.com"* ]]
+  [[ "$output" == *"Profile 2: (no Google account)"* ]]
+  [[ "$output" == *"— Personal"* ]]
+  [[ "$output" == *"— Work"* ]]
+}
+
+@test "list_profiles_with_email returns non-zero when no Local State found in any candidate path" {
+  run list_profiles_with_email
+  [ "$status" -ne 0 ]
+}
+
+@test "list_profiles_with_email falls back to Linux Chrome path when macOS path absent" {
+  mkdir -p "$HOME/.config/google-chrome"
+  cat > "$HOME/.config/google-chrome/Local State" <<'JSON'
+{ "profile": { "info_cache": { "Default": { "user_name": "linux@example.com", "name": "Linux Profile" } } } }
+JSON
+  run list_profiles_with_email
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Default: linux@example.com"* ]]
+  [[ "$output" == *"— Linux Profile"* ]]
+}
