@@ -134,8 +134,8 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-1 | `hooks/session-start` 加 `CODE_TOOLKIT_MODE=off` 退場條件 | Phase 0 規劃 | ✅ 已 ship（commit 9cba15c，Phase 1 一併做了） |
 | P15-2 | `tdd-iron-law` SKILL.md — Feathers (2004) ISBN 978-0131177055 distinction | Phase 1 ritual feedback（`i-already-wrote-it.txt` 沒區分 legacy 與 violation） | ✅ 已 ship（v0.2.1） |
 | P15-3 | `systematic-debugging` SKILL.md — description tuning for production-bug auto-fire | Phase 2 ritual feedback（`silence-with-try-except.txt` 沒 auto-load specialist） | ✅ 已 ship（v0.2.1） |
-| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | ⏳ 待真實 dogfood — 不知道哪個 skill 太強 / 何種放鬆規則之前無法設計 |
-| P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | ⏳ 待真實使用 session（ritual 不算 — ritual 是 synthetic prompt，dogfood 是 natural flow） |
+| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | 🔄 **重定義為 post-v0.7.0 backlog** — across v0.5.x → v0.6.x ship cycle 沒有任一 skill 浮現「過強」signal；HARD-GATEs 全部 earned their strictness。Dogfood #1 §"What didn't work" 提出 P15-4 可能是 YAGNI，等 dogfood #2-#5 累積後決定 retire 或實做 |
+| P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | 🔄 **重定義為 ongoing post-ship capture** — v0.7.0 ship 時 ≥1 retroactive 已存（`research/dogfood-2026-05-16-self-toolkit-architectural-shift.md`，scope=meta）；接下來 4 個從 external real-work sessions 收（natural flow，非 ritual）。原本「ship-blocking」性質改為「v1.0.0 GA 前累積」。Chicken-and-egg 破解：dogfood 需要 plugin deploy → deploy 需要 ship → 所以先 ship 收集 dogfood |
 | P15-6 | `scripts/check-skill-structure.py` allowlist — `agents/` + `scripts/` + `assets/` | Phase 3 verification-before-completion ritual（v0.3.0 close-out） | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
 | P15-7 | SKILL.md plugin-rooted-path reframes (SDD + tdd-iron-law) | Phase 3 verification ritual + CHK-SKL-011 | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
 | P15-8 | 10 個 skill frontmatter `version:` 與 plugin manifest 對齊（皆 bump 至 v0.4.0-draft） | v0.4.0-draft Phase 2 ritual feedback（version-stamp drift caught by requesting-code-review cross-task-coherence dimension） | ✅ 已 ship（v0.4.0） |
@@ -146,8 +146,8 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-12 (Phase 2) | Promote remaining 3 agents to plugin-level (`spec-reviewer` / `code-quality-reviewer` / `code-reviewer`)；each gets baseline injection via SSOT; per-skill `agents/` dirs emptied → CHK-SKL-012 false-positive 自然消解。systematic-debugging 沒有 agent 目錄，no debugger.md in this batch. | Phase 1 ritual PASS 之後執行 — 是 v0.6.0 minor-version scope | ✅ 已 ship（v0.6.0，two rituals PASS — Ritual A: SDD triad parallel dispatch validated spec-reviewer + code-quality-reviewer plugin-level resolution + baseline injection; Ritual B: code-reviewer whole-branch review caught 5 real doc-drift findings (all fixed before drop-draft) — cross-task-coherence dimension worked as designed） |
 
 **Acceptance（rolling）**：
-- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11 / P15-12-Phase1 / P15-12-Phase2 / P15-14（12 of 13 closed）
-- ⏳ P15-4 / P15-5（等真實 dogfood data — v1.0.0 release engineering 階段 unblock）
+- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11 / P15-12-Phase1 / P15-12-Phase2 / P15-14（12 of 13 closed; v0.7.0 ship gate satisfied）
+- 🔄 P15-4 / P15-5（重定義為 post-v0.7.0 — v0.7.0 ship 不阻擋；P15-5 ≥1 retroactive 已收，剩 4 個從 external real-work sessions 累積；P15-4 等 dogfood data 決定 retire 或實做）
 - ℹ️ CHK-SKL-012 false-positive (`agents/` not in OPTIONAL_SUBDIRS allowlist of `scripts/check-skill-structure.py`) — naturally resolved by P15-12 Phase 2 (per-skill `agents/` dirs removed). Underlying script allowlist gap still present but no longer surfaces for code-toolkit. Tracked as P15-13 for future cleanup if other plugins hit it.
 - ℹ️ P15-14 (v0.6.1) — doc-drift cleanup post-v0.6.0 ritual: TECH-SPEC.md / README.md / tests/integration/README.md / tests/codex-cli/README.md updated to reflect v0.6.0 architectural state (4 plugin-level agents + SSOT baseline injection). Pure documentation; no architectural / contract / behavior change.
 
