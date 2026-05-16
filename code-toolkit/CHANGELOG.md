@@ -24,6 +24,100 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.6.1] — 2026-05-16
+
+**Patch — doc-drift cleanup beyond v0.6.0 code-reviewer ritual scope.**
+
+The v0.6.0 ritual's whole-branch code-reviewer found 5 doc-drift
+findings in skills/ (all fixed before v0.6.0 ship). A wider post-ship
+scan surfaced 4 more drift items in TECH-SPEC + README + 2 tests/
+README files that the reviewer didn't flag — its dimension scoring
+prioritized dispatch-affecting drift over pure documentation drift
+elsewhere in the plugin tree. This patch cleans those up.
+
+### What changed
+
+1. **`TECH-SPEC.md`** — 6 references to deleted per-skill prompt
+   templates (`agents/*-prompt.md`) updated to plugin-level paths
+   (`code-toolkit/agents/*.md`):
+   - §2.1 dirtree: removed per-skill `agents/` subdir from SDD
+     skill block; added new plugin-level `agents/` + `scripts/` block
+     describing v0.5.2 + v0.6.0 layout
+   - §2.4 subagent data flow: rewrote 3 prompt-template entries to
+     reference plugin-level dispatch via
+     `Agent({subagent_type: "code-toolkit:<role>"})`; added 4th entry
+     for `code-reviewer` (was missing in original spec)
+   - §3.3 SKILL.md sections table: `Prompt Templates` row updated to
+     `Subagent dispatch` with current path + version migration note
+   - §3.4 Subagent prompts: 3 section headers updated from
+     `*-prompt.md` to plugin-level forms; intro paragraph added
+   - Revision history: new row added documenting the v0.6.0 agent-
+     layer migration (P15-12 Phase 1+2) and pointing at v0.5.2 +
+     v0.6.0 CHANGELOG entries for rationale
+
+2. **`README.md`** — landing-page status updated:
+   - Status line: `v0.4.0-draft (9 of 9 skills shipped; Codex CLI
+     build complete; verification rituals pending → v1.0.0 target)`
+     → `v0.6.0 (10 skills shipped — full Superpowers parity since
+     v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule
+     baseline since v0.6.0 / P15-12; …)`
+   - §Install / Codex CLI section reworded — Codex live verification
+     deferred per user, not "pending" indefinitely
+   - §Compatibility table — Claude Code row updated to enumerate the
+     multiple ritual cycles validated (Phase 3 / Phase 4 / v0.5.1
+     multilingual / v0.5.2 + v0.6.0 plugin-level dispatch / v0.6.0
+     whole-branch code-review)
+
+3. **`tests/integration/README.md`** — removed `(Phase 3 ship)`
+   annotations from 4 test directory descriptions. Phases shipped
+   in v0.3.0; annotations were stale.
+
+4. **`tests/codex-cli/README.md`** — wholesale version refresh:
+   - Title block: `v0.4.0 — Phase 2.5 BUILD complete` → "build
+     complete; tracked in lock-step with `.claude-plugin/plugin.json`
+     since v0.4.0; live verification still deferred per user direction"
+   - §When to run: removed `v0.4.0 Phase 2.5` phase-stamped section
+     title (the ritual is timeless; phase-stamping it tied it to a
+     past moment that no longer exists)
+   - §Prerequisite line: removed `As of v0.4.0 build` qualifier
+   - PASS clause: was `drop -draft → v0.4.0 ship`; now "note in
+     CHANGELOG against the current plugin version"
+   - See-also: `.codex-plugin/plugin.json (v0.4.0-draft)` →
+     "tracked in lock-step with `.claude-plugin/plugin.json`"
+
+### Why a patch, not a major bump
+
+No architectural change. No agent contract change. No SKILL behavior
+change. Pure documentation drift cleanup. The code-reviewer's
+selection bias (dispatch-affecting drift first) is real and predictable
+— periodic wider sweeps catch what the per-ritual scope misses.
+
+### Version bumps
+
+- 10 skill SKILL.md `version:` 0.6.0 → 0.6.1
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` 0.6.0 → 0.6.1
+
+### Gate status pre-commit
+
+- `claude plugin validate`: PASS (no warnings)
+- `check-skill-structure`: 10/10 PASS
+- `verify-drift`: 12 functional-copy pairs + 4 baseline blocks all OK
+- Post-fix grep for `v0\.[0-5]\.` / `agents/.*-prompt\.md` /
+  `Phase 3 ship` / `Phase 2.5 BUILD` / `v0\.4\.0-draft` outside
+  CHANGELOG / ROADMAP / historical narrative: clean
+
+### Learning — drift-finding has a long tail
+
+The v0.6.0 code-reviewer ritual surfaced 5 high-priority drift items
+(dispatch-affecting). The post-ship wider scan surfaced 4 more
+(documentation-only). A future v1.0.0 release-engineering pass
+should expect another low-priority tail (probably in PRODUCT-SPEC.md,
+hooks/ scripts, or `using-code-toolkit/references/codex-tools.md`
+TBD-marked sections). Drift accumulates faster than any single
+ritual catches it; cadence > comprehensiveness.
+
+---
+
 ## [0.6.0] — 2026-05-16
 
 **Ship status**: ritual PASS (see §Phase 2 ritual verification at end

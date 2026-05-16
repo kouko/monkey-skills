@@ -1,6 +1,10 @@
 # Codex CLI integration tests
 
-> **Phase**: v0.4.0 — Phase 2.5 BUILD complete; verification ritual pending Codex CLI install.
+> **Status (as of v0.6.0)**: build complete; tracked at current
+> plugin version (`.codex-plugin/plugin.json` bumped in lock-step with
+> `.claude-plugin/plugin.json` since v0.4.0). Live install +
+> verification ritual on a real Codex CLI instance is still deferred
+> per user direction.
 
 This directory holds the Codex CLI verification scripts. The scripts run when Codex CLI is installed; they gracefully skip with install instructions when it is not, so this dir is safe to ship without breaking CI.
 
@@ -11,11 +15,11 @@ This directory holds the Codex CLI verification scripts. The scripts run when Co
 | `test-skill-loading.sh` | Plugin installs cleanly; all 10 skills discoverable via Codex CLI's plugin-details command | Run once after Codex CLI install + `codex plugin install code-toolkit@monkey-skills --scope local` |
 | `test-hook-injection.sh` | Hook script emits `additional_context` top-level JSON key (offline check; always runs); fresh Codex session has router context loaded (live check; requires Codex CLI) | Run once after first install |
 
-## When to run — the v0.4.0 Phase 2.5 verification ritual
+## When to run — Codex CLI verification ritual
 
 ### Prerequisite: install Codex CLI
 
-The exact install path depends on the Codex CLI distribution. As of v0.4.0 build, **not verified** which Codex CLI implementation this targets — likely OpenAI's open-source codex CLI (https://github.com/openai/codex) or equivalent.
+The exact install path depends on the Codex CLI distribution. **Not yet verified** which Codex CLI implementation this targets — likely OpenAI's open-source codex CLI (https://github.com/openai/codex) or equivalent.
 
 **⚠️ TBD verify**: exact install command. Probable options:
 
@@ -84,7 +88,7 @@ Expected (same acceptance as Claude Code Phase 1 ritual + v0.2.1 Feathers patch)
 - Proposes "Delete it. Start over." remediation
 - Offers quarantine + re-derivation path
 
-If PASS in Codex CLI: **Phase 2.5 ritual complete; drop -draft → v0.4.0 ship**.
+If PASS in Codex CLI: Codex live-verification ritual complete; note in CHANGELOG against the current plugin version.
 
 ## What's NOT in this dir (deferred)
 
@@ -98,7 +102,7 @@ The codex-tools.md reference file enumerates **⚠️ TBD verify** items (skill 
 ## See also
 
 - [`../../skills/using-code-toolkit/references/codex-tools.md`](../../skills/using-code-toolkit/references/codex-tools.md) — Codex CLI tool surface reference with TBD markers.
-- [`../../.codex-plugin/plugin.json`](../../.codex-plugin/plugin.json) — Codex CLI manifest (v0.4.0-draft).
+- [`../../.codex-plugin/plugin.json`](../../.codex-plugin/plugin.json) — Codex CLI manifest (tracked in lock-step with `.claude-plugin/plugin.json`).
 - [`../../hooks/session-start`](../../hooks/session-start) — bash; emits portable JSON (Claude Code + Codex CLI + legacy shapes).
 - [`../../TECH-SPEC.md`](../../TECH-SPEC.md) §2.3 — hook mechanism design.
 - [`../../ROADMAP.md`](../../ROADMAP.md) §Phase 2.5 — full deliverable list + acceptance criteria.

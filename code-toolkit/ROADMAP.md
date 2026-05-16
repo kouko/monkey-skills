@@ -146,9 +146,10 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-12 (Phase 2) | Promote remaining 3 agents to plugin-level (`spec-reviewer` / `code-quality-reviewer` / `code-reviewer`)；each gets baseline injection via SSOT; per-skill `agents/` dirs emptied → CHK-SKL-012 false-positive 自然消解。systematic-debugging 沒有 agent 目錄，no debugger.md in this batch. | Phase 1 ritual PASS 之後執行 — 是 v0.6.0 minor-version scope | ✅ 已 ship（v0.6.0，two rituals PASS — Ritual A: SDD triad parallel dispatch validated spec-reviewer + code-quality-reviewer plugin-level resolution + baseline injection; Ritual B: code-reviewer whole-branch review caught 5 real doc-drift findings (all fixed before drop-draft) — cross-task-coherence dimension worked as designed） |
 
 **Acceptance（rolling）**：
-- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11 / P15-12-Phase1 / P15-12-Phase2（11 of 12 closed）
+- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11 / P15-12-Phase1 / P15-12-Phase2 / P15-14（12 of 13 closed）
 - ⏳ P15-4 / P15-5（等真實 dogfood data — v1.0.0 release engineering 階段 unblock）
 - ℹ️ CHK-SKL-012 false-positive (`agents/` not in OPTIONAL_SUBDIRS allowlist of `scripts/check-skill-structure.py`) — naturally resolved by P15-12 Phase 2 (per-skill `agents/` dirs removed). Underlying script allowlist gap still present but no longer surfaces for code-toolkit. Tracked as P15-13 for future cleanup if other plugins hit it.
+- ℹ️ P15-14 (v0.6.1) — doc-drift cleanup post-v0.6.0 ritual: TECH-SPEC.md / README.md / tests/integration/README.md / tests/codex-cli/README.md updated to reflect v0.6.0 architectural state (4 plugin-level agents + SSOT baseline injection). Pure documentation; no architectural / contract / behavior change.
 
 ---
 
