@@ -106,13 +106,13 @@ Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluat
 
 ## Knowledge layer
 
-`standards/`, `rubrics/`, `checklists/` under this skill are byte-identical functional copies (plus a 5-line SSOT header) of `domain-teams/skills/code-team/{standards,rubrics,checklists}/`. To edit a rule:
+`standards/`, `rubrics/`, `checklists/` under this skill are byte-identical functional copies (plus a 5-line SSOT header) of the canonical `code-team` knowledge layer (which lives in the sibling `domain-teams` plugin). To edit a rule:
 
-1. Land the edit in `domain-teams/skills/code-team/...` (canonical).
+1. Land the edit in the canonical `code-team` source.
 2. In the same commit, run `python3 code-toolkit/scripts/distribute.py`.
 3. CI's `verify-drift.py` enforces byte-identity.
 
-See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the full pointer table.
+See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the full pointer table (canonical paths + functional-copy destinations).
 
 ## What this skill does NOT do
 

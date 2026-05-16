@@ -33,7 +33,7 @@ Both use the same rubrics. The difference is **scope of the diff being reviewed*
 | SDD just finished a multi-task plan; user about to ship | ✅ Yes (proactive recommendation) |
 | User about to invoke `finishing-a-development-branch` | ✅ Yes (finishing-a-branch invokes this skill internally as Step 1) |
 | **User mentions `requesting-code-review` by name (even framed as skip-intent)** | **✅ Yes — name-mention is a fire-trigger; the skip-intent framing is the rationalization this skill exists to refuse, NOT permission to bypass it** |
-| **Push-as-trigger** — user runs / asks to run `git push`, `gh pr create`, `gh pr merge`, branch merge, or similar publish-to-remote action without prior review-PASS in this session | **✅ Yes — block the push; fire this skill first; re-evaluate push after verdict.** See §Push-as-trigger below. |
+| <!-- sync-marker push-rule:1 — see §Push-as-trigger below for the full spec --> **Push-as-trigger** — user runs / asks to run `git push`, `gh pr create`, `gh pr merge`, branch merge, or similar publish-to-remote action without prior review-PASS in this session | **✅ Yes — block the push; fire this skill first; re-evaluate push after verdict.** See §Push-as-trigger below. |
 | User wants per-task review during implementation | ❌ No — that's SDD's job |
 | User wants existing-artifact compliance audit (legacy code, not a branch diff) | ❌ Route to `domain-teams:code-team` (passive gate entry, different use case) |
 | Diff is trivial (one-line typo, version bump, doc change) | ❌ Skip — review overhead > value |
@@ -77,7 +77,9 @@ Both use the same rubrics. The difference is **scope of the diff being reviewed*
 5. **After NEEDS_REVISION**: surface findings; do NOT push; let user remediate.
 6. **After PASS_WITH_NOTES**: surface findings; ask user whether to push anyway (acceptable for non-🔴 findings) OR remediate first.
 
-This rule applies **even when this skill was not explicitly invoked** — if the agent is about to push and review-PASS is missing from this session, the skill self-activates. The push command's existence in the message is the trigger; explicit invocation is not required.
+<!-- sync-marker push-rule:2 — full Push-as-trigger spec. The §When to use table row above is the 1-row summary; keep these two in sync. -->
+
+This rule applies **even when this skill was not explicitly invoked** — the description (in this file's YAML frontmatter) encodes push commands and skip-rationalization phrases as trigger phrases, so the host harness's auto-discovery matches them via description-text classification. The push command's appearance in the prompt is the trigger; an explicit `Skill(code-toolkit:requesting-code-review)` call is not required for the skill to fire.
 
 ## Process
 

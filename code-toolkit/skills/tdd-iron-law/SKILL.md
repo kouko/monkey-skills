@@ -130,7 +130,7 @@ Skipping this diagnostic is how tests-pass-but-bug-still-ships happens. Beck (20
 
 - **`subagent-driven-development`** dispatches implementer subagents that work under this Iron Law. The implementer prompt loads this skill before writing any code.
 - **`verification-before-completion`** (Phase 3) re-checks that every behavior shipped in the diff has a corresponding failing-then-passing test in commit history.
-- **`domain-teams:code-team`** evaluator subagent applies `tdd-standard.md` as one dimension of `rubrics/quality-gate.md` scoring. This skill's `standards/tdd-standard.md` is a byte-identical functional copy of that file plus a SSOT header — the canonical version lives at `domain-teams/skills/code-team/standards/tdd-standard.md`.
+- **`domain-teams:code-team`** evaluator subagent applies `tdd-standard.md` as one dimension of `rubrics/quality-gate.md` scoring. This skill's `standards/tdd-standard.md` is a byte-identical functional copy of that file plus a SSOT header — see [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the canonical source location.
 
 ## Reference
 
