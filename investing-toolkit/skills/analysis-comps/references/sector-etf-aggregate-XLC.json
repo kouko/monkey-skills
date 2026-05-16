@@ -1,11 +1,15 @@
 {
   "etf": "XLC",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-05-16",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 71.55,
-    "outliers_dropped": {},
+    "weight_coverage_pct": 61.89,
+    "outliers_dropped": {
+      "trailingPE": 3,
+      "evEbitda": 2,
+      "operating_margin": 1
+    },
     "skipped_holdings": [],
     "schema_dispatch": {
       "tech-saas": 3,
@@ -14,15 +18,15 @@
     "source": "yfinance funds_data + data-us memo-fetch"
   },
   "multiples": {
-    "trailingPE": 32.29609232135564,
+    "trailingPE": 45.64305522263664,
     "forwardPE": null,
-    "evEbitda": 13.114864846709445,
-    "priceToSales": 6.772321017221187,
-    "priceToBook": 5.012454594930338
+    "evEbitda": 21.723842495368157,
+    "priceToSales": 7.215928929204639,
+    "priceToBook": 28.50756663796772
   },
   "indicators": {
-    "gross_margin": 37.07358004622418,
-    "operating_margin": 19.188903043695685,
-    "FCF_yield": 6.9029021899061185
+    "gross_margin": 45.50661687119402,
+    "operating_margin": -2.0399990934233543,
+    "FCF_yield": 3.2241561457104124
   }
 }
