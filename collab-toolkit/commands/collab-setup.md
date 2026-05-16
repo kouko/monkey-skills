@@ -1,13 +1,13 @@
 ---
 name: collab-setup
-description: Bootstrap collab-toolkit. Installs agent-browser, Chrome for Testing, abx wrapper, writes ~/.config/collab-toolkit/config.json. Two modes — shared (reuses your daily Chrome profile login state, default) and dedicated (unified per-toolkit profile, opt-in via --dedicated). v0.1.2 orchestrates dedicated-mode login flow via AskUserQuestion (no terminal interaction needed). Sub-commands: --reauth <service>, --switch-mode (bidirectional toggle), --verify.
+description: Bootstrap collab-toolkit. Installs agent-browser, Chrome for Testing, abx wrapper, writes ~/.config/collab-toolkit/config.json. v0.1.2 default = dedicated mode (unified per-toolkit profile, Claude-orchestrated 2-3-login flow via AskUserQuestion — Google SSO cascade). Shared mode (reuse your daily Chrome login state) is opt-in via --shared (⚠️ failure-prone in multi-profile / multi-account / SSO-refresh setups). Sub-commands: --reauth <service>, --switch-mode (bidirectional toggle), --verify.
 ---
 
 # /collab-setup
 
 Bootstrap and configure collab-toolkit. This command is **Claude-orchestrated** — Claude reads the instructions below and drives the flow with `Bash` + `AskUserQuestion` tools. No `!` prefix needed.
 
-`$ARGUMENTS` may contain: `--dedicated`, `--switch-mode`, `--reauth <service>`, `--verify`, or nothing.
+`$ARGUMENTS` may contain: `--dedicated`, `--shared`, `--switch-mode`, `--reauth <service>`, `--verify`, or nothing.
 
 The plugin directory containing this command file is `${CLAUDE_PLUGIN_ROOT}` (or, in older runtimes, resolve via `$(dirname this-file)/..`). The setup script lives at `<plugin-root>/scripts/setup.sh`.
 
@@ -19,9 +19,10 @@ Determine the requested action:
 
 | `$ARGUMENTS` | Action |
 |---|---|
-| empty | Setup (or re-setup) **shared** mode |
-| `--dedicated` | Setup (or re-setup) **dedicated** mode (unified profile) |
-| `--switch-mode` | Read current `mode` from config, toggle: shared↔dedicated. If no config yet, treat as default (shared). |
+| empty | Setup (or re-setup) **dedicated** mode (v0.1.2 default — most reliable) |
+| `--dedicated` | Setup (or re-setup) **dedicated** mode explicitly (unified profile) |
+| `--shared` | Setup (or re-setup) **shared** mode (opt-in; ⚠️ may fail in multi-profile / multi-account setups) |
+| `--switch-mode` | Read current `mode` from config, toggle: shared↔dedicated. If no config yet, treat as default (dedicated). |
 | `--reauth <service>` | Re-open Chrome at one service URL for re-login (dedicated mode only) |
 | `--verify` | Verify all 5 services are logged in (headless) |
 
@@ -45,7 +46,9 @@ This installs agent-browser (Homebrew preferred on macOS, npm fallback), downloa
 
 ## Step 3: Dispatch by action
 
-### 3a. Setup shared mode
+### 3a. Setup shared mode (opt-in via `--shared`)
+
+> ⚠️ **Shared mode has known failure modes** in real-world setups: cookies may not transfer from daily Chrome (especially when Chrome is running with profile-lock active or macOS Keychain prompts dismissed); multi-Chrome-profile users have to pick the "right" profile; services using SSO refresh may not work headless; verify is brittle for marketing-redirect cases. **Dedicated mode (default) is recommended for office-collaboration use.** Use shared only if you specifically know your setup is simple (one Chrome profile, all 5 services in one Google account, no SSO refresh).
 
 Goal: pick a Chrome profile + write shared-mode config + verify.
 
@@ -132,7 +135,7 @@ Goal: write dedicated-mode config + open headed Chrome + walk user through 5 ser
 1. Read current mode (Step 1).
 2. If current = `shared` → run 3b (Setup dedicated mode).
 3. If current = `dedicated` → run 3a (Setup shared mode).
-4. If empty → run 3a.
+4. If empty → run 3b (no prior config → v0.1.2 default = dedicated).
 
 After completion, mention to the user that the mode has been toggled.
 
