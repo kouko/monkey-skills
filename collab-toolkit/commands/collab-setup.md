@@ -13,18 +13,25 @@ The plugin directory containing this command file is `${CLAUDE_PLUGIN_ROOT}` (or
 
 ---
 
-## Step 1: Parse `$ARGUMENTS`
+## ⚠️ MUST NOT — anti-pattern guards for this orchestration
 
-Determine the requested action:
+> 1. **DO NOT use `AskUserQuestion` to ask the user which mode (shared vs dedicated) to use.** The mode is determined unambiguously by `$ARGUMENTS` per the Step 1 dispatch table. Empty args = dedicated, period. Showing a mode picker is a regression — the user explicitly opted for "no-flag default" UX (see v0.1.3 release notes).
+> 2. **DO NOT prompt the user for shared/dedicated confirmation when no config exists.** "No config + no args = dedicated" is the explicit v0.1.3 default. Just proceed.
+> 3. **`AskUserQuestion` is reserved for the orchestrated login flow** (per-service "Logged in to X?" prompts in Section 3b) and for `--reauth` Done/Retry confirmation. **Mode selection is never an `AskUserQuestion`.**
+> 4. Sections 3a / 3b / 3c / 3d / 3e are **dispatch targets** (determined by Step 1), **not** menu options shown to the user.
 
-| `$ARGUMENTS` | Action |
-|---|---|
-| empty | Setup (or re-setup) **dedicated** mode (v0.1.2 default — most reliable) |
-| `--dedicated` | Setup (or re-setup) **dedicated** mode explicitly (unified profile) |
-| `--shared` | Setup (or re-setup) **shared** mode (opt-in; ⚠️ may fail in multi-profile / multi-account setups) |
-| `--switch-mode` | Read current `mode` from config, toggle: shared↔dedicated. If no config yet, treat as default (dedicated). |
-| `--reauth <service>` | Re-open Chrome at one service URL for re-login (dedicated mode only) |
-| `--verify` | Verify all 5 services are logged in (headless) |
+## Step 1: Parse `$ARGUMENTS` and dispatch (no picker)
+
+Parse `$ARGUMENTS` and JUMP DIRECTLY to the corresponding Section 3 subsection. Do not surface the choice to the user.
+
+| `$ARGUMENTS` | Action | Jump to |
+|---|---|---|
+| empty | Default = dedicated mode | Section 3b |
+| `--dedicated` | Explicit dedicated mode | Section 3b |
+| `--shared` | Opt-in shared mode (⚠️ caveat) | Section 3a |
+| `--switch-mode` | Toggle mode (no-config → dedicated) | Section 3c |
+| `--reauth <service>` | Re-login one service | Section 3d |
+| `--verify` | Verify 5 services headless | Section 3e |
 
 Read current mode if config exists:
 
@@ -44,7 +51,9 @@ bash "<plugin-root>/scripts/setup.sh" --install-only
 
 This installs agent-browser (Homebrew preferred on macOS, npm fallback), downloads Chrome for Testing if missing, installs `~/.local/bin/abx` wrapper. Already-installed steps are no-ops.
 
-## Step 3: Dispatch by action
+## Step 3: Dispatch targets (executed per Step 1 — NOT menu options)
+
+> **Reminder**: subsections 3a–3e are jump targets selected by Step 1's args parsing. **Never** present them as options to the user via `AskUserQuestion`. The user already chose by passing (or omitting) flags.
 
 ### 3a. Setup shared mode (opt-in via `--shared`)
 
