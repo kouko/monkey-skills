@@ -1,72 +1,54 @@
 ---
 name: page-backlinks
-purpose: Find all pages that link to a target Notion page.
+purpose: Find all pages linking to a target Notion page.
 ---
 
 ## Inputs
-
 - `page_url`: required.
 - `--json`: optional.
 
 ## Output
+```
+## Pages linking to <target>
 
-Default Markdown: list of linking pages with their names and URLs.
+- **<linking page title>** — <path>
+```
 
-`--json`: array of `{ title, href }`.
+## Localized labels
 
-> **Output spec note**: `path` and `last_updated` fields from the full spec are not reliably extractable from the AT snapshot in v0.1.0. Output is narrowed to `title` + `href` (from `.href // ""`). Remaining fields deferred to v0.2.0 after live-snapshot verification.
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Backlinks region | `[region] "Backlinks"` | `[region] "反向連結"` | `[region] "バックリンク"` |
+| More-options button | `[button] "More options"` or `"..."` | `[button] "更多選項"` or `"..."` | `[button] "その他のオプション"` or `"..."` |
+| Show-backlinks menuitem | `[menuitem] "Show backlinks"` | `[menuitem] "顯示反向連結"` | `[menuitem] "バックリンクを表示"` |
 
 ## Procedure
 
-```bash
-URL="$1"
-[ -z "$URL" ] && { echo "ERR: page_url required"; exit 1; }
+1. ```bash
+   abx open <page_url>
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=notion abx open "$URL"
-ABX_SERVICE=notion abx wait --load networkidle
+2. **Read snapshot**. Look for Backlinks region (locale-dependent). If present, extract `[link]` children: name + href.
 
-# Backlinks panel may be visible directly — find the Backlinks region
-SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
-BACKLINKS_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Backlinks") | .ref' | head -1)
+3. **If Backlinks region NOT present**:
+   - Find More-options button (locale-dependent). Click + re-snapshot.
+   - Find Show-backlinks menuitem (locale-dependent). Click + re-snapshot.
+   - Now find Backlinks region.
 
-if [ -z "$BACKLINKS_REF" ]; then
-  # Fallback: open page menu → "Show backlinks"
-  MENU_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name=="More options" or .name=="...")) | .ref' | head -1)
-  [ -z "$MENU_REF" ] && { echo "ERR: page menu not found"; exit 1; }
-  ABX_SERVICE=notion abx click "$MENU_REF"
-  ABX_SERVICE=notion abx wait 500
-  # Find "Show backlinks" menuitem
-  SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
-  SHOW_BL=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="menuitem" and .name=="Show backlinks") | .ref' | head -1)
-  [ -z "$SHOW_BL" ] && { echo "ERR: 'Show backlinks' menu item not found"; exit 1; }
-  ABX_SERVICE=notion abx click "$SHOW_BL"
-  ABX_SERVICE=notion abx wait 500
-  SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
-  # Re-derive ref after click — guard against silent click failure
-  BACKLINKS_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Backlinks") | .ref' | head -1)
-  [ -z "$BACKLINKS_REF" ] && { echo "ERR: Backlinks panel did not open after 'Show backlinks' click" >&2; exit 1; }
-fi
-
-# Each backlink is role="link" within Backlinks region
-# .children[]? and .href are speculative (see ui-patterns.md AT-schema notes)
-RESULT=$(echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="region" and .name=="Backlinks")
-  | .children[]?
-  | select(.role=="link")
-  | "- \(.name // "(unknown)") — \(.href // "")"
-')
-
-if [ -z "$RESULT" ]; then
-  echo "No pages link to this page."
-else
-  echo "$RESULT"
-fi
-```
+4. If still absent → zero backlinks (valid empty).
 
 ## Failure modes
 
-- Page has no backlinks → valid empty (outputs `No pages link to this page.`)
-- Menu not found → UI evolution
-- `Show backlinks` item absent → Notion version does not support backlinks via this menu path
-- Backlinks panel absent after click → silent click failure → exits 1 with `ERR: Backlinks panel did not open`
+- **More-options button missing** → page UI changed.
+- **Show-backlinks menuitem missing** → option moved / disabled.
+
+## Notes
+
+- Backlinks visibility is per-page (page settings toggle).
+- Sub-pages count as backlinks if they link back.
+
+## Examples
+
+Input: `page_url = ...` → Markdown list of linking pages.

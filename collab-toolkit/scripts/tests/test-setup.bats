@@ -284,6 +284,48 @@ EOF
   [[ "$output" == *"Sign in - Notion"* ]]
 }
 
+@test "verify_one detects zh-TW login title (登入)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/0/inbox" ;;
+    *"get title"*) echo "登入 - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one asana
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"登入 - Asana"* ]]
+}
+
+@test "verify_one detects ja login title (ログイン)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://www.notion.so" ;;
+    *"get title"*) echo "Notion へログイン" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one notion
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"ログイン"* ]]
+}
+
 @test "service_url returns expected URL per service" {
   run service_url asana
   [ "$output" = "https://app.asana.com/0/inbox" ]

@@ -1,63 +1,60 @@
-# Notion Failure Modes
+# notion-automate Failure Modes
 
-## UI evolution
-
-**Symptom**: Protocol exits with `ERR: UI changed: <role>+<name> not found`.
-
-**Cause**: Notion renamed an element, changed a role, or restructured navigation.
-
-**Remediation**:
-1. Open `references/ui-patterns.md` and locate the failing entry
-2. Run `ABX_SERVICE=notion abx snapshot -i --json > /tmp/notion-snap.json` against the affected page
-3. Find the new role+name combination via `jq 'select(...)'`
-4. Update `references/ui-patterns.md` entry
-5. Update the protocol's jq filter to match
-6. Re-run protocol to verify fix
+Common failure modes and their remediations.
 
 ## Auth expiry / login wall
 
-**Symptom**: Page title contains `Log in` / `Sign up` / `Sign in to Notion`, OR URL redirects to `notion.so/login`.
-
-**Cause**: Notion session expired.
+**Symptom**: page title contains `Sign in` / `Log in` / `Login`, OR URL redirects to the service's login path / `accounts.google.com`.
 
 **Remediation**:
-- **Shared profile mode**: Open Notion in your daily Chrome, log in. Next protocol invocation picks up fresh cookies.
-- **Dedicated profile mode**: Run `/collab-setup --reauth notion`.
+- **Shared profile mode**: log into notion in your daily Chrome under the configured profile. Next protocol invocation picks up fresh cookies.
+- **Dedicated profile mode**: `/collab-setup --reauth notion`
 
-Protocols MUST fail fast on detection — do not attempt to scrape content from a logged-out session.
+Protocols MUST fail fast on detection — do NOT attempt to scrape login-walled pages.
 
-## No-access pages
+## UI changed
 
-**Symptom**: Page loads but shows a "This content is not accessible" or similar message. The `Page content` region may still appear but be empty, or the heading may read `Forbidden`.
+**Symptom**: protocol expected an element with specific role+name (e.g., `[link] "My tasks"`), but it's not in the snapshot output.
 
-**Cause**: The Notion page is in a workspace or sub-page the authenticated user does not have access to.
+**Remediation**:
+1. Run `abx snapshot -i` against the affected page yourself
+2. Inspect the text output for similar elements (capitalization variation, role change, restructured navigation)
+3. Update the protocol's "look for" hint to match the new pattern
 
-**Remediation**: Verify the page URL and ensure the Notion account used has been granted access by the page owner.
-
-## Archived pages
-
-**Symptom**: Page title shows a banner `This page is in Trash`. Content may still be readable.
-
-**Cause**: The target page was archived/trashed by a workspace member.
-
-**Remediation**: Restore the page in Notion, or note that content may be stale. `page-fetch` will still render what is visible.
+Common UI evolution patterns:
+- Service rebranding (e.g., link text changes)
+- Role swap (`[link]` → `[button]` or vice versa)
+- Wrapping inside an extra container (the element you want is now a grandchild)
 
 ## Empty result vs UI evolution
 
 **Disambiguation**:
-- If the expected role appears in the snapshot but no element matches the name → likely valid empty result (e.g., no search results, no backlinks)
-- If the expected role itself is absent from the snapshot → UI evolved, treat as error
+- If the expected role appears in the snapshot but no element matches the name → valid empty result (e.g., no tasks matching filter)
+- If the expected role itself is absent → UI evolved, treat as error
 
-Protocols emit different output:
-- Empty result: `No pages link to this page.` / `(no results)`
-- UI evolved: `ERR: UI changed: <role>+<name> not found`
+Protocols emit different output for each case:
+- Empty: `No <items> matching <filter>.`
+- UI evolved: `ERR: UI changed: <role>+<name> not found.` (with hint to re-snapshot)
 
-## Rate limiting / load failure
+## Daemon stale profile
 
-**Symptom**: `agent-browser` returns timeout, or page load takes > 25s.
+**Symptom**: warning `⚠ --profile, --headed ignored: daemon already running. Use 'agent-browser close' first to restart with new options.`
 
-**Cause**: Notion rate-limit, network issue, or slow page rendering (large databases).
+**Impact**: usually no actual problem — the daemon already has the correct profile from a previous `/collab-setup` or earlier invocation. The warning is agent-browser being conservative.
 
-**Remediation**: agent-browser retries automatically. If persistent:
-- Increase `AGENT_BROWSER_TIMEOUT_MS=45000` env var
-- For large databases, consider narrowing the URL to a filtered view before running `database-query`
+**When to actually act**: only if extracted data is from the wrong account (verify by checking title or URL in protocol output). To force fresh:
+```bash
+agent-browser close
+```
+
+## Network timeout / page load failure
+
+**Symptom**: `abx open` returns timeout, page load > 25s default.
+
+**Remediation**:
+```bash
+export AGENT_BROWSER_TIMEOUT_MS=45000   # bump to 45s
+abx open <url>
+```
+
+Or retry once after `agent-browser close`.

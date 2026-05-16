@@ -313,10 +313,13 @@ verify_one() {
     esac
   fi
 
-  # Check 3: title fallback (catches edge cases the URL checks miss)
+  # Check 3: title fallback (catches edge cases the URL checks miss).
+  # Multi-locale patterns: EN + zh-TW (登入/登錄) + ja (ログイン/サインイン).
+  # zh-CN (登录) included as zero-cost bonus.
   if ! $not_logged_in; then
     case "$title" in
-      *"Sign in"*|*"Log in"*|*"Login"*|*"sign in"*|*"log in"*)
+      *"Sign in"*|*"Log in"*|*"Login"*|*"sign in"*|*"log in"* \
+      |*"登入"*|*"登錄"*|*"登录"*|*"ログイン"*|*"サインイン"*)
         not_logged_in=true
         reason="title indicates login page: $title"
         ;;

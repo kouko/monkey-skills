@@ -1,64 +1,67 @@
 ---
 name: search-workspace
-purpose: Full-text search across pages, databases, and content in the Notion workspace.
+purpose: Full-text search across pages and databases.
 ---
 
 ## Inputs
-
 - `query`: required.
-- `filter_type`: optional. `pages` / `databases` / `all`. Default: `all`.
+- `filter_type`: optional. `pages` / `databases` / `all`.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown:
 ```
-## Notion search: "OKR" — 18 matches
+## Notion search: "<query>" — N matches
 
-### Pages (12)
-- **Q2 OKRs** — Updated 2 days ago by alice — /OKRs/Q2-OKRs-...
-- ...
+### Pages (M)
+- **<page title>** — <path or parent>
 
-### Databases (6)
-- **OKR Tracker** — Owner: alice — /OKR-Tracker-...
+### Databases (K)
+- **<database name>** — <owner>
 ```
 
-`--json`: `{ query, pages: [...], databases: [...] }`.
+## Localized labels
 
-> **Output spec note**: `path` field is extracted from the AT snapshot. This field is speculative (v0.1.0 unverified) — see `references/ui-patterns.md` AT-schema notes. Falls back to `""`.
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Search trigger | `[button] "Search"` or `"Quick Find"` | `[button] "搜尋"` or `"快速尋找"` | `[button] "検索"` or `"クイック検索"` |
+| Search input | `[textbox] "Search"` | `[textbox] "搜尋"` | `[textbox] "検索"` |
 
 ## Procedure
 
-```bash
-QUERY="$1"
-[ -z "$QUERY" ] && { echo "ERR: query required"; exit 1; }
+1. ```bash
+   abx open https://www.notion.so
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=notion abx open https://www.notion.so
-ABX_SERVICE=notion abx wait --load networkidle
+2. **Read snapshot**. Find Search trigger. Or use keyboard shortcut: `abx press Cmd+P` (macOS) / `Ctrl+P` (others).
 
-# Open search — Cmd+P or top bar button
-SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
-SEARCH_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and (.name=="Search" or .name=="Quick Find")) | .ref' | head -1)
-[ -z "$SEARCH_REF" ] && { echo "ERR: UI changed: 'Search' / 'Quick Find' button not found"; exit 1; }
-ABX_SERVICE=notion abx click "$SEARCH_REF"
-ABX_SERVICE=notion abx wait 500
+3. Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait 500
+   abx snapshot -i
+   ```
 
-# Type query
-ABX_SERVICE=notion abx fill --active "$QUERY"
-ABX_SERVICE=notion abx wait 1000
+4. **Find search input**. Fill (Notion search is real-time as you type):
+   ```bash
+   abx fill @eM "<query>"
+   abx wait 1000
+   abx snapshot -i
+   ```
 
-# Snapshot results — each result is role="listitem"
-# NOTE: .parent.name filter dropped (Pattern F) — agent-browser flat snapshot has no .parent.
-# Accept all listitems; precision to be improved after live-snapshot verification (see ui-patterns.md).
-SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="listitem")
-  | "- **\(.name // "(unknown)")** — \(.path // "")"
-'
-```
+5. **Read results**. Each result `[listitem]` with name + path. Extract + filter + format.
 
 ## Failure modes
 
-- Search button not found → UI evolution
-- Empty results → valid empty (no match)
+- **Search trigger missing** → top bar restructured.
+- **Empty results** → valid empty.
+
+## Notes
+
+- Workspace switcher (top-left) matters for multi-workspace users.
+- Pressing Enter sometimes optional (real-time search).
+
+## Examples
+
+`query = "OKR", filter_type = pages` → page results.

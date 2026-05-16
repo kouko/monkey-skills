@@ -1,43 +1,60 @@
-# Slack Failure Modes
+# slack-automate Failure Modes
 
-## UI evolution
+Common failure modes and their remediations.
 
-Same playbook as asana-automate. Update `references/ui-patterns.md` first, then protocol jq filters.
+## Auth expiry / login wall
 
-1. Run `ABX_SERVICE=slack abx snapshot -i --json > /tmp/slack-snap.json` against the affected page
-2. Inspect for elements near the failing area
-3. Identify new role+name combination
-4. Update `references/ui-patterns.md`
-5. Update the failing protocol's jq filter
+**Symptom**: page title contains `Sign in` / `Log in` / `Login`, OR URL redirects to the service's login path / `accounts.google.com`.
 
-## Auth expiry
+**Remediation**:
+- **Shared profile mode**: log into slack in your daily Chrome under the configured profile. Next protocol invocation picks up fresh cookies.
+- **Dedicated profile mode**: `/collab-setup --reauth slack`
 
-Detection: title contains `Sign in to Slack`. Or URL redirects to `slack.com/signin`.
+Protocols MUST fail fast on detection — do NOT attempt to scrape login-walled pages.
 
-Remediation:
-- Shared mode: log into Slack in your daily Chrome
-- Dedicated mode: `/collab-setup --reauth slack`
+## UI changed
 
-## Channel not in sidebar
+**Symptom**: protocol expected an element with specific role+name (e.g., `[link] "My tasks"`), but it's not in the snapshot output.
 
-User might have left the channel, or it might be hidden under "More" expansion. Protocol falls back to channel URL-based access (`https://app.slack.com/client/<workspace>/<channel-id>`).
+**Remediation**:
+1. Run `abx snapshot -i` against the affected page yourself
+2. Inspect the text output for similar elements (capitalization variation, role change, restructured navigation)
+3. Update the protocol's "look for" hint to match the new pattern
 
-## Free tier limitations
+Common UI evolution patterns:
+- Service rebranding (e.g., link text changes)
+- Role swap (`[link]` → `[button]` or vice versa)
+- Wrapping inside an extra container (the element you want is now a grandchild)
 
-Slack Free workspaces have:
-- 90-day message history (older messages return "Upgrade to see")
-- No People view
+## Empty result vs UI evolution
 
-`find-user` protocol handles People-view absence by falling back to @-typeahead in any open channel.
+**Disambiguation**:
+- If the expected role appears in the snapshot but no element matches the name → valid empty result (e.g., no tasks matching filter)
+- If the expected role itself is absent → UI evolved, treat as error
 
-## People view absent
+Protocols emit different output for each case:
+- Empty: `No <items> matching <filter>.`
+- UI evolved: `ERR: UI changed: <role>+<name> not found.` (with hint to re-snapshot)
 
-`find-user` detects `ERR: People link not found` and suggests the @-typeahead fallback — type `@<query>` in a channel message input, snapshot the suggestion `option` elements for user names.
+## Daemon stale profile
 
-## Search returns 0 results
+**Symptom**: warning `⚠ --profile, --headed ignored: daemon already running. Use 'agent-browser close' first to restart with new options.`
 
-For a known-good query, 0 results often means auth has expired silently. Run:
+**Impact**: usually no actual problem — the daemon already has the correct profile from a previous `/collab-setup` or earlier invocation. The warning is agent-browser being conservative.
+
+**When to actually act**: only if extracted data is from the wrong account (verify by checking title or URL in protocol output). To force fresh:
 ```bash
-ABX_SERVICE=slack abx snapshot -i --json | jq '.elements[] | select(.role=="button" and .name=="Sign in")'
+agent-browser close
 ```
-Non-empty output confirms auth expiry — remediate as above.
+
+## Network timeout / page load failure
+
+**Symptom**: `abx open` returns timeout, page load > 25s default.
+
+**Remediation**:
+```bash
+export AGENT_BROWSER_TIMEOUT_MS=45000   # bump to 45s
+abx open <url>
+```
+
+Or retry once after `agent-browser close`.
