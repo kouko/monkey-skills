@@ -43,9 +43,9 @@ After that, ask Claude things like:
 | Mode | What | When |
 |---|---|---|
 | **Shared** (default) | Reuses your daily Chrome's login state via `--profile <name>` | Single-user, single-machine — fastest setup |
-| **Dedicated** (`--dedicated`) | 5 per-service profile dirs, manual login each | Multi-machine sync, dedicated automation environment, isolation |
+| **Dedicated** (`--dedicated`) | Single unified profile at `~/.local/share/collab-toolkit/profiles/dedicated/`. Google SSO cascades across services → typically 2-3 logins for all 5 services. Setup is Claude-orchestrated (no terminal interaction). | Shared profile cookies don't transfer reliably; multi-account scenarios; isolation from daily Chrome cookies; multi-machine portability |
 
-Switch any time: `/collab-setup --switch-mode`.
+Switch any time: `/collab-setup --switch-mode` (bidirectional toggle since v0.1.2).
 
 ## Skills
 

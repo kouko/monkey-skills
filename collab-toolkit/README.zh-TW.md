@@ -43,9 +43,9 @@
 | 模式 | 內容 | 使用時機 |
 |---|---|---|
 | **Shared**（預設） | 透過 `--profile <name>` 重複使用日常 Chrome 的登入狀態 | 單一使用者、單一機器 — 最快速的設定 |
-| **Dedicated**（`--dedicated`） | 每個服務各有獨立的設定檔目錄，需手動逐一登入 | 多機器同步、專用自動化環境、隔離需求 |
+| **Dedicated**（`--dedicated`） | 位於 `~/.local/share/collab-toolkit/profiles/dedicated/` 的單一統合設定檔。Google SSO 在服務間自動串接 → 5 個服務通常只需 2-3 次登入。設定流程由 Claude 編排（不需在終端機操作）。 | Shared 模式 cookies 無法成功轉移時、多帳號情境、與日常 Chrome cookies 隔離、跨機器移植 |
 
-隨時切換：`/collab-setup --switch-mode`。
+隨時切換：`/collab-setup --switch-mode`（v0.1.2 後支援雙向 toggle）。
 
 ## Skill 清單
 
