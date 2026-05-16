@@ -5,6 +5,150 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Phase 3 ship — code-review cluster (4 new skills) closes the loop from
+discovery through merge. **9 of 9 planned skills now shipped — full
+Superpowers parity reached.** Plugin version bumps to `0.3.0-draft`;
+drops `-draft` after the user runs the Phase 3 ritual (4 pressure
+prompts in fresh sessions) and confirms each new skill behaves per
+its assertion table.
+
+### Added — `requesting-code-review` skill
+
+Whole-branch / whole-PR review skill. Different from `subagent-driven-
+development`'s per-task code-quality-reviewer (per atomic task during
+execution) — this fires at end-of-branch / pre-merge to catch
+**cross-task interactions** that per-task review can't see.
+
+- `skills/requesting-code-review/SKILL.md` — orchestration spec;
+  comparison table (per-task vs whole-branch — same rubrics, different
+  scope); 4-step process; §When NOT to Use (4 exemptions); Red Flags
+  table (6 rationalizations × ja + zh-TW); cross-skill contract with
+  `finishing-a-development-branch` (Step 1 delegate target) +
+  `domain-teams:code-team` (optional escalation for >500 LOC audits).
+- `skills/requesting-code-review/agents/code-reviewer-prompt.md` —
+  evaluator subagent role prompt. 7-dimension scoring (security /
+  architecture / correctness / naming / tests / refactoring + **cross-
+  task-coherence** as branch-only dimension). Same rubrics + checklists
+  + standards (functional-copied from `domain-teams:code-team`) loaded
+  via Read tool.
+- `skills/requesting-code-review/README.{md,ja.md,zh-TW.md}` — 3-lang.
+
+### Added — `verification-before-completion` skill
+
+HARD-GATE: NO "DONE" WITHOUT PACKAGE-LEVEL TEST INVOCATION. Per P3-B:
+forces canonical package-level test commands, refuses single-file lint
+or "tests pass" without invocation evidence. Catches 3 failure modes
+only package-level catches: test interaction bugs, orphan tests, lint-
+passes-but-tests-fail.
+
+- `skills/verification-before-completion/SKILL.md` — HARD-GATE measure;
+  §When NOT to Use (4 exemptions); 4-step process (detect → run →
+  read exit + output + test count → surface); Red Flags (8 ration-
+  alizations × ja + zh-TW).
+- `skills/verification-before-completion/references/test-invocation-by-
+  stack.md` — canonical command per language / build tool (20+ stacks);
+  monorepo handling; per-runner "0 tests ran" detection; slow-suite
+  handling protocol (routes to systematic-debugging condition-based-
+  waiting.md for >10min isolation).
+- `skills/verification-before-completion/README.{md,ja.md,zh-TW.md}` —
+  3-lang.
+
+### Added — `using-git-worktrees` skill
+
+Native `git worktree` workflow per P3-C — no wrapper tool, just `git
+worktree add` with documented `.worktrees/<branch-slug>/` subdirectory
+convention + `.gitignore` discipline. This very repo's `.worktrees/
+code-toolkit-design/` is the worked example.
+
+- `skills/using-git-worktrees/SKILL.md` — when to use / NOT to use;
+  §The `.worktrees/` convention; setup / create / remove recipes;
+  Red Flags (6 rationalizations × ja + zh-TW including "stash" +
+  "clone twice" rebuttals).
+- `skills/using-git-worktrees/README.{md,ja.md,zh-TW.md}` — 3-lang.
+
+### Added — `finishing-a-development-branch` skill
+
+Orchestrator — ties the close-branch sequence: `requesting-code-review`
+(Step 1) → `verification-before-completion` (Step 2) → mandatory `dev-
+workflow:git-memory` per P3-D (Step 3) → git commit (Step 4) → git
+push (Step 5) → optional `gh pr create` (Step 6) → optional `using-
+git-worktrees` cleanup (Step 7). **Deliberately light on novel logic;
+heavy on delegation** — each step's value lives in its specialist skill.
+
+- `skills/finishing-a-development-branch/SKILL.md` — 7-step default
+  flow with explicit user-confirmation gates at each visible action;
+  §When NOT to Use (4 exemptions); Red Flags (7 rationalizations ×
+  ja + zh-TW including blanket-skip, force-push, amend, auto-merge);
+  explicit "does NOT" list inherits CLAUDE.md git policy (no amend /
+  no skip hooks / no force-push without authorization).
+- `skills/finishing-a-development-branch/README.{md,ja.md,zh-TW.md}` —
+  3-lang.
+
+### Updated — `using-code-toolkit` router for full 8-stage + auxiliary
+
+- Skill Priority table rows 6, 7, 8 flipped from "Phase 3" → "✅ shipped".
+- New auxiliary entry below the table: `using-git-worktrees` — lateral
+  utility, not in linear flow.
+- Router version bumped to `0.3.0-draft`.
+- Router stays under the 2000-token P1-A budget: ~1902 tokens (was
+  ~1837 at v0.2.1 — auxiliary section + ✅ labels added ~60 tokens).
+- 3-lang README tables updated in lockstep.
+
+### Added — Phase 3 pressure tests
+
+`tests/{requesting-code-review,verification-before-completion,using-
+git-worktrees,finishing-a-development-branch}-pressure/prompts/`:
+
+| Skill | Prompts |
+|---|---|
+| requesting-code-review | `its-fine-just-merge.txt` / `sdd-already-reviewed.txt` |
+| verification-before-completion | `tests-pass-no-invocation.txt` / `lint-passes-thats-enough.txt` / `let-ci-catch-it.txt` |
+| using-git-worktrees | `just-stash-and-switch.txt` / `just-clone-twice.txt` |
+| finishing-a-development-branch | `skip-review-just-push.txt` / `dont-bother-with-git-memory.txt` / `auto-merge-after-push.txt` |
+
+10 prompts total; each cluster has its own `index.md` assertion table.
+
+### Phase 3 closeout — 9 of 9 skills shipped
+
+| Stage | Skill | Status |
+|---|---|---|
+| Router | `using-code-toolkit` | ✅ |
+| 1 — Discovery | `brainstorming` | ✅ |
+| 2 — Planning | `writing-plans` | ✅ |
+| 3 — Execution | `subagent-driven-development` | ✅ |
+| 4 — Discipline | `tdd-iron-law` | ✅ |
+| 5 — Repair | `systematic-debugging` | ✅ |
+| 6 — Review | `requesting-code-review` | **✅ NEW** |
+| 7 — Verification | `verification-before-completion` | **✅ NEW** |
+| 8 — Branch close | `finishing-a-development-branch` | **✅ NEW** |
+| Auxiliary | `using-git-worktrees` | **✅ NEW** |
+
+Full Superpowers parity reached (per PRODUCT-SPEC §3.2 plan).
+
+Two intentionally-deferred Superpowers skills remain on observation
+list — `dispatching-parallel-agents` and `receiving-code-review`. The
+latter overlaps `dev-workflow:git-memory` and is unlikely to ship; the
+former awaits Phase 3.5+ evaluation.
+
+### Knowledge layer
+
+No new functional copies needed for Phase 3 — `requesting-code-review`
+loads SDD's existing rubrics + checklists + standards via cross-skill
+path reference; `verification-before-completion` has its own
+references; `using-git-worktrees` has no canonical grounding to copy;
+`finishing-a-development-branch` delegates to `dev-workflow:git-memory`
+directly. The `distribute.py` ROUTE table is unchanged (12 functional
+copies); cross-plugin knowledge layer remains stable at code-team SHA
+`916a165`.
+
+### Plugin version
+
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` bumped
+  to `0.3.0-draft`. Drops `-draft` when all 4 Phase 3 ritual prompts
+  re-run cleanly in fresh sessions.
+
 ## [0.2.1] — 2026-05-16
 
 Phase 1.5 rolling patches — dogfood-driven SKILL.md tuning surfaced

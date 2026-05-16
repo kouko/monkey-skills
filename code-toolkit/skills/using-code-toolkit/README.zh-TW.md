@@ -21,9 +21,10 @@
 | 執行 | [`subagent-driven-development`](../subagent-driven-development) | ✅ 已 ship |
 | 紀律 | [`tdd-iron-law`](../tdd-iron-law) | ✅ 已 ship |
 | 修復 | [`systematic-debugging`](../systematic-debugging) | ✅ 已 ship |
-| 審查 | [`requesting-code-review`](../requesting-code-review) | Phase 3 |
-| 驗收 | [`verification-before-completion`](../verification-before-completion) | Phase 3 |
-| 收尾 | [`finishing-a-development-branch`](../finishing-a-development-branch) | Phase 3 |
+| 審查 | [`requesting-code-review`](../requesting-code-review) | ✅ 已 ship |
+| 驗收 | [`verification-before-completion`](../verification-before-completion) | ✅ 已 ship |
+| 收尾 | [`finishing-a-development-branch`](../finishing-a-development-branch) | ✅ 已 ship |
+| 輔助 | [`using-git-worktrees`](../using-git-worktrees) | ✅ 已 ship（lateral 工具，不在線性流程中） |
 
 ## 使用時機
 

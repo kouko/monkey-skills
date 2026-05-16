@@ -21,9 +21,10 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 | Execution | [`subagent-driven-development`](../subagent-driven-development) | ✅ shipped |
 | Discipline | [`tdd-iron-law`](../tdd-iron-law) | ✅ shipped |
 | Repair | [`systematic-debugging`](../systematic-debugging) | ✅ shipped |
-| Review | [`requesting-code-review`](../requesting-code-review) | Phase 3 |
-| Verification | [`verification-before-completion`](../verification-before-completion) | Phase 3 |
-| Branch close | [`finishing-a-development-branch`](../finishing-a-development-branch) | Phase 3 |
+| Review | [`requesting-code-review`](../requesting-code-review) | ✅ shipped |
+| Verification | [`verification-before-completion`](../verification-before-completion) | ✅ shipped |
+| Branch close | [`finishing-a-development-branch`](../finishing-a-development-branch) | ✅ shipped |
+| Auxiliary | [`using-git-worktrees`](../using-git-worktrees) | ✅ shipped (lateral utility, not in linear flow) |
 
 ## When to use
 

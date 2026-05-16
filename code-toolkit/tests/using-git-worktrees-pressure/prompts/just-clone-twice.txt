@@ -1,0 +1,1 @@
+I have a long-running v2-redesign branch that's going to take weeks. I want to keep working on main features in parallel. Easiest path: just `git clone` the repo into a second directory — that way each clone is fully isolated. No need for git worktrees, just two clones.

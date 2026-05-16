@@ -1,7 +1,7 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.2.0-draft
+version: 0.3.0-draft
 ---
 
 <SUBAGENT-STOP>
@@ -48,9 +48,11 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | 3 | Execution | `subagent-driven-development` | ✅ shipped |
 | 4 | Discipline (during execution) | `tdd-iron-law` | ✅ shipped |
 | 5 | Repair (when stuck) | `systematic-debugging` | ✅ shipped |
-| 6 | Review | `requesting-code-review` | Phase 3 |
-| 7 | Verification | `verification-before-completion` | Phase 3 |
-| 8 | Branch close | `finishing-a-development-branch` → delegates `dev-workflow:git-memory` | Phase 3 |
+| 6 | Review | `requesting-code-review` | ✅ shipped |
+| 7 | Verification | `verification-before-completion` | ✅ shipped |
+| 8 | Branch close | `finishing-a-development-branch` → delegates `dev-workflow:git-memory` | ✅ shipped |
+
+**Auxiliary**: `using-git-worktrees` — invoke on demand when parallel branches / long-running experiments / design-then-build cycles call for one repo with N checkouts. Not part of the linear stage flow; lateral utility.
 
 ## Red flags — agent rationalizations to refuse
 
