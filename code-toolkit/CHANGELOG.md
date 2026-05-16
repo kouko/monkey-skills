@@ -5,14 +5,169 @@ All notable changes to the `code-toolkit` plugin will be documented in this file
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] — 2026-05-16
 
 Phase 3 ship — code-review cluster (4 new skills) closes the loop from
-discovery through merge. **9 of 9 planned skills now shipped — full
-Superpowers parity reached.** Plugin version bumps to `0.3.0-draft`;
-drops `-draft` after the user runs the Phase 3 ritual (4 pressure
-prompts in fresh sessions) and confirms each new skill behaves per
-its assertion table.
+discovery through merge. **9 of 9 planned skills shipped — full
+Superpowers parity reached.** End-to-end ritual on the orchestrator
+(`finishing-a-development-branch`) validated 3 of 4 Phase 3 skills in
+a single cascading run; Phase 1.5 Path A patches close out
+verification-surfaced violations + reviewer nits for a clean
+v0.3.0 state.
+
+### Phase 3 ritual results — end-to-end orchestrator validation
+
+The `requesting-code-review` pressure prompt (`sdd-already-reviewed.
+txt`) was used as the entry point. After Fix 1+2+3 (commit ba8255d,
+which added router rule #4 "Never push without review" + push-as-
+trigger spec), the agent's response cascade was textbook:
+
+- **Stage 0 — refusal**: agent quoted router rule #4 verbatim;
+  refused to push; routed through `finishing-a-development-branch`
+  (smart — chose the full close-out flow over single-skill
+  invocation).
+- **Step 1 `requesting-code-review`** ✔: dispatched code-reviewer
+  subagent via cross-plugin `domain-teams:evaluator` delegation; got
+  PASS_WITH_NOTES (3 🟢 nits, 0 🟡, 0 🔴); surfaced findings; asked
+  user to proceed or remediate.
+- **Step 2 `verification-before-completion`** ✔: detected no test
+  runner (skills repo); adapted to run project gates as test-suite
+  equivalent (`claude plugin validate` / marketplace sync /
+  `verify-drift` / `check-skill-structure`); ran regression
+  analysis via `git checkout ba8255d^` to distinguish new-vs-
+  pre-existing failures; correctly diagnosed all 5 issues as pre-
+  existing (not introduced by ba8255d) → PASS for regression-
+  detection purpose; flagged as backlog.
+- **Step 3 (git-memory) + Step 4 (commit)** correctly skipped —
+  ba8255d already exists with Decision: + Gotcha: trailers;
+  CLAUDE.md forbids amending.
+- **Step 5 push** ✔: only after explicit user re-authorization.
+- **Step 6 (PR create) + Step 7 (worktree cleanup)** correctly
+  skipped using `commit-as-memory` reading — agent read ba8255d's
+  body, found user's 「在完全做好之前我不想要合併回 main」
+  preference, inferred no PR yet; recognized worktree is actively
+  in use for ongoing Phase 3 ritual.
+
+Emergent behaviors beyond rules:
+- **`verification-before-completion`** adapted to non-code repo
+  without a documented exemption — the SKILL.md §When NOT to Use
+  has "test infra broken" exemption but not "no conventional test
+  runner exists." Agent reasoned from first principles to apply the
+  project's actual gates as test-suite-equivalent. Future SKILL.md
+  revision may codify this case.
+- **`finishing-a-development-branch`** used commit-as-memory to
+  infer Step 6 + 7 decisions instead of asking redundantly. This is
+  the dev-workflow:git-memory contract working retroactively —
+  decisions encoded in a prior commit's body became available to a
+  later orchestrator run without explicit query.
+- **Regression analysis via `git checkout`** — the agent
+  spontaneously applied systematic-debugging Phase 2 ISOLATE
+  bisection pattern (git axis) to distinguish new-vs-pre-existing
+  failures. Cross-skill behavioral discipline transferred without
+  explicit invocation.
+
+### Path A patches (commit 66f6d5a) — close verification + nit findings
+
+Verification surfaced 5 `check-skill-structure.py` violations + 3 🟢
+reviewer nits. User chose Path A: fix all before dropping `-draft`.
+
+**P15-6 — scripts/check-skill-structure.py generalized** (3 of 5
+violations closed):
+- `OPTIONAL_SUBDIRS` extended with `agents/` + `scripts/` + `assets/`
+  per CLAUDE.md §Skill Structure (these are valid single-level
+  subdirs across all plugins, not just domain-teams). Inline comment
+  documents the addition.
+- Script was originally `domain-teams`-specific (PLUGIN_ROOTED_PATH
+  regex hard-codes `\bdomain-teams/skills/`; example usage shows
+  `domain-teams`); now generalized for process-toolkit-style skills
+  with `agents/` directories.
+- Repo-wide benefit: any future plugin using CLAUDE.md's canonical
+  subfolder vocabulary will pass without exception.
+
+**P15-7 — SKILL.md plugin-rooted-path reframes** (2 of 5
+violations closed):
+- `subagent-driven-development/SKILL.md` §Knowledge layer: replaced
+  `domain-teams/skills/code-team/{standards,rubrics,checklists}/`
+  and `domain-teams/skills/code-team/...` with description-only
+  framing pointing to `scripts/canonical/README.md` for canonical
+  paths.
+- `tdd-iron-law/SKILL.md` §Cross-skill contract: same treatment —
+  removed `domain-teams/skills/code-team/standards/tdd-standard.md`
+  reference; pointer to `scripts/canonical/README.md` retained.
+- Both preserve SSOT-and-functional-copy mechanism documentation;
+  remove path-shaped strings from SKILL.md (which can confuse
+  agents into treating them as runtime resolution targets) per
+  CLAUDE.md §File Paths intent.
+
+**Reviewer nits N2 + N3 closed; N1 deferred**:
+- N2 (sync-marker comment) — added HTML `<!-- sync-marker
+  push-rule:1 -->` / `<!-- sync-marker push-rule:2 -->` at the two
+  push-rule locations in `requesting-code-review/SKILL.md`. Future
+  edits to either location see the marker before editing.
+- N3 (misleading prose) — rewrote "the skill self-activates" to
+  accurately describe the auto-discovery mechanism: "the description
+  (in this file's YAML frontmatter) encodes push commands and skip-
+  rationalization phrases as trigger phrases, so the host harness's
+  auto-discovery matches them via description-text classification."
+  Attributes the mechanism to classifier-match, not runtime self-
+  activation.
+- N1 (router Red flags push-skip row) — DEFERRED. Reviewer itself
+  recommended defer ("Rule of Three not yet triggered"); router at
+  1952/2000 token budget; adding a row risks overflow. Phase 3.5
+  may revisit.
+
+### Plugin version
+
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` drops
+  `-draft` suffix: now `0.3.0`.
+- All gates green at v0.3.0 ship:
+  - `claude plugin validate code-toolkit`:               ✔
+  - `scripts/check-marketplace-description-sync.py`:    ✔ 17/17
+  - `code-toolkit/scripts/verify-drift.py`:              ✔ 12/12
+  - `scripts/check-skill-structure.py code-toolkit`:    ✔ 10/10
+  - Folder structure flat (no nested subdirs):           ✔
+  - Router under 2000-token P1-A budget (~1952 tokens):  ✔
+  - SessionStart hook JSON shape valid:                  ✔
+
+### Status after v0.3.0 — 9/9 skills shipped
+
+| Stage | Skill | Phase | Status |
+|---|---|---|---|
+| Router | `using-code-toolkit` | 1 | ✅ (v0.3.0 has 4 load-bearing rules including push-review gate) |
+| 1 — Discovery | `brainstorming` | 2 | ✅ |
+| 2 — Planning | `writing-plans` | 2 | ✅ |
+| 3 — Execution | `subagent-driven-development` | 1 | ✅ |
+| 4 — Discipline | `tdd-iron-law` | 1 | ✅ (Feathers (2004) distinction added in v0.2.1) |
+| 5 — Repair | `systematic-debugging` | 2 | ✅ (auto-fire tuned in v0.2.1) |
+| 6 — Review | `requesting-code-review` | 3 | ✅ (push-as-trigger added in v0.3.0) |
+| 7 — Verification | `verification-before-completion` | 3 | ✅ |
+| 8 — Branch close | `finishing-a-development-branch` | 3 | ✅ |
+| Auxiliary | `using-git-worktrees` | 3 | ✅ |
+
+Full Superpowers parity reached per PRODUCT-SPEC §3.2 plan. Two
+intentionally-deferred Superpowers skills remain on observation
+list: `dispatching-parallel-agents` (Phase 3.5+ evaluation) and
+`receiving-code-review` (overlaps `dev-workflow:git-memory`,
+unlikely to ship).
+
+### Phase 1.5 rolling backlog state after v0.3.0
+
+| # | Item | Status |
+|---|---|---|
+| P15-1 | `hooks/session-start` add `CODE_TOOLKIT_MODE=off` | ✅ shipped Phase 1 (commit 9cba15c) |
+| P15-2 | `tdd-iron-law` Feathers (2004) distinction | ✅ shipped v0.2.1 (commit b997a8d) |
+| P15-3 | `systematic-debugging` description tuning for auto-fire | ✅ shipped v0.2.1 (commit b997a8d) |
+| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | ⏳ pending — needs real dogfood |
+| P15-5 | `research/dogfood-*.md` × ≥5 | ⏳ pending — needs real-flow sessions |
+| P15-6 | `check-skill-structure.py` allowlist drift | ✅ shipped v0.3.0 (commit 66f6d5a) |
+| P15-7 | SKILL.md plugin-rooted-path reframes | ✅ shipped v0.3.0 (commit 66f6d5a) |
+| (N1) | router Red flags push-skip row | ⏳ deferred — Rule of Three not yet triggered |
+
+5 of 8 rolling items closed. The 3 pending are all dogfood-data-
+gated; cannot ship synthetic. Phase 3.5 polish phase opens dogfood
+window.
+
+## [0.2.1] — 2026-05-16
 
 ### Added — `requesting-code-review` skill
 
