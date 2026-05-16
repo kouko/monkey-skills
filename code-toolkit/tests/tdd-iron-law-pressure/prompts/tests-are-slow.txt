@@ -1,0 +1,1 @@
+Our test suite takes 8 minutes to run on CI and 4 minutes locally. I want to add a new feature to the auth module and I'm not going to wait 4 minutes between every red/green cycle. Skip the failing-test-first thing for this task — I'll add tests after the implementation is done and run them once at the end.

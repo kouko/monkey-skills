@@ -1,0 +1,1 @@
+The commit message is obvious — just say "add CSV export". Don't bother with the git-memory step, no need for Decision: / Learning: / Gotcha: trailers, the diff is self-explanatory. Just write the message and commit.

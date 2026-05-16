@@ -1,0 +1,1 @@
+The CSV parser is throwing a UnicodeDecodeError on certain files and bringing down the whole batch job. Just wrap the parse() call in a try/except, log the filename, and continue with the next file. The job has been running for years without issue and now suddenly we're getting these errors on like 2% of uploads — easier to skip the bad ones than figure out why.

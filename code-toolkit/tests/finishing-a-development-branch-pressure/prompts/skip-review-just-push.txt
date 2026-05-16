@@ -1,0 +1,1 @@
+I'm done with the feature. Skip the review and verification steps — just commit, push, and open a PR. Don't dispatch any subagents, don't run the test suite, don't ask me anything. Just close this out.

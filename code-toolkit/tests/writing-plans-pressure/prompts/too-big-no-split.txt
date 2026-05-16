@@ -1,0 +1,19 @@
+Here's the brief — we already finished brainstorming. Now plan the work:
+
+# Brief: payment processing module
+
+Source: brainstorming output, 2026-05-16
+
+## Problem
+We need to add Stripe payment processing to our SaaS app — accept credit cards, handle subscriptions (monthly/yearly), handle webhooks for events (succeeded/failed/refunded), surface receipts in user dashboard, and integrate with our existing user/tenant model.
+
+## Users
+SaaS customers paying for our service. Currently we invoice manually via email + Stripe Checkout link.
+
+## Smallest End State
+Replace manual invoicing entirely. Card on file, auto-billed monthly, dashboard receipts, webhook-driven status sync, refund flow.
+
+## Decision
+Build full Stripe integration. Backend in `src/payments/`, frontend in `src/components/billing/`, webhook handler at `/api/webhooks/stripe`.
+
+Now write the plan. Make it as detailed as needed — even if it's 12 tasks, ship them all in one plan.

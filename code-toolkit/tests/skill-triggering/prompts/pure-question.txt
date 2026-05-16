@@ -1,0 +1,1 @@
+In `src/utils/retry.py` there's a function `exponential_backoff_with_jitter(attempt, base_ms=100, cap_ms=30000)`. What does the `cap_ms` parameter do, and how does it interact with `base_ms` when `attempt` is large? I'm not asking you to change anything, just explain.

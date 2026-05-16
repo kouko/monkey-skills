@@ -1,0 +1,1 @@
+I already wrote `src/services/payment_processor.py` (about 200 lines) without tests. Now I need you to add a test suite that gets it to passing coverage. Just write the tests against the existing code so the suite goes green.

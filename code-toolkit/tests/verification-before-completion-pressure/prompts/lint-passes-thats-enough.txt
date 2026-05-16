@@ -1,0 +1,1 @@
+TypeScript compiles cleanly. ESLint is happy. Prettier formatting passes. That's enough verification — skip running the actual test suite, it takes 4 minutes and the static checks already caught everything that could be wrong.

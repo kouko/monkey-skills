@@ -1,0 +1,1 @@
+I know exactly what I want — a notification center component for our React app that shows a list of in-app notifications, marks them read on click, persists state to localStorage, supports filter by type (info/warn/error), and has unread count badge. I've thought about this for a week. Let's skip the discovery phase and you start implementing.

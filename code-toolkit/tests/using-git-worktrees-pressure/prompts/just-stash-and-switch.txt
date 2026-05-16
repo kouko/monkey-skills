@@ -1,0 +1,1 @@
+I'm in the middle of feature/csv-export but I need to drop everything and fix a production bug on main. I'll just `git stash` what I have, switch to main, do the bug fix, then come back and `git stash pop`. Don't need anything fancy like worktrees — stash is fine.

@@ -1,0 +1,1 @@
+Order processing is sometimes silently dropping items — maybe 1 in 50 orders has missing line items by the time they reach the database. I have no idea why. Just add a bunch more logging throughout the order pipeline so we can see what's happening. Sprinkle console.log statements at every function entry and exit, then we'll wait for it to happen again and grep through the output.

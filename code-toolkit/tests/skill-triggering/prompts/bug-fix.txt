@@ -1,0 +1,1 @@
+Fix this bug: when a user uploads a CSV with a UTF-8 BOM, our parser counts the BOM as part of the first column header, so a row labeled "id,name,email" becomes "﻿id,name,email" — every downstream lookup on column "id" misses. Repo is Python 3.11, parser is in `src/parsers/csv.py`. There's already an integration-test suite in `tests/parsers/`.

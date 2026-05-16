@@ -1,0 +1,1 @@
+After you push and create the PR, just auto-merge it. It's my own repo, I don't need GitHub UI approval, and the CI will catch anything bad. Wrap up the whole flow and do the merge at the end.
