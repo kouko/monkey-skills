@@ -4,7 +4,7 @@ Fixtures live FLAT in tests/ (not tests/fixtures/) per Anthropic flat-folder
 rule. Each test invokes the grader as a subprocess with the canonical
 --plan / --state / --memo / --summary CLI; exit code is the contract.
 
-Test surface (15):
+Test surface (16):
      1. test_passing_fixture_exits_0                — happy path; 9 sources, 4 types, early_stop
      2. test_missing_plan_exits_1                   — file existence: plan
      3. test_missing_state_exits_1                  — file existence: state
@@ -12,7 +12,7 @@ Test surface (15):
      5. test_missing_summary_exits_1                — file existence: summary
      6. test_state_over_cap_exits_1                 — rounds=6 (> MAX_ROUNDS=5)
      7. test_state_inconsistent_no_warn_exits_1     — forced_stop=true + memo no ⚠️
-     8. test_state_forced_stop_with_warn_exits_2    — forced_stop=true + memo ⚠️ → PASS_WITH_NOTES
+     8. test_state_forced_stop_with_warn_exits_2    — forced_stop=true + memo ⚠️ + §Escalation → PASS_WITH_NOTES
      9. test_memo_7_citations_no_warn_exits_1       — 7 citations + no ⚠️
     10. test_memo_single_type_exits_1               — 8 citations + 1 type only + no ⚠️
     11. test_memo_no_relevance_exits_1              — citation missing `→ <relevance>`
@@ -20,6 +20,7 @@ Test surface (15):
     13. test_memo_orphan_tbd_exits_1                — orphan {{tbd_section_x}}
     14. test_summary_no_disclaimer_exits_1          — §Disclaimer missing
     15. test_summary_no_conclusion_marker_exits_1   — ✅/⚠️/❌ missing from §結論
+    16. test_escalation_missing_when_forced_stop_exits_1 — forced_stop=true + summary no §Escalation → exit 1
 """
 import os
 import subprocess
@@ -105,17 +106,17 @@ def test_state_inconsistent_no_warn_exits_1():
 
 
 def test_state_forced_stop_with_warn_exits_2():
-    """forced_stop=true + memo HAS ⚠️ block + 7 citations → PASS_WITH_NOTES (exit 2).
+    """forced_stop=true + memo HAS ⚠️ block + 7 citations + §Escalation → PASS_WITH_NOTES (exit 2).
 
     Per spec §6.6: forced_stop with a properly-surfaced ⚠️ block is the
     acceptable degraded path; sources < 8 floor is excused by the ⚠️ block
-    via citation_count_or_warn.
+    via citation_count_or_warn. §Escalation is also required (check #16).
     """
     rc = _run_grader(
         PLAN_PASS,
         FIXTURES / "fixture-state-inconsistent.json",
         FIXTURES / "fixture-memo-7-citations-with-warn.md",
-        SUMMARY_PASS,
+        FIXTURES / "fixture-summary-forced-stop.md",
     )
     assert rc == 2
 
@@ -196,5 +197,17 @@ def test_summary_no_conclusion_marker_exits_1():
         STATE_PASS,
         MEMO_PASS,
         FIXTURES / "fixture-summary-no-conclusion-marker.md",
+    )
+    assert rc == 1
+
+
+# ---------------------------------------------------------- Test 16 — escalation
+def test_escalation_missing_when_forced_stop_exits_1():
+    """forced_stop=true + summary has NO §Escalation → escalation_when_forced_stop fail."""
+    rc = _run_grader(
+        PLAN_PASS,
+        FIXTURES / "fixture-state-inconsistent.json",
+        FIXTURES / "fixture-memo-7-citations-with-warn.md",
+        SUMMARY_PASS,
     )
     assert rc == 1

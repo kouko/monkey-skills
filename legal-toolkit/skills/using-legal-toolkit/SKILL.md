@@ -139,7 +139,7 @@ User confirms the auto-classified path before sub-protocol dispatch. → hand of
 
 **Keyword triggers**: 「能不能做」/「是否合法」/「我們想做」/「分析一下」/「這樣可以嗎」/「合不合法」/「is it legal」/「can we」/「fact pattern」/「issue spot」.
 
-**Disambiguation**: if the user's request is a literal law-text lookup (查 §227 / 找 110 年判決 / 法條), route to Q4-law-lookup instead (NOT YET available; ships v0.5.2).
+**Disambiguation**: if the user's request is a literal law-text lookup (查 §227 / 找 110 年判決 / 法條), route to Q4-law-lookup instead (active v0.5.2+).
 
 → hand off to `legal-issue-spot` skill with the fact pattern as input.
 
@@ -268,7 +268,7 @@ First-time install path:
 使用者: 我剛裝好這個 plugin，下一步幹嘛？
 
 Router 回:
-   歡迎！legal-toolkit v0.5.0 ships 7 個 active skill：
+   歡迎！legal-toolkit v0.5.2 ships 7 個 active skill：
    - using-legal-toolkit (router，你正在用)
    - legal-playbook-author (建立你公司的議價 playbook)
    - legal-contract-review (跑 7 層合約審查 pipeline)

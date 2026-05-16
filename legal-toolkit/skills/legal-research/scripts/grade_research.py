@@ -3,7 +3,7 @@
 
 A grader run takes a quartet of files emitted by the 5-protocol legal-research
 pipeline (plan.md + state.json + research-memo.md + executive-summary.md) and
-verifies 15 structural / loop-integrity / citation / safety checks. No LLM
+verifies 16 structural / loop-integrity / citation / safety checks. No LLM
 calls — pure regex + section-presence + JSON-shape logic. Runs in <1s on a
 typical fixture quartet.
 
@@ -13,7 +13,7 @@ Public CLI:
     exit 1 = FAIL (missing file / schema / Path A / orphan / etc.; reasons → stderr)
     exit 2 = PASS_WITH_NOTES (forced_stop=true AND memo has ⚠️ block — per spec §6.6)
 
-Checks (15):
+Checks (16):
     Existence (#1-#4):
         1. plan_md_exists            — plan.md is a file
         2. state_json_exists         — state.json is a file
@@ -41,6 +41,10 @@ Checks (15):
        15. path_a_antipatterns       — bank check on plan + memo + summary
            template_orphan_check     — {{var}} grep on plan + memo + summary
            disclaimer_footer         — §Disclaimer + canonical sentinel in memo + summary
+
+    Escalation (#16):
+       16. escalation_when_forced_stop — if state.forced_stop=true, executive-summary.md
+           MUST contain `## §Escalation` section with 律師 keyword (per spec §6.4)
 
 PATH_A_ANTIPATTERNS bank + _check_no_template_orphans helper are byte-identical
 to legal-issue-spot/scripts/grade_issue_spot.py and legal-incident-response/
@@ -481,6 +485,33 @@ def _check_summary_conclusion_marker(summary_text: str) -> list[str]:
     return []
 
 
+# ---------------------------------------------------------- escalation check
+def _check_escalation_when_forced_stop(state: dict, summary_text: str) -> list[str]:
+    """If state.forced_stop=true, executive-summary.md MUST contain §Escalation
+    with a 律師 keyword (per spec §6.4 / SKILL.md §6.4 Escalation Override).
+
+    High-stakes-domain triggers (刑事 / 訴訟 / 跨境 / 重大金額) are SHOULD-level
+    and cannot be reliably classified by the grader, so only the forced_stop
+    trigger is enforced here as a MUST.
+    """
+    if not state.get("forced_stop"):
+        return []
+    escalation_pattern = re.compile(r"^#{1,4}\s*§Escalation", re.MULTILINE)
+    if not escalation_pattern.search(summary_text):
+        return [
+            "escalation_when_forced_stop: state.forced_stop=true but executive-summary.md "
+            "has no '## §Escalation' section — spec §6.4 requires §Escalation when forced_stop "
+            "(cite.md Step 7 must emit the block before §Disclaimer)"
+        ]
+    if "律師" not in summary_text:
+        return [
+            "escalation_when_forced_stop: executive-summary.md §Escalation section found but "
+            "missing '律師' keyword — the escalation banner must include an explicit 律師 "
+            "consultation recommendation (per spec §6.4 escalation template)"
+        ]
+    return []
+
+
 # ---------------------------------------------------------- disclaimer footer
 def _check_disclaimer_footer(memo_text: str, summary_text: str) -> list[str]:
     """Both memo + summary MUST have §Disclaimer heading + canonical sentinels
@@ -568,6 +599,10 @@ def grade_research(
     ))
     reasons.extend(_check_no_template_orphans(plan_text, memo_text, summary_text))
     reasons.extend(_check_disclaimer_footer(memo_text, summary_text))
+
+    # Escalation (#16).
+    if state is not None:
+        reasons.extend(_check_escalation_when_forced_stop(state, summary_text))
 
     return GradeResult(passed=not reasons, reasons=reasons, notes_only=notes_only)
 

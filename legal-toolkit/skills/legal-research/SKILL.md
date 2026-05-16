@@ -202,8 +202,8 @@ have JSON Schema contracts in `assets/plan-schema.json` /
 ## §6.3 Mandatory Disclaimer footer
 
 Every output `.md` file MUST end with the §6.3 Disclaimer footer.
-**This skill produces 法律意見 (legal opinion) — disclaimer is
-mandatory, not optional.**
+**This skill produces law-source research — not formal legal opinion —
+so the disclaimer explicitly scopes what the output is and is not.**
 
 The verbatim canonical disclaimer text lives in
 [`protocols/cite.md`](protocols/cite.md) §6.3 Disclaimer text section
