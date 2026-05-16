@@ -20,13 +20,13 @@ SKILL_PATH="${PLUGIN_ROOT}/skills/using-code-toolkit/SKILL.md"
 
 # Escape hatch — Superpowers coexistence
 if [ "${CODE_TOOLKIT_MODE:-on}" = "off" ]; then
-  printf '{"hookSpecificOutput":{"additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
   exit 0
 fi
 
 # Skill file missing → fail open with empty context (do not crash the session)
 if [ ! -f "${SKILL_PATH}" ]; then
-  printf '{"hookSpecificOutput":{"additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
   exit 0
 fi
 
@@ -49,5 +49,5 @@ banner_open='<EXTREMELY_IMPORTANT>\nYou have code-toolkit. Routing through this 
 banner_close='\n</EXTREMELY_IMPORTANT>'
 context="${banner_open}${escaped}${banner_close}"
 
-printf '{"hookSpecificOutput":{"additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
   "${context}" "${context}" "${context}"
