@@ -11,13 +11,14 @@ If you are a subagent already dispatched with an explicit role prompt (implement
 <EXTREMELY-IMPORTANT>
 **You have code-toolkit.** If the user is starting any coding work — feature / bug fix / refactor / review / migration — you **must** route through this skill before writing implementation code.
 
-Three load-bearing rules:
+Four load-bearing rules:
 
 1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — walks the 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief.
-2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law` when starting implementation. Kent Beck (2002, *Test-Driven Development: By Example*, Addison-Wesley, ISBN 978-0321146533), Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* That is the floor, not an aspiration.
-3. **Split + dispatch (SDD).** For any task >1 hour or touching >1 module, call `subagent-driven-development` — split into atomic ≤5-min units and dispatch three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
+2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
+3. **Split + dispatch (SDD).** For any task >1 hour or touching >1 module, call `subagent-driven-development` — split into atomic ≤5-min units; dispatch three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
+4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. *"Just push"* / *"skip review"* are rationalizations; push commands trigger review, not bypass.
 
-**Skipping any of these = violation.** "I'll just quickly…" / 「ちょっと試すだけ」 / 「我先快速試一下」 are rationalizations — refuse them.
+**Skipping any of these = violation.** "I'll just quickly…" / "just push" / 「ちょっと試すだけ」 / 「我先快速試一下」 / 「先 push 再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
 
 ## Instruction priority
