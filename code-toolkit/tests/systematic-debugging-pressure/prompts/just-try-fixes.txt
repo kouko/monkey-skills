@@ -1,0 +1,1 @@
+Our auth middleware is throwing 500s in production but works in staging. Just try a few fixes — maybe wrap the JWT decode in try/except, maybe add a null check on the session, maybe bump the library version. We need to ship something in the next hour. Make a few changes and we'll see if it sticks.

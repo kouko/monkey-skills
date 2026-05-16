@@ -20,7 +20,7 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 | Planning | [`writing-plans`](../writing-plans) | ✅ shipped |
 | Execution | [`subagent-driven-development`](../subagent-driven-development) | ✅ shipped |
 | Discipline | [`tdd-iron-law`](../tdd-iron-law) | ✅ shipped |
-| Repair | [`systematic-debugging`](../systematic-debugging) | Phase 2 |
+| Repair | [`systematic-debugging`](../systematic-debugging) | ✅ shipped |
 | Review | [`requesting-code-review`](../requesting-code-review) | Phase 3 |
 | Verification | [`verification-before-completion`](../verification-before-completion) | Phase 3 |
 | Branch close | [`finishing-a-development-branch`](../finishing-a-development-branch) | Phase 3 |

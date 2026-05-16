@@ -10,6 +10,91 @@ Versioning: [Semantic Versioning](https://semver.org/).
 Phase 2 underway — Discovery + planning + repair cluster. Skills accumulate
 under [Unreleased] until all 3 ship, then bump to [0.2.0].
 
+### Added — `systematic-debugging` skill (3 of 3 Phase 2 skills) — closes Phase 2
+
+Repair-cluster skill — the debugging analogue of `tdd-iron-law`. HARD-GATE
+measure: NO FIXING WITHOUT REPRODUCING. 4-phase discipline (REPRODUCE →
+ISOLATE → HYPOTHESIZE → VERIFY) with explicit gates between phases.
+
+- `skills/systematic-debugging/SKILL.md` — HARD-GATE measure;
+  4-phase framework with per-phase gates (🟢 reliable repro / 🟡
+  bounded conditions / 🔴 cannot reproduce → not actionable yet);
+  §When NOT to Use with 4 enumerated exemptions; Red Flags table
+  covering 8 rationalizations × ja + zh-TW variants (random-patching,
+  hypothesis-without-observation, "works on my machine," fishing-
+  without-hypothesis logging, try/except masking, intermittent
+  dismissal, symptom-as-root-cause); primary sources: Kernighan &
+  Pike (1999) *The Practice of Programming* Ch.5 Debugging (ISBN
+  978-0201615869) and Hunt & Thomas (2019) *Pragmatic Programmer*
+  Topic 28 (ISBN 978-0135957059).
+- `skills/systematic-debugging/references/root-cause-tracing.md` —
+  Phase 2 ISOLATE sub-protocols. 6 bisection axes (git / dependency /
+  input / component / time / 5-Whys) with trigger conditions, tools,
+  and halving cost estimates. Anti-patterns enumerated.
+- `skills/systematic-debugging/references/condition-based-waiting.md` —
+  Phase 1 🟡 + Phase 2 time-axis bisection. Replaces `sleep(500)`
+  anti-pattern with condition-polling; library helpers per language
+  (TS / Python / Go / Java / Rust / shell); heisenbug bisection
+  protocol (CPU / network / disk / GC axes).
+- `skills/systematic-debugging/references/defense-in-depth.md` —
+  Phase 4 post-VERIFY layering. 6-layer ladder (regression test →
+  input validation → invariant assertion → type-system constraint →
+  monitoring → architectural refactor) with proportionality rule
+  (cost ≤ expected damage of next instance). 3 worked examples
+  (typo / SQLi / race condition) showing layer selection by blast
+  radius. The Rule-of-Three trigger for layer 6.
+- `skills/systematic-debugging/references/character-encoding-debug.md`
+  — **P2-C deliverable, new to code-toolkit.** Encoding-specific
+  bisection (BOM detection / UTF-8 vs UTF-16 mismatch / NFC vs NFD
+  normalization / surrogate pairs / stream decoder buffer boundary).
+  Hex-dump bisection protocol. Cross-links to
+  `domain-teams:code-team/standards/character-encoding-security.md`
+  (徳丸本 第 2 版 Ch.6, ISBN 978-4797393163) for the security-
+  grounded version. Worked example mirrors `tests/skill-triggering/
+  prompts/bug-fix.txt` (UTF-8 BOM in CSV first column).
+- `skills/systematic-debugging/README.{md,ja.md,zh-TW.md}` — 3-lang.
+
+### Updated — `using-code-toolkit` router for systematic-debugging
+
+- Skill Priority table row 5: Repair `systematic-debugging` flipped
+  from "Phase 2" → "✅ shipped".
+- Router stays under the 2000-token P1-A budget: ~1837 tokens.
+- 3-lang README tables updated in lockstep.
+
+### Added — systematic-debugging pressure tests
+
+`tests/systematic-debugging-pressure/prompts/`:
+- `just-try-fixes.txt` — canonical random-patching rationalization
+  dressed in time pressure ("ship in next hour").
+- `add-more-logging.txt` — fishing-without-hypothesis (1-in-50
+  intermittent order drop; user wants `console.log` at every
+  function entry/exit).
+- `silence-with-try-except.txt` — error-masking with operational
+  justification ("years without issue"; user wants to silent-skip
+  2% of CSV uploads with UnicodeDecodeError). Tests both the
+  masking refusal AND the character-encoding-debug invocation.
+- `index.md` — assertion table per prompt; Phase 2 ritual
+  acceptance is 3/3 refused with 4-phase engagement.
+
+### Phase 2 closeout
+
+This commit completes the Phase 2 skill triplet:
+1. ✅ `brainstorming` — Discovery (Stage 1)
+2. ✅ `writing-plans` — Planning (Stage 2)
+3. ✅ `systematic-debugging` — Repair (Stage 5)
+
+Stages 3-4 (Execution / Discipline) shipped in Phase 1
+(`subagent-driven-development` / `tdd-iron-law`).
+
+The plugin version stays `0.2.0-draft` until the user runs the
+Phase 2 ritual for systematic-debugging in a fresh session and
+confirms PASS. The 4-step path to `0.2.0`:
+1. `claude plugin validate code-toolkit` ✔ (already passing)
+2. `claude plugin uninstall + install code-toolkit@monkey-skills --scope local`
+3. Run one systematic-debugging-pressure prompt in fresh session
+4. If PASS, drop -draft from both manifest version fields; convert
+   this [Unreleased] section to `## [0.2.0] — YYYY-MM-DD`; commit.
+
 ### Added — `writing-plans` skill (2 of 3 Phase 2 skills)
 
 Bridge between `brainstorming` (produces the brief) and `subagent-driven-

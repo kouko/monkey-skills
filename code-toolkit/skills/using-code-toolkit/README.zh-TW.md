@@ -20,7 +20,7 @@
 | 計畫 | [`writing-plans`](../writing-plans) | ✅ 已 ship |
 | 執行 | [`subagent-driven-development`](../subagent-driven-development) | ✅ 已 ship |
 | 紀律 | [`tdd-iron-law`](../tdd-iron-law) | ✅ 已 ship |
-| 修復 | [`systematic-debugging`](../systematic-debugging) | Phase 2 |
+| 修復 | [`systematic-debugging`](../systematic-debugging) | ✅ 已 ship |
 | 審查 | [`requesting-code-review`](../requesting-code-review) | Phase 3 |
 | 驗收 | [`verification-before-completion`](../verification-before-completion) | Phase 3 |
 | 收尾 | [`finishing-a-development-branch`](../finishing-a-development-branch) | Phase 3 |

@@ -47,7 +47,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | 2 | Planning | `writing-plans` | ✅ shipped |
 | 3 | Execution | `subagent-driven-development` | ✅ shipped |
 | 4 | Discipline (during execution) | `tdd-iron-law` | ✅ shipped |
-| 5 | Repair (when stuck) | `systematic-debugging` | Phase 2 |
+| 5 | Repair (when stuck) | `systematic-debugging` | ✅ shipped |
 | 6 | Review | `requesting-code-review` | Phase 3 |
 | 7 | Verification | `verification-before-completion` | Phase 3 |
 | 8 | Branch close | `finishing-a-development-branch` → delegates `dev-workflow:git-memory` | Phase 3 |
