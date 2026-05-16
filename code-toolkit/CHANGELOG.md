@@ -24,11 +24,62 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
-## [Unreleased]
+## [0.5.0] — 2026-05-16
 
 Phase 1.5 patch P15-10 — Router rule #5 "Research before asking" +
-brainstorming Axis 4 research protocol. **v0.5.0-draft**. Verification
-ritual pending (1 pressure prompt in fresh Claude session).
+brainstorming Axis 4 research protocol. Verification ritual PASSED
+with ~12 emergent behaviors beyond rules.
+
+### Verification ritual PASS — research-before-asking validated
+
+User ran the rate-limiting pressure prompt in a fresh Claude session.
+Agent's response was textbook + 12 emergent behaviors:
+
+- ✅ **Refused to pick** algorithm directly ("would be the 'I'll just
+  quickly…' rationalization")
+- ✅ **3 WebSearch invocations** following Axis 4 search-query-patterns
+  table (algorithm-comparison / vendor-specific / RFC-IETF)
+- ✅ **5 industry approaches** surfaced (not just 3-4 minimum) with
+  specific citations + concrete metrics: Stripe (capacity=500,
+  refill=0.01s), Cloudflare (0.003% error rate at 400M-request
+  scale), Uber (outbound shaping), GitHub REST (legacy) + GraphQL
+  (cost-based)
+- ✅ **Conditional-reversal "My take"** per Axis 4 §Output format —
+  "Default: token bucket for external multi-tenant APIs. Conditional
+  reversal: pick sliding window if requirement is strict... pick
+  leaky bucket only if shaping outbound..."
+- ✅ **RFC 6585 + IETF draft-ietf-httpapi-ratelimit-headers-10
+  references** — agent found in-progress standards, not just stable
+  RFCs
+- ✅ **Repo-self-aware refusal** (4th time across rituals) — caught
+  this worktree has no API codebase; refused to fabricate
+- ✅ **3 ways forward offered to user** — (A) provide context, (B)
+  confirm test mode, (C) explicit "different task" framing — refusing
+  bait-and-switch
+- ✅ **9-source bibliography** at bottom of brief
+
+P15-10 PASS confirmed; closed as ✅ shipped.
+
+### Phase 1.5 backlog state after v0.5.0
+
+| # | Item | Status |
+|---|---|---|
+| P15-1..P15-3 | (closed v0.1.0–v0.2.1) | ✅ |
+| P15-4 | soft-mode flag | ⏳ dogfood-data-gated |
+| P15-5 | ≥5 dogfood notes | ⏳ dogfood-data-gated |
+| P15-6..P15-9 | (closed v0.3.0–v0.4.0) | ✅ |
+| **P15-10** | **Research-before-asking** | **✅ shipped + ritual PASS** |
+
+8 of 10 closed; 2 remaining are v1.0.0 release-engineering items
+that need real natural-flow dogfood data.
+
+### Why this patch (carried over from -draft section)
+
+User pain pattern: repeatedly asking agent "first search industry
+practice" before answering design / strategy decisions. Manual
+injection of research-first discipline; toolkit didn't mandate it.
+
+Fix per Option D (router rule + Axis 4 deepening, minimum-invasive):
 
 ### Why this patch
 
