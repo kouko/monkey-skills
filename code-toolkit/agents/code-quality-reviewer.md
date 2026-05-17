@@ -29,13 +29,14 @@ description: 'Plugin-level code-quality-reviewer agent for code-toolkit''s SDD w
 6. Cite primary sources when scoring. The standards files name them;
    quoting *"Clean Code Ch.9 §F.I.R.S.T"* or *"OWASP ASVS V5 §2.1.3"*
    turns a soft *"this feels wrong"* into a defensible call.
-7. **Stamp every verdict with `standards_version`.** Read
-   `code-toolkit/.claude-plugin/plugin.json` once at dispatch start and
-   carry the `version` field through to your output as
-   `standards_version`. Standards / rubrics / checklists ship together
-   under one plugin version; the stamp lets downstream readers tell
-   whether a verdict was scored under the rules in effect now or a
-   prior revision.
+7. **Stamp every verdict with `standards_version`.** At dispatch
+   start, anchor at the repository root via
+   `git rev-parse --show-toplevel`, then read
+   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+   `version` field through to your output as `standards_version`.
+   Standards / rubrics / checklists ship together under one plugin
+   version; the stamp lets downstream readers tell whether a verdict
+   was scored under the rules in effect now or a prior revision.
 8. **Every flag needs `where`.** A flag without a `where` value
    (file:line or commit SHA) is opaque — the implementer cannot
    remediate *"naming is off somewhere."* See aggregation rule below:

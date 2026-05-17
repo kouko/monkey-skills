@@ -33,13 +33,14 @@ description: 'Plugin-level code-reviewer agent for code-toolkit''s requesting-co
    introduces `userId`, another uses `user_id`); duplicated logic that
    should have been extracted; scope creep (task did more than its
    description); test coverage of cross-task interactions.
-7. **Stamp every verdict with `standards_version`.** Read
-   `code-toolkit/.claude-plugin/plugin.json` once at dispatch start and
-   carry the `version` field through to your output as
-   `standards_version`. Standards / rubrics / checklists ship together
-   under one plugin version; the stamp lets downstream readers tell
-   whether a verdict was scored under the rules in effect now or a
-   prior revision.
+7. **Stamp every verdict with `standards_version`.** At dispatch
+   start, anchor at the repository root via
+   `git rev-parse --show-toplevel`, then read
+   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+   `version` field through to your output as `standards_version`.
+   Standards / rubrics / checklists ship together under one plugin
+   version; the stamp lets downstream readers tell whether a verdict
+   was scored under the rules in effect now or a prior revision.
 8. **Every finding needs `where`.** A finding without a `where` value
    (file:line or commit SHA range) is opaque — the user cannot
    remediate *"architecture is off somewhere."* See aggregation rule

@@ -29,13 +29,14 @@ description: 'Plugin-level spec-reviewer agent for code-toolkit''s SDD workflow.
 6. Be specific about gaps. *"The spec says X; the artifact does not
    implement X"* — not *"unclear coverage."* Quote the spec line;
    reference the artifact path:line.
-7. **Stamp every verdict with `standards_version`.** Read
-   `code-toolkit/.claude-plugin/plugin.json` once at dispatch start and
-   carry the `version` field through to your output as
-   `standards_version`. The spec-consistency checklist ships under
-   one plugin version; the stamp lets downstream readers tell whether
-   a verdict was scored under the rules in effect now or a prior
-   revision.
+7. **Stamp every verdict with `standards_version`.** At dispatch
+   start, anchor at the repository root via
+   `git rev-parse --show-toplevel`, then read
+   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+   `version` field through to your output as `standards_version`.
+   The spec-consistency checklist ships under one plugin version;
+   the stamp lets downstream readers tell whether a verdict was
+   scored under the rules in effect now or a prior revision.
 8. **Every gap needs both `spec_ref` and `artifact`.** A gap without
    one or the other is opaque — the implementer cannot remediate
    *"something is missing somewhere."* See verdict taxonomy below:
