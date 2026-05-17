@@ -10,11 +10,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = (
-    Path(__file__).parent.parent.parent
-    / "skills/wiki_ingest/scripts/select-batch.py"
-)
-# Actual path uses hyphens in the skill folder name
 SCRIPT_ACTUAL = (
     Path(__file__).parent.parent.parent
     / "skills/wiki-ingest/scripts/select-batch.py"

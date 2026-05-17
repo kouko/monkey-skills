@@ -63,7 +63,7 @@ Read the user's most recent message and apply the decision table below. No `AskU
 - **Path**: token contains `/` AND does not end with `.md`
 - **Single-file**: token ends with `.md` (whether a full path or bare basename)
 - **Time keyword**: case-insensitive substring match for ASCII keywords; exact equality for CJK keywords (no case concept)
-- **Topic word**: any non-empty token not matched by the above three rules — activates `topic_filter` in commit 2. Claude passes `TOPIC_FILTER=<topic>` env var to `select-batch.py`; the script applies case-insensitive ASCII substring match on basename AND exact match on frontmatter `tags` / `aliases` values. Scope = `whole_vault` + topic filter (only matching files proceed past STEP 3).
+- **Topic word**: any non-empty token not matched by the above three rules — activates `topic_filter`. Claude passes `TOPIC_FILTER=<topic>` env var to `select-batch.py`; the script applies case-insensitive ASCII substring match on basename AND exact match on frontmatter `tags` / `aliases` values. Scope = `whole_vault` + topic filter (only matching files proceed past STEP 3).
 
 ### STEP 1 summary line
 
@@ -125,9 +125,9 @@ printf '%s\n' "${new_and_modified_paths[@]}" \
 | Key | Use |
 |---|---|
 | `batch` | Ordered list of vault-relative paths to process in STEP 4 (≤ cap) |
-| `remaining` | Deferred paths (surfaced in STEP 6 next-batch preview — commit 3 scope; omit in commit 1) |
+| `remaining` | Deferred paths (surfaced in STEP 6 next-batch preview) |
 | `skipped_unchanged` | Count of UNCHANGED files (informational) |
-| `scope_summary` | Date-range metadata for STEP 6 report (commit 3 scope; omit in commit 1) |
+| `scope_summary` | Date-range metadata for STEP 6 report |
 
 STEP 4's per-source loop iterates over the `batch` list in the order returned by the script.
 

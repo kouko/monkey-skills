@@ -107,9 +107,11 @@ The sort direction for dated files is controlled by `BATCH_ORDER`. The value rea
 
 **`BATCH_ORDER` accepted values**: `oldest-first` or `newest-first`. Any other value causes the script to exit with code `2` and print an error to stderr.
 
-**`TOPIC_FILTER` interaction**: `TOPIC_FILTER` is a case-insensitive substring filter applied to a file's basename, frontmatter tags, and frontmatter aliases. It is applied **after** the NEW/MODIFIED bucket is built and **before** the date sort + cap. Files that do not match the filter are excluded from `to_process` entirely (they are neither in `batch` nor `remaining`). The order override matrix is independent of `TOPIC_FILTER`; after filtering, the surviving files are sorted and capped normally.
+**`TOPIC_FILTER` interaction**: `TOPIC_FILTER` is a case-insensitive ASCII substring filter applied to a file's basename AND case-insensitive exact-element match on frontmatter `tags` and `aliases` list values. It is applied **after** the NEW/MODIFIED bucket is built and **before** the date sort + cap. Files that do not match the filter are excluded from `to_process` entirely (they are neither in `batch` nor `remaining`). The order override matrix is independent of `TOPIC_FILTER`; after filtering, the surviving files are sorted and capped normally.
 
-Case-insensitivity uses Python's `str.casefold()` on the basename; for CJK characters, substring matching works directly on Unicode codepoints via the `in` operator without normalization.
+Matching logic:
+- **Basename**: case-insensitive ASCII substring match via `str.casefold()`.
+- **Tags / Aliases**: case-insensitive element match — the filter must equal one casefolded value in the list exactly, not just appear as a substring within a value.
 
 ```
 candidates

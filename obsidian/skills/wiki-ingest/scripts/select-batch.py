@@ -249,33 +249,6 @@ def _resolve_date(abs_path: Path) -> tuple[str | None, str]:
 
 
 # ---------------------------------------------------------------------------
-# Sorting key
-# ---------------------------------------------------------------------------
-
-def _sort_key(item: dict, reverse: bool) -> tuple:
-    """Return a tuple for sorting.
-
-    Dated items sort before undated:
-      (0, date_str) — dated; date_str sorts lexicographically (ISO 8601 safe)
-      (1, mtime)    — undated; always at tail, sorted by mtime asc within tail
-    """
-    if item["date"] is None:
-        # Undated always at tail; sort within tail by mtime asc (regardless of order)
-        return (1, item["mtime"])
-    # Dated: primary bucket 0; within dated, direction controlled by caller
-    date_str = item["date"]
-    if reverse:
-        # Flip lexicographic order: prefix with a negated value is awkward for
-        # strings, so invert via a tuple trick: (0, '') sorts before (0, 'z').
-        # For newest-first we want larger dates first, which means reversed sort.
-        # We return the tuple normally but the caller uses reverse=True on the
-        # dated items; undated still go to tail regardless.
-        # Simpler: use a decorated sort below.
-        return (0, date_str)
-    return (0, date_str)
-
-
-# ---------------------------------------------------------------------------
 # Scope summary helpers
 # ---------------------------------------------------------------------------
 
