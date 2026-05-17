@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when a task takes >1 hour OR touches >1 module — splits the work into atomic ≤5-minute units and dispatches three subagents per unit (implementer / spec-reviewer / code-quality-reviewer). The implementer works under the TDD iron law; the two reviewers produce verdicts (PASS / PASS_WITH_NOTES / NEEDS_REVISION) grounded in the 7 standards + 2 rubrics + 2 checklists functional-copied from `domain-teams:code-team`. SDD・サブエージェント駆動開発・並列レビュー。SDD・子代理驅動開發・三角審查。
-version: 0.1.0-draft
+version: 0.7.0
 ---
 
 ## Continuous execution
@@ -47,9 +47,9 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 
 For each atomic task in the plan:
 
-1. **Dispatch `implementer`** with the task description + context paths + resource paths (see [`agents/implementer-prompt.md`](agents/implementer-prompt.md)). Wait for return.
+1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)). Wait for return.
 2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → surface the question to the user, do not dispatch reviewers. If `status: BLOCKED` → apply the unblock step or surface to user.
-3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls). Wait for both.
+3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls) — both are plugin-level agents (v0.6.0 / P15-12 Phase 2): `Agent({subagent_type: "code-toolkit:spec-reviewer"})` + `Agent({subagent_type: "code-toolkit:code-quality-reviewer"})`. See [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) + [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) for input/output contracts. Wait for both.
 4. **Resolve verdicts** per the rule below.
 5. **Move to the next task** unless the resolution requires re-dispatch.
 
@@ -89,30 +89,30 @@ The orchestrator never silently dismisses a `BLOCKED` — even if the unblock st
 
 ## Prompt templates
 
-Three role-defined subagent prompts; the orchestrator substitutes `{…}` placeholders when dispatching:
+Three role-defined plugin-level subagents (v0.6.0 / P15-12 complete); all carry the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into their system prompts.
 
-- [`agents/implementer-prompt.md`](agents/implementer-prompt.md) — worker; produces code + tests + status.
-- [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list.
-- [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — evaluator; produces three-valued verdict + six-dimension scores + flags.
+- **implementer** — worker; produces code + tests + status. [`code-toolkit/agents/implementer.md`](../../agents/implementer.md). Dispatch via `Agent({subagent_type: "code-toolkit:implementer"})`. Shipped v0.5.2 / P15-12 Phase 1.
+- **spec-reviewer** — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list. [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md). Dispatch via `Agent({subagent_type: "code-toolkit:spec-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
+- **code-quality-reviewer** — evaluator; produces three-valued verdict + six-dimension scores + flags. [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md). Dispatch via `Agent({subagent_type: "code-toolkit:code-quality-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
 
 Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluate code quality; code-quality-reviewer **cannot** evaluate spec coverage. Mixing the two collapses the signal at the orchestrator level.
 
 ## Cross-skill contract
 
 - **[`tdd-iron-law`](../tdd-iron-law/SKILL.md)** — implementer prompts must load this skill before writing code. The reviewer's `tests` dimension scores against `standards/tdd-standard.md` (functional copy of code-team SSOT).
-- **`writing-plans`** (Phase 2) — produces the task list SDD consumes. Until Phase 2 ships, the orchestrator may draft a ≤5-task plan inline and ask the user to approve it.
-- **`finishing-a-development-branch`** (Phase 3) — runs after the last task is DONE; delegates to `dev-workflow:git-memory` for commit-message memory.
+- **`writing-plans`** — produces the task list SDD consumes.
+- **`finishing-a-development-branch`** — runs after the last task is DONE; delegates to `dev-workflow:git-memory` for commit-message memory.
 - **`domain-teams:code-team`** — passive gate; not invoked by SDD directly. The knowledge layer here is a functional copy of code-team's standards / rubrics / checklists, kept byte-identical by `scripts/distribute.py` + `scripts/verify-drift.py`.
 
 ## Knowledge layer
 
-`standards/`, `rubrics/`, `checklists/` under this skill are byte-identical functional copies (plus a 5-line SSOT header) of `domain-teams/skills/code-team/{standards,rubrics,checklists}/`. To edit a rule:
+`standards/`, `rubrics/`, `checklists/` under this skill are byte-identical functional copies (plus a 5-line SSOT header) of the canonical `code-team` knowledge layer (which lives in the sibling `domain-teams` plugin). To edit a rule:
 
-1. Land the edit in `domain-teams/skills/code-team/...` (canonical).
+1. Land the edit in the canonical `code-team` source.
 2. In the same commit, run `python3 code-toolkit/scripts/distribute.py`.
 3. CI's `verify-drift.py` enforces byte-identity.
 
-See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the full pointer table.
+See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the full pointer table (canonical paths + functional-copy destinations).
 
 ## What this skill does NOT do
 
@@ -124,9 +124,10 @@ See [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for
 
 ## See also
 
-- [`agents/implementer-prompt.md`](agents/implementer-prompt.md)
-- [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md)
-- [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md)
+- [`code-toolkit/agents/implementer.md`](../../agents/implementer.md) — plugin-level implementer (v0.5.2+).
+- [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) — plugin-level spec-reviewer (v0.6.0+).
+- [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) — plugin-level code-quality-reviewer (v0.6.0+).
+- [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md) — SSOT for the 12-rule engineering baseline embedded in every plugin-level agent.
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md)
 - [`../using-code-toolkit/SKILL.md`](../using-code-toolkit/SKILL.md)
 - [`../../TECH-SPEC.md`](../../TECH-SPEC.md) §3.3–3.4 — interface contracts.

@@ -1,11 +1,11 @@
 ---
 name: brainstorming
 description: 'Use BEFORE implementing — for any task that touches new behavior, new module boundaries, or non-obvious design space. Enforces a HARD-GATE: explore intent and alternatives FIRST through a 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete), then emit a structured brief that writing-plans consumes. Refuses "this is simple", "I know what to build", "let''s just start coding" rationalizations. Grounded in Jobs-To-Be-Done (Christensen 1997, ISBN 978-0875845852) and Klement (2018) job-story format. ブレインストーミング・要件発掘・先に探索。腦力激盪・需求探索・先想清楚再寫。'
-version: 0.2.0-draft
+version: 0.7.0
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / debugger), the parent orchestrator already finished discovery. **Do not** re-route through this skill. Follow your dispatched prompt directly.
+If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer), the parent orchestrator already finished discovery. **Do not** re-route through this skill. Follow your dispatched prompt directly.
 </SUBAGENT-STOP>
 
 ## The HARD-GATE
@@ -71,13 +71,95 @@ Examples of "smaller than first ask":
 
 This axis often delegates to `dev-workflow:complexity-critique` for systematic deletion-first triage. See §Cross-skill delegation.
 
-### Axis 4 — Alternatives Considered
+### Axis 4 — Alternatives Considered (**research-grounded, not imagined**)
 
 What are 2-3 other ways this could be solved, and why were they rejected? Force the user (or yourself, in conversation with the user) to enumerate.
 
 The point is not to pick from the alternatives — it is to make the chosen path's trade-offs visible. *"We picked X over Y because Z"* is a sentence that survives 6 months of context loss; *"X is the obvious choice"* does not.
 
-If you cannot articulate 2-3 alternatives, you have not explored enough. Push for more — *"what if we did nothing,"* *"what if we did it manually for a quarter and revisited,"* *"what if we delegated to an existing tool."*
+#### Research protocol — the SHIPPED industry options, not imagined ones
+
+Run **WebSearch** to find what the industry currently does for this problem class. The agent's training data is frozen; current consensus may have shifted. *"Alternatives I can imagine"* is the failure mode this protocol exists to prevent — it produces alternatives that don't exist (hallucinated libraries, deprecated patterns, decade-old advice).
+
+**Search query patterns** (use 2-3 of these per axis, mix-and-match):
+
+| Pattern | Example for "rate limiting algorithm" |
+|---|---|
+| `<topic> industry best practice 2025` | "rate limiting algorithm industry best practice 2025" |
+| `<topic> trade-offs <year>` | "rate limiting algorithm trade-offs 2025" |
+| `<topic> open source library` | "rate limiting open source library node.js" |
+| `<topic> RFC` / `<topic> spec` | "rate limiting RFC 6585 retry-after" |
+| `<topic> HackerNews` / `<topic> reddit` | "rate limiting algorithm hackernews discussion" |
+| `<vendor> <topic>` | "Cloudflare rate limiting algorithm" / "AWS API Gateway rate limiting" |
+
+#### Multilingual coverage — at minimum English + Japanese
+
+For every Axis 4 research round, run **at least one English search AND at least one Japanese search**. Single-language search is sampling bias.
+
+**Why both languages**:
+
+- Japanese engineering blogs (Qiita / Zenn / はてなブログ / 個人 Tech Blog) often cover details + 失敗事例 / post-mortems the English web misses
+- Japanese-developed tech (Mercari / Cookpad / LINE / Sansan / SmartHR / freee / DeNA) frequently documented only in Japanese
+- Cross-language consensus is a stronger signal than single-language consensus — when EN + JA agree, the recommendation is robust; when they disagree, the disagreement itself is a finding
+- Domain-specific gap example: for encoding security, English search underrepresents 文字コード attack vectors that 徳丸本 第 2 版 Ch.6 catches
+
+**Bilingual query patterns** (mix EN + JA in the same search round):
+
+| Lang | Pattern | Example for "rate limiting algorithm" |
+|---|---|---|
+| EN | `<topic> industry best practice 2025` | "rate limiting algorithm industry best practice 2025" |
+| JA | `<topic 日本語> 設計 ベストプラクティス 2025` | "レート制限 アルゴリズム 設計 ベストプラクティス 2025" |
+| JA | `<topic 日本語> 実装事例 / 採用事例` | "レート制限 Stripe 実装事例" |
+| JA | `<vendor 日本語名> <topic 日本語>` | "メルカリ レート制限" / "クックパッド rate limiting" |
+| JA | `<topic 日本語> Qiita` / `<topic 日本語> Zenn` | "レート制限 アルゴリズム Qiita" |
+
+Cite sources in **both languages** in the output format. Label each citation with its source language (EN / JA) so the user can audit coverage at a glance.
+
+**If a Japanese-language search returns 0 relevant hits**, surface that as a finding — *"Searched in 日本語 with patterns X, Y; 0 relevant Japanese-language results — this topic appears to have English-only industry coverage."* Don't silently skip the language axis; the empty result IS the signal.
+
+**Output format** — when surfacing alternatives to the user, structure as:
+
+```
+Industry approaches found (3, via WebSearch):
+
+1. <Approach name> — <source citation, e.g. RFC 6585, Cloudflare blog, Stripe API docs>
+   • Pros: <2-3 bullets>
+   • Cons: <2-3 bullets>
+   • Used by: <named vendors / open-source projects>
+
+2. <Approach name> — <source>
+   ...
+
+3. <Approach name> — <source>
+   ...
+
+My take (given your context):
+  Recommend: <approach #N>
+  Why: <1-2 sentences tying recommendation to user's brief + constraints>
+  Conditional reversal: <if X changes, prefer approach #M instead>
+```
+
+#### If WebSearch is unavailable
+
+Surface the limitation **explicitly** to the user — do NOT silently fall back to imagined alternatives.
+
+> *"WebSearch is unavailable in this session. I can articulate alternatives from memory but my training cutoff is <date> — current industry consensus may have shifted. Want me to (a) proceed with from-memory alternatives flagged as 'unverified vintage', (b) defer the decision until you can re-run in a session with WebSearch, or (c) you research and paste findings?"*
+
+The point is informed consent: the user knows the alternatives weren't verified.
+
+#### When ≤3 alternatives genuinely exist
+
+If WebSearch returns "the industry has only ever had 2 approaches to this," that's a valid output. Document it: *"Searched X, Y, Z; only 2 distinct approaches found in current industry use; neither has obvious technical advantage."* Don't pad with bad alternatives just to hit 3.
+
+#### Anti-patterns
+
+- ❌ **"Alternatives I can think of"** — agent's training data is frozen; alternatives I-can-think-of are dated. Use WebSearch.
+- ❌ **Single-source research** — if all 3 alternatives come from one blog post, the research is shallow. Cross-source.
+- ❌ **Single-language coverage** — research limited to one language is sampling bias. Per §Multilingual coverage, at minimum EN + JA required; cite sources in both, label each by source language.
+- ❌ **Surface options without trade-offs** — listing 3 algorithm names with no pros/cons is decoration, not decision-support.
+- ❌ **No "my take"** — research that doesn't end in agent's recommendation pushes the synthesis cost back to the user. Agent's job is to compress research INTO a recommendation, surface the recommendation, and document the reasoning so user can override.
+
+This research protocol is also referenced by **router rule #5** (Research before asking) for decisions that arise OUTSIDE the brainstorming-Axis-4 context — e.g. SDD implementer asks "which retry strategy?" mid-execution. Same protocol applies; same output format.
 
 ### Axis 5 — What Becomes Obsolete
 

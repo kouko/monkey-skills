@@ -134,14 +134,22 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P15-1 | `hooks/session-start` 加 `CODE_TOOLKIT_MODE=off` 退場條件 | Phase 0 規劃 | ✅ 已 ship（commit 9cba15c，Phase 1 一併做了） |
 | P15-2 | `tdd-iron-law` SKILL.md — Feathers (2004) ISBN 978-0131177055 distinction | Phase 1 ritual feedback（`i-already-wrote-it.txt` 沒區分 legacy 與 violation） | ✅ 已 ship（v0.2.1） |
 | P15-3 | `systematic-debugging` SKILL.md — description tuning for production-bug auto-fire | Phase 2 ritual feedback（`silence-with-try-except.txt` 沒 auto-load specialist） | ✅ 已 ship（v0.2.1） |
-| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | ⏳ 待真實 dogfood — 不知道哪個 skill 太強 / 何種放鬆規則之前無法設計 |
-| P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | ⏳ 待真實使用 session（ritual 不算 — ritual 是 synthetic prompt，dogfood 是 natural flow） |
+| P15-4 | `--soft-mode` flag for Iron Law strength (OQ-1) | Phase 0 OQ-1 | 🔄 **重定義為 post-v0.7.0 backlog** — across v0.5.x → v0.6.x ship cycle 沒有任一 skill 浮現「過強」signal；HARD-GATEs 全部 earned their strictness。Dogfood #1 §"What didn't work" 提出 P15-4 可能是 YAGNI，等 dogfood #2-#5 累積後決定 retire 或實做 |
+| P15-5 | `research/dogfood-2026-05-XX.md` × ≥5 | Phase 0 規劃 | 🔄 **重定義為 ongoing post-ship capture** — v0.7.0 ship 時 ≥1 retroactive 已存（`research/dogfood-2026-05-16-self-toolkit-architectural-shift.md`，scope=meta）；接下來 4 個從 external real-work sessions 收（natural flow，非 ritual）。原本「ship-blocking」性質改為「v1.0.0 GA 前累積」。Chicken-and-egg 破解：dogfood 需要 plugin deploy → deploy 需要 ship → 所以先 ship 收集 dogfood |
+| P15-6 | `scripts/check-skill-structure.py` allowlist — `agents/` + `scripts/` + `assets/` | Phase 3 verification-before-completion ritual（v0.3.0 close-out） | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
+| P15-7 | SKILL.md plugin-rooted-path reframes (SDD + tdd-iron-law) | Phase 3 verification ritual + CHK-SKL-011 | ✅ 已 ship（v0.3.0 commit 66f6d5a） |
+| P15-8 | 10 個 skill frontmatter `version:` 與 plugin manifest 對齊（皆 bump 至 v0.4.0-draft） | v0.4.0-draft Phase 2 ritual feedback（version-stamp drift caught by requesting-code-review cross-task-coherence dimension） | ✅ 已 ship（v0.4.0） |
+| P15-9 | `tests/integration/test-superpowers-mode-{on,off}.sh` — 區分 installed vs enabled；installed-but-not-enabled SKIP 而非 PASS | v0.4.0-draft Phase 4 ritual Session 4-5（superpowers 在 user 機器 installed 但 `enabledPlugins` 沒包含；coexistence live verification deferred） | ✅ 已 ship（v0.4.0） |
+| P15-10 | Router rule #5 "Research before asking" + brainstorming Axis 4 research protocol (WebSearch-grounded alternatives, not imagined) | User pain pattern: 重複手動要求 "先 search 業界實踐"。Option D — minimum-invasive: 1 router rule + 1 Axis 4 inline protocol；無新 skill | ✅ 已 ship（v0.5.0 — ritual PASS + ~12 emergent behaviors） |
+| P15-11 | brainstorming Axis 4 §Multilingual coverage — EN + JA minimum；bilingual query patterns table；single-language anti-pattern | User extension request post-P15-10: 9-source rate-limiting bibliography 100% 英文 → 顯示出單語言 sampling bias；Mercari / Cookpad / Qiita / Zenn / 徳丸本 等日文 sources 系統性遺漏 | ✅ 已 ship（v0.5.1，ritual PASS — validated via v0.5.2 natural-flow ritual: 4 parallel WebSearches 2 EN + 2 JA unprompted; FSA Japan 2026 JA-only regulatory finding surfaced; メルカリ engineering blog cited; cross-language consensus + JA-specific conditional reversal） |
+| P15-12 (Phase 1) | Plugin-level agent files (`code-toolkit/agents/`) + 12-rule engineering baseline SSOT (`scripts/_baseline.md`) + `distribute.py` / `verify-drift.py` extension for in-file baseline-block sync. Phase 1 scope: 1 agent (`implementer.md`) as proof-of-mechanism. | User adopted 12-rule CLAUDE.md template + asked "為何不全部塞 agent file"。Active-enforcement need: baked-into-system-prompt > passive reference doc. SSOT-and-functional-copy pattern extended from whole-file (existing) to in-file section (new). | ✅ 已 ship（v0.5.2，ritual PASS — (a) plugin-level agent resolved cleanly via `Agent({subagent_type:"code-toolkit:implementer"})`; (b) baseline visible in system prompt (agent quoted Rule 1 + Rule 12 verbatim); (c) returned BLOCKED rather than NEEDS_CONTEXT — stronger than predicted, agent correctly discriminated "ask-and-proceed" vs "external-state-must-change"; bonuses: refused "work without stopping" reminder as fabrication cover, cited TDD-iron-law cross-skill content unprompted） |
+| P15-12 (Phase 2) | Promote remaining 3 agents to plugin-level (`spec-reviewer` / `code-quality-reviewer` / `code-reviewer`)；each gets baseline injection via SSOT; per-skill `agents/` dirs emptied → CHK-SKL-012 false-positive 自然消解。systematic-debugging 沒有 agent 目錄，no debugger.md in this batch. | Phase 1 ritual PASS 之後執行 — 是 v0.6.0 minor-version scope | ✅ 已 ship（v0.6.0，two rituals PASS — Ritual A: SDD triad parallel dispatch validated spec-reviewer + code-quality-reviewer plugin-level resolution + baseline injection; Ritual B: code-reviewer whole-branch review caught 5 real doc-drift findings (all fixed before drop-draft) — cross-task-coherence dimension worked as designed） |
 
 **Acceptance（rolling）**：
-- ✅ P15-1（CODE_TOOLKIT_MODE=off 退場機制可運作）
-- ✅ P15-2（Feathers distinction 在 SKILL.md §Legitimate legacy-code backfill）
-- ✅ P15-3（systematic-debugging description 含 production-bug 詞彙 11/15 keyword hits）
-- ⏳ P15-4 / P15-5（等真實 dogfood data）
+- ✅ P15-1 / P15-2 / P15-3 / P15-6 / P15-7 / P15-8 / P15-9 / P15-10 / P15-11 / P15-12-Phase1 / P15-12-Phase2 / P15-14（12 of 13 closed; v0.7.0 ship gate satisfied）
+- 🔄 P15-4 / P15-5（重定義為 post-v0.7.0 — v0.7.0 ship 不阻擋；P15-5 ≥1 retroactive 已收，剩 4 個從 external real-work sessions 累積；P15-4 等 dogfood data 決定 retire 或實做）
+- ℹ️ CHK-SKL-012 false-positive (`agents/` not in OPTIONAL_SUBDIRS allowlist of `scripts/check-skill-structure.py`) — naturally resolved by P15-12 Phase 2 (per-skill `agents/` dirs removed). Underlying script allowlist gap still present but no longer surfaces for code-toolkit. Tracked as P15-13 for future cleanup if other plugins hit it.
+- ℹ️ P15-14 (v0.6.1) — doc-drift cleanup post-v0.6.0 ritual: TECH-SPEC.md / README.md / tests/integration/README.md / tests/codex-cli/README.md updated to reflect v0.6.0 architectural state (4 plugin-level agents + SSOT baseline injection). Pure documentation; no architectural / contract / behavior change.
 
 ---
 
@@ -179,18 +187,23 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 ### 交付物
 
-| 模組 | 檔案 |
-|---|---|
-| Codex plugin | `.codex-plugin/plugin.json` v0.2.5（含 `interface` block，mirror Superpowers） |
-| Tool mapping | `skills/using-code-toolkit/references/codex-tools.md`（完整） |
-| Hook adapt | `hooks/session-start` JSON 輸出加 Codex CLI 期望的 `additional_context` top-level key |
-| Tests | `tests/codex-cli/test-skill-loading.sh` + `tests/codex-cli/test-hook-injection.sh` |
+**Note 2026-05-16**: Phase 2.5 重新編號至 **v0.4.0**（原規劃 v0.2.5，但 Phase 3 先 ship 為 v0.3.0；Phase 2.5 內容自然落在 v0.4.0 minor bump — 新 harness 是 minor feature）。
+
+| 模組 | 檔案 | v0.4.0 status |
+|---|---|---|
+| Codex plugin | `.codex-plugin/plugin.json` v0.4.0-draft（含 `interface` block，mirror Superpowers） | ✅ build done |
+| Tool mapping | `skills/using-code-toolkit/references/codex-tools.md`（完整 + ⚠️ TBD verify markers） | ✅ build done |
+| Hook adapt | `hooks/session-start` 已從 v0.1.0 emit `additional_context` top-level key（已驗證 offline，6717 chars） | ✅ done since v0.1.0 |
+| Tests | `tests/codex-cli/test-skill-loading.sh` + `test-hook-injection.sh` + `README.md` | ✅ build done |
 
 ### Acceptance test
 
-- Codex CLI `plugin install` 跑得通
-- Codex session 啟動 → using-code-toolkit 自動載入
-- 在 Codex 跑同樣的 TDD 鐵律壓測 × 5 → 5/5 拒絕
+- ✅ build 完成（v0.4.0-draft 落地）
+- ⏳ Codex CLI `plugin install` 跑得通（待使用者跑 verification ritual）
+- ⏳ Codex session 啟動 → using-code-toolkit 自動載入（待 ritual）
+- ⏳ 在 Codex 跑同樣的 TDD 鐵律壓測 × 5 → 5/5 拒絕（待 ritual）
+
+**Phase 2.5 BUILD vs VERIFICATION 分割**：build artifacts 落地（manifest / docs / scripts）= v0.4.0-draft；verification ritual 跑 PASS = drop -draft → v0.4.0。同 Phase 1 / 2 / 3 的 -draft 慣例。
 
 ---
 

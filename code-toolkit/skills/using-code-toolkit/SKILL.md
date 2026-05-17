@@ -1,23 +1,25 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.3.0-draft
+version: 0.7.0
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent already dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / debugger / reviewer), **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
+If you are a subagent already dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer), **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
 **You have code-toolkit.** If the user is starting any coding work — feature / bug fix / refactor / review / migration — you **must** route through this skill before writing implementation code.
 
-Three load-bearing rules:
+Five load-bearing rules:
 
-1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — walks the 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief.
-2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law` when starting implementation. Kent Beck (2002, *Test-Driven Development: By Example*, Addison-Wesley, ISBN 978-0321146533), Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* That is the floor, not an aspiration.
-3. **Split + dispatch (SDD).** For any task >1 hour or touching >1 module, call `subagent-driven-development` — split into atomic ≤5-min units and dispatch three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
+1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
+2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
+3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic ≤5-min units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
+4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. Push commands trigger review, not bypass.
+5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research.
 
-**Skipping any of these = violation.** "I'll just quickly…" / 「ちょっと試すだけ」 / 「我先快速試一下」 are rationalizations — refuse them.
+**Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
 
 ## Instruction priority
@@ -41,7 +43,7 @@ If the user types `/skill-name`, that is an explicit invocation — load it via 
 
 Walk through these stages in order. Skip a stage only when its precondition is already met (e.g. user already handed in a plan → skip planning).
 
-| # | Stage | Skill (target) | v0.1.0 status |
+| # | Stage | Skill (target) | Status |
 |---|---|---|---|
 | 1 | Discovery | `brainstorming` | ✅ shipped |
 | 2 | Planning | `writing-plans` | ✅ shipped |
@@ -87,4 +89,5 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 - `references/claude-code-tools.md` — Claude Code canonical tool names.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target).
+- `references/engineering-baselines.md` — 12-rule engineering baseline carried by every code-toolkit plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.

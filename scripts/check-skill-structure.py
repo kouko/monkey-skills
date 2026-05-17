@@ -372,7 +372,15 @@ def check_chk_skl_011(skill_dir: Path) -> list[CheckError]:
 # ---------------------------------------------------------------------------
 
 REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
-OPTIONAL_SUBDIRS = {"research", "references"}
+# Optional subdirs allowed across all plugins per CLAUDE.md §Skill Structure:
+#   research/ + references/ — documentation / grounding evidence
+#   agents/ + scripts/ + assets/ — runtime assets that ship with the skill
+# Router skills and process-toolkit-style skills (e.g. code-toolkit) often
+# have agents/ + scripts/ instead of the 4 REQUIRED_SUBDIRS; the router-skill
+# exemption in CHK-SKL-012 already handles the "no protocols/" case, but the
+# optional subdirs list must include agents/ + scripts/ + assets/ so they
+# are not flagged as "unexpected subdirectory" by check_chk_skl_012.
+OPTIONAL_SUBDIRS = {"research", "references", "agents", "scripts", "assets"}
 RESEARCH_FILENAME = re.compile(r"^grounding-v\d+\.\d+\.\d+\.md$")
 
 

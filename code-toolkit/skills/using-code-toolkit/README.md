@@ -14,7 +14,7 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 
 ## What it routes between
 
-| Stage | Skill | v0.1.0 status |
+| Stage | Skill | Status |
 |---|---|---|
 | Discovery | [`brainstorming`](../brainstorming) | ✅ shipped |
 | Planning | [`writing-plans`](../writing-plans) | ✅ shipped |

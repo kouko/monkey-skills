@@ -1,7 +1,7 @@
 ---
 name: tdd-iron-law
 description: 'Use when implementing any feature, bug fix, refactor, or migration — before writing implementation code. Enforces "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" as a non-negotiable iron law, grounded in Kent Beck (2002) Test-Driven Development: By Example (Addison-Wesley, ISBN 978-0321146533) Preface + Ch.1 + Part II and Robert C. Martin (2008) Clean Code Ch.9 Three Laws of TDD. Exception path (throwaway / generated / pure config) is enumerated in §When NOT to Use. Distinguishes Iron Law violation (code you just wrote without tests) from legitimate legacy-code backfill (Feathers 2004 Working Effectively with Legacy Code, ISBN 978-0131177055, Characterization Tests Ch.13) — see §Legitimate legacy-code backfill. TDD・テスト駆動開発・鉄則・レガシーコード区別。TDD 鐵律・先寫測試・區分 legacy code。'
-version: 0.1.0-draft
+version: 0.7.0
 ---
 
 ## The Iron Law
@@ -130,7 +130,7 @@ Skipping this diagnostic is how tests-pass-but-bug-still-ships happens. Beck (20
 
 - **`subagent-driven-development`** dispatches implementer subagents that work under this Iron Law. The implementer prompt loads this skill before writing any code.
 - **`verification-before-completion`** (Phase 3) re-checks that every behavior shipped in the diff has a corresponding failing-then-passing test in commit history.
-- **`domain-teams:code-team`** evaluator subagent applies `tdd-standard.md` as one dimension of `rubrics/quality-gate.md` scoring. This skill's `standards/tdd-standard.md` is a byte-identical functional copy of that file plus a SSOT header — the canonical version lives at `domain-teams/skills/code-team/standards/tdd-standard.md`.
+- **`domain-teams:code-team`** evaluator subagent applies `tdd-standard.md` as one dimension of `rubrics/quality-gate.md` scoring. This skill's `standards/tdd-standard.md` is a byte-identical functional copy of that file plus a SSOT header — see [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) for the canonical source location.
 
 ## Reference
 

@@ -144,6 +144,92 @@ def distribute(route: dict[str, list[str]] | None = None) -> int:
     return written
 
 
+# ─── Agent baseline injection (P15-12) ──────────────────────────────────────
+#
+# Plugin-level agent files in ``code-toolkit/agents/`` carry the 12-rule
+# engineering baseline as an embedded block between BEGIN/END markers. The
+# canonical text lives once in ``code-toolkit/scripts/_baseline.md``;
+# ``distribute_baselines`` rewrites the block in every routed agent to match.
+# This is the SSOT-and-functional-copy variant for in-file SECTIONS rather
+# than whole files.
+
+AGENT_BASELINE_SSOT_REL = "scripts/_baseline.md"
+AGENT_BASELINE_BEGIN = (
+    "<!-- BEGIN baseline-v1 — managed by "
+    "code-toolkit/scripts/distribute.py from "
+    "code-toolkit/scripts/_baseline.md — do not edit in place -->"
+)
+AGENT_BASELINE_END = "<!-- END baseline-v1 -->"
+
+# Routing: agent files that embed the baseline block. Add new agent files
+# here when promoting them to plugin-level.
+#
+# v0.5.2 (P15-12 Phase 1): implementer.md (proof-of-mechanism)
+# v0.6.0 (P15-12 Phase 2): spec-reviewer.md + code-quality-reviewer.md +
+#                           code-reviewer.md (SDD reviewer pair + whole-branch
+#                           reviewer from requesting-code-review). systematic-
+#                           debugging has no agent directory; no debugger.md
+#                           in this batch.
+AGENT_BASELINE_TARGETS: list[str] = [
+    "agents/implementer.md",
+    "agents/spec-reviewer.md",
+    "agents/code-quality-reviewer.md",
+    "agents/code-reviewer.md",
+]
+
+
+def expected_baseline_text() -> str:
+    """Canonical text of the baseline block (the body of ``_baseline.md``)."""
+    src = ROOT / AGENT_BASELINE_SSOT_REL
+    return src.read_text(encoding="utf-8").rstrip("\n")
+
+
+def expected_agent_text(agent_rel: str) -> str:
+    """Reconstruct the expected on-disk text of an agent file by rebuilding
+    its baseline block from SSOT and leaving role-contract / other content
+    untouched. Raises ``ValueError`` if the agent lacks the BEGIN/END markers.
+    """
+    dst = ROOT / agent_rel
+    content = dst.read_text(encoding="utf-8")
+    begin_idx = content.find(AGENT_BASELINE_BEGIN)
+    end_idx = content.find(AGENT_BASELINE_END)
+    if begin_idx == -1 or end_idx == -1:
+        raise ValueError(
+            f"{agent_rel}: missing BEGIN or END baseline marker"
+        )
+    if begin_idx >= end_idx:
+        raise ValueError(
+            f"{agent_rel}: BEGIN marker appears at/after END marker"
+        )
+
+    baseline = expected_baseline_text()
+    before = content[: begin_idx + len(AGENT_BASELINE_BEGIN)]
+    after = content[end_idx:]
+    return before + "\n" + baseline + "\n" + after
+
+
+def distribute_baselines() -> int:
+    """Rewrite each routed agent's baseline block to match SSOT. Returns the
+    number of files actually rewritten (idempotent — no-op if already in
+    sync).
+    """
+    written = 0
+    for agent_rel in AGENT_BASELINE_TARGETS:
+        dst = ROOT / agent_rel
+        if not dst.is_file():
+            raise FileNotFoundError(f"agent missing: code-toolkit/{agent_rel}")
+        rebuilt = expected_agent_text(agent_rel)
+        current = dst.read_text(encoding="utf-8")
+        if rebuilt != current:
+            dst.write_text(rebuilt, encoding="utf-8")
+            written += 1
+            print(
+                f"[deploy-baseline] {AGENT_BASELINE_SSOT_REL} "
+                f"-> code-toolkit/{agent_rel}"
+            )
+    return written
+
+
 def main() -> int:
     if not CODE_TEAM_ROOT.is_dir():
         print(
@@ -154,10 +240,15 @@ def main() -> int:
         return 2
     try:
         n = distribute()
-    except FileNotFoundError as e:
+        b = distribute_baselines()
+    except (FileNotFoundError, ValueError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
-    print(f"\nOK: deployed {n} functional copies from code-team.")
+    print(
+        f"\nOK: deployed {n} functional copies from code-team "
+        f"+ synced baseline into {b} agent file(s) "
+        f"(of {len(AGENT_BASELINE_TARGETS)} routed)."
+    )
     return 0
 
 

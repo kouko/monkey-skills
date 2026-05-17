@@ -21,7 +21,14 @@ Agent(
 )
 ```
 
-Available `subagent_type` values vary by host configuration; common ones surface in the system prompt at startup. For `code-toolkit:subagent-driven-development`, the SDD orchestrator passes prompts via the `prompt` field — see `skills/subagent-driven-development/agents/*-prompt.md`.
+Available `subagent_type` values vary by host configuration; common ones surface in the system prompt at startup. code-toolkit ships 4 plugin-level agents (v0.6.0+) — dispatch via `subagent_type: "code-toolkit:<role>"`:
+
+- `code-toolkit:implementer` — SDD worker
+- `code-toolkit:spec-reviewer` — SDD per-task spec evaluator
+- `code-toolkit:code-quality-reviewer` — SDD per-task quality evaluator
+- `code-toolkit:code-reviewer` — whole-branch evaluator (requesting-code-review)
+
+Role contracts live at `code-toolkit/agents/<role>.md`. Each agent carries the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../../scripts/_baseline.md)) baked into its system prompt.
 
 ## File operations
 

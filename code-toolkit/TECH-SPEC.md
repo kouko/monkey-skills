@@ -10,6 +10,7 @@
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 0.1.0-draft | 2026-05-15 | kouko | Initial spec — 2-layer (process / knowledge) + SSOT-and-functional-copy from `domain-teams:code-team` + dual-harness (Claude Code + Codex CLI) |
+| 0.6.0 | 2026-05-16 | kouko | **Agent-layer migration** (P15-12 Phase 1+2): subagent prompts moved from per-skill `skills/<skill>/agents/*-prompt.md` (original layout below) to plugin-level `code-toolkit/agents/*.md`. 4 plugin-level agents (`implementer` / `spec-reviewer` / `code-quality-reviewer` / `code-reviewer`) each carry the 12-rule engineering baseline injected from SSOT at `scripts/_baseline.md` via `scripts/distribute.py`. Dispatch via `Agent({subagent_type: "code-toolkit:<role>"})`. §2.1, §2.4, §3.3, §3.4 below updated to reflect current layout; rationale in CHANGELOG v0.5.2 + v0.6.0 entries. |
 
 ---
 
@@ -112,10 +113,6 @@ code-toolkit/
     │   └── README × 3
     ├── subagent-driven-development/
     │   ├── SKILL.md
-    │   ├── agents/                    # subagent prompts
-    │   │   ├── implementer-prompt.md
-    │   │   ├── spec-reviewer-prompt.md
-    │   │   └── code-quality-reviewer-prompt.md
     │   ├── rubrics/                   # functional copies from code-team
     │   │   ├── quality-gate.md
     │   │   └── arch-gate.md
@@ -131,9 +128,20 @@ code-toolkit/
     │   │   ├── app-security-standard.md
     │   │   └── character-encoding-security.md
     │   └── README × 3
-    └── (Phase 2-3 adds: brainstorming / writing-plans / systematic-debugging /
+    └── (Phase 2-3 added: brainstorming / writing-plans / systematic-debugging /
           requesting-code-review / verification-before-completion /
-          using-git-worktrees / finishing-a-development-branch)
+          using-git-worktrees / finishing-a-development-branch — all shipped)
+
+  # Plugin-level layer (added v0.5.2 + v0.6.0 per P15-12)
+  agents/                              # plugin-level subagents (cross-plugin reusable)
+    implementer.md                     # role contract + injected 12-rule baseline
+    spec-reviewer.md
+    code-quality-reviewer.md
+    code-reviewer.md
+  scripts/
+    _baseline.md                       # SSOT — 12-rule engineering baseline
+    distribute.py                      # injects _baseline.md into each agent's BEGIN/END block
+    verify-drift.py                    # CI gate on SSOT integrity
 ```
 
 ### 2.2 Two-Layer Architecture
@@ -224,19 +232,29 @@ EOF
 
 ### 2.4 Subagent 串接資料流
 
+As of v0.6.0, all subagents are **plugin-level** — dispatch via
+`Agent({subagent_type: "code-toolkit:<role>"})`. Each agent file at
+`code-toolkit/agents/<role>.md` carries role contract + the 12-rule
+engineering baseline (injected from SSOT at `scripts/_baseline.md`).
+
 ```
-implementer-prompt.md
+code-toolkit:implementer   (agents/implementer.md)
   Input: task text + context paths + standards paths
   Output: code + test commits + status (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED)
 
-spec-reviewer-prompt.md
+code-toolkit:spec-reviewer   (agents/spec-reviewer.md)
   Input: artifact + spec path + checklists/spec-consistency.md
-  Output: PASS / NEEDS_REVISION + diff list
+  Output: PASS / NEEDS_REVISION + gap list
 
-code-quality-reviewer-prompt.md
+code-toolkit:code-quality-reviewer   (agents/code-quality-reviewer.md)
   Input: artifact + rubrics/quality-gate.md + rubrics/arch-gate.md +
          checklists/security-checklist.md + all 7 standards/
-  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + dimension scores
+  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 6-dimension scores + flags
+
+code-toolkit:code-reviewer   (agents/code-reviewer.md) — whole-branch scope
+  Input: branch diff + same rubrics + checklists + standards as above
+  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7-dimension scores
+          (adds cross-task-coherence dimension unique to branch scope)
 ```
 
 Reviewer 角色封閉（CLAUDE.md 慣例）：**只產 verdict 不修 artifact**。修訂由 implementer 接力重跑。
@@ -335,11 +353,16 @@ Sync via: code-toolkit/scripts/distribute.py
 | Process | per-task: implementer → spec-reviewer → code-quality-reviewer |
 | Model Selection | mechanical → cheap / integration → standard / architecture → most capable |
 | Status Handling | DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED |
-| Prompt Templates | `./agents/{implementer,spec-reviewer,code-quality-reviewer}-prompt.md` |
+| Subagent dispatch | Plugin-level — `code-toolkit/agents/{implementer,spec-reviewer,code-quality-reviewer}.md` (v0.6.0+; previously per-skill `./agents/*-prompt.md` in v0.1.0–v0.5.1) |
 
 ### 3.4 Subagent prompts
 
-**implementer-prompt.md** input contract:
+As of v0.6.0, plugin-level paths: `code-toolkit/agents/<role>.md`.
+Dispatch via `Agent({subagent_type: "code-toolkit:<role>"})`. Each
+agent's system prompt is the file content verbatim (YAML frontmatter
++ role contract + injected baseline block + input/output contract).
+
+**code-toolkit:implementer** (`agents/implementer.md`) input contract:
 ```
 ### Task
 {task text}
@@ -356,7 +379,7 @@ status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED
 artifacts: [commit SHAs, test results, self-review notes]
 ```
 
-**spec-reviewer-prompt.md** input contract:
+**code-toolkit:spec-reviewer** (`agents/spec-reviewer.md`) input contract:
 ```
 ### Artifact
 {commit SHA range or file paths}
@@ -372,7 +395,7 @@ verdict: PASS / NEEDS_REVISION
 gaps: [list of spec items not covered]
 ```
 
-**code-quality-reviewer-prompt.md** input contract:
+**code-toolkit:code-quality-reviewer** (`agents/code-quality-reviewer.md`) input contract:
 ```
 ### Artifact
 {commit SHA range or file paths}

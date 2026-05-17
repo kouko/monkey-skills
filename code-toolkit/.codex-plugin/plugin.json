@@ -1,7 +1,7 @@
 {
   "name": "code-toolkit",
-  "version": "0.3.0-draft",
-  "description": "Process-discipline + canon-grounded coding toolkit for Codex CLI — Superpowers-style workflow + 8-source primary-grounding from `domain-teams:code-team`. Phase 1 only ships Claude Code; this Codex manifest is a v0.2.5 ship target placeholder (see ROADMAP.md Phase 2.5).",
+  "version": "0.7.0",
+  "description": "Process-discipline + canon-grounded coding toolkit for Claude Code (+ Codex CLI manifest tracked in lock-step) — 10 skills implementing a Superpowers-style 8-stage workflow (brainstorm → plan → SDD → TDD iron-law → systematic-debugging → code-review → verification → finish-branch) with SessionStart hook auto-injection. Every rule grounded in primary sources (Beck 2002 TDD / Martin 2008 Clean Code / Hunt & Thomas 2019 Pragmatic / Martin 2000-2017 SOLID / Fowler 2018 Refactoring / Feathers 2004 Legacy Code / OWASP ASVS v5.0.0 / 徳丸本 第 2 版 Ch.6) via byte-identical functional copies of `domain-teams:code-team` (CI-enforced byte-identity). v0.6.0 introduces 4 plugin-level subagents (`code-toolkit:{implementer, spec-reviewer, code-quality-reviewer, code-reviewer}`) each carrying the 12-rule engineering baseline SSOT-injected from `scripts/_baseline.md`. brainstorming Axis 4 enforces multilingual research (EN + JA minimum) since v0.5.1. Coexists with `domain-teams:code-team` (passive gate entry) and `dev-workflow:{git-memory, complexity-critique, proposal-critique}`; conflicts with `obra/superpowers` resolved via `CODE_TOOLKIT_MODE=off`. 個人開発者向け process-discipline + canon-grounded コーディングツールキット。個人開發者用流程紀律 + 一級書目 grounding 程式開發工具組。",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "code-toolkit",
     "shortDescription": "Process-discipline + canon-grounded coding workflow for Codex CLI",
-    "longDescription": "Use code-toolkit to drive agent work through brainstorming, plan-writing, subagent-driven development, TDD iron-law, systematic debugging, code review, and branch finishing. Each rule grounded in primary sources (Clean Code / Beck 2002 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). Coexists with `domain-teams:code-team` (passive gate) and `dev-workflow:{git-memory, complexity-critique}`.",
+    "longDescription": "Use code-toolkit to drive agent work through brainstorming, plan-writing, subagent-driven development, TDD iron-law, systematic debugging, code review, verification-before-completion, and finish-branch. Each rule grounded in primary sources (Beck 2002 TDD / Martin 2008 Clean Code / Hunt & Thomas 2019 Pragmatic Programmer / Martin 2000-2017 SOLID / Fowler 2018 Refactoring / Feathers 2004 Legacy Code / OWASP ASVS v5.0.0 / 徳丸本 第 2 版 Ch.6 encoding security). 10 skills total; full Superpowers parity at v0.3.0. Coexists with `domain-teams:code-team` (passive gate) and `dev-workflow:{git-memory, complexity-critique, proposal-critique}`. SessionStart hook auto-injects router; `CODE_TOOLKIT_MODE=off` disables for users running obra/superpowers concurrently.",
     "developerName": "kouko",
     "category": "Coding",
     "capabilities": [
