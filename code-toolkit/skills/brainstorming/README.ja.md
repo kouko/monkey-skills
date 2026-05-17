@@ -24,9 +24,13 @@
 | 4 — 代替案 | この問題を他に 2-3 通り解決する方法と、なぜ却下したか | トレードオフの明示化 |
 | 5 — 何が陳腐化するか | この変更で冗長になる既存コード・プロセス — **同じ PR で削除すること** | YAGNI + same-PR クリーンアップ規律 |
 
+## Current State Evidence — recon 規律（v0.7.0+）
+
+変更が既存コードや既存プロセスに触れる場合、ブリーフに `## Current State Evidence` セクション（5 サブブレット：Forward / Reverse / Error / Data / Boundary + Evidence paths appendix）を含める。各ブレットは `file:line` を引用。エージェントが `grep` / `Read` / `Explore` のディスパッチで自分で埋める — recon はエージェントの仕事であってユーザの仕事ではない。Greenfield 作業は `N/A — greenfield` でスキップ可。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence を参照。
+
 ## 成果物
 
-`docs/superpowers/specs/YYYY-MM-DD-<topic>.md`（またはプロジェクトのローカル spec 慣習）に書き出される構造化ブリーフ。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) を参照。`writing-plans`（Phase 2）がこのブリーフを消費して原子タスクに分解する。
+`docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md` に書き出される構造化ブリーフ。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) を参照。`writing-plans`（Phase 2）がこのブリーフを消費して原子タスクに分解する。
 
 ## 使わない場面
 

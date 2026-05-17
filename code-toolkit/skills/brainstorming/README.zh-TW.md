@@ -24,9 +24,13 @@
 | 4 — 替代方案 | 還有哪 2-3 種解法、為什麼被刷掉 | 強制把 trade-off 講白 |
 | 5 — 什麼變多餘 | 這個變更會讓哪些既有 code / 流程變冗 — 並 **在同個 PR 刪掉** | YAGNI + same-PR cleanup 紀律 |
 
+## Current State Evidence — recon 紀律（v0.7.0+）
+
+當變更觸碰既有 code 或流程，brief 必須帶上 `## Current State Evidence` section：5 個 sub-bullets（Forward / Reverse / Error / Data / Boundary）+ Evidence paths appendix，每個 bullet 都附 `file:line` 引用。Agent 用 `grep` / `Read` / 派 `Explore` 自己填；recon 是 agent 的工作，不是使用者的。Greenfield 任務允許 `N/A — greenfield` 跳過。Schema 見 [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence。
+
 ## 產出
 
-寫到 `docs/superpowers/specs/YYYY-MM-DD-<topic>.md`（或專案的 local spec 慣例）的結構化 brief。Schema 在 [`references/handoff-brief-format.md`](references/handoff-brief-format.md)。`writing-plans`（Phase 2）會消費這個 brief 拆成原子任務。
+寫到 `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md` 的結構化 brief。Schema 在 [`references/handoff-brief-format.md`](references/handoff-brief-format.md)。`writing-plans`（Phase 2）會消費這個 brief 拆成原子任務。
 
 ## 不使用時機
 

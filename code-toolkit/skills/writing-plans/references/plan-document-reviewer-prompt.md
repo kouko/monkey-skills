@@ -14,10 +14,10 @@
 
 ```
 ### Plan
-<absolute path to docs/superpowers/plans/<date>-<topic>.md>
+<absolute path to docs/code-toolkit/plans/<date>-<topic>.md>
 
 ### Source brief
-<absolute path to docs/superpowers/specs/<date>-<topic>.md>
+<absolute path to docs/code-toolkit/specs/<date>-<topic>.md>
 
 ### Schema
 code-toolkit/skills/writing-plans/references/plan-format.md

@@ -1,8 +1,8 @@
 # code-toolkit
 
-> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 9-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
+> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 10-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.6.0 (10 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
+**Status**: v0.7.0 (10 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 ships **reviewer-output discipline R1+R2** (`standards_version` stamp + evidence-citation requirement via second SSOT injection block `_reviewer-discipline.md`) + **Current State Evidence** section in brainstorming brief schema (5-dim recon checklist Forward / Reverse / Error / Data / Boundary) + artifact path migration `docs/superpowers/` → `docs/code-toolkit/`; Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -47,7 +47,7 @@ claude plugin details code-toolkit           # expect: 10 skills + 1 SessionStar
 
 ### Codex CLI (build complete; live verification deferred)
 
-⚠️ Codex CLI manifest is built and bumped through v0.6.0 alongside the
+⚠️ Codex CLI manifest is built and bumped through v0.7.0 alongside the
 Claude Code variant, but a live install + verification ritual on a real
 Codex CLI instance is still deferred per user direction. See
 [`tests/codex-cli/README.md`](tests/codex-cli/README.md) for the install
@@ -91,9 +91,9 @@ The intended user flow on a non-trivial task:
 ```
 You: "I want to add feature X"
   ↓ (SessionStart hook router auto-fires)
-brainstorming → 5-axis brief → docs/superpowers/specs/<topic>.md
+brainstorming → 5-axis brief → docs/code-toolkit/specs/<topic>.md
   ↓
-writing-plans → ≤5-task plan → docs/superpowers/plans/<topic>.md
+writing-plans → ≤5-task plan → docs/code-toolkit/plans/<topic>.md
   ↓
 subagent-driven-development → per-task triad dispatch
   ↓ (per implementer subagent)
@@ -123,8 +123,8 @@ Plus on-demand:
 
 | Harness | Status |
 |---|---|
-| **Claude Code** | ✅ Verified end-to-end through multiple ritual cycles — Phase 3 orchestrator (v0.3.0), Phase 4 prep (v0.4.0), multilingual research (v0.5.1), plugin-level agent dispatch (v0.5.2 + v0.6.0), whole-branch code-review with cross-task-coherence dimension (v0.6.0) |
-| **Codex CLI** | ⚠️ Manifest built + tracked at v0.6.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
+| **Claude Code** | ✅ Verified end-to-end through multiple ritual cycles — Phase 3 orchestrator (v0.3.0), Phase 4 prep (v0.4.0), multilingual research (v0.5.1), plugin-level agent dispatch (v0.5.2 + v0.6.0), whole-branch code-review with cross-task-coherence dimension (v0.6.0), reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
+| **Codex CLI** | ⚠️ Manifest built + tracked at v0.7.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
 
 The SessionStart hook emits a portable JSON shape covering Claude Code's `hookSpecificOutput.additionalContext`, Codex CLI's `additional_context`, and legacy `additionalContext` keys — same hook serves both harnesses.
 

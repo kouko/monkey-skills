@@ -33,10 +33,22 @@ Per [`SKILL.md`](SKILL.md) §When NOT to Use:
 
 ## Output
 
-7-dimension scores (security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — branch-only) + severity-tagged findings (🔴 fatal / 🟡 should-fix / 🟢 nit) + ≤5-bullet summary. Aggregation:
+Every verdict carries:
+
+- **`standards_version`** stamp (from `plugin.json` `version`) — lets downstream readers date the review against a specific rubric revision (v0.7.0 reviewer-discipline R1).
+- 7-dimension scores (security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — branch-only).
+- Severity-tagged findings (🔴 fatal / 🟡 should-fix / 🟢 nit), each citing `where:` (file:line or commit SHA range). **Missing `where` flips the verdict to `NEEDS_REVISION`** regardless of severity (v0.7.0 reviewer-discipline R2 — opaque findings are unfixable).
+- ≤5-bullet summary.
+
+Aggregation (aligned with `rubrics/quality-gate.md` SSOT):
+
 - Any 🔴 → `NEEDS_REVISION`
-- All PASS, no findings → `PASS`
-- Else → `PASS_WITH_NOTES`
+- Any finding missing `where` → `NEEDS_REVISION` (malformed)
+- **2 or more 🟡** → `NEEDS_REVISION` (aggregated warnings = systemic concern)
+- Exactly 1 🟡, no 🔴, all with `where` → `PASS_WITH_NOTES`
+- No 🔴, no 🟡 → `PASS`
+
+R1+R2 discipline lives in `code-toolkit/scripts/_reviewer-discipline.md` (SSOT) and is auto-injected into the 3 reviewer agents by `distribute.py`.
 
 ## Cross-skill
 

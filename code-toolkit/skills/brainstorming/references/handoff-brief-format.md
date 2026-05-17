@@ -14,10 +14,9 @@ Free-form discovery notes can hold these signals but force `writing-plans` to re
 
 ## Where the brief lives
 
-| Repo convention | Path | When |
+| Mode | Path | When |
 |---|---|---|
-| monkey-skills-style | `docs/superpowers/specs/YYYY-MM-DD-<topic>.md` | When the brief is a load-bearing artifact (referenced by `writing-plans`, code review, post-ship retrospectives). **Default for non-trivial work.** |
-| Project-local | `docs/specs/<topic>.md` | When the project already has a `docs/specs/` convention. Adapt to match the project. |
+| File | `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md` | **Default for non-trivial work.** The brief becomes a load-bearing artifact (referenced by `writing-plans`, code review, post-ship retrospectives). |
 | Inline (no file) | The brainstorming conversation itself | For genuinely small work that the §When NOT to Use exemption was on the edge of — write the brief in the chat but do not commit it. `writing-plans` consumes from chat context. |
 
 When in doubt, write it to a file. The cost of the file is one `git add`; the cost of losing the brief is re-doing the discovery 6 months later.

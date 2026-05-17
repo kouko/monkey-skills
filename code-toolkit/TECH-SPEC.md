@@ -87,7 +87,7 @@ code-toolkit/
 │   ├── verify-drift.py                # CI gate: byte-identical check
 │   └── README.md
 ├── docs/
-│   └── superpowers/                   # follow monkey-skills convention
+│   └── code-toolkit/                  # plugin-namespaced artifact dir
 │       ├── plans/                     # implementation plans (writing-plans output)
 │       ├── specs/                     # design docs (brainstorming output)
 │       └── audits/                    # dogfood audit notes

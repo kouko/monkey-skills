@@ -24,9 +24,13 @@ Walk all five. None are optional unless the §When NOT to Use exemption applies.
 | 4 — Alternatives Considered | What are 2-3 other ways this could be solved, and why rejected? | Forces trade-off articulation |
 | 5 — What Becomes Obsolete | What existing code / process this change makes redundant — and removes in the same PR | YAGNI + same-PR cleanup discipline |
 
+## Current State Evidence — recon discipline (v0.7.0+)
+
+When the change touches existing code or process, the brief carries a `## Current State Evidence` section with 5 sub-bullets (Forward / Reverse / Error / Data / Boundary) + Evidence paths appendix — every bullet cites `file:line`. The agent fills this via `grep` / `Read` / dispatching `Explore`; recon is the agent's job, not the user's. Greenfield work allowed `N/A — greenfield` skip. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the schema.
+
 ## Output
 
-A structured brief written to `docs/superpowers/specs/YYYY-MM-DD-<topic>.md` (or the project's local spec convention). Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
+A structured brief written to `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md`. Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
 
 ## When NOT to use
 

@@ -37,6 +37,15 @@
 2. 同じ commit で `python3 code-toolkit/scripts/distribute.py`。
 3. CI で `code-toolkit/scripts/verify-drift.py` がバイト一致を強制。
 
+## Reviewer 出力規律（v0.7.0+）
+
+3 つの reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`）はそれぞれ **追加で** ファイル内 SSOT 注入ブロック — **reviewer-discipline-v1** — を BEGIN/END マーカーで包んで持つ。canonical テキストは `code-toolkit/scripts/_reviewer-discipline.md`：
+
+- **R1** — すべての verdict に `standards_version` フィールドを付与（`plugin.json` の `version` から読む）— 後の読者が「どのバージョンの rubric で採点されたか」を判別できる。
+- **R2** — すべての flag / finding / gap にエビデンス引用フィールド（`where:` / `artifact:` / `spec_ref:`）を必須記載。欠落すると verdict 全体が `NEEDS_REVISION` に反転（不透明な出力は修正不能）。
+
+`distribute.py` が 12 ルール engineering baseline と並んで自動注入する。implementer はこのブロックを **持たない** — verdict を出さないため。`verify-drift.py` は共有の `expected_agent_text` 経由で両方のブロックをカバー。
+
 ## このスキルがしないこと
 
 - コードを書かない — implementer をディスパッチする。

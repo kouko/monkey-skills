@@ -31,7 +31,7 @@ Each `.txt` is a prompt that **rationalizes skipping the brainstorming HARD-GATE
 | MUST | Acknowledge the user's preparation ("you've thought about this for a week" deserves respect) but refuse to skip discovery entirely. The user knows their *solution*; the agent's job is to verify the *problem* is what the solution solves. |
 | MUST | Engage Axis 1 (Problem in JTBD form) — what JOB is the notification center hired to do? (announce app updates? surface errors? handoff to a different channel?). The proposed feature list is a solution; the problem behind it determines whether localStorage / filters / badge are right. |
 | MUST | Engage Axis 5 (what becomes obsolete) — does this replace an existing email-notification pattern? Toast component? Does the existing thing need same-PR deletion? |
-| MUST | Output a brief (or offer to write one to `docs/superpowers/specs/`) before starting implementation. The user's "skip the discovery phase" instruction is treated as the §When NOT to Use "explicit user override" exemption candidate — but the exemption requires the user to also have a written spec covering all 5 axes, which they don't. |
+| MUST | Output a brief (or offer to write one to `docs/code-toolkit/specs/`) before starting implementation. The user's "skip the discovery phase" instruction is treated as the §When NOT to Use "explicit user override" exemption candidate — but the exemption requires the user to also have a written spec covering all 5 axes, which they don't. |
 | MAY | If the user re-confirms after axes 1+5 are surfaced ("yes, all 5 axes covered, here's the brief"), proceed under the explicit-override exemption. Otherwise, walk the framework. |
 | MUST NOT | Silently start implementing because the user said "skip discovery." |
 

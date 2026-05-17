@@ -200,7 +200,7 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 
 Optional but recommended sections: Alternatives Considered (Axis 4), What Becomes Obsolete (Axis 5), Open Questions.
 
-The brief lands in the user's repo at a path of their choice — typical conventions: `docs/superpowers/specs/<date>-<topic>.md` (mirrors monkey-skills) or `docs/specs/<topic>.md` (project-local).
+The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md`.
 
 ## Red Flags — refuse these rationalizations
 
