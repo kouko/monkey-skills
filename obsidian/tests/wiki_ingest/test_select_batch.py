@@ -1,8 +1,15 @@
-"""Parametrized tests for select-batch.py — CC-01..CC-08.
+"""Parametrized tests for select-batch.py — CC-01..CC-13.
 
 Cases CC-05..CC-08 are appended by T4 (CC-05/CC-06/CC-08 extend the CASES
 list; CC-07 has its own test function because it requires a pre-populated
 manifest, which the shared harness always overwrites with {}).
+
+Cases CC-09..CC-13 are appended by T5 and cover TOPIC_FILTER behaviour:
+  CC-09 — basename substring match
+  CC-10 — frontmatter tags (inline list) match
+  CC-11 — frontmatter aliases (block list) match
+  CC-12 — TOPIC_FILTER with zero matches → empty batch
+  CC-13 — TOPIC_FILTER + BATCH_ORDER=newest-first combined
 
 TDD Iron Law note: the production script (select-batch.py) was implemented
 in T2 before this test file; this file provides characterization test
@@ -41,8 +48,13 @@ def _run(
     *,
     batch_order: str = "oldest-first",
     batch_cap: int = 15,
+    topic_filter: str | None = None,
 ) -> subprocess.CompletedProcess:
-    """Invoke select-batch.py with vault-relative candidate list on stdin."""
+    """Invoke select-batch.py with vault-relative candidate list on stdin.
+
+    topic_filter: when provided, sets TOPIC_FILTER env var; when None/unset,
+    the env var is NOT set so existing CC-01..CC-08 behaviour is unchanged.
+    """
     candidates = "\n".join(
         str(p.relative_to(vault)) for p in sorted(vault.rglob("*.md"))
     )
@@ -55,6 +67,8 @@ def _run(
         # Prevent pycache noise inside tmp dirs
         "PYTHONDONTWRITEBYTECODE": "1",
     }
+    if topic_filter is not None:
+        env["TOPIC_FILTER"] = topic_filter
     return subprocess.run(
         [sys.executable, str(SCRIPT)],
         input=candidates,
@@ -470,20 +484,260 @@ def expected_cc08(vault: Path) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Parametrize table — CC-05, CC-06, CC-08 added by T4.
-# (CC-07 uses its own test function; see test_select_batch_cc07 below.)
-#
-# Each entry: (case_id, builder_fn, expected_fn, batch_cap, batch_order)
+# CC-09: TOPIC_FILTER substring match on basename.
+#         5 files, 3 with "invest" in basename, 2 without.
+#         TOPIC_FILTER="invest" → batch=3 matching (oldest-first), remaining=[].
 # ---------------------------------------------------------------------------
 
-CASES: list[tuple[str, Callable, Callable, int, str]] = [
-    ("cc01", build_cc01_vault, expected_cc01, 15, "oldest-first"),
-    ("cc02", build_cc02_vault, expected_cc02, 15, "oldest-first"),
-    ("cc03", build_cc03_vault, expected_cc03, _CC03_BATCH_CAP, "oldest-first"),
-    ("cc04", build_cc04_vault, expected_cc04, 15, "oldest-first"),
-    ("cc05", build_cc05_vault, expected_cc05, 15, "oldest-first"),
-    ("cc06", build_cc06_vault, expected_cc06, 15, "oldest-first"),
-    ("cc08", build_cc08_vault, expected_cc08, 15, "newest-first"),
+_CC09_FILES: list[tuple[str, bool]] = [
+    # (filename, matches_invest)
+    ("2023-01-01 my-investing-note.md",     True),
+    ("2023-03-15 investment-review.md",     True),
+    ("2023-02-10 regular-note.md",          False),
+    ("2023-04-20 invest-strategy.md",       True),
+    ("2023-05-05 unrelated-topic.md",       False),
+]
+
+
+def build_cc09_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, _ in _CC09_FILES:
+        (vault / name).write_text(f"# {name}\n", encoding="utf-8")
+    return vault
+
+
+def expected_cc09(vault: Path) -> dict[str, Any]:
+    matching = sorted(
+        name for name, matches in _CC09_FILES if matches
+    )  # lex asc = date asc
+    dates = [n[:10] for n in matching]
+    return {
+        "batch": matching,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": min(dates),
+            "last_date": max(dates),
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-10: TOPIC_FILTER matches frontmatter `tags` (inline list).
+#         4 files, 2 with tags: [investing, x], 2 with other tags.
+#         TOPIC_FILTER="investing" → batch=2 by tag match.
+# ---------------------------------------------------------------------------
+
+# (filename, content)
+_CC10_FILES: list[tuple[str, str]] = [
+    (
+        "2023-01-10 note-a.md",
+        "---\ntags: [investing, markets]\n---\n\n# note-a\n",
+    ),
+    (
+        "2023-01-20 note-b.md",
+        "---\ntags: [cooking, food]\n---\n\n# note-b\n",
+    ),
+    (
+        "2023-01-15 note-c.md",
+        "---\ntags: [investing, economics]\n---\n\n# note-c\n",
+    ),
+    (
+        "2023-01-25 note-d.md",
+        "---\ntags: [travel, leisure]\n---\n\n# note-d\n",
+    ),
+]
+_CC10_MATCHING = {"2023-01-10 note-a.md", "2023-01-15 note-c.md"}
+
+
+def build_cc10_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, content in _CC10_FILES:
+        (vault / name).write_text(content, encoding="utf-8")
+    return vault
+
+
+def expected_cc10(vault: Path) -> dict[str, Any]:
+    matching = sorted(_CC10_MATCHING)  # lex asc = date asc
+    dates = [n[:10] for n in matching]
+    return {
+        "batch": matching,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": min(dates),
+            "last_date": max(dates),
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-11: TOPIC_FILTER matches frontmatter `aliases` (block list).
+#         4 files, 2 with aliases containing "stock", 2 without.
+#         TOPIC_FILTER="stock" → batch=2 by alias match.
+# ---------------------------------------------------------------------------
+
+_CC11_FILES: list[tuple[str, str]] = [
+    (
+        "2023-02-01 note-a.md",
+        "---\naliases:\n  - stock\n  - equity\n---\n\n# note-a\n",
+    ),
+    (
+        "2023-02-10 note-b.md",
+        "---\naliases:\n  - recipe\n  - food\n---\n\n# note-b\n",
+    ),
+    (
+        "2023-02-05 note-c.md",
+        "---\naliases:\n  - stock\n  - shares\n---\n\n# note-c\n",
+    ),
+    (
+        "2023-02-15 note-d.md",
+        "# note-d\nNo frontmatter.\n",
+    ),
+]
+_CC11_MATCHING = {"2023-02-01 note-a.md", "2023-02-05 note-c.md"}
+
+
+def build_cc11_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, content in _CC11_FILES:
+        (vault / name).write_text(content, encoding="utf-8")
+    return vault
+
+
+def expected_cc11(vault: Path) -> dict[str, Any]:
+    matching = sorted(_CC11_MATCHING)  # lex asc = date asc
+    dates = [n[:10] for n in matching]
+    return {
+        "batch": matching,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": min(dates),
+            "last_date": max(dates),
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-12: TOPIC_FILTER zero matches → batch=[], remaining=[], scope dates all None.
+#         5 files, none matching TOPIC_FILTER="nomatch".
+# ---------------------------------------------------------------------------
+
+_CC12_FILES = [
+    "2023-03-01 alpha.md",
+    "2023-03-10 beta.md",
+    "2023-03-20 gamma.md",
+    "2023-03-15 delta.md",
+    "2023-03-25 epsilon.md",
+]
+
+
+def build_cc12_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name in _CC12_FILES:
+        (vault / name).write_text(f"# {name}\n", encoding="utf-8")
+    return vault
+
+
+def expected_cc12(vault: Path) -> dict[str, Any]:
+    return {
+        "batch": [],
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": None,
+            "last_date": None,
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-13: TOPIC_FILTER + BATCH_ORDER=newest-first combined.
+#         6 files, 3 matching "invest" by basename, 3 not.
+#         Expected: batch=3 matching sorted desc by date.
+# ---------------------------------------------------------------------------
+
+_CC13_FILES: list[tuple[str, bool]] = [
+    # (filename, matches_invest)
+    ("2023-04-01 invest-jan.md",    True),
+    ("2023-07-15 invest-mid.md",    True),
+    ("2023-05-20 unrelated-a.md",   False),
+    ("2023-10-30 invest-late.md",   True),
+    ("2023-06-10 unrelated-b.md",   False),
+    ("2023-08-22 unrelated-c.md",   False),
+]
+
+
+def build_cc13_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, _ in _CC13_FILES:
+        (vault / name).write_text(f"# {name}\n", encoding="utf-8")
+    return vault
+
+
+def expected_cc13(vault: Path) -> dict[str, Any]:
+    # Only matching files, sorted newest-first (desc)
+    matching = sorted(
+        (name for name, matches in _CC13_FILES if matches),
+        reverse=True,
+    )
+    all_dates = [n[:10] for n in matching]
+    return {
+        "batch": matching,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            # scope_summary uses min/max, independent of sort order
+            "first_date": min(all_dates),
+            "last_date": max(all_dates),
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Parametrize table — CC-05, CC-06, CC-08 added by T4; CC-09..CC-13 by T5.
+# (CC-07 uses its own test function; see test_select_batch_cc07 below.)
+#
+# Each entry: (case_id, builder_fn, expected_fn, batch_cap, batch_order,
+#              topic_filter)
+# topic_filter=None → TOPIC_FILTER env var not set (preserves CC-01..CC-08).
+# ---------------------------------------------------------------------------
+
+CASES: list[tuple[str, Callable, Callable, int, str, str | None]] = [
+    ("cc01", build_cc01_vault, expected_cc01, 15, "oldest-first", None),
+    ("cc02", build_cc02_vault, expected_cc02, 15, "oldest-first", None),
+    ("cc03", build_cc03_vault, expected_cc03, _CC03_BATCH_CAP, "oldest-first", None),
+    ("cc04", build_cc04_vault, expected_cc04, 15, "oldest-first", None),
+    ("cc05", build_cc05_vault, expected_cc05, 15, "oldest-first", None),
+    ("cc06", build_cc06_vault, expected_cc06, 15, "oldest-first", None),
+    ("cc08", build_cc08_vault, expected_cc08, 15, "newest-first", None),
+    # T5: TOPIC_FILTER cases
+    ("cc09", build_cc09_vault, expected_cc09, 15, "oldest-first", "invest"),
+    ("cc10", build_cc10_vault, expected_cc10, 15, "oldest-first", "investing"),
+    ("cc11", build_cc11_vault, expected_cc11, 15, "oldest-first", "stock"),
+    ("cc12", build_cc12_vault, expected_cc12, 15, "oldest-first", "nomatch"),
+    ("cc13", build_cc13_vault, expected_cc13, 15, "newest-first", "invest"),
 ]
 
 
@@ -495,7 +749,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "case_id, builder, expected_fn, batch_cap, batch_order",
+    "case_id, builder, expected_fn, batch_cap, batch_order, topic_filter",
     CASES,
     ids=[c[0] for c in CASES],
 )
@@ -505,6 +759,7 @@ def test_select_batch(
     expected_fn: Callable,
     batch_cap: int,
     batch_order: str,
+    topic_filter: str | None,
     tmp_path: Path,
 ) -> None:
     """Assert select-batch.py output matches expected JSON for each CC case."""
@@ -512,7 +767,12 @@ def test_select_batch(
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
 
-    r = _run(vault, manifest, batch_order=batch_order, batch_cap=batch_cap)
+    r = _run(
+        vault, manifest,
+        batch_order=batch_order,
+        batch_cap=batch_cap,
+        topic_filter=topic_filter,
+    )
 
     assert r.returncode == 0, (
         f"[{case_id}] expected exit 0, got {r.returncode}.\n"
