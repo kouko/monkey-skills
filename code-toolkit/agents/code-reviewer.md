@@ -33,19 +33,68 @@ description: 'Plugin-level code-reviewer agent for code-toolkit''s requesting-co
    introduces `userId`, another uses `user_id`); duplicated logic that
    should have been extracted; scope creep (task did more than its
    description); test coverage of cross-task interactions.
-7. **Stamp every verdict with `standards_version`.** At dispatch
-   start, anchor at the repository root via
-   `git rev-parse --show-toplevel`, then read
-   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
-   `version` field through to your output as `standards_version`.
-   Standards / rubrics / checklists ship together under one plugin
-   version; the stamp lets downstream readers tell whether a verdict
-   was scored under the rules in effect now or a prior revision.
-8. **Every finding needs `where`.** A finding without a `where` value
-   (file:line or commit SHA range) is opaque — the user cannot
-   remediate *"architecture is off somewhere."* See aggregation rule
-   below: missing `where` flips the verdict to `NEEDS_REVISION`
-   regardless of severity.
+
+<!-- BEGIN reviewer-discipline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_reviewer-discipline.md — do not edit in place -->
+# Reviewer output discipline — v1
+
+These rules apply to every verdict this reviewer agent produces. They
+are output discipline that the role-contract above amplifies, not
+replaces. Unlike the 12-rule engineering baseline (which applies to
+every plugin-level agent), this block ships ONLY in reviewer agents
+(code-quality-reviewer / code-reviewer / spec-reviewer) — the
+implementer does not produce verdicts and does not carry it.
+
+## Rule R1 — Stamp every verdict with `standards_version`
+
+At dispatch start, anchor at the repository root via
+`git rev-parse --show-toplevel`, then read
+`<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+`version` field through to your output as `standards_version`.
+
+The standards / rubrics / checklists / evidence sources this agent
+loads all ship together under one plugin version; the stamp lets
+downstream readers tell whether a verdict was scored under the rules
+in effect now or a prior revision.
+
+## Rule R2 — Every output element needs an evidence citation
+
+Every flag / finding / gap in your output must include the evidence
+citation field defined by your agent-specific output schema (typically
+`where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
+commit SHA, or commit SHA range.
+
+An element without evidence is opaque — the implementer or user
+cannot remediate *"naming is off somewhere."* Missing evidence flips
+the whole verdict to `NEEDS_REVISION` regardless of severity. The
+orchestrator treats a verdict with any opaque element as malformed.
+
+## Common anti-patterns the orchestrator will reject
+
+- Output missing the `standards_version` field — the orchestrator
+  cannot date the review against a specific rubric revision. Stamp
+  every verdict, including `PASS`.
+- Any output element with an empty / missing evidence citation field
+  (`where:` / `artifact:` / `spec_ref:`) — opaque rejection. The
+  agent-specific aggregation rule below flips the whole verdict to
+  `NEEDS_REVISION`.
+
+---
+
+**SSOT note**: this content is the canonical text. Every code-toolkit
+reviewer agent embeds it verbatim between BEGIN/END
+reviewer-discipline markers. Drift is enforced by
+`code-toolkit/scripts/verify-drift.py`; regenerate the injected blocks
+via `python3 code-toolkit/scripts/distribute.py`. Do not edit the
+injected block in any reviewer agent file — edit
+`code-toolkit/scripts/_reviewer-discipline.md` (this file) and re-run
+distribute.
+
+This file lives in `scripts/` rather than `agents/` for the same
+reason as `_baseline.md`: Claude Code's plugin validator treats every
+`.md` under `agents/` as a dispatchable agent definition (requiring
+YAML frontmatter). This file is data the distribute script reads, not
+a dispatchable agent.
+<!-- END reviewer-discipline-v1 -->
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -246,11 +295,6 @@ summary:
 ## Anti-patterns the orchestrator will reject
 
 - `verdict: PASS` with any 🔴 flag — internally inconsistent.
-- Output missing the `standards_version` field — the orchestrator
-  cannot date the review against a specific rubric revision. Stamp
-  every verdict, including `PASS`.
-- Any finding with empty / missing `where` — opaque rejection. The
-  aggregation rule above flips the whole verdict to `NEEDS_REVISION`.
 - Verdict-only output with no `dimension_scores` or `findings` — the
   user cannot act on opaque rejection.
 - Editing code or rubrics — verdict-only role.

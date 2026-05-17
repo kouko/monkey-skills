@@ -144,14 +144,21 @@ def distribute(route: dict[str, list[str]] | None = None) -> int:
     return written
 
 
-# ─── Agent baseline injection (P15-12) ──────────────────────────────────────
+# ─── Agent in-file injection blocks (P15-12 + reviewer-discipline) ─────────
 #
-# Plugin-level agent files in ``code-toolkit/agents/`` carry the 12-rule
-# engineering baseline as an embedded block between BEGIN/END markers. The
-# canonical text lives once in ``code-toolkit/scripts/_baseline.md``;
-# ``distribute_baselines`` rewrites the block in every routed agent to match.
-# This is the SSOT-and-functional-copy variant for in-file SECTIONS rather
-# than whole files.
+# Plugin-level agent files in ``code-toolkit/agents/`` carry one or more
+# canonical text blocks between BEGIN/END markers. The canonical text lives
+# once in ``code-toolkit/scripts/_*.md``; ``distribute_agent_injections``
+# rewrites each block in every routed agent to match. This is the SSOT-and-
+# functional-copy variant for in-file SECTIONS rather than whole files.
+#
+# Two blocks are routed today:
+#
+# 1. **baseline-v1** — the 12-rule engineering baseline. Applies to every
+#    plugin-level agent (implementer + 3 reviewers).
+# 2. **reviewer-discipline-v1** — rules R1+R2 for verdict-producing agents
+#    (standards_version stamp + evidence-citation requirement). Applies ONLY
+#    to the 3 reviewer agents; implementer does not carry it.
 
 AGENT_BASELINE_SSOT_REL = "scripts/_baseline.md"
 AGENT_BASELINE_BEGIN = (
@@ -177,6 +184,23 @@ AGENT_BASELINE_TARGETS: list[str] = [
     "agents/code-reviewer.md",
 ]
 
+AGENT_REVIEWER_DISCIPLINE_SSOT_REL = "scripts/_reviewer-discipline.md"
+AGENT_REVIEWER_DISCIPLINE_BEGIN = (
+    "<!-- BEGIN reviewer-discipline-v1 — managed by "
+    "code-toolkit/scripts/distribute.py from "
+    "code-toolkit/scripts/_reviewer-discipline.md — do not edit in place -->"
+)
+AGENT_REVIEWER_DISCIPLINE_END = "<!-- END reviewer-discipline-v1 -->"
+
+# Routing: reviewer agents only. Implementer is intentionally excluded — it
+# does not produce verdicts and has no `standards_version` / evidence-field
+# discipline to apply.
+AGENT_REVIEWER_DISCIPLINE_TARGETS: list[str] = [
+    "agents/spec-reviewer.md",
+    "agents/code-quality-reviewer.md",
+    "agents/code-reviewer.md",
+]
+
 
 def expected_baseline_text() -> str:
     """Canonical text of the baseline block (the body of ``_baseline.md``)."""
@@ -184,34 +208,84 @@ def expected_baseline_text() -> str:
     return src.read_text(encoding="utf-8").rstrip("\n")
 
 
-def expected_agent_text(agent_rel: str) -> str:
-    """Reconstruct the expected on-disk text of an agent file by rebuilding
-    its baseline block from SSOT and leaving role-contract / other content
-    untouched. Raises ``ValueError`` if the agent lacks the BEGIN/END markers.
+def expected_reviewer_discipline_text() -> str:
+    """Canonical text of the reviewer-discipline block (the body of
+    ``_reviewer-discipline.md``).
     """
-    dst = ROOT / agent_rel
-    content = dst.read_text(encoding="utf-8")
-    begin_idx = content.find(AGENT_BASELINE_BEGIN)
-    end_idx = content.find(AGENT_BASELINE_END)
+    src = ROOT / AGENT_REVIEWER_DISCIPLINE_SSOT_REL
+    return src.read_text(encoding="utf-8").rstrip("\n")
+
+
+def _rebuild_marker_block(
+    content: str,
+    agent_rel: str,
+    begin_marker: str,
+    end_marker: str,
+    canonical_text: str,
+    label: str,
+) -> str:
+    """Find ``begin_marker``/``end_marker`` in ``content`` and replace the
+    body between them with ``canonical_text``. Returns the rebuilt content.
+    Raises ``ValueError`` if either marker is missing or ordered wrong.
+    """
+    begin_idx = content.find(begin_marker)
+    end_idx = content.find(end_marker)
     if begin_idx == -1 or end_idx == -1:
         raise ValueError(
-            f"{agent_rel}: missing BEGIN or END baseline marker"
+            f"{agent_rel}: missing BEGIN or END {label} marker"
         )
     if begin_idx >= end_idx:
         raise ValueError(
-            f"{agent_rel}: BEGIN marker appears at/after END marker"
+            f"{agent_rel}: BEGIN {label} marker appears at/after END marker"
+        )
+    before = content[: begin_idx + len(begin_marker)]
+    after = content[end_idx:]
+    return before + "\n" + canonical_text + "\n" + after
+
+
+def expected_agent_text(agent_rel: str) -> str:
+    """Reconstruct the expected on-disk text of an agent file by rebuilding
+    every injection block from SSOT and leaving role-contract / other
+    content untouched. Raises ``ValueError`` if a routed agent lacks the
+    BEGIN/END markers for any block it should carry.
+
+    Two blocks are rebuilt:
+    - baseline-v1 (every routed agent — see ``AGENT_BASELINE_TARGETS``)
+    - reviewer-discipline-v1 (reviewer agents only — see
+      ``AGENT_REVIEWER_DISCIPLINE_TARGETS``)
+    """
+    dst = ROOT / agent_rel
+    content = dst.read_text(encoding="utf-8")
+
+    # Baseline applies to every routed agent.
+    content = _rebuild_marker_block(
+        content,
+        agent_rel,
+        AGENT_BASELINE_BEGIN,
+        AGENT_BASELINE_END,
+        expected_baseline_text(),
+        "baseline",
+    )
+
+    # Reviewer-discipline applies only to reviewer agents.
+    if agent_rel in AGENT_REVIEWER_DISCIPLINE_TARGETS:
+        content = _rebuild_marker_block(
+            content,
+            agent_rel,
+            AGENT_REVIEWER_DISCIPLINE_BEGIN,
+            AGENT_REVIEWER_DISCIPLINE_END,
+            expected_reviewer_discipline_text(),
+            "reviewer-discipline",
         )
 
-    baseline = expected_baseline_text()
-    before = content[: begin_idx + len(AGENT_BASELINE_BEGIN)]
-    after = content[end_idx:]
-    return before + "\n" + baseline + "\n" + after
+    return content
 
 
-def distribute_baselines() -> int:
-    """Rewrite each routed agent's baseline block to match SSOT. Returns the
-    number of files actually rewritten (idempotent — no-op if already in
-    sync).
+def distribute_agent_injections() -> int:
+    """Rewrite every routed agent's injection blocks (baseline +
+    reviewer-discipline where applicable) to match SSOT. Returns the
+    number of files actually rewritten (idempotent — no-op if already
+    in sync).
     """
     written = 0
     for agent_rel in AGENT_BASELINE_TARGETS:
@@ -223,9 +297,12 @@ def distribute_baselines() -> int:
         if rebuilt != current:
             dst.write_text(rebuilt, encoding="utf-8")
             written += 1
+            tags = ["baseline"]
+            if agent_rel in AGENT_REVIEWER_DISCIPLINE_TARGETS:
+                tags.append("reviewer-discipline")
             print(
-                f"[deploy-baseline] {AGENT_BASELINE_SSOT_REL} "
-                f"-> code-toolkit/{agent_rel}"
+                f"[deploy-agent-injections] code-toolkit/{agent_rel} "
+                f"({' + '.join(tags)})"
             )
     return written
 
@@ -240,14 +317,15 @@ def main() -> int:
         return 2
     try:
         n = distribute()
-        b = distribute_baselines()
+        b = distribute_agent_injections()
     except (FileNotFoundError, ValueError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
     print(
         f"\nOK: deployed {n} functional copies from code-team "
-        f"+ synced baseline into {b} agent file(s) "
-        f"(of {len(AGENT_BASELINE_TARGETS)} routed)."
+        f"+ synced injection blocks into {b} agent file(s) "
+        f"(of {len(AGENT_BASELINE_TARGETS)} routed; "
+        f"reviewer-discipline applies to {len(AGENT_REVIEWER_DISCIPLINE_TARGETS)} reviewers)."
     )
     return 0
 

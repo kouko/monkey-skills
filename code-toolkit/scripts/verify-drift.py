@@ -96,11 +96,13 @@ def main() -> int:
             for line in _unified_diff(expected, actual, rel_dst):
                 failures.append(f"    {line}")
 
-    # ─── Agent baseline drift check (P15-12) ─────────────────────────
-    # Each routed agent file must contain a BEGIN/END baseline block whose
-    # body matches code-toolkit/scripts/_baseline.md verbatim. Role-contract
-    # content outside the block is unique per agent and not compared.
-    baseline_checked = 0
+    # ─── Agent in-file injection drift check ─────────────────────────
+    # Each routed agent file must carry the BEGIN/END marker(s) for the
+    # injection block(s) it should embed. `expected_agent_text` rebuilds
+    # every applicable block from SSOT (baseline for all routed agents,
+    # reviewer-discipline for reviewer agents only). Role-contract content
+    # outside the blocks is unique per agent and not compared.
+    injection_checked = 0
     for agent_rel in AGENT_BASELINE_TARGETS:
         dst = ROOT / agent_rel
         if not dst.is_file():
@@ -109,17 +111,17 @@ def main() -> int:
         try:
             expected_text = expected_agent_text(agent_rel)
         except ValueError as e:
-            failures.append(f"BASELINE-MARKERS   code-toolkit/{agent_rel}: {e}")
+            failures.append(f"INJECTION-MARKERS  code-toolkit/{agent_rel}: {e}")
             continue
         expected_bytes = expected_text.encode("utf-8")
         actual_bytes = dst.read_bytes()
-        baseline_checked += 1
+        injection_checked += 1
         if actual_bytes == expected_bytes:
             continue
         failures.append(
-            f"BASELINE-DRIFT     code-toolkit/{agent_rel}\n"
-            f"    expected: role-contract + SSOT baseline block from "
-            f"code-toolkit/scripts/_baseline.md\n"
+            f"INJECTION-DRIFT    code-toolkit/{agent_rel}\n"
+            f"    expected: role-contract + SSOT injection blocks "
+            f"(baseline + reviewer-discipline where applicable)\n"
             f"    md5(expected) = {_md5(expected_bytes)}\n"
             f"    md5(on-disk)  = {_md5(actual_bytes)}"
         )
@@ -132,15 +134,15 @@ def main() -> int:
         print(
             f"\nFAIL: drift detected "
             f"(checked {checked} functional-copy pairs "
-            f"+ {baseline_checked} agent baseline blocks)."
+            f"+ {injection_checked} agent injection block file(s))."
             f"\nFix: python3 code-toolkit/scripts/distribute.py"
         )
         return 1
     print(
         f"OK: all {checked} functional copies match expected "
         f"(canonical + SSOT header) "
-        f"and all {baseline_checked} agent baseline block(s) "
-        f"match SSOT (code-toolkit/scripts/_baseline.md)."
+        f"and all {injection_checked} agent file(s) carry valid "
+        f"injection blocks (baseline + reviewer-discipline where applicable)."
     )
     return 0
 
