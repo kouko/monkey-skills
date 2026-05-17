@@ -172,6 +172,8 @@ Examples:
 
 If nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see `dev-workflow:complexity-critique`) or the design space wasn't explored enough.
 
+**Pairs with `## Current State Evidence` in the brief**: Axis 5 is forward-looking (what gets removed); Current State Evidence is backward-looking (what currently exists at the touch points). The same `file:line` citations often serve both — the recon you do to fill Evidence is the same recon that surfaces obsolescence candidates here. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the format.
+
 ## Output Contract — the brief
 
 Brainstorming's deliverable is a **structured brief** that `writing-plans` consumes. Schema in [`references/handoff-brief-format.md`](references/handoff-brief-format.md); minimum required sections:
@@ -185,6 +187,9 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 
 ## Smallest End State
 (Axis 3 — minimum shippable resolution)
+
+## Current State Evidence
+(Required when touching existing code. Five sub-bullets — Forward / Reverse / Error / Data / Boundary — each citing file:line; plus Evidence paths appendix. `N/A — greenfield` allowed only for truly greenfield work. Agent fills via grep / Read / Explore; user reviews — same model as Axis 4 research.)
 
 ## Decision
 (One paragraph: what we will build, what we will NOT build, why)
@@ -207,6 +212,8 @@ The brief lands in the user's repo at a path of their choice — typical convent
 | *"The user already gave me a spec."* | Maybe — but specs that skip Axis 4 (alternatives) and Axis 5 (what becomes obsolete) leave the agent unable to make follow-on decisions intelligently. | Read the spec against the 5 axes. If any axis is empty, ask the user — do not invent. |
 | *"It's just refactoring, no new behavior."* | Refactoring under existing test coverage is the §When NOT to Use exemption — but architecture-shifting refactor (new module boundary, new contract) is NOT covered by that exemption. | Distinguish: rename / extract-under-coverage = exempt; new boundary / new contract = brainstorm. |
 | *「太簡單了不用討論 / 簡単すぎる / こんな簡単な話」* | Same rationalization, localized. | Same refusal — walk the 5 axes minimally; if trivial after, name the §When NOT to Use exemption. |
+| *"I'll fill Current State Evidence from memory."* | Hallucinated reconnaissance. The whole point of the section is grounded `file:line` citations; bullets without them defeat it. | Refuse. Run `grep` / `Read` / dispatch `Explore` first; quote what you actually read. If the codebase is unfamiliar enough that recon is genuinely expensive, surface that as an Open Question — do not invent. |
+| *"It's greenfield, skip Current State Evidence."* | Valid only when nothing pre-existing is touched (new module from scratch, no integration points). Adding a method to an existing class, integrating with an existing API, or extending existing config is NOT greenfield. | Distinguish honestly. If any touch point is pre-existing, fill the relevant sub-bullets and mark only the irrelevant ones `N/A`. |
 
 ## Cross-skill delegation
 
