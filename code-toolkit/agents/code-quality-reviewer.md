@@ -29,19 +29,68 @@ description: 'Plugin-level code-quality-reviewer agent for code-toolkit''s SDD w
 6. Cite primary sources when scoring. The standards files name them;
    quoting *"Clean Code Ch.9 §F.I.R.S.T"* or *"OWASP ASVS V5 §2.1.3"*
    turns a soft *"this feels wrong"* into a defensible call.
-7. **Stamp every verdict with `standards_version`.** At dispatch
-   start, anchor at the repository root via
-   `git rev-parse --show-toplevel`, then read
-   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
-   `version` field through to your output as `standards_version`.
-   Standards / rubrics / checklists ship together under one plugin
-   version; the stamp lets downstream readers tell whether a verdict
-   was scored under the rules in effect now or a prior revision.
-8. **Every flag needs `where`.** A flag without a `where` value
-   (file:line or commit SHA) is opaque — the implementer cannot
-   remediate *"naming is off somewhere."* See aggregation rule below:
-   missing `where` flips the verdict to `NEEDS_REVISION` regardless
-   of severity.
+
+<!-- BEGIN reviewer-discipline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_reviewer-discipline.md — do not edit in place -->
+# Reviewer output discipline — v1
+
+These rules apply to every verdict this reviewer agent produces. They
+are output discipline that the role-contract above amplifies, not
+replaces. Unlike the 12-rule engineering baseline (which applies to
+every plugin-level agent), this block ships ONLY in reviewer agents
+(code-quality-reviewer / code-reviewer / spec-reviewer) — the
+implementer does not produce verdicts and does not carry it.
+
+## Rule R1 — Stamp every verdict with `standards_version`
+
+At dispatch start, anchor at the repository root via
+`git rev-parse --show-toplevel`, then read
+`<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+`version` field through to your output as `standards_version`.
+
+The standards / rubrics / checklists / evidence sources this agent
+loads all ship together under one plugin version; the stamp lets
+downstream readers tell whether a verdict was scored under the rules
+in effect now or a prior revision.
+
+## Rule R2 — Every output element needs an evidence citation
+
+Every flag / finding / gap in your output must include the evidence
+citation field defined by your agent-specific output schema (typically
+`where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
+commit SHA, or commit SHA range.
+
+An element without evidence is opaque — the implementer or user
+cannot remediate *"naming is off somewhere."* Missing evidence flips
+the whole verdict to `NEEDS_REVISION` regardless of severity. The
+orchestrator treats a verdict with any opaque element as malformed.
+
+## Common anti-patterns the orchestrator will reject
+
+- Output missing the `standards_version` field — the orchestrator
+  cannot date the review against a specific rubric revision. Stamp
+  every verdict, including `PASS`.
+- Any output element with an empty / missing evidence citation field
+  (`where:` / `artifact:` / `spec_ref:`) — opaque rejection. The
+  agent-specific aggregation rule below flips the whole verdict to
+  `NEEDS_REVISION`.
+
+---
+
+**SSOT note**: this content is the canonical text. Every code-toolkit
+reviewer agent embeds it verbatim between BEGIN/END
+reviewer-discipline markers. Drift is enforced by
+`code-toolkit/scripts/verify-drift.py`; regenerate the injected blocks
+via `python3 code-toolkit/scripts/distribute.py`. Do not edit the
+injected block in any reviewer agent file — edit
+`code-toolkit/scripts/_reviewer-discipline.md` (this file) and re-run
+distribute.
+
+This file lives in `scripts/` rather than `agents/` for the same
+reason as `_baseline.md`: Claude Code's plugin validator treats every
+`.md` under `agents/` as a dispatchable agent definition (requiring
+YAML frontmatter). This file is data the distribute script reads, not
+a dispatchable agent.
+<!-- END reviewer-discipline-v1 -->
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -206,16 +255,26 @@ notes:                           # optional; ≤3 bullets, e.g. cross-dimension 
 
 ### Verdict aggregation rule
 
+Aligned with `rubrics/quality-gate.md` §Verdict Rules — the rubric is
+the SSOT; this enumeration applies the rubric to the 🔴 / 🟡 / 🟢
+flag taxonomy used in this agent's output schema.
+
 - Any 🔴 fatal flag → `verdict: NEEDS_REVISION`.
 - Any flag with an empty / missing `where` field → `verdict: NEEDS_REVISION`
   regardless of severity. An opaque flag is unfixable on re-dispatch
   and is treated as a malformed verdict by the orchestrator.
-- All dimensions `PASS` and no flags → `verdict: PASS`.
-- Otherwise (🟡 and 🟢 flags but no 🔴, all with `where`) →
+- **2 or more 🟡 warning flags, no 🔴** → `verdict: NEEDS_REVISION`
+  (rubric §Verdict Rules — aggregated warnings signal systemic
+  concern, not just isolated polish).
+- Exactly 1 🟡 warning flag, no 🔴, all with `where` →
   `verdict: PASS_WITH_NOTES`.
+- No 🔴, no 🟡 (only 🟢 informational flags or no flags) →
+  `verdict: PASS`.
 
 The implementer fixes 🔴 on re-dispatch. 🟡 is fixed-now or filed-as-debt
-at the orchestrator's discretion. 🟢 is informational.
+at the orchestrator's discretion (when 1 🟡 / PASS_WITH_NOTES) or
+required on re-dispatch (when 2+ 🟡 / NEEDS_REVISION). 🟢 is
+informational only.
 
 ### Dimensions — what each one means
 
@@ -232,12 +291,6 @@ at the orchestrator's discretion. 🟢 is informational.
 
 - `verdict: PASS` with any 🔴 flag — internally inconsistent. The
   orchestrator will re-dispatch as `NEEDS_REVISION`.
-- Output missing the `standards_version` field — the orchestrator
-  cannot date the review against a specific rubric revision. Stamp
-  every verdict, including `PASS`.
-- Any flag with empty / missing `where` — opaque rejection. The
-  implementer cannot act on *"naming is off somewhere."* The
-  aggregation rule above flips the whole verdict to `NEEDS_REVISION`.
 - Verdict-only output with no `dimension_scores` or `flags` — the
   implementer cannot act on opaque rejection. Always cite where +
   source.
