@@ -81,19 +81,21 @@ skill directly.
 
 ## Teams
 
+Each team skill is invocable by its name as an auto-generated slash command (e.g. `/code-team`, `/qa-team`).
+
 | Team | Slash command | Role | Key grounding |
 |------|---------------|------|---------------|
-| `code-team` | `/code` | Develop code with primary-source-grounded quality gates | Clean Code (Martin 2008), Pragmatic Programmer (Hunt & Thomas 2019), SOLID, TDD (Beck 2002), Refactoring 2nd ed (Fowler 2018), Working Effectively with Legacy Code (Feathers 2004), OWASP ASVS v5.0.0, 徳丸本 Ch.6 |
-| `docs-team` | `/docs` | Write documentation and assess codebases with Diátaxis discipline | Diátaxis taxonomy, Standard README (RichardLitt), Google + Microsoft style, Trong-Tra `documentation-specialist` (readme + architecture L0–L4) |
-| `qa-team` | `/qa` | Plan and verify tests beyond unit level | 品質は工程で作り込む — built-in quality; E2E / integration / performance test strategy |
-| `devops-team` | `/devops` | Ship code safely with CI/CD, containers, and IaC | Google SRE, DORA, 12-Factor App primary sources |
-| `research-team` | `/research` | Conduct primary-source-grounded research with citation verification | Systematic-review rigor, confidence calibration, operator-perspective market analysis |
-| `design-team` | `/design` | Design with accessibility and quality review | 行為設計 (behavioral design), 感性工学, 無意識の設計; UI / UX / a11y |
-| `planning-team` | `/planning` | Cross-domain project planning (企画) | JTBD, Lean Startup, OKR, 4 Big Risks, Business Model Canvas / Lean Canvas |
-| `copywriting-team` | `/copywriting` | Write persuasive marketing copy | Japanese advertising tradition (神田昌典 PASONA / 谷山 / 糸井) + Anglo persuasion psychology (Cialdini, Schwartz Awareness Levels, Ogilvy) |
-| `investing-team` | *(no slash command)* | Make defensible investment decisions backed by primary-source frameworks | Investment Clock (regime), Buy/Hold/Sell verdicts, Taiwan equity (三大法人 / 月營收 / 董監持股 / 融資融券) |
-| `skill-team` | `/skill` | Build or modify domain-team skills with convention discipline | 4-tier gate design, primary-source grounding, 3-commit split, dual-file (README + SKILL.md), companion file pattern |
-| `using-domain-teams` | *(router)* | Route intents to the right team | — |
+| `code-team` | `/code-team` | Develop code with primary-source-grounded quality gates | Clean Code (Martin 2008), Pragmatic Programmer (Hunt & Thomas 2019), SOLID, TDD (Beck 2002), Refactoring 2nd ed (Fowler 2018), Working Effectively with Legacy Code (Feathers 2004), OWASP ASVS v5.0.0, 徳丸本 Ch.6 |
+| `docs-team` | `/docs-team` | Write documentation and assess codebases with Diátaxis discipline | Diátaxis taxonomy, Standard README (RichardLitt), Google + Microsoft style, Trong-Tra `documentation-specialist` (readme + architecture L0–L4) |
+| `qa-team` | `/qa-team` | Plan and verify tests beyond unit level | 品質は工程で作り込む — built-in quality; E2E / integration / performance test strategy |
+| `devops-team` | `/devops-team` | Ship code safely with CI/CD, containers, and IaC | Google SRE, DORA, 12-Factor App primary sources |
+| `research-team` | `/research-team` | Conduct primary-source-grounded research with citation verification | Systematic-review rigor, confidence calibration, operator-perspective market analysis |
+| `design-team` | `/design-team` | Design with accessibility and quality review | 行為設計 (behavioral design), 感性工学, 無意識の設計; UI / UX / a11y |
+| `planning-team` | `/planning-team` | Cross-domain project planning (企画) | JTBD, Lean Startup, OKR, 4 Big Risks, Business Model Canvas / Lean Canvas |
+| `copywriting-team` | `/copywriting-team` | Write persuasive marketing copy | Japanese advertising tradition (神田昌典 PASONA / 谷山 / 糸井) + Anglo persuasion psychology (Cialdini, Schwartz Awareness Levels, Ogilvy) |
+| `investing-team` | *(invoked via delegation)* | Make defensible investment decisions backed by primary-source frameworks | Investment Clock (regime), Buy/Hold/Sell verdicts, Taiwan equity (三大法人 / 月營收 / 董監持股 / 融資融券) |
+| `skill-team` | `/skill-team` | Build or modify domain-team skills with convention discipline | 4-tier gate design, primary-source grounding, 3-commit split, dual-file (README + SKILL.md), companion file pattern |
+| `using-domain-teams` | `/using-domain-teams` (router) | Route intents to the right team | — |
 
 `investing-team` ships without a slash command because it is normally
 reached through the `investing-toolkit` plugin via the Cross-Plugin
@@ -108,16 +110,6 @@ domain-teams/
 ├── agents/
 │   ├── worker.md                # generic task executor (sonnet)
 │   └── evaluator.md             # generic quality evaluator (opus)
-├── commands/
-│   ├── code.md                  # /code → code-team
-│   ├── copywriting.md           # /copywriting
-│   ├── design.md                # /design
-│   ├── devops.md                # /devops
-│   ├── docs.md                  # /docs
-│   ├── planning.md              # /planning
-│   ├── qa.md                    # /qa
-│   ├── research.md              # /research
-│   └── skill.md                 # /skill
 ├── skills/
 │   ├── using-domain-teams/      # router
 │   ├── code-team/

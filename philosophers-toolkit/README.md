@@ -24,8 +24,9 @@ The toolkit blends two traditions:
   Methods of stage diagnosis, purpose, continuous improvement,
   blame-free reflection, and good-enough.
 
-Every skill is invocable as a slash command. A router skill (`/think`)
-helps you pick the right one when you are not sure.
+Every skill is invocable as a slash command. A router skill
+(`/using-philosophers-toolkit`) helps you pick the right one when you are
+not sure.
 
 ## Install
 
@@ -50,7 +51,7 @@ Pick a skill directly when you know which method you want:
 Or let the router pick for you:
 
 ```
-/philosophers-toolkit:think
+/philosophers-toolkit:using-philosophers-toolkit
 ```
 
 The router asks one question — "what are you trying to do?" — and
@@ -185,7 +186,7 @@ points you at the best-fit skill.
 
 ### Getting started
 
-#### `/think` router
+#### `/using-philosophers-toolkit` router
 
 | Field | Value |
 |-------|-------|
@@ -193,7 +194,7 @@ points you at the best-fit skill.
 | Core idea | Match intent to method. The right framework matters more than the most fashionable one. |
 | Method | Claude asks one question — "what are you trying to do?" — and routes you to the right skill. |
 | Use when | You want to think deeper but are not sure which method fits; you have a vague problem and need to clarify it. |
-| Command | `/philosophers-toolkit:think` |
+| Command | `/philosophers-toolkit:using-philosophers-toolkit` |
 
 ## Design principles
 

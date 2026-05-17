@@ -27,7 +27,7 @@ Sherwood 的操作貢獻全部集中在 `cld-craft`：12 條 hygiene 規則、Ru
 
 ## 怎麼用
 
-1. 不確定要叫哪個 skill？用 `/systems-thinking-toolkit:stt` 走意圖路由。
+1. 不確定要叫哪個 skill？用 `/systems-thinking-toolkit:using-systems-thinking-toolkit` 走意圖路由。
 2. 有散文 / vicious cycle / death spiral 這類語言？直接呼叫 `/systems-thinking-toolkit:cld-craft`。
 3. 已經有 CLD 了？看 `/stt` 內「I have a CLD — now what?」段落分流到 archetypes / overlay / simulation。
 4. 在做策略 / 團隊作業？看 `/strategy-lever-and-cascade` 或 `/team-mental-model`。

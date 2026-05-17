@@ -25,7 +25,8 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
   good-enough の方法論。
 
 すべての skill は slash command として呼び出せる。どれを使うか
-迷ったときは、router skill（`/think`）が選定を支援する。
+迷ったときは、router skill（`/using-philosophers-toolkit`）が選定を
+支援する。
 
 ## Install
 
@@ -50,7 +51,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 迷っている場合は router に任せる：
 
 ```
-/philosophers-toolkit:think
+/philosophers-toolkit:using-philosophers-toolkit
 ```
 
 router は「何をしたいのか？」と一度だけ問い、最適な skill を
@@ -185,7 +186,7 @@ router は「何をしたいのか？」と一度だけ問い、最適な skill 
 
 ### Getting started
 
-#### `/think` router
+#### `/using-philosophers-toolkit` router
 
 | 項目 | 内容 |
 |-------|-------|
@@ -193,7 +194,7 @@ router は「何をしたいのか？」と一度だけ問い、最適な skill 
 | Core idea | 意図と method を一致させる。流行のものより、状況に合うものが大事。 |
 | Method | Claude は「何をしたいのか？」と一度だけ問い、最適な skill に案内する。 |
 | Use when | 思考を深めたいが、どの method が合うか分からないとき。問題が曖昧で、まず明確化したいとき。 |
-| Command | `/philosophers-toolkit:think` |
+| Command | `/philosophers-toolkit:using-philosophers-toolkit` |
 
 ## Design principles
 

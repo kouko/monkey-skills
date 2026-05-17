@@ -27,7 +27,7 @@ Sherwood の運用的貢献は `cld-craft` に集約されている: 12 hygiene 
 
 ## 使い方
 
-1. どのスキルを使うべきか分からない場合は `/systems-thinking-toolkit:stt` で意図ルーティング。
+1. どのスキルを使うべきか分からない場合は `/systems-thinking-toolkit:using-systems-thinking-toolkit` で意図ルーティング。
 2. 散文 / vicious cycle / death spiral 系の言い回しがある場合は `/systems-thinking-toolkit:cld-craft` を直接呼ぶ。
 3. CLD が既にある場合は `/stt` の「I have a CLD — now what?」セクションで archetypes / overlay / simulation へルーティング。
 4. 戦略 / チーム作業なら `/strategy-lever-and-cascade` または `/team-mental-model` を参照。

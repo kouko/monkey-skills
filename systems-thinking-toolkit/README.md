@@ -27,7 +27,7 @@ Downstream skills (cld-archetypes / cld-overlay / team-mental-model / simulation
 
 ## How to use
 
-1. Don't know which skill? Use `/systems-thinking-toolkit:stt` for intent-routing.
+1. Don't know which skill? Use `/systems-thinking-toolkit:using-systems-thinking-toolkit` for intent-routing.
 2. Have prose / vicious cycle / death spiral language? Go directly to `/systems-thinking-toolkit:cld-craft`.
 3. Have a CLD already? See the "I have a CLD — now what?" section in `/stt` for archetypes / overlay / simulation routing.
 4. Doing strategy or team work? See `/strategy-lever-and-cascade` or `/team-mental-model`.

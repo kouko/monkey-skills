@@ -65,7 +65,7 @@ Then match their intent to the right skill:
 >
 > **v0.6 note**: scenario-perturbation (formerly `innovaction-martian-test`)
 > has been absorbed into `strategy-lever-and-cascade` Step 5. Reach for
-> `/strategy` directly when you need Martian-test feature perturbation
+> `/strategy-lever-and-cascade` directly when you need Martian-test feature perturbation
 > for scenario generation.
 
 ### "I'm not sure"
