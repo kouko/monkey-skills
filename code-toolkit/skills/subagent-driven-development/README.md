@@ -37,6 +37,15 @@ All `standards/`, `rubrics/`, `checklists/` files under this skill are byte-iden
 2. Run `python3 code-toolkit/scripts/distribute.py` in the same commit.
 3. CI runs `code-toolkit/scripts/verify-drift.py`; any byte diff fails.
 
+## Reviewer-output discipline (v0.7.0+)
+
+The 3 reviewer agents (`spec-reviewer`, `code-quality-reviewer`, `code-reviewer`) each embed an **additional** in-file SSOT injection block — **reviewer-discipline-v1** — between BEGIN/END markers. Canonical text lives in `code-toolkit/scripts/_reviewer-discipline.md`:
+
+- **R1** — every verdict carries a `standards_version` field (read from `plugin.json` `version`), so future readers can date the review against a specific rubric revision.
+- **R2** — every flag / finding / gap must include an evidence-citation field (`where:` / `artifact:` / `spec_ref:`). Missing evidence flips the whole verdict to `NEEDS_REVISION` (opaque outputs are unfixable).
+
+Auto-injected by `distribute.py` alongside the 12-rule engineering baseline. The implementer does NOT carry this block — it doesn't produce verdicts. `verify-drift.py` covers both blocks via the shared `expected_agent_text` function.
+
 ## What this skill does NOT do
 
 - Does not write code — dispatches the implementer.

@@ -1,8 +1,8 @@
 # code-toolkit
 
-> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 9-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
+> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 10-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.6.0 (10 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
+**Status**: v0.7.0 (10 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 ships **reviewer-output discipline R1+R2** (`standards_version` stamp + evidence-citation requirement via second SSOT injection block `_reviewer-discipline.md`) + **Current State Evidence** section in brainstorming brief schema (5-dim recon checklist Forward / Reverse / Error / Data / Boundary) + artifact path migration `docs/superpowers/` → `docs/code-toolkit/`; Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 

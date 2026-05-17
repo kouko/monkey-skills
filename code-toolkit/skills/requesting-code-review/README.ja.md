@@ -33,10 +33,22 @@
 
 ## 出力
 
-7 次元スコア（security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — ブランチ限定）+ 重大度タグ付き findings（🔴 fatal / 🟡 should-fix / 🟢 nit）+ ≤5 行 summary。集計：
+すべての verdict は以下を含む：
+
+- **`standards_version`** スタンプ（`plugin.json` の `version` から）— ダウンストリーム読者が「この review はどのバージョンの rubric で採点されたか」を判別できる（v0.7.0 reviewer-discipline R1）。
+- 7 次元スコア（security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — ブランチ限定）。
+- 重大度タグ付き findings（🔴 fatal / 🟡 should-fix / 🟢 nit）— 各 finding は `where:`（file:line または commit SHA range）を必須記載。**`where` が欠落すると重大度に関わらず verdict は `NEEDS_REVISION` に反転**（v0.7.0 reviewer-discipline R2 — 不透明な finding は修正不能）。
+- ≤5 行 summary。
+
+集計（`rubrics/quality-gate.md` SSOT に整合）：
+
 - 任意の 🔴 → `NEEDS_REVISION`
-- 全 PASS + findings なし → `PASS`
-- それ以外 → `PASS_WITH_NOTES`
+- 任意の finding が `where` 欠落 → `NEEDS_REVISION`（malformed）
+- **🟡 が 2 個以上** → `NEEDS_REVISION`（警告の累積 = システム的懸念）
+- ちょうど 1 個の 🟡、🔴 なし、全 finding が `where` 付き → `PASS_WITH_NOTES`
+- 🔴 なし、🟡 なし → `PASS`
+
+R1+R2 規律の canonical は `code-toolkit/scripts/_reviewer-discipline.md` にあり、`distribute.py` が 3 つの reviewer agent に自動注入する。
 
 ## Cross-skill
 

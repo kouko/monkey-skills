@@ -37,6 +37,15 @@
 2. 同 commit 跑 `python3 code-toolkit/scripts/distribute.py`。
 3. CI 跑 `code-toolkit/scripts/verify-drift.py` 強制 byte-identical。
 
+## Reviewer 輸出紀律（v0.7.0+）
+
+3 個 reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`）各自 **額外** 攜帶一個檔內 SSOT 注入區塊 — **reviewer-discipline-v1** — 用 BEGIN/END 標記包覆。Canonical 文字在 `code-toolkit/scripts/_reviewer-discipline.md`：
+
+- **R1** — 每個 verdict 帶 `standards_version` 欄位（從 `plugin.json` 的 `version` 讀），讓未來讀者知道這次 review 是哪一版 rubric 跑的。
+- **R2** — 每個 flag / finding / gap 都必須帶證據引用欄位（`where:` / `artifact:` / `spec_ref:`）。缺證據 → 整個 verdict 翻成 `NEEDS_REVISION`（opaque 輸出無法修）。
+
+由 `distribute.py` 跟 12 條 engineering baseline 一起自動注入。Implementer **不** 攜帶此區塊 — 它不產 verdict。`verify-drift.py` 透過共用的 `expected_agent_text` 同時覆蓋兩個注入區塊。
+
 ## 這個 skill 不做的事
 
 - 不寫 code — 派 implementer 去寫。
