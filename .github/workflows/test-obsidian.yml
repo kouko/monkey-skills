@@ -39,4 +39,4 @@ jobs:
       - name: Run obsidian pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: cd obsidian && python3 -m pytest tests/ -v
+        run: cd obsidian && python3 -m pytest -v

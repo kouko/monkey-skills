@@ -38,7 +38,7 @@ Execute all 13 checks defined in [lint-checks.md](references/lint-checks.md):
 - L06: Orphan pages
 - L07: Broken wikilinks
 - L08: Stale pages
-- L13: Aliases required on cross-language slug (slug language ≠ body language → frontmatter `aliases:` must be present and non-empty; authority: [references/language-policy.md](references/language-policy.md))
+- L13: Aliases required on cross-language slug (slug language ≠ body language → frontmatter `aliases:` should be present and non-empty; authority: [references/language-policy.md](references/language-policy.md))
 
 **Provenance (advisory):**
 - L09: Provenance drift

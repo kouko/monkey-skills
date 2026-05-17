@@ -142,4 +142,4 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L10 | Re-ingest the affected source |
 | L11 | Resolve contradictions (research, query author, or move to Open Questions) |
 | L12 | Re-ingest stale page from current source, OR add `## Contradictions` block on canonical entity page documenting the disagreement (with as-of-date if time-sensitive) |
-| L13 | Add `aliases:` field to frontmatter with the native-language title (e.g. `aliases: [ソフトバンクグループ]`). Re-run `/wiki-ingest` on the source — ingest now auto-populates `aliases:` from the native title when slug language ≠ body language (see language-policy.md §aliases-generation) |
+| L13 | Add `aliases:` field to frontmatter with the native-language title (e.g. `aliases: [余白, yohaku]`). Re-run `/wiki-ingest` on the source if you want the wiki page rebuilt (see language-policy.md §4. Aliases Conditional MUST) |
