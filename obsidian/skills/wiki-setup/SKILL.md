@@ -235,6 +235,20 @@ OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST=15
 # in your /wiki-ingest prompt.
 OBSIDIAN_WIKI_BATCH_ORDER=oldest-first
 
+# Vault primary body language for wiki/ pages. BCP-47 codes (zh-TW, ja, en, ko).
+# Used as fallback in language-policy.md decision tree.
+# Required when LANGUAGE_POLICY=enabled.
+OBSIDIAN_WIKI_PRIMARY_LANGUAGE=
+
+# Switch for body language policy. `enabled` runs the decision tree in
+# references/language-policy.md. Omit (or empty) → legacy LLM heuristic
+# (current v3.10.0 behavior; full backward compat).
+OBSIDIAN_WIKI_LANGUAGE_POLICY=
+
+# Optional vault-owned term-preservation list. Terms in this file are
+# NEVER translated, regardless of language policy. Vault-relative path.
+OBSIDIAN_WIKI_PRESERVE_TERMS_FILE=
+
 # --- Advisory-only keys below (documentation, not consumed by skills) ---
 # These reflect current convention; changing them does NOT alter behavior.
 # Wiki page categories are fixed at the 6 type folders below; renaming here
