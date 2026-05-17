@@ -11,7 +11,7 @@ Reads source notes from configured folders (via `.obsidian-wiki.config`), distil
 
 Read these BEFORE STEP 1:
 
-1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
+1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty) and `OBSIDIAN_WIKI_BATCH_ORDER` (`oldest-first` or `newest-first`, defaults `oldest-first` if absent — backward-compatible). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
 2. **`wiki/.manifest.json`** — for delta detection. If missing, treat as empty `{}` (likely first ingest after wiki-setup).
 
 ## References (lazy — read only when needed)
@@ -21,8 +21,9 @@ These are spec references; load them at the moment you need them, not at pre-fli
 | Reference | When to load |
 |---|---|
 | [references/delta-tracking.md](references/delta-tracking.md) | Before STEP 2 (scan and hash) — defines the manifest update contract |
-| [references/category-routing.md](references/category-routing.md) | Before STEP 3b (decide category) — decision tree for entities vs concepts |
-| [references/page-format.md](references/page-format.md) | Before STEP 3c (generate page) — authoritative output spec; reread before EVERY new page generation |
+| [references/batching-policy.md](references/batching-policy.md) | Before STEP 3 (select batch) — cap + order override matrix |
+| [references/category-routing.md](references/category-routing.md) | Before STEP 4b (decide category) — decision tree for entities vs concepts |
+| [references/page-format.md](references/page-format.md) | Before STEP 4c (generate page) — authoritative output spec; reread before EVERY new page generation |
 
 **Why lazy**: a delta-only run with 0 NEW / 0 MODIFIED sources never needs page-format.md or category-routing.md. Eager loading wastes context on the common no-op path.
 
@@ -44,25 +45,47 @@ For the full contract, edge cases, and rationale, see [references/source-scope.m
 
 ## STEP 1 — Determine ingest scope
 
-Use `AskUserQuestion`:
+Read the user's most recent message and apply the decision table below. No `AskUserQuestion` is issued; Claude resolves scope and order autonomously, then prints the one-line summary and proceeds.
+
+### Decision table
+
+| Prompt pattern | scope | order |
+|---|---|---|
+| Plain `/wiki-ingest` (no arguments) | `whole_vault` | from config (default `oldest-first`) |
+| Path token containing `/` and not ending `.md` (e.g. `research/`, `investing/2026/`) | `path:<p>` | from config |
+| Single-file token ending `.md` (path or bare basename) | `single_file:<f>` | n/a (not batched) |
+| Time keyword: `latest` / `recent` / `newest` / `最新` / `近期` | `whole_vault` | `newest-first` (prompt override) |
+| Time keyword: `oldest` / `backfill` / `最舊` / `從頭` / `舊筆記` | `whole_vault` | `oldest-first` (prompt override) |
+| Topic word (no `/`, no `.md`, no time-keyword, non-empty token) | `whole_vault` + `topic_filter:<t>` | from config |
+
+### Classification rules
+
+- **Path**: token contains `/` AND does not end with `.md`
+- **Single-file**: token ends with `.md` (whether a full path or bare basename)
+- **Time keyword**: case-insensitive substring match for ASCII keywords; exact equality for CJK keywords (no case concept)
+- **Topic word**: any non-empty token not matched by the above three rules — activates `topic_filter`. Claude passes `TOPIC_FILTER=<topic>` env var to `select-batch.py`; the script applies case-insensitive ASCII substring match on basename AND exact match on frontmatter `tags` / `aliases` values. Scope = `whole_vault` + topic filter (only matching files proceed past STEP 3).
+
+### STEP 1 summary line
+
+After resolving scope and order, print **one line** and continue (user can Ctrl+C to abort):
 
 ```
-Question: "What should I ingest?"
-Options:
-1. "Whole vault, delta only" — scan entire vault minus excluded dirs, skip unchanged via manifest
-2. "Specific path" — user types a vault-relative file or folder
-3. "Research notes only" — limit to research/ (typical after wiki-auto-research)
+Scope: <whole_vault | path:<p> | single_file:<f>>  (filtered by topic '<t>' if any)
+Order: <oldest-first | newest-first>
+Source: <config | prompt hint | default>
 ```
 
-Respect `OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST` (default 15). If scope exceeds it, ask user to confirm or batch.
+**Config note**: `OBSIDIAN_WIKI_BATCH_ORDER` in `.obsidian-wiki.config` sets the persistent default order (defaults `oldest-first` if absent). Claude reads this value at pre-flight and passes it as `BATCH_ORDER=<value>` to `select-batch.py`; a time-keyword in the prompt overrides it for that run only. When the prompt contains a topic word, Claude additionally passes `TOPIC_FILTER=<topic>` to `select-batch.py` — the script filters candidates to those whose basename contains the topic substring (case-insensitive) OR whose frontmatter `tags` / `aliases` exactly match it.
 
-For option 1, invoke the bundled scan script (POSIX-portable; auto-sources `.obsidian-wiki.config` from the vault root, emits one absolute path per line):
+### Vault scan
+
+Invoke the bundled scan script (POSIX-portable; auto-sources `.obsidian-wiki.config` from the vault root, emits vault-relative paths one per line):
 
 ```sh
-bash <skill-root>/scripts/scan-vault.sh "$VAULT_ROOT" > /tmp/wiki-ingest-candidates.txt
+bash <skill-root>/scripts/scan-vault.sh "$VAULT_ROOT"
 ```
 
-The script auto-sources `<vault-root>/.obsidian-wiki.config` to read `OBSIDIAN_WIKI_EXCLUDE_DIRS` — no need to source it manually. See [scripts/scan-vault.sh](scripts/scan-vault.sh) for implementation. Don't hand-roll a `find` command — the script handles top-level pruning, system exclusions, multi-line value parsing, and edge cases (loose root .md files, special chars in dir names). For options 2 and 3, scan the user-specified path directly via `Read` / `Bash find`.
+The script handles top-level pruning, system exclusions, multi-line value parsing, and edge cases. See [scripts/scan-vault.sh](scripts/scan-vault.sh). Do not hand-roll a `find` command. For `path:<p>` or `single_file:<f>` scopes, pass the user-specified path directly to the scan (or use `Read` / `Bash find` for single files).
 
 ## STEP 2 — Scan and hash
 
@@ -81,14 +104,40 @@ Found 47 source files:
   UNCHANGED:  32  ← skipped via manifest
 
 Cap: 15 pages per run (configurable in .obsidian-wiki.config)
-Proceed?
 ```
 
-## STEP 3 — Per-source ingest loop
+## STEP 3 — Select batch
+
+Pipe the NEW + MODIFIED paths from STEP 2 into `scripts/select-batch.py`:
+
+```sh
+printf '%s\n' "${new_and_modified_paths[@]}" \
+  | BATCH_ORDER="${OBSIDIAN_WIKI_BATCH_ORDER:-oldest-first}" \
+    BATCH_CAP="${OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST:-15}" \
+    MANIFEST_PATH="$VAULT_ROOT/wiki/.manifest.json" \
+    VAULT_ROOT="$VAULT_ROOT" \
+    ${TOPIC_FILTER:+TOPIC_FILTER="$TOPIC_FILTER"} \
+    python3 <skill-root>/scripts/select-batch.py
+```
+
+`BATCH_ORDER` is sourced from `OBSIDIAN_WIKI_BATCH_ORDER` read at pre-flight (default `oldest-first`); a time-keyword prompt hint sets it directly per STEP 1 decision table. `TOPIC_FILTER` is included only when Claude detected a topic-word hint in STEP 1 (set to the resolved topic token, casefolded). The script exits `0` on success, `2` on invalid env or unreadable manifest. Consume its JSON output:
+
+| Key | Use |
+|---|---|
+| `batch` | Ordered list of vault-relative paths to process in STEP 4 (≤ cap) |
+| `remaining` | Deferred paths (surfaced in STEP 6 next-batch preview) |
+| `skipped_unchanged` | Count of UNCHANGED files (informational) |
+| `scope_summary` | Date-range metadata for STEP 6 report |
+
+STEP 4's per-source loop iterates over the `batch` list in the order returned by the script.
+
+**Reference**: load [references/batching-policy.md](references/batching-policy.md) before STEP 3 — defines the full cap + order override matrix.
+
+## STEP 4 — Per-source ingest loop
 
 For each NEW or MODIFIED source, in this order:
 
-### 3a. Read source content
+### 4a. Read source content
 
 Use `Read`. Capture frontmatter + body. Note any existing `wikilinks` for connection inference.
 
@@ -100,11 +149,11 @@ Use `Read`. Capture frontmatter + body. Note any existing `wikilinks` for connec
 
 This decouples the user-review gate from auto-research. Manually-written research notes (no `generated_by` field) are always ingested without status check.
 
-### 3b. Decide category (per [category-routing.md](references/category-routing.md))
+### 4b. Decide category (per [category-routing.md](references/category-routing.md))
 
 A single source may contribute to multiple wiki pages (e.g., a paper covering MAB → updates `entities/Thompson-Sampling`, `entities/UCB`, `concepts/exploration-exploitation`). Identify all targets.
 
-### 3c. For each target wiki page
+### 4c. For each target wiki page
 
 **Filename uniqueness check** (before creating any new page):
 
@@ -124,7 +173,7 @@ Algorithm:
 - `## Summary` — re-synthesize incorporating new source
 - `## Key Facts` — append new facts; mark provenance correctly (`^[inferred]`, `^[ambiguous]`)
 - `## Connections` — add new wikilinks if discovered
-- `## Sources` — add link to the per-source reference page (see 3d)
+- `## Sources` — add link to the per-source reference page (see 4d)
 - `frontmatter.sources_count` — increment
 - `frontmatter.updated` — today's date
 - `frontmatter.summary` — refresh if material changes (≤200 chars)
@@ -138,7 +187,7 @@ grep -nE '`[^`]*\[\[[^]]+\]\][^`]*`' <wiki-root>/<category>/<slug>.md
 
 If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]]` `` or `` **`[[Page]]`** ``) — Obsidian renders it as inline code, NOT a clickable link. **Do not advance**: edit the file to remove the wrapping backticks, then re-run the check until empty. The Quality bar self-check (below) is advisory; this grep is the enforced gate. Spec rationale in [page-format.md](references/page-format.md#never-wrap-wikilinks-in-backticks-critical).
 
-### 3d. Create/update reference page
+### 4d. Create/update reference page
 
 Always write `wiki/references/<slug>.md` (one page per source) with:
 
@@ -167,25 +216,25 @@ summary: "≤200 char single-line description of what this source contributes"
 
 Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`.
 
-### 3e. Update `wiki/index.md`
+### 4e. Update `wiki/index.md`
 
 Append the new page link under the appropriate category section. Skip if already present.
 
-### 3f. Update `wiki/.manifest.json`
+### 4f. Update `wiki/.manifest.json`
 
 Per [delta-tracking.md](references/delta-tracking.md): write entry with sha256, ISO timestamp, and union of `wiki_pages`.
 
-### 3g. Append to `wiki/log.md`
+### 4g. Append to `wiki/log.md`
 
 ```markdown
 | YYYY-MM-DD | ingest | <source-path> | <comma-separated wiki page links, marked (new) or (updated)> |
 ```
 
-## STEP 4 — Update `wiki/hot.md`
+## STEP 5 — Update `wiki/hot.md`
 
 Refresh the "Recently touched" section with this run's affected pages. Cap entire section ≤300 chars; truncate oldest first.
 
-## STEP 5 — Report and recommend
+## STEP 6 — Report and recommend
 
 ```
 Ingest complete:
@@ -193,7 +242,20 @@ Ingest complete:
   Wiki pages created: M
   Wiki pages updated: K
   Reference pages:    R
+```
 
+**Next-batch preview** (from `scope_summary` in STEP 3 output):
+
+- If `scope_summary.remaining_count == 0`:
+  ```
+  All NEW sources ingested. Wiki is up-to-date with vault.
+  ```
+- Else:
+  ```
+  Next batch on next run: <remaining_first_date> → <remaining_last_date> (~<remaining_count> remaining NEW)
+  ```
+
+```
 Recommended next steps:
   /wiki-cross-linker  — strengthen wikilinks across the new pages
   /wiki-lint          — health check (run after large batches)

@@ -1,0 +1,7 @@
+# obsidian plugin pytest config — NOT a Python package.
+# Used solely for `[tool.pytest.ini_options]` discovery rules.
+# No [build-system] / no [project] — `pip install` is not the install path;
+# CI installs pytest directly and runs `pytest obsidian/tests/`.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

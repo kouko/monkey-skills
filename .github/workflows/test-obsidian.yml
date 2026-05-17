@@ -1,0 +1,39 @@
+name: obsidian tests
+
+# Runs the obsidian pytest suite on every PR that touches the plugin
+# (or the workflow itself), and on every push to main that changes
+# the plugin.
+
+on:
+  pull_request:
+    paths:
+      - 'obsidian/**'
+      - '.github/workflows/test-obsidian.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'obsidian/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pytest
+        run: python3 -m pip install --quiet 'pytest>=7'
+
+      - name: Run obsidian pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: cd obsidian && python3 -m pytest tests/ -v

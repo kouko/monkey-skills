@@ -229,6 +229,12 @@ OBSIDIAN_WIKI_EXCLUDE_FILES=""
 # Hard cap per /wiki-ingest run. Consumed by wiki-ingest STEP 1.
 OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST=15
 
+# Batch order when NEW + MODIFIED exceeds the cap (oldest-first | newest-first).
+# Default is `oldest-first` (backfill posture — recommended for catch-up).
+# Override per-run by including 'latest' / 'recent' / 'oldest' / 'backfill' / 最新 / 最舊
+# in your /wiki-ingest prompt.
+OBSIDIAN_WIKI_BATCH_ORDER=oldest-first
+
 # --- Advisory-only keys below (documentation, not consumed by skills) ---
 # These reflect current convention; changing them does NOT alter behavior.
 # Wiki page categories are fixed at the 6 type folders below; renaming here
