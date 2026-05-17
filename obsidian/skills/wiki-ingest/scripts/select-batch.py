@@ -62,13 +62,6 @@ _FM_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 
-# Matches a YAML list field header (tags or aliases) and captures values.
-# Handles both block-list (- item) and inline list (tags: [a, b]) forms.
-_FM_LIST_BLOCK_RE = re.compile(
-    r"^(?:tags|aliases)\s*:\s*\[([^\]]*)\]|^(?P<key>tags|aliases)\s*:\s*\n((?:[ \t]*-[ \t]*\S[^\n]*\n?)+)",
-    re.MULTILINE,
-)
-
 # Sentinel for files whose date falls back to mtime (sort to tail).
 _UNDATED = "undated"
 
@@ -168,7 +161,7 @@ def _date_from_frontmatter(text: str) -> str | None:
     return fm.group(1) if fm else None
 
 
-def _fm_list_values(fm_block: str, field: str) -> list[str]:
+def _fm_list_values(frontmatter_block: str, field: str) -> list[str]:
     """Return lowercased list values for `field` (tags or aliases) from a frontmatter block.
 
     Handles both:
@@ -183,7 +176,7 @@ def _fm_list_values(fm_block: str, field: str) -> list[str]:
         rf"^{field}\s*:\s*\[([^\]]*)\]",
         re.MULTILINE,
     )
-    m = inline_re.search(fm_block)
+    m = inline_re.search(frontmatter_block)
     if m:
         for v in m.group(1).split(","):
             v = v.strip().strip('"').strip("'")
@@ -196,7 +189,7 @@ def _fm_list_values(fm_block: str, field: str) -> list[str]:
         rf"^{field}\s*:\s*\n((?:[ \t]*-[ \t]*\S[^\n]*\n?)+)",
         re.MULTILINE,
     )
-    m = block_re.search(fm_block)
+    m = block_re.search(frontmatter_block)
     if m:
         for line in m.group(1).splitlines():
             v = line.strip().lstrip("-").strip().strip('"').strip("'")
