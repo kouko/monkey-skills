@@ -1,8 +1,8 @@
-"""Parametrized tests for select-batch.py — CC-01..CC-04.
+"""Parametrized tests for select-batch.py — CC-01..CC-08.
 
-Cases CC-05..CC-08 will be appended by T4 (extend the CASES list + add
-builder / expected functions below; the parametrize decorator picks them
-up automatically).
+Cases CC-05..CC-08 are appended by T4 (CC-05/CC-06/CC-08 extend the CASES
+list; CC-07 has its own test function because it requires a pre-populated
+manifest, which the shared harness always overwrites with {}).
 
 TDD Iron Law note: the production script (select-batch.py) was implemented
 in T2 before this test file; this file provides characterization test
@@ -270,7 +270,209 @@ def expected_cc04(vault: Path) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Parametrize table — T4 extends this list with CC-05..CC-08.
+# CC-05: frontmatter `upload_date` fallback when filename has no date prefix.
+#         3 files, no YYYY-MM-DD prefix, each with frontmatter upload_date.
+#         Expected: sorted by upload_date asc; none classified as undated/mtime.
+# ---------------------------------------------------------------------------
+
+# (filename, upload_date)
+_CC05_FILES: list[tuple[str, str]] = [
+    ("note-c.md", "2021-03-01"),
+    ("note-a.md", "2021-01-15"),
+    ("note-b.md", "2021-02-10"),
+]
+
+
+def build_cc05_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, upload_date in _CC05_FILES:
+        f = vault / name
+        f.write_text(
+            f"---\nupload_date: {upload_date}\n---\n\n# {name}\n",
+            encoding="utf-8",
+        )
+    return vault
+
+
+def expected_cc05(vault: Path) -> dict[str, Any]:
+    # Sorted by upload_date asc (frontmatter tier)
+    sorted_files = sorted(_CC05_FILES, key=lambda x: x[1])
+    sorted_names = [name for name, _ in sorted_files]
+    dates = [d for _, d in sorted_files]
+    return {
+        "batch": sorted_names,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": dates[0],
+            "last_date": dates[-1],
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-06: NEW + MOD ≤ cap → all in batch, empty remaining.
+#         5 NEW dated files, 0 MOD, cap=15 (default).
+#         Expected: batch=5, remaining=[], scope_summary.remaining_count=0.
+# ---------------------------------------------------------------------------
+
+_CC06_DATED_FILES = [
+    "2022-03-01 alpha.md",
+    "2022-05-20 beta.md",
+    "2022-01-10 gamma.md",
+    "2022-08-07 delta.md",
+    "2022-06-15 epsilon.md",
+]
+
+
+def build_cc06_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name in _CC06_DATED_FILES:
+        f = vault / name
+        f.write_text(f"# {name}\n", encoding="utf-8")
+    return vault
+
+
+def expected_cc06(vault: Path) -> dict[str, Any]:
+    sorted_names = sorted(_CC06_DATED_FILES)  # lex asc = date asc
+    dates = [n[:10] for n in sorted_names]
+    return {
+        "batch": sorted_names,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": dates[0],
+            "last_date": dates[-1],
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-07: Cap squeeze — 3 MOD + 13 NEW = 16 total, cap=15 → squeeze 1.
+#
+# This case has its own test function (test_select_batch_cc07) because the
+# shared parametrize harness always writes {} to the manifest after the
+# builder runs, making it impossible to pre-populate stale hashes.
+#
+# Design:
+#   Dates: 2023-01-01 through 2023-01-16 (16 consecutive days)
+#   MOD files: 2023-01-01, 2023-01-02, 2023-01-03 (among oldest)
+#   NEW files: 2023-01-04 through 2023-01-16 (13 files)
+#
+# With cap=15 and oldest-first sort: batch = files 01..15 (mix of all 3 MOD
+# + 12 NEW); remaining = [2023-01-16 ...] (the 16th, 1 NEW).
+# ---------------------------------------------------------------------------
+
+import datetime as _dt
+import hashlib as _hashlib
+
+_CC07_CAP = 15
+_CC07_TOTAL = 16  # 3 MOD + 13 NEW
+_CC07_MOD_COUNT = 3
+
+
+def _cc07_filenames() -> list[str]:
+    """16 dated filenames, 2023-01-01 to 2023-01-16."""
+    base = _dt.date(2023, 1, 1)
+    return [f"{(base + _dt.timedelta(days=i)).isoformat()} note-{i+1:02d}.md"
+            for i in range(_CC07_TOTAL)]
+
+
+def build_cc07_vault(tmp_path: Path) -> tuple[Path, Path]:
+    """Return (vault, manifest_path) with 3 MOD entries pre-populated."""
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+
+    filenames = _cc07_filenames()
+    for name in filenames:
+        (vault / name).write_text(f"# {name}\n", encoding="utf-8")
+
+    # First 3 files are MODIFIED: manifest has stale (fake) hashes
+    mod_names = filenames[:_CC07_MOD_COUNT]
+    stale_manifest: dict[str, Any] = {
+        name: {"sha256": "a" * 64}  # 64-char hex string ≠ real hash
+        for name in mod_names
+    }
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(stale_manifest), encoding="utf-8")
+
+    return vault, manifest_path
+
+
+def expected_cc07() -> dict[str, Any]:
+    filenames = sorted(_cc07_filenames())  # lex asc = date asc (01..16)
+    batch = filenames[:_CC07_CAP]          # 01..15
+    remaining = filenames[_CC07_CAP:]      # [16th file]
+    batch_dates = [f[:10] for f in batch]
+    remaining_dates = [f[:10] for f in remaining]
+    return {
+        "batch": batch,
+        "remaining": remaining,
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": min(batch_dates),
+            "last_date": max(batch_dates),
+            "remaining_count": len(remaining),
+            "remaining_first_date": min(remaining_dates),
+            "remaining_last_date": max(remaining_dates),
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CC-08: Env BATCH_ORDER=newest-first reverses dated sort.
+#         5 dated NEW files; batch_order="newest-first".
+#         Expected: batch sorted desc by date (newest first).
+# ---------------------------------------------------------------------------
+
+_CC08_DATED_FILES = [
+    "2023-06-01 note-a.md",
+    "2023-06-05 note-b.md",
+    "2023-06-03 note-c.md",
+    "2023-06-07 note-d.md",
+    "2023-06-02 note-e.md",
+]
+
+
+def build_cc08_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name in _CC08_DATED_FILES:
+        f = vault / name
+        f.write_text(f"# {name}\n", encoding="utf-8")
+    return vault
+
+
+def expected_cc08(vault: Path) -> dict[str, Any]:
+    # Sorted desc by date (newest-first)
+    sorted_names = sorted(_CC08_DATED_FILES, reverse=True)
+    all_dates = [n[:10] for n in _CC08_DATED_FILES]
+    # scope_summary uses min/max — not positional — independent of sort order
+    return {
+        "batch": sorted_names,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": min(all_dates),
+            "last_date": max(all_dates),
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Parametrize table — CC-05, CC-06, CC-08 added by T4.
+# (CC-07 uses its own test function; see test_select_batch_cc07 below.)
 #
 # Each entry: (case_id, builder_fn, expected_fn, batch_cap, batch_order)
 # ---------------------------------------------------------------------------
@@ -280,7 +482,9 @@ CASES: list[tuple[str, Callable, Callable, int, str]] = [
     ("cc02", build_cc02_vault, expected_cc02, 15, "oldest-first"),
     ("cc03", build_cc03_vault, expected_cc03, _CC03_BATCH_CAP, "oldest-first"),
     ("cc04", build_cc04_vault, expected_cc04, 15, "oldest-first"),
-    # T4 appends here: ("cc05", ...), ("cc06", ...), ("cc07", ...), ("cc08", ...)
+    ("cc05", build_cc05_vault, expected_cc05, 15, "oldest-first"),
+    ("cc06", build_cc06_vault, expected_cc06, 15, "oldest-first"),
+    ("cc08", build_cc08_vault, expected_cc08, 15, "newest-first"),
 ]
 
 
@@ -321,6 +525,31 @@ def test_select_batch(
 
     assert actual == expected, (
         f"[{case_id}] output mismatch.\n"
+        f"expected: {json.dumps(expected, indent=2)}\n"
+        f"  actual: {json.dumps(actual, indent=2)}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# CC-07 standalone test (manifest pre-population incompatible with shared harness)
+# ---------------------------------------------------------------------------
+
+def test_select_batch_cc07(tmp_path: Path) -> None:
+    """Cap squeeze: 3 MOD + 13 NEW = 16, cap=15 → squeeze 1 to remaining."""
+    vault, manifest = build_cc07_vault(tmp_path)
+
+    r = _run(vault, manifest, batch_order="oldest-first", batch_cap=_CC07_CAP)
+
+    assert r.returncode == 0, (
+        f"[cc07] expected exit 0, got {r.returncode}.\n"
+        f"stderr: {r.stderr}\nstdout: {r.stdout}"
+    )
+
+    actual = json.loads(r.stdout)
+    expected = expected_cc07()
+
+    assert actual == expected, (
+        f"[cc07] output mismatch.\n"
         f"expected: {json.dumps(expected, indent=2)}\n"
         f"  actual: {json.dumps(actual, indent=2)}"
     )
