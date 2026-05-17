@@ -132,13 +132,15 @@ summary:
 scored under the rules in effect now or a prior revision — standards,
 rubrics, and checklists ship together under one plugin version.
 
-**Aggregation rule** (same as SDD's code-quality-reviewer with the added cross-task dimension):
+**Aggregation rule** (same as SDD's code-quality-reviewer with the added cross-task dimension; aligned with `rubrics/quality-gate.md` §Verdict Rules):
 
 - Any 🔴 → `verdict: NEEDS_REVISION`
 - Any finding with empty / missing `where` → `verdict: NEEDS_REVISION`
   regardless of severity (opaque finding = malformed verdict)
-- All 7 dimensions PASS + no findings → `verdict: PASS`
-- Otherwise (🟡 / 🟢 findings, no 🔴, all with `where`) → `verdict: PASS_WITH_NOTES`
+- **2 or more 🟡 warning findings, no 🔴** → `verdict: NEEDS_REVISION`
+  (rubric §Verdict Rules — aggregated warnings signal systemic concern)
+- Exactly 1 🟡 warning finding, no 🔴, all with `where` → `verdict: PASS_WITH_NOTES`
+- No 🔴, no 🟡 (only 🟢 informational findings or no findings) → `verdict: PASS`
 
 ## Red Flags — refuse these rationalizations
 

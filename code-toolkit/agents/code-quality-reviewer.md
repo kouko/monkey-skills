@@ -255,16 +255,26 @@ notes:                           # optional; ≤3 bullets, e.g. cross-dimension 
 
 ### Verdict aggregation rule
 
+Aligned with `rubrics/quality-gate.md` §Verdict Rules — the rubric is
+the SSOT; this enumeration applies the rubric to the 🔴 / 🟡 / 🟢
+flag taxonomy used in this agent's output schema.
+
 - Any 🔴 fatal flag → `verdict: NEEDS_REVISION`.
 - Any flag with an empty / missing `where` field → `verdict: NEEDS_REVISION`
   regardless of severity. An opaque flag is unfixable on re-dispatch
   and is treated as a malformed verdict by the orchestrator.
-- All dimensions `PASS` and no flags → `verdict: PASS`.
-- Otherwise (🟡 and 🟢 flags but no 🔴, all with `where`) →
+- **2 or more 🟡 warning flags, no 🔴** → `verdict: NEEDS_REVISION`
+  (rubric §Verdict Rules — aggregated warnings signal systemic
+  concern, not just isolated polish).
+- Exactly 1 🟡 warning flag, no 🔴, all with `where` →
   `verdict: PASS_WITH_NOTES`.
+- No 🔴, no 🟡 (only 🟢 informational flags or no flags) →
+  `verdict: PASS`.
 
 The implementer fixes 🔴 on re-dispatch. 🟡 is fixed-now or filed-as-debt
-at the orchestrator's discretion. 🟢 is informational.
+at the orchestrator's discretion (when 1 🟡 / PASS_WITH_NOTES) or
+required on re-dispatch (when 2+ 🟡 / NEEDS_REVISION). 🟢 is
+informational only.
 
 ### Dimensions — what each one means
 

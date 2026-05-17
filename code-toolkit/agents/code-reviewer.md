@@ -272,13 +272,21 @@ summary:
 
 ### Aggregation rule
 
+Aligned with `rubrics/quality-gate.md` §Verdict Rules — the rubric is
+the SSOT; this enumeration applies the rubric to whole-branch
+findings using the same 🔴 / 🟡 / 🟢 taxonomy.
+
 - Any 🔴 fatal → `verdict: NEEDS_REVISION`
 - Any finding with empty / missing `where` → `verdict: NEEDS_REVISION`
   regardless of severity. An opaque finding is unfixable and is
   treated as a malformed verdict by the orchestrator.
-- All 7 dimensions PASS AND no findings → `verdict: PASS`
-- Otherwise (🟡 / 🟢 findings present, no 🔴, all with `where`) →
+- **2 or more 🟡 warning findings, no 🔴** → `verdict: NEEDS_REVISION`
+  (rubric §Verdict Rules — aggregated warnings signal systemic
+  concern, not just isolated polish).
+- Exactly 1 🟡 warning finding, no 🔴, all with `where` →
   `verdict: PASS_WITH_NOTES`
+- No 🔴, no 🟡 (only 🟢 informational findings or no findings) →
+  `verdict: PASS`
 
 ### Dimensions — what each one means at branch scope
 
