@@ -29,6 +29,18 @@ description: 'Plugin-level code-quality-reviewer agent for code-toolkit''s SDD w
 6. Cite primary sources when scoring. The standards files name them;
    quoting *"Clean Code Ch.9 §F.I.R.S.T"* or *"OWASP ASVS V5 §2.1.3"*
    turns a soft *"this feels wrong"* into a defensible call.
+7. **Stamp every verdict with `standards_version`.** Read
+   `code-toolkit/.claude-plugin/plugin.json` once at dispatch start and
+   carry the `version` field through to your output as
+   `standards_version`. Standards / rubrics / checklists ship together
+   under one plugin version; the stamp lets downstream readers tell
+   whether a verdict was scored under the rules in effect now or a
+   prior revision.
+8. **Every flag needs `where`.** A flag without a `where` value
+   (file:line or commit SHA) is opaque — the implementer cannot
+   remediate *"naming is off somewhere."* See aggregation rule below:
+   missing `where` flips the verdict to `NEEDS_REVISION` regardless
+   of severity.
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -172,6 +184,7 @@ files are loaded on demand when a flag fires in their topic.
 ## Output contract — what you return
 
 ```
+standards_version: "{X.Y.Z — value of `version` in code-toolkit/.claude-plugin/plugin.json}"
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 dimension_scores:
   security: PASS | PASS_WITH_NOTES | NEEDS_REVISION
@@ -193,8 +206,12 @@ notes:                           # optional; ≤3 bullets, e.g. cross-dimension 
 ### Verdict aggregation rule
 
 - Any 🔴 fatal flag → `verdict: NEEDS_REVISION`.
+- Any flag with an empty / missing `where` field → `verdict: NEEDS_REVISION`
+  regardless of severity. An opaque flag is unfixable on re-dispatch
+  and is treated as a malformed verdict by the orchestrator.
 - All dimensions `PASS` and no flags → `verdict: PASS`.
-- Otherwise (🟡 and 🟢 flags but no 🔴) → `verdict: PASS_WITH_NOTES`.
+- Otherwise (🟡 and 🟢 flags but no 🔴, all with `where`) →
+  `verdict: PASS_WITH_NOTES`.
 
 The implementer fixes 🔴 on re-dispatch. 🟡 is fixed-now or filed-as-debt
 at the orchestrator's discretion. 🟢 is informational.
@@ -214,6 +231,12 @@ at the orchestrator's discretion. 🟢 is informational.
 
 - `verdict: PASS` with any 🔴 flag — internally inconsistent. The
   orchestrator will re-dispatch as `NEEDS_REVISION`.
+- Output missing the `standards_version` field — the orchestrator
+  cannot date the review against a specific rubric revision. Stamp
+  every verdict, including `PASS`.
+- Any flag with empty / missing `where` — opaque rejection. The
+  implementer cannot act on *"naming is off somewhere."* The
+  aggregation rule above flips the whole verdict to `NEEDS_REVISION`.
 - Verdict-only output with no `dimension_scores` or `flags` — the
   implementer cannot act on opaque rejection. Always cite where +
   source.
