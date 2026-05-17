@@ -109,6 +109,8 @@ The sort direction for dated files is controlled by `BATCH_ORDER`. The value rea
 
 **`TOPIC_FILTER` interaction**: `TOPIC_FILTER` is a case-insensitive substring filter applied to a file's basename, frontmatter tags, and frontmatter aliases. It is applied **after** the NEW/MODIFIED bucket is built and **before** the date sort + cap. Files that do not match the filter are excluded from `to_process` entirely (they are neither in `batch` nor `remaining`). The order override matrix is independent of `TOPIC_FILTER`; after filtering, the surviving files are sorted and capped normally.
 
+Case-insensitivity uses Python's `str.casefold()` on the basename; for CJK characters, substring matching works directly on Unicode codepoints via the `in` operator without normalization.
+
 ```
 candidates
   → bucket (NEW / MODIFIED / UNCHANGED)
@@ -117,8 +119,6 @@ candidates
   → cap slice
   → batch + remaining
 ```
-
-> **Note**: `TOPIC_FILTER` support is added in commit 2 of the feature branch. In commit 1, the env var is accepted but has no effect (the script currently does not implement the filter; it is a planned extension). See §6 of the design doc for the authoritative commit-2 contract.
 
 ---
 
