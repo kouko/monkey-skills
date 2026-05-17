@@ -43,6 +43,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 
 - **Description**: <≤5 min unit of work, imperative voice>
 - **Module**: <path or module name; ONE only>
+- **Files touched**: <comma-separated paths the implementer will Write / Edit>
 - **Context paths**:
   - <absolute path to existing code the implementer reads>
   - <... additional context paths>
@@ -50,8 +51,15 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M parallel">
+- **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
 ```
+
+#### `Files touched` and `Independent` (v0.8.0+)
+
+- **`Files touched`** is the **disjointness oracle** for cross-task parallel dispatch. List every file the implementer will Write or Edit (not files it merely Reads — those go in `Context paths`).
+- **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
+- [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
 
 ### Optional sections
 
@@ -84,6 +92,7 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
 
 - **Description**: Accept `format=csv` query param in `GET /reports/:id`; default to `format=json` if absent or unrecognized.
 - **Module**: `src/routes/reports.ts`
+- **Files touched**: `src/routes/reports.ts`, `tests/routes/reports.test.ts`
 - **Context paths**:
   - `/Users/kouko/proj/src/routes/reports.ts`
   - `/Users/kouko/proj/tests/routes/reports.test.ts`
@@ -91,12 +100,14 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
   - **RED**: `reports.test.ts > GET /reports/:id?format=csv returns 200`
   - **GREEN**: query param parsed; passed to renderer; existing JSON path unchanged
 - **Dependencies**: none
+- **Independent**: true
 - **Brief item covered**: "minimum shippable change: `?format=csv` query param to existing report URL (no UI work)"
 
 ## Task 2 — Implement CSV renderer for report payload
 
 - **Description**: Convert the existing `ReportPayload` JSON shape to RFC 4180 CSV. Use `papaparse` (already in deps).
 - **Module**: `src/renderers/csv.ts` (new file)
+- **Files touched**: `src/renderers/csv.ts`, `src/renderers/csv.test.ts`
 - **Context paths**:
   - `/Users/kouko/proj/src/types/ReportPayload.ts`
   - `/Users/kouko/proj/node_modules/papaparse/README.md` (API ref)
@@ -104,12 +115,14 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
   - **RED**: `renderers/csv.test.ts > renderCSV produces RFC 4180-compliant output with quoted fields containing commas`
   - **GREEN**: CSV string matches RFC 4180 fixture; passes existing fuzz tests
 - **Dependencies**: none (parallel with Task 1)
+- **Independent**: true
 - **Brief item covered**: "minimum shippable change: CSV output that downstream pipeline can ingest"
 
 ## Task 3 — Wire renderer into handler + set Content-Type
 
 - **Description**: When `format=csv`, call `renderCSV(payload)`, return with `Content-Type: text/csv; charset=utf-8`.
 - **Module**: `src/routes/reports.ts`
+- **Files touched**: `src/routes/reports.ts`, `tests/routes/reports.test.ts`
 - **Context paths**:
   - `/Users/kouko/proj/src/routes/reports.ts` (modified by Task 1)
   - `/Users/kouko/proj/src/renderers/csv.ts` (produced by Task 2)
@@ -117,11 +130,12 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
   - **RED**: `reports.test.ts > GET /reports/:id?format=csv returns text/csv body matching renderer output`
   - **GREEN**: end-to-end request returns valid CSV; Content-Type header correct
 - **Dependencies**: Tasks 1, 2 complete first
+- **Independent**: false  # touches files Task 1 also touches; must run after Task 1
 - **Brief item covered**: "minimum shippable change: end-to-end CSV download path"
 
 ## Notes
 
-Tasks 1 + 2 are independent and can run parallel in SDD dispatch. Task 3 joins them.
+Tasks 1 + 2 are independent (disjoint `Files touched`) and can run parallel in `dispatching-parallel-agents`. Task 3 joins them sequentially because its `Files touched` overlaps Task 1's.
 ```
 
 ## Anti-patterns
@@ -133,6 +147,7 @@ Tasks 1 + 2 are independent and can run parallel in SDD dispatch. Task 3 joins t
 - ❌ **Tasks not traceable to brief.** Every task must quote / reference a brief item. Orphan tasks are scope creep.
 - ❌ **>5 tasks with no fallback decision.** If the plan needs >5 atomic tasks, route back to brainstorming OR split into multiple briefs. Do not silently produce a 10-task plan.
 - ❌ **Skipping plan-document-reviewer self-review.** `Plan-document-reviewer verdict: PENDING` means SDD blocks. Do not pass an unreviewed plan to SDD.
+- ❌ **Claiming `Independent: true` with overlapping `Files touched`.** Independence requires disjoint write sets. If two tasks both declare `Independent: true` AND share any file in `Files touched`, the claim is wrong — fix the plan, not the dispatch. `dispatching-parallel-agents` will refuse to dispatch overlapping tasks regardless of the marker.
 
 ## See also
 

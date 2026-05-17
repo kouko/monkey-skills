@@ -127,7 +127,7 @@ with BOTH code-toolkit + obra/superpowers installed):
        loaded (both injected via SessionStart)
 
   4. Test prompt: "what skills do you have?"
-     - Expected: both code-toolkit (10 skills) + superpowers (~11 skills)
+     - Expected: both code-toolkit (11 skills) + superpowers (~13 skills)
        discoverable
      - Skill-name collisions (brainstorming, writing-plans, etc.) — user
        must use plugin-scoped form: Skill(code-toolkit:brainstorming)

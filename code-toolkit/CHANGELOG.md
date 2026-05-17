@@ -16,11 +16,132 @@ The toolkit emerged from a single design question — *"is there a way to combin
 | **v0.2.1** | 2026-05-16 | Phase 1.5 rolling patches | tdd-iron-law gains Feathers (2004) Ch.13 §Legitimate legacy-code backfill distinction (closes "I just wrote 200 lines" rationalization gap surfaced in ritual); systematic-debugging description tuned for production-bug auto-fire (closes the auto-discovery miss surfaced in v0.2.0 ritual). |
 | **v0.3.0** | 2026-05-16 | Phase 3 — close-branch cluster + full Superpowers parity | + requesting-code-review + verification-before-completion + finishing-a-development-branch + using-git-worktrees = 9 of 9 planned skills shipped. Push-without-review gap caught + fixed (Fix 1+2+3 + Path A patches). End-to-end orchestrator ritual validated 3-of-4 Phase 3 skills in one cascading session. |
 | **v0.4.0** | (current draft) | Phase 2.5 + Phase 3.5 + Phase 4 prep | Codex CLI variant manifest + integration tests + 3 worked examples (Python / TypeScript / Swift) + 5 cross-plugin integration test scripts + announcement draft + multi-version retrospective. Build complete; verification rituals deferred to user-side Codex / superpowers sessions. |
-| **v1.0.0** | (target) | GA | After v0.4.0 verification rituals PASS: announcement publish + public release + merge to main per user 2026-05-16 "完全做好之前不合 main" policy. Phase 4 GA criteria from ROADMAP met. |
+| **v0.7.0** | 2026-05-16 | Policy-reset merge-to-main | Catches `main` up to the post-policy quality bar. Synthesizes v0.3.0 → v0.6.1 (Codex variant, reviewer-discipline R1+R2, Current State Evidence, `docs/superpowers/` → `docs/code-toolkit/` migration). No new feature; the merge artifact. |
+| **v0.8.0** | 2026-05-18 | Across-domain parallel dispatch | + `dispatching-parallel-agents` (auxiliary skill borrowed from superpowers v5.1.0, adapted with TDD iron-law per branch + 3-valued verdict aggregation). `writing-plans` schema extended with `Independent` + `Files touched` per-task markup as the parallel-dispatch eligibility oracle. 11 skills total. |
+| **v1.0.0** | (target) | GA | After v0.8.0 dogfood adds 4 more notes (`research/dogfood-*.md`) + announcement publish + public release. Phase 4 GA criteria from ROADMAP met. |
 
 **Cumulative artifact count at v0.4.0-draft**: 10 skills + 1 SessionStart hook + 12 byte-identical knowledge-layer functional copies + 3 SSOT pipeline scripts + 24 pressure-prompt test files across 9 test clusters + 5 integration test scripts + 2 Codex CLI verification scripts + 3 worked examples. ~28 commits on the long-lived `feat/code-toolkit-design` branch (per Q4 worktree convention).
 
 **Hybrid testing cadence (TC-1 decision, 2026-05-16)**: each Phase ship gates on a 3-minute ritual (`claude plugin validate` + reinstall + 1 pressure prompt). Catches measure-level / behavior-level bugs early; defers full systematic test suite to v1.0.0 release engineering. Found 7 substantive bugs across rituals (YAML / hookEventName / Feathers gap / systematic-debugging auto-fire / push-without-review / check-skill-structure allowlist / plugin-rooted-path) — all caught before Phase ship, none after.
+
+---
+
+## [0.8.0] — 2026-05-18 — **Across-domain parallel dispatch + plan-schema markup**
+
+Adds the 11th skill — `dispatching-parallel-agents` — borrowed from
+`obra/superpowers` v5.1.0's same-named skill and adapted for
+code-toolkit's discipline stack (TDD iron-law per branch + three-valued
+verdict aggregation + clear coexistence boundary with SDD's per-task
+reviewer parallelism). Plus an opt-in plan-schema extension in
+`writing-plans` that gives the new skill a machine-checkable
+eligibility signal.
+
+### Why this ships
+
+Dogfood observation (this session, 2026-05-18): code-toolkit's SDD
+parallels the two reviewers inside one task (`spec-reviewer` +
+`code-quality-reviewer` in one assistant message), but **across-task**
+parallelism — when the plan contains genuinely independent atomic
+tasks — was not surfaced as a first-class pattern. SDD also forbids
+multiple-implementers-on-one-plan as a default safety rule, which is
+correct *unless* the plan author has done the independence work.
+
+superpowers v5.1.0 ships a dedicated `dispatching-parallel-agents`
+skill that scopes the pattern cleanly: one agent per independent
+problem domain, dispatched in one message. The borrowed shape
+solves the gap without changing SDD's per-task safety floor.
+
+### What v0.8.0 ships
+
+**New skill — `dispatching-parallel-agents`** (auxiliary; no Skill
+Priority stage; lateral utility like `using-git-worktrees`):
+
+- Borrowed from `obra/superpowers` v5.1.0 `dispatching-parallel-agents`.
+- Adapted: TDD iron-law applies per branch (not waived); three-valued
+  verdict aggregation (`PASS` / `PASS_WITH_NOTES` / `NEEDS_REVISION`)
+  matching code-toolkit's reviewer contract; explicit coexistence
+  boundary with `subagent-driven-development` (this skill is across-
+  task; SDD is within-task per-triad reviewer parallelism).
+- Trigger conditions: 2+ independent problem domains (multiple
+  unrelated test failures, multiple modules to audit, N disjoint data
+  fetches, atomic tasks the plan marks `Independent: true`).
+- Refusal conditions: shared file / shared symbol / sequential data
+  dependency / investigation phase / within-SDD-triad attempts to
+  double-wrap.
+- Dispatch shape: **one assistant message, multiple `Agent` tool
+  calls** (Claude Code's concurrency primitive).
+
+**Plan schema extension in `writing-plans` (P15-15)**:
+
+- Per-task fields `Independent: true | false` (default `false`) and
+  `Files touched: <comma-separated paths>` added to the plan format
+  at `skills/writing-plans/references/plan-format.md`.
+- New §"Parallel-dispatch markup (v0.8.0+)" section in
+  `skills/writing-plans/SKILL.md` documents the contract: a task is
+  parallel-dispatch-safe **only when** both `Independent: true` AND
+  `Files touched` is disjoint from other independent tasks.
+- New anti-pattern in `plan-format.md` §Anti-patterns refuses
+  `Independent: true` with overlapping `Files touched`.
+- Worked example in `plan-format.md` updated to show the new fields
+  on all three tasks (Task 1 + Task 2 mark `Independent: true` with
+  disjoint files; Task 3 marks `false` because it touches Task 1's
+  files).
+
+**Router update — `using-code-toolkit/SKILL.md`**:
+
+- §Skill priority's Auxiliary section expanded from one line to a
+  bulleted list, adding `dispatching-parallel-agents` alongside
+  `using-git-worktrees`.
+
+**Version bump across artifacts**:
+
+- All 11 SKILL.md frontmatter `version: 0.7.0` → `0.8.0`.
+- `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` version
+  `0.7.0` → `0.8.0`; description "10 skills" → "11 skills";
+  longDescription (Codex) updated to mention auxiliary parallel
+  dispatch.
+- All 3 READMEs (EN / JA / TW) "10 skills" → "11 skills" + status
+  paragraph updated + skill table row added.
+
+### Why NOT to learn other superpowers v5.1.0 patterns
+
+Two patterns from superpowers v5.1.0 deliberately NOT carried into
+code-toolkit at v0.8.0:
+
+- **superpowers SDD's strict spec-rev → quality-rev sequencing**.
+  code-toolkit's SDD already parallels them (one message, two
+  `Agent` calls) — superpowers' sequencing is more conservative
+  (saves wasted quality-rev compute when spec-rev fails) but
+  code-toolkit's 3-round retry cap caps the waste; the latency win
+  from parallelism dominates. No change.
+- **`Task("...")` API shape**. superpowers' examples use a
+  Claude-Agent-SDK shape that does not match Claude Code's
+  `Agent({subagent_type: ..., prompt: ...})`. The new skill uses
+  Claude Code's canonical shape and references it explicitly.
+
+### Ship gate (same as v0.7.0)
+
+No new ship-blocking criteria. v0.8.0 ships under v0.7.0's
+"merge-to-main post-policy-reset" quality bar — all 11 skills validate
+through `claude plugin validate`; no behavioral regression in the 10
+prior skills.
+
+Codex CLI live verification remains explicitly deferred (precedent
+since v0.4.0).
+
+### Migration
+
+No migration steps for existing users. The new skill is auxiliary
+(no Skill Priority stage, no auto-fire); the plan schema extension
+is opt-in (existing plans without `Independent` / `Files touched`
+behave identically to v0.7.0 plans). Users who want parallel
+dispatch:
+
+1. Mark independent atomic tasks `Independent: true` in the plan.
+2. Declare `Files touched` for each.
+3. Invoke `dispatching-parallel-agents` (or let `using-code-toolkit`'s
+   router suggest it when the plan declares 2+ `Independent: true`
+   tasks with disjoint `Files touched`).
 
 ---
 

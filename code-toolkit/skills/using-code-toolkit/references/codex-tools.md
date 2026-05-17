@@ -13,7 +13,7 @@ Codex CLI plugin spec uses **slash-command syntax** for skill invocation (one-to
 /plugin:skill-name    # plugin-scoped (when same skill name exists in multiple plugins)
 ```
 
-For `code-toolkit`'s 10 skills:
+For `code-toolkit`'s 11 skills:
 
 | Skill | Codex CLI invocation |
 |---|---|
@@ -27,6 +27,7 @@ For `code-toolkit`'s 10 skills:
 | verification-before-completion | `/verification-before-completion` |
 | finishing-a-development-branch | `/finishing-a-development-branch` |
 | using-git-worktrees | `/using-git-worktrees` |
+| dispatching-parallel-agents | `/dispatching-parallel-agents` |
 
 If skill-name conflicts with another installed plugin (e.g. `obra/superpowers` ships `/brainstorming` too), use plugin-scoped form: `/code-toolkit:brainstorming`.
 
@@ -110,7 +111,7 @@ So the hook is the safety net even if specialist skill invocation tool names dif
 Run `tests/codex-cli/test-skill-loading.sh` + `tests/codex-cli/test-hook-injection.sh` (see `tests/codex-cli/README.md` for full procedure). Expected:
 
 1. Plugin installs cleanly via Codex CLI plugin install command (TBD exact syntax)
-2. `codex plugin details code-toolkit` (TBD command) lists 10 skills
+2. `codex plugin details code-toolkit` (TBD command) lists 11 skills
 3. SessionStart hook fires on fresh session; router context appears in agent's first prompt
 4. `/tdd-iron-law` (or however Codex CLI invokes skills) loads the skill body
 5. Run one TDD-pressure prompt (e.g. `tests/tdd-iron-law-pressure/prompts/skip-just-this-once.txt`) → agent refuses + cites Beck 2002
