@@ -21,7 +21,7 @@ The plan is the **paths-not-content handoff** between brainstorming and SDD. bra
 ## The pipeline
 
 ```
-brainstorming → brief (docs/superpowers/specs/<topic>.md)
+brainstorming → brief (docs/code-toolkit/specs/<topic>.md)
                   ↓
               writing-plans
                   ↓
@@ -105,12 +105,12 @@ If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-ru
 
 ## Output contract — the plan
 
-Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives at `docs/superpowers/plans/<date>-<topic>.md` (sibling to the brief). Minimum structure:
+Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives at `docs/code-toolkit/plans/<date>-<topic>.md` (sibling to the brief). Minimum structure:
 
 ```markdown
 # Plan: <topic>
 
-Source brief: docs/superpowers/specs/<date>-<topic>.md
+Source brief: docs/code-toolkit/specs/<date>-<topic>.md
 Total tasks: <N> (≤5)
 Execution order: sequential | parallel-where-possible
 
@@ -131,8 +131,8 @@ Execution order: sequential | parallel-where-possible
 
 | Direction | Skill | Contract |
 |---|---|---|
-| **Upstream** | `brainstorming` | Produces brief at `docs/superpowers/specs/<topic>.md`. writing-plans reads it via Read tool. |
-| **Downstream** | `subagent-driven-development` | Consumes plan at `docs/superpowers/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
+| **Upstream** | `brainstorming` | Produces brief at `docs/code-toolkit/specs/<topic>.md`. writing-plans reads it via Read tool. |
+| **Downstream** | `subagent-driven-development` | Consumes plan at `docs/code-toolkit/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
 | **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
 | **Recursive (BLOCKED fallback)** | `writing-plans` (self) | When SDD's implementer returns BLOCKED with decomposition signal, orchestrator re-invokes this skill on the failing task. |
 | **Optional delegation** | `dev-workflow:complexity-critique` | If the plan produces >3 tasks and you suspect Axis 3 (smallest end state) was too generous, optionally invoke complexity-critique before falling back to brainstorming. |

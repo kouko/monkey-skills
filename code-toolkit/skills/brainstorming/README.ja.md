@@ -26,7 +26,7 @@
 
 ## 成果物
 
-`docs/superpowers/specs/YYYY-MM-DD-<topic>.md`（またはプロジェクトのローカル spec 慣習）に書き出される構造化ブリーフ。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) を参照。`writing-plans`（Phase 2）がこのブリーフを消費して原子タスクに分解する。
+`docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md` に書き出される構造化ブリーフ。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) を参照。`writing-plans`（Phase 2）がこのブリーフを消費して原子タスクに分解する。
 
 ## 使わない場面
 

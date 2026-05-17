@@ -18,7 +18,7 @@ export support.
 
 ## Stage 1 — `brainstorming` (Discovery)
 
-Router auto-routes to `brainstorming` (Stage 1). Agent walks the 5-axis framework BEFORE jumping to implementation. The brief lands at `docs/superpowers/specs/2026-05-16-csv-export.md`:
+Router auto-routes to `brainstorming` (Stage 1). Agent walks the 5-axis framework BEFORE jumping to implementation. The brief lands at `docs/code-toolkit/specs/2026-05-16-csv-export.md`:
 
 ```markdown
 # Brief: CSV export for /reports/:id
@@ -69,7 +69,7 @@ Build the query-param approach. Backend only; one file modified
 (none — brief is complete)
 ```
 
-**Agent halts here**: brief written, asks user to approve before proceeding to plan-writing. *"Brief at `docs/superpowers/specs/2026-05-16-csv-export.md`. Confirm scope before I invoke writing-plans?"*
+**Agent halts here**: brief written, asks user to approve before proceeding to plan-writing. *"Brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md`. Confirm scope before I invoke writing-plans?"*
 
 User confirms.
 
@@ -77,12 +77,12 @@ User confirms.
 
 ## Stage 2 — `writing-plans` (Planning)
 
-Router routes to `writing-plans`. Reads the brief, produces atomic plan at `docs/superpowers/plans/2026-05-16-csv-export.md`:
+Router routes to `writing-plans`. Reads the brief, produces atomic plan at `docs/code-toolkit/plans/2026-05-16-csv-export.md`:
 
 ```markdown
 # Plan: CSV export query param
 
-**Source brief**: docs/superpowers/specs/2026-05-16-csv-export.md
+**Source brief**: docs/code-toolkit/specs/2026-05-16-csv-export.md
 **Total tasks**: 3 (≤5 ✓)
 **Execution order**: parallel-where-possible (Tasks 1 + 2 parallel; Task 3 joins)
 **Plan-document-reviewer verdict**: PASS (2026-05-16, 12/12 checks)

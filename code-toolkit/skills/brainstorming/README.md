@@ -26,7 +26,7 @@ Walk all five. None are optional unless the §When NOT to Use exemption applies.
 
 ## Output
 
-A structured brief written to `docs/superpowers/specs/YYYY-MM-DD-<topic>.md` (or the project's local spec convention). Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
+A structured brief written to `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md`. Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
 
 ## When NOT to use
 

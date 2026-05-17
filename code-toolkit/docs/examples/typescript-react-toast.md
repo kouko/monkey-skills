@@ -70,7 +70,7 @@ Three pieces:
 ```markdown
 # Plan: app-wide toast notifications
 
-**Source brief**: docs/superpowers/specs/2026-05-16-toast.md
+**Source brief**: docs/code-toolkit/specs/2026-05-16-toast.md
 **Total tasks**: 4 (≤5 ✓)
 **Execution order**: sequential with Task 4 dependent on 1-3
 **Plan-document-reviewer verdict**: PASS (2026-05-16, 12/12)
@@ -151,7 +151,7 @@ self_review:
 
 ### Re-invoke `writing-plans` on Task 3
 
-writing-plans applies the splitting framework to Task 3. Produces child plan at `docs/superpowers/plans/2026-05-16-toast-part-3-children.md`:
+writing-plans applies the splitting framework to Task 3. Produces child plan at `docs/code-toolkit/plans/2026-05-16-toast-part-3-children.md`:
 
 ```markdown
 # Plan: Task 3 child decomposition (Beck Child Test pattern)

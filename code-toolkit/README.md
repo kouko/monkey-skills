@@ -91,9 +91,9 @@ The intended user flow on a non-trivial task:
 ```
 You: "I want to add feature X"
   ↓ (SessionStart hook router auto-fires)
-brainstorming → 5-axis brief → docs/superpowers/specs/<topic>.md
+brainstorming → 5-axis brief → docs/code-toolkit/specs/<topic>.md
   ↓
-writing-plans → ≤5-task plan → docs/superpowers/plans/<topic>.md
+writing-plans → ≤5-task plan → docs/code-toolkit/plans/<topic>.md
   ↓
 subagent-driven-development → per-task triad dispatch
   ↓ (per implementer subagent)

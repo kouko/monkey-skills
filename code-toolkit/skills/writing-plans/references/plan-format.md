@@ -16,10 +16,9 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
 ## Where the plan lives
 
-| Repo convention | Path | When |
+| Mode | Path | When |
 |---|---|---|
-| monkey-skills-style | `docs/superpowers/plans/YYYY-MM-DD-<topic>.md` | Default. Sibling to the brief at `docs/superpowers/specs/`. |
-| Project-local | `docs/plans/<topic>.md` | If the project has its own `docs/plans/` convention. |
+| File | `docs/code-toolkit/plans/YYYY-MM-DD-<topic>.md` | **Default.** Sibling to the brief at `docs/code-toolkit/specs/`. |
 | Inline (no file) | Plan in chat context | Only for §When NOT to Use exempt cases — brief was its own plan; document inline; do not commit. |
 
 ## Schema
@@ -29,7 +28,7 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 ```markdown
 # Plan: <topic>
 
-**Source brief**: <path to brief, e.g. docs/superpowers/specs/2026-05-16-csv-export.md>
+**Source brief**: <path to brief, e.g. docs/code-toolkit/specs/2026-05-16-csv-export.md>
 **Total tasks**: <N> (must be ≤5; if >5 route back to brainstorming)
 **Execution order**: sequential | parallel-where-possible
 **Plan-document-reviewer verdict**: PASS (timestamp) | PENDING
@@ -71,12 +70,12 @@ Parent declared DONE when all children DONE.
 
 ## Worked example
 
-For a brief at `docs/superpowers/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*
+For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*
 
 ```markdown
 # Plan: CSV export query param
 
-**Source brief**: docs/superpowers/specs/2026-05-16-csv-export.md
+**Source brief**: docs/code-toolkit/specs/2026-05-16-csv-export.md
 **Total tasks**: 3 (≤5 ✓)
 **Execution order**: sequential
 **Plan-document-reviewer verdict**: PASS (2026-05-16 10:42)
