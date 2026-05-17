@@ -135,7 +135,7 @@ STEP 4's per-source loop iterates over the `batch` list in the order returned by
 
 For each NEW or MODIFIED source, in this order:
 
-### 3a. Read source content
+### 4a. Read source content
 
 Use `Read`. Capture frontmatter + body. Note any existing `wikilinks` for connection inference.
 
@@ -147,11 +147,11 @@ Use `Read`. Capture frontmatter + body. Note any existing `wikilinks` for connec
 
 This decouples the user-review gate from auto-research. Manually-written research notes (no `generated_by` field) are always ingested without status check.
 
-### 3b. Decide category (per [category-routing.md](references/category-routing.md))
+### 4b. Decide category (per [category-routing.md](references/category-routing.md))
 
 A single source may contribute to multiple wiki pages (e.g., a paper covering MAB → updates `entities/Thompson-Sampling`, `entities/UCB`, `concepts/exploration-exploitation`). Identify all targets.
 
-### 3c. For each target wiki page
+### 4c. For each target wiki page
 
 **Filename uniqueness check** (before creating any new page):
 
@@ -171,7 +171,7 @@ Algorithm:
 - `## Summary` — re-synthesize incorporating new source
 - `## Key Facts` — append new facts; mark provenance correctly (`^[inferred]`, `^[ambiguous]`)
 - `## Connections` — add new wikilinks if discovered
-- `## Sources` — add link to the per-source reference page (see 3d)
+- `## Sources` — add link to the per-source reference page (see 4d)
 - `frontmatter.sources_count` — increment
 - `frontmatter.updated` — today's date
 - `frontmatter.summary` — refresh if material changes (≤200 chars)
@@ -185,7 +185,7 @@ grep -nE '`[^`]*\[\[[^]]+\]\][^`]*`' <wiki-root>/<category>/<slug>.md
 
 If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]]` `` or `` **`[[Page]]`** ``) — Obsidian renders it as inline code, NOT a clickable link. **Do not advance**: edit the file to remove the wrapping backticks, then re-run the check until empty. The Quality bar self-check (below) is advisory; this grep is the enforced gate. Spec rationale in [page-format.md](references/page-format.md#never-wrap-wikilinks-in-backticks-critical).
 
-### 3d. Create/update reference page
+### 4d. Create/update reference page
 
 Always write `wiki/references/<slug>.md` (one page per source) with:
 
@@ -214,15 +214,15 @@ summary: "≤200 char single-line description of what this source contributes"
 
 Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`.
 
-### 3e. Update `wiki/index.md`
+### 4e. Update `wiki/index.md`
 
 Append the new page link under the appropriate category section. Skip if already present.
 
-### 3f. Update `wiki/.manifest.json`
+### 4f. Update `wiki/.manifest.json`
 
 Per [delta-tracking.md](references/delta-tracking.md): write entry with sha256, ISO timestamp, and union of `wiki_pages`.
 
-### 3g. Append to `wiki/log.md`
+### 4g. Append to `wiki/log.md`
 
 ```markdown
 | YYYY-MM-DD | ingest | <source-path> | <comma-separated wiki page links, marked (new) or (updated)> |
