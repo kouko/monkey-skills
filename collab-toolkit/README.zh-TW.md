@@ -38,14 +38,20 @@
 - "今天 Google Calendar 上有什麼行程"
 - "找出下週二 10am 到 4pm 之間空閒的 30 分鐘時段"
 
+## 支援的 UI 語言
+
+v0.1.6+ 支援 **English / 繁體中文 / 日本語** UI 標籤。每個 protocol 都有 `Localized labels` 表格列出 3 種語言的 role+name 對照。其他語系（zh-CN / ko / 歐洲語言）可能部分可用 — 歡迎驗證過的標籤透過 PR 補充。
+
+帳號介面語言為繁中時，protocol 會自動匹配繁中標籤。英文/日文帳號同理。
+
 ## 設定檔模式
 
 | 模式 | 內容 | 使用時機 |
 |---|---|---|
-| **Shared**（預設） | 透過 `--profile <name>` 重複使用日常 Chrome 的登入狀態 | 單一使用者、單一機器 — 最快速的設定 |
-| **Dedicated**（`--dedicated`） | 每個服務各有獨立的設定檔目錄，需手動逐一登入 | 多機器同步、專用自動化環境、隔離需求 |
+| **Dedicated**（預設、v0.1.2+） | 位於 `~/.local/share/collab-toolkit/profiles/dedicated/` 的單一統合設定檔。Google SSO 在服務間自動串接 → 5 個服務通常只需 2-3 次登入。設定流程由 Claude 編排（透過 AskUserQuestion，不需在終端機操作）。 | **預設 — 辦公協作用途推薦。** 多 profile、多帳號、SSO refresh 等情境都能穩定運作。與日常 Chrome 狀態完全脫鉤。 |
+| **Shared**（`--shared`、選擇性啟用） | 透過 `--profile <name>` 重複使用日常 Chrome 的登入狀態 | ⚠️ Shared 模式有已知失敗情境：Chrome 執行中時 cookies 無法轉移（profile lock）、macOS Keychain 可能需要手動授權、多個 Chrome profile 時要挑「對」的、有 SSO refresh 的服務在 headless 下可能失效、verify 對行銷頁面 redirect 容易誤判。**僅在以下條件成立時推薦：只有 1 個 Chrome profile、5 個服務全用同一個 Google 帳號、沒有 SSO refresh。** |
 
-隨時切換：`/collab-setup --switch-mode`。
+隨時切換：`/collab-setup --switch-mode`（v0.1.2 後支援雙向 toggle）。
 
 ## Skill 清單
 

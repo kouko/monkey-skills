@@ -1,49 +1,51 @@
 ---
 name: database-query
-purpose: Query a Notion database with multi-property filters and sort, return matching rows.
+purpose: Query a Notion database with filter / sort. Return matching rows.
 ---
 
 ## Inputs
-
 - `database_url`: required.
-- `filters`: optional JSON array, each `{ property, operator, value }`.
+- `filters`: optional JSON array.
 - `sort`: optional `property:direction`.
 - `--json`: optional.
 
 ## Output
+Markdown table of rows.
 
-Default Markdown: table of rows with key properties.
+## Localized labels
 
-`--json`: array of row objects.
-
-> **Output spec note**: Row cells are extracted via `.cells[]?.text`. The `.cells[]` path is speculative (v0.1.0 unverified) — see `references/ui-patterns.md` AT-schema notes. Falls back to `""` per cell.
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Filter button | `[button] "Filter"` | `[button] "篩選"` | `[button] "フィルター"` |
+| Sort button | `[button] "Sort"` | `[button] "排序"` | `[button] "並べ替え"` |
+| Add-filter button | `[button] "Add filter"` | `[button] "新增篩選"` | `[button] "フィルターを追加"` |
 
 ## Procedure
 
-```bash
-URL="$1"
-[ -z "$URL" ] && { echo "ERR: database_url required"; exit 1; }
+1. ```bash
+   abx open <database_url>
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=notion abx open "$URL"
-ABX_SERVICE=notion abx wait --load networkidle
-SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
+2. **Read snapshot**. Find database `[grid]`. Rows = `[row]`, header = `[columnheader]`.
 
-# Database rows are role="row" within role="grid"
-# NOTE: .parent.role filter dropped (Pattern F) — agent-browser flat snapshot has no .parent.
-# Accept all role="row" elements; precision to be improved after live-snapshot verification (see ui-patterns.md).
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="row")
-  | [.cells[]? | (.text // "")] | join(" | ")
-'
+3. **Apply filters via UI** if specified (look for Filter button per Localized labels). Notion's filter dropdown may render in a portal — see Failure modes.
 
-# Filter / sort application:
-# Notion's filter UI is interactive — implementer adds clicks on filter chip + property selector + value input.
-# Reference role+name in references/ui-patterns.md.
-```
+4. **Apply sort** similarly via Sort button.
+
+5. **Read rows**. Extract `[cell]` children. Format as Markdown table.
 
 ## Failure modes
 
-- Database not found → invalid URL
-- Filter property doesn't exist → error message naming the bad property
-- No `row` elements in snapshot → UI evolution or database is empty
+- **Filter UI in React portal** — dropdown not in accessibility tree → fetch all visible rows + filter in this protocol's logic instead.
+- **Lazy-loaded rows** → scroll + re-snapshot.
+- **Login wall** → reauth.
+
+## Notes
+
+- Different views (Table / Board / Calendar / Timeline / Gallery / List) render differently. Switch to Table view first for cleanest `[grid]`/`[row]`/`[cell]` structure.
+
+## Examples
+
+Input: `database_url = ...` → Markdown table of rows.

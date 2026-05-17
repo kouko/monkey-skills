@@ -1,71 +1,69 @@
 ---
 name: find-user
-purpose: Search workspace users by name / email / handle, return profile + activity status.
+purpose: Search Slack users by name / email / handle.
 ---
 
 ## Inputs
-
-- `query`: required. Name fragment, email, or handle.
+- `query`: required.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown:
 ```
-## User search: "alice"
+## Slack users matching "<query>"
 
-**Alice Chen** · @alice · alice@company.com · Active (last seen 2 min ago)
-Title: Senior Engineer · Team: Platform
-Timezone: PST
-
-**Alice Lee** · @alicelee · alice@elsewhere.com · Away (idle 12 min)
-...
+**<Display Name>** · @<handle> · <email>
+Status: <Active | Away>
+Title: <job title>
 ```
 
-`--json`: array of `{ name, handle, email, status, title, team, timezone }`.
+## Localized labels
 
-> **Output spec note**: `handle`, `email`, `status`, `title`, `team`, `timezone` are extracted from AT snapshot `row` elements in the People grid. These fields are speculative (v0.1.0 unverified) — see `references/ui-patterns.md` AT-schema notes. All use `// "(unknown)"` / `// ""` fallbacks. `last_seen` is not included in v0.1.0 output (AT snapshot does not reliably expose it as a separate field).
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| People sidebar link | `[link] "People"` or `"More"` | `[link] "成員"` or `"更多"` | `[link] "メンバー"` or `"その他"` |
+| People grid heading | `[grid] "People"` | `[grid] "成員"` | `[grid] "メンバー"` |
+| Search input within People | `[textbox]` or `[combobox]` | `[textbox]` or `[combobox]` | `[textbox]` or `[combobox]` |
 
 ## Procedure
 
-```bash
-QUERY="$1"
-[ -z "$QUERY" ] && { echo "ERR: query required"; exit 1; }
+1. ```bash
+   abx open https://app.slack.com
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=slack abx open https://app.slack.com
-ABX_SERVICE=slack abx wait --load networkidle
+2. **Read snapshot**. Find People link (locale-dependent). NOTE: free Slack may lack People view → see Failure modes.
 
-# Open People view — sidebar link or top bar People button
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-PEOPLE_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="link" and (.name=="People" or .name=="More")) | .ref' | head -1)
-[ -z "$PEOPLE_REF" ] && { echo "ERR: People link not found — see failure-modes.md for free-tier fallback"; exit 1; }
-ABX_SERVICE=slack abx click "$PEOPLE_REF"
-ABX_SERVICE=slack abx wait --load networkidle
+3. Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Fill search in People view
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-SEARCH_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="textbox") | .ref' | head -1)
-[ -n "$SEARCH_REF" ] && ABX_SERVICE=slack abx click "$SEARCH_REF"
-ABX_SERVICE=slack abx fill --active "$QUERY"
-ABX_SERVICE=slack abx wait 500
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
+4. **Find People grid search input**. Fill + submit:
+   ```bash
+   abx fill @eM "<query>"
+   abx press Enter
+   abx wait 1000
+   abx snapshot -i
+   ```
 
-# User results are role="row" within People grid
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="row")
-  | "\(.name // "(unknown)") · \(.handle // "") · \(.email // "") · \(.status // "")"
-'
-```
+5. **Read results**. User cards as `[row]` / `[listitem]`. Extract name / handle / email / title / status.
+
+6. Format Markdown.
 
 ## Failure modes
 
-- "People" view not accessible (free Slack tier may not have it) → graceful fallback: use @mention typeahead in any open channel. Navigate to a channel, type `@<query>` in the message input, snapshot the suggestion list:
-  ```bash
-  # Fallback: @-typeahead in message input
-  ABX_SERVICE=slack abx fill --active "@$QUERY"
-  ABX_SERVICE=slack abx wait 500
-  SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-  echo "$SNAP" | jq -r '.elements[] | select(.role=="option") | .name // "(unknown)"'
-  ```
-- Auth expiry → "Auth expiry"
+- **No People link** → free Slack tier. **Fallback**: open any channel, type `@<query>` in composer (DON'T send), snapshot typeahead.
+- **Empty results** → valid.
+- **Login wall** → reauth.
+
+## Notes
+
+- Slack hides email per privacy settings — may be `(hidden)`.
+- Activity status (Active/Away) shifts in real time.
+
+## Examples
+
+`query = "alice"` → Markdown list of matching users.

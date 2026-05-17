@@ -1,47 +1,51 @@
 ---
 name: project-overview
-purpose: List all projects user has access to, with sections and task counts.
+purpose: List all projects user can access. Flat list only (section counts deferred to v0.2.0).
 ---
 
 ## Inputs
-
-- None (lists all accessible projects).
+- None.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown (v0.1.0 — project names only):
 ```
-## Projects (12)
-
-- Backend
-- Frontend
-- Eng Ops
-- ...
+## Projects (N)
+- <project name 1>
+- <project name 2>
 ```
 
-`--json`: array of `{name}`.
+## Localized labels
 
-**v0.2.0 deferred**: per-project section / task-count fetching requires navigating into each project (3 levels deep). Will add in v0.2.0 with batched parallel tab fetches. v0.1.0 returns top-level project list only.
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Sidebar Projects link | `[link] "Projects"` | `[link] "專案"` | `[link] "プロジェクト"` |
+| Show-more button | `[button] "Show more"` | `[button] "顯示更多"` | `[button] "もっと表示"` |
 
 ## Procedure
 
-```bash
-ABX_SERVICE=asana abx open https://app.asana.com/0/projects
-ABX_SERVICE=asana abx wait --load networkidle
-SNAP=$(ABX_SERVICE=asana abx snapshot -i --json)
+1. Navigate:
+   ```bash
+   abx open https://app.asana.com/0/projects
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Each project = role="row" within a grid, with name in role="link"
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="row")
-  | ([.children[]? | select(.role=="link") | .name] | first // "(unnamed)")
-' | while read -r project; do
-  echo "- $project"
-done
-```
+2. **Read snapshot**. Projects appear as `[row]` (grid view) or `[treeitem]` (sidebar). Names are user-defined (no translation).
+
+3. Extract project name (link / treeitem name).
+
+4. Format as flat Markdown list.
 
 ## Failure modes
 
-- "Projects" page empty → user has no projects (valid empty result)
-- Login wall → "Auth expiry"
+- **No projects in snapshot** → empty (valid) OR UI changed.
+- **Login wall** → reauth.
+
+## v0.1.5+ limitations
+
+- **Section/task counts not fetched** — out of scope, deferred to v0.2.0.
+- **Pagination** — only visible page captured.
+
+## Examples
+
+Flat list of project names.

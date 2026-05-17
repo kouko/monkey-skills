@@ -57,7 +57,7 @@ EOF
 @test "install_agent_browser on macOS with brew uses brew" {
   OSTYPE="darwin23"
   stub_command brew 'echo "brew $*"; exit 0'
-  PATH="$TEST_TMPDIR/bin:$ORIG_PATH"   # don't yet have agent-browser
+  PATH="$TEST_TMPDIR/bin:/usr/bin:/bin"   # isolate from real agent-browser on host PATH
   rm -f "$TEST_TMPDIR/bin/agent-browser"
 
   run install_agent_browser
@@ -79,6 +79,7 @@ EOF
   OSTYPE="darwin23"
   stub_command brew 'echo "brew failure" >&2; exit 1'
   stub_command npm 'echo "npm $*"; exit 0'
+  PATH="$TEST_TMPDIR/bin:/usr/bin:/bin"   # isolate from real agent-browser on host PATH
   rm -f "$TEST_TMPDIR/bin/agent-browser"
 
   run install_agent_browser
@@ -129,59 +130,200 @@ EOF
   [ "$profile" = "Work" ]
 }
 
-@test "write_config_dedicated creates valid JSON with dedicated mode" {
-  run write_config_dedicated
+@test "write_config_dedicated_unified writes mode=dedicated with dedicated_profile path" {
+  run write_config_dedicated_unified "/some/path/dedicated"
   [ "$status" -eq 0 ]
   mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
   [ "$mode" = "dedicated" ]
+  dp=$(jq -r .dedicated_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$dp" = "/some/path/dedicated" ]
 }
 
-@test "setup_dedicated creates 5 profile dirs" {
-  # Stub agent-browser + abx so login phase is no-op
-  stub_command agent-browser 'echo "Asana - Inbox"'
-  echo '#!/bin/sh' > "$TEST_TMPDIR/bin/abx"; chmod +x "$TEST_TMPDIR/bin/abx"
+@test "setup_dedicated_config_only creates unified profile dir + writes config" {
+  run setup_dedicated_config_only
+  [ "$status" -eq 0 ]
+  # Profile dir created
+  [ -d "$XDG_DATA_HOME/collab-toolkit/profiles/dedicated" ]
+  # Config has mode=dedicated and dedicated_profile pointing to that dir
+  mode=$(jq -r .mode "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$mode" = "dedicated" ]
+  dp=$(jq -r .dedicated_profile "$XDG_CONFIG_HOME/collab-toolkit/config.json")
+  [ "$dp" = "$XDG_DATA_HOME/collab-toolkit/profiles/dedicated" ]
+}
 
-  # Skip interactive login by overriding setup_one_dedicated
-  setup_one_dedicated() { :; }
-
-  run setup_dedicated
+@test "setup_dedicated_config_only does NOT create per-service dirs (v0.1.0/v0.1.1 schema removed)" {
+  run setup_dedicated_config_only
+  [ "$status" -eq 0 ]
   for service in asana slack notion gcal gmail; do
-    [ -d "$XDG_DATA_HOME/collab-toolkit/profiles/$service" ]
+    [ ! -d "$XDG_DATA_HOME/collab-toolkit/profiles/$service" ]
   done
 }
 
-@test "verify_one detects login wall via title" {
+@test "open_headed_service errors when config missing" {
+  rm -f "$XDG_CONFIG_HOME/collab-toolkit/config.json"
+  OPEN_SERVICE=asana run open_headed_service
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"dedicated_profile not set"* ]]
+}
+
+@test "open_headed_service launches agent-browser headed with dedicated profile" {
+  setup_dedicated_config_only >/dev/null
+  stub_command agent-browser 'echo "agent-browser $*"'
+  OPEN_SERVICE=slack run open_headed_service
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--headed"* ]]
+  [[ "$output" == *"--profile $XDG_DATA_HOME/collab-toolkit/profiles/dedicated"* ]]
+  [[ "$output" == *"open https://app.slack.com"* ]]
+}
+
+@test "verify_one detects login wall via URL path (same-host /login redirect, e.g. Asana)" {
   mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
   cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
 { "mode": "shared", "chrome_profile": "Default" }
 JSON
-  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "Sign in - Asana"; else echo ok; fi'
-  # abx must exist on PATH so verify_one can call it
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/-/login?u=app" ;;
+    *"get title"*) echo "Log in - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
   cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
 #!/usr/bin/env bash
-exec agent-browser --profile Default "$@"
+exec agent-browser "$@"
 EOF
   chmod +x "$TEST_TMPDIR/bin/abx"
 
   MODE=shared run verify_one asana
   [[ "$output" == *"NOT logged in"* ]]
-  [[ "$output" == *"Sign in - Asana"* ]]
+  [[ "$output" == *"login page"* || "$output" == *"/-/login"* ]]
 }
 
-@test "verify_one reports ok when title is not a login page" {
+@test "verify_one detects hostname redirect (marketing landing page, e.g. Slack)" {
   mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
   cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
 { "mode": "shared", "chrome_profile": "Default" }
 JSON
-  stub_command agent-browser 'if [[ "$*" == *"get title"* ]]; then echo "My Tasks - Asana"; else echo ok; fi'
+  # Slack redirects unauthenticated users to marketing page on slack.com
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://slack.com/get-started" ;;
+    *"get title"*) echo "Slack | AI Work Platform & Productivity Tools" ;;
+    *)             echo "ok" ;;
+  esac'
   cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
 #!/usr/bin/env bash
-exec agent-browser --profile Default "$@"
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one slack
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"hostname redirected"* ]]
+  [[ "$output" == *"app.slack.com"* ]]
+}
+
+@test "verify_one detects Google SSO redirect (accounts.google.com) for GCal/Gmail" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://accounts.google.com/ServiceLogin?service=cl" ;;
+    *"get title"*) echo "Google Calendar - Sign in to Access..." ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one gcal
+  [[ "$output" == *"NOT logged in"* ]]
+  # Could be caught by hostname mismatch OR URL pattern — either is correct
+  [[ "$output" == *"accounts.google.com"* ]]
+}
+
+@test "verify_one reports ready when URL stays at expected host AND title not login" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/0/inbox" ;;
+    *"get title"*) echo "My Tasks - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
 EOF
   chmod +x "$TEST_TMPDIR/bin/abx"
 
   MODE=shared run verify_one asana
   [[ "$output" == *"✓ asana ready"* ]]
+  [[ "$output" == *"My Tasks - Asana"* ]]
+}
+
+@test "verify_one falls back to title check when URL fetch is empty (abx daemon error)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "" ;;
+    *"get title"*) echo "Sign in - Notion" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one notion
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"Sign in - Notion"* ]]
+}
+
+@test "verify_one detects zh-TW login title (登入)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://app.asana.com/0/inbox" ;;
+    *"get title"*) echo "登入 - Asana" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one asana
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"登入 - Asana"* ]]
+}
+
+@test "verify_one detects ja login title (ログイン)" {
+  mkdir -p "$XDG_CONFIG_HOME/collab-toolkit"
+  cat > "$XDG_CONFIG_HOME/collab-toolkit/config.json" <<'JSON'
+{ "mode": "shared", "chrome_profile": "Default" }
+JSON
+  stub_command agent-browser 'case "$*" in
+    *"get url"*)   echo "https://www.notion.so" ;;
+    *"get title"*) echo "Notion へログイン" ;;
+    *)             echo "ok" ;;
+  esac'
+  cat > "$TEST_TMPDIR/bin/abx" <<'EOF'
+#!/usr/bin/env bash
+exec agent-browser "$@"
+EOF
+  chmod +x "$TEST_TMPDIR/bin/abx"
+
+  MODE=shared run verify_one notion
+  [[ "$output" == *"NOT logged in"* ]]
+  [[ "$output" == *"ログイン"* ]]
 }
 
 @test "service_url returns expected URL per service" {
@@ -195,4 +337,42 @@ EOF
   [ "$output" = "https://calendar.google.com" ]
   run service_url gmail
   [ "$output" = "https://mail.google.com" ]
+}
+
+@test "list_profiles_with_email reads macOS Chrome Local State and emits profile:email lines" {
+  mkdir -p "$HOME/Library/Application Support/Google/Chrome"
+  cat > "$HOME/Library/Application Support/Google/Chrome/Local State" <<'JSON'
+{
+  "profile": {
+    "info_cache": {
+      "Default":   { "user_name": "alice@example.com",      "name": "Personal" },
+      "Profile 1": { "user_name": "alice.work@example.com", "name": "Work" },
+      "Profile 2": { "name": "No signin" }
+    }
+  }
+}
+JSON
+  run list_profiles_with_email
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Default: alice@example.com"* ]]
+  [[ "$output" == *"Profile 1: alice.work@example.com"* ]]
+  [[ "$output" == *"Profile 2: (no Google account)"* ]]
+  [[ "$output" == *"— Personal"* ]]
+  [[ "$output" == *"— Work"* ]]
+}
+
+@test "list_profiles_with_email returns non-zero when no Local State found in any candidate path" {
+  run list_profiles_with_email
+  [ "$status" -ne 0 ]
+}
+
+@test "list_profiles_with_email falls back to Linux Chrome path when macOS path absent" {
+  mkdir -p "$HOME/.config/google-chrome"
+  cat > "$HOME/.config/google-chrome/Local State" <<'JSON'
+{ "profile": { "info_cache": { "Default": { "user_name": "linux@example.com", "name": "Linux Profile" } } } }
+JSON
+  run list_profiles_with_email
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Default: linux@example.com"* ]]
+  [[ "$output" == *"— Linux Profile"* ]]
 }

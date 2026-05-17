@@ -1,69 +1,54 @@
 ---
 name: page-fetch
-purpose: Fetch a Notion page's full content including embedded databases, callouts, toggles, and metadata.
+purpose: Fetch a Notion page's content as Markdown.
 ---
 
 ## Inputs
-
-- `page_url`: required. Notion page URL.
+- `page_url`: required.
 - `--json`: optional.
-- `expand_toggles`: optional bool (default true).
 
 ## Output
+Page rendered as Markdown — headings, paragraphs, lists, callouts (`> 💡 ...`), toggles (`▶ <title>`).
 
-Default Markdown: full page rendered as Markdown (headings, paragraphs, lists, callouts, embedded database row summaries).
+## Localized labels
 
-`--json`: structured `{ title, blocks: [...] }`.
-
-> **Output spec note**: `properties` and `embedded_dbs` fields are not reliably extractable from the AT snapshot in v0.1.0. Output is narrowed to `title` + `blocks` until live-snapshot verification confirms additional fields (v0.2.0 deferred).
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Page content region | `[region] "Page content"` | `[region] "頁面內容"` | `[region] "ページコンテンツ"` |
 
 ## Procedure
 
-```bash
-URL="$1"
-[ -z "$URL" ] && { echo "ERR: page_url required"; exit 1; }
+1. ```bash
+   abx open <page_url>
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=notion abx open "$URL"
-ABX_SERVICE=notion abx wait --load networkidle
-SNAP=$(ABX_SERVICE=notion abx snapshot -i --json)
+2. **Read snapshot**. Identify:
+   - Title: `[heading]` level=1 (locale-agnostic)
+   - Page content region (locale-dependent — see table)
+   - Block children inside region: `[heading]`, `[paragraph]`, `[listitem]`, `[callout]`, `[toggle]` (roles locale-agnostic)
 
-# Page title — role="heading" level=1 within main content
-TITLE=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="heading" and .level==1) | .name // "(unknown)"' | head -1)
-echo "# $TITLE"
-echo
+3. Iterate children of the page content region. Map block type → Markdown:
+   - `[heading]` → `## <name>` (level-aware)
+   - `[paragraph]` → text via `abx get text @eN`
+   - `[listitem]` → `- <text>`
+   - `[callout]` → `> 💡 <text>`
+   - `[toggle]` → `▶ <name>` (click + re-snapshot to expand)
 
-# Iterate blocks under main content region
-# .children[]? and .text / .name on children are speculative (see ui-patterns.md AT-schema notes)
-CONTENT=$(echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="region" and .name=="Page content")
-  | .children[]?
-  | (
-    if .role == "heading" then "\n## \(.name // "")"
-    elif .role == "paragraph" then (.text // .name // "")
-    elif .role == "listitem" then "- \(.text // .name // "")"
-    elif .role == "callout" then "> 💡 \(.text // .name // "")"
-    elif .role == "toggle" then "▶ \(.name // "")"
-    else (.name // .text // "")
-    end
-  )
-')
-
-if [ -z "$CONTENT" ]; then
-  REGION_CHECK=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="region" and .name=="Page content") | .ref' | head -1)
-  if [ -z "$REGION_CHECK" ]; then
-    echo "ERR: UI changed: 'Page content' region not found" >&2
-    exit 1
-  fi
-  echo "(page has no visible content blocks)"
-else
-  echo "$CONTENT"
-fi
-```
+4. Concatenate into Markdown.
 
 ## Failure modes
 
-- Page not found (404 title) → invalid URL
-- Page private / no access → message about permissions
-- `Page content` region present but empty → valid empty page → outputs `(page has no visible content blocks)`
-- `Page content` region absent → UI evolution → exits 1 with `ERR: UI changed` (run snapshot refresh playbook in `references/ui-patterns.md`)
+- **Page content region missing** (in any of 3 locales) → wait longer + re-snapshot OR no permission.
+- **Empty page** → `(page has no visible content blocks)`.
+
+## Notes
+
+- Embedded databases render as `[grid]` — use `protocols/database-query.md` for rows.
+- Toggles collapsed by default — expand to capture nested content.
+- Long pages lazy-load — scroll + re-snapshot.
+
+## Examples
+
+Input: `page_url = https://www.notion.so/workspace/Some-Page-abc123` → full Markdown.

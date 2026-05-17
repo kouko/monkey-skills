@@ -1,69 +1,65 @@
 ---
 name: search-messages
-purpose: Full-text search across all Slack channels with optional operators (from / in / before / after / has).
+purpose: Full-text search across Slack channels with Slack operators.
 ---
 
 ## Inputs
-
-- `query`: required. Search string, may include operators.
+- `query`: required. May include operators.
 - `--json`: optional.
 
 ## Output
-
-Default Markdown:
 ```
-## Slack search: "OKR" (in: #engineering after: 2026-05-01) — 12 results
+## Slack search: "<query>" — N results
 
-**#engineering** · alice · 2026-05-10 14:32
-> Q2 OKRs are due next Friday. Let's align in standup.
-> [Open thread →](https://kouko-workspace.slack.com/archives/...)
-
-**#engineering** · bob · 2026-05-08 09:15
-> ...
+**#<channel>** · <user> · <timestamp>
+> <text>
 ```
 
-`--json`: `{ query, total, results: [{ channel, user, timestamp, text, url, has_thread }] }`.
+## Localized labels
 
-> **Output spec note**: `channel`, `user`, `timestamp`, `text` fields are extracted from the snapshot accessibility tree. Fields not present in the AT snapshot will fall back to `"(unknown)"`. Validated field availability is deferred to v0.2.0 dogfood (see `references/ui-patterns.md` AT-schema notes).
+| Element | en | zh-TW | ja |
+|---|---|---|---|
+| Search button | `[button] "Search"` | `[button] "搜尋"` | `[button] "検索"` |
+| Search input | `[textbox] "Search"` or `[combobox]` | `[textbox] "搜尋"` or `[combobox]` | `[textbox] "検索"` or `[combobox]` |
+| Sign-in fallback button (login-detect) | `[button] "Sign in to Slack"` | `[button] "登入 Slack"` | `[button] "Slack にサインイン"` |
 
 ## Procedure
 
-```bash
-QUERY="$1"
-[ -z "$QUERY" ] && { echo "ERR: query required"; exit 1; }
+1. ```bash
+   abx open https://app.slack.com
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-ABX_SERVICE=slack abx open https://app.slack.com
-ABX_SERVICE=slack abx wait --load networkidle
+2. **Read snapshot**. Find Search button (per Localized labels).
 
-# Open search — role="button" name="Search"
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-TITLE_CHECK=$(echo "$SNAP" | jq -r '.title // ""')
-if echo "$TITLE_CHECK" | grep -qiE "sign in|log in|login"; then
-  echo "ERR: Slack login wall detected (title: $TITLE_CHECK)" >&2
-  echo "  → Shared mode: log into Slack in your daily Chrome" >&2
-  echo "  → Dedicated mode: /collab-setup --reauth slack" >&2
-  exit 1
-fi
-SEARCH_REF=$(echo "$SNAP" | jq -r '.elements[] | select(.role=="button" and .name=="Search") | .ref' | head -1)
-[ -z "$SEARCH_REF" ] && { echo "ERR: UI changed: 'Search' button not found"; exit 1; }
-ABX_SERVICE=slack abx click "$SEARCH_REF"
-ABX_SERVICE=slack abx wait 500
+3. Click + re-snapshot:
+   ```bash
+   abx click @eN
+   abx wait 500
+   abx snapshot -i
+   ```
 
-# Type query
-ABX_SERVICE=slack abx fill --active "$QUERY"
-ABX_SERVICE=slack abx press Enter
-ABX_SERVICE=slack abx wait --load networkidle
+4. **Find active search input**. Fill + submit:
+   ```bash
+   abx fill @eM "<query>"
+   abx press Enter
+   abx wait --load networkidle
+   abx snapshot -i
+   ```
 
-# Snapshot results — each result is role="listitem" within Search results region
-SNAP=$(ABX_SERVICE=slack abx snapshot -i --json)
-echo "$SNAP" | jq -r '
-  .elements[]
-  | select(.role=="listitem")
-  | "**\(.channel // "(unknown)")** · \(.user // "(unknown)") · \(.timestamp // "")\n> \(.text // "")\n"
-'
-```
+5. **Read results**. Each result `[listitem]` (or `[article]`) with channel / user / timestamp / text. Extract + format.
 
 ## Failure modes
 
-- Search button missing → UI evolution
-- 0 results for a known-good query → "Auth expiry" check (snapshot for `role=button name=Sign in`)
+- **Search button missing** → top bar restructured.
+- **No results for known-good query** → check for Sign-in button (any locale per table) → reauth.
+
+## Notes
+
+- **Slack operators** (`from:`, `in:`, `has:`, `before:`, `after:`) are locale-stable.
+- Free Slack: 90-day message history.
+
+## Examples
+
+`query = "OKR in:#engineering after:2026-05-01"` → matching results.

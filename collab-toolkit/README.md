@@ -38,14 +38,20 @@ After that, ask Claude things like:
 - "What's on my Google Calendar today"
 - "Find free 30-minute slots between 10am-4pm next Tuesday"
 
+## Supported UI languages
+
+v0.1.6+ supports **English / 繁體中文 / 日本語** UI labels. Each protocol has a `Localized labels` table mapping role+name patterns across the 3 languages. Other locales (zh-CN / ko / European) may partially work — refine via PR with verified labels.
+
+If your account language is English, no setup needed. If 繁中 or 日文, the protocols will match the localized labels automatically.
+
 ## Profile modes
 
 | Mode | What | When |
 |---|---|---|
-| **Shared** (default) | Reuses your daily Chrome's login state via `--profile <name>` | Single-user, single-machine — fastest setup |
-| **Dedicated** (`--dedicated`) | 5 per-service profile dirs, manual login each | Multi-machine sync, dedicated automation environment, isolation |
+| **Dedicated** (default, v0.1.2+) | Single unified profile at `~/.local/share/collab-toolkit/profiles/dedicated/`. Google SSO cascades across services → typically 2-3 logins for all 5 services. Setup is Claude-orchestrated via AskUserQuestion (no terminal interaction). | **Default — recommended for office-collaboration use.** Reliable across multi-profile / multi-account / SSO-refresh setups. Independent of daily Chrome state. |
+| **Shared** (`--shared`, opt-in) | Reuses your daily Chrome's login state via `--profile <name>` | ⚠️ Shared has known failure modes: cookies may not transfer when Chrome is running (profile-lock); macOS Keychain may need manual permission; multi-Chrome-profile users have to pick the "right" profile; services using SSO refresh may not work headless; verify is brittle for marketing-redirect cases. **Use only if you have ONE Chrome profile + all 5 services in ONE Google account + no SSO refresh.** |
 
-Switch any time: `/collab-setup --switch-mode`.
+Switch any time: `/collab-setup --switch-mode` (bidirectional toggle since v0.1.2).
 
 ## Skills
 
