@@ -242,7 +242,20 @@ Ingest complete:
   Wiki pages created: M
   Wiki pages updated: K
   Reference pages:    R
+```
 
+**Next-batch preview** (from `scope_summary` in STEP 3 output):
+
+- If `scope_summary.remaining_count == 0`:
+  ```
+  All NEW sources ingested. Wiki is up-to-date with vault.
+  ```
+- Else:
+  ```
+  Next batch on next run: <remaining_first_date> → <remaining_last_date> (~<remaining_count> remaining NEW)
+  ```
+
+```
 Recommended next steps:
   /wiki-cross-linker  — strengthen wikilinks across the new pages
   /wiki-lint          — health check (run after large batches)
