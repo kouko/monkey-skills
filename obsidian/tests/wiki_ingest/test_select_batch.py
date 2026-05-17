@@ -1,4 +1,4 @@
-"""Parametrized tests for select-batch.py — CC-01..CC-13.
+"""Parametrized tests for select-batch.py — CC-01..CC-15.
 
 Cases CC-05..CC-08 are appended by T4 (CC-05/CC-06/CC-08 extend the CASES
 list; CC-07 has its own test function because it requires a pre-populated
@@ -10,6 +10,10 @@ Cases CC-09..CC-13 are appended by T5 and cover TOPIC_FILTER behaviour:
   CC-11 — frontmatter aliases (block list) match
   CC-12 — TOPIC_FILTER with zero matches → empty batch
   CC-13 — TOPIC_FILTER + BATCH_ORDER=newest-first combined
+
+Cases CC-14..CC-15 are appended by T2 (part-3 plan):
+  CC-14 — all UNCHANGED (real SHA-256 in manifest) → batch=[], skipped_unchanged=3
+  CC-15 — NEGATIVE: script does NOT filter by frontmatter.status → all 4 pass through
 
 TDD Iron Law note: the production script (select-batch.py) was implemented
 in T2 before this test file; this file provides characterization test
@@ -716,8 +720,67 @@ def expected_cc13(vault: Path) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Parametrize table — CC-05, CC-06, CC-08 added by T4; CC-09..CC-13 by T5.
-# (CC-07 uses its own test function; see test_select_batch_cc07 below.)
+# CC-15: Script does NOT filter by frontmatter `status` field (NEGATIVE test).
+#
+# CC-15 verifies a NEGATIVE: select-batch.py does NOT filter by frontmatter.status.
+# The auto-research-status gate lives in SKILL.md STEP 4a (per-source loop), not
+# in this script. The gate test belongs to STEP 4a prose review.
+#
+# 4 NEW files, dated 2023-01-01..2023-01-04, varying status values.
+# TOPIC_FILTER=None, empty manifest → all 4 pass through, sorted oldest-first.
+# ---------------------------------------------------------------------------
+
+_CC15_FILES: list[tuple[str, str]] = [
+    # (filename, frontmatter_content)
+    (
+        "2023-01-01 file-reviewed-accept.md",
+        "---\ndate: 2023-01-01\nstatus: reviewed-accept\n---\n\n# file-reviewed-accept\n",
+    ),
+    (
+        "2023-01-02 file-pending-review.md",
+        "---\ndate: 2023-01-02\nstatus: pending-review\n---\n\n# file-pending-review\n",
+    ),
+    (
+        "2023-01-03 file-reviewed-reject.md",
+        "---\ndate: 2023-01-03\nstatus: reviewed-reject\n---\n\n# file-reviewed-reject\n",
+    ),
+    (
+        "2023-01-04 file-no-status.md",
+        "---\ndate: 2023-01-04\n---\n\n# file-no-status\n",
+    ),
+]
+
+
+def build_cc15_vault(tmp_path: Path) -> Path:
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+    for name, content in _CC15_FILES:
+        (vault / name).write_text(content, encoding="utf-8")
+    return vault
+
+
+def expected_cc15(vault: Path) -> dict[str, Any]:
+    # All 4 files, sorted oldest-first (date prefix ascending)
+    sorted_names = sorted(name for name, _ in _CC15_FILES)
+    dates = [n[:10] for n in sorted_names]
+    return {
+        "batch": sorted_names,
+        "remaining": [],
+        "skipped_unchanged": 0,
+        "scope_summary": {
+            "first_date": dates[0],
+            "last_date": dates[-1],
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Parametrize table — CC-05, CC-06, CC-08 added by T4; CC-09..CC-13 by T5;
+#                     CC-15 added by T2 (part-3 plan).
+# (CC-07 and CC-14 use their own test functions; see standalone tests below.)
 #
 # Each entry: (case_id, builder_fn, expected_fn, batch_cap, batch_order,
 #              topic_filter)
@@ -738,6 +801,8 @@ CASES: list[tuple[str, Callable, Callable, int, str, str | None]] = [
     ("cc11", build_cc11_vault, expected_cc11, 15, "oldest-first", "stock"),
     ("cc12", build_cc12_vault, expected_cc12, 15, "oldest-first", "nomatch"),
     ("cc13", build_cc13_vault, expected_cc13, 15, "newest-first", "invest"),
+    # T2 (part-3 plan): status field is NOT a filter in select-batch.py
+    ("cc15", build_cc15_vault, expected_cc15, 15, "oldest-first", None),
 ]
 
 
@@ -811,6 +876,67 @@ def test_select_batch_cc07(tmp_path: Path) -> None:
 
     assert actual == expected, (
         f"[cc07] output mismatch.\n"
+        f"expected: {json.dumps(expected, indent=2)}\n"
+        f"  actual: {json.dumps(actual, indent=2)}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# CC-14 standalone test (manifest pre-population with REAL hashes → all UNCHANGED)
+#
+# This case uses a standalone function (not the shared parametrize harness)
+# because the harness always writes {} to the manifest after the builder runs,
+# preventing pre-population with real SHA-256 hashes. This is the opposite of
+# CC-07 which used fake stale hashes for MODIFIED classification.
+# ---------------------------------------------------------------------------
+
+_CC14_FILES: list[tuple[str, str]] = [
+    ("2022-05-01 alpha.md", "# alpha\nContent for alpha.\n"),
+    ("2022-05-02 beta.md",  "# beta\nContent for beta.\n"),
+    ("2022-05-03 gamma.md", "# gamma\nContent for gamma.\n"),
+]
+
+
+def test_select_batch_cc14(tmp_path: Path) -> None:
+    """All UNCHANGED: manifest has real SHA-256s → batch=[], skipped_unchanged=3."""
+    import hashlib
+
+    vault = tmp_path / "vault"
+    vault.mkdir(parents=True, exist_ok=True)
+
+    # Write files and compute their real SHA-256 hashes
+    real_manifest: dict[str, Any] = {}
+    for name, content in _CC14_FILES:
+        (vault / name).write_text(content, encoding="utf-8")
+        sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        real_manifest[name] = {"sha256": sha}
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(real_manifest), encoding="utf-8")
+
+    r = _run(vault, manifest_path, batch_order="oldest-first", batch_cap=15)
+
+    assert r.returncode == 0, (
+        f"[cc14] expected exit 0, got {r.returncode}.\n"
+        f"stderr: {r.stderr}\nstdout: {r.stdout}"
+    )
+
+    actual = json.loads(r.stdout)
+    expected: dict[str, Any] = {
+        "batch": [],
+        "remaining": [],
+        "skipped_unchanged": 3,
+        "scope_summary": {
+            "first_date": None,
+            "last_date": None,
+            "remaining_count": 0,
+            "remaining_first_date": None,
+            "remaining_last_date": None,
+        },
+    }
+
+    assert actual == expected, (
+        f"[cc14] output mismatch.\n"
         f"expected: {json.dumps(expected, indent=2)}\n"
         f"  actual: {json.dumps(actual, indent=2)}"
     )
