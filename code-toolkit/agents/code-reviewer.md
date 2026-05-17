@@ -33,6 +33,19 @@ description: 'Plugin-level code-reviewer agent for code-toolkit''s requesting-co
    introduces `userId`, another uses `user_id`); duplicated logic that
    should have been extracted; scope creep (task did more than its
    description); test coverage of cross-task interactions.
+7. **Stamp every verdict with `standards_version`.** At dispatch
+   start, anchor at the repository root via
+   `git rev-parse --show-toplevel`, then read
+   `<root>/code-toolkit/.claude-plugin/plugin.json`. Carry the
+   `version` field through to your output as `standards_version`.
+   Standards / rubrics / checklists ship together under one plugin
+   version; the stamp lets downstream readers tell whether a verdict
+   was scored under the rules in effect now or a prior revision.
+8. **Every finding needs `where`.** A finding without a `where` value
+   (file:line or commit SHA range) is opaque — the user cannot
+   remediate *"architecture is off somewhere."* See aggregation rule
+   below: missing `where` flips the verdict to `NEEDS_REVISION`
+   regardless of severity.
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -184,6 +197,8 @@ this exact shape.
 ## Output contract — what you return
 
 ```
+standards_version: "{X.Y.Z — value of `version` in code-toolkit/.claude-plugin/plugin.json}"
+
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
 dimension_scores:
@@ -209,8 +224,12 @@ summary:
 ### Aggregation rule
 
 - Any 🔴 fatal → `verdict: NEEDS_REVISION`
+- Any finding with empty / missing `where` → `verdict: NEEDS_REVISION`
+  regardless of severity. An opaque finding is unfixable and is
+  treated as a malformed verdict by the orchestrator.
 - All 7 dimensions PASS AND no findings → `verdict: PASS`
-- Otherwise (🟡 / 🟢 findings present but no 🔴) → `verdict: PASS_WITH_NOTES`
+- Otherwise (🟡 / 🟢 findings present, no 🔴, all with `where`) →
+  `verdict: PASS_WITH_NOTES`
 
 ### Dimensions — what each one means at branch scope
 
@@ -227,6 +246,11 @@ summary:
 ## Anti-patterns the orchestrator will reject
 
 - `verdict: PASS` with any 🔴 flag — internally inconsistent.
+- Output missing the `standards_version` field — the orchestrator
+  cannot date the review against a specific rubric revision. Stamp
+  every verdict, including `PASS`.
+- Any finding with empty / missing `where` — opaque rejection. The
+  aggregation rule above flips the whole verdict to `NEEDS_REVISION`.
 - Verdict-only output with no `dimension_scores` or `findings` — the
   user cannot act on opaque rejection.
 - Editing code or rubrics — verdict-only role.

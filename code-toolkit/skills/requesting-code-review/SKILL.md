@@ -104,6 +104,8 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 Returns:
 
 ```
+standards_version: "{X.Y.Z — value of `version` in code-toolkit/.claude-plugin/plugin.json}"
+
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
 dimension_scores:
@@ -118,7 +120,7 @@ dimension_scores:
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: <which of the 7 above>
-    where: <file:line OR commit SHA range>
+    where: <file:line OR commit SHA range>     # REQUIRED — empty/missing flips verdict to NEEDS_REVISION
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
 
@@ -126,11 +128,17 @@ summary:
   - <≤5 bullet observations about the branch as a whole>
 ```
 
+`standards_version` lets downstream readers tell whether a verdict was
+scored under the rules in effect now or a prior revision — standards,
+rubrics, and checklists ship together under one plugin version.
+
 **Aggregation rule** (same as SDD's code-quality-reviewer with the added cross-task dimension):
 
 - Any 🔴 → `verdict: NEEDS_REVISION`
+- Any finding with empty / missing `where` → `verdict: NEEDS_REVISION`
+  regardless of severity (opaque finding = malformed verdict)
 - All 7 dimensions PASS + no findings → `verdict: PASS`
-- Otherwise → `verdict: PASS_WITH_NOTES`
+- Otherwise (🟡 / 🟢 findings, no 🔴, all with `where`) → `verdict: PASS_WITH_NOTES`
 
 ## Red Flags — refuse these rationalizations
 
