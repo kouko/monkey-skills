@@ -12,6 +12,8 @@ behavioral contract of the 3-tier date resolution + sort + cap pipeline.
 
 from __future__ import annotations
 
+import datetime as _dt
+import hashlib as _hashlib
 import json
 import os
 import subprocess
@@ -371,9 +373,6 @@ def expected_cc06(vault: Path) -> dict[str, Any]:
 # + 12 NEW); remaining = [2023-01-16 ...] (the 16th, 1 NEW).
 # ---------------------------------------------------------------------------
 
-import datetime as _dt
-import hashlib as _hashlib
-
 _CC07_CAP = 15
 _CC07_TOTAL = 16  # 3 MOD + 13 NEW
 _CC07_MOD_COUNT = 3
@@ -536,6 +535,8 @@ def test_select_batch(
 
 def test_select_batch_cc07(tmp_path: Path) -> None:
     """Cap squeeze: 3 MOD + 13 NEW = 16, cap=15 → squeeze 1 to remaining."""
+    # TODO: refactor _run() / shared harness to support pre-populated manifest
+    # if CC-09+ also requires this pattern (Rule of Three trigger).
     vault, manifest = build_cc07_vault(tmp_path)
 
     r = _run(vault, manifest, batch_order="oldest-first", batch_cap=_CC07_CAP)
