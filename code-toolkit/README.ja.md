@@ -46,7 +46,7 @@ claude plugin details code-toolkit           # 期待：10 skills + 1 SessionSta
 
 ### Codex CLI（build 完了、実機検証は延期中）
 
-⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.6.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
+⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.7.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
 
 ### ローカル開発（コントリビューター向け）
 
@@ -119,7 +119,7 @@ finishing-a-development-branch
 | Harness | 状態 |
 |---|---|
 | **Claude Code** | ✅ 複数 ritual サイクル完全検証 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多言語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 次元での全ブランチ code-review (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest は build + v0.6.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
+| **Codex CLI** | ⚠️ Manifest は build + v0.7.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
 
 SessionStart hook は portable な JSON shape を発出し、Claude Code の `hookSpecificOutput.additionalContext`、Codex CLI の `additional_context`、legacy `additionalContext` keys をカバー — 同じ hook が両 harness を提供。
 

@@ -46,7 +46,7 @@ claude plugin details code-toolkit           # 預期：10 skills + 1 SessionSta
 
 ### Codex CLI（build 完成、實機驗證延後）
 
-⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.6.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
+⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.7.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
 
 ### 本地開發（給貢獻者）
 
@@ -119,7 +119,7 @@ finishing-a-development-branch
 | Harness | 狀態 |
 |---|---|
 | **Claude Code** | ✅ 多輪 ritual 完整驗證 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 維度全 branch 審查 (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.6.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
+| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.7.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
 
 SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpecificOutput.additionalContext`、Codex CLI 的 `additional_context` 以及 legacy `additionalContext` keys — 同一個 hook 服務兩種 harness。
 
