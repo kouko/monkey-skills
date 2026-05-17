@@ -21,8 +21,8 @@ These are spec references; load them at the moment you need them, not at pre-fli
 | Reference | When to load |
 |---|---|
 | [references/delta-tracking.md](references/delta-tracking.md) | Before STEP 2 (scan and hash) — defines the manifest update contract |
-| [references/category-routing.md](references/category-routing.md) | Before STEP 3b (decide category) — decision tree for entities vs concepts |
-| [references/page-format.md](references/page-format.md) | Before STEP 3c (generate page) — authoritative output spec; reread before EVERY new page generation |
+| [references/category-routing.md](references/category-routing.md) | Before STEP 4b (decide category) — decision tree for entities vs concepts |
+| [references/page-format.md](references/page-format.md) | Before STEP 4c (generate page) — authoritative output spec; reread before EVERY new page generation |
 
 **Why lazy**: a delta-only run with 0 NEW / 0 MODIFIED sources never needs page-format.md or category-routing.md. Eager loading wastes context on the common no-op path.
 
@@ -44,25 +44,47 @@ For the full contract, edge cases, and rationale, see [references/source-scope.m
 
 ## STEP 1 — Determine ingest scope
 
-Use `AskUserQuestion`:
+Read the user's most recent message and apply the decision table below. No `AskUserQuestion` is issued; Claude resolves scope and order autonomously, then prints the one-line summary and proceeds.
+
+### Decision table
+
+| Prompt pattern | scope | order |
+|---|---|---|
+| Plain `/wiki-ingest` (no arguments) | `whole_vault` | from config (default `oldest-first`) |
+| Path token containing `/` and not ending `.md` (e.g. `research/`, `investing/2026/`) | `path:<p>` | from config |
+| Single-file token ending `.md` (path or bare basename) | `single_file:<f>` | n/a (not batched) |
+| Time keyword: `latest` / `recent` / `newest` / `最新` / `近期` | `whole_vault` | `newest-first` (prompt override) |
+| Time keyword: `oldest` / `backfill` / `最舊` / `從頭` / `舊筆記` | `whole_vault` | `oldest-first` (prompt override) |
+| Topic word (no `/`, no `.md`, no time-keyword, non-empty token) | `whole_vault` + `topic_filter:<t>` | from config |
+
+### Classification rules
+
+- **Path**: token contains `/` AND does not end with `.md`
+- **Single-file**: token ends with `.md` (whether a full path or bare basename)
+- **Time keyword**: case-insensitive substring match for ASCII keywords; exact equality for CJK keywords (no case concept)
+- **Topic word**: any non-empty token not matched by the above three rules — treated as a case-insensitive substring filter on filenames (+ frontmatter tags/aliases); falls back to whole-vault delta with the filter annotation
+
+### STEP 1 summary line
+
+After resolving scope and order, print **one line** and continue (user can Ctrl+C to abort):
 
 ```
-Question: "What should I ingest?"
-Options:
-1. "Whole vault, delta only" — scan entire vault minus excluded dirs, skip unchanged via manifest
-2. "Specific path" — user types a vault-relative file or folder
-3. "Research notes only" — limit to research/ (typical after wiki-auto-research)
+Scope: <whole_vault | path:<p> | single_file:<f>>  (filtered by topic '<t>' if any)
+Order: <oldest-first | newest-first>
+Source: <config | prompt hint | default>
 ```
 
-Respect `OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST` (default 15). If scope exceeds it, ask user to confirm or batch.
+**Config note**: `OBSIDIAN_WIKI_BATCH_ORDER` (commit 2 scope) lets the user set a persistent default in `.obsidian-wiki.config`. In commit 1, default order is hardcoded `oldest-first`; Claude passes `BATCH_ORDER=oldest-first` to `select-batch.py` unless the prompt triggers a time-keyword override. Topic-only hints fall back to whole-vault delta with the topic annotation shown in the summary line.
 
-For option 1, invoke the bundled scan script (POSIX-portable; auto-sources `.obsidian-wiki.config` from the vault root, emits one absolute path per line):
+### Vault scan
+
+Invoke the bundled scan script (POSIX-portable; auto-sources `.obsidian-wiki.config` from the vault root, emits vault-relative paths one per line):
 
 ```sh
-bash <skill-root>/scripts/scan-vault.sh "$VAULT_ROOT" > /tmp/wiki-ingest-candidates.txt
+bash <skill-root>/scripts/scan-vault.sh "$VAULT_ROOT"
 ```
 
-The script auto-sources `<vault-root>/.obsidian-wiki.config` to read `OBSIDIAN_WIKI_EXCLUDE_DIRS` — no need to source it manually. See [scripts/scan-vault.sh](scripts/scan-vault.sh) for implementation. Don't hand-roll a `find` command — the script handles top-level pruning, system exclusions, multi-line value parsing, and edge cases (loose root .md files, special chars in dir names). For options 2 and 3, scan the user-specified path directly via `Read` / `Bash find`.
+The script handles top-level pruning, system exclusions, multi-line value parsing, and edge cases. See [scripts/scan-vault.sh](scripts/scan-vault.sh). Do not hand-roll a `find` command. For `path:<p>` or `single_file:<f>` scopes, pass the user-specified path directly to the scan (or use `Read` / `Bash find` for single files).
 
 ## STEP 2 — Scan and hash
 
@@ -81,10 +103,35 @@ Found 47 source files:
   UNCHANGED:  32  ← skipped via manifest
 
 Cap: 15 pages per run (configurable in .obsidian-wiki.config)
-Proceed?
 ```
 
-## STEP 3 — Per-source ingest loop
+## STEP 3 — Select batch
+
+Pipe the NEW + MODIFIED paths from STEP 2 into `scripts/select-batch.py`:
+
+```sh
+printf '%s\n' "${new_and_modified_paths[@]}" \
+  | BATCH_ORDER=oldest-first \
+    BATCH_CAP="${OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST:-15}" \
+    MANIFEST_PATH="$VAULT_ROOT/wiki/.manifest.json" \
+    VAULT_ROOT="$VAULT_ROOT" \
+    python3 <skill-root>/scripts/select-batch.py
+```
+
+The script exits `0` on success, `2` on invalid env or unreadable manifest. Consume its JSON output:
+
+| Key | Use |
+|---|---|
+| `batch` | Ordered list of vault-relative paths to process in STEP 4 (≤ cap) |
+| `remaining` | Deferred paths (surfaced in STEP 6 next-batch preview — commit 3 scope; omit in commit 1) |
+| `skipped_unchanged` | Count of UNCHANGED files (informational) |
+| `scope_summary` | Date-range metadata for STEP 6 report (commit 3 scope; omit in commit 1) |
+
+STEP 4's per-source loop iterates over the `batch` list in the order returned by the script.
+
+**Reference**: `references/batching-policy.md` (commit 2 scope — will define the full cap + order override matrix; will exist by end of part-2).
+
+## STEP 4 — Per-source ingest loop
 
 For each NEW or MODIFIED source, in this order:
 
@@ -181,11 +228,11 @@ Per [delta-tracking.md](references/delta-tracking.md): write entry with sha256, 
 | YYYY-MM-DD | ingest | <source-path> | <comma-separated wiki page links, marked (new) or (updated)> |
 ```
 
-## STEP 4 — Update `wiki/hot.md`
+## STEP 5 — Update `wiki/hot.md`
 
 Refresh the "Recently touched" section with this run's affected pages. Cap entire section ≤300 chars; truncate oldest first.
 
-## STEP 5 — Report and recommend
+## STEP 6 — Report and recommend
 
 ```
 Ingest complete:
