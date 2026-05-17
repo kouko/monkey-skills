@@ -2,7 +2,7 @@
 
 **Authoritative spec** for all pages generated under `wiki/`. This file is owned by `wiki-ingest`. Other skills (`wiki-lint`, `wiki-cross-linker`, `wiki-auto-research`) reference their own copies of the relevant fragments — do not cross-link to this file.
 
-## Frontmatter (8 fields, all required)
+## Frontmatter (8 required + 1 conditional)
 
 ```yaml
 ---
@@ -16,6 +16,9 @@ tags:
   - tag2                            # 1+ tags, free vocabulary
 sources_count: N                    # cumulative count, increments on each ingest
 summary: "≤200 chars single-line summary used by tiered retrieval"
+aliases:                            # conditional MUST — see Field rules
+  - alternate-name
+  - 別名
 ---
 ```
 
@@ -31,6 +34,7 @@ summary: "≤200 chars single-line summary used by tiered retrieval"
 | `tags` | YAML list, lowercase-kebab-case preferred |
 | `sources_count` | Integer, increments by 1 each time a new source contributes |
 | `summary` | **≤200 characters**, single line, no markdown. Used by `wiki-query` tiered retrieval to avoid loading full pages |
+| `aliases` | List of strings. **Required when slug language ≠ body language** (e.g. ASCII slug + zh-TW body) for cross-language linkability via wiki-cross-linker. Optional otherwise. Lint-enforced by wiki-lint (part-2). |
 
 ### Type-specific frontmatter for non-entity/concept pages
 
@@ -94,7 +98,7 @@ End with confidence: high | medium | unverified.
 | **Tables** | Markdown tables OK in any section; prefer over long bulleted comparisons |
 | **Code blocks** | Use language hints; quote source provenance in caption when from a specific source |
 
-## Filename rules
+## Filename rules (authority: page-format.md)
 
 - **Globally unique within `wiki/`** — filenames MUST be unique across all 6 subfolders (`entities/`, `concepts/`, `synthesis/`, `skills/`, `journal/`, `references/`). This is a hard requirement because wikilinks are bare filenames; collisions break linking.
 - ASCII-safe filenames preferred for wikilink stability: `MAB-bandit-algorithms.md` not `多臂老虎機.md`
@@ -102,6 +106,14 @@ End with confidence: high | medium | unverified.
 - Reference pages: `YYYY-MM-DD-<slug>.md` (date-prefixed for ordering, naturally unique)
 - Journal pages: `YYYY-MM-DD-<slug>.md` (date-prefixed, naturally unique)
 - Entity / concept / synthesis / skill pages: when boundary is ambiguous and a name is taken, disambiguate with a qualifier suffix (e.g., `qlib-microsoft.md` vs `qlib-language.md`), not by adding a path prefix to the wikilink.
+
+## Body language (authority: language-policy.md when loaded)
+
+- Default (legacy): skill heuristic, English-leaning with CJK loanwords.
+- When `OBSIDIAN_WIKI_LANGUAGE_POLICY=enabled`: see references/language-policy.md.
+- Slug and body language are STRICTLY decoupled — slug can be ASCII while body is zh-TW / ja / ko.
+- `title` follows body language (slug remains ASCII per Filename rules section).
+- `summary` follows body language; preserve key terms per `OBSIDIAN_WIKI_PRESERVE_TERMS_FILE`.
 
 ## Wikilink resolution
 

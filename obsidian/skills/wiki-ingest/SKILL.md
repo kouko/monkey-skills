@@ -11,7 +11,7 @@ Reads source notes from configured folders (via `.obsidian-wiki.config`), distil
 
 Read these BEFORE STEP 1:
 
-1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty) and `OBSIDIAN_WIKI_BATCH_ORDER` (`oldest-first` or `newest-first`, defaults `oldest-first` if absent — backward-compatible). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
+1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty), `OBSIDIAN_WIKI_BATCH_ORDER` (`oldest-first` or `newest-first`, defaults `oldest-first` if absent — backward-compatible), `OBSIDIAN_WIKI_PRIMARY_LANGUAGE` (BCP-47 tag, e.g. `zh-TW`; defaults empty — no language enforcement), `OBSIDIAN_WIKI_LANGUAGE_POLICY` (`enabled` or absent; activates language resolution in STEP 4c when set to `enabled`), and `OBSIDIAN_WIKI_PRESERVE_TERMS_FILE` (vault-relative path to a no-translate term list; only consulted when `OBSIDIAN_WIKI_LANGUAGE_POLICY=enabled`). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
 2. **`wiki/.manifest.json`** — for delta detection. If missing, treat as empty `{}` (likely first ingest after wiki-setup).
 
 ## References (lazy — read only when needed)
@@ -24,6 +24,7 @@ These are spec references; load them at the moment you need them, not at pre-fli
 | [references/batching-policy.md](references/batching-policy.md) | Before STEP 3 (select batch) — cap + order override matrix |
 | [references/category-routing.md](references/category-routing.md) | Before STEP 4b (decide category) — decision tree for entities vs concepts |
 | [references/page-format.md](references/page-format.md) | Before STEP 4c (generate page) — authoritative output spec; reread before EVERY new page generation |
+| [references/language-policy.md](references/language-policy.md) | Before STEP 4c — only when LANGUAGE_POLICY=enabled |
 
 **Why lazy**: a delta-only run with 0 NEW / 0 MODIFIED sources never needs page-format.md or category-routing.md. Eager loading wastes context on the common no-op path.
 
@@ -154,6 +155,12 @@ This decouples the user-review gate from auto-research. Manually-written researc
 A single source may contribute to multiple wiki pages (e.g., a paper covering MAB → updates `entities/Thompson-Sampling`, `entities/UCB`, `concepts/exploration-exploitation`). Identify all targets.
 
 ### 4c. For each target wiki page
+
+**Language resolution** (only when `OBSIDIAN_WIKI_LANGUAGE_POLICY=enabled`): load
+`references/language-policy.md` and resolve body language per its decision tree.
+Slug remains ASCII (page-format.md authority); body language follows resolved
+policy. If `OBSIDIAN_WIKI_PRESERVE_TERMS_FILE` is set, load it and treat listed
+terms as no-translate.
 
 **Filename uniqueness check** (before creating any new page):
 

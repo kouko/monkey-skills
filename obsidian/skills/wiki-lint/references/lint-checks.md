@@ -1,4 +1,4 @@
-# Wiki Lint — 12 Health Checks
+# Wiki Lint — 13 Health Checks
 
 Categorized into **structural** (format violations), **semantic** (content health), and **provenance** (source/citation integrity).
 
@@ -52,6 +52,26 @@ Pages with `frontmatter.updated` older than 90 days **and** `status: developing`
 Pages with `status: seed` for >30 days → **warning** (likely abandoned at seed; either flesh out or archive).
 
 `status: archived` is exempt.
+
+### L13 — Aliases required on cross-language slug
+
+When a page's filename slug uses a different language script than its body language, the frontmatter `aliases:` field must be present and non-empty. Missing or empty `aliases:` → **warning** (SHOULD).
+
+**Slug vs body language detection** (per [language-policy.md](language-policy.md)):
+- **Slug language**: inferred from the filename (before `.md`). ASCII-only slug → Latin/English script. CJK characters in slug → zh/ja/ko script.
+- **Body language**: inferred from the dominant script of the page body text (excluding code blocks and frontmatter). CJK character ratio ≥30% of body characters → CJK body.
+
+**Cross-language condition** (triggers the check):
+- Slug is ASCII-only **and** body language is CJK (zh-TW, ja, ko) — the typical case when `wiki-ingest` generates ASCII slugs from non-ASCII titles per language-policy §slug-generation.
+- Slug contains CJK **and** body is primarily Latin/English (less common but also flagged).
+
+**Rationale**: Obsidian search and `[[wikilink]]` autocomplete use the filename slug. When slug and body language diverge, users searching in their native language cannot discover the page without an alias. `aliases:` in frontmatter adds the native-language title as a searchable alternative.
+
+**Examples**:
+- `wiki/entities/softbank-group.md` (ASCII slug) with Japanese body → must have `aliases: [ソフトバンクグループ]` or similar → missing → **warning**
+- `wiki/concepts/supply-chain-resilience.md` (ASCII slug) with zh-TW body → must have `aliases: [供應鏈韌性]` or similar → missing → **warning**
+
+**Exemptions**: pages where slug and body language are the same script are exempt (no alias required). Pages with `status: archived` are exempt.
 
 ## Provenance (source / citation integrity)
 
@@ -122,3 +142,4 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L10 | Re-ingest the affected source |
 | L11 | Resolve contradictions (research, query author, or move to Open Questions) |
 | L12 | Re-ingest stale page from current source, OR add `## Contradictions` block on canonical entity page documenting the disagreement (with as-of-date if time-sensitive) |
+| L13 | Add `aliases:` field to frontmatter with the native-language title (e.g. `aliases: [余白, yohaku]`). Re-run `/wiki-ingest` on the source if you want the wiki page rebuilt (see language-policy.md §4. Aliases Conditional MUST) |
