@@ -11,7 +11,7 @@ Reads source notes from configured folders (via `.obsidian-wiki.config`), distil
 
 Read these BEFORE STEP 1:
 
-1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
+1. **`.obsidian-wiki.config`** at vault root — must contain `OBSIDIAN_WIKI_VAULT_PATH`, `OBSIDIAN_WIKI_EXCLUDE_DIRS`. May also set `OBSIDIAN_WIKI_EXCLUDE_FILES` (any-depth basename glob list, defaults empty) and `OBSIDIAN_WIKI_BATCH_ORDER` (`oldest-first` or `newest-first`, defaults `oldest-first` if absent — backward-compatible). If missing but legacy `.env` (containing `OBSIDIAN_VAULT_PATH=`) exists, instruct user to run `/wiki-setup` to migrate. If neither exists, instruct user to run `/wiki-setup`.
 2. **`wiki/.manifest.json`** — for delta detection. If missing, treat as empty `{}` (likely first ingest after wiki-setup).
 
 ## References (lazy — read only when needed)
@@ -21,6 +21,7 @@ These are spec references; load them at the moment you need them, not at pre-fli
 | Reference | When to load |
 |---|---|
 | [references/delta-tracking.md](references/delta-tracking.md) | Before STEP 2 (scan and hash) — defines the manifest update contract |
+| [references/batching-policy.md](references/batching-policy.md) | Before STEP 3 (select batch) — cap + order override matrix |
 | [references/category-routing.md](references/category-routing.md) | Before STEP 4b (decide category) — decision tree for entities vs concepts |
 | [references/page-format.md](references/page-format.md) | Before STEP 4c (generate page) — authoritative output spec; reread before EVERY new page generation |
 
@@ -62,7 +63,7 @@ Read the user's most recent message and apply the decision table below. No `AskU
 - **Path**: token contains `/` AND does not end with `.md`
 - **Single-file**: token ends with `.md` (whether a full path or bare basename)
 - **Time keyword**: case-insensitive substring match for ASCII keywords; exact equality for CJK keywords (no case concept)
-- **Topic word**: any non-empty token not matched by the above three rules — treated as a case-insensitive substring filter on filenames (+ frontmatter tags/aliases); falls back to whole-vault delta with the filter annotation
+- **Topic word**: any non-empty token not matched by the above three rules — activates `topic_filter` in commit 2. Claude passes `TOPIC_FILTER=<topic>` env var to `select-batch.py`; the script applies case-insensitive ASCII substring match on basename AND exact match on frontmatter `tags` / `aliases` values. Scope = `whole_vault` + topic filter (only matching files proceed past STEP 3).
 
 ### STEP 1 summary line
 
@@ -74,7 +75,7 @@ Order: <oldest-first | newest-first>
 Source: <config | prompt hint | default>
 ```
 
-**Config note**: `OBSIDIAN_WIKI_BATCH_ORDER` (commit 2 scope) lets the user set a persistent default in `.obsidian-wiki.config`. In commit 1, default order is hardcoded `oldest-first`; Claude passes `BATCH_ORDER=oldest-first` to `select-batch.py` unless the prompt triggers a time-keyword override. Topic-only hints fall back to whole-vault delta with the topic annotation shown in the summary line.
+**Config note**: `OBSIDIAN_WIKI_BATCH_ORDER` in `.obsidian-wiki.config` sets the persistent default order (defaults `oldest-first` if absent). Claude reads this value at pre-flight and passes it as `BATCH_ORDER=<value>` to `select-batch.py`; a time-keyword in the prompt overrides it for that run only. When the prompt contains a topic word, Claude additionally passes `TOPIC_FILTER=<topic>` to `select-batch.py` — the script filters candidates to those whose basename contains the topic substring (case-insensitive) OR whose frontmatter `tags` / `aliases` exactly match it.
 
 ### Vault scan
 
@@ -111,14 +112,15 @@ Pipe the NEW + MODIFIED paths from STEP 2 into `scripts/select-batch.py`:
 
 ```sh
 printf '%s\n' "${new_and_modified_paths[@]}" \
-  | BATCH_ORDER=oldest-first \
+  | BATCH_ORDER="${OBSIDIAN_WIKI_BATCH_ORDER:-oldest-first}" \
     BATCH_CAP="${OBSIDIAN_WIKI_MAX_PAGES_PER_INGEST:-15}" \
     MANIFEST_PATH="$VAULT_ROOT/wiki/.manifest.json" \
     VAULT_ROOT="$VAULT_ROOT" \
+    ${TOPIC_FILTER:+TOPIC_FILTER="$TOPIC_FILTER"} \
     python3 <skill-root>/scripts/select-batch.py
 ```
 
-The script exits `0` on success, `2` on invalid env or unreadable manifest. Consume its JSON output:
+`BATCH_ORDER` is sourced from `OBSIDIAN_WIKI_BATCH_ORDER` read at pre-flight (default `oldest-first`); a time-keyword prompt hint sets it directly per STEP 1 decision table. `TOPIC_FILTER` is included only when Claude detected a topic-word hint in STEP 1 (set to the resolved topic token, casefolded). The script exits `0` on success, `2` on invalid env or unreadable manifest. Consume its JSON output:
 
 | Key | Use |
 |---|---|
@@ -129,7 +131,7 @@ The script exits `0` on success, `2` on invalid env or unreadable manifest. Cons
 
 STEP 4's per-source loop iterates over the `batch` list in the order returned by the script.
 
-**Reference**: `references/batching-policy.md` (commit 2 scope — will define the full cap + order override matrix; will exist by end of part-2).
+**Reference**: load [references/batching-policy.md](references/batching-policy.md) before STEP 3 — defines the full cap + order override matrix.
 
 ## STEP 4 — Per-source ingest loop
 
