@@ -49,7 +49,7 @@ Canvas 作成 / Excalidraw 図 / Mermaid 図をカバー。
 `using-obsidian` が entry skill。ユーザーの依頼内容（daily note、vault setup、
 file processing、図、cleanup など）に応じて適切な skill に routing する。
 
-slash command `/obsidian` は `using-obsidian` を呼び出す。
+slash command は `/using-obsidian` で呼び出す。
 
 ### Agent
 

@@ -5,7 +5,7 @@
 > Diátaxis-grounded documentation skill with checkpoint quality gates and an opt-in 4× cost-saving quick mode.
 
 **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) → `domain-teams`
-**Slash command**: `/docs`
+**Slash command**: `/docs-team`
 **Grounding**: Diátaxis · Google Style · Microsoft Style · Standard README · Nygard ADR · OpenAPI 3.2.0 · Write the Docs · JTAP · Software Engineering at Google Ch.10
 
 ## Table of contents
@@ -42,7 +42,7 @@ docs-team ships with the monkey-skills plugin. To use it:
 
 ```bash
 # In Claude Code with the monkey-skills plugin enabled:
-/docs <your request>
+/docs-team <your request>
 ```
 
 No separate installation. The plugin's `domain-teams` directory contains
@@ -50,15 +50,15 @@ the SKILL.md that Claude discovers automatically.
 
 ## Usage
 
-Invoke with `/docs` followed by the request, or let the
+Invoke with `/docs-team` followed by the request, or let the
 `using-domain-teams` router pick docs-team based on intent.
 
 ```
-/docs write a README for this Go library
-/docs document the payment service architecture
-/docs write an ADR for our token-bucket rate limiter
-/docs audit the docs/ directory for staleness
-/docs draft a quick how-to for rotating API keys     ← quick mode
+/docs-team write a README for this Go library
+/docs-team document the payment service architecture
+/docs-team write an ADR for our token-bucket rate limiter
+/docs-team audit the docs/ directory for staleness
+/docs-team draft a quick how-to for rotating API keys     ← quick mode
 ```
 
 The skill detects the artifact type, picks the right Diátaxis quadrant
@@ -122,7 +122,7 @@ Quick mode is **refused** for ADRs, API references, public-facing
 release READMEs, and architecture documentation — the gate audit
 trail is the artifact's value for these.
 
-`/docs verify <artifact>` runs gates retroactively on a quick-mode
+`/docs-team verify <artifact>` runs gates retroactively on a quick-mode
 output (~25K), letting you defer the verification decision without
 paying full mode up front.
 

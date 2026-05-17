@@ -22,7 +22,7 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 
 > **Migration note (v2.0.0)**: This skill replaces the v1.x
 > `investment-memo-writer`, which was deleted in v2.0.0. The slash command
-> `/invest-memo` continues to route here.
+> `/report-equity-memo` continues to route here.
 
 ---
 

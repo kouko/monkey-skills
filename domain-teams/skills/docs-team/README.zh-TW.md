@@ -5,7 +5,7 @@
 > Diátaxis 錨定的文件 skill，搭配 checkpoint quality gate 與可選的 4× 成本節省 quick mode。
 
 **所屬**: [monkey-skills](https://github.com/kouko/monkey-skills) → `domain-teams`
-**slash command**: `/docs`
+**slash command**: `/docs-team`
 **grounding**: Diátaxis · Google Style · Microsoft Style · Standard README · Nygard ADR · OpenAPI 3.2.0 · Write the Docs · JTAP · *Software Engineering at Google* 第 10 章
 
 ## 目錄
@@ -32,21 +32,21 @@ docs-team 隨 monkey-skills plugin 一起發佈。使用方式：
 
 ```bash
 # 在啟用 monkey-skills plugin 的 Claude Code 中：
-/docs <你的請求>
+/docs-team <你的請求>
 ```
 
 不需要另外安裝。Claude 會自動 discover plugin 的 `domain-teams` 目錄裡的 SKILL.md。
 
 ## 使用方式
 
-用 `/docs` 加上請求，或讓 `using-domain-teams` router 依意圖選擇 docs-team。
+用 `/docs-team` 加上請求，或讓 `using-domain-teams` router 依意圖選擇 docs-team。
 
 ```
-/docs write a README for this Go library
-/docs document the payment service architecture
-/docs write an ADR for our token-bucket rate limiter
-/docs audit the docs/ directory for staleness
-/docs draft a quick how-to for rotating API keys     ← quick mode
+/docs-team write a README for this Go library
+/docs-team document the payment service architecture
+/docs-team write an ADR for our token-bucket rate limiter
+/docs-team audit the docs/ directory for staleness
+/docs-team draft a quick how-to for rotating API keys     ← quick mode
 ```
 
 skill 偵測 artifact 類型、選擇對應的 Diátaxis quadrant 或 composite template，並啟動對應的 gate。
@@ -101,7 +101,7 @@ verdict: `PASS` / `PASS_WITH_NOTES`（自動修訂）/ `NEEDS_REVISION`（escala
 
 quick mode 對 ADR、API reference、對外公開的 release README、architecture documentation 一律 **拒絕** — 這些 artifact 的價值就在於 gate audit trail。
 
-`/docs verify <artifact>` 可對 quick mode 的輸出事後跑 gate（約 25K），讓你延後驗證決策，不必一開始就付 full mode 的成本。
+`/docs-team verify <artifact>` 可對 quick mode 的輸出事後跑 gate（約 25K），讓你延後驗證決策，不必一開始就付 full mode 的成本。
 
 ## 檔案配置
 

@@ -78,19 +78,21 @@ worker artifact ──► evaluator ──► verdict
 
 ## Teams
 
+每個 team skill 都能用 skill 名稱直接以自動產生的 slash command 呼叫（例如 `/code-team`、`/qa-team`）。
+
 | Team | Slash command | 角色 | 主要 grounding |
 |------|---------------|------|---------------|
-| `code-team` | `/code` | 以 primary-source-grounded 的 quality gate develop code | Clean Code（Martin 2008）、Pragmatic Programmer（Hunt & Thomas 2019）、SOLID、TDD（Beck 2002）、Refactoring 第 2 版（Fowler 2018）、Working Effectively with Legacy Code（Feathers 2004）、OWASP ASVS v5.0.0、徳丸本 第 6 章 |
-| `docs-team` | `/docs` | 以 Diátaxis discipline 撰寫 documentation 並 assess codebase | Diátaxis taxonomy、Standard README（RichardLitt）、Google + Microsoft style、Trong-Tra `documentation-specialist`（readme + architecture L0–L4） |
-| `qa-team` | `/qa` | 規劃並驗證 unit 以上層級的 test | 品質は工程で作り込む — built-in 品質；E2E / integration / performance test 策略 |
-| `devops-team` | `/devops` | 以 CI/CD、container、IaC 安全 ship code | Google SRE、DORA、12-Factor App primary source |
-| `research-team` | `/research` | 以 citation 驗證執行 primary-source-grounded 的 research | systematic-review rigor、confidence calibration、operator 視角 market analysis |
-| `design-team` | `/design` | 含 accessibility 與 quality review 的 design | 行為設計（behavioral design）、感性工学、無意識の設計；UI / UX / a11y |
-| `planning-team` | `/planning` | 跨領域 project planning（企画） | JTBD、Lean Startup、OKR、4 Big Risks、Business Model Canvas / Lean Canvas |
-| `copywriting-team` | `/copywriting` | 撰寫具說服力的 marketing copy | 日本廣告傳統（神田昌典 PASONA / 谷山 / 糸井）+ Anglo persuasion psychology（Cialdini、Schwartz Awareness Levels、Ogilvy） |
-| `investing-team` | *（無 slash command）* | 以 primary-source framework 支撐可辯護的投資決策 | Investment Clock（regime）、Buy/Hold/Sell verdict、台股（三大法人 / 月營收 / 董監持股 / 融資融券） |
-| `skill-team` | `/skill` | 以 convention discipline 建構或修改 domain-team skill | 4-tier gate 設計、primary-source grounding、3-commit split、dual-file（README + SKILL.md）、companion file pattern |
-| `using-domain-teams` | *（router）* | 將 intent route 至對應 team | — |
+| `code-team` | `/code-team` | 以 primary-source-grounded 的 quality gate develop code | Clean Code（Martin 2008）、Pragmatic Programmer（Hunt & Thomas 2019）、SOLID、TDD（Beck 2002）、Refactoring 第 2 版（Fowler 2018）、Working Effectively with Legacy Code（Feathers 2004）、OWASP ASVS v5.0.0、徳丸本 第 6 章 |
+| `docs-team` | `/docs-team` | 以 Diátaxis discipline 撰寫 documentation 並 assess codebase | Diátaxis taxonomy、Standard README（RichardLitt）、Google + Microsoft style、Trong-Tra `documentation-specialist`（readme + architecture L0–L4） |
+| `qa-team` | `/qa-team` | 規劃並驗證 unit 以上層級的 test | 品質は工程で作り込む — built-in 品質；E2E / integration / performance test 策略 |
+| `devops-team` | `/devops-team` | 以 CI/CD、container、IaC 安全 ship code | Google SRE、DORA、12-Factor App primary source |
+| `research-team` | `/research-team` | 以 citation 驗證執行 primary-source-grounded 的 research | systematic-review rigor、confidence calibration、operator 視角 market analysis |
+| `design-team` | `/design-team` | 含 accessibility 與 quality review 的 design | 行為設計（behavioral design）、感性工学、無意識の設計；UI / UX / a11y |
+| `planning-team` | `/planning-team` | 跨領域 project planning（企画） | JTBD、Lean Startup、OKR、4 Big Risks、Business Model Canvas / Lean Canvas |
+| `copywriting-team` | `/copywriting-team` | 撰寫具說服力的 marketing copy | 日本廣告傳統（神田昌典 PASONA / 谷山 / 糸井）+ Anglo persuasion psychology（Cialdini、Schwartz Awareness Levels、Ogilvy） |
+| `investing-team` | *（透過 delegation 呼叫）* | 以 primary-source framework 支撐可辯護的投資決策 | Investment Clock（regime）、Buy/Hold/Sell verdict、台股（三大法人 / 月營收 / 董監持股 / 融資融券） |
+| `skill-team` | `/skill-team` | 以 convention discipline 建構或修改 domain-team skill | 4-tier gate 設計、primary-source grounding、3-commit split、dual-file（README + SKILL.md）、companion file pattern |
+| `using-domain-teams` | `/using-domain-teams`（router） | 將 intent route 至對應 team | — |
 
 `investing-team` 沒有 slash command 是因為它通常透過 Cross-Plugin
 Delegation Contract 從 `investing-toolkit` plugin 呼叫（見下方）。
@@ -104,16 +106,6 @@ domain-teams/
 ├── agents/
 │   ├── worker.md                # 通用任務 executor（sonnet）
 │   └── evaluator.md             # 通用 quality evaluator（opus）
-├── commands/
-│   ├── code.md                  # /code → code-team
-│   ├── copywriting.md           # /copywriting
-│   ├── design.md                # /design
-│   ├── devops.md                # /devops
-│   ├── docs.md                  # /docs
-│   ├── planning.md              # /planning
-│   ├── qa.md                    # /qa
-│   ├── research.md              # /research
-│   └── skill.md                 # /skill
 ├── skills/
 │   ├── using-domain-teams/      # router
 │   ├── code-team/

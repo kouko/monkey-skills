@@ -51,7 +51,7 @@ Canvas authoring, Excalidraw diagrams, and Mermaid diagrams.
 on what the user asks for — daily notes, vault setup, file processing,
 diagrams, or cleanup.
 
-The slash command `/obsidian` invokes `using-obsidian`.
+Invoke it as `/using-obsidian`.
 
 ### Agent
 

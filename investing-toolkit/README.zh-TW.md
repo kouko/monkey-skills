@@ -59,12 +59,12 @@ Router：using-investing-toolkit
 
 | Command | 路由至 | 說明 |
 |---------|--------|------|
-| `/invest` | `using-investing-toolkit` | Router — 描述目標後 dispatch |
-| `/invest-macro` | `analysis-macro-regime` | 5-block regime dashboard（`--region us|japan|taiwan|korea|china|global|asia-pac|all|<comma-list>`） |
-| `/invest-memo {ticker}` | `report-equity-memo` | 完整 memo pipeline → `domain-teams:investing-team` |
-| `/invest-screen {tickers}` | `report-screener-list` | 跨國家分組的多條件 screener，含複合 score 排名 |
-| `/invest-portfolio` | `report-portfolio-review` | P&L snapshot + 總經 regime overlay + rebalance |
-| `/invest-snapshot {ticker}` | `report-stock-snapshot` | Snapshot card；依 ticker suffix 自動 route 至 `data-{country}` |
+| `/using-investing-toolkit` | `using-investing-toolkit` | Router — 描述目標後 dispatch |
+| `/analysis-macro-regime` | `analysis-macro-regime` | 5-block regime dashboard（`--region us|japan|taiwan|korea|china|global|asia-pac|all|<comma-list>`） |
+| `/report-equity-memo {ticker}` | `report-equity-memo` | 完整 memo pipeline → `domain-teams:investing-team` |
+| `/report-screener-list {tickers}` | `report-screener-list` | 跨國家分組的多條件 screener，含複合 score 排名 |
+| `/report-portfolio-review` | `report-portfolio-review` | P&L snapshot + 總經 regime overlay + rebalance |
+| `/report-stock-snapshot {ticker}` | `report-stock-snapshot` | Snapshot card；依 ticker suffix 自動 route 至 `data-{country}` |
 
 ## Skill 清單（16）
 
@@ -110,19 +110,19 @@ Router：using-investing-toolkit
 
 ```bash
 # AAPL 投資 memo — 串接 data-us → analysis-dcf + analysis-comps + analysis-technical → investing-team
-/invest-memo AAPL
+/report-equity-memo AAPL
 
 # 跨國家 screener
-/invest-screen AAPL,MSFT,2330.TW,7203.T --preset quality
+/report-screener-list AAPL,MSFT,2330.TW,7203.T --preset quality
 
 # Snapshot card；ticker suffix 自動 route 到 data-tw
-/invest-snapshot 2330.TW
+/report-stock-snapshot 2330.TW
 
 # 亞太 macro regime dashboard
-/invest-macro --region asia-pac
+/analysis-macro-regime --region asia-pac
 
 # 投組 review（CSV path 或 inline list）
-/invest-portfolio --holdings my-holdings.csv
+/report-portfolio-review --holdings my-holdings.csv
 ```
 
 ## Setup

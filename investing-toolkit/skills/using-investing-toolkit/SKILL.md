@@ -54,12 +54,12 @@ You are the entry point for **investing-toolkit v2.0.0** (three-layer architectu
 
 | Command | Routes to | Description |
 |---|---|---|
-| `/invest` | this router | Describe your goal; we dispatch |
-| `/invest-memo` | `report-equity-memo` | Full investment memo pipeline |
-| `/invest-screen` | `report-screener-list` | Cross-country stock screener with 8 presets |
-| `/invest-portfolio` | `report-portfolio-review` | Holdings P&L review + optional regime overlay |
-| `/invest-snapshot` | `report-stock-snapshot` | Single-ticker quick snapshot card |
-| `/invest-macro` | `data-{country}` regime-pack + `analysis-macro-regime` | 5-country macro regime |
+| `/using-investing-toolkit` | this router | Describe your goal; we dispatch |
+| `/report-equity-memo` | `report-equity-memo` | Full investment memo pipeline |
+| `/report-screener-list` | `report-screener-list` | Cross-country stock screener with 8 presets |
+| `/report-portfolio-review` | `report-portfolio-review` | Holdings P&L review + optional regime overlay |
+| `/report-stock-snapshot` | `report-stock-snapshot` | Single-ticker quick snapshot card |
+| `/analysis-macro-regime` | `data-{country}` regime-pack + `analysis-macro-regime` | 5-country macro regime |
 
 ---
 

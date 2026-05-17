@@ -47,7 +47,7 @@ Defuddle 網頁萃取、Canvas 建立、Excalidraw 圖與 Mermaid 圖。
 `using-obsidian` 是入口 skill，依使用者意圖（daily note、vault setup、
 file processing、圖表、清理 vault）將請求 routing 至正確的 skill。
 
-slash command `/obsidian` 會呼叫 `using-obsidian`。
+用 `/using-obsidian` 呼叫即可。
 
 ### Agent
 
