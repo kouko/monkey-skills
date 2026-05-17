@@ -1,11 +1,26 @@
 {
   "name": "translation-toolkit",
   "version": "0.3.0",
-  "description": "High-quality translation across i18n / technical docs / ad copy / novel chapters for EN / JA / ZH-TW / ZH-CN with bundled CC-BY glossary (~10K+ entries) and 6-gate verification (placeholder integrity / glossary compliance / deterministic post-translation linter / back-translation / register / untranslatability). v0.3.0 adds: novel whole-book pre-pass (character + world-glossary extraction), 5D literary critic (rhythm / euphony / archaism / register-shift), M3 deterministic linter for novel + doc, and cheap-model split for cost-amortized pre-pass.",
+  "description": "High-quality translation across i18n / docs / ad copy / novel chapters for EN / JA / ZH-TW / ZH-CN. Bundled CC-BY glossary (~10K entries) + 6-gate verification (placeholder / glossary / linter / back-translation / register / untranslatability).",
   "author": {
     "name": "kouko",
     "email": "kouko.d@gmail.com"
   },
   "homepage": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "translation",
+    "i18n",
+    "glossary",
+    "novel",
+    "ad-copy",
+    "back-translation",
+    "literary-translation",
+    "en",
+    "ja",
+    "zh-tw",
+    "zh-cn",
+    "翻訳",
+    "翻譯"
+  ]
 }

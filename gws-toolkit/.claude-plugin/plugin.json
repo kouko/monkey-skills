@@ -1,7 +1,7 @@
 {
   "name": "gws-toolkit",
   "version": "0.5.0",
-  "description": "Generic Google Workspace toolkit layered on the official googleworkspace/cli (gws). Vendors upstream gws-shared / gws-drive / gws-docs / gws-slides / gws-sheets API reference skills, plus toolkit-original setup automation, design knowledge (Minto / SCQA / chart-selection for Slides), and safety wrappers (trash-default delete, appProperties provenance tagging). Successor to slides-toolkit (Phase 3 deprecated 2026-05-06). Not affiliated with Google. ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
+  "description": "Generic Google Workspace toolkit on the official googleworkspace/cli (gws) — drive / docs / slides / sheets + setup automation + design knowledge (Minto / SCQA / chart selection). ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
