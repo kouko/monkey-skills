@@ -41,14 +41,16 @@ You **must** load all three via the Read tool before producing a verdict.
 | 10 | Dependency graph is a DAG — no cycles | Task A depends on B, B depends on A (directly or transitively) |
 | 11 | `Dependencies` field uses valid syntax: `"none"` OR `"Task N completes first"` OR `"Tasks N, M parallel"` | Free-form dependency description |
 | 12 | If this plan is a BLOCKED fallback (parent-child decomposition section present): parent task ID is named; child tasks ladder up; parent-DONE condition is explicit | Missing parent reference or unclear ladder |
+| 13 | (v0.8.0+) Each task has the optional `Files touched` field. If absent on any task that declares `Independent: true`, fail — the disjointness oracle is missing. Tasks without `Independent: true` may omit `Files touched`. | `Independent: true` task missing `Files touched` |
+| 14 | (v0.8.0+) For any two tasks both declaring `Independent: true`, their `Files touched` sets MUST be disjoint (no shared path). If they share any file, the claim is wrong — flip one to `Independent: false` OR split the shared file. | Two `Independent: true` tasks share at least one file in `Files touched` |
 
 ## Output contract — what you return
 
 ```
 verdict: PASS | NEEDS_REVISION
-checks_passed: <N>/<12>
+checks_passed: <N>/<14>
 gaps:                            # mandatory when NEEDS_REVISION; omit when PASS
-  - check_id: <1-12>
+  - check_id: <1-14>
     rule: "<quoted schema rule from plan-format.md or this prompt>"
     where: "<plan path + task number or brief section>"
     gap: "<1-sentence description of what is missing or violates the rule>"
@@ -59,8 +61,8 @@ notes:                           # optional; ≤3 bullets
 
 ### Verdict mapping
 
-- **PASS**: all 12 checks passed (or 11 if check 12 N/A for non-fallback plan).
-- **NEEDS_REVISION**: any check failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round.
+- **PASS**: all applicable checks passed. Check 12 is N/A when the plan is not a BLOCKED-fallback. Checks 13–14 are N/A when no task declares `Independent: true` (the parallel-dispatch markup is opt-in).
+- **NEEDS_REVISION**: any applicable check failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round.
 
 ### Anti-patterns the writing-plans orchestrator will reject
 

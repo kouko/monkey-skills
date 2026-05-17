@@ -1,6 +1,6 @@
 # Codex CLI integration tests
 
-> **Status (as of v0.6.0)**: build complete; tracked at current
+> **Status (as of v0.8.0)**: build complete; tracked at current
 > plugin version (`.codex-plugin/plugin.json` bumped in lock-step with
 > `.claude-plugin/plugin.json` since v0.4.0). Live install +
 > verification ritual on a real Codex CLI instance is still deferred
@@ -12,7 +12,7 @@ This directory holds the Codex CLI verification scripts. The scripts run when Co
 
 | Script | Tests | When |
 |---|---|---|
-| `test-skill-loading.sh` | Plugin installs cleanly; all 10 skills discoverable via Codex CLI's plugin-details command | Run once after Codex CLI install + `codex plugin install code-toolkit@monkey-skills --scope local` |
+| `test-skill-loading.sh` | Plugin installs cleanly; all 11 skills discoverable via Codex CLI's plugin-details command | Run once after Codex CLI install + `codex plugin install code-toolkit@monkey-skills --scope local` |
 | `test-hook-injection.sh` | Hook script emits `additional_context` top-level JSON key (offline check; always runs); fresh Codex session has router context loaded (live check; requires Codex CLI) | Run once after first install |
 
 ## When to run — Codex CLI verification ritual
@@ -49,7 +49,7 @@ codex plugin install code-toolkit@monkey-skills --scope local
 
 # Confirm install:
 codex plugin list      # expect: code-toolkit@monkey-skills, scope: local, enabled
-codex plugin details code-toolkit    # expect: 10 skills listed + 1 SessionStart hook
+codex plugin details code-toolkit    # expect: 11 skills listed + 1 SessionStart hook
 ```
 
 ### Run the two scripts

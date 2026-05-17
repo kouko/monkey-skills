@@ -1,8 +1,8 @@
 # code-toolkit
 
-> **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 10-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
+> **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 11-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**状態**：v0.7.0（10 skill 出荷済 — v0.3.0 以来 Superpowers parity；v0.6.0 / P15-12 以来 4 つの plugin-level subagent が SSOT 注入の 12 ルール engineering baseline を運搬；v0.7.0 は **reviewer-output discipline R1+R2**（`standards_version` スタンプ + evidence-citation 必須、第 2 の SSOT 注入ブロック `_reviewer-discipline.md` 経由）+ brainstorming brief schema に **Current State Evidence** セクション追加（5 次元 recon チェックリスト Forward / Reverse / Error / Data / Boundary）+ artifact パス移行 `docs/superpowers/` → `docs/code-toolkit/` を出荷；Codex CLI build 完了、実機検証は延期中；merge to main はユーザポリシー「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes でブロック中）
+**状態**：v0.8.0（11 skill 出荷済 — v0.3.0 以来 Superpowers parity；v0.6.0 / P15-12 以来 4 つの plugin-level subagent が SSOT 注入の 12 ルール engineering baseline を運搬；v0.7.0 は reviewer-output discipline R1+R2 + brainstorming Current State Evidence + パス移行 `docs/superpowers/` → `docs/code-toolkit/` を出荷；**v0.8.0 で `dispatching-parallel-agents` を追加**（auxiliary の across-domain ディスパッチ、superpowers v5.1.0 から借用し TDD iron-law per branch + verdict 三値集約を加えた）+ `writing-plans` schema 拡張（`Independent` + `Files touched` タスクフィールド）；Codex CLI build 完了、実機検証は延期中；merge to main はユーザポリシー「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes でブロック中）
 **言語**：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
@@ -41,12 +41,12 @@ claude plugin install code-toolkit@monkey-skills
 
 # 確認
 claude plugin list | grep code-toolkit       # 期待：enabled
-claude plugin details code-toolkit           # 期待：10 skills + 1 SessionStart hook
+claude plugin details code-toolkit           # 期待：11 skills + 1 SessionStart hook
 ```
 
 ### Codex CLI（build 完了、実機検証は延期中）
 
-⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.7.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
+⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.8.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
 
 ### ローカル開発（コントリビューター向け）
 
@@ -62,13 +62,13 @@ claude plugin install code-toolkit@monkey-skills --scope local
 
 ---
 
-## 10 のスキル
+## 11 のスキル
 
 | # | Skill | Stage | 何をするか |
 |---|---|---|---|
-| Router | [`using-code-toolkit`](skills/using-code-toolkit/) | Always-on | SessionStart 自動注入；4 つの load-bearing rules + Skill Priority テーブル |
+| Router | [`using-code-toolkit`](skills/using-code-toolkit/) | Always-on | SessionStart 自動注入；5 つの load-bearing rules + Skill Priority テーブル |
 | 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis 探索（Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete）；v0.7.0+ ブリーフに `Current State Evidence` 5 次元 recon セクション搭載；discovery スキップの合理化を拒否 |
-| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 各タスク RED-GREEN acceptance；BLOCKED → child-test フォールバック（Beck Part II §Child Test） |
+| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 各タスク RED-GREEN acceptance；BLOCKED → child-test フォールバック（Beck Part II §Child Test）；v0.8.0+ で `Independent` + `Files touched` フィールドを追加（parallel-dispatch 適格条件） |
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | タスクごとに triad を派遣（implementer + spec-reviewer + code-quality-reviewer）；reviewer 三人組は `reviewer-discipline-v1` SSOT 注入ブロック（R1+R2）搭載 |
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "FAILING TEST なしに production code を書くな"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 正当な legacy code backfill 区別 |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 フェーズ REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "再現せず fix するな" |
@@ -76,6 +76,7 @@ claude plugin install code-toolkit@monkey-skills --scope local
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "PACKAGE-LEVEL TEST 実行なしに DONE するな"；20+ stack の canonical コマンドを網羅 |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7 ステップ orchestrator（review → verify → git-memory 必須 → commit → push → 任意 PR + worktree cleanup） |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | ネイティブ `git worktree` ワークフロー；`.worktrees/<slug>/` 慣習 |
+| Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | across-domain `Agent` ディスパッチ、**1 つの assistant メッセージ内に複数の `Agent` 呼び出し**で並行実行；2+ の独立した問題ドメイン（共有ファイル無し・共有シンボル無し・順次データ依存無し）に適用；TDD iron-law は各ブランチで適用；verdict はこの skill 層で集約 |
 
 ---
 
@@ -119,7 +120,7 @@ finishing-a-development-branch
 | Harness | 状態 |
 |---|---|
 | **Claude Code** | ✅ 複数 ritual サイクル完全検証 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多言語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 次元での全ブランチ code-review (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest は build + v0.7.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
+| **Codex CLI** | ⚠️ Manifest は build + v0.8.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
 
 SessionStart hook は portable な JSON shape を発出し、Claude Code の `hookSpecificOutput.additionalContext`、Codex CLI の `additional_context`、legacy `additionalContext` keys をカバー — 同じ hook が両 harness を提供。
 

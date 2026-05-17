@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when a task takes >1 hour OR touches >1 module — splits the work into atomic ≤5-minute units and dispatches three subagents per unit (implementer / spec-reviewer / code-quality-reviewer). The implementer works under the TDD iron law; the two reviewers produce verdicts (PASS / PASS_WITH_NOTES / NEEDS_REVISION) grounded in the 7 standards + 2 rubrics + 2 checklists functional-copied from `domain-teams:code-team`. SDD・サブエージェント駆動開発・並列レビュー。SDD・子代理驅動開發・三角審查。
-version: 0.7.0
+version: 0.8.0
 ---
 
 ## Continuous execution

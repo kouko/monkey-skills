@@ -1,7 +1,7 @@
 ---
 name: writing-plans
 description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If brief produces >5 atomic tasks, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
-version: 0.7.0
+version: 0.8.0
 ---
 
 <SUBAGENT-STOP>
@@ -117,15 +117,28 @@ Execution order: sequential | parallel-where-possible
 ## Task 1 — <short name>
 - Description: <≤5 min unit of work, imperative voice>
 - Module: <path or module name; one only>
+- Files touched: <comma-separated paths the implementer will Write / Edit>
 - Context paths:
   - <path to existing code the implementer reads>
 - Acceptance:
   - RED: <failing test name / diagnostic>
   - GREEN: <observable condition when done>
 - Dependencies: <"none" | "Task N completes first" | "Tasks N, M parallel">
+- Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
 
 ## Task 2 — ...
 ```
+
+### Parallel-dispatch markup (v0.8.0+)
+
+Two per-task fields signal eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md):
+
+- **`Independent: true`** — the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default is `false`.
+- **`Files touched: <paths>`** — the disjointness oracle. Two tasks are dispatch-parallel-safe **only when** both declare `Independent: true` AND their `Files touched` sets are disjoint.
+
+If both conditions hold across N tasks, `dispatching-parallel-agents` MAY dispatch their implementers in one assistant message with N `Agent` calls. If either condition fails, SDD's sequential dispatch is the floor.
+
+The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) routes through SDD's standard sequential per-task triad. Claiming `Independent: true` with overlapping `Files touched` is a plan error — `plan-document-reviewer` should catch it; if not, `dispatching-parallel-agents` will refuse to dispatch.
 
 ## Cross-skill contract
 
@@ -133,6 +146,7 @@ Execution order: sequential | parallel-where-possible
 |---|---|---|
 | **Upstream** | `brainstorming` | Produces brief at `docs/code-toolkit/specs/<topic>.md`. writing-plans reads it via Read tool. |
 | **Downstream** | `subagent-driven-development` | Consumes plan at `docs/code-toolkit/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
+| **Downstream (opt-in)** | `dispatching-parallel-agents` | Consumes tasks marked `Independent: true` with disjoint `Files touched`. Dispatches their implementers in one assistant message for concurrent execution. Fall back to SDD's sequential dispatch if either condition fails. |
 | **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
 | **Recursive (BLOCKED fallback)** | `writing-plans` (self) | When SDD's implementer returns BLOCKED with decomposition signal, orchestrator re-invokes this skill on the failing task. |
 | **Optional delegation** | `dev-workflow:complexity-critique` | If the plan produces >3 tasks and you suspect Axis 3 (smallest end state) was too generous, optionally invoke complexity-critique before falling back to brainstorming. |
