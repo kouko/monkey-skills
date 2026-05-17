@@ -33,6 +33,9 @@ jobs:
       - name: Install pytest
         run: python3 -m pip install --quiet 'pytest>=7'
 
+      - name: Verify SSOT drift (language-policy.md sync)
+        run: python3 obsidian/scripts/verify-drift.py
+
       - name: Run obsidian pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
