@@ -16,8 +16,9 @@
 #   MANIFEST_PATH   absolute path to <vault-root>/wiki/.manifest.json
 #   VAULT_ROOT      absolute path to the vault root
 #
-# Not in v1 (commit 2):
-#   TOPIC_FILTER
+# Optional env vars:
+#   TOPIC_FILTER    substring to match against basename / tags / aliases
+#                   (case-insensitive); unset or empty → no-op
 #
 # Output (stdout, JSON):
 #   {
@@ -58,6 +59,13 @@ _FRONTMATTER_RE = re.compile(
 )
 _FM_FIELD_RE = re.compile(
     r"^(?:date|upload_date|processed_at)\s*:\s*(\d{4}-\d{2}-\d{2})",
+    re.MULTILINE,
+)
+
+# Matches a YAML list field header (tags or aliases) and captures values.
+# Handles both block-list (- item) and inline list (tags: [a, b]) forms.
+_FM_LIST_BLOCK_RE = re.compile(
+    r"^(?:tags|aliases)\s*:\s*\[([^\]]*)\]|^(?P<key>tags|aliases)\s*:\s*\n((?:[ \t]*-[ \t]*\S[^\n]*\n?)+)",
     re.MULTILINE,
 )
 
@@ -160,6 +168,70 @@ def _date_from_frontmatter(text: str) -> str | None:
     return fm.group(1) if fm else None
 
 
+def _fm_list_values(fm_block: str, field: str) -> list[str]:
+    """Return lowercased list values for `field` (tags or aliases) from a frontmatter block.
+
+    Handles both:
+      tags: [a, b, c]          (inline)
+      tags:
+        - a
+        - b                    (block)
+    """
+    values: list[str] = []
+    # Inline form: field: [val1, val2, ...]
+    inline_re = re.compile(
+        rf"^{field}\s*:\s*\[([^\]]*)\]",
+        re.MULTILINE,
+    )
+    m = inline_re.search(fm_block)
+    if m:
+        for v in m.group(1).split(","):
+            v = v.strip().strip('"').strip("'")
+            if v:
+                values.append(v.casefold())
+        return values
+
+    # Block form: field:\n  - val
+    block_re = re.compile(
+        rf"^{field}\s*:\s*\n((?:[ \t]*-[ \t]*\S[^\n]*\n?)+)",
+        re.MULTILINE,
+    )
+    m = block_re.search(fm_block)
+    if m:
+        for line in m.group(1).splitlines():
+            v = line.strip().lstrip("-").strip().strip('"').strip("'")
+            if v:
+                values.append(v.casefold())
+    return values
+
+
+def _matches_topic_filter(rel: str, abs_path: Path, topic_filter: str) -> bool:
+    """Return True if `rel` should be kept given `topic_filter` (already casefolded).
+
+    Checks (a) basename, (b) frontmatter tags, (c) frontmatter aliases.
+    """
+    # (a) basename
+    if topic_filter in Path(rel).name.casefold():
+        return True
+
+    # (b) + (c) frontmatter tags and aliases
+    try:
+        text = abs_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+
+    fm_match = _FRONTMATTER_RE.match(text)
+    if not fm_match:
+        return False
+
+    block = fm_match.group(1)
+    for field in ("tags", "aliases"):
+        if topic_filter in _fm_list_values(block, field):
+            return True
+
+    return False
+
+
 def _resolve_date(abs_path: Path) -> tuple[str | None, str]:
     """Return (date_str, tier) where tier ∈ 'filename'|'frontmatter'|'mtime'.
 
@@ -232,6 +304,7 @@ def _first_last(dates: list[str]) -> tuple[str | None, str | None]:
 def main() -> None:
     batch_order, batch_cap, manifest_path, vault_root = _load_env()
     manifest = _load_manifest(manifest_path)
+    topic_filter = os.environ.get("TOPIC_FILTER", "").strip().casefold()
 
     vault = Path(vault_root)
 
@@ -271,6 +344,16 @@ def main() -> None:
             "date": date,
             "mtime": mtime,
         })
+
+    # Apply TOPIC_FILTER (after bucket, before sort+cap).
+    # UNCHANGED count is already fixed; filter only reduces to_process.
+    # A MODIFIED file excluded by filter is simply not re-ingested this run;
+    # its manifest entry remains and it will reappear in future runs if still MODIFIED.
+    if topic_filter:
+        to_process = [
+            item for item in to_process
+            if _matches_topic_filter(item["path"], vault / item["path"], topic_filter)
+        ]
 
     # Sort: dated items by date (asc or desc), undated at tail by mtime asc
     reverse_dated = (batch_order == "newest-first")

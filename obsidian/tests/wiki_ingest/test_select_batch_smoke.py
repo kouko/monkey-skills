@@ -72,3 +72,57 @@ def test_missing_env_returns_exit_2(tmp_path):
         f"Expected exit 2, got {result.returncode}.\n"
         f"stderr: {result.stderr}"
     )
+
+
+def test_topic_filter_basename_match(tmp_path):
+    """TOPIC_FILTER: only basenames containing the substring appear in batch.
+
+    Two NEW files: one matching (investing-notes.md), one not (cooking-notes.md).
+    With TOPIC_FILTER=investing, only the matching file should be in batch.
+    The non-matching file should appear in remaining=[].
+    skipped_unchanged is unchanged-bucket count (0 here — no manifest entries).
+    """
+    vault_root = tmp_path / "vault"
+    vault_root.mkdir()
+    manifest_path = tmp_path / "manifest.json"
+
+    # Create two NEW files (no manifest entry → both NEW)
+    matching = vault_root / "investing-notes.md"
+    matching.write_text("# Investing Notes\n", encoding="utf-8")
+
+    non_matching = vault_root / "cooking-notes.md"
+    non_matching.write_text("# Cooking Notes\n", encoding="utf-8")
+
+    env = {
+        **os.environ,
+        "BATCH_ORDER": "oldest-first",
+        "BATCH_CAP": "15",
+        "MANIFEST_PATH": str(manifest_path),
+        "VAULT_ROOT": str(vault_root),
+        "TOPIC_FILTER": "investing",
+    }
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_ACTUAL)],
+        input="investing-notes.md\ncooking-notes.md\n",
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert result.returncode == 0, (
+        f"Expected exit 0, got {result.returncode}.\n"
+        f"stderr: {result.stderr}\nstdout: {result.stdout}"
+    )
+
+    data = json.loads(result.stdout)
+    assert data["batch"] == ["investing-notes.md"], (
+        f"Expected only matching file in batch, got: {data['batch']}"
+    )
+    assert data["remaining"] == [], (
+        f"Expected empty remaining (non-matching excluded, not deferred), "
+        f"got: {data['remaining']}"
+    )
+    assert data["skipped_unchanged"] == 0, (
+        "skipped_unchanged should count unchanged-bucket files, not filtered files"
+    )
