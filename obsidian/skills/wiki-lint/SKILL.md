@@ -23,20 +23,20 @@ Build:
 - Frontmatter dump per page (for L01/L02 checks)
 - Parsed `wiki/.manifest.json` (for L10 check)
 
-## STEP 2 — Run the 13 checks
+## STEP 2 — Run the 14 checks
 
-Execute all 13 checks defined in [lint-checks.md](references/lint-checks.md):
+Execute all 14 checks defined in [lint-checks.md](references/lint-checks.md):
 
 **Structural (must-fix):**
-- L01: Frontmatter completeness
+- L01: Frontmatter completeness (per-page-type field set)
 - L02: Summary length
-- L03: Required body sections
+- L03: Required body sections (per-page-type section set)
 - L04: Wikilink format
 - L05: Mermaid placement
 
 **Semantic (should-fix):**
 - L06: Orphan pages
-- L07: Broken wikilinks
+- L07: Broken wikilinks (intra-wiki only; reference-page `## Source` wikilinks are handled by L14)
 - L08: Stale pages
 - L13: Aliases required on cross-language slug (slug language ≠ body language → frontmatter `aliases:` should be present and non-empty; authority: [references/language-policy.md](references/language-policy.md))
 
@@ -45,8 +45,9 @@ Execute all 13 checks defined in [lint-checks.md](references/lint-checks.md):
 - L10: Manifest divergence
 - L11: Contradictions surfaced (intra-page self-declared)
 - L12: Cross-page numeric / claim disagreement (advisory; user judgment required)
+- L14: Reference page `## Source` wikilink format (basename / no path / no `.md`; basename matches `source_path` stem)
 
-Severity: L01–L04, L07 → **error**. L05, L06, L08, L09, L10, L12, L13 → **warning**. L11 → **info**.
+Severity: L01–L04, L07 → **error** (L14 path/extension violations also → **error**). L05, L06, L08, L09, L10, L12, L13, L14 (missing/empty/basename-mismatch) → **warning**. L11 → **info**.
 
 ## STEP 3 — Report
 

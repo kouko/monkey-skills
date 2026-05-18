@@ -5,19 +5,34 @@ Categorized into **structural** (format violations), **semantic** (content healt
 ## Structural (format compliance)
 
 ### L01 — Frontmatter completeness
-Each wiki page must have all 8 required fields. Missing any → **error**.
 
-```
-title type domain status updated tags sources_count summary
-```
+Each wiki page must have the full set of required frontmatter fields for its `type`. Missing any → **error**.
 
-Per-page-type extras (`date` for journal, `source_path` for references) also required.
+**Required fields by page type** (authority: [page-format.md](../../wiki-ingest/references/page-format.md) §Type-specific frontmatter):
+
+| Page `type` | Required frontmatter fields |
+|---|---|
+| `wiki-entity`, `wiki-concept`, `wiki-synthesis`, `wiki-skill` | `title`, `type`, `domain`, `status`, `updated`, `tags`, `sources_count`, `summary` (8 fields) |
+| `wiki-journal` | Same 8 as above **plus** `date` |
+| `wiki-reference` | `title`, `type`, `source_path`, `date`, `ingested`, `contributes_to`, `tags`, `summary` (8 fields; `domain` / `status` / `updated` / `sources_count` are NOT required — reference pages are immutable per-source citation records, not lifecycle-managed knowledge pages) |
+
+The per-type field sets diverge intentionally: reference pages are auto-generated audit-trail records (one per source ingest), while entity / concept / synthesis / skill pages are curated and evolve over time and so carry lifecycle metadata (`status`, `updated`, `sources_count`).
 
 ### L02 — Summary length
 `frontmatter.summary` must be ≤200 characters, single line, no markdown. Violations → **error**.
 
 ### L03 — Required body sections
-Every wiki page must have `## Summary`, `## Key Facts`, `## Connections`. Missing → **error**.
+
+Each wiki page must have the body sections required by its `type`. Missing any → **error**.
+
+**Required sections by page type** (authority: [page-format.md](../../wiki-ingest/references/page-format.md) §Body Structure and §Reference page body structure):
+
+| Page `type` | Required body sections |
+|---|---|
+| `wiki-entity`, `wiki-concept`, `wiki-synthesis`, `wiki-skill`, `wiki-journal` | `## Summary`, `## Key Facts`, `## Connections` |
+| `wiki-reference` | `## Source`, `## Source Excerpt / TL;DR`, `## Key Contributions` |
+
+Reference pages use a different body shape because they are citation records, not knowledge cards — they do not synthesize claims, so `## Key Facts` and `## Connections` do not apply. The `## Source` section on reference pages is then further validated by L14.
 
 ### L04 — Wikilink format
 - Wikilinks MUST be **bare filename** form: `[[filename-slug]]`
@@ -45,6 +60,8 @@ Build a **filename inventory** by scanning `wiki/{entities,concepts,synthesis,sk
 - 2+ matches → **error** (filename collision; should have been prevented at ingest by uniqueness check, indicates corruption); list all candidates
 
 Path-prefixed forms (`[[entities/foo]]`) are caught by L04, not L07.
+
+**Exemption — reference page `## Source` section:** Wikilinks inside the `## Source` body section of `wiki/references/*.md` pages are out of scope for L07. These wikilinks intentionally point to **source files outside `wiki/`** (in the Sources layer — `references/<topic>/<file>.md`, `inbox/`, `reading_list/`, etc.) and resolve via Obsidian's bare-basename matching. Per [page-format.md §Reference page body structure](../../wiki-ingest/references/page-format.md#reference-page-body-structure), the wikilink basename matches `Path(source_path).stem` from frontmatter. Validation of these cross-layer links is handled by **L14**, which compares against `source_path` instead of the wiki-only inventory. L07 must skip these to avoid false-positive broken-link errors on every reference page.
 
 ### L08 — Stale pages
 Pages with `frontmatter.updated` older than 90 days **and** `status: developing` → **warning** (consider promoting to `mature` or archiving).
