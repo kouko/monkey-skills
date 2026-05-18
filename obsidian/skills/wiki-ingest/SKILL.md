@@ -213,6 +213,10 @@ tags:
 summary: "≤200 char single-line description of what this source contributes"
 ---
 
+## Source
+
+[[<source-basename>]]
+
 ## Source Excerpt / TL;DR
 2–4 sentence neutral description of what the source argues / measures / claims.
 
@@ -221,7 +225,30 @@ summary: "≤200 char single-line description of what this source contributes"
 - Cite which target pages were updated and how
 ```
 
-Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`.
+> [!warning] `## Source` wikilink format — common LLM mistake
+>
+> The wikilink inside `## Source` must be the source file's **bare basename** — no folder path, no `.md` extension. The `source_path` frontmatter keeps the full machine-readable path; the body wikilink is a separate human-navigation form for Obsidian.
+>
+> Given `source_path: references/finance/2026-04-20 台積電財報.md`:
+>
+> ```markdown
+> ✅ [[2026-04-20 台積電財報]]
+> ❌ [[references/finance/2026-04-20 台積電財報]]      — path prefix forbidden
+> ❌ [[references/finance/2026-04-20 台積電財報.md]]   — path + extension forbidden
+> ❌ [[2026-04-20 台積電財報.md]]                      — extension forbidden
+> ❌ [[finance/2026-04-20 台積電財報]]                 — partial path also forbidden
+> ❌ [[<source-basename>]]                            — literal placeholder (substitute the actual basename)
+> ```
+>
+> **Mechanical rule** (4 steps):
+> 1. Take the `source_path` frontmatter value
+> 2. **Strip surrounding YAML quotes if present** — YAML allows `source_path: "foo.md"` or `source_path: foo.md` (quoting is mandatory only when the value contains special characters); both must produce the same basename
+> 3. Apply basename — drop everything up to and including the last `/`
+> 4. Strip the trailing `.md` suffix
+>
+> The result MUST contain no `/`, MUST NOT end with `.md`, MUST NOT contain literal `"` or `'`. This is enforced by `wiki-lint` L14. See [page-format.md §Wikilink resolution](references/page-format.md#wikilink-resolution) for the underlying rule.
+
+Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`. The `## Source` wikilink stays stable unless the source file is renamed (then `source_path` and the wikilink update together; Obsidian auto-tracks the rename).
 
 ### 4e. Update `wiki/index.md`
 

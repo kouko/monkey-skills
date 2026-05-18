@@ -40,7 +40,53 @@ aliases:                            # conditional MUST — see Field rules
 
 - **Skills pages** (`wiki/skills/*.md`): `type: wiki-skill`
 - **Journal pages** (`wiki/journal/*.md`): `type: wiki-journal`, add `date: YYYY-MM-DD`
-- **Reference pages** (`wiki/references/*.md`): `type: wiki-reference`, add `source_path: <vault-relative path of original>`, `contributes_to: [list of wiki page links]`
+- **Reference pages** (`wiki/references/*.md`): `type: wiki-reference`, add `source_path: <vault-relative path of original>`, `contributes_to: [list of wiki page links]`. Reference pages also have a dedicated body structure — see [§Reference page body structure](#reference-page-body-structure) below.
+
+### Reference page body structure
+
+Reference pages (`wiki/references/*.md`) use a different body shape from entity/concept pages. They have **3 required sections** in this order:
+
+```markdown
+## Source
+
+[[<source-basename>]]
+
+## Source Excerpt / TL;DR
+
+2–4 sentence neutral description of what the source argues / measures / claims.
+
+## Key Contributions
+
+- Bullet list — what specifically this source added to the wiki
+- Cite which target pages were updated and how
+```
+
+The `## Source` section is the **human-navigation affordance**: a single wikilink that lets users click from the wiki card back to the original note in Obsidian. The `source_path` frontmatter stays as the machine-readable path; the wikilink is a separate UX channel for Obsidian's preview / jump / graph-view features.
+
+> [!warning] `## Source` wikilink format — common LLM mistake
+>
+> The wikilink inside `## Source` must be the source file's **bare basename** — no folder path, no `.md` extension. LLMs frequently default to writing `[[references/folder/filename.md]]` from the `source_path` value; that form is forbidden by §Wikilink resolution below.
+>
+> Given `source_path: references/finance/2026-04-20 台積電財報.md`:
+>
+> ```markdown
+> ✅ [[2026-04-20 台積電財報]]
+> ❌ [[references/finance/2026-04-20 台積電財報]]      — path prefix forbidden
+> ❌ [[references/finance/2026-04-20 台積電財報.md]]   — path + extension forbidden
+> ❌ [[2026-04-20 台積電財報.md]]                      — extension forbidden
+> ❌ [[finance/2026-04-20 台積電財報]]                 — partial path also forbidden
+> ❌ [[<source-basename>]]                            — literal placeholder, must substitute the real basename
+> ```
+>
+> **Mechanical rule** (4 steps):
+> 1. Take the `source_path` frontmatter value
+> 2. **Strip surrounding YAML quotes if present** — both `source_path: "foo.md"` and `source_path: foo.md` are valid YAML and must produce the same basename
+> 3. Apply basename — drop everything up to and including the last `/`
+> 4. Strip the trailing `.md` suffix
+>
+> Result MUST NOT contain `/`, MUST NOT end with `.md`, MUST NOT contain literal `"` or `'`.
+>
+> Enforced by `wiki-lint` L14.
 
 ## Body Structure (3 Required + 2 Conditional)
 
@@ -286,5 +332,6 @@ When a page cites references, append:
 - ❌ Use 9+ body sections (the legacy SCHEMA failure mode this spec corrects)
 - ❌ Skip `summary` frontmatter (breaks tiered retrieval)
 - ❌ Use absolute paths in wikilinks
+- ❌ Put folder paths in the `## Source` wikilink on reference pages (must be bare basename — see [§Reference page body structure](#reference-page-body-structure))
 - ❌ Mark inferred claims as direct citations (provenance integrity)
 - ❌ Write Mermaid in entity/concept pages (clutter; reserve for synthesis)

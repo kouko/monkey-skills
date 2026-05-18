@@ -1,4 +1,4 @@
-# Wiki Lint — 13 Health Checks
+# Wiki Lint — 14 Health Checks
 
 Categorized into **structural** (format violations), **semantic** (content health), and **provenance** (source/citation integrity).
 
@@ -100,6 +100,32 @@ Output → **warning** with both page citations and the conflicting bullet text.
 
 **Limits**: this check is *advisory* — it WILL miss semantic mismatches expressed in prose, and WILL false-positive on facts that are genuinely time-sensitive (e.g. "Q1 P/E was 39, Q3 P/E is 19" both correct as-of-date). User judgment required on every L12 hit.
 
+### L14 — Reference page `## Source` wikilink
+
+Every page under `wiki/references/` must have a `## Source` body section containing exactly one wikilink in **bare basename** form (per [page-format.md §Wikilink resolution](../../wiki-ingest/references/page-format.md#wikilink-resolution) and §Reference page body structure).
+
+Triggers (`wiki/references/*.md` only):
+
+- Missing `## Source` heading → **warning**
+- `## Source` section contains no wikilink → **warning**
+- Wikilink contains `/` (path prefix, e.g. `[[references/foo/bar]]`) → **error**
+- Wikilink ends with `.md` (extension, e.g. `[[bar.md]]` or `[[bar.md#anchor]]`) → **error**
+- Wikilink basename ≠ basename of `source_path` from frontmatter → **warning** (likely stale; source renamed or re-ingested)
+
+Detection regex (run against the body between `## Source` heading and the next `##` heading):
+
+```
+malformed_link_pattern = r'\[\[[^\]]*/[^\]]+\]\]|\[\[[^\]]+\.md[\]#]'
+```
+
+The second alternation uses `[\]#]` (not `\]\]`) so it catches both `[[foo.md]]` and `[[foo.md#anchor]]`. The first alternation already catches any `/` regardless of trailing anchor.
+
+**Basename comparison** — parse the frontmatter as YAML (use `yaml.safe_load` or equivalent, **do not regex-extract**), then take `Path(source_path).stem`. YAML-quoted values like `source_path: "foo.md"` must be unquoted by the YAML parser before comparison; raw-string extraction will leave stray `"` characters that break the equality check.
+
+**Rationale**: the `## Source` section is a human-navigation affordance for Obsidian. Path-prefixed or extension-suffixed wikilinks bypass Obsidian's shortest-link resolution and break preview / graph features. This is the most common LLM mistake on reference pages because `source_path` frontmatter (which keeps the full path) is right above it — LLMs sometimes copy that value into the wikilink, often retaining the YAML surrounding quotes too.
+
+**Migration note**: reference pages created before this check existed will trigger missing-section warnings. Either re-ingest the source (regenerates correct format) or hand-edit. The check is warning-level (not error) precisely to allow gradual migration.
+
 ## Lint output format
 
 ```
@@ -143,3 +169,4 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L11 | Resolve contradictions (research, query author, or move to Open Questions) |
 | L12 | Re-ingest stale page from current source, OR add `## Contradictions` block on canonical entity page documenting the disagreement (with as-of-date if time-sensitive) |
 | L13 | Add `aliases:` field to frontmatter with the native-language title (e.g. `aliases: [余白, yohaku]`). Re-run `/wiki-ingest` on the source if you want the wiki page rebuilt (see language-policy.md §4. Aliases Conditional MUST) |
+| L14 | Re-run `/wiki-ingest` on the source (regenerates `## Source` with correct format), OR hand-edit: take `source_path` from frontmatter, strip folder path and `.md` extension, write as `[[basename]]` |
