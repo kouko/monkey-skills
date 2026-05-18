@@ -69,6 +69,81 @@ def test_missing_env_returns_exit_2(tmp_path):
     )
 
 
+def test_absolute_path_normalized_to_vault_relative(tmp_path):
+    """stdin candidates may be ABSOLUTE paths under VAULT_ROOT (scan-vault.sh output);
+    script must strip prefix + match manifest by vault-relative key.
+
+    Regression for v3.10.0/v3.11.0 bug: scan-vault.sh emits absolute paths,
+    but manifest keys are vault-relative (per delta-tracking.md spec). Without
+    normalization, every file misses manifest → skipped_unchanged stays 0
+    → every run re-ingests existing wiki pages.
+
+    Fix: select-batch.py strips VAULT_ROOT prefix from any absolute path
+    before manifest lookup. Verify with a real manifest hit.
+    """
+    import hashlib
+    import json as _json
+
+    vault_root = tmp_path / "vault"
+    vault_root.mkdir()
+    manifest_path = tmp_path / "manifest.json"
+
+    # Create one file at vault/references/foo.md
+    refs = vault_root / "references"
+    refs.mkdir()
+    src = refs / "foo.md"
+    content = "# Foo\nbody\n"
+    src.write_text(content, encoding="utf-8")
+
+    # Pre-populate manifest with vault-relative key + matching SHA-256
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    manifest_path.write_text(
+        _json.dumps({
+            "references/foo.md": {
+                "sha256": sha,
+                "last_ingested": "2026-05-01T00:00:00Z",
+                "wiki_pages": ["entities/foo.md"],
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    env = {
+        **os.environ,
+        "BATCH_ORDER": "oldest-first",
+        "BATCH_CAP": "15",
+        "MANIFEST_PATH": str(manifest_path),
+        "VAULT_ROOT": str(vault_root),
+    }
+
+    # Pipe ABSOLUTE path (scan-vault.sh output format) — NOT vault-relative
+    abs_path = str(src)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_ACTUAL)],
+        input=f"{abs_path}\n",
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert result.returncode == 0, (
+        f"Expected exit 0, got {result.returncode}.\n"
+        f"stderr: {result.stderr}\nstdout: {result.stdout}"
+    )
+
+    data = json.loads(result.stdout)
+    # After normalization, abs path → vault-relative → manifest hit → UNCHANGED
+    assert data["skipped_unchanged"] == 1, (
+        f"Expected skipped_unchanged=1 (abs path normalized + manifest hit), "
+        f"got skipped_unchanged={data['skipped_unchanged']}.\n"
+        f"This indicates abs→rel normalization is NOT happening.\n"
+        f"Full output: {data}"
+    )
+    assert data["batch"] == [], (
+        f"Expected empty batch (file matched manifest), got: {data['batch']}"
+    )
+
+
 def test_topic_filter_basename_match(tmp_path):
     """TOPIC_FILTER: only basenames containing the substring appear in batch.
 
