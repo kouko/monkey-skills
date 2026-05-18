@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 11-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.8.0（11 skill 已 ship — v0.3.0 起達成 Superpowers parity；v0.6.0 / P15-12 起 4 個 plugin-level subagent 攜帶 SSOT 注入的 12 條 engineering baseline；v0.7.0 出貨 reviewer-output discipline R1+R2 + brainstorming Current State Evidence + 路徑遷移 `docs/superpowers/` → `docs/code-toolkit/`；**v0.8.0 新增 `dispatching-parallel-agents`**（auxiliary 跨 domain 派遣，借鑒 superpowers v5.1.0，加入 TDD iron-law per branch + verdict 三值聚合）+ `writing-plans` schema 擴充（`Independent` + `Files touched` 任務欄位）；Codex CLI build 完成、Codex 實機驗證仍延後；merge to main 受使用者政策「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes 阻擋）
+**狀態**：v0.9.0（11 skill 已 ship — v0.3.0 起達成 Superpowers parity；v0.6.0 / P15-12 起 4 個 plugin-level subagent 攜帶 SSOT 注入的 12 條 engineering baseline；v0.7.0 出貨 reviewer-output discipline R1+R2 + brainstorming Current State Evidence + 路徑遷移 `docs/superpowers/` → `docs/code-toolkit/`；v0.8.0 新增 `dispatching-parallel-agents`（auxiliary 跨 domain 派遣）+ `writing-plans` schema 擴充（`Independent` + `Files touched` 任務欄位）；**v0.9.0 推出 inline rule-sheet** — reviewer 上行 standards 載入量由 ~80K → ~8K chars 壓縮（4 個 plugin-level agent 注入 `_rule-sheet.md`）；7 份 standards 檔由「上行預載入」轉為「即時引用查表」；cite-on-fire 紀律明文化（徳丸本 Ch.6 / OWASP ASVS 章節號引用前必 `Read` 驗證；Beck / Clean Code / Fowler 章節可憑記憶引用）；Codex CLI build 完成、Codex 實機驗證仍延後；merge to main 受使用者政策「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes 阻擋）
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -46,7 +46,7 @@ claude plugin details code-toolkit           # 預期：11 skills + 1 SessionSta
 
 ### Codex CLI（build 完成、實機驗證延後）
 
-⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.8.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
+⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.9.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
 
 ### 本地開發（給貢獻者）
 
@@ -120,7 +120,7 @@ finishing-a-development-branch
 | Harness | 狀態 |
 |---|---|
 | **Claude Code** | ✅ 多輪 ritual 完整驗證 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 維度全 branch 審查 (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.8.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
+| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.9.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
 
 SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpecificOutput.additionalContext`、Codex CLI 的 `additional_context` 以及 legacy `additionalContext` keys — 同一個 hook 服務兩種 harness。
 

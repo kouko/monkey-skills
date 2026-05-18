@@ -147,6 +147,48 @@ Co-locating with the script that owns it makes the relationship
 explicit and avoids the validator warning.
 <!-- END baseline-v1 -->
 
+<!-- BEGIN rule-sheet-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_rule-sheet.md — do not edit in place -->
+# Code-toolkit rule sheet — deltas only
+
+## Preamble
+
+General LLM knowledge of Clean Code / SOLID / DRY / TDD / F.I.R.S.T /
+OWASP is baseline. This sheet covers only code-toolkit deltas not in
+training data. Standards files are on-demand citation targets, not
+preloads.
+
+## Thresholds + verdict aggregation
+
+- Function length: 20-line soft (Clean Code Ch.3) / 50-line hard
+  (house) / 100-line gate-warning (`naming-and-functions.md`).
+- Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
+  2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
+  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+- Severity: 🔴 fatal / 🟡 should-fix / 🟢 nit (informational).
+
+## Dimension → standard path
+
+Paths under `subagent-driven-development/`:
+
+- security → `checklists/security-checklist.md` +
+  `standards/app-security-standard.md` +
+  `standards/character-encoding-security.md`
+- architecture → `rubrics/arch-gate.md` + `standards/solid-principles.md`
+- correctness → `rubrics/quality-gate.md` + implementer `test_results`
+- naming → `standards/naming-and-functions.md`
+- tests → `standards/tdd-standard.md`
+- refactoring → `standards/refactoring-standard.md` +
+  `standards/pragmatic-principles.md`
+
+## Cite-on-fire discipline
+
+MUST `Read` before citing: `character-encoding-security.md` (徳丸本
+Ch.6); `app-security-standard.md` (OWASP ASVS V5 §X.Y.Z); house
+thresholds + verdict rules.
+
+May cite from memory: Clean Code chapters; Fowler smells; Beck 2002.
+<!-- END rule-sheet-v1 -->
+
 ## Input contract — what the orchestrator hands you
 
 The orchestrator dispatches you with a prompt of this exact shape.
@@ -161,14 +203,11 @@ Treat unspecified sections as empty.
 
 ### Resource Paths
 - protocol: code-toolkit/skills/tdd-iron-law/SKILL.md
-- standards (load via Read when scoring or refactoring):
-  - code-toolkit/skills/subagent-driven-development/standards/naming-and-functions.md
-  - code-toolkit/skills/subagent-driven-development/standards/pragmatic-principles.md
-  - code-toolkit/skills/subagent-driven-development/standards/solid-principles.md
-  - code-toolkit/skills/subagent-driven-development/standards/tdd-standard.md
-  - code-toolkit/skills/subagent-driven-development/standards/refactoring-standard.md
-  - code-toolkit/skills/subagent-driven-development/standards/app-security-standard.md
-  - code-toolkit/skills/subagent-driven-development/standards/character-encoding-security.md
+- standards: load on cite, not upfront. The `rule-sheet-v1` block
+  above embeds the cite-on-fire discipline and the dimension →
+  standard mapping that tells you which of the 7 standards files
+  under `code-toolkit/skills/subagent-driven-development/standards/`
+  to load when a specific concern fires.
 - repo: {absolute path to repo root}
 - branch: {target git branch — usually feat/* created by orchestrator}
 ```

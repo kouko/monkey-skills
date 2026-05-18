@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** An 11-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.8.0 (11 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 shipped reviewer-output discipline R1+R2 + Current State Evidence section + path migration `docs/superpowers/` → `docs/code-toolkit/`; **v0.8.0 adds `dispatching-parallel-agents`** (auxiliary across-domain dispatch borrowed from superpowers v5.1.0, adapted with TDD iron-law per branch + verdict aggregation) + `writing-plans` schema extension (`Independent` + `Files touched` task fields); Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
+**Status**: v0.9.0 (11 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 shipped reviewer-output discipline R1+R2 + Current State Evidence section + path migration `docs/superpowers/` → `docs/code-toolkit/`; v0.8.0 added `dispatching-parallel-agents` (auxiliary across-domain dispatch) + `writing-plans` schema extension (`Independent` + `Files touched` task fields); **v0.9.0 ships inline rule-sheet** — reviewer upfront standards load shrinks ~80K → ~8K chars via `_rule-sheet.md` injected into all 4 plugin-level agents; 7 standards files shift role from preload input to on-demand citation target; cite-on-fire discipline codified (徳丸本 Ch.6 / OWASP ASVS sections MUST `Read` before citing; Beck / Clean Code / Fowler chapters may cite from memory); Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -47,7 +47,7 @@ claude plugin details code-toolkit           # expect: 11 skills + 1 SessionStar
 
 ### Codex CLI (build complete; live verification deferred)
 
-⚠️ Codex CLI manifest is built and bumped through v0.8.0 alongside the
+⚠️ Codex CLI manifest is built and bumped through v0.9.0 alongside the
 Claude Code variant, but a live install + verification ritual on a real
 Codex CLI instance is still deferred per user direction. See
 [`tests/codex-cli/README.md`](tests/codex-cli/README.md) for the install
@@ -125,7 +125,7 @@ Plus on-demand:
 | Harness | Status |
 |---|---|
 | **Claude Code** | ✅ Verified end-to-end through multiple ritual cycles — Phase 3 orchestrator (v0.3.0), Phase 4 prep (v0.4.0), multilingual research (v0.5.1), plugin-level agent dispatch (v0.5.2 + v0.6.0), whole-branch code-review with cross-task-coherence dimension (v0.6.0), reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest built + tracked at v0.8.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
+| **Codex CLI** | ⚠️ Manifest built + tracked at v0.9.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
 
 The SessionStart hook emits a portable JSON shape covering Claude Code's `hookSpecificOutput.additionalContext`, Codex CLI's `additional_context`, and legacy `additionalContext` keys — same hook serves both harnesses.
 

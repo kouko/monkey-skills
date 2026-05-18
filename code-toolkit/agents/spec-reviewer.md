@@ -92,6 +92,48 @@ YAML frontmatter). This file is data the distribute script reads, not
 a dispatchable agent.
 <!-- END reviewer-discipline-v1 -->
 
+<!-- BEGIN rule-sheet-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_rule-sheet.md — do not edit in place -->
+# Code-toolkit rule sheet — deltas only
+
+## Preamble
+
+General LLM knowledge of Clean Code / SOLID / DRY / TDD / F.I.R.S.T /
+OWASP is baseline. This sheet covers only code-toolkit deltas not in
+training data. Standards files are on-demand citation targets, not
+preloads.
+
+## Thresholds + verdict aggregation
+
+- Function length: 20-line soft (Clean Code Ch.3) / 50-line hard
+  (house) / 100-line gate-warning (`naming-and-functions.md`).
+- Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
+  2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
+  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+- Severity: 🔴 fatal / 🟡 should-fix / 🟢 nit (informational).
+
+## Dimension → standard path
+
+Paths under `subagent-driven-development/`:
+
+- security → `checklists/security-checklist.md` +
+  `standards/app-security-standard.md` +
+  `standards/character-encoding-security.md`
+- architecture → `rubrics/arch-gate.md` + `standards/solid-principles.md`
+- correctness → `rubrics/quality-gate.md` + implementer `test_results`
+- naming → `standards/naming-and-functions.md`
+- tests → `standards/tdd-standard.md`
+- refactoring → `standards/refactoring-standard.md` +
+  `standards/pragmatic-principles.md`
+
+## Cite-on-fire discipline
+
+MUST `Read` before citing: `character-encoding-security.md` (徳丸本
+Ch.6); `app-security-standard.md` (OWASP ASVS V5 §X.Y.Z); house
+thresholds + verdict rules.
+
+May cite from memory: Clean Code chapters; Fowler smells; Beck 2002.
+<!-- END rule-sheet-v1 -->
+
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
 

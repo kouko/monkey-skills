@@ -18,11 +18,136 @@ The toolkit emerged from a single design question — *"is there a way to combin
 | **v0.4.0** | (current draft) | Phase 2.5 + Phase 3.5 + Phase 4 prep | Codex CLI variant manifest + integration tests + 3 worked examples (Python / TypeScript / Swift) + 5 cross-plugin integration test scripts + announcement draft + multi-version retrospective. Build complete; verification rituals deferred to user-side Codex / superpowers sessions. |
 | **v0.7.0** | 2026-05-16 | Policy-reset merge-to-main | Catches `main` up to the post-policy quality bar. Synthesizes v0.3.0 → v0.6.1 (Codex variant, reviewer-discipline R1+R2, Current State Evidence, `docs/superpowers/` → `docs/code-toolkit/` migration). No new feature; the merge artifact. |
 | **v0.8.0** | 2026-05-18 | Across-domain parallel dispatch | + `dispatching-parallel-agents` (auxiliary skill borrowed from superpowers v5.1.0, adapted with TDD iron-law per branch + 3-valued verdict aggregation). `writing-plans` schema extended with `Independent` + `Files touched` per-task markup as the parallel-dispatch eligibility oracle. 11 skills total. |
+| **v0.9.0** | 2026-05-18 | Inline rule-sheet — reviewer load reduction | Reviewer upfront standards load shrinks from ~80K → ~8K chars via inline `_rule-sheet.md` (1,531 bytes) injected into all 4 plugin-level agents through `distribute.py`'s `_baseline.md`-style BEGIN/END marker mechanism. 7 standards files unchanged in role — shifted from preload input to on-demand citation target. Cite-on-fire discipline codified (徳丸本 Ch.6 / OWASP ASVS section numbers MUST `Read` before citing; Beck / Clean Code / Fowler chapters may cite from memory). +1 integration test (rule-sheet drift). |
 | **v1.0.0** | (target) | GA | After v0.8.0 dogfood adds 4 more notes (`research/dogfood-*.md`) + announcement publish + public release. Phase 4 GA criteria from ROADMAP met. |
 
 **Cumulative artifact count at v0.4.0-draft**: 10 skills + 1 SessionStart hook + 12 byte-identical knowledge-layer functional copies + 3 SSOT pipeline scripts + 24 pressure-prompt test files across 9 test clusters + 5 integration test scripts + 2 Codex CLI verification scripts + 3 worked examples. ~28 commits on the long-lived `feat/code-toolkit-design` branch (per Q4 worktree convention).
 
 **Hybrid testing cadence (TC-1 decision, 2026-05-16)**: each Phase ship gates on a 3-minute ritual (`claude plugin validate` + reinstall + 1 pressure prompt). Catches measure-level / behavior-level bugs early; defers full systematic test suite to v1.0.0 release engineering. Found 7 substantive bugs across rituals (YAML / hookEventName / Feathers gap / systematic-debugging auto-fire / push-without-review / check-skill-structure allowlist / plugin-rooted-path) — all caught before Phase ship, none after.
+
+---
+
+## [0.9.0] — 2026-05-18 — **Inline rule-sheet — reviewer standards-loading optimization (V1)**
+
+Replaces the upfront `Read` of 7 standards in every reviewer dispatch
+with a single inline `_rule-sheet.md` (~1.5K chars) injected into the 4
+plugin-level agent prompts via the same BEGIN/END marker mechanism
+that ships `_baseline.md` and `_reviewer-discipline.md`. Standards
+files keep their role as canonical text — they shift from "preload
+input" to "on-demand citation target", read only when a flag's
+`source:` field cites a specific section.
+
+### Why this ships
+
+Dogfood observation (2026-05-18): every reviewer dispatch was loading
+~80K chars (~20K tokens) of standards / rubrics / checklists upfront,
+regardless of whether the task triggered any of them. A typical 5-task
+SDD plan burned 250K-400K tokens in reviewer context alone — repeated
+for every plan. Adopting Anthropic Skills' 3-tier progressive
+disclosure model (skill body always loaded; referenced files
+on-demand) cuts the upfront load by ≥90% in the standards portion
+without compromising code-toolkit's primary-source-grounded
+differentiator vs `obra/superpowers`.
+
+### What v0.9.0 ships
+
+**New SSOT file — `code-toolkit/scripts/_rule-sheet.md`** (1,531 bytes):
+
+- code-toolkit house thresholds (20-line soft / 50-line hard / 100-line
+  gate-warning function length; etc.) — the *delta* between general
+  LLM training data and toolkit specifics.
+- Verdict aggregation rules (2🟡 = NEEDS_REVISION; opaque flag =
+  NEEDS_REVISION; etc.).
+- Dimension → standard path mapping table for cite-on-fire navigation.
+- Cite-on-fire discipline: 徳丸本 Ch.6 sections / OWASP ASVS V5
+  §X.Y.Z numbers / house thresholds **MUST** `Read` before citing
+  (high hallucination risk on specific numbers). Clean Code chapter
+  names / Fowler smell names / Beck Preface rule **MAY** cite from
+  memory (canonical literature in training data).
+- Does NOT contain: SOLID definitions, what F.I.R.S.T means, why DRY
+  matters, generic smells — general LLM knowledge the agent already
+  has.
+
+**4 plugin-level agents now carry `rule-sheet-v1` BEGIN/END injection
+block** (`implementer.md` + `spec-reviewer.md` + `code-quality-reviewer.md`
++ `code-reviewer.md`), managed by `scripts/distribute.py` — mirrors the
+existing `baseline-v1` / `reviewer-discipline-v1` mechanism. As
+embedded in `code-toolkit/agents/code-quality-reviewer.md`, the
+rule-sheet block measures **1,531 bytes content / 1,703 bytes including
+markers** — this is the **V2 measurement baseline** for future
+compression / auto-gen comparisons (per brief §Alternatives Considered
+#4: LLMLingua-style compression kept as V2 fallback).
+
+**`scripts/distribute.py` extended**:
+
+- New routing rule injects `_rule-sheet.md` content into all 4 agent
+  files between `BEGIN rule-sheet-v1` / `END rule-sheet-v1` markers.
+- Existing baseline + reviewer-discipline routing unchanged.
+
+**Reviewer agent prompts updated** (`spec-reviewer.md`,
+`code-quality-reviewer.md`, `code-reviewer.md`): the former "Standards
+(load via Read before scoring)" preload list is replaced with a brief
+"Standards (load on cite)" note pointing at the rule-sheet's
+cite-on-fire discipline. Standards files themselves are unchanged in
+role and content — they remain SSOT for canonical text, sourced from
+`domain-teams/skills/code-team/standards/` via functional copy.
+
+**New integration test —
+`code-toolkit/tests/integration/test-rule-sheet-drift.sh`**: covers
+rule-sheet drift detection — verifies the BEGIN/END block in each of
+the 4 agent files matches `scripts/_rule-sheet.md` byte-for-byte and
+that `verify-drift.py` fails loudly on intentional drift.
+
+### Token impact
+
+Standards-portion upfront load per reviewer dispatch:
+
+| | Before (v0.8.0) | After (v0.9.0) | Reduction |
+|---|---|---|---|
+| 7 standards files | ~55K chars | 0 (on-demand) | -100% |
+| 2 rubrics + 1 checklist | ~20K chars | ~20K chars | unchanged (still Tier 2) |
+| Inline rule-sheet | — | ~1.5K chars | new |
+| **Total standards portion** | **~80K chars** | **~8K chars** | **≥90%** |
+
+Per-reviewer total upfront token load: ~20K → ≤2.5K tokens
+(target met). On-demand `Read` of a full standard is still available
+when a flag's `source:` field cites a specific section.
+
+### What becomes obsolete
+
+| Artifact | Status after V1 |
+|---|---|
+| Agent prompt section "Standards (load via Read before scoring)" with full preload list | **Replaced** — becomes "Standards (load on cite)" pointing at rule-sheet's cite-on-fire discipline |
+| Always-load behavior at dispatch | **Removed** — inline rule-sheet replaces it |
+| 7 standards files themselves | **Role shift, not deleted** — from "preload input" to "citation target". Still SSOT for canonical text. |
+| `distribute.py` / `verify-drift.py` | **Extended** — `_rule-sheet.md` joins the agent-injection routing table. Existing standards-copy routing unchanged. |
+
+### Deferred to V2
+
+- Adding `## quick-rules` sections to each of the 7 standards files
+  (prerequisite for auto-gen).
+- Auto-generating `_rule-sheet.md` from standards (V2; V1 is
+  hand-written + manually drift-checked).
+- Token-measurement instrumentation (V1 eyeballs the savings; V2
+  instruments if needed).
+- LLMLingua-style compression of the rule-sheet itself (V2 fallback
+  if cite-on-fire navigation fails in dogfood).
+
+### References
+
+- Brief: `docs/code-toolkit/specs/2026-05-18-inline-rule-sheet.md`
+- Plan: `docs/code-toolkit/plans/2026-05-18-inline-rule-sheet.md`
+
+### Migration
+
+No migration steps for existing users. The change is internal to
+plugin-agent dispatch. Reviewer behavior preserved: same flag
+triggers, same verdict semantics, same primary-source citation
+discipline — just with the canonical rule text inline instead of
+preloaded. Users running the agents via `claude plugin install` /
+`update` pick up the new injection blocks automatically; users on a
+local clone should run `python3 code-toolkit/scripts/distribute.py`
+once after pulling.
 
 ---
 

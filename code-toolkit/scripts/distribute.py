@@ -201,6 +201,19 @@ AGENT_REVIEWER_DISCIPLINE_TARGETS: list[str] = [
     "agents/code-reviewer.md",
 ]
 
+AGENT_RULE_SHEET_SSOT_REL = "scripts/_rule-sheet.md"
+AGENT_RULE_SHEET_BEGIN = (
+    "<!-- BEGIN rule-sheet-v1 — managed by "
+    "code-toolkit/scripts/distribute.py from "
+    "code-toolkit/scripts/_rule-sheet.md — do not edit in place -->"
+)
+AGENT_RULE_SHEET_END = "<!-- END rule-sheet-v1 -->"
+AGENT_RULE_SHEET_TARGETS: list[str] = list(AGENT_BASELINE_TARGETS)
+# ^ routes to all 4 agents (implementer + 3 reviewers). Single canonical
+#   text — implementer reads same content as reviewers; verdict aggregation
+#   rules are informational for implementer (self-check during TDD reduces
+#   reviewer NEEDS_REVISION rate).
+
 
 def expected_baseline_text() -> str:
     """Canonical text of the baseline block (the body of ``_baseline.md``)."""
@@ -213,6 +226,14 @@ def expected_reviewer_discipline_text() -> str:
     ``_reviewer-discipline.md``).
     """
     src = ROOT / AGENT_REVIEWER_DISCIPLINE_SSOT_REL
+    return src.read_text(encoding="utf-8").rstrip("\n")
+
+
+def expected_rule_sheet_text() -> str:
+    """Canonical text of the rule-sheet block (the body of
+    ``_rule-sheet.md``).
+    """
+    src = ROOT / AGENT_RULE_SHEET_SSOT_REL
     return src.read_text(encoding="utf-8").rstrip("\n")
 
 
@@ -249,10 +270,12 @@ def expected_agent_text(agent_rel: str) -> str:
     content untouched. Raises ``ValueError`` if a routed agent lacks the
     BEGIN/END markers for any block it should carry.
 
-    Two blocks are rebuilt:
+    Three blocks are rebuilt:
     - baseline-v1 (every routed agent — see ``AGENT_BASELINE_TARGETS``)
     - reviewer-discipline-v1 (reviewer agents only — see
       ``AGENT_REVIEWER_DISCIPLINE_TARGETS``)
+    - rule-sheet-v1 (every routed agent — see ``AGENT_RULE_SHEET_TARGETS``,
+      same set as baseline)
     """
     dst = ROOT / agent_rel
     content = dst.read_text(encoding="utf-8")
@@ -278,6 +301,16 @@ def expected_agent_text(agent_rel: str) -> str:
             "reviewer-discipline",
         )
 
+    # Rule-sheet applies to every routed agent (same routing as baseline).
+    content = _rebuild_marker_block(
+        content,
+        agent_rel,
+        AGENT_RULE_SHEET_BEGIN,
+        AGENT_RULE_SHEET_END,
+        expected_rule_sheet_text(),
+        "rule-sheet",
+    )
+
     return content
 
 
@@ -300,6 +333,8 @@ def distribute_agent_injections() -> int:
             tags = ["baseline"]
             if agent_rel in AGENT_REVIEWER_DISCIPLINE_TARGETS:
                 tags.append("reviewer-discipline")
+            if agent_rel in AGENT_RULE_SHEET_TARGETS:
+                tags.append("rule-sheet")
             print(
                 f"[deploy-agent-injections] code-toolkit/{agent_rel} "
                 f"({' + '.join(tags)})"
@@ -325,7 +360,8 @@ def main() -> int:
         f"\nOK: deployed {n} functional copies from code-team "
         f"+ synced injection blocks into {b} agent file(s) "
         f"(of {len(AGENT_BASELINE_TARGETS)} routed; "
-        f"reviewer-discipline applies to {len(AGENT_REVIEWER_DISCIPLINE_TARGETS)} reviewers)."
+        f"reviewer-discipline applies to {len(AGENT_REVIEWER_DISCIPLINE_TARGETS)} reviewers; "
+        f"rule-sheet applies to {len(AGENT_RULE_SHEET_TARGETS)} agents)."
     )
     return 0
 

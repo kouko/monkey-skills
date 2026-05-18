@@ -2,7 +2,7 @@
 # test-skill-loading.sh — verify Codex CLI plugin install + skill discovery
 #
 # Phase 2.5 v0.4.0 build deliverable. Runs the install + details probe;
-# verifies all 11 expected skills are discoverable (v0.8.0+).
+# verifies all 11 expected skills are discoverable (v0.9.0+).
 #
 # Prerequisite: Codex CLI installed (https://github.com/openai/codex
 # or equivalent). Script gracefully skips with install instructions if

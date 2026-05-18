@@ -1,7 +1,7 @@
 ---
 name: dispatching-parallel-agents
 description: 'Use when 2+ independent problem domains can be worked on concurrently — multiple test files failing for unrelated reasons, multiple modules to audit at once, multiple atomic tasks the plan marks `independent: true`, or N data fetches across disjoint inputs. Examples: "fix the 3 unrelated test files in parallel", "audit security across 4 modules at once", "fetch data for 5 tickers concurrently", "run independent atomic tasks 3 and 4 of the plan in parallel". Dispatch one fresh subagent per independent domain via **one assistant message with multiple Agent tool calls** — the harness runs them concurrently. Refuses parallel dispatch when domains share files / shared state / sequential data dependency. Borrowed pattern from superpowers v5.1.0 dispatching-parallel-agents, adapted for code-toolkit (TDD iron-law per branch, verdict aggregation, integration with SDD). Auxiliary — on-demand, no Skill Priority stage. 並行ディスパッチ・独立ドメイン・サブエージェント横並び。並行派遣・獨立 domain・子代理同時跑.'
-version: 0.8.0
+version: 0.9.0
 ---
 
 <SUBAGENT-STOP>
