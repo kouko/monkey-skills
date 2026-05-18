@@ -5,7 +5,9 @@
 #   scan-vault.sh <vault-root> \
 #     | python3 select-batch.py
 #
-# Reads vault-relative candidate paths from stdin (one per line).
+# Reads candidate paths from stdin (one per line); accepts vault-relative
+# OR absolute paths under VAULT_ROOT (latter is scan-vault.sh's output
+# format), auto-normalized to vault-relative for manifest lookup.
 # Consults .manifest.json to skip UNCHANGED files.
 # Sorts NEW + MODIFIED files by date (3-tier: filename → frontmatter → mtime)
 # and outputs the first BATCH_CAP entries as JSON.
@@ -274,12 +276,26 @@ def main() -> None:
 
     vault = Path(vault_root)
 
-    # Read candidate paths from stdin (vault-relative, one per line)
-    candidates: list[str] = [
-        line.strip()
-        for line in sys.stdin
-        if line.strip()
-    ]
+    # Read candidate paths from stdin (vault-relative OR absolute under VAULT_ROOT).
+    # scan-vault.sh emits absolute paths; manifest keys are vault-relative
+    # (per delta-tracking.md). Normalize abs → rel here so the script accepts
+    # either format and manifest lookup works uniformly.
+    vault_prefix = str(vault) + os.sep
+    candidates: list[str] = []
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith(vault_prefix):
+            line = line[len(vault_prefix):]  # abs under vault → vault-relative
+        elif os.path.isabs(line):
+            # Absolute but outside vault — drop with warning
+            print(
+                f"warning: absolute path outside VAULT_ROOT, skipping: {line}",
+                file=sys.stderr,
+            )
+            continue
+        candidates.append(line)
 
     # Bucket into NEW / MODIFIED / UNCHANGED
     to_process: list[dict] = []  # NEW + MODIFIED
