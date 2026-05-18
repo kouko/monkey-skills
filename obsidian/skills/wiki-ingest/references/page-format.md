@@ -78,7 +78,13 @@ The `## Source` section is the **human-navigation affordance**: a single wikilin
 > ❌ [[<source-basename>]]                            — literal placeholder, must substitute the real basename
 > ```
 >
-> Mechanical rule: take `source_path`, apply `os.path.basename(...)`, strip the trailing `.md`. Result MUST NOT contain `/` and MUST NOT end with `.md`.
+> **Mechanical rule** (4 steps):
+> 1. Take the `source_path` frontmatter value
+> 2. **Strip surrounding YAML quotes if present** — both `source_path: "foo.md"` and `source_path: foo.md` are valid YAML and must produce the same basename
+> 3. Apply basename — drop everything up to and including the last `/`
+> 4. Strip the trailing `.md` suffix
+>
+> Result MUST NOT contain `/`, MUST NOT end with `.md`, MUST NOT contain literal `"` or `'`.
 >
 > Enforced by `wiki-lint` L14.
 

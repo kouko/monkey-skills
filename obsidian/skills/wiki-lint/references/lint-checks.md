@@ -109,16 +109,20 @@ Triggers (`wiki/references/*.md` only):
 - Missing `## Source` heading → **warning**
 - `## Source` section contains no wikilink → **warning**
 - Wikilink contains `/` (path prefix, e.g. `[[references/foo/bar]]`) → **error**
-- Wikilink ends with `.md` (extension, e.g. `[[bar.md]]`) → **error**
-- Wikilink basename ≠ `Path(source_path).stem` from frontmatter → **warning** (likely stale; source renamed or re-ingested)
+- Wikilink ends with `.md` (extension, e.g. `[[bar.md]]` or `[[bar.md#anchor]]`) → **error**
+- Wikilink basename ≠ basename of `source_path` from frontmatter → **warning** (likely stale; source renamed or re-ingested)
 
 Detection regex (run against the body between `## Source` heading and the next `##` heading):
 
 ```
-malformed_link_pattern = r'\[\[[^\]]*/[^\]]+\]\]|\[\[[^\]]+\.md\]\]'
+malformed_link_pattern = r'\[\[[^\]]*/[^\]]+\]\]|\[\[[^\]]+\.md[\]#]'
 ```
 
-**Rationale**: the `## Source` section is a human-navigation affordance for Obsidian. Path-prefixed or extension-suffixed wikilinks bypass Obsidian's shortest-link resolution and break preview / graph features. This is the most common LLM mistake on reference pages because `source_path` frontmatter (which keeps the full path) is right above it — LLMs sometimes copy that value into the wikilink.
+The second alternation uses `[\]#]` (not `\]\]`) so it catches both `[[foo.md]]` and `[[foo.md#anchor]]`. The first alternation already catches any `/` regardless of trailing anchor.
+
+**Basename comparison** — parse the frontmatter as YAML (use `yaml.safe_load` or equivalent, **do not regex-extract**), then take `Path(source_path).stem`. YAML-quoted values like `source_path: "foo.md"` must be unquoted by the YAML parser before comparison; raw-string extraction will leave stray `"` characters that break the equality check.
+
+**Rationale**: the `## Source` section is a human-navigation affordance for Obsidian. Path-prefixed or extension-suffixed wikilinks bypass Obsidian's shortest-link resolution and break preview / graph features. This is the most common LLM mistake on reference pages because `source_path` frontmatter (which keeps the full path) is right above it — LLMs sometimes copy that value into the wikilink, often retaining the YAML surrounding quotes too.
 
 **Migration note**: reference pages created before this check existed will trigger missing-section warnings. Either re-ingest the source (regenerates correct format) or hand-edit. The check is warning-level (not error) precisely to allow gradual migration.
 

@@ -240,7 +240,13 @@ summary: "≤200 char single-line description of what this source contributes"
 > ❌ [[<source-basename>]]                            — literal placeholder (substitute the actual basename)
 > ```
 >
-> Apply `os.path.basename(source_path)` then strip the `.md` suffix. The result MUST contain no `/` and MUST NOT end with `.md`. This is enforced by `wiki-lint` L14. See [page-format.md §Wikilink resolution](references/page-format.md#wikilink-resolution) for the underlying rule.
+> **Mechanical rule** (4 steps):
+> 1. Take the `source_path` frontmatter value
+> 2. **Strip surrounding YAML quotes if present** — YAML allows `source_path: "foo.md"` or `source_path: foo.md` (quoting is mandatory only when the value contains special characters); both must produce the same basename
+> 3. Apply basename — drop everything up to and including the last `/`
+> 4. Strip the trailing `.md` suffix
+>
+> The result MUST contain no `/`, MUST NOT end with `.md`, MUST NOT contain literal `"` or `'`. This is enforced by `wiki-lint` L14. See [page-format.md §Wikilink resolution](references/page-format.md#wikilink-resolution) for the underlying rule.
 
 Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`. The `## Source` wikilink stays stable unless the source file is renamed (then `source_path` and the wikilink update together; Obsidian auto-tracks the rename).
 
