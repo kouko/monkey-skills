@@ -45,9 +45,9 @@ Mapping to MCP params:
 - **Missing workspace gid** → ask user.
 - **Pagination dropped** → check `next_page.offset` in response; full enumeration required for accurate count.
 
-## v0.2.0 scope
+## Limitations
 
-- **Section / task counts**: not fetched (would require N additional API calls). Deferred to v0.3.0 if needed.
+- **Section / task counts**: not fetched. Would require N additional `mcp__asana__list_tasks` calls (one per project); cost grows linearly with workspace size. Out of scope for v0.2.0; revisit if a single-call aggregate endpoint ships.
 
 ## Examples
 

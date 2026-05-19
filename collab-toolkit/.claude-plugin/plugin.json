@@ -1,7 +1,7 @@
 {
   "name": "collab-toolkit",
   "version": "0.2.0",
-  "description": "Browser automation toolkit on vercel-labs/agent-browser — 5 read-only office-collab skills (Asana / Slack / Notion / Google Calendar / Gmail). Supports EN / zh-TW / ja UI. ⚠️ Claude Code CLI only — Cowork blocks browser launch.",
+  "description": "Read-only office-collab toolkit (Asana / Slack / Notion / Google Calendar / Gmail) over official channels — MCP servers for Asana/Slack/Notion + Google Workspace CLI (gws) for Gmail/GCal. Locale-independent. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -10,16 +10,16 @@
   "repository": "https://github.com/kouko/monkey-skills",
   "license": "MIT",
   "keywords": [
-    "agent-browser",
-    "browser-automation",
+    "mcp",
+    "gws",
+    "google-workspace-cli",
     "office-collaboration",
     "asana",
     "slack",
     "notion",
     "google-calendar",
     "gmail",
-    "headless",
-    "read-only",
-    "semantic-selector"
+    "oauth",
+    "read-only"
   ]
 }

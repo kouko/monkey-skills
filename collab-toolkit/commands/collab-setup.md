@@ -1,6 +1,6 @@
 ---
 description: One-time bootstrap for collab-toolkit v0.2.0 — installs gws CLI + registers 3 MCP servers (Asana / Slack / Notion).
-allowed-tools: Bash(brew:*), Bash(gws:*), Bash(npm:*), Bash(/mcp:*)
+allowed-tools: Bash(brew:*), Bash(gws:*), Bash(npm:*)
 ---
 
 # /collab-setup

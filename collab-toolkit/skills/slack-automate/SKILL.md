@@ -8,6 +8,8 @@ allowed-tools: mcp__slack__search_messages, mcp__slack__read_channel, mcp__slack
 
 Read-only Slack access via the official Slack MCP server (GA 2026-02). Tool calls return structured JSON — no UI scraping, no locale tables, no browser daemon.
 
+> ⚠️ **First-MCP-session verification needed (v0.2.0)**: the `mcp__slack__find_user` tool name is assumed against likely Slack MCP exposure but unverified — `find-user` may fail on first invocation if the actual tool name differs (e.g. `mcp__slack__users_lookup`). On first run of any protocol, ask Claude Code to list the slack MCP server's exposed tools and reconcile with `allowed-tools` + protocol bodies. See `references/failure-modes.md` §"Tool name verification needed" for the one-shot procedure.
+
 ## Prerequisites
 
 One-time setup:
