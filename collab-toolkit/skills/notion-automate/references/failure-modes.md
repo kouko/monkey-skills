@@ -1,60 +1,94 @@
-# notion-automate Failure Modes
+# notion-automate Failure Modes (Notion MCP)
 
-Common failure modes and their remediations.
+Failure modes against `mcp.notion.com/mcp` (Active since 2026-03-30). Read-only protocols only.
 
-## Auth expiry / login wall
+## OAuth scope insufficient
 
-**Symptom**: page title contains `Sign in` / `Log in` / `Login`, OR URL redirects to the service's login path / `accounts.google.com`.
+**Symptom**: tool call returns 403 / "insufficient capabilities" / "object_not_found" even though the page/database visibly exists in Notion's web UI.
 
-**Remediation**:
-- **Shared profile mode**: log into notion in your daily Chrome under the configured profile. Next protocol invocation picks up fresh cookies.
-- **Dedicated profile mode**: `/collab-setup --reauth notion`
-
-Protocols MUST fail fast on detection — do NOT attempt to scrape login-walled pages.
-
-## UI changed
-
-**Symptom**: protocol expected an element with specific role+name (e.g., `[link] "My tasks"`), but it's not in the snapshot output.
+**Background**: Notion's MCP server uses the integration's granted scope. Pages and databases must be **explicitly shared** with the Notion integration to appear in search / get / query results. Workspace-wide access is not granted by default.
 
 **Remediation**:
-1. Run `abx snapshot -i` against the affected page yourself
-2. Inspect the text output for similar elements (capitalization variation, role change, restructured navigation)
-3. Update the protocol's "look for" hint to match the new pattern
+1. Re-run `/mcp add notion` — Claude Code's native OAuth pre-registration will re-prompt for scopes / re-grant integration access.
+2. In Notion's web UI, navigate to the target page → ⋯ menu → "Add connections" → select the integration → confirm.
+3. For workspace-admin or wide-read access, the workspace owner may need to install the integration at workspace level (not user-level).
 
-Common UI evolution patterns:
-- Service rebranding (e.g., link text changes)
-- Role swap (`[link]` → `[button]` or vice versa)
-- Wrapping inside an extra container (the element you want is now a grandchild)
+## API 2025-09-03 data-source abstraction
 
-## Empty result vs UI evolution
+**Background**: Notion API version `2025-09-03` introduced `data_sources` as a wrapper around what was previously raw database row arrays. Some MCP responses now return `data_source_id` alongside (or instead of) `database_id`.
+
+**Impact**: protocol code that hard-codes `database_id` may need to also handle `data_source_id` when the MCP version flips. Row-level shape is unchanged — only the container changes.
+
+**Remediation**:
+- Treat `database_id` and `data_source_id` as interchangeable handles at the protocol layer.
+- If the MCP tool signature changes between calls, surface the new param name in the protocol's `## Steps` section.
+- Watch the Notion changelog at `developers.notion.com/changelog` for further evolution.
+
+## Rate limit
+
+**Symptom**: tool call returns 429 / "rate_limited".
+
+**Background**: Notion API rate limit is ~3 requests/second per integration (average; bursts allowed). Search and database-query are the heaviest.
+
+**Remediation**:
+- Implement exponential backoff: wait 2s, retry; on second 429 wait 8s; on third give up and surface error.
+- The MCP server may handle backoff automatically — check response metadata for `Retry-After` header value.
+- For bulk operations (e.g., enumerating all rows of a 10k-row database), throttle client-side to <2 req/s to leave headroom.
+
+## Token refresh
+
+**Symptom**: tool call returns 401 / "unauthorized" / "invalid_grant".
+
+**Background**: Claude Code's native MCP OAuth pre-registration handles refresh-token rotation automatically — this should be rare.
+
+**Remediation**:
+- If seen during a session: retry the tool call (Claude Code refreshes silently between calls).
+- If persistent: run `/mcp add notion` to re-authenticate from scratch.
+- Flag in the protocol output so the user knows refresh occurred.
+
+## Tool name verification needed
+
+**Status**: tool names below are **assumed** based on the Notion REST endpoint shape (`/v1/search`, `/v1/pages/<id>`, `/v1/databases/<id>/query`). Verification against the live MCP server's `tools/list` response is **not done during initial v0.2.0 rewrite** — flagged for follow-up.
+
+**Assumed tool names**:
+- `mcp__notion__search` (for protocols/search-workspace.md)
+- `mcp__notion__get_page` (for protocols/page-fetch.md)
+- `mcp__notion__query_database` (for protocols/database-query.md)
+
+**Possibly also needed but not yet verified**:
+- `mcp__notion__get_block_children` (for paginating page-fetch block trees longer than the inline response cap)
+- `mcp__notion__get_database` (for resolving a database's schema before querying — falls back to first-row inference in v0.2.0)
+
+**Verification procedure** (one-shot, run after first `/mcp add notion`):
+1. Open an MCP-capable Claude Code session.
+2. Ask: "list the tools exposed by the notion MCP server".
+3. Compare returned names to the assumed list above.
+4. If any tool name differs, update both `SKILL.md` `allowed-tools` and the protocol's `allowed-tools` frontmatter, plus the example invocations.
+
+## Coverage gaps from v0.1.6 → v0.2.0
+
+**`page-backlinks` protocol dropped**.
+
+**Background**: v0.1.6 implemented page-backlinks by browser-driving the Notion web UI — clicking the page's "⋯" → "Show backlinks" menuitem, then scraping the rendered Backlinks region. This relied entirely on the front-end UI rendering backlinks; the Notion REST / MCP API does **not** expose a backlinks endpoint. There is no `/v1/pages/<id>/backlinks` or equivalent.
+
+**Why this matters**: migrating to MCP means we lose the ability to enumerate inbound links to a page. Notion's data model tracks block-level "mentions" internally (block `type = "mention"` references), but no API surface aggregates them per-target-page.
+
+**Workarounds (none chosen for v0.2.0)**:
+- Crawl every page in the workspace via `mcp__notion__search` + `mcp__notion__get_page`, scan all `rich_text[].mention` entries, build an inverted index client-side. Expensive (O(N) pages × paginated block fetches per page) and stale-by-design. Deferred.
+- Use Notion's `?source=copy_link` URL pattern + grep on exported workspace HTML. Out of MCP scope.
+
+**If Notion adds a native backlinks endpoint**: bump skill version, re-introduce `protocols/page-backlinks.md` mirroring the search/get patterns. Track via developers.notion.com/changelog.
+
+## Empty result vs error
 
 **Disambiguation**:
-- If the expected role appears in the snapshot but no element matches the name → valid empty result (e.g., no tasks matching filter)
-- If the expected role itself is absent → UI evolved, treat as error
+- Tool call returns `results: []` with HTTP 200 → valid empty result. Emit `No <items> matching <filter>.`
+- Tool call returns non-2xx → error. Surface `ERR: <status>: <message>` to user.
 
-Protocols emit different output for each case:
-- Empty: `No <items> matching <filter>.`
-- UI evolved: `ERR: UI changed: <role>+<name> not found.` (with hint to re-snapshot)
+## Page id parsing
 
-## Daemon stale profile
+**Symptom**: protocol asks for `page_id` and user supplies a URL.
 
-**Symptom**: warning `⚠ --profile, --headed ignored: daemon already running. Use 'agent-browser close' first to restart with new options.`
+**Background**: Notion URLs have format `https://www.notion.so/<workspace>/<slug>-<id>` or `https://www.notion.so/<id>`. The id is 32 hex chars, may be dash-formatted (`8-4-4-4-12`) or compact.
 
-**Impact**: usually no actual problem — the daemon already has the correct profile from a previous `/collab-setup` or earlier invocation. The warning is agent-browser being conservative.
-
-**When to actually act**: only if extracted data is from the wrong account (verify by checking title or URL in protocol output). To force fresh:
-```bash
-agent-browser close
-```
-
-## Network timeout / page load failure
-
-**Symptom**: `abx open` returns timeout, page load > 25s default.
-
-**Remediation**:
-```bash
-export AGENT_BROWSER_TIMEOUT_MS=45000   # bump to 45s
-abx open <url>
-```
-
-Or retry once after `agent-browser close`.
+**Remediation**: strip dashes, take the final 32 hex chars of the last URL path segment. Re-insert dashes in 8-4-4-4-12 form if the MCP requires UUID format.

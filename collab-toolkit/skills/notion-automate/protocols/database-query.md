@@ -1,51 +1,68 @@
 ---
 name: database-query
-purpose: Query a Notion database with filter / sort. Return matching rows.
+purpose: Query a Notion database with filter / sort and return matching rows as a Markdown table.
+allowed-tools: mcp__notion__query_database
 ---
 
-## Inputs
-- `database_url`: required.
-- `filters`: optional JSON array.
-- `sort`: optional `property:direction`.
-- `--json`: optional.
+## Purpose
 
-## Output
-Markdown table of rows.
+Return a Markdown table of rows from a Notion database, optionally filtered and sorted server-side via the Notion API's structured filter/sort syntax.
 
-## Localized labels
+## Input
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Filter button | `[button] "Filter"` | `[button] "篩選"` | `[button] "フィルター"` |
-| Sort button | `[button] "Sort"` | `[button] "排序"` | `[button] "並べ替え"` |
-| Add-filter button | `[button] "Add filter"` | `[button] "新增篩選"` | `[button] "フィルターを追加"` |
+- `database_url` OR `database_id`: required. Parse the 32-char hex id out of the URL if needed (same rules as page-fetch).
+- `filters`: optional. Notion API filter object (e.g., `{ "property": "Status", "select": { "equals": "Done" } }`) or compound `{ "and": [...] }` / `{ "or": [...] }`. Pass through to the API.
+- `sort`: optional. Either `property:direction` shorthand (e.g., `"Due:descending"`) — convert to API form `[{ "property": "Due", "direction": "descending" }]` — or the raw API sort array.
+- `--json`: optional. Skip Markdown formatting, return raw API records.
 
-## Procedure
+## Steps
 
-1. ```bash
-   abx open <database_url>
-   abx wait --load networkidle
-   abx snapshot -i
+1. Resolve `database_id` from `database_url` if needed.
+
+2. Call:
+   ```
+   mcp__notion__query_database({
+     "database_id": "<database_id>",
+     "filter": <filters or omit>,
+     "sorts": <sort array or omit>,
+     "page_size": 100
+   })
    ```
 
-2. **Read snapshot**. Find database `[grid]`. Rows = `[row]`, header = `[columnheader]`.
+   Note: Notion API version `2025-09-03` introduced `data_sources` as the canonical wrapper for database rows. The MCP tool may accept `data_source_id` instead of (or in addition to) `database_id` — pass whichever the tool signature documents. When both are present, the response shape is identical at the row level.
 
-3. **Apply filters via UI** if specified (look for Filter button per Localized labels). Notion's filter dropdown may render in a portal — see Failure modes.
+3. Handle pagination — loop on `has_more: true` / `start_cursor: <next_cursor>` until exhausted.
 
-4. **Apply sort** similarly via Sort button.
+4. Discover columns from the first row's `properties` map. Render a Markdown table:
+   ```
+   ## <Database title> — N rows
 
-5. **Read rows**. Extract `[cell]` children. Format as Markdown table.
+   | <col 1> | <col 2> | <col 3> |
+   |---------|---------|---------|
+   | <val>   | <val>   | <val>   |
+   ```
 
-## Failure modes
+   Cell value extraction by property type (most common):
+   - `title` → concatenate `title[].plain_text`
+   - `rich_text` → concatenate `rich_text[].plain_text`
+   - `select` → `select.name`
+   - `multi_select` → comma-join `multi_select[].name`
+   - `date` → `date.start` (append `→ date.end` if present)
+   - `people` → comma-join `people[].name`
+   - `checkbox` → `[x]` / `[ ]`
+   - `number` → `number`
+   - `url` / `email` / `phone_number` → literal string
+   - `relation` → comma-join `relation[].id` (resolve to titles via page-fetch if needed; expensive)
+   - `formula` / `rollup` → use the typed sub-object (`formula.string`, `formula.number`, etc.)
 
-- **Filter UI in React portal** — dropdown not in accessibility tree → fetch all visible rows + filter in this protocol's logic instead.
-- **Lazy-loaded rows** → scroll + re-snapshot.
-- **Login wall** → reauth.
+## Common failure modes
 
-## Notes
-
-- Different views (Table / Board / Calendar / Timeline / Gallery / List) render differently. Switch to Table view first for cleanest `[grid]`/`[row]`/`[cell]` structure.
+- **400 / invalid filter** → filter property name or operator wrong for column type. Notion returns the offending field in the error message.
+- **404 / database not found** → invalid id or database not shared with the MCP integration.
+- **Pagination dropped** → row count off; always loop until `has_more: false`.
+- **Empty array** → valid empty result. Emit `No rows matching filter.`
+- **Property type changed** → schema evolved since last query; surface raw value and warn.
 
 ## Examples
 
-Input: `database_url = ...` → Markdown table of rows.
+Input: `database_url = ..., filters = { "property": "Status", "select": { "equals": "Done" } }, sort = "Due:descending"` → Markdown table.
