@@ -10,10 +10,14 @@ gws_cli_release: v0.22.5
 gws_cli_commit: 705fb0ecac6f4249679958f6325b809b63fdde17
 upstream_repo: googleworkspace/cli
 upstream_license: Apache-2.0
-synced_at: 2026-05-04
+synced_at: 2026-05-19
 synced_skills:
   - gws-shared
   - gws-drive
   - gws-docs
   - gws-slides
   - gws-sheets
+  - gws-gmail
+  - gws-gmail-read
+  - gws-calendar
+  - gws-calendar-agenda

@@ -4,8 +4,9 @@ set -euo pipefail
 # =============================================================================
 # sync-upstream-skills.sh — vendor selected upstream gws skills into gws-toolkit
 # -----------------------------------------------------------------------------
-# Fetches SKILL.md for the 5 vendored upstream skills (gws-shared, gws-drive,
-# gws-docs, gws-slides, gws-sheets) from googleworkspace/cli at the commit
+# Fetches SKILL.md for the 9 vendored upstream skills (gws-shared, gws-drive,
+# gws-docs, gws-slides, gws-sheets, gws-gmail, gws-gmail-read, gws-calendar,
+# gws-calendar-agenda) from googleworkspace/cli at the commit
 # pinned in UPSTREAM_GWS_VERSION, writes them under gws-toolkit/skills/<name>/
 # SKILL.md, and injects provenance metadata into the frontmatter.
 #
@@ -43,7 +44,7 @@ readonly SKILLS_DIR="${TOOLKIT_ROOT}/skills"
 readonly GH="${GH:-gh}"
 
 # Vendored skill names — keep in sync with UPSTREAM_GWS_VERSION's synced_skills list
-readonly VENDORED_SKILLS=(gws-shared gws-drive gws-docs gws-slides gws-sheets)
+readonly VENDORED_SKILLS=(gws-shared gws-drive gws-docs gws-slides gws-sheets gws-gmail gws-gmail-read gws-calendar gws-calendar-agenda)
 
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -160,5 +161,5 @@ fi
 
 printf '[sync] all %d skill(s) synced\n' "${#VENDORED_SKILLS[@]}" >&2
 if (( DRY_RUN == 0 )); then
-  printf '[sync] review changes: git diff -- gws-toolkit/skills/gws-{shared,drive,docs,slides,sheets}/\n' >&2
+  printf '[sync] review changes: git diff -- gws-toolkit/skills/gws-{shared,drive,docs,slides,sheets,gmail,gmail-read,calendar,calendar-agenda}/\n' >&2
 fi
