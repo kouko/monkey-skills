@@ -36,6 +36,8 @@ Ask Claude a simple query that hits each service:
 
 The first call per server opens a browser → OAuth consent → token cached. Subsequent calls reuse the cached token.
 
+> **Notion specific**: during the OAuth consent screen, Notion asks **which pages / databases / workspace branches** to grant Claude access to — pick generously (the entire workspace, or specific top-level pages). This is **OAuth-based** access: Claude then acts with your own Notion permissions on the selected resources. You do **not** need to go into each page and add a "connection" afterwards — that's the legacy Internal Integration Token flow, which is different from this MCP's OAuth model.
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -44,6 +46,8 @@ The first call per server opens a browser → OAuth consent → token cached. Su
 | MCP tool returns "auth required" | First-call OAuth not yet completed — Claude Code should auto-prompt; if not, restart Claude Code. |
 | Asana OAuth fails with `redirect_uri not registered` / DCR error | Asana V2 officially does not support Dynamic Client Registration — some Claude Code builds rely on a default client that may stop working. **Escape hatch (per-user, never goes to git)**: register your own OAuth client at https://app.asana.com/0/my-apps, then add the `clientId` to your user-level `~/.claude.json` `mcpServers.asana.oauth` block — that user-level config overrides this plugin's entry. **Do NOT add `client_secret` to plugin.json** — it would be committed to git and exposed to every installer of this plugin. |
 | Slack tool returns `missing_scope` | The plugin declares 17 read-only scopes; if Slack adds new APIs that need more, edit the `mcpServers.slack.oauth.scopes` line in this plugin's `plugin.json` (read-only additions only — no `chat:write`). |
+| Slack OAuth shows "needs admin approval" / cannot proceed | Your Slack workspace has **app governance enabled** (Enterprise Grid or workspaces with strict app permissions). Ask your Slack workspace admin to approve the MCP integration for collab-toolkit, then retry the first-call OAuth. |
+| Notion search returns nothing useful / "object_not_found" | Your Notion OAuth grant didn't include the pages you're searching. Re-trigger OAuth and during the consent screen pick a broader page tree (or the whole workspace). See `skills/notion-automate/references/failure-modes.md` §"OAuth: page/database not found" for full details. **Do not** use the Notion "⋯ → Add connections" per-page flow — that's the legacy Internal Integration mechanism, not OAuth-based MCP. |
 
 ## Migrating from v0.1.x?
 

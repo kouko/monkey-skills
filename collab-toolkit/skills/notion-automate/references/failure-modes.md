@@ -2,16 +2,23 @@
 
 Failure modes against `mcp.notion.com/mcp` (Active since 2026-03-30). Read-only protocols only.
 
-## OAuth scope insufficient
+## OAuth: page/database not found
 
 **Symptom**: tool call returns 403 / "insufficient capabilities" / "object_not_found" even though the page/database visibly exists in Notion's web UI.
 
-**Background**: Notion's MCP server uses the integration's granted scope. Pages and databases must be **explicitly shared** with the Notion integration to appear in search / get / query results. Workspace-wide access is not granted by default.
+**Background**: Notion has **two** integration models — they are easy to confuse:
+
+| Model | Used by | Permission mechanism |
+|---|---|---|
+| **OAuth-based integration** (newer) | `mcp.notion.com/mcp` (this plugin) + Claude.ai's Notion connector | At OAuth time, user picks **which pages / databases / workspace tree** to grant. Claude then acts with the user's own Notion permissions on those resources. No per-page sharing afterwards. |
+| **Internal Integration Token** (legacy) | Custom scripts using an Internal Integration's API token | Per-page sharing required — user goes into each page's "⋯ → Add connections" to authorize the integration. |
+
+`mcp.notion.com/mcp` is **OAuth-based**, so the per-page "Add connections" flow is **not** how access works for this plugin.
 
 **Remediation**:
-1. Re-run `/mcp add notion` — Claude Code's native OAuth pre-registration will re-prompt for scopes / re-grant integration access.
-2. In Notion's web UI, navigate to the target page → ⋯ menu → "Add connections" → select the integration → confirm.
-3. For workspace-admin or wide-read access, the workspace owner may need to install the integration at workspace level (not user-level).
+1. **Re-run OAuth with broader page selection.** Open Claude Code's MCP UI (or run a Notion tool to force the OAuth flow) and during the consent screen, expand the page/database tree to include the resources you want Claude to read. The previous OAuth grant likely had a narrower selection.
+2. **Enterprise governance**: workspace admins on Notion Enterprise may have restricted which AI apps can connect (Settings → Connections → Permissions → "Only from approved list"). Ask your workspace admin to allow `collab-toolkit` / the corresponding MCP client.
+3. **Do NOT use the Internal Integration "Add connections" per-page flow** — that mechanism applies to custom integrations using an API token, not to this OAuth-based MCP. Doing so will not fix MCP access (it'll authorize a separate integration that the MCP isn't using).
 
 ## Trust boundary — confused-deputy / prompt-injection risk
 
