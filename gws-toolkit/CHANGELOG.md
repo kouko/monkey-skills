@@ -39,6 +39,79 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.6.0] - 2026-05-19
+
+Google Workspace account support — auto-detect by gcloud account email
+domain. Prior releases assumed personal `@gmail.com` accounts only;
+Workspace users (`@company.com`) hit the External + Testing's 7-day
+refresh-token expiry every week despite their Internal-app eligibility,
+and got walked through the Test User step that Internal apps don't
+require. v0.6.0 detects account type from the active gcloud account's
+email domain and dual-paths the OAuth consent walkthrough accordingly.
+
+### Added
+
+- **`detect_account_type()` in `scripts/gws/auto-setup.sh`** (Part 1
+  T1) — domain-based detection from `gcloud auth list --filter=status:ACTIVE`
+  email. `@gmail.com` / `@googlemail.com` → `personal`; all other
+  domains → `workspace`. `--audience=internal|external` flag override
+  available for edge cases (BYO-Workspace-as-personal, personal-as-
+  Workspace test fixtures).
+- **`account_type` field in `scripts/gws/credential-check.sh` JSON
+  output** (Part 1 T4) — `"personal" | "workspace" | "unknown"`.
+  Downstream consumers (skill body, future cron) can branch on token-
+  expiry handling without re-detecting.
+
+### Changed
+
+- **Dual-path `step_5a_branding` in `scripts/gws/auto-setup.sh`**
+  (Part 1 T2) — Internal Audience walkthrough for Workspace accounts
+  (no Test User section, no 7-day refresh policy); External Audience
+  walkthrough preserved verbatim for personal accounts.
+- **Conditional `step_5b_test_user` in `scripts/gws/auto-setup.sh`**
+  (Part 1 T3) — skipped entirely for Workspace (Internal apps don't
+  need Test Users); preserved for personal accounts.
+- **`skills/gws-setup/SKILL.md` narrative dual-pathed** (Part 2 T1) —
+  Prerequisites, Setup flow, and "Every 7 days maintenance" sections
+  now branch on detected account type. Workspace branch omits the
+  weekly refresh ritual.
+- **`TECH-SPEC.md`** (Part 2 T2) — **no changes**. Plan stage expected
+  to find "Workspace accounts are Phase 2+" caveats and remove them, but
+  a grep against the current TECH-SPEC.md found 0 matches. The
+  account-type / personal-vs-Workspace distinction was only documented
+  in SKILL.md (now updated in Part 2 T1). Brief §line 140 had pre-flagged
+  this with "locations TBD during plan stage grep" — confirmed empty.
+  Linux / CI / WSL "Phase 2+" caveats untouched (still out of scope).
+  Follow-up: TECH-SPEC.md §6.3 currently states the 7-day token policy
+  universally; a future patch could add an account-type qualifier
+  ("personal-account only") for factual precision, but the user-facing
+  setup flow (in SKILL.md + auto-setup.sh) already routes Workspace
+  users past it.
+
+### Notes
+
+- Workspace accounts are no longer subject to External + Testing's
+  7-day refresh-token policy (Internal-app exemption per Google
+  OAuth 2.0 docs).
+- Workspace user OAuth flow skips the Test User step entirely
+  (Internal apps don't require Test Users).
+- User account-type is detected from `gcloud auth list --filter=status:ACTIVE`
+  email domain: `@gmail.com` / `@googlemail.com` → `personal`; else →
+  `workspace`.
+- `--audience=internal|external` override available for edge cases
+  where domain-based detection produces the wrong default.
+
+### Open follow-ups
+
+- Real-machine dogfood pending against an actual Workspace account
+  (`kouko@ichef.com.tw`); first-use validation will close brief Open Q1.
+- Issue #119 workaround applicability under Workspace OAuth client —
+  verify in first-use (brief Open Q2); env-guard wiring may need
+  Workspace-specific adjustment.
+- GCP project creation under iChef org policy — verify in first-use
+  that `gcloud projects create` is permitted; if blocked, document
+  the BYO-project fallback in the next patch.
+
 ## [0.5.2] - 2026-05-19
 
 Skill-UX fix: when `gws-setup` skill routes to the re-auth-only branch
