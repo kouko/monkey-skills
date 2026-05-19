@@ -214,11 +214,31 @@ production verification, there's no way around it.
 
 Every 7 days (or whenever you see exit 10 `token expired`):
 
+**Agent directive**: Claude — invoke this directly via the Bash tool.
+**Do NOT** print the command as a paste-it `!` invocation for the user
+to run manually. The OAuth flow opens a browser; the user completes
+consent there, the Bash call blocks until the localhost callback
+returns. That blocking is expected behaviour, not a reason to defer to
+the user.
+
 ```bash
-gws auth login --scopes=presentations,drive,documents,spreadsheets
-# Browser opens → consent → callback returns
-# Takes about 10 seconds
+bash scripts/gws/refresh-auth.sh
 ```
+
+`refresh-auth.sh` is the wrapper purpose-built for this case (7-day
+Testing-mode token expired, same Google account — no account-switch
+intent). It:
+
+1. Sources `~/.config/gws/env.sh` (issue #119 workaround env vars must
+   be present before `gws auth login`).
+2. Runs `gws auth login --scopes=presentations,drive,documents,spreadsheets`
+   (the 4-API scope set; matches `auto-setup.sh` step 8 and
+   `slides-builder` runtime needs).
+3. Opens the browser for consent; total wall time ~10 seconds end-to-end.
+
+For account switch (different Google account), use
+`scripts/gws/gws-login.sh --switch` instead — that script clears local
+creds first via `gws-logout.sh` so the Google account picker reappears.
 
 **No need to rerun the setup flow** — your Client Secret and OAuth
 client are still valid, only the refresh token expired.
