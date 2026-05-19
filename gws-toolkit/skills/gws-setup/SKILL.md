@@ -91,7 +91,28 @@ Branch on the result:
 
 Full checklist: `checklists/setup-state.md`.
 
-## Setup flow
+## Setup flow — pick a path
+
+Two paths, **same end state**. Pick one:
+
+| Path | What it is | When to pick |
+|---|---|---|
+| **Path A (recommended)** — `/gws-setup` slash command | Runs `scripts/gws/auto-setup.sh` end-to-end: install gcloud → `gcloud auth login` → create GCP project → enable 4 APIs → guided OAuth Consent + Client → install credentials → bootstrap binaries → `gws auth login`. Idempotent. | Default for first-time setup; ~6-8 min first run, ~30 sec when re-run on a set-up machine. |
+| **Path B (manual fallback)** — 10-step browser walkthrough | Do everything yourself in the GCP Console; SKILL surfaces the table below. | Debugging, partial state recovery, or environments where the script can't run (no TTY, custom GCP setup, ...). |
+
+### Path A — `/gws-setup` (recommended)
+
+In Claude Code:
+
+```
+/gws-setup
+```
+
+(Or run the underlying script directly: `bash scripts/gws/auto-setup.sh`. Supports `--dry-run` and `--force-reinstall`.)
+
+The slash command's full contract — `$ARGUMENTS`, the 8 codified steps, troubleshooting, when it doesn't apply — lives in `commands/gws-setup.md`. Read that for the per-step detail before running on a constrained environment (no TTY / behind a proxy / non-default `~/Downloads/` path).
+
+### Path B — manual 10-step walkthrough
 
 **10 steps total**, split into two segments: 6 browser steps in the
 Console, then 4 local steps.
