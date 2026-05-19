@@ -39,6 +39,47 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.5.1] - 2026-05-19
+
+Fix-only release: expose existing `auto-setup.sh` automation that was
+previously dead code (no user-facing entry point). The 742-line
+end-to-end onboarding script has been in the repo since v0.5.0 but
+`gws-toolkit/commands/` was empty and `skills/gws-setup/SKILL.md`
+walkthrough only documented the 10-step manual flow, so users
+following the documented setup re-did manually what the script could
+automate.
+
+### Added
+
+- **`commands/gws-setup.md`** — new slash command body. Invokes
+  `bash ${CLAUDE_PLUGIN_ROOT}/scripts/gws/auto-setup.sh $ARGUMENTS`.
+  Documents the 8 codified steps, supported args
+  (`--dry-run` / `--force-reinstall`), prerequisites (macOS / TTY /
+  personal Gmail), idempotence semantics, troubleshooting, and when
+  to use the manual fallback (Path B).
+
+### Changed
+
+- **`skills/gws-setup/SKILL.md` "Setup flow" section** — restructured
+  as Path A vs Path B chooser:
+  - **Path A**: `/gws-setup` slash command (recommended; ~6-8 min
+    first run, ~30 sec on re-run when already set up)
+  - **Path B**: the existing 10-step manual walkthrough (kept
+    verbatim as fallback for debugging / constrained environments /
+    no-TTY contexts)
+
+### Notes
+
+- The underlying `scripts/gws/auto-setup.sh` is unchanged — this
+  release only adds entry points + documentation. Anyone who was
+  already invoking the script directly (`bash scripts/gws/auto-setup.sh`)
+  sees no functional difference.
+- Follow-up planned (separate release): refactor script placement
+  (relocate plugin-level `scripts/gws/` into per-skill `scripts/`
+  folders per Anthropic skill self-containment, using `code-toolkit`'s
+  canonical + distribute + verify-drift pattern as precedent).
+  Tracking PR: TBD.
+
 ## [0.5.0] - 2026-05-06
 
 **Phase 1 validation closed; slides-toolkit enters Phase 3 deprecation.**
