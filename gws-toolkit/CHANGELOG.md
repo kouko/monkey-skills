@@ -63,10 +63,12 @@ paths stay read-only until write JTBDs land in v0.7.x.
   vendored upstream `gws-calendar-agenda` skill; covers event list /
   search / free-busy / agenda-view operations. Read-path counterpart to
   `gws-calendar`.
-- **Gmail OAuth scope** (`https://mail.google.com/` — full read-write,
-  restricted tier) added to `scripts/gws/auto-setup.sh` (Part 1 T1 /
-  `1d4b950`). macOS Mail already holds this scope at the iChef org
-  level; confirmed unblocked at `myaccount.google.com/permissions`.
+- **Gmail OAuth scope** (`https://www.googleapis.com/auth/gmail` — full
+  read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
+  (Part 1 T1 / `1d4b950`). The org-policy probe at
+  `myaccount.google.com/permissions` showed macOS Mail already holds
+  the broader `https://mail.google.com/` scope at the iChef org level;
+  the narrower API scope we request is therefore allowed.
 - **Calendar OAuth scope** (`https://www.googleapis.com/auth/calendar` —
   full read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
   (Part 1 T1 / `1d4b950`).
@@ -128,8 +130,8 @@ paths stay read-only until write JTBDs land in v0.7.x.
   as the v0.4.0 Drive decision). OAuth grant is full read-write;
   code paths stay read-only this release; write-side wrappers ship in
   v0.7.x when first write JTBD lands. Gmail/Calendar extend the same
-  contract: OAuth grant is full (`https://mail.google.com/` +
-  `https://www.googleapis.com/auth/calendar`), but no compose / insert
+  contract: OAuth grant is full (`https://www.googleapis.com/auth/gmail`
+  + `https://www.googleapis.com/auth/calendar`), but no compose / insert
   user-facing path ships until a confirmed write JTBD is scoped.
 - **iChef Workspace admin-policy probe** — macOS Mail already holds
   `https://mail.google.com/` scope per `myaccount.google.com/permissions`
