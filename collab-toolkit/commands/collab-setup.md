@@ -1,5 +1,5 @@
 ---
-description: One-time bootstrap for collab-toolkit v0.2.0 — installs gws CLI + registers 3 MCP servers (Asana / Slack / Notion).
+description: One-time bootstrap for collab-toolkit v0.2.0 — install gws CLI + verify auto-registered MCP servers.
 allowed-tools: Bash(brew:*), Bash(gws:*), Bash(npm:*)
 ---
 
@@ -12,24 +12,27 @@ Read top-to-bottom; pause where prompted.
 
 - **Google Workspace CLI (`gws`)** — drives Gmail + GCal (also exposes
   Drive / Sheets for future skills).
-- **3 official remote MCP servers** — Asana / Slack / Notion.
+- **3 official remote MCP servers** (Asana / Slack / Notion) —
+  **already auto-registered** by this plugin's `mcpServers` block in
+  `plugin.json` when you installed `collab-toolkit`. Each one's OAuth
+  flow triggers the first time you invoke a tool on that server.
 
 5 services, 4 OAuth dances (the Google one covers Gmail + GCal in a
-single consent).
+single consent; the 3 MCP OAuths fire on first tool call).
 
 ## Step 1 — Install `gws`
 
 Try Homebrew first (preferred):
 
 ```bash
-brew search gws
-brew install gws   # if the formula appears
+brew install googleworkspace-cli
 ```
 
-If the brew formula is unavailable on your machine, fall back to npm:
+The Homebrew formula name is `googleworkspace-cli` (not `gws`); the
+installed binary is `gws`. If brew is unavailable, fall back to npm:
 
 ```bash
-npm i -g @googleworkspace/gws
+npm i -g @googleworkspace/cli
 ```
 
 Verify:
@@ -62,38 +65,36 @@ don't have one yet:
 
 ## Step 3 — Google OAuth
 
+First-time setup (walks GCP config + opens browser):
+
 ```bash
-gws auth
+gws auth setup
 ```
 
-This opens your default browser for the OAuth dance. **Click through
-fast** — the local terminal handshake can fail with `connection
-refused` if you stall in the browser (documented in the Zenn gog
-設定指南). Just re-run `gws auth` on failure; it is idempotent.
+Subsequent re-auth (token refresh / scope change):
 
-## Step 4 — Asana MCP
-
-In Claude Code:
-
-```
-/mcp add asana
+```bash
+gws auth login
 ```
 
-Native OAuth pre-registration → browser opens → approve.
+**Click through fast** — the local terminal handshake can fail with
+`connection refused` if you stall in the browser (documented in the
+Zenn gog 設定指南). Just re-run on failure; both commands are
+idempotent.
 
-## Step 5 — Slack MCP
+## Step 4 — MCP servers (already registered)
 
-```
-/mcp add slack
-```
-
-Same flow — browser-based OAuth, approve in your workspace.
-
-## Step 6 — Notion MCP
+The Asana / Slack / Notion MCP servers are **auto-registered** by
+this plugin — open Claude Code and run:
 
 ```
-/mcp add notion
+/mcp list
 ```
+
+You should see `asana`, `slack`, `notion` listed. **No manual
+`/mcp add` step is needed.** The OAuth flow for each fires the first
+time you invoke a tool on that server (e.g. asking Claude to list
+your Asana tasks triggers the Asana OAuth dance).
 
 > ⚠️ **`page-backlinks` is gone in v0.2.0.** The Notion API has no
 > native backlinks endpoint; the v0.1.6 UI-scraping workaround does
@@ -102,23 +103,30 @@ Same flow — browser-based OAuth, approve in your workspace.
 ## Verify
 
 ```bash
-gws gmail list --limit 1      # Gmail OAuth healthy
-gws calendar list --limit 1   # GCal shares the same OAuth
-/mcp list                     # confirms 3 MCP servers connected
+gws gmail messages list --max-results 1   # Gmail OAuth healthy
+gws calendar events list --max-results 1  # GCal shares the same OAuth
 ```
 
-You should see Gmail + GCal results, plus `asana`, `slack`, `notion`
-listed as connected MCP servers.
+And in Claude Code:
+
+```
+/mcp list
+```
+
+You should see Gmail + GCal results from `gws`, plus `asana`,
+`slack`, `notion` listed as connected MCP servers (status pending
+until first tool call triggers OAuth).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `gws: command not found` | Re-run `brew install gws` (or the npm fallback); ensure your `PATH` includes the brew prefix (`brew --prefix`/bin). |
+| `gws: command not found` | Re-run `brew install googleworkspace-cli` (or the npm fallback `@googleworkspace/cli`); ensure your `PATH` includes the brew prefix (`brew --prefix`/bin). |
 | `GOOGLE_CLOUD_PROJECT not set` | Step 2 — export the env var and reload your shell. |
-| `gws auth` → `connection refused` | Browser flow timed out — re-run `gws auth` and click through faster. |
+| `gws auth setup` → `connection refused` | Browser flow timed out — re-run and click through faster. |
 | OAuth scope exceeded 25 | Trim unused APIs in the Cloud Console (personal-account 25-scope limit). |
-| `/mcp add` fails | Update Claude Code — native OAuth pre-registration shipped late 2026; older builds lack the one-click flow. |
+| MCP server missing from `/mcp list` | Plugin not loaded — verify `collab-toolkit` is installed via `/plugin list`; reinstall if missing. |
+| MCP tool returns "auth required" | First-call OAuth not yet completed — Claude Code should auto-prompt; if not, restart Claude Code. |
 
 ## Migrating from v0.1.x?
 

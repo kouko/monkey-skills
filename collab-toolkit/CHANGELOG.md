@@ -17,22 +17,29 @@ five services.
 
 ### Per-service channels
 
-| Service | Channel | Setup step |
+| Service | Channel | How it's wired |
 |---|---|---|
-| Asana  | Official MCP V2 (`mcp.asana.com/v2/mcp`) | `/mcp add asana` — Claude Code native OAuth pre-reg |
-| Slack  | Official MCP (GA 2026-02)                | `/mcp add slack` |
-| Notion | Official remote MCP (`mcp.notion.com/mcp`) | `/mcp add notion` |
-| Gmail  | Google Workspace CLI (`gws`)             | `gws auth` (shared OAuth w/ GCal) |
-| GCal   | Google Workspace CLI (`gws`, same binary) | (same OAuth) |
+| Asana  | Official MCP V2 (`mcp.asana.com/v2/mcp`) | Auto-registered via plugin's `mcpServers` block |
+| Slack  | Official MCP (GA 2026-02, `mcp.slack.com/mcp`) | Auto-registered; OAuth scopes declared inline |
+| Notion | Official remote MCP (`mcp.notion.com/mcp`) | Auto-registered via plugin's `mcpServers` block |
+| Gmail  | Google Workspace CLI (`gws`, brew formula `googleworkspace-cli`) | `gws auth setup` (shared OAuth w/ GCal) |
+| GCal   | Google Workspace CLI (`gws`, same binary) | (same OAuth as Gmail) |
 
 ### What changed in-repo
 
+- **MCP servers ship inside the plugin.** 3 servers (Asana / Slack /
+  Notion) declared in `.claude-plugin/plugin.json` `mcpServers` block,
+  HTTP+OAuth transport. **No manual `/mcp add` step needed** — Claude
+  Code auto-registers when the plugin loads, and triggers OAuth on
+  first tool call per server.
 - 5 × `SKILL.md` rewritten to declare new tools (`mcp__asana__*` /
   `mcp__slack__*` / `mcp__notion__*` / `Bash(gws:*)`).
 - 20 × `protocols/*.md` rewritten as MCP / CLI invocation recipes —
   no UI snapshots, no per-locale label tables.
-- `commands/collab-setup.md` rewritten end-to-end: `gws` install
-  (brew preferred, npm fallback) + `gws auth` + 3 × `/mcp add`.
+- `commands/collab-setup.md` walks 4 user-side steps: `gws` install
+  (brew formula `googleworkspace-cli`, npm fallback `@googleworkspace/cli`)
+  + `GOOGLE_CLOUD_PROJECT` env var + `gws auth setup` + `/mcp list`
+  verify.
 - agent-browser fully retired: `scripts/abx`, `scripts/setup.sh`,
   `scripts/tests/` deleted.
 - READMEs (en / ja / zh-TW) rewritten — drop browser framing,
