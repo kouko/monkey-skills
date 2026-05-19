@@ -71,5 +71,14 @@ is no longer referenced by any skill.
   than reinvented.
 - **Cowork still N/A**, but the reason changed: it is now an MCP /
   CLI availability question, not a Chrome-for-Testing question.
+- **No secrets in `plugin.json`** — the `mcpServers` block ships only
+  public URLs + OAuth scope names. Scope strings are public OAuth
+  metadata, not credentials. If a service requires user-specific
+  OAuth `clientId` / `clientSecret` (e.g. Asana V2 with strict DCR
+  enforcement), those go in the user's `~/.claude.json` mcpServers
+  block (user-level overrides plugin-level) — never in this plugin's
+  config. Repo `.gitignore` carries defensive patterns for
+  `*.env` / `*credentials*.json` / `oauth-*.json` / `*.pem` /
+  `*.key` to prevent accidental commits.
 
 Brief: `docs/collab-toolkit/specs/2026-05-19-v0.2.0-migration.md`

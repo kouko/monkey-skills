@@ -127,6 +127,7 @@ until first tool call triggers OAuth).
 | OAuth scope exceeded 25 | Trim unused APIs in the Cloud Console (personal-account 25-scope limit). |
 | MCP server missing from `/mcp list` | Plugin not loaded — verify `collab-toolkit` is installed via `/plugin list`; reinstall if missing. |
 | MCP tool returns "auth required" | First-call OAuth not yet completed — Claude Code should auto-prompt; if not, restart Claude Code. |
+| Asana OAuth fails with `redirect_uri not registered` / DCR error | Asana V2 officially does not support Dynamic Client Registration — some Claude Code builds rely on a default client that may stop working. **Escape hatch (per-user, never goes to git)**: register your own OAuth client at https://app.asana.com/0/my-apps, then add the `clientId` to your user-level `~/.claude.json` `mcpServers.asana.oauth` block — that user-level config overrides this plugin's entry. **Do NOT add `client_secret` to plugin.json** — it would be committed to git and exposed to every installer of this plugin. |
 
 ## Migrating from v0.1.x?
 

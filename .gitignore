@@ -29,3 +29,21 @@ Thumbs.db
 # Skill eval-loop ephemeral output (run_loop / skill-judge history JSONL)
 **/.run_loop-results/
 **/.skill-judge-history.jsonl
+
+# OAuth / credentials / secrets — never commit
+# (Plugins must not ship client_secret / api_key / access_token. Public
+# client_id may live in user-level ~/.claude.json mcpServers, never in
+# plugin.json which is shipped to all users.)
+*.env
+.env.*
+!.env.example
+**/credentials.json
+**/credentials.*.json
+!**/credentials.example.json
+*-secret.json
+*-secrets.json
+oauth-*.json
+!oauth-*.example.json
+*.pem
+*.key
+!*.pub.key
