@@ -25,7 +25,7 @@ set -euo pipefail
 #
 # Env:
 #   GWS_TOOLKIT_SCOPES     Override the scope clamp.
-#                          Default: presentations,drive,documents,spreadsheets
+#                          Default: presentations,drive,documents,spreadsheets,gmail,calendar
 #                          (as full URLs, comma-separated).
 #
 # Stdin: none
@@ -46,12 +46,12 @@ readonly CLIENT_SECRET="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
 readonly GWS_BIN="${HOME}/.cache/slides-toolkit/bin/gws"
 
-# Default scope set: 4 APIs covered (Slides, Drive, Docs, Sheets).
+# Default scope set: 6 APIs covered (Slides, Drive, Docs, Sheets, Gmail, Calendar).
 # Full drive scope is the natural fit for general Drive operations exposed
 # via the vendored gws-drive skill. ASVS V1 least-privilege is preserved
 # at the application layer through the three-tier safety wrapper
 # (scripts/gws/safe-delete.sh), not at the OAuth scope boundary.
-readonly DEFAULT_SCOPES="https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets"
+readonly DEFAULT_SCOPES="https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/gmail,https://www.googleapis.com/auth/calendar"
 SCOPES="${GWS_TOOLKIT_SCOPES:-${DEFAULT_SCOPES}}"
 
 die() {
