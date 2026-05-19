@@ -1,69 +1,60 @@
 ---
 name: find-user
-purpose: Search Slack users by name / email / handle.
+purpose: Search Slack workspace users by display name / handle / email.
+allowed-tools: mcp__slack__find_user
 ---
 
-## Inputs
-- `query`: required.
+## Purpose
+
+Return a Markdown rendering of users in the workspace matching a name / handle / email substring.
+
+> **Tool-name verification status**: `mcp__slack__find_user` is **assumed** — see `references/failure-modes.md` § Tool name verification needed (Open Q4). If verification reveals the official Slack MCP does not expose a user-search tool, this protocol is deprecated; fall back to `users.list` + client-side filter via `execute_sql`-style raw API call only if the MCP exposes one.
+
+## Input
+
+- `query`: required. Substring matched against `name` / `real_name` / `display_name` / `profile.email`.
+- `limit`: optional. Default 20.
 - `--json`: optional.
 
-## Output
-```
-## Slack users matching "<query>"
+Mapping to MCP params:
+- `query` / `search`: pass through (param name depends on tool signature — verify at first call).
+- `limit`: pass through.
 
-**<Display Name>** · @<handle> · <email>
-Status: <Active | Away>
-Title: <job title>
-```
+## Steps
 
-## Localized labels
-
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| People sidebar link | `[link] "People"` or `"More"` | `[link] "成員"` or `"更多"` | `[link] "メンバー"` or `"その他"` |
-| People grid heading | `[grid] "People"` | `[grid] "成員"` | `[grid] "メンバー"` |
-| Search input within People | `[textbox]` or `[combobox]` | `[textbox]` or `[combobox]` | `[textbox]` or `[combobox]` |
-
-## Procedure
-
-1. ```bash
-   abx open https://app.slack.com
-   abx wait --load networkidle
-   abx snapshot -i
+1. Call:
+   ```
+   mcp__slack__find_user({
+     "query": "<query>",
+     "limit": 20
+   })
    ```
 
-2. **Read snapshot**. Find People link (locale-dependent). NOTE: free Slack may lack People view → see Failure modes.
+2. If the tool returns a full workspace user list (no server-side filter), apply client-side substring match across `real_name` / `display_name` / `profile.email` / `name`.
 
-3. Click + re-snapshot:
-   ```bash
-   abx click @eN
-   abx wait --load networkidle
-   abx snapshot -i
+3. Format Markdown:
+   ```
+   ## Slack users matching "<query>"
+
+   **<real_name>** · @<name> · <profile.email>
+   Status: <Active | Away>
+   Title: <profile.title>
    ```
 
-4. **Find People grid search input**. Fill + submit:
-   ```bash
-   abx fill @eM "<query>"
-   abx press Enter
-   abx wait 1000
-   abx snapshot -i
-   ```
+   Omit `<profile.email>` if `profile.email` is absent (Slack hides email per workspace privacy settings).
 
-5. **Read results**. User cards as `[row]` / `[listitem]`. Extract name / handle / email / title / status.
+## Common failure modes
 
-6. Format Markdown.
-
-## Failure modes
-
-- **No People link** → free Slack tier. **Fallback**: open any channel, type `@<query>` in composer (DON'T send), snapshot typeahead.
+- **Tool not found** → `mcp__slack__find_user` may not exist; see `references/failure-modes.md` § Tool name verification. If absent, surface `ERR: user-search tool not exposed by Slack MCP` and recommend dropping this protocol in v0.3.0.
 - **Empty results** → valid.
-- **Login wall** → reauth.
+- **Email field missing** → workspace privacy setting hides email; emit `(hidden)`.
+- **Rate limit (429)** → see `references/failure-modes.md` § Rate limit. `users.list` is a Tier-2 method (~20 req/min).
 
 ## Notes
 
-- Slack hides email per privacy settings — may be `(hidden)`.
-- Activity status (Active/Away) shifts in real time.
+- Activity status (Active / Away) shifts in real time — snapshot only.
+- Bot users include `is_bot: true` — filter out by default unless user asks.
 
 ## Examples
 
-`query = "alice"` → Markdown list of matching users.
+`query = "alice"` → Markdown list of users matching `alice` across name / handle / email.

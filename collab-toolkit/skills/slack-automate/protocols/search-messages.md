@@ -1,65 +1,60 @@
 ---
 name: search-messages
 purpose: Full-text search across Slack channels with Slack operators.
+allowed-tools: mcp__slack__search_messages
 ---
 
-## Inputs
-- `query`: required. May include operators.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Slack search: "<query>" — N results
+Return a Markdown rendering of message hits for a free-text query across all channels the authenticated user can read. Slack operators (`from:`, `in:`, `has:`, `before:`, `after:`) are honored server-side.
 
-**#<channel>** · <user> · <timestamp>
-> <text>
-```
+## Input
 
-## Localized labels
+- `query`: required. Free-text query. May include Slack operators.
+- `count`: optional. Number of results to return. Default 20, max 100.
+- `sort`: optional. `timestamp` (newest first) or `score` (relevance). Default `score`.
+- `--json`: optional. Skip Markdown formatting, return raw API record.
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Search button | `[button] "Search"` | `[button] "搜尋"` | `[button] "検索"` |
-| Search input | `[textbox] "Search"` or `[combobox]` | `[textbox] "搜尋"` or `[combobox]` | `[textbox] "検索"` or `[combobox]` |
-| Sign-in fallback button (login-detect) | `[button] "Sign in to Slack"` | `[button] "登入 Slack"` | `[button] "Slack にサインイン"` |
+Mapping to MCP params:
+- `query`: pass through verbatim.
+- `count`: pass through.
+- `sort`: pass through (`timestamp` or `score`).
 
-## Procedure
+## Steps
 
-1. ```bash
-   abx open https://app.slack.com
-   abx wait --load networkidle
-   abx snapshot -i
+1. Call:
+   ```
+   mcp__slack__search_messages({
+     "query": "<query>",
+     "count": 20,
+     "sort": "score"
+   })
    ```
 
-2. **Read snapshot**. Find Search button (per Localized labels).
+2. Handle pagination — if response includes `next_cursor` / `paging.next`, repeat with that cursor until result budget exhausted.
 
-3. Click + re-snapshot:
-   ```bash
-   abx click @eN
-   abx wait 500
-   abx snapshot -i
+3. Format Markdown:
+   ```
+   ## Slack search: "<query>" — N results
+
+   **#<channel.name>** · <user.name> · <timestamp>
+   > <text>
    ```
 
-4. **Find active search input**. Fill + submit:
-   ```bash
-   abx fill @eM "<query>"
-   abx press Enter
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
+   Render `timestamp` as ISO date (server returns Unix epoch — convert client-side).
 
-5. **Read results**. Each result `[listitem]` (or `[article]`) with channel / user / timestamp / text. Extract + format.
+## Common failure modes
 
-## Failure modes
-
-- **Search button missing** → top bar restructured.
-- **No results for known-good query** → check for Sign-in button (any locale per table) → reauth.
+- **Empty array** → valid, emit `No messages matching <query>.`
+- **Operator syntax rejected** → Slack search operators documented at api.slack.com/methods/search.messages; unknown operators return 400.
+- **Search disabled on tier** → Free Slack tier has 90-day message history cap; older results silently missing.
+- **OAuth scope insufficient** → see `references/failure-modes.md` § OAuth scope.
 
 ## Notes
 
-- **Slack operators** (`from:`, `in:`, `has:`, `before:`, `after:`) are locale-stable.
-- Free Slack: 90-day message history.
+- Slack search operators (`from:@alice`, `in:#engineering`, `after:2026-05-01`) are locale-stable at the API layer — pass through verbatim.
+- Free Slack: 90-day message history limit applies server-side.
 
 ## Examples
 
-`query = "OKR in:#engineering after:2026-05-01"` → matching results.
+`query = "OKR in:#engineering after:2026-05-01"` → matching results as Markdown.
