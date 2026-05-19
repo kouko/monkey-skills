@@ -8,9 +8,9 @@ set -euo pipefail
 # idempotent script. Steps:
 #   1. Detect / install gcloud CLI (brew cask or the official installer).
 #   2. gcloud auth login (skipped if already signed in).
-#   3. Create the GCP project and enable the 4 Workspace APIs (Slides +
-#      Drive + Docs + Sheets) — must match the OAuth scope set requested
-#      in step 8 below.
+#   3. Create the GCP project and enable the 6 Workspace APIs (Slides +
+#      Drive + Docs + Sheets + Gmail + Calendar) — must match the OAuth
+#      scope set requested in step 8 below.
 #   4. Guide through 3 sub-steps (5a Branding → 5b Test User → 5c OAuth
 #      Client). Each opens a single Console URL, prints inline
 #      instructions, waits for the user's ENTER (read from /dev/tty so
@@ -23,11 +23,11 @@ set -euo pipefail
 #   6. (handled jointly with 5 — install credentials + env.sh).
 #   7. Bootstrap the gws + jq binaries via bootstrap.sh
 #      (`~/.cache/slides-toolkit/bin/`).
-#   8. `gws auth login --scopes=presentations,drive,documents,spreadsheets`
-#      (4 scopes covering Slides + Drive + Docs + Sheets API operations
-#      surfaced by the 5 vendored upstream skills; correct scope syntax —
-#      `--scopes=` with full URLs, not `-s`). Verify `gws auth status`
-#      reports oauth2.
+#   8. `gws auth login --scopes=presentations,drive,documents,spreadsheets,
+#      gmail,calendar` (6 scopes covering Slides + Drive + Docs + Sheets +
+#      Gmail + Calendar API operations surfaced by the 9 vendored upstream
+#      skills; correct scope syntax — `--scopes=` with full URLs, not `-s`).
+#      Verify `gws auth status` reports oauth2.
 #
 # Idempotent: each function probes the current state and skips with an
 # "already done" stderr line when the step is complete. --force-reinstall
@@ -61,7 +61,7 @@ set -euo pipefail
 # Stdin: none
 # Stdout: JSON
 #   {"status":"success","project_id":"...","account":"...",
-#    "scopes":["presentations","drive","documents","spreadsheets"],
+#    "scopes":["presentations","drive","documents","spreadsheets","gmail","calendar"],
 #    "elapsed_sec":N}
 # Stderr: human-readable `[auto-setup] step N/7: ...` progress +
 #         structured error JSON on failure.
@@ -87,6 +87,8 @@ readonly SLIDES_SCOPE="https://www.googleapis.com/auth/presentations"
 readonly DRIVE_SCOPE="https://www.googleapis.com/auth/drive"
 readonly DOCS_SCOPE="https://www.googleapis.com/auth/documents"
 readonly SHEETS_SCOPE="https://www.googleapis.com/auth/spreadsheets"
+readonly GMAIL_SCOPE="https://www.googleapis.com/auth/gmail"
+readonly CALENDAR_SCOPE="https://www.googleapis.com/auth/calendar"
 
 # 等待 client_secret JSON 出現的 timeout（秒）與輪詢週期
 readonly WAIT_CLIENT_SECRET_TIMEOUT_SEC=600
@@ -343,15 +345,15 @@ ensure_project() {
   fi
 }
 
-# --- step 4：enable Slides + Drive + Docs + Sheets APIs ---------------------
-# `gcloud services list --enabled` 比對；4 個全在 → skip。Workspace API
+# --- step 4：enable Slides + Drive + Docs + Sheets + Gmail + Calendar APIs --
+# `gcloud services list --enabled` 比對；6 個全在 → skip。Workspace API
 # enablement is independent of OAuth scope grant — both gates must pass for
 # any API call to succeed (see PRODUCT-SPEC v1.0 §6.3).
 ensure_apis() {
-  step 4 8 "enable slides + drive + docs + sheets APIs on ${PROJECT_ID}"
+  step 4 8 "enable slides + drive + docs + sheets + gmail + calendar APIs on ${PROJECT_ID}"
 
   if (( DRY_RUN == 1 )); then
-    dry_echo "gcloud services enable slides.googleapis.com drive.googleapis.com docs.googleapis.com sheets.googleapis.com --project=${PROJECT_ID}"
+    dry_echo "gcloud services enable slides.googleapis.com drive.googleapis.com docs.googleapis.com sheets.googleapis.com gmail.googleapis.com calendar.googleapis.com --project=${PROJECT_ID}"
     return
   fi
 
@@ -364,7 +366,9 @@ ensure_apis() {
   if printf '%s\n' "${enabled}" | grep -q '^slides\.googleapis\.com$' \
      && printf '%s\n' "${enabled}" | grep -q '^drive\.googleapis\.com$' \
      && printf '%s\n' "${enabled}" | grep -q '^docs\.googleapis\.com$' \
-     && printf '%s\n' "${enabled}" | grep -q '^sheets\.googleapis\.com$'; then
+     && printf '%s\n' "${enabled}" | grep -q '^sheets\.googleapis\.com$' \
+     && printf '%s\n' "${enabled}" | grep -q '^gmail\.googleapis\.com$' \
+     && printf '%s\n' "${enabled}" | grep -q '^calendar\.googleapis\.com$'; then
     printf '[auto-setup] APIs already enabled, skip\n' >&2
     return
   fi
@@ -374,6 +378,8 @@ ensure_apis() {
       drive.googleapis.com \
       docs.googleapis.com \
       sheets.googleapis.com \
+      gmail.googleapis.com \
+      calendar.googleapis.com \
       --project="${PROJECT_ID}"; then
     die_json 12 "gcloud services enable failed"
   fi
@@ -733,7 +739,7 @@ ensure_binaries() {
 # 實測：gws 的 `-s` 是 service filter，不是 scope；要用 `--scopes=<URL>,<URL>`
 # --force-reinstall 時強制重跑，否則 gws auth status 已 oauth2 → skip。
 ensure_gws_auth() {
-  step 8 8 "gws auth login with presentations + drive + documents + spreadsheets scopes"
+  step 8 8 "gws auth login with presentations + drive + documents + spreadsheets + gmail + calendar scopes"
 
   local gws_bin
   gws_bin="$(command -v gws || printf '%s/gws' "${CACHE_BIN_DIR}")"
@@ -757,7 +763,7 @@ ensure_gws_auth() {
 
   if (( DRY_RUN == 1 )); then
     dry_echo "source ${ENV_FILE}"
-    dry_echo "${gws_bin} auth login --scopes=${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE}"
+    dry_echo "${gws_bin} auth login --scopes=${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE},${GMAIL_SCOPE},${CALENDAR_SCOPE}"
     return
   fi
 
@@ -767,7 +773,7 @@ ensure_gws_auth() {
   export GOOGLE_WORKSPACE_CLI_CLIENT_ID GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
 
   if ! "${gws_bin}" auth login \
-      --scopes="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE}"; then
+      --scopes="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE},${GMAIL_SCOPE},${CALENDAR_SCOPE}"; then
     die_json 10 "gws auth login failed"
   fi
 }
@@ -819,7 +825,7 @@ emit_result() {
        project_id: $project_id,
        account: $account,
        account_type: $account_type,
-       scopes: ["presentations", "drive", "documents", "spreadsheets"],
+       scopes: ["presentations", "drive", "documents", "spreadsheets", "gmail", "calendar"],
        elapsed_sec: $elapsed,
        dry_run: $dry_run
      }'
