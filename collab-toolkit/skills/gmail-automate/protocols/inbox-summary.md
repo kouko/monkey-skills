@@ -1,61 +1,62 @@
 ---
 name: inbox-summary
-purpose: Summarize inbox state — unread counts + first N rows per Category tab.
+purpose: Summarize INBOX state — recent messages with unread flag.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `limit_per_tab`: optional, default 5.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Inbox Summary
+Return a Markdown summary of the most recent N messages in `INBOX`, with unread messages highlighted. Replaces v0.1.6's Category-tab scraping — Gmail Category tabs are a UI affordance, not an API concept, so v0.2.0 reports a flat INBOX list and (optionally) per-category breakdowns via additional `label:CATEGORY_*` filters.
 
-### Primary (N unread)
-- <from>: <subject>
+## Input
 
-### Social (N unread)
-...
-```
+- `limit`: optional. Number of messages to return. Default 20.
+- `category`: optional. One of `primary` / `social` / `promotions` / `updates` / `forums`. Maps to Gmail system labels `CATEGORY_PERSONAL` / `CATEGORY_SOCIAL` / `CATEGORY_PROMOTIONS` / `CATEGORY_UPDATES` / `CATEGORY_FORUMS`.
+- `--json`: optional. Skip Markdown formatting.
 
-## Localized labels
+## Steps
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Primary tab | `[tab] "Primary"` | `[tab] "主要"` | `[tab] "メイン"` |
-| Social tab | `[tab] "Social"` | `[tab] "社交網路"` | `[tab] "ソーシャル"` |
-| Promotions tab | `[tab] "Promotions"` | `[tab] "促銷內容"` | `[tab] "プロモーション"` |
-| Updates tab | `[tab] "Updates"` | `[tab] "最新快訊"` | `[tab] "新着"` |
-| Unread aria-label suffix | `, unread` | `, 未讀` | `, 未読` |
+1. Build the label list:
+   - Always include `INBOX`.
+   - If `category` is set, add the matching `CATEGORY_*` label.
 
-## Procedure
+2. Call:
 
-1. ```bash
-   abx open https://mail.google.com
-   abx wait --load networkidle
-   abx snapshot -i
+   ```bash
+   gws gmail messages list \
+     --labels INBOX \
+     --max-results <limit>
    ```
 
-2. **Read snapshot**. Find Category tabs (per Localized labels — try all 3 locales). If no tabs present: user has tabs disabled — single-pane mode.
+   Or with a category:
 
-3. For each tab (or single list):
-   - Click tab + re-snapshot
-   - Find unread count in tab aria-label (e.g., `[tab] "Primary, N unread"` / locale variant)
-   - Extract first N rows (`[row]` elements). Unread rows often marked via aria-label suffix (locale-dependent).
-   - Per row: from + subject
+   ```bash
+   gws gmail messages list \
+     --labels INBOX,CATEGORY_PROMOTIONS \
+     --max-results <limit>
+   ```
 
-4. Format Markdown.
+3. Parse the JSON array. Each record exposes `labelIds[]`; `UNREAD` membership indicates an unread message.
 
-## Failure modes
+4. Format Markdown:
 
-- **No `[tab]` elements** → tabs disabled (valid). Summarize single-pane inbox.
-- **Login wall** → reauth.
+   ```
+   ## Inbox Summary (N messages, M unread)
 
-## Notes
+   - [unread] <YYYY-MM-DD> <from>: <subject>
+   - <YYYY-MM-DD> <from>: <subject>
+   ```
 
-- **Unread visual = bold text**. Accessibility tree may expose via aria-label suffix (locale-dependent).
-- List density modes (Default / Comfortable / Compact) don't change row pattern.
+   Prefix unread rows with `[unread]`. Date and from come from `payload.headers`.
+
+## Common failure modes
+
+- **Empty array** → valid, emit `Inbox empty.`
+- **Unknown category** → surface `ERR: unknown category "<category>"; expected one of primary/social/promotions/updates/forums`.
+- **Auth expired** → see `references/failure-modes.md` § `gws auth`.
 
 ## Examples
 
-`limit_per_tab = 3` → 3 rows × 4 tabs = up to 12 summaries.
+`limit = 10` → 10 most recent INBOX messages.
+
+`limit = 5, category = "promotions"` → 5 most recent promotional messages.

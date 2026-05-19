@@ -1,61 +1,57 @@
 ---
 name: thread-read
-purpose: Read a single email thread — all messages, headers, attachments.
+purpose: Read a single Gmail thread — all messages, headers, bodies, attachments.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `thread_url`: required.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-# <subject>
+Return a Markdown rendering of a full Gmail thread: subject, each message's from / to / date / body, and attachment filenames.
 
-## Message 1: <from> → <to> (<date>)
-<body>
+## Input
 
-Attachments:
-- <filename>
-```
+- `thread_id` OR `thread_url`: required. Parse `thread_id` out of a Gmail URL if needed — the hex segment after `/thread/` (e.g. `https://mail.google.com/mail/u/0/#inbox/<thread_id>`).
+- `--json`: optional. Skip Markdown formatting, return raw API record.
 
-## Localized labels
+## Steps
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Expand-all button | `[button] "Expand all"` | `[button] "全部展開"` | `[button] "すべて展開"` |
-| Show-details button | `[button] "Show details"` | `[button] "顯示詳細資料"` | `[button] "詳細を表示"` |
+1. Resolve `thread_id` from `thread_url` if needed.
 
-## Procedure
+2. Call:
 
-1. ```bash
-   abx open <thread_url>
-   abx wait --load networkidle
-   abx snapshot -i
+   ```bash
+   gws gmail threads get <thread_id>
    ```
 
-2. **Read snapshot**:
-   - Subject: `[heading]` level=1 (locale-agnostic)
-   - Each message: `[region]` or `[article]` with header + body
-   - Body content: child `[region]` with body text
-   - Attachments: child `[link]` with file names
+   Returns a thread record with `messages: [...]`; each message has `payload.headers`, `payload.parts[]` (MIME), `payload.body`, and `snippet`.
 
-3. **Expand collapsed messages** — find Expand-all button (locale-dependent) or per-message Show-details. Click + re-snapshot.
+3. For each message:
+   - Headers: pull `From`, `To`, `Date`, `Subject` from `payload.headers`.
+   - Body: walk `payload.parts[]`; prefer the `text/plain` part. If only `text/html` is present, surface the raw HTML or note `(HTML body — render not implemented in v0.2.0)`.
+   - Attachments: any part with `filename != ""` is an attachment.
 
-4. For each message: extract from/to from header, body via `abx get text @eN`, attachments from `[link]` children.
+4. Format Markdown:
 
-5. Format Markdown.
+   ```
+   # <subject>
 
-## Failure modes
+   ## Message 1: <from> → <to> (<date>)
+   <body>
 
-- **No level=1 heading** → redirected to inbox/login. Verify URL.
-- **Body in iframe** — Gmail may render HTML body in `[iframe]`. `abx get html @eN` for inspection.
-- **Login wall** → reauth.
+   Attachments:
+   - <filename>
+   ```
 
-## Notes
+   Subject is taken from the first message's `Subject` header. Omit `Attachments:` section if none.
 
-- Per-message grouping depends on Gmail's tree structure — v0.2.0 extracts what's visible.
-- `abx get text @eN` strips HTML noise.
+## Common failure modes
+
+- **404 / thread not found** → invalid `thread_id` or thread deleted. Surface `ERR: thread <thread_id> not found`.
+- **HTML-only body** → emit raw HTML with a note; full HTML→text rendering is a v0.2.0 limitation.
+- **Auth expired** → see `references/failure-modes.md` § `gws auth`.
 
 ## Examples
 
-Input: `thread_url = ...` → full thread Markdown.
+Input: `thread_id = "18f2c..."` → full thread Markdown.
+
+Input: `thread_url = "https://mail.google.com/mail/u/0/#inbox/18f2c..."` → same, after parsing `thread_id`.

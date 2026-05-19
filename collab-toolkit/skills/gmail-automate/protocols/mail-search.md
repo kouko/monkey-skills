@@ -1,59 +1,54 @@
 ---
 name: mail-search
-purpose: Full-text mail search with Gmail operators.
+purpose: Full-text mail search via Gmail search operators.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `query`: required. May include operators.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Gmail search: "<query>" — N results
+Return a Markdown list of Gmail messages matching a search query. Gmail's full search-operator syntax is supported because `gws` forwards `--query` verbatim to the underlying Gmail API `users.messages.list` `q` parameter.
 
-- <YYYY-MM-DD> <from>: <subject> — <snippet>
-```
+## Input
 
-## Localized labels
+- `query`: required. Gmail search syntax (e.g. `from:alice@company.com has:attachment after:2026/05/01`).
+- `max_results`: optional. Cap on number of message records. Default 20.
+- `--json`: optional. Skip Markdown formatting, return raw API records.
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Search input | `[combobox] "Search mail"` | `[combobox] "搜尋郵件"` | `[combobox] "メールを検索"` |
-| Star/Starred button | `[button] "Star"` / `"Starred"` | `[button] "已加星號"` / `"未加星號"` | `[button] "スター付き"` / `"スター無し"` |
+Mapping to `gws` flags:
 
-## Procedure
+- `--query "<query>"` — passed straight through to Gmail API `q`.
+- `--max-results <n>` — caps page size; default chosen for typical Markdown rendering.
 
-1. ```bash
-   abx open https://mail.google.com
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
+## Steps
 
-2. **Read snapshot**. Find search input (locale-dependent). Gmail uses `[combobox]` (not `[textbox]`) because of suggestion dropdown.
+1. Build invocation:
 
-3. Fill + submit:
    ```bash
-   abx click @eN
-   abx fill @eN "<query>"
-   abx press Enter
-   abx wait --load networkidle
-   abx snapshot -i
+   gws gmail messages list \
+     --query "<query>" \
+     --max-results <n>
    ```
 
-4. **Read results**. Each row `[row]` with cells: from / subject / snippet / date.
+2. Parse the returned JSON array. Each record contains at least `id`, `threadId`, `snippet`, and a `payload.headers` array (`From`, `Subject`, `Date`).
 
-5. Extract + format Markdown.
+3. Format Markdown:
 
-## Failure modes
+   ```
+   ## Gmail search: "<query>" — N results
 
-- **Operator preservation** — `abx fill` may have autocomplete interfere with `:` / `@`. **If `from:foo@example.com` queries return wrong results, switch to** `abx type @eN "<query>"` **for character-by-character keypress simulation**.
-- **No results** → valid empty.
-- **Login wall** → reauth.
+   - <YYYY-MM-DD> <from>: <subject> — <snippet>
+   ```
 
-## Notes
+   Date comes from the `Date` header; truncate snippet to ~120 chars.
 
-- **Operators**: `from:`, `to:`, `subject:`, `has:attachment`, `before:YYYY/MM/DD`, `after:YYYY/MM/DD`, `label:`, `is:unread`, `is:starred` — all locale-stable.
+## Common failure modes
+
+- **Empty array** → valid empty result. Emit `No mail matching "<query>".`
+- **Operator parse error** → Gmail API returns a 400. Surface `ERR: invalid query "<query>"` and suggest checking operator syntax (`from:`, `to:`, `subject:`, `has:attachment`, `before:YYYY/MM/DD`, `after:YYYY/MM/DD`, `label:`, `is:unread`, `is:starred`).
+- **Auth expired** → see `references/failure-modes.md` § `gws auth`.
 
 ## Examples
 
-`query = "from:alice@company.com has:attachment after:2026-05-01"` → matching mail.
+`query = "from:alice@company.com has:attachment after:2026/05/01"` → Markdown list of matching mail.
+
+`query = "subject:invoice is:unread"` / 「未読の請求書を探す」 / 「找未讀的發票郵件」 → unread invoices.

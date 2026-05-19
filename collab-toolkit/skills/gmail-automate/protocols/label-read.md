@@ -1,70 +1,71 @@
 ---
 name: label-read
-purpose: Read messages under a Gmail label. Supports single-level nesting.
+purpose: Enumerate Gmail labels — system + user-defined, including nested.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `label_name`: required. Top-level or `parent/child`.
-- `limit`: optional, default 20.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## <label_name> (N messages)
+Return a Markdown list of every label visible to the authenticated account: system labels (`INBOX`, `UNREAD`, `STARRED`, `SENT`, `DRAFT`, `SPAM`, `TRASH`, `CATEGORY_*`) and user-defined labels (including nested paths like `Work/Projects/2026`).
 
-- <YYYY-MM-DD> <from>: <subject> — <snippet>
-```
+## Input
 
-## Localized labels
+- `filter`: optional. Substring match on label name. Default: no filter.
+- `messages_for`: optional. A label name; if set, *also* fetch the recent messages tagged with that label (delegates to `mail-search.md` with `label:<name>` operator).
+- `limit`: optional. When `messages_for` is set, cap on returned messages. Default 20.
+- `--json`: optional. Skip Markdown formatting.
 
-Labels themselves are user-defined (no translation table). Only UI affordances:
+## Steps
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Expand-parent twisty button | (varies — no explicit name; identified by position) | (same) | (same) |
+1. Call:
 
-## Procedure
-
-1. ```bash
-   abx open https://mail.google.com
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
-
-2. **Read snapshot**. Sidebar labels appear as `[link]` with name = label name (user-defined; matches in all locales).
-
-3. **For nested `parent/child`**:
-   - Find `[link] "<parent>"` — note sibling `[button]` (expand twisty)
-   - Click the expand button (NOT the parent link itself; clicking the link navigates):
-     ```bash
-     abx click @eN   # expand twisty
-     abx wait 500
-     abx snapshot -i
-     ```
-   - Now look for `[link] "<parent>/<child>"` (Gmail uses `/` in label paths regardless of locale)
-
-4. Click target label link:
    ```bash
-   abx click @eM
-   abx wait --load networkidle
-   abx snapshot -i
+   gws gmail labels list
    ```
 
-5. **Read filtered mail list**. Same row structure as inbox-summary. Extract first `limit` rows.
+   Returns a JSON array of label records, each with `id`, `name`, `type` (`system` | `user`), and message counts.
 
-6. Format Markdown.
+2. Apply `filter` (substring match on `name`) if set.
 
-## Failure modes
+3. Format Markdown:
 
-- **Label not in sidebar** → collapsed under parent (expand) OR hidden in label settings.
-- **Multi-level nesting** (`parent/child/grandchild`) → v0.2.0 supports single-level only. Use `mail-search.md` with `label:<full path>` for deeper.
-- **Login wall** → reauth.
+   ```
+   ## Gmail labels (N total)
 
-## Notes
+   ### System
+   - INBOX
+   - UNREAD
+   - STARRED
+   - …
 
-- **v0.2.0 nesting limit**: single-level (`parent/child`). For deeper: expand sidebar manually or use `mail-search.md` with `label:` operator.
-- Label paths use `/` separator regardless of UI language.
+   ### User-defined
+   - Work
+   - Work/Projects
+   - Work/Projects/2026
+   - Personal
+   - …
+   ```
+
+   Nested labels are exposed by Gmail as `parent/child/grandchild` strings — no separate tree structure to traverse.
+
+4. If `messages_for` is set, follow with a `mail-search.md`-style invocation:
+
+   ```bash
+   gws gmail messages list \
+     --query "label:<messages_for>" \
+     --max-results <limit>
+   ```
+
+   Append the messages section below the label list.
+
+## Common failure modes
+
+- **Empty array** → impossible (system labels always present). If observed, treat as auth error.
+- **`messages_for` references a label that does not exist** → mail list comes back empty. Note in output: `(label "<name>" not found, or has no messages)`.
+- **Auth expired** → see `references/failure-modes.md` § `gws auth`.
 
 ## Examples
 
-`label_name = "Work/Projects"` → messages with that label.
+`filter = "Work"` → all labels containing `Work` in the name.
+
+`messages_for = "Work/Projects/2026", limit = 10` → label list + 10 most recent messages with that label.
