@@ -39,6 +39,35 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.5.2] - 2026-05-19
+
+Skill-UX fix: when `gws-setup` skill routes to the re-auth-only branch
+(token expired but full setup unnecessary), Claude was deferring to the
+user with a paste-it `!` `gws auth login` command instead of invoking
+directly. Root cause: SKILL.md "Every 7 days maintenance" section
+showed the command as a bare bash snippet without an agent directive,
+so Claude played it safe. Fix: explicit `**Agent directive**: invoke
+directly via the Bash tool. Do NOT print the command as a paste-it...`
++ point at `scripts/gws/refresh-auth.sh` (the existing wrapper that
+sources `env.sh` + handles the 7-day refresh case specifically).
+
+### Fixed
+
+- **`skills/gws-setup/SKILL.md` "Every 7 days maintenance"** —
+  explicit agent directive instructing Claude to invoke
+  `bash scripts/gws/refresh-auth.sh` via Bash tool, not as
+  paste-it `!` command. Browser-OAuth fires on the user's behalf;
+  the blocking Bash call is the expected UX.
+- Reference `refresh-auth.sh` (the right wrapper for 7-day refresh,
+  same account) instead of bare `gws auth login` invocation.
+  Distinguishes from `gws-login.sh --switch` (account-swap intent).
+
+### Underlying scripts unchanged
+
+- `scripts/gws/refresh-auth.sh` already existed and already
+  worked correctly; this release only updates the skill body so
+  Claude invokes it instead of asking the user to paste a command.
+
 ## [0.5.1] - 2026-05-19
 
 Fix-only release: expose existing `auto-setup.sh` automation that was
