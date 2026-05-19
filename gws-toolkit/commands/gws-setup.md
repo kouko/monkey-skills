@@ -30,11 +30,11 @@ If `CLAUDE_PLUGIN_ROOT` is not set in your runtime, resolve via the directory co
 | 1 | Detect / install gcloud | brew cask `google-cloud-sdk` preferred; falls back to the official `https://sdk.cloud.google.com` installer if brew is unavailable |
 | 2 | `gcloud auth login` | Opens browser; skipped if an active account is already signed in |
 | 3 | Create GCP project | `slides-toolkit-<YYMMDD>` by default; override via `SLIDES_TOOLKIT_PROJECT_ID` env var |
-| 4 | Enable 4 APIs | Slides / Drive / Docs / Sheets (must match the OAuth scope set used in step 8) |
+| 4 | Enable 6 APIs | Slides / Drive / Docs / Sheets / Gmail / Calendar (must match the OAuth scope set used in step 8) |
 | 5 | Guided OAuth Consent screen | 5a Branding → 5b Test User → 5c OAuth Client. Opens one Console URL per sub-step, prints inline instructions, waits for the user's ENTER (read from `/dev/tty`). 5c also polls `~/Downloads/` for `client_secret_*.json` and validates it is a Desktop app (rejects Web app early) |
 | 6 | Install credentials | Move `client_secret.json` → `~/.config/gws/` (chmod 600) + write `~/.config/gws/env.sh` (issue #119 workaround env vars) |
 | 7 | Bootstrap binaries | Download `gws` + `jq` binaries to `~/.cache/slides-toolkit/bin/` (via `scripts/gws/bootstrap.sh`) |
-| 8 | `gws auth login` + verify | `gws auth login --scopes=presentations,drive,documents,spreadsheets` then verify `gws auth status` reports `auth_method=oauth2` |
+| 8 | `gws auth login` + verify | `gws auth login --scopes=presentations,drive,documents,spreadsheets,gmail,calendar` then verify `gws auth status` reports `auth_method=oauth2` |
 
 Final stdout: JSON with `{status, project_id, account, scopes, elapsed_sec, dry_run}`.
 
@@ -50,7 +50,7 @@ Each step probes current state and skips with an "already done" stderr line when
 
 ## When this doesn't apply
 
-- Just expired token (every-7-days re-auth) — run `gws auth login --scopes=presentations,drive,documents,spreadsheets` directly; `/gws-setup` would also work but is overkill
+- Just expired token (every-7-days re-auth) — run `gws auth login --scopes=presentations,drive,documents,spreadsheets,gmail,calendar` directly; `/gws-setup` would also work but is overkill
 - State detection (you're unsure where things stand) — `bash scripts/gws/credential-check.sh` first; branch on the JSON
 - Manual control / debugging — see the 10-step browser walkthrough in `skills/gws-setup/SKILL.md` §"Path B (manual)"
 
@@ -64,6 +64,7 @@ Each step probes current state and skips with an "already done" stderr line when
 | `gcloud projects create failed` (exit 12) | Quota / billing / name-collision issue | Try `SLIDES_TOOLKIT_PROJECT_ID=my-custom-id /gws-setup` |
 | Step 5c stalls forever | `~/Downloads/client_secret_*.json` never appeared (download blocked, wrong app type, or not on the expected path) | Manually move the JSON to `~/Downloads/`, or re-run |
 | Final `gws auth status` fails | issue #119 env vars missing (`env.sh` not sourced) | Verify `~/.config/gws/env.sh` exists; `source` it manually |
+| `access_denied` after consenting | Workspace admin has restricted Gmail/Calendar OAuth scopes | Escalate to your Workspace admin to allow the gws-toolkit OAuth client |
 
 ## See also
 
