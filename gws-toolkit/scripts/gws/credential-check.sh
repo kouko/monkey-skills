@@ -30,10 +30,15 @@ set -euo pipefail
 # Args: none
 #
 # Stdin: none
-# Stdout: JSON `{"backend":"keychain"|"file"|"none","token_valid":bool,"expires_in_days":int}`
+# Stdout: JSON `{"backend":"keychain"|"file"|"none","token_valid":bool,"expires_in_days":int,"account_type":"personal"|"workspace"|"unknown"}`
 #        — always a structured status JSON; the no-backend case does NOT
 #          degrade to an error JSON, so callers such as gws-wrap.sh can
 #          parse uniformly. Severity is signalled via the exit code.
+#        `account_type` is derived from the active gcloud account's email
+#        domain (gmail.com / googlemail.com → personal; else → workspace).
+#        Falls back to "unknown" if gcloud is missing or no active account
+#        — credential-check.sh is read-only state detection and must never
+#        error on missing tooling.
 # Stderr: human-readable progress (no secrets).
 #
 # Exit codes (per TECH-SPEC §4.2):
@@ -116,17 +121,49 @@ compute_expires_in_days() {
   printf '%d' "${remaining}"
 }
 
+# --- 偵測 account_type（從 active gcloud account 的 email domain 推斷）------
+# Mirrors auto-setup.sh `detect_account_type()` domain logic (T1) inline —
+# duplication is intentional per plan T4: credential-check.sh is read-only
+# state detection and must remain self-contained / defensive against
+# missing tooling.
+#
+# Echoes "personal" | "workspace" | "unknown" to stdout. Never errors:
+#   - gcloud missing                → "unknown"
+#   - no active gcloud account      → "unknown"
+#   - gmail.com / googlemail.com    → "personal"
+#   - any other domain              → "workspace"
+detect_account_type() {
+  if ! command -v gcloud >/dev/null 2>&1; then
+    printf 'unknown'
+    return
+  fi
+  local account
+  account="$(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null || printf '')"
+  if [[ -z "${account}" ]]; then
+    printf 'unknown'
+    return
+  fi
+  local domain="${account##*@}"
+  domain="$(printf '%s' "${domain}" | tr '[:upper:]' '[:lower:]')"
+  case "${domain}" in
+    gmail.com|googlemail.com) printf 'personal' ;;
+    *)                         printf 'workspace' ;;
+  esac
+}
+
 # --- 結果輸出（ASVS V1 output encoding） ------------------------------------
 emit_result() {
   local backend="$1"       # "keychain" | "file"
   local token_valid="$2"   # "true" | "false"
   local expires_days="$3"  # int
+  local account_type="$4"  # "personal" | "workspace" | "unknown"
 
   jq -n \
     --arg backend "${backend}" \
     --argjson valid "${token_valid}" \
     --argjson exp "${expires_days}" \
-    '{backend: $backend, token_valid: $valid, expires_in_days: $exp}'
+    --arg account_type "${account_type}" \
+    '{backend: $backend, token_valid: $valid, expires_in_days: $exp, account_type: $account_type}'
 }
 
 # --- main -------------------------------------------------------------------
@@ -167,7 +204,10 @@ main() {
   local remaining
   remaining="$(compute_expires_in_days)"
 
-  emit_result "${backend}" "${token_valid}" "${remaining}"
+  local account_type
+  account_type="$(detect_account_type)"
+
+  emit_result "${backend}" "${token_valid}" "${remaining}" "${account_type}"
 
   if (( backend_usable == 0 )); then
     exit 18
