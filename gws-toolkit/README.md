@@ -4,7 +4,7 @@
 
 > ✅ **Phase 1 stable (2026-05-06).** Successor to [`slides-toolkit/`](../slides-toolkit/), seeded 2026-05-04 via strangler-fig fork. Phase 1 (vendor + α-trim + rename + scope upgrade + Drive safety wrappers + account switching) closed with all 4 validation criteria green: ≥ 1 deck generated end-to-end (108 sec; KR1 ≤ 180 sec), ≥ 1 ad-hoc Drive op via vendored `gws-drive`, ≥ 1 destructive op through three-tier `safe-delete.sh`, no KR1 regression. `slides-toolkit` is now Phase 3 deprecated and removed from the plugin marketplace; existing installations keep working but new users should land here. Not affiliated with Google.
 
-> Brief → Google Workspace artifacts (Slides / Docs / Sheets / Drive) via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
+> Brief → Google Workspace artifacts (Slides / Docs / Sheets / Drive / Gmail / Calendar) via Claude Code skills. Pure shell + `gws` CLI, no Python or gcloud required.
 
 > ⚠️ **Cowork compatibility — Claude Code CLI / Code tab only.** Google
 > Slides and Drive API calls are blocked by the Claude Desktop Cowork
@@ -19,7 +19,7 @@ Producing Google Slides decks regularly involves a large mechanical
 share — text replacement, image upload, placeholder alignment.
 `gws-toolkit` skills the repetitive layer (deck plumbing) so time and
 attention land on content and design judgement. Beyond Slides, the
-toolkit covers ad-hoc Drive / Docs / Sheets operations through 5
+toolkit covers ad-hoc Drive / Docs / Sheets / Gmail / Calendar operations through 9
 vendored upstream `gws-*` skills (Apache-2.0).
 
 The toolkit follows the **Platform Pivot architecture** (PRODUCT-SPEC
@@ -139,8 +139,8 @@ refresh token, breaking the metadata-only access pattern in
 
 ## Skills
 
-The plugin ships **9 skills** in two provenance tiers — 4
-toolkit-original + 5 vendored from upstream
+The plugin ships **13 skills** in two provenance tiers — 4
+toolkit-original + 9 vendored from upstream
 [`googleworkspace/cli`](https://github.com/googleworkspace/cli) at
 `v0.22.5` (Apache-2.0; provenance recorded in each vendored
 SKILL.md's `metadata.vendored_from`).
@@ -150,11 +150,11 @@ SKILL.md's `metadata.vendored_from`).
 | Skill | Layer | Purpose |
 |---|---|---|
 | `using-gws-toolkit` | Router | Inspect intent, read `slide-plan.target`, route to the right skill |
-| `gws-setup` | Setup (generic) | First-time GCP Console / OAuth (4 scopes: presentations + drive + documents + spreadsheets) / `gws` + `jq` bootstrap; state detection; 7-day re-auth |
+| `gws-setup` | Setup (generic) | First-time GCP Console / OAuth (6 scopes: presentations + drive + documents + spreadsheets + gmail + calendar) / `gws` + `jq` bootstrap; state detection; 7-day re-auth |
 | `slides-design` | Knowledge (Slides-specific) | Minto Pyramid + SCQA narrative, chart-type selection |
 | `slides-builder` | Execution (Slides-specific) | `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL; placeholder-map composition pattern lives here |
 
-**Vendored upstream (5, Apache-2.0)**
+**Vendored upstream (9, Apache-2.0)**
 
 | Skill | API surface | Helper |
 |---|---|---|
@@ -163,6 +163,10 @@ SKILL.md's `metadata.vendored_from`).
 | `gws-docs` | Docs API v1 (`documents.{batchUpdate, create, get}`) | — |
 | `gws-slides` | Slides API v1 (`presentations.{batchUpdate, create, get}` + pages) | — (slides-builder is a higher-layer orchestrator, not a helper) |
 | `gws-sheets` | Sheets API v4 (`spreadsheets.*` + values + sheets + developerMetadata) | — |
+| `gws-gmail` | Gmail API v1 (users.messages / users.labels / users.threads / users.drafts / etc.) | — |
+| `gws-gmail-read` | Gmail API v1 read-only subset (users.messages.get / list / search / labels / threads) | — |
+| `gws-calendar` | Calendar API v3 (calendars / events / freeBusy / acl / calendarList) | — |
+| `gws-calendar-agenda` | Calendar API v3 read-only subset (events.list / events.get / freeBusy / calendarList) | — |
 
 `using-gws-toolkit` is deliberately backend-agnostic so future
 `html-builder` / `pptx-builder` / `marp-builder` skills can reuse the
@@ -228,7 +232,8 @@ format.
                   Vendored upstream skills as
                   per-API method reference:
                   gws-shared / gws-drive / gws-docs /
-                  gws-slides / gws-sheets
+                  gws-slides / gws-sheets / gws-gmail /
+                  gws-gmail-read / gws-calendar / gws-calendar-agenda
                                   ▼
                                    Deck URL
 ```
