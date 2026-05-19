@@ -411,10 +411,59 @@ prompt_continue() {
 }
 
 step_5a_branding() {
-  step 5 8 "5a — OAuth Consent Screen / Branding"
+  step 5 8 "5a — OAuth Consent Screen / Branding (account_type=${ACCOUNT_TYPE})"
   local url="https://console.cloud.google.com/auth/overview?project=${PROJECT_ID}"
 
-  cat >&2 <<EOF
+  if [[ "${ACCOUNT_TYPE}" == "workspace" ]]; then
+    cat >&2 <<EOF
+
+  📋 5a — Google Auth Platform initial setup (4-stage wizard, Workspace/Internal)
+     URL: ${url}
+
+     For a brand-new project, the Overview page shows
+     "Google Auth Platform not configured yet" with a single
+     [Get started] button. Branding / Audience / Contact are all
+     filled inside this one wizard.
+
+     If you see [Get started]:
+       1. Click [Get started] — opens the "Project configuration" wizard
+
+       Stage 1/4 — App Information
+         • App name: gws-toolkit (or your choice)
+         • User support email: ${ACCOUNT:-your@workspace-domain.com}
+         → Click [Next]
+
+       Stage 2/4 — Audience
+         • Select [Internal]   ✅ Internal is the right choice when
+           the active gcloud account belongs to a Google Workspace org.
+           Internal apps:
+             - do NOT require Test Users (5b is auto-skipped)
+             - do NOT hit the 7-day refresh-token expiry that External
+               + Testing imposes
+             - do NOT require Google's scope review for sensitive /
+               restricted scopes (still subject to org admin policy)
+         → Click [Next]
+
+       Stage 3/4 — Contact Information
+         • Email addresses: ${ACCOUNT:-your@workspace-domain.com} (usually pre-filled)
+         → Click [Next]
+
+       Stage 4/4 — Finish
+         • Tick: "I agree to the Google API Services: User Data Policy"
+         → Click [Continue]
+         → Click [Create]
+         → Wait for "OAuth configuration created!" toast
+
+     If the Auth Platform is already configured (no [Get started]
+     button — you see Metrics / Project Checkup directly): no action
+     needed; press ENTER to continue.
+
+     Note: Internal audience means anyone in your Workspace org can
+     use the app without being added as a Test User; 5b will be
+     skipped automatically.
+EOF
+  else
+    cat >&2 <<EOF
 
   📋 5a — Google Auth Platform initial setup (4-stage wizard)
      URL: ${url}
@@ -455,6 +504,7 @@ step_5a_branding() {
      Note: this wizard sets Audience type to External but does NOT
      add Test Users. 5b adds the Test User next.
 EOF
+  fi
   if (( DRY_RUN == 1 )); then
     dry_echo "open ${url}"
     return
