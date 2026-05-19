@@ -1,65 +1,72 @@
 ---
 name: find-free-slots
-purpose: Find open time slots given duration + business-hours window.
+purpose: Find open time slots given duration + business-hours window. Agent-side computation over gws events list output.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `duration_minutes`: required.
-- `start_date` / `end_date`: required.
-- `business_hours_start` / `business_hours_end`: optional (24h format). Default 09:00 / 18:00.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Free slots (<duration> min, business hours <start>–<end>, <date range>)
+Return a Markdown list of free time slots ≥ `duration_minutes` within a business-hours window across a date range. **Agent-side computation pattern**: `gws` returns the event list; the agent (Claude) computes the inverse to derive free intervals.
 
-- <YYYY-MM-DD>: <HH:MM>–<HH:MM> (<duration> min)
-```
+## Input
 
-## Localized labels
+- `duration_minutes`: required. Minimum slot length.
+- `start_date` / `end_date`: required. ISO date.
+- `business_hours_start` / `business_hours_end`: optional 24h `HH:MM`. Default `09:00` / `18:00`.
+- `timezone`: optional. IANA tz. Default user's primary calendar tz.
+- `calendar_id`: optional. Defaults to primary. May accept comma-separated ids to merge busy intervals across multiple calendars.
 
-(Inherits from `agenda-view.md` — same view switcher / nav / time-format labels.)
+## Computation pattern
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Week view button | `[button] "Week"` | `[button] "週"` | `[button] "週"` |
-| Time AM/PM | `AM` / `PM` | `上午` / `下午` | `午前` / `午後` |
-| All-day prefix | `All day, ` | `全天, ` | `終日, ` |
+This protocol is **CLI-fetch + agent-compute**:
 
-## Procedure
+1. `gws calendar events list` returns busy intervals (one event = one busy interval).
+2. The agent inverts: for each date in range, compute gaps inside `[business_hours_start, business_hours_end]` between consecutive busy intervals.
+3. Filter gaps where `gap_duration >= duration_minutes`.
 
-1. Open GCal Week view:
+The agent does NOT call a `freeBusy`-style endpoint here — it derives free slots from the event list. (If gws exposes a dedicated free-busy subcommand later, this protocol can be replaced with a single call.)
+
+## Steps
+
+1. Compute `--time-min` / `--time-max` ISO timestamps from `start_date` 00:00 → `end_date` 23:59 in the user's timezone.
+
+2. Call:
    ```bash
-   abx open https://calendar.google.com
-   abx wait --load networkidle
-   abx snapshot -i
+   gws calendar events list \
+     --time-min 2026-05-18T00:00:00+08:00 \
+     --time-max 2026-05-22T23:59:59+08:00 \
+     --single-events true
    ```
 
-2. Click Week button (per labels) + re-snapshot.
+3. Parse the JSON array. Build per-date `busy_intervals[date] = [(start_dt, end_dt), ...]`:
+   - **Skip all-day events** (they typically don't block working hours).
+   - For events spanning midnight, split across dates.
 
-3. Navigate to `start_date` if needed (prev/next-week buttons).
+4. For each date in `[start_date, end_date]`:
+   - Clip busy intervals to `[business_hours_start, business_hours_end]`.
+   - Sort by start time, merge overlapping intervals.
+   - Compute gaps: business_hours_start → first busy start; between consecutive busys; last busy end → business_hours_end.
+   - Keep gaps where `(gap_end - gap_start) >= duration_minutes`.
 
-4. **Read week snapshot**. For each `[columnheader] "<date>"`:
-   - Find all child `[button]` event entries
-   - Parse start/end time from aria-label (handle locale-specific time format — AM/PM or 上午/下午 or 午前/午後, or 24h with no marker)
-   - Build busy-intervals per date
+5. Format Markdown:
+   ```
+   ## Free slots (<duration> min, business hours <start>–<end>, <date range>)
 
-5. Compute free slots = gaps between busy intervals within `business_hours_start`–`business_hours_end`, where gap ≥ `duration_minutes`.
+   - <YYYY-MM-DD>: <HH:MM>–<HH:MM> (<duration> min)
+   ```
 
-6. Combine across all dates in range. Format Markdown.
+## Common failure modes
 
-## Failure modes
-
-- **Time parsing fails** for non-supported locale → protocol assumes EN / zh-TW / ja. Other locales: refine logic.
-- **No events** → entire business window free.
-- **Login wall** → reauth.
+- **No events in range** → entire business window per date is free; emit one slot per date spanning the full window.
+- **Recurring events not expanded** → ensure `--single-events true` is passed.
+- **Timezone confusion** → all comparisons must occur in the same tz; convert UTC `dateTime` values to the user's tz before clipping to business hours. See `references/failure-modes.md` § Timezone handling.
+- **Multi-calendar busy merge** → if `calendar_id` is comma-separated, run one `gws calendar events list` per id and merge busy intervals before inversion.
 
 ## Notes
 
-- **Recurring events** flattened — each instance separately.
-- **All-day events** typically don't block working hours — exclude when computing busy intervals.
-- **24h format** has no AM/PM marker — parse directly as 24h hour.
+- All-day events are excluded by default (they typically don't block working hours). To treat them as busy, set an explicit override.
+- The agent-side computation is intentionally simple — if gws later ships a `gws calendar freebusy` subcommand, prefer that over agent-side inversion.
 
 ## Examples
 
-`duration_minutes = 30, start_date = 2026-05-18, end_date = 2026-05-22` → free 30-min slots.
+`duration_minutes = 30, start_date = 2026-05-18, end_date = 2026-05-22` → free 30-min slots within 09:00–18:00 each day.

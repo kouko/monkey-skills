@@ -1,68 +1,64 @@
 ---
 name: agenda-view
 purpose: Fetch events for today / this week / arbitrary date range.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `range`: optional. `today` / `week` / `custom`.
-- `start_date` / `end_date`: required when `custom`.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Agenda (<date range>)
+Return a Markdown agenda of calendar events for the current user across a date range (today / this week / custom).
 
-### <Date 1>
-- <HH:MM> – <HH:MM>: <title>
-```
+## Input
 
-## Localized labels
+- `range`: optional. `today` / `week` / `custom`. Default `today`.
+- `start_date` / `end_date`: required when `range = custom`. ISO date (`YYYY-MM-DD`).
+- `calendar_id`: optional. Defaults to primary calendar.
+- `timezone`: optional. IANA tz (e.g., `Asia/Taipei`). Default: user's primary calendar timezone.
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Day view button | `[button] "Day"` | `[button] "日"` | `[button] "日"` |
-| Week view button | `[button] "Week"` | `[button] "週"` | `[button] "週"` |
-| Month view button | `[button] "Month"` | `[button] "月"` | `[button] "月"` |
-| Previous-week nav | `[button] "Previous week"` | `[button] "上一週"` | `[button] "前週"` |
-| Next-week nav | `[button] "Next week"` | `[button] "下一週"` | `[button] "次週"` |
-| Time AM/PM | `AM` / `PM` | `上午` / `下午` | `午前` / `午後` |
-| All-day prefix | `All day, ` | `全天, ` | `終日, ` |
+Mapping to gws params:
+- `--time-min` / `--time-max`: ISO-8601 timestamps with offset (e.g., `2026-05-19T00:00:00+08:00`). Compute from `range`:
+  - `today` → start = local midnight today, end = local midnight tomorrow.
+  - `week` → start = local Monday 00:00, end = local Monday+7 00:00.
+  - `custom` → from `start_date` / `end_date`.
+- `--calendar` (optional): defaults to `primary`.
+- `--single-events true` (recommended): expand recurring events into individual instances.
 
-## Procedure
+## Steps
 
-1. ```bash
-   abx open https://calendar.google.com
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
+1. Resolve `--time-min` / `--time-max` from `range` inputs (compute in the user's timezone).
 
-2. **Read snapshot**. Find view switcher (top-right toolbar). Click desired view (per Localized labels):
+2. Call:
    ```bash
-   abx click @eN
-   abx wait --load networkidle
-   abx snapshot -i
+   gws calendar events list \
+     --time-min 2026-05-19T00:00:00+08:00 \
+     --time-max 2026-05-26T00:00:00+08:00 \
+     --single-events true
    ```
 
-3. For custom range: navigate via date picker (look for `[button]` with date or use prev/next buttons).
+3. Parse the JSON array. Per event extract:
+   - `start.dateTime` / `start.date` (all-day if `date`-only)
+   - `end.dateTime` / `end.date`
+   - `summary` (title)
+   - `location` (optional)
 
-4. **Read calendar grid snapshot**. Day columns are `[columnheader] "<date>"`. Events within columns are `[button]` with name format like `"<HH:MM AM/PM>, <title>"` or `"<HH:MM>, <title>"` (24h locale). All-day events use locale-specific All-day prefix.
+4. Group events by date, sort ascending by start time. All-day events appear at the top of their date group.
 
-5. Extract per event: time (handle locale variants), title, optional location.
+5. Format Markdown:
+   ```
+   ## Agenda (<date range>)
 
-6. Group by date column. Format Markdown.
+   ### <YYYY-MM-DD>
+   - <HH:MM>–<HH:MM>: <title>  [@ <location>]
+   - (all day): <title>
+   ```
 
-## Failure modes
+## Common failure modes
 
-- **View switcher missing** → toolbar restructured.
-- **No event buttons** → no events in range (valid empty).
-- **Login wall** → reauth.
-
-## Notes
-
-- **Time format depends on locale + 12/24h preference** — protocol handles AM/PM (en) + 上午/下午 (zh-TW) + 午前/午後 (ja) + 24h (locale-independent).
-- **All-day events** appear at top of day column with locale-specific All-day prefix.
-- **Recurring events** show as instances per day.
+- **Empty array** → valid empty result. Emit `No events in <date range>.`
+- **Recurring events not expanded** → ensure `--single-events true` is passed (otherwise master events show without per-instance times).
+- **Timezone mismatch** → see `references/failure-modes.md` § Timezone handling.
+- **Auth error** → see `references/failure-modes.md` § Shared OAuth with gmail-automate.
 
 ## Examples
 
-`range = week` → events for this week.
+`range = week` → events for this week as grouped Markdown.

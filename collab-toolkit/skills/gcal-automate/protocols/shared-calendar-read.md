@@ -1,64 +1,63 @@
 ---
 name: shared-calendar-read
 purpose: Read events from a colleague's shared calendar.
+allowed-tools: Bash(gws:*)
 ---
 
-## Inputs
-- `calendar_name`: required. Display name in "Other calendars" sidebar.
-- `range`: optional. `today` / `week`.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## <calendar_name> (<date range>)
+Return a Markdown agenda for a subscribed (shared) calendar — e.g., a colleague's calendar that the current user has added to their account.
 
-### <Date>
-- <HH:MM>–<HH:MM>: <title>
-```
+## Input
 
-## Localized labels
+- `calendar_name`: required. Display name OR calendar id. If a display name is supplied, the protocol resolves it to a calendar id via `gws calendar list`.
+- `range`: optional. `today` / `week` / `custom`. Default `today`.
+- `start_date` / `end_date`: required when `range = custom`.
+- `timezone`: optional.
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Other calendars sidebar list | `[list] "Other calendars"` | `[list] "其他日曆"` | `[list] "他のカレンダー"` |
-| Add-calendar button | `[button] "Add other calendars"` | `[button] "新增其他日曆"` | `[button] "他のカレンダーを追加"` |
+## Steps
 
-## Procedure
-
-1. ```bash
-   abx open https://calendar.google.com
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
-
-2. **Read snapshot**. Find Other-calendars list in sidebar (locale-dependent). It contains `[checkbox]` items per subscribed calendar.
-
-3. **Find target checkbox**: `[checkbox] "<calendar_name>"` (calendar display name; user-set, no translation). If unchecked, click to enable:
+1. **Enumerate subscribed calendars** to resolve `calendar_name` → `calendar_id`:
    ```bash
-   abx click @eN
-   abx wait 500
-   abx snapshot -i
+   gws calendar list
+   ```
+   Returns a JSON array of `{ id, summary, accessRole, ... }`. Find the entry where `summary` (or `summaryOverride`) matches `calendar_name`. If `calendar_name` already looks like an id (contains `@`), skip resolution.
+
+2. Compute `--time-min` / `--time-max` from `range` inputs (same logic as `agenda-view`).
+
+3. **List events scoped to that calendar id**:
+   ```bash
+   gws calendar events list \
+     --calendar alice@example.com \
+     --time-min 2026-05-19T00:00:00+08:00 \
+     --time-max 2026-05-26T00:00:00+08:00 \
+     --single-events true
    ```
 
-4. To isolate (optional): uncheck other calendars OR rely on event-color matching.
+4. Parse the JSON array. Per event extract `start` / `end` / `summary` / `location`.
 
-5. Run agenda-view extraction (see `protocols/agenda-view.md`) to get events.
+5. Group by date, sort ascending. Format Markdown:
+   ```
+   ## <calendar_name> (<date range>)
 
-6. Filter to target calendar (if distinguishable).
+   ### <YYYY-MM-DD>
+   - <HH:MM>–<HH:MM>: <title>  [@ <location>]
+   ```
 
-## Failure modes
+## Common failure modes
 
-- **Calendar not in Other-calendars list** → user hasn't subscribed → instruct user to add via `+` button → "Subscribe to calendar".
-- **No events** → colleague has none OR calendar privacy = "Free/Busy only" (shows "Busy" blocks, no details).
-- **Login wall** → reauth.
+- **`calendar_name` not found in `gws calendar list`** → the user hasn't subscribed to it. Instruct: in calendar.google.com, add it via "Other calendars" → "Subscribe to calendar".
+- **`accessRole: freeBusyReader`** → only busy-blocks visible; event titles return as `"Busy"` and `location` is null. Emit slots as `(busy)` with no title.
+- **Empty array** → valid empty result. Emit `No events in <date range>.`
+- **Auth error** → see `references/failure-modes.md` § Shared OAuth with gmail-automate.
 
 ## Notes
 
-- **Privacy levels**:
-  - "See all event details" — full info visible
-  - "Only free/busy" — only "Busy" blocks visible
-- **Event aria-label may not include calendar source** — distinguishing via color hard. Best path: temporarily uncheck other calendars.
+- The `accessRole` field on each `gws calendar list` entry indicates privacy:
+  - `owner` / `writer` / `reader` — full event details visible.
+  - `freeBusyReader` — only busy blocks visible.
+- Calendar id is stable (typically the owner's email); cache resolved ids across invocations to skip step 1.
 
 ## Examples
 
-`calendar_name = "Alice Chen", range = week` → Alice's events this week.
+`calendar_name = "Alice Chen", range = week` → Alice's events this week as grouped Markdown.
