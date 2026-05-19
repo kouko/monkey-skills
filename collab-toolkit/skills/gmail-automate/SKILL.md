@@ -1,6 +1,6 @@
 ---
 name: gmail-automate
-description: Gmail read access via Google Workspace CLI (gws). Read-only v0.2.0 — mail-search / thread-read / inbox-summary / label-read via gws gmail subcommands. Locale-independent. Replaces v0.1.6 agent-browser approach. Gmail CLI・公式 Workspace・読取専用。Gmail CLI・官方 Workspace・唯讀。
+description: Gmail read access via Google Workspace CLI (gws). Read-only v0.2.0 — mail-search / thread-read / inbox-summary / label-read via gws gmail subcommands. Locale-independent. Supersedes the v0.1.6 browser-driving skill. Gmail CLI・公式 Workspace・読取専用。Gmail CLI・官方 Workspace・唯讀。
 allowed-tools: Bash(gws:*)
 ---
 
