@@ -1,6 +1,6 @@
 # Codex CLI integration tests
 
-> **Status (as of v0.8.0)**: build complete; tracked at current
+> **Status (as of v0.9.0)**: build complete; tracked at current
 > plugin version (`.codex-plugin/plugin.json` bumped in lock-step with
 > `.claude-plugin/plugin.json` since v0.4.0). Live install +
 > verification ritual on a real Codex CLI instance is still deferred
