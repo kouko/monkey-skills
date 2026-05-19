@@ -40,7 +40,7 @@
 
 ## 支援的 UI 語言
 
-v0.1.6+ 支援 **English / 繁體中文 / 日本語** UI 標籤。每個 protocol 都有 `Localized labels` 表格列出 3 種語言的 role+name 對照。其他語系（zh-CN / ko / 歐洲語言）可能部分可用 — 歡迎驗證過的標籤透過 PR 補充。
+v0.2.0+ 支援 **English / 繁體中文 / 日本語** UI 標籤。每個 protocol 都有 `Localized labels` 表格列出 3 種語言的 role+name 對照。其他語系（zh-CN / ko / 歐洲語言）可能部分可用 — 歡迎驗證過的標籤透過 PR 補充。
 
 帳號介面語言為繁中時，protocol 會自動匹配繁中標籤。英文/日文帳號同理。
 

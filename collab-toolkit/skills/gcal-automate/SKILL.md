@@ -1,12 +1,12 @@
 ---
 name: gcal-automate
-description: Google Calendar automation via agent-browser browser-driving. Use for: agenda-view (today/week/range), event-search, find-free-slots, shared-calendar-read. Read-only v0.1.6. Supports EN / zh-TW / ja UI labels. Google カレンダー自動化、予定読取、多言語UI対応。Google 行事曆自動化・行程讀取・多語言介面支援。
+description: Google Calendar automation via agent-browser browser-driving. Use for: agenda-view (today/week/range), event-search, find-free-slots, shared-calendar-read. Read-only v0.2.0. Supports EN / zh-TW / ja UI labels. Google カレンダー自動化、予定読取、多言語UI対応。Google 行事曆自動化・行程讀取・多語言介面支援。
 allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
 ---
 
 # gcal-automate
 
-Follows agent-browser text-snapshot conventions. v0.1.6 supports EN / zh-TW / ja UI labels.
+Follows agent-browser text-snapshot conventions. v0.2.0 supports EN / zh-TW / ja UI labels.
 
 ## Prerequisites
 

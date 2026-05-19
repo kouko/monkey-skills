@@ -1,12 +1,12 @@
 ---
 name: gmail-automate
-description: Gmail automation via agent-browser browser-driving. Use for: mail-search with operators, thread-read, inbox-summary by Category tabs, label-read with nested labels. Read-only v0.1.6. Supports EN / zh-TW / ja UI labels. Gmail 自動化、メール読取、多言語UI対応。Gmail 自動化・郵件讀取・多語言介面支援。
+description: Gmail automation via agent-browser browser-driving. Use for: mail-search with operators, thread-read, inbox-summary by Category tabs, label-read with nested labels. Read-only v0.2.0. Supports EN / zh-TW / ja UI labels. Gmail 自動化、メール読取、多言語UI対応。Gmail 自動化・郵件讀取・多語言介面支援。
 allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
 ---
 
 # gmail-automate
 
-Follows agent-browser text-snapshot conventions. v0.1.6 supports EN / zh-TW / ja UI labels.
+Follows agent-browser text-snapshot conventions. v0.2.0 supports EN / zh-TW / ja UI labels.
 
 ## Prerequisites
 

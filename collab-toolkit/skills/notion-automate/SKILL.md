@@ -1,12 +1,12 @@
 ---
 name: notion-automate
-description: Notion automation via agent-browser browser-driving. Use for: search-workspace, page-fetch with embedded blocks, database-query with filter/sort, page-backlinks. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Notion 自動化、ページ読取、多言語UI対応。Notion 自動化・頁面讀取・多語言介面支援。
+description: Notion automation via agent-browser browser-driving. Use for: search-workspace, page-fetch with embedded blocks, database-query with filter/sort, page-backlinks. Read-only v0.2.0 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Notion 自動化、ページ読取、多言語UI対応。Notion 自動化・頁面讀取・多語言介面支援。
 allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
 ---
 
 # notion-automate
 
-Follows agent-browser text-snapshot conventions. v0.1.6 supports EN / zh-TW / ja UI labels (per-protocol Localized labels tables).
+Follows agent-browser text-snapshot conventions. v0.2.0 supports EN / zh-TW / ja UI labels (per-protocol Localized labels tables).
 
 ## Prerequisites
 

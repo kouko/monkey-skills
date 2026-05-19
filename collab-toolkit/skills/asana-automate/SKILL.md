@@ -1,6 +1,6 @@
 ---
 name: asana-automate
-description: Asana automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: task-list across projects with filtering, task-detail with subtasks/comments/attachments, project-overview, search-global across tasks and portfolios. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Asana 自動化、タスク読取、ヘッドレス、多言語UI対応。Asana 自動化・任務讀取・無頭背景・多語言介面支援。
+description: Asana automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: task-list across projects with filtering, task-detail with subtasks/comments/attachments, project-overview, search-global across tasks and portfolios. Read-only v0.2.0 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Asana 自動化、タスク読取、ヘッドレス、多言語UI対応。Asana 自動化・任務讀取・無頭背景・多語言介面支援。
 allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
 ---
 
@@ -10,7 +10,7 @@ Read-only browser automation for Asana. Follows agent-browser's official text-sn
 
 ## Supported UI languages
 
-v0.1.6 supports **EN, zh-TW (繁體中文), ja (日本語)** UI labels. Each protocol has a `## Localized labels` section listing role+name patterns. Other locales not officially supported — refine via PR.
+v0.2.0 supports **EN, zh-TW (繁體中文), ja (日本語)** UI labels. Each protocol has a `## Localized labels` section listing role+name patterns. Other locales not officially supported — refine via PR.
 
 ## Prerequisites
 

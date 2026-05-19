@@ -1,6 +1,6 @@
 {
   "name": "collab-toolkit",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "Browser automation toolkit on vercel-labs/agent-browser — 5 read-only office-collab skills (Asana / Slack / Notion / Google Calendar / Gmail). Supports EN / zh-TW / ja UI. ⚠️ Claude Code CLI only — Cowork blocks browser launch.",
   "author": {
     "name": "kouko",

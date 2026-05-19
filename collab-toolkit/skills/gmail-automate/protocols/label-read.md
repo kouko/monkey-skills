@@ -57,12 +57,12 @@ Labels themselves are user-defined (no translation table). Only UI affordances:
 ## Failure modes
 
 - **Label not in sidebar** → collapsed under parent (expand) OR hidden in label settings.
-- **Multi-level nesting** (`parent/child/grandchild`) → v0.1.6 supports single-level only. Use `mail-search.md` with `label:<full path>` for deeper.
+- **Multi-level nesting** (`parent/child/grandchild`) → v0.2.0 supports single-level only. Use `mail-search.md` with `label:<full path>` for deeper.
 - **Login wall** → reauth.
 
 ## Notes
 
-- **v0.1.6 nesting limit**: single-level (`parent/child`). For deeper: expand sidebar manually or use `mail-search.md` with `label:` operator.
+- **v0.2.0 nesting limit**: single-level (`parent/child`). For deeper: expand sidebar manually or use `mail-search.md` with `label:` operator.
 - Label paths use `/` separator regardless of UI language.
 
 ## Examples

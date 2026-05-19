@@ -53,7 +53,7 @@ Attachments:
 
 ## Notes
 
-- Per-message grouping depends on Gmail's tree structure — v0.1.6 extracts what's visible.
+- Per-message grouping depends on Gmail's tree structure — v0.2.0 extracts what's visible.
 - `abx get text @eN` strips HTML noise.
 
 ## Examples
