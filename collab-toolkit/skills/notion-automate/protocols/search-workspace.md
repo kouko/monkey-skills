@@ -1,67 +1,57 @@
 ---
 name: search-workspace
-purpose: Full-text search across pages and databases.
+purpose: Full-text search across pages and databases in the authenticated user's Notion workspace.
+allowed-tools: mcp__notion__search
 ---
 
-## Inputs
-- `query`: required.
-- `filter_type`: optional. `pages` / `databases` / `all`.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-## Notion search: "<query>" — N matches
+Return a grouped Markdown rendering of search hits across pages and databases for a free-text query.
 
-### Pages (M)
-- **<page title>** — <path or parent>
+## Input
 
-### Databases (K)
-- **<database name>** — <owner>
-```
+- `query`: required. Free-text query string.
+- `filter_type`: optional. `pages` / `databases` / `all`. Default `all`.
+- `--json`: optional. Skip Markdown formatting, return raw API records.
 
-## Localized labels
+Mapping to MCP params:
+- `query`: pass through as the `query` field.
+- `filter`: when `filter_type != all`, pass `{ "value": "page" | "database", "property": "object" }`. Omit for `all`.
+- `page_size`: default 20 — bump to 100 if `--json` is set or caller asks for more results.
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Search trigger | `[button] "Search"` or `"Quick Find"` | `[button] "搜尋"` or `"快速尋找"` | `[button] "検索"` or `"クイック検索"` |
-| Search input | `[textbox] "Search"` | `[textbox] "搜尋"` | `[textbox] "検索"` |
+## Steps
 
-## Procedure
-
-1. ```bash
-   abx open https://www.notion.so
-   abx wait --load networkidle
-   abx snapshot -i
+1. Call:
+   ```
+   mcp__notion__search({
+     "query": "<query>",
+     "filter": { "value": "page", "property": "object" },   // omit when filter_type=all
+     "page_size": 20
+   })
    ```
 
-2. **Read snapshot**. Find Search trigger. Or use keyboard shortcut: `abx press Cmd+P` (macOS) / `Ctrl+P` (others).
+2. Handle pagination — if response includes `has_more: true` and `next_cursor`, repeat with `start_cursor: <next_cursor>` until exhausted or caller-supplied limit reached.
 
-3. Click + re-snapshot:
-   ```bash
-   abx click @eN
-   abx wait 500
-   abx snapshot -i
+3. Group results by `object` field (`page` vs `database`) and format Markdown:
+   ```
+   ## Notion search: "<query>" — N matches
+
+   ### Pages (M)
+   - **<page title>** — <parent.type>: <parent.title or id>
+
+   ### Databases (K)
+   - **<database title>** — <parent.type>: <parent.title or id>
    ```
 
-4. **Find search input**. Fill (Notion search is real-time as you type):
-   ```bash
-   abx fill @eM "<query>"
-   abx wait 1000
-   abx snapshot -i
-   ```
+   Omit any group whose count is 0. Page title lives at `properties.title.title[].plain_text` for pages, `title[].plain_text` for databases.
 
-5. **Read results**. Each result `[listitem]` with name + path. Extract + filter + format.
+## Common failure modes
 
-## Failure modes
-
-- **Search trigger missing** → top bar restructured.
-- **Empty results** → valid empty.
-
-## Notes
-
-- Workspace switcher (top-left) matters for multi-workspace users.
-- Pressing Enter sometimes optional (real-time search).
+- **Empty array** → valid empty result. Emit `No matches for "<query>".`
+- **Pagination dropped** → check `has_more` / `next_cursor`; full enumeration required for accurate count.
+- **Title field missing** → page may be a child without a title property; fall back to `id`.
+- **OAuth scope insufficient** → see `references/failure-modes.md` § OAuth scope. Notion's MCP grants vary by integration — workspace-wide search needs full read scope.
 
 ## Examples
 
-`query = "OKR", filter_type = pages` → page results.
+"search notion for OKR" / 「在 Notion 搜尋 OKR」 / 「NotionでOKRを検索」 → grouped Markdown by object type.

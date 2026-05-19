@@ -1,34 +1,44 @@
 ---
 name: notion-automate
-description: Notion automation via agent-browser browser-driving. Use for: search-workspace, page-fetch with embedded blocks, database-query with filter/sort, page-backlinks. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Notion 自動化、ページ読取、多言語UI対応。Notion 自動化・頁面讀取・多語言介面支援。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
+description: Notion automation via official MCP (mcp.notion.com/mcp). Read-only v0.2.0 — search-workspace / page-fetch / database-query via MCP tool calls. Locale-independent (structured JSON, no UI scraping). page-backlinks dropped — Notion API exposes no native backlinks endpoint. Notion MCP・ページ読取・公式サーバ。Notion MCP・頁面讀取・官方伺服器。
+allowed-tools: mcp__notion__search, mcp__notion__get_page, mcp__notion__query_database
 ---
 
 # notion-automate
 
-Follows agent-browser text-snapshot conventions. v0.1.6 supports EN / zh-TW / ja UI labels (per-protocol Localized labels tables).
+Read-only Notion access via the official Notion MCP server (`mcp.notion.com/mcp`, Active since 2026-03-30). Tool calls return structured JSON — no UI scraping, no locale tables, no browser daemon.
 
 ## Prerequisites
 
-`/collab-setup` once. Login wall → reauth.
+One-time setup:
+
+1. Run `/collab-setup` and accept the notion row (records intent + verifies prerequisites).
+2. Run `/mcp add notion` once — this triggers Claude Code's native OAuth pre-registration flow against `mcp.notion.com/mcp`. Token refresh is handled automatically thereafter.
+
+If a protocol fails with an auth error, re-run `/mcp add notion` to refresh the OAuth grant.
 
 ## Hero protocols
 
-- `protocols/search-workspace.md`
-- `protocols/page-fetch.md`
-- `protocols/database-query.md`
-- `protocols/page-backlinks.md`
+- `protocols/search-workspace.md` — full-text search across pages and databases
+- `protocols/page-fetch.md` — fetch a page's content (blocks → Markdown). Note: Notion API 2025-09-03 introduced `data_sources` as the primary abstraction over raw block lists — see protocol for the wrapper details.
+- `protocols/database-query.md` — query a database with filter + sort, return matching rows
+
+Note: `page-backlinks` is **not** offered. The Notion REST / MCP API has no native backlinks endpoint — the v0.1.6 implementation relied on UI scraping (clicking the "Show backlinks" menuitem) which does not port to API context. See `references/failure-modes.md` § "Coverage gaps from v0.1.6 → v0.2.0".
 
 ## Workflow pattern
 
-```bash
-abx open <url>
-abx wait --load networkidle
-abx snapshot -i
-abx click @eN
-abx snapshot -i
+A typical search invocation:
+
 ```
+mcp__notion__search({
+  "query": "OKR",
+  "filter": { "value": "page", "property": "object" },
+  "page_size": 20
+})
+```
+
+Returns a JSON array of page / database records. Format per the protocol's `## Output` section.
 
 ## Failure modes
 
-See `references/failure-modes.md`.
+See `references/failure-modes.md` — OAuth scope, data-source vs page abstraction, rate limits, token refresh, tool-name verification status, page-backlinks coverage gap.

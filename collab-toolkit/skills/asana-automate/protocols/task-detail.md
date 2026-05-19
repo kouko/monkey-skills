@@ -1,82 +1,65 @@
 ---
 name: task-detail
 purpose: Fetch full task detail — title, description, subtasks, comments, attachments, custom fields.
+allowed-tools: mcp__asana__get_task
 ---
 
-## Inputs
-- `task_url`: required.
-- `--json`: optional.
+## Purpose
 
-## Output
-```
-# <title>
-**Assignee**: <name>
-**Due**: <date>
-**Status**: <incomplete | complete>
+Return a Markdown rendering of a single task: title, assignee, due date, description (HTML rendered as plain text), subtasks, comments (stories of type `comment_added`), attachments, and custom fields.
 
-## Description
-<body>
+## Input
 
-## Subtasks (N)
-- [ ] <title>
+- `task_url` OR `task_gid`: required. Parse gid out of URL if needed — last numeric segment of `https://app.asana.com/0/<project>/<task_gid>` or new format `https://app.asana.com/1/<workspace>/project/<project>/task/<task_gid>`.
+- `--json`: optional. Skip Markdown formatting, return raw API record.
 
-## Comments (N)
-**<author> (<date>)**: <text>
+## Steps
 
-## Attachments (N)
-- <filename>
-```
+1. Resolve `task_gid` from `task_url` if needed.
 
-## Localized labels
-
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Assignee button prefix | `Assignee, ` | `受指派者, ` | `担当者, ` |
-| Due-date button prefix | `Due date, ` | `到期日, ` | `期日, ` |
-| Description region | `[region] "Description"` | `[region] "說明"` | `[region] "説明"` |
-| Subtasks list | `[list] "Subtasks"` | `[list] "子任務"` | `[list] "サブタスク"` |
-| Attachments list | `[list] "Attachments"` | `[list] "附件"` | `[list] "添付ファイル"` |
-| Show-all-subtasks button | `[button] "Show all subtasks"` | `[button] "顯示所有子任務"` | `[button] "すべてのサブタスクを表示"` |
-
-## Procedure
-
-1. Open task URL:
-   ```bash
-   abx open <task_url>
-   abx wait --load networkidle
-   abx snapshot -i
+2. Call:
+   ```
+   mcp__asana__get_task({
+     "task_gid": "<gid>",
+     "opt_fields": "name,notes,html_notes,due_on,completed,assignee.name,projects.name,custom_fields.name,custom_fields.display_value,num_subtasks"
+   })
    ```
 
-2. **Read snapshot**. Identify (per Localized labels):
-   - Title: `[heading]` level=1 (locale-agnostic)
-   - Assignee: `[button]` with locale-specific prefix
-   - Due date: `[button]` with locale-specific prefix
-   - Description: `[region]` with locale-specific name
-   - Subtasks: `[list]` with locale-specific name + `[listitem]` children
-   - Comments: `[article]` elements (role locale-agnostic)
-   - Attachments: `[list]` with locale-specific name
+3. If `num_subtasks > 0`, fetch subtasks. The Asana V2 MCP exposes this either as a separate tool or via `opt_fields` expansion — assumed canonical: pass `opt_fields: "subtasks.name,subtasks.completed"` or call a dedicated subtasks tool if exposed. Fall back to documenting in failure-modes if neither works.
 
-3. Fetch rich content:
-   ```bash
-   abx get text @eN
+4. Fetch stories (comments) — call the stories endpoint if exposed by MCP (e.g., `mcp__asana__list_task_stories`); otherwise note as a v0.2.0 limitation.
+
+5. Format Markdown:
+   ```
+   # <name>
+   **Assignee**: <assignee.name>
+   **Due**: <due_on>
+   **Status**: <incomplete | complete>
+
+   ## Description
+   <notes>
+
+   ## Subtasks (N)
+   - [ ] <name>
+
+   ## Comments (N)
+   **<author> (<created_at>)**: <text>
+
+   ## Attachments (N)
+   - <name>
+
+   ## Custom fields
+   - <field.name>: <field.display_value>
    ```
 
-4. For each subtask listitem: title + child-checkbox state.
+   Omit any section whose count is 0.
 
-5. Format Markdown. Omit empty sections.
+## Common failure modes
 
-## Failure modes
-
-- **No level=1 heading** → login page → reauth.
-- **Task URL 404** → invalid/deleted.
-- **Missing Description** → valid empty → `(no description)`.
-
-## Notes
-
-- Lazy comment rendering — scroll + re-snapshot.
-- Custom fields: `[button]` with `<field name>, <value>` (field names user-defined).
-- Subtasks may be collapsed — click locale-specific Show-all-subtasks button before re-snapshotting.
+- **404 / task not found** → invalid gid or task deleted.
+- **Stories or attachments endpoint not exposed** → emit warning and skip section; see `references/failure-modes.md`.
+- **Empty `notes`** → `(no description)`.
 
 ## Examples
 
-Input: `task_url = https://app.asana.com/0/1234/5678` → full Markdown.
+Input: `task_url = https://app.asana.com/0/1234/5678` → full Markdown rendering of the task.

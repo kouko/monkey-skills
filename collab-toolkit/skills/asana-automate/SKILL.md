@@ -1,40 +1,44 @@
 ---
 name: asana-automate
-description: Asana automation via agent-browser browser-driving (Web mode, headless background after first login). Use for: task-list across projects with filtering, task-detail with subtasks/comments/attachments, project-overview, search-global across tasks and portfolios. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Asana 自動化、タスク読取、ヘッドレス、多言語UI対応。Asana 自動化・任務讀取・無頭背景・多語言介面支援。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
+description: Asana automation via official MCP V2 (mcp.asana.com/v2/mcp). Read-only v0.2.0 — task-list / task-detail / project-overview / search-global via MCP tool calls. Locale-independent (structured JSON, no UI scraping). Asana MCP・タスク読取・公式 V2 サーバ。Asana MCP・任務讀取・官方 V2 伺服器。
+allowed-tools: mcp__asana__list_tasks, mcp__asana__get_task, mcp__asana__list_projects, mcp__asana__search
 ---
 
 # asana-automate
 
-Read-only browser automation for Asana. Follows agent-browser's official text-snapshot conventions — `abx snapshot -i` produces an indented text tree; read it, identify the ref, click by `@eN`.
-
-## Supported UI languages
-
-v0.1.6 supports **EN, zh-TW (繁體中文), ja (日本語)** UI labels. Each protocol has a `## Localized labels` section listing role+name patterns. Other locales not officially supported — refine via PR.
+Read-only Asana access via the official Asana MCP V2 server (`mcp.asana.com/v2/mcp`). Tool calls return structured JSON — no UI scraping, no locale tables, no browser daemon.
 
 ## Prerequisites
 
-`/collab-setup` once. abx + config + logged-in profile. Login wall → `/collab-setup --reauth asana` (dedicated) or log into daily Chrome (shared).
+One-time setup:
+
+1. Run `/collab-setup` and accept the asana row (records intent + verifies prerequisites).
+2. Run `/mcp add asana` once — this triggers Claude Code's native OAuth pre-registration flow against `mcp.asana.com/v2/mcp`. Token refresh is handled automatically thereafter.
+
+If a protocol fails with an auth error, re-run `/mcp add asana` to refresh the OAuth grant.
 
 ## Hero protocols
 
-- `protocols/task-list.md` — list My Tasks, filter by due-date / status / project
-- `protocols/task-detail.md` — task content with subtasks / comments / attachments
-- `protocols/project-overview.md` — list all projects (flat)
-- `protocols/search-global.md` — full-text search across tasks / projects / portfolios
+- `protocols/task-list.md` — list tasks (My Tasks or scoped to a project) with optional filters
+- `protocols/task-detail.md` — full task content: description, subtasks, comments, attachments, custom fields
+- `protocols/project-overview.md` — list accessible projects (workspace-scoped)
+- `protocols/search-global.md` — typeahead / full-text search across tasks, projects, portfolios
 
 ## Workflow pattern
 
-```bash
-abx open <url>
-abx wait --load networkidle
-abx snapshot -i           # text output, locale-dependent label names
-abx click @eN             # ref from snapshot
-abx snapshot -i           # re-snapshot after navigation
+A typical task-list invocation:
+
+```
+mcp__asana__list_tasks({
+  "assignee": "me",
+  "workspace": "<workspace_gid>",
+  "completed_since": "now",
+  "opt_fields": "name,due_on,completed,projects.name"
+})
 ```
 
-**Always re-snapshot after a click** — refs reassigned each time.
+Returns a JSON array of task records. Format per the protocol's `## Output` section.
 
 ## Failure modes
 
-See `references/failure-modes.md`.
+See `references/failure-modes.md` — OAuth scope, V2 lifecycle, rate limits, token refresh, tool-name verification status.

@@ -1,51 +1,54 @@
 ---
 name: project-overview
-purpose: List all projects user can access. Flat list only (section counts deferred to v0.2.0).
+purpose: List projects the user can access. Flat list, workspace-scoped.
+allowed-tools: mcp__asana__list_projects
 ---
 
-## Inputs
-- None.
+## Purpose
+
+Return a flat Markdown list of projects accessible to the authenticated user in a given workspace.
+
+## Input
+
+- `workspace`: optional. Workspace gid. If omitted, prompt user or default to the workspace cached from `/collab-setup`.
+- `archived`: optional. Default `false` (exclude archived projects).
 - `--json`: optional.
 
-## Output
-```
-## Projects (N)
-- <project name 1>
-- <project name 2>
-```
+Mapping to MCP params:
+- `workspace`: required by API.
+- `archived`: pass `false` to hide archived; omit for all.
+- `opt_fields: "name,archived,owner.name"` — minimal field set.
 
-## Localized labels
+## Steps
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Sidebar Projects link | `[link] "Projects"` | `[link] "專案"` | `[link] "プロジェクト"` |
-| Show-more button | `[button] "Show more"` | `[button] "顯示更多"` | `[button] "もっと表示"` |
-
-## Procedure
-
-1. Navigate:
-   ```bash
-   abx open https://app.asana.com/0/projects
-   abx wait --load networkidle
-   abx snapshot -i
+1. Call:
+   ```
+   mcp__asana__list_projects({
+     "workspace": "<workspace_gid>",
+     "archived": false,
+     "opt_fields": "name,owner.name"
+   })
    ```
 
-2. **Read snapshot**. Projects appear as `[row]` (grid view) or `[treeitem]` (sidebar). Names are user-defined (no translation).
+2. Handle pagination — if response includes `next_page.offset`, repeat with that offset until exhausted.
 
-3. Extract project name (link / treeitem name).
+3. Format flat Markdown:
+   ```
+   ## Projects (N)
+   - <name>
+   - <name>
+   ```
 
-4. Format as flat Markdown list.
+## Common failure modes
 
-## Failure modes
+- **Empty array** → user has no project memberships in this workspace.
+- **Missing workspace gid** → ask user.
+- **Pagination dropped** → check `next_page.offset` in response; full enumeration required for accurate count.
 
-- **No projects in snapshot** → empty (valid) OR UI changed.
-- **Login wall** → reauth.
+## Limitations
 
-## v0.1.5+ limitations
-
-- **Section/task counts not fetched** — out of scope, deferred to v0.2.0.
-- **Pagination** — only visible page captured.
+- **Section / task counts**: not fetched. Would require N additional `mcp__asana__list_tasks` calls (one per project); cost grows linearly with workspace size. Out of scope for v0.2.0; revisit if a single-call aggregate endpoint ships.
 
 ## Examples
 
-Flat list of project names.
+→ Flat Markdown list of project names.

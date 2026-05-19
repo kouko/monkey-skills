@@ -1,75 +1,64 @@
 ---
 name: search-global
-purpose: Full-text search across tasks / projects / portfolios.
+purpose: Search across tasks / projects / portfolios in a workspace.
+allowed-tools: mcp__asana__search
 ---
 
-## Inputs
-- `query`: required.
-- `filter_type`: optional. `tasks` / `projects` / `portfolios` / `all`.
+## Purpose
+
+Return a grouped Markdown rendering of search hits across tasks, projects, and (where exposed) portfolios for a free-text query in a workspace.
+
+## Input
+
+- `query`: required. Free-text query. Asana operators (`assignee:`, `project:`, `due:today`) are honored server-side.
+- `filter_type`: optional. `tasks` / `projects` / `portfolios` / `all`. Default `all`.
+- `workspace`: optional. Workspace gid (use cached default if omitted).
 - `--json`: optional.
 
-## Output
-```
-## Search results for "<query>" (N)
+Mapping to MCP params:
+- `query`: pass through as `text` or `query` (per tool signature).
+- `workspace`: required.
+- `resource_type`: pass when `filter_type != all` (e.g., `task`, `project`, `portfolio`). Some Asana MCP versions expose this as separate tools — if so, call the type-specific search tool and merge results.
 
-### Tasks (M)
-- <task title> — Project: <project>
+## Steps
 
-### Projects (K)
-- <project name>
-
-### Portfolios (L)
-- <portfolio name>
-```
-
-## Localized labels
-
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Top-bar Search button | `[button] "Search"` or `"Search Asana"` | `[button] "搜尋"` or `"搜尋 Asana"` | `[button] "検索"` or `"Asana を検索"` |
-| Search input | `[textbox] "Search"` or `[combobox]` | `[textbox] "搜尋"` or `[combobox]` | `[textbox] "検索"` or `[combobox]` |
-| Tasks group heading | `[heading] "Tasks"` | `[heading] "任務"` | `[heading] "タスク"` |
-| Projects group heading | `[heading] "Projects"` | `[heading] "專案"` | `[heading] "プロジェクト"` |
-| Portfolios group heading | `[heading] "Portfolios"` | `[heading] "投資組合"` | `[heading] "ポートフォリオ"` |
-
-## Procedure
-
-1. Open Asana:
-   ```bash
-   abx open https://app.asana.com/0/inbox
-   abx wait --load networkidle
-   abx snapshot -i
+1. Call:
+   ```
+   mcp__asana__search({
+     "workspace": "<workspace_gid>",
+     "query": "<query>",
+     "opt_fields": "name,resource_type,projects.name"
+   })
    ```
 
-2. **Read snapshot**. Find Search button (per Localized labels). Click + re-snapshot:
-   ```bash
-   abx click @eN
-   abx wait 500
-   abx snapshot -i
+2. If `filter_type` is specified, restrict results by `resource_type` field client-side (or by calling type-scoped search if exposed).
+
+3. Group results by `resource_type` and format Markdown:
+   ```
+   ## Search results for "<query>" (N)
+
+   ### Tasks (M)
+   - <name> — Project: <projects[0].name>
+
+   ### Projects (K)
+   - <name>
+
+   ### Portfolios (L)
+   - <name>
    ```
 
-3. **Find active search input** (textbox/combobox). Fill + submit:
-   ```bash
-   abx fill @eM "<query>"
-   abx press Enter
-   abx wait --load networkidle
-   abx snapshot -i
-   ```
+   Omit any group whose count is 0.
 
-4. **Read results**. Headings (locale-dependent) then row/listitem children below each.
+## Common failure modes
 
-5. Extract names + secondary info. Apply `filter_type`. Format Markdown.
-
-## Failure modes
-
-- **Search button missing** → re-snapshot, top bar restructured.
-- **No textbox after click** → `abx wait 1000` + re-snapshot.
-- **No results** → valid empty.
+- **Empty array** → valid empty result.
+- **Portfolios not returned** → may require separate scope or tool; see `references/failure-modes.md` § OAuth scope.
+- **Operator syntax rejected** → Asana search operators are documented at developers.asana.com; passing unknown operators returns 400.
 
 ## Notes
 
-- **Asana search operators** (`assignee:`, `project:`, `due:today`) are locale-stable — include in query.
+- Asana search operators (`assignee:me`, `project:<gid>`, `due:today`) are locale-independent at the API layer — pass through verbatim.
 
 ## Examples
 
-Input: `query = "OKR"` → Markdown grouped by type.
+Input: `query = "OKR"` → grouped Markdown by resource type.

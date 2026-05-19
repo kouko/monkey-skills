@@ -1,43 +1,45 @@
 ---
 name: slack-automate
-description: Slack automation via agent-browser browser-driving. Use for: search-messages with from/in/before/after operators, channel-read with thread expansion, thread-read with replies, find-user by name/email/handle. Read-only v0.1.6 — search and fetch only, no writes. Supports EN / zh-TW / ja UI labels. Slack 自動化、メッセージ読取、ヘッドレス、多言語UI対応。Slack 自動化・訊息讀取・無頭背景・多語言介面支援。
-allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*), Bash(abx:*)
+description: Slack automation via the official Slack MCP server. Read-only v0.2.0 — search-messages / channel-read / thread-read / find-user via MCP tool calls. Locale-independent (structured JSON, no UI scraping). Slack MCP・メッセージ読取・公式 MCP サーバ。Slack MCP・訊息讀取・官方 MCP 伺服器。
+allowed-tools: mcp__slack__search_messages, mcp__slack__read_channel, mcp__slack__read_thread, mcp__slack__find_user
 ---
 
 # slack-automate
 
-Inherits patterns from agent-browser's [official slack skill](https://github.com/vercel-labs/agent-browser/blob/main/skill-data/slack/SKILL.md). v0.1.6 extends with zh-TW / ja UI label support.
+Read-only Slack access via the official Slack MCP server (GA 2026-02). Tool calls return structured JSON — no UI scraping, no locale tables, no browser daemon.
+
+> ⚠️ **First-MCP-session verification needed (v0.2.0)**: the `mcp__slack__find_user` tool name is assumed against likely Slack MCP exposure but unverified — `find-user` may fail on first invocation if the actual tool name differs (e.g. `mcp__slack__users_lookup`). On first run of any protocol, ask Claude Code to list the slack MCP server's exposed tools and reconcile with `allowed-tools` + protocol bodies. See `references/failure-modes.md` §"Tool name verification needed" for the one-shot procedure.
 
 ## Prerequisites
 
-`/collab-setup` once. Login wall → reauth.
+One-time setup:
+
+1. Run `/collab-setup` and accept the slack row (records intent + verifies prerequisites).
+2. Run `/mcp add slack` once — this triggers Claude Code's native OAuth pre-registration flow against the Slack MCP endpoint. Token refresh is handled automatically thereafter.
+
+If a protocol fails with an auth error, re-run `/mcp add slack` to refresh the OAuth grant.
 
 ## Hero protocols
 
-- `protocols/search-messages.md`
-- `protocols/channel-read.md`
-- `protocols/thread-read.md`
-- `protocols/find-user.md`
+- `protocols/search-messages.md` — full-text search with Slack operators (`from:`, `in:`, `before:`, `after:`)
+- `protocols/channel-read.md` — recent N messages in a channel, with thread-reply count
+- `protocols/thread-read.md` — parent + all replies for a thread
+- `protocols/find-user.md` — search workspace users by name / email / handle (see § failure-modes for tool-name verification status)
 
 ## Workflow pattern
 
-```bash
-abx open https://app.slack.com
-abx wait --load networkidle
-abx snapshot -i
-abx click @eN
-abx snapshot -i
+A typical search-messages invocation:
+
+```
+mcp__slack__search_messages({
+  "query": "OKR in:#engineering after:2026-05-01",
+  "count": 20,
+  "sort": "timestamp"
+})
 ```
 
-## Key elements (locale-dependent — see per-protocol Localized labels)
-
-- Sidebar tabs (Home / DMs / Activity)
-- Search button + input
-- Channel treeitem
-- "More unreads" button
-- Conversation region + article messages
-- Thread complementary panel
+Returns a JSON array of message records. Format per the protocol's `## Output` section.
 
 ## Failure modes
 
-See `references/failure-modes.md`.
+See `references/failure-modes.md` — OAuth scope, workspace visibility (private vs public channels), rate limits, Real-Time Search API quotas, tool-name verification status.

@@ -1,59 +1,61 @@
 ---
 name: channel-read
-purpose: Read recent N messages in a channel.
+purpose: Read recent N messages in a Slack channel.
+allowed-tools: mcp__slack__read_channel
 ---
 
-## Inputs
-- `channel`: required (name or URL).
-- `limit`: optional, default 20.
+## Purpose
+
+Return a Markdown rendering of the last N messages in a channel, with thread-reply counts surfaced inline.
+
+## Input
+
+- `channel`: required. Channel name (`engineering` / `#engineering`) or channel ID (`C0123456789`).
+- `limit`: optional. Number of messages. Default 20, max 200 (Slack API cap per call).
 - `--json`: optional.
 
-## Output
-```
-## #<channel> (last N messages)
+Mapping to MCP params:
+- `channel`: pass channel ID if known; if user gave a name, the MCP server may resolve it, otherwise call `mcp__slack__find_channel` (assumed name — verify) or look up via search first.
+- `limit`: pass through.
+- `oldest` / `latest`: optional time bounds — omit for "most recent N".
 
-**<user>** · <timestamp>
-<text>
-└─ <thread reply count>
-```
+## Steps
 
-## Localized labels
+1. Resolve `channel` to channel ID if user supplied a name (drop leading `#`, then call channel-list / search if MCP exposes one; otherwise prompt user for ID).
 
-| Element | en | zh-TW | ja |
-|---|---|---|---|
-| Conversation region | `[region] "Conversation"` | `[region] "對話"` | `[region] "会話"` |
-| Thread reply link | `[link] "<N> reply"` or `"<N> replies"` | `[link] "<N> 則回覆"` or `"<N> 個回覆"` | `[link] "<N> 件の返信"` |
-
-## Procedure
-
-1. If `channel` is URL: `abx open <url>`. Else: open Slack + find `[treeitem]` with channel name in sidebar (channel names are user-defined).
-   ```bash
-   abx open https://app.slack.com
-   abx wait --load networkidle
-   abx snapshot -i
+2. Call:
+   ```
+   mcp__slack__read_channel({
+     "channel": "<channel_id>",
+     "limit": 20
+   })
    ```
 
-2. **Read snapshot**, find channel `[treeitem]`. Click + re-snapshot:
-   ```bash
-   abx click @eN
-   abx wait --load networkidle
-   abx snapshot -i
+3. Handle pagination — if response includes `has_more: true` with `next_cursor`, repeat once if `limit` not yet satisfied.
+
+4. Format Markdown:
+   ```
+   ## #<channel.name> (last N messages)
+
+   **<user.name>** · <timestamp>
+   <text>
+   └─ <reply_count> replies
    ```
 
-3. **Read channel snapshot**. Messages are `[article]` within Conversation region (locale-dependent name). Per article: author, timestamp, body, optional thread-reply link.
+   Omit the `└─` line when `reply_count == 0`.
 
-4. Extract last N messages. Format Markdown.
+## Common failure modes
 
-## Failure modes
-
-- **Channel `[treeitem]` not in sidebar** → user left or hidden — try direct URL `https://app.slack.com/client/<workspace>/<channel-id>`.
-- **No `[article]` elements** → empty channel.
+- **`channel_not_found`** → ID typo, or user not a member of a private channel; see `references/failure-modes.md` § Workspace visibility.
+- **`not_in_channel`** → channel exists but bot/user not joined; emit `ERR: not a member of <channel>`.
+- **Empty `messages: []`** → valid empty channel.
+- **Rate limit (429)** → see `references/failure-modes.md` § Rate limit.
 
 ## Notes
 
-- Scroll up + re-snapshot for older messages.
-- For thread replies → use `protocols/thread-read.md`.
+- For thread replies on a specific message → use `protocols/thread-read.md`.
+- The Slack `conversations.history` API returns messages newest-first; reverse client-side if chronological order is desired in output.
 
 ## Examples
 
-`channel = engineering, limit = 10` → last 10 messages.
+`channel = engineering, limit = 10` → last 10 messages as Markdown.
