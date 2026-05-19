@@ -1,13 +1,15 @@
 ---
 name: gws-setup
-description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets API), gws CLI bootstrap, issue #119 workaround, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。MVP 只處理個人 @gmail.com（macOS）；Google Workspace 企業帳號 Phase 2+。
+description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets API), gws CLI bootstrap, issue #119 workaround, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。v0.6.0: Workspace accounts auto-detected by gcloud active-account email domain (Internal app, no 7-day refresh limit); personal @gmail.com still supported via External + Testing path with 7-day refresh. macOS only.
 ---
 
 # gws-setup
 
 One-time machine setup so that `slides-builder` can call the gws
-CLI against Google Slides. MVP scope is personal `@gmail.com` accounts
-on macOS. Workspace accounts, Linux, and CI are Phase 2+.
+CLI against Google Slides. Supports both personal `@gmail.com` accounts
+(External + Testing, 7-day refresh) and Google Workspace org accounts
+(Internal, no 7-day limit) on macOS. Account type is auto-detected from
+the active gcloud account's email domain. Linux and CI are out of scope.
 
 ## When to use
 
@@ -16,8 +18,9 @@ Invoke this skill in any of these four situations:
 1. **First-time setup** — brand-new machine or brand-new Google
    account, no `~/.config/gws/` yet.
 2. **Expired credentials** — more than 7 days since the last
-   `gws auth` (Google's hard limit for External + Testing; see
-   [Every 7 days maintenance](#every-7-days-maintenance)).
+   `gws auth` on a personal `@gmail.com` account (Google's hard limit
+   for External + Testing; Workspace accounts do not hit this — see
+   [Every 7 days maintenance](#every-7-days-maintenance-personal-account-only)).
 3. **Auth error** — `slides-builder` returns exit code 10 / 16 /
    18, or stderr shows `401` / `403` / `invalid_scope` /
    `invalid_client`.
@@ -30,11 +33,11 @@ Invoke this skill in any of these four situations:
 
 | Item | Requirement | Notes |
 |---|---|---|
-| OS | macOS (darwin-arm64 or darwin-x86_64) | The only MVP-supported platform. Linux / WSL are Phase 2+. |
+| OS | macOS (darwin-arm64 or darwin-x86_64) | The only supported platform. Linux / WSL are out of scope. |
 | Shell | zsh or bash | The default macOS zsh is fine. |
 | Network tool | `curl` | Preinstalled on macOS. |
 | Browser | Chrome or Safari | Needed once for the GCP Console steps. |
-| Google account | Personal `@gmail.com` | Workspace accounts are Phase 2+. |
+| Google account | Personal `@gmail.com` OR Google Workspace org account | Auto-detected by gcloud active-account email domain; `--audience` flag overrides if needed. Workspace accounts skip the 7-day refresh limit. |
 | Credential store | macOS Keychain available (default) | If Keychain silently fails, the tooling falls back to a file backend. See [Workarounds](#workarounds). |
 
 **Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
@@ -76,16 +79,22 @@ bash scripts/gws/credential-check.sh
 Expected JSON output:
 
 ```json
-{"backend":"keychain","token_valid":true,"expires_in_sec":518400}
+{"backend":"keychain","token_valid":true,"expires_in_days":6,"account_type":"personal"}
 ```
+
+The `account_type` field is one of `personal` | `workspace` | `unknown`
+— derived from the active gcloud account's email domain (`unknown` is a
+defensive fallback when gcloud is missing or no active account is set).
 
 Branch on the result:
 
 | Result | Branch | Entry point |
 |---|---|---|
 | `credential-check.sh` not found, or `~/.cache/slides-toolkit/bin/` empty | Fresh machine | Setup flow step 1 |
-| `backend=keychain`, `token_valid=true`, `expires_in_sec > 0` | All green | Run `slides-builder` directly |
-| `backend=keychain`, `token_valid=false` or `expires_in_sec <= 0` | Expired | [Every 7 days maintenance](#every-7-days-maintenance) |
+| `backend=keychain`, `token_valid=true`, `expires_in_days > 0` | All green | Run `slides-builder` directly |
+| `backend=keychain`, `token_valid=false` or `expires_in_days <= 0`, `account_type=personal` | Expired (personal) | [Every 7 days maintenance](#every-7-days-maintenance-personal-account-only) |
+| `backend=keychain`, `token_valid=false` or `expires_in_days <= 0`, `account_type=workspace` | Expired (workspace — rare; no 7-day policy applies) | `bash scripts/gws/refresh-auth.sh` |
+| `account_type=unknown` | gcloud missing or no active account | Run `gcloud auth login`, then rerun state detection |
 | `backend=file` | Keychain silently failed, fell back to file | Continue, but read the Keychain note in [Workarounds](#workarounds) |
 | exit 18 | Keychain unreadable and file backend also failed | Rerun setup step 3 (download the Client Secret) and steps 8–9 |
 
@@ -206,10 +215,17 @@ Five hard rules (summarized):
 The same file contains the incident response playbook and the
 ASVS v5.0.0 L1 mapping (V1 / V13 / V14 / V16).
 
-## Every 7 days maintenance
+## Every 7 days maintenance (personal-account only)
+
+**Workspace accounts: no 7-day refresh limit applies; this section does
+not apply.** Internal apps issued by Workspace orgs are not subject to
+External + Testing's 7-day policy, so Workspace refresh tokens persist
+until explicitly revoked. Skip this section if `credential-check.sh`
+reports `account_type=workspace`.
 
 **Refresh tokens issued under External + Testing last 7 days** — this
-is a Google OAuth policy. Since the MVP intentionally does not pursue
+is a Google OAuth policy that applies to personal `@gmail.com` accounts.
+Since the personal-account path intentionally does not pursue
 production verification, there's no way around it.
 
 Every 7 days (or whenever you see exit 10 `token expired`):
@@ -252,7 +268,7 @@ on demand, rather than nagging you on every run.
 
 | Message / state | Root cause | Go to |
 |---|---|---|
-| `401 Unauthorized` | Token expired or never authed | [Every 7 days maintenance](#every-7-days-maintenance) |
+| `401 Unauthorized` | Token expired or never authed | [Every 7 days maintenance](#every-7-days-maintenance-personal-account-only) (personal) or `bash scripts/gws/refresh-auth.sh` (workspace) |
 | `403 Forbidden` + `access_denied` | Your Gmail is not in Test users | walkthrough §3 (add test user) |
 | `403 Forbidden` + `API not enabled` | Slides or Drive API not enabled | walkthrough §6 |
 | `invalid_scope` | gws built-in client rejects the scope on personal Gmail | [Issue #119 workaround](#issue-119--invalid_scope--invalid_client-on-personal-gmail) |
