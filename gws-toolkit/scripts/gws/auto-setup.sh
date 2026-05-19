@@ -514,7 +514,13 @@ EOF
 }
 
 step_5b_test_user() {
-  step 5 8 "5b — Test User"
+  step 5 8 "5b — Test User (account_type=${ACCOUNT_TYPE})"
+
+  if [[ "${ACCOUNT_TYPE}" == "workspace" ]]; then
+    step 5 8 "5b — Test User SKIPPED (Internal app — no Test User needed)"
+    return 0
+  fi
+
   local url="https://console.cloud.google.com/auth/audience?project=${PROJECT_ID}"
 
   cat >&2 <<EOF
