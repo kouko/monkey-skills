@@ -687,7 +687,7 @@ Per-script contracts：
 |---|---|
 | Args | none |
 | Stdin | none |
-| Stdout | `{"backend":"keychain"\|"file","token_valid":bool,"expires_in_sec":int}` |
+| Stdout | `{"backend":"keychain"\|"file","token_valid":bool,"expires_in_days":int,"account_type":"personal"\|"workspace"\|"unknown"}` (v0.6.0+ added `account_type` field; v0.5.x renamed `expires_in_sec` → `expires_in_days`) |
 | Behavior | 偵測 Keychain 可讀 → fallback `KEYRING_BACKEND=file`；讀 gws token 到期時間 |
 | Errors | exit 18 |
 
@@ -947,7 +947,7 @@ stderr 含 `could not be found` → 轉 file backend。
 非必要時段打斷。
 
 - `slides-builder` pre-flight check 跑 `credential-check.sh`
-- 若 `expires_in_sec < 0` → exit 10，stderr 印：
+- 若 `expires_in_days < 0` → exit 10，stderr 印：
   ```
   Your gws refresh token has expired (Google External + Testing policy:
   7-day lifetime). Please run: `gws auth` then retry.
@@ -1174,7 +1174,7 @@ checklist。
 | OPEN-1 | Slide plan 格式？JSON schema 嚴謹度？ | **JSON**；flat 寬鬆 `schema v1.2`（§4.1，Scope Refinement 後：移除 `backend_config.template_ref`、`layout_hint` 升為 Google Slides predefined layout enum）；以 `jq` 驗證必填欄位 + 型別 + enum；不引入 JSON Schema / Pydantic | YAML 會引入 yaml parser 依賴（多 runtime）；Markdown front-matter 對結構化 slides 陣列不自然；JSON 是 gws 本身溝通格式，shell + jq 是 MVP runtime minimalism 的唯一自然選擇。Phase 2 升 Pydantic 的 trigger 已定義在 PRODUCT-SPEC §3.5。v0.3 起 schema 全檔引用統一為 `v1.2`（§2.1 / §3.4 / §4.1 / §5.2 / §11）|
 | OPEN-2 | ~~`registry.md` 資料結構？~~ | **v0.3 退休**：PRODUCT-SPEC v0.3 §3.2 將 template-based workflow 列為 Non-Goal，`registry.md` 不再存在。此問題在 Phase 2+ trigger「Template-based workflow return」達成時會重開 | PRODUCT-SPEC v0.3 scope refinement 判定：個人使用閉環下 template 管理 overhead > 視覺品質邊際增益 |
 | OPEN-3 | gws 呼叫：單一 function vs 多 recipe script？ | **單一 wrapper + 多 recipe protocol**（§2.1、§4.2）。`scripts/gws/gws-wrap.sh` 是唯一 shell entry；`skills/slides-builder/protocols/recipe-*.md`（v0.3 起為 `create-presentation / create-slides / insert-text / insert-image` 四份）是各 recipe 的 intent spec；builder SKILL 按需 compose | 執行層統一 retry + env guard + error mapping（DRY）；recipe 層放 intent 讓知識可迭代而不動 shell（SOLID OCP） |
-| OPEN-4 | state detection 實作？ | `scripts/gws/credential-check.sh` 三分支（§4.2）：(1) `which gws` 有無 → 未裝 / 已裝；(2) `gws auth status` → 未登入 / 已登入；(3) token `expires_in_sec` 比對 → 有效 / 過期。每種狀態回對應 JSON + exit code 供 `gws-setup` 分支 | State machine 顯式化；一次性線性 10 步違反 PRODUCT-SPEC §4.4 principle 5（state-aware onboarding） |
+| OPEN-4 | state detection 實作？ | `scripts/gws/credential-check.sh` 三分支（§4.2）：(1) `which gws` 有無 → 未裝 / 已裝；(2) `gws auth status` → 未登入 / 已登入；(3) token `expires_in_days` 比對 → 有效 / 過期。每種狀態回對應 JSON + exit code 供 `gws-setup` 分支 | State machine 顯式化；一次性線性 10 步違反 PRODUCT-SPEC §4.4 principle 5（state-aware onboarding） |
 | OPEN-5 | jq binary 自抓策略？（integrity 面向 v0.3 退休） | **來源 + version pin 部分保留**：從 `github.com/jqlang/jq/releases` pin `jq-1.7.1+`；放 `~/.cache/slides-toolkit/bin/jq`。**Integrity 改由 HTTPS + `curl -f` + URL pin + 官方 org 信任邊界保證**，不做 SHA-256 shasum 比對 | jqlang 是官方 fork（2023 takeover after upstream stagnation）；SHA-256 改由 Phase 2+ trigger 恢復（publish / CI / supply-chain incident；PRODUCT-SPEC v0.3 §3.5） |
 | OPEN-6 | gws binary 自抓 vs 手動裝？（integrity 面向 v0.3 退休；v0.3.1 auto-refresh） | **由 `gws-setup` 自動抓**（§2.3）；URL 預設 `/releases/latest/download/`，GitHub 原生 302 redirect + 旁呼 API 解析實際 tag 寫入 `.version`；**TTL 30 天自動重抓**（env `SLIDES_TOOLKIT_BINARY_TTL_DAYS` 客製；失敗有安全網保留既有 binary）；**`GWS_VERSION=v0.X.Y` env 可 override 停用 auto-refresh**（用於 upstream breaking change 救火） | 「純 shell + curl + 瀏覽器」的 runtime minimalism（PRODUCT-SPEC §4.4 principle 1）；手動裝違反 KR2（≤ 20 分鐘）；官方 release 是 Rust 靜態 binary，自抓成本極低。v0.3.1 消掉最後一個 `GWS_VERSION` TODO；auto-refresh 讓 binary 跟上 upstream bugfix 但不強制即時（TTL + pin override 提供彈性）。Integrity 改由 HTTPS + `curl -f` 保證（同 OPEN-5） |
 | OPEN-7 | Error handling：structured JSON vs stderr+exit code？ | **Hybrid**：exit code 為 machine signal（§4.2 表），stderr 為 structured JSON + 人讀訊息，stdout 保留給 success JSON | Unix convention（stdout = result, stderr = diag）；Claude 讀 stderr 做 TaskUpdate；exit code 不撞 `sysexits.h` 常見值（1/2/64–78） |

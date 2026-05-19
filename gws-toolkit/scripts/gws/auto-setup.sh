@@ -97,10 +97,14 @@ readonly CLIENT_SECRET_FRESHNESS_SEC=300
 # --- 旗標 -------------------------------------------------------------------
 DRY_RUN=0
 FORCE_REINSTALL=0
+# --audience override（空字串 = 走自動偵測；internal/external = 強制覆寫）
+AUDIENCE_OVERRIDE=""
 
 # 內部 state（由 detect / ensure functions 填入，供 emit_result 使用）
 PROJECT_ID=""
 ACCOUNT=""
+# 帳號類型（"personal" | "workspace"）— 由 detect_account_type 填入
+ACCOUNT_TYPE=""
 START_EPOCH=0
 
 # --- helper：結構化 error 輸出後 exit ----------------------------------------
@@ -140,9 +144,34 @@ parse_args() {
     case "$1" in
       --dry-run)          DRY_RUN=1; shift ;;
       --force-reinstall)  FORCE_REINSTALL=1; shift ;;
+      --audience=internal|--audience=external)
+        AUDIENCE_OVERRIDE="${1#--audience=}"
+        shift
+        ;;
+      --audience=*)
+        die_json 1 "invalid --audience value: ${1#--audience=} (expected internal|external)"
+        ;;
+      --audience)
+        # support `--audience internal` (space-separated) form too
+        if [[ $# -lt 2 ]]; then
+          die_json 1 "--audience requires a value (internal|external)"
+        fi
+        case "$2" in
+          internal|external) AUDIENCE_OVERRIDE="$2"; shift 2 ;;
+          *) die_json 1 "invalid --audience value: $2 (expected internal|external)" ;;
+        esac
+        ;;
       -h|--help)
         cat <<'USAGE' >&2
-Usage: auto-setup.sh [--dry-run] [--force-reinstall]
+Usage: auto-setup.sh [--dry-run] [--force-reinstall] [--audience=internal|external]
+
+Options:
+  --dry-run                  Print the plan only; no gcloud/gws commands.
+  --force-reinstall          Re-run gws auth login even if already authed.
+  --audience=internal        Force Workspace (internal) account-type branch.
+  --audience=external        Force personal (external) account-type branch.
+                             Default: auto-detect from the active gcloud
+                             account domain (gmail.com → personal).
 
 Env:
   SLIDES_TOOLKIT_PROJECT_ID    GCP project id (default: slides-toolkit-<YYMMDD>)
@@ -240,6 +269,42 @@ ensure_gcloud_auth() {
     --format='value(account)' 2>/dev/null || printf '')"
   [[ -n "${ACCOUNT}" ]] \
     || die_json 10 "no active account after gcloud auth login"
+}
+
+# --- step 2.5：判定 account_type（personal / workspace） --------------------
+# 委派順序：明確的 --audience 旗標優先（internal → workspace，external →
+# personal），否則依 $ACCOUNT 的網域自動推斷。gmail.com / googlemail.com
+# 視為 personal；其餘網域視為 workspace（Workspace 通常使用自有網域）。
+#
+# 注意：本任務只填 ACCOUNT_TYPE 全域變數；step 5a/5b 的分支邏輯由
+# 後續任務 (T2/T3) 連接。本步驟僅為 plumbing。
+detect_account_type() {
+  if [[ -n "${AUDIENCE_OVERRIDE}" ]]; then
+    case "${AUDIENCE_OVERRIDE}" in
+      internal) ACCOUNT_TYPE="workspace" ;;
+      external) ACCOUNT_TYPE="personal" ;;
+      *)
+        # parse_args 已驗證，但 belt-and-suspenders
+        die_json 1 "internal: unexpected AUDIENCE_OVERRIDE=${AUDIENCE_OVERRIDE}"
+        ;;
+    esac
+    step 2.5 8 "detected account_type=${ACCOUNT_TYPE} (forced via --audience=${AUDIENCE_OVERRIDE})"
+    return
+  fi
+
+  # 從 $ACCOUNT 抽 domain 部分（@ 之後），轉小寫做比對
+  local domain="${ACCOUNT##*@}"
+  domain="$(printf '%s' "${domain}" | tr '[:upper:]' '[:lower:]')"
+
+  case "${domain}" in
+    gmail.com|googlemail.com)
+      ACCOUNT_TYPE="personal"
+      ;;
+    *)
+      ACCOUNT_TYPE="workspace"
+      ;;
+  esac
+  step 2.5 8 "detected account_type=${ACCOUNT_TYPE} (from account domain=${domain})"
 }
 
 # --- step 3a：決定 project id -----------------------------------------------
@@ -346,10 +411,59 @@ prompt_continue() {
 }
 
 step_5a_branding() {
-  step 5 8 "5a — OAuth Consent Screen / Branding"
+  step 5 8 "5a — OAuth Consent Screen / Branding (account_type=${ACCOUNT_TYPE})"
   local url="https://console.cloud.google.com/auth/overview?project=${PROJECT_ID}"
 
-  cat >&2 <<EOF
+  if [[ "${ACCOUNT_TYPE}" == "workspace" ]]; then
+    cat >&2 <<EOF
+
+  📋 5a — Google Auth Platform initial setup (4-stage wizard, Workspace/Internal)
+     URL: ${url}
+
+     For a brand-new project, the Overview page shows
+     "Google Auth Platform not configured yet" with a single
+     [Get started] button. Branding / Audience / Contact are all
+     filled inside this one wizard.
+
+     If you see [Get started]:
+       1. Click [Get started] — opens the "Project configuration" wizard
+
+       Stage 1/4 — App Information
+         • App name: gws-toolkit (or your choice)
+         • User support email: ${ACCOUNT:-your@workspace-domain.com}
+         → Click [Next]
+
+       Stage 2/4 — Audience
+         • Select [Internal]   ✅ Internal is the right choice when
+           the active gcloud account belongs to a Google Workspace org.
+           Internal apps:
+             - do NOT require Test Users (5b is auto-skipped)
+             - do NOT hit the 7-day refresh-token expiry that External
+               + Testing imposes
+             - do NOT require Google's scope review for sensitive /
+               restricted scopes (still subject to org admin policy)
+         → Click [Next]
+
+       Stage 3/4 — Contact Information
+         • Email addresses: ${ACCOUNT:-your@workspace-domain.com} (usually pre-filled)
+         → Click [Next]
+
+       Stage 4/4 — Finish
+         • Tick: "I agree to the Google API Services: User Data Policy"
+         → Click [Continue]
+         → Click [Create]
+         → Wait for "OAuth configuration created!" toast
+
+     If the Auth Platform is already configured (no [Get started]
+     button — you see Metrics / Project Checkup directly): no action
+     needed; press ENTER to continue.
+
+     Note: Internal audience means anyone in your Workspace org can
+     use the app without being added as a Test User; 5b will be
+     skipped automatically.
+EOF
+  else
+    cat >&2 <<EOF
 
   📋 5a — Google Auth Platform initial setup (4-stage wizard)
      URL: ${url}
@@ -390,6 +504,7 @@ step_5a_branding() {
      Note: this wizard sets Audience type to External but does NOT
      add Test Users. 5b adds the Test User next.
 EOF
+  fi
   if (( DRY_RUN == 1 )); then
     dry_echo "open ${url}"
     return
@@ -399,7 +514,13 @@ EOF
 }
 
 step_5b_test_user() {
-  step 5 8 "5b — Test User"
+  step 5 8 "5b — Test User (account_type=${ACCOUNT_TYPE})"
+
+  if [[ "${ACCOUNT_TYPE}" == "workspace" ]]; then
+    step 5 8 "5b — Test User SKIPPED (Internal app — no Test User needed)"
+    return 0
+  fi
+
   local url="https://console.cloud.google.com/auth/audience?project=${PROJECT_ID}"
 
   cat >&2 <<EOF
@@ -683,16 +804,21 @@ emit_result() {
   local account_out="${ACCOUNT}"
   [[ -z "${account_out}" ]] && account_out="<unknown>"
 
+  local account_type_out="${ACCOUNT_TYPE}"
+  [[ -z "${account_type_out}" ]] && account_type_out="<unknown>"
+
   jq -n \
     --arg status "success" \
     --arg project_id "${PROJECT_ID}" \
     --arg account "${account_out}" \
+    --arg account_type "${account_type_out}" \
     --argjson elapsed "${elapsed}" \
     --argjson dry_run "$([[ ${DRY_RUN} -eq 1 ]] && printf 'true' || printf 'false')" \
     '{
        status: $status,
        project_id: $project_id,
        account: $account,
+       account_type: $account_type,
        scopes: ["presentations", "drive", "documents", "spreadsheets"],
        elapsed_sec: $elapsed,
        dry_run: $dry_run
@@ -725,6 +851,7 @@ main() {
 
   ensure_gcloud                  # step 1
   ensure_gcloud_auth             # step 2
+  detect_account_type            # step 2.5 (plumbing — branch wiring lands in T2/T3)
   resolve_project_id
   ensure_project                 # step 3
   ensure_apis                    # step 4
