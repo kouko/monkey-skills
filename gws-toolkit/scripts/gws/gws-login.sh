@@ -4,7 +4,7 @@ set -euo pipefail
 # =============================================================================
 # gws-login.sh — user-facing OAuth login (with --switch for account swap)
 # -----------------------------------------------------------------------------
-# Wraps `gws auth login --scopes=...` (4-API scope set) with two
+# Wraps `gws auth login --scopes=...` (6-API scope set) with two
 # additions over a raw gws call:
 #   1. Idempotent — if already authed (`gws auth status` reports
 #      auth_method=oauth2 + token_valid=true), exits 0 without
@@ -28,8 +28,8 @@ set -euo pipefail
 #
 # Env:
 #   GWS_TOOLKIT_SCOPES    Override scope set (full URLs, comma-separated).
-#                         Default: 4-API set (presentations + drive +
-#                         documents + spreadsheets).
+#                         Default: 6-API set (presentations + drive +
+#                         documents + spreadsheets + gmail + calendar).
 #
 # Pre-flight:
 #   - ~/.config/gws/client_secret.json must exist
@@ -40,7 +40,7 @@ set -euo pipefail
 # Stdout: JSON
 #   {"status":"success","action":"login"|"already_authed"|"switched",
 #    "user":"<email>"|null,
-#    "scopes":["presentations","drive","documents","spreadsheets"],
+#    "scopes":["presentations","drive","documents","spreadsheets","gmail","calendar"],
 #    "dry_run":bool}
 # Stderr: human-readable progress.
 #
@@ -63,7 +63,9 @@ readonly SLIDES_SCOPE="https://www.googleapis.com/auth/presentations"
 readonly DRIVE_SCOPE="https://www.googleapis.com/auth/drive"
 readonly DOCS_SCOPE="https://www.googleapis.com/auth/documents"
 readonly SHEETS_SCOPE="https://www.googleapis.com/auth/spreadsheets"
-readonly DEFAULT_SCOPES="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE}"
+readonly GMAIL_SCOPE="https://www.googleapis.com/auth/gmail.readonly"
+readonly CALENDAR_SCOPE="https://www.googleapis.com/auth/calendar.readonly"
+readonly DEFAULT_SCOPES="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE},${GMAIL_SCOPE},${CALENDAR_SCOPE}"
 SCOPES="${GWS_TOOLKIT_SCOPES:-${DEFAULT_SCOPES}}"
 
 DRY_RUN=0
@@ -92,8 +94,8 @@ parse_args() {
         cat <<'USAGE' >&2
 Usage: gws-login.sh [--switch] [--dry-run]
 
-OAuth login via `gws auth login` with the 4-API scope set
-(presentations, drive, documents, spreadsheets). Idempotent — skips
+OAuth login via `gws auth login` with the 6-API scope set
+(presentations, drive, documents, spreadsheets, gmail, calendar). Idempotent — skips
 the OAuth flow if already authed, unless --switch is given.
 
 Args:
@@ -105,7 +107,7 @@ Args:
   -h|--help    Print this help.
 
 Env:
-  GWS_TOOLKIT_SCOPES   Override scopes (default: 4 APIs as full URLs,
+  GWS_TOOLKIT_SCOPES   Override scopes (default: 6 APIs as full URLs,
                        comma-separated).
 
 Exit codes:
@@ -149,7 +151,7 @@ emit_result() {
          status: $status,
          action: $action,
          user: $user,
-         scopes: ["presentations", "drive", "documents", "spreadsheets"],
+         scopes: ["presentations", "drive", "documents", "spreadsheets", "gmail", "calendar"],
          dry_run: $dry
        }'
   else
@@ -161,7 +163,7 @@ emit_result() {
          status: $status,
          action: $action,
          user: null,
-         scopes: ["presentations", "drive", "documents", "spreadsheets"],
+         scopes: ["presentations", "drive", "documents", "spreadsheets", "gmail", "calendar"],
          dry_run: $dry
        }'
   fi
