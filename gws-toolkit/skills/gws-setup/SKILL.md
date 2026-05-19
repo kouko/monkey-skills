@@ -54,7 +54,7 @@ binaries are fetched by `scripts/gws/bootstrap.sh` into
 │ State detection             │   ← always run this first
 │ credential-check.sh         │
 └──────────┬──────────────────┘
-           │ JSON: {backend, token_valid, expires_in_sec}
+           │ JSON: {backend, token_valid, expires_in_days, account_type}
            ▼
  ┌─────────┴──────────────┬──────────────────────┬─────────────────┐
  │ binary missing          │ binary present / not  │ token expired    │ all green

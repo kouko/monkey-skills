@@ -73,9 +73,10 @@ done
 scripts/gws/credential-check.sh
 ```
 
-回傳 `{"backend":"...","token_valid":true,"expires_in_sec":N}` 且 `N > 0`。
+回傳 `{"backend":"...","token_valid":true,"expires_in_days":N,"account_type":"personal"|"workspace"|"unknown"}` 且 `N > 0`。
 
-- `token_valid == false` 或 `expires_in_sec <= 0` → **exit 10** + hint：`Your gws refresh token has expired (Google External + Testing policy: 7-day lifetime). Run: gws auth login`
+- `token_valid == false` 或 `expires_in_days <= 0` → **exit 10** + hint：`Your gws refresh token has expired (Google External + Testing policy applies to personal accounts; Workspace Internal apps don't hit this). Run: bash scripts/gws/refresh-auth.sh`
+- `account_type == "workspace"` → 7-day expiry doesn't apply; token validity check should still pass but the "refresh every 7 days" expectation is personal-only
 - Keychain + file backend 都失敗 → **exit 18**
 
 ## 6. [ ] 所需 scope 已 grant（`presentations` + `drive` + `documents` + `spreadsheets`）
