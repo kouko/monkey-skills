@@ -32,7 +32,7 @@ Phase 2+, trigger-gated.
 
 | Aspect | Value |
 |---|---|
-| Release | `0.5.0` (see [`CHANGELOG.md`](CHANGELOG.md)) |
+| Release | `0.7.0` (see [`CHANGELOG.md`](CHANGELOG.md)) |
 | Backends | `google-slides` (MVP) · `html` / `pptx` / `marp` Phase 2+ trigger-gated |
 | Platform | macOS (darwin-arm64 / darwin-x86_64) |
 | Account scope | Personal Google account (`@gmail.com`); Workspace accounts Phase 2+ |
@@ -227,7 +227,7 @@ format.
               gws CLI · ~/.cache binaries
                                   ▼
                   Google Workspace APIs
-              (Slides v1 / Drive v3 / Docs v1 / Sheets v4)
+              (Slides v1 / Drive v3 / Docs v1 / Sheets v4 / Gmail v1 / Calendar v3)
                                   ▼
                   Vendored upstream skills as
                   per-API method reference:
