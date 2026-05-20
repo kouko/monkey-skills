@@ -39,6 +39,124 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.7.0] - 2026-05-19
+
+Gmail + Calendar absorption — vendor 4 new upstream skills, add 2
+restricted-tier OAuth scopes (gmail + calendar), and enable 2 Workspace
+APIs. No write-side user-facing paths ship in this release; OAuth grant
+is full read-write (mirroring the v0.4.0 Drive precedent) while code
+paths stay read-only until write JTBDs land in v0.7.x.
+
+### Added
+
+- **`skills/gws-gmail/SKILL.md`** (Part 1 T5 / commit `5031eb4`) —
+  vendored upstream `gws-gmail` skill; covers compose / reply / forward
+  / move / delete / label operations. Vendored via `sync-upstream-skills.sh`;
+  Apache-2.0 upstream.
+- **`skills/gws-gmail-read/SKILL.md`** (Part 1 T5 / `5031eb4`) —
+  vendored upstream `gws-gmail-read` skill; covers list / read / search /
+  thread / attachment operations. Read-path counterpart to `gws-gmail`.
+- **`skills/gws-calendar/SKILL.md`** (Part 1 T5 / `5031eb4`) —
+  vendored upstream `gws-calendar` skill; covers event create / update /
+  delete / share operations.
+- **`skills/gws-calendar-agenda/SKILL.md`** (Part 1 T5 / `5031eb4`) —
+  vendored upstream `gws-calendar-agenda` skill; covers event list /
+  search / free-busy / agenda-view operations. Read-path counterpart to
+  `gws-calendar`.
+- **Gmail OAuth scope** (`https://www.googleapis.com/auth/gmail` — full
+  read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
+  (Part 1 T1 / `1d4b950`). The org-policy probe at
+  `myaccount.google.com/permissions` showed macOS Mail already holds
+  the broader `https://mail.google.com/` scope at the iChef org level;
+  the narrower API scope we request is therefore allowed.
+- **Calendar OAuth scope** (`https://www.googleapis.com/auth/calendar` —
+  full read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
+  (Part 1 T1 / `1d4b950`).
+- **`gmail.googleapis.com`** enabled in `scripts/gws/auto-setup.sh`
+  Workspace API enable step (Part 1 T1 / `1d4b950`).
+- **`calendar.googleapis.com`** enabled in `scripts/gws/auto-setup.sh`
+  Workspace API enable step (Part 1 T1 / `1d4b950`).
+
+### Changed
+
+- **`scripts/gws/auto-setup.sh`** (Part 1 T1 / `1d4b950`) — added
+  Gmail + Calendar OAuth scopes to `OAUTH_SCOPES` array; added
+  `gmail.googleapis.com` + `calendar.googleapis.com` to the API enable
+  step; refreshed Phase 1 banner to list 6 APIs.
+- **`scripts/gws/refresh-auth.sh`** (Part 1 T2 / `8e5260d`) — updated
+  scope list to include gmail + calendar scopes so re-auth flows grant
+  all 6 scopes (not just the original 4).
+- **`scripts/gws/gws-login.sh`** (Part 1 T3 / `b94dc6b` + round-2 fix
+  `5169c0b`) — updated scope enumeration in login flow; round-2 fix
+  corrected a missed reference in the scope-list construction.
+- **`UPSTREAM_GWS_VERSION` + `sync-upstream-skills.sh`** (Part 1 T4 /
+  `756caf4`) — updated upstream pin comment to document the 4 newly
+  vendored skills; `sync-upstream-skills.sh` updated with the new skill
+  names so future upstream syncs pull all 9 vendored skills.
+- **Vendored SKILL.md files × 9** (Part 1 T5 / `5031eb4`) — 4 new
+  (`gws-gmail`, `gws-gmail-read`, `gws-calendar`, `gws-calendar-agenda`)
+  + 5 metadata-refreshed (`gws-shared`, `gws-drive`, `gws-docs`,
+  `gws-slides`, `gws-sheets`) via sync script run against
+  `v0.22.5 / 705fb0ec`.
+- **`commands/gws-setup.md`** (Part 2 T1 / `3af41c2`) — updated
+  prerequisite list and confirmation checklist to surface Gmail +
+  Calendar as newly covered services.
+- **`skills/gws-setup/SKILL.md`** (Part 2 T2 / `2d249d9`) — updated
+  capabilities narrative and service enumeration; setup walkthrough now
+  references 6 enabled APIs.
+- **`skills/using-gws-toolkit/SKILL.md` routing table** (Part 2 T3 /
+  `be8ebe6`) — Gmail + Calendar skills added to the skill-dispatch
+  table; routing description updated to surface gws-gmail-read and
+  gws-calendar-agenda as the read-path entry points.
+- **`README.md` + `TECH-SPEC.md` + `UPSTREAM_GWS_VERSION` header**
+  (Part 2 T4 / `9b0e9bf`) — README banner + service enumeration +
+  ASCII architecture diagram updated to include Gmail + Calendar;
+  TECH-SPEC.md vendored-skills table updated (4 new rows); upstream
+  pin header comment refreshed.
+- **`plugin.json`** (this commit) — `version` bumped `0.6.0` → `0.7.0`;
+  `description` field extended with `/ gmail / calendar`; `keywords`
+  array appended with `"gmail"` and `"google-calendar"`.
+- **`README.md` Status table Release column** (this commit) — bumped
+  from `0.5.0` (stale) to `0.7.0` to match `plugin.json`.
+- **`README.md` Architecture ASCII diagram** (this commit) — Workspace
+  APIs node parenthetical extended from
+  `(Slides v1 / Drive v3 / Docs v1 / Sheets v4)` to
+  `(Slides v1 / Drive v3 / Docs v1 / Sheets v4 / Gmail v1 / Calendar v3)`.
+
+### Notes
+
+- **Full r/w scope rationale** — App-layer least-privilege via
+  `safe-delete.sh` replaces scope-boundary enforcement (same pattern
+  as the v0.4.0 Drive decision). OAuth grant is full read-write;
+  code paths stay read-only this release; write-side wrappers ship in
+  v0.7.x when first write JTBD lands. Gmail/Calendar extend the same
+  contract: OAuth grant is full (`https://www.googleapis.com/auth/gmail`
+  + `https://www.googleapis.com/auth/calendar`), but no compose / insert
+  user-facing path ships until a confirmed write JTBD is scoped.
+- **iChef Workspace admin-policy probe** — macOS Mail already holds
+  `https://mail.google.com/` scope per `myaccount.google.com/permissions`
+  (confirmed full Gmail grant unblocked for iChef org). Calendar scope
+  follows the same org policy; no admin unblock required.
+- **Upstream pin held at `v0.22.5 / 705fb0ec`** — additive vendoring
+  only; no upstream version bump in this PR per brief §Out of Scope.
+  5 previously vendored skills were metadata-refreshed from the same
+  pin; no behavior changes expected.
+
+### Open follow-ups (v0.7.x backlog)
+
+- **`find-free-slots`** + **`shared-calendar-read`** — no native
+  upstream equivalent in `v0.22.5`; would require toolkit-original
+  wrapper skills when the JTBD is confirmed.
+- **Write-side vendored skills** (`gws-gmail-send` / `gws-calendar-insert`)
+  + **app-layer safety wrappers** (`gmail-confirm-send.sh` /
+  `calendar-confirm-insert.sh`, analogous to `safe-delete.sh`) — ship
+  when first write JTBD lands (compose email / insert event); gate on
+  user-confirmable dry-run shape before live send/insert.
+- **bats-core test infrastructure** — carried from `[Unreleased]`
+  backlog; highest ROI on `safe-delete.sh` arg parsing + `gws-wrap.sh`
+  error-code mapping. Unblocked now that Phase 1 + Phase 2 surfaces are
+  stable.
+
 ## [0.6.0] - 2026-05-19
 
 Google Workspace account support — auto-detect by gcloud account email

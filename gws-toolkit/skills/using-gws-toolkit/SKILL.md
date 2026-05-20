@@ -26,6 +26,8 @@ Entry router for the `slides-toolkit` plugin. Inspect the user's intent, read th
 | Setup / auth (初期設定 / 初次設定) — EN: "first time", "401 / 403 / invalid_scope", "auth failed", "gws not installed", "token expired". JP: 「初めて使う」「認証エラー」「gws まだ入れてない」「token 切れ」. ZH: 「第一次用」「auth 失敗」「gws 還沒裝」「token 過期」 | `gws-setup` |
 | Deck generation (デッキ生成 / 生成 deck) — EN: "generate the deck", "turn slide-plan into Google Slides", "export", "run pipeline". JP: 「deck を作る」「slide-plan を Google Slides に」「エクスポート」「パイプライン実行」. ZH: 「生成 deck」「把 slide-plan 變 Google Slides」「匯出」「執行 pipeline」 | `slides-builder` |
 | Low-level API learning / debugging (API 学習・デバッグ / API 學習・除錯) — EN: "how do I call this op", "debug a Slides error", "learn batchUpdate", "tweak a recipe". JP: 「この API の使い方」「Slides のエラーをデバッグ」「batchUpdate を学ぶ」「recipe を改造」. ZH: 「單一 API op 怎麼打」「debug Slides 錯誤」「學 batchUpdate」「想改 recipe」 | upstream `gws-slides` skill (raw API method discovery) or `slides-builder` (the 4 bundled recipes — composition patterns, error mapping) |
+| Email management (メール管理 / 郵件管理) — EN: "read my inbox", "find an email", "list messages", "inbox triage". JP: 「メール検索」「インボックス」「Gmail を読む」「スレッド」. ZH: 「找信件」「收信」「Gmail 信件」「列出郵件」 | `gws-gmail` (parent API reference) + `gws-gmail-read` (general read recipes for messages / threads / labels / search) |
+| Calendar / scheduling (カレンダー・スケジューリング / 行事曆・安排) — EN: "today's agenda", "find a free slot", "schedule a meeting", "list events". JP: 「予定」「カレンダー」「空き時間」「アジェンダ」. ZH: 「行事曆」「今天行程」「找空檔」「找會議時間」 | `gws-calendar` (parent API reference) + `gws-calendar-agenda` (agenda-view recipes) |
 | Vague or "make a simple deck" with no explicit target | Default `target: "google-slides"` (MVP's only backend); continue through setup → builder. |
 
 **Example A** (design consultation):

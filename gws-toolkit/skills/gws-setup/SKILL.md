@@ -1,6 +1,6 @@
 ---
 name: gws-setup
-description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets API), gws CLI bootstrap, issue #119 workaround, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。v0.6.0: Workspace accounts auto-detected by gcloud active-account email domain (Internal app, no 7-day refresh limit); personal @gmail.com still supported via External + Testing path with 7-day refresh. macOS only.
+description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets + Gmail + Calendar API), gws CLI bootstrap, issue #119 workaround, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。v0.6.0: Workspace accounts auto-detected by gcloud active-account email domain (Internal app, no 7-day refresh limit); personal @gmail.com still supported via External + Testing path with 7-day refresh. macOS only.
 ---
 
 # gws-setup
@@ -106,7 +106,7 @@ Two paths, **same end state**. Pick one:
 
 | Path | What it is | When to pick |
 |---|---|---|
-| **Path A (recommended)** — `/gws-setup` slash command | Runs `scripts/gws/auto-setup.sh` end-to-end: install gcloud → `gcloud auth login` → create GCP project → enable 4 APIs → guided OAuth Consent + Client → install credentials → bootstrap binaries → `gws auth login`. Idempotent. | Default for first-time setup; ~6-8 min first run, ~30 sec when re-run on a set-up machine. |
+| **Path A (recommended)** — `/gws-setup` slash command | Runs `scripts/gws/auto-setup.sh` end-to-end: install gcloud → `gcloud auth login` → create GCP project → enable 6 APIs → guided OAuth Consent + Client → install credentials → bootstrap binaries → `gws auth login`. Idempotent. | Default for first-time setup; ~6-8 min first run, ~30 sec when re-run on a set-up machine. |
 | **Path B (manual fallback)** — 10-step browser walkthrough | Do everything yourself in the GCP Console; SKILL surfaces the table below. | Debugging, partial state recovery, or environments where the script can't run (no TTY, custom GCP setup, ...). |
 
 ### Path A — `/gws-setup` (recommended)
@@ -139,7 +139,7 @@ Console, then 4 local steps.
 | 6 | Browser | Enable APIs: Google Slides API + Google Drive API | walkthrough §6 |
 | 7 | Terminal | `bash scripts/gws/bootstrap.sh` (installs gws + jq) | walkthrough §7 |
 | 8 | Terminal | Export the issue #119 env vars (see below) | `protocols/issue-119-workaround.md` |
-| 9 | Terminal | `gws auth login --scopes=presentations,drive,documents,spreadsheets` (**never use the `recommended` preset**) | walkthrough §9 |
+| 9 | Terminal | `gws auth login --scopes=presentations,drive,documents,spreadsheets,gmail,calendar` (**never use the `recommended` preset**) | walkthrough §9 |
 | 10 | Browser | Consent screen → Advanced → Go to app (unsafe) → Allow | walkthrough §10 |
 
 **Done when**:
@@ -247,8 +247,8 @@ intent). It:
 
 1. Sources `~/.config/gws/env.sh` (issue #119 workaround env vars must
    be present before `gws auth login`).
-2. Runs `gws auth login --scopes=presentations,drive,documents,spreadsheets`
-   (the 4-API scope set; matches `auto-setup.sh` step 8 and
+2. Runs `gws auth login --scopes=presentations,drive,documents,spreadsheets,gmail,calendar`
+   (the 6-API scope set; matches `auto-setup.sh` step 8 and
    `slides-builder` runtime needs).
 3. Opens the browser for consent; total wall time ~10 seconds end-to-end.
 
@@ -270,6 +270,7 @@ on demand, rather than nagging you on every run.
 |---|---|---|
 | `401 Unauthorized` | Token expired or never authed | [Every 7 days maintenance](#every-7-days-maintenance-personal-account-only) (personal) or `bash scripts/gws/refresh-auth.sh` (workspace) |
 | `403 Forbidden` + `access_denied` | Your Gmail is not in Test users | walkthrough §3 (add test user) |
+| `403 Forbidden` + `access_denied` (Workspace) | Your Workspace admin restricts Gmail/Calendar OAuth scopes | Escalate to your Workspace admin; see brief §Axis 4 Q3 |
 | `403 Forbidden` + `API not enabled` | Slides or Drive API not enabled | walkthrough §6 |
 | `invalid_scope` | gws built-in client rejects the scope on personal Gmail | [Issue #119 workaround](#issue-119--invalid_scope--invalid_client-on-personal-gmail) |
 | `invalid_client` | Client ID / Secret not exported, or `client_secret.json` missing | walkthrough §5, §8 |
