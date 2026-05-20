@@ -44,21 +44,111 @@ aliases:                            # conditional MUST — see Field rules
 
 ### Reference page body structure
 
-Reference pages (`wiki/references/*.md`) use a different body shape from entity/concept pages. They have **3 required sections** in this order:
+Reference pages (`wiki/references/*.md`) use a different body shape from entity/concept pages. They have **3 required sections + 1 optional section** in this order:
 
 ```markdown
 ## Source
 
 [[<source-basename>]]
 
-## Source Excerpt / TL;DR
+## TL;DR
 
-2–4 sentence neutral description of what the source argues / measures / claims.
+- bullet 1 (sentence fragment — main topic / claim / context)
+- bullet 2
+- ...
+
+## Detailed Extract  <!-- MAY — include when source has substance worth preserving -->
+
+### Key Claims
+- ...
+
+### Methodology
+- ...
 
 ## Key Contributions
 
-- Bullet list — what specifically this source added to the wiki
+- **[[target-wiki-page]]** — what this source added to the wiki
 - Cite which target pages were updated and how
+```
+
+#### `## TL;DR` format
+
+**Length**: 3–7 bullets, source-thickness driven:
+- Thin source (3-min tutorial video, 1-page forum post): 3 bullets
+- Medium source (10-min explainer, 5-page blog article): 4–5 bullets
+- Substantive source (long video, paper, chapter): 6–7 bullets
+
+**Style**: sentence-fragment style — browseable scan-friendly. Avoid full multi-clause prose. No nested sub-bullets (keep TL;DR shallow; nesting goes in Detailed Extract).
+
+**Content per bullet**: any of {主題 / 主張 / 範例 / context / 來源頻道脈絡 / 注意事項}. LLM picks per source what's most informative.
+
+**Example — thin source** (4m21s tutorial video):
+
+```markdown
+## TL;DR
+
+- 主題：Prop Firm (Proprietary Trading Firm) 攻略入門
+- 評測對象：FundedNext Futures — 期貨自營交易公司
+- 涵蓋面：交易帳戶評估 / 提領限制 / 風險管理 / 客戶服務品質
+- 格式：短片快速教學 (4m21s)
+- 頻道脈絡：Little Wolf channel 的「Prop Firm」議題首見
+```
+
+**Example — substantive source** (industrial design analysis video):
+
+```markdown
+## TL;DR
+
+- John Mauriello (CCA adjunct, Design-Theory channel) 解構 Shinola × Astro Studios Canfield headphones
+- 核心主張：design is a language — 厚重 joint 結構 + 皮革金屬材質 + 拋光鉻 + 外露縫線 → encode "Detroit American craftsmanship" 定位
+- 方法論：three-pass reading (silhouette/proportion → materials/contrast → manufacturing traces)
+- 場景：CCA design theory 課堂 deconstruction 練習
+```
+
+#### `## Detailed Extract` format (MAY — advisory / strongly encouraged when source has substance)
+
+**Severity**: MAY. LLM judges per-source whether to include. Skip when source is thin (short video, single forum post). Include when source has meaningful detail (structure, verbatim quotes, methodology, examples) beyond what TL;DR captures.
+
+**Sub-heading vocabulary** (suggested, not enforced; LLM picks 2–4 per source from this list OR invents new ones):
+- `### Key Claims` — concrete assertions made by source
+- `### Examples / Cases` — illustrative case studies or worked examples
+- `### Notable Quotes` — verbatim excerpts (with `^[from §X / timestamp HH:MM]` location markers when available)
+- `### Cross-references` — other works / people / concepts cited by source
+- `### Methodology` — how source produced claims (research method, data, analysis)
+- `### Caveats / Limitations` — counter-args, limitations, acknowledged uncertainty
+
+**Length**: source-proportional, no hard cap:
+- Thin source: skip entirely
+- Medium source (10-min explainer, 5-page article): 100–400 words across 2–3 sub-sections
+- Substantive source (long video, paper, chapter): 400–1500 words across 3–5 sub-sections
+
+**Example — substantive source with Detailed Extract** (Shinola industrial design analysis):
+
+```markdown
+## Detailed Extract
+
+### Key Claims
+
+- Design choices ARE language — every material / proportion / surface treatment carries semantic load
+- Canfield headphones encode "American craftsmanship" via 4 deliberate choices: bulky joint, leather/metal materiality, polished chrome accents, exposed stitching
+- Mauriello distinguishes "designer language" (intent) from "user language" (interpretation)
+
+### Methodology
+
+Three-pass reading protocol:
+1. **Silhouette / proportion** — first impression at distance; what shape vocabulary does it borrow?
+2. **Materials / contrast** — what does the material palette signal?
+3. **Manufacturing traces** — visible joints, stitches, fasteners → assembly story → labor visibility
+
+### Notable Quotes
+
+- "Design is a language. If you don't speak it, you'll miss the conversation." (opening)
+- "Plastic would have killed this product — it would say 'mass-market', and Shinola sells the opposite story."
+
+### Cross-references
+
+- [[Astro-Studios]] — design firm collaborator
+- Mauriello's broader "deconstruction" series methodology
 ```
 
 The `## Source` section is the **human-navigation affordance**: a single wikilink that lets users click from the wiki card back to the original note in Obsidian. The `source_path` frontmatter stays as the machine-readable path; the wikilink is a separate UX channel for Obsidian's preview / jump / graph-view features.
