@@ -1,6 +1,6 @@
 ---
 name: sf-setup
-description: First-time salesforce-toolkit setup — brew installs sf CLI + salesforce-mcp, runs sf org login web for your Salesforce instance, sets default alias. Idempotent — safe to re-run after partial failure or token expiry.
+description: First-time salesforce-toolkit setup — brew installs sf CLI + salesforce-mcp, runs sf org login web, sets default alias. Idempotent — safe to re-run.
 allowed-tools: Bash(bash:*), Bash(brew:*), Bash(sf:*), Bash(curl:*), Bash(command:*)
 ---
 
