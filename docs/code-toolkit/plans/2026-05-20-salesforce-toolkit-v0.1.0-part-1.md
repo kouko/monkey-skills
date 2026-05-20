@@ -3,7 +3,7 @@
 **Source brief**: docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 **Total tasks**: 5 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-05-20 round 2, 14/14 checks)
 **Prerequisites**: none (this is the first plan part of the v0.1.0 branch)
 
 Part 1 scope：plugin scaffold + cross-cutting registration（root marketplace + root README plugin table）+ MCP 動態派發 shim + TTY guard helper。Part 2 蓋 setup automation；Part 3 蓋 skills + specs + CI；Part 4 蓋 tri-language READMEs。四 part 同分支 `feat/salesforce-toolkit-v0.1.0`，順序 ship。
@@ -32,7 +32,7 @@ Wave 3:  T3 (.mcp.json) ∥ T4 (sf-mcp-launcher.sh) ∥ T5 (tty-guard.sh)
   - /Users/kouko/GitHub/monkey-skills/LICENSE
 - **Acceptance**:
   - **RED**: `test -f salesforce-toolkit/.claude-plugin/plugin.json` exits non-zero
-  - **GREEN**: `jq -e '.name == "salesforce-toolkit" and .version == "0.1.0" and .license == "MIT"' salesforce-toolkit/.claude-plugin/plugin.json` exit 0；`test -f salesforce-toolkit/CHANGELOG.md`；`test -f salesforce-toolkit/LICENSE-MIT.txt`；`grep -c '## v0.1.0' salesforce-toolkit/CHANGELOG.md` ≥ 1
+  - **GREEN**: `jq -e '.name == "salesforce-toolkit" and .version == "0.1.0" and .license == "MIT"' salesforce-toolkit/.claude-plugin/plugin.json` exit 0；`test -f salesforce-toolkit/CHANGELOG.md`；`test -f salesforce-toolkit/LICENSE-MIT.txt`；`grep -cE '^## \[0\.1\.0\]' salesforce-toolkit/CHANGELOG.md` ≥ 1 (Keep-a-Changelog convention per gws/collab sibling precedent)
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: Smallest End State `.claude-plugin/plugin.json` + `CHANGELOG.md`；plugin-level license convention（與 gws-toolkit 對齊，brief 未顯式列出 LICENSE-MIT.txt 但 monkey-skills convention 要求 per-plugin license — 採 monorepo 慣例）
