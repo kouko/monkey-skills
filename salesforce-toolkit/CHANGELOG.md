@@ -21,8 +21,10 @@ Shipped via 5-part SDD (subagent-driven-development) cycle:
   marketplace + root README plugin-list) + `.mcp.json` static config +
   `bin/sf-mcp-launcher.sh` brew→npx shim + `scripts/common/tty-guard.sh`.
 - **Part 2** — `scripts/sf/` setup automation: `alias-infer.sh` /
-  `credential-check.sh` / `auto-setup.sh` (6-step idempotent installer)
-  / `refresh-auth.sh` + `/salesforce-toolkit:sf-setup` slash command.
+  `credential-check.sh` / `auto-setup.sh` (6-step idempotent installer,
+  TTY-bound terminal-mode) / `refresh-auth.sh` + Claude-orchestrated
+  `/salesforce-toolkit:sf-setup` slash command (in-conversation default;
+  no terminal switching for sf + salesforce-mcp install + OAuth).
 - **Part 3** — `sf-query` SKILL.md + `sf-report` SKILL.md +
   `PRODUCT-SPEC.md` + `TECH-SPEC.md` + CI workflow (shellcheck + bats +
   marketplace-sync).
@@ -47,6 +49,12 @@ Shipped via 5-part SDD (subagent-driven-development) cycle:
   driving brew install of `sf` CLI + `salesforce-mcp`, OAuth via
   `sf org login web`, alias inference from instance URL).
 - `commands/sf-setup.md` — `/salesforce-toolkit:sf-setup` slash command.
+  Claude-orchestrated walkthrough that stays in the conversation: probes
+  state, runs missing brew installs non-interactively, asks for instance
+  URL + alias via `AskUserQuestion`, starts `sf org login web` in
+  background, polls until OAuth completes, then prompts the user to
+  `/reload-plugins`. Homebrew is the only one-time external prerequisite
+  (its installer needs `sudo` so it stays outside Claude Code).
 - Two read-only skills:
   - `sf-query` — natural-language → SOQL/SOSL query patterns.
   - `sf-report` — Salesforce Report / Dashboard pull + analysis.

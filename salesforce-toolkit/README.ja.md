@@ -19,14 +19,23 @@ v0.1.0 は upstream の Salesforce DX MCP サーバー（[`salesforcecli/mcp`](h
 ## クイックスタート
 
 ```bash
-# Claude Code marketplace 経由で plugin をインストール
-/plugin install salesforce-toolkit
-
-# 初回ブートストラップ（~3-5 分 — ほとんどはブラウザ OAuth フローの時間）
-/salesforce-toolkit:sf-setup
+# 0. 初回のみ：Homebrew をインストール（未インストールの場合）。
+#    Terminal.app で 1 回だけ実行し、Claude Code を再起動：
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-`sf-setup` は 6 ステップの idempotent インストーラ：macOS / TTY ガード → Homebrew 確保 → `brew install sf` → `brew install salesforce-mcp` → 3 層 alias 推論つき `sf org login web` → `sf org display` で検証。既にセットアップ済みなら再実行は ~5 秒で、完了済みステップはスキップされます。
+```
+# Claude Code 内で：
+1. /plugin install salesforce-toolkit          # marketplace から plugin をインストール
+2. /salesforce-toolkit:sf-setup                # Claude が setup をオーケストレーション — terminal 不要
+3. /reload-plugins                             # salesforce MCP server を有効化（Claude が案内します）
+```
+
+`/sf-setup` はこの会話の中で完結します：Claude が `credential-check.sh` で状態を確認 → 不足している `brew install sf` + `brew install salesforce-mcp` を非対話で実行 → instance URL と alias を question UI で確認 → `sf org login web` をバックグラウンドで起動 → OAuth 完了をポーリング → `/reload-plugins` を案内。所要時間：~3-5 分（大半はブラウザでの OAuth 承認）。再実行は ~5 秒（各 step が状態を確認、完了済みは skip）。
+
+> **brew だけが唯一の外部の 1 回限り step です。** brew installer 自体は `sudo` を呼ぶため Claude Code の Bash tool からは動きません — それが Step 0 を残している理由。brew が入った後はすべて会話内で完結します。
+
+> Power-user パス：自分の terminal から `bash $CLAUDE_PLUGIN_ROOT/scripts/sf/auto-setup.sh` を実行すれば、TTY prompt 付きで同じ end-to-end install が走ります。両パスは同じ end state に収束。
 
 セットアップ後は Claude に次のように尋ねられます：
 

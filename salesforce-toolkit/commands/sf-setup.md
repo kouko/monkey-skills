@@ -1,82 +1,158 @@
 ---
 name: sf-setup
-description: First-time salesforce-toolkit setup — brew installs sf CLI + salesforce-mcp, runs sf org login web, sets default alias. Idempotent — safe to re-run.
-allowed-tools: Bash(bash:*), Bash(brew:*), Bash(sf:*), Bash(curl:*), Bash(command:*)
+description: Walks you through Salesforce DX backend setup entirely in this conversation — installs sf CLI + salesforce-mcp via brew, then opens browser for one OAuth click. No terminal switching.
+allowed-tools: Bash(brew:*), Bash(sf:*), Bash(command:*), Bash(bash:*), Bash(jq:*)
 ---
 
 # /sf-setup
 
-End-to-end Salesforce DX backend onboarding — replaces the manual `brew install sf` → `sf org login web` → alias-bookkeeping walkthrough with an idempotent automation that wires `sf` + `salesforce-mcp` and authenticates your default org.
+**End-to-end Salesforce DX onboarding without leaving Claude Code.** Claude orchestrates every step — installs binaries via brew, infers your org alias, opens browser for OAuth, polls for completion, then tells you to `/reload-plugins`.
 
-`$ARGUMENTS` accepts:
+## Prerequisite (one-time, outside this command)
+
+**Homebrew must already be installed.** This command does not install brew itself because the brew installer is interactive and runs `sudo` — which cannot work from a Claude Code Bash tool (no controlling terminal).
+
+If `command -v brew` fails when this command runs, Claude will halt and show you the one-liner to paste into Terminal.app:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Run that once, restart Claude Code (so brew is in `PATH`), then re-invoke `/sf-setup`.
+
+## $ARGUMENTS
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | Print the plan only; no `brew` / `curl` / `sf` invocations. Safe to run anywhere. |
-| `--alias=<name>` | Explicit alias override (Layer 1 — wins over inference). |
-| `--no-alias` | Force omit alias; `sf` derives one from your username. Mutually exclusive with `--alias=<name>`. |
-| `--no-prompt` | Skip the Enter-to-accept prompt; use the inferred (or empty) alias directly. |
+| `--instance-url=<url>` | Salesforce instance URL (e.g. `https://ichef.my.salesforce.com`). If omitted, Claude asks via `AskUserQuestion`. |
+| `--alias=<name>` | Explicit alias override. If omitted, Claude infers from instance URL subdomain and asks you to confirm. |
 | `--force-reauth` | Re-run `sf org login web` even when an active default org already exists. |
-| `--instance-url=<url>` | Pass-through to `sf org login web --instance-url=<url>`; also feeds the Layer-2 subdomain alias parser. |
-| `--skip-mcp-brew` | Skip step 4 (`brew install salesforce-mcp`); the launcher shim falls back to `npx` at runtime. |
+| `--skip-mcp-brew` | Skip `brew install salesforce-mcp`; the launcher shim falls back to `npx -y @salesforce/mcp` at runtime. |
+| `--no-prompt` | Use inferred alias directly; skip the AskUserQuestion confirmation step. |
 
-## Run
+## Procedure (Claude follows these steps)
+
+### Step 1 — Probe current state
+
+Run via Bash tool:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/auto-setup.sh" $ARGUMENTS
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/credential-check.sh"
 ```
 
-If `CLAUDE_PLUGIN_ROOT` is not set in your runtime, resolve via the directory containing this command file (`$(dirname this-file)/..`).
+Parse the JSON output: `{brew, sf_cli, sf_version, salesforce_mcp, mcp_version, node, default_org, default_org_status}`.
 
-## What it does
+**Halt if `.brew == "missing"`** — show the Prerequisite section above and stop. User must install brew in Terminal.app, restart Claude Code, then re-run.
 
-6 idempotent steps. First-time end-to-end: ~3-5 minutes (most time is the `sf org login web` browser OAuth flow). Already-set-up: ~5 seconds (each step probes current state and skips).
+### Step 2 — Install missing binaries (non-interactive)
 
-| # | Step | Action |
-|---|---|---|
-| 1 | OS + TTY guard | macOS only (`uname -s == Darwin`); requires a controlling terminal for OAuth + Enter-to-accept prompts. Skipped in `--dry-run`. |
-| 2 | Ensure Homebrew | `command -v brew` else prompt + run the official `https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh` curl-pipe (y/N confirmation required). |
-| 3 | Ensure `sf` CLI | `command -v sf` else `brew install sf`. Captures `sf --version` for the final JSON. |
-| 4 | Ensure `salesforce-mcp` | `command -v salesforce-mcp` else `brew install salesforce-mcp`. Skipped under `--skip-mcp-brew` (launcher shim handles npx fallback at runtime). |
-| 5 | `sf org login web` | 3-layer alias resolution (explicit `--alias=` / `--instance-url=` subdomain parse / well-known endpoint) → Enter-to-accept prompt → `sf org login web [--alias=…] [--set-default] [--instance-url=…]`. Skipped when an active default org already exists, unless `--force-reauth`. |
-| 6 | Verify + JSON | `sf org display [--target-org=<alias>] --json` to confirm; extract `instanceUrl` + `accessTokenExpirationDate`; emit final stdout JSON. |
+If `.sf_cli == "missing"`:
+```bash
+brew install sf
+```
 
-Final stdout: JSON with `{status, sf_version, mcp_version, org_alias, instance_url, oauth_expiry, elapsed_sec, dry_run}`.
+If `.salesforce_mcp == "missing"` and `--skip-mcp-brew` was NOT passed:
+```bash
+brew install salesforce-mcp
+```
 
-## Prerequisites
+Both `brew install` calls are non-interactive (no TTY needed) on modern Homebrew. Report progress to user; expect 1-3 min per install on a clean system.
 
-- **macOS only** (MVP) — `darwin-arm64` or `darwin-x86_64`. Step 1 hard-fails with exit 11 on other OSes.
-- **TTY required** — run from Terminal.app / iTerm2 / VSCode integrated terminal. Not from a piped stdin or background bash invocation; steps 2, 5 need `/dev/tty` for confirmation prompts and OAuth.
-- **Salesforce org credentials** — a Production, Sandbox, Scratch, or Developer Edition org you can sign into via browser OAuth. For non-Production orgs pass `--instance-url=<url>` (e.g. `--instance-url=https://test.salesforce.com` for sandboxes).
+### Step 3 — Resolve org instance URL + alias
 
-## Re-running / idempotence
+If `--instance-url=<url>` was passed in `$ARGUMENTS`, use it directly. Otherwise ask user via `AskUserQuestion`:
 
-Each step probes current state and emits an `already done: <step>` stderr line when complete. Safe to re-run after a partial failure — only the failed step (and its dependents) will re-execute.
+> **Question**: Which Salesforce instance? (4 options)
+> 1. **Production** (`https://login.salesforce.com`) — default for production orgs
+> 2. **Sandbox** (`https://test.salesforce.com`) — for sandbox / test orgs
+> 3. **My Domain** (e.g. `https://ichef.my.salesforce.com`) — for company-specific Domain instance
+> 4. Other (custom URL)
 
-- **Token expired** (every-N-hours re-auth) — re-run with `--force-reauth` to re-authenticate the same alias without touching brew installs.
-- **New org / alias** — re-run with `--alias=<new-name> --instance-url=<url>` to add another org without disturbing the existing default.
+Then infer alias from URL via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/alias-infer.sh"` (sourced) — pass the URL and any explicit `--alias=` value. If `--alias=` was given, that wins. Otherwise the inference result is the proposed alias.
 
-## When this doesn't apply
+If `--no-prompt` was passed, use the inferred alias directly. Otherwise ask user via `AskUserQuestion`:
 
-- Just expired token — `sf org login web --alias=<existing-alias>` directly is faster than `/sf-setup`.
-- State detection / debugging — read the underlying `scripts/sf/auto-setup.sh` (annotated step headers) and `scripts/sf/alias-infer.sh` (3-layer algorithm) directly.
-- Non-macOS host — Phase 2+; manual setup required (`brew` doesn't apply; install `sf` per the official Salesforce DX docs and run `sf org login web` by hand).
-- Org-level admin needed first — if your org requires API access enablement, Connected App approval, or IP allow-listing, do that in the Setup UI before re-running.
+> **Question**: Use alias `<inferred>` for this org?
+> - Yes (accept inferred)
+> - Use a different name (then prompt for custom)
+> - Don't set alias (sf uses username-derived default)
+
+### Step 4 — OAuth via background bash
+
+Check if a default org is already active (and `--force-reauth` was NOT passed):
+```bash
+sf org display --json
+```
+
+If exit 0 + `.result.connectedStatus == "Connected"`, skip Step 4 — the user is already logged in. Report "already authenticated" + skip to Step 5.
+
+Otherwise, start `sf org login web` in background (use `Bash` tool with `run_in_background: true`):
+```bash
+sf org login web --alias=<resolved-alias> --set-default --instance-url=<resolved-url>
+```
+
+**Tell the user**: "Your browser will open in a moment — please complete the Salesforce OAuth flow. I'll detect when you're done."
+
+Then poll every 5-10 seconds (use `Bash` tool foreground; wait between polls):
+```bash
+sf org display --target-org=<resolved-alias> --json 2>/dev/null | jq -e '.result.connectedStatus == "Connected"'
+```
+
+Poll loop: max 5 minutes (60 polls × 5 sec). If still not connected after 5 min, ask user:
+- "OAuth not detected yet — still in progress, or want to abort?"
+
+When `connectedStatus == "Connected"` returns true, OAuth is complete. Move to Step 5.
+
+### Step 5 — Verify + emit summary
+
+Final check:
+```bash
+sf org display --target-org=<resolved-alias> --json
+```
+
+Extract: `instanceUrl`, `username`, `accessTokenExpirationDate`. Report to user as a short summary:
+
+> ✅ Salesforce setup complete
+> - Alias: `<alias>`
+> - Instance: `<instanceUrl>`
+> - Account: `<username>`
+> - Token expires: `<accessTokenExpirationDate>`
+
+### Step 6 — Activate MCP server
+
+Tell user:
+
+> Run `/reload-plugins` to activate the salesforce MCP server. After reload you can ask things like:
+> - "List the 10 most-recent Opportunities over $50K"
+> - "Pull the Weekly Revenue dashboard"
+
+That's the end of the procedure.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
+| Symptom | Cause | Fix |
 |---|---|---|
-| `auto-setup.sh requires a controlling terminal` (exit 10) | Invoked without TTY (background bash / piped stdin) | Re-run from a real terminal app |
-| `unsupported OS` (exit 11) | Not macOS | Phase 2+; install `sf` + run `sf org login web` manually |
-| `brew install sf failed` / `brew install salesforce-mcp failed` (exit 12) | Network, brew tap drift, or disk-full | Run the failing `brew install ...` directly to surface the real error; re-run `/sf-setup` after fixing. Use `--skip-mcp-brew` to defer the MCP install. |
-| `sf org login web failed` (exit 10) | OAuth flow cancelled, wrong account picked, or `--instance-url` mismatch (e.g. sandbox URL on Production login) | Re-run with `--force-reauth`; pass `--instance-url=https://test.salesforce.com` for sandboxes |
-| `--no-alias and --alias=<name> are mutually exclusive` (exit 1) | Both flags passed | Pick one — explicit alias or username-derived default |
-| Final `sf org display` empty / verify fails (exit 10) | Login appeared to succeed but token didn't persist (Keychain ACL block, profile drift) | Re-run with `--force-reauth`; if it recurs, run `sf org logout --target-org=<alias>` then re-try |
+| `brew: command not found` halt | Homebrew not installed | Run the brew installer one-liner in Terminal.app (see Prerequisite section), restart Claude Code |
+| `brew install sf` fails | Network / tap drift / Homebrew API outage | Re-run `/sf-setup`; if persistent, run `brew install sf` in Terminal.app to see the real error |
+| OAuth poll times out | User didn't complete consent in browser | Re-run `/sf-setup --force-reauth` |
+| `sf org login web` immediately errors | Wrong instance URL for org type (e.g. sandbox URL on Production login) | Re-run `/sf-setup --instance-url=<correct-url> --force-reauth` |
+| MCP server still failing after `/reload-plugins` | Launcher couldn't find binary | Run `command -v salesforce-mcp` — if missing, re-run `/sf-setup` (Step 2 will install it) |
+| `--no-alias` was passed but Claude still asks alias | Bug — file an issue | Workaround: pass `--no-prompt --alias=-` (literal dash to omit) |
+
+## Alternative — terminal power-user path
+
+If you prefer to run setup in your own terminal (one-shot, TTY-bound):
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/auto-setup.sh"
+```
+
+This invokes the same 6-step idempotent installer with TTY prompts (no Claude orchestration). Use when you want full control over the brew install confirmation or are debugging step-by-step. Both paths converge on the same end state — `sf` CLI authenticated + `salesforce-mcp` installed + default org set.
 
 ## See also
 
-- `docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md` — full PRODUCT-SPEC (Decision setup steps, JSON contract)
-- `docs/code-toolkit/plans/2026-05-20-salesforce-toolkit-v0.1.0-part-2.md` — Part-2 plan (this command's parent atomic task)
-- `scripts/sf/auto-setup.sh` — the underlying installer (step-by-step source)
-- `scripts/sf/alias-infer.sh` — 3-layer alias inference (explicit / instance-url subdomain / well-known endpoint)
+- `docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md` — PRODUCT-SPEC (setup steps, JSON contract)
+- `scripts/sf/credential-check.sh` — state probe (Step 1 source)
+- `scripts/sf/alias-infer.sh` — 3-layer alias inference (Step 3 source)
+- `scripts/sf/auto-setup.sh` — TTY-bound terminal-mode installer (alternative path)
+- `scripts/sf/refresh-auth.sh` — standalone re-auth helper for token expiry

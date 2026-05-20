@@ -19,14 +19,23 @@ v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https:
 ## Quick start
 
 ```bash
-# Install plugin via Claude Code marketplace
-/plugin install salesforce-toolkit
-
-# One-time bootstrap (~3-5 min — most time is the browser OAuth flow)
-/salesforce-toolkit:sf-setup
+# 0. One-time: install Homebrew (only if you don't have it).
+#    Run this once in Terminal.app, then restart Claude Code:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-`sf-setup` is a 6-step idempotent installer: macOS / TTY guard → ensure Homebrew → `brew install sf` → `brew install salesforce-mcp` → `sf org login web` with 3-layer alias inference → verify `sf org display`. Already set up? Re-runs take ~5 seconds and skip each step that's done.
+```
+# In Claude Code:
+1. /plugin install salesforce-toolkit          # install plugin from marketplace
+2. /salesforce-toolkit:sf-setup                # Claude orchestrates setup — no terminal needed
+3. /reload-plugins                             # activate the salesforce MCP server (Claude will remind you)
+```
+
+`/sf-setup` stays in this conversation: Claude probes state via `credential-check.sh`, runs missing `brew install sf` + `brew install salesforce-mcp` non-interactively, asks you for instance URL + alias via the question UI, starts `sf org login web` in background, polls until OAuth completes, then tells you to `/reload-plugins`. Total time: ~3-5 minutes (most of it is the browser OAuth click). Re-runs are ~5 seconds (each step probes + skips if already done).
+
+> **Brew is the only one-time external step.** The brew installer itself runs `sudo` so it can't work from Claude Code's Bash tool — that's why Step 0 exists. Once brew is installed, everything else stays in the conversation.
+
+> Power-user path: `bash $CLAUDE_PLUGIN_ROOT/scripts/sf/auto-setup.sh` from your own terminal does the same end-to-end install with TTY prompts. Both paths converge on the same end state.
 
 After that, ask Claude things like:
 

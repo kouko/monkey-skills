@@ -19,14 +19,23 @@ v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://
 ## 快速開始
 
 ```bash
-# 透過 Claude Code marketplace 安裝 plugin
-/plugin install salesforce-toolkit
-
-# 一次性初始化（~3-5 分鐘 — 大部分時間花在瀏覽器 OAuth 流程）
-/salesforce-toolkit:sf-setup
+# 0. 一次性：安裝 Homebrew（如果還沒裝過）。
+#    在 Terminal.app 跑一次,然後重啟 Claude Code：
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-`sf-setup` 是 6 步驟的 idempotent 安裝器：macOS / TTY 守衛 → 確認 Homebrew → `brew install sf` → `brew install salesforce-mcp` → 帶 3 層 alias 推論的 `sf org login web` → 用 `sf org display` 驗證。已經裝過了？重跑大約 5 秒,每個完成過的步驟都會跳過。
+```
+# 在 Claude Code 內：
+1. /plugin install salesforce-toolkit          # 從 marketplace 安裝 plugin
+2. /salesforce-toolkit:sf-setup                # Claude 引導你跑完 setup — 不用碰 terminal
+3. /reload-plugins                             # 啟用 salesforce MCP server（Claude 會提醒你）
+```
+
+`/sf-setup` 從頭到尾留在這個對話：Claude 用 `credential-check.sh` 探測現況 → 用非互動模式跑缺的 `brew install sf` + `brew install salesforce-mcp` → 用 question UI 問你 instance URL 跟 alias → 把 `sf org login web` 丟到背景 → 輪詢 OAuth 完成 → 提示你跑 `/reload-plugins`。耗時：~3-5 分鐘（大部分是瀏覽器按 OAuth 同意）。重跑 ~5 秒（每個 step 都會探測現況,裝過的就 skip）。
+
+> **brew 是唯一的一次性外部 step。** brew installer 本身會跑 `sudo`,從 Claude Code 的 Bash tool 跑不動 — 這就是為什麼 Step 0 留下。裝完 brew 之後其他全部留在對話內。
+
+> Power-user 路徑：在自己 terminal 跑 `bash $CLAUDE_PLUGIN_ROOT/scripts/sf/auto-setup.sh` 走 TTY-prompt 完整 install,跟對話內路徑收斂到同一個 end state。
 
 設定完成後,你可以這樣問 Claude：
 

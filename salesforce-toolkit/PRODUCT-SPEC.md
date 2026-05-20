@@ -104,6 +104,17 @@ Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
 但 skill prompt 不教 Claude 主動呼叫，由 user 顯式要求時 Claude 才會
 走「user-typed write request」路徑（非預設行為）。
 
+**Two install paths（互為 fallback）**：
+
+| Path | 觸發方式 | 適合 | TTY 需求 |
+|---|---|---|---|
+| **Claude-orchestrated（default）** | `/salesforce-toolkit:sf-setup` 在 Claude Code 對話內 | 一般 user — 不想離開 conversation | ❌ 不需 TTY；Claude 用 `AskUserQuestion` 處理互動、`Bash run_in_background` 處理 OAuth callback wait |
+| **Terminal power-user** | `bash $CLAUDE_PLUGIN_ROOT/scripts/sf/auto-setup.sh` 在自己 terminal | 想 debug step-by-step / 想看 brew install y/N prompt 細節 | ✅ 需要 TTY；走 `/dev/tty` Enter-to-accept pattern |
+
+兩條 path 收斂到同一個 end state（`sf` CLI 已 OAuth 完成 + `salesforce-mcp` 已 installed + default org alias 已設）。User 任選其一。
+
+**Homebrew 是唯一外部一次性 step**：brew installer 內含 `sudo` 要 user macOS 密碼，不能從 Claude Code 的 Bash tool 跑（無 TTY、無 root 提權路徑）。User 必須先在自己 Terminal.app 跑一次 brew installer 一行 curl，再重啟 Claude Code 讓 brew 進 PATH。`/sf-setup` Step 1 偵測 brew 缺席會 halt 並提示這條一行指令。
+
 ### Phase 2+（deferred；明列 trigger 條件，非 v0.1.0 承諾）
 
 | Phase 2+ 項目 | Trigger 條件 |

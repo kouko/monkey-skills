@@ -194,12 +194,48 @@ present in v0.1.0).
 
 ### Setup path (PRODUCT-SPEC §Success criteria KR1)
 
+**Two paths converge on the same end state.** Default is Claude-orchestrated (in-conversation); terminal-power-user path is opt-in.
+
+#### Path A — Claude-orchestrated (default)
+
 ```
 user types /salesforce-toolkit:sf-setup
     │
-    │  ① commands/sf-setup.md handed to Claude as a slash command
+    │  ① commands/sf-setup.md handed to Claude as procedural walkthrough
     ▼
-Claude runs scripts/sf/auto-setup.sh via Bash tool
+Claude executes step-by-step:
+    │  ② Bash: bash scripts/sf/credential-check.sh → probe state JSON
+    │     halt if .brew == "missing" (show user the brew curl one-liner;
+    │     user runs in Terminal.app + restarts Claude Code; re-invoke /sf-setup)
+    │  ③ Bash: brew install sf (if sf_cli == "missing"; non-interactive)
+    │  ④ Bash: brew install salesforce-mcp (if salesforce_mcp == "missing"
+    │     and not --skip-mcp-brew)
+    │  ⑤ AskUserQuestion: instance URL (4 options or custom) — if not in $ARGUMENTS
+    │  ⑥ Bash: source alias-infer.sh + infer_alias  →  inferred alias
+    │     AskUserQuestion: confirm alias (accept / custom / omit) — if not --no-prompt
+    │  ⑦ Bash run_in_background: sf org login web --alias=X --set-default --instance-url=Y
+    │     tells user: "browser will open, complete OAuth"
+    │  ⑧ Bash poll every 5-10s: sf org display --target-org=X --json
+    │     until .result.connectedStatus == "Connected" (max 5 min)
+    │  ⑨ Bash: sf org display --target-org=X --json → extract instanceUrl + expiry
+    ▼
+Claude reports summary to user + instructs: /reload-plugins to activate MCP
+    │  ⑩ user runs /reload-plugins in same conversation → MCP server reloads
+    ▼
+End state: sf authenticated + salesforce-mcp installed + default org bound
+```
+
+TTY: not required at any step (`AskUserQuestion` replaces `read </dev/tty`; `run_in_background` replaces blocking on browser OAuth callback). Bash tool subprocesses don't need TTY because Claude handles every interactive moment.
+
+#### Path B — Terminal power-user (opt-in)
+
+```
+user opens Terminal.app
+    │
+    │  ① user finds plugin path (e.g.
+    │      ~/.claude/plugins/cache/monkey-skills/<ver>/salesforce-toolkit/)
+    ▼
+user runs: bash scripts/sf/auto-setup.sh
     │  ② 6 idempotent steps (see §Setup Flow); stderr progress + stdout JSON
     │     interactive: brew install confirm + Enter-to-accept alias prompt
     │     opens browser: sf org login web (TTY-bound; runs in user terminal)
@@ -208,8 +244,14 @@ auto-setup.sh emits final JSON contract
     │  ③ {status, sf_version, mcp_version, org_alias, instance_url,
     │      oauth_expiry, elapsed_sec, dry_run}
     ▼
-Claude confirms to user; user can now query SF in same session
+user returns to Claude Code → /reload-plugins
 ```
+
+TTY: required. Used for brew install y/N prompt (Step 2) + Enter-to-accept alias prompt (Step 5). Cannot run from Claude Code Bash tool (which lacks a controlling terminal); must run from a real terminal app.
+
+#### Why both paths
+
+Path A is friction-minimized for the common case (kouko's iChef instance, single-org workflow). Path B is preserved for: (a) advanced debugging where you want full bash control + see brew prompts directly, (b) automated provisioning scripts that bash-pipe into auto-setup.sh, (c) environments where Claude Code is unavailable. Both paths share the same atomic helpers (`tty-guard.sh` / `alias-infer.sh` / `credential-check.sh` / `refresh-auth.sh`) — only the orchestration layer differs.
 
 ### Re-auth path (PRODUCT-SPEC §Success criteria KR4)
 
