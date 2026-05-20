@@ -86,3 +86,32 @@ ALIAS_INFER="${BATS_TEST_DIRNAME}/../scripts/sf/alias-infer.sh"
   [ "$status" -eq 0 ]
   [ "$output" = "" ]
 }
+
+# ---------------------------------------------------------------------------
+# Direct-invocation entry point — enables `bash alias-infer.sh URL [ALIAS]`
+# for Claude-orchestrated /sf-setup (Step 5) without a `source ...` wrapper.
+# ---------------------------------------------------------------------------
+
+@test "(i) direct invocation: ichef URL prints ichef" {
+  run bash "$ALIAS_INFER" "https://ichef.my.salesforce.com" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "ichef" ]
+}
+
+@test "(j) direct invocation: explicit alias override wins" {
+  run bash "$ALIAS_INFER" "https://ichef.my.salesforce.com" "myorg"
+  [ "$status" -eq 0 ]
+  [ "$output" = "myorg" ]
+}
+
+@test "(k) direct invocation: login.salesforce.com prints prod" {
+  run bash "$ALIAS_INFER" "https://login.salesforce.com" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "prod" ]
+}
+
+@test "(l) direct invocation: no args → prod (empty URL defaults to prod)" {
+  run bash "$ALIAS_INFER"
+  [ "$status" -eq 0 ]
+  [ "$output" = "prod" ]
+}

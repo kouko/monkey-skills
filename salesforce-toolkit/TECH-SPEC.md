@@ -201,31 +201,61 @@ present in v0.1.0).
 ```
 user types /salesforce-toolkit:sf-setup
     │
-    │  ① commands/sf-setup.md handed to Claude as procedural walkthrough
+    │  commands/sf-setup.md handed to Claude as 9-step procedural walkthrough
     ▼
-Claude executes step-by-step:
-    │  ② Bash: bash scripts/sf/credential-check.sh → probe state JSON
-    │     halt if .brew == "missing" (show user the brew curl one-liner;
-    │     user runs in Terminal.app + restarts Claude Code; re-invoke /sf-setup)
-    │  ③ Bash: brew install sf (if sf_cli == "missing"; non-interactive)
-    │  ④ Bash: brew install salesforce-mcp (if salesforce_mcp == "missing"
-    │     and not --skip-mcp-brew)
-    │  ⑤ AskUserQuestion: instance URL (4 options or custom) — if not in $ARGUMENTS
-    │  ⑥ Bash: source alias-infer.sh + infer_alias  →  inferred alias
-    │     AskUserQuestion: confirm alias (accept / custom / omit) — if not --no-prompt
-    │  ⑦ Bash run_in_background: sf org login web --alias=X --set-default --instance-url=Y
-    │     tells user: "browser will open, complete OAuth"
-    │  ⑧ Bash poll every 5-10s: sf org display --target-org=X --json
-    │     until .result.connectedStatus == "Connected" (max 5 min)
-    │  ⑨ Bash: sf org display --target-org=X --json → extract instanceUrl + expiry
+Claude executes step-by-step (Step 0-8 per commands/sf-setup.md):
+    │  Step 0  Validate $ARGUMENTS: reject --no-alias + --alias=X mutex;
+    │          reject unknown flags
+    │
+    │  Step 1  Bash: bash scripts/sf/credential-check.sh → probe state JSON
+    │          halt if .brew == "missing" (show user brew curl one-liner;
+    │          user runs in Terminal.app + restarts Claude Code + re-invoke)
+    │
+    │  Step 2  Resolve target_alias (cheap pre-pass, no AskUserQuestion):
+    │          --no-alias → ""; --alias=X → X; --instance-url=Y → infer_alias(Y, "");
+    │          neither flag → null
+    │
+    │  Step 3  Install missing binaries (idempotent):
+    │          brew install sf (if sf_cli == "missing")
+    │          brew install salesforce-mcp (if missing AND NOT --skip-mcp-brew)
+    │          halt on non-zero exit (surface stderr)
+    │
+    │  Step 4  Early-exit check (skip OAuth if already authenticated):
+    │          probe `sf org display --json` → .result.connectedStatus
+    │          early-exit if Connected AND target_alias matches current default
+    │          (or target null with no args, or target "" with --no-alias)
+    │          → emit summary + /reload-plugins reminder + END
+    │
+    │  Step 5  Resolve instance URL + alias (interactive):
+    │          AskUserQuestion: instance URL (Production / Sandbox / My Domain
+    │          / Other) if not in $ARGUMENTS AND NOT --no-prompt
+    │          run alias-infer.sh against resolved URL if target_alias was null
+    │          AskUserQuestion: confirm alias (accept / custom / omit)
+    │          if NOT --no-prompt AND NOT --alias= explicit
+    │
+    │  Step 6  OAuth in background + poll:
+    │          Bash run_in_background:
+    │            sf org login web [--alias=X] --set-default --instance-url=Y
+    │            (--set-default ALWAYS passed; --alias= conditional on non-empty)
+    │          tells user: "browser will open, complete OAuth"
+    │          poll every 5s: sf org display [--target-org=X] --json
+    │            until .result.connectedStatus == "Connected" (max 5 min, then
+    │            asks user to keep waiting or abort; abort kills bg via
+    │            pkill -INT -f "sf org login web --alias=X")
+    │
+    │  Step 7  Verify + emit summary:
+    │          sf org display [--target-org=X] --json → extract instanceUrl,
+    │          username, accessTokenExpirationDate; report to user
     ▼
 Claude reports summary to user + instructs: /reload-plugins to activate MCP
-    │  ⑩ user runs /reload-plugins in same conversation → MCP server reloads
+    │  Step 8  user runs /reload-plugins in same conversation → MCP server reloads
     ▼
 End state: sf authenticated + salesforce-mcp installed + default org bound
 ```
 
 TTY: not required at any step (`AskUserQuestion` replaces `read </dev/tty`; `run_in_background` replaces blocking on browser OAuth callback). Bash tool subprocesses don't need TTY because Claude handles every interactive moment.
+
+**Install-before-early-exit ordering** (important): Step 3 (install) runs BEFORE Step 4 (early-exit check) deliberately. If the user has `sf` authed to an existing org but is missing `salesforce-mcp` (e.g. re-running `/sf-setup` to add the MCP binary), Step 3 installs `salesforce-mcp` and Step 4 detects "still authed, alias matches" → clean early-exit without redundant OAuth. Earlier doc drafts ordered early-exit-before-install, which made this scenario re-OAuth unnecessarily.
 
 #### Path B — Terminal power-user (opt-in)
 

@@ -107,3 +107,15 @@ infer_alias() {
   esac
   return 0
 }
+
+# Direct-invocation entry point. When this script is executed (not sourced),
+# `bash alias-infer.sh <instance_url> [<user_alias>]` prints the resolved
+# alias to stdout. When sourced via `source alias-infer.sh`, this block is
+# skipped (BASH_SOURCE[0] != $0) and only the function is defined.
+#
+# Used by Claude-orchestrated `/sf-setup` so the slash command's procedure
+# can call alias-infer.sh via a single Bash tool invocation without writing
+# a `bash -c 'source ...; infer_alias ...'` wrapper.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  infer_alias "${1:-}" "${2:-}"
+fi
