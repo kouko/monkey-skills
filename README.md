@@ -2,7 +2,7 @@
 
 Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Personal Claude Code plugin marketplace — 9 plugins covering domain-team workflows, skill development, philosophical thinking, Obsidian, investing, copywriting, slides, book distillation, and repo knowledge.
+> Personal Claude Code plugin marketplace — 11 plugins covering domain-team workflows, skill development, philosophical thinking, Obsidian, investing, copywriting, slides, book distillation, repo knowledge, artifact deconstruction, and Salesforce data/report query.
 
 ## Plugins
 
@@ -18,10 +18,11 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | LLM Wiki Pattern for code repos — seed `.repo-wiki/` from git history (init), grow from changes / context / external docs (ingest, polymorphic), query with verification against `src/` (Eager triggers + segmented output). |
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, intentional omissions. Grounded in Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman, with EN/JA/ZH cultural-variant lenses (Hinds kishōtenketsu / 劉勰《文心雕龍》六觀 / Hu/Hwang face-and-favor). BCG「バリュー・チェーンの脱構築」系譜. |
+| [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 2 | 1 | Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only data + report query. macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported. |
 
-**Totals:** 88 skills and 41 slash commands across 10 plugins.
+**Totals:** 90 skills and 42 slash commands across 11 plugins.
 
-> Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
+> Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
 
 ## Install
 

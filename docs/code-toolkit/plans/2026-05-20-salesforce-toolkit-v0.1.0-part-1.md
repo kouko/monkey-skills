@@ -41,7 +41,7 @@ Wave 3:  T3 (.mcp.json) ∥ T4 (sf-mcp-launcher.sh) ∥ T5 (tty-guard.sh)
 
 ## Task 2 — Cross-cutting registration (`marketplace.json` entry + root README plugin table row)
 
-- **Description**: 在 root `.claude-plugin/marketplace.json` `plugins` array 末加 `{"name": "salesforce-toolkit", "source": "./salesforce-toolkit"}`；在 root `README.md` `## Plugins` table 加一行（| salesforce-toolkit | 0.1.0 | 2 | 1 | description verbatim from plugin.json |）；`description` 須 verbatim 同 plugin.json（CI `scripts/check-marketplace-description-sync.py` 強制）
+- **Description**: 在 root `.claude-plugin/marketplace.json` `plugins` array 末加 `{"name": "salesforce-toolkit", "source": "./salesforce-toolkit/"}`（trailing slash per existing 17 entries' convention）；在 root `README.md` `## Plugins` table 加一行採 link-wrapped backtick 慣例：`| [\`salesforce-toolkit\`](salesforce-toolkit/) | 0.1.0 | 2 | 1 | description verbatim from plugin.json |`；`description` 須 verbatim 同 plugin.json（CI `scripts/check-marketplace-description-sync.py` 強制）；同時更新 README 既有 stale aggregates（L5 plugin 數、L23 Totals、L25 ⚠️ list）以反映 salesforce-toolkit 加入後的狀態
 - **Module**: `.claude-plugin/` (repo root)
 - **Files touched**: `.claude-plugin/marketplace.json`, `README.md`
 - **Context paths**:
@@ -50,7 +50,7 @@ Wave 3:  T3 (.mcp.json) ∥ T4 (sf-mcp-launcher.sh) ∥ T5 (tty-guard.sh)
   - /Users/kouko/GitHub/monkey-skills/scripts/check-marketplace-description-sync.py
 - **Acceptance**:
   - **RED**: `jq -e '.plugins[] | select(.name == "salesforce-toolkit")' .claude-plugin/marketplace.json` exit non-zero（無 entry）
-  - **GREEN**: `jq -e '.plugins[] | select(.name == "salesforce-toolkit" and .source == "./salesforce-toolkit")' .claude-plugin/marketplace.json` exit 0；`python3 scripts/check-marketplace-description-sync.py` exit 0（description verbatim sync 過）；`grep -c '| salesforce-toolkit' README.md` ≥ 1
+  - **GREEN**: `jq -e '.plugins[] | select(.name == "salesforce-toolkit" and .source == "./salesforce-toolkit/")' .claude-plugin/marketplace.json` exit 0；`python3 scripts/check-marketplace-description-sync.py` exit 0（description verbatim sync 過）；`grep -cE '\[`salesforce-toolkit`\]\(salesforce-toolkit/\)' README.md` ≥ 1（link-wrapped backtick row in `## Plugins` table）；`grep -c 'salesforce-toolkit' README.md` ≥ 2（at least: table row + ⚠️ list）
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: Smallest End State root `.claude-plugin/marketplace.json` entry；What Becomes Obsolete row 3「monkey-skills 主 README plugin list 加 salesforce-toolkit」（brief Open Question 確認結果：root README 確有 `## Plugins` table，必須加 row）
