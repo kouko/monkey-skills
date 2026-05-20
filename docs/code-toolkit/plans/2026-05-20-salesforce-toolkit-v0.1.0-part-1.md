@@ -59,7 +59,7 @@ Wave 3:  T3 (.mcp.json) ∥ T4 (sf-mcp-launcher.sh) ∥ T5 (tty-guard.sh)
 
 ## Task 3 — `.mcp.json` static config 走 shim
 
-- **Description**: 建立 `salesforce-toolkit/.mcp.json` — stdio mode + `command: "bash"` + `args: ["${CLAUDE_PLUGIN_ROOT}/bin/sf-mcp-launcher.sh", "--orgs", "DEFAULT_TARGET_ORG", "--toolsets", "data,metadata"]`；加 bats 驗證檔結構（jq schema check）
+- **Description**: 建立 `salesforce-toolkit/.mcp.json` — **必須 wrap in `{ "mcpServers": { "salesforce": { ... } } }` envelope**（Claude Code plugin MCP loader 規定）；server entry: stdio mode + `command: "bash"` + `args: ["${CLAUDE_PLUGIN_ROOT}/bin/sf-mcp-launcher.sh", "--orgs", "DEFAULT_TARGET_ORG", "--toolsets", "data,metadata"]`；加 bats 驗證檔結構（jq schema check 含 envelope）
 - **Module**: `salesforce-toolkit/`
 - **Files touched**: `salesforce-toolkit/.mcp.json`, `salesforce-toolkit/tests/test_mcp_config.bats`
 - **Context paths**:
@@ -67,7 +67,7 @@ Wave 3:  T3 (.mcp.json) ∥ T4 (sf-mcp-launcher.sh) ∥ T5 (tty-guard.sh)
   - /Users/kouko/GitHub/monkey-skills/docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 - **Acceptance**:
   - **RED**: `bats salesforce-toolkit/tests/test_mcp_config.bats` fail（檔案不存在）
-  - **GREEN**: `jq -e '.salesforce.type == "stdio" and .salesforce.command == "bash"' salesforce-toolkit/.mcp.json` exit 0；`jq -e '.salesforce.args[0] | contains("sf-mcp-launcher.sh")' salesforce-toolkit/.mcp.json` exit 0；`jq -e '.salesforce.args | index("--toolsets") as $i | .[$i+1] == "data,metadata"' salesforce-toolkit/.mcp.json` exit 0；bats 全 pass
+  - **GREEN**: `jq -e '.mcpServers | type == "object"' salesforce-toolkit/.mcp.json` exit 0（envelope check）；`jq -e '.mcpServers.salesforce.type == "stdio" and .mcpServers.salesforce.command == "bash"' salesforce-toolkit/.mcp.json` exit 0；`jq -e '.mcpServers.salesforce.args[0] | contains("sf-mcp-launcher.sh")' salesforce-toolkit/.mcp.json` exit 0；`jq -e '.mcpServers.salesforce.args | index("--toolsets") as $i | .[$i+1] == "data,metadata"' salesforce-toolkit/.mcp.json` exit 0；bats 全 pass
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: Smallest End State `.mcp.json`；Decision Q1 Path D shim；Decision Q2 toolsets `data,metadata`
