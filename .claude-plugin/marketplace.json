@@ -36,7 +36,7 @@
     },
     {
       "name": "gws-toolkit",
-      "description": "Generic Google Workspace toolkit on the official googleworkspace/cli (gws) — drive / docs / slides / sheets + setup automation + design knowledge (Minto / SCQA / chart selection). ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
+      "description": "Generic Google Workspace toolkit on the official googleworkspace/cli (gws) — drive / docs / slides / sheets / gmail / calendar + setup automation + design knowledge (Minto / SCQA / chart selection). ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
       "source": "./gws-toolkit/"
     },
     {
