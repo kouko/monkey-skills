@@ -217,13 +217,38 @@ summary: "≤200 char single-line description of what this source contributes"
 
 [[<source-basename>]]
 
-## Source Excerpt / TL;DR
-2–4 sentence neutral description of what the source argues / measures / claims.
+## TL;DR
+
+- bullet 1 (sentence fragment — main topic / claim / context)
+- bullet 2
+- ...
+
+3–7 bullets, sentence-fragment style — scan-friendly. No nested sub-bullets (nesting goes in Detailed Extract).
+
+## Detailed Extract  <!-- MAY — include when source has substance worth preserving -->
+
+### Key Claims
+- ...
+
+### Methodology
+- ...
 
 ## Key Contributions
 - Bullet list — what specifically this source added to the wiki
 - Cite which target pages were updated and how
 ```
+
+**`## TL;DR` format**: 3–7 bullets, sentence-fragment style. Thin source (3-min video, 1-page post): 3 bullets. Substantive source (long video, paper, chapter): 6–7 bullets. No nested sub-bullets — nesting goes in Detailed Extract.
+
+**`## Detailed Extract` format** (MAY — skip thin sources; include when source has structure, quotes, or methodology beyond TL;DR): sub-heading vocabulary (LLM picks 2–4, or invents new ones):
+- `### Key Claims` — concrete assertions made by source
+- `### Examples / Cases` — illustrative case studies or worked examples
+- `### Notable Quotes` — verbatim excerpts (with `^[from §X / timestamp HH:MM]` location markers when available)
+- `### Cross-references` — other works / people / concepts cited by source
+- `### Methodology` — how source produced claims (research method, data, analysis)
+- `### Caveats / Limitations` — counter-args, limitations, acknowledged uncertainty
+
+See [references/page-format.md](references/page-format.md) §Reference page body structure for the full spec and 2 worked examples.
 
 > [!warning] `## Source` wikilink format — common LLM mistake
 >
