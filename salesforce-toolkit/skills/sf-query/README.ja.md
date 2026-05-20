@@ -1,8 +1,8 @@
 # sf-query
 
-Salesforce DX MCP server 経由で接続済み org に対する自然言語の Salesforce SOQL / SOSL query。ビジネス上の質問を散文で投げると、skill が適切な MCP tool を選び、SOQL（または SOSL）文字列を組み立て、sanity-check 用にそのまま表示してから実行し、行を table としてレンダリングする。
+Salesforce DX MCP server 経由で接続済み org に対する自然言語の Salesforce SOQL query。ビジネス上の質問を散文で投げると、skill が SOQL 文字列を組み立て、sanity-check 用にそのまま表示してから upstream の `run_soql_query` MCP tool を呼び、行を table としてレンダリングする。
 
-read-only。DML も metadata 変更もしない — それは `sf-deploy`（Phase 2）の責務。
+read-only。plugin は `data` MCP toolset のみ（唯一の tool：`run_soql_query`）を有効化。DML も metadata 変更もしない。SOSL は upstream MCP がまだ tool 化していないため、v0.1.0 は SOQL のみ。
 
 ## 事前条件
 
@@ -72,5 +72,5 @@ MCP server は集計結果を plain JSON に flatten するので、2 列 markdo
 ## References
 
 - 完全な skill 指示：[`SKILL.md`](SKILL.md)
-- [Salesforce SOQL & SOSL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source
+- [Salesforce SOQL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source（この plugin の v0.1.0 で reach できるのは SOQL のみ）
 - [salesforcecli/mcp](https://github.com/salesforcecli/mcp) — upstream MCP server

@@ -42,10 +42,10 @@ Brief Decision Q1–Q7 (in [`../docs/code-toolkit/specs/2026-05-20-salesforce-to
 are realized as:
 
 - Q1 (Path D shim launcher) → §Modules `bin/sf-mcp-launcher.sh`
-- Q2 (toolsets `data,metadata`) → §Modules `.mcp.json` args
+- Q2 (toolsets — originally drafted `data,metadata`; narrowed to `data` only after 2026-05-20 pre-ship verification, see §MCP default toolsets) → §Modules `.mcp.json` args
 - Q3 (3-layer alias infer) → §Modules `scripts/sf/alias-infer.sh`; §Interfaces `alias-infer.sh` contract
 - Q4 (Enter-to-accept UX) → §Setup Flow Step 5
-- Q5 (sf-query + sf-report skills) → §Modules skills/
+- Q5 (originally drafted sf-query + sf-report skills; sf-report dropped — upstream MCP exposes no Report / Dashboard tools) → §Modules skills/
 - Q6 (`prod` / `sandbox` alias names) → §Interfaces `alias-infer.sh` Layer 3
 - Q7 (brew→npx shim fallback) → §Modules `bin/sf-mcp-launcher.sh`
 
@@ -80,14 +80,9 @@ salesforce-toolkit/
 │       ├── auto-setup.sh       # 6-step idempotent installer (orchestrator)
 │       └── refresh-auth.sh     # standalone re-auth helper
 ├── skills/
-│   ├── sf-query/
-│   │   ├── SKILL.md            # SOQL/SOSL natural-language query
-│   │   ├── README.md           # en, authoritative
-│   │   ├── README.ja.md
-│   │   └── README.zh-TW.md
-│   └── sf-report/
-│       ├── SKILL.md            # Dashboard/Report fetch + analyze
-│       ├── README.md
+│   └── sf-query/
+│       ├── SKILL.md            # SOQL natural-language query (via run_soql_query MCP tool)
+│       ├── README.md           # en, authoritative
 │       ├── README.ja.md
 │       └── README.zh-TW.md
 ├── tests/
@@ -120,7 +115,7 @@ bin/sf-mcp-launcher.sh
     │  3. neither                → stderr pointer to /salesforce-toolkit:sf-setup; exit 127
     ▼
 sf-mcp-server (brew formula `salesforce-mcp`, v0.30.9+, Apache-2.0)   OR   npx -y @salesforce/mcp (cold-start fallback)
-    │  stdio MCP transport; 60+ tools; default toolsets data,metadata
+    │  stdio MCP transport; default toolset: data only (single tool: run_soql_query)
     ▼
 sf CLI (brew formula, v2.x, Apache-2.0)
     │  OAuth2 token in macOS Keychain (file backend fallback ~/.sfdx/)
@@ -139,11 +134,32 @@ time — brew bottle if installed (<1s cold start), else npx fallback
 
 ### MCP default toolsets
 
-`.mcp.json` invokes `sf-mcp-launcher.sh` with `--toolsets data,metadata`
-to scope the 60+ available MCP tools down to the read-only surface
-PRODUCT-SPEC §Scope allows. Phase 2+ `sf-deploy` skill (per
-PRODUCT-SPEC §Scope Phase 2+ table) will expand to
-`metadata,data,users`.
+`.mcp.json` invokes `sf-mcp-launcher.sh` with `--toolsets data` —
+the `data` toolset is the **only** one enabled in v0.1.0, exposing a
+single MCP tool: `run_soql_query`. This is a deliberate narrowing
+from the originally-drafted `data,metadata` (brief Decision Q2)
+following 2026-05-20 pre-ship verification against
+`salesforcecli/mcp` v0.30.9 (live `tools/list` JSON-RPC introspection
++ `sf-mcp-server --help` toolset enum):
+
+- **`metadata` toolset is NOT enabled** because it bundles
+  `deploy_metadata` — a destructive write to the org — alongside the
+  read-only `retrieve_metadata`. Upstream provides no read-only /
+  write split; enabling `metadata` would expose write surface in
+  contradiction to the v0.1.0 read-only charter (PRODUCT-SPEC
+  §Success criteria KR3). Re-enabling `metadata` is gated on either
+  (a) upstream splitting the toolset, or (b) this plugin shipping a
+  destructive-op safety wrapper (Phase 2+).
+- **`data` toolset is SOQL-only**; there is no SOSL or full-text
+  search tool in upstream `data`. Earlier drafts of the `sf-query`
+  skill mentioned SOSL routing; those were dropped before ship.
+- **No Report / Dashboard / Analytics tools exist in upstream MCP at
+  all** as of v0.30.9; the originally-drafted `sf-report` skill (brief
+  Decision Q5) was dropped before ship. Phase 2+ `sf-report` returns
+  if upstream adds the tools.
+
+Phase 2+ `sf-deploy` skill (per PRODUCT-SPEC §Scope Phase 2+ table)
+expands further to `metadata,data,users` behind the safety wrapper.
 
 The launcher also passes `--orgs DEFAULT_TARGET_ORG` — the
 `sf-mcp-server` arg that binds the MCP server to whichever org the
@@ -203,12 +219,15 @@ sf-mcp-server
 Claude Code (renders result inline; offers follow-up analysis)
 ```
 
-**Read-only by default** (PRODUCT-SPEC §Success criteria KR3) — Step ③
-the MCP server is launched with `--toolsets data,metadata`, which
-restricts the tool surface to read affordances + metadata describe;
-write tools (data record insert/update/delete, metadata deploy) are
-absent unless user explicitly requests Phase 2+ `sf-deploy` skill (not
-present in v0.1.0).
+**Read-only by construction** (PRODUCT-SPEC §Success criteria KR3) —
+Step ③ the MCP server is launched with `--toolsets data`, which
+restricts the entire MCP tool surface to a single tool
+(`run_soql_query`). Write tools are not just instruction-disabled —
+they are structurally absent from the JSON-RPC `tools/list` response,
+so Claude has no write tool to call even if it tried. The `metadata`
+toolset (which bundles destructive `deploy_metadata` with read-only
+`retrieve_metadata`) is intentionally not enabled; re-enabling it is
+deferred to v0.2+ behind a safety wrapper.
 
 ### Setup path (PRODUCT-SPEC §Success criteria KR1)
 
@@ -463,8 +482,9 @@ emits {status, alias, instance_url, expiry} JSON to stdout
   `.mcp.json` is always loadable, regardless of whether the user has
   run `/salesforce-toolkit:sf-setup` yet.
 - **Args**: any args forwarded verbatim to the chosen entrypoint via
-  `"$@"` (typically `--toolsets data,metadata` from `.mcp.json`, plus
-  user-supplied flags).
+  `"$@"` (typically `--orgs DEFAULT_TARGET_ORG --toolsets data` from
+  `.mcp.json`, plus user-supplied flags). See §MCP default toolsets
+  for why `data` only.
 - **Stdin / Stdout / Stderr**: pass-through from the exec'd binary
   (MCP stdio transport — JSON-RPC frames on stdin/stdout).
 - **Resolution order**:

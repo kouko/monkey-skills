@@ -1,6 +1,6 @@
 # salesforce-toolkit
 
-> read-only Salesforce ツールキット — 公式 Salesforce DX MCP サーバー（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0）を介して、自然言語の SOQL / SOSL クエリと Report / Dashboard 分析を組織（org）に対して実行。
+> read-only Salesforce ツールキット — 公式 Salesforce DX MCP サーバー（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0）を介して、自然言語の SOQL クエリを組織（org）に対して実行。
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
@@ -10,11 +10,10 @@
 
 Claude Code を Salesforce org に接続し、以下を自然言語で問い合わせ可能にします：
 
-- **データクエリ** — 自然言語の SOQL / SOSL：オブジェクト一覧、レコード取得、フィルタリング、集計、親子関係の traverse
-- **Reports & Dashboards** — フォルダ一覧、metadata 取得、Report 実行、行データ取得、Dashboard ウィジェットの snapshot、トレンド / Top-N / ファネル分析
-- **read-only 憲章** — `data,metadata` MCP toolset のみ。Apex deploy、metadata push、ユーザー CRUD は v0.2+ で破壊的操作の safety wrapper が入るまで非対応
+- **SOQL クエリ** — upstream の `run_soql_query` MCP tool を介した自然言語 SOQL：オブジェクト一覧、レコード取得、フィルタリング、集計、親子関係の traverse
+- **真の read-only** — `data` MCP toolset のみ（唯一の tool：`run_soql_query`）。Apex deploy、metadata push、ユーザー CRUD はなし。`metadata` toolset は `deploy_metadata`（org への書き込み）を含むため意図的に **無効化**
 
-v0.1.0 は upstream の Salesforce DX MCP サーバー（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）をラップします — ベンダー保守の schema-aware なツール群で、サードパーティ製クエリ DSL の drift はありません。
+v0.1.0 は upstream の Salesforce DX MCP サーバー（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）をラップします — ベンダー保守の schema-aware なツール群で、サードパーティ製クエリ DSL の drift はありません。Salesforce Report / Dashboard tools は現時点で upstream MCP に存在しないため、Phase 2+（upstream が公開した場合）に持ち越し。
 
 ## クイックスタート
 
@@ -41,23 +40,22 @@ v0.1.0 は upstream の Salesforce DX MCP サーバー（[`salesforcecli/mcp`](h
 
 - 「直近の Opportunity で $50K 超のものを 10 件出して」
 - 「EMEA チームの stage 別 pipeline を見せて」
-- 「Weekly Revenue Dashboard を取得して、上位の動きを要約して」
+- 「今 quarter の Case を Status 別に count して」
 
 ## スキル
 
 | Skill | 用途 |
 |---|---|
-| [`sf-query`](skills/sf-query/) | 自然言語の SOQL / SOSL — オブジェクト一覧、レコード取得、フィルタリング、集計、親子関係の traverse |
-| [`sf-report`](skills/sf-report/) | Salesforce Reports + Dashboards — フォルダ一覧、metadata 取得、Report 実行、行データ取得、ウィジェットの snapshot、トレンド / Top-N / ファネル分析 |
+| [`sf-query`](skills/sf-query/) | 自然言語の SOQL — オブジェクト一覧、レコード取得、フィルタリング、集計、親子関係の traverse（upstream の `run_soql_query` MCP tool 経由） |
 
-両 skill とも read-only です。書き込み toolset（`users` / `code-analyzer` / Apex deploy）は v0.2+ に延期され、その時点でもユーザーが明示的に書き込みを要求する文言を入力しないと走りません。
+設計上 read-only。書き込み toolset（`metadata` / `users` / `code-analyzer` / Apex deploy）は v0.2+ に延期され、その時点でもユーザーが明示的に書き込みを要求する文言を入力しないと走りません。
 
 ## ツール構成
 
 | Component | Source | 役割 |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — OAuth（`sf org login web`）、org / alias 管理、token キャッシュを提供 |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | 60+ の Salesforce ツール（data / metadata / orgs / users / code-analyzer）を公開する MCP サーバー。v0.1.0 は `data,metadata` toolset のみ有効化。brew formula 名は `salesforce-mcp` ですが、install されるバイナリ名は `sf-mcp-server`（npm パッケージ `@salesforce/mcp` も同じバイナリを ship） |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | Salesforce tools（data / metadata / orgs / users / code-analyzer toolsets）を公開する MCP サーバー。v0.1.0 は真の read-only surface のため `data` toolset のみ有効化（唯一の tool：`run_soql_query`）。brew formula 名は `salesforce-mcp` ですが、install されるバイナリ名は `sf-mcp-server`（npm パッケージ `@salesforce/mcp` も同じバイナリを ship） |
 | [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 同梱 shim | Launcher：PATH 上の `sf-mcp-server` バイナリを優先、無ければ `npx -y @salesforce/mcp` にフォールバック。どちらも無い場合は `sf-setup` への案内を出力 |
 | Homebrew | https://brew.sh | macOS パッケージマネージャ — `sf-setup` が y/N 確認つきで自動インストール |
 | Node ≥ 26（推移的依存） | Homebrew 依存 | `sf-mcp-server` バイナリの実行環境 |
@@ -101,14 +99,12 @@ bash scripts/sf/refresh-auth.sh
 ┌──────────────────────────────────────────────────────────────┐
 │  Claude Code (CLI / Code タブ)                               │
 │                                                              │
-│  ┌─────────────┐         ┌─────────────┐                     │
-│  │  sf-query   │         │  sf-report  │                     │
-│  │  (SKILL.md) │         │  (SKILL.md) │                     │
-│  └──────┬──────┘         └──────┬──────┘                     │
-│         │                       │                            │
-│         └───────────┬───────────┘                            │
+│              ┌─────────────┐                                 │
+│              │  sf-query   │                                 │
+│              │  (SKILL.md) │                                 │
+│              └──────┬──────┘                                 │
 │                     ▼                                        │
-│        mcp__salesforce__*  (60+ tools, data + metadata)      │
+│        mcp__salesforce__run_soql_query  (data toolset)       │
 └─────────────────────┬────────────────────────────────────────┘
                       │  stdio MCP transport
                       ▼
@@ -124,7 +120,7 @@ bash scripts/sf/refresh-auth.sh
               Salesforce org REST API
 ```
 
-セットアップ時間（1 回限り）：`/salesforce-toolkit:sf-setup` がユーザーのターミナルで 6 ステップのインストーラを実行。実行時：Claude Code が `.mcp.json` をロード → launcher shim を spawn → stdio 経由で `sf-mcp-server` を spawn → 2 つの skill から MCP ツールが利用可能になる。
+セットアップ時間（1 回限り）：`/salesforce-toolkit:sf-setup` がユーザーのターミナルで 6 ステップのインストーラを実行。実行時：Claude Code が `.mcp.json` をロード → launcher shim を spawn → stdio 経由で `sf-mcp-server` を spawn → `sf-query` skill から `run_soql_query` MCP tool が利用可能になる。
 
 ## リンク
 

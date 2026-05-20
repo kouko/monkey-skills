@@ -3,7 +3,9 @@
 # Verifies salesforce-toolkit/.mcp.json schema:
 #   - Top-level `mcpServers` envelope (Claude Code plugin MCP loader contract)
 #   - stdio mode + bash launcher shim (Decision Q1 Path D)
-#   - toolsets default = data,metadata (Decision Q2)
+#   - toolsets default = data (Decision Q2; v0.1.0 dropped `metadata` after
+#     dogfood confirmed `metadata` toolset includes destructive `deploy_metadata`
+#     tool, breaking the "read-only" claim)
 #   - args include ${CLAUDE_PLUGIN_ROOT} placeholder + sf-mcp-launcher.sh shim
 #
 # Scope: file structure only. Launcher runtime behavior is T4's scope.
@@ -43,8 +45,8 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
-@test "salesforce.args contains --toolsets data,metadata pair" {
-  run jq -e '.mcpServers.salesforce.args | index("--toolsets") as $i | .[$i+1] == "data,metadata"' "$MCP_JSON"
+@test "salesforce.args contains --toolsets data pair (read-only)" {
+  run jq -e '.mcpServers.salesforce.args | index("--toolsets") as $i | .[$i+1] == "data"' "$MCP_JSON"
   [ "$status" -eq 0 ]
 }
 

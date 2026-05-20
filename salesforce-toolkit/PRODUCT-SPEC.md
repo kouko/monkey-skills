@@ -49,11 +49,11 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 **Primary Job Story**
 
 > **When** 我想在 Claude Code 內以自然語言查詢自己工作的 Salesforce
-> org（SOQL/SOSL 查詢、Dashboard/Report 拉取），**I want to** 從
-> 「裝完一個 plugin → 跑一個 setup 指令 → 完成 browser OAuth → 立刻
-> 可用」的單線流程把所有 CLI / OAuth / MCP 設定一次跑完，**so I can**
-> 不需要記 5 套 CLI 指令、不需要編 JSON、不需要排查 brew formula 改
-> 版（如 `salesforce-cli` cask 2026-09-01 disable）。
+> org（SOQL 查詢），**I want to** 從「裝完一個 plugin → 跑一個 setup
+> 指令 → 完成 browser OAuth → 立刻可用」的單線流程把所有 CLI / OAuth /
+> MCP 設定一次跑完，**so I can** 不需要記 5 套 CLI 指令、不需要編
+> JSON、不需要排查 brew formula 改版（如 `salesforce-cli` cask
+> 2026-09-01 disable）。
 
 **Supporting Job Story（再認證面）**
 
@@ -68,7 +68,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 
 ### Phase 1（v0.1.0，本 PR）
 
-落地以下 11 個檔案 + 1 個 CI workflow，達成「install plugin →
+落地以下檔案 + 1 個 CI workflow，達成「install plugin →
 `/salesforce-toolkit:sf-setup` → 自然語言問 SF」乾淨流程：
 
 ```
@@ -85,8 +85,7 @@ salesforce-toolkit/
 │       └── refresh-auth.sh                # token 過期 standalone re-auth
 ├── commands/sf-setup.md                   # /salesforce-toolkit:sf-setup
 ├── skills/
-│   ├── sf-query/SKILL.md + README.{md,ja.md,zh-TW.md}    # SOQL/SOSL
-│   └── sf-report/SKILL.md + README.{md,ja.md,zh-TW.md}   # Dashboard/Report
+│   └── sf-query/SKILL.md + README.{md,ja.md,zh-TW.md}    # SOQL via run_soql_query
 ├── README.md + README.ja.md + README.zh-TW.md            # plugin top-level
 ├── PRODUCT-SPEC.md + TECH-SPEC.md
 ├── CHANGELOG.md
@@ -96,13 +95,16 @@ salesforce-toolkit/
 外加 root `.claude-plugin/marketplace.json` 加一筆
 `{"name": "salesforce-toolkit", "source": "./salesforce-toolkit"}`。
 
-**MCP toolsets default**：`data,metadata`（read-only data + report
-查詢分析涵蓋；deploy/users/code-analyzer v0.1.0 不需）。
+**MCP toolsets default**：`data` only。Pre-ship 驗證（2026-05-20 對
+`salesforcecli/mcp` v0.30.9 binary 跑 `tools/list` JSON-RPC + `--help`
+toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
+`metadata` toolset 內含 `deploy_metadata`（破壞性寫入 org）+
+`retrieve_metadata`,故 v0.1.0 不啟用 `metadata` 以保「真正 read-only」。
+此 v0.1.0 純讀。寫入類 toolsets（`metadata` / `users` / `code-analyzer`
+/ Apex deploy）統一延到 v0.2+ 安全包覆層成熟後。
 
-**Read-only by default**：v0.1.0 skill 只暴露讀路徑（SOQL/SOSL +
-Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
-但 skill prompt 不教 Claude 主動呼叫，由 user 顯式要求時 Claude 才會
-走「user-typed write request」路徑（非預設行為）。
+**真正 read-only**：v0.1.0 plugin tool surface = `mcp__salesforce__run_soql_query`
+單一 tool;結構上即無寫操作 tool 可被 Claude 呼叫，不依賴 prompt 紀律。
 
 **Two install paths（互為 fallback）**：
 
@@ -119,6 +121,9 @@ Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
 
 | Phase 2+ 項目 | Trigger 條件 |
 |---|---|
+| `sf-report` skill（Salesforce Report / Dashboard 拉取分析） | upstream `salesforcecli/mcp` 推出 Report / Dashboard MCP tools（v0.30.9 為止無此 tool） |
+| `sf-query` 加入 SOSL 路徑 | upstream MCP 推出 SOSL query tool（v0.30.9 `data` toolset 僅有 SOQL 路徑 `run_soql_query`） |
+| Schema-aware describe via `metadata` toolset | upstream 把 `metadata` toolset 拆成 read-only describe + write deploy 兩個獨立 toolset,或本 plugin 加上 destructive-op 安全包覆層 |
 | `sf-deploy` skill（寫操作：Apex push / metadata push） | kouko 出現首次真實寫操作需求；同時 toolsets 擴到 `metadata,data,users` |
 | Salesforce Hosted MCP path（HTTP + per-org URL） | iChef 開啟 Enterprise Edition+ license 且 Hosted MCP 啟用 |
 | Linux / Windows 支援 | 外部用戶請求 + 有人願意 maintain 平台差異（brew 替代偵測、Keychain fallback） |
@@ -137,6 +142,9 @@ Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
 
 | Non-goal | Rejected because |
 |---|---|
+| Salesforce Report / Dashboard 拉取分析（原 `sf-report` skill） | upstream `salesforcecli/mcp` v0.30.9 不暴露任何 Report / Dashboard / Analytics MCP tool（2026-05-20 對 `tools/list` JSON-RPC 介接驗證）。若 plugin 側自建 REST 替代 = drift surface 與 supply-chain 風險,因此延到 upstream 推出後 |
+| SOSL（在 v0.1.0 `sf-query` 內） | upstream MCP `data` toolset 僅有 SOQL 路徑 `run_soql_query`;無 `run_sosl_query` 等價 tool。若在 plugin 側 fallback 改打 `sf data search` CLI = 走出 MCP 介接,失去 supply-chain 一致性 |
+| `metadata` toolset 同時開啟（為了取得 schema describe） | `metadata` toolset 內含 `deploy_metadata` 破壞性寫入,無 read-only / write 分離 toggle。為了 v0.1.0 結構上 read-only 安全保證,寧可放棄 schema describe 也不冒 accidental write 風險 |
 | Deploy / Apex push / metadata push skill（寫操作 path） | v0.1.0 read-only scope；寫操作 = 非冪等 / 不可逆風險；先驗 read pipeline 可用 |
 | Salesforce Hosted MCP 路徑（HTTP + per-org URL） | 受眾與 license 不匹配 — Enterprise Edition+ 才有；kouko iChef instance 未開通 |
 | Multi-org 切換 helper / wrapper | kouko 僅一個 SF org（iChef）；`sf config set target-org` 直接用足夠；多 org 切換抽象屬外部用戶需求 |
@@ -158,14 +166,14 @@ Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
 
 | 路徑 | 機制 | 適用場景 | v0.1.0 立場 |
 |---|---|---|---|
-| **A. Salesforce DX MCP**（採用） | brew install `sf` + `salesforce-mcp`（Apache-2.0, `salesforcecli/mcp`, v0.30.9+）；stdio MCP transport；用 `sf` CLI 已有的 OAuth token | 個人 SF org 讀路徑（kouko、外部 dev / business analyst）；無 Enterprise license；最低 setup cost | **採用**。60+ MCP tools 覆蓋 orgs/metadata/data/users/code-analyzer；read-only 場景 `data,metadata` 兩 toolsets 已足 |
+| **A. Salesforce DX MCP**（採用） | brew install `sf` + `salesforce-mcp`（Apache-2.0, `salesforcecli/mcp`, v0.30.9+）；stdio MCP transport；用 `sf` CLI 已有的 OAuth token | 個人 SF org 讀路徑（kouko、外部 dev / business analyst）；無 Enterprise license；最低 setup cost | **採用**。MCP tools 涵蓋 orgs / metadata / data / users / code-analyzer toolsets；v0.1.0 read-only 場景僅啟用 `data` toolset（單一 tool `run_soql_query`） |
 | **B. Salesforce Hosted MCP** | HTTP MCP transport + per-org URL；SF 自家託管 | Enterprise Edition+ license；多人協作；不想跑本機 daemon | **Phase 2+**。受眾不對（kouko iChef instance 未開通 Enterprise），license 邊界與 v0.1.0 用戶不匹配 |
 | **C. Third-party community MCPs** | 例如 [`@modelcontextprotocol/server-salesforce`](https://github.com/modelcontextprotocol) 等社群 MCP | 非官方 schema 覆蓋（自定 query DSL） | **拒絕**。官方 DX MCP 已 GA + Apache-2.0；社群 MCP 缺乏官方 schema 同步保證 + supply-chain 信任邊界較弱 |
 
 **Path A 的差異化**（vs Path B/C）：
 - **License**：Apache-2.0（DX MCP）+ MIT（本 plugin） — 商用 + 個人都 OK
 - **Setup cost**：< 5 min 第一次（brew + sf login web）；後續 < 1s 冷啟（brew bottle）；token expired 時 30s re-auth
-- **Toolset 覆蓋**：60+ MCP tools，data/metadata/orgs/users/code-analyzer 全可選；本 v0.1.0 default 開 `data,metadata`
+- **Toolset 覆蓋**：upstream 提供 data / metadata / orgs / users / code-analyzer toolsets 可選;本 v0.1.0 default 僅啟用 `data`（唯一 tool `run_soql_query`） — 結構上 read-only
 - **Cross-org switching**：透過 `sf` CLI 內建 alias 切換（`sf config set target-org`）
 
 ---
@@ -178,7 +186,7 @@ Dashboard/Report 拉取）；MCP `data,metadata` toolsets 雖含寫操作 tool
 |---|---|---|
 | KR1 | 首次 install → setup → first query 端到端時間 | < 5 min（含 brew install + OAuth browser flow） |
 | KR2 | `auto-setup.sh` 重複執行（已 setup 過的狀態）是否 idempotent，且 stderr 印 `already done: <step>` | 100%（6 step 全部跳過 `brew install` / `sf login web`） |
-| KR3 | MCP 預設 toolsets 為 read-only 範圍（`data,metadata`），無寫操作 tool 出現在 Claude tool list 直到 user 顯式請求 | 100% read-only by default |
+| KR3 | MCP 預設 toolsets 為 read-only 範圍（`data` only — 單一 tool `run_soql_query`），無寫操作 tool 出現在 Claude tool list 直到 user 顯式請求 | 100% read-only by construction |
 | KR4 | OAuth token 過期後跑 `refresh-auth.sh` 重新拿 token | < 30s + 1 次 browser confirm |
 | KR5 | brew 缺席時 `.mcp.json` 仍可載入（shim fallback 到 `npx -y @salesforce/mcp`） | 100% load 成功 |
 | KR6 | v0.1.0 期間 kouko 實際做的 SF 查詢數 | ≥ 5 次（驗證「裝完即可用」） |

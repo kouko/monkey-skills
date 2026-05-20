@@ -1,6 +1,6 @@
 # salesforce-toolkit
 
-> Read-only Salesforce toolkit — natural-language SOQL / SOSL queries and Report / Dashboard analysis over your org via the official Salesforce DX MCP server (`salesforcecli/mcp`, Apache-2.0).
+> Read-only Salesforce toolkit — natural-language SOQL queries over your org via the official Salesforce DX MCP server (`salesforcecli/mcp`, Apache-2.0).
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
@@ -10,11 +10,10 @@
 
 Connects Claude Code to your Salesforce org so you can ask in prose:
 
-- **Data queries** — natural-language SOQL / SOSL: list objects, fetch records, filter, aggregate, traverse parent-child relationships
-- **Reports & Dashboards** — list folders, fetch metadata, execute Reports, pull row data, snapshot Dashboard widgets, run trend / Top-N / funnel analysis
-- **Read-only charter** — `data,metadata` MCP toolsets only; no Apex deploy, no metadata push, no user CRUD until v0.2+ ships a destructive-op safety wrapper
+- **SOQL queries** — natural-language SOQL via the upstream `run_soql_query` MCP tool: list objects, fetch records, filter, aggregate, traverse parent-child relationships
+- **Truly read-only** — `data` MCP toolset only (single tool: `run_soql_query`); no Apex deploy, no metadata push, no user CRUD. The `metadata` toolset is intentionally NOT enabled because it includes `deploy_metadata` which writes to the org
 
-v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https://github.com/salesforcecli/mcp), Apache-2.0, GA 2026) — vendor-maintained schema-aware tool surface, no third-party query DSL drift.
+v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https://github.com/salesforcecli/mcp), Apache-2.0, GA 2026) — vendor-maintained schema-aware tool surface, no third-party query DSL drift. Salesforce Report / Dashboard tools are not exposed by upstream MCP today; deferred to Phase 2+ if they land.
 
 ## Quick start
 
@@ -41,23 +40,22 @@ After that, ask Claude things like:
 
 - "List the 10 most-recent Opportunities over $50K"
 - "Show me the pipeline by stage for the EMEA team"
-- "Pull the Weekly Revenue Dashboard and summarise the top movers"
+- "Count Cases by Status grouped this quarter"
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
-| [`sf-query`](skills/sf-query/) | Natural-language SOQL / SOSL — list objects, fetch records, filter, aggregate, traverse parent-child relationships |
-| [`sf-report`](skills/sf-report/) | Salesforce Reports + Dashboards — list folders, fetch metadata, execute Reports, pull row data, snapshot widgets, trend / Top-N / funnel analysis |
+| [`sf-query`](skills/sf-query/) | Natural-language SOQL — list objects, fetch records, filter, aggregate, traverse parent-child relationships (via upstream `run_soql_query` MCP tool) |
 
-Both skills are read-only. Write toolsets (`users` / `code-analyzer` / Apex deploy) are deferred to v0.2+ and require user-typed explicit write requests even then.
+Read-only by construction. Write toolsets (`metadata` / `users` / `code-analyzer` / Apex deploy) are deferred to v0.2+ and require user-typed explicit write requests even then.
 
 ## Tooling stack
 
 | Component | Source | Role |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — provides OAuth (`sf org login web`), org / alias management, token cache |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing 60+ Salesforce tools (data / metadata / orgs / users / code-analyzer); v0.1.0 ships with `data,metadata` toolsets enabled. Brew formula name is `salesforce-mcp` but the installed binary is `sf-mcp-server` (same binary ships from the npm package `@salesforce/mcp`) |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing Salesforce tools (data / metadata / orgs / users / code-analyzer toolsets); v0.1.0 ships with only the `data` toolset enabled (single tool: `run_soql_query`) for a truly read-only surface. Brew formula name is `salesforce-mcp` but the installed binary is `sf-mcp-server` (same binary ships from the npm package `@salesforce/mcp`) |
 | [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | Plugin-bundled shim | Launcher: prefers the `sf-mcp-server` binary on PATH, falls back to `npx -y @salesforce/mcp` when brew is unavailable; prints `sf-setup` pointer if neither path works |
 | Homebrew | https://brew.sh | macOS package manager — installed automatically by `sf-setup` if missing (with y/N confirmation) |
 | Node ≥ 26 (transitive) | Homebrew dependency | Runtime for the `sf-mcp-server` binary |
@@ -101,14 +99,12 @@ Two non-TTY caveats baked into the scripts (you don't have to do anything — fl
 ┌──────────────────────────────────────────────────────────────┐
 │  Claude Code (CLI / Code tab)                                │
 │                                                              │
-│  ┌─────────────┐         ┌─────────────┐                     │
-│  │  sf-query   │         │  sf-report  │                     │
-│  │  (SKILL.md) │         │  (SKILL.md) │                     │
-│  └──────┬──────┘         └──────┬──────┘                     │
-│         │                       │                            │
-│         └───────────┬───────────┘                            │
+│              ┌─────────────┐                                 │
+│              │  sf-query   │                                 │
+│              │  (SKILL.md) │                                 │
+│              └──────┬──────┘                                 │
 │                     ▼                                        │
-│        mcp__salesforce__*  (60+ tools, data + metadata)      │
+│        mcp__salesforce__run_soql_query  (data toolset)       │
 └─────────────────────┬────────────────────────────────────────┘
                       │  stdio MCP transport
                       ▼
@@ -124,7 +120,7 @@ Two non-TTY caveats baked into the scripts (you don't have to do anything — fl
               Salesforce org REST API
 ```
 
-Setup time (one-off): `/salesforce-toolkit:sf-setup` runs the 6-step installer in the user's terminal. Runtime: Claude Code loads `.mcp.json` → spawns the launcher shim → spawns `sf-mcp-server` over stdio → MCP tools become available to the two skills.
+Setup time (one-off): `/salesforce-toolkit:sf-setup` runs the 6-step installer in the user's terminal. Runtime: Claude Code loads `.mcp.json` → spawns the launcher shim → spawns `sf-mcp-server` over stdio → the `run_soql_query` MCP tool becomes available to the `sf-query` skill.
 
 ## Links
 

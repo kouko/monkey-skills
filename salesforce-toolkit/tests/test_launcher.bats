@@ -50,18 +50,18 @@ STUB
   # No npx stub in $TMPDIR_TEST → proves selection is sf-mcp-server first.
   # /bin:/usr/bin on macOS does not normally have npx either.
   run env -i PATH="$TMPDIR_TEST:/bin:/usr/bin" HOME="$HOME" "$LAUNCHER" \
-    --orgs DEFAULT_TARGET_ORG --toolsets data,metadata
+    --orgs DEFAULT_TARGET_ORG --toolsets data
   [ "$status" -eq 0 ]
-  [[ "$output" == *"STUB sf-mcp-server --orgs DEFAULT_TARGET_ORG --toolsets data,metadata"* ]]
+  [[ "$output" == *"STUB sf-mcp-server --orgs DEFAULT_TARGET_ORG --toolsets data"* ]]
 }
 
 @test "(b) only npx on PATH → exec npx -y @salesforce/mcp with forwarded args" {
   make_stub "$TMPDIR_TEST/npx"
   run env -i PATH="$TMPDIR_TEST:/bin:/usr/bin" HOME="$HOME" "$LAUNCHER" \
-    --orgs DEFAULT_TARGET_ORG --toolsets data,metadata
+    --orgs DEFAULT_TARGET_ORG --toolsets data
   [ "$status" -eq 0 ]
   # npx must be invoked with `-y @salesforce/mcp` then user args.
-  [[ "$output" == *"STUB npx -y @salesforce/mcp --orgs DEFAULT_TARGET_ORG --toolsets data,metadata"* ]]
+  [[ "$output" == *"STUB npx -y @salesforce/mcp --orgs DEFAULT_TARGET_ORG --toolsets data"* ]]
 }
 
 @test "(c) neither sf-mcp-server nor npx → exit 127 + stderr mentions sf-setup" {

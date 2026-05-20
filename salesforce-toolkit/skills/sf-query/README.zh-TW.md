@@ -1,8 +1,8 @@
 # sf-query
 
-透過 Salesforce DX MCP server 對已連線的 org 執行自然語言 Salesforce SOQL / SOSL query。以散文丟出商業問題，skill 會挑出對的 MCP tool、組合 SOQL（或 SOSL）字串、先把它印出來給你 sanity-check、執行、再把列以 table 呈現。
+透過 Salesforce DX MCP server 對已連線的 org 執行自然語言 Salesforce SOQL query。以散文丟出商業問題，skill 會組合 SOQL 字串、先把它印出來給你 sanity-check、呼叫上游 `run_soql_query` MCP tool、再把列以 table 呈現。
 
-唯讀（read-only）。不做 DML、不改 metadata — 那是 `sf-deploy`（Phase 2）的範圍。
+唯讀（read-only）。plugin 只啟用 `data` MCP toolset（唯一 tool：`run_soql_query`）;不做 DML、不改 metadata。SOSL 目前上游 MCP 還沒 tool 化,所以 v0.1.0 只跑 SOQL。
 
 ## 前置條件
 
@@ -72,5 +72,5 @@ MCP server 會把彙總結果攤平成 plain JSON — 請以 2 欄 markdown tabl
 ## References
 
 - 完整 skill 指令：[`SKILL.md`](SKILL.md)
-- [Salesforce SOQL & SOSL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source
+- [Salesforce SOQL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source（v0.1.0 本 plugin 只接得到 SOQL）
 - [salesforcecli/mcp](https://github.com/salesforcecli/mcp) — upstream MCP server

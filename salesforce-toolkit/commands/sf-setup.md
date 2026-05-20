@@ -302,7 +302,7 @@ Tell user:
 
 > Run `/reload-plugins` to activate the salesforce MCP server. After reload you can ask things like:
 > - "List the 10 most-recent Opportunities over $50K"
-> - "Pull the Weekly Revenue dashboard"
+> - "Count Cases by Status grouped this quarter"
 >
 > If you skip `/reload-plugins`, the MCP server will remain in its previously-failed state until you restart Claude Code.
 

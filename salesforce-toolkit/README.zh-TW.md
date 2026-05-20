@@ -1,6 +1,6 @@
 # salesforce-toolkit
 
-> 唯讀的 Salesforce 工具包 — 透過官方 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0），對你的 org 進行自然語言 SOQL / SOSL 查詢與 Report / Dashboard 分析。
+> 唯讀的 Salesforce 工具包 — 透過官方 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0），對你的 org 進行自然語言 SOQL 查詢。
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
@@ -10,11 +10,10 @@
 
 把 Claude Code 接到你的 Salesforce org，讓你用自然語言問問題：
 
-- **資料查詢** — 自然語言 SOQL / SOSL：列出 object、抓 record、過濾、聚合、走訪父子關聯
-- **Reports 與 Dashboards** — 列出資料夾、抓 metadata、執行 Report、拉 row 資料、Dashboard widget 快照、趨勢 / Top-N / 漏斗分析
-- **唯讀章程** — 只啟用 `data,metadata` MCP toolset；不做 Apex deploy、metadata push、user CRUD,等到 v0.2+ 推出破壞性操作的 safety wrapper 才開放
+- **SOQL 查詢** — 透過上游 `run_soql_query` MCP tool 跑自然語言 SOQL：列出 object、抓 record、過濾、聚合、走訪父子關聯
+- **真正的唯讀** — 只啟用 `data` MCP toolset（唯一 tool：`run_soql_query`）；不做 Apex deploy、metadata push、user CRUD。`metadata` toolset 因為內含 `deploy_metadata`（會寫入 org）而 **刻意不啟用**
 
-v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）— vendor 維護、schema-aware 的工具表面,沒有第三方 query DSL 漂移問題。
+v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）— vendor 維護、schema-aware 的工具表面,沒有第三方 query DSL 漂移問題。Salesforce Report / Dashboard tool 目前上游 MCP 並未提供;若日後上游補上,再排進 Phase 2+。
 
 ## 快速開始
 
@@ -41,23 +40,22 @@ v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://
 
 - 「列出最近 10 筆超過 $50K 的 Opportunity」
 - 「給我看 EMEA team 的 pipeline,依 stage 分群」
-- 「拉 Weekly Revenue Dashboard,幫我整理重點變動」
+- 「本 quarter 的 Case 依 Status 計數」
 
 ## Skill 清單
 
 | Skill | 用途 |
 |---|---|
-| [`sf-query`](skills/sf-query/) | 自然語言 SOQL / SOSL — 列出 object、抓 record、過濾、聚合、走訪父子關聯 |
-| [`sf-report`](skills/sf-report/) | Salesforce Reports + Dashboards — 列出資料夾、抓 metadata、執行 Report、拉 row 資料、widget 快照、趨勢 / Top-N / 漏斗分析 |
+| [`sf-query`](skills/sf-query/) | 自然語言 SOQL — 列出 object、抓 record、過濾、聚合、走訪父子關聯（透過上游 `run_soql_query` MCP tool） |
 
-兩個 skill 都是唯讀。寫入類 toolset（`users` / `code-analyzer` / Apex deploy）延到 v0.2+,而且即使到時候,也必須使用者明確輸入寫入請求才會執行。
+設計上即為唯讀。寫入類 toolset（`metadata` / `users` / `code-analyzer` / Apex deploy）延到 v0.2+,而且即使到時候,也必須使用者明確輸入寫入請求才會執行。
 
 ## 工具堆疊
 
 | Component | Source | 角色 |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — 提供 OAuth（`sf org login web`）、org / alias 管理、token 快取 |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 60+ Salesforce tool（data / metadata / orgs / users / code-analyzer）;v0.1.0 只啟用 `data,metadata` toolset。brew formula 名為 `salesforce-mcp`,但實際安裝的 binary 是 `sf-mcp-server`（npm 套件 `@salesforce/mcp` 也是 ship 同一個 binary） |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 Salesforce tool（data / metadata / orgs / users / code-analyzer toolsets）;v0.1.0 為了真正唯讀只啟用 `data` toolset（唯一 tool：`run_soql_query`）。brew formula 名為 `salesforce-mcp`,但實際安裝的 binary 是 `sf-mcp-server`（npm 套件 `@salesforce/mcp` 也是 ship 同一個 binary） |
 | [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 內建 shim | Launcher：優先使用 PATH 上的 `sf-mcp-server` binary,沒有的話 fallback 到 `npx -y @salesforce/mcp`;兩條路徑都不通時印出 `sf-setup` 提示 |
 | Homebrew | https://brew.sh | macOS 套件管理器 — 如果沒裝,`sf-setup` 會自動安裝（會有 y/N 確認） |
 | Node ≥ 26（傳遞依賴） | Homebrew 依賴 | `sf-mcp-server` binary 的執行環境 |
@@ -101,14 +99,12 @@ scripts 內已經處理好的兩個非 TTY 注意事項（你不用做什麼 —
 ┌──────────────────────────────────────────────────────────────┐
 │  Claude Code (CLI / Code 分頁)                               │
 │                                                              │
-│  ┌─────────────┐         ┌─────────────┐                     │
-│  │  sf-query   │         │  sf-report  │                     │
-│  │  (SKILL.md) │         │  (SKILL.md) │                     │
-│  └──────┬──────┘         └──────┬──────┘                     │
-│         │                       │                            │
-│         └───────────┬───────────┘                            │
+│              ┌─────────────┐                                 │
+│              │  sf-query   │                                 │
+│              │  (SKILL.md) │                                 │
+│              └──────┬──────┘                                 │
 │                     ▼                                        │
-│        mcp__salesforce__*  (60+ tools, data + metadata)      │
+│        mcp__salesforce__run_soql_query  (data toolset)       │
 └─────────────────────┬────────────────────────────────────────┘
                       │  stdio MCP transport
                       ▼
@@ -124,7 +120,7 @@ scripts 內已經處理好的兩個非 TTY 注意事項（你不用做什麼 —
               Salesforce org REST API
 ```
 
-設定時間（一次性）：`/salesforce-toolkit:sf-setup` 在使用者終端跑 6 步驟安裝器。執行時：Claude Code 載入 `.mcp.json` → spawn launcher shim → 透過 stdio spawn `sf-mcp-server` → MCP tool 對兩個 skill 變為可用。
+設定時間（一次性）：`/salesforce-toolkit:sf-setup` 在使用者終端跑 6 步驟安裝器。執行時：Claude Code 載入 `.mcp.json` → spawn launcher shim → 透過 stdio spawn `sf-mcp-server` → `sf-query` skill 可使用 `run_soql_query` MCP tool。
 
 ## 連結
 

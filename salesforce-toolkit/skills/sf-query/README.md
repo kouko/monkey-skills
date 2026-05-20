@@ -1,8 +1,8 @@
 # sf-query
 
-Natural-language Salesforce SOQL / SOSL query over a connected org via the Salesforce DX MCP server. Ask a business question in prose; the skill picks the right MCP tool, composes the SOQL (or SOSL) string, echoes it for sanity-check, executes, and renders rows as a table.
+Natural-language Salesforce SOQL query over a connected org via the Salesforce DX MCP server. Ask a business question in prose; the skill composes the SOQL string, echoes it for sanity-check, calls the upstream `run_soql_query` MCP tool, and renders rows as a table.
 
-Read-only. No DML, no metadata mutation — that's `sf-deploy` (Phase 2) territory.
+Read-only. The plugin ships only the `data` MCP toolset (single tool: `run_soql_query`); no DML, no metadata mutation. SOSL is not yet exposed by upstream MCP, so v0.1.0 is SOQL-only.
 
 ## Prerequisites
 
@@ -72,5 +72,5 @@ Common errors (full table with fixes in [`SKILL.md`](SKILL.md) §"Common errors 
 ## References
 
 - Full skill instructions: [`SKILL.md`](SKILL.md)
-- [Salesforce SOQL & SOSL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source
+- [Salesforce SOQL Reference](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/) — primary source (SOQL only is reachable from this plugin in v0.1.0)
 - [salesforcecli/mcp](https://github.com/salesforcecli/mcp) — upstream MCP server
