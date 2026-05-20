@@ -3,7 +3,7 @@
 **Source brief**: docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 **Total tasks**: 5 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-05-20 round 2, 14/14 checks)
 **Prerequisites**: part-1 merged (plugin scaffold + tty-guard.sh + launcher 已存在)
 
 Part 2 scope：`auto-setup.sh` 6-step idempotent installer + alias inference + credential-check + refresh-auth + `/sf-setup` slash command。

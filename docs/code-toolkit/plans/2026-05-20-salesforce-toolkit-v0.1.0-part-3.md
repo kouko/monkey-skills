@@ -3,7 +3,7 @@
 **Source brief**: docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 **Total tasks**: 4 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-05-20 round 2, 14/14 checks)
 **Prerequisites**: part-1 + part-2 merged (plugin scaffold + setup automation 已存在；skill 文中 reference `/salesforce-toolkit:sf-setup` 與 `.mcp.json` salesforce server)
 
 Part 3 scope：兩個 read-only skill 的 SKILL.md 本體（不含 tri-language READMEs，那是 part-4）+ PRODUCT/TECH spec + CI workflow。

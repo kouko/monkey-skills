@@ -3,7 +3,7 @@
 **Source brief**: docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 **Total tasks**: 3 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-05-20 round 1, 14/14 checks)
 **Prerequisites**: part-4a merged (3 個 en authoritative README 已存在；ja + zh-TW 從各自的 en 主檔翻譯)
 
 Part 4b scope：3 個 translation pair（plugin-level + 2 skill-level），每 task 翻譯 1 個 en 主檔成 ja + zh-TW 兩語言（同主檔的雙語翻譯為 logical unit；2 檔 ≤ 100 行各，glossary lint 同步通過）。

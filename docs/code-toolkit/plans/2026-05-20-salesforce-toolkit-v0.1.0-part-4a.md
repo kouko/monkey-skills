@@ -3,7 +3,7 @@
 **Source brief**: docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md
 **Total tasks**: 3 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-05-20 round 1, 14/14 checks)
 **Prerequisites**: part-1 + part-2 + part-3 merged (plugin scaffold + setup automation + skill SKILL.md 已存在)
 
 Part 4a scope：3 個 English authoritative README（plugin-level + 2 skill-level）。Translation 部分（ja + zh-TW）由 part-4b 處理。
