@@ -75,8 +75,6 @@ jobs:
       - name: Run check-marketplace-description-sync.py
         # Same-PR drift rule: when salesforce-toolkit's plugin.json
         # description changes, the .claude-plugin/marketplace.json
-        # entry must be updated in the same commit. The script reads
-        # YAML/JSON via stdlib + pyyaml.
-        run: |
-          python3 -m pip install --quiet pyyaml
-          python3 scripts/check-marketplace-description-sync.py
+        # entry must be updated in the same commit. Script uses stdlib
+        # only (json + sys + pathlib), no extra pip install needed.
+        run: python3 scripts/check-marketplace-description-sync.py
