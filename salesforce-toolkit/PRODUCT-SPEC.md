@@ -9,7 +9,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 - Target plugin: `salesforce-toolkit` (v0.1.0, greenfield)
 - Upstream brief:
   [`docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
-- Status: implementation-in-progress (part-3 of 5-part plan series)
+- Status: shipped v0.1.0 (2026-05-21) — all 5 plan parts landed; scope-cut + dogfood hardening complete; whole-branch review PASS
 
 ---
 
@@ -204,13 +204,17 @@ toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
 ## Open questions
 
 無 v0.1.0 blocking 未決事項。Brief §Open Questions 7 個 Q 全部 resolved
-（見 brief Decision table Q1–Q7）。Plan-stage 微確認項：
+（見 brief Decision table Q1–Q7）。
 
-- ⚠️ monkey-skills root README 是否需加 plugin entry — 部分 toolkit
-  README 不維護總表；plan T1 grep 後決定
-- ⚠️ `${CLAUDE_PLUGIN_ROOT}` 在 `.mcp.json` `args[]` 內是否真會替換
-  — Claude Code MCP 文件只 verbatim 提到 `env` field 支援；plan T2
-  寫測試，必要時 fallback 用 `bash -c "$CLAUDE_PLUGIN_ROOT/bin/..."`
+### Resolved during ship
+
+- ✅ monkey-skills root README plugin entry — 加入確認；EN +
+  JA + ZH-TW 三語 root README 同步更新（commit `e5a30cf` EN；whole-branch
+  review 後 JA/ZH-TW 補齊）
+- ✅ `${CLAUDE_PLUGIN_ROOT}` 在 `.mcp.json` `args[]` 內的展開 — Claude
+  Code MCP runtime 平台合約，不在 plugin 測試邊界內。`tests/test_mcp_config.bats`
+  以 substring 驗證 placeholder 字面存在；runtime expansion 由 Claude Code
+  保證（dogfood 已實證）
 
 ---
 

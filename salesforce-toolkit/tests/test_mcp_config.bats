@@ -41,6 +41,8 @@ setup() {
 }
 
 @test "salesforce.args[0] uses \${CLAUDE_PLUGIN_ROOT} placeholder" {
+  # Boundary: verifies placeholder string literal is present in .mcp.json.
+  # Runtime expansion is Claude Code MCP platform contract (out of test scope).
   run jq -e '.mcpServers.salesforce.args[0] | contains("${CLAUDE_PLUGIN_ROOT}")' "$MCP_JSON"
   [ "$status" -eq 0 ]
 }
