@@ -10,13 +10,13 @@ After `wiki-ingest`, recently-created pages may be mentioned as plain text in ol
 ## Pre-flight
 
 1. Read `.obsidian-wiki.config` for `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
-2. If wiki/ doesn't exist or `wiki/index.md` is empty, exit and tell user to run `/wiki-setup` then `/wiki-ingest`.
+2. If `wiki/` doesn't exist or contains no `.md` files under the type subdirectories (`wiki/{entities,concepts,references,skills,synthesis,journal}/*.md` directory scan returns empty), exit and tell user to run `/wiki-setup` then `/wiki-ingest`.
 
 ## STEP 1 — Build the link inventory
 
-Read `wiki/index.md` and gather all page titles. For each, also collect:
-- Filename slug (canonical wikilink target)
-- Frontmatter `title:` (display alias)
+Glob `wiki/{entities,concepts,references,skills,synthesis,journal}/*.md` (directory scan — do NOT rely on `wiki/index.md`, which is a stale snapshot after Path 2). For each file, gather:
+- Filename slug (canonical wikilink target — derived from the file's basename without `.md`)
+- Frontmatter `title:` (display alias; fallback to filename slug if `title:` is missing or empty)
 - Common variants (e.g., "qlib" / "Qlib" / "QLib"; capture all from page bodies)
 
 Build an inventory: `{search_phrase → canonical_wikilink}`.
