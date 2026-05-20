@@ -238,7 +238,7 @@ summary: "≤200 char single-line description of what this source contributes"
 - Cite which target pages were updated and how
 ```
 
-**`## TL;DR` format**: 3–7 bullets, sentence-fragment style. Thin source (3-min video, 1-page post): 3 bullets. Substantive source (long video, paper, chapter): 6–7 bullets. No nested sub-bullets — nesting goes in Detailed Extract.
+**`## TL;DR` format**: 3–7 bullets, sentence-fragment style. Thin source (3-min video, 1-page post): 3 bullets. Medium source (10-min explainer, 5-page article): 4–5 bullets. Substantive source (long video, paper, chapter): 6–7 bullets. No nested sub-bullets — nesting goes in Detailed Extract.
 
 **`## Detailed Extract` format** (MAY — skip thin sources; include when source has structure, quotes, or methodology beyond TL;DR): sub-heading vocabulary (LLM picks 2–4, or invents new ones):
 - `### Key Claims` — concrete assertions made by source
