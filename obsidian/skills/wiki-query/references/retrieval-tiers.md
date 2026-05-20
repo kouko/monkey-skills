@@ -22,15 +22,23 @@ Tier 2: full page body                    (full read)
 
 If hot.md doesn't have it, proceed to Tier 1.
 
-## Tier 1 — Summary scan
+## Tier 1 — Frontmatter script
 
-Scan `wiki/index.md` to identify candidate pages by category and title match.
+Invoke the bundled frontmatter script (`<skill-root>/scripts/query-frontmatter.py`) to scan every page's YAML frontmatter in one pass and return the top-N ranked candidates as a JSON array. Each row already carries `path`, `title`, `type`, `summary`, `tags`, `score` — no further file reads required at this tier.
 
-For each candidate, **read frontmatter only** (or use `head` to grab first ~15 lines).
+```bash
+python3 <skill-root>/scripts/query-frontmatter.py \
+  --keywords "<comma-separated-keywords>" \
+  --top 5 \
+  [--type <entities|concepts|references|skills|synthesis|journal>] \
+  --vault-root <vault-root>
+```
 
-The `summary:` field (≤200 chars) is the synthesized one-line answer the page provides. If a single summary or 2-3 summaries answer the user's question, return them with page-name attribution and stop.
+The `summary:` field (≤200 chars per page) is the synthesized one-line answer the page provides. If a single summary or 2-3 summaries answer the user's question, return them with page-name attribution and stop.
 
-**Do not load the full page body unless required.**
+**Do not load the full page body unless required** — that is Tier 2.
+
+The script replaces the older approach of reading `wiki/index.md` + grepping for candidates, which forced Claude to lexically scan an N-line text file from its own context. Moving the scan into deterministic Python keeps Tier 1 cost flat as the wiki grows.
 
 ## Tier 2 — Full page read
 
@@ -52,10 +60,12 @@ if hot_content satisfies query:
     return hot_content with caveat "from hot cache (recent activity)"
 
 # Tier 1
-candidates = scan_index_for_matches(query)
-summaries = [read_frontmatter_summary(p) for p in candidates]
-if summaries satisfy query:
-    return summaries with page-name attribution
+keywords = extract_keywords(query)                            # LLM
+type_hint = infer_type_if_explicit(query)                     # LLM; may be None
+candidates = run_query_frontmatter_script(keywords, type_hint)  # deterministic Python
+# each candidate already has path/title/type/summary/tags/score
+if candidates satisfy query:
+    return candidate summaries with page-name attribution
 
 # Tier 2
 top_pages = rank_by_relevance(candidates, query)[:3]
@@ -66,22 +76,25 @@ return synthesized_answer(bodies)
 update_hot_md(query, pages_used)
 ```
 
-## Match heuristics for index scan
+## Match heuristics (implemented by the frontmatter script)
 
-When scanning `wiki/index.md` for candidates:
+Both keywords and the parsed frontmatter values are NFKC-normalized and lowercased before matching. Per-keyword weights are summed across the parsed frontmatter fields (title=+3, tag=+2, summary=+1 per matched keyword):
 
-1. **Exact title match** — highest priority (e.g., "qlib" → `entities/qlib.md`)
-2. **Tag match** — frontmatter tags overlap with query keywords
-3. **Filename slug match** — substring match on filename
-4. **Domain match** — if user said "in finance", restrict to `domain: finance`
+1. **Title substring** — `+3` if the keyword appears anywhere inside the `title:` string (substring, not exact equality)
+2. **Tag substring** — `+2` if the keyword appears inside any element of the `tags:` list
+3. **Summary substring** — `+1` if the keyword appears inside the `summary:` field
+
+Contributions accumulate across all keywords for a given page. Pages with total score `> 0` are sorted by `(score desc, path asc)` and truncated to `--top N`. The script does **not** match on filename, slug, or basename — only on parsed frontmatter fields.
+
+Type filtering (`--type entities|concepts|references|skills|synthesis|journal`) restricts the scan to one subdir; omit it to search all 6.
 
 ### Limitations of lexical heuristics
 
-These heuristics are **lexical**, not semantic. They fail in 3 known cases:
+The script's ranking is **lexical**, not semantic. It fails in 3 known cases:
 
-1. **Synonym mismatch** — user asks about "Multi-Armed Bandits" but page is named `MAB.md`; pure title match misses unless user uses exact slug
-2. **Conceptual subset query** — user asks "is qlib good for crypto trading?" — title-match on "qlib" hits, but the answer requires reading `## Key Facts` of multiple related pages
-3. **Cross-language query** — user asks in 中文 but page slugs are English
+1. **Synonym / abbreviation mismatch** — user queries `"MAB"` but the page's `title:` / `tags:` / `summary:` only contain the long form `"Multi-Armed Bandits"`; substring `"MAB"` does not occur inside `"multi-armed bandits"`, so the page scores 0 even though it is the right answer. (Symmetrically: querying `"Multi-Armed Bandits"` against a page whose frontmatter only carries the short form `"MAB"` also misses.)
+2. **Conceptual subset query** — user asks "is qlib good for crypto trading?" — substring on `"qlib"` hits, but the answer requires reading `## Key Facts` of multiple related pages
+3. **Cross-language query** — user asks in 中文 but frontmatter values are English
 
 **Mitigation**: when Tier-1 returns ≥1 candidate but the answer feels weak, fall through to Tier-2 (full page) on the **top-3 candidates** rather than just the top-1. Tier-2 body content has higher semantic surface area than the summary line.
 

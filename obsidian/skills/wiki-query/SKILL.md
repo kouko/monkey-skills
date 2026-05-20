@@ -13,7 +13,7 @@ See [retrieval-tiers.md](references/retrieval-tiers.md) for the full contract.
 
 1. Read `<vault-root>/.obsidian-wiki.config` to find `OBSIDIAN_WIKI_VAULT_PATH` (defaults `wiki/`). If only legacy `.env` exists, instruct user to run `/wiki-setup` to migrate.
 2. If `wiki/` does not exist, instruct user to run `/wiki-setup`.
-3. If `wiki/index.md` is empty, instruct user to run `/wiki-ingest` first.
+3. Verify `<skill-root>/scripts/query-frontmatter.py` exists. If missing, the skill is broken; tell the user to reinstall the plugin.
 
 ## STEP 1 — Tier 0: Hot cache
 
@@ -23,24 +23,39 @@ If recent activity directly answers the user's query, return that and add a one-
 
 Skip to STEP 4 (update hot.md and report).
 
-## STEP 2 — Tier 1: Summary scan
+## STEP 2 — Tier 1: Frontmatter script
 
-If hot.md doesn't suffice:
+If hot.md doesn't suffice, delegate candidate selection + summary collection to `<skill-root>/scripts/query-frontmatter.py`. The script scans every page's frontmatter in one pass and returns ranked candidates with `summary:` already extracted, so you do **not** read `wiki/index.md` or any page bodies yourself in this tier.
 
-1. Read `wiki/index.md`
-2. Identify candidate pages matching the query (see match heuristics in [retrieval-tiers.md](references/retrieval-tiers.md))
-3. For each candidate, read **frontmatter only** (use `Read` with `limit: 15` to capture frontmatter without body)
-4. Collect `summary:` values
+1. Extract 2-5 keywords from the user's question (lowercase nouns/proper-nouns, drop stopwords). Combine into a single comma-separated string.
+2. Decide whether to pass `--type <type>`:
+   - Only when the user's query is explicitly type-scoped (e.g. "Who is TSMC?" → entities; "what does HHI mean?" → concepts).
+   - Otherwise omit `--type` and let the script search all 6 type subdirectories.
+   - Valid types: `entities`, `concepts`, `references`, `skills`, `synthesis`, `journal`.
+3. Invoke the script:
+   ```bash
+   python3 <skill-root>/scripts/query-frontmatter.py \
+     --keywords "<kw1,kw2,...>" \
+     --top 5 \
+     [--type <type>] \
+     --vault-root <vault-root>
+   ```
+   `<vault-root>` is the directory containing `wiki/` (from Pre-flight step 1).
+4. Parse the JSON array on stdout. Each candidate object already has `path`, `title`, `type`, `summary`, `tags`, `score` — no further file reads needed at this tier.
 
 If 2-3 summaries together answer the question:
 - Return synthesized answer with page-name attribution: "Per `entities/qlib`: ...; per `concepts/quant-investing`: ..."
-- Skip to STEP 4
+- Skip to STEP 4.
+
+**Fallback when the script returns an empty array (0 candidates):**
+- Broaden: drop `--type` if you set one, try synonyms / translated keywords (e.g. add 中文 ↔ English variants), re-invoke.
+- If still 0 candidates, do **not** fall through to Tier 2 (there is nothing to read). Suggest `/wiki-auto-research <topic>` per the "When the wiki has nothing" section.
 
 ## STEP 3 — Tier 2: Full page read
 
 Only if Tier 1 was insufficient:
 
-1. Rank top 1-3 candidates by relevance
+1. Pick top 1-3 from the script's ranked output (semantically re-rank only if the lexical score looks misleading)
 2. Read full page body
 3. Synthesize answer using `## Summary`, `## Key Facts`, `## Connections` content
 4. Honor provenance markers — if a key fact is `^[ambiguous]` or `^[inferred]`, surface that uncertainty in your answer
@@ -72,7 +87,7 @@ Cap section ≤300 chars; truncate oldest first.
 ## Anti-patterns
 
 - ❌ Reading multiple full pages when frontmatter summaries would have answered
-- ❌ Reading the index, then full page, without the summary scan in between
+- ❌ Reading the index, then full page, without the frontmatter script in between
 - ❌ Synthesizing without citing which page contributed which fact
 - ❌ Hiding `^[ambiguous]` markers in synthesis (silently launders provenance)
 - ❌ Falling through to Tier 2 too quickly (defeats the purpose of tiered retrieval)

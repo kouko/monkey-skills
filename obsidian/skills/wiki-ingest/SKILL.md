@@ -250,9 +250,17 @@ summary: "≤200 char single-line description of what this source contributes"
 
 Reference pages are append-only over time — re-ingest of the same source updates `ingested`, may extend `contributes_to` and `Key Contributions`. The `## Source` wikilink stays stable unless the source file is renamed (then `source_path` and the wikilink update together; Obsidian auto-tracks the rename).
 
-### 4e. Update `wiki/index.md`
+### 4e. Ensure `wiki/index.md` stale banner
 
-Append the new page link under the appropriate category section. Skip if already present.
+Ensure `wiki/index.md` has a stale-snapshot banner at the very top. If the first non-empty line of `wiki/index.md` already contains `LLM Tier 1 retrieval` (idempotent marker), skip. Otherwise prepend the following banner block (followed by a blank line) above existing content:
+
+```markdown
+> [!warning] Historical snapshot — LLM Tier 1 retrieval has moved
+> LLM Tier 1 retrieval is now handled by `wiki-query/scripts/query-frontmatter.py` (frontmatter-only index built on demand from `wiki/**/*.md`).
+> This `index.md` is preserved as a historical snapshot for Obsidian human navigation only — it is no longer updated by `wiki-ingest` and may drift from the canonical page set.
+```
+
+Do not append new page links to category sections — that responsibility is retired. The banner check is the only mutation in this sub-step.
 
 ### 4f. Update `wiki/.manifest.json`
 

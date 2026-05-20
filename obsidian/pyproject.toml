@@ -4,4 +4,4 @@
 # CI installs pytest directly and runs `pytest obsidian/tests/`.
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "scripts"]
+testpaths = ["tests", "scripts", "skills"]
