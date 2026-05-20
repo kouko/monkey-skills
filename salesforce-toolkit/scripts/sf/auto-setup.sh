@@ -217,7 +217,7 @@ ensure_os_and_tty() {
   fi
 
   # require_tty exits 10 on failure — no need to check return value.
-  require_tty
+  require_tty "auto-setup.sh"
 }
 
 # --- step 2: Homebrew -------------------------------------------------------

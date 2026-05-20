@@ -17,10 +17,13 @@
 #
 # Contract:
 #   - Designed to be `source`d:  `source "${CLAUDE_PLUGIN_ROOT}/scripts/common/tty-guard.sh"`
-#   - Exposes one public function: `require_tty`
+#   - Exposes one public function: `require_tty [caller_name]`
 #   - `require_tty` returns 0 when stdin is a TTY; otherwise prints
-#     `auto-setup.sh requires a controlling terminal` to stderr and `exit 10`
+#     `<caller_name> requires a controlling terminal` to stderr and `exit 10`
 #     (exit-10 == auth/interaction error, mirrors gws-toolkit convention).
+#   - `caller_name` defaults to `script` when omitted; callers SHOULD pass
+#     their own basename (e.g. `require_tty "refresh-auth.sh"`) so users
+#     hitting the error see which script blocked.
 #
 # Why `tty -s` (not `[ -t 0 ]`):
 #   Both work for the basic case. `tty -s` is POSIX-standard and matches the
@@ -38,11 +41,14 @@
 # =============================================================================
 
 # Public: ensure caller is running with a controlling terminal.
+# Optional first arg: caller name (defaults to "script") used in the
+# stderr message so users see which script blocked.
 # Returns 0 on success; exits 10 on failure (does not return).
 require_tty() {
+  local caller="${1:-script}"
   if tty -s; then
     return 0
   fi
-  printf '%s\n' "auto-setup.sh requires a controlling terminal" >&2
+  printf '%s requires a controlling terminal\n' "${caller}" >&2
   exit 10
 }

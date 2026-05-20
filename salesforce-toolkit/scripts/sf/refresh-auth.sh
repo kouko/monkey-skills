@@ -245,7 +245,7 @@ main() {
 
   # TTY guard ONLY on real path; dry-run is bats / CI-friendly.
   if (( DRY_RUN == 0 )); then
-    require_tty
+    require_tty "refresh-auth.sh"
   fi
 
   resolve_alias
