@@ -144,6 +144,13 @@ PRODUCT-SPEC §Scope allows. Phase 2+ `sf-deploy` skill (per
 PRODUCT-SPEC §Scope Phase 2+ table) will expand to
 `metadata,data,users`.
 
+The launcher also passes `--orgs DEFAULT_TARGET_ORG` — the
+`salesforce-mcp` arg that binds the MCP server to whichever org the
+local `sf` CLI has set as `target-org` (via `sf config set
+target-org=<alias>`). Multi-org users can switch the bound org at
+runtime by changing their default alias and reconnecting MCP, without
+editing `.mcp.json` or restarting Claude Code from scratch.
+
 ---
 
 ## Data Flow

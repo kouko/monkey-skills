@@ -94,7 +94,7 @@ Most common symptoms are covered in [`commands/sf-setup.md`](commands/sf-setup.m
 │         │                       │                            │
 │         └───────────┬───────────┘                            │
 │                     ▼                                        │
-│        mcp__salesforce-mcp__*  (60+ tools, data + metadata)  │
+│        mcp__salesforce__*  (60+ tools, data + metadata)      │
 └─────────────────────┬────────────────────────────────────────┘
                       │  stdio MCP transport
                       ▼

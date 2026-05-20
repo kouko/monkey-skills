@@ -36,7 +36,10 @@ Shipped via 5-part SDD (subagent-driven-development) cycle:
 - `.claude-plugin/plugin.json` — plugin metadata (name / version /
   description / license MIT / keywords).
 - `.mcp.json` — static MCP config (stdio transport via
-  `bin/sf-mcp-launcher.sh` shim; read-only `data,metadata` toolset).
+  `bin/sf-mcp-launcher.sh` shim; read-only `data,metadata` toolset;
+  `--orgs DEFAULT_TARGET_ORG` arg binds MCP server to whichever org
+  `sf config set target-org=<alias>` has marked default — switch orgs
+  by changing the sf alias, no `.mcp.json` edit needed).
 - `bin/sf-mcp-launcher.sh` — runtime brew→npx fallback launcher
   (`salesforce-mcp` brew binary preferred; `npx -y @salesforce/mcp`
   fallback; explicit setup-command pointer if neither available).

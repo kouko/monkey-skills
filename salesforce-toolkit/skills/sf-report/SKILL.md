@@ -1,6 +1,7 @@
 ---
 name: sf-report
 description: Salesforce Report and Dashboard fetch + analysis via the salesforce-toolkit MCP server (data toolset). Read-only — list Report folders, fetch Report metadata, execute Reports, pull row data, do trend / aggregate / Top-N analysis, snapshot Dashboard widgets. Use when user asks for a Salesforce Report or Dashboard, KPI snapshot, pipeline funnel, or Top-N by metric. Salesforce レポート・ダッシュボード・KPI 分析。Salesforce 報表・儀表板・KPI 拉取分析。
+allowed-tools: mcp__salesforce__*
 ---
 
 # sf-report
