@@ -6,8 +6,8 @@
 
 ## 前置條件
 
-- `/salesforce-toolkit:sf-setup` 已成功跑過（安裝 `sf` CLI 與 `salesforce-mcp` 並完成 browser OAuth）。
-- `/mcp` 輸出顯示 `salesforce-mcp` 為 **connected**。
+- `/salesforce-toolkit:sf-setup` 已成功跑過（安裝 `sf` CLI 與 `salesforce-mcp` brew formula — PATH 上的 binary 名是 `sf-mcp-server` — 並完成 browser OAuth）。
+- `/mcp` 輸出顯示名為 `salesforce` 的 MCP server 是 **connected**（server 名來自 `.mcp.json`,實際 binary 是 `sf-mcp-server`）。
 
 任一檢查失敗就停下來，請使用者執行 `/salesforce-toolkit:sf-setup`（若 OAuth token 過期則加 `--force-reauth`）。
 

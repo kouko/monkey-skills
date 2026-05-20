@@ -59,19 +59,25 @@ have_cmd() {
 # install; both paths funnel to empty string here.
 probe_sf_version() {
   have_cmd sf || { printf ''; return 0; }
-  sf --version 2>/dev/null | head -n 1 || printf ''
+  # SF_DISABLE_TELEMETRY=true bypasses first-run sf consent prompt
+  # (would hang in non-TTY; dogfood-verified 2026-05-20)
+  SF_DISABLE_TELEMETRY=true sf --version 2>/dev/null | head -n 1 || printf ''
 }
 
-# Echo `salesforce-mcp --version` (or `npx -y @salesforce/mcp --version`
-# fallback) or empty. We deliberately DO NOT shell out to npx in the
-# fallback because (a) it would be a multi-second network probe in the
-# common cold-cache case, and (b) a missing `salesforce-mcp` binary
-# means the brew bottle is not installed regardless of whether npx
-# could resolve the package. v0.1.0 keeps this brew-binary-only;
-# auto-setup.sh covers the npx fallback narrative.
+# Echo the installed sf-mcp-server version (binary shipped by brew
+# formula `salesforce-mcp` and npm package `@salesforce/mcp`) or empty.
+#
+# The binary itself does NOT have a working `--version` flag — running
+# `sf-mcp-server --version` emits stderr warnings + boots the MCP
+# stdio server briefly before exit, with no version string on stdout
+# (upstream quirk verified dogfood 2026-05-20). Workaround: parse
+# `brew list --versions salesforce-mcp` output instead — gives clean
+# "salesforce-mcp <version>" line when installed via brew. Falls back
+# to empty for npx-installed users (where brew has no record).
 probe_mcp_version() {
-  have_cmd salesforce-mcp || { printf ''; return 0; }
-  salesforce-mcp --version 2>/dev/null | head -n 1 || printf ''
+  have_cmd sf-mcp-server || { printf ''; return 0; }
+  have_cmd brew || { printf ''; return 0; }
+  brew list --versions salesforce-mcp 2>/dev/null | awk '{print $2}' || printf ''
 }
 
 # ---------------------------------------------------------------------------
@@ -85,7 +91,7 @@ probe_mcp_version() {
 probe_default_org_alias() {
   have_cmd sf || { printf ''; return 0; }
   local raw value
-  raw="$(sf config get target-org --json 2>/dev/null || printf '')"
+  raw="$(SF_DISABLE_TELEMETRY=true sf config get target-org --json 2>/dev/null || printf '')"
   if [ -z "$raw" ]; then
     printf ''
     return 0
@@ -110,7 +116,7 @@ probe_default_org_status() {
   fi
   have_cmd sf || { printf ''; return 0; }
   local raw status
-  raw="$(sf org display --target-org="$alias" --json 2>/dev/null || printf '')"
+  raw="$(SF_DISABLE_TELEMETRY=true sf org display --target-org="$alias" --json 2>/dev/null || printf '')"
   if [ -z "$raw" ]; then
     printf ''
     return 0
@@ -189,7 +195,7 @@ main() {
 
   have_cmd brew           && brew_state="installed" || brew_state="missing"
   have_cmd sf             && sf_state="installed"   || sf_state="missing"
-  have_cmd salesforce-mcp && mcp_state="installed"  || mcp_state="missing"
+  have_cmd sf-mcp-server  && mcp_state="installed"  || mcp_state="missing"
   have_cmd node           && node_state="installed" || node_state="missing"
 
   sf_version="$(probe_sf_version)"

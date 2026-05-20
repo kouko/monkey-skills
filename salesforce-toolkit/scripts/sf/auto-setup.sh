@@ -12,8 +12,10 @@ set -euo pipefail
 #   2. Homebrew        — detect; if absent prompt + run the official
 #                        install.sh curl pipe.
 #   3. `sf` CLI        — `command -v sf` else `brew install sf`.
-#   4. `salesforce-mcp` — `command -v salesforce-mcp` else `brew install
-#                        salesforce-mcp` (unless --skip-mcp-brew).
+#   4. `sf-mcp-server` — `command -v sf-mcp-server` else `brew install
+#                        salesforce-mcp` (brew formula name is
+#                        `salesforce-mcp`; the binary it produces is
+#                        `sf-mcp-server`). Skipped unless --skip-mcp-brew.
 #   5. `sf org login web` — alias inferred via scripts/sf/alias-infer.sh
 #                        (3-layer: explicit / instance-url subdomain /
 #                        well-known endpoint). Enter-to-accept inferred
@@ -76,6 +78,14 @@ set -euo pipefail
 
 # --- UTF-8 locale -----------------------------------------------------------
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
+
+# --- sf-CLI telemetry consent bypass ----------------------------------------
+# First-run sf CLI shows an interactive y/N telemetry consent prompt that
+# blocks in non-TTY contexts (verified dogfood 2026-05-20: sf hangs in CC
+# Bash tool waiting for stdin). Setting SF_DISABLE_TELEMETRY=true skips
+# the prompt + opts out of telemetry. Users who want to enable telemetry
+# can override this env var explicitly before invoking the script.
+export SF_DISABLE_TELEMETRY="${SF_DISABLE_TELEMETRY:-true}"
 
 # --- Resolve script dir + source helpers ------------------------------------
 # `readlink -f` is GNU; macOS uses `realpath` or BSD `readlink`. Fall back to
@@ -269,13 +279,16 @@ ensure_sf() {
   SF_VERSION="$(sf --version 2>/dev/null | head -n 1 || printf '')"
 }
 
-# --- step 4: salesforce-mcp -------------------------------------------------
+# --- step 4: sf-mcp-server (from brew formula salesforce-mcp) ---------------
+# Note: brew formula name is `salesforce-mcp`; the binary it installs is
+# `sf-mcp-server` (verified dogfood 2026-05-20; cf. sf-mcp-launcher.sh
+# header for the same caveat).
 ensure_mcp() {
-  step 4 "ensure salesforce-mcp installed"
+  step 4 "ensure sf-mcp-server installed (via brew formula salesforce-mcp)"
 
-  if command -v salesforce-mcp >/dev/null 2>&1; then
-    printf '[auto-setup] already done: salesforce-mcp installed\n' >&2
-    MCP_VERSION="$(salesforce-mcp --version 2>/dev/null | head -n 1 || printf '')"
+  if command -v sf-mcp-server >/dev/null 2>&1; then
+    printf '[auto-setup] already done: sf-mcp-server installed\n' >&2
+    MCP_VERSION="$(brew list --versions salesforce-mcp 2>/dev/null | awk '{print $2}' || printf '')"
     return
   fi
 
@@ -292,7 +305,7 @@ ensure_mcp() {
   if ! brew install salesforce-mcp; then
     die_json 12 "brew install salesforce-mcp failed"
   fi
-  MCP_VERSION="$(salesforce-mcp --version 2>/dev/null | head -n 1 || printf '')"
+  MCP_VERSION="$(brew list --versions salesforce-mcp 2>/dev/null | awk '{print $2}' || printf '')"
 }
 
 # --- resolve_alias: 3-layer infer + Enter-to-accept prompt ------------------

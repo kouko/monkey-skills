@@ -57,10 +57,10 @@ v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://
 | Component | Source | 角色 |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — 提供 OAuth（`sf org login web`）、org / alias 管理、token 快取 |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 60+ Salesforce tool（data / metadata / orgs / users / code-analyzer）;v0.1.0 只啟用 `data,metadata` toolset |
-| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 內建 shim | Launcher：優先使用 brew 安裝的 binary,沒有的話 fallback 到 `npx -y @salesforce/mcp`;兩條路徑都不通時印出 `sf-setup` 提示 |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 60+ Salesforce tool（data / metadata / orgs / users / code-analyzer）;v0.1.0 只啟用 `data,metadata` toolset。brew formula 名為 `salesforce-mcp`,但實際安裝的 binary 是 `sf-mcp-server`（npm 套件 `@salesforce/mcp` 也是 ship 同一個 binary） |
+| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 內建 shim | Launcher：優先使用 PATH 上的 `sf-mcp-server` binary,沒有的話 fallback 到 `npx -y @salesforce/mcp`;兩條路徑都不通時印出 `sf-setup` 提示 |
 | Homebrew | https://brew.sh | macOS 套件管理器 — 如果沒裝,`sf-setup` 會自動安裝（會有 y/N 確認） |
-| Node ≥ 26（傳遞依賴） | Homebrew 依賴 | `salesforce-mcp` server 的執行環境 |
+| Node ≥ 26（傳遞依賴） | Homebrew 依賴 | `sf-mcp-server` binary 的執行環境 |
 
 `sf-setup` 一次把這 4 個可安裝項目串好。Launcher shim 讓 `.mcp.json` 即使在沒裝 brew 的情況下也能載入 — server 會在第一次 MCP tool 呼叫時透過 `npx` 啟動。
 
@@ -90,6 +90,11 @@ bash scripts/sf/refresh-auth.sh
 
 最常見的症狀都在 [`commands/sf-setup.md`](commands/sf-setup.md) §Troubleshooting 涵蓋（TTY 守衛 / 不支援的 OS / brew 安裝失敗 / OAuth 流程被取消 / verify 空 / 互斥旗標）。要做更深入的狀態檢查,可以跑 `bash scripts/sf/credential-check.sh --json`,沒有 side effect 地 dump 目前的 `sf` + brew + MCP 狀態。
 
+scripts 內已經處理好的兩個非 TTY 注意事項（你不用做什麼 — 這裡只列出來給你看背景）：
+
+- **`SF_DISABLE_TELEMETRY=true` 會被自動 export。** 第一次跑 `sf` 會跳一個 y/N 的 telemetry 同意 prompt,在非 TTY 環境（Claude Code 的 Bash tool）會 hang 住;setup script 透過 export 這個 env var 把 prompt skip 掉。
+- **非 TTY 模式下不會印 OAuth URL。** `sf org login web` 在沒有真正 TTY attach 的時候不會把 auth URL 印到 stdout/stderr,所以 Claude 沒辦法把 URL inline 顯示給你（瀏覽器還是會自動開）。如果瀏覽器沒開,請改走 Path B（Terminal power-user）— 那條路徑會原生印出 URL。
+
 ## 架構
 
 ```
@@ -110,7 +115,7 @@ bash scripts/sf/refresh-auth.sh
         bin/sf-mcp-launcher.sh   (brew → npx fallback)
                       │
                       ▼
-        salesforce-mcp  (Apache-2.0, salesforcecli/mcp)
+        sf-mcp-server  (brew `salesforce-mcp` / npm `@salesforce/mcp` 的 binary, Apache-2.0)
                       │
                       ▼
                   sf CLI  (sf org login web 拿到的 OAuth token)
@@ -119,7 +124,7 @@ bash scripts/sf/refresh-auth.sh
               Salesforce org REST API
 ```
 
-設定時間（一次性）：`/salesforce-toolkit:sf-setup` 在使用者終端跑 6 步驟安裝器。執行時：Claude Code 載入 `.mcp.json` → spawn launcher shim → 透過 stdio spawn `salesforce-mcp` → MCP tool 對兩個 skill 變為可用。
+設定時間（一次性）：`/salesforce-toolkit:sf-setup` 在使用者終端跑 6 步驟安裝器。執行時：Claude Code 載入 `.mcp.json` → spawn launcher shim → 透過 stdio spawn `sf-mcp-server` → MCP tool 對兩個 skill 變為可用。
 
 ## 連結
 

@@ -6,7 +6,7 @@ allowed-tools: mcp__salesforce__*
 
 # sf-query
 
-Natural-language SOQL / SOSL query over a Salesforce org via the Salesforce DX MCP server (`salesforce-mcp`, Apache-2.0, GA 2026). The user asks a business question in prose; this skill picks the right MCP tool, composes a SOQL or SOSL string, calls the tool, and renders the JSON rows back as a table or a narrative answer.
+Natural-language SOQL / SOSL query over a Salesforce org via the Salesforce DX MCP server (brew formula `salesforce-mcp` / npm `@salesforce/mcp`, binary `sf-mcp-server`, Apache-2.0, GA 2026). The user asks a business question in prose; this skill picks the right MCP tool, composes a SOQL or SOSL string, calls the tool, and renders the JSON rows back as a table or a narrative answer.
 
 Read-only. No `DML`, no `INSERT / UPDATE / DELETE`, no metadata mutation — those are Phase 2 (`sf-deploy`) territory.
 
@@ -15,7 +15,7 @@ Read-only. No `DML`, no `INSERT / UPDATE / DELETE`, no metadata mutation — tho
 One-time setup:
 
 1. Run `/salesforce-toolkit:sf-setup` and complete the browser OAuth flow. This installs `sf` CLI + `salesforce-mcp` via brew and authenticates the default org.
-2. Verify the MCP server is alive: in Claude Code, run `/mcp` and confirm `salesforce-mcp` is listed as connected. If it shows `disconnected` or `error`, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/refresh-auth.sh"` to re-auth the OAuth token, then restart the MCP server.
+2. Verify the MCP server is alive: in Claude Code, run `/mcp` and confirm `salesforce` is listed as connected (this is the MCP server name from `.mcp.json`; the underlying binary is `sf-mcp-server`, shipped by brew formula `salesforce-mcp`). If it shows `disconnected` or `error`, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/refresh-auth.sh"` to re-auth the OAuth token, then restart the MCP server.
 3. Confirm the default org responds: `sf org display --json` should return a JSON blob with `instanceUrl` and a non-expired `accessTokenExpirationDate`.
 
 If any of the three checks fail, stop and tell the user to run `/salesforce-toolkit:sf-setup` (or `--force-reauth` if the token expired). Do **not** try to compose queries against a dead MCP server — the error messages will be cryptic.
@@ -164,7 +164,7 @@ Prefer the subquery form when the user wants per-row detail; prefer the aggregat
 | `MALFORMED_QUERY: line N, column M: unexpected token` (general) | SOQL syntax error — most often a `WHERE` clause comparing a string without quotes, or a date literal with quotes (`'TODAY'` instead of `TODAY`). | Re-read the echoed query carefully. String literals: `'foo'`. Date literals: `TODAY` / `THIS_QUARTER` / `NEXT_N_DAYS:30` — **no quotes**. Numeric / boolean: bare value. |
 | `QUERY_TIMEOUT` or row-count over governor limits | Query touched too much data without selective filters; Salesforce throttles. | Add a more selective `WHERE` (indexed fields: `Id`, `Name`, `CreatedDate`, `LastModifiedDate`, `OwnerId`, external IDs); add `LIMIT`; or split by date range. |
 | MCP tool returns `unauthorized` / `INVALID_SESSION_ID` | OAuth token expired. | Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/refresh-auth.sh"` (or `/salesforce-toolkit:sf-setup --force-reauth`). Then retry. |
-| MCP tool not listed in `/mcp` output at all | `salesforce-mcp` brew formula missing AND npx fallback also failed. | Run `/salesforce-toolkit:sf-setup` from scratch; if `--skip-mcp-brew` was used previously, drop it. |
+| MCP tool not listed in `/mcp` output at all | `salesforce-mcp` brew formula missing (no `sf-mcp-server` binary on PATH) AND npx fallback also failed. | Run `/salesforce-toolkit:sf-setup` from scratch; if `--skip-mcp-brew` was used previously, drop it. |
 
 ## Output format
 

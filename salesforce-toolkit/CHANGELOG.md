@@ -43,11 +43,15 @@ Shipped via 5-part SDD (subagent-driven-development) cycle:
   `sf config set target-org=<alias>` has marked default — switch orgs
   by changing the sf alias, no `.mcp.json` edit needed).
 - `bin/sf-mcp-launcher.sh` — runtime brew→npx fallback launcher
-  (`salesforce-mcp` brew binary preferred; `npx -y @salesforce/mcp`
-  fallback; explicit setup-command pointer if neither available).
+  (`sf-mcp-server` binary preferred — the binary that brew formula
+  `salesforce-mcp` and npm package `@salesforce/mcp` both install;
+  `npx -y @salesforce/mcp` fallback; explicit setup-command pointer
+  if neither available).
 - `scripts/sf/` setup-automation scripts (6-step idempotent installer
   driving brew install of `sf` CLI + `salesforce-mcp`, OAuth via
-  `sf org login web`, alias inference from instance URL).
+  `sf org login web` with `SF_DISABLE_TELEMETRY=true` exported to
+  skip the non-TTY-hanging first-run consent prompt, alias inference
+  from instance URL).
 - `commands/sf-setup.md` — `/salesforce-toolkit:sf-setup` slash command.
   Claude-orchestrated walkthrough that stays in the conversation: probes
   state, runs missing brew installs non-interactively, asks for instance
@@ -77,6 +81,27 @@ Shipped via 5-part SDD (subagent-driven-development) cycle:
 - **Alias inference** — 3-layer from `--alias=` flag / instance-URL
   subdomain / well-known endpoint fallback (`prod` / `sandbox`); user
   ENTER to accept inferred, override or `-` to omit.
+
+### Notes — upstream-tool caveats discovered during 2026-05-20 dogfood
+
+- **Binary name vs brew formula name** — `brew install salesforce-mcp`
+  ships a binary called `sf-mcp-server`, not `salesforce-mcp`. The
+  npm package `@salesforce/mcp` ships the same `sf-mcp-server` binary.
+  Setup scripts + launcher shim probe for `sf-mcp-server` on PATH;
+  docs that previously referenced a `salesforce-mcp` binary have been
+  corrected. The brew formula name is unchanged — only the installed
+  binary name differs.
+- **`sf` first-run telemetry prompt** — `sf` shows an interactive y/N
+  telemetry consent prompt on first invocation, which hangs in non-TTY
+  contexts (Claude Code's Bash tool). All setup scripts export
+  `SF_DISABLE_TELEMETRY=true` before any `sf` invocation to skip it;
+  no user action needed.
+- **`sf org login web` URL suppression in non-TTY** — `sf org login web`
+  does not print the OAuth URL on stdout/stderr when running without a
+  controlling TTY (Claude orchestrated Path A). The browser still opens
+  automatically. If the browser fails to open, the user must fall back
+  to Path B (Terminal power-user `auto-setup.sh`), which prints the URL
+  natively because it runs in a real TTY.
 
 ### Open follow-ups (Phase 2+)
 

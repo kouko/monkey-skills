@@ -54,6 +54,12 @@ set -euo pipefail
 # --- UTF-8 locale -----------------------------------------------------------
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
+# --- sf-CLI telemetry consent bypass ----------------------------------------
+# Cf. auto-setup.sh header: SF_DISABLE_TELEMETRY=true skips first-run sf
+# consent prompt that would otherwise hang in non-TTY contexts. Dogfood-
+# verified 2026-05-20. Override the env var before invocation to opt in.
+export SF_DISABLE_TELEMETRY="${SF_DISABLE_TELEMETRY:-true}"
+
 # --- Resolve script dir + source helpers ------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR

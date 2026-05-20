@@ -57,10 +57,10 @@ Both skills are read-only. Write toolsets (`users` / `code-analyzer` / Apex depl
 | Component | Source | Role |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — provides OAuth (`sf org login web`), org / alias management, token cache |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing 60+ Salesforce tools (data / metadata / orgs / users / code-analyzer); v0.1.0 ships with `data,metadata` toolsets enabled |
-| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | Plugin-bundled shim | Launcher: prefers brew binary, falls back to `npx -y @salesforce/mcp` when brew is unavailable; prints `sf-setup` pointer if neither path works |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing 60+ Salesforce tools (data / metadata / orgs / users / code-analyzer); v0.1.0 ships with `data,metadata` toolsets enabled. Brew formula name is `salesforce-mcp` but the installed binary is `sf-mcp-server` (same binary ships from the npm package `@salesforce/mcp`) |
+| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | Plugin-bundled shim | Launcher: prefers the `sf-mcp-server` binary on PATH, falls back to `npx -y @salesforce/mcp` when brew is unavailable; prints `sf-setup` pointer if neither path works |
 | Homebrew | https://brew.sh | macOS package manager — installed automatically by `sf-setup` if missing (with y/N confirmation) |
-| Node ≥ 26 (transitive) | Homebrew dependency | Runtime for the `salesforce-mcp` server |
+| Node ≥ 26 (transitive) | Homebrew dependency | Runtime for the `sf-mcp-server` binary |
 
 `sf-setup` orchestrates the four installable pieces in one shot. The launcher shim means `.mcp.json` still loads if brew is missing — the server boots via `npx` at first MCP tool call.
 
@@ -90,6 +90,11 @@ Or, equivalently, re-run `/salesforce-toolkit:sf-setup --force-reauth`. Both ski
 
 Most common symptoms are covered in [`commands/sf-setup.md`](commands/sf-setup.md) §Troubleshooting (TTY guard / unsupported OS / brew install failure / OAuth flow cancelled / verify-empty / mutually-exclusive flags). For deeper state inspection, run `bash scripts/sf/credential-check.sh --json` to dump current `sf` + brew + MCP state without side effects.
 
+Two non-TTY caveats baked into the scripts (you don't have to do anything — flagged here for context):
+
+- **`SF_DISABLE_TELEMETRY=true` is exported automatically.** First-run `sf` shows an interactive y/N telemetry consent prompt that hangs in non-TTY contexts (Claude Code's Bash tool); setup scripts export this env var to skip it.
+- **OAuth URL is not printed in non-TTY mode.** `sf org login web` suppresses the auth URL on stdout/stderr when not attached to a real TTY, so Claude cannot echo the URL inline; the browser still opens automatically. If the browser fails to open, fall back to Path B (Terminal power-user) which prints the URL natively.
+
 ## Architecture
 
 ```
@@ -110,7 +115,7 @@ Most common symptoms are covered in [`commands/sf-setup.md`](commands/sf-setup.m
         bin/sf-mcp-launcher.sh   (brew → npx fallback)
                       │
                       ▼
-        salesforce-mcp  (Apache-2.0, salesforcecli/mcp)
+        sf-mcp-server  (binary from brew `salesforce-mcp` / npm `@salesforce/mcp`, Apache-2.0)
                       │
                       ▼
                   sf CLI  (OAuth token from sf org login web)
@@ -119,7 +124,7 @@ Most common symptoms are covered in [`commands/sf-setup.md`](commands/sf-setup.m
               Salesforce org REST API
 ```
 
-Setup time (one-off): `/salesforce-toolkit:sf-setup` runs the 6-step installer in the user's terminal. Runtime: Claude Code loads `.mcp.json` → spawns the launcher shim → spawns `salesforce-mcp` over stdio → MCP tools become available to the two skills.
+Setup time (one-off): `/salesforce-toolkit:sf-setup` runs the 6-step installer in the user's terminal. Runtime: Claude Code loads `.mcp.json` → spawns the launcher shim → spawns `sf-mcp-server` over stdio → MCP tools become available to the two skills.
 
 ## Links
 

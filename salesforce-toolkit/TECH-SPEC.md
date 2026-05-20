@@ -114,11 +114,12 @@ plugin.json
     ▼
 bin/sf-mcp-launcher.sh
     │  resolve at runtime:
-    │  1. salesforce-mcp on PATH  → exec it
-    │  2. npx on PATH             → exec npx -y @salesforce/mcp
-    │  3. neither                 → stderr pointer to /salesforce-toolkit:sf-setup; exit 127
+    │  1. sf-mcp-server on PATH  → exec it (binary installed by brew formula
+    │                              `salesforce-mcp` — formula name ≠ binary name)
+    │  2. npx on PATH            → exec npx -y @salesforce/mcp (same `sf-mcp-server` binary)
+    │  3. neither                → stderr pointer to /salesforce-toolkit:sf-setup; exit 127
     ▼
-salesforce-mcp (brew bottle, v0.30.9+, Apache-2.0)   OR   npx -y @salesforce/mcp (cold-start fallback)
+sf-mcp-server (brew formula `salesforce-mcp`, v0.30.9+, Apache-2.0)   OR   npx -y @salesforce/mcp (cold-start fallback)
     │  stdio MCP transport; 60+ tools; default toolsets data,metadata
     ▼
 sf CLI (brew formula, v2.x, Apache-2.0)
@@ -145,11 +146,28 @@ PRODUCT-SPEC §Scope Phase 2+ table) will expand to
 `metadata,data,users`.
 
 The launcher also passes `--orgs DEFAULT_TARGET_ORG` — the
-`salesforce-mcp` arg that binds the MCP server to whichever org the
+`sf-mcp-server` arg that binds the MCP server to whichever org the
 local `sf` CLI has set as `target-org` (via `sf config set
 target-org=<alias>`). Multi-org users can switch the bound org at
 runtime by changing their default alias and reconnecting MCP, without
 editing `.mcp.json` or restarting Claude Code from scratch.
+
+### `sf` CLI non-TTY caveats (dogfood 2026-05-20)
+
+Two `sf` CLI behaviors block in Claude Code's Bash tool (no controlling
+TTY) and are handled in scripts/sf/*.sh:
+
+- **First-run telemetry consent prompt** — `sf` shows an interactive
+  y/N consent prompt on first invocation that hangs without stdin.
+  Setup scripts export `SF_DISABLE_TELEMETRY=true` before any `sf`
+  invocation (Path A orchestrator + `credential-check.sh` +
+  `auto-setup.sh` + `refresh-auth.sh`). No user action required.
+- **OAuth URL suppression** — `sf org login web` does not print the
+  auth URL to stdout/stderr in non-TTY mode, even with `--json`.
+  Claude cannot echo the URL inline during Path A; the browser opens
+  automatically. If it fails to open, the user falls back to Path B
+  (Terminal `auto-setup.sh`), where the URL is printed natively
+  because `sf` has a real TTY attached.
 
 ---
 
@@ -163,9 +181,9 @@ Claude Code (user session: "list 10 open opportunities")
     │  ① skill prompt: skills/sf-query/SKILL.md routes to MCP tool
     ▼
 MCP stdio transport
-    │  ② Claude → salesforce-mcp via stdio (JSON-RPC over stdin/stdout)
+    │  ② Claude → sf-mcp-server via stdio (JSON-RPC over stdin/stdout)
     ▼
-salesforce-mcp (brew bottle / npx)
+sf-mcp-server (brew formula `salesforce-mcp` bottle / npx @salesforce/mcp)
     │  ③ MCP tool maps to sf CLI subcommand (e.g. `sf data query --query "SELECT ..."`)
     ▼
 sf CLI
@@ -179,7 +197,7 @@ Salesforce instance API
 Response JSON
     │  ⑥ sf CLI parses + emits JSON to stdout
     ▼
-salesforce-mcp
+sf-mcp-server
     │  ⑦ MCP packages stdout into MCP tool-result message
     ▼
 Claude Code (renders result inline; offers follow-up analysis)
@@ -337,9 +355,11 @@ emits {status, alias, instance_url, expiry} JSON to stdout
 
 ### `scripts/sf/credential-check.sh`
 
-- **Role**: read-only diagnostic — probe brew / sf / salesforce-mcp /
+- **Role**: read-only diagnostic — probe brew / sf / sf-mcp-server /
   node / default org / org status. Pure read; never installs or
-  modifies state.
+  modifies state. All `sf` invocations are prefixed with
+  `SF_DISABLE_TELEMETRY=true` to skip the first-run consent prompt
+  that would otherwise hang in non-TTY contexts.
 - **Input**: stdin none; args none (any `--help` ignored in v0.1.0).
 - **Output (stdout)**: single JSON object —
   ```json
@@ -448,9 +468,13 @@ emits {status, alias, instance_url, expiry} JSON to stdout
 - **Stdin / Stdout / Stderr**: pass-through from the exec'd binary
   (MCP stdio transport — JSON-RPC frames on stdin/stdout).
 - **Resolution order**:
-  1. `salesforce-mcp` on PATH (brew bottle) → `exec salesforce-mcp "$@"`
+  1. `sf-mcp-server` on PATH (brew formula `salesforce-mcp` ships this
+     binary, NOT a `salesforce-mcp` executable; the npm package
+     `@salesforce/mcp` ships the same `sf-mcp-server` binary) →
+     `exec sf-mcp-server "$@"`
   2. `npx` on PATH → `exec npx -y @salesforce/mcp "$@"` (cold-start
-     fallback)
+     fallback; the npx-resolved package's `bin` field also maps to
+     `sf-mcp-server` — same binary, different launch path)
   3. neither → stderr pointer to `/salesforce-toolkit:sf-setup`;
      exit 127
 - **Exit code**: pass-through from exec'd binary; 127 only on
@@ -498,7 +522,9 @@ underlying action.
                   │   ─ else brew install sf                   │
                   │                                            │
                   │   Step 4: ensure_mcp                       │
-                  │   ─ command -v salesforce-mcp → skip       │
+                  │   ─ command -v sf-mcp-server → skip        │
+                  │     (binary from brew formula              │
+                  │     `salesforce-mcp` — NOT `salesforce-mcp`)│
                   │   ─ --skip-mcp-brew → skip (shim → npx)    │
                   │   ─ else brew install salesforce-mcp       │
                   │                                            │
@@ -534,7 +560,7 @@ underlying action.
 | 1 | OS + TTY guard | `uname -s == Darwin` + `tty -s` | 11 (OS), 10 (TTY) |
 | 2 | Homebrew install | `command -v brew` | 12 |
 | 3 | `sf` CLI install | `command -v sf` | 12 |
-| 4 | `salesforce-mcp` install | `command -v salesforce-mcp` OR `--skip-mcp-brew` | 12 |
+| 4 | `salesforce-mcp` brew formula install (binary on PATH = `sf-mcp-server`) | `command -v sf-mcp-server` OR `--skip-mcp-brew` | 12 |
 | 5 | `sf org login web` | `sf org display --json` (returns 0 if active default org) | 10 |
 | 6 | verify org + capture instance_url + oauth_expiry | always runs | 10 (empty payload), 12 (sf missing) |
 

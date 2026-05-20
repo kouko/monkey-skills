@@ -6,8 +6,8 @@ Read-only. No DML, no metadata mutation — that's `sf-deploy` (Phase 2) territo
 
 ## Prerequisites
 
-- `/salesforce-toolkit:sf-setup` has run successfully (installs `sf` CLI + `salesforce-mcp` and completes browser OAuth).
-- `salesforce-mcp` shows **connected** in `/mcp` output.
+- `/salesforce-toolkit:sf-setup` has run successfully (installs `sf` CLI + the `salesforce-mcp` brew formula — binary on PATH is `sf-mcp-server` — and completes browser OAuth).
+- The MCP server named `salesforce` shows **connected** in `/mcp` output (server name from `.mcp.json`; underlying binary is `sf-mcp-server`).
 
 If either check fails, stop and tell the user to run `/salesforce-toolkit:sf-setup` (or pass `--force-reauth` if the OAuth token expired).
 

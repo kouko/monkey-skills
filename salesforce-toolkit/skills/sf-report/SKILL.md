@@ -40,7 +40,7 @@ The `salesforce` MCP server (with `--toolsets data,metadata`) exposes Report-rel
 - `list-dashboards` / `describe-dashboard` — enumerate Dashboards and their widgets; each widget has a `reportId` pointing back to the source Report.
 - `run-dashboard-widget` (or run the widget's underlying Report directly) — fetch a single Dashboard widget's data snapshot.
 
-**Important**: the salesforce-mcp tool catalogue can shift between releases. **List the tools first** via the MCP introspection call your runtime exposes if a name above doesn't resolve. Don't assume — verify, then call.
+**Important**: the Salesforce DX MCP server's tool catalogue can shift between releases. **List the tools first** via the MCP introspection call your runtime exposes if a name above doesn't resolve. Don't assume — verify, then call.
 
 ## Workflow
 
@@ -128,7 +128,7 @@ Salesforce caps Report API responses at **2,000 rows** per call (factMap aggrega
 
 ### MCP server tool name mismatch
 
-The salesforce-mcp tool list can shift between releases (we pin to `data,metadata` toolsets but tool names within those evolve). If a tool name above (`list-reports`, `run-report`, …) doesn't resolve:
+The Salesforce DX MCP server's tool list can shift between releases (we pin to `data,metadata` toolsets but tool names within those evolve). If a tool name above (`list-reports`, `run-report`, …) doesn't resolve:
 
 - List available tools via your runtime's MCP introspection (e.g. `claude mcp list-tools salesforce`).
 - Match by semantics (Report list / describe / run / Dashboard list / describe) and use the actual name.

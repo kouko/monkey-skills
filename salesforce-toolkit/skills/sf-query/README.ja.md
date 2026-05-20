@@ -6,8 +6,8 @@ read-only。DML も metadata 変更もしない — それは `sf-deploy`（Phas
 
 ## 事前条件
 
-- `/salesforce-toolkit:sf-setup` が成功している（`sf` CLI + `salesforce-mcp` を install し、browser OAuth まで完了）。
-- `/mcp` 出力で `salesforce-mcp` が **connected** と表示されている。
+- `/salesforce-toolkit:sf-setup` が成功している（`sf` CLI + `salesforce-mcp` brew formula を install し — PATH 上のバイナリ名は `sf-mcp-server` — browser OAuth まで完了）。
+- `/mcp` 出力で `salesforce` という MCP server が **connected** と表示されている（server 名は `.mcp.json` 由来、実際のバイナリは `sf-mcp-server`）。
 
 いずれかに失敗していたら、user に `/salesforce-toolkit:sf-setup` 実行（OAuth token が expire しているなら `--force-reauth` を渡す）を依頼して停止する。
 

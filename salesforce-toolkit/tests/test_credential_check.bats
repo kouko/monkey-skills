@@ -13,7 +13,7 @@
 #
 # Mock strategy (mirrors test_launcher.bats T4 PATH-mock):
 #   - mktemp -d per test → $TMPDIR_TEST
-#   - write executable stubs (brew / sf / salesforce-mcp / node / npx) into
+#   - write executable stubs (brew / sf / sf-mcp-server / node / npx) into
 #     $TMPDIR_TEST that print canned `--version` output and canned `sf
 #     org display --json` / `sf config get target-org --json` payloads
 #   - run credential-check.sh with PATH set to $TMPDIR_TEST:/bin:/usr/bin
@@ -63,6 +63,26 @@ make_stub() {
 #!/usr/bin/env bash
 ${body}
 STUB
+  chmod +x "$path"
+}
+
+# Helper: stub `brew` that responds to `--version` AND `list --versions
+# salesforce-mcp` (the new mcp-version probe path uses brew list).
+make_brew_stub() {
+  local path="$1"
+  cat >"$path" <<'BREW'
+#!/usr/bin/env bash
+case "$1" in
+  --version)
+    printf "Homebrew 4.5.0\n"
+    ;;
+  list)
+    if [ "$2" = "--versions" ] && [ "$3" = "salesforce-mcp" ]; then
+      printf "salesforce-mcp 0.30.9\n"
+    fi
+    ;;
+esac
+BREW
   chmod +x "$path"
 }
 
@@ -137,9 +157,9 @@ SF
 # ---------------------------------------------------------------------------
 
 @test "(a) full PATH → all fields installed and versions present" {
-  make_stub        "$TMPDIR_TEST/brew"           'printf "Homebrew 4.5.0\n"'
+  make_brew_stub   "$TMPDIR_TEST/brew"
   make_sf_stub     "$TMPDIR_TEST/sf"
-  make_stub        "$TMPDIR_TEST/salesforce-mcp" 'printf "@salesforce/mcp/1.2.3\n"'
+  make_stub        "$TMPDIR_TEST/sf-mcp-server"  'true'
   make_stub        "$TMPDIR_TEST/node"           'printf "v20.10.0\n"'
 
   run env -i PATH="$TMPDIR_TEST:$JQ_SANDBOX:/bin:/usr/bin" HOME="$HOME" "$CHECK"
@@ -170,7 +190,7 @@ SF
 @test "(b) brew absent → .brew == \"missing\" but sf still detected" {
   # No brew stub.
   make_sf_stub     "$TMPDIR_TEST/sf"
-  make_stub        "$TMPDIR_TEST/salesforce-mcp" 'printf "@salesforce/mcp/1.2.3\n"'
+  make_stub        "$TMPDIR_TEST/sf-mcp-server"  'true'
   make_stub        "$TMPDIR_TEST/node"           'printf "v20.10.0\n"'
 
   run env -i PATH="$TMPDIR_TEST:$JQ_SANDBOX:/bin:/usr/bin" HOME="$HOME" "$CHECK"
@@ -187,9 +207,9 @@ SF
 # ---------------------------------------------------------------------------
 
 @test "(c) sf absent → .sf_cli missing AND .sf_version null AND default_org null" {
-  make_stub        "$TMPDIR_TEST/brew"           'printf "Homebrew 4.5.0\n"'
+  make_brew_stub   "$TMPDIR_TEST/brew"
   # No sf stub.
-  make_stub        "$TMPDIR_TEST/salesforce-mcp" 'printf "@salesforce/mcp/1.2.3\n"'
+  make_stub        "$TMPDIR_TEST/sf-mcp-server"  'true'
   make_stub        "$TMPDIR_TEST/node"           'printf "v20.10.0\n"'
 
   run env -i PATH="$TMPDIR_TEST:$JQ_SANDBOX:/bin:/usr/bin" HOME="$HOME" "$CHECK"

@@ -234,10 +234,10 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/sf/alias-infer.sh" "<resolved-url>" ""
 
 ### Step 6 — OAuth in background + poll for completion
 
-**Build the login command**:
+**Build the login command** (always export `SF_DISABLE_TELEMETRY=true` first to skip first-run consent prompt that would block in non-TTY):
 
 ```bash
-sf org login web [--alias=<final_alias>] --set-default --instance-url=<resolved-url>
+SF_DISABLE_TELEMETRY=true sf org login web [--alias=<final_alias>] --set-default --instance-url=<resolved-url>
 ```
 
 - If `final_alias` is **non-empty**: pass `--alias=<final_alias>` AND `--set-default`.
@@ -247,12 +247,12 @@ sf org login web [--alias=<final_alias>] --set-default --instance-url=<resolved-
 
 **Tell the user**:
 
-> Your browser will open momentarily — sign in to Salesforce + click **Allow** when consent screen appears. I'll detect when you're done. (If the browser doesn't open: see Troubleshooting — `sf` prints the URL to its stdout, which Claude can fetch on request via the bg reference.)
+> Your browser will open momentarily — sign in to Salesforce + click **Allow** when consent screen appears. I'll detect when you're done. (If the browser doesn't open within ~10 seconds, see Troubleshooting — sf-CLI suppresses URL output in non-TTY mode so we can't show it inline; fall back to Path B in your terminal which prints the URL.)
 
 **Poll**:
 
 ```bash
-sf org display --target-org=<final_alias> --json 2>/dev/null | \
+SF_DISABLE_TELEMETRY=true sf org display --target-org=<final_alias> --json 2>/dev/null | \
   jq -e '.result.connectedStatus == "Connected"'
 ```
 
@@ -316,10 +316,11 @@ END procedure.
 | `brew install sf` or `brew install salesforce-mcp` fails at Step 4 | Network / tap drift / Homebrew API outage / disk full | Claude surfaces the stderr; resolve in Terminal.app (`brew install <pkg>` directly), then re-run `/sf-setup` |
 | OAuth poll times out at Step 6 + user picks "Abort" | User closed browser / network blocked callback / OAuth consent denied | Re-run `/sf-setup --force-reauth`; check browser default + popup blocker |
 | `sf org login web` immediately errors (e.g. before browser opens) | Wrong instance URL for org type (sandbox URL on Production login, or vice versa) | Re-run `/sf-setup --instance-url=<correct-url> --alias=<your-alias> --force-reauth` (pass `--alias` so it's preserved across the new URL — inference would otherwise re-compute from the new subdomain) |
-| MCP server still failing after `/reload-plugins` | salesforce-mcp not installed yet (Step 4 skipped or `--skip-mcp-brew`) | Run `command -v salesforce-mcp` — if missing, re-run `/sf-setup` without `--skip-mcp-brew` |
+| MCP server still failing after `/reload-plugins` | `sf-mcp-server` binary not installed yet (Step 4 skipped or `--skip-mcp-brew`; brew formula is `salesforce-mcp` but the binary it ships is `sf-mcp-server`) | Run `command -v sf-mcp-server` — if missing, re-run `/sf-setup` without `--skip-mcp-brew` |
 | `--no-alias` and `--alias=<name>` both passed | Mutually exclusive (rejected at Step 0) | Pick one; re-run |
 | `localhost:1717 already in use` error from sf | Previous `sf org login web` background process still alive (e.g. prior `/sf-setup` aborted but its bg process not killed) | Claude runs `pkill -f 'sf org login web'` (in-conversation) to free the port; then re-run `/sf-setup --force-reauth` |
-| Browser didn't auto-open at Step 6 | `open` command failed (no default browser / sandbox / SSH session without X forwarding) | Ask Claude to fetch the bg-reference stdout (sf prints the OAuth URL there) — copy + paste it into any browser manually |
+| Browser didn't auto-open at Step 6 | `open` command failed (no default browser / sandbox / SSH session without X forwarding); ALSO sf-CLI suppresses URL output in non-TTY mode so Claude can't show URL inline | Fall back to Path B — run `bash $CLAUDE_PLUGIN_ROOT/scripts/sf/auto-setup.sh` in your own Terminal.app where sf prints the URL natively |
+| sf-CLI hangs at Step 6 without opening browser | First-run telemetry consent prompt blocking (sf shows y/N prompt that needs stdin which is unavailable in non-TTY) | Procedure exports `SF_DISABLE_TELEMETRY=true` automatically; if you see this anyway, run `SF_DISABLE_TELEMETRY=true sf --version` once via Claude Bash to verify env var works, then retry `/sf-setup --force-reauth` |
 
 ## Alternative — terminal power-user path
 

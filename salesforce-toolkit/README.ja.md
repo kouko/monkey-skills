@@ -57,10 +57,10 @@ v0.1.0 は upstream の Salesforce DX MCP サーバー（[`salesforcecli/mcp`](h
 | Component | Source | 役割 |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — OAuth（`sf org login web`）、org / alias 管理、token キャッシュを提供 |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | 60+ の Salesforce ツール（data / metadata / orgs / users / code-analyzer）を公開する MCP サーバー。v0.1.0 は `data,metadata` toolset のみ有効化 |
-| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 同梱 shim | Launcher：brew バイナリを優先、無ければ `npx -y @salesforce/mcp` にフォールバック。どちらも無い場合は `sf-setup` への案内を出力 |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | 60+ の Salesforce ツール（data / metadata / orgs / users / code-analyzer）を公開する MCP サーバー。v0.1.0 は `data,metadata` toolset のみ有効化。brew formula 名は `salesforce-mcp` ですが、install されるバイナリ名は `sf-mcp-server`（npm パッケージ `@salesforce/mcp` も同じバイナリを ship） |
+| [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 同梱 shim | Launcher：PATH 上の `sf-mcp-server` バイナリを優先、無ければ `npx -y @salesforce/mcp` にフォールバック。どちらも無い場合は `sf-setup` への案内を出力 |
 | Homebrew | https://brew.sh | macOS パッケージマネージャ — `sf-setup` が y/N 確認つきで自動インストール |
-| Node ≥ 26（推移的依存） | Homebrew 依存 | `salesforce-mcp` サーバーの実行環境 |
+| Node ≥ 26（推移的依存） | Homebrew 依存 | `sf-mcp-server` バイナリの実行環境 |
 
 `sf-setup` がこの 4 つのインストール対象を一括 orchestrate します。Launcher shim のおかげで brew が無い状態でも `.mcp.json` はロード可能 — 初回の MCP ツール呼び出し時に `npx` 経由でサーバーが起動します。
 
@@ -90,6 +90,11 @@ bash scripts/sf/refresh-auth.sh
 
 大半の症状は [`commands/sf-setup.md`](commands/sf-setup.md) §Troubleshooting に網羅されています（TTY ガード / 非対応 OS / brew インストール失敗 / OAuth フローのキャンセル / verify 空 / 排他フラグ）。より深い状態調査には、副作用なしで現在の `sf` + brew + MCP 状態をダンプする `bash scripts/sf/credential-check.sh --json` を実行してください。
 
+スクリプトに組み込まれた 2 つの非 TTY 対応の注意点（ユーザーは何もしなくて OK — 文脈として記載）：
+
+- **`SF_DISABLE_TELEMETRY=true` を自動 export。** 初回 `sf` 実行時に表示される y/N の telemetry 同意 prompt は非 TTY 環境（Claude Code の Bash tool）で hang するため、setup script はこの env var を export して prompt を skip します。
+- **非 TTY モードでは OAuth URL が出力されません。** `sf org login web` は本物の TTY に attach されていないと auth URL を stdout/stderr に出力しないので、Claude が URL をインライン表示することはできません（ブラウザは自動で開きます）。ブラウザが開かない場合は Path B（Terminal power-user）にフォールバックしてください — そちらは URL をネイティブに表示します。
+
 ## アーキテクチャ
 
 ```
@@ -110,7 +115,7 @@ bash scripts/sf/refresh-auth.sh
         bin/sf-mcp-launcher.sh   (brew → npx fallback)
                       │
                       ▼
-        salesforce-mcp  (Apache-2.0, salesforcecli/mcp)
+        sf-mcp-server  (brew `salesforce-mcp` / npm `@salesforce/mcp` のバイナリ, Apache-2.0)
                       │
                       ▼
                   sf CLI  (sf org login web の OAuth token)
@@ -119,7 +124,7 @@ bash scripts/sf/refresh-auth.sh
               Salesforce org REST API
 ```
 
-セットアップ時間（1 回限り）：`/salesforce-toolkit:sf-setup` がユーザーのターミナルで 6 ステップのインストーラを実行。実行時：Claude Code が `.mcp.json` をロード → launcher shim を spawn → stdio 経由で `salesforce-mcp` を spawn → 2 つの skill から MCP ツールが利用可能になる。
+セットアップ時間（1 回限り）：`/salesforce-toolkit:sf-setup` がユーザーのターミナルで 6 ステップのインストーラを実行。実行時：Claude Code が `.mcp.json` をロード → launcher shim を spawn → stdio 経由で `sf-mcp-server` を spawn → 2 つの skill から MCP ツールが利用可能になる。
 
 ## リンク
 
