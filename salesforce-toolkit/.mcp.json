@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "salesforce": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/bin/sf-mcp-launcher.sh",
+        "--orgs",
+        "DEFAULT_TARGET_ORG",
+        "--toolsets",
+        "data"
+      ]
+    }
+  }
+}

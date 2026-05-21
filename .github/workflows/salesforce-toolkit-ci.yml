@@ -1,0 +1,80 @@
+name: salesforce-toolkit CI
+
+# Runs shellcheck against every shell script under salesforce-toolkit/,
+# the bats test suite, and the marketplace-vs-plugin description sync
+# check on every PR that touches the plugin (or this workflow itself),
+# and on every push to main that changes the plugin or the marketplace
+# manifest.
+#
+# Runs on macos-latest because the salesforce-toolkit scripts target
+# the user's Mac shell environment (Homebrew layout, BSD coreutils, sf
+# CLI install paths). Matching the runner OS to the target OS keeps
+# the bats fixtures honest.
+
+on:
+  pull_request:
+    paths:
+      - 'salesforce-toolkit/**'
+      - '.github/workflows/salesforce-toolkit-ci.yml'
+      - '.claude-plugin/marketplace.json'
+  push:
+    branches: [main]
+    paths:
+      - 'salesforce-toolkit/**'
+      - '.claude-plugin/marketplace.json'
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        # shellcheck ships in Homebrew's default tap on macos-latest
+        # runners; install is idempotent if already cached on the image.
+        run: brew install shellcheck
+
+      - name: Run shellcheck on every salesforce-toolkit *.sh
+        # Find every shell script under the plugin and feed them all to
+        # one shellcheck invocation. -print0/-0 keeps paths-with-spaces
+        # safe; xargs exits non-zero on the first failing script which
+        # fails the job.
+        run: |
+          find salesforce-toolkit -name '*.sh' -print0 | xargs -0 shellcheck
+
+  bats:
+    name: bats
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: brew install bats-core
+
+      - name: Run salesforce-toolkit bats suite
+        run: bats salesforce-toolkit/tests/
+
+  marketplace-sync:
+    name: marketplace description sync
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run check-marketplace-description-sync.py
+        # Same-PR drift rule: when salesforce-toolkit's plugin.json
+        # description changes, the .claude-plugin/marketplace.json
+        # entry must be updated in the same commit. Script uses stdlib
+        # only (json + sys + pathlib), no extra pip install needed.
+        run: python3 scripts/check-marketplace-description-sync.py
