@@ -346,8 +346,12 @@ emits {status, alias, instance_url, expiry} JSON to stdout
   `refresh-auth.sh`. Refuses to proceed when there is no controlling
   TTY (e.g. CI runner, Bash tool background invocation) since the
   browser-based OAuth flow requires user interaction.
-- **Public API**: `require_tty` function. Exits 10 (auth/interaction
-  error) on no-TTY with structured stderr message. Side-effect-free
+- **Public API**: `require_tty [caller_name]` function. Optional
+  first arg names the calling script for the stderr message (defaults
+  to `"script"`); both `auto-setup.sh` and `refresh-auth.sh` pass their
+  own basename so users see which script blocked. Exits 10
+  (auth/interaction error) on no-TTY with structured stderr message
+  (`"<caller_name> requires a controlling terminal"`). Side-effect-free
   otherwise.
 - **Sourcing**: `source "${SCRIPT_DIR}/../common/tty-guard.sh"`.
 
