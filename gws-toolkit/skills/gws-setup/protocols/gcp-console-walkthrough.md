@@ -509,7 +509,7 @@ comes from `standards/credential-hygiene.md` and ASVS V14.
 
 **Why this step matters**: this skill doesn't require you to
 preinstall `gws` or `jq`. `bootstrap.sh` fetches both binaries from
-their official GitHub releases into `~/.cache/slides-toolkit/bin/`.
+their official GitHub releases into `~/.cache/gws-toolkit/bin/`.
 
 Then we write the issue #119 env vars into `~/.config/gws/env.sh`:
 the gws built-in OAuth client trips `invalid_scope` /
@@ -554,14 +554,14 @@ ls -l ~/.config/gws/env.sh
 ```
 
 **❌ Common errors**:
-- exit 17 `SHA-256 mismatch` (bootstrap) → the network is tampered,
-  or the upstream release changed. Confirm the network first, then
-  check the upstream release page. **Never bypass the SHA check
-  manually.**
+- bootstrap exits with download failure → confirm the network and
+  the upstream release URL. (SHA-256 verification was retired in
+  v0.4.0; HTTPS + URL pin + official GitHub org is now the integrity
+  boundary — TECH-SPEC §2.3.)
 - exit 1 `unknown platform` → your machine isn't darwin-arm64 or
   darwin-x86_64. The MVP doesn't support Linux / WSL.
 - `jq: command not found` → `bootstrap.sh` didn't finish, or PATH
-  doesn't include `~/.cache/slides-toolkit/bin`.
+  doesn't include `~/.cache/gws-toolkit/bin`.
 - One of the env vars is the empty string → `client_secret.json`
   structure is off (you probably picked the wrong client type at
   download). Return to §A4 / §B4 and confirm Desktop app was
@@ -581,12 +581,12 @@ source ~/.config/gws/env.sh   # if §L2 was not in the same shell
 gws auth login --scopes=https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets
 ```
 
-**Important**: **do not** use `--preset recommended` or anything
-similar. The `recommended` preset pulls a scope list that includes
-`drive` (full) and `userinfo.email`, and the Testing-mode consent
-screen only allows specific scope combinations — you'll hit
-`invalid_scope`. **List the two scope URLs explicitly**
-(least-privilege, TECH-SPEC §4.4).
+**Important**: **list the 6 scope URLs explicitly** (least-privilege,
+TECH-SPEC §4.4). gws v0.22.5's scope picker fetches all available
+scopes from each enabled API's Discovery Document (`setup.rs:259-371`);
+Testing mode caps consent at 25 scopes total — picking "all scopes"
+in the picker exceeds that and produces `invalid_scope`. The 6-URL
+explicit list keeps you well under.
 
 The browser flow:
 
@@ -616,8 +616,9 @@ The browser flow:
 **✅ Verify**: see §L4.
 
 **❌ Common errors**:
-- `invalid_scope` → you used the `recommended` preset. Switch to the
-  two explicit scope URLs.
+- `invalid_scope` → you picked too many scopes (Testing mode caps
+  consent at 25 total) or used a preset that pulls extras. Pass the
+  6-URL explicit list shown above.
 - `invalid_client` → §L2 env vars were not exported / `env.sh` was
   not sourced. Return to §L2.
 - `403 access_denied` → the Gmail you signed in with is **not** on

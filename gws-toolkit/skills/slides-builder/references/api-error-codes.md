@@ -186,7 +186,7 @@ full recovery protocol.
 | 13b | warning | InsertImage: role not in layout | Use `BLANK` layout or pick a layout with an image slot |
 | 15 | fatal | `layout_hint` enum invalid | Fix input to one of the 7 allowed values |
 | 16 | fatal | Issue #119 workaround needed | Run the setup skill; export client_id/secret env |
-| 18 | fatal | Credential backend unavailable | `gws auth login`; consider `KEYRING_BACKEND=file` |
+| 18 | fatal | Credential backend unavailable | `gws auth login`; consider `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` |
 
 ---
 

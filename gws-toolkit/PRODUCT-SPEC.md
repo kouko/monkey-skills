@@ -579,7 +579,7 @@ slides-toolkit (plugin root)
 | JSON 處理 | `jq`（由 skill 自抓 binary） | 使用者不需預裝；`jq` 靜態 binary 極小 |
 | 帳號模型 | 個人 `@gmail.com`，External + Testing mode | kouko 唯一帳號；Workspace 企業流程歸 Phase 2+ |
 | Token 策略 | 接受 refresh token 7 天過期，每週重登（~10 秒） | External + Testing 是 Google policy 硬邊界；產線 OAuth app 需過審，超出 MVP scope |
-| Credential 儲存 | 預設 macOS Keychain，fallback `KEYRING_BACKEND=file` | macOS Keychain silent fail 是已知風險；file fallback 是 gws 官方支援 |
+| Credential 儲存 | 預設 macOS Keychain（v0.22.3 起 strict mode，無 silent fallback），需 file backend 時顯式 `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` | macOS Keychain strict mode 是上游 secure-default；env var 顯式 opt-in 是 gws 官方支援的 backend override |
 | Layout 模型（v0.3 取代 template 模型） | **Google 內建 predefined layouts**（`TITLE` / `TITLE_AND_BODY` / `SECTION_HEADER` / `TITLE_AND_TWO_COLUMNS` 等），Claude 在 `slide-plan.json` 以 `layout_hint` enum 明示指定 | 零 template 管理 overhead（個人使用情境下 template 維護成本 > 視覺品質微升）；零 Drive ID 洩漏風險；零 schema drift；Google 預設 layout 覆蓋基本可讀性。template-based 模型改為 Phase 2+ trigger-gated（見 §3.5） |
 | Core recipe | `presentations.create`（建空 deck）/ 指定 predefined layout（batchUpdate）/ `replaceAllText` / `insert local image` | 覆蓋 ≥ 80% 場景（待 `[ASSUMPTION-2]` revalidation）、且四者都是 Google Slides API / gws 穩定命令 |
 | Binary integrity（v0.3 新增） | HTTPS 傳輸 + `curl -f` 失敗即 abort；**不做 SHA-256 pin** | 個人使用閉環下，SHA pin 維護成本（每次 upstream release 更新 hash、跨 arch 多組 hash）大於邊際安全增益；HTTPS + GitHub release 官方 org 信任邊界足以防禦「下載錯誤 / 網路中斷」常見失效。SHA pin 改為 Phase 2+ trigger-gated（publish / CI / 安全事件）|
@@ -590,7 +590,7 @@ slides-toolkit (plugin root)
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | gws issue #119（個人 Gmail invalid_scope） | 高（已確認） | 高（阻斷 OAuth） | `GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET` env var workaround，在 `gws-setup` 提供分支引導 |
-| macOS Keychain silent fail | 中 | 中 | Fallback 到 `KEYRING_BACKEND=file`，在 `gws-setup` state detect |
+| macOS Keychain 不可用（v0.22.3+ strict）| 低 | 中 | 顯式 opt-in `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`；`gws-setup` state detect 偵測缺 Keychain 條件 |
 | Refresh token 7 天過期 | 100%（policy） | 低（10 秒重登） | 文件明說；`slides-builder` 呼叫前先 ping token |
 | 使用者誤 commit credential | 中 | 高（credential 外洩） | `settings.json` deny rule + `.gitignore` pattern 雙重 |
 | gws 未來 breaking change | 低（官方維護） | 中 | Version pinning；Phase 2+ 觀察 |

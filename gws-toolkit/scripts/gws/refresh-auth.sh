@@ -2,12 +2,18 @@
 set -euo pipefail
 
 # =============================================================================
-# refresh-auth.sh — slides-toolkit gws refresh-token re-auth helper
+# refresh-auth.sh — gws-toolkit re-auth helper (re-runs gws auth login)
 # -----------------------------------------------------------------------------
 # One-shot helper to re-obtain a gws refresh token from Google (used when
-# the 7-day Testing-mode expiry hits). Wraps the full scope URLs and the
-# issue #119 env-var exports so the user does not need to memorize the
-# long command.
+# the 7-day External + Testing mode expiry hits). Wraps the 6-URL scope
+# list and the BYO-OAuth-client env var exports so the user does not need
+# to memorize the long command.
+#
+# NOTE: upstream `gws` v0.22.5 has **no native `gws auth refresh` subcommand**.
+# Refresh is automatic on every API call via `get_token() → refresh_token_with_reqwest()`
+# (see upstream auth.rs:49-75, 243-263). What this script does is re-run
+# `gws auth login` with the cached 6-scope set when the refresh token
+# itself has expired (Testing mode 7-day limit).
 #
 # Usage scenarios:
 #   1. Run proactively every 7 days (alias: `gws-relogin`).
@@ -19,7 +25,7 @@ set -euo pipefail
 #   - `gws-setup` has completed the first-time setup.
 #   - `~/.config/gws/client_secret.json` exists.
 #   - `~/.config/gws/env.sh` exists (issue #119 workaround env vars).
-#   - `~/.cache/slides-toolkit/bin/gws` exists.
+#   - `~/.cache/gws-toolkit/bin/gws` exists.
 #
 # Args: none (flags via env).
 #
@@ -44,7 +50,7 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly CLIENT_SECRET="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
-readonly GWS_BIN="${HOME}/.cache/slides-toolkit/bin/gws"
+readonly GWS_BIN="${HOME}/.cache/gws-toolkit/bin/gws"
 
 # Default scope set: 6 APIs covered (Slides, Drive, Docs, Sheets, Gmail, Calendar).
 # Full drive scope is the natural fit for general Drive operations exposed

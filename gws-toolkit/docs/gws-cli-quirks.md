@@ -114,9 +114,9 @@ Using keyring backend: keyring
 
 只有像 `createSlide` 這種會產出新物件的 request，reply 才包含對應 key。解析時不要 assume 所有 request 都有對應 key。
 
-## 8. `gws` 路徑固定 `~/.cache/slides-toolkit/bin/gws`（by bootstrap.sh）
+## 8. `gws` 路徑固定 `~/.cache/gws-toolkit/bin/gws`（by bootstrap.sh）
 
-skill 呼叫 gws 時用絕對路徑 `~/.cache/slides-toolkit/bin/gws`，不依賴 `$PATH`，這樣：
+skill 呼叫 gws 時用絕對路徑 `~/.cache/gws-toolkit/bin/gws`，不依賴 `$PATH`，這樣：
 - 不需要要求使用者把 gws 加進 `$PATH`
 - 避免和系統 gws（若有）衝突（future-proof：若使用者 brew install 了別版 gws，skill 用的仍是我們 pin 的版本）
 

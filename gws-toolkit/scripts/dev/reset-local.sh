@@ -17,9 +17,9 @@ set -uo pipefail
 # without paying the 15-min full-Console-walkthrough cost.
 #
 # Targets removed:
-#   ~/.cache/slides-toolkit/bin/         entire dir (gws + jq + .version)
+#   ~/.cache/gws-toolkit/bin/         entire dir (gws + jq + .version)
 #   ~/.config/gws/client_secret.json     downloaded OAuth client
-#   ~/.config/gws/env.sh                 issue #119 workaround
+#   ~/.config/gws/env.sh                 BYO-OAuth-client env vars
 #   ~/.config/gws/credentials.enc        encrypted refresh token
 #   ~/.config/gws/keyring-file.json      file-backend fallback (if any)
 #   macOS Keychain entry: service=gws-cli, account=$USER
@@ -45,7 +45,7 @@ set -uo pipefail
 #   bash gws-toolkit/scripts/dev/reset-local.sh --dry-run   # show plan only
 # =============================================================================
 
-readonly CACHE_BIN="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_BIN="${HOME}/.cache/gws-toolkit/bin"
 readonly GWS_CONFIG="${HOME}/.config/gws"
 readonly KEYCHAIN_SERVICE="gws-cli"
 
@@ -82,7 +82,7 @@ printf '\n=== reset-local.sh — local state wipe ===\n\n' >&2
 printf 'Targets present:\n' >&2
 list_target "binary cache dir"     "${CACHE_BIN}"
 list_target "OAuth client_secret"  "${GWS_CONFIG}/client_secret.json"
-list_target "issue #119 env.sh"    "${GWS_CONFIG}/env.sh"
+list_target "BYO-client env.sh"    "${GWS_CONFIG}/env.sh"
 list_target "encrypted creds"      "${GWS_CONFIG}/credentials.enc"
 list_target "file-backend creds"   "${GWS_CONFIG}/keyring-file.json"
 if security find-generic-password -s "${KEYCHAIN_SERVICE}" -a "${USER}" >/dev/null 2>&1; then
@@ -122,7 +122,7 @@ fi
 
 printf '\n=== done ===\n' >&2
 printf 'Re-run setup with:\n' >&2
-printf '  SLIDES_TOOLKIT_PROJECT_ID="<your-project-id>" \\\n    bash gws-toolkit/scripts/gws/auto-setup.sh\n\n' >&2
+printf '  GWS_TOOLKIT_PROJECT_ID="<your-project-id>" \\\n    bash gws-toolkit/scripts/gws/auto-setup.sh\n\n' >&2
 printf 'Steps 1-4 will idempotent-skip (project + APIs already on GCP).\n' >&2
 printf 'Step 5 will need either an existing client_secret_*.json freshly\n' >&2
 printf 'placed in ~/Downloads, OR a fresh OAuth Client created via the\n' >&2

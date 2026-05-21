@@ -61,7 +61,7 @@ goes through the second phase.
 ```
 
 Routes to the `gws-setup` skill. It detects current state,
-fetches `gws` + `jq` to `~/.cache/slides-toolkit/bin/`, walks you
+fetches `gws` + `jq` to `~/.cache/gws-toolkit/bin/`, walks you
 through the manual GCP Console steps (OAuth Client + Test User), and
 writes `~/.config/gws/env.sh` with the issue #119 workaround if your
 account needs it.
@@ -193,7 +193,7 @@ tagging), the toolkit-original layer is first-line.
 | Google account | Personal `@gmail.com`. Workspace accounts are Phase 2+. |
 
 **Not required**: Python, uv, gcloud, brew, npm. The `gws` and `jq`
-binaries are fetched into `~/.cache/slides-toolkit/bin/` by
+binaries are fetched into `~/.cache/gws-toolkit/bin/` by
 `scripts/gws/bootstrap.sh` over HTTPS with `curl -f`.
 
 ## Architecture
@@ -267,7 +267,7 @@ Read / Bash / Write that touches the gws credential store:
   "permissions": {
     "deny": [
       "Read(~/.config/gws/**)",
-      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Read(~/.cache/gws-toolkit/bin/.version)",
       "Bash(cat ~/.config/gws/*)",
       "Bash(cat ~/.config/gws/**)",
       "Bash(cp ~/.config/gws/* *)",

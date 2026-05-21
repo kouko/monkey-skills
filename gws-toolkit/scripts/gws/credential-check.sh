@@ -55,7 +55,7 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly FILE_BACKEND="${GWS_CONFIG_DIR}/keyring-file.json"
 readonly CREDENTIALS_FILE="${GWS_CONFIG_DIR}/credentials.enc"
-readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_BIN_DIR="${HOME}/.cache/gws-toolkit/bin"
 
 # Google OAuth External + Testing：refresh_token 7 天 lifetime（TECH-SPEC §6.3）
 readonly TOKEN_LIFETIME_DAYS=7

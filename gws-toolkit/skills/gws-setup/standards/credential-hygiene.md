@@ -1,10 +1,10 @@
 # Credential Hygiene — gws-setup
 
-> Applies to: the `slides-toolkit` plugin, specifically the OAuth
-> Client Secret, refresh tokens, and env-var workaround that the
-> Google Slides backend handles.
+> Applies to: the `gws-toolkit` plugin, specifically the OAuth
+> Client Secret, refresh tokens, and BYO-client env vars that the
+> Google Workspace backend handles.
 > Baseline: OWASP ASVS v5.0.0 L1 (`app-security-standard.md`). This
-> document specializes that baseline for slides-toolkit; it does not
+> document specializes that baseline for gws-toolkit; it does not
 > replace the upstream standard.
 
 ## Five hard rules (non-negotiable)
@@ -37,8 +37,8 @@ nowhere else:
 ~/.config/gws/
 ├── config.yaml             # non-secret; account + client_id reference
 ├── client_secret.json      # OAuth Client Secret (600)
-├── env.sh                  # issue #119 workaround env vars (600)
-└── keyring-file.json       # refresh token, only when Keychain falls back (600)
+├── env.sh                  # BYO-client env vars (600)
+└── keyring-file.json       # refresh token, only when explicit file-backend opt-in (600)
 ```
 
 Permission requirements:
@@ -64,7 +64,7 @@ get summarized, or land in a commit:
   "permissions": {
     "deny": [
       "Read(~/.config/gws/**)",
-      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Read(~/.cache/gws-toolkit/bin/.version)",
       "Bash(cat ~/.config/gws/*)",
       "Bash(cat ~/.config/gws/**)",
       "Bash(cp ~/.config/gws/* *)",
@@ -79,10 +79,10 @@ What the 7 patterns cover:
 
 1. `Read(~/.config/gws/**)` — blocks Claude's Read tool from
    reading credentials directly.
-2. `Read(~/.cache/slides-toolkit/bin/.version)` — the version file
-   gets treated as harmless metadata. It holds no secret (SHA-256
-   pins are integrity, not secrecy), but narrowing reads keeps the
-   attack surface small.
+2. `Read(~/.cache/gws-toolkit/bin/.version)` — the version file
+   gets treated as harmless metadata. It holds no secret (the file
+   stores the resolved release tag, not credentials), but narrowing
+   reads keeps the attack surface small.
 3. `Bash(cat ~/.config/gws/*)` — blocks `cat` from reading the
    credential files.
 4. `Bash(cat ~/.config/gws/**)` — `**` covers subdirectories.
@@ -134,19 +134,21 @@ goes through `.gitignore`, home-dir goes through `settings.json`.
 No one confuses "it's in .gitignore so it's safe". Aligns with
 TECH-SPEC §8.2.
 
-### Rule 5 — Prefer Keychain on macOS; only fall back to file backend on Linux/CI
+### Rule 5 — Prefer Keychain on macOS; only opt into file backend explicitly
 
 Keychain is macOS's native encrypted credential store, and it's
-more secure than a plaintext file.
+more secure than a plaintext file. **Since gws v0.22.3 (2026-01), macOS and
+Windows use strict Keychain — there is no silent file-backend fallback.**
+The wrapper scripts honour that contract.
 
-- **Personal macOS machine**: **do not** set `KEYRING_BACKEND=file`
-  on your own. Keep Keychain as the default.
-- **Keychain silent fail**: when
-  `scripts/gws/credential-check.sh` detects that Keychain
-  writes succeed but reads can't find the item, it **automatically**
-  falls back to the file backend and writes
-  `export KEYRING_BACKEND=file` into `~/.config/gws/env.sh`. This is
-  a technical workaround, not the normal case.
+- **Personal macOS machine**: **do not** set
+  `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` on your own. Keep
+  Keychain as the default.
+- **If Keychain genuinely fails** (no graphical session / strict
+  no-keyring CI / etc.): **explicitly** opt into the file backend
+  via `export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`. The token
+  then lives in `~/.config/gws/keyring-file.json` (chmod 600,
+  `.gitignore`-covered). On macOS this is rarely needed.
 - **Linux / CI** (Phase 2+): Keychain doesn't exist; the file
   backend is acceptable. Re-evaluate ASVS requirements when Phase
   2+ begins (you may need to level up to L2).
@@ -155,7 +157,8 @@ more secure than a plaintext file.
 "hardware/OS-level crypto vs filesystem permissions" — a plaintext
 file (even at chmod 600) is easier to extract if the machine is
 physically compromised. The MVP targets macOS only, so use
-Keychain; only step down when silent fail forces it.
+Keychain by default and opt into file explicitly when you have a
+reason.
 
 ## Sensitivity tiers
 
@@ -168,7 +171,7 @@ Aligned with TECH-SPEC §2.4 (external dependencies) and §4.8
 | Refresh token (Keychain or `keyring-file.json`) | 🔴 High | Attacker has consent-free access to your Slides / Drive.file for up to 7 days | `gws auth logout` immediately + wipe Keychain/file |
 | `env.sh` (Client ID + Secret in plaintext) | 🔴 High | Equivalent to a Client Secret leak | Delete + rotate immediately |
 | `installed.client_id` inside `client_secret.json` | 🟡 Medium | The Client ID alone doesn't authenticate; it's dangerous only when paired with the Secret | Handle based on Secret status |
-| `gws` binary + its SHA-256 pin | ⚪ Low | Public resource; the SHA-256 pin is an integrity control, not a secret | No action |
+| `gws` binary + its URL pin | ⚪ Low | Public resource; the URL pin + HTTPS + official GitHub org is the integrity boundary (SHA-256 verification retired v0.4.0; TECH-SPEC §2.3) | No action |
 | Drive IDs in `registry.md` (only if the template itself is non-sensitive) | ⚪ Low | A Drive ID still requires scoped access; leaking the ID alone doesn't authorize anything | No action |
 | Google-account email | 🟡 Medium | PII + phishing surface; don't commit it | Replace with a placeholder |
 
@@ -259,7 +262,7 @@ The ASVS L1 verification items this standard touches (aligned with
 | ASVS chapter | How this standard maps |
 |---|---|
 | **V1** Encoding & Sanitization | Minimal OAuth scopes (least-privilege: `presentations` + `drive` + `documents` + `spreadsheets`, never `drive` full or `userinfo.email`); UTF-8-only pipeline to avoid mojibake creating an injection surface |
-| **V13** Configuration | Rule 5 (Keychain preferred, file-backend fallback decision); binary SHA-256 pin as secure-default + dependency-integrity control |
+| **V13** Configuration | Rule 5 (Keychain preferred, explicit file-backend opt-in via `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`); binary URL pin + HTTPS as secure-default + dependency-integrity control |
 | **V14** Data Protection | Rule 1 (no secret in repo) + Rule 2 (centralized `~/.config/gws/`, chmod 600) + Rule 4 (.gitignore) + Rule 3 (settings.json deny rule blocking Claude reads) — a multi-layer secrets-at-rest defense |
 | **V16** Security Logging & Error Handling | Incident response writes `incidents/` without secrets; the exit-code table (TECH-SPEC §4.2) never prints token values to stderr |
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# auto-setup.sh — slides-toolkit end-to-end GCP / OAuth setup automation
+# auto-setup.sh — gws-toolkit end-to-end GCP / OAuth setup automation
 # -----------------------------------------------------------------------------
 # Codifies the live-E2E-verified Google Slides backend bootstrap as an
 # idempotent script. Steps:
@@ -22,7 +22,7 @@ set -euo pipefail
 #      write env.sh.
 #   6. (handled jointly with 5 — install credentials + env.sh).
 #   7. Bootstrap the gws + jq binaries via bootstrap.sh
-#      (`~/.cache/slides-toolkit/bin/`).
+#      (`~/.cache/gws-toolkit/bin/`).
 #   8. `gws auth login --scopes=presentations,drive,documents,spreadsheets,
 #      gmail,calendar` (6 scopes covering Slides + Drive + Docs + Sheets +
 #      Gmail + Calendar API operations surfaced by the 9 vendored upstream
@@ -56,7 +56,9 @@ set -euo pipefail
 #   -h|--help                 Print usage.
 #
 # Env:
-#   SLIDES_TOOLKIT_PROJECT_ID  Optional; defaults to slides-toolkit-<YYMMDD>.
+#   GWS_TOOLKIT_PROJECT_ID    Optional; defaults to gws-toolkit-<YYMMDD>.
+#                             SLIDES_TOOLKIT_PROJECT_ID also accepted as
+#                             deprecated alias for v0.4.0-and-earlier callers.
 #
 # Stdin: none
 # Stdout: JSON
@@ -82,7 +84,7 @@ readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly CLIENT_SECRET_DEST="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
 readonly DOWNLOADS_DIR="${HOME}/Downloads"
-readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_BIN_DIR="${HOME}/.cache/gws-toolkit/bin"
 readonly SLIDES_SCOPE="https://www.googleapis.com/auth/presentations"
 readonly DRIVE_SCOPE="https://www.googleapis.com/auth/drive"
 readonly DOCS_SCOPE="https://www.googleapis.com/auth/documents"
@@ -176,7 +178,8 @@ Options:
                              account domain (gmail.com → personal).
 
 Env:
-  SLIDES_TOOLKIT_PROJECT_ID    GCP project id (default: slides-toolkit-<YYMMDD>)
+  GWS_TOOLKIT_PROJECT_ID       GCP project id (default: gws-toolkit-<YYMMDD>)
+                               (SLIDES_TOOLKIT_PROJECT_ID accepted as deprecated alias)
 
 Exit codes:
   0  success
@@ -310,12 +313,16 @@ detect_account_type() {
 }
 
 # --- step 3a：決定 project id -----------------------------------------------
-# 優先 env SLIDES_TOOLKIT_PROJECT_ID；否則產 slides-toolkit-<YYMMDD>
+# 優先 env GWS_TOOLKIT_PROJECT_ID（含 SLIDES_TOOLKIT_PROJECT_ID 為 deprecated
+# alias，留給 v0.4.0-and-earlier 既有 caller 用）；否則產 gws-toolkit-<YYMMDD>
 resolve_project_id() {
-  if [[ -n "${SLIDES_TOOLKIT_PROJECT_ID:-}" ]]; then
+  if [[ -n "${GWS_TOOLKIT_PROJECT_ID:-}" ]]; then
+    PROJECT_ID="${GWS_TOOLKIT_PROJECT_ID}"
+  elif [[ -n "${SLIDES_TOOLKIT_PROJECT_ID:-}" ]]; then
+    printf '[auto-setup] note: SLIDES_TOOLKIT_PROJECT_ID is deprecated; prefer GWS_TOOLKIT_PROJECT_ID\n' >&2
     PROJECT_ID="${SLIDES_TOOLKIT_PROJECT_ID}"
   else
-    PROJECT_ID="slides-toolkit-$(date +%y%m%d)"
+    PROJECT_ID="gws-toolkit-$(date +%y%m%d)"
   fi
 }
 
@@ -326,7 +333,7 @@ ensure_project() {
   step 3 8 "ensure project ${PROJECT_ID}"
 
   if (( DRY_RUN == 1 )); then
-    dry_echo "gcloud projects describe ${PROJECT_ID} || gcloud projects create ${PROJECT_ID} --name=slides-toolkit"
+    dry_echo "gcloud projects describe ${PROJECT_ID} || gcloud projects create ${PROJECT_ID} --name=gws-toolkit"
     dry_echo "gcloud config set project ${PROJECT_ID}"
     return
   fi
@@ -335,9 +342,24 @@ ensure_project() {
     printf '[auto-setup] project %s already exists, skip create\n' \
       "${PROJECT_ID}" >&2
   else
-    if ! gcloud projects create "${PROJECT_ID}" --name="slides-toolkit"; then
+    # Capture stderr so we can detect Workspace org policy denials and
+    # surface a friendly admin-escalation message instead of generic exit 12.
+    local create_stderr="${TMPDIR:-/tmp}/auto-setup-create-$$.err"
+    if ! gcloud projects create "${PROJECT_ID}" --name="gws-toolkit" 2>"${create_stderr}"; then
+      # 403 / PERMISSION_DENIED → Workspace user without projectCreator role
+      # (Google Cloud Resource Manager docs: roles/resourcemanager.projectCreator
+      # required at org level for non-admin Workspace users).
+      if grep -qE 'PERMISSION_DENIED|403|projectCreator' "${create_stderr}"; then
+        local err_msg
+        err_msg="$(cat "${create_stderr}")"
+        rm -f "${create_stderr}"
+        die_json 12 "gcloud projects create denied (PERMISSION_DENIED): your Workspace account lacks roles/resourcemanager.projectCreator at the org level. Ask your Workspace admin to grant it, OR use GWS_TOOLKIT_PROJECT_ID=<existing-project-id> to point at a project you already have access to. gcloud stderr: ${err_msg}"
+      fi
+      cat "${create_stderr}" >&2
+      rm -f "${create_stderr}"
       die_json 12 "gcloud projects create failed for ${PROJECT_ID}"
     fi
+    rm -f "${create_stderr}"
   fi
 
   if ! gcloud config set project "${PROJECT_ID}" >/dev/null 2>&1; then
@@ -732,7 +754,7 @@ ensure_binaries() {
   if ! bash "${bootstrap}" >/dev/null; then
     die_json 1 "bootstrap.sh failed"
   fi
-  printf '[auto-setup] gws + jq binaries installed under ~/.cache/slides-toolkit/bin/\n' >&2
+  printf '[auto-setup] gws + jq binaries installed under ~/.cache/gws-toolkit/bin/\n' >&2
 }
 
 # --- step 8a：gws auth login（正確 --scopes=URL,URL 語法） -----------------

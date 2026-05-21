@@ -18,7 +18,9 @@ But under the combination of **personal `@gmail.com`** +
 consistently throws one of:
 
 - `invalid_scope` — Google rejects the scope list gws requested
-  (typically the set pulled by `--preset recommended`).
+  (e.g. picking "all available scopes" in the consent picker — gws
+  v0.22.5 has no `--preset recommended` flag; the 25-scope Testing-mode
+  cap is the underlying constraint).
 - `invalid_client` — Google does not recognize the gws built-in
   client as valid for a personal Gmail user. (Workspace-tenant
   clients cannot be used across tenants.)
@@ -68,8 +70,8 @@ export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET=$(jq -r .installed.client_secret ~/.co
 
 - `~/.config/gws/client_secret.json` exists
   (`gcp-console-walkthrough.md` §5).
-- `jq` is on PATH. Either put `~/.cache/slides-toolkit/bin/` on PATH,
-  or alias `jq=~/.cache/slides-toolkit/bin/jq`.
+- `jq` is on PATH. Either put `~/.cache/gws-toolkit/bin/` on PATH,
+  or alias `jq=~/.cache/gws-toolkit/bin/jq`.
 
 ### Write to shell profile (persistent)
 
@@ -144,7 +146,7 @@ are true:
 1. `googleworkspace/cli` officially fixes issue #119 (e.g. the
    built-in client starts accepting personal Gmail, or the CLI adds
    an official `--use-external-oauth-client` flag).
-2. `~/.cache/slides-toolkit/bin/gws` has been upgraded to the fixed
+2. `~/.cache/gws-toolkit/bin/gws` has been upgraded to the fixed
    version.
 3. `scripts/gws/env-guard.sh`'s feature flag detects a
    version >= known-fixed (see TECH-SPEC §6.1 final paragraph).

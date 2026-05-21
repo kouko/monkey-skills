@@ -33,7 +33,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set in your runtime, resolve via the directory co
 | 4 | Enable 6 APIs | Slides / Drive / Docs / Sheets / Gmail / Calendar (must match the OAuth scope set used in step 8) |
 | 5 | Guided OAuth Consent screen | 5a Branding → 5b Test User → 5c OAuth Client. Opens one Console URL per sub-step, prints inline instructions, waits for the user's ENTER (read from `/dev/tty`). 5c also polls `~/Downloads/` for `client_secret_*.json` and validates it is a Desktop app (rejects Web app early) |
 | 6 | Install credentials | Move `client_secret.json` → `~/.config/gws/` (chmod 600) + write `~/.config/gws/env.sh` (issue #119 workaround env vars) |
-| 7 | Bootstrap binaries | Download `gws` + `jq` binaries to `~/.cache/slides-toolkit/bin/` (via `scripts/gws/bootstrap.sh`) |
+| 7 | Bootstrap binaries | Download `gws` + `jq` binaries to `~/.cache/gws-toolkit/bin/` (via `scripts/gws/bootstrap.sh`) |
 | 8 | `gws auth login` + verify | `gws auth login --scopes=presentations,drive,documents,spreadsheets,gmail,calendar` then verify `gws auth status` reports `auth_method=oauth2` |
 
 Final stdout: JSON with `{status, project_id, account, scopes, elapsed_sec, dry_run}`.

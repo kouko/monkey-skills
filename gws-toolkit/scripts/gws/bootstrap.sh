@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # =============================================================================
-# bootstrap.sh — slides-toolkit google-slides backend binary self-fetch
+# bootstrap.sh — gws-toolkit Google Workspace backend binary self-fetch
 # -----------------------------------------------------------------------------
 # Detects the macOS platform, then downloads the gws and jq binaries from
 # GitHub releases over HTTPS via `curl -fLSs` into
-# ~/.cache/slides-toolkit/bin/, marks them executable, and writes a .version
+# ~/.cache/gws-toolkit/bin/, marks them executable, and writes a .version
 # manifest. Idempotent: if the binaries already exist and are within TTL,
 # the script skips the download (unless --force is given).
 #
@@ -42,8 +42,10 @@ set -euo pipefail
 #   GWS_VERSION                     Pin a specific tag (e.g. v0.23.0);
 #                                   disables auto-refresh.
 #   JQ_VERSION                      Pin jq version (default jq-1.7.1).
-#   SLIDES_TOOLKIT_BINARY_TTL_DAYS  Auto-refresh threshold in days
-#                                   (default 30).
+#   GWS_TOOLKIT_BINARY_TTL_DAYS    Auto-refresh threshold in days
+#                                  (default 30). SLIDES_TOOLKIT_BINARY_TTL_DAYS
+#                                  accepted as deprecated alias for v0.4.0-
+#                                  and-earlier callers.
 #
 # Stdin: none
 # Stdout: JSON `{"gws":"<path>","jq":"<path>","version":{"gws":"...","jq":"..."},"cache_dir":"...","dry_run":bool}`
@@ -67,10 +69,10 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 # 不需 latest）。
 GWS_VERSION="${GWS_VERSION:-}"
 JQ_VERSION="${JQ_VERSION:-jq-1.7.1}"
-TTL_DAYS="${SLIDES_TOOLKIT_BINARY_TTL_DAYS:-30}"
+TTL_DAYS="${GWS_TOOLKIT_BINARY_TTL_DAYS:-${SLIDES_TOOLKIT_BINARY_TTL_DAYS:-30}}"
 
 # --- 常數 -------------------------------------------------------------------
-readonly CACHE_DIR="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_DIR="${HOME}/.cache/gws-toolkit/bin"
 readonly VERSION_FILE="${CACHE_DIR}/.version"
 readonly GWS_RELEASE_BASE="https://github.com/googleworkspace/cli/releases/download"
 readonly GWS_LATEST_BASE="https://github.com/googleworkspace/cli/releases/latest/download"
@@ -78,7 +80,7 @@ readonly GWS_API_LATEST="https://api.github.com/repos/googleworkspace/cli/releas
 readonly JQ_RELEASE_BASE="https://github.com/jqlang/jq/releases/download"
 
 # --- 臨時目錄 + 清理 trap ---------------------------------------------------
-TMP="$(mktemp -d -t slides-toolkit-bootstrap.XXXXXX)"
+TMP="$(mktemp -d -t gws-toolkit-bootstrap.XXXXXX)"
 trap 'rm -rf "${TMP}"' EXIT
 
 # --- 旗標 -------------------------------------------------------------------
@@ -126,7 +128,8 @@ Usage: bootstrap.sh [--force] [--dry-run] [--platform darwin-arm64|darwin-x86_64
 Env:
   GWS_VERSION=v0.23.0                 pin a specific tag (disables auto-refresh)
   JQ_VERSION=jq-1.7.1                 pin jq version (default)
-  SLIDES_TOOLKIT_BINARY_TTL_DAYS=30   auto-refresh threshold in days
+  GWS_TOOLKIT_BINARY_TTL_DAYS=30      auto-refresh threshold in days
+                                      (SLIDES_TOOLKIT_BINARY_TTL_DAYS deprecated alias)
 USAGE
         exit 0
         ;;

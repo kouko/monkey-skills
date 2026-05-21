@@ -98,11 +98,11 @@ curl -sSf --max-time 5 -o /dev/null https://www.googleapis.com/discovery/v1/apis
 
 - Fail（DNS / 封鎖 / proxy）→ **exit 1** + hint：`network unreachable to googleapis.com; check connectivity / proxy`
 
-## 8. [ ] `~/.cache/slides-toolkit/bin/gws` 存在 + executable
+## 8. [ ] `~/.cache/gws-toolkit/bin/gws` 存在 + executable
 
 ```bash
-[[ -x "$HOME/.cache/slides-toolkit/bin/gws" ]] && \
-[[ -x "$HOME/.cache/slides-toolkit/bin/jq" ]]
+[[ -x "$HOME/.cache/gws-toolkit/bin/gws" ]] && \
+[[ -x "$HOME/.cache/gws-toolkit/bin/jq" ]]
 ```
 
 - Fail → **exit 1** + hint：`gws/jq binary missing — run gws-setup (scripts/gws/bootstrap.sh)`
