@@ -33,8 +33,8 @@ set -euo pipefail
 #
 # Pre-flight:
 #   - ~/.config/gws/client_secret.json must exist
-#   - ~/.config/gws/env.sh must exist (issue #119 workaround env vars)
-#   - gws binary in PATH or ~/.cache/slides-toolkit/bin/
+#   - ~/.config/gws/env.sh must exist (BYO-client env vars)
+#   - gws binary in PATH or ~/.cache/gws-toolkit/bin/
 #
 # Stdin: none
 # Stdout: JSON
@@ -55,7 +55,7 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly CLIENT_SECRET="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
-readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_BIN_DIR="${HOME}/.cache/gws-toolkit/bin"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LOGOUT_SCRIPT="${SCRIPT_DIR}/gws-logout.sh"
 

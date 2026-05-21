@@ -2,14 +2,25 @@
 set -euo pipefail
 
 # =============================================================================
-# env-guard.sh — gws issue #119 detection + workaround apply (ISP split)
+# env-guard.sh — BYO OAuth client env-var injection (ISP split)
 # -----------------------------------------------------------------------------
+# Historical naming: this used to be framed as "issue #119 workaround".
+# Upstream `googleworkspace/cli` now documents `GOOGLE_WORKSPACE_CLI_CLIENT_ID`
+# / `_CLIENT_SECRET` env vars as the **first-class External-audience
+# BYO-client mechanism** (README §Authentication; setup.rs
+# `manual_oauth_instructions()`). Personal `@gmail.com` accounts under
+# External + Testing always need their own OAuth client because there is no
+# shared `gws` consumer client (IAP OAuth Admin API was deprecated 2025).
+# Issue #119's underlying parsing bug was separately fixed by upstream PR
+# #177 (merged 2026-03-05, shipped in v0.22.5).
+#
 # Two subcommands with separate responsibilities (Interface Segregation):
-#   - `check`: Detect whether the issue #119 workaround is needed (missing
-#     GOOGLE_WORKSPACE_CLI_CLIENT_ID / CLIENT_SECRET env vars, or gws auth
-#     returning invalid_scope / invalid_client). Emits JSON
-#     `{"workaround_needed": bool, "reason": "..."}`. Exits 16 when the
-#     workaround is needed but not applied; exits 0 otherwise.
+#   - `check`: Detect whether the BYO-client env vars are currently active
+#     (set via `~/.config/gws/env.sh`, exported to env, or absent). Emits
+#     JSON `{"workaround_needed": bool, "reason": "..."}` (field name kept
+#     for backward compat with v0.4.0+ callers parsing this). Exits 16 when
+#     the env vars are missing AND gws is returning invalid_scope /
+#     invalid_client; exits 0 otherwise.
 #   - `apply`: Read client ID / secret from
 #     `~/.config/gws/client_secret.json` and emit shell-eval lines (KISS:
 #     the caller's env is not mutated directly — the caller must `eval` or
@@ -20,7 +31,7 @@ set -euo pipefail
 #
 # Upstream refs:
 #   - TECH-SPEC §4.2 `scripts/gws/env-guard.sh` contract
-#   - TECH-SPEC §6.1 gws issue #119 workaround
+#   - TECH-SPEC §6.1 BYO-client env-var mechanism (historical: gws issue #119)
 #   - TECH-SPEC §8.1 settings.json deny rule (credential-at-rest guard)
 #
 # Args:
@@ -45,7 +56,7 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly CLIENT_SECRET_FILE="${GWS_CONFIG_DIR}/client_secret.json"
 readonly ENV_FILE="${GWS_CONFIG_DIR}/env.sh"
-readonly BIN_DIR="${BIN_DIR:-${HOME}/.cache/slides-toolkit/bin}"
+readonly BIN_DIR="${BIN_DIR:-${HOME}/.cache/gws-toolkit/bin}"
 readonly GWS="${BIN_DIR}/gws"
 
 TMP="$(mktemp -d -t env-guard.XXXXXX)"
@@ -117,13 +128,13 @@ cmd_check() {
   fi
 
   if grep -qiE 'invalid_scope|invalid_client' "${auth_stderr}"; then
-    emit_check "true" "gws returned invalid_scope / invalid_client (issue #119)"
-    # exit 16：需 workaround 但未套用
+    emit_check "true" "gws returned invalid_scope / invalid_client; BYO-client env vars need (re-)applying"
+    # exit 16：BYO-client env vars 缺；caller 應跑 `env-guard.sh apply`
     exit 16
   fi
 
-  # 其他 auth 錯誤不是 #119；不在本 script 責任範圍（ISP）
-  emit_check "false" "gws auth error is not #119-related; see stderr"
+  # 其他 auth 錯誤不是 BYO-client 範疇；不在本 script 責任範圍（ISP）
+  emit_check "false" "gws auth error is not BYO-client-related; see stderr"
   exit 0
 }
 

@@ -39,6 +39,147 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.7.2] - 2026-05-21
+
+Audit-driven maintenance release. End-to-end cross-check against (a)
+upstream `googleworkspace/cli@v0.22.5/705fb0ec` Rust source and (b)
+Google's 2026 official OAuth / GCP Console docs surfaced 10 deltas +
+6 upstream-side changes since the v0.4.0 strangler-fig rename. v0.7.2
+absorbs all P0+P1+P2 fixes in one patch so future v0.8.0 development
+starts from accurate ground truth.
+
+### Fixed
+
+- **`KEYRING_BACKEND` → `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND`** —
+  P0. The env-var name in `skills/gws-setup/SKILL.md` (lines 217 +
+  227) and `standards/credential-hygiene.md` was missing the
+  `GOOGLE_WORKSPACE_CLI_` prefix that upstream requires
+  (`credential_store.rs:150,161`). Setting the old name was a silent
+  no-op in v0.7.1 and earlier — `gws` ignored it and used its
+  default Keychain backend.
+- **macOS Keychain v0.22.3+ strict mode** — P1. v0.22.3 removed the
+  silent file-backend fallback on macOS / Windows; the SKILL.md and
+  credential-hygiene.md narrative still described the (no-longer-
+  present) auto-fallback path. Rewritten to: "Keychain is strict;
+  explicit `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` opt-in if you
+  need the file backend."
+- **`--preset recommended` warning** — P1. gws v0.22.5 has no
+  `recommended` preset flag (verified via `auth_commands.rs:362-395`
+  flag surface). The warning was stale guidance from an older gws
+  version. Replaced with the current 25-scope Testing-mode cap
+  caveat (upstream README §Authentication line 438-446).
+- **`exit 17 SHA-256 mismatch`** — P1. SHA-256 verification was
+  retired in v0.4.0 (PRODUCT-SPEC v0.3 Non-Goal); 3 stale references
+  in `SKILL.md:308`, `checklists/setup-state.md:55`,
+  `protocols/gcp-console-walkthrough.md:557` removed.
+- **`gcloud projects create` 403 PERMISSION_DENIED detection** — P1.
+  `auto-setup.sh ensure_project()` previously surfaced any project-
+  create failure as generic `exit 12`. Workspace users without
+  `roles/resourcemanager.projectCreator` at the org level were the
+  silent victim. v0.7.2 captures stderr and surfaces a friendly
+  "ask your Workspace admin for projectCreator role OR set
+  `GWS_TOOLKIT_PROJECT_ID=<existing>` to point at a project you
+  already have access to" message.
+- **gws-setup §Quota awareness 403/429 fact** — P1 (carry-over from
+  v0.7.1 reviewer 🟡). Old text said "403 / 429 rate-limit errors
+  are handled transparently by gws-wrap.sh's exponential backoff",
+  but `gws-wrap.sh:187` maps 403 to exit 10 (auth/scope) — only 429
+  + 5xx are retried at `:201`. Sentence rewritten to reflect
+  actual behaviour.
+
+### Added
+
+- **§OAuth client maintenance** sub-section in
+  `skills/gws-setup/SKILL.md` documenting two Google-side behaviours
+  introduced in the 2025-06 Cloud Console UI update:
+  - Client secret is **shown only once** after creation (Console
+    masks it on every subsequent view; if lost, delete + recreate).
+  - **6-month inactivity → auto-delete** of OAuth clients, with a
+    30-day restore window.
+
+### Changed
+
+- **Reframe `env-guard.sh` from "issue #119 workaround" to
+  "BYO OAuth client mechanism"** — P2. Upstream now documents
+  `GOOGLE_WORKSPACE_CLI_CLIENT_ID/_SECRET` as the first-class
+  External-audience BYO-client mechanism (`README §Authentication`,
+  `setup.rs:1457` `manual_oauth_instructions()`). The original issue
+  #119's underlying parsing bug was separately fixed by upstream
+  PR #177 (merged 2026-03-05; shipped in v0.22.5, which is what we
+  pin). The script's behaviour is unchanged; only the narrative
+  framing is updated across `env-guard.sh` header, `SKILL.md`
+  Workarounds section, `checklists/setup-state.md` check 5,
+  `standards/credential-hygiene.md`, `commands/gws-setup.md`. The
+  file `protocols/issue-119-workaround.md` keeps its filename as a
+  stable cross-link anchor; its content is updated.
+- **`refresh-auth.sh` header note** — P2. Clarified that upstream
+  `gws` v0.22.5 has no native `gws auth refresh` subcommand
+  (`auth_commands.rs:398-429` shows the 5-subcommand surface
+  `login | setup | status | export | logout`). Our `refresh-auth.sh`
+  re-runs `gws auth login` with the cached 6-scope set when the
+  refresh token itself has expired.
+- **Legacy `slides-toolkit` → `gws-toolkit` rename (5+ surfaces)** —
+  P2. Strangler-fig fork from v0.4.0 left these legacy fragments:
+  - Cache path: `~/.cache/slides-toolkit/bin/` → `~/.cache/gws-toolkit/bin/`
+    (15 references across `auto-setup.sh`, `bootstrap.sh`,
+    `refresh-auth.sh`, `env-guard.sh`, `credential-check.sh`,
+    `gws-wrap.sh`, `gws-login.sh`, `gws-logout.sh`,
+    `scripts/dev/reset-local.sh`, `scripts/dev/smoke-test-api-coverage.sh`,
+    SKILL.md, checklists, credential-hygiene.md).
+  - Project ID prefix: `slides-toolkit-<YYMMDD>` → `gws-toolkit-<YYMMDD>`.
+  - Env vars: `SLIDES_TOOLKIT_PROJECT_ID` → `GWS_TOOLKIT_PROJECT_ID`,
+    `SLIDES_TOOLKIT_BINARY_TTL_DAYS` → `GWS_TOOLKIT_BINARY_TTL_DAYS`.
+    Old names retained as **deprecated aliases** with a one-line
+    `[auto-setup] note: SLIDES_TOOLKIT_PROJECT_ID is deprecated;
+    prefer GWS_TOOLKIT_PROJECT_ID` stderr warning when used.
+  - Script header docstrings: `slides-toolkit X` → `gws-toolkit X`
+    in `auto-setup.sh`, `bootstrap.sh`, `refresh-auth.sh`.
+  - **Migration impact for existing users**: re-running
+    `bash gws-toolkit/scripts/gws/bootstrap.sh` re-downloads `gws` +
+    `jq` to the new cache path; old `~/.cache/slides-toolkit/bin/`
+    can be removed manually if desired. Setup is otherwise
+    backward-compatible (deprecated env-var aliases work; no re-auth
+    needed).
+- **`plugin.json`** — version bumped `0.7.1` → `0.7.2`. Description
+  unchanged (no user-facing capability added; this is a maintenance
+  release).
+- **`marketplace.json`** — gws-toolkit description still matches
+  plugin.json byte-identical (no change needed — description is the
+  same).
+
+### Notes
+
+- **Upstream pin held** at `v0.22.5 / 705fb0ec` — purely additive
+  doc + script-rename cleanups; upstream version bump is a separate
+  concern for v0.8.0.
+- **No OAuth scope changes** — the 6 scopes from v0.7.0 stay; no
+  re-consent needed.
+- **Audit sources**: research-agent cross-references against (a)
+  upstream `googleworkspace/cli` v0.22.5 / 705fb0ec source files
+  (`setup.rs`, `auth_commands.rs`, `auth.rs`, `credential_store.rs`,
+  `README.md`), and (b) Google's official OAuth / GCP Console
+  documentation as of 2026-05-21 (Google Auth Platform path, OAuth
+  consent screen UI, granular OAuth rollout 2026-01-07, Workspace
+  app-audience policy, Desktop client OAuth flow, restricted-scope
+  classification, 2026-05-01 Gmail/Calendar API quota change).
+
+### Audit findings deferred to v0.8.0 backlog
+
+These v0.8.0-backlog items were carried forward from v0.7.1 already;
+v0.7.2 does not address them:
+
+- **DRY across 4 safety wrappers** — extract `scripts/gws/_common.sh`
+  for die/usage/preflight (~50 LOC duplicated 4×; Rule of Three).
+- **Shared input-sanitization helper** — `_validate.sh` covering
+  CRLF email header injection (gmail-confirm-send) + USER_ENTERED
+  formula injection (sheets-confirm-write).
+- **bats-core test infrastructure** — carried from v0.7.0
+  [Unreleased] backlog.
+- **Vendor remaining upstream skills** — 6 gmail-* helpers +
+  gws-sheets-read + 51 recipe-* + 10 persona-* + gws-tasks +
+  gws-meet + gws-people.
+- **Upstream pin bump beyond v0.22.5** — independent PR concern.
+
 ## [0.7.1] - 2026-05-20
 
 Close the v0.7.0 write asymmetry — vendor 5 new upstream write-side

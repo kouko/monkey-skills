@@ -22,25 +22,25 @@ the manual version — useful during first-time setup and debugging.
 
 ## 1. Is the `gws` binary present?
 
-**Why**: `~/.cache/slides-toolkit/bin/gws` is the execution point
+**Why**: `~/.cache/gws-toolkit/bin/gws` is the execution point
 for every Google Slides backend operation. No binary, no show.
 
 **Check**:
 
 ```bash
-ls ~/.cache/slides-toolkit/bin/gws
+ls ~/.cache/gws-toolkit/bin/gws
 ```
 
 **Expected output**:
 
 ```
-/Users/<you>/.cache/slides-toolkit/bin/gws
+/Users/<you>/.cache/gws-toolkit/bin/gws
 ```
 
 And it should run:
 
 ```bash
-~/.cache/slides-toolkit/bin/gws --version
+~/.cache/gws-toolkit/bin/gws --version
 # Expected: gws vX.Y.Z (version depends on bootstrap.sh pin; TODO: fill in current pin)
 ```
 
@@ -49,25 +49,26 @@ And it should run:
 - File missing → `gcp-console-walkthrough.md` §7 (run
   `bootstrap.sh`).
 - Present but not executable (`Permission denied`) →
-  `chmod +x ~/.cache/slides-toolkit/bin/gws`, or rerun
+  `chmod +x ~/.cache/gws-toolkit/bin/gws`, or rerun
   `bash scripts/gws/bootstrap.sh --force`.
-- `--version` reports a SHA mismatch-style error → rerun bootstrap.
-  If exit 17 persists, see SKILL.md
-  [Error messages guide](../SKILL.md#error-messages-guide).
+- `--version` fails to run → rerun `bash scripts/gws/bootstrap.sh --force`
+  to re-download. (SHA-256 verification was retired in v0.4.0; HTTPS +
+  URL pin + official GitHub org is now the integrity boundary —
+  TECH-SPEC §2.3.)
 
 ---
 
 ## 2. Is the `jq` binary present?
 
-**Why**: the issue #119 workaround uses `jq` to extract fields from
-`client_secret.json` when setting env vars; the builder pipeline
+**Why**: the BYO-client env-var mechanism uses `jq` to extract fields
+from `client_secret.json` when setting env vars; the builder pipeline
 also uses `jq` to validate slide-plan schemas.
 
 **Check**:
 
 ```bash
-ls ~/.cache/slides-toolkit/bin/jq
-~/.cache/slides-toolkit/bin/jq --version
+ls ~/.cache/gws-toolkit/bin/jq
+~/.cache/gws-toolkit/bin/jq --version
 # Expected: jq-1.7.1 or newer
 ```
 
@@ -79,11 +80,11 @@ ls ~/.cache/slides-toolkit/bin/jq
 - Present but version < 1.7.1 →
   `bash scripts/gws/bootstrap.sh --force`.
 - Correct version but `command not found` at runtime → PATH doesn't
-  include `~/.cache/slides-toolkit/bin`. Pick one:
-  1. Temporary: `export PATH="$HOME/.cache/slides-toolkit/bin:$PATH"`
+  include `~/.cache/gws-toolkit/bin`. Pick one:
+  1. Temporary: `export PATH="$HOME/.cache/gws-toolkit/bin:$PATH"`
   2. Permanent: append to `~/.zshrc`
   3. Per-call: use the absolute path
-     `~/.cache/slides-toolkit/bin/jq`
+     `~/.cache/gws-toolkit/bin/jq`
 
 ---
 
@@ -129,8 +130,10 @@ future Phase 2+ introduces a gcloud dependency, update this check.
 ## 4. Does `~/.config/gws/client_secret.json` exist?
 
 **Why**: gws reads this file to find the Client ID / Client Secret.
-The issue #119 workaround env vars are also extracted from it (see
-`protocols/issue-119-workaround.md` §Concrete commands).
+The BYO-client env vars (`GOOGLE_WORKSPACE_CLI_CLIENT_ID/_SECRET`)
+are also extracted from it (see `protocols/issue-119-workaround.md`
+§Concrete commands — the file path keeps the historical name as a
+stable cross-link anchor).
 
 **Check**:
 
@@ -153,7 +156,7 @@ Key points:
 Deeper check (confirms the client type is Desktop):
 
 ```bash
-~/.cache/slides-toolkit/bin/jq -r '.installed.client_id' ~/.config/gws/client_secret.json
+~/.cache/gws-toolkit/bin/jq -r '.installed.client_id' ~/.config/gws/client_secret.json
 # Expected: non-empty string, usually ending in .apps.googleusercontent.com
 ```
 
@@ -174,12 +177,15 @@ recreate as Desktop type.
 
 ---
 
-## 5. Are the issue #119 env vars exported?
+## 5. Are the BYO-client env vars exported?
 
-**Why**: on personal Gmail, the gws built-in client trips
-`invalid_scope` / `invalid_client`; you must export
-`GOOGLE_WORKSPACE_CLI_CLIENT_ID/SECRET` to override it (full
-details: `protocols/issue-119-workaround.md`).
+**Why**: on External + Testing (personal Gmail or Workspace BYO),
+you must export `GOOGLE_WORKSPACE_CLI_CLIENT_ID/_SECRET` for gws to
+use your own OAuth client (there is no shared `gws` consumer client;
+the IAP OAuth Admin API was deprecated in 2025 — see upstream
+README §Authentication). Full details:
+`protocols/issue-119-workaround.md` (filename is historical;
+content covers the now-canonical BYO-client mechanism).
 
 **Check**:
 
@@ -223,10 +229,10 @@ bash scripts/gws/env-guard.sh check
 
 **Why**: this is the **end-to-end check** for the whole setup.
 `whoami` returning your email means: the Client Secret is paired
-correctly, the issue #119 workaround is active, your Test user is
+correctly, the BYO-client env vars are active, your Test user is
 on the list, the APIs are enabled, the refresh token is valid, and
-at least one of Keychain / file backend is readable. **whoami passing
-= the entire setup is green.**
+Keychain (or the explicit file-backend override) is readable.
+**whoami passing = the entire setup is green.**
 
 **Check**:
 
@@ -250,8 +256,8 @@ user in `gcp-console-walkthrough.md` §3.
 | `401 Unauthorized` / `token expired` | Token expired (>7 days unused) | SKILL.md [Every 7 days maintenance](../SKILL.md#every-7-days-maintenance) |
 | `403 access_denied` | The Gmail you signed in with isn't in Test users | `gcp-console-walkthrough.md` §3 |
 | `403` + `API not enabled` | Slides / Drive API not enabled | `gcp-console-walkthrough.md` §6 |
-| `invalid_scope` / `invalid_client` | Issue #119 env vars aren't active | Check 5 failed + `protocols/issue-119-workaround.md` |
-| `Keychain item not found` / `KeyError` | Keychain silent fail | SKILL.md [Workarounds](../SKILL.md#workarounds), Keychain section (automatic fallback to file backend) |
+| `invalid_scope` / `invalid_client` | BYO-client env vars aren't active | Check 5 failed + `protocols/issue-119-workaround.md` |
+| `Keychain item not found` / `KeyError` | Keychain unavailable (v0.22.3+ macOS is strict — no silent fallback) | SKILL.md [Workarounds](../SKILL.md#macos-keychain-v0223-strict-mode); explicitly set `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` if needed |
 | `No such file or directory` `gws` | gws not on PATH | Check 1 failed |
 | Command exits 0 with no output | Unusual state / outdated gws | `bash scripts/gws/bootstrap.sh --force` to refetch |
 
@@ -262,8 +268,8 @@ user in `gcp-console-walkthrough.md` §3.
 Run all 6 checks in one go:
 
 ```bash
-echo "--- 1. gws binary ---"        && ls ~/.cache/slides-toolkit/bin/gws && ~/.cache/slides-toolkit/bin/gws --version
-echo "--- 2. jq binary ---"         && ls ~/.cache/slides-toolkit/bin/jq && ~/.cache/slides-toolkit/bin/jq --version
+echo "--- 1. gws binary ---"        && ls ~/.cache/gws-toolkit/bin/gws && ~/.cache/gws-toolkit/bin/gws --version
+echo "--- 2. jq binary ---"         && ls ~/.cache/gws-toolkit/bin/jq && ~/.cache/gws-toolkit/bin/jq --version
 echo "--- 3. gcloud (optional) ---" && (which gcloud && gcloud --version 2>/dev/null) || echo "gcloud not installed (OK, MVP doesn't need it)"
 echo "--- 4. client_secret.json ---" && ls -l ~/.config/gws/client_secret.json
 echo "--- 5. env vars ---"          && bash scripts/gws/env-guard.sh check
@@ -277,14 +283,14 @@ branch" column above to fix it, then rerun from that point.
 
 - `../SKILL.md` (main flow + error messages guide)
 - `../protocols/gcp-console-walkthrough.md` (10-step tutorial)
-- `../protocols/issue-119-workaround.md` (env var workaround, full
-  detail)
+- `../protocols/issue-119-workaround.md` (BYO-client env-var
+  mechanism, full detail — filename historical, content current)
 - `../standards/credential-hygiene.md` (`client_secret.json` /
   `env.sh` chmod rules)
 - `../../scripts/gws/credential-check.sh` (automated
   state detection)
-- `../../scripts/gws/env-guard.sh` (check / apply for
-  the issue #119 workaround)
+- `../../scripts/gws/env-guard.sh` (check / apply for the BYO-client
+  env-var mechanism)
 - TECH-SPEC §3.2 (gws-setup state-detection contract)
 - TECH-SPEC §4.2 (`credential-check.sh` / `env-guard.sh` script
   contract)

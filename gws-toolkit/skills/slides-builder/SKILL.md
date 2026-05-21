@@ -40,7 +40,7 @@ Example shape:
 ## Prerequisites
 
 - `gws-setup` has been run once:
-  - `~/.cache/slides-toolkit/bin/gws` and `jq` are downloaded (HTTPS + `curl -f`; v0.3 does not pin SHA-256)
+  - `~/.cache/gws-toolkit/bin/gws` and `jq` are downloaded (HTTPS + `curl -f` + URL pin; SHA-256 verification retired in v0.4.0 — TECH-SPEC §2.3)
   - Google OAuth is granted (scopes: `presentations` + `drive` + `documents` + `spreadsheets`; see TECH-SPEC §4.4)
   - `~/.config/gws/env.sh` includes the issue #119 workaround (if detected)
 - Runs on macOS + Claude Code; all input files are **UTF-8 only**
@@ -158,7 +158,7 @@ Full table in TECH-SPEC §4.2; common cases for this skill:
 | 14 | Local image missing / too large / unsupported format | Check `local_path` |
 | 15 | Schema validation failed (including `layout_hint` not in enum) | Fix the slide plan |
 | 16 | Issue #119 / invalid_scope | Return to `gws-setup`; run `env-guard.sh apply` |
-| 18 | Keychain + file backend both fail | Check `KEYRING_BACKEND` |
+| 18 | Keychain + file backend both fail | Check `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND` |
 
 **Removed in v0.3**:
 - ~~13c~~ (`replaceAllShapesWithImage` miss) — no longer used by this skill

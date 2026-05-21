@@ -57,7 +57,7 @@ Code 讓它讀取 skill。
 ```
 
 route 到 `gws-setup` skill。它會偵測目前狀態，把 `gws` +
-`jq` 抓到 `~/.cache/slides-toolkit/bin/`，引導你完成 GCP Console
+`jq` 抓到 `~/.cache/gws-toolkit/bin/`，引導你完成 GCP Console
 的手動步驟（OAuth Client + Test User），如帳號需要的話會把 issue
 #119 workaround 寫入 `~/.config/gws/env.sh`。
 
@@ -171,7 +171,7 @@ toolkit-opinion 由 toolkit-original 層擔任一線。
 
 **不需要**：Python、uv、gcloud、brew、npm。`gws` 與 `jq` binary 由
 `scripts/gws/bootstrap.sh` 透過 HTTPS + `curl -f` 抓到
-`~/.cache/slides-toolkit/bin/`。
+`~/.cache/gws-toolkit/bin/`。
 
 ## Architecture
 
@@ -226,7 +226,7 @@ Credential 絕不入 repo。透過兩個互補機制守住此邊界（TECH-SPEC 
   "permissions": {
     "deny": [
       "Read(~/.config/gws/**)",
-      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Read(~/.cache/gws-toolkit/bin/.version)",
       "Bash(cat ~/.config/gws/*)",
       "Bash(cat ~/.config/gws/**)",
       "Bash(cp ~/.config/gws/* *)",

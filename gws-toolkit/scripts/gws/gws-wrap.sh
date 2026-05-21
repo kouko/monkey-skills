@@ -4,9 +4,10 @@ set -euo pipefail
 # =============================================================================
 # gws-wrap.sh — gws CLI wrapper with pre-flight + 429 backoff
 # -----------------------------------------------------------------------------
-# Before each gws invocation, the wrapper runs env-guard (issue #119
-# pre-flight check, no apply) and credential-check (token validity and
-# backend detection), then retries 429 / 5xx errors with exponential
+# Before each gws invocation, the wrapper runs env-guard (BYO-client
+# env-var pre-flight check, no apply) and credential-check (token
+# validity and backend detection), then retries 429 / 5xx errors with
+# exponential
 # backoff. Structured errors are parsed and mapped to the TECH-SPEC §4.2
 # exit-code table.
 #
@@ -32,16 +33,17 @@ set -euo pipefail
 #   10  token expired / unauthenticated (401/403)
 #   11  rate limit exhausted after retry (429 × 5)
 #   12  Google resource not found / API error
-#   16  issue #119 workaround needed (env-guard check failed)
+#   16  BYO-client env vars missing (env-guard check failed; historical
+#       name "issue #119 workaround")
 #
-# Default: `BIN_DIR=${HOME}/.cache/slides-toolkit/bin` (populated by
+# Default: `BIN_DIR=${HOME}/.cache/gws-toolkit/bin` (populated by
 # bootstrap.sh).
 # =============================================================================
 
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
 # --- 常數 -------------------------------------------------------------------
-readonly BIN_DIR="${BIN_DIR:-${HOME}/.cache/slides-toolkit/bin}"
+readonly BIN_DIR="${BIN_DIR:-${HOME}/.cache/gws-toolkit/bin}"
 readonly GWS="${BIN_DIR}/gws"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly ENV_GUARD="${SCRIPT_DIR}/env-guard.sh"

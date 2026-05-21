@@ -60,7 +60,7 @@ plug 可能な execution layer を切り離しています。MVP では
 ```
 
 `gws-setup` skill に route。現在の状態を検出し、`gws` +
-`jq` を `~/.cache/slides-toolkit/bin/` に取得、GCP Console での
+`jq` を `~/.cache/gws-toolkit/bin/` に取得、GCP Console での
 手動設定（OAuth Client + Test User）を案内し、必要なら issue #119
 の workaround を `~/.config/gws/env.sh` に書き込みます。
 
@@ -182,7 +182,7 @@ tag 等の toolkit-opinion は toolkit-original 層が一次線。
 
 **不要**：Python、uv、gcloud、brew、npm。`gws` と `jq` の binary
 は `scripts/gws/bootstrap.sh` が HTTPS + `curl -f` で
-`~/.cache/slides-toolkit/bin/` に取得します。
+`~/.cache/gws-toolkit/bin/` に取得します。
 
 ## Architecture
 
@@ -238,7 +238,7 @@ credential store に触れる Read / Bash / Write をすべて deny：
   "permissions": {
     "deny": [
       "Read(~/.config/gws/**)",
-      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Read(~/.cache/gws-toolkit/bin/.version)",
       "Bash(cat ~/.config/gws/*)",
       "Bash(cat ~/.config/gws/**)",
       "Bash(cp ~/.config/gws/* *)",

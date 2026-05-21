@@ -45,7 +45,7 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 readonly GWS_CONFIG_DIR="${HOME}/.config/gws"
 readonly CREDENTIALS_FILE="${GWS_CONFIG_DIR}/credentials.enc"
 readonly TOKEN_CACHE="${GWS_CONFIG_DIR}/token_cache.json"
-readonly CACHE_BIN_DIR="${HOME}/.cache/slides-toolkit/bin"
+readonly CACHE_BIN_DIR="${HOME}/.cache/gws-toolkit/bin"
 readonly REVOKE_URL="https://myaccount.google.com/permissions"
 
 DRY_RUN=0

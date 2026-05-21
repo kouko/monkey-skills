@@ -38,8 +38,8 @@ set -uo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-readonly GWS="${HOME}/.cache/slides-toolkit/bin/gws"
-readonly JQ="${HOME}/.cache/slides-toolkit/bin/jq"
+readonly GWS="${HOME}/.cache/gws-toolkit/bin/gws"
+readonly JQ="${HOME}/.cache/gws-toolkit/bin/jq"
 readonly SAFE_DELETE="${TOOLKIT_ROOT}/gws/safe-delete.sh"
 
 KEEP=0

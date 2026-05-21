@@ -3,7 +3,7 @@
     "deny": [
       "Read(~/.config/gws/**)",
       "Read(~/.config/gcloud/**)",
-      "Read(~/.cache/slides-toolkit/bin/.version)",
+      "Read(~/.cache/gws-toolkit/bin/.version)",
       "Read(.env)",
       "Read(.env.*)",
       "Read(**/client_secret*.json)",
