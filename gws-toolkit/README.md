@@ -32,7 +32,7 @@ Phase 2+, trigger-gated.
 
 | Aspect | Value |
 |---|---|
-| Release | `0.7.0` (see [`CHANGELOG.md`](CHANGELOG.md)) |
+| Release | `0.7.1` (see [`CHANGELOG.md`](CHANGELOG.md)) |
 | Backends | `google-slides` (MVP) · `html` / `pptx` / `marp` Phase 2+ trigger-gated |
 | Platform | macOS (darwin-arm64 / darwin-x86_64) |
 | Account scope | Personal Google account (`@gmail.com`); Workspace accounts Phase 2+ |
@@ -139,8 +139,8 @@ refresh token, breaking the metadata-only access pattern in
 
 ## Skills
 
-The plugin ships **13 skills** in two provenance tiers — 4
-toolkit-original + 9 vendored from upstream
+The plugin ships **18 skills** in two provenance tiers — 4
+toolkit-original + 14 vendored from upstream
 [`googleworkspace/cli`](https://github.com/googleworkspace/cli) at
 `v0.22.5` (Apache-2.0; provenance recorded in each vendored
 SKILL.md's `metadata.vendored_from`).
@@ -154,19 +154,24 @@ SKILL.md's `metadata.vendored_from`).
 | `slides-design` | Knowledge (Slides-specific) | Minto Pyramid + SCQA narrative, chart-type selection |
 | `slides-builder` | Execution (Slides-specific) | `slide-plan.json` v1.2 → pre-flight → 4-recipe chain → deck URL; placeholder-map composition pattern lives here |
 
-**Vendored upstream (9, Apache-2.0)**
+**Vendored upstream (14, Apache-2.0)**
 
 | Skill | API surface | Helper |
 |---|---|---|
 | `gws-shared` | auth + global flags + security rules (other 4 reference this) | — |
 | `gws-drive` | Drive API v3 (about / files / permissions / changes / etc.) | toolkit's `safe-delete.sh` + `tag-create.sh` complement Drive ops |
+| `gws-drive-upload` | Drive API v3 single-file upload (`files.create` with media) | toolkit's `tag-create.sh` (v0.4.0+) wraps `drive files create` with provenance (`appProperties.created_by`); L1 tier — no new v0.7.1 wrapper needed per brief §Q4 |
 | `gws-docs` | Docs API v1 (`documents.{batchUpdate, create, get}`) | — |
+| `gws-docs-write` | Docs API v1 `documents.batchUpdate` write subset (insertText / replaceAllText) | toolkit's `docs-confirm-append.sh` L1 dry-run gate wraps this skill |
 | `gws-slides` | Slides API v1 (`presentations.{batchUpdate, create, get}` + pages) | — (slides-builder is a higher-layer orchestrator, not a helper) |
 | `gws-sheets` | Sheets API v4 (`spreadsheets.*` + values + sheets + developerMetadata) | — |
+| `gws-sheets-append` | Sheets API v4 `spreadsheets.values.append` write subset | toolkit's `sheets-confirm-write.sh` op-aware L1/L2 gate wraps this skill |
 | `gws-gmail` | Gmail API v1 (users.messages / users.labels / users.threads / users.drafts / etc.) | — |
 | `gws-gmail-read` | Gmail API v1 read-only subset (users.messages.get / list / search / labels / threads) | — |
+| `gws-gmail-send` | Gmail API v1 `users.messages.send` write subset (RFC 5322 + MIME + base64) | toolkit's `gmail-confirm-send.sh` L3 typed recipient+subject gate wraps this skill |
 | `gws-calendar` | Calendar API v3 (calendars / events / freeBusy / acl / calendarList) | — |
 | `gws-calendar-agenda` | Calendar API v3 read-only subset (events.list / events.get / freeBusy / calendarList) | — |
+| `gws-calendar-insert` | Calendar API v3 `events.insert` write subset (attendees / Meet link / recurrence) | toolkit's `calendar-confirm-insert.sh` auto-tier L1/L2 gate wraps this skill |
 
 `using-gws-toolkit` is deliberately backend-agnostic so future
 `html-builder` / `pptx-builder` / `marp-builder` skills can reuse the
@@ -222,7 +227,11 @@ format.
               scripts/gws/*.sh  ──┐
               (bootstrap, gws-wrap, env-guard,
                credential-check, refresh-auth,
-               safe-delete, tag-create)
+               safe-delete, tag-create,
+               gmail-confirm-send       [L3 typed-name],
+               calendar-confirm-insert  [L2/L1 auto-tier],
+               sheets-confirm-write     [L1/L2 op-aware],
+               docs-confirm-append      [L1])
                                   ▼
               gws CLI · ~/.cache binaries
                                   ▼
@@ -231,9 +240,11 @@ format.
                                   ▼
                   Vendored upstream skills as
                   per-API method reference:
-                  gws-shared / gws-drive / gws-docs /
-                  gws-slides / gws-sheets / gws-gmail /
-                  gws-gmail-read / gws-calendar / gws-calendar-agenda
+                  gws-shared / gws-drive / gws-drive-upload /
+                  gws-docs / gws-docs-write /
+                  gws-slides / gws-sheets / gws-sheets-append /
+                  gws-gmail / gws-gmail-read / gws-gmail-send /
+                  gws-calendar / gws-calendar-agenda / gws-calendar-insert
                                   ▼
                                    Deck URL
 ```

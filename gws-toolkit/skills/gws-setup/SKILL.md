@@ -44,6 +44,36 @@ Invoke this skill in any of these four situations:
 binaries are fetched by `scripts/gws/bootstrap.sh` into
 `~/.cache/slides-toolkit/bin/` and verified by SHA-256 (TECH-SPEC §2.3).
 
+### Quota awareness — 2026-05-01 API quota change
+
+Google rolled out a new Gmail / Calendar API quota (クォータ / 配額)
+schedule on **2026-05-01**, with potential billing (課金 / 計費)
+arriving later in 2026 ("at least 90 days' notice before changes take
+effect"). Whether your GCP project is affected depends on when it
+first saw API traffic:
+
+- Projects with API usage between **Nov 2025 and Apr 2026** are
+  **grandfathered (旧基準維持 / 沿用舊額度)** to the old quotas — this
+  includes the GCP project kouko created during the slides-toolkit
+  Phase 1 era.
+- Projects **created on/after 2026-05-01** (new marketplace users
+  doing first-time `/gws-setup`) are subject to the new quota
+  schedule and the upcoming billing change.
+- Gmail per-user limits: **250 quota units/user/second** moving
+  average; **2,000 messages/day** per Workspace user; **500
+  recipients/message**.
+- Calendar per-project limits: **1,000,000 queries/day**; transient
+  `429` rate-limit errors are handled transparently by `gws-wrap.sh`'s
+  exponential backoff (5s / 10s / 20s). `403` is treated as a scope /
+  auth error (exit 10) — in Workspace contexts `403` typically signals
+  missing OAuth scope rather than transient throttling, so re-run
+  `gws-setup` instead of waiting for backoff.
+
+Authoritative references:
+
+- [Gmail API Usage Limits](https://developers.google.com/workspace/gmail/api/reference/quota)
+- [Calendar API Usage Limits](https://developers.google.com/workspace/calendar/api/guides/quota)
+
 ## Workflow overview
 
 ```

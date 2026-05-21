@@ -27,6 +27,7 @@ and is referenced by `§` number.
 | 2026-04-23 | **v0.3 — Scope Refinement alignment** | 對齊 PRODUCT-SPEC v0.3：**移除 template-based workflow + SHA-256 binary pin 兩塊 MVP scope**。`slide-plan.json` schema v1.1 → v1.2（刪除 `backend_config.template_ref`、`layout_hint` 從自由字串改為 Google Slides API predefined layout enum）。Recipe 表重寫：由 `copy-template / replace-text / insert-image` 改為 `create-presentation / create-slides / insert-text / insert-image`（以 `presentations.create` + `batchUpdate createSlide` 指定 `predefinedLayout` 建 deck，不再 copy template deck）。`bootstrap.sh` 移除 SHA-256 pin 邏輯（exit 17 自 exit code 表移除），改用 HTTPS + `curl -f`。刪除 `skills/slides-builder/templates/registry.md` 與 `recipe-copy-template.md`。§9 OPEN-5 / OPEN-6 的 integrity 面向、OPEN-2（registry format）、OPEN-10（template schema fingerprint）均隨 scope 移除而退休。**不做** schema v1.1 → v1.2 backward compat（MVP 無既有 user）。**Because** PRODUCT-SPEC v0.3 把個人使用情境下「template 管理 overhead > 視覺品質邊際」「SHA pin 維護成本 > 邊際安全增益」兩條 trade-off 解為刪除，本 TECH-SPEC 同步移除對應模組。原兩塊範圍改為 Phase 2+ trigger-gated（PRODUCT-SPEC §3.5） |
 | 2026-04-24 | **v0.3.2 — Architectural layer split** | 抽出 sibling skill `google-slides-api` 作為低層 per-op recipe reference 層；`slides-builder` 保留為高層 orchestration（讀 `slide-plan.json` v1.2、pre-flight、串接 4 recipes）。4 個 recipe 檔 `git mv` 自 `slides-builder/protocols/` 至 `google-slides-api/protocols/`；新建 `google-slides-api/SKILL.md` 與 `references/api-error-codes.md`。Router `using-gws-toolkit` 加第 4 分支（低層 API 學習 / debug → google-slides-api）。**Because** (1) SRP 架構更乾淨：per-op recipe 與 pipeline orchestration 為兩種變動維度，分離後各自獨立演進（OCP）；(2) 授權自主：新 skill 全為我們原創 MIT，不需引用 `gws-slides` Apache-2.0 SKILL 內容（`gws` binary 仍為 runtime dep，不影響 repo licensing）；(3) 為 Phase 2+ 潛在 second consumer（e.g. slide-deck-auditor, deck-diff tool）預留低耦合入口。無 scope 變動、無 API 功能變動、無 4 Big Risks 變動（非 pivot、非 scope refinement；純 refactor） |
 | 2026-05-19 | **v0.7.0 — Gmail + Calendar absorption** | Add gmail.googleapis.com + calendar.googleapis.com to the enabled API set (6 APIs total); add full-scope `https://www.googleapis.com/auth/gmail` + `…/auth/calendar` to the OAuth grant (6 scopes total, both restricted-tier matching `drive` precedent per v0.4.0); vendor 4 new upstream skills (`gws-gmail`, `gws-gmail-read`, `gws-calendar`, `gws-calendar-agenda`); pure-vendor strategy (no toolkit-original wrappers — strangler-fig per v0.4.0 precedent); lock-step bump 0.6.0 → 0.7.0. **Because** the v0.7.0 charter is to absorb the Gmail/Calendar responsibility that `collab-toolkit` v0.2.0 retired on the explicit promise that gws-toolkit would consolidate Google Workspace OAuth into one client. iChef admin-policy probe (myaccount.google.com/permissions) confirmed full Gmail scope unblocked. v0.7.x backlog: `find-free-slots` + `shared-calendar-read` (no native upstream equivalent); write-side toolkit-original wrappers (`gmail-confirm-send.sh` / `calendar-confirm-insert.sh`) when first write JTBD lands. |
+| 2026-05-20 | **v0.7.1 — Write asymmetry close-out** | Vendor 5 new upstream write helpers (`gws-gmail-send`, `gws-calendar-insert`, `gws-docs-write`, `gws-sheets-append`, `gws-drive-upload`) to close the read/write asymmetry that v0.7.0 left in place (read-side vendored, write-side bare). Add 4 first-party safety wrappers under `scripts/gws/` (`gmail-confirm-send.sh` L3 typed recipient+subject, `calendar-confirm-insert.sh` L2 attendees / L1 solo, `sheets-confirm-write.sh` L1 append / L2 clear-overwrite, `docs-confirm-append.sh` L1 dry-run) modeled on the `safe-delete.sh` 3-tier dry-run-by-default + tiered-confirm pattern. Pure-vendor + first-party safety strategy: no toolkit-original skill wrappers; safety layer lives in scripts, not skills. No OAuth scope changes (write scopes already granted under v0.7.0's full-scope gmail/calendar + existing drive/docs/sheets grants). Upstream pin held at `v0.22.5/705fb0ec`. Lock-step bump 0.7.0 → 0.7.1. **Because** v0.7.0 §Open follow-ups flagged write-side vendored skills + app-layer safety wrappers as the residual debt; v0.7.1 discharges 5 of 11 upstream write helpers (the JTBD-driven subset: send / insert / write / append / upload — the ones surfaced by daily Gmail/Calendar/Docs/Sheets/Drive dogfood) and ships the 4 safety wrappers needed to make Claude-orchestrated writes safe. Remaining 6 write helpers stay un-vendored until a JTBD surfaces. |
 
 ---
 
@@ -102,11 +103,17 @@ slides-toolkit/
 │   └── slides.md
 ├── scripts/                       # plugin-scoped shell helpers（依 backend 分子目錄）
 │   ├── common/                    # 跨 backend 共用（MVP 暫無；預留 Phase 2+）
-│   └── google-slides/             # Google Slides backend 專屬
+│   └── google-slides/             # Google Slides backend 專屬（disk: scripts/gws/ since v0.4.0）
 │       ├── bootstrap.sh           # fetch gws + jq binaries (HTTPS + curl -f; v0.3 無 SHA-256 pin)
 │       ├── gws-wrap.sh            # thin wrapper: token ping + retry + JSON parse
 │       ├── env-guard.sh           # issue-#119 env var detection + fallback
-│       └── credential-check.sh    # Keychain / file-backend state detect
+│       ├── credential-check.sh   # Keychain / file-backend state detect
+│       ├── safe-delete.sh         # [v0.5.0] Drive delete: dry-run + L1/L2/L3 tiered confirm
+│       ├── tag-create.sh          # [v0.5.0] Drive provenance tag (label) creator
+│       ├── gmail-confirm-send.sh         # [v0.7.1] L3 typed recipient + subject; dry-run by default
+│       ├── calendar-confirm-insert.sh    # [v0.7.1] L2 (attendees) / L1 (solo); dry-run by default
+│       ├── sheets-confirm-write.sh       # [v0.7.1] L1 (append) / L2 (clear/overwrite); dry-run by default
+│       └── docs-confirm-append.sh        # [v0.7.1] L1 dry-run; flags replaceAllText match-count > 5
 ├── tests/
 │   ├── dry_run/                   # no-network fixtures
 │   ├── golden/                    # expected output snapshots
@@ -161,13 +168,18 @@ slides-toolkit/
     │       └── gws-command-map.md
     ├── gws-shared/         # (vendored) auth + global flags + security rules
     ├── gws-drive/          # (vendored) Drive API v3
+    ├── gws-drive-upload/   # (vendored, v0.7.1) Drive files.create — single-file upload
     ├── gws-docs/           # (vendored) Docs API v1
+    ├── gws-docs-write/     # (vendored, v0.7.1) Docs documents.batchUpdate — insert / replace
     ├── gws-slides/         # (vendored) Slides API v1
     ├── gws-sheets/         # (vendored) Sheets API v4
+    ├── gws-sheets-append/  # (vendored, v0.7.1) Sheets values.append — append-only write path
     ├── gws-gmail/          # (vendored) Gmail API v1 (full scope)
     ├── gws-gmail-read/     # (vendored) Gmail API v1 read-only subset
+    ├── gws-gmail-send/     # (vendored, v0.7.1) Gmail users.messages.send — RFC 5322 compose + send
     ├── gws-calendar/       # (vendored) Calendar API v3 (full scope)
-    └── gws-calendar-agenda/ # (vendored) Calendar API v3 read-only subset
+    ├── gws-calendar-agenda/ # (vendored) Calendar API v3 read-only subset
+    └── gws-calendar-insert/ # (vendored, v0.7.1) Calendar events.insert — create event with attendees
 
 # Phase 2+（trigger-gated per PRODUCT-SPEC §3.5；MVP 不建立）
 # ├── scripts/{html,pptx,marp}/

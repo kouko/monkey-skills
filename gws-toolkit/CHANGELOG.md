@@ -39,6 +39,163 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.7.1] - 2026-05-20
+
+Close the v0.7.0 write asymmetry — vendor 5 new upstream write-side
+skills (Gmail send / Calendar insert / Docs write / Sheets append /
+Drive upload) and ship 4 new first-party app-layer safety wrappers
+modeled on the `safe-delete.sh` (3-tier) + `tag-create.sh` (provenance)
+precedent. No OAuth scope changes: full r/w grant from v0.7.0 already
+covers every write op v0.7.1 adds; no re-consent needed.
+
+### Added
+
+- **`skills/gws-gmail-send/SKILL.md`** (Part 1 T3) — vendored upstream
+  `gws-gmail-send`; covers Gmail send via `gws gmail +send`. Sync
+  materialization round.
+- **`skills/gws-calendar-insert/SKILL.md`** (Part 1 T3) — vendored
+  upstream `gws-calendar-insert`; covers Calendar event create via
+  `gws calendar +insert`.
+- **`skills/gws-docs-write/SKILL.md`** (Part 1 T3) — vendored upstream
+  `gws-docs-write`; covers Docs body / `replaceAllText` write surface.
+- **`skills/gws-sheets-append/SKILL.md`** (Part 1 T3) — vendored
+  upstream `gws-sheets-append`; covers Sheets row append +
+  range update / clear write surface.
+- **`skills/gws-drive-upload/SKILL.md`** (Part 1 T3) — vendored
+  upstream `gws-drive-upload`; covers Drive file upload write surface.
+  Composes with toolkit's `tag-create.sh` provenance wrapper.
+- **`scripts/gws/gmail-confirm-send.sh`** (Part 2 T1) — first-party L3
+  typed-name safety wrapper for Gmail send. Default mode is dry-run
+  (renders the message envelope without calling the destructive API);
+  execute requires `--i-confirm-recipients` + `--i-confirm-subject`
+  typed-name gates. Modeled on `safe-delete.sh` L3.
+- **`scripts/gws/calendar-confirm-insert.sh`** (Part 2 T2) — first-party
+  auto-tier safety wrapper for Calendar event insert. Attendees > 0 →
+  L2 + `visibility_warning` (invite emails fire on insert); attendees
+  == 0 → L1 (solo event, no broadcast).
+- **`scripts/gws/sheets-confirm-write.sh`** (Part 2 T3) — first-party
+  op-aware safety wrapper for Sheets append / clear / update. `append`
+  → L1 (additive); `clear` / `update` → L2 with dual-gate
+  `--confirm-recovery="version_history_only"` (30-day version-history
+  recovery, no immediate undo).
+- **`scripts/gws/docs-confirm-append.sh`** (Part 2 T4) — first-party L1
+  safety wrapper for Docs append / replace. `replaceAllText` with
+  match-count > 5 surfaces a broad-stroke warning before execution.
+- **`skills/gws-setup/SKILL.md` §Quota awareness** (Part 3 T3) — new
+  sub-section under §Prerequisites documenting the 2026-05-01
+  Gmail / Calendar API quota change. Pre-2026-05-01 projects are
+  grandfathered on the prior quota; projects created on/after
+  2026-05-01 follow the new quota schedule and may incur billing
+  later in 2026.
+
+### Changed
+
+- **`UPSTREAM_GWS_VERSION` `synced_skills:` list** (Part 1 T1) — 9 → 14
+  entries; added the 5 new vendored skill names alongside the existing
+  9 (alphabetical / grouped-by-domain per v0.7.0 convention).
+- **`scripts/sync-upstream-skills.sh` `VENDORED_SKILLS=(…)` array**
+  (Part 1 T2) — mirrored to 14 entries so future upstream syncs pull
+  all 14 vendored skills.
+- **`gws-toolkit/README.md`** (Part 3 T1) — Status table Release column
+  bumped 0.7.0 → 0.7.1; vendored-skill table extended 9 → 14 rows; the
+  ASCII Architecture diagram annotates the 4 new safety wrappers with
+  their tier labels (L1 / L2 / L3 typed-name).
+- **`gws-toolkit/TECH-SPEC.md`** (Part 3 T2) — Revision History row
+  added for v0.7.1; §2.1 plugin-layout tree extended with the 5 new
+  vendored-skill entries + 4 new safety-wrapper script entries under
+  `scripts/gws/`.
+- **`skills/using-gws-toolkit/SKILL.md`** (Part 3 T4) — routing table
+  extended with 5 vendored write-skill rows (gws-gmail-send /
+  gws-calendar-insert / gws-docs-write / gws-sheets-append /
+  gws-drive-upload) and a unified safety-wrappers row covering the
+  4 new `confirm-*.sh` scripts plus a cross-reference to the existing
+  `tag-create.sh`.
+- **`plugin.json`** (Part 4 T1) — `version` bumped 0.7.0 → 0.7.1;
+  `description` field extended to surface the write-safety wrapper
+  capability.
+- **`marketplace.json`** (Part 4 T1) — `gws-toolkit` plugin
+  `description` mirrored byte-identical to `plugin.json` per
+  `MEMORY.md feedback_plugin_marketplace_sync` (Required CI check).
+
+### Notes
+
+- **Purpose** — close the v0.7.0 write asymmetry. The OAuth grant from
+  v0.7.0 was full read-write, but first-party code paths only existed
+  for Slides + Drive. v0.7.1 ships first-party safety wrappers + the
+  vendored upstream write helpers for Gmail / Calendar / Docs / Sheets
+  / Drive, modeled on the `safe-delete.sh` (3-tier) +
+  `tag-create.sh` (provenance) precedent from v0.4.0.
+- **No OAuth scope changes** — full r/w grant from v0.7.0 already
+  covers every write op v0.7.1 adds; no re-consent needed.
+- **Upstream pin held** at `v0.22.5 / 705fb0ecac6f4249679958f6325b809b63fdde17`
+  — purely additive vendoring; upstream version bump deferred to an
+  independent PR.
+- **2026-05-01 API quota change context** — Gmail + Calendar API
+  quotas were updated 2026-05-01, active when v0.7.1 ships.
+  Grandfathering is documented in §Quota awareness for users with
+  pre-2026-05-01 projects.
+- **Safety tier mapping** (per brief §Q3): gmail-send → L3 typed-name
+  (irreversible after ~30s undo); calendar-insert → L2 (sends invite
+  emails when attendees > 0) / L1 (solo); sheets-append → L1 /
+  sheets-clear-or-update → L2 (recoverable via version history,
+  30-day); docs → L1 (Drive version history); drive-upload covered
+  by existing `tag-create.sh` L1.
+
+### Discharged from v0.7.0 backlog
+
+- **Write-side vendored skills + app-layer safety wrappers** — v0.7.0
+  §Open follow-ups noted: "ship when first write JTBD lands; gate on
+  user-confirmable dry-run shape before live send/insert." v0.7.1
+  discharges this for 5 of 11 upstream write helpers (`gws-gmail-send`,
+  `gws-calendar-insert`, `gws-docs-write`, `gws-sheets-append`,
+  `gws-drive-upload`) + 4 new app-layer safety wrappers
+  (`gmail-confirm-send.sh`, `calendar-confirm-insert.sh`,
+  `sheets-confirm-write.sh`, `docs-confirm-append.sh`). Drive write
+  was already covered by `tag-create.sh` (v0.4.0+).
+- **Brief Axis 5 correction to v0.7.0 finding** — `find-free-slots`
+  does have a native upstream equivalent: `recipe-find-free-time`
+  (51 recipes web-fetched 2026-05-20). The v0.7.0 CHANGELOG said
+  "no native upstream equivalent" — this was an incomplete WebFetch
+  scope at v0.7.0 brief time (inspected only top-level `skills/gws-*`
+  not `skills/recipe-*`). v0.8.0 will correct this by vendoring the
+  `recipe-*` tree.
+
+### Open follow-ups (v0.8.0 backlog)
+
+- **Remaining 6 upstream `gmail-*` helpers** — `gmail-reply`,
+  `gmail-reply-all`, `gmail-forward`, `gmail-triage`, `gmail-watch`,
+  plus a `gmail-confirm-reply.sh` wrapper that composes
+  `gmail-confirm-send.sh`.
+- **`gws-sheets-read` vendored skill** — additive read-only completion
+  of the Sheets surface.
+- **51 upstream `recipe-*` skills** — composition layer
+  (`recipe-find-free-time`, `recipe-label-and-archive-emails`,
+  `recipe-create-events-from-sheet`, `recipe-draft-email-from-doc`,
+  `recipe-batch-invite-to-event`, etc.).
+- **10 upstream `persona-*` skills** — `persona-exec-assistant`,
+  `persona-project-manager`, `persona-researcher`, etc.
+- **3 new non-write services** — `gws-tasks` (todo from email /
+  calendar), `gws-meet` (calendar Meet link pairing), `gws-people`
+  (recipient resolution for mail-send).
+- **bats-core test infrastructure** — `[Unreleased]` backlog carried
+  forward from v0.7.0; runs in a separate PR.
+- **Code-quality reviewer 🟡 debt from v0.7.1**:
+  - Part 2 T1 — CRLF header-injection defense-in-depth on
+    `gmail-confirm-send.sh` (OWASP ASVS V5.2.6); ~10 LOC pre-flight
+    check.
+  - Part 2 T2 — `calendar-confirm-insert.sh` `visibility_warning` may
+    be aspirational; verify upstream `gws calendar +insert` default
+    for `sendUpdates` or explicitly set `sendUpdates=all` in params.
+  - Part 2 T3 — `sheets-confirm-write.sh` hard-coded
+    `valueInputOption=USER_ENTERED` allows formula injection; consider
+    exposing `--value-input-option=USER_ENTERED|RAW` as a flag.
+  - Part 2 T4 — `docs-confirm-append.sh` `--help` `sed` range
+    overshoots by 5 lines (leaks code into help output); 1-line fix
+    (range `5,68` → `5,62`).
+  - Part 1 T2 — plan-document regex `grep -c '"gws-'` is technically
+    malformed against bash array entries (entries are unquoted);
+    should be `grep -c '^  gws-'` in future plans.
+
 ## [0.7.0] - 2026-05-19
 
 Gmail + Calendar absorption — vendor 4 new upstream skills, add 2
