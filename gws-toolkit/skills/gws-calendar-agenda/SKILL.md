@@ -4,7 +4,7 @@ description: "Google Calendar: Show upcoming events across all calendars."
 metadata:
   vendored_from: "googleworkspace/cli@705fb0ecac6f4249679958f6325b809b63fdde17"
   vendored_release: "v0.22.5"
-  vendored_at: "2026-05-19"
+  vendored_at: "2026-05-20"
   upstream_license: "Apache-2.0"
   version: 0.22.5
   openclaw:

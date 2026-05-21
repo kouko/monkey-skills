@@ -14,10 +14,15 @@ synced_at: 2026-05-19
 synced_skills:
   - gws-shared
   - gws-drive
+  - gws-drive-upload
   - gws-docs
+  - gws-docs-write
   - gws-slides
   - gws-sheets
+  - gws-sheets-append
   - gws-gmail
   - gws-gmail-read
+  - gws-gmail-send
   - gws-calendar
   - gws-calendar-agenda
+  - gws-calendar-insert

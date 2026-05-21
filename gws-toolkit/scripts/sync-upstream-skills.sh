@@ -4,11 +4,11 @@ set -euo pipefail
 # =============================================================================
 # sync-upstream-skills.sh — vendor selected upstream gws skills into gws-toolkit
 # -----------------------------------------------------------------------------
-# Fetches SKILL.md for the 9 vendored upstream skills (gws-shared, gws-drive,
-# gws-docs, gws-slides, gws-sheets, gws-gmail, gws-gmail-read, gws-calendar,
-# gws-calendar-agenda) from googleworkspace/cli at the commit
-# pinned in UPSTREAM_GWS_VERSION, writes them under gws-toolkit/skills/<name>/
-# SKILL.md, and injects provenance metadata into the frontmatter.
+# Fetches SKILL.md for the vendored upstream skills (see VENDORED_SKILLS array
+# below; must mirror UPSTREAM_GWS_VERSION's synced_skills: list) from
+# googleworkspace/cli at the commit pinned in UPSTREAM_GWS_VERSION, writes them
+# under gws-toolkit/skills/<name>/SKILL.md, and injects provenance metadata
+# into the frontmatter.
 #
 # Idempotent: re-running with the same pin overwrites with identical content.
 # Updating the pin in UPSTREAM_GWS_VERSION → re-run → review the diff.
@@ -43,8 +43,25 @@ readonly LICENSE_FILE="${TOOLKIT_ROOT}/LICENSE-APACHE-2.0.txt"
 readonly SKILLS_DIR="${TOOLKIT_ROOT}/skills"
 readonly GH="${GH:-gh}"
 
-# Vendored skill names — keep in sync with UPSTREAM_GWS_VERSION's synced_skills list
-readonly VENDORED_SKILLS=(gws-shared gws-drive gws-docs gws-slides gws-sheets gws-gmail gws-gmail-read gws-calendar gws-calendar-agenda)
+# Vendored skill names — keep in sync with UPSTREAM_GWS_VERSION's synced_skills list.
+# Order: grouped-by-domain (shared → drive → docs → slides → sheets → gmail* → calendar*),
+# matching UPSTREAM_GWS_VERSION for diff-friendly cross-file review.
+readonly VENDORED_SKILLS=(
+  gws-shared
+  gws-drive
+  gws-drive-upload
+  gws-docs
+  gws-docs-write
+  gws-slides
+  gws-sheets
+  gws-sheets-append
+  gws-gmail
+  gws-gmail-read
+  gws-gmail-send
+  gws-calendar
+  gws-calendar-agenda
+  gws-calendar-insert
+)
 
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -161,5 +178,5 @@ fi
 
 printf '[sync] all %d skill(s) synced\n' "${#VENDORED_SKILLS[@]}" >&2
 if (( DRY_RUN == 0 )); then
-  printf '[sync] review changes: git diff -- gws-toolkit/skills/gws-{shared,drive,docs,slides,sheets,gmail,gmail-read,calendar,calendar-agenda}/\n' >&2
+  printf '[sync] review changes: git diff -- gws-toolkit/skills/\n' >&2
 fi
