@@ -46,6 +46,13 @@ class Event:
       `Skill(skill: "<name>")` tool_use OR a user message wraps a slash
       command in `<command-name>...</command-name>`, the parsed skill /
       command name; None otherwise.
+    - facet: when the session has a matching `/insights` facets JSON
+      under `~/.claude/usage-data/facets/<session_id>.json`, the parsed
+      FacetRecord; None otherwise. Populated post-ingest by
+      `facets.attach_facets_to_events` (T3); ingest itself does not set
+      this. Forward-reference string avoids the circular import that
+      would result from `from facets import FacetRecord` here, since
+      facets.py imports Event from this module.
     """
 
     agent: str
@@ -58,3 +65,4 @@ class Event:
     user_interrupt: bool = False
     is_subagent: bool = False
     skill_invocation: str | None = None
+    facet: "FacetRecord | None" = None  # noqa: F821  forward ref to facets.FacetRecord

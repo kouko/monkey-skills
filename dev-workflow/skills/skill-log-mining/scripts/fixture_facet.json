@@ -1,0 +1,21 @@
+{
+  "underlying_goal": "<redacted underlying goal for fixture>",
+  "goal_categories": {
+    "feature": 1,
+    "research_documentation": 2
+  },
+  "outcome": "fully_achieved",
+  "user_satisfaction_counts": {
+    "satisfied": 1,
+    "likely_satisfied": 2
+  },
+  "claude_helpfulness": "very_helpful",
+  "session_type": "multi_task",
+  "friction_counts": {
+    "user_rejected_action": 1
+  },
+  "friction_detail": "<redacted friction detail for fixture>",
+  "primary_success": "multi_file_changes",
+  "brief_summary": "<redacted brief summary for fixture>",
+  "session_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+}
