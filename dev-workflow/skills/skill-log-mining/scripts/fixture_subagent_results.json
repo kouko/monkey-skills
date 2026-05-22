@@ -1,0 +1,46 @@
+[
+  {
+    "session_id": "session-aaa-111",
+    "target_skill_path": "/fake/skills/example/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Use Read before Edit on existing files",
+        "description": "Failure: agent attempted Edit before Read; tool errored.",
+        "content": "When editing an existing file, always invoke Read first so the harness can track file state. Edit fails on un-Read files.",
+        "kind": "failure",
+        "section_anchor": "Examples",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Use Read before Edit on existing files.",
+        "description": "Same failure observed again — confirm Read-before-Edit rule.",
+        "content": "When editing an existing file, always invoke Read first so the harness tracks file state. Edit fails on un-Read files.",
+        "kind": "failure",
+        "section_anchor": "Examples",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "session-bbb-222",
+    "target_skill_path": "/fake/skills/example/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Successful pattern: parallel subagent dispatch",
+        "description": "Success: dispatched 3 implementers in parallel, all returned DONE.",
+        "content": "When tasks are file-disjoint and Independent: true, dispatch all implementers in a single assistant message with multiple Agent tool calls.",
+        "kind": "success",
+        "section_anchor": "When to use",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Add new section: edge-case taxonomy for cross-plugin delegation",
+        "description": "Would require a dedicated reference file (>500 token taxonomy).",
+        "content": "Comprehensive edge-case taxonomy for cross-plugin delegation including path-resolution, gate-bypass refusal, version-mismatch detection, and structured-seed-context passing. Best owned by a new references/cross-plugin-delegation.md file.",
+        "kind": "success",
+        "section_anchor": "Anti-patterns",
+        "requires_new_reference_file": true
+      }
+    ]
+  }
+]
