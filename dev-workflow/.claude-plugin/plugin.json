@@ -1,6 +1,6 @@
 {
   "name": "dev-workflow",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique.",
   "author": {
     "name": "kouko",
@@ -20,6 +20,7 @@
     "complexity-critique",
     "skill-refactor",
     "skill-tuning",
-    "developer-workflow"
+    "developer-workflow",
+    "skill-log-mining"
   ]
 }
