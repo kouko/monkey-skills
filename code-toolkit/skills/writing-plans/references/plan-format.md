@@ -50,6 +50,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **Acceptance**:
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
+- **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M parallel">
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
@@ -60,6 +61,27 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **`Files touched`** is the **disjointness oracle** for cross-task parallel dispatch. List every file the implementer will Write or Edit (not files it merely Reads — those go in `Context paths`).
 - **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
 - [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
+
+#### `External surfaces` (v0.9.0+)
+
+When an atomic task touches a **non-stdlib external surface** the agent does not author, the plan MUST declare it. This is the plan-time half of the external-surface-grounding discipline (see `code-toolkit/skills/subagent-driven-development/standards/external-surface-grounding.md`); the review-time half is D7 in `code-quality-reviewer.md` + `code-reviewer.md`. The two halves form one defense-in-depth gate.
+
+Five surface categories trigger the field (per the standard's §Five Surface Categories): **HTTP API**, **SDK package**, **MCP tool**, **CLI flag**, **internal sibling-team contract**.
+
+Format — one bullet per surface:
+
+```markdown
+- **External surfaces**:
+  - SDK package: @anthropic-ai/sdk@0.40 client.messages.create — grounding: WebFetch https://docs.anthropic.com/en/api/messages (captured 2026-05-22)
+  - MCP tool: claude_ai_Asana__create_tasks — grounding: in-context tool schema
+  - CLI flag: gh pr create --base — grounding: gh pr create --help (captured 2026-05-22)
+```
+
+Each bullet declares **category** + **specific name / identifier** + **grounding source** (one of the four valid types: Live verification / MCP schema / Pinned reference / In-repo evidence — see the standard for details).
+
+**Omit the field entirely** when the task is pure internal logic (renames a local symbol, edits a markdown doc with no external references, refactors an existing function with no new external calls, etc.). The field is opt-in by surface presence, not by every task.
+
+Per-task `code-quality-reviewer.md` D7 enforces that any external call in the task's diff carries a grounding cite. Whole-branch `code-reviewer.md` D7 additionally checks for cross-task surface-consistency conflicts. The `spec-consistency.md` checklist (`CHK-SPEC-008`) requires this field's presence when the task description / `Files touched` reference any of the five surface categories.
 
 ### Optional sections
 

@@ -123,6 +123,7 @@ Execution order: sequential | parallel-where-possible
 - Acceptance:
   - RED: <failing test name / diagnostic>
   - GREEN: <observable condition when done>
+- External surfaces: <required when task touches non-stdlib external surface; see `references/plan-format.md` §External surfaces. Format `- <category>: <name> — grounding: <method>`. Omit field entirely if pure internal logic.>
 - Dependencies: <"none" | "Task N completes first" | "Tasks N, M parallel">
 - Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
 
