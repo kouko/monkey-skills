@@ -55,8 +55,11 @@ Step 2 Resolve target alias (cheap — needed for Step 4's early-exit comparison
    │     interactive AskUserQuestion in Step 5+
    ▼
 Step 3 Install missing binaries (idempotent — cheap if already installed)
-   │   - brew install sf (if .sf_cli == "missing")
-   │   - brew install salesforce-mcp (if .salesforce_mcp == "missing" AND NOT --skip-mcp-brew)
+   │   - emit BEFORE-progress: "🔧 Installing missing binaries (~2-3 min)..."
+   │   - if BOTH missing: brew install sf salesforce-mcp (combined, v0.1.1+)
+   │   - else if only sf missing: brew install sf
+   │   - else if only salesforce-mcp missing AND NOT --skip-mcp-brew: brew install salesforce-mcp
+   │   - emit AFTER-progress: "✅ Installed: sf vX.Y + salesforce-mcp vA.B"
    │
    ├── any brew install fails? ──► HALT (surface stderr) ─► END
    │
@@ -82,17 +85,18 @@ Step 5 Fully resolve instance URL + alias (interactive)
    │   - if NOT --no-prompt AND NOT --alias= explicit: AskUserQuestion confirm alias
    │   - if --no-alias: force empty alias
    ▼
-Step 6 OAuth in background + poll
+Step 6 OAuth in background + poll with 30-sec window progress (v0.1.1+)
    │   - Bash run_in_background: sf org login web [--alias=…] --set-default --instance-url=…
    │     (always pass --set-default; only --alias= is conditional on final_alias non-empty)
-   │   - tell user browser will open
-   │   - poll every 5s: sf org display [--target-org=<alias>] --json
-   │     until connectedStatus == "Connected"
-   │   - max 60 polls (5 min)
+   │   - tell user browser will open + poll cadence
+   │   - poll in 10 windows × 30 sec (6 polls × 5s each per window) — up to 5 min total
+   │   - between EVERY window emit: "⏳ Still waiting... <Ns> elapsed (max 5 min)"
+   │   - after window 2 (60s) add "sign in + click Allow on consent screen if not yet"
+   │   - after window 8 (4:00) add "1 min before I'll ask continue/abort"
    │
-   ├── poll timeout? ──► ask user (continue / abort)
+   ├── poll timeout (window 10)? ──► ask user (continue / abort)
    │   ├── abort → pkill -INT -f "sf org login web --alias=…" → END (error)
-   │   └── continue → reset poll counter, another 5 min
+   │   └── continue → reset window counter, another 5 min
    │
    ▼
 Step 7 Verify + emit summary
@@ -141,17 +145,39 @@ This is a lightweight resolution to enable Step 4's early-exit comparison. It do
 
 ### Step 3 — Install missing binaries (non-interactive, idempotent)
 
-If `.sf_cli == "missing"` (from Step 1):
+**Progress emit BEFORE the install** (so user sees the wait is starting, not silent):
+
+> 🔧 Installing missing binaries via Homebrew (~2-3 min on a clean system)...
+
+Then choose ONE of these three patterns based on Step 1's probe:
+
+**Fast path — both missing (combined install, v0.1.1+)**:
+
+If `.sf_cli == "missing"` AND `.salesforce_mcp == "missing"` AND `--skip-mcp-brew` was NOT passed, run a **single combined** brew install (saves one brew startup + parallel formula download):
+
+```bash
+brew install sf salesforce-mcp
+```
+
+**Slow paths — only one missing**:
+
+If only `.sf_cli == "missing"`:
 ```bash
 brew install sf
 ```
 
-If `.salesforce_mcp == "missing"` and `--skip-mcp-brew` was NOT passed:
+If only `.salesforce_mcp == "missing"` AND `--skip-mcp-brew` was NOT passed:
 ```bash
 brew install salesforce-mcp
 ```
 
-Both formulas (NOT casks) install non-interactively on modern Homebrew (≥4.x). Report progress to user; expect 1-3 min per install on a clean system. **If both binaries are already installed from a prior run, Step 3 is a near-zero-cost no-op** (~50ms total for the two `command -v` probes embedded in `credential-check.sh`'s output).
+Both formulas (NOT casks) install non-interactively on modern Homebrew (≥4.x). Expect 1-3 min total on a clean system (combined path) or 2-6 min if installing sequentially across separate runs. **If both binaries are already installed from a prior run, Step 3 is a near-zero-cost no-op** (~50ms total for the two `command -v` probes embedded in `credential-check.sh`'s output).
+
+**Progress emit AFTER the install** (so user sees concrete done state, not just "ok"):
+
+> ✅ Installed: `sf v<sf_version>` + `salesforce-mcp v<mcp_version>` — proceeding to OAuth setup.
+
+Substitute `<sf_version>` / `<mcp_version>` from the post-install `sf --version` + `brew list --versions salesforce-mcp` probes.
 
 **On failure** (`brew install` returns non-zero):
 
@@ -247,9 +273,11 @@ SF_DISABLE_TELEMETRY=true sf org login web [--alias=<final_alias>] --set-default
 
 **Tell the user**:
 
-> Your browser will open momentarily — sign in to Salesforce + click **Allow** when consent screen appears. I'll detect when you're done. (If the browser doesn't open within ~10 seconds, see Troubleshooting — sf-CLI suppresses URL output in non-TTY mode so we can't show it inline; fall back to Path B in your terminal which prints the URL.)
+> 🌐 Opening browser for Salesforce OAuth. Sign in + click **Allow** when the consent screen appears. I'll check every 30 seconds and let you know when complete (up to 5 min). If the browser doesn't open within ~10 sec, see Troubleshooting — sf-CLI suppresses URL output in non-TTY mode so we can't inline the URL; fall back to Path B in your own terminal which prints the URL natively.
 
-**Poll**:
+**Poll structure — 30-second windows with progress emit between (v0.1.1+)**:
+
+The poll command:
 
 ```bash
 SF_DISABLE_TELEMETRY=true sf org display --target-org=<final_alias> --json 2>/dev/null | \
@@ -258,11 +286,34 @@ SF_DISABLE_TELEMETRY=true sf org display --target-org=<final_alias> --json 2>/de
 
 (If `final_alias` is empty, omit `--target-org=` flag — sf uses the most-recently-logged-in org by default.)
 
-Loop: foreground Bash poll every 5 seconds. Up to 60 polls (5 min total).
+**Window structure** — split the 5-min poll budget into 10 windows of 30 sec each (6 polls × 5 sec per window):
 
-**When `jq -e` returns exit 0** (Connected): OAuth complete → proceed to Step 7.
+```
+Window 1: poll × 6 (5s each = 30s)  → if Connected, exit; else emit progress
+Window 2: poll × 6                  → if Connected, exit; else emit progress
+...
+Window 10 (4:30-5:00): poll × 6     → if Connected, exit; else timeout handler
+```
 
-**On poll timeout (5 min)**: Ask user via `AskUserQuestion`:
+**Between every window, emit a progress line so the user knows you're still alive**:
+
+> ⏳ Still waiting for OAuth completion... `<Ns>` elapsed (5 min max). If the browser tab didn't open, see Troubleshooting §"Browser didn't auto-open".
+
+Substitute `<Ns>` with the actual elapsed seconds at each window boundary (`30s`, `60s`, `90s`, ...).
+
+After **window 2 (60s)** add a hint:
+
+> ⏳ 60s elapsed. Sign in + click **Allow** on the Salesforce consent screen if you haven't yet.
+
+After **window 8 (4:00)** add a near-timeout warning:
+
+> ⏳ 4 min elapsed. ~1 min remaining before I'll ask whether to keep waiting or abort.
+
+**When `jq -e` returns exit 0 within any window** (Connected): emit success line + proceed to Step 7:
+
+> ✅ OAuth complete — Salesforce org connected. Verifying setup...
+
+**On poll timeout (after window 10 = 5 min)**: Ask user via `AskUserQuestion`:
 
 > OAuth not detected yet (5 min elapsed). Choose:
 > - Keep waiting — give me another 5 min
@@ -278,7 +329,7 @@ If **Abort**:
 2. Report to user: "Aborted. The `sf org login web` background process has been terminated. Re-run `/sf-setup --force-reauth` when ready."
 3. END procedure with error status.
 
-If **Keep waiting**: reset poll counter, loop again (another 60 × 5 sec = 5 min).
+If **Keep waiting**: reset window counter, loop again (another 10 windows × 30 sec = 5 min, with progress emit between each window).
 
 ### Step 7 — Verify + emit summary
 
@@ -298,13 +349,20 @@ Extract from `.result`: `instanceUrl`, `username`, `accessTokenExpirationDate`. 
 
 ### Step 8 — Activate MCP server
 
-Tell user:
+Tell user with **visual emphasis** so the next-step doesn't get lost in the surrounding text (this is the most-commonly-forgotten step in v0.1.0 dogfood):
 
-> Run `/reload-plugins` to activate the salesforce MCP server. After reload you can ask things like:
-> - "List the 10 most-recent Opportunities over $50K"
-> - "Count Cases by Status grouped this quarter"
+> ╔══════════════════════════════════════════════════════════════════╗
+> ║  ⚠️  NEXT STEP REQUIRED — RUN: `/reload-plugins`                  ║
+> ╚══════════════════════════════════════════════════════════════════╝
 >
-> If you skip `/reload-plugins`, the MCP server will remain in its previously-failed state until you restart Claude Code.
+> The salesforce MCP server won't start until you run `/reload-plugins` (Claude Code primitive — must be triggered by you). Without it, the MCP server stays in its previously-failed state until you restart Claude Code.
+>
+> **Try these immediately after `/reload-plugins`** (paste-ready):
+> - `列出最近 5 筆 Account`  /  `List the 5 most-recent Accounts`
+> - `本季結案的 Opportunity 前 10 筆`  /  `Top 10 Opportunities closed this quarter`
+> - `今年的 Lead 依 Source 分群`  /  `Leads this year grouped by Source`
+
+The example queries serve two purposes: (1) demonstrate `sf-query` skill capability immediately, (2) give the user a concrete validation step — if the first query works, the whole pipeline is healthy.
 
 END procedure.
 

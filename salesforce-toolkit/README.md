@@ -13,7 +13,7 @@ Connects Claude Code to your Salesforce org so you can ask in prose:
 - **SOQL queries** — natural-language SOQL via the upstream `run_soql_query` MCP tool: list objects, fetch records, filter, aggregate, traverse parent-child relationships
 - **Truly read-only** — `data` MCP toolset only (single tool: `run_soql_query`); no Apex deploy, no metadata push, no user CRUD. The `metadata` toolset is intentionally NOT enabled because it includes `deploy_metadata` which writes to the org
 
-v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https://github.com/salesforcecli/mcp), Apache-2.0, GA 2026) — vendor-maintained schema-aware tool surface, no third-party query DSL drift. Salesforce Report / Dashboard tools are not exposed by upstream MCP today; deferred to Phase 2+ if they land.
+v0.1.1 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https://github.com/salesforcecli/mcp), Apache-2.0, GA 2026) — vendor-maintained schema-aware tool surface, no third-party query DSL drift. Salesforce Report / Dashboard tools are not exposed by upstream MCP today; deferred to Phase 2+ if they land.
 
 ## Quick start
 
@@ -23,14 +23,24 @@ v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+**Recommended (one-shot — you know your org URL)** — single command, no AskUserQuestion prompts:
+
 ```
 # In Claude Code:
-1. /plugin install salesforce-toolkit          # install plugin from marketplace
-2. /salesforce-toolkit:sf-setup                # Claude orchestrates setup — no terminal needed
-3. /reload-plugins                             # activate the salesforce MCP server (Claude will remind you)
+1. /plugin install salesforce-toolkit
+2. /salesforce-toolkit:sf-setup --instance-url=https://YOUR-ORG.my.salesforce.com --no-prompt
+3. /reload-plugins
 ```
 
-`/sf-setup` stays in this conversation: Claude probes state via `credential-check.sh`, runs missing `brew install sf` + `brew install salesforce-mcp` non-interactively, asks you for instance URL + alias via the question UI, starts `sf org login web` in background, polls until OAuth completes, then tells you to `/reload-plugins`. Total time: ~3-5 minutes (most of it is the browser OAuth click). Re-runs are ~5 seconds (each step probes + skips if already done).
+**Alternative (interactive — let Claude guide you)** — same end state, ~20 sec more in two AskUserQuestion prompts (instance picker + alias confirm):
+
+```
+1. /plugin install salesforce-toolkit
+2. /salesforce-toolkit:sf-setup
+3. /reload-plugins
+```
+
+`/sf-setup` stays in this conversation: Claude probes state via `credential-check.sh`, runs missing brew installs **in a single combined `brew install sf salesforce-mcp` call** (v0.1.1+; saves one brew startup + parallel formula download), asks you for instance URL + alias via the question UI if not pre-supplied, starts `sf org login web` in background, polls every 30 seconds with **explicit progress emit between windows** (so you're not staring at silence), then tells you to `/reload-plugins`. Total time: ~3-5 minutes (most of it is the browser OAuth click). Re-runs are ~5 seconds (each step probes + skips if already done).
 
 > **Brew is the only one-time external step.** The brew installer itself runs `sudo` so it can't work from Claude Code's Bash tool — that's why Step 0 exists. Once brew is installed, everything else stays in the conversation.
 
@@ -55,7 +65,7 @@ Read-only by construction. Write toolsets (`metadata` / `users` / `code-analyzer
 | Component | Source | Role |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — provides OAuth (`sf org login web`), org / alias management, token cache |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing Salesforce tools (data / metadata / orgs / users / code-analyzer toolsets); v0.1.0 ships with only the `data` toolset enabled (single tool: `run_soql_query`) for a truly read-only surface. Brew formula name is `salesforce-mcp` but the installed binary is `sf-mcp-server` (same binary ships from the npm package `@salesforce/mcp`) |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp` (Apache-2.0) | MCP server exposing Salesforce tools (data / metadata / orgs / users / code-analyzer toolsets); v0.1.1 ships with only the `data` toolset enabled (single tool: `run_soql_query`) for a truly read-only surface. Brew formula name is `salesforce-mcp` but the installed binary is `sf-mcp-server` (same binary ships from the npm package `@salesforce/mcp`) |
 | [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | Plugin-bundled shim | Launcher: prefers the `sf-mcp-server` binary on PATH, falls back to `npx -y @salesforce/mcp` when brew is unavailable; prints `sf-setup` pointer if neither path works |
 | Homebrew | https://brew.sh | macOS package manager — installed automatically by `sf-setup` if missing (with y/N confirmation) |
 | Node ≥ 26 (transitive) | Homebrew dependency | Runtime for the `sf-mcp-server` binary |
@@ -72,7 +82,7 @@ Read-only by construction. Write toolsets (`metadata` / `users` / `code-analyzer
 | Browser | Chrome or Safari (needed once for `sf org login web`) |
 | Salesforce org | Production, Sandbox, Scratch, or Developer Edition org you can sign into via browser OAuth. For non-Production orgs pass `--instance-url=` to `sf-setup`. |
 
-**Not required**: Python, uv, gcloud, custom Connected App. The `sf` CLI ships a public OAuth client that v0.1.0 uses.
+**Not required**: Python, uv, gcloud, custom Connected App. The `sf` CLI ships a public OAuth client that v0.1.1 uses.
 
 ## Re-auth on token expiry
 
