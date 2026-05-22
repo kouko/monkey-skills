@@ -10,7 +10,7 @@ Salesforce DX MCP Server（[salesforcecli/mcp](https://github.com/salesforcecli/
 
 ## Users
 
-- **唯一 confirmed user**：kouko 對自己工作的 Salesforce instance（`ichef.my.salesforce.com`，iChef 餐廳 POS SaaS）做 read-only 資料查詢分析
+- **唯一 confirmed user**：kouko 對自己工作的 Salesforce instance（`acme.my.salesforce.com`，Acme 餐廳 POS SaaS）做 read-only 資料查詢分析
 - **次要 user 想像**：其他 Salesforce dev / business analyst macOS 使用者，把 plugin 從 monkey-skills marketplace install 起來就能用
 - **既有條件**：macOS（darwin）、Homebrew 已裝、終端機可開 browser、有 Salesforce org credentials
 
@@ -62,7 +62,7 @@ Phase 1 採以下 7 個操作層決議：
 |---|------|------|------|
 | Q1 | MCP 啟動模式 | **Path D — Shim launcher** (`bin/sf-mcp-launcher.sh` brew → npx auto-fallback) | Plugin install 當下 `.mcp.json` 已有效，不依賴 setup 是否跑過；brew 有就 <1s 冷啟，沒有就 fallback npx；環境破洞時錯誤訊息明確指 setup command |
 | Q2 | MCP toolsets default | `data,metadata` | Read-only data + report 查詢分析涵蓋；deploy/users/code-analyzer Phase 1 不需 |
-| Q3 | Alias 策略 | 3-layer infer：(1) `--alias=` flag → (2) `https://<sub>.my.salesforce.com` subdomain 解析 → (3) well-known endpoint fallback (`login.salesforce.com` → `prod`, `test.salesforce.com` → `sandbox`) → (4) omit | 不寫死 `ichef`；URL 多數 case 自動推得乾淨 alias |
+| Q3 | Alias 策略 | 3-layer infer：(1) `--alias=` flag → (2) `https://<sub>.my.salesforce.com` subdomain 解析 → (3) well-known endpoint fallback (`login.salesforce.com` → `prod`, `test.salesforce.com` → `sandbox`) → (4) omit | 不寫死 `acme`；URL 多數 case 自動推得乾淨 alias |
 | Q4 | Alias confirm UX | Enter-to-accept inferred；可輸入 override 或 `-` omit；`--no-prompt` skip 互動 | 順流但允許否決；與 `gws-setup` ENTER pattern 一致 |
 | Q5 | Phase 1 skills | `sf-query`（SOQL/SOSL）+ `sf-report`（Dashboard/Report 拉取） | 讀路徑兩條清楚 affordance；sf-deploy 寫操作 Phase 2+ |
 | Q6 | Sandbox/prod alias 預設名 | `prod` / `sandbox`（簡短 CLI-friendly） | 對應 `login.salesforce.com` / `test.salesforce.com` |
@@ -88,14 +88,14 @@ Phase 1 採以下 7 個操作層決議：
 - Anthropic 官方 marketplace（`claude-plugins-community`）投稿
 - 自然語言查詢 → SOQL 的 schema-aware grammar / validation（依賴 MCP 自己的 tool 設計）
 - Multi-org 切換 helper（`sf config set target-org` 直接用，不另寫 wrapper）
-- iChef-specific 預設 alias / 預設 instance URL 寫死
+- Acme-specific 預設 alias / 預設 instance URL 寫死
 
 ### Future triggers（記錄避免遺忘）
 
 | 觸發條件 | 升級項目 |
 |---------|---------|
 | 有用戶要 deploy Apex / metadata push | Phase 2 加 `sf-deploy` skill + 擴 toolsets 到 `metadata,data,users` |
-| iChef 開啟 Hosted MCP（Enterprise+ license） | 加第二條 path 走 HTTP `https://ichef.my.salesforce.com/mcp/v1` |
+| Acme 開啟 Hosted MCP（Enterprise+ license） | 加第二條 path 走 HTTP `https://acme.my.salesforce.com/mcp/v1` |
 | brew formula `salesforce-mcp` upstream 停更 | 自動 fallback npx 即可，無 panic |
 | `sf` CLI 大版本 breaking change | refresh-auth 與 alias-infer 需 regression test |
 | Linux 用戶請求 | Phase 2 加 apt / dnf 偵測；同 brew 邏輯 |
@@ -115,7 +115,7 @@ Phase 1 採以下 7 個操作層決議：
 
 | 選項 | 拒絕原因 |
 |------|---------|
-| 寫死 `ichef` | 跟 iChef 綁太死；公開 plugin 不合適 |
+| 寫死 `acme` | 跟 Acme 綁太死；公開 plugin 不合適 |
 | 強制每次手輸 | 流程卡 |
 | 純 well-known fallback (`prod`/`sandbox`) | 沒利用到 my.salesforce.com subdomain 的天然 identity 訊號 |
 | 3-layer infer + Enter accept（採用） | 多數 case 推得乾淨 alias + 保留否決權；自然語言 UX |

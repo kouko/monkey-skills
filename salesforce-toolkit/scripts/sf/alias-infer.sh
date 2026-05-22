@@ -10,7 +10,7 @@
 #
 # Why this guard exists:
 #   The auto-setup.sh flow needs to suggest a sensible default alias at the
-#   `sf org login web` step. Hard-coding `ichef` was rejected (Brief §Decisions)
+#   `sf org login web` step. Hard-coding `acme` was rejected (Brief §Decisions)
 #   because (a) it leaks a specific tenant name into a generic toolkit and
 #   (b) multi-org users get the same alias for every login, masking later orgs.
 #   Three-layer inference covers the common cases (My-Domain URL, well-known

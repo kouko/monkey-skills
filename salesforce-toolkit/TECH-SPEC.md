@@ -204,7 +204,7 @@ sf-mcp-server (brew formula `salesforce-mcp` bottle / npx @salesforce/mcp)
     ▼
 sf CLI
     │  ④ sf reads OAuth2 token from macOS Keychain (file fallback ~/.sfdx/)
-    │     ↳ token-cache key derived from alias (e.g. "ichef" or "prod")
+    │     ↳ token-cache key derived from alias (e.g. "acme" or "prod")
     ▼
 Salesforce instance API
     │  ⑤ HTTPS GET https://<sub>.my.salesforce.com/services/data/vXX.X/query?q=...
@@ -318,7 +318,7 @@ TTY: required. Used for brew install y/N prompt (Step 2) + Enter-to-accept alias
 
 #### Why both paths
 
-Path A is friction-minimized for the common case (kouko's iChef instance, single-org workflow). Path B is preserved for: (a) advanced debugging where you want full bash control + see brew prompts directly, (b) automated provisioning scripts that bash-pipe into auto-setup.sh, (c) environments where Claude Code is unavailable. Both paths share the same atomic helpers (`tty-guard.sh` / `alias-infer.sh` / `credential-check.sh` / `refresh-auth.sh`) — only the orchestration layer differs.
+Path A is friction-minimized for the common case (kouko's Acme instance, single-org workflow). Path B is preserved for: (a) advanced debugging where you want full bash control + see brew prompts directly, (b) automated provisioning scripts that bash-pipe into auto-setup.sh, (c) environments where Claude Code is unavailable. Both paths share the same atomic helpers (`tty-guard.sh` / `alias-infer.sh` / `credential-check.sh` / `refresh-auth.sh`) — only the orchestration layer differs.
 
 ### Re-auth path (PRODUCT-SPEC §Success criteria KR4)
 

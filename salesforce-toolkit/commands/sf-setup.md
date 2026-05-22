@@ -24,7 +24,7 @@ Run that once, restart Claude Code (so brew is in `PATH`), then re-invoke `/sf-s
 
 | Flag | Effect |
 |---|---|
-| `--instance-url=<url>` | Salesforce instance URL (e.g. `https://ichef.my.salesforce.com`). If omitted, Claude asks via `AskUserQuestion` (unless `--no-prompt`, then defaults to Production). |
+| `--instance-url=<url>` | Salesforce instance URL (e.g. `https://acme.my.salesforce.com`). If omitted, Claude asks via `AskUserQuestion` (unless `--no-prompt`, then defaults to Production). |
 | `--alias=<name>` | Explicit alias override. If omitted, Claude infers from instance URL subdomain and asks you to confirm (unless `--no-prompt`, then uses inferred directly). |
 | `--no-alias` | Force omit alias; `sf` derives one from your username. Mutually exclusive with `--alias=<name>`. |
 | `--force-reauth` | Re-run `sf org login web` even when an active default org already exists. Disables the early-exit shortcut at Step 4. |
@@ -215,7 +215,7 @@ If early-exit fires:
 
 Otherwise, proceed to Step 5. **Multi-org safety**: when `target_alias` is non-null and DIFFERS from `.result.alias`, user is adding a new org → Steps 5-7 MUST run (do NOT skip), so this early-exit correctly falls through.
 
-**Common scenario unblocked by re-ordering** (was a bug in early drafts): user has `sf` authed to ichef + missing `salesforce-mcp` only. Old order ran Step 3 early-exit first → gate fail because mcp missing → fell through to install → then re-OAuthed unnecessarily. New order (install first → early-exit second) lets Step 3 install salesforce-mcp + Step 4 detect "still authed, alias matches" → clean early-exit without redundant OAuth.
+**Common scenario unblocked by re-ordering** (was a bug in early drafts): user has `sf` authed to acme + missing `salesforce-mcp` only. Old order ran Step 3 early-exit first → gate fail because mcp missing → fell through to install → then re-OAuthed unnecessarily. New order (install first → early-exit second) lets Step 3 install salesforce-mcp + Step 4 detect "still authed, alias matches" → clean early-exit without redundant OAuth.
 
 ### Step 5 — Fully resolve instance URL + alias (interactive)
 
@@ -230,7 +230,7 @@ Otherwise, proceed to Step 5. **Multi-org safety**: when `target_alias` is non-n
 > **AskUserQuestion**: "Which Salesforce instance?"
 > 1. **Production** (`https://login.salesforce.com`) — default for production orgs
 > 2. **Sandbox** (`https://test.salesforce.com`) — for sandbox / test orgs
-> 3. **My Domain** (e.g. `https://ichef.my.salesforce.com`) — for company-specific Domain
+> 3. **My Domain** (e.g. `https://acme.my.salesforce.com`) — for company-specific Domain
 
 (The `AskUserQuestion` tool automatically appends an "Other" choice with free-text input — no need to enumerate it explicitly. If the user picks Other, Claude reads the typed URL from the response.)
 

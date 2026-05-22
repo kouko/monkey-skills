@@ -19,7 +19,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 
 | 維度 | 描述 |
 |---|---|
-| 角色 | iChef 工程師；對自己工作的 Salesforce instance（`ichef.my.salesforce.com`，iChef 餐廳 POS SaaS）做 read-only 資料查詢分析 |
+| 角色 | Acme 工程師；對自己工作的 Salesforce instance（`acme.my.salesforce.com`，Acme 餐廳 POS SaaS）做 read-only 資料查詢分析 |
 | 平台 | macOS (darwin-arm64 / darwin-x64) |
 | 技術能力 | Python / TypeScript proficient、熟 shell、已是 Claude Code 深度使用者 |
 | Salesforce 角色 | org member（非 admin），無 Connected App 自訂權限；用 `sf` CLI 內建公開 OAuth client |
@@ -125,12 +125,12 @@ toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
 | `sf-query` 加入 SOSL 路徑 | upstream MCP 推出 SOSL query tool（v0.30.9 `data` toolset 僅有 SOQL 路徑 `run_soql_query`） |
 | Schema-aware describe via `metadata` toolset | upstream 把 `metadata` toolset 拆成 read-only describe + write deploy 兩個獨立 toolset,或本 plugin 加上 destructive-op 安全包覆層 |
 | `sf-deploy` skill（寫操作：Apex push / metadata push） | kouko 出現首次真實寫操作需求；同時 toolsets 擴到 `metadata,data,users` |
-| Salesforce Hosted MCP path（HTTP + per-org URL） | iChef 開啟 Enterprise Edition+ license 且 Hosted MCP 啟用 |
+| Salesforce Hosted MCP path（HTTP + per-org URL） | Acme 開啟 Enterprise Edition+ license 且 Hosted MCP 啟用 |
 | Linux / Windows 支援 | 外部用戶請求 + 有人願意 maintain 平台差異（brew 替代偵測、Keychain fallback） |
 | 自訂 Connected App | 公開 OAuth client 配額不足 / 出現 client_id 衝突 |
 | `/refresh-auth` slash command | user 直接跑 `bash scripts/sf/refresh-auth.sh` 痛苦到需要 namespace 化 |
 | Anthropic 官方 marketplace 投稿 | v0.1.0 在外部用戶跑通 ≥ 3 次成功 setup |
-| Multi-org 切換 helper | kouko 出現第二個 SF org（目前僅 iChef instance） |
+| Multi-org 切換 helper | kouko 出現第二個 SF org（目前僅 Acme instance） |
 | 自然語言 → SOQL schema-aware grammar validation | MCP 自家 tool 設計覆蓋不足，外部要 Claude side 補強 |
 
 ---
@@ -146,10 +146,10 @@ toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
 | SOSL（在 v0.1.0 `sf-query` 內） | upstream MCP `data` toolset 僅有 SOQL 路徑 `run_soql_query`;無 `run_sosl_query` 等價 tool。若在 plugin 側 fallback 改打 `sf data search` CLI = 走出 MCP 介接,失去 supply-chain 一致性 |
 | `metadata` toolset 同時開啟（為了取得 schema describe） | `metadata` toolset 內含 `deploy_metadata` 破壞性寫入,無 read-only / write 分離 toggle。為了 v0.1.0 結構上 read-only 安全保證,寧可放棄 schema describe 也不冒 accidental write 風險 |
 | Deploy / Apex push / metadata push skill（寫操作 path） | v0.1.0 read-only scope；寫操作 = 非冪等 / 不可逆風險；先驗 read pipeline 可用 |
-| Salesforce Hosted MCP 路徑（HTTP + per-org URL） | 受眾與 license 不匹配 — Enterprise Edition+ 才有；kouko iChef instance 未開通 |
-| Multi-org 切換 helper / wrapper | kouko 僅一個 SF org（iChef）；`sf config set target-org` 直接用足夠；多 org 切換抽象屬外部用戶需求 |
+| Salesforce Hosted MCP 路徑（HTTP + per-org URL） | 受眾與 license 不匹配 — Enterprise Edition+ 才有；kouko Acme instance 未開通 |
+| Multi-org 切換 helper / wrapper | kouko 僅一個 SF org（Acme）；`sf config set target-org` 直接用足夠；多 org 切換抽象屬外部用戶需求 |
 | 自然語言查詢 → SOQL 的 schema-aware grammar / validation | 依賴 MCP 自身 tool 設計（`@salesforce/mcp` 的 query tool 已內建 schema 推導）；plugin 側再做 grammar 驗證 = duplication + drift surface |
-| iChef-specific 預設 alias / 預設 instance URL 寫死 | 跟 iChef 綁太死；公開 plugin 不合適；改 3-layer alias infer + Enter accept |
+| Acme-specific 預設 alias / 預設 instance URL 寫死 | 跟 Acme 綁太死；公開 plugin 不合適；改 3-layer alias infer + Enter accept |
 | 強制每次手輸 alias | 流程卡；多數 case 可從 my.salesforce.com subdomain 推得乾淨 alias |
 | 自訂 Connected App（自家 client_id / client_secret） | `sf` CLI 內建公開 OAuth client 已夠用；自訂 Connected App 需 SF admin 權限（kouko 無） |
 | Linux / Windows 支援 | v0.1.0 macOS only；兩平台都有 brew 替代但流程不同（apt / dnf / winget），分散驗證焦點 |
@@ -167,7 +167,7 @@ toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
 | 路徑 | 機制 | 適用場景 | v0.1.0 立場 |
 |---|---|---|---|
 | **A. Salesforce DX MCP**（採用） | brew install `sf` + `salesforce-mcp`（Apache-2.0, `salesforcecli/mcp`, v0.30.9+）；stdio MCP transport；用 `sf` CLI 已有的 OAuth token | 個人 SF org 讀路徑（kouko、外部 dev / business analyst）；無 Enterprise license；最低 setup cost | **採用**。MCP tools 涵蓋 orgs / metadata / data / users / code-analyzer toolsets；v0.1.0 read-only 場景僅啟用 `data` toolset（單一 tool `run_soql_query`） |
-| **B. Salesforce Hosted MCP** | HTTP MCP transport + per-org URL；SF 自家託管 | Enterprise Edition+ license；多人協作；不想跑本機 daemon | **Phase 2+**。受眾不對（kouko iChef instance 未開通 Enterprise），license 邊界與 v0.1.0 用戶不匹配 |
+| **B. Salesforce Hosted MCP** | HTTP MCP transport + per-org URL；SF 自家託管 | Enterprise Edition+ license；多人協作；不想跑本機 daemon | **Phase 2+**。受眾不對（kouko Acme instance 未開通 Enterprise），license 邊界與 v0.1.0 用戶不匹配 |
 | **C. Third-party community MCPs** | 例如 [`@modelcontextprotocol/server-salesforce`](https://github.com/modelcontextprotocol) 等社群 MCP | 非官方 schema 覆蓋（自定 query DSL） | **拒絕**。官方 DX MCP 已 GA + Apache-2.0；社群 MCP 缺乏官方 schema 同步保證 + supply-chain 信任邊界較弱 |
 
 **Path A 的差異化**（vs Path B/C）：

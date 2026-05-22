@@ -26,7 +26,7 @@ T4 + T5 並行：refresh-auth standalone 不依賴 auto-setup runtime；sf-setup
 
 ## Task 1 — `scripts/sf/alias-infer.sh` 3-layer infer function library + bats
 
-- **Description**: 建立 `scripts/sf/alias-infer.sh` — 純 shell function `infer_alias(instance_url, user_alias)` 實作 3-layer：(1) `--alias=X` 顯式 wins；(2) regex 解析 `^https?://([a-zA-Z0-9_-]+)\.(my\.salesforce\.com|lightning\.force\.com|sandbox\.my\.salesforce\.com)` subdomain，lowercase + collapse `--` → `-`；(3) `login.salesforce.com` → `prod`，`test.salesforce.com` → `sandbox`，其他 → empty。Bats 驗 8 case：explicit override / ichef → ichef / `acme--devsbx.sandbox.my.salesforce.com` → `acme-devsbx` / MIXED-Case → lowercase / login → prod / test → sandbox / 空 URL → prod / `https://random.example.com` → empty
+- **Description**: 建立 `scripts/sf/alias-infer.sh` — 純 shell function `infer_alias(instance_url, user_alias)` 實作 3-layer：(1) `--alias=X` 顯式 wins；(2) regex 解析 `^https?://([a-zA-Z0-9_-]+)\.(my\.salesforce\.com|lightning\.force\.com|sandbox\.my\.salesforce\.com)` subdomain，lowercase + collapse `--` → `-`；(3) `login.salesforce.com` → `prod`，`test.salesforce.com` → `sandbox`，其他 → empty。Bats 驗 8 case：explicit override / acme → acme / `acme--devsbx.sandbox.my.salesforce.com` → `acme-devsbx` / MIXED-Case → lowercase / login → prod / test → sandbox / 空 URL → prod / `https://random.example.com` → empty
 - **Module**: `salesforce-toolkit/scripts/sf/`
 - **Files touched**: `salesforce-toolkit/scripts/sf/alias-infer.sh`, `salesforce-toolkit/tests/test_alias_infer.bats`
 - **Context paths**:
