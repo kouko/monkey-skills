@@ -82,3 +82,13 @@ For each module:
 - [ ] All code blocks properly closed
 - [ ] Table columns consistent
 - [ ] No orphaned list items or broken internal references
+
+## CHK-SPEC-008: External Surface Declaration in Plan Tasks [FIXABLE]
+
+Grounded in `standards/external-surface-grounding.md` — the plan-time half of the external-surface-grounding discipline. Applies to plan documents produced by `writing-plans` and consumed by `subagent-driven-development`.
+
+For each atomic task in the plan:
+
+- [ ] If task `Description` OR `Files touched` references a **non-stdlib external surface** in one of the five categories (HTTP API / SDK package / MCP tool / CLI flag / internal sibling-team contract), the `External surfaces:` field is present and non-empty
+- [ ] Each declared external surface names its **category**, its **specific name / identifier** (function name, endpoint, tool name, flag name), AND its **grounding source** (one of: Live verification / MCP schema / Pinned reference / In-repo evidence — per the standard's §Four Grounding Sources)
+- [ ] Pure internal-logic tasks (renames within one module, markdown-only edits with no external references, refactors with no new external calls) MAY omit the field — opt-in by surface presence, not mandatory on every task
