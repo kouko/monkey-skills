@@ -75,7 +75,7 @@ CASES = [
         {"a": {"t.a"}, "b": {"t.b"}},
     ),
     # 8. dbt `SELECT * FROM final` wrapper pattern — must unwrap to real columns
-    # (very common in iCHEF-style dbt projects; v1.2.0 added this fallback).
+    # (very common in example-style dbt projects; v1.2.0 added this fallback).
     (
         """
         WITH staging AS (SELECT raw_id, raw_name FROM raw_t),

@@ -77,9 +77,9 @@ Frontmatter:
 
 ```yaml
 ---
-unique_id: model.iCHEF_dbt_pipline.fct_orders     # manifest.json node id
+unique_id: model.example_dbt_project.fct_orders     # manifest.json node id
 type: model
-package: iCHEF_dbt_pipline
+package: example_dbt_project
 path: dbt/models/marts/fct_orders.sql              # repo-relative
 materialization: table                              # view | table | incremental | ephemeral | snapshot
 schema: dbt_marts                                   # target schema
@@ -209,7 +209,7 @@ Frontmatter:
 
 ```yaml
 ---
-unique_id: source.iCHEF_dbt_pipline.raw_data.orders_raw
+unique_id: source.example_dbt_project.raw_data.orders_raw
 type: source
 source_name: raw_data
 table_name: orders_raw
@@ -238,9 +238,9 @@ Only macros referenced by ≥1 model get a page (init filters by usage count).
 
 ```yaml
 ---
-unique_id: macro.iCHEF_dbt_pipline.parse_currency
+unique_id: macro.example_dbt_project.parse_currency
 type: macro
-package: iCHEF_dbt_pipline                           # or external package name (e.g., dbt_utils)
+package: example_dbt_project                           # or external package name (e.g., dbt_utils)
 path: dbt/macros/parse_currency.sql
 arguments: [amount, currency_code]                   # from manifest macro signature
 description: "..."                                   # from schema.yml or docstring
@@ -367,7 +367,7 @@ Append-only operation log. Entries:
 ## Naming Rules
 
 - Model file = `<model_name>.md` (no prefix). If two packages have a `customers` model,
-  filename becomes `<package>__<model_name>.md` (e.g., `iCHEF_dbt_pipline__customers.md`).
+  filename becomes `<package>__<model_name>.md` (e.g., `example_dbt_project__customers.md`).
 - Source file = `<source_name>__<table_name>.md` (always 2-part, no collision risk).
 - Macro file = `<macro_name>.md` for project macros, `<package>__<macro>.md` for external (dbt_utils, etc.).
 - Slug rule: lowercase, underscores preserved (matching dbt convention).

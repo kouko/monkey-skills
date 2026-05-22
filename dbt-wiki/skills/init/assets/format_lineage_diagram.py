@@ -11,14 +11,14 @@ Two modes:
 
        python3 format_lineage_diagram.py column \\
            --recursive-jsonl /tmp/dbt-wiki-recursive-lineage.jsonl \\
-           --model model.iCHEF.fct_orders --column customer_id \\
+           --model model.example_project.fct_orders --column customer_id \\
            --direction both
 
 2. Model lineage (consumes manifest.json directly, walks depends_on / feeds_into):
 
        python3 format_lineage_diagram.py model \\
            --manifest dbt/target/manifest.json \\
-           --model model.iCHEF.fct_orders \\
+           --model model.example_project.fct_orders \\
            --direction both --max-depth 3
 
 Output (stdout, JSON):

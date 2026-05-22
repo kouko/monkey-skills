@@ -33,25 +33,25 @@ Single (model, column) target:
     python3 extract_recursive_column_lineage.py \\
         --manifest target/manifest.json \\
         --lineage /tmp/dbt-wiki-col-lineage.jsonl \\
-        --model model.iCHEF.fct_orders \\
+        --model model.example_project.fct_orders \\
         --column customer_id
 
 Output (JSONL — one record per target column)
 ---------------------------------------------
     {
-        "model_uid": "model.iCHEF.fct_orders",
+        "model_uid": "model.example_project.fct_orders",
         "column": "customer_id",
         "ancestors": {
-            "model.iCHEF.stg_orders::customer_id": {
-                "source.iCHEF.raw.orders_raw::customer_id": {}
+            "model.example_project.stg_orders::customer_id": {
+                "source.example_project.raw.orders_raw::customer_id": {}
             },
-            "model.iCHEF.stg_customers::id": {
+            "model.example_project.stg_customers::id": {
                 "_unresolved::dbt_dim.customers::id": {}
             }
         },
         "descendants": {
-            "model.iCHEF.dim_orders_summary::customer_id": {
-                "model.iCHEF.mart_finance_daily::customer_id": {}
+            "model.example_project.dim_orders_summary::customer_id": {
+                "model.example_project.mart_finance_daily::customer_id": {}
             }
         }
     }
