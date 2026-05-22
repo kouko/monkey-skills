@@ -5,7 +5,7 @@
 ## Environment
 
 - **Machine**：kouko 本機，macOS darwin-arm64
-- **Google account**：`kouko.d@gmail.com`（個人 Gmail，非 Workspace org）
+- **Google account**：`kouko@example.com`（個人 Gmail，非 Workspace org）
 - **Starting state**：
   - `gcloud`：not installed
   - `brew`：`/opt/homebrew/bin/brew` ✓
@@ -22,7 +22,7 @@ brew install --cask google-cloud-sdk
 
 gcloud auth login --quiet
 # → 自動開瀏覽器 localhost callback；點允許；回 terminal 印
-#   "You are now logged in as [kouko.d@gmail.com]"
+#   "You are now logged in as [kouko@example.com]"
 ```
 
 **注意事項**：
@@ -84,7 +84,7 @@ gcloud auth application-default login \
 ### Phase 5 — Console 手動 2 步（~3 min）
 
 使用者在瀏覽器完成：
-1. **Google Auth Platform → Audience** subpage，往下捲到 **Test users** section，`+ Add users` → `kouko.d@gmail.com` → Save
+1. **Google Auth Platform → Audience** subpage，往下捲到 **Test users** section，`+ Add users` → `kouko@example.com` → Save
 2. **Google Auth Platform → Clients** subpage，`+ Create client` → Application type: **Desktop app**（不是 Web）→ Name: `slides-toolkit-cli` → Create → **Download JSON** 到 `~/Downloads/`
 
 **UI 注意點**：

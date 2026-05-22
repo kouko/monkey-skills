@@ -225,7 +225,7 @@ Add a comment line in the moved file's frontmatter:
 
 ```yaml
 ---
-unique_id: model.iCHEF_dbt_pipline.deprecated_model
+unique_id: model.example_dbt_project.deprecated_model
 removed: true
 removed_at: 2026-05-02
 removed_reason: "no longer in manifest after dbt parse"

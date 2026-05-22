@@ -41,7 +41,7 @@ collisions when names are long; self-loops + duplicate edges deduped.
 
 5/5 tests pass (column ancestors+descendants / ancestors-only / model
 both / missing record / mermaid node-id safety). Real-world verified
-on iCHEF mart_customer__dimension (38 upstream models, truncates
+on example mart_customer__dimension (38 upstream models, truncates
 cleanly).
 
 #### 2. Auto-saved syntheses with precise stale detection
@@ -113,7 +113,7 @@ overwrites the synthesis, clears the stale flag.
   this is v1.3 introducing it) falls back to `manifest_sha` drift
   comparison (less precise but always works)
 
-### Real-world impact preview (iCHEF-dbt-pipeline)
+### Real-world impact preview (example-dbt-pipeline)
 
 After re-running `/dbt-wiki:init` (or just `/dbt-wiki:refresh`):
 - `format_lineage_diagram.py` becomes available in `.dbt-wiki/_internal/`
@@ -156,7 +156,7 @@ SELECT * FROM final
 
 In v1.0–v1.1.2, sqlglot saw only the outer `SELECT *` and reported a
 single column named `*`. Models authored with this convention lost all
-per-column information. On the iCHEF-dbt-pipeline dogfood, this hit
+per-column information. On the example-dbt-pipeline dogfood, this hit
 **71% of models** (860/1209), making column-level lineage queries
 mostly useless for marts/dash tiers.
 
@@ -173,7 +173,7 @@ pattern), unqualified column references are auto-resolved to that
 table — so a single-CTE wrapper produces clean `merge_data.col1` style
 sources.
 
-### Real-world impact (iCHEF-dbt-pipeline, 1209 model files)
+### Real-world impact (example-dbt-pipeline, 1209 model files)
 
 | Metric | v1.1 | v1.2 | Δ |
 |---|---|---|---|
@@ -338,7 +338,7 @@ project (rare, but possible in monorepos with multiple dbt projects).
 
 | User's cwd | dbt at | v1.1.0 | v1.1.1 |
 |---|---|---|---|
-| repo root | `./dbt/` (iCHEF style) | ✅ | ✅ |
+| repo root | `./dbt/` (example style) | ✅ | ✅ |
 | repo root | `./` | ✅ | ✅ |
 | `models/staging/` | `../../dbt_project.yml` | ❌ | ✅ (ancestor walk) |
 | any cwd, `$DBT_PROJECT_DIR` set | (env-pointed) | ❌ | ✅ (env var) |
@@ -548,11 +548,11 @@ Four skills for local-only LLM-queryable dbt knowledge (symmetric with repo-wiki
 
 ### Pre-trial validation
 
-Plan validation against `/Users/kouko/DataspellProjects/iCHEF-dbt-pipeline` (real dbt-on-Redshift project, ~200+ models across 8 tiers — staging/interm/marts/marts_msd/marts_qlr/dash/expt/export_to_googlesheets):
+Plan validation against `<local dbt project>` (real dbt-on-Redshift project, ~200+ models across 8 tiers — staging/interm/marts/marts_msd/marts_qlr/dash/expt/export_to_googlesheets):
 - ✅ dbt project layout matches dbt-wiki's expectations (`dbt/dbt_project.yml`, `dbt/models/<tier>/`, `dbt/target/`)
 - ✅ User already has dbt CLI (`dbt-redshift` conda env)
 - ⏳ sqlglot install required (`pip install sqlglot` in dbt-redshift env) — pre-condition
-- ⏳ Real-world dogfood scheduled post-merge: `/dbt-wiki:init` against iCHEF-dbt-pipeline → measure model count, sqlglot failure rate, lineage depth, query response quality
+- ⏳ Real-world dogfood scheduled post-merge: `/dbt-wiki:init` against example-dbt-pipeline → measure model count, sqlglot failure rate, lineage depth, query response quality
 
 ### Known limitations (v1.0)
 

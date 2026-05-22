@@ -57,7 +57,7 @@ the whole init):
 
 Dialect
 -------
-Defaults to "redshift" (most common in iCHEF-dbt-pipeline target). sqlglot
+Defaults to "redshift" (most common in example-dbt-pipeline target). sqlglot
 supports: redshift, postgres, snowflake, bigquery, databricks, duckdb,
 clickhouse, mysql, oracle, spark, sqlite, tsql.
 
@@ -155,7 +155,7 @@ def _expand_star_via_cte(
 ) -> dict[str, list[str]] | None:
     """Unwrap the dbt `SELECT * FROM <final_cte>` wrapper pattern.
 
-    Many dbt projects (especially staging / mart layers in iCHEF-style
+    Many dbt projects (especially staging / mart layers in example-style
     codebases) end with a CTE named `final` and a top-level
     `SELECT * FROM final`. Without unwrapping, sqlglot reports just
     one column named `*` per such model — losing all per-column

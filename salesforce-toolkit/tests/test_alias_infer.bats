@@ -41,10 +41,10 @@ ALIAS_INFER="${BATS_TEST_DIRNAME}/../scripts/sf/alias-infer.sh"
 # Layer 2 — subdomain inference from *.my.salesforce.com family
 # ---------------------------------------------------------------------------
 
-@test "(b) ichef.my.salesforce.com → ichef" {
-  run bash -c "source '$ALIAS_INFER'; infer_alias 'https://ichef.my.salesforce.com' ''"
+@test "(b) acme.my.salesforce.com → acme" {
+  run bash -c "source '$ALIAS_INFER'; infer_alias 'https://acme.my.salesforce.com' ''"
   [ "$status" -eq 0 ]
-  [ "$output" = "ichef" ]
+  [ "$output" = "acme" ]
 }
 
 @test "(c) acme--devsbx.sandbox.my.salesforce.com → acme-devsbx (collapse --)" {
@@ -92,14 +92,14 @@ ALIAS_INFER="${BATS_TEST_DIRNAME}/../scripts/sf/alias-infer.sh"
 # for Claude-orchestrated /sf-setup (Step 5) without a `source ...` wrapper.
 # ---------------------------------------------------------------------------
 
-@test "(i) direct invocation: ichef URL prints ichef" {
-  run bash "$ALIAS_INFER" "https://ichef.my.salesforce.com" ""
+@test "(i) direct invocation: acme URL prints acme" {
+  run bash "$ALIAS_INFER" "https://acme.my.salesforce.com" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "ichef" ]
+  [ "$output" = "acme" ]
 }
 
 @test "(j) direct invocation: explicit alias override wins" {
-  run bash "$ALIAS_INFER" "https://ichef.my.salesforce.com" "myorg"
+  run bash "$ALIAS_INFER" "https://acme.my.salesforce.com" "myorg"
   [ "$status" -eq 0 ]
   [ "$output" = "myorg" ]
 }

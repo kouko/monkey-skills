@@ -517,7 +517,7 @@ paths stay read-only until write JTBDs land in v0.7.x.
   read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
   (Part 1 T1 / `1d4b950`). The org-policy probe at
   `myaccount.google.com/permissions` showed macOS Mail already holds
-  the broader `https://mail.google.com/` scope at the iChef org level;
+  the broader `https://mail.google.com/` scope at the Acme org level;
   the narrower API scope we request is therefore allowed.
 - **Calendar OAuth scope** (`https://www.googleapis.com/auth/calendar` —
   full read-write, restricted tier) added to `scripts/gws/auto-setup.sh`
@@ -583,9 +583,9 @@ paths stay read-only until write JTBDs land in v0.7.x.
   contract: OAuth grant is full (`https://www.googleapis.com/auth/gmail`
   + `https://www.googleapis.com/auth/calendar`), but no compose / insert
   user-facing path ships until a confirmed write JTBD is scoped.
-- **iChef Workspace admin-policy probe** — macOS Mail already holds
+- **Acme Workspace admin-policy probe** — macOS Mail already holds
   `https://mail.google.com/` scope per `myaccount.google.com/permissions`
-  (confirmed full Gmail grant unblocked for iChef org). Calendar scope
+  (confirmed full Gmail grant unblocked for Acme org). Calendar scope
   follows the same org policy; no admin unblock required.
 - **Upstream pin held at `v0.22.5 / 705fb0ec`** — additive vendoring
   only; no upstream version bump in this PR per brief §Out of Scope.
@@ -672,11 +672,11 @@ email domain and dual-paths the OAuth consent walkthrough accordingly.
 ### Open follow-ups
 
 - Real-machine dogfood pending against an actual Workspace account
-  (`kouko@ichef.com.tw`); first-use validation will close brief Open Q1.
+  (`kouko@acme.com`); first-use validation will close brief Open Q1.
 - Issue #119 workaround applicability under Workspace OAuth client —
   verify in first-use (brief Open Q2); env-guard wiring may need
   Workspace-specific adjustment.
-- GCP project creation under iChef org policy — verify in first-use
+- GCP project creation under Acme org policy — verify in first-use
   that `gcloud projects create` is permitted; if blocked, document
   the BYO-project fallback in the next patch.
 
