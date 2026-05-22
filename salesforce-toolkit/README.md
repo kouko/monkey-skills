@@ -23,14 +23,24 @@ v0.1.0 wraps the upstream Salesforce DX MCP server ([`salesforcecli/mcp`](https:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+**Recommended (one-shot — you know your org URL)** — single command, no AskUserQuestion prompts:
+
 ```
 # In Claude Code:
-1. /plugin install salesforce-toolkit          # install plugin from marketplace
-2. /salesforce-toolkit:sf-setup                # Claude orchestrates setup — no terminal needed
-3. /reload-plugins                             # activate the salesforce MCP server (Claude will remind you)
+1. /plugin install salesforce-toolkit
+2. /salesforce-toolkit:sf-setup --instance-url=https://YOUR-ORG.my.salesforce.com --no-prompt
+3. /reload-plugins
 ```
 
-`/sf-setup` stays in this conversation: Claude probes state via `credential-check.sh`, runs missing `brew install sf` + `brew install salesforce-mcp` non-interactively, asks you for instance URL + alias via the question UI, starts `sf org login web` in background, polls until OAuth completes, then tells you to `/reload-plugins`. Total time: ~3-5 minutes (most of it is the browser OAuth click). Re-runs are ~5 seconds (each step probes + skips if already done).
+**Alternative (interactive — let Claude guide you)** — same end state, ~20 sec more in two AskUserQuestion prompts (instance picker + alias confirm):
+
+```
+1. /plugin install salesforce-toolkit
+2. /salesforce-toolkit:sf-setup
+3. /reload-plugins
+```
+
+`/sf-setup` stays in this conversation: Claude probes state via `credential-check.sh`, runs missing brew installs **in a single combined `brew install sf salesforce-mcp` call** (v0.1.1+; saves one brew startup + parallel formula download), asks you for instance URL + alias via the question UI if not pre-supplied, starts `sf org login web` in background, polls every 30 seconds with **explicit progress emit between windows** (so you're not staring at silence), then tells you to `/reload-plugins`. Total time: ~3-5 minutes (most of it is the browser OAuth click). Re-runs are ~5 seconds (each step probes + skips if already done).
 
 > **Brew is the only one-time external step.** The brew installer itself runs `sudo` so it can't work from Claude Code's Bash tool — that's why Step 0 exists. Once brew is installed, everything else stays in the conversation.
 

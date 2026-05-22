@@ -107,6 +107,13 @@ DRY_RUN=0
 USER_ALIAS=""
 NO_ALIAS=0
 NO_PROMPT=0
+
+# Combined-install fast-path marker: set to 1 by ensure_sf when it detects
+# both sf and salesforce-mcp are missing and runs `brew install sf
+# salesforce-mcp` once. ensure_mcp reads this and skips its own install path.
+# Saves the second brew startup (~3-5 sec) + enables parallel formula
+# download. v0.1.1 onboarding-friction optimization.
+COMBINED_INSTALL_DONE=0
 FORCE_REAUTH=0
 INSTANCE_URL=""
 SKIP_MCP_BREW=0
@@ -262,7 +269,37 @@ ensure_brew() {
 ensure_sf() {
   step 3 "ensure sf CLI installed"
 
-  if command -v sf >/dev/null 2>&1; then
+  # Probe whether both sf and salesforce-mcp are missing — if so, use a
+  # single combined `brew install sf salesforce-mcp` call instead of two
+  # separate installs. Saves ~3-5 sec brew startup + enables parallel
+  # formula download. ensure_mcp (step 4) reads COMBINED_INSTALL_DONE
+  # and skips its own install path.
+  local need_sf=0 need_mcp=0
+  command -v sf >/dev/null 2>&1 || need_sf=1
+  if (( SKIP_MCP_BREW == 0 )); then
+    command -v sf-mcp-server >/dev/null 2>&1 || need_mcp=1
+  fi
+
+  # Fast path: both binaries missing → one combined brew install.
+  if (( need_sf == 1 && need_mcp == 1 )); then
+    if (( DRY_RUN == 1 )); then
+      dry_echo 'brew install sf salesforce-mcp  # combined (both missing)'
+      COMBINED_INSTALL_DONE=1
+      return
+    fi
+
+    if ! brew install sf salesforce-mcp; then
+      die_json 12 "brew install sf salesforce-mcp failed"
+    fi
+    SF_VERSION="$(sf --version 2>/dev/null | head -n 1 || printf '')"
+    MCP_VERSION="$(brew list --versions salesforce-mcp 2>/dev/null | awk '{print $2}' || printf '')"
+    COMBINED_INSTALL_DONE=1
+    return
+  fi
+
+  # Slow paths (existing behavior): only sf needs install, or sf already
+  # installed.
+  if (( need_sf == 0 )); then
     printf '[auto-setup] already done: sf CLI installed\n' >&2
     SF_VERSION="$(sf --version 2>/dev/null | head -n 1 || printf '')"
     return
@@ -285,6 +322,12 @@ ensure_sf() {
 # header for the same caveat).
 ensure_mcp() {
   step 4 "ensure sf-mcp-server installed (via brew formula salesforce-mcp)"
+
+  # Combined-install fast path (step 3 already installed both binaries).
+  if (( COMBINED_INSTALL_DONE == 1 )); then
+    printf '[auto-setup] already done: sf-mcp-server installed (combined with sf in step 3)\n' >&2
+    return
+  fi
 
   if command -v sf-mcp-server >/dev/null 2>&1; then
     printf '[auto-setup] already done: sf-mcp-server installed\n' >&2

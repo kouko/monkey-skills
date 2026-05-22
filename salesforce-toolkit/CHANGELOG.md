@@ -7,6 +7,61 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.1] - 2026-05-22 — **Onboarding-friction reduction (no functional change)**
+
+UX-only release addressing v0.1.0 dogfood findings: shorten the first-time
+install path's wall-clock time and visible silence. No behavioral surface
+change — `.mcp.json` toolset still `data` only, MCP tools unchanged, auth
+flow unchanged, all existing `--flag` semantics preserved.
+
+### Changed
+
+- **`scripts/sf/auto-setup.sh`** — Step 3 (`ensure_sf`) now detects the
+  common case of "both `sf` CLI and `sf-mcp-server` missing" and runs a
+  **single combined `brew install sf salesforce-mcp`** instead of two
+  separate installs. Saves ~3-5 sec brew startup + enables parallel
+  formula download (~30-60 sec network save on clean systems).
+  ensure_mcp (Step 4) skips its own install when `COMBINED_INSTALL_DONE=1`.
+  Existing 6-step structure preserved (bats `(a)` test still asserts
+  `step N/6` labels). Partial-state re-runs (only one binary missing)
+  unchanged.
+- **`commands/sf-setup.md`** Step 3 — added explicit BEFORE/AFTER
+  progress emit (`🔧 Installing missing binaries...` / `✅ Installed:
+  sf vX.Y + salesforce-mcp vA.B`) so the user sees concrete start/done
+  signals around the 2-3 min brew wait, instead of silence.
+- **`commands/sf-setup.md`** Step 6 — restructured the 5-min OAuth
+  poll from "60 polls × 5 sec, silent" to "10 windows × 30 sec, emit
+  progress between each window". User now gets a `⏳ Still waiting...`
+  status line every 30 sec instead of waiting up to 5 min in silence.
+  Adds extra hints at 60 sec ("sign in + click Allow if not yet") and
+  4:00 ("1 min before continue/abort prompt").
+- **`commands/sf-setup.md`** Step 8 — visual emphasis on the
+  `/reload-plugins` reminder (boxed callout) + paste-ready example
+  query templates (`列出最近 5 筆 Account` / `本季結案的 Opportunity`
+  / `今年的 Lead 依 Source 分群`) so the most-commonly-forgotten step
+  in v0.1.0 dogfood becomes hard to miss + immediately verifiable.
+- **`README.md` / `README.ja.md` / `README.zh-TW.md`** — promoted the
+  one-shot `--instance-url=<url> --no-prompt` invocation form as the
+  **primary recommendation** in §Quick Start. Interactive form kept as
+  alternative for users who don't know their org URL. Tri-lang
+  parallel update.
+
+### Migration
+
+None — drop-in replacement for v0.1.0. Existing users:
+`/plugin update salesforce-toolkit@monkey-skills` + `/reload-plugins`.
+
+### Friction-cost delta (vs v0.1.0)
+
+| Step | v0.1.0 | v0.1.1 | Δ |
+|------|--------|--------|---|
+| Step 3 brew install (both missing) | 2-6 min sequential | 1-3 min combined | **-1 to -3 min** |
+| Step 6 OAuth wait visibility | 5 min silent | progress emit every 30s | **eliminated silence anxiety** |
+| Step 8 `/reload-plugins` recall | prose line | boxed callout + try-this queries | **lower forget rate** |
+| One-shot setup discoverability | buried as power-user note | primary Quick Start example | **lower decision cost for users who know their URL** |
+
+---
+
 ## [0.1.0] - 2026-05-20 — **Initial release: Salesforce DX MCP plugin with brew-first auto-setup**
 
 First public cut. Wraps the upstream Salesforce DX MCP server
