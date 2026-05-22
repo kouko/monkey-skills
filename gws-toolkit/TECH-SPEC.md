@@ -1,13 +1,16 @@
-# TECH-SPEC — slides-toolkit
+# TECH-SPEC — gws-toolkit
 
-Technical specification for the `slides-toolkit` plugin in the
+Technical specification for the `gws-toolkit` plugin in the
 `monkey-skills` repository. Scope: module design, data flow,
 interface contracts, implementation plan. Product-level direction
 (goals, users, scenarios, non-goals) lives in `PRODUCT-SPEC.md`
 and is referenced by `§` number.
 
 - Spec type: TECH-SPEC (code-team ownership)
-- Target plugin: `slides-toolkit`
+- Target plugin: `gws-toolkit` (originated as `slides-toolkit`;
+  renamed via v0.4.0-strangler-fig-seed on 2026-05-04; the original
+  plugin directory was hard-deleted in v0.7.3 on 2026-05-22 with
+  git history preserved)
 - Upstream PRODUCT-SPEC: `./PRODUCT-SPEC.md` (v0.3 — **Scope Refinement**
   on top of v0.2 Platform Pivot)
 - Written against `code-team/protocols/spec-writing.md` (5-phase
@@ -28,6 +31,7 @@ and is referenced by `§` number.
 | 2026-04-24 | **v0.3.2 — Architectural layer split** | 抽出 sibling skill `google-slides-api` 作為低層 per-op recipe reference 層；`slides-builder` 保留為高層 orchestration（讀 `slide-plan.json` v1.2、pre-flight、串接 4 recipes）。4 個 recipe 檔 `git mv` 自 `slides-builder/protocols/` 至 `google-slides-api/protocols/`；新建 `google-slides-api/SKILL.md` 與 `references/api-error-codes.md`。Router `using-gws-toolkit` 加第 4 分支（低層 API 學習 / debug → google-slides-api）。**Because** (1) SRP 架構更乾淨：per-op recipe 與 pipeline orchestration 為兩種變動維度，分離後各自獨立演進（OCP）；(2) 授權自主：新 skill 全為我們原創 MIT，不需引用 `gws-slides` Apache-2.0 SKILL 內容（`gws` binary 仍為 runtime dep，不影響 repo licensing）；(3) 為 Phase 2+ 潛在 second consumer（e.g. slide-deck-auditor, deck-diff tool）預留低耦合入口。無 scope 變動、無 API 功能變動、無 4 Big Risks 變動（非 pivot、非 scope refinement；純 refactor） |
 | 2026-05-19 | **v0.7.0 — Gmail + Calendar absorption** | Add gmail.googleapis.com + calendar.googleapis.com to the enabled API set (6 APIs total); add full-scope `https://www.googleapis.com/auth/gmail` + `…/auth/calendar` to the OAuth grant (6 scopes total, both restricted-tier matching `drive` precedent per v0.4.0); vendor 4 new upstream skills (`gws-gmail`, `gws-gmail-read`, `gws-calendar`, `gws-calendar-agenda`); pure-vendor strategy (no toolkit-original wrappers — strangler-fig per v0.4.0 precedent); lock-step bump 0.6.0 → 0.7.0. **Because** the v0.7.0 charter is to absorb the Gmail/Calendar responsibility that `collab-toolkit` v0.2.0 retired on the explicit promise that gws-toolkit would consolidate Google Workspace OAuth into one client. iChef admin-policy probe (myaccount.google.com/permissions) confirmed full Gmail scope unblocked. v0.7.x backlog: `find-free-slots` + `shared-calendar-read` (no native upstream equivalent); write-side toolkit-original wrappers (`gmail-confirm-send.sh` / `calendar-confirm-insert.sh`) when first write JTBD lands. |
 | 2026-05-20 | **v0.7.1 — Write asymmetry close-out** | Vendor 5 new upstream write helpers (`gws-gmail-send`, `gws-calendar-insert`, `gws-docs-write`, `gws-sheets-append`, `gws-drive-upload`) to close the read/write asymmetry that v0.7.0 left in place (read-side vendored, write-side bare). Add 4 first-party safety wrappers under `scripts/gws/` (`gmail-confirm-send.sh` L3 typed recipient+subject, `calendar-confirm-insert.sh` L2 attendees / L1 solo, `sheets-confirm-write.sh` L1 append / L2 clear-overwrite, `docs-confirm-append.sh` L1 dry-run) modeled on the `safe-delete.sh` 3-tier dry-run-by-default + tiered-confirm pattern. Pure-vendor + first-party safety strategy: no toolkit-original skill wrappers; safety layer lives in scripts, not skills. No OAuth scope changes (write scopes already granted under v0.7.0's full-scope gmail/calendar + existing drive/docs/sheets grants). Upstream pin held at `v0.22.5/705fb0ec`. Lock-step bump 0.7.0 → 0.7.1. **Because** v0.7.0 §Open follow-ups flagged write-side vendored skills + app-layer safety wrappers as the residual debt; v0.7.1 discharges 5 of 11 upstream write helpers (the JTBD-driven subset: send / insert / write / append / upload — the ones surfaced by daily Gmail/Calendar/Docs/Sheets/Drive dogfood) and ships the 4 safety wrappers needed to make Claude-orchestrated writes safe. Remaining 6 write helpers stay un-vendored until a JTBD surfaces. |
+| 2026-05-22 | **v0.7.3 — Phase 4 slides-toolkit hard-delete + round-2 audit fixes** | Removed retired `slides-toolkit/` plugin directory (44 files, 26 git history commits preserved); 2-week validation window closed cleanly and gws-toolkit shipped 6 stable releases on top. Fixed dead links to `../slides-toolkit/` across repo-root + gws-toolkit READMEs. (Round-2 audit findings) Fixed ~10 current-state `slides-toolkit` identity references in `TECH-SPEC.md` + `PRODUCT-SPEC.md` (historical commit-plan + revision history entries correctly kept). `auto-setup.sh ensure_gws_auth` now diffs granted vs requested scopes after `gws auth login` and surfaces partial-grant failures proactively — closes the 2026-01 Google Granular OAuth Consent UX gap that Desktop OAuth users could trip by unchecking individual scopes. `auto-setup.sh ensure_project` 403 grep widened from `PERMISSION_DENIED\|projectCreator` only to also cover `FAILED_PRECONDITION` / `folderlessProjectCreation` / `projectCreationAllowedLocations` org-policy cases, each with a tailored escalation hint. `skills/gws-setup/SKILL.md §Quota awareness` corrected to `≥60-day quota cutover / ≥90-day billing` notice (per Google's 2026-05 Agent tools post) instead of the v0.7.2 incorrect "90-day universal". New `### Environment variables (full inventory)` section in `gws-setup/SKILL.md` documenting all 11 upstream `GOOGLE_WORKSPACE_CLI_*` env vars (we previously only documented 3) — adds `GOOGLE_WORKSPACE_CLI_TOKEN` for CI / headless, `_LOG` / `_LOG_FILE` for debugging, `GOOGLE_WORKSPACE_PROJECT_ID` for quota-attribution override. macOS Keychain "Always Allow" guidance added under §macOS Keychain — known upstream friction ([issue #252](https://github.com/googleworkspace/cli/issues/252)). Upstream pin held at `v0.22.5/705fb0ec`. Lock-step bump 0.7.2 → 0.7.3. **Because** round-2 audit (cross-checking against upstream Rust source + Google's 2026 official docs) surfaced 6 new findings v0.7.2 missed: (1) Granular Consent affects Desktop flow, not Chat-only; (2) 403 grep too narrow for non-permission org-policy cases; (3) 60-day vs 90-day notice distinction; (4) 11 env vars in upstream we under-document; (5) Keychain Always-Allow UX gap; (6) SPEC identity drift v0.7.2 missed. Combining with the slides-toolkit hard-delete (2-week validation period closed) is the natural v0.7.x close-out before v0.8.0 platform expansion begins. Also: MCP integration is officially deferred indefinitely — upstream PR #275 (2026-03-06) deliberately removed MCP server mode as a BREAKING CHANGE; no reinstatement on the open PR queue. The v0.8.0 backlog item "evaluate MCP" can be dropped. Drive scope downscoping (`drive` → `drive.file` since `tag-create.sh` already provenance-tags via `appProperties.created_by`) added to v0.8.0 backlog as a security-posture improvement (drops restricted-tier scope, smaller blast radius). |
 | 2026-05-21 | **v0.7.2 — Setup audit + legacy cleanup** | Audit-driven maintenance release. (P0) Fix `KEYRING_BACKEND` → `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND` env var name across SKILL.md + credential-hygiene.md (silently no-op in v0.7.1 and earlier). (P1) Rewrite macOS Keychain narrative for v0.22.3+ strict mode (no silent file-backend fallback); remove non-existent `--preset recommended` warning; replace with the 25-scope Testing-mode cap caveat; remove orphan `exit 17 SHA-256 mismatch` references (SHA-256 verification was retired in v0.4.0). (P1) New OAuth-client-maintenance section: client_secret shown only once after 2025-06 Console UI update + 6-month inactivity auto-delete (30-day restore window). (P1) `auto-setup.sh` `ensure_project()` now detects `PERMISSION_DENIED` and surfaces a friendly Workspace-admin-escalation message instead of generic exit 12. (P2) Legacy rename `slides-toolkit` → `gws-toolkit` across cache path (`~/.cache/gws-toolkit/bin/`), project ID prefix (`gws-toolkit-<YYMMDD>`), env vars (`GWS_TOOLKIT_PROJECT_ID` / `GWS_TOOLKIT_BINARY_TTL_DAYS`; `SLIDES_TOOLKIT_*` retained as deprecated aliases), and 13 script-header / sub-doc references. (P2) Reframe `env-guard.sh` from "issue #119 workaround" to "BYO OAuth client mechanism" — upstream now documents `GOOGLE_WORKSPACE_CLI_CLIENT_ID/_SECRET` as the first-class External-audience BYO-client mechanism (`README §Authentication`); issue #119's underlying parsing bug was separately fixed by upstream PR #177 (merged 2026-03-05, shipped in v0.22.5). (P2) `refresh-auth.sh` header clarifies upstream has no native `gws auth refresh` subcommand — this script re-runs `gws auth login` with cached 6-scope set. Upstream pin held at `v0.22.5/705fb0ec`. Lock-step bump 0.7.1 → 0.7.2. **Because** an end-to-end audit cross-referenced our setup wrappers against (a) the upstream `googleworkspace/cli` v0.22.5 source and (b) Google's 2026 official OAuth/GCP Console docs, surfacing 10 deltas + 6 upstream changes since v0.4.0; v0.7.2 absorbs all P0+P1+P2 fixes in one patch so future v0.8.0 development starts from accurate ground truth. |
 
 ---
@@ -37,7 +41,7 @@ and is referenced by `§` number.
 ### 1.1 Delivery form
 
 CLI-style **Claude Code skill plugin**（四 skills，依 monkey-skills
-plugin convention 放在 `slides-toolkit/`）。Platform Pivot 架構
+plugin convention 放在 `gws-toolkit/`）。Platform Pivot 架構
 下的四 skill 分為兩層：
 - **Backend-agnostic layer**（通用）：`using-gws-toolkit`（router）、
   `slides-design`（knowledge）
@@ -93,7 +97,7 @@ builder skill 的獨立交付物，不改動 backend-agnostic layer。
 ### 2.1 Plugin layout（target state — Platform Pivot multi-backend）
 
 ```
-slides-toolkit/
+gws-toolkit/
 ├── .claude-plugin/
 │   └── plugin.json                # plugin manifest
 ├── PRODUCT-SPEC.md                # (existing; v0.3.2 Architectural split)
@@ -232,7 +236,7 @@ deep」規則，所有 reference files 由各自 SKILL.md 直接引用，不巢�
   污染通用層。
 - `incidents/` 目錄為 **on-demand 建立**（非預設骨架一部分）：僅在
   §8.4 incident response playbook 實際觸發時才建
-  `slides-toolkit/incidents/`，平時不佔目錄樹。
+  `gws-toolkit/incidents/`，平時不佔目錄樹。
 - `scripts/common/` 為 **預留目錄**：MVP 無跨 backend 共用 shell；Phase 2+
   第二個 backend 落地時才填入實際共用工具（見 §5.1 C12 deferred note）。
 
@@ -270,13 +274,13 @@ deep」規則，所有 reference files 由各自 SKILL.md 直接引用，不巢�
         │               │                   │
         │               ▼                   ▼
         │     ┌────────────────────────┐  ┌──────────────────────────┐
-        │     │ scripts/gws/ │  │ ~/.cache/slides-toolkit/ │
+        │     │ scripts/gws/ │  │ ~/.cache/gws-toolkit/    │
         │     │   bootstrap.sh         │  │   bin/gws                │
         │     │   (HTTPS + curl -f;    │  │   bin/jq                 │
         │     │    v0.3 無 SHA pin)     │  └──────────┬───────────────┘
         │     └────────────┬───────────┘             │
         │                  ▼                         ▼
-        │          ~/.cache/slides-         Google Slides / Drive API
+        │          ~/.cache/gws-           Google Slides / Drive API
         │          toolkit/bin/                      │
         │                                            ▼
         └─→ (read-only design knowledge; no I/O;     Google Slides URL
@@ -350,7 +354,7 @@ binary" 原則；觸發 Phase 2+ 實作時，每個 backend 在對應 builder sk
 獨立評估，**既有 `google-slides-*` skill 不受影響**（Backend pluggability
 principle，PRODUCT-SPEC §4.4 principle 6）。
 
-**Plugin license**：本 `slides-toolkit` plugin 本身採 MIT（對齊
+**Plugin license**：本 `gws-toolkit` plugin 本身採 MIT（對齊
 PRODUCT-SPEC §6.1，monkey-skills repo 整體 license）。外部 binary
 （gws / jq）license 列於上表，不變更其原 license；plugin 僅 bundle
 下載腳本（URL + version pin），不 redistribute binary。v0.3 起不再 bundle
@@ -1100,7 +1104,7 @@ Plugin root `.gitignore`：
 # the settings.json deny rule in §8.1.
 
 # binary cache
-.cache/slides-toolkit/
+.cache/gws-toolkit/
 
 # runtime artifacts
 tests/fixtures/*.drive_id.txt
@@ -1115,7 +1119,7 @@ tests/fixtures/*.local
 絕對路徑）；改由 §8.1 `settings.json` deny rule 阻擋 Claude 工具層
 對 home-dir credential 的讀取，credential-at-rest 防護責任單一化
 （ASVS V14）。上表其餘條目（`.config/gws/` / `*/keyring-file.json`
-/ `*/env.sh` / `.cache/slides-toolkit/` / `tests/fixtures/*.local`
+/ `*/env.sh` / `.cache/gws-toolkit/` / `tests/fixtures/*.local`
 等）皆為 repo-relative，符合 `.gitignore` 語意。
 
 ### 8.3 Pre-commit hook 建議
@@ -1140,7 +1144,7 @@ near-miss leak）。MVP 不強制，docs 內 recommend。
 5. **Keychain / file backend** 清掉舊 token：
    `security delete-generic-password -s gws-cli` + `rm ~/.config/gws/keyring-file.json`
 6. **Rotate** 7 天內有用到的任何衍生資源（雖然 OAuth scope 最小，仍檢查）
-7. 記 incident log 於 `slides-toolkit/incidents/YYYY-MM-DD.md`（不含 secret；`incidents/` 為 on-demand 目錄，首次觸發時建立，對齊 §2.1 無 `docs/` 的設計）
+7. 記 incident log 於 `gws-toolkit/incidents/YYYY-MM-DD.md`（不含 secret；`incidents/` 為 on-demand 目錄，首次觸發時建立，對齊 §2.1 無 `docs/` 的設計）
 
 **Because** ASVS V16 要求 audit；V14 要求 rotate-on-compromise。
 
@@ -1295,7 +1299,7 @@ MVP scope 所有現存 module 皆 READY，無 PARTIAL / BLOCKED。v0.3 總模組
 
 ---
 
-**End of TECH-SPEC.md — slides-toolkit**
+**End of TECH-SPEC.md — gws-toolkit**
 
 下一步：
 1. skill-team 依 §3 每 skill 的 I/O + deps + errors 寫 4 份 SKILL.md（每份 ≤ 6k tokens）——

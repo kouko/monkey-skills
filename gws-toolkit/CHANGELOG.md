@@ -39,6 +39,158 @@ Phased ROI:
 3. **Skipped** — `bootstrap.sh` (one-shot binary download; no
    unit-test surface worth the lines).
 
+## [0.7.3] - 2026-05-22
+
+Phase 4 close-out: hard-delete retired `slides-toolkit/` plugin
+(strangler-fig migration complete; 2-week validation window closed
+2026-05-20 with gws-toolkit having shipped 6 stable releases on top —
+v0.5.0 / v0.5.1 / v0.5.2 / v0.6.0 / v0.7.0 / v0.7.1 / v0.7.2) +
+absorb 6 round-2 audit findings v0.7.2 missed.
+
+### Removed
+
+- **`slides-toolkit/` plugin directory** — 44 files removed via
+  `git rm -r`; 26 commits of plugin history preserved in
+  `git log -- slides-toolkit/`. Marketplace entry was already
+  removed at v0.5.0 (2026-05-06) when slides-toolkit entered Phase
+  3 deprecation. v0.7.3 closes Phase 4 (hard delete) per the
+  strangler-fig rollback-vs-commit binary that v0.4.0-strangler-fig-
+  seed committed to. **MCP integration item dropped from v0.8.0
+  backlog** — upstream PR #275 (merged 2026-03-06) deliberately
+  removed `gws mcp` server mode as a BREAKING CHANGE; no
+  reinstatement on the open PR queue. Our wrappers do not need to
+  plan for MCP.
+
+### Fixed (P1)
+
+- **`slides-toolkit` dead links** in 7 places after directory
+  removal: repo-root `README.md` / `README.ja.md` / `README.zh-TW.md`
+  (plugin table row + warning bullet + directory tree) +
+  `gws-toolkit/README.md` / `README.ja.md` / `README.zh-TW.md`
+  (banner link `[\`slides-toolkit/\`](../slides-toolkit/)` reframed
+  to non-link historical reference) + `gws-toolkit/README.md`
+  Release column was still pinned at `0.7.1` (caught by round-3
+  self-audit; v0.7.2 missed updating it).
+- **`slides-toolkit` identity drift** in `gws-toolkit/TECH-SPEC.md`
+  and `gws-toolkit/PRODUCT-SPEC.md` — ~10 current-state references
+  (file title, intro, Target plugin field, ASCII tree roots,
+  incident dir, cache path in ASCII diagrams, Plugin license claim,
+  file footers) corrected to `gws-toolkit`. Historical references
+  (Revision History rows, commit-plan tables C1-C13) kept verbatim
+  because they describe actual git history. v0.7.2's legacy-rename
+  pass grep was scoped to `slides-toolkit/bin` paths only and
+  missed these bare identity strings.
+- **Granular OAuth Consent partial-grant detection** in
+  `auto-setup.sh ensure_gws_auth` — Google's 2026-01-07 Granular
+  OAuth Consent UI rollout (initially documented as Chat-apps-only
+  but actually applies to Desktop OAuth flow too — Round-2 audit
+  Agent B finding) lets users uncheck individual scopes on the
+  consent screen. `gws auth login` returns 0 even when only a
+  subset was granted; first API call against the missing scope then
+  403s. v0.7.3 adds a post-login scope diff: parse `gws auth status
+  | jq '.scopes'`, compare against the 6 requested URLs, exit 10
+  with the missing-scope list + re-run instructions if any gap.
+- **`gcloud projects create` 403-detect grep widened** — v0.7.2
+  pattern `PERMISSION_DENIED\|projectCreator` only caught the most
+  common Workspace blocker. v0.7.3 adds `FAILED_PRECONDITION`
+  (generic org-policy violation) + `folderlessProjectCreation`
+  (project parent restricted to folder; suggests `--folder=`) +
+  `projectCreationAllowedLocations` (project parent restricted to
+  specific folders/orgs). Each case gets a tailored escalation hint
+  + `GWS_TOOLKIT_PROJECT_ID=<existing-project>` skip-create fallback.
+- **`§Quota awareness` 60-day vs 90-day notice precision** — v0.7.2
+  text said "≥90 days' notice" universally. Per Google's
+  [2026-05 Agent tools and security updates](https://workspaceupdates.googleblog.com/2026/05/agent-tools-and-security-updates-for-workspace-developers.html)
+  the notice windows are: **≥60 days for quota cutover**, **≥90 days
+  for billing changes**. Different lead times, both clocks not yet
+  started as of 2026-05-22.
+
+### Added
+
+- **`§Environment variables (full inventory)` section** in
+  `gws-setup/SKILL.md` documenting all 11 upstream
+  `GOOGLE_WORKSPACE_CLI_*` env vars + standard fallbacks + 4 toolkit-
+  original env vars. v0.7.2 only documented 3 (`CLIENT_ID/_SECRET`
+  / `KEYRING_BACKEND`). New documentation surfaces:
+  - `GOOGLE_WORKSPACE_CLI_TOKEN` — pre-obtained access token for
+    CI / headless / short-lived script runs (bypasses all OAuth).
+  - `GOOGLE_WORKSPACE_CLI_LOG=gws=debug` — tracing-subscriber
+    stderr debug.
+  - `GOOGLE_WORKSPACE_CLI_LOG_FILE=<dir>` — daily-rotated JSON-line
+    persistent log files.
+  - `GOOGLE_WORKSPACE_PROJECT_ID` — `x-goog-user-project`
+    quota-attribution header override.
+  - `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` /
+    `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` — non-default paths for
+    multi-config dev work / sandboxed test runs.
+  - `GOOGLE_WORKSPACE_CLI_SANITIZE_TEMPLATE` / `_MODE` — Model
+    Armor PI sanitization (out of personal-use scope; documented
+    for completeness).
+- **macOS Keychain "Always Allow" guidance** in `gws-setup/SKILL.md
+  §macOS Keychain` — most-reported friction point in upstream
+  ([#252](https://github.com/googleworkspace/cli/issues/252)) is users
+  clicking "Allow Once" instead of "Always Allow", causing repeated
+  Keychain prompts. Documented the fix via Keychain Access →
+  `gws-cli` entry → Access Control → "Allow all applications".
+
+### Changed
+
+- `plugin.json` version `0.7.2` → `0.7.3`. Description unchanged.
+- `README.md` Status table Release column → 0.7.3 (also fixes
+  v0.7.2's missed update from 0.7.1 → 0.7.2).
+- `TECH-SPEC.md` Revision History row added.
+
+### Notes
+
+- **Upstream pin held** at `v0.22.5 / 705fb0ec` — purely additive
+  doc + grep-widening + scope-diff fixes; no code-behavior change
+  beyond the new error / warning paths.
+- **No OAuth scope changes** — the 6 scopes from v0.7.0 stay; no
+  re-consent needed.
+- **Round-2 audit sources**: same as v0.7.2 — research agents
+  cross-referencing upstream `googleworkspace/cli` v0.22.5 / 705fb0ec
+  source + Google's 2026 official OAuth / GCP Console docs (with
+  fresh queries dated 2026-05-22). Agents went deeper this round
+  on (a) `gws auth setup` Rust TUI architecture, (b) complete
+  `GOOGLE_WORKSPACE_CLI_*` env-var inventory, (c) Granular Consent
+  Desktop-flow scope-uncheck UX, (d) `gcloud projects create`
+  org-policy failure modes beyond projectCreator role, (e) Google
+  Workspace 2026-05 Agent tools announcement notice windows.
+
+### Audit findings deferred to v0.8.0 backlog (updated 2026-05-22)
+
+**Closed / dropped from v0.8.0 backlog**:
+- ~~MCP integration evaluation~~ — confirmed upstream PR #275
+  deliberately removed `gws mcp`; no reinstatement on the open PR
+  queue. Our wrappers do not need to plan for MCP.
+
+**Carried from v0.7.2 (still v0.8.0 scope)**:
+- DRY across 4 safety wrappers — extract `scripts/gws/_common.sh`.
+- Shared input-sanitization helper — `_validate.sh` (CRLF email
+  headers + USER_ENTERED formula injection).
+- bats-core test infrastructure (from v0.7.0 `[Unreleased]` backlog).
+- Vendor remaining upstream skills (6 gmail-* + sheets-read +
+  51 recipe-* + 10 persona-* + tasks + meet + people).
+- Upstream pin bump beyond v0.22.5.
+
+**Newly added to v0.8.0 backlog**:
+- **Drive scope downscoping `drive` → `drive.file`** (Round-2 audit
+  Agent B strategy finding). `tag-create.sh` already provenance-tags
+  every file we create with `appProperties.created_by =
+  "gws-toolkit"`, which is exactly what `drive.file` ACLs require.
+  Migration to non-sensitive scope removes the restricted-tier
+  verification surface entirely + shrinks blast radius if creds
+  leak. Defer to v0.8.0 because it requires re-consent (existing
+  refresh tokens get invalidated when scope set changes).
+- **Surface `gws sheets +append --range` flag** in vendored
+  `gws-sheets-append` skill cross-reference doc (upstream main is
+  1 commit ahead of v0.22.5 with this addition; current users with
+  multi-tab spreadsheets silently appended to the first tab).
+- **Re-test status parsing** after upstream PR #811 merges
+  (`gws auth status` will start surfacing env-based credential
+  overrides). Our `gws auth status | jq` parsing in v0.7.3 may
+  need a field check after the pin bump.
+
 ## [0.7.2] - 2026-05-21
 
 Audit-driven maintenance release. End-to-end cross-check against (a)

@@ -14,15 +14,14 @@
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資調査 toolkit — macro regime 診断（US/JP/TW/KR/CN）、DCF、screener、primary source adapter 経由の equity snapshot。 |
 | [`copywriting-toolkit`](copywriting-toolkit/) | 1.14.0 | 14 | 1 | Pipeline 構造の copywriting — intake、ideation、ネタ投入、5 種の form 別 drafter、voice 配置、ethics + form gate、audit。 |
-| [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides 生成 toolkit — `gws` 経由の template ベース deck pipeline、backend 非依存の design 知識、Platform-Pivot 構成。 |
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — Kobo の積読 e-book を RIA-TV++ distillation pipeline で実行可能な agent skill 群に変換。 |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | コードリポジトリ向け LLM Wiki Pattern — git 履歴から `.repo-wiki/` を seed (init)、変更/コンテキスト/外部ドキュメントから成長 (ingest, polymorphic)、`src/` への verification 付きで query (Eager triggers + segmented output)。 |
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | 制作物（コピー / ドキュメント / UI / 論証 / 製品 / 組織）を逆向きに分解し、設計判断・借用フレームワーク・修辞メカニズム・意図的な省略を可視化。Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman に紐付け、EN/JA/ZH 文化バリアント（Hinds 起承転結 / 劉勰《文心雕龍》六観 / Hu/Hwang 面子・関係）。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。 |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server を Claude Code plugin 化 — brew-first installer、read-only な SOQL query（data toolset のみ）。macOS のみ。⚠️ Claude Code CLI 限定 — Cowork sandbox 非対応。 |
 
-**合計**：89 skill、42 slash command（11 plugin 横断）。
+**合計**：84 skill、42 slash command（表に並ぶのは 10 plugin；marketplace は 18 plugin 出荷中 — 表は完全同期前。権威ソースは [`marketplace.json`](.claude-plugin/marketplace.json)）。
 
-> 各 plugin の description で ⚠️ が付いているもの（`investing-toolkit`、`slides-toolkit`、`tsundoku`、`salesforce-toolkit`、および `obsidian` 内の `defuddle` skill）は Claude Code CLI 環境を要求します — Cowork sandbox は外部 network 通信や subprocess 実行を遮断します。
+> 各 plugin の description で ⚠️ が付いているもの（`investing-toolkit`、`tsundoku`、`salesforce-toolkit`、および `obsidian` 内の `defuddle` skill）は Claude Code CLI 環境を要求します — Cowork sandbox は外部 network 通信や subprocess 実行を遮断します。
 
 ## インストール
 
@@ -64,7 +63,6 @@ monkey-skills/
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin
 ├── copywriting-toolkit/          # plugin
-├── slides-toolkit/               # plugin
 ├── tsundoku/                     # plugin
 ├── repo-wiki/                    # plugin
 ├── deconstruct-toolkit/          # plugin

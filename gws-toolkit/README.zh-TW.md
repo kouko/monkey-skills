@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> ✅ **Phase 1 穩定（2026-05-06）。** [`slides-toolkit/`](../slides-toolkit/) 的後繼者，2026-05-04 用 strangler-fig 模式 fork。Phase 1（vendor 5 個 upstream skill + α-trim + 重命名 + OAuth scope 升級 + Drive 安全 wrapper + 帳號切換）以 4 條驗證基準全綠收尾：≥ 1 份 deck 端到端產出（108 秒，KR1 ≤ 180 秒）、≥ 1 個 ad-hoc Drive 操作透過 vendored `gws-drive`、≥ 1 個破壞性操作透過三層 `safe-delete.sh`、KR1 無 regression。`slides-toolkit` 進入 Phase 3 deprecated 並從 plugin marketplace 下架；既有安裝照常運作，新使用者請改裝本 plugin。與 Google 無關。
+> ✅ **Phase 1 穩定（2026-05-06）。** 已退役 `slides-toolkit/` plugin 的後繼者，2026-05-04 用 strangler-fig 模式 fork（歷史保留於 `git log`）。Phase 1（vendor 5 個 upstream skill + α-trim + 重命名 + OAuth scope 升級 + Drive 安全 wrapper + 帳號切換）以 4 條驗證基準全綠收尾：≥ 1 份 deck 端到端產出（108 秒，KR1 ≤ 180 秒）、≥ 1 個 ad-hoc Drive 操作透過 vendored `gws-drive`、≥ 1 個破壞性操作透過三層 `safe-delete.sh`、KR1 無 regression。`slides-toolkit` 於 2 週驗證期 + gws-toolkit 6 個 release 穩定後，v0.7.3（2026-05-22）硬刪除。與 Google 無關。
 
 > 透過 Claude Code skill 從 brief 一鍵生成 Google Workspace 製品（Slides / Docs / Sheets / Drive）。純 shell + `gws` CLI，免 Python / gcloud。
 
@@ -16,7 +16,7 @@
 ## Background
 
 固定產出 Google Slides deck 的工作中，機械性勞動佔很大比重 ——
-文字替換、圖片 upload、placeholder 對位。`slides-toolkit` 把這層
+文字替換、圖片 upload、placeholder 對位。`gws-toolkit` 把這層
 重複勞動 skill 化，讓時間與注意力落在內容與 design 判斷上，而不
 是 deck 配管。
 
@@ -244,7 +244,7 @@ credential 檔：
 .config/gws/
 */keyring-file.json
 */env.sh
-.cache/slides-toolkit/
+.cache/gws-toolkit/
 ```
 
 `.gitignore` 無法 match `~/.config/gws/**`（git 只用 repo-relative

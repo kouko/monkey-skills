@@ -264,7 +264,7 @@ trigger-gated。**Because** 個人使用閉環下，template 管理 overhead 大
 **MVP 不涵蓋**（見 §3.2 Non-Goals、§9.2 Future Phases）
 
 **Build-Measure-Learn loop in this MVP**
-- Build → `slides-toolkit` MVP 四 skill
+- Build → `gws-toolkit` MVP 四 skill（原 `slides-toolkit` MVP，2026-05-04 strangler-fig fork 後改名）
 - Measure → kouko 實產 deck 時間、實測首次設定時間、fallback 次數、
   **Google 預設 layout 能否覆蓋 ≥ 80% kouko 實際場景**（見
   `[ASSUMPTION-2]` revalidation）
@@ -518,7 +518,7 @@ to Phase 2+（Tufte, Cleveland, Few 等深度 reference 是 trigger-gated）。
 **Platform 架構（MVP = 1 個 backend；Phase 2+ = 可插拔多 backend）**
 
 ```
-slides-toolkit (plugin root)
+gws-toolkit (plugin root)
 ├── PRODUCT-SPEC.md                      # 本檔（planning-team 擁有）
 ├── TECH-SPEC.md                         # 技術規格（code-team 擁有）
 ├── README.md                            # plugin 入口文件
@@ -850,7 +850,7 @@ issue #119 workaround 穩定）。
 
 ---
 
-**End of PRODUCT-SPEC.md — slides-toolkit**
+**End of PRODUCT-SPEC.md — gws-toolkit**
 
 下一步：code-team 依本 spec §6.3 + §8 Open Questions 產出 `TECH-SPEC.md`；
 skill-team 依 §4 §5 §6 產出 4 份 SKILL.md。

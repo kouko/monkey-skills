@@ -50,9 +50,11 @@ verification was retired in v0.4.0 — see TECH-SPEC §2.3).
 
 Google rolled out a new Gmail / Calendar API quota (クォータ / 配額)
 schedule on **2026-05-01**, with potential billing (課金 / 計費)
-arriving later in 2026 ("at least 90 days' notice before changes take
-effect"). Whether your GCP project is affected depends on when it
-first saw API traffic:
+arriving later in 2026. Notice windows per Google's [2026-05 Agent
+tools and security updates](https://workspaceupdates.googleblog.com/2026/05/agent-tools-and-security-updates-for-workspace-developers.html):
+**≥ 60 days' notice for quota cutover**, **≥ 90 days' notice before
+billing changes take effect**. Whether your GCP project is affected
+depends on when it first saw API traffic:
 
 - Projects with API usage between **Nov 2025 and Apr 2026** are
   **grandfathered (旧基準維持 / 沿用舊額度)** to the old quotas — this
@@ -61,15 +63,19 @@ first saw API traffic:
 - Projects **created on/after 2026-05-01** (new marketplace users
   doing first-time `/gws-setup`) are subject to the new quota
   schedule and the upcoming billing change.
-- Gmail per-user limits: **250 quota units/user/second** moving
-  average; **2,000 messages/day** per Workspace user; **500
-  recipients/message**.
-- Calendar per-project limits: **1,000,000 queries/day**; transient
+- Gmail per-project limits (post-2026-05-01): **80,000,000 quota
+  units/day/project**. Per-user limits: **250 quota units/user/second**
+  moving average; **2,000 messages/day** per Workspace user;
+  **500 recipients/message**.
+- Calendar per-project limits: **1,000,000 requests/day**; transient
   `429` rate-limit errors are handled transparently by `gws-wrap.sh`'s
   exponential backoff (5s / 10s / 20s). `403` is treated as a scope /
   auth error (exit 10) — in Workspace contexts `403` typically signals
   missing OAuth scope rather than transient throttling, so re-run
   `gws-setup` instead of waiting for backoff.
+- Google's framing: *"less than 1% of active Workspace developers
+  will need to move beyond our standard usage tiers"* (the 2026-05
+  announcement above).
 
 Authoritative references:
 
@@ -235,6 +241,60 @@ correct `~/` permissions this stays within ASVS V14 L1.
 **Do not set `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` by default
 on a personal machine** — that violates rule 5 of
 `standards/credential-hygiene.md`.
+
+**Always Allow prompt** — first `gws auth login` triggers a macOS
+Keychain access prompt. By default you'll see *"Allow"* and *"Always
+Allow"*. **Choose Always Allow.** "Allow Once" makes Keychain re-prompt
+on every subsequent call (~once per minute under busy use) and is one
+of the most-reported friction points in upstream's tracker. If you
+already clicked "Allow Once" by mistake, fix it via Keychain Access:
+
+1. Open `Keychain Access.app` (Spotlight: "Keychain")
+2. Search for `gws-cli` in the top-right search box
+3. Right-click the entry → **Get Info** → **Access Control** tab
+4. Select **"Allow all applications to access this item"** → **Save Changes**
+5. macOS asks for your login password to confirm; enter it
+
+Upstream issue: [googleworkspace/cli #252](https://github.com/googleworkspace/cli/issues/252).
+
+### Environment variables (full inventory)
+
+`gws` v0.22.5 honors 11 `GOOGLE_WORKSPACE_CLI_*` env vars plus
+standard fallbacks. Our wrappers manage the first 3 automatically;
+the rest are opt-in.
+
+**Managed by `auto-setup.sh` / `env-guard.sh`** (set in `~/.config/gws/env.sh`):
+
+| Env var | Used for |
+|---|---|
+| `GOOGLE_WORKSPACE_CLI_CLIENT_ID` | BYO OAuth client ID (External-audience requirement) |
+| `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET` | Paired client secret |
+| `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND` | `file` opt-in (see §macOS Keychain above) |
+
+**Opt-in / situational** (set yourself when needed):
+
+| Env var | When to set |
+|---|---|
+| `GOOGLE_WORKSPACE_CLI_TOKEN` | Skip OAuth entirely with a pre-obtained access token — useful for short-lived CI / scripted runs. Highest priority; bypasses all other auth paths. |
+| `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` | Point at a non-default OAuth/Service-Account JSON. Override for multi-config dev work. |
+| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` | Move the config dir away from `~/.config/gws/`. Useful for sandboxed test runs that should not touch your real creds. |
+| `GOOGLE_WORKSPACE_CLI_LOG=gws=debug` | Enable tracing-subscriber stderr debug logging. Great for diagnosing "why is this gws call hanging" without a strace session. |
+| `GOOGLE_WORKSPACE_CLI_LOG_FILE=<dir>` | Write daily-rotated JSON-line log files to the directory. Pair with `GOOGLE_WORKSPACE_CLI_LOG=` for persistent debug trace. |
+| `GOOGLE_WORKSPACE_PROJECT_ID` | Override `x-goog-user-project` quota-attribution header. Useful when your client_secret.json points at one project but you want API quota charged to another. |
+| `GOOGLE_WORKSPACE_CLI_SANITIZE_TEMPLATE` / `_MODE` | Model Armor PI sanitization (template name + `warn`/`block`). Out of scope for personal gws-toolkit use; documented for completeness. |
+| `GOOGLE_WORKSPACE_PROJECT_ID` | Override quota-attribution header (`x-goog-user-project`). |
+
+Plus standard fallbacks gws honors: `GOOGLE_APPLICATION_CREDENTIALS`
+(ADC path), `NO_COLOR` (suppress ANSI codes).
+
+**Toolkit-original env vars** (consumed by our wrapper scripts):
+
+| Env var | Effect |
+|---|---|
+| `GWS_TOOLKIT_PROJECT_ID` | Override the default `gws-toolkit-<YYMMDD>` project ID in `auto-setup.sh` (also accepts deprecated `SLIDES_TOOLKIT_PROJECT_ID` from v0.4.0 era). |
+| `GWS_TOOLKIT_BINARY_TTL_DAYS` | Override the 30-day auto-refresh threshold in `bootstrap.sh` (also accepts deprecated `SLIDES_TOOLKIT_BINARY_TTL_DAYS`). |
+| `GWS_TOOLKIT_SCOPES` | Override the 6-URL scope set in `refresh-auth.sh`. |
+| `GWS_VERSION` | Pin a specific `gws` release tag (disables auto-refresh in `bootstrap.sh`). |
 
 ### OAuth client maintenance (Google 2025-06 Console changes)
 
