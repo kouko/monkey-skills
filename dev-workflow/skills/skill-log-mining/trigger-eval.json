@@ -1,0 +1,15 @@
+[
+  {"query": "I've burned through a lot of code-toolkit PRs lately — what can I learn from the JSONL logs about which skills missed-trigger?", "should_trigger": true},
+  {"query": "Mine my Claude Code session logs to find friction patterns in skill brief-before-asking and propose SKILL.md edits", "should_trigger": true},
+  {"query": "Distill MEMORY.md friction memos into concrete SKILL.md edit proposals for dev-workflow skills", "should_trigger": true},
+  {"query": "Analyze ~/.claude/projects/ JSONL transcripts to figure out which dev-workflow skills need iteration this week", "should_trigger": true},
+  {"query": "技能ログから知見を蒸留して既存 SKILL.md の description / body 改善提案を出してほしい", "should_trigger": true},
+  {"query": "ここ最近の PR から code-toolkit の活性化漏れパターンを見つけて skill を改善したい", "should_trigger": true},
+  {"query": "從 JSONL transcript 挖掘 skill iteration 機會，產生 dev-workflow:* 的 SKILL.md edit proposal", "should_trigger": true},
+  {"query": "把累積在 MEMORY.md 的 friction memo 整理成具體的 SKILL.md 修改提案", "should_trigger": true},
+  {"query": "Coach me in real time while I'm coding — interrupt me when I'm about to make a mistake", "should_trigger": false},
+  {"query": "Discover new skills I might want to create from clustering my recent prompts", "should_trigger": false},
+  {"query": "Show me the /insights report for the last 30 days of skill activations", "should_trigger": false},
+  {"query": "Score this SKILL.md against the 8-dimension skill-judge rubric and tell me where it loses points", "should_trigger": false},
+  {"query": "Run an A/B test on three different phrasings of this skill description and let me pick which one feels best", "should_trigger": false}
+]
