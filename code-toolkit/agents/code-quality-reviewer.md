@@ -124,6 +124,7 @@ Paths under `subagent-driven-development/`:
 - tests → `standards/tdd-standard.md`
 - refactoring → `standards/refactoring-standard.md` +
   `standards/pragmatic-principles.md`
+- external-surface-grounding → `standards/external-surface-grounding.md`
 
 ## Cite-on-fire discipline
 
@@ -286,9 +287,10 @@ dimension_scores:
   naming: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION
+  external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 flags:                           # one entry per concern; order does not matter
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
-    dimension: security | architecture | correctness | naming | tests | refactoring
+    dimension: security | architecture | correctness | naming | tests | refactoring | external-surface-grounding
     where: "{file:line or commit SHA}"
     source: "{rubric / checklist / standard file:section that triggered this flag}"
     note: "{1-2 sentence description}"
@@ -329,6 +331,19 @@ informational only.
 | naming | `standards/naming-and-functions.md` |
 | tests | `standards/tdd-standard.md` (F.I.R.S.T, Three Laws, anti-patterns) — verify failing-then-passing evidence exists |
 | refactoring | `standards/refactoring-standard.md` + `standards/pragmatic-principles.md` |
+| external-surface-grounding | `standards/external-surface-grounding.md` — verify every external-surface call in this task's diff carries a grounding cite |
+
+#### D7 — External Surface Grounding (per-task scope)
+
+The agent has no author authority over external surfaces — third-party HTTP APIs, third-party packages (npm / pip / cargo), MCP server tools, CLI binaries, internal sibling-team contracts. Calling them without verifying their current shape is the failure mode this dimension catches. See `standards/external-surface-grounding.md` for the rule, the 5 surface categories, the 4 grounding sources (Live verification / MCP schema / Pinned reference / In-repo evidence), and the anti-patterns.
+
+**Severity calibration** (per §Resolved Decisions Q4 of the brief `docs/code-toolkit/specs/2026-05-22-external-surface-grounding-discipline.md`):
+
+- 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** in this task's diff lacks a grounding cite in the test docstring / commit message / PR body. Implementer fixes on re-dispatch.
+- 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite. Lower severity than the four external categories because sibling-team contracts are harder to objectively audit; the whole-branch reviewer carries the harder cross-task version.
+- 🟢 **Nit**: the grounding cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available in this session — flag for next-touch opportunity to anchor on the higher-fidelity source.
+
+**Scope** (per §Resolved Decisions Q3): D7 evaluates **this task's artifact only**. Cross-task surface-consistency checks (sibling tasks calling the same surface with conflicting parameter shapes / version pins / endpoints) are **out of scope for per-task review** and live in whole-branch `code-reviewer.md` D7. Per-task reviewer is structurally blind to sibling tasks.
 
 ### Anti-patterns the orchestrator will reject
 

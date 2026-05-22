@@ -124,6 +124,7 @@ Paths under `subagent-driven-development/`:
 - tests → `standards/tdd-standard.md`
 - refactoring → `standards/refactoring-standard.md` +
   `standards/pragmatic-principles.md`
+- external-surface-grounding → `standards/external-surface-grounding.md`
 
 ## Cite-on-fire discipline
 

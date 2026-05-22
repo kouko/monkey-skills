@@ -128,6 +128,7 @@ Paths under `subagent-driven-development/`:
 - tests → `standards/tdd-standard.md`
 - refactoring → `standards/refactoring-standard.md` +
   `standards/pragmatic-principles.md`
+- external-surface-grounding → `standards/external-surface-grounding.md`
 
 ## Cite-on-fire discipline
 
@@ -300,10 +301,11 @@ dimension_scores:
   tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   cross-task-coherence: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # whole-branch scope only
+  external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # mirrors per-task D7 + adds cross-task surface-consistency 🟡
 
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
-    dimension: security | architecture | correctness | naming | tests | refactoring | cross-task-coherence
+    dimension: security | architecture | correctness | naming | tests | refactoring | cross-task-coherence | external-surface-grounding
     where: <file:line OR commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
@@ -341,6 +343,20 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 | tests | `standards/tdd-standard.md` — branch-scope: is every shipped behavior covered by failing-then-passing test commits? F.I.R.S.T properties hold for the suite as a whole? |
 | refactoring | `standards/refactoring-standard.md` + `standards/pragmatic-principles.md` — Rule of Three at branch scope (3 tasks doing similar thing → extract) |
 | **cross-task-coherence** | **Branch-only dimension.** Look for: inconsistent abstractions across tasks; duplicated logic that survived per-task review because each task saw only its slice; tasks that introduce dependencies on each other in non-obvious ways; scope creep (task did more than its name suggested) |
+| **external-surface-grounding** | `standards/external-surface-grounding.md` — mirrors per-task D7 (HTTP API / SDK / MCP / CLI / sibling-team contract calls need grounding cites) AND adds the whole-branch-only cross-task-conflict check |
+
+#### D7 — External Surface Grounding (whole-branch + cross-task)
+
+The agent has no author authority over external surfaces — third-party HTTP APIs, third-party packages, MCP server tools, CLI binaries, internal sibling-team contracts. Whole-branch scope adds the **cross-task surface-consistency check** that per-task reviewers cannot perform. See `standards/external-surface-grounding.md` for the rule, the 5 surface categories, the 4 grounding sources, and the anti-patterns.
+
+**Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md` per §Resolved Decisions Q4 of the brief `docs/code-toolkit/specs/2026-05-22-external-surface-grounding-discipline.md`, PLUS the cross-task 🟡 unique to whole-branch):
+
+- 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** anywhere in the branch lacks a grounding cite.
+- 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (per Q4 — lower severity because sibling-team contracts are harder to objectively audit at review time).
+- 🟡 **Should-fix SHOULD (whole-branch only)**: **two or more tasks in this branch call the SAME external surface with CONFLICTING parameter shapes / version pins / endpoints / output expectations**. Per-task reviewers could not see this; the whole-branch reviewer owns it. Cite both task numbers and the conflicting lines in `where`.
+- 🟢 **Nit**: cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available — next-touch opportunity to anchor on higher-fidelity source.
+
+**Scope** (per §Resolved Decisions Q3): this dimension's cross-task-conflict check (the second 🟡 above) is **whole-branch reviewer's exclusive responsibility** — per-task `code-quality-reviewer.md` is structurally blind to sibling tasks and that 🟡 will never fire there.
 
 ## Anti-patterns the orchestrator will reject
 
