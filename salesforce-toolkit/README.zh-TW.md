@@ -13,7 +13,7 @@
 - **SOQL 查詢** — 透過上游 `run_soql_query` MCP tool 跑自然語言 SOQL：列出 object、抓 record、過濾、聚合、走訪父子關聯
 - **真正的唯讀** — 只啟用 `data` MCP toolset（唯一 tool：`run_soql_query`）；不做 Apex deploy、metadata push、user CRUD。`metadata` toolset 因為內含 `deploy_metadata`（會寫入 org）而 **刻意不啟用**
 
-v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）— vendor 維護、schema-aware 的工具表面,沒有第三方 query DSL 漂移問題。Salesforce Report / Dashboard tool 目前上游 MCP 並未提供;若日後上游補上,再排進 Phase 2+。
+v0.1.1 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://github.com/salesforcecli/mcp)、Apache-2.0、2026 GA）— vendor 維護、schema-aware 的工具表面,沒有第三方 query DSL 漂移問題。Salesforce Report / Dashboard tool 目前上游 MCP 並未提供;若日後上游補上,再排進 Phase 2+。
 
 ## 快速開始
 
@@ -65,7 +65,7 @@ v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://
 | Component | Source | 角色 |
 |---|---|---|
 | [`sf` CLI](https://developer.salesforce.com/tools/salesforcecli) | `brew install sf` | Salesforce DX CLI — 提供 OAuth（`sf org login web`）、org / alias 管理、token 快取 |
-| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 Salesforce tool（data / metadata / orgs / users / code-analyzer toolsets）;v0.1.0 為了真正唯讀只啟用 `data` toolset（唯一 tool：`run_soql_query`）。brew formula 名為 `salesforce-mcp`,但實際安裝的 binary 是 `sf-mcp-server`（npm 套件 `@salesforce/mcp` 也是 ship 同一個 binary） |
+| [`salesforce-mcp`](https://github.com/salesforcecli/mcp) | `brew install salesforce-mcp`（Apache-2.0） | MCP server,暴露 Salesforce tool（data / metadata / orgs / users / code-analyzer toolsets）;v0.1.1 為了真正唯讀只啟用 `data` toolset（唯一 tool：`run_soql_query`）。brew formula 名為 `salesforce-mcp`,但實際安裝的 binary 是 `sf-mcp-server`（npm 套件 `@salesforce/mcp` 也是 ship 同一個 binary） |
 | [`bin/sf-mcp-launcher.sh`](bin/sf-mcp-launcher.sh) | plugin 內建 shim | Launcher：優先使用 PATH 上的 `sf-mcp-server` binary,沒有的話 fallback 到 `npx -y @salesforce/mcp`;兩條路徑都不通時印出 `sf-setup` 提示 |
 | Homebrew | https://brew.sh | macOS 套件管理器 — 如果沒裝,`sf-setup` 會自動安裝（會有 y/N 確認） |
 | Node ≥ 26（傳遞依賴） | Homebrew 依賴 | `sf-mcp-server` binary 的執行環境 |
@@ -82,7 +82,7 @@ v0.1.0 包裝上游的 Salesforce DX MCP server（[`salesforcecli/mcp`](https://
 | Browser | Chrome 或 Safari（`sf org login web` 過程中需要一次） |
 | Salesforce org | 可以透過瀏覽器 OAuth 登入的 Production、Sandbox、Scratch 或 Developer Edition org。非 Production org 請透過 `--instance-url=` 傳給 `sf-setup`。 |
 
-**不需要**：Python、uv、gcloud、自建的 Connected App。v0.1.0 使用 `sf` CLI 內附的 public OAuth client。
+**不需要**：Python、uv、gcloud、自建的 Connected App。v0.1.1 使用 `sf` CLI 內附的 public OAuth client。
 
 ## token 過期時的重新認證
 
