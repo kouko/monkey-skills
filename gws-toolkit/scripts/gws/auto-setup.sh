@@ -346,17 +346,34 @@ ensure_project() {
     # surface a friendly admin-escalation message instead of generic exit 12.
     local create_stderr="${TMPDIR:-/tmp}/auto-setup-create-$$.err"
     if ! gcloud projects create "${PROJECT_ID}" --name="gws-toolkit" 2>"${create_stderr}"; then
-      # 403 / PERMISSION_DENIED → Workspace user without projectCreator role
-      # (Google Cloud Resource Manager docs: roles/resourcemanager.projectCreator
-      # required at org level for non-admin Workspace users).
-      if grep -qE 'PERMISSION_DENIED|403|projectCreator' "${create_stderr}"; then
-        local err_msg
-        err_msg="$(cat "${create_stderr}")"
-        rm -f "${create_stderr}"
-        die_json 12 "gcloud projects create denied (PERMISSION_DENIED): your Workspace account lacks roles/resourcemanager.projectCreator at the org level. Ask your Workspace admin to grant it, OR use GWS_TOOLKIT_PROJECT_ID=<existing-project-id> to point at a project you already have access to. gcloud stderr: ${err_msg}"
-      fi
-      cat "${create_stderr}" >&2
+      # Workspace / org-policy failure-mode discrimination — different
+      # error patterns get different actionable hints (per v0.7.3 audit
+      # broadening; v0.7.2 only caught the projectCreator role case).
+      local err_msg
+      err_msg="$(cat "${create_stderr}")"
       rm -f "${create_stderr}"
+      # Case 1: missing projectCreator role at org level (most common
+      # Workspace-user blocker; PERMISSION_DENIED + 403 status).
+      if grep -qE 'PERMISSION_DENIED|projectCreator' <<<"${err_msg}"; then
+        die_json 12 "gcloud projects create denied (PERMISSION_DENIED): your Workspace account lacks roles/resourcemanager.projectCreator at the org level. Ask your Workspace admin to grant it (or roles/resourcemanager.projectCreator at a specific folder), OR use GWS_TOOLKIT_PROJECT_ID=<existing-project-id> to point at a project you already have access to. gcloud stderr: ${err_msg}"
+      fi
+      # Case 2: folderlessProjectCreation org policy (Workspace org
+      # requires every project under a specific folder; FAILED_PRECONDITION).
+      if grep -qE 'folderlessProjectCreation' <<<"${err_msg}"; then
+        die_json 12 "gcloud projects create denied (folderlessProjectCreation org policy): your Workspace org requires projects to live under a specific folder. Re-run with --folder=<folder-id>: gcloud projects create ${PROJECT_ID} --folder=<folder-id> --name=gws-toolkit. Ask your Workspace admin for the folder ID. gcloud stderr: ${err_msg}"
+      fi
+      # Case 3: projectCreationAllowedLocations org policy (project
+      # parent restricted to specific folders / orgs; FAILED_PRECONDITION).
+      if grep -qE 'projectCreationAllowedLocations' <<<"${err_msg}"; then
+        die_json 12 "gcloud projects create denied (projectCreationAllowedLocations org policy): your Workspace admin has restricted where new projects can be created. Ask which folder / org is allowed and pass --folder=<folder-id> or --organization=<org-id>. gcloud stderr: ${err_msg}"
+      fi
+      # Case 4: generic FAILED_PRECONDITION (other org-policy violation;
+      # surface raw stderr so admin can identify the constraint).
+      if grep -qE 'FAILED_PRECONDITION' <<<"${err_msg}"; then
+        die_json 12 "gcloud projects create denied (FAILED_PRECONDITION — org policy violation): some Workspace org policy is blocking project creation. Read the stderr below to identify the constraint, then escalate to your Workspace admin OR set GWS_TOOLKIT_PROJECT_ID=<existing-project-id> to skip create. gcloud stderr: ${err_msg}"
+      fi
+      # Fallback: unknown failure (network / billing / name collision).
+      printf '%s\n' "${err_msg}" >&2
       die_json 12 "gcloud projects create failed for ${PROJECT_ID}"
     fi
     rm -f "${create_stderr}"
@@ -797,6 +814,34 @@ ensure_gws_auth() {
   if ! "${gws_bin}" auth login \
       --scopes="${SLIDES_SCOPE},${DRIVE_SCOPE},${DOCS_SCOPE},${SHEETS_SCOPE},${GMAIL_SCOPE},${CALENDAR_SCOPE}"; then
     die_json 10 "gws auth login failed"
+  fi
+
+  # Granular-consent partial-grant detect (v0.7.3 audit — Agent B finding).
+  # Since Google's 2026-01 Granular OAuth Consent rollout, Desktop OAuth users
+  # can uncheck individual scopes on the consent screen. `gws auth login`
+  # returns 0 even when only a subset was granted; the first API call against
+  # the missing scope then 403s. We diff `gws auth status .scopes` against
+  # the 6 requested URLs and surface any gap proactively.
+  local jq_bin status_json granted_scopes missing_scopes
+  jq_bin="$(command -v jq || printf '%s/jq' "${CACHE_BIN_DIR}")"
+  if [[ -x "${jq_bin}" ]]; then
+    status_json="$("${gws_bin}" auth status 2>/dev/null | sed -n '/^{/,$p' || printf '{}')"
+    granted_scopes="$(printf '%s' "${status_json}" | "${jq_bin}" -r '.scopes // [] | join(" ")' 2>/dev/null || printf '')"
+    missing_scopes=""
+    for scope in "${SLIDES_SCOPE}" "${DRIVE_SCOPE}" "${DOCS_SCOPE}" "${SHEETS_SCOPE}" "${GMAIL_SCOPE}" "${CALENDAR_SCOPE}"; do
+      if [[ " ${granted_scopes} " != *" ${scope} "* ]]; then
+        missing_scopes="${missing_scopes}  - ${scope}"$'\n'
+      fi
+    done
+    if [[ -n "${missing_scopes}" ]]; then
+      printf '\n[auto-setup] ⚠ Partial-scope grant detected (Google 2026-01 Granular Consent UI).\n' >&2
+      printf '[auto-setup]   You appear to have unchecked one or more scopes during consent:\n' >&2
+      printf '%s' "${missing_scopes}" >&2
+      printf '[auto-setup]   Affected gws-toolkit features will return 403 at first API call.\n' >&2
+      printf '[auto-setup]   Fix: re-run /gws-setup (or `bash scripts/gws/refresh-auth.sh`)\n' >&2
+      printf '[auto-setup]         and tick ALL boxes on the consent screen this time.\n\n' >&2
+      die_json 10 "gws auth login granted partial scope set; see missing scopes above"
+    fi
   fi
 }
 

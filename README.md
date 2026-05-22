@@ -14,15 +14,14 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF, screener, equity snapshots via primary-source adapters. |
 | [`copywriting-toolkit`](copywriting-toolkit/) | 1.14.0 | 14 | 1 | Pipeline-structured copywriting — intake, ideation, neta injection, 5 form-specific drafters, voice positioning, ethics + form gates, audit. |
-| [`slides-toolkit`](slides-toolkit/) | 0.1.0-mvp | 5 | 0 | Google Slides generation toolkit — template-based deck pipeline via `gws`, backend-agnostic design knowledge, Platform-Pivot architecture. |
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | LLM Wiki Pattern for code repos — seed `.repo-wiki/` from git history (init), grow from changes / context / external docs (ingest, polymorphic), query with verification against `src/` (Eager triggers + segmented output). |
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, intentional omissions. Grounded in Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman, with EN/JA/ZH cultural-variant lenses (Hinds kishōtenketsu / 劉勰《文心雕龍》六觀 / Hu/Hwang face-and-favor). BCG「バリュー・チェーンの脱構築」系譜. |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported. |
 
-**Totals:** 89 skills and 42 slash commands across 11 plugins.
+**Totals:** 84 skills and 42 slash commands across 10 plugins listed (the marketplace ships 18 — table not yet fully synced; see [`marketplace.json`](.claude-plugin/marketplace.json) for the authoritative list).
 
-> Plugins marked ⚠️ in their own description (`investing-toolkit`, `slides-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
+> Plugins marked ⚠️ in their own description (`investing-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
 
 ## Install
 
@@ -64,7 +63,6 @@ monkey-skills/
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin
 ├── copywriting-toolkit/          # plugin
-├── slides-toolkit/               # plugin
 ├── tsundoku/                     # plugin
 ├── repo-wiki/                    # plugin
 ├── deconstruct-toolkit/          # plugin

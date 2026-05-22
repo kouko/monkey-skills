@@ -1,6 +1,6 @@
 {
   "name": "gws-toolkit",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Generic Google Workspace toolkit on the official googleworkspace/cli (gws) — drive / docs / slides / sheets / gmail / calendar + setup automation + write-safety wrappers + design knowledge (Minto / SCQA / chart selection). ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
   "author": {
     "name": "kouko",

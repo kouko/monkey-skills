@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> ✅ **Phase 1 安定（2026-05-06）。** [`slides-toolkit/`](../slides-toolkit/) の後継として 2026-05-04 に strangler-fig fork で seed。Phase 1（upstream 5 skill vendor + α-trim + リネーム + OAuth scope 拡張 + Drive 安全 wrapper + アカウント切替）は検証 4 基準すべて green でクローズ：deck エンドツーエンド生成 ≥ 1 件（108 秒、KR1 ≤ 180 秒）、vendored `gws-drive` 経由の ad-hoc Drive 操作 ≥ 1 件、三層 `safe-delete.sh` 経由の破壊的操作 ≥ 1 件、KR1 regression なし。`slides-toolkit` は Phase 3 deprecated となり plugin marketplace から削除されました。既存導入は動作継続；新規ユーザーは本 plugin へ。Google とは無関係。
+> ✅ **Phase 1 安定（2026-05-06）。** 廃止された `slides-toolkit/` plugin の後継として 2026-05-04 に strangler-fig fork で seed（履歴は `git log` 保存）。Phase 1（upstream 5 skill vendor + α-trim + リネーム + OAuth scope 拡張 + Drive 安全 wrapper + アカウント切替）は検証 4 基準すべて green でクローズ：deck エンドツーエンド生成 ≥ 1 件（108 秒、KR1 ≤ 180 秒）、vendored `gws-drive` 経由の ad-hoc Drive 操作 ≥ 1 件、三層 `safe-delete.sh` 経由の破壊的操作 ≥ 1 件、KR1 regression なし。`slides-toolkit` は 2 週間の検証期間が gws-toolkit の 6 リリース安定で完了した後、v0.7.3（2026-05-22）でハード削除しました。Google とは無関係。
 
 > Brief から Google Workspace artifacts（Slides / Docs / Sheets / Drive）を Claude Code skill で生成。pure shell + `gws` CLI、Python / gcloud 不要。
 
@@ -18,7 +18,7 @@
 
 Google Slides deck を継続的に作成する作業には、機械的な要素が大き
 な比重を占める — 文字差し替え、画像 upload、placeholder の位置合
-わせ。`slides-toolkit` はこの繰り返し layer を skill 化し、残った
+わせ。`gws-toolkit` はこの繰り返し layer を skill 化し、残った
 時間を deck 配管ではなく内容と design 判断に向けるためのものです。
 
 設計は **Platform Pivot architecture**（PRODUCT-SPEC v0.2）に従い
@@ -256,7 +256,7 @@ credential store に触れる Read / Bash / Write をすべて deny：
 .config/gws/
 */keyring-file.json
 */env.sh
-.cache/slides-toolkit/
+.cache/gws-toolkit/
 ```
 
 `.gitignore` は `~/.config/gws/**` には match できません（git は
