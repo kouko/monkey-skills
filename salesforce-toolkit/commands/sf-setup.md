@@ -297,7 +297,9 @@ Window 10 (4:30-5:00): poll × 6     → if Connected, exit; else timeout handle
 
 **Between every window, emit a progress line so the user knows you're still alive**:
 
-> ⏳ Still waiting for OAuth completion... 30s elapsed (5 min max). If the browser tab didn't open, see Troubleshooting §"Browser didn't auto-open".
+> ⏳ Still waiting for OAuth completion... `<Ns>` elapsed (5 min max). If the browser tab didn't open, see Troubleshooting §"Browser didn't auto-open".
+
+Substitute `<Ns>` with the actual elapsed seconds at each window boundary (`30s`, `60s`, `90s`, ...).
 
 After **window 2 (60s)** add a hint:
 
@@ -327,7 +329,7 @@ If **Abort**:
 2. Report to user: "Aborted. The `sf org login web` background process has been terminated. Re-run `/sf-setup --force-reauth` when ready."
 3. END procedure with error status.
 
-If **Keep waiting**: reset poll counter, loop again (another 60 × 5 sec = 5 min).
+If **Keep waiting**: reset window counter, loop again (another 10 windows × 30 sec = 5 min, with progress emit between each window).
 
 ### Step 7 — Verify + emit summary
 
