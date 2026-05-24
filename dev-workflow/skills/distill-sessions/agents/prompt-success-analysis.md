@@ -155,7 +155,7 @@ Field rules:
 
 This prompt is dispatched as a Claude `Agent()` subagent call from the
 v0.1 Stage 3 orchestrator. Per the architecture decision in
-`docs/code-toolkit/specs/2026-05-22-skill-log-mining-research.md`
+`docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md`
 §"Subagent vs headless claude -p":
 
 - **Model**: `claude-haiku-4-5-20251001` (Haiku 4.5 — fast, cheap, used

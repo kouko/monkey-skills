@@ -1,5 +1,5 @@
 ---
-name: skill-log-mining
+name: distill-sessions
 description: >-
   Mine `~/.claude/projects/**/*.jsonl` Claude Code session transcripts joined
   with `~/.claude/usage-data/facets/*.json` `/insights` outputs, detect
@@ -23,7 +23,7 @@ description: >-
 version: 0.1.0
 ---
 
-# skill-log-mining
+# distill-sessions
 
 Stage 1+2+3+5 of the v2 mining architecture: ingest Claude Code session
 transcripts, attach `/insights` per-session facets, detect friction
@@ -345,6 +345,15 @@ that key — `main.py` merges over the defaults.
 Deferred per brief Decision §"Out of Scope (v0.1)" and §"Future
 roadmap":
 
+- **v1.0 broad-scope `skill-log-mining` sibling** — this skill
+  (`distill-sessions`) is the narrow v0.1 ship of a wider vision
+  documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
+  The broad-scope `skill-log-mining` is planned to also surface
+  (a) new-skill proposals from clustering recurring prompts (crune-style),
+  (b) `CLAUDE.md` rule extractions from recurring user corrections
+  (claude-coach-style). v0.1 explicitly excluded both to ship the
+  narrowest end state first; v1.0 will re-brainstorm the unified
+  pipeline that covers all three surfaces.
 - **Stage 4 full SDD consolidation** — if v0.1 dogfood shows
   orchestrator merge conflicts across the ≤5 per-skill subagent
   outputs, promote the merge step to a real `spec-reviewer` +
@@ -380,7 +389,7 @@ roadmap":
   *iterates* existing ones. github chigichan24/crune.
 - **claude-coach** — signal taxonomy + agent-guardrail framing.
   github netresearch/claude-coach-plugin.
-- **Brief** — `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`
+- **Brief** — `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md`
   carries the six locked decisions (Q1-Q6) and the empirical
   derivation of the Q5 thresholds from the mining-demo Pattern 1-4
   findings.

@@ -1,5 +1,7 @@
 # Plan: skill-log-mining v0.1 — Part 2 (Trace2Skill prompts + propose + apply + main + E2E)
 
+> ✏️ **2026-05-24 post-ship note** — shipped as **`dev-workflow:distill-sessions`** (PR #328). Plan terminology (`skill-log-mining`) is the historical narrow-scope codename; see Part 1 preface for naming-change context.
+
 **Source brief**: docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md
 **Total tasks**: 5 (≤5 ✓)
 **Execution order**: parallel-where-possible (T6 ∥ T7 ∥ T8 ∥ T9 after Part 1 ships, then T10)

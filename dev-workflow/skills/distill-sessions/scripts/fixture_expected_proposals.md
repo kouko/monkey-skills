@@ -1,4 +1,4 @@
-# skill-log-mining proposals — 2026-05-22
+# distill-sessions proposals — 2026-05-22
 
 **Target SKILL.md**: `/fake/skills/example/SKILL.md`
 **Counts**: 1 addition(s), 1 modification(s), 1 deferred to v0.2.

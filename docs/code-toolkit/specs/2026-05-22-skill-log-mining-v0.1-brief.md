@@ -1,5 +1,7 @@
 # skill-log-mining v0.1 — brainstorming brief
 
+> ✏️ **2026-05-24 post-ship note** — The narrow-scope realization of this brief shipped as **`dev-workflow:distill-sessions`** (PR #328). This brief intentionally framed scope around "iterate EXISTING SKILL.md only" as the differentiator vs claude-coach / crune; the user's actual mental model was wider (existing SKILL.md + new-skill proposals + CLAUDE.md rules). The broad-scope `skill-log-mining` (covering all three surfaces) is queued for v1.0 re-brainstorm in a future brief. This file is kept as the historical narrow-scope brainstorming record; it is the source-of-truth for v0.1 `distill-sessions` only.
+
 Brainstorming brief produced 2026-05-22, consumed by `writing-plans` next session. Author: kouko + Claude session.
 
 > **Consumes**: [`2026-05-22-skill-log-mining-research.md`](2026-05-22-skill-log-mining-research.md) (research memo, 545 lines, 4-domain landscape + Stage 1-5 v2 architecture + 6 open questions).

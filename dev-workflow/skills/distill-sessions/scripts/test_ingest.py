@@ -16,7 +16,7 @@ anonymized from a real `~/.claude/projects/` session. Covers:
   (skill_invocation extraction for slash commands),
 - one housekeeping `queue-operation` line (must be skipped silently).
 
-Per dev-workflow/skills/skill-log-mining Plan Part 1 §Task 2 acceptance.
+Per dev-workflow/skills/distill-sessions Plan Part 1 §Task 2 acceptance.
 """
 
 from __future__ import annotations

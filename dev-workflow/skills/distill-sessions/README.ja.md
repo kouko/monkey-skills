@@ -94,13 +94,13 @@ skill は multi-stage pipeline で動く：
 skill は `dev-workflow` plugin に同梱されている。Claude Code 上で：
 
 ```
-Skill(skill: "dev-workflow:skill-log-mining")
+Skill(skill: "dev-workflow:distill-sessions")
 ```
 
 slash-command alias が設定されていれば：
 
 ```
-/skill-log-mining
+/distill-sessions
 ```
 
 外部依存は無し — Python script は stdlib のみで動き、
@@ -112,14 +112,14 @@ slash-command alias が設定されていれば：
 
 ```bash
 # repo root から、override 無しで Q5 default を使う場合：
-cd dev-workflow/skills/skill-log-mining/scripts
+cd dev-workflow/skills/distill-sessions/scripts
 python3 main.py
 ```
 
 出力イメージ：
 
 ```
-# skill-log-mining v0.1 — run summary    (stderr)
+# distill-sessions v0.1 — run summary    (stderr)
 
 - run_id: `b3a1...`
 - target_pattern: `code-toolkit:*`

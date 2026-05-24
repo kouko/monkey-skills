@@ -1,6 +1,6 @@
 """propose.py — merge subagent Memory Item outputs → markdown diff renderer.
 
-Stage 3 of skill-log-mining v0.1. Reads a JSON list of subagent results
+Stage 3 of distill-sessions v0.1. Reads a JSON list of subagent results
 (one per session, each containing a list of Trace2Skill Memory Items),
 dedups near-identical Items via Title + content overlap heuristic, then
 renders a structured markdown proposal file with three sections:
@@ -398,7 +398,7 @@ def render_proposals_markdown(
     modifications = [it for it in main if it["kind"] == "failure"]
 
     parts: list[str] = []
-    parts.append(f"# skill-log-mining proposals — {run_date}")
+    parts.append(f"# distill-sessions proposals — {run_date}")
     parts.append("")
     parts.append(f"**Target SKILL.md**: `{target_skill_path}`")
     parts.append(
@@ -466,7 +466,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="propose",
         description=(
-            "Merge skill-log-mining subagent Memory Items into a markdown "
+            "Merge distill-sessions subagent Memory Items into a markdown "
             "proposal file. Does NOT write to the target SKILL.md."
         ),
     )

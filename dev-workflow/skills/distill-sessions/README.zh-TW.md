@@ -89,13 +89,13 @@ skill 跑 multi-stage pipeline：
 skill 隨 `dev-workflow` plugin 一起 ship。在 Claude Code 中：
 
 ```
-Skill(skill: "dev-workflow:skill-log-mining")
+Skill(skill: "dev-workflow:distill-sessions")
 ```
 
 若有設定 slash-command alias：
 
 ```
-/skill-log-mining
+/distill-sessions
 ```
 
 無外部依賴 — Python script 只用 stdlib，目標為 `python3.11+`。
@@ -106,14 +106,14 @@ Skill(skill: "dev-workflow:skill-log-mining")
 
 ```bash
 # 從 repo root 起，不加 override，使用 Q5 default：
-cd dev-workflow/skills/skill-log-mining/scripts
+cd dev-workflow/skills/distill-sessions/scripts
 python3 main.py
 ```
 
 預期輸出示意：
 
 ```
-# skill-log-mining v0.1 — run summary    (stderr)
+# distill-sessions v0.1 — run summary    (stderr)
 
 - run_id: `b3a1...`
 - target_pattern: `code-toolkit:*`

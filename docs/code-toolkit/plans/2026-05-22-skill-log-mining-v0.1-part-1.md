@@ -1,5 +1,7 @@
 # Plan: skill-log-mining v0.1 — Part 1 (scaffold + Stage 1 ingest/normalize + Stage 2 aggregate)
 
+> ✏️ **2026-05-24 post-ship note** — shipped as **`dev-workflow:distill-sessions`** (PR #328). Plan terminology (`skill-log-mining`) is the historical narrow-scope codename; final skill name was changed to `distill-sessions` at branch-finishing time to free the broader `skill-log-mining` name for a future v1.0 that also covers new-skill discovery + CLAUDE.md rule extraction. See the brief's preface for context.
+
 **Source brief**: docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md
 **Total tasks**: 5 (≤5 ✓)
 **Execution order**: parallel-where-possible (T1 → T2 → (T3 ∥ T4) → T5)

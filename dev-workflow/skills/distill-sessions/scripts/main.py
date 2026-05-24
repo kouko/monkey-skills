@@ -65,7 +65,7 @@ DEFAULT_TOP_N = 5
 DEFAULT_TARGET_PATTERN = "code-toolkit:*"
 
 # Repo-root resolution: this file lives at
-# ``dev-workflow/skills/skill-log-mining/scripts/main.py``. monkey-skills root
+# ``dev-workflow/skills/distill-sessions/scripts/main.py``. monkey-skills root
 # is 4 parents up.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 
@@ -279,7 +279,7 @@ def _render_summary_markdown(
 ) -> str:
     """Human-readable summary block for stderr."""
     lines: list[str] = []
-    lines.append("# skill-log-mining v0.1 — run summary")
+    lines.append("# distill-sessions v0.1 — run summary")
     lines.append("")
     lines.append(f"- run_id: `{config.get('run_id')}`")
     lines.append(f"- target_pattern: `{config.get('target_pattern')}`")

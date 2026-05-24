@@ -1,9 +1,9 @@
 {
-  "skill_name": "skill-log-mining",
+  "skill_name": "distill-sessions",
   "schema_version": 1,
   "created": "2026-05-22",
   "last_reviewed": "2026-05-22",
-  "notes": "Trigger-classification test set for skill-log-mining v0.1. should_trigger covers EN / JA / zh-TW phrasings of post-hoc JSONL transcript mining + MEMORY.md friction memo extraction + edit-proposal generation against existing dev-workflow:* / code-toolkit:* SKILL.md files. should_not_trigger covers adjacent-territory boundary cases (real-time coaching = claude-coach; new-skill discovery = crune; session-level = /insights; rubric scoring = skill-judge; output A/B = skill-tuning). Per memory feedback_run_loop_iteration_ties.md: do NOT iterate phrasing here to maximize run_loop scores when iterations tie — that's a framework limitation, not a description issue.",
+  "notes": "Trigger-classification test set for distill-sessions v0.1. should_trigger covers EN / JA / zh-TW phrasings of post-hoc JSONL transcript mining + MEMORY.md friction memo extraction + edit-proposal generation against existing dev-workflow:* / code-toolkit:* SKILL.md files. should_not_trigger covers adjacent-territory boundary cases (real-time coaching = claude-coach; new-skill discovery = crune; session-level = /insights; rubric scoring = skill-judge; output A/B = skill-tuning). Per memory feedback_run_loop_iteration_ties.md: do NOT iterate phrasing here to maximize run_loop scores when iterations tie — that's a framework limitation, not a description issue.",
   "should_trigger": [
     "I've burned through a lot of code-toolkit PRs lately — what can I learn from the JSONL logs about which skills missed-trigger?",
     "Mine my Claude Code session logs to find friction patterns in skill brief-before-asking and propose SKILL.md edits",

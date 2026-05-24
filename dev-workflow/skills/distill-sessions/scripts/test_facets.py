@@ -13,7 +13,7 @@ Covers:
 - attach_facets_to_events leaves event.facet=None when no match,
 - FacetRecord field defaults are gracefully None / empty-dict.
 
-Per dev-workflow/skills/skill-log-mining Plan Part 1 §Task 3 acceptance.
+Per dev-workflow/skills/distill-sessions Plan Part 1 §Task 3 acceptance.
 """
 
 from __future__ import annotations

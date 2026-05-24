@@ -1,4 +1,4 @@
-"""event.py — unified Event dataclass for skill-log-mining v0.1.
+"""event.py — unified Event dataclass for distill-sessions v0.1.
 
 Layer-A future-proof: `agent` field defaults to "claude-code" at v0.1;
 later adapters (codex / gemini) populate the same shape with their own
@@ -8,7 +8,7 @@ Schema is the contract between scripts/ingest.py (writer) and Stage 2-5
 consumers (facets.py / friction_signals.py / aggregate.py — landed in
 T3-T5 of Part 1).
 
-Per dev-workflow/skills/skill-log-mining Plan Part 1 §Task 2.
+Per dev-workflow/skills/distill-sessions Plan Part 1 §Task 2.
 """
 
 from __future__ import annotations

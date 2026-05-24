@@ -1,6 +1,6 @@
 """test_prompts_parseable.py — structural guard for Trace2Skill prompt files.
 
-Per dev-workflow/skills/skill-log-mining Plan Part 2 §Task 6.
+Per dev-workflow/skills/distill-sessions Plan Part 2 §Task 6.
 
 The two prompt files at agents/prompt-{failure,success}-analysis.md are
 bundled subagent prompts the v0.1 Stage 3 orchestrator dispatches via

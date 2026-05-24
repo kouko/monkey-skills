@@ -9,7 +9,7 @@ Verifies that ``main.main(argv)``:
    ``friction_signals.load_thresholds``).
 4. Stderr carries a human-readable markdown summary with section headers.
 
-Per dev-workflow/skills/skill-log-mining Plan Part 2 §Task 9.
+Per dev-workflow/skills/distill-sessions Plan Part 2 §Task 9.
 """
 
 from __future__ import annotations

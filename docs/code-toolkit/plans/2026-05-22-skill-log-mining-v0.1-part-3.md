@@ -1,5 +1,7 @@
 # Plan: skill-log-mining v0.1 — Part 3 (SKILL.md body + READMEs + plugin metadata + test-prompts)
 
+> ✏️ **2026-05-24 post-ship note** — shipped as **`dev-workflow:distill-sessions`** (PR #328). Plan terminology (`skill-log-mining`) is the historical narrow-scope codename; see Part 1 preface for naming-change context.
+
 **Source brief**: docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md
 **Total tasks**: 4 (≤5 ✓)
 **Execution order**: parallel-where-possible (T11 ∥ T12 ∥ T13 ∥ T14 all after Part 2 ships)

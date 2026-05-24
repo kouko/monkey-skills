@@ -1,4 +1,4 @@
-"""apply.py — approval-gated SKILL.md write-back for skill-log-mining.
+"""apply.py — approval-gated SKILL.md write-back for distill-sessions.
 
 Per Plan Part 2 §Task 8: parses a proposal markdown file (produced by
 `propose.py`) and applies the contained §"Proposed additions" + §"Proposed

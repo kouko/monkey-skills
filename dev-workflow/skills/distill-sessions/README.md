@@ -92,13 +92,13 @@ See [`SKILL.md`](SKILL.md) §Pipeline for the full step-by-step.
 The skill ships with the `dev-workflow` plugin. In Claude Code:
 
 ```
-Skill(skill: "dev-workflow:skill-log-mining")
+Skill(skill: "dev-workflow:distill-sessions")
 ```
 
 Or, if a slash-command alias is configured:
 
 ```
-/skill-log-mining
+/distill-sessions
 ```
 
 No external dependencies — the Python scripts are stdlib-only and
@@ -110,14 +110,14 @@ target `python3.11+`.
 
 ```bash
 # From the repo root, with no overrides — uses the Q5 defaults:
-cd dev-workflow/skills/skill-log-mining/scripts
+cd dev-workflow/skills/distill-sessions/scripts
 python3 main.py
 ```
 
 Expected output sketch:
 
 ```
-# skill-log-mining v0.1 — run summary    (stderr)
+# distill-sessions v0.1 — run summary    (stderr)
 
 - run_id: `b3a1...`
 - target_pattern: `code-toolkit:*`

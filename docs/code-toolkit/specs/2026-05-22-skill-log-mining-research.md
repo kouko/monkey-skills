@@ -1,5 +1,7 @@
 # Skill log mining — industry & architecture research
 
+> ✏️ **2026-05-24 post-ship note** — Narrow-scope v0.1 shipped as **`dev-workflow:distill-sessions`** (PR #328) covering only "iterate existing SKILL.md from session-log evidence". The broad-scope `skill-log-mining` vision in this memo (covering existing-skill iteration + new-skill discovery + CLAUDE.md rule extraction) is queued for v1.0 re-brainstorm. Memo kept as historical research record; future v1.0 brief will re-evaluate prompt-system integration across the three surfaces.
+
 Research memo produced 2026-05-22. **Not a brief, not a decided design** — captures the landscape so the next session doesn't re-research. Author: kouko + Claude session `be116ae7`.
 
 > **Updated same-day 2026-05-22 (post-research convergence)** — added §`/insights` post-run verification, §Subagent vs headless `claude -p` decision, §Cross-agent compatibility layer split. Earlier sections (4-domain landscape / deep dives) unchanged; final architecture in §"Final convergent architecture (v2)" supersedes the earlier §"Convergent architecture proposal".

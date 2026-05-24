@@ -1,6 +1,6 @@
 """aggregate.py — per-skill aggregation + crune reusability score + cross-project fingerprint.
 
-Stage 2 of skill-log-mining v0.1. Consumes Event[] (from ingest.py) and
+Stage 2 of distill-sessions v0.1. Consumes Event[] (from ingest.py) and
 Signal[] (from friction_signals.py), groups by target Skill invocation
 glob, attaches per-session signals, computes a crune-style reusability
 score, and ranks the high-friction skills.

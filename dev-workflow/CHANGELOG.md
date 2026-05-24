@@ -6,7 +6,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [2.4.0] — 2026-05-22
 
-### Added — `skill-log-mining` skill (9th in dev-workflow)
+### Added — `distill-sessions` skill (9th in dev-workflow)
 
 New skill that mines `~/.claude/projects/**/*.jsonl` transcripts and the
 existing `/insights` facets to produce **edit proposals** against
@@ -46,9 +46,9 @@ under-cited references → propose surgical SKILL.md edits → re-ship.
   `code-toolkit:*` corpus for drift signals)
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md` —
+- `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
   v0.1 design brief (problem framing, scope decisions, deferred items)
-- `docs/code-toolkit/specs/2026-05-22-skill-log-mining-research.md` —
+- `docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md` —
   background research (JSONL schema, /insights facet anatomy, prior
   telemetry-mining attempts)
 
