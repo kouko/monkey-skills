@@ -1,0 +1,24 @@
+{
+  "skill_name": "distill-sessions",
+  "schema_version": 1,
+  "created": "2026-05-22",
+  "last_reviewed": "2026-05-22",
+  "notes": "Trigger-classification test set for distill-sessions v0.1. should_trigger covers EN / JA / zh-TW phrasings of post-hoc JSONL transcript mining + MEMORY.md friction memo extraction + edit-proposal generation against existing dev-workflow:* / code-toolkit:* SKILL.md files. should_not_trigger covers adjacent-territory boundary cases (real-time coaching = claude-coach; new-skill discovery = crune; session-level = /insights; rubric scoring = skill-judge; output A/B = skill-tuning). Per memory feedback_run_loop_iteration_ties.md: do NOT iterate phrasing here to maximize run_loop scores when iterations tie — that's a framework limitation, not a description issue.",
+  "should_trigger": [
+    "I've burned through a lot of code-toolkit PRs lately — what can I learn from the JSONL logs about which skills missed-trigger?",
+    "Mine my Claude Code session logs to find friction patterns in skill brief-before-asking and propose SKILL.md edits",
+    "Distill MEMORY.md friction memos into concrete SKILL.md edit proposals for dev-workflow skills",
+    "Analyze ~/.claude/projects/ JSONL transcripts to figure out which dev-workflow skills need iteration this week",
+    "技能ログから知見を蒸留して既存 SKILL.md の description / body 改善提案を出してほしい",
+    "ここ最近の PR から code-toolkit の活性化漏れパターンを見つけて skill を改善したい",
+    "從 JSONL transcript 挖掘 skill iteration 機會，產生 dev-workflow:* 的 SKILL.md edit proposal",
+    "把累積在 MEMORY.md 的 friction memo 整理成具體的 SKILL.md 修改提案"
+  ],
+  "should_not_trigger": [
+    "Coach me in real time while I'm coding — interrupt me when I'm about to make a mistake",
+    "Discover new skills I might want to create from clustering my recent prompts",
+    "Show me the /insights report for the last 30 days of skill activations",
+    "Score this SKILL.md against the 8-dimension skill-judge rubric and tell me where it loses points",
+    "Run an A/B test on three different phrasings of this skill description and let me pick which one feels best"
+  ]
+}

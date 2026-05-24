@@ -1,0 +1,492 @@
+"""test_main.py — Stage 1+2 orchestrator (main.py) tests.
+
+Verifies that ``main.main(argv)``:
+
+1. Walks a fixture project tree, ingests JSONL, detects friction signals,
+   aggregates per-skill, and emits a JSON payload on stdout.
+2. ``--top-n N`` caps the ``top_skills`` list at ``N``.
+3. ``--config <override.json>`` swaps thresholds (cross-checked via
+   ``friction_signals.load_thresholds``).
+4. Stderr carries a human-readable markdown summary with section headers.
+
+Per dev-workflow/skills/distill-sessions Plan Part 2 §Task 9.
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import sys
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+
+import pytest
+
+import main
+
+
+HERE = Path(__file__).parent
+
+
+# ---------------------------------------------------------------------------
+# Fixture builder — minimal synthetic project tree exercising friction
+# signal detectors. Sessions are constructed inline (no on-disk fixtures
+# beyond what already lives at scripts/ root) so the test stays
+# self-contained and flat-subfolder hook stays clean.
+# ---------------------------------------------------------------------------
+
+
+def _build_fixture_tree(tmp_path: Path) -> tuple[Path, Path]:
+    """Build a tiny ~/.claude/projects-shaped tree under tmp_path.
+
+    Returns (projects_root, facets_root). 3 sessions invoking
+    ``code-toolkit:brainstorming`` so the skill clears the
+    ``min_session_count=3`` threshold; each session has an immediate
+    user_interrupt after the brainstorming call → high-severity
+    interrupt_after_brainstorm signals.
+    """
+    projects_root = tmp_path / "projects" / "-Users-kouko-fixture"
+    projects_root.mkdir(parents=True)
+    facets_root = tmp_path / "facets"
+    facets_root.mkdir()
+
+    base_ts = "2026-05-22T10:14:0"
+    sessions = [
+        f"sess{i:04d}-aaaa-bbbb-cccc-dddddddddddd" for i in range(3)
+    ]
+
+    for i, session_id in enumerate(sessions):
+        # One brainstorming Skill call + one snap-back user_interrupt
+        # (Δt < 60s → high severity per friction_signals.py).
+        lines = [
+            json.dumps(
+                {
+                    "type": "assistant",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.000Z",
+                    "message": {
+                        "role": "assistant",
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": f"toolu_{i}_01",
+                                "name": "Skill",
+                                "input": {
+                                    "skill": "code-toolkit:brainstorming",
+                                    "args": "test",
+                                },
+                            }
+                        ],
+                    },
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "user",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.500Z",
+                    "message": {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "[Request interrupted by user]"}
+                        ],
+                    },
+                }
+            ),
+        ]
+        (projects_root / f"{session_id}.jsonl").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
+
+    return projects_root.parent, facets_root
+
+
+def _run_main(argv: list[str]) -> tuple[dict, str]:
+    """Invoke ``main.main(argv)`` capturing stdout (parsed as JSON) and stderr."""
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+        rc = main.main(argv)
+    assert rc == 0, f"main exited non-zero (rc={rc}); stderr={stderr.getvalue()}"
+    raw = stdout.getvalue()
+    payload = json.loads(raw)
+    return payload, stderr.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Test 1 — payload shape.
+# ---------------------------------------------------------------------------
+
+
+def test_main_emits_payload_json_to_stdout(tmp_path: Path) -> None:
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+
+    payload, _stderr = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    # Required top-level keys.
+    assert "run_id" in payload
+    assert "generated_at" in payload
+    assert "config" in payload
+    assert "top_skills" in payload
+    assert "subagent_payload" in payload
+    assert isinstance(payload["top_skills"], list)
+    assert isinstance(payload["subagent_payload"], list)
+
+    # The fixture has 3 sessions of code-toolkit:brainstorming with a
+    # high-severity interrupt each — that skill MUST be in top_skills.
+    skill_names = [s["skill"] for s in payload["top_skills"]]
+    assert "code-toolkit:brainstorming" in skill_names
+
+    top = next(s for s in payload["top_skills"] if s["skill"] == "code-toolkit:brainstorming")
+    assert "sessions" in top
+    assert "aggregate_record" in top
+    assert isinstance(top["sessions"], list)
+    assert len(top["sessions"]) == 3
+    for sess in top["sessions"]:
+        assert set(sess.keys()) >= {"session_id", "friction_level", "event_count"}
+        assert sess["friction_level"] in ("low", "mid", "high")
+
+    # subagent_payload entries reference the agents/ prompt paths and the
+    # locked Haiku model ID.
+    assert payload["subagent_payload"], "subagent_payload must be non-empty"
+    for entry in payload["subagent_payload"]:
+        assert entry["model"] == "claude-haiku-4-5-20251001"
+        assert entry["prompt_path"] in (
+            "agents/prompt-failure-analysis.md",
+            "agents/prompt-success-analysis.md",
+        )
+        assert entry["kind"] in ("failure", "success")
+        assert "input" in entry
+        inp = entry["input"]
+        assert "session_events" in inp
+        assert "target_skill_path" in inp
+        assert "target_skill_md_content" in inp
+        assert isinstance(inp["session_events"], list)
+
+
+# ---------------------------------------------------------------------------
+# Test 2 — --top-n caps the list.
+# ---------------------------------------------------------------------------
+
+
+def test_top_n_caps_returned_skills(tmp_path: Path) -> None:
+    """Synthesize multiple qualifying skills, assert --top-n 1 returns 1."""
+    projects_root = tmp_path / "projects" / "p"
+    projects_root.mkdir(parents=True)
+
+    base_ts = "2026-05-22T10:14:0"
+    # Two skills, each with ≥3 sessions to clear min_session_count.
+    for skill in ("code-toolkit:brainstorming", "code-toolkit:writing-plans"):
+        for i in range(3):
+            session_id = f"{skill[-12:]}-sess-{i:04d}-cccc-dddddddddddd".replace(
+                ":", "-"
+            ).replace(" ", "")
+            # Ensure session_id is 36-char-ish; ingest just needs str.
+            lines = [
+                json.dumps(
+                    {
+                        "type": "assistant",
+                        "sessionId": session_id,
+                        "timestamp": f"{base_ts}{i}.000Z",
+                        "message": {
+                            "role": "assistant",
+                            "content": [
+                                {
+                                    "type": "tool_use",
+                                    "id": f"toolu_{skill}_{i}",
+                                    "name": "Skill",
+                                    "input": {"skill": skill, "args": "x"},
+                                }
+                            ],
+                        },
+                    }
+                ),
+                # Add a NEEDS_REVISION text marker so the skill picks up a
+                # friction signal and qualifies as "interesting".
+                json.dumps(
+                    {
+                        "type": "user",
+                        "sessionId": session_id,
+                        "timestamp": f"{base_ts}{i}.500Z",
+                        "message": {
+                            "role": "user",
+                            "content": "NEEDS_REVISION on T1; NEEDS_REVISION on T2",
+                        },
+                    }
+                ),
+            ]
+            (projects_root / f"{session_id}.jsonl").write_text(
+                "\n".join(lines) + "\n", encoding="utf-8"
+            )
+
+    payload, _ = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root.parent),
+            "--facets-root",
+            str(tmp_path / "no-facets"),
+            "--top-n",
+            "1",
+        ]
+    )
+    assert len(payload["top_skills"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Test 3 — --config override swaps thresholds.
+# ---------------------------------------------------------------------------
+
+
+def test_config_override_swaps_thresholds(tmp_path: Path) -> None:
+    """Write a JSON override; assert the emitted ``config`` block carries the
+    override value (cross-checks ``friction_signals.load_thresholds`` plumbing).
+    """
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+
+    override_path = tmp_path / "override.json"
+    override_path.write_text(
+        json.dumps({"needs_revision_threshold": 99, "interrupt_window_sec": 30}),
+        encoding="utf-8",
+    )
+
+    payload, _ = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+            "--config",
+            str(override_path),
+        ]
+    )
+
+    cfg = payload["config"]
+    assert cfg["thresholds"]["needs_revision_threshold"] == 99
+    assert cfg["thresholds"]["interrupt_window_sec"] == 30
+    # Untouched threshold survives.
+    assert cfg["thresholds"]["redispatch_threshold"] == 2
+
+
+# ---------------------------------------------------------------------------
+# Test 4 — stderr summary.
+# ---------------------------------------------------------------------------
+
+
+def test_stderr_contains_markdown_summary(tmp_path: Path) -> None:
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+
+    _payload, stderr_text = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    # Some markdown section header for top skills.
+    assert "## Top skills" in stderr_text
+    # And at least the qualifying skill name printed in the summary.
+    assert "code-toolkit:brainstorming" in stderr_text
+
+
+# ---------------------------------------------------------------------------
+# Test 5 — trajectory_id determinism across runs.
+#
+# Round-2 fix for T9 🟡 #2: ``uuid.uuid5(namespace, "skill|session|kind")``
+# is supposed to produce identical trajectory_ids across runs of the same
+# mine so subagent results stay cacheable. A future refactor to uuid4
+# would silently break that. Pin the contract.
+# ---------------------------------------------------------------------------
+
+
+def test_trajectory_id_is_deterministic_across_runs(tmp_path: Path) -> None:
+    """Two runs of main() over the same fixture must produce identical
+    subagent_payload trajectory_ids in the same order.
+    """
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+
+    argv = [
+        "--target-skill-pattern",
+        "code-toolkit:*",
+        "--project-root",
+        str(projects_root),
+        "--facets-root",
+        str(facets_root),
+    ]
+    payload1, _ = _run_main(argv)
+    payload2, _ = _run_main(argv)
+
+    ids1 = [e["trajectory_id"] for e in payload1["subagent_payload"]]
+    ids2 = [e["trajectory_id"] for e in payload2["subagent_payload"]]
+
+    assert ids1, "subagent_payload must be non-empty for the determinism test to mean anything"
+    assert ids1 == ids2, (
+        f"trajectory_id determinism broken: run1={ids1!r} run2={ids2!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 6 — low-friction session without facet maps to kind=success.
+#
+# Round-2 fix for T9 🟡 #1: ``_build_subagent_entries`` used to hardcode
+# ``friction_level="high"`` as the fallback to ``_kind_for_session``, so
+# any session without a facet got tagged ``kind="failure"`` and routed to
+# ``prompt-failure-analysis.md`` — even when the session's real
+# friction_level was ``low`` (no signals at all). Pin the contract: a
+# low-friction, no-facet session must be tagged ``kind="success"``.
+# ---------------------------------------------------------------------------
+
+
+def _build_fixture_with_low_friction_session(tmp_path: Path) -> tuple[Path, Path, str]:
+    """Same base as ``_build_fixture_tree`` but with one extra session that
+    has zero friction signals (just a Skill call, no interrupt, no
+    NEEDS_REVISION, no tool errors). That session should get
+    friction_level="low" → kind="success".
+
+    Returns (projects_root, facets_root, low_session_id).
+    """
+    projects_root = tmp_path / "projects" / "-Users-kouko-fixture"
+    projects_root.mkdir(parents=True)
+    facets_root = tmp_path / "facets"
+    facets_root.mkdir()
+
+    base_ts = "2026-05-22T10:14:0"
+    high_sessions = [
+        f"sess{i:04d}-aaaa-bbbb-cccc-dddddddddddd" for i in range(3)
+    ]
+    low_session_id = "sessLOWX-aaaa-bbbb-cccc-dddddddddddd"
+
+    # 3 high-friction sessions (interrupt within 0.5s of brainstorming).
+    for i, session_id in enumerate(high_sessions):
+        lines = [
+            json.dumps(
+                {
+                    "type": "assistant",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.000Z",
+                    "message": {
+                        "role": "assistant",
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": f"toolu_{i}_01",
+                                "name": "Skill",
+                                "input": {
+                                    "skill": "code-toolkit:brainstorming",
+                                    "args": "test",
+                                },
+                            }
+                        ],
+                    },
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "user",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.500Z",
+                    "message": {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "[Request interrupted by user]"}
+                        ],
+                    },
+                }
+            ),
+        ]
+        (projects_root / f"{session_id}.jsonl").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
+
+    # 4th session: brainstorming Skill call, zero friction signals,
+    # zero facets → friction_level="low", kind should be "success".
+    lines = [
+        json.dumps(
+            {
+                "type": "assistant",
+                "sessionId": low_session_id,
+                "timestamp": f"{base_ts}4.000Z",
+                "message": {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "toolu_low_01",
+                            "name": "Skill",
+                            "input": {
+                                "skill": "code-toolkit:brainstorming",
+                                "args": "calm-session",
+                            },
+                        }
+                    ],
+                },
+            }
+        ),
+    ]
+    (projects_root / f"{low_session_id}.jsonl").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
+
+    return projects_root.parent, facets_root, low_session_id
+
+
+def test_low_friction_no_facet_session_is_tagged_kind_success(tmp_path: Path) -> None:
+    projects_root, facets_root, low_session_id = (
+        _build_fixture_with_low_friction_session(tmp_path)
+    )
+
+    payload, _ = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    # Locate the low-friction session entry in subagent_payload.
+    low_entries = [
+        e for e in payload["subagent_payload"]
+        if e["session_id"] == low_session_id
+    ]
+    assert low_entries, (
+        f"low-friction session {low_session_id!r} missing from subagent_payload; "
+        f"got sessions={[e['session_id'] for e in payload['subagent_payload']]!r}"
+    )
+    low = low_entries[0]
+    assert low["kind"] == "success", (
+        f"low-friction no-facet session should be kind=success, got kind={low['kind']!r}; "
+        "this is the 🟡 #1 round-1 regression — friction_level fallback was hardcoded to 'high'"
+    )
+    assert low["prompt_path"] == "agents/prompt-success-analysis.md", (
+        f"low-friction session should route to prompt-success-analysis.md, got {low['prompt_path']!r}"
+    )
+
+    # Sanity: the high-friction sessions remain kind=failure.
+    high_entries = [
+        e for e in payload["subagent_payload"]
+        if e["session_id"] != low_session_id
+    ]
+    for e in high_entries:
+        assert e["kind"] == "failure", (
+            f"high-friction session {e['session_id']!r} should be kind=failure, "
+            f"got kind={e['kind']!r}"
+        )

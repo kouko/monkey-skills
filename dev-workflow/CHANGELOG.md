@@ -4,6 +4,54 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.4.0] — 2026-05-22
+
+### Added — `distill-sessions` skill (9th in dev-workflow)
+
+New skill that mines `~/.claude/projects/**/*.jsonl` transcripts and the
+existing `/insights` facets to produce **edit proposals** against
+existing `dev-workflow:*` and `code-toolkit:*` SKILL.md files. Closes
+the empirical-iteration loop: skill author ships v1 → real activations
+accumulate in JSONL → mine for missed triggers / false routes /
+under-cited references → propose surgical SKILL.md edits → re-ship.
+
+**v0.1 scope (this release)**:
+
+- Read-only telemetry mining — emits proposals, **never auto-edits**
+- Targets `dev-workflow:*` and `code-toolkit:*` skills (own + sibling
+  plugins under monkey-skills); other plugins out of v0.1 scope
+- Pipeline (Stage 1+2 in Python; Stage 3 dispatched to Claude via
+  `code-toolkit:dispatching-parallel-agents`; Stage 5 in Python with
+  approval gate):
+  - Stage 1 (ingest + normalize): `ingest.py`, `facets.py`, `event.py`
+  - Stage 1c (signal extraction): `friction_signals.py` (4 detectors
+    per Q5 baked thresholds)
+  - Stage 2 (aggregate + score + fingerprint): `aggregate.py`
+  - Stage 3 entry (subagent payload emit): `main.py`
+  - Stage 5 (proposal render + write-back): `propose.py` + `apply.py`
+- LLM used only for the final proposal-writeup step; routing,
+  aggregation, and proposal selection stay deterministic (Rule 5 of the
+  12-rule baseline)
+
+**Pattern**: read-only Mining + LLM-as-judgment-only.
+**Knowledge ratio**: E:A:R ~ 60:30:10 (Empirical:Anti-pattern:Reference).
+
+**Differentiation**:
+- Heavier than `skill-judge` (which scores a single skill against an
+  8-dim rubric without telemetry)
+- Lighter than `skill-creator-advance` eval-loop (which generates
+  synthetic test queries; this skill uses real activations)
+- Lighter than `skill-tuning` (which A/B-tests output quality on a
+  single skill; this skill scans the whole `dev-workflow:*` +
+  `code-toolkit:*` corpus for drift signals)
+
+**See also**:
+- `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
+  v0.1 design brief (problem framing, scope decisions, deferred items)
+- `docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md` —
+  background research (JSONL schema, /insights facet anatomy, prior
+  telemetry-mining attempts)
+
 ## [2.3.0] — 2026-05-14
 
 ### Added — `brief-before-asking` skill (8th in dev-workflow)
