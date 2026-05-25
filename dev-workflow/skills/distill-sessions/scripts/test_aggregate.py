@@ -28,6 +28,7 @@ from aggregate import (
     fingerprint_count,
     rank_top_n,
     reusability_score,
+    score_skill_in_session,
     signal_fingerprint,
 )
 
@@ -582,3 +583,68 @@ def test_aggregate_computes_recency_from_events():
         records["code-toolkit:fresh"].recency_norm
         > records["code-toolkit:stale"].recency_norm
     )
+
+
+# ---------------------------------------------------------------------------
+# score_skill_in_session — per-session signal severity-weight sum
+# ---------------------------------------------------------------------------
+
+
+def test_score_skill_in_session_sums_severity_weights():
+    """Score signals in a record filtered by session, using severity weights:
+    high=3.0, mid=1.0, low=0.3.
+
+    Fixture:
+    - session_a: 2 high + 1 mid → 2*3.0 + 1*1.0 = 7.0
+    - session_b: 1 low → 0.3
+    - missing_session: no matching signals → 0.0
+    """
+    from aggregate import score_skill_in_session
+
+    sig_high_1 = Signal(
+        kind="interrupt_after_brainstorm",
+        session="session_a",
+        ts="2026-05-22T10:00:00.000Z",
+        severity="high",
+        evidence=[],
+    )
+    sig_high_2 = Signal(
+        kind="tool_error_cluster",
+        session="session_a",
+        ts="2026-05-22T10:01:00.000Z",
+        severity="high",
+        evidence=[],
+    )
+    sig_mid = Signal(
+        kind="needs_revision_streak",
+        session="session_a",
+        ts="2026-05-22T10:02:00.000Z",
+        severity="mid",
+        evidence=[],
+    )
+    sig_low = Signal(
+        kind="redispatch_concentration",
+        session="session_b",
+        ts="2026-05-22T10:03:00.000Z",
+        severity="low",
+        evidence=[],
+    )
+
+    rec = AggregateRecord(
+        skill_name="code-toolkit:brainstorming",
+        sessions=["session_a", "session_b"],
+        event_count=4,
+        signals=[sig_high_1, sig_high_2, sig_mid, sig_low],
+        project_paths=set(),
+        facet_summary={},
+        confidence="low",
+    )
+
+    # Test: score for session_a
+    assert score_skill_in_session(rec, "session_a") == 7.0
+
+    # Test: score for session_b
+    assert score_skill_in_session(rec, "session_b") == 0.3
+
+    # Test: missing session returns 0.0
+    assert score_skill_in_session(rec, "missing_session") == 0.0
