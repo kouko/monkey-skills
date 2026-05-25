@@ -20,7 +20,7 @@ description: >-
   scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
   /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
   觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
-version: 0.1.0
+version: 0.3.0
 ---
 
 # distill-sessions
