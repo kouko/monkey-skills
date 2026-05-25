@@ -518,9 +518,14 @@ def render_proposals_markdown(
     """Render the full proposals markdown file as a string.
 
     Args:
-        items: Memory Items (already normalized + deduped). Caller may pre-
-            dedup; the renderer also dedups defensively to keep test
-            ergonomics simple.
+        items: Memory Items (already normalized via ``normalize_memory_item``).
+            The renderer clusters items by ``(title, section_anchor)`` via
+            ``cluster_memory_items`` to identify multi-session patterns
+            (N >= 2 distinct sessions → promoted) vs single-session
+            observations (→ §"Cross-session evidence pending" bucket).
+            Cluster subsumes the old ratio-based dedup that previously ran
+            inline here; the public ``dedup_items`` helper remains available
+            for callers needing the legacy behavior.
         target_skill_path: path to the target SKILL.md (rendered in header
             for human reviewers).
         target_skill_md_content: current SKILL.md text (used to compute
